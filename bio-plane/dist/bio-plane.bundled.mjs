@@ -1717,6 +1717,7 @@ async function checkBundle(input, opts = {}) {
 var checks_exports = {};
 __export(checks_exports, {
   ACQUISITION_CHECKS: () => ACQUISITION_CHECKS,
+  ARCHIVE_CHECKS: () => ARCHIVE_CHECKS,
   CAPTURE_REQUEST_ARM_CHECKS: () => CAPTURE_REQUEST_ARM_CHECKS,
   CIVICSMITH_CONTACT_URL: () => CIVICSMITH_CONTACT_URL,
   DRIVE_CAPTURE_CHECKS: () => DRIVE_CAPTURE_CHECKS,
@@ -1740,7 +1741,7 @@ var CAPTURE_REQUEST_ARM_CHECKS = Object.freeze({
   CAPTURE_NOT_DRAINING: Object.freeze({
     check: "C-28.13",
     where: at("is-capture-request-arm"),
-    translation: "Only this instance's own background worker fetches documents, and it does so from its own queue. Nothing else can ask it to fetch something right now \u2014 including the assistant that asked for the document in the first place."
+    translation: "Only the background worker of your group's Civicsmith fetches documents, and it does so from its own queue. Nothing else can ask it to fetch something right now \u2014 including the assistant that asked for the document in the first place."
   })
 });
 var RENDER_CAPTURE_CHECKS = Object.freeze({
@@ -1749,7 +1750,7 @@ var RENDER_CAPTURE_CHECKS = Object.freeze({
   RENDER_FLAG_MALFORMED: Object.freeze({
     check: "C-83.1",
     where: at("is-render-admit"),
-    translation: "This request asked for a rendered capture in a form this instance does not recognise. It answers render: true or nothing, so a request for the page as a visitor saw it is never quietly answered with the page's empty frame. Nothing was fetched."
+    translation: "This request asked for a rendered capture in a form your group's Civicsmith does not recognise. It answers render: true or nothing, so a request for the page as a visitor saw it is never quietly answered with the page's empty frame. Nothing was fetched."
   }),
   /* A render combined with an arm whose bytes are not a live page: an archive replay, a Drive export, or the
      continuation of a capture already filed. */
@@ -1763,7 +1764,7 @@ var RENDER_CAPTURE_CHECKS = Object.freeze({
   RENDER_NO_RENDERER: Object.freeze({
     check: "C-83.3",
     where: at("is-render-admit"),
-    translation: "This instance has no working page renderer, so it cannot capture the page as a visitor saw it. Nothing was fetched, and the page's empty frame was not filed in its place."
+    translation: "Your group's Civicsmith has no working page renderer, so it cannot capture the page as a visitor saw it. Nothing was fetched, and the page's empty frame was not filed in its place."
   }),
   /* BOB #32 item 3: the daily render allowance is COMMITTED — spent, or reserved by renders in flight (D-492). The
      render is DEFERRED and the deferral is recorded; the shell is never the content. The sentence says which, without
@@ -1771,14 +1772,14 @@ var RENDER_CAPTURE_CHECKS = Object.freeze({
   RENDER_DEFERRED: Object.freeze({
     check: "C-83.4",
     where: at("is-render-admit"),
-    translation: "Today's allowance for rendering pages is fully committed \u2014 either already used, or held by renders this instance is running right now \u2014 so this render is deferred, and that is recorded. Nothing was fetched and nothing was filed in its place. Try again when the renders in flight have finished, or after midnight UTC."
+    translation: "Today's allowance for rendering pages is fully committed \u2014 either already used, or held by renders your group's Civicsmith is running right now \u2014 so this render is deferred, and that is recorded. Nothing was fetched and nothing was filed in its place. Try again when the renders in flight have finished, or after midnight UTC."
   }),
   /* The render loads the page again, which is a second document load to the host, so it asks the per-host governor
      like any other (BOB #32 item 3: "through the host governor"). Refused by name when the host is cooling off. */
   RENDER_HOST_COOLING_OFF: Object.freeze({
     check: "C-83.5",
     where: at("is-render-admit"),
-    translation: "This instance is giving that website a rest after it asked us to slow down, and a rendered capture loads the page again, so it was not attempted. Nothing was fetched. Try again after the wait shown beside this message."
+    translation: "Your group's Civicsmith is giving that website a rest after it asked us to slow down, and a rendered capture loads the page again, so it was not attempted. Nothing was fetched. Try again after the wait shown beside this message."
   }),
   /* The shell is not an HTML page small enough to render (a PDF, an office file, a multipart giant). A document that
      is not a page has nothing a browser adds; capture it without `render`. */
@@ -1800,7 +1801,7 @@ var RENDER_CAPTURE_CHECKS = Object.freeze({
   RENDER_AT_CAPACITY: Object.freeze({
     check: "C-83.8",
     where: at("is-render-admit"),
-    translation: "This instance is already rendering as many pages at once as it allows, so this render is waiting for one of them to finish. Nothing was fetched and nothing was filed in its place. A scheduled capture asks again on its own; try again in a minute."
+    translation: "Your group's Civicsmith is already rendering as many pages at once as it allows, so this render is waiting for one of them to finish. Nothing was fetched and nothing was filed in its place. A scheduled capture asks again on its own; try again in a minute."
   })
 });
 var DRIVE_CAPTURE_CHECKS = Object.freeze({
@@ -1811,7 +1812,7 @@ var DRIVE_CAPTURE_CHECKS = Object.freeze({
   DRIVE_HOP_FACT_SUPPLIED: Object.freeze({
     check: "C-48.1",
     where: at("is-drive-capture"),
-    translation: "This request tried to tell the record where a document was exported from, in what format, or by whom. Those are facts this instance establishes by doing the fetch itself, never facts it accepts from whoever asked. Send the Drive link and nothing else."
+    translation: "This request tried to tell the record where a document was exported from, in what format, or by whom. Those are facts your group's Civicsmith establishes by doing the fetch itself, never facts it accepts from whoever asked. Send the Drive link and nothing else."
   }),
   /* A FOLDER. There is nothing to export and no single set of bytes a capture could honestly hold. */
   DRIVE_FOLDER_NOT_A_DOCUMENT: Object.freeze({
@@ -1830,7 +1831,7 @@ var DRIVE_CAPTURE_CHECKS = Object.freeze({
   DRIVE_SHAPE_UNRECOGNISED: Object.freeze({
     check: "C-48.4",
     where: `${at("is-drive-capture")}, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472)`,
-    translation: "That is a Google Drive address in a form this instance does not recognise. Rather than capture whatever bytes the address happens to serve and call it the document, it says so. If this shape should be harvestable, that is a change worth making deliberately."
+    translation: "That is a Google Drive address in a form your group's Civicsmith does not recognise. Rather than capture whatever bytes the address happens to serve and call it the document, it says so. If this shape should be harvestable, that is a change worth making deliberately."
   }),
   /* THE APPLICATION SHELL, REFUSED BY NAME AND NEVER PARSED. Google answers the export address with `text/html` when
      the file is not shared with anyone who has the link. It is never the document. */
@@ -1852,14 +1853,14 @@ var DRIVE_CAPTURE_CHECKS = Object.freeze({
   DRIVE_EXPORT_BYTES_ARE_THE_SHELL: Object.freeze({
     check: "C-48.7",
     where: at("is-drive-bytes"),
-    translation: "The export address said it was sending a document and sent a web page instead. This instance checks the bytes rather than taking the label, so the application page was recognised and refused. Nothing was filed under that document address."
+    translation: "The export address said it was sending a document and sent a web page instead. Your group's Civicsmith checks the bytes rather than taking the label, so the application page was recognised and refused. Nothing was filed under that document address."
   })
 });
 var INSTALLATION_CHECKS = Object.freeze({
   EVIDENCE_STORAGE_NOT_CONFIGURED: Object.freeze({
     check: "C-68.1",
     where: "src/acquisition/index.mjs evidenceStorageAbsent > is-storage-absent",
-    translation: "This copy was installed without the storage it keeps captured documents in, so it cannot keep or read the bytes of a captured document. That is a fact about how the copy was set up, not about this request: whoever installed it can connect that storage in the hosting account. Nothing was changed."
+    translation: "Your group's Civicsmith was installed without the storage it keeps captured documents in, so it cannot keep or read the bytes of a captured document. That is a fact about how your group's Civicsmith was set up, not about this request: whoever installed it can connect that storage in the hosting account. Nothing was changed."
   })
 });
 var SWEEP_SCOPE_CHECKS = Object.freeze({
@@ -1867,7 +1868,7 @@ var SWEEP_SCOPE_CHECKS = Object.freeze({
   SWEEP_SCOPE_MISSING: Object.freeze({
     check: "C-128.1",
     where: at("is-sweep-scope"),
-    translation: "A sweep asked this instance to fetch a document without saying which sites the sweep may reach, so nothing was fetched. A sweep only ever fetches within the scope members ratified for it."
+    translation: "A sweep asked your group's Civicsmith to fetch a document without saying which sites the sweep may reach, so nothing was fetched. A sweep only ever fetches within the scope members ratified for it."
   }),
   /* The source redirected the sweep to an address outside its scope: the redirect is not followed, nothing at its
      target is fetched and nothing is filed. */
@@ -1877,12 +1878,129 @@ var SWEEP_SCOPE_CHECKS = Object.freeze({
     translation: "The page this sweep fetched sent it on to an address outside the sweep's ratified scope. The sweep did not follow it: nothing there was fetched and nothing was filed. Members can widen the scope if that address belongs in it."
   })
 });
+var un = (region) => `src/acquisition/unpack.mjs unpack > ${region}`;
+var ls = (region) => `src/acquisition/unpack.mjs archiveList > ${region}`;
+var ARCHIVE_CHECKS = Object.freeze({
+  /* R38: no receipt or register row names the archive, or its bytes are not all held and verified. R41 answers the
+     same for an archive whose home the viewer may not see, so the two cannot be told apart. */
+  ARCHIVE_NOT_HELD: Object.freeze({
+    check: "C-137.1",
+    where: `${un("is-archive-held")}; ${ls("is-archive-held")}`,
+    translation: "Your group's Civicsmith does not hold that archive, or does not hold all of its bytes intact, so nothing in it was opened. Capture the archive again, then open it."
+  }),
+  /* R38: the archive's own structure could not be read (a truncated directory, a multi-disk archive, too many
+     entries, or storage that could not be read). Nothing in it is cut. */
+  ARCHIVE_UNREADABLE: Object.freeze({
+    check: "C-137.2",
+    where: un("is-archive-listed"),
+    translation: "Your group's Civicsmith could not read the list of files inside this archive, so none of them was filed. The archive itself is kept as it was captured; capture a fresh copy if the source has one."
+  }),
+  /* R38: the archive can be read more than one way (two end records, a directory that disagrees with its end
+     record, entries out of range or overlapping). Read as one, it could hide a file or show one twice. */
+  ARCHIVE_AMBIGUOUS: Object.freeze({
+    check: "C-137.3",
+    where: un("is-archive-listed"),
+    translation: "This archive can be read in more than one way, so your group's Civicsmith did not pick one: none of its files was filed. The archive itself is kept as it was captured, and can be opened by hand with an ordinary unzip tool."
+  }),
+  /* R40: only a member's own act, the daemon's continuation, or the capture that brought the archive in opens it. */
+  UNPACK_NOT_PERMITTED: Object.freeze({
+    check: "C-137.4",
+    where: un("is-unpack-caller"),
+    translation: "Opening an archive is something a member asks for, or that happens on its own when the archive is captured. This request came from neither, so nothing was opened."
+  }),
+  MEMBER_ENCRYPTED: Object.freeze({
+    check: "C-137.5",
+    where: un("is-entry-verdict"),
+    translation: "This file is locked with a password inside the archive, so your group's Civicsmith cannot read it and did not file it. If you have the password, open the archive yourself and capture the file."
+  }),
+  MEMBER_METHOD_UNSUPPORTED: Object.freeze({
+    check: "C-137.6",
+    where: un("is-entry-verdict"),
+    translation: "This file is packed in a way your group's Civicsmith does not unpack, so it was not filed. Open the archive with an unzip tool that supports it, and capture the file on its own."
+  }),
+  /* The entry's own header disagrees with the archive's directory about it: which is the file is not decided. */
+  MEMBER_AMBIGUOUS: Object.freeze({
+    check: "C-137.7",
+    where: un("is-entry-verdict"),
+    translation: "The archive describes this file in two places, and they disagree, so which bytes are the file cannot be decided. It was not filed rather than filed as a guess."
+  }),
+  /* The cut did not come out exactly as declared (size, checksum, or the stream's end). Any bytes stored on the way
+     stay content-addressed and named by nothing. */
+  MEMBER_CORRUPT: Object.freeze({
+    check: "C-137.8",
+    where: un("is-entry-cut"),
+    translation: "This file came out of the archive damaged: it did not match the size or checksum the archive states for it. It was not filed. A fresh copy of the archive from the source may hold it intact."
+  }),
+  MEMBER_MAX: Object.freeze({
+    check: "C-137.9",
+    where: un("is-entry-verdict"),
+    translation: "This file is larger than your group's Civicsmith unpacks from an archive, so it was not filed. If the source offers the file on its own, capture it directly."
+  }),
+  /* A declared size far beyond what compression can produce: the mark of an archive built to exhaust its reader. */
+  ARCHIVE_RATIO_MAX: Object.freeze({
+    check: "C-137.10",
+    where: un("is-entry-verdict"),
+    translation: "This file claims to unpack to far more than packing can make, which is how an archive built to overwhelm a reader looks. It was not filed."
+  }),
+  ARCHIVE_ENTRIES_MAX: Object.freeze({
+    check: "C-137.11",
+    where: un("is-archive-listed"),
+    translation: "This archive holds more files than your group's Civicsmith opens in one archive, so none of them was filed. The archive itself is kept as it was captured."
+  }),
+  ARCHIVE_TOTAL_MAX: Object.freeze({
+    check: "C-137.12",
+    where: un("is-archive-listed"),
+    translation: "The files in this archive add up to more than your group's Civicsmith unpacks from one archive, so it was listed and none of its files was filed. The archive itself is kept as it was captured."
+  }),
+  /* R40: an archive nested deeper than the published depth is filed as a file and never opened. */
+  ARCHIVE_DEPTH_MAX: Object.freeze({
+    check: "C-137.13",
+    where: un("is-unpack-budget"),
+    translation: "This archive sits inside other archives deeper than your group's Civicsmith opens, so it is kept as a file and its contents were not filed."
+  }),
+  /* R40 (F7): the whole tree under the outermost archive is held to a total; the automatic run stops and the rest
+     waits for a member, whose own request goes past it. */
+  ARCHIVE_TREE_TOTAL_MAX: Object.freeze({
+    check: "C-137.14",
+    where: un("is-unpack-budget"),
+    translation: "The archives nested inside this one add up to more than your group's Civicsmith unpacks on its own, so the rest of these files are waiting. A member can ask to open the archive, and it will go on."
+  }),
+  ARCHIVE_TREE_ENTRIES_MAX: Object.freeze({
+    check: "C-137.15",
+    where: un("is-unpack-budget"),
+    translation: "The archives nested inside this one hold more files than your group's Civicsmith unpacks on its own, so the rest of these files are waiting. A member can ask to open the archive, and it will go on."
+  }),
+  /* R40: the group's daily allowance for opening archives on their own is used for today. */
+  UNPACK_DAILY_BYTES: Object.freeze({
+    check: "C-137.16",
+    where: un("is-unpack-budget"),
+    translation: "Your group's Civicsmith has unpacked as much from archives on its own as it does in one day, so the rest of these files are waiting. A member can ask to open the archive now, or it goes on after midnight UTC."
+  }),
+  UNPACK_DAILY_ENTRIES: Object.freeze({
+    check: "C-137.17",
+    where: un("is-unpack-budget"),
+    translation: "Your group's Civicsmith has unpacked as many files from archives on its own as it does in one day, so the rest of these files are waiting. A member can ask to open the archive now, or it goes on after midnight UTC."
+  }),
+  /* R42 (F16): a fetch never goes to one of the group's own hosts: the copy itself or a member of its fleet. */
+  OWN_HOST_REFUSED: Object.freeze({
+    check: "C-137.18",
+    where: "src/acquisition/index.mjs acquire > is-own-host; src/acquisition/keyed.mjs keyedFetch > is-own-host",
+    translation: "That address belongs to your group's own Civicsmith, and it never fetches from itself, so nothing was fetched or filed. What your group holds is already in its record."
+  }),
+  /* R43 (K1888): the group's co-archive setting is on or off, nothing else. */
+  CO_ARCHIVE_SETTING_INVALID: Object.freeze({
+    check: "C-137.19",
+    where: "src/acquisition/unpack.mjs coArchiveSet > is-co-archive-setting",
+    translation: "Whether captures also ask a public archive to keep a copy is on or off, and this request said neither, so the setting was not changed."
+  })
+});
 var ACQUISITION_CHECKS = Object.freeze({
   ...CAPTURE_REQUEST_ARM_CHECKS,
   ...RENDER_CAPTURE_CHECKS,
   ...DRIVE_CAPTURE_CHECKS,
   ...INSTALLATION_CHECKS,
-  ...SWEEP_SCOPE_CHECKS
+  ...SWEEP_SCOPE_CHECKS,
+  ...ARCHIVE_CHECKS
 });
 
 // src/cpu.mjs
@@ -2210,25 +2328,25 @@ function stripElements(html) {
   return out;
 }
 function rewriteCssText(css, resolve) {
-  const one4 = (whole, u) => {
+  const one4 = (whole2, u) => {
     const t2 = resolve(u);
-    return t2 === null ? whole : whole.replace(/url\(\s*(?:"[^"]*"|'[^']*'|[^)'"\s]*)\s*\)/i, `url("${t2}")`);
+    return t2 === null ? whole2 : whole2.replace(/url\(\s*(?:"[^"]*"|'[^']*'|[^)'"\s]*)\s*\)/i, `url("${t2}")`);
   };
-  let out = css.replace(CSS_URL_RE, (whole, a, b, c) => one4(whole, (a ?? b ?? c ?? "").trim()));
-  out = out.replace(CSS_IMPORT_RE, (whole, a, b, c, d, e2) => {
+  let out = css.replace(CSS_URL_RE, (whole2, a, b, c) => one4(whole2, (a ?? b ?? c ?? "").trim()));
+  out = out.replace(CSS_IMPORT_RE, (whole2, a, b, c, d, e2) => {
     const u = (a ?? b ?? c ?? d ?? e2 ?? "").trim();
     const t2 = resolve(u);
-    return t2 === null ? whole : `@import url("${t2}")`;
+    return t2 === null ? whole2 : `@import url("${t2}")`;
   });
   return out;
 }
 function renderCompanion(html, { resolve, classifyLink, primarySha, when }) {
   let src = stripElements(String(html));
-  src = src.replace(STYLE_EL_RE, (whole, attrsBlob, body) => `<style${attrsBlob}>${rewriteCssText(body, (u) => resolve(u, "css-asset"))}</style>`);
-  src = src.replace(TAG_RE, (whole, name2, blob, selfClose) => {
+  src = src.replace(STYLE_EL_RE, (whole2, attrsBlob, body) => `<style${attrsBlob}>${rewriteCssText(body, (u) => resolve(u, "css-asset"))}</style>`);
+  src = src.replace(TAG_RE, (whole2, name2, blob, selfClose) => {
     const tag2 = name2.toLowerCase();
     const as = attrsOf(blob || "");
-    if (!as.length) return whole;
+    if (!as.length) return whole2;
     const kept = [];
     for (const a of as) {
       if (/^on[a-z]+$/.test(a.name)) continue;
@@ -3252,16 +3370,16 @@ function parseLiteralString(s, pos) {
 }
 function parseHexString(s, pos) {
   pos++;
-  let hex7 = "";
+  let hex9 = "";
   while (pos < s.length && s.charCodeAt(pos) !== 62) {
     const c = s[pos];
-    if (/[0-9a-fA-F]/.test(c)) hex7 += c;
+    if (/[0-9a-fA-F]/.test(c)) hex9 += c;
     pos++;
   }
   pos++;
-  if (hex7.length % 2) hex7 += "0";
+  if (hex9.length % 2) hex9 += "0";
   let raw = "";
-  for (let i = 0; i < hex7.length; i += 2) raw += String.fromCharCode(parseInt(hex7.substr(i, 2), 16));
+  for (let i = 0; i < hex9.length; i += 2) raw += String.fromCharCode(parseInt(hex9.substr(i, 2), 16));
   return { value: { t: "str", v: decodePdfText(raw) }, pos };
 }
 function decodePdfText(raw) {
@@ -3941,16 +4059,16 @@ function readLiteralBytes(s, pos) {
 }
 function readHexBytes(s, pos) {
   pos++;
-  let hex7 = "";
+  let hex9 = "";
   while (pos < s.length && s.charCodeAt(pos) !== 62) {
     const ch = s[pos];
-    if (/[0-9a-fA-F]/.test(ch)) hex7 += ch;
+    if (/[0-9a-fA-F]/.test(ch)) hex9 += ch;
     pos++;
   }
   pos++;
-  if (hex7.length % 2) hex7 += "0";
+  if (hex9.length % 2) hex9 += "0";
   const bytes2 = [];
-  for (let i = 0; i < hex7.length; i += 2) bytes2.push(parseInt(hex7.substr(i, 2), 16));
+  for (let i = 0; i < hex9.length; i += 2) bytes2.push(parseInt(hex9.substr(i, 2), 16));
   return { bytes: bytes2, pos };
 }
 function readContentName(s, pos) {
@@ -3983,17 +4101,17 @@ function readContentNumber(s, pos) {
   const v = parseFloat(s.slice(start, pos));
   return { v: Number.isNaN(v) ? 0 : v, pos };
 }
-function hexToUnicode(hex7) {
-  if (hex7.length <= 2) return String.fromCharCode(parseInt(hex7 || "0", 16));
+function hexToUnicode(hex9) {
+  if (hex9.length <= 2) return String.fromCharCode(parseInt(hex9 || "0", 16));
   let out = "";
-  for (let i = 0; i + 4 <= hex7.length; i += 4) out += String.fromCharCode(parseInt(hex7.substr(i, 4), 16));
-  if (hex7.length % 4 === 2) out += String.fromCharCode(parseInt(hex7.substr(hex7.length - 2, 2), 16));
+  for (let i = 0; i + 4 <= hex9.length; i += 4) out += String.fromCharCode(parseInt(hex9.substr(i, 4), 16));
+  if (hex9.length % 4 === 2) out += String.fromCharCode(parseInt(hex9.substr(hex9.length - 2, 2), 16));
   return out;
 }
-function unicodeIncr(hex7, off) {
+function unicodeIncr(hex9, off) {
   const units = [];
-  for (let i = 0; i + 4 <= hex7.length; i += 4) units.push(parseInt(hex7.substr(i, 4), 16));
-  if (units.length === 0) return String.fromCharCode(parseInt(hex7 || "0", 16) + off & 65535);
+  for (let i = 0; i + 4 <= hex9.length; i += 4) units.push(parseInt(hex9.substr(i, 4), 16));
+  if (units.length === 0) return String.fromCharCode(parseInt(hex9 || "0", 16) + off & 65535);
   units[units.length - 1] = units[units.length - 1] + off & 65535;
   return units.map((u) => String.fromCharCode(u)).join("");
 }
@@ -6527,8 +6645,8 @@ async function* cut(source2, row9) {
   await feeding;
   if (sourceFailed) return unreadable2;
   if (inflateError || !fedAll) {
-    const whole = size === declared2 && (crc ^ 4294967295) >>> 0 === row9.crc32;
-    return corrupt3(whole ? "stream_end_mismatch" : "inflate_failed");
+    const whole2 = size === declared2 && (crc ^ 4294967295) >>> 0 === row9.crc32;
+    return corrupt3(whole2 ? "stream_end_mismatch" : "inflate_failed");
   }
   return finish();
 }
@@ -11878,8 +11996,8 @@ function applyRules(text7, rules) {
     let count2 = 0, bytes2 = 0;
     for (const re of rule.patterns) {
       if (!(re instanceof RegExp)) continue;
-      out = out.replace(re, (whole, pre, mid, post) => {
-        if (!mid || !mid.length) return whole;
+      out = out.replace(re, (whole2, pre, mid, post) => {
+        if (!mid || !mid.length) return whole2;
         count2++;
         bytes2 += mid.length;
         return (pre || "") + PLACEHOLDER + (post || "");
@@ -16673,7 +16791,7 @@ function readDriveAddress(address) {
     ...base2,
     shape: "unknown",
     harvestable: false,
-    why: `this is a Drive host (${host}) with a path shape this recogniser does not read, so it is named rather than harvested. A Drive address whose shape is unread is not a document this instance can promise to have captured.`
+    why: `this is a Drive host (${host}) with a path shape this recogniser does not read, so it is named rather than harvested. A Drive address whose shape is unread is not a document your group's Civicsmith can promise to have captured.`
   };
 }
 function exportAddressFor(kindRow, fileId) {
@@ -16689,7 +16807,7 @@ function driveHop(drive, { retrieved, resolved = null, detected = null } = {}) {
       `export address ${drive.exportAddress}`,
       `export format ${drive.format} (${drive.mimetype})`,
       `producer ${DRIVE_PRODUCER}`,
-      `the export address was COMPOSED BY THIS INSTANCE from the file id and the kind carried in ${drive.address}, and no part of it was read from the request (D-112)`,
+      `the export address was COMPOSED BY YOUR GROUP'S CIVICSMITH from the file id and the kind carried in ${drive.address}, and no part of it was read from the request (D-112)`,
       `the export endpoint is canonicalised to ${EXPORT_HOST}${drive.host === EXPORT_HOST ? "" : `, though the link named ${drive.host}`}`,
       resolved && resolved !== drive.exportAddress ? `redirected to ${resolved}` : null,
       /* BYTES-FIRST, and stated either way. COFF-9's discriminator reads the
@@ -16786,32 +16904,32 @@ function classifyDriveBaseline({ drive, locator, rows: rows3, retrievals = [] })
   if (fromExport && !fromPage) return {
     verdict: htmlSaid ? "undetermined" : "export",
     ...facts,
-    basis: htmlSaid ? `the plane recorded fetching the export address, but ${said7}; the two disagree and neither is taken over the other` : `the plane recorded fetching the export address ${drive.exportAddress} (CAP-8), and ${said7}`
+    basis: htmlSaid ? `your group's Civicsmith recorded fetching the export address, but ${said7}; the two disagree and neither is taken over the other` : `your group's Civicsmith recorded fetching the export address ${drive.exportAddress} (CAP-8), and ${said7}`
   };
   if (fromPage && !fromExport) return {
     verdict: docSaid ? "undetermined" : "shell",
     ...facts,
-    basis: docSaid ? `the plane recorded fetching ${fetchedAddress}, not the export, but ${said7}; the two disagree and neither is taken over the other` : `the plane recorded fetching ${fetchedAddress}, not the export address \u2014 Google serves the application there, not the document \u2014 and ${said7}`
+    basis: docSaid ? `your group's Civicsmith recorded fetching ${fetchedAddress}, not the export, but ${said7}; the two disagree and neither is taken over the other` : `your group's Civicsmith recorded fetching ${fetchedAddress}, not the export address \u2014 Google serves the application there, not the document \u2014 and ${said7}`
   };
   if (fromExport && fromPage) return {
     verdict: "undetermined",
     ...facts,
-    basis: `the plane recorded these bytes from BOTH the export and ${fetchedAddress}; which one the baseline is cannot be told`
+    basis: `your group's Civicsmith recorded these bytes from BOTH the export and ${fetchedAddress}; which one the baseline is cannot be told`
   };
   if (row9.locator === drive.exportAddress && !htmlSaid) return {
     verdict: "export",
     ...facts,
-    basis: `the register row names the export address and ${said7}; the plane holds no retrieval record for these bytes`
+    basis: `the register row names the export address and ${said7}; your group's Civicsmith holds no retrieval record for these bytes`
   };
   if (htmlSaid && row9.locator !== drive.exportAddress) return {
     verdict: "shell",
     ...facts,
-    basis: `${said7} for a row at the document address; the plane holds no retrieval record for these bytes, so this rests on the register alone`
+    basis: `${said7} for a row at the document address; your group's Civicsmith holds no retrieval record for these bytes, so this rests on the register alone`
   };
   return {
     verdict: "undetermined",
     ...facts,
-    basis: `the plane holds no direct retrieval record for these bytes and ${said7}`
+    basis: `your group's Civicsmith holds no direct retrieval record for these bytes and ${said7}`
   };
 }
 
@@ -17098,15 +17216,15 @@ function readMementoAnswer({ url, status, headers } = {}) {
 var HEX642 = /^[0-9a-f]{64}$/;
 function mementoRow(answer, { sha256: sha2562, bytes: bytes2 } = {}) {
   if (!answer || answer.ok !== true || answer.kind !== "memento") return null;
-  const hex7 = typeof sha2562 === "string" ? sha2562.toLowerCase() : "";
-  if (!HEX642.test(hex7)) return null;
+  const hex9 = typeof sha2562 === "string" ? sha2562.toLowerCase() : "";
+  if (!HEX642.test(hex9)) return null;
   return {
     urlkey: null,
     timestamp: answer.timestamp,
     original: answer.original,
     mimetype: answer.mimetype || void 0,
     statuscode: answer.status == null ? "unstated" : String(answer.status),
-    digest: bytes2 === 0 ? EMPTY_BODY_DIGEST : hex7
+    digest: bytes2 === 0 ? EMPTY_BODY_DIGEST : hex9
   };
 }
 function mementoHop(chosen, mementoUri, { archive = WAYBACK_MEMENTO, answer = null } = {}) {
@@ -17123,13 +17241,43 @@ function mementoHop(chosen, mementoUri, { archive = WAYBACK_MEMENTO, answer = nu
       a && a.timegate ? `rel="timegate" ${a.timegate}` : null,
       a && a.timemap ? `rel="timemap" ${a.timemap}` : null,
       chosen.mimetype ? `mimetype ${chosen.mimetype}` : null,
-      chosen.digest === EMPTY_BODY_DIGEST ? null : `SHA-256 ${chosen.digest}, computed by this instance over the bytes it received, not a digest the archive stated`
+      chosen.digest === EMPTY_BODY_DIGEST ? null : `SHA-256 ${chosen.digest}, computed by your group's Civicsmith over the bytes it received, not a digest the archive stated`
     ].filter(Boolean).join("; "),
     bound: false,
     unsigned_reason: `no cryptographic attestation exists over a ${name2} memento; this is a dated third-party claim we are trusting, not verifying`,
     via,
     document_address: chosen.original
   };
+}
+
+// src/capture-sources/own-hosts.mjs
+function hostKey(host) {
+  if (typeof host !== "string") return "";
+  let h = host.trim().toLowerCase();
+  if (h.startsWith("[")) {
+    const end2 = h.indexOf("]");
+    return end2 > 0 ? h.slice(0, end2 + 1) : h;
+  }
+  const colon = h.indexOf(":");
+  if (colon >= 0) h = h.slice(0, colon);
+  if (h.endsWith(".")) h = h.slice(0, -1);
+  return h;
+}
+function isOwnHost(host, ownHosts) {
+  try {
+    if (!Array.isArray(ownHosts) || ownHosts.length === 0) return false;
+    const h = hostKey(host);
+    if (h === "") return false;
+    for (const entry3 of ownHosts) {
+      if (typeof entry3 !== "string") continue;
+      const e2 = entry3.trim().toLowerCase();
+      if (e2 === "" || e2 === ".") continue;
+      if (e2.startsWith(".") ? h.endsWith(e2) : h === hostKey(e2)) return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
 }
 
 // src/browserrender.mjs
@@ -17140,6 +17288,25 @@ var LONG_LIVED_AFTER_MS = 4e3;
 var SERIALISE_MS = 1e3;
 var BODY_PHASE_MS = 1e4;
 var BODY_CALL_MS = 5e3;
+var RENDER_BLOCKED_REASONS = Object.freeze({
+  NOT_A_PUBLIC_LOCATOR: "it is not a public https address",
+  OWN_HOST: "its host is one of your group's own (where your group's Civicsmith or its fleet is reached)"
+});
+var FETCH_PATTERNS = Object.freeze([{ urlPattern: "*", requestStage: "Request" }]);
+var SOCKET_PATTERNS = Object.freeze(["ws://*", "wss://*"]);
+var GUARD_CALL_MS = 5e3;
+function requestRefusal(url, ownHosts) {
+  if (typeof url === "string" && /^(?:data|blob):/i.test(url)) return null;
+  if (!isPublicHttpsLocator(url)) return "NOT_A_PUBLIC_LOCATOR";
+  let host = null;
+  try {
+    host = new URL(url).hostname;
+  } catch {
+    return "NOT_A_PUBLIC_LOCATOR";
+  }
+  return isOwnHost(host, ownHosts) ? "OWN_HOST" : null;
+}
+var refusedSentence = (url, reason) => `${url} was refused before it was sent (${reason}: ${RENDER_BLOCKED_REASONS[reason]})`;
 async function openSession(binding) {
   const acq = await binding.fetch(`${FAKE_HOST}/v1/devtools/browser`, { method: "POST" });
   if (acq.status !== 200) {
@@ -17304,6 +17471,9 @@ async function renderWithBinding(binding, req, { now = () => Date.now() } = {}) 
   const timeoutMs = Math.max(1e3, Number(asked.wait?.timeout_ms) || 15e3);
   const navMs = Math.max(1e3, Number(asked.navigation_timeout_ms) || 3e4);
   const until = typeof asked.wait?.until === "string" ? asked.wait.until : "networkidle";
+  const ownHosts = Array.isArray(asked.own_hosts) ? asked.own_hosts : [];
+  const refusedAddress = requestRefusal(String(asked.url || ""), ownHosts);
+  if (refusedAddress) return { ok: false, error: `the browser could not navigate to ${String(asked.url || "")}: ${refusedSentence(String(asked.url || ""), refusedAddress)}` };
   let sess = null, conn = null, targetId = null;
   const started = now();
   const navDeadline = started + navMs;
@@ -17373,7 +17543,8 @@ async function renderWithBinding(binding, req, { now = () => Date.now() } = {}) 
     try {
       await conn.send("Network.enable", {}, sessionId, navLeft());
       sawNetwork = true;
-    } catch {
+    } catch (e2) {
+      throw new Error(`the browser would not hold this render's requests (its network domain would not enable: ${String(e2 && e2.message || e2).slice(0, 200)}), so nothing was rendered`);
     }
     try {
       await conn.send("Page.enable", {}, sessionId, navLeft());
@@ -17386,10 +17557,73 @@ async function renderWithBinding(binding, req, { now = () => Date.now() } = {}) 
     }
     let inflight = 0, lastQuietAt = null, loadFired = false, mainFrameId = null, mainStatus = null;
     let quietYoungSince = null;
+    const heldBack2 = /* @__PURE__ */ new Map(), refusedDocuments = [];
+    const settle2 = (r, outcome, blockedBy = null) => {
+      if (!r || r.outcome !== "pending") return;
+      r.outcome = outcome;
+      if (blockedBy) r.blocked_by = blockedBy;
+      inflight--;
+      lastQuietAt = inflight === 0 ? now() : null;
+    };
+    const guard = async (sid, ms5) => {
+      await conn.send("Fetch.enable", { patterns: FETCH_PATTERNS }, sid, ms5());
+      await conn.send("Network.setBlockedURLs", { urls: SOCKET_PATTERNS }, sid, ms5());
+      await conn.send("Target.setAutoAttach", { autoAttach: true, waitForDebuggerOnStart: true, flatten: true }, sid, ms5());
+    };
+    const guardChild = async (sid) => {
+      try {
+        await conn.send("Network.enable", {}, sid, GUARD_CALL_MS);
+        await guard(sid, () => GUARD_CALL_MS);
+      } catch {
+        return;
+      }
+      try {
+        await conn.send("Runtime.runIfWaitingForDebugger", {}, sid, GUARD_CALL_MS);
+      } catch {
+      }
+    };
     conn.on((m) => {
       const p3 = m.params || {};
       switch (m.method) {
-        case "Network.requestWillBeSent":
+        case "Fetch.requestPaused": {
+          const url = String(p3.request?.url || "");
+          const reason = requestRefusal(url, ownHosts);
+          if (!reason) {
+            conn.send("Fetch.continueRequest", { requestId: p3.requestId }, m.sessionId, GUARD_CALL_MS).catch(() => {
+            });
+            break;
+          }
+          conn.send("Fetch.failRequest", { requestId: p3.requestId, errorReason: "BlockedByClient" }, m.sessionId, GUARD_CALL_MS).catch(() => {
+          });
+          if (resourceType(p3.resourceType) === "document") refusedDocuments.push({ url, reason, frameId: p3.frameId || null });
+          const id = p3.networkId;
+          const r = id ? requests.get(id) : null;
+          if (r && r.url === url && r.outcome === "pending") settle2(r, "blocked", reason);
+          else if (id) heldBack2.set(id, { url, reason });
+          else requests.set(`held:${p3.requestId}`, {
+            url,
+            type: resourceType(p3.resourceType),
+            outcome: "blocked",
+            status: null,
+            blocked_by: reason,
+            since: now()
+          });
+          break;
+        }
+        case "Target.attachedToTarget":
+          if (typeof p3.sessionId === "string" && p3.sessionId) guardChild(p3.sessionId);
+          break;
+        case "Network.webSocketCreated":
+          if (p3.requestId) requests.set(`ws:${p3.requestId}`, {
+            url: String(p3.url || ""),
+            type: "websocket",
+            outcome: "blocked",
+            status: null,
+            blocked_by: "NOT_A_PUBLIC_LOCATOR",
+            since: now()
+          });
+          break;
+        case "Network.requestWillBeSent": {
           if (!p3.requestId) break;
           if (p3.redirectResponse && requests.has(p3.requestId)) {
             const prev = requests.get(p3.requestId);
@@ -17400,7 +17634,7 @@ async function renderWithBinding(binding, req, { now = () => Date.now() } = {}) 
               redirect: true
             });
           } else inflight++;
-          requests.set(p3.requestId, {
+          const entry3 = {
             rid: p3.requestId,
             url: String(p3.request?.url || ""),
             type: resourceType(p3.type),
@@ -17408,9 +17642,16 @@ async function renderWithBinding(binding, req, { now = () => Date.now() } = {}) 
             status: null,
             blocked_by: null,
             since: now()
-          });
+          };
+          requests.set(p3.requestId, entry3);
+          const held2 = heldBack2.get(p3.requestId);
+          if (held2 && held2.url === entry3.url) {
+            heldBack2.delete(p3.requestId);
+            settle2(entry3, "blocked", held2.reason);
+          }
           quietYoungSince = null;
           break;
+        }
         case "Network.responseReceived": {
           const r = requests.get(p3.requestId);
           if (r) {
@@ -17432,12 +17673,7 @@ async function renderWithBinding(binding, req, { now = () => Date.now() } = {}) 
         }
         case "Network.loadingFailed": {
           const r = requests.get(p3.requestId);
-          if (r && r.outcome === "pending") {
-            r.outcome = p3.blockedReason ? "blocked" : "failed";
-            if (p3.blockedReason) r.blocked_by = String(p3.blockedReason);
-            inflight--;
-            lastQuietAt = inflight === 0 ? now() : null;
-          }
+          settle2(r, p3.blockedReason ? "blocked" : "failed", p3.blockedReason ? String(p3.blockedReason) : null);
           break;
         }
         case "Page.loadEventFired":
@@ -17448,8 +17684,16 @@ async function renderWithBinding(binding, req, { now = () => Date.now() } = {}) 
           break;
       }
     });
+    try {
+      await guard(sessionId, navLeft);
+    } catch (e2) {
+      throw new Error(`the browser would not hold this render's requests (request interception could not be enabled: ${String(e2 && e2.message || e2).slice(0, 200)}), so nothing was rendered`);
+    }
     const nav = await conn.send("Page.navigate", { url: String(asked.url || "") }, sessionId, navLeft());
-    if (nav.errorText) throw new Error(`the browser could not navigate to ${asked.url}: ${nav.errorText}`);
+    if (nav.errorText) {
+      const doc = refusedDocuments.find((d) => d.frameId && d.frameId === nav.frameId) || refusedDocuments[0];
+      throw new Error(`the browser could not navigate to ${asked.url}: ${nav.errorText}${doc ? `; ${refusedSentence(doc.url, doc.reason)}` : ""}`);
+    }
     mainFrameId = nav.frameId || null;
     const overall = started + navMs + timeoutMs;
     const deadline = Math.min(now() + timeoutMs, overall - SERIALISE_MS);
@@ -17707,7 +17951,7 @@ async function keepRenderBodies(answer, { put: put2, sha256: sha2562 }) {
       digest2 = await sha2562(bytes2);
       await put2(digest2, bytes2);
     } catch (e2) {
-      out.push(undet(`the plane could not keep the bytes (${String(e2 && e2.message || e2).slice(0, 200)})`));
+      out.push(undet(`your group's Civicsmith could not keep the bytes (${String(e2 && e2.message || e2).slice(0, 200)})`));
       continue;
     }
     kept++;
@@ -17747,7 +17991,7 @@ function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at: a
       if (d && (HEX643.test(String(d.sha256)) || d.sha256 === "undetermined")) return d;
       return {
         sha256: "undetermined",
-        digest_reason: "the plane did not keep this render's subresource bytes",
+        digest_reason: "your group's Civicsmith did not keep this render's subresource bytes",
         ...HEX643.test(String(r.sha256 || "")) ? { renderer_sha256: r.sha256 } : {}
       };
     };
@@ -17830,7 +18074,7 @@ function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at: a
   else if (firedClass === "timeout")
     undetermined3.push(`completeness: ${RENDER_INCOMPLETE_READING} \u2014 the renderer's wait ended on its timeout${num(asked.wait && asked.wait.timeout_ms) !== null ? ` (${asked.wait.timeout_ms} ms asked)` : ""}${isStr2(asked.wait && asked.wait.until) ? ` rather than on the \`${asked.wait.until}\` condition` : ""}, so what the page would have shown had the condition been met is undetermined. The capture keeps its grade and its method; these bytes are not presented as the whole page (BOB #32, 2026-09-24).`);
   else if (firedClass === "undetermined")
-    undetermined3.push(`completeness: ${isStr2(waitFired) ? `the renderer reported the wait fired on \`${waitFired}\`, which is neither the \`${asked.wait && asked.wait.until || "(none asked)"}\` condition this plane asked for nor a timeout` : "the renderer did not report which wait ended the render"}, so whether the render ran to its condition is undetermined and this rendering may be incomplete.`);
+    undetermined3.push(`completeness: ${isStr2(waitFired) ? `the renderer reported the wait fired on \`${waitFired}\`, which is neither the \`${asked.wait && asked.wait.until || "(none asked)"}\` condition your group's Civicsmith asked for nor a timeout` : "the renderer did not report which wait ended the render"}, so whether the render ran to its condition is undetermined and this rendering may be incomplete.`);
   const render2 = {
     of: shellSha,
     engine: pick3("engine", isStr2(answer.engine) ? answer.engine : null),
@@ -19275,19 +19519,19 @@ var RecordCore = class _RecordCore {
    *  so is a module's second registration; no module name, no non-empty list of names, or no function is
    *  `COUNTS_MALFORMED`. A refused registration registers nothing. It writes nothing. */
   registerCounts(module, keys, counts) {
-    const refuse21 = (code, detail, more) => {
+    const refuse22 = (code, detail, more) => {
       const row9 = RECORD_CORE_CHECKS[code];
       return { ...more, ok: false, reason: code, code, check: row9.check, translation: row9.translation, detail };
     };
     if (typeof module !== "string" || !module.trim() || !Array.isArray(keys) || keys.length === 0 || !keys.every((k) => typeof k === "string" && k.trim() !== "") || typeof counts !== "function")
-      return refuse21("COUNTS_MALFORMED", "a counts registration names its module, a non-empty list of figure names and a function answering them; nothing was registered.", { module: typeof module === "string" ? module : null });
+      return refuse22("COUNTS_MALFORMED", "a counts registration names its module, a non-empty list of figure names and a function answering them; nothing was registered.", { module: typeof module === "string" ? module : null });
     let clash = this.#countsBy.some((r) => r.module === module) ? { heldBy: module } : null;
     for (let i = 0; !clash && i < keys.length; i++) {
       const held2 = keys.indexOf(keys[i]) < i ? module : this.#countsBy.find((r) => r.keys.includes(keys[i]))?.module;
       if (held2) clash = { key: keys[i], heldBy: held2 };
     }
     if (clash)
-      return refuse21("COUNTS_DECLARED", clash.key === void 0 ? `${module} has already registered its figures; nothing more was registered.` : `the figure ${clash.key} is already reported by ${clash.heldBy}; nothing was registered.`, { module, ...clash });
+      return refuse22("COUNTS_DECLARED", clash.key === void 0 ? `${module} has already registered its figures; nothing more was registered.` : `the figure ${clash.key} is already reported by ${clash.heldBy}; nothing was registered.`, { module, ...clash });
     this.#countsBy.push({ module, keys: [...keys], counts });
     return { ok: true, module, keys: [...keys] };
   }
@@ -20383,7 +20627,7 @@ function appetiteOf(value) {
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 function badAppetite(host = null) {
-  const detail = "appetite_per_min must be a positive number, or omit it to reset to the instance default";
+  const detail = "appetite_per_min must be a positive number, or omit it to reset to your group's default";
   return {
     ok: false,
     configured: false,
@@ -20593,12 +20837,12 @@ function governorOf(ctx, { env = null, now = null, random = null, record = null 
     return g;
   }
   const given2 = SUPPLIED.get(g);
-  const refuse21 = (name2) => {
+  const refuse22 = (name2) => {
     throw new Error(`governorOf: a caller supplied a different \`${name2}\` for a storage whose governor already holds another one a caller gave; host-governor refuses it rather than run against either silently (R26)`);
   };
-  if (env != null && given2.has("env") && !sameEnv(g.env, env)) refuse21("env");
-  for (const name2 of ["now", "random"]) if (opts[name2] != null && given2.has(name2) && g[name2] !== opts[name2]) refuse21(name2);
-  if (record != null && record !== g.core) refuse21("record");
+  if (env != null && given2.has("env") && !sameEnv(g.env, env)) refuse22("env");
+  for (const name2 of ["now", "random"]) if (opts[name2] != null && given2.has(name2) && g[name2] !== opts[name2]) refuse22(name2);
+  if (record != null && record !== g.core) refuse22("record");
   for (const name2 of Object.keys(opts))
     if (opts[name2] != null && !given2.has(name2)) {
       g[name2] = opts[name2];
@@ -20699,10 +20943,10 @@ async function governorOp(op, url, store, relay2 = null) {
   if (r.result && r.result.ok === false) return { status: 400, body: r.result };
   return { status: 200, body: { ok: true, ...r.result } };
 }
-async function governorOpResponse(op, url, store, { json: json17, doAnswer: doAnswer2, storeRefusal: storeRefusal2, storeSilent: storeSilent2 }) {
+async function governorOpResponse(op, url, store, { json: json18, doAnswer: doAnswer2, storeRefusal: storeRefusal2, storeSilent: storeSilent2 }) {
   const g = await governorOp(op, url, store, { doAnswer: doAnswer2, storeRefusal: storeRefusal2 });
   if (!g) return null;
-  return g.refused ? g.response : g.silent ? storeSilent2(op, g.correlation) : json17(g.body, g.status);
+  return g.refused ? g.response : g.silent ? storeSilent2(op, g.correlation) : json18(g.body, g.status);
 }
 
 // src/membership/schema.mjs
@@ -21578,7 +21822,7 @@ var MODULE_ORDER = Object.freeze([
 var isObj2 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var LISTENER_REFUSAL_FIELDS = /* @__PURE__ */ new Set(["ok", "reason", "code", "detail", "module", "check", "translation"]);
 function listenerRefusal(held2, module, fn, extra) {
-  const refuse21 = (code, detail, fields) => {
+  const refuse22 = (code, detail, fields) => {
     const row9 = MEMBERSHIP_CHECKS[code];
     let own5 = {};
     try {
@@ -21588,8 +21832,8 @@ function listenerRefusal(held2, module, fn, extra) {
     }
     return { ...own5, ok: false, reason: code, code, detail, ...fields, check: row9.check, translation: row9.translation };
   };
-  const malformed3 = (detail) => refuse21("LISTENER_MALFORMED", detail, {});
-  const declared2 = (detail, holder3) => refuse21("LISTENER_DECLARED", detail, { module: holder3 });
+  const malformed3 = (detail) => refuse22("LISTENER_MALFORMED", detail, {});
+  const declared2 = (detail, holder3) => refuse22("LISTENER_DECLARED", detail, { module: holder3 });
   try {
     if (typeof module !== "string" || !module || typeof fn !== "function")
       return malformed3("a listener names the module that registers it and its function");
@@ -24577,20 +24821,20 @@ var Membership = class _Membership {
   /** R109: an administrator records the description; each call appends a whole record and overwrites none. */
   groupDescriptionSet({ kinds: kinds3, otherKind = null, focus = null, purpose = null, visibility = null, by = null } = {}) {
     if (!this.isAdministrator(by)) return notAnAdmin(by, "describing the group");
-    const refuse21 = (code, detail, extra) => _Membership.#rowRefusal(code, `${detail} Nothing was written.`, extra);
+    const refuse22 = (code, detail, extra) => _Membership.#rowRefusal(code, `${detail} Nothing was written.`, extra);
     if (!Array.isArray(kinds3) || kinds3.some((k) => !_Membership.GROUP_KINDS.includes(k)))
-      return refuse21("GROUP_KIND_UNKNOWN", `the kinds are a list drawn from ${_Membership.GROUP_KINDS.join(", ")}, and may be empty.`);
+      return refuse22("GROUP_KIND_UNKNOWN", `the kinds are a list drawn from ${_Membership.GROUP_KINDS.join(", ")}, and may be empty.`);
     const ks = [...new Set(kinds3)];
     const other = ks.includes("other") ? _Membership.#text(otherKind) : null;
     if (ks.includes("other") && !other)
-      return refuse21("GROUP_KIND_OTHER_EMPTY", "`other` was chosen, and the kind it describes was left empty.");
+      return refuse22("GROUP_KIND_OTHER_EMPTY", "`other` was chosen, and the kind it describes was left empty.");
     const f17 = _Membership.#text(focus), p3 = _Membership.#text(purpose);
     for (const [name2, v, max] of [["otherKind", other, 120], ["focus", f17, 1e3], ["purpose", p3, 4e3]])
       if (v !== null && v.length > max)
-        return refuse21("GROUP_DESCRIPTION_TOO_LONG", `${name2} is at most ${max} characters.`, { field: name2, max });
+        return refuse22("GROUP_DESCRIPTION_TOO_LONG", `${name2} is at most ${max} characters.`, { field: name2, max });
     const vis = visibility === void 0 || visibility === null ? "members" : visibility;
     if (vis !== "members" && vis !== "public")
-      return refuse21("GROUP_VISIBILITY_UNKNOWN", "the description is seen by `members` or by the `public` too.");
+      return refuse22("GROUP_VISIBILITY_UNKNOWN", "the description is seen by `members` or by the `public` too.");
     const at34 = (/* @__PURE__ */ new Date()).toISOString();
     this.sql.exec(`INSERT INTO group_description (kinds, other_kind, focus, purpose, visibility, set_by, at)
                    VALUES (?,?,?,?,?,?,?)`, JSON.stringify(ks), other, f17, p3, vis, by, at34);
@@ -27468,6 +27712,58 @@ var ORIGIN_KINDS = ["named_request", "sweep", "member", DOORBELL_ORIGIN];
 var CAPTURE_ENCODINGS2 = ["utf8", "base64", "binary"];
 var HIST_TS_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
 var RAW_SHA_RE2 = /^[0-9a-f]{64}$/;
+var UNPACKED_METHOD = "unpacked";
+var whole = (v) => Number.isSafeInteger(v) && v >= 0;
+var canon2 = (v) => JSON.stringify(v, (k, x) => x && typeof x === "object" && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort().map((key) => [key, x[key]])) : x);
+function checkContainer(ctx, findings, d, i) {
+  const cap = d.capture && typeof d.capture === "object" ? d.capture : null;
+  const unpacked = !!cap && cap.method === UNPACKED_METHOD;
+  const c = d.container;
+  if (!unpacked) {
+    if (c !== void 0) findings.push(f5("C-18.1", "error", `provenance documents[${i}] carries a container block but its capture.method is '${cap ? cap.method : void 0}', not '${UNPACKED_METHOD}': only a file cut out of a captured archive names the archive it came from`));
+    return;
+  }
+  if (!c || typeof c !== "object" || Array.isArray(c)) {
+    findings.push(f5("C-18.1", "error", `provenance documents[${i}] was cut out of an archive (capture.method '${UNPACKED_METHOD}') and carries no container block naming the archive and the entry it came from`));
+    return;
+  }
+  const bad2 = [];
+  if (typeof c.archive_sha256 !== "string" || !RAW_SHA_RE2.test(c.archive_sha256)) bad2.push("archive_sha256 (64 lowercase hex)");
+  for (const k of ["index", "compressed", "uncompressed", "local_offset"]) if (!whole(c[k])) bad2.push(`${k} (a whole number, at least 0)`);
+  if (!(c.path === null || typeof c.path === "string")) bad2.push("path (the entry's name, or null)");
+  if (typeof c.name_raw !== "string" || !/^(?:[0-9a-f]{2})*$/.test(c.name_raw)) bad2.push("name_raw (lowercase hex)");
+  if (c.method !== 0 && c.method !== 8) bad2.push("method (0 or 8)");
+  if (!whole(c.crc32)) bad2.push("crc32 (a whole number)");
+  if (typeof c.member_sha256 !== "string" || c.member_sha256 !== cap.sha256) bad2.push("member_sha256 (equal to capture.sha256)");
+  if (!(c.dos_time_stated === null || typeof c.dos_time_stated === "string" && c.dos_time_stated !== "")) bad2.push("dos_time_stated (the archive's stated time, or null)");
+  if (bad2.length) {
+    findings.push(f5("C-18.1", "error", `provenance documents[${i}].container is malformed: ${bad2.join("; ")}`));
+    return;
+  }
+  const r = ctx.resolve;
+  if (!r) {
+    if (cap.grade !== void 0 && cap.grade !== null && !CAPTURE_GRADES.includes(cap.grade)) findings.push(f5("C-18.1", "error", `provenance documents[${i}].capture.grade '${cap.grade}' is not one of: ${CAPTURE_GRADES.join(", ")}`));
+    if ((cap.grade === void 0 || cap.grade === null) && (typeof cap.grade_basis !== "string" || !cap.grade_basis)) findings.push(f5("C-18.1", "error", `provenance documents[${i}] was cut out of an archive and carries no capture.grade and no grade_basis: why it carries no letter is stated, never left to be inferred`));
+    return;
+  }
+  const a = c.archive_sha256;
+  if (!r.holds(a)) {
+    findings.push(f5("C-18.1", "error", `provenance documents[${i}].container names archive ${a.slice(0, 16)}\u2026, which the record neither registers nor holds a receipt for: a file is cut out only of an archive the record holds`));
+    return;
+  }
+  const g = r.gradeVia(a, c.index) || {};
+  const letter2 = typeof g.grade === "string" && g.grade ? g.grade : null;
+  const stated = cap.grade === void 0 || cap.grade === null ? null : cap.grade;
+  if (letter2 && stated !== letter2) findings.push(f5("C-18.1", "error", `provenance documents[${i}] was cut out of archive ${a.slice(0, 16)}\u2026 and states capture.grade '${stated}', but a file earns exactly what its archive earns, ${letter2}`));
+  if (!letter2) {
+    const basis = g.archive && typeof g.archive === "object" ? g.archive.basis : g.basis;
+    if (stated !== null) findings.push(f5("C-18.1", "error", `provenance documents[${i}] was cut out of archive ${a.slice(0, 16)}\u2026 and states capture.grade '${stated}', but its archive earns no letter (${basis}), so neither does the file`));
+    if (cap.grade_basis !== basis) findings.push(f5("C-18.1", "error", `provenance documents[${i}] was cut out of archive ${a.slice(0, 16)}\u2026 and its capture.grade_basis is '${cap.grade_basis}', not its archive's, '${basis}'`));
+  }
+  const found3 = r.archiveOrigin(a) || { found: false };
+  if (!found3.found) findings.push(f5("C-18.1", "error", `provenance documents[${i}] was cut out of archive ${a.slice(0, 16)}\u2026, and no register document of that archive can be read, so its origin cannot be shown to be the archive's`));
+  else if (canon2(d.origin ?? null) !== canon2(found3.origin ?? null)) findings.push(f5("C-18.1", "error", `provenance documents[${i}] was cut out of archive ${a.slice(0, 16)}\u2026 and its origin is ${canon2(d.origin ?? null).slice(0, 120)}, not its archive's, ${canon2(found3.origin ?? null).slice(0, 120)}`));
+}
 function checkAuthorityPublishable(ctx, findings) {
   const hist = Array.isArray(ctx.fm?.state_history) ? ctx.fm.state_history : [];
   const atFence = ctx.fm?.current_state === "verified" || hist.some((e2) => e2 && e2.to_state === "verified");
@@ -27599,12 +27895,14 @@ function checkReleaseAuthority(ctx, findings) {
       if (d.authored === true) {
         if (cap.grade !== void 0 && cap.grade !== null) findings.push(f5("C-18.1", "error", `provenance documents[${i}] is a member's authored observation and carries capture.grade '${cap.grade}': the capture axis does not apply to an authored document, and a letter on it would read as strength the observation does not have (MEMBER-KNOWLEDGE-DESIGN.md \xA73)`));
         if (cap.actor_class !== "member") findings.push(f5("C-18.1", "error", `provenance documents[${i}] is a member's authored observation and its capture.actor_class is '${cap.actor_class}', not 'member'`));
+      } else if (cap.method === UNPACKED_METHOD) {
       } else if (d.origin && typeof d.origin === "object" && d.origin.kind === DOORBELL_ORIGIN) {
         if (cap.grade !== void 0 && cap.grade !== null) findings.push(f5("C-18.1", "error", `provenance documents[${i}] was received through the doorbell and carries capture.grade '${cap.grade}': received material was fetched from no address, so it earns no fetched letter (Intake Doctrine \xA72a)`));
         if (cap.grade_basis !== RECEIVED_NOT_FETCHED) findings.push(f5("C-18.1", "error", `provenance documents[${i}] was received through the doorbell and its capture.grade_basis is '${cap.grade_basis}', not '${RECEIVED_NOT_FETCHED}': why it carries no letter is stated, never left to be inferred`));
       } else if (!CAPTURE_GRADES.includes(cap.grade)) findings.push(f5("C-18.1", "error", `provenance documents[${i}].capture.grade '${cap.grade}' is not one of: ${CAPTURE_GRADES.join(", ")}`));
       if (!ACTOR_CLASSES.includes(cap.actor_class)) findings.push(f5("C-18.1", "error", `provenance documents[${i}].capture.actor_class '${cap.actor_class}' is not one of: ${ACTOR_CLASSES.join(", ")}`));
     }
+    checkContainer(ctx, findings, d, i);
     const or = d.origin;
     if (d.authored === true && (!or || typeof or !== "object" || or.kind !== "member")) {
       findings.push(f5("C-18.1", "error", `provenance documents[${i}] is a member's authored observation and its origin.kind is '${or && typeof or === "object" ? or.kind : or}', not 'member'`));
@@ -27832,12 +28130,13 @@ function checkInfo2Register(ctx, findings) {
     }
   }
 }
-function registerChecks({ files, fm, elided = null }) {
+function registerChecks({ files, fm, elided = null, resolve = null }) {
   const findings = [];
   const ctx = {
     files: files instanceof Map ? files : new Map(Object.entries(files || {})),
     fm: fm || null,
-    elided: elided instanceof Set ? elided : new Set(elided || [])
+    elided: elided instanceof Set ? elided : new Set(elided || []),
+    resolve: resolve && typeof resolve.holds === "function" ? resolve : null
   };
   if (!ctx.fm || typeof ctx.fm !== "object") return findings;
   checkReleaseAuthority(ctx, findings);
@@ -27921,7 +28220,7 @@ var PROVENANCE_ACT_CHECKS = {
   RECEIPT_NO_KEY: {
     check: "C-103.7",
     where: "src/attestation/index.mjs signReceipt",
-    translation: "This instance holds no key to sign its receipts with, so this receipt was not signed, and nothing claims that it was. Whoever runs the instance can add one."
+    translation: "Your group's Civicsmith holds no key to sign its receipts with, so this receipt was not signed, and nothing claims that it was. Whoever hosts your group's Civicsmith can add one."
   }
 };
 var TESTIMONY_CHECKS = {
@@ -28028,6 +28327,11 @@ function bundleGate(col, viewer) {
 var ARCHIVE_VIA = "archive.org";
 var ARCHIVE_CAPTURE_GRADE = BASIS_GRADES[BASIS_GRADES.indexOf(EARNED_CAPTURE_CEILING) + 1] ?? null;
 var DOORBELL_VIA = "doorbell";
+var UNPACKED_VIA = "unpacked";
+var UNPACKED_FROM_ARCHIVE = "CAPTURE_UNPACKED_FROM_ARCHIVE";
+var UNPACKED_UNRESOLVED = "CAPTURE_UNPACKED_UNRESOLVED";
+var UNPACKED_LOCATOR = /^zip:([0-9a-fA-F]{64})!(\d+)$/;
+var ROUTE_RANK = { direct: 0, archive: 1, unpacked: 2, doorbell: 3 };
 var VERSION_CHAIN_LIMIT_DEFAULT = 200;
 var VERSION_CHAIN_LIMIT_MAX = 1e3;
 var TESTIMONY_MAX_BYTES = 128 * 1024;
@@ -28146,8 +28450,8 @@ function imageForChecks(image) {
   const fm = typeof md === "string" ? parseFrontmatter(md).data : null;
   return { files, elided, fm: isObj4(fm) ? fm : null };
 }
-function withRegisterChecks(image, gate) {
-  const found3 = registerChecks(imageForChecks(image));
+function withRegisterChecks(image, gate, resolve = null) {
+  const found3 = registerChecks({ ...imageForChecks(image), resolve });
   const errors = found3.filter((x) => x.severity === "error").map((x) => ({ check: x.check, detail: x.message, ...x.repairs ? { repairs: x.repairs } : {} }));
   const findings = [...gate.findings || [], ...errors];
   return {
@@ -28249,7 +28553,12 @@ var Provenance = class {
       for (const f17 of list6) if (f17 && typeof f17.path === "string") img[f17.path] = typeof f17.text === "string" ? f17.text : { blobSha: f17.blobSha };
       return img;
     };
-    const now = registerChecks({ ...imageForChecks(asImage(files)), fm: isObj4(docFm) ? docFm : imageForChecks(asImage(files)).fm }).filter((x) => x.severity === "error");
+    const resolve = this.containerResolver();
+    const now = registerChecks({
+      ...imageForChecks(asImage(files)),
+      fm: isObj4(docFm) ? docFm : imageForChecks(asImage(files)).fm,
+      resolve
+    }).filter((x) => x.severity === "error");
     if (!now.length) return null;
     let held2 = /* @__PURE__ */ new Set();
     if (head) {
@@ -28258,7 +28567,7 @@ var Provenance = class {
         const f17 = this.#record.readFile(bundleId, p3);
         if (f17) live7[p3] = typeof f17.text === "string" ? f17.text : { blobSha: f17.blobSha };
       }
-      held2 = new Set(registerChecks(imageForChecks(live7)).filter((x) => x.severity === "error").map((x) => `${x.check}\0${x.message}`));
+      held2 = new Set(registerChecks({ ...imageForChecks(live7), resolve }).filter((x) => x.severity === "error").map((x) => `${x.check}\0${x.message}`));
     }
     const added = now.filter((x) => !held2.has(`${x.check}\0${x.message}`));
     if (!added.length) return null;
@@ -28272,6 +28581,26 @@ var Provenance = class {
         ...x.repairs ? { repairs: x.repairs } : {}
       })) }
     );
+  }
+  /** R42 · N688: the record's answers an `unpacked` document is judged against (`register-checks.mjs`'
+   *  `checkContainer`), at the write, in the audit, and for a caller of `withRegisterChecks` that holds this module:
+   *  whether the archive is held (R5), what entry `index` of it earns (R59, read through the archive from the top, as
+   *  a receipt `zip:<sha>!<index>` would be), and the origin of the archive's own document in its home's register. */
+  containerResolver() {
+    return {
+      holds: (a) => {
+        const h = this.registerHolds({ sha: a });
+        return h.registered === true || h.acquired === true;
+      },
+      gradeVia: (a, index2) => this.#unpacked(`zip:${a}!${index2}`, 0),
+      archiveOrigin: (a) => {
+        const home = this.homeOf(a);
+        const f17 = home ? this.#record.readFile(home.bundleId, "data/provenance.json") : null;
+        const reg = f17 && typeof f17.text === "string" ? safeJson(f17.text) : null;
+        const doc = (Array.isArray(reg?.documents) ? reg.documents : []).find((x) => isObj4(x) && isObj4(x.capture) && bareSha(x.capture.sha256) === a);
+        return doc ? { found: true, origin: doc.origin } : { found: false };
+      }
+    };
   }
   /* R1: the register write, after `commit`, in the same transaction. `registered` is this module's clock; the
      authored columns are written from the testimony path's own key and never from the entry a caller sent. */
@@ -28733,13 +29062,18 @@ var Provenance = class {
     };
   }
   /* ===================================================================== *
-   * R24–R27, R51: THE CAPTURE AXIS FOR ONE CAPTURE, FROM ITS ROUTE.
+   * R24–R27, R51, R59: THE CAPTURE AXIS FOR ONE CAPTURE, FROM ITS ROUTE.
    * ===================================================================== */
   /** `captureGrade(captureSha) → {grade, route, determined, basis, why}`. The route is the record's own fact about
    *  WHO SERVED the bytes, written by the fetch that received them (the receipts' `via`), never by a member; the
-   *  issuing authority (D-97) is a different axis and is never read here. No letter above the ceiling is earned. */
+   *  issuing authority (D-97) is a different axis and is never read here. No letter above the ceiling is earned.
+   *  R59: when the receipts name more than one route, each route answers and the strongest answer stands (`#strongest`);
+   *  a file cut out of an archive answers its archive's answer (`#unpacked`). */
   captureGrade(captureSha) {
-    const s = bareSha(captureSha);
+    return this.#grade(bareSha(captureSha), 0);
+  }
+  /* One capture's answer; `depth` is how many archives a file's answer has already been read through (R59). */
+  #grade(s, depth) {
     const reg = s ? this.#one(`SELECT authored FROM register WHERE capture_sha = ?`, s) : null;
     if (reg && Number(reg.authored) === 1)
       return {
@@ -28751,39 +29085,6 @@ var Provenance = class {
         why: `a member's own words were not read in from anywhere, so the capture axis earns no letter; the observation is graded as testimony, ${TESTIMONY_GRADE}, and nothing raises that`
       };
     const vias = s ? this.#rows(`SELECT DISTINCT via FROM captured_locators WHERE capture_sha = ? ORDER BY via`, s).map((r) => r.via) : [];
-    if (vias.includes("direct"))
-      return {
-        grade: EARNED_CAPTURE_CEILING,
-        route: "direct",
-        determined: true,
-        basis: "measured",
-        why: `this instance fetched these bytes directly from their address, so their capture grade is ${EARNED_CAPTURE_CEILING} by that fact rather than by a member's account`
-      };
-    if (vias.includes(ARCHIVE_VIA))
-      return {
-        grade: ARCHIVE_CAPTURE_GRADE,
-        route: "archive",
-        determined: ARCHIVE_CAPTURE_GRADE !== null,
-        basis: "measured",
-        why: `this instance fetched these bytes only through an archive replay (${ARCHIVE_VIA}), never from their publisher: one more party stands between the record and the publisher, so their capture grade is ${ARCHIVE_CAPTURE_GRADE}, ranked below a direct capture`
-      };
-    if (vias.includes(DOORBELL_VIA)) {
-      const r = this.#one(
-        `SELECT address, address_norm, first_retrieved FROM captured_locators
-                            WHERE capture_sha = ? AND via = ? ORDER BY first_retrieved, address_norm LIMIT 1`,
-        s,
-        DOORBELL_VIA
-      );
-      return {
-        grade: null,
-        route: "doorbell",
-        determined: false,
-        basis: RECEIVED_NOT_FETCHED,
-        ceiling: EARNED_CAPTURE_CEILING,
-        received: { address: r.address, address_norm: r.address_norm, at: r.first_retrieved },
-        why: `these bytes were handed to the group through the doorbell and brought in by a member, never fetched from an address, so no capture grade is measured from how they were fetched. A leg on them keeps the letter its author gave, under the ceiling (${EARNED_CAPTURE_CEILING}), stated as authored. That the record held them at ${r.first_retrieved} is proven by this plane's own receipt at ${r.address}`
-      };
-    }
     if (!vias.length)
       return {
         grade: null,
@@ -28793,6 +29094,45 @@ var Provenance = class {
         ceiling: EARNED_CAPTURE_CEILING,
         why: `no fetch route is recorded for these bytes (bytes a provenance document carried, or a member's upload), so no capture grade is measured from how they were fetched. A leg on them keeps the letter its author gave, under the ceiling (${EARNED_CAPTURE_CEILING}), stated as authored`
       };
+    const answers = [];
+    if (vias.includes("direct"))
+      answers.push({
+        grade: EARNED_CAPTURE_CEILING,
+        route: "direct",
+        determined: true,
+        basis: "measured",
+        why: `your group's Civicsmith fetched these bytes directly from their address, so their capture grade is ${EARNED_CAPTURE_CEILING} by that fact rather than by a member's account`
+      });
+    if (vias.includes(ARCHIVE_VIA))
+      answers.push({
+        grade: ARCHIVE_CAPTURE_GRADE,
+        route: "archive",
+        determined: ARCHIVE_CAPTURE_GRADE !== null,
+        basis: "measured",
+        why: `your group's Civicsmith fetched these bytes only through an archive replay (${ARCHIVE_VIA}), never from their publisher: one more party stands between the record and the publisher, so their capture grade is ${ARCHIVE_CAPTURE_GRADE}, ranked below a direct capture`
+      });
+    if (vias.includes(UNPACKED_VIA))
+      for (const r of this.#rows(`SELECT DISTINCT retrieval_locator FROM captured_locators
+                                   WHERE capture_sha = ? AND via = ? ORDER BY retrieval_locator`, s, UNPACKED_VIA))
+        answers.push(this.#unpacked(r.retrieval_locator, depth));
+    if (vias.includes(DOORBELL_VIA)) {
+      const r = this.#one(
+        `SELECT address, address_norm, first_retrieved FROM captured_locators
+                            WHERE capture_sha = ? AND via = ? ORDER BY first_retrieved, address_norm LIMIT 1`,
+        s,
+        DOORBELL_VIA
+      );
+      answers.push({
+        grade: null,
+        route: "doorbell",
+        determined: false,
+        basis: RECEIVED_NOT_FETCHED,
+        ceiling: EARNED_CAPTURE_CEILING,
+        received: { address: r.address, address_norm: r.address_norm, at: r.first_retrieved },
+        why: `these bytes were handed to the group through the doorbell and brought in by a member, never fetched from an address, so no capture grade is measured from how they were fetched. A leg on them keeps the letter its author gave, under the ceiling (${EARNED_CAPTURE_CEILING}), stated as authored. That the record held them at ${r.first_retrieved} is proven by the receipt your group's Civicsmith itself made at ${r.address}`
+      });
+    }
+    if (answers.length) return this.#strongest(answers);
     return {
       grade: null,
       route: vias.join(","),
@@ -28802,7 +29142,46 @@ var Provenance = class {
       why: `these bytes were served by a route no ruling grades (${vias.join(", ")}), so what they earn on the capture axis is UNDETERMINED`
     };
   }
-  /* ===================================================================== *
+  /* R59: the strongest of several routes' answers: a determined grade before an undetermined one, a higher letter
+     before a lower one, and between equal answers the order direct, archive.org, unpacked, doorbell. The sort is
+     stable, so between two equal `unpacked` answers the first receipt's stands. With one answer this is that answer,
+     so R24, R25, R26 and R51 answer as before for a capture with no `unpacked` receipt. */
+  #strongest(answers) {
+    const letter2 = (a) => {
+      const i = BASIS_GRADES.indexOf(a.grade);
+      return i === -1 ? Infinity : i;
+    };
+    return [...answers].sort((x, y) => Number(y.determined === true) - Number(x.determined === true) || letter2(x) - letter2(y) || (ROUTE_RANK[x.route] ?? Infinity) - (ROUTE_RANK[y.route] ?? Infinity))[0];
+  }
+  /* R59 · N688 (K1844, K1852 (1), (3)): a file cut out of an archive earns exactly what its archive earns. The
+     archive's digest and the entry's index are read from the receipt's retrieval locator (R15), which no caller
+     writes. Every field of the archive's answer is passed through unchanged but `route`, `basis` and `why`, and
+     `archive` names the archive whose route decided it, the entry indexes from it down to this file (outermost
+     first), and that archive's own route and basis. An archive that is itself unpacked is read the same way, through
+     at most `ARCHIVE_DEPTH_MAX` archives (`ooxml` R30); past that, or with a locator not of that form, the answer is
+     undetermined and says why. */
+  #unpacked(locator, depth) {
+    const unresolved = (why2) => ({ grade: null, route: "unpacked", determined: false, basis: UNPACKED_UNRESOLVED, why: why2 });
+    const m = UNPACKED_LOCATOR.exec(typeof locator === "string" ? locator : "");
+    const index2 = m ? Number(m[2]) : NaN;
+    if (!m || !Number.isSafeInteger(index2))
+      return unresolved(`these bytes were recorded as cut out of an archive, but the receipt names the archive as ${JSON.stringify(String(locator ?? "")).slice(0, 100)}, not as zip:<the archive's 64-hex digest>!<the entry's number>, so the archive they came from cannot be read and what they earn on the capture axis is UNDETERMINED`);
+    if (depth + 1 > ARCHIVE_DEPTH_MAX)
+      return unresolved(`these bytes were cut out of archives nested more than ${ARCHIVE_DEPTH_MAX} deep, past the depth your group's Civicsmith reads an archive's grade through, so what they earn on the capture axis is UNDETERMINED`);
+    const archiveSha = m[1].toLowerCase();
+    const a = this.#grade(archiveSha, depth + 1);
+    if (a.basis === UNPACKED_UNRESOLVED) return unresolved(a.why);
+    const { route, basis, why, archive: inner, ...rest } = a;
+    const archive = route === "unpacked" ? { sha256: inner.sha256, through: [...inner.through, index2], route: inner.route, basis: inner.basis } : { sha256: archiveSha, through: [index2], route, basis };
+    return {
+      ...rest,
+      route: "unpacked",
+      basis: UNPACKED_FROM_ARCHIVE,
+      archive,
+      why: `these bytes are entry ${index2} of an archive the record holds (${archiveSha.slice(0, 16)}\u2026), cut out of it, so on the capture axis they earn exactly what that archive earns, never more and never less. Of the archive: ${why}`
+    };
+  }
+  /* =====================================================================
    * R29, R30 · REC-225: A MEMBER'S DECLARED ORIGIN FOR A DOCUMENT. A host serves many offices, so a host is not an
    * origin: the system a document came from is a member's attributed statement, per document, dated and append-only.
    * ===================================================================== */
@@ -28912,19 +29291,19 @@ var Provenance = class {
    *  from a total that something was withheld. Nothing publishes how many rows
    *  the gate removed, because that count is the leak (REC-36). */
   versionChain({ addressNorm = null, at: at34 = null, limit = null, offset = 0, viewer = null } = {}) {
-    const refuse21 = (key, detail) => {
+    const refuse22 = (key, detail) => {
       const row9 = VERSION_CHAIN_CHECKS[key];
       return { ok: false, reason: key, check: row9.check, translation: row9.translation, detail };
     };
     const addr = addressNorm == null ? "" : String(addressNorm).trim();
     if (!addr)
-      return refuse21(
+      return refuse22(
         "VERSION_CHAIN_NO_ADDRESS",
         "op=versionchain answers for ONE document address: pass address=<url>. The plane normalises it with the same normaliser the capture wrote it with, so the address you captured is the address that answers."
       );
     const anchor2 = at34 == null ? "" : String(at34).trim().toLowerCase();
     if (anchor2 && !/^[0-9a-f]{64}$/.test(anchor2))
-      return refuse21(
+      return refuse22(
         "VERSION_CHAIN_BAD_ANCHOR",
         `at=${JSON.stringify(String(at34).slice(0, 80))} is not a sha256. A version is anchored by the capture identity of its bytes, which is 64 hex characters.`
       );
@@ -28978,7 +29357,7 @@ var Provenance = class {
     if (anchor2) {
       anchorRow = shape(this.#one(`${CHAIN2} SELECT * FROM chain WHERE capture_sha = ?`, ...args, anchor2));
       if (!anchorRow)
-        return refuse21(
+        return refuse22(
           "VERSION_CHAIN_NO_SUCH_VERSION",
           `no version with capture ${anchor2.slice(0, 12)}\u2026 is held at ${addr}. A capture the record does not hold, one filed at a different address, and one inside a project you were not invited to answer identically here, deliberately.`
         );
@@ -29065,9 +29444,9 @@ var Provenance = class {
       if (j === null) unreadable2 = true;
       else docs = Array.isArray(j.documents) ? j.documents : [];
     }
-    const shaOf7 = (d) => d && typeof d === "object" && d.capture && typeof d.capture === "object" && typeof d.capture.sha256 === "string" && d.capture.sha256 ? d.capture.sha256 : null;
+    const shaOf8 = (d) => d && typeof d === "object" && d.capture && typeof d.capture === "object" && typeof d.capture.sha256 === "string" && d.capture.sha256 ? d.capture.sha256 : null;
     const regs = Array.isArray(register2) ? register2.filter((c) => c && typeof c.sha256 === "string") : [];
-    const asked = [.../* @__PURE__ */ new Set([...docs.map(shaOf7).filter(Boolean), ...regs.map((c) => c.sha256)])];
+    const asked = [.../* @__PURE__ */ new Set([...docs.map(shaOf8).filter(Boolean), ...regs.map((c) => c.sha256)])];
     const held2 = this.#rows(
       `SELECT capture_sha, bundle_id FROM register
         WHERE authored = 1 AND (bundle_id = ? OR capture_sha IN (SELECT value FROM json_each(?)))
@@ -29089,7 +29468,7 @@ var Provenance = class {
     for (let i = 0; i < docs.length; i++) {
       const d = docs[i];
       if (!d || typeof d !== "object") continue;
-      const s = shaOf7(d);
+      const s = shaOf8(d);
       const claims = d.authored !== void 0 && d.authored !== null && d.authored !== false;
       const authored = s != null && (here.has(s) || own5(s));
       if (claims && !authored)
@@ -29114,7 +29493,7 @@ var Provenance = class {
           { bundleId, index: i, origin: origin ?? null, actor_class: actor ?? null }
         );
     }
-    const stated = new Set(docs.filter((d) => d && typeof d === "object" && d.authored === true).map(shaOf7).filter(Boolean));
+    const stated = new Set(docs.filter((d) => d && typeof d === "object" && d.authored === true).map(shaOf8).filter(Boolean));
     for (const s of here)
       if (!stated.has(s))
         return refusal29(
@@ -29226,7 +29605,7 @@ var Provenance = class {
         "",
         "## Provenance Notes",
         "",
-        `Authored through op=testify. Observed ${obs}, in the member's own statement; recorded ${recorded}, by this record's clock. The author is stamped by the plane from the signed-in session. It stands on that member's trust, graded as testimony (MEMBER-KNOWLEDGE-DESIGN.md section 3).`,
+        `Authored through op=testify. Observed ${obs}, in the member's own statement; recorded ${recorded}, by this record's clock. The author is taken from the signed-in session, not from the request. It stands on that member's trust, graded as testimony (MEMBER-KNOWLEDGE-DESIGN.md section 3).`,
         "",
         "## Session Log",
         "",
@@ -29251,7 +29630,7 @@ var Provenance = class {
         recorded_at: recorded,
         authority: "the observing member",
         authority_state: "determined",
-        authority_basis: `the author of these bytes is the signed-in member the plane stamped from the session at op=testify, ${recorded}; the request could not name it`,
+        authority_basis: `the author of these bytes is the signed-in member taken from the session at op=testify, ${recorded}; the request could not name it`,
         provenance_chain: [{
           who: observer,
           asserts: `these are my own words, as written, about what I observed at ${obs}`,
@@ -29360,7 +29739,7 @@ function provenanceOf(host, deps) {
     instances3.set(host, p3);
     record.declarePurge("provenance", ["register", "origin_declarations", { name: "captured_locators", keys: [] }]);
     p3.joinPromotion();
-    record.registerAuditCheck("provenance", ({ raw }) => registerChecks(imageForChecks(raw)));
+    record.registerAuditCheck("provenance", ({ raw }) => registerChecks({ ...imageForChecks(raw), resolve: p3.containerResolver() }));
     record.registerCounts("provenance", ["register"], (hid) => p3.counts(hid));
   }
   return p3;
@@ -29397,9 +29776,9 @@ function derInteger(bytes2) {
 }
 var derIntegerSmall = (n) => derInteger(new Uint8Array([n]));
 var OID_SHA256 = new Uint8Array([6, 9, 96, 134, 72, 1, 101, 3, 4, 2, 1]);
-var hexToBytes = (hex7) => {
-  const out = new Uint8Array(hex7.length / 2);
-  for (let i = 0; i < out.length; i++) out[i] = parseInt(hex7.substr(i * 2, 2), 16);
+var hexToBytes = (hex9) => {
+  const out = new Uint8Array(hex9.length / 2);
+  for (let i = 0; i < out.length; i++) out[i] = parseInt(hex9.substr(i * 2, 2), 16);
   return out;
 };
 function timestampRequest(sha256Hex15, nonceBytes) {
@@ -29499,7 +29878,7 @@ var ATTEST_CHECKS = {
   CAPTURE_HELD_IN_PARTS: {
     check: "C-89.1",
     where: "src/attestation/index.mjs attest > is-attest-parts",
-    translation: "The record lists this document, but keeps it in parts rather than as one file, and this instance has no record of fetching it itself. A timestamp is only requested for bytes this instance can vouch for, so none was requested. Nothing is missing: do not capture the document again. If the instance fetches it from its address, it can then be co-attested."
+    translation: "The record lists this document, but keeps it in parts rather than as one file, and your group's Civicsmith has no record of fetching it itself. A timestamp is only requested for bytes your group's Civicsmith can vouch for, so none was requested. Nothing is missing: do not capture the document again. If your group's Civicsmith fetches it from its address, it can then be co-attested."
   }
 };
 
@@ -29536,10 +29915,10 @@ function migrateAttestation(sql) {
 }
 
 // src/attestation/ops.mjs
-async function attestOp(req, env, store, { json: json17, doAnswer: doAnswer2, storageAbsent: storageAbsent2, captureKey: captureKey2, storeName, cls: cls3 }) {
-  if (req.method !== "POST") return json17({ ok: false, error: "attest is a POST" }, 405);
+async function attestOp(req, env, store, { json: json18, doAnswer: doAnswer2, storageAbsent: storageAbsent2, captureKey: captureKey2, storeName, cls: cls3 }) {
+  if (req.method !== "POST") return json18({ ok: false, error: "attest is a POST" }, 405);
   if (typeof env.CAPTURES?.put !== "function")
-    return storageAbsent2("attest", "this instance has no evidence storage configured");
+    return storageAbsent2("attest", "your group's Civicsmith has no evidence storage configured");
   const body = await req.json().catch(() => null);
   const attested = await attest(body || {}, {
     head: (sha2) => env.CAPTURES.head(captureKey2(storeName, sha2)),
@@ -29550,7 +29929,7 @@ async function attestOp(req, env, store, { json: json17, doAnswer: doAnswer2, st
       return hOut.answered ? hOut.result : null;
     }
   });
-  return json17({ ...attested, store: storeName, tokenClass: cls3 }, attestStatus(attested));
+  return json18({ ...attested, store: storeName, tokenClass: cls3 }, attestStatus(attested));
 }
 
 // src/attestation/index.mjs
@@ -29574,7 +29953,7 @@ var actRefusal2 = (code, detail, extra) => {
   const row9 = PROVENANCE_ACT_CHECKS[code];
   return { ok: false, reason: code, code, check: row9.check, translation: row9.translation, detail, ...extra || {} };
 };
-async function attest(body, { head, put: put2, fetch: fetchFn, holds, now = () => (/* @__PURE__ */ new Date()).toISOString() } = {}) {
+async function attest(body, { head, put: put2, fetch: fetchFn, holds: holds2, now = () => (/* @__PURE__ */ new Date()).toISOString() } = {}) {
   const sha2 = typeof body?.sha256 === "string" ? body.sha256.toLowerCase() : "";
   if (!/^[0-9a-f]{64}$/.test(sha2))
     return { ok: false, reason: "BAD_SHA", detail: "attest takes the sha256 of a capture already in the store" };
@@ -29582,7 +29961,7 @@ async function attest(body, { head, put: put2, fetch: fetchFn, holds, now = () =
   if (!await head(sha2)) {
     let holdsAnswer = null;
     try {
-      holdsAnswer = typeof holds === "function" ? await holds(sha2) : null;
+      holdsAnswer = typeof holds2 === "function" ? await holds2(sha2) : null;
     } catch {
       holdsAnswer = null;
     }
@@ -29590,7 +29969,7 @@ async function attest(body, { head, put: put2, fetch: fetchFn, holds, now = () =
       held2 = {
         form: "parts",
         on: "acquisition_receipt",
-        detail: "no object is stored under this hash, because the document was captured in parts and only its parts are stored, each under its own hash. This plane hashed the whole document as it arrived and recorded that receipt, which is what this attestation rests on."
+        detail: "no object is stored under this hash, because the document was captured in parts and only its parts are stored, each under its own hash. Your group's Civicsmith hashed the whole document as it arrived and recorded that receipt, which is what this attestation rests on."
       };
     } else {
       if (holdsAnswer && holdsAnswer.registered === true)
@@ -29601,12 +29980,12 @@ async function attest(body, { head, put: put2, fetch: fetchFn, holds, now = () =
           check: ATTEST_CHECKS.CAPTURE_HELD_IN_PARTS.check,
           translation: ATTEST_CHECKS.CAPTURE_HELD_IN_PARTS.translation,
           sha256: sha2,
-          detail: "the record's register names these bytes, but no object is stored under this hash and this plane holds no receipt of having acquired them, which is the shape of a document kept only in parts. A register row is written from what the promoting caller named, so a timestamp is not rested on it alone. Nothing here says the bytes are missing."
+          detail: "the record's register names these bytes, but no object is stored under this hash and your group's Civicsmith holds no receipt of having acquired them, which is the shape of a document kept only in parts. A register row is written from what the promoting caller named, so a timestamp is not rested on it alone. Nothing here says the bytes are missing."
         };
       return {
         ok: false,
         reason: "NO_SUCH_CAPTURE",
-        detail: holdsAnswer ? "no object is stored under that hash, the register holds no row for it under a record that exists, and this plane holds no receipt of having acquired it" : "no object is stored under that hash, and the store could not be asked whether its register or an acquisition receipt names it, so this is not a finding that the record lacks the bytes"
+        detail: holdsAnswer ? "no object is stored under that hash, the register holds no row for it under a record that exists, and your group's Civicsmith holds no receipt of having acquired it" : "no object is stored under that hash, and the store could not be asked whether its register or an acquisition receipt names it, so this is not a finding that the record lacks the bytes"
       };
     }
   }
@@ -29703,7 +30082,7 @@ async function attest(body, { head, put: put2, fetch: fetchFn, holds, now = () =
         bytes: token.length,
         over: sha2
       },
-      note: "A trusted timestamp over the capture hash. Anyone can check it with openssl ts -verify against the authority's certificate; this plane obtains and stores it, and does not claim to have verified the signature.",
+      note: "A trusted timestamp over the capture hash. Anyone can check it with openssl ts -verify against the authority's certificate; your group's Civicsmith obtains and stores it, and does not claim to have verified the signature.",
       ...held2 ? { held: held2 } : {}
     } : {
       reason: "NO_ATTESTATION",
@@ -29734,7 +30113,7 @@ sha256: ${captureSha}
 }
 var noKey = () => actRefusal2(
   "RECEIPT_NO_KEY",
-  "this instance holds no receipt-signing key it can read, so nothing is signed. The operator binds one as a secret; nothing is claimed signed until then"
+  "your group's Civicsmith holds no receipt-signing key it can read, so nothing is signed. Whoever hosts your group's Civicsmith sets one as a secret; nothing is claimed signed until then"
 );
 var Attestation = class {
   #sql;
@@ -29767,33 +30146,77 @@ var Attestation = class {
    *  `at` is the instant of the entry's matching attempt, when the entry recorded one. It asks no authority and
    *  verifies no token's signature, and says so. An empty list is the earned "none recorded" only when the home's
    *  register was read; with no home (a capture registered only by its parts has none under the whole's digest) or an
-   *  unreadable register the answer is `undetermined`, with why (provenance R37). */
+   *  unreadable register the answer is `undetermined`, with why (provenance R37).
+   *
+   *  N688 · K1852 (1): a file cut out of a captured archive carries the archive's co-attestation unchanged. When an
+   *  entry naming the capture states `capture.method: "unpacked"` with a `container` block (provenance R42), the same
+   *  read is applied to `container.archive_sha256`, and to that archive's own archive in turn, through at most
+   *  `ARCHIVE_DEPTH_MAX` archives (ooxml R30). Each of an archive's attestations is answered as its entry states it,
+   *  with `inherited: {from, through}`: `from` the archive whose entry records it, `through` the entry indexes from
+   *  that archive down to this capture, outermost first (the shape of provenance R59's `archive.through`). The
+   *  capture's own come first and carry no `inherited`. A chain past the bound, an archive whose register cannot be
+   *  read, or a container block that names no archive, is stated in `undetermined` beside what was read. */
   attestationsOf(captureSha) {
     const s = bareSha2(captureSha);
     if (!s || !/^[0-9a-f]{64}$/.test(s))
       return { ok: false, reason: "BAD_SHA", detail: "attestationsOf takes the sha256 of a capture: 64 hex characters" };
-    const note = "read from what the record holds: no timestamp authority or archive was asked, and no token's signature was verified here";
-    const home = this.#provenance.homeOf(s);
-    const answer = (attestations, why) => ({
+    const own5 = this.#recordedFor(s);
+    const out = [...own5.attestations];
+    const why = own5.why ? [own5.why] : [];
+    let unpacked = false;
+    const climb2 = (entries, through, depth) => {
+      for (const d of entries) {
+        if (d.capture.method !== "unpacked") continue;
+        unpacked = true;
+        const c = isObj5(d.container) ? d.container : null;
+        const archive = c ? bareSha2(c.archive_sha256) : null;
+        const index2 = c ? c.index : null;
+        const named = through.length ? `the archive above it (through entries ${through.join(", ")})` : "this capture";
+        if (!archive || !/^[0-9a-f]{64}$/.test(archive) || !Number.isInteger(index2) || index2 < 0) {
+          why.push(`the record states ${named} was cut out of an archive, but its container block names no archive digest of 64 hex and whole entry index, so whose attestations it carries cannot be read`);
+          continue;
+        }
+        const path = [index2, ...through];
+        if (depth >= ARCHIVE_DEPTH_MAX) {
+          why.push(`the archives it was cut out of nest deeper than ARCHIVE_DEPTH_MAX (${ARCHIVE_DEPTH_MAX}): the archive ${archive} (through entries ${path.join(", ")}) was not read, so its attestations are not here`);
+          continue;
+        }
+        const above = this.#recordedFor(archive);
+        for (const a of above.attestations) out.push({ ...a, inherited: { from: archive, through: path } });
+        if (above.why) why.push(`for the archive ${archive} it was cut out of (through entries ${path.join(", ")}): ${above.why}`);
+        climb2(above.entries, path, depth + 1);
+      }
+    };
+    climb2(own5.entries, [], 0);
+    const note = "read from what the record holds: no timestamp authority or archive was asked, and no token's signature was verified here" + (unpacked ? ". This capture was cut out of a captured archive: an attestation marked inherited is the archive's, recorded for the archive named in `from`, and its token proves the archive existed at its instant, and so every byte cut out of it" : "");
+    return {
       ok: true,
       sha256: s,
-      registered: !!home,
-      attestations,
-      ...why ? { undetermined: why } : {},
+      registered: own5.registered,
+      attestations: out,
+      ...why.length ? { undetermined: why.join("; ") } : {},
       note
-    });
+    };
+  }
+  /* One capture's record, as R7 reads it: whether a register row names it under an existing bundle, the document
+     entries of its home's register that name it (each with a `capture` block), the attestations those entries state,
+     each naming its bundle and path, and why the answer is undetermined, when it is. Reads only; never throws. */
+  #recordedFor(s) {
+    const home = this.#provenance.homeOf(s);
+    const none = (why) => ({ registered: !!home, entries: [], attestations: [], why });
     if (!home)
-      return answer([], "no register row names this capture under a record that exists, so the record states no attestation for it; a capture registered only by its parts is named by their digests, not the whole's");
+      return none("no register row names this capture under a record that exists, so the record states no attestation for it; a capture registered only by its parts is named by their digests, not the whole's");
     const PATH = "data/provenance.json";
     const f17 = this.#record.readFile(home.bundleId, PATH);
-    if (!f17) return answer([], `its home ${home.bundleId} carries no ${PATH}`);
-    if (typeof f17.text !== "string") return answer([], `its home's ${PATH} is held as a blob, which cannot be read here`);
+    if (!f17) return none(`its home ${home.bundleId} carries no ${PATH}`);
+    if (typeof f17.text !== "string") return none(`its home's ${PATH} is held as a blob, which cannot be read here`);
     const reg = safeJson2(f17.text);
-    if (!isObj5(reg) || !Array.isArray(reg.documents)) return answer([], `its home's ${PATH} cannot be read as a register`);
+    if (!isObj5(reg) || !Array.isArray(reg.documents)) return none(`its home's ${PATH} cannot be read as a register`);
     const str39 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
-    const out = [];
+    const entries = [], out = [];
     for (const d of reg.documents) {
       if (!isObj5(d) || !isObj5(d.capture) || bareSha2(d.capture.sha256) !== s) continue;
+      entries.push(d);
       const tries = Array.isArray(d.attestation_attempts) ? d.attestation_attempts.filter(isObj5) : [];
       const when = (match) => {
         const a = tries.find(match);
@@ -29832,7 +30255,7 @@ var Attestation = class {
           ...where
         });
     }
-    return answer(out, null);
+    return { registered: true, entries, attestations: out, why: null };
   }
   /* ===================================================================== *
    * R4 · K59: THE INSTANCE SIGNS ITS OWN RECEIPT FOR AN ARCHIVE-SOURCED CAPTURE (ARCHIVE-FALLBACK §Shape on the
@@ -29978,13 +30401,875 @@ function attestationOf(host, deps) {
   return a;
 }
 
+// src/acquisition/unpack.mjs
+var UNPACK_CALL_ENTRIES = 100;
+var UNPACK_CALL_BYTES = 67108864;
+var UNPACK_DAILY_BYTES = 1073741824;
+var UNPACK_DAILY_ENTRIES = 4e4;
+var UNPACK_LIMITS = Object.freeze({ UNPACK_CALL_ENTRIES, UNPACK_CALL_BYTES, UNPACK_DAILY_BYTES, UNPACK_DAILY_ENTRIES });
+var PART = 8 * 1024 * 1024;
+var LIST_DEFAULT = 200;
+var LIST_MAX = 1e3;
+var LINK_TARGET_MAX = 4096;
+var HEX644 = /^[0-9a-f]{64}$/;
+var stampSecond = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
+var dayOf = (when = Date.now()) => new Date(when).toISOString().slice(0, 10);
+var hex4 = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+var shaOf = (v) => typeof v === "string" && HEX644.test(v.toLowerCase()) ? v.toLowerCase() : null;
+var json = (v) => {
+  try {
+    return v == null ? null : JSON.parse(v);
+  } catch {
+    return null;
+  }
+};
+var FIGURES = Object.freeze({ ...ARCHIVE_LIMITS, ...UNPACK_LIMITS });
+function rowed(code, extra = {}) {
+  const row9 = ARCHIVE_CHECKS[code];
+  const limit = Object.prototype.hasOwnProperty.call(FIGURES, code) ? { limit: FIGURES[code] } : {};
+  return row9 ? { reason: code, code, check: row9.check, translation: row9.translation, ...limit, ...extra } : { reason: code, code, ...limit, ...extra };
+}
+var refuse = (code, extra = {}) => ({ ok: false, ...rowed(code, extra) });
+var NOT_CUT = Object.freeze(["MEMBER_ENCRYPTED", "MEMBER_METHOD_UNSUPPORTED", "MEMBER_AMBIGUOUS", "MEMBER_MAX", "ARCHIVE_RATIO_MAX"]);
+var FORMAT_MEDIA_TYPES = Object.freeze({
+  html: "text/html",
+  pdf: "application/pdf",
+  csv: "text/csv",
+  zip: "application/zip",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  odt: "application/vnd.oasis.opendocument.text",
+  ods: "application/vnd.oasis.opendocument.spreadsheet",
+  odp: "application/vnd.oasis.opendocument.presentation"
+});
+function partsSource(ev, parts) {
+  const starts = [];
+  let size = 0;
+  for (const p3 of parts) {
+    starts.push(size);
+    size += p3.bytes;
+  }
+  const cache = /* @__PURE__ */ new Map();
+  const load = async (i) => {
+    if (cache.has(i)) return cache.get(i);
+    const o = await ev.get(parts[i].sha256);
+    if (!o) throw new Error("a part is no longer held");
+    const b = new Uint8Array(await o.arrayBuffer());
+    if (b.length !== parts[i].bytes) throw new Error("a part's size changed");
+    if (cache.size >= 2) cache.delete(cache.keys().next().value);
+    cache.set(i, b);
+    return b;
+  };
+  return {
+    size,
+    async read(offset, length) {
+      if (!(offset >= 0 && length >= 0 && offset + length <= size)) throw new Error("out of range");
+      const out = new Uint8Array(length);
+      let at34 = 0;
+      while (at34 < length) {
+        const pos = offset + at34;
+        let i = starts.length - 1;
+        while (i > 0 && starts[i] > pos) i--;
+        const b = await load(i);
+        const from = pos - starts[i], take = Math.min(b.length - from, length - at34);
+        out.set(b.subarray(from, from + take), at34);
+        at34 += take;
+      }
+      return out;
+    }
+  };
+}
+async function storeChunks(ev, chunks) {
+  const whole2 = createSha256();
+  const parts = [];
+  let held2 = [], heldBytes = 0, total2 = 0;
+  const flush = async (all) => {
+    while (heldBytes >= PART || all && heldBytes > 0) {
+      const n = Math.min(PART, heldBytes);
+      const buf = new Uint8Array(n);
+      let at34 = 0;
+      while (at34 < n) {
+        const c = held2[0], take = Math.min(c.length, n - at34);
+        buf.set(c.subarray(0, take), at34);
+        at34 += take;
+        if (take === c.length) held2.shift();
+        else held2[0] = c.subarray(take);
+      }
+      heldBytes -= n;
+      const psha = hex4(await crypto.subtle.digest("SHA-256", buf));
+      if (!await ev.head(psha)) await ev.put(psha, buf);
+      parts.push({ sha256: psha, bytes: n });
+    }
+  };
+  for await (const c of chunks) {
+    whole2.update(c);
+    total2 += c.length;
+    held2.push(c);
+    heldBytes += c.length;
+    if (heldBytes >= PART) await flush(false);
+  }
+  await flush(true);
+  if (!parts.length) {
+    const e2 = new Uint8Array(0), esha = hex4(await crypto.subtle.digest("SHA-256", e2));
+    if (!await ev.head(esha)) await ev.put(esha, e2);
+    parts.push({ sha256: esha, bytes: 0 });
+  }
+  return { sha256: whole2.hex(), bytes: total2, parts };
+}
+var ACQUISITION_TABLES = Object.freeze([
+  Object.freeze({
+    name: "archive_entries",
+    keys: Object.freeze([]),
+    purge: "clear",
+    expunge: "none",
+    export: "yes",
+    sight: "source",
+    derive: "stored",
+    version_chain: false
+  }),
+  Object.freeze({
+    name: "unpack_days",
+    purge: "exempt",
+    expunge: "none",
+    export: "never",
+    sight: "group",
+    derive: "stored",
+    version_chain: false
+  })
+]);
+var SCHEMA = `
+CREATE TABLE IF NOT EXISTS archive_entries (
+  archive_sha TEXT NOT NULL, idx INTEGER NOT NULL,
+  name TEXT, name_raw TEXT, name_encoding TEXT, name_shared INTEGER, path_unsafe INTEGER, kind TEXT, dos_time TEXT,
+  uncompressed INTEGER, verdict TEXT,
+  state TEXT NOT NULL, code TEXT, detail TEXT, limit_name TEXT, sha256 TEXT, target TEXT, at TEXT,
+  depth INTEGER, root_sha TEXT, address TEXT, address_norm TEXT, origin TEXT, parts TEXT, entries INTEGER,
+  declared_total INTEGER, bytes INTEGER, tree_entries INTEGER, tree_bytes INTEGER,
+  PRIMARY KEY (archive_sha, idx));
+CREATE INDEX IF NOT EXISTS archive_entries_sha ON archive_entries(sha256);
+CREATE TABLE IF NOT EXISTS unpack_days (day TEXT PRIMARY KEY, entries INTEGER NOT NULL, bytes INTEGER NOT NULL)`;
+var CO_ARCHIVE_SETTING = "co_archive";
+var instances5 = /* @__PURE__ */ new WeakMap();
+var byRecord = /* @__PURE__ */ new WeakMap();
+var Acquisition = class {
+  #sql;
+  #record;
+  #provenance;
+  #membership;
+  constructor({ storage, record, provenance = null, membership = null }) {
+    this.#sql = storage.sql;
+    this.#record = record;
+    this.#provenance = provenance;
+    this.#membership = membership;
+  }
+  migrate() {
+    for (const t2 of SCHEMA.split(";")) if (t2.trim()) this.#sql.exec(t2);
+  }
+  #rows(q10, ...a) {
+    return [...this.#sql.exec(q10, ...a)];
+  }
+  #one(q10, ...a) {
+    const r = this.#rows(q10, ...a);
+    return r.length ? r[0] : null;
+  }
+  #tx(fn) {
+    return this.#record && typeof this.#record.transact === "function" ? this.#record.transact(fn) : fn();
+  }
+  get record() {
+    return this.#record;
+  }
+  get provenance() {
+    return this.#provenance;
+  }
+  /* ---- R38's record of each entry's outcome ---- */
+  header(archiveSha) {
+    return this.#one(`SELECT * FROM archive_entries WHERE archive_sha=? AND idx=-1`, archiveSha);
+  }
+  entryRows(archiveSha) {
+    return this.#rows(`SELECT * FROM archive_entries WHERE archive_sha=? AND idx>=0 ORDER BY idx`, archiveSha);
+  }
+  /** R38: the archive's own row and one `waiting` row per entry of its listing, written once, when it is first opened. */
+  open(archiveSha, { listing, depth, root, address, addressNorm, origin, parts, bytes: bytes2, at: at34 }) {
+    return this.#tx(() => {
+      if (this.header(archiveSha)) return { ok: true, already: true };
+      this.#sql.exec(
+        `INSERT INTO archive_entries (archive_sha, idx, state, at, depth, root_sha, address, address_norm, origin, parts,
+                        entries, declared_total, bytes, tree_entries, tree_bytes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,0,0)`,
+        archiveSha,
+        -1,
+        "opened",
+        at34,
+        depth,
+        root,
+        address,
+        addressNorm,
+        JSON.stringify(origin ?? null),
+        JSON.stringify(parts),
+        listing.count,
+        listing.declared_total,
+        bytes2
+      );
+      for (const e2 of listing.entries)
+        this.#sql.exec(
+          `INSERT INTO archive_entries (archive_sha, idx, name, name_raw, name_encoding, name_shared, path_unsafe, kind,
+                          dos_time, uncompressed, verdict, state) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+          archiveSha,
+          e2.index,
+          e2.name,
+          e2.name_raw,
+          e2.name_encoding,
+          e2.name_shared,
+          e2.path_unsafe ? 1 : 0,
+          e2.kind,
+          e2.dos_time,
+          e2.uncompressed,
+          e2.verdict,
+          "waiting"
+        );
+      return { ok: true };
+    });
+  }
+  /** R38, R40: one entry's outcome, with the call's, the tree's and the day's counts it costs, in one transaction. */
+  settle(archiveSha, index2, { state, code = null, detail = null, sha256: sha2562 = null, target = null, at: at34, cost = null, root = null, day: day2 = null }) {
+    return this.#tx(() => {
+      this.#sql.exec(`UPDATE archive_entries SET state=?, code=?, detail=?, sha256=?, target=?, at=?, limit_name=NULL
+                       WHERE archive_sha=? AND idx=?`, state, code, detail, sha2562, target, at34, archiveSha, index2);
+      if (cost && root)
+        this.#sql.exec(
+          `UPDATE archive_entries SET tree_entries=tree_entries+1, tree_bytes=tree_bytes+? WHERE archive_sha=? AND idx=-1`,
+          cost.bytes,
+          root
+        );
+      if (cost && day2)
+        this.#sql.exec(`INSERT INTO unpack_days (day, entries, bytes) VALUES (?,1,?)
+                         ON CONFLICT(day) DO UPDATE SET entries=entries+1, bytes=bytes+excluded.bytes`, day2, cost.bytes);
+      return { ok: true };
+    });
+  }
+  /** R40, R41: the entries still waiting, marked with the limit or budget they wait on (null: only the next call). */
+  markWaiting(archiveSha, limitName) {
+    return this.#tx(() => {
+      this.#sql.exec(`UPDATE archive_entries SET limit_name=? WHERE archive_sha=? AND idx>=0 AND state='waiting'`, limitName, archiveSha);
+      return { ok: true };
+    });
+  }
+  dayCount(day2) {
+    return this.#one(`SELECT entries, bytes FROM unpack_days WHERE day=?`, day2) || { entries: 0, bytes: 0 };
+  }
+  treeCount(root) {
+    return this.#one(`SELECT tree_entries, tree_bytes FROM archive_entries WHERE archive_sha=? AND idx=-1`, root) || { tree_entries: 0, tree_bytes: 0 };
+  }
+  /** R38: whether the record holds these bytes as a file an archive filed (`provenance` R2's one home, read beside it). */
+  filedBefore(sha2) {
+    return !!this.#one(`SELECT 1 AS x FROM archive_entries WHERE sha256=? AND idx>=0 AND state='filed' LIMIT 1`, sha2);
+  }
+  /** R41: every archive a capture was filed from or found in, from R38's records; `[]` for none. Writes nothing, never
+   *  throws. */
+  memberOf(captureSha) {
+    try {
+      const s = shaOf(captureSha);
+      if (!s) return [];
+      return this.#rows(`SELECT archive_sha, idx FROM archive_entries WHERE sha256=? AND idx>=0 AND state IN ('filed','already_held')
+                          ORDER BY archive_sha, idx`, s).map((r) => ({ archiveSha: r.archive_sha, index: r.idx }));
+    } catch {
+      return [];
+    }
+  }
+  /** R40: where an archive stands in its unpack tree: its depth (the outermost at 1) and its outermost archive, from its
+   *  own row, else from the archive it was cut from (the shallowest one, when several hold it), else the outermost. */
+  placeOf(archiveSha) {
+    const h = this.header(archiveSha);
+    if (h) return { depth: h.depth, root: h.root_sha };
+    let best = null;
+    for (const p3 of this.memberOf(archiveSha)) {
+      const ph = this.header(p3.archiveSha);
+      const d = ph ? ph.depth : 1;
+      if (!best || d < best.depth) best = { depth: d, root: ph ? ph.root_sha : p3.archiveSha };
+    }
+    return best ? { depth: best.depth + 1, root: best.root } : { depth: 1, root: archiveSha };
+  }
+  /** R39: the archive's document address, as its own acquisition receipt recorded it (provenance R48's read contract on
+   *  `captured_locators`): a fetched receipt before a file's own `unpacked` one, the earliest first. */
+  addressOf(archiveSha) {
+    try {
+      const r = this.#one(`SELECT address, address_norm FROM captured_locators WHERE capture_sha=?
+                            ORDER BY CASE WHEN via=? THEN 1 ELSE 0 END, first_retrieved, address_norm LIMIT 1`, archiveSha, UNPACKED_VIA);
+      return r ? { address: r.address, addressNorm: r.address_norm } : null;
+    } catch {
+      return null;
+    }
+  }
+  /** R41: whether `viewer` may see `bundleId`, by membership's one rule (its R43), asked over record-core's `bundles`. */
+  sees(viewer, bundleId) {
+    const gate = viewerPredicate(viewer);
+    if (gate.scope === "DENY") return false;
+    if (gate.scope === "member") return true;
+    try {
+      return !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, bundleId, ...gate.args);
+    } catch {
+      return false;
+    }
+  }
+  /* ---- R43: the group's co-archive setting ---- */
+  /** R43: `{on, set_by, set_at}`; on (K60's default) with `set_by` and `set_at` null while never set. Writes nothing, never
+   *  throws. */
+  coArchiveState() {
+    return coArchiveStateOf(this.#record);
+  }
+  /** R43: an active administrator's act (membership R64); anyone else, a machine credential included, is refused through
+   *  `notAnAdmin` (its R84); an `on` that is not a boolean is refused with its row. A refusal records nothing. */
+  coArchiveSet({ on, by } = {}) {
+    const who2 = typeof by === "string" ? by : null;
+    const admin = who2 && !isMachineIdentity(who2) && this.#membership && typeof this.#membership.isAdministrator === "function" ? this.#membership.isAdministrator(who2.replace(/^member:/, "")) : false;
+    if (!admin) return notAnAdmin(by ?? null, "set whether your group's captures ask a public archive for a copy");
+    if (typeof on !== "boolean")
+      return refuse("CO_ARCHIVE_SETTING_INVALID", {
+        on: on === void 0 ? null : typeof on,
+        detail: "the setting is true (on) or false (off); nothing was recorded"
+      });
+    const at34 = stampSecond();
+    const r = this.#record.setSetting(CO_ARCHIVE_SETTING, { on, set_by: who2, set_at: at34 }, who2);
+    if (r && r.ok === false) return r;
+    return { ok: true, on, set_by: who2, set_at: at34 };
+  }
+  /* ---- R38–R41: the act and the read, through this instance ---- */
+  unpack(store, args) {
+    return unpack({ ...store, acquisition: this }, args);
+  }
+  archiveList(args) {
+    return archiveList(this, args);
+  }
+};
+function coArchiveStateOf(record) {
+  let v = null;
+  try {
+    v = record && typeof record.getSetting === "function" ? record.getSetting(CO_ARCHIVE_SETTING) : null;
+  } catch {
+    v = null;
+  }
+  if (v && typeof v === "object" && typeof v.on === "boolean")
+    return { on: v.on, set_by: typeof v.set_by === "string" ? v.set_by : null, set_at: typeof v.set_at === "string" ? v.set_at : null };
+  return { on: true, set_by: null, set_at: null };
+}
+function acquisitionOf(host, deps = {}) {
+  const storage = host && host.storage ? host.storage : host;
+  let a = instances5.get(storage);
+  if (!a) {
+    const record = deps.record || recordOf(host);
+    const membership = deps.membership || membershipOf(host, { record });
+    const provenance = deps.provenance || provenanceOf(host, { record, membership });
+    a = new Acquisition({ storage, record, provenance, membership });
+    a.migrate();
+    const d = record.declareTable("acquisition", ACQUISITION_TABLES.map((t2) => ({ ...t2, ...t2.keys ? { keys: [...t2.keys] } : {} })));
+    if (d && d.ok === false && d.reason !== "TABLE_DECLARED")
+      throw new Error(`acquisition: record-core refused its tables: ${d.reason}`);
+    instances5.set(storage, a);
+    byRecord.set(record, a);
+  }
+  return a;
+}
+var instanceOf = (store) => (store && store.acquisition instanceof Acquisition ? store.acquisition : store && store.core && byRecord.get(store.core)) || null;
+function modeOf({ by, cls: cls3, member }, automatic) {
+  if (automatic || cls3 === "daemon") return "automatic";
+  const who2 = typeof by === "string" ? by.trim() : "";
+  if ((cls3 === "member" || member === true) && who2 && !isMachineIdentity(who2)) return "member";
+  return null;
+}
+async function heldParts(inst, store, ev, archiveSha, given2) {
+  const h = inst.header(archiveSha);
+  let parts = h && json(h.parts) || given2 || null;
+  if (!parts) {
+    const whole2 = await ev.head(archiveSha).catch(() => null);
+    if (whole2 && Number.isSafeInteger(Number(whole2.size))) parts = [{ sha256: archiveSha, bytes: Number(whole2.size) }];
+  }
+  if (!parts) {
+    const p3 = store.provenance || inst.provenance;
+    let home = null;
+    try {
+      home = p3 && typeof p3.homeOf === "function" ? p3.homeOf(archiveSha) : null;
+    } catch {
+      home = null;
+    }
+    let named = null;
+    try {
+      named = home && typeof p3.registerHolds === "function" ? (await p3.registerHolds({ sha: archiveSha, bundle: home.bundleId })).parts : null;
+    } catch {
+      named = null;
+    }
+    if (named && named.state === "named") parts = named.parts.map((x) => ({ sha256: x.sha256, bytes: x.bytes }));
+  }
+  if (!Array.isArray(parts) || !parts.length) return { why: "its bytes are not held whole or in parts the record names" };
+  let v;
+  try {
+    v = await partsHeld(ev, (s) => s, parts.map((x, i) => ({ file: `part ${i}`, ...x })));
+  } catch {
+    return { why: "the evidence store could not be read" };
+  }
+  if (v.missing.length || v.disagree.length || v.unverified.length)
+    return { why: `${v.missing.length} part(s) missing, ${v.disagree.length} disagreeing and ${v.unverified.length} unverified` };
+  return { parts };
+}
+async function holds(store, inst, archiveSha) {
+  if (inst.header(archiveSha)) return true;
+  const p3 = store.provenance || inst.provenance;
+  try {
+    const r = p3 && typeof p3.registerHolds === "function" ? await p3.registerHolds({ sha: archiveSha }) : null;
+    return !!(r && (r.registered === true || r.acquired === true));
+  } catch {
+    return false;
+  }
+}
+function listingRefusal(listing) {
+  if (!listing.ok) {
+    if (listing.why === "ARCHIVE_AMBIGUOUS") return rowed("ARCHIVE_AMBIGUOUS", { detail: listing.detail ?? null });
+    if (listing.why === "ARCHIVE_ENTRIES_MAX")
+      return rowed("ARCHIVE_UNREADABLE", { why: "ARCHIVE_ENTRIES_MAX", limit: ARCHIVE_LIMITS.ARCHIVE_ENTRIES_MAX });
+    return rowed("ARCHIVE_UNREADABLE", { why: listing.why ?? "source_unreadable" });
+  }
+  if (listing.verdict === "ARCHIVE_TOTAL_MAX") return rowed("ARCHIVE_TOTAL_MAX");
+  return null;
+}
+function originOf2(inst, archiveSha, given2) {
+  if (given2 && typeof given2 === "object") return given2;
+  const h = inst.header(archiveSha);
+  const kept = h ? json(h.origin) : null;
+  if (kept && typeof kept === "object") return kept;
+  try {
+    const home = inst.provenance && typeof inst.provenance.homeOf === "function" ? inst.provenance.homeOf(archiveSha) : null;
+    const f17 = home && inst.record && typeof inst.record.readFile === "function" ? inst.record.readFile(home.bundleId, "data/provenance.json") : null;
+    const docs = f17 && typeof f17.text === "string" ? json(f17.text)?.documents : null;
+    const d = Array.isArray(docs) ? docs.find((x) => x && x.capture && x.capture.sha256 === archiveSha) : null;
+    if (d && d.origin && typeof d.origin === "object") return d.origin;
+  } catch {
+  }
+  return { kind: "named_request" };
+}
+async function unpack(store, { archiveSha = null, by = null, cls: cls3 = null, member = false } = {}, internal = null) {
+  const st = store || {};
+  const sha2 = shaOf(archiveSha);
+  if (!sha2) return { ok: false, reason: "BAD_SHA", code: "BAD_SHA", detail: "archiveSha names an archive by its SHA-256, 64 hex; nothing was opened" };
+  const mode = modeOf({ by, cls: cls3, member }, !!(internal && internal.automatic));
+  if (!mode) return refuse("UNPACK_NOT_PERMITTED", {
+    cls: cls3 ?? null,
+    detail: "an archive is opened by a member's own request, by the daemon continuing an automatic run, or by the capture that brought it in; nothing was opened"
+  });
+  const inst = instanceOf(st);
+  if (!inst) return {
+    ok: false,
+    reason: "ARCHIVE_RECORD_UNAVAILABLE",
+    code: "ARCHIVE_RECORD_UNAVAILABLE",
+    detail: "the store handed in carries no acquisition instance, so no archive's outcomes can be recorded; nothing was opened"
+  };
+  const core = st.core || inst.record;
+  const ev = core && typeof core.evidenceStore === "function" ? core.evidenceStore() : null;
+  if (!ev) return evidenceStorageAbsent("unpack", "your group's Civicsmith has no evidence storage configured").body;
+  if (!await holds(st, inst, sha2))
+    return refuse("ARCHIVE_NOT_HELD", { archive: sha2, detail: "no acquisition receipt or register row names this archive; nothing was opened" });
+  const held2 = await heldParts(inst, st, ev, sha2, internal && internal.parts);
+  if (!held2.parts) return refuse("ARCHIVE_NOT_HELD", { archive: sha2, detail: `${held2.why}; nothing was opened` });
+  const source2 = partsSource(ev, held2.parts);
+  const listing = await listArchive(source2);
+  const whole2 = listingRefusal(listing);
+  if (whole2) return { ok: false, ...whole2, archive: sha2 };
+  const at34 = stampSecond();
+  const archive = { sha256: sha2, entries: listing.count, declared_total: listing.declared_total };
+  let h = inst.header(sha2);
+  if (!h && inst.placeOf(sha2).depth > ARCHIVE_DEPTH_MAX)
+    return {
+      ok: true,
+      archive,
+      documents: [],
+      already_held: [],
+      not_filed: [],
+      nested: [],
+      waiting: listing.count,
+      complete: listing.count === 0,
+      ...listing.count ? { waiting_on: rowed("ARCHIVE_DEPTH_MAX") } : {}
+    };
+  if (!h) {
+    const place = inst.placeOf(sha2);
+    const addr = internal && internal.address ? { address: internal.address, addressNorm: internal.addressNorm } : inst.addressOf(sha2);
+    const opened2 = inst.open(sha2, {
+      listing,
+      depth: place.depth,
+      root: place.root,
+      address: addr ? addr.address : null,
+      addressNorm: addr ? addr.addressNorm : null,
+      origin: originOf2(inst, sha2, internal && internal.origin),
+      parts: held2.parts,
+      bytes: source2.size,
+      at: at34
+    });
+    if (opened2 && opened2.ok === false) return opened2;
+    h = inst.header(sha2);
+  }
+  const out = { documents: [], already_held: [], not_filed: [], nested: [] };
+  const rowsByIndex = new Map(listing.entries.map((e2) => [e2.index, e2]));
+  const waitingRows = inst.entryRows(sha2).filter((r) => r.state === "waiting");
+  const day2 = dayOf();
+  const call = { entries: 0, bytes: 0 };
+  let stoppedOn = null, stoppedForCall = false;
+  const ctx = {
+    st,
+    inst,
+    ev,
+    sha: sha2,
+    h,
+    at: at34,
+    mode,
+    by,
+    cls: cls3,
+    member,
+    out,
+    source: source2,
+    pv: profileView(core)
+  };
+  if (h.depth > ARCHIVE_DEPTH_MAX) stoppedOn = "ARCHIVE_DEPTH_MAX";
+  for (const r of stoppedOn ? [] : waitingRows) {
+    const row9 = rowsByIndex.get(r.idx);
+    if (!row9) continue;
+    if (row9.verdict === "directory") {
+      inst.settle(sha2, row9.index, { state: "folder", at: at34 });
+      continue;
+    }
+    if (row9.verdict === "symlink") {
+      inst.settle(sha2, row9.index, { state: "link", target: await linkTarget(source2, row9), at: at34 });
+      continue;
+    }
+    if (NOT_CUT.includes(row9.verdict)) {
+      inst.settle(sha2, row9.index, { state: "not_filed", code: row9.verdict, at: at34 });
+      out.not_filed.push({ index: row9.index, ...rowed(row9.verdict) });
+      continue;
+    }
+    if (row9.verdict !== "ok") continue;
+    if (call.entries >= UNPACK_CALL_ENTRIES || call.entries > 0 && call.bytes + row9.uncompressed > UNPACK_CALL_BYTES) {
+      stoppedForCall = true;
+      break;
+    }
+    if (mode === "automatic") {
+      const t2 = inst.treeCount(h.root_sha), d = inst.dayCount(day2);
+      const over = t2.tree_entries + 1 > ARCHIVE_TREE_ENTRIES_MAX ? "ARCHIVE_TREE_ENTRIES_MAX" : t2.tree_bytes + row9.uncompressed > ARCHIVE_TREE_TOTAL_MAX ? "ARCHIVE_TREE_TOTAL_MAX" : d.entries + 1 > UNPACK_DAILY_ENTRIES ? "UNPACK_DAILY_ENTRIES" : d.bytes + row9.uncompressed > UNPACK_DAILY_BYTES ? "UNPACK_DAILY_BYTES" : null;
+      if (over) {
+        stoppedOn = over;
+        break;
+      }
+    }
+    call.entries++;
+    call.bytes += row9.uncompressed;
+    await cutOne(ctx, row9, { bytes: row9.uncompressed, day: day2 });
+  }
+  const left2 = inst.entryRows(sha2).filter((r) => r.state === "waiting").length;
+  inst.markWaiting(sha2, left2 ? stoppedOn : null);
+  if (mode === "automatic" && typeof st.taskEnqueue === "function") {
+    const more = [...left2 && stoppedForCall && !stoppedOn ? [sha2] : [], ...h.depth < ARCHIVE_DEPTH_MAX ? out.nested : []];
+    for (const s of more) {
+      try {
+        await st.taskEnqueue({ kind: "archive-unpack", captureSha: s, subject: s, at: at34 });
+      } catch {
+      }
+    }
+  }
+  return {
+    ok: true,
+    archive,
+    documents: out.documents,
+    already_held: out.already_held,
+    not_filed: out.not_filed,
+    nested: out.nested,
+    waiting: left2,
+    complete: left2 === 0,
+    ...left2 && stoppedOn ? { waiting_on: rowed(stoppedOn) } : {}
+  };
+}
+async function linkTarget(source2, row9) {
+  if (!(row9.uncompressed <= LINK_TARGET_MAX) || row9.encrypted || row9.method !== 0 && row9.method !== 8) return null;
+  try {
+    const { chunks, done } = streamMember(source2, { ...row9, verdict: "ok" });
+    const got = [];
+    for await (const c of chunks) got.push(c);
+    const r = await done;
+    if (!r.ok) return null;
+    const all = new Uint8Array(got.reduce((n, c) => n + c.length, 0));
+    let at34 = 0;
+    for (const c of got) {
+      all.set(c, at34);
+      at34 += c.length;
+    }
+    return new TextDecoder("utf-8", { fatal: true }).decode(all);
+  } catch {
+    return null;
+  }
+}
+async function cutOne(ctx, row9, cost) {
+  const { st, inst, ev, sha: sha2, h, at: at34, out } = ctx;
+  const counted = { cost: { bytes: cost.bytes }, root: h.root_sha, day: cost.day };
+  const { chunks, done } = streamMember(ctx.source, row9);
+  let stored = null;
+  try {
+    stored = await storeChunks(ev, chunks);
+  } catch {
+    stored = null;
+  }
+  const verdict = await done;
+  if (!verdict.ok || !stored || stored.sha256 !== verdict.sha256) {
+    const code = verdict.ok ? "ARCHIVE_UNREADABLE" : verdict.why === "MEMBER_CORRUPT" ? "MEMBER_CORRUPT" : NOT_CUT.includes(verdict.why) ? verdict.why : "ARCHIVE_UNREADABLE";
+    const detail = verdict.ok ? "the evidence store could not hold the file's bytes" : verdict.detail ?? verdict.why ?? null;
+    inst.settle(sha2, row9.index, { state: "not_filed", code, detail, at: at34, ...counted });
+    out.not_filed.push({ index: row9.index, ...rowed(code, { detail }) });
+    return;
+  }
+  const fileSha = stored.sha256;
+  const p3 = st.provenance || inst.provenance;
+  const address = h.address ? `${h.address}#zip:${row9.index}` : null;
+  const receipt = {
+    address,
+    addressNorm: h.address_norm ? `${h.address_norm}#zip:${row9.index}` : null,
+    captureSha: fileSha,
+    retrieved: at34,
+    via: UNPACKED_VIA,
+    retrievalLocator: `zip:${sha2}!${row9.index}`
+  };
+  let registered5 = false;
+  try {
+    registered5 = !!(p3 && typeof p3.registerHolds === "function" && (await p3.registerHolds({ sha: fileSha }))?.registered === true);
+  } catch {
+    registered5 = false;
+  }
+  const before2 = registered5 || inst.filedBefore(fileSha) || out.documents.some((d) => d.capture.sha256 === fileSha);
+  try {
+    await p3?.recordReceipt?.(receipt);
+  } catch {
+  }
+  if (before2) {
+    inst.settle(sha2, row9.index, { state: "already_held", sha256: fileSha, at: at34, ...counted });
+    out.already_held.push({ index: row9.index, sha256: fileSha });
+    return;
+  }
+  const document = await fileDocument(ctx, row9, stored, receipt);
+  inst.settle(sha2, row9.index, { state: "filed", sha256: fileSha, at: at34, ...counted });
+  out.documents.push(document);
+  if (document.profile && document.profile.format && document.profile.format.format === "zip") out.nested.push(fileSha);
+}
+async function fileDocument(ctx, row9, stored, receipt) {
+  const { st, inst, ev, sha: sha2, h, at: at34, mode, by, cls: cls3, member } = ctx;
+  const multipart = stored.parts.length > 1;
+  let ct = null;
+  try {
+    const o = await ev.get(stored.parts[0].sha256);
+    const head = o ? new Uint8Array(await o.arrayBuffer()) : null;
+    const f17 = head ? detectFormat(head, null) : null;
+    ct = f17 && FORMAT_MEDIA_TYPES[f17.format] ? FORMAT_MEDIA_TYPES[f17.format] : null;
+  } catch {
+    ct = null;
+  }
+  const name2 = `zip-${sha2}-${row9.index}`;
+  const profile = await profileOf({
+    ev,
+    sha: stored.sha256,
+    ct,
+    total: stored.bytes,
+    multipart,
+    headers: {},
+    locator: receipt.address,
+    view: ctx.pv,
+    retrieved: at34,
+    origin: "fetch",
+    parts: stored.parts
+  });
+  const p3 = st.provenance || inst.provenance;
+  let g = null;
+  try {
+    g = p3 && typeof p3.captureGrade === "function" ? await p3.captureGrade(stored.sha256) : null;
+  } catch {
+    g = null;
+  }
+  const isMember3 = mode === "member" || cls3 === "member" || member === true;
+  const actor = isMember3 && typeof by === "string" && by && !isMachineIdentity(by) ? by : null;
+  const path = row9.name ?? null;
+  const env = st.env || {};
+  return {
+    file: `snapshots/${name2}`,
+    locator: receipt.address,
+    retrieved: at34,
+    profile,
+    authority_state: "undetermined",
+    authority_basis: `a file cut out of an archive at ${at34}: the cut asserts its bytes and where they sat, never who issued them; the archive's own document states its source`,
+    provenance_chain: [{
+      who: firstHopWho(env.INSTANCE_NAME, env.VERSION),
+      asserts: `these bytes are entry ${row9.index} (${path === null ? "a name that is not valid UTF-8" : path}, the archive's own claim) of the archive ${sha2} held by your group's Civicsmith, cut out and verified by size and CRC-32 at ${at34}`,
+      evidence: `the archive's capture ${sha2}; its central directory and the entry's local header agree on this entry`,
+      bound: false,
+      via: UNPACKED_VIA,
+      archive_sha256: sha2
+    }],
+    capture: {
+      method: UNPACKED_VIA,
+      ...g && g.grade ? { grade: g.grade } : { ...g && g.basis ? { grade_basis: g.basis } : {} },
+      actor_class: isMember3 ? "member" : cls3 === "probe" ? "session" : "daemon",
+      actor,
+      sha256: stored.sha256,
+      encoding: "binary",
+      bytes: stored.bytes,
+      ...ct ? { content_type: ct } : {}
+    },
+    container: {
+      archive_sha256: sha2,
+      index: row9.index,
+      path,
+      name_raw: row9.name_raw,
+      method: row9.method,
+      crc32: row9.crc32,
+      compressed: row9.compressed,
+      uncompressed: row9.uncompressed,
+      local_offset: row9.local_offset,
+      member_sha256: stored.sha256,
+      /* the archive's statement, with no zone, never a fact */
+      dos_time_stated: row9.dos_time ?? null,
+      name_shared: row9.name_shared,
+      path_unsafe: !!row9.path_unsafe
+    },
+    ...multipart ? { parts: stored.parts.map((x, i) => ({ file: `snapshots/${name2}.part${String(i).padStart(3, "0")}`, sha256: x.sha256, bytes: x.bytes })) } : {},
+    origin: json(h.origin) || { kind: "named_request" },
+    attestation_attempts: []
+  };
+}
+function entryOf(r, { limit, refused: refused3, sees }) {
+  const base2 = {
+    index: r.idx ?? r.index,
+    name: r.name ?? null,
+    name_raw: r.name_raw ?? null,
+    name_encoding: r.name_encoding ?? null,
+    name_shared: r.name_shared ?? 1,
+    path_unsafe: !!r.path_unsafe,
+    kind: r.kind ?? null,
+    dos_time_stated: r.dos_time ?? null,
+    uncompressed: r.uncompressed ?? null
+  };
+  if (refused3) return { ...base2, state: "not_filed", ...rowed(refused3.code), ...refused3.detail ? { detail: refused3.detail } : {} };
+  const verdict = r.verdict;
+  const state = r.state || (verdict === "directory" ? "folder" : verdict === "symlink" ? "link" : NOT_CUT.includes(verdict) ? "not_filed" : "waiting");
+  if (state === "filed" || state === "already_held") return { ...base2, state, sha256: r.sha256, bundle: sees(r.sha256) };
+  if (state === "folder") return { ...base2, state };
+  if (state === "link") return { ...base2, state, target: r.target ?? null };
+  if (state === "not_filed") {
+    const code = r.code || verdict;
+    return { ...base2, state, ...rowed(code), ...r.detail ? { detail: r.detail } : {} };
+  }
+  const waitsOn = r.limit_name || limit || null;
+  return { ...base2, state: "waiting", ...waitsOn ? { waiting_on: waitsOn, limit: FIGURES[waitsOn] ?? null } : { waiting_on: null } };
+}
+async function archiveList(instOrStore, { archiveSha = null, viewer = null, state = null, limit = LIST_DEFAULT, after = null } = {}) {
+  const inst = instOrStore instanceof Acquisition ? instOrStore : instanceOf(instOrStore);
+  const sha2 = shaOf(archiveSha);
+  if (!sha2) return { ok: false, reason: "BAD_SHA", code: "BAD_SHA", detail: "archiveSha names an archive by its SHA-256, 64 hex" };
+  if (!inst) return {
+    ok: false,
+    reason: "ARCHIVE_RECORD_UNAVAILABLE",
+    code: "ARCHIVE_RECORD_UNAVAILABLE",
+    detail: "no acquisition instance holds this storage's archive records"
+  };
+  const p3 = inst.provenance;
+  const notHeld2 = () => refuse("ARCHIVE_NOT_HELD", { archive: sha2, detail: "no archive your group holds and you may see answers to that digest" });
+  let home = null;
+  try {
+    home = p3 && typeof p3.homeOf === "function" ? p3.homeOf(sha2) : null;
+  } catch {
+    home = null;
+  }
+  if (viewerPredicate(viewer).scope === "DENY" || home && !inst.sees(viewer, home.bundleId)) return notHeld2();
+  if (!await holds({}, inst, sha2)) return notHeld2();
+  const sees = (s) => {
+    let hh = null;
+    try {
+      hh = s && p3 && typeof p3.homeOf === "function" ? p3.homeOf(s) : null;
+    } catch {
+      hh = null;
+    }
+    return hh && inst.sees(viewer, hh.bundleId) ? hh.bundleId : null;
+  };
+  let g = null;
+  try {
+    g = p3 && typeof p3.captureGrade === "function" ? await p3.captureGrade(sha2) : null;
+  } catch {
+    g = null;
+  }
+  const h = inst.header(sha2);
+  let rows3, refused3 = null, waitLimit = null, bytes2 = null, entries = 0, declaredTotal2 = null;
+  if (h) {
+    rows3 = inst.entryRows(sha2);
+    bytes2 = h.bytes;
+    entries = h.entries;
+    declaredTotal2 = h.declared_total;
+    if (h.depth > ARCHIVE_DEPTH_MAX) waitLimit = "ARCHIVE_DEPTH_MAX";
+  } else {
+    const ev = inst.record && typeof inst.record.evidenceStore === "function" ? inst.record.evidenceStore() : null;
+    const held2 = ev ? await heldParts(inst, {}, ev, sha2, null) : { why: "no evidence storage" };
+    if (!held2.parts) return notHeld2();
+    const source2 = partsSource(ev, held2.parts);
+    const listing = await listArchive(source2);
+    bytes2 = source2.size;
+    refused3 = listingRefusal(listing);
+    rows3 = Array.isArray(listing.entries) ? listing.entries : [];
+    entries = listing.ok ? listing.count : rows3.length;
+    declaredTotal2 = listing.ok ? listing.declared_total : null;
+    if (!refused3 && inst.placeOf(sha2).depth > ARCHIVE_DEPTH_MAX) waitLimit = "ARCHIVE_DEPTH_MAX";
+  }
+  const all = rows3.map((r) => entryOf(r, { limit: waitLimit, refused: refused3, sees }));
+  const summary2 = { filed: 0, already_held: 0, not_filed: 0, folders: 0, links: 0, waiting: 0 };
+  for (const e2 of all) {
+    if (e2.state === "folder") summary2.folders++;
+    else if (e2.state === "link") summary2.links++;
+    else summary2[e2.state]++;
+  }
+  const want = typeof state === "string" && state ? state : null;
+  const lim = Math.min(LIST_MAX, Math.max(1, Number.isFinite(Number(limit)) ? Math.trunc(Number(limit)) : LIST_DEFAULT));
+  const from = Number.isInteger(Number(after)) && after !== null && after !== "" ? Number(after) : -1;
+  const picked = all.filter((e2) => (!want || e2.state === want) && e2.index > from);
+  const page2 = picked.slice(0, lim);
+  const truncated3 = picked.length > page2.length;
+  return {
+    ok: true,
+    archive: {
+      sha256: sha2,
+      bundle: home ? home.bundleId : null,
+      grade: g && g.grade ? g.grade : null,
+      bytes: bytes2,
+      entries,
+      declared_total: declaredTotal2,
+      opened: !!h,
+      refused: refused3 ? {
+        code: refused3.code,
+        check: refused3.check,
+        translation: refused3.translation,
+        ...refused3.why ? { why: refused3.why } : {},
+        ...refused3.detail ? { detail: refused3.detail } : {},
+        ...refused3.limit !== void 0 ? { limit: refused3.limit } : {}
+      } : null
+    },
+    summary: summary2,
+    entries: page2,
+    limit: lim,
+    truncated: truncated3,
+    next: truncated3 ? page2[page2.length - 1].index : null
+  };
+}
+function memberOf(store, captureSha) {
+  try {
+    const inst = store instanceof Acquisition ? store : instanceOf(store);
+    return inst ? inst.memberOf(captureSha) : [];
+  } catch {
+    return [];
+  }
+}
+
 // src/acquisition/keyed.mjs
 var SERVICES = Object.freeze({
   courtlistener: Object.freeze({ host: "www.courtlistener.com", authorization: (key) => `Token ${key}` })
 });
 var KEYED_SERVICE_HOSTS = Object.freeze(Object.fromEntries(Object.entries(SERVICES).map(([k, v]) => [k, v.host])));
 var KEYED_ANSWER_MAX = 8 * 1024 * 1024;
-var refuse = (reason, detail, extra = {}) => ({ ok: false, reason, ...extra, detail });
+var refuse2 = (reason, detail, extra = {}) => ({ ok: false, reason, ...extra, detail });
 var hostOf2 = (u) => {
   try {
     return new URL(u).hostname.toLowerCase();
@@ -30022,20 +31307,29 @@ async function readBounded(res, max = KEYED_ANSWER_MAX) {
   }
   return { text: new TextDecoder("utf-8", { fatal: false }).decode(all) };
 }
-async function keyedFetch(store, { service = null, request = null, purpose = "keyed-service", viewer = void 0 } = {}) {
+async function keyedFetch(store, { service = null, request = null, purpose = "keyed-service", viewer = void 0, ownHosts = null } = {}) {
   const svc = typeof service === "string" && Object.prototype.hasOwnProperty.call(SERVICES, service) ? SERVICES[service] : null;
   if (!svc)
-    return refuse(
+    return refuse2(
       "UNKNOWN_KEYED_SERVICE",
-      `the keyed services this copy speaks to are ${Object.keys(SERVICES).join(", ")}; nothing was fetched`,
+      `the keyed services your group's Civicsmith speaks to are ${Object.keys(SERVICES).join(", ")}; nothing was fetched`,
       { service: typeof service === "string" ? service.slice(0, 40) : null }
     );
   if (viewer !== void 0 && viewer !== null && isMachineIdentity(viewer))
-    return refuse("NOT_PERMITTED", "a keyed outside service is used for a member's or an operator's act, never by a machine credential or the daemon; nothing was fetched", { service });
+    return refuse2("NOT_PERMITTED", "a keyed outside service is used for a member's or an operator's act, never by a machine credential or the daemon; nothing was fetched", { service });
   const r = request && typeof request === "object" ? request : {};
   const method = r.method === void 0 ? "GET" : r.method;
   if (typeof r.url !== "string" || !isPublicHttpsLocator(r.url) || hostOf2(r.url) !== svc.host || method !== "GET" && method !== "POST" || r.form != null && (typeof r.form !== "object" || Object.values(r.form).some((v) => typeof v !== "string")))
-    return refuse("BAD_KEYED_REQUEST", `a keyed request is a GET or POST of a public https address on ${svc.host}, its form a flat set of strings; nothing was fetched`, { service });
+    return refuse2("BAD_KEYED_REQUEST", `a keyed request is a GET or POST of a public https address on ${svc.host}, its form a flat set of strings; nothing was fetched`, { service });
+  const own5 = Array.isArray(ownHosts) ? ownHosts : store && Array.isArray(store.ownHosts) ? store.ownHosts : null;
+  if (own5 && isOwnHost(hostOf2(r.url), own5)) {
+    const row9 = ARCHIVE_CHECKS.OWN_HOST_REFUSED;
+    return refuse2(
+      "OWN_HOST_REFUSED",
+      `${hostOf2(r.url)} is one of your group's own hosts; nothing was fetched`,
+      { code: "OWN_HOST_REFUSED", check: row9.check, translation: row9.translation, service, host: hostOf2(r.url) }
+    );
+  }
   const creds = store && store.credentials && typeof store.credentials.keyedServiceFor === "function" ? store.credentials : null;
   let k = null;
   try {
@@ -30045,7 +31339,7 @@ async function keyedFetch(store, { service = null, request = null, purpose = "ke
   }
   if (!k || k.ok !== true || typeof k.key !== "string" || !k.key) {
     if (k && k.ok === false) return { ...k, service };
-    return refuse(
+    return refuse2(
       "KEYED_SERVICE_OFF",
       "the group's key for this service is off or not held; the caller goes on without it",
       { code: "KEYED_SERVICE_OFF", service }
@@ -30074,18 +31368,18 @@ async function keyedFetch(store, { service = null, request = null, purpose = "ke
       })
     });
   } catch {
-    return refuse("FETCH_FAILED", "the request to the service did not complete; its error is not carried because the group's key rode it", { service });
+    return refuse2("FETCH_FAILED", "the request to the service did not complete; its error is not carried because the group's key rode it", { service });
   }
   if (out.refusedByGovernor)
-    return refuse(
+    return refuse2(
       "HOST_COOLING_OFF",
       `the per-host governor is holding requests to ${svc.host} (${out.reason})`,
       { service, retry_in_ms: out.retry_in_ms || 0 }
     );
   const res = out.res;
   const body = await readBounded(res);
-  if (body.failed) return refuse("FETCH_FAILED", "the service's answer broke off while it was read", { service });
-  if (body.oversize) return refuse("TOO_LARGE", `the service's answer is over ${KEYED_ANSWER_MAX} bytes; it was not read`, { service });
+  if (body.failed) return refuse2("FETCH_FAILED", "the service's answer broke off while it was read", { service });
+  if (body.oversize) return refuse2("TOO_LARGE", `the service's answer is over ${KEYED_ANSWER_MAX} bytes; it was not read`, { service });
   const contentType = (res.headers && res.headers.get("content-type") || "").split(";")[0].trim().toLowerCase() || null;
   const retryAfter = res.headers && res.headers.get("retry-after") || null;
   if (!(res.status >= 200 && res.status < 300))
@@ -30119,17 +31413,18 @@ function serviceAddress(u) {
   }
   return isPublicHttpsLocator(abs) && hostOf2(abs) === SERVICES.courtlistener.host ? abs : null;
 }
-async function citationLookup(store, { text: text7 = null, viewer = null } = {}) {
+async function citationLookup(store, { text: text7 = null, viewer = null, ownHosts = null } = {}) {
   if (typeof viewer !== "string" || !viewer.trim())
-    return refuse("NOT_PERMITTED", "a citation lookup is a member's or an operator's act, and none was named; nothing was sent");
+    return refuse2("NOT_PERMITTED", "a citation lookup is a member's or an operator's act, and none was named; nothing was sent");
   if (typeof text7 !== "string" || !text7.trim())
-    return refuse("BAD_TEXT", "there is no text to look citations up in; nothing was sent");
+    return refuse2("BAD_TEXT", "there is no text to look citations up in; nothing was sent");
   if (text7.length > CITATION_TEXT_MAX)
-    return refuse("TEXT_TOO_LONG", `the service reads at most ${CITATION_TEXT_MAX} characters a request and this text is ${text7.length}; nothing was sent`, { max: CITATION_TEXT_MAX, length: text7.length });
+    return refuse2("TEXT_TOO_LONG", `the service reads at most ${CITATION_TEXT_MAX} characters a request and this text is ${text7.length}; nothing was sent`, { max: CITATION_TEXT_MAX, length: text7.length });
   const k = await keyedFetch(store, {
     service: "courtlistener",
     purpose: "citation-lookup",
     viewer,
+    ownHosts,
     request: { url: CITATION_LOOKUP_URL, method: "POST", form: { text: text7 } }
   });
   if (!k.ok) {
@@ -30160,7 +31455,7 @@ async function citationLookup(store, { text: text7 = null, viewer = null } = {})
     rows3 = null;
   }
   if (!Array.isArray(rows3))
-    return refuse("SERVICE_ANSWER_UNREADABLE", "the service's answer is not the list of citations its documentation describes", { service: "courtlistener" });
+    return refuse2("SERVICE_ANSWER_UNREADABLE", "the service's answer is not the list of citations its documentation describes", { service: "courtlistener" });
   const citations = rows3.filter((x) => x && typeof x === "object").map((x) => ({
     citation: str(x.citation),
     normalized: Array.isArray(x.normalized_citations) ? x.normalized_citations.filter((n) => typeof n === "string") : [],
@@ -30183,10 +31478,10 @@ async function citationLookup(store, { text: text7 = null, viewer = null } = {})
 }
 
 // src/acquisition/index.mjs
-var hex4 = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
-var stampSecond = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
+var hex5 = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+var stampSecond2 = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
 async function sha256Hex6(v) {
-  return hex4(await crypto.subtle.digest("SHA-256", typeof v === "string" ? new TextEncoder().encode(v) : v));
+  return hex5(await crypto.subtle.digest("SHA-256", typeof v === "string" ? new TextEncoder().encode(v) : v));
 }
 var driveRow = (code) => {
   const row9 = DRIVE_CAPTURE_CHECKS[code];
@@ -30647,7 +31942,7 @@ function governedCall(cap, purpose) {
     return res;
   };
 }
-async function coAttest(cap, { sha: sha2, locator, via, ev }) {
+async function coAttest(cap, { sha: sha2, locator, via, ev, coArchive = { on: true, by: "group" } }) {
   const p3 = cap.provenance;
   const recorded = (a) => ({
     ...a,
@@ -30656,10 +31951,19 @@ async function coAttest(cap, { sha: sha2, locator, via, ev }) {
     ok: a.ok === true,
     ...typeof a.attempted === "string" ? { at: a.attempted } : {}
   });
-  const notAsked = (why) => [{ service: "attest", attempted: false, ok: false, at: stampSecond(), note: why }];
+  const notAsked = (why) => [{ service: "attest", attempted: false, ok: false, at: stampSecond2(), note: why }];
+  const coNotAsked = via !== "archive.org" && !coArchive.on ? [{
+    service: "co_archive",
+    kind: "co_archive",
+    attempted: false,
+    ok: false,
+    asked: false,
+    by: coArchive.by,
+    note: coArchive.by === "member" ? "the capturing member chose no co-archive for this capture" : "your group's setting asks no co-archive at capture"
+  }] : [];
   try {
     const out = await attest(
-      { sha256: sha2, archive: via !== "archive.org", locator },
+      { sha256: sha2, archive: via !== "archive.org" && coArchive.on, locator },
       {
         head: (s) => ev.head(s),
         put: (s, b) => ev.put(s, b),
@@ -30668,9 +31972,9 @@ async function coAttest(cap, { sha: sha2, locator, via, ev }) {
       }
     );
     const attempts = Array.isArray(out && out.attempts) ? out.attempts.filter((a) => a && typeof a === "object") : [];
-    return attempts.length ? attempts.map(recorded) : notAsked(String(out && (out.reason || out.note || out.detail) || "no attempt was reported"));
+    return [...attempts.length ? attempts.map(recorded) : notAsked(String(out && (out.reason || out.note || out.detail) || "no attempt was reported")), ...coNotAsked];
   } catch (e2) {
-    return notAsked(String(e2 && e2.message || e2).slice(0, 200));
+    return [...notAsked(String(e2 && e2.message || e2).slice(0, 200)), ...coNotAsked];
   }
 }
 function evidenceStorageAbsent(op, error, { code = true } = {}) {
@@ -30685,12 +31989,43 @@ function evidenceStorageAbsent(op, error, { code = true } = {}) {
     op
   } : { ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", check: row9.check, translation: row9.translation, op, error } };
 }
-async function acquire(cap, body0, { cls: cls3 = null, member = false, sessMember = null, storeName = "bio", captureRequest = null } = {}) {
+var ownHostsOf = (cap, given2) => Array.isArray(given2) ? given2 : cap && Array.isArray(cap.ownHosts) ? cap.ownHosts : null;
+var hostnameOf = (u) => {
+  try {
+    return new URL(u).hostname.toLowerCase();
+  } catch {
+    return null;
+  }
+};
+var onOwnHost = (u, ownHosts) => !!ownHosts && isOwnHost(hostnameOf(u), ownHosts);
+function ownHostRefused(locator, extra = {}) {
+  const row9 = ARCHIVE_CHECKS.OWN_HOST_REFUSED;
+  return {
+    ok: false,
+    reason: "OWN_HOST_REFUSED",
+    code: "OWN_HOST_REFUSED",
+    check: row9.check,
+    translation: row9.translation,
+    host: hostnameOf(locator),
+    locator,
+    ...extra,
+    detail: `${hostnameOf(locator)} is one of your group's own hosts; nothing was fetched or filed`
+  };
+}
+async function acquire(cap, body0, {
+  cls: cls3 = null,
+  member = false,
+  sessMember = null,
+  storeName = "bio",
+  captureRequest = null,
+  ownHosts = null
+} = {}) {
   const body = body0 && typeof body0 === "object" ? { ...body0 } : {};
   const answer = (status, b) => ({ status, body: b });
   const op = "acquire";
+  const own5 = ownHostsOf(cap, ownHosts);
   const ev = cap.core && typeof cap.core.evidenceStore === "function" ? cap.core.evidenceStore() : null;
-  if (!ev) return evidenceStorageAbsent(op, "this instance has no evidence storage configured", { code: false });
+  if (!ev) return evidenceStorageAbsent(op, "your group's Civicsmith has no evidence storage configured", { code: false });
   if (!captureRequest && body.via === "capture-request") {
     const row9 = CAPTURE_REQUEST_ARM_CHECKS.CAPTURE_NOT_DRAINING;
     return answer(403, {
@@ -30702,7 +32037,7 @@ async function acquire(cap, body0, { cls: cls3 = null, member = false, sessMembe
       cls: cls3,
       request: body.request ?? null,
       op,
-      detail: "this instance fetches a requested document only from inside its own drain, and a request cannot reach that arm from outside. The AI does not capture: it REQUESTS, and the daemon captures with provenance preserved (DEC-47's structural gate, DEC-60). Write a request and let the drain make it."
+      detail: "your group's Civicsmith fetches a requested document only from inside its own drain, and a request cannot reach that arm from outside. The AI does not capture: it REQUESTS, and the daemon captures with provenance preserved (DEC-47's structural gate, DEC-60). Write a request and let the drain make it."
     });
   }
   if (cls3 === "daemon" && body.via !== "archive.org" && !captureRequest)
@@ -30779,7 +32114,7 @@ async function acquire(cap, body0, { cls: cls3 = null, member = false, sessMembe
         ...driveRow("DRIVE_HOP_FACT_SUPPLIED"),
         op,
         supplied: supplied2,
-        detail: `this request carried ${supplied2.map((k) => `\`${k}\``).join(", ")}. The export address, the export format and the producer are DERIVED by this instance from the file id and the kind in the address, at the moment it performs the fetch, and are never read from a request. A provenance hop a caller can hand us is a provenance hop a caller can invent (D-112), and the whole value of a disclosed chain is that the disclosure is ours. Send the Drive link alone.`
+        detail: `this request carried ${supplied2.map((k) => `\`${k}\``).join(", ")}. The export address, the export format and the producer are DERIVED by your group's Civicsmith from the file id and the kind in the address, at the moment it performs the fetch, and are never read from a request. A provenance hop a caller can hand us is a provenance hop a caller can invent (D-112), and the whole value of a disclosed chain is that the disclosure is ours. Send the Drive link alone.`
       });
     const drive = readDriveAddress(body.locator);
     if (drive) {
@@ -30832,9 +32167,10 @@ async function acquire(cap, body0, { cls: cls3 = null, member = false, sessMembe
       reason: "BAD_LOCATOR",
       detail: "a locator must be https on a public host: no bare IP address, no localhost, no credentials in the address"
     });
-  if (session) return continueCapture(cap, { body, session, cls: cls3, storeName, ev });
+  if (!archiveAsked && !session && onOwnHost(locator, own5)) return answer(403, { ...ownHostRefused(locator), op });
+  if (session) return continueCapture(cap, { body, session, cls: cls3, storeName, ev, own: own5 });
   const authorityAsserted = typeof body.authority === "string" && body.authority.trim() ? body.authority.trim() : null;
-  const retrieved = stampSecond();
+  const retrieved = stampSecond2();
   const pv = profileView(cap.core);
   const renderAsked = Object.prototype.hasOwnProperty.call(body, "render") && body.render !== false;
   let renderer = null, renderReserved = 0, renderSlot = null;
@@ -30910,7 +32246,7 @@ async function acquire(cap, body0, { cls: cls3 = null, member = false, sessMembe
         ...renderRow("RENDER_AT_CAPACITY"),
         op,
         render: { state: "waiting", content: "undetermined", running: adm.running, cap: adm.cap },
-        detail: `${adm.running} renders are running on this instance, which runs at most ${adm.cap} at once; this render is waiting and nothing was fetched.`
+        detail: `${adm.running} renders are running in your group's Civicsmith, which runs at most ${adm.cap} at once; this render is waiting and nothing was fetched.`
       });
     if (adm && adm.state === "admitted") renderSlot = adm.slot || null;
     if (!adm || adm.state !== "admitted")
@@ -30954,11 +32290,12 @@ async function acquire(cap, body0, { cls: cls3 = null, member = false, sessMembe
   if (!res) try {
     let url = locator;
     const home = hostOf3(locator);
+    const byHand = !!sweepScope || !!own5;
     for (let hop = 0; ; hop++) {
       const g = await governedFetch2(cap, url, crPurpose || "acquire", crAgent, {
         headers: conditional,
-        credential: sweepScope && hostOf3(url) !== home ? null : crCredential,
-        manual: !!sweepScope
+        credential: byHand && hostOf3(url) !== home ? null : crCredential,
+        manual: byHand
       });
       if (g.refusedByGovernor) {
         await noteOutcome("governed", null);
@@ -30971,7 +32308,7 @@ async function acquire(cap, body0, { cls: cls3 = null, member = false, sessMembe
         });
       }
       res = g.res;
-      if (!sweepScope) break;
+      if (!byHand) break;
       const loc = res.status >= 300 && res.status < 400 && res.status !== 304 ? res.headers.get("location") : null;
       if (!loc || hop >= REDIRECT_MAX) break;
       let next = null;
@@ -30980,7 +32317,11 @@ async function acquire(cap, body0, { cls: cls3 = null, member = false, sessMembe
       } catch {
         next = null;
       }
-      if (!next || !inSweepScope(next, sweepScope)) {
+      if (next && onOwnHost(next, own5)) {
+        cancelBody(res);
+        return answer(403, { ...ownHostRefused(next, { redirected_from: url, status: res.status }), op });
+      }
+      if (sweepScope && (!next || !inSweepScope(next, sweepScope))) {
         cancelBody(res);
         const row9 = SWEEP_SCOPE_CHECKS.SWEEP_REDIRECT_OUT_OF_SCOPE;
         return answer(422, {
@@ -31048,7 +32389,7 @@ async function acquire(cap, body0, { cls: cls3 = null, member = false, sessMembe
       locator: driveCapture.address,
       export_address: driveCapture.exportAddress,
       drive: driveFacts,
-      detail: `Google answered ${res.status} at the OpenDocument export address ${driveCapture.exportAddress}, which this instance composed from the ${driveCapture.kind} id in ${driveCapture.address}. Nothing was captured, and the application page at the document's own address was NOT captured in its place \u2014 a fallback to the shell would record a success holding no document. A 404 usually means the id is wrong; a 403 usually means the file is not shared with anyone who has the link.`
+      detail: `Google answered ${res.status} at the OpenDocument export address ${driveCapture.exportAddress}, which your group's Civicsmith composed from the ${driveCapture.kind} id in ${driveCapture.address}. Nothing was captured, and the application page at the document's own address was NOT captured in its place \u2014 a fallback to the shell would record a success holding no document. A 404 usually means the id is wrong; a 403 usually means the file is not shared with anyone who has the link.`
     });
   }
   if (driveCapture) {
@@ -31079,22 +32420,22 @@ async function acquire(cap, body0, { cls: cls3 = null, member = false, sessMembe
     return answer(502, { ok: false, reason: "SOURCE_REFUSED", status: res.status, locator });
   }
   if (!archiveMemento) await noteOutcome("success", res.status);
-  const PART = 8 * 1024 * 1024;
+  const PART2 = 8 * 1024 * 1024;
   const MAX = CAPTURE_MAX;
-  const whole = createSha256();
+  const whole2 = createSha256();
   const parts = [];
   const partHeldBefore = [];
   let total2 = 0, held2 = [], heldBytes = 0, oversize = false;
   const part = async (buf) => {
-    const psha = hex4(await crypto.subtle.digest("SHA-256", buf));
+    const psha = hex5(await crypto.subtle.digest("SHA-256", buf));
     const heldBefore = !!await ev.head(psha);
     if (!heldBefore) await ev.put(psha, buf);
     parts.push({ sha256: psha, bytes: buf.length });
     partHeldBefore.push(heldBefore);
   };
   const flush = async (all = true) => {
-    while (heldBytes >= PART || all && heldBytes > 0) {
-      const n = Math.min(PART, heldBytes);
+    while (heldBytes >= PART2 || all && heldBytes > 0) {
+      const n = Math.min(PART2, heldBytes);
       const buf = new Uint8Array(n);
       let at34 = 0;
       while (at34 < n) {
@@ -31133,7 +32474,7 @@ async function acquire(cap, body0, { cls: cls3 = null, member = false, sessMembe
       oversize = true;
       break;
     }
-    whole.update(value);
+    whole2.update(value);
     if (driveHead && driveHeadBytes < driveHead.length) {
       const take = Math.min(value.length, driveHead.length - driveHeadBytes);
       driveHead.set(value.subarray(0, take), driveHeadBytes);
@@ -31141,7 +32482,7 @@ async function acquire(cap, body0, { cls: cls3 = null, member = false, sessMembe
     }
     held2.push(value);
     heldBytes += value.length;
-    if (heldBytes >= PART) await flush(false);
+    if (heldBytes >= PART2) await flush(false);
   }
   if (driveCapture && driveHeadBytes > 0) {
     const sniff = detectFormat(driveHead.subarray(0, driveHeadBytes), null);
@@ -31182,7 +32523,7 @@ async function acquire(cap, body0, { cls: cls3 = null, member = false, sessMembe
     });
   }
   await flush();
-  let sha2 = whole.hex();
+  let sha2 = whole2.hex();
   if (archiveMemento) {
     const c = chooseMemento(archiveMemento, sha2, total2, archiveAsked, archiveAt);
     if (!c.ok) return answer(c.status, c.payload);
@@ -31203,11 +32544,11 @@ async function acquire(cap, body0, { cls: cls3 = null, member = false, sessMembe
     } catch {
       reg = null;
     }
-    const heldParts = partHeldBefore.filter(Boolean).length;
+    const heldParts2 = partHeldBefore.filter(Boolean).length;
     if (reg && reg.registered === true) existed = true;
     else {
       existed = null;
-      existedUndetermined = reg ? `this document was captured in ${parts.length} parts, so the store holds no object under its whole hash for the question a single-part capture asks, and the record's register - which does answer by the whole hash - holds no row for these bytes under a record that still exists. That is NOT a finding that the bytes are new: a capture acquired earlier and never promoted leaves its parts in the store and no register row, and part boundaries follow the stream's chunking, so this fetch's parts need not be the parts an earlier one made. Observed, and not the answer: ${heldParts} of this fetch's ${parts.length} parts were already held before it wrote them.` : `this document was captured in ${parts.length} parts, so the store holds no object under its whole hash for the question a single-part capture asks, and the record's register could not be consulted. Nothing here is a statement about the record, and in particular it is not a claim that these bytes are new. Observed, and not the answer: ${heldParts} of this fetch's ${parts.length} parts were already held before it wrote them.`;
+      existedUndetermined = reg ? `this document was captured in ${parts.length} parts, so the store holds no object under its whole hash for the question a single-part capture asks, and the record's register - which does answer by the whole hash - holds no row for these bytes under a record that still exists. That is NOT a finding that the bytes are new: a capture acquired earlier and never promoted leaves its parts in the store and no register row, and part boundaries follow the stream's chunking, so this fetch's parts need not be the parts an earlier one made. Observed, and not the answer: ${heldParts2} of this fetch's ${parts.length} parts were already held before it wrote them.` : `this document was captured in ${parts.length} parts, so the store holds no object under its whole hash for the question a single-part capture asks, and the record's register could not be consulted. Nothing here is a statement about the record, and in particular it is not a claim that these bytes are new. Observed, and not the answer: ${heldParts2} of this fetch's ${parts.length} parts were already held before it wrote them.`;
     }
   }
   let ct = (res.headers.get("content-type") || "").split(";")[0].trim();
@@ -31244,7 +32585,7 @@ async function acquire(cap, body0, { cls: cls3 = null, member = false, sessMembe
       });
     }
     try {
-      answerR = await renderer.render({ url: pageUrl, ...RENDER_DEFAULTS, locale: renderLocale(pv.view) });
+      answerR = await renderer.render({ url: pageUrl, ...RENDER_DEFAULTS, locale: renderLocale(pv.view), ...own5 ? { own_hosts: own5 } : {} });
     } catch (e2) {
       answerR = { ok: false, error: String(e2 && e2.message || e2) };
     }
@@ -31359,7 +32700,8 @@ async function acquire(cap, body0, { cls: cls3 = null, member = false, sessMembe
       base: resolvedUrl || locator,
       retrieved,
       resume: null,
-      sessionId: null
+      sessionId: null,
+      own: own5
     });
     subs = w.subs;
     subsSkipped = w.skipped;
@@ -31377,7 +32719,8 @@ async function acquire(cap, body0, { cls: cls3 = null, member = false, sessMembe
     locator: documentAddress,
     view: pv,
     retrieved,
-    origin: "fetch"
+    origin: "fetch",
+    parts: renderRecorded ? null : parts
   });
   if (driveCapture) {
     let detected = null;
@@ -31394,7 +32737,9 @@ async function acquire(cap, body0, { cls: cls3 = null, member = false, sessMembe
     }
     driveHopRecorded = driveHop(driveCapture, { retrieved, resolved: resolvedUrl, detected });
   }
-  const attestations = await coAttest(cap, { sha: sha2, locator: documentAddress, via, ev });
+  const memberChoice = captureRequest ? captureRequest.coArchive : member && typeof sessMember === "string" && sessMember ? body.coArchive : void 0;
+  const coArchive = typeof memberChoice === "boolean" ? { on: memberChoice, by: "member" } : { on: coArchiveStateOf(cap.core).on, by: "group" };
+  const attestations = await coAttest(cap, { sha: sha2, locator: documentAddress, via, ev, coArchive });
   const document = {
     file: `snapshots/${name2}`,
     locator,
@@ -31459,6 +32804,29 @@ async function acquire(cap, body0, { cls: cls3 = null, member = false, sessMembe
     origin: captureRequest ? crOrigin || { kind: "named_request" } : { kind: "named_request" },
     attestation_attempts: attestations
   };
+  let unpacked = null;
+  if (profile && profile.format && profile.format.format === "zip") {
+    try {
+      unpacked = await unpack(cap, { archiveSha: sha2, by: actor, cls: cls3, member }, {
+        automatic: true,
+        parts: parts.map((p3) => ({ sha256: p3.sha256, bytes: p3.bytes })),
+        origin: document.origin,
+        address: addressIsDerived ? documentAddress : resolvedUrl || locator,
+        addressNorm: addressIsDerived ? addrNorm : normalizeAddress(resolvedUrl || locator)
+      });
+    } catch (e2) {
+      const row9 = ARCHIVE_CHECKS.ARCHIVE_UNREADABLE;
+      unpacked = {
+        ok: false,
+        reason: "ARCHIVE_UNREADABLE",
+        code: "ARCHIVE_UNREADABLE",
+        check: row9.check,
+        translation: row9.translation,
+        why: "source_unreadable",
+        detail: String(e2 && e2.message || e2).slice(0, 200)
+      };
+    }
+  }
   return answer(200, {
     ok: true,
     existed,
@@ -31470,6 +32838,7 @@ async function acquire(cap, body0, { cls: cls3 = null, member = false, sessMembe
     ...snapshotOf(subs, sessionId, name2, shellRecorded),
     ...subsSkipped ? { subresources_skipped: subsSkipped } : {},
     ...receiptSignature ? { receipt_signature: receiptSignature } : {},
+    ...unpacked ? { unpack: unpacked } : {},
     store: storeName,
     tokenClass: cls3,
     note: ACQUIRE_GRADE_NOTE
@@ -31485,7 +32854,8 @@ async function profileOf({
   locator = null,
   view,
   retrieved,
-  origin = null
+  origin = null,
+  parts = null
 }) {
   const pv = view || { view: void 0, ids: null };
   let profileText = "", profileBytes = null;
@@ -31532,11 +32902,44 @@ async function profileOf({
     jurisdiction_view: pv.ids,
     format: detectFormat(formatBytes, ct || null)
   };
+  if (!formatBytes && Array.isArray(parts) && parts.length) {
+    const z = await zipPastBound(ev, parts);
+    if (z) profile.format = z;
+    else if (profile.format && profile.format.format === "zip")
+      profile.format = {
+        format: "undetermined",
+        confidence: "none",
+        signals: [...profile.format.signals || [], "the stored bytes were not read as a ZIP archive, so the declared type does not make one"]
+      };
+  }
   let containerBytes = null;
   const odfFmt = profile.format && ODF_FORMATS.includes(profile.format.format);
   if (!profileBytes && !multipart && odfFmt && total2 > 0 && total2 <= ODF_DIGEST_MAX) containerBytes = readWhole;
   profile.digests = await substanceDigests(profileBytes, stackId, profCtx, sha2, multipart, containerBytes);
   return profile;
+}
+async function zipPastBound(ev, parts) {
+  try {
+    const first = await ev.get(parts[0].sha256);
+    if (!first || !hasZipMagic(new Uint8Array(await first.arrayBuffer()).subarray(0, 4))) return null;
+    const l2 = await listArchive(partsSource(ev, parts));
+    if (!l2.ok) return null;
+    const names = new Set(l2.entries.map((e2) => normalizePartName(e2.name || "")));
+    if (names.has(CONTENT_TYPES_PART) || names.has(ODF_MIMETYPE_PART)) return null;
+    return {
+      format: "zip",
+      confidence: "likely",
+      signals: [
+        "magic: PK\\x03\\x04 in the stored bytes",
+        "listed whole over the stored parts",
+        `part: ${CONTENT_TYPES_PART} absent`,
+        `part: ${ODF_MIMETYPE_PART} absent`,
+        `entries: ${l2.count}`
+      ]
+    };
+  } catch {
+    return null;
+  }
 }
 function snapshotOf(subs, sessionId, name2, shellRecorded) {
   if (!subs) return shellRecorded ? { files: { [shellRecorded.file]: shellRecorded.sha256 } } : {};
@@ -31576,7 +32979,7 @@ function snapshotOf(subs, sessionId, name2, shellRecorded) {
     }
   };
 }
-async function walkSubresources(cap, { ev, sha: sha2, total: total2, multipart, ct, name: name2, locator, base: base2, retrieved, resume, sessionId }) {
+async function walkSubresources(cap, { ev, sha: sha2, total: total2, multipart, ct, name: name2, locator, base: base2, retrieved, resume, sessionId, own: own5 = null }) {
   const SUB_PARSE_MAX = 8 * 1024 * 1024;
   if (multipart || total2 > SUB_PARSE_MAX)
     return { subs: null, skipped: { reason: "TOO_LARGE_TO_PARSE", detail: `subresource capture reads the primary back into memory to parse it, so it is bounded to ${SUB_PARSE_MAX} bytes; this document is ${total2}` } };
@@ -31637,6 +33040,7 @@ async function walkSubresources(cap, { ev, sha: sha2, total: total2, multipart, 
         subHost = new URL(u).host;
       } catch {
       }
+      if (onOwnHost(u, own5)) return { ok: false, status: 0, reason: "OWN_HOST_REFUSED" };
       if (subHost && cap.governor) {
         try {
           if (await cap.governor.isHeld(subHost, Date.now())) return { ok: false, status: 0, reason: "HOST_COOLING_OFF" };
@@ -31645,7 +33049,20 @@ async function walkSubresources(cap, { ev, sha: sha2, total: total2, multipart, 
       }
       const stagger = cap.subresourceStaggerMs();
       if (stagger) await new Promise((s) => setTimeout(s, stagger));
-      const r = await fetch(u, { redirect: "follow", headers: { "user-agent": userAgent(env, "acquire") } });
+      let r = await fetch(u, { redirect: own5 ? "manual" : "follow", headers: { "user-agent": userAgent(env, "acquire") } });
+      for (let hop = 0, at34 = u; own5 && r.status >= 300 && r.status < 400 && hop < REDIRECT_MAX; hop++) {
+        let next = null;
+        try {
+          next = new URL(r.headers.get("location") || "", at34).href;
+        } catch {
+          next = null;
+        }
+        if (!next || !isPublicHttpsLocator(next)) break;
+        cancelBody(r);
+        if (onOwnHost(next, own5)) return { ok: false, status: 0, reason: "OWN_HOST_REFUSED" };
+        at34 = next;
+        r = await fetch(next, { redirect: "manual", headers: { "user-agent": userAgent(env, "acquire") } });
+      }
       if (subHost && cap.governor) {
         try {
           await cap.governor.governorReport({ host: subHost, status: r.status, retry_after_ms: retryAfterMs(r.headers.get("retry-after")) });
@@ -31708,7 +33125,7 @@ async function walkSubresources(cap, { ev, sha: sha2, total: total2, multipart, 
   }
   return { subs, skipped: null, sessionId: sid };
 }
-async function continueCapture(cap, { body, session, cls: cls3, storeName, ev }) {
+async function continueCapture(cap, { body, session, cls: cls3, storeName, ev, own: own5 = null }) {
   const name2 = String(session.primaryFile || "snapshots/capture").replace(/^snapshots\//, "");
   let obj = null;
   try {
@@ -31726,9 +33143,10 @@ async function continueCapture(cap, { body, session, cls: cls3, storeName, ev })
     name: name2,
     locator: session.locator,
     base: session.base,
-    retrieved: stampSecond(),
+    retrieved: stampSecond2(),
     resume: session.state,
-    sessionId: session.session
+    sessionId: session.session,
+    own: own5
   });
   return { status: 200, body: {
     ok: true,
@@ -32064,7 +33482,7 @@ function level2Feature(s) {
   }
   return null;
 }
-function readDate(s, whole) {
+function readDate(s, whole2) {
   const q10 = { uncertain: false, approximate: false, unspecified: false, season: false };
   let t2 = s;
   const qm = /[?~%]$/.exec(t2);
@@ -32075,23 +33493,23 @@ function readDate(s, whole) {
   }
   let m = /^Y(-?)(\d+)$/.exec(t2);
   if (m) {
-    if (m[2].length <= 4) return invalid(whole, "a Y-prefixed year has more than four digits");
+    if (m[2].length <= 4) return invalid(whole2, "a Y-prefixed year has more than four digits");
     const y2 = (m[1] ? -1 : 1) * Number(m[2]);
-    if (!Number.isSafeInteger(y2) || Math.abs(y2) > 1e12) return invalid(whole, "the year is beyond any reckoning held here");
+    if (!Number.isSafeInteger(y2) || Math.abs(y2) > 1e12) return invalid(whole2, "the year is beyond any reckoning held here");
     return { lo: dayNumber(y2, 1, 1), hi: dayNumber(y2, 12, 31), q: q10 };
   }
   m = /^(-?)(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(Z|[+-]\d{2}(?::?\d{2})?)?$/.exec(t2);
   if (m) {
-    if (qm) return invalid(whole, "a date-time takes no qualifier");
+    if (qm) return invalid(whole2, "a date-time takes no qualifier");
     const y2 = (m[1] ? -1 : 1) * +m[2], mo2 = +m[3], d2 = +m[4];
-    if (mo2 < 1 || mo2 > 12 || d2 < 1 || d2 > monthLength(y2, mo2) || +m[5] > 23 || +m[6] > 59 || +m[7] > 59) return invalid(whole, "no such date-time");
+    if (mo2 < 1 || mo2 > 12 || d2 < 1 || d2 > monthLength(y2, mo2) || +m[5] > 23 || +m[6] > 59 || +m[7] > 59) return invalid(whole2, "no such date-time");
     const n = dayNumber(y2, mo2, d2);
     return { lo: n, hi: n, q: q10 };
   }
   m = /^(-?)(\d{4}|\d{3}X|\d{2}XX)(?:-(\d{2}|XX)(?:-(\d{2}|XX))?)?$/.exec(t2);
   if (!m) {
     if (/X/.test(t2) && /^-?[\dX]{4}(-[\dX]{2}){0,2}$/.test(t2)) return level2("unspecified digits in a position level 1 does not allow");
-    return invalid(whole, "not a date of EDTF's forms");
+    return invalid(whole2, "not a date of EDTF's forms");
   }
   const neg = !!m[1], ys = m[2], ms5 = m[3], ds = m[4];
   if (/X/.test(ys)) {
@@ -32110,21 +33528,21 @@ function readDate(s, whole) {
   }
   const mo = Number(ms5);
   if (mo >= 21 && mo <= 24) {
-    if (ds !== void 0) return invalid(whole, "a season takes no day");
+    if (ds !== void 0) return invalid(whole2, "a season takes no day");
     q10.season = true;
     if (mo === 24) return { lo: dayNumber(y, 1, 1), hi: dayNumber(y + 1, 2, monthLength(y + 1, 2)), q: q10 };
     const [, m1, d1, m2, d2] = SEASONS[mo];
     return { lo: dayNumber(y, m1, d1), hi: dayNumber(y, m2, d2), q: q10 };
   }
   if (mo >= 25 && mo <= 41) return level2(`the sub-year grouping ${ms5}`);
-  if (mo < 1 || mo > 12) return invalid(whole, `no month ${ms5}`);
+  if (mo < 1 || mo > 12) return invalid(whole2, `no month ${ms5}`);
   if (ds === void 0) return { lo: dayNumber(y, mo, 1), hi: dayNumber(y, mo, monthLength(y, mo)), q: q10 };
   if (ds === "XX") {
     q10.unspecified = true;
     return { lo: dayNumber(y, mo, 1), hi: dayNumber(y, mo, monthLength(y, mo)), q: q10 };
   }
   const d = Number(ds);
-  if (d < 1 || d > monthLength(y, mo)) return invalid(whole, `no day ${ds} in that month`);
+  if (d < 1 || d > monthLength(y, mo)) return invalid(whole2, `no day ${ds} in that month`);
   return { lo: dayNumber(y, mo, d), hi: dayNumber(y, mo, d), q: q10 };
 }
 function readEdtf(s) {
@@ -32150,14 +33568,14 @@ function readEdtf(s) {
 }
 
 // src/civil-time/values.mjs
-var refuse2 = (code, why) => ({ refused: code, why });
+var refuse3 = (code, why) => ({ refused: code, why });
 var undetermined = (why, candidates) => candidates ? { undetermined: true, why, candidates } : { undetermined: true, why };
 var isNo = (r) => !!(r && (r.refused || r.undetermined));
 var PRECISIONS = ["day", "minute", "second", "edtf"];
 var MINUTE_RE = /^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})$/;
 var SECOND_RE = /^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2}):(\d{2})$/;
 function zoneRefusal(zone) {
-  return isZone(zone) ? null : refuse2("ZONE_INVALID", `'${String(zone)}' is not a time zone the runtime knows (an IANA name)`);
+  return isZone(zone) ? null : refuse3("ZONE_INVALID", `'${String(zone)}' is not a time zone the runtime knows (an IANA name)`);
 }
 function wallSeconds(day2, h, m, s) {
   const n = parseDay(day2);
@@ -32167,7 +33585,7 @@ function wallSeconds(day2, h, m, s) {
 function spanOf(x) {
   if (typeof x === "string") {
     const t2 = parseInstant(x);
-    if (t2 === null) return refuse2("DATE_INVALID", `'${x}' is not an instant (YYYY-MM-DDTHH:MM:SSZ)`);
+    if (t2 === null) return refuse3("DATE_INVALID", `'${x}' is not an instant (YYYY-MM-DDTHH:MM:SSZ)`);
     return { lo: t2, hi: t2 + 1, dt: { value: x, precision: "second", zone: "UTC" } };
   }
   if (!x || typeof x !== "object") throw new TypeError("a date-time is an object {value, precision, zone} or an instant string");
@@ -32176,8 +33594,8 @@ function spanOf(x) {
     throw new TypeError("a date-time's value, precision and zone are strings");
   const z = zoneRefusal(zone);
   if (z) return z;
-  if (!PRECISIONS.includes(precision)) return refuse2("DATE_INVALID", `'${precision}' is not a precision (day, minute, second, edtf)`);
-  const bad2 = (why) => refuse2("DATE_INVALID", `'${value}' is not a ${precision}-precision value: ${why}`);
+  if (!PRECISIONS.includes(precision)) return refuse3("DATE_INVALID", `'${precision}' is not a precision (day, minute, second, edtf)`);
+  const bad2 = (why) => refuse3("DATE_INVALID", `'${value}' is not a ${precision}-precision value: ${why}`);
   if (precision === "day") {
     const n = parseDay(value);
     if (n === null) return bad2(DAY_RE.test(value) ? "no such day" : "a day is YYYY-MM-DD");
@@ -32232,7 +33650,7 @@ function isCalendarDate(s) {
 function localDay(instant5, zone) {
   if (typeof instant5 !== "string" || typeof zone !== "string") throw new TypeError("localDay takes an instant and a zone, both strings");
   const t2 = parseInstant(instant5);
-  if (t2 === null) return refuse2("DATE_INVALID", `'${instant5}' is not an instant (YYYY-MM-DDTHH:MM:SSZ)`);
+  if (t2 === null) return refuse3("DATE_INVALID", `'${instant5}' is not an instant (YYYY-MM-DDTHH:MM:SSZ)`);
   const z = zoneRefusal(zone);
   if (z) return z;
   return dayText(localDayNumber(t2, zone));
@@ -32241,19 +33659,19 @@ function dayRange(fromDay, toDay, zone) {
   if (typeof fromDay !== "string" || typeof toDay !== "string" || typeof zone !== "string")
     throw new TypeError("dayRange takes two days and a zone, all strings");
   const a = parseDay(fromDay), b = parseDay(toDay);
-  if (a === null || b === null) return refuse2("DATE_INVALID", `'${a === null ? fromDay : toDay}' is not a calendar day (YYYY-MM-DD)`);
+  if (a === null || b === null) return refuse3("DATE_INVALID", `'${a === null ? fromDay : toDay}' is not a calendar day (YYYY-MM-DD)`);
   const z = zoneRefusal(zone);
   if (z) return z;
-  if (a > b) return refuse2("RANGE_INVERTED", `${fromDay} is after ${toDay}`);
+  if (a > b) return refuse3("RANGE_INVERTED", `${fromDay} is after ${toDay}`);
   return { start: instantText(startOfDay(a, zone)), end: instantText(startOfDay(b + 1, zone)) };
 }
 function joinLocal(date, time, zone) {
   if (typeof date !== "string" || typeof time !== "string" || typeof zone !== "string")
     throw new TypeError("joinLocal takes a date, a time and a zone, all strings");
   const dm = /^(\d{4}-\d{2}-\d{2})(?:T00:00:00)?$/.exec(date.trim());
-  if (!dm || parseDay(dm[1]) === null) return refuse2("DATE_INVALID", `'${date}' is not a date (YYYY-MM-DD, or with T00:00:00)`);
+  if (!dm || parseDay(dm[1]) === null) return refuse3("DATE_INVALID", `'${date}' is not a date (YYYY-MM-DD, or with T00:00:00)`);
   const tm = /^(\d{1,2})\s*:\s*(\d{2})\s*([ap])\.?\s*m\.?$/i.exec(time.trim());
-  if (!tm || +tm[1] < 1 || +tm[1] > 12 || +tm[2] > 59) return refuse2("DATE_INVALID", `'${time}' is not a clock time written h:mm AM or h:mm PM`);
+  if (!tm || +tm[1] < 1 || +tm[1] > 12 || +tm[2] > 59) return refuse3("DATE_INVALID", `'${time}' is not a clock time written h:mm AM or h:mm PM`);
   const z = zoneRefusal(zone);
   if (z) return z;
   const h = +tm[1] % 12 + (tm[3].toLowerCase() === "p" ? 12 : 0);
@@ -32270,7 +33688,7 @@ function boundSpan(b, precision, zone, side) {
   if (typeof b !== "object") throw new TypeError(`a validity's ${side} is a string, an object or null`);
   const hasValue = b.value !== void 0 && b.value !== null;
   const hasEvent = b.event !== void 0 && b.event !== null;
-  if (hasValue && hasEvent) return refuse2("BOUND_BOTH", `the validity's ${side} gives both a value and an event`);
+  if (hasValue && hasEvent) return refuse3("BOUND_BOTH", `the validity's ${side} gives both a value and an event`);
   if (hasValue) return boundSpan(b.value, b.precision || precision, b.zone || zone, side);
   if (hasEvent) {
     if (b.at === void 0 || b.at === null) return undetermined(`the bounding event is not resolved (${side}: ${b.event}${b.edge ? `, ${b.edge}` : ""})`);
@@ -32737,7 +34155,7 @@ function evaluateRule(args) {
   const pre = preconditions(rule, view);
   if (pre) return pre;
   const tolledSet = tolledDays(tolled);
-  if (tolledSet === null) return refuse2("DATE_INVALID", "a tolled span is not {from, to} calendar days in order");
+  if (tolledSet === null) return refuse3("DATE_INVALID", "a tolled span is not {from, to} calendar days in order");
   const anchorZone = typeof anchor2 === "string" ? "UTC" : anchor2 && anchor2.zone;
   const zone = viewZone(view) || anchorZone;
   const zr = zoneRefusal(zone);
@@ -32793,7 +34211,7 @@ function due(args) {
   if (!args || typeof args !== "object") throw new TypeError("due takes {basis, ...}");
   const { basis } = args;
   if (typeof basis !== "string") throw new TypeError("due's basis is a string");
-  if (!BASIS_KINDS.includes(basis)) return refuse2("BASIS_UNKNOWN", `'${basis}' is not a basis kind (${BASIS_KINDS.join(", ")})`);
+  if (!BASIS_KINDS.includes(basis)) return refuse3("BASIS_UNKNOWN", `'${basis}' is not a basis kind (${BASIS_KINDS.join(", ")})`);
   if (basis === "rule") {
     const r2 = evaluateRule(args);
     if (r2.refused || r2.undetermined) return { ...r2, basis_kind: "rule", law_set: true };
@@ -32839,11 +34257,11 @@ function overdueOn(args) {
   if (!args || typeof args !== "object") throw new TypeError("overdueOn takes {due, at, side}");
   let { due: d, at: at34, side } = args;
   if (d === void 0 || d === null || typeof at34 !== "string" || typeof side !== "string") throw new TypeError("overdueOn needs due, at (an instant) and side");
-  if (side !== "group" && side !== "body") return refuse2("SIDE_UNKNOWN", `'${side}' is neither group nor body`);
+  if (side !== "group" && side !== "body") return refuse3("SIDE_UNKNOWN", `'${side}' is neither group nor body`);
   if (d && typeof d === "object" && "due" in d && !("value" in d)) d = d.due;
   if (d && (d.undetermined || d.refused)) return no2(d.code || "DUE_UNDETERMINED", `the due date is undetermined: ${d.why}`);
   const t2 = parseInstant(at34);
-  if (t2 === null) return refuse2("DATE_INVALID", `'${at34}' is not an instant (YYYY-MM-DDTHH:MM:SSZ)`);
+  if (t2 === null) return refuse3("DATE_INVALID", `'${at34}' is not an instant (YYYY-MM-DDTHH:MM:SSZ)`);
   const past = (dt2) => {
     const s = spanOf(dt2);
     if (isNo(s)) return s;
@@ -32881,7 +34299,7 @@ function span(a, b, opts) {
   if (!opts || typeof opts !== "object" || typeof opts.unit !== "string") throw new TypeError("span takes (a, b, {unit, view?, office?})");
   if (a === void 0 || a === null || b === void 0 || b === null) throw new TypeError("span needs both date-times");
   const { unit, view = null, office = null, factOf = null } = opts;
-  if (!SPAN_UNITS.includes(unit)) return refuse2("UNIT_UNKNOWN", `'${unit}' is not one of ${SPAN_UNITS.join(", ")}`);
+  if (!SPAN_UNITS.includes(unit)) return refuse3("UNIT_UNKNOWN", `'${unit}' is not one of ${SPAN_UNITS.join(", ")}`);
   const sa = spanOf(a), sb = spanOf(b);
   for (const s of [sa, sb]) if (isNo(s)) return s;
   for (const s of [sa, sb]) if (s.lo === null || s.hi === null) return no2("OPEN_END", `${s.dt.value} has an open or unknown end`);
@@ -32928,8 +34346,8 @@ var FREQS = ["WEEKLY", "MONTHLY", "YEARLY"];
 var MAX_INSTANCES = 500;
 var MAX_MONTHS = 24;
 var RRDAY = { SU: "sun", MO: "mon", TU: "tue", WE: "wed", TH: "thu", FR: "fri", SA: "sat" };
-var unsupported = (part) => refuse2("RRULE_UNSUPPORTED", `${part} is outside the RFC 5545 subset this module expands (${SUBSET.join(", ")})`);
-var bad = (why) => refuse2("DATE_INVALID", `the recurrence is malformed: ${why}`);
+var unsupported = (part) => refuse3("RRULE_UNSUPPORTED", `${part} is outside the RFC 5545 subset this module expands (${SUBSET.join(", ")})`);
+var bad = (why) => refuse3("DATE_INVALID", `the recurrence is malformed: ${why}`);
 function readStamp(s) {
   const m = /^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z)?)?$/.exec(s);
   if (!m) return null;
@@ -33119,7 +34537,7 @@ function expandRecurrence(args) {
   let k = 0;
   const span3 = r.freq === "WEEKLY" ? 7 * r.interval : r.freq === "MONTHLY" ? 28 * r.interval : 365 * r.interval;
   if (fromDay - dtDay > 2 * span3) k = Math.max(0, Math.floor((fromDay - dtDay) / (r.freq === "WEEKLY" ? 7 * r.interval : r.freq === "MONTHLY" ? 31 * r.interval : 366 * r.interval)) - 1);
-  const instances65 = [];
+  const instances66 = [];
   const notes = [];
   let truncated3 = false;
   for (let guard = 0; guard < 1e5; guard++, k++) {
@@ -33148,7 +34566,7 @@ function expandRecurrence(args) {
         notes.push(`${dayText(n)} excluded (EXDATE)`);
         continue;
       }
-      if (instances65.length >= MAX_INSTANCES) {
+      if (instances66.length >= MAX_INSTANCES) {
         truncated3 = true;
         stop2 = true;
         break;
@@ -33156,7 +34574,7 @@ function expandRecurrence(args) {
       if (it.shifted) notes.push(`${dayText(n)}: the wall time does not occur in ${zone}; the instance is the time after the gap`);
       const w = it.t + offsetAt(it.t, zone), wn = Math.floor(w / 86400), ws = w - wn * 86400;
       const p24 = (x) => String(x).padStart(2, "0");
-      instances65.push({
+      instances66.push({
         value: ds.dt.precision === "day" ? dayText(wn) : `${dayText(wn)}T${p24(Math.floor(ws / 3600))}:${p24(Math.floor(ws / 60) % 60)}`,
         precision: ds.dt.precision === "day" ? "day" : "minute",
         zone,
@@ -33166,8 +34584,8 @@ function expandRecurrence(args) {
     if (stop2) break;
   }
   const trace = { rrule, dtstart, zone, from, to, limits: { months: MAX_MONTHS, instances: MAX_INSTANCES }, notes, runtime: runtimeVersions() };
-  if (truncated3) trace.notes.push(`stopped at ${instances65.length >= MAX_INSTANCES ? `${MAX_INSTANCES} instances` : `${MAX_MONTHS} months after from`}`);
-  return { instances: instances65, truncated: truncated3, trace };
+  if (truncated3) trace.notes.push(`stopped at ${instances66.length >= MAX_INSTANCES ? `${MAX_INSTANCES} instances` : `${MAX_MONTHS} months after from`}`);
+  return { instances: instances66, truncated: truncated3, trace };
 }
 function periodFor(y, f17) {
   const [mm, dd] = f17.start.split("-").map(Number);
@@ -36538,10 +37956,10 @@ var DERIVATION_FIELDS = Object.freeze(["kind", "from", "to", "as_of", "method"].
 function derivedConnectionLegFindings(label, leg2, findings) {
   const l2 = leg2 && typeof leg2 === "object" ? leg2 : {};
   if (typeof l2.target !== "string" || !DERIVED_CONNECTION_ID_RE.test(l2.target)) return false;
-  const refuse21 = (message2, repairs) => findings.push(derivedLegRefusal(message2, repairs));
+  const refuse22 = (message2, repairs) => findings.push(derivedLegRefusal(message2, repairs));
   const missing2 = DERIVATION_FIELDS.filter((k) => typeof l2[k] !== "string" || l2[k].trim() === "");
   for (const k of missing2) {
-    refuse21(
+    refuse22(
       `${label}.${k} is missing or empty on a leg on a derived connection (${l2.target}): the leg carries the five fields the connection was derived from (${DERIVATION_FIELDS.join(", ")}), each a non-empty string, so a reader can derive it again`,
       [`state ${k} on ${label}, as the connection's derivation gives it`]
     );
@@ -36555,7 +37973,7 @@ function derivedConnectionLegFindings(label, leg2, findings) {
       method: l2.derivation_method
     });
     if (id !== l2.target) {
-      refuse21(
+      refuse22(
         `${label}.target ${l2.target} is not the id of the derivation the leg carries (${id}): a derived connection is named by the SHA-256 of its five fields, so a leg whose target and fields disagree names two different connections`,
         [
           `set ${label}.target to ${id}, the id its derivation_* fields give`,
@@ -36569,7 +37987,7 @@ function derivedConnectionLegFindings(label, leg2, findings) {
     l2,
     `a derived connection (${l2.target})`,
     "its grade is its chain's, the weakest hop of the derivation, and never authored",
-    refuse21
+    refuse22
   );
   return true;
 }
@@ -40309,7 +41727,7 @@ var REFUSALS = {
 var featureReasons = (declared2, named) => Object.freeze(Object.fromEntries(Object.keys(declared2).map((k) => [k, named[k] ?? "UNSUPPORTED_FILTER"])));
 var JBIG2_FEATURE_REASONS = featureReasons(JBIG2_REFUSES, {});
 var JPX_FEATURE_REASONS = featureReasons(JPX_REFUSES, { "an image past the memory bound": "IMAGE_TOO_LARGE" });
-var refuse3 = (reason, detail = {}) => {
+var refuse4 = (reason, detail = {}) => {
   if (!(reason in REFUSALS)) throw new Error(`undeclared refusal: ${reason}`);
   return { ok: false, reason, why: REFUSALS[reason], ...detail };
 };
@@ -40350,11 +41768,11 @@ async function decodeImage(doc, im, opts) {
   const filters = im.filters;
   const last = filters[filters.length - 1] || null;
   if (last === "DCTDecode" || last === "DCT") {
-    if (filters.length > 1) return refuse3("UNSUPPORTED_FILTER", { filters, note: "DCT behind another filter" });
+    if (filters.length > 1) return refuse4("UNSUPPORTED_FILTER", { filters, note: "DCT behind another filter" });
     const raw = doc.streamRawBytes(im.obj);
-    if (!raw || raw.length < 4) return refuse3("IMAGE_UNREADABLE", { filters });
+    if (!raw || raw.length < 4) return refuse4("IMAGE_UNREADABLE", { filters });
     if (!(raw[0] === 255 && raw[1] === 216)) {
-      return refuse3("DECODE_FAILED", { filters, note: "DCT stream does not start with SOI" });
+      return refuse4("DECODE_FAILED", { filters, note: "DCT stream does not start with SOI" });
     }
     if (opts.decodeDct) return decodeDct(doc, im, raw, opts.rotate || 0);
     return {
@@ -40365,31 +41783,31 @@ async function decodeImage(doc, im, opts) {
       upright: (opts.rotate || 0) === 0
     };
   }
-  if (!im.width || !im.height) return refuse3("IMAGE_UNREADABLE", { filters });
+  if (!im.width || !im.height) return refuse4("IMAGE_UNREADABLE", { filters });
   if (last === "CCITTFaxDecode" || last === "CCF") {
     let data = doc.streamRawBytes(im.obj);
     if (filters.length > 1) {
       if (filters.slice(0, -1).every((f17) => f17 === "FlateDecode" || f17 === "Fl")) {
         const st = { ...im.obj, dict: { ...dict, Filter: { t: "name", v: "FlateDecode" } } };
         data = await doc.streamDecoded(st);
-      } else return refuse3("UNSUPPORTED_FILTER", { filters });
+      } else return refuse4("UNSUPPORTED_FILTER", { filters });
     }
-    if (!data) return refuse3("IMAGE_UNREADABLE", { filters });
+    if (!data) return refuse4("IMAGE_UNREADABLE", { filters });
     const p3 = decodeParms(doc, dict, filters.length - 1) || {};
     const K4 = numOf2(doc, p3.K) ?? 0;
     const columns = numOf2(doc, p3.Columns) ?? 1728;
     const rows3 = numOf2(doc, p3.Rows) ?? im.height;
-    if (K4 > 0) return refuse3("UNSUPPORTED_FILTER", { filters, note: "mixed-mode (K>0) CCITT is not decoded here" });
+    if (K4 > 0) return refuse4("UNSUPPORTED_FILTER", { filters, note: "mixed-mode (K>0) CCITT is not decoded here" });
     const blackIs1 = doc.resolve(p3.BlackIs1) === true;
     const byteAlign = doc.resolve(p3.EncodedByteAlign) === true;
     let bits;
     try {
       bits = ccittDecode(data, { K: K4, columns, rows: rows3, byteAlign });
     } catch (e2) {
-      return refuse3("DECODE_FAILED", { filters, note: String(e2 && e2.message || e2) });
+      return refuse4("DECODE_FAILED", { filters, note: String(e2 && e2.message || e2) });
     }
     if (bits.rowsDecoded < im.height) {
-      return refuse3("TRUNCATED_IMAGE_DATA", {
+      return refuse4("TRUNCATED_IMAGE_DATA", {
         filters,
         declaredHeight: im.height,
         rowsDecoded: bits.rowsDecoded,
@@ -40419,31 +41837,31 @@ async function decodeImage(doc, im, opts) {
   if (last === "JBIG2Decode") {
     let data = doc.streamRawBytes(im.obj);
     if (filters.length > 1) {
-      if (!filters.slice(0, -1).every((f17) => f17 === "FlateDecode" || f17 === "Fl")) return refuse3("UNSUPPORTED_FILTER", { filter: last, filters });
+      if (!filters.slice(0, -1).every((f17) => f17 === "FlateDecode" || f17 === "Fl")) return refuse4("UNSUPPORTED_FILTER", { filter: last, filters });
       data = await doc.streamDecoded({ ...im.obj, dict: { ...dict, Filter: { t: "name", v: "FlateDecode" }, DecodeParms: null } });
     }
-    if (!data) return refuse3("IMAGE_UNREADABLE", { filters });
+    if (!data) return refuse4("IMAGE_UNREADABLE", { filters });
     const p3 = decodeParms(doc, dict, filters.length - 1);
     let globals = null;
     if (p3 && p3.JBIG2Globals !== void 0) {
       const g = doc.resolve(p3.JBIG2Globals);
       globals = g && g.t === "stream" ? await doc.streamDecoded(g) : null;
-      if (!globals) return refuse3("IMAGE_UNREADABLE", { filters, note: "the /JBIG2Globals stream could not be read" });
+      if (!globals) return refuse4("IMAGE_UNREADABLE", { filters, note: "the /JBIG2Globals stream could not be read" });
     }
-    if (!im.isMask && (im.bpc ?? 1) !== 1) return refuse3("UNSUPPORTED_SAMPLES", { filters, bpc: im.bpc, note: "a JBIG2 image is 1 bit per sample" });
+    if (!im.isMask && (im.bpc ?? 1) !== 1) return refuse4("UNSUPPORTED_SAMPLES", { filters, bpc: im.bpc, note: "a JBIG2 image is 1 bit per sample" });
     let out;
     try {
       out = decodeJbig2(data, globals);
     } catch (e2) {
-      if (!(e2 instanceof Jbig2Refusal)) return refuse3("DECODE_FAILED", { filters, note: String(e2 && e2.message || e2) });
+      if (!(e2 instanceof Jbig2Refusal)) return refuse4("DECODE_FAILED", { filters, note: String(e2 && e2.message || e2) });
       const reason = e2.code === "UNSUPPORTED" ? JBIG2_FEATURE_REASONS[e2.detail.feature] ?? "UNSUPPORTED_FILTER" : { TRUNCATED: "TRUNCATED_IMAGE_DATA" }[e2.code] || "DECODE_FAILED";
-      return refuse3(reason, { filter: last, filters, jbig2: e2.code, ...e2.detail });
+      return refuse4(reason, { filter: last, filters, jbig2: e2.code, ...e2.detail });
     }
     if (out.width !== im.width || out.height > im.height) {
-      return refuse3("DECODE_FAILED", { filters, note: `the JBIG2 page is ${out.width}x${out.height}; the image declares ${im.width}x${im.height}` });
+      return refuse4("DECODE_FAILED", { filters, note: `the JBIG2 page is ${out.width}x${out.height}; the image declares ${im.width}x${im.height}` });
     }
     if (out.height < im.height) {
-      return refuse3("TRUNCATED_IMAGE_DATA", { filters, declaredHeight: im.height, rowsDecoded: out.height });
+      return refuse4("TRUNCATED_IMAGE_DATA", { filters, declaredHeight: im.height, rowsDecoded: out.height });
     }
     const samples2 = out.packed.map((b) => ~b & 255);
     const bi = await bilevelPng(doc, dict, samples2, im.width, im.height, opts.rotate || 0);
@@ -40459,27 +41877,27 @@ async function decodeImage(doc, im, opts) {
   if (last === "JPXDecode") {
     let data = doc.streamRawBytes(im.obj);
     if (filters.length > 1) {
-      if (!filters.slice(0, -1).every((f17) => f17 === "FlateDecode" || f17 === "Fl")) return refuse3("UNSUPPORTED_FILTER", { filter: last, filters });
+      if (!filters.slice(0, -1).every((f17) => f17 === "FlateDecode" || f17 === "Fl")) return refuse4("UNSUPPORTED_FILTER", { filter: last, filters });
       data = await doc.streamDecoded({ ...im.obj, dict: { ...dict, Filter: { t: "name", v: "FlateDecode" }, DecodeParms: null } });
     }
-    if (!data) return refuse3("IMAGE_UNREADABLE", { filters });
-    if (doc.resolve(dict.Decode)) return refuse3("UNSUPPORTED_SAMPLES", { filters, note: "a /Decode array on a JPX image is not applied here" });
-    if (im.isMask) return refuse3("UNSUPPORTED_SAMPLES", { filters, note: "a JPX image mask" });
+    if (!data) return refuse4("IMAGE_UNREADABLE", { filters });
+    if (doc.resolve(dict.Decode)) return refuse4("UNSUPPORTED_SAMPLES", { filters, note: "a /Decode array on a JPX image is not applied here" });
+    if (im.isMask) return refuse4("UNSUPPORTED_SAMPLES", { filters, note: "a JPX image mask" });
     const pdfComps = jpxColourComponents(doc, dict.ColorSpace);
-    if (pdfComps === false) return refuse3("UNSUPPORTED_SAMPLES", { filters, colorSpace: im.colorSpace, note: "a colour space other than DeviceGray, DeviceRGB or a 1- or 3-component ICCBased" });
+    if (pdfComps === false) return refuse4("UNSUPPORTED_SAMPLES", { filters, colorSpace: im.colorSpace, note: "a colour space other than DeviceGray, DeviceRGB or a 1- or 3-component ICCBased" });
     let out;
     try {
       out = decodeJpx(data);
     } catch (e2) {
-      if (!(e2 instanceof JpxRefusal)) return refuse3("DECODE_FAILED", { filters, note: String(e2 && e2.message || e2) });
+      if (!(e2 instanceof JpxRefusal)) return refuse4("DECODE_FAILED", { filters, note: String(e2 && e2.message || e2) });
       const reason = e2.code === "UNSUPPORTED" ? JPX_FEATURE_REASONS[e2.detail.feature] ?? "UNSUPPORTED_FILTER" : { UNSUPPORTED_SAMPLES: "UNSUPPORTED_SAMPLES", TRUNCATED: "TRUNCATED_IMAGE_DATA" }[e2.code] || "DECODE_FAILED";
-      return refuse3(reason, { filter: last, filters, jpx: e2.code, ...e2.detail });
+      return refuse4(reason, { filter: last, filters, jpx: e2.code, ...e2.detail });
     }
     if (pdfComps !== null && pdfComps !== out.comps) {
-      return refuse3("UNSUPPORTED_SAMPLES", { filters, note: `the colour space has ${pdfComps} components; the image has ${out.comps}` });
+      return refuse4("UNSUPPORTED_SAMPLES", { filters, note: `the colour space has ${pdfComps} components; the image has ${out.comps}` });
     }
     if (out.width !== im.width || out.height !== im.height) {
-      return refuse3("DECODE_FAILED", { filters, note: `the JPEG 2000 image is ${out.width}x${out.height}; the PDF declares ${im.width}x${im.height}` });
+      return refuse4("DECODE_FAILED", { filters, note: `the JPEG 2000 image is ${out.width}x${out.height}; the PDF declares ${im.width}x${im.height}` });
     }
     const rot = rotate8(out.samples, out.width, out.height, out.comps, opts.rotate || 0);
     out.samples = null;
@@ -40497,15 +41915,15 @@ async function decodeImage(doc, im, opts) {
   }
   if (filters.length === 0 || filters.every((f17) => f17 === "FlateDecode" || f17 === "Fl")) {
     const data = await doc.streamDecoded(im.obj);
-    if (!data) return refuse3("IMAGE_UNREADABLE", { filters });
+    if (!data) return refuse4("IMAGE_UNREADABLE", { filters });
     const bpc = im.isMask ? 1 : im.bpc ?? 8;
     const cs = im.colorSpace;
     const comps = im.isMask ? 1 : cs === "DeviceRGB" ? 3 : cs === "DeviceGray" ? 1 : null;
-    if (comps == null) return refuse3("UNSUPPORTED_SAMPLES", { colorSpace: cs, bpc, filters });
+    if (comps == null) return refuse4("UNSUPPORTED_SAMPLES", { colorSpace: cs, bpc, filters });
     const rowBytes = Math.ceil(im.width * comps * bpc / 8);
     const need = rowBytes * im.height;
     if (data.length < need) {
-      return refuse3("TRUNCATED_IMAGE_DATA", {
+      return refuse4("TRUNCATED_IMAGE_DATA", {
         filters,
         declaredHeight: im.height,
         haveBytes: data.length,
@@ -40529,9 +41947,9 @@ async function decodeImage(doc, im, opts) {
         bytes: await encodePng8(rot.samples, rot.width, rot.height, comps)
       };
     }
-    return refuse3("UNSUPPORTED_SAMPLES", { colorSpace: cs, bpc, comps, filters });
+    return refuse4("UNSUPPORTED_SAMPLES", { colorSpace: cs, bpc, comps, filters });
   }
-  return refuse3("UNSUPPORTED_FILTER", { filters });
+  return refuse4("UNSUPPORTED_FILTER", { filters });
 }
 async function bilevelPng(doc, dict, samples2, width, height, rotate) {
   const dec4 = doc.resolve(dict.Decode);
@@ -40571,7 +41989,7 @@ var DCT_TO_REFUSAL = {
 async function decodeDct(doc, im, raw, rotate) {
   const filters = im.filters;
   const dict = im.obj.dict;
-  if (doc.resolve(dict.Decode)) return refuse3("UNSUPPORTED_SAMPLES", { filters, note: "a /Decode array on a DCT image is not applied here" });
+  if (doc.resolve(dict.Decode)) return refuse4("UNSUPPORTED_SAMPLES", { filters, note: "a /Decode array on a DCT image is not applied here" });
   const cs = im.colorSpace;
   const expectComps = cs === "DeviceGray" ? 1 : cs === "DeviceRGB" ? 3 : cs === "DeviceCMYK" ? 4 : null;
   const p3 = decodeParms(doc, dict, filters.length - 1);
@@ -40580,8 +41998,8 @@ async function decodeDct(doc, im, raw, rotate) {
   try {
     out = decodeBaselineJpeg(raw, { rotate, expectComps, colorTransform });
   } catch (e2) {
-    if (!(e2 instanceof DctRefusal)) return refuse3("DECODE_FAILED", { filters, note: String(e2 && e2.message || e2) });
-    return refuse3(DCT_TO_REFUSAL[e2.code] || "DECODE_FAILED", { filters, jpeg: e2.code, ...e2.detail });
+    if (!(e2 instanceof DctRefusal)) return refuse4("DECODE_FAILED", { filters, note: String(e2 && e2.message || e2) });
+    return refuse4(DCT_TO_REFUSAL[e2.code] || "DECODE_FAILED", { filters, jpeg: e2.code, ...e2.detail });
   }
   const bytes2 = await encodePng8(out.samples, out.width, out.height, out.comps);
   return {
@@ -40796,7 +42214,7 @@ var CROP_REFUSALS = Object.freeze({
   INLINE_IMAGE: "the image at that rectangle is inline in the content stream; extracting inline images is not built",
   DECODE_REFUSED: "the image was found and its samples could not be decoded here"
 });
-var refuse4 = (reason, detail = {}) => {
+var refuse5 = (reason, detail = {}) => {
   if (!(reason in CROP_REFUSALS)) throw new Error(`undeclared refusal: ${reason}`);
   return { ok: false, derived: true, reason, why: CROP_REFUSALS[reason], ...detail };
 };
@@ -40810,27 +42228,27 @@ async function sha256Hex8(u8) {
 async function cropImage(bytes2, extent) {
   const e2 = extent && typeof extent === "object" ? extent : {};
   if (e2.kind !== "image" || !Number.isInteger(e2.page) || e2.part != null)
-    return refuse4("NOT_AN_IMAGE_EXTENT", { extent: e2 });
+    return refuse5("NOT_AN_IMAGE_EXTENT", { extent: e2 });
   if (!(Array.isArray(e2.rect) && e2.rect.length === 4 && e2.rect.every((n2) => typeof n2 === "number" && Number.isFinite(n2))))
-    return refuse4("RECT_REQUIRED", { page: e2.page });
+    return refuse5("RECT_REQUIRED", { page: e2.page });
   const doc = await loadPdf2(bytes2);
-  if (!doc) return refuse4("NOT_A_PDF");
-  if (doc.isEncrypted()) return refuse4("ENCRYPTED");
+  if (!doc) return refuse5("NOT_A_PDF");
+  if (doc.isEncrypted()) return refuse5("ENCRYPTED");
   const n = doc.pageCount;
-  if (e2.page < 0 || e2.page >= n) return refuse4("NO_SUCH_PAGE", { page: e2.page, pageCount: n });
+  if (e2.page < 0 || e2.page >= n) return refuse5("NO_SUCH_PAGE", { page: e2.page, pageCount: n });
   const got = await pdfPageImages(doc, e2.page);
-  if (!got.images) return refuse4("PAGE_UNWALKABLE", { page: e2.page, detail: got.why });
+  if (!got.images) return refuse5("PAGE_UNWALKABLE", { page: e2.page, detail: got.why });
   const want = normRect2(e2.rect);
   const hits = got.images.filter((im2) => Array.isArray(im2.rect) && sameRect(im2.rect, want));
   if (hits.length === 0)
-    return refuse4("NO_IMAGE_AT_RECT", { page: e2.page, rect: want, painted: got.images.map((im2) => im2.rect) });
-  if (hits.length > 1) return refuse4("AMBIGUOUS_RECT", { page: e2.page, rect: want, count: hits.length });
+    return refuse5("NO_IMAGE_AT_RECT", { page: e2.page, rect: want, painted: got.images.map((im2) => im2.rect) });
+  if (hits.length > 1) return refuse5("AMBIGUOUS_RECT", { page: e2.page, rect: want, count: hits.length });
   const hit = hits[0];
   const src = imagePlacementSource(hit);
-  if (hit.inline || !src?.stream) return refuse4("INLINE_IMAGE", { page: e2.page, rect: want });
+  if (hit.inline || !src?.stream) return refuse5("INLINE_IMAGE", { page: e2.page, rect: want });
   const im = imageOf(doc, hit);
   const out = await decodeImage(doc, im, { rotate: 0 });
-  if (!out.ok) return refuse4("DECODE_REFUSED", { page: e2.page, rect: want, decoder: out.reason, decoderWhy: out.why });
+  if (!out.ok) return refuse5("DECODE_REFUSED", { page: e2.page, rect: want, decoder: out.reason, decoderWhy: out.why });
   return {
     ok: true,
     derived: true,
@@ -42291,12 +43709,12 @@ var KNOCK_CHECKS = {
   KNOCK_ENVELOPE_TOO_LARGE: {
     check: "C-85.3",
     where: "src/capture/doorbell.mjs knockEnvelopeTooLarge > is-knock-envelope-too-large",
-    translation: "This group's inbox did not read what you sent, because the request itself is larger than this door accepts. Nothing was stored, nothing was opened, and nothing about your material was judged \u2014 its size was read off the request and it stopped there. The size this instance will read is published beside this message. Send the material again smaller, or as more than one knock, and it will be read. The group can see how often its doorbell turns people away."
+    translation: "This group's inbox did not read what you sent, because the request itself is larger than this door accepts. Nothing was stored, nothing was opened, and nothing about your material was judged \u2014 its size was read off the request and it stopped there. The size this inbox will read is published beside this message. Send the material again smaller, or as more than one knock, and it will be read. The group can see how often its doorbell turns people away."
   },
   KNOCK_PAYLOAD_TOO_LARGE: {
     check: "C-85.4",
     where: "src/capture/doorbell.mjs knockPayloadTooLarge > is-knock-payload-too-large",
-    translation: "This group's inbox read your material and cannot keep it, because it is larger than this instance stores. That is a fact about how this group has set its instance up rather than a judgement about what you sent \u2014 a group that has configured evidence storage can keep far more \u2014 and the size this one can keep is published beside this message. Nothing was stored. Send something smaller, or ask the group's members how to get the whole of it to them. The group can see how often its doorbell turns people away."
+    translation: "This group's inbox read your material and cannot keep it, because it is larger than this inbox stores. That is a fact about how this group has set its Civicsmith up rather than a judgement about what you sent \u2014 a group that has configured evidence storage can keep far more \u2014 and the size this one can keep is published beside this message. Nothing was stored. Send something smaller, or ask the group's members how to get the whole of it to them. The group can see how often its doorbell turns people away."
   },
   KNOCK_EMPTY: {
     check: "C-85.5",
@@ -42306,13 +43724,13 @@ var KNOCK_CHECKS = {
 };
 
 // src/capture/ops.mjs
-function relayUnanswered(out, op, { json: json17, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) {
+function relayUnanswered(out, op, { json: json18, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) {
   if (out.refused && out.reply)
-    return typeof storeRefusal2 === "function" ? storeRefusal2(out) : json17(out.reply.body, out.reply.status);
+    return typeof storeRefusal2 === "function" ? storeRefusal2(out) : json18(out.reply.body, out.reply.status);
   if (!out.answered) return storeSilent2(op, out.correlation);
   return null;
 }
-async function linksOp(url, store, { json: json17, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2, viewer }) {
+async function linksOp(url, store, { json: json18, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2, viewer }) {
   const v = `viewer=${encodeURIComponent(viewer ?? "")}` + ["limit", "after"].map((k) => url.searchParams.get(k) ? `&${k}=${encodeURIComponent(url.searchParams.get(k))}` : "").join("");
   const address = url.searchParams.get("address");
   const capture2 = url.searchParams.get("capture");
@@ -42321,14 +43739,14 @@ async function linksOp(url, store, { json: json17, storeSilent: storeSilent2, st
   if (address) r = await doAnswer2(store.fetch(`http://x/linksto?address=${encodeURIComponent(normalizeAddress(address))}&${v}`));
   else if (host) r = await doAnswer2(store.fetch(`http://x/navchanges?host=${encodeURIComponent(host)}&${v}`));
   else if (/^[0-9a-f]{64}$/.test(capture2 || "")) r = await doAnswer2(store.fetch(`http://x/resolvelinks?capture=${capture2}&${v}`));
-  else return json17({
+  else return json18({
     ok: false,
     reason: "NEED_CAPTURE_OR_ADDRESS",
     detail: "pass capture=<sha256> for a document's outbound links, address=<url> for what points at it, or host=<host> for how that host's navigation changed between captures"
   }, 400);
-  const unanswered3 = relayUnanswered(r, "links", { json: json17, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
+  const unanswered3 = relayUnanswered(r, "links", { json: json18, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
   if (unanswered3) return unanswered3;
-  return json17({ ok: true, ...r.result });
+  return json18({ ok: true, ...r.result });
 }
 var EVIDENCE_ABSENT_FIXED = /* @__PURE__ */ new Set(["ok", "reason", "code", "check", "translation", "sha256", "store"]);
 function evidenceAbsent(sha2, store, extra = null) {
@@ -42351,11 +43769,11 @@ function evidenceAbsent(sha2, store, extra = null) {
     ...Object.fromEntries(own5)
   } };
 }
-async function captureObjectOp(req, url, env, { json: json17, storageAbsent: storageAbsent2, requiredArgument: requiredArgument2, key, storeName, cls: cls3 }) {
+async function captureObjectOp(req, url, env, { json: json18, storageAbsent: storageAbsent2, requiredArgument: requiredArgument2, key, storeName, cls: cls3 }) {
   if (typeof env.CAPTURES?.get !== "function") return storageAbsent2("capture", "R2 is not configured on this instance");
   const sha2 = (url.searchParams.get("sha256") || "").toLowerCase();
   if (!/^[0-9a-f]{64}$/.test(sha2))
-    return json17({ ok: false, ...requiredArgument2(
+    return json18({ ok: false, ...requiredArgument2(
       "capture",
       "sha256",
       "<64 lowercase hex>",
@@ -42367,7 +43785,7 @@ async function captureObjectOp(req, url, env, { json: json17, storageAbsent: sto
     const d = await crypto.subtle.digest("SHA-256", body);
     const digest2 = [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, "0")).join("");
     if (digest2 !== sha2)
-      return json17({
+      return json18({
         ok: false,
         reason: "INTEGRITY",
         detail: "body hash does not match the sha256 parameter",
@@ -42377,16 +43795,16 @@ async function captureObjectOp(req, url, env, { json: json17, storageAbsent: sto
         tokenClass: cls3
       }, 400);
     const existing = await env.CAPTURES.head(k);
-    if (existing) return json17({ ok: true, sha256: sha2, bytes: existing.size, existed: true, store: storeName, tokenClass: cls3 });
+    if (existing) return json18({ ok: true, sha256: sha2, bytes: existing.size, existed: true, store: storeName, tokenClass: cls3 });
     await env.CAPTURES.put(k, body, { sha256: d });
-    return json17({ ok: true, sha256: sha2, bytes: body.length, existed: false, store: storeName, tokenClass: cls3 });
+    return json18({ ok: true, sha256: sha2, bytes: body.length, existed: false, store: storeName, tokenClass: cls3 });
   }
   const wantRange = req.headers.get("range");
   const obj = await env.CAPTURES.get(k, wantRange ? { range: req.headers } : void 0);
   const dl = (url.searchParams.get("dl") || "").replace(/[^\w.\- ]/g, "").slice(0, 120);
   if (!obj) {
     const a = evidenceAbsent(sha2, storeName, { tokenClass: cls3 });
-    return json17(a.body, a.status);
+    return json18(a.body, a.status);
   }
   return new Response(obj.body, {
     status: wantRange ? 206 : 200,
@@ -42398,7 +43816,7 @@ async function captureObjectOp(req, url, env, { json: json17, storageAbsent: sto
     }
   });
 }
-async function archiveLookupOp(req, url, store, { json: json17, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2 }) {
+async function archiveLookupOp(req, url, store, { json: json18, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2 }) {
   const body = req.method === "POST" ? await req.json().catch(() => null) : null;
   const address = body?.address || url.searchParams.get("address");
   const r = await doAnswer2(store.fetch("http://x/archivelookup", {
@@ -42406,12 +43824,12 @@ async function archiveLookupOp(req, url, store, { json: json17, storeSilent: sto
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ address })
   }));
-  const unanswered3 = relayUnanswered(r, "archivelookup", { json: json17, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
+  const unanswered3 = relayUnanswered(r, "archivelookup", { json: json18, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
   if (unanswered3) return unanswered3;
-  return json17(r.result.body, r.result.status);
+  return json18(r.result.body, r.result.status);
 }
 async function acquireOp(req, env, store, {
-  json: json17,
+  json: json18,
   storeSilent: storeSilent2,
   storeRefusal: storeRefusal2,
   storageAbsent: storageAbsent2,
@@ -42421,9 +43839,9 @@ async function acquireOp(req, env, store, {
   sessMember,
   storeName
 }) {
-  if (req.method !== "POST") return { response: json17({ ok: false, error: "acquire is a POST" }, 405) };
+  if (req.method !== "POST") return { response: json18({ ok: false, error: "acquire is a POST" }, 405) };
   if (typeof env.CAPTURES?.put !== "function")
-    return { response: storageAbsent2("acquire", "this instance has no evidence storage configured") };
+    return { response: storageAbsent2("acquire", "your group's Civicsmith has no evidence storage configured") };
   const body = await req.json().catch(() => null);
   const q10 = new URLSearchParams({ cls: cls3 || "", member: member ? "1" : "0", sessMember: sessMember || "", store: storeName || "bio" });
   const r = await doAnswer2(store.fetch(`http://x/acquire?${q10}`, {
@@ -42431,10 +43849,10 @@ async function acquireOp(req, env, store, {
     headers: { "content-type": "application/json" },
     body: JSON.stringify(body || {})
   }));
-  const unanswered3 = relayUnanswered(r, "acquire", { json: json17, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
+  const unanswered3 = relayUnanswered(r, "acquire", { json: json18, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
   if (unanswered3) return { response: unanswered3 };
   const { status, body: answer } = r.result;
-  if (!answer || answer.ok !== true || !answer.document) return { response: json17(answer, status) };
+  if (!answer || answer.ok !== true || !answer.document) return { response: json18(answer, status) };
   return { answer };
 }
 function withReading(answer, { reading: reading2, textUnits, textUnitsOverBound }) {
@@ -42451,22 +43869,22 @@ function withReading(answer, { reading: reading2, textUnits, textUnitsOverBound 
   } };
 }
 async function captureOp(op, req, url, env, store, h) {
-  const { json: json17, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2 } = h;
-  if (op === "links") return linksOp(url, store(), { json: json17, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2, viewer: h.viewer });
+  const { json: json18, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2 } = h;
+  if (op === "links") return linksOp(url, store(), { json: json18, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2, viewer: h.viewer });
   if (op === "capture")
     return captureObjectOp(req, url, env, {
-      json: json17,
+      json: json18,
       storageAbsent: h.storageAbsent,
       requiredArgument: h.requiredArgument,
       key: h.key,
       storeName: h.storeName,
       cls: h.cls
     });
-  if (op === "archivelookup") return archiveLookupOp(req, url, store(), { json: json17, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2 });
+  if (op === "archivelookup") return archiveLookupOp(req, url, store(), { json: json18, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2 });
   if (op === "acquire") {
     const at34 = store();
     const acquired = await acquireOp(req, env, at34, {
-      json: json17,
+      json: json18,
       storeSilent: storeSilent2,
       storeRefusal: storeRefusal2,
       storageAbsent: h.storageAbsent,
@@ -42479,7 +43897,7 @@ async function captureOp(op, req, url, env, store, h) {
     if (acquired.response) return acquired.response;
     const read3 = await h.readAcquired(acquired.answer, at34);
     if (read3.response) return read3.response;
-    return json17(Object.assign(read3.body, { note: ACQUIRE_GRADE_NOTE }), 200);
+    return json18(Object.assign(read3.body, { note: ACQUIRE_GRADE_NOTE }), 200);
   }
   return null;
 }
@@ -42888,14 +44306,14 @@ var ReadHooks = class {
     return { ran, failed: failed3 };
   }
 };
-var instances5 = /* @__PURE__ */ new WeakMap();
+var instances6 = /* @__PURE__ */ new WeakMap();
 function readHooksOf(ctx) {
   const key = ctx && typeof ctx === "object" && ctx.storage && typeof ctx.storage === "object" ? ctx.storage : ctx;
   if (!key || typeof key !== "object" && typeof key !== "function") return new ReadHooks();
-  let h = instances5.get(key);
+  let h = instances6.get(key);
   if (!h) {
     h = new ReadHooks();
-    instances5.set(key, h);
+    instances6.set(key, h);
   }
   return h;
 }
@@ -43664,18 +45082,18 @@ async function read(document, {
   }
 }
 async function bytesOf(evidence, doc) {
-  const whole = async (digest2) => {
+  const whole2 = async (digest2) => {
     const o = await evidence.get(digest2);
     return o ? new Uint8Array(await o.arrayBuffer()) : null;
   };
-  if (!Array.isArray(doc.parts)) return { bytes: await whole(doc.capture.sha256) };
+  if (!Array.isArray(doc.parts)) return { bytes: await whole2(doc.capture.sha256) };
   const total2 = doc.parts.reduce((n, p3) => n + (Number.isFinite(p3 && p3.bytes) ? p3.bytes : 0), 0);
   if (total2 > MULTIPART_READ_MAX)
     return { bytes: null, why: `the capture is ${total2} bytes in ${doc.parts.length} parts, over the ${MULTIPART_READ_MAX} B a format entry is handed here, so it was not read` };
   const out = new Uint8Array(total2);
   let at34 = 0;
   for (const p3 of doc.parts) {
-    const b = p3 && typeof p3.sha256 === "string" ? await whole(p3.sha256) : null;
+    const b = p3 && typeof p3.sha256 === "string" ? await whole2(p3.sha256) : null;
     if (!b) return { bytes: null, why: `part ${doc.parts.indexOf(p3) + 1} of ${doc.parts.length} is not held in the evidence store` };
     out.set(b.subarray(0, Math.max(0, total2 - at34)), at34);
     at34 += b.length;
@@ -44155,11 +45573,11 @@ var MIGRATIONS = Object.freeze({
     noLayer: "the reading carries no pptx text layer to mark, so nothing it holds was read from the slides"
   })
 });
-var instances6 = /* @__PURE__ */ new WeakMap();
+var instances7 = /* @__PURE__ */ new WeakMap();
 var isObjectState = (ctx) => !!ctx && typeof ctx.blockConcurrencyWhile === "function";
 function extractionOf(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let x = instances6.get(storage);
+  let x = instances7.get(storage);
   if (!x) {
     const record = opts.record ?? recordOf(ctx);
     x = new Extraction(storage, {
@@ -44170,7 +45588,7 @@ function extractionOf(ctx, opts = {}) {
       provenance: opts.provenance ?? (isObjectState(ctx) ? provenanceOf(ctx) : null),
       host: opts.host ?? (isObjectState(ctx) ? ctx : null)
     });
-    instances6.set(storage, x);
+    instances7.set(storage, x);
     x.registerFigures();
   }
   return x;
@@ -44633,8 +46051,8 @@ var Extraction = class _Extraction {
      replaced; one equal to the latest kept is not kept again; a capture whose one reading predates the history has
      it kept first; each kept reading stores `compareProvenance` against the one before (reading-pipeline R19). */
   #keepReading(bundleId, sha2, reading2) {
-    const json17 = JSON.stringify(reading2);
-    const digest2 = sha256HexSync(json17);
+    const json18 = JSON.stringify(reading2);
+    const digest2 = sha256HexSync(json18);
     const provOf2 = (r) => r && typeof r === "object" && r.provenance && typeof r.provenance === "object" && r.provenance.scheme === PROVENANCE_SCHEME ? r.provenance : null;
     const textShaOf = (p3) => p3 && typeof p3.text_sha256 === "string" ? p3.text_sha256 : null;
     const now = stampInstant("second");
@@ -44670,7 +46088,7 @@ var Extraction = class _Extraction {
       seq,
       bundleId,
       digest2,
-      json17,
+      json18,
       np ? JSON.stringify(np) : null,
       textShaOf(np),
       compared ? JSON.stringify(compared) : null,
@@ -45598,9 +47016,9 @@ var Extraction = class _Extraction {
           if (out) {
             this.recordComposed(reading2, sha2);
             const afterRead = out.afterRead ? await out.afterRead : null;
-            const ls = Object.values(out.listeners || {});
-            const staled = ls.reduce((n, l2) => n + (l2 && Number.isInteger(l2.staled) ? l2.staled : 0), 0);
-            const observed = (ls.find((l2) => l2 && l2.observed) || {}).observed ?? null;
+            const ls2 = Object.values(out.listeners || {});
+            const staled = ls2.reduce((n, l2) => n + (l2 && Number.isInteger(l2.staled) ? l2.staled : 0), 0);
+            const observed = (ls2.find((l2) => l2 && l2.observed) || {}).observed ?? null;
             w = {
               ok: true,
               staled,
@@ -46520,11 +47938,11 @@ function gradeAcross(row9, extent, older, newer) {
     older = { ...older, cells: null };
     newer = { ...newer, cells: null };
   }
-  const whole = extent.kind === "document";
+  const whole2 = extent.kind === "document";
   const cited = heldTextAt(extent, older);
   if (cited.text == null) return U(cited.reason, `${cited.why}, so there is nothing to compare`);
   const found3 = (x) => ({ extent: safeJson28(x.extent), ref: x.ref });
-  if (whole) {
+  if (whole2) {
     const complete = newer.state === "whole" && newer.units.length && !newer.units.some((u) => u.truncated);
     if (!complete)
       return U(
@@ -48244,9 +49662,9 @@ function legacyConnectionAxis(r, extent, connectionByBundle) {
     why: `this leg cites ${describeExtent2(extent)} and refers only to that portion (Bob, 2026-09-14). Whether any resolution of this document to the subject was established inside it is undetermined and stated, never borrowed from the whole document. The document-grain answer is under earned.connection for ${r.bundle_id}, and it is the DOCUMENT's, not this portion's`
   };
 }
-var instances7 = /* @__PURE__ */ new WeakMap();
+var instances8 = /* @__PURE__ */ new WeakMap();
 function contentOf(host, deps) {
-  let c = instances7.get(host);
+  let c = instances8.get(host);
   if (!c) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -48254,7 +49672,7 @@ function contentOf(host, deps) {
     const provenance = d.provenance || provenanceOf(host);
     const extraction = d.extraction || extractionOf(host);
     c = new Content({ ...d, storage: d.storage || host.storage, record, membership, provenance, extraction });
-    instances7.set(host, c);
+    instances8.set(host, c);
     declareTables(record);
     c.extraction.onReading("content", (e2) => ({ staled: c.markStale(e2.captureSha, e2.chainAfter, { unitsBefore: e2.unitsBefore ?? null }) }));
     joinTestimony(c);
@@ -48302,7 +49720,7 @@ var KNOCK = {
   // without one: inline into the store, small only
 };
 KNOCK.statedPerIp = `at most ${KNOCK.perIp} knocks from one source in any ${KNOCK.windowMs / 6e4} minutes, estimated by a sliding window`;
-KNOCK.statedGlobal = `at most ${KNOCK.global} knocks to this instance in any ${KNOCK.windowMs / 6e4} minutes, estimated by a sliding window`;
+KNOCK.statedGlobal = `at most ${KNOCK.global} knocks to this group's inbox in any ${KNOCK.windowMs / 6e4} minutes, estimated by a sliding window`;
 function knockEnvelopeTooLarge() {
   const row9 = KNOCK_CHECKS.KNOCK_ENVELOPE_TOO_LARGE;
   if (!row9 || typeof row9.translation !== "string" || !row9.translation)
@@ -48327,7 +49745,7 @@ function knockPayloadTooLarge(cap, evidence) {
     check: row9.check,
     translation: row9.translation,
     maxBytes: cap,
-    detail: evidence ? void 0 : "this instance stores knocks inline; large material needs its evidence storage configured"
+    detail: evidence ? void 0 : "this group's inbox stores knocks inline; large material needs its evidence storage configured"
   };
 }
 function knockEmpty() {
@@ -48352,14 +49770,16 @@ function knockerSecretWeak() {
     minChars: KNOCKER_SECRET_MIN
   };
 }
-async function knockOp(req, env, store, { json: json17, requiredArgument: requiredArgument2, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2 }) {
-  if (req.method !== "POST") return json17({ ok: false, error: "knock is a POST" }, 405);
-  const refuse21 = async (answer, status) => {
-    await tallyRefusal(store, doAnswer2);
-    return json17(answer, status);
+async function knockOp(req, env, store, { json: json18, requiredArgument: requiredArgument2, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2, country = null }) {
+  if (req.method !== "POST") return json18({ ok: false, error: "knock is a POST" }, 405);
+  const place = typeof country === "string" && country ? country : null;
+  const stamp3 = place ? `&country=${encodeURIComponent(place)}` : "";
+  const refuse22 = async (answer, status) => {
+    await tallyRefusal(store, doAnswer2, place);
+    return json18(answer, status);
   };
   const raw = await req.arrayBuffer();
-  if (raw.byteLength > KNOCK.maxBytes + 4096) return refuse21(knockEnvelopeTooLarge(), 413);
+  if (raw.byteLength > KNOCK.maxBytes + 4096) return refuse22(knockEnvelopeTooLarge(), 413);
   let body;
   try {
     body = JSON.parse(new TextDecoder().decode(raw));
@@ -48367,7 +49787,7 @@ async function knockOp(req, env, store, { json: json17, requiredArgument: requir
     body = null;
   }
   if (!body || typeof body.contentB64 !== "string" && typeof body.contentText !== "string")
-    return refuse21({ ok: false, ...requiredArgument2(
+    return refuse22({ ok: false, ...requiredArgument2(
       "knock",
       "contentB64 or contentText",
       "a JSON body with contentB64=<base64> or contentText=<text>",
@@ -48377,15 +49797,15 @@ async function knockOp(req, env, store, { json: json17, requiredArgument: requir
   try {
     bytes2 = typeof body.contentB64 === "string" ? Uint8Array.from(atob(body.contentB64), (c) => c.charCodeAt(0)) : new TextEncoder().encode(body.contentText);
   } catch {
-    return refuse21({ ok: false, ...requiredArgument2("knock", "contentB64", "<base64>", "contentB64 is not valid base64") }, 400);
+    return refuse22({ ok: false, ...requiredArgument2("knock", "contentB64", "<base64>", "contentB64 is not valid base64") }, 400);
   }
-  if (bytes2.length === 0) return refuse21(knockEmpty(), 400);
+  if (bytes2.length === 0) return refuse22(knockEmpty(), 400);
   const evidence = typeof env.CAPTURES?.put === "function";
   const cap = evidence ? KNOCK.maxBytes : KNOCK.maxInline;
-  if (bytes2.length > cap) return refuse21(knockPayloadTooLarge(cap, evidence), 413);
-  if (isWeakKnockerSecret(body.knockerSecret)) return refuse21(knockerSecretWeak(), 400);
+  if (bytes2.length > cap) return refuse22(knockPayloadTooLarge(cap, evidence), 413);
+  if (isWeakKnockerSecret(body.knockerSecret)) return refuse22(knockerSecretWeak(), 400);
   const source2 = req.headers.get("cf-connecting-ip") || "unknown";
-  const out = await doAnswer2(store.fetch(new Request(`http://do/knock?source=${encodeURIComponent(source2)}`, {
+  const out = await doAnswer2(store.fetch(new Request(`http://do/knock?source=${encodeURIComponent(source2)}${stamp3}`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
@@ -48402,15 +49822,15 @@ async function knockOp(req, env, store, { json: json17, requiredArgument: requir
       now: Date.now()
     })
   })));
-  const unanswered3 = relayUnanswered(out, "knock", { json: json17, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
+  const unanswered3 = relayUnanswered(out, "knock", { json: json18, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
   if (unanswered3) return unanswered3;
   const rec = out.result || {};
   if (!rec.ok) {
     if (rec.reason === "RATE_IP" || rec.reason === "RATE_GLOBAL")
-      return json17({ ok: false, ...rec, stated: rec.reason === "RATE_IP" ? KNOCK.statedPerIp : KNOCK.statedGlobal }, 429);
-    return json17({ ok: false, ...rec }, rec.status || 502);
+      return json18({ ok: false, ...rec, stated: rec.reason === "RATE_IP" ? KNOCK.statedPerIp : KNOCK.statedGlobal }, 429);
+    return json18({ ok: false, ...rec }, rec.status || 502);
   }
-  return json17({
+  return json18({
     ok: true,
     knockId: rec.knockId,
     sha256: rec.sha256,
@@ -48420,9 +49840,9 @@ async function knockOp(req, env, store, { json: json17, requiredArgument: requir
     ...typeof rec.secret === "string" ? { secret: rec.secret } : {}
   }, 200);
 }
-async function tallyRefusal(store, doAnswer2) {
+async function tallyRefusal(store, doAnswer2, country = null) {
   try {
-    await doAnswer2(store.fetch(new Request("http://do/doorbellrefused", {
+    await doAnswer2(store.fetch(new Request(`http://do/doorbellrefused${country ? `?country=${encodeURIComponent(country)}` : ""}`, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ now: Date.now() })
@@ -48477,8 +49897,8 @@ async function checkInformationExtension(ctx, findings) {
   const dsRaw = ctx.files.get("data/dataset.json");
   if (dsRaw && chOk) {
     try {
-      const canon4 = canonicalJson(JSON.parse(asText6(dsRaw)));
-      const actual = "sha256:" + await ctx.sha256(canon4);
+      const canon5 = canonicalJson(JSON.parse(asText6(dsRaw)));
+      const actual = "sha256:" + await ctx.sha256(canon5);
       if (actual !== ch) {
         findings.push(f8(
           "C-2.7",
@@ -49067,7 +50487,7 @@ var SECURITY_THRESHOLD = Object.freeze({ atLeast: 10, times: 5, usualDays: 28 })
 var RECOVERY_CODE_COUNT = 10;
 var HOUR_MS = 3600 * 1e3;
 var DAY_MS = 24 * HOUR_MS;
-var stampSecond2 = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
+var stampSecond3 = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
 var ROOT = Membership.ROOT_ADMIN;
 var Credentials = class _Credentials {
   constructor({ sql, core = null, membership = null, sealSecret = null } = {}) {
@@ -49148,7 +50568,7 @@ var Credentials = class _Credentials {
     }
     this.sql.exec(
       `UPDATE ai_credentials SET expires_at=? WHERE expires_at IS NULL`,
-      stampSecond2(Date.now() + AI_CREDENTIAL_EXPIRY_DAYS.default * DAY_MS)
+      stampSecond3(Date.now() + AI_CREDENTIAL_EXPIRY_DAYS.default * DAY_MS)
     );
     this.declareTables();
   }
@@ -49328,7 +50748,7 @@ var Credentials = class _Credentials {
   async login({ role = ROOT, password, ttlSeconds = 43200, source: source2 = null, country = null } = {}) {
     const gate = await this.#gate({ role, source: source2, country, password });
     if (gate.paused) return gate.paused;
-    const refuse21 = () => {
+    const refuse22 = () => {
       this.#refusedAttempt(gate, country);
       return _Credentials.#refused();
     };
@@ -49336,16 +50756,16 @@ var Credentials = class _Credentials {
       const m = this.#memberFacts(role.slice(7));
       if (!m || m.status !== "active") {
         await _Credentials.#payLoginCost(password);
-        return refuse21();
+        return refuse22();
       }
     }
     const c = this.#one(`SELECT salt, hash, iterations FROM credentials WHERE role=?`, role);
     if (!c) {
       await _Credentials.#payLoginCost(password);
-      return refuse21();
+      return refuse22();
     }
     const got = await _Credentials.#derive(String(password ?? ""), c.salt, c.iterations);
-    if (!_Credentials.#same(got, c.hash)) return refuse21();
+    if (!_Credentials.#same(got, c.hash)) return refuse22();
     const token = _Credentials.#rand(32);
     const expires = Date.now() + ttlSeconds * 1e3;
     this.sql.exec(`DELETE FROM sessions WHERE expires < ?`, Date.now());
@@ -49442,7 +50862,7 @@ var Credentials = class _Credentials {
       this.sql.exec(
         `INSERT OR IGNORE INTO security_key (id, key_hex, created) VALUES (1, ?, ?)`,
         _Credentials.#rand(32),
-        stampSecond2()
+        stampSecond3()
       );
       r = this.#one(`SELECT key_hex FROM security_key WHERE id=1`);
     }
@@ -49450,10 +50870,10 @@ var Credentials = class _Credentials {
   }
   /* HMAC-SHA-256 under that key, as hex. */
   async #keyed(text7) {
-    const hex7 = this.#securityKeyHex();
-    if (this.#hmac?.hex !== hex7) {
-      const raw = Uint8Array.from(hex7.match(/../g), (h) => parseInt(h, 16));
-      this.#hmac = { hex: hex7, key: await crypto.subtle.importKey("raw", raw, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]) };
+    const hex9 = this.#securityKeyHex();
+    if (this.#hmac?.hex !== hex9) {
+      const raw = Uint8Array.from(hex9.match(/../g), (h) => parseInt(h, 16));
+      this.#hmac = { hex: hex9, key: await crypto.subtle.importKey("raw", raw, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]) };
     }
     const mac = await crypto.subtle.sign("HMAC", this.#hmac.key, _Credentials.#enc.encode(text7));
     return [...new Uint8Array(mac)].map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -49843,7 +51263,7 @@ var Credentials = class _Credentials {
         ...extra || {}
       };
     };
-    const now = at34 || stampSecond2();
+    const now = at34 || stampSecond3();
     const id = String(tokenId ?? "").trim();
     const kind = String(principalKind ?? "").trim().toLowerCase();
     if (!who2 || isMachineIdentity(who2))
@@ -49886,7 +51306,7 @@ var Credentials = class _Credentials {
         { expiresInDays: typeof expiresInDays === "number" ? expiresInDays : null }
       );
     const base2 = Date.parse(now);
-    const expiresAt = stampSecond2((Number.isFinite(base2) ? base2 : Date.now()) + days * DAY_MS);
+    const expiresAt = stampSecond3((Number.isFinite(base2) ? base2 : Date.now()) + days * DAY_MS);
     const declared2 = (Array.isArray(writes) ? writes : []).map((w) => String(w)).sort();
     const confinement = confinedTo === null || confinedTo === void 0 ? null : String(confinedTo);
     this.sql.exec(
@@ -49924,7 +51344,7 @@ var Credentials = class _Credentials {
         ...extra || {}
       };
     };
-    const now = at34 || stampSecond2();
+    const now = at34 || stampSecond3();
     const id = String(tokenId ?? "").trim();
     if (!who2 || isMachineIdentity(who2))
       return refusal29(
@@ -50048,14 +51468,14 @@ var Credentials = class _Credentials {
      `member` naming no member of the roster ('organisation', a project, a machine class) is refused as any principal
      but the acting member is: NOT_YOUR_ACCOUNT, or ACCOUNT_MEMBER_NOT_ACTIVE when it names the actor themself (K1756). */
   #accountBar(member, by) {
-    const refuse21 = (code, detail) => _Credentials.#row(ACCOUNT_CHECKS, code, detail);
+    const refuse22 = (code, detail) => _Credentials.#row(ACCOUNT_CHECKS, code, detail);
     if (by === null || by === void 0 || by === "" || isMachineIdentity(by))
-      return refuse21("MACHINE_CANNOT_HOLD_ACCOUNT", "a member's Claude account is held only by that member's own act, from their own signed-in session; this caller has no member behind it. Nothing was written.");
+      return refuse22("MACHINE_CANNOT_HOLD_ACCOUNT", "a member's Claude account is held only by that member's own act, from their own signed-in session; this caller has no member behind it. Nothing was written.");
     const id = _Credentials.#memberOf(member);
     if (id === null || _Credentials.#memberOf(by) !== id)
       return _Credentials.#notYours("a member's Claude account is acted on only by that member; another member, an administrator or the founder cannot. Nothing was written.");
     if (this.#memberFacts(id)?.status !== "active")
-      return refuse21("ACCOUNT_MEMBER_NOT_ACTIVE", "only an active member holds a Claude account reference. Nothing was written.");
+      return refuse22("ACCOUNT_MEMBER_NOT_ACTIVE", "only an active member holds a Claude account reference. Nothing was written.");
     return null;
   }
   /* R22–R24, R27, R35: NOT_YOUR_ACCOUNT, minted here alone; `detail` is the asking act's fixed sentence. */
@@ -50153,7 +51573,7 @@ var Credentials = class _Credentials {
     if (unsealable) return unsealable;
     const id = _Credentials.#memberOf(member);
     const { sealed, iv } = await this.#encrypt(`member:${id}`, kind, secret);
-    const setAt = stampSecond2();
+    const setAt = stampSecond3();
     this.sql.exec(
       `INSERT INTO account_references (member_id, kind, sealed, iv, set_at) VALUES (?,?,?,?,?)
        ON CONFLICT(member_id) DO UPDATE SET kind=excluded.kind, sealed=excluded.sealed, iv=excluded.iv,
@@ -50211,7 +51631,7 @@ var Credentials = class _Credentials {
     const id = _Credentials.#memberOf(member);
     if (id === null || isMachineIdentity(member) || this.#memberFacts(id)?.status !== "active")
       return _Credentials.#row(ACCOUNT_CHECKS, "ACCOUNT_MEMBER_NOT_ACTIVE", "only an active member is connected through their subscription. Nothing was recorded.");
-    this.sql.exec(`INSERT OR IGNORE INTO subscription_connections (member_id, since) VALUES (?,?)`, id, stampSecond2());
+    this.sql.exec(`INSERT OR IGNORE INTO subscription_connections (member_id, since) VALUES (?,?)`, id, stampSecond3());
     return { ok: true, member: id, since: this.#one(`SELECT since FROM subscription_connections WHERE member_id=?`, id).since };
   }
   /* R43: the member's own act (R22's refusals) clears it; so does their revocation (R16). */
@@ -50292,7 +51712,7 @@ var Credentials = class _Credentials {
       act2,
       detail ?? null,
       _Credentials.#memberOf(by),
-      stampSecond2()
+      stampSecond3()
     );
   }
   /* R33: one key for the group's copy, replacing any earlier one; off when first set (a replacement keeps the switch
@@ -50305,7 +51725,7 @@ var Credentials = class _Credentials {
     const unsealable = this.#seal();
     if (unsealable) return unsealable;
     const { sealed, iv } = await this.#encrypt(_Credentials.#GROUP_KEY_OWNER, "apikey", key);
-    const setAt = stampSecond2();
+    const setAt = stampSecond3();
     const first = !this.#groupKeyFacts().held;
     this.sql.exec(
       `INSERT INTO group_key (id, sealed, iv, is_on, set_by, set_at) VALUES (1,?,?,0,?,?)
@@ -50384,7 +51804,7 @@ var Credentials = class _Credentials {
     if (bar) return bar;
     const id = _Credentials.#memberOf(member);
     const already = !!this.#one(`SELECT member_id FROM group_key_notices WHERE member_id=?`, id);
-    if (!already) this.sql.exec(`INSERT INTO group_key_notices (member_id, seen_at) VALUES (?,?)`, id, stampSecond2());
+    if (!already) this.sql.exec(`INSERT INTO group_key_notices (member_id, seen_at) VALUES (?,?)`, id, stampSecond3());
     return { ok: true, seen: true, already };
   }
   /* R36: GROUP_KEY_NOTICE_DUE, minted here alone. */
@@ -50467,15 +51887,15 @@ var Credentials = class _Credentials {
   /* R32: a standing question's grant, for `answers` R19 only (not routed): shaped as R27's, minted with no session. */
   async aiGrantMintStanding({ member = null, question = null } = {}) {
     const id = _Credentials.#memberOf(member);
-    const refuse21 = (code, detail) => _Credentials.#row(ACCOUNT_CHECKS, code, detail, { member: id });
+    const refuse22 = (code, detail) => _Credentials.#row(ACCOUNT_CHECKS, code, detail, { member: id });
     if (id === null || isMachineIdentity(member) || this.#memberFacts(id)?.status !== "active")
-      return refuse21("ACCOUNT_MEMBER_NOT_ACTIVE", "a standing question runs only for an active member. Nothing was minted.");
+      return refuse22("ACCOUNT_MEMBER_NOT_ACTIVE", "a standing question runs only for an active member. Nothing was minted.");
     const serving = this.#servingAccount(id);
     if (!serving) return this.#noAccount(id);
     if (!serving.standing)
-      return refuse21("STANDING_SWITCH_OFF", `standing questions are off for the ${serving.level === "group" ? "group's key" : "member's own account"}, which would serve this one. Nothing was minted.`);
+      return refuse22("STANDING_SWITCH_OFF", `standing questions are off for the ${serving.level === "group" ? "group's key" : "member's own account"}, which would serve this one. Nothing was minted.`);
     if (typeof question !== "string" || question.trim() === "")
-      return refuse21("NO_QUESTION", "no standing question was named. Nothing was minted.");
+      return refuse22("NO_QUESTION", "no standing question was named. Nothing was minted.");
     return this.#mintGrant(id, "", Date.now() + AI_GRANT_TTL_SECONDS * 1e3, "standing");
   }
   /* R28, R31: the live grant a token names, or null: unexpired and, for an ask's, its session live and the member's;
@@ -50614,7 +52034,7 @@ var Credentials = class _Credentials {
   }
   /* ===== THE SECURITY MAP AND THE LEVEL (R45; DEC-165, DEC-166; K1881, K1934 (2), (3)) ===== */
   static #iso(ms5) {
-    return stampSecond2(ms5);
+    return stampSecond3(ms5);
   }
   static #instantOf(v) {
     if (typeof v === "number") return Number.isFinite(v) ? v : NaN;
@@ -50780,7 +52200,7 @@ var Credentials = class _Credentials {
     const bar = this.#adminBar(by, "issuing recovery codes");
     if (bar) return bar;
     const role = _Credentials.#roleFor(_Credentials.#memberOf(by));
-    const issuedAt = stampSecond2();
+    const issuedAt = stampSecond3();
     const codes = Array.from({ length: RECOVERY_CODE_COUNT }, () => _Credentials.#newCode());
     this.#tx(() => {
       this.sql.exec(`UPDATE recovery_codes SET spent_at=? WHERE role=? AND spent_at IS NULL`, issuedAt, role);
@@ -50834,26 +52254,26 @@ var Credentials = class _Credentials {
     };
     const admin = this.#roleIsAdmin(asked);
     const given2 = typeof code === "string" && code.trim() !== "";
-    const refuse21 = () => {
+    const refuse22 = () => {
       this.#refusedAttempt(gate, country);
       return _Credentials.#recoveryRefused();
     };
     if (!(matches2() !== null && admin && given2)) {
       await _Credentials.#payLoginCost(password);
-      return refuse21();
+      return refuse22();
     }
     const hashed = await _Credentials.#hashFor(password);
     const done = this.#tx(() => {
       const hit = matches2();
       if (hit === null || !this.#roleIsAdmin(asked)) return null;
-      const at34 = stampSecond2();
+      const at34 = stampSecond3();
       this.#storePassword(asked, hashed);
       this.sql.exec(`UPDATE recovery_codes SET spent_at=? WHERE code_sha=?`, at34, hit);
       this.#endSessions(this.#rows(`SELECT token_sha FROM sessions WHERE role=?`, asked).map((r) => r.token_sha));
       this.sql.exec(`INSERT INTO recoveries (role, at) VALUES (?,?)`, asked, at34);
       return { ok: true, role: asked, remaining: unspent(asked).length };
     });
-    if (!done) return refuse21();
+    if (!done) return refuse22();
     this.#succeeded(gate);
     return done;
   }
@@ -50881,7 +52301,7 @@ var Credentials = class _Credentials {
     const unsealable = this.#seal();
     if (unsealable) return unsealable;
     const { sealed, iv } = await this.#encrypt(`group:${service}`, "key", key);
-    const setAt = stampSecond2();
+    const setAt = stampSecond3();
     this.sql.exec(
       `INSERT INTO keyed_services (service, sealed, iv, is_on, set_by, set_at) VALUES (?,?,?,0,?,?)
        ON CONFLICT(service) DO UPDATE SET sealed=excluded.sealed, iv=excluded.iv, set_by=excluded.set_by,
@@ -51579,9 +52999,9 @@ var CAPTURE_EXEMPT_TABLES = [
 ];
 
 // src/capture/index.mjs
-var stampSecond3 = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
+var stampSecond4 = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
 var ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
-var HEX644 = /^[0-9a-f]{64}$/;
+var HEX645 = /^[0-9a-f]{64}$/;
 var te5 = new TextEncoder();
 var hexOf2 = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var b64Of = (bytes2) => {
@@ -51613,7 +53033,7 @@ var rawReplayOf = (archived) => {
 var REPLAY_MAX = 256 * 1024 * 1024;
 var WITHIN_FAULT = Symbol("pullKnock: within's fault");
 var PULL_WITHIN_FAILED_DETAIL = "the act run with the pull did not complete, so the pull was rolled back and nothing was written";
-var TASK_KINDS = Object.freeze(["authority-undetermined"]);
+var TASK_KINDS = Object.freeze(["authority-undetermined", "archive-unpack"]);
 var boundedSubject = (v) => String(v == null ? "" : v).replace(/[\r\n\t]+/g, " ").replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 200);
 var SOURCE_OUTCOMES = Object.freeze(["success", "source_refused", "fetch_failed", "governed"]);
 var REACHABILITY_DEFAULTS = Object.freeze({ failures: 3, days: 14, minForAge: 2 });
@@ -51649,7 +53069,8 @@ var TALLY_DAYS = 30;
 var INBOX_SORTS = Object.freeze(["received", "status", "secret", "project"]);
 var SORT_DIRS = Object.freeze(["asc", "desc"]);
 var HELD_SORTS = Object.freeze(["age", "source", "project"]);
-var instances8 = /* @__PURE__ */ new WeakMap();
+var HELD_FILES_IN_ROW = 50;
+var instances9 = /* @__PURE__ */ new WeakMap();
 var supplied = /* @__PURE__ */ new WeakMap();
 var sameEnv2 = (a, b) => {
   const ka = Object.keys(a || {}), kb = Object.keys(b || {});
@@ -51657,7 +53078,7 @@ var sameEnv2 = (a, b) => {
 };
 function captureOf(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let c = instances8.get(storage);
+  let c = instances9.get(storage);
   if (!c) {
     const record = opts.record ?? recordOf(ctx), provenance = opts.provenance ?? provenanceOf(ctx);
     c = new Capture(storage, {
@@ -51666,22 +53087,27 @@ function captureOf(ctx, opts = {}) {
       provenance,
       governor: opts.governor ?? governorOf(ctx, { env: opts.env ?? null }),
       /* attestation's own instance for this host, over the record and provenance capture holds */
-      attestation: opts.attestation ?? attestationOf(ctx, { record, provenance })
+      attestation: opts.attestation ?? attestationOf(ctx, { record, provenance }),
+      /* acquisition's own instance for this host (its archive records, R38–R41; B3, K1953),
+         made when first reached */
+      acquisition: opts.acquisition ?? null,
+      acquisitionHost: opts.acquisition ? null : ctx
     });
-    instances8.set(storage, c);
-    supplied.set(c, new Set(["env", "governor", "record", "provenance", "attestation"].filter((k) => opts[k] != null)));
+    instances9.set(storage, c);
+    supplied.set(c, new Set(["env", "governor", "record", "provenance", "attestation", "acquisition", "ownHosts"].filter((k) => opts[k] != null)));
     registerGrammar(c.core);
     registerFigures2(c);
     return c;
   }
   const given2 = supplied.get(c);
-  const refuse21 = (name2) => {
+  const refuse22 = (name2) => {
     throw new Error(`captureOf: a caller supplied a different \`${name2}\` for a storage whose capture already holds another one a caller gave; capture refuses it rather than run against either silently (R58)`);
   };
-  if (opts.env != null && given2.has("env") && !sameEnv2(c.env, opts.env)) refuse21("env");
-  if (opts.governor != null && given2.has("governor") && c.governor !== opts.governor) refuse21("governor");
-  for (const [name2, held2] of [["record", c.core], ["provenance", c.provenance], ["attestation", c.attestation]])
-    if (opts[name2] != null && opts[name2] !== held2) refuse21(name2);
+  if (opts.env != null && given2.has("env") && !sameEnv2(c.env, opts.env)) refuse22("env");
+  if (opts.governor != null && given2.has("governor") && c.governor !== opts.governor) refuse22("governor");
+  if (opts.ownHosts != null && given2.has("ownHosts") && !Capture.sameHosts(c.ownHosts, opts.ownHosts)) refuse22("ownHosts");
+  for (const [name2, held2] of [["record", c.core], ["provenance", c.provenance], ["attestation", c.attestation], ["acquisition", c.acquisition]])
+    if (opts[name2] != null && opts[name2] !== held2) refuse22(name2);
   if (opts.env != null && !given2.has("env")) {
     c.env = opts.env;
     given2.add("env");
@@ -51689,6 +53115,10 @@ function captureOf(ctx, opts = {}) {
   if (opts.governor != null && !given2.has("governor")) {
     c.governor = opts.governor;
     given2.add("governor");
+  }
+  if (opts.ownHosts != null && !given2.has("ownHosts")) {
+    c.ownHosts = Capture.hostsOf(opts.ownHosts);
+    given2.add("ownHosts");
   }
   return c;
 }
@@ -51711,7 +53141,19 @@ var Capture = class _Capture {
   #listeners = /* @__PURE__ */ new Map();
   #readers = /* @__PURE__ */ new Map();
   #declared = false;
-  constructor(storage, { record, env = {}, governor = null, provenance = null, attestation = null, credentials = null } = {}) {
+  #acquisition = null;
+  #acquisitionHost = null;
+  constructor(storage, {
+    record,
+    env = {},
+    governor = null,
+    provenance = null,
+    attestation = null,
+    credentials = null,
+    acquisition = null,
+    acquisitionHost = null,
+    ownHosts = []
+  } = {}) {
     this.#storage = storage;
     this.#sql = storage.sql;
     this.core = record;
@@ -51720,6 +53162,36 @@ var Capture = class _Capture {
     this.provenance = provenance;
     this.attestation = attestation;
     this.credentials = credentials;
+    this.#acquisition = acquisition;
+    this.#acquisitionHost = acquisitionHost;
+    this.ownHosts = _Capture.hostsOf(ownHosts);
+  }
+  /** R73 (T35): acquisition's instance, the one given, else `acquisitionOf` over this host's storage made when first
+   *  reached (a record without record-core's table seam, a test's stand-in, reads as none: the archive acts then answer
+   *  acquisition's `ARCHIVE_RECORD_UNAVAILABLE`). */
+  get acquisition() {
+    if (!this.#acquisition && this.#acquisitionHost) {
+      const host = this.#acquisitionHost;
+      this.#acquisitionHost = null;
+      try {
+        this.#acquisition = acquisitionOf(host, { record: this.core, provenance: this.provenance });
+      } catch {
+        this.#acquisition = null;
+      }
+    }
+    return this.#acquisition;
+  }
+  set acquisition(a) {
+    this.#acquisition = a;
+    this.#acquisitionHost = null;
+  }
+  /* R73: a list of host names, lower-cased, each once; anything else reads as none. */
+  static hostsOf(list6) {
+    return Object.freeze([...new Set((Array.isArray(list6) ? list6 : []).filter((h) => typeof h === "string" && h.trim()).map((h) => h.trim().toLowerCase()))]);
+  }
+  static sameHosts(a, b) {
+    const x = _Capture.hostsOf(a), y = _Capture.hostsOf(b);
+    return x.length === y.length && x.every((h) => y.includes(h));
   }
   /* credentials' instance for this storage (R69's attesting keys, its R11), reached when first needed. */
   #credentials() {
@@ -51844,6 +53316,19 @@ var Capture = class _Capture {
   archiveLookup(args) {
     return archiveLookup(this, args);
   }
+  /** R73 (T35; `acquisition` R38): `acquisition`'s `unpack` with this module's store handed in. */
+  unpack(args) {
+    return unpack(this, args);
+  }
+  /** R73, R77 (T35; `acquisition` R41): `acquisition`'s `archiveList`, likewise. */
+  archiveList(args) {
+    return archiveList(this, args);
+  }
+  /** R73, R77 (T35; `acquisition` R41): `acquisition`'s `memberOf`, likewise: every archive a capture was filed from or
+   *  found in, `[]` for none. */
+  memberOf(captureSha) {
+    return memberOf(this, captureSha);
+  }
   #emitSync(event2, payload) {
     const out = [];
     for (const { module, fn } of this.#listeners.get(event2) || []) {
@@ -51889,7 +53374,7 @@ var Capture = class _Capture {
     if (!r) {
       const k = new Uint8Array(32);
       crypto.getRandomValues(k);
-      this.#tx(() => this.#sql.exec(`INSERT OR IGNORE INTO knock_key (id, key_hex, created) VALUES (1, ?, ?)`, hexOf2(k), stampSecond3()));
+      this.#tx(() => this.#sql.exec(`INSERT OR IGNORE INTO knock_key (id, key_hex, created) VALUES (1, ?, ?)`, hexOf2(k), stampSecond4()));
       r = this.#one(`SELECT key_hex FROM knock_key WHERE id = 1`);
     }
     return Uint8Array.from(r.key_hex.match(/../g).map((h) => parseInt(h, 16)));
@@ -51912,7 +53397,7 @@ var Capture = class _Capture {
       if (!create) return null;
       const k = new Uint8Array(32);
       crypto.getRandomValues(k);
-      this.#tx(() => this.#sql.exec(`INSERT OR IGNORE INTO knocker_key (id, key_hex, created) VALUES (1, ?, ?)`, hexOf2(k), stampSecond3()));
+      this.#tx(() => this.#sql.exec(`INSERT OR IGNORE INTO knocker_key (id, key_hex, created) VALUES (1, ?, ?)`, hexOf2(k), stampSecond4()));
       r = this.#one(`SELECT key_hex FROM knocker_key WHERE id = 1`);
     }
     return Uint8Array.from(r.key_hex.match(/../g).map((h) => parseInt(h, 16)));
@@ -51934,7 +53419,7 @@ var Capture = class _Capture {
       if (!key) return {
         knocker_digest: null,
         pseudonym: null,
-        basis: "no knock carrying a secret has been received at this instance, so no secret is recognised"
+        basis: "no knock carrying a secret has been received by your group's Civicsmith, so no secret is recognised"
       };
       const knocker_digest = await _Capture.#knockerDigest(key, secret);
       return { knocker_digest, pseudonym: pseudonymOf(knocker_digest) };
@@ -51994,15 +53479,30 @@ var Capture = class _Capture {
     } catch {
     }
   }
-  /* R80: a refusal answered, counted first. */
-  #refusedKnock(answer, nowMs) {
+  /** R85 (N703; K1875, DEC-165, DEC-166): one refused hand-over in the security tally, through `credentials`'
+   *  `securityCount({kind: "handover", country})` (its R44), beside R80's tally. `country` is the control plane's stamp
+   *  (Cloudflare's two-letter label for the request), never the body's; nothing else of the knock reaches the count. A
+   *  count that cannot be written is dropped: it never changes the refusal's answer, R53's order or R80's tally, and
+   *  this module keeps no table for it. */
+  #securityCount(country) {
+    try {
+      const cr = this.#credentials();
+      if (cr && typeof cr.securityCount === "function")
+        cr.securityCount({ kind: "handover", country: typeof country === "string" && country ? country : null });
+    } catch {
+    }
+  }
+  /* R80, R85: a refusal answered, counted first in both tallies. */
+  #refusedKnock(answer, nowMs, country = null) {
     this.#tallyRefusal(nowMs, answer && answer[_Capture.#LIMIT_REACHED] === true);
+    this.#securityCount(country);
     return answer;
   }
-  /** R80: a knock the Worker refused before the store was asked to keep anything (R49–R51, the required-argument
-   *  refusals, R66's weak secret), counted in the tally and nowhere else. Answers `{counted: true}` and never throws. */
-  doorbellRefused({ now = null } = {}) {
-    this.#tallyRefusal(now != null && now !== "" && Number.isFinite(Number(now)) ? Number(now) : Date.now(), false);
+  /** R80, R85: a knock the Worker refused before the store was asked to keep anything (R49–R51, the required-argument
+   *  refusals, R66's weak secret), counted in the doorbell's tally and the security tally (`country` the control
+   *  plane's stamp, or null). Answers `{counted: true}` and never throws. */
+  doorbellRefused({ now = null, country = null } = {}) {
+    this.#refusedKnock(null, now != null && now !== "" && Number.isFinite(Number(now)) ? Number(now) : Date.now(), country);
     return { counted: true };
   }
   /** R80: the tally, to a member session only: the kept days with at least one refusal, newest first, and the day the
@@ -52057,12 +53557,12 @@ var Capture = class _Capture {
    *  exactly as `knock` asks them: a refusal is R31's (`RATE_IP` or `RATE_GLOBAL`, with `stated`, the published bound)
    *  and counts nothing; an admitted attempt is counted in both windows, in one transaction that asks again, and
    *  answers null. Nothing else is written. */
-  async knockAttempt({ sourceAddress = null, now = null } = {}) {
+  async knockAttempt({ sourceAddress = null, now = null, country = null } = {}) {
     const nowMs = now != null && now !== "" && Number.isFinite(Number(now)) ? Number(now) : Date.now();
     const rate = await this.#rateWindows({ sourceAddress, nowMs });
     const refusal29 = this.#knockRateRefusal(rate) || this.#tx(() => this.#countKnock(rate));
     if (!refusal29) return null;
-    this.#refusedKnock(refusal29, nowMs);
+    this.#refusedKnock(refusal29, nowMs, country);
     return { ...refusal29, stated: refusal29.reason === "RATE_IP" ? KNOCK.statedPerIp : KNOCK.statedGlobal };
   }
   /** R31, R32, R53, R54: an accepted knock. `sourceAddress` is the connecting address, reduced here to a keyed
@@ -52082,20 +53582,21 @@ var Capture = class _Capture {
     globalLimit = KNOCK.global,
     now = null,
     knockerSecret = null,
-    generateSecret = false
+    generateSecret = false,
+    country = null
   } = {}) {
     const nowMs = now != null && now !== "" && Number.isFinite(Number(now)) ? Number(now) : Date.now();
     let bytes2;
     try {
       bytes2 = contentB64 != null ? Uint8Array.from(atob(contentB64), (c) => c.charCodeAt(0)) : te5.encode(String(content ?? ""));
     } catch {
-      return this.#refusedKnock({ ok: false, reason: "BAD_CONTENT", detail: "the content did not decode" }, nowMs);
+      return this.#refusedKnock({ ok: false, reason: "BAD_CONTENT", detail: "the content did not decode" }, nowMs, country);
     }
-    if (isWeakKnockerSecret(knockerSecret)) return this.#refusedKnock(knockerSecretWeak(), nowMs);
+    if (isWeakKnockerSecret(knockerSecret)) return this.#refusedKnock(knockerSecretWeak(), nowMs, country);
     const sha2 = hexOf2(await crypto.subtle.digest("SHA-256", bytes2));
     const rate = await this.#rateWindows({ sourceAddress, nowMs, windowMs, perIpLimit, globalLimit });
     const early = this.#knockRateRefusal(rate);
-    if (early) return this.#refusedKnock(early, nowMs);
+    if (early) return this.#refusedKnock(early, nowMs, country);
     const bucket = this.env && typeof this.env.CAPTURES?.put === "function" ? this.env.CAPTURES : null;
     const key = `bio/inbox/${sha2}`;
     let stored = false;
@@ -52151,7 +53652,7 @@ var Capture = class _Capture {
       } catch {
       }
     }
-    return answer.ok ? answer : this.#refusedKnock(answer, nowMs);
+    return answer.ok ? answer : this.#refusedKnock(answer, nowMs, country);
   }
   /** R32: only a signed-in member reaches these (the op's fence). N90: at most `limit` knocks, paged by `after`: a
    *  doorbell anyone may ring must not answer a member with everything it was ever handed. Each row names its knocker's
@@ -52340,7 +53841,7 @@ var Capture = class _Capture {
         translation: row10.translation,
         status: 503,
         knockId,
-        detail: "this instance has no evidence storage configured, so the knock's bytes cannot be held under their own digest; nothing was written"
+        detail: "this group's Civicsmith has no evidence storage configured, so the knock's bytes cannot be held under their own digest; nothing was written"
       };
     }
     let bytes2 = null;
@@ -52378,7 +53879,7 @@ var Capture = class _Capture {
         detail: "the knock's bytes could not be held under their own digest, so nothing was written"
       };
     }
-    const when = typeof at34 === "string" && ISO_INSTANT.test(at34) ? at34 : stampSecond3();
+    const when = typeof at34 === "string" && ISO_INSTANT.test(at34) ? at34 : stampSecond4();
     const address = `knock:${knockId}`;
     const profile = await profileOf({
       ev,
@@ -52482,7 +53983,7 @@ var Capture = class _Capture {
         /* R65 (N541): the first hop's `who` in acquisition's one spelling (its R33), never a copy. A document pulled
            before T31 keeps its `who` as written (DEC-124), answered again as stored (`pulled_document`). */
         who: firstHopWho(this.env.INSTANCE_NAME, this.env.VERSION),
-        asserts: `these bytes were received at this instance's doorbell as knock ${row9.knock_id} at ${row9.received}, and brought into the record by ${by} at ${at34}; they were received, not fetched from any address`,
+        asserts: `these bytes were received at the doorbell of your group's Civicsmith as knock ${row9.knock_id} at ${row9.received}, and brought into the record by ${by} at ${at34}; they were received, not fetched from any address`,
         evidence: "the knock's receipt: its digest, taken as the bytes arrived, and its instant",
         bound: false,
         via: DOORBELL_VIA
@@ -52540,7 +54041,7 @@ var Capture = class _Capture {
   pulledKnocksOf(captureSha) {
     try {
       const sha2 = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
-      if (!HEX644.test(sha2)) return [];
+      if (!HEX645.test(sha2)) return [];
       return this.#rows(`SELECT knock_id, sha256, bytes, received, pseudonym, knocker_digest FROM inbox
                           WHERE capture_sha = ? ORDER BY received, knock_id`, sha2).map((r) => ({ ...r }));
     } catch {
@@ -52553,12 +54054,12 @@ var Capture = class _Capture {
   /** `acquisition` R16, R69: record `actor` as one who captured `captureSha` (a member session's acquire, a knock's pull). Kept once
    *  per pair, at the first instant. */
   recordCaptureActor({ captureSha, actor, at: at34 = null } = {}) {
-    if (typeof captureSha !== "string" || !HEX644.test(captureSha) || typeof actor !== "string" || !actor) return { recorded: false };
+    if (typeof captureSha !== "string" || !HEX645.test(captureSha) || typeof actor !== "string" || !actor) return { recorded: false };
     this.#tx(() => this.#sql.exec(
       `INSERT OR IGNORE INTO capture_actors (capture_sha, actor, at) VALUES (?, ?, ?)`,
       captureSha,
       actor,
-      at34 && ISO_INSTANT.test(at34) ? at34 : stampSecond3()
+      at34 && ISO_INSTANT.test(at34) ? at34 : stampSecond4()
     ));
     return { recorded: true };
   }
@@ -52570,7 +54071,7 @@ var Capture = class _Capture {
   async recordCaptureAccount({ captureSha, text: text7, signature, by, at: at34 = null } = {}) {
     const sha2 = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
     const who2 = memberIdOf(by);
-    const actors = HEX644.test(sha2) ? this.#rows(`SELECT actor FROM capture_actors WHERE capture_sha = ?`, sha2).map((r) => memberIdOf(r.actor)) : [];
+    const actors = HEX645.test(sha2) ? this.#rows(`SELECT actor FROM capture_actors WHERE capture_sha = ?`, sha2).map((r) => memberIdOf(r.actor)) : [];
     if (!who2 || !actors.includes(who2)) {
       const row9 = CAPTURE_CHECKS.NOT_THE_CAPTURING_ACTOR;
       return {
@@ -52613,7 +54114,7 @@ var Capture = class _Capture {
         detail: "the signature does not verify over this account's statement against a key of yours that attests, so nothing was written"
       };
     }
-    const when = at34 && ISO_INSTANT.test(at34) ? at34 : stampSecond3();
+    const when = at34 && ISO_INSTANT.test(at34) ? at34 : stampSecond4();
     const seq = this.#tx(() => {
       const n = Number(this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM capture_accounts WHERE capture_sha = ?`, sha2).n) + 1;
       this.#sql.exec(
@@ -52638,7 +54139,7 @@ var Capture = class _Capture {
   captureAccountsOf(captureSha, { viewer = void 0 } = {}) {
     try {
       const sha2 = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
-      if (!HEX644.test(sha2)) return { captureSha: sha2 || null, actors: [], accounts: [] };
+      if (!HEX645.test(sha2)) return { captureSha: sha2 || null, actors: [], accounts: [] };
       if (!this.#captureSeen(sha2, viewer)) return { captureSha: sha2, actors: [], accounts: [] };
       return {
         captureSha: sha2,
@@ -52659,10 +54160,10 @@ var Capture = class _Capture {
    *  are held (a capture held in parts counts when provenance holds its receipt, provenance R5). */
   async reattest({ captureSha, locator = null, by = null } = {}) {
     const sha2 = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
-    if (!HEX644.test(sha2)) return { ok: false, reason: "BAD_SHA", status: 400, detail: "reattest takes the sha256 of a capture the record holds" };
+    if (!HEX645.test(sha2)) return { ok: false, reason: "BAD_SHA", status: 400, detail: "reattest takes the sha256 of a capture the record holds" };
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
     const p3 = this.provenance;
-    const holds = async (s) => p3 && typeof p3.registerHolds === "function" ? p3.registerHolds({ sha: s }) : null;
+    const holds2 = async (s) => p3 && typeof p3.registerHolds === "function" ? p3.registerHolds({ sha: s }) : null;
     let held2 = false;
     if (ev) {
       try {
@@ -52672,7 +54173,7 @@ var Capture = class _Capture {
       }
       if (!held2) {
         try {
-          held2 = (await holds(sha2))?.acquired === true;
+          held2 = (await holds2(sha2))?.acquired === true;
         } catch {
           held2 = false;
         }
@@ -52687,7 +54188,7 @@ var Capture = class _Capture {
     try {
       out = await attest(
         { sha256: sha2, archive, locator: archive ? locator : null },
-        { head: (s) => ev.head(s), put: (s, b) => ev.put(s, b), fetch: governedCall(this, "reattest"), holds }
+        { head: (s) => ev.head(s), put: (s, b) => ev.put(s, b), fetch: governedCall(this, "reattest"), holds: holds2 }
       );
     } catch (e2) {
       out = { ok: false, attempts: [], reason: "ATTEST_FAILED", note: String(e2 && e2.message || e2).slice(0, 200) };
@@ -52695,7 +54196,7 @@ var Capture = class _Capture {
     const attempts = Array.isArray(out && out.attempts) ? out.attempts.filter((a) => a && typeof a === "object") : [];
     if (!attempts.length && out && out.ok === false && out.reason !== "NO_ATTESTATION" && out.reason !== "ATTEST_FAILED")
       return { ...out, status: 409 };
-    const now = stampSecond3();
+    const now = stampSecond4();
     const outcomes = [];
     for (const a of attempts.length ? attempts : [{ service: "attest", ok: false, note: String(out && (out.note || out.reason) || "no attempt was reported") }]) {
       const at34 = typeof a.attempted === "string" && ISO_INSTANT.test(a.attempted) ? a.attempted : now;
@@ -52742,7 +54243,7 @@ var Capture = class _Capture {
      is no archived locator, the replay cannot be fetched (the governor holding its host included), or it is too large. */
   async #replayMatches(sha2, archived) {
     const replay = rawReplayOf(archived);
-    if (!replay) return { matches: "undetermined", match_basis: archived ? "the archived locator is not a replay this instance can read raw" : "the co-archive gave no archived locator to compare" };
+    if (!replay) return { matches: "undetermined", match_basis: archived ? "the archived locator is not a replay your group's Civicsmith can read raw" : "the co-archive gave no archived locator to compare" };
     try {
       const g = await governedFetch2(this, replay, "reattest");
       if (g.refusedByGovernor) return { matches: "undetermined", replay, match_basis: `the governor is holding requests to the archive (${g.reason})` };
@@ -52759,7 +54260,7 @@ var Capture = class _Capture {
             await reader.cancel();
           } catch {
           }
-          return { matches: "undetermined", replay, match_basis: "the replay is larger than this instance compares" };
+          return { matches: "undetermined", replay, match_basis: "the replay is larger than your group's Civicsmith compares" };
         }
         h.update(value);
       }
@@ -52780,7 +54281,7 @@ var Capture = class _Capture {
   lateAttestationsOf(captureSha) {
     try {
       const sha2 = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
-      if (!HEX644.test(sha2)) return { captureSha: sha2 || null, late_attestations: [] };
+      if (!HEX645.test(sha2)) return { captureSha: sha2 || null, late_attestations: [] };
       return { captureSha: sha2, late_attestations: this.#rows(`SELECT seq, by, outcome FROM late_attestations WHERE capture_sha = ? ORDER BY seq`, sha2).map((r) => ({ seq: r.seq, by: r.by, ...JSON.parse(r.outcome) })) };
     } catch {
       return { captureSha: null, late_attestations: [] };
@@ -52795,7 +54296,7 @@ var Capture = class _Capture {
     const sha2 = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
     const none = { captureSha: sha2 || null, note: null };
     try {
-      if (!HEX644.test(sha2) || !this.#captureSeen(sha2, viewer)) return none;
+      if (!HEX645.test(sha2) || !this.#captureSeen(sha2, viewer)) return none;
       const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
       let held2 = false;
       if (ev) {
@@ -52836,12 +54337,34 @@ var Capture = class _Capture {
     const g = viewerPredicate(viewer);
     return { sql: g.sql, args: g.args };
   }
+  /* R77: the WHERE terms of a held document: an Information document at `collected`, not set aside, seen by the viewer,
+     and passing the `member` and `project` filters; with their arguments. One builder for the list and for asking
+     whether one document (an archive's, R77's grouping) is a row of it. */
+  #heldWhere({ viewer, who: who2, project }) {
+    const sight = this.#sightOf(viewer);
+    const hasProject = project != null && project !== "";
+    return {
+      sql: `b.object_type = 'information' AND b.current_state = 'collected' AND ${_Capture.#NOT_SET_ASIDE} AND (${sight.sql})
+            AND ${who2 ? `EXISTS (SELECT 1 FROM register r JOIN capture_actors ca ON ca.capture_sha = r.capture_sha
+                                  WHERE r.bundle_id = b.bundle_id
+                                    AND (CASE WHEN ca.actor LIKE 'member:%' THEN substr(ca.actor, 8) ELSE ca.actor END) = ?)` : "1=1"}
+            AND ${hasProject ? "b.project = ?" : "1=1"}`,
+      args: [...sight.args, ...who2 ? [who2] : [], ...hasProject ? [String(project)] : []]
+    };
+  }
   /** R77 (DEC-97 (1)): the Information documents at `collected` not set aside, as the viewer may see them, at most
    *  `limit` (N90), with `truncated` and `next`. `member` keeps the documents that member captured (`capture_actors`
    *  over the register); `project` that project's (the document's `project`). Each row: the document, its source, its
    *  project, its age since collected, its batch eligibility (R78) and `captured_for`, the questions it was captured for as
    *  R83's reader answers them for the viewer (DEC-141 (1)). Sorted by `age` (the default, oldest first),
-   *  `source` or `project`, either way, a row with none last; ties by id. Writes nothing; nothing is notified. */
+   *  `source` or `project`, either way, a row with none last; ties by id. Writes nothing; nothing is notified.
+   *
+   *  DEC-167 (8) (N688; T35): a document whose capture is a file cut out of an archive (`acquisition.memberOf`) is listed
+   *  beside its archive, not as a row of its own, while its archive's document is a row of this list for the viewer:
+   *  that row carries `archive` (`acquisition.archiveList`'s summary) and `files`, its held files the viewer may see
+   *  passing the same filters, in index order, at most `HELD_FILES_IN_ROW` with `files_total` and `files_truncated`. A
+   *  file whose archive is not a row is a row of its own, with `archive: {sha256}`. `limit` counts rows, never files:
+   *  the page is read in windows and a file shown beside its archive is skipped, so a page holds `limit` rows. */
   async heldCaptures({
     member = null,
     project = null,
@@ -52862,32 +54385,49 @@ var Capture = class _Capture {
     const k1 = { age: "since", source: "COALESCE(src_address, '')", project: "COALESCE(project, '')" }[by];
     const k0 = by === "age" ? "'0'" : by === "source" ? "CASE WHEN src_address IS NULL THEN '1' ELSE '0' END" : "CASE WHEN project IS NULL OR project = '' THEN '1' ELSE '0' END";
     const asc = by === "age" ? way === "desc" : way === "asc";
-    const sight = this.#sightOf(viewer);
     const who2 = typeof member === "string" && member ? memberIdOf(member) : null;
-    const found3 = this.#rows(
+    const where = this.#heldWhere({ viewer, who: who2, project });
+    const window = (key2, n) => this.#rows(
       `SELECT * FROM (SELECT bundle_id, title, project, since, src_address, src_via, src_retrieved, ${k0} AS k0, ${k1} AS k1 FROM (
          SELECT b.bundle_id, b.title, b.project, ${_Capture.#SINCE} AS since, ${_Capture.#SOURCE("address")} AS src_address,
                 ${_Capture.#SOURCE("via")} AS src_via, ${_Capture.#SOURCE("first_retrieved")} AS src_retrieved
-           FROM bundles b
-          WHERE b.object_type = 'information' AND b.current_state = 'collected' AND ${_Capture.#NOT_SET_ASIDE} AND (${sight.sql})
-            AND ${who2 ? `EXISTS (SELECT 1 FROM register r JOIN capture_actors ca ON ca.capture_sha = r.capture_sha
-                                  WHERE r.bundle_id = b.bundle_id
-                                    AND (CASE WHEN ca.actor LIKE 'member:%' THEN substr(ca.actor, 8) ELSE ca.actor END) = ?)` : "1=1"}
-            AND ${project != null && project !== "" ? "b.project = ?" : "1=1"})) q
-        WHERE ${from ? `(k0 > ? OR (k0 = ? AND (k1 ${asc ? ">" : "<"} ? OR (k1 = ? AND bundle_id > ?))))` : "1=1"}
+           FROM bundles b WHERE ${where.sql})) q
+        WHERE ${key2 ? `(k0 > ? OR (k0 = ? AND (k1 ${asc ? ">" : "<"} ? OR (k1 = ? AND bundle_id > ?))))` : "1=1"}
         ORDER BY k0 ASC, k1 ${asc ? "ASC" : "DESC"}, bundle_id ASC LIMIT ?`,
-      ...sight.args,
-      ...who2 ? [who2] : [],
-      ...project != null && project !== "" ? [String(project)] : [],
-      ...from ? [from[0], from[0], from[1], from[1], from[2]] : [],
-      cap + 1
+      ...where.args,
+      ...key2 ? [key2[0], key2[0], key2[1], key2[1], key2[2]] : [],
+      n
     );
-    const page2 = found3.slice(0, cap), truncated3 = found3.length > cap, last = page2[page2.length - 1];
+    const isRow = /* @__PURE__ */ new Map();
+    const rowOf16 = (bundleId) => {
+      if (!bundleId) return false;
+      if (!isRow.has(bundleId))
+        isRow.set(bundleId, !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id = ? AND ${where.sql}`, bundleId, ...where.args));
+      return isRow.get(bundleId);
+    };
+    const kept = [];
+    let key = from, more = true;
+    while (kept.length <= cap && more) {
+      const found3 = window(key, cap + 1);
+      more = found3.length > cap;
+      if (!found3.length) break;
+      const last2 = found3[found3.length - 1];
+      key = [String(last2.k0), String(last2.k1), last2.bundle_id];
+      const archives = this.#archivesOfDocuments(found3.map((r) => r.bundle_id));
+      for (const r of found3) {
+        const of = archives.get(r.bundle_id) || [];
+        if (of.some((a) => rowOf16(a.bundle))) continue;
+        kept.push({ ...r, of_archive: of.length ? of[0].sha256 : null });
+        if (kept.length > cap) break;
+      }
+    }
+    const page2 = kept.slice(0, cap), truncated3 = kept.length > cap, last = page2[page2.length - 1];
     const at34 = now != null && Number.isFinite(Date.parse(now)) ? Date.parse(now) : Date.now();
     const rows3 = [];
     for (const r of page2) {
       const since = Date.parse(r.since);
       const asked = this.#questionsOf(r.bundle_id, viewer);
+      const grouped = await this.#archiveRow(r.bundle_id, { viewer, rowOf: rowOf16 });
       rows3.push({
         bundle_id: r.bundle_id,
         title: r.title ?? null,
@@ -52896,7 +54436,8 @@ var Capture = class _Capture {
         collected_since: r.since,
         age_days: Number.isFinite(since) ? Math.max(0, Math.floor((at34 - since) / 864e5)) : null,
         ...await this.#eligibility(r.bundle_id),
-        ...asked.questions ? { captured_for: _Capture.#shown(asked.questions) } : { captured_for: null, captured_for_basis: asked.basis }
+        ...asked.questions ? { captured_for: _Capture.#shown(asked.questions) } : { captured_for: null, captured_for_basis: asked.basis },
+        ...grouped || (r.of_archive ? { archive: { sha256: r.of_archive } } : {})
       });
     }
     return {
@@ -52908,6 +54449,106 @@ var Capture = class _Capture {
       truncated: truncated3,
       next: truncated3 ? cursorOf([String(last.k0), String(last.k1), last.bundle_id]) : null
     };
+  }
+  /* R77 (DEC-167 (8)): for each document of a window, the archives its captures were cut out of or found in
+     (`acquisition.memberOf` over the captures the register files under it, provenance R48), each with the document its
+     archive is filed in (the register's home of the archive's digest), in `memberOf`'s order. Asked once per window, one
+     capture at a time; a document with no archive is absent. A `memberOf` that fails reads as no archive: the document
+     stands as a row of its own, never hidden. */
+  #archivesOfDocuments(bundleIds) {
+    const out = /* @__PURE__ */ new Map();
+    if (!bundleIds.length) return out;
+    let regs = [];
+    try {
+      regs = this.#rows(`SELECT capture_sha, bundle_id FROM register WHERE bundle_id IN (SELECT value FROM json_each(?))
+                          ORDER BY bundle_id, capture_sha`, JSON.stringify(bundleIds));
+    } catch {
+      regs = [];
+    }
+    for (const { capture_sha, bundle_id } of regs) {
+      let of;
+      try {
+        of = this.memberOf(capture_sha);
+      } catch {
+        of = [];
+      }
+      if (!Array.isArray(of)) continue;
+      for (const m of of) {
+        const archiveSha = m && typeof m.archiveSha === "string" ? m.archiveSha.toLowerCase() : null;
+        if (!archiveSha || !HEX645.test(archiveSha) || archiveSha === capture_sha) continue;
+        const list6 = out.get(bundle_id) || [];
+        if (list6.some((a) => a.sha256 === archiveSha)) continue;
+        const home = this.#one(`SELECT bundle_id FROM register WHERE capture_sha = ?`, archiveSha);
+        list6.push({ sha256: archiveSha, bundle: home ? home.bundle_id : null });
+        out.set(bundle_id, list6);
+      }
+    }
+    return out;
+  }
+  /* R77 (DEC-167 (8)): an archive's row additions, when the row's document holds an archive `acquisition.archiveList`
+     answers for the viewer (one it opened, or one whose listing reads entries): `archive`, its summary, and `files`, the held files beside it (filed, or already held and
+     found in it) whose documents are rows of this list for the viewer, in index order, at most `HELD_FILES_IN_ROW`, each
+     `{document, sha256, index, name, grade, eligible}` (the grade the archive's), with `files_total` and
+     `files_truncated`. Null for a document that holds no archive. The entries are read through `archiveList`, a page of
+     at most 1000 at a time, never by this module's own SQL over acquisition's tables. */
+  async #archiveRow(bundleId, { viewer, rowOf: rowOf16 }) {
+    let shas = [];
+    try {
+      shas = this.#rows(`SELECT capture_sha FROM register WHERE bundle_id = ? ORDER BY capture_sha`, bundleId).map((r) => r.capture_sha);
+    } catch {
+      shas = [];
+    }
+    for (const sha2 of shas) {
+      let first;
+      try {
+        first = await this.archiveList({ archiveSha: sha2, viewer, limit: 1 });
+      } catch {
+        first = null;
+      }
+      if (!first || first.ok !== true || !first.archive || first.archive.opened !== true && !(Number(first.archive.entries) > 0)) continue;
+      const files = [];
+      for (const state of ["filed", "already_held"]) {
+        let after = null;
+        for (; ; ) {
+          let page2;
+          try {
+            page2 = await this.archiveList({ archiveSha: sha2, viewer, state, limit: READ_LIMIT.max, after });
+          } catch {
+            page2 = null;
+          }
+          if (!page2 || page2.ok !== true || !Array.isArray(page2.entries)) break;
+          for (const e2 of page2.entries) {
+            const fileSha = e2 && typeof e2.sha256 === "string" ? e2.sha256.toLowerCase() : null;
+            if (!fileSha || fileSha === sha2) continue;
+            const home = this.#one(`SELECT bundle_id FROM register WHERE capture_sha = ?`, fileSha);
+            if (!home || home.bundle_id === bundleId || !rowOf16(home.bundle_id)) continue;
+            files.push({ document: home.bundle_id, sha256: fileSha, index: Number(e2.index), name: e2.name ?? null });
+          }
+          if (!page2.truncated || !page2.next) break;
+          after = page2.next;
+        }
+      }
+      files.sort((a, b) => a.index - b.index || (a.document < b.document ? -1 : a.document > b.document ? 1 : 0));
+      const seen = /* @__PURE__ */ new Set(), unique = files.filter((f17) => seen.has(f17.document) ? false : (seen.add(f17.document), true));
+      const shown3 = [];
+      for (const f17 of unique.slice(0, HELD_FILES_IN_ROW))
+        shown3.push({ ...f17, grade: first.archive.grade ?? null, eligible: (await this.#eligibility(f17.document)).eligible });
+      const sum = first.summary || {};
+      return {
+        archive: {
+          sha256: sha2,
+          entries: first.archive.entries ?? null,
+          filed: sum.filed ?? null,
+          already_held: sum.already_held ?? null,
+          not_filed: sum.not_filed ?? null,
+          waiting: sum.waiting ?? null
+        },
+        files: shown3,
+        files_total: unique.length,
+        files_truncated: unique.length > HELD_FILES_IN_ROW
+      };
+    }
+    return null;
   }
   /* R78: one document's batch eligibility, by the registered examination (`ratification` R34): `eligible: true`, or
      false with the class it fails first and that class's reason; with none registered, or one that fails or answers
@@ -53039,7 +54680,7 @@ var Capture = class _Capture {
   /* R79, R81, R84: append one act per document, in one transaction, each recorded with the questions `questionsOf(id)`
      names (R79's waiting questions; R81's, those of the set-aside it undoes), one row per (act, question). */
   #appendHeld(ids, act2, reason, author, questionsOf = () => []) {
-    const at34 = stampSecond3();
+    const at34 = stampSecond4();
     this.#tx(() => {
       for (const id of new Set(ids)) {
         const n = Number(this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM held_acts WHERE bundle_id = ?`, id).n) + 1;
@@ -53216,7 +54857,7 @@ var Capture = class _Capture {
    *  admission plus reservation, so a render that never reports cannot hold one for ever. */
   renderAdmit({ allowanceMs, reserveMs = 0, cap = null, at: at34 = null } = {}) {
     return this.#tx(() => {
-      const now = at34 || stampSecond3();
+      const now = at34 || stampSecond4();
       const day2 = now.slice(0, 10);
       const allowance = Number.isFinite(Number(allowanceMs)) ? Math.max(0, Math.floor(Number(allowanceMs))) : 0;
       const reserve = Number.isFinite(Number(reserveMs)) ? Math.max(0, Math.ceil(Number(reserveMs))) : 0;
@@ -53232,7 +54873,7 @@ var Capture = class _Capture {
             cap: capN,
             running,
             reserve_ms: reserve,
-            why: `${running} renders are running and this instance runs at most ${capN} at once`
+            why: `${running} renders are running and your group's Civicsmith runs at most ${capN} at once`
           };
       }
       const cur = this.#one(`SELECT * FROM render_allowance WHERE day = ?`, day2);
@@ -53284,7 +54925,7 @@ var Capture = class _Capture {
   renderSpend({ ms: ms5, releaseMs = 0, slot = null, at: at34 = null } = {}) {
     return this.#tx(() => {
       if (typeof slot === "string" && slot) this.#sql.exec(`DELETE FROM render_slots WHERE slot = ?`, slot);
-      const now = at34 || stampSecond3();
+      const now = at34 || stampSecond4();
       const day2 = now.slice(0, 10);
       const n = typeof ms5 === "number" && Number.isFinite(ms5) && ms5 >= 0 ? Math.ceil(ms5) : null;
       const rel = Number.isFinite(Number(releaseMs)) ? Math.max(0, Math.ceil(Number(releaseMs))) : 0;
@@ -53321,7 +54962,7 @@ var Capture = class _Capture {
   recordLinks({ sourceCapture, sourceBundle = null, capturedAt, links = [] } = {}) {
     return this.#tx(() => {
       if (!sourceCapture) return { recorded: 0 };
-      const now = stampSecond3();
+      const now = stampSecond4();
       const kept = /* @__PURE__ */ new Set();
       let n = 0;
       for (const l2 of links) {
@@ -53421,7 +55062,7 @@ var Capture = class _Capture {
     const rows3 = found3.slice(0, bound);
     const next = truncated3 ? cursorOf([rows3[rows3.length - 1].citation_norm, rows3[rows3.length - 1].link_ref]) : null;
     if (!rows3.length) return { sourceCapture, resolved: 0, links: [], limit: cap, truncated: truncated3, next };
-    const T = stampSecond3(Date.parse(rows3[0].captured_at) || Date.parse(at34 || "") || Date.now());
+    const T = stampSecond4(Date.parse(rows3[0].captured_at) || Date.parse(at34 || "") || Date.now());
     const out = [];
     const tally = { linked: 0, offsite: 0, intra: 0, anchor: 0, refused: 0 };
     const verdicts = { contemporaneous: 0, superseded: 0, undetermined: 0 };
@@ -53545,7 +55186,7 @@ var Capture = class _Capture {
     limit = null
   } = {}) {
     return this.#tx(() => {
-      const now = at34 || stampSecond3();
+      const now = at34 || stampSecond4();
       this.#sql.exec(
         `INSERT INTO link_verdicts (source_capture, address_norm, verdict, basis, target_bundle, target_capture, at, detail)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING`,
@@ -53691,7 +55332,7 @@ var Capture = class _Capture {
         n >= 2 ? "chrome" : "undetermined",
         n,
         n >= 2 ? `contained in a chrome region and recurred on ${n} distinct pages of ${host}` : `contained in a chrome region on one page of ${host} only: whether it is the site's navigation or that page's own is undetermined until another page of the host carries it`,
-        at34 || stampSecond3()
+        at34 || stampSecond4()
       );
     }
   }
@@ -53730,7 +55371,7 @@ var Capture = class _Capture {
         cap + 1
       );
       const page2 = found3.slice(0, cap);
-      const at34 = stampSecond3();
+      const at34 = stampSecond4();
       for (const r of page2) this.#chromeDeriveCapture(r.capture_sha, at34);
       const truncated3 = found3.length > cap;
       return {
@@ -53836,7 +55477,7 @@ var Capture = class _Capture {
   saveCaptureSession({ session, locator, primarySha, primaryFile, base: base2, state, ttlMs = 36e5, at: at34 = null } = {}) {
     return this.#tx(() => {
       const now = at34 ? new Date(at34) : /* @__PURE__ */ new Date();
-      const iso6 = (d) => stampSecond3(d.getTime());
+      const iso6 = (d) => stampSecond4(d.getTime());
       this.#sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, iso6(now));
       if (!session || !state) return { session: null, saved: false };
       const cur = this.#one(`SELECT ticks FROM capture_sessions WHERE session = ?`, session);
@@ -53871,7 +55512,7 @@ var Capture = class _Capture {
   loadCaptureSession({ session, at: at34 = null } = {}) {
     return this.#tx(() => {
       const now = at34 ? new Date(at34) : /* @__PURE__ */ new Date();
-      this.#sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, stampSecond3(now.getTime()));
+      this.#sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, stampSecond4(now.getTime()));
       const r = this.#one(`SELECT * FROM capture_sessions WHERE session = ?`, session);
       if (!r) return {
         session,
@@ -53906,7 +55547,7 @@ var Capture = class _Capture {
   /** R46: every live session, for `queue`'s partial-capture condition. Writes nothing, never throws. */
   liveCaptureSessions(now) {
     try {
-      const at34 = typeof now === "string" ? now : stampSecond3(Number.isFinite(Number(now)) ? Number(now) : Date.now());
+      const at34 = typeof now === "string" ? now : stampSecond4(Number.isFinite(Number(now)) ? Number(now) : Date.now());
       return this.#rows(`SELECT * FROM capture_sessions WHERE expires > ? ORDER BY session`, at34).map((r) => {
         let state = null;
         try {
@@ -53993,12 +55634,12 @@ var Capture = class _Capture {
   recordSiteAssets({ host, primarySha, observations = [], at: at34 = null, limit = null } = {}) {
     return this.#tx(() => {
       if (!host || !primarySha) return { host: null, recorded: 0 };
-      const now = at34 || stampSecond3();
+      const now = at34 || stampSecond4();
       const cap = limitOf(limit);
       let truncated3 = false;
       let added = 0, changedCount = 0;
       const changed = [];
-      const fromObs = (o) => typeof o.reused_from === "string" && HEX644.test(o.reused_from) ? o.reused_from : null;
+      const fromObs = (o) => typeof o.reused_from === "string" && HEX645.test(o.reused_from) ? o.reused_from : null;
       for (const o of observations) {
         if (!o || !o.address_norm || !o.sha256) continue;
         const cur = this.#one(`SELECT * FROM site_assets WHERE host = ? AND address_norm = ?`, host, o.address_norm);
@@ -54118,7 +55759,7 @@ var Capture = class _Capture {
    *  refusals are collected and reported, never thrown. */
   recordReuseVerdicts({ bundleId = null, verdicts = [], at: at34 = null } = {}) {
     return this.#tx(() => {
-      const now = at34 || stampSecond3();
+      const now = at34 || stampSecond4();
       let recorded = 0;
       const refusals = [];
       for (const v of verdicts) {
@@ -54224,7 +55865,7 @@ var Capture = class _Capture {
    *  that MOVED keeps the old value and the date ("51 until Tuesday, now 1000" is the fact worth acting on). */
   recordCaptureLimit({ runtime = "subrequests", observed = null, at: at34 = null } = {}) {
     return this.#tx(() => {
-      const now = at34 || stampSecond3();
+      const now = at34 || stampSecond4();
       const cur = this.#one(`SELECT * FROM capture_limits WHERE runtime = ?`, runtime);
       if (observed == null) {
         if (cur) this.#sql.exec(`UPDATE capture_limits SET since_probe = since_probe + 1 WHERE runtime = ?`, runtime);
@@ -54267,11 +55908,11 @@ var Capture = class _Capture {
    *  included, since the consumer still owes it a drain) calls the `task` listeners (R44), which arm the drain. */
   async taskEnqueue({ kind = "authority-undetermined", captureSha = null, subject = "", locator = null, at: at34 = null } = {}) {
     if (!TASK_KINDS.includes(kind)) return { ok: false, reason: "BAD_KIND", detail: `kind must be one of: ${TASK_KINDS.join(", ")}` };
-    if (typeof captureSha !== "string" || !HEX644.test(captureSha))
+    if (typeof captureSha !== "string" || !HEX645.test(captureSha))
       return { ok: false, reason: "BAD_CAPTURE_SHA", detail: "a capture sha256 identifies the event; a record does not exist yet at capture time" };
     const text7 = boundedSubject(subject) || "a capture whose authority could not be determined";
     const loc = typeof locator === "string" && locator.length <= 2e3 ? locator : null;
-    const now = at34 && ISO_INSTANT.test(at34) ? at34 : stampSecond3();
+    const now = at34 && ISO_INSTANT.test(at34) ? at34 : stampSecond4();
     const existing = this.#tx(() => {
       const held2 = this.#one(`SELECT capture_sha FROM task_queue WHERE kind=? AND capture_sha=?`, kind, captureSha);
       if (!held2)
@@ -54289,12 +55930,14 @@ var Capture = class _Capture {
     const armedAt = heard.map((h) => h.ok && h.result && h.result.armedAt).find((x) => x != null) ?? null;
     return existing ? { ok: true, queued: false, deduped: true, kind, captureSha, armedAt } : { ok: true, queued: true, deduped: false, kind, captureSha, enqueued: now, armedAt };
   }
-  /** R45: the queued events, oldest first (by `enqueued`, then digest), at most `limit`. */
-  taskEvents({ limit = 50 } = {}) {
+  /** R45: the queued events, oldest first (by `enqueued`, then digest), at most `limit`; with `kind`, only that kind's,
+   *  so each drainer reads its own (T35: `tasks` drains `authority-undetermined`, the daemon `archive-unpack`). */
+  taskEvents({ limit = 50, kind = null } = {}) {
     try {
       const n = Math.max(0, Math.min(1e3, Math.trunc(Number(limit)) || 0));
+      const one4 = typeof kind === "string" && kind;
       return this.#rows(`SELECT kind, capture_sha, subject, locator, enqueued, attempts, last_try FROM task_queue
-                          ORDER BY enqueued, capture_sha LIMIT ?`, n).map((r) => ({
+                          WHERE ${one4 ? "kind = ?" : "1=1"} ORDER BY enqueued, capture_sha LIMIT ?`, ...one4 ? [kind] : [], n).map((r) => ({
         kind: r.kind,
         captureSha: r.capture_sha,
         subject: r.subject,
@@ -54307,10 +55950,11 @@ var Capture = class _Capture {
       return [];
     }
   }
-  /** R45 */
-  taskEventCount() {
+  /** R45; with `kind`, that kind's count only. */
+  taskEventCount({ kind = null } = {}) {
     try {
-      return Number(this.#one(`SELECT COUNT(*) AS n FROM task_queue`).n);
+      const one4 = typeof kind === "string" && kind;
+      return Number(this.#one(`SELECT COUNT(*) AS n FROM task_queue WHERE ${one4 ? "kind = ?" : "1=1"}`, ...one4 ? [kind] : []).n);
     } catch {
       return 0;
     }
@@ -54322,7 +55966,7 @@ var Capture = class _Capture {
         if (!this.#one(`SELECT 1 AS x FROM task_queue WHERE kind=? AND capture_sha=?`, kind, captureSha)) return { found: false };
         this.#sql.exec(
           `UPDATE task_queue SET attempts = attempts + 1, last_try = ? WHERE kind=? AND capture_sha=?`,
-          at34 ?? stampSecond3(),
+          at34 ?? stampSecond4(),
           kind,
           captureSha
         );
@@ -54352,7 +55996,7 @@ var Capture = class _Capture {
    *  replaces it. Never throws. */
   recordValidators({ addressNorm, captureSha, etag = null, lastModified = null, at: at34 = null } = {}) {
     try {
-      if (typeof addressNorm !== "string" || !addressNorm || typeof captureSha !== "string" || !HEX644.test(captureSha))
+      if (typeof addressNorm !== "string" || !addressNorm || typeof captureSha !== "string" || !HEX645.test(captureSha))
         return { recorded: false };
       this.#tx(() => this.#sql.exec(
         `INSERT INTO capture_validators (address_norm, capture_sha, etag, last_modified, at) VALUES (?, ?, ?, ?, ?)
@@ -54362,7 +56006,7 @@ var Capture = class _Capture {
         captureSha,
         etag || null,
         lastModified || null,
-        at34 && ISO_INSTANT.test(at34) ? at34 : stampSecond3()
+        at34 && ISO_INSTANT.test(at34) ? at34 : stampSecond4()
       ));
       return { recorded: true };
     } catch {
@@ -54425,7 +56069,7 @@ var Capture = class _Capture {
     if (typeof addressNorm !== "string" || addressNorm === "") return { ok: false, reason: "NO_ADDRESS" };
     if (!SOURCE_OUTCOMES.includes(outcome))
       return { ok: false, reason: "BAD_OUTCOME", detail: `outcome must be one of: ${SOURCE_OUTCOMES.join(", ")}` };
-    const now = at34 && ISO_INSTANT.test(at34) ? at34 : stampSecond3();
+    const now = at34 && ISO_INSTANT.test(at34) ? at34 : stampSecond4();
     const st = Number.isInteger(status) ? status : null;
     this.#tx(() => {
       this.#sql.exec(`INSERT INTO source_reachability (address_norm, updated_at) VALUES (?, ?) ON CONFLICT(address_norm) DO NOTHING`, addressNorm, now);
@@ -54473,7 +56117,7 @@ var Capture = class _Capture {
         thresholds: TH,
         basis: "no attempt on this address has ever been recorded"
       };
-    const at34 = now && ISO_INSTANT.test(now) ? now : stampSecond3();
+    const at34 = now && ISO_INSTANT.test(now) ? now : stampSecond4();
     const byCount = row9.consecutive_failures >= TH.failures;
     const since = row9.first_failure_since ? Date.parse(row9.first_failure_since) : null;
     const staleDays = since === null ? 0 : (Date.parse(at34) - since) / 864e5;
@@ -54549,7 +56193,8 @@ function captureOps(c, url, body, env) {
     dropcapturesession: () => c.dropCaptureSession({ session: q10("session") }),
     sitechrome: () => c.siteChrome({ host: q10("host"), threshold: Number(q10("threshold")) || 0.6, limit: page2.limit }),
     recordcapturelimit: () => c.recordCaptureLimit(body || {}),
-    knock: () => c.knock({ ...body || {}, sourceAddress: q10("source") }),
+    /* R85: `country` is the control plane's stamp in the query, never the body's (nor is `sourceAddress`). */
+    knock: () => c.knock({ ...body || {}, sourceAddress: q10("source"), country: q10("country") }),
     inboxlist: () => c.inboxList(q10("status") || null, { ...page2, sort: q10("sort"), dir: q10("dir") }),
     inboxget: () => c.inboxGet(q10("id")),
     /* N499: a body names no `at` or `within`: the pull's instant and its joined act are an in-process caller's. */
@@ -54558,7 +56203,7 @@ function captureOps(c, url, body, env) {
       return c.inboxResolve({ knockId: b.knockId, status: b.status, by: b.by, reason: b.reason });
     },
     /* R80: the Worker's count of a knock it refused before the store; the tally read by the stamped viewer. */
-    doorbellrefused: () => c.doorbellRefused(body || {}),
+    doorbellrefused: () => c.doorbellRefused({ now: body && body.now, country: q10("country") }),
     doorbelltally: () => c.doorbellTally({ viewer: q10("viewer") ?? "" }),
     /* R76, R77, R79, R81: by the caller's stamped viewer; an unstamped call sees nothing. The author is the stamp. */
     gradenote: () => c.gradeNoteOf({ captureSha: q10("capture") ?? (body && body.captureSha), viewer: q10("viewer") ?? "" }),
@@ -54598,7 +56243,16 @@ function captureOps(c, url, body, env) {
       sessMember: q10("sessMember") || null,
       storeName: q10("store") || "bio"
     }),
-    archivelookup: () => c.archiveLookup({ address: body && body.address || q10("address") })
+    archivelookup: () => c.archiveLookup({ address: body && body.address || q10("address") }),
+    /* R73 (T35; `acquisition` R38, R41): the archive, through this store; `by`, `cls` and the viewer are the control
+       plane's stamps, never the body's, and the body names only the archive. */
+    unpack: () => c.unpack({ archiveSha: body && body.archiveSha || q10("archive"), by: q10("by"), cls: q10("cls"), member: q10("member") === "1" }),
+    archivelist: () => c.archiveList({
+      archiveSha: q10("archive") ?? (body && body.archiveSha),
+      viewer: q10("viewer") ?? "",
+      state: q10("state"),
+      ...page2
+    })
   };
 }
 
@@ -59320,7 +60974,7 @@ function answerFailures(answer, ctx) {
 // src/connection-grammar/registry.mjs
 var FORBIDDEN_WORDS = Object.freeze(["knows", "network", "conflict", "suspicious", "most connected", "centrality", "score"]);
 var filled3 = (v) => typeof v === "string" && v.trim() !== "";
-var refuse5 = (refused3, why) => ({ refused: refused3, why });
+var refuse6 = (refused3, why) => ({ refused: refused3, why });
 function createRegistry() {
   const byOwner = /* @__PURE__ */ new Map();
   const byKind = /* @__PURE__ */ new Map();
@@ -59333,22 +60987,22 @@ function createRegistry() {
       /** @type {any} */
       {}
     );
-    if (!filled3(owner)) return refuse5("OWNER_MISSING", "an owner is named by a non-empty string");
-    if (byOwner.has(owner)) return refuse5("OWNER_DUPLICATE", `${owner} is already registered`);
-    if (typeof neighbours3 !== "function") return refuse5("NEIGHBOURS_MISSING", `${owner} registers no neighbours read`);
-    if (!Array.isArray(kinds3) || kinds3.length === 0) return refuse5("KINDS_MISSING", `${owner} registers no kind`);
+    if (!filled3(owner)) return refuse6("OWNER_MISSING", "an owner is named by a non-empty string");
+    if (byOwner.has(owner)) return refuse6("OWNER_DUPLICATE", `${owner} is already registered`);
+    if (typeof neighbours3 !== "function") return refuse6("NEIGHBOURS_MISSING", `${owner} registers no neighbours read`);
+    if (!Array.isArray(kinds3) || kinds3.length === 0) return refuse6("KINDS_MISSING", `${owner} registers no kind`);
     const mine = /* @__PURE__ */ new Set();
     for (const k of kinds3) {
-      if (k === null || typeof k !== "object" || !filled3(k.kind)) return refuse5("KIND_MISSING", `a kind of ${owner} is not named`);
+      if (k === null || typeof k !== "object" || !filled3(k.kind)) return refuse6("KIND_MISSING", `a kind of ${owner} is not named`);
       const held2 = byKind.get(k.kind);
-      if (held2) return refuse5("KIND_TAKEN", `kind ${k.kind} is held by ${held2.owner}`);
-      if (mine.has(k.kind)) return refuse5("KIND_TAKEN", `kind ${k.kind} is listed twice by ${owner}`);
+      if (held2) return refuse6("KIND_TAKEN", `kind ${k.kind} is held by ${held2.owner}`);
+      if (mine.has(k.kind)) return refuse6("KIND_TAKEN", `kind ${k.kind} is listed twice by ${owner}`);
       mine.add(k.kind);
-      if (!CLASSES.includes(k.class)) return refuse5("CLASS_UNKNOWN", `kind ${k.kind}'s class ${String(k.class).slice(0, 40)} is not one of ${CLASSES.join(", ")}`);
-      if (!filled3(k.word)) return refuse5("WORD_MISSING", `kind ${k.kind} has no members' word`);
+      if (!CLASSES.includes(k.class)) return refuse6("CLASS_UNKNOWN", `kind ${k.kind}'s class ${String(k.class).slice(0, 40)} is not one of ${CLASSES.join(", ")}`);
+      if (!filled3(k.word)) return refuse6("WORD_MISSING", `kind ${k.kind} has no members' word`);
       const lower2 = k.word.toLowerCase();
       const bad2 = FORBIDDEN_WORDS.find((w) => lower2.includes(w));
-      if (bad2) return refuse5("WORD_FORBIDDEN", `kind ${k.kind}'s word "${k.word}" says "${bad2}", which no kind's word may say`);
+      if (bad2) return refuse6("WORD_FORBIDDEN", `kind ${k.kind}'s word "${k.word}" says "${bad2}", which no kind's word may say`);
     }
     const entry3 = { owner, kinds: kinds3.map((k) => Object.freeze({ kind: k.kind, word: k.word, class: k.class })), neighbours: neighbours3 };
     byOwner.set(owner, entry3);
@@ -59374,16 +61028,16 @@ function createRegistry() {
       {}
     );
     if (a.viewer === void 0 || a.viewer === null || a.viewer === "") {
-      return refuse5("VIEWER_MISSING", "a read names the member reading; an absent viewer is neither an administrator nor the public");
+      return refuse6("VIEWER_MISSING", "a read names the member reading; an absent viewer is neither an administrator nor the public");
     }
     const e2 = byOwner.get(a.owner);
-    if (!e2) return refuse5("OWNER_UNKNOWN", `${String(a.owner).slice(0, 60)} is not a registered owner`);
+    if (!e2) return refuse6("OWNER_UNKNOWN", `${String(a.owner).slice(0, 60)} is not a registered owner`);
     const { owner: _o, ...args } = a;
     let answer;
     try {
       answer = e2.neighbours(args);
     } catch (err) {
-      return refuse5("OWNER_FAILED", `${e2.owner}'s read threw: ${String(
+      return refuse6("OWNER_FAILED", `${e2.owner}'s read threw: ${String(
         /** @type {any} */
         err?.message ?? err
       ).slice(0, 200)}`);
@@ -59988,10 +61642,10 @@ function refTermsSql(nTerms, gateSql) {
            LIMIT ?`;
 }
 var refReachSql = (nTerms, gateSql) => `SELECT src, COUNT(*) AS n FROM (${refTermsSql(nTerms, gateSql)}) GROUP BY src`;
-var instances9 = /* @__PURE__ */ new WeakMap();
+var instances10 = /* @__PURE__ */ new WeakMap();
 function entitiesOf(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let e2 = instances9.get(storage);
+  let e2 = instances10.get(storage);
   if (!e2) {
     const record = opts.record ?? recordOf(ctx);
     e2 = new Entities(storage, {
@@ -60000,7 +61654,7 @@ function entitiesOf(ctx, opts = {}) {
       membership: opts.membership ?? membershipOf(ctx, { record }),
       provenance: opts.provenance ?? (() => provenanceOf(ctx))
     });
-    instances9.set(storage, e2);
+    instances10.set(storage, e2);
     registerFigures3(e2, record);
     opened = opened === null ? e2 : AMBIGUOUS;
   }
@@ -61513,9 +63167,9 @@ var Entities = class _Entities {
       const uninformativeSrc = new Set([...reach3].filter(([src, n]) => isUninformative(n, corpusFor(src))).map(([src]) => src));
       for (const r of rows3) {
         const srcText = r.src === "ref" ? r.ref : r.src === "key" ? r.ref_key : r.label;
-        const whole = normAlias(srcText) === a.alias_norm;
-        const correspondence = CORRESPONDENCE[r.src][whole ? "whole" : "part"];
-        if (!whole && uninformativeSrc.has(r.src)) {
+        const whole2 = normAlias(srcText) === a.alias_norm;
+        const correspondence = CORRESPONDENCE[r.src][whole2 ? "whole" : "part"];
+        if (!whole2 && uninformativeSrc.has(r.src)) {
           const mark = `${a.alias}\0${r.src}`;
           if (!uninformativeSeen.has(mark)) {
             uninformativeSeen.add(mark);
@@ -61524,7 +63178,7 @@ var Entities = class _Entities {
           continue;
         }
         const reachN = reach3.get(r.src) || 0, corpusN = corpusFor(r.src);
-        const selectivity = whole ? null : {
+        const selectivity = whole2 ? null : {
           source: r.src,
           reaches: reachN,
           corpus: corpusN,
@@ -61552,7 +63206,7 @@ var Entities = class _Entities {
           matched_on: r.src,
           selectivity,
           grade_if_resolved: gradeIf,
-          detail: (whole ? `this document's reading ${where} '${srcText}', which is this subject's name '${a.alias}'` : `this document's reading ${where} '${srcText}', which carries every word of this subject's name '${a.alias}'`) + (whole && gradeIf == null ? "; resolving this document would record nothing here, because a stronger identifier on this same reference resolves first" : "") + (selectivity && selectivity.value != null ? `; that name reaches ${selectivity.reaches} of the ${selectivity.corpus} references this reader can see at this source` : "")
+          detail: (whole2 ? `this document's reading ${where} '${srcText}', which is this subject's name '${a.alias}'` : `this document's reading ${where} '${srcText}', which carries every word of this subject's name '${a.alias}'`) + (whole2 && gradeIf == null ? "; resolving this document would record nothing here, because a stronger identifier on this same reference resolves first" : "") + (selectivity && selectivity.value != null ? `; that name reaches ${selectivity.reaches} of the ${selectivity.corpus} references this reader can see at this source` : "")
         };
         const prev = found3.get(tk);
         if (!prev || candOrderCmp(cand, prev) < 0) found3.set(tk, cand);
@@ -63425,7 +65079,7 @@ var Connections = class _Connections {
      instead of the machine's pair (R9); a lapsed one is stated and the pair read as unchosen. */
   #grade(row9, conns, keep2) {
     const extent = safeJson8(row9.extent);
-    const whole = row9.extent_kind === "document";
+    const whole2 = row9.extent_kind === "document";
     const reaching = [], undetermined3 = [], outside = [];
     const mentionCache = /* @__PURE__ */ new Map();
     const mentionsOf = (entityId) => {
@@ -63463,7 +65117,7 @@ var Connections = class _Connections {
         other_bundle_id: keep2(side === "a" ? c.b_bundle_id : c.a_bundle_id),
         determining_pair: view.determining_pair
       };
-      if (whole) {
+      if (whole2) {
         reaching.push({ ...entry3, why: "this citation is of the whole document, so every connection the document has is inside it" });
         continue;
       }
@@ -64468,12 +66122,12 @@ function setScalar2(text7, key, value) {
 function randHex2(n) {
   return [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
-var instances10 = /* @__PURE__ */ new WeakMap();
+var instances11 = /* @__PURE__ */ new WeakMap();
 var created = 0;
 var latest = null;
 function registeredNeighbours(args) {
   const a = args && typeof args === "object" ? args : {};
-  const k = a.host ? instances10.get(a.host) : created === 1 ? latest : null;
+  const k = a.host ? instances11.get(a.host) : created === 1 ? latest : null;
   if (!k) return {
     refused: a.host || created === 0 ? "OWNER_NOT_READY" : "OWNER_HOST_AMBIGUOUS",
     why: a.host || created === 0 ? "no connections instance is held for this host yet" : "several records are open in this isolate and the read names no host, so whose connections to read is not known"
@@ -64487,7 +66141,7 @@ var MENTIONED_REGISTRATION = registerOwner({
   neighbours: registeredNeighbours
 });
 function connectionsOf(host, deps) {
-  let k = instances10.get(host);
+  let k = instances11.get(host);
   if (!k) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -64509,7 +66163,7 @@ function connectionsOf(host, deps) {
       capture: capture2,
       entities: entities2
     });
-    instances10.set(host, k);
+    instances11.set(host, k);
     created++;
     latest = k;
     const declared2 = record.declareTable("connections", CONNECTIONS_TABLES.map((t2) => ({ ...t2 })));
@@ -64973,10 +66627,10 @@ function contentObservationsFor(reading2, captureSha, tiersOf) {
   let so_far = null;
   const rows3 = (tiers.length ? tiers : [{ tier: null, covers: "all", steps: [] }]).map((t2) => {
     so_far = so_far == null ? t2.covers : unionCovers(so_far, t2.covers);
-    const whole = coversWholeDocument(so_far, reading2) && !shortfall;
+    const whole2 = coversWholeDocument(so_far, reading2) && !shortfall;
     return {
       tier: t2.tier,
-      state: whole ? "PRESENT" : "partial",
+      state: whole2 ? "PRESENT" : "partial",
       condition: null,
       /* THE BACK-REFERENCE, and C-22.10 requires it on PRESENT. What the
          look PRODUCED is a reading, and a reading is keyed by the capture
@@ -64991,7 +66645,7 @@ function contentObservationsFor(reading2, captureSha, tiersOf) {
         t2,
         terminal,
         reading2,
-        whole ? "text over the whole document" : so_far === "all" ? "text over the document, with pages it could not read" : "text over part of the document"
+        whole2 ? "text over the whole document" : so_far === "all" ? "text over the document, with pages it could not read" : "text over part of the document"
       )
     };
   });
@@ -66505,9 +68159,9 @@ var ObservationLog = class _ObservationLog {
     };
   }
 };
-var instances11 = /* @__PURE__ */ new WeakMap();
+var instances12 = /* @__PURE__ */ new WeakMap();
 function observationLogOf(host, deps) {
-  let o = instances11.get(host);
+  let o = instances12.get(host);
   if (!o) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -66516,7 +68170,7 @@ function observationLogOf(host, deps) {
     if (declared2 && declared2.ok === false)
       throw new Error(`observation-log: record-core refused its table declaration: ${declared2.reason} (${declared2.table})`);
     o = new ObservationLog({ storage: d.storage || host.storage, record, membership, now: d.now || null });
-    instances11.set(host, o);
+    instances12.set(host, o);
     const provenance = d.provenance === void 0 ? provenanceOf(host) : d.provenance;
     if (provenance && typeof provenance.onReceipt === "function")
       provenance.onReceipt(OBSERVATION_LOG_MODULE, (e2) => o.receiptLook(e2));
@@ -68503,11 +70157,11 @@ WHERE ${gate.sql}`,
   };
 }
 function savedForm(query = {}, relation2 = null) {
-  const refuse21 = (reason, detail, warnings = []) => ({ ok: false, reason, detail, warnings });
+  const refuse22 = (reason, detail, warnings = []) => ({ ok: false, reason, detail, warnings });
   try {
     const o = query && typeof query === "object" ? query : {};
     if (Array.isArray(o.ids) ? o.ids.length > 0 : o.ids !== void 0 && o.ids !== null)
-      return refuse21("SAVED_QUERY_SELECTION", "it carries ids: a selection, not a search, and a selection is not re-run");
+      return refuse22("SAVED_QUERY_SELECTION", "it carries ids: a selection, not a search, and a selection is not re-run");
     const q10 = typeof o.q === "string" ? o.q : "";
     const implicitOp = o.implicitOp === "or" ? "or" : "and";
     const drops = [];
@@ -68523,11 +70177,11 @@ function savedForm(query = {}, relation2 = null) {
     const plan = compile4({ q: q10, implicitOp, zone: o.zone ?? null }, relation2);
     drops.push(...plan.drops);
     if (drops.length)
-      return refuse21("SAVED_QUERY_DROPS", `compiling it drops ${drops.length === 1 ? "a term" : `${drops.length} terms`}, so what would be saved is not what would run`, drops);
-    if (plan.ast === null) return refuse21("SAVED_QUERY_EMPTY", "no term of it compiles");
+      return refuse22("SAVED_QUERY_DROPS", `compiling it drops ${drops.length === 1 ? "a term" : `${drops.length} terms`}, so what would be saved is not what would run`, drops);
+    if (plan.ast === null) return refuse22("SAVED_QUERY_EMPTY", "no term of it compiles");
     return { ok: true, form: { v: 1, q: q10, implicitOp, sort, dir } };
   } catch {
-    return refuse21(
+    return refuse22(
       "SAVED_QUERY_DROPS",
       "its sort cannot be read, so what would be saved is not what would run",
       ["sort: not readable"]
@@ -68805,7 +70459,7 @@ function orderByWhen(items, idOf4) {
 var MACHINE = "class:daemon";
 var said2 = (v) => typeof v === "string" && v.trim() !== "";
 var isObj14 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
-var refuse6 = (reason, detail, extra = {}) => ({ ok: false, reason, detail, ...extra });
+var refuse7 = (reason, detail, extra = {}) => ({ ok: false, reason, detail, ...extra });
 var DATE_FIELD = { meeting_minutes: { date: "meeting" }, meeting_agenda: { date: "meeting" }, staff_report: { date: "issued" } };
 var NAMED = ["meeting", "adopted", "effective", "signed", "entered", "issued", "published", "received", "hearing"];
 var READ_DATE_CLASSES = Object.freeze([
@@ -68936,15 +70590,15 @@ function participant(k, eventId3, entityId, role, attestationId, voteValue = nul
   return { id: pid, added: true };
 }
 function followedImport(k, { captureSha, body, period, by = MACHINE } = {}) {
-  if (!said2(body)) return refuse6("NO_BODY", "following names the one body a member follows, by its entity id");
+  if (!said2(body)) return refuse7("NO_BODY", "following names the one body a member follows, by its entity id");
   if (!isObj14(period) || !said2(period.from) && !said2(period.to))
-    return refuse6("NO_PERIOD", "following names the period a member follows: {from, to}, days");
+    return refuse7("NO_PERIOD", "following names the period a member follows: {from, to}, days");
   if (!said2(captureSha)) return noSha("an import reads one captured Legistar list, named by its capture sha256");
   const held2 = k.heldCapture(captureSha, null);
-  if (!held2) return refuse6("CAPTURE_NOT_HELD", "the record holds no such capture");
+  if (!held2) return refuse7("CAPTURE_NOT_HELD", "the record holds no such capture");
   const reading2 = readingOf(k, held2.sha);
   if (!reading2 || reading2.content_type !== "legistar_api")
-    return refuse6("NOT_LEGISTAR", "the capture is not one legistar-reader read");
+    return refuse7("NOT_LEGISTAR", "the capture is not one legistar-reader read");
   if (!k.entities || !k.entities.has(body)) return noSuchEntity(body, { end: "body" });
   const zone = k.zone();
   const from = said2(period.from) ? period.from.trim() : null, to = said2(period.to) ? period.to.trim() : null;
@@ -69152,9 +70806,9 @@ function followedRegister(k, { captureSha, proceeding, by = MACHINE } = {}) {
   if (!k.entities || !k.entities.has(proceeding)) return noSuchEntity(proceeding);
   if (!said2(captureSha)) return noSha("a register import reads one captured register, named by its capture sha256");
   const held2 = k.heldCapture(captureSha, null);
-  if (!held2) return refuse6("CAPTURE_NOT_HELD", "the record holds no such capture");
+  if (!held2) return refuse7("CAPTURE_NOT_HELD", "the record holds no such capture");
   const reading2 = readingOf(k, held2.sha);
-  if (!reading2 || !COURT_TYPES.includes(reading2.content_type)) return refuse6("NOT_A_REGISTER", "the capture is not a register court-doctypes read");
+  if (!reading2 || !COURT_TYPES.includes(reading2.content_type)) return refuse7("NOT_A_REGISTER", "the capture is not a register court-doctypes read");
   const rows3 = reading2.facts && Array.isArray(reading2.facts.rows) ? reading2.facts.rows : [];
   const out = { written: [], unchanged: 0, skipped: [] };
   const res = k.tx(() => {
@@ -69429,9 +71083,9 @@ var ACT_RE = idPattern("ACT");
 var EVT_RE = idPattern("EVT");
 var isObj16 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var said3 = (v) => typeof v === "string" && v.trim() !== "";
-var refuse7 = (reason, detail, extra = {}) => ({ ok: false, reason, detail, ...extra });
+var refuse8 = (reason, detail, extra = {}) => ({ ok: false, reason, detail, ...extra });
 var stamp = (by) => by == null ? null : String(by).slice(0, 200);
-var json = (s) => {
+var json2 = (s) => {
   try {
     return JSON.parse(s);
   } catch {
@@ -69457,13 +71111,13 @@ function oneHome(row9) {
   return null;
 }
 var GATED = ["events", "event_attestations", "event_participants", "event_concerns", "event_relations"];
-var instances12 = /* @__PURE__ */ new WeakMap();
+var instances13 = /* @__PURE__ */ new WeakMap();
 var made = /* @__PURE__ */ new Set();
 var ownerRegistered = false;
 function ownerRead(a) {
   const host = a && a.host;
   if (host) {
-    const e2 = instances12.get(host.storage ? host.storage : host);
+    const e2 = instances13.get(host.storage ? host.storage : host);
     return e2 ? e2.neighbours(a) : { refused: "OWNER_HOST_UNKNOWN", why: "no events instance is wired for that host" };
   }
   if (made.size === 1) return [...made][0].neighbours(a);
@@ -69471,7 +71125,7 @@ function ownerRead(a) {
 }
 function eventsOf(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let e2 = instances12.get(storage);
+  let e2 = instances13.get(storage);
   if (!e2) {
     const record = opts.record ?? recordOf(ctx);
     const lazy = (v, f17) => v ?? f17;
@@ -69484,7 +71138,7 @@ function eventsOf(ctx, opts = {}) {
       content: lazy(opts.content, () => contentOf(ctx)),
       entities: lazy(opts.entities, () => entitiesOf(ctx))
     });
-    instances12.set(storage, e2);
+    instances13.set(storage, e2);
     e2.start(opts.readHooks ?? readHooksOf(ctx));
   }
   return e2;
@@ -69665,14 +71319,14 @@ var Events = class _Events {
   recordDatedFact({ captureSha, extent, kind, value, method, by = null } = {}) {
     if (!said3(captureSha)) return noSha("a dated fact is a captured document's own statement, named by its capture sha256");
     const held2 = this.#heldCapture(captureSha, by);
-    if (!held2) return refuse7("CAPTURE_NOT_HELD", "the record holds no such capture you can see");
-    if (!isObj16(extent)) return refuse7("NO_EXTENT", "a dated fact names the extent of the capture that states it");
+    if (!held2) return refuse8("CAPTURE_NOT_HELD", "the record holds no such capture you can see");
+    if (!isObj16(extent)) return refuse8("NO_EXTENT", "a dated fact names the extent of the capture that states it");
     const bad2 = this.#extentRefusal(held2.sha, extent);
     if (bad2) return bad2;
-    if (!DATED_KINDS.includes(kind)) return refuse7("UNKNOWN_DATED_KIND", `a dated fact is one of ${DATED_KINDS.join(", ")}`, { kinds: [...DATED_KINDS] });
+    if (!DATED_KINDS.includes(kind)) return refuse8("UNKNOWN_DATED_KIND", `a dated fact is one of ${DATED_KINDS.join(", ")}`, { kinds: [...DATED_KINDS] });
     const d = readDate2(value, this.zone());
-    if (d.bad) return refuse7("BAD_DATE", d.bad);
-    if (!said3(method)) return refuse7("NO_METHOD", "a dated fact says how its date was read (a member's reading, a reader, OCR, office metadata)");
+    if (d.bad) return refuse8("BAD_DATE", d.bad);
+    if (!said3(method)) return refuse8("NO_METHOD", "a dated fact says how its date was read (a member's reading, a reader, OCR, office metadata)");
     return this.#record.transact(() => this.#holdFact({
       sha: held2.sha,
       bundleId: held2.bundleId,
@@ -69692,7 +71346,7 @@ var Events = class _Events {
     } catch (e2) {
       bad2 = { code: "CONTENT_EXTENT_UNREADABLE", detail: String(e2 && e2.message || e2) };
     }
-    return bad2 ? refuse7("EXTENT_NOT_IN_CAPTURE", "the extent names no part of that capture", { extent_refusal: bad2 }) : null;
+    return bad2 ? refuse8("EXTENT_NOT_IN_CAPTURE", "the extent names no part of that capture", { extent_refusal: bad2 }) : null;
   }
   /* R1, R2: one dated fact, inside the caller's transaction; its grade is the capture's own, never above it. */
   #holdFact({ sha: sha2, bundleId, extent, kind, date, method, by, sourceRow = null, upperBound = false }) {
@@ -69730,7 +71384,7 @@ var Events = class _Events {
     return {
       dated_fact_id: r.dated_fact_id,
       capture_sha: r.capture_sha,
-      extent: json(r.extent),
+      extent: json2(r.extent),
       source_row: r.source_row ?? null,
       kind: r.kind,
       value: r.value,
@@ -69750,7 +71404,7 @@ var Events = class _Events {
     const admin = !!member && !!m && typeof m.isAdministrator === "function" && m.isAdministrator(member);
     if (!admin || isMachineIdentity(by)) return notAnAdmin(by, "choosing which readings' dates are held");
     if (!Array.isArray(captureClasses) || !captureClasses.every(said3))
-      return refuse7("NO_CLASSES", "the opt-in set is a list of capture classes (content-type keys), empty for none");
+      return refuse8("NO_CLASSES", "the opt-in set is a list of capture classes (content-type keys), empty for none");
     const classes = [...new Set(captureClasses.map((c) => c.trim()))].sort();
     const at34 = this.#instant();
     this.#sql.exec(`INSERT INTO event_read_optin (classes, by_actor, at) VALUES (?,?,?)`, JSON.stringify(classes), stamp(by), at34);
@@ -69766,10 +71420,10 @@ var Events = class _Events {
     const r = this.#one(`SELECT classes, by_actor, at FROM event_read_optin ORDER BY seq DESC LIMIT 1`);
     return {
       ok: true,
-      captureClasses: r ? json(r.classes) || [] : [],
+      captureClasses: r ? json2(r.classes) || [] : [],
       by: r ? r.by_actor : null,
       at: r ? r.at : null,
-      history: this.#rows(`SELECT classes, by_actor, at FROM event_read_optin ORDER BY seq`).map((x) => ({ captureClasses: json(x.classes) || [], by: x.by_actor, at: x.at }))
+      history: this.#rows(`SELECT classes, by_actor, at FROM event_read_optin ORDER BY seq`).map((x) => ({ captureClasses: json2(x.classes) || [], by: x.by_actor, at: x.at }))
     };
   }
   /** R4: the hook reading-pipeline calls after a reading commits. For a class in the opt-in set it holds each date the
@@ -69802,10 +71456,10 @@ var Events = class _Events {
   recordEditActs({ captureSha, by = null } = {}) {
     if (!said3(captureSha)) return noSha("edit acts are read from a captured office document, named by its capture sha256");
     const held2 = this.#heldCapture(captureSha, by);
-    if (!held2) return refuse7("CAPTURE_NOT_HELD", "the record holds no such capture you can see");
+    if (!held2) return refuse8("CAPTURE_NOT_HELD", "the record holds no such capture you can see");
     const c = this.#content;
     const m = c && typeof c.officeMetadataOf === "function" ? c.officeMetadataOf(held2.sha) : null;
-    if (!m || !m.metadata) return refuse7("NO_OFFICE_METADATA", m && m.why ? m.why : "the capture's reading holds no office metadata");
+    if (!m || !m.metadata) return refuse8("NO_OFFICE_METADATA", m && m.why ? m.why : "the capture's reading holds no office metadata");
     const md = m.metadata, zone = this.zone(), out = [], skipped = [];
     return this.#record.transact(() => {
       for (const [field2, kind, who2] of [["created", "issued", md.author], ["modified", "edited", md.lastModifiedBy]]) {
@@ -69858,7 +71512,7 @@ var Events = class _Events {
   }
   /* R7: an attestation as given, read into its row, or a refusal. `by` is the stamp whose sight a capture is asked in. */
   #attestationFrom(a, by) {
-    if (!isObj16(a)) return refuse7("NO_ATTESTATION", "an attestation is {datedFactId}, {captureSha, extent} or {testimony}");
+    if (!isObj16(a)) return refuse8("NO_ATTESTATION", "an attestation is {datedFactId}, {captureSha, extent} or {testimony}");
     if (a.datedFactId !== void 0) {
       const f17 = said3(a.datedFactId) ? this.#one(`SELECT * FROM dated_facts WHERE dated_fact_id=?`, a.datedFactId.trim()) : null;
       if (!f17 || !this.#sees(f17.bundle_id, by)) return noSuchDatedFact(typeof a.datedFactId === "string" ? a.datedFactId : null);
@@ -69880,8 +71534,8 @@ var Events = class _Events {
     if (a.captureSha !== void 0) {
       if (!said3(a.captureSha)) return noSha("an attestation from a captured document names its capture sha256");
       const held2 = this.#heldCapture(a.captureSha, by);
-      if (!held2) return refuse7("CAPTURE_NOT_HELD", "the record holds no such capture you can see");
-      if (!isObj16(a.extent)) return refuse7("NO_EXTENT", "a capture attestation names the extent that attests the event");
+      if (!held2) return refuse8("CAPTURE_NOT_HELD", "the record holds no such capture you can see");
+      if (!isObj16(a.extent)) return refuse8("NO_EXTENT", "a capture attestation names the extent that attests the event");
       const bad2 = this.#extentRefusal(held2.sha, a.extent);
       if (bad2) return bad2;
       return { ok: true, row: {
@@ -69899,12 +71553,12 @@ var Events = class _Events {
       } };
     }
     if (a.testimony !== void 0) {
-      if (!said3(a.testimony)) return refuse7("NO_STATEMENT", "testimony carries the member's own account of the event");
-      if (!said3(by) || isMachineIdentity(by)) return refuse7("MEMBER_ACT_ONLY", "testimony is a member's own account, never the machine's");
+      if (!said3(a.testimony)) return refuse8("NO_STATEMENT", "testimony carries the member's own account of the event");
+      if (!said3(by) || isMachineIdentity(by)) return refuse8("MEMBER_ACT_ONLY", "testimony is a member's own account, never the machine's");
       let date = null;
       if (a.value !== void 0 && a.value !== null) {
         const d = readDate2(a.value, this.zone());
-        if (d.bad) return refuse7("BAD_DATE", d.bad);
+        if (d.bad) return refuse8("BAD_DATE", d.bad);
         date = d;
       }
       let bundleId = null;
@@ -69927,7 +71581,7 @@ var Events = class _Events {
         grade: TESTIMONY_GRADE
       } };
     }
-    return refuse7("NO_ATTESTATION", "an attestation is {datedFactId}, {captureSha, extent} or {testimony}");
+    return refuse8("NO_ATTESTATION", "an attestation is {datedFactId}, {captureSha, extent} or {testimony}");
   }
   /* A relation's citation (R17) is held as `relation:<from>`, so it is never one of the event's own attestations (R9, the
      R37 contract: each capture an attestation OF the event cites). */
@@ -69944,7 +71598,7 @@ var Events = class _Events {
   /* R6: a concerns end, an entity or another event; a hypothesis id is never held (R39). */
   #concernRefusal(end2) {
     if (!said3(end2)) return noEntity("an event concerns a registered subject or another event, named by its id");
-    if (isHypothesisId(end2)) return refuse7("HYPOTHESIS_ID", "a hypothesis is never what an event concerns (K1467)");
+    if (isHypothesisId(end2)) return refuse8("HYPOTHESIS_ID", "a hypothesis is never what an event concerns (K1467)");
     if (EVT_RE.test(end2)) return this.has(end2) ? null : noSuchEvent(end2);
     const e2 = this.#ents;
     return e2 && e2.has(end2) ? null : noSuchEntity(end2, { end: "concerns" });
@@ -69952,17 +71606,17 @@ var Events = class _Events {
   /* R11: a participant's refusals after its event: the entity, the role, the attestation, the vote. */
   #participantRefusal({ entityId, role, attestation, voteValue }, { attestationGiven = true } = {}) {
     if (!said3(entityId)) return noEntity("a participant is a registered subject, named by its id");
-    if (isHypothesisId(entityId)) return refuse7("HYPOTHESIS_ID", "a hypothesis is never a participant (K1467)");
+    if (isHypothesisId(entityId)) return refuse8("HYPOTHESIS_ID", "a hypothesis is never a participant (K1467)");
     const e2 = this.#ents;
     if (!e2 || !e2.has(entityId)) return noSuchEntity(entityId);
     if (!ROLES.includes(role))
-      return refuse7(
+      return refuse8(
         "UNKNOWN_ROLE",
         `a role is one of ${ROLES.join(", ")}; a payer or payee lives on the money fact, never on an event`,
         { roles: [...ROLES] }
       );
     if (!attestationGiven || attestation === void 0 || attestation === null)
-      return refuse7("NO_ATTESTATION", "a participant is what a document states or a member testifies, never filled from who held an office");
+      return refuse8("NO_ATTESTATION", "a participant is what a document states or a member testifies, never filled from who held an office");
     if (role === "voted") return this.#voteRefusal(voteValue);
     return null;
   }
@@ -69981,13 +71635,13 @@ var Events = class _Events {
      source (`fromSource`, R22) that is no entry's `value` is matched exactly on an entry's `label`, and that entry's
      `value` is held (K1788). With none held, the value is kept as written, unchecked. */
   #voteMatch(voteValue, { fromSource = false } = {}) {
-    if (!said3(voteValue)) return refuse7("NO_VOTE_VALUE", "a vote is held with the value the record states");
+    if (!said3(voteValue)) return refuse8("NO_VOTE_VALUE", "a vote is held with the value the record states");
     const v = voteValue.trim(), entries = this.#voteEntries();
     if (!entries) return { ok: true, value: v };
     const hit = entries.find((x) => x.value === v) || (fromSource ? entries.find((x) => x.label === v) : null);
     if (hit) return { ok: true, value: hit.value };
     const values = entries.map((x) => x.value);
-    return refuse7("UNKNOWN_VOTE_VALUE", `a vote value is one of the profile's: ${values.join(", ")}`, { values });
+    return refuse8("UNKNOWN_VOTE_VALUE", `a vote value is one of the profile's: ${values.join(", ")}`, { values });
   }
   #voteRefusal(voteValue) {
     const m = this.#voteMatch(voteValue);
@@ -69995,10 +71649,10 @@ var Events = class _Events {
   }
   /** R6: an event held with at least one attestation, its concerns and its participants, in one transaction. */
   createEvent({ kind, status = "EventScheduled", where = null, concerns = [], attestations, participants = [], by = null } = {}) {
-    if (!EVENT_KINDS.includes(kind)) return refuse7("UNKNOWN_EVENT_KIND", `an event is one of ${EVENT_KINDS.join(", ")}`, { kinds: [...EVENT_KINDS] });
-    if (!STATUSES.includes(status)) return refuse7("UNKNOWN_STATUS", `a status is one of ${STATUSES.join(", ")}`, { statuses: [...STATUSES] });
+    if (!EVENT_KINDS.includes(kind)) return refuse8("UNKNOWN_EVENT_KIND", `an event is one of ${EVENT_KINDS.join(", ")}`, { kinds: [...EVENT_KINDS] });
+    if (!STATUSES.includes(status)) return refuse8("UNKNOWN_STATUS", `a status is one of ${STATUSES.join(", ")}`, { statuses: [...STATUSES] });
     if (!Array.isArray(attestations) || !attestations.length)
-      return refuse7("NO_ATTESTATION", "an event is held only with at least one attestation");
+      return refuse8("NO_ATTESTATION", "an event is held only with at least one attestation");
     const rows3 = [];
     for (const a of attestations) {
       const r = this.#attestationFrom(a, by);
@@ -70015,7 +71669,7 @@ var Events = class _Events {
       const r = this.#participantRefusal(isObj16(p3) ? p3 : {});
       if (r) return r;
       if (!(Number.isInteger(p3.attestation) && p3.attestation >= 0 && p3.attestation < rows3.length))
-        return refuse7("NO_ATTESTATION", "a participant names the attestation that states it, by its index in attestations");
+        return refuse8("NO_ATTESTATION", "a participant names the attestation that states it, by its index in attestations");
     }
     return this.#tx(() => {
       const at34 = this.#instant();
@@ -70060,7 +71714,7 @@ var Events = class _Events {
         } catch (e2) {
           if (e2 && e2.refusal) return e2.refusal;
           if (e2 instanceof ListenerFailure)
-            return refuse7("LISTENER_FAILED", `the write was undone because ${e2.module}'s listener failed: ${e2.message}`, { module: e2.module });
+            return refuse8("LISTENER_FAILED", `the write was undone because ${e2.module}'s listener failed: ${e2.message}`, { module: e2.module });
           throw e2;
         }
       });
@@ -70105,8 +71759,8 @@ var Events = class _Events {
     const id = this.#resolve(eventId3);
     if (!id) return noSuchEvent(eventId3 ?? null);
     const a = this.#one(`SELECT * FROM event_attestations WHERE attestation_id=? AND event_id=? AND serves='event'`, Number(attestationId), id);
-    if (!a) return refuse7("NO_SUCH_ATTESTATION", "that event holds no such attestation");
-    if (a.value == null) return refuse7("ATTESTATION_UNDATED", "an attestation with no date of its own cannot govern when the event happened");
+    if (!a) return refuse8("NO_SUCH_ATTESTATION", "that event holds no such attestation");
+    if (a.value == null) return refuse8("ATTESTATION_UNDATED", "an attestation with no date of its own cannot govern when the event happened");
     return this.#tx(() => {
       this.#sql.exec(
         `INSERT INTO event_choices (event_id, attestation_id, reason, by_actor, at) VALUES (?,?,?,?,?)`,
@@ -70218,7 +71872,7 @@ var Events = class _Events {
     let attRow = null, attId = null;
     if (Number.isInteger(attestation)) {
       const a = this.#one(`SELECT attestation_id FROM event_attestations WHERE attestation_id=? AND event_id=? AND serves='event'`, attestation, id);
-      if (!a) return refuse7("NO_SUCH_ATTESTATION", "that event holds no such attestation");
+      if (!a) return refuse8("NO_SUCH_ATTESTATION", "that event holds no such attestation");
       attId = Number(a.attestation_id);
     } else {
       const x = this.#attestationFrom(attestation, by);
@@ -70248,16 +71902,16 @@ var Events = class _Events {
   }
   /** R13: a participant re-resolved to another entity; the corrected row stays, superseded with who, when and why. */
   correctParticipant({ participantId, entityId, reason, by = null } = {}) {
-    if (!said3(reason)) return refuse7("NO_REASON", "a correction says why the participant was wrong; it is kept beside the row");
+    if (!said3(reason)) return refuse8("NO_REASON", "a correction says why the participant was wrong; it is kept beside the row");
     const p3 = this.#one(`SELECT * FROM event_participants WHERE participant_id=?`, Number(participantId));
-    if (!p3) return refuse7("NO_SUCH_PARTICIPANT", "no participant with that id is held");
-    if (p3.superseded_by != null) return refuse7(
+    if (!p3) return refuse8("NO_SUCH_PARTICIPANT", "no participant with that id is held");
+    if (p3.superseded_by != null) return refuse8(
       "PARTICIPANT_SUPERSEDED",
       "that row was already corrected; correct the row that replaced it",
       { superseded_by: Number(p3.superseded_by) }
     );
     if (!said3(entityId)) return noEntity("a correction names the subject the participant is, by its id");
-    if (isHypothesisId(entityId)) return refuse7("HYPOTHESIS_ID", "a hypothesis is never a participant (K1467)");
+    if (isHypothesisId(entityId)) return refuse8("HYPOTHESIS_ID", "a hypothesis is never a participant (K1467)");
     if (!this.#ents.has(entityId)) return noSuchEntity(entityId);
     return this.#tx(() => {
       const at34 = this.#instant();
@@ -70286,17 +71940,17 @@ var Events = class _Events {
    * MERGE AND SPLIT (R14): a member's acts only, recorded, rebuilding every when they touch.
    * ===================================================================== */
   #memberAct(by) {
-    return !said3(by) || isMachineIdentity(by) ? refuse7("MEMBER_ACT_ONLY", "only a member merges or splits events; the machine's rows are corrected by a member's act") : null;
+    return !said3(by) || isMachineIdentity(by) ? refuse8("MEMBER_ACT_ONLY", "only a member merges or splits events; the machine's rows are corrected by a member's act") : null;
   }
   /** R14: `absorb` joins `keep`; `absorb` stays as an alias resolving to `keep`. */
   mergeEvents({ keep: keep2, absorb, reason, by = null } = {}) {
     const m = this.#memberAct(by);
     if (m) return m;
-    if (!said3(reason)) return refuse7("NO_REASON", "a merge says why the two records are one happening");
+    if (!said3(reason)) return refuse8("NO_REASON", "a merge says why the two records are one happening");
     const k = this.#resolve(keep2), a = this.#resolve(absorb);
     if (!k) return noSuchEvent(keep2 ?? null, { end: "keep" });
     if (!a) return noSuchEvent(absorb ?? null, { end: "absorb" });
-    if (k === a) return refuse7("SAME_EVENT", "an event is not merged into itself");
+    if (k === a) return refuse8("SAME_EVENT", "an event is not merged into itself");
     return this.#tx(() => {
       const at34 = this.#instant(), why = reason.trim().slice(0, REASON_MAX2);
       const g = this.#governing(k);
@@ -70340,16 +71994,16 @@ var Events = class _Events {
   splitEvent({ eventId: eventId3, attestations, reason, by = null } = {}) {
     const m = this.#memberAct(by);
     if (m) return m;
-    if (!said3(reason)) return refuse7("NO_REASON", "a split says why one record held two happenings");
+    if (!said3(reason)) return refuse8("NO_REASON", "a split says why one record held two happenings");
     const id = this.#resolve(eventId3);
     if (!id) return noSuchEvent(eventId3 ?? null);
     const ids = Array.isArray(attestations) ? [...new Set(attestations.map(Number))] : [];
-    if (!ids.length) return refuse7("NO_ATTESTATION", "a split names the attestations that move to the new event");
+    if (!ids.length) return refuse8("NO_ATTESTATION", "a split names the attestations that move to the new event");
     for (const x of ids)
       if (!this.#one(`SELECT 1 AS y FROM event_attestations WHERE attestation_id=? AND event_id=? AND serves='event'`, x, id))
-        return refuse7("NO_SUCH_ATTESTATION", "that event holds no such attestation", { attestation_id: x });
+        return refuse8("NO_SUCH_ATTESTATION", "that event holds no such attestation", { attestation_id: x });
     const left2 = Number(this.#one(`SELECT COUNT(*) AS n FROM event_attestations WHERE event_id=? AND serves='event'`, id).n);
-    if (left2 <= ids.length) return refuse7("SPLIT_EMPTIES", "a split leaves at least one attestation on the event it splits");
+    if (left2 <= ids.length) return refuse8("SPLIT_EMPTIES", "a split leaves at least one attestation on the event it splits");
     const ev = this.#one(`SELECT * FROM events WHERE event_id=?`, id);
     return this.#tx(() => {
       const at34 = this.#instant(), why = reason.trim().slice(0, REASON_MAX2);
@@ -70426,24 +72080,24 @@ var Events = class _Events {
   }
   /** R17–R19: a cited relation between two events. */
   relate({ from, to, kind, attestation, by = null } = {}) {
-    if (!RELATION_KINDS2.includes(kind)) return refuse7("UNKNOWN_RELATION", `a relation is one of ${RELATION_KINDS2.join(", ")}`, { kinds: [...RELATION_KINDS2] });
-    if (!said3(from) || !said3(to)) return refuse7("NO_ENDS", "a relation names two events by id: from and to");
-    if (isHypothesisId(from) || isHypothesisId(to)) return refuse7("HYPOTHESIS_ID", "a hypothesis is never an end of an event's relation (K1467)");
+    if (!RELATION_KINDS2.includes(kind)) return refuse8("UNKNOWN_RELATION", `a relation is one of ${RELATION_KINDS2.join(", ")}`, { kinds: [...RELATION_KINDS2] });
+    if (!said3(from) || !said3(to)) return refuse8("NO_ENDS", "a relation names two events by id: from and to");
+    if (isHypothesisId(from) || isHypothesisId(to)) return refuse8("HYPOTHESIS_ID", "a hypothesis is never an end of an event's relation (K1467)");
     const f17 = this.#resolve(from), t2 = this.#resolve(to);
-    if (f17 && t2 && f17 === t2) return refuse7("SELF_RELATION", "a relation is between two distinct events");
+    if (f17 && t2 && f17 === t2) return refuse8("SELF_RELATION", "a relation is between two distinct events");
     if (!f17) return noSuchEvent(from, { end: "from" });
     if (!t2) return noSuchEvent(to, { end: "to" });
-    if (attestation === void 0 || attestation === null) return refuse7("NO_ATTESTATION", "every relation is cited");
+    if (attestation === void 0 || attestation === null) return refuse8("NO_ATTESTATION", "every relation is cited");
     const machine3 = isMachineIdentity(by);
     if (kind === "stated_cause") {
-      if (machine3) return refuse7("CAUSE_NOT_MACHINE", "a stated cause is held only from a named source by a member; the machine never writes one");
+      if (machine3) return refuse8("CAUSE_NOT_MACHINE", "a stated cause is held only from a named source by a member; the machine never writes one");
       if (isObj16(attestation) && attestation.testimony !== void 0)
-        return refuse7("CAUSE_NEEDS_SOURCE", "a cause is held only as a named source's claim; a member's own hypothesis is not held here (K1467)");
+        return refuse8("CAUSE_NEEDS_SOURCE", "a cause is held only as a named source's claim; a member's own hypothesis is not held here (K1467)");
     } else if (machine3 && kind !== "within")
-      return refuse7("RELATION_NOT_MACHINE", "the machine writes no relation but within (R41)");
+      return refuse8("RELATION_NOT_MACHINE", "the machine writes no relation but within (R41)");
     const x = this.#attestationFrom(attestation, by);
     if (!x.ok) return x;
-    if (kind === "within" && this.#withinLoops(f17, t2)) return refuse7("WITHIN_CYCLE", "that within would make an event lie within itself");
+    if (kind === "within" && this.#withinLoops(f17, t2)) return refuse8("WITHIN_CYCLE", "that within would make an event lie within itself");
     const prior = this.#one(
       `SELECT r.relation_id FROM event_relations r JOIN event_attestations a ON a.attestation_id = r.attestation_id
                               WHERE r.from_event=? AND r.to_event=? AND r.kind=? AND r.withdrawn_at IS NULL AND a.form=?
@@ -70467,9 +72121,9 @@ var Events = class _Events {
   }
   /** R20: a relation withdrawn, never deleted. */
   withdrawRelation({ relationId, reason, by = null } = {}) {
-    if (!said3(reason)) return refuse7("NO_REASON", "a withdrawal says why the relation was wrong; it is kept beside it");
+    if (!said3(reason)) return refuse8("NO_REASON", "a withdrawal says why the relation was wrong; it is kept beside it");
     const r = this.#one(`SELECT * FROM event_relations WHERE relation_id=?`, Number(relationId));
-    if (!r) return refuse7("NO_SUCH_RELATION", "no relation with that id is held");
+    if (!r) return refuse8("NO_SUCH_RELATION", "no relation with that id is held");
     if (r.withdrawn_at) return { ok: true, already: true, relation: this.#relationView(r, "class:admin") };
     this.#sql.exec(
       `UPDATE event_relations SET withdrawn_actor=?, withdrawn_at=?, withdrawn_why=? WHERE relation_id=?`,
@@ -70505,12 +72159,12 @@ var Events = class _Events {
    * ACT- ALIASES (R21).
    * ===================================================================== */
   aliasAct({ actId, eventId: eventId3, by = null } = {}) {
-    if (!said3(actId) || !ACT_RE.test(actId.trim())) return refuse7("NO_ACT", "an act is named by its ACT- id");
+    if (!said3(actId) || !ACT_RE.test(actId.trim())) return refuse8("NO_ACT", "an act is named by its ACT- id");
     const id = this.#resolve(eventId3);
     if (!id) return noSuchEvent(eventId3 ?? null);
     const held2 = this.#one(`SELECT event_id FROM event_aliases WHERE alias=?`, actId.trim());
     if (held2 && held2.event_id === id) return { ok: true, already: true, act_id: actId.trim(), event_id: id };
-    if (held2) return refuse7("ACT_ALIASED", "that act already names another event", { event_id: held2.event_id });
+    if (held2) return refuse8("ACT_ALIASED", "that act already names another event", { event_id: held2.event_id });
     this.#sql.exec(`INSERT INTO event_aliases (alias, event_id, by_actor, at) VALUES (?,?,?,?)`, actId.trim(), id, stamp(by), this.#instant());
     return { ok: true, act_id: actId.trim(), event_id: id };
   }
@@ -70538,7 +72192,7 @@ var Events = class _Events {
       form: a.form,
       dated_fact_id: a.dated_fact_id,
       capture_sha: a.capture_sha,
-      extent: json(a.extent),
+      extent: json2(a.extent),
       source_row: a.source_row ?? null,
       ...a.form === "testimony" ? { statement: a.statement, testimony: true } : {},
       date: a.value != null ? { value: a.value, precision: a.precision, zone: a.zone } : null,
@@ -70602,7 +72256,7 @@ var Events = class _Events {
     const relations2 = this.#rows(`SELECT * FROM event_relations WHERE from_event=? OR to_event=? ORDER BY relation_id`, id, id).filter(relVisible).map((r) => ({ ...this.#relationView(r, viewer), direction: r.from_event === id ? "out" : "in" }));
     const within3 = relations2.filter((r) => r.kind === "within" && r.direction === "out" && !r.withdrawn).map((r) => r.to);
     const concerns = this.#rows(`SELECT end_id FROM event_concerns WHERE event_id=? ORDER BY end_id`, id).map((r) => r.end_id);
-    const changes = this.#rows(`SELECT kind, other, detail, reason, by_actor, at FROM event_changes WHERE event_id=? ORDER BY change_id`, id).map((c) => ({ kind: c.kind, other: c.other, detail: json(c.detail), reason: c.reason, by: c.by_actor, at: c.at }));
+    const changes = this.#rows(`SELECT kind, other, detail, reason, by_actor, at FROM event_changes WHERE event_id=? ORDER BY change_id`, id).map((c) => ({ kind: c.kind, other: c.other, detail: json2(c.detail), reason: c.reason, by: c.by_actor, at: c.at }));
     const choices = this.#rows(`SELECT attestation_id, reason, by_actor, at FROM event_choices WHERE event_id=? ORDER BY choice_id`, id).filter((c) => attById.has(Number(c.attestation_id))).map((c) => ({ attestation_id: Number(c.attestation_id), reason: c.reason, by: c.by_actor, at: c.at }));
     return {
       event_id: id,
@@ -70625,7 +72279,7 @@ var Events = class _Events {
   }
   /** R26: one event, by its id or an alias of it. */
   readEvent({ eventId: eventId3, viewer = null } = {}) {
-    if (!said3(eventId3)) return refuse7("NO_EVENT", "an event is read by its id (op=event&id=EVT-\u2026)");
+    if (!said3(eventId3)) return refuse8("NO_EVENT", "an event is read by its id (op=event&id=EVT-\u2026)");
     const id = this.#resolve(eventId3);
     const v = id ? this.#eventView(id, viewer) : null;
     if (!v) return { ok: true, found: false, event_id: eventId3 };
@@ -70693,14 +72347,14 @@ var Events = class _Events {
     if (!said3(entity2)) return noEntity("events are read for one registered subject, named by its id");
     const ks = Array.isArray(kinds3) && kinds3.length ? kinds3 : typeof kinds3 === "string" && kinds3 ? kinds3.split(",") : null;
     const r = this.#range(this.#eventsOfEntity(entity2, viewer, { kinds: ks }), from, to);
-    if (r.bad) return refuse7("BAD_DATE", r.bad);
+    if (r.bad) return refuse8("BAD_DATE", r.bad);
     const b = this.#bounded(r.items, limit);
     return { ok: true, entity: entity2, count: b.items.length + b.placed_nowhere.length, events: b.items, placed_nowhere: b.placed_nowhere, limit: b.limit, truncated: b.truncated };
   }
   /** R28–R30: the world's events concerning or involving an explicit set, and, apart, what the group's own modules did. */
   timeline({ set, from = null, to = null, lanes = null, limit = null, viewer = null } = {}) {
     const ids = Array.isArray(set) ? set.filter(said3).map((s) => s.trim()) : typeof set === "string" ? set.split(",").filter(said3) : [];
-    if (!ids.length) return refuse7("NO_SET", "a timeline is of an explicit set of entity or event ids; a project's or inquiry's scope is resolved by its caller");
+    if (!ids.length) return refuse8("NO_SET", "a timeline is of an explicit set of entity or event ids; a project's or inquiry's scope is resolved by its caller");
     const want = Array.isArray(lanes) && lanes.length ? lanes : ["world", "ours"];
     const answer = { ok: true, set: ids };
     if (want.includes("world")) {
@@ -70719,7 +72373,7 @@ var Events = class _Events {
       }
       const all = [...items.values()];
       const r = this.#range(all.filter((i) => i.when), from, to);
-      if (r.bad) return refuse7("BAD_DATE", r.bad);
+      if (r.bad) return refuse8("BAD_DATE", r.bad);
       const b = this.#bounded([...r.items, ...all.filter((i) => !i.when)], limit);
       answer.world = { label: "what they did", items: b.items, placed_nowhere: b.placed_nowhere, limit: b.limit, truncated: b.truncated };
     }
@@ -70774,7 +72428,7 @@ var Events = class _Events {
     const r = this.readEvent({ eventId: eventId3, viewer });
     if (!r.ok || !r.found) return r;
     if (!["communication", "issuance", "meeting"].includes(r.event.kind))
-      return refuse7("NOT_A_COMMUNICATION", "who was sent something is read of a communication, an issuance or a meeting");
+      return refuse8("NOT_A_COMMUNICATION", "who was sent something is read of a communication, an issuance or a meeting");
     const WORDS3 = { sender: "sent by", recipient: "sent to", copied: "copied", present: "present" };
     const list6 = r.event.participants.filter((p3) => !p3.superseded && WORDS3[p3.role]).map((p3) => ({ entity_id: p3.entity_id, role: p3.role, words: WORDS3[p3.role], attestation: r.event.attestations.find((a) => a.attestation_id === p3.attestation_id) || null }));
     return {
@@ -70790,7 +72444,7 @@ var Events = class _Events {
     if (!said3(entity2)) return noEntity("statements are read for one registered subject, named by its id");
     const items = this.#eventsOfEntity(entity2, viewer, { kinds: ["statement", "communication"], roles: ["speaker", "sender", "author", "actor"] });
     const r = this.#range(items, from, to);
-    if (r.bad) return refuse7("BAD_DATE", r.bad);
+    if (r.bad) return refuse8("BAD_DATE", r.bad);
     const b = this.#bounded(r.items, limit);
     return { ok: true, entity: entity2, count: b.items.length + b.placed_nowhere.length, statements: b.items, placed_nowhere: b.placed_nowhere, limit: b.limit, truncated: b.truncated };
   }
@@ -70801,7 +72455,7 @@ var Events = class _Events {
     if (!ents.has(proceeding)) return noSuchEntity(proceeding);
     const e2 = ents.readEntity({ entityId: proceeding, viewer: "class:admin" });
     if (!e2 || !e2.entity || e2.entity.kind !== "proceeding")
-      return refuse7("NOT_A_PROCEEDING", "status as of a date is read of an entity of kind proceeding", { entity_id: proceeding });
+      return refuse8("NOT_A_PROCEEDING", "status as of a date is read of an entity of kind proceeding", { entity_id: proceeding });
     const und = (why, extra = {}) => ({ ok: true, proceeding, at: at34 ?? null, stage: "undetermined", why, ...extra });
     const facet = typeof ents.proceedingOf === "function" ? ents.proceedingOf(proceeding) : e2.entity.proceeding || null;
     const kind = facet && facet.kind;
@@ -70810,7 +72464,7 @@ var Events = class _Events {
     const flow = Array.isArray(flows) ? flows.find((f17) => f17 && f17.kind === kind) : isObj16(flows) ? flows[kind] : null;
     if (!flow || !Array.isArray(flow.stages)) return und(`no active profile holds a flow for proceedings of kind ${kind}`);
     const point = spanOfBound(at34, this.zone());
-    if (!point || point.bad) return refuse7("BAD_DATE", point && point.bad ? point.bad : "a status is read as of a date");
+    if (!point || point.bad) return refuse8("BAD_DATE", point && point.bad ? point.bad : "a status is read as of a date");
     const events = this.#eventsOfEntity(proceeding, viewer);
     let reached = null, rests = [], open = [];
     flow.stages.forEach((st, i) => {
@@ -71121,8 +72775,8 @@ var EDGES = ["start", "end"];
 var PROCEEDING_LINKS = ["appeal_of", "consolidated_with", "remanded_to", "arises_from"];
 var isObj17 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var filled4 = (v) => typeof v === "string" && v.trim() !== "";
-var refuse8 = (reason, detail, extra = {}) => ({ ok: false, reason, code: reason, detail, ...extra });
-var json2 = (v) => JSON.stringify(v);
+var refuse9 = (reason, detail, extra = {}) => ({ ok: false, reason, code: reason, detail, ...extra });
+var json3 = (v) => JSON.stringify(v);
 var parse = (s) => {
   try {
     return JSON.parse(s);
@@ -71133,14 +72787,14 @@ var parse = (s) => {
 var kinds = () => LINE_KINDS;
 var capacities = () => CAPACITIES;
 var roles = (kind) => LINE_KINDS.includes(kind) ? ROLES2[kind] ?? Object.freeze([]) : null;
-var instances13 = /* @__PURE__ */ new WeakMap();
+var instances14 = /* @__PURE__ */ new WeakMap();
 var live = /* @__PURE__ */ new Set();
 var storageOf = (host) => host && host.storage ? host.storage : host;
 function ownerNeighbours(args) {
   const a = isObj17(args) ? args : {};
   const { host, ...rest } = a;
   let l2 = null;
-  if (host !== void 0 && host !== null) l2 = instances13.get(storageOf(host)) ?? null;
+  if (host !== void 0 && host !== null) l2 = instances14.get(storageOf(host)) ?? null;
   else if (live.size === 1) l2 = [...live][0];
   if (!l2) return {
     refused: "OWNER_HOST_AMBIGUOUS",
@@ -71151,7 +72805,7 @@ function ownerNeighbours(args) {
 defaultRegistry.registerOwner({ owner: OWNER, kinds: [...CONNECTION_KINDS2], neighbours: ownerNeighbours });
 function linesOf(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let l2 = instances13.get(storage);
+  let l2 = instances14.get(storage);
   if (!l2) {
     const record = opts.record ?? recordOf(ctx);
     l2 = new Lines(storage, {
@@ -71162,7 +72816,7 @@ function linesOf(ctx, opts = {}) {
       entities: opts.entities ?? entitiesOf(ctx),
       events: opts.events ?? eventsOf(ctx)
     });
-    instances13.set(storage, l2);
+    instances14.set(storage, l2);
   }
   return l2;
 }
@@ -71193,7 +72847,7 @@ var Lines = class _Lines {
     this.#events = events;
     this.#registry = registry;
     this.#now = typeof now === "function" ? now : () => (/* @__PURE__ */ new Date()).toISOString();
-    if (!instances13.has(storage)) instances13.set(storage, this);
+    if (!instances14.has(storage)) instances14.set(storage, this);
     live.add(this);
   }
   #rows(q10, ...a) {
@@ -71345,16 +72999,16 @@ var Lines = class _Lines {
   #bound(b, side, precision, zone) {
     if (b === void 0 || b === null) return { b: null };
     if (typeof b === "string") return this.#value(b, side, precision, zone);
-    if (!isObj17(b)) return { refusal: refuse8("BAD_DATE", `the validity's ${side} is a date-time value, an event bound or null`) };
+    if (!isObj17(b)) return { refusal: refuse9("BAD_DATE", `the validity's ${side} is a date-time value, an event bound or null`) };
     const hasValue = b.value !== void 0 && b.value !== null;
     const hasEvent = b.event !== void 0 && b.event !== null;
-    if (hasValue && hasEvent) return { refusal: refuse8("BOUND_BOTH", `the validity's ${side} gives both a value and an event; a bound is one or the other`, { side }) };
-    if (hasValue) return typeof b.value === "string" ? this.#value(b.value, side, precision, zone) : { refusal: refuse8("BAD_DATE", `the validity's ${side} value is a string`, { side }) };
+    if (hasValue && hasEvent) return { refusal: refuse9("BOUND_BOTH", `the validity's ${side} gives both a value and an event; a bound is one or the other`, { side }) };
+    if (hasValue) return typeof b.value === "string" ? this.#value(b.value, side, precision, zone) : { refusal: refuse9("BAD_DATE", `the validity's ${side} value is a string`, { side }) };
     if (hasEvent) {
       if (!filled4(b.event) || this.#when(b.event) === void 0)
-        return { refusal: refuse8("NO_SUCH_EVENT", `the validity's ${side} names an event the record does not hold`, { side, event: b.event ?? null }) };
+        return { refusal: refuse9("NO_SUCH_EVENT", `the validity's ${side} names an event the record does not hold`, { side, event: b.event ?? null }) };
       if (!EDGES.includes(b.edge))
-        return { refusal: refuse8("BAD_EDGE", `an event bound names the edge start or end of the event's when`, { side }) };
+        return { refusal: refuse9("BAD_EDGE", `an event bound names the edge start or end of the event's when`, { side }) };
       return { b: { event: b.event, edge: b.edge } };
     }
     return { b: null };
@@ -71366,7 +73020,7 @@ var Lines = class _Lines {
     } catch (e2) {
       r = { refused: "DATE_INVALID", why: String(e2.message || e2) };
     }
-    if (r.refused) return { refusal: refuse8("BAD_DATE", `the validity's ${side} ${v} is not a ${precision}-precision date-time in ${zone}: ${r.why}`, { side }) };
+    if (r.refused) return { refusal: refuse9("BAD_DATE", `the validity's ${side} ${v} is not a ${precision}-precision date-time in ${zone}: ${r.why}`, { side }) };
     return { b: v };
   }
   /* R6: a bound's resolved value: a value as given; an event bound as that event's `when` edge (`override` stands in
@@ -71494,29 +73148,29 @@ var Lines = class _Lines {
    *  and day. The machine records one only from a system rule (R4). A later one supersedes; the earlier is kept. */
   recordCurrentThrough({ lineId: lineId3, day: day2, basis, by } = {}) {
     const line = filled4(lineId3) ? this.#one(`SELECT * FROM lines WHERE line_id = ?`, lineId3) : null;
-    if (!line) return refuse8("NO_SUCH_LINE", "no line with that id is held", { line_id: lineId3 ?? null });
-    if (line.withdrawn) return refuse8("LINE_WITHDRAWN", "a withdrawn line takes no current-through statement");
-    if (line.kind !== "holds") return refuse8("NOT_A_HOLDS_LINE", "only a holds line is stated current through a day");
-    if (parse(line.valid_json).to !== null) return refuse8("END_STATED", "this line states its end; a current-through statement is for a line with none");
+    if (!line) return refuse9("NO_SUCH_LINE", "no line with that id is held", { line_id: lineId3 ?? null });
+    if (line.withdrawn) return refuse9("LINE_WITHDRAWN", "a withdrawn line takes no current-through statement");
+    if (line.kind !== "holds") return refuse9("NOT_A_HOLDS_LINE", "only a holds line is stated current through a day");
+    if (parse(line.valid_json).to !== null) return refuse9("END_STATED", "this line states its end; a current-through statement is for a line with none");
     if (typeof day2 !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(day2) || bounds({ value: day2, precision: "day", zone: "UTC" }).refused)
-      return refuse8("BAD_DATE", "a current-through day is a calendar day, YYYY-MM-DD");
+      return refuse9("BAD_DATE", "a current-through day is a calendar day, YYYY-MM-DD");
     const b = this.#basis(basis, by);
     if (b.refusal) return b.refusal;
     if (isMachineIdentity(by) && b.form !== "rule")
-      return refuse8("MACHINE_NEEDS_IDENTIFIERS", "the machine records a current-through statement only from a system rule (K1443)");
-    if (!filled4(by)) return refuse8("NO_BY", "a statement is recorded by the act's stamped author");
+      return refuse9("MACHINE_NEEDS_IDENTIFIERS", "the machine records a current-through statement only from a system rule (K1443)");
+    if (!filled4(by)) return refuse9("NO_BY", "a statement is recorded by the act's stamped author");
     const at34 = this.#now();
     return this.#record.transact(() => {
       this.#sql.exec(`INSERT INTO line_current_through (line_id, day, basis_form, basis_json, capture_sha, sight_bundle, by_actor, at)
-                      VALUES (?,?,?,?,?,?,?,?)`, lineId3, day2, b.form, json2(b.basis), b.captureSha, b.sight, by, at34);
+                      VALUES (?,?,?,?,?,?,?,?)`, lineId3, day2, b.form, json3(b.basis), b.captureSha, b.sight, by, at34);
       return { ok: true, line_id: lineId3, day: day2, at: at34 };
     });
   }
   static #atRefusal(at34) {
-    if (at34 === void 0 || at34 === null || at34 === "") return refuse8("NO_DATE", "a read as of a date names the date (`at`)");
+    if (at34 === void 0 || at34 === null || at34 === "") return refuse9("NO_DATE", "a read as of a date names the date (`at`)");
     if (typeof at34 === "string" && (ISO_TS_RE.test(at34) || /^\d{4}-\d{2}-\d{2}$/.test(at34))) return null;
     if (isObj17(at34) && typeof at34.value === "string") return null;
-    return refuse8("BAD_DATE", "`at` is a day (YYYY-MM-DD), an instant (YYYY-MM-DDTHH:MM:SSZ) or a date-time {value, precision, zone}");
+    return refuse9("BAD_DATE", "`at` is a day (YYYY-MM-DD), an instant (YYYY-MM-DDTHH:MM:SSZ) or a date-time {value, precision, zone}");
   }
   /* ---- basis (R1, R4, R5, R19) ---- */
   #captureHeld(sha2, viewer) {
@@ -71538,13 +73192,13 @@ var Lines = class _Lines {
   }
   /* A basis read into its form, or a refusal. `by` is the viewer the cited capture is checked against. */
   #basis(basis, by) {
-    if (!isObj17(basis)) return { refusal: refuse8("NO_BASIS", "a line rests on a passage {captureSha, extent}, a system rule {rule, source} or a member's testimony {statement}") };
+    if (!isObj17(basis)) return { refusal: refuse9("NO_BASIS", "a line rests on a passage {captureSha, extent}, a system rule {rule, source} or a member's testimony {statement}") };
     if ("captureSha" in basis || "extent" in basis) {
       const sha2 = typeof basis.captureSha === "string" ? basis.captureSha.trim().toLowerCase() : "";
-      if (!sha2) return { refusal: refuse8("NO_SHA", "a passage names its capture by its sha256") };
+      if (!sha2) return { refusal: refuse9("NO_SHA", "a passage names its capture by its sha256") };
       const home = this.#captureHeld(sha2, by);
-      if (!home) return { refusal: refuse8("CAPTURE_NOT_HELD", "the record holds no such capture, or it may not be seen") };
-      if (!isObj17(basis.extent)) return { refusal: refuse8("NO_EXTENT", "a passage names the part of the capture it cites (an extent)") };
+      if (!home) return { refusal: refuse9("CAPTURE_NOT_HELD", "the record holds no such capture, or it may not be seen") };
+      if (!isObj17(basis.extent)) return { refusal: refuse9("NO_EXTENT", "a passage names the part of the capture it cites (an extent)") };
       let bad2 = null;
       try {
         canonicalExtent2(basis.extent);
@@ -71553,7 +73207,7 @@ var Lines = class _Lines {
       } catch (e2) {
         bad2 = { reason: "CONTENT_EXTENT_UNREADABLE", detail: String(e2.message || e2) };
       }
-      if (bad2) return { refusal: refuse8("EXTENT_NOT_IN_CAPTURE", `the extent is not a part of that capture: ${bad2.detail || bad2.reason || bad2.code}`, { extent_refusal: bad2.reason || bad2.code || null }) };
+      if (bad2) return { refusal: refuse9("EXTENT_NOT_IN_CAPTURE", `the extent is not a part of that capture: ${bad2.detail || bad2.reason || bad2.code}`, { extent_refusal: bad2.reason || bad2.code || null }) };
       return {
         form: "passage",
         basis: { captureSha: sha2, extent: basis.extent },
@@ -71563,17 +73217,17 @@ var Lines = class _Lines {
       };
     }
     if ("rule" in basis || "source" in basis) {
-      if (!filled4(basis.rule)) return { refusal: refuse8("NO_BASIS", "a system rule names the rule it applies") };
+      if (!filled4(basis.rule)) return { refusal: refuse9("NO_BASIS", "a system rule names the rule it applies") };
       const ids = isObj17(basis.ids) ? { from: basis.ids.from ?? null, to: basis.ids.to ?? null } : null;
       const recordedAt = basis.recorded_at ?? null;
       if (recordedAt !== null && !(typeof recordedAt === "string" && ISO_TS_RE.test(recordedAt)))
-        return { refusal: refuse8("NO_BASIS", "a register row's own record instant is an instant (YYYY-MM-DDTHH:MM:SSZ)") };
+        return { refusal: refuse9("NO_BASIS", "a register row's own record instant is an instant (YYYY-MM-DDTHH:MM:SSZ)") };
       const system = filled4(basis.system) ? basis.system.trim() : null;
       if (typeof basis.source === "string") {
         const sha2 = basis.source.trim().toLowerCase();
         const home = this.#captureHeld(sha2, by);
-        if (!home) return { refusal: refuse8("CAPTURE_NOT_HELD", "the system rule's source is a capture the record does not hold, or it may not be seen") };
-        if (system && !recordedAt) return { refusal: refuse8("NO_BASIS", `a ${system} register row states its own record instant (recorded_at)`) };
+        if (!home) return { refusal: refuse9("CAPTURE_NOT_HELD", "the system rule's source is a capture the record does not hold, or it may not be seen") };
+        if (system && !recordedAt) return { refusal: refuse9("NO_BASIS", `a ${system} register row states its own record instant (recorded_at)`) };
         return {
           form: "rule",
           basis: {
@@ -71603,14 +73257,14 @@ var Lines = class _Lines {
           assertion: PROFILE_ASSERTION_GRADE,
           recordedAt: null
         };
-      return { refusal: refuse8("NO_BASIS", "a system rule's source is a held capture or a profile entry {profile, entry}") };
+      return { refusal: refuse9("NO_BASIS", "a system rule's source is a held capture or a profile entry {profile, entry}") };
     }
     if ("statement" in basis) {
-      if (!filled4(basis.statement)) return { refusal: refuse8("NO_STATEMENT", "a member's testimony states what they know, in their own words") };
+      if (!filled4(basis.statement)) return { refusal: refuse9("NO_STATEMENT", "a member's testimony states what they know, in their own words") };
       let sight = null;
       if (basis.project !== void 0 && basis.project !== null) {
         const p3 = this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id = ? AND object_type = 'project'`, String(basis.project));
-        if (!p3) return { refusal: refuse8("NO_BASIS", "testimony inside a project names a project the record holds") };
+        if (!p3) return { refusal: refuse9("NO_BASIS", "testimony inside a project names a project the record holds") };
         sight = p3.bundle_id;
       }
       return {
@@ -71621,54 +73275,54 @@ var Lines = class _Lines {
         assertion: TESTIMONY_GRADE2
       };
     }
-    return { refusal: refuse8("NO_BASIS", "a line rests on a passage {captureSha, extent}, a system rule {rule, source} or a member's testimony {statement}") };
+    return { refusal: refuse9("NO_BASIS", "a line rests on a passage {captureSha, extent}, a system rule {rule, source} or a member's testimony {statement}") };
   }
   /* ---- recordLine (R1–R5) ---- */
   recordLine({ kind, from, to, role, capacity, title, valid, basis, by } = {}) {
     const k = typeof kind === "string" ? kind.trim() : "";
     if (!LINE_KINDS.includes(k))
-      return refuse8(
+      return refuse9(
         "UNKNOWN_LINE_KIND",
         `a line's kind is one of ${LINE_KINDS.join(", ")}; money given or received is a money fact, never a line`,
         { kinds: [...LINE_KINDS] }
       );
-    if (!filled4(from) || !filled4(to)) return refuse8("NO_ENDS", "a line names both its ends (from and to), each a registered entity");
-    if (from === to) return refuse8("SELF_LINE", "a line runs between two different entities");
+    if (!filled4(from) || !filled4(to)) return refuse9("NO_ENDS", "a line names both its ends (from and to), each a registered entity");
+    if (from === to) return refuse9("SELF_LINE", "a line runs between two different entities");
     for (const [end2, id] of [["from", from], ["to", to]])
       if (!this.#entities.has(id)) return noSuchEntity(id, { end: end2 });
     const fk = this.#entityKind(from), tk = this.#entityKind(to);
     const ek = END_KINDS[k];
     if (ek && (ek.from && !ek.from.includes(fk) || ek.to && !ek.to.includes(tk)))
-      return refuse8(
+      return refuse9(
         ek.code,
         `${k} runs from ${ek.from ? `an entity of kind ${ek.from.join(" or ")}` : "any registered entity"} to one of kind ${ek.to.join(" or ")}`,
         { from_kind: fk, to_kind: tk }
       );
     if (k === "holds" && fk !== "person")
-      return refuse8("HOLDER_NOT_A_PERSON", "a post is held by a person entity, the same entity across every role it has held (K1452)", { from_kind: fk });
+      return refuse9("HOLDER_NOT_A_PERSON", "a post is held by a person entity, the same entity across every role it has held (K1452)", { from_kind: fk });
     const allowed = ROLES2[k];
     if (role !== void 0 && role !== null && role !== "" && (!allowed || !allowed.includes(role)))
-      return refuse8("BAD_ROLE", allowed ? `${k} takes a role of ${allowed.join(", ")}` : `${k} takes no role`, { roles: allowed ? [...allowed] : [] });
+      return refuse9("BAD_ROLE", allowed ? `${k} takes a role of ${allowed.join(", ")}` : `${k} takes no role`, { roles: allowed ? [...allowed] : [] });
     if (k === "holds") {
-      if (!filled4(capacity)) return refuse8("NO_CAPACITY", `a post is held in a capacity: ${CAPACITIES.join(", ")}`);
-      if (!CAPACITIES.includes(capacity)) return refuse8("UNKNOWN_CAPACITY", `a capacity is one of ${CAPACITIES.join(", ")}`, { capacities: [...CAPACITIES] });
+      if (!filled4(capacity)) return refuse9("NO_CAPACITY", `a post is held in a capacity: ${CAPACITIES.join(", ")}`);
+      if (!CAPACITIES.includes(capacity)) return refuse9("UNKNOWN_CAPACITY", `a capacity is one of ${CAPACITIES.join(", ")}`, { capacities: [...CAPACITIES] });
     } else if (capacity !== void 0 && capacity !== null && capacity !== "")
-      return refuse8("BAD_CAPACITY", "only a holds line carries a capacity");
+      return refuse9("BAD_CAPACITY", "only a holds line carries a capacity");
     if (title !== void 0 && title !== null) {
-      if (k !== "holds") return refuse8("BAD_TITLE", "only a holds line carries a title");
-      if (!filled4(title)) return refuse8("BAD_TITLE", "a title is the post's title as the basis words it, a non-blank string");
+      if (k !== "holds") return refuse9("BAD_TITLE", "only a holds line carries a title");
+      if (!filled4(title)) return refuse9("BAD_TITLE", "a title is the post's title as the basis words it, a non-blank string");
     }
     const b = this.#basis(basis, by);
     if (b.refusal) return b.refusal;
     const v = isObj17(valid) ? valid : {};
     const precision = v.precision === void 0 || v.precision === null ? "day" : v.precision;
-    if (!PRECISIONS5.includes(precision)) return refuse8("BAD_DATE", `a validity's precision is one of ${PRECISIONS5.join(", ")}`);
+    if (!PRECISIONS5.includes(precision)) return refuse9("BAD_DATE", `a validity's precision is one of ${PRECISIONS5.join(", ")}`);
     const zone = filled4(v.zone) ? v.zone : this.#zone();
     const vf = this.#bound(v.from, "from", precision, zone ?? "UTC");
     if (vf.refusal) return vf.refusal;
     const vt = this.#bound(v.to, "to", precision, zone ?? "UTC");
     if (vt.refusal) return vt.refusal;
-    if (!zone) return refuse8("BAD_DATE", "a validity carries its zone, and no zone is stated and the active profiles give none");
+    if (!zone) return refuse9("BAD_DATE", "a validity carries its zone, and no zone is stated and the active profiles give none");
     const norm3 = { from: vf.b, to: vt.b, precision, zone };
     const probe = this.#cacheRow("probe", norm3);
     if (probe.from_instant !== null && probe.to_instant !== null) {
@@ -71681,14 +73335,14 @@ var Lines = class _Lines {
       } catch {
         c = null;
       }
-      if (c === "after") return refuse8("BOUNDS_REVERSED", "the validity's from is after its to");
+      if (c === "after") return refuse9("BOUNDS_REVERSED", "the validity's from is after its to");
     }
     const machine3 = isMachineIdentity(by);
     const idFrom = b.form === "rule" && b.basis.ids ? this.#byIdentifier(b.basis.ids.from) : null;
     const idTo = b.form === "rule" && b.basis.ids ? this.#byIdentifier(b.basis.ids.to) : null;
     if (machine3 && !(b.form === "rule" && idFrom === from && idTo === to))
-      return refuse8("MACHINE_NEEDS_IDENTIFIERS", "the machine records a line only from a system rule whose two ends are identified by scheme identifiers; a line from a name match is a member's act (K1443)");
-    if (!filled4(by)) return refuse8("NO_BY", "a line is recorded by the act's stamped author");
+      return refuse9("MACHINE_NEEDS_IDENTIFIERS", "the machine records a line only from a system rule whose two ends are identified by scheme identifiers; a line from a name match is a member's act (K1443)");
+    if (!filled4(by)) return refuse9("NO_BY", "a line is recorded by the act's stamped author");
     const endGrade = (id, byId) => {
       if (byId === id) return "A";
       if (b.form === "testimony" || !b.captureSha) return TESTIMONY_GRADE2;
@@ -71703,11 +73357,11 @@ var Lines = class _Lines {
       role: filled4(role) ? role : null,
       capacity: k === "holds" ? capacity : null,
       title: k === "holds" && filled4(title) ? title : null,
-      valid_json: json2(norm3),
+      valid_json: json3(norm3),
       from_event: isObj17(norm3.from) ? norm3.from.event : null,
       to_event: isObj17(norm3.to) ? norm3.to.event : null,
       basis_form: b.form,
-      basis_json: json2(b.basis),
+      basis_json: json3(b.basis),
       capture_sha: b.captureSha,
       sight_bundle: b.sight,
       recorded_at: b.recordedAt ?? null,
@@ -71731,10 +73385,10 @@ var Lines = class _Lines {
   }
   /* ---- withdrawLine, readLine, linesOf (R8, R9) ---- */
   withdrawLine({ lineId: lineId3, reason, by } = {}) {
-    if (!filled4(reason)) return refuse8("NO_REASON", "a withdrawal says why, in the member's own words");
+    if (!filled4(reason)) return refuse9("NO_REASON", "a withdrawal says why, in the member's own words");
     const line = filled4(lineId3) ? this.#one(`SELECT line_id, withdrawn FROM lines WHERE line_id = ?`, lineId3) : null;
-    if (!line) return refuse8("NO_SUCH_LINE", "no line with that id is held", { line_id: lineId3 ?? null });
-    if (!filled4(by)) return refuse8("NO_BY", "a withdrawal is made by the act's stamped author");
+    if (!line) return refuse9("NO_SUCH_LINE", "no line with that id is held", { line_id: lineId3 ?? null });
+    if (!filled4(by)) return refuse9("NO_BY", "a withdrawal is made by the act's stamped author");
     const held2 = this.#one(`SELECT * FROM line_withdrawals WHERE line_id = ?`, lineId3);
     if (held2) return { ok: true, already: true, line_id: lineId3, withdrawn: { by: held2.by_actor, at: held2.at, reason: held2.reason } };
     const at34 = this.#now();
@@ -71793,7 +73447,7 @@ var Lines = class _Lines {
     return "a member's testimony";
   }
   readLine({ lineId: lineId3, viewer } = {}) {
-    if (!filled4(lineId3)) return refuse8("NO_LINE", "a line is read by its id (LIN-...)");
+    if (!filled4(lineId3)) return refuse9("NO_LINE", "a line is read by its id (LIN-...)");
     const line = this.#visible(lineId3, viewer);
     if (!line) return { ok: true, found: false, line_id: lineId3 };
     return { ok: true, found: true, line: this.#view(line, viewer) };
@@ -71803,7 +73457,7 @@ var Lines = class _Lines {
     const kk = _Lines.#kindList(ks, LINE_KINDS);
     if (kk.refusal) return kk.refusal;
     const dir = direction ?? "both";
-    if (!["from", "to", "both"].includes(dir)) return refuse8("BAD_DIRECTION", "direction is from, to or both");
+    if (!["from", "to", "both"].includes(dir)) return refuse9("BAD_DIRECTION", "direction is from, to or both");
     const n = Number(limit);
     const cap = Number.isFinite(n) && n >= 1 ? Math.min(Math.floor(n), LINES_LIMIT_MAX) : LINES_LIMIT_DEFAULT;
     const g = this.#gate(viewer);
@@ -71819,7 +73473,7 @@ var Lines = class _Lines {
     if (ks === void 0 || ks === null || ks === "") return { list: [...within3] };
     const list6 = Array.isArray(ks) ? ks : String(ks).split(",").map((s) => s.trim()).filter(Boolean);
     const bad2 = list6.find((k) => !within3.includes(k));
-    if (bad2 !== void 0) return { refusal: refuse8("UNKNOWN_LINE_KIND", `${bad2} is not one of ${within3.join(", ")}`, { kinds: [...within3] }) };
+    if (bad2 !== void 0) return { refusal: refuse9("UNKNOWN_LINE_KIND", `${bad2} is not one of ${within3.join(", ")}`, { kinds: [...within3] }) };
     return { list: list6 };
   }
   /* The live lines at `entity` of `kinds`, visible to `viewer`, bounded, with `truncated` by reading one past. */
@@ -71850,7 +73504,7 @@ var Lines = class _Lines {
     if (!filled4(office)) return noEntity("a holder is asked of one office, named by its entity id");
     if (!this.#entities.has(office)) return noSuchEntity(office);
     if (this.#entityKind(office) !== "office")
-      return refuse8("NOT_AN_OFFICE", "a holder is asked of an entity of kind office; a line to an organisation is a career, never a holder");
+      return refuse9("NOT_AN_OFFICE", "a holder is asked of an entity of kind office; a line to an organisation is a career, never a holder");
     const bad2 = _Lines.#atRefusal(at34);
     if (bad2) return bad2;
     const { rows: rows3, truncated: truncated3 } = this.#liveAt("l.to_entity = ?", [office], ["holds"], viewer);
@@ -71890,7 +73544,7 @@ var Lines = class _Lines {
   #proceeding(id, what) {
     if (!filled4(id)) return noEntity(`${what} is asked of one proceeding, named by its entity id`);
     if (!this.#entities.has(id)) return noSuchEntity(id);
-    if (this.#entityKind(id) !== "proceeding") return refuse8("NOT_A_PROCEEDING", "this read is asked of an entity of kind proceeding");
+    if (this.#entityKind(id) !== "proceeding") return refuse9("NOT_A_PROCEEDING", "this read is asked of an entity of kind proceeding");
     return null;
   }
   partiesOf({ proceeding, at: at34, viewer } = {}) {
@@ -72763,16 +74417,16 @@ function localFactsOps(s, url, body) {
     factsdue: () => s.factsDue({ paths: paths(), viewer: qp("viewer") })
   };
 }
-var instances14 = /* @__PURE__ */ new WeakMap();
+var instances15 = /* @__PURE__ */ new WeakMap();
 function localFactsOf(host, deps) {
-  let s = instances14.get(host);
+  let s = instances15.get(host);
   if (!s) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     s = new LocalFacts({ ...d, storage, record, membership, host });
-    instances14.set(host, s);
+    instances15.set(host, s);
     record.declareTable("local-facts", LOCAL_FACTS_TABLE_CLASSES.map((e2) => ({ ...e2, keys: [...e2.keys] })));
   }
   return s;
@@ -73622,16 +75276,16 @@ var ProvenanceRoutes = class {
     };
   }
 };
-var instances15 = /* @__PURE__ */ new WeakMap();
+var instances16 = /* @__PURE__ */ new WeakMap();
 function provenanceRoutesOf(host, deps) {
-  let p3 = instances15.get(host);
+  let p3 = instances16.get(host);
   if (!p3) {
     const d = deps || {};
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host);
     p3 = new ProvenanceRoutes({ ...d, storage: d.storage || host.storage, record, membership, promotion });
-    instances15.set(host, p3);
+    instances16.set(host, p3);
     record.declarePurge(PROVENANCE_ROUTES_MODULE, PROVENANCE_ROUTES_TABLES);
     record.registerAuditFinding(PROVENANCE_ROUTES_MODULE, ROUTE_FINDING_KEY, (page2) => p3.routeTally(page2));
     record.registerCounts(PROVENANCE_ROUTES_MODULE, ["routeMarks"], (hid) => p3.counts(hid));
@@ -75428,18 +77082,18 @@ var Retrieval = class _Retrieval {
    *  (REC-36). THE REFUSALS ARE DEC-49's SHAPE, from this module's own rows (C-23.1, C-23.2). */
   meaningRows(input = {}) {
     const known = Object.keys(MEANING);
-    const refuse21 = (key, detail) => {
+    const refuse22 = (key, detail) => {
       const row9 = MEANING_READ_CHECKS[key];
       return { ok: false, reason: key, check: row9.check, translation: row9.translation, detail };
     };
     const asked = input.rows == null ? "" : String(input.rows).trim().toLowerCase();
     if (!asked)
-      return refuse21(
+      return refuse22(
         "MEANING_ROWS_NO_ARM",
         `op=meaningrows answers at MEANING grain and must be told which: rows=${known.join("|")}. Each reads a different table and answers a different question, so there is no default that would not be answering something you did not ask.`
       );
     if (!known.includes(asked))
-      return refuse21(
+      return refuse22(
         "MEANING_ROWS_UNKNOWN_ARM",
         `no meaning of the kind ${JSON.stringify(asked)} is held. The kinds that are: ` + known.map((k) => `${k} (${MEANING[k].rowGrain})`).join("; ")
       );
@@ -76250,9 +77904,9 @@ function observationOf(o, sql) {
     leadReferentVisible: (kind, ref, viewer) => o.referentVisible(kind, ref, viewer)
   };
 }
-var instances16 = /* @__PURE__ */ new WeakMap();
+var instances17 = /* @__PURE__ */ new WeakMap();
 function retrievalOf(host, deps) {
-  let r = instances16.get(host);
+  let r = instances17.get(host);
   if (!r) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -76262,7 +77916,7 @@ function retrievalOf(host, deps) {
     const storage = d.storage || (host.storage ?? host);
     const observation = d.observation || observationOf(observationLogOf(host), storage.sql);
     r = new Retrieval({ ...d, storage, record, membership, promotion, extraction, observation, host });
-    instances16.set(host, r);
+    instances17.set(host, r);
     const answer = typeof record.declareTable === "function" ? record.declareTable("retrieval", retrievalTables(r)) : record.declarePurge("retrieval", RETRIEVAL_PURGE);
     if (answer && answer.ok === false)
       throw new Error(`retrieval: record-core refused its table declaration: ${answer.reason} (${answer.table})`);
@@ -78806,12 +80460,12 @@ function standardsOps(s, url, body) {
     })
   };
 }
-var instances17 = /* @__PURE__ */ new WeakMap();
+var instances18 = /* @__PURE__ */ new WeakMap();
 var current = null;
 var constructed = 0;
 function ownerRead2(a) {
   const { host, ...rest } = a && typeof a === "object" ? a : {};
-  const s = host !== void 0 && host !== null ? instances17.get(host) : constructed === 1 ? current : null;
+  const s = host !== void 0 && host !== null ? instances18.get(host) : constructed === 1 ? current : null;
   if (s) return s.neighbours(rest);
   return host !== void 0 && host !== null ? { refused: "OWNER_NOT_READY", why: "no standards instance is constructed on this host yet" } : constructed === 0 ? { refused: "OWNER_NOT_READY", why: "no standards instance is constructed yet" } : { refused: "OWNER_HOST_AMBIGUOUS", why: `${constructed} standards instances are held here and the read names no host` };
 }
@@ -78821,7 +80475,7 @@ registerOwner({
   neighbours: ownerRead2
 });
 function standardsOf(host, deps) {
-  let s = instances17.get(host);
+  let s = instances18.get(host);
   if (!s) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -78837,7 +80491,7 @@ function standardsOf(host, deps) {
       content: d.content || (() => contentOf(host, { record, membership })),
       events: d.events || (() => eventsOf(host, { record, membership }))
     });
-    instances17.set(host, s);
+    instances18.set(host, s);
     current = s;
     constructed++;
     record.declareTable("standards", STANDARDS_TABLES.map((t2) => ({ ...t2 })));
@@ -79901,25 +81555,25 @@ var RUN = {
   },
   share(st, env) {
     const part = env.table(st.part);
-    const whole = env.table(st.whole);
+    const whole2 = env.table(st.whole);
     let num2;
     let den;
     const set = [];
     if (st.field === void 0) {
       num2 = countFigure(part.size);
-      den = countFigure(whole.size);
+      den = countFigure(whole2.size);
     } else {
       const a = total(part, st.field, st.as);
-      const b = total(whole, st.field, st.as);
+      const b = total(whole2, st.field, st.as);
       set.push(...b.rows);
       num2 = a.u || a.v;
       den = b.u || b.v;
     }
     if (isUndetermined(num2) || isUndetermined(den))
-      return { kind: "ratio", value: { numerator: num2, denominator: den, value: undetermined2("a total is undetermined") }, inputRows: whole.size, set };
+      return { kind: "ratio", value: { numerator: num2, denominator: den, value: undetermined2("a total is undetermined") }, inputRows: whole2.size, set };
     const r = makeRatio(num2, den, st.places ?? RATIO_DEFAULT.places, st.mode ?? RATIO_DEFAULT.mode);
     if (isRefusal2(r)) stop(r.refused, r.why, st.as);
-    return { kind: "ratio", value: r, inputRows: whole.size, set };
+    return { kind: "ratio", value: r, inputRows: whole2.size, set };
   },
   group(st, env) {
     const t2 = env.table(st.from);
@@ -80438,11 +82092,11 @@ function exactDecimal(s) {
   return f17.value;
 }
 var negate = (v) => /^0(?:\.0+)?$/.test(v) ? v : `-${v}`;
-var instances18 = /* @__PURE__ */ new WeakMap();
+var instances19 = /* @__PURE__ */ new WeakMap();
 var live2 = /* @__PURE__ */ new Set();
 function moneyOf2(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let m = instances18.get(storage);
+  let m = instances19.get(storage);
   if (!m) {
     live2.add(storage);
     const record = opts.record ?? recordOf(ctx);
@@ -80456,7 +82110,7 @@ function moneyOf2(ctx, opts = {}) {
       events: opts.events ?? (() => eventsOf(ctx, { record, membership })),
       lines: opts.lines ?? (() => linesOf(ctx, { record }))
     });
-    instances18.set(storage, m);
+    instances19.set(storage, m);
   }
   return m;
 }
@@ -81712,7 +83366,7 @@ function ownerNeighbours2(args = {}) {
   if (live2.size !== 1)
     return { refused: "OWNER_HOST_AMBIGUOUS", why: `money's read names no host and this isolate holds ${live2.size} money stores` };
   const [storage] = live2;
-  return instances18.get(storage).neighbours(rest);
+  return instances19.get(storage).neighbours(rest);
 }
 try {
   defaultRegistry.registerOwner({ owner: "money", kinds: Money.CONNECTION_KINDS, neighbours: ownerNeighbours2 });
@@ -82044,8 +83698,8 @@ var CONNECTION_KINDS4 = Object.freeze([
 
 // src/duties/index.mjs
 var MODULE = "duties";
-var LIST_DEFAULT = 100;
-var LIST_MAX = 500;
+var LIST_DEFAULT2 = 100;
+var LIST_MAX2 = 500;
 var TRACK_BACK_DAYS = 366;
 var SCHEDULER_STAMP = "class:scheduler";
 var WORDS_MAX = 4e3;
@@ -82347,7 +84001,7 @@ var Duties = class _Duties {
     if (!this.lines) return null;
     let r;
     try {
-      r = this.lines.linesOf({ entity: entity2, kinds: [...ACTING_LINES], direction: "both", limit: LIST_MAX, viewer: SYSTEM_VIEWER2 });
+      r = this.lines.linesOf({ entity: entity2, kinds: [...ACTING_LINES], direction: "both", limit: LIST_MAX2, viewer: SYSTEM_VIEWER2 });
     } catch {
       return null;
     }
@@ -82745,7 +84399,7 @@ var Duties = class _Duties {
     if (!["obligor", "obligee", "enforcer"].includes(as))
       return { ok: false, reason: "BAD_PLACE", detail: "as is one of obligor, obligee, enforcer" };
     const n = Number(b.limit);
-    const limit = Number.isInteger(n) ? Math.min(Math.max(n, 1), LIST_MAX) : LIST_DEFAULT;
+    const limit = Number.isInteger(n) ? Math.min(Math.max(n, 1), LIST_MAX2) : LIST_DEFAULT2;
     const date = said4(b.at) ? b.at.slice(0, 10) : this.#stamp().slice(0, 10);
     const out = [];
     let truncated3 = false;
@@ -82802,7 +84456,7 @@ var Duties = class _Duties {
     if (t2.kind === "event") {
       let r = null;
       try {
-        r = this.events ? this.events.eventsFor({ entity: t2.entity, kinds: [t2.event_kind], from, to, limit: LIST_MAX, viewer: _Duties.#reader(viewer) }) : null;
+        r = this.events ? this.events.eventsFor({ entity: t2.entity, kinds: [t2.event_kind], from, to, limit: LIST_MAX2, viewer: _Duties.#reader(viewer) }) : null;
       } catch (e2) {
         errors.push({ source: "events", error: String(e2 && e2.message || e2).slice(0, 200) });
       }
@@ -82810,7 +84464,7 @@ var Duties = class _Duties {
         ...Array.isArray(r.events) ? r.events : Array.isArray(r.items) ? r.items : [],
         ...Array.isArray(r.placed_nowhere) ? r.placed_nowhere : []
       ] : [];
-      if (r && r.truncated) errors.push({ source: "events", error: `the events read stopped at its bound of ${r.limit ?? LIST_MAX}`, truncated: true });
+      if (r && r.truncated) errors.push({ source: "events", error: `the events read stopped at its bound of ${r.limit ?? LIST_MAX2}`, truncated: true });
       if (!this.events) errors.push({ source: "events", error: "the events service is not available" });
       for (const ev of evs) {
         if (ev.kind !== void 0 && ev.kind !== t2.event_kind) continue;
@@ -82901,10 +84555,10 @@ var Duties = class _Duties {
   }
   #derive(d, fields, from, to, asOf, viewer) {
     const view = this.view();
-    const { instances: instances65, errors } = this.#instances(d.duty_id, d.version, fields, from, to, viewer);
+    const { instances: instances66, errors } = this.#instances(d.duty_id, d.version, fields, from, to, viewer);
     const occurrences2 = [];
     const inForce = this.inForce(fields, asOf.slice(0, 10), viewer);
-    for (const inst of instances65) {
+    for (const inst of instances66) {
       if (d.withdrawn_at && inst.date && !isUndet(inst.date) && compare2(inst.date, d.withdrawn_at) === "after") continue;
       const key = _Duties.occurrenceKey(d.duty_id, d.version, inst.kind, inst.ref);
       occurrences2.push(this.#occurrence(d, fields, inst, key, asOf, view, inForce, viewer));
@@ -82999,8 +84653,8 @@ var Duties = class _Duties {
   /* An occurrence key the duty derives in a broad window around `asOf` (two years either side), or null. */
   #occurrenceAt(d, fields, key, asOf) {
     const day2 = asOf.slice(0, 10);
-    const { instances: instances65 } = this.#instances(d.duty_id, d.version, fields, addDays2(day2, -731), addDays2(day2, 731), INTERNAL);
-    for (const inst of instances65) if (_Duties.occurrenceKey(d.duty_id, d.version, inst.kind, inst.ref) === key) return inst;
+    const { instances: instances66 } = this.#instances(d.duty_id, d.version, fields, addDays2(day2, -731), addDays2(day2, 731), INTERNAL);
+    for (const inst of instances66) if (_Duties.occurrenceKey(d.duty_id, d.version, inst.kind, inst.ref) === key) return inst;
     return null;
   }
   /** R12: a member matches an event (or a held exception) to an occurrence, recorded with who, when and why, and
@@ -83228,7 +84882,7 @@ var Duties = class _Duties {
     for (const ent of scope) {
       let r;
       try {
-        r = this.money.moneyOf({ entity: ent, period: b.period ?? null, limit: LIST_MAX, viewer: _Duties.#reader(b.viewer) });
+        r = this.money.moneyOf({ entity: ent, period: b.period ?? null, limit: LIST_MAX2, viewer: _Duties.#reader(b.viewer) });
       } catch (e2) {
         undetermined3.push({ entity: ent, why: String(e2 && e2.message || e2).slice(0, 200) });
         continue;
@@ -83373,19 +85027,19 @@ function dutiesOps(s, url, body) {
     dutysetagainst: () => s.setAgainst({ dutyId: q10("id"), period: b.period ?? null, viewer: q10("viewer") })
   };
 }
-var instances19 = /* @__PURE__ */ new WeakMap();
+var instances20 = /* @__PURE__ */ new WeakMap();
 var live3 = /* @__PURE__ */ new Set();
 function neighboursRead(bound) {
   return (args) => {
     const a = isObj24(args) ? args : {};
     const { host, ...rest } = a;
-    const s = host !== void 0 && host !== null ? instances19.get(host) : bound || (live3.size === 1 ? [...live3][0] : null);
+    const s = host !== void 0 && host !== null ? instances20.get(host) : bound || (live3.size === 1 ? [...live3][0] : null);
     if (!s) return { refused: "OWNER_HOST_AMBIGUOUS", why: host !== void 0 && host !== null ? "no duties instance answers for the host named" : "several stores hold duties in this isolate; the read names its host" };
     return s.neighbours(rest);
   };
 }
 function dutiesOf(host, deps) {
-  let s = instances19.get(host);
+  let s = instances20.get(host);
   if (!s) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -83414,7 +85068,7 @@ function dutiesOf(host, deps) {
       provenance: pick3("provenance"),
       content: pick3("content")
     });
-    instances19.set(host, s);
+    instances20.set(host, s);
     if (s.registry === defaultRegistry) live3.add(s);
     record.declareTable(MODULE, DUTIES_TABLES.map((t2) => ({ ...t2 })));
     for (const t2 of DUTIES_TABLES) record.registerStoreGate(MODULE, t2.name, (row9, ctx) => s.oneHome(row9, ctx));
@@ -84556,9 +86210,9 @@ var LegEarning = class {
     };
   }
 };
-var instances20 = /* @__PURE__ */ new WeakMap();
+var instances21 = /* @__PURE__ */ new WeakMap();
 function legEarningOf(host, deps) {
-  let k = instances20.get(host);
+  let k = instances21.get(host);
   if (!k) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -84566,7 +86220,7 @@ function legEarningOf(host, deps) {
     const promotion = d.promotion || promotionOf(host, { record, membership });
     const content = d.content || contentOf(host, { record, membership });
     k = new LegEarning({ ...d, host, storage: d.storage || host.storage, record, membership, promotion, content });
-    instances20.set(host, k);
+    instances21.set(host, k);
     if (typeof record.declareTable === "function")
       record.declareTable("leg-earning", LEG_EARNING_TABLES.map((t2) => ({ ...t2, keys: [...t2.keys] })));
   }
@@ -84888,7 +86542,7 @@ function scanCsv(text7, onRow) {
 }
 var needsQuote = (v) => /[",\r\n]/.test(v);
 var csvField = (v) => needsQuote(v) ? `"${v.replace(/"/g, '""')}"` : v;
-var shaOf = (text7) => sha256HexSync(text7);
+var shaOf2 = (text7) => sha256HexSync(text7);
 function schemaFault(schema, header2) {
   if (!plain2(schema) || !Array.isArray(schema.fields) || !schema.fields.length)
     return { field: null, why: "a Table Schema is {fields: [{name, type}]} with one field per column" };
@@ -85128,21 +86782,21 @@ var PATTERNS = Object.freeze([
 var plain3 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var list3 = (v, ...keys) => Array.isArray(v) ? v : plain3(v) ? keys.map((k) => v[k]).find(Array.isArray) || [] : [];
 var found2 = (r) => !!r && r.ok !== false && r.found !== false;
-var dayOf = (v) => {
+var dayOf2 = (v) => {
   const s = typeof v === "string" ? v : plain3(v) ? typeof v.value === "string" ? v.value : plain3(v.date) ? v.date.value : plain3(v.due) ? v.due.value : typeof v.start === "string" ? v.start : null : null;
   return typeof s === "string" && /^\d{4}-\d{2}-\d{2}/.test(s) ? s : null;
 };
 var recipe = (steps, output) => ({ method: METHOD, inputs: [{ name: "t", kind: "table" }], steps, output });
 function shareOf(t2, field2, value) {
   const steps = [];
-  let whole = "t";
+  let whole2 = "t";
   if (field2) {
     steps.push({ op: "select", from: "t", where: [{ field: field2, test: "eq", value }], as: "whole" });
-    whole = "whole";
+    whole2 = "whole";
   }
   steps.push(
-    { op: "select", from: whole, where: [{ field: "late", test: "eq", value: true }], as: "late_rows" },
-    { op: "share", part: "late_rows", whole, as: "share" }
+    { op: "select", from: whole2, where: [{ field: "late", test: "eq", value: true }], as: "late_rows" },
+    { op: "share", part: "late_rows", whole: whole2, as: "share" }
   );
   const r = evaluate(recipe(steps, "share"), { t: t2 });
   return r.refused ? null : r.result;
@@ -85181,8 +86835,8 @@ var EVALUATORS = {
     const p3 = deps.progressions;
     if (!p3 || typeof p3.proposalsFeed !== "function") return { results: [], denominator: { n: null, why: "the progressions module is not reachable here" }, evaluated: 0 };
     const feed = await p3.proposalsFeed(Date.parse(deps.now));
-    const instances65 = list3(feed, "instances").filter(plain3).slice(0, UNITS_MAX);
-    const rows3 = instances65.map((x) => {
+    const instances66 = list3(feed, "instances").filter(plain3).slice(0, UNITS_MAX);
+    const rows3 = instances66.map((x) => {
       const ooo = list3(x.findings, "findings").filter((f17) => plain3(f17) && f17.kind === "out_of_order");
       return { x, ooo, row: { instance: `${x.progression_key ?? x.progressionKey}\0${x.entity_id ?? x.entityId}`, late: ooo.length ? "true" : "false" } };
     });
@@ -85209,9 +86863,9 @@ var EVALUATORS = {
       } catch {
         occ = null;
       }
-      const due2 = occ ? dayOf(occ.due) : null;
+      const due2 = occ ? dayOf2(occ.due) : null;
       const metBy = occ ? list3(occ.evidence, "events")[0] || occ.matched || null : null;
-      const met = metBy ? dayOf(metBy.when ?? metBy) : null;
+      const met = metBy ? dayOf2(metBy.when ?? metBy) : null;
       late.push({ u, due: due2, met, event: metBy && (metBy.event_id ?? metBy.eventId ?? null) });
     }
     const t2 = { fields: [{ name: "due", type: "date" }, { name: "met", type: "date" }], rows: late.map((x) => ({ due: x.due ?? "", met: x.met ?? "" })) };
@@ -85249,7 +86903,7 @@ var EVALUATORS = {
           full = null;
         }
         if (!found2(full)) continue;
-        const start = dayOf((full.event || full).when);
+        const start = dayOf2((full.event || full).when);
         const rels = list3((full.event || full).relations, "in", "relations").filter((r) => plain3(r) && r.kind === "within");
         for (const rel of rels) {
           const pid = rel.from === id ? rel.to : rel.from;
@@ -85261,7 +86915,7 @@ var EVALUATORS = {
           }
           const p3 = found2(pe) ? pe.event || pe : null;
           if (!p3 || p3.kind !== "publication") continue;
-          units.push({ body, meeting: id, posting: pid, start, posted: dayOf(p3.when), startDt: (full.event || full).when, postedDt: p3.when });
+          units.push({ body, meeting: id, posting: pid, start, posted: dayOf2(p3.when), startDt: (full.event || full).when, postedDt: p3.when });
           if (units.length >= UNITS_MAX) break;
         }
       }
@@ -85352,7 +87006,7 @@ var TABLE_CACHE_CHARS = 24 * 1024 * 1024;
 var TEXT_CHUNK = 512 * 1024;
 var str7 = (v) => typeof v === "string" ? v.trim() : "";
 var plain4 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
-var json3 = (v) => v === void 0 ? null : JSON.stringify(v);
+var json4 = (v) => v === void 0 ? null : JSON.stringify(v);
 var parse2 = (s) => {
   try {
     return s == null ? null : JSON.parse(s);
@@ -85365,7 +87019,7 @@ var no3 = (reason, detail, extra = {}) => ({ ok: false, reason, detail, ...extra
 var weaker4 = (a, b) => GRADES2.indexOf(a) >= GRADES2.indexOf(b) ? a : b;
 var isGrade = (g) => GRADES2.includes(g);
 var randomSeed = () => [...crypto.getRandomValues(new Uint8Array(16))].map((b) => b.toString(16).padStart(2, "0")).join("");
-function memberOf(stamp3) {
+function memberOf2(stamp3) {
   if (stamp3 === "admin") return "admin";
   const m = /^member:([A-Za-z0-9._:-]{1,128})$/.exec(typeof stamp3 === "string" ? stamp3 : "");
   return m ? m[1] : null;
@@ -85529,7 +87183,7 @@ var Calculations = class {
   }
   /* May `viewer` see the bundle? A machine stamp sees every held bundle (membership R43); a null bundle is group-wide. */
   #sees(bundleId, viewer) {
-    if (bundleId === null || bundleId === void 0 || bundleId === "") return stamped(viewer) && (isMachine3(viewer) || memberOf(viewer) !== null);
+    if (bundleId === null || bundleId === void 0 || bundleId === "") return stamped(viewer) && (isMachine3(viewer) || memberOf2(viewer) !== null);
     try {
       return this.content.sees(bundleId, viewer);
     } catch {
@@ -85637,15 +87291,15 @@ var Calculations = class {
                      VALUES (?,?,?,?,?,?,?,?,NULL,?,?,?,?,?,?)`,
         tableSha,
         row9.bundle_id ?? null,
-        json3({ content_id: contentId, capture_sha: row9.capture_sha, extent_kind: row9.extent_kind }),
-        json3(schema),
-        json3(names),
-        roles2 ? json3(roles2) : null,
+        json4({ content_id: contentId, capture_sha: row9.capture_sha, extent_kind: row9.extent_kind }),
+        json4(schema),
+        json4(names),
+        roles2 ? json4(roles2) : null,
         vintage2 ? vintage2.key.trim() : null,
-        vintage2 ? json3(vintage2) : null,
+        vintage2 ? json4(vintage2) : null,
         built.rows,
         bytes2.byteLength,
-        json3(built.undetermined),
+        json4(built.undetermined),
         built.count,
         by,
         at34
@@ -85685,7 +87339,7 @@ var Calculations = class {
   /* A held table from its canonical text (`textTable`: read row by row, never held as row objects), or null. */
   #fromText(tableSha, text7) {
     const r = this.#one(`SELECT schema_json, rows FROM calc_tables WHERE sha=?`, tableSha);
-    if (!r || typeof text7 !== "string" || shaOf(text7) !== tableSha) return null;
+    if (!r || typeof text7 !== "string" || shaOf2(text7) !== tableSha) return null;
     const t2 = textTable(parse2(r.schema_json).fields, text7, r.rows);
     this.#tableCache.set(tableSha, t2);
     let chars = 0;
@@ -85905,10 +87559,10 @@ var Calculations = class {
     if (threshold) {
       for (const s of stringsIn(threshold)) if (isHypothesisId(s)) hyps.push(s);
     }
-    const bound = {}, hashes = {}, canon4 = {}, refs = [], described = [], apart = { withdrawn: [], out_of_view: [] };
+    const bound = {}, hashes = {}, canon5 = {}, refs = [], described = [], apart = { withdrawn: [], out_of_view: [] };
     const held2 = (name2, v) => {
-      canon4[name2] = canonicalJson(v);
-      hashes[name2] = sha256HexSync(canon4[name2]);
+      canon5[name2] = canonicalJson(v);
+      hashes[name2] = sha256HexSync(canon5[name2]);
     };
     const names = /* @__PURE__ */ new Set();
     let refused3 = null;
@@ -86045,7 +87699,7 @@ var Calculations = class {
         const text7 = pre ? canonicalJson({ recipe: parse2(c.recipe_json), inputs: pre, method_version: c.method_version }) : null;
         bound[inp.name] = b;
         hashes[inp.name] = c.result_key;
-        canon4[inp.name] = text7 && sha256HexSync(text7) === c.result_key ? text7 : null;
+        canon5[inp.name] = text7 && sha256HexSync(text7) === c.result_key ? text7 : null;
         refs.push({ name: inp.name, kind, ref });
         described.push({ name: inp.name, kind, ref, grade: axis.capture.grade, why: `its own capture axis: ${axis.capture.why}` });
       } else if (kind === "set") {
@@ -86061,7 +87715,7 @@ var Calculations = class {
         held2(inp.name, ids);
         if (hashes[inp.name] !== s.set_sha) {
           hashes[inp.name] = s.set_sha;
-          canon4[inp.name] = null;
+          canon5[inp.name] = null;
         }
         refs.push({ name: inp.name, kind, ref: s.set_sha });
         described.push({
@@ -86104,7 +87758,7 @@ var Calculations = class {
         held2(inp.name, { set: d.set_sha, kind: d.set_kind, seed: d.seed, n: d.n, method: d.method });
         if (hashes[inp.name] !== d.draw_key) {
           hashes[inp.name] = d.draw_key;
-          canon4[inp.name] = null;
+          canon5[inp.name] = null;
         }
         refs.push({ name: inp.name, kind, ref: d.draw_key });
         described.push({
@@ -86120,7 +87774,7 @@ var Calculations = class {
     }
     if (refused3) return refused3;
     if (hyps.length) return no3("HYPOTHESIS_NOT_A_FACT", `"${hyps[0]}" is a hypothesis: hunches and hypotheses are held in the working inquiry and are never a calculation's input or threshold (K1467). Nothing was written.`, { hypothesis: hyps[0] });
-    return { ok: true, bound, hashes, canon: canon4, refs, inputs: described, apart };
+    return { ok: true, bound, hashes, canon: canon5, refs, inputs: described, apart };
   }
   /* R6: the threshold, as a figure bound under the name `threshold`, with its standing. */
   #threshold(threshold, period, viewer) {
@@ -86316,11 +87970,11 @@ var Calculations = class {
     }
     const bound = { ...b.bound };
     const hashes = { ...b.hashes };
-    const canon4 = { ...b.canon };
+    const canon5 = { ...b.canon };
     if (th.figure) {
       bound.threshold = th.figure;
-      canon4.threshold = canonicalJson({ threshold: th.held });
-      hashes.threshold = sha256HexSync(canon4.threshold);
+      canon5.threshold = canonicalJson({ threshold: th.held });
+      hashes.threshold = sha256HexSync(canon5.threshold);
     }
     const view = this.#view();
     const opts = { resolveId: (space, v) => {
@@ -86397,7 +88051,7 @@ var Calculations = class {
     const figures2 = Object.fromEntries(b.inputs.filter((d) => d.kind === "figure" || d.kind === "value").map((d) => [d.name, bound[d.name]]));
     if (Object.keys(figures2).length) results.inputs_bound = figures2;
     const key = resultKey(r, hashes);
-    return { ok: true, recipe: r, results, result_key: key, hashes, canon: canon4, inputs: b.inputs, refs: b.refs, threshold: th.held ?? null };
+    return { ok: true, recipe: r, results, result_key: key, hashes, canon: canon5, inputs: b.inputs, refs: b.refs, threshold: th.held ?? null };
   }
   /* ===================================================================== *
    * CALCULATIONS (R4–R11)
@@ -86453,21 +88107,21 @@ var Calculations = class {
         calcId,
         project ? str7(project) : null,
         str7(question),
-        json3(terms),
-        json3(p3),
+        json4(terms),
+        json4(p3),
         kind,
-        json3(c.recipe),
-        json3(inputs),
-        c.threshold ? json3(c.threshold) : null,
+        json4(c.recipe),
+        json4(inputs),
+        c.threshold ? json4(c.threshold) : null,
         METHOD,
         str7(methodNote) || null,
-        evidences ? json3(evidences) : null,
+        evidences ? json4(evidences) : null,
         c.result_key,
-        json3(c.results),
+        json4(c.results),
         at34,
         by,
         at34,
-        json3(c.hashes)
+        json4(c.hashes)
       );
       for (const ref of c.refs)
         this.sql.exec(
@@ -86520,7 +88174,7 @@ var Calculations = class {
       n + 1,
       status,
       key,
-      detail ? json3(detail) : null,
+      detail ? json4(detail) : null,
       at34
     );
   }
@@ -86556,7 +88210,7 @@ var Calculations = class {
       this.sql.exec(
         `UPDATE calculations SET recompute_status=?, recompute_json=? WHERE calc_id=?`,
         status,
-        json3({ at: at34, result_key: r.result_key ?? null, differing: r.differing ?? null }),
+        json4({ at: at34, result_key: r.result_key ?? null, differing: r.differing ?? null }),
         c.calc_id
       );
       this.#appendRecompute(c.calc_id, c.project, status, r.result_key ?? null, r.differing ?? null, at34);
@@ -86588,7 +88242,7 @@ var Calculations = class {
       if (now && now.accepted_by) return { ok: true, already: now };
       this.sql.exec(
         `UPDATE calculations SET recompute_status='agrees', recompute_json=?, accepted_by=?, accepted_at=? WHERE calc_id=?`,
-        json3({ at: at34, result_key: r.result_key ?? null, differing: null }),
+        json4({ at: at34, result_key: r.result_key ?? null, differing: null }),
         by,
         at34,
         c.calc_id
@@ -86887,7 +88541,7 @@ var Calculations = class {
         key,
         t2.sha,
         t2.bundle_id ?? null,
-        json3(roles2),
+        json4(roles2),
         by,
         at34
       );
@@ -87043,10 +88697,10 @@ var Calculations = class {
         key,
         b.binding_key,
         b.bundle_id ?? null,
-        json3(rows3 === "all" ? "all" : picked),
+        json4(rows3 === "all" ? "all" : picked),
         str7(reason) || null,
-        json3(written2),
-        json3(notWritten),
+        json4(written2),
+        json4(notWritten),
         by,
         at34
       );
@@ -87110,7 +88764,7 @@ var Calculations = class {
         n,
         usedSeed,
         d.method,
-        json3(d.sample),
+        json4(d.sample),
         by,
         at34
       );
@@ -87152,8 +88806,8 @@ var Calculations = class {
         `INSERT INTO calc_sets (set_sha, project, query_json, ids_json, n, frozen_by, frozen_at) VALUES (?,?,?,?,?,?,?)`,
         setSha,
         project ? str7(project) : null,
-        json3(query),
-        json3(ids),
+        json4(query),
+        json4(ids),
         ids.length,
         by,
         at34
@@ -87297,7 +88951,7 @@ var Calculations = class {
           p3.version,
           seq,
           out.evaluated || 0,
-          json3(out.denominator),
+          json4(out.denominator),
           at34
         );
         for (const r of out.results) {
@@ -87309,10 +88963,10 @@ var Calculations = class {
             p3.pattern,
             p3.version,
             r.subject ?? null,
-            json3(r.value),
-            json3(r.denominator ?? out.denominator),
-            json3(r.derivation),
-            json3(r.rests_on || []),
+            json4(r.value),
+            json4(r.denominator ?? out.denominator),
+            json4(r.derivation),
+            json4(r.rests_on || []),
             at34
           );
         }
@@ -87339,7 +88993,7 @@ var Calculations = class {
   }
   /** R23: `recordPatternGate({pattern, goldSet, falseAlarmRate, by})`, an administrator's act. */
   async recordPatternGate({ pattern = null, goldSet = null, falseAlarmRate = null, by = null } = {}) {
-    const member = memberOf(by);
+    const member = memberOf2(by);
     if (!member || !this.membership.isAdministrator(member)) return notAnAdmin(by, "Recording a pattern's gate");
     const p3 = PATTERNS.find((x) => x.pattern === pattern);
     if (!p3) return no3("NO_SUCH_PATTERN", `no shipped pattern is named "${String(pattern).slice(0, 64)}". Nothing was written.`);
@@ -87375,7 +89029,7 @@ var Calculations = class {
   }
   /** R23: `switchPattern({pattern, project, on, by})`: a member of the project switches a pattern off (or back on) for it. */
   switchPattern({ pattern = null, project = null, on = null, by = null } = {}) {
-    const member = memberOf(by);
+    const member = memberOf2(by);
     if (!member) return no3("MEMBER_ACT_ONLY", "a pattern is switched by a member. Nothing was written.");
     if (!PATTERNS.some((x) => x.pattern === pattern)) return no3("NO_SUCH_PATTERN", `no shipped pattern is named "${String(pattern).slice(0, 64)}". Nothing was written.`);
     if (!str7(project) || !this.#sees(project, by)) return no3("NO_SUCH_PROJECT", "no project answers to that id here, or it is not one you may see. Nothing was written.");
@@ -87517,9 +89171,9 @@ var Calculations = class {
     }
   }
 };
-var instances21 = /* @__PURE__ */ new WeakMap();
+var instances22 = /* @__PURE__ */ new WeakMap();
 function calculationsOf(host, deps) {
-  let c = instances21.get(host);
+  let c = instances22.get(host);
   if (!c) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -87527,7 +89181,7 @@ function calculationsOf(host, deps) {
     const content = d.content || contentOf(host, { record, membership });
     const provenance = d.provenance || content.provenance || provenanceOf(host, { record, membership });
     c = new Calculations({ ...d, storage: d.storage || host.storage, record, membership, content, provenance });
-    instances21.set(host, c);
+    instances22.set(host, c);
     const declared2 = record.declareTable("calculations", CALCULATIONS_TABLES);
     if (!declared2 || declared2.ok === false) throw new Error(`calculations' tables could not be declared: ${JSON.stringify(declared2)}`);
     joinUpstream(c);
@@ -88570,8 +90224,8 @@ var Progressions = class _Progressions {
     const held2 = read3 && read3.ok !== false && read3.found !== false ? read3.standard && typeof read3.standard === "object" ? read3.standard : read3 : null;
     if (!held2) return noSuchStandard(id || null);
     const part = portion == null || portion === "" ? null : String(portion).slice(0, 500);
-    const holds = held2.portion == null ? null : typeof held2.portion === "object" ? held2.portion.path ?? null : held2.portion;
-    if (part !== null && part !== holds) return this.portionUnknown(id, part, { portion_held: holds });
+    const holds2 = held2.portion == null ? null : typeof held2.portion === "object" ? held2.portion.path ?? null : held2.portion;
+    if (part !== null && part !== holds2) return this.portionUnknown(id, part, { portion_held: holds2 });
     return { standard: id, portion: part };
   }
   /* R39: whether the standard a basis names is in force on the read's date, answered by `standards` on every read and
@@ -89564,7 +91218,7 @@ var Progressions = class _Progressions {
       const d = recorded.get(pk + "::" + sk);
       return !!(d && d.applies);
     };
-    const instances65 = [];
+    const instances66 = [];
     const groups = /* @__PURE__ */ new Map();
     for (const p3 of this.#pairs()) {
       const inst = this.#assemble(p3.progression_key, p3.entity_id);
@@ -89576,7 +91230,7 @@ var Progressions = class _Progressions {
       const findings = [...missing2, ...overdueF, ...others];
       if (!findings.length) continue;
       const entityLabel = inst.entity ? inst.entity.label : null;
-      instances65.push({
+      instances66.push({
         progression_key: inst.progression_key,
         progression_label: inst.label,
         definition_version: inst.definition_version,
@@ -89656,10 +91310,10 @@ var Progressions = class _Progressions {
     })).sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
     return {
       ok: true,
-      instances: instances65,
+      instances: instances66,
       proposals,
       dispositions,
-      instance_count: instances65.length,
+      instance_count: instances66.length,
       proposal_count: proposals.length,
       disposition_count: dispositions.length
     };
@@ -89682,7 +91336,7 @@ var Progressions = class _Progressions {
       established: f17.grade_determined === true && isEstablished(f17.grade),
       needs_confirmation: f17.grade === "C"
     });
-    const instances65 = [];
+    const instances66 = [];
     for (const r of rows3) {
       const ck = r.progression_key + "\0" + r.entity_id;
       let a = assembled.get(ck);
@@ -89701,7 +91355,7 @@ var Progressions = class _Progressions {
       const missing2 = inst.findings.filter((f17) => f17.kind === "missing_predecessor");
       const others = inst.findings.filter((f17) => f17.kind !== "missing_predecessor");
       const findings = [...missing2, ...a.overdue, ...others].map(project).map((f17) => ({ ...f17, disposition: a.decided.get(f17.stage_key) ?? null }));
-      instances65.push({
+      instances66.push({
         progression_key: inst.progression_key,
         progression_label: inst.label,
         definition_version: inst.definition_version,
@@ -89714,7 +91368,7 @@ var Progressions = class _Progressions {
         open_finding_count: findings.filter((f17) => !(f17.disposition && f17.disposition.applies)).length
       });
     }
-    return { ok: true, capture_sha: captureSha, count: instances65.length, instances: instances65 };
+    return { ok: true, capture_sha: captureSha, count: instances66.length, instances: instances66 };
   }
   /* ===================================================================== *
    * THE CONNECTION OWNER (R40; connection-grammar R2, R6–R9; B1a.8).
@@ -89884,9 +91538,9 @@ function progressionOps(p3, url, body) {
     captureprogressions: () => p3.captureProgressions({ captureSha: q10("sha256"), nowMs: q10("now") })
   };
 }
-var instances22 = /* @__PURE__ */ new WeakMap();
+var instances23 = /* @__PURE__ */ new WeakMap();
 function progressionsOf(host, deps) {
-  let p3 = instances22.get(host);
+  let p3 = instances23.get(host);
   if (!p3) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -89903,7 +91557,7 @@ function progressionsOf(host, deps) {
       standards: d.standards || (() => standardsOf(host, { record })),
       zoneOf: d.zoneOf || (() => governingZone(localFactsOf(host, { record })))
     });
-    instances22.set(host, p3);
+    instances23.set(host, p3);
     const declared2 = record.declareTable("progressions", PROGRESSIONS_TABLES);
     if (declared2 && declared2.ok === false)
       throw new Error(`progressions: record-core refused its tables: ${declared2.reason} ${declared2.table || ""}`.trim());
@@ -89926,7 +91580,7 @@ var OWNER_REGISTRATION2 = registerOwner({
     const { host = null, ...args } = a && typeof a === "object" ? a : {};
     if (args.viewer === void 0 || args.viewer === null || args.viewer === "")
       return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
-    const p3 = host ? instances22.get(host) : made2.size === 1 ? [...made2][0] : null;
+    const p3 = host ? instances23.get(host) : made2.size === 1 ? [...made2][0] : null;
     if (!p3) return { refused: "OWNER_HOST_AMBIGUOUS", why: host ? "progressions holds no instance for that host" : `progressions holds ${made2.size} instances in this isolate and the read names no host` };
     return p3.neighbours(args);
   }
@@ -90506,10 +92160,10 @@ function contradictionFindings(fm) {
             incomplete("reason", "a corrected resolution says why that side is wrong: a non-empty `reason`.");
           else if (present(reason) && (text3(reason) === null || text3(reason).trim() === ""))
             incomplete("reason", "`reason` is a non-empty statement.");
-          const canon4 = block2.canon;
-          if (kind === "conflict_of_norms" && !present(canon4))
+          const canon5 = block2.canon;
+          if (kind === "conflict_of_norms" && !present(canon5))
             incomplete("canon", `a conflict of norms names the canon that reconciles them, or says none does: \`canon\` from ${NORM_CANONS.join(", ")}.`);
-          else if (present(canon4) && !NORM_CANONS.includes(canon4))
+          else if (present(canon5) && !NORM_CANONS.includes(canon5))
             incomplete("canon", `\`canon\` is one of ${NORM_CANONS.join(", ")}.`);
           for (const [key, name2] of [["qualifier_a", "a"], ["qualifier_b", "b"]]) {
             const v = block2[key];
@@ -93069,9 +94723,9 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
     }
   }
 };
-var instances23 = /* @__PURE__ */ new WeakMap();
+var instances24 = /* @__PURE__ */ new WeakMap();
 function inquiryOf(host, deps) {
-  let k = instances23.get(host);
+  let k = instances24.get(host);
   if (!k) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -93079,7 +94733,7 @@ function inquiryOf(host, deps) {
     const promotion = d.promotion || promotionOf(host, { record, membership });
     const content = d.content || contentOf(host, { record, membership });
     k = new Inquiry({ ...d, host, storage: d.storage || host.storage, record, membership, promotion, content });
-    instances23.set(host, k);
+    instances24.set(host, k);
     void k.legEarning;
     record.declareTable("inquiry", INQUIRY_DECLARATIONS.map((d2) => ({ ...d2 })));
     if (typeof record.registerAuditContext === "function")
@@ -93185,8 +94839,8 @@ var AcceptedWork = class {
    *  holder. The fourth function, `moves` (R8), is optional: a registration without it is whole, one whose `moves`
    *  is given but is not a function is malformed. */
   registerAcceptedWork(module, fns) {
-    const whole = isObj25(fns) && typeof fns.finding === "function" && typeof fns.openFlags === "function" && typeof fns.withdrawals === "function" && (fns.moves === void 0 || typeof fns.moves === "function");
-    const refused3 = listenerRefusal(this.#source, module, whole ? fns.finding : null);
+    const whole2 = isObj25(fns) && typeof fns.finding === "function" && typeof fns.openFlags === "function" && typeof fns.withdrawals === "function" && (fns.moves === void 0 || typeof fns.moves === "function");
+    const refused3 = listenerRefusal(this.#source, module, whole2 ? fns.finding : null);
     if (refused3) return refused3;
     this.#source = {
       module,
@@ -93343,15 +94997,15 @@ function refOf(target) {
   return parseImportedFindingRef(t2) ? t2 : null;
 }
 var pairKey = (leg2) => `${refOf(leg2.target)}\0${typeof leg2.target_edition}\0${String(leg2.target_edition)}`;
-var instances24 = /* @__PURE__ */ new WeakMap();
+var instances25 = /* @__PURE__ */ new WeakMap();
 function acceptedWorkOf(host, deps) {
-  let w = instances24.get(host);
+  let w = instances25.get(host);
   if (!w) {
     const d = deps || {};
     const record = d.record || recordOf(host);
     const promotion = d.promotion || promotionOf(host, { record });
     w = new AcceptedWork({ record });
-    instances24.set(host, w);
+    instances25.set(host, w);
     promotion.registerStep("accepted-work", { check: (c) => w.check(c) });
   }
   return w;
@@ -94352,7 +96006,7 @@ function basisVersionFindings(fm, findings) {
     }
   }
 }
-function canon2(v) {
+function canon3(v) {
   return String(v ?? "").replace(/\\/g, "\\\\").replace(/\t/g, "\\t").replace(/\n/g, "\\n");
 }
 function versionsIn(fm) {
@@ -94404,7 +96058,7 @@ function versionsIn(fm) {
       at: str39(g.at),
       statement: typeof g.statement === "string" ? g.statement : null
     })).sort((a, b) => a.ground < b.ground ? -1 : a.ground > b.ground ? 1 : 0);
-    const c = canon2;
+    const c = canon3;
     const kind = str39(v.kind);
     const composition = [
       `name	${c(name2)}`,
@@ -95004,18 +96658,18 @@ var BasisVersions = class _BasisVersions {
    *  (the bound counts VERSIONS); an inquiry the viewer may not see answers exactly as one with no versions, and
    *  `inquiry_present` appears only when it is visible. The run a version names is reported, never joined (§14b.7). */
   basisVersions({ id = null, limit = null, offset = 0, viewer = null, project = null } = {}) {
-    const refuse21 = (key, detail) => {
+    const refuse22 = (key, detail) => {
       const row9 = BASIS_VERSION_CHECKS[key];
       return { ok: false, reason: key, check: row9.check, code: key, translation: row9.translation, detail };
     };
     const inq = id == null ? "" : String(id).trim();
     if (!inq)
-      return refuse21(
+      return refuse22(
         "BASIS_VERSIONS_NO_INQUIRY",
         "op=basisversions answers for ONE inquiry: pass id=<INQ-\u2026>. Versions are versions of a question's basis, and there is no default question."
       );
     if (!isInquiryId(inq))
-      return refuse21(
+      return refuse22(
         "BASIS_VERSIONS_NOT_AN_INQUIRY",
         `${inq.slice(0, 60)} is not an inquiry. Only an inquiry has a basis, so only an inquiry has versions of one; an empty list here would say this thing has none when it could not have any.`
       );
@@ -95393,7 +97047,7 @@ var BasisVersions = class _BasisVersions {
     const a = args || {};
     const to = VERSION_ACT_TO[act2] ?? null;
     const preview = a.preview === true || a.preview === "1" || a.preview === "true";
-    const refuse21 = (key, detail, extra) => {
+    const refuse22 = (key, detail, extra) => {
       const row10 = VERSION_ACT_CHECKS[key];
       return {
         ok: false,
@@ -95408,40 +97062,40 @@ var BasisVersions = class _BasisVersions {
     };
     const target = String(a.target ?? "").trim();
     if (!target)
-      return refuse21(
+      return refuse22(
         "VERSION_ACT_NO_INQUIRY",
         "a reading belongs to one question: pass target=<INQ-\u2026>. There is no default question and there must not be one."
       );
     if (!isInquiryId(target))
-      return refuse21(
+      return refuse22(
         "VERSION_ACT_NOT_AN_INQUIRY",
         `${target.slice(0, 60)} is not an inquiry, so it holds no readings of its evidence to act on.`,
         { target }
       );
     const vname = String(a.version ?? "").trim();
     if (!vname)
-      return refuse21(
+      return refuse22(
         "VERSION_ACT_NO_VERSION",
         "a question can hold several readings of its evidence: pass version=<name>. Acting on the wrong one is worse than being asked which was meant.",
         { target }
       );
     const who2 = String(a.author ?? "").trim();
     if (!who2 || isMachineIdentity(who2))
-      return refuse21(
+      return refuse22(
         "MACHINE_CANNOT_MOVE_VERSION",
         `op=version${act2} moves what the record stands on or shows, and the credential that called it is ${who2 ? "a machine" : "unnamed"}. A machine credential may COMPOSE an account of the evidence and propose it, and may never accept it, turn it down, set it aside, hide it, or make it what a project stands on. Sign in as a member.`,
         { target, version: vname }
       );
     const b = this.#visible(target, a.viewer ?? null);
     if (!b)
-      return refuse21(
+      return refuse22(
         "VERSION_ACT_NO_SUCH_VERSION",
         "no question by that id is readable here, so it holds no reading by that name either.",
         { target, version: vname }
       );
     let text7 = this.#doc(target);
     if (text7 === null)
-      return refuse21(
+      return refuse22(
         "VERSION_ACT_UNWRITABLE",
         "this question has no readable file, so nothing about its readings can be moved.",
         { target, version: vname }
@@ -95450,7 +97104,7 @@ var BasisVersions = class _BasisVersions {
     const rows3 = Array.isArray(fm.basis_versions) ? fm.basis_versions : [];
     const idx = rows3.findIndex((r) => r && typeof r === "object" && String(r.name ?? "").trim() === vname);
     if (idx < 0)
-      return refuse21(
+      return refuse22(
         "VERSION_ACT_NO_SUCH_VERSION",
         `this question holds no reading named '${vname.slice(0, 60)}'. Readings are named so a member can ask for one by name, and a name nobody wrote is refused rather than matched to the nearest.`,
         { target, version: vname, known: rows3.map((r) => String(r?.name ?? "").trim()).filter(Boolean).slice(0, 20) }
@@ -95458,7 +97112,7 @@ var BasisVersions = class _BasisVersions {
     const row9 = rows3[idx];
     const from = typeof row9.state === "string" ? row9.state.trim() : "";
     if (act2 !== "current" && setVersionField(text7, vname, "hidden", row9.hidden === true) === null)
-      return refuse21(
+      return refuse22(
         "VERSION_ACT_UNWRITABLE",
         "this question's version block could not be rewritten in place, so nothing was changed.",
         { target, version: vname }
@@ -95468,7 +97122,7 @@ var BasisVersions = class _BasisVersions {
       if (!member.ok)
         return { ...member, ok: false, reason: member.reason, code: member.code, act: act2, target, version: vname };
       if (member.value)
-        return refuse21(
+        return refuse22(
           "PUBLISHED_CANNOT_MOVE_VERSION",
           `'${vname}' belongs to a question that is PUBLISHED, and a published case froze this finding at the version its members signed. Moving a reading from ${from || "no recorded state"} to ${to} would change what this finding rests on underneath an edition already on the record, leaving it deriving something the published bytes contradict. Reopen it (op=reopen), move the reading, and publish what changed as a new edition \u2014 the route DEC-12 built for exactly this, and the one op=inquiryground and op=inquirydivide already send you down. The pinned edition keeps its own signature and keeps answering.`,
           { target, version: vname, from, to, state: b.current_state }
@@ -95476,19 +97130,19 @@ var BasisVersions = class _BasisVersions {
     }
     const why = String(a.reason ?? "").trim();
     if (versionNeedsReason(to) && !why)
-      return refuse21(
+      return refuse22(
         "VERSION_NO_REASON",
         `op=version${act2} records WHY. ${to === "rejected" ? "The record of what was turned down is the anti-omission instrument (\xA76 rule 4) and it is worthless without the reason" : "Setting a reading aside without saying why leaves the next reader unable to tell a judgement from an oversight"}.`,
         { target, version: vname, from, to }
       );
     if (why.length > VERSION_REASON_MAX || /["\\\r\n]/.test(why) || versionNeedsReason(to) && why.length < VERSION_REASON_MIN)
-      return refuse21(
+      return refuse22(
         "VERSION_REASON_MALFORMED",
         `a reason is at most ${VERSION_REASON_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes. A reason for setting a reading aside or turning it down is at least ${VERSION_REASON_MIN} characters, the shortest the record keeps.`,
         { target, version: vname, reason_length: why.length }
       );
     if (to !== null && !(VERSION_MACHINE.edges[from] || []).includes(to))
-      return refuse21(
+      return refuse22(
         "VERSION_ILLEGAL_TRANSITION",
         `'${vname}' is ${from || "in no recorded state"} and op=version${act2} would make it ${to}. The states are not a one-way ladder and being considered or turned down is reversible, but a reading a member ACCEPTED is a historical fact: it is corrected by turning it down or by putting it back under consideration, never by returning it to something nobody acted on.`,
         { target, version: vname, from, to, legal: VERSION_MACHINE.edges[from] || [] }
@@ -95499,7 +97153,7 @@ var BasisVersions = class _BasisVersions {
       if (inqTargets.length) {
         const cycle = this.inquiry.cyclePath(target, inqTargets);
         if (cycle)
-          return refuse21(
+          return refuse22(
             "VERSION_BASIS_CYCLE",
             `accepting '${vname}' would close a cycle: ${cycle.join(" -> ")}. An inquiry's basis is a DAG, and the chain above already rests on ${target}.`,
             { target, version: vname, path: cycle }
@@ -95516,7 +97170,7 @@ var BasisVersions = class _BasisVersions {
         const missing2 = declared2.filter((d) => !said7.includes(d));
         const unknown = said7.filter((s) => !declared2.includes(s));
         if (missing2.length || unknown.length)
-          return refuse21(
+          return refuse22(
             "VERSION_AFFIRMATION_INCOMPLETE",
             `'${vname.slice(0, 60)}' rests on ${declared2.length} separately sufficient parts and this answer counts the STRONGEST of them, so accepting it is a claim that each one would carry the finding on its own. ${missing2.length ? `Not affirmed: ${missing2.slice(0, 8).join(", ")}.` : ``}${unknown.length ? ` Named but not part of this reading: ${unknown.slice(0, 8).join(", ")}.` : ``} Pass affirmed=<every part, comma-separated>. DEC-32 rule 4: this cannot be carried by omission or by default, because that is exactly how a finding gets strengthened by repackaging.`,
             { target, version: vname, declared: declared2, affirmed: said7, missing: missing2, unknown }
@@ -95527,14 +97181,14 @@ var BasisVersions = class _BasisVersions {
     let projectId = null, projectRow = null;
     if (act2 === "current") {
       if (from !== "accepted")
-        return refuse21(
+        return refuse22(
           "VERSION_NOT_ACCEPTED",
           `'${vname}' is ${from || "in no recorded state"}. Current implies accepted (\xA76 rule 5), and exploring an unaccepted reading is done by CALCULATING OVER IT rather than by making it what everyone stands on \u2014 once a stance is shared, designating one temporarily would move a whole team's ground so one member could examine a possibility.`,
           { target, version: vname, from }
         );
       projectId = String(a.project ?? "").trim();
       if (!projectId)
-        return refuse21(
+        return refuse22(
           "VERSION_CURRENT_NO_PROJECT",
           "pass project=<PROJ-\u2026>: what a project stands on is the project's own dated declaration, and there is no default project.",
           { target, version: vname }
@@ -95545,7 +97199,7 @@ var BasisVersions = class _BasisVersions {
         if (existence) return existence;
       }
       if (!projectRow || normalizeType(projectRow.object_type) !== "project")
-        return refuse21(
+        return refuse22(
           "VERSION_CURRENT_UNRELATED",
           `${projectId.slice(0, 60)} is not a project readable here, so it holds no stance to move.`,
           { target, version: vname, project: projectId }
@@ -95554,13 +97208,13 @@ var BasisVersions = class _BasisVersions {
       if (denied) return denied;
       const ptext = this.#doc(projectId);
       if (!drawsOn(ptext !== null ? parseFrontmatter(ptext).data || {} : {}, target))
-        return refuse21(
+        return refuse22(
           "VERSION_CURRENT_UNRELATED",
           `${projectId} does not draw on ${target}, so it has no stance on this question to move. Cite the question into the project first.`,
           { target, version: vname, project: projectId }
         );
       if (setCurrentVersionRow(ptext, target, vname, who2, "") === null)
-        return refuse21(
+        return refuse22(
           "VERSION_ACT_UNWRITABLE",
           `${projectId}'s current_versions block could not be rewritten in place, so its stance cannot be recorded.`,
           { target, version: vname, project: projectId }
@@ -95599,7 +97253,7 @@ var BasisVersions = class _BasisVersions {
     }
     if (act2 === "hide" && text7 !== null) text7 = setVersionField(text7, vname, "hidden", hidden);
     if (text7 === null)
-      return refuse21(
+      return refuse22(
         "VERSION_ACT_UNWRITABLE",
         "this question's version block could not be rewritten in place, so nothing was changed.",
         { target, version: vname }
@@ -96628,9 +98282,9 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     };
   }
 };
-var instances25 = /* @__PURE__ */ new WeakMap();
+var instances26 = /* @__PURE__ */ new WeakMap();
 function basisVersionsOf(host, deps) {
-  let bv = instances25.get(host);
+  let bv = instances26.get(host);
   if (!bv) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -96647,7 +98301,7 @@ function basisVersionsOf(host, deps) {
     };
     const acceptedWork = d.acceptedWork && typeof d.acceptedWork.acceptedLegRefusals === "function" ? d.acceptedWork : acceptedWorkOf(host, { record, membership, promotion });
     bv = new BasisVersions({ ...d, inquiry, acceptedWork, storage: d.storage || host.storage, record, membership, promotion, content });
-    instances25.set(host, bv);
+    instances26.set(host, bv);
     record.declarePurge("basis-versions", BASIS_VERSIONS_TABLES);
     registerBasisVersionGrammar(record);
     promotion.registerStep("basis-versions", { check: (c) => bv.check(c), project: (c) => bv.project(c) });
@@ -98321,7 +99975,7 @@ var CONSENT_STATEMENT = "This consent is permanent for anything published under 
 var WITHDRAWAL_STATEMENT = "This withdrawal binds only later publications: what was published under the consent stays published.";
 var NOT_RECORDED = "known to the group, not recorded";
 var claimSentence = (claimedBy, at34) => `named by ${claimedBy} on ${String(at34).slice(0, 10)}; not confirmed by the group`;
-var HEX645 = /^[0-9a-f]{64}$/;
+var HEX646 = /^[0-9a-f]{64}$/;
 var DATE = /^\d{4}-\d{2}-\d{2}$/;
 var str9 = (v) => typeof v === "string" ? v.trim() : "";
 var isObj26 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
@@ -98333,7 +99987,7 @@ var safeJson18 = (s) => {
     return null;
   }
 };
-var hex5 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
+var hex6 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 function evidenceOf(v) {
   if (typeof v === "string" && v.trim() && v.length <= EVIDENCE_MAX) return { statement: v.trim() };
   if (isObj26(v) && typeof v.cite === "string" && v.cite.trim() && v.cite.length <= EVIDENCE_MAX) {
@@ -98478,7 +100132,7 @@ var Sources = class _Sources {
       }
       if (!page2 || page2.ok === false || !Array.isArray(page2.knocks)) return;
       for (const k of page2.knocks)
-        if (k && k.status === "pulled" && typeof k.knock_id === "string" && HEX645.test(String(k.sha256)) && k.capture_sha === k.sha256)
+        if (k && k.status === "pulled" && typeof k.knock_id === "string" && HEX646.test(String(k.sha256)) && k.capture_sha === k.sha256)
           this.#bindKnock(k, src.source_id);
       if (!page2.truncated || !page2.next) return;
       after = page2.next;
@@ -98489,7 +100143,7 @@ var Sources = class _Sources {
   sourceOf(args = {}) {
     const { captureSha, viewer } = isObj26(args) ? args : {};
     const reader = this.#memberOf(viewer);
-    if (!reader || typeof captureSha !== "string" || !HEX645.test(captureSha)) return noSuchSource(null, { captureSha: HEX645.test(String(captureSha)) ? captureSha : null });
+    if (!reader || typeof captureSha !== "string" || !HEX646.test(captureSha)) return noSuchSource(null, { captureSha: HEX646.test(String(captureSha)) ? captureSha : null });
     const knocks = this.#pulledKnocks(captureSha);
     if (!knocks.length) return noSuchSource(null, { captureSha });
     const ids = this.#record.transact(() => {
@@ -98759,7 +100413,7 @@ var Sources = class _Sources {
     const before2 = this.#rung(sourceId).rung;
     const linkedBefore = w.linkTo ? this.#rung(w.linkTo).rung : null;
     const at34 = this.#instant();
-    const entryId = `SRCE-${hex5(8)}`;
+    const entryId = `SRCE-${hex6(8)}`;
     this.#record.transact(() => {
       this.#bindKnocks(this.#source(sourceId));
       if (w.linkTo) this.#bindKnocks(this.#source(w.linkTo));
@@ -99057,7 +100711,7 @@ var Sources = class _Sources {
       return noService("terms", `the vendor's terms, when stated, are text of at most ${TERMS_MAX} characters`);
     const terms = str9(a.terms) || null;
     const captureSha = typeof a.captureSha === "string" ? a.captureSha.trim().toLowerCase() : null;
-    if (!captureSha || !HEX645.test(captureSha)) return noSuchCapture(null);
+    if (!captureSha || !HEX646.test(captureSha)) return noSuchCapture(null);
     let doc;
     try {
       doc = this.#captureDocument(captureSha);
@@ -99094,7 +100748,7 @@ var Sources = class _Sources {
   keyedResultOf(captureSha) {
     try {
       const sha2 = typeof captureSha === "string" ? captureSha.trim().toLowerCase() : "";
-      if (!HEX645.test(sha2)) return null;
+      if (!HEX646.test(sha2)) return null;
       const m = this.#lastMark(sha2);
       if (!m) return null;
       return {
@@ -99590,9 +101244,9 @@ var MACHINE_VIEWER2 = "class:daemon";
 var filled7 = (v) => typeof v === "string" && v.trim() !== "";
 var isObj28 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var clean = (v, max = TEXT_MAX2) => typeof v === "string" ? v.trim().slice(0, max) : "";
-var refuse9 = (reason, detail, extra = {}) => ({ ok: false, reason, detail, ...extra });
-var noBy = (what) => refuse9("NO_BY", `${what} is recorded under the act's stamped author (by); with none, nothing was written`);
-var json4 = (v) => {
+var refuse10 = (reason, detail, extra = {}) => ({ ok: false, reason, detail, ...extra });
+var noBy = (what) => refuse10("NO_BY", `${what} is recorded under the act's stamped author (by); with none, nothing was written`);
+var json5 = (v) => {
   try {
     return JSON.parse(v);
   } catch {
@@ -99611,14 +101265,14 @@ var eventId2 = (e2) => e2.event_id ?? e2.id ?? null;
 var factIdOf = (f17) => f17.fact_id ?? f17.id ?? null;
 var partyEntity3 = (p3) => isObj28(p3) ? p3.entity ?? null : typeof p3 === "string" ? p3 : null;
 var roleNames2 = (roles2) => Array.isArray(roles2) ? roles2.map((r) => isObj28(r) ? r.role : r).filter(filled7) : [];
-var memberOf2 = (by) => typeof by !== "string" || !by.trim() || isMachineIdentity(by) ? null : by.startsWith("member:") ? by.slice(7) || null : by.trim();
+var memberOf3 = (by) => typeof by !== "string" || !by.trim() || isMachineIdentity(by) ? null : by.startsWith("member:") ? by.slice(7) || null : by.trim();
 var viewerMember = (viewer) => viewer === "admin" ? "admin" : typeof viewer === "string" && viewer.startsWith("member:") && viewer.length > 7 ? viewer.slice(7) : null;
 var bounded = (items, max = READ_LIST_MAX, truncated3 = false) => ({ items: items.slice(0, max), truncated: truncated3 || items.length > max });
-var instances26 = /* @__PURE__ */ new WeakMap();
+var instances27 = /* @__PURE__ */ new WeakMap();
 var live4 = /* @__PURE__ */ new Set();
 function peopleOf(ctx, deps = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let p3 = instances26.get(storage);
+  let p3 = instances27.get(storage);
   if (!p3) {
     const d = deps || {};
     const record = d.record ?? recordOf(ctx);
@@ -99647,7 +101301,7 @@ function peopleOf(ctx, deps = {}) {
       money: pick3("money"),
       duties: pick3("duties")
     });
-    instances26.set(storage, p3);
+    instances27.set(storage, p3);
   }
   return p3;
 }
@@ -99781,7 +101435,7 @@ var People = class _People {
     return viewerPredicate(viewer).scope === "DENY";
   }
   static #noViewer() {
-    return refuse9("NO_VIEWER", "a read names the member reading, stamped by the control plane; with none, nothing is answered");
+    return refuse10("NO_VIEWER", "a read names the member reading, stamped by the control plane; with none, nothing is answered");
   }
   #seesProject(project, viewer) {
     if (!filled7(project)) return !this.#denied(viewer);
@@ -99840,7 +101494,7 @@ var People = class _People {
     if (!filled7(id) || !this.#entities.has(id)) return noSuchEntity(id ?? null, extra);
     const e2 = this.#entity(id);
     if (!e2 || e2.kind !== "person")
-      return refuse9("NOT_A_PERSON", `${id} is registered as ${e2 ? `a ${e2.kind}` : "something"}, not a person`, { entity_id: id, ...extra });
+      return refuse10("NOT_A_PERSON", `${id} is registered as ${e2 ? `a ${e2.kind}` : "something"}, not a person`, { entity_id: id, ...extra });
     return null;
   }
   /* The live names of a person, as their aliases stand in the registry. */
@@ -99973,36 +101627,36 @@ var People = class _People {
    * ===================================================================== */
   /** R1–R3. */
   claimIdentity({ a, b, kind, basis, evidence = null, project = null, note, by = null } = {}) {
-    if (!filled7(a) || !filled7(b)) return refuse9("NO_ENDS", "a claim names two person records by id: a and b");
-    if (a === b) return refuse9("SELF_CLAIM", "a claim is between two distinct person records");
+    if (!filled7(a) || !filled7(b)) return refuse10("NO_ENDS", "a claim names two person records by id: a and b");
+    if (a === b) return refuse10("SELF_CLAIM", "a claim is between two distinct person records");
     for (const [id, end2] of [[a, "a"], [b, "b"]]) {
       const r = this.#personRefusal(id, end2);
       if (r) return r;
     }
     if (!CLAIM_KINDS.includes(kind))
-      return refuse9("UNKNOWN_CLAIM_KIND", `a claim's kind is one of ${CLAIM_KINDS.join(", ")}`, { kinds: [...CLAIM_KINDS] });
+      return refuse10("UNKNOWN_CLAIM_KIND", `a claim's kind is one of ${CLAIM_KINDS.join(", ")}`, { kinds: [...CLAIM_KINDS] });
     if (!CLAIM_BASES.includes(basis))
-      return refuse9("UNKNOWN_BASIS", `a claim's basis is one of ${CLAIM_BASES.join(", ")}; its grade is earned from it`, { bases: [...CLAIM_BASES] });
+      return refuse10("UNKNOWN_BASIS", `a claim's basis is one of ${CLAIM_BASES.join(", ")}; its grade is earned from it`, { bases: [...CLAIM_BASES] });
     const machine3 = isMachineIdentity(by);
     if (machine3 && (basis !== "identifier" || !isObj28(evidence) || !isObj28(evidence.a) || !isObj28(evidence.b) || !filled7(evidence.a.captureSha) || !filled7(evidence.b.captureSha)))
-      return refuse9("MACHINE_CLAIM_REFUSED", "the machine records only an identifier claim from source-native data with identifiers at both ends; any other claim is a member's act");
+      return refuse10("MACHINE_CLAIM_REFUSED", "the machine records only an identifier claim from source-native data with identifiers at both ends; any other claim is a member's act");
     const hasEvidence = isObj28(evidence) && Object.keys(evidence).length > 0;
     if (basis !== "testimony" && !hasEvidence)
-      return refuse9("NO_EVIDENCE", `a ${basis} claim carries its evidence: each end's cited record and what it rests on`);
+      return refuse10("NO_EVIDENCE", `a ${basis} claim carries its evidence: each end's cited record and what it rests on`);
     const why = clean(note);
-    if (!why) return refuse9("NO_NOTE", "a claim carries a note in the claimant's own words");
+    if (!why) return refuse10("NO_NOTE", "a claim carries a note in the claimant's own words");
     if (filled7(project) && !(this.#record.bundleInfo(project) && this.#record.bundleInfo(project).type === "project"))
       return noSuchProject(project);
     for (const end2 of ["a", "b"]) {
       if (!hasEvidence || evidence[end2] === void 0) continue;
       const bad2 = this.#citationRefusal(evidence[end2], `the evidence for ${end2}`);
-      if (bad2) return refuse9("NO_EVIDENCE", bad2.detail || `the evidence for ${end2} is not a citation the record holds`, { end: end2, cause: bad2.reason });
+      if (bad2) return refuse10("NO_EVIDENCE", bad2.detail || `the evidence for ${end2} is not a citation the record holds`, { end: end2, cause: bad2.reason });
       if (evidence[end2].date !== void 0 && !isCalendarDate(evidence[end2].date))
-        return refuse9("NO_EVIDENCE", `the evidence for ${end2} states a date that is not a calendar day`, { end: end2 });
+        return refuse10("NO_EVIDENCE", `the evidence for ${end2} states a date that is not a calendar day`, { end: end2 });
     }
     const earned = this.#earn(basis, a, b, hasEvidence ? evidence : {});
     if (earned.failed)
-      return refuse9(
+      return refuse10(
         "IDENTITY_GRADE_UNEARNED",
         `a ${basis} claim earns grade ${BASIS_GRADE[basis]} only when ${earned.failed}; nothing was written`,
         { condition: earned.failed, basis }
@@ -100069,8 +101723,8 @@ var People = class _People {
       return { because: `both records hold the identifier ${want.scheme} ${want.id}, valid at ${dA} and ${dB}` };
     }
     if (!shared) return { failed: "the two records share a name" };
-    const ls = isObj28(ev.lines) ? ev.lines : null;
-    if (!ls || !filled7(ls.a) || !filled7(ls.b)) return { failed: "the evidence names the cited line held by each record (lines: {a, b})" };
+    const ls2 = isObj28(ev.lines) ? ev.lines : null;
+    if (!ls2 || !filled7(ls2.a) || !filled7(ls2.b)) return { failed: "the evidence names the cited line held by each record (lines: {a, b})" };
     const read3 = (id) => {
       try {
         const r = this.#lines.readLine({ lineId: id, viewer: MACHINE_VIEWER2 });
@@ -100079,24 +101733,24 @@ var People = class _People {
         return null;
       }
     };
-    const la = read3(ls.a), lb = read3(ls.b);
-    if (!la || la.withdrawn) return { failed: `the line ${ls.a} is held and not withdrawn` };
-    if (!lb || lb.withdrawn) return { failed: `the line ${ls.b} is held and not withdrawn` };
+    const la = read3(ls2.a), lb = read3(ls2.b);
+    if (!la || la.withdrawn) return { failed: `the line ${ls2.a} is held and not withdrawn` };
+    if (!lb || lb.withdrawn) return { failed: `the line ${ls2.b} is held and not withdrawn` };
     const otherOf = (l2, p3) => lineFrom(l2) === p3 ? lineTo(l2) : lineTo(l2) === p3 ? lineFrom(l2) : void 0;
     const oa = otherOf(la, a), ob = otherOf(lb, b);
-    if (oa === void 0) return { failed: `the line ${ls.a} has a at one end` };
-    if (ob === void 0) return { failed: `the line ${ls.b} has b at one end` };
+    if (oa === void 0) return { failed: `the line ${ls2.a} has a at one end` };
+    if (ob === void 0) return { failed: `the line ${ls2.b} has b at one end` };
     if (la.kind !== lb.kind || oa !== ob) return { failed: "the two lines are the same fact: one kind, to the same entity" };
-    if (_People.#judge(la.valid, dA, _People.#through(la)) !== "in") return { failed: `the line ${ls.a} is valid at a's record date ${dA}` };
-    if (_People.#judge(lb.valid, dB, _People.#through(lb)) !== "in") return { failed: `the line ${ls.b} is valid at b's record date ${dB}` };
+    if (_People.#judge(la.valid, dA, _People.#through(la)) !== "in") return { failed: `the line ${ls2.a} is valid at a's record date ${dA}` };
+    if (_People.#judge(lb.valid, dB, _People.#through(lb)) !== "in") return { failed: `the line ${ls2.b} is valid at b's record date ${dB}` };
     return { because: `both records carry the name '${shared}' and each holds a ${la.kind} line to ${oa} at its record's date (${dA}, ${dB})` };
   }
   /** R4: a claim withdrawn, never edited or deleted; it links nothing after. No entities row moves (R28). */
   withdrawIdentityClaim({ claimId, reason, by = null } = {}) {
     const why = clean(reason);
-    if (!why) return refuse9("NO_REASON", "a withdrawal says why the claim was wrong; it is kept beside the claim");
+    if (!why) return refuse10("NO_REASON", "a withdrawal says why the claim was wrong; it is kept beside the claim");
     const c = filled7(claimId) ? this.#one(`SELECT claim_id, withdrawn_by, withdrawn_at, withdrawn_reason FROM identity_claims WHERE claim_id=?`, claimId) : null;
-    if (!c) return refuse9("NO_SUCH_CLAIM", "no identity claim with that id is held", { claim_id: claimId ?? null });
+    if (!c) return refuse10("NO_SUCH_CLAIM", "no identity claim with that id is held", { claim_id: claimId ?? null });
     if (c.withdrawn_at)
       return { ok: true, already: true, claim_id: claimId, withdrawn: { by: c.withdrawn_by, at: c.withdrawn_at, reason: c.withdrawn_reason } };
     if (!filled7(by)) return noBy("a withdrawal");
@@ -100231,7 +101885,7 @@ var People = class _People {
       basis: c.basis,
       grade: c.grade,
       why: c.why,
-      evidence: c.evidence_json == null ? null : json4(c.evidence_json),
+      evidence: c.evidence_json == null ? null : json5(c.evidence_json),
       note: c.note,
       project: c.project ?? null,
       valid: { from: c.valid_from ?? null, to: c.valid_to ?? null },
@@ -100344,16 +101998,16 @@ var People = class _People {
     if (!filled7(person)) return noSuchEntity(person ?? null);
     const bad2 = this.#personRefusal(person);
     if (bad2) return bad2;
-    if (!FACT_KINDS.includes(kind)) return refuse9("UNKNOWN_FACT_KIND", `a person fact is one of ${FACT_KINDS.join(", ")}`, { kinds: [...FACT_KINDS] });
+    if (!FACT_KINDS.includes(kind)) return refuse10("UNKNOWN_FACT_KIND", `a person fact is one of ${FACT_KINDS.join(", ")}`, { kinds: [...FACT_KINDS] });
     const contact = CONTACT_KINDS.includes(kind);
-    if (contact && (isMachineIdentity(by) || !memberOf2(by)))
-      return refuse9("CONTACT_NOT_IMPORTED", "an address or contact is recorded only by a member's own act from a cited document; the machine never imports one");
+    if (contact && (isMachineIdentity(by) || !memberOf3(by)))
+      return refuse10("CONTACT_NOT_IMPORTED", "an address or contact is recorded only by a member's own act from a cited document; the machine never imports one");
     const v = clean(value, 400);
-    if (!v) return refuse9("NO_VALUE", "a person fact carries its value as the cited document states it");
+    if (!v) return refuse10("NO_VALUE", "a person fact carries its value as the cited document states it");
     const cite = this.#citationRefusal(citation, "a person fact");
-    if (cite) return refuse9(cite.reason, cite.detail, cite.code ? { code: cite.code, check: cite.check, translation: cite.translation } : {});
+    if (cite) return refuse10(cite.reason, cite.detail, cite.code ? { code: cite.code, check: cite.check, translation: cite.translation } : {});
     const vv = _People.#validity(valid);
-    if (vv.refused) return refuse9("BAD_VALIDITY", `the validity's ${vv.refused} is refused: ${vv.why}`, { bound: vv.refused });
+    if (vv.refused) return refuse10("BAD_VALIDITY", `the validity's ${vv.refused} is refused: ${vv.why}`, { bound: vv.refused });
     if (!filled7(by)) return noBy("a person fact");
     const at34 = this.#now(), stamp3 = String(by);
     const table4 = contact ? "person_contacts" : "person_facts";
@@ -100379,9 +102033,9 @@ var People = class _People {
   /** R11 (DEC-19): a wrong fact corrected forward: kept, marked withdrawn with who, when and why. */
   withdrawPersonFact({ factId: factId2, reason, by = null } = {}) {
     const why = clean(reason);
-    if (!why) return refuse9("NO_REASON", "a withdrawal says why the fact was wrong; it is kept beside the fact");
+    if (!why) return refuse10("NO_REASON", "a withdrawal says why the fact was wrong; it is kept beside the fact");
     const table4 = this.#factTable(factId2);
-    if (!table4) return refuse9("NO_SUCH_FACT", "no person fact with that id is held", { fact_id: factId2 ?? null });
+    if (!table4) return refuse10("NO_SUCH_FACT", "no person fact with that id is held", { fact_id: factId2 ?? null });
     const f17 = this.#one(`SELECT * FROM ${table4} WHERE fact_id=?`, factId2);
     if (f17.withdrawn_at)
       return { ok: true, already: true, fact_id: factId2, withdrawn: { by: f17.withdrawn_by, at: f17.withdrawn_at, reason: f17.withdrawn_reason } };
@@ -100401,8 +102055,8 @@ var People = class _People {
       member: f17.person,
       kind: f17.kind,
       value: f17.value,
-      valid: json4(f17.valid_json),
-      citation: { captureSha: f17.capture_sha, extent: json4(f17.extent_json) },
+      valid: json5(f17.valid_json),
+      citation: { captureSha: f17.capture_sha, extent: json5(f17.extent_json) },
       grade: this.#captureGrade(f17.capture_sha),
       by: f17.by_actor,
       at: f17.at,
@@ -100421,19 +102075,19 @@ var People = class _People {
   /** R12 (K1493; record-core R79): a value removed, leaving a tombstone, only on the grounds K1493 lists and only by an
    *  administrator. Any other wish to correct is a withdrawal (R11). */
   expunge({ id, ground, demandKind = null, order: order4 = null, reason, by = null } = {}) {
-    const who2 = memberOf2(by);
+    const who2 = memberOf3(by);
     if (!who2 || !this.#isAdmin(who2)) return notAnAdmin(by ?? null, "removing a person fact, claim, tie or source link");
     if (!EXPUNGE_GROUNDS.includes(ground) || ground === "court_order" && !filled7(order4))
-      return refuse9("EXPUNGE_GROUND_REFUSED", `a value is removed only as unlawful to hold, confidential, under a recorded court order (naming it) or under a lawful demand the jurisdiction lists; anything else is corrected forward by withdrawing it (op=personfactwithdraw, op=identitywithdraw, op=membertiewithdraw)`, { grounds: [...EXPUNGE_GROUNDS], correction: "withdraw" });
+      return refuse10("EXPUNGE_GROUND_REFUSED", `a value is removed only as unlawful to hold, confidential, under a recorded court order (naming it) or under a lawful demand the jurisdiction lists; anything else is corrected forward by withdrawing it (op=personfactwithdraw, op=identitywithdraw, op=membertiewithdraw)`, { grounds: [...EXPUNGE_GROUNDS], correction: "withdraw" });
     if (ground === "lawful_demand") {
       const kinds3 = (Array.isArray(this.#view().lawful_demands) ? this.#view().lawful_demands : []).map((d) => d && d.kind).filter(filled7);
       if (!kinds3.includes(demandKind))
-        return refuse9("DEMAND_KIND_UNLISTED", `the active jurisdiction profiles list no lawful demand of that kind; they list ${kinds3.length ? kinds3.join(", ") : "none"}`, { demand_kinds: kinds3 });
+        return refuse10("DEMAND_KIND_UNLISTED", `the active jurisdiction profiles list no lawful demand of that kind; they list ${kinds3.length ? kinds3.join(", ") : "none"}`, { demand_kinds: kinds3 });
     }
     const why = clean(reason);
-    if (!why) return refuse9("NO_REASON", "a removal states its reason");
+    if (!why) return refuse10("NO_REASON", "a removal states its reason");
     const target = this.#expungeTarget(id);
-    if (!target) return refuse9("NO_SUCH_ITEM", "no person fact, identity claim, member tie or source link answers to that id", { id: id ?? null });
+    if (!target) return refuse10("NO_SUCH_ITEM", "no person fact, identity claim, member tie or source link answers to that id", { id: id ?? null });
     return this.#record.transact(() => {
       const r = this.#record.expunge({
         module: MODULE2,
@@ -100553,7 +102207,7 @@ var People = class _People {
   personAt({ entityId, at: at34, viewer = null } = {}) {
     const o = this.#readOpen(entityId, viewer, "a person as of a date");
     if (o) return o.refusal;
-    if (at34 === void 0 || at34 === null || at34 === "") return refuse9("NO_DATE", "a person is read as of a date (at)");
+    if (at34 === void 0 || at34 === null || at34 === "") return refuse10("NO_DATE", "a person is read as of a date (at)");
     const { cluster, members: members2 } = this.#over(entityId, viewer);
     const names = members2.flatMap((m) => this.#names(m).map((name2) => ({ member: m, name: name2, from: "registry" })));
     const facts = _People.#atDate(members2.flatMap((m) => this.#factsOf(m, viewer)), at34);
@@ -100793,7 +102447,7 @@ var People = class _People {
     if (!filled7(organisation)) return noEntity("staffing is read for one organisation, by its entity id");
     if (this.#denied(viewer)) return _People.#noViewer();
     if (!this.#entities.has(organisation)) return noSuchEntity(organisation);
-    if (at34 === void 0 || at34 === null || at34 === "") return refuse9("NO_DATE", "staffing is read as of a date (at)");
+    if (at34 === void 0 || at34 === null || at34 === "") return refuse10("NO_DATE", "staffing is read as of a date (at)");
     const units = [organisation];
     const s = this.#lines.structureAt({ entity: organisation, at: at34, kinds: ["part_of"], viewer });
     const parts = isObj28(s) ? Array.isArray(s.held) ? s.held : listOf4(s) : [];
@@ -100844,15 +102498,15 @@ var People = class _People {
    * ===================================================================== */
   /** R20: a member's own tie, by their own act; there is no field naming another member. */
   declareTie({ entity: entity2, kind, note, attribution, by = null } = {}) {
-    const member = memberOf2(by);
-    if (!member) return refuse9("MEMBER_ACT_ONLY", "a tie is declared by the member it is theirs, stamped from their session; the machine declares none");
+    const member = memberOf3(by);
+    if (!member) return refuse10("MEMBER_ACT_ONLY", "a tie is declared by the member it is theirs, stamped from their session; the machine declares none");
     if (!filled7(entity2)) return noEntity("a tie names the registered entity it is to, by its id");
     if (!this.#entities.has(entity2)) return noSuchEntity(entity2);
-    if (!TIE_KINDS.includes(kind)) return refuse9("UNKNOWN_TIE_KIND", `a tie is one of ${TIE_KINDS.join(", ")}`, { kinds: [...TIE_KINDS] });
+    if (!TIE_KINDS.includes(kind)) return refuse10("UNKNOWN_TIE_KIND", `a tie is one of ${TIE_KINDS.join(", ")}`, { kinds: [...TIE_KINDS] });
     const n = clean(note);
-    if (!n) return refuse9("NO_NOTE", "a tie carries a note in the member's own words");
+    if (!n) return refuse10("NO_NOTE", "a tie carries a note in the member's own words");
     if (!ATTRIBUTION_LEVELS.includes(attribution))
-      return refuse9("UNKNOWN_ATTRIBUTION", `a tie's disclosure is at one of ${ATTRIBUTION_LEVELS.join(", ")}`, { levels: [...ATTRIBUTION_LEVELS] });
+      return refuse10("UNKNOWN_ATTRIBUTION", `a tie's disclosure is at one of ${ATTRIBUTION_LEVELS.join(", ")}`, { levels: [...ATTRIBUTION_LEVELS] });
     const at34 = this.#now();
     return this.#record.transact(() => {
       const r = this.#record.allocId("MTI", at34.slice(0, 4));
@@ -100873,10 +102527,10 @@ var People = class _People {
   /** R20: a tie withdrawn by its member (or an administrator); kept, marked withdrawn. Another's tie answers as absent. */
   withdrawTie({ tieId, reason, by = null } = {}) {
     const why = clean(reason);
-    if (!why) return refuse9("NO_REASON", "a withdrawal says why; it is kept beside the tie");
+    if (!why) return refuse10("NO_REASON", "a withdrawal says why; it is kept beside the tie");
     const t2 = filled7(tieId) ? this.#one(`SELECT * FROM member_ties WHERE tie_id=?`, tieId) : null;
-    const who2 = memberOf2(by);
-    if (!t2 || !who2 || t2.member !== who2 && !this.#isAdmin(who2)) return refuse9("NO_SUCH_TIE", "no tie of yours answers to that id", { tie_id: tieId ?? null });
+    const who2 = memberOf3(by);
+    if (!t2 || !who2 || t2.member !== who2 && !this.#isAdmin(who2)) return refuse10("NO_SUCH_TIE", "no tie of yours answers to that id", { tie_id: tieId ?? null });
     if (t2.withdrawn_at) return { ok: true, already: true, tie_id: tieId, withdrawn: { by: t2.withdrawn_by, at: t2.withdrawn_at, reason: t2.withdrawn_reason } };
     const at34 = this.#now();
     this.#sql.exec(`UPDATE member_ties SET withdrawn_by=?, withdrawn_at=?, withdrawn_reason=? WHERE tie_id=?`, String(by), at34, why, tieId);
@@ -100925,14 +102579,14 @@ var People = class _People {
    * ===================================================================== */
   /** R21. */
   linkSourceToPerson({ source: source2, person, evidence, sight, by = null } = {}) {
-    if (!memberOf2(by)) return refuse9("MEMBER_ACT_ONLY", "a source is linked to a person only by a member's own act");
-    if (!filled7(source2) || !this.#sourceHeld(source2, by)) return refuse9("NO_SUCH_SOURCE", "no source with that id is held", { source: source2 ?? null });
+    if (!memberOf3(by)) return refuse10("MEMBER_ACT_ONLY", "a source is linked to a person only by a member's own act");
+    if (!filled7(source2) || !this.#sourceHeld(source2, by)) return refuse10("NO_SUCH_SOURCE", "no source with that id is held", { source: source2 ?? null });
     const bad2 = this.#personRefusal(person);
     if (bad2) return bad2;
     const ev = clean(evidence);
-    if (!ev) return refuse9("NO_EVIDENCE", "a link from a source to a person carries its evidence");
+    if (!ev) return refuse10("NO_EVIDENCE", "a link from a source to a person carries its evidence");
     const list6 = Array.isArray(sight) ? [...new Set(sight.filter(filled7).map((s) => s.startsWith("member:") ? s.slice(7) : s))] : [];
-    if (!list6.length) return refuse9("NO_SIGHT_LIST", "a link from a source to a person names the members who may read it");
+    if (!list6.length) return refuse10("NO_SIGHT_LIST", "a link from a source to a person names the members who may read it");
     const at34 = this.#now(), stamp3 = String(by);
     return this.#record.transact(() => {
       const prior = this.#one(`SELECT * FROM source_person_links WHERE source=? AND person=?`, source2, person);
@@ -100957,7 +102611,7 @@ var People = class _People {
   #sourceHeld(id, by) {
     try {
       if (!this.#sources || typeof this.#sources.rungOf !== "function") return false;
-      const r = this.#sources.rungOf({ source: id, viewer: `member:${memberOf2(by)}` });
+      const r = this.#sources.rungOf({ source: id, viewer: `member:${memberOf3(by)}` });
       return !!r && r.ok !== false && r.reason !== "NO_SUCH_SOURCE";
     } catch {
       return false;
@@ -100967,7 +102621,7 @@ var People = class _People {
   sourceLinksOf({ source: source2 = null, person = null, viewer = null } = {}) {
     const v = viewerMember(viewer);
     const rows3 = filled7(source2) ? this.#rows(`SELECT * FROM source_person_links WHERE source=? ORDER BY person`, source2) : filled7(person) ? this.#rows(`SELECT * FROM source_person_links WHERE person=? ORDER BY source`, person) : [];
-    const links = rows3.filter((r) => !!v && (json4(r.sight_json) || []).includes(v)).map((r) => ({ source: r.source, person: r.person, evidence: r.evidence, sight: json4(r.sight_json), by: r.by_actor, at: r.at }));
+    const links = rows3.filter((r) => !!v && (json5(r.sight_json) || []).includes(v)).map((r) => ({ source: r.source, person: r.person, evidence: r.evidence, sight: json5(r.sight_json), by: r.by_actor, at: r.at }));
     return { ok: true, count: links.length, links };
   }
   /** R34 (N600): for other modules' code only, never an op and never answered to a viewer: null when no source link to
@@ -100981,7 +102635,7 @@ var People = class _People {
       if (!rows3.length) return null;
       let admitted = null;
       for (const r of rows3) {
-        const list6 = (Array.isArray(json4(r.sight_json)) ? json4(r.sight_json) : []).filter(filled7);
+        const list6 = (Array.isArray(json5(r.sight_json)) ? json5(r.sight_json) : []).filter(filled7);
         admitted = admitted === null ? [...new Set(list6)] : admitted.filter((m) => list6.includes(m));
       }
       return admitted.sort();
@@ -100995,13 +102649,13 @@ var People = class _People {
   /** R22: a member's own check, a new check or a new version of one. */
   defineCheck({ name: name2, condition, denominator, project = null, check: check2 = null, by = null } = {}) {
     const n = clean(name2, 200);
-    if (!n) return refuse9("NO_NAME", "a check carries a name");
+    if (!n) return refuse10("NO_NAME", "a check carries a name");
     const hyp = hypothesisNamed(name2, condition, denominator);
-    if (hyp) return refuse9("HYPOTHESIS_NOT_A_FACT", `a check rests on held facts, never on a hypothesis (${hyp} is one)`, { hypothesis: hyp });
+    if (hyp) return refuse10("HYPOTHESIS_NOT_A_FACT", `a check rests on held facts, never on a hypothesis (${hyp} is one)`, { hypothesis: hyp });
     const err = conditionError(condition);
-    if (err) return refuse9("BAD_CONDITION", err);
+    if (err) return refuse10("BAD_CONDITION", err);
     const den = clean(denominator, 400);
-    if (!den) return refuse9("NO_DENOMINATOR", "a check names the set it counts against");
+    if (!den) return refuse10("NO_DENOMINATOR", "a check names the set it counts against");
     if (filled7(project) && !(this.#record.bundleInfo(project) && this.#record.bundleInfo(project).type === "project")) return noSuchProject(project);
     if (!filled7(by)) return noBy("a check");
     const machine3 = isMachineIdentity(by) ? 1 : 0;
@@ -101009,7 +102663,7 @@ var People = class _People {
     const proj = filled7(project) ? project : null;
     if (filled7(check2)) {
       const prior = this.#one(`SELECT MAX(version) AS v, MAX(machine) AS m FROM interest_checks WHERE check_id=?`, check2);
-      if (!prior || prior.v == null) return refuse9("NO_SUCH_CHECK", "no check with that id is held", { check: check2 });
+      if (!prior || prior.v == null) return refuse10("NO_SUCH_CHECK", "no check with that id is held", { check: check2 });
       const v = Number(prior.v) + 1;
       this.#sql.exec(
         `INSERT INTO interest_checks (check_id,version,name,condition_json,denominator,project,machine,by_actor,at)
@@ -101062,10 +102716,10 @@ var People = class _People {
   /** R22: any check switched off (or on again) in one project by a member of that project. */
   switchCheck({ check: check2, project, on, by = null } = {}) {
     if (!filled7(check2) || !this.#one(`SELECT 1 AS x FROM interest_checks WHERE check_id=?`, check2))
-      return refuse9("NO_SUCH_CHECK", "no check with that id is held", { check: check2 ?? null });
-    const who2 = memberOf2(by);
+      return refuse10("NO_SUCH_CHECK", "no check with that id is held", { check: check2 ?? null });
+    const who2 = memberOf3(by);
     if (!filled7(project) || !who2 || !this.#membership.inSight(project, `member:${who2}`)) return noSuchProject(project ?? null);
-    if (typeof on !== "boolean") return refuse9("NO_SWITCH", "a switch says on: true or on: false");
+    if (typeof on !== "boolean") return refuse10("NO_SWITCH", "a switch says on: true or on: false");
     const at34 = this.#now();
     this.#sql.exec(`INSERT INTO interest_check_switches (check_id,project,is_on,by_actor,at) VALUES (?,?,?,?,?)`, check2, project, on ? 1 : 0, String(by), at34);
     this.#changed(check2, project);
@@ -101118,7 +102772,7 @@ var People = class _People {
     let evaluated = 0, remaining = false;
     for (const c of this.#latest()) {
       if (!this.#switchedOn(c)) continue;
-      const condition = json4(c.condition_json);
+      const condition = json5(c.condition_json);
       if (conditionError(condition)) continue;
       const cur = this.#one(`SELECT after, base, done_base FROM interest_check_cursor WHERE check_id=? AND version=?`, c.check_id, c.version);
       let after = cur ? cur.after : "", base2 = cur ? Number(cur.base) : 0;
@@ -101190,7 +102844,7 @@ var People = class _People {
       version: Number(r.version),
       name: c.name,
       project: r.project ?? null,
-      derivation: json4(r.derivation_json),
+      derivation: json5(r.derivation_json),
       denominator: this.#denominator(r),
       at: r.at,
       by: "the machine's",
@@ -101201,15 +102855,15 @@ var People = class _People {
   }
   /** R24: a machine check version's gate, by an administrator: its gold set and measured false-alarm rate. */
   recordCheckGate({ check: check2, version, goldSet, falseAlarmRate, by = null } = {}) {
-    const who2 = memberOf2(by);
+    const who2 = memberOf3(by);
     if (!who2 || !this.#isAdmin(who2)) return notAnAdmin(by ?? null, "recording a check's measured gate");
     const c = filled7(check2) ? this.#one(`SELECT * FROM interest_checks WHERE check_id=? AND version=?`, check2, Number(version)) : null;
-    if (!c) return refuse9("NO_SUCH_CHECK", "no check version with that id is held", { check: check2 ?? null, version: version ?? null });
+    if (!c) return refuse10("NO_SUCH_CHECK", "no check version with that id is held", { check: check2 ?? null, version: version ?? null });
     const gold = clean(goldSet);
-    if (!gold) return refuse9("NO_GOLD_SET", "a gate names the gold set the false-alarm rate was measured on");
+    if (!gold) return refuse10("NO_GOLD_SET", "a gate names the gold set the false-alarm rate was measured on");
     const rate = Number(falseAlarmRate);
     if (falseAlarmRate === null || falseAlarmRate === "" || !Number.isFinite(rate) || rate < 0 || rate > 1)
-      return refuse9("BAD_RATE", "a false-alarm rate is a number from 0 to 1");
+      return refuse10("BAD_RATE", "a false-alarm rate is a number from 0 to 1");
     const at34 = this.#now(), stamp3 = String(by), v = Number(version);
     this.#record.transact(() => {
       const prior = this.#one(`SELECT * FROM interest_check_gates WHERE check_id=? AND version=?`, check2, v);
@@ -101247,7 +102901,7 @@ var People = class _People {
       let truncated3 = false;
       for (const r of this.#rows(`SELECT * FROM interest_check_results WHERE check_id=? AND version=? ORDER BY result_id`, c.check_id, Number(c.version))) {
         if (!this.#seesProject(r.project, viewer)) continue;
-        const d = json4(r.derivation_json);
+        const d = json5(r.derivation_json);
         const rows3 = isObj28(d) && Array.isArray(d.rows) ? d.rows : [];
         if (!rows3.every((row9) => this.#rowVisible(row9, viewer))) continue;
         if (results.length >= READ_LIST_MAX) {
@@ -101267,7 +102921,7 @@ var People = class _People {
       check: c.check_id,
       version: Number(c.version),
       name: c.name,
-      condition: json4(c.condition_json),
+      condition: json5(c.condition_json),
       denominator: c.denominator,
       project: c.project ?? null,
       machine: !!Number(c.machine),
@@ -101291,7 +102945,7 @@ var People = class _People {
   static forHost(host) {
     if (host) {
       const storage = host.storage ? host.storage : host;
-      return instances26.get(storage) || null;
+      return instances27.get(storage) || null;
     }
     const alive = [];
     for (const r of live4) {
@@ -101314,7 +102968,7 @@ var People = class _People {
       const valid = { from: c.valid_from ?? null, to: c.valid_to ?? null, precision: "day", zone: "UTC" };
       const j = _People.#judge(valid, at34);
       if (j === "out") continue;
-      const ev = json4(c.evidence_json) || {};
+      const ev = json5(c.evidence_json) || {};
       const cited = ["a", "b"].filter((e2) => isObj28(ev[e2]) && filled7(ev[e2].captureSha)).map((e2) => ({ source: ev[e2].captureSha, extent: ev[e2].extent ?? null, end: e2 }));
       const evidence = cited.length ? cited : [{ source: `testimony:${c.by_actor ?? "a member"}`, statement: c.note }];
       items.push({
@@ -103868,7 +105522,7 @@ function strengthOps(s, url, body) {
     })
   };
 }
-var instances27 = /* @__PURE__ */ new WeakMap();
+var instances28 = /* @__PURE__ */ new WeakMap();
 function strengthTables(s) {
   const rest = { expunge: "none", export: "admin-only", version_chain: false };
   return [
@@ -103885,7 +105539,7 @@ function strengthTables(s) {
   ];
 }
 function strengthOf(host, deps) {
-  let s = instances27.get(host);
+  let s = instances28.get(host);
   if (!s) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -103897,7 +105551,7 @@ function strengthOf(host, deps) {
       return f17 && f17.ok ? f17.value || null : null;
     });
     s = new Strength({ ...d, host, storage, record, membership, promotion, producingGroup });
-    instances27.set(host, s);
+    instances28.set(host, s);
     s.migrate();
     const declared2 = record.declareTable("strength", strengthTables(s));
     if (!declared2 || declared2.ok === false) throw new Error(`strength's tables could not be declared: ${JSON.stringify(declared2)}`);
@@ -104495,11 +106149,11 @@ var STORED_ROW = `candidate, key, a_kind, a_ref, a_version, a_bundle_id, b_kind,
   proposed_by, label, reason, state, origin, at, a_side, b_side`;
 var RUN_GATE_DECLARED = "RUN_GATE_DECLARED";
 var RUN_GATE_MALFORMED = "RUN_GATE_MALFORMED";
-var instances28 = /* @__PURE__ */ new WeakMap();
+var instances29 = /* @__PURE__ */ new WeakMap();
 var live5 = /* @__PURE__ */ new Set();
 function contradictionOf(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let c = instances28.get(storage);
+  let c = instances29.get(storage);
   if (!c) {
     const record = opts.record ?? recordOf(ctx);
     const lazy = (given2, make) => given2 ?? make;
@@ -104515,7 +106169,7 @@ function contradictionOf(ctx, opts = {}) {
       money: lazy(opts.money, () => moneyOf2(ctx, { record })),
       inquiry: lazy(opts.inquiry, () => inquiryServices(ctx))
     });
-    instances28.set(storage, c);
+    instances29.set(storage, c);
     live5.add(c);
     const promotion = typeof opts.promotion === "object" && opts.promotion ? opts.promotion : promotionOf(ctx, { record });
     if (promotion && typeof promotion.registerStep === "function")
@@ -104555,7 +106209,7 @@ function ownerNeighbours3(args) {
   const a = args && typeof args === "object" && !Array.isArray(args) ? args : {};
   const { host, ...rest } = a;
   let c = null;
-  if (host !== void 0 && host !== null) c = instances28.get(host.storage ? host.storage : host) ?? null;
+  if (host !== void 0 && host !== null) c = instances29.get(host.storage ? host.storage : host) ?? null;
   else if (live5.size === 1) c = [...live5][0];
   if (!c) return {
     refused: "OWNER_HOST_AMBIGUOUS",
@@ -105692,9 +107346,9 @@ var Contradiction = class _Contradiction {
     if (typeof id !== "string" || !id.trim()) return null;
     const r = this.#one(`SELECT ${STORED_ROW}, seq FROM contradiction_candidates WHERE candidate=?`, id.trim());
     if (!r) return null;
-    const side = (json17, kind, ref) => {
+    const side = (json18, kind, ref) => {
       try {
-        if (json17) return JSON.parse(json17);
+        if (json18) return JSON.parse(json18);
       } catch {
       }
       if (kind === "claim") {
@@ -109262,14 +110916,14 @@ var Reevaluation = class {
     };
     const flags2 = () => {
       const m = get2();
-      let whole = false;
+      let whole2 = false;
       if (m.absent) try {
-        whole = this.acceptedWork.acceptanceWithdrawals({ after: "", limit: 1 })?.absent === true;
+        whole2 = this.acceptedWork.acceptanceWithdrawals({ after: "", limit: 1 })?.absent === true;
       } catch {
-        whole = false;
+        whole2 = false;
       }
       return {
-        ...m.absent ? { accepted_work_absent: true, accepted_work_why: whole ? ACCEPTED_WORK_ABSENT_WHY : MOVES_ABSENT_WHY } : {},
+        ...m.absent ? { accepted_work_absent: true, accepted_work_why: whole2 ? ACCEPTED_WORK_ABSENT_WHY : MOVES_ABSENT_WHY } : {},
         ...m.ok ? {} : { accepted_work_unreadable: true, accepted_work_unreadable_why: MOVES_UNREAD }
       };
     };
@@ -109516,10 +111170,10 @@ var Reevaluation = class {
       JSON.stringify(cids),
       cids.length
     ) : []).filter((r) => r.capture_sha).map((r) => [r.content_id, r.capture_sha]));
-    const whole = [...new Set(legs.filter((l2) => !l2.content_id).map((l2) => l2.target_id))];
+    const whole2 = [...new Set(legs.filter((l2) => !l2.content_id).map((l2) => l2.target_id))];
     const byTarget = /* @__PURE__ */ new Map();
-    for (const r of whole.length ? this.#rows(`SELECT DISTINCT bundle_id, capture_sha FROM register WHERE bundle_id IN (SELECT value FROM json_each(?))
-                     ORDER BY bundle_id, capture_sha`, JSON.stringify(whole)) : []) {
+    for (const r of whole2.length ? this.#rows(`SELECT DISTINCT bundle_id, capture_sha FROM register WHERE bundle_id IN (SELECT value FROM json_each(?))
+                     ORDER BY bundle_id, capture_sha`, JSON.stringify(whole2)) : []) {
       if (!byTarget.has(r.bundle_id)) byTarget.set(r.bundle_id, []);
       byTarget.get(r.bundle_id).push(r.capture_sha);
     }
@@ -111840,9 +113494,9 @@ Why: ${line}
     return fm ? checkReevalPending(fm) : [];
   }
 };
-var instances29 = /* @__PURE__ */ new WeakMap();
+var instances30 = /* @__PURE__ */ new WeakMap();
 function reevaluationOf(host, deps) {
-  let r = instances29.get(host);
+  let r = instances30.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -111850,7 +113504,7 @@ function reevaluationOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     r = new Reevaluation({ ...d, host, storage, record, membership, promotion });
-    instances29.set(host, r);
+    instances30.set(host, r);
     r.migrate();
     record.declarePurge("reevaluation", REEVALUATION_TABLES);
     r.inquiry.onRaised("reevaluation", ({ target, cause, since, viewer }) => r.raise({ target, source: cause, since, viewer }));
@@ -112123,8 +113777,8 @@ function sourceRowsStanding(rows3, publishable) {
     const p3 = cache.get(capture2);
     const stated = r && typeof r.stated === "string" ? oneLine(r.stated) : null;
     const basis = r ? r.basis ?? null : null;
-    const holds = !!p3 && stated !== null && (basis === null ? stated === unnamedSourceStatement({ capture: capture2, received: p3.received }) : SOURCE_BASES.includes(basis) && (p3.entries || []).some((e2) => e2 && e2.basis === basis && sourceStatement(e2) === stated));
-    if (!holds) failed3.push({ capture: capture2, stated, basis });
+    const holds2 = !!p3 && stated !== null && (basis === null ? stated === unnamedSourceStatement({ capture: capture2, received: p3.received }) : SOURCE_BASES.includes(basis) && (p3.entries || []).some((e2) => e2 && e2.basis === basis && sourceStatement(e2) === stated));
+    if (!holds2) failed3.push({ capture: capture2, stated, basis });
   }
   return failed3;
 }
@@ -112593,7 +114247,7 @@ var CASE_FILE_MANIFEST_FIELDS = Object.freeze([
 var CASE_FILE_KEY_FIELDS = Object.freeze(["key", "fingerprint"]);
 var CASE_FILE_PART_FIELDS = Object.freeze(["index", "sha256", "bytes"]);
 var CASE_FILE_FILE_FIELDS = Object.freeze(["path", "sha256", "bytes", "part", "kind"]);
-var HEX646 = /^[0-9a-f]{64}$/;
+var HEX647 = /^[0-9a-f]{64}$/;
 var SEGMENT2 = /^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$/;
 var FINGERPRINT = /^SHA256:[A-Za-z0-9+/]{43}$/;
 var SLUG3 = /^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/;
@@ -112623,7 +114277,7 @@ function caseFilePath(kind, key = null) {
     return `attestations/${key[0]}/${key[1]}`;
   if (kind === "calculation") {
     if (key === "prov") return CASE_FILE_PROV_PATH;
-    if (Array.isArray(key)) return key.length === 2 && SEGMENT2.test(String(key[0] ?? "")) && HEX646.test(String(key[1] ?? "")) ? `calculations/${key[0]}/inputs/${key[1]}` : null;
+    if (Array.isArray(key)) return key.length === 2 && SEGMENT2.test(String(key[0] ?? "")) && HEX647.test(String(key[1] ?? "")) ? `calculations/${key[0]}/inputs/${key[1]}` : null;
     return SEGMENT2.test(String(key ?? "")) && key !== "prov" ? `calculations/${key}/${CALCULATION_FILE}` : null;
   }
   return null;
@@ -112633,7 +114287,7 @@ function caseFileEntryOf(path) {
   for (const [kind, p3] of Object.entries(SINGLE_PATHS)) if (path === p3) return { kind };
   if (path === CASE_FILE_PROV_PATH) return { kind: "calculation", prov: true };
   const parts = path.split("/");
-  if (parts.length === 4 && parts[0] === "calculations" && SEGMENT2.test(parts[1]) && parts[1] !== "prov.jsonld" && parts[2] === "inputs" && HEX646.test(parts[3]))
+  if (parts.length === 4 && parts[0] === "calculations" && SEGMENT2.test(parts[1]) && parts[1] !== "prov.jsonld" && parts[2] === "inputs" && HEX647.test(parts[3]))
     return { kind: "calculation", calc: parts[1], input: parts[3] };
   if (parts.length !== 3 || !SEGMENT2.test(parts[1])) return null;
   const [top2, key, leaf] = parts;
@@ -112684,7 +114338,7 @@ function caseFileManifestCheck(manifest) {
       no8("case", "case", `the case is named by its id, and this manifest states ${shown(manifest.case)}`);
     if (!Number.isSafeInteger(manifest.edition) || manifest.edition < 1)
       no8("edition", "edition", `the edition is a whole number from 1, and this manifest states ${shown(manifest.edition)}`);
-    if (typeof manifest.case_document_sha !== "string" || !HEX646.test(manifest.case_document_sha))
+    if (typeof manifest.case_document_sha !== "string" || !HEX647.test(manifest.case_document_sha))
       no8("case_document_sha", "sha256", `the case document's SHA-256 is 64 lower-case hex digits, and this manifest states ${shown(manifest.case_document_sha)}`);
     if (!Array.isArray(manifest.keys) || !manifest.keys.length)
       no8("keys", "keys", "the manifest names at least one signing key, with its fingerprint");
@@ -112707,7 +114361,7 @@ function caseFileManifestCheck(manifest) {
       if (!plain5(p3)) return no8(at34, "part", `a part is {index, sha256, bytes}, and this is ${shown(p3)}`);
       for (const f17 of Object.keys(p3)) if (!CASE_FILE_PART_FIELDS.includes(f17)) no8(`${at34}.${f17}`, "unknown_field", `a part has no field ${shown(f17)}`);
       if (p3.index !== i + 1) no8(`${at34}.index`, "part_index", `the parts are numbered from 1 in order, so this one is ${i + 1}, and it states ${shown(p3.index)}`);
-      if (typeof p3.sha256 !== "string" || !HEX646.test(p3.sha256)) no8(`${at34}.sha256`, "sha256", `a part's SHA-256 is 64 lower-case hex digits, and this is ${shown(p3.sha256)}`);
+      if (typeof p3.sha256 !== "string" || !HEX647.test(p3.sha256)) no8(`${at34}.sha256`, "sha256", `a part's SHA-256 is 64 lower-case hex digits, and this is ${shown(p3.sha256)}`);
       if (!Number.isSafeInteger(p3.bytes) || p3.bytes < 0) no8(`${at34}.bytes`, "bytes", `a part's size is a whole number of bytes, and this is ${shown(p3.bytes)}`);
     });
     const files = Array.isArray(manifest.files) ? manifest.files : null;
@@ -112728,7 +114382,7 @@ function caseFileManifestCheck(manifest) {
         if (paths.has(f17.path)) no8(`${at34}.path`, "path_twice", `${shown(f17.path)} is listed twice`);
         paths.add(f17.path);
       }
-      if (typeof f17.sha256 !== "string" || !HEX646.test(f17.sha256)) no8(`${at34}.sha256`, "sha256", `a file's SHA-256 is 64 lower-case hex digits, and this is ${shown(f17.sha256)}`);
+      if (typeof f17.sha256 !== "string" || !HEX647.test(f17.sha256)) no8(`${at34}.sha256`, "sha256", `a file's SHA-256 is 64 lower-case hex digits, and this is ${shown(f17.sha256)}`);
       else if (entry3 && entry3.input && f17.sha256 !== entry3.input)
         no8(`${at34}.sha256`, "input_sha", `a calculation's input is named by its SHA-256, and ${shown(f17.path)} is listed with another`);
       if (!Number.isSafeInteger(f17.bytes) || f17.bytes < 0) no8(`${at34}.bytes`, "bytes", `a file's size is a whole number of bytes, and this is ${shown(f17.bytes)}`);
@@ -112789,13 +114443,13 @@ var objects3 = (xs) => Array.isArray(xs) ? xs.filter((x) => x && typeof x === "o
 var exact = (v) => {
   if (v === null || v === void 0) return "null";
   if (typeof v === "boolean" || typeof v === "number" && Number.isFinite(v)) return String(v);
-  let json17;
+  let json18;
   try {
-    json17 = canonicalJson(v);
+    json18 = canonicalJson(v);
   } catch {
     return "null";
   }
-  return json17 === void 0 ? "null" : `'${json17.replace(/'/g, "\\u0027")}'`;
+  return json18 === void 0 ? "null" : `'${json18.replace(/'/g, "\\u0027")}'`;
 };
 var unexact = (v) => {
   if (v === null || v === void 0 || typeof v === "number" || typeof v === "boolean") return v ?? null;
@@ -112925,7 +114579,7 @@ var RECOMPUTE_STATUSES = Object.freeze([
      `calc` is its capture's SHA-256, its `inputs` empty and its `result_key` null (it carries no recipe to key). */
   "not_recomputed"
 ]);
-var HEX647 = /^[0-9a-f]{64}$/;
+var HEX648 = /^[0-9a-f]{64}$/;
 var plain6 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var objects4 = (xs) => Array.isArray(xs) ? xs.filter(plain6) : [];
 var str13 = (v) => typeof v === "string" && v ? v : null;
@@ -112934,7 +114588,7 @@ function inputsOf(v) {
   if (!pairs) return null;
   const out = {};
   for (const [name2, sha2] of pairs) {
-    if (typeof name2 !== "string" || !name2 || typeof sha2 !== "string" || !HEX647.test(sha2) || Object.hasOwn(out, name2)) return null;
+    if (typeof name2 !== "string" || !name2 || typeof sha2 !== "string" || !HEX648.test(sha2) || Object.hasOwn(out, name2)) return null;
     out[name2] = sha2;
   }
   return out;
@@ -112976,7 +114630,7 @@ function calculationsOf2(fm) {
         inputs: inputsOf(v.inputs),
         method_version: str13(v.method_version),
         results: plain6(v.results) ? v.results : null,
-        result_key: typeof v.result_key === "string" && HEX647.test(v.result_key) ? v.result_key : null,
+        result_key: typeof v.result_key === "string" && HEX648.test(v.result_key) ? v.result_key : null,
         recompute: RECOMPUTE_STATUSES.includes(v.recompute) ? v.recompute : null,
         disclosed: str13(v.disclosed)
       };
@@ -113179,7 +114833,7 @@ function filesOf(files) {
   for (const f17 of objects6(files)) {
     const c = f17.content;
     if (typeof f17.path !== "string" || typeof c !== "string" && !(c instanceof Uint8Array)) continue;
-    all.set(f17.path, [...all.get(f17.path) || [], [shaOf2(c), c, f17.sha256]]);
+    all.set(f17.path, [...all.get(f17.path) || [], [shaOf3(c), c, f17.sha256]]);
   }
   const out = /* @__PURE__ */ new Map();
   for (const [path, copies] of all) {
@@ -113190,7 +114844,7 @@ function filesOf(files) {
 }
 var decoder = new TextDecoder("utf-8");
 var textOf2 = (v) => typeof v === "string" ? v : v instanceof Uint8Array ? decoder.decode(v) : null;
-var shaOf2 = (v) => typeof v === "string" ? createSha256().update(new TextEncoder().encode(v)).hex() : v instanceof Uint8Array ? createSha256().update(v).hex() : null;
+var shaOf3 = (v) => typeof v === "string" ? createSha256().update(new TextEncoder().encode(v)).hex() : v instanceof Uint8Array ? createSha256().update(v).hex() : null;
 var jsonOf = (v) => {
   try {
     const t2 = textOf2(v);
@@ -113229,7 +114883,7 @@ function completeEditionOf(caseFile) {
     const edition = said5(fm.case_edition ?? cf.edition);
     const bar = fm.required_strength && typeof fm.required_strength === "object" ? fm.required_strength : {};
     const floors = bar.declared === false ? "no bar declared" : `capture ${said5(bar.capture, "not set")}, connection ${said5(bar.connection, "not set")}`;
-    const docSha = shaOf2(docBytes);
+    const docSha = shaOf3(docBytes);
     const notice = `${said5(group, "a group not named")} \xB7 Case ${caseId} \xB7 Edition ${edition}. Declared bias: ${clause(fm.bias_acknowledgement, "none stated")}. Bar (floors): ${floors}. Case document SHA-256: ${docSha}. Verify it with the checker from the group's public read ${CHECKER_READS.program}, or against the case file's manifest and the group's published record.`;
     const roster = Array.isArray(fm.case_findings) ? fm.case_findings.map(String) : [];
     const roles2 = new Map(objects6(fm.case_roles).map((r) => [String(r.target), r.role ?? null]));
@@ -114847,7 +116501,7 @@ var EXPORT_LOG_LIMIT_DEFAULT = 200;
 var EXPORT_LOG_LIMIT_MAX = 1e3;
 var EXPORT_NOTE_MAX = 280;
 var CREATION_BASE = sha256HexSync("");
-var HEX648 = /^[0-9a-f]{64}$/;
+var HEX649 = /^[0-9a-f]{64}$/;
 var te8 = new TextEncoder();
 var CorpusExport = class {
   constructor({ storage, record, now = null, entities: entities2 = null, events = null, lines: lines2 = null, money = null } = {}) {
@@ -115089,7 +116743,7 @@ function verifyCorpusExport(input) {
     };
     const part = (where, sha2, size, hashReason, sizeReason) => {
       const want = lower(sha2);
-      if (!HEX648.test(want)) {
+      if (!HEX649.test(want)) {
         failures.push({ reason: hashReason, ...where, expected: "a SHA-256 digest", found: describe3(sha2) });
         return false;
       }
@@ -115247,7 +116901,7 @@ function verifyTables(manifest, held2, failures, counts, declared2) {
       counts.pages++;
       const at34 = { ...where, page: p3 ? p3.index ?? null : null };
       const want = lower(p3 && p3.sha256);
-      if (!HEX648.test(want)) {
+      if (!HEX649.test(want)) {
         failures.push({ reason: "PAGE_HASH_MISMATCH", ...at34, expected: "a SHA-256 digest", found: describe3(p3 && p3.sha256) });
         continue;
       }
@@ -115336,9 +116990,9 @@ function corpusExportOps(ce, q10) {
     exportrender: () => ce.exportRendering({ format: q10("format"), viewer: q10("viewer") })
   };
 }
-var instances30 = /* @__PURE__ */ new WeakMap();
+var instances31 = /* @__PURE__ */ new WeakMap();
 function corpusExportOf(host, deps) {
-  let c = instances30.get(host);
+  let c = instances31.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -115350,7 +117004,7 @@ function corpusExportOf(host, deps) {
       money: d.money ?? (() => moneyOf2(host, { record }))
     };
     c = new CorpusExport({ ...d, ...owners2, storage, record });
-    instances30.set(host, c);
+    instances31.set(host, c);
     c.migrate();
     c.purgeDeclaration = record.declarePurge("corpus-export", [], { exempt: [...CORPUS_EXPORT_EXEMPT] });
   }
@@ -115402,10 +117056,10 @@ var safeJson19 = (s) => {
     return null;
   }
 };
-var HEX649 = /^[0-9a-f]{64}$/;
+var HEX6410 = /^[0-9a-f]{64}$/;
 var str15 = (v) => typeof v === "string" && v.trim() ? v.trim() : "";
 var te9 = new TextEncoder();
-var shaOf3 = (text7) => createSha256().update(te9.encode(String(text7))).hex();
+var shaOf4 = (text7) => createSha256().update(te9.encode(String(text7))).hex();
 var CaseCarriage = class {
   #deps;
   constructor({
@@ -115499,13 +117153,13 @@ var CaseCarriage = class {
         sha256: what === "extracted_text" ? str15(m.text_sha).toLowerCase() || null : sha2 || null,
         why
       });
-      if (!HEX649.test(sha2)) {
+      if (!HEX6410.test(sha2)) {
         miss(kind === "observation" ? "observation" : "document", "the row names no SHA-256");
         continue;
       }
       const home = this.#registered(sha2);
       const inline = home ? this.#fileText(home.bundle_id, home.path) : null;
-      const inlineOk = !!inline && shaOf3(inline.content) === sha2;
+      const inlineOk = !!inline && shaOf4(inline.content) === sha2;
       if (kind === "observation") {
         if (inlineOk) hold(ref, "observation", sha2, inline.content);
         else miss("observation", "your group's Civicsmith holds no text of that observation at its digest");
@@ -115526,12 +117180,12 @@ var CaseCarriage = class {
       } catch {
         text7 = null;
       }
-      if (typeof text7 === "string" && HEX649.test(textSha) && shaOf3(text7) === textSha) hold(ref, "extracted_text", textSha, text7);
+      if (typeof text7 === "string" && HEX6410.test(textSha) && shaOf4(text7) === textSha) hold(ref, "extracted_text", textSha, text7);
       else miss("extracted_text", "your group's Civicsmith holds no whole extracted text of that document at its stated digest");
       for (const t2 of this.#tokenFiles(home, sha2)) {
         const f17 = this.#fileRow(home.bundle_id, t2);
-        if (f17 && typeof f17.text === "string") hold(ref, "attestation", shaOf3(f17.text), f17.text);
-        else if (f17 && typeof f17.blobSha === "string" && HEX649.test(f17.blobSha)) hold(ref, "attestation", f17.blobSha, null, f17.bytes);
+        if (f17 && typeof f17.text === "string") hold(ref, "attestation", shaOf4(f17.text), f17.text);
+        else if (f17 && typeof f17.blobSha === "string" && HEX6410.test(f17.blobSha)) hold(ref, "attestation", f17.blobSha, null, f17.bytes);
         else miss("attestation", `the timestamp token ${t2} is not held`);
       }
     }
@@ -115704,9 +117358,9 @@ var CaseCarriage = class {
     });
   }
 };
-var instances31 = /* @__PURE__ */ new WeakMap();
+var instances32 = /* @__PURE__ */ new WeakMap();
 function caseCarriageOf(host, deps) {
-  let c = instances31.get(host);
+  let c = instances32.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -115714,7 +117368,7 @@ function caseCarriageOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     c = new CaseCarriage({ ...d, host, storage, record, membership, promotion });
-    instances31.set(host, c);
+    instances32.set(host, c);
     c.migrate();
     c.purgeDeclaration = record.declarePurge("case-carriage", [], { exempt: [...CASE_CARRIAGE_EXEMPT] });
   }
@@ -115921,7 +117575,7 @@ var PUBLICATION_DOORS = Object.freeze([
   "reauthorSection"
 ]);
 var pageOf = (limit, max) => Math.max(1, Math.min(Math.floor(Number(limit)) || max, max));
-var HEX6410 = /^[0-9a-f]{64}$/;
+var HEX6411 = /^[0-9a-f]{64}$/;
 var str16 = (v) => typeof v === "string" && v.trim() ? v.trim() : "";
 var NO_PROVIDER = "no module has registered the publication provider, so this module reads no case";
 var CaseTensions = class {
@@ -116380,7 +118034,7 @@ var CaseTensions = class {
    *  edition's (a later edition INHERITS the prior choice until the author changes it). None is none: nothing is ever
    *  prefilled. R7: a capture's SHA-256 (never a bundle id) reads its attesting member's choice, on the same rule. */
   attributionInForce(caseId, edition, observation) {
-    if (typeof observation === "string" && HEX6410.test(observation))
+    if (typeof observation === "string" && HEX6411.test(observation))
       return this.#one(
         `SELECT level, edition, chosen_by, chosen_at, reason FROM capture_attributions
                          WHERE case_id=? AND capture_sha=? AND edition<=? ORDER BY edition DESC LIMIT 1`,
@@ -116412,7 +118066,7 @@ var CaseTensions = class {
     } catch {
       rows3 = null;
     }
-    return [...new Set((Array.isArray(rows3) ? rows3 : []).filter((r) => r && typeof r.capture === "string" && HEX6410.test(r.capture) && (r.basis == null || r.basis === "null")).map((r) => r.capture))];
+    return [...new Set((Array.isArray(rows3) ? rows3 : []).filter((r) => r && typeof r.capture === "string" && HEX6411.test(r.capture) && (r.basis == null || r.basis === "null")).map((r) => r.capture))];
   }
   /* R5, R7: everything an edition's attribution statements are about: its observations, then its off-the-record
      captures, keyed by their SHA-256. */
@@ -116431,7 +118085,7 @@ var CaseTensions = class {
       return d ? this.#attributedReachedBy(d.text) : [];
     })();
     return obsList.map((obs) => {
-      const key = HEX6410.test(String(obs)) ? { capture: obs } : { observation: obs };
+      const key = HEX6411.test(String(obs)) ? { capture: obs } : { observation: obs };
       const act2 = this.attributionInForce(caseId, edition, obs);
       if (!act2) return {
         ...key,
@@ -116440,7 +118094,7 @@ var CaseTensions = class {
         chosen_at_edition: null,
         why: "its author has chosen no level for this edition or any earlier one"
       };
-      const g = HEX6410.test(String(obs)) ? { author: act2.chosen_by } : this.#one(`SELECT author FROM register WHERE bundle_id=? AND authored=1 LIMIT 1`, obs);
+      const g = HEX6411.test(String(obs)) ? { author: act2.chosen_by } : this.#one(`SELECT author FROM register WHERE bundle_id=? AND authored=1 LIMIT 1`, obs);
       const m = g ? this.membership.memberFacts(g.author) : null;
       const shown3 = act2.level === "group" ? this.#producingGroup() : act2.level === "project" ? project : act2.level === "cover" ? m && m.cover ? m.cover : null : act2.level === "name" ? m && m.handle ? m.handle : null : null;
       if (shown3 === null && act2.level !== "group")
@@ -116514,7 +118168,7 @@ var CaseTensions = class {
   attributionStatedFor(observation) {
     const id = String(observation ?? "");
     if (!id) return false;
-    const field2 = HEX6410.test(id) ? "capture" : "observation";
+    const field2 = HEX6411.test(id) ? "capture" : "observation";
     const docs = this.#list("signedDocumentsNaming", `  - ${field2}: ${id}`, STATED_FOR_DOCS);
     return docs.some((d) => {
       const rows3 = (parseFrontmatter(String(d && d.text || "")).data || {}).observation_attributions;
@@ -116585,7 +118239,7 @@ var CaseTensions = class {
     const reg = obs ? this.#one(`SELECT author FROM register WHERE bundle_id=? AND authored=1 LIMIT 1`, obs) : null;
     const named = cap ? { capture: cap } : { observation: obs || null };
     if (cap) {
-      if (!HEX6410.test(cap) || !doc || !this.#capturesReachedBy(doc.text).includes(cap))
+      if (!HEX6411.test(cap) || !doc || !this.#capturesReachedBy(doc.text).includes(cap))
         return refusal29(
           "ATTRIBUTION_NOT_AN_OBSERVATION",
           `${cap.slice(0, 80)} is not material from a source the named case edition shows as Withheld, so it has no attesting member to choose how they are credited`,
@@ -116737,9 +118391,9 @@ var CaseTensions = class {
     });
   }
 };
-var instances32 = /* @__PURE__ */ new WeakMap();
+var instances33 = /* @__PURE__ */ new WeakMap();
 function caseTensionsOf2(host, deps) {
-  let c = instances32.get(host);
+  let c = instances33.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -116747,7 +118401,7 @@ function caseTensionsOf2(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     c = new CaseTensions({ ...d, host, storage, record, membership, promotion });
-    instances32.set(host, c);
+    instances33.set(host, c);
     c.migrate();
     c.purgeDeclaration = record.declareTable("case-tensions", CASE_TENSIONS_TABLES.map((t2) => ({ ...t2, keys: [...t2.keys] })));
     promotion.registerFact("caseMember", "case-tensions", (id) => {
@@ -116860,7 +118514,7 @@ function resolveAt(p3, at34) {
     };
   return { ok: true, at: { date, time, zone }, publish_at: b.earliest };
 }
-function entryOf(p3, r) {
+function entryOf2(p3, r) {
   const project = projectOf2(p3, r.case_id, r.edition);
   return {
     case: r.case_id,
@@ -116939,7 +118593,7 @@ function scheduleEdition(p3, {
         case: id,
         edition: ed,
         state: "waiting",
-        at: entryOf(p3, held2).at,
+        at: entryOf2(p3, held2).at,
         publish_at: held2.publish_at
       };
     return {
@@ -116947,7 +118601,7 @@ function scheduleEdition(p3, {
       reason: "PUBLISH_AT_ALREADY_SET",
       caseId: id,
       edition: ed,
-      waiting: entryOf(p3, held2),
+      waiting: entryOf2(p3, held2),
       detail: `case ${id} edition ${ed} already waits to be published; move or cancel that time`
     };
   }
@@ -116996,7 +118650,7 @@ async function publishDue(p3, now) {
 }
 async function takeOne(p3, r, at34) {
   const entry3 = {
-    ...entryOf(p3, r),
+    ...entryOf2(p3, r),
     doc_sha: r.doc_sha,
     signature: r.sig_armored,
     delivered_by: r.delivered_by ?? null,
@@ -117086,7 +118740,7 @@ function publishAtMove(p3, { case: caseArg = null, caseId = null, edition = null
       JSON.stringify(moves),
       f17.row.seq
     );
-    return { ok: true, ...entryOf(p3, one(p3, `SELECT * FROM scheduled_editions WHERE seq=?`, f17.row.seq)) };
+    return { ok: true, ...entryOf2(p3, one(p3, `SELECT * FROM scheduled_editions WHERE seq=?`, f17.row.seq)) };
   });
   if (out.ok) tell(p3);
   return out;
@@ -117102,7 +118756,7 @@ function publishAtCancel(p3, { case: caseArg = null, caseId = null, edition = nu
       clock(p3),
       f17.row.seq
     );
-    return { ok: true, ...entryOf(p3, one(p3, `SELECT * FROM scheduled_editions WHERE seq=?`, f17.row.seq)) };
+    return { ok: true, ...entryOf2(p3, one(p3, `SELECT * FROM scheduled_editions WHERE seq=?`, f17.row.seq)) };
   });
   if (out.ok) tell(p3);
   return out;
@@ -117153,7 +118807,7 @@ function scheduledEditions(p3, {
   const last = out[out.length - 1];
   return {
     ok: true,
-    editions: out.map((r) => entryOf(p3, r)),
+    editions: out.map((r) => entryOf2(p3, r)),
     limit: cap,
     cursor: more && last ? `${last.publish_at}#${last.seq}` : null
   };
@@ -117197,9 +118851,9 @@ var safeJson21 = (s) => {
     return null;
   }
 };
-var HEX6411 = /^[0-9a-f]{64}$/;
+var HEX6412 = /^[0-9a-f]{64}$/;
 var str18 = (v) => typeof v === "string" && v.trim() ? v.trim() : "";
-var shaOf4 = (text7) => createSha256().update(new TextEncoder().encode(String(text7))).hex();
+var shaOf5 = (text7) => createSha256().update(new TextEncoder().encode(String(text7))).hex();
 var REVIEW_DOORS = Object.freeze([
   "draftForMember",
   "draftIdentity",
@@ -117506,7 +119160,7 @@ var Publication = class {
     const id = str18(caseArg ?? caseId), ed = Number(edition);
     if (!id || !Number.isInteger(ed) || ed < 1 || typeof text7 !== "string" || !text7)
       return { ok: false, reason: "MALFORMED", detail: "a case document names its case, a positive edition and its text" };
-    const docSha = shaOf4(text7);
+    const docSha = shaOf5(text7);
     this.sql.exec(
       `INSERT INTO case_documents (case_id,edition,doc_sha,text,authored_at,authored_by,draft_id)
        VALUES (?,?,?,?,?,?,?)
@@ -117568,7 +119222,7 @@ var Publication = class {
     if (!at34) return { ok: true, ...held2, reauthored: false, why: `this case document carries no ${section} section to re-author` };
     const text7 = [...all.slice(0, at34.f0), ...fmLines, ...all.slice(at34.f1, at34.b0), ...bodyLines, ...all.slice(at34.b1)].join("\n");
     if (text7 === doc.text) return { ok: true, ...held2, reauthored: false };
-    const newSha = shaOf4(text7);
+    const newSha = shaOf5(text7);
     this.sql.exec(`UPDATE case_documents SET doc_sha=?, text=? WHERE case_id=? AND edition=? AND doc_sha=?
                    AND sig_armored IS NULL`, newSha, text7, id, ed, doc.doc_sha);
     this.projectCaseExclusions(id, ed);
@@ -118085,7 +119739,7 @@ var Publication = class {
         detail: this.#orders ? "that entry is not a posted court-order entry of this case with this effect, so nothing was stamped" : "no court-order source is registered, so no entry can be confirmed and nothing was stamped"
       };
     const when = str18(at34) || this.#when();
-    const json17 = partsList && partsList.length ? JSON.stringify(partsList) : null;
+    const json18 = partsList && partsList.length ? JSON.stringify(partsList) : null;
     let wrote = 0;
     for (const e2 of eds) {
       const had = this.#one(`SELECT 1 AS h FROM edition_stamps WHERE case_id=? AND edition=? AND entry_seq=?`, id, e2, seq);
@@ -118096,7 +119750,7 @@ var Publication = class {
         e2,
         seq,
         fx,
-        json17,
+        json18,
         when
       );
       wrote++;
@@ -118106,7 +119760,7 @@ var Publication = class {
       case: id,
       entry: seq,
       effect: fx,
-      parts: json17 ? partsList : null,
+      parts: json18 ? partsList : null,
       editions: eds,
       existed: wrote === 0,
       stamps: eds.flatMap((e2) => this.stampsOf({ case: id, edition: e2 }).stamps.filter((x) => x.entry === seq))
@@ -118973,7 +120627,7 @@ var Publication = class {
       );
       let files = 0;
       for (const f17 of Array.isArray(manifest.files) ? manifest.files : []) {
-        if (!f17 || typeof f17 !== "object" || typeof f17.sha256 !== "string" || !HEX6411.test(f17.sha256) || typeof f17.path !== "string" || !f17.path) continue;
+        if (!f17 || typeof f17 !== "object" || typeof f17.sha256 !== "string" || !HEX6412.test(f17.sha256) || typeof f17.path !== "string" || !f17.path) continue;
         this.sql.exec(
           `INSERT INTO published_shas (sha256,bundle_id,path,kind,bytes,published) VALUES (?,?,?,?,?,?)
            ON CONFLICT(sha256,bundle_id,path) DO NOTHING`,
@@ -119415,9 +121069,9 @@ var Publication = class {
     return reg;
   }
 };
-var instances33 = /* @__PURE__ */ new WeakMap();
+var instances34 = /* @__PURE__ */ new WeakMap();
 function publicationOf(host, deps) {
-  let p3 = instances33.get(host);
+  let p3 = instances34.get(host);
   if (!p3) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -119425,7 +121079,7 @@ function publicationOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     p3 = new Publication({ ...d, host, storage, record, membership, promotion });
-    instances33.set(host, p3);
+    instances34.set(host, p3);
     p3.migrate();
     p3.purgeDeclaration = record.declareTable("publication", PUBLICATION_DECLARATIONS.map((t2) => ({ ...t2 })));
     void p3.corpusExport;
@@ -119874,16 +121528,16 @@ case_project: ${pid}
     };
   }
 };
-var instances34 = /* @__PURE__ */ new WeakMap();
+var instances35 = /* @__PURE__ */ new WeakMap();
 function projectStageOf(host, deps) {
-  let s = instances34.get(host);
+  let s = instances35.get(host);
   if (!s) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     s = new ProjectStage({ ...d, host, storage, record, membership });
-    instances34.set(host, s);
+    instances35.set(host, s);
   }
   return s;
 }
@@ -120236,7 +121890,7 @@ var int2 = (v) => {
 };
 var yes = (v) => v === true || v === "true" || v === "1" || v === 1;
 var isSha = (v) => typeof v === "string" && /^[0-9a-f]{64}$/.test(v);
-var dayOf2 = (iso6) => String(iso6).slice(0, 10);
+var dayOf3 = (iso6) => String(iso6).slice(0, 10);
 var td = new TextDecoder();
 var b643 = (bytes2) => {
   let s = "";
@@ -120249,7 +121903,7 @@ function withRow2(r) {
   const row9 = rowOf6(r.reason);
   return row9 ? { ...r, code: r.code ?? r.reason, check: row9.check, translation: row9.translation } : r;
 }
-var refuse10 = (code, detail, extra) => withRow2({ ok: false, reason: code, detail, ...extra || {} });
+var refuse11 = (code, detail, extra) => withRow2({ ok: false, reason: code, detail, ...extra || {} });
 var noSuchCase = (caseId) => ({
   ok: false,
   reason: "NO_SUCH_CASE",
@@ -120468,11 +122122,11 @@ var Docket = class {
   #filerRefusal({ case: caseId, author, viewer }) {
     const member = this.#member(author);
     if (!member)
-      return { refusal: refuse10("MACHINE_CANNOT_FILE_DOCKET", str20(author) ? "a docket entry is filed by a member signed in as themselves, and this caller is not one" : "no member is named as the one filing: this call carries nobody") };
+      return { refusal: refuse11("MACHINE_CANNOT_FILE_DOCKET", str20(author) ? "a docket entry is filed by a member signed in as themselves, and this caller is not one" : "no member is named as the one filing: this call carries nobody") };
     const k = this.#caseFor(caseId, str20(viewer) || str20(author));
     if (k.refusal) return k;
     if (!this.#call(() => this.membership.isJoinedParticipant(k.c.project, member), false))
-      return { refusal: refuse10(
+      return { refusal: refuse11(
         "DOCKET_NOT_A_PARTICIPANT",
         "only a joined participant of the case's project files to its docket",
         { case: k.c.case }
@@ -120485,23 +122139,23 @@ var Docket = class {
     const f17 = parse4(from);
     const ed = int2(edition);
     if (ed === null || !c.editions.some((e2) => e2.edition === ed))
-      return { refusal: refuse10(
+      return { refusal: refuse11(
         "DOCKET_NO_EDITION",
         "the edition named is not a ratified edition of this case",
         { editions: c.editions.map((e2) => e2.edition) }
       ) };
     if (!f17 || typeof f17 !== "object" || !FROM_KINDS.includes(f17.kind))
-      return { refusal: refuse10("DOCKET_NOT_ATTRIBUTED", "from is {kind: subject, entity}, {kind: holder, grant} or {kind: other, name}") };
+      return { refusal: refuse11("DOCKET_NOT_ATTRIBUTED", "from is {kind: subject, entity}, {kind: holder, grant} or {kind: other, name}") };
     let fromRow;
     if (f17.kind === "subject") {
       const entity2 = str20(f17.entity);
       if (!entity2 || !this.#namedSubjects(c.case, ed).has(entity2))
-        return { refusal: refuse10("DOCKET_NOT_THE_SUBJECT", `the entity named is not a subject of edition ${ed}`, { edition: ed }) };
+        return { refusal: refuse11("DOCKET_NOT_THE_SUBJECT", `the entity named is not a subject of edition ${ed}`, { edition: ed }) };
       fromRow = { kind: "subject", entity: entity2 };
     } else if (f17.kind === "holder") {
       const grant = this.#grant(c.case, f17.grant);
       if (!this.#liveAt(grant, at34))
-        return { refusal: refuse10(
+        return { refusal: refuse11(
           "DOCKET_NO_STANDING",
           "the grant named is not a grant of standing on this docket live at the filing",
           { grant: int2(f17.grant) }
@@ -120509,28 +122163,28 @@ var Docket = class {
       fromRow = { kind: "holder", grant: grant.seq };
     } else {
       if (!oneLine2(f17.name, NAME_MAX))
-        return { refusal: refuse10("DOCKET_NOT_ATTRIBUTED", `the source's name is one line of 1 to ${NAME_MAX} characters`) };
+        return { refusal: refuse11("DOCKET_NOT_ATTRIBUTED", `the source's name is one line of 1 to ${NAME_MAX} characters`) };
       fromRow = { kind: "other", name: f17.name.trim() };
     }
     const cap = this.#capture(capture2);
     if (!cap.held)
-      return { refusal: refuse10(
+      return { refusal: refuse11(
         "DOCKET_NO_CAPTURE",
         "the capture named is not one the register holds with its origin locator",
         { capture: typeof capture2 === "string" ? capture2 : null }
       ) };
     const fits = { response: ["subject", "holder"], statement: ["subject", "holder"], reaction: ["other"], outcome: FROM_KINDS };
     if (!RECORD_KINDS.includes(kind) || !fits[kind].includes(fromRow.kind))
-      return { refusal: refuse10("DOCKET_KIND_UNKNOWN", "a response or statement is from the subject or a holder, a reaction from anyone else, an outcome from anyone", { kind: typeof kind === "string" ? kind : null, from: fromRow.kind }) };
+      return { refusal: refuse11("DOCKET_KIND_UNKNOWN", "a response or statement is from the subject or a holder, a reaction from anyone else, an outcome from anyone", { kind: typeof kind === "string" ? kind : null, from: fromRow.kind }) };
     let answering = null;
     if (answers !== void 0 && answers !== null && answers !== "") {
       const r = this.#recordEntry(str20(answers));
       if (!r || r.case_id !== c.case || this.#recordState(r.entry_id).state !== "receipted")
-        return { refusal: refuse10("NO_SUCH_DOCKET_ENTRY", "answers names no receipted record entry of this case", { answers: str20(answers) }) };
+        return { refusal: refuse11("NO_SUCH_DOCKET_ENTRY", "answers names no receipted record entry of this case", { answers: str20(answers) }) };
       answering = r.entry_id;
     }
     if (!PROPOSALS.includes(proposed) || !words(reason, REASON_MAX9))
-      return { refusal: refuse10("DOCKET_NO_REASON", `proposed is record, public or both, with a reason of 1 to ${REASON_MAX9} characters`) };
+      return { refusal: refuse11("DOCKET_NO_REASON", `proposed is record, public or both, with a reason of 1 to ${REASON_MAX9} characters`) };
     return { fields: { edition: ed, from: fromRow, capture: cap, kind, proposed, reason, answers: answering, contests: yes(contests) } };
   }
   /** R1, R11, R13: files a record entry, or, with `takesBack`, takes an earlier record entry back with a reason. */
@@ -120599,10 +122253,10 @@ var Docket = class {
     const r = this.#entryRefusal(c.case, id);
     if (r) return r;
     if (!words(reason, REASON_MAX9))
-      return refuse10("DOCKET_NO_REASON", `a take-back carries a reason of 1 to ${REASON_MAX9} characters`);
+      return refuse11("DOCKET_NO_REASON", `a take-back carries a reason of 1 to ${REASON_MAX9} characters`);
     const out = this.record.transact(() => {
       if (this.#recordState(id).state !== "pending")
-        return refuse10("DOCKET_ENTRY_SETTLED", "the entry was settled meanwhile", { entry: id });
+        return refuse11("DOCKET_ENTRY_SETTLED", "the entry was settled meanwhile", { entry: id });
       this.sql.exec(`INSERT INTO docket_marks (entry_id, kind, reason, by_member, at) VALUES (?,?,?,?,?)`, id, "taken-back", reason, member, at34);
       return { ok: true };
     });
@@ -120613,10 +122267,10 @@ var Docket = class {
   #entryRefusal(caseId, id) {
     const r = this.#recordEntry(id);
     if (!r || r.case_id !== caseId)
-      return refuse10("NO_SUCH_DOCKET_ENTRY", "no record entry of this case answers by that id", { entry: id });
+      return refuse11("NO_SUCH_DOCKET_ENTRY", "no record entry of this case answers by that id", { entry: id });
     const s = this.#recordState(id);
     if (s.state !== "pending")
-      return refuse10("DOCKET_ENTRY_SETTLED", `the entry is already ${s.state}`, { entry: id, state: s.state });
+      return refuse11("DOCKET_ENTRY_SETTLED", `the entry is already ${s.state}`, { entry: id, state: s.state });
     return null;
   }
   /* ================================================================ R2: the pressure mark */
@@ -120627,18 +122281,18 @@ var Docket = class {
     const r = this.#recordEntry(id);
     const p3 = parse4(pressure);
     if (!member)
-      return refuse10("MACHINE_CANNOT_MARK_DOCKET_PRESSURE", "a docket entry is marked by a member signed in as themselves");
+      return refuse11("MACHINE_CANNOT_MARK_DOCKET_PRESSURE", "a docket entry is marked by a member signed in as themselves");
     const c = r ? this.#case(r.case_id) : null;
     if (!r || !c || !c.project || this.#call(() => this.membership.sight(c.project, str20(viewer) || str20(author))) !== "full")
-      return refuse10("NO_SUCH_DOCKET_ENTRY", "no record entry you see answers by that id", { entry: id });
+      return refuse11("NO_SUCH_DOCKET_ENTRY", "no record entry you see answers by that id", { entry: id });
     if (this.#marks(id).some((m) => m.kind === "pressure"))
-      return refuse10("DOCKET_PRESSURE_MARKED", "the entry is already marked", { entry: id });
+      return refuse11("DOCKET_PRESSURE_MARKED", "the entry is already marked", { entry: id });
     const note = p3 && typeof p3 === "object" && p3.note !== void 0 && p3.note !== null && p3.note !== "" ? p3.note : null;
     if (!p3 || typeof p3 !== "object" || !PRESSURE_KINDS.includes(p3.kind) || note !== null && !words(note, NOTE_MAX3))
-      return refuse10("DOCKET_PRESSURE_REFUSED", `kind is one of ${PRESSURE_KINDS.join(", ")}, with a note of at most ${NOTE_MAX3} characters`);
+      return refuse11("DOCKET_PRESSURE_REFUSED", `kind is one of ${PRESSURE_KINDS.join(", ")}, with a note of at most ${NOTE_MAX3} characters`);
     const at34 = this.#stamp();
     const out = this.record.transact(() => {
-      if (this.#marks(id).some((m) => m.kind === "pressure")) return refuse10("DOCKET_PRESSURE_MARKED", "the entry was marked meanwhile", { entry: id });
+      if (this.#marks(id).some((m) => m.kind === "pressure")) return refuse11("DOCKET_PRESSURE_MARKED", "the entry was marked meanwhile", { entry: id });
       this.sql.exec(
         `INSERT INTO docket_marks (entry_id, kind, pressure, note, by_member, at) VALUES (?,?,?,?,?,?)`,
         id,
@@ -120658,13 +122312,13 @@ var Docket = class {
   #managerRefusal({ case: caseId, by, viewer }) {
     const member = this.#member(by);
     if (!member)
-      return { refusal: refuse10("MACHINE_CANNOT_PLACE_DOCKET", str20(by) ? "a public docket entry is placed by the case's manager signed in as themselves, and this caller is not one" : "no member is named as the one acting: this call carries nobody") };
+      return { refusal: refuse11("MACHINE_CANNOT_PLACE_DOCKET", str20(by) ? "a public docket entry is placed by the case's manager signed in as themselves, and this caller is not one" : "no member is named as the one acting: this call carries nobody") };
     const k = this.#caseFor(caseId, str20(viewer) || str20(by));
     if (k.refusal) return k;
     if (!this.#isManager(k.c.project, member))
-      return { refusal: refuse10("DOCKET_NOT_THE_MANAGER", "only an owner of the case's project manages its public docket", { case: k.c.case }) };
+      return { refusal: refuse11("DOCKET_NOT_THE_MANAGER", "only an owner of the case's project manages its public docket", { case: k.c.case }) };
     const slug2 = this.#slug();
-    if (!slug2) return { refusal: refuse10("DOCKET_NO_GROUP_SLUG", "no group slug is recorded, and there are no anonymous entries") };
+    if (!slug2) return { refusal: refuse11("DOCKET_NO_GROUP_SLUG", "no group slug is recorded, and there are no anonymous entries") };
     return { c: k.c, member, slug: slug2 };
   }
   /* R4's kind refusals (R7, R8, R10–R12), the shelf and a reaction's summary and archive copy. Answers the fields the
@@ -120675,11 +122329,11 @@ var Docket = class {
     const ed = a.edition === "all" ? "all" : int2(a.edition);
     if (rec) {
       if (a.edition !== null && a.edition !== void 0 && a.edition !== "" && ed !== Number(rec.edition))
-        return { refusal: refuse10("DOCKET_NO_EDITION", `the record entry concerns edition ${rec.edition}`, { edition: Number(rec.edition) }) };
+        return { refusal: refuse11("DOCKET_NO_EDITION", `the record entry concerns edition ${rec.edition}`, { edition: Number(rec.edition) }) };
       out.edition = Number(rec.edition);
     } else {
       if (ed === null || (ed === "all" ? !["withdrawal", "court-order"].includes(kind) : !c.editions.some((e2) => e2.edition === ed)))
-        return { refusal: refuse10(
+        return { refusal: refuse11(
           "DOCKET_NO_EDITION",
           "the edition named is not a ratified edition of this case",
           { editions: c.editions.map((e2) => e2.edition) }
@@ -120687,52 +122341,52 @@ var Docket = class {
       out.edition = ed;
     }
     if (kind === "edition" && !(out.edition > 1))
-      return { refusal: refuse10("DOCKET_NO_EDITION", "an edition entry names a ratified edition above 1") };
+      return { refusal: refuse11("DOCKET_NO_EDITION", "an edition entry names a ratified edition above 1") };
     if (kind === "standing-granted" && !oneLine2(a.holder, NAME_MAX))
-      return { refusal: refuse10("DOCKET_NOT_ATTRIBUTED", `a grant names its holder in one line of 1 to ${NAME_MAX} characters`) };
+      return { refusal: refuse11("DOCKET_NOT_ATTRIBUTED", `a grant names its holder in one line of 1 to ${NAME_MAX} characters`) };
     const needsReason = ["withdrawal", "standing-granted", "standing-withdrawn", "take-back", "receipt", "court-order"].includes(kind);
     if (!reasonOk(needsReason))
-      return { refusal: refuse10("DOCKET_NO_REASON", `${needsReason ? "this kind carries" : "a reason given is"} a reason of 1 to ${REASON_MAX9} characters`) };
+      return { refusal: refuse11("DOCKET_NO_REASON", `${needsReason ? "this kind carries" : "a reason given is"} a reason of 1 to ${REASON_MAX9} characters`) };
     if (kind === "receipt") {
       const f17 = recFields.from;
       if (!["response", "statement"].includes(rec.kind) || !["subject", "holder"].includes(f17.kind))
-        return { refusal: refuse10("DOCKET_NO_STANDING", "a receipt lists only a reply from the subject or from someone granted standing") };
+        return { refusal: refuse11("DOCKET_NO_STANDING", "a receipt lists only a reply from the subject or from someone granted standing") };
     }
     if (kind === "standing-withdrawn") {
       const g = this.#grant(c.case, a.grant);
-      if (!g) return { refusal: refuse10("NO_SUCH_DOCKET_ENTRY", "grant names no grant of standing on this docket", { grant: int2(a.grant) }) };
-      if (g.ended_at) return { refusal: refuse10("DOCKET_NO_STANDING", "that grant has already ended", { grant: g.seq }) };
+      if (!g) return { refusal: refuse11("NO_SUCH_DOCKET_ENTRY", "grant names no grant of standing on this docket", { grant: int2(a.grant) }) };
+      if (g.ended_at) return { refusal: refuse11("DOCKET_NO_STANDING", "that grant has already ended", { grant: g.seq }) };
       out.grant = g;
     }
     if (kind === "take-back") {
       const n = int2(a.takesBack);
       const t2 = n === null ? null : this.#entry(c.case, n);
-      if (!t2) return { refusal: refuse10("NO_SUCH_DOCKET_ENTRY", "takesBack names no public entry of this case", { takes_back: n }) };
+      if (!t2) return { refusal: refuse11("NO_SUCH_DOCKET_ENTRY", "takesBack names no public entry of this case", { takes_back: n }) };
       if (FINAL_KINDS.includes(t2.kind))
-        return { refusal: refuse10("DOCKET_WITHDRAWAL_FINAL", t2.kind === "court-order" ? "a court order is never taken back: a later order is a new entry" : "a withdrawal is never lifted", { takes_back: n, kind: t2.kind }) };
-      if (t2.kind === "take-back") return { refusal: refuse10("DOCKET_TAKE_BACK_FINAL", "a take-back is never taken back", { takes_back: n }) };
-      if (this.#takenBack(c.case).has(n)) return { refusal: refuse10("DOCKET_ENTRY_SETTLED", "that entry is already taken back", { takes_back: n }) };
+        return { refusal: refuse11("DOCKET_WITHDRAWAL_FINAL", t2.kind === "court-order" ? "a court order is never taken back: a later order is a new entry" : "a withdrawal is never lifted", { takes_back: n, kind: t2.kind }) };
+      if (t2.kind === "take-back") return { refusal: refuse11("DOCKET_TAKE_BACK_FINAL", "a take-back is never taken back", { takes_back: n }) };
+      if (this.#takenBack(c.case).has(n)) return { refusal: refuse11("DOCKET_ENTRY_SETTLED", "that entry is already taken back", { takes_back: n }) };
       out.takes_back = n;
     }
     if (kind === "disclosure") {
       const cand = str20(a.candidate);
-      if (!cand) return { refusal: refuse10("NO_SUCH_DOCKET_ENTRY", "a disclosure names the candidate it discloses") };
+      if (!cand) return { refusal: refuse11("NO_SUCH_DOCKET_ENTRY", "a disclosure names the candidate it discloses") };
       out.candidate = cand;
     }
     if (kind === "withdrawal") {
       const withdrawn = this.#withdrawn(c.case);
       const named = out.edition === "all" ? c.editions.map((e2) => e2.edition) : [out.edition];
       if (named.every((e2) => withdrawn.has(e2)))
-        return { refusal: refuse10("DOCKET_ALREADY_WITHDRAWN", out.edition === "all" ? "every ratified edition is already withdrawn" : `edition ${out.edition} is already withdrawn`, { edition: out.edition }) };
+        return { refusal: refuse11("DOCKET_ALREADY_WITHDRAWN", out.edition === "all" ? "every ratified edition is already withdrawn" : `edition ${out.edition} is already withdrawn`, { edition: out.edition }) };
     }
     const shelf = kind === "reaction" ? "reactions" : "listed";
     if (a.shelf !== shelf)
-      return { refusal: refuse10("DOCKET_WRONG_SHELF", `a ${kind} goes on ${shelf}`, { shelf: typeof a.shelf === "string" ? a.shelf : null }) };
+      return { refusal: refuse11("DOCKET_WRONG_SHELF", `a ${kind} goes on ${shelf}`, { shelf: typeof a.shelf === "string" ? a.shelf : null }) };
     const hasSummary = a.summary !== null && a.summary !== void 0 && a.summary !== "";
     if ((shelf === "reactions" || hasSummary) && !oneParagraph(a.summary, SUMMARY_MAX))
-      return { refusal: refuse10("DOCKET_NO_SUMMARY", `a summary is one paragraph of 1 to ${SUMMARY_MAX} characters`) };
+      return { refusal: refuse11("DOCKET_NO_SUMMARY", `a summary is one paragraph of 1 to ${SUMMARY_MAX} characters`) };
     if (shelf === "reactions" && !recFields.capture.archived)
-      return { refusal: refuse10(
+      return { refusal: refuse11(
         "DOCKET_NO_ARCHIVE_COPY",
         "the capture's co-archive has not succeeded; ask it again (op=reattest)",
         { capture: rec.capture_sha }
@@ -120754,25 +122408,25 @@ var Docket = class {
       if (eds.every((e2) => e2 !== null && c.editions.some((x) => x.edition === e2))) editions = [...new Set(eds)].sort((a, b) => a - b);
     }
     if (!editions)
-      return { refusal: refuse10(
+      return { refusal: refuse11(
         "DOCKET_NO_EDITION",
         "a court order names the ratified editions of this case it concerns, or all",
         { editions: c.editions.map((e2) => e2.edition) }
       ) };
     const cap = this.#capture(capture2);
     if (!cap.held)
-      return { refusal: refuse10(
+      return { refusal: refuse11(
         "DOCKET_NO_CAPTURE",
         "a court order is placed with the order itself captured, its origin locator held",
         { capture: typeof capture2 === "string" ? capture2 : null }
       ) };
     if (!words(reason, REASON_MAX9))
-      return { refusal: refuse10("DOCKET_NO_REASON", `a court order carries the manager's reason of 1 to ${REASON_MAX9} characters`) };
+      return { refusal: refuse11("DOCKET_NO_REASON", `a court order carries the manager's reason of 1 to ${REASON_MAX9} characters`) };
     const effect = o.effect;
     const hasParts = o.parts !== void 0 && o.parts !== null;
     const partsOk = Array.isArray(o.parts) && o.parts.length > 0 && o.parts.every((x) => oneLine2(x, PART_MAX)) && new Set(o.parts.map((x) => x.trim())).size === o.parts.length;
     if (!ORDER_EFFECTS.includes(effect) || PART_EFFECTS.includes(effect) && !hasParts || hasParts && !partsOk)
-      return { refusal: refuse10(
+      return { refusal: refuse11(
         "DOCKET_ORDER_UNREADABLE",
         `effect is one of ${ORDER_EFFECTS.join(", ")}; to ${PART_EFFECTS.join(", ")}, parts are the distinct parts of the edition it names, each one line of 1 to ${PART_MAX} characters`,
         { effect: typeof effect === "string" ? effect : null }
@@ -120782,7 +122436,7 @@ var Docket = class {
       const sealed = new Set(this.#orders(c.case).filter((x) => x.order.effect === "seal").flatMap((x) => x.order.parts || []));
       const none = parts.filter((x) => !sealed.has(x));
       if (none.length)
-        return { refusal: refuse10("DOCKET_NOTHING_SEALED", "an unsealing order names a part no sealing order of this case names", { parts: none }) };
+        return { refusal: refuse11("DOCKET_NOTHING_SEALED", "an unsealing order names a part no sealing order of this case names", { parts: none }) };
     }
     return { order: { effect, editions, ...parts ? { parts } : {} }, edition: editions === "all" ? "all" : editions[editions.length - 1], capture: cap };
   }
@@ -120838,17 +122492,17 @@ var Docket = class {
       if (v.refusal) return v.refusal;
       recFields = v.fields;
       if (kind !== "receipt" && kind !== rec.kind)
-        return refuse10("DOCKET_KIND_UNKNOWN", `the record entry is a ${rec.kind}`, { kind });
+        return refuse11("DOCKET_KIND_UNKNOWN", `the record entry is a ${rec.kind}`, { kind });
     } else if (!ENTRY_KINDS.includes(kind)) {
-      return refuse10("DOCKET_KIND_UNKNOWN", `kind is one of ${ENTRY_KINDS.join(", ")}`, { kind: typeof kind === "string" ? kind : null });
+      return refuse11("DOCKET_KIND_UNKNOWN", `kind is one of ${ENTRY_KINDS.join(", ")}`, { kind: typeof kind === "string" ? kind : null });
     }
     const kr = this.#kindRefusal(c, kind, { shelf, edition, summary: summary2, reason, holder: holder3, takesBack, candidate, grant }, rec, recFields);
     if (kr.refusal) return kr.refusal;
     const x = kr.out;
     const prior = this.#one(`SELECT seq, digest FROM docket_entries WHERE case_id=? ORDER BY seq DESC LIMIT 1`, c.case);
     const seq = prior ? Number(prior.seq) + 1 : 1;
-    const date = dayOf2(this.#stamp(nowMs));
-    const json17 = {
+    const date = dayOf3(this.#stamp(nowMs));
+    const json18 = {
       format: ENTRY_FORMAT,
       group: slug2,
       case: c.case,
@@ -120860,16 +122514,16 @@ var Docket = class {
       date
     };
     if (placing) {
-      json17.received = dayOf2(rec.filed_at);
-      json17.from = this.#fromName(c.case, recFields.from);
-      if (kind === "receipt") json17.reason = `${RECEIPT_REASON}: ${reason.trim()}`;
-      else json17.capture = { sha256: rec.capture_sha, origin: recFields.capture.origin, archived: recFields.capture.archived };
+      json18.received = dayOf3(rec.filed_at);
+      json18.from = this.#fromName(c.case, recFields.from);
+      if (kind === "receipt") json18.reason = `${RECEIPT_REASON}: ${reason.trim()}`;
+      else json18.capture = { sha256: rec.capture_sha, origin: recFields.capture.origin, archived: recFields.capture.archived };
       if (kind !== "receipt" && rec.answers) {
         const receipt = this.#recordState(rec.answers).pub;
-        if (receipt) json17.answers = Number(receipt.seq);
+        if (receipt) json18.answers = Number(receipt.seq);
       }
     }
-    if (str20(summary2)) json17.summary = summary2.trim();
+    if (str20(summary2)) json18.summary = summary2.trim();
     if (kind === "edition") {
       const doc = this.#call(() => this.#one(
         `SELECT text FROM case_documents WHERE case_id=? AND edition=? AND sig_armored IS NOT NULL`,
@@ -120877,21 +122531,21 @@ var Docket = class {
         x.edition
       ));
       const p3 = doc ? this.#call(() => parseFrontmatter(doc.text)) : null;
-      json17.what_changed = p3 ? (this.#call(() => whatChangedOf(p3.data, p3.body)) || {}).statement ?? null : null;
+      json18.what_changed = p3 ? (this.#call(() => whatChangedOf(p3.data, p3.body)) || {}).statement ?? null : null;
     }
-    if (kind === "disclosure") json17.answers = x.candidate;
-    if (kind === "standing-granted") json17.holder = holder3.trim();
+    if (kind === "disclosure") json18.answers = x.candidate;
+    if (kind === "standing-granted") json18.holder = holder3.trim();
     if (kind === "standing-withdrawn") {
-      json17.holder = x.grant.holder;
-      json17.answers = x.grant.seq;
+      json18.holder = x.grant.holder;
+      json18.answers = x.grant.seq;
     }
-    if (kind === "take-back") json17.takes_back = x.takes_back;
+    if (kind === "take-back") json18.takes_back = x.takes_back;
     if (ordered2) {
-      json17.capture = { sha256: capture2, origin: ordered2.capture.origin, archived: ordered2.capture.archived };
-      json17.order = ordered2.order;
+      json18.capture = { sha256: capture2, origin: ordered2.capture.origin, archived: ordered2.capture.archived };
+      json18.order = ordered2.order;
     }
-    if (kind !== "receipt" && str20(reason)) json17.reason = reason.trim();
-    const text7 = canonicalJson(json17);
+    if (kind !== "receipt" && str20(reason)) json18.reason = reason.trim();
+    const text7 = canonicalJson(json18);
     const digest2 = sha256HexSync(text7);
     const key = `${member}\0${digest2}`;
     const held2 = this.#held.get(key);
@@ -120910,8 +122564,8 @@ var Docket = class {
       expiresMs,
       case: c.case,
       seq,
-      previous: json17.previous,
-      json: json17,
+      previous: json18.previous,
+      json: json18,
       text: text7,
       digest: digest2,
       kind,
@@ -120927,29 +122581,29 @@ var Docket = class {
     const member = this.#member(by);
     const held2 = member ? this.#held.get(`${member}\0${str20(digest2)}`) : null;
     if (!member) {
-      return refuse10("MACHINE_CANNOT_PLACE_DOCKET", "a public docket entry is posted by the case's manager signed in as themselves");
+      return refuse11("MACHINE_CANNOT_PLACE_DOCKET", "a public docket entry is posted by the case's manager signed in as themselves");
     }
     if (held2) {
       const k = this.#managerRefusal({ case: held2.case, by, viewer });
       if (k.refusal) return k.refusal;
     }
     if (acknowledged !== true)
-      return refuse10("DOCKET_WARNING_NOT_ACKNOWLEDGED", "acknowledged must be exactly true: the warning was read");
+      return refuse11("DOCKET_WARNING_NOT_ACKNOWLEDGED", "acknowledged must be exactly true: the warning was read");
     if (!held2 || held2.expiresMs <= nowMs)
-      return refuse10("DOCKET_STALE", "no prepared entry from you with this digest is held, or it has expired: prepare again");
+      return refuse11("DOCKET_STALE", "no prepared entry from you with this digest is held, or it has expired: prepare again");
     const moved = () => {
       const last = this.#one(`SELECT seq, digest FROM docket_entries WHERE case_id=? ORDER BY seq DESC LIMIT 1`, held2.case);
       return (last ? Number(last.seq) : 0) !== held2.seq - 1 || (last ? last.digest : null) !== held2.previous || held2.record && this.#recordState(held2.record).state !== "pending";
     };
-    if (moved()) return refuse10("DOCKET_STALE", "the docket moved since this was prepared: prepare again", { seq: held2.seq });
+    if (moved()) return refuse11("DOCKET_STALE", "the docket moved since this was prepared: prepare again", { seq: held2.seq });
     const keys = (this.#call(() => this.credentials.attestingKeys(), []) || []).filter((k) => k.member_id === member).map((k) => k.key_b64);
     const v = await verifySshsig(String(signature ?? ""), docketStatement(held2.case, held2.seq, held2.digest), NS_DOCKET, keys);
-    if (!v.ok) return refuse10("DOCKET_SIGNATURE_REFUSED", `the signature was refused: ${v.reason}`, { verifier: v.reason });
+    if (!v.ok) return refuse11("DOCKET_SIGNATURE_REFUSED", `the signature was refused: ${v.reason}`, { verifier: v.reason });
     const at34 = this.#stamp(nowMs);
     const fixed = held2.kind === "withdrawal" ? (held2.edition === "all" ? this.#editions(held2.case).map((e2) => e2.edition) : [held2.edition]).filter((e2) => !this.#withdrawn(held2.case).has(e2)) : held2.kind === "court-order" ? held2.order.editions === "all" ? this.#editions(held2.case).map((e2) => e2.edition) : held2.order.editions : null;
     const editions = fixed ? JSON.stringify(fixed) : null;
     const out = this.record.transact(() => {
-      if (moved()) return refuse10("DOCKET_STALE", "the docket moved since this was prepared: prepare again", { seq: held2.seq });
+      if (moved()) return refuse11("DOCKET_STALE", "the docket moved since this was prepared: prepare again", { seq: held2.seq });
       this.sql.exec(
         `INSERT INTO docket_entries (case_id, seq, digest, json, kind, shelf, edition, record_entry, editions, signature,
                                                  signer_key, published_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
@@ -120991,18 +122645,18 @@ var Docket = class {
   docketDecline({ entry: entry3 = null, reason = null, by = null, viewer = null } = {}) {
     const member = this.#member(by);
     const id = str20(entry3);
-    if (!member) return refuse10("MACHINE_CANNOT_PLACE_DOCKET", "a submission is declined by the case's manager signed in as themselves");
+    if (!member) return refuse11("MACHINE_CANNOT_PLACE_DOCKET", "a submission is declined by the case's manager signed in as themselves");
     const r = this.#recordEntry(id);
     const k = r ? this.#caseFor(r.case_id, str20(viewer) || str20(by)) : null;
-    if (!r || !k || k.refusal) return refuse10("NO_SUCH_DOCKET_ENTRY", "no record entry you see answers by that id", { entry: id });
+    if (!r || !k || k.refusal) return refuse11("NO_SUCH_DOCKET_ENTRY", "no record entry you see answers by that id", { entry: id });
     if (!this.#isManager(k.c.project, member))
-      return refuse10("DOCKET_NOT_THE_MANAGER", "only an owner of the case's project declines a submission", { case: k.c.case });
+      return refuse11("DOCKET_NOT_THE_MANAGER", "only an owner of the case's project declines a submission", { case: k.c.case });
     const settled = this.#entryRefusal(k.c.case, id);
     if (settled) return settled;
-    if (!words(reason, REASON_MAX9)) return refuse10("DOCKET_NO_REASON", `a decline carries a reason of 1 to ${REASON_MAX9} characters`);
+    if (!words(reason, REASON_MAX9)) return refuse11("DOCKET_NO_REASON", `a decline carries a reason of 1 to ${REASON_MAX9} characters`);
     const at34 = this.#stamp();
     const out = this.record.transact(() => {
-      if (this.#recordState(id).state !== "pending") return refuse10("DOCKET_ENTRY_SETTLED", "the entry was settled meanwhile", { entry: id });
+      if (this.#recordState(id).state !== "pending") return refuse11("DOCKET_ENTRY_SETTLED", "the entry was settled meanwhile", { entry: id });
       this.sql.exec(`INSERT INTO docket_marks (entry_id, kind, reason, by_member, at) VALUES (?,?,?,?,?)`, id, "declined", reason, member, at34);
       return { ok: true };
     });
@@ -121024,7 +122678,7 @@ var Docket = class {
     const k = r ? this.#caseFor(r.case_id, viewer) : null;
     const s = r ? this.#recordState(id) : null;
     if (!r || !k || k.refusal || s.state !== "receipted")
-      return refuse10("NO_SUCH_DOCKET_ENTRY", "no receipted record entry you see answers by that id", { entry: id });
+      return refuse11("NO_SUCH_DOCKET_ENTRY", "no receipted record entry you see answers by that id", { entry: id });
     const pub = parse4(s.pub.json) || {};
     return {
       ok: true,
@@ -121399,16 +123053,16 @@ for (const m of ["docketFile", "docketPressure", "docketPrepare", "docketDecline
     return withRow2(await fn.apply(this, a));
   };
 }
-var instances35 = /* @__PURE__ */ new WeakMap();
+var instances36 = /* @__PURE__ */ new WeakMap();
 function docketOf(host, deps) {
-  let k = instances35.get(host);
+  let k = instances36.get(host);
   if (!k) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     k = new Docket({ ...d, host, storage, record, membership, env: d.env ?? host.env ?? null });
-    instances35.set(host, k);
+    instances36.set(host, k);
     k.migrate();
     k.purgeDeclaration = record.declarePurge("docket", DOCKET_TABLES.map((name2) => ({ name: name2, keys: [] })));
     k.countsRegistration = record.registerCounts("docket", ["docketRecordEntries", "docketPublicEntries", "docketMarks"], () => {
@@ -121624,13 +123278,13 @@ function withholdingOf(caseId, stamps, items, docketAddress3) {
       } else for (const p3 of o.parts) sealed.delete(p3);
     }
   }
-  const whole = removedWhole || sealedWhole;
+  const whole2 = removedWhole || sealedWhole;
   const withheld = /* @__PURE__ */ new Map();
   for (const it of Array.isArray(items) ? items : []) {
     if (!it || typeof it.sha256 !== "string") continue;
     const keys = [it.sha256, ...list4(it.paths)];
     const by = [];
-    if (whole) by.push(whole);
+    if (whole2) by.push(whole2);
     for (const k of keys) {
       for (const m of [removed, sealed]) {
         const o = m.get(k);
@@ -121641,7 +123295,7 @@ function withholdingOf(caseId, stamps, items, docketAddress3) {
     const prev = withheld.get(it.sha256) || [];
     withheld.set(it.sha256, [...prev, ...by.filter((o) => !prev.includes(o))]);
   }
-  return { orders, whole: !!whole, withheld };
+  return { orders, whole: !!whole2, withheld };
 }
 
 // src/public-read/reads.mjs
@@ -121730,7 +123384,7 @@ function standingsOf(fm) {
   return out;
 }
 var heldText = (v) => typeof v === "string" ? v : v && typeof v.text === "string" ? v.text : null;
-var HEX6412 = /^[0-9a-f]{64}$/;
+var HEX6413 = /^[0-9a-f]{64}$/;
 var docketAddress2 = (caseId) => `op=docketpublic&case=${encodeURIComponent(caseId)}`;
 var LENS_NO_DOCUMENT_SENTENCE = "no signed case document is held for this edition, so it states no lens here";
 var withheldRow = (row9, orders) => orders && orders.length ? { ...row9, title: null, withheld: { orders, detail: WITHHELD_SENTENCE } } : row9;
@@ -121749,7 +123403,7 @@ var SHARE_NO_DENOMINATOR_SENTENCE = "the signed document states no denominator f
 var TIMELINE_SENTENCE = "the timeline as the case document froze it at signing: what they did and what we did, apart and never interleaved, each item with its source; an item that could be placed at no time is listed apart";
 function inputHashes(inputs) {
   const shas = Array.isArray(inputs) ? inputs.map((i) => i && typeof i === "object" ? i.sha256 ?? i.sha : i) : inputs && typeof inputs === "object" ? Object.values(inputs).map((i) => i && typeof i === "object" ? i.sha256 ?? i.sha : i) : [];
-  return [...new Set(shas.map((s) => String(s ?? "").toLowerCase()).filter((s) => HEX6412.test(s)))];
+  return [...new Set(shas.map((s) => String(s ?? "").toLowerCase()).filter((s) => HEX6413.test(s)))];
 }
 var isNowhere = (when) => when === "nowhere" || !!(when && typeof when === "object" && when.nowhere === true);
 function outputOf(key, result2) {
@@ -122286,10 +123940,10 @@ var PublicRead = class {
     const manifestHeld = cRow && cRow.manifest ? safeJson22(cRow.manifest) : null;
     const index2 = this.#withheldIndex();
     const mine = theCase ? index2.editions.get(`${theCase}\0${Number(ed)}`) : null;
-    const whole = !!(mine && mine.whole);
+    const whole2 = !!(mine && mine.whole);
     const withheldBy = (sha2) => typeof sha2 === "string" && index2.bySha.get(sha2) || null;
-    const docWithheld = !!(state.document && (whole || withheldBy(state.document.doc_sha)));
-    const manifestWithheld = whole || !!withheldBy(state.manifest_sha);
+    const docWithheld = !!(state.document && (whole2 || withheldBy(state.document.doc_sha)));
+    const manifestWithheld = whole2 || !!withheldBy(state.manifest_sha);
     const heldDocument = docWithheld ? null : state.document;
     const findings = state.findings.map((fnd) => {
       const serves = [], names = [], unresolved = [];
@@ -122388,8 +124042,8 @@ var PublicRead = class {
     }));
     const withheldFiles = files.filter((f17) => f17.withheld).map((f17) => f17.path);
     const withheldFindings = findings.filter((f17) => f17.withheld).map((f17) => f17.bundle_id);
-    const withheld = whole || docWithheld || manifestWithheld || withheldFiles.length || withheldFindings.length ? {
-      whole,
+    const withheld = whole2 || docWithheld || manifestWithheld || withheldFiles.length || withheldFindings.length ? {
+      whole: whole2,
       document: docWithheld,
       manifest: manifestWithheld,
       findings: withheldFindings,
@@ -122416,7 +124070,7 @@ var PublicRead = class {
          they withhold; `[]` and null when none. */
       court_orders: mine ? mine.orders : [],
       withheld,
-      scope: whole ? null : state.scope,
+      scope: whole2 ? null : state.scope,
       /* CASE-5 / DEC-72 clause 2, ON THE ANONYMOUS PUBLIC READ, which is
          the surface the whole ruling is FOR. Clause 4's design sentence
          is *"each claim's own derived strength displayed beside the case's
@@ -122433,7 +124087,7 @@ var PublicRead = class {
       project_reference: signed3 ? workingOnOf(signed3.fm) : null,
       bar: state.bar ?? null,
       bar_detail: state.bar ? "the standard of evidence this case was held to, read from its publishing project at the moment of publication and frozen here (DEC-72). It is the CASE's property: no bar attaches to any finding, and nothing composed it across projects. Each member's own derived pair is printed beside it inside findings[], and a member may exceed it." : "NO BAR IS RECORDED for this case edition, and that is not a bar of zero. Either the case was published before a case carried its own standard, or no bar was ever declared \u2014 in which case the case claims no cleared standard and says so, because undetermined is first-class here and is never rounded to a number nobody chose.",
-      bias_acknowledgement: whole ? null : state.bias_acknowledgement ?? null,
+      bias_acknowledgement: whole2 ? null : state.bias_acknowledgement ?? null,
       /* R3 (DEC-103): the lens this edition was produced under, read from its signed document, never live. */
       lens: said7.lens,
       lens_fingerprint: said7.lens_fingerprint,
@@ -122494,7 +124148,7 @@ var PublicRead = class {
                       `convert-publishedcase.test.mjs` and the container's by
                       `convert-multifinding.test.mjs`; `op=ratify`'s is the control
                       plane's. */
-      completeness: whole ? null : state.completeness,
+      completeness: whole2 ? null : state.completeness,
       ratified_at: state.ratified_at,
       /* R29 (DEC-147 (5)): when this edition was signed and when it was published, exactly as `publication` R70
          holds them on its row (one instant for both for an edition published at signing or before T34); each
@@ -122597,7 +124251,7 @@ var PublicRead = class {
     const findings = [...members2, ...reached];
     const mats = materialsOf(doc.fm) || {};
     const rows3 = Array.isArray(mats.materials) ? mats.materials : [];
-    const text7 = (sha2) => HEX6412.test(String(sha2 ?? "")) ? heldText(this.publication.publishedMaterialText(sha2)) : null;
+    const text7 = (sha2) => HEX6413.test(String(sha2 ?? "")) ? heldText(this.publication.publishedMaterialText(sha2)) : null;
     const included = rows3.filter((m) => m && (m.included === true || m.included === "true"));
     const materials = included.map((m) => ({
       ref: m.ref,
@@ -122744,13 +124398,13 @@ var PublicRead = class {
   #editionItems(caseId, state, manifestSha, manifest) {
     const items = [];
     const doc = state && state.document;
-    if (doc && HEX6412.test(String(doc.doc_sha ?? "")))
+    if (doc && HEX6413.test(String(doc.doc_sha ?? "")))
       items.push({ sha256: doc.doc_sha, paths: [caseFilePath("case_document"), ...this.#rows(
         `SELECT path FROM published_shas WHERE sha256=? AND bundle_id=?`,
         doc.doc_sha,
         caseId
       ).map((r) => r.path)] });
-    if (HEX6412.test(String(manifestSha ?? ""))) items.push({ sha256: manifestSha, paths: ["manifest.json", "MANIFEST.json"] });
+    if (HEX6413.test(String(manifestSha ?? ""))) items.push({ sha256: manifestSha, paths: ["manifest.json", "MANIFEST.json"] });
     const files = manifest && Array.isArray(manifest.files) ? manifest.files : manifest && Array.isArray(manifest.parts) ? manifest.parts : [];
     for (const f17 of files) if (f17 && typeof f17.sha256 === "string") items.push({ sha256: f17.sha256, paths: [f17.path] });
     for (const f17 of state && state.findings || []) {
@@ -122791,7 +124445,7 @@ var PublicRead = class {
    *  the hashes asked, each a court order in force withholds, with each order (its case, edition, effect, parts and
    *  docket entry). `{ok: true, withheld: {<sha256>: [order…]}}`; a hash nothing withholds is not listed. Writes nothing. */
   withheldOf(shas) {
-    const want = (Array.isArray(shas) ? shas : String(shas ?? "").split(",")).map((s) => String(s).trim().toLowerCase()).filter((s) => HEX6412.test(s));
+    const want = (Array.isArray(shas) ? shas : String(shas ?? "").split(",")).map((s) => String(s).trim().toLowerCase()).filter((s) => HEX6413.test(s));
     if (!want.length) return { ok: true, withheld: {} };
     const { bySha } = this.#withheldIndex();
     return { ok: true, withheld: Object.fromEntries(want.filter((s) => bySha.has(s)).map((s) => [s, bySha.get(s)])) };
@@ -123047,16 +124701,16 @@ var PublicRead = class {
     return legacy.map((r) => ({ case_id: r.case_id, edition: Number(r.edition) }));
   }
 };
-var instances36 = /* @__PURE__ */ new WeakMap();
+var instances37 = /* @__PURE__ */ new WeakMap();
 function publicReadOf(host, deps) {
-  let r = instances36.get(host);
+  let r = instances37.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const publication = d.publication || publicationOf(host);
     const docket = d.docket || docketOf(host);
     r = new PublicRead({ storage, publication, docket });
-    instances36.set(host, r);
+    instances37.set(host, r);
   }
   return r;
 }
@@ -123415,7 +125069,7 @@ function climb(hash, pos, path) {
   }
   return h;
 }
-var HEX6413 = /^[0-9a-f]{64}$/;
+var HEX6414 = /^[0-9a-f]{64}$/;
 var b64ToBytes3 = (s) => {
   try {
     return Uint8Array.from(atob(String(s)), (c) => c.charCodeAt(0));
@@ -123426,9 +125080,9 @@ var b64ToBytes3 = (s) => {
 function verifyOpening(opening) {
   try {
     const o = opening && typeof opening === "object" ? opening : null;
-    if (!o || !HEX6413.test(o.seal) || !HEX6413.test(o.week_root) || !Array.isArray(o.leaves))
+    if (!o || !HEX6414.test(o.seal) || !HEX6414.test(o.week_root) || !Array.isArray(o.leaves))
       return { ok: false, leaves: false, seal: false, timestamp: "not_bound", detail: "not an opening" };
-    const okPath = (p3, size) => Array.isArray(p3) && 2 ** p3.length === size && p3.every((x) => HEX6413.test(x));
+    const okPath = (p3, size) => Array.isArray(p3) && 2 ** p3.length === size && p3.every((x) => HEX6414.test(x));
     const leaves = o.leaves.length > 0 && o.leaves.every((x) => x && x.leaf && Number.isInteger(x.position) && x.position >= 0 && x.position < o.size && okPath(x.path, o.size) && climb(leafHash(x.leaf), x.position, x.path) === o.seal);
     const seal = Number.isInteger(o.seal_position) && okPath(o.seal_path, o.week_size) && climb(weekLeafHash(o.seal), o.seal_position, o.seal_path) === o.week_root;
     let timestamp = "untimestamped";
@@ -123514,7 +125168,7 @@ function withRow3(r) {
   const row9 = rowOf8(r.reason);
   return row9 ? { ...r, code: r.code ?? r.reason, check: row9.check, translation: row9.translation } : r;
 }
-var refuse11 = (code, detail, extra) => withRow3({ ok: false, reason: code, detail, ...extra || {} });
+var refuse12 = (code, detail, extra) => withRow3({ ok: false, reason: code, detail, ...extra || {} });
 var required = (op, argument, shape) => ({
   ok: false,
   reason: "REQUIRED_ARGUMENT_MISSING",
@@ -123676,31 +125330,31 @@ var NetworkNotices = class {
     if (sight) return { refusal: sight };
     const member = this.#member(by);
     if (!str22(by) || isMachineIdentity(by) || !member)
-      return { refusal: refuse11("MACHINE_CANNOT_POST_NOTICE", str22(by) ? "a notice is prepared and posted by a member signed in as themselves, and this caller is not one" : "no member is named as the one acting: this call carries nobody") };
+      return { refusal: refuse12("MACHINE_CANNOT_POST_NOTICE", str22(by) ? "a notice is prepared and posted by a member signed in as themselves, and this caller is not one" : "no member is named as the one acting: this call carries nobody") };
     if (!this.#call(() => this.membership.isProjectOwner(pid, member), false))
-      return { refusal: refuse11("NOTICE_NOT_THE_OWNER", "only an owner of the project posts its notice", { project: pid }) };
+      return { refusal: refuse12("NOTICE_NOT_THE_OWNER", "only an owner of the project posts its notice", { project: pid }) };
     if (this.#closed(pid)) {
       const nid = str22(notice);
       const stopping = final === "stopped" && nid && this.#notice(nid)?.project === pid && this.#latestRevision(nid)?.status !== "stopped" && ["open", "closed"].includes(this.#status(nid));
-      if (!stopping) return { refusal: refuse11("NOTICE_PROJECT_CLOSED", "the project is closed; only a stop of its open notice is taken", { project: pid }) };
+      if (!stopping) return { refusal: refuse12("NOTICE_PROJECT_CLOSED", "the project is closed; only a stop of its open notice is taken", { project: pid }) };
     }
     const slug2 = this.#slug();
-    if (!slug2) return { refusal: refuse11("NOTICE_NO_GROUP_SLUG", "no group slug is recorded, and there are no anonymous notices") };
+    if (!slug2) return { refusal: refuse12("NOTICE_NO_GROUP_SLUG", "no group slug is recorded, and there are no anonymous notices") };
     if (!await this.#keyBound())
-      return { refusal: refuse11("NOTICE_NO_INSTANCE_KEY", "your group's Civicsmith holds no signing key of its own, and a notice is never published without its signed level") };
+      return { refusal: refuse12("NOTICE_NO_INSTANCE_KEY", "your group's Civicsmith holds no signing key of its own, and a notice is never published without its signed level") };
     return { pid, member, slug: slug2 };
   }
   /* R1's field refusals: wording, body, matter, handoff; `since` and its bounds (R27). */
   #fieldRefusal({ wording, body, matter, handoff, final, since }, pid, todayMs) {
     const opt = (v, max) => v === void 0 || v === null || v === "" || oneLine3(v, max);
     if (!oneLine3(wording, WORDING_MAX) || !opt(body, SUBJECT_MAX) || !opt(matter, SUBJECT_MAX) || !opt(handoff, HANDOFF_MAX) || str22(handoff) && final !== "stopped")
-      return refuse11("NOTICE_WORDING_MALFORMED", `the wording is one line of 1 to ${WORDING_MAX} characters; a body or matter one line of at most ${SUBJECT_MAX}; a handoff one line of at most ${HANDOFF_MAX}, with a stop only`);
+      return refuse12("NOTICE_WORDING_MALFORMED", `the wording is one line of 1 to ${WORDING_MAX} characters; a body or matter one line of at most ${SUBJECT_MAX}; a handoff one line of at most ${HANDOFF_MAX}, with a stop only`);
     const s = parseDate(since);
-    if (s === null) return refuse11("NOTICE_SINCE_MALFORMED", "since is a date, YYYY-MM-DD");
+    if (s === null) return refuse12("NOTICE_SINCE_MALFORMED", "since is a date, YYYY-MM-DD");
     const created2 = this.#createdDate(pid);
     if (created2 && since < created2)
-      return refuse11("NOTICE_SINCE_BEFORE_PROJECT", `the project was created on ${created2}`, { project_created: created2 });
-    if (s > todayMs) return refuse11("NOTICE_SINCE_IN_FUTURE", `since is later than today (${dateOf(todayMs)})`);
+      return refuse12("NOTICE_SINCE_BEFORE_PROJECT", `the project was created on ${created2}`, { project_created: created2 });
+    if (s > todayMs) return refuse12("NOTICE_SINCE_IN_FUTURE", `since is later than today (${dateOf(todayMs)})`);
     return null;
   }
   /* R1's last refusal and R6, R11: a first revision while a notice is open; a change to a notice that is not the
@@ -123708,9 +125362,9 @@ var NetworkNotices = class {
   #noticeRefusal({ notice, final, fields }, pid) {
     const nid = str22(notice);
     if (!nid) {
-      if (final === "stopped") return { refusal: refuse11("NOTICE_NOT_OPEN", "a stop names the notice it stops", { notice: null }) };
+      if (final === "stopped") return { refusal: refuse12("NOTICE_NOT_OPEN", "a stop names the notice it stops", { notice: null }) };
       const open = this.#openNotice(pid);
-      if (open) return { refusal: refuse11(
+      if (open) return { refusal: refuse12(
         "NOTICE_ALREADY_OPEN",
         "the project already has an open notice; a change is a new revision of it",
         { notice: open.notice_id }
@@ -123722,12 +125376,12 @@ var NetworkNotices = class {
     const rev = n ? this.#latestRevision(nid) : null;
     const status = n ? this.#status(nid) : null;
     if (!n || n.project !== pid || !latest3 || latest3.notice_id !== nid || !rev || rev.status === "stopped" || !(status === "open" || status === "closed" && final === "stopped"))
-      return { refusal: refuse11("NOTICE_NOT_OPEN", "that notice is not this project's open notice", { notice: nid }) };
+      return { refusal: refuse12("NOTICE_NOT_OPEN", "that notice is not this project's open notice", { notice: nid }) };
     const prior = parse5(rev.json) || {};
     if (fields.since < prior.since)
-      return { refusal: refuse11("NOTICE_SINCE_EARLIER", `the notice already says the work began on ${prior.since}`, { notice: nid }) };
+      return { refusal: refuse12("NOTICE_SINCE_EARLIER", `the notice already says the work began on ${prior.since}`, { notice: nid }) };
     if (final !== "stopped" && ["wording", "body", "matter", "since", "collaborate"].every((k) => (prior[k] ?? null) === (fields[k] ?? null)))
-      return { refusal: refuse11("NOTICE_UNCHANGED", "the revision changes nothing the notice says", { notice: nid }) };
+      return { refusal: refuse12("NOTICE_UNCHANGED", "the revision changes nothing the notice says", { notice: nid }) };
     return { n: rev.revision + 1, previous: rev.digest, prior, nid };
   }
   /* R2: the notice id a first revision takes, reserved per project per UTC day so two identical prepares agree. */
@@ -123810,7 +125464,7 @@ var NetworkNotices = class {
     const member = this.#member(by);
     const held2 = member ? this.#held.get(`${member}\0${str22(digest2)}`) : null;
     if (!str22(by) || isMachineIdentity(by) || !member) {
-      return refuse11("MACHINE_CANNOT_POST_NOTICE", "a notice is posted by a member signed in as themselves");
+      return refuse12("MACHINE_CANNOT_POST_NOTICE", "a notice is posted by a member signed in as themselves");
     }
     if (held2) {
       const c = await this.#callerRefusal({ project: held2.pid, by, viewer, final: held2.final, notice: held2.firstRevision ? null : held2.nid }, "noticepost");
@@ -123823,12 +125477,12 @@ var NetworkNotices = class {
       if (st.refusal && st.refusal.reason !== "NOTICE_UNCHANGED") return st.refusal;
     }
     if (acknowledged !== true)
-      return refuse11("NOTICE_WARNING_NOT_ACKNOWLEDGED", "acknowledged must be exactly true: the warning was read");
+      return refuse12("NOTICE_WARNING_NOT_ACKNOWLEDGED", "acknowledged must be exactly true: the warning was read");
     if (!held2 || held2.expiresMs <= nowMs)
-      return refuse11("NOTICE_STALE", "no prepared notice from you with this digest is held, or it has expired: prepare again");
+      return refuse12("NOTICE_STALE", "no prepared notice from you with this digest is held, or it has expired: prepare again");
     const keys = (this.#call(() => this.credentials.attestingKeys(), []) || []).filter((k) => k.member_id === member).map((k) => k.key_b64);
     const v = await verifySshsig(String(signature ?? ""), noticeStatement(held2.nid, held2.n, held2.digest), NS_NOTICE, keys);
-    if (!v.ok) return refuse11("NOTICE_SIGNATURE_REFUSED", `the signature was refused: ${v.reason}`, { verifier: v.reason });
+    if (!v.ok) return refuse12("NOTICE_SIGNATURE_REFUSED", `the signature was refused: ${v.reason}`, { verifier: v.reason });
     const at34 = this.#stamp(nowMs);
     const att = this.#attestation({
       nid: held2.nid,
@@ -123839,15 +125493,15 @@ var NetworkNotices = class {
       revisionStatus: held2.revision.status
     });
     const signed3 = await this.#sign(att.digest);
-    if (!signed3) return refuse11("NOTICE_NO_INSTANCE_KEY", "your group's Civicsmith holds no signing key of its own, and a notice is never published without its signed level");
+    if (!signed3) return refuse12("NOTICE_NO_INSTANCE_KEY", "your group's Civicsmith holds no signing key of its own, and a notice is never published without its signed level");
     const out = this.record.transact(() => {
       const latest3 = this.#latestRevision(held2.nid);
       if ((latest3 ? latest3.revision : 0) !== held2.n - 1 || held2.firstRevision && this.#notice(held2.nid))
-        return refuse11("NOTICE_STALE", "the notice moved since this was prepared: prepare again");
+        return refuse12("NOTICE_STALE", "the notice moved since this was prepared: prepare again");
       if (held2.firstRevision) {
         const rec = this.#call(() => this.record.recordOpaqueId(held2.nid), null);
         if (!rec || rec.ok !== true)
-          return refuse11(
+          return refuse12(
             "NOTICE_STALE",
             "the notice id this was prepared with is already spent: prepare again",
             { opaque_id: rec ? rec.reason ?? null : null }
@@ -123931,7 +125585,7 @@ var NetworkNotices = class {
                                               LEFT JOIN nn_week_roots r ON r.week = s.week
                                              WHERE s.project = ? AND s.week IN (${weeks.map(() => "?").join(",")}) ORDER BY s.week`, pid, ...weeks).map((r) => ({ week: r.week, seal: r.seal, timestamp_sha: r.token_sha ?? null, untimestamped: !!r.untimestamped })) : [];
     const openings = this.#rows(`SELECT case_id, edition, week FROM nn_openings WHERE project=? ORDER BY case_id, edition, week`, pid).map((r) => ({ case: r.case_id, edition: Number(r.edition), week: r.week }));
-    const json17 = {
+    const json18 = {
       format: ATTESTATION_FORMAT,
       group: this.#slug(),
       notice: nid,
@@ -123944,7 +125598,7 @@ var NetworkNotices = class {
       seals,
       openings
     };
-    return { json: json17, digest: sha256HexSync(canonicalJson(json17)) };
+    return { json: json18, digest: sha256HexSync(canonicalJson(json18)) };
   }
   /* R13: signed with the instance key over attestation's statement (its R5) under the new attestation's own format,
      `ATTESTATION_FORMAT`; one issued before T31 stays signed, and verifies, over its earlier label. Null when no key is
@@ -124396,16 +126050,16 @@ var NetworkNotices = class {
         };
       }
       const a = this.#one(`SELECT * FROM nn_attestations WHERE seq=?`, r.n);
-      const json17 = parse5(a.json);
+      const json18 = parse5(a.json);
       return {
         type: "attestation",
         notice: a.notice_id,
         kind: a.kind,
         digest: a.digest,
-        json: json17,
+        json: json18,
         signature: { instance_signature: a.signature, key_id: a.key_id },
         published_at: a.published_at,
-        openings: this.#openingsFor(json17)
+        openings: this.#openingsFor(json18)
       };
     });
     const last = rows3.at(-1);
@@ -124534,16 +126188,16 @@ for (const m of ["prepareNotice", "postNotice"]) {
     return withRow3(await fn.apply(this, a));
   };
 }
-var instances37 = /* @__PURE__ */ new WeakMap();
+var instances38 = /* @__PURE__ */ new WeakMap();
 function networkNoticesOf(host, deps) {
-  let n = instances37.get(host);
+  let n = instances38.get(host);
   if (!n) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     n = new NetworkNotices({ ...d, host, storage, record, membership, env: d.env ?? host.env ?? null });
-    instances37.set(host, n);
+    instances38.set(host, n);
     n.migrate();
     record.declarePurge("network-notices", NETWORK_NOTICES_TABLES.map((name2) => ({ name: name2, keys: [] })));
     const publicRead = d.publicRead || publicReadOf(host);
@@ -125977,8 +127631,8 @@ var byJson = (a, b) => {
 var listOf5 = (x, key) => Array.isArray(x) ? x : x && typeof x === "object" && x.ok !== false && Array.isArray(x[key]) ? x[key] : null;
 function keyFingerprint(keyB64) {
   if (!str23(keyB64)) return null;
-  const hex7 = createSha256().update(b64ToBytes(keyB64.trim())).hex();
-  const bytes2 = Uint8Array.from(hex7.match(/../g), (h) => parseInt(h, 16));
+  const hex9 = createSha256().update(b64ToBytes(keyB64.trim())).hex();
+  const bytes2 = Uint8Array.from(hex9.match(/../g), (h) => parseInt(h, 16));
   return `SHA256:${btoa(String.fromCharCode(...bytes2)).replace(/=+$/, "")}`;
 }
 function moneyFactsNamed(people) {
@@ -126073,15 +127727,15 @@ function checkedOf({ text: text7, fm, caseId, project, signer, keyB64, at: at34,
     }
   }
   {
-    let holds;
-    if (!project) holds = { held: false };
+    let holds2;
+    if (!project) holds2 = { held: false };
     else if (!reads.holdsOn) unreadable2.push({ part: "holds", what: "the litigation holds: no hold reader is registered (R45)" });
     else {
       const h = ask2("holds", "the litigation holds", () => reads.holdsOn({ project }));
       if (h !== void 0 && (!h || typeof h !== "object" || typeof h.held !== "boolean"))
         unreadable2.push({ part: "holds", what: "the litigation holds" });
       else if (h !== void 0)
-        holds = h.held ? { held: true, since: h.since ?? null, recorded_by: h.recorded_by ?? null } : { held: false };
+        holds2 = h.held ? { held: true, since: h.since ?? null, recorded_by: h.recorded_by ?? null } : { held: false };
     }
     const editions = ask2("holds", "the case's ratified editions", () => reads.ratifiedEditions(caseId));
     const stamps = [];
@@ -126091,19 +127745,19 @@ function checkedOf({ text: text7, fm, caseId, project, signer, keyB64, at: at34,
       if (list6 === null) unreadable2.push({ part: "holds", what: `the stamps on edition ${edition}` });
       else if (list6 !== void 0) stamps.push({ edition, stamps: list6 });
     }
-    if (!unreadable2.some((u) => u.part === "holds") && holds !== void 0)
-      parts.holds = { project: holds, stamps };
+    if (!unreadable2.some((u) => u.part === "holds") && holds2 !== void 0)
+      parts.holds = { project: holds2, stamps };
   }
   parts.signer_key = keyFingerprint(keyB64);
   if (unreadable2.length) return { ok: false, unreadable: unreadable2 };
   return { ok: true, checked: Object.fromEntries(CHECKED_PARTS.map((p3) => [p3, canonicalJson(parts[p3] ?? null)])) };
 }
-function itemsOf2(part, json17) {
+function itemsOf2(part, json18) {
   let v = null;
   try {
-    v = JSON.parse(json17);
+    v = JSON.parse(json18);
   } catch {
-    return [String(json17)];
+    return [String(json18)];
   }
   if (part === "sources" && v) return [
     ...(v.sources || []).map((r) => canonicalJson({ source: r })),
@@ -127177,8 +128831,8 @@ async function publishedRoutes({ op, url, env, stub }) {
 }
 
 // src/ratification/ops.mjs
-function storeRefused(out, { json: json17, storeRefusal: storeRefusal2 }) {
-  return typeof storeRefusal2 === "function" ? storeRefusal2(out) : json17(out.reply.body, out.reply.status);
+function storeRefused(out, { json: json18, storeRefusal: storeRefusal2 }) {
+  return typeof storeRefusal2 === "function" ? storeRefusal2(out) : json18(out.reply.body, out.reply.status);
 }
 function ratificationOp(op, req, stub, ctx) {
   if (op === "caseratify") return caseRatifyOp(req, stub, ctx);
@@ -127195,7 +128849,7 @@ async function publishAtOp(req, stub, ctx) {
 async function caseCeremony(req, stub, ctx, later2) {
   const {
     env,
-    json: json17,
+    json: json18,
     doAnswer: doAnswer2,
     storeSilent: storeSilent2,
     storeRefusal: storeRefusal2,
@@ -127207,20 +128861,20 @@ async function caseCeremony(req, stub, ctx, later2) {
     sessRights
   } = ctx;
   const assembleCaseContainer2 = ctx.assembleCaseContainer || assembleCaseContainer;
-  const relay2 = { json: json17, storeRefusal: storeRefusal2 };
+  const relay2 = { json: json18, storeRefusal: storeRefusal2 };
   if (aiCred && isMachineIdentity(`${MACHINE_CLASS_PREFIX}${cls3}/${aiCred.tokenId}`))
-    return json17(machineCaseRefusal(cls3), 403);
+    return json18(machineCaseRefusal(cls3), 403);
   if (!viaSession)
-    return json17(operatorCaseRefusal(cls3), 403);
+    return json18(operatorCaseRefusal(cls3), 403);
   const body = await req.json().catch(() => null);
   if (!body?.caseId || !Number.isInteger(body?.edition) || !body?.expectedSha || typeof body?.sig !== "string")
-    return json17({
+    return json18({
       ok: false,
       reason: "MALFORMED",
       detail: "caseratify requires caseId, edition (integer), expectedSha, and sig (armored SSH signature over the case document's sha)"
     }, 400);
   if (later2 && (!body.at || typeof body.at !== "object" || Array.isArray(body.at)))
-    return json17({
+    return json18({
       ok: false,
       reason: "MALFORMED",
       detail: "publishat requires caseId, edition (integer), expectedSha, sig (armored SSH signature over the case document's sha) and at ({date: YYYY-MM-DD, time: HH:MM}, in the group's time zone)"
@@ -127231,14 +128885,14 @@ async function caseCeremony(req, stub, ctx, later2) {
   if (factsOut.refused) return storeRefused(factsOut, relay2);
   if (!factsOut.answered) return storeSilent2("caseratify/facts", factsOut.correlation);
   const facts = factsOut.result;
-  if (!facts.ok) return json17({ ok: false, ...facts, store: storeName, tokenClass: cls3 }, 404);
+  if (!facts.ok) return json18({ ok: false, ...facts, store: storeName, tokenClass: cls3 }, 404);
   const attr2 = facts.attribution || { reached: [], legacy: [], stated: [], current: [] };
   for (const refusal29 of [
     testimonyCaseRefusal(facts.doc.case_id, facts.doc.edition, attr2.legacy),
     attributionUnchosenRefusal(facts.doc.case_id, facts.doc.edition, attr2),
     attributionStaleRefusal(facts.doc.case_id, facts.doc.edition, attr2)
   ])
-    if (refusal29) return json17({ ...refusal29, store: storeName, tokenClass: cls3 }, 409);
+    if (refusal29) return json18({ ...refusal29, store: storeName, tokenClass: cls3 }, 409);
   const anonOut = await doAnswer2(stub.fetch("http://do/casetestimony", {
     method: "POST",
     body: JSON.stringify({ caseId: facts.doc.case_id, edition: Number(facts.doc.edition) })
@@ -127246,9 +128900,9 @@ async function caseCeremony(req, stub, ctx, later2) {
   if (anonOut.refused) return storeRefused(anonOut, relay2);
   if (!anonOut.answered) return storeSilent2("caseratify/testimony", anonOut.correlation);
   if (anonOut.result && anonOut.result.refusal)
-    return json17({ ...anonOut.result.refusal, store: storeName, tokenClass: cls3 }, 409);
+    return json18({ ...anonOut.result.refusal, store: storeName, tokenClass: cls3 }, 409);
   if (facts.doc.doc_sha !== body.expectedSha)
-    return json17({
+    return json18({
       ok: false,
       reason: "CASE_RATIFY_STALE",
       detail: "the case document has changed since it was reviewed; read it again and re-sign",
@@ -127258,7 +128912,7 @@ async function caseCeremony(req, stub, ctx, later2) {
       tokenClass: cls3
     }, 409);
   if (!facts.signers.length)
-    return json17({
+    return json18({
       ok: false,
       reason: "NO_SIGNERS",
       detail: "no active registered signing keys; an admin must register a member key before anything can be ratified",
@@ -127272,7 +128926,7 @@ async function caseCeremony(req, stub, ctx, later2) {
     facts.signers.map((s) => s.key_b64)
   );
   if (!sv.ok)
-    return json17({
+    return json18({
       ok: false,
       reason: "SIG_" + sv.reason,
       ...sv.keyB64 ? { keyB64: sv.keyB64 } : {},
@@ -127293,9 +128947,9 @@ async function caseCeremony(req, stub, ctx, later2) {
   if (!gateOut.answered) return storeSilent2("caseratify/gate", gateOut.correlation);
   const gate = gateOut.result || {};
   if (gate.reason && !Array.isArray(gate.findings))
-    return json17({ ok: false, ...gate, store: storeName, tokenClass: cls3 }, gate.reason === "CASE_RATIFY_STALE" ? 409 : 404);
+    return json18({ ok: false, ...gate, store: storeName, tokenClass: cls3 }, gate.reason === "CASE_RATIFY_STALE" ? 409 : 404);
   if (!gate.ok)
-    return json17({
+    return json18({
       ok: false,
       reason: "GATE_REFUSED",
       gateVersion: gate.gateVersion,
@@ -127323,13 +128977,13 @@ async function caseCeremony(req, stub, ctx, later2) {
     if (!sOut.answered) return storeSilent2("publishat/schedule", sOut.correlation);
     const sr = sOut.result || {};
     if (!sr.ok)
-      return json17({
+      return json18({
         ok: false,
         ...sr.reason ? sr : { reason: "PUBLISH_AT_FAILED", detail: sr },
         store: storeName,
         tokenClass: cls3
       }, 409);
-    return json17({
+    return json18({
       ok: true,
       ...sr,
       gateVersion: gate.gateVersion,
@@ -127357,7 +129011,7 @@ async function caseCeremony(req, stub, ctx, later2) {
   const answered = out.result;
   const { completedCase, evidenceMaterials, ...r } = answered || {};
   if (!answered || !r.ok)
-    return json17({
+    return json18({
       ok: false,
       ...r.reason ? r : { reason: "CASE_PUBLISH_FAILED", detail: answered },
       store: storeName,
@@ -127365,7 +129019,7 @@ async function caseCeremony(req, stub, ctx, later2) {
     }, 409);
   const materialsCopied = await copyMaterials(env, storeName, Array.isArray(evidenceMaterials) ? evidenceMaterials : []);
   const container2 = completedCase && completedCase.complete && !completedCase.manifest_sha ? await assembleCaseContainer2({ env, stub, storeName, cs: completedCase, via: "caseratify" }) : null;
-  return json17({
+  return json18({
     ok: true,
     ...r,
     gateVersion: gate.gateVersion,
@@ -127412,7 +129066,7 @@ async function copyMaterials(env, storeName, shas) {
 async function ratifyOp(req, stub, ctx) {
   const {
     env,
-    json: json17,
+    json: json18,
     doAnswer: doAnswer2,
     storeSilent: storeSilent2,
     storeRefusal: storeRefusal2,
@@ -127427,10 +129081,10 @@ async function ratifyOp(req, stub, ctx) {
     STORE_SILENT_DETAIL: STORE_SILENT_DETAIL2
   } = ctx;
   const assembleCaseContainer2 = ctx.assembleCaseContainer || assembleCaseContainer;
-  const relay2 = { json: json17, storeRefusal: storeRefusal2 };
+  const relay2 = { json: json18, storeRefusal: storeRefusal2 };
   const op = "ratify";
   if (aiCred && isMachineIdentity(`${MACHINE_CLASS_PREFIX}${cls3}/${aiCred.tokenId}`))
-    return json17({
+    return json18({
       ok: false,
       reason: "MACHINE_CANNOT_RATIFY",
       ...rowOf9("MACHINE_CANNOT_RATIFY"),
@@ -127439,7 +129093,7 @@ async function ratifyOp(req, stub, ctx) {
       detail: "ratifying is a member's signed act. An assistant's credential may prepare the finding and may never carry the signature in, whoever's key made it (DEC-24 rule 4)."
     }, 403);
   if (!viaSession)
-    return json17({
+    return json18({
       ok: false,
       reason: "OPERATOR_TOKEN_CANNOT_RATIFY",
       ...rowOf9("OPERATOR_TOKEN_CANNOT_RATIFY"),
@@ -127449,15 +129103,15 @@ async function ratifyOp(req, stub, ctx) {
     }, 403);
   const body = await req.json().catch(() => null);
   if (!body?.bundleId || !body?.expectedSha || typeof body?.sig !== "string")
-    return json17({ ok: false, reason: "MALFORMED", detail: "ratify requires bundleId, expectedSha, and sig (armored SSH signature)" }, 400);
+    return json18({ ok: false, reason: "MALFORMED", detail: "ratify requires bundleId, expectedSha, and sig (armored SSH signature)" }, 400);
   const ratViewer = encodeURIComponent(viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls3}`);
   const factsOut = await doAnswer2(stub.fetch(`http://do/gatefacts?id=${encodeURIComponent(body.bundleId)}&viewer=${ratViewer}`));
   if (factsOut.refused) return storeRefused(factsOut, relay2);
   if (!factsOut.answered) return storeSilent2("ratify/gatefacts", factsOut.correlation);
   const facts = factsOut.result;
-  if (!facts.ok) return json17({ ...facts, store: storeName, tokenClass: cls3 }, 404);
+  if (!facts.ok) return json18({ ...facts, store: storeName, tokenClass: cls3 }, 404);
   if (normalizeType(facts.row.object_type) === "project")
-    return json17({
+    return json18({
       ok: false,
       reason: "RATIFY_PROJECT_BUNDLE",
       ...rowOf9("RATIFY_PROJECT_BUNDLE"),
@@ -127468,7 +129122,7 @@ async function ratifyOp(req, stub, ctx) {
     }, 409);
   const legacy = Array.isArray(facts.testimonyLegacy) ? facts.testimonyLegacy : [];
   if (facts.testimony && facts.testimony.self.length && legacy.includes(body.bundleId))
-    return json17({
+    return json18({
       ok: false,
       reason: "TESTIMONY_UNPUBLISHABLE",
       ...rowOf9("TESTIMONY_UNPUBLISHABLE"),
@@ -127478,7 +129132,7 @@ async function ratifyOp(req, stub, ctx) {
       tokenClass: cls3
     }, 409);
   if (facts.testimony && facts.testimony.via.some((v) => legacy.includes(v.observation)))
-    return json17({
+    return json18({
       ok: false,
       reason: "TESTIMONY_CITED_UNPUBLISHABLE",
       ...rowOf9("TESTIMONY_CITED_UNPUBLISHABLE"),
@@ -127489,7 +129143,7 @@ async function ratifyOp(req, stub, ctx) {
       tokenClass: cls3
     }, 409);
   if (facts.testimony && facts.testimony.self.length && !facts.attributionStated)
-    return json17({
+    return json18({
       ok: false,
       reason: "ATTRIBUTION_UNSTATED",
       ...rowOf9("ATTRIBUTION_UNSTATED"),
@@ -127499,7 +129153,7 @@ async function ratifyOp(req, stub, ctx) {
       tokenClass: cls3
     }, 409);
   if (facts.row.bundle_sha !== body.expectedSha)
-    return json17({
+    return json18({
       ok: false,
       reason: "RATIFY_STALE",
       detail: "the record has changed since it was reviewed; read it again and re-sign",
@@ -127509,7 +129163,7 @@ async function ratifyOp(req, stub, ctx) {
       tokenClass: cls3
     }, 409);
   if (!facts.signers.length)
-    return json17({
+    return json18({
       ok: false,
       reason: "NO_SIGNERS",
       detail: "no active registered signing keys; an admin must register a member key before anything can be ratified",
@@ -127523,7 +129177,7 @@ async function ratifyOp(req, stub, ctx) {
     facts.signers.map((s) => s.key_b64)
   );
   if (!sv.ok)
-    return json17({
+    return json18({
       ok: false,
       reason: "SIG_" + sv.reason,
       ...sv.keyB64 ? { keyB64: sv.keyB64 } : {},
@@ -127569,7 +129223,7 @@ async function ratifyOp(req, stub, ctx) {
     parseFrontmatter
   );
   if (!gate.ok)
-    return json17({
+    return json18({
       ok: false,
       reason: "GATE_REFUSED",
       gateVersion: gate.gateVersion,
@@ -127600,8 +129254,8 @@ async function ratifyOp(req, stub, ctx) {
     }
   }
   const partShaSet = /* @__PURE__ */ new Set();
-  for (const [whole, parts] of partedRows) {
-    const at34 = (facts.registers || []).find((r) => r.capture_sha === whole)?.path || whole;
+  for (const [whole2, parts] of partedRows) {
+    const at34 = (facts.registers || []).find((r) => r.capture_sha === whole2)?.path || whole2;
     parts.forEach((p3, i) => {
       partShaSet.add(p3.sha256);
       if (!shas.some((s) => s.sha256 === p3.sha256))
@@ -127657,7 +129311,7 @@ async function ratifyOp(req, stub, ctx) {
   if (!pubOut.answered) return storeSilent2("ratify/publish", pubOut.correlation);
   const pub = pubOut.result;
   if (!pub?.ok)
-    return json17(
+    return json18(
       {
         ok: false,
         ...pub && pub.reason ? pub : { reason: "PUBLISH_FAILED", detail: pub },
@@ -127836,7 +129490,7 @@ async function ratifyOp(req, stub, ctx) {
       } }
     };
   }
-  return json17({
+  return json18({
     ok: true,
     bundleId: body.bundleId,
     bundleSha: body.expectedSha,
@@ -129362,13 +131016,13 @@ var Ratification = class _Ratification {
   }
 };
 var evidenceShas = (x) => (Array.isArray(x) ? x : Array.isArray(x?.materials) ? x.materials : []).filter((m) => m && m.held === "evidence" && typeof m.sha === "string").map((m) => m.sha);
-var instances38 = /* @__PURE__ */ new WeakMap();
+var instances39 = /* @__PURE__ */ new WeakMap();
 var MINT_SEED = Object.freeze([
   Object.freeze(["CASE", "cases", "case_id"]),
   Object.freeze(["CASE", "case_documents", "case_id"])
 ]);
 function ratificationOf(host, deps) {
-  let r = instances38.get(host);
+  let r = instances39.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -129376,7 +131030,7 @@ function ratificationOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     r = new Ratification({ ...d, host, storage, record, membership, promotion });
-    instances38.set(host, r);
+    instances39.set(host, r);
     promotion.registerCaseCatalogue("ratification", checkCaseDocument);
     (d.capture || captureOf(host)).registerReader("batch-examination", "ratification", (id) => r.examine(id));
     promotion.registerStep("ratification", { check: (c) => r.check(c) });
@@ -131789,9 +133443,9 @@ function crossFoot(ix) {
     const rFrom = C2[0].from, rTo = C2[0].to, cFrom = R6[0].from, cTo = R6[0].to;
     if (!rows3.every((x) => x >= rFrom && x <= rTo) || !cols.every((x) => x >= cFrom && x <= cTo)) continue;
     if (rows3.length !== rTo - rFrom + 1 || cols.length !== cTo - cFrom + 1) continue;
-    const total2 = (ls) => {
+    const total2 = (ls2) => {
       let acc = { value: "0", sign: "+", precision: "exact" };
-      for (const l2 of ls) {
+      for (const l2 of ls2) {
         if (!isNumberCell(l2.f)) return null;
         acc = add(acc, numberOf(l2.f));
         if (!acc || acc.refused) return null;
@@ -132143,8 +133797,8 @@ function buildExport(calc, tables) {
           const a = numberAt(st.numerator), b = numberAt(st.denominator);
           f17 = a && b ? rounded(`${a.ref}/${b.ref}`, a.figure, b.figure, places, mode) : null;
         } else {
-          const part = setOf(st.part, sets, steps, (n) => trace.get(n)), whole = setOf(st.whole, sets, steps, (n) => trace.get(n));
-          const num2 = part && setFormula(part, st.field ?? null), den = whole && setFormula(whole, st.field ?? null);
+          const part = setOf(st.part, sets, steps, (n) => trace.get(n)), whole2 = setOf(st.whole, sets, steps, (n) => trace.get(n));
+          const num2 = part && setFormula(part, st.field ?? null), den = whole2 && setFormula(whole2, st.field ?? null);
           f17 = num2 && den && v && isFigure(v.numerator) && isFigure(v.denominator) ? rounded(`(${num2})/(${den})`, v.numerator, v.denominator, places, mode) : null;
         }
       }
@@ -132233,7 +133887,7 @@ function workbooksOps(workbooks, url, body) {
 var RECOMPUTE_STATUSES2 = Object.freeze(["agrees", "differs", "partial", "not recomputed here"]);
 var CHECK_OUTCOMES = Object.freeze(["agrees", "disagrees", "could_not_check"]);
 var NOT_RECOMPUTED = "not recomputed here";
-var LIST_MAX2 = 2e3;
+var LIST_MAX3 = 2e3;
 var RECOMPUTE_MEANING = "agreement between the file's engine and the instance's engine, never accuracy";
 var ENGINE_MEASURE = Object.freeze({
   engine: ENGINE_NAME,
@@ -132249,7 +133903,7 @@ var GRADE_RANK3 = { A: 4, B: 3, C: 2, D: 1 };
 var weaker5 = (a, b) => !a ? b : !b ? a : (GRADE_RANK3[a] || 0) <= (GRADE_RANK3[b] || 0) ? a : b;
 var SHA_RE2 = /^[0-9a-f]{64}$/;
 var str25 = (v) => typeof v === "string" ? v.trim() : "";
-var json5 = (v) => JSON.stringify(v ?? null);
+var json6 = (v) => JSON.stringify(v ?? null);
 var parse6 = (s) => {
   try {
     return JSON.parse(s);
@@ -132258,7 +133912,7 @@ var parse6 = (s) => {
   }
 };
 var refusal15 = (reason, detail, extra = {}) => ({ ok: false, reason, detail, ...extra });
-var cut5 = (list6) => list6.length > LIST_MAX2 ? { list: list6.slice(0, LIST_MAX2), left: list6.length - LIST_MAX2 } : { list: list6, left: 0 };
+var cut5 = (list6) => list6.length > LIST_MAX3 ? { list: list6.slice(0, LIST_MAX3), left: list6.length - LIST_MAX3 } : { list: list6, left: 0 };
 function tableFrom(answer) {
   if (!answer || answer.ok === false || answer.found === false) return null;
   const t2 = answer.table && typeof answer.table === "object" ? answer.table : answer;
@@ -132270,13 +133924,13 @@ function calculationFrom(answer) {
   const c = answer.calculation && typeof answer.calculation === "object" ? answer.calculation : answer;
   return c && c.recipe && Array.isArray(c.inputs) ? c : null;
 }
-var instances39 = /* @__PURE__ */ new WeakMap();
+var instances40 = /* @__PURE__ */ new WeakMap();
 function workbooksOf(ctx, deps = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let w = instances39.get(storage);
+  let w = instances40.get(storage);
   if (!w) {
     w = new Workbooks({ storage, recompute: ctx && typeof ctx.recompute === "function" ? ctx.recompute : null, ...deps });
-    instances39.set(storage, w);
+    instances40.set(storage, w);
   }
   return w;
 }
@@ -132439,11 +134093,11 @@ var Workbooks = class {
         sha2,
         p3,
         str25(question),
-        json5(period),
-        json5(origin),
+        json6(period),
+        json6(origin),
         by,
         at34,
-        json5(facts)
+        json6(facts)
       );
       for (const s of sheets) for (const c of s.cells) {
         const pos = cellAt(c.source.cell);
@@ -132560,7 +134214,7 @@ var Workbooks = class {
         wb.project,
         sheet,
         rect,
-        json5(stored),
+        json6(stored),
         by,
         at34
       );
@@ -132720,7 +134374,7 @@ var Workbooks = class {
         by,
         rec.reason,
         rec.why,
-        json5(rec.body)
+        json6(rec.body)
       );
       const row9 = this.#one(`SELECT * FROM workbook_recomputes WHERE recompute_id=last_insert_rowid()`);
       return { ok: true, recompute: recomputeView(row9) };
@@ -132798,7 +134452,7 @@ var Workbooks = class {
         wb.capture_sha,
         wb.project,
         str25(purpose),
-        json5(srcs),
+        json6(srcs),
         str25(steps),
         str25(limitations),
         by,
@@ -133608,10 +135262,10 @@ var versionsOut = () => ({
 });
 var te11 = new TextEncoder();
 var td3 = new TextDecoder("utf-8", { fatal: false });
-var HEX6414 = /^[0-9a-f]{64}$/;
+var HEX6415 = /^[0-9a-f]{64}$/;
 var isObj31 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var str26 = (v) => typeof v === "string" ? v : null;
-var shaOf5 = (bytes2) => createSha256().update(bytes2).hex();
+var shaOf6 = (bytes2) => createSha256().update(bytes2).hex();
 var textOf3 = (bytes2) => bytes2 ? td3.decode(bytes2) : null;
 var jsonOf2 = (bytes2) => {
   try {
@@ -133632,17 +135286,17 @@ var b646 = (bytes2) => {
 var entry2 = (check2, about, detail, more = {}) => ({ check: check2, about, ...more, detail });
 function keyFingerprint3(keyB64) {
   try {
-    return "SHA256:" + b646(asBytes2(hexBytes3(shaOf5(b64ToBytes(keyB64))))).replace(/=+$/, "");
+    return "SHA256:" + b646(asBytes2(hexBytes3(shaOf6(b64ToBytes(keyB64))))).replace(/=+$/, "");
   } catch {
     return null;
   }
 }
-function hexBytes3(hex7) {
-  const o = new Uint8Array(hex7.length / 2);
-  for (let i = 0; i < o.length; i++) o[i] = parseInt(hex7.slice(2 * i, 2 * i + 2), 16);
+function hexBytes3(hex9) {
+  const o = new Uint8Array(hex9.length / 2);
+  for (let i = 0; i < o.length; i++) o[i] = parseInt(hex9.slice(2 * i, 2 * i + 2), 16);
   return o;
 }
-var entryOf2 = (path) => {
+var entryOf3 = (path) => {
   const e2 = caseFileEntryOf(path);
   return isObj31(e2) ? e2 : null;
 };
@@ -133699,7 +135353,7 @@ function readParts(parts) {
   const m = manifest || {};
   const listedParts = Array.isArray(m.parts) ? m.parts.filter(isObj31) : [];
   const files = (Array.isArray(m.files) ? m.files.filter(isObj31) : []).map((f17) => {
-    const e2 = entryOf2(f17.path) || {};
+    const e2 = entryOf3(f17.path) || {};
     return {
       path: str26(f17.path) || "",
       kind: str26(f17.kind) || "",
@@ -133728,7 +135382,7 @@ function readParts(parts) {
     if (!rows3.every((f17) => z.entries.has(f17.path))) return { index: lp.index, sha256: str26(lp.sha256), state: "incomplete" };
     const carried = rows3.map((f17) => {
       const b = z.entries.get(f17.path);
-      return { path: f17.path, sha256: shaOf5(b), bytes: b.length, part: lp.index };
+      return { path: f17.path, sha256: shaOf6(b), bytes: b.length, part: lp.index };
     });
     const d = casePartDigest(carried, lp.index);
     const ok2 = d.sha256 === lp.sha256 && d.bytes === lp.bytes;
@@ -133738,7 +135392,7 @@ function readParts(parts) {
     const z = f17.part !== null ? partOf2.get(f17.part) : null;
     const b = z ? z.entries.get(f17.path) : null;
     if (!b) continue;
-    const sha2 = shaOf5(b);
+    const sha2 = shaOf6(b);
     if (sha2 !== f17.sha256 || b.length !== f17.bytes) {
       f17.state = "differs";
       f17.detail = `${f17.path} does not match the manifest: it has SHA-256 ${sha2} and ${b.length} bytes, where the manifest lists ${f17.sha256} and ${f17.bytes} bytes`;
@@ -133835,7 +135489,7 @@ async function check({ parts, documents = [], keys = null }) {
       supplied2.push({ sha: null, bytes: null, used: false });
       continue;
     }
-    const doc = { sha: shaOf5(b), bytes: b, used: false };
+    const doc = { sha: shaOf6(b), bytes: b, used: false };
     supplied2.push(doc);
     for (const g of files.filter((f17) => f17.state === "missing" && f17.sha256 === doc.sha)) {
       g.state = "supplied";
@@ -134091,8 +135745,8 @@ async function check({ parts, documents = [], keys = null }) {
       complete_edition.detail = "this checker could not render the complete edition from the case file";
       caseLevel.differs.push(entry2("complete_edition", ceFile.path, complete_edition.detail));
     } else {
-      complete_edition.rendered_sha256 = shaOf5(rb);
-      complete_edition.equal = complete_edition.rendered_sha256 === shaOf5(ceFile.content);
+      complete_edition.rendered_sha256 = shaOf6(rb);
+      complete_edition.equal = complete_edition.rendered_sha256 === shaOf6(ceFile.content);
       complete_edition.detail = complete_edition.equal ? "the carried complete edition is the edition the rest of the case file renders" : `the carried complete edition (SHA-256 ${complete_edition.sha256}) is not the edition the rest of the case file renders (SHA-256 ${complete_edition.rendered_sha256})`;
       if (!complete_edition.equal) caseLevel.differs.push(entry2("complete_edition", ceFile.path, complete_edition.detail));
     }
@@ -134128,7 +135782,7 @@ async function check({ parts, documents = [], keys = null }) {
       const pin = str26(roleOf.get(id)?.version_sha);
       const fs = fileOf("finding_signature", "finding", id);
       const sig = { finding: id, verified: false, reason: null };
-      if (ff && ff.content && pin && shaOf5(ff.content) !== pin)
+      if (ff && ff.content && pin && shaOf6(ff.content) !== pin)
         differs.push(entry2("integrity", id, `finding ${id}'s carried bytes are not the version the case pins (${pin})`));
       if (!fs) differs.push(entry2("signature", id, `the case file carries no signature for finding ${id}`));
       else if (!fs.content) put2(fileGap(fs, id, `finding ${id}'s signature`));
@@ -134151,7 +135805,7 @@ async function check({ parts, documents = [], keys = null }) {
       const cap = str26(row9.capture_sha) || "";
       const mat = materials.find((x) => x.sha === cap) || null;
       const where = `a passage of ${cap || "an unnamed document"} relied on by ${id}`;
-      if (!HEX6414.test(String(row9.content_id ?? "")) || contentIdFor(cap, row9.extent, row9.chain ?? null) !== row9.content_id) {
+      if (!HEX6415.test(String(row9.content_id ?? "")) || contentIdFor(cap, row9.extent, row9.chain ?? null) !== row9.content_id) {
         differs.push(entry2("passage", id, `${where} does not recompute to the content id it states (${String(row9.content_id)})`));
         continue;
       }
@@ -134323,7 +135977,7 @@ function recomputeCalculations(fm, files, supplied2 = []) {
     for (const [name2, sha2] of Object.entries(hashes || {})) {
       const f17 = sha2 ? files.find((x) => x.kind === "calculation" && x.input === sha2 && x.calc === calc) || files.find((x) => x.kind === "calculation" && x.input === sha2) : null;
       const b = f17 && f17.content ? f17.content : null;
-      if (b && shaOf5(b) === sha2) {
+      if (b && shaOf6(b) === sha2) {
         if (f17.state === "supplied") filled15.push({ input: name2, sha256: sha2 });
         inputBytes[name2] = { bytes: b, file: f17 };
         continue;
@@ -134511,7 +136165,7 @@ var rnOf = (kind, id) => {
   const m = typeof id === "string" ? new RegExp(`^${ID[kind]}-([1-9][0-9]{0,15})$`).exec(id.trim()) : null;
   return m ? Number(m[1]) : null;
 };
-function shaOf6(bytes2) {
+function shaOf7(bytes2) {
   return createSha256().update(bytes2).hex();
 }
 function bytesOf3(v) {
@@ -134535,7 +136189,7 @@ function withRow4(r) {
   const row9 = rowOf10(r.reason);
   return row9 ? { ...r, code: r.code ?? r.reason, check: row9.check, translation: row9.translation } : r;
 }
-var refuse12 = (code, detail, extra) => withRow4({ ok: false, reason: code, detail, ...extra || {} });
+var refuse13 = (code, detail, extra) => withRow4({ ok: false, reason: code, detail, ...extra || {} });
 function importIdOf({ group, case: caseId, lens }) {
   return sha256HexSync(canonicalJson({ group, case: caseId, lens: lens ?? null }));
 }
@@ -134596,7 +136250,7 @@ function recreateCalculations({ rows: rows3 = [], files = [], documents = [] } =
   const byContent = /* @__PURE__ */ new Map(), byStated = /* @__PURE__ */ new Map();
   for (const f17 of Array.isArray(files) ? files : []) {
     if (!isObj32(f17)) continue;
-    const got = f17.content instanceof Uint8Array ? shaOf6(f17.content) : null;
+    const got = f17.content instanceof Uint8Array ? shaOf7(f17.content) : null;
     if (got && !byContent.has(got)) byContent.set(got, f17.content);
     if (isSha2(f17.sha256) && got !== f17.sha256 && !byStated.has(f17.sha256))
       byStated.set(f17.sha256, { path: f17.path ?? null, got, detail: typeof f17.detail === "string" ? f17.detail.slice(0, 400) : null });
@@ -134604,7 +136258,7 @@ function recreateCalculations({ rows: rows3 = [], files = [], documents = [] } =
   for (const d of Array.isArray(documents) ? documents : []) {
     const b = bytesOf3(d);
     if (b) {
-      const got = shaOf6(b);
+      const got = shaOf7(b);
       if (!byContent.has(got)) byContent.set(got, b);
     }
   }
@@ -134809,9 +136463,9 @@ var CaseImport = class _CaseImport {
   #callerRefusal({ by, viewer }) {
     const member = this.#member(by);
     if (!member)
-      return { refusal: refuse12("MACHINE_CANNOT_IMPORT", str27(by) ? "an import, and every act on one, is a member's, signed in as themselves; this caller is not one" : "no member is named as the one acting: this call carries nobody") };
+      return { refusal: refuse13("MACHINE_CANNOT_IMPORT", str27(by) ? "an import, and every act on one, is a member's, signed in as themselves; this caller is not one" : "no member is named as the one acting: this call carries nobody") };
     if (!this.#isActiveMember(str27(viewer) || by))
-      return { refusal: refuse12("IMPORT_NOT_A_MEMBER", "only an active member of this group imports, or acts on an import") };
+      return { refusal: refuse13("IMPORT_NOT_A_MEMBER", "only an active member of this group imports, or acts on an import") };
     return { member };
   }
   /* ================================================================ the bytes */
@@ -134849,7 +136503,7 @@ var CaseImport = class _CaseImport {
     if (parts.some((p3) => !p3)) return null;
     const got = this.#call(() => readCaseFile(parts).files.find((x) => x.path === f17.path));
     const bytes2 = got && got.content instanceof Uint8Array ? got.content : null;
-    return bytes2 && shaOf6(bytes2) === f17.sha ? { path: f17.path, kind: f17.kind ?? null, sha: f17.sha, bytes: bytes2 } : null;
+    return bytes2 && shaOf7(bytes2) === f17.sha ? { path: f17.path, kind: f17.kind ?? null, sha: f17.sha, bytes: bytes2 } : null;
   }
   /* ================================================================ R3: one recreation */
   /* The checker's answer over the edition's parts and the documents supplied for it, or what stands for none. The
@@ -134976,7 +136630,7 @@ var CaseImport = class _CaseImport {
     if (k.refusal) return k.refusal;
     const list6 = Array.isArray(parts) ? parts.map(bytesOf3) : [];
     if (!list6.length || list6.some((p3) => !p3))
-      return refuse12(
+      return refuse13(
         "IMPORT_NOT_A_CASE_FILE",
         "parts are the case file's parts, each as bytes",
         { departures: [!list6.length ? "no part was given" : `part ${list6.findIndex((p3) => !p3)} is not bytes`] }
@@ -134986,17 +136640,17 @@ var CaseImport = class _CaseImport {
     const checked = !isObj32(read3.manifest) ? Array.isArray(read3.departures) && read3.departures.length ? read3.departures : ["no manifest was found"] : typeof check2 === "function" ? this.#call(() => check2(read3.manifest), ["the manifest could not be checked"]) : ["this copy holds no check of a case file's manifest"];
     const named = Array.isArray(checked) ? checked : checked ? [checked] : [];
     if (named.length)
-      return refuse12("IMPORT_NOT_A_CASE_FILE", "the parts do not carry a manifest that meets the case-file format", { departures: named });
+      return refuse13("IMPORT_NOT_A_CASE_FILE", "the parts do not carry a manifest that meets the case-file format", { departures: named });
     const big = list6.findIndex((p3) => p3.length > PART_MAX2);
     if (big >= 0)
-      return refuse12(
+      return refuse13(
         "IMPORT_PART_TOO_LARGE",
         `part ${big} is ${list6[big].length} bytes, over the part bound of ${PART_MAX2}`,
         { part: big, bytes: list6[big].length, bound: PART_MAX2 }
       );
     const who2 = _CaseImport.#manifestIdentity(read3.manifest);
     if (!who2.group || !who2.case || !who2.edition)
-      return refuse12(
+      return refuse13(
         "IMPORT_NOT_A_CASE_FILE",
         "the manifest departs from the case-file format",
         { departures: ["the manifest does not name its group, case and edition"] }
@@ -135023,7 +136677,7 @@ var CaseImport = class _CaseImport {
         wrote: false
       };
     if (held2)
-      return refuse12(
+      return refuse13(
         "IMPORT_EDITION_DIFFERS",
         `edition ${who2.edition} of this case is held with other bytes; an edition never changes`,
         { import: importId, edition: who2.edition, held: held2.manifest_sha, given: manifestSha }
@@ -135053,13 +136707,13 @@ var CaseImport = class _CaseImport {
         who2.edition,
         manifestSha,
         str27(read3.manifest.format),
-        docBytes ? shaOf6(docBytes) : null,
+        docBytes ? shaOf7(docBytes) : null,
         sourceBar ? canonicalJson(sourceBar) : null,
         k.member,
         at34
       );
       list6.forEach((bytes2, idx) => {
-        const sha2 = shaOf6(bytes2);
+        const sha2 = shaOf7(bytes2);
         this.#putBlob(sha2, bytes2);
         this.sql.exec(
           `INSERT INTO case_import_parts (import_id, edition, idx, sha, bytes) VALUES (?,?,?,?,?)`,
@@ -135083,7 +136737,7 @@ var CaseImport = class _CaseImport {
           who2.edition,
           f17.path,
           str27(f17.kind),
-          shaOf6(f17.content),
+          shaOf7(f17.content),
           f17.content.length,
           listed2.get(f17.path)?.part ?? 0
         );
@@ -135104,7 +136758,7 @@ var CaseImport = class _CaseImport {
           manifest_sha: manifestSha,
           wrote: false
         };
-      return again ? refuse12(
+      return again ? refuse13(
         "IMPORT_EDITION_DIFFERS",
         `edition ${who2.edition} of this case is held with other bytes`,
         { import: importId, edition: who2.edition, held: again.manifest_sha, given: manifestSha }
@@ -135228,7 +136882,7 @@ var CaseImport = class _CaseImport {
   }
   /* R6–R8 and R4: an edition this import does not hold, answered the same whatever the reason. */
   #noSuchEdition(importId, edition) {
-    return refuse12(
+    return refuse13(
       "IMPORT_NO_SUCH_EDITION",
       "no imported edition answers here by that import and edition",
       { import: str27(importId), edition: int3(edition) }
@@ -135327,7 +136981,7 @@ var CaseImport = class _CaseImport {
     const k = this.#callerRefusal({ by, viewer });
     if (k.refusal) return k.refusal;
     const b = bytesOf3(bytes2);
-    const sha2 = b ? shaOf6(b) : null;
+    const sha2 = b ? shaOf7(b) : null;
     const e2 = this.#edition(importId, edition);
     const missing2 = /* @__PURE__ */ new Set();
     if (e2) for (const r of this.#resultsOf(e2.import_id, Number(e2.edition))) for (const m of r.missing) fingerprintsOf(m, missing2);
@@ -135335,7 +136989,7 @@ var CaseImport = class _CaseImport {
       for (const c of this.#calcsOf(e2.import_id, Number(e2.edition))) for (const m of c.missing) if (isObj32(m) && isSha2(m.sha)) missing2.add(m.sha);
     }
     if (!b || !e2 || !missing2.has(sha2))
-      return refuse12(
+      return refuse13(
         "IMPORT_DOCUMENT_NOT_MISSING",
         "the bytes match no material this imported edition records as missing",
         { import: str27(importId), edition: int3(edition), fingerprint: sha2 }
@@ -135396,7 +137050,7 @@ var CaseImport = class _CaseImport {
     const { e: e2 } = er;
     const ed = Number(e2.edition);
     if (!words2(checked) || !words2(reason))
-      return refuse12(
+      return refuse13(
         "IMPORT_ACCEPT_NO_REASON",
         `what was checked and the reason are each 1 to ${WORDS_MAX2} characters`,
         { missing: [!words2(checked) ? "checked" : null, !words2(reason) ? "reason" : null].filter(Boolean) }
@@ -135406,7 +137060,7 @@ var CaseImport = class _CaseImport {
     const results = new Map(this.#resultsOf(e2.import_id, ed).map((r) => [r.finding, r]));
     const unknown = named.filter((f17) => typeof f17 !== "string" || !results.has(f17));
     if (!named.length || unknown.length)
-      return refuse12(
+      return refuse13(
         "IMPORT_NO_SUCH_FINDING",
         named.length ? "a finding named is not one of this edition's" : "no finding is named",
         { import: e2.import_id, edition: ed, findings: unknown.map((f17) => typeof f17 === "string" ? f17 : null) }
@@ -135414,7 +137068,7 @@ var CaseImport = class _CaseImport {
     const stated = isObj32(gaps) ? gaps : typeof gaps === "string" ? parse7(gaps, {}) : {};
     const notRecreated = named.filter((f17) => results.get(f17).result === "did_not_recreate");
     if (notRecreated.length)
-      return refuse12(
+      return refuse13(
         "IMPORT_ACCEPT_NOT_RECREATED",
         "only a finding that recreated, wholly or in part, is accepted",
         { import: e2.import_id, edition: ed, findings: notRecreated }
@@ -135429,7 +137083,7 @@ var CaseImport = class _CaseImport {
       });
     }
     if (unstated.length)
-      return refuse12("IMPORT_ACCEPT_GAPS_UNSTATED", "each missing entry of a finding recreated in part is stated in the member's words, in order", { import: e2.import_id, edition: ed, unstated });
+      return refuse13("IMPORT_ACCEPT_GAPS_UNSTATED", "each missing entry of a finding recreated in part is stated in the member's words, in order", { import: e2.import_id, edition: ed, unstated });
     const kept = {};
     for (const f17 of named) if (results.get(f17).result === "recreated_in_part") kept[f17] = stated[f17].slice(0, results.get(f17).missing.length).map((s) => s.trim());
     const at34 = this.#stamp();
@@ -135475,14 +137129,14 @@ var CaseImport = class _CaseImport {
     const { e: e2 } = er;
     const ed = Number(e2.edition);
     if (!words2(reason))
-      return refuse12("IMPORT_ACCEPT_NO_REASON", `the reason for withdrawing is 1 to ${WORDS_MAX2} characters`, { missing: ["reason"] });
+      return refuse13("IMPORT_ACCEPT_NO_REASON", `the reason for withdrawing is 1 to ${WORDS_MAX2} characters`, { missing: ["reason"] });
     if (!this.#acceptancesInForce(e2.import_id, ed).length)
-      return refuse12("IMPORT_NOTHING_ACCEPTED", "no acceptance of this edition is in force", { import: e2.import_id, edition: ed });
+      return refuse13("IMPORT_NOTHING_ACCEPTED", "no acceptance of this edition is in force", { import: e2.import_id, edition: ed });
     const at34 = this.#stamp();
     let rn = null, ids = [], refs = [];
     const out = this.record.transact(() => {
       const live7 = this.#acceptancesInForce(e2.import_id, ed);
-      if (!live7.length) return refuse12("IMPORT_NOTHING_ACCEPTED", "the acceptance was withdrawn meanwhile", { import: e2.import_id, edition: ed });
+      if (!live7.length) return refuse13("IMPORT_NOTHING_ACCEPTED", "the acceptance was withdrawn meanwhile", { import: e2.import_id, edition: ed });
       ids = live7.map((a) => idOf2("acceptance", a.rn));
       refs = [...new Set(live7.flatMap((a) => parse7(a.findings, [])))].sort().map((f17) => importedFindingRef(e2.import_id, f17)).filter(Boolean);
       this.sql.exec(
@@ -135525,7 +137179,7 @@ var CaseImport = class _CaseImport {
   /* ================================================================ R8: flags */
   /* R8's refusals after R1's: the issue or reason, then the edition and the finding. */
   #flagRefusal(text7, what) {
-    if (!words2(text7)) return refuse12("IMPORT_FLAG_NO_ISSUE", `${what} is 1 to ${WORDS_MAX2} characters`);
+    if (!words2(text7)) return refuse13("IMPORT_FLAG_NO_ISSUE", `${what} is 1 to ${WORDS_MAX2} characters`);
     return null;
   }
   /** R8: a member's flag on an edition, or on one of its findings, naming the specific issue. */
@@ -135540,7 +137194,7 @@ var CaseImport = class _CaseImport {
     const ed = Number(e2.edition);
     const f17 = finding5 === null || finding5 === void 0 || finding5 === "" ? null : str27(finding5);
     if (finding5 !== null && finding5 !== void 0 && finding5 !== "" && !f17 || f17 && !this.#resultsOf(e2.import_id, ed).some((r) => r.finding === f17))
-      return refuse12(
+      return refuse13(
         "IMPORT_NO_SUCH_FINDING",
         "the finding named is not one of this edition's",
         { import: e2.import_id, edition: ed, findings: [typeof finding5 === "string" ? finding5 : null] }
@@ -135572,7 +137226,7 @@ var CaseImport = class _CaseImport {
     const rn = rnOf("flag", flag2);
     const open = () => rn ? this.#one(`SELECT f.* FROM case_import_flags f LEFT JOIN case_import_clears c ON c.flag_rn = f.rn
                                          WHERE f.rn=? AND c.flag_rn IS NULL`, rn) : null;
-    const notOpen = () => refuse12("IMPORT_FLAG_NOT_OPEN", "no open flag answers by that id", { flag: str27(flag2) });
+    const notOpen = () => refuse13("IMPORT_FLAG_NOT_OPEN", "no open flag answers by that id", { flag: str27(flag2) });
     const f17 = open();
     if (!f17) return notOpen();
     const at34 = this.#stamp();
@@ -135626,7 +137280,7 @@ var CaseImport = class _CaseImport {
   }
   /* R17, R18: an import that is held, or IMPORT_NOT_WATCHED's refusal (one site for both acts and the service). */
   #notWatched(importId, detail, extra = {}) {
-    return refuse12("IMPORT_NOT_WATCHED", detail, { import: str27(importId), ...extra });
+    return refuse13("IMPORT_NOT_WATCHED", detail, { import: str27(importId), ...extra });
   }
   /** R17: a member's standing request that this copy read the publisher's docket for one import. The same docket
    *  address already in force answers `existed: true` and writes nothing; another address replaces the watch in force.
@@ -135638,7 +137292,7 @@ var CaseImport = class _CaseImport {
     if (!i) return this.#noSuchEdition(importId, null);
     const p3 = typeof publisher === "string" ? publisher.trim() : null;
     if (!p3 || !isPublicHttpsLocator(p3) || /[?#\s]/.test(p3))
-      return refuse12("IMPORT_WATCH_BAD_ADDRESS", "the publisher's address is the public https address of their copy, with no query and no fragment", { publisher: typeof publisher === "string" ? publisher.slice(0, 400) : null });
+      return refuse13("IMPORT_WATCH_BAD_ADDRESS", "the publisher's address is the public https address of their copy, with no query and no fragment", { publisher: typeof publisher === "string" ? publisher.slice(0, 400) : null });
     const docket = docketAddressOf(p3, i.case_id);
     const held2 = this.#watchInForce(i.import_id);
     if (held2 && held2.docket === docket)
@@ -135742,7 +137396,7 @@ var CaseImport = class _CaseImport {
      refused `differs`, and the held one stands. Answers the rows to record. */
   async #checkEntries(i, list6) {
     const verified = /* @__PURE__ */ new Map(), seen = /* @__PURE__ */ new Set();
-    const served = (seq, digest2, json17, signature) => sha256HexSync(canonicalJson([seq ?? null, digest2 ?? null, json17 ?? null, signature ?? null]));
+    const served = (seq, digest2, json18, signature) => sha256HexSync(canonicalJson([seq ?? null, digest2 ?? null, json18 ?? null, signature ?? null]));
     for (const r of this.#rows(`SELECT seq, digest, json, signature, status FROM case_import_docket_entries WHERE import_id=?`, i.import_id)) {
       seen.add(served(r.seq === null ? null : Number(r.seq), r.digest, r.json, r.signature));
       if (r.status === "verified") verified.set(Number(r.seq), r.digest);
@@ -135754,16 +137408,16 @@ var CaseImport = class _CaseImport {
     for (const { e: e2 } of ordered2) {
       const seq = seqOf(e2);
       const digest2 = isObj32(e2) && typeof e2.digest === "string" ? e2.digest.slice(0, 128) : null;
-      const json17 = isObj32(e2) && typeof e2.json === "string" && e2.json.length <= 65536 ? e2.json : null;
+      const json18 = isObj32(e2) && typeof e2.json === "string" && e2.json.length <= 65536 ? e2.json : null;
       const signature = isObj32(e2) && typeof e2.signature === "string" && e2.signature.length <= 16384 ? e2.signature : null;
-      const key = served(seq, digest2, json17, signature);
+      const key = served(seq, digest2, json18, signature);
       if (seen.has(key)) continue;
       seen.add(key);
-      const f17 = json17 ? parse7(json17, null) : null;
+      const f17 = json18 ? parse7(json18, null) : null;
       const row9 = {
         seq,
         digest: digest2,
-        json: json17,
+        json: json18,
         signature,
         published_at: isObj32(e2) ? str27(e2.published_at) : null,
         status: "refused",
@@ -135787,7 +137441,7 @@ var CaseImport = class _CaseImport {
         fail("seq", `entry ${seq} is held with digest ${row9.held_digest}; this one has ${digest2}; the held entry stands`);
         continue;
       }
-      if (!json17 || !isSha2(digest2) || sha256HexSync(json17) !== digest2) {
+      if (!json18 || !isSha2(digest2) || sha256HexSync(json18) !== digest2) {
         fail("digest", "the SHA-256 of the entry's JSON is not its digest");
         continue;
       }
@@ -136223,16 +137877,16 @@ for (const m of ["importCaseFile", "completeImportedDocument", "recordDocketRead
     return withRow4(await fn.apply(this, a));
   };
 }
-var instances40 = /* @__PURE__ */ new WeakMap();
+var instances41 = /* @__PURE__ */ new WeakMap();
 function caseImportOf(host, deps) {
-  let c = instances40.get(host);
+  let c = instances41.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     c = new CaseImport({ ...d, host, storage, record, membership, env: d.env ?? host.env ?? null });
-    instances40.set(host, c);
+    instances41.set(host, c);
     c.migrate();
     c.purgeDeclaration = record.declarePurge("case-import", CASE_IMPORT_TABLES.map((name2) => ({ name: name2, keys: [] })));
     c.countsRegistration = record.registerCounts(
@@ -137106,10 +138760,10 @@ var CaseDisclosures = class {
       for (const r of this.#rows(`SELECT content_id, capture_sha FROM content WHERE content_id IN (${marks(part)})`, ...part))
         if (typeof r.capture_sha === "string" && r.capture_sha) captureOfContent.set(r.content_id, r.capture_sha);
     });
-    const whole = [...new Set(legs.filter((l2) => !captureOfContent.has(l2.content_id)).map((l2) => l2.target_id).filter((t2) => typeof t2 === "string" && t2))];
+    const whole2 = [...new Set(legs.filter((l2) => !captureOfContent.has(l2.content_id)).map((l2) => l2.target_id).filter((t2) => typeof t2 === "string" && t2))];
     const documents = /* @__PURE__ */ new Set();
     const registered5 = /* @__PURE__ */ new Map();
-    chunked(whole, (part) => {
+    chunked(whole2, (part) => {
       for (const r of this.#rows(`SELECT bundle_id, object_type FROM bundles WHERE bundle_id IN (${marks(part)})`, ...part))
         if (normalizeType(r.object_type) === "information") documents.add(r.bundle_id);
     });
@@ -138014,15 +139668,15 @@ var CaseDisclosures = class {
     return { captures, materials, flags: flagRows, group };
   }
 };
-var instances41 = /* @__PURE__ */ new WeakMap();
+var instances42 = /* @__PURE__ */ new WeakMap();
 function caseDisclosuresOf(host, deps) {
-  let c = instances41.get(host);
+  let c = instances42.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     c = new CaseDisclosures({ ...d, host, storage, record });
-    instances41.set(host, c);
+    instances42.set(host, c);
   }
   return c;
 }
@@ -141038,16 +142692,16 @@ case_project: ${project}
     };
   }
 };
-var instances42 = /* @__PURE__ */ new WeakMap();
+var instances43 = /* @__PURE__ */ new WeakMap();
 function caseAuthoringOf(host, deps) {
-  let c = instances42.get(host);
+  let c = instances43.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     c = new CaseAuthoring({ ...d, host, storage, record, membership });
-    instances42.set(host, c);
+    instances43.set(host, c);
     c.migrate();
     record.declarePurge("case-authoring", CASE_AUTHORING_TABLES);
   }
@@ -141578,7 +143232,7 @@ var SHA_RE4 = /^[0-9a-f]{64}$/;
 var VERSION_RE = /^(.+)@([1-9][0-9]*)$/;
 var WELL_FORMED2 = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
 var str30 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
-var json6 = (v) => JSON.stringify(v ?? null);
+var json7 = (v) => JSON.stringify(v ?? null);
 var parse8 = (s) => {
   try {
     return JSON.parse(s);
@@ -141600,7 +143254,7 @@ function withRow5(r) {
   const row9 = rowOf11(r.reason);
   return row9 ? { ...r, code: r.code ?? r.reason, check: row9.check, translation: row9.translation } : r;
 }
-var refuse13 = (code, detail, extra) => withRow5({ ok: false, reason: code, detail, ...extra || {} });
+var refuse14 = (code, detail, extra) => withRow5({ ok: false, reason: code, detail, ...extra || {} });
 function noTemplateGrant() {
   const row9 = FILING_TEMPLATE_CHECKS.NO_TEMPLATE_GRANT;
   return {
@@ -141673,38 +143327,38 @@ var FilingTemplates = class _FilingTemplates {
   #machine(act2, who2) {
     if (str30(who2) && !isMachineIdentity(who2)) return null;
     const code = act2 === "review" ? "MACHINE_CANNOT_REVIEW_TEMPLATE" : act2 === "approve" ? "MACHINE_CANNOT_APPROVE_TEMPLATE" : "MACHINE_CANNOT_DRAFT_TEMPLATE";
-    return refuse13(code, str30(who2) ? `'${String(who2).trim().slice(0, 60)}' is a machine identity: a machine proposes wording and comments, labelled, and nothing else` : "no member is named as the one acting: this call carries nobody");
+    return refuse14(code, str30(who2) ? `'${String(who2).trim().slice(0, 60)}' is a machine identity: a machine proposes wording and comments, labelled, and nothing else` : "no member is named as the one acting: this call carries nobody");
   }
   /* ================================================================ the one-condition answers */
   /* R3, R24, R25: absent and invisible are one answer. */
   #noTemplate(asked) {
-    return refuse13(
+    return refuse14(
       "NO_SUCH_TEMPLATE",
       "no template by that id is readable here; one you may not see answers the same",
       { template: str30(typeof asked === "string" ? asked : null) }
     );
   }
   #scope(t2, detail) {
-    return refuse13("TEMPLATE_SCOPE_REFUSED", detail, { template: t2 ? t2.id : null });
+    return refuse14("TEMPLATE_SCOPE_REFUSED", detail, { template: t2 ? t2.id : null });
   }
   #retired(t2) {
-    return refuse13(
+    return refuse14(
       "TEMPLATE_RETIRED",
       `the template was retired: ${t2.retired.reason}`,
       { template: t2.id, retired: t2.retired }
     );
   }
   #notADraft(t2, n, state) {
-    return refuse13("NOT_A_DRAFT", `the version is ${state}, past draft: its text is fixed`, { version: versionId(t2.id, n), state });
+    return refuse14("NOT_A_DRAFT", `the version is ${state}, past draft: its text is fixed`, { version: versionId(t2.id, n), state });
   }
   #notInReview(t2, n, state) {
-    return refuse13("NOT_IN_REVIEW", `the version is ${state}, not in review`, { version: versionId(t2.id, n), state });
+    return refuse14("NOT_IN_REVIEW", `the version is ${state}, not in review`, { version: versionId(t2.id, n), state });
   }
   #notAnApprover(t2, detail) {
-    return refuse13("NOT_AN_APPROVER", detail, { template: t2.id });
+    return refuse14("NOT_AN_APPROVER", detail, { template: t2.id });
   }
   #fromRefusal(detail) {
-    return refuse13("TEMPLATE_FROM_REFUSED", detail);
+    return refuse14("TEMPLATE_FROM_REFUSED", detail);
   }
   /* ================================================================ the profiles (R1, R15) */
   #activeIds() {
@@ -142033,7 +143687,7 @@ var FilingTemplates = class _FilingTemplates {
   /* R1: the template's own fields, in R1's order. */
   #shapeRefusal({ kind, use, profiles: profiles2, name: name2, project }) {
     if (typeof kind !== "string" || !KIND_RE2.test(kind))
-      return refuse13(
+      return refuse14(
         "TEMPLATE_KIND_REFUSED",
         "a kind is lower-case letters, digits and underscores, beginning with a letter",
         { kind: typeof kind === "string" ? kind.slice(0, 60) : null }
@@ -142042,35 +143696,35 @@ var FilingTemplates = class _FilingTemplates {
     for (const p3 of listed2) {
       const held2 = this.#profile(p3);
       if (held2 && !this.#kindIn(held2, kind))
-        return refuse13("TEMPLATE_KIND_UNKNOWN", `the profile '${p3}' holds no action kind '${kind}'`, { kind, profile: p3 });
+        return refuse14("TEMPLATE_KIND_UNKNOWN", `the profile '${p3}' holds no action kind '${kind}'`, { kind, profile: p3 });
     }
     if (!TEMPLATE_USES2.includes(use))
-      return refuse13("TEMPLATE_USE_REFUSED", "a template's use is file or brief", { use: typeof use === "string" ? use.slice(0, 20) : null });
+      return refuse14("TEMPLATE_USE_REFUSED", "a template's use is file or brief", { use: typeof use === "string" ? use.slice(0, 20) : null });
     if (profiles2 !== "general") {
-      if (!listed2.length) return refuse13("TEMPLATE_PROFILE_UNKNOWN", "a template names the profiles it is written for, or general", { profile: null });
+      if (!listed2.length) return refuse14("TEMPLATE_PROFILE_UNKNOWN", "a template names the profiles it is written for, or general", { profile: null });
       const missing2 = listed2.find((p3) => !this.#profile(p3));
-      if (missing2) return refuse13("TEMPLATE_PROFILE_UNKNOWN", `no profile '${missing2.slice(0, 60)}' is held`, { profile: missing2.slice(0, 60) });
+      if (missing2) return refuse14("TEMPLATE_PROFILE_UNKNOWN", `no profile '${missing2.slice(0, 60)}' is held`, { profile: missing2.slice(0, 60) });
     }
     if (use === "file" && this.#tierOf(kind, profiles2) === 3)
-      return refuse13("TEMPLATE_TIER3_FILE", "the kind's tier is 3: no file template is kept for it; a brief template may serve it", { kind });
+      return refuse14("TEMPLATE_TIER3_FILE", "the kind's tier is 3: no file template is kept for it; a brief template may serve it", { kind });
     if (!oneLine4(name2, TEMPLATE_NAME_MAX))
-      return refuse13("TEMPLATE_NAME_REFUSED", `a template is named in one line of 1 to ${TEMPLATE_NAME_MAX} characters`, { max: TEMPLATE_NAME_MAX });
+      return refuse14("TEMPLATE_NAME_REFUSED", `a template is named in one line of 1 to ${TEMPLATE_NAME_MAX} characters`, { max: TEMPLATE_NAME_MAX });
     const taken = this.#rows(`SELECT template_id FROM tpl_templates WHERE project IS ? AND name=?`, project, name2.trim()).map((r) => this.#groupTemplate(r.template_id)).find((t2) => t2 && !t2.retired && !t2.widened);
-    if (taken) return refuse13("TEMPLATE_NAME_TAKEN", "the scope's library already holds a template by this name", { name: name2.trim() });
+    if (taken) return refuse14("TEMPLATE_NAME_TAKEN", "the scope's library already holds a template by this name", { name: name2.trim() });
     return null;
   }
   /* R2, R12: a text and any notes. */
   #textRefusal(text7, notes) {
     if (typeof text7 !== "string" || !text7.trim() || WELL_FORMED2.test(text7) || utf84(text7) > FILING_TEXT_MAX)
-      return refuse13(
+      return refuse14(
         "TEMPLATE_TEXT_REFUSED",
         `a template's words are non-empty UTF-8 text of at most ${FILING_TEXT_MAX} bytes`,
         { max_bytes: FILING_TEXT_MAX }
       );
     const { unknown } = blanksOf(text7);
-    if (unknown) return refuse13("TEMPLATE_BLANK_UNKNOWN", `{{${unknown}}} is not a blank filings fill`, { blank: unknown, blanks: Object.keys(FILING_BLANKS) });
+    if (unknown) return refuse14("TEMPLATE_BLANK_UNKNOWN", `{{${unknown}}} is not a blank filings fill`, { blank: unknown, blanks: Object.keys(FILING_BLANKS) });
     if (notes !== void 0 && notes !== null && (typeof notes !== "string" || notes.length > TEMPLATE_NOTES_MAX || WELL_FORMED2.test(notes)))
-      return refuse13("TEMPLATE_NOTES_REFUSED", `a version's notes are text of at most ${TEMPLATE_NOTES_MAX} characters`, { max: TEMPLATE_NOTES_MAX });
+      return refuse14("TEMPLATE_NOTES_REFUSED", `a version's notes are text of at most ${TEMPLATE_NOTES_MAX} characters`, { max: TEMPLATE_NOTES_MAX });
     return null;
   }
   #notesRefusal(notes) {
@@ -142127,7 +143781,7 @@ var FilingTemplates = class _FilingTemplates {
       events = this.#events(t2.id);
       const open = this.#openVersion(t2, events);
       if (open !== null)
-        return refuse13(
+        return refuse14(
           "TEMPLATE_DRAFT_OPEN",
           `version ${open} is ${this.#stateOf(events, open)}: finish or withdraw it first`,
           { version: versionId(t2.id, open), state: this.#stateOf(events, open) }
@@ -142175,7 +143829,7 @@ var FilingTemplates = class _FilingTemplates {
           scopeProject,
           kind,
           use,
-          prof === "general" ? "general" : json6(prof),
+          prof === "general" ? "general" : json7(prof),
           name2.trim(),
           "group",
           member,
@@ -142187,7 +143841,7 @@ var FilingTemplates = class _FilingTemplates {
       const prev = t2 ? Math.max(0, ...this.#numbers(tid)) : 0;
       const n = prev + 1;
       this.sql.exec(`INSERT INTO tpl_versions (template_id, version, bundle_id, author, author_name, derived_from, created_at)
-                     VALUES (?,?,?,?,?,?,?)`, tid, n, bundle, member, name_, source2 ? json6(source2.derived) : null, at34);
+                     VALUES (?,?,?,?,?,?,?)`, tid, n, bundle, member, name_, source2 ? json7(source2.derived) : null, at34);
       const sha2 = sha256HexSync(body);
       this.sql.exec(`INSERT INTO tpl_revisions (template_id, version, bundle_id, text, sha, author, author_name, adopted, at)
                      VALUES (?,?,?,?,?,?,?,?,?)`, tid, n, bundle, body, sha2, member, name_, source2 && source2.proposal ? source2.proposal : null, at34);
@@ -142274,7 +143928,7 @@ var FilingTemplates = class _FilingTemplates {
     skill_pack = null
   } = {}) {
     const who2 = str30(proposer);
-    if (!who2) return refuse13("TEMPLATE_NO_PROPOSER", "no stamped proposer: a proposal names who made it");
+    if (!who2) return refuse14("TEMPLATE_NO_PROPOSER", "no stamped proposer: a proposal names who made it");
     let t2 = null;
     if (template !== null && template !== void 0 && template !== "") {
       t2 = this.#template(template, viewer);
@@ -142286,7 +143940,7 @@ var FilingTemplates = class _FilingTemplates {
     const bad2 = this.#textRefusal(text7);
     if (bad2) return bad2;
     if (!textUpTo(why, PROPOSAL_WHY_MAX))
-      return refuse13("TEMPLATE_WHY_REFUSED", `say why in 1 to ${PROPOSAL_WHY_MAX} characters`, { max: PROPOSAL_WHY_MAX });
+      return refuse14("TEMPLATE_WHY_REFUSED", `say why in 1 to ${PROPOSAL_WHY_MAX} characters`, { max: PROPOSAL_WHY_MAX });
     const at34 = this.#when();
     const cut8 = (v) => str30(v) ? String(v).trim().slice(0, 200) : null;
     return this.record.transact(() => {
@@ -142353,17 +144007,17 @@ var FilingTemplates = class _FilingTemplates {
       const facts = id ? this.#call(() => this.membership.memberFacts(id)) : null;
       const standing = id && (facts && facts.status === "active" || this.#call(() => this.membership.isAdministrator(id)) === true);
       if (!standing || !this.#canSee(t2, `member:${id}`))
-        return refuse13("REVIEWER_UNKNOWN", `'${a.slice(0, 80)}' is not a member who can read the template`, { reviewer: a.slice(0, 80) });
+        return refuse14("REVIEWER_UNKNOWN", `'${a.slice(0, 80)}' is not a member who can read the template`, { reviewer: a.slice(0, 80) });
       ids.push(id);
     }
     if (!ids.length && !this.#liveGrants(t2.id, n, events).length)
-      return refuse13("NO_REVIEWERS", "name a member to review it, or open a review grant on the version first");
+      return refuse14("NO_REVIEWERS", "name a member to review it, or open a review grant on the version first");
     const at34 = this.#when();
     const sha2 = this.#latestRevision(t2.id, n).sha;
     const name_ = this.#nameOf(member);
     return this.record.transact(() => {
       this.sql.exec(`INSERT INTO tpl_events (template_id, version, bundle_id, event, actor, actor_name, detail, at)
-                     VALUES (?,?,?,?,?,?,?,?)`, t2.id, n, t2.bundle_id, "submitted", member, name_, json6({ sha: sha2, reviewers: ids }), at34);
+                     VALUES (?,?,?,?,?,?,?,?)`, t2.id, n, t2.bundle_id, "submitted", member, name_, json7({ sha: sha2, reviewers: ids }), at34);
       for (const id of ids)
         this.sql.exec(`INSERT INTO tpl_reviewers (template_id, version, member, bundle_id, member_name, asked_by, asked_name, at)
                        VALUES (?,?,?,?,?,?,?,?)`, t2.id, n, id, t2.bundle_id, this.#nameOf(id), member, name_, at34);
@@ -142392,14 +144046,14 @@ var FilingTemplates = class _FilingTemplates {
     const state = this.#stateOf(this.#events(t2.id), n);
     if (!["draft", "in_review"].includes(state)) return this.#notInReview(t2, n, state);
     if (!oneLine4(recipient, GRANT_FIELD_MAX) || !oneLine4(organisation, GRANT_FIELD_MAX))
-      return refuse13(
+      return refuse14(
         "GRANT_RECIPIENT_REFUSED",
         `the reviewer and their organisation, each one line of 1 to ${GRANT_FIELD_MAX} characters`,
         { max: GRANT_FIELD_MAX }
       );
     const s = typeof secretSha === "string" ? secretSha.trim() : "";
     if (!SHA_RE4.test(s) || this.#one(`SELECT 1 AS x FROM tpl_grants WHERE secret_sha=?`, s))
-      return refuse13("GRANT_NO_SECRET", "no fresh secret digest was stamped for this grant: your group's Civicsmith makes the secret");
+      return refuse14("GRANT_NO_SECRET", "no fresh secret digest was stamped for this grant: your group's Civicsmith makes the secret");
     const at34 = this.#when();
     return this.record.transact(() => {
       const id = this.#mint("TRG", at34.slice(0, 4));
@@ -142438,7 +144092,7 @@ var FilingTemplates = class _FilingTemplates {
     if (machine3) return machine3;
     const g = str30(grant) ? this.#one(`SELECT * FROM tpl_grants WHERE grant_id=?`, str30(grant)) : null;
     const t2 = g ? this.#template(g.template_id, viewer) : null;
-    if (!t2) return refuse13("NO_SUCH_GRANT", "no review grant by that id is readable here", { grant: str30(grant) });
+    if (!t2) return refuse14("NO_SUCH_GRANT", "no review grant by that id is readable here", { grant: str30(grant) });
     const member = this.#member(by);
     if (!member || !this.#call(() => this.membership.isJoinedParticipant(t2.project, member)))
       return this.#scope(t2, "a review grant is revoked by a joined participant of the template's project");
@@ -142514,9 +144168,9 @@ var FilingTemplates = class _FilingTemplates {
     if (state !== "in_review") return this.#notInReview(t2, n, state);
     const present2 = this.#latestRevision(t2.id, n).sha;
     if (!REVIEW_OUTCOMES2.includes(outcome) || !oneLine4(scope, REVIEW_SCOPE_MAX) || comment !== null && comment !== void 0 && !textUpTo(comment, REVIEW_COMMENT_MAX, 0) || reviewer.kind === "professional" && credential !== null && credential !== void 0 && !oneLine4(credential, REVIEW_CREDENTIAL_MAX))
-      return refuse13("REVIEW_REFUSED", `outcome is one of ${REVIEW_OUTCOMES2.join(", ")}; scope 1 to ${REVIEW_SCOPE_MAX} characters; comment at most ${REVIEW_COMMENT_MAX}; credential at most ${REVIEW_CREDENTIAL_MAX}`, { outcomes: REVIEW_OUTCOMES2 });
+      return refuse14("REVIEW_REFUSED", `outcome is one of ${REVIEW_OUTCOMES2.join(", ")}; scope 1 to ${REVIEW_SCOPE_MAX} characters; comment at most ${REVIEW_COMMENT_MAX}; credential at most ${REVIEW_CREDENTIAL_MAX}`, { outcomes: REVIEW_OUTCOMES2 });
     if (sha2 !== null && sha2 !== void 0 && sha2 !== "" && sha2 !== present2)
-      return refuse13("REVIEW_STALE", "the text reviewed is not the version's present text", { sha: present2 });
+      return refuse14("REVIEW_STALE", "the text reviewed is not the version's present text", { sha: present2 });
     const at34 = this.#when();
     const cred = reviewer.kind === "professional" && str30(credential) ? credential.trim() : null;
     this.sql.exec(
@@ -142531,7 +144185,7 @@ var FilingTemplates = class _FilingTemplates {
       reviewer.name,
       reviewer.organisation ?? null,
       cred,
-      reviewer.kind === "member" ? json6(reviewer.expertise) : null,
+      reviewer.kind === "member" ? json7(reviewer.expertise) : null,
       outcome,
       scope.trim(),
       str30(comment) ? comment : null,
@@ -142564,7 +144218,7 @@ var FilingTemplates = class _FilingTemplates {
     if (widening) {
       if (t2.origin === "profile") return this.#notAnApprover(t2, "a profile's template is already offered to the whole group");
       if (!OFFERED.includes(state) || t2.retired)
-        return refuse13(
+        return refuse14(
           "TEMPLATE_NOT_APPROVED",
           `the version is ${t2.retired ? "of a retired template" : state}: only an approved project template is widened`,
           { version: versionId(t2.id, n), state }
@@ -142574,7 +144228,7 @@ var FilingTemplates = class _FilingTemplates {
       if (t2.widened) return { ok: true, template: t2.id, existed: true, widened: t2.widened, scope: "group" };
       const at35 = this.#when();
       this.sql.exec(`INSERT INTO tpl_events (template_id, version, bundle_id, event, actor, actor_name, detail, at)
-                     VALUES (?,NULL,?,?,?,?,?,?)`, t2.id, t2.bundle_id, "widened", member, name_, json6({ from: { project: t2.project } }), at35);
+                     VALUES (?,NULL,?,?,?,?,?,?)`, t2.id, t2.bundle_id, "widened", member, name_, json7({ from: { project: t2.project } }), at35);
       return { ok: true, template: t2.id, existed: false, scope: "group", widened: { by: { id: member, name: name_ }, at: at35 } };
     }
     if (state !== "in_review") return this.#notInReview(t2, n, state);
@@ -142583,7 +144237,7 @@ var FilingTemplates = class _FilingTemplates {
     const v = this.#one(`SELECT author FROM tpl_versions WHERE template_id=? AND version=?`, t2.id, n);
     const others = this.#contributors(t2.id, n).filter((c) => c.kind === "member" && c.member !== v.author);
     if (v.author === member && !others.length)
-      return refuse13(
+      return refuse14(
         "APPROVER_IS_AUTHOR",
         "you are the version's author and its only member contributor: another member approves it",
         { version: versionId(t2.id, n) }
@@ -142596,7 +144250,7 @@ var FilingTemplates = class _FilingTemplates {
     const blocking = standing.filter((x) => x.outcome === "changes_requested");
     const met = standing.some((x) => x.kind === needs && x.outcome === "no_concerns") || needs === "professional" && !!why;
     if (blocking.length || !met)
-      return refuse13(
+      return refuse14(
         "REVIEWS_INSUFFICIENT",
         blocking.length ? "a review requesting changes stands" : tier === 1 ? "a Tier 1 kind needs one member's review with no concerns" : `${tier === "undetermined" ? "an undetermined tier" : `Tier ${tier}`} needs a professional's review with no concerns, or the approver's reason for going without one (1 to ${APPROVAL_REASON_MAX} characters)`,
         { version: versionId(t2.id, n), tier, needs, reviews: _FilingTemplates.#summary(standing, sha2) }
@@ -142606,10 +144260,10 @@ var FilingTemplates = class _FilingTemplates {
     return this.record.transact(() => {
       const detail = { tier, tier_words: RISK_TIERS[tier] ?? null, profiles: t2.profiles, reason: why, sha: sha2 };
       this.sql.exec(`INSERT INTO tpl_events (template_id, version, bundle_id, event, actor, actor_name, detail, at)
-                     VALUES (?,?,?,?,?,?,?,?)`, t2.id, n, t2.bundle_id, "approved", member, name_, json6(detail), at34);
+                     VALUES (?,?,?,?,?,?,?,?)`, t2.id, n, t2.bundle_id, "approved", member, name_, json7(detail), at34);
       if (prev !== null && prev !== n)
         this.sql.exec(`INSERT INTO tpl_events (template_id, version, bundle_id, event, actor, actor_name, detail, at)
-                       VALUES (?,?,?,?,?,?,?,?)`, t2.id, prev, t2.bundle_id, "updated", member, name_, json6({ by: n }), at34);
+                       VALUES (?,?,?,?,?,?,?,?)`, t2.id, prev, t2.bundle_id, "updated", member, name_, json7({ by: n }), at34);
       return {
         ok: true,
         version: versionId(t2.id, n),
@@ -142634,12 +144288,12 @@ var FilingTemplates = class _FilingTemplates {
     if (version === null || version === void 0 || version === "") {
       const approver = t2.origin !== "profile" && !!member && (t2.widened ? this.#call(() => this.membership.isAdministrator(member)) === true : this.#call(() => this.membership.isProjectOwner(t2.project, member)) === true);
       if (!approver) return this.#notAnApprover(t2, t2.origin === "profile" ? "a profile's template is read-only here" : t2.widened ? "an administrator retires a group-wide template" : "an owner of the template's project retires it");
-      if (!why) return refuse13("TEMPLATE_REASON_REFUSED", `give the reason in 1 to ${ENDING_REASON_MAX} characters`, { max: ENDING_REASON_MAX });
-      if (t2.retired) return refuse13("TEMPLATE_ALREADY_ENDED", "the template was already retired", { template: t2.id, ended: { ending: "retired", ...t2.retired } });
+      if (!why) return refuse14("TEMPLATE_REASON_REFUSED", `give the reason in 1 to ${ENDING_REASON_MAX} characters`, { max: ENDING_REASON_MAX });
+      if (t2.retired) return refuse14("TEMPLATE_ALREADY_ENDED", "the template was already retired", { template: t2.id, ended: { ending: "retired", ...t2.retired } });
       const at35 = this.#when();
       const name_2 = this.#nameOf(member);
       this.sql.exec(`INSERT INTO tpl_events (template_id, version, bundle_id, event, actor, actor_name, detail, at)
-                     VALUES (?,NULL,?,?,?,?,?,?)`, t2.id, t2.bundle_id, "retired", member, name_2, json6({ reason: reason.trim() }), at35);
+                     VALUES (?,NULL,?,?,?,?,?,?)`, t2.id, t2.bundle_id, "retired", member, name_2, json7({ reason: reason.trim() }), at35);
       return {
         ok: true,
         template: t2.id,
@@ -142654,10 +144308,10 @@ var FilingTemplates = class _FilingTemplates {
     if (!v || !member || v.author !== member) return this.#scope(t2, "a version is withdrawn by its author");
     const state = this.#stateOf(events, n);
     if (OFFERED.includes(state)) return this.#notADraft(t2, n, state);
-    if (!why) return refuse13("TEMPLATE_REASON_REFUSED", `give the reason in 1 to ${ENDING_REASON_MAX} characters`, { max: ENDING_REASON_MAX });
+    if (!why) return refuse14("TEMPLATE_REASON_REFUSED", `give the reason in 1 to ${ENDING_REASON_MAX} characters`, { max: ENDING_REASON_MAX });
     if (state === "withdrawn") {
       const e2 = events.find((x) => x.version === n && x.event === "withdrawn");
-      return refuse13("TEMPLATE_ALREADY_ENDED", "the version was already withdrawn", {
+      return refuse14("TEMPLATE_ALREADY_ENDED", "the version was already withdrawn", {
         version: versionId(t2.id, n),
         ended: { ending: "withdrawn", by: { id: e2.actor, name: e2.actor_name }, at: e2.at, reason: (parse8(e2.detail) || {}).reason ?? null }
       });
@@ -142665,7 +144319,7 @@ var FilingTemplates = class _FilingTemplates {
     const at34 = this.#when();
     const name_ = this.#nameOf(member);
     this.sql.exec(`INSERT INTO tpl_events (template_id, version, bundle_id, event, actor, actor_name, detail, at)
-                   VALUES (?,?,?,?,?,?,?,?)`, t2.id, n, t2.bundle_id, "withdrawn", member, name_, json6({ reason: reason.trim() }), at34);
+                   VALUES (?,?,?,?,?,?,?,?)`, t2.id, n, t2.bundle_id, "withdrawn", member, name_, json7({ reason: reason.trim() }), at34);
     return { ok: true, version: versionId(t2.id, n), state: "withdrawn", withdrawn: { by: { id: member, name: name_ }, at: at34, reason: reason.trim() } };
   }
   /* ================================================================ R12, R13: comments and notes */
@@ -142688,7 +144342,7 @@ var FilingTemplates = class _FilingTemplates {
     }
     const isNote = note === true || note === "true" || note === "1" || note === 1;
     if (!by || !textUpTo(text7, COMMENT_MAX))
-      return refuse13(
+      return refuse14(
         "COMMENT_REFUSED",
         by ? `a comment is 1 to ${COMMENT_MAX} characters` : "a comment names who wrote it: this call carries nobody",
         { max: COMMENT_MAX }
@@ -142697,7 +144351,7 @@ var FilingTemplates = class _FilingTemplates {
       if (by.kind !== "member" || !t2.project || !this.#call(() => this.membership.isJoinedParticipant(t2.project, by.id)))
         return this.#scope(t2, "a note is added by a member who may revise the template");
       if (this.#stateOf(this.#events(t2.id), n) === "draft")
-        return refuse13("COMMENT_REFUSED", "a draft's notes are edited by revising it (op=templaterevise, notes=)", { max: COMMENT_MAX });
+        return refuse14("COMMENT_REFUSED", "a draft's notes are edited by revising it (op=templaterevise, notes=)", { max: COMMENT_MAX });
     }
     const at34 = this.#when();
     this.sql.exec(`INSERT INTO tpl_comments (template_id, version, bundle_id, text, note, kind, author, author_name, organisation, at)
@@ -142757,7 +144411,7 @@ var FilingTemplates = class _FilingTemplates {
   templatesFor({ kind = null, profile = null, use = null, state = null, viewer = null } = {}) {
     const st = str30(state);
     if (st && st !== "offered" && !TEMPLATES_STATES_LISTED.includes(st))
-      return refuse13("TEMPLATES_STATE_REFUSED", `state is offered or one of ${TEMPLATES_STATES_LISTED.join(", ")}`, { states: TEMPLATES_STATES_LISTED });
+      return refuse14("TEMPLATES_STATE_REFUSED", `state is offered or one of ${TEMPLATES_STATES_LISTED.join(", ")}`, { states: TEMPLATES_STATES_LISTED });
     const k = str30(kind), p3 = str30(profile), u = str30(use);
     if (st === "proposed") {
       const rows3 = this.#rows(`SELECT * FROM tpl_proposals p WHERE NOT EXISTS (SELECT 1 FROM tpl_revisions r WHERE r.adopted=p.proposal_id)
@@ -142853,7 +144507,7 @@ var FilingTemplates = class _FilingTemplates {
     if (!t2) return this.#noTemplate(template);
     if (t2.retired) return this.#retired(t2);
     const bad2 = _FilingTemplates.#badBlank(t2);
-    if (bad2) return refuse13(
+    if (bad2) return refuse14(
       "TEMPLATE_BLANK_UNKNOWN",
       `{{${bad2}}} is not a blank filings fill, so this template is not offered`,
       { template: t2.id, blank: bad2 }
@@ -142863,7 +144517,7 @@ var FilingTemplates = class _FilingTemplates {
     const n = version === null || version === void 0 || version === "" ? latest3 : this.#versionOf(t2, version);
     const state = n === null ? null : t2.origin === "profile" ? "approved" : this.#stateOf(events, n);
     if (n === null || !OFFERED.includes(state))
-      return refuse13(
+      return refuse14(
         "TEMPLATE_NOT_OFFERED",
         n === null ? version ? "no such version of this template" : "the template has no approved version" : `the version is ${state}: only an approved or updated version is offered`,
         { template: t2.id, ...n !== null ? { version: versionId(t2.id, n), state } : {} }
@@ -142971,7 +144625,7 @@ var FilingTemplates = class _FilingTemplates {
         );
         const sha2 = sha256HexSync(String(f17.text));
         this.sql.exec(`INSERT INTO tpl_versions (template_id, version, bundle_id, author, author_name, derived_from, created_at)
-                       VALUES (?,1,?,?,?,?,?)`, id, bundle, member, name_, json6({ filing: f17.from_filing, sha: sha2 }), at34);
+                       VALUES (?,1,?,?,?,?,?)`, id, bundle, member, name_, json7({ filing: f17.from_filing, sha: sha2 }), at34);
         this.sql.exec(`INSERT INTO tpl_revisions (template_id, version, bundle_id, text, sha, author, author_name, adopted, at)
                        VALUES (?,1,?,?,?,?,?,NULL,?)`, id, bundle, String(f17.text), sha2, member, name_, at34);
         this.sql.exec(`INSERT INTO tpl_notes (template_id, version, bundle_id, text, author, author_name, carried, at)
@@ -143005,16 +144659,16 @@ for (const m of [
     return withRow5(fn.apply(this, a));
   };
 }
-var instances43 = /* @__PURE__ */ new WeakMap();
+var instances44 = /* @__PURE__ */ new WeakMap();
 function filingTemplatesOf(host, deps) {
-  let f17 = instances43.get(host);
+  let f17 = instances44.get(host);
   if (!f17) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     f17 = new FilingTemplates({ ...d, storage, record, membership, env: d.env ?? host.env ?? null });
-    instances43.set(host, f17);
+    instances44.set(host, f17);
     f17.migrate();
     record.declarePurge("filing-templates", [...FILING_TEMPLATES_TABLES]);
     record.registerMintSeed("filing-templates", FILING_TEMPLATES_MINT_SEED.map((x) => [...x]));
@@ -144051,12 +145705,12 @@ Changes: cites edges added to ${listed2}.${nt ? ` Note: ${nt}.` : ""}
     };
   }
 };
-var instances44 = /* @__PURE__ */ new WeakMap();
+var instances45 = /* @__PURE__ */ new WeakMap();
 function inquiryServices2(k) {
   return { earned: (subject, targets, contentIds) => k.earned(subject, targets, contentIds), checkLegExtentGrammar, BASIS_ROLES };
 }
 function citationOf(host, deps) {
-  let c = instances44.get(host);
+  let c = instances45.get(host);
   if (!c) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -144066,7 +145720,7 @@ function citationOf(host, deps) {
     const retrieval = d.retrieval || retrievalOf(host, { record, membership, promotion });
     const inquiry = d.inquiry || inquiryServices2(inquiryOf(host, { record, membership, promotion, content }));
     c = new Citation({ ...d, record, membership, promotion, content, retrieval, inquiry });
-    instances44.set(host, c);
+    instances45.set(host, c);
   }
   return c;
 }
@@ -144714,7 +146368,7 @@ var VERSION_RE2 = /^(.+)@([1-9][0-9]*)$/;
 var WELL_FORMED3 = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
 var TOKEN_RE3 = /^[A-Za-z0-9_.:-]{1,200}$/;
 var str31 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
-var json7 = (v) => JSON.stringify(v ?? null);
+var json8 = (v) => JSON.stringify(v ?? null);
 var parse9 = (s) => {
   try {
     return JSON.parse(s);
@@ -144737,7 +146391,7 @@ function withRow6(r) {
   const row9 = rowOf13(r.reason);
   return row9 ? { ...r, code: r.code ?? r.reason, check: row9.check, translation: row9.translation } : r;
 }
-var refuse14 = (code, detail, extra) => withRow6({ ok: false, reason: code, code, detail, ...extra || {} });
+var refuse15 = (code, detail, extra) => withRow6({ ok: false, reason: code, code, detail, ...extra || {} });
 var versionId2 = (script, version) => `${script}@${version}`;
 function parseVersionId2(v) {
   const m = typeof v === "string" ? VERSION_RE2.exec(v.trim()) : null;
@@ -145010,48 +146664,48 @@ var WizardScripts = class _WizardScripts {
   /* R19: a machine, or a call stamped with nobody, is refused by shape before anything else is asked. */
   #machine(act2, who2) {
     if (str31(who2) && !isMachineIdentity(who2)) return null;
-    return refuse14(act2 === "approve" ? "MACHINE_CANNOT_APPROVE_WIZARD" : "MACHINE_CANNOT_DRAFT_WIZARD", str31(who2) ? `'${String(who2).trim().slice(0, 60)}' is a machine identity: a machine proposes steps, labelled, and nothing else` : "no member is named as the one acting: this call carries nobody");
+    return refuse15(act2 === "approve" ? "MACHINE_CANNOT_APPROVE_WIZARD" : "MACHINE_CANNOT_DRAFT_WIZARD", str31(who2) ? `'${String(who2).trim().slice(0, 60)}' is a machine identity: a machine proposes steps, labelled, and nothing else` : "no member is named as the one acting: this call carries nobody");
   }
   /* ================================================================ the one-condition answers */
   /* R20: absent and invisible are one answer. */
   #noWizard(asked) {
-    return refuse14(
+    return refuse15(
       "NO_SUCH_WIZARD",
       "no wizard script by that id is readable here; one you may not see answers the same",
       { script: typeof asked === "string" ? parseVersionId2(asked)?.script ?? str31(asked) : null }
     );
   }
   #scope(s, detail) {
-    return refuse14("WIZARD_SCOPE_REFUSED", detail, { script: s ? s.id : null });
+    return refuse15("WIZARD_SCOPE_REFUSED", detail, { script: s ? s.id : null });
   }
   #notGranted(detail) {
-    return refuse14("WIZARD_EDITOR_NOT_GRANTED", detail);
+    return refuse15("WIZARD_EDITOR_NOT_GRANTED", detail);
   }
   #notADraft(s, n, state) {
-    return refuse14("NOT_A_DRAFT", `the version is ${state}, past draft: its steps are fixed`, { version: versionId2(s.id, n), state });
+    return refuse15("NOT_A_DRAFT", `the version is ${state}, past draft: its steps are fixed`, { version: versionId2(s.id, n), state });
   }
   #notAnApprover(s, detail) {
-    return refuse14("NOT_AN_APPROVER", detail, { script: s.id });
+    return refuse15("NOT_AN_APPROVER", detail, { script: s.id });
   }
   #notTheGroups(s) {
-    return refuse14(
+    return refuse15(
       "WIZARD_NOT_THE_GROUPS",
       "a Civicsmith script is read-only to every group: groups cannot edit or retire it",
       { script: s.id, origin: "civicsmith" }
     );
   }
   #ended(s, ended, extra) {
-    return refuse14(
+    return refuse15(
       "WIZARD_ALREADY_ENDED",
       ended.ending === "retired" ? "the script was already retired" : "the version was already withdrawn",
       { script: s.id, ...extra || {}, ended }
     );
   }
   #stepRefusal(bad2) {
-    return refuse14("WIZARD_STEP_REFUSED", bad2.why, { step: bad2.step });
+    return refuse15("WIZARD_STEP_REFUSED", bad2.why, { step: bad2.step });
   }
   #useRefusal(detail) {
-    return refuse14("WIZARD_USE_REFUSED", detail);
+    return refuse15("WIZARD_USE_REFUSED", detail);
   }
   /* R6, R7: R12's refusals as one answer: the first, naming its step, with every one. */
   static #checked(refusals, warnings, extra) {
@@ -145385,7 +147039,7 @@ var WizardScripts = class _WizardScripts {
     irreversible = [],
     library = CIVICSMITH_LIBRARY
   } = {}) {
-    if (this.reg) return refuse14("WIZARD_ALREADY_REGISTERED", "the registration is made once per construction, and it was");
+    if (this.reg) return refuse15("WIZARD_ALREADY_REGISTERED", "the registration is made once per construction, and it was");
     this.reg = normaliseRegistration({ screens, ops, machineRefused, machineDrafts, irreversible, library });
     const broken = [], returned = [];
     const at34 = this.#when();
@@ -145405,7 +147059,7 @@ var WizardScripts = class _WizardScripts {
           n,
           s.bundle_id,
           "broken",
-          json7(first),
+          json8(first),
           at34
         );
         broken.push(versionId2(s.id, n));
@@ -145469,17 +147123,17 @@ var WizardScripts = class _WizardScripts {
   }
   /* ================================================================ R3: wizardDraft */
   #recordingRefusal(recorded) {
-    if (!Array.isArray(recorded)) return refuse14("WIZARD_STEP_REFUSED", "a recording is a list of {screen, act}", { step: null });
-    if (recorded.length > STEPS_MAX) return refuse14("WIZARD_STEP_REFUSED", `a script has at most ${STEPS_MAX} steps`, { step: null });
+    if (!Array.isArray(recorded)) return refuse15("WIZARD_STEP_REFUSED", "a recording is a list of {screen, act}", { step: null });
+    if (recorded.length > STEPS_MAX) return refuse15("WIZARD_STEP_REFUSED", `a script has at most ${STEPS_MAX} steps`, { step: null });
     for (let i = 0; i < recorded.length; i++) {
       const s = recorded[i];
       if (isObj34(s) && Object.keys(s).some((k) => k !== "screen" && k !== "act"))
-        return refuse14("WIZARD_RECORDING_CARRIES_VALUES", "a recorded step holds its screen and act, never a typed value", { step: i + 1 });
+        return refuse15("WIZARD_RECORDING_CARRIES_VALUES", "a recorded step holds its screen and act, never a typed value", { step: i + 1 });
     }
     for (let i = 0; i < recorded.length; i++) {
       const s = recorded[i];
       if (!isObj34(s) || !oneLine5(s.screen, NAME_FIELD_MAX) || s.act !== void 0 && s.act !== null && !oneLine5(s.act, NAME_FIELD_MAX))
-        return refuse14("WIZARD_STEP_REFUSED", "a recorded step is {screen, act}", { step: i + 1 });
+        return refuse15("WIZARD_STEP_REFUSED", "a recorded step is {screen, act}", { step: i + 1 });
     }
     return null;
   }
@@ -145522,13 +147176,13 @@ var WizardScripts = class _WizardScripts {
     if (!recording && !source2 && !this.#liveGrant(member))
       return this.#notGranted("a blank start needs the advanced editor, which an administrator grants");
     if (recording || base2 && given2(from)) {
-      if (source2) return refuse14("WIZARD_STEP_REFUSED", "a draft starts from one of a recording, a source or a copy", { step: null });
+      if (source2) return refuse15("WIZARD_STEP_REFUSED", "a draft starts from one of a recording, a source or a copy", { step: null });
       const bad2 = this.#recordingRefusal(recorded);
       if (bad2) return bad2;
     }
     const named = base2 && !given2(name2) ? base2.s.name.slice(0, WIZARD_NAME_MAX) : name2;
     if (!target && !oneLine5(named, WIZARD_NAME_MAX))
-      return refuse14("WIZARD_NAME_REFUSED", `a script is named in one line of 1 to ${WIZARD_NAME_MAX} characters`, { max: WIZARD_NAME_MAX });
+      return refuse15("WIZARD_NAME_REFUSED", `a script is named in one line of 1 to ${WIZARD_NAME_MAX} characters`, { max: WIZARD_NAME_MAX });
     const pairs = recording ? recorded.map((s) => ({ screen: s.screen.trim(), act: str31(s.act) })) : base2 ? source2.steps.map((s) => ({ screen: s.screen, act: s.act ?? null })) : null;
     const steps = canonicalSteps(recording ? pairs.map((p3) => ({ ...p3, what: "", why: "" })) : source2 ? source2.steps : []);
     const at34 = this.#when();
@@ -145545,10 +147199,10 @@ var WizardScripts = class _WizardScripts {
       const bundle = target ? target.bundle_id : proj;
       const n = (target ? Math.max(0, ...this.#numbers(sid)) : 0) + 1;
       this.sql.exec(`INSERT INTO wiz_versions (script_id, version, bundle_id, author, author_name, recorded, derived_from, created_at)
-                     VALUES (?,?,?,?,?,?,?,?)`, sid, n, bundle, member, who2, pairs ? json7(pairs) : null, source2 && source2.derived ? json7(source2.derived) : null, at34);
+                     VALUES (?,?,?,?,?,?,?,?)`, sid, n, bundle, member, who2, pairs ? json8(pairs) : null, source2 && source2.derived ? json8(source2.derived) : null, at34);
       const sha2 = stepsSha(steps);
       this.sql.exec(`INSERT INTO wiz_revisions (script_id, version, bundle_id, steps, sha, author, author_name, adopted, at)
-                     VALUES (?,?,?,?,?,?,?,?,?)`, sid, n, bundle, json7(steps), sha2, member, who2, source2 && source2.proposal ? source2.proposal : null, at34);
+                     VALUES (?,?,?,?,?,?,?,?,?)`, sid, n, bundle, json8(steps), sha2, member, who2, source2 && source2.proposal ? source2.proposal : null, at34);
       return {
         ok: true,
         script: sid,
@@ -145590,15 +147244,15 @@ var WizardScripts = class _WizardScripts {
     if (bad2) return this.#stepRefusal(bad2);
     const at34 = this.#when();
     const who2 = this.#nameOf(member);
-    const canon4 = canonicalSteps(body);
-    const sha2 = stepsSha(canon4);
+    const canon5 = canonicalSteps(body);
+    const sha2 = stepsSha(canon5);
     this.sql.exec(
       `INSERT INTO wiz_revisions (script_id, version, bundle_id, steps, sha, author, author_name, adopted, at)
                    VALUES (?,?,?,?,?,?,?,?,?)`,
       s.id,
       n,
       s.bundle_id,
-      json7(canon4),
+      json8(canon5),
       sha2,
       member,
       who2,
@@ -145638,7 +147292,7 @@ var WizardScripts = class _WizardScripts {
     model = null
   } = {}) {
     const who2 = str31(proposer);
-    if (!who2) return refuse14("WIZARD_NO_PROPOSER", "no stamped proposer: a proposal names who made it");
+    if (!who2) return refuse15("WIZARD_NO_PROPOSER", "no stamped proposer: a proposal names who made it");
     let s = null, proj = null;
     if (str31(script)) {
       s = this.#script(script, viewer);
@@ -145652,16 +147306,16 @@ var WizardScripts = class _WizardScripts {
     const bad2 = Array.isArray(steps) && !steps.length ? { step: null, why: "a proposal proposes at least one step" } : stepShape(steps);
     if (bad2) return this.#stepRefusal(bad2);
     if (!textUpTo2(why, PROPOSAL_WHY_MAX2))
-      return refuse14("WIZARD_WHY_REFUSED", `say why in 1 to ${PROPOSAL_WHY_MAX2} characters`, { max: PROPOSAL_WHY_MAX2 });
+      return refuse15("WIZARD_WHY_REFUSED", `say why in 1 to ${PROPOSAL_WHY_MAX2} characters`, { max: PROPOSAL_WHY_MAX2 });
     const at34 = this.#when();
     const cut8 = (v) => str31(v) ? String(v).trim().slice(0, 200) : null;
-    const canon4 = canonicalSteps(steps);
+    const canon5 = canonicalSteps(steps);
     return this.record.transact(() => {
       const id = this.#mint("WZP", at34.slice(0, 4));
       if (!id) return mintExhausted("WZP");
-      const sha2 = stepsSha(canon4);
+      const sha2 = stepsSha(canon5);
       this.sql.exec(`INSERT INTO wiz_proposals (proposal_id, bundle_id, project, script_id, steps, sha, why, proposer, run, model, at)
-                     VALUES (?,?,?,?,?,?,?,?,?,?,?)`, id, proj, proj, s ? s.id : null, json7(canon4), sha2, why.trim(), who2, cut8(run2), cut8(model), at34);
+                     VALUES (?,?,?,?,?,?,?,?,?,?,?)`, id, proj, proj, s ? s.id : null, json8(canon5), sha2, why.trim(), who2, cut8(run2), cut8(model), at34);
       return {
         ok: true,
         proposal: { id, project: proj, script: s ? s.id : null, sha: sha2, why: why.trim(), at: at34, label: _WizardScripts.#label(who2) },
@@ -145697,7 +147351,7 @@ var WizardScripts = class _WizardScripts {
       "submitted",
       member,
       this.#nameOf(member),
-      json7({ sha: sha2 }),
+      json8({ sha: sha2 }),
       at34
     );
     return { ok: true, version: versionId2(s.id, n), state: "submitted", sha: sha2, warnings };
@@ -145719,7 +147373,7 @@ var WizardScripts = class _WizardScripts {
     const who2 = member ? this.#nameOf(member) : null;
     if (truthy(widen)) {
       if (state !== "approved" || s.retired)
-        return refuse14(
+        return refuse15(
           "WIZARD_NOT_APPROVED",
           `the version is ${s.retired ? "of a retired script" : state}: only an approved project script is widened`,
           { version: versionId2(s.id, n), state }
@@ -145734,19 +147388,19 @@ var WizardScripts = class _WizardScripts {
         "widened",
         member,
         who2,
-        json7({ from: { project: s.project } }),
+        json8({ from: { project: s.project } }),
         at35
       );
       return { ok: true, script: s.id, existed: false, scope: "group", widened: { by: { id: member, name: who2 }, at: at35 } };
     }
     if (state !== "submitted")
-      return refuse14("NOT_SUBMITTED", `the version is ${state}, not submitted`, { version: versionId2(s.id, n), state });
+      return refuse15("NOT_SUBMITTED", `the version is ${state}, not submitted`, { version: versionId2(s.id, n), state });
     if (!this.#mayApprove(s, member))
       return this.#notAnApprover(s, s.widened ? "an administrator approves a group-wide script" : "an owner of the script's project approves it");
     const v = this.#one(`SELECT author FROM wiz_versions WHERE script_id=? AND version=?`, s.id, n);
     const others = this.#contributors(s.id, n).filter((c) => c.kind === "member" && c.member !== v.author);
     if (v.author === member && !others.length)
-      return refuse14(
+      return refuse15(
         "APPROVER_IS_AUTHOR",
         "you are the version's author and its only member contributor: another member approves it",
         { version: versionId2(s.id, n) }
@@ -145764,7 +147418,7 @@ var WizardScripts = class _WizardScripts {
         "approved",
         member,
         who2,
-        json7({ sha: this.#latestRevision(s.id, n).sha }),
+        json8({ sha: this.#latestRevision(s.id, n).sha }),
         at34
       );
       if (prev !== null && prev !== n)
@@ -145776,7 +147430,7 @@ var WizardScripts = class _WizardScripts {
           "updated",
           member,
           who2,
-          json7({ by: n }),
+          json8({ by: n }),
           at34
         );
       return {
@@ -145798,7 +147452,7 @@ var WizardScripts = class _WizardScripts {
     if (!this.#isAdmin(admin)) return notAnAdmin(str31(by), "granting the advanced wizard editor");
     const id = str31(member) ? str31(member).replace(/^member:/, "") : null;
     const facts = id ? this.#call(() => this.membership.memberFacts(id)) : null;
-    if (!facts) return refuse14("WIZARD_EDITOR_MEMBER_UNKNOWN", "no member by that id", { member: id ? id.slice(0, 80) : null });
+    if (!facts) return refuse15("WIZARD_EDITOR_MEMBER_UNKNOWN", "no member by that id", { member: id ? id.slice(0, 80) : null });
     const held2 = this.#liveGrant(id);
     if (held2) return {
       ok: true,
@@ -145830,7 +147484,7 @@ var WizardScripts = class _WizardScripts {
     const admin = this.#member(by);
     if (!this.#isAdmin(admin)) return notAnAdmin(str31(by), "revoking the advanced wizard editor");
     const g = str31(grant) ? this.#one(`SELECT * FROM wiz_editor_grants WHERE grant_id=?`, str31(grant)) : null;
-    if (!g) return refuse14("WIZARD_NO_SUCH_GRANT", "no editor grant by that id", { grant: str31(grant) });
+    if (!g) return refuse15("WIZARD_NO_SUCH_GRANT", "no editor grant by that id", { grant: str31(grant) });
     const held2 = this.#one(`SELECT * FROM wiz_editor_revocations WHERE grant_id=?`, g.grant_id);
     if (held2) return { ok: true, grant: g.grant_id, existed: true, revoked: { by: { id: held2.actor, name: held2.actor_name }, at: held2.at } };
     const at34 = this.#when();
@@ -145851,7 +147505,7 @@ var WizardScripts = class _WizardScripts {
     const member = this.#member(by);
     const why = textUpTo2(reason, ENDING_REASON_MAX2);
     const reasonRefused = () => {
-      return refuse14("WIZARD_REASON_REFUSED", `give the reason in 1 to ${ENDING_REASON_MAX2} characters`, { max: ENDING_REASON_MAX2 });
+      return refuse15("WIZARD_REASON_REFUSED", `give the reason in 1 to ${ENDING_REASON_MAX2} characters`, { max: ENDING_REASON_MAX2 });
     };
     if (version === null || version === void 0 || version === "") {
       if (!this.#mayApprove(s, member))
@@ -145867,7 +147521,7 @@ var WizardScripts = class _WizardScripts {
         "retired",
         member,
         who3,
-        json7({ reason: reason.trim() }),
+        json8({ reason: reason.trim() }),
         at35
       );
       return {
@@ -145903,7 +147557,7 @@ var WizardScripts = class _WizardScripts {
       "withdrawn",
       member,
       who2,
-      json7({ reason: reason.trim() }),
+      json8({ reason: reason.trim() }),
       at34
     );
     return { ok: true, version: versionId2(s.id, n), state: "withdrawn", withdrawn: { by: { id: member, name: who2 }, at: at34, reason: reason.trim() } };
@@ -145944,7 +147598,7 @@ var WizardScripts = class _WizardScripts {
   wizards({ state = null, viewer = null } = {}) {
     const st = str31(state);
     if (st && st !== "offered" && !WIZARDS_STATES_LISTED.includes(st))
-      return refuse14("WIZARDS_STATE_REFUSED", `state is offered or one of ${WIZARDS_STATES_LISTED.join(", ")}`, { states: WIZARDS_STATES_LISTED });
+      return refuse15("WIZARDS_STATE_REFUSED", `state is offered or one of ${WIZARDS_STATES_LISTED.join(", ")}`, { states: WIZARDS_STATES_LISTED });
     const me = this.#member(viewer);
     if (st === "proposed") {
       const rows3 = this.#rows(`SELECT * FROM wiz_proposals p WHERE NOT EXISTS (SELECT 1 FROM wiz_revisions r WHERE r.adopted=p.proposal_id)
@@ -146193,11 +147847,11 @@ var WizardScripts = class _WizardScripts {
   writingHelp(args = {}) {
     const { op = null, field: field2 = null, told = null, draftHeld = false, assistant = null } = isObj34(args) ? args : {};
     const at34 = this.writingHelpAt({ op, field: field2, draftHeld, assistant });
-    if (!at34.offered) return refuse14(at34.code, "the assistant does not help word this field", { op: typeof op === "string" ? op.slice(0, 80) : null });
+    if (!at34.offered) return refuse15(at34.code, "the assistant does not help word this field", { op: typeof op === "string" ? op.slice(0, 80) : null });
     const text7 = typeof told === "string" ? told : Array.isArray(told) ? told.filter((x) => typeof x === "string").join("\n") : "";
     if (!text7.trim() || text7.length > TOLD_MAX)
-      return refuse14("WRITING_HELP_NOTHING_TOLD", `tell the assistant what to say, in 1 to ${TOLD_MAX} characters`, { max: TOLD_MAX });
-    return refuse14(
+      return refuse15("WRITING_HELP_NOTHING_TOLD", `tell the assistant what to say, in 1 to ${TOLD_MAX} characters`, { max: TOLD_MAX });
+    return refuse15(
       "ASSISTANT_DRAFT_UNAVAILABLE",
       "the assistant's draft is not served yet: nothing was drafted and the field is unchanged",
       { firsthand: FIRSTHAND_ACTS.includes(String(op).trim()) }
@@ -146224,9 +147878,9 @@ var WizardScripts = class _WizardScripts {
     const steps = this.#steps(h.s, h.n);
     const k = step === null || step === void 0 || step === "" ? null : Number(step);
     if (!WIZARD_EVENTS.includes(event2))
-      return refuse14("WIZARD_PROGRESS_REFUSED", "use is counted as start, step or finish: stopping is not an event", { events: WIZARD_EVENTS });
+      return refuse15("WIZARD_PROGRESS_REFUSED", "use is counted as start, step or finish: stopping is not an event", { events: WIZARD_EVENTS });
     if (event2 === "step" ? !(Number.isInteger(k) && k >= 1 && k <= steps.length) : k !== null)
-      return refuse14("WIZARD_PROGRESS_REFUSED", event2 === "step" ? `a step reached is one of the script's, 1 to ${steps.length}` : "only a step reached names a step", { events: WIZARD_EVENTS });
+      return refuse15("WIZARD_PROGRESS_REFUSED", event2 === "step" ? `a step reached is one of the script's, 1 to ${steps.length}` : "only a step reached names a step", { events: WIZARD_EVENTS });
     this.sql.exec(`INSERT INTO wiz_tallies (version_id, event, step, day) VALUES (?,?,?,?)`, versionId2(h.s.id, h.n), event2, k, this.#day());
     return { ok: true };
   }
@@ -146354,9 +148008,9 @@ for (const m of [
     return withRow6(fn.apply(this, a));
   };
 }
-var instances45 = /* @__PURE__ */ new WeakMap();
+var instances46 = /* @__PURE__ */ new WeakMap();
 function wizardScriptsOf(host, deps) {
-  let w = instances45.get(host);
+  let w = instances46.get(host);
   if (!w) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -146364,7 +148018,7 @@ function wizardScriptsOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const filingTemplates = d.filingTemplates || filingTemplatesOf(host, { record, membership });
     w = new WizardScripts({ ...d, storage, record, membership, filingTemplates, env: d.env ?? host.env ?? null });
-    instances45.set(host, w);
+    instances46.set(host, w);
     w.migrate();
     record.declareTable("wizard-scripts", WIZARD_SCRIPTS_TABLE_CLASSES.map((t2) => ({ ...t2 })));
     record.registerMintSeed("wizard-scripts", WIZARD_SCRIPTS_MINT_SEED.map((x) => [...x]));
@@ -146632,12 +148286,12 @@ var AffordanceFacts = class {
     return { ok: true, screens, wizard_scripts, writing_help_refused: w.writingHelpRefused() };
   }
 };
-var instances46 = /* @__PURE__ */ new WeakMap();
+var instances47 = /* @__PURE__ */ new WeakMap();
 function affordancesOf(host, deps) {
-  let a = instances46.get(host);
+  let a = instances47.get(host);
   if (!a) {
     a = new AffordanceFacts(host, deps);
-    instances46.set(host, a);
+    instances47.set(host, a);
   }
   return a;
 }
@@ -147207,16 +148861,16 @@ function checkAnswer(answer, { readLog = null, viewer = null } = {}) {
     };
     const sentenceCode = (s) => {
       const sup = s.support.map(at34);
-      const hs = sup.filter((x) => x.kind === "h"), rs = sup.filter((x) => x.kind === "r"), ls = sup.filter((x) => x.kind === "l");
+      const hs = sup.filter((x) => x.kind === "h"), rs = sup.filter((x) => x.kind === "r"), ls2 = sup.filter((x) => x.kind === "l");
       if (s.kind === "absence") {
-        if (!ls.length || ls.some((x) => !lookOk[x.i])) return "ANSWER_ABSENCE_WITHOUT_LEVEL";
+        if (!ls2.length || ls2.some((x) => !lookOk[x.i])) return "ANSWER_ABSENCE_WITHOUT_LEVEL";
       } else if (s.kind === "rule" && !rs.length) return "ANSWER_RULE_NOT_PLANE";
       else if (log.empty || !sup.length) return "ANSWER_CITES_UNREAD";
       if (hs.some((x) => !holdOk[x.i])) return "ANSWER_CITES_UNREAD";
       if (s.kind === "quote" && !hs.length) return "ANSWER_CITES_UNREAD";
       if (rs.some((x) => !ruleOk[x.i])) return "ANSWER_RULE_NOT_PLANE";
       if (s.kind === "rule" && !rs.length) return "ANSWER_RULE_NOT_PLANE";
-      if (ls.some((x) => !lookOk[x.i])) return "ANSWER_ABSENCE_WITHOUT_LEVEL";
+      if (ls2.some((x) => !lookOk[x.i])) return "ANSWER_ABSENCE_WITHOUT_LEVEL";
       const quotes = [...hs.map((x) => answer.holdings[x.i].quote), ...rs.map((x) => answer.rules[x.i].quote)];
       const figs = figuresIn(s.text, quotes);
       if (figs.length) {
@@ -147499,7 +149153,7 @@ var STANDING_LABEL = "machine work, from your standing question";
 var STANDING_AI_SETTING = "answers_standing_ai";
 var STANDING_IDS_MAX = 1e4;
 var DAY2 = /^\d{4}-\d{2}-\d{2}$/;
-var json8 = (v) => v === void 0 ? null : JSON.stringify(v);
+var json9 = (v) => v === void 0 ? null : JSON.stringify(v);
 var parse10 = (s) => {
   try {
     return s == null ? null : JSON.parse(s);
@@ -147507,7 +149161,7 @@ var parse10 = (s) => {
     return null;
   }
 };
-function memberOf3(stamp3) {
+function memberOf4(stamp3) {
   if (stamp3 === "admin") return "admin";
   const m = /^member:([A-Za-z0-9._:-]{1,128})$/.exec(typeof stamp3 === "string" ? stamp3 : "");
   return m ? m[1] : null;
@@ -147543,7 +149197,7 @@ function questionAnswer(r) {
   };
 }
 function standingQuestionSet(self, { author = null, question = null, query = null, cadence = null, ends = null } = {}) {
-  if (!memberOf3(author) || isMachineIdentity(author))
+  if (!memberOf4(author) || isMachineIdentity(author))
     return refusal18("MACHINE_CANNOT_AUTHOR", "a standing question is set only by a member's own act");
   const ql = self.dep("query");
   const asked = typeof query === "string" ? { q: query } : query && typeof query === "object" ? query : {};
@@ -147559,9 +149213,9 @@ function standingQuestionSet(self, { author = null, question = null, query = nul
       `INSERT INTO standing_questions (stq_id, author, question, form_json, cadence, ends, created_at, next_due)
                    VALUES (?,?,?,?,?,?,?,NULL)`,
       a.id,
-      stampOf(memberOf3(author)),
+      stampOf(memberOf4(author)),
       String(question ?? ""),
-      json8(saved.form),
+      json9(saved.form),
       cadence,
       ends,
       now
@@ -147572,10 +149226,10 @@ function standingQuestionSet(self, { author = null, question = null, query = nul
   return r;
 }
 function own4(self, id, viewer) {
-  const m = memberOf3(viewer);
+  const m = memberOf4(viewer);
   if (!m || typeof id !== "string") return null;
   const r = self.one(`SELECT * FROM standing_questions WHERE stq_id=?`, id);
-  return r && memberOf3(r.author) === m ? r : null;
+  return r && memberOf4(r.author) === m ? r : null;
 }
 var noSuch = (id) => refusal18("NO_SUCH_STANDING_QUESTION", "no standing question of yours answers to that", { id: id ?? null });
 function standingQuestionRead(self, { id = null, viewer = null } = {}) {
@@ -147585,7 +149239,7 @@ function standingQuestionRead(self, { id = null, viewer = null } = {}) {
   return { ok: true, question: questionAnswer(own4(self, id, viewer)) };
 }
 function standingQuestionsOf(self, { viewer = null } = {}) {
-  const m = memberOf3(viewer);
+  const m = memberOf4(viewer);
   if (!m) return { ok: true, questions: [] };
   const rows3 = self.rows(`SELECT * FROM standing_questions WHERE author=? ORDER BY stq_id`, stampOf(m));
   return { ok: true, questions: rows3.map(questionAnswer) };
@@ -147660,7 +149314,7 @@ async function heldBack(self, r, at34) {
   const ceiling = self.dep("ceilingRefusal");
   let refused3 = null;
   try {
-    refused3 = typeof ceiling === "function" ? await ceiling(memberOf3(author), at34) : null;
+    refused3 = typeof ceiling === "function" ? await ceiling(memberOf4(author), at34) : null;
   } catch {
     refused3 = null;
   }
@@ -147700,7 +149354,7 @@ async function runOne(self, r, now) {
         r.stq_id,
         r.author,
         now,
-        json8({ condition: "query_refused", reason: res ? res.reason ?? null : "no retrieval" })
+        json9({ condition: "query_refused", reason: res ? res.reason ?? null : "no retrieval" })
       );
       return { ok: true };
     });
@@ -147754,9 +149408,9 @@ async function runOne(self, r, now) {
   }
   self.record.transact(() => {
     self.sql.exec(`UPDATE standing_questions SET last_run_at=?, next_due=?, last_ids_json=?, last_occ_json=?, last_digest=?
-                   WHERE stq_id=?`, now, next, json8(ids), json8(occ), res.digest ?? null, r.stq_id);
+                   WHERE stq_id=?`, now, next, json9(ids), json9(occ), res.digest ?? null, r.stq_id);
     if (found3) self.sql.exec(`INSERT INTO standing_runs (stq_id, author, at, new_found, finds_json, answer_json, withheld_json, held_back_json)
-                              VALUES (?,?,?,1,?,?,?,?)`, r.stq_id, r.author, now, json8(finds), json8(answer), json8(withheld), json8(held2));
+                              VALUES (?,?,?,1,?,?,?,?)`, r.stq_id, r.author, now, json9(finds), json9(answer), json9(withheld), json9(held2));
     else self.sql.exec(`INSERT INTO standing_runs (stq_id, author, at, new_found) VALUES (?,?,?,0)`, r.stq_id, r.author, now);
     return { ok: true };
   });
@@ -147772,7 +149426,7 @@ async function standingTick(self, now) {
   return { at: at34, ran, remaining: Math.max(0, due2.length - STANDING_TICK_MAX) };
 }
 function standingAnswersFor(self, { member = null, after = null, limit = null } = {}) {
-  const m = memberOf3(member) ?? (typeof member === "string" && /^[A-Za-z0-9._:-]{1,128}$/.test(member) ? member : null);
+  const m = memberOf4(member) ?? (typeof member === "string" && /^[A-Za-z0-9._:-]{1,128}$/.test(member) ? member : null);
   if (!m) return { ok: true, entries: [], cursor: null };
   const n = Number(limit);
   const cap = Number.isInteger(n) && n > 0 ? Math.min(n, STANDING_ANSWERS_MAX) : STANDING_ANSWERS_MAX;
@@ -148011,7 +149665,7 @@ var Answers = class {
   }
   /** J1 (2): the administrator's switch for the rule services. */
   ruleServicesSwitch({ on = null, by = null } = {}) {
-    const m = memberOf3(by);
+    const m = memberOf4(by);
     if (!m || !this.membership.isAdministrator(m)) return notAnAdmin(by ?? null, "switching the rule services");
     this.record.setSetting(RULE_SERVICES_SETTING, on === true, by);
     return { ok: true, on: on === true };
@@ -148090,7 +149744,7 @@ var Answers = class {
   }
   /** R13: the counts, to an administrator only. */
   tallies({ viewer = null, from = null, to = null } = {}) {
-    const m = memberOf3(viewer);
+    const m = memberOf4(viewer);
     if (!m || !this.membership.isAdministrator(m)) return notAnAdmin(viewer ?? null, "reading the assistant's tallies");
     const lo = filled11(from) ? from : "0000-00-00", hi = filled11(to) ? to : "9999-99-99";
     const rows3 = this.rows(`SELECT day, zone, mode, kind, code, n FROM answers_tallies WHERE day >= ? AND day <= ?
@@ -148102,7 +149756,7 @@ var Answers = class {
    * ===================================================================== */
   /** R19 (J1 (5)): the administrator's switch for the AI half of standing questions (off by default). */
   standingAiSwitch({ on = null, by = null } = {}) {
-    const m = memberOf3(by);
+    const m = memberOf4(by);
     if (!m || !this.membership.isAdministrator(m)) return notAnAdmin(by ?? null, "switching the standing questions' AI half");
     this.record.setSetting(STANDING_AI_SETTING, on === true, by);
     return { ok: true, on: on === true };
@@ -148156,16 +149810,16 @@ var Answers = class {
     return standingAnswersFor(this, a);
   }
 };
-var instances47 = /* @__PURE__ */ new WeakMap();
+var instances48 = /* @__PURE__ */ new WeakMap();
 function answersOf(host, deps) {
   const storage = host && host.storage ? host.storage : host;
-  let a = instances47.get(storage);
+  let a = instances48.get(storage);
   if (!a) {
     const d = deps || {};
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     a = new Answers({ ...d, storage: d.storage || storage, record, membership });
-    instances47.set(storage, a);
+    instances48.set(storage, a);
     const declared2 = record.declareTable("answers", ANSWERS_TABLES);
     if (!declared2 || declared2.ok === false) throw new Error(`answers' tables could not be declared: ${JSON.stringify(declared2)}`);
   }
@@ -148223,7 +149877,7 @@ function affordancesAnswer({
   };
 }
 async function affordancesOp(url, stub, {
-  json: json17,
+  json: json18,
   doAnswer: doAnswer2,
   storeSilent: storeSilent2,
   storeRefusal: storeRefusal2,
@@ -148241,7 +149895,7 @@ async function affordancesOp(url, stub, {
   if (kOut.refused) return storeRefusal2(kOut);
   if (!kOut.answered) return storeSilent2("affordances", kOut.correlation);
   const kinds3 = kOut.result?.kinds;
-  const answer = (result3) => json17({ ok: true, result: result3, store: storeName, tokenClass: cls3 }, 200);
+  const answer = (result3) => json18({ ok: true, result: result3, store: storeName, tokenClass: cls3 }, 200);
   if (out.refused) return storeRefusal2(out);
   if (!target) {
     if (!out.answered || !out.result) return storeSilent2("affordances", out.correlation);
@@ -148258,7 +149912,7 @@ async function affordancesOp(url, stub, {
   if (!facts) return storeSilent2("affordances");
   const result2 = affordancesAnswer({ target, facts, kinds: kinds3, gate });
   if (result2.ok === false)
-    return json17({ ...result2, store: storeName, tokenClass: cls3 }, result2.reason === "NO_SUCH_BUNDLE" ? 404 : 400);
+    return json18({ ...result2, store: storeName, tokenClass: cls3 }, result2.reason === "NO_SUCH_BUNDLE" ? 404 : 400);
   return answer(result2);
 }
 
@@ -154994,7 +156648,7 @@ var CAPTURE_CREDENTIAL_CHECKS = Object.freeze({
   CAPTURE_CREDENTIAL_NO_KEY: {
     check: "C-105.8",
     where: at21("credentialSupply", "is-credential-key-bound"),
-    translation: "No encryption key is bound to this instance, so no credential is stored or used."
+    translation: "No encryption key is set for your group's Civicsmith, so no credential is stored or used."
   },
   CAPTURE_CREDENTIAL_NO_SUCH: {
     check: "C-105.9",
@@ -155010,6 +156664,11 @@ var CAPTURE_CREDENTIAL_CHECKS = Object.freeze({
     check: "C-105.11",
     where: at21("credentialWithdraw", "is-credential-withdrawn"),
     translation: "The credential could not be read or withdrawn just now, so nothing was changed. Try again, and if it keeps failing tell an administrator."
+  },
+  CAPTURE_CREDENTIAL_OWN_HOST: {
+    check: "C-105.12",
+    where: at21("credentialSupply", "is-credential-host-foreign"),
+    translation: "A credential is never for one of your group's own hosts: the address your group's Civicsmith is reached at, or one of its fleet's. A capture goes only to other sites, so a credential for these is refused."
   }
 });
 var CREDENTIAL_LIST_LIMIT = 200;
@@ -155053,7 +156712,7 @@ var unb644 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
 var utf85 = (s) => new TextEncoder().encode(s);
 var stamp2 = (ms5) => new Date(ms5).toISOString().replace(/\.\d+Z$/, "Z");
 var OF7 = /* @__PURE__ */ new WeakMap();
-function credentialsOf2(ctx, { key = null, record = null, membership = null, now = null } = {}) {
+function credentialsOf2(ctx, { key = null, record = null, membership = null, now = null, ownHosts = void 0 } = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let c = OF7.get(storage);
   if (!c) {
@@ -155066,6 +156725,7 @@ function credentialsOf2(ctx, { key = null, record = null, membership = null, now
     });
     OF7.set(storage, c);
   }
+  if (Array.isArray(ownHosts)) c.setOwnHosts(ownHosts);
   return c;
 }
 var CaptureCredentials = class _CaptureCredentials {
@@ -155075,7 +156735,9 @@ var CaptureCredentials = class _CaptureCredentials {
   #secret;
   #key = null;
   #now;
-  constructor({ sql, core, members: members2, key = null, now = null }) {
+  #ownHosts = [];
+  constructor({ sql, core, members: members2, key = null, now = null, ownHosts = [] }) {
+    this.setOwnHosts(ownHosts);
     this.#sql = sql;
     this.#core = core;
     this.#members = members2;
@@ -155095,6 +156757,11 @@ var CaptureCredentials = class _CaptureCredentials {
     }]);
     if (typeof this.#members.onRevoked === "function")
       this.#members.onRevoked("capture-sources", ({ memberId } = {}) => this.#withdrawRevoked(memberId));
+  }
+  /** R65: the group's own hosts this store refuses (R55) and never answers for (R56). A copy of the list's strings;
+   *  anything else leaves the list empty. */
+  setOwnHosts(ownHosts) {
+    this.#ownHosts = Array.isArray(ownHosts) ? Object.freeze(ownHosts.filter((h) => typeof h === "string")) : [];
   }
   /** The table, created when absent; idempotent. */
   migrate() {
@@ -155201,7 +156868,7 @@ var CaptureCredentials = class _CaptureCredentials {
     const { kind, host, secret, scope, project, by } = args && typeof args === "object" ? args : {};
     try {
       if (!this.#active(by))
-        return refusal19("CAPTURE_CREDENTIAL_NOT_A_MEMBER", "the supplier named is not an active member of this instance");
+        return refusal19("CAPTURE_CREDENTIAL_NOT_A_MEMBER", "the supplier named is not an active member of your group");
       if (!CREDENTIAL_KINDS2.includes(kind))
         return refusal19("CAPTURE_CREDENTIAL_BAD_KIND", `the kind given is not one of ${CREDENTIAL_KINDS2.join(", ")}`);
       const h = hostNameOf(host);
@@ -155209,6 +156876,11 @@ var CaptureCredentials = class _CaptureCredentials {
         return refusal19(
           "CAPTURE_CREDENTIAL_BAD_HOST",
           "the host given is not a bare host name (a credential is for the one host the source that refused is served from)"
+        );
+      if (isOwnHost(h, this.#ownHosts))
+        return refusal19(
+          "CAPTURE_CREDENTIAL_OWN_HOST",
+          "the host given is one of your group's own (where your group's Civicsmith or its fleet is reached), and a credential is never for one of them"
         );
       const given2 = project !== void 0 && project !== null;
       if (!CREDENTIAL_SCOPES.includes(scope) || given2 && scope !== "project")
@@ -155224,7 +156896,7 @@ var CaptureCredentials = class _CaptureCredentials {
       if (denied) return denied;
       const key = await this.#aesKey();
       if (!key)
-        return refusal19("CAPTURE_CREDENTIAL_NO_KEY", "no encryption key is bound to this instance, so nothing is stored in the clear");
+        return refusal19("CAPTURE_CREDENTIAL_NO_KEY", "no encryption key is set for your group's Civicsmith, so nothing is stored in the clear");
       return await this.#store({ kind, h, secret, scope, project, by, key });
     } catch {
       return refusal19(
@@ -155269,6 +156941,8 @@ var CaptureCredentials = class _CaptureCredentials {
     try {
       const h = hostNameOf(host);
       if (!h) return none("the fetch names no host a credential can be for, so it goes without credentials");
+      if (isOwnHost(h, this.#ownHosts))
+        return none(`CAPTURE_CREDENTIAL_OWN_HOST: ${h} is one of your group's own hosts, so no credential is used for it and the fetch goes without credentials`);
       let who2 = principalMember(principalPlane);
       if (who2 !== null && !this.#active(who2)) {
         this.#withdrawRevoked(who2);
@@ -155286,7 +156960,7 @@ var CaptureCredentials = class _CaptureCredentials {
         return none(`no credential supplied for ${h} is admitted for this request's scope, so the fetch goes without credentials and the source's refusal stands`);
       const key = await this.#aesKey();
       if (!key)
-        return none("CAPTURE_CREDENTIAL_NO_KEY: no encryption key is bound to this instance, so no credential is used and the source's refusal stands");
+        return none("CAPTURE_CREDENTIAL_NO_KEY: no encryption key is set for your group's Civicsmith, so no credential is used and the source's refusal stands");
       let secret;
       try {
         const pt = await crypto.subtle.decrypt(
@@ -155296,7 +156970,7 @@ var CaptureCredentials = class _CaptureCredentials {
         );
         secret = new TextDecoder("utf-8", { fatal: true }).decode(pt);
       } catch {
-        return none(`credential ${r.credential_id} will not decrypt under this instance's key, so the fetch goes without credentials and the source's refusal stands`);
+        return none(`credential ${r.credential_id} will not decrypt under the key of your group's Civicsmith, so the fetch goes without credentials and the source's refusal stands`);
       }
       return { credentials: [{
         credential: r.credential_id,
@@ -156727,14 +158401,14 @@ function checkConsume(entries, opts) {
 var AI_RUN_STATE_MAX_BYTES = 262144;
 function checkRunState(state) {
   if (state == null) return null;
-  let json17;
+  let json18;
   try {
-    json17 = JSON.stringify(state);
+    json18 = JSON.stringify(state);
   } catch {
     return null;
   }
-  if (typeof json17 !== "string") return null;
-  const bytes2 = new TextEncoder().encode(json17).length;
+  if (typeof json18 !== "string") return null;
+  const bytes2 = new TextEncoder().encode(json18).length;
   if (bytes2 <= AI_RUN_STATE_MAX_BYTES) return null;
   return refusal22(
     "AI_RUN_STATE_TOO_LARGE",
@@ -156750,12 +158424,12 @@ var ASK_BOUNDS = Object.freeze({
 });
 function startAllowed(asked) {
   const { startedBy = null, mode = null, standing = null } = asked && typeof asked === "object" ? asked : {};
-  const memberOf4 = (who2) => {
+  const memberOf5 = (who2) => {
     const p3 = runPrincipalOf(who2);
     return /^member:\S/.test(p3) ? p3 : "";
   };
-  if (memberOf4(startedBy)) return { ok: true };
-  const author = standing && typeof standing === "object" ? memberOf4(standing.author) : "";
+  if (memberOf5(startedBy)) return { ok: true };
+  const author = standing && typeof standing === "object" ? memberOf5(standing.author) : "";
   const m = mode == null ? "" : String(mode).trim();
   if (author && m === "ask") return { ok: true, exception: "standing_question", author };
   return refusal22(
@@ -158471,13 +160145,13 @@ var AiRuns = class _AiRuns {
   async wake(now) {
     const iso6 = _AiRuns.#aiIso(now);
     const until = _AiRuns.#aiIso(now + _AiRuns.AI_RUN_LEASE_MS);
-    const holds = [], wakes = [], dispatches = [];
+    const holds2 = [], wakes = [], dispatches = [];
     const resumer = this.#aiRunWakeRuns().length ? await this.#aiRunResumer() : null;
     for (const r of this.#aiRunWakeHolds(iso6)) {
       this.#transact(() => {
         this.sql.exec(`UPDATE ai_runs SET expires = ? WHERE run = ?`, until, r.run);
       });
-      holds.push({ run: r.run, outstanding: r.outstanding, expires: until });
+      holds2.push({ run: r.run, outstanding: r.outstanding, expires: until });
     }
     for (const r of this.#aiRunWakeRuns()) {
       const done = (this.#wait().completions(r.run, _AiRuns.AI_RUN_WAKE_TICK_BATCH) || []).slice(0, _AiRuns.AI_RUN_WAKE_TICK_BATCH);
@@ -158521,8 +160195,8 @@ var AiRuns = class _AiRuns {
     }
     return {
       at: iso6,
-      held: holds.length,
-      holds,
+      held: holds2.length,
+      holds: holds2,
       woken: wakes.length,
       wakes,
       dispatched: wakes.filter((w) => w.dispatch && (w.dispatch.state === "DISPATCHED" || w.dispatch.state === "RUNNING")).length
@@ -159039,9 +160713,9 @@ var AiRuns = class _AiRuns {
     const atOpenParsed = atOpenHeld ? safeJson24(String(row9.lens_at_open)) : null;
     const atOpen = atOpenParsed && typeof atOpenParsed === "object" && !Array.isArray(atOpenParsed) ? atOpenParsed : null;
     const atOpenUnreadable = atOpenHeld && !atOpen;
-    const shaOf7 = (m) => m && m.in_force === true && typeof m.statements_sha === "string" ? m.statements_sha : null;
-    const openSha = atOpen ? shaOf7(atOpen) : null;
-    const nowSha = shaOf7(nowManifest);
+    const shaOf8 = (m) => m && m.in_force === true && typeof m.statements_sha === "string" ? m.statements_sha : null;
+    const openSha = atOpen ? shaOf8(atOpen) : null;
+    const nowSha = shaOf8(nowManifest);
     const nowBlock = {
       in_force: nowManifest.in_force === true,
       statements_sha: nowManifest.statements_sha ?? null,
@@ -160272,7 +161946,7 @@ var safeJson25 = (s) => {
     return null;
   }
 };
-var HEX6415 = /^[0-9a-f]{64}$/;
+var HEX6416 = /^[0-9a-f]{64}$/;
 function posFields2(pos) {
   const { kind, ref, ...rest } = pos;
   return rest;
@@ -160606,7 +162280,7 @@ var RunProductions = class _RunProductions {
       const named = legsIn[i]?.extent_capture;
       const isDoc = normalizeType(row9.object_type) === "information";
       if (named !== void 0 && named !== null && named !== "") {
-        const held3 = isDoc && typeof named === "string" && HEX6415.test(named) ? this.content.captureFor(t2, named) : null;
+        const held3 = isDoc && typeof named === "string" && HEX6416.test(named) ? this.content.captureFor(t2, named) : null;
         if (!held3) {
           unreachable.push({ ord: i, target: t2, why: "the capture it names is not one this record holds for it" });
           continue;
@@ -160800,24 +162474,24 @@ Changes: reading '${name2}' proposed as ${kind}, in state suggested, carrying ru
    *  proposal that says WHERE it read the reference mints that passage through `content` (on the capture's own chain,
    *  so a member's later citation of the same passage finds this row); one with no position mints nothing. */
   extractPropose({ run: run2, bundleId, fn, version, cap = null, refs, proposedBy, viewer = null, at: at34 = null, caller = null }) {
-    const refuse21 = (code, detail, extra) => {
+    const refuse22 = (code, detail, extra) => {
       const row9 = EXTRACT_PROPOSE_CHECKS[code];
       return { ok: false, reason: code, code, check: row9.check, translation: row9.translation, detail, ...extra || {} };
     };
     if (typeof proposedBy !== "string" || !proposedBy.trim())
-      return refuse21(
+      return refuse22(
         "NO_PROPOSER",
         `a proposed reading records WHO proposed it. The plane stamps that from the credential that asked, so an empty one means the act arrived by a route that does not attribute it \u2014 which is refused rather than filled in`
       );
     if (typeof run2 !== "string" || !run2.trim())
-      return refuse21(
+      return refuse22(
         "NO_RUN",
         `EXTRACT runs in DEC-62's RUN and nowhere else: the run is the object that bounds this work, logs it, resumes it and checks it plane-side. A production outside one would be a second place a machine writes`
       );
     const runId = run2.trim();
     const r = this.aiRuns.runFor(runId, viewer);
     if (!r)
-      return refuse21(
+      return refuse22(
         "NO_SUCH_RUN",
         `no run is open under ${runId}. A run begins on a MEMBER's act (op=airunopen), naming the subject and the objective \u2014 both of which stay the member's (DEC-24 rule 2). The assistant may propose that a run would help; it may not start one`,
         { run: runId }
@@ -160835,33 +162509,33 @@ Changes: reading '${name2}' proposed as ${kind}, in state suggested, carrying ru
         note: "a proposed reading names a run its caller holds. Nothing was proposed or minted"
       };
     if (r.status !== "running")
-      return refuse21(
+      return refuse22(
         "RUN_NOT_RUNNING",
         `this run has ended. Its log is closed and a later production does not reopen it \u2014 the conditions a run was formed under are what its work is interpretable against, and they stopped being current when it stopped`,
         { run: runId, status: r.status }
       );
     if (String(r.mode || "") !== EXTRACT_RUN_MODE)
-      return refuse21(
+      return refuse22(
         "NOT_AN_EXTRACT_RUN",
         `this run was opened in mode '${r.mode == null ? "(none)" : String(r.mode)}' and a proposed reading is the EXTRACT role's production. A run's mode is one of the conditions it was formed under: it is read back, never widened by the work`,
         { run: runId, mode: r.mode ?? null }
       );
     const bound = this.aiRuns.boundOf(runId, "mints");
     if (!bound || !(Number(bound.allowed) > 0))
-      return refuse21(
+      return refuse22(
         "NO_MINTS_BOUND",
         `this run declares no 'mints' bound, so its productions would be unbounded \u2014 and a machine that may mark passages citable without a bound produces a store of proposals nobody cited, each correctly labelled and the whole unexamined. The bound is declared at op=airunopen, by the member who opens the run`,
         { run: runId }
       );
     if (Number(bound.consumed) >= Number(bound.allowed))
-      return refuse21(
+      return refuse22(
         "MINTS_BOUND_REACHED",
         `this run has reached its 'mints' bound (${Number(bound.consumed)} of ${Number(bound.allowed)}). The next tick ends the run, and the log says which bound stopped it and where`,
         { run: runId, allowed: Number(bound.allowed), consumed: Number(bound.consumed) }
       );
     const list6 = Array.isArray(refs) ? refs : [];
     if (list6.length === 0)
-      return refuse21(
+      return refuse22(
         "NO_PROPOSALS",
         `a proposed reading carries what the machine found. An EMPTY one is not a reading that found nothing \u2014 that is an observation about a LOOK, and it belongs in the run's log, where absence is first-class and says which of the four levels it was`
       );
@@ -160877,14 +162551,14 @@ Changes: reading '${name2}' proposed as ${kind}, in state suggested, carrying ru
         detail: `no document is addressed by ${bundleId} in this record`
       };
     if (normalizeType(b.object_type) !== "information")
-      return refuse21(
+      return refuse22(
         "NOT_A_DOCUMENT",
         `${bundleId} is not a document, so there is no text to have read. The content axis ranges over documents (DEC-21)`,
         { target: bundleId, target_type: normalizeType(b.object_type) ?? null }
       );
     const sha2 = this.content.captureFor(bundleId);
     if (!sha2)
-      return refuse21(
+      return refuse22(
         "NO_BYTES_HELD",
         `this record holds no capture of ${bundleId}, so there is no text a machine could have read. Absence here is a fact about what was captured and never evidence about what the document says`,
         { target: bundleId }
@@ -160909,7 +162583,7 @@ Changes: reading '${name2}' proposed as ${kind}, in state suggested, carrying ru
     }
     const willMint = rows3.filter((x) => x.pos != null).length;
     if (Number(bound.consumed) + willMint > Number(bound.allowed))
-      return refuse21(
+      return refuse22(
         "MINTS_BOUND_WOULD_EXCEED",
         `this batch would mark ${willMint} passage(s) citable and this run has ${Number(bound.allowed) - Number(bound.consumed)} left of its 'mints' bound. It is refused whole rather than truncated: a batch trimmed to fit would drop proposals the caller believes it filed`,
         { run: runId, allowed: Number(bound.allowed), consumed: Number(bound.consumed), would_mint: willMint }
@@ -161146,9 +162820,9 @@ Changes: reading '${name2}' proposed as ${kind}, in state suggested, carrying ru
     return out;
   }
 };
-var instances48 = /* @__PURE__ */ new WeakMap();
+var instances49 = /* @__PURE__ */ new WeakMap();
 function runProductionsOf(host, deps) {
-  let p3 = instances48.get(host);
+  let p3 = instances49.get(host);
   if (!p3) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -161167,7 +162841,7 @@ function runProductionsOf(host, deps) {
       basisVersions: d.basisVersions || basisVersionsOf(host, { record, membership, content }),
       now: d.now || null
     });
-    instances48.set(host, p3);
+    instances49.set(host, p3);
     record.declarePurge(RUN_PRODUCTIONS_MODULE, RUN_PRODUCTIONS_TABLES);
     p3.basisVersions.onCandidates(RUN_PRODUCTIONS_MODULE, (a) => p3.candidates(a));
   }
@@ -168093,10 +169767,10 @@ var CAPTURE_REQUESTS_TABLES = Object.freeze([
     version_chain: false
   })
 ]);
-var instances49 = /* @__PURE__ */ new WeakMap();
+var instances50 = /* @__PURE__ */ new WeakMap();
 function captureRequestsOf(host, deps = {}) {
   const storage = host && host.storage ? host.storage : host;
-  let c = instances49.get(storage);
+  let c = instances50.get(storage);
   if (!c) {
     const env = deps.env || {};
     const record = deps.record || recordOf(host);
@@ -168117,7 +169791,7 @@ function captureRequestsOf(host, deps = {}) {
       inquiry: deps.inquiry || { memberUserAgent: (id) => inquiryOf(host).memberUserAgent(id) }
     };
     c = new CaptureRequests(storage, d);
-    instances49.set(storage, c);
+    instances50.set(storage, c);
     if (typeof record.declareTable === "function") {
       const declared2 = record.declareTable(CAPTURE_REQUESTS_MODULE, CAPTURE_REQUESTS_TABLES.map((t2) => ({ ...t2 })));
       if (declared2 && declared2.ok === false)
@@ -170331,9 +172005,9 @@ function intentOps(i, url, body) {
     workobjective: () => i.workObjective({ ...b, viewer: qp("viewer") })
   };
 }
-var instances50 = /* @__PURE__ */ new WeakMap();
+var instances51 = /* @__PURE__ */ new WeakMap();
 function intentOf(host, deps) {
-  let i = instances50.get(host);
+  let i = instances51.get(host);
   if (!i) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -170354,7 +172028,7 @@ function intentOf(host, deps) {
       captureRequests: d.captureRequests || (() => captureRequestsOf(host)),
       money: d.money || (() => moneyOf2(host))
     });
-    instances50.set(host, i);
+    instances51.set(host, i);
     record.declarePurge("intent", INTENT_TABLES);
     promotion.registerStep("intent", { check: (c) => i.check(c) });
     record.registerAuditCheck("intent", (image) => i.auditCheck(image));
@@ -172209,9 +173883,9 @@ function determinationDoc({
   ];
   return lines2.join("\n");
 }
-var instances51 = /* @__PURE__ */ new WeakMap();
+var instances52 = /* @__PURE__ */ new WeakMap();
 function conformanceOf(host, deps) {
-  let c = instances51.get(host);
+  let c = instances52.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -172219,7 +173893,7 @@ function conformanceOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     c = new Conformance({ ...d, host, storage, record, membership, promotion });
-    instances51.set(host, c);
+    instances52.set(host, c);
     c.migrate();
     record.declarePurge("conformance", CONFORMANCE_TABLES);
     promotion.registerStep("conformance", { check: (x) => c.check(x) });
@@ -172547,7 +174221,7 @@ function withRow7(r) {
   if (!row9) return r;
   return { ...r, code: r.code ?? r.reason, check: r.check ?? row9.check, translation: r.translation ?? row9.translation };
 }
-var refuse15 = (code, detail, extra) => withRow7({ ok: false, reason: code, detail, ...extra || {} });
+var refuse16 = (code, detail, extra) => withRow7({ ok: false, reason: code, detail, ...extra || {} });
 var NO_SUCH_ACTION_DETAIL = "no action answers to that id here. An action you may not see is answered exactly as one that does not exist, so this is not a hint either way.";
 var NO_SUCH_ACTION_FIXED = /* @__PURE__ */ new Set(["ok", "reason", "code", "check", "translation", "action", "detail"]);
 function noSuchAction(actionId, extra = null) {
@@ -173019,7 +174693,7 @@ var Actions = class _Actions {
     const was = head ? _Actions.#lawsKey(heldFm) : JSON.stringify([null, null, null]);
     const now = _Actions.#lawsKey(nextFm);
     if (was !== now)
-      return refuse15(
+      return refuse16(
         "GOVERNING_LAWS_REWRITTEN",
         `${head ? "this revision of" : "this creation of"} ${bundleId} sets or changes its governing laws without op=actionlaws. The laws that govern a request are a member's authored statement, set by that act and carried forward unchanged by every other write. Nothing was written.`,
         { bundleId }
@@ -173033,7 +174707,7 @@ var Actions = class _Actions {
   #machineRiskTierRefusal({ who: who2, nextTier, heldTier, cur, act: act2 }) {
     const heldSet = heldTier === 1 || heldTier === 2 || heldTier === 3;
     if ((!who2 || isMachineIdentity(who2)) && (act2 || (nextTier === 1 || nextTier === 2 || nextTier === 3 || heldSet) && nextTier !== heldTier))
-      return refuse15(
+      return refuse16(
         "MACHINE_CANNOT_SET_RISK_TIER",
         (act2 ? `op=actionrisktier is a member's authored revision of this action's risk tier (held: ${heldTier}).` : cur ? `this revision states risk_tier ${nextTier} where the version it replaces states ${heldTier}.` : `this creation states risk_tier ${nextTier}.`) + " A risk tier is a member's assessment of the legal exposure of filing this action, and only a member's authored act sets 1, 2 or 3. A machine credential may carry a member's tier forward unchanged, and may leave the tier unstated (undetermined) only where no member has set one; it may not remove a member's tier. Nothing was written.",
         { risk_tier: nextTier, held: cur ? heldTier : null }
@@ -173052,7 +174726,7 @@ var Actions = class _Actions {
     const tierMoved = head ? nextTier !== heldTier : false;
     const histMoved = histKey(nextFm) !== (head ? histKey(heldFm) : "[]");
     if (tierMoved || histMoved)
-      return refuse15(
+      return refuse16(
         "RISK_TIER_REWRITTEN",
         (tierMoved ? `this revision of ${bundleId} states risk_tier ${nextTier} where the version it replaces states ${heldTier}` : `this ${head ? "revision" : "creation"} of ${bundleId} ${head ? "changes" : "states"} its risk_tier_history`) + " without op=actionrisktier. After intake a risk tier is revised by that act alone \u2014 it records who, when and why, and keeps every earlier tier readable. Nothing was written.",
         { bundleId, ...head ? { held: heldTier } : {}, risk_tier: nextTier }
@@ -173064,7 +174738,7 @@ var Actions = class _Actions {
     const lawOf = (fm) => fm && typeof fm.law === "string" && fm.law.trim() ? fm.law.trim() : null;
     const was = creation ? null : lawOf(heldFm), now = lawOf(nextFm);
     if ((!who2 || isMachineIdentity(who2)) && was !== now)
-      return refuse15(
+      return refuse16(
         "MACHINE_CANNOT_STATE_RECORDS_LAW",
         "which law governs a records request is a member's statement. A machine credential may write a records_request stating no law, and may propose one (op=actionlawspropose); it may not state, change or remove the law. Nothing was written.",
         { held: was, law: now }
@@ -173082,10 +174756,10 @@ var Actions = class _Actions {
     if (kindMoved) {
       const kinds3 = this.kinds();
       if (!kinds3.includes(nextFm.action_kind))
-        return refuse15("ACTION_KIND_UNKNOWN", `action_kind '${String(nextFm.action_kind).slice(0, 40)}' is not a kind your group's Civicsmith offers: one of ${kinds3.join(", ")}. Nothing was written.`, { legal: kinds3 });
+        return refuse16("ACTION_KIND_UNKNOWN", `action_kind '${String(nextFm.action_kind).slice(0, 40)}' is not a kind your group's Civicsmith offers: one of ${kinds3.join(", ")}. Nothing was written.`, { legal: kinds3 });
     }
     if (riskTierState(nextFm.risk_tier) === null)
-      return refuse15("RISK_TIER_REFUSED", `risk_tier '${String(nextFm.risk_tier).slice(0, 20)}' is not 1, 2, 3 or undetermined. Nothing was written.`, { legal: Object.keys(RISK_TIERS) });
+      return refuse16("RISK_TIER_REFUSED", `risk_tier '${String(nextFm.risk_tier).slice(0, 20)}' is not 1, 2, 3 or undetermined. Nothing was written.`, { legal: Object.keys(RISK_TIERS) });
     const cp = nextFm.counterparty;
     const cpMoved = creation || !heldFm || JSON.stringify(heldFm.counterparty ?? null) !== JSON.stringify(cp ?? null);
     if (cpMoved && cp !== void 0 && cp !== null) {
@@ -173099,14 +174773,14 @@ var Actions = class _Actions {
       else if (!cf.length && eid && addresseeIsOffice(cp) && eidKind !== "office")
         cf.push({ check: "C-2.10", severity: "error", message: `counterparty.entity_id '${eid.slice(0, 40)}' names ${eidKind ? `an entity of kind ${eidKind}` : "no entity the subject registry holds"}: an office addressee's entity is an office entity (R9, arm: office)` });
       if (cf.length || office)
-        return refuse15(
+        return refuse16(
           "COUNTERPARTY_REFUSED",
           cf.length ? cf[0].message : "a named counterparty is an office, stated by its official role and the body it belongs to (R9). Nothing was written.",
           { findings: findingsOf(cf.length ? cf : [{ check: "C-2.10", severity: "error", message: "counterparty names no office (role and body)" }]) }
         );
     }
     if (nextFm.current_state === "resolved" && !RESOLUTIONS.includes(nextFm.resolution))
-      return refuse15("ACTION_RESOLUTION_REFUSED", `a resolved action names how it ended: one of ${RESOLUTIONS.join(", ")}. Nothing was written.`, { legal: RESOLUTIONS });
+      return refuse16("ACTION_RESOLUTION_REFUSED", `a resolved action names how it ended: one of ${RESOLUTIONS.join(", ")}. Nothing was written.`, { legal: RESOLUTIONS });
     const clock2 = nextFm.clock;
     if (clock2 !== void 0 && clock2 !== null) {
       const bad2 = [];
@@ -173119,7 +174793,7 @@ var Actions = class _Actions {
           if (!["pending", "met", "overdue", "waived"].includes(e2.status)) bad2.push({ check: "C-11.1", detail: `clock[${i}].status '${e2.status}' is not one of: pending, met, overdue, waived` });
         }
       });
-      if (bad2.length) return refuse15("CLOCK_REFUSED", bad2[0].detail, { findings: bad2 });
+      if (bad2.length) return refuse16("CLOCK_REFUSED", bad2[0].detail, { findings: bad2 });
     }
     if (!creation && (!who2 || isMachineIdentity(who2) || writer === "mechanical")) {
       const today2 = localToday(this.#nowMs(null), zoneOf(this.place())) ?? "0000-00-00";
@@ -173129,7 +174803,7 @@ var Actions = class _Actions {
       const moved = clockMovesNotMechanical(heldClock, nextClock, today2);
       const reshaped = heldClock.length !== nextClock.length || heldClock.some((e2, i) => _Actions.#clockShape(e2) !== _Actions.#clockShape(nextClock[i]));
       if (moved.length || reshaped || !recheck && JSON.stringify(heldClock) !== JSON.stringify(nextClock))
-        return refuse15("CLOCK_STATUS_NOT_MECHANICAL", "a machine write may move a pending clock entry whose date has passed to overdue, and nothing else: it never adds, removes or re-dates an entry or sets another status. Nothing was written.", { moves: moved });
+        return refuse16("CLOCK_STATUS_NOT_MECHANICAL", "a machine write may move a pending clock entry whose date has passed to overdue, and nothing else: it never adds, removes or re-dates an entry or sets another status. Nothing was written.", { moves: moved });
     }
     return null;
   }
@@ -173151,18 +174825,18 @@ var Actions = class _Actions {
     const held2 = key(heldFm), next = key(nextFm);
     if (held2 !== next) {
       if (!who2 || isMachineIdentity(who2))
-        return refuse15("MACHINE_CANNOT_OVERRIDE", "a premise override is a member's open statement that the group acts on a breach it has not determined, with the reason why. A machine credential may not state or change one. Nothing was written.");
+        return refuse16("MACHINE_CANNOT_OVERRIDE", "a premise override is a member's open statement that the group acts on a breach it has not determined, with the reason why. A machine credential may not state or change one. Nothing was written.");
       const o = nextFm.premise_override;
       const firstBreach = nextFm.breach === true && !(heldFm && heldFm.breach === true);
       if (held2 !== "null" || !firstBreach)
-        return refuse15("PREMISE_OVERRIDE_REWRITTEN", held2 !== "null" ? "this write edits or removes the action's premise override. It is stated once and kept as it was. Nothing was written." : "a premise override is stated on the creation or revision that first marks the action a breach, and on no other write. Nothing was written.");
+        return refuse16("PREMISE_OVERRIDE_REWRITTEN", held2 !== "null" ? "this write edits or removes the action's premise override. It is stated once and kept as it was. Nothing was written." : "a premise override is stated on the creation or revision that first marks the action a breach, and on no other write. Nothing was written.");
       const keys = o && typeof o === "object" && !Array.isArray(o) ? Object.keys(o) : null;
       if (!keys || keys.join() !== "reason" || typeof o.reason !== "string" || !o.reason.trim() || o.reason.length > NOTE_MAX5 || /["\\\r\n]/.test(o.reason))
-        return refuse15("PREMISE_OVERRIDE_REFUSED", `premise_override is {reason}: 1 to ${NOTE_MAX5} characters with no quote, backslash or line break. Nothing was written.`, { max: NOTE_MAX5 });
+        return refuse16("PREMISE_OVERRIDE_REFUSED", `premise_override is {reason}: 1 to ${NOTE_MAX5} characters with no quote, backslash or line break. Nothing was written.`, { max: NOTE_MAX5 });
     }
     const cp = nextFm.counterparty;
     if (nextFm.breach === true && cp !== void 0 && cp !== null && !addresseeIsOffice(cp))
-      return refuse15("ADDRESSEE_NOT_AN_OFFICE", `an action recorded for a breach is addressed to the office responsible, by its official role and body; this one is addressed to ${cp && typeof cp === "object" && cp.state === "named" ? `a ${cp.kind}` : `${cp && cp.state ? `an addressee ${cp.state}` : "no office"}`}. Nothing was written.`, { counterparty_state: cp && typeof cp === "object" ? cp.state ?? null : null });
+      return refuse16("ADDRESSEE_NOT_AN_OFFICE", `an action recorded for a breach is addressed to the office responsible, by its official role and body; this one is addressed to ${cp && typeof cp === "object" && cp.state === "named" ? `a ${cp.kind}` : `${cp && cp.state ? `an addressee ${cp.state}` : "no office"}`}. Nothing was written.`, { counterparty_state: cp && typeof cp === "object" ? cp.state ?? null : null });
     return null;
   }
   /* R45 (D5), R46 (Bob's ruling 1 of 2026-09-29): the group's contact, set or changed by a member and naming one; the
@@ -173171,7 +174845,7 @@ var Actions = class _Actions {
     const same3 = (k) => JSON.stringify(heldFm && heldFm[k] !== void 0 ? heldFm[k] : null) === JSON.stringify(nextFm[k] !== void 0 ? nextFm[k] : null);
     if (!same3("contact")) {
       if (!who2 || isMachineIdentity(who2))
-        return refuse15("MACHINE_CANNOT_SET_CONTACT", "the group's contact for an action is a member's choice; a machine credential may not set or change it. Nothing was written.");
+        return refuse16("MACHINE_CANNOT_SET_CONTACT", "the group's contact for an action is a member's choice; a machine credential may not set or change it. Nothing was written.");
       const id = contactId(nextFm.contact);
       let facts = null;
       if (id) {
@@ -173186,11 +174860,11 @@ var Actions = class _Actions {
     const has3 = (fm, k) => fm && fm[k] !== void 0 && fm[k] !== null && fm[k] !== "";
     if (c.head) {
       if (!same3("plan") || !same3("option"))
-        return refuse15("PLAN_LINK_REWRITTEN", "the plan and option an action was started from are set when it is created and never set, changed or removed by a revision. Nothing was written.");
+        return refuse16("PLAN_LINK_REWRITTEN", "the plan and option an action was started from are set when it is created and never set, changed or removed by a revision. Nothing was written.");
     } else if (has3(nextFm, "plan") || has3(nextFm, "option")) {
       const plan = nextFm.plan, option = nextFm.option;
       if (typeof plan !== "string" || !PLAN_ID_RE.test(plan) || !(typeof option === "string" && /^[A-Za-z0-9_.:-]{1,80}$/.test(option) || Number.isInteger(option)))
-        return refuse15("PLAN_LINK_REFUSED", "plan is a PLN- id and option a token of 1 to 80 letters, digits, '_', '.', ':' or '-', stated together. Nothing was written.");
+        return refuse16("PLAN_LINK_REFUSED", "plan is a PLN- id and option a token of 1 to 80 letters, digits, '_', '.', ':' or '-', stated together. Nothing was written.");
     }
     return null;
   }
@@ -173203,9 +174877,9 @@ var Actions = class _Actions {
     const lawStd = val5(nextFm, "law_standard");
     if (JSON.stringify(val5(heldFm, "law_standard")) !== JSON.stringify(lawStd)) {
       if (!who2 || isMachineIdentity(who2))
-        return refuse15("MACHINE_CANNOT_STATE_RECORDS_LAW", "which law governs a records request, and the held standard it names, are a member's statement. A machine credential may propose one (op=actionlawspropose); it may not state, change or remove it. Nothing was written.", { held: val5(heldFm, "law_standard"), law_standard: lawStd });
+        return refuse16("MACHINE_CANNOT_STATE_RECORDS_LAW", "which law governs a records request, and the held standard it names, are a member's statement. A machine credential may propose one (op=actionlawspropose); it may not state, change or remove it. Nothing was written.", { held: val5(heldFm, "law_standard"), law_standard: lawStd });
       if (lawStd !== null && (nextFm.action_kind !== "records_request" || typeof nextFm.law !== "string" || !nextFm.law.trim()))
-        return refuse15(
+        return refuse16(
           "RECORDS_LAW_REFUSED",
           "law_standard names the held standard of a records request's stated law; this action states no law, or is not a records_request. Nothing was written.",
           { findings: [{
@@ -173222,7 +174896,7 @@ var Actions = class _Actions {
     const proc2 = val5(nextFm, "proceeding");
     if (JSON.stringify(val5(heldFm, "proceeding")) !== JSON.stringify(proc2)) {
       if (!who2 || isMachineIdentity(who2))
-        return refuse15("MACHINE_CANNOT_SET_PROCEEDING", "the proceeding an action belongs to is a member's statement; a machine credential may not set, change or remove it. Nothing was written.");
+        return refuse16("MACHINE_CANNOT_SET_PROCEEDING", "the proceeding an action belongs to is a member's statement; a machine credential may not set, change or remove it. Nothing was written.");
       if (proc2 !== null) {
         const r = this.#proceedingRefusal(proc2);
         if (r) return r;
@@ -173250,7 +174924,7 @@ var Actions = class _Actions {
     const kind = pid ? this.#entityKind(pid) : null;
     if (!kind) return noSuchEntity(pid || null, { end: "proceeding" });
     if (kind !== "proceeding")
-      return refuse15("NOT_A_PROCEEDING", `proceeding names an entity of kind ${kind}; an action belongs to an entity of kind proceeding. Nothing was written.`, { entity_id: pid, kind });
+      return refuse16("NOT_A_PROCEEDING", `proceeding names an entity of kind ${kind}; an action belongs to an entity of kind proceeding. Nothing was written.`, { entity_id: pid, kind });
     return null;
   }
   /* R3 (N237, K351): a document holding more legs or entries than the projection reads is refused where it is authored
@@ -173262,7 +174936,7 @@ var Actions = class _Actions {
     const part = legs > ACTION_LEGS_MAX ? "action_basis" : "correspondence";
     const count2 = part === "action_basis" ? legs : ledger;
     const limit = part === "action_basis" ? ACTION_LEGS_MAX : ACTION_LEDGER_MAX;
-    return refuse15("ACTION_TOO_LARGE", `this action's ${part} holds ${count2} entries; an action holds at most ${limit}. Nothing was written.`, { part, count: count2, limit });
+    return refuse16("ACTION_TOO_LARGE", `this action's ${part} holds ${count2} entries; an action holds at most ${limit}. Nothing was written.`, { part, count: count2, limit });
   }
   /** R1–R3, R5–R8, R33: this module's check, run inside every promotion before the write (promotion R39). */
   check(c) {
@@ -173291,14 +174965,14 @@ var Actions = class _Actions {
       if (large) return large;
       const af = [];
       actionBasisFindings(nextFm, af);
-      if (af.some((x) => x.severity === "error")) return refuse15("ACTION_BASIS_REFUSED", void 0, { findings: findingsOf(af) });
+      if (af.some((x) => x.severity === "error")) return refuse16("ACTION_BASIS_REFUSED", void 0, { findings: findingsOf(af) });
       const cf = [];
       correspondenceFindings(nextFm, cf);
-      if (cf.some((x) => x.severity === "error")) return refuse15("CORRESPONDENCE_REFUSED", void 0, { findings: findingsOf(cf) });
+      if (cf.some((x) => x.severity === "error")) return refuse16("CORRESPONDENCE_REFUSED", void 0, { findings: findingsOf(cf) });
       for (const leg2 of Array.isArray(nextFm.action_basis) ? nextFm.action_basis : []) {
         if (!leg2 || typeof leg2.target !== "string") continue;
         if (!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, leg2.target))
-          return refuse15("ACTION_BASIS_REFUSED", void 0, { target: leg2.target, findings: [{
+          return refuse16("ACTION_BASIS_REFUSED", void 0, { target: leg2.target, findings: [{
             check: "C-2.10",
             detail: `action_basis target '${leg2.target}' does not resolve in this store: an action that names why it exists names something that exists, or it points a reader at nothing while claiming a reason`
           }] });
@@ -173307,7 +174981,7 @@ var Actions = class _Actions {
         if (!e2 || typeof e2.artifact_sha !== "string" || !e2.artifact_sha.trim()) continue;
         const sha2 = e2.artifact_sha.trim().replace(/^sha256:/, "").toLowerCase();
         if (!this.#one(`SELECT capture_sha FROM register WHERE capture_sha=?`, sha2))
-          return refuse15("CORRESPONDENCE_REFUSED", void 0, { artifact_sha: sha2, findings: [{
+          return refuse16("CORRESPONDENCE_REFUSED", void 0, { artifact_sha: sha2, findings: [{
             check: "C-2.10",
             detail: `correspondence artifact_sha '${sha2.slice(0, 16)}...' does not resolve in the register: an entry claiming captured bytes names bytes this store holds, or it is testimony and says so with an account and an author (DEC-13)`,
             repairs: ["capture the artifact first (op=capture), then record its sha", "or record a named account instead"]
@@ -173319,11 +174993,11 @@ var Actions = class _Actions {
     if (nextFm && typeof nextFm === "object" && !pkg.replay) {
       const rf = [];
       respondsToEdgeFindings(nextFm, rf);
-      if (rf.some((x) => x.severity === "error")) return refuse15("RESPONDS_TO_REFUSED", void 0, { findings: findingsOf(rf) });
+      if (rf.some((x) => x.severity === "error")) return refuse16("RESPONDS_TO_REFUSED", void 0, { findings: findingsOf(rf) });
       for (const r of Array.isArray(nextFm.references) ? nextFm.references : []) {
         if (!r || typeof r !== "object" || r.rel !== "responds_to") continue;
         if (!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, r.target))
-          return refuse15("RESPONDS_TO_REFUSED", void 0, { target: r.target, findings: [{
+          return refuse16("RESPONDS_TO_REFUSED", void 0, { target: r.target, findings: [{
             check: "C-6.1",
             detail: `responds_to target '${r.target}' does not resolve in this store: this document claims to be what came back from an ask that is not here`
           }] });
@@ -173355,7 +175029,7 @@ var Actions = class _Actions {
       return null;
     }
     if (superseded) return determinationSuperseded(superseded.id, superseded.by);
-    return refuse15(
+    return refuse16(
       "ACTION_NO_DETERMINATION",
       readable ? "an action recorded for a breach rests on a live conformance determination you may see, as a rests_on leg. None of its legs names one. Nothing was written." : "an action recorded for a breach rests on a conformance determination, and no determination can be read on your group's Civicsmith yet, so none could be found. Nothing was written.",
       readable ? {} : { cause: "CONFORMANCE_UNAVAILABLE" }
@@ -174071,15 +175745,15 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
   /* R48 (K597 (1)): the conditions on a pressure mark, at `actionCorrespond` and `actionPressure` alike. */
   #pressureRefusal({ who: who2, mark, direction }) {
     if (!who2 || isMachineIdentity(who2))
-      return refuse15("MACHINE_CANNOT_MARK_PRESSURE", "marking pressure directed at the group is a member's judgement; a machine credential may not mark it. Nothing was written.");
+      return refuse16("MACHINE_CANNOT_MARK_PRESSURE", "marking pressure directed at the group is a member's judgement; a machine credential may not mark it. Nothing was written.");
     if (!mark || !PRESSURE_KINDS2.includes(mark.kind) || !mark.note || mark.note.length > NOTE_MAX5 || /["\\\r\n]/.test(mark.raw))
-      return refuse15(
+      return refuse16(
         "PRESSURE_REFUSED",
         `a pressure mark is {kind, note}: kind one of ${PRESSURE_KINDS2.join(", ")}, the note 1 to ${NOTE_MAX5} characters with no quote, backslash or line break. Nothing was written.`,
         { legal: PRESSURE_KINDS2, max: NOTE_MAX5 }
       );
     if (direction !== "received")
-      return refuse15("PRESSURE_NOT_RECEIVED", `pressure is marked on a received entry; this one is ${direction || "not one"}. Nothing was written.`);
+      return refuse16("PRESSURE_NOT_RECEIVED", `pressure is marked on a received entry; this one is ${direction || "not one"}. Nothing was written.`);
     return null;
   }
   /** R48: `actionPressure` marks pressure on a received entry already recorded, in this module's own table; the entry
@@ -174100,7 +175774,7 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
     const n = typeof ord === "number" ? ord : /^\d+$/.test(String(ord ?? "").trim()) ? Number(String(ord).trim()) : NaN;
     const entry3 = Number.isInteger(n) ? ledger[n] : void 0;
     if (!entry3 || typeof entry3 !== "object")
-      return refuse15(
+      return refuse16(
         "PRESSURE_NO_ENTRY",
         "no correspondence entry stands at that position. Nothing was written.",
         { target, ord: ord ?? null, entries: ledger.length }
@@ -174108,7 +175782,7 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
     const notReceived = this.#pressureRefusal({ who: who2, mark, direction: entry3.direction });
     if (notReceived) return { ...notReceived, target, ord: n };
     if (this.#one(`SELECT ord FROM action_pressure WHERE bundle_id=? AND ord=?`, target, n))
-      return refuse15("PRESSURE_MARKED", "that entry is already marked as pressure, and a mark is never rewritten. Nothing was written.", { target, ord: n });
+      return refuse16("PRESSURE_MARKED", "that entry is already marked as pressure, and a mark is never rewritten. Nothing was written.", { target, ord: n });
     const at34 = stampInstant("second", this.#nowMs(null));
     this.sql.exec(
       `INSERT INTO action_pressure (bundle_id, ord, kind, note, marked_by, at) VALUES (?,?,?,?,?,?)`,
@@ -174141,12 +175815,12 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
     const preview = mode === "preview", release2 = mode === "release";
     const h = release2 ? "released" : typeof hold === "string" ? hold.trim() : "";
     const why = typeof reason === "string" ? reason.trim() : "";
-    const machine3 = !preview && (!who2 || isMachineIdentity(who2)) ? refuse15("MACHINE_CANNOT_SET_HOLD", "saying whether a litigation hold is in place is a member's judgement; a machine credential may not state it. Nothing was written.") : null;
-    const shape = !preview && (!HOLD_STATES.includes(h) || !why || why.length > NOTE_MAX5 || /["\\\r\n]/.test(why)) ? refuse15("HOLD_REFUSED", `a litigation hold is one of ${HOLD_STATES.join(", ")}, with a reason of 1 to ${NOTE_MAX5} characters and no quote, backslash or line break. Nothing was written.`, { legal: HOLD_STATES, max: NOTE_MAX5 }) : null;
+    const machine3 = !preview && (!who2 || isMachineIdentity(who2)) ? refuse16("MACHINE_CANNOT_SET_HOLD", "saying whether a litigation hold is in place is a member's judgement; a machine credential may not state it. Nothing was written.") : null;
+    const shape = !preview && (!HOLD_STATES.includes(h) || !why || why.length > NOTE_MAX5 || /["\\\r\n]/.test(why)) ? refuse16("HOLD_REFUSED", `a litigation hold is one of ${HOLD_STATES.join(", ")}, with a reason of 1 to ${NOTE_MAX5} characters and no quote, backslash or line break. Nothing was written.`, { legal: HOLD_STATES, max: NOTE_MAX5 }) : null;
     if (machine3) return machine3;
     if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
     if (mode === "hold" && h === "released")
-      return refuse15("HOLD_RELEASE_IS_ITS_OWN_ACT", "a hold is released by its own act, op=actionholdrelease, which states what the release restarts. Nothing was written.", { target });
+      return refuse16("HOLD_RELEASE_IS_ITS_OWN_ACT", "a hold is released by its own act, op=actionholdrelease, which states what the release restarts. Nothing was written.", { target });
     if (shape) return { ...shape, target };
     let named = [];
     if (mode === "hold") {
@@ -174161,7 +175835,7 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
     const n = typeof ord === "number" ? ord : /^\d+$/.test(String(ord ?? "").trim()) ? Number(String(ord).trim()) : NaN;
     const mark = Number.isInteger(n) ? this.#one(`SELECT kind FROM action_pressure WHERE bundle_id=? AND ord=?`, target, n) : null;
     if (!mark || mark.kind !== "legal")
-      return refuse15("HOLD_NO_LEGAL_MARK", "a litigation hold is stated on a received entry marked as legal pressure; the entry named carries no such mark. Nothing was written.", { target, ord: ord ?? null });
+      return refuse16("HOLD_NO_LEGAL_MARK", "a litigation hold is stated on a received entry marked as legal pressure; the entry named carries no such mark. Nothing was written.", { target, ord: ord ?? null });
     const latest3 = this.#one(
       `SELECT seq, hold FROM action_holds WHERE bundle_id=? AND ord=? ORDER BY seq DESC LIMIT 1`,
       target,
@@ -174180,7 +175854,7 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
       };
     }
     if (release2 && latest3 && latest3.hold === "released")
-      return refuse15("HOLD_ALREADY_RELEASED", "this entry's hold is already released; a release ends a hold in place. Nothing was written.", { target, ord: n });
+      return refuse16("HOLD_ALREADY_RELEASED", "this entry's hold is already released; a release ends a hold in place. Nothing was written.", { target, ord: n });
     for (const p3 of named) {
       if (this.#sees(p3, viewer)) continue;
       let existence = null;
@@ -174267,7 +175941,7 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
     const ids = Array.isArray(list6) ? list6 : null;
     const distinct = ids ? new Set(ids) : null;
     if ((!absent || exact2) && (!ids || ids.some((x) => typeof x !== "string" || !PROJECT_ID_RE.test(x)) || distinct.size > HOLD_PROJECTS_MAX || exact2 && (!ids.length || distinct.size !== ids.length)))
-      return refuse15(
+      return refuse16(
         "HOLD_PROJECTS_REFUSED",
         `projects is a list of ${exact2 ? "1 to " : "at most "}${HOLD_PROJECTS_MAX} distinct project ids (PROJ-\u2026)${exact2 ? ", each named once" : ""}. Nothing was ${exact2 ? "read" : "written"}.`,
         { max: HOLD_PROJECTS_MAX }
@@ -174874,7 +176548,7 @@ Reason: ${why}
   /* R23, R28 (C-90.2): the one site that answers a tier that is not 1, 2 or 3, for the act and for a proposal alike
      (one condition, one code). */
   #badRiskTier(target, tier, who2) {
-    return refuse15(
+    return refuse16(
       "BAD_RISK_TIER",
       `${who2} states a tier of 1 (file freely), 2 (file with caution) or 3 (do not file without counsel). Undetermined is what an action reads when nobody has assessed it, not a tier to set.`,
       { target, tier: tier ?? null, legal: [1, 2, 3] }
@@ -175435,7 +177109,7 @@ Changes: responds_to edge added to ${actionId}.
   /* R52: an entry's hold statements, oldest first, each with those of its projects the viewer sees at FULL (an
      `in_place` statement's `projects`, a release's `restarted`), and its current hold (the latest; null while none). */
   #holdsOf(id, ord, viewer) {
-    const holds = this.#rows(`SELECT seq, hold, reason, stated_by, at FROM action_holds WHERE bundle_id=? AND ord=?
+    const holds2 = this.#rows(`SELECT seq, hold, reason, stated_by, at FROM action_holds WHERE bundle_id=? AND ord=?
       ORDER BY seq`, id, ord).map((h) => {
       const projects = this.#rows(`SELECT project FROM action_hold_projects WHERE bundle_id=? AND ord=? AND seq=?
         ORDER BY project`, id, ord, h.seq).map((p3) => p3.project).filter((p3) => this.#sees(p3, viewer));
@@ -175448,7 +177122,7 @@ Changes: responds_to edge added to ${actionId}.
         [h.hold === "released" ? "restarted" : "projects"]: projects
       };
     });
-    return { holds, hold: holds.length ? holds[holds.length - 1].hold : null };
+    return { holds: holds2, hold: holds2.length ? holds2[holds2.length - 1].hold : null };
   }
   /** R54 (K899 (7); for `queue-producers` R19): every `legal` pressure mark on a visible action on which no hold is
    *  stated, whatever the action's state (a legal matter outlives the action), at most 500 per page in (action id,
@@ -175637,7 +177311,7 @@ Changes: responds_to edge added to ${actionId}.
    *  (`lines.structureAt`); undetermined ones apart, with why. A suggestion: it writes nothing and sets nothing. */
   addresseeSuggest({ action = null, subject = null, viewer = null } = {}) {
     const subj = typeof subject === "string" ? subject.trim() : "";
-    if (!subj) return refuse15("NO_SUBJECT", "an addressee is suggested for a subject: an entity (ENT-) or a record the action rests on. Nothing was read.");
+    if (!subj) return refuse16("NO_SUBJECT", "an addressee is suggested for a subject: an entity (ENT-) or a record the action rests on. Nothing was read.");
     let at34 = null, basis = "today";
     if (action) {
       const b = this.#visibleAction(String(action), viewer);
@@ -175814,7 +177488,7 @@ Changes: responds_to edge added to ${actionId}.
     if (asked !== 1 && asked !== 2 && asked !== 3) return this.#badRiskTier(target, tier, "a proposal");
     const why = typeof basis === "string" ? basis.trim() : "";
     if (!why || why.length > RISK_PROPOSAL_BASIS_MAX || /["\\\r\n]/.test(why))
-      return refuse15("RISK_PROPOSAL_BASIS_REFUSED", `a proposed tier carries its basis: 1 to ${RISK_PROPOSAL_BASIS_MAX} characters with no quote, backslash or line break`, { target, max: RISK_PROPOSAL_BASIS_MAX });
+      return refuse16("RISK_PROPOSAL_BASIS_REFUSED", `a proposed tier carries its basis: 1 to ${RISK_PROPOSAL_BASIS_MAX} characters with no quote, backslash or line break`, { target, max: RISK_PROPOSAL_BASIS_MAX });
     const b = this.#visibleAction(target, viewer);
     if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
     if (normalizeType(b.object_type) !== "action")
@@ -175918,9 +177592,9 @@ function proposalLabelFor(who2, subject) {
   const base2 = lawProposalLabel(who2);
   return { by: base2.by, state: base2.state, machine_work: base2.machine_work, says: PROPOSAL_SAYS2[subject][base2.state] };
 }
-var instances52 = /* @__PURE__ */ new WeakMap();
+var instances53 = /* @__PURE__ */ new WeakMap();
 function actionsOf(host, deps) {
-  let a = instances52.get(host);
+  let a = instances53.get(host);
   if (!a) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -175928,7 +177602,7 @@ function actionsOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     a = new Actions({ ...d, host, storage, record, membership, promotion });
-    instances52.set(host, a);
+    instances53.set(host, a);
     a.migrate();
     void a.conformance;
     record.declarePurge("actions", [...ACTIONS_TABLES]);
@@ -176345,8 +178019,8 @@ function askOnce(factOf, h) {
   }
   return f17 && typeof f17 === "object" ? f17 : { status: "absent", why: "the reader gave no answer" };
 }
-var dayOf3 = (dt2) => dt2 && typeof dt2.value === "string" ? dt2.value.slice(0, 10) : null;
-var earliestDay = (due2) => due2 && Array.isArray(due2.candidates) ? dayOf3(due2.candidates[0]) : dayOf3(due2);
+var dayOf4 = (dt2) => dt2 && typeof dt2.value === "string" ? dt2.value.slice(0, 10) : null;
+var earliestDay = (due2) => due2 && Array.isArray(due2.candidates) ? dayOf4(due2.candidates[0]) : dayOf4(due2);
 function whyOf(r) {
   const w = textOf5(r && (r.why || r.refused)) || "the count is undetermined";
   return w.replace(/the office calendar/g, "the profile's holiday calendar");
@@ -176387,7 +178061,7 @@ function computeDeadline(d, fm, view, { factOf = null } = {}) {
       date: earliestDay(r.due),
       start,
       due: r.due,
-      ...Array.isArray(r.due && r.due.candidates) ? { candidates: r.due.candidates.map(dayOf3) } : {},
+      ...Array.isArray(r.due && r.due.candidates) ? { candidates: r.due.candidates.map(dayOf4) } : {},
       ...r.extension ? { extension: r.extension } : {},
       trace: r.trace,
       ...calendar2
@@ -176578,7 +178252,7 @@ function withRow8(r) {
   if (!row9) return r;
   return { ...r, code: r.code ?? r.reason, check: r.check ?? row9.check, translation: r.translation ?? row9.translation };
 }
-var refuse16 = (code, detail, extra) => withRow8({ ok: false, reason: code, detail, ...extra || {} });
+var refuse17 = (code, detail, extra) => withRow8({ ok: false, reason: code, detail, ...extra || {} });
 var isDay3 = (v) => typeof v === "string" && isCalendarDate(v);
 var clampLimit2 = (v, dflt, max) => {
   const n = Math.floor(Number(v));
@@ -176872,7 +178546,7 @@ var ActionClocks = class {
   pendingClocks({ before: before2, limit = null, after = null, viewer = null } = {}) {
     const day2 = String(before2 ?? "").slice(0, 10);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(day2))
-      return refuse16("PENDING_CLOCKS_BAD_BEFORE", "before= is a date, YYYY-MM-DD", { before: before2 ?? null });
+      return refuse17("PENDING_CLOCKS_BAD_BEFORE", "before= is a date, YYYY-MM-DD", { before: before2 ?? null });
     const max = clampLimit2(limit, PENDING_CLOCKS_MAX, PENDING_CLOCKS_MAX);
     const gate = viewerPredicate(viewer);
     const page2 = this.#entryPage({
@@ -177130,7 +178804,7 @@ var ActionClocks = class {
   #machineReminder(author) {
     const who2 = String(author ?? "").trim();
     if (!who2 || isMachineIdentity(who2))
-      return refuse16("MACHINE_CANNOT_SET_REMINDER", "a reminder is a member's own request to be reminded, set, changed and answered by that member alone. A machine credential never sets one, and a call that carries nobody is not a member. Nothing was changed.");
+      return refuse17("MACHINE_CANNOT_SET_REMINDER", "a reminder is a member's own request to be reminded, set, changed and answered by that member alone. A machine credential never sets one, and a call that carries nobody is not a member. Nothing was changed.");
     return null;
   }
   /* R4, R6: the action as the viewer may see it, through `actions`' read (its R29); absent, invisible and not an action
@@ -177326,7 +179000,7 @@ var ActionClocks = class {
     const due2 = Number.isInteger(pos) && pos >= 0 && today2 !== null ? this.#rows(`SELECT rid, day FROM action_reminders WHERE bundle_id=? AND entry=? AND set_by=? AND day <= ?
                       AND answered_at IS NULL AND removed_at IS NULL ORDER BY day, rid`, a.id, pos, who2, today2) : [];
     if (!due2.length)
-      return refuse16("NO_SUCH_REMINDER", "no reminder of yours on this entry has come due and is waiting for an answer. Nothing was answered.", { target: a.id, entry: Number.isInteger(pos) ? pos : entry3 ?? null });
+      return refuse17("NO_SUCH_REMINDER", "no reminder of yours on this entry has come due and is waiting for an answer. Nothing was answered.", { target: a.id, entry: Number.isInteger(pos) ? pos : entry3 ?? null });
     const day2 = on === null || on === void 0 || on === "" ? null : String(on).trim();
     if (day2 !== null && (!isDay3(day2) || !(day2 > today2)))
       return reminderRefused("on", `on '${day2.slice(0, 20)}' is not a date written YYYY-MM-DD after today (${today2}): a further reminder is for a later day. Nothing was answered.`, { target: a.id, entry: pos, today: today2 });
@@ -177371,7 +179045,7 @@ var ActionClocks = class {
   } = {}) {
     const who2 = String(author ?? "").trim();
     if (!who2 || isMachineIdentity(who2))
-      return refuse16("MACHINE_CANNOT_ADOPT_CLOCK", "a deadline is put on an action's clock by a member, in their own act; a machine credential proposes one and never adopts it, and a call that carries nobody is not a member. Nothing was written.", { target: target ?? null });
+      return refuse17("MACHINE_CANNOT_ADOPT_CLOCK", "a deadline is put on an action's clock by a member, in their own act; a machine credential proposes one and never adopts it, and a call that carries nobody is not a member. Nothing was written.", { target: target ?? null });
     const a = this.#actionFor(target, viewer);
     if (!a) return noSuchAction(target ?? null);
     const key = String(proposal ?? "");
@@ -177379,13 +179053,13 @@ var ActionClocks = class {
     const p3 = at34 > 0 ? this.#one(`SELECT * FROM action_clock_proposals WHERE bundle_id=? AND rule=? AND proposed_by=?
                                     AND adopted_at IS NULL`, a.id, key.slice(0, at34), key.slice(at34 + 1)) : null;
     if (!p3)
-      return refuse16(
+      return refuse17(
         "NO_SUCH_CLOCK_PROPOSAL",
         `no standing proposal '${key.slice(0, 120)}' on this action: name the key op=clockpropose answered (<rule>@<proposer>), for a proposal not yet adopted. Nothing was written.`,
         { target: a.id, proposal: key.slice(0, 200) || null }
       );
     if (p3.date === null || p3.date === void 0)
-      return refuse16(
+      return refuse17(
         "CLOCK_PROPOSAL_UNDETERMINED",
         `the proposed deadline has no date: ${p3.why || "it is undetermined"}. A member states such an entry by their own revision of the action, with its basis. Nothing was written.`,
         { target: a.id, proposal: key, why: p3.why ?? null }
@@ -177404,7 +179078,7 @@ var ActionClocks = class {
     }
     const amend = {};
     if (date !== null && date !== void 0 && date !== "") {
-      if (!isDay3(String(date))) return refuse16("CLOCK_ENTRY_REFUSED", `date '${String(date).slice(0, 20)}' is not a calendar day written YYYY-MM-DD. Nothing was written.`, { target: a.id, proposal: key });
+      if (!isDay3(String(date))) return refuse17("CLOCK_ENTRY_REFUSED", `date '${String(date).slice(0, 20)}' is not a calendar day written YYYY-MM-DD. Nothing was written.`, { target: a.id, proposal: key });
       amend.date = String(date);
     }
     for (const [k, v] of [["text", text7], ["description", description]])
@@ -177813,16 +179487,16 @@ for (const m of ["pendingClocks", "clockPropose", "reminderSet", "reminderAnswer
     return withRow8(fn.apply(this, a));
   };
 }
-var instances53 = /* @__PURE__ */ new WeakMap();
+var instances54 = /* @__PURE__ */ new WeakMap();
 function actionClocksOf(host, deps) {
-  let a = instances53.get(host);
+  let a = instances54.get(host);
   if (!a) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     a = new ActionClocks({ ...d, host, storage, record, membership });
-    instances53.set(host, a);
+    instances54.set(host, a);
     a.migrate();
     void a.actions;
     for (const t2 of ["action_reminders", "action_clock_proposals"])
@@ -178088,7 +179762,7 @@ var INTERNAL3 = `${MACHINE_CLASS_PREFIX}admin`;
 var str34 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
 var isObj38 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var q7 = (v) => JSON.stringify(v ?? null);
-var json9 = (v) => v == null ? null : JSON.stringify(v);
+var json10 = (v) => v == null ? null : JSON.stringify(v);
 var parse12 = (s) => {
   if (s == null) return null;
   try {
@@ -178101,10 +179775,10 @@ var machine2 = (who2) => !str34(who2) || isMachineIdentity(str34(who2));
 var second2 = (iso6) => String(iso6).replace(/\.\d+Z$/, "Z");
 var fold6 = (t2) => String(t2).normalize("NFKC").replace(/\s+/g, " ").trim().toLowerCase();
 var rand12 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
-var HEX6416 = /^[0-9a-f]{64}$/;
+var HEX6417 = /^[0-9a-f]{64}$/;
 var DATE3 = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2}))?$/;
 var aliasesOf = (ent) => (Array.isArray(ent.aliases) ? ent.aliases : []).filter((a) => isObj38(a) ? !a.withdrawn : typeof a === "string").map((a) => isObj38(a) ? a.alias : a);
-function refuse17(code, detail, extra = {}) {
+function refuse18(code, detail, extra = {}) {
   const row9 = CONSEQUENCES_CHECKS[code];
   return {
     ok: false,
@@ -178117,23 +179791,23 @@ function refuse17(code, detail, extra = {}) {
 }
 var NOTHING = " Nothing was written.";
 function noSuchPart(id, wrote = false) {
-  return refuse17("NO_SUCH_PART", `no consequence part answers to that id here; one you may not see is answered exactly as one that does not exist.${wrote ? NOTHING : ""}`, { id: id ?? null });
+  return refuse18("NO_SUCH_PART", `no consequence part answers to that id here; one you may not see is answered exactly as one that does not exist.${wrote ? NOTHING : ""}`, { id: id ?? null });
 }
 function alreadySuperseded(id, next) {
-  return refuse17(
+  return refuse18(
     "ALREADY_SUPERSEDED",
     `${id} has been revised by ${next}; act on that one.${NOTHING}`,
     { id, superseded_by: next }
   );
 }
 function reasonRefusal(reason) {
-  if (!str34(reason)) return refuse17("NO_REASON", `the record says why.${NOTHING}`);
+  if (!str34(reason)) return refuse18("NO_REASON", `the record says why.${NOTHING}`);
   if (reason.trim().length > REASON_MAX11)
-    return refuse17("BAD_REASON", `a reason is at most ${REASON_MAX11} characters.${NOTHING}`);
+    return refuse18("BAD_REASON", `a reason is at most ${REASON_MAX11} characters.${NOTHING}`);
   return null;
 }
 function basisUnreadable(why, extra = {}) {
-  return refuse17("BASIS_UNREADABLE", `${why}.${NOTHING}`, extra);
+  return refuse18("BASIS_UNREADABLE", `${why}.${NOTHING}`, extra);
 }
 function foreignRefusal(code, why, extra = {}) {
   return { ok: false, reason: code, code, detail: `${String(why ?? "").replace(/\.?\s*$/, "")}.${NOTHING}`, ...extra };
@@ -178141,7 +179815,7 @@ function foreignRefusal(code, why, extra = {}) {
 function checkAffected(a) {
   const o = isObj38(a) ? a : {};
   const kind = str34(o.kind) ? o.kind.trim().toLowerCase() : null;
-  const unknown = (why) => refuse17("AFFECTED_UNKNOWN_KIND", `${why}: kind one of ${AFFECTED_KINDS.join(", ")}, with a description; an office is {role, body}, and a person {entity, named_in}. Nothing was written.`, { kind: kind ?? null });
+  const unknown = (why) => refuse18("AFFECTED_UNKNOWN_KIND", `${why}: kind one of ${AFFECTED_KINDS.join(", ")}, with a description; an office is {role, body}, and a person {entity, named_in}. Nothing was written.`, { kind: kind ?? null });
   if (!isObj38(a)) return unknown("an affected is {kind, description, role?, person?}");
   if (!kind || !AFFECTED_KINDS.includes(kind)) return unknown(`"${String(o.kind ?? "")}" is not a kind of affected`);
   if (!str34(o.description)) return unknown("an affected is described");
@@ -178159,13 +179833,13 @@ function checkAffected(a) {
 function checkMeasure(m) {
   if (m == null) return { ok: true, measure: null };
   if (!isObj38(m) || !str34(m.unit) || !UNITS3.includes(m.unit.trim()))
-    return refuse17(
+    return refuse18(
       "MEASURE_UNKNOWN_UNIT",
       `a measure's unit is one of ${UNITS3.join(", ")}. Nothing was written.`,
       { unit: isObj38(m) ? m.unit ?? null : null }
     );
   const unit = m.unit.trim();
-  const bad2 = (why) => refuse17("MEASURE_INVALID", `${why}. Nothing was written.`, { unit });
+  const bad2 = (why) => refuse18("MEASURE_INVALID", `${why}. Nothing was written.`, { unit });
   if (m.currency != null && m.currency !== "") {
     if (unit !== "money") return bad2(`a currency belongs to a measure of money, and this one is of ${unit}`);
     if (!str34(m.currency)) return bad2("a currency is named by its code, such as USD");
@@ -178198,7 +179872,7 @@ function measureAsHeld(m) {
   return out;
 }
 function checkPeriod(p3) {
-  const bad2 = (why) => refuse17("PERIOD_INVALID", `${why}. Nothing was written.`);
+  const bad2 = (why) => refuse18("PERIOD_INVALID", `${why}. Nothing was written.`);
   if (!isObj38(p3)) return bad2("a period is {from, to}: the dates the consequence ran between");
   const from = str34(p3.from);
   const to = str34(p3.to);
@@ -178408,7 +180082,7 @@ var Consequences = class {
   /* R9, R3: an evidence or rests-on id resolves to a content row, or a finding (an inquiry), the author may see. */
   #resolvesEvidence(id, who2) {
     if (!str34(id)) return false;
-    if (HEX6416.test(id)) {
+    if (HEX6417.test(id)) {
       const row9 = this.content.contentRow(id);
       return !!row9 && this.membership.inSight(row9.bundle_id, who2);
     }
@@ -178419,7 +180093,7 @@ var Consequences = class {
   #evidenceRefusal(ids, who2, what) {
     const unknown = ids.filter((x) => !this.#resolvesEvidence(x, who2));
     if (!unknown.length) return null;
-    return refuse17(
+    return refuse18(
       "NO_SUCH_EVIDENCE",
       `${what} content or findings this record holds and you may see.${NOTHING}`,
       { unknown: unknown.map((x) => typeof x === "string" ? x : null) }
@@ -178437,14 +180111,14 @@ var Consequences = class {
     }
     const ent = e2 && e2.ok !== false && e2.found !== false ? e2.entity : null;
     if (!ent || ent.kind !== "person")
-      return refuse17(
+      return refuse18(
         "AFFECTED_NOT_A_PERSON",
         `${person.entity ? `${person.entity} is not a person this record holds` : "an affected person names the person entity"}: a harmed person is a registered person entity.${NOTHING}`,
         { entity: person.entity ?? null }
       );
-    const notNamed = (why) => refuse17("AFFECTED_PERSON_NOT_NAMED", `${why}: a person is recorded as affected only as a document in the record names them.${NOTHING}`, { entity: person.entity, named_in: person.named_in ?? null });
+    const notNamed = (why) => refuse18("AFFECTED_PERSON_NOT_NAMED", `${why}: a person is recorded as affected only as a document in the record names them.${NOTHING}`, { entity: person.entity, named_in: person.named_in ?? null });
     if (!person.named_in) return notNamed("no passage naming the person is given (named_in)");
-    const row9 = HEX6416.test(person.named_in) ? this.content.contentRow(person.named_in) : null;
+    const row9 = HEX6417.test(person.named_in) ? this.content.contentRow(person.named_in) : null;
     if (!row9 || !this.membership.inSight(row9.bundle_id, who2)) return notNamed("named_in is not content of a held capture you may see");
     const text7 = this.#passageText(person.named_in);
     const names = [ent.label, ...aliasesOf(ent)].filter((x) => str34(x)).map(fold6);
@@ -178502,7 +180176,7 @@ var Consequences = class {
     if (!project) return null;
     const denied = this.membership.projectAuthority(project, str34(author), "joined", act2);
     if (!denied) return null;
-    return refuse17("CONSEQUENCE_NOT_A_PARTICIPANT", `acting on a consequence is work inside ${project}, and ${str34(author)} has not joined it.${NOTHING}`, { project });
+    return refuse18("CONSEQUENCE_NOT_A_PARTICIPANT", `acting on a consequence is work inside ${project}, and ${str34(author)} has not joined it.${NOTHING}`, { project });
   }
   /* ===================================================================== *
    * R1–R6: RECORDING A PART
@@ -178555,7 +180229,7 @@ var Consequences = class {
     if (!d || !this.#seesProject(d.project, who2)) return noSuchDetermination(determination ?? null);
     if (!d.live) return determinationSuperseded(d.id, d.supersededBy);
     if (!str34(standard2) || d.outcome(standard2) !== "noncompliant")
-      return refuse17(
+      return refuse18(
         "CONSEQUENCE_NOT_NONCOMPLIANT",
         `${d.id}'s outcome for ${str34(standard2) ?? "that standard"} is ${d.outcome(standard2) ?? "not stated"}, not noncompliant: a consequence is what a breach did.${NOTHING}`,
         { determination: d.id, standard: standard2 ?? null }
@@ -178618,16 +180292,16 @@ var Consequences = class {
         d.id,
         standard2,
         d.project,
-        json9(a.affected),
-        json9(b.measure),
-        json9(p3.period),
+        json10(a.affected),
+        json10(b.measure),
+        json10(p3.period),
         b.state,
         b.op ?? null,
-        json9(b.value),
+        json10(b.value),
         b.grade ?? null,
         b.gradeWhy ?? null,
         b.rationale ?? null,
-        json9(b.restsOn),
+        json10(b.restsOn),
         b.undeterminedCode ?? null,
         b.undeterminedWhy ?? null,
         cause.inquiry,
@@ -178655,7 +180329,7 @@ var Consequences = class {
         o.basis ?? null,
         o.kind,
         o.key ?? null,
-        json9(o.exact)
+        json10(o.exact)
       ));
       return { ok: true, id, part: this.#answer(this.#one(`SELECT * FROM consequence_parts WHERE bundle_id=?`, id), who2) };
     });
@@ -178667,12 +180341,12 @@ var Consequences = class {
     if (computation) return this.#computation(basis, measure, who2);
     const hasFigure = measure && ("value" in measure || "range" in measure);
     if (byMachine)
-      return refuse17("MACHINE_CANNOT_ASSESS", "a machine may prepare a computed part, from the record's own figures, and propose an assessment as text for a member; it never records an assessment or an undetermined judgment. Nothing was written.");
+      return refuse18("MACHINE_CANNOT_ASSESS", "a machine may prepare a computed part, from the record's own figures, and propose an assessment as text for a member; it never records an assessment or an undetermined judgment. Nothing was written.");
     if (hasFigure) {
       const rationale = isObj38(basis) ? str34(basis.rationale) : null;
-      if (!rationale) return refuse17("NO_RATIONALE", `an assessed value says why: a rationale of at most ${RATIONALE_MAX} characters. Nothing was written.`);
+      if (!rationale) return refuse18("NO_RATIONALE", `an assessed value says why: a rationale of at most ${RATIONALE_MAX} characters. Nothing was written.`);
       if (rationale.length > RATIONALE_MAX)
-        return refuse17("BAD_RATIONALE", `a rationale is at most ${RATIONALE_MAX} characters. Nothing was written.`);
+        return refuse18("BAD_RATIONALE", `a rationale is at most ${RATIONALE_MAX} characters. Nothing was written.`);
       const rests = basis.rests_on ?? basis.restsOn ?? [];
       if (!Array.isArray(rests))
         return basisUnreadable("what an assessment rests on is a list of content ids or findings, possibly empty");
@@ -179115,7 +180789,7 @@ var Consequences = class {
   /** R9: a member records a part addressed or not, with evidence and a reason. */
   addressedRecord({ id = null, state = null, evidence = null, reason = null, author = null, viewer = null } = {}) {
     if (machine2(author))
-      return refuse17("MACHINE_CANNOT_ADDRESS", "whether a consequence has been addressed is a member's judgment, with evidence; a machine never records it. Nothing was written.");
+      return refuse18("MACHINE_CANNOT_ADDRESS", "whether a consequence has been addressed is a member's judgment, with evidence; a machine never records it. Nothing was written.");
     const who2 = viewer ?? str34(author);
     const r = this.#part(id, who2);
     if (!r) return noSuchPart(id, true);
@@ -179124,7 +180798,7 @@ var Consequences = class {
     const denied = this.#participantRefusal(r.project, author, "addressedRecord");
     if (denied) return denied;
     if (!ADDRESSED_STATES.includes(state))
-      return refuse17(
+      return refuse18(
         "ADDRESSED_UNKNOWN_STATE",
         `a part is recorded ${ADDRESSED_STATES.join(" or ")}. Nothing was written.`,
         { state: state ?? null }
@@ -179133,7 +180807,7 @@ var Consequences = class {
     if (bad2) return bad2;
     const ev = evidence == null ? [] : Array.isArray(evidence) ? evidence : [evidence];
     if (state === "addressed" && !ev.length)
-      return refuse17("ADDRESSED_NO_EVIDENCE", "a consequence is recorded addressed with the evidence that it was: content or findings in the record. Partial redress does not end an escalation. Nothing was written.");
+      return refuse18("ADDRESSED_NO_EVIDENCE", "a consequence is recorded addressed with the evidence that it was: content or findings in the record. Partial redress does not end an escalation. Nothing was written.");
     const unseen = this.#evidenceRefusal(ev, who2, "evidence is");
     if (unseen) return unseen;
     const at34 = this.#when();
@@ -179307,9 +180981,9 @@ function partDoc(id, p3) {
     ""
   ].join("\n");
 }
-var instances54 = /* @__PURE__ */ new WeakMap();
+var instances55 = /* @__PURE__ */ new WeakMap();
 function consequencesModule(host, deps) {
-  let c = instances54.get(host);
+  let c = instances55.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -179317,7 +180991,7 @@ function consequencesModule(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     c = new Consequences({ ...d, host, storage, record, membership, promotion });
-    instances54.set(host, c);
+    instances55.set(host, c);
     c.migrate();
     record.declarePurge("consequences", CONSEQUENCES_TABLES);
   }
@@ -179595,7 +181269,7 @@ var CLOSED = Object.freeze(["resolved", "abandoned"]);
 var MACHINE_READER = `${MACHINE_CLASS_PREFIX}admin`;
 var DRAFT_SAYS = "a draft prepared from the record: nobody has approved or sent it, and nothing is filed until a member approves it and files it by the venue's own means";
 var str35 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
-var json10 = (v) => JSON.stringify(v ?? null);
+var json11 = (v) => JSON.stringify(v ?? null);
 var parse13 = (s) => {
   try {
     return JSON.parse(s);
@@ -180196,19 +181870,19 @@ ${body}`;
         a.id,
         a.kind,
         gov.tier,
-        json10(gov),
+        json11(gov),
         body,
-        json10(blanks),
-        json10(unfilled),
+        json11(blanks),
+        json11(unfilled),
         advisory,
-        json10(venue),
+        json11(venue),
         who2,
         when,
-        json10(basis),
-        json10(exhibits),
-        json10(standard2),
+        json11(basis),
+        json11(exhibits),
+        json11(standard2),
         disclosure2,
-        json10(tpl)
+        json11(tpl)
       );
       return {
         ok: true,
@@ -180280,7 +181954,7 @@ ${text7}` : text7;
     return this.record.transact(() => {
       const { id } = this.record.allocId("FIL", when.slice(0, 4));
       this.sql.exec(`INSERT INTO communication_drafts (filing_id, action_id, text, purpose, disclosure, preparer, prepared_at, basis)
-                     VALUES (?,?,?,?,?,?,?,?)`, id, a.id, body, why, disclosure2, who2, when, json10(basis));
+                     VALUES (?,?,?,?,?,?,?,?)`, id, a.id, body, why, disclosure2, who2, when, json11(basis));
       return {
         ok: true,
         id,
@@ -180318,14 +181992,14 @@ ${text7}` : text7;
     const changed = [];
     const gov = this.governingTier(a);
     if (gov.tier !== was.tier) changed.push(`the governing tier (was ${was.tier}, now ${gov.tier})`);
-    if (json10(a.counterparty ?? null) !== json10(was.counterparty ?? null)) changed.push("the counterparty");
+    if (json11(a.counterparty ?? null) !== json11(was.counterparty ?? null)) changed.push("the counterparty");
     const then = was.determination ? this.#det(was.determination, MACHINE_READER) : null;
     const now = this.#restsOn(a, MACHINE_READER).det;
     if (was.determination && (!then || !then.live))
       changed.push(`the determination ${was.determination} was superseded${then && then.superseded_by ? ` by ${then.superseded_by}` : ""}`);
     else if ((now ? now.id : null) !== (was.determination ?? null)) changed.push("the determination the action rests on");
     const laws = a.governing_laws && a.governing_laws.state === "stated" ? a.governing_laws.laws ?? [] : null;
-    if (json10(laws) !== json10(was.governing_laws ?? null)) changed.push("the governing laws");
+    if (json11(laws) !== json11(was.governing_laws ?? null)) changed.push("the governing laws");
     return changed;
   }
   /* A draft the viewer may see (through its action and the project it draws on), or null (R6, R7, R19; K316). A
@@ -180406,7 +182080,7 @@ ${body}` : body;
       sha2,
       who2,
       at34,
-      json10(inband)
+      json11(inband)
     );
     return {
       ok: true,
@@ -181012,13 +182686,13 @@ ${body}` : body;
         id,
         version,
         a.id,
-        json10(c),
+        json11(c),
         who2,
         at34,
-        json10(sections),
-        json10(basis),
+        json11(sections),
+        json11(basis),
         disclosure2,
-        json10(tpl),
+        json11(tpl),
         why
       );
       return {
@@ -181220,7 +182894,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
     );
     const sha2 = sha256HexSync(bytes2);
     this.sql.exec(`INSERT INTO counsel_packet_exports (packet_id, version, action_id, author, at, counsel, sha, inband)
-                   VALUES (?,?,?,?,?,?,?,?)`, read3.id, read3.version, read3.action, who2, at34, json10(read3.head.counsel), sha2, json10(inband));
+                   VALUES (?,?,?,?,?,?,?,?)`, read3.id, read3.version, read3.action, who2, at34, json11(read3.head.counsel), sha2, json11(inband));
     return {
       ok: true,
       id: read3.id,
@@ -181360,7 +183034,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
     return this.record.transact(() => {
       const { id } = this.record.allocId("THY", at34.slice(0, 4));
       this.sql.exec(`INSERT INTO theory_proposals (theory_id, action_id, packet_id, theory, remedy, standards, why, proposer, at)
-                     VALUES (?,?,?,?,?,?,?,?,?)`, id, a.id, packetId, t2, rem, json10([...new Set(list6)]), w, who2, at34);
+                     VALUES (?,?,?,?,?,?,?,?,?)`, id, a.id, packetId, t2, rem, json11([...new Set(list6)]), w, who2, at34);
       return {
         ok: true,
         proposal: {
@@ -181526,15 +183200,15 @@ ${inbandBlock(quartet)}`, inband: quartet };
     return { case: caseId, edition, ...b, determinations_read: true };
   }
 };
-var instances55 = /* @__PURE__ */ new WeakMap();
+var instances56 = /* @__PURE__ */ new WeakMap();
 function filingsOf(host, deps) {
-  let f17 = instances55.get(host);
+  let f17 = instances56.get(host);
   if (!f17) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     f17 = new Filings({ ...d, host, storage, record });
-    instances55.set(host, f17);
+    instances56.set(host, f17);
     f17.migrate();
     record.declarePurge("filings", FILINGS_TABLES);
     f17.publicRead.registerEvidenceBlock("filings", "available_actions", (arg) => f17.evidenceBlock(arg));
@@ -181942,7 +183616,7 @@ var hex8 = () => {
   return [...b].map((x) => x.toString(16).padStart(2, "0")).join("");
 };
 var isMachine4 = (who2) => str36(who2) === "" || isMachineIdentity(who2);
-var json11 = (v) => v === null || v === void 0 ? null : JSON.stringify(v);
+var json12 = (v) => v === null || v === void 0 ? null : JSON.stringify(v);
 var unjson = (s, d = null) => {
   try {
     return s ? JSON.parse(s) : d;
@@ -181955,7 +183629,7 @@ var instantMs2 = (v) => {
   return /^\d{4}-\d{2}-\d{2}$/.test(v) ? Date.parse(`${v}T00:00:00Z`) : Date.parse(v);
 };
 var iso = (ms5) => stampInstant("second", ms5);
-var dayOf4 = (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v) ? v.slice(0, 10) : Number.isFinite(v) ? new Date(v).toISOString().slice(0, 10) : null;
+var dayOf5 = (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v) ? v.slice(0, 10) : Number.isFinite(v) ? new Date(v).toISOString().slice(0, 10) : null;
 var quoted4 = (v) => `"${String(v).trim().replace(/\s*\n\s*/g, " ")}"`;
 var DRAFTED_BY = "system";
 function overdueSince(text7, date, nowMs, place) {
@@ -182326,7 +184000,7 @@ var Escalation = class _Escalation {
           item3.election = { state: "undetermined", says: "the active profiles do not say whether this office is elected" };
         if (a.purpose === "oversight_request" || a.purpose === "audit_request") {
           const target = isObj40(visible.counterparty) ? str36(visible.counterparty.entity_id) || null : null;
-          const l2 = this.#oversightLines(target, actor, dayOf4(a.at), viewer);
+          const l2 = this.#oversightLines(target, actor, dayOf5(a.at), viewer);
           const doubt = l2.state === "none" && l2.undetermined.length ? { undetermined: l2.undetermined } : {};
           if (l2.state === "held")
             item3.oversight = { state: "held", lines: l2.lines, says: "this office holds a line by which it oversees the actor's office on the attachment's day; the line governs over the profile" };
@@ -182529,7 +184203,7 @@ var Escalation = class _Escalation {
     if (e2.state === "suspended")
       answer.suspended = { since: e2.stateSince, says: "suspended: its proposals are not reported as due, its clocks keep running in the actions, and it is not ended" };
     if (e2.state === "ended") answer.ended = { at: e2.stateSince, says: "ended: compliance was restored and the consequences addressed" };
-    if (e2.stage === 7) answer.targets = this.#targets(actor, dayOf4(at34), viewer);
+    if (e2.stage === 7) answer.targets = this.#targets(actor, dayOf5(at34), viewer);
     if (e2.stage === 5) {
       const av = this.filings.availableActions({ determination: e2.determination, viewer });
       answer.available = av && av.ok !== false ? av : { state: "undetermined", says: "the actions available against the determination's offices could not be read" };
@@ -182633,7 +184307,7 @@ var Escalation = class _Escalation {
           x.from ?? null,
           x.to ?? null,
           x.reason ?? null,
-          json11(x.trigger),
+          json12(x.trigger),
           x.author,
           x.at
         );
@@ -182659,7 +184333,7 @@ var Escalation = class _Escalation {
           x.seq,
           x.stage,
           x.purpose ?? null,
-          json11(x.standards),
+          json12(x.standards),
           typeof x.reason === "string" ? x.reason : null,
           x.author,
           x.at
@@ -183404,9 +185078,9 @@ for (const name2 of [
     }
   } });
 }
-var instances56 = /* @__PURE__ */ new WeakMap();
+var instances57 = /* @__PURE__ */ new WeakMap();
 function escalationOf(host, deps) {
-  let i = instances56.get(host);
+  let i = instances57.get(host);
   if (!i) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -183432,7 +185106,7 @@ function escalationOf(host, deps) {
       entities: entities2,
       lines: lines2
     });
-    instances56.set(host, i);
+    instances57.set(host, i);
     i.migrate();
     record.declarePurge("escalation", ESCALATION_TABLES);
     promotion.registerStep("escalation", { check: (c) => i.check(c), project: (c) => i.project(c) });
@@ -183692,8 +185366,8 @@ var driveRow2 = (code) => {
     throw new Error(`driveRow: ${code} has no Drive row with a canned translation (DEC-49).`);
   return { code, check: row9.check, translation: row9.translation };
 };
-var hex6 = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
-var sha256Hex12 = async (v) => hex6(await crypto.subtle.digest("SHA-256", typeof v === "string" ? new TextEncoder().encode(v) : v));
+var hex7 = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
+var sha256Hex12 = async (v) => hex7(await crypto.subtle.digest("SHA-256", typeof v === "string" ? new TextEncoder().encode(v) : v));
 async function readBounded2(res, max) {
   const declared2 = Number(res.headers && typeof res.headers.get === "function" ? res.headers.get("content-length") : NaN);
   if (Number.isFinite(declared2) && declared2 > max) {
@@ -186725,17 +188399,17 @@ var Monitoring = class {
     }
   }
 };
-var instances57 = /* @__PURE__ */ new WeakMap();
+var instances58 = /* @__PURE__ */ new WeakMap();
 function monitoringOf(host, deps) {
   const storage = host && host.storage ? host.storage : host;
-  let m = instances57.get(storage);
+  let m = instances58.get(storage);
   if (!m) {
     const d = deps || {};
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     m = new Monitoring({ ...d, host, storage: d.storage || storage, record, membership, promotion });
-    instances57.set(storage, m);
+    instances58.set(storage, m);
     m.migrate();
     record.declarePurge("monitoring", [...MONITORING_TABLES]);
     if (typeof record.registerCounts === "function")
@@ -186770,7 +188444,7 @@ function monitoringOps(m, url, body) {
   };
 }
 async function monitorOp(req, store, {
-  json: json17,
+  json: json18,
   storeSilent: storeSilent2,
   storeRefusal: storeRefusal2 = null,
   requiredArgument: requiredArgument2,
@@ -186780,11 +188454,11 @@ async function monitorOp(req, store, {
   storeName,
   cls: cls3
 }) {
-  if (req.method !== "POST") return json17({ ok: false, error: "monitor is a POST" }, 405);
+  if (req.method !== "POST") return json18({ ok: false, error: "monitor is a POST" }, 405);
   const body = await req.json().catch(() => null);
   const bundleId = body?.bundleId;
   if (typeof bundleId !== "string" || !bundleId)
-    return json17({ ok: false, ...requiredArgument2(
+    return json18({ ok: false, ...requiredArgument2(
       "monitor",
       "bundleId",
       "a non-empty string in the POST body",
@@ -186804,12 +188478,12 @@ async function monitorOp(req, store, {
     out = { answered: false, result: void 0 };
   }
   if (out.refused && out.reply && typeof out.reply === "object")
-    return typeof storeRefusal2 === "function" ? storeRefusal2(out) : json17(out.reply.body, out.reply.status);
+    return typeof storeRefusal2 === "function" ? storeRefusal2(out) : json18(out.reply.body, out.reply.status);
   if (!out.answered) return storeSilent2("monitor", out.correlation);
   const r = out.result;
   if (!r || typeof r.status !== "number" || !r.body || typeof r.body !== "object") return storeSilent2("monitor");
-  if (r.body.ok === true) return json17({ ok: true, ...r.body, store: storeName, tokenClass: cls3 }, r.status);
-  return json17({ ok: false, ...r.body, store: storeName, tokenClass: cls3 }, r.status);
+  if (r.body.ok === true) return json18({ ok: true, ...r.body, store: storeName, tokenClass: cls3 }, r.status);
+  return json18({ ok: false, ...r.body, store: storeName, tokenClass: cls3 }, r.status);
 }
 
 // src/link-sweep/schema.mjs
@@ -186880,7 +188554,7 @@ var parse14 = (t2) => {
   }
 };
 var sweepsOf = (g) => g && Array.isArray(g.sweeps) ? g.sweeps.filter((s) => s && typeof s === "object" && typeof s.id === "string") : [];
-var canon3 = (v) => Array.isArray(v) ? `[${v.map(canon3).join(",")}]` : v && typeof v === "object" ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canon3(v[k])}`).join(",")}}` : JSON.stringify(v ?? null);
+var canon4 = (v) => Array.isArray(v) ? `[${v.map(canon4).join(",")}]` : v && typeof v === "object" ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canon4(v[k])}`).join(",")}}` : JSON.stringify(v ?? null);
 var median = (xs) => {
   if (!xs.length) return null;
   const s = [...xs].sort((a, b) => a - b), h = s.length >> 1;
@@ -187057,8 +188731,8 @@ var LinkSweep = class {
     const touched = [];
     for (const id of /* @__PURE__ */ new Set([...before2.keys(), ...after.keys()])) {
       const p3 = before2.get(id), n = after.get(id);
-      if (p3 && n && canon3(p3) === canon3(n)) continue;
-      if (p3 && n && p3.ratified === true && n.ratified === false && canon3({ ...p3, ratified: false }) === canon3(n)) continue;
+      if (p3 && n && canon4(p3) === canon4(n)) continue;
+      if (p3 && n && p3.ratified === true && n.ratified === false && canon4({ ...p3, ratified: false }) === canon4(n)) continue;
       touched.push({ id, ratified: p3?.ratified === true || n?.ratified === true });
     }
     if (!touched.length) return null;
@@ -187110,7 +188784,7 @@ var LinkSweep = class {
     let found3 = null, prev = cur;
     for (let i = 0; i < entries.length; i++) {
       const p3 = at34(prev), n = at34(after[i]);
-      if (n && n.ratified === true && (!p3 || p3.ratified !== true || canon3(p3) !== canon3(n)))
+      if (n && n.ratified === true && (!p3 || p3.ratified !== true || canon4(p3) !== canon4(n)))
         found3 = { by: entries[i].author ?? null, at: entries[i].created ?? null };
       if (!n || n.ratified !== true) found3 = null;
       prev = after[i];
@@ -187513,12 +189187,12 @@ var LinkSweep = class {
     const file = `snapshots/monitor-${sha2.slice(0, 12)}-${leaf}`;
     const img = this.record.readImage(x.bundle);
     if (!img || typeof img["bundle.md"] !== "string" || !Number.isSafeInteger(bytes2)) return { file: null, why: "the sweep's bundle or the capture's size could not be read" };
-    const hex7 = (t2) => createSha256().update(new TextEncoder().encode(t2)).hex();
+    const hex9 = (t2) => createSha256().update(new TextEncoder().encode(t2)).hex();
     const files = [];
     let has3 = false;
     for (const [path, v] of Object.entries(img)) {
       if (path.startsWith("_history/")) continue;
-      if (typeof v === "string") files.push({ path, text: v, bytes: new TextEncoder().encode(v).length, sha256: hex7(v) });
+      if (typeof v === "string") files.push({ path, text: v, bytes: new TextEncoder().encode(v).length, sha256: hex9(v) });
       else {
         files.push({ path, blobSha: v.blobSha, sha256: v.sha256, bytes: v.bytes });
         if (v.sha256 === sha2) has3 = true;
@@ -187528,7 +189202,7 @@ var LinkSweep = class {
     const fm = this.record.head(x.bundle);
     const p3 = await this.promotion.promote({
       bundleId: x.bundle,
-      base: hex7(img["bundle.md"]),
+      base: hex9(img["bundle.md"]),
       author: SWEEP_ACTOR,
       snapKey: `${at34.replace(/[-:]/g, "")}_${[...crypto.getRandomValues(new Uint8Array(4))].map((b) => b.toString(16).padStart(2, "0")).join("")}`,
       writer: "mechanical",
@@ -187611,10 +189285,10 @@ var LinkSweep = class {
 };
 
 // src/link-sweep/index.mjs
-var instances58 = /* @__PURE__ */ new WeakMap();
+var instances59 = /* @__PURE__ */ new WeakMap();
 function linkSweepOf(host, deps) {
   const storage = host && host.storage ? host.storage : host;
-  let s = instances58.get(storage);
+  let s = instances59.get(storage);
   if (!s) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -187636,7 +189310,7 @@ function linkSweepOf(host, deps) {
       captureRequests: lazy(d.captureRequests, () => captureRequestsOf(host, { record })),
       monitoring: lazy(d.monitoring, () => monitoringOf(host, { record, membership, promotion }))
     });
-    instances58.set(storage, s);
+    instances59.set(storage, s);
     s.migrate();
     record.declarePurge(LINK_SWEEP_MODULE, LINK_SWEEP_TABLES.map((t2) => ({ name: t2.name, keys: [...t2.keys] })));
     s.registration = s.registerWithMonitoring();
@@ -187794,7 +189468,7 @@ var LABEL_MAX = 200;
 var TEXT_MAX4 = 4e3;
 var str37 = (v) => typeof v === "string" ? v.trim() : "";
 var plain14 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
-var json12 = (v) => canonicalJson(v);
+var json13 = (v) => canonicalJson(v);
 var parse15 = (s) => {
   try {
     return JSON.parse(s);
@@ -188014,7 +189688,7 @@ var MoneyChecks = class _MoneyChecks {
   }
   /* One check's answer (R1's shape): `holds` true, false or "undetermined", why, and the derivation with what it read.
      A sum money refuses is answered as that refusal, never as a check (R2). */
-  static #answer(check2, { holds, why, sums = {}, read: read3, parameters = [], refused: refused3 = null }) {
+  static #answer(check2, { holds: holds2, why, sums = {}, read: read3, parameters = [], refused: refused3 = null }) {
     const base2 = {
       check: check2,
       label: NOTICED,
@@ -188023,7 +189697,7 @@ var MoneyChecks = class _MoneyChecks {
       read: read3
     };
     if (refused3) return { ...base2, refused: refused3, holds: "undetermined", why: "a sum the summation rule refuses is answered as that refusal" };
-    return { ...base2, holds, why };
+    return { ...base2, holds: holds2, why };
   }
   static #fromRelation(rel, ifHigher, ifNot, isQuestion = (r) => r === "higher") {
     if (rel && rel.refused) return { holds: "undetermined", why: rel.why };
@@ -188252,16 +189926,16 @@ var MoneyChecks = class _MoneyChecks {
     if (id && !held2 && !shipped) return refusal20("NO_SUCH_DETECTOR", { detector_id: id });
     const at34 = this.now(), who2 = str37(by);
     return this.record.transact(() => {
-      const did = id || `md-${this.#one(`SELECT count(*) AS n FROM money_detectors`).n + 1}-${sha256HexSync(json12({ lab, at: at34, who: who2 })).slice(0, 8)}`;
+      const did = id || `md-${this.#one(`SELECT count(*) AS n FROM money_detectors`).n + 1}-${sha256HexSync(json13({ lab, at: at34, who: who2 })).slice(0, 8)}`;
       if (!held2) this.#append("money_detectors", { detector_id: did, origin: shipped ? "shipped" : "member", by: who2, at: at34 });
       const version = (this.#one(`SELECT max(version) AS v FROM money_detector_versions WHERE detector_id=?`, did).v || 0) + 1;
       this.#append("money_detector_versions", {
         detector_id: did,
         version,
         label: lab.slice(0, LABEL_MAX),
-        population: json12(population),
-        condition: json12(condition),
-        parameters: json12(pl.list),
+        population: json13(population),
+        condition: json13(condition),
+        parameters: json13(pl.list),
         denominator: str37(denominator).slice(0, TEXT_MAX4),
         derivation: str37(derivation).slice(0, TEXT_MAX4),
         by: who2,
@@ -188472,8 +190146,8 @@ var MoneyChecks = class _MoneyChecks {
     if (!ratio || !ratio.denominator || ratio.denominator.undetermined || isZero2(ratio.denominator.value))
       return { none: "no denominator" };
     const inputs = [...new Set([...s.facts, ...names.has("population") ? populationFacts : []].map((f17) => f17.fact_id))].sort();
-    const subject = json12(s.subject);
-    const key = sha256HexSync(json12({ detector_id: v.detector_id, version: v.version, subject: s.subject, inputs }));
+    const subject = json13(s.subject);
+    const key = sha256HexSync(json13({ detector_id: v.detector_id, version: v.version, subject: s.subject, inputs }));
     return { row: {
       result_key: key,
       result_id: `mdr-${key.slice(0, 16)}`,
@@ -188481,9 +190155,9 @@ var MoneyChecks = class _MoneyChecks {
       version: v.version,
       subject_key: s.key,
       subject,
-      numerator: json12(ratio.numerator),
-      denominator: json12(ratio.denominator),
-      derivation: json12({
+      numerator: json13(ratio.numerator),
+      denominator: json13(ratio.denominator),
+      derivation: json13({
         method: "bio-calc/1",
         stated: v.derivation,
         denominator_is: v.denominator,
@@ -188491,7 +190165,7 @@ var MoneyChecks = class _MoneyChecks {
         compare: r.result,
         trace: r.trace.map((t2) => ({ step: t2.step, op: t2.op, output: t2.output }))
       }),
-      inputs: json12(inputs.map((id) => ({ fact_id: id, held_by: "money" })))
+      inputs: json13(inputs.map((id) => ({ fact_id: id, held_by: "money" })))
     } };
   }
   /** R6: runs the current version of each detector switched on for at least one project over the facts held, within
@@ -188533,7 +190207,7 @@ var MoneyChecks = class _MoneyChecks {
             }
           } else stats.skipped[e2.none] = (stats.skipped[e2.none] || 0) + 1;
         });
-        if (this.nowMs() - start >= budget) return { ok: true, ...stats, remaining: true, cursor: json12({ d: v.detector_id, s: s.key }) };
+        if (this.nowMs() - start >= budget) return { ok: true, ...stats, remaining: true, cursor: json13({ d: v.detector_id, s: s.key }) };
       }
       this.record.transact(() => {
         for (const r of this.#rows(`SELECT result_key, subject_key FROM money_detector_results WHERE detector_id=?`, v.detector_id))
@@ -188677,9 +190351,9 @@ function moneyChecksOps(c, url, body) {
     moneynoticed: () => c.noticed({ project: q10("project"), viewer: q10("viewer"), limit: q10("limit") })
   };
 }
-var instances59 = /* @__PURE__ */ new WeakMap();
+var instances60 = /* @__PURE__ */ new WeakMap();
 function moneyChecksOf(host, deps) {
-  let c = instances59.get(host);
+  let c = instances60.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -188694,7 +190368,7 @@ function moneyChecksOf(host, deps) {
       progressions: d.progressions || progressionsOf(host, { record }),
       money: d.money || moneyOf2(host, { record, membership })
     });
-    instances59.set(host, c);
+    instances60.set(host, c);
     c.migrate();
     const declared2 = record.declareTable("money-checks", moneyChecksTables((scope) => c.rebuild(scope)));
     if (declared2 && declared2.ok === false) throw new Error(`money-checks: record-core refused its tables: ${declared2.reason}`);
@@ -188862,7 +190536,7 @@ function readBodyName(name2, ctx) {
 }
 var given = (v) => v === void 0 ? null : v;
 var DAY3 = /^(\d{4}-\d{2}-\d{2})(?:T00:00:00(?:\.0+)?)?$/;
-function dayOf5(v) {
+function dayOf6(v) {
   if (typeof v !== "string") return given(v);
   const m = DAY3.exec(v.trim());
   return m ? m[1] : v;
@@ -188906,7 +190580,7 @@ var READERS = {
     };
   },
   officerecords(o, ctx, at34) {
-    const end2 = o.OfficeRecordEndDate == null || o.OfficeRecordEndDate === "" ? null : dayOf5(o.OfficeRecordEndDate);
+    const end2 = o.OfficeRecordEndDate == null || o.OfficeRecordEndDate === "" ? null : dayOf6(o.OfficeRecordEndDate);
     const day2 = typeof at34 === "string" && /^\d{4}-\d{2}-\d{2}/.test(at34) ? at34.slice(0, 10) : null;
     const planned = end2 === null ? false : day2 === null || !/^\d{4}-\d{2}-\d{2}$/.test(end2) ? null : end2 > day2;
     return {
@@ -188917,7 +190591,7 @@ var READERS = {
         PersonId: given(o.OfficeRecordPersonId),
         BodyId: given(o.OfficeRecordBodyId),
         role: given(o.OfficeRecordMemberType),
-        start: dayOf5(given(o.OfficeRecordStartDate)),
+        start: dayOf6(given(o.OfficeRecordStartDate)),
         end: end2
       },
       extra: {
@@ -188992,10 +190666,10 @@ var READERS = {
         MatterFile: given(o.MatterFile),
         type: given(o.MatterTypeName),
         status: given(o.MatterStatusName),
-        intro_date: dayOf5(given(o.MatterIntroDate)),
-        passed_date: dayOf5(given(o.MatterPassedDate)),
+        intro_date: dayOf6(given(o.MatterIntroDate)),
+        passed_date: dayOf6(given(o.MatterPassedDate)),
         enactment_number: given(o.MatterEnactmentNumber),
-        enactment_date: dayOf5(given(o.MatterEnactmentDate))
+        enactment_date: dayOf6(given(o.MatterEnactmentDate))
       }
     };
   }
@@ -189629,8 +191303,8 @@ var EPOCH_MS = 36e5;
 var STATIC_ONLY = "only its static form is followed: the register is not re-rendered, so what a visitor's browser would add is not seen";
 var NOT_PUBLIC = "not reproducible by the public: it was read with a member's own credential or for a fee";
 var said6 = (v) => typeof v === "string" && v.trim() !== "";
-var refuse18 = followRefusal;
-var json13 = (v) => {
+var refuse19 = followRefusal;
+var json14 = (v) => {
   try {
     return v == null ? null : JSON.parse(v);
   } catch {
@@ -189639,10 +191313,10 @@ var json13 = (v) => {
 };
 var ms3 = (s) => Date.parse(s);
 var instant3 = (t2) => stampInstant("second", t2);
-var instances60 = /* @__PURE__ */ new WeakMap();
+var instances61 = /* @__PURE__ */ new WeakMap();
 function followingOf(host, deps = {}) {
   const storage = host && host.storage ? host.storage : host;
-  let f17 = instances60.get(storage);
+  let f17 = instances61.get(storage);
   if (!f17) {
     const record = deps.record || recordOf(host);
     const membership = deps.membership || membershipOf(host, { record });
@@ -189662,7 +191336,7 @@ function followingOf(host, deps = {}) {
       events: lazy(deps.events, () => eventsOf(host)),
       monitoring: lazy(deps.monitoring, () => monitoringOf(host, { record, membership }))
     });
-    instances60.set(storage, f17);
+    instances61.set(storage, f17);
     f17.migrate();
   }
   return f17;
@@ -189770,9 +191444,9 @@ var Following = class {
   /* R1: the refusals every follow shares: a machine (or absent) author, and a home the author may not see. */
   #actorRefusal(author, viewer, home) {
     if (!said6(author) || isMachineIdentity(author))
-      return refuse18("MACHINE_CANNOT_FOLLOW", "a follow is a member's own act; the machine follows nothing of its own accord");
+      return refuse19("MACHINE_CANNOT_FOLLOW", "a follow is a member's own act; the machine follows nothing of its own accord");
     if (home != null && (!said6(home) || !this.membership.inSight(home, viewer ?? author)))
-      return refuse18("NO_SUCH_HOME", "the follow's home is a bundle you may see, whose project it lives in");
+      return refuse19("NO_SUCH_HOME", "the follow's home is a bundle you may see, whose project it lives in");
     return null;
   }
   #cadence(c) {
@@ -189810,13 +191484,13 @@ var Following = class {
     if (r) return r;
     const ents = this.entities;
     const seen = said6(body) && ents.has(body.trim()) && viewerPredicate(viewer ?? author).scope !== "DENY";
-    if (!seen) return refuse18("NO_SUCH_BODY", "no body by that id is registered that you may see");
+    if (!seen) return refuse19("NO_SUCH_BODY", "no body by that id is registered that you may see");
     const id = this.#legistarId(body.trim());
-    if (!id) return refuse18("NO_LEGISTAR_ID", "the body holds no identifier in a scheme the active profiles name for Legistar");
+    if (!id) return refuse19("NO_LEGISTAR_ID", "the body holds no identifier in a scheme the active profiles name for Legistar");
     if (!said6(from) || !isCalendarDate(from.trim()) || until != null && (!said6(until) || !isCalendarDate(until.trim()) || until.trim() < from.trim()))
-      return refuse18("BAD_PERIOD", "a follow names the days it covers: from (a day), and until (a day not before it) or none");
+      return refuse19("BAD_PERIOD", "a follow names the days it covers: from (a day), and until (a day not before it) or none");
     const c = this.#cadence(cadence);
-    if (!c) return refuse18("BAD_FOLLOW_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
+    if (!c) return refuse19("BAD_FOLLOW_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
     return this.#insert("body", { kind: "body", id: body.trim(), legistar: id }, {
       home,
       author,
@@ -189837,8 +191511,8 @@ var Following = class {
   /** R1: a follow ends only by its author's act. */
   unfollow({ follow, author } = {}) {
     const row9 = this.#follow(follow);
-    if (!row9) return refuse18("NO_SUCH_FOLLOW", "no follow by that id is held");
-    if (!said6(author) || author !== row9.author) return refuse18("NOT_THE_AUTHOR", "a follow is ended only by the member who made it");
+    if (!row9) return refuse19("NO_SUCH_FOLLOW", "no follow by that id is held");
+    if (!said6(author) || author !== row9.author) return refuse19("NOT_THE_AUTHOR", "a follow is ended only by the member who made it");
     if (row9.ended_at) return { ok: true, already: true, follow: row9.follow_id, ended_at: row9.ended_at };
     const at34 = instant3(this.now());
     this.#sql.exec(`UPDATE follows SET ended_at=?, ended_by=? WHERE follow_id=?`, at34, author, row9.follow_id);
@@ -189853,19 +191527,19 @@ var Following = class {
   followRegister({ address, render: render2 = false, gated = null, cadence = null, home = null, author, viewer = null } = {}) {
     const r = this.#actorRefusal(author, viewer, home);
     if (r) return r;
-    if (!said6(address) || !isPublicHttpsLocator(address.trim())) return refuse18("NO_LOCATOR", "a register is followed at a public https locator");
-    if (render2 !== true && render2 !== false && render2 != null) return refuse18("BAD_RENDER", "render is true or false");
+    if (!said6(address) || !isPublicHttpsLocator(address.trim())) return refuse19("NO_LOCATOR", "a register is followed at a public https locator");
+    if (render2 !== true && render2 !== false && render2 != null) return refuse19("BAD_RENDER", "render is true or false");
     const g = this.#gated(gated);
-    if (g.bad) return refuse18("BAD_GATE", g.bad);
+    if (g.bad) return refuse19("BAD_GATE", g.bad);
     const c = this.#cadence(cadence);
-    if (!c) return refuse18("BAD_FOLLOW_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
+    if (!c) return refuse19("BAD_FOLLOW_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
     return this.#insert("register", { kind: "register", address: address.trim(), render: render2 === true }, { home, author, cadence: c, gated: g.gated });
   }
   /** R9: a register's own query for one identifier a member names for a person. */
   followPersonQuery({ register: register2, scheme, value, address, person = null, gated = null, cadence = null, home = null, author, viewer = null } = {}) {
     const r = this.#actorRefusal(author, viewer, home);
     if (r) return r;
-    const no8 = (detail) => refuse18("PERSON_QUERY_NOT_NAMED", detail);
+    const no8 = (detail) => refuse19("PERSON_QUERY_NOT_NAMED", detail);
     const view = this.view();
     const sch = (Array.isArray(view.identifier_schemes) ? view.identifier_schemes : []).find((s) => s && s.scheme === scheme);
     if (!said6(register2) || !sch || !Array.isArray(sch.systems) || !sch.systems.includes(register2))
@@ -189876,9 +191550,9 @@ var Following = class {
     if (!said6(home)) return no8("a person query's follow lives in its author's project: name its home");
     if (person != null && !(said6(person) && this.entities.has(person.trim()))) return no8("the person named is not a registered entity");
     const g = this.#gated(gated);
-    if (g.bad) return refuse18("BAD_GATE", g.bad);
+    if (g.bad) return refuse19("BAD_GATE", g.bad);
     const c = this.#cadence(cadence);
-    if (!c) return refuse18("BAD_FOLLOW_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
+    if (!c) return refuse19("BAD_FOLLOW_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
     return this.#insert("person-query", {
       kind: "person-query",
       register: register2,
@@ -189921,14 +191595,14 @@ var Following = class {
   followPortal({ address, query = null, key, cadence = null, home = null, author, viewer = null } = {}) {
     const r = this.#actorRefusal(author, viewer, home);
     if (r) return r;
-    if (!said6(address) || !isPublicHttpsLocator(address.trim())) return refuse18("NO_LOCATOR", "a portal is followed at a public https locator");
+    if (!said6(address) || !isPublicHttpsLocator(address.trim())) return refuse19("NO_LOCATOR", "a portal is followed at a public https locator");
     const q10 = portalKey(address.trim(), query);
-    if (!q10) return refuse18("NO_LOCATOR", "a portal is followed at a public https locator");
-    if (!said6(key)) return refuse18("NO_KEY", "a portal follow declares the field that keys its rows");
+    if (!q10) return refuse19("NO_LOCATOR", "a portal is followed at a public https locator");
+    if (!said6(key)) return refuse19("NO_KEY", "a portal follow declares the field that keys its rows");
     const c = this.#cadence(cadence);
-    if (!c) return refuse18("BAD_FOLLOW_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
+    if (!c) return refuse19("BAD_FOLLOW_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
     const held2 = this.#rows(`SELECT follow_id, subject FROM follows WHERE kind='portal' AND ended_at IS NULL`).find((x) => {
-      const s = json13(x.subject);
+      const s = json14(x.subject);
       return s && s.address === q10 && s.key === key.trim();
     });
     if (held2) return { ok: true, already: true, follow: Number(held2.follow_id) };
@@ -189937,10 +191611,10 @@ var Following = class {
   /** R4 (K1505 (15)): the body and notice period of a `per_meeting` watch. */
   perMeetingBody({ address, body, notice = null, author, viewer = null } = {}) {
     if (!said6(author) || isMachineIdentity(author))
-      return refuse18("MACHINE_CANNOT_FOLLOW", "naming a watch's body is a member's own act");
+      return refuse19("MACHINE_CANNOT_FOLLOW", "naming a watch's body is a member's own act");
     const sub = this.#perMeetingSubjects(this.now()).find((s) => s.address === (said6(address) ? address.trim() : null) && this.membership.inSight(s.bundle, viewer ?? author));
-    if (!sub) return refuse18("NO_SUCH_MEETING_ADDRESS", "no address you may see is watched per meeting");
-    if (!said6(body) || !this.entities.has(body.trim())) return refuse18("NO_SUCH_BODY", "no body by that id is registered that you may see");
+    if (!sub) return refuse19("NO_SUCH_MEETING_ADDRESS", "no address you may see is watched per meeting");
+    if (!said6(body) || !this.entities.has(body.trim())) return refuse19("NO_SUCH_BODY", "no body by that id is registered that you may see");
     const at34 = instant3(this.now());
     this.#sql.exec(
       `INSERT INTO per_meeting_links (address, bundle_id, body, notice, author, at) VALUES (?,?,?,?,?,?)`,
@@ -190153,9 +191827,9 @@ var Following = class {
   }
   /* One follow's read, by its kind. */
   async #readFollow(f17, nowMs) {
-    const subject = json13(f17.subject) || {};
+    const subject = json14(f17.subject) || {};
     const at34 = instant3(nowMs);
-    const gated = json13(f17.gated);
+    const gated = json14(f17.gated);
     let r;
     if (gated && (f17.kind === "register" || f17.kind === "person-query")) {
       r = { member_act_required: {
@@ -190291,7 +191965,7 @@ var Following = class {
       const key = matterAddress(client, m.ids.MatterId);
       const now = enactmentOf(m);
       const held2 = this.#one(`SELECT facts FROM follow_reads WHERE follow_id=? AND address=?`, f17.follow_id, key);
-      if (held2 && JSON.stringify(json13(held2.facts)) === JSON.stringify(now)) continue;
+      if (held2 && JSON.stringify(json14(held2.facts)) === JSON.stringify(now)) continue;
       const t2 = await read3(key, false);
       if (t2) this.#sql.exec(`UPDATE follow_reads SET facts=? WHERE follow_id=? AND address=?`, JSON.stringify(now), f17.follow_id, key);
       if (t2 && !t2.same) captured[captured.length - 1].enactment = now;
@@ -190352,16 +192026,16 @@ var Following = class {
   /** R8: a register behind an account or a fee, refreshed only by the act of the member whose credential it uses. */
   async refreshRegister({ follow, author, credential = null, price = null } = {}) {
     const f17 = this.#follow(follow);
-    if (!f17 || f17.ended_at || !["register", "person-query"].includes(f17.kind)) return refuse18("NO_SUCH_FOLLOW", "no live register follow by that id is held");
-    const gated = json13(f17.gated);
-    if (!gated) return refuse18("NOT_GATED", "a public register is read on the tick; a member's refresh is for one behind an account or a fee");
+    if (!f17 || f17.ended_at || !["register", "person-query"].includes(f17.kind)) return refuse19("NO_SUCH_FOLLOW", "no live register follow by that id is held");
+    const gated = json14(f17.gated);
+    if (!gated) return refuse19("NOT_GATED", "a public register is read on the tick; a member's refresh is for one behind an account or a fee");
     if (!said6(author) || isMachineIdentity(author) || author !== f17.author)
-      return refuse18("NOT_THE_FOLLOWER", "only the member who follows this register refreshes it, with their own credential");
+      return refuse19("NOT_THE_FOLLOWER", "only the member who follows this register refreshes it, with their own credential");
     if (gated.kind === "fee" && price !== gated.price)
-      return refuse18("PRICE_FIRST", `this register charges ${gated.price}; the refresh runs only once that price is accepted as shown`, { price: gated.price });
+      return refuse19("PRICE_FIRST", `this register charges ${gated.price}; the refresh runs only once that price is accepted as shown`, { price: gated.price });
     if (gated.kind === "account" && (!credential || typeof credential !== "object"))
-      return refuse18("NO_CREDENTIAL", "an account-gated register is read with the member's own credential");
-    const s = json13(f17.subject) || {};
+      return refuse19("NO_CREDENTIAL", "an account-gated register is read with the member's own credential");
+    const s = json14(f17.subject) || {};
     const t2 = await this.#take(f17, s.address, this.now(), {
       render: s.render === true,
       member: author,
@@ -190369,7 +192043,7 @@ var Following = class {
       notPublic: true,
       title: `Refreshed by its member: ${s.address}`
     });
-    if (t2.failed) return refuse18("NOT_READ", t2.failed.reason);
+    if (t2.failed) return refuse19("NOT_READ", t2.failed.reason);
     this.#sql.exec(`UPDATE follows SET last_read=?, last_outcome=? WHERE follow_id=?`, instant3(this.now()), t2.same ? "unchanged" : "captured", f17.follow_id);
     this.#tell(Number(f17.follow_id), this.#nextDue(f17.follow_id));
     return { ok: true, follow: Number(f17.follow_id), capture: t2.sha, unchanged: t2.same, reproducible_by_public: false, note: NOT_PUBLIC };
@@ -190384,11 +192058,11 @@ var Following = class {
   /** R11: between two snapshots of one portal follow, what was added, removed and changed by key. Writes nothing. */
   snapshotDiff({ follow, from, to, viewer = null } = {}) {
     const f17 = this.#follow(follow);
-    if (!f17 || f17.kind !== "portal" || !this.#sees(f17, viewer)) return refuse18("NO_SUCH_FOLLOW", "no portal follow by that id you may see");
+    if (!f17 || f17.kind !== "portal" || !this.#sees(f17, viewer)) return refuse19("NO_SUCH_FOLLOW", "no portal follow by that id you may see");
     const snap = (n) => this.#one(`SELECT * FROM portal_snapshots WHERE follow_id=? AND seq=?`, f17.follow_id, Number(n));
     const a = snap(from), b = snap(to);
-    if (!a || !b) return refuse18("NO_SUCH_SNAPSHOT", "both snapshots are of this follow, by their sequence numbers");
-    const key = (json13(f17.subject) || {}).key;
+    if (!a || !b) return refuse19("NO_SUCH_SNAPSHOT", "both snapshots are of this follow, by their sequence numbers");
+    const key = (json14(f17.subject) || {}).key;
     const base2 = {
       ok: true,
       follow: Number(f17.follow_id),
@@ -190405,12 +192079,12 @@ var Following = class {
       changed: [],
       undetermined: unread.map((x) => ({ key: null, snapshot: x.seq, why: x.why || "the snapshot was not read as rows" }))
     };
-    return { ...base2, ...diffRows(json13(a.rows) || [], json13(b.rows) || [], key) };
+    return { ...base2, ...diffRows(json14(a.rows) || [], json14(b.rows) || [], key) };
   }
   /** R10: a portal's snapshots, each a vintage whose validity is its capture instant (`civil-time` `validAt`). */
   snapshots({ follow, at: at34 = null, viewer = null } = {}) {
     const f17 = this.#follow(follow);
-    if (!f17 || f17.kind !== "portal" || !this.#sees(f17, viewer)) return refuse18("NO_SUCH_FOLLOW", "no portal follow by that id you may see");
+    if (!f17 || f17.kind !== "portal" || !this.#sees(f17, viewer)) return refuse19("NO_SUCH_FOLLOW", "no portal follow by that id you may see");
     const list6 = this.#rows(`SELECT seq, capture_sha, at, why FROM portal_snapshots WHERE follow_id=? ORDER BY seq`, f17.follow_id).map((x) => ({
       seq: Number(x.seq),
       capture: x.capture_sha,
@@ -190429,8 +192103,8 @@ var Following = class {
     for (const p3 of plan) {
       const f17 = p3.follow;
       if (!this.#sees(f17, viewer)) continue;
-      const s = json13(f17.subject) || {};
-      const gated = json13(f17.gated);
+      const s = json14(f17.subject) || {};
+      const gated = json14(f17.gated);
       items.push({
         follow: p3.id,
         kind: f17.kind,
@@ -191226,9 +192900,9 @@ var Scheduler = class {
   }
 };
 var DAILY_OWNER = Object.freeze([["duty-transitions", "duties"], ["interest-checks", "people"], ["money-detectors", "moneyChecks"]]);
-var instances61 = /* @__PURE__ */ new WeakMap();
+var instances62 = /* @__PURE__ */ new WeakMap();
 function schedulerOf(ctx, env = null, deps = {}) {
-  let s = instances61.get(ctx);
+  let s = instances62.get(ctx);
   if (!s) {
     const e2 = env || {};
     const owners2 = deps.owners || {
@@ -191254,7 +192928,7 @@ function schedulerOf(ctx, env = null, deps = {}) {
     };
     const zone = deps.zone || (() => viewZone3(recordOf(ctx)));
     s = new Scheduler({ storage: deps.storage || ctx.storage, env: e2, owners: owners2, zone });
-    instances61.set(ctx, s);
+    instances62.set(ctx, s);
     if (!deps.owners)
       s.listenTo({
         retrieval: retrievalOf(ctx),
@@ -193587,9 +195261,9 @@ function instanceSetupOps(m, url, body) {
     memberlanguage: () => m.memberLanguage({ viewer: q10("viewer") })
   };
 }
-function notAnswered(out, op, { json: json17, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) {
+function notAnswered(out, op, { json: json18, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) {
   if (out && out.refused === true && out.reply)
-    return typeof storeRefusal2 === "function" ? storeRefusal2(out) : json17(out.reply.body, out.reply.status);
+    return typeof storeRefusal2 === "function" ? storeRefusal2(out) : json18(out.reply.body, out.reply.status);
   return storeSilent2(op, out ? out.correlation : void 0);
 }
 var PUBLIC_GROUP_PROJECTIONS = Object.freeze(["instancegrouppublic", "groupidentitypublic"]);
@@ -193605,26 +195279,26 @@ async function publicInstanceGroup(env, storeName, projection = "instancegrouppu
   return doAnswer2(stub.fetch(`http://do/${projection}`));
 }
 async function instanceGroupOp(env, storeName, { viewer = null, cls: cls3 = null } = {}, io) {
-  const { json: json17, doAnswer: doAnswer2 } = io;
+  const { json: json18, doAnswer: doAnswer2 } = io;
   if (viewer) {
     const out = await doAnswer2(env.STORE.get(env.STORE.idFromName(storeName)).fetch("http://do/instancegroup"));
     if (!out.answered) return notAnswered(out, "instancegroup", io);
-    return json17({ ok: true, result: out.result, store: storeName, tokenClass: cls3 }, 200);
+    return json18({ ok: true, result: out.result, store: storeName, tokenClass: cls3 }, 200);
   }
   const pub = await publicInstanceGroup(env, storeName, "instancegrouppublic", doAnswer2);
   if (!pub.answered) return notAnswered(pub, "instancegroup", io);
-  return json17({ ok: true, result: pub.result, store: storeName }, 200);
+  return json18({ ok: true, result: pub.result, store: storeName }, 200);
 }
 async function groupIdentityOp(env, storeName, { viewer = null, cls: cls3 = null } = {}, io) {
-  const { json: json17, doAnswer: doAnswer2 } = io;
+  const { json: json18, doAnswer: doAnswer2 } = io;
   const out = await doAnswer2(env.STORE.get(env.STORE.idFromName(storeName)).fetch(viewer ? "http://do/groupidentity" : "http://do/groupidentitypublic"));
   if (!out.answered) return notAnswered(out, "groupidentity", io);
-  return json17({ ok: true, result: out.result, store: storeName, ...viewer ? { tokenClass: cls3 } : {} }, 200);
+  return json18({ ok: true, result: out.result, store: storeName, ...viewer ? { tokenClass: cls3 } : {} }, 200);
 }
-async function bootstrapReport(env, fp, { members: members2 = false, stub, json: json17, storeSilent: storeSilent2, doAnswer: doAnswer2, storeRefusal: storeRefusal2 }) {
+async function bootstrapReport(env, fp, { members: members2 = false, stub, json: json18, storeSilent: storeSilent2, doAnswer: doAnswer2, storeRefusal: storeRefusal2 }) {
   const out = await doAnswer2(stub.fetch(new Request(`http://do/bootstrap?fp=${fp}`)));
-  if (!out.answered) return notAnswered(out, "bootstrap", { json: json17, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
-  return json17({
+  if (!out.answered) return notAnswered(out, "bootstrap", { json: json18, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
+  return json18({
     ok: true,
     service: "bio-plane",
     version: env.VERSION || "0.0.0",
@@ -193633,7 +195307,7 @@ async function bootstrapReport(env, fp, { members: members2 = false, stub, json:
     ...members2 ? { memberVersions: await memberVersions(env) } : {}
   }, 200);
 }
-async function selftest(env, storeName, { cls: cls3 = null, viewer = "", scratch = "scratch" } = {}, { json: json17, doAnswer: doAnswer2 }) {
+async function selftest(env, storeName, { cls: cls3 = null, viewer = "", scratch = "scratch" } = {}, { json: json18, doAnswer: doAnswer2 }) {
   const r2Configured = typeof env.CAPTURES?.get === "function" && typeof env.PUBLISHED?.get === "function";
   const out = {
     ok: true,
@@ -193685,17 +195359,17 @@ async function selftest(env, storeName, { cls: cls3 = null, viewer = "", scratch
   }
   out.bindingsAllPresent = out.bindings.STORE === true && out.bindings.ADMIN_TOKEN === true && out.bindings.MEMBER_TOKEN === true && out.bindings.PROBE_TOKEN === true;
   if (!out.bindingsAllPresent) out.ok = false;
-  return json17(out, out.ok ? 200 : 500);
+  return json18(out, out.ok ? 200 : 500);
 }
 var RUNTIME_ASYMMETRY = "a refused subrequest throws and is caught, so the subrequest ceiling is known by having hit it. Exceeding the CPU limit TERMINATES the isolate, so no run can report its own death: consumption is measured on every run and the ceiling is found by op=cpuprobe, whose checkpoints survive the kill.";
 async function runtimeOp(stub, io) {
-  const { json: json17, doAnswer: doAnswer2 } = io;
+  const { json: json18, doAnswer: doAnswer2 } = io;
   const obsOut = await doAnswer2(stub.fetch("http://x/runtimeobservations"));
   const probeOut = await doAnswer2(stub.fetch("http://x/cpuprobestate"));
   const limOut = await doAnswer2(stub.fetch("http://x/capturelimit?runtime=subrequests"));
   const miss = [obsOut, probeOut, limOut].find((o) => !o.answered);
   if (miss) return notAnswered(miss, "runtime", io);
-  return json17({
+  return json18({
     ok: true,
     measured: obsOut.result,
     cpu_probe: probeOut.result,
@@ -193704,7 +195378,7 @@ async function runtimeOp(stub, io) {
   });
 }
 async function cpuProbeOp(stub, { iterations = null, budget_ms = null, run: run2 = null, probe = cpuProbe } = {}, io) {
-  const { json: json17, storeSilent: storeSilent2, doAnswer: doAnswer2 } = io;
+  const { json: json18, storeSilent: storeSilent2, doAnswer: doAnswer2 } = io;
   const beforeOut = await doAnswer2(stub.fetch("http://x/cpuprobestate"));
   if (!beforeOut.answered) return notAnswered(beforeOut, "cpuprobe", io);
   if (!beforeOut.result) return storeSilent2("cpuprobe");
@@ -193742,7 +195416,7 @@ async function cpuProbeOp(stub, { iterations = null, budget_ms = null, run: run2
   if (complete) await post("cpuprobeend", { run: id, completed: r.completed, elapsedMs: r.elapsed_ms, reason: r.reason });
   const afterOut = await doAnswer2(stub.fetch("http://x/cpuprobestate"));
   if (!afterOut.answered) return notAnswered(afterOut, "cpuprobe", io);
-  return json17({
+  return json18({
     ok: true,
     run: { ...r, id },
     state: afterOut.result,
@@ -193756,17 +195430,17 @@ async function instanceSetupOp(op, url, env, storeName, {
   cls: cls3 = null,
   viewer = "",
   scratch = "scratch",
-  json: json17,
+  json: json18,
   doAnswer: doAnswer2,
   storeSilent: storeSilent2,
   storeRefusal: storeRefusal2
 } = {}) {
-  const io = { json: json17, doAnswer: doAnswer2, storeSilent: storeSilent2, storeRefusal: storeRefusal2 };
+  const io = { json: json18, doAnswer: doAnswer2, storeSilent: storeSilent2, storeRefusal: storeRefusal2 };
   const store = () => env.STORE.get(env.STORE.idFromName(storeName));
-  if (op === "selftest") return selftest(env, storeName, { cls: cls3, scratch, viewer }, { json: json17, doAnswer: doAnswer2 });
+  if (op === "selftest") return selftest(env, storeName, { cls: cls3, scratch, viewer }, { json: json18, doAnswer: doAnswer2 });
   if (op === "livefire") {
     const out = await livefire(env, storeName, { capacity: cls3 === "admin", viewer });
-    return json17(out, out.verdict === "pass" ? 200 : 500);
+    return json18(out, out.verdict === "pass" ? 200 : 500);
   }
   if (op === "runtime") return runtimeOp(store(), io);
   if (op === "cpuprobe") return cpuProbeOp(
@@ -193776,11 +195450,11 @@ async function instanceSetupOp(op, url, env, storeName, {
   );
   return null;
 }
-function bootstrapOp(url, env, fp, { stub, json: json17, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2 }) {
+function bootstrapOp(url, env, fp, { stub, json: json18, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2 }) {
   return bootstrapReport(env, fp, {
     members: url.searchParams.get("members") === "1",
     stub,
-    json: json17,
+    json: json18,
     storeSilent: storeSilent2,
     storeRefusal: storeRefusal2,
     doAnswer: doAnswer2
@@ -194192,10 +195866,10 @@ var PUBLIC_READ_DOOR_OPS = Object.freeze([
   "docketpublic",
   "docketfeed"
 ]);
-async function publicReadDoorDocket(op, url, env, stub, { json: json17, requiredArgument: requiredArgument2, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2 }) {
+async function publicReadDoorDocket(op, url, env, stub, { json: json18, requiredArgument: requiredArgument2, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2 }) {
   const c = (url.searchParams.get("case") || "").trim();
   if (!c)
-    return json17({
+    return json18({
       ok: false,
       ...requiredArgument2(op, "case", "<a published case's id>"),
       error: `${op} requires case=<a published case's id>`
@@ -194207,17 +195881,17 @@ async function publicReadDoorDocket(op, url, env, stub, { json: json17, required
   if (!out.answered) return storeSilent2(op, out.correlation);
   const r = out.result;
   if (!r || typeof r !== "object" || typeof r.ok !== "boolean") return storeSilent2(op);
-  if (!r.ok) return json17({ ok: false, ...r }, 404);
-  if (op === "docketpublic") return json17(r, 200);
+  if (!r.ok) return json18({ ok: false, ...r }, 404);
+  if (op === "docketpublic") return json18(r, 200);
   if (typeof r.feed !== "string") return storeSilent2(op);
   return new Response(r.feed, { status: 200, headers: {
     "content-type": ATOM_MEDIA_TYPE,
     "access-control-allow-origin": "*"
   } });
 }
-async function publicReadDoorRead(name2, url, env, stub, { json: json17, requiredArgument: requiredArgument2, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2 }) {
+async function publicReadDoorRead(name2, url, env, stub, { json: json18, requiredArgument: requiredArgument2, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2 }) {
   if (typeof name2 !== "string" || !PUBLIC_READ_NAME.test(name2))
-    return json17({
+    return json18({
       ok: false,
       ...requiredArgument2("publicread", "name", "<a registered read's name: lowercase letters and digits>"),
       error: "publicread requires name=<a registered read's name: lowercase letters and digits>"
@@ -194230,15 +195904,15 @@ async function publicReadDoorRead(name2, url, env, stub, { json: json17, require
   if (!out.answered) return storeSilent2("publicread", out.correlation);
   const r = out.result;
   if (!r || typeof r !== "object" || typeof r.ok !== "boolean") return storeSilent2("publicread");
-  if (r.ok === false) return json17(r, r.reason === PUBLIC_READ_NOT_REGISTERED ? 404 : 400);
-  return json17(r, 200);
+  if (r.ok === false) return json18(r, r.reason === PUBLIC_READ_NOT_REGISTERED ? 404 : 400);
+  return json18(r, 200);
 }
 async function publicReadDoorOp(op, url, env, stub, helpers) {
-  const { json: json17, requiredArgument: requiredArgument2, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2, publicReads } = helpers;
+  const { json: json18, requiredArgument: requiredArgument2, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2, publicReads } = helpers;
   if (op === "verify") {
     const sha2 = (url.searchParams.get("sha256") || "").toLowerCase();
     if (!/^[0-9a-f]{64}$/.test(sha2))
-      return json17({
+      return json18({
         ok: false,
         ...requiredArgument2("verify", "sha256", "<64 lowercase hex>"),
         error: "verify requires sha256=<64 lowercase hex>"
@@ -194246,13 +195920,13 @@ async function publicReadDoorOp(op, url, env, stub, helpers) {
     const out = await doAnswer2(stub.fetch(new Request(`http://do/verify?sha256=${sha2}`)));
     if (out.refused) return storeRefusal2(out);
     if (!out.answered) return storeSilent2("verify", out.correlation);
-    return json17({ ok: true, ...out.result }, 200);
+    return json18({ ok: true, ...out.result }, 200);
   }
   if (op === "publishedmanifest") {
     const out = await doAnswer2(stub.fetch(new Request("http://do/publishedmanifest")));
     if (out.refused) return storeRefusal2(out);
     if (!out.answered) return storeSilent2("publishedmanifest", out.correlation);
-    return json17({ ok: true, result: out.result }, 200);
+    return json18({ ok: true, result: out.result }, 200);
   }
   if (op === "publishedcase" || op === "publishedbytes") return publishedRoutes({ op, url, env, stub });
   if (op === "docketpublic" || op === "docketfeed") return publicReadDoorDocket(op, url, env, stub, helpers);
@@ -194352,7 +196026,7 @@ async function reviewAnswer(out, op) {
   if (out.refused) return storeRefusal(out);
   if (!out.answered) return storeSilent(op, out.correlation);
   const r = out.result;
-  if (!r?.ok) return json14({ ok: false, ...r }, r?.reason === "NO_REVIEW_COPY" ? 404 : 400);
+  if (!r?.ok) return json15({ ok: false, ...r }, r?.reason === "NO_REVIEW_COPY" ? 404 : 400);
   if (op === "reviewcopy") {
     const { required_strength: bar, ...copy } = r;
     const served = { ok: true, ...copy };
@@ -194368,12 +196042,12 @@ async function reviewAnswer(out, op) {
       author: r.updated_by ?? null,
       bar: bar ?? null
     });
-    return json14({ ...served, inband: quartet }, 200);
+    return json15({ ...served, inband: quartet }, 200);
   }
-  return json14({ ok: true, ...r }, 200);
+  return json15({ ok: true, ...r }, 200);
 }
 var TEMPLATE_GRANT_DOORS = Object.freeze([...TEMPLATE_DOOR_ACTIONS, ...TEMPLATE_DOOR_READS]);
-var deadTemplateGrant = () => json14({ ok: false, ...noTemplateGrant() }, 404);
+var deadTemplateGrant = () => json15({ ok: false, ...noTemplateGrant() }, 404);
 async function templateGrantDoor({ req, url, env, op, spec, presentedAi, stub }) {
   const inner = new URL(`http://do/${op}`);
   for (const [k, v] of url.searchParams) inner.searchParams.set(k, v);
@@ -194413,14 +196087,14 @@ async function templateGrantDoor({ req, url, env, op, spec, presentedAi, stub })
   if (!out.answered) return storeSilent(op, out.correlation);
   const r = out.result;
   if (r?.reason === "NO_TEMPLATE_GRANT") return deadTemplateGrant();
-  if (!r?.ok) return json14({ ok: false, ...r }, r?.reason === "NO_SUCH_TEMPLATE" ? 404 : 400);
-  return json14({ ok: true, ...r }, 200);
+  if (!r?.ok) return json15({ ok: false, ...r }, r?.reason === "NO_SUCH_TEMPLATE" ? 404 : 400);
+  return json15({ ok: true, ...r }, 200);
 }
 async function caseReader(url, env, storeName, presentedAi) {
   const r = await readerOf(url, env, storeName, presentedAi, doAnswer);
   return r.silent ? { silent: r.silent.op, correlation: r.silent.correlation } : r;
 }
-var json14 = (o, status = 200) => new Response(JSON.stringify(dec49Attach(o)), {
+var json15 = (o, status = 200) => new Response(JSON.stringify(dec49Attach(o)), {
   status,
   headers: { "content-type": "application/json", "access-control-allow-origin": "*" }
 });
@@ -194459,10 +196133,10 @@ async function doAnswer(res) {
   return correlation ? { answered: false, result: void 0, correlation } : { answered: false, result: void 0 };
 }
 function storeRefusal(out, extra = {}) {
-  return json14({ ...out.reply.body, ...extra }, out.reply.status);
+  return json15({ ...out.reply.body, ...extra }, out.reply.status);
 }
 function storeSilent(op, correlation = void 0) {
-  return json14({
+  return json15({
     ok: false,
     reason: "STORE_DID_NOT_ANSWER",
     ...dispatchRow("STORE_DID_NOT_ANSWER"),
@@ -194475,7 +196149,7 @@ async function relayAnswer(res, op) {
   const out = await doAnswer(res);
   if (out.refused) return storeRefusal(out);
   if (!out.answered) return storeSilent(op, out.correlation);
-  return json14({ ok: true, result: out.result }, out.reply.status);
+  return json15({ ok: true, result: out.result }, out.reply.status);
 }
 function planeInternalError(e2, req) {
   const correlation = crypto.randomUUID();
@@ -194495,7 +196169,7 @@ function planeInternalError(e2, req) {
     }));
   } catch {
   }
-  return json14(answer, 500);
+  return json15(answer, 500);
 }
 function planeInternalAnswer(correlation) {
   return {
@@ -194545,7 +196219,7 @@ var dispatchRow = (code) => {
 var captureKey = (storeName, sha2) => `${storeName}/captures/${sha2}`;
 function storageAbsent(op, error) {
   const { status, body } = evidenceStorageAbsent(op, error);
-  return json14(body, status);
+  return json15(body, status);
 }
 async function groupRead(op, url, env, presentedAi) {
   const held2 = url.searchParams.get("token");
@@ -194554,7 +196228,7 @@ async function groupRead(op, url, env, presentedAi) {
   const store = heldScope && !heldScope.error ? heldScope.name : url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio";
   const reader = await caseReader(url, env, store, presentedAi.cred);
   if (reader.silent) return storeSilent(reader.silent, reader.correlation);
-  const io = { json: json14, storeSilent, storeRefusal, doAnswer };
+  const io = { json: json15, storeSilent, storeRefusal, doAnswer };
   return op === "instancegroup" ? instanceGroupOp(env, store, reader, io) : groupIdentityOp(env, store, reader, io);
 }
 var DRIVE_PROVENANCE_PATH = "migration/drive-provenance.json";
@@ -194614,7 +196288,7 @@ async function replayVerdict(env, storeName, text7, viaSession, cls3) {
   };
 }
 async function knockerConsent(req, store) {
-  if (req.method !== "POST") return json14({ ok: false, error: "knockerconsent is a POST" }, 405);
+  if (req.method !== "POST") return json15({ ok: false, error: "knockerconsent is a POST" }, 405);
   let b = null;
   try {
     b = JSON.parse(await req.text() || "{}");
@@ -194640,8 +196314,8 @@ async function knockerConsent(req, store) {
   if (!out.answered) return storeSilent("knockerconsent", out.correlation);
   const rec = out.result && typeof out.result === "object" ? out.result : {};
   if (rec.ok !== true)
-    return json14({ ok: false, ...rec }, rec.reason === "RATE_IP" || rec.reason === "RATE_GLOBAL" ? 429 : 403);
-  return json14({ ...rec, ok: true }, 200);
+    return json15({ ok: false, ...rec }, rec.reason === "RATE_IP" || rec.reason === "RATE_GLOBAL" ? 429 : 403);
+  return json15({ ...rec, ok: true }, 200);
 }
 async function publishAffordances(res, url) {
   if (url.searchParams.get("target")) return res;
@@ -194659,7 +196333,7 @@ async function publishAffordances(res, url) {
   } catch (e2) {
     absent = String(e2 && e2.message || "the pack could not be rendered").slice(0, 500);
   }
-  return json14({ ...body, result: { ...published, pack, ...pack ? {} : { pack_absent: absent } } }, res.status);
+  return json15({ ...body, result: { ...published, pack, ...pack ? {} : { pack_absent: absent } } }, res.status);
 }
 var PLANE_LIMITS = Object.freeze({ subrequests: 1e4 });
 var PLANE_LIMITS_STATEMENT = "bio-plane-limits/1 subrequests=10000";
@@ -194727,7 +196401,7 @@ function makeFetch(hooks = {}) {
       return new Response(SIGN_HTML, { headers: { "content-type": "text/html; charset=utf-8" } });
     if (req.method === "GET" && !url.pathname.startsWith("/api") && (url.pathname === "/" || url.pathname === "") && !url.searchParams.get("op")) {
       const pageNamespace = namespaceGate(url);
-      if (pageNamespace) return json14(pageNamespace.body, pageNamespace.status);
+      if (pageNamespace) return json15(pageNamespace.body, pageNamespace.status);
       const pageStore = url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio";
       return new Response(
         setupPage(await hooks.publicInstanceGroup(env, pageStore, "groupidentitypublic")),
@@ -194753,14 +196427,14 @@ function makeFetch(hooks = {}) {
         resolving = true;
       }
     }
-    if (!spec) return json14({
+    if (!spec) return json15({
       ok: false,
       error: "unknown op",
       reason: "UNKNOWN_OP",
       ...dispatchRow("UNKNOWN_OP"),
       op
     }, 400);
-    const refused3 = (r) => json14(r.body, r.status);
+    const refused3 = (r) => json15(r.body, r.status);
     const unknownNamespace = namespaceGate(url);
     if (unknownNamespace) return refused3(unknownNamespace);
     queryGate(url, op);
@@ -194776,21 +196450,21 @@ function makeFetch(hooks = {}) {
       const invStub = url.searchParams.get("store") === SCRATCH ? env.STORE.get(env.STORE.idFromName(SCRATCH)) : stub2;
       if (op === "claim") {
         const body2 = await req.json().catch(() => ({}));
-        if (!env.ADMIN_TOKEN) return json14({
+        if (!env.ADMIN_TOKEN) return json15({
           ok: false,
           reason: "BOOTSTRAP_CREDENTIAL_UNSET",
           ...installationRow("BOOTSTRAP_CREDENTIAL_UNSET"),
           error: "instance has no bootstrap credential set"
         }, 409);
         if (!await liveToken(env.ADMIN_TOKEN))
-          return json14({
+          return json15({
             ok: false,
             reason: "BOOTSTRAP_CREDENTIAL_PUBLISHED",
             ...installationRow("BOOTSTRAP_CREDENTIAL_PUBLISHED"),
             error: "bootstrap credential is a published repository value and can never arm a claim; set a fresh ADMIN_TOKEN in the Cloudflare dashboard"
           }, 409);
         if (body2.bootstrapToken !== env.ADMIN_TOKEN)
-          return json14({
+          return json15({
             ok: false,
             reason: "BOOTSTRAP_CREDENTIAL_MISMATCH",
             ...installationRow("BOOTSTRAP_CREDENTIAL_MISMATCH"),
@@ -194877,7 +196551,7 @@ function makeFetch(hooks = {}) {
       if (op === "instancegroup" || op === "groupidentity") return groupRead(op, url, env, presentedAi);
       if (op === "knockerconsent") return knockerConsent(req, stub2);
       if (NETWORK_NOTICES_PUBLIC_READS.includes(op) || CASE_CHECKER_PUBLIC_READS2.includes(op))
-        return publicReadDoorRead(op, url, env, stub2, { json: json14, requiredArgument, storeSilent, storeRefusal, doAnswer });
+        return publicReadDoorRead(op, url, env, stub2, { json: json15, requiredArgument, storeSilent, storeRefusal, doAnswer });
       return hooks.publicOp({ req, url, env, op, stub: stub2, invStub, fp, presentedAi });
     }
     let admitted = await admit({ url, env, op, spec, method: req.method, presented: presentedAi, doAnswer });
@@ -194892,7 +196566,7 @@ function makeFetch(hooks = {}) {
     const { cls: cls3, viaSession, aiCred, storeName } = caller;
     const { member: sessMember, viewer: sessViewer, identity: sessIdentity, rights: sessRights, caps: sessCaps } = caller;
     if (op === "whoami") {
-      return json14({ ok: true, result: {
+      return json15({ ok: true, result: {
         tokenClass: cls3,
         session: viaSession,
         member: viaSession ? sessMember : null,
@@ -195127,7 +196801,7 @@ function makeFetch(hooks = {}) {
     if (fenced) return refused3(fenced);
     const replay = op === "promote" && req.method === "POST" ? await replayVerdict(env, storeName, await req.clone().text(), viaSession, cls3) : null;
     if (replay?.asserted && !replay.proven)
-      return json14({
+      return json15({
         ok: false,
         reason: "REPLAY_UNVERIFIED",
         ...replayRow("REPLAY_UNVERIFIED"),
@@ -195139,7 +196813,7 @@ function makeFetch(hooks = {}) {
     if (op === "purge") {
       const confirm = url.searchParams.get("confirm");
       if (confirm !== storeName)
-        return json14({
+        return json15({
           ok: false,
           ...requiredArgument(
             "purge",
@@ -195479,8 +197153,8 @@ function makeFetch(hooks = {}) {
       if (minted.refused) return storeRefusal(minted, { op, store: storeName, tokenClass: cls3 });
       if (!minted.answered) return storeSilent("aicredentialmint", minted.correlation);
       if (!minted.result || minted.result.ok !== true)
-        return json14({ ok: false, ...minted.result || {}, op, store: storeName, tokenClass: cls3 }, 403);
-      return json14({ ok: true, result: {
+        return json15({ ok: false, ...minted.result || {}, op, store: storeName, tokenClass: cls3 }, 403);
+      return json15({ ok: true, result: {
         ...minted.result,
         /* THE ONE TIME THIS VALUE EXISTS ANYWHERE A CALLER CAN READ IT. It is
            not recoverable afterwards from this instance by any route, because
@@ -195497,8 +197171,8 @@ function makeFetch(hooks = {}) {
       if (issued.refused) return storeRefusal(issued, { op, store: storeName, tokenClass: cls3 });
       if (!issued.answered) return storeSilent("reviewgrant", issued.correlation);
       if (!issued.result || issued.result.ok !== true)
-        return json14({ ok: false, ...issued.result || {}, op, store: storeName, tokenClass: cls3 }, 403);
-      return json14({ ok: true, result: {
+        return json15({ ok: false, ...issued.result || {}, op, store: storeName, tokenClass: cls3 }, 403);
+      return json15({ ok: true, result: {
         ...issued.result,
         secret,
         secretIsShownOnce: "This is the only time your group's Civicsmith will show this value. It is stored only as a fingerprint and cannot be recovered. Give it to the recipient: it lets them READ this one draft and COMMENT on it, and nothing else. If it is lost, withdraw this grant and issue another.",
@@ -195512,8 +197186,8 @@ function makeFetch(hooks = {}) {
       if (issued.refused) return storeRefusal(issued, { op, store: storeName, tokenClass: cls3 });
       if (!issued.answered) return storeSilent("templatereviewgrant", issued.correlation);
       if (!issued.result || issued.result.ok !== true)
-        return json14({ ok: false, ...issued.result || {}, op, store: storeName, tokenClass: cls3 }, 403);
-      return json14({ ok: true, result: {
+        return json15({ ok: false, ...issued.result || {}, op, store: storeName, tokenClass: cls3 }, 403);
+      return json15({ ok: true, result: {
         ...issued.result,
         secret,
         secretIsShownOnce: "This is the only time your group's Civicsmith will show this value. It is stored only as a fingerprint and cannot be recovered. Give it to the reviewer: it lets them READ this one template version, COMMENT on it and REVIEW it while it is a draft or in review, and nothing else. If it is lost, withdraw this grant and open another.",
@@ -195527,18 +197201,18 @@ function makeFetch(hooks = {}) {
     if (!out.answered) return storeSilent(op, out.correlation);
     const { body, status } = out.reply;
     if ((op === "inboxget" || op === "inboxresolve") && body.result?.ok === false && body.result.reason === "NO_SUCH_KNOCK")
-      return json14({ ...body, store: storeName, tokenClass: cls3 }, 404);
+      return json15({ ...body, store: storeName, tokenClass: cls3 }, 404);
     const hinted = body.result?.status;
     if (STATED_STATUS_OPS.includes(op) && body.result?.ok === false && Number.isInteger(hinted) && hinted >= 400 && hinted < 600)
-      return json14({ ...body, store: storeName, tokenClass: cls3 }, hinted);
-    return json14({ ...body, store: storeName, tokenClass: cls3 }, status);
+      return json15({ ...body, store: storeName, tokenClass: cls3 }, hinted);
+    return json15({ ...body, store: storeName, tokenClass: cls3 }, status);
   }
 }
 
 // src/publication/door.mjs
 var PUBLICATION_DOOR_OPS = Object.freeze(["caseflags", "casedocument"]);
 async function publicationDoorOp(op, url, stub, {
-  json: json17,
+  json: json18,
   storeSilent: storeSilent2,
   storeRefusal: storeRefusal2,
   doAnswer: doAnswer2,
@@ -195558,13 +197232,13 @@ async function publicationDoorOp(op, url, stub, {
     const fOut = await doAnswer2(stub.fetch(`http://do/caseflags?${q10}`));
     if (fOut.refused) return storeRefusal2(fOut);
     if (!fOut.answered) return storeSilent2("caseflags", fOut.correlation);
-    return json17({ ok: true, result: fOut.result }, 200);
+    return json18({ ok: true, result: fOut.result }, 200);
   }
   if (op === "casedocument") {
     const caseId = url.searchParams.get("case") || "";
     const ed = url.searchParams.get("edition");
     if (!caseId || !ed)
-      return json17({
+      return json18({
         ok: false,
         reason: "MALFORMED",
         detail: "casedocument requires case=<CASE-YYYY-NNNN> and edition=<n>"
@@ -195578,8 +197252,8 @@ async function publicationDoorOp(op, url, stub, {
     if (out.refused) return storeRefusal2(out);
     if (!out.answered) return storeSilent2("casedocument", out.correlation);
     const r = out.result;
-    if (!r?.ok) return json17({ ok: false, ...r }, 404);
-    return json17({
+    if (!r?.ok) return json18({ ok: false, ...r }, 404);
+    return json18({
       ok: true,
       ...r,
       /* THE STATEMENT TO SIGN, PRINTED. It is the exact bytes
@@ -197230,7 +198904,7 @@ function checkPhases(phases2, { chosen, subjects }) {
   return { phases: out };
 }
 var ms4 = (iso6) => typeof iso6 === "string" ? Date.parse(iso6) : NaN;
-var dayOf6 = (msv) => new Date(msv).toISOString().slice(0, 10);
+var dayOf7 = (msv) => new Date(msv).toISOString().slice(0, 10);
 var iso3 = (msv) => new Date(msv).toISOString().replace(/\.\d{3}Z$/, "Z");
 function phaseTimes(phases2, { setAt, judged, track, duty = () => null }) {
   const byId = new Map(phases2.map((p3) => [p3.id, p3]));
@@ -198433,7 +200107,7 @@ var ActionPlans = class {
       const held2 = this.duties.readDuty({ dutyId: duty, viewer: dutyViewer(viewer) });
       if (!ok(held2) || held2.found !== true) return noSuchDuty(duty, { index: i });
       if (occurrence === void 0) continue;
-      const r = this.duties.occurrencesOf({ dutyId: duty, asOf, to: dayOf6(msOf2(asOf) + 731 * DAY_MS6), viewer: dutyViewer(viewer) });
+      const r = this.duties.occurrencesOf({ dutyId: duty, asOf, to: dayOf7(msOf2(asOf) + 731 * DAY_MS6), viewer: dutyViewer(viewer) });
       if (!ok(r)) return r.code === "NO_SUCH_DUTY" ? noSuchDuty(duty, { index: i }) : r;
       const keys = new Set((r.occurrences || []).map((x) => x.key));
       for (const t2 of (this.duties.transitionsOf({ dutyId: duty, viewer: dutyViewer(viewer) }) || {}).transitions || []) keys.add(t2.occurrence_key);
@@ -198493,9 +200167,9 @@ var ActionPlans = class {
     const recorded = ((this.duties.transitionsOf({ dutyId: duty, occurrenceKey: occ.key, viewer: dutyViewer(viewer) }) || {}).transitions || []).filter((t2) => typeof t2.at === "string" && msOf2(t2.at) <= nowMs);
     const last = recorded.at(-1) || null;
     const state = last ? last.state : occ.state;
-    const holds = state === s.state;
+    const holds2 = state === s.state;
     let since = null;
-    if (holds) {
+    if (holds2) {
       let t2 = last ? msOf2(last.as_of) : derivedSince(occ, nowMs);
       if (!Number.isFinite(t2) || t2 > nowMs) t2 = nowMs;
       since = iso4(Math.max(t2, msOf2(anchor2)));
@@ -198511,7 +200185,7 @@ var ActionPlans = class {
       why: last ? last.cause : occ.why,
       derivation: occ.derivation,
       ...occ.question ? { question: occ.question } : {},
-      holds,
+      holds: holds2,
       since
     };
   }
@@ -198860,9 +200534,9 @@ var ActionPlans = class {
      serves is no longer live is said only when every one is seen. */
   #optionView(p3, o, live7, viewer, see) {
     const f17 = see.fields(o.fields);
-    const whole = (o.fields.subjects || []).length === (f17.subjects || []).length;
+    const whole2 = (o.fields.subjects || []).length === (f17.subjects || []).length;
     const bound = (f17.subjects || []).map((s) => ({ key: subjectKey(s), liveness: live7.get(subjectKey(s)) || { state: "subject_removed" } }));
-    const anyLive = !whole || bound.some((b) => b.liveness.state === "live");
+    const anyLive = !whole2 || bound.some((b) => b.liveness.state === "live");
     const revisions = this.#rows(`SELECT * FROM plan_option_revisions WHERE plan_id=? AND option_id=? ORDER BY rev`, p3.id, o.id).map((r) => ({ rev: r.rev, fields: see.fields(unjson2(r.fields_json, {})), reason: r.reason ?? null, author: r.author, at: r.at }));
     const dispositions = this.#rows(`SELECT * FROM plan_history WHERE plan_id=? AND kind='dispose' ORDER BY seq`, p3.id).map((h) => ({ ...unjson2(h.entry_json, {}), seq: h.seq })).filter((e2) => (e2.options || []).includes(o.id)).map((e2) => ({ disposition: e2.disposition, reason: e2.reason ?? null, author: e2.author, at: e2.at }));
     const out = {
@@ -198928,7 +200602,7 @@ var ActionPlans = class {
      fact, asked of every subject it serves, seen or not (R35 withholds the subject, not what the plan says of it). */
   #checks(p3, options, scenarios, live7, now, viewer, held2) {
     const out = [];
-    const today2 = dayOf6(now);
+    const today2 = dayOf7(now);
     const outward = (o) => !!o.addressee;
     const pending = (o) => !["declined", "done"].includes(o.disposition) && !o.action;
     for (const o of options) {
@@ -198958,7 +200632,7 @@ var ActionPlans = class {
     const byId = new Map(options.map((o) => [o.id, o]));
     for (const sc of scenarios) {
       for (const ph of sc.phases) {
-        const start = ph.earliest ? dayOf6(msOf2(ph.earliest)) : null;
+        const start = ph.earliest ? dayOf7(msOf2(ph.earliest)) : null;
         for (const oid of ph.options) {
           const o = byId.get(oid);
           if (o && start) {
@@ -199328,9 +201002,9 @@ for (const name2 of [
     }
   } });
 }
-var instances62 = /* @__PURE__ */ new WeakMap();
+var instances63 = /* @__PURE__ */ new WeakMap();
 function actionPlansOf(host, deps) {
-  let i = instances62.get(host);
+  let i = instances63.get(host);
   if (!i) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -199356,7 +201030,7 @@ function actionPlansOf(host, deps) {
       duties: lazy("duties", () => dutiesOf(host, base2)),
       aiRuns: lazy("aiRuns", () => aiRunsOf(host))
     });
-    instances62.set(host, i);
+    instances63.set(host, i);
     i.migrate();
     record.declarePurge("action-plans", ACTION_PLANS_TABLES);
     promotion.registerStep("action-plans", { check: (c) => i.check(c), project: (c) => i.project(c) });
@@ -200596,8 +202270,8 @@ function cardinalityDetail(g) {
   return `${g.n} ${plural(g.n, "instance", "instances")} of this progression thread more than one document at '${stageName(g)}' (${g.document_count} in all), which is declared to hold ${held2}: a finding, which decides nothing about which of them belongs (framework 8.2)`;
 }
 function proposalFindingItems(feed, { subjectsOf, homesOf, optionsOf, subjectsMax = 8 } = {}) {
-  const subjectsFor = (instances65, into = []) => {
-    for (const inst of instances65)
+  const subjectsFor = (instances66, into = []) => {
+    for (const inst of instances66)
       for (const b of subjectsOf(inst.progression_key, inst.entity_id) || [])
         if (!into.includes(b)) into.push(b);
     return into;
@@ -204145,7 +205819,7 @@ var bare3 = (m) => {
 };
 var isMachine6 = (m) => typeof m === "string" && (m.startsWith(MACHINE_AUTHOR_PREFIX) || m.startsWith(MACHINE_CLASS_PREFIX));
 var instantOf3 = (ms5) => new Date(ms5).toISOString().replace(/\.\d{3}Z$/, "Z");
-var dayOf7 = (v) => {
+var dayOf8 = (v) => {
   const d = typeof v === "string" ? v.slice(0, 10) : "";
   return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : null;
 };
@@ -204567,10 +206241,10 @@ var NoticeProducers = class _NoticeProducers {
     if (!state) return null;
     const body = due2 && Array.isArray(due2.candidates) ? due2.candidates[due2.candidates.length - 1] : due2;
     const first = due2 && Array.isArray(due2.candidates) ? due2.candidates[0] : due2;
-    const dueDay2 = body && typeof body === "object" ? dayOf7(body.value) : dayOf7(body);
+    const dueDay2 = body && typeof body === "object" ? dayOf8(body.value) : dayOf8(body);
     const words4 = due2 && Array.isArray(due2.candidates) ? `between ${due2.candidates.map((c) => c.value).join(" and ")}` : `by ${dueDay2 ?? "its due date"}`;
     const act2 = d.performance && d.performance.act ? d.performance.act : "what it names";
-    const sinceDay = state === "overdue" ? dueDay2 : first && typeof first === "object" ? dayOf7(first.value) : null;
+    const sinceDay = state === "overdue" ? dueDay2 : first && typeof first === "object" ? dayOf8(first.value) : null;
     const sinceZone = state === "overdue" ? body && typeof body === "object" ? body.zone : null : first && typeof first === "object" ? first.zone : null;
     return {
       /* K1676: the key carries the occurrence's state as duties answers it, so possibly overdue becoming overdue is new */
@@ -204620,7 +206294,7 @@ var NoticeProducers = class _NoticeProducers {
     if (!r || r.ok === false || !Array.isArray(r.waits)) return { items: [], facts: {} };
     const byKey = /* @__PURE__ */ new Map();
     for (const w of r.waits) {
-      if (!w || w.state !== "due" || !filled12(w.inquiry) || !dayOf7(w.date) || bare3(w.set_by) !== me) continue;
+      if (!w || w.state !== "due" || !filled12(w.inquiry) || !dayOf8(w.date) || bare3(w.set_by) !== me) continue;
       const id = `OBLIGATION::inquiry-recheck-due::${w.inquiry}::${w.date}`;
       if (!byKey.has(id)) byKey.set(id, []);
       byKey.get(id).push(w);
@@ -207024,7 +208698,7 @@ function queueAnswer(r, { gate } = {}) {
 // src/queue/door.mjs
 var QUEUE_DOOR_OPS = Object.freeze(["queue"]);
 async function queueFeedOp(url, store, {
-  json: json17,
+  json: json18,
   doAnswer: doAnswer2,
   storeRefusal: storeRefusal2,
   storeSilent: storeSilent2,
@@ -207047,8 +208721,8 @@ async function queueFeedOp(url, store, {
   const r = qOut.result;
   if (!r) return storeSilent2("queue");
   const a = queueAnswer(r, { gate });
-  if (a.status !== 200) return json17({ ok: false, ...a.refusal, store: storeName, tokenClass: cls3 }, a.status);
-  return json17({ ok: true, result: a.result, store: storeName, tokenClass: cls3 }, 200);
+  if (a.status !== 200) return json18({ ok: false, ...a.refusal, store: storeName, tokenClass: cls3 }, a.status);
+  return json18({ ok: true, result: a.result, store: storeName, tokenClass: cls3 }, 200);
 }
 async function queueOp(op, url, getStore, stamps) {
   if (op === "queue") return queueFeedOp(url, getStore(), stamps);
@@ -207102,12 +208776,12 @@ function provenanceOps(provenance, url, body, { observer = null } = {}) {
     registeraudit: () => provenance.registerRows()
   };
 }
-async function registerAuditOp(env, store, { json: json17, doAnswer: doAnswer2, storeSilent: storeSilent2, storeRefusal: storeRefusal2, captureKey: captureKey2, storeName, cls: cls3 }) {
+async function registerAuditOp(env, store, { json: json18, doAnswer: doAnswer2, storeSilent: storeSilent2, storeRefusal: storeRefusal2, captureKey: captureKey2, storeName, cls: cls3 }) {
   const aOut = await doAnswer2(store.fetch("http://do/registeraudit"));
   if (aOut.refused) return storeRefusal2(aOut);
   if (!aOut.answered) return storeSilent2("registeraudit", aOut.correlation);
   if (!aOut.result) return storeSilent2("registeraudit");
-  return json17({ ok: true, result: await registerAuditReport(aOut.result, typeof env.CAPTURES?.head === "function" ? { head: (sha2) => env.CAPTURES.head(captureKey2(storeName, sha2)), get: (sha2) => env.CAPTURES.get(captureKey2(storeName, sha2)) } : null), store: storeName, tokenClass: cls3 }, 200);
+  return json18({ ok: true, result: await registerAuditReport(aOut.result, typeof env.CAPTURES?.head === "function" ? { head: (sha2) => env.CAPTURES.head(captureKey2(storeName, sha2)), get: (sha2) => env.CAPTURES.get(captureKey2(storeName, sha2)) } : null), store: storeName, tokenClass: cls3 }, 200);
 }
 
 // src/extraction/ops.mjs
@@ -207135,14 +208809,14 @@ var jsonAnswer = (o, status = 200) => new Response(JSON.stringify(o, null, 1), {
   status,
   headers: { "content-type": "application/json", "access-control-allow-origin": "*" }
 });
-function unanswered2(r, op, { json: json17, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) {
+function unanswered2(r, op, { json: json18, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) {
   if (r && r.refused && r.reply)
-    return typeof storeRefusal2 === "function" ? storeRefusal2(r) : json17(r.reply.body, r.reply.status);
+    return typeof storeRefusal2 === "function" ? storeRefusal2(r) : json18(r.reply.body, r.reply.status);
   if (!r || !r.answered || !r.result) return storeSilent2(op, r ? r.correlation : void 0);
   return null;
 }
 async function pdfStructureOp(url, env, store, {
-  json: json17,
+  json: json18,
   storeSilent: storeSilent2,
   storeRefusal: storeRefusal2,
   doAnswer: doAnswer2,
@@ -207159,7 +208833,7 @@ async function pdfStructureOp(url, env, store, {
   if (typeof env.CAPTURES?.get !== "function") return storageAbsent2(op, "R2 is not configured on this instance");
   const sha2 = (url.searchParams.get("sha256") || "").toLowerCase();
   if (!/^[0-9a-f]{64}$/.test(sha2))
-    return json17({ ok: false, ...requiredArgument2(
+    return json18({ ok: false, ...requiredArgument2(
       "pdfstructure",
       "sha256",
       "<64 lowercase hex>",
@@ -207176,20 +208850,20 @@ async function pdfStructureOp(url, env, store, {
   });
   if (url.searchParams.has("ocr")) q10.set("ocr", url.searchParams.get("ocr") ?? "");
   const r = await ask(store, `http://x/pdfstructure?${q10}`, void 0, doAnswer2);
-  return unanswered2(r, op, { json: json17, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) ?? json17(r.result.body, r.result.status);
+  return unanswered2(r, op, { json: json18, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) ?? json18(r.result.body, r.result.status);
 }
 var EXTRACTION_OPS = Object.freeze(["pdfstructure"]);
 async function extractionOp(op, url, env, getStore, stamps) {
   if (op === "pdfstructure") return pdfStructureOp(url, env, getStore(), stamps);
   return null;
 }
-async function acquireReadingOp(answer, store, { json: json17 = jsonAnswer, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2, storeName }) {
+async function acquireReadingOp(answer, store, { json: json18 = jsonAnswer, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2, storeName }) {
   const r = await ask(store, `http://x/extractread?store=${encodeURIComponent(storeName || "bio")}`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ document: answer.document })
   }, doAnswer2);
-  const relayed = unanswered2(r, "acquire", { json: json17, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
+  const relayed = unanswered2(r, "acquire", { json: json18, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
   if (relayed) return { response: relayed };
   const out = r.result;
   const body = withReading(answer, {
@@ -207203,15 +208877,15 @@ async function acquireReadingOp(answer, store, { json: json17 = jsonAnswer, stor
 
 // src/connections/ops.mjs
 var CONNECTIONS_OPS = Object.freeze(["linkproject"]);
-async function linkProjectOp(url, store, { json: json17, doAnswer: doAnswer2, storeRefusal: storeRefusal2, storeSilent: storeSilent2, viewer, identity }) {
+async function linkProjectOp(url, store, { json: json18, doAnswer: doAnswer2, storeRefusal: storeRefusal2, storeSilent: storeSilent2, viewer, identity }) {
   const capture2 = url.searchParams.get("capture");
   if (!/^[0-9a-f]{64}$/.test(capture2 || ""))
-    return json17({ ok: false, reason: "NEED_CAPTURE", detail: "pass capture=<sha256>" }, 400);
+    return json18({ ok: false, reason: "NEED_CAPTURE", detail: "pass capture=<sha256>" }, 400);
   const bundle = url.searchParams.get("bundle");
   const p3 = await doAnswer2(store.fetch(`http://x/projectlinks?capture=${capture2}` + (bundle ? `&bundle=${encodeURIComponent(bundle)}` : "") + `&viewer=${encodeURIComponent(viewer)}&identity=${encodeURIComponent(identity)}`));
   if (p3.refused) return storeRefusal2(p3);
   if (!p3.answered) return storeSilent2("linkproject", p3.correlation);
-  return json17({ ok: true, ...p3.result });
+  return json18({ ok: true, ...p3.result });
 }
 async function connectionsOp(op, url, getStore, stamps) {
   if (op === "linkproject") return linkProjectOp(url, getStore(), stamps);
@@ -207219,18 +208893,18 @@ async function connectionsOp(op, url, getStore, stamps) {
 }
 
 // src/plane/ask.mjs
-var json15 = (body, status) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
+var json16 = (body, status) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 var idOf3 = (m) => typeof m === "string" && m.startsWith("member:") ? m.slice(7) : m;
 async function askOp({ req, url, env, viaSession, sessMember, grantMember }) {
   const member = viaSession && sessMember ? `member:${idOf3(sessMember)}` : typeof grantMember === "string" && grantMember ? grantMember : null;
   if (!member)
-    return json15({ ok: false, reason: "ASK_NOT_A_MEMBER", detail: "an ask is a member's own act, from their own session or the grant minted at it. Nothing was asked." }, 403);
-  if (req.method !== "POST") return json15({ ok: false, reason: "METHOD_NOT_ALLOWED", detail: "an ask is a POST" }, 405);
+    return json16({ ok: false, reason: "ASK_NOT_A_MEMBER", detail: "an ask is a member's own act, from their own session or the grant minted at it. Nothing was asked." }, 403);
+  if (req.method !== "POST") return json16({ ok: false, reason: "METHOD_NOT_ALLOWED", detail: "an ask is a POST" }, 405);
   let body;
   try {
     body = await req.json();
   } catch {
-    return json15({ ok: false, reason: "BAD_JSON", detail: "the ask's body is not JSON" }, 400);
+    return json16({ ok: false, reason: "BAD_JSON", detail: "the ask's body is not JSON" }, 400);
   }
   const named = url.searchParams.get("store");
   const args = {
@@ -207246,18 +208920,18 @@ async function askOp({ req, url, env, viaSession, sessMember, grantMember }) {
 async function askOnObject(ctx, env, { member, session = null, grant = null, question, conversation, store = null }) {
   const w = env && env.AGENT_WORKER;
   if (!w || typeof w.fetch !== "function")
-    return json15({ ok: false, reason: "AGENT_WORKER_UNBOUND", detail: "your group's Civicsmith has no assistant bound to it. Nothing was asked." }, 503);
+    return json16({ ok: false, reason: "AGENT_WORKER_UNBOUND", detail: "your group's Civicsmith has no assistant bound to it. Nothing was asked." }, 503);
   const off = instanceSetupOf(ctx, env).assistantGate();
-  if (off) return json15(off, 403);
+  if (off) return json16(off, 403);
   const c = credentialsOf(ctx);
   let token = grant;
   if (!token) {
     const g = await c.aiGrantMint({ member, by: member, session });
-    if (!g || g.ok !== true) return json15(g, 403);
+    if (!g || g.ok !== true) return json16(g, 403);
     token = g.token;
   }
   let ref = await c.accountFor({ member, act: { kind: "ask", member } });
-  if (!ref || ref.ok !== true) return json15(ref, 409);
+  if (!ref || ref.ok !== true) return json16(ref, 409);
   let suggestions = false;
   if (ref.level === "member")
     try {
@@ -207278,7 +208952,7 @@ async function askOnObject(ctx, env, { member, session = null, grant = null, que
   try {
     res = await w.fetch("https://agent-worker/ask", { method: "POST", headers: { "content-type": "application/json" }, body: out });
   } catch {
-    return json15({ ok: false, reason: "AGENT_WORKER_SILENT", detail: "the assistant member did not answer. Nothing was kept." }, 502);
+    return json16({ ok: false, reason: "AGENT_WORKER_SILENT", detail: "the assistant member did not answer. Nothing was kept." }, 502);
   }
   return new Response(res.body, { status: res.status, headers: res.headers });
 }
@@ -207286,12 +208960,12 @@ async function askOnObject(ctx, env, { member, session = null, grant = null, que
 // src/plane/door.mjs
 async function publicOp({ req, url, env, op, stub, fp, presentedAi }) {
   {
-    const pr = await publicReadDoorOp(op, url, env, stub, { json: json14, requiredArgument, storeSilent, storeRefusal, doAnswer });
+    const pr = await publicReadDoorOp(op, url, env, stub, { json: json15, requiredArgument, storeSilent, storeRefusal, doAnswer });
     if (pr) return pr;
   }
   {
     const pd = await publicationDoorOp(op, url, stub, {
-      json: json14,
+      json: json15,
       storeSilent,
       storeRefusal,
       doAnswer,
@@ -207303,10 +208977,10 @@ async function publicOp({ req, url, env, op, stub, fp, presentedAi }) {
     if (pd) return pd;
   }
   {
-    const knocked = await capturePublicOp(op, req, env, stub, { json: json14, requiredArgument, storeSilent, storeRefusal, doAnswer });
+    const knocked = await capturePublicOp(op, req, env, stub, { json: json15, requiredArgument, storeSilent, storeRefusal, doAnswer });
     if (knocked) return knocked;
   }
-  return bootstrapOp(url, env, fp, { stub, json: json14, storeSilent, storeRefusal, doAnswer });
+  return bootstrapOp(url, env, fp, { stub, json: json15, storeSilent, storeRefusal, doAnswer });
 }
 async function gatedOp({
   req,
@@ -207334,7 +209008,7 @@ async function gatedOp({
   if (op === "ask") return askOp({ req, url, env, viaSession, sessMember, grantMember });
   if (op === "affordances")
     return affordancesOp(url, store(), {
-      json: json14,
+      json: json15,
       doAnswer,
       storeSilent,
       storeRefusal,
@@ -207347,7 +209021,7 @@ async function gatedOp({
       cls: cls3
     });
   if (QUEUE_DOOR_OPS.includes(op)) return queueOp(op, url, store, {
-    json: json14,
+    json: json15,
     doAnswer,
     storeRefusal,
     storeSilent,
@@ -207358,7 +209032,7 @@ async function gatedOp({
     member: viaSession ? sessMember : ""
   });
   if (op === "registeraudit") return registerAuditOp(env, store(), {
-    json: json14,
+    json: json15,
     doAnswer,
     storeSilent,
     storeRefusal,
@@ -207369,24 +209043,24 @@ async function gatedOp({
   if (INSTANCE_SETUP_OPS.includes(op)) return instanceSetupOp(op, url, env, storeName, {
     cls: cls3,
     scratch: SCRATCH,
-    json: json14,
+    json: json15,
     doAnswer,
     storeSilent,
     storeRefusal,
     viewer: principalViewer
   });
   if (CONNECTIONS_OPS.includes(op)) return connectionsOp(op, url, store, {
-    json: json14,
+    json: json15,
     doAnswer,
     storeRefusal,
     storeSilent,
     viewer: principalViewer,
     identity
   });
-  if (GOVERNOR_OPS.includes(op)) return governorOpResponse(op, url, store, { json: json14, doAnswer, storeRefusal, storeSilent });
+  if (GOVERNOR_OPS.includes(op)) return governorOpResponse(op, url, store, { json: json15, doAnswer, storeRefusal, storeSilent });
   {
     const c = await captureOp(op, req, url, env, store, {
-      json: json14,
+      json: json15,
       storeSilent,
       storeRefusal,
       doAnswer,
@@ -207398,12 +209072,12 @@ async function gatedOp({
       storeName,
       key: (s) => captureKey(storeName, s),
       viewer,
-      readAcquired: (answer, st) => acquireReadingOp(answer, st, { json: json14, storeSilent, storeRefusal, doAnswer, storeName })
+      readAcquired: (answer, st) => acquireReadingOp(answer, st, { json: json15, storeSilent, storeRefusal, doAnswer, storeName })
     });
     if (c) return c;
   }
   if (EXTRACTION_OPS.includes(op)) return extractionOp(op, url, env, store, {
-    json: json14,
+    json: json15,
     storeSilent,
     storeRefusal,
     doAnswer,
@@ -207416,9 +209090,9 @@ async function gatedOp({
     author,
     storeName
   });
-  if (op === "attest") return attestOp(req, env, store(), { json: json14, doAnswer, storageAbsent, captureKey, storeName, cls: cls3 });
+  if (op === "attest") return attestOp(req, env, store(), { json: json15, doAnswer, storageAbsent, captureKey, storeName, cls: cls3 });
   if (op === "monitor") return monitorOp(req, store(), {
-    json: json14,
+    json: json15,
     storeSilent,
     storeRefusal,
     requiredArgument,
@@ -207430,7 +209104,7 @@ async function gatedOp({
   });
   return ratificationOp(op, req, stub, {
     env,
-    json: json14,
+    json: json15,
     doAnswer,
     storeSilent,
     storeRefusal,
@@ -207826,8 +209500,8 @@ var Review = class {
         );
       params.caseId = named;
     }
-    const json17 = JSON.stringify(params);
-    if (json17.length > REVIEW_DRAFT_MAX)
+    const json18 = JSON.stringify(params);
+    if (json18.length > REVIEW_DRAFT_MAX)
       return refusal28(
         "REVIEW_DRAFT_TOO_LARGE",
         "a draft's arguments are at most 64 KiB, the size of what op=publish would accept."
@@ -207840,7 +209514,7 @@ var Review = class {
     if (existing) {
       id = existing.draft_id;
       this.sql.exec(`UPDATE case_drafts SET case_id=?, params=?, updated_by=?, updated_at=?, statement_by=?
-                     WHERE draft_id=?`, named, json17, who2, when, statementBy, id);
+                     WHERE draft_id=?`, named, json18, who2, when, statementBy, id);
     } else {
       this.seedLedger();
       id = this.record.mintOpaqueId("DRAFT", when.slice(0, 4), "", (d) => !!(this.#one(`SELECT 1 FROM case_drafts WHERE draft_id=?`, d) || this.#one(`SELECT 1 FROM review_grants WHERE draft_id=? LIMIT 1`, d)));
@@ -207851,7 +209525,7 @@ var Review = class {
         id,
         owning,
         named,
-        json17,
+        json18,
         who2,
         when,
         who2,
@@ -208227,16 +209901,16 @@ var Review = class {
     };
   }
 };
-var instances63 = /* @__PURE__ */ new WeakMap();
+var instances64 = /* @__PURE__ */ new WeakMap();
 function reviewOf(host, deps) {
-  let r = instances63.get(host);
+  let r = instances64.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     r = new Review({ ...d, host, storage, record, membership });
-    instances63.set(host, r);
+    instances64.set(host, r);
     r.migrate();
     record.declarePurge("review", REVIEW_TABLES);
     r.seedLedger();
@@ -208988,7 +210662,7 @@ var wizardRegistration = () => ({
 });
 
 // src/explore/answer.mjs
-var refuse19 = (refused3, why) => ({ refused: refused3, why });
+var refuse20 = (refused3, why) => ({ refused: refused3, why });
 var isObj42 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var filled13 = (v) => typeof v === "string" && v.trim() !== "";
 var isRefusal3 = (a) => isObj42(a) && filled13(a.refused);
@@ -208998,19 +210672,19 @@ var HUNCH_MARK = HUNCH_LABEL;
 var NOT_ASSERTED = "Each step is a cited connection the record holds; the answer asserts nothing beyond them.";
 function viewerRefusal(viewer) {
   if (viewer === void 0 || viewer === null || viewer === "") {
-    return refuse19("VIEWER_MISSING", "a read names the member reading; an absent viewer is neither an administrator nor the public");
+    return refuse20("VIEWER_MISSING", "a read names the member reading; an absent viewer is neither an administrator nor the public");
   }
   return null;
 }
 function nodeRefusal(node, name2, required2) {
   if (node === void 0 || node === null || node === "") {
-    return required2 ? refuse19("NO_NODE", `no ${name2} is named: a walk starts from a record id`) : null;
+    return required2 ? refuse20("NO_NODE", `no ${name2} is named: a walk starts from a record id`) : null;
   }
-  if (!isRecordId(node)) return refuse19("BAD_NODE", `${name2} ${String(node).slice(0, 60)} is not a record id the id grammar knows`);
+  if (!isRecordId(node)) return refuse20("BAD_NODE", `${name2} ${String(node).slice(0, 60)} is not a record id the id grammar knows`);
   return null;
 }
 function dateRefusal(at34, name2 = "at") {
-  if (at34 === void 0 || at34 === null || at34 === "") return refuse19("NO_DATE", `no ${name2} is stated: an exploration is always as of a stated date, never of "now"`);
+  if (at34 === void 0 || at34 === null || at34 === "") return refuse20("NO_DATE", `no ${name2} is stated: an exploration is always as of a stated date, never of "now"`);
   let b;
   try {
     b = bounds(
@@ -209018,17 +210692,17 @@ function dateRefusal(at34, name2 = "at") {
       at34
     );
   } catch (e2) {
-    return refuse19("BAD_DATE", `${name2} is not a date-time {value, precision, zone} or an instant: ${String(
+    return refuse20("BAD_DATE", `${name2} is not a date-time {value, precision, zone} or an instant: ${String(
       /** @type {any} */
       e2?.message ?? e2
     )}`);
   }
-  if (b && (b.refused || b.undetermined)) return refuse19("BAD_DATE", `${name2}: ${b.why}`);
+  if (b && (b.refused || b.undetermined)) return refuse20("BAD_DATE", `${name2}: ${b.why}`);
   return null;
 }
 function depthOrRefusal(depth) {
   const d = depthOf(depth);
-  return typeof d === "number" ? { depth: d } : { refusal: refuse19(d.refused, d.why) };
+  return typeof d === "number" ? { depth: d } : { refusal: refuse20(d.refused, d.why) };
 }
 var dateText2 = (at34) => typeof at34 === "string" ? at34 : isObj42(at34) ? `${at34.value} (${at34.precision}, ${at34.zone})` : String(at34);
 
@@ -209108,9 +210782,9 @@ var QUANTITY_OF_PATH = "the quantity its last step states";
 var PATH_ORDER = "fewest steps first, then the earliest start of validity, then the steps' ids";
 function resolveKinds(registry, kinds3) {
   if (kinds3 === void 0 || kinds3 === null) return { kinds: registry.owners().flatMap((o) => o.kinds.map((k) => k.kind)) };
-  if (!Array.isArray(kinds3) || kinds3.some((k) => !filled13(k))) return { refusal: refuse19("UNKNOWN_KIND", "kinds is a list of the kinds owners registered") };
+  if (!Array.isArray(kinds3) || kinds3.some((k) => !filled13(k))) return { refusal: refuse20("UNKNOWN_KIND", "kinds is a list of the kinds owners registered") };
   const unknown = kinds3.find((k) => registry.kindOf(k) === null);
-  if (unknown !== void 0) return { refusal: refuse19("UNKNOWN_KIND", `no owner registered the kind ${String(unknown).slice(0, 60)}`) };
+  if (unknown !== void 0) return { refusal: refuse20("UNKNOWN_KIND", `no owner registered the kind ${String(unknown).slice(0, 60)}`) };
   return { kinds: [...new Set(kinds3)] };
 }
 function checkWalkArgs(registry, a) {
@@ -209121,9 +210795,9 @@ function checkWalkArgs(registry, a) {
   if (k.refusal) return k;
   const d = depthOrRefusal(arg.depth);
   if (d.refusal) return d;
-  if (arg.sortBy !== void 0 && arg.sortBy !== null && !filled13(arg.sortBy)) return { refusal: refuse19("UNKNOWN_QUANTITY", "sortBy names a quantity a step states") };
+  if (arg.sortBy !== void 0 && arg.sortBy !== null && !filled13(arg.sortBy)) return { refusal: refuse20("UNKNOWN_QUANTITY", "sortBy names a quantity a step states") };
   if (arg.scope !== void 0 && arg.scope !== null && !(isObj42(arg.scope) && filled13(arg.scope.inquiry))) {
-    return { refusal: refuse19("BAD_SCOPE", "a scope is {inquiry}: the working inquiry whose hunch steps may be walked") };
+    return { refusal: refuse20("BAD_SCOPE", "a scope is {inquiry}: the working inquiry whose hunch steps may be walked") };
   }
   return { kinds: k.kinds, depth: d.depth };
 }
@@ -209186,7 +210860,7 @@ function walk2(ctx, w) {
   if (w.to !== void 0 && w.to !== null) paths = paths.filter((p3) => p3.hops[p3.hops.length - 1].from === w.to || p3.hops[p3.hops.length - 1].to === w.to);
   if (w.sortBy) {
     const stated = found3.some((hops) => hops.some((h) => isObj42(h.quantities) && typeof h.quantities[w.sortBy] === "number"));
-    if (!stated) return refuse19("UNKNOWN_QUANTITY", `no step in the walk states the quantity ${w.sortBy}`);
+    if (!stated) return refuse20("UNKNOWN_QUANTITY", `no step in the walk states the quantity ${w.sortBy}`);
   }
   paths = /** @type {any[]} */
   orderPaths(paths, w.sortBy ? { by: w.sortBy } : {});
@@ -209364,7 +211038,7 @@ var pathBetween = (ctx, a) => {
   const x = argOf(a);
   const v = viewerRefusal(x.viewer);
   if (v) return v;
-  if (x.to === void 0 || x.to === null || x.to === "") return refuse19("NO_NODE", "no to is named: a path between two records names both");
+  if (x.to === void 0 || x.to === null || x.to === "") return refuse20("NO_NODE", "no to is named: a path between two records names both");
   return presetWalk(ctx, "pathBetween", { from: x.from, to: x.to, at: x.at, depth: x.depth, viewer: x.viewer });
 };
 var OVERLAP_SENTENCE = "An overlap is a cited fact: both held a connection of this kind to the same record in the same span. It does not say the two are acquainted.";
@@ -209481,7 +211155,7 @@ function rederive(ctx, arg) {
   const r0 = viewerRefusal(a.viewer) || nodeRefusal(a.from, "from", true) || nodeRefusal(a.to, "to", true);
   if (r0) return r0;
   if (a.scope !== void 0 && a.scope !== null && !(isObj42(a.scope) && filled13(a.scope.inquiry))) {
-    return refuse19("BAD_SCOPE", "a scope is {inquiry}: the inquiry the leg naming the derived connection belongs to");
+    return refuse20("BAD_SCOPE", "a scope is {inquiry}: the inquiry the leg naming the derived connection belongs to");
   }
   const scope = a.scope ? a.scope.inquiry : null;
   for (const f17 of ["kind", "as_of", "method", "id"]) if (!filled13(a[f17])) return no5(`${f17} is not stated, so the derivation cannot be recomputed`);
@@ -209559,10 +211233,10 @@ function timelineOver(ctx, arg) {
   const a = isObj42(arg) ? arg : {};
   const v = viewerRefusal(a.viewer);
   if (v) return v;
-  if (!Array.isArray(a.set) || a.set.length === 0) return refuse19("NO_SET", "a timeline is over a set of record ids the caller names");
+  if (!Array.isArray(a.set) || a.set.length === 0) return refuse20("NO_SET", "a timeline is over a set of record ids the caller names");
   const events = typeof ctx.events === "function" ? ctx.events() : ctx.events;
   const money = typeof ctx.money === "function" ? ctx.money() : ctx.money;
-  if (!events || typeof events.timeline !== "function") return refuse19("NOT_AVAILABLE", "your group's Civicsmith has no events record connected, so no timeline can be read");
+  if (!events || typeof events.timeline !== "function") return refuse20("NOT_AVAILABLE", "your group's Civicsmith has no events record connected, so no timeline can be read");
   const t2 = events.timeline({ set: a.set, from: a.from ?? null, to: a.to ?? null, viewer: a.viewer });
   if (isRefusal3(t2) || isObj42(t2) && t2.ok === false) return t2;
   const out = [];
@@ -209602,7 +211276,7 @@ function exploreOps(explore, url, body) {
     explore: () => explore.explore({ ...args, viewer }),
     explorepreset: () => {
       const name2 = args.preset ?? url.searchParams.get("preset");
-      if (!PRESET_NAMES.includes(name2)) return refuse19("UNKNOWN_PRESET", `a preset is one of ${PRESET_NAMES.join(", ")}`);
+      if (!PRESET_NAMES.includes(name2)) return refuse20("UNKNOWN_PRESET", `a preset is one of ${PRESET_NAMES.join(", ")}`);
       const { preset: _p, ...rest } = args;
       return name2 === "presets" ? explore.presets() : explore[name2]({ ...rest, viewer });
     },
@@ -209733,7 +211407,7 @@ var UTF86 = new TextEncoder();
 var HUNCH_VALID = Object.freeze({ from: null, to: null, precision: "day", zone: "UTC" });
 var isObj44 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var filled14 = (v) => typeof v === "string" && v.trim() !== "";
-var json16 = (v) => JSON.stringify(v);
+var json17 = (v) => JSON.stringify(v);
 var parse17 = (s) => {
   try {
     return JSON.parse(s);
@@ -209742,18 +211416,18 @@ var parse17 = (s) => {
   }
 };
 var isThenable3 = (v) => v !== null && (typeof v === "object" || typeof v === "function") && typeof v.then === "function";
-function refuse20(code, detail, extra = {}) {
+function refuse21(code, detail, extra = {}) {
   const row9 = HYPOTHESES_CHECKS[code];
   return { ok: false, reason: code, code, check: row9.check, translation: row9.translation, detail, ...extra };
 }
-var instances64 = /* @__PURE__ */ new WeakMap();
+var instances65 = /* @__PURE__ */ new WeakMap();
 var live6 = /* @__PURE__ */ new Set();
 var storageOf2 = (host) => host && host.storage ? host.storage : host;
 function ownerNeighbours4(args) {
   const a = isObj44(args) ? args : {};
   const { host, ...rest } = a;
   let h = null;
-  if (host !== void 0 && host !== null) h = instances64.get(storageOf2(host)) ?? null;
+  if (host !== void 0 && host !== null) h = instances65.get(storageOf2(host)) ?? null;
   else if (live6.size === 1) h = [...live6][0];
   if (!h) return {
     refused: "OWNER_HOST_AMBIGUOUS",
@@ -209764,7 +211438,7 @@ function ownerNeighbours4(args) {
 defaultRegistry.registerOwner({ owner: OWNER2, kinds: [...HUNCH_KINDS], neighbours: ownerNeighbours4 });
 function hypothesesOf(host, deps = {}) {
   const storage = storageOf2(host);
-  let h = instances64.get(storage);
+  let h = instances65.get(storage);
   if (!h) {
     const record = deps.record ?? recordOf(host);
     const membership = deps.membership ?? membershipOf(host, { record });
@@ -209776,7 +211450,7 @@ function hypothesesOf(host, deps = {}) {
       host,
       explore: deps.explore ?? null
     });
-    instances64.set(storage, h);
+    instances65.set(storage, h);
     live6.add(h);
     h.migrate();
     const r = promotion.registerStep(OWNER2, { check: (c) => h.check(c) });
@@ -209848,8 +211522,8 @@ var Hypotheses = class _Hypotheses {
   #inquiry(id, viewer) {
     const b = filled14(id) ? this.#record.bundleInfo(id) : null;
     if (!b || !this.#membership.inSight(id, viewer))
-      return { refusal: refuse20("NO_SUCH_BUNDLE", "no inquiry by that id is held, or it is not one you may see", { inquiry: filled14(id) ? id : null }) };
-    if (b.type !== "inquiry") return { refusal: refuse20("NOT_AN_INQUIRY", `${id} is a ${b.type}, not an inquiry`, { inquiry: id }) };
+      return { refusal: refuse21("NO_SUCH_BUNDLE", "no inquiry by that id is held, or it is not one you may see", { inquiry: filled14(id) ? id : null }) };
+    if (b.type !== "inquiry") return { refusal: refuse21("NOT_AN_INQUIRY", `${id} is a ${b.type}, not an inquiry`, { inquiry: id }) };
     return { bundle: b };
   }
   /* The hypothesis `id` names, when the viewer may see its inquiry; else null (absent and hidden alike). */
@@ -209858,12 +211532,12 @@ var Hypotheses = class _Hypotheses {
     return r && this.#membership.inSight(r.bundle_id, viewer) ? r : null;
   }
   static #noSuch(id) {
-    return refuse20("NO_SUCH_HYPOTHESIS", "no hypothesis by that id is held, or it is not one you may see", { hypothesis_id: filled14(id) ? id : null });
+    return refuse21("NO_SUCH_HYPOTHESIS", "no hypothesis by that id is held, or it is not one you may see", { hypothesis_id: filled14(id) ? id : null });
   }
   /* ---- the nodes (R1) ---- */
   /* `about` read for `kind`: `{about, from, to}` or a refusal naming the node. */
   static #about(kind, about) {
-    const bad2 = (detail, node) => ({ refusal: refuse20("BAD_ABOUT", detail, node === void 0 ? {} : { node }) });
+    const bad2 = (detail, node) => ({ refusal: refuse21("BAD_ABOUT", detail, node === void 0 ? {} : { node }) });
     const known = (v) => typeof v === "string" && isRecordId(v);
     if (isObj44(about) && ("from" in about || "to" in about)) {
       for (const end2 of ["from", "to"])
@@ -209883,10 +211557,10 @@ var Hypotheses = class _Hypotheses {
   hold({ inquiry = null, kind = null, statement = null, about = null, by = null } = {}) {
     const q10 = this.#inquiry(inquiry, by);
     if (q10.refusal) return q10.refusal;
-    if (isMachineIdentity(by)) return refuse20("MACHINE_CANNOT_HYPOTHESISE", "the act's stamp is a machine's; only a member holds a hypothesis (K1473)");
+    if (isMachineIdentity(by)) return refuse21("MACHINE_CANNOT_HYPOTHESISE", "the act's stamp is a machine's; only a member holds a hypothesis (K1473)");
     if (!HYPOTHESIS_KINDS.includes(kind))
-      return refuse20("UNKNOWN_HYPOTHESIS_KIND", `a hypothesis is one of ${HYPOTHESIS_KINDS.join(", ")}`, { kinds: [...HYPOTHESIS_KINDS] });
-    if (!filled14(statement)) return refuse20("HYPOTHESIS_NO_STATEMENT", "a hypothesis states, in the member's words, what they think");
+      return refuse21("UNKNOWN_HYPOTHESIS_KIND", `a hypothesis is one of ${HYPOTHESIS_KINDS.join(", ")}`, { kinds: [...HYPOTHESIS_KINDS] });
+    if (!filled14(statement)) return refuse21("HYPOTHESIS_NO_STATEMENT", "a hypothesis states, in the member's words, what they think");
     const a = _Hypotheses.#about(kind, about);
     if (a.refusal) return a.refusal;
     const at34 = this.#now();
@@ -209895,9 +211569,9 @@ var Hypotheses = class _Hypotheses {
       const id = this.#record.allocId("HYP", at34.slice(0, 4));
       if (!id || !id.id) return id;
       this.#sql.exec(`INSERT INTO hypotheses (hypothesis_id, bundle_id, kind, statement, about_json, from_node, to_node, held_by, held_at)
-                      VALUES (?,?,?,?,?,?,?,?,?)`, id.id, inquiry, kind, text7, json16(a.about), a.from, a.to, by, at34);
+                      VALUES (?,?,?,?,?,?,?,?,?)`, id.id, inquiry, kind, text7, json17(a.about), a.from, a.to, by, at34);
       this.#sql.exec(`INSERT INTO hypothesis_revisions (hypothesis_id, bundle_id, act, statement, about_json, reason, by_actor, at)
-                      VALUES (?,?,?,?,?,?,?,?)`, id.id, inquiry, "hold", text7, json16(a.about), null, by, at34);
+                      VALUES (?,?,?,?,?,?,?,?)`, id.id, inquiry, "hold", text7, json17(a.about), null, by, at34);
       return { ok: true, hypothesis_id: id.id, kind, label: HYPOTHESIS_LABEL, at: at34 };
     });
   }
@@ -209905,8 +211579,8 @@ var Hypotheses = class _Hypotheses {
   #amendable(hypothesisId, reason, by) {
     const r = this.#held(hypothesisId, by);
     if (!r) return { refusal: _Hypotheses.#noSuch(hypothesisId) };
-    if (isMachineIdentity(by)) return { refusal: refuse20("MACHINE_CANNOT_HYPOTHESISE", "the act's stamp is a machine's; only a member changes a hypothesis (K1473)") };
-    if (!filled14(reason)) return { refusal: refuse20("HYPOTHESIS_NO_REASON", "a change to a hypothesis says why, in the member's words") };
+    if (isMachineIdentity(by)) return { refusal: refuse21("MACHINE_CANNOT_HYPOTHESISE", "the act's stamp is a machine's; only a member changes a hypothesis (K1473)") };
+    if (!filled14(reason)) return { refusal: refuse21("HYPOTHESIS_NO_REASON", "a change to a hypothesis says why, in the member's words") };
     return { row: r, reason: reason.trim().slice(0, REASON_MAX14) };
   }
   /** R2: `revise({hypothesisId, statement?, about?, reason, by})` appends a revision; the hypothesis keeps its id. */
@@ -209914,9 +211588,9 @@ var Hypotheses = class _Hypotheses {
     const m = this.#amendable(hypothesisId, reason, by);
     if (m.refusal) return m.refusal;
     const r = m.row;
-    if (r.withdrawn) return refuse20("HYPOTHESIS_WITHDRAWN", `${r.hypothesis_id} was withdrawn; a withdrawn hypothesis is not revised`, { hypothesis_id: r.hypothesis_id });
+    if (r.withdrawn) return refuse21("HYPOTHESIS_WITHDRAWN", `${r.hypothesis_id} was withdrawn; a withdrawn hypothesis is not revised`, { hypothesis_id: r.hypothesis_id });
     if (statement !== void 0 && statement !== null && !filled14(statement))
-      return refuse20("HYPOTHESIS_NO_STATEMENT", "a revised statement says, in the member's words, what they now think");
+      return refuse21("HYPOTHESIS_NO_STATEMENT", "a revised statement says, in the member's words, what they now think");
     const text7 = filled14(statement) ? statement.trim().slice(0, STATEMENT_MAX2) : r.statement;
     let a = { about: parse17(r.about_json), from: r.from_node, to: r.to_node };
     if (about !== void 0 && about !== null) {
@@ -209928,13 +211602,13 @@ var Hypotheses = class _Hypotheses {
       this.#sql.exec(
         `UPDATE hypotheses SET statement = ?, about_json = ?, from_node = ?, to_node = ? WHERE hypothesis_id = ?`,
         text7,
-        json16(a.about),
+        json17(a.about),
         a.from,
         a.to,
         r.hypothesis_id
       );
       this.#sql.exec(`INSERT INTO hypothesis_revisions (hypothesis_id, bundle_id, act, statement, about_json, reason, by_actor, at)
-                      VALUES (?,?,?,?,?,?,?,?)`, r.hypothesis_id, r.bundle_id, "revise", text7, json16(a.about), m.reason, by, at34);
+                      VALUES (?,?,?,?,?,?,?,?)`, r.hypothesis_id, r.bundle_id, "revise", text7, json17(a.about), m.reason, by, at34);
       return { ok: true, hypothesis_id: r.hypothesis_id, kind: r.kind, label: HYPOTHESIS_LABEL, at: at34 };
     });
   }
@@ -210070,11 +211744,11 @@ var Hypotheses = class _Hypotheses {
    *  note a member keeps while the group tells members what a court can reach answers the court statement, once. */
   noteWrite({ text: text7 = null, by = null } = {}) {
     const member = this.#noteMember(by);
-    if (!member) return refuse20("MACHINE_CANNOT_NOTE", "the act's stamp names no member; only a member keeps a note of their own");
-    if (!filled14(text7)) return refuse20("NOTE_NO_TEXT", "a note holds the member's words, and this one holds none");
+    if (!member) return refuse21("MACHINE_CANNOT_NOTE", "the act's stamp names no member; only a member keeps a note of their own");
+    if (!filled14(text7)) return refuse21("NOTE_NO_TEXT", "a note holds the member's words, and this one holds none");
     const bytes2 = UTF86.encode(text7).length;
     if (bytes2 > NOTE_MAX_BYTES)
-      return refuse20("NOTE_TOO_LONG", `a note holds at most ${NOTE_MAX_BYTES} bytes, and this one is ${bytes2}`, { max_bytes: NOTE_MAX_BYTES, bytes: bytes2 });
+      return refuse21("NOTE_TOO_LONG", `a note holds at most ${NOTE_MAX_BYTES} bytes, and this one is ${bytes2}`, { max_bytes: NOTE_MAX_BYTES, bytes: bytes2 });
     let tell2 = false;
     try {
       tell2 = this.#membership.courtNotice().choice === "tell";
@@ -210119,10 +211793,10 @@ var Hypotheses = class _Hypotheses {
    *  stays its author's alone. */
   noteTurn({ note = null, into = null, by = null, hunch = null, made: made3 = null } = {}) {
     const member = this.#noteMember(by);
-    if (!member) return refuse20("MACHINE_CANNOT_NOTE", "the act's stamp names no member; only a note's author turns it");
+    if (!member) return refuse21("MACHINE_CANNOT_NOTE", "the act's stamp names no member; only a note's author turns it");
     const n = this.#ownNote(note, member);
-    if (!n) return refuse20("NO_SUCH_NOTE", "no note of yours is held by that number", { note: typeof note === "number" || typeof note === "string" ? note : null });
-    if (!NOTE_TURNS.includes(into)) return refuse20("NOTE_TURN_UNKNOWN", `a note becomes one of ${NOTE_TURNS.join(", ")}`, { turns: [...NOTE_TURNS] });
+    if (!n) return refuse21("NO_SUCH_NOTE", "no note of yours is held by that number", { note: typeof note === "number" || typeof note === "string" ? note : null });
+    if (!NOTE_TURNS.includes(into)) return refuse21("NOTE_TURN_UNKNOWN", `a note becomes one of ${NOTE_TURNS.join(", ")}`, { turns: [...NOTE_TURNS] });
     const noteId = Number(n.note_id);
     const append = (id2) => {
       const at34 = this.#now();
@@ -210132,7 +211806,7 @@ var Hypotheses = class _Hypotheses {
     if (into === "hunch") {
       const length = n.text.trim().length;
       if (length > STATEMENT_MAX2)
-        return refuse20(
+        return refuse21(
           "NOTE_TOO_LONG_FOR_HUNCH",
           `a hunch's statement holds at most ${STATEMENT_MAX2} characters, and this note is ${length}`,
           { max_characters: STATEMENT_MAX2, characters: length, note: noteId }
@@ -210146,7 +211820,7 @@ var Hypotheses = class _Hypotheses {
     }
     const id = typeof made3 === "string" ? made3.trim() : made3;
     if (typeof id !== "string" || !isRecordId(id))
-      return refuse20("NOTE_TURN_NOT_MADE", `name the ${into} your own act made from this note by the record's id`, { made: typeof made3 === "string" ? made3 : null });
+      return refuse21("NOTE_TURN_NOT_MADE", `name the ${into} your own act made from this note by the record's id`, { made: typeof made3 === "string" ? made3 : null });
     return this.#record.transact(() => append(id));
   }
   /* ---- the leg check (R5, R6) ---- */
@@ -215997,7 +217671,7 @@ var Store = class extends DurableObject {
 
 // src/plane/index.mjs
 bindPublishedPlane({
-  json: json14,
+  json: json15,
   doAnswer,
   storeSilent,
   storeRefusal,
