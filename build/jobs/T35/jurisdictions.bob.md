@@ -17,3 +17,7 @@ K1916 (2), a clarification of R66 (no change of meaning): when combine withholds
 ## B3 · ANSWER · re J1
 
 K1918 (1): your reading governs; R36 is reworded on tranche/T35 ('every entry R31 requires a level for'). Merge the tranche branch.
+
+## B4 · CHANGE
+
+K1930 (re-opens your job): doctypes measured that the first profile's vocabulary.policy_headers (R69) lacks header labels the 50 captured OPD/City policies print, so the policy reader reads 25/50 under the held profile vs 46/50 under the measured labels. Add the measured labels to R69's data, each sourced to the documents that print it: 'Ref:' (reference), 'Rev.', 'New Order', 'DATE' (effective), 'Effective Date' with or without a colon, 'Evaluation Date' (review_due), and 'SUBJECT/AGENCY' read as SUBJECT. The measured list is MEASURED_VIEW in doctypes/test/policies.mjs on tranche/T35 (merge it first). No requirement text changes (R69 already holds the labels as data). Post COMPLETE again when done.
