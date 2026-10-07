@@ -107,6 +107,8 @@ const ADOPTION_KEYS = Object.freeze(["standard", "act", "edition", "from", "amen
                                      "author", "viewer"]);
 /* R41: what a read says in place of a reading-room or paywalled standard's words for a caller that is not a member. */
 const TEXT_WITHHELD = "this standard's words are read only by members of your group, inside the group";
+/* R37: the project a bundle is filed in (a project's own bundle is its project), as membership reads it. */
+const PROJECT_OF = "CASE WHEN b.object_type='project' THEN b.bundle_id ELSE b.project END";
 /* R41: a member viewer, `member:<id>`, never a machine credential. */
 const isMemberViewer = (v) => typeof v === "string" && /^member:./.test(v) && !isMachineIdentity(v);
 const ADOPT_KEYS = Object.freeze([...DECLARE_KEYS, "proposal"]);
@@ -235,10 +237,10 @@ export class Standards {
   #view() {
     const ids = this.record.getSetting("jurisdiction_profiles");
     if (!Array.isArray(ids) || !ids.length)
-      return { view: null, why: "the instance has no active jurisdiction profile, so no source of standards is known" };
+      return { view: null, why: "your group's Civicsmith has no active jurisdiction profile, so no source of standards is known" };
     const c = this.combine(ids);
     if (!c || !c.ok)
-      return { view: null, why: "the instance's active jurisdiction profiles could not be combined ("
+      return { view: null, why: "the active jurisdiction profiles of your group's Civicsmith could not be combined ("
                + `${[...new Set(((c && c.errors) || []).map((e) => e.code))].join(", ") || "unreadable"}), so no source `
                + "of standards is known" };
     return { view: c.view, why: null };
@@ -736,7 +738,7 @@ export class Standards {
     for (const id of texts) {
       const row = this.content.contentRow(id);
       if (!row) continue;
-      const b = this.#one(`SELECT bundle_id, project FROM bundles WHERE bundle_id=?`, row.bundle_id);
+      const b = this.#one(`SELECT bundle_id, ${PROJECT_OF} AS project FROM bundles b WHERE bundle_id=?`, row.bundle_id);
       if (b && b.project) bundles.add(b.bundle_id);
     }
     return bundles.size ? { class: "bundle", bundles: [...bundles].sort() } : { class: "group" };
@@ -876,7 +878,7 @@ export class Standards {
         copy_claimed_json: f.copy.claimed ? JSON.stringify(f.copy.claimed) : null, sight_json: JSON.stringify(f.sight),
         version_basis_json: f.version_basis ? JSON.stringify(f.version_basis) : null,
         force_source_json: f.force_source ? JSON.stringify(f.force_source) : null, designation: f.designation.value,
-        designation_json: JSON.stringify(f.designation), edition: f.edition.value, issuer_entity: f.issuer_entity,
+        designation_json: JSON.stringify({ designation: f.designation, edition: f.edition }), edition: f.edition.value, issuer_entity: f.issuer_entity,
         access: f.access, target_json: f.target ? JSON.stringify(f.target) : null, question: f.question,
       };
       const names = Object.keys(cols);
@@ -889,7 +891,7 @@ export class Standards {
       if (proposalId)
         this.sql.exec(`INSERT INTO standard_adoptions (proposal_id, standard_id, adopted_by, adopted_at) VALUES (?,?,?,?)`,
                       proposalId, id, author, at);
-      return { ok: true, ...this.#answer(this.#row(id)), bundleSha: r.bundleSha };
+      return { ok: true, ...this.#answer(this.#row(id), viewer ?? author), bundleSha: r.bundleSha };
     });
   }
 
@@ -942,9 +944,12 @@ export class Standards {
       held, ...(held === "cited" ? { cited_by: heldDetail } : {}), ...(held === "absent" ? { search: heldDetail } : {}),
       version_basis: safeJson(row.version_basis_json), overrides: this.#overridesBy(row.standard_id),
       force_source: safeJson(row.force_source_json),
-      designation: safeJson(row.designation_json) || { value: null, declared: false, read: null,
-                                                       why: "recorded before a designation was read" },
-      edition: row.edition ?? null, access, target: safeJson(row.target_json), question: qn,
+      designation: row.designation ?? null, edition: row.edition ?? null,
+      designation_read: (safeJson(row.designation_json) || {}).designation
+        || { value: null, declared: false, read: null, why: "recorded before a designation was read" },
+      edition_read: (safeJson(row.designation_json) || {}).edition
+        || { value: null, declared: false, read: null, why: "recorded before an edition was read" },
+      access, target: safeJson(row.target_json), question: qn,
       sight: sight.class === "bundle" ? { class: sight.released ? "group" : "bundle", released: sight.released || null }
                                       : { class: "group" },
       ...(notPublic ? { not_public: notPublic } : {}),
@@ -965,7 +970,7 @@ export class Standards {
   #releaseBy(sight) {
     const projects = new Set();
     for (const b of sight.bundles || []) {
-      const r = this.#one(`SELECT project FROM bundles WHERE bundle_id=?`, b);
+      const r = this.#one(`SELECT ${PROJECT_OF} AS project FROM bundles b WHERE bundle_id=?`, b);
       if (r && r.project) projects.add(r.project);
     }
     return [...projects].sort().map((p) => {
