@@ -23,3 +23,7 @@
 - ownership: 5 files changed by inquiry-grammar between tranche/T35 and HEAD; 0 failures.
 
 Size (session_0149evd1NyLT3FnFWo5BhDQC): test runs 9, module lines 1840
+
+## J1 · COMPLETE
+
+T35-40 done: R15 imports OCCURRENCE_KEY_RE from duties' vocab.mjs (same value, no copy; a test proves only vocab.mjs of duties is loaded); golden.json re-pinned to DEC-149's C-2.8 wording, the only difference (red 27 cleared; basis-versions 131/0). inquiry-grammar 60/0; format, architecture, coverage 17/17, ownership: 0 failures. Stale generated artifacts for the close: case-checker program.mjs (R13 red, 69 inputs, 0.6 MB) and the plane bundle. Users' other reds are accepted 19, 22, 26, 28, 29. Details in my record.
