@@ -916,14 +916,20 @@ export async function activeContent(bytes, container, rels, dir) {
     const last = part.slice(part.lastIndexOf("/") + 1);
     if (last.toLowerCase() === "vbaproject.bin") {
       const v = await readVbaProject(bytes, container, part);
+      /* `undetermined`: the modules whose source ooxml could not read, so a
+         partial read never reads as complete (K1916). */
       active.push(v.ok
         ? { kind: "vba-project", part, read: true, why: null, project: v.project,
-            modules: v.modules.map((m) => m.name), autoRun: v.autoRun, suspicious: v.suspicious }
+            modules: v.modules.map((m) => m.name), autoRun: v.autoRun, suspicious: v.suspicious,
+            undetermined: v.undetermined }
         : { kind: "vba-project", part, read: false, why: v.why, project: null,
-            modules: null, autoRun: null, suspicious: null });
+            modules: null, autoRun: null, suspicious: null, undetermined: null });
     }
-    if (part.startsWith(`${dir}activeX/`)) active.push({ kind: "activex", part });
-    else if (part.startsWith(`${dir}embeddings/`)) {
+    /* A part under `_rels/` is never itself an ActiveX, OLE or embedded
+       item: it yields its own external-target items below (K1916). */
+    const inRels = /(^|\/)_rels\//.test(part);
+    if (!inRels && part.startsWith(`${dir}activeX/`)) active.push({ kind: "activex", part });
+    else if (!inRels && part.startsWith(`${dir}embeddings/`)) {
       active.push({ kind: /^oleobject/i.test(last) ? "ole-object" : "embedded-file", part });
     } else if (dir === "xl/" && part.startsWith("xl/macrosheets/")) active.push({ kind: "xl4-macrosheet", part });
     const read = relsOf.get(part)?.shift();

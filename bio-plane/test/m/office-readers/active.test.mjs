@@ -37,8 +37,8 @@ const FORMATS = [
 async function vbaItem(bytes, part) {
   const v = await readVbaProject(bytes, readContainer(bytes), part);
   return v.ok
-    ? { kind: "vba-project", part, read: true, why: null, project: v.project, modules: v.modules.map((m) => m.name), autoRun: v.autoRun, suspicious: v.suspicious }
-    : { kind: "vba-project", part, read: false, why: v.why, project: null, modules: null, autoRun: null, suspicious: null };
+    ? { kind: "vba-project", part, read: true, why: null, project: v.project, modules: v.modules.map((m) => m.name), autoRun: v.autoRun, suspicious: v.suspicious, undetermined: v.undetermined }
+    : { kind: "vba-project", part, read: false, why: v.why, project: null, modules: null, autoRun: null, suspicious: null, undetermined: null };
 }
 
 /* Every kind of acting part, under `dir`, in this member order. */
@@ -54,6 +54,7 @@ function acting(dir) {
     { name: `${dir}embeddings/oleObject1.bin`, data: "OLE1" },
     { name: `${dir}embeddings/Microsoft_Excel_Worksheet.xlsx`, data: "XLSX" },
     { name: `${dir}embeddings/OLEOBJECT2.BIN`, data: "OLE2" },
+    { name: `${dir}embeddings/_rels/oleObject1.bin.rels`, data: F.rels([]) },
     { name: "xl/macrosheets/sheet1.xml", data: "<xm:macrosheet/>" },
     { name: `${dir === "ppt/" ? "word/" : "ppt/"}activeX/elsewhere.xml`, data: "<x/>" },
     { name: "customXml/_rels/item1.xml.rels", data: F.rels([]), cd: F.CORRUPT },
@@ -70,7 +71,6 @@ async function expected(bytes, dir, format) {
     await vbaItem(bytes, `${dir}vbaProject.bin`),
     { kind: "activex", part: `${dir}activeX/activeX1.xml` },
     { kind: "activex", part: `${dir}activeX/activeX1.bin` },
-    { kind: "activex", part: `${dir}activeX/_rels/activeX1.xml.rels` },
     { kind: "external-target", part: `${dir}activeX/_rels/activeX1.xml.rels`, type: T.image, target: "http://example.org/ax.png" },
     { kind: "ole-object", part: `${dir}embeddings/oleObject1.bin` },
     { kind: "embedded-file", part: `${dir}embeddings/Microsoft_Excel_Worksheet.xlsx` },
@@ -102,7 +102,7 @@ const ownItems = (format) => [
 
 /* ------------------------------------------------------------------ R32 */
 
-test("R32 docx, pptx and xlsx active: every part that can act, in central-directory order of its part and .rels order within one, hyperlinks left to links, nothing run", async () => {
+test("R32 docx, pptx and xlsx active: every part that can act, in central-directory order of its part and .rels order within one, hyperlinks left to links, a _rels/ part only by its targets, nothing run", async () => {
   for (const { entry, format, dir } of FORMATS) {
     const b = withOwnRels(format, dir);
     const s = await entry.structure(b);
@@ -131,7 +131,8 @@ test("R32 the vba-project item: ooxml.readVbaProject's reading as worded, the mo
     for (const k of OLEVBA.suspicious) if (VBA_SUSPICIOUS_KEYWORDS.includes(k)) assert.ok(item.suspicious.includes(k), `${format}: olevba's suspicious ${k}`);
     assert.ok(item.autoRun.every((k) => VBA_AUTORUN_NAMES.includes(k)));
     assert.ok(item.suspicious.every((k) => VBA_SUSPICIOUS_KEYWORDS.includes(k)));
-    assert.deepEqual(Object.keys(item), ["kind", "part", "read", "why", "project", "modules", "autoRun", "suspicious"]);
+    assert.deepEqual(item.undetermined, [], `${format}: every module read`);
+    assert.deepEqual(Object.keys(item), ["kind", "part", "read", "why", "project", "modules", "autoRun", "suspicious", "undetermined"]);
   }
 });
 
@@ -143,15 +144,17 @@ test("R32 a VBA project ooxml refuses is still listed, read:false with its why a
   ] });
   const active = (await docxEntry.structure(b)).active;
   assert.deepEqual(active, [await vbaItem(b, "word/vbaProject.bin"), await vbaItem(b, "custom/VBAPROJECT.BIN")]);
-  assert.deepEqual(active[0], { kind: "vba-project", part: "word/vbaProject.bin", read: false, why: active[0].why, project: null, modules: null, autoRun: null, suspicious: null });
+  assert.deepEqual(active[0], { kind: "vba-project", part: "word/vbaProject.bin", read: false, why: active[0].why, project: null, modules: null, autoRun: null, suspicious: null, undetermined: null });
   assert.equal(typeof active[0].why, "string");
   assert.equal(active[1].read, true);
-  /* a module whose source cannot be read leaves the project read, its name listed */
+  /* a module whose source cannot be read leaves the project read, its name listed, and says so (K1916) */
   const half = F.vbaProject({ ...SAMPLE, corrupt: ["Module1"] });
   const h = F.docx({ extra: [{ name: "word/vbaProject.bin", data: half }] });
   const [item] = (await docxEntry.structure(h)).active;
   assert.deepEqual(item, await vbaItem(h, "word/vbaProject.bin"));
   assert.deepEqual(item.modules, ["ThisDocument", "Module1"]);
+  assert.deepEqual(item.undetermined.map((u) => u.module), ["Module1"]);
+  assert.equal(typeof item.undetermined[0].why, "string");
 });
 
 test("R32 an unreadable .rels part is an unread item: the list may be missing items, stated, never read as none", async () => {
