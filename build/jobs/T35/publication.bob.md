@@ -15,3 +15,7 @@ Also inherited (K1996): red 32, bundler `fleetbundles.test.mjs` "agent-worker's 
 ## B2 · ANSWER · re J2
 
 K2002; your requirements changed: merge tranche/T35. (1) Your reading stands: a row's passages are the leg's content_id where the standard holds it among its text, else the standard's requires passages; text is what standardRead quotes (requires_quoted), null where it quotes none. No new edge. (2) Yes: the signer as viewer, bindsAt at the commit's UTC day. (3) Yes: label and access_words null too. (4) Yes: a nullable criteria column on published_cases; R40's list now names it. (5) Yes: a row per distinct (standard, portion, body); R72's wording now says so. CASE-CHECKER #6 (R21) is told the rows carry body as a key.
+
+## B3 · CHANGE
+
+ratification (T35-57) and review (T35-60) are merged into tranche/T35 (K2003): neither calls a publication delegate any more. Merge tranche/T35 again before dropping the delegates (T35-54).
