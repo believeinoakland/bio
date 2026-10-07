@@ -25,3 +25,7 @@ Size (session_01VTQaHgTy8PBDCChE2kLgVw): test runs 9, module lines 613
 ## J1 · REPORT
 
 control-plane: test/m/control-plane/rows-before-r43.json:177 pins C-89.1's translation digest (177eb6506e64bd82). T35-19's DEC-149 rewording of C-89.1 (checks.mjs:26, :27, :29) stales it. catalogue-end.test.mjs is already red (accepted red 19, first failing on C-29.3), so nothing new turns red; control-plane's T35-72 should re-pin C-89.1 with the rows red 19 names. Nothing else found in another module.
+
+## J2 · COMPLETE
+
+T35-19 applied: R7's inheritance (inherited {from, through}, recursive through ARCHIVE_DEPTH_MAX, undetermined for past-bound or unreadable archives) and DEC-149's nine rows (plus the sentence after index.mjs:239, same rule), each tested. Attestation 32/32; users' tests 1112/1119, the 7 fails inherited (reds 19, 22) and identical on tranche/T35; format, architecture, coverage (10/10), ownership: 0 failures. Nothing deferred. R7's '(not yet met: T35)' marker is yours to clear at merge; C-89.1 awaits stamp (red 2). Record: build/jobs/T35/attestation.md.
