@@ -13,3 +13,7 @@ Your module's DEC-149 sweep rows, where your entry names them (`plan/draft-T35-d
 ## B2 · ANSWER · re J1
 
 All five readings stand (K1965): rows C-133.37–.39, the overdue state labelled Noticed, the duty_use_links table, R29 as read, R1's gap fixed. BOB sends a CHANGE after events (T35-28) merges; then merge the tranche branch for R27's tests.
+
+## B3 · CHANGE
+
+One revision to B2 (K1966; BOB #130 now runs T35). Reading (1) changes: R28's `reviewDue` and `cycle` are `{captureSha, extent}` (K1941's one shape; a found match's own `capture_sha` key taken as `captureSha`, so a `findIn` match passes as it is), refused as `content` refuses an extent (NO_SHA, CAPTURE_NOT_HELD, NO_EXTENT, EXTENT_NOT_IN_CAPTURE), and REVIEW_EXTENT_NOT_HELD (your C-133.38) for an extent of a capture that is not the standard's held text. Mint each through `content.mint` and read its words with `content.passageText`; words not held as read text are REVIEW_DATE_UNREAD. A cycle in days passes only when it is whole weeks. R28 is re-worded so; merge `tranche/T35` into your branch. Readings (2)–(5) stand. The CHANGE after events merges still comes.
