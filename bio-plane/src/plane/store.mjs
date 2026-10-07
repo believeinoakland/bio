@@ -88,6 +88,7 @@ import { caseTensionsOf, caseTensionsOps } from "../case-tensions/index.mjs";
 import { followingOf, followingOps } from "../following/index.mjs";
 import { noticeProducersOf } from "../notice-producers/index.mjs";
 import { askOnObject, draftOnObject } from "./ask.mjs";
+import { archiveUnpackConsumer } from "./unpack.mjs";
 import { rosterSource } from "../../../roster-reader/index.mjs";
 import { credentialsOf as captureCredentialsOf } from "../capture-sources/credentials.mjs";
 import { registerReaders, rosterReads, ownHostsOf, officePorts, dutiesFactOf, retrievalTerms, sheetRecompute,
@@ -335,6 +336,9 @@ export class Store extends DurableObject {
       Queue.PRODUCER_DEPS.filter((k) => queueDeps[k] !== undefined).map((k) => [k, queueDeps[k]])));
     queueOf(ctx, { ...queueDeps, producers: queueProducers }).migrate();
     tasksOf(ctx, { env }).migrate();
+    /* K1951, K2042, K2046: the daemon's drain of capture's `archive-unpack` events, registered with the scheduler after
+       tasks' `task-drain` (scheduler R8), each event asked of the Worker as `op=unpack` through `SELF`. */
+    schedulerOf(ctx, env).register("plane", archiveUnpackConsumer({ capture: () => captureOf(ctx), env }));
     /* R1: instance-setup started once per object (its `start` is idempotent on one storage), built here first, with the
        queue's producers (K1868 (2)). */
     const instanceSetup = instanceSetupOf(ctx, env, { queueProducers });

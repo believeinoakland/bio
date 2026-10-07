@@ -71,6 +71,11 @@ import { followingOf, followingOps } from "../../../src/following/index.mjs";
 export const MODULE_MAPS = [
   ["membership", (c, u, b, e) => membershipOps(membershipOf(c), u, b, e)],
   ["credentials", (c, u, b, e) => credentialsOps(credentialsOf(c), u, b, e)],
+  /* K2042 (acquisition R43): the group's co-archive setting, acquisition's two acts. acquisition exports no ops map of
+     its own (its ops are reached through capture's and control-plane's doors), so the pair is named here as the module's
+     whose methods answer them: the plane adds no behaviour, only the entry (plane R9). */
+  ["acquisition", (c, u, b) => ({ coarchiveset: () => acquisitionOf(c).coArchiveSet({ on: b ? b.on : undefined, by: u.searchParams.get("by") }),
+                                  coarchivestate: () => acquisitionOf(c).coArchiveState() })],
   ["capture", (c, u, b, e) => captureOps(captureOf(c), u, b, e)],
   ["calibration", (c, u, b) => calibrationOps(calibrationOf(c), u, b)],
   ["bias", (c, u, b) => biasOps(biasOf(c), u, b)],
