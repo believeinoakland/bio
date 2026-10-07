@@ -10,7 +10,7 @@
  * deadline is adopted in one member act (R13, K1440), a member downloads their deadlines as one calendar file (R14,
  * K1451; `ics.mjs`), and the group's own lateness is counted, never a finding about government (R15, D234). T34-50:
  * R3 and R5 items carry the zone they were judged in (N609); a named closure list's entry is read at its own local fact
- * (R12, N562; `count.mjs`). An
+ * (R12, N562; `count.mjs`). T35-62: R11 also lists those entries a live deadline reads (N689). An
  * action's clock is written in its own document (`actions`); this module reads it, proposes entries apart, holds the
  * members' reminders in its own table, and writes the document only through R13's adoption, a member's revision.
  *
@@ -55,13 +55,13 @@ import { isCalendarDate, span } from "../civil-time/index.mjs";
 import { evaluate as calcEvaluate } from "../calc-grammar/index.mjs";
 import { ACTION_CLOCK_CHECKS } from "./checks.mjs";
 import { ACTION_CLOCKS_TABLES, ACTION_CLOCKS_TABLE_CLASSES, migrateActionClocks } from "./schema.mjs";
-import { actionOffices, actionZone, localDayOf, yearEntries, holidayFact, officeHours, readsOfficeCalendar, factReader,
-         computeDeadline, traceLine } from "./count.mjs";
+import { actionOffices, actionZone, localDayOf, yearEntries, holidayFact, officeHours, readsOfficeCalendar, closureListsRead,
+         factReader, computeDeadline, traceLine } from "./count.mjs";
 import { icsCalendar } from "./ics.mjs";
 
 export { ACTION_CLOCK_CHECKS } from "./checks.mjs";
 export { ACTION_CLOCKS_SCHEMA, ACTION_CLOCKS_TABLES, ACTION_CLOCKS_TABLE_CLASSES } from "./schema.mjs";
-export { actionOffices, actionZone, yearEntries, factReader, computeDeadline } from "./count.mjs";
+export { actionOffices, actionZone, yearEntries, closureListsRead, factReader, computeDeadline } from "./count.mjs";
 export { icsCalendar } from "./ics.mjs";
 
 /** R1: the most pending clock entries one page answers, and the most actions one page reads. */
@@ -435,19 +435,29 @@ export class ActionClocks {
 
   /** R11 (for `queue-producers` R21, through `local-facts` R4): the `local-facts` paths a live deadline reads, once each,
    *  with the actions that read them. For every visible action not `resolved` or `abandoned` whose kind has a profile
-   *  deadline counted in business days: its offices' `hours`; and, when one of its kind's deadlines reads the office
+   *  deadline counted in business days: its offices' `hours`; when one of its kind's deadlines reads the office
    *  calendar (`readsOfficeCalendar`: a count that skips or rolls past closed days and names no closure list), the
-   *  office-calendar entries that apply to its offices (R10) for each year from the UTC year of the instance clock to
-   *  the year of its latest pending clock entry, and at least the next year. A closure-list entry is never a path
-   *  (K1519; local-facts R6). Only facts the active profiles hold are paths (a year they do not list has no fact to
-   *  confirm, and a count reaching it is undetermined, jurisdictions R33). Each path's actions are `{action, project,
-   *  created_by}`, the project and creator as R3 computes them (K1000). At most 500 actions read, `truncated` stated. */
+   *  office-calendar entries that apply to its offices (R10); and (N689, K1847) for each named closure list one of its
+   *  kind's deadlines counts or rolls on, as its `closures` or its `observed.closures` (`closureListsRead`), that list's
+   *  entries for the same offices, each at its own path (`list=<name>`, local-facts R6), the path R12 reads it at;
+   *  each for every year from the UTC year of the instance clock to the year of its latest pending clock entry, and at
+   *  least the next year. A path a rule and an `observed` both name is listed once. Only facts the active profiles hold
+   *  are paths (a year they do not list has no fact to confirm, and a count reaching it is undetermined, jurisdictions
+   *  R33). Each path's actions are `{action, project, created_by}`, the project and creator as R3 computes them
+   *  (K1000). At most 500 actions read, `truncated` stated. */
   calendarFactsRead({ viewer = null, now = null } = {}) {
     const today = this.#today(now);
     const view = this.#view();
     const deadlines = (view && Array.isArray(view.deadlines) ? view.deadlines : []).filter((d) => d && typeof d.applies_to === "string");
     const business = new Set(deadlines.filter((d) => d.count === "business").map((d) => d.applies_to));
     const calendarKinds = new Set(deadlines.filter(readsOfficeCalendar).map((d) => d.applies_to));
+    /* N689: each kind's named closure lists, read by a rule's count or roll or by its observed practice. */
+    const listsOf = new Map();
+    for (const d of deadlines)
+      for (const l of closureListsRead(d)) {
+        if (!listsOf.has(d.applies_to)) listsOf.set(d.applies_to, new Set());
+        listsOf.get(d.applies_to).add(l);
+      }
     const gate = viewerPredicate(viewer);
     const closed = CLOSED_ACTION_STATES.map(() => "?").join(",");
     const rows = business.size ? this.#rows(`SELECT b.bundle_id FROM bundles b
@@ -466,12 +476,16 @@ export class ActionClocks {
       /* K1000: the action as its paths answer it, one object shared by every path it reads. */
       const a = { action: r.bundle_id, project: this.#projectOf(fm, viewer), created_by: this.#createdBy(r.bundle_id) };
       const offices = actionOffices(fm, view);
-      if (calendarKinds.has(fm.action_kind)) {
+      const lists = [...(listsOf.get(fm.action_kind) || [])].sort();
+      if (calendarKinds.has(fm.action_kind) || lists.length) {
         let y1 = y0 + 1;
         for (const e of Array.isArray(fm.clock) ? fm.clock : [])
           if (e && e.status === "pending" && isDay(e.date)) y1 = Math.max(y1, Number(e.date.slice(0, 4)));
+        /* null: the office calendar; a name: that closure list's entries, at their own paths. */
+        const reads = [...(calendarKinds.has(fm.action_kind) ? [null] : []), ...lists];
         for (let y = y0; y <= y1; y++)
-          for (const h of yearEntries(view, offices, y).entries) { try { add(factPath(holidayFact(h)), a); } catch { /* no path */ } }
+          for (const list of reads)
+            for (const h of yearEntries(view, offices, y, list).entries) { try { add(factPath(holidayFact(h)), a); } catch { /* no path */ } }
       }
       for (const f of officeHours(view, offices)) { try { add(factPath(f), a); } catch { /* no path */ } }
     }
