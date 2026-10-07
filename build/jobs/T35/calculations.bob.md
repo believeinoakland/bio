@@ -13,3 +13,7 @@ Your module's DEC-149 sweep rows, where your entry names them (`plan/draft-T35-d
 ## B2 · ANSWER · re J1
 
 All seven readings stand (K1967), `RECIPE_NOT_TEMPLATE` included (its catalogue row owed as T33's were). BOB #130 now runs T35.
+
+## B3 · CHANGE
+
+Merged (K1976), and re-opened for one fix found at the merge: you call `standards.isMeasure({standard, viewer})`, but standards R34 states `isMeasure(id)` and its merged code is `isMeasure(id, viewer = null)` (positional), so every provision reads not-a-measure. Merge `tranche/T35` @ bd314ba4d6 (events and standards are now merged), call it as R34 states, and check your other uses against the real services (`usesOf`, `readEvent`, `standardRead`, `inForceAt`, `bindsAt`, `forcesOf`), with at least one test of R36 over standards' real service, not a stand-in. Your J2 (4) refinement stands. Record completion again and post COMPLETE.
