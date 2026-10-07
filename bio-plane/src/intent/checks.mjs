@@ -131,7 +131,8 @@ export const INTENT_CHECKS = Object.freeze({
   },
   SOURCE_DECLARED: {
     check: 'C-111.24', where: at("registerSource", "is-source-once"),
-    translation: 'This source of proposals is already registered. A source registers once, when the plane starts.',
+    translation: 'This source of proposals is already registered. A source registers once, when your group\'s '
+      + 'Civicsmith starts.',
   },
   SOURCE_MALFORMED: {
     check: 'C-111.25', where: at("registerSource", "is-source-shaped"),

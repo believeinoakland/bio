@@ -2,6 +2,7 @@
    surfaced), R20 (an assistant proposes and adopts at no point). */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { INTENT_CHECKS } from "../../../src/intent/index.mjs";
 import { seeded, V, MACHINE, DAY } from "./fixture.mjs";
 
 /* Two entities missing the same required stage of `proc`: one progression proposal carrying both instances. */
@@ -41,6 +42,20 @@ test("R15 a later module registers a proposal source once (SOURCE_DECLARED, SOUR
   assert.ok(r.proposals.every((p) => "grade" in p && "basis" in p && "surfaced_by" in p));
   assert.deepEqual(seen.at(-1), { project: null, viewer: V("bob") });
   assert.equal(r.count, r.proposals.length);
+});
+
+test("R15 R22 (DEC-149, T35-51) a second registration of a source answers SOURCE_DECLARED (C-111.24) whose words name your group's Civicsmith: \"A source registers once, when your group's Civicsmith starts.\"; no row of this module names the plane, the instance or the copy", () => {
+  const w = seeded();
+  assert.equal(w.i.registerSource("monitoring", () => []).ok, true);
+  const again = w.i.registerSource("monitoring", () => []);
+  const words = "This source of proposals is already registered. A source registers once, when your group's Civicsmith starts.";
+  assert.deepEqual([again.ok, again.reason, again.code, again.check, again.translation],
+                   [false, "SOURCE_DECLARED", "SOURCE_DECLARED", "C-111.24", words]);
+  assert.equal(INTENT_CHECKS.SOURCE_DECLARED.translation, words, "the row carries the same sentence");
+  assert.doesNotMatch(again.translation, /the plane/);
+  /* DEC-149's pattern over every row a member can read here */
+  for (const [code, row] of Object.entries(INTENT_CHECKS))
+    assert.doesNotMatch(row.translation, /\b(?:this|the|your|our)(?: own)? (?:plane|instance|copy)\b|\bservers?\b/i, code);
 });
 
 test("R16 adopt records the proposal in the named project's objective with who and when; question opens a question at surfaced through inquiry with the proposal as its basis; defer and dismiss need a reason and a progression proposal is decided through progressions; a set-aside proposal stays readable with its reason", async () => {
