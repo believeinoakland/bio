@@ -122,3 +122,7 @@ Size: test runs 10, module lines 2079.
 - ownership: run after the commit.
 
 Size (session_013gccXT7dmwA6HqYDk4k5uR): test runs 12, module lines 2089
+
+## J4 · COMPLETE
+
+B4 (K2049) is done and pushed after merging tranche/T35. standardrelease is now in IRREVERSIBLE_WEIGHT; its rung stays reasoned. It also gains a CONSEQUENCE_STATEMENTS dialog stating what standards R37 enforces: every member sees the policy from then on, it is never undone, and the release is recorded with who, when and why. Tests: 26 of 26 pass. Checks: format, architecture and ownership show 0 failures; coverage is 22 of 22. For you: R21 still says IRREVERSIBLE_WEIGHT holds personexpunge 'and no other op', and R4 lists which ops carry a statement; both need wording for standardrelease. Size: test runs 12, module lines 2089.
