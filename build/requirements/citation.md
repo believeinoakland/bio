@@ -29,6 +29,7 @@ Terms. The **citing object** is the bundle a citation is written into, named by 
 
 ### Uses
 
+- `provenance` (L3): `homeOf` (its R4), the document a found match's capture is held in (R1); a capture with no home, or in a bundle the viewer may not see, answered alike `FOUND_MALFORMED` (K1982).
 - `record-grammar`: the shared grammar names this module once read from the check catalogue (frontmatter, types, ids, actors, labels, grades, `SHARED_ACT_CHECKS`), re-pointed in T19 (rule 1); the catalogue rows it owned are in its own code (K808, K820).
 - `record-core`: `recordOf(ctx)`, the `bundles` read contract and a bundle's live files (R37, R41–R43).
 - `membership`: the existence answer and sight (`existenceAct`, `inSight`; R44, R61), the one no-such-project answer (`noSuchProject`, R78), `projectAuthority` (R55).
