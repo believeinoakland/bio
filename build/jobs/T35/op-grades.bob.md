@@ -1,6 +1,6 @@
 # BOB to op-grades (T35)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -24,3 +24,7 @@ K2038. Both readings stand: (1) `IRREVERSIBLE_WEIGHT` and `CONSEQUENCE_STATEMENT
 ## B3 · CHANGE
 
 K2043, re-opening your job (P10). Grade, in your tables (`RUNGS` or `RUNG_ABSENT`, and `NON_ACTS` where the op is no act), every op served in T35 that has no grade yet, each by its owner's requirements as op-declarations declares it (member act, proposal, read; MEMBER_ACT_ONLY where the owner says so): standards `bindsat`, `editioninforce`, `forcesof`, `standardforce`, `standardforcewithdraw`, `standardrelease`, `standardadoption`, `standardimpose`, `standardbenchmark`, `standardforcepropose`, `overridesof`; events `discretionrecord`, `assessmentrecord`, `usesof`, `usewithdraw`; calculations `usesfreeze`, `applicationrecipes`; duties `poweruses`, `uselink`, `useunlink`, `reviewpropose`; capture-requests `recordsrequestopen`, `recordsrequestanswer`, `recordsrequests`; credentials `subscriptiondisconnect`. Check against `git show origin/job/T35/op-declarations:build/jobs/T35/op-declarations.md` for any op its REPORT adds. This clears red 29 and red 36 (affordances `catalogue.test.mjs`:579). Merge tranche/T35 first; record completion again.
+
+## B4 · CHANGE
+
+K2049. (1) `standardrelease` is never undone, so by DEC-143's rule it carries the Irreversible weight: add it to `IRREVERSIBLE_WEIGHT` (and `CONSEQUENCE_STATEMENTS` as its owner's requirements word it); its rung stays as R3 gives it. (2) R22 now names the 25 ops (merge tranche/T35). Record completion again.

@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, block, version, merge, V } from "../basis-versions/fixture.mjs";
 import { seeded, V as IV } from "../intent/fixture.mjs";
-import { JUSTIFICATION_REFUSALS, RUNGS, RUNG_ABSENT } from "../../../src/affordances.mjs";
+import { JUSTIFICATION_REFUSALS, RUNGS, RUNG_ABSENT } from "../../../src/op-grades/index.mjs";
 
 test("R19: narrow, graded `reasoned` (R27), called well-formed but without its account of what changed, is refused "
    + "with a code in JUSTIFICATION_REFUSALS, and with one it is accepted", () => {
