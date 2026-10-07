@@ -21,3 +21,7 @@
 - `checks/format.mjs`: 2 failures, both accepted red 24 (law-relations paths/tests). `checks/architecture.mjs … people`: 0 failures. `checks/coverage.mjs … people`: 35 of 35 live ids named; 0 failures. `checks/ownership.mjs … people tranche/T35`: 0 failures.
 
 Size (session_01FSeSN6nLRsFEECUy7671eK): test runs 20, module lines 1956
+
+## J1 · COMPLETE
+
+T35-35 applied: R9 (found extent as citation, taken as its capture and extent; optional question, QUESTION_NOT_HELD after BAD_VALIDITY, kept beside the fact and withheld as null from a viewer who may not see the inquiry) and R24 (mark 'Hint · machine work' and R24's detail on every result, op and listeners alike). people 40/40; users green but accepted reds 9, 22, 23; checks: architecture, coverage (35/35), ownership 0; format 2 = accepted red 24. Stale: the plane bundle (§14). Readings and detail in my record.
