@@ -635,6 +635,15 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 .mk-search { display: flex; gap: 8px; align-items: center; } .mk-search .cs-input { flex: 1; }
 .cs-hold.mk-hold { box-shadow: none; }
 .mk-thumb { float: left; width: 64px; height: 48px; margin: 2px 12px 2px 0; border: 1px solid var(--c-rule-strong); border-radius: 2px; overflow: hidden; cursor: pointer; } .mk-thumb svg { display: block; width: 64px; height: 48px; }
+.mk-page .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.mk-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0; background: var(--c-surface); border: var(--hair); }
+.mk-facts > div { padding: 10px 14px; display: grid; gap: 6px; align-content: start; border-right: var(--hair); }
+.mk-facts > div:last-child { border-right: 0; }
+.mk-facts .k { font: 600 var(--t-xs)/1.2 var(--f-sans); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--c-muted); }
+.mk-facts .v { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: var(--t-sm); }
+.mk-facts .cs-btn { min-height: 0; padding: 2px 6px; font-size: var(--t-sm); }
+@media (max-width: 560px) { .mk-facts { grid-template-columns: 1fr; } .mk-facts > div { border-right: 0; border-bottom: var(--hair); } .mk-facts > div:last-child { border-bottom: 0; } }
+.mk-device[data-device="phone"] .mk-facts { grid-template-columns: 1fr; } .mk-device[data-device="phone"] .mk-facts > div { border-right: 0; border-bottom: var(--hair); } .mk-device[data-device="phone"] .mk-facts > div:last-child { border-bottom: 0; }
 .mk-tabs2 { display: flex; gap: 0; border-bottom: var(--hair); }
 .mk-tabs2 span { padding: 8px 12px; font-weight: 600; font-size: var(--t-sm); color: var(--c-muted); }
 .mk-tabs2 span[aria-selected] { color: var(--c-ink); box-shadow: inset 0 -3px 0 var(--c-accent); }
@@ -1484,8 +1493,12 @@ SCR['open-file'] = c => { const st = OPEN_ST[c.v] || 'b'; const sel = v => v ===
   </div></div>` }; };
 
 SCR.document = c => ({ rail: 'projects', title: 'Document', crumbs: ['Pothole repairs', 'Documents', 'Administrative Instruction 4.12'], main: `
-  <div class="mk-doc-h">${h1('<span class="rec">Pothole repair policy, Administrative Instruction 4.12</span>', 'Public Works · revised 2023 · captured by Dev from oaklandca.gov, 2 October 2026')}${pathm(0)}</div>
-  <div class="row">${grade('capture', 'B', 'Capture')}${btn('gradenote', 'Why B?')}<span class="id">fingerprint 3b9f…c210</span></div>
+  ${h1('<span class="rec">Pothole repair policy, Administrative Instruction 4.12</span>', 'Public Works · revised 2023 · captured by Dev from oaklandca.gov, 2 October 2026')}
+  <div class="mk-facts">
+   <div><span class="k">Where it stands</span><span class="v">${pathm(0)}</span></div>
+   <div><span class="k">This copy</span><span class="v">${grade('capture', 'B', 'Capture')}${btn('gradenote', 'Why B?', { tone: 'quiet' })}</span></div>
+   <div><span class="k">Fingerprint</span><span class="v"><span class="id" tabindex="0" data-tip="<b>Fingerprint</b>: a short code computed from this copy's exact bytes. Anyone can compute it again to check the copy is unchanged.">3b9f…c210</span></span></div>
+  </div>
   ${acts(btn('owed:findin DEC-164', 'Find in this', { icon: 'search' }))}
   ${sec('Passages', `<blockquote class="mk-passage rec" data-act="cite">"3. The Director shall repair each reported pothole within seven calendar days of the report, weather permitting."</blockquote>${acts(btn('cite', 'Cite this passage', { tone: 'primary' }))}
     <blockquote class="mk-passage rec">"5. Repairs are recorded as closed when the crew reports the work complete."</blockquote>`)}

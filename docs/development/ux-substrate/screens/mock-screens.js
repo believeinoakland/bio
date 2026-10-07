@@ -368,8 +368,12 @@ SCR['open-file'] = c => { const st = OPEN_ST[c.v] || 'b'; const sel = v => v ===
   </div></div>` }; };
 
 SCR.document = c => ({ rail: 'projects', title: 'Document', crumbs: ['Pothole repairs', 'Documents', 'Administrative Instruction 4.12'], main: `
-  <div class="mk-doc-h">${h1('<span class="rec">Pothole repair policy, Administrative Instruction 4.12</span>', 'Public Works · revised 2023 · captured by Dev from oaklandca.gov, 2 October 2026')}${pathm(0)}</div>
-  <div class="row">${grade('capture', 'B', 'Capture')}${btn('gradenote', 'Why B?')}<span class="id">fingerprint 3b9f…c210</span></div>
+  ${h1('<span class="rec">Pothole repair policy, Administrative Instruction 4.12</span>', 'Public Works · revised 2023 · captured by Dev from oaklandca.gov, 2 October 2026')}
+  <div class="mk-facts">
+   <div><span class="k">Where it stands</span><span class="v">${pathm(0)}</span></div>
+   <div><span class="k">This copy</span><span class="v">${grade('capture', 'B', 'Capture')}${btn('gradenote', 'Why B?', { tone: 'quiet' })}</span></div>
+   <div><span class="k">Fingerprint</span><span class="v"><span class="id" tabindex="0" data-tip="<b>Fingerprint</b>: a short code computed from this copy's exact bytes. Anyone can compute it again to check the copy is unchanged.">3b9f…c210</span></span></div>
+  </div>
   ${acts(btn('owed:findin DEC-164', 'Find in this', { icon: 'search' }))}
   ${sec('Passages', `<blockquote class="mk-passage rec" data-act="cite">"3. The Director shall repair each reported pothole within seven calendar days of the report, weather permitting."</blockquote>${acts(btn('cite', 'Cite this passage', { tone: 'primary' }))}
     <blockquote class="mk-passage rec">"5. Repairs are recorded as closed when the crew reports the work complete."</blockquote>`)}
