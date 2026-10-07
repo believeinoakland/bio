@@ -20,7 +20,7 @@ import { signSshsig, signerPublicLine } from "../../../scripts/sign-sshsig.mjs";
 import { renderSignpage } from "../../../scripts/embed-signpage.mjs";
 import {
   makeRepo, addMember, addContainerMember, buildAll, run, snapshot, readJson, writeJson, rm, hex, planeConfig, VERSION,
-  ACCOUNT, PLANE, DIGEST,
+  ACCOUNT, PLANE, DIGEST, CONTAINER_PACKAGES,
 } from "./repo.mjs";
 
 const refused = (r, code) => {
@@ -566,8 +566,9 @@ function expectedPayload(root, version = VERSION) {
     /* R25: a container member's descriptor, written here from its marker's fields by hand. */
     const mk = readJson(join(m.abs, "fleet-member.json"));
     if (mk.kind === "container") {
+      /* R27: the image's packages, as the fixture's lockfile states them (CONTAINER_PACKAGES, by hand), last. */
       const b = Buffer.from(JSON.stringify({ class_name: mk.class_name, image: `${mk.image.repository}@${mk.image.digest}`,
-        scheduling_policy: "default", max_instances: mk.max_instances, bind: mk.bind }, null, 2) + "\n");
+        scheduling_policy: "default", max_instances: mk.max_instances, bind: mk.bind, packages: CONTAINER_PACKAGES }, null, 2) + "\n");
       parts.push({ path: "container.json", type: "Container", sha256: hex(b), bytes: b.length, buf: b });
     }
     return { member: m.name, asset: `${m.name}.bundled.mjs`, sha256: hex(art(m)), bytes: art(m).length,

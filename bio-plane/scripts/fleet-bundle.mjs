@@ -255,11 +255,50 @@ export function imageReference(image) {
   return { reference: `${image.repository}@${image.digest}` };
 }
 
+/* ---- THE NPM PACKAGES A LOCKFILE INSTALLS (bundler R27, R28 (a); F20, F21) ----
+ *
+ * Read off the lockfile npm itself installs from, so the list is the install's
+ * without running it: every entry under `packages` whose key is a `node_modules/`
+ * path and that is not marked `dev`, one per installed copy (a nested copy is a
+ * second entry). The name is the entry's own `name` where npm records one (an
+ * alias), else the path's last package segment. A lockfile that is not npm 7+'s
+ * shape (no `packages` map) is unread, never an empty list. */
+const packageOfPath = (key) => {
+  const seg = key.split("node_modules/").pop().split("/");
+  return seg[0].startsWith("@") ? `${seg[0]}/${seg[1]}` : seg[0];
+};
+const byNameVersion = (a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : a.version < b.version ? -1 : a.version > b.version ? 1 : 0);
+
+/** `{packages: [{name, version}]}` sorted by name then version, or `{unread}` naming the file, or the package
+ *  with no version. Never throws. */
+export function npmProductionPackages(lockPath, label = lockPath) {
+  let lock;
+  try { lock = JSON.parse(readFileSync(lockPath, "utf8")); }
+  catch (e) { return { unread: `${label} ${e.code === "ENOENT" ? "is missing" : "does not parse"}` }; }
+  if (!lock || typeof lock.packages !== "object" || lock.packages === null || Array.isArray(lock.packages))
+    return { unread: `${label} does not parse: it has no \`packages\` map (npm 7 or later writes one)` };
+  const packages = [];
+  for (const [key, entry] of Object.entries(lock.packages)) {
+    if (!key.includes("node_modules/") || !entry || typeof entry !== "object" || entry.dev === true) continue;
+    const name = typeof entry.name === "string" && entry.name ? entry.name : packageOfPath(key);
+    if (typeof entry.version !== "string" || !entry.version)
+      return { unread: `${label} names the installed package ${name} (${key}) without a version` };
+    packages.push({ name, version: entry.version });
+  }
+  return { packages: packages.sort(byNameVersion) };
+}
+
+/** R27: a container member's image packages, from its own `package-lock.json` (the file its image's `npm ci
+ *  --omit=dev` installs from). */
+export const containerPackages = (member) =>
+  npmProductionPackages(join(member.abs, "package-lock.json"), `${member.dir}/package-lock.json`);
+
 /** The `container.json` part for a container member: `{descriptor, bytes}`, or
  *  `{missing: [field, …]}` naming every field the marker does not state in the
  *  form the part needs. `memberNames` are the fleet's members, which `bind` must
- *  name. */
-export function containerDescriptor(member, memberNames = []) {
+ *  name. `packages`, where given, is R27's list, written as the part's last
+ *  field; the others are unchanged by it. */
+export function containerDescriptor(member, memberNames = [], { packages = null } = {}) {
   const meta = (member && member.marker) || {};
   const missing = [];
   if (!member || !member.bundle) missing.push("bundle");
@@ -280,6 +319,7 @@ export function containerDescriptor(member, memberNames = []) {
     scheduling_policy: "default",
     max_instances: meta.max_instances,
     bind: meta.bind.map((b) => ({ member: b.member, binding: b.binding })),
+    ...(packages ? { packages: packages.map((p) => ({ name: p.name, version: p.version })) } : {}),
   };
   return { descriptor, bytes: Buffer.from(JSON.stringify(descriptor, null, 2) + "\n") };
 }
