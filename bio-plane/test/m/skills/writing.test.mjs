@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { renderPack, SOURCING } from "../../../src/skillpack.mjs";
 import { writingHelpLayer, suggestionsLayer, WRITING_HELP_CLAUSES, WRITING_HELP_ACTS, WRITING_HELP_ACT,
          INTERACTION_SOURCE, ROLES_SOURCE, PILOT_SOURCE, controlFlowAuthority } from "../../../src/skilldoctrine.mjs";
+import { DRAFT_MODE } from "../../../src/run-rules/index.mjs";
 import { SRC, read, foundIn, section, canonDocuments, published, stringLiterals } from "./fixture.mjs";
 
 /* The acts R36 names, as `op=affordances` would publish them once their ops land (L11): the draft acts open to the
@@ -37,6 +38,9 @@ test("R36 R5 the writing_help layer, in disclosed after suggestions and before w
   assert.equal(layer.load_when, LOAD_WHEN);
   assert.ok(resident.disclosable.some((d) => d.layer === "writing_help" && d.load_when === LOAD_WHEN));
   assert.equal(layer.body.clauses, WRITING_HELP_CLAUSES);
+  /* The mode is run-rules' draft mode (its R21), read from it; the source never types it (R23). */
+  assert.equal(layer.body.mode, DRAFT_MODE.mode);
+  assert.ok(!SRC.flatMap((f) => stringLiterals(read(f))).includes(DRAFT_MODE.mode), "the mode is not typed");
   for (const src of [INTERACTION_SOURCE, ROLES_SOURCE, PILOT_SOURCE]) assert.ok(canonDocuments().has(src), `${src} is canon`);
   const bySource = sections();
   for (const c of WRITING_HELP_CLAUSES) {

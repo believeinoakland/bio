@@ -90,7 +90,7 @@ import { BASIS_VERSION_CHECKS, CONCLUDE_ACT_CHECKS } from "./basis-versions/inde
 import { INQUIRY_GRAMMAR_CHECKS } from "./inquiry-grammar/index.mjs";
 /* The run's rows and the one deployment order are run-rules' (its R8, R9, R11;
    N156, K617): read from it, never copied. */
-import { AI_RUN_CHECKS, DEPLOYMENT_SEQUENCE, DEPLOYED_MODES, GATE_ADDRESS, SEQUENCING_SOURCE,
+import { AI_RUN_CHECKS, DEPLOYMENT_SEQUENCE, DEPLOYED_MODES, DRAFT_MODE, GATE_ADDRESS, SEQUENCING_SOURCE,
          SEQUENCING_ALSO_NAMED_IN } from "./run-rules/index.mjs";
 export { DEPLOYMENT_SEQUENCE, GATE_ADDRESS, SEQUENCING_SOURCE, SEQUENCING_ALSO_NAMED_IN };
 
@@ -1482,6 +1482,9 @@ export function writingHelpLayer(catalog) {
     sourcing: "authored",
     body: {
       clauses: WRITING_HELP_CLAUSES,
+      /* The mode a draft is answered in, run-rules' (its R21), read and never typed; run-rules holds whether it is
+         deployed, and this layer carries no flag. */
+      mode: DRAFT_MODE.mode,
       acts: {
         proposes: WRITING_HELP_ACTS.proposes.map(read),
         leaves_to_a_member: WRITING_HELP_ACTS.leaves_to_a_member.map(read),
