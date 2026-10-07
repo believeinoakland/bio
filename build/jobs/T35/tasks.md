@@ -35,3 +35,7 @@ The bound for B1's finding (SCHEDULER #29 J1 (2), K2029: an unfiled capture keep
 Open alternatives, if you prefer: a cap on the interval instead of a stop (still a timer forever, so against R15), or a stop with no back-off (8 retries at 60 s, 8 minutes). I recommend the proposal.
 
 Also found, for your record (my module, not fixable here alone): R1's drain reads capture's queue oldest first, at most `limit`; if `limit` or more unfiled events stand at the head, a filed event behind them is never reached (head-of-line). Fixing it needs capture R45 to read past a cursor or order by `attempts`; I list it in my record as deferred and REPORT it.
+
+## J2 · REPORT
+
+Generated artifact made stale: the plane bundle (bio-plane/dist/bio-plane.bundled.mjs) embeds tasks, changed by T35-77 and R18; for L11's close regeneration (§14). Nothing else outside tasks.
