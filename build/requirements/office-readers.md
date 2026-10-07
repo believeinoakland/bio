@@ -256,11 +256,14 @@ second copy that could drift.
   it is opened, found and read, never run. csv's `active` is always `[]` (the format can
   carry none). One item per finding, in central-directory order of its `part`, and within
   one `.rels` part in that part's order:
-  - `{kind:"vba-project", part, read, why, project, modules, autoRun, suspicious}` for each
+  - `{kind:"vba-project", part, read, why, project, modules, autoRun, suspicious, undetermined}` for each
     member whose name's last segment is `vbaProject.bin` (without regard to case), read
     through `ooxml.readVbaProject` (its R32): `modules` the module names, `autoRun` and
-    `suspicious` its lists against `ooxml`'s tables; when that read refuses, `read:false`,
-    `why` its refusal, the other fields `null`, the item still listed.
+    `suspicious` its lists against `ooxml`'s tables, and `undetermined` ooxml's `[{module, why}]` for
+    each module whose source it could not read (`[]` when none; K1916), so a partial read never reads as
+    complete; when that read refuses, `read:false`, `why` its refusal, the other fields `null`, the item
+    still listed. A part under a `_rels/` directory is never an `activex`, `ole-object` or
+    `embedded-file` item (it yields its own `external-target` items).
   - `{kind:"activex", part}` for each member under the format's own `activeX/` directory
     (`word/activeX/`, `ppt/activeX/`, `xl/activeX/`).
   - `{kind:"ole-object", part}` for each member under the format's own `embeddings/`
