@@ -2,6 +2,9 @@
  * captured PDF. Run by hand, never by a test (K1918 (3)):
  *   npm i --no-save unpdf@1.8.0 miniflare   (pdf-worker's pinned unpdf; the OCR member's miniflare)
  *   node doctypes/test/capture-policies.mjs doctypes/test/fixtures/policies-pick.json
+ *   node doctypes/test/capture-policies.mjs doctypes/test/fixtures/policies-fresh-pick.json policies-fresh.json
+ * The second argument names the fixture written (default `policies.json`): the out-of-sample set (R35, T36-4) is
+ * `policies-fresh.json`, at least 20 more of the same issuers and series, none among the 50.
  * `pick.json` is `[{id, family, name, url}]`: the 50 chosen from the police department's public PowerDMS index
  * (`public.powerdms.com/OAKLAND/documents`, every Special Order and City Administrative Instruction it lists, the four
  * use-of-force and complaint orders `world.md` names, and the other General Orders taken at an even step through the
@@ -73,8 +76,10 @@ async function tier3Text(bytes) {
 }
 
 const pick = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+const target = process.argv[3] || "policies.json";
 const out = {
-  note: "doctypes R35's 50 public policies of the City of Oakland and its Police Department (Administrative Instructions, "
+  note: (target === "policies.json" ? "doctypes R35's 50 public policies" : `doctypes R35's ${pick.length} out-of-sample public policies, none among the 50 of policies.json,`)
+      + " of the City of Oakland and its Police Department (Administrative Instructions, "
       + "Departmental General Orders, Special Orders; posted under Penal Code §13650), each fetched from its public address and "
       + "read as the plane reads a captured PDF: pdf-reader Tier 1, and where Tier 1 read essentially nothing, pdf-worker Tier 2 "
       + "(unpdf 1.8.0) merged page by page by text-chain's mergeTier2Text; where neither tier read a text layer (an image-only "
@@ -107,4 +112,4 @@ for (const p of pick) {
   console.log(p.id, tier, String(text.document || "").length);
 }
 if (ocr) await ocr.mf.dispose();
-fs.writeFileSync(new URL("./fixtures/policies.json", import.meta.url), JSON.stringify(out, null, 1) + "\n");
+fs.writeFileSync(new URL(`./fixtures/${target}`, import.meta.url), JSON.stringify(out, null, 1) + "\n");
