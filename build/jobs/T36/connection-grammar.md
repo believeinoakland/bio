@@ -15,7 +15,7 @@
 
 **Deferred:** none.
 
-**Found in other modules (REPORT J2).**
+**Found in other modules (REPORT J1).**
 - **events** (`bio-plane/src/events/owner.mjs`:95) judges a hub on the whole set of the kinds asked against `BOUNDS.hub` (1,000), not per kind as connection-grammar R6 now says. Two consequences: a member with 1,001–4,000 votes, read for `event_voted` alone, is answered a hub of that size, which the registry now refuses `OWNER_NONCONFORMING` (explore then reads an owner refusal, not the votes); and a node with, say, 600 votes and 600 of another kind is answered a hub though no kind exceeds its bound (the registry cannot see that, the answer naming no kind). The fix is events': count per kind and compare with `hubBoundOf(kind)`. Events' own tests and every other user's are unchanged by this job (below), so nothing is red today; it shows only on real volumes, and T36-42's M-X1a re-measure on a 4,000-vote fixture will meet it if it reads through events' owner.
 - **Stale artifact:** the plane bundle (`bio-plane/dist/bio-plane.bundled.mjs`; its inputs carry `bounds.mjs`, `reads.mjs`, `conformance.mjs`), regenerated at the layer close. Case-checker's `program.mjs` carries only `shape.mjs`, unchanged.
 
