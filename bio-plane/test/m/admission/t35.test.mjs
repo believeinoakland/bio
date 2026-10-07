@@ -226,7 +226,7 @@ test("R21: countryOf answers Cloudflare's two-character label or null; the windo
 
 /* ---------------------------------------------------------------------------------------------------------------- */
 
-test("R22: refused keys and links and over-the-limit requests are counted once each in credentials' tally through the store's internal securitycount — kind credential (revoked or expired agent credential, an unknown aik- credential, invitelook/enroll NO_SUCH_INVITATION, websiteinvite WEBSITE_KEY_UNKNOWN, joinlinkinvite NO_SUCH_JOIN_LINK), kind rate (DOOR_RATE_LIMITED, WEBSITE_DAILY_CAP, JOIN_LINK_DAILY_CAP); country from countryOf, null when the credential names a member; nothing else crosses; every other answer is not counted; a failed write is dropped", async () => {
+test("R22 (store write deferred to T36 by K2038, N744): securityTally classifies each refusal once — kind credential (a revoked or expired agent credential, an unknown aik- credential, invitelook/enroll NO_SUCH_INVITATION, websiteinvite WEBSITE_KEY_UNKNOWN, joinlinkinvite NO_SUCH_JOIN_LINK), kind rate (DOOR_RATE_LIMITED, WEBSITE_DAILY_CAP, JOIN_LINK_DAILY_CAP); country from countryOf, null when the credential names a member; only kind and country in its answer; every other answer is null; it writes nothing, never throws and never changes the refusal", async () => {
   const reqIn = (country) => { const r = new Request("https://plane.example/api"); Object.defineProperty(r, "cf", { value: { country } }); return r; };
   const req = reqIn("NZ");
   const stranger = { token: null };
@@ -253,41 +253,39 @@ test("R22: refused keys and links and over-the-limit requests are counted once e
     { op: "invitelook", answer: { ok: false, code: "WEBSITE_KEY_UNKNOWN" }, presented: stranger },
     { op: "login", answer: { ok: false, code: "SIGN_IN_REFUSED" }, presented: stranger },
     { op: "invitelook", answer: { ok: true, result: {} }, presented: stranger },
+    { op: "index", answer: { ok: true, code: "AI_CREDENTIAL_REVOKED" }, presented: stranger },
     { op: "index", answer: null, presented: stranger },
   ];
-  for (const [args, kind, country] of counted) {
-    const env = makeEnv();
-    assert.equal(A.securityKindOf(args), kind, JSON.stringify(args.answer));
-    const out = await A.securityTally({ ...args, req, env, doAnswer });
-    assert.deepEqual(out, { kind, country }, JSON.stringify(args.answer));
-    assert.equal(env.calls.length, 1, "once per refusal");
-    const [c] = env.calls;
-    assert.deepEqual([c.ns, c.route, c.method, c.params, c.body], ["bio", "securitycount", "POST", {}, { kind, country }]);
-    for (const s of [args.presented.token, args.op, "member:", "ann"].filter(Boolean))
-      assert.equal(c.raw.includes(s), false, `nothing but kind and country crosses: ${s}`);
-  }
-  for (const args of notCounted) {
-    const env = makeEnv();
-    assert.equal(A.securityKindOf(args), null, JSON.stringify(args));
-    assert.equal(await A.securityTally({ ...args, req, env, doAnswer }), null);
-    assert.equal(env.calls.length, 0);
-  }
-  /* no country stated: null */
-  assert.deepEqual(await A.securityTally({ ...counted[4][0], req: new Request("https://plane.example/api"), env: makeEnv(), doAnswer }), { kind: "credential", country: null });
-  /* a write that cannot be made is dropped, never thrown: an unanswering store, a throwing store, no env */
-  const broken = makeEnv({ answer: () => new Response("nope", { status: 500 }) });
-  assert.deepEqual(await A.securityTally({ ...counted[8][0], req, env: broken, doAnswer }), { kind: "rate", country: "NZ" });
-  const throwing = { STORE: { idFromName: (n) => n, get: () => ({ fetch: () => { throw new Error("down"); } }) } };
-  assert.deepEqual(await A.securityTally({ ...counted[8][0], req, env: throwing, doAnswer }), { kind: "rate", country: "NZ" });
-  assert.deepEqual(await A.securityTally({ ...counted[8][0], req, env: null, doAnswer }), { kind: "rate", country: "NZ" });
-  /* the refusals this module gives reach it unchanged: a gate's expired refusal counts as a refused key */
+  /* a store that would record any write: none is made (K2038) */
+  const env = makeEnv();
+  const fetched = [];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async (...a) => { fetched.push(a); return new Response("{}"); };
+  try {
+    for (const [args, kind, country] of counted) {
+      assert.equal(A.securityKindOf(args), kind, JSON.stringify(args.answer));
+      const before = JSON.stringify(args.answer);
+      const out = await A.securityTally({ ...args, req, env, doAnswer });
+      assert.deepEqual(out, { kind, country }, JSON.stringify(args.answer));
+      assert.deepEqual(Object.keys(out).sort(), ["country", "kind"], "nothing but kind and country");
+      assert.equal(JSON.stringify(args.answer), before, "the refusal is not changed");
+    }
+    for (const args of notCounted) {
+      assert.equal(A.securityKindOf(args), null, JSON.stringify(args));
+      assert.equal(await A.securityTally({ ...args, req, env, doAnswer }), null, JSON.stringify(args));
+    }
+    /* no country stated: null; a hostile request: null, never a throw */
+    assert.deepEqual(await A.securityTally({ ...counted[4][0], req: new Request("https://plane.example/api") }), { kind: "credential", country: null });
+    assert.deepEqual(await A.securityTally({ ...counted[4][0], req: { get cf() { throw new Error("x"); } } }), { kind: "credential", country: null });
+    for (const odd of [undefined, {}, { answer: 5 }, { answer: "x", presented: 7 }]) assert.equal(await A.securityTally(odd), null);
+    assert.equal(env.calls.length, 0, "no store request");
+    assert.equal(fetched.length, 0, "no request at all");
+  } finally { globalThis.fetch = realFetch; }
+  /* the refusals this module gives reach it unchanged: a gate's expired refusal is a refused key */
   const lapsed = aik();
   const w = world({ creds: { [lapsed]: cred({ principal: "class:ai", expired: true, expiresAt: "2026-01-01T00:00:00Z" }) } });
   const r = await gate(w.env, { op: "index", token: lapsed, via: "header" });
-  const before = JSON.stringify(r.refusal);
   const looked = await A.aiCredentialPresented(urlOf({ token: lapsed }), w.env, doAnswer);
-  w.env.calls.length = 0;
-  assert.deepEqual(await A.securityTally({ op: "index", answer: r.refusal, presented: { token: lapsed, cred: looked.cred }, req: reqIn("FR"), env: w.env, doAnswer }),
+  assert.deepEqual(await A.securityTally({ op: "index", answer: r.refusal, presented: { token: lapsed, cred: looked.cred }, req: reqIn("FR") }),
                    { kind: "credential", country: "FR" });
-  assert.equal(JSON.stringify(r.refusal), before, "the refusal is not changed");
 });

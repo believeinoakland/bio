@@ -241,9 +241,15 @@ export const AI_TOKEN_SHAPE = /^aik-[0-9a-f]{64}$/;
 const SESSION_TOKEN_SHAPE = /^[0-9a-f]{64}$/;
 const bioStore = (env) => env.STORE.get(env.STORE.idFromName("bio"));
 
+/* R6, R20 (K2038) — HOW A LOOKUP REACHES THE STORE: in a header, never the address. `x-bio-session` carries the token
+   `session` resolves, `x-bio-credential-sha` the digest `aicredentiallook` resolves; `store-door` hands each to
+   credentials' map (its R9), so nothing of the credential is in the address of the store's request. */
+const lookup = (env, route, header, value) =>
+  bioStore(env).fetch(new Request(`http://do/${route}`, { method: "GET", headers: { [header]: value } }));
+
 /* R6 (D-199 (2), D-463) — THE PRESENTED `ai` CREDENTIAL, RESOLVED ONCE PER REQUEST against `bio`'s credential rows,
    through `credentials.aiCredentialLook` (its R15) by the store's route `aicredentiallook`, by its SHA-256 (the value
-   never crosses to the store). Once, because the confinement (R2) needs the row before
+   never crosses to the store, and the digest travels in a header). Once, because the confinement (R2) needs the row before
    anything else runs and two lookups could disagree across a revocation. The SHAPE is checked before the store is
    asked. `{ cred }` (null when none is presented or none is known) or `{ silent }` (REC-52: a store that did not
    answer is not "this credential is unknown"). `credential` is the door's `presentedCredential` answer (R20); `op`,
@@ -252,15 +258,16 @@ export async function aiCredentialPresented(url, env, doAnswer, { credential = n
   if (op !== null && PUBLIC_DOORS.includes(op)) return { cred: null };
   const t = credentialOf(credential, url).token;
   if (!t || !AI_TOKEN_SHAPE.test(t)) return { cred: null };
-  const out = await doAnswer(bioStore(env).fetch(`http://do/aicredentiallook?sha=${await sha256hex(t)}`));
+  const out = await doAnswer(lookup(env, "aicredentiallook", "x-bio-credential-sha", await sha256hex(t)));
   if (!out.answered) return { silent: { op: "aicredentiallook", correlation: out.correlation } };
   return { cred: out.result?.found ? out.result.credential : null };
 }
 
 /* R6 — A SIGNED-IN SESSION, RESOLVED THROUGH `credentials.session` (its R5, which owns sessions since T19, K637)
-   against `bio` by the store's route `session`. `{ sess }` (null for none) or `{ silent }`. */
+   against `bio` by the store's route `session`, the token in a header (R20). `{ sess }` (null for none) or
+   `{ silent }`. */
 async function sessionPresented(t, env, doAnswer) {
-  const out = await doAnswer(bioStore(env).fetch(`http://do/session?t=${t}`));
+  const out = await doAnswer(lookup(env, "session", "x-bio-session", t));
   if (!out.answered) return { silent: { op: "session", correlation: out.correlation } };
   return { sess: out.result?.session ?? null };
 }
@@ -717,6 +724,57 @@ export function doorRateLimited(retryAfter) {
   /* END DEC-49 REGION is-door-window */
 }
 
+/* R21 — WHO IS CALLING, AS A KEYED FINGERPRINT: the connecting address as Cloudflare states it (`CF-Connecting-IP`),
+   digested as `capture` R56 digests it (HMAC-SHA-256, its first 16 bytes in hex, under the same key). In the Worker
+   that key is at hand only when the `KNOCK_FINGERPRINT_KEY` binding is set; otherwise it is capture's own, held in the
+   store, and this answers `null`: the door then stamps the `source` the window's store side answers (`doorWindowGate`,
+   K2038). A request that states no address is one shared source of its own (`UNSTATED_SOURCE`, not a digest, so it
+   never equals one). The address is read here, digested, and dropped; it is never kept, logged or answered. */
+export const UNSTATED_SOURCE = "unstated";
+function connectingAddress(req) {
+  try {
+    const a = req && req.headers && typeof req.headers.get === "function" ? req.headers.get("cf-connecting-ip") : null;
+    return typeof a === "string" && a.trim() !== "" ? a.trim() : null;
+  } catch { return null; }
+}
+export async function sourceOf(req, env) {
+  const address = connectingAddress(req);
+  if (address === null) return UNSTATED_SOURCE;
+  const bound = env && typeof env.KNOCK_FINGERPRINT_KEY === "string" && env.KNOCK_FINGERPRINT_KEY ? env.KNOCK_FINGERPRINT_KEY : null;
+  if (!bound) return null;
+  const te = new TextEncoder();
+  const key = await crypto.subtle.importKey("raw", te.encode(bound), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const mac = new Uint8Array(await crypto.subtle.sign("HMAC", key, te.encode(address)));
+  return hexOf(mac).slice(0, 32);
+}
+
+/* R21 — THE WINDOW, AS THE FIRST GATE OF THE PUBLIC OPS (control-plane R28's order): every request to an op whose spec
+   is public (`classes: null`), whoever calls and whatever it presents, is asked of its source's window in the store
+   (`doorwindow`, this module's store map, `window.mjs`), the connecting address in the request's body. A request to
+   any other op is never counted or refused here. Answers `{ refusal }` (R21's 429, nothing of the op read or written)
+   or `{ source }` (the fingerprint the store answered, for the door's stamps; `null` when it could not be read). A
+   window that cannot be read or written ADMITS the request (it fails open, so a fault in it never refuses a caller)
+   and is named in the log by its correlation id only. */
+export async function doorWindowGate({ req = null, env = null, spec = null, doAnswer = null, now = null } = {}) {
+  if (!spec || spec.classes !== null) return { source: null };
+  let out = null;
+  try {
+    const body = { address: connectingAddress(req) };
+    if (now !== null) body.now = now;
+    const asked = bioStore(env).fetch(new Request("http://do/doorwindow", {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }));
+    out = typeof doAnswer === "function" ? await doAnswer(asked) : null;
+  } catch { out = null; }
+  if (!out || !out.answered || !out.result || typeof out.result !== "object") {
+    console.warn(`admission: the door's window was not read; the request is admitted (correlation ${
+      out && typeof out.correlation === "string" ? out.correlation : "none"})`);
+    return { source: null };
+  }
+  const r = out.result;
+  if (r.refused === true) return { refusal: doorRateLimited(r.retryAfter) };
+  return { source: typeof r.source === "string" ? r.source : null };
+}
+
 /* R22 (N703; K1875; DEC-165, DEC-166; credentials R44) — THE REFUSALS COUNTED IN THE SECURITY TALLY, and their kind. */
 const CREDENTIAL_REFUSED_ANYWHERE = Object.freeze(["AI_CREDENTIAL_REVOKED", "AI_CREDENTIAL_EXPIRED"]);
 const CREDENTIAL_REFUSED_AT = Object.freeze({
@@ -761,21 +819,15 @@ export function securityKindOf({ op = null, answer = null, presented = null } = 
   return null;
 }
 
-/* R22 — ONE COUNT PER REFUSAL, through `credentials.securityCount({kind, country})` (its R44), reached in-plane by the
-   store's internal route `securitycount` (no caller reaches it: op-declarations R6). This module answers it for each
-   refusal it gives and `control-plane` calls it for each refusal it relays. Only the kind and the country cross:
-   no address, fingerprint, credential, handle, role, op or time. A count that cannot be written is dropped; this
-   never throws and never changes the refusal. Answers what it counted, `{ kind, country }`, or `null`. */
-export async function securityTally({ op = null, answer = null, presented = null, req = null, env = null,
-                                      doAnswer = null } = {}) {
-  let kind = null, country = null;
+/* R22 — ONE COUNT PER REFUSAL, through `credentials.securityCount({kind, country})` (its R44). This module answers
+   it for each refusal it gives and `control-plane` calls it for each refusal it relays. Only the kind and the country
+   would cross: no address, fingerprint, credential, handle, role, op or time. THE STORE WRITE IS DEFERRED (K2038, to
+   T36, N744): credentials' map has no `securitycount` route yet, so this classifies and answers what it would count,
+   `{ kind, country }`, or `null`, and writes nothing; it never throws and never changes the refusal. */
+export async function securityTally({ op = null, answer = null, presented = null, req = null } = {}) {
   try {
-    kind = securityKindOf({ op, answer, presented });
+    const kind = securityKindOf({ op, answer, presented });
     if (!kind) return null;
-    country = namesMember(presented) ? null : countryOf(req);
-    const write = bioStore(env).fetch(new Request("http://do/securitycount", {
-      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ kind, country }) }));
-    if (typeof doAnswer === "function") await doAnswer(write); else await write;
-  } catch { /* dropped (R22) */ }
-  return kind ? { kind, country } : null;
+    return { kind, country: namesMember(presented) ? null : countryOf(req) };
+  } catch { return null; }
 }

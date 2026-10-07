@@ -13,7 +13,7 @@ const GROUP_KEY_OPS = ["groupkeyset", "groupkeyremove", "groupkeyswitch", "group
                        "groupkeynoticeseen"];
 const SECRET = "wk_" + hex64(), LINK = "jl_" + hex64(), COVER = "Rosa from the tenants' union", APIKEY = "sk-ant-api03-" + hex64();
 
-test("R17: websiteinvite and joinlinkinvite are public ops admitted with no credential; a credential or session presented is neither required nor used, nothing about the caller reaches the act, the key, link and cover are read from the body only, admission adds no limit, and no key, link or invitation appears in a refusal", async () => {
+test("R17: websiteinvite and joinlinkinvite are public ops admitted with no credential; a credential or session presented (by header, body or query) is neither required nor used, nothing about the caller reaches the act, the key, link and cover are read from the body only, the one limit admission adds is R21's per-source window (the daily caps are membership's), and no key, link or invitation appears in a refusal", async () => {
   assert.deepEqual([...A.PUBLIC_DOORS].sort(), DOORS);
   for (const op of DOORS) assert.equal(OPS[op]?.classes, null, `${op} is public (op-declarations R22)`);
   const { env, S, K } = world();
@@ -33,9 +33,18 @@ test("R17: websiteinvite and joinlinkinvite are public ops admitted with no cred
     for (const k of own) assert.equal(r.url.searchParams.has(k), false, `${op}: ${k} not read from the query`);
     assert.equal(JSON.stringify([...r.url.searchParams]).includes(op === "websiteinvite" ? SECRET : LINK), false);
   }
-  /* no limit of admission's own: the daily cap is membership's; the hundredth call is admitted as the first */
+  /* by header and by body too: no lookup, nothing of the caller kept */
+  for (const op of DOORS) for (const via of ["header", "body"]) for (const token of [S.ann, K.ann, env.ADMIN_TOKEN]) {
+    env.calls.length = 0;
+    const r = await gate(env, { op, token, via });
+    assert.equal(r.public, true, `${op}/${via}`);
+    assert.equal(env.calls.length, 0, `${op}/${via}: no lookup`);
+  }
+  /* the gates themselves add no limit (the hundredth call is admitted as the first, and nothing is counted by them);
+     the one limit is R21's window, which every public op meets alike (window.test.mjs), the doors among them */
   for (let i = 0; i < 100; i++) assert.equal((await gate(env, { op: "websiteinvite", token: K.confined })).public, true);
   assert.equal(env.calls.length, 0);
+  for (const op of DOORS) assert.equal(OPS[op].classes, null, `${op} meets R21's window as a public op`);
   /* R1 still applies to every caller; its refusal carries no key, link, cover or credential (R15) */
   for (const op of DOORS) for (const token of [undefined, S.ann, K.ann, env.ADMIN_TOKEN]) {
     const r = await gate(env, { op, token, params: { store: "elsewhere", key: SECRET, link: LINK, cover: COVER } });

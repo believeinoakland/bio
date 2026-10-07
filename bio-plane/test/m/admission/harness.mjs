@@ -28,7 +28,8 @@ export async function doAnswer(res) {
 const ok = (result) => new Response(JSON.stringify({ ok: true, result }));
 
 /** A fake env. `sessions` maps a 64-hex token to its session row; `creds` maps an `aik-` value to its credential row
- *  (looked up by SHA-256, as the module asks). `answer(call)` may return a Response to override a route. */
+ *  (looked up by SHA-256, as the module asks). Each inner request is recorded with its route, query, body and `x-bio-`
+ *  headers. `answer(call)` may return a Response to override a route. */
 export function makeEnv({ sessions = {}, creds = {}, answer = null, omit = [] } = {}) {
   const calls = [];
   const bySha = new Map(Object.entries(creds).map(([v, c]) => [sha(v), c]));
@@ -47,12 +48,16 @@ export function makeEnv({ sessions = {}, creds = {}, answer = null, omit = [] } 
             try { raw = isReq ? await input.clone().text() : (typeof init?.body === "string" ? init.body : null); } catch { raw = null; }
             let body = null;
             try { body = raw ? JSON.parse(raw) : null; } catch { body = null; }
+            const hs = isReq ? input.headers : new Headers(init?.headers || {});
+            const headers = Object.fromEntries([...hs].filter(([k]) => k.startsWith("x-bio-")));
             const call = { ns: id, route: u.pathname.slice(1), params: Object.fromEntries(u.searchParams), href: u.href,
-                           method, body, raw: raw ?? "" };
+                           method, body, raw: raw ?? "", headers };
             calls.push(call);
             if (answer) { const r = await answer(call); if (r) return r; }
-            /* credentials' routes read the body first, then the query (the form R20 asks of them) */
-            const arg = (k) => (body && typeof body[k] === "string" ? body[k] : u.searchParams.get(k));
+            /* store-door's hand-over (its R9, K2038): `x-bio-session` reaches credentials' map as `t`,
+               `x-bio-credential-sha` as `sha`, on the in-process URL; the request's own address carries neither */
+            const HAND = { t: "x-bio-session", sha: "x-bio-credential-sha" };
+            const arg = (k) => headers[HAND[k]] ?? null;
             if (call.route === "session") return ok({ session: sessions[arg("t")] ?? null });
             if (call.route === "aicredentiallook") {
               const c = bySha.get(arg("sha"));
