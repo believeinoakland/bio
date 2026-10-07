@@ -223,3 +223,52 @@ test("R28 no place is named in the module's outward text: every exported sentenc
   assert.ok(strings.length > 100);
   for (const s of strings) assert.doesNotMatch(s, PLACE);
 });
+
+test("R36 four served sentences name your group's Civicsmith (DEC-149): the actor class `plane`, the authority kind `objective`, the content detail for pages no engine could read, and `render-deferred`'s opening; every key and stored value unchanged; no served sentence says the plane, this or the instance, copy or server for it; rows already written keep their detail", () => {
+  const CIVICSMITH = "your group's Civicsmith";
+  // the actor class `plane` and the authority kind `objective`: the keys stay the stored values (R29), the sentences move
+  assert.equal(ol.OBSERVATION_ACTOR_CLASSES.plane, "the scheduler of your group's Civicsmith looked, with no member and no machine behind it");
+  assert.equal(ol.OBSERVATION_AUTHORITY_KINDS.objective, "a standing objective your group's Civicsmith is monitoring for");
+  assert.deepEqual(Object.keys(ol.OBSERVATION_ACTOR_CLASSES), ["plane", "machine", "member"]);
+  assert.ok("objective" in ol.OBSERVATION_AUTHORITY_KINDS);
+  // R6's content-level detail for a reading with pages left unread, at every arm that composes it
+  const PAGES = "this document has pages no engine in your group's Civicsmith could read";
+  const tiers = () => ({ tiers: [{ tier: 1, covers: "all", steps: ["layer"] }], unclassified: [] });
+  const base = { read_from_text: true, text_source: [{ step: "layer", tier: 1 }], page_count: 2, tier3_candidate: true };
+  for (const r of [base, { ...base, read_from_text: false }, { ...base, text_chars: 0 }]) {
+    const rows = ol.contentObservationsFor(r, "c", tiers).rows;
+    assert.ok(rows.length > 0);
+    for (const row of rows) assert.ok(row.detail.split("; ").includes(PAGES), row.detail);
+  }
+  assert.ok(!ol.contentObservationsFor({ ...base, tier3_candidate: false }, "c", tiers).rows[0].detail.includes(CIVICSMITH),
+    "said only where pages were left unread");
+  // and in the row the writer appends
+  const w = world();
+  w.obs.observeExtraction("INFO-2026-0001", "c1", base);
+  assert.ok(w.log().at(-1).detail.includes(PAGES));
+  // `render-deferred`: its opening re-worded, the rest of its sentence unchanged
+  assert.equal(ol.CONDITION_KINDS["render-deferred"],
+    "a render your group's Civicsmith could not do is held under its C-83 reason until its request expires, and is then "
+    + "recorded undetermined (D-491, D-523) — LIVE: queue-producers #conditionsRenderDeferred");
+  assert.equal(ol.checkCondition("render-deferred"), null, "the key is unchanged and still accepted");
+  // no served sentence of this module says the plane, this or the instance, copy or server for the group's Civicsmith:
+  // every exported vocabulary and published answer word, and the four composed sentences above
+  const OLD = /\b(the plane|this plane|this instance|the instance|copy|server)\b/i;
+  const strings = [];
+  const walk = (v, depth = 0) => {
+    if (depth > 4 || v == null) return;
+    if (typeof v === "string") { strings.push(v); return; }
+    if (v instanceof Set) { for (const x of v) walk(x, depth + 1); return; }
+    if (typeof v === "object") for (const x of Object.values(v)) walk(x, depth + 1);
+  };
+  for (const [k, v] of Object.entries(ol)) if (typeof v !== "function" && k !== "OBSERVATION_LOG_SCHEMA") walk(v);
+  assert.ok(strings.length > 100);
+  for (const s of strings) assert.doesNotMatch(s, OLD, s);
+  for (const s of [PAGES, w.log().at(-1).detail]) assert.doesNotMatch(s, OLD, s);
+  // a row written before T35 keeps its stored detail as written (R4, append-only): reads return it, never re-composed
+  const OLD_DETAIL = "first extraction; text over the whole document; tier 1; this document has pages no engine bound to this instance could read";
+  assert.equal(w.obs.observe({ authority_kind: "extract", authority: "INFO-2026-0001", level: "content", subject_kind: "capture",
+    subject: "c0", state: "partial", result_kind: "reading", result_ref: "c0", detail: OLD_DETAIL }), null);
+  assert.equal(w.obs.contentRows("c0").extraction.detail, OLD_DETAIL);
+  assert.equal(w.obs.latest("content").find((r) => r.subject === "c0").detail, OLD_DETAIL);
+});
