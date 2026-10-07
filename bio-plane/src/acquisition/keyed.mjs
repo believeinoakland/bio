@@ -12,7 +12,7 @@
 import { isPublicHttpsLocator, isMachineIdentity } from "../record-grammar/index.mjs";
 import { governedFetch as hostGovernedFetch } from "../host-governor/index.mjs";
 import { civicsmithUserAgent, ARCHIVE_CHECKS } from "./checks.mjs";
-import { isOwnHost } from "../capture-sources/index.mjs";
+import { isOwnHost } from "../capture-sources/own-hosts.mjs";
 
 /* R36: each keyed service this copy can speak to: its one host, and how its key rides a request. The names are
    credentials' `KEYED_SERVICES` (its R29); a service that this table and credentials do not both know is not

@@ -33,7 +33,7 @@ import { governedFetch as hostGovernedFetch, retryAfterMs } from "../host-govern
 import { ARCHIVE_CAPTURE_GRADE } from "../provenance/index.mjs";
 import { attest } from "../attestation/index.mjs";
 import { hasZipMagic, listArchive, normalizePartName, CONTENT_TYPES_PART, ODF_MIMETYPE_PART } from "../ooxml.mjs";
-import { isOwnHost } from "../capture-sources/index.mjs";
+import { isOwnHost } from "../capture-sources/own-hosts.mjs";
 import { ARCHIVE_CHECKS } from "./checks.mjs";
 import { unpack, coArchiveStateOf, partsSource } from "./unpack.mjs";
 
