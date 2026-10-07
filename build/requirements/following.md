@@ -84,7 +84,7 @@ Rule 3's list: `monitoring` (`sweepHost`, its R65; R14's frequencies), `capture`
   3. **Who owns `per_meeting`'s captures.** R4 takes them off `monitoring`'s plan; `monitoring` R16 keeps listing them `unscheduled` (no interval). A one-line `monitoring` rewording ("scheduled by `following`") avoids two answers.
   4. **`events`' Legistar write.** R2 uses `followedImport` as the sibling `events` draft names it (T33-26); its `by` is the follow.
   5. **Cadence words.** R12's daily default and "a longer cadence" follow `monitoring` R14's list; BOB may prefer one shared word list.
-  6. **The court register path** (CONDITIONAL): a court register is a register under R7–R8; a row becoming a `filing`/`order` event is `events`' (T33-26).
+  6. **The court register path**: a court register is a register under R7–R8; a row becoming a `filing`/`order` event is `events`' (T33-26).
   7. Refusal codes are this draft's.
 - **T35-65 (open technical details, BOB's).** R20's 7-day cadence is BOB's (a protective choice under K1881: a policy page changes seldom and the fleet's fetch volume stays low); a member may not shorten it in T35. The watch may be a row of the follows table with subject kind `policy` and the `per_meeting` columns null. Which standards are policies is `standards`' family read (T35-31); if its name differs, the job follows it.
 - **The host.** Running every tick under `monitoring.sweepHost()` (claim, land, pause, gate) is `link-sweep`'s precedent (N506) and gives one pause and one idempotence key.

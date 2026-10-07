@@ -71,7 +71,7 @@ Every service takes `view`: the combined view of the active jurisdiction profile
 ### Uses
 
 - `jurisdictions`: the combined view's shape (`combine`), and its identifier spaces, systems, floors, crosswalks and conflicts; since T35-7, its `standard_sources` entries with `series` (R63) and their conflicts (R66), for R30–R33.
-- `court-citations` (CONDITIONAL, T33-8): its reporter and variant data for R27, a `uses` edge only when that module reads GO and is built (plan T33, Rule 5); without it, R28 holds.
+- `court-citations` (T33-8; K1506): its reporter and variant data for R27.
 
 ### Invariants
 
