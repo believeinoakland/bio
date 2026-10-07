@@ -7,3 +7,6 @@ Also inherited (K1993): red 31, scheduler `plane.test.mjs`:151 and plane `sweep.
 
 Your share (K1993): `system/sweep.test.mjs`:29 and :41 (R2 and its negative control, via `drainedSweepRefusal`) file requests for addresses their scene never captured; capture-requests R49 (merged in L6) now refuses them `CAPTURE_REQUEST_ADDRESS_NOT_HELD`. Make each address held first (a member's `op=acquire` of a page linking to it with `subresources: true`, or a receipt, as capture-requests' own `bio-plane/test/m/capture-requests/plane.test.mjs` does), clearing red 31's plane arm.
 Also inherited (K1996): red 32, bundler `fleetbundles.test.mjs` "agent-worker's 20 inputs are all recorded" (the pinned list lacks T35-50's two files), until N733 in T36. Red 30 is cleared (L6's close regenerated the bundles).
+
+Also yours (K2011): `plane/door.mjs`:30 passes the request body to `publicationDoorOp` as `body` (for instance `body: () => req.clone().json()`), so publication R73's body form works through the Worker; until then the address form works with its deprecation.
+Also inherited (K2011): red 33, control-plane `converts.test.mjs`:136 (publication R73's deprecation), until T35-72.

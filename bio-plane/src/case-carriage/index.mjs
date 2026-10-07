@@ -3,6 +3,8 @@
  * by SHA-256, the materials the signed document includes, so `public-read` carries them in the case file from the
  * published projection alone (R1–R3), and it re-reads what the document rests on that may have changed since it was
  * prepared: what may be published of each source it states (R5; N364) and another group's work it accepted (R4; N522).
+ * A document cut out of a captured archive is carried with its archive, its `container` record and the archive's tokens,
+ * so an outsider re-derives it with stock tools (R8; N688, K1844).
  * The refusals those re-reads lead to, and every write to the published projection's other tables, are `publication`'s:
  * this module owns only the two tables of held materials (`./schema.mjs`, exempt from purge, R6) and names no place (R7).
  *
@@ -30,7 +32,7 @@
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
-import { createSha256 } from "../record-grammar/index.mjs";
+import { createSha256, canonicalJson } from "../record-grammar/index.mjs";
 import { sourcesOf } from "../sources/index.mjs";
 import { extractionOf } from "../extraction/index.mjs";
 import { acceptedWorkOf } from "../accepted-work/index.mjs";
@@ -49,6 +51,7 @@ const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch
 const HEX64 = /^[0-9a-f]{64}$/;
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : "");
 const te = new TextEncoder();
+const digestOf = (v) => String(v ?? "").trim().replace(/^sha256:/i, "").toLowerCase();
 const shaOf = (text) => createSha256().update(te.encode(String(text))).hex();
 
 export class CaseCarriage {
@@ -138,12 +141,9 @@ export class CaseCarriage {
       if (typeof text === "string" && HEX64.test(textSha) && shaOf(text) === textSha) hold(ref, "extracted_text", textSha, text);
       else miss("extracted_text", "your group's Civicsmith holds no whole extracted text of that document at its stated digest");
       /* its timestamp tokens, as the capture's home provenance names them (K1315, K1322) */
-      for (const t of this.#tokenFiles(home, sha)) {
-        const f = this.#fileRow(home.bundle_id, t);
-        if (f && typeof f.text === "string") hold(ref, "attestation", shaOf(f.text), f.text);
-        else if (f && typeof f.blobSha === "string" && HEX64.test(f.blobSha)) hold(ref, "attestation", f.blobSha, null, f.bytes);
-        else miss("attestation", `the timestamp token ${t} is not held`);
-      }
+      this.#holdTokens(ref, home, sha, hold, unheld);
+      /* R8 (N688; K1844): a member of a captured archive, carried with its archive, outward to the outermost */
+      this.#holdArchives(ref, home, sha, hold, unheld);
     }
     /* The writes, after every read: each text once, and the edition's list once (a second call writes nothing new). */
     try {
@@ -164,6 +164,51 @@ export class CaseCarriage {
     return { materials, unheld: unheld.slice(0, UNHELD_MAX), files };
   }
 
+  /* R1: each timestamp token the home's provenance names for capture `sha`: inline as text, blob-backed as evidence
+     under its blob digest, else named unheld under `sha`. */
+  #holdTokens(ref, home, sha, hold, unheld) {
+    for (const t of this.#tokenFiles(home, sha)) {
+      const f = this.#fileRow(home.bundle_id, t);
+      if (f && typeof f.text === "string") hold(ref, "attestation", shaOf(f.text), f.text);
+      else if (f && typeof f.blobSha === "string" && HEX64.test(f.blobSha)) hold(ref, "attestation", f.blobSha, null, f.bytes);
+      else unheld.push({ ref: ref || null, kind: "attestation", sha256: sha, why: `the timestamp token ${t} is not held` });
+    }
+  }
+
+  /** R8 (N688; K1844, K1852 (1); Intake §3b): a document is a member when the entry its home's `data/provenance.json`
+   *  states for it has `capture.method` `unpacked` and a `container` block. Its `container` record (canonical JSON,
+   *  kind `container`), its archive (as a document's captured bytes, kind `archive`) and the archive's tokens are held,
+   *  and the same for the archive when it is itself a member, up to the outermost. A block that does not name this
+   *  document, an archive not held, or a token not held is named unheld and never refused; the first two stop the walk,
+   *  since nothing further out can be checked against them. An archive already walked in this call ends it (a cycle). */
+  #holdArchives(ref, home, sha, hold, unheld) {
+    const walked = new Set([sha]);
+    let cur = sha, at = home;
+    for (;;) {
+      const entry = this.#entriesFor(at, cur).find((d) => d.capture && d.capture.method === "unpacked"
+        && d.container && typeof d.container === "object" && !Array.isArray(d.container));
+      if (!entry) return;
+      const c = entry.container;
+      const archive = str(c.archive_sha256).toLowerCase();
+      if (digestOf(c.member_sha256) !== cur || !HEX64.test(archive)) {
+        unheld.push({ ref: ref || null, kind: "container", sha256: cur, why: "the container record does not name this document" });
+        return;
+      }
+      const record = canonicalJson(c);
+      hold(ref, "container", shaOf(record), record);
+      if (walked.has(archive)) return;
+      walked.add(archive);
+      const aHome = this.#registered(archive);
+      const inline = aHome ? this.#fileText(aHome.bundle_id, aHome.path) : null;
+      if (inline && shaOf(inline.content) === archive) hold(ref, "archive", archive, inline.content);
+      else if (aHome && !inline) hold(ref, "archive", archive, null, Number(aHome.bytes));
+      else { unheld.push({ ref: ref || null, kind: "archive", sha256: archive, why: "the archive is not held" }); return; }
+      this.#holdTokens(ref, aHome, archive, hold, unheld);
+      cur = archive;
+      at = aHome;
+    }
+  }
+
   /* R1: the register row homing a capture on a bundle that exists, or null (provenance's read contract, R48). */
   #registered(sha) {
     try {
@@ -177,16 +222,21 @@ export class CaseCarriage {
 
   /* R1 (K1315, K1322): the timestamp token files the home's `data/provenance.json` names for one capture. */
   #tokenFiles(home, sha) {
-    const f = home ? this.#fileText(home.bundle_id, "data/provenance.json") : null;
-    const reg = f ? safeJson(f.content) : null;
     const out = new Set();
-    for (const d of reg && Array.isArray(reg.documents) ? reg.documents : []) {
-      if (!d || !d.capture || String(d.capture.sha256 || "").replace(/^sha256:/, "").toLowerCase() !== sha) continue;
+    for (const d of this.#entriesFor(home, sha)) {
       if (d.timestamp && typeof d.timestamp.token_file === "string" && d.timestamp.token_file) out.add(d.timestamp.token_file);
       for (const t of Array.isArray(d.attestations) ? d.attestations : [])
         if (t && t.kind === "rfc3161" && typeof t.file === "string" && t.file) out.add(t.file);
     }
     return [...out];
+  }
+
+  /* R1, R8: the entries the home's `data/provenance.json` states for capture `sha` (its `capture.sha256`). */
+  #entriesFor(home, sha) {
+    const f = home ? this.#fileText(home.bundle_id, "data/provenance.json") : null;
+    const reg = f ? safeJson(f.content) : null;
+    return (reg && Array.isArray(reg.documents) ? reg.documents : [])
+      .filter((d) => d && typeof d === "object" && d.capture && digestOf(d.capture.sha256) === sha);
   }
 
   /** R2 (K1317): what a committed case edition held, `[{sha, held}]` in the order held, `held` `inline` or `evidence`,

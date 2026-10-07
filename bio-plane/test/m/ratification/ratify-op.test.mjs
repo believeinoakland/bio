@@ -62,14 +62,14 @@ test("R4: in order — C-58.1, C-53.10, C-53.11, C-92.12, RATIFY_STALE, NO_SIGNE
   assert.deepEqual([proj.status, proj.body.reason, proj.body.check, proj.body.translation],
     [409, "RATIFY_PROJECT_BUNDLE", "C-58.1", SCOPE.RATIFY_PROJECT_BUNDLE.translation]);
   const legacy = new Set([DOC, "INFO-2026-0007-obs"]);
-  w.publication.observationsNamingAuthor = (ids) => ids.filter((x) => legacy.has(x));
+  w.caseTensions.observationsNamingAuthor = (ids) => ids.filter((x) => legacy.has(x));
   w.bv.reach = { self: [DOC], via: [{ finding: DOC, observation: "INFO-2026-0007-obs" }] };
   w.st.sql.exec(`UPDATE signers SET status='revoked'`);
   const body = { bundleId: DOC, expectedSha: "f".repeat(64), sig };
   const steps = [
     ["TESTIMONY_UNPUBLISHABLE", 409, "C-53.10", TESTIMONY.TESTIMONY_UNPUBLISHABLE, () => { legacy.delete(DOC); }],
     ["TESTIMONY_CITED_UNPUBLISHABLE", 409, "C-53.11", TESTIMONY.TESTIMONY_CITED_UNPUBLISHABLE, () => { legacy.clear(); }],
-    ["ATTRIBUTION_UNSTATED", 409, "C-92.12", ATTRIBUTION.ATTRIBUTION_UNSTATED, () => { w.publication.attributionStatedFor = () => true; }],
+    ["ATTRIBUTION_UNSTATED", 409, "C-92.12", ATTRIBUTION.ATTRIBUTION_UNSTATED, () => { w.caseTensions.attributionStatedFor = () => true; }],
     ["RATIFY_STALE", 409, null, null, () => { body.expectedSha = sha; }],
     ["NO_SIGNERS", 409, null, null, () => { w.st.sql.exec(`UPDATE signers SET status='active'`); body.sig = null; }],
   ];

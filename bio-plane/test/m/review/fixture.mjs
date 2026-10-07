@@ -1,7 +1,7 @@
 /* review over record-core, membership and strength (the real ones) on a real SQLite database (node:sqlite) standing in
    for a Durable Object's storage, at the plane's shape: `sql.exec` answers a one-pass cursor as workerd does (K316),
    never an array, so code that indexes or measures an answer instead of iterating it fails here as it would there. What it reads from `publication` (its `cases` and `published_cases` read contract,
-   R3 and R5, its R40; `attributionInForce`, R16, its R39), `case-authoring` (`publishCase` run dry, R13;
+   R3 and R5, its R40), `case-tensions` (`attributionInForce`, R16, its R6), `case-authoring` (`publishCase` run dry, R13;
    `statementAcknowledgements` with its `withheld_stated`, R15) and `basis-versions` (`testimonyReach`, R16) are providers the test controls, in the
    shapes of those modules' Provides, as `reviewOf`'s `deps` take them. Every test drives the module at its interface. */
 import { DatabaseSync } from "node:sqlite";
@@ -76,7 +76,7 @@ export function world({ now = NOW, injectClock = true } = {}) {
   const clock = { now };
   /* case-authoring's side: `publishCase` answers what `gate` returns for the arguments, and writes a case document
      first (so a dry run that did not roll back would leave a row); the acknowledgement list is `acks`. */
-  const calls = { publish: [], acks: [], reach: [], attribution: [] };
+  const calls = { publish: [], acks: [], reach: [], attribution: [], attributionViaPublication: [] };
   const ca = { gate: () => ({ ok: true, caseId: "CASE-2026-0001" }), acks: [], throws: null };
   const caseAuthoring = {
     publishCase(args) {
@@ -100,14 +100,22 @@ export function world({ now = NOW, injectClock = true } = {}) {
                                           reason: r.reason ?? null })) };
     },
   };
-  /* publication's side: the attribution level in force (its R17). */
+  /* case-tensions' side: the attribution level in force (its R6). */
   const chosen = new Set();          // `${case}|${edition}|${observation}`
-  const providers = [];              // what this module registered with publication (its R23)
-  const publication = {
-    registerReviewProvider(module, provider) { providers.push({ module, provider }); return { ok: true, module }; },
+  const caseTensions = {
     attributionInForce(caseId, edition, observation) {
       calls.attribution.push([caseId, edition, observation]);
       return chosen.has(`${caseId}|${edition}|${observation}`) ? { level: "group", edition } : null;
+    },
+  };
+  /* publication's side: the review provider this module fills (its R23). Its old delegate `attributionInForce` (its
+     R61 drops it, T35-54) answers the same as case-tensions here and records each call, so a read through it is seen. */
+  const providers = [];
+  const publication = {
+    registerReviewProvider(module, provider) { providers.push({ module, provider }); return { ok: true, module }; },
+    attributionInForce(caseId, edition, observation) {
+      calls.attributionViaPublication.push([caseId, edition, observation]);
+      return caseTensions.attributionInForce(caseId, edition, observation);
     },
   };
   /* basis-versions' side: which observations the findings reach (its R39). */
@@ -122,7 +130,7 @@ export function world({ now = NOW, injectClock = true } = {}) {
     },
   };
   /* `injectClock: false` leaves the module on its own default clock (R17's stamps as the module writes them). */
-  const r = reviewOf(host, { record, membership, strength, basisVersions, publication, caseAuthoring,
+  const r = reviewOf(host, { record, membership, strength, basisVersions, publication, caseTensions, caseAuthoring,
                              ...(injectClock ? { now: () => clock.now } : {}) });
   let bundles = 0;
   const w = {

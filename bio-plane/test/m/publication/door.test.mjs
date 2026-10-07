@@ -8,7 +8,7 @@ import { createHash } from "node:crypto";
 import { planeWorld as world, V, SIG } from "./fixture.mjs";
 import { publicationOps } from "../../../src/publication/index.mjs";
 import { caseTensionsOf, caseTensionsOps } from "../../../src/case-tensions/index.mjs";
-import { publicationDoorOp, PUBLICATION_DOOR_OPS } from "../../../src/publication/door.mjs";
+import { publicationDoorOp, PUBLICATION_DOOR_OPS, CREDENTIAL_IN_ADDRESS } from "../../../src/publication/door.mjs";
 import { NS_RATIFY, caseRatifyStatement } from "../../../src/sshsig.mjs";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -44,13 +44,13 @@ function stubOf(w) {
   } };
 }
 /* The door: `viewer` is what its reader resolution stamps from the presented credential (null: the reader is silent). */
-async function door(op, q, stub, { viewer = "", silent = false } = {}) {
+async function door(op, q, stub, { viewer = "", silent = false, body = undefined } = {}) {
   const url = new URL(`https://plane/?op=${op}`);
   for (const [k, v] of Object.entries(q)) url.searchParams.set(k, String(v));
   let asked = 0;
   const readerOf = async () => { asked++; return silent ? { silent: "session", correlation: undefined } : { viewer }; };
   const r = await publicationDoorOp(op, url, stub, { json, storeSilent, storeRefusal, doAnswer, sha256Hex, NS_RATIFY,
-                                                    caseRatifyStatement, readerOf });
+                                                    caseRatifyStatement, readerOf, ...(body !== undefined ? { body } : {}) });
   return r ? { status: r.status, body: await r.json(), asked } : null;
 }
 const replying = (res) => ({ async fetch() { return res(); } });
@@ -73,12 +73,12 @@ test("R6 the door's caseflags forwards only case, target, outstanding and limit,
   const stub = stubOf(w);
   const r = await door("caseflags", { case: " CASE-2026-0001 ", target: F, outstanding: "1", limit: 3, viewer: "member:x", junk: 1 }, stub);
   assert.equal(r.status, 200);
-  assert.deepEqual(r.body, { ok: true, result: w.p.caseFlags({ caseId: "CASE-2026-0001", target: F, outstandingOnly: true, limit: 3 }) });
+  assert.deepEqual(r.body, { ok: true, result: w.p.caseTensionsModule.caseFlags({ caseId: "CASE-2026-0001", target: F, outstandingOnly: true, limit: 3 }) });
   assert.equal(r.body.result.flags.length, 1);
   assert.deepEqual([...stub.seen[0].searchParams.keys()].sort(), ["case", "limit", "outstanding", "target"]);
   assert.equal(r.asked, 0, "every fact in the answer is already public: no reader is resolved");
   const all = await door("caseflags", {}, stubOf(w));
-  assert.deepEqual(all.body.result, w.p.caseFlags({}));
+  assert.deepEqual(all.body.result, w.p.caseTensionsModule.caseFlags({}));
   assert.equal((await door("caseflags", { outstanding: "yes" }, stubOf(w))).body.result.outstanding, 1);
 });
 
@@ -144,30 +144,74 @@ function granted(w, secret, edition = 1) {
   return grant;
 }
 
-test("R1 (reviewcopy's share) a grant secret presented at the door is hashed there and only its fingerprint crosses: a live holder reads the unsigned edition; revoked or bound to another edition, the stranger's bytes", async () => {
+test("R1 R73 (reviewcopy's share) a grant secret presented at the door in the request body is hashed there and only its fingerprint crosses: a live holder reads the unsigned edition; revoked or bound to another edition, the stranger's bytes", async () => {
   const secret = "the grant's secret";
   const { w } = prepared();
   const grant = granted(w, secret);
   const fresh = world();
   const stranger = (await door("casedocument", { case: "CASE-2026-0001", edition: 1 }, stubOf(fresh), { viewer: "" })).body;
   const stub = stubOf(w);
-  const held = await door("casedocument", { case: "CASE-2026-0001", edition: 1, secret }, stub, { viewer: "" });
+  const held = await door("casedocument", { case: "CASE-2026-0001", edition: 1 }, stub, { viewer: "", body: { secret } });
   assert.deepEqual([held.status, held.body.ok, held.body.ratified], [200, true, false]);
   assert.equal(held.body.text, w.row(`SELECT text FROM case_documents`).text);
   assert.equal(stub.seen[0].searchParams.get("secretSha"), grant.secretSha, "the fingerprint, and never the secret");
   assert.equal(stub.seen[0].toString().includes(encodeURIComponent(secret)), false);
   /* a wrong secret, and an empty one */
   for (const s of ["another secret", ""]) {
-    const x = await door("casedocument", { case: "CASE-2026-0001", edition: 1, secret: s }, stubOf(w), { viewer: "" });
+    const x = await door("casedocument", { case: "CASE-2026-0001", edition: 1 }, stubOf(w), { viewer: "", body: { secret: s } });
     assert.deepEqual([x.status, x.body], [404, stranger], `secret ${JSON.stringify(s)}`);
   }
   /* the edition the grant is bound to only: another edition answers as one never authored */
   w.prepare("CASE-2026-0001", 2, { roles: [{ target: F, version_sha: w.head(F) }] });
-  const other = await door("casedocument", { case: "CASE-2026-0001", edition: 2, secret }, stubOf(w), { viewer: "" });
+  const other = await door("casedocument", { case: "CASE-2026-0001", edition: 2 }, stubOf(w), { viewer: "", body: { secret } });
   const other0 = await door("casedocument", { case: "CASE-2026-0001", edition: 2 }, stubOf(fresh), { viewer: "" });
   assert.deepEqual([other.status, other.body], [404, other0.body]);
   /* revoked: the stranger's bytes */
   grant.live = false;
-  const dead = await door("casedocument", { case: "CASE-2026-0001", edition: 1, secret }, stubOf(w), { viewer: "" });
+  const dead = await door("casedocument", { case: "CASE-2026-0001", edition: 1 }, stubOf(w), { viewer: "", body: { secret } });
   assert.deepEqual([dead.status, dead.body], [404, stranger]);
+});
+
+test("R73 the door reads a review grant's secret from the request body's `secret` (an object, or a function or Promise answering one), never the address; an address secret is still read only when the body carries none, and the answer, admitted or refused, then says CREDENTIAL_IN_ADDRESS; nothing the door writes holds the secret", async () => {
+  const secret = "the grant's secret", digest = createHash("sha256").update(secret).digest("hex");
+  const { w } = prepared();
+  const grant = granted(w, secret);
+  const fresh = world();
+  const stranger = (await door("casedocument", { case: "CASE-2026-0001", edition: 1 }, stubOf(fresh), { viewer: "" })).body;
+  const q = { case: "CASE-2026-0001", edition: 1 };
+  /* every form of the body: read, with no deprecation, and only the fingerprint crosses */
+  for (const [label, body] of [["object", { secret }], ["function", () => ({ secret })], ["async function", async () => ({ secret })],
+                               ["promise", Promise.resolve({ secret })]]) {
+    const stub = stubOf(w);
+    const r = await door("casedocument", q, stub, { viewer: "", body });
+    assert.deepEqual([r.status, r.body.ok, r.body.ratified, "deprecated" in r.body], [200, true, false, false], label);
+    assert.equal(stub.seen[0].searchParams.get("secretSha"), grant.secretSha, label);
+    assert.equal(stub.seen[0].toString().includes(encodeURIComponent(secret)), false, `${label}: the secret never crosses`);
+  }
+  /* the body wins over the address: a wrong address secret with the right body secret is read from the body */
+  const both = await door("casedocument", { ...q, secret: "wrong" }, stubOf(w), { viewer: "", body: { secret } });
+  assert.deepEqual([both.status, both.body.ok, "deprecated" in both.body], [200, true, false]);
+  /* the address form, for T35's release: read when the body carries none, the answer naming the deprecation */
+  for (const body of [undefined, null, {}, { secret: "" }, { secret: 7 }, "secret", [secret], () => { throw new Error("unread"); },
+                      Promise.reject(new Error("unread"))]) {
+    const stub = stubOf(w);
+    const r = await door("casedocument", { ...q, secret }, stub, { viewer: "", body });
+    assert.deepEqual([r.status, r.body.ok, r.body.deprecated], [200, true, CREDENTIAL_IN_ADDRESS], String(body));
+    assert.equal(stub.seen[0].searchParams.get("secretSha"), grant.secretSha);
+  }
+  assert.equal(CREDENTIAL_IN_ADDRESS, "CREDENTIAL_IN_ADDRESS", "the one name admission and control-plane give it");
+  /* refused through the address: the stranger's answer, with the deprecation; a refusal the store relays carries it too */
+  const wrong = await door("casedocument", { ...q, secret: "another secret" }, stubOf(w), { viewer: "" });
+  assert.deepEqual([wrong.status, wrong.body], [404, { ...stranger, deprecated: CREDENTIAL_IN_ADDRESS }]);
+  const refused = () => Response.json({ ok: false, reason: "BAD_JSON", detail: "no" }, { status: 400 });
+  const relayed = await door("casedocument", { ...q, secret }, replying(refused), { viewer: "" });
+  assert.deepEqual([relayed.status, relayed.body], [400, { ok: false, reason: "BAD_JSON", detail: "no", deprecated: CREDENTIAL_IN_ADDRESS }]);
+  /* no secret anywhere: R1's answer unchanged, no fingerprint sent, no deprecation */
+  const none = await door("casedocument", q, stubOf(w), { viewer: "", body: {} });
+  assert.deepEqual([none.status, none.body], [404, stranger]);
+  /* nothing the door answers holds the secret or its digest */
+  for (const r of [both, wrong, relayed, none]) {
+    assert.equal(JSON.stringify(r.body).includes(secret), false);
+    assert.equal(JSON.stringify(r.body).includes(digest), false);
+  }
 });
