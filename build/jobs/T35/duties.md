@@ -13,3 +13,7 @@ Readings I am building on (T35-34); answer only where you differ.
 5. R1 "a source naming the body" is met, for any organisation obligor, by a source whose standard's issuer is a public body entity (fixes a gap: today only lines count).
 
 R27's tests need events' `usesOf` (T35-28); I build against R46's wording now and will merge the tranche branch after events merges, when you say so.
+
+## J2 · QUESTION
+
+Applying B3 (K1966). One edge needed: B3's `NO_SHA` is extraction's one answer (`noSha`, its R63), and duties does not use `extraction`, so the architecture check fails on `import { noSha } from "../extraction/index.mjs"`. My reading: add `extraction` to duties' `uses` in `modules.json` (layer 4, earlier; content and events already import `noSha` the same way). The other three codes (`CAPTURE_NOT_HELD`, `NO_EXTENT`, `EXTENT_NOT_IN_CAPTURE`) are answered bare, as events R1 answers them (no row in any family), and the extent is checked with content's `checkContentExtent` over `contentContextFor`. Until the edge is added, the architecture check reports this one failure.
