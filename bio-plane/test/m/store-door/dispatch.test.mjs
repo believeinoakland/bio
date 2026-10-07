@@ -9,7 +9,7 @@ import { D, go, quietly, UUID } from "./harness.mjs";
 const { record } = await import("./record.mjs");
 const { DISPATCH_CHECKS } = await import("../../../src/answer-envelope/checks.mjs");
 const { askAdmits } = await import("../../../src/answers/scope.mjs");
-const { dispatch, PROJECT_NAMING_READS, PROJECT_NAMING_READS_NOT, GRANT_HEADER } = D;
+const { dispatch, PROJECT_NAMING_READS, PROJECT_NAMING_READS_NOT, GRANT_HEADER, SESSION_HEADER, CREDENTIAL_SHA_HEADER } = D;
 
 /* A store whose routes record their call; `membership` answers existence for the ids in `existence` (discoverable, and
    seen at EXISTENCE by the viewer), and records every question. */
@@ -180,7 +180,7 @@ test("R6 (C-69.4): an error thrown anywhere in the store's door, in a route or i
   assert.equal(JSON.parse(logged[0]).op.length, 200, "the op logged is bounded");
 });
 
-test("R9 (F1; K1874, K1943): the store's door reads an ask's grant only from the request's `x-bio-grant` header — a grant in the query is not read, not logged and not handed to a route — and the door makes no request of its own, so no credential reaches any address (negative control: the header's grant is read and logged)", async () => {
+test("R9 (F1; K1874, K1943): the store's door reads an ask's grant only from the request's `x-bio-grant` header — a grant in the query is not the one read, logged or handed as the map's grant — and the door makes no request of its own, so no credential reaches any address (negative control: the header's grant is read and logged)", async () => {
   assert.equal(GRANT_HEADER, "x-bio-grant");
   const logged = [], handed = [];
   const store = {
@@ -230,6 +230,41 @@ test("R9 (F1; K1874, K1943): the store's door reads an ask's grant only from the
   answersOf(r.ctx).check = orig;
 });
 
+test("R9 (K2038, K2041): the headers `x-bio-session`, `x-bio-grant` and `x-bio-credential-sha` are handed to the owners' maps on the in-process URL — the session as `session` and `t`, the grant as `grant`, the digest as `sha`, each over the query's own — and none of them is logged among a read's arguments; with no header the URL is as the Worker sent it; over a real record, credentials' `session` and `aicredentiallook` and answers' `answercheck` read them unchanged", async () => {
+  assert.deepEqual([SESSION_HEADER, GRANT_HEADER, CREDENTIAL_SHA_HEADER], ["x-bio-session", "x-bio-grant", "x-bio-credential-sha"]);
+  const seen = [], logged = [];
+  const store = { routes: (url) => ({ search: () => { seen.push(Object.fromEntries(url.searchParams)); return { rows: [] }; } }),
+                  membership: () => ({ visibilityOf: () => "hidden", existenceAct: () => null }),
+                  logRead: (e) => { logged.push(e); return e.answer; } };
+  const H = { [SESSION_HEADER]: "S-H", [GRANT_HEADER]: "G-H", [CREDENTIAL_SHA_HEADER]: "D-H" };
+  await go(store, "search?viewer=member:ann&q=x&session=S-Q&t=T-Q&grant=G-Q&sha=D-Q", { headers: H });
+  assert.deepEqual(seen.at(-1), { viewer: "member:ann", q: "x", session: "S-H", t: "S-H", grant: "G-H", sha: "D-H" });
+  assert.equal(logged.length, 1);
+  assert.deepEqual(logged[0].grant, "G-H");
+  for (const v of ["S-H", "D-H"]) assert.equal(JSON.stringify(logged[0].args).includes(v), false, `${v} logged`);
+  /* negative control: no header, the URL is the Worker's, a parameter of the op's own (a capture session id) untouched */
+  await go(store, "search?viewer=member:ann&session=CAPSESSION-1");
+  assert.deepEqual(seen.at(-1), { viewer: "member:ann", session: "CAPSESSION-1" });
+  assert.equal(logged.length, 1, "no grant header, nothing logged");
+  /* over a real record, through the owners' own maps */
+  const r = await record({ sealSecret: "store-door-test-seal-secret-00003" });
+  const { credentialsOf, credentialsOps } = await import("../../../src/credentials/index.mjs");
+  const { answersOf } = await import("../../../src/answers/index.mjs");
+  const { answersOps } = await import("../../../src/answers/ops.mjs");
+  const asked = [];
+  const C = credentialsOf(r.ctx);
+  const origSession = C.session.bind(C), origLook = C.aiCredentialLook.bind(C), origCheck = answersOf(r.ctx).check.bind(answersOf(r.ctx));
+  C.session = (t) => { asked.push(["session", t]); return origSession(t); };
+  C.aiCredentialLook = (a) => { asked.push(["look", a.secretSha]); return origLook(a); };
+  answersOf(r.ctx).check = (a) => { asked.push(["check", a.grant]); return origCheck(a); };
+  const owners = { routes: (url, body) => ({ ...credentialsOps(C, url, body, {}), ...answersOps(answersOf(r.ctx), url, body) }),
+                   membership: () => null };
+  for (const [path, headers] of [["session?t=T-QUERY", { [SESSION_HEADER]: "T-HEADER" }], ["aicredentiallook?sha=D-QUERY", { [CREDENTIAL_SHA_HEADER]: "D-HEADER" }],
+                                 ["answercheck?viewer=member:ann&grant=G-QUERY", { [GRANT_HEADER]: "G-HEADER" }]])
+    assert.equal((await go(owners, path, { method: "POST", headers, body: JSON.stringify({ answer: { sentences: [] } }) })).status, 200, path);
+  assert.deepEqual(asked, [["session", "T-HEADER"], ["look", "D-HEADER"], ["check", "G-HEADER"]]);
+});
+
 test("R11 (K1674; answers R1, R2, R7): a read the store serves under a grant is handed to `store.logRead` with its grant, op, arguments (query and body, the stamped viewer and any query grant aside), answer and viewer, and answered as logged; no grant, `rule` (which records its own) and an op off the asking scope are answered as served; a store that cannot log is R6's internal error, never an unlogged answer", async () => {
   const logged = [];
   const store = (logRead) => ({
@@ -255,7 +290,7 @@ test("R11 (K1674; answers R1, R2, R7): a read the store serves under a grant is 
   assert.deepEqual([thrown.status, thrown.json.reason], [500, "STORE_INTERNAL_ERROR"]);
 });
 
-test("R11 (K1674, K1685, K1798; credentials R28, ai-runs R48, R50, answers R4): the ask's store-internal routes, each its owner's with the member the stamped viewer — `aigrantadmit` answers credentials' own words, `askceiling` ai-runs' ceiling check (`{ok: true}` when under it), `askusage` ai-runs' counter with mode `ask` whatever was sent and the ask's `calls`, `askcheck` answers' check over the grant's read log (negative control: a name no module serves is R1's refusal)", async () => {
+test("R11 (K1674, K1685, K1798, K1986; credentials R28, ai-runs R48, R50, answers R4): the ask's store-internal routes, each its owner's with the member the stamped viewer — `aigrantadmit` answers credentials' own words, `askceiling` ai-runs' ceiling check (`{ok: true}` when under it), `askusage` ai-runs' counter with the mode it is given (`ask` when none; ai-runs refuses one that is neither `ask` nor `draft`) and the ask's `calls`, `askcheck` answers' check over the grant's read log (negative control: a name no module serves is R1's refusal)", async () => {
   const r = await record();
   const a = await r.go("aigrantadmit", "POST", { token: "f".repeat(64), op: "search", write: false });
   assert.deepEqual([a.status, a.json.ok, a.json.result.ok, a.json.result.reason], [200, true, false, "GRANT_NOT_HELD"]);
@@ -269,9 +304,14 @@ test("R11 (K1674, K1685, K1798; credentials R28, ai-runs R48, R50, answers R4): 
   assert.deepEqual((await r.go("askceiling?viewer=member:ann")).json.result, { ok: true }, "under the ceiling: {ok: true}");
   aiRunsOf(r.ctx).aiUseCheck = orig;
   const USE = { input_tokens: 10, output_tokens: 5, cache_read_input_tokens: 0, cache_creation_input_tokens: 0, total_cost_usd: null };
-  const u = await r.go("askusage?viewer=member:ann", "POST", { mode: "run", usage: USE });
+  const u = await r.go("askusage?viewer=member:ann", "POST", { usage: USE });
   assert.deepEqual([u.json.ok, u.json.result.ok, u.json.result.counted], [true, true, 1], JSON.stringify(u.json).slice(0, 300));
   assert.deepEqual(r.db.prepare("SELECT member, mode FROM ai_usage").all().map((x) => [x.member, x.mode]), [["ann", "ask"]]);
+  const run = await r.go("askusage?viewer=member:ann", "POST", { mode: "run", usage: USE });
+  assert.equal(run.json.result.ok, false, "a run's mode is not an ask's use");
+  const draft = await r.go("askusage?viewer=member:bea", "POST", { mode: "draft", usage: USE });
+  assert.equal(draft.json.result.ok, true, JSON.stringify(draft.json).slice(0, 300));
+  assert.deepEqual(r.db.prepare("SELECT member, mode FROM ai_usage ORDER BY member").all().map((x) => [x.member, x.mode]), [["ann", "ask"], ["bea", "draft"]]);
   const calls = () => r.db.prepare("SELECT COALESCE(SUM(calls), 0) n FROM ai_usage WHERE member = 'ann'").get().n;
   assert.equal((await r.go("askusage?viewer=member:ann", "POST", { usage: USE, calls: 3 })).json.result.ok, true);
   assert.equal(calls(), 4, "an ask of three calls counts three");

@@ -218,16 +218,32 @@ function purgeHoldRefusal(store, url) {
    read log through `store.logRead` (answers' `logRead`, handed by plane), its answer scrubbed there and answered as
    recorded; `rule` records its own (answers R7). A read that cannot be recorded throws to R6's catch, so it is never
    answered unrecorded.
-   R9 (F1; K1874, K1943): the grant is a credential, so it reaches this door in the request's `GRANT_HEADER` header and
-   never in its address: a `grant` in the query is not read, and it is not logged among the read's arguments either. */
+   R9 (F1; K1874, K1943, K2038, K2041): a credential reaches this door in a header of the request, never in its address:
+   `x-bio-session` (a stamped session, and the token admission asks `session` to resolve), `x-bio-grant` (an ask's grant)
+   and `x-bio-credential-sha` (the digest admission asks `aicredentiallook` to resolve). A `grant` in the query is not the
+   one read here, and it is not logged among the read's arguments either. */
+export const SESSION_HEADER = "x-bio-session";
 export const GRANT_HEADER = "x-bio-grant";
-export function grantOf(req) {
-  const g = req.headers.get(GRANT_HEADER);
-  return typeof g === "string" && g !== "" ? g : null;
+export const CREDENTIAL_SHA_HEADER = "x-bio-credential-sha";
+const headerOf = (req, name) => {
+  const v = req.headers.get(name);
+  return typeof v === "string" && v !== "" ? v : null;
+};
+export function grantOf(req) { return headerOf(req, GRANT_HEADER); }
+/* R9: each header's value handed to its owner's map on the in-process URL object `store.routes(url, body)` receives (no
+   request's address): the session as `session` (credentials' sign-out routes) and `t` (credentials' `session`), the
+   grant as `grant` (answers' `rule` and `answercheck`), the digest as `sha` (credentials' `aicredentiallook`). A header
+   absent leaves the parameter as the Worker sent it, so the owners' maps are unchanged. */
+const HANDED = Object.freeze([[SESSION_HEADER, ["session", "t"]], [GRANT_HEADER, ["grant"]], [CREDENTIAL_SHA_HEADER, ["sha"]]]);
+function handOn(req, url) {
+  for (const [name, keys] of HANDED) {
+    const v = headerOf(req, name);
+    if (v !== null) for (const k of keys) url.searchParams.set(k, v);
+  }
 }
-function underGrant(store, grant, url, op, body, answer) {
+function underGrant(store, grant, asked, op, body, answer) {
   if (!grant || op === "rule" || !askAdmits(op)) return answer;
-  const { grant: _g, viewer, ...args } = Object.fromEntries(url.searchParams);
+  const { grant: _g, viewer, ...args } = asked;
   return store.logRead({ grant, op, args: { ...args, ...(body && typeof body === "object" ? body : {}) }, answer, viewer });
 }
 
@@ -252,8 +268,8 @@ async function assistantFor(ctx, by, adminOnly) {
 
 /* R1: the frame. `store.routes(url, body)` answers the route map, `store.membership()` membership for R2;
    `store.namespace()` (the object's own name, plane R2) and `store.purgeHeld({bundleId})` (`actions`' R60 reader, plane
-   R14), each a function asked at a purge and never before, for R4. The grant read from the header (R9) is handed to the
-   route map as its third argument, so the routes that need it (`askcheck`, R11) read it there and never from the query. */
+   R14), each a function asked at a purge and never before, for R4. The headers' credentials (R9) are set on the URL the
+   map receives, and the grant is also handed as its third argument, which this module's `askcheck` (R11) reads. */
 export async function dispatch(req, store) {
   const url = new URL(req.url);
   const op = url.pathname.slice(1);
@@ -275,6 +291,9 @@ export async function dispatch(req, store) {
      hazard for the byte comparisons the D-15 posture rests on. */
   try {
     const grant = grantOf(req);
+    /* the read's own parameters, taken before the headers' credentials are handed on, so none is logged (R11) */
+    const asked = Object.fromEntries(url.searchParams);
+    handOn(req, url);
     const map = store.routes(url, body, grant);
     /* R1: the map's own keys only, so an inherited name (`toString`, `constructor`) is no route. */
     if (!Object.hasOwn(map, op)) return Response.json({ ok: false, error: "unknown op: " + op }, { status: 400 });
@@ -283,7 +302,7 @@ export async function dispatch(req, store) {
       if (held) return Response.json(held, { status: 409 });
     }
     const existence = existenceRead(() => store.membership(), op, url, body);
-    return Response.json({ ok: true, result: existence ?? underGrant(store, grant, url, op, body, await map[op]()) });
+    return Response.json({ ok: true, result: existence ?? underGrant(store, grant, asked, op, body, await map[op]()) });
   } catch (e) {
     return Response.json(storeInternalError(e, op), { status: 500 });
   }
@@ -325,7 +344,9 @@ export function controlPlaneRoutes(ctx, url, body, grant = null) {
        ask's (its R48), and the answer checked over the grant's read log (answers R4), the grant the header's (R9). */
     askceiling: () => aiRunsOf(ctx).aiUseCheck({ member: q("viewer") }) ?? { ok: true },
     /* K1798 (ai-runs R48): `calls`, the model calls the usage covers, so an ask of N calls counts N (absent, one). */
-    askusage: () => aiRunsOf(ctx).countAskUsage({ member: q("viewer"), mode: "ask", usage: b.usage ?? null, calls: b.calls }),
+    /* K1986: the mode it is given (an ask's `ask`, a draft's `draft`, control-plane R57), `ask` when none is sent; ai-runs
+       refuses any other (its R48). */
+    askusage: () => aiRunsOf(ctx).countAskUsage({ member: q("viewer"), mode: b.mode ?? "ask", usage: b.usage ?? null, calls: b.calls }),
     askcheck: () => answersOf(ctx).check({ answer: b.answer ?? null, grant, viewer: q("viewer"), mode: "ask" }),
     /* R10: the two drafts, routed here over their owners' map entries (plane spreads this map last), the assistant
        resolved first (`assistantFor`); the handler's own arguments from the body, the stamps from the query, and a
