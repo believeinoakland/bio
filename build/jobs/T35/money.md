@@ -32,3 +32,7 @@ R2's found extent (T35-32; K1941's one shape). My reading, which I am building o
 2. A match naming a table (R74's `{kind, table: {...}, words, origin: "search"}`) is refused `NO_SOURCE`, its detail saying a table's amount column is declared and counted through `calculations`, never read in here row by row (K1468).
 3. `question` is a top-level field of `recordFact` (beside `source`), not a field of the match. QUESTION_NOT_HELD comes after ADJUSTS_NOT_HELD (R2's last source refusal). "The actor" is `by` (as for SOURCE_NOT_HELD). The question is stored in a new `money_facts.question` column (added by `migrate` to an existing table), not part of R19's read contract.
 4. A fact recorded from a source fact (`{fact}`) may also carry a question; nothing in R2 limits it to found extents.
+
+## J2 · COMPLETE
+
+T35-32 applied: N635 (calc-grammar through its index; relate in place of readingOf/cmpD) and N698 (R2: found match as source, optional question, QUESTION_NOT_HELD, money_facts.question added by migrate). money 57/0; users of money green but their accepted reds (op-declarations 9, 23; plane ask 22). format (red 24 only), architecture, coverage 23/23, ownership: 0 failures. R2's not-yet-met mark is yours to strike. Details in the record's Completion section.
