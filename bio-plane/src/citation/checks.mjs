@@ -56,6 +56,21 @@ export const CITE_CHECKS = {
       + 'cite that. A document its publisher withdrew or changed is a different thing and can still '
       + 'be cited.',
   },
+  /* T35 (T35-42; N698, DEC-164 (5)): the optional question a member names when citing what a find turned up, the
+     question they looked for it for. Minted in `cite`'s region is-cite-question. */
+  NO_SUCH_QUESTION: {
+    check: 'C-33.52',
+    where: 'src/citation/index.mjs cite > is-cite-question',
+    translation: 'There is no question by that name that you can see, so this citation cannot be kept '
+      + 'with it. A question the group has not asked and one you have not been shown are answered '
+      + 'alike. Cite without naming a question, or name one you can open.',
+  },
+  NOT_AN_INQUIRY: {
+    check: 'C-33.53',
+    where: 'src/citation/index.mjs cite > is-cite-question',
+    translation: 'What you named as the question you were looking for this for is not a question: it is '
+      + 'another kind of item in the record. Name the question itself, or cite without naming one.',
+  },
 };
 
 /* REC-97 / IC-90 — the four ways `cite` can be handed a part of a document it must not write, split out of
@@ -97,5 +112,29 @@ export const CITE_EXTENT_CHECKS = {
       + 'written into the record as it stands — it is empty, too long, or contains a quotation '
       + 'mark, a backslash, a line break or a comment mark, and those characters would silently '
       + 'reshape the document rather than appear in it. It is declined instead of mangled.',
+  },
+  /* T35 (T35-42; N698, DEC-164 (4), (5)) — citing a passage "Find in this" turned up (`found`, retrieval R73's match):
+     the three refusals asked before anything else, minted in `cite`'s region is-cite-found. */
+  CITE_ONE_SOURCE: {
+    check: 'C-45.14',
+    where: 'src/citation/index.mjs cite > is-cite-found',
+    translation: 'A citation names what it rests on once: either a set of items you picked, or one passage '
+      + 'a search found, with the part of the document that passage is. This one names both or '
+      + 'neither, so the record could not tell which you meant, and nothing was written.',
+  },
+  FOUND_MALFORMED: {
+    check: 'C-45.15',
+    where: 'src/citation/index.mjs cite > is-cite-found',
+    translation: 'The passage sent with this citation does not say which document it is in, which version '
+      + 'of that document it was found in, or which part of it it is, so there is nothing the record '
+      + 'can point at. A document you cannot see is answered the same way. Search again and cite the '
+      + 'passage as the search shows it.',
+  },
+  FOUND_CAPTURE_MOVED: {
+    check: 'C-45.16',
+    where: 'src/citation/index.mjs cite > is-cite-found',
+    translation: 'This passage was found in a different version of the document from the one a citation of '
+      + 'it is pinned to, so the part it names could point at different words. Nothing was written. '
+      + 'Search the version the record cites, or cite the document by picking it.',
   },
 };
