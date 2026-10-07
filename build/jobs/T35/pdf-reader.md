@@ -33,3 +33,7 @@ R36 (`active`) leaves six details open. I am building on the readings below and 
 - `node checks/ownership.mjs … pdf-reader tranche/T35`: 0 failures.
 
 Size (session_01Jry3dXC9WHUGbknu4WMyTM): test runs 4, module lines 3108
+
+## J2 · REPORT
+
+A generated artifact this job made stale (mechanics §14): `pdf-worker/dist/pdf-worker.bundled.mjs` (owned by pdf-worker) inlines `pdfstructure.mjs` and does not carry R36's `active`. pdf-worker's `structure.test.mjs` compares the bundle's output with the live source, so two of its arms now fail: "R7 every other field is extractPdfStructure's own, unchanged" and "R10 the structure fields are kept" (81 pass, 2 fail; 83/0 on the tranche base). No pdf-worker code needs to change. They pass again once the bundle is regenerated at L1's close.
