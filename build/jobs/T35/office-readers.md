@@ -1,6 +1,6 @@
 # office-readers (T35)
 
-**Status** · session_0197hpZKQkhjw4tqoDSVoZF9 · depth 2 · WORKING · handled B2
+**Status** · session_0197hpZKQkhjw4tqoDSVoZF9 · depth 2 · WAITING ON BOB (J2) · handled B2
 
 ## J1 · QUESTION
 
