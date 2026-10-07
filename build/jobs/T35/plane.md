@@ -37,3 +37,48 @@ B4 (a), B5 and B8 applied; plane's own tests 128/128, and format, architecture, 
 (2) **R9 and the R5 union test caught the inline co-archive pair** (K2042's wording): `coarchiveset`/`coarchivestate` written straight into `routes` made the plane hold two routes no module's own ops map holds, which R9 forbids and `store.test.mjs`'s R5 and R9 arms check by name. acquisition exports no ops map (its ops are reached through capture's and control-plane's doors). My reading, applied: the two entries stay in `routes` as you worded them, and the test helper (`test/m/plane/maps.mjs`, plane's own file) names the pair as **acquisition's**, since both handlers are wholly acquisition's methods and the plane adds no behaviour — so R5's union and R9's "every route is a module's" still hold against a real owner. If you would rather acquisition export `acquisitionOps` (its layer is closed, so that is a CHANGE you place, or a `next.md` entry), say so and I drop the helper entry.
 
 Also: `draftOnObject` now answers `read`, the strings of the grant's read log (K2041), with an arm that drives a read under the grant during the draft; `ownHosts` is built from the claim's `instance_address` and handed to capture and capture-sources; `STEP = "store-door"`. Still open on my side: B4 (b)'s re-points (store-door and answer-envelope are not on the tranche yet), `admissionOps` (B7, on your word), and the tranche merge after control-plane.
+
+## J5 · COMPLETE
+
+T35-73 is complete on `job/T35/plane` (tranche/T35 merged at `1e50718a35`). Ready to merge directly after control-plane (K2062).
+
+**Entries applied**
+- (K1901, red 10) `system/migrate-released.test.mjs`: 0.79.0 and 0.80.0 added to RELEASES (as the 0.81.0 cut did). The seed's meta title is now the document's own, because 0.80.0 refuses a title the document does not bear (C-86.3). The ARMED promote check now reads the promotion's own verdict; the envelope's `ok` had been hiding the refusal. Result: 585 pass, 0 fail.
+- (N633, K1730) `wiring.mjs` `rosterReads({sql})` is the store's read: captures extraction placed as `staff_roster` or `org_chart` that entities resolved to the organisation, and calculations' tables whose source capture resolves to it and whose header roster-reader R6 names a roster. Both are within membership's sight. roster-reader's `rosterSource(rosterReads(...))` is registered into people, and the plane's "held as a table, not read" source is gone. `t33.test.mjs`'s R23 arm moved with it.
+- (N686, K2038, K2041, K2062) `Store.draft` → `draftOnObject` in `ask.mjs`, taking `draftAsk`'s shape.
+  - Order: the assistant gate first, then `accountFor` (an `ask`-kind act), then the serving account's `suggestions` switch (the member's reference's, or `groupKeySwitches`').
+  - A grant is minted only when `suggestions` is on and the field is not firsthand; the door's `pack` is sent only when there is no grant.
+  - It POSTs to agent-worker's `/draft` and answers a Response at agent-worker's status: its JSON plus `grant`, `suggestions` and `read` (the grant's read-log strings).
+  - R19's registration was already met.
+- (F1) `ask.mjs` reads the session or grant from `Authorization: Bearer`, else the body's `token`, else (T35 only) the query.
+- (red 22) `ask.test.mjs` stores the session as its SHA-256 (credentials R40).
+- (F16, K2038) `ownHosts` = the domain claim's `instance_address` host, plus `.<sub>.workers.dev` when it is a workers.dev name; never the claimed domain. It is built after the migration and instance-setup's start and handed to `captureOf` and capture-sources' `credentialsOf`. Fail-open with nothing recorded; the install-time binding is N745.
+- (K2011) `door.mjs` hands publication's door `body: () => req.clone().json()`.
+- (red 31, K1993, K2029) `sweep.test.mjs` captures a page linking to the asked address (`subresources: true`) before filing. The scene follows no alarm, so the capture is not filed in a bundle.
+- (K1907, K2041, K2043) Re-points:
+  - `wizards.mjs`/`wizards.test.mjs` to op-grades;
+  - `door.mjs`, `index.mjs` and `split.test.mjs` to answer-envelope (`caseReader`, `captureKey`, `storageAbsent`, `sha256Hex`, `SCRATCH`, `PUBLISHED_STORE` and `makeFetch` stay control-plane's);
+  - `store.mjs`, `door.test.mjs` and `maps.mjs` to store-door, with the grant handed to `controlPlaneRoutes`.
+- (K2037) `STEP = "store-door"`.
+- (K2044, K2054) `admissionOps(admissionOf(ctx))` is composed before store-door's map; `admissionOf` is built at construction.
+- (K2042, K2051) `coarchiveset`/`coarchivestate` are on acquisition's instance (named as acquisition's in `maps.mjs`).
+- (K2046) `unpack.mjs`'s `archive-unpack` consumer calls `op=unpack` through `SELF` as the daemon (Bearer header, body `{archiveSha}`). An `ok` answer or a 4xx other than 408/429 removes the event; anything else is an attempt with tasks R18's back-off and retry limit. It is tested through `onAlarm` since tasks' kind filter merged.
+- (K2062) `publicOp` passes `credential` to `caseReader` and `country` to capture's knock. The door test drives the new 25th instance-setup route (`adminrecoverystep`).
+
+**Deferred:** none.
+
+**Found in other modules (for BOB)**
+1. With `job/T35/control-plane` merged, instance-setup's `worker-reports.test.mjs` "R42 R34 R33 on the real plane" fails. The answer now carries `deprecated` because the test sends its token in the address. instance-setup's test (header form), or accepted until it is re-pointed.
+2. Wording only, BOB's: plane R1's frame, R10's "control-plane's step" and R19's text predate the splits. Uses already re-worded by K2043.
+3. The plane bundle (`bio-plane/dist/bio-plane.bundled.mjs`) is stale from my changes (§14: BOB regenerates at the layer close).
+
+**Tests and checks**
+- Plane module tests (`test/m/plane/`) on my branch: 130 pass, 0 fail.
+- `system/migrate-released.test.mjs`: 585 pass, 0 fail, on my branch and again with control-plane merged.
+- On a scratch copy of my branch with `origin/job/T35/control-plane` merged (not merged into mine):
+  - plane 130/130;
+  - all `test/m`: 8398 tests, 8378 pass, 9 fail. Seven are accepted reds: 25 (MODULE_ORDER ×4 sisters), 34 (following C-137), 21 (sources R1), and the tmp-tree arm that is red on the tranche tip. The other two are the instance-setup finding above and the read-only tmp-tree arm, a sandbox flake also red at base.
+- On my branch alone, against tranche/T35's tip run the same way, my branch adds no failure and clears 47 that are red there.
+- Checks: `format` 0 failures; `architecture` (plane) 0 failures; `coverage` (plane) 24 of 24 live ids named, 0 failures; `ownership` (plane, tranche/T35) 21 files, 0 failures.
+
+Size (session_01HKDrPPG4tCX3Djot3Tn2dF): test runs 48, module lines 1275
