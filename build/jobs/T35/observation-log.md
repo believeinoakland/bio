@@ -24,3 +24,7 @@ Size (session_01A9EYJuESL7uTGS8gLgUrJf): test runs 4, module lines 3235
 ## J1 · REPORT
 
 Stale artifacts (record, Completion): R36's rewording makes the plane bundle bio-plane/dist/bio-plane.bundled.mjs (:66472, :66677, :66939) and agent-worker's bundle agent-worker/dist/agent-worker.bundled.mjs (:1547, render-deferred, through run-rules) stale; neither is mine to regenerate (§14). No other module's test pins the four sentences.
+
+## J2 · COMPLETE
+
+T35-30 applied: R36's four sentences (vocabulary.mjs :176, :198, :626, :1409) say your group's Civicsmith in K1801's words; keys and stored values unchanged; no check translation moved, nothing awaits stamp. R36 named by a test in test/m/observation-log/vocabulary.test.mjs (negative control run). Module tests 67/67; users' vocabulary tests 207/207; architecture, coverage (36/36), ownership: 0 failures; format: 2 failures, accepted red 24 only. Record: build/jobs/T35/observation-log.md, Completion. Pushed job/T35/observation-log.
