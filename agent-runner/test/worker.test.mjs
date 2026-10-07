@@ -23,8 +23,9 @@ async function hosted(script = async () => success()) {
 test('R12 the Worker exports the Container Durable Object class AgentRunner and adds no route of its own', async () => {
   const h = await hosted();
   try {
-    assert.deepEqual(Object.keys(h.mod).sort(), ['AgentRunner', 'ContainerProxy'],
-      'no default export: the Worker answers nothing itself; ContainerProxy is reachable only through ctx.exports');
+    assert.deepEqual(Object.keys(h.mod).sort(), ['AgentRunner', 'ContainerProxy', 'default'],
+      'the class, the library\'s proxy (reachable only through ctx.exports) and R15\'s default handler, nothing else');
+    assert.deepEqual(Object.keys(h.mod.default), ['fetch'], 'the default export adds no handler but R15\'s fetch');
     assert.equal(typeof h.mod.AgentRunner, 'function');
     assert.equal(h.mod.AgentRunner.name, 'AgentRunner');
     // agent-worker's RUNNER binding names this class in this script
@@ -93,4 +94,40 @@ test('R12 the Worker holds no credential: it starts the container with no enviro
     assert.equal(w.workers_dev, false);
     assert.equal(w.preview_urls, false);
   } finally { await h.stop(); }
+});
+
+// R15: the committed bundle (wrangler's `main`) has a default export carrying a `fetch` handler, so wrangler builds an
+// ES-module Worker and deploys the class; the handler answers R6's 404 to everything, reads no body, reaches no
+// container and holds no state.
+test('R15 the committed bundle has a default fetch handler answering 404 UNKNOWN, beside the AgentRunner class', async () => {
+  const restore = installRuntime();
+  try {
+    assert.equal(wrangler().main, readManifest().bundle.outfile, 'the bundle under test is the one wrangler deploys');
+    const mod = await loadWorker();
+    assert.equal(typeof mod.AgentRunner, 'function', 'AgentRunner still exported');
+    assert.equal(mod.AgentRunner.name, 'AgentRunner');
+    assert.equal(typeof mod.default, 'object');
+    assert.equal(typeof mod.default.fetch, 'function');
+    // whatever reaches it: every method, path and the conversation's upgrade, with a body it must not read
+    const touched = [];
+    const env = new Proxy({}, { get: (_, k) => { touched.push(['env', k]); return undefined; } });
+    const ctx = new Proxy({}, { get: (_, k) => { touched.push(['ctx', k]); return undefined; } });
+    const cases = [['GET', '/version'], ['GET', '/'], ['GET', '/conversation', { Upgrade: 'websocket' }],
+      ['POST', '/conversation', {}, 'secret-bearing body'], ['PUT', '/x', {}, 'x'], ['DELETE', '/version'], ['HEAD', '/x']];
+    for (let round = 0; round < 2; round++) {                     // a second round answers the same: no state
+      for (const [method, path, headers = {}, body] of cases) {
+        let pulled = false;
+        const stream = body === undefined ? undefined : new ReadableStream({ pull(c) { pulled = true; c.enqueue(new TextEncoder().encode(body)); c.close(); } }, { highWaterMark: 0 });
+        const req = new Request(`https://agent-runner${path}`, { method, headers, body: stream, duplex: stream ? 'half' : undefined });
+        const res = await mod.default.fetch(req, env, ctx);
+        assert.equal(res.status, 404, `${method} ${path}`);
+        if (method !== 'HEAD') assert.deepEqual(await res.json(), { ok: false, code: 'UNKNOWN' }, `${method} ${path}`);
+        assert.equal(req.bodyUsed, false, `${method} ${path}: no body read`);
+        assert.equal(pulled, false, `${method} ${path}: no body byte pulled`);
+        assert.equal(res.webSocket ?? null, null, 'no connection accepted');
+      }
+    }
+    assert.deepEqual(touched, [], 'no binding, container instance or context reached');
+    assert.deepEqual(Object.keys(mod.default), ['fetch'], 'no state beside the handler');
+  } finally { restore(); }
 });

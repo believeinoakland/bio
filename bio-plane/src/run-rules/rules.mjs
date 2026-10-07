@@ -698,9 +698,10 @@ export function askBoundReached(bounds, used) {
  *  stamp for whoever started it, names a member (`member:<id>`, or a credential that member minted, `member:<id>/<tok>`,
  *  through `runPrincipalOf`). The ONE exception is the AI half of a standing question a member wrote (`answers` R19):
  *  with no member's act, it starts only when `standing` names its author, a member, and the mode is `ask` (R16's
- *  read-only reach; R17's bounds and the author's own account and ceiling are held by its callers). Anything else —
- *  a token class, the scheduler, a blank or unrecognised stamp — is `AI_RUN_NOT_A_MEMBER_ACT` (C-22.19): fail closed.
- *  Never throws. */
+ *  read-only reach; R17's bounds and the author's own account and ceiling are held by its callers). A draft (R21; T35,
+ *  N686, DEC-153) starts only at the act of the member who asked for the help: the exception is `ask`'s alone, so with
+ *  no member's act a draft is refused whatever `standing` holds. Anything else — a token class, the scheduler, a blank
+ *  or unrecognised stamp — is `AI_RUN_NOT_A_MEMBER_ACT` (C-22.19): fail closed. Never throws. */
 export function startAllowed(asked) {
   const { startedBy = null, mode = null, standing = null } = asked && typeof asked === "object" ? asked : {};
   const memberOf = (who) => {
@@ -712,7 +713,10 @@ export function startAllowed(asked) {
   const m = mode == null ? "" : String(mode).trim();
   if (author && m === "ask") return { ok: true, exception: "standing_question", author };
   return refusal("AI_RUN_NOT_A_MEMBER_ACT",
-    author
+    m === "draft"
+      ? "a draft of a member's own words starts only at the act of the member who asked for the help, and the "
+        + "standing question's exception is an ask's alone (DEC-153, K1481). Nothing was started"
+      : author
       ? `a standing question starts only an ask, which reads and answers; it cannot start a run in mode `
         + `${JSON.stringify(m.slice(0, 40))} (K1481). Nothing was started`
       : "no member's act started this, and it is not the AI half of a standing question a member wrote (K1481). "

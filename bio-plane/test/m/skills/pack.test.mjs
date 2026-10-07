@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { renderPack, machineFences, memberOnlyActs, packVersion, SKILL_PACK_ID, DOCTRINE_EDITION,
          OBJECTIVE, BOUNDARY, FOUR_LEVEL_RULE, SEARCH_COMPLETENESS, AUTHORED_SOURCES, SOURCING,
          ABSENCE_ANSWER_SHAPE } from "../../../src/skillpack.mjs";
-import { judgementLayers } from "../../../src/skilldoctrine.mjs";
+import { judgementLayers, RESEARCH_BOUNDARY_CLAUSES } from "../../../src/skilldoctrine.mjs";
 import { OBSERVATION_LEVELS, OBSERVATION_STATES } from "../../../src/observation-log/index.mjs";
 import { RUN_BOUNDS, RUN_ENDINGS, AI_RUN_CHECKS } from "../../../src/run-rules/index.mjs";
 import { RECOMMEND_PROMPT, RECOMMEND_PROMPT_SHA256 } from "../../../src/contradiction.mjs";
@@ -115,9 +115,12 @@ test("R1 R27 contradiction's recommender prompt absent or blank, or not the prom
   assert.ok(renderWithContradiction({}).rendered);
 });
 
-test("R2 resident holds exactly objective, boundary, four_level, absence, disclosable, each with its source and sourcing", () => {
+test("R2 resident holds exactly objective, boundary, four_level, absence, research_boundary, disclosable, each with its source and sourcing", () => {
   const { resident } = renderPack(published());
-  assert.deepEqual(Object.keys(resident).sort(), ["absence", "boundary", "disclosable", "four_level", "objective"]);
+  assert.deepEqual(Object.keys(resident), ["objective", "boundary", "four_level", "absence", "research_boundary", "disclosable"]);
+  assert.equal(resident.research_boundary.clauses, RESEARCH_BOUNDARY_CLAUSES, "R37's and R38's clauses, held once");
+  assert.equal(resident.research_boundary.sourcing, "authored");
+  for (const c of resident.research_boundary.clauses) assert.ok(c.source && c.section, `${c.text} carries its source`);
   assert.deepEqual(resident.objective, { text: OBJECTIVE, source: AUTHORED_SOURCES.OBJECTIVE, sourcing: "authored" });
   assert.equal(resident.boundary.rule, BOUNDARY);
   assert.equal(resident.boundary.source, AUTHORED_SOURCES.BOUNDARY);
@@ -163,12 +166,12 @@ test("R4 disclosable lists every disclosed key with its load_when, and nothing o
   for (const d of resident.disclosable) assert.deepEqual(Object.keys(d).sort(), ["layer", "load_when"]);
 });
 
-test("R5 disclosed holds the judgement layers, then vocabularies, acts, bounds, refusals, contradiction, action_planning, filing_drafting, edition_statement, wizard_authoring, legal_lookup, ask, suggestions, wizard_scripts (no recipes layer), each with load_when and sourcing", () => {
+test("R5 disclosed holds the judgement layers, then vocabularies, acts, bounds, refusals, contradiction, action_planning, filing_drafting, edition_statement, wizard_authoring, legal_lookup, ask, suggestions, writing_help, wizard_scripts (no recipes layer), each with load_when and sourcing", () => {
   const pub = published();
   const { disclosed } = renderPack(pub);
   assert.deepEqual(Object.keys(disclosed), [...JUDGEMENT_KEYS, "vocabularies", "acts", "bounds", "refusals",
     "contradiction", "action_planning", "filing_drafting", "edition_statement", "wizard_authoring", "legal_lookup",
-    "ask", "suggestions", "wizard_scripts"]);
+    "ask", "suggestions", "writing_help", "wizard_scripts"]);
   assert.ok(!("recipes" in disclosed), "DEC-120 retires the recipe: no layer carries the word");
   assert.deepEqual(JUDGEMENT_KEYS.map((k) => disclosed[k]), JUDGEMENT_KEYS.map((k) => judgementLayers()[k]));
   assert.equal(disclosed.vocabularies.body, pub.vocabularies, "the published vocabularies, unchanged");
