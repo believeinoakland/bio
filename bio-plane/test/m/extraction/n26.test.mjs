@@ -200,6 +200,15 @@ test("R66: bytes not held, or a stored reading that changed while the bytes were
   assert.deepEqual(b.x.readingFor(b.digest).reading, newer);
 });
 
+test("R66 (DEC-149): with no evidence store set up, the stored reading is left as it stands, saying your group's Civicsmith cannot read the stored bytes again", async () => {
+  const f = await seeded();
+  f.core.evidenceStore = () => null;
+  const out = await f.x.migrateDocxReadings();
+  assert.deepEqual(out.skipped.map((s) => s.why),
+                   ["your group's Civicsmith has no evidence store set up, so the stored bytes cannot be read again"]);
+  assert.deepEqual(f.x.readingFor(f.digest).reading, f.old);
+});
+
 test("R66 R21: an asserted reading stays the caller's assertion, with its standing and justification, after it is moved", async () => {
   const f = await seeded({ origin: "asserted", author: "member:ruth" });
   const before = f.x.readingFor(f.digest).origin;
