@@ -51,6 +51,8 @@ N680 (the security package, K1831), N688 (ZIP archives, K1844, K1852), N686 (the
    19. control-plane `catalogue-end.test.mjs`:21 (R43, R22), pinning the translation digests of C-102.11, C-102.12, C-55.1, C-96.11 and record-core's T35-13 rows, from membership's merge (T35-14) until T35-72 (MEMBERSHIP #26 J1).
    20. hypotheses `notes.test.mjs`:43 (R11), pinning the court sentence's old wording, from membership's merge until T35-41 (MEMBERSHIP #26 J1).
    21. sources `contract.test.mjs`:108 R1, pinning `mintExhausted`'s old detail, from record-core's merge (T35-13) until N718 (RECORD-CORE #18 J1; sources has no T35 job).
+   22. plane `ask.test.mjs` ×6 (raw tokens written into `sessions`; credentials R40 keys it by `token_sha`), from credentials' merge (T35-15) until T35-73, whose START carries it (CREDENTIALS #6 J1).
+   23. op-declarations `t33.test.mjs`:180 (credentials' seven new routes without specs), from credentials' merge until T35-70.
 
 ## BOB's review (K1899)
 
@@ -262,7 +264,7 @@ Over or at about 4,000 if the jobs add as planned: **affordances** 3,944 (T35-66
 
 - **control-plane (T35-72):** promotes an archive's document, then its files'; routes `unpack`, `archivelist`, `coarchiveset`, `coarchivestate`; passes `country` to capture's `knock` and `knockAttempt` (capture R85).
 - **op-declarations (T35-70):** declares `unpack`, `archivelist`, `coarchiveset`, `coarchivestate`.
-- **plane (T35-73):** builds `ownHosts` (the copy's own host and every fleet member's) and passes it through capture R73 to acquisition R42 and capture-sources R55, R65; until its merge the own-host check refuses nothing (F16, low).
+- **plane (T35-73):** its `ask.test.mjs` signs in through `login` or writes the token's SHA-256 (red 22). Builds `ownHosts` (the copy's own host and every fleet member's) and passes it through capture R73 to acquisition R42 and capture-sources R55, R65; until its merge the own-host check refuses nothing (F16, low).
 - **capture (T35-22):** an `archive-unpack` queue kind in R15, drained by the daemon, so an automatic unpack continues past one call; R48's quoted "knocks to this instance" re-worded with the P row (`doorbell.mjs`:24), wording only.
 - **`modules.json` at each START:** provenance, attestation and acquisition use ooxml; capture-sources uses record-grammar; acquisition uses membership.
 - **standards (T35-31), at L5's START:** `law-relations` (`law.mjs`) is split off first (P6; the wording's estimate is 2,339 + 1,200–1,700 lines, K617, BOB's review (4)); a `modules.json` change BOB makes then.
