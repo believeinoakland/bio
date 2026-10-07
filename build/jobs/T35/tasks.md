@@ -11,7 +11,7 @@
 
 **Deferred.** Head-of-line in R1's drain: capture's queue is read oldest first, at most `limit`, so `limit` or more unfiled events at the head keep a filed event behind them from being reached. Needs capture R45 to read past a cursor or by attempts: N740 (T36), as BOB recorded (B3).
 
-**Found in other modules (REPORT J3).** Generated artifact: the plane bundle (`bio-plane/dist/bio-plane.bundled.mjs`) embeds `tasks`, so this job stales it; regenerated at L11's close (§14).
+**Found in other modules (REPORT J2).** Generated artifact: the plane bundle (`bio-plane/dist/bio-plane.bundled.mjs`) embeds `tasks`, so this job stales it; regenerated at L11's close (§14).
 
 **Tests and checks.**
 - `node --test bio-plane/test/m/tasks/`: 98 pass, 0 fail, 0 skipped (was 95; three new tests: R1's kind, R18's back-off, R18's commit re-arm).
