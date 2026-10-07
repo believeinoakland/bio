@@ -61,3 +61,7 @@ T35-50 applied whole, on the tranche with run-rules and agent-model merged (B3, 
 **Tests and checks** (merge `tranche/T35` @ capture-requests and answers): agent-worker 140/0; ask 57/0; cascade 56/0; fanout 185/0; harness 261/0; plan 55/0; requirements 290/3 (R45 ×3, red 30); t35 206/0; versions 20/0; wire-vocabulary 83/0. format 0 failures; architecture 0 failures; coverage 57 of 57, 0 failures; ownership 25 files, 0 failures.
 
 Size (session_015n9TPjBe1pYaYabW7hyVhC): test runs 35, module lines 2477
+
+## J3 · COMPLETE
+
+B5 applied: tranche merged (capture-requests, answers); plane-capturerequest.mjs refuses CAPTURE_REQUEST_ADDRESS_TOO_LONG and CAPTURE_REQUEST_ADDRESS_NOT_HELD as R49 does, the suites' requested addresses held, a direct fanout arm proving the mock refuses. All suites green but R45 x3 (red 30); format, architecture, coverage 57/57, ownership: 0 failures. Record: 'Completion after B5'. Still to merge when you say: ai-runs, skills, agent-runner.
