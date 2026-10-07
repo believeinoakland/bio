@@ -38,3 +38,7 @@ The R16, R24 and R26 titles in `adopt-manifest.test.mjs` are re-worded. R26 stay
 - `checks/ownership.mjs bias tranche/T35`: 5 files changed by bias; 0 failures.
 
 Size (session_019zdNUsk54fCyiEu7YX6E5x): test runs 5, module lines 1916
+
+## J1 · REPORT
+
+Two findings outside bias, from T35-36. (1) control-plane rows-before-r43.json pins C-26.2's translation digest. BIAS_STATEMENT_SUBJECT_NOT_REGISTERED moves 34a21a493da8de0f → f10fde3b4d80b59b, because its translation said "an instance statement" split across two lines. catalogue-end.test.mjs is already red (red 19) and stops at its first difference, so this adds C-26.2 to T35-72's re-pin list without a new red. (2) The plane bundle (§14) embeds src/bias/ and is stale until L5's close regenerates it. Also done in bias, under BOB's review (1) M rule: R11's NOT_AN_ADMIN act and remedy said "the whole instance" (a row the sweep missed) and now say "the whole group". No other module's test pins those strings.
