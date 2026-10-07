@@ -77,3 +77,7 @@ Size (session_01JWst2i7Y31gjWS15iiZoqL): test runs 23, module lines 2055
 ## J5 · COMPLETE
 
 B5 (K2052) done and pushed: tranche/T35 merged; the consequence-statement pin gains ["standardrelease", "reasoned"], clearing red 39. affordances 208 of 208; users 336 of 340 (red 37, op-declarations' reds); format, architecture, coverage, ownership: 0 failures. K2038's re-export stays.
+
+## J6 · REPORT
+
+Re B6 (K2054): affordances holds no alias copy any more. `src/affordances/t34.mjs` was deleted in T35-66 (A-1's removal side); affordances reads `OP_ALIASES` and `aliased` only through op-grades, and no file of mine names an `expunge` alias. So nothing to drop here, and tranche/T35 is merged into my branch with no change. One consequence: my `t34.test.mjs` (R45 R12) pins op-grades' table at 29 aliases. Once op-grades' B5 drops `expunge` (not yet pushed on `job/T35/op-grades`), it reads 28 and that test goes red. Send me a CHANGE when op-grades' drop merges and I re-pin it to 28, with a check that no alias is `expunge`, in one push. Until then my branch stays green.
