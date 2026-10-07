@@ -29,3 +29,7 @@
 - `node checks/ownership.mjs … membership tranche/T35`: 5 files changed; 0 failures.
 
 Size (session_015yQnLVheaZfu3qaM43gQjp): test runs 12, module lines 3970
+
+## J1 · REPORT
+
+Two reds in other modules from T35-14's wording, both re-pins in their owners' T35 jobs: control-plane catalogue-end.test.mjs:21 (R43, R22) pins translation digests of C-102.11, C-102.12, C-55.1, C-96.11 (T35-72; record-core's T35-13 rows meet the same pin); hypotheses notes.test.mjs:43 (R11) pins the court sentence's old 'Your group's copy' wording (T35-41). Staled (§14): bio-plane/dist/bio-plane.bundled.mjs (fleetbundles STALE BUNDLE on src/membership/*) until L2's close regenerates. Detail in the record's Completion.
