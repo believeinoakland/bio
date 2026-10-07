@@ -14,6 +14,6 @@
 - control-plane `catalogue-end.test.mjs` (accepted red 19): red with and without this change, on C-29.3; it pins no docket row.
 - Generated artifacts made stale (§14): the plane bundle (`bio-plane/dist/bio-plane.bundled.mjs`) carries C-129.16's previous words; BOB regenerates at the layer close.
 
-**Ran.** `node --test bio-plane/test/m/docket/`: tests 59, pass 59, fail 0. Users (wording only): public-read 131/0, network-notices 72/0; promotion `gate.test.mjs` 8/0. No layer tests named in `build/manifest.md`. Checks: format "130 modules, 129 requirements files; 0 failures"; architecture "12 product files, 55 relative imports (0 naming no tracked file, not judged); 0 failures"; coverage "26 of 26 live requirement ids named by a test; 0 failures"; ownership (re-run after commit, below).
+**Ran.** `node --test bio-plane/test/m/docket/`: tests 59, pass 59, fail 0. Users (wording only): public-read 131/0, network-notices 72/0; promotion `gate.test.mjs` 8/0. No layer tests named in `build/manifest.md`. Checks: format "130 modules, 129 requirements files; 0 failures"; architecture "12 product files, 55 relative imports (0 naming no tracked file, not judged); 0 failures"; coverage "26 of 26 live requirement ids named by a test; 0 failures"; ownership "3 files changed by docket between tranche/T35 and HEAD; 0 failures".
 
 Size (session_011Vi7vfBaCXdnheezEF7LYc): test runs 9, module lines 1486
