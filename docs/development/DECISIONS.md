@@ -2562,6 +2562,7 @@ reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` 
 owed: (BOB) the member's explanation level (a per-member setting, default Guidance, the one-month question); the masthead control and Alt+Shift+I; each element's level (marks and references 1, screen, section and rail guidance 2); the guidance texts as interface words (translation layer, DEC-157); the op behind the registry's `owed:infolevelset DEC-162`.
 
 ### DEC-163 · answered
+amended: 2026-10-07 · DEC-174 (Bob's direction): every act's button explains itself, at the guidance level; the exception for a button's label is withdrawn.
 raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob: "why doesn't, for example, a mouseover of 'Lakeshore Tenants' show? … go through EVERY type of element, every context, and ask 'Why shouldn't there be a mouseover and/or clickover for this?'")
 for: bob-session
 question: Which types of element explain themselves or open something, at which information level (DEC-162), and why the rest do not.
@@ -2717,3 +2718,17 @@ response: **Bob, 2026-10-07: "S15: as recommended".** Ruled (B): (1) for a high-
 decided: 2026-10-07 · Bob
 reasoning recorded in: this entry; S15 on `docs/development/ux-substrate/layouts.html`; "Opening a file" in `screens/mock-screens.js`; `BIO_Interaction_Constructs_v0_1.md` §R.
 owed: (BOB, with N707) file-safety R8's `override` gains a warned path: `openOriginal` with the member's two confirmations opens a high-risk original when no scan hold applies and a ClamAV `clean` note is newer than `RESCAN_INTERVAL_MS`, refused otherwise by name (`SCAN_HOLD`, `NOT_SCANNED`, a stale-check refusal); `originalState` says which path is open; the act behind `owed:openwithwarning DEC-173`; no record of who opened or confirmed (R10).
+
+### DEC-174 · answered
+raised: 2026-10-07 · the UX design session with Bob on his primary account (session_01NWPmrrYZbbF8Wkrvp5Y2vx; the development process runs on his secondary account since K1891) (Bob, 7 October, on the Document screen's buttons: "Noticing the lack of explanation for these actions provides us with the opportunity to go through all such actions in all screens to add those mouseovers that should be there to help members understand what the action would do and how it fits into the larger context.")
+for: bob-session
+question: Whether every act's button explains itself, and what it says.
+why it is Bob's: it is not: carrying out his direction and DEC-162; it withdraws the design session's own exception in DEC-163; decided by the design session (P17) and reported.
+provisional: DEC-163: a button's label and pips explain it; heavy acts open a dialog.
+alternative: explain only heavy acts.
+recommendation: as decided below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-07, on Bob's direction.** (1) Every act's button, on every screen, explains itself on hover, focus or tap, at the guidance level (DEC-162): its name, then what the act does and how it fits the larger work (what it leads to or rests on, who sees it, whether it can be undone), in one or two plain sentences. (2) The pips keep their own explanation of the act's weight; an act that sends, signs or cannot be undone still opens its dialog. (3) One explanation per act, the same wherever the act appears (207 acts; 277 buttons on the 46 screens); held in `screens/mock-acts.js` as `ACT_HELP`, keyed by op.
+decided: 2026-10-07 · the design session (P17)
+reasoning recorded in: this entry; `screens/mock-acts.js`; `screens/mock-kit.js` (`btn`); `layouts.html` ("Explained where it appears").
+owed: (BOB) each act's explanation as interface words held for translation (DEC-99), shown on the act's control at the guidance level; the texts in `mock-acts.js` as the design's statement of what each act does.
