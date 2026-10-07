@@ -38,3 +38,7 @@ T35-74 applied (F1, K1874; K2040). app.html sends the session as Authorization: 
 I merged `tranche/T35`, which now carries admission, control-plane and plane. UI runner: 28 PASS, 3 FAIL. The three failures are red 3 (progression-revision 18 of 30 failed, queue-recipients 10 failed, statement-ack 1 failed), with failing assertions identical to the baseline's (diff empty). The five suites that drive the real plane (group-identity-surface, group-surface, meaning-arms, several-cases-choice, review-copy) are green, and so is credential-in-header. check-mock-envelope still has its 2 baseline failures (deferred). Checks: format, architecture, coverage and ownership each 0 failures (ownership: 12 files).
 
 Size (session_01SJohZ5PQ7yKQBnZCaZeVfS): test runs 14, module lines 27415
+
+## J3 · COMPLETE · re B3
+
+B3 applied: tranche/T35 merged. UI runner 28 PASS, 3 FAIL; the three are red 3 (progression-revision, queue-recipients, statement-ack), with failing assertions identical to the baseline's. All five plane-driven suites (group-identity-surface, group-surface, meaning-arms, several-cases-choice, review-copy) are green, and so is credential-in-header. check-mock-envelope: the 2 baseline failures, unchanged (deferred). format, architecture, coverage, ownership: 0 failures. Pushed.
