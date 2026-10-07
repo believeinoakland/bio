@@ -18,3 +18,15 @@
 ## J1 · REPORT
 
 T35-11 built on job/T35/format-registry: the zip entry (R28) registered tenth (R23), detect synchronous from the central directory with the same lookups as ooxml.discriminate, the content-type arm, parts = ooxml.listArchive. Tests 32 pass, 1 red: R28's parts test, until ooxml (T35-8) merges listArchive. Please send a CHANGE when ooxml has merged into tranche/T35; I then merge it, re-run the tests and checks and post COMPLETE. Found: the plane bundle (dist/bio-plane.bundled.mjs) is stale from src/formats.mjs, for your layer-close regeneration. Details in my record's Work section.
+
+## Completion
+
+B2 (K1927: ooxml merged) applied: merged `tranche/T35`; the requirements I read are unchanged except ooxml's, whose changes (R3's ZIP64 read now met, R27's range-source window, R23's digest) touch nothing this module uses beyond `listArchive`, `hasZipMagic`, `readContainer`, `normalizePartName` and the two part-name constants. ZIP64 archives now detect as `zip`, as `discriminate` answers.
+
+- **Entries applied:** T35-11 whole (R28 met, R23 met). No DEC-149 sweep rows for this module (`draft-T35-dec149-l1-l7.md`, "Modules with nothing to change").
+- **Deferred:** nothing.
+- **Found elsewhere:** the plane bundle `bio-plane/dist/bio-plane.bundled.mjs` is stale from `src/formats.mjs` too (with accepted red 15's sources), for L1's close regeneration (§14).
+- **Tests:** `node --test bio-plane/test/m/format-registry/`: pass 33, fail 0. Users of the registry: acquisition 88/0, capture 127/0, reading-pipeline 85/0, content 126/0, extraction 115/6 (accepted red 6, the same six tests as before my change).
+- **Checks:** format: 0 failures; architecture: 0 failures; coverage: 28 of 28 live requirement ids named by a test, 0 failures; ownership: 0 failures.
+
+Size (session_01Kh4KjEZGmcA83CAoYuLqA8): test runs 21, module lines 351
