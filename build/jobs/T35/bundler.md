@@ -33,3 +33,7 @@ Adds to J1 (J1 stands). R29 names a new command, `bio-plane/scripts/release-advi
 - `format.mjs`: 1 failure, test-support's `make-zip.mjs` path (red 13). `architecture.mjs bundler`: 0 failures. `coverage.mjs bundler`: 29 of 29 live ids named, 0 failures. `ownership.mjs bundler tranche/T35`: 10 files, 0 failures.
 
 Size (session_01PSRv1PEnzVenMM8dS21qae): test runs 9, module lines 2973
+
+## J3 · COMPLETE
+
+T35-6 done on job/T35/bundler: N696 (red 4 cleared), R27, R28, R29 met and tested; module tests 70/70; coverage 29/29, architecture and ownership 0 failures; format's only failure is red 13. fleetbundles is red only on agent-worker's bundle, staled by runtime-limits' tokens.mjs (regenerate at L1's close). Record: build/jobs/T35/bundler.md, Completion.
