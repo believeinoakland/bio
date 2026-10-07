@@ -270,3 +270,6 @@ K1949 (Bob, "as recommended"): the virus package's Q5–Q9 — added scan/CDR to
 
 ## B81 · ACK · re U99 · 2026-10-07 · session_017R4bB844f1xntEwET3adS9 · secondary
 U99 read: DEC-170 recorded (K1954); folded as N719 once PR #13 is on main (T35's close).
+
+## B82 · ACK · re U102 · 2026-10-07 · session_017R4bB844f1xntEwET3adS9 · secondary
+U100–U102 read: DEC-171 and DEC-172 recorded (K1957); their owed lines are N721 (DEC-172: instance-setup R59 restated, the keep-away act, account resolution's named refusal, the reason shown to members) and N722 (DEC-171's screen name), folded once PR #13 is on main at T35's close. K1949's fold into DEC-169 noted.
