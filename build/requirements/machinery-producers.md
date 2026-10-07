@@ -1,15 +1,6 @@
 # machinery-producers — requirements
 
-**Status** · New product module, layer 11, directly after `tasks` and before `queue-producers`; no `from`. Split from `queue-producers` by copy, with no change of meaning (K617, K1850; seam read `build/extraction/queue-producers-split.md`). The split keeps `queue-producers`' T34 job (T34-54, T34-82, its share of T34-92) under 4,000 lines. Drafted by a worker for BOB #125 on `tranche/T34`, 2026-10-06.
-- Moved:
-  - `queue-producers` R8's share → R1;
-  - R3 → R2;
-  - R22 → R3;
-  - R26 → R4;
-  - R27 → R5.
-- R6–R10 are copies of `queue-producers` R11, R12, R13, R24 and R36, which stay.
-
-`queue-producers`' `feedItems` (its R8) calls this module's one read and answers every item it did, so no importer changes code. The order is K624 (1): copy here first, then `queue-producers`' job deletes its copy. The copy carries T34-54's word change, "signal" → "status" in member text (N550, DEC-131; R9), where the moved text has it. No requirement's meaning changed. Not yet met (T34).
+**Status** · In force: split from `queue-producers` by copy for size (K617, K1850), meaning unchanged: R1–R5 marked "was" and retired there; R6–R10 copies of its R11, R12, R13, R24 and R36, which stay. Last changed T34 at its split (T34-95); every requirement met (MACHINERY-PRODUCERS #1, K1863).
 
 **Size (P6).** About 1,050 lines. It takes about 840 lines from `queue-producers/index.mjs` (353–802, 1842–1939, 1943–2027, 3031–3237) and copies about 200 lines of helpers. That leaves `queue-producers` at about 3,155.
 
