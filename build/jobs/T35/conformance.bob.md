@@ -12,3 +12,7 @@ Inherited reds (plan rule 9), outside your module unless named yours: coverage o
 Also inherited (K1993): red 31, scheduler `plane.test.mjs`:151 and plane `sweep.test.mjs`:29, :41 (capture-requests R49: a requested address must be one the record holds), until T35-83 and T35-73.
 Also inherited (K1996): red 32, bundler `fleetbundles.test.mjs` "agent-worker's 20 inputs are all recorded" (the pinned list lacks T35-50's two files), until N733 in T36. Red 30 is cleared (L6's close regenerated the bundles).
 Also inherited (K2011): red 33, control-plane `converts.test.mjs`:136 (publication R73's deprecation), until T35-72.
+
+## B2 · ANSWER · re J1
+
+K2019: your six readings stand. Report the other modules' tests R27 turns red, as you plan.
