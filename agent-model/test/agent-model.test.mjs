@@ -89,7 +89,7 @@ function conv(over = {}) {
            messages: [{ role: "user", content: "STEP plan" }], tools: TOOLS, finalTool: "answer",
            onTool: async () => ({ content: "ok" }), ...over };
 }
-const MODES = ["check", "investigate", "extract", "plan", "ask"];
+const MODES = ["check", "investigate", "extract", "plan", "ask", "draft"];
 
 /* ------------------------------------------------------------------ R1 */
 
@@ -98,6 +98,9 @@ test("R1 the model per mode comes from MODEL_FOR_MODE only; the call runs under 
   assert.deepEqual(Object.keys(MODEL_FOR_MODE).sort(), [...MODES].sort());
   for (const m of MODES) assert.match(MODEL_FOR_MODE[m], /^claude-/);
   assert.match(MODEL_FOR_MODE_SOURCE, /M-Q9/);
+  /* K1983: `draft` (agent-worker R59) has its entry, today's default model, provisional until M-Q9 like every mode. */
+  assert.equal(MODEL_FOR_MODE.draft, MODEL_FOR_MODE.ask);
+  assert.match(MODEL_FOR_MODE_SOURCE, /provisional/);
   assert.throws(() => { "use strict"; MODEL_FOR_MODE.check = "other"; });
 
   for (const mode of MODES) {

@@ -30,6 +30,10 @@
 
 Size (session_01492fK8cL8nD6NiXB6XUnvs): test runs 9, module lines 764
 
+**B2 CHANGE (K1983), applied.** `MODEL_FOR_MODE.draft` added (`claude-opus-5`, today's default, provisional until M-Q9 as `MODEL_FOR_MODE_SOURCE` states), named by the R1 test. For agent-worker's openings: `openRow(messages, step, row, facts)`, `subsessionOpening(contract)` and the tool `READ_FACTS` (also `READ_RESULT`) are exported from `agent-model/src/model.mjs`; `READ_FACTS` is already in `judgeTools`, `planJudgeTools` and `subsessionTools`. Re-run: `node --test agent-model/test/` 13 pass, 0 fail; agent-worker `ask.test.mjs` 0 FAIL; format, architecture (5 files), coverage (12 of 12), ownership (5 files): 0 failures each.
+
+Size (session_01492fK8cL8nD6NiXB6XUnvs): test runs 11, module lines 766
+
 ## J1 · REPORT
 
 agent-worker (T35-50, R61) needs re-pointing for agent-model R12. (1) index.mjs:489: rowPrompt(step,row) no longer carries facts; use openRow(model.messages, state.step, row, rowFacts(state, LEVELS)). (2) :1275: open sub-sessions with subsessionOpening(contract). (3) requirements.test.mjs:1252 (contract read whole from the system prompt) and :1254 (tools now include read_facts) pin what R12 forbids. (4) agent-worker's committed bundle is stale from agent-model's source (R45 x2); BOB's at L6's close (§14). Details in my record.

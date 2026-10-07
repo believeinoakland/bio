@@ -45,6 +45,8 @@ export const MODEL_FOR_MODE = Object.freeze({
   extract: "claude-opus-5",
   plan: "claude-opus-5",
   ask: "claude-opus-5",
+  /* K1983: `agent-worker` R59's `POST /draft`; provisional like the rest until M-Q9. */
+  draft: "claude-opus-5",
 });
 export const MODEL_FOR_MODE_SOURCE = "provisional: today's default for every mode, until M-Q9 measures the cheapest "
   + "model passing K1504's bar (assistant-substrate §7) per mode";
