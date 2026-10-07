@@ -1,0 +1,106 @@
+<title>The Action Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Source+Serif+4:opsz,wght@8..60,600&display=swap">
+<style>
+/* One reading column; tables break out to a wider measure. Tokens from build/layers-view.html. */
+:root{
+  --bg:#F4F6F8; --panel:#FFFFFF; --ink:#18202B; --muted:#5B6676; --rule:#D8DEE6; --chip:#E9EEF3;
+  --accent:#1D6A86;
+  --ok:#2F6B3A; --ok-bg:#DCEEDD; --part:#8A5A12; --part-bg:#F5E6C8; --gap:#9A3B2E; --gap-bg:#F6E0DA;
+  --serif:"Source Serif 4",Georgia,serif; --sans:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  color-scheme:dark; --bg:#11161D; --panel:#18202A; --ink:#E4E9EF; --muted:#9AA6B5; --rule:#2B3542; --chip:#222C38;
+  --accent:#5FB3CF; --ok:#8FD19B; --ok-bg:#1C3822; --part:#E0B060; --part-bg:#43341A; --gap:#F09A86; --gap-bg:#472019;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark; --bg:#11161D; --panel:#18202A; --ink:#E4E9EF; --muted:#9AA6B5; --rule:#2B3542; --chip:#222C38;
+  --accent:#5FB3CF; --ok:#8FD19B; --ok-bg:#1C3822; --part:#E0B060; --part-bg:#43341A; --gap:#F09A86; --gap-bg:#472019;
+}
+body{background:var(--bg);color:var(--ink);font:15.5px/1.6 var(--sans)}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:16px;padding-block:32px 64px}
+.wrap > *:not(.tw){max-width:74ch}
+h1{font:600 clamp(28px,4vw,36px)/1.15 var(--serif);margin:0 0 12px;text-wrap:balance}
+h2{font:600 22px/1.25 var(--serif);margin:44px 0 12px;padding-top:18px;border-top:1px solid var(--rule);text-wrap:balance}
+p,ul,ol{margin:0 0 14px}
+li{margin:0 0 8px}
+li > ul{margin-top:8px}
+a{color:var(--accent)}
+code{font:0.88em var(--mono);background:var(--chip);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+.lede{color:var(--muted);font-size:14.5px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px}
+.eyebrow{display:block;font:500 11.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+.tw{overflow-x:auto;margin:6px 0 20px;border:1px solid var(--rule);border-radius:8px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;min-width:760px;font-size:13.5px;line-height:1.5}
+th{font:500 11.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px 12px;border-bottom:1px solid var(--rule);background:color-mix(in srgb,var(--chip) 60%,var(--panel))}
+td{padding:10px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td:first-child{min-width:150px}
+.v{display:inline-block;font:500 12px/1.3 var(--mono);padding:3px 7px;border-radius:5px;margin-bottom:4px}
+.v.gap{color:var(--gap);background:var(--gap-bg)}
+.v.part{color:var(--part);background:var(--part-bg)}
+.v.ok{color:var(--ok);background:var(--ok-bg)}
+.v.wire{color:var(--part);background:var(--part-bg);outline:1px dashed var(--part)}
+.v.design{color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--panel))}
+table.wide{min-width:1180px}
+</style>
+<div class="wrap">
+<h1>The action plan</h1>
+<p class="lede"><span class="eyebrow">Status</span> DRAFT design by ACTION_DESIGN #1, 2026-09-29, from Bob's brainstorm and rulings the same day (below). It builds on the action-plan design in <code>BIO_Case_Making_v0_1.md</code> §THE ACTION PLAN (Bob, 2026-08-03), which no module or requirement carries yet (UX open question 9, use case 126). Nothing here is build state until Bob approves the module and BOB folds the requirements.</p>
+<h2>Bob's rulings, 2026-09-29</h2>
+<ol>
+<li><strong>The Action layer gets an action plan.</strong> A publication can give rise to several plans. A member creates one; the system suggests options; the member adds others, directly or through the assistant; the member chooses which to pursue and lays them out over time. It is not a project-management system: it helps the group understand its options and envision scenarios.</li>
+<li><strong>No catalogue of response options.</strong> Every documented breach calls for a response that is largely its own; a formal catalogue would limit and mislead. Suggestions may learn from prior cases.</li>
+<li><strong>No budgets.</strong> Neither money nor licensed resources are costed.</li>
+<li><strong>One plan may address several related broken rules</strong>, and an option may serve several of them at once (public awareness of a bond measure falsely certified <em>and</em> of its proceeds moved to the general fund), while others serve one.</li>
+<li><strong>A plan may also start from a compliant or unclear determination</strong> (a success story, a records campaign).</li>
+<li><strong>Lobbying</strong> is an allowed option only to enforce or restore an existing requirement; lobbying for new policy is outside Operational Principle 1.</li>
+<li><strong>An option left unticked is undecided.</strong> Declining is an explicit act, taken only if the member wants to, and it records a short reason, because a plan keeps "the options NOT taken".</li>
+<li><strong>A plan holds up to three scenarios</strong>, alternative ways of laying out the chosen options, to compare.</li>
+<li><strong>The categories</strong> are mitigation, legal, awareness, journalistic, grassroots, and other.</li>
+<li><strong>A plan may open when an inquiry begins</strong>, before anything is published or determined. It is not tied to a publication.</li>
+</ol>
+<p>And on 2026-09-30 Bob agreed <code>MATRIX.md</code> §6, D1–D6: an action may be addressed to a reporter or outlet, an organisation, another civic group or a described audience, never a private individual (D1); the assistant drafts communications as proposals a member adopts (D2); <code>completed</code> joins the resolutions (D3); a project may declare the kind of work it does, which shapes suggestions only (D4); a started option may name the group's contact (D5); any group may use CivicOS, disclosing a stake (D6). The requirements draft is <code>drafts/action-plans.md</code>.</p>
+<h2>Terms</h2>
+<ul>
+<li><strong>Subject:</strong> what a plan addresses. Either a <strong>suspected</strong> matter (an open inquiry, with the government act and the standards the group suspects, where it can name them), or a <strong>determined</strong> one (one outcome of a live conformance determination: an act measured against one standard, found noncompliant, compliant or unclear). A suspected subject becomes determined when members record a determination on its act (ruling 10).</li>
+<li><strong>Support status:</strong> each subject's standing, from Case Making: <code>established</code> (determined), <code>short of the standard</code>, or <code>hypothetical</code> (suspected, not yet shown). Planning on a hypothetical subject is hunch debt (Declared Bias), shown, never hidden.</li>
+<li><strong>Plan:</strong> a project's working material that addresses one or more subjects. It belongs to the project, never to a person, and is never published (DEC-25).</li>
+<li><strong>Option:</strong> something the group could do: a summary, its detail, a category, the subjects it serves, whom it addresses, and any regulated dates.</li>
+<li><strong>Scenario:</strong> one layout of the chosen options into phases, with checkpoints and conditions.</li>
+</ul>
+<h2>The rules</h2>
+<p><strong>Creating a plan</strong>
+- <strong>A1</strong> A member who is a joined participant of a project creates a plan naming one or more subjects: the project's open inquiries (suspected) or its live determinations' outcomes (determined). A plan may open as soon as an inquiry does (ruling 10).
+- <strong>A2</strong> Within a project, a subject is in at most one active plan. Another project may plan the same subject its own way (a finding is shared across projects, DEC-72).
+- <strong>A3</strong> A subject may be added to or removed from a plan later, with a reason. When members record a determination on a suspected subject's act, the plan links it and the subject's support status follows; when an inquiry closes without one, the plan says so. When a subject stops being live (its determination is superseded), the plan says so and keeps the option bound to it; nothing is removed silently.</p>
+<p><strong>Options</strong>
+- <strong>A4</strong> An option carries: a one-line summary; its detail; a category (mitigation, legal, awareness, journalistic, grassroots, or other); the subjects it serves (one or more of the plan's); whom it addresses (a government office, by role and body, or for awareness and journalistic options a described audience); its regulated dates, each naming the statute, order or commitment it comes from; for a legal option, its risk tier (1, 2, 3 or undetermined, never defaulted); for a lobbying option, which existing requirement it enforces or restores (ruling 6: without one it is refused).
+- <strong>A5</strong> The assistant suggests options, and each suggestion is stored apart from the plan and labelled as the machine's. It works from the plan's subjects, the standards' text, the recorded consequences, the profile's venues, deadlines and legal organisations, and earlier plans in this instance that addressed similar standards, and the project's declared kind of work (D4: reporting, fixing, legal, oversight, other), which shapes suggestions and nothing else. There is no catalogue (ruling 2). A suggestion becomes an option only when a member adopts it.
+- <strong>A6</strong> A member adds an option directly, or through the assistant, which asks for what the option needs and shows it before the member adds it. The assistant never adds one itself.
+- <strong>A7</strong> An option's disposition is <code>open</code> (the default), <code>chosen</code>, <code>declined</code> (with a reason), <code>done</code> or <code>blocked</code> (with a reason). Choosing and declining may be done singly or in bulk.</p>
+<p><strong>Scenarios and time</strong>
+- <strong>A8</strong> A plan holds up to three scenarios. Each lays out the chosen options in phases. A phase starts at the plan's start, after another phase, or when a condition is met, and it may carry a checkpoint set relative to its own start ("8 weeks into mitigation").
+- <strong>A9</strong> A condition is written in words and judged by a member ("the city shows earnest commitment"). At a checkpoint the member records what they judged and the scenario follows the branch it names. The system reminds once at each checkpoint and never judges a condition.
+- <strong>A10</strong> There are two kinds of time, and they never mix. A plan's checkpoints are the group's own intentions: a missed one is never shown as a finding about the government. A regulated date belongs to an option or an action and names its basis.
+- <strong>A11</strong> A scenario may branch on another subject's outcome: an option bound to one rule may depend on how another rule's track ends.</p>
+<p><strong>Acting on the plan</strong>
+- <strong>A12</strong> Starting a chosen option creates an Action (the <code>actions</code> module), which records the plan and option it came from, and may name the member who is the group's contact for it (D5). It rests on what its subjects rest on: an inquiry for a suspected subject, a determination for a determined one. The gate is at the act, not the plan (DEC-26): an option that seeks evidence (a records request, a request for comment) may start on a suspected subject, while an action asserting a breach needs a live noncompliant determination, as <code>actions</code> already requires. A legal option on a noncompliant subject is attached to that determination's escalation as today; the plan never opens, advances or ends an escalation.
+- <strong>A13</strong> The plan reads, for each option it started, the action's state and correspondence, and for each subject its escalation's stage, so the member sees where each track stands.</p>
+<p><strong>The machine</strong>
+- <strong>A14</strong> The machine suggests (A5) and checks. It flags an option whose regulated date is past or unreachable in its scenario, an outward option bound only to hypothetical subjects, a branch with no next step, an option bound to a subject no longer live, and a lobbying option with no existing requirement. It never adopts, chooses, declines, schedules or starts anything.</p>
+<p><strong>What it is not</strong>
+- <strong>A15</strong> Not a project-management system: no assignees, hours, costs or task lists (ruling 3). The canon's free-form resources note on a step stays a note. Not published, and never read by publication (DEC-25).</p>
+<p><strong>Closing</strong>
+- <strong>A17</strong> A member closes a plan with a reason; a plan never closes itself. A closed plan stays readable, and its subjects may join another plan. <em>(Bob, 2026-09-30)</em></p>
+<p><strong>Presenting it (UX)</strong>
+- <strong>A16</strong> Options show collapsed as their summary, expanding to their detail. The list sorts by category, by regulated start or end date, by subject and by disposition.</p>
+<h2>Worked example</h2>
+<p>A city certifies a $100M school bond measure as passed although it did not reach the required two-thirds vote, then deposits the proceeds in its general fund. Members publish the case and record two determinations: the certification against the two-thirds requirement (noncompliant), and the deposit against the requirement that bond proceeds serve the voter-approved purpose (noncompliant). They are two government acts, so there are two determinations and, if pursued, two escalations, each with its own venue and deadlines.</p>
+<p>The plan opens when the inquiry into the certification begins, with one suspected subject; its first options seek evidence (a records request for the canvass and the certification record). When the case is published and both determinations recorded, the plan names both determined subjects. Its options include: a demand to the city to rescind the certification (mitigation, subject 1); a demand to move the proceeds to a restricted account (mitigation, subject 2); an election contest or court petition (legal, subject 1, its regulated end date likely short, so it sorts first); a referral to the county grand jury (legal, Tier 1, both); a public-awareness campaign (awareness, both); a briefing for local reporters (journalistic, both). Scenario A: three months of mitigation; checkpoint at week 8, "the city shows earnest commitment"; if not, awareness begins, then legal preparation. It branches: if the certification is voided, the second rule's question changes, since proceeds of a measure that never passed should not exist.</p>
+<h2>Where it sits</h2>
+<ul>
+<li><strong>A new module, <code>action-plans</code>, last in layer 9</strong> (after <code>escalation</code>). Adding it is a technical decision, BOB's (Bob, 2026-09-30). It uses <code>inquiry</code> (suspected subjects), <code>conformance</code> (determined subjects), <code>consequences</code> (what is at stake), <code>standards</code>, <code>actions</code> (a started option), <code>escalation</code> (each subject's track), <code>jurisdictions</code> (venues, deadlines, legal organisations), <code>membership</code> (who may act) and <code>ai-runs</code> (the assistant's suggestions). <code>monitoring</code> (layer 10) watches checkpoints; the queue carries one reminder per checkpoint.</li>
+<li><strong>Changes elsewhere:</strong> <code>actions</code> gains the plan and option an action came from. The layer contract widens with rulings 5 and 10: a plan may rest on an open inquiry or on any determination outcome, and an action it starts rests on what its subjects rest on; breach actions keep the stricter rule. "An action rests on a published finding" gives way to "an action rests on the record, and one asserting a breach rests on a published finding and a standard".</li>
+<li><strong>Reconciled with Case Making:</strong> its steps, dependencies, deadlines, outcome-keyed branches, dispositions, suggest-and-check machine and never-published rule are kept. Its support status is kept on each subject, and DEC-26's gate stays at the outward act. Changed by Bob's rulings: a plan is keyed to subjects (an inquiry, then its determinations) rather than to findings; options carry categories and the subjects they serve; scenarios are added; resources are not costed.</li>
+</ul>
+</div>

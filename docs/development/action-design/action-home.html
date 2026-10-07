@@ -1,0 +1,257 @@
+<title>BIO Action v0.1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Source+Serif+4:opsz,wght@8..60,600&display=swap">
+<style>
+/* One reading column; tables break out to a wider measure. Tokens from build/layers-view.html. */
+:root{
+  --bg:#F4F6F8; --panel:#FFFFFF; --ink:#18202B; --muted:#5B6676; --rule:#D8DEE6; --chip:#E9EEF3;
+  --accent:#1D6A86;
+  --ok:#2F6B3A; --ok-bg:#DCEEDD; --part:#8A5A12; --part-bg:#F5E6C8; --gap:#9A3B2E; --gap-bg:#F6E0DA;
+  --serif:"Source Serif 4",Georgia,serif; --sans:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  color-scheme:dark; --bg:#11161D; --panel:#18202A; --ink:#E4E9EF; --muted:#9AA6B5; --rule:#2B3542; --chip:#222C38;
+  --accent:#5FB3CF; --ok:#8FD19B; --ok-bg:#1C3822; --part:#E0B060; --part-bg:#43341A; --gap:#F09A86; --gap-bg:#472019;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark; --bg:#11161D; --panel:#18202A; --ink:#E4E9EF; --muted:#9AA6B5; --rule:#2B3542; --chip:#222C38;
+  --accent:#5FB3CF; --ok:#8FD19B; --ok-bg:#1C3822; --part:#E0B060; --part-bg:#43341A; --gap:#F09A86; --gap-bg:#472019;
+}
+body{background:var(--bg);color:var(--ink);font:15.5px/1.6 var(--sans)}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:16px;padding-block:32px 64px}
+.wrap > *:not(.tw){max-width:74ch}
+h1{font:600 clamp(28px,4vw,36px)/1.15 var(--serif);margin:0 0 12px;text-wrap:balance}
+h2{font:600 22px/1.25 var(--serif);margin:44px 0 12px;padding-top:18px;border-top:1px solid var(--rule);text-wrap:balance}
+p,ul,ol{margin:0 0 14px}
+li{margin:0 0 8px}
+li > ul{margin-top:8px}
+a{color:var(--accent)}
+code{font:0.88em var(--mono);background:var(--chip);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+.lede{color:var(--muted);font-size:14.5px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px}
+.eyebrow{display:block;font:500 11.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+.tw{overflow-x:auto;margin:6px 0 20px;border:1px solid var(--rule);border-radius:8px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;min-width:760px;font-size:13.5px;line-height:1.5}
+th{font:500 11.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px 12px;border-bottom:1px solid var(--rule);background:color-mix(in srgb,var(--chip) 60%,var(--panel))}
+td{padding:10px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td:first-child{min-width:150px}
+.v{display:inline-block;font:500 12px/1.3 var(--mono);padding:3px 7px;border-radius:5px;margin-bottom:4px}
+.v.gap{color:var(--gap);background:var(--gap-bg)}
+.v.part{color:var(--part);background:var(--part-bg)}
+.v.ok{color:var(--ok);background:var(--ok-bg)}
+.v.wire{color:var(--part);background:var(--part-bg);outline:1px dashed var(--part)}
+.v.design{color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--panel))}
+table.wide{min-width:1180px}
+</style>
+<div class="wrap">
+<h1>BIO Action v0.1: the Action layer</h1>
+<p class="lede"><span class="eyebrow">Status</span> APPROVED by Bob 2026-09-30 as canon (whole), the level-1 home of the Action layer; written by ACTION_DESIGN #1 the same day. BOB places it at <code>docs/architecture/BIO_Action_v0_1.md</code>, lists it in <code>requirements/README.md</code> and applies §6's canon edits at a tranche boundary (K592). It was proposed as the level-1 home of the Action layer (construct 16 in <code>BIO_System_Design.md</code> §3, which has no row for action or escalation today). It gathers into one place what is now spread across Functional Architecture v3 "Layer 3: Action", Design Requirements 7 and 8 as amended, State Rules §4.4, Case Making §2 and §THE ACTION PLAN, Publication §6 and §8, Bob's DEC rulings, the approved layer-9 requirements (<code>build/layers.md</code>, K102) and Bob's rulings of 2026-09-29 and 2026-09-30 (<code>ACTION-PLAN.md</code>, <code>MATRIX.md</code> §6). §5 reconciles the sixteen contradictions the inventory found (<code>INVENTORY.md</code> §5); §6 lists the canon text each reconciliation changes; §7 lists what is still Bob's. When Bob approves it, it is listed in <code>requirements/README.md</code> as canon (whole), and Case Making's action sections become history for why.</p>
+<h2>1. What the layer is for</h2>
+<p>The Action layer is where a group turns what it has learned into what it does. It covers the whole span: from the first suspicion that something is wrong or working, through planning, preparing, deciding and sending, to tracking the response and recording how it ended. Functional Architecture v3 names it "Turn findings into outputs: work products, publications, escalations, communications, and ongoing tracking."</p>
+<p>Different groups act differently on the same record: a reporter reports, an activist works to fix, a lawyer supports or changes a claim, an oversight body refers, an administrator responds. A group may take many actions of different kinds on one matter, or none; it may act on a success as well as on a breach (Bob, 2026-09-29).</p>
+<h2>2. The contract</h2>
+<p>An action rests on the record, and one asserting a breach rests on a published finding and a standard held in the record. The group plans and decides every act; the AI proposes and prepares, and never files or sends. Compliance is recorded as carefully as noncompliance. Every deadline names its basis.</p>
+<h2>3. The constructs</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>construct</th>
+<th>what it is</th>
+<th>its home module</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Standard</strong></td>
+<td>what a government act is measured against: a statute, regulation, ordinance, court decision or order, adopted policy or public commitment, held as captured text with its citation and period in force</td>
+<td><code>standards</code></td>
+</tr>
+<tr>
+<td><strong>Determination</strong></td>
+<td>a member's judgment that a named government act is compliant, noncompliant or unclear against named standards, per standard, resting on published findings</td>
+<td><code>conformance</code></td>
+</tr>
+<tr>
+<td><strong>Consequence</strong></td>
+<td>what a breach did and to whom (a class, fund, program, service or body, never a person), computed from the record or assessed by a member, with causation as its own finding; whether each part is addressed</td>
+<td><code>consequences</code></td>
+</tr>
+<tr>
+<td><strong>Action plan</strong></td>
+<td>a project's working material for deciding what to do about one or more matters, suspected or determined: options, their disposition, up to three scenarios with checkpoints a member judges</td>
+<td><code>action-plans</code></td>
+</tr>
+<tr>
+<td><strong>Action</strong></td>
+<td>one outward engagement: its kind, addressee, risk tier, clock (each deadline with its basis), what it rests on, lifecycle, correspondence, and its own outcome</td>
+<td><code>actions</code></td>
+</tr>
+<tr>
+<td><strong>Filing and communication</strong></td>
+<td>what the group sends, prepared from the record: Tier 1–2 filings from the profile's templates, the Tier 3 counsel packet for named counsel, and communication drafts; each approved by a member and sent by the member's own hand, carrying the in-band stamp</td>
+<td><code>filings</code></td>
+</tr>
+<tr>
+<td><strong>Escalation</strong></td>
+<td>the seven-stage protocol that pursues one noncompliant determination until compliance is restored and its consequences are addressed</td>
+<td><code>escalation</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>How they connect: an inquiry opens a plan (suspected); publication and a determination make its matters determined; consequences measure a breach; a chosen option starts an action; a filing or communication prepares what the action sends; a breach action joins its determination's escalation; replies return as correspondence; an action resolves with its own outcome; the plan closes by a member's act. Monitoring (layer 10) watches the actions' clocks and the escalations' triggers and tells members; the queue carries the reminders.</p>
+<h2>4. The rules</h2>
+<ol>
+<li><strong>Humans decide.</strong> A member takes every act that commits the group: declaring a standard, determining, assessing a consequence, choosing an option, approving, sending, advancing a stage, resolving, closing. The machine may find, compare, compute, propose and draft, always labelled as machine work, and never does any of these acts (DEC-24, DEC-27; Roadmap §10).</li>
+<li><strong>The gate is at the outward act, not the reasoning</strong> (DEC-26), <strong>and a member may pass it openly</strong> (Bob, 2026-09-30). A plan may rest on premises not yet established, shown as hunch debt. An action that asserts a breach is refused by default unless it rests on a live noncompliant determination; a member may proceed anyway only by an attributed act with a stated reason, and the action and everything prepared from it carry that disclosure. No tool has the final word (Requirement 12), and a departure from the group's standard is visible to every reader. An action that seeks evidence (a records request, a request for comment) is never gated.</li>
+<li><strong>No significance, no score.</strong> Whether a matter warrants action, and how urgently, is a member's judgment, recorded only in acts and their reasons: a declined option's reason, an escalation stage declined with a reason. No field holds significance, severity, priority or a score.</li>
+<li><strong>Compliance counts.</strong> A compliant determination is recorded with the same care as a noncompliant one, and may start a plan: recognition and success stories are actions.</li>
+<li><strong>Every deadline names its basis, and members are told without being nagged.</strong> Reminders follow Bob's notification rulings (DEC-10, DEC-69, DEC-70 and DEC-94): a deadline reminder is the member's own request, set when the option is chosen from defaults the member sees; it fires as asked, and its response offers another reminder or none; an overdue date notifies once; a nearing date changes display only; no outside channel; nothing is repeated unless the member asks (K613–K615).</li>
+<li><strong>Addressees are roles, not people.</strong> An action is addressed to a government office by role and body, a reporter or outlet, an organisation or another civic group by role and organisation, or a described audience; never a private individual (Requirement 6). An action asserting a breach is addressed to an office.</li>
+<li><strong>Nothing leaves by a system path.</strong> The instance transmits nothing. A member sends by the venue's own means and records the sending with the bytes sent; anything addressed carries the in-band stamp (Publication §3 rule 9). A plan is never published (DEC-25); a counsel packet is never published and never fileable as it stands.</li>
+<li><strong>No catalogue, no budgets.</strong> Suggested options come from reasoning over the matter and from the group's own earlier plans, never from a fixed list; the plan holds no costs, assignees or hours (Bob, 2026-09-29).</li>
+<li><strong>The doctrine's limits.</strong> CivicOS takes no position on what policy should be (Operational Principle 1). Political accountability asks officials to act on a breach, requests oversight and audits, testifies, and supports legislation that restores or enforces an existing requirement; lobbying is an option only for that. Policy advocacy and candidate support are not actions. Any group may use CivicOS; a group with a stake in a matter discloses it (D6).</li>
+<li><strong>The work varies, not the person.</strong> A project may declare the kind of work it does (reporting, fixing, legal, oversight, other), which shapes what the assistant suggests and nothing else. No attribute of a person gates, filters or orders anything (DEC-17, DEC-54).</li>
+<li><strong>Jurisdiction lives in data.</strong> Kinds, venues, templates, offices, legal organisations, deadlines and holidays come from a jurisdiction profile; a missing fact reads undetermined, never a default (<code>build/layers.md</code>, "No jurisdiction in the product").</li>
+<li><strong>Hope for good faith; prepare for opposition</strong> (Bob, 2026-09-30; Design Requirements 13 and 14). People are presumed to want better outcomes, and a bad actor is identified by evidence, never by role. The system is nonetheless fully prepared for responses that amount to war: stonewalling, retaliation, discrediting, legal harassment. So every plan is checked for a branch that answers a hostile response; pressure against the group or its supporters is recorded as evidence (Operational Principle 8), and can open an inquiry of its own; what counsel or another group needs to carry a matter on (the counsel packet, the published case, the evidence package) survives the group's disruption.</li>
+<li><strong>The venue sets the standard of evidence</strong> (Bob, 2026-09-30). Courts and other venues hold different standards: the project's research found that federal courts have accepted co-attested Grade B evidence since the 2017 amendments to Federal Rule of Evidence 902(13)–(14) (<code>docs/development/GRADE-A-CAPTURE.md</code>), and other venues accept other grades, though a lower grade may be contested by the opposition. No action is refused for its evidence grade. Where a filing rests on a grade the opposition could contest, it says so, so counsel and members can prepare (rule 12). Every filing and counsel packet shows each exhibit's grade, and where the profile states a venue's standard, shows it beside them. DEC-81's "Grade A stays the ceiling for adversarial or legal use" is read as the highest grade the product offers, not a minimum.</li>
+</ol>
+<h2>5. The contradictions, reconciled</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>the contradiction</th>
+<th>reconciled as</th>
+<th>on what authority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>The layer contract's "rests on a published finding" against actions the canon allows before any finding (records requests, request for comment, review copy)</td>
+<td>§2: an action rests on the record; only a breach action needs a published finding</td>
+<td>Bob's rulings 5 and 10 (2026-09-29); DEC-13; DEC-26</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Requirement 7's "the next stage activates" (mechanical) against "Human decides"</td>
+<td>a met trigger is proposed, with its age; a member advances or declines with a reason</td>
+<td>K102 (approved by Bob 2026-09-26); Roadmap §10; Requirement 12</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Seven stages (Requirement 7 as amended) against "six" in four other places</td>
+<td>seven everywhere</td>
+<td>Bob, 2026-09-26 (K14)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>The clock stored and marked by a machine (State Rules I-11, I-20) against "the clock is never encoded" (Case Making)</td>
+<td>both, each for its own thing: an action's clock entries are stored with their basis, overdue is derived when read, and the one machine write is the mechanical pending→overdue mark; a records request's next-stage due date lives on its correspondence entry</td>
+<td><code>actions</code> R12, R25, R33; <code>monitoring</code> R34 (approved 2026-09-26)</td>
+</tr>
+<tr>
+<td>5</td>
+<td>A free-text counterparty (State Rules) against an office by role and body (requirements)</td>
+<td>rule 6: the addressee shapes, never a person</td>
+<td><code>actions</code> R9; D1</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Seven state-specific kinds (State Rules) against law-neutral product kinds and profile kinds</td>
+<td>the product's kinds are those whose rules it enforces (records request, request for comment, other); every other kind comes from the profile; old kinds read as written</td>
+<td><code>actions</code> R10; "No jurisdiction"</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Three outcome vocabularies</td>
+<td>three different things, each kept: an action's <strong>resolution</strong> (complied, denied, escalated, withdrawn, completed), a correspondence entry's <strong>outcome</strong> (granted, denied, partial, reversed, affirmed, none stated), an escalation's <strong>evaluation</strong> of a response (complied, partial, denied, none)</td>
+<td>D3; <code>actions</code> R7, R21; <code>escalation</code> R10</td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>action_basis</code>, <code>responds_to</code> and <code>references</code> outside State Rules' closed edge vocabulary</td>
+<td>added to the vocabulary (§6)</td>
+<td>built and approved (<code>actions</code> R3, R17; Case Making §8)</td>
+</tr>
+<tr>
+<td>9</td>
+<td>State Rules' distribution ladder against case publication</td>
+<td>outside this layer: publication's to reconcile; this layer sends nothing through distribution</td>
+<td>Publication v0.1</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Risk tier per kind (reference platforms) or per action (State Rules)</td>
+<td>both: a kind's tier from the profile and an action's tier set by a member; a filing is governed by the stricter; undetermined is never read as 1</td>
+<td><code>filings</code> Terms, R2 (approved)</td>
+</tr>
+<tr>
+<td>11</td>
+<td>The plan (options, some declined) against escalation (one pursued breach)</td>
+<td>the plan is the strategic layer above; each determined breach keeps its own escalation; a legal option joins it; the plan never moves an escalation</td>
+<td>Bob, 2026-09-29 and 2026-09-30</td>
+</tr>
+<tr>
+<td>12</td>
+<td>Audience (a reader) against user type (plans vary by it), with no record of either</td>
+<td>audience stays a reader of a published case; the user-type difference lives in the project's declared kind of work (rule 10)</td>
+<td>D4</td>
+</tr>
+<tr>
+<td>13</td>
+<td>Case Making listed as canon "whole" but calling itself non-authoritative</td>
+<td>this document replaces Case Making's action sections as the authority; Case Making stays readable for why</td>
+<td>this document, on Bob's approval</td>
+</tr>
+<tr>
+<td>14</td>
+<td>"Layer 3" means Action (Functional Architecture's analysis) and "the UI surfaces" (its 2026-07-27 addition)</td>
+<td>the build's numbering governs: Action is layer 9; the Functional Architecture's "Layer 3: Action" is read as the functional layer, the 2026-07-27 addition as an annotation outside canon</td>
+<td><code>build/layers.md</code>; <code>requirements/README.md</code> ("not the v3 annotations")</td>
+</tr>
+<tr>
+<td>15</td>
+<td>The Roadmap's "war" and "protection network" against "all stakeholders are presumed to want better outcomes"</td>
+<td>both hold, for different things: people are treated in good faith and judged by evidence; the system is prepared for opposition (rule 12)</td>
+<td>Bob, 2026-09-30; Design Requirement 13</td>
+</tr>
+<tr>
+<td>16</td>
+<td>DEC-26's refusal of an unestablished outward act against Requirement 12 (no tool gates an action) and Requirement 8 (anyone may initiate Tier 1)</td>
+<td>refuse by default; a member may override by an attributed act with a reason, disclosed on the action and everything prepared from it; evidence-seeking actions never gated (rule 2)</td>
+<td>Bob, 2026-09-30, option (c); the pattern of DEC-81 (3) and DEC-76</td>
+</tr>
+</tbody>
+</table></div>
+<h2>6. Canon text this changes (on Bob's approval)</h2>
+<ul>
+<li><code>BIO_System_Design.md</code> §3: a row 16, <strong>Action</strong>: standards, determinations, consequences, action plans, actions, filings and communications, escalation; home this document.</li>
+<li><code>BIO_Design_Requirements_v2.md</code> Requirement 7: "the next stage activates" becomes "the next stage is proposed, and a member advances it"; Requirement 12's "six-stage" becomes "seven-stage".</li>
+<li><code>BIO_Complete_Roadmap_v5.md</code> §6 and Skill 8: "six" becomes "seven"; §8's Tier 3 gains the counsel packet (Requirement 8 as amended already governs).</li>
+<li><code>BIO_Functional_Architecture_v3.md</code> Function 3 and the skills inventory: "six-stage" becomes "seven-stage".</li>
+<li><code>BIO_State_Rules_Consistency_v1_5.md</code> §4.4: the addressee (rule 6), the product and profile kinds, the resolution <code>completed</code>, <code>contact</code>, <code>plan</code> and <code>option</code>; §4 gains the action-plan type <code>PLN-</code>; §5.1's closed vocabulary gains <code>action_basis</code> (action → the inquiry, determination or information it rests on or advances), <code>responds_to</code> (a reply → the action) and <code>references</code> (a finding of non-response → the action).</li>
+<li><code>BIO_Intake_Doctrine_v1_1.md</code> §3 and DEC-81 (1): "Grade A stays the ceiling for adversarial or legal use" gains "a ceiling, not a minimum: the venue sets the standard" (rule 13).</li>
+<li><code>requirements/README.md</code>: this document listed as canon (whole); Case Making's canon part narrowed to exclude §2's action paragraphs and §THE ACTION PLAN.</li>
+</ul>
+<h2>7. Bob's rulings on this draft (2026-09-30) and what is still his</h2>
+<ol>
+<li><strong>The stance toward government:</strong> agreed, amended by Bob: the system hopes for good faith and is fully prepared for opposition (rule 12).</li>
+<li><strong>DEC-26 and Requirement 12:</strong> option (c): refuse by default, a member may override openly (rule 2). Bob, 2026-09-30.</li>
+<li><strong>Evidence grade for legal use:</strong> the venue sets the standard; no grade gate (rule 13).</li>
+<li><strong>Certification by a licensed professional:</strong> deferred until a group needs a licensed name on an output; meanwhile the attribution levels serve (Publication §3 rule 7). Agreed.</li>
+<li><strong>Confidential referral:</strong> an action addressed to the oversight office, prepared as a filing or communication, sent by the member's own hand and recorded; nothing non-public leaves by a system path (DEC-31). Agreed.</li>
+<li><strong>Joint action with another group:</strong> recorded and deferred (Bob, 2026-09-30). The design for when it is taken up is in §8.</li>
+</ol>
+<h2>8. The reasoning behind points 2 and 6</h2>
+<p><strong>DEC-26 and Requirement 12.</strong> DEC-26 says the system refuses an outward act whose premise is not established; Requirement 12 says no tool may approve, reject or gate any action, and Requirement 8 that anyone may start a Tier 1 action. Built today: <code>actions</code> R8 refuses an action that asserts a breach unless it rests on a live noncompliant determination. Nothing stops a member acting outside CivicOS; the question is what the group's record will prepare and hold in its name. Three readings:
+- (a) <em>Refuse</em> (as built): the record never holds a breach claim the group has not established. Protects the group's standard; reads Requirement 12 narrowly.
+- (b) <em>Warn only</em>: the act proceeds, marked "rests on an unestablished premise" on the action and everything prepared from it. Honours Requirement 12's letter; DEC-26's gate becomes a label.
+- (c) <em>Refuse by default, a member may override</em>: a member proceeds by an attributed act with a stated reason, and the action and everything prepared from it carry the disclosure. The pattern Bob chose for a failed co-attestation (DEC-81 (3)) and for contradictions (DEC-76, disclose-not-block, confirmed in DEC-84).
+Bob chose (c), 2026-09-30.</p>
+<p><strong>Joint action with another group.</strong> Deferral was recommended for cost, not doctrine: each group runs its own sovereign instance, membership never crosses a group boundary (Membership §2), and a plan or filing shared across two instances would need cross-instance machinery the canon has not designed (how one group's strength composes with another's is unanswered; UX open questions 12 and 29). Most of what a coalition needs can be supported now without that machinery:
+- each group records the joint act as its own action, naming its partner groups (D1's <code>group</code> addressee kind, reused as <code>partners</code>);
+- the joint text is one communication draft that each group approves in its own instance; its in-band stamp's hash is identical in both, so either record proves the same bytes were sent;
+- each group's plan may carry the same option, and its published case may cite the other's.
+Bob, 2026-09-30: recorded, and deferred for now, including the near-term level above. Trigger: a coalition of groups asks to act jointly.</p>
+</div>
