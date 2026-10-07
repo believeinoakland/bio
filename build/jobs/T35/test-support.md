@@ -13,3 +13,15 @@ Readings of R10–R14 I am building on (carrying on; none blocks the job). Say i
 6. **`secondEocd`.** The candidate is appended to the end of the comment, states what the real end record states, with comment length 0, so it ends exactly at the archive's end.
 7. **Time.** The fixed time is 1980-01-01 00:00:00; an entry may give its own as `dosDate`/`dosTime`.
 8. **R13 errors beyond the listed three:** an override key makeZip cannot write, `descriptor` without `dataDescriptor`, `zip64Record` without `options.zip64`, and an out-of-range field value each throw an `Error` naming the field.
+
+## J2 · COMPLETE
+
+**T35-3 applied** (N688; K1844, K1852, F7). `bio-plane/test/make-zip.mjs` (337 lines, new): `makeZip(entries, options)` writes conforming archives in APPNOTE 6.3's form (R10) and every R12 hostile shape by override: duplicate names, verbatim unsafe names and `utf8: false` CP437 names, `local`/`central` disagreement (with `localOffset` out of range), bit 3 with `descriptor` overrides and `signature: false`, entry and archive ZIP64 with `zip64Record`, the four `encrypted` kinds, `sameDataAs` overlap, `eocd`/`comment`/`secondEocd`, and nesting. Deterministic, no clock, randomness or disk, import without side effect; unwritable specs throw naming the field (R13). `zipBomb` and `nestedZip` (R14) are built on `makeZip` alone. Readings J1 1–8 as accepted in B2 (K1917). Clears accepted red 13.
+
+**Tests** (`bio-plane/test/m/test-support/make-zip.test.mjs`, 17 new, named R10–R14): every archive read back by Python `struct` (each record's bytes), Python `zipfile` and Info-ZIP `unzip -t` (UnZip 6.00, Python 3.13.16; both present in this container, none skipped). Field overrides checked byte for byte: only the named field's bytes change. `node --test test/m/test-support/` (bio-plane): **tests 42, pass 42, fail 0, skipped 0**. No layer tests named in the manifest; no module uses make-zip yet (ooxml, T35-8, codes against it).
+
+**Checks** (civicos-process): format 2 failures, both bundler's (`bio-plane/scripts/release-advisories.mjs`, `third-party.json` in its `paths` name no file yet; K1900, its job's to create), none test-support's; architecture 0 failures; coverage 14 of 14 live ids named, 0 failures; ownership 3 files, 0 failures.
+
+**Deferred:** none. **Found in other modules:** none (bundler's two format failures above are its pending T35-6 files, not a flaw).
+
+Size (session_016FG9ULYTRSS3dhqvhVKfG6): test runs 6, module lines 721
