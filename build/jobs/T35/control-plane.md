@@ -1,6 +1,6 @@
 # control-plane (T35)
 
-**Status** · session_01P62eYdiWj9iNakZSwvdHKj · depth 2 · WAITING ON BOB (J3) · handled B5
+**Status** · session_01P62eYdiWj9iNakZSwvdHKj · depth 2 · WAITING ON BOB (merges) · handled B5
 
 ## J1 · QUESTION
 
