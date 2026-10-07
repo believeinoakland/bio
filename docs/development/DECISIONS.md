@@ -2747,3 +2747,17 @@ response: **Bob, 2026-10-07: "S16: as recommended".** Ruled: (1) nothing is ever
 decided: 2026-10-07 · Bob
 reasoning recorded in: this entry; S16 on `docs/development/ux-substrate/layouts.html`; `screens/page.src.html` (the tip timing, `LONG_MS`); `mock-shell.js` (the masthead switch); Settings › Your account; `BIO_Interaction_Constructs_v0_1.md` §V.
 owed: (BOB) the per-member setting's two values renamed ("Explain promptly", "On a longer pause"); guidance-level explanations shown after 1.5 s of rest at the second value instead of withheld; focus and tap immediate in both; the interface words held for translation.
+
+### DEC-176 · answered
+raised: 2026-10-07 · the UX design session with Bob on his primary account (session_01XZRZG4F5h3eL54heRZyusj; the development process runs on his secondary account since K1891) (Bob, 7 October, on the money trail: "I'm not happy about how members acting on lines in the table currently do so by scrolling down to elsewhere in the panel to find references to the item. This is completely unworkable for tables with more than the few shown in the example. The UX should somehow be more direct.")
+for: bob-session
+question: How a member acts on one row, or several rows, of a table.
+why it is Bob's: it is not: carrying out his direction; the pattern is design detail beneath DEC-99 and §V, decided by the design session (P17) and reported.
+provisional: acts on a row's uncertain items gathered in a section below the table (U114).
+alternative: a menu of acts on each row; a separate page per row.
+recommendation: as decided below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-07, on Bob's direction.** (1) A row of a table is acted on where it is. Each row opens, with its name or by keyboard, a panel directly beneath it: where the row came from (its source and passage), what is undetermined about it and what evidence would help (U115's words), and every act on that one row. Opening it never moves the member elsewhere on the screen. (2) An undetermined cell is itself a control: pressing it opens the same panel at that item, with the keyboard on its first act. (3) Ticking rows brings the hold strip (§S) with the acts that apply to all of them, its count, and "Unpick all". (4) A filter above the table keeps only the rows with something undetermined, with their count, so a member can work through them in turn. (5) Sorting keeps each open panel with its row (U110). (6) On a phone each row reads as a card, every value labelled with its column's name, the headings above as sort buttons. (7) A wizard pointing into a row opens that row. (8) Acts on the screen as a whole (reading a new figure, starting a trail) stay above the table; no row's acts are anywhere but in its panel and the hold strip.
+decided: 2026-10-07 · the design session (P17)
+reasoning recorded in: this entry; `screens/mock-screens.js` (`SCR.money`, `mrow`, `gapcell`); `screens/mock-shell.js` (`decorate`, `ring`); `screens/page.src.html` (the panel, card and filter); `layouts.html` (section 6); `BIO_Interaction_Constructs_v0_1.md` §V.
+owed: (BOB) every table of rows in the member screens follows (1)–(8); each row's panel lists the row's undetermined or absent dimensions with the acts that add evidence (U114); the words held for translation.

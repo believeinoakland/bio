@@ -629,6 +629,38 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 .mk-table th[aria-sort="ascending"] .mk-sort::after { content: " \2191"; opacity: 1; }
 .mk-table th[aria-sort="descending"] .mk-sort::after { content: " \2193"; opacity: 1; }
 .mk-table th[aria-sort="ascending"], .mk-table th[aria-sort="descending"] { color: var(--c-ink); }
+.mk-rows .mk-pickc { width: 36px; padding-right: 0; } .mk-rows .mk-pick { width: 18px; height: 18px; margin: 2px 0 0; }
+/* DEC-176: a row opens its own panel beneath it */
+.mk-open { all: unset; cursor: pointer; display: inline-flex; gap: 6px; align-items: flex-start; font-weight: 600; color: var(--c-ink); }
+.mk-open::before { content: "▸"; color: var(--c-accent); width: 10px; flex: none; }
+.mk-open[aria-expanded="true"]::before { content: "▾"; }
+.mk-open:focus-visible, .mk-gapbtn:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 2px; }
+.mk-open:hover { color: var(--c-accent-strong); text-decoration: underline; }
+.mk-gapbtn { all: unset; cursor: pointer; }
+.mk-gapbtn .cs-gap { white-space: nowrap; }
+.mk-rows tr.mk-r:has(+ tr.mk-detail:not([hidden])) td { background: var(--c-accent-tint); border-bottom-color: transparent; }
+.mk-rows tr.mk-r:has(.mk-pick:checked) td { background: var(--c-ground-2); }
+.mk-detail > td { padding: 0 9px 12px; background: var(--c-accent-tint); border-bottom: 2px solid var(--c-accent); }
+.mk-detailbox { position: sticky; left: 9px; max-width: min(760px, calc(100vw - 72px)); display: grid; gap: 10px; padding: 12px 14px; background: var(--c-sheet); border: var(--hair); border-left: 3px solid var(--c-accent); }
+.mk-gapblock { display: grid; gap: 6px; padding: 10px 12px; border: var(--hair); background: var(--c-surface); }
+.mk-tablebar { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
+.mk-gapfilter[aria-pressed="true"] { background: var(--c-accent-tint); box-shadow: inset 0 0 0 1.5px var(--c-accent); }
+.mk-rows.only-gaps tr.mk-r:not([data-gaps]), .mk-rows.only-gaps tr.mk-r:not([data-gaps]) + tr.mk-detail { display: none; }
+.mk-rowhold { position: sticky; bottom: 0; z-index: 3; }
+.mk-rowhold[hidden] { display: none; }
+/* DEC-176 on a phone: each row is a card; the headings wrap above it as sort buttons */
+.mk-device[data-device="phone"] .mk-rows, .mk-device[data-device="phone"] .mk-rows tbody { display: block; }
+.mk-device[data-device="phone"] .mk-rows thead tr { display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 6px 0 8px; }
+.mk-device[data-device="phone"] .mk-rows thead th { border: 0; padding: 0; } .mk-device[data-device="phone"] .mk-rows thead th.mk-pickc { display: none; }
+.mk-device[data-device="phone"] .mk-rows tr.mk-r { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 4px 6px; padding: 10px 12px; border: var(--hair); border-bottom: 0; background: var(--c-surface); }
+.mk-device[data-device="phone"] .mk-rows tr.mk-r td { display: block; padding: 0; border: 0; background: none; text-align: left; }
+.mk-device[data-device="phone"] .mk-rows tr.mk-r td[data-label] { grid-column: 1 / -1; display: grid; grid-template-columns: 8.5em minmax(0, 1fr); gap: 8px; }
+.mk-device[data-device="phone"] .mk-rows tr.mk-r td[data-label]::before { content: attr(data-label); font: 600 var(--t-xs)/1.5 var(--f-sans); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--c-muted); }
+.mk-device[data-device="phone"] .mk-rows tr.mk-detail { display: block; } .mk-device[data-device="phone"] .mk-rows tr.mk-detail[hidden] { display: none; }
+.mk-device[data-device="phone"] .mk-rows tr.mk-detail > td { display: block; padding: 0 0 10px; border: var(--hair); border-top: 0; }
+.mk-device[data-device="phone"] .mk-rows tbody > tr:last-child { border-bottom: var(--hair); }
+.mk-device[data-device="phone"] .mk-detailbox { position: static; max-width: none; border-left-width: 3px; margin: 0 8px; }
+.mk-device[data-device="phone"] .mk-rows tr.mk-r:has(+ tr.mk-detail:not([hidden])) { background: var(--c-accent-tint); }
 .mk-draftcell { background: var(--c-machine-tint); }
 .mk-lanes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; }
 .mk-lanehead { font: 700 var(--t-xs) var(--f-sans); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--c-muted); border-bottom: 2px solid var(--c-ink); padding-bottom: 4px; }
@@ -930,7 +962,7 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 <tr><td>Archives (DEC-167, under your ruling K1852)</td><td>A captured ZIP has its own screen: what was found when it opened, then every file with its state: filed and held for review beside it with the archive's grade, already held (a second sighting), a folder, or not filed with its reason named (locked by a password, over a limit). Names are shown exactly as the archive states them. Members vouch for or set aside the files they pick. An archive refused whole says why, and stays captured as it arrived. Held captures shows the archive with its files waiting beside it.</td></tr>
 <tr><td>Opening a file, and security tools (DEC-169, under your rulings on the virus package and DEC-168)</td><td>“Opening a file” says whether a file is low or high risk and why. A low-risk file opens as it is, scanned first if its last check is over a week old. A high-risk file opens in the safe view, a derived copy labelled as such; “Open the original” appears only after a deeper check passes. A file held after a finding shows the finding, its checks as notes (tool, engine, version, date) and its release: by a second, different scanner when only the built-in one found it, otherwise by two members' reasons (your ruling of 7 October). Outside tools run when a member asks for a deeper check, unless they run on the organization's own servers. Nothing records who opened what. Settings › Security lists the built-in tools and those added, each with what it is sent, who receives it, how long it keeps files and whether it shares; adding one shows the same and a test; tools that share are not offered. Setup has an optional step for the organization's own tools.</td></tr>
 <tr><td>Explanations that frame a screen (Your ties, on your comments)</td><td>The explanation of why a screen asks something and who sees it is one panel that folds to a single line: open on a member's first visit, closed after that until opened, the choice remembered for the member; with explanations on a longer pause (DEC-175), they start closed.</td></tr>
-<tr><td>Where more evidence would help (the money trail and the timeline, on your comments)</td><td>Under a table, each uncertain item gets a short block: what is missing and why, what kind of evidence would help, and the acts that add it. The words never promise an answer: more evidence may agree or disagree with what is there. They are: look for it in what the group holds (Find in this); read it from another source, citing the passage; record the event that dates it; ask the office for the record; get the office's own copy to raise a grade; ask a member with the right expertise; or keep one's own reading as a hunch, labelled as theirs and never evidence. A budget figure is answered by the paid figure read in at its own stage, compared and never merged; a later change is an adjustment naming the figure it changes. Adding evidence never changes a figure: what is added is a new fact or event beside it, with its own source; where two sources disagree, both stay, shown in tension, and the screen never picks one. The money trail's “When it moved” comes from the event a figure is tied to, never its accounting period, and is “Undetermined” until a passage dates it.</td></tr>
+<tr><td>Acting on a table's rows (DEC-176, on your comments)</td><td>A row is acted on where it is. Its name opens a panel directly beneath it: where it came from (source and passage), what is undetermined about it and what evidence would help, and every act on that one row. An undetermined cell opens the same panel at that item. Ticking rows brings the hold strip with the acts for all of them; a filter keeps only the rows with something undetermined, with their count. Sorting keeps each open panel with its row; on a phone each row is a card with every value labelled. Acts on the whole screen stay above the table; a row's acts are nowhere else. The words never promise an answer: more evidence may agree or disagree, and where two sources disagree both stay, shown in tension. Adding evidence never changes a figure: it is a new fact or event beside it, with its own source. The money trail's “When it moved” comes from the event a figure is tied to, never its accounting period.</td></tr>
 </tbody></table></div>
 </section>
 
@@ -1834,28 +1866,35 @@ SCR.timeline = c => ({ rail: 'projects', title: 'Timeline', crumbs: ['The Colise
   ${sec('Undated', sheet(row(I('timeline'), 'Memo on rent indexing, undated', '<span class="muted">listed apart, never guessed into place</span>')))}
   ${acts(btn('createevent', 'Record an event', { tone: 'primary' }), btn('addparticipant', 'Add who took part'), btn('relate', 'Link events'), btn('recorddatedfact', 'Record a dated fact'), btn('hypothesishold', 'Keep a suspected cause as a hunch'))}` });
 
+/* DEC-176: a table's rows are acted on where they are. A row opens its own panel directly beneath it (its facts, what is
+   undetermined about it and the evidence that would help, and every act on that one row); an undetermined cell opens the
+   same panel at that item; ticking rows brings the hold strip with the acts for all of them; a filter keeps only the rows
+   with something undetermined. Nothing about a row is ever found by scrolling elsewhere on the screen. */
+const mrow = (id, open, cells, panel, gaps) => `<tr class="mk-r"${gaps ? ` data-gaps="${gaps}"` : ''}><td class="mk-pickc"><input type="checkbox" class="mk-pick" aria-label="Pick ${esc(cells[0].replace(/<[^>]+>/g, ''))}"></td>
+   <td><button type="button" class="mk-open" aria-expanded="${open}" aria-controls="${id}" data-tip="Open this figure: its source, what is undetermined about it, and what you can do with it, right here.">${cells[0]}</button></td>${cells.slice(1).join('')}</tr>
+   <tr class="mk-detail" id="${id}"${open ? '' : ' hidden'}><td colspan="10"><div class="mk-detailbox">${panel}</div></td></tr>`;
+const gapcell = (id, html, sort = '') => `<td data-sort="${sort}"><button type="button" class="mk-gapbtn" aria-controls="${id}" data-tip="Open this figure at what is undetermined, with the evidence that would help.">${gapm('undetermined', html)}</button></td>`;
+const gapblock = (title, mark, help, a) => `<div class="mk-gapblock"><b>${title}</b>${mark}<p class="mk-small" style="margin:0">${help}</p>${a}</div>`;
 SCR.money = c => ({ rail: 'projects', title: 'Money trail', crumbs: ['Sewer fund transfers', 'Money trail'], main: `
   ${h1('Sewer fund transfers, FY2022', 'A money trail · 3 figures · from the Sewer Fund, mostly to the General Fund · started by Ana')}
-  <div class="tw"><table class="mk-table"><thead><tr><th>Figure</th><th>From</th><th>To, where it went</th><th>When it moved</th><th>Stage</th><th>Period</th><th>Amount</th><th>Source</th><th>In this trail?</th></tr></thead><tbody>
-   <tr><td>Transfer out</td><td>Sewer Fund 3100</td><td><b>General Fund 1010</b></td><td data-sort="" class="muted">did not move: a budget figure, adopted 15 Jun 2021</td><td>adopted</td><td>FY2022</td><td class="num">$4,200,000</td><td>${grade('capture', 'B')}</td><td>included · "the transfer we ask about"</td></tr>
-   <tr><td>Transfer out</td><td>Sewer Fund 3100</td><td><b>General Fund 1010</b></td><td data-sort="2022-06-30">30 Jun 2022<br><span class="muted">posted as a year-end transfer</span></td><td>actual (paid)</td><td>FY2022</td><td class="num">$4,750,000</td><td>${grade('capture', 'B')}</td><td>included</td></tr>
-   <tr><td>Overhead charge</td><td>Sewer Fund 3100</td><td class="muted">not stated in this source</td><td data-sort="">${gapm('undetermined', '<b>Undetermined</b>: the source gives only the year')}</td><td>actual</td><td>FY2022</td><td class="num">$310,000</td><td>${grade('capture', 'B')}</td><td class="muted">left out · "a different transfer"</td></tr></tbody></table></div>
-  ${note('Each column is read from the figure\'s own source, as it writes it, never guessed. When it moved comes from the event the figure is tied to (here the city\'s general ledger for the paid transfer), never from its accounting period: a figure counted in FY2022 may have moved on any day of that year.')}
-  ${sec('Where more evidence would help', `
-   <div class="cs-sheet" style="padding:12px 14px;display:grid;gap:8px"><b>Overhead charge · where it went</b>${gapm('undetermined', '<b>Undetermined</b>: not stated in the financial report, the only source holding this figure.')}
-    <p class="mk-small" style="margin:0">Evidence that names the payee would help: a cost-allocation plan, a journal entry, the budget's transfer schedule. Read it in from there, citing the passage; if the group holds none, ask the city for the record.</p>
-    ${acts(btn('owed:findin DEC-164', 'Look for it in this project', { icon: 'search' }), btn('recordfact', 'Read it from another source'), btn('actioncreate', 'Ask the city for the record'))}</div>
-   <div class="cs-sheet" style="padding:12px 14px;display:grid;gap:8px"><b>Overhead charge · when it moved</b>${gapm('undetermined', '<b>Undetermined</b>: the source gives only the year.')}
-    <p class="mk-small" style="margin:0">A passage that dates it would help: a ledger line, a journal entry, a council report. Record the movement as an event, citing that passage; until a source dates it, it is never placed by its year.</p>
-    ${acts(btn('owed:findin DEC-164', 'Look for its date in this project', { icon: 'search' }), btn('createevent', 'Record when it moved, citing the passage'))}</div>
-   <div class="cs-sheet" style="padding:12px 14px;display:grid;gap:8px"><b>Transfer out · adopted $4,200,000</b><span class="muted">A budget figure says what was planned, not what happened. Here the financial report's paid figure sits beside it: <b>$550,000 more paid than adopted</b>. The two differ in basis: the budget is by fund, the financial report by department.</span>
-    <p class="mk-small" style="margin:0">For a budget figure with nothing paid beside it, evidence of what was paid would help (the financial report, a ledger, a mid-year adjustment): read it in at its own stage; the two are compared, never merged. A later budget change is read in as an adjustment that names the figure it changes.</p>
-    ${acts(btn('reconcile', 'Compare adopted and paid'), btn('owed:findin DEC-164', 'Look for what was paid', { icon: 'search' }))}</div>
-   <div class="cs-sheet" style="padding:12px 14px;display:grid;gap:8px"><b>All three · copies graded B</b><span class="muted">Each was read from a copy a member uploaded, not one your group's Civicsmith fetched from the city itself.</span>
-    <p class="mk-small" style="margin:0">The city's own copy, fetched by your group's Civicsmith, can raise the grade. A member who knows public budgets can check the readings, and a member's own reading of what a line means is kept as a hunch, labelled as theirs, until a source bears it out.</p>
-    ${acts(btn('gradenote', 'Why B, and what would raise it'), btn('acquire', 'Get the city\'s own copy'), btn('checkrequest', 'Ask a member who knows budgets'), btn('hypothesishold', 'Keep my reading as a hunch'))}</div>
-   ${note('Adding evidence never changes a figure: what a member adds is a new fact or event beside it, from its own cited source, and the table shows it with that source. New evidence may agree or disagree with what is there; where two sources disagree, both stay, shown in tension, and the table never picks one.')}`)}
-  ${acts(btn('recordfact', 'Read a figure', { tone: 'primary' }), btn('createset', 'Start a money trail'), btn('include', 'Include, with a reason'), btn('exclude', 'Leave out, with a reason'), btn('reconcile', 'Compare two sources'), btn('committedagainstpaid', 'Committed against paid'), btn('authoritychain', 'What authorised it'))}` });
+  ${acts(btn('recordfact', 'Read a figure', { tone: 'primary' }), btn('createset', 'Start a money trail'), btn('committedagainstpaid', 'Committed against paid'))}
+  <div class="row mk-tablebar"><button type="button" class="cs-btn mk-gapfilter" data-tone="quiet" aria-pressed="false" data-tip="Show only the figures with something undetermined, so you can add evidence to each in turn. Press again for every figure.">${I('undetermined')}Only figures with something undetermined · 1</button><span class="muted mk-small">Open a figure to act on it; tick several to act on them together.</span></div>
+  <div class="tw"><table class="mk-table mk-rows"><thead><tr><th class="mk-pickc"><span class="sr">Pick</span></th><th>Figure</th><th>From</th><th>To, where it went</th><th>When it moved</th><th>Stage</th><th>Period</th><th class="num">Amount</th><th>Source</th><th>In this trail?</th></tr></thead><tbody>
+  ${mrow('mf1', false, ['Transfer out', '<td>Sewer Fund 3100</td>', '<td><b>General Fund 1010</b></td>', '<td data-sort="" class="muted">did not move: a budget figure, adopted 15 Jun 2021</td>', '<td>adopted</td>', '<td>FY2022</td>', '<td class="num">$4,200,000</td>', `<td>${grade('capture', 'B')}</td>`, '<td>included · "the transfer we ask about"</td>'],
+    `<p class="mk-small" style="margin:0">Read by Ana from the adopted budget FY2021–23, transfer schedule, p. 88: <span class="rec">"Transfer to General Fund 1010 … 4,200,000"</span>.</p>
+     <p class="mk-small" style="margin:0">A budget figure says what was planned, not what happened. The paid figure from the financial report sits beside it in this trail: <b>$550,000 more paid than adopted</b>; the two differ in basis (the budget is by fund, the financial report by department) and are compared, never merged. A later budget change would be read in as an adjustment naming this figure.</p>
+     ${acts(btn('reconcile', 'Compare adopted and paid'), btn('authoritychain', 'What authorised it'), btn('exclude', 'Leave out, with a reason'))}`)}
+  ${mrow('mf2', false, ['Transfer out', '<td>Sewer Fund 3100</td>', '<td><b>General Fund 1010</b></td>', '<td data-sort="2022-06-30">30 Jun 2022<br><span class="muted">posted as a year-end transfer</span></td>', '<td>actual (paid)</td>', '<td>FY2022</td>', '<td class="num">$4,750,000</td>', `<td>${grade('capture', 'B')}</td>`, '<td>included</td>'],
+    `<p class="mk-small" style="margin:0">Read by Ana from the annual financial report FY2022, interfund transfers note, p. 131. When it moved: the general ledger's entry of 30 June 2022, recorded as an event with that passage.</p>
+     ${acts(btn('authoritychain', 'What authorised it'), btn('exclude', 'Leave out, with a reason'), btn('gradenote', 'Why B, and what would raise it'), btn('acquire', 'Get the city\'s own copy'))}`)}
+  ${mrow('mf3', true, ['Overhead charge', '<td>Sewer Fund 3100</td>', gapcell('mf3', 'not stated'), gapcell('mf3', 'only the year'), '<td>actual</td>', '<td>FY2022</td>', '<td class="num">$310,000</td>', `<td>${grade('capture', 'B')}</td>`, '<td class="muted">left out · "a different transfer"</td>'],
+    `<p class="mk-small" style="margin:0">Read by Ana from the annual financial report FY2022, p. 214: <span class="rec">"Overhead allocation, Sewer Fund … 310,000"</span>. It says neither where the money went nor on what day.</p>
+     ${gapblock('Where it went', gapm('undetermined', '<b>Undetermined</b>: not stated in the financial report, the only source holding this figure.'), 'Evidence that names the payee would help: a cost-allocation plan, a journal entry, the budget\'s transfer schedule. Read it in from there, citing the passage; if the group holds none, ask the city for the record.', acts(btn('owed:findin DEC-164', 'Look for it in this project', { icon: 'search' }), btn('recordfact', 'Read it from another source'), btn('actioncreate', 'Ask the city for the record')))}
+     ${gapblock('When it moved', gapm('undetermined', '<b>Undetermined</b>: the source gives only the year.'), 'A passage that dates it would help: a ledger line, a journal entry, a council report. Record the movement as an event, citing that passage; until a source dates it, it is never placed by its year.', acts(btn('owed:findin DEC-164', 'Look for its date in this project', { icon: 'search' }), btn('createevent', 'Record when it moved, citing the passage')))}
+     ${acts(btn('include', 'Include, with a reason'), btn('checkrequest', 'Ask a member who knows budgets'), btn('hypothesishold', 'Keep my reading as a hunch'))}`, 'to when')}
+  </tbody></table></div>
+  <div class="cs-hold mk-hold mk-rowhold" hidden>${I('hold')}<span><span class="n">0 figures picked</span></span><span class="acts">${btn('include', 'Include, with a reason')}${btn('exclude', 'Leave out, with a reason')}${btn('reconcile', 'Compare the two')}${btn('checkrequest', 'Ask a member who knows budgets')}<button type="button" class="cs-btn mk-unpick" data-tone="quiet">Unpick all</button></span></div>
+  ${note('Each column is read from the figure\'s own source, as it writes it, never guessed; when it moved comes from the event the figure is tied to, never its accounting period. Adding evidence never changes a figure: it is a new fact or event beside it, with its own source. New evidence may agree or disagree; where two sources disagree, both stay, shown in tension, and the table never picks one.')}` });
 
 SCR.calculation = c => ({ rail: 'projects', title: 'Calculation', crumbs: ['Pothole repairs', 'Calculation'], main: `
   ${h1('<span class="rec">Reports closed within seven days, FY2025</span>', 'A computed fact · method shown · recomputed when an input changes')}
@@ -2195,9 +2234,12 @@ function decorate(html, id, c) {
   R.querySelectorAll('.mk-steps li').forEach(li => set(li, li.classList.contains('done') ? `<b>${li.textContent}</b>: done.` : li.getAttribute('aria-current') ? `<b>${li.textContent}</b>: you are here.` : `<b>${li.textContent}</b>: still to do. You can leave and come back; nothing is lost.`, 2));
   R.querySelectorAll('.cs-row > svg:first-child, .cs-row > .ic:first-child').forEach(sv => { const u = sv.querySelector('use'); const n = u && (u.getAttribute('href') || '').replace('#i-', ''); if (ICON_KIND[n]) set(sv, ICON_KIND[n] + '.', 2); });
   R.querySelectorAll('.mk-table').forEach(tb => { if (!tb.tHead || !tb.tBodies[0] || tb.tBodies[0].rows.length < 2) return;
-    [...tb.tHead.rows[0].cells].forEach(th => { const x = th.textContent.trim(); if (!x) return; th.setAttribute('aria-sort', 'none');
+    [...tb.tHead.rows[0].cells].forEach(th => { const x = th.textContent.trim(); if (!x || th.classList.contains('mk-pickc')) return; th.setAttribute('aria-sort', 'none');
       const what = (typeof COL_HELP !== 'undefined' && COL_HELP[id + '|' + x]) || (typeof console !== 'undefined' && console.warn('no COL_HELP for ' + id + '|' + x), '');
       th.innerHTML = `<button type="button" class="mk-sort" data-level="1" data-tip="<b>${x}</b>: ${esc(what)}<span class=more>Click to sort the rows by this column; click again to reverse. Sorting changes only your view, never the record.</span>">${th.innerHTML}</button>`; }); });
+  // DEC-176: on a phone a row reads as a card, each value labelled with its column's name
+  R.querySelectorAll('table.mk-rows').forEach(tb => { const hs = [...tb.tHead.rows[0].cells].map(h => h.textContent.trim());
+    tb.querySelectorAll('tbody tr.mk-r').forEach(r => [...r.cells].forEach((td, i) => { if (i > 1 && hs[i]) { td.dataset.label = hs[i]; td.innerHTML = `<span class="mk-cv">${td.innerHTML}</span>`; } })); });
   set(R.querySelector('.cs-pubhead .grp'), GROUP_PUBLIC, 1);
   set(R.querySelector('.cs-pubfoot .id'), '<b>The signature</b>: an owner of the project signed this edition with their key. Anyone can check it, and recreate the case, with the open checker, without the group\'s help.', 1);
   set(R.querySelector('.cs-credit'), '<b>Made with Civicsmith</b>: free software for groups that check whether government keeps its own rules and promises. Civicsmith is software; it neither wrote nor checked this case.', 1);
@@ -2237,6 +2279,7 @@ function ring(root, act, label) {
   const sel = `[data-act="${CSS.escape(act)}"]`;
   const el = root.querySelector(`button${sel}`) || root.querySelector(sel);
   if (!el) return false;
+  const det = el.closest('tr.mk-detail[hidden]'); if (det) { det.hidden = false; const ob = det.previousElementSibling.querySelector('.mk-open'); if (ob) ob.setAttribute('aria-expanded', 'true'); } // DEC-176: a wizard opens the row it points into
   el.classList.add('cs-target');
   const tag = document.createElement('span');
   tag.className = 'cs-target-label mk-ringlabel';
@@ -3021,10 +3064,18 @@ function journeySteps(j, ai) {
     [].forEach.call(tb.tHead.rows[0].cells, function (h) { if (h.hasAttribute('aria-sort')) h.setAttribute('aria-sort', 'none'); });
     th.setAttribute('aria-sort', up ? 'ascending' : 'descending');
     var key = function (r) { var c = r.cells[i], t = (c ? (c.hasAttribute('data-sort') ? c.getAttribute('data-sort') : c.textContent) : '').trim(), n = t.replace(/[$,%\s]/g, ''); return { t: t, n: /^-?\d+(\.\d+)?$/.test(n) ? +n : null }; };
-    var rows = [].slice.call(body.rows), ks = rows.map(key), num = ks.every(function (k) { return k.n !== null || !k.t; });
+    var rows = [].slice.call(body.rows).filter(function (r) { return !r.classList.contains('mk-detail'); }), ks = rows.map(key), num = ks.every(function (k) { return k.n !== null || !k.t; });
     rows.map(function (r, j) { return [r, ks[j], j]; }).sort(function (a, b) { if (!a[1].t !== !b[1].t) return a[1].t ? -1 : 1;
       var d = num ? a[1].n - b[1].n : a[1].t.localeCompare(b[1].t, undefined, { numeric: true, sensitivity: 'base' }); return (up ? d : -d) || a[2] - b[2]; })
-      .forEach(function (x) { body.appendChild(x[0]); }); });
+      .forEach(function (x) { var d = x[0].nextElementSibling; body.appendChild(x[0]); if (d && d.classList.contains('mk-detail')) body.appendChild(d); }); });
+  /* DEC-176: open a row's panel in place; an undetermined cell opens it too; picks bring the hold strip; the filter keeps rows with something undetermined */
+  document.addEventListener('click', function (e) { var t = e.target.closest && e.target.closest('.mk-open, .mk-gapbtn'); if (!t || !t.closest('.mk-page')) return;
+    var d = t.closest('.mk-page').querySelector('#' + t.getAttribute('aria-controls')), b = d && d.previousElementSibling.querySelector('.mk-open'); if (!d) return;
+    var open = t.classList.contains('mk-gapbtn') ? true : d.hidden; d.hidden = !open; b.setAttribute('aria-expanded', open); if (open && t.classList.contains('mk-gapbtn')) { var f = d.querySelector('.mk-gapblock button'); if (f) f.focus(); } });
+  document.addEventListener('change', function (e) { if (!e.target.classList || !e.target.classList.contains('mk-pick')) return; var pg = e.target.closest('.mk-page'), n = pg.querySelectorAll('.mk-pick:checked').length, h = pg.querySelector('.mk-rowhold'); if (!h) return;
+    h.hidden = !n; h.querySelector('.n').textContent = n + (n === 1 ? ' figure picked' : ' figures picked'); });
+  document.addEventListener('click', function (e) { var u = e.target.closest && e.target.closest('.mk-unpick'); if (u) { var pg = u.closest('.mk-page'); pg.querySelectorAll('.mk-pick:checked').forEach(function (x) { x.checked = false; }); pg.querySelector('.mk-rowhold').hidden = true; return; }
+    var g = e.target.closest && e.target.closest('.mk-gapfilter'); if (g) { var on = g.getAttribute('aria-pressed') !== 'true'; g.setAttribute('aria-pressed', on); g.closest('.mk-page').querySelector('.mk-rows').classList.toggle('only-gaps', on); } });
   document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('[data-lvl]'); if (b) setLevel(+b.dataset.lvl); if (e.target.closest && e.target.closest('[data-lvltoggle]')) setLevel(window.CS_LEVEL === 2 ? 1 : 2); });
   document.addEventListener('click', function (e) { var g = e.target.closest && e.target.closest('[data-goto]'); if (g && g.closest('.mk-page')) { e.preventDefault(); hide(); var W = window.CS_WALK; if (W && typeof SCR !== 'undefined' && SCR[g.dataset.goto]) { W.st.mode = 'screen'; W.st.id = g.dataset.goto; W.st.step = 0; W.draw(); var v = document.getElementById('vscale'); if (v) v.scrollIntoView({ block: 'nearest' }); } return; }
     var el = target(e); if (el && el.closest('.mk-page') && !el.closest('button') && !el.closest('summary')) { e.preventDefault(); if (cur === el) hide(); else show(el); } });
