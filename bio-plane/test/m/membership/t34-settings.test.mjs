@@ -13,8 +13,9 @@ const rowOf = (r, code) => {
   assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation], [false, code, code, row.check, row.translation], code);
   assert.match(r.detail, /Nothing was written\./);
 };
-const COURT = "Your group's copy keeps this from the public and the people the group looks into. A court order your "
-  + "group can't defeat could still require it to be shown. Write accordingly.";
+/* R108 as DEC-149 amended it (T35-14, K1779): "Your group's Civicsmith", never "copy". */
+const COURT = "Your group's Civicsmith keeps this from the public and the people the group looks into. A court order "
+  + "your group can't defeat could still require it to be shown. Write accordingly.";
 
 /* ---- R106 ---- */
 

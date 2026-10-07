@@ -33,7 +33,7 @@ const bytesFor = (tail) => [...tail].map((c) => ALPHABET.indexOf(c));
 
 const SEQUENTIAL = ID_TABLE.filter((e) => e.form === "sequential").map((e) => e.prefix);
 const OPAQUE = ID_TABLE.filter((e) => e.form === "opaque").map((e) => e.prefix);
-const BUILD_FAULT = "This is a fault in how the instance was built, not in the record, and nothing in the record changed.";
+const BUILD_FAULT = "This is a fault in how your group's Civicsmith was built, not in the record, and nothing in the record changed.";
 
 /* ---- R1, R76, R40, R62: ids from ID_TABLE ---- */
 
@@ -153,7 +153,7 @@ test("R76 R62: after 64 hits in a row allocId answers MINT_EXHAUSTED for the pre
   const before = dump(s);
   const r = draws(Array.from({ length: 64 }, () => bytesFor(tail)).flat(), () => rc.allocId("PFA", "2026"));
   assert.deepEqual(r, mintExhausted("PFA"));
-  assert.equal(r.detail, "the plane could not find a free person fact id: every one it drew was already taken. Nothing was written.");
+  assert.equal(r.detail, "your group's Civicsmith could not find a free person fact id: every one it drew was already taken. Nothing was written.");
   assert.deepEqual(dump(s), before);
   assert.equal(rc.allocIdOp("PFA", "2026").ok, undefined, "a fresh draw succeeds again");
 });
@@ -164,7 +164,7 @@ test("R62 (K1728): mintExhausted names each opaque prefix's object, a calculatio
   for (const [p, what] of Object.entries(names)) {
     const r = mintExhausted(p);
     assert.deepEqual([r.ok, r.code, r.check, r.prefix], [false, "MINT_EXHAUSTED", "C-59.6", p]);
-    assert.equal(r.detail, `the plane could not find a free ${what} id: every one it drew was already taken. Nothing was written.`);
+    assert.equal(r.detail, `your group's Civicsmith could not find a free ${what} id: every one it drew was already taken. Nothing was written.`);
   }
   const all = [...Object.keys(names), ...RecordCore.GATED_ID_PREFIXES, "SRC"].map((p) => mintExhausted(p).detail);
   assert.equal(new Set(all).size, all.length, "one sentence per prefix, none shared");
@@ -646,7 +646,7 @@ test("R79: refusals, each removing nothing, in order: EXPUNGE_GROUND_UNKNOWN, EX
   assert.deepEqual(dump(s), before, "nothing removed, no tombstone");
   for (const code of Object.keys(checks)) {
     assert.equal(RECORD_CORE_CHECKS[code].where, "src/record-core/index.mjs expunge > is-expunge-refused");
-    assert.ok(!RECORD_CORE_CHECKS[code].translation.includes("fault in how the instance was built"), `${code} is a member's refusal`);
+    assert.ok(!RECORD_CORE_CHECKS[code].translation.includes("fault in how"), `${code} is a member's refusal`);
   }
   assert.equal(rc.expunge(ok).ok, true, "the control: the same call with every condition met removes");
 });

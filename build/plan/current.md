@@ -1,6 +1,6 @@
 # Plan T35
 
-**Status** · OPEN · BOB #128 · session_017R4bB844f1xntEwET3adS9 · depth 1
+**Status** · OPEN · BOB #129 · session_01KuURxZAVK6JTqRh7HNwwTX · depth 1
 
 **Jobs** · jurisdictions: JURISDICTIONS #8 session_016ugHTajUHdmuCsGKMnbB4L; civil-time: CIVIL-TIME #3 session_01FWZ869SsVrV3mffbRFWTNY; test-support: TEST-SUPPORT #4 session_016FG9ULYTRSS3dhqvhVKfG6; runtime-limits: RUNTIME-LIMITS #5 session_01ENYzMG4jn6hUTZ6bBR8iNB; signatures: SIGNATURES #10 session_01S19brLpPpaT6mCpQtwVbHH; bundler: BUNDLER #9 session_01PSRv1PEnzVenMM8dS21qae; id-spaces: ID-SPACES #5 session_01VGEWLNunPZ8F4aBDx9uTno; ooxml: OOXML #1 session_014EpXPcr4nfcapzqQAhZ57c; office-readers: OFFICE-READERS #6 session_0197hpZKQkhjw4tqoDSVoZF9; odf-reader: ODF-READER #5 session_01Cp5wGJf8KyKDzCvUrmymPr; pdf-reader: PDF-READER #4 session_01Jry3dXC9WHUGbknu4WMyTM; format-registry: FORMAT-REGISTRY #2 session_01Kh4KjEZGmcA83CAoYuLqA8; doctypes: DOCTYPES #2 session_01Y6hcEDnNpHHyH8SJXrD1tK; record-core: RECORD-CORE #18 session_017vQLzkn2zJ8X6s82ZjqvLM; membership: MEMBERSHIP #26 session_015yQnLVheaZfu3qaM43gQjp; credentials: CREDENTIALS #6 session_018Ck3Fpjqfuff67UQ1EwxJB; promotion: PROMOTION #33 session_0149kWBQZo4PvpqDKSn6ihKi
 
@@ -47,6 +47,10 @@ N680 (the security package, K1831), N688 (ZIP archives, K1844, K1852), N686 (the
    15. fleetbundles' STALE BUNDLE arms (the plane bundle embeds `signpage.mjs`, `calendar.mjs`, `tokens.mjs`), until L1's close regenerates (§14).
    16. The format check's bundler paths `release-advisories.mjs`, `third-party.json` (K1917), until T35-6 creates them.
    17. pdf-worker `structure.test.mjs` R7, R10 arms (its committed bundle predates pdf-reader R36; K1920), until L1's close regenerates it (§14).
+   18. From agent-worker's merge (T35-50) until admission's (T35-71): `bio-plane/test/d260-resume.test.mjs` and `fence-e2e.test.mjs`, which drive agent-worker against a plane that reads the credential only from the address until admission reads the header (F1; K1941). Nothing is released in between.
+   19. control-plane `catalogue-end.test.mjs`:21 (R43, R22), pinning the translation digests of C-102.11, C-102.12, C-55.1, C-96.11 and record-core's T35-13 rows, from membership's merge (T35-14) until T35-72 (MEMBERSHIP #26 J1).
+   20. hypotheses `notes.test.mjs`:43 (R11), pinning the court sentence's old wording, from membership's merge until T35-41 (MEMBERSHIP #26 J1).
+   21. sources `contract.test.mjs`:108 R1, pinning `mintExhausted`'s old detail, from record-core's merge (T35-13) until N718 (RECORD-CORE #18 J1; sources has no T35 job).
 
 ## BOB's review (K1899)
 
@@ -253,3 +257,16 @@ Over or at about 4,000 if the jobs add as planned: **affordances** 3,944 (T35-66
 **Jobs per layer:** L1 13, L2 4, L3 6, L4 4, L5 13, L6 11, L7 2, L8 8, L9 4, L10 1, L11 13. **Total 79.** Joiners for DEC-149 rows only (rule 4): signatures, host-governor, calibration, reading-pipeline, content, connections, intent, reevaluation (runtime-limits, capture and citation carry other entries too).
 
 **Entries carried (`next.md` N551–N705):** wholly in T35: N553, N586, N623, N633–N636, N638–N640, N642, N644, N646, N648, N649, N651, N653, N655, N657, N658, N659 (with its constructs), N660, N661, N664, N674–N678, N680 (as the security package), N681, N682, N685, N686–N694, N696, N697, N699, N700, N702, N704. In part: N597, N643, N645, N652, N688 (the archive screen left out), N695, N698, N701, N703. Left out: N551 (part), N559, N563, N566, N572, N579, N592, N632, N641, N647, N650, N654, N666, N669, N670, N672, N673, N683. Closed: N564, N629, N637, N656, N684, N705 (K1895) (N667, N671, N679 moved into T34).
+
+## Shares named for later STARTs (K1940; P10: a provided service's change carried to its users in this tranche)
+
+- **control-plane (T35-72):** promotes an archive's document, then its files'; routes `unpack`, `archivelist`, `coarchiveset`, `coarchivestate`; passes `country` to capture's `knock` and `knockAttempt` (capture R85).
+- **op-declarations (T35-70):** declares `unpack`, `archivelist`, `coarchiveset`, `coarchivestate`.
+- **plane (T35-73):** builds `ownHosts` (the copy's own host and every fleet member's) and passes it through capture R73 to acquisition R42 and capture-sources R55, R65; until its merge the own-host check refuses nothing (F16, low).
+- **capture (T35-22):** an `archive-unpack` queue kind in R15, drained by the daemon, so an automatic unpack continues past one call; R48's quoted "knocks to this instance" re-worded with the P row (`doorbell.mjs`:24), wording only.
+- **`modules.json` at each START:** provenance, attestation and acquisition use ooxml; capture-sources uses record-grammar; acquisition uses membership.
+- **standards (T35-31), at L5's START:** `law-relations` (`law.mjs`) is split off first (P6; the wording's estimate is 2,339 + 1,200–1,700 lines, K617, BOB's review (4)); a `modules.json` change BOB makes then.
+- **`modules.json` at L5's START:** standards uses entities, calc-grammar; retrieval uses civil-time, calc-grammar (doctypes only if minutes and agendas are not in extraction's readings); calculations uses extraction, connection-grammar. **At L8's:** publication uses standards, entities. **At L9's:** conformance uses calculations. **At L10's:** following uses standards, acquisition.
+- **The found extent's one shape** is retrieval R73's match `{kind, words, capture_sha, extent}`: citation, events, money, people and standards resolve the document from the capture; each START says so. Standards' read names (bindingness `bindsAt`, `access`, `edition`, `designation`, `adoption`, `family`) are aligned in publication's, conformance's, filings' and following's STARTs, wording only.
+- **Before L6's START:** BOB folds K1880's and K1888's rules into the canon as one sentence each (Roles §3, a new rule 11) so skills R36, R38 can quote them (skills R21); DEC-153's sentences are on `main` already.
+- **control-plane (T35-72):** also routes `op=credit` (public-read R30), carries a draft's usage with `mode: "draft"` (ai-runs R48), and the door mints credentials R27's ask grant for a draft only when the switch is on and the field is not firsthand (agent-worker R59). **op-declarations (T35-70):** declares `credit`, `findin`, `entitieskind`. Deprecation code `CREDENTIAL_IN_ADDRESS` is one name in admission, control-plane and publication.

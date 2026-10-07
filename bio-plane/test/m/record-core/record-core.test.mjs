@@ -1334,10 +1334,9 @@ test("R40 R28: seedMintLedger learns live ids under the plane's 50-byte LIKE/GLO
 
 /* ---- T13: R62 `mintExhausted`, its row C-59.6 (N322, N250) ---- */
 
-const MINT_EXHAUSTED_TRANSLATION = 'The plane could not find a free identifier for this, so nothing was saved and nothing was '
-  + 'issued. Identifiers are drawn at random so that none of them says how many others exist, and every '
-  + 'one it tried was already taken. Trying again may succeed; if it keeps happening, tell whoever runs '
-  + 'this instance.';
+const MINT_EXHAUSTED_TRANSLATION = "Your group's Civicsmith could not find a free identifier for this, so nothing was saved and nothing "
+  + "was issued. Identifiers are drawn at random so that none of them says how many others exist, and every one it tried was "
+  + "already taken. Trying again may succeed; if it keeps happening, tell whoever hosts your group's Civicsmith.";
 
 test("R62: mintExhausted is the one answer when mintOpaqueId answers null: MINT_EXHAUSTED under its row C-59.6, one fixed detail per opaque-minted prefix", () => {
   const row = RECORD_CORE_CHECKS.MINT_EXHAUSTED;
@@ -1351,7 +1350,7 @@ test("R62: mintExhausted is the one answer when mintOpaqueId answers null: MINT_
   for (const [p, what] of Object.entries(names)) {
     const r = mintExhausted(p);
     assert.deepEqual(r, { ok: false, reason: "MINT_EXHAUSTED", code: "MINT_EXHAUSTED", check: "C-59.6", translation: MINT_EXHAUSTED_TRANSLATION,
-                          prefix: p, detail: `the plane could not find a free ${what} id: every one it drew was already taken. Nothing was written.` });
+                          prefix: p, detail: `your group's Civicsmith could not find a free ${what} id: every one it drew was already taken. Nothing was written.` });
     assert.deepEqual(mintExhausted(p), r, "the same answer for every caller, every time");
     assert.deepEqual(mintExhausted(p, undefined), r);
     assert.ok(!/\d/.test(r.detail), "the detail names no count and no id");
@@ -1391,7 +1390,7 @@ test("R62: mintExhausted's extra adds a caller's own fields and never replaces i
       assert.doesNotThrow(() => { a = mintExhausted(p, extra); }, `${String(p)} / ${typeof extra}`);
       assert.deepEqual([a.ok, a.reason, a.code, a.check, a.translation], [false, "MINT_EXHAUSTED", "MINT_EXHAUSTED", "C-59.6", MINT_EXHAUSTED_TRANSLATION]);
       assert.equal(typeof a.prefix, "string");
-      assert.equal(a.detail, "the plane could not find a free id: every one it drew was already taken. Nothing was written.",
+      assert.equal(a.detail, "your group's Civicsmith could not find a free id: every one it drew was already taken. Nothing was written.",
                    "a prefix outside R3's set names no object");
     }
   assert.equal(mintExhausted("INFO", { x: 1 }).x, 1);
@@ -1402,7 +1401,7 @@ test("R62: mintExhausted's extra adds a caller's own fields and never replaces i
 test("R62 (N376): mintExhausted(\"SRC\") names a source, as sources answers when no source id can be drawn; SRC stays outside R3's gated set", () => {
   const r = mintExhausted("SRC");
   assert.deepEqual(r, { ok: false, reason: "MINT_EXHAUSTED", code: "MINT_EXHAUSTED", check: "C-59.6", translation: MINT_EXHAUSTED_TRANSLATION,
-                        prefix: "SRC", detail: "the plane could not find a free source id: every one it drew was already taken. Nothing was written." });
+                        prefix: "SRC", detail: "your group's Civicsmith could not find a free source id: every one it drew was already taken. Nothing was written." });
   assert.notEqual(r.detail, mintExhausted("INFO").detail, "no longer the unnamed sentence of a prefix outside the set");
   for (const near of ["SRCE", "src", "SRC-X", " SRC"]) assert.doesNotMatch(mintExhausted(near).detail, /source/, `${near} is not SRC`);
   assert.deepEqual(mintExhausted("SRC", { op: "sourceadd", prefix: "X" }), { ...r, op: "sourceadd" }, "extra never replaces its own");
@@ -1423,12 +1422,12 @@ test("R62 (N376): mintExhausted(\"SRC\") names a source, as sources answers when
 
 /* ---- T14: R63 `registerCounts`, `counts`; its rows C-102.13, C-102.14 (N342) ---- */
 
-const COUNTS_DECLARED_TRANSLATION = 'A part of this instance tried to report a figure another part already reports, or to register its '
-  + 'figures twice, so the second registration was refused and the first still stands. This is a fault in how the '
-  + 'instance was built, not in the record, and nothing in the record changed.';
-const COUNTS_MALFORMED_TRANSLATION = 'A part of this instance tried to register its figures without naming itself, the figures or a '
-  + 'function to count them, so nothing was registered. This is a fault in how the instance was built, not in the '
-  + 'record, and nothing in the record changed.';
+const COUNTS_DECLARED_TRANSLATION = "A part of your group's Civicsmith tried to report a figure another part already reports, or to "
+  + "register its figures twice, so the second registration was refused and the first still stands. This is a fault in how "
+  + "your group's Civicsmith was built, not in the record, and nothing in the record changed.";
+const COUNTS_MALFORMED_TRANSLATION = "A part of your group's Civicsmith tried to register its figures without naming itself, the figures "
+  + "or a function to count them, so nothing was registered. This is a fault in how your group's Civicsmith was built, not "
+  + "in the record, and nothing in the record changed.";
 
 test("R63: counts answers every registered key in registration order, each its module's number, with hid passed on unchanged", () => {
   const { s, rc } = fresh();
@@ -1560,7 +1559,7 @@ test("R63: a refusal's own fields are never replaced by what it names, and neith
 /* ---- T18: the rows held here (C-75 moved; C-59.5, C-102.1–.3 copied), R66 `afterCommit` (N406), R67 the grammar
    seam (§1b), R64/R65 `op=stats`' disclosure (K621), and R28's caller half (the `mint-ledger` convert) ---- */
 
-const BUILD_FAULT = "This is a fault in how the instance was built, not in the record, and nothing in the record changed.";
+const BUILD_FAULT = "This is a fault in how your group's Civicsmith was built, not in the record, and nothing in the record changed.";
 
 test("R55 R50 R52: C-75's five rows are this module's own table, PER_ITEM_CHECKS, each where naming perItem's region, and the catalogue holds them no more", () => {
   assert.deepEqual(Object.keys(PER_ITEM_CHECKS), ["SET_NO_ITEMS", "SET_TOO_LARGE", "SET_ITEM_MALFORMED", "SET_ITEM_FAILED", "SET_ITEMS_RETAINED"]);
@@ -1594,11 +1593,11 @@ test("R3 R27: ALLOCID_PREFIX_GATED's row C-59.5 is held here, its where naming a
 });
 
 test("R59: registerAuditCheck's refusals carry their code and rows C-102.1 and C-102.2, and a check that threw leaves C-102.3's AUDIT_CHECK_FAILED", async () => {
-  /* copied unchanged from the catalogue's REGISTRATION_CHECKS (T18) */
+  /* copied from the catalogue's REGISTRATION_CHECKS (T18); C-102.1 and .2 re-worded by R82 (T35, DEC-149) */
   assert.deepEqual(["AUDIT_CHECK_DECLARED", "AUDIT_CHECK_MALFORMED", "AUDIT_CHECK_FAILED"].map((c) => RECORD_CORE_CHECKS[c].translation), [
-    "A part of this instance tried to register its audit check a second time. Each part registers once, when it starts, so the "
-      + "second was refused and the first still runs. " + BUILD_FAULT,
-    "A part of this instance tried to register an audit check without naming itself or without a check to run, so nothing "
+    "A part of your group's Civicsmith tried to register its audit check a second time. Each part registers once, when it "
+      + "starts, so the second was refused and the first still runs. " + BUILD_FAULT,
+    "A part of your group's Civicsmith tried to register an audit check without naming itself or without a check to run, so nothing "
       + "was registered. " + BUILD_FAULT,
     "One of the checks the audit runs over this document stopped with an error instead of answering, so the document is "
       + "counted as having an error rather than as clean. The error is in the check and says nothing yet about the document. "
