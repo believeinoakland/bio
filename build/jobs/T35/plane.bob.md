@@ -32,3 +32,7 @@ K2038. (1) Your `ownHosts` reading stands; the install-time binding is N745 (T36
 ## B4 · CHANGE
 
 K2041. (a) `draftOnObject` also answers `read`: the strings of the grant's read log (`[...answers.readLog(grant).index.keys()]`, `[]` with no grant), beside `grant` and `suggestions`. (b) From STORE-DOOR #1 and ANSWER-ENVELOPE #1: `store.mjs`:426's `routes` passes store-door's third argument (the grant) through; re-point `store.mjs`:69–70 to `store-door/`, and `door.mjs`:24–25, `index.mjs`:5–6 to `../answer-envelope/index.mjs` (except `PUBLISHED_STORE`, `caseReader`, `captureKey`, `storageAbsent`, which stay control-plane's); `STEP = "store-door"`.
+
+## B5 · CHANGE
+
+K2042 (from CONTROL-PLANE #24 J3). (a) Add to the store map you compose: `coarchiveset: () => acquisitionOf(ctx).coArchiveSet({on: body.on, by: q("by")})` and `coarchivestate: () => acquisitionOf(ctx).coArchiveState()`. (b) The drain of capture's `archive-unpack` events (K1951) is yours: on the alarm (scheduler's wake), for each event of `capture.taskEvents({kind: "archive-unpack"})`, call `op=unpack` through the Worker as the daemon (`DAEMON_TOKEN`, `cls: "daemon"`), so control-plane's door promotes the unpacked documents. If the object cannot reach the Worker that way, say so (QUESTION) before building another path.
