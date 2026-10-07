@@ -107,6 +107,7 @@ import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import {
   REPO_ROOT, discoverMembers, planeMember, verifyFresh, freshBuildRunnable, sha256, isContainer, containerDescriptor,
+  containerPackages,
 } from "./fleet-bundle.mjs";
 /* The statement and its namespace come from the module the INSTALLER also
    imports. Neither side builds the bytes it signs or verifies — see the comment
@@ -146,7 +147,7 @@ for (const m of discovered) {
       "Every member a release names ships a guarded bundle. Restore the member's `bundle` block, rebuild, and commit.");
 }
 
-/* ---- A CONTAINER MEMBER'S DESCRIPTOR (R25; N610, K1678 (1), K1730) ----------
+/* ---- A CONTAINER MEMBER'S DESCRIPTOR (R25, R27; N610, K1678 (1), K1730, K1881) ----
    The member's Worker bundle is its asset, like any member's; its `container.json`
    is one more part, so the fleet signature covers the image digest exactly as it
    covers every other part's bytes. Checked HERE, before any build runs or anything
@@ -174,8 +175,16 @@ for (const m of discovered.filter((x) => isContainer(x) && x.bundle)) {
       + "  bind           [{ member, binding }] — each a member this release carries, and the binding it calls the class by\n"
       + "  image.schedulingPolicy, where stated, \"default\"");
   }
-  containerParts.set(m.name, { path: "container.json", type: "Container", sha256: sha256(d.bytes),
-    bytes: d.bytes.length, data: d.bytes });
+  /* R27 (F20): the image's npm packages, read from the lockfile its `npm ci --omit=dev` installs from, so the
+     fleet signature states what the image runs without building it. Unread is a refusal, never an empty list. */
+  const pk = containerPackages(m);
+  if (pk.unread)
+    die("CONTAINER_PACKAGES_UNREAD", `${m.name} is a container member and ${pk.unread}.`,
+      "The release lists every npm package the member's image installs, from the member's own package-lock.json\n"
+      + "(its packages not marked dev). Restore or regenerate the lockfile (`npm install --package-lock-only`), then assemble again.");
+  const full = containerDescriptor(m, discovered.filter((x) => !leftOut.includes(x)).map((x) => x.name), { packages: pk.packages });
+  containerParts.set(m.name, { path: "container.json", type: "Container", sha256: sha256(full.bytes),
+    bytes: full.bytes.length, data: full.bytes });
 }
 
 const members = discovered.filter((m) => !leftOut.includes(m));
