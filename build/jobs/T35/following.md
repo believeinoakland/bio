@@ -44,3 +44,7 @@ R20/R21 readings; I am building on them now. Only (2) needs an act from you.
 7. **Sight.** A watch's captures land in the policy text's bundle (its project) while standards holds the policy at bundle sight, otherwise group-wide. R14 and R21 show a watch or change only to a viewer standards lets read the policy (`isMeasure(id, viewer)`, true for a held-text policy exactly when the viewer may read it). An absent viewer sees none.
 8. **`amendment_held`.** True when the policy's successor (`superseded_by`) has a period `from`, or a `version_basis` band end, between the two captures' local days inclusive, or when an adopted temporal law relation into the policy (`lawRelationsOf`, `in`, not withdrawn) has its effective day in that range. An event effective date is read from events.
 9. **`member_act_required`.** A policy whose `access` is `paywalled` or `reading_room`: nothing is fetched (R8, R15).
+
+## J2 · REPORT
+
+Found in acquisition (T35-21, K1940): its ARCHIVE_CHECKS rows are numbered C-137.1 onward (src/acquisition/checks.mjs:270 on), but C-137 is following's family (K1836, K1856). This turns following's checks.test.mjs:118 red ('C-137 is following's alone'); it is red on tranche/T35 before my job and is not a named accepted red. Proposed fix (acquisition's, or a catalogue ruling): give acquisition's archive rows a family number of their own. I have not weakened the test.
