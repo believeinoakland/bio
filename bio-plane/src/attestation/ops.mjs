@@ -25,7 +25,7 @@ import { attest, attestStatus } from "./index.mjs";
 export async function attestOp(req, env, store, { json, doAnswer, storageAbsent, captureKey, storeName, cls }) {
   if (req.method !== "POST") return json({ ok: false, error: "attest is a POST" }, 405);
   if (typeof env.CAPTURES?.put !== "function")
-    return storageAbsent("attest", "this instance has no evidence storage configured");
+    return storageAbsent("attest", "your group's Civicsmith has no evidence storage configured");
   const body = await req.json().catch(() => null);
   const attested = await attest(body || {}, {
     head: (sha) => env.CAPTURES.head(captureKey(storeName, sha)),
