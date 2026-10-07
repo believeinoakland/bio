@@ -215,7 +215,7 @@ SCR.translations = c => ({ rail: 'settings', title: 'Translations', main: `
   ${h1('Translations', 'The words members see, in your group\'s languages.')}
   ${choice('mk-tl', 'Language', ['Español', 'Tiếng Việt'], 'Español')}
   ${sec('Who may translate Español', `${sheet(row(I('group'), '<b>Mai</b> · speaks Español', '<span class="muted">granted by Rosa, 2 October</span>') + row(I('group'), '<b>Teo</b> · speaks Español', '<span class="muted">granted by Rosa, 5 October</span>'))}${acts(btn('owed:translationgrant DEC-157', 'Give a member the grant for a language'))}`)}
-  <div class="tw"><table class="mk-table"><thead><tr><th>English</th><th>Español</th><th></th></tr></thead><tbody>
+  <div class="tw"><table class="mk-table"><thead><tr><th>English</th><th>Español</th><th>Where it came from</th></tr></thead><tbody>
    <tr><td>Undetermined <span class="mk-tag">Protected</span></td><td>Indeterminado</td><td class="muted">from the release</td></tr>
    <tr><td>Nobody looked</td><td class="mk-draftcell">Nadie buscó</td><td>${c.ai ? origin('machine', 'Draft · the assistant\'s') : '<span class="muted">typed by Mai</span>'}</td></tr>
    <tr><td>This tells the office what you are looking at. <span class="mk-tag">Protected</span></td><td class="mk-draftcell">Esto le indica a la oficina lo que está investigando.</td><td><span class="muted">${c.ai ? 'changed from the assistant\'s draft by Mai · needs a second check' : 'typed by Mai · needs a second check'}</span></td></tr>
@@ -479,7 +479,7 @@ SCR.timeline = c => ({ rail: 'projects', title: 'Timeline', crumbs: ['The Colise
 
 SCR.money = c => ({ rail: 'projects', title: 'Money trail', crumbs: ['Sewer fund transfers', 'Money trail'], main: `
   ${h1('Sewer fund transfers, FY2022', 'A money trail · 3 figures · from the Sewer Fund, mostly to the General Fund · started by Ana')}
-  <div class="tw"><table class="mk-table"><thead><tr><th>Figure</th><th>From</th><th>To, where it went</th><th>Stage</th><th>Period</th><th>Amount</th><th>Source</th><th></th></tr></thead><tbody>
+  <div class="tw"><table class="mk-table"><thead><tr><th>Figure</th><th>From</th><th>To, where it went</th><th>Stage</th><th>Period</th><th>Amount</th><th>Source</th><th>In this trail?</th></tr></thead><tbody>
    <tr><td>Transfer out</td><td>Sewer Fund 3100</td><td><b>General Fund 1010</b></td><td>adopted</td><td>FY2022</td><td class="num">$4,200,000</td><td>${grade('capture', 'B')}</td><td>included · "the transfer we ask about"</td></tr>
    <tr><td>Transfer out</td><td>Sewer Fund 3100</td><td><b>General Fund 1010</b></td><td>actual (paid)</td><td>FY2022</td><td class="num">$4,750,000</td><td>${grade('capture', 'B')}</td><td>included</td></tr>
    <tr><td>Overhead charge</td><td>Sewer Fund 3100</td><td class="muted">not stated in this source</td><td>actual</td><td>FY2022</td><td class="num">$310,000</td><td>${grade('capture', 'B')}</td><td class="muted">left out · "a different transfer"</td></tr></tbody></table></div>

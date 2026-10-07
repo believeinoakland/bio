@@ -190,7 +190,8 @@ function decorate(html, id, c) {
   R.querySelectorAll('.cs-row > svg:first-child, .cs-row > .ic:first-child').forEach(sv => { const u = sv.querySelector('use'); const n = u && (u.getAttribute('href') || '').replace('#i-', ''); if (ICON_KIND[n]) set(sv, ICON_KIND[n] + '.', 2); });
   R.querySelectorAll('.mk-table').forEach(tb => { if (!tb.tHead || !tb.tBodies[0] || tb.tBodies[0].rows.length < 2) return;
     [...tb.tHead.rows[0].cells].forEach(th => { const x = th.textContent.trim(); if (!x) return; th.setAttribute('aria-sort', 'none');
-      th.innerHTML = `<button type="button" class="mk-sort" data-level="2" data-tip="<b>Sort by ${x}</b>: click to put the rows in order by this column; click again to reverse it. It changes only how you see this table, never the record.">${th.innerHTML}</button>`; }); });
+      const what = (typeof COL_HELP !== 'undefined' && COL_HELP[id + '|' + x]) || (typeof console !== 'undefined' && console.warn('no COL_HELP for ' + id + '|' + x), '');
+      th.innerHTML = `<button type="button" class="mk-sort" data-level="1" data-tip="<b>${x}</b>: ${esc(what)}<span class=more>Click to sort the rows by this column; click again to reverse. Sorting changes only your view, never the record.</span>">${th.innerHTML}</button>`; }); });
   set(R.querySelector('.cs-pubhead .grp'), GROUP_PUBLIC, 1);
   set(R.querySelector('.cs-pubfoot .id'), '<b>The signature</b>: an owner of the project signed this edition with their key. Anyone can check it, and recreate the case, with the open checker, without the group\'s help.', 1);
   set(R.querySelector('.cs-credit'), '<b>Made with Civicsmith</b>: free software for groups that check whether government keeps its own rules and promises. Civicsmith is software; it neither wrote nor checked this case.', 1);

@@ -444,3 +444,22 @@ const RAIL_HELP = {
   people: 'People: the people and organisations the record follows. Your own group\'s members are under Settings.',
   settings: 'Settings: your account, your group\'s members, the assistant, translations and wizards.',
 };
+
+// What each table column shows, by screen and heading: the heading's explanation, at the level of names (always on).
+const COL_HELP = {
+  'money|Figure': 'What the amount is, in the words of its source: a transfer, a charge, a payment, a grant.',
+  'money|From': 'Who or which fund paid, as the source writes it. The payer is part of the figure itself, never guessed from somewhere else.',
+  'money|To, where it went': 'Who or which fund received the money, as the source writes it. "Not stated in this source" means this source does not say; record it from another source that does, citing the passage.',
+  'money|Stage': 'How far along the money was when the source counted it: <b>adopted</b> (budgeted), <b>committed</b> (promised by contract), or <b>actual</b> (spent; "paid" when the source shows the payment). Figures at different stages are compared, never added.',
+  'money|Period': 'The accounting period the source counts the amount in, here the city\'s fiscal year (FY2022 ran 1 July 2021 to 30 June 2022). It is not the date the money moved.',
+  'money|Amount': 'The amount exactly as the source states it. A rounded amount ("about $2 million") keeps its rounding.',
+  'money|Source': 'The document the figure was read from, with its capture grade: how sure the group is that the copy is what the office published. Click the mark for the document.',
+  'money|In this trail?': 'Whether this figure counts in the trail\'s comparison, and the member\'s reason for including it or leaving it out. A figure left out stays listed, with why.',
+  'security|Kind': 'The kind of attempt that was turned away. Each counts attempts, not people.',
+  'security|This period': 'How many of this kind in the period you are looking at.',
+  'security|Usual': 'Your group\'s own median for the same length of time over the four weeks before. Far above it is what makes a period Raised or High.',
+  'security|Busiest hour': 'The hour with the most of this kind, and its count.',
+  'translations|English': 'The words as Civicsmith ships them. <b>Protected</b> marks words that carry a ruling and need a second member\'s check before a translation is used; <b>Local name</b> marks a name kept as it is, with its explanation translated.',
+  'translations|Español': 'The translation members see. A shaded cell is a draft, not yet shown to anyone.',
+  'translations|Where it came from': 'Whether the translation came with a Civicsmith release, was typed by a member, or started as the assistant\'s draft, and whether it still needs its second check.',
+};
