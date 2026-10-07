@@ -42,7 +42,7 @@ function wizardGuide(w) {
 function mast(c, s) {
   return `<header class="cs-mast"><span class="grp">${G.name}</span><span class="spacer"></span>
     <span class="mk-mastsearch">${I('search')}<span>Search</span></span>
-    <button type="button" class="cs-btn mk-lvlbtn" data-tone="quiet" data-lvltoggle aria-label="Explanations: with guidance. Alt+Shift+I switches" data-tip="<b>Explanations</b>: with guidance, screens and the rail also say what they are. Click or press Alt+Shift+I to switch to marks and names only.">${I('question')}<span class="mk-hide-phone">${typeof window !== 'undefined' && window.CS_LEVEL === 1 ? 'Marks and names' : 'Guidance'}</span></button>
+    <button type="button" class="cs-btn mk-lvlbtn" data-tone="quiet" data-lvltoggle aria-label="Explanations: Alt+Shift+I switches" data-tip="<b>Explanations</b>: promptly, every explanation opens when you rest on something for half a second. On a longer pause, marks and names still do; what screens, sections and acts are waits a second and a half, so less opens while you move. Keyboard focus and a tap always show everything at once. Click or press Alt+Shift+I to switch.">${I('question')}<span class="mk-hide-phone">${typeof window !== 'undefined' && window.CS_LEVEL === 1 ? 'On a longer pause' : 'Explain promptly'}</span></button>
     ${c.ai ? `<button type="button" class="cs-btn" data-tone="quiet" aria-label="The assistant">${I('machine')}<span class="mk-hide-phone">Assistant</span></button>` : ''}
     <span class="cs-kind mk-hide-phone" data-kind="todo">${I('queue')}4</span><span class="mk-avatar" aria-label="Mai">M</span></header>`;
 }
@@ -53,10 +53,10 @@ const PATH = {
   install: ['Civicsmith', 'Install'], setup: ['Set up', 'Places and languages'], join: ['Lakeshore Tenants', 'Your invitation'],
   doorbell: ['Lakeshore Tenants', 'Hand material over'], published: ['Lakeshore Tenants', 'Published cases', 'The Coliseum lease'],
   home: ['Home'], queue: ['Queue'], 'due-date': ['Queue', 'Due date'], inbox: ['Queue', 'Inbox'],
-  finder: ['Find'], capture: ['Add'], held: ['Add', 'Held captures'], archive: ['Add', 'Held captures', 'Archive'],
+  finder: ['Find'], capture: ['Add'], held: ['Add', 'Held captures'], archive: ['Add', 'Held captures', 'Archive'], 'open-file': ['Projects', 'The Coliseum lease', 'Opening a file'],
   'find-in': ['Projects', 'Pothole repairs', 'Find in this'],
   'group-identity': ['Settings', 'Who your group is'], members: ['Settings', 'Members'], security: ['Settings', 'Security'], account: ['Settings', 'Your account'],
-  connect: ['Settings', 'The assistant and your account'], ties: ['Settings', 'Your ties'], notes: ['Settings', 'Your notes'],
+  connect: ['Settings', 'The assistant'], ties: ['Settings', 'Your ties'], notes: ['Settings', 'Your notes'],
   translations: ['Settings', 'Translations'], wizards: ['Settings', 'Wizards'],
   person: ['People', 'Person'], explore: ['People', 'Person', 'Explore connections'],
   project: ['Projects', 'Pothole repairs'], document: ['Projects', 'Pothole repairs', 'Document'],
@@ -188,6 +188,13 @@ function decorate(html, id, c) {
   R.querySelectorAll('.cs-wizmark').forEach(w => { set(w, `<b>${w.textContent.trim()}</b>: ${w.getAttribute('title')}. A wizard walks you through this screen step by step; it points at the real control and never presses it.`, 2); w.removeAttribute('title'); });
   R.querySelectorAll('.mk-steps li').forEach(li => set(li, li.classList.contains('done') ? `<b>${li.textContent}</b>: done.` : li.getAttribute('aria-current') ? `<b>${li.textContent}</b>: you are here.` : `<b>${li.textContent}</b>: still to do. You can leave and come back; nothing is lost.`, 2));
   R.querySelectorAll('.cs-row > svg:first-child, .cs-row > .ic:first-child').forEach(sv => { const u = sv.querySelector('use'); const n = u && (u.getAttribute('href') || '').replace('#i-', ''); if (ICON_KIND[n]) set(sv, ICON_KIND[n] + '.', 2); });
+  R.querySelectorAll('.mk-table').forEach(tb => { if (!tb.tHead || !tb.tBodies[0] || tb.tBodies[0].rows.length < 2) return;
+    [...tb.tHead.rows[0].cells].forEach(th => { const x = th.textContent.trim(); if (!x || th.classList.contains('mk-pickc')) return; th.setAttribute('aria-sort', 'none');
+      const what = (typeof COL_HELP !== 'undefined' && COL_HELP[id + '|' + x]) || (typeof console !== 'undefined' && console.warn('no COL_HELP for ' + id + '|' + x), '');
+      th.innerHTML = `<button type="button" class="mk-sort" data-level="1" data-tip="<b>${x}</b>: ${esc(what)}<span class=more>Click to sort the rows by this column; click again to reverse. Sorting changes only your view, never the record.</span>">${th.innerHTML}</button>`; }); });
+  // DEC-176: on a phone a row reads as a card, each value labelled with its column's name
+  R.querySelectorAll('table.mk-rows').forEach(tb => { const hs = [...tb.tHead.rows[0].cells].map(h => h.textContent.trim());
+    tb.querySelectorAll('tbody tr.mk-r').forEach(r => [...r.cells].forEach((td, i) => { if (i > 1 && hs[i]) { td.dataset.label = hs[i]; td.innerHTML = `<span class="mk-cv">${td.innerHTML}</span>`; } })); });
   set(R.querySelector('.cs-pubhead .grp'), GROUP_PUBLIC, 1);
   set(R.querySelector('.cs-pubfoot .id'), '<b>The signature</b>: an owner of the project signed this edition with their key. Anyone can check it, and recreate the case, with the open checker, without the group\'s help.', 1);
   set(R.querySelector('.cs-credit'), '<b>Made with Civicsmith</b>: free software for groups that check whether government keeps its own rules and promises. Civicsmith is software; it neither wrote nor checked this case.', 1);
@@ -200,7 +207,10 @@ function renderFrame(screenId, c) {
   const s = SCR[screenId](c);
   WRITE_ON = false;
   s.main = attachRefs(screenId, s.main);
-  if (typeof SCREEN_HELP !== 'undefined' && SCREEN_HELP[screenId]) s.main = s.main.replace(/<h1([ >])/, `<h1 data-level="2" data-tip="${esc(SCREEN_HELP[screenId])}"$1`);
+  if (typeof SCREEN_HELP !== 'undefined' && SCREEN_HELP[screenId]) {
+    const th = typeof TITLE_HELP !== 'undefined' && TITLE_HELP[screenId];  // a title naming a particular thing explains that thing first, as a name does
+    s.main = s.main.replace(/<h1([ >])/, th ? `<h1 data-level="1" data-tip="${esc(th + '<span class=more>This screen: ' + SCREEN_HELP[screenId] + '</span>')}"$1` : `<h1 data-level="2" data-tip="${esc(SCREEN_HELP[screenId])}"$1`);
+  }
   const frame = s.frame || 'working';
   const dock = c.wizard ? wizardGuide(c.wizard) : (s.dock === 'assistant' && c.ai) || (c.dockAssist && c.ai) ? assistantPanel(screenId, c) : '';
   if (frame === 'published') return `<div class="cs-frame mk-page" data-frame="published"><header class="cs-pubhead"><span class="grp">${G.name}</span></header><main class="mk-pubmain">${pathNav(pathOf(screenId, s))}${s.main}</main>
@@ -208,7 +218,7 @@ function renderFrame(screenId, c) {
   if (frame === 'setup' || frame === 'public') return `<div class="cs-frame mk-page mk-plain${dock ? ' with-dock' : ''}" data-frame="${frame}"><main class="mk-plainmain">${pathNav(pathOf(screenId, s))}${s.main}</main>${dock}</div>`;
   const band = s.band || 'working';
   return `<div class="cs-frame cs-shell mk-page${dock ? ' with-dock' : ''}${railW() < 120 ? ' rail-icons' : ''}" data-frame="working" style="--rail:${railW()}px">${mast(c, s)}<div class="cs-band" data-band="${band}">${BANDS[band]}</div>
-   <nav class="cs-rail" aria-label="Sections">${RAIL.map(([k, l, ic, n]) => `<a href="#" onclick="return false" data-level="2" data-tip="${typeof RAIL_HELP !== 'undefined' ? esc(RAIL_HELP[k] || l) : l}"${s.rail === k ? ' aria-current="page"' : ''}>${I(ic)}${l}${n ? `<span class="count">${n}</span>` : ''}</a>`).join('')}<button type="button" class="cs-grip" role="separator" aria-orientation="vertical" aria-label="Width of the sections list" aria-valuemin="64" aria-valuemax="320" aria-valuenow="${railW()}" title="Drag to resize; arrow keys too; double-click to reset"></button></nav>
+   <nav class="cs-rail" aria-label="Sections">${RAIL.map(([k, l, ic, n]) => `<a href="#" onclick="return false" data-level="${railW() < 120 ? 1 : 2}" data-tip="${typeof RAIL_HELP !== 'undefined' ? esc(RAIL_HELP[k] || l) : l}"${s.rail === k ? ' aria-current="page"' : ''}>${I(ic)}${l}${n ? `<span class="count">${n}</span>` : ''}</a>`).join('')}<button type="button" class="cs-grip" role="separator" aria-orientation="vertical" aria-label="Width of the sections list" aria-valuemin="64" aria-valuemax="320" aria-valuenow="${railW()}" title="Drag to resize; arrow keys too; double-click to reset"></button></nav>
    <main class="cs-main"${s.st ? ` data-st="${s.st}"` : ''}>${pathNav(pathOf(screenId, s))}${s.main}</main>${dock}
    <nav class="cs-tabs" aria-label="Sections">${TABS.map(([k, l, ic]) => `<a href="#" onclick="return false"${(s.rail === k || (k === 'more' && ['projects', 'people', 'settings'].includes(s.rail))) ? ' aria-current="page"' : ''}>${I(ic)}${l}</a>`).join('')}</nav></div>`;
 }
@@ -227,6 +237,7 @@ function ring(root, act, label) {
   const sel = `[data-act="${CSS.escape(act)}"]`;
   const el = root.querySelector(`button${sel}`) || root.querySelector(sel);
   if (!el) return false;
+  const det = el.closest('tr.mk-detail[hidden]'); if (det) { det.hidden = false; const ob = det.previousElementSibling.querySelector('.mk-open'); if (ob) ob.setAttribute('aria-expanded', 'true'); } // DEC-176: a wizard opens the row it points into
   el.classList.add('cs-target');
   const tag = document.createElement('span');
   tag.className = 'cs-target-label mk-ringlabel';
