@@ -36,7 +36,7 @@ test("R1: not bytes -> NOT_BYTES; no %PDF- signature in the first 1024 bytes -> 
 
 test("R2: the ok shape — version, pages, links, counts, text, images at the top level, notes", async () => {
   const r = await extractPdfStructure(doc([{ content: "BT /F1 10 Tf (Hi) Tj ET" }, { content: "" }], { header: "%PDF-1.6\n" }));
-  assert.deepEqual(Object.keys(r).sort(), ["container", "counts", "images", "links", "notes", "ok", "pageBoxes", "pages", "text", "version"]);
+  assert.deepEqual(Object.keys(r).sort(), ["active", "container", "counts", "images", "links", "notes", "ok", "pageBoxes", "pages", "text", "version"]);
   assert.equal(r.ok, true);
   assert.equal(r.container, "pdf");
   assert.equal(r.version, "1.6");
