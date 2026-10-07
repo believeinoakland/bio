@@ -43,3 +43,7 @@ These record-dependent arms run at the write (promotion check) and in the audit,
 ## J2 · COMPLETE
 
 T35-18 applied (record build/jobs/T35/provenance.md, Completion). R59 captureGrade's unpacked route (archive's answer passed through, recursive to ARCHIVE_DEPTH_MAX, strongest-of-routes order); R42 container arm with B2's correction (archive's document read only through the record; resolver at the write and in the audit; withRegisterChecks takes an optional resolver, ratification asks shape only); R15/R48 pinned by tests; 7 DEC-149 rows with dec149.test.mjs. provenance 102/102; users of provenance 4031/4050, the 17 fails all accepted reds by name; ratification 212/212; format, architecture, coverage (44/44), ownership: 0 failures. Awaiting stamp: C-103.7 RECEIPT_NO_KEY (row census red 2 names it until declared). Stale: the plane bundle, for L3's close. For acquisition (T35-21): the archive's own document must be filed in its home before a file's promotion. Deferred: none.
+
+## J3 · COMPLETE
+
+B3 applied: register-checks.test.mjs's pulled-knock fixture asserts 'received at the doorbell of your group's Civicsmith', as capture's #pulledDocument writes it on job/T35/capture. provenance 102/102; format, architecture, coverage 44/44, ownership: 0 failures. Note: tranche/T35's history was rewritten after my first merge (same commits, new hashes, e.g. K1950 2768b5c252 -> 946aa3151c); I merged it again taking the tranche's text for every non-provenance file, so the branch differs from the tranche only in provenance's files and record.
