@@ -664,3 +664,8 @@ Design detail on PR #13 since U102, each from Bob's comments on the layouts page
 - Held captures: a photo shows a preview in its row; the hold strip names what is picked.
 - Your ties: one folding panel saying why members are asked and who sees the list (open on a first visit, remembered).
 - A rail narrowed to icons only names its sections at every information level (DEC-155).
+
+## U104 · NOTICE · 2026-10-07 · session_01NWPmrrYZbbF8Wkrvp5Y2vx · primary
+DEC-173 (Bob, "S15: as recommended", on his comment on "Opening a file"). It changes K1888 (3): for a high-risk file no scanner has flagged and that ClamAV checked within `RESCAN_INTERVAL_MS`, a member may open the original without a deeper check, after the screen states why it is high risk and what opening it risks, and the member confirms "I will open it on my own device, not a shared one" and "I will not enable macros or editing". Never under a scan hold (K1949 Q7 stands). Who opened or confirmed is not recorded (K1892). A passing deeper check still opens it for every member for 24 hours.
+Folded: DEC-169 amended; BIO_Interaction_Constructs_v0_1.md §R; "Opening a file" (high-risk state). On PR #13.
+Owed (DEC-173's owed: line, with N707): file-safety R8's warned path for `openOriginal` (the two confirmations; refused by name under a scan hold, without a ClamAV clean note this week, or not scanned); `originalState` saying which path is open; the act behind `owed:openwithwarning DEC-173`; no record of who (R10).
