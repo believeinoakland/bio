@@ -10,8 +10,8 @@ import { notAnAdmin, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs
 
 const SHA = (c) => c.repeat(64);
 const row = (code) => AI_CREDENTIAL_CHECKS[code];
-const PUBLIC = ["confinedTo", "mintedAt", "mintedBy", "note", "principal", "principalKind", "revoked", "revokedAt", "revokedBy",
-                "taskScope", "tokenId", "writes"];
+const PUBLIC = ["confinedTo", "expired", "expiresAt", "mintedAt", "mintedBy", "note", "principal", "principalKind", "revoked",
+                "revokedAt", "revokedBy", "taskScope", "tokenId", "writes"];
 
 test("R12 aiCredentialMint: refusals in order with their rows, each writing nothing; records minted_by; never a secret, only its hash", async () => {
   const w = await world().group("ann");
@@ -39,7 +39,7 @@ test("R12 aiCredentialMint: refusals in order with their rows, each writing noth
   const ok = w.c.aiCredentialMint({ ...base, who: "ann", at: "2026-10-01T00:00:00Z" });
   assert.deepEqual(ok, { ok: true, minted: true, credential: { tokenId: "t1", principalKind: "member", principal: "member:ann",
     taskScope: "investigative", writes: ["capture", "promote"], note: "my agent", mintedBy: "ann", mintedAt: "2026-10-01T00:00:00Z",
-    revokedAt: null, revokedBy: null, revoked: false, confinedTo: null } });
+    revokedAt: null, revokedBy: null, revoked: false, confinedTo: null, expiresAt: "2026-12-30T00:00:00Z", expired: false } });
   const taken = w.c.aiCredentialMint({ ...base, who: "ann", secretSha: SHA("b") });
   assert.deepEqual([taken.reason, taken.tokenId], ["AI_CREDENTIAL_IDENTITY_TAKEN", "t1"], "an identity is never rebound");
   assert.equal(w.row(`SELECT COUNT(*) AS n FROM ai_credentials`).n, 1);

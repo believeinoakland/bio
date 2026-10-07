@@ -6,7 +6,7 @@ import { world, realWorld, PASSWORD } from "./fixture.mjs";
 import { credentialsOf, CREDENTIALS_EXEMPT_TABLES, CREDENTIALS_TABLES } from "../../../src/credentials/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 
-const sessionsOf = (w, id) => w.rows(`SELECT token FROM sessions WHERE role=?`, `member:${id}`).length;
+const sessionsOf = (w, id) => w.rows(`SELECT token_sha FROM sessions WHERE role=?`, `member:${id}`).length;
 const keysOf = (w, id) => w.rows(`SELECT key_b64, status, status_by FROM signers WHERE member_id=? ORDER BY key_b64`, id);
 
 async function revocationWorld() {
@@ -95,30 +95,38 @@ test("R17 claimed() is true exactly when the founder's credential is held; membe
   assert.equal(broken.claimed(), false);
 });
 
-test("R18 every credentials table is declared exempt from purge, and a whole-store purge clears none of them (through the real record-core)", async () => {
+test("R18 R30 every credentials table is declared exempt from purge, and a whole-store purge clears none of them (through the real record-core), T35's tables included", async () => {
   const w = realWorld();
   await w.c.claim({ password: "x".repeat(12), tokenFp: "fp-1" });
   const a = await w.m.memberAdd({ memberId: "second", cover: "c", role: "admin", by: "admin" });
   await w.m.enroll({ invite: a.invite, handle: "second", password: PASSWORD("second") });
   await w.c.setPassword({ role: "member:second", password: PASSWORD("second") });
-  assert.equal((await w.c.login({ role: "member:second", password: PASSWORD("second") })).ok, true);
+  /* T35's tables: recovery codes and a recovery (R46, R47), a refused sign-in's window, tally, waiting place and key
+     (R38, R44), a connected subscription (R43) */
+  const codes = w.c.recoveryCodesIssue({ by: "second" }).codes;
+  assert.equal((await w.c.recover({ role: "member:second", code: codes[0], password: "recovered-passphrase", source: "fp-a" })).ok, true);
+  assert.equal((await w.c.login({ role: "member:nobody", password: "wrong-passphrase", source: "fp-b", country: "US" })).ok, false);
+  assert.equal(w.c.subscriptionConnected({ member: "second" }).ok, true);
+  const sess = (await w.c.login({ role: "member:second", password: "recovered-passphrase" })).token;
+  assert.equal(typeof sess, "string");
   w.c.signerAdd({ keyB64: "AAAAsecond", memberId: "second", by: "admin" });
   w.c.aiCredentialMint({ tokenId: "t1", secretSha: "a".repeat(64), principalKind: "member", who: "second" });
   assert.equal((await w.c.accountReferenceSet({ member: "second", kind: "apikey", secret: "sk-test", by: "second" })).ok, true);
   assert.equal((await w.c.keyedServiceSet({ service: "courtlistener", key: "cl-key", by: "second" })).ok, true);
-  const sess = w.row(`SELECT token FROM sessions WHERE role='member:second'`).token;
   assert.equal((await w.c.aiGrantMint({ member: "second", by: "second", session: sess })).ok, true);
   assert.equal((await w.c.groupKeySet({ key: "sk-group", by: "second" })).ok, true);
   assert.equal(w.c.groupKeyNoticeSeen({ member: "second", by: "second" }).ok, true);
   const count = () => Object.fromEntries(CREDENTIALS_EXEMPT_TABLES.map((t) => [t, w.row(`SELECT COUNT(*) AS n FROM ${t}`).n]));
   const before = count();
   assert.deepEqual(before, { credentials: 2, sessions: 1, bootstrap: 1, signers: 1, ai_credentials: 1,
-    account_references: 1, keyed_services: 1, ai_grants: 1, group_key: 1, group_key_acts: 1, group_key_notices: 1 });
+    account_references: 1, keyed_services: 1, ai_grants: 1, group_key: 1, group_key_acts: 1, group_key_notices: 1,
+    signin_window: 2, security_counts: 1, security_pending: 1, security_key: 1, recovery_codes: 10, recoveries: 1,
+    subscription_connections: 1 });
   assert.equal(w.rc.purge({}).ok, true);
   assert.deepEqual(count(), before, "a whole-store purge clears none of them");
   assert.equal(w.rc.purge({ bundleId: "second" }).ok, true);
   assert.deepEqual(count(), before);
-  assert.equal((await w.c.login({ role: "member:second", password: PASSWORD("second") })).ok, true);
+  assert.equal((await w.c.login({ role: "member:second", password: "recovered-passphrase" })).ok, true);
 });
 
 test("R18 R30 R34 the declaration: every table declared once by credentials through declareTable, with its classes; any refusal is thrown", () => {

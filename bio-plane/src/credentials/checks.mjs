@@ -18,13 +18,13 @@ export const SIGNER_ENROLMENT_CHECKS = Object.freeze({
   SIGNER_MEMBER_NOT_ENROLLED: Object.freeze({
     check: 'C-63.1', where: at("#signerMemberBar", "is-signer-member-attesting"),
     translation: 'That person has not enrolled yet. A signing key belongs to a member who has taken up '
-      + 'their invitation and chosen a handle; until then this instance would refuse anything signed '
+      + 'their invitation and chosen a handle; until then your group\'s Civicsmith would refuse anything signed '
       + 'with it, so registering it now would put a key on the roster that cannot sign. Nothing was '
       + 'written. Send them their invitation link, and register the key once they have enrolled.',
   }),
   SIGNER_MEMBER_NOT_ACTIVE: Object.freeze({
     check: 'C-63.2', where: at("#signerMemberBar", "is-signer-member-attesting"),
-    translation: 'That member’s membership is not active, so this instance would refuse anything '
+    translation: 'That member’s membership is not active, so your group\'s Civicsmith would refuse anything '
       + 'signed with their key. Nothing was written. Reinstate the member first if they should be '
       + 'able to sign again.',
   }),
@@ -36,7 +36,7 @@ export const AI_CREDENTIAL_CHECKS = Object.freeze({
   /* D-199 (3): "If an agent can request a broader token, the scoping is theatre." */
   AI_CREDENTIAL_MINT_NOT_A_MEMBER: Object.freeze({
     check: 'C-29.1', where: at("aiCredentialMint", "is-ai-credential-mint"),
-    translation: 'Only a named person signed in to this instance can create an agent credential. '
+    translation: 'Only a named person signed in to your group\'s Civicsmith can create an agent credential. '
       + 'Deciding what an automated worker is allowed to reach is a judgement somebody has to be '
       + 'accountable for, so an automated worker cannot make it — not even about itself.',
   }),
@@ -50,7 +50,7 @@ export const AI_CREDENTIAL_CHECKS = Object.freeze({
   /* The identity is what acts cite, so it is never rebound. */
   AI_CREDENTIAL_IDENTITY_TAKEN: Object.freeze({
     check: 'C-29.3', where: at("aiCredentialMint", "is-ai-credential-mint"),
-    translation: 'That name already belongs to an agent credential on this instance. Acts in the '
+    translation: 'That name already belongs to an agent credential in your group\'s Civicsmith. Acts in the '
       + 'record cite the name, so binding it to something new would quietly change who did work that '
       + 'has already been done. Retire the old one or choose another name.',
   }),
@@ -63,7 +63,7 @@ export const AI_CREDENTIAL_CHECKS = Object.freeze({
   }),
   AI_CREDENTIAL_UNKNOWN: Object.freeze({
     check: 'C-29.5', where: at("aiCredentialRevoke", "is-ai-credential-revoke"),
-    translation: 'There is no agent credential by that name on this instance, so nothing was '
+    translation: 'There is no agent credential by that name in your group\'s Civicsmith, so nothing was '
       + 'withdrawn. Being told that plainly matters more than it looks: believing you have taken an '
       + 'authority away when you have not is the worse of the two outcomes.',
   }),
@@ -74,6 +74,13 @@ export const AI_CREDENTIAL_CHECKS = Object.freeze({
       + 'You named another member, and nobody can authorise an agent in someone else\'s name: it would see '
       + 'what they see and its work would be recorded as theirs. Nothing was created. The member it should '
       + 'act for can create it themselves.',
+  }),
+  /* R42 (F15; K1881, K1934): an agent credential expires after a whole number of days, 1 to 365, 90 when not given.
+     T35's new row, awaiting promotion's stamp (T35-16). */
+  AI_CREDENTIAL_BAD_EXPIRY: Object.freeze({
+    check: 'C-29.28', where: at("aiCredentialMint", "is-ai-credential-expiry"),
+    translation: 'An agent credential lasts a whole number of days, from 1 to 365, and 90 if you do not say. That '
+      + 'was not one of them. Nothing was created. Choose a number of days, or leave it out.',
   }),
 });
 
@@ -150,8 +157,8 @@ export const ACCOUNT_CHECKS = Object.freeze({
   }),
   ACCOUNT_SEAL_UNAVAILABLE: Object.freeze({
     check: 'C-29.22', where: at("#sealRefusal", "is-seal-bound"),
-    translation: 'This copy cannot keep a key sealed right now, because its sealing secret is not set or has changed. '
-      + 'Nothing was stored or read. Ask whoever hosts this copy to set it.',
+    translation: 'Your group\'s Civicsmith cannot keep a key sealed right now, because its sealing secret is not set or has '
+      + 'changed. Nothing was stored or read. Ask whoever hosts your group\'s Civicsmith to set it.',
   }),
   GRANT_OP_REFUSED: Object.freeze({
     check: 'C-29.23', where: at("aiGrantAdmit", "is-grant-op"),
@@ -173,6 +180,14 @@ export const ACCOUNT_CHECKS = Object.freeze({
   NO_QUESTION: Object.freeze({
     check: 'C-29.26', where: at("aiGrantMintStanding", "is-standing-grant"),
     translation: 'A standing question needs its words, and none were given. Nothing was read or changed.',
+  }),
+  /* R43 (DEC-156; K1819, K1922): a connected subscription is held as a fact only; a call carrying anything but the
+     member is refused, so no login, code or token is ever taken. T35's new row, awaiting promotion's stamp (T35-16). */
+  SUBSCRIPTION_LOGIN_REFUSED: Object.freeze({
+    check: 'C-29.29', where: at("subscriptionConnected", "is-subscription-fact"),
+    translation: 'Your Claude subscription\'s sign-in stays where Claude Code itself keeps it, for you alone. Your '
+      + 'group\'s Civicsmith only notes that you are connected, and never takes a login, a code or a token. This '
+      + 'request carried more than that, so nothing was recorded.',
   }),
   GROUP_KEY_NOTICE_DUE: Object.freeze({
     check: 'C-29.27', where: at("#noticeDue", "is-group-key-notice-seen"),
@@ -196,5 +211,37 @@ export const KEYED_SERVICE_CHECKS = Object.freeze({
     check: 'C-96.21', where: at("keyedServiceFor", "is-keyed-service-on"),
     translation: 'The group\'s key for this outside service is switched off, or no key is held, so it was not used. '
       + 'Everything still works without it.',
+  }),
+});
+
+/* T35 (T35-15; F3, F14, N703, K1888; K1881, K1934): the sign-in window (R38), sign-out (R39), recovery (R47) and the
+   security tally and map (R44, R45). New rows, the next free numbers of C-96, awaiting promotion's stamp (T35-16). */
+export const SIGN_IN_CHECKS = Object.freeze({
+  SIGN_IN_PAUSED: Object.freeze({
+    check: 'C-96.39', where: at("#paused", "is-sign-in-window"),
+    translation: 'Signing in is paused for a few minutes, because too many attempts were refused in a short time. '
+      + 'Nothing was checked or changed. Wait ten minutes and try again; if it keeps happening, tell an administrator, '
+      + 'since someone may be trying to guess a password.',
+  }),
+  NOT_SIGNED_IN: Object.freeze({
+    check: 'C-96.40', where: at("#notSignedIn", "is-session-live"),
+    translation: 'There is no signed-in session to end here: it has already ended, it expired, or it never existed. '
+      + 'Nothing was changed.',
+  }),
+  RECOVERY_REFUSED: Object.freeze({
+    check: 'C-96.41', where: at("#recoveryRefused", "is-recovery-code"),
+    translation: 'That recovery did not go through. A recovery code works once, only for the administrator it was '
+      + 'given to, and only while they are an administrator. Nothing was changed. Check the code and the account it '
+      + 'belongs to, or ask another administrator for help.',
+  }),
+  SECURITY_KIND_UNKNOWN: Object.freeze({
+    check: 'C-96.42', where: at("securityCount", "is-security-kind"),
+    translation: 'That is not a kind of refused request the security count keeps, so nothing was counted. This is a '
+      + 'fault in how your group\'s Civicsmith was built, not in the record.',
+  }),
+  SECURITY_PERIOD_INVALID: Object.freeze({
+    check: 'C-96.43', where: at("securityMap", "is-security-period"),
+    translation: 'The security map shows a period of up to 90 days within the last 90, from an earlier time to a '
+      + 'later one. The period asked was not one of those. Nothing was changed. Choose another period.',
   }),
 });
