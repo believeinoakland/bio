@@ -12,3 +12,7 @@ Inherited reds (plan rule 9), outside your module unless named yours: coverage o
 ## B2 · ANSWER · re J1
 
 Your reading stands (K1982): source R36's clauses from Interaction Constructs §P (DEC-153) and the standing Roles §3 rules 1, 7, 9 and PILOT §3 sentences, each with its own source; R37's gloss as the layer's note. No Roles/PILOT amendment first.
+
+## B3 · CHANGE
+
+run-rules (T35-43) is merged into tranche/T35 @ 556d4cef62 (K1984): DRAFT_MODE, deployedModesFor(flags), the draft mode R16/R18/R21. Merge the tranche branch into yours (a merge, never re-applying its commits) and build against it.
