@@ -15,7 +15,8 @@ test("R36 eventsOps: one arm per act and read, parameters from the url (the cont
   const ops = Object.keys(eventsOps(w.ev, new URL("https://plane.test/"), {})).sort();
   assert.deepEqual(ops, ["actalias", "datedfact", "datedfacts", "editacts", "event", "eventattest", "eventcreate", "eventforact",
     "eventgovern", "eventimport", "eventmerge", "eventrelate", "eventrelationwithdraw", "eventsfor", "eventsplit", "participantadd",
-    "participantcorrect", "proceedingstatus", "readoptin", "registerimport", "sequence", "statementsof", "timeline", "whowassent"].sort());
+    "participantcorrect", "proceedingstatus", "readoptin", "registerimport", "sequence", "statementsof", "timeline", "whowassent",
+    "discretionrecord", "assessmentrecord", "usewithdraw", "usesof"].sort());
   const s = w.capture("ops");
   const f = call(w, "datedfact", { by: MEMBER }, { captureSha: s, extent: { kind: "document" }, kind: "meeting", value: "2026-02-02", method: "m", by: "member:forged" });
   assert.equal(f.dated_fact.by, MEMBER, "the body's own author is never read");
