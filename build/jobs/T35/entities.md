@@ -23,3 +23,7 @@
 - `format`: 130 modules, 129 requirements files; 2 failures (law-relations' paths, inherited red 24). `architecture entities`: 16 product files, 47 relative imports; 0 failures. `coverage entities`: 51 of 51 live ids named by a test; 0 failures. `ownership entities tranche/T35`: 4 files; 0 failures.
 
 Size (session_01AauqX25foruEiA5tiNQTf8): test runs 4, module lines 1922
+
+## J1 · COMPLETE
+
+T35-27 applied: R50 (SECTORS imported from jurisdictions, no copy held) and R51 (entitiesOfKind, op=entitieskind; limit 1-500, default 100). entities 93/0; coverage 51/51; architecture, ownership 0 failures; format's only failures are inherited red 24. Users' suites: no new failure (every red is also red on tranche/T35). Stale artifact: the plane bundle. Shares already named: op-declarations T35-70 declares entitieskind; control-plane T35-72 routes it; setup-page T35-68 reads it. Record: build/jobs/T35/entities.md on job/T35/entities.
