@@ -11,8 +11,8 @@
  * DELEGATION: adopt the GUARD pattern.
  *
  * The forcing fact is DIST's, measured: **`newgroup` is a Worker. It cannot run
- * `wrangler` and it cannot bundle**, and this member is THREE modules
- * (`index.mjs` imports `./harness.mjs` and `./subsession.mjs`), so the one-part
+ * `wrangler` and it cannot bundle**, and this member is several modules
+ * (`index.mjs` imports its own files and `agent-harness`', `agent-model`'s and the plane's), so the one-part
  * script upload an installer has cannot resolve them. An installable fleet needs
  * one bundled, hashed, signed artifact per member.
  *

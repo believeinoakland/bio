@@ -136,7 +136,7 @@ export default {
                              suggested: S.suggested, requests: S.requests, spawns: S.spawns, bvIds: S.bvIds,
                              repeats: [...S.refusals.values()].map((r) => r.repeats) });
     const op = url.searchParams.get("op") || "";
-    const token = url.searchParams.get("token") || "";
+    const token = (req.headers.get("authorization") || "").replace(/^Bearer /, "") || "";
     let body = null;
     if (req.method === "POST") { try { body = await req.json(); } catch { body = null; } }
     S.log.push({ op, token, store: url.searchParams.get("store"), method: req.method, body,
@@ -260,7 +260,9 @@ export default {
       if (uses.some((u) => !answered.has(u.id)))
         return Response.json({ type: "error", error: { type: "invalid_request_error", message: "tool_use without tool_result" } }, { status: 400 });
     }
-    const lastIsResult = Array.isArray(last.content) && last.content.some((b) => b.type === "tool_result");
+    /* R61: a judged row opens with the facts as \`read_facts\`' result (ids \`facts_…\`); that is not a turn the model took. */
+    const lastIsResult = Array.isArray(last.content)
+      && last.content.some((b) => b.type === "tool_result" && !String(b.tool_use_id).startsWith("facts_"));
     if (names.includes("report")) {
       const sys = Array.isArray(body.system) ? body.system.map((x) => x.text).join("") : String(body.system);
       const contract = JSON.parse(sys.split("YOUR SPAWN CONTRACT:\\n")[1]);
@@ -1129,8 +1131,9 @@ section("R32, R33 · the cascade: the one account that arrived, at its own level
 
 section("R34 · SURFACE and fleet-member.json");
 {
-  t("R34, R54: SURFACE is {run: POST, ask: POST, version: GET}, every one mutating: false (K1601 (5))", SURFACE,
-    { run: { method: "POST", mutating: false }, ask: { method: "POST", mutating: false }, version: { method: "GET", mutating: false } });
+  t("R34, R54, R59: SURFACE is {run: POST, ask: POST, draft: POST, version: GET}, every one mutating: false (K1601 (5))", SURFACE,
+    { run: { method: "POST", mutating: false }, ask: { method: "POST", mutating: false },
+      draft: { method: "POST", mutating: false }, version: { method: "GET", mutating: false } });
   t("R34: the manifest names the entry, the surface, the test directory and the bundle recipe",
     [MANIFEST.entry, MANIFEST.surface, MANIFEST.testDir, MANIFEST.bundle?.entry, MANIFEST.bundle?.outfile, MANIFEST.bundle?.manifest],
     ["src/index.mjs", "SURFACE", "test", "src/index.mjs", "dist/agent-worker.bundled.mjs", "dist/agent-worker.bundle.json"]);
@@ -1246,13 +1249,20 @@ section("agent-harness R7 · sub-sessions run, one per level, each under its con
   const r = await runOp(mf, { ...base, account: ACCOUNTS });
   const calls = (await modelState(mf)).calls.map((c) => JSON.parse(c.raw));
   const subs = calls.filter((b) => (b.tools || []).some((x) => x.name === "report"));
-  const firsts = subs.filter((b) => b.messages.length === 1);
+  /* agent-model R12 (T35, K1987): a sub-session's opening is three turns, its own words, a `read_facts` call and that
+     call's result, which holds the contract's fields from the record; its system carries only the table's own fields
+     (level, scope, returns). So a first request is one whose transcript is that opening, and its brief is the two put
+     back together. */
+  const firsts = subs.filter((b) => b.messages.length === 3);
+  const factsOfOpening = (b) => JSON.parse(b.messages[2].content[0].content.map((c) => c.text).join(""));
   t("agent-harness R7: one sub-session per level, each starting its own conversation (nothing shared with the parent or another level)",
     firsts.map((b) => JSON.parse(sysText(b).split("YOUR SPAWN CONTRACT:\n")[1]).level), LEVELS);
-  t("agent-harness R7: each is briefed with its own spawn contract, exactly as published", firsts.map((b) => sysText(b).split("YOUR SPAWN CONTRACT:\n")[1]),
-    (r.out.fanout?.contracts || []).map((c) => JSON.stringify(c)));
-  t("agent-harness R7: its tools are its contract's scope and `report`, nothing else",
-    [...new Set(subs.map((b) => b.tools.map((x) => x.name).join(",")))], ["meaningrows,report"]);
+  t("agent-harness R7, R61: each is briefed with its own spawn contract, exactly as published: the table's fields in its system, the record's as read_facts' result",
+    firsts.map((b) => JSON.stringify(Object.fromEntries(Object.entries({ ...JSON.parse(sysText(b).split("YOUR SPAWN CONTRACT:\n")[1]),
+                                                                          ...factsOfOpening(b) }).sort(([a], [c]) => a.localeCompare(c))))),
+    (r.out.fanout?.contracts || []).map((c) => JSON.stringify(Object.fromEntries(Object.entries(c).sort(([a], [d]) => a.localeCompare(d))))));
+  t("agent-harness R7: its tools are its contract's scope, `report` and agent-model's `read_facts`, nothing else",
+    [...new Set(subs.map((b) => b.tools.map((x) => x.name).join(",")))], ["meaningrows,report,read_facts"]);
   t("agent-harness R7: no sub-session was handed the lens or a credential", subs.some((b) => /LENS|aik-|sk-ant/.test(JSON.stringify(b))), false);
   const st = await planeState(mf);
   t("agent-harness R7: a sub-session's meaningrows reached the plane through the parent's reader",
@@ -1410,8 +1420,9 @@ section("R45 · the committed bundle is a fresh build of src/index.mjs, its mani
   t("R45: a fresh build is byte-identical to the committed bundle", [fresh.checked, fresh.findings], [true, []]);
   const inputs = (stat.manifest?.inputs || []).map((i) => i.path);
   t("R45: the manifest names every input, bio-plane/src/tokens.mjs included",
-    ["../bio-plane/src/tokens.mjs", "src/index.mjs", "src/harness.mjs", "src/subsession.mjs", "src/cascade.mjs", "src/model.mjs"]
-      .filter((p) => !inputs.some((i) => i.endsWith(p.replace(/^\.\.\//, "")))), []);
+    ["../bio-plane/src/tokens.mjs", "src/index.mjs", "src/cascade.mjs", "src/ops.mjs", "src/ask.mjs", "src/draft.mjs", "src/reads.mjs",
+     "../agent-harness/src/harness.mjs", "../agent-harness/src/subsession.mjs", "../agent-model/src/model.mjs"]
+      .filter((p) => !inputs.includes(p)), []);
 }
 
 section("R46 · no place is named in its behaviour or outward text; its account is the project's");

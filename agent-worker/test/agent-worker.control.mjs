@@ -44,7 +44,9 @@ const REPO = join(MEMBER, "..");
 const PLANE = join(REPO, "bio-plane");
 
 const SRC = join(MEMBER, "src", "index.mjs");
-const HARNESS_SRC = join(MEMBER, "src", "harness.mjs");
+/* R65 (T35): `NAMESPACES` and `MEANING_ARM` are declared in `src/ops.mjs` (since T33-57); the arms that patched them
+   through the deleted re-export `src/harness.mjs`, and so armed nothing, now patch them where they live. */
+const OPS_SRC = join(MEMBER, "src", "ops.mjs");
 const MANIFEST = join(MEMBER, "fleet-member.json");
 const COVERAGE = join(PLANE, "scripts", "coverage.mjs");
 
@@ -371,14 +373,14 @@ arm({
   },
 });
 
-/* The copy ages: this member's NAMESPACES is a copy of the plane's, EXPORTED from `harness.mjs` (N402) and pinned
+/* The copy ages: this member's NAMESPACES is a copy of the plane's, EXPORTED from `ops.mjs` (N402) and pinned
    exactly in the suite; control-plane pins the export to its own gate (layer 11), which notices the day they part. */
 arm({
   id: "N2", subject: "D-462 — THE MEMBER'S NAMESPACE SET PARTS FROM THE PLANE'S",
   what: "the member's exported NAMESPACES gains `biosmoke`, a name the plane's `namespaceGate` does not hold",
   mustFail: "the exported-set pin, the `store=biosmoke` refusal arms and the refusal-lists-the-export arm (the member now accepts it, so no refusal lists anything), and the record-still-empty arm (it worked a run under that name)",
   mustNot: "the BAD_STORE arms, the Scratch/BIO/hyphenated arms, and section 7's over-strictness arms",
-  file: HARNESS_SRC,
+  file: OPS_SRC,
   find: `export const NAMESPACES = Object.freeze(["bio", "scratch"]);`,
   replace: `export const NAMESPACES = Object.freeze(["bio", "scratch", "biosmoke"]);`,
   run: () => {
@@ -600,7 +602,7 @@ arm({
   what: `MEANING_ARM goes back to "legs", the spelling that shipped; the fixture and the answer check are held OPEN`,
   mustFail: "ALL THREE of this member's suites — the arm-is-known arms, the observation-entry arms in agent-worker and harness, and fanout's citations_reread",
   mustNot: "the bound, the refusal-passthrough, the version endpoint or the write arms — none of them is about the meaning layer",
-  patches: [{ file: HARNESS_SRC, find: ARM_FIND, replace: ARM_WRONG }],
+  patches: [{ file: OPS_SRC, find: ARM_FIND, replace: ARM_WRONG }],
   run: () => {
     const s = threeSuites();
     const allRed = s.aw.fail > 0 && s.fo.fail > 0 && s.hs.fail > 0;
@@ -640,7 +642,7 @@ arm({
   what: "both halves of D-276 at once: MEANING_ARM back to \"legs\" and the fixture accepting anything. TWO defences down deliberately, which is why it is stated",
   mustFail: "agent-worker's REAL-plane arms; AND in fanout and harness EXACTLY ONE arm each — the STRUCTURAL one that reads the plane's registry without going through the mock",
   mustNot: "every BEHAVIOURAL arm in fanout and harness — the observation entries, the notes, the counts. A permissive fixture makes the behaviour unmeasurable, and that is the finding",
-  patches: [{ file: HARNESS_SRC, find: ARM_FIND, replace: ARM_WRONG },
+  patches: [{ file: OPS_SRC, find: ARM_FIND, replace: ARM_WRONG },
             { file: MEANING_MOCK, find: MOCK_FIND, replace: MOCK_PERMISSIVE }],
   /* THIS ARM WAS DECLARED WRONG THE FIRST TIME AND THE DECLARATION WAS
      CORRECTED INTO SOMETHING STRONGER RATHER THAN SMOOTHED — WORKER.md's rule,
@@ -674,7 +676,7 @@ arm({
   what: "the arm is wrong AND `planeAnswer` stops looking inside `result`, so it checks only the ENVELOPE's ok — which the plane sets to TRUE on a refused arm (measured: HTTP 200, ok:true, the refusal nested)",
   mustFail: "agent-worker and harness — the refusal reaches the note-writing code unrecognised, so the entry stops saying rows were queried",
   mustNot: "the FALSE ZERO. The entry must say UNDETERMINED and must NOT say `0 meaning-grain row(s) queried`, because the note has a second defence and this arm is what proves it",
-  patches: [{ file: HARNESS_SRC, find: ARM_FIND, replace: ARM_WRONG },
+  patches: [{ file: OPS_SRC, find: ARM_FIND, replace: ARM_WRONG },
             { file: SRC, find: NESTED_FIND, replace: NESTED_GONE }],
   /* DECLARED WRONG THE FIRST TIME AND CORRECTED INTO SOMETHING STRONGER RATHER
      THAN SMOOTHED, and the correction is a real property of the fix rather than
@@ -713,8 +715,8 @@ if (!only.length || only.includes("D5")) {
   console.log(`                     CORRECT WORK, and an arm that failed it would be a fence`);
   console.log(`                     tighter than its rule.`);
   console.log(`    MUST PASS      : all three suites, unchanged counts.`);
-  const o = takeOriginal(HARNESS_SRC);
-  const p = patch(HARNESS_SRC, ARM_FIND, `export const MEANING_ARM = "LEG";`);
+  const o = takeOriginal(OPS_SRC);
+  const p = patch(OPS_SRC, ARM_FIND, `export const MEANING_ARM = "LEG";`);
   let s = null;
   if (!p.armed) {
     console.log(`    >>> THE ARM DID NOT ARM: patch matched ${p.hits} time(s).`);

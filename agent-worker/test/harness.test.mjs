@@ -682,7 +682,7 @@ export default {
                              requests: S.requests || [], bvIds: S.bvIds || [],
                              repeats: [...S.refusals.values()].map((r) => r.repeats) });
     const op = url.searchParams.get("op") || "";
-    const token = url.searchParams.get("token") || "";
+    const token = (req.headers.get("authorization") || "").replace(/^Bearer /, "") || "";
     const store = url.searchParams.get("store") || "";
     let body = null;
     if (req.method === "POST") { try { body = await req.json(); } catch { body = null; } }
@@ -1424,8 +1424,8 @@ console.log("\n--- FT0 · FL-11/FL-12: the mock itself REFUSES by name what the 
   const mf = newMf({ mode: "check", maxPasses: 1, budget: wide, target: "INQ-FL11" });
   const mock = await mf.getWorker("plane-mock");
   const ask = async (op, body, token = AIK) =>
-    (await (await mock.fetch(`http://plane/?op=${op}&store=scratch&token=${token}`,
-      { method: "POST", body: JSON.stringify(body) })).json()).result ?? {};
+    (await (await mock.fetch(`http://plane/?op=${op}&store=scratch`,
+      { method: "POST", headers: { authorization: `Bearer ${token}` }, body: JSON.stringify(body) })).json()).result ?? {};
   const good = { kind: "basis-version", name: "v1", description: "a reading the record does not hold yet", run: "run-1" };
   const codes = [
     (await ask("suggest", { ...good })).code,

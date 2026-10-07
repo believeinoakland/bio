@@ -45,7 +45,10 @@
  * `body`), so a table-driven walk is never presented as a model run, nor the
  * reverse. `POST /ask` (R54) is a member's question, answered through the same
  * module under the account that serves that member's ask and an ask grant, and
- * handed to the plane's `answers` checks before anything is returned.
+ * handed to the plane's `answers` checks before anything is returned. `POST
+ * /draft` (R59) is a member's labelled draft of their own words, made the same
+ * way, read only under a grant the door sends when the draft may read, and
+ * checked by the door before the member sees it.
  *
  * WHAT IT MUST NOT DO (fleet rules 2/3, inherited from I6 and asserted in the
  * suite behaviourally, at this member's interface — what it reads from `env`,
@@ -138,8 +141,12 @@ import {
 
 /* R4, R37, R55 — what this member names to the plane: its namespaces, a run's ops, the meaning arm, an ask's reach. */
 import { NAMESPACES, MEANING_ARM } from "./ops.mjs";
+/* R63 — what a read hands the model of a file: the readers' text and its `active` list, never its bytes. */
+import { toolContent, droppedNote } from "./reads.mjs";
 /* R54–R56 — `POST /ask`, in its own file. */
 import { handleAsk } from "./ask.mjs";
+/* R59 — `POST /draft`, in its own file. */
+import { handleDraft } from "./draft.mjs";
 
 /* R49, N293 — THE CEILING ON A RUN'S PUBLISHED STATE IS run-rules' (its R10), read from its own module and never
  * copied. run-rules is pure (no storage, no clock), so this is the one plane module in the bundle beside `tokens.mjs`. */
@@ -166,7 +173,8 @@ import {
  * the member's act and the model its mode names (`MODEL_FOR_MODE`), and decides no step; the table still decides every one. */
 import {
   DEFAULT_MAX_SEGMENT_BYTES, SEGMENT_BYTES_SOURCE, segmentMeter, converse, MODEL_FOR_MODE,
-  judgeTools, planJudgeTools, LOAD_LAYER, parentSystem, rowPrompt, rowFacts, subsessionSystem, subsessionTools,
+  judgeTools, planJudgeTools, LOAD_LAYER, parentSystem, openRow, rowFacts, subsessionSystem, subsessionOpening,
+  subsessionTools,
 } from "../../agent-model/src/model.mjs";
 
 /* R48 — THE PACK A RUN'S MODEL IS INSTRUCTED BY is the one the plane renders and publishes on its untargeted
@@ -265,6 +273,7 @@ const refusal = (code, detail, status, extra) =>
 export const SURFACE = {
   run:     { method: "POST", mutating: false },
   ask:     { method: "POST", mutating: false },
+  draft:   { method: "POST", mutating: false },
   version: { method: "GET",  mutating: false },
 };
 
@@ -273,20 +282,28 @@ export const SURFACE = {
  * Everything this member learns, it learns here. The credential is forwarded
  * exactly as handed over and is never stored, logged or echoed.
  *
+ * R60 (F1; K1874): THE CREDENTIAL TRAVELS IN THE `Authorization: Bearer` HEADER
+ * AND NOWHERE ELSE. An address is logged, cached and echoed by every hop it
+ * passes; a header is not part of it. So the address carries only `op`, `store`
+ * and the op's own arguments, a body only the op's own fields, and there is no
+ * query form kept as a fallback: the plane reads the header from admission's T35
+ * merge, and both ship in one release. A call with no credential (a draft that
+ * may read nothing, R59) sends no header at all.
+ *
  * REC-52's rule, one layer out: a failure to ANSWER is not an answer. If the
  * plane could not be reached, this member says the plane was silent — it does not
  * convert its own failure into a statement about the record or about who the
  * caller is. */
 async function askPlane(env, op, credential, store, query = null, body = null) {
   /* An ask that names no namespace sends none, and the plane's default applies (K1601 (5)); a run always names one (R4). */
-  let url = `${PLANE_ORIGIN}/?op=${op}${store == null ? "" : `&store=${encodeURIComponent(store)}`}`
-    + `&token=${encodeURIComponent(credential)}`;
+  let url = `${PLANE_ORIGIN}/?op=${op}${store == null ? "" : `&store=${encodeURIComponent(store)}`}`;
   for (const [k, v] of Object.entries(query || {}))
     if (v != null && v !== "") url += `&${k}=${encodeURIComponent(String(v))}`;
+  const headers = credential ? { authorization: `Bearer ${credential}` } : {};
   let res;
   try {
-    res = await env.PLANE.fetch(url, body == null ? undefined : {
-      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body),
+    res = await env.PLANE.fetch(url, body == null ? { headers } : {
+      method: "POST", headers: { ...headers, "content-type": "application/json" }, body: JSON.stringify(body),
     });
   } catch (e) {
     return { reached: false, detail: String((e && e.message) || e).slice(0, 200) };
@@ -485,8 +502,14 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     /* THE JUDGEMENT, AND THE ONE DOOR IT COMES THROUGH. Supplied by the caller in order, or (R58; agent-model R1) made by
        a model turn at every judged row but `collect`, whose judgements are the sub-sessions' REPORTS (agent-harness R7). */
     let judgement;
+    let factsDropped = [];
     if (row && row.judged && model && state.step !== "collect") {
-      model.messages.push({ role: "user", content: rowPrompt(state.step, row, rowFacts(state, LEVELS)) });
+      /* R61 (F5; agent-model R12): THE ROW'S FACTS ARE RECORD TEXT, AND REACH THE MODEL ONLY AS A TOOL'S RESULT.
+         `openRow` appends the row's own prompt (the step and the row) and then the facts it judges over as the result of
+         `read_facts` (which `converse` answers again from the transcript if the model calls it), text only (R63). */
+      const { content: facts, dropped } = toolContent(rowFacts(state, LEVELS));
+      factsDropped = dropped;
+      openRow(model.messages, state.step, row, facts);
       const got = await converse({
         reference: model.reference, runner: model.runner, mode: state.mode, meter: model.meter, system: model.system,
         messages: model.messages, tools: model.tools, finalTool: `judge_${state.step}`,
@@ -553,8 +576,11 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     if (state.step === "adjust" && state.adjusted) adjusted += 1;
 
     const decision = planMode ? nextPlanStep(state) : nextStep(state);
+    /* R63: a drop of a file's bytes, from the row's facts or a sub-session's reads, is named in the step's trace. */
+    const dropNote = droppedNote([...factsDropped, ...(work.dropped || [])]);
+    const stepNote = [work.note, dropNote].filter(Boolean).join("; ");
     trace.push({ step: state.step, to: decision.step, why: decision.why,
-                 ...(work.note ? { note: work.note } : {}) });
+                 ...(stepNote ? { note: stepNote } : {}) });
 
     /* LOG-ALWAYS, AND IT IS A TICK RATHER THAN A SEPARATE WRITE. The tick is
        ONE call that appends what was observed, spends the budget and extends
@@ -866,6 +892,7 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
       if (model) {
         const ran = await runSubsessions(call, out.state, runId, model, logSeq, contracts);
         if (ran.silent || ran.model || ran.stopped) return ran;
+        if (ran.dropped.length) out.dropped = ran.dropped;
         out.state = { ...out.state, reports: ran.reports,
                       reportsRefused: [...(out.state.reportsRefused || []), ...ran.refused] };
         out.note += `; ${ran.reports.length} sub-session(s) reported, ${ran.refused.length} returned no report`;
@@ -1267,12 +1294,14 @@ async function performPlanStep(call, state, runId) {
  *  at its level, and that entry's address is the report's `observed_at`. A sub-session that returns no report is
  *  named, never read as an absence. */
 async function runSubsessions(call, state, runId, model, logSeq, contracts) {
-  const reports = [], refused = [];
+  const reports = [], refused = [], dropped = [];
   for (const contract of contracts) {
     const got = await converse({
       reference: model.reference, runner: model.runner, mode: state.mode, meter: model.meter,
+      /* R61: the contract's fields from the record (the run, its context, mode, skill) reach the sub-session only as
+         `read_facts`' result (`subsessionOpening`); its system carries the pack and the table's own fields. */
       system: subsessionSystem(model.pack, contract),
-      messages: [{ role: "user", content: `Search the ${contract.level} level for the run's question, then report.` }],
+      messages: subsessionOpening(contract),
       tools: subsessionTools(contract),
       finalTool: "report",
       onTool: async (name, input) => {
@@ -1281,8 +1310,10 @@ async function runSubsessions(call, state, runId, model, logSeq, contracts) {
         const lim = Math.min(50, Math.max(1, Math.floor(Number(input.limit)) || 20));
         const r = await meaningRead(call, { q: String(input.q ?? ""), rows: String(input.rows ?? ""), limit: lim });
         if (r.silent) return { halt: { planeSilent: r.silent } };
-        if (r.refused) return { content: r.refused.plane ?? { code: r.refused.code }, error: true };
-        return { content: r.result };
+        /* R61, R63: what the plane answers reaches the sub-session only as this tool's result, text only. */
+        const told = toolContent(r.refused ? (r.refused.plane ?? { code: r.refused.code }) : r.result);
+        dropped.push(...told.dropped.map((d) => ({ ...d, path: `${contract.level}: ${d.path}` })));
+        return r.refused ? { content: told.content, error: true } : { content: told.content };
       },
     });
     model.spent(got, state.mode);
@@ -1320,7 +1351,7 @@ async function runSubsessions(call, state, runId, model, logSeq, contracts) {
     }
     reports.push(report);
   }
-  return { reports, refused };
+  return { reports, refused, dropped };
 }
 
 /* R56 (K1479, K1502, K1755) — THE SUGGESTIONS SWITCH THAT GOVERNS THE ACT, as the plane sends it beside the account
@@ -1637,15 +1668,16 @@ function handleVersion(env) {
   return json({ ok: true, name: "agent-worker", version: env.VERSION || "0.0.0", model_turns: MODEL_TURNS });
 }
 
-/* R54 — what `/ask` (ask.mjs) uses of this shell: one route to the plane, one refusal helper, one account judgement. */
+/* R54, R59 — what `/ask` (ask.mjs) and `/draft` (draft.mjs) use of this shell: one route to the plane, one refusal
+   helper, one account judgement. */
 const ASK_DEPS = { refusal, json, askPlane, planeAnswer, publishedPack, accountOf, cascadeToken, modelHalf,
                    loadableLayers, loadLayer, converse, segmentMeter, NAMESPACES, DEFAULT_MAX_SEGMENT_BYTES };
 
 /* R58 — ONE TRUTH FOR MODEL TURNS, the sentence this member states about itself on `GET /version`, and the same one its
    header and its `/run` answer state. */
 const MODEL_TURNS = "run through agent-model exactly when the Claude account that serves the member's act (the "
-  + "member's own reference, or the group's API key) arrives with the call and the run's or ask's mode has turns to "
-  + "run; a segment whose caller supplies the judgements runs none";
+  + "member's own reference, or the group's API key) arrives with the call and the run's, ask's or draft's mode has "
+  + "turns to run; a segment whose caller supplies the judgements runs none";
 
 export default {
   async fetch(req, env) {
@@ -1654,6 +1686,7 @@ export default {
     if (req.method === "GET" && path === "version") return handleVersion(env);
     if (req.method === "POST" && (path === "run" || path === "")) return handleRun(req, env);
     if (req.method === "POST" && path === "ask") return handleAsk(req, env, ASK_DEPS);
-    return refusal("UNKNOWN", "POST /run, POST /ask or GET /version only.", 404);
+    if (req.method === "POST" && path === "draft") return handleDraft(req, env, ASK_DEPS);
+    return refusal("UNKNOWN", "POST /run, POST /ask, POST /draft or GET /version only.", 404);
   },
 };
