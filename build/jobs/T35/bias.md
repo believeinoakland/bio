@@ -25,7 +25,7 @@ The R16, R24 and R26 titles in `adopt-manifest.test.mjs` are re-worded. R26 stay
 
 **Deferred:** none.
 
-**Found in other modules (REPORT J2):**
+**Found in other modules (REPORT J1):**
 1. control-plane `rows-before-r43.json` pins C-26.2's translation digest (`BIAS_STATEMENT_SUBJECT_NOT_REGISTERED`: `34a21a493da8de0f` → `f10fde3b4d80b59b`). `catalogue-end.test.mjs` is already red (red 19) and stops at its first difference, so this adds C-26.2 to the rows T35-72 re-pins, no new red. The row also awaits stamp under red 2.
 2. The plane bundle (`bio-plane/dist/bio-plane.bundled.mjs`, §14, `not_product`) embeds `src/bias/` and is now stale until L5's close regenerates it.
 
