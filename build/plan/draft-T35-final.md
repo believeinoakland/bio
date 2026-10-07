@@ -100,7 +100,7 @@ Each line is one job (P8): every T35 entry for that module. Fields: module · (N
 
 ### L5
 
-- **T35-27 · entities** · (N699) a read of the group's offices (entities by kind `office`), never answered beyond the viewer's gate, so setup-page R20 lists them all · K1867 · req: a new R, BOB's wording · depends —.
+- **T35-27 · entities** · (K1902) `SECTORS` read from jurisdictions' export (T35-1), not its own copy. (N699) a read of the group's offices (entities by kind `office`), never answered beyond the viewer's gate, so setup-page R20 lists them all · K1867 · req: a new R, BOB's wording · depends —.
 - **T35-28 · events** · (N642, with N659's words) an act of discretion and a waiver as events of the power used (decider, subject, date, the provision as an opaque `standards` key, stated reason, outcome; a waiver's scope, conditions, expiry); accreditation assessments as events citing the standards found unmet; the key is held opaque and read only by standards and duties (events does not use standards, P4). (N698) R1's recording act takes a found extent as its citation, with the optional question kept beside it · K1713 (2), K1740, K1865; DEC-145, DEC-164 · req: new Rs (POLICIES L3 PO6, PO7; STANDARDS L3 ST8), R1 amended, BOB's wording · depends T35-1.
 - **T35-29 · connections** · (sweep, 2 rows) `index.mjs`:1198, :1296: "the plane's inference" → "an inference from position" · DEC-149 · req: none · depends —.
 - **T35-30 · observation-log** · (N664, sweep, 4 rows) `vocabulary.mjs`:176 (`OBSERVATION_ACTOR_CLASSES.plane`), :198 (`OBSERVATION_AUTHORITY_KINDS.objective`), :626, :1409 · K1801, DEC-149 · req: BOB's wording where a vocabulary's served text changes · depends —. 3,235 lines.
