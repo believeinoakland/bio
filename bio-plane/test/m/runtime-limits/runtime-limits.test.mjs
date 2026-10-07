@@ -329,7 +329,7 @@ test("R12: PUBLISHED_TOKEN_HASHES is an exported Set of SHA-256 hex; membership 
 
 /* ------------------------------------------------------------------ instanceClaudeStatus */
 
-test("R13: instanceClaudeStatus answers not configured, CASCADE_UNSET, with a detail pointing to each member's own account, for every env; it reads nothing from env and no binding name is exported", async () => {
+test("R13: instanceClaudeStatus answers not configured, CASCADE_UNSET, with a detail naming a member's own account or the group's API key in credentials, for every env; it reads nothing from env and no binding name is exported", async () => {
   const v = fresh();
   const answers = [];
   const check = async (env) => {
@@ -345,17 +345,35 @@ test("R13: instanceClaudeStatus answers not configured, CASCADE_UNSET, with a de
   await check(new Proxy({}, { get() { throw new Error("read"); }, has() { throw new Error("has"); } }));
   await check(undefined);
   assert.equal(new Set(answers).size, 1, "one answer, whatever env carries");
-  // The detail says the member connects their own Claude account or API key.
+  // The detail says where the assistant's account comes from instead (K1755): a member's own Claude account or API
+  // key, or the group's API key, each held in credentials, never a binding of the copy.
   const { detail } = await instanceClaudeStatus({ INSTANCE_CLAUDE_TOKEN: v });
-  assert.match(detail, /member/i);
-  assert.match(detail, /own Claude account/i);
-  assert.match(detail, /API key/i);
+  assert.match(detail, /a member's own Claude account or API key/);
+  assert.match(detail, /the group's API key/);
+  assert.match(detail, /administrator/);
+  assert.match(detail, /held sealed in Civicsmith's credentials, never as a setting/);
+  assert.match(detail, /binds no Claude account to its own settings, and none can be set there/);
+  // It claims no limit of Anthropic's plans (K1761, K1763): the retired "serves only its own holder" is gone, and
+  // nothing says the group can hold no account at all.
+  assert.doesNotMatch(detail, /serves only|only its own holder|subscription/i);
+  assert.doesNotMatch(detail, /holds no Claude account/i);
   assert.ok(!("INSTANCE_CLAUDE_BINDING" in tokens), "INSTANCE_CLAUDE_BINDING is no longer exported");
   assert.ok(!Object.values(tokens).includes("INSTANCE_CLAUDE_TOKEN"), "no export names the retired binding");
   // A fresh answer each call: changing one answer changes no later one.
   const st = await instanceClaudeStatus({});
   st.configured = true; st.detail = null;
   NO_ACCOUNT(await instanceClaudeStatus({}));
+});
+
+test("R13 (DEC-149 sweep, tokens.mjs:62): the detail says \"Your group's Civicsmith\", never \"the plane\", \"the instance\" or \"this group's copy\"", async () => {
+  const v = fresh();
+  for (const env of [{}, { INSTANCE_CLAUDE_TOKEN: v }]) {
+    const { detail } = await instanceClaudeStatus(env);
+    assert.ok(detail.startsWith("Your group's Civicsmith binds no Claude account"), detail);
+    assert.doesNotMatch(detail, /\bthe plane\b|\bthe instance\b|\bcopy\b|This group's/i);
+  }
+  // The sweep's old string is gone.
+  assert.ok(!(await instanceClaudeStatus({})).detail.includes("This group's copy holds no Claude account"));
 });
 
 test("R16: detail is null exactly when configured, a string otherwise, and no status ever carries the value", async () => {
@@ -558,7 +576,8 @@ test("R23: nothing exported accepts or sets a credential; the env passed in is o
     assert.equal(await instanceClaudeToken({}), null);
     assert.ok(withToken);
   }
-  // No Claude credential is read from env at all (K1502): with every binding present, the Claude services read nothing.
+  // No Claude credential is read from env at all (K1502, K1755): a member's own account and the group's API key are
+  // credentials'; with every binding present, the Claude services read nothing.
   {
     const reads = [];
     const e = watched({ INSTANCE_CLAUDE_TOKEN: v, ANTHROPIC_API_KEY: v, CLAUDE_CODE_OAUTH_TOKEN: v }, reads);
