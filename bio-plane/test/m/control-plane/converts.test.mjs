@@ -141,7 +141,7 @@ test("R30, R2 (reviewcopy convert): op=casedocument with a grant secret over the
   }
   /* the address form is still honoured for T35's release, and its answer names the deprecation (publication R73) */
   w.env.calls.length = 0;
-  const q = await call(w.env, { op: "casedocument", params: { case: doc.case_id, edition: "2", secret: LIVE }, hooks });
+  const q = await call(w.env, { op: "casedocument", params: { case: doc.case_id, edition: "2", secret: LIVE }, hooks, secretIn: "query" });
   assert.deepEqual([q.r?.status ?? q.status, q.json.text, q.json.deprecated], [200, "the document", "CREDENTIAL_IN_ADDRESS"]);
   assert.equal("deprecated" in live.r.json, false);
 });

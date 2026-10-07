@@ -15,6 +15,10 @@ import { evidenceStorageAbsent } from "../acquisition/index.mjs";
 import { SCRATCH, classify, scopeFor, namespaceGate, confinedNamespaceGate, pinnedNamespaceGate,
          aiCredentialPresented, admit, bearerFence, readerOf, aiCredentialMint, reviewGrantSecret,
          projectCreationGate, queryGate } from "../admission/index.mjs";
+/* T35 (admission R20–R22; F1, F4, N703; K2044): the credential read once from the header or the body (the address only
+   for T35's release, and then named deprecated), the public ops' window and the caller's source and country, and the
+   security tally of every refusal the door gives or relays. */
+import { presentedCredential, CREDENTIAL_IN_ADDRESS, doorWindowGate, sourceOf, countryOf, securityTally } from "../admission/index.mjs";
 /* answer-envelope (its R1–R8; the split, K1907, K1974): the envelope, its decoration, the store's answer read once, the
    internal-error answer, the row readers, the page policy and the composed catalogue the published fences read (R41). */
 import { json, doAnswer, storeRefusal, storeSilent, relayAnswer, planeInternalError, replayRow, requiredArgument,
@@ -102,6 +106,26 @@ async function tallySessionRefusal(res, session) {
   } catch { /* the tally is status, never a gate */ }
 }
 
+/* R59 (admission R20, R22; F1, N703; K2044): ON THE WAY OUT. A refusal the door gives or relays, at either of the two
+   levels R22 decorates, is handed once to admission's `securityTally` (a tally that fails never changes the answer); and
+   every JSON answer to a request whose credential was read from its address carries `deprecated: "CREDENTIAL_IN_ADDRESS"`
+   at its top level, beside `store` and `tokenClass`, the one name admission and publication use. */
+async function outOfAddress(res, seen, req) {
+  if (!res || !/application\/json/i.test(res.headers.get("content-type") || "")) return res;
+  let body;
+  try { body = await res.clone().json(); } catch { return res; }
+  if (!body || typeof body !== "object" || Array.isArray(body)) return res;
+  const refusal = body.ok === false ? body : body.result && typeof body.result === "object" && body.result.ok === false ? body.result : null;
+  if (refusal) {
+    try { await securityTally({ op: seen.op, answer: refusal, presented: { token: seen.credential?.token ?? null, cred: seen.cred }, req }); }
+    catch { /* the tally is status, never a gate */ }
+  }
+  if (!seen.credential?.inAddress || body.deprecated === CREDENTIAL_IN_ADDRESS) return res;
+  const headers = new Headers(res.headers);
+  headers.delete("content-length");
+  return new Response(JSON.stringify({ ...body, deprecated: CREDENTIAL_IN_ADDRESS }), { status: res.status, statusText: res.statusText, headers });
+}
+
 /* REC-22: the ONE namespace the public read path answers from. An instance has
    one published record, so op=publishedcase and op=publishedbytes are pinned
    here exactly as op=verify and op=publishedmanifest are — and a probe's
@@ -128,11 +152,13 @@ async function sha256Hex(v) {
    `#noReviewCopy` is carried at 404 with nothing added, so a caller outside the fence reads the same status and the
    same bytes from the single read (`reviewcopy`) and from the list (`casedrafts`); a store that did not answer is a
    silence, stated as one. */
-async function reviewAnswer(out, op) {
-  if (out.refused) return storeRefusal(out);   /* R23: the store's own refusal, at its status */
+/* R59 (admission R20): `extra` is `{deprecated}` for a secret read from the address, put in the answer before the in-band
+   hash is taken, so the hash is over the answer exactly as served. */
+async function reviewAnswer(out, op, extra = {}) {
+  if (out.refused) return storeRefusal(out, extra);   /* R23: the store's own refusal, at its status */
   if (!out.answered) return storeSilent(op, out.correlation);
   const r = out.result;
-  if (!r?.ok) return json({ ok: false, ...r }, r?.reason === "NO_REVIEW_COPY" ? 404 : 400);
+  if (!r?.ok) return json({ ok: false, ...r, ...extra }, r?.reason === "NO_REVIEW_COPY" ? 404 : 400);
   if (op === "reviewcopy") {
     /* REC-148 / DEC-31's BOUND RULE (`BIO_Publication_v0_1.md` §6A.3 point 1): the answer carries its
        hash, date, author and both floors IN-BAND, by the SAME function the container manifest is
@@ -142,7 +168,7 @@ async function reviewAnswer(out, op) {
        into the floors and not served twice. (Moved here from the review door's inline branch when REC-198
        made this function the one answer shape for every read of a draft.) */
     const { required_strength: bar, ...copy } = r;
-    const served = { ok: true, ...copy };
+    const served = { ok: true, ...copy, ...extra };
     const { quartet } = await inbandQuartet({
       subject: served,
       over: "this answer exactly as served, without its `inband` key: parse it, delete `inband`, and "
@@ -155,7 +181,7 @@ async function reviewAnswer(out, op) {
       date: r.last_change?.at ?? null, author: r.updated_by ?? null, bar: bar ?? null });
     return json({ ...served, inband: quartet }, 200);
   }
-  return json({ ok: true, ...r }, 200);
+  return json({ ok: true, ...r, ...extra }, 200);
 }
 
 /* R44 (K921; filing-templates R8, R9, R13, R14) — THE TEMPLATE GRANT'S FOUR DOORS, on the review copy's (R20) for its
@@ -173,16 +199,17 @@ async function reviewAnswer(out, op) {
    inner request carries the caller's own arguments with every stamp and credential removed. */
 const TEMPLATE_GRANT_DOORS = Object.freeze([...TEMPLATE_DOOR_ACTIONS, ...TEMPLATE_DOOR_READS]);   /* op-declarations R8 */
 const deadTemplateGrant = () => json({ ok: false, ...noTemplateGrant() }, 404);
-async function templateGrantDoor({ req, url, env, op, spec, presentedAi, stub }) {
+async function templateGrantDoor({ req, url, env, op, spec, presentedAi, stub, credential }) {
   const inner = new URL(`http://do/${op}`);
   for (const [k, v] of url.searchParams) inner.searchParams.set(k, v);
   for (const k of ["token", "op", "store", "secret", "secretSha", "bySecret", ...QUERY_STAMPS]) inner.searchParams.delete(k);
-  if (url.searchParams.has("secret")) {
+  /* R59 (admission R20): the secret is the body's `secret` (the address's only for T35's release) */
+  if (credential.secret !== null) {
     inner.searchParams.set("bySecret", "1");
-    inner.searchParams.set("secretSha", await sha256Hex(url.searchParams.get("secret") || ""));
+    inner.searchParams.set("secretSha", await sha256Hex(credential.secret || ""));
   } else {
     const admitted = await admit({ url, env, op, spec: { ...spec, classes: ["admin", "member"], machineClasses: [] },
-                                   method: req.method, presented: presentedAi, doAnswer });
+                                   method: req.method, presented: presentedAi, doAnswer, credential });
     if (admitted.silent) return storeSilent(admitted.silent.op, admitted.silent.correlation);
     if (admitted.refusal || !admitted.caller.viaSession) return deadTemplateGrant();
     inner.searchParams.set("viewer", admitted.caller.viewer);
@@ -193,7 +220,7 @@ async function templateGrantDoor({ req, url, env, op, spec, presentedAi, stub })
     let b = {};
     try { b = JSON.parse((await req.text()) || "{}"); } catch { b = {}; }
     if (!b || typeof b !== "object" || Array.isArray(b)) b = {};
-    for (const k of [...BODY_STAMPS, ...QUERY_STAMPS, "secretSha", "bySecret"]) delete b[k];
+    for (const k of [...BODY_STAMPS, ...QUERY_STAMPS, "secretSha", "bySecret", "secret", "token"]) delete b[k];
     body = JSON.stringify(b);
   }
   const out = await doAnswer(stub.fetch(new Request(inner, body === undefined ? { method: "GET" } : { method: "POST", body })));
@@ -207,8 +234,8 @@ async function templateGrantDoor({ req, url, env, op, spec, presentedAi, stub })
 
 /* WHO IS ASKING, FOR A PUBLIC OP THAT ANSWERS WORKING MATERIAL ONLY TO SOME: `admission`'s `readerOf` (its R16), in the
    shape the arms behind plane's hooks read (`{viewer, cls}`, or `{silent: <op>, correlation}`). */
-async function caseReader(url, env, storeName, presentedAi) {
-  const r = await readerOf(url, env, storeName, presentedAi, doAnswer);
+async function caseReader(url, env, storeName, presentedAi, credential = null) {
+  const r = await readerOf(url, env, storeName, presentedAi, doAnswer, credential);
   return r.silent ? { silent: r.silent.op, correlation: r.silent.correlation } : r;
 }
 
@@ -238,13 +265,13 @@ function storageAbsent(op, error) {
    so a probe naming nothing still reads `scratch`), and for every other caller `store=scratch` when named and `bio`
    otherwise, the invitation ops' rule. A silence is a silence (REC-52): never "no group is recorded". Moved from
    legacy-index at T19 (its door share). */
-async function groupRead(op, url, env, presentedAi) {
-  const held = url.searchParams.get("token");
+async function groupRead(op, url, env, presentedAi, credential) {
+  const held = credential.token;
   const heldCls = held ? await classify(held, env) : null;
   const heldScope = heldCls ? scopeFor(heldCls, url) : null;
   const store = heldScope && !heldScope.error ? heldScope.name
     : (url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio");
-  const reader = await caseReader(url, env, store, presentedAi.cred);
+  const reader = await caseReader(url, env, store, presentedAi.cred, credential);
   if (reader.silent) return storeSilent(reader.silent, reader.correlation);
   const io = { json, storeSilent, storeRefusal, doAnswer };
   return op === "instancegroup" ? instanceGroupOp(env, store, reader, io) : groupIdentityOp(env, store, reader, io);
@@ -391,8 +418,8 @@ const GRANT_OWN_OPS = Object.freeze(["askceiling", "askcheck", "askusage", "affo
 const GRANT_HEADER = "x-bio-grant";
 /* store-door R9 (K2038 (1)): the internal header a stamped session travels in to the store. */
 const SESSION_HEADER = "x-bio-session";
-async function grantAdmit(env, url, op, spec) {
-  const own = GRANT_OWN_OPS.includes(op), token = url.searchParams.get("token");
+async function grantAdmit(env, url, op, spec, token) {
+  const own = GRANT_OWN_OPS.includes(op);
   if ((!own && !AI_GRANT_OPS.includes(op)) || (op === "affordances" && url.searchParams.get("target"))) return {};
   const out = await doAnswer(env.STORE.get(env.STORE.idFromName("bio")).fetch(new Request("http://do/aigrantadmit", {
     method: "POST", body: JSON.stringify({ token, op: own ? AI_GRANT_OPS[0] : op, write: own ? false : spec.mutating }) })));
@@ -407,7 +434,8 @@ async function grantAdmit(env, url, op, spec) {
 /* R1–R25: the Worker entry. `hooks.publicOp(ctx)` answers a public op whose handler is a module's, through plane's hooks;
    `hooks.gatedOp(ctx)` an admitted op's handler there, or undefined for the generic forward below. */
 /* R17: the stamps a caller may never supply, in the query and in a body. */
-const QUERY_STAMPS = Object.freeze(["viewer", "identity", "author", "by", "actor", "who", "origin", "administer", "aiCred"]);
+const QUERY_STAMPS = Object.freeze(["viewer", "identity", "author", "by", "actor", "who", "origin", "administer", "aiCred",
+                                    /* T35 (R58): who is calling, the door's alone (admission R21) */ "source", "country"]);
 const BODY_STAMPS = Object.freeze(["actorIdentity", "actorViewer", "actorMemberId", "ownerMemberId", "assistantPrincipal",
                                    "migrationReplay"]);
 /* R36, R23 (K1037): the ops whose refusals state their own HTTP status in `result.status`, which the forward answers. */
@@ -417,10 +445,11 @@ export function makeFetch(hooks = {}) {
   /* R50: `seen.session` is set once admission has admitted a member's session, so a refusal answered to it is tallied;
      R51: every HTML answer leaves with the page policy. */
   const planeDoor = async function planeDoor(req, env) {
-    const seen = { session: null };
+    const seen = { session: null, credential: null, cred: null, op: null };
     let res;
     try { res = await fetch(req, env, seen); } catch (e) { res = planeInternalError(e, req); }
     await tallySessionRefusal(res, seen.session);
+    res = await outOfAddress(res, seen, req);
     return await withPagePolicy(res);
   };
   planeDoor.limits = PLANE_LIMITS;
@@ -428,6 +457,13 @@ export function makeFetch(hooks = {}) {
   return planeDoor;
   async function fetch(req, env, seen = { session: null }) {
     const url = new URL(req.url);
+    /* R59 (admission R20; F1, K2044): the credential this request presents, read once — the `Authorization` header's, else
+       a JSON body's `token`, else (T35's release only) the address's — and every gate below judges it and no other. */
+    let reqBody = null;
+    if (req.method === "POST")
+      try { reqBody = JSON.parse((await req.clone().text()) || "null"); } catch { reqBody = null; }
+    const credential = presentedCredential({ req, url, body: reqBody });
+    seen.credential = credential;
     if (req.method === "OPTIONS")
       return new Response(null, { status: 204, headers: { "access-control-allow-origin": "*", "access-control-allow-methods": "GET, POST, OPTIONS", "access-control-allow-headers": "content-type" } });
 
@@ -490,6 +526,7 @@ export function makeFetch(hooks = {}) {
     /* R55 (op-declarations R21): a requirement function's name that aliases an op is that op, before every gate: its
        handler, its stamps and its answer, so the two answer alike. */
     if (Object.hasOwn(OP_ALIASES, op)) op = OP_ALIASES[op];
+    seen.op = op;
     let spec = Object.hasOwn(OPS, op) ? OPS[op] : undefined;   /* R2: the table's own keys only */
     /* R36 (N364; capture R32, R65): a knock resolved to `pulled` is R65's pull, so it is routed as `op=inboxpull` before
        any gate: every gate, stamp and answer it meets is the pull's, the promotion included, and no pull files a capture
@@ -523,8 +560,9 @@ export function makeFetch(hooks = {}) {
     if (unknownNamespace) return refused(unknownNamespace);
     /* R28 (K1861 (6)): admission's query gate, which never refuses: what an op may take only from the body (a door's key,
        link and cover; the group key) and a public door's `token` leave the URL before anything reads it (R54, R56). */
-    queryGate(url, op);
-    const presentedAi = await aiCredentialPresented(url, env, doAnswer);
+    queryGate(url, op, credential);
+    const presentedAi = await aiCredentialPresented(url, env, doAnswer, { credential, op });
+    seen.cred = presentedAi.cred ?? null;
     if (presentedAi.silent) return storeSilent(presentedAi.silent.op, presentedAi.silent.correlation);
     const confinedNamespace = confinedNamespaceGate(url, presentedAi.cred);
     if (confinedNamespace) return refused(confinedNamespace);
@@ -533,6 +571,14 @@ export function makeFetch(hooks = {}) {
 
     /* Unauthenticated by design. Each one gates itself. */
     if (spec.classes === null) {
+      /* R28, R58 (admission R21; F4): the public ops' window first, before the op reads or writes anything; then who is
+         calling, as admission knows them (a keyed fingerprint and a country, never the address), the stamps `claim`,
+         `login` and `recover` take (credentials R1, R4, R47) and capture's knock its `country` (its R85). */
+      const windowed = await doorWindowGate({ req, env, op, spec, doAnswer });
+      if (windowed.refusal) return refused(windowed.refusal);
+      const source = windowed.source ?? await sourceOf(req, env);
+      const country = countryOf(req);
+      const doorStamps = new URLSearchParams({ ...(source ? { source } : {}), ...(country ? { country } : {}) }).toString();
       const fp = await fingerprint(env.ADMIN_TOKEN);
       const stub = env.STORE.get(env.STORE.idFromName("bio"));
       /* Claiming and logging in are pinned to `bio` above, because an instance
@@ -561,7 +607,7 @@ export function makeFetch(hooks = {}) {
           return json({ ok: false, reason: "BOOTSTRAP_CREDENTIAL_MISMATCH", ...installationRow("BOOTSTRAP_CREDENTIAL_MISMATCH"),
             error: "bootstrap credential does not match" }, 403);
         /* END DEC-49 REGION is-bootstrap-claim */
-        return relayAnswer(stub.fetch(new Request(`http://do/claim?fp=${fp}`, {
+        return relayAnswer(stub.fetch(new Request(`http://do/claim?fp=${fp}${doorStamps ? `&${doorStamps}` : ""}`, {
           method: "POST", body: JSON.stringify({ role: "admin", password: body.password }) })), "claim");
       }
       /* ===== REC-126 / DEC-31 / IC-145: THE REVIEW COPY'S READ AND COMMENT (R20) ====== */
@@ -586,7 +632,7 @@ export function makeFetch(hooks = {}) {
       /* D-150: `statementack` takes these two doors, and a member may name an unsigned case
          document (`case` + `edition`) in place of a draft. */
       if (op === "reviewcopy" || op === "reviewcomment" || op === "statementack") {
-        const bySecret = url.searchParams.has("secret");
+        const bySecret = credential.secret !== null;   /* R59 (admission R20): the body's `secret` */
         const q = new URLSearchParams();
         const draftParam = (url.searchParams.get("draft") || "").trim();
         if (draftParam) q.set("draft", draftParam);
@@ -596,9 +642,9 @@ export function makeFetch(hooks = {}) {
         if (op === "reviewcopy" && url.searchParams.get("limit")) q.set("limit", url.searchParams.get("limit"));
         if (bySecret) {
           q.set("bySecret", "1");
-          q.set("secretSha", await sha256Hex(url.searchParams.get("secret") || ""));
+          q.set("secretSha", await sha256Hex(credential.secret || ""));
         } else {
-          const reader = await caseReader(url, env, "bio", presentedAi.cred);   /* admission's `readerOf` */
+          const reader = await caseReader(url, env, "bio", presentedAi.cred, credential);   /* admission's `readerOf` */
           if (reader.silent) return storeSilent(reader.silent, reader.correlation);
           q.set("viewer", reader.viewer);
         }
@@ -622,15 +668,24 @@ export function makeFetch(hooks = {}) {
         }
         const out = await doAnswer(stub.fetch(`http://do/${op}?${q}`,
           commentBody === null ? undefined : { method: "POST", body: commentBody }));
-        return reviewAnswer(out, op);
+        return reviewAnswer(out, op, credential.inAddress ? { deprecated: CREDENTIAL_IN_ADDRESS } : {});
       }
       /* The sign-in and the invitation's two steps, relayed to the store's routes (credentials' `login`, membership's
          `invitelook` and `enroll`) and answered through R24's relay (D-679). The invitation ops answer from the store
          the caller names (`invStub` above). Moved from legacy-index at T19 (its door share). */
       if (op === "login") {
         const body = await req.json().catch(() => ({}));
-        return relayAnswer(stub.fetch(new Request("http://do/login", {
+        return relayAnswer(stub.fetch(new Request(`http://do/login${doorStamps ? `?${doorStamps}` : ""}`, {
           method: "POST", body: JSON.stringify({ role: body.role || "admin", password: body.password }) })), "login");
+      }
+      /* R58 (credentials R47; K1888): `recover`, credential-free as `login` is, pinned to `bio`: its `role`, `code` and
+         `password` from the body alone, relayed once and never logged, kept or echoed here (R30); `source` and `country`
+         the door's. */
+      if (op === "recover") {
+        const b = await req.json().catch(() => null);
+        const o = b && typeof b === "object" && !Array.isArray(b) ? b : {};
+        return relayAnswer(stub.fetch(new Request(`http://do/recover${doorStamps ? `?${doorStamps}` : ""}`, {
+          method: "POST", body: JSON.stringify({ role: o.role, code: o.code, password: o.password }) })), "recover");
       }
       if (op === "invitelook" || op === "enroll") {
         const body = await req.json().catch(() => ({}));
@@ -651,13 +706,13 @@ export function makeFetch(hooks = {}) {
       /* R54 (membership R110): the group's self-description, the viewer read as admission's `readerOf` reads who is asking
          (`""` for no one) in the store the caller names, so the public receives only what membership answers the public. */
       if (op === "groupdescription") {
-        const reader = await caseReader(url, env, url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio", presentedAi.cred);
+        const reader = await caseReader(url, env, url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio", presentedAi.cred, credential);
         if (reader.silent) return storeSilent(reader.silent, reader.correlation);
         return relayAnswer(invStub.fetch(`http://do/groupdescription?viewer=${encodeURIComponent(reader.viewer)}`), op);
       }
       /* R44 (K921): the template grant's four doors, a recipient's secret or a member's session (above). */
-      if (TEMPLATE_GRANT_DOORS.includes(op)) return templateGrantDoor({ req, url, env, op, spec, presentedAi, stub });
-      if (op === "instancegroup" || op === "groupidentity") return groupRead(op, url, env, presentedAi);
+      if (TEMPLATE_GRANT_DOORS.includes(op)) return templateGrantDoor({ req, url, env, op, spec, presentedAi, stub, credential });
+      if (op === "instancegroup" || op === "groupidentity") return groupRead(op, url, env, presentedAi, credential);
       if (op === "knockerconsent") return knockerConsent(req, stub);
       /* R45 (DEC-111, K1170; public-read R18, R10): network-notices' public reads, each asked by its own name, served by
          public-read's door read from the published store (`stub`, `bio`; a `store=scratch` was refused above), with no
@@ -667,16 +722,16 @@ export function makeFetch(hooks = {}) {
       if (NETWORK_NOTICES_PUBLIC_READS.includes(op) || CASE_CHECKER_PUBLIC_READS.includes(op))
         return publicReadDoorRead(op, url, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer });
       /* The public ops whose handlers are their modules' (publication, public-read, instance-setup, capture). */
-      return hooks.publicOp({ req, url, env, op, stub, invStub, fp, presentedAi });
+      return hooks.publicOp({ req, url, env, op, stub, invStub, fp, presentedAi, credential, source, country });
     }
 
     /* R28: admission R5–R11 in their order (`admit`): the binding class, the agent credential, the session (its export
        refusal and session gate), the class or the agent's task scope, the capability, the landing. A refusal is answered
        as the gate gives it; a store that could not be asked is a silence, never a statement about the caller. */
-    let admitted = await admit({ url, env, op, spec, method: req.method, presented: presentedAi, doAnswer });
+    let admitted = await admit({ url, env, op, spec, method: req.method, presented: presentedAi, doAnswer, credential });
     if (admitted.silent) return storeSilent(admitted.silent.op, admitted.silent.correlation);
     if (admitted.refusal?.body?.reason === "NOT_AUTHENTICATED") {   /* R53: an ask's grant */
-      const granted = await grantAdmit(env, url, op, spec);
+      const granted = await grantAdmit(env, url, op, spec, credential.token);
       if (granted.silent) return storeSilent(granted.silent.op, granted.silent.correlation);
       if (granted.caller || granted.refusal) admitted = granted;
     }
@@ -770,7 +825,11 @@ export function makeFetch(hooks = {}) {
     const actor = viaSession ? sessViewer : cls === "ai" ? `${MACHINE_CLASS_PREFIX}ai/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
     const stampOf = { viewer: viaSession ? sessViewer : cls === "ai" ? aiCred.principal : actor, by: actor,
       author: viaSession ? sessIdentity : actor, proposer: viaSession ? sessMember : actor,
-      member: viaSession ? sessViewer : null, session: viaSession ? url.searchParams.get("token") : null };
+      member: viaSession ? sessViewer : null, session: viaSession ? credential.token : null,
+      /* T35 (op-declarations R30; K1972): `principal`, the run verbs' expression; `owner`, a selection's owner (the
+         stamp a selection scope is read under) */
+      principal: viaSession ? sessIdentity : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`,
+      owner: viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}` };
     /* R59, store-door R9 (K2038 (1)): a stamped `session` is a credential, so it reaches the store in the internal header
        `x-bio-session`, never the address; store-door hands it to the owner's map in process. A caller's `session`
        parameter is deleted for every op. */
@@ -2774,7 +2833,7 @@ export function makeFetch(hooks = {}) {
       try { asked = passBody ? JSON.parse(passBody) : {}; } catch { asked = {}; }
       const pack = await heldPack({ req, url, env, cls, viaSession, sessMember, sessViewer, sessIdentity, sessRights, sessCaps,
                                     aiCred, storeName, stub });
-      const ask = draftAsk(op, asked, { member: sessMember, session: url.searchParams.get("token"),
+      const ask = draftAsk(op, asked, { member: sessMember, session: credential.token,
                                        firsthand: body.result.firsthand === true, pack });
       const res = await stub.draft(ask);
       let drafted = null;

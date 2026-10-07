@@ -13,7 +13,10 @@ const { ASK_PLANE_OPS } = await import("../../../../agent-worker/src/ops.mjs");
 
 const { OPS } = O;
 const OP_STAMPS = O.OP_STAMPS || {};
-const KEYS = ["viewer", "by", "bodyBy", "author", "proposer", "member", "session"];
+/* T35 (op-declarations R30; OP-DECLARATIONS #12 J2): `principal`, `owner`, and the public ops' `source` and `country` */
+const KEYS = ["viewer", "by", "bodyBy", "author", "proposer", "member", "session", "principal", "owner", "source", "country"];
+/* who is calling, as the door knows them on a public op (admission R21): the window's fingerprint, no country unstated */
+const DOOR = { source: "src-test", country: null };
 const MEMBER_ID_BY = ["invitewithdraw", "websitekeycreate", "websitekeyset", "websitekeyrevoke", "joinlinkenable", "joinlinkset",
                       "joinlinkreplace", "joinlinkoff", "courtnoticeset", "groupdescriptionset"];
 const URL0 = new URL("http://do/");
@@ -44,16 +47,19 @@ function callers() {
   const agent = aik();
   const w = world({ creds: { [agent]: cred({ tokenId: "agent-ann", principal: "member:ann", writes: Object.keys(OPS) }) } });
   const bind = (c, token, params = {}) => ({ name: c, token, params, session: false,
-    want: { viewer: `class:${c}`, by: `class:${c}`, bodyBy: `class:${c}`, author: `class:${c}`, proposer: `class:${c}`, member: null, session: null } });
+    want: { viewer: `class:${c}`, by: `class:${c}`, bodyBy: `class:${c}`, author: `class:${c}`, proposer: `class:${c}`, member: null, session: null,
+            principal: `class:${c}`, owner: `class:${c}`, ...DOOR } });
   return { w, list: [
     bind("admin", w.env.ADMIN_TOKEN), bind("member", w.env.MEMBER_TOKEN), bind("probe", w.env.PROBE_TOKEN, { store: "scratch" }),
     { name: "founder", token: w.S.founder, params: {}, session: true,
-      want: { viewer: "admin", by: "admin", bodyBy: "admin", author: "member:admin", proposer: "admin", member: "admin", session: w.S.founder } },
+      want: { viewer: "admin", by: "admin", bodyBy: "admin", author: "member:admin", proposer: "admin", member: "admin", session: w.S.founder,
+              principal: "member:admin", owner: "member:admin", ...DOOR } },
     { name: "ann", token: w.S.ann, params: {}, session: true,
-      want: { viewer: "member:ann", by: "member:ann", bodyBy: "member:ann", author: "member:ann", proposer: "ann", member: "member:ann", session: w.S.ann } },
+      want: { viewer: "member:ann", by: "member:ann", bodyBy: "member:ann", author: "member:ann", proposer: "ann", member: "member:ann", session: w.S.ann,
+              principal: "member:ann", owner: "member:ann", ...DOOR } },
     { name: "agent", token: agent, params: {}, session: false,
       want: { viewer: "member:ann", by: "class:ai/agent-ann", bodyBy: "class:ai/agent-ann", author: "class:ai/agent-ann",
-              proposer: "class:ai/agent-ann", member: null, session: null } },
+              proposer: "class:ai/agent-ann", member: null, session: null, principal: "member:ann/agent-ann", owner: "class:ai", ...DOOR } },
   ] };
 }
 
@@ -79,6 +85,8 @@ test("R53, R17, R29: for every op `OP_STAMPS` declares and every kind of caller 
   const forgedQ = Object.fromEntries([...KEYS, "grant"].map((k) => [k, FORGED]));
   let checked = 0, reached = 0;
   for (const [op, keys] of Object.entries(OP_STAMPS)) for (const c of list) {
+    /* R41 (T35): `agentpack` is answered from the untargeted affordances handler (a hook), which stamps its own reads */
+    if (op === "agentpack") continue;
     for (const [params, body] of [[c.params, {}], [{ ...c.params, ...forgedQ }, { by: FORGED, note: "kept" }]]) {
       w.env.calls.length = 0;
       const r = await call(w.env, { op, token: c.token, params, method: OPS[op]?.mutating ? "POST" : "GET",

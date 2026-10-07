@@ -39,10 +39,12 @@ const ok = (result, status = 200) => new Response(JSON.stringify({ ok: true, res
  *  row (looked up by SHA-256, as the module asks). `answer(call)` may return a Response to override any route. */
 export function makeEnv({ sessions = {}, creds = {}, answer = null, omit = [], group = null } = {}) {
   const calls = [];
+  /* admission R21: the public ops' window, asked of bio's store before the op; kept apart from the op's own calls */
+  const windowCalls = [];
   const bySha = new Map(Object.entries(creds).map(([v, c]) => [sha(v), c]));
   const env = {
     ADMIN_TOKEN: hex64(), MEMBER_TOKEN: hex64(), PROBE_TOKEN: hex64(), DAEMON_TOKEN: hex64(), VERSION: "9.8.7",
-    calls,
+    calls, windowCalls,
     STORE: {
       idFromName(n) { return n; },
       get(id) {
@@ -56,6 +58,7 @@ export function makeEnv({ sessions = {}, creds = {}, answer = null, omit = [], g
             const route = u.pathname.slice(1);
             const call = { ns: id, route, url: u, params: Object.fromEntries(u.searchParams), body, method: req.method,
                            headers: Object.fromEntries(req.headers) };
+            if (route === "doorwindow") { windowCalls.push(call); if (answer) { const r = await answer(call); if (r) return r; } return ok({ source: "src-test" }); }
             calls.push(call);
             if (answer) { const r = await answer(call); if (r) return r; }
             /* admission R6, R20 (K2038): a lookup's credential travels in a header, as store-door R9 hands it on */
@@ -84,12 +87,24 @@ export const member = (id, caps = [], extra = {}) => ({ role: `member:${id}`, ca
 export const cred = (extra = {}) => ({ tokenId: "agent-1", principal: "member:ann", writes: [], revoked: false,
                                        confinedTo: null, taskScope: "t", ...extra });
 
-/** Drive the Worker entry. Returns status, headers, raw text and parsed JSON (null if not JSON). */
+/** Drive the Worker entry. Returns status, headers, raw text and parsed JSON (null if not JSON). The credential is sent as
+ *  R59 (admission R20) has it, in an `Authorization: Bearer` header; `tokenIn: "query"` sends it in the address instead
+ *  (T35's deprecated form), `tokenIn: "body"` as a JSON body's `token`. */
 export async function call(env, { op, token, params = {}, method = "GET", body, path = "/api", headers = {},
-                                  hooks } = {}) {
+                                  hooks, tokenIn = "header", secretIn = "body" } = {}) {
   const u = new URL(`https://plane.example${path}`);
   if (op !== undefined) u.searchParams.set("op", op);
-  if (token !== undefined) u.searchParams.set("token", token);
+  if (token !== undefined && tokenIn === "query") u.searchParams.set("token", token);
+  if (token !== undefined && tokenIn === "header") headers = { authorization: `Bearer ${token}`, ...headers };
+  if (token !== undefined && tokenIn === "body") body = { ...(body && typeof body === "object" ? body : {}), token };
+  /* R59 (R20, R44; admission R20): a review or template grant's secret goes in the JSON body of a POST, unless the address
+     form (T35's deprecated one) is asked for with `secretIn: "query"` */
+  if (Object.hasOwn(params, "secret") && secretIn === "body") {
+    const { secret, ...rest } = params;
+    params = rest;
+    method = "POST";
+    body = { ...(body && typeof body === "object" ? body : {}), secret };
+  }
   for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v);
   const init = { method, headers };
   if (body !== undefined) init.body = typeof body === "string" ? body : JSON.stringify(body);
