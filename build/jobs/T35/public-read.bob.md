@@ -11,3 +11,7 @@ Inherited reds (plan rule 9), outside your module unless named yours: coverage o
 
 Also inherited (K1993): red 31, scheduler `plane.test.mjs`:151 and plane `sweep.test.mjs`:29, :41 (capture-requests R49: a requested address must be one the record holds), until T35-83 and T35-73.
 Also inherited (K1996): red 32, bundler `fleetbundles.test.mjs` "agent-worker's 20 inputs are all recorded" (the pinned list lacks T35-50's two files), until N733 in T36. Red 30 is cleared (L6's close regenerated the bundles).
+
+## B2 · CHANGE
+
+Re-opened (K2011, mechanics §7): publication R72 (merged, K2011) freezes each case edition's criteria in its R53 state, and DEC-145's labels are owed in T35. Your requirements gain R31 (merge tranche/T35 and read it): publishedCase answers criteria as R53 freezes them, each row with its label and access_words, [] for none, null (not recorded, never filled) for an edition before T35; passages only as R72 holds them; nothing recomputed from standards. Name R31 in a test and record completion again.
