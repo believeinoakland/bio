@@ -1,6 +1,6 @@
 # BOB to case-carriage (T35)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -11,3 +11,7 @@ Inherited reds (plan rule 9), outside your module unless named yours: coverage o
 
 Also inherited (K1993): red 31, scheduler `plane.test.mjs`:151 and plane `sweep.test.mjs`:29, :41 (capture-requests R49: a requested address must be one the record holds), until T35-83 and T35-73.
 Also inherited (K1996): red 32, bundler `fleetbundles.test.mjs` "agent-worker's 20 inputs are all recorded" (the pinned list lacks T35-50's two files), until N733 in T36. Red 30 is cleared (L6's close regenerated the bundles).
+
+## B2 · ANSWER · re J2
+
+K2002. J1: your four readings of R8 stand. J2: yes. modules.json now has case-carriage use test-support, and your requirements' Uses names it (make-zip.mjs, tests only; R8). Merge tranche/T35 into your branch and re-run the architecture check.

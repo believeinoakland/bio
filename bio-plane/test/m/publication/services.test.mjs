@@ -8,7 +8,7 @@ import { planeWorld as world, caseDoc, V, SIG, KEY, NOW } from "./fixture.mjs";
 const F = "INQ-2026-0001", G = "INQ-2026-0002", DOC = "INFO-2026-0001-minutes";
 const CASE = "CASE-2026-0001";
 const roster = (roles) => roles.map((r) => ({ bundle_id: r.target, version_sha: r.version_sha, role: r.role ?? "load_bearing" }));
-const STATE_KEYS = ["awaiting", "bar", "bias_acknowledgement", "caseId", "complete", "completeness", "detail", "document",
+const STATE_KEYS = ["awaiting", "bar", "bias_acknowledgement", "caseId", "complete", "completeness", "criteria", "detail", "document",
                     "edition", "findings", "group", "manifest_sha", "opened", "project", "ratified_at", "scope", "timeline"].sort();
 
 /* CASE edition 1 over F (load-bearing, B/C in the document) and G (supporting, stated nothing), signed; nothing published. */

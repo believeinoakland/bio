@@ -22,7 +22,7 @@ const TIP = { ord: 0, target_id: OBS2, level: "group", state: "uncorroborated", 
 
 /* alice owns P and holds an administrator-registered key; bo joined P and holds none; eve is in no project. The case
    document is stored unsigned, and the act's facts are publication's for it, the attribution facts being whatever
-   `publication.attributionFacts` answers (the same read the pre-flight makes). */
+   `case-tensions`' `attributionFacts` answers (the same read the pre-flight makes). */
 async function setup({ mutate = (d) => d, edition = 1, conclusions = true, body = CASE_BODY } = {}) {
   const w = world();
   const key = await newKey();
@@ -35,7 +35,7 @@ async function setup({ mutate = (d) => d, edition = 1, conclusions = true, body 
                       { raw: conclusions ? ["case_conclusions:", ...caseConclusionRowLines(Q1, conc)] : [], body });
   const docSha = w.caseDoc(CASE, edition, text);
   const facts = () => ({ ok: true, doc: { case_id: CASE, edition, doc_sha: docSha, text },
-                         attribution: w.publication.attributionFacts({ text, case_id: CASE, edition }),
+                         attribution: w.caseTensions.attributionFacts({ text, case_id: CASE, edition }),
                          signers: w.credentials.attestingKeys(), memberBasis: {},
                          priorCase: w.row(`SELECT edition, completeness, bias_acknowledgement FROM published_cases
                                             WHERE case_id=? AND edition<? AND ratified_at IS NOT NULL
@@ -125,7 +125,7 @@ test("R18 (N385): C-32.13 is chosen by the machine-identity predicate, never by 
 test("R18: C-53.12, C-92.10 and C-92.11 over publication's attribution facts for these bytes, each the act's own", async () => {
   const s = await setup();
   let attr = { reached: [OBS], legacy: [OBS], stated: [], current: [{ observation: OBS, level: null, why: "no choice made" }] };
-  s.w.publication.attributionFacts = () => attr;
+  s.w.caseTensions.attributionFacts = () => attr;
   const all = s.preflight();
   assert.deepEqual(reasons(all), ["TESTIMONY_CASE_UNPUBLISHABLE", "ATTRIBUTION_UNCHOSEN", "ATTRIBUTION_STATEMENT_STALE"]);
   const steps = [
@@ -223,7 +223,7 @@ test("R18: the case gate's findings, as the act's GATE_REFUSED, with the previou
 
 test("R18: every refusal that holds is listed, each asked on its own, in R18's order", async () => {
   const s = await setup({ mutate: (d) => ({ ...d, case_scope: "" }) });
-  s.w.publication.attributionFacts = () => ({ reached: [OBS, OBS2], legacy: [OBS], stated: [],
+  s.w.caseTensions.attributionFacts = () => ({ reached: [OBS, OBS2], legacy: [OBS], stated: [],
     current: [{ observation: OBS, level: null, why: "none" }, { observation: OBS2, level: "group", shown: "g", why: null }] });
   s.w.corroboration.set(Q1, [TIP]);
   s.w.bv.conc.set(s.w.key(s.P, Q1), { ...OWN, version: "second" });
@@ -238,7 +238,7 @@ test("R35, R2, R18: a member resting on group- or project-level testimony streng
     const s = await setup();
     const stated = [{ observation: OBS2, level, shown: "g" }];
     let attr = { reached: [OBS2], legacy: [], stated, current: [{ ...stated[0], why: null }] };
-    s.w.publication.attributionFacts = () => attr;
+    s.w.caseTensions.attributionFacts = () => attr;
     s.w.corroboration.set(Q1, [{ ...TIP, level }]);
     const pf = s.preflight();
     assert.deepEqual(reasons(pf), ["ANONYMOUS_TESTIMONY_UNCORROBORATED"], level);
@@ -266,7 +266,7 @@ test("R35, R2, R18: a member resting on group- or project-level testimony streng
   }
   /* a document recording no conclusion row for the member: its live basis, `version` null */
   const nc = await setup({ conclusions: false });
-  nc.w.publication.attributionFacts = () => ({ reached: [OBS2], legacy: [], stated: [{ observation: OBS2, level: "group", shown: "g" }],
+  nc.w.caseTensions.attributionFacts = () => ({ reached: [OBS2], legacy: [], stated: [{ observation: OBS2, level: "group", shown: "g" }],
                                                current: [{ observation: OBS2, level: "group", shown: "g", why: null }] });
   nc.w.corroboration.set(Q1, [TIP]);
   nc.preflight();
@@ -274,7 +274,7 @@ test("R35, R2, R18: a member resting on group- or project-level testimony streng
   for (const level of ["cover", "name"]) {
     const s = await setup();
     const stated = [{ observation: OBS2, level, shown: "x" }];
-    s.w.publication.attributionFacts = () => ({ reached: [OBS2], legacy: [], stated, current: [{ ...stated[0], why: null }] });
+    s.w.caseTensions.attributionFacts = () => ({ reached: [OBS2], legacy: [], stated, current: [{ ...stated[0], why: null }] });
     s.w.corroboration.set(Q1, [TIP]);
     assert.deepEqual(s.preflight().refusals, [], level);
     assert.equal(s.w.corroborationAsked.length, 0, `a leg at ${level} is not asked`);
@@ -288,7 +288,7 @@ const CAP = "ab".repeat(32), DOC = "INFO-2026-0011-document";
 test("R2, R18, R14: an off-the-record capture whose attesting member chose no level is ATTRIBUTION_UNCHOSEN (C-92.10), naming the capture, and a stated level no longer in force ATTRIBUTION_STATEMENT_STALE (C-92.11), by the act and the pre-flight byte for byte; once the member chose and the document states it, it passes", async () => {
   const s = await setup();
   let attr = { reached: [], legacy: [], stated: [], current: [{ capture: CAP, level: null, why: "no choice made" }] };
-  s.w.publication.attributionFacts = () => attr;
+  s.w.caseTensions.attributionFacts = () => attr;
   assert.deepEqual(reasons(s.preflight()), ["ATTRIBUTION_UNCHOSEN", "ATTRIBUTION_STATEMENT_STALE"]);
   const un = entry(s.preflight(), "ATTRIBUTION_UNCHOSEN");
   assert.deepEqual(un.unchosen, [{ capture: CAP, why: "no choice made" }]);
@@ -320,7 +320,7 @@ test("R35, R2, R18, R14: a member resting on a document whose off-the-record cap
   for (const level of ["group", "project"]) {
     const s = await setup();
     const stated = [{ capture: CAP, level, shown: "g" }];
-    s.w.publication.attributionFacts = () => ({ reached: [], legacy: [], stated, current: [{ ...stated[0], why: null }] });
+    s.w.caseTensions.attributionFacts = () => ({ reached: [], legacy: [], stated, current: [{ ...stated[0], why: null }] });
     s.w.corroboration.set(Q1, [{ ...LEG, level }]);
     const pf = s.preflight();
     assert.deepEqual(reasons(pf), ["ANONYMOUS_TESTIMONY_UNCORROBORATED"], level);
@@ -341,7 +341,7 @@ test("R35, R2, R18, R14: a member resting on a document whose off-the-record cap
   /* testimony and evidence together are named side by side */
   const both = await setup();
   const stated = [{ observation: OBS2, level: "group", shown: "g" }, { capture: CAP, level: "project", shown: "p" }];
-  both.w.publication.attributionFacts = () => ({ reached: [OBS2], legacy: [], stated, current: stated.map((x) => ({ ...x, why: null })) });
+  both.w.caseTensions.attributionFacts = () => ({ reached: [OBS2], legacy: [], stated, current: stated.map((x) => ({ ...x, why: null })) });
   both.w.corroboration.set(Q1, [TIP, LEG]);
   assert.deepEqual(entry(both.preflight(), "ANONYMOUS_TESTIMONY_UNCORROBORATED").uncorroborated,
                    [{ member: Q1, observation: OBS2 }, { member: Q1, document: DOC }]);
@@ -349,7 +349,7 @@ test("R35, R2, R18, R14: a member resting on a document whose off-the-record cap
   for (const level of ["cover", "name"]) {
     const s = await setup();
     const st = [{ capture: CAP, level, shown: "x" }];
-    s.w.publication.attributionFacts = () => ({ reached: [], legacy: [], stated: st, current: [{ ...st[0], why: null }] });
+    s.w.caseTensions.attributionFacts = () => ({ reached: [], legacy: [], stated: st, current: [{ ...st[0], why: null }] });
     s.w.corroboration.set(Q1, [LEG]);
     assert.deepEqual(s.preflight().refusals, [], level);
     assert.equal(s.w.corroborationAsked.length, 0, `a capture at ${level} is not asked`);
@@ -400,7 +400,7 @@ test("R18: it writes nothing and never throws", async () => {
     }
   assert.doesNotThrow(() => s.w.r.caseRatifyPreflight());
   assert.equal(snap(), before, "nothing was written");
-  s.w.publication.attributionFacts = () => { throw new Error("disk"); };
+  s.w.caseTensions.attributionFacts = () => { throw new Error("disk"); };
   const u = s.preflight();
   assert.deepEqual([u.ok, u.reason, "refusals" in u], [false, "PREFLIGHT_UNDETERMINED", false]);
   assert.doesNotMatch(u.detail, /disk/);

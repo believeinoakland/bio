@@ -5,7 +5,9 @@
  * public (R29). At its time the one publisher `ratification` registers (R67) runs every signing check again and commits
  * through R22 only when nothing has changed; otherwise the edition stops, once, and publishing it needs a new signing.
  * An owner of the case's project may move or cancel the time until it comes (R68). R69 lists them; R71 tells
- * `scheduler` the next wake after each act, so a waiting edition is taken on an idle instance.
+ * `scheduler` the next wake after each act, so a waiting edition is taken on an idle instance. R74 answers a case's
+ * waiting edition to `case-authoring`, which refuses its acts while one waits (its R58; N681). A stop with no publisher
+ * able to check carries its row, C-122.5 (R33; N687).
  *
  * The table is `scheduled_editions` (`./schema.mjs`): one row per setting, its `seq` the order made; at most one row of a
  * case edition is `waiting` at a time (R66's PUBLISH_AT_ALREADY_SET). Each function takes the module's instance `p`
@@ -14,17 +16,15 @@
 import { bounds, isCalendarDate } from "../civil-time/index.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import { viewerPredicate } from "../membership/index.mjs";
+import { rowOf } from "./checks.mjs";
 
 /** R69: the page of `scheduledEditions`, its default and its ceiling. */
 export const SCHEDULED_EDITIONS_MAX = 500;
 /** R67, R69: the states a scheduled edition passes through; only `waiting` changes, and only once. */
 export const SCHEDULE_STATES = Object.freeze(["waiting", "published", "stopped", "cancelled"]);
-/** R67: the reason a waiting edition is stopped when no publisher could check it: never published unchecked. */
-export const SCHEDULED_CHECK_UNAVAILABLE = Object.freeze({
-  code: "SCHEDULED_CHECK_UNAVAILABLE",
-  translation: "This edition was not published at its set time, because the checks it needed then could not be run. "
-    + "Nothing was published. Sign it again to publish it.",
-});
+/** R67, R33: the reason a waiting edition is stopped when no publisher could check it, never published unchecked: its
+ *  code, its row (C-122.5; N687) and the row's translation. */
+export const SCHEDULED_CHECK_UNAVAILABLE = Object.freeze(rowOf("SCHEDULED_CHECK_UNAVAILABLE"));
 
 const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : "");
@@ -92,6 +92,20 @@ const waitingRow = (p, caseId, edition) => one(p,
 
 /** R21: whether a case edition's document waits (R66), and so counts as signed for R21's writes. */
 export const isWaiting = (p, caseId, edition) => !!waitingRow(p, str(caseId), edition);
+
+/** R74 (N681; K1833): the case's one edition R66 holds waiting, `{case, edition, doc_sha, at, publish_at}`, or null when
+ *  none waits (none set, or each published, stopped or cancelled), for `case-authoring` before its acts (its R58).
+ *  Viewer-free; writes nothing; never throws (a malformed `caseId` answers null). */
+export function waitingEditionOf(p, caseId) {
+  try {
+    const id = str(caseId);
+    if (!id) return null;
+    const r = one(p, `SELECT case_id, edition, doc_sha, at_date, at_time, zone, publish_at FROM scheduled_editions
+                       WHERE case_id=? AND state='waiting' ORDER BY edition, seq LIMIT 1`, id);
+    return r ? { case: r.case_id, edition: Number(r.edition), doc_sha: r.doc_sha,
+                 at: { date: r.at_date, time: r.at_time, zone: r.zone }, publish_at: r.publish_at } : null;
+  } catch { return null; }
+}
 
 /** R66: set a signed case edition to wait for its time, inside the caller's transaction. */
 export function scheduleEdition(p, { case: caseArg = null, caseId = null, edition = null, docSha = null, signature = null,
@@ -174,7 +188,7 @@ async function takeOne(p, r, at) {
     ? answer.stopped.map((s) => ({ code: String(s && s.code || ""), translation: String(s && s.translation || ""),
                                    ...(s && s.check ? { check: String(s.check) } : {}),
                                    ...(s && s.cause ? { cause: s.cause } : {}) }))
-    : [{ ...SCHEDULED_CHECK_UNAVAILABLE }];
+    : unchecked();
   const state = signed ? "published" : "stopped";
   p.record.transact(() => p.sql.exec(
     `UPDATE scheduled_editions SET state=?, outcome_at=?, reasons=? WHERE seq=? AND state='waiting'`,
@@ -182,6 +196,13 @@ async function takeOne(p, r, at) {
   tell(p);
   return { case: r.case_id, edition: Number(r.edition), state,
            ...(signed ? { published_at: signed.ratified_at } : { reasons: stops }) };
+}
+
+/* R67, R33 (C-122.5): the stop of an edition no publisher could check. */
+function unchecked() {
+  /* DEC-49 REGION is-scheduled-check-available */
+  return [{ ...SCHEDULED_CHECK_UNAVAILABLE }];
+  /* END DEC-49 REGION is-scheduled-check-available */
 }
 
 /* R68: the common fence of a move and a cancel, in R68's order; the waiting row, or a refusal. */

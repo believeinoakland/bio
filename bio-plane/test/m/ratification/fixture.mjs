@@ -140,8 +140,7 @@ export function world({ steer = {} } = {}) {
                     earned: (subject, targets) => ({ subject, earned: { capture: Object.fromEntries(targets.map((t) => [t, null])) } }) };
 
   /* publication: the real module (its tables, R22's two commits and the discharge, R35), with the reads a test steers
-     — the case document facts, the pins, what rests on a bundle, the claims, the registries and the attribution
-     facts — answered from the maps below. Every call is recorded; a test replaces any method by assigning it. */
+     — the case document facts, the pins, what rests on a bundle, the claims and the registries — answered from the maps below. Every call is recorded; a test replaces any method by assigning it. */
   const realPub = publicationOf(host, { storage: st, record, membership, promotion, now: () => NOW,
     inquiry: { exclusionsNaming: () => [] }, basisVersions: { testimonyReach: () => bv.reach },
     /* reevaluation R26: publication registers its R41 and R43 at creation (K359); nothing here reads them */
@@ -169,8 +168,6 @@ export function world({ steer = {} } = {}) {
     caseClaimsOf: (id) => pub.claims.get(id) ?? [],
     publishedRegistryFor: (id, targets) => ({ asked: [id, ...targets] }),
     publishedCaseRegistryFor: (ids) => ({ cases: ids }),
-    attributionStatedFor: () => false,
-    observationsNamingAuthor: () => [],
     commitCaseEdition: (a) => { pub.committed.push(a); return realPub.commitCaseEdition(a); },
     /* a test's own stand-ins (T34-85: publication R66, R67, R69, R62 until publication's merge), present at creation */
     ...steer,
@@ -179,6 +176,19 @@ export function world({ steer = {} } = {}) {
     get(t, k) {
       const fn = Object.prototype.hasOwnProperty.call(t, k) ? t[k]
         : typeof realPub[k] === "function" ? realPub[k].bind(realPub) : realPub[k];
+      return typeof fn === "function" ? (...a) => { calls.push([k, ...a]); return fn(...a); } : fn;
+    },
+  });
+  /* case-tensions: the real module publication created on this host (its R61's provider registered), with the two
+     attribution reads op=ratify's gate makes steered (T35-57: this module reads them, `attributionFacts` and
+     `dischargeCaseFlags` directly, never through publication). Every call is recorded in `calls`, as publication's; a
+     test replaces any method by assigning it. */
+  const realTensions = realPub.caseTensionsModule;
+  const steeredTensions = { attributionStatedFor: () => false, observationsNamingAuthor: () => [] };
+  const caseTensions = new Proxy(steeredTensions, {
+    get(t, k) {
+      const fn = Object.prototype.hasOwnProperty.call(t, k) ? t[k]
+        : typeof realTensions[k] === "function" ? realTensions[k].bind(realTensions) : realTensions[k];
       return typeof fn === "function" ? (...a) => { calls.push([k, ...a]); return fn(...a); } : fn;
     },
   });
@@ -205,12 +215,12 @@ export function world({ steer = {} } = {}) {
                                                                   : { ok: true, found: false, fact_id: factId, fact: null }) };
   const capture = { registerReader: (slot, module, fn) => (readers.push({ slot, module, fn }), { ok: true, slot, module }) };
   const r = ratificationOf(host, { storage: st, record, membership, credentials, promotion, provenance, inquiry,
-                                   basisVersions, publication, capture, strength, reevaluation, networkNotices,
-                                   people, money });
+                                   basisVersions, publication, caseTensions, capture, strength, reevaluation,
+                                   networkNotices, people, money });
   let n = 0;
   const w = {
-    st, host, record, membership, credentials, promotion, r, bv, key, registers, holds, evidence, pub, publication, calls,
-    readers, corroboration, corroborationAsked, levelMoves, sealCalls, realPub, ties, moneyFacts, tiesAsked,
+    st, host, record, membership, credentials, promotion, r, bv, key, registers, holds, evidence, pub, publication,
+    caseTensions, calls, readers, corroboration, corroborationAsked, levelMoves, sealCalls, realPub, ties, moneyFacts, tiesAsked,
     openSeals: async (a) => ({ ok: true, case: a.case, edition: a.edition, project: null, opened: [], attestation: null }),
     ops: {},   /* stand-ins for other modules' Durable Object ops, by name (the Worker half's tests) */
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,

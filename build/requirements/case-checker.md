@@ -55,7 +55,7 @@ Terms. The **case file**, its **manifest**, **parts** and **files** are `case-gr
   - `COPYRIGHTED_PASSAGE_UNRELIED` `{standard, content}`: a passage of such a standard's capture that no finding relies on (only the passages a finding relies on are quoted, K1739);
   - `BENCHMARK_CALLED_NONCONFORMING` `{finding, standard, word}`: a member finding whose criteria rows are all `binds: false` (it rests on no standard that binds the body) and whose conclusion or claim, as the document states it (`case-authoring` R14), or the case's statement, uses `violated`, `violates`, `violation`, `nonconforming`, `non-conforming`, `nonconformity` or `nonconformance`, matched as whole words in any letter case (K1723: such a finding says "slower than" or "below").
 
-  A criteria row with `stated: "not held"` is not judged and is named in `unjudged`. Pure, as R1: it reads only its arguments, the same arguments give the same answer, and it never throws (malformed arguments answer `{ok: false, refusals: [{code: "MALFORMED", field}]}`). The ceremony's refusal is its caller's (Suggestions). *(not yet met: T35)*
+  A criteria row with `stated: "not held"` is not judged and is named in `unjudged`. Pure, as R1: it reads only its arguments, the same arguments give the same answer, and it never throws (malformed arguments answer `{ok: false, refusals: [{code: "MALFORMED", field}]}`). The ceremony's refusal is its caller's (Suggestions).
 
 **Calculations a case carries** (C:A-13; K1448)
 

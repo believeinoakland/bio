@@ -9,7 +9,10 @@
  * the invitation, the shelves' labels) are the UX design stream's; these rows only say why an act was refused and that
  * nothing changed. At T33 (K1480, T33-64) C-129.27 and C-129.28 arrived for a court order (R25), awaiting the stamp.
  * At T34 (DEC-149, T34-87) C-129.16 and C-129.22 call the group's Civicsmith "your group's Civicsmith", not "this
- * copy"; both rows read changed until T35's promotion stamp moves `CATALOG_VERSION`. */
+ * copy"; both rows read changed until T35's promotion stamp moves `CATALOG_VERSION`. At T35 (N685, K1834) the two
+ * rows say what `network-notices`' C-127.4 and C-127.12 say, the same way: C-129.16 "Your group has no name recorded
+ * yet", as C-127.4; C-129.22 already has C-127.12's form, its third clause (the docket has moved since) being R5's own
+ * condition. Both await the stamp (T36's promotion job). */
 
 const at = (fn, region) => `src/docket/index.mjs ${fn} > ${region}`;
 const FILER = at("#filerRefusal", "is-docket-filer");
@@ -100,8 +103,8 @@ export const DOCKET_CHECKS = Object.freeze({
   },
   DOCKET_NO_GROUP_SLUG: {
     check: "C-129.16", where: MANAGER,
-    translation: "Your group's Civicsmith has no group name recorded, and a docket entry is never anonymous. Record "
-      + "the group's name first. Nothing was published.",
+    translation: "Your group has no name recorded yet, and a docket entry is never anonymous. Record the group's "
+      + "name first. Nothing was published.",
   },
   DOCKET_ENTRY_SETTLED: {
     check: "C-129.17", where: ENTRY,
