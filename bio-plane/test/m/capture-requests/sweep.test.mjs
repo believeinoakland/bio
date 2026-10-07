@@ -94,7 +94,7 @@ test("R45 a held sweep, an unratified one, an unknown one and an address out of 
   for (const [why, id] of Object.entries(ids)) refusedOutOfScope(w, d, id, why);
   assert.match(w.req(ids.held).detail, /INQ-1#full is held \(backlog 40 of 40\)/);
   assert.match(w.req(ids.unratified).detail, /INQ-1#draft is not ratified/);
-  assert.match(w.req(ids.unknown).detail, /INQ-1#nothing is not a sweep this instance holds/);
+  assert.match(w.req(ids.unknown).detail, /INQ-1#nothing is not a sweep your group's Civicsmith holds/);
   assert.match(w.req(ids.out).detail, /INQ-1#agendas does not reach this address/);
   assert.equal(check.asked.length, 5);
   assert.equal(w.capture.calls.length, 0, "nothing was fetched");
@@ -227,6 +227,7 @@ test("R45 a fetch that meets a locator out of the sweep's scope (acquisition's C
 test("R45 the op takes a request's sweep from the body like its address, and the drain op files it under that sweep", async () => {
   const { w } = sweepWorld();
   const url = new URL("http://x/capturerequest?viewer=member%3Aann&principal=member%3Aann%2Ftok1");
+  w.hold("https://council.example.org/agendas/op");
   const a = captureRequestsOps(w.cr, url, { run: "R-1", address: "https://council.example.org/agendas/op", target: "INQ-1",
                                            purpose: "investigate", sweep: "INQ-1#agendas" }).capturerequest();
   assert.deepEqual([a.ok, a.sweep], [true, "INQ-1#agendas"]);

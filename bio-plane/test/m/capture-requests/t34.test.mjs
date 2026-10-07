@@ -64,6 +64,7 @@ test("R48 sight: a question the viewer may not see answers visible false with ti
   const fn = readerOf(w);
   const A = "https://h.example.org/x.pdf";
   w.capture.script.set(A, same("held bytes"));
+  w.hold(A);
   assert.equal(w.cr.captureRequest({ run: "R-H", address: A, target: "INQ-H", purpose: "investigate" },
                                    { viewer: V("inner"), caller: "member:inner/tok3" }).ok, true);
   await w.cr.drain({});
