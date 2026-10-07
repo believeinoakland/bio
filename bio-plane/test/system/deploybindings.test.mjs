@@ -159,12 +159,14 @@ const CFG = {
   const b = derive(real, { slug: "biosmoke7", version: real.vars.VERSION });
   t("the real config derives without refusal and SELF targets the instance",
     named(b, "SELF")?.service, "biosmoke7");
-  /* N696 (K1864): SHEET_WORKER/sheet-worker joined the real config; five service bindings since T34. */
-  t("the real config's five service bindings all derive",
+  /* N696 (K1864): SHEET_WORKER/sheet-worker joined the real config; five service bindings since T34.
+     T36-2 (BUNDLER #10; rev. 2 §2 R10, plane uses file-scanner): FILE_SCANNER/file-scanner is named ahead of the plane's
+     job adding it (T36-49): red 10 of T36's opening, accepted by name, in both assertions, until it lands. */
+  t("the real config's six service bindings all derive",
     (Array.isArray(b) ? b : [b]).filter((x) => x.type === "service").map((x) => x.name).sort(),
-    ["AGENT_WORKER", "OCR_WORKER", "PDF_WORKER", "SELF", "SHEET_WORKER"]);
+    ["AGENT_WORKER", "FILE_SCANNER", "OCR_WORKER", "PDF_WORKER", "SELF", "SHEET_WORKER"]);
   t("the real config's fleet targets pre-flight (self excluded)",
-    Array.isArray(b) ? serviceTargets(b, "biosmoke7").sort() : b, ["agent-worker", "ocr-worker", "pdf-worker", "sheet-worker"]);
+    Array.isArray(b) ? serviceTargets(b, "biosmoke7").sort() : b, ["agent-worker", "file-scanner", "ocr-worker", "pdf-worker", "sheet-worker"]);
   t("no phantom leaves the real derivation",
     Array.isArray(b) ? b.some((x) => x.service === "bio-plane") : b, false);
 }

@@ -94,11 +94,37 @@
  * declared part) is NOT driven — it requires hand-editing a generated manifest,
  * and it is stated rather than claimed.
  *
- * usage (bundler R22, R23; moved from the old process's `tools/` in T19), from the repository root:
+ * ---- ASSEMBLED APART FROM SIGNED (bundler R30; T36-2, K1936 Q4 step 2, N713) ----------
+ *
+ * A session ASSEMBLES and never signs: every check above runs, and what is to be signed (the plane asset and the
+ * fleet payload) is written out, with no seed anywhere near it. Signing runs in ONE place, the repository's GitHub
+ * Actions environment that holds `BIO_RELEASE_SEED` as its secret and waits for Bob, its required reviewer: one
+ * approval signs one release. So `--sign` refuses `[NOT_SIGNING_ENVIRONMENT]` anywhere but a GitHub Actions run,
+ * BEFORE it reads the seed — no command a session runs reads it — and the release is completed from the
+ * signatures only when stock `ssh-keygen` accepts each (R23). The workflow (`.github/workflows/release-sign.yml`) is
+ * BOB's; the commands it calls, in order, from the repository root of the commit being released:
+ *
+ *   1. npm ci                                                  (in bio-plane/: the library's esbuild)
+ *   2. node bio-plane/scripts/bundles.mjs --install-dirs
+ *        the directories the byte guard needs installed, one per line, the plane's first (R22)
+ *      npm ci                                                  (in each directory it printed after the plane's)
+ *   3. node bio-plane/scripts/release-assemble.mjs --version <V> --dry-run
+ *        every R22 check; writes nothing; no seed
+ *   4. node bio-plane/scripts/release-assemble.mjs --version <V> --sign
+ *        in the environment holding BIO_RELEASE_SEED: re-runs every check on this commit, signs the plane asset
+ *        (bio-release) and the payload (bio-release-fleet), refuses unless stock ssh-keygen accepts both for
+ *        RELEASE.json's signer, and only then writes `release/`
+ *   5. node bio-plane/scripts/release-advisories.mjs --out <file>
+ *        R29's report over what the release ships, for the operator (it refuses nothing)
+ *
+ * Signatures made elsewhere complete a release the same way, without the seed:
+ *   node bio-plane/scripts/release-assemble.mjs --version <V> --fleet-sig <file> --plane-sig <file>
+ *
+ * usage (bundler R22, R23, R30; moved from the old process's `tools/` in T19), from the repository root:
  *   node bio-plane/scripts/release-assemble.mjs --dry-run
- *   node bio-plane/scripts/release-assemble.mjs --version 0.57.0 --emit-payload <file>
- *   node bio-plane/scripts/release-assemble.mjs --version 0.57.0 --sign
- *   node bio-plane/scripts/release-assemble.mjs --version 0.57.0 --fleet-sig <file>
+ *   node bio-plane/scripts/release-assemble.mjs --version 0.57.0 --emit-payload <file> [--emit-plane <file>]
+ *   node bio-plane/scripts/release-assemble.mjs --version 0.57.0 --sign          (GitHub Actions only, R30)
+ *   node bio-plane/scripts/release-assemble.mjs --version 0.57.0 --fleet-sig <file> [--plane-sig <file>]
  */
 import { readFileSync, writeFileSync, copyFileSync, existsSync, mkdirSync, rmSync } from "node:fs";
 import { execFileSync } from "node:child_process";
@@ -106,8 +132,7 @@ import { join, dirname } from "node:path";
 import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import {
-  REPO_ROOT, discoverMembers, planeMember, verifyFresh, freshBuildRunnable, sha256, isContainer, containerDescriptor,
-  containerPackages,
+  REPO_ROOT, discoverMembers, planeMember, verifyFresh, freshBuildRunnable, sha256, isContainer, containerParts,
 } from "./fleet-bundle.mjs";
 /* The statement and its namespace come from the module the INSTALLER also
    imports. Neither side builds the bytes it signs or verifies — see the comment
@@ -122,6 +147,7 @@ const flag = (n) => { const i = argv.indexOf(n); return i === -1 ? null : (argv[
 const DRY = argv.includes("--dry-run");
 const SIGN = argv.includes("--sign");
 const EMIT = flag("--emit-payload");
+const EMIT_PLANE = flag("--emit-plane");
 
 const RELEASE_DIR = join(REPO_ROOT, "release");
 const RELEASE_JSON = join(RELEASE_DIR, "RELEASE.json");
@@ -131,6 +157,14 @@ const die = (code, msg, detail) => {
   if (detail) console.error(detail);
   process.exit(1);
 };
+
+/* R30: SIGNING HAPPENS IN THE SIGNING ENVIRONMENT ONLY, and this is checked before anything else, the seed
+   included: a session that passes `--sign` is refused without the seed ever being read. */
+if (SIGN && process.env.GITHUB_ACTIONS !== "true")
+  die("NOT_SIGNING_ENVIRONMENT", "--sign runs only in the repository's GitHub Actions signing environment (bundler R30).",
+    "Sessions assemble and never sign. Assemble with --dry-run or --emit-payload; the release-sign workflow signs,\n"
+    + "on Bob's approval, with the seed it alone holds. Signatures made there complete a release with\n"
+    + "--fleet-sig <file> --plane-sig <file>. BIO_RELEASE_SEED was not read.");
 
 /* ---------------------------------------------------------------- the assets */
 
@@ -152,7 +186,8 @@ for (const m of discovered) {
    is one more part, so the fleet signature covers the image digest exactly as it
    covers every other part's bytes. Checked HERE, before any build runs or anything
    is written: a descriptor the marker cannot state is a release that cannot install
-   its container.
+   its container. A member with more than one class (`file-scanner`'s `FileScanner`
+   and `SafeViewRenderer`, T36-2) carries one part per class, `container/<class>.json`.
 
    A CONTAINER MEMBER WITH NO WORKER BUNDLE IS LEFT OUT, BY NAME (K1730), as 0.80.0
    left agent-runner out (K1705): there is no Worker to host its class, so no
@@ -162,29 +197,36 @@ const leftOut = discovered.filter((m) => isContainer(m) && !m.bundle);
 for (const m of leftOut)
   console.log(`left out: ${m.name} — a container member with no Worker bundle to host its class (bundler R24, K1730); `
     + "the release and its fleet signature do not carry it");
-const containerParts = new Map();
+const containerPartsOf = new Map();
+const carried = discovered.filter((x) => !leftOut.includes(x)).map((x) => x.name);
 for (const m of discovered.filter((x) => isContainer(x) && x.bundle)) {
-  const d = containerDescriptor(m, discovered.filter((x) => !leftOut.includes(x)).map((x) => x.name));
+  /* R25 for every class first, then R27: a descriptor the marker cannot state is refused before any package is read. */
+  const d = containerParts(m, carried, { packages: false });
   if (d.missing) {
     die("CONTAINER_UNDESCRIBED",
-      `${m.name} is a container member and its fleet-member.json does not state ${d.missing.join(", ")}.`,
+      `${m.name} is a container member and its fleet-member.json does not state`
+        + `${d.class ? `, for its class ${d.class},` : ""} ${d.missing.join(", ")}.`,
       "The release copies the container's descriptor from the member's own marker and never defaults it:\n"
       + "  image          { repository, digest: \"sha256:<64 hex>\" } — the digest the release wrote when it published the image\n"
       + "  class_name     the Durable Object class the container runs behind\n"
       + "  max_instances  a positive integer\n"
       + "  bind           [{ member, binding }] — each a member this release carries, and the binding it calls the class by\n"
-      + "  image.schedulingPolicy, where stated, \"default\"");
+      + "  image.schedulingPolicy, where stated, \"default\"\n"
+      + "A member with several classes states them as `containers: [{ class_name, image, max_instances?, bind? }]`, each\n"
+      + "class's max_instances and bind read from the class, else from the member's top level.");
   }
-  /* R27 (F20): the image's npm packages, read from the lockfile its `npm ci --omit=dev` installs from, so the
-     fleet signature states what the image runs without building it. Unread is a refusal, never an empty list. */
-  const pk = containerPackages(m);
-  if (pk.unread)
-    die("CONTAINER_PACKAGES_UNREAD", `${m.name} is a container member and ${pk.unread}.`,
-      "The release lists every npm package the member's image installs, from the member's own package-lock.json\n"
-      + "(its packages not marked dev). Restore or regenerate the lockfile (`npm install --package-lock-only`), then assemble again.");
-  const full = containerDescriptor(m, discovered.filter((x) => !leftOut.includes(x)).map((x) => x.name), { packages: pk.packages });
-  containerParts.set(m.name, { path: "container.json", type: "Container", sha256: sha256(full.bytes),
-    bytes: full.bytes.length, data: full.bytes });
+  /* R27 (F20): each image's packages — npm's from the lockfile its `npm ci --omit=dev` installs from, or a system
+     image's from the member's committed package statement pinned with its base digest — so the fleet signature states
+     what each image runs without building it. Unread is a refusal, never an empty list. */
+  const full = containerParts(m, carried);
+  if (full.unread)
+    die("CONTAINER_PACKAGES_UNREAD", `${m.name} is a container member and ${full.unread}.`,
+      "The release lists every package each of the member's images installs: from the member's own package-lock.json\n"
+      + "(its packages not marked dev), or, for an image whose packages are not npm's, from the package statement its\n"
+      + "class names (`image.packages`), taken against the base digest the marker pins (`image.base.digest`).\n"
+      + "Restore or regenerate the file (`npm install --package-lock-only`, or the statement from the pinned base), then assemble again.");
+  containerPartsOf.set(m.name, full.parts.map((p) => ({ path: p.path, type: "Container", sha256: sha256(p.bytes),
+    bytes: p.bytes.length, data: p.bytes })));
 }
 
 const members = discovered.filter((m) => !leftOut.includes(m));
@@ -315,11 +357,10 @@ for (const m of all) {
     }
     parts.push({ path: rel, type: ptype, sha256: sha256(bytes), bytes: bytes.length, from: abs });
   }
-  if (containerParts.has(m.name)) {
-    const c = containerParts.get(m.name);
+  for (const c of containerPartsOf.get(m.name) || []) {
     if (parts.some((p) => p.path === c.path))
       die("CONTAINER_UNDESCRIBED", `${m.name} declares an upload part named ${c.path}, which is the container descriptor's own path.`,
-        "Rename the member's part: container.json is written by the release from the marker.");
+        "Rename the member's part: a container descriptor is written by the release from the marker.");
     parts.push(c);
   }
   if (parts.length) {
@@ -398,6 +439,8 @@ process.stdout.write(payload);
 console.log("─────────────────────────────────────");
 
 if (EMIT) { writeFileSync(EMIT, payload); console.log(`payload written to ${EMIT}`); }
+/* R30: the other thing to be signed, the plane asset the payload names, byte for byte. */
+if (EMIT_PLANE) { copyFileSync(planeEntry.from, EMIT_PLANE); console.log(`plane asset written to ${EMIT_PLANE}`); }
 
 if (DRY) {
   console.log(`\n--dry-run: nothing written. A release cut now would carry ${entries.length} assets `
@@ -447,13 +490,14 @@ function verifyWith(signer, sig, bytes, ns) {
 }
 
 let fleetSig = flag("--fleet-sig") ? readFileSync(flag("--fleet-sig"), "utf8") : null;
-let planeSig = existing.sig ?? null;
+/* R30: a plane signature made in the signing environment arrives as a file; otherwise RELEASE.json's (R23). */
+let planeSig = flag("--plane-sig") ? readFileSync(flag("--plane-sig"), "utf8") : (existing.sig ?? null);
 const planeBytes = readFileSync(planeEntry.from);
 
 if (SIGN) {
   const seed = process.env.BIO_RELEASE_SEED;
   if (!seed) die("NO_SEED", "--sign needs BIO_RELEASE_SEED and it is not set.",
-    "It is machine-local and never printed. Without it, use --emit-payload and sign separately.");
+    "It is the signing environment's secret and is never printed (R30).");
   fleetSig = signWith(seed, payload, NS_FLEET);
   planeSig = signWith(seed, planeBytes, NS_RELEASE);
   console.log("signed: the plane asset and the fleet payload, with the release key");
@@ -470,7 +514,7 @@ if (SIGN) {
    installer uses, and it REFUSES. */
 {
   if (!planeSig) die("NO_PLANE_SIG", "there is no plane signature to publish.",
-    "Pass --sign (with BIO_RELEASE_SEED), or restore release/RELEASE.json's `sig`.");
+    "Pass --plane-sig <file> (made in the signing environment), or restore release/RELEASE.json's `sig`.");
   const v = verifyWith(existing.signer, planeSig, planeBytes, NS_RELEASE);
   if (!v.ok) {
     die("PLANE_SIG_DOES_NOT_COVER_ASSET",
@@ -484,7 +528,7 @@ if (SIGN) {
 }
 
 if (!fleetSig) die("NO_FLEET_SIG", "no fleet signature supplied.",
-  "Pass --sign (with BIO_RELEASE_SEED) or --fleet-sig <file>.");
+  "Pass --fleet-sig <file> (made in the signing environment, R30).");
 
 /* The fleet signature, checked by the same stock verifier — never by the code
    that produced it. A signature only its own author can check is worth nothing. */
