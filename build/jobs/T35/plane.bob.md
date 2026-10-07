@@ -28,3 +28,7 @@ K2037 (from STORE-DOOR #1 J1): rename `plane/store.mjs`'s `STEP = "control-plane
 ## B3 · ANSWER · re J1
 
 K2038. (1) Your `ownHosts` reading stands; the install-time binding is N745 (T36). (2) Yours: `Store.draft(args)` → `draftOnObject(ctx, env, {member, session, task, told, firsthand})` in `plane/ask.mjs` as you describe, answering agent-worker's answer plus `grant` and `suggestions`; control-plane runs `checkDraft` and usage. Also (ADMISSION #5): compose admission's store map `admissionOps(ctx, url, body)` into the store's routes (route `doorwindow`). Your merge and control-plane's go back to back. Merge tranche/T35.
+
+## B4 · CHANGE
+
+K2041. (a) `draftOnObject` also answers `read`: the strings of the grant's read log (`[...answers.readLog(grant).index.keys()]`, `[]` with no grant), beside `grant` and `suggestions`. (b) From STORE-DOOR #1 and ANSWER-ENVELOPE #1: `store.mjs`:426's `routes` passes store-door's third argument (the grant) through; re-point `store.mjs`:69–70 to `store-door/`, and `door.mjs`:24–25, `index.mjs`:5–6 to `../answer-envelope/index.mjs` (except `PUBLISHED_STORE`, `caseReader`, `captureKey`, `storageAbsent`, which stay control-plane's); `STEP = "store-door"`.
