@@ -276,6 +276,7 @@ Over or at about 4,000 if the jobs add as planned: **affordances** 3,944 (T35-66
 
 ## Shares named for later STARTs (K1940; P10: a provided service's change carried to its users in this tranche)
 
+- **control-plane (T35-72):** also re-pins C-111.24 and C-110.1 (L7's DEC-149 rows; INTENT #13 J1, REEVALUATION #20 J1; K1999).
 - **control-plane (T35-72):** re-pins `rows-before-r43.json` for C-26.2 (BIAS #11 J1), C-28.13, C-83.1, .3, .4, .5, .8, C-48.1, .4, .7, C-68.1 and C-89.1 with red 19's rows (ACQUISITION #12 J2, ATTESTATION #3 J1); `op=unpack` calls `unpack(store, {archiveSha, by, cls, member})` with the stamps (`cls: "member"` for a member session, `"daemon"` for the tick), the other three ops the instance's methods; promotes `acquire`'s `document`, then `unpack.documents`. Its scheduled tick drains capture's `archive-unpack` events as `op=unpack` (K1951); builds acquisition's instance (`acquisitionOf`) for its four ops; promotes an archive's document, then its files'; routes `unpack`, `archivelist`, `coarchiveset`, `coarchivestate`; passes `country` to capture's `knock` and `knockAttempt` (capture R85).
 - **op-declarations (T35-70):** declares `unpack`, `archivelist`, `coarchiveset`, `coarchivestate`.
 - **plane (T35-73):** also its `system/sweep.test.mjs`:29, :41 hold the requested address first (capture-requests R49; red 31; K1993).
