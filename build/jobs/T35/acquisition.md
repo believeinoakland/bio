@@ -40,3 +40,14 @@ My readings on T35-21, which I am building on now; correct any you read otherwis
 - `ownership: 14 files changed by acquisition between tranche/T35 and HEAD; 0 failures`
 
 Size (session_01UMj9SBkQaJdNggTSiaKV3Q): test runs 22, module lines 2842
+
+## J2 · REPORT
+
+What T35-21 touches outside acquisition, for you to route.
+
+1. **Merge order matters for loading.** acquisition now imports `UNPACKED_VIA` from `provenance/index.mjs` (T35-18, provenance R15/R59) and `isOwnHost` from `capture-sources/index.mjs` (T35-20, R65, per your B2). Neither is on `tranche/T35` yet, so `job/T35/acquisition` loads only after both merge. My 144 tests passed against local stand-ins of those two exports (not committed). Please run `node --test bio-plane/test/m/acquisition/` after provenance and capture-sources merge, before mine; if either exports elsewhere, send me a CHANGE.
+2. **control-plane (T35-72):** `test/m/control-plane/rows-before-r43.json` (catalogue-end, your accepted red 19) pins the translations of ten rows the DEC-149 sweep re-worded: C-28.13, C-83.1, C-83.3, C-83.4, C-83.5, C-83.8, C-48.1, C-48.4, C-48.7, C-68.1. They join red 19's re-pin. Row census (red 2): those ten, C-128.1, and the new C-137.1–C-137.19 await stamp.
+3. **control-plane's share (T35-72):** `acquisitionOf(ctx, {record, provenance, membership})` makes the instance; `op=unpack` calls `unpack(store, {archiveSha, by, cls, member})` with the stamps (a member session: `cls: "member"` and `by` the member; daemon: `cls: "daemon"`); `archivelist` calls `instance.archiveList({archiveSha, viewer, state, limit, after})`; `coarchiveset` `instance.coArchiveSet({on, by})`; `coarchivestate` `instance.coArchiveState()`. Promote `acquire`'s `document`, then `unpack.documents` (each at `collected`, in the archive's project).
+4. **capture's share (T35-22, as B2 told CAPTURE #22):** set `acquisition` on its store and pass `ownHosts` (opts or `store.ownHosts`); add the `archive-unpack` queue kind (`{kind, captureSha, subject, at}`), drained as `op=unpack` by the daemon. `profileOf` gained an optional `parts`; capture's knock pull needs no change.
+5. **Generated artifact:** the plane bundle (`bio-plane/dist/bio-plane.bundled.mjs`) is stale from this job; regenerated at the layer's close (§14).
+6. **For your record, no action:** `MEMBER_MAX` cannot arise through ooxml's listing while `MEMBER_MAX` = `ARCHIVE_TOTAL_MAX` (one member over it puts the archive over the total, refused whole first). Not a defect; noted in case the figures ever part.
