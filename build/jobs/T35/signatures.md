@@ -25,3 +25,7 @@ Size (session_01S19brLpPpaT6mCpQtwVbHH): test runs 9, module lines 869
 ## J1 · REPORT
 
 Generated artifact staled (§14): bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (not_product) embed src/signpage.mjs, which T35-5 re-embedded. fleetbundles.test.mjs: 2 FAIL on bio-plane (STALE BUNDLE) until BOB regenerates at L1's close (node bio-plane/scripts/bundles.mjs, K1540's order); 0 fail before the change. release/ and newgroup/src/release.mjs, newgroup/dist carry the old strings as release copies, refreshed by the next release.
+
+## J2 · COMPLETE
+
+T35-5 applied: the 11 DEC-149 rows in sign-release.html read as the sweep words them; signpage.mjs re-embedded (in my paths). New R32 (DEC-149) test names each string. signatures 77/77; doors 5/5; format 1 failure (inherited red 13, test-support's); architecture, coverage (42/42), ownership 0 failures. One staled artifact reported (J1). Record: build/jobs/T35/signatures.md on job/T35/signatures.
