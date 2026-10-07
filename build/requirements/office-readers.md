@@ -1,6 +1,6 @@
 # office-readers — requirements
 
-**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). R11's csv bound stays the OOXML figure (20 MiB) until measured on a deployed plane (DIST-14). Last changed T36 (T36-3: R11 amended, a `.docx` table's cells; K1972); every requirement met (OFFICE-READERS #7, K2078) (K1931).
+**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). R11's csv bound stays the OOXML figure (20 MiB) until measured on a deployed plane (DIST-14). Last changed T36 (T36-3: R11 amended, a `.docx` table's cells; K1972); every requirement met (OFFICE-READERS #7, K2078).
 
 ## Public
 
