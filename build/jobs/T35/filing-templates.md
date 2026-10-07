@@ -42,3 +42,7 @@ In `invariants.test.mjs`, R23's row test now counts R26's two C-115 rows beside 
 - `checks/ownership.mjs` filing-templates tranche/T35: 5 files changed; 0 failures.
 
 Size (session_01PyDJe4kpvF85uYt49rEyW4): test runs 6, module lines 1782
+
+## J1 · REPORT
+
+N702's user is not yet wired: wizard-scripts src/wizard-scripts/index.mjs:657-659 (#check's templateOffered) splits a {template} ref on '@', so '@records-request' reaches offeredVersion as template '' and version 'records-request', which now answers TEMPLATE_REF_REFUSED (still not offered). It should call offeredVersion({name: ref, project?, viewer}) for a ref beginning with '@' and keep the <id>@<n> split for an id: wizard-scripts' share (P10), for a later START. Also: bio-plane/dist/bio-plane.bundled.mjs embeds this module's source and is stale from this change, for BOB's regeneration at L9's close (section 14). Details in my record.
