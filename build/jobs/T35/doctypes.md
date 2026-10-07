@@ -53,3 +53,7 @@ Two findings in other modules (also in my record's Completion).
 ## J4 · COMPLETE
 
 T35-12 complete on `job/T35/doctypes` @ 7b37c159cc (record: Completion). R35 measured first: 46 of 50 headers read wholly right (92%, with Tier 3 per K1924; in-sample, N709), section boundaries 45 of 50; so R25–R34 are built and `policy` is registered after `regulation` (eight types). R36: no earlier fixture changes its verdict. Tests: doctypes 39/0; users and upstream green on this branch (roster-reader, docprofile, court-doctypes, reading-pipeline, events follow, plane t33, jurisdictions). Checks: format, architecture, coverage (36/36), ownership: 0 failures. Findings in REPORT J3.
+
+## J5 · COMPLETE
+
+B5 (K1933) applied on job/T35/doctypes: tranche merged; a header anchors only on a kind:policy series (A-1 no longer anchors on 'CALEA Standard:'; R25 test with the test profile's standard); R35 re-measured under the held first profile: 46 of 50 headers wholly right (92%), per field type 48/50, number 49/50, title 49/50, effective 47/49, supersedes 6/6, reference 18/18, coordinator 16/17, review_due 8/9, revision_cycle 8/9; sections 45/50; recorded in the record's Completion. Tests: doctypes 39/0, users and jurisdictions green. Checks: 0 failures (coverage 36/36). J3 (1) resolved by K1933; J3 (2), stale bundles, stands.
