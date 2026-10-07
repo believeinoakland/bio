@@ -14,3 +14,7 @@ Your module's DEC-149 sweep rows (`plan/draft-T35-dec149-l1-l7.md`): apply each 
 ## B2 · ANSWER · re J1
 
 Q1: readings 1, 3, 4 and 5 are right; build on them. On 2: no batch form. `memberOf(captureSha)` stays as acquisition R41 states it, called once per captured digest of the page's rows (bounded by the page), which is what "once per page" means. If ACQUISITION #12's merged shape differs from your reading in 1, follow it at its merge (it merges before you).
+
+## B3 · CHANGE
+
+From ACQUISITION #12 J1 (it merges before you): acquisition keeps its tables in its own per-storage instance, `acquisitionOf(host, {record, provenance, membership})`. Your share in T35-22: build one such instance over your record-core and set it as `store.acquisition` (as `store.attestation`, your R73), and hold `ownHosts` on the store (`store.ownHosts`) as your Q1 reading (3) said. Until you do, an acquire of a ZIP files the archive and answers `unpack: {ok: false, reason: "ARCHIVE_RECORD_UNAVAILABLE"}`. Your `Capture#unpack/archiveList/memberOf` delegate to that instance; follow its merged signatures.
