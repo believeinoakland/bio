@@ -5,11 +5,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { setupPage, groupLine, SETUP_HTML } from "../../../src/setup.mjs";
 import { HOSTING_CONTROL, hostingControlBlock } from "../../../src/setup-fleet.mjs";
-import { PAGE_HTML, HOSTING_SLOT, pageOf, groupLine as pageGroupLine } from "../../../src/setup-page/index.mjs";
-import * as setupPageModule from "../../../src/setup-page/index.mjs";
-/* K2038: setup-page's address of its guide to replacing the one-time password (its R27); read through the namespace
-   until setup-page's T35 merge brings the name. */
-const ROTATION_GUIDE_HREF = setupPageModule.ROTATION_GUIDE_HREF ?? null;
+/* K2038: setup-page's address of its guide to replacing the one-time password (its R27). */
+import { PAGE_HTML, HOSTING_SLOT, pageOf, groupLine as pageGroupLine, ROTATION_GUIDE_HREF } from "../../../src/setup-page/index.mjs";
 
 test("R47 K1851 the composed page is setup-page's template with the hosting block in its one slot and no slot left; setupPage(read) is that page with the read's group line, and groupLine is setup-page's", () => {
   assert.equal(PAGE_HTML.split(HOSTING_SLOT).length - 1, 1, "the template carries the slot once");
@@ -96,10 +93,14 @@ test("R47 F10 the block ends by naming the guide to replacing the one-time passw
   assert.equal(page.replace(last, ""), installer.replace(lastParagraph(installer), ""));
 });
 
-test("R47 F10 setup-page R14 on the page this module serves, the guide's name links to setup-page's guide (its R27), an element of the same page", () => {
+test("R47 F10 setup-page R14 on the page this module serves, the guide's name links to setup-page's guide (its R27) at the address setup-page exports, and the page carries that guide", () => {
   assert.equal(ROTATION_GUIDE_HREF, "#replace-one-time-password", "setup-page exports its guide's address (K2038)");
-  const id = ROTATION_GUIDE_HREF.slice(1);
   const block = (SETUP_HTML.match(/<div class="notice" id="hosting-control">[^]*?<\/div>/) || [""])[0];
-  assert.ok(block.includes(`<a href="${ROTATION_GUIDE_HREF}">${HOSTING_CONTROL.guide.name}</a>`));
-  assert.equal(SETUP_HTML.split(`id="${id}"`).length - 1, 1, "the guide is one element of the composed page");
+  assert.deepEqual([...block.matchAll(/<a href="([^"]*)">([^<]*)<\/a>/g)].map((m) => [m[1], m[2]]),
+    [[ROTATION_GUIDE_HREF, HOSTING_CONTROL.guide.name]], "the block's one link is the guide's name, to setup-page's address");
+  /* the guide is part of the same page: its section, and the page's script opening it at that address (setup-page R27) */
+  assert.equal(SETUP_HTML.split('<section id="s-rotate"').length - 1, 1, "the page carries the guide's section once");
+  assert.ok(SETUP_HTML.includes(`const ROTATION = ${JSON.stringify(ROTATION_GUIDE_HREF)};`), "the page opens the guide at that address");
+  /* every page this module serves carries the same link */
+  assert.ok(setupPage({ answered: true, result: { ok: true, group: "river-town" } }).includes(block));
 });

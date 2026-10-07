@@ -232,10 +232,13 @@ test("R45 R3 R7 R12 R19: every op T34 declares in op-declarations R22–R24, R26
     assert.deepEqual(A.unaccounted([{ op, mutating: false, gated: true }]).unpublished, [op], `${op}, carried gated, is seen`);
 });
 
-test("R45 R12: each of op-declarations R21's 29 aliases takes its op's very grade and reason through one frozen table — "
+test("R45 R12: each of op-declarations R21's 28 aliases (K2059: `expunge` dropped, no op since K1901) takes its op's very grade and reason through one frozen table — "
    + "an alias never differs from its op — and with the alias rows nothing is unaccounted", () => {
   assert.ok(Object.isFrozen(OP_ALIASES));
-  assert.equal(Object.keys(OP_ALIASES).length, 29);
+  assert.equal(Object.keys(OP_ALIASES).length, 28);
+  /* K2054, K2059: `expunge` is no alias (no op since K1901); `personexpunge` is a declared op of its own */
+  assert.equal(Object.hasOwn(OP_ALIASES, "expunge"), false);
+  assert.equal(Object.values(OP_ALIASES).includes("personexpunge"), false);
   for (const [a, op] of Object.entries(OP_ALIASES)) {
     assert.ok(Object.hasOwn(NON_ACTS, op), `${op}, ${a}'s op, is named`);
     assert.equal(NON_ACTS[a], NON_ACTS[op], a);

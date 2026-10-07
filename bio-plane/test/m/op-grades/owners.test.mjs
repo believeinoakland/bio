@@ -288,10 +288,13 @@ test("R17: every op T34 declares carries the grade read from its owner, each gat
   notMachine([...Object.keys(T34_WRITES), ...T34_READS]);
 });
 
-test("R17: each of op-declarations R21's 29 aliases takes its op's very grade and reason through one frozen table — an "
+test("R17: each of op-declarations R21's 28 aliases takes its op's very grade and reason through one frozen table — an "
    + "alias never differs from its op", () => {
   assert.ok(Object.isFrozen(OP_ALIASES));
-  assert.equal(Object.keys(OP_ALIASES).length, 29);
+  assert.equal(Object.keys(OP_ALIASES).length, 28);
+  /* K2054: `expunge` is no alias since K1901 (`personexpunge` is a declared op), so nothing grades it */
+  assert.ok(!Object.hasOwn(OP_ALIASES, "expunge"));
+  assert.deepEqual([RUNGS.expunge, RUNG_ABSENT.expunge, NON_ACTS.expunge], [undefined, undefined, undefined]);
   for (const [a, op] of Object.entries(OP_ALIASES)) {
     assert.ok(Object.hasOwn(NON_ACTS, op), `${op}, ${a}'s op, is named`);
     assert.equal(NON_ACTS[a], NON_ACTS[op], a);
