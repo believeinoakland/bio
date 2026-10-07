@@ -22,7 +22,7 @@
  * creates its tables, declares them to record-core's purge (K23, R19) and registers the available-actions block with
  * `public-read` (its R8; R15 here). `deps` (each module is reached through its factory on the same host unless given):
  *   record, publication, provenance, content   `getSetting`, `allocId`, `transact`, `textAtSha`, `declarePurge`;
- *                                   `publishedEditionsOf`; `captureGrade` (R25); `contentRow`, `captureFor`.
+ *                                   `publishedEditionsOf`; `captureGrade` (R25); `contentRow`, `captureFor`, `sees`, `passageText` (R8).
  *   attestation    `attestationsOf` (its R7; R9's exhibits and R25's co-attestation), from `attestationOf` (N512: split
  *                  from `provenance`, whose R49 it was).
  *   publicRead     `registerEvidenceBlock` (its R8; R15), from `publicReadOf` (K651).
@@ -36,7 +36,8 @@
  *   localFacts     `factStatus` (its R2; R30): each holiday year a packet's business-day deadline reads, as action-clocks
  *                  R10 reads it, from `localFactsOf`.
  *   conformance    `determinationRead` (its R9), `determinationsFor` (R11), from `conformanceOf` (K252).
- *   standards      `standardRead` (its R5), `inForce` (R7), from `standardsOf(host, deps)` (K251).
+ *   standards      `standardRead` (its R5), `inForce` (R7), from `standardsOf(host, deps)` (K251); (T35) its `access`,
+ *                  `designation`, `edition` (R39, R41) and `editionInForce` (R40), R8's carriage of a standard not free.
  *   consequences   `consequencesOf` (its R7), from `consequencesModule(host, deps)` (K171 (17), K250).
  *   promotion      `fact("producingGroup")` (its R40; R3's `group`, N331), from `promotionOf` on the same host unless given.
  *   events         `timeline` (its R28–R30; R33's chronology) and `readEvent` (its R26; the captures R9's exhibits take from
@@ -1106,6 +1107,69 @@ export class Filings {
                  + "apart, each in its own order, never interleaved into one list" };
   }
 
+  /* R8 (T35, N653; K1739, K2019): a standard whose access, as `standards` holds it (its R41), is not `free` (for kind
+     `standard`, an access it does not state included; a law kind stating none is free) is carried by its designation, edition, issuer, citation, adoption and access, and only the
+     passages relied on: those the determination's comparison rows for it quote as what it requires (conformance's
+     `requires`, with each of the row's content ids that is a passage of the standard's text) and those the findings'
+     legs target among its text, each with its content id, quoted. Its other text content ids are not listed. A passage
+     whose extent is the whole document is named but never quoted: quoting it would carry the whole text. */
+  #heldBack(r, s, act, facts, viewer) {
+    const textIds = new Set(Array.isArray(r.text) ? r.text.map(str).filter(Boolean) : []);
+    const relied = new Map();
+    const rely = (cid, by) => { if (!relied.has(cid)) relied.set(cid, []); relied.get(cid).push(by); };
+    const requires = (Array.isArray(s.rows) ? s.rows : []).filter(isObj).map((row, i) => {
+      const ids = [...new Set((Array.isArray(row.content) ? row.content : []).map(str).filter((c) => c && textIds.has(c)))];
+      for (const c of ids) rely(c, { comparison_row: i, source: s.id });
+      return { requires: str(row.requires), content_ids: ids, row: i, source: s.id };
+    });
+    for (const f of facts) for (const c of f.citations || [])
+      if (str(c.content_id) && textIds.has(str(c.content_id))) rely(str(c.content_id), { finding_leg: c.target ?? null, source: f.source });
+    const passages = [...relied.entries()].map(([cid, by]) => ({ content_id: cid, ...this.#quote(cid, viewer), relied_on_by: by }));
+    const access = str(r.access) || "undetermined";
+    const words = isObj(r.says) && str(r.says.access);
+    return {
+      designation: str(r.designation), edition: str(r.edition),
+      ...(str(r.edition) ? {} : { edition_says: "the record states no edition of this standard" }),
+      adoption: this.#adoption(r.id ?? s.id, act, viewer), access,
+      access_says: words ? `${words}: only the passages relied on are carried, never the whole text`
+        : "how this standard's text can be read is not stated, so it is carried as not free: only the passages relied on, never the whole text",
+      requires, passages,
+      says: passages.length ? "only the passages the determination's comparison and the findings rely on are carried, each quoted"
+        : "no passage of its text is relied on by a comparison row or a finding, so none is carried",
+    };
+  }
+
+  /* R8: one relied-on passage's words (`content.passageText`, its R46), or null with why; a passage whose document the
+     reader may not see is answered as unquoted, naming nothing of it. */
+  #quote(cid, viewer) {
+    const c = this.content;
+    const row = c && typeof c.contentRow === "function" ? this.#call(() => c.contentRow(cid)) : null;
+    if (!row) return { text: null, text_why: "the record holds no passage by this content id" };
+    if (str(row.bundle_id) && typeof c.sees === "function" && !this.#call(() => c.sees(row.bundle_id, viewer)))
+      return { text: null, text_why: "the passage is not one you may see" };
+    if (row.extent_kind === "document")
+      return { text: null, text_why: "the passage cited is the whole document, so it is not quoted: only passages relied on travel" };
+    const t = typeof c.passageText === "function" ? this.#call(() => c.passageText(cid)) : null;
+    return typeof t === "string" ? { text: t } : { text: null, text_why: "the passage's words are not held as text here" };
+  }
+
+  /* R8: the edition the act's body had adopted on the act's day (`standards.editionInForce`, its R40), or undetermined
+     with why. */
+  #adoption(id, act, viewer) {
+    const day = Filings.#actDay(act);
+    const body = isObj(act.actor) ? str(act.actor.body) : null;
+    if (!day) return { state: "undetermined", why: "the act has no single day, so which edition was adopted is not asked" };
+    if (!body) return { state: "undetermined", why: "the determination names no body, so no adoption is read" };
+    const s = this.standards;
+    if (!s || typeof s.editionInForce !== "function") return { state: "undetermined", why: "no module answers a standard's adoptions here" };
+    const e = this.#call(() => s.editionInForce({ standard: id, body, date: day, viewer }));
+    if (!isObj(e) || e.ok === false) return { state: "undetermined", why: "the adoptions could not be read" };
+    const a = isObj(e.adoption) ? e.adoption : null;
+    return { state: e.state ?? "undetermined", body, date: day, edition: e.edition ?? null,
+             ...(a ? { adoption: { id: a.id, mode: a.mode ?? null, from: a.from ?? null, citation: a.citation ?? null } } : {}),
+             why: e.why ?? null, source: a ? a.id : id };
+  }
+
   /* R9: the six sections and the consequences, each item naming its source. R8, R24: for an action resting on a
      premise override and no live determination, `det` is null: the facts section says in words that no determination
      is held, and nothing is drawn from one. R25: each exhibit read against the venue's standard. R33: the chronology. */
@@ -1122,9 +1186,12 @@ export class Filings {
     const standards = (det ? det.standards : []).flatMap((s) => {
       const r = this.#standard(s.id, viewer);
       if (!r) { refused = true; return []; }
-      return [{ standard: s.id, cite: r.cite ?? null, kind: r.kind ?? null, issuer: r.issuer ?? null,
-                text: Array.isArray(r.text) ? r.text : [], outcome: s.outcome ?? null,
-                in_force: this.#inForce(s.id, Filings.#actDay(act)), source: s.id }];
+      const base = { standard: s.id, cite: r.cite ?? null, kind: r.kind ?? null, issuer: r.issuer ?? null };
+      const tail = { outcome: s.outcome ?? null, in_force: this.#inForce(s.id, Filings.#actDay(act)), source: s.id };
+      /* R8 (K2019): a law kind stating no access is public law, free to read; kind `standard` only when stated free */
+      if (r.access === "free" || (r.access == null && r.kind !== "standard"))
+        return [{ ...base, text: Array.isArray(r.text) ? r.text : [], access: r.access ?? null, ...tail }];
+      return [{ ...base, ...this.#heldBack(r, s, act, facts, viewer), ...tail }];
     });
     const unseen = { out_of_view: true };
     const theories = this.#rows(`SELECT * FROM theory_proposals WHERE action_id=? ORDER BY theory_id`, a.id).map((t) => ({
