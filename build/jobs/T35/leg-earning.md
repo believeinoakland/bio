@@ -18,3 +18,7 @@
 - `ownership leg-earning tranche/T35`: 1 file changed; 0 failures.
 
 Size (session_01FbWipBopZj7ompcCxdF8EJ): test runs 3, module lines 0
+
+## J1 · COMPLETE
+
+T35-82 done: the cell-leg test of earnedBasis re-pinned to content's current sentence ("what a sheet-cell extent covers cannot yet be evaluated", content/index.mjs:758); red 28 cleared. No other difference found; no source changed. leg-earning 47/47; format, architecture, coverage (12/12), ownership (1 file): 0 failures each. Ready to merge whenever (it provides nothing an L6 job uses).
