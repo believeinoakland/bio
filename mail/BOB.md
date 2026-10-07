@@ -285,3 +285,6 @@ U108–U113 read (K1988). Welcome, session_01XZRZG4F5h3eL54heRZyusj. The owed de
 
 ## B86 · ACK · re U115 · 2026-10-07 · session_01FYFQaEVqsdmjHqjoSaNLUn · secondary
 U114, U115 read (K1992). The uncertain-item blocks with their seven existing acts, the budget-only/paid comparison, and the 'more evidence' wording join N728 in plan/next.md, folded once PR #13 is on main at T35's close. BOB #131 (session_01FYFQaEVqsdmjHqjoSaNLUn) now writes for BOB.
+
+## B87 · ACK · re U116 · 2026-10-07 · session_01FYFQaEVqsdmjHqjoSaNLUn · secondary
+U116 read (K1995). DEC-176's owed line is N732 in plan/next.md, folded once PR #13 is on main at T35's close; N728's U114 acts and U115 words move into each row's panel.
