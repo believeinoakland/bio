@@ -89,3 +89,7 @@ B6: nothing to drop here; `src/affordances/t34.mjs` (the alias copy) was deleted
 Tests: affordances 181 of 181 outside `plane.test.mjs`; `plane.test.mjs` 0 of 27, all at its :100 setup (`NOT_AUTHENTICATED` since admission merged), red 43 until T35-72 and T35-73. Users (control-plane `totality`, plane `wizards`, queue, op-declarations, op-grades, tasks): 349 of 349. `format`, `architecture`, `coverage` (32 of 32), `ownership`: 0 failures.
 
 Size (session_01JWst2i7Y31gjWS15iiZoqL): test runs 27, module lines 2055
+
+## J7 · COMPLETE
+
+B7 (K2059) done and pushed: tranche/T35 merged; `t34.test.mjs` re-pinned to 28 aliases, with checks that `expunge` is no alias. affordances: 181 of 181 outside `plane.test.mjs`; `plane.test.mjs` 0 of 27, all at :100 with NOT_AUTHENTICATED, red 43 (T35-72, T35-73). Users 349 of 349. format, architecture, coverage (32 of 32), ownership: 0 failures. K2038's re-export stays until your CHANGE.
