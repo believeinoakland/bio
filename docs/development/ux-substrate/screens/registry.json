@@ -1761,7 +1761,7 @@
      "label": "Link a decision to what it interprets",
      "status": "function",
      "modules": [
-      "standards"
+      "law-relations"
      ]
     }
    ],
@@ -1832,7 +1832,7 @@
      "label": "Relate to a law",
      "status": "declared",
      "modules": [
-      "standards"
+      "law-relations"
      ]
     }
    ],
