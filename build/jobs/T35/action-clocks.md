@@ -24,3 +24,7 @@
 - `node checks/ownership.mjs … action-clocks tranche/T35`: 5 files changed; 0 failures.
 
 Size (session_01UFtQue2xpbhshBRbkbZG3j): test runs 19, module lines 1629
+
+## J1 · COMPLETE
+
+T35-62 applied: red 14 cleared (factreader 5/5, DEC-149 wording); R11 (N689) lists each named closure list's entries a live deadline counts or rolls on (closures, observed.closures) at their list=<name> paths, once each. Module 55/55; users' suites show no new reds (each failure also red on origin/tranche/T35). format, architecture, coverage, ownership: 0 failures. Nothing deferred; nothing found in other modules. Details in the record's Completion section.
