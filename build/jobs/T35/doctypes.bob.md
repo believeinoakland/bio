@@ -21,3 +21,7 @@ K1924: yes, the plane's Tier 3 counts: 46/50 = 92%, so build R25–R34 (this rep
 ## B4 · CHANGE
 
 K1926: jurisdictions (T35-1) is merged into tranche/T35 (R63–R69, vocabulary.policy_headers). Merge the tranche branch and run against its held profile.
+
+## B5 · CHANGE
+
+K1933 (re-opens your job): jurisdictions now holds the measured labels (merged into tranche/T35); its scorer reads 45/50 under the held profile. Merge the tranche branch. Then (1) anchor a policy header on the profile's policy series only, never a standard's designation (DGO A-1 anchored on 'CALEA Standard:'); (2) re-run R35's measure under the held profile (not MEASURED_VIEW) and record it per field in your record (target 90%, K1902 (5)); (3) post COMPLETE.
