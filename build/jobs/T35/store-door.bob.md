@@ -16,3 +16,7 @@ Also inherited (K2011): red 33, control-plane `converts.test.mjs`:136 (publicati
 Also inherited (K2027): red 34, following `checks.test.mjs`:118 ("C-137 is following's alone"; acquisition's archive rows reuse family C-137), until N738 in T36.
 
 Your `modules.json` row enters with empty `paths` and `tests` (K1043, K2033). Create your files under `bio-plane/src/store-door/` and `bio-plane/test/m/store-door/` as the split plan says, and list them in your COMPLETE; BOB fills your row from it before the ownership check. Until then the architecture check lists your new files as owned by no module, and coverage names none of your ids: both expected, nothing to fix.
+
+## B2 · ANSWER · re J1
+
+K2037. All three readings stand: (1) the grant only from the internal header `x-bio-grant` (`GRANT_HEADER`); control-plane is told to set it. (2) `DISPATCH_CHECKS` from `answer-envelope/checks.mjs`; answer-envelope is told to keep it there. (3) plane renames `STEP` to "store-door", rank unchanged; plane is told.
