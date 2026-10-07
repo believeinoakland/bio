@@ -228,7 +228,7 @@ test("R15: with nothing in force the answer is in_force false and 'no manifest w
   assert.equal("interactions" in m, false);
 });
 
-test("R16: instance statements then the project's; a nullification of an unlocked statement removes it, of a locked one keeps it and reports it, text adds or replaces; ordered by bundle then statement id", async () => {
+test("R16: group statements then the project's; a nullification of an unlocked statement removes it, of a locked one keeps it and reports it, text adds or replaces; ordered by bundle then statement id", async () => {
   const w = await adoptWorld("adopted");
   w.set("BIAS-2026-0003-inst", [S("s2"), S("s3", { locked: true }), S("s4")], "adopted");
   w.set("BIAS-2026-0000-proj", [S("p1"), S("n2", { text: "", nullifies: "s2" }), S("n3", { text: "", nullifies: "s3" }),
@@ -321,7 +321,7 @@ test("R23: a successful adoption notifies each registered module once, after the
   assert.equal(armed, true);
 });
 
-test("R24: a project statement on an instance statement's subject that names no override is listed as an interaction, with both justifications; it refuses nothing", async () => {
+test("R24: a project statement on a group statement's subject that names no override is listed as an interaction, with both justifications; it refuses nothing", async () => {
   const w = await adoptWorld();
   w.set("BIAS-2026-0000-proj", [S("p1", { subject: "ENT-2026-0007", justification: "We hold the office to a higher bar here." }),
                                 S("p2", { subject: "ENT-2026-0099" }),
@@ -376,7 +376,7 @@ test("R25: a statement whose subject is not in the registry is listed for review
   assert.deepEqual(real.bias.biasManifest({ viewer: "admin" }).unregistered_subjects.map((u) => u.statement_id), ["s2"]);
 });
 
-test.todo("R26: a project statement that loosens an instance statement on the same subject is an override whatever it calls itself, and the strictest applies (deferred by K102 until evaluation findings exist)");
+test.todo("R26: a project statement that loosens a group statement on the same subject is an override whatever it calls itself, and the strictest applies (deferred by K102 until evaluation findings exist)");
 
 test("R27: nothing puts a lens in force but a member's authored adoption whose pinned revision stands at adopted", async () => {
   const w = await adoptWorld();

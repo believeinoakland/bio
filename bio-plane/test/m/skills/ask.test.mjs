@@ -14,7 +14,8 @@ const CHECKS = {
   ANSWER_ABSENCE_WITHOUT_LEVEL: { check: "C-200.4", translation: "an absence with no level" },
 };
 const ASK_LOAD_WHEN = "the member asks a question of the record";
-const SUGGESTIONS_LOAD_WHEN = "the asking member's own suggestions switch is on";
+const SUGGESTIONS_LOAD_WHEN = "the asking member's own suggestions switch is on, or the member asks for writing help "
+  + "with their own suggestions switch on";
 
 /* The canon sections the clauses are quoted from. */
 const sections = () => {
@@ -102,12 +103,12 @@ test("R34 R9 with no answers checks published, the ask layer is a stated absence
   assert.notEqual(version, renderPack(published({ answer_checks: CHECKS })).version);
 });
 
-test("R35 R5 the suggestions layer, in disclosed after ask and before wizard_scripts: authored, its load_when R35's sentence, its body the ladders' suggestion switch (§2) and DEC-27's limit, each found by R21's normaliser", () => {
+test("R35 R5 the suggestions layer, in disclosed after ask and before writing_help: authored, its load_when R35's sentence (the switch also governs writing help, K1841 (2)), its body the ladders' suggestion switch (§2) and DEC-27's limit, each found by R21's normaliser", () => {
   for (const pub of [published(), published({ answer_checks: CHECKS })]) {
     const { disclosed, resident } = renderPack(pub);
     const keys = Object.keys(disclosed);
     assert.equal(keys.indexOf("suggestions"), keys.indexOf("ask") + 1, "after ask");
-    assert.equal(keys.indexOf("wizard_scripts"), keys.indexOf("suggestions") + 1, "and before wizard_scripts");
+    assert.equal(keys.indexOf("writing_help"), keys.indexOf("suggestions") + 1, "and before writing_help (R36)");
     const layer = disclosed.suggestions;
     assert.deepEqual(layer, suggestionsLayer());
     assert.equal(layer.sourcing, "authored");

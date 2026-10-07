@@ -13,6 +13,8 @@ import { list as heldProfiles, combine } from "../../../../jurisdictions/index.m
 
 const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "src");
 const sha = (v) => createHash("sha256").update(v).digest("hex");
+/* R12's requested address, at a host the governor holds (below) */
+const HELD_DOC = "https://www.held.example.org/doc.pdf";
 let MF;
 const mf = new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: join(SRC, "plane", "index.mjs"),
@@ -24,7 +26,12 @@ const mf = new Miniflare({
               CAPTURE_REQUEST_TICK_MS: "3600000", MONITOR_TICK_MS: "3600000",
               ACCOUNT_SEAL_SECRET: "sched-plane-seal-secret" },   /* a member's account reference is kept sealed (credentials R23) */
   serviceBindings: { SELF: async (request) => MF.dispatchFetch(request) },
-  outboundService() {
+  outboundService(request) {
+    /* capture-requests R49 (T35-83, K1993): the page a member captures first, whose one outbound link is the address the
+       R12 run asks for, so the request names an address the record already holds (capture R27's links) */
+    if (new URL(request.url).host === "index.example.org")
+      return new Response(`<!doctype html><html><head><title>Index</title></head><body><a href="${HELD_DOC}">${HELD_DOC}</a></body></html>`,
+        { headers: { "content-type": "text/html; charset=utf-8" } });
     return new Response(new Uint8Array(512).map((_, i) => i % 251), { headers: { "content-type": "application/pdf" } });
   },
 });
@@ -82,6 +89,25 @@ async function promoteReading(id, captureSha, ref) {
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
             { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
             { path: file, blobSha: captureSha, sha256: captureSha, bytes: 10 }] });
+}
+
+/* An information bundle filing one capture op=acquire made, its register the document the acquisition answered. */
+async function fileCapture(id, doc, token) {
+  const C = "2026-09-01T00:00:00Z", cap = doc.capture.sha256;
+  const md = ["---", `id: ${id}`, "object_type: information", "schema: information@1", `title: "Capture ${id}"`,
+    "current_state: collected", "prior_state: null", `created: ${C}`, `last_updated: ${C}`, "produced_by:",
+    "  mode: assisted", "  capability_tier: session", "group: a-group", "references: []", "state_history: []",
+    "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []",
+    "criticality: supporting", "source_status: unchanged", "source:", `  locator: ${doc.locator}`, "  authority: synthetic",
+    `  retrieved: ${C}`, "monitoring:", "  enabled: false", "  frequency: none", "---", "", "## Summary", "", "A capture.",
+    "", "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+  const prov = JSON.stringify({ documents: [doc] });
+  return await POST(`op=promote&token=${token}`, { bundleId: id, base: null, snapKey: `${id}-s`,
+    register: [{ sha256: cap, path: doc.file, encoding: doc.capture.encoding, bytes: doc.capture.bytes }],
+    meta: { object_type: "information", group: "a-group", title: `Capture ${id}`, current_state: "collected", created: C, last_updated: C },
+    files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
+            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
+            { path: doc.file, blobSha: cap, sha256: cap, bytes: doc.capture.bytes }] });
 }
 
 test("R9: a resolution that marks an entity leaves the alarm armed at the connection sweep's wake (entities R13, connections R18)", async () => {
@@ -172,6 +198,13 @@ test("R12: a run waiting on a request that reaches expired is woken on the alarm
      account first, through the op the plane routes (credentials R22), the member named, never by writing the store */
   const acct = await POST(`op=accountreferenceset&token=${RUTH}`, { member: "ruth", kind: "apikey", secret: "sk-sched-plane" });
   assert.equal(acct.ok, true, JSON.stringify(acct));
+  /* capture-requests R49 (K1993): ruth captures the index page first, so the address the run asks for is one a held
+     capture links to; only the page itself is fetched, never the address it links to. She files it in a bundle, as a
+     member does, so its task event drains (tasks R1) and leaves no wake of its own in the alarms followed below. */
+  const idx = await POST(`op=acquire&token=${RUTH}`, { locator: "https://index.example.org/list.html", subresources: true });
+  assert.equal(idx.ok, true, JSON.stringify(idx).slice(0, 400));
+  const filed = await fileCapture("INFO-2026-4201-sched-index", idx.document, RUTH);
+  assert.equal(filed.ok, true, JSON.stringify(filed).slice(0, 300));
   const T0 = Date.now();
   const RUN = "RUN-2026-0928-sched-expiry";
   const opened = await POST(`op=airunopen&token=${RUTH}`, { run: RUN, contextType: "inquiry", contextId: INQ,
@@ -184,7 +217,7 @@ test("R12: a run waiting on a request that reaches expired is woken on the alarm
   await (await obj.fetch("http://x/governorreport", { method: "POST",
     body: JSON.stringify({ host: "www.held.example.org", status: 429, retry_after_ms: 3 * 86400000 }) })).json();
   const rq = await POST(`op=capturerequest&token=${RUTH}`,
-    { target: INQ, run: RUN, purpose: "investigate", address: "https://www.held.example.org/doc.pdf" });
+    { target: INQ, run: RUN, purpose: "investigate", address: HELD_DOC });
   assert.equal(rq.ok, true, JSON.stringify(rq));
 
   const r1 = await obj.onAlarm(T0 + 1000);

@@ -38,12 +38,13 @@ import { BUILT_IN_SERVICES, notHeld } from "./rules.mjs";
 import * as S from "./standing.mjs";
 
 export { ANSWERS_CHECKS, refusal } from "./checks.mjs";
-export { ASK_SCOPE, askAdmits, scrubRead } from "./scope.mjs";
+export { ASK_SCOPE, askAdmits, draftAdmits, scrubRead } from "./scope.mjs";
 export { ReadLog, textOf } from "./readlog.mjs";
 export { checkAnswer, shapeRefusal, figuresIn, ANSWER_FIELDS, SENTENCE_KINDS, RULE_LABELS, ANSWER_LABEL, LEVELS,
          ABSENCE_TERMS } from "./check.mjs";
 export { BUILT_IN_SERVICES, RULE_SERVICE_NAMES } from "./rules.mjs";
-export { CADENCES, STANDING_TICK_MAX, STANDING_ANSWERS_MAX, STANDING_LABEL, STANDING_AI_SETTING, nextDueDay, memberOf }
+export { CADENCES, STANDING_TICK_MAX, STANDING_ANSWERS_MAX, STANDING_LABEL, STANDING_AI_SETTING, STANDING_FIND_MAX,
+         STANDING_FIND_KEYS_MAX, STANDING_FIND_CAPTURES_MAX, STANDING_FIND_LABEL, FIND_ORIGIN, nextDueDay, memberOf }
   from "./standing.mjs";
 export { ANSWERS_SCHEMA, ANSWERS_TABLES } from "./schema.mjs";
 
@@ -199,7 +200,7 @@ export class Answers {
    *  under. Non-mutating; never throws. */
   async ruleAnswer({ service = null, args = null, viewer = null, at = null, grant = null } = {}) {
     if (this.record.getSetting(RULE_SERVICES_SETTING) !== true)
-      return refusal("RULE_SERVICES_OFF", "the rule services are switched off in this copy");
+      return refusal("RULE_SERVICES_OFF", "the rule services are switched off in your group's Civicsmith");
     const fn = BUILT_IN_SERVICES[service] || this.services.get(service);
     if (typeof fn !== "function" || !Object.hasOwn(BUILT_IN_SERVICES, service) && !this.services.has(service))
       return refusal("RULE_SERVICE_UNKNOWN", `no rule service is named ${service}`, { service: service ?? null });

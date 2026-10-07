@@ -28,6 +28,7 @@ async function refusedOds(bytes, marker) {
   assert.deepEqual({ ...t, images: undefined }, {
     ok: true, container: "ods", document: null, sheets: [], rangeUnits: null, rangeUnitsSkipped: null,
     undetermined: [marker], counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 }, images: undefined,
+    active: [],   // R47: content.xml was read for its listeners; the repeat bound stops only the projection
   });
   const s = await odsEntry.structure(bytes);
   assert.equal(s.ok, true);

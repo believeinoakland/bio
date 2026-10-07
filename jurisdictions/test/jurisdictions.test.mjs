@@ -305,12 +305,14 @@ test("R28 validate codes for the action sections", () => {
 /* ============================================================================================== */
 /* The action sections (R23–R27).                                                                  */
 
-test("R23 standard_sources: source, kind from the six, issuer, level from R31, cite pattern, code naming a codes key", () => {
+test("R23 standard_sources: source, kind from the seven, issuer, level from R31 (or a sector, T35), cite pattern, code naming a codes key", () => {
   for (const level of LAW_LEVELS) assert.ok(breakIt((p) => { p.standard_sources[0].level = level; }).ok, level);
   for (const bad of ["local", "district", "", 1, null]) assert.ok(hasError(breakIt((p) => { p.standard_sources[0].level = bad; }), "LEVEL_UNKNOWN", "standard_sources[0].level"), String(bad));
-  assert.ok(hasError(breakIt((p) => { delete p.standard_sources[0].level; }), "LEVEL_UNKNOWN", "standard_sources[0].level"), "every source has a level");
-  for (const id of [FIRST, TEST]) for (const s of get(id).standard_sources) assert.ok(LAW_LEVELS.includes(s.level), `${id} ${s.source}`);
-  for (const kind of ["statute", "regulation", "ordinance", "court", "policy", "commitment"])
+  assert.ok(hasError(breakIt((p) => { delete p.standard_sources[0].level; }), "LEVEL_UNKNOWN", "standard_sources[0].level"), "an ordinance has a level");
+  /* (T35-1) a level where R31 requires one, else a sector (R64): never neither */
+  for (const id of [FIRST, TEST]) for (const s of get(id).standard_sources)
+    assert.ok(LAW_LEVELS.includes(s.level) || (["policy", "commitment", "standard"].includes(s.kind) && !("level" in s) && s.sector), `${id} ${s.source}`);
+  for (const kind of ["statute", "regulation", "ordinance", "court", "policy", "commitment", "standard"])
     assert.ok(breakIt((p) => { p.standard_sources[0].kind = kind; }).ok, kind);
   assert.ok(hasError(breakIt((p) => { p.standard_sources[0].cite = { re: "(" }; }), "PATTERN_INVALID", "standard_sources[0].cite"));
   assert.ok(hasError(breakIt((p) => { delete p.standard_sources[0].issuer; }), "VALUE_INVALID", "standard_sources[0].issuer"));
@@ -912,12 +914,15 @@ test("R36 the test profile supplies R31's levels, oversight, a Tier 2 advisory, 
   const t = get(TEST);
   assert.ok(t.action_kinds.some((k) => k.evidence && k.evidence.contestable && k.evidence.contestable.length
     && k.evidence.contestable.every((g) => GRADES.includes(g.grade))), "evidence with a contestable grade (R39)");
-  assert.deepEqual([...new Set([...t.records_laws, ...t.standard_sources].map((x) => x.level))].sort(), ["city", "county", "federal", "state"]);
+  /* every level; an entry with none carries a sector instead (R31 as amended by T35-1) */
+  assert.deepEqual([...new Set([...t.records_laws, ...t.standard_sources].map((x) => x.level).filter(Boolean))].sort(), ["city", "county", "federal", "state"]);
   assert.ok(t.counterparties.some((c) => c.oversight === true));
   assert.ok(t.action_kinds.some((k) => k.tier === 2 && typeof k.advisory === "string"));
   assert.ok(t.legal_organisations.length && t.holidays.length);
   const f = get(FIRST);
-  for (const x of [...f.records_laws, ...f.standard_sources]) assert.ok(LAW_LEVELS.includes(x.level), x.name || x.source);
+  /* every entry R31 gives a level carries one; OUSD's families, a government at no law level, carry their sector (T35-1) */
+  for (const x of [...f.records_laws, ...f.standard_sources])
+    assert.ok(LAW_LEVELS.includes(x.level) || (["policy", "commitment", "standard"].includes(x.kind) && !("level" in x) && x.sector), x.name || x.source);
   /* the Tier 3 kinds §8 names are held, for the organisations that evaluate them */
   assert.ok(f.action_kinds.filter((k) => k.tier === 3).length >= 3);
   /* the legal organisations Bob named (K283 (2), K303): exactly these two, each taking up its Tier 3 kinds,

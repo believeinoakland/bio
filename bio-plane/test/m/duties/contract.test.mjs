@@ -32,7 +32,7 @@ test("R18 the module registers once as a connection owner, and its neighbours pa
   const { w, A, B, C, D } = owners();
   const mine = w.registry.owners().find((o) => o.owner === "duties");
   assert.deepEqual(mine.kinds, CONNECTION_KINDS.map((k) => ({ ...k })));
-  assert.deepEqual(CONNECTION_KINDS.map((k) => k.word), ["owes", "is owed to", "holds the power", "met by"]);
+  assert.deepEqual(CONNECTION_KINDS.map((k) => k.word), ["owes", "is owed to", "holds the power", "met by", "used in"]);
   const r = ownerConformance({
     owner: "duties", kinds: CONNECTION_KINDS.map((k) => ({ ...k })), neighbours: (args) => w.duties.neighbours(args),
     fixture: { node: E.clerk, at: AT, in: `${A}:owes`, out: `${B}:owes`, undetermined: `${C}:owes`, fenced: `${D}:owes`,
@@ -99,7 +99,7 @@ test("R19 dutiesOps publishes one route arm per act and read, with the control p
   const w = world();
   const ops = w.ops("by=member:bob&viewer=member:bob", {});
   assert.deepEqual(Object.keys(ops).sort(), ["duty", "dutyadopt", "dutydeclare", "dutiesof", "dutymatch", "dutyoccurrences", "dutypropose", "dutyrevise",
-    "dutysetagainst", "dutytransition", "dutytransitions", "dutywithdraw", "powersof"].sort());
+    "dutysetagainst", "dutytransition", "dutytransitions", "dutywithdraw", "powersof", "poweruses", "uselink", "useunlink", "reviewpropose"].sort());
   const body = { ...w.fields(), clause: "s1", by: "member:mallory" };
   const d = w.ops("by=member:bob&viewer=member:bob", body).dutydeclare();
   assert.equal(d.ok, true);

@@ -97,7 +97,7 @@ test("R15 the block is registered with publication once, at start, and computed 
   assert.equal(again.reason, "PROVIDER_DECLARED");
   assert.equal(filingsOf(x.host), x.f, "one instance per host");
   const first = block(x);
-  const s3 = x.declare({ cite: "P.E.B.L. § 13", kind: "ordinance", issuer: "Port Ellery Selectboard", period: { from: "2020-01-01", to: null } });
+  const s3 = x.declare({ cite: "P.E.B.L. § 13", kind: "ordinance", issuer: "Port Ellery Selectboard", period: { from: "2020-01-01", to: "2030-12-31" } });  /* closed, so it binds (conformance R27; civil-time R22) */
   supersede(x, x.D, { standards: [{ standard: x.S1, outcome: "noncompliant" }, { standard: s3, outcome: "noncompliant" }] });
   assert.deepEqual(block(x).determinations[0].tier3.standards, [x.S1, s3], "computed at the read");
   assert.notDeepEqual(first, block(x));
@@ -113,7 +113,9 @@ test("R21 availableActions answers R15's block for a determination's offices, fr
   const hidden = x.f.availableActions({ determination: x.D, viewer: V("quinn") });
   assert.deepEqual([absent.reason, absent.detail], [hidden.reason, hidden.detail]);
   assert.equal(absent.reason, "NO_SUCH_DETERMINATION");
-  const D8 = x.determine({ act: { ...x.act, description: "the harbour works let", actor: { role: "Harbour Master", body: "Nowhere Harbour" } } });
+  /* conformance R27 (K2021): no standard is shown to bind Nowhere Harbour, so its outcomes are compliant */
+  const D8 = x.determine({ act: { ...x.act, description: "the harbour works let", actor: { role: "Harbour Master", body: "Nowhere Harbour" } },
+                           standards: [{ standard: x.S1, outcome: "compliant" }, { standard: x.S2, outcome: "compliant" }] });
   const off = x.f.availableActions({ determination: D8, viewer: V("bo") }).determinations[0].office;
   assert.deepEqual([off.in_profile, off.role], [false, "Harbour Master"]);
   assert.match(off.says, /not an office the active profile lists/);
@@ -148,7 +150,7 @@ test("R18 every filled value, packet item and chronology event names the record 
   assert.ok(dl.date.why);
   /* an act whose event is placed nowhere starts no single day: the chronology reads from the earliest event (R33), and
      a claim deadline starting at the act is undetermined, with why */
-  const Dp = x.determine({ act: { ...x.act, event: x.event({ kind: "adoption" }) } });
+  const Dp = x.determine({ act: { ...x.act, event: x.event({ kind: "adoption" }) }, standards: [{ standard: x.S1, outcome: "compliant" }, { standard: x.S2, outcome: "compliant" }] });  /* conformance R27: no date binds */
   const P = x.action({ kind: "commitment_claim", legs: [{ target: Dp, kind: "rests_on" }] });
   const pp = x.f.counselPacket({ reason: WHY, action: P, counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
   assert.deepEqual([pp.sections.chronology.from, /earliest/.test(pp.sections.chronology.from_says)], [null, true]);

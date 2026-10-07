@@ -81,7 +81,7 @@ export function checkProjectNameUniqueness(corpus) {
     if (!key) {
       findings.push(f('C-77.2', 'warning',
         `${label}: a project with no title cannot be compared for name uniqueness (the write path refuses it NO_TITLE)`,
-        ['give the project a title unique across the instance']));
+        ['give the project a title unique across your group\'s Civicsmith']));
       continue;
     }
     keyed.push({ id: label, title: String(fm.title), state: fm.current_state, key });

@@ -116,7 +116,7 @@ export function deriveMembership(structure, view) {
       system: shape.system,
       basis: "each file link is assigned to the item link whose region contains the top edge of its "
            + "rect; a region runs from an item link's top edge down to the next item link's, in page "
-           + "order. The publisher linked neither end to the other: this pairing is the plane's "
+           + "order. The publisher linked neither end to the other: this pairing is an "
            + "inference from position, to be confirmed, never the publisher's own link.",
       counts: { items: groups.length, placed: groups.reduce((n, g) => n + g.files.length, 0), unplaced: unplaced.length },
       items: groups,

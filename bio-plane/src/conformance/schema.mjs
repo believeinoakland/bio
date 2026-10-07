@@ -48,6 +48,10 @@ CREATE TABLE IF NOT EXISTS determination_standards (
   in_force_why      TEXT,
   PRIMARY KEY (determination_id, ord)
 );
+-- R27 (T35): each standard's bindingness on the act's body, as standards'
+-- bindsAt answered it at the act's dates (binds: true, false for a benchmark,
+-- or undetermined; binds_basis its why and what it rests on), added by
+-- migrateConformance's additive columns; a row written before T35 holds null.
 CREATE INDEX IF NOT EXISTS determination_standards_standard ON determination_standards (standard_id, determination_id);
 -- R1: THE COMPARISON, one row per row the member stated: what the standard
 -- requires, what was done, the reading (aligns, diverges, open) and the content
@@ -62,6 +66,10 @@ CREATE TABLE IF NOT EXISTS determination_rows (
   content           TEXT NOT NULL,
   PRIMARY KEY (determination_id, ord)
 );
+-- R29 (T35): a row whose did is a measure holds it in measure (an additive
+-- column): the calculation, its result key and the result, denominator,
+-- population and derivation as calculations read them at the write; did then
+-- holds the measure's words.
 -- R2: EACH FINDING PINNED, at the case edition and version it is published
 -- in, with its frozen pair as that edition states it (publication R37).
 CREATE TABLE IF NOT EXISTS determination_findings (
@@ -111,7 +119,9 @@ CREATE TABLE IF NOT EXISTS determination_flags (
 );
 -- R12: A COMPARISON PROPOSED, stored apart from determinations: who made it
 -- (machine = 1 for machine work), the act, the standards named, the rows and
--- the questions, and never an outcome.
+-- the questions, and never an outcome. From T35 its act is read as R25 and
+-- R28 read it, and bindings (an additive column) holds R27's bindingness of
+-- each standard on the act's body, read, never taken from the proposal.
 CREATE TABLE IF NOT EXISTS comparison_proposals (
   proposal_id       TEXT PRIMARY KEY,
   project_id        TEXT NOT NULL,
@@ -167,13 +177,21 @@ export const CONFORMANCE_TABLES = Object.freeze([
   { name: "comparison_proposal_contradictions", keys: ["proposal_id", "inquiry_id"] },
 ]);
 
-/* R25 (T33-70): the act's columns added to a store made before T33; its rows keep null in them. */
-const ADDITIVE = Object.freeze([["act_event", "TEXT"], ["act_entity", "TEXT"], ["act_when", "TEXT"]]);
+/* R25 (T33-70): the act's columns added to a store made before T33; its rows keep null in them. R27, R29 (T35): the
+   bindingness and measure columns, null on rows written before T35. */
+const ADDITIVE = Object.freeze([
+  ["determinations", "act_event", "TEXT"], ["determinations", "act_entity", "TEXT"], ["determinations", "act_when", "TEXT"],
+  ["determination_standards", "body", "TEXT"], ["determination_standards", "binds", "TEXT"],
+  ["determination_standards", "binds_basis", "TEXT"], ["determination_rows", "measure", "TEXT"],
+  ["comparison_proposals", "bindings", "TEXT"],
+]);
 
-/** Creates the tables, and the columns a store made before T33 lacks; idempotent. */
+/** Creates the tables, and the columns a store made before T33 or T35 lacks; idempotent. */
 export function migrateConformance(sql) {
   const bare = CONFORMANCE_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const s of bare.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
-  const have = [...sql.exec(`PRAGMA table_info(determinations)`)].map((r) => r.name);
-  for (const [column, decl] of ADDITIVE) if (!have.includes(column)) sql.exec(`ALTER TABLE determinations ADD COLUMN ${column} ${decl}`);
+  for (const [table, column, decl] of ADDITIVE) {
+    const have = [...sql.exec(`PRAGMA table_info(${table})`)].map((r) => r.name);
+    if (!have.includes(column)) sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
+  }
 }

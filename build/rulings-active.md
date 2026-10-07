@@ -1,0 +1,72 @@
+# Rulings in force (read whole at takeover)
+
+**Status** · Read whole at every takeover. Only what a BOB must follow or would otherwise relearn, beyond `roles/BOB.md` and the mechanics, each line stated as the rule with its source ids. Drawn from K1–K2026 by BOB #132 (2026-10-07, K2034). The full record is `build/rulings.md`, never read whole: searched on need, always before an act on `main` (§16). **Kept current:** a ruling that adds or changes a rule in force updates its line here in the same commit; a line no longer in force is removed. Kept under about 80 lines.
+
+## 1. Working with Bob
+
+- Bob decides capability, what a requirement means, doctrine, policy, UX, high-level architecture (like the definition of layers: adding, removing or reordering layers, adding or removing a module that carries product capability) and the principles; each question comes with an explanation he can understand, a set of options, and a recommendation (K2055). Details about layers, modules and their boundaries and order are BOB's. Packaging is BOB's, decided and reported, never asked: which module holds a function, splits and module boundaries, `uses` edges, where ruled capability lives, a field added to a provided service without changing its meaning, technical placements such as where a sign-in is stored. (K569, K1257, K1819, K2007, K2008)
+- Before putting a question to Bob, apply his test: values, legal exposure, money, how real groups behave, or reversing one of his own doctrines are his; whatever follows from canon or his rulings, or is technical, is BOB's. Check he has not already answered it, and never trust a "for Bob" label inherited from a plan or handoff. (K1437, K1266, K2009, K1913)
+- Record a ruling of Bob's in his own words: its "Ruled" text adds no limit or scope he did not state; BOB's additions are marked "BOB's details (P17)"; where his words and a recorded ruling differ, his words govern and a new line corrects it at once. (K1762, K1755)
+- A change to `PROCESS-DESIGN.md`, or to any process document that alters a rule, is made only after Bob has seen the exact change rendered and approved it in words; an answer to another question is never that approval. Do not propose principle changes in reaction to an incident: recurring confusion is fixed by retiring the BOB and ROOT and starting a fresh ROOT. (K1258, K1265, K1497, K2020)
+- End every turn that waits by naming each question open with Bob; "Nothing for Bob to do" only when none is open. (K2006)
+- Open each tranche as soon as its plan is ready, without asking. A layer never waits on Bob's meter reading: ask for it at each layer close and go on. (K1507, K1853)
+- A tranche carries everything safely doable, with no job-count cap, every rung of a ruled construct (not only the first), each exclusion with its named hard reason. P10 stands: no closing sweep, but work may join layers not yet started. When `next.md` holds nothing doable, no tranche opens until an entry arrives. (K642, K1741, K882, K899, K1249)
+- An out-of-layer job (an exception to P10's layer order) needs Bob's approval each time; one approval is no precedent. (K1548)
+- Releases are BOB's decision, never asked: cut one only when the deployment or measurement it yields lets held work enter the next tranche; at most one per tranche boundary; never mid-tranche from unmerged work. Each deploy act still needs Bob (§2 below). (K1501, K1759, K1862, K1876)
+- Add protective limits (sign-in caps, rate limits, session and key expiry, size and count caps) without asking and report them; a limit that changes what a member or group may do is Bob's. (K1881)
+- Account switch: once Bob reports his primary meter at about 90% or more, move the work to the secondary account at the next layer close with no job live (handoff, then Bob starts a ROOT there); Bob stops the primary at 95%. Sessions on the other account cannot be rung or archived: leave them, with no `BOB-final` row. The `BOB` row of `build/channels.md` follows the account, changed at a tranche close. (K1820, K1891, K1896, K742, K1897, K1428)
+
+## 2. Standing approvals and recorded refusals (check before acting, §16)
+
+- Standing list (both repositories' `.claude/settings.json`, Bob's): `mcp__github__merge_pull_request` (development and design-stream PRs into `main` at a tranche boundary, CLAUDE.md, K1177), `archive_session` under both tool names (one name failed to match at K526), `delete_trigger`, `mail.mjs xcheck`, `git rm -q --` under the four test directories, removing `.git/hooks`. These cleared the refusals of K1014, K1177, K929, K1113, K526, K1067, K1095. Deleting a predecessor's routines and archiving it are BOB's own acts, never asked as Bob's. (K1261, K618, K511, K112, K687)
+- A listed act refused anyway is §16 again: one-off approval, not re-added (K1091, K1702). Edits to `.claude/settings.json` are refused even with Bob's approval: Bob writes them himself. A rule added mid-tranche reaches a job only in a session started on a branch carrying it: merge the tranche into the job branch, then restart. (K1091, K1702, K112, K620)
+- Pushing or fast-forwarding `main` (§5.7 (3), and before an opening) has been refused as "Merge Without Review" (K1454, K1906) and accepted at other times; not on the standing list (Bob approved once, K1909). If refused, ask Bob in that session; never move to PR-based closes (reverted, K1497). (K1454, K1906, K1909, K1496, K1497)
+- Between tranches, commit build state to the closed tranche branch only; `main` moves only by §5.7 (3) and §5.7 (1)'s design merge, never as a side effect of another push. (K1703, K1701, K1887)
+- Every deploy to `biosmoke7` (fleet, plane, installer) is refused as "Production Deploy" and approved by Bob in session each time; never on the standing list. The release's `ssh-keygen -Y verify` signature controls likewise. (K1715, K1716, K1717, K1915, K1905, K1910)
+- Release 0.81.0 is cut and signed on `dist/cut-0.81.0`, not deployed: Bob, "Hold until T35 is complete"; `biosmoke7` stays on 0.80.0 until T35's release deploys the whole fleet with the container. (K1922, K1915)
+- Tag pushes are refused by the session's git proxy (HTTP 403, not GitHub): never retry; cite a branch at a commit. Branch `study/constructs` (@ `892fca16c4`) is never deleted or rewritten. Release cuts live on `dist/cut-<version>` branches, untagged. (K1433, K1436, K1709)
+- A job's session may be refused reading its own module's files by name ("Credential Materialization" for credentials): Bob approves in that job's session; not listed. (K1748, K1758)
+- A session showing auto mode's "no verdict" fault is replaced, not approved in. (K273)
+
+## 3. Standing doctrine and policy (not yet in requirements)
+
+- Bob's construct rulings live in canon: the Capability Ladders (§2 cross-cutting rulings, §6B–§6C, §10 doctrine), Intake Doctrine §3 (ZIP), Assistant and AI Roles §3 rule 11. Apply them from there; do not re-ask. (K1432, K1472, K1500, K1742, K1852, K1944)
+- Substrate first: each stage publishes its services (ops, reads, refusals, vocabularies) for the design stream; a member screen is never a precondition of a substrate stage. (K1430)
+- The assistant may search and read any public site to plan research, but nothing it reads enters the record: the substrate's capture fetches whatever does. (K1880)
+- No credential (session token, secret, grant) ever travels in a URL; DEC-2, the root of trust, is not reopened. (K1874)
+- AI accounts: a group-level API key held by an administrator; a member's own subscription token, used only by that member; a member's own API key; or no AI (a subset of the product). K1502's "no group-wide account" applies to subscriptions only. (K1755, K1757, K1761, K1547)
+- Any statement about Anthropic's (or any provider's) terms cites an `AT-n`/`U-n` id of `build/terms/anthropic.md` or a ruling of Bob's, never a paraphrase; re-read those entries live at each tranche opening and before a ruling relies on one. Its format-check arm stays opt-in (`CIVICOS_TERMS_CHECK=1`) until certified. (K1762, K1763, K1765, K1772)
+- Members' words: "record", never "bundle", in any text a member reads, the assistant's relayed text included (identifiers stay); "your group's Civicsmith" to members, "this group's Civicsmith" to a reader without credentials, never "copy", "instance" or "plane". (K106, K158, K899, K902, K1821)
+- `legacy-ui` (`app.html`) stays as it is until the new interface replaces it; it is touched only where Bob names it. (K633, K1849)
+
+## 4. Operational lessons
+
+- A push answered "Internal Server Error" is retried at once with `git -c http.version=HTTP/1.1 push`. (K1977)
+- Merge job branches with merge commits, never a rebase that flattens them. A job branch that re-applied tranche commits under new hashes is merged only after checking it differs from the tranche state only in its own paths and record, keeping the tranche's version elsewhere. A job claiming the tranche was rewritten is checked: BOB's pushes are fast-forwards. (K1991, K1976, K1952)
+- Ownership check: run it before a merge only while the job holds the tranche's tip, else against `git merge-base` or the merge's own diff; after an early merge, confirm multiple-merge-base artifacts with `git merge-tree`; a multi-line statement shortened by removal reads as added and is accepted as a removal. (K255, K1295, K684, K140, K189)
+- After a container restart, run `npm ci` in `agent-runner` (`--ignore-scripts`) and `sheet-worker` before `fleetbundles`, or it skips. (K1980, K1948)
+- Never stop agent-worker's test run midway: its negative controls mutate the working tree; if one was stopped, restore from HEAD before the next run. (K1994)
+- Regenerate artifacts in the manifest's order: case-checker `program.mjs` before the bundles (the plane bundles it), newgroup last. (K1540, K1341)
+- Measure a module's size (P6, K617's ~4,000-line split) over its own code in its `paths`, the most specific path owning each file, never its tests or a job's `Size` line. (K1821, K1519, K1024, K1135)
+- Read every scripted edit back (a `modules.json` edit once matched nothing because of indentation), and read a file into memory before reopening it for writing. (K702, K715)
+- Code that runs on the plane keeps each LIKE/GLOB pattern within workerd's 50 bytes and spreads `sql.exec` cursors; test it at the plane's shape. (K313, K316)
+- The coverage check counts any `R<n>` string in a module's tests: a new id that other tests already name reads green wrongly, so each START requires an explicit test for such ids. (K874, K1369, K1122)
+- Routine creation is rate-limited: ring a refused doorbell a minute later. Never issue a doorbell in the same step as a destructive local command. (K1825, K1694)
+- On a point already answered, wait for the job's next entry before answering again (crossed answers). (K1172)
+- Before restarting a QUIET job, check its session is not in one long live turn: a restart discards that work. (K506, K510)
+- Container images are built and published by the GitHub workflow `agent-runner-image.yml` (GHCR, by digest), never in a session (Docker Hub limits, the proxy's TLS); the project's Cloudflare token is `bio-biosmoke7-deploy`, with Containers · Edit. (K1898, K1893, K1985, K1908)
+
+## 5. Standing BOB conventions
+
+- A job never strikes a `not yet met` mark: it names the met ids in its record and BOB strikes them at the merge; BOB never edits a job's record. (K460, K775, K787, K567)
+- A test names a requirement id at the module's interface; an id not yet met is marked so and named in a `test.todo` with its cause, never a red test or a pin of today's behaviour. (K208)
+- Splitting a product module: copy, then delete, in one tranche; the new module (no `from`) builds by copy and merges early, then the source module's job deletes its copy and re-points. A moved id is retired as "moved to <module> R<n>"; ids are never reused. (K624, K531, K617, K179, K114)
+- Any act that adds or reorders modules in `modules.json` carries a membership `MODULE_ORDER` (R83) entry in the same act. (K657, K271, K1185)
+- A new module enters `modules.json` with empty `paths` and `tests`, filled from its job's COMPLETE before the ownership check; the format check refuses a path naming nothing. (K1043, K1304, K1975)
+- One code, one condition, one site: the module owning an absent object provides the helper and the row, others call it; distinct conditions get distinct codes; a member-facing refusal follows DEC-83's sentence-then-remedy pattern. (K231, K275, K446)
+- Merge in `modules.json` order, upstream first; a provider merges early for its users; a job that uses no unmerged same-layer job may merge as soon as it is complete. promotion's stamp merges last in its layer; rows changed in later layers wait, accepted red by name, for the next tranche's stamp. (K425, K527, K1680, K1965, K1750)
+- An entry found mid-tranche for a module whose job has not started joins that job's START when small; `next.md` holds only open entries, applied ones moving to `archive/next-applied.md`. (K279, K411)
+- The handoff is `build/handoff.md`, replaced whole each time (TRANSITION.md is archived). (K2026)
+- Reading-set budgets: BOB's takeover set at most 250 KB; a module job's set at most 300 KB, measured by `build/plan/reading-sets.py` at each START, a job reading of each used module only its Purpose and the services its Uses names (mechanics §3, K2057); a set still over it given a task digest by the job's workers (K2032). (K2053, K2057)
+- P20 and mechanics §17 (K2060) hold the rule below: sets are defined in advance, measured, and fixed by trim, split, then a task summary whose helpers know the work and what follows it; Bob hears only of a set BOB cannot fix.
+- Everything a session must read is read whole, never scanned. A body too large is trimmed, or workers told the task read it in full and write the summary most useful to that task, citing its sections; a summary serves only its task, and the source stays binding. (K2028, K2032)

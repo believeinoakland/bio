@@ -1,6 +1,6 @@
 # case-carriage — requirements
 
-**Status** · DRAFT by a worker for BOB #106, 2026-10-03, on `tranche/T28` (N532; K617, P6; seam read `build/extraction/publication-split-2.md`). Split from `publication` with no change of meaning: its R57's holding with `heldMaterialsOf` and `publishedMaterialText` (here R1–R3), R59's and R51's re-reads (R4, R5), R31's clause on the held materials (R6), R34 copied (R7). Layer 8, directly before `publication`, which creates it (K1024's form). Code today: `bio-plane/src/publication/index.mjs` 894–1054 and `schema.mjs` 571–596 on `tranche/T28`. A product module with no `from`. Not yet met: R1–R7 (T29). Folded by a fold worker for BOB #106 on `prep/T29-folds`, 2026-10-03, entry N532, ruling K1332, from the seam read's Appendix A, with K1332's two wording fixes: R1's tokens are those the capture's `provenance.json` names, as built (K1322), not tokens a `co_attestation` row names; the `register` read contract (`provenance` R48) lists `bytes`. R51's re-read is taken with R57's and R59's (K1332).
+**Status** · In force: split from `publication` for size, BOB's (N532, K617, K1332), meaning unchanged. Last changed T35 (T35-53: R8); every requirement met (K2004).
 
 **Size (P6).** About 270 lines.
 
@@ -33,6 +33,14 @@ Terms. A **material** is a row of the case document's `materials:` block (`case-
   - `files`: one `{sha256, ref, path: "materials/<sha>", kind, bytes}` per held item, for the caller to register by hash.
 
   Nothing is held for a material not included. A material it cannot hold is answered, never refused. Never throws.
+- **R8** (N688; K1844) An included document whose capture is an archive member is carried with its archive. A document is a **member** when the entry its home's `data/provenance.json` states for it (as R1 reads tokens) has `capture.method` `"unpacked"` and a `container` block. For each such document, R1 also holds, in the same call and the same ways:
+  - **its `container` record**: the `container` block as that entry states it, in `record-grammar`'s canonical JSON (`canonicalJson`), as text of kind `container`;
+  - **its archive**: the capture at `container.archive_sha256`, held as R1 holds a document's captured bytes (inline text, else `evidence`), under kind `archive`;
+  - **the archive's timestamp tokens**, those the archive's own home `data/provenance.json` names for it, as R1 holds a document's tokens (kind `attestation`).
+
+  When the archive is itself a member, the same is done for its archive, in turn, up to the outermost archive. Each is held under `materials/<sha>` in `files`, so the outsider's check is the bag's `manifest-sha256.txt`, then `unzip -p materials/<archive_sha256> <container.path> | sha256sum` against the member's SHA-256, then `openssl ts -verify` on the archive's token (Intake Doctrine §3b); the bag's writer is `public-read`'s and is unchanged.
+
+  It answers in `unheld`, never refuses, each of: a `container` block whose `member_sha256` is not the document's SHA-256 or whose `archive_sha256` is not 64 hexadecimal digits (`kind` `container`, why "the container record does not name this document"); an archive not held at its digest (`kind` `archive`, why "the archive is not held"); an archive token not held (`kind` `attestation`). A document that is not a member is held exactly as R1 states.
 - **R2** `heldMaterialsOf(caseId, edition)` answers the `[{sha, held}]` R1 wrote for that case edition, in its order. It answers `[]` for an edition that held nothing or was never committed. Writes nothing; never throws. (K1317)
 - **R3** `publishedMaterialText(sha)` answers `{found: true, sha256, kind, text}` for a text R1 held (`sha` read case-insensitively), else `{found: false}`. A text no commit held is unreachable here. Writes nothing. (K1316)
 - **R4** `acceptedWorkLapsed(fm, signer)` reads the `accepted_work:` and `accepted_work_flags:` blocks (`case-grammar` R16). It asks `accepted-work` (its R2) once per distinct `(ref, edition)`, as `member:<signer>`:
@@ -53,7 +61,8 @@ Terms. A **material** is a row of the case document's `materials:` block (`case-
 
 ### Uses
 
-- `record-grammar`: `createSha256`.
+- `test-support`: `make-zip.mjs` (tests only; R8; K2002).
+- `record-grammar`: `createSha256`; `canonicalJson` (T35, R8).
 - `record-core`: `readFile` (R13), the `bundles` read contract (R37), `declarePurge` (R21).
 - `membership`, `promotion`: only to construct `extraction`, `sources` and `accepted-work` through their factories.
 - `provenance`: the `register` read contract (R48), for `capture_sha`, `bundle_id`, `path` and `bytes`.
@@ -73,11 +82,13 @@ Terms. A **material** is a row of the case document's `materials:` block (`case-
 - DEC-96 items 1, 4; N522 (R4).
 - DEC-78 item 5(d); N364 (R5).
 - K1315, K1316, K1317.
+- K1844 (ZIP archives; N688), `docs/architecture/BIO_Intake_Doctrine_v1_1.md` §3b (each step a stock tool): R8.
 
 ### Suggestions
 
 - **Factory.** `caseCarriageOf(host, deps)` keeps one instance per host. `publication`'s factory creates it eagerly, so its tables exist and are declared at every boot (K1024's form). A given `extraction`, `sources` or `acceptedWork` is used as is (test injection); otherwise each is reached lazily through its factory.
 - **As built (R1's tokens).** R1 states the code as built (K1322, K1332): the token files are those the capture's home `data/provenance.json` names for that capture. Co-archives are locators and hold no bytes.
 - **For callers.** `publication` registers R1's `files` in `published_shas` in the same transaction, and raises C-122.1 on R5 and C-122.3 or C-122.4 on R4 (its R51, R59). It answers its own `heldMaterialsOf` and `publishedMaterialText` through R2 and R3, so `ratification` R39 and `public-read` R23 read unchanged.
+- **R8's kinds.** `published_material_texts.kind` gains `archive` and `container`; R3 answers either as stated. A test builds an archive with `test-support`'s `make-zip.mjs`, unpacks one member, publishes a case citing it, and runs the three steps of the outsider's check over the bag's files (with `unzip` and `openssl` where the runner has them, else their equivalents in-process).
 - **Tests.** A negative control for each withdrawn and undisclosed arm of R4, and for each lapse of R5. An arm that R1 writes nothing for a material not included. A purge arm for R6.
 

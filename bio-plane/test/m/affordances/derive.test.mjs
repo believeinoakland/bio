@@ -6,7 +6,8 @@
    basis-versions' `VERSION_MACHINE`, which is what R8's "an edge to X" is defined over. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { deriveActs, ACTS, MACHINE_REFUSALS, REOPENABLE_FROM, DISPOSITIONS } from "../../../src/affordances.mjs";
+import { deriveActs, ACTS, REOPENABLE_FROM, DISPOSITIONS } from "../../../src/affordances.mjs";
+import { MACHINE_REFUSALS } from "../../../src/op-grades/index.mjs";
 import { STATES, normalizeType, vocabFor } from "../../../src/record-grammar/index.mjs";
 import { VERSION_MACHINE } from "../../../src/basis-versions/index.mjs";
 

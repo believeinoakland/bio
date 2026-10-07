@@ -63,7 +63,7 @@ function planeStub(rec, cfg) {
     const op = u.searchParams.get("op") || "";
     let body = null;
     if (init && typeof init.body === "string") { try { body = JSON.parse(init.body); } catch { body = null; } }
-    rec.planeCalls.push({ url: String(url), origin: u.origin, op, token: u.searchParams.get("token"),
+    rec.planeCalls.push({ url: String(url), origin: u.origin, op, token: String(init?.headers?.authorization ?? "").replace(/^Bearer /, "") || null,
                           method: init?.method || "GET", query: Object.fromEntries(u.searchParams.entries()), body });
     switch (op) {
       case "whoami": return ok({ tokenClass: "ai", session: false, member: null });
@@ -151,7 +151,9 @@ function modelAnswer(body) {
     return { content: [{ type: "tool_use", id: "a3", name: "answer", input: { question_as_read: "who held the seat",
       clarifying: null, summary: "not held", sentences: [], label: "machine work" } }] };
   const last = body.messages[body.messages.length - 1];
-  const answered = Array.isArray(last?.content) && last.content.some((b) => b.type === "tool_result");
+  /* R61: a conversation opens with its facts as `read_facts`' result (ids `facts_…`); that is not a turn the model took. */
+  const answered = Array.isArray(last?.content)
+    && last.content.some((b) => b.type === "tool_result" && !String(b.tool_use_id).startsWith("facts_"));
   if (names.includes("report") && !answered)
     return { content: [{ type: "tool_use", id: "q", name: "meaningrows", input: { rows: "leg", q: "", limit: SUBSESSION_LIMIT } }] };
   if (names.includes("report"))

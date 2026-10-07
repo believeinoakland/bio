@@ -43,7 +43,7 @@ function plane(cfg = {}) {
     const u = new URL(url);
     const op = u.searchParams.get("op");
     let body = null; try { body = init?.body ? JSON.parse(init.body) : null; } catch { body = null; }
-    calls.push({ op, token: u.searchParams.get("token"), store: u.searchParams.get("store"), query: Object.fromEntries(u.searchParams), body, raw: String(url) + (init?.body ?? "") });
+    calls.push({ op, token: String(init?.headers?.authorization ?? "").replace(/^Bearer /, "") || null, store: u.searchParams.get("store"), query: Object.fromEntries(u.searchParams), body, raw: String(url) + (init?.body ?? "") });
     if (cfg.silent?.includes(op)) return new Response("<html>", { status: 502 });
     switch (op) {
       case "askceiling": return cfg.ceiling ? ok(CEILING) : ok({ ok: true, reached: false });
@@ -79,7 +79,9 @@ function model(script = {}) {
     calls.push({ url: String(url), key: init.headers["x-api-key"], body, raw: init.body });
     if (script.refuse) return Response.json({ type: "error", error: { type: "overloaded_error", message: "busy" } }, { status: 529 });
     const names = (body.tools || []).map((x) => x.name);
-    const results = body.messages.filter((m) => Array.isArray(m.content) && m.content.some((b) => b.type === "tool_result"));
+    /* R61: a judged row opens with the facts as `read_facts`' result (ids `facts_…`); that is not a turn the model took. */
+    const results = body.messages.filter((m) => Array.isArray(m.content)
+      && m.content.some((b) => b.type === "tool_result" && !String(b.tool_use_id).startsWith("facts_")));
     const use = (name, input) => Response.json({ id: "m", type: "message", role: "assistant", stop_reason: "tool_use",
       content: [{ type: "tool_use", id: `u${calls.length}`, name, input }], usage: { input_tokens: 3, output_tokens: 2 } });
     if (names.includes("done_reading")) {

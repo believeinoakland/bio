@@ -28,6 +28,8 @@
  *        matches on the tally line, so a killed module reads `fail: -1` rather
  *        than a comfortable zero.
  *
+ *   (W-B and W-C were removed by R65, T35: they patched `src/harness.mjs`, which is gone; their record stays below.)
+ *
  *   W-B  THE ARM THIS ITEM EXISTS FOR — the colon restored in `harness.mjs`
  *        (`level-empty-${reported}` -> `level-empty:${reported}`), which is the
  *        EXACT pre-fix name. MUST FAIL naming the refusal the live plane gives;
@@ -83,7 +85,9 @@ import { tmpdir } from "node:os";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const MEMBER = join(HERE, "..");
 
-const HARNESS = join(MEMBER, "src", "harness.mjs");
+/* R65 (N586, T35): this member re-exports no other module's code, so `src/harness.mjs` is gone, and with it every
+   arm that patched it. Those arms had armed nothing since T33-57 made the file a seven-line re-export (the code they
+   named moved to `agent-harness`, whose own suite holds it). W-B and W-C were those arms; W-A, W-D and W-E remain. */
 const MOCK = join(HERE, "plane-suggest.mjs");
 
 /* INSIDE THIS WORKTREE'S OWN TMPDIR. A shared scratchpad is not isolated between
@@ -206,55 +210,6 @@ arm({
     return {
       observed: `wire ${w.pass}/${w.fail} · harness ${h.pass}/${h.fail} · fanout ${f.pass}/${f.fail}`,
       asDeclared: w.ran && h.ran && f.ran && w.fail === 0 && h.fail === 0 && f.fail === 0 && w.pass > 0,
-    };
-  },
-});
-
-arm({
-  id: "W-B", subject: "D-323 — THE COLON RESTORED, which is the arm this item exists for",
-  what: "`emptyLevelCandidates` mints `level-empty:<level>` again — the exact pre-fix name",
-  mustFail: "the wire-vocabulary arms, NAMING C-25.2, the refusal the deployed plane gives; and the "
-    + "suites' own wire-spelling assertions",
-  mustNot: "F10 (refusal -> adjust -> land), dedup, or the mode gate — a name defect is not a control-flow one",
-  file: HARNESS,
-  find: "      name: `level-empty-${reported}`,",
-  replace: "      name: `level-empty:${reported}`,",
-  run: () => {
-    const w = runWire(), h = runHarness(), f = runFanout();
-    const named = anyFailed(w, /refused by NOTHING the wire holds|passes VERSION_NAME_RE|carries no colon/);
-    const namesTheCode = /C-25\.2/.test(w.out);
-    const f10Held = !anyFailed(h, /routed to ADJUST|adjust routed BACK|repeats. counter stayed/);
-    const dedupHeld = !anyFailed(h, /never submitted|compared against 2 on the record/);
-    return {
-      observed: `wire ${w.pass}/${w.fail} · harness ${h.pass}/${h.fail} · fanout ${f.pass}/${f.fail}`
-        + ` · wire arms ${named ? "FAILED" : "did NOT fail"} · C-25.2 named in the output: ${namesTheCode}`
-        + ` · F10 ${f10Held ? "held" : "also failed"} · dedup ${dedupHeld ? "held" : "also failed"}`,
-      asDeclared: w.ran && h.ran && f.ran && named && namesTheCode && w.fail > 0 && h.fail > 0
-                  && f10Held && dedupHeld,
-    };
-  },
-});
-
-arm({
-  id: "W-C", subject: "D-324 — A KIND §9 DOES NOT HOLD",
-  what: "the table mints `kind: \"new-version\"` — D-324's own fixture spelling — on the empty-level candidate",
-  mustFail: "the wire-vocabulary arms, NAMING C-27.3; and the suites' kind assertions",
-  mustNot: "the name arms — the two defects are separable and the suite must be able to tell them apart",
-  file: HARNESS,
-  find: `      kind: "level-empty",
-      target: target ?? null,`,
-  replace: `      kind: "new-version",
-      target: target ?? null,`,
-  run: () => {
-    const w = runWire(), h = runHarness(), f = runFanout();
-    const named = anyFailed(w, /refused by NOTHING the wire holds|names a kind the catalogue holds/);
-    const namesTheCode = /C-27\.3/.test(w.out);
-    const nameArmHeld = !anyFailed(w, /passes VERSION_NAME_RE|carries no colon/);
-    return {
-      observed: `wire ${w.pass}/${w.fail} · harness ${h.pass}/${h.fail} · fanout ${f.pass}/${f.fail}`
-        + ` · kind arms ${named ? "FAILED" : "did NOT fail"} · C-27.3 named: ${namesTheCode}`
-        + ` · name arms ${nameArmHeld ? "held" : "also failed"}`,
-      asDeclared: w.ran && h.ran && f.ran && named && namesTheCode && nameArmHeld && w.fail > 0,
     };
   },
 });

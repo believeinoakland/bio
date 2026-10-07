@@ -25,7 +25,7 @@ import { linesOf } from "../lines/index.mjs";
 import { moneyOf } from "../money/index.mjs";
 import { dutiesOf } from "../duties/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
-import { PEOPLE_SCHEMA, PEOPLE_TABLES, CLUSTER_TABLE } from "./schema.mjs";
+import { PEOPLE_SCHEMA, PEOPLE_TABLES, CLUSTER_TABLE, ADDITIVE_COLUMNS } from "./schema.mjs";
 import { SHIPPED_CHECKS, CHECK_MACHINE, conditionError, hypothesisNamed, evaluatePerson } from "./checks.mjs";
 
 export { PEOPLE_SCHEMA, PEOPLE_TABLES } from "./schema.mjs";
@@ -61,6 +61,10 @@ export const CANDIDATES_DEFAULT = 50;
 export const CANDIDATES_MAX = 200;
 /* R24 (K1504, M-C8): a machine check's results are shown only at a measured false-alarm rate at most this. */
 export const GATE_RATE_MAX = 0.2;
+/* R24 (DEC-131; N694, K1863): the mark every answered check result carries where it reaches a member, DEC-131's words
+   exactly, and the member-facing sentence that begins with it. */
+export const HINT_MARK = "Hint · machine work";
+export const HINT_DETAIL = `${HINT_MARK}. A check noticed this hint, a pattern in held facts, worth a look. It is not a finding and says nothing about anyone.`;
 /* R2 (K1488): the people line kinds a name match is corroborated by. */
 const STATEMENT_ROLES = Object.freeze(["decider", "signatory", "implementer", "author"]);
 const TEXT_MAX = 2000;
@@ -169,6 +173,9 @@ export class People {
   migrate() {
     const bare = PEOPLE_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
     for (const st of bare.split(";")) { const t = st.trim(); if (t) this.#sql.exec(t); }
+    /* a store made before a column was added gains it in place (R9's question, T35) */
+    for (const [table, column, decl] of ADDITIVE_COLUMNS)
+      if (!this.#rows(`PRAGMA table_info(${table})`).some((r) => r.name === column)) this.#sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
     this.declare();
     this.#installShipped();
   }
@@ -340,6 +347,15 @@ export class People {
     return { valid: { from: valid.from ?? null, to: valid.to ?? null, precision, zone } };
   }
 
+  /* R9 (T35; N698, DEC-164 (4), K1941): a citation as `{captureSha, extent}`, or a match a find answered (retrieval
+     R73: `{kind, words, capture_sha, extent, origin}`), read as its capture and extent and nothing else, so being found
+     changes no refusal, no grade and no sight. Anything else answers as given, for the refusal to name. */
+  static #cited(c) {
+    if (!isObj(c)) return c;
+    if (filled(c.captureSha)) return { captureSha: c.captureSha, extent: c.extent };
+    if (filled(c.capture_sha)) return { captureSha: c.capture_sha, extent: c.extent };
+    return c;
+  }
   /* A citation `{captureSha, extent}`: a capture the record holds, and an extent content judges (R9; R1's evidence). */
   #citationRefusal(c, what) {
     if (!isObj(c) || !filled(c.captureSha) || !isObj(c.extent))
@@ -630,8 +646,9 @@ export class People {
   #profile(id, viewer) {
     const posts = listOf(this.#lines ? this.#lines.linesOf({ entity: id, kinds: ["holds"], direction: "from", limit: READ_LIST_MAX, viewer }) : null)
       .filter((l) => !l.withdrawn).map((l) => ({ line_id: lineId(l), to: lineTo(l) }));
-    const life = this.#rows(`SELECT fact_id, kind, value, capture_sha FROM person_facts WHERE person=? AND kind IN ('birth','death')
-                             AND withdrawn_at IS NULL ORDER BY fact_id`, id).filter((f) => this.#seesCapture(f.capture_sha, viewer));
+    const life = this.#rows(`SELECT fact_id, kind, value, capture_sha, question FROM person_facts WHERE person=? AND kind IN ('birth','death')
+                             AND withdrawn_at IS NULL ORDER BY fact_id`, id).filter((f) => this.#seesCapture(f.capture_sha, viewer))
+      .map((f) => ({ ...f, question: this.#questionFor(f, viewer) }));
     return { names: this.#names(id), identifiers: this.#identifiers(id), posts, life };
   }
   static #compareProfiles(p, q) {
@@ -664,8 +681,10 @@ export class People {
    * PERSON FACTS (R9–R12)
    * ===================================================================== */
 
-  /** R9, R10. */
-  recordPersonFact({ person, kind, value, valid, citation, by = null } = {}) {
+  /** R9, R10. The citation may be an extent a find answered (R73's match); `question`, optional, is an inquiry bundle
+   *  the actor may see, kept beside the fact (DEC-164 (5)). */
+  recordPersonFact({ person, kind, value, valid, citation: given, question = null, by = null } = {}) {
+    const citation = People.#cited(given);
     if (!filled(person)) return noSuchEntity(person ?? null);
     const bad = this.#personRefusal(person);
     if (bad) return bad;
@@ -681,16 +700,20 @@ export class People {
     if (cite) return refuse(cite.reason, cite.detail, cite.code ? { code: cite.code, check: cite.check, translation: cite.translation } : {});
     const vv = People.#validity(valid);
     if (vv.refused) return refuse("BAD_VALIDITY", `the validity's ${vv.refused} is refused: ${vv.why}`, { bound: vv.refused });
+    const asked = question === null || question === undefined || question === "" ? null : question;
+    if (asked !== null && !this.#questionSeen(asked, People.#actorViewer(by)))
+      return refuse("QUESTION_NOT_HELD", "the question names no inquiry the record holds that you may see; the fact can be "
+        + "recorded without one", { question: typeof asked === "string" ? asked : null });
     if (!filled(by)) return noBy("a person fact");
     const at = this.#now(), stamp = String(by);
     const table = contact ? "person_contacts" : "person_facts";
     return this.#record.transact(() => {
       const r = this.#record.allocId("PFA", at.slice(0, 4));
       if (!r || r.ok === false) return r;
-      this.#sql.exec(`INSERT INTO ${table} (fact_id,person,kind,value,valid_json,capture_sha,extent_json,by_actor,at)
-                      VALUES (?,?,?,?,?,?,?,?,?)`, r.id, person, kind, v, JSON.stringify(vv.valid), citation.captureSha,
-                     JSON.stringify(citation.extent), stamp, at);
-      return { ok: true, fact_id: r.id, person, kind, value: v, valid: vv.valid, at, ...(contact ? { publishable: false } : {}) };
+      this.#sql.exec(`INSERT INTO ${table} (fact_id,person,kind,value,valid_json,capture_sha,extent_json,by_actor,at,question)
+                      VALUES (?,?,?,?,?,?,?,?,?,?)`, r.id, person, kind, v, JSON.stringify(vv.valid), citation.captureSha,
+                     JSON.stringify(citation.extent), stamp, at, asked);
+      return { ok: true, fact_id: r.id, person, kind, value: v, valid: vv.valid, question: asked, at, ...(contact ? { publishable: false } : {}) };
     });
   }
 
@@ -708,13 +731,29 @@ export class People {
     this.#sql.exec(`UPDATE ${table} SET withdrawn_by=?, withdrawn_at=?, withdrawn_reason=? WHERE fact_id=?`, stamp, at, why, factId);
     return { ok: true, fact_id: factId, withdrawn: { by: stamp, at, reason: why } };
   }
+  /* R9: the viewer an act's stamp reads as: a member's session, or the machine's own credential. */
+  static #actorViewer(by) {
+    if (!filled(by)) return null;
+    if (isMachineIdentity(by)) return by;
+    const m = memberOf(by);
+    return m ? `member:${m}` : null;
+  }
+  /* R9 (record-core R37): a bundle the record holds whose object_type is inquiry, which `viewer` may see; an absent and
+     an unseen one answer alike. */
+  #questionSeen(id, viewer) {
+    if (!filled(id) || this.#denied(viewer)) return false;
+    const b = this.#record.bundleInfo(id);
+    return !!b && b.type === "inquiry" && this.#membership.inSight(id, viewer) === true;
+  }
+  /* R9: a fact's question as `viewer` may read it: withheld as absent (null) from a viewer who may not see it. */
+  #questionFor(f, viewer) { return filled(f.question) && this.#questionSeen(f.question, viewer) ? f.question : null; }
   #factTable(factId) {
     if (!filled(factId)) return null;
     for (const t of ["person_facts", "person_contacts"]) if (this.#one(`SELECT 1 AS x FROM ${t} WHERE fact_id=?`, factId)) return t;
     return null;
   }
-  #factView(f, contact) {
-    return { fact_id: f.fact_id, member: f.person, kind: f.kind, value: f.value, valid: json(f.valid_json),
+  #factView(f, contact, viewer) {
+    return { fact_id: f.fact_id, member: f.person, kind: f.kind, value: f.value, valid: json(f.valid_json), question: this.#questionFor(f, viewer),
              citation: { captureSha: f.capture_sha, extent: json(f.extent_json) }, grade: this.#captureGrade(f.capture_sha),
              by: f.by_actor, at: f.at, withdrawn: f.withdrawn_at ? { by: f.withdrawn_by, at: f.withdrawn_at, reason: f.withdrawn_reason } : null,
              ...(contact ? { publishable: false } : {}) };
@@ -724,7 +763,7 @@ export class People {
     const out = [];
     for (const [table, contact] of [["person_facts", false], ["person_contacts", true]])
       for (const f of this.#rows(`SELECT * FROM ${table} WHERE person=? AND withdrawn_at IS NULL ORDER BY at, fact_id`, person))
-        if (this.#seesCapture(f.capture_sha, viewer)) out.push(this.#factView(f, contact));
+        if (this.#seesCapture(f.capture_sha, viewer)) out.push(this.#factView(f, contact, viewer));
     return out;
   }
 
@@ -1341,11 +1380,12 @@ export class People {
     const result = this.#resultView(r, c);
     for (const l of this.#onResult) { try { l.fn({ result }); } catch { /* a listener's failure never undoes the result */ } }
   }
+  /* R24 (DEC-131): the one view of a result, answered by `op=interestchecks` and told to R25's listeners alike, so the
+     mark reaches a member wherever the result does. */
   #resultView(r, c) {
     return { result_id: r.result_id, check: r.check_id, version: Number(r.version), name: c.name, project: r.project ?? null,
              derivation: json(r.derivation_json), denominator: this.#denominator(r), at: r.at,
-             by: "the machine's", layer: "hypothesis", label: "Noticed",
-             detail: "Noticed by a check: a pattern in held facts, worth a look. It is not a finding and says nothing about anyone." };
+             by: "the machine's", layer: "hypothesis", label: "Noticed", mark: HINT_MARK, detail: HINT_DETAIL };
   }
 
   /** R24: a machine check version's gate, by an administrator: its gold set and measured false-alarm rate. */

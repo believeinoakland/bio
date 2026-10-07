@@ -8,12 +8,25 @@
  * the statement a member signs (`NS_RATIFY`, `caseRatifyStatement`, signatures'), so this module imports none of them.
  *
  * `publicationDoorOp(op, url, stub, helpers)` answers one of the two ops, or null for any other, so the door asks it and
- * goes on. */
+ * goes on. The request's body reaches it through the helpers as `body`: the parsed JSON object, or a function answering
+ * it (or a Promise of it), the control plane's to pass (R73; F1, K1874). */
+
+/** R73 (F1): the deprecation an answer carries when a review grant's secret was read from the address, the one name
+ *  `admission` and `control-plane` give the query form of a credential. */
+export const CREDENTIAL_IN_ADDRESS = "CREDENTIAL_IN_ADDRESS";
+
+/* R73: the request body's `secret`, a non-empty string, or null: a body that is absent, unreadable or not an object
+   carries none. */
+async function bodySecret(body) {
+  let b = null;
+  try { b = typeof body === "function" ? await body() : await body; } catch { b = null; }
+  return b && typeof b === "object" && !Array.isArray(b) && typeof b.secret === "string" && b.secret ? b.secret : null;
+}
 
 export const PUBLICATION_DOOR_OPS = Object.freeze(["caseflags", "casedocument"]);
 
 export async function publicationDoorOp(op, url, stub, { json, storeSilent, storeRefusal, doAnswer, readerOf, sha256Hex,
-                                                       NS_RATIFY, caseRatifyStatement }) {
+                                                       NS_RATIFY, caseRatifyStatement, body = null }) {
   /* ---- CASE-4 / DEC-72: op=caseflags ----
      WHICH PUBLISHED CASES ARE CARRYING A STALE PIN, AND WHICH OWNING
      PROJECTS HAVE ACTED. Placed with the public read path above and pinned
@@ -63,13 +76,20 @@ export async function publicationDoorOp(op, url, stub, { json, storeSilent, stor
        precondition admits to an unsigned document. The secret is HASHED HERE
        and only its fingerprint crosses to the store, which judges it through
        the review copy's one live-grant predicate. Absent, the parameter is
-       not sent at all and the answer is REC-130's, unchanged. */
-    const docSecret = url.searchParams.has("secret") ? await sha256Hex(url.searchParams.get("secret") || "") : "";
+       not sent at all and the answer is REC-130's, unchanged.
+       R73 (F1, K1874): the secret is read from the request BODY's `secret` (a POST with a JSON body), never the address.
+       For T35's release a `secret` in the address is still read when the body carries none, and the answer then says
+       the form is deprecated; its refusal is a later release's, with admission's. */
+    const fromBody = await bodySecret(body);
+    const inAddress = !fromBody && url.searchParams.has("secret");
+    const presented = fromBody ?? (inAddress ? url.searchParams.get("secret") || "" : null);
+    const docSecret = presented !== null ? await sha256Hex(presented) : "";
+    const deprecated = inAddress ? { deprecated: CREDENTIAL_IN_ADDRESS } : {};
     const out = await doAnswer(stub.fetch(
       `http://do/casedocument?case=${encodeURIComponent(caseId)}&edition=${encodeURIComponent(ed)}`
       + `&viewer=${encodeURIComponent(reader.viewer)}`
       + (docSecret ? `&secretSha=${docSecret}` : "")));
-    if (out.refused) return storeRefusal(out);
+    if (out.refused) return inAddress ? json({ ...out.reply.body, ...deprecated }, out.reply.status) : storeRefusal(out);
     if (!out.answered) return storeSilent("casedocument", out.correlation);
     const r = out.result;
     /* THE VERDICT IS DECLARED AS A LITERAL, FIRST, rather than inherited
@@ -78,8 +98,8 @@ export async function publicationDoorOp(op, url, stub, { json, storeSilent, stor
        inside a spread reads as UNCLASSIFIED — which is a place this
        detector's own subject could hide. The spread still carries the
        store's own `ok`, so the two cannot disagree. */
-    if (!r?.ok) return json({ ok: false, ...r }, 404);
-    return json({ ok: true, ...r,
+    if (!r?.ok) return json({ ok: false, ...r, ...deprecated }, 404);
+    return json({ ok: true, ...r, ...deprecated,
                   /* THE STATEMENT TO SIGN, PRINTED. It is the exact bytes
                      `caseRatifyStatement` builds, handed to the member so the
                      signer page, the wizard and a member at a terminal all

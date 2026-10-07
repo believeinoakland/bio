@@ -4,6 +4,7 @@
    through membership's own acts and given their passwords through this module's `setPassword` (R3), so the world holds
    whichever module writes the password at enrolment. Every test drives the module at its interface. */
 import { DatabaseSync } from "node:sqlite";
+import { createHash } from "node:crypto";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { credentialsOf, credentialsOps } from "../../../src/credentials/index.mjs";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -20,6 +21,8 @@ export function sqlOver(db) {
 }
 
 export const PASSWORD = (id) => `${id}-passphrase-x`;
+/* R40: a session is held as its token's SHA-256, computed here independently of the module. */
+export const sha = (text) => createHash("sha256").update(String(text)).digest("hex");
 export const FOUNDER_PASSWORD = "founder-passphrase-1";
 
 /* A record-core stub whose `declarePurge` and `declareTable` answer as record-core's R21 does: a table declared twice,

@@ -70,10 +70,11 @@ export async function resolveClaudeCascade(account) {
       ? `${whose} has been published in this repository, which revokes it, so no model turn can run under it. `
         + (level === "group"
           ? "An administrator sets a new key for the group, or members connect their own."
-          : "The member connects a new one; the group's API key serves them only when the plane sends it in its place.")
+          : "The member connects a new one; until then the group's API key serves them only while your group's "
+            + "Civicsmith holds it and it is on.")
       : `no usable Claude account arrived for this act (${whose} was absent, empty, or of a kind its level does not `
-        + "hold). Which account serves a member's act is the plane's to answer (the member's own, else the group's API "
-        + "key while it is held and on, K1755); a member whom neither serves has no assistant.",
+        + "hold). Which account serves a member's act is your group's Civicsmith's to answer (the member's own, else "
+        + "the group's API key while it is held and on); a member whom neither serves has no assistant.",
   };
 }
 

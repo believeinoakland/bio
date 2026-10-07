@@ -96,8 +96,9 @@ const SILENT_RE = /could not read (its|the|this) group/i;    // the silence, sai
 
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
 async function memberSession(mf){
+  /* T35-74 (F1, K1874): the credential travels in the `Authorization: Bearer` header, never in the address. */
   const post = async (op, body, tok) => rP(await (await mf.dispatchFetch(
-    `http://x/api/?op=${op}${tok ? "&token=" + tok : ""}`, { method:"POST", body: JSON.stringify(body) })).json());
+    `http://x/api/?op=${op}`, { method:"POST", headers: tok ? { authorization: `Bearer ${tok}` } : {}, body: JSON.stringify(body) })).json());
   const mk = async (id, role) => {
     const add = await post("memberadd", { memberId:id, cover:`cover for ${id}`, role, capabilities:["contribute"] }, ADM);
     if(!add || !add.invite) throw new Error(`memberadd ${id}: ${JSON.stringify(add)}`);
@@ -127,7 +128,10 @@ function loadApp(fetchImpl){
   const SENT = [];
   async function bridge(u, opts){
     const url = new URL(u, "http://x");
-    SENT.push({ op: url.searchParams.get("op"), params: Object.fromEntries(url.searchParams.entries()) });
+    /* T35-74 (F1): the surface's credential is the `Authorization: Bearer` header's; `cred` is what it presented. */
+    const auth = String((opts && opts.headers && (opts.headers.authorization || opts.headers.Authorization)) || "");
+    SENT.push({ op: url.searchParams.get("op"), params: Object.fromEntries(url.searchParams.entries()),
+                cred: auth.startsWith("Bearer ") ? auth.slice(7) : null });
     return fetchImpl(url, opts);
   }
   const ctx = { console:{ log(){}, warn(){}, error(){}, info(){} }, URL, URLSearchParams, JSON, Array, Object, String,
@@ -205,7 +209,7 @@ const OLIVE = await memberSession(mfS);
   ok("SIGNED OUT, HEADER: the site is marked recorded", A.state("#p-gname") === "recorded");
   const igSent = A.SENT.filter(s => s.op === GROUP_OP);
   ok(`SIGNED OUT: the header read op=${GROUP_OP} exactly once, holding NO credential`,
-     igSent.length === 1 && !("token" in igSent[0].params));
+     igSent.length === 1 && !("token" in igSent[0].params) && igSent[0].cred === null);
   ok(`SIGNED OUT NO-LITERAL: the DOM's text, hidden or not, names neither literal:\n${A.domText()}`, !hasLiteral(A.domText()));
 }
 {
@@ -219,13 +223,13 @@ const OLIVE = await memberSession(mfS);
   for(const s of FENCE) ok(`SIGNED IN, FENCE: ${s} is marked recorded`, B.state(s) === "recorded");
   const igSent = B.SENT.filter(s => s.op === GROUP_OP);
   ok(`SIGNED IN: the fence read op=${GROUP_OP} through the member's own credential (the store every other read asks)`,
-     igSent.length >= 1 && igSent[0].params.token === OLIVE);
+     igSent.length >= 1 && igSent[0].cred === OLIVE && !("token" in igSent[0].params));
   /* ...and the public header, entered WITH a credential held, reads the public answer holding nothing. */
   B.U.enterPublished(true);
   await B.U.PUB_GROUP;
   ok(`SIGNED IN, HEADER: #p-gname shows the recorded slug (read "${B.at("#p-gname")}")`, B.at("#p-gname") === SECOND);
   const pubSent = B.SENT.filter(s => s.op === GROUP_OP).slice(1);
-  ok("SIGNED IN, HEADER: the public header's read carried NO credential", pubSent.length === 1 && !("token" in pubSent[0].params));
+  ok("SIGNED IN, HEADER: the public header's read carried NO credential", pubSent.length === 1 && !("token" in pubSent[0].params) && pubSent[0].cred === null);
   ok(`SIGNED IN NO-LITERAL: the DOM's text, hidden or not, names neither literal:\n${B.domText().slice(0, 3000)}`, !hasLiteral(B.domText()));
 }
 

@@ -209,7 +209,7 @@ test("R4 (testify): op=ratify on an observation itself, under a registered membe
     [409, "ATTRIBUTION_UNSTATED", "C-92.12", ATTRIBUTION.ATTRIBUTION_UNSTATED.translation, OBS]);
   assert.equal(r.p.published.size, 0, "the published bucket holds nothing");
   assert.equal(w.count("published_bundles"), 0);
-  w.publication.attributionStatedFor = (id) => id === OBS;
+  w.caseTensions.attributionStatedFor = (id) => id === OBS;
   const stated = await run(await body(OBS));
   assert.deepEqual([stated.status, stated.body.ok], [200, true], "the negative control: once a ratified case states it, it crosses as that case's evidence");
 });

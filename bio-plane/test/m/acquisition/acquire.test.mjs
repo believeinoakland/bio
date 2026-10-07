@@ -99,7 +99,7 @@ test("R3 R32: the archive arm needs an eligible address, finds a memento through
   const chain = r.body.document.provenance_chain;
   assert.equal(chain.length, 2); assert.equal(chain[1].via, "archive.org"); assert.equal(chain[1].who, "Internet Archive Wayback Machine");
   assert.equal(chain[1].document_address, addr);
-  assert.match(chain[1].evidence, new RegExp(`SHA-256 ${sha("archived bytes")}, computed by this instance`));
+  assert.match(chain[1].evidence, new RegExp(`SHA-256 ${sha("archived bytes")}, computed by your group's Civicsmith`));
   assert.equal(r.body.document.capture.authority, "Internet Archive");
   /* attestation R4 (K59, K1224): the instance signs its receipt through the attestation instance handed in */
   assert.deepEqual(w.signed().map((x) => [x.capture_sha, x.retrieval_locator]), [[sha("archived bytes"), replay]], "the receipt is signed");

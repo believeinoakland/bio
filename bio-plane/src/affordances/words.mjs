@@ -84,10 +84,15 @@ export function composedVocabularies() {
     out.money_precisions = vocabulary(moneyPrecisions());
   }
   if (composed.has("people")) out.identity_claim_kinds = vocabulary(CLAIM_KINDS, registered);
+  /* N695 (K1864): each kind carried once, in the others' shape: `values` the kind names in `owners()`'s order, `words`
+     each kind's word, class and owner; the registry entries themselves are not carried beside them. */
   if (reg.length) {
-    const words = {};
-    for (const o of reg) for (const k of o.kinds) words[k.kind] = { word: k.word, class: k.class, owner: o.owner };
-    out.connection_kinds = { values: reg, words };
+    const values = [], words = {};
+    for (const o of reg) for (const k of o.kinds) {
+      values.push(k.kind);
+      words[k.kind] = { word: k.word, class: k.class, owner: o.owner };
+    }
+    out.connection_kinds = { values, words };
   }
   return out;
 }

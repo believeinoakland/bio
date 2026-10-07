@@ -31,7 +31,9 @@ test("R2 (op-declarations R6): no spec is without a handler or a store route —
       const publicRead = opCalls(env).some((c) => c.route === "publicread" && c.params.name === op);
       /* R55 (op-declarations R21): an alias is its op, so it is reached at that op's route */
       const target = O.OP_ALIASES[op] ?? op;
-      if (routes.includes(RENAMED[target] ?? target) || publicRead || log.some((l) => l.kind === "public" && l.op === op) || (op === "whoami" && r.json.ok)) {
+      if (routes.includes(RENAMED[target] ?? target) || publicRead || log.some((l) => l.kind === "public" && l.op === op) || (op === "whoami" && r.json.ok)
+          /* R41 (T35): `agentpack` is answered from the untargeted affordances handler (its hook) */
+          || (op === "agentpack" && log.some((l) => l.kind === "gated" && l.op === "affordances"))) {
         reached = true; break;
       }
     }

@@ -86,7 +86,7 @@ test("R21: the transcription axis: not applicable for bytes, undetermined for an
   const s = w.content.standings([bytes, para, page, doc]);
   assert.deepEqual([s[bytes].transcription.applies, s[bytes].transcription.ceiling], [false, null]);
   assert.equal(s[para].transcription.ceiling, null);
-  assert.match(s[para].transcription.why, /cannot yet evaluate/);
+  assert.match(s[para].transcription.why, /cannot yet be evaluated/);
   assert.deepEqual([s[page].transcription.ceiling, s[page].transcription.determinant], ["C", "derivation"]);
   /* a page attestation raises the page and not the whole document */
   w.content.attestText({ note: "compared with the page", captureSha: a.sha, viewer: V("bo"), member: V("cy"), extent: { kind: "page", page: 1 } });

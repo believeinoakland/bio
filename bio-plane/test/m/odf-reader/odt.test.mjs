@@ -183,6 +183,7 @@ test("R13 text() over the guard carries the guard marker verbatim; with no reada
   assert.deepEqual({ ...over, images: undefined, imagesWhy: undefined }, {
     ok: true, container: "odt", document: null, paragraphs: [], tables: null,
     undetermined: [sizeGuard(OVER_BOUND)], counts: { chars: 0, undetermined: 1 }, images: undefined, imagesWhy: undefined,
+    active: [{ kind: "unread", part: "content.xml", why: "over_size_bound" }],
   });
   assert.deepEqual(over.undetermined[0], { ok: false, text: "undetermined", why: "over_size_bound", size: OVER_BOUND,
     bound: 20 * 1024 * 1024, boundName: "MEASURED_OOXML_TEXT_BOUND_BYTES", metric: "declared_uncompressed_text_part_bytes" });

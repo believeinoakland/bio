@@ -142,8 +142,18 @@ mf = new Miniflare({
               GOVERNOR_APPETITE_PER_MIN: "600000" },
 });
 const rP = (j) => (j && typeof j === "object" && "result" in j) ? j.result : j;
-const GET = async (q) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`)).json());
-const POST = async (q, body) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`,
+/* T35-74 (F1, K1874): a credential travels in the `Authorization: Bearer` header and a review grant's secret in a
+   POST's JSON body, never in an address; the fixture's `token=` and `secret=` are moved there before the plane is asked. */
+const planeAsk = (base, q, init = {}) => {
+  const u = new URL(`${base}/api/?${q}`), t = u.searchParams.get("token"), s = u.searchParams.get("secret");
+  u.searchParams.delete("token"); u.searchParams.delete("secret");
+  const headers = { ...(init.headers || {}), ...(t ? { authorization: `Bearer ${t}` } : {}) };
+  if(s === null) return mf.dispatchFetch(u.toString(), { ...init, headers });
+  const body = { ...(init.body ? JSON.parse(init.body) : {}), secret: s };
+  return mf.dispatchFetch(u.toString(), { ...init, method: "POST", headers, body: JSON.stringify(body) });
+};
+const GET = async (q) => rP(await (await planeAsk("http://x", q)).json());
+const POST = async (q, body) => rP(await (await planeAsk("http://x", q,
   { method: "POST", body: JSON.stringify(body ?? {}) })).json());
 const must = async (what, r) => {
   if (!r || r.ok !== true) { ok(`FIXTURE: ${what}`, false, JSON.stringify(r).slice(0, 400)); await finish(1); }
@@ -235,7 +245,8 @@ function page(hash, token, me) {
       const params = Object.fromEntries(url.searchParams.entries());
       let body = null;
       try { body = opts && opts.body ? JSON.parse(opts.body) : null; } catch (_) { body = null; }
-      WIRE.push({ op: params.op, params, body, method: (opts && opts.method) || "GET" });
+      WIRE.push({ op: params.op, params, body, method: (opts && opts.method) || "GET",
+                  auth: (opts && opts.headers && opts.headers.authorization) || null });   /* T35-74 (F1): the header's credential */
       return mf.dispatchFetch(url.toString(), opts);
     } };
   ctx.globalThis = ctx; vm.createContext(ctx);
@@ -410,9 +421,9 @@ PAGES.push(["the recipient's copy", rv1]);
 const rt1 = strip(rv1);
 ok("REACH: the address resolved AT LOAD, with no session, and drew the copy", /data-rvc-copy/.test(rv1)
    && R.U.PLANE.token == null, rt1.slice(0, 200));
-ok("NO CREDENTIAL ON THE WIRE: every request the recipient's page made carried no token, and it read the copy by its secret",
-   R.WIRE.length > 0 && R.WIRE.every((w) => !("token" in w.params))
-   && R.WIRE.some((w) => w.op === "reviewcopy" && w.params.secret === SECRET), JSON.stringify(R.WIRE.map((w) => w.params)));
+ok("NO CREDENTIAL ON THE WIRE: every request the recipient's page made carried no token, and it read the copy by its secret, in the body (T35-74)",
+   R.WIRE.length > 0 && R.WIRE.every((w) => !("token" in w.params) && !("secret" in w.params) && w.auth === null)
+   && R.WIRE.some((w) => w.op === "reviewcopy" && w.method === "POST" && w.body?.secret === SECRET), JSON.stringify(R.WIRE.map((w) => w.params)));
 ok("RECIPIENT READS THE SAME COPY: the marking, the scope and the missing-list are the plane's, verbatim",
    rt1.includes(flat(direct2.marking)) && rt1.includes(direct2.authored.scope) && rt1.includes(flat(direct2.evaluated)));
 ok("ADDRESSED: the page says who it was addressed to and by whom", /data-rvc-addressed/.test(rv1)
@@ -422,8 +433,9 @@ await R.run(handler(rv1, "onchange", /id="rv-comment"/), "The 2023 transfer is n
 R.WIRE.length = 0;
 await R.run(handler(R.html("#pub-body"), "onclick", /rvsComment/));
 const rcom = R.WIRE.find((w) => w.op === "reviewcomment");
-ok("RECIPIENT COMMENT: sent by the secret, holding nothing, with the text as the body",
-   rcom && rcom.params.secret === SECRET && !("token" in rcom.params) && rcom.body?.text === "The 2023 transfer is not in the ledger you cite.",
+ok("RECIPIENT COMMENT: sent by the secret, holding nothing, with the text beside it in the body (T35-74)",
+   rcom && rcom.body?.secret === SECRET && !("secret" in rcom.params) && !("token" in rcom.params) && rcom.auth === null
+   && rcom.body?.text === "The 2023 transfer is not in the ledger you cite.",
    JSON.stringify(rcom));
 const direct3 = await GET(`op=reviewcopy&draft=${encodeURIComponent(draftId)}&token=${IRIS}`);
 const rc = (direct3.comments || []).find((c) => c.text === "The 2023 transfer is not in the ledger you cite.");

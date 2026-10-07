@@ -11,7 +11,8 @@
  * Every refusal is an answer `{ok: false, reason, ...}`, never a throw. */
 import { isPublicHttpsLocator, isMachineIdentity } from "../record-grammar/index.mjs";
 import { governedFetch as hostGovernedFetch } from "../host-governor/index.mjs";
-import { civicsmithUserAgent } from "./checks.mjs";
+import { civicsmithUserAgent, ARCHIVE_CHECKS } from "./checks.mjs";
+import { isOwnHost } from "../capture-sources/own-hosts.mjs";
 
 /* R36: each keyed service this copy can speak to: its one host, and how its key rides a request. The names are
    credentials' `KEYED_SERVICES` (its R29); a service that this table and credentials do not both know is not
@@ -58,10 +59,10 @@ async function readBounded(res, max = KEYED_ANSWER_MAX) {
  *  R9's agent naming `purpose`; a redirect is answered, never followed. Answers `{ok: true, service, status, text,
  *  content_type, retry_after}` for a 2xx, else `{ok: false, reason: "SOURCE_REFUSED", status, text}`; the key is in
  *  none of them. */
-export async function keyedFetch(store, { service = null, request = null, purpose = "keyed-service", viewer = undefined } = {}) {
+export async function keyedFetch(store, { service = null, request = null, purpose = "keyed-service", viewer = undefined, ownHosts = null } = {}) {
   const svc = typeof service === "string" && Object.prototype.hasOwnProperty.call(SERVICES, service) ? SERVICES[service] : null;
   if (!svc)
-    return refuse("UNKNOWN_KEYED_SERVICE", `the keyed services this copy speaks to are ${Object.keys(SERVICES).join(", ")}; nothing was fetched`,
+    return refuse("UNKNOWN_KEYED_SERVICE", `the keyed services your group's Civicsmith speaks to are ${Object.keys(SERVICES).join(", ")}; nothing was fetched`,
                   { service: typeof service === "string" ? service.slice(0, 40) : null });
   /* K1449: never one a daemon uses. An act with no viewer named is the in-plane caller's own; a machine's is refused. */
   if (viewer !== undefined && viewer !== null && isMachineIdentity(viewer))
@@ -74,6 +75,15 @@ export async function keyedFetch(store, { service = null, request = null, purpos
       || (r.form != null && (typeof r.form !== "object" || Object.values(r.form).some((v) => typeof v !== "string"))))
     return refuse("BAD_KEYED_REQUEST", `a keyed request is a GET or POST of a public https address on ${svc.host}, `
       + "its form a flat set of strings; nothing was fetched", { service });
+  /* DEC-49 REGION is-own-host
+     R42 (F16): never to one of the group's own hosts (capture-sources R65), the caller's list or the store's. */
+  const own = Array.isArray(ownHosts) ? ownHosts : store && Array.isArray(store.ownHosts) ? store.ownHosts : null;
+  if (own && isOwnHost(hostOf(r.url), own)) {
+    const row = ARCHIVE_CHECKS.OWN_HOST_REFUSED;
+    return refuse("OWN_HOST_REFUSED", `${hostOf(r.url)} is one of your group's own hosts; nothing was fetched`,
+                  { code: "OWN_HOST_REFUSED", check: row.check, translation: row.translation, service, host: hostOf(r.url) });
+  }
+  /* END DEC-49 REGION is-own-host */
   /* The key, read at the moment of the call (credentials R29); any refusal is credentials' own, passed on whole. */
   const creds = store && store.credentials && typeof store.credentials.keyedServiceFor === "function" ? store.credentials : null;
   let k = null;
@@ -142,7 +152,7 @@ function serviceAddress(u) {
  *  `normalized`), how its lookup ended (`lookup`, with the service's own `status` and message) and the matches it
  *  named (`case_name`, `court`, `date`, `address`), each labelled as the service's answer, never as verified. With
  *  the service off it answers R36's refusal and the recogniser's own reading stands alone. It writes nothing. */
-export async function citationLookup(store, { text = null, viewer = null } = {}) {
+export async function citationLookup(store, { text = null, viewer = null, ownHosts = null } = {}) {
   if (typeof viewer !== "string" || !viewer.trim())
     return refuse("NOT_PERMITTED", "a citation lookup is a member's or an operator's act, and none was named; nothing was sent");
   if (typeof text !== "string" || !text.trim())
@@ -150,7 +160,7 @@ export async function citationLookup(store, { text = null, viewer = null } = {})
   if (text.length > CITATION_TEXT_MAX)
     return refuse("TEXT_TOO_LONG", `the service reads at most ${CITATION_TEXT_MAX} characters a request and this text is `
       + `${text.length}; nothing was sent`, { max: CITATION_TEXT_MAX, length: text.length });
-  const k = await keyedFetch(store, { service: "courtlistener", purpose: "citation-lookup", viewer,
+  const k = await keyedFetch(store, { service: "courtlistener", purpose: "citation-lookup", viewer, ownHosts,
                                       request: { url: CITATION_LOOKUP_URL, method: "POST", form: { text } } });
   if (!k.ok) {
     /* the service's throttle names when the next request may go */

@@ -6,7 +6,9 @@
    and record-grammar's `checkBundle` over each bundle with the catalogue's C-6.1, C-15.1 and C-2.8 `LEGACY_GRAMMARS`
    entries (and with none). The module's tests compare against it and never read the catalogue (rule 1). A case added
    or changed here needs its golden entry recorded the same way, from the catalogue as it stood before the move
-   (branch `snapshot/pre-refactor-2026-09-25`, or `tranche/T19` before this job's merge). */
+   (branch `snapshot/pre-refactor-2026-09-25`, or `tranche/T19` before this job's merge). Re-pinned once since, at T35
+   (INQUIRY-GRAMMAR #8; K1972): `content`'s C-2.8 `CONTENT_EXTENT_NO_PRODUCER` sentence reads "Nothing produces a dom
+   address yet" (DEC-149's wording, T35-26), the only difference from the findings as recorded. */
 
 const T0 = "2026-07-01T00:00:00Z";
 export const INFO = "INFO-2026-0001-a", INFO2 = "INFO-2026-0002-b", INFO3 = "INFO-2026-0003-obs";

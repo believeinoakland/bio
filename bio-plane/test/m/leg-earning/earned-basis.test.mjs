@@ -125,7 +125,7 @@ test("R1 R3 earnedBasis for a cell leg: names the leg's row; its standing is abo
   assert.deepEqual([s.extent_kind, s.extent.sheet, s.extent.cell], ["sheet-cell", "Sheet1", "B14"]);
   assert.deepEqual([s.connection.determined, s.connection.grain, s.connection.undetermined_because], [false, "portion", "NO_CONNECTION"]);
   assert.equal(s.transcription.ceiling, null);
-  assert.match(s.transcription.why, /cannot yet evaluate what a sheet-cell extent covers/);
+  assert.match(s.transcription.why, /what a sheet-cell extent covers cannot yet be evaluated/);
   assert.equal(s.ref, "Sheet1!B14");
 });
 

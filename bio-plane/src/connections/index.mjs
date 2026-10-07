@@ -1195,7 +1195,7 @@ export class Connections {
     if (!item.norm || !file.norm) return "unaddressable";
     if (item.bundle && file.bundle && item.bundle !== file.bundle) {
       const basis = `the file ${cut(pair.file_address, 300)} is printed under the agenda item ${cut(pair.item_address, 300)} `
-        + `in the agenda ${agendaCapture.slice(0, 12)}: ${MEMBERSHIP_LABEL.derived}, the plane's inference from position, `
+        + `in the agenda ${agendaCapture.slice(0, 12)}: ${MEMBERSHIP_LABEL.derived}, an inference from position, `
         + `never the publisher's own link`;
       this.sql.exec(
         `INSERT INTO asserted_connections (kind, a_bundle_id, b_bundle_id, origin, grade, established, asserted_by, author,
@@ -1293,7 +1293,7 @@ export class Connections {
              truncated: storedRows.length > cap || pendingRows.length > cap,
              stored_truncated: storedRows.length > cap, pending_truncated: pendingRows.length > cap,
              says: "an agenda item's membership in a file, derived from where the file is printed; the publisher "
-                 + "linked neither end to the other, so this is the plane's inference, to be confirmed, never the publisher's own link" };
+                 + "linked neither end to the other, so this is an inference from position, to be confirmed, never the publisher's own link" };
   }
 
   /** R49 (`op=filemembershipjudge`): a member confirms or rejects a stored containment, with a reason; both acts kept

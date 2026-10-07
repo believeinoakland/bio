@@ -40,7 +40,9 @@
  *                        `isProjectOwner`, `projectOwners`, `existenceAct`, `viewerPredicate`.
  *   strength             `projectBar` (its R14; R11's `required_strength`).
  *   basisVersions        `testimonyReach` (its R39; R16).
- *   publication          `attributionInForce` (its R39; R16) and `registerReviewProvider` (its R23).
+ *   publication          `registerReviewProvider` (its R23).
+ *   caseTensions         `attributionInForce` (its R6, was publication R39; R16), read directly and never through
+ *                        `publication`, which no longer answers it (its R61; T35-60, N597, K1643).
  *   caseAuthoring        `publishCase` (its R18; R13) and `statementAcknowledgements`, whose list carries its
  *                        `withheld_stated` sentence (its R20; R15).
  *   now                  the clock for the instants it writes, an ISO string (default: the wall clock, to the ms).
@@ -58,6 +60,7 @@ import { membershipOf, viewerPredicate } from "../membership/index.mjs";
 import { strengthOf } from "../strength/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
+import { caseTensionsOf } from "../case-tensions/index.mjs";
 import { caseAuthoringOf } from "../case-authoring/index.mjs";
 import { isMachineIdentity } from "../record-grammar/index.mjs";
 import { REVIEW_COPY_CHECKS } from "./checks.mjs";
@@ -234,11 +237,11 @@ export class Review {
   #seeded = false;
 
   constructor({ storage, record, membership, host = null, strength = null, basisVersions = null, publication = null,
-                caseAuthoring = null, now = null } = {}) {
+                caseTensions = null, caseAuthoring = null, now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
-    this.#deps = { host, strength, basisVersions, publication, caseAuthoring };
+    this.#deps = { host, storage, strength, basisVersions, publication, caseTensions, caseAuthoring };
     this.now = typeof now === "function" ? now : () => stampInstant("millisecond");
   }
 
@@ -246,6 +249,12 @@ export class Review {
   get strength() { return this.#deps.strength ||= strengthOf(this.#deps.host); }
   get basisVersions() { return this.#deps.basisVersions ||= basisVersionsOf(this.#deps.host); }
   get publication() { return this.#deps.publication ||= publicationOf(this.#deps.host); }
+  /* T35-60 (N597): case-tensions, one per host, forwarded the uses this module was given, as publication forwards its. */
+  get caseTensions() {
+    const { host, storage, basisVersions } = this.#deps;
+    return this.#deps.caseTensions ||= caseTensionsOf(host, { storage, record: this.record, membership: this.membership,
+                                                              ...(basisVersions ? { basisVersions } : {}) });
+  }
   get caseAuthoring() { return this.#deps.caseAuthoring ||= caseAuthoringOf(this.#deps.host); }
 
   migrate() { migrateReview(this.sql); }
@@ -665,7 +674,7 @@ export class Review {
     const seen = findings.filter((f) => f.present).map((f) => f.target);
     const r = this.basisVersions.testimonyReach(seen);
     return [...new Set([...r.self, ...r.via.map((v) => v.observation)])].map((obs) => {
-      const chosen = ident.caseId ? this.publication.attributionInForce(ident.caseId, ident.edition, obs) : null;
+      const chosen = ident.caseId ? this.caseTensions.attributionInForce(ident.caseId, ident.edition, obs) : null;
       return { observation: obs, chosen: !!chosen,
                stated: chosen ? `its author has chosen a level for ${ident.caseId} edition ${ident.edition}`
                  : ident.caseId ? `its author has chosen no level for ${ident.caseId} edition ${ident.edition}; `

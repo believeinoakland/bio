@@ -11,7 +11,7 @@
 import { DatabaseSync } from "node:sqlite";
 import { readFileSync } from "node:fs";
 import "./harness.mjs";
-import { dispatch, controlPlaneRoutes } from "../../../src/control-plane/dispatch.mjs";
+import { dispatch, controlPlaneRoutes } from "../../../src/store-door/dispatch.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { membershipOf, MODULE_ORDER } from "../../../src/membership/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
@@ -21,7 +21,7 @@ import { provenanceOps } from "../../../src/provenance/ops.mjs";
 import { attestationOf } from "../../../src/attestation/index.mjs";
 import { provenanceRoutesOf, provenanceRouteOps } from "../../../src/provenance-routes/index.mjs";
 import { OBSERVATION_LOG_MODULE } from "../../../src/observation-log/index.mjs";
-import { promotionStep } from "../../../src/control-plane/step.mjs";
+import { promotionStep } from "../../../src/store-door/step.mjs";
 import { calibrationOf } from "../../../src/calibration/index.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";

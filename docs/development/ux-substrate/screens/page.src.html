@@ -98,6 +98,44 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 .mk-table th, .mk-table td { text-align: left; padding: 7px 9px; border-bottom: var(--hair); vertical-align: top; }
 .mk-table th { font: 600 var(--t-xs) var(--f-sans); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--c-muted); }
 .mk-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.mk-sort { all: unset; cursor: pointer; font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; white-space: nowrap; }
+.mk-sort:focus-visible { outline: 2px solid var(--c-focus, currentColor); outline-offset: 2px; }
+.mk-sort::after { content: " \2195"; opacity: .45; }
+.mk-table th[aria-sort="ascending"] .mk-sort::after { content: " \2191"; opacity: 1; }
+.mk-table th[aria-sort="descending"] .mk-sort::after { content: " \2193"; opacity: 1; }
+.mk-table th[aria-sort="ascending"], .mk-table th[aria-sort="descending"] { color: var(--c-ink); }
+.mk-rows .mk-pickc { width: 36px; padding-right: 0; } .mk-rows .mk-pick { width: 18px; height: 18px; margin: 2px 0 0; }
+/* DEC-176: a row opens its own panel beneath it */
+.mk-open { all: unset; cursor: pointer; display: inline-flex; gap: 6px; align-items: flex-start; font-weight: 600; color: var(--c-ink); }
+.mk-open::before { content: "▸"; color: var(--c-accent); width: 10px; flex: none; }
+.mk-open[aria-expanded="true"]::before { content: "▾"; }
+.mk-open:focus-visible, .mk-gapbtn:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 2px; }
+.mk-open:hover { color: var(--c-accent-strong); text-decoration: underline; }
+.mk-gapbtn { all: unset; cursor: pointer; }
+.mk-gapbtn .cs-gap { white-space: nowrap; }
+.mk-rows tr.mk-r:has(+ tr.mk-detail:not([hidden])) td { background: var(--c-accent-tint); border-bottom-color: transparent; }
+.mk-rows tr.mk-r:has(.mk-pick:checked) td { background: var(--c-ground-2); }
+.mk-detail > td { padding: 0 9px 12px; background: var(--c-accent-tint); border-bottom: 2px solid var(--c-accent); }
+.mk-detailbox { position: sticky; left: 9px; max-width: min(760px, calc(100vw - 72px)); display: grid; gap: 10px; padding: 12px 14px; background: var(--c-sheet); border: var(--hair); border-left: 3px solid var(--c-accent); }
+.mk-gapblock { display: grid; gap: 6px; padding: 10px 12px; border: var(--hair); background: var(--c-surface); }
+.mk-tablebar { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
+.mk-gapfilter[aria-pressed="true"] { background: var(--c-accent-tint); box-shadow: inset 0 0 0 1.5px var(--c-accent); }
+.mk-rows.only-gaps tr.mk-r:not([data-gaps]), .mk-rows.only-gaps tr.mk-r:not([data-gaps]) + tr.mk-detail { display: none; }
+.mk-rowhold { position: sticky; bottom: 0; z-index: 3; }
+.mk-rowhold[hidden] { display: none; }
+/* DEC-176 on a phone: each row is a card; the headings wrap above it as sort buttons */
+.mk-device[data-device="phone"] .mk-rows, .mk-device[data-device="phone"] .mk-rows tbody { display: block; }
+.mk-device[data-device="phone"] .mk-rows thead tr { display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 6px 0 8px; }
+.mk-device[data-device="phone"] .mk-rows thead th { border: 0; padding: 0; } .mk-device[data-device="phone"] .mk-rows thead th.mk-pickc { display: none; }
+.mk-device[data-device="phone"] .mk-rows tr.mk-r { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 4px 6px; padding: 10px 12px; border: var(--hair); border-bottom: 0; background: var(--c-surface); }
+.mk-device[data-device="phone"] .mk-rows tr.mk-r td { display: block; padding: 0; border: 0; background: none; text-align: left; }
+.mk-device[data-device="phone"] .mk-rows tr.mk-r td[data-label] { grid-column: 1 / -1; display: grid; grid-template-columns: 8.5em minmax(0, 1fr); gap: 8px; }
+.mk-device[data-device="phone"] .mk-rows tr.mk-r td[data-label]::before { content: attr(data-label); font: 600 var(--t-xs)/1.5 var(--f-sans); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--c-muted); }
+.mk-device[data-device="phone"] .mk-rows tr.mk-detail { display: block; } .mk-device[data-device="phone"] .mk-rows tr.mk-detail[hidden] { display: none; }
+.mk-device[data-device="phone"] .mk-rows tr.mk-detail > td { display: block; padding: 0 0 10px; border: var(--hair); border-top: 0; }
+.mk-device[data-device="phone"] .mk-rows tbody > tr:last-child { border-bottom: var(--hair); }
+.mk-device[data-device="phone"] .mk-detailbox { position: static; max-width: none; border-left-width: 3px; margin: 0 8px; }
+.mk-device[data-device="phone"] .mk-rows tr.mk-r:has(+ tr.mk-detail:not([hidden])) { background: var(--c-accent-tint); }
 .mk-draftcell { background: var(--c-machine-tint); }
 .mk-lanes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; }
 .mk-lanehead { font: 700 var(--t-xs) var(--f-sans); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--c-muted); border-bottom: 2px solid var(--c-ink); padding-bottom: 4px; }
@@ -109,6 +147,16 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 .mk-passage { margin: 0; padding: 10px 14px; border-left: 3px solid var(--c-capture); background: var(--c-surface); font-size: var(--t-lg); line-height: 1.5; }
 .mk-search { display: flex; gap: 8px; align-items: center; } .mk-search .cs-input { flex: 1; }
 .cs-hold.mk-hold { box-shadow: none; }
+.mk-thumb { float: left; width: 64px; height: 48px; margin: 2px 12px 2px 0; border: 1px solid var(--c-rule-strong); border-radius: 2px; overflow: hidden; cursor: pointer; } .mk-thumb svg { display: block; width: 64px; height: 48px; }
+.mk-page .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.mk-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0; background: var(--c-surface); border: var(--hair); }
+.mk-facts > div { padding: 10px 14px; display: grid; gap: 6px; align-content: start; border-right: var(--hair); }
+.mk-facts > div:last-child { border-right: 0; }
+.mk-facts .k { font: 600 var(--t-xs)/1.2 var(--f-sans); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--c-muted); }
+.mk-facts .v { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: var(--t-sm); }
+.mk-facts .cs-btn { min-height: 0; padding: 2px 6px; font-size: var(--t-sm); }
+@media (max-width: 560px) { .mk-facts { grid-template-columns: 1fr; } .mk-facts > div { border-right: 0; border-bottom: var(--hair); } .mk-facts > div:last-child { border-bottom: 0; } }
+.mk-device[data-device="phone"] .mk-facts { grid-template-columns: 1fr; } .mk-device[data-device="phone"] .mk-facts > div { border-right: 0; border-bottom: var(--hair); } .mk-device[data-device="phone"] .mk-facts > div:last-child { border-bottom: 0; }
 .mk-tabs2 { display: flex; gap: 0; border-bottom: var(--hair); }
 .mk-tabs2 span { padding: 8px 12px; font-weight: 600; font-size: var(--t-sm); color: var(--c-muted); }
 .mk-tabs2 span[aria-selected] { color: var(--c-ink); box-shadow: inset 0 -3px 0 var(--c-accent); }
@@ -180,6 +228,7 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 .tbl th, .tbl td { text-align: left; vertical-align: top; padding: 9px 10px; border-bottom: var(--hair); }
 .tbl th { font: 600 var(--t-xs) var(--f-sans); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--c-muted); }
 .tw { overflow-x: auto; }
+.mk-page .cs-main, .mk-plainmain, .mk-pubmain { grid-auto-rows: max-content; }
 .asfig { margin: 0; display: grid; gap: 6px; min-width: 0; }
 .asfig figcaption { font-size: var(--t-sm); color: var(--c-ink-2); }
 .asfig .mk-device { padding: 6px; }
@@ -208,14 +257,14 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 <div class="meta3">
 <div><b>How to use it</b>Pick a journey, a wizard or a screen in the viewer below, then step through. Switch between with and without the assistant, desktop and phone, light and dark, at the top.</div>
 <div><b>What is real</b>Every button carries the act it would perform and its weight; every wizard step names a screen and an act from the requirements, checked. The data is invented: Lakeshore Tenants, its members Rosa, Dev, Mai, Ana and Teo.</div>
-<div><b>Status</b>Open to your comments. The wizard library is approved (DEC-148); publishing at a set time (DEC-147), the name for a group’s own Civicsmith (DEC-149) and the group’s API key (K1755) are ruled (section 7). A group whose place Civicsmith doesn’t know yet is ruled too (DEC-150, DEC-151). Connecting a Claude subscription without a command line is ruled too (DEC-156). Who may translate the interface is ruled too (DEC-157). Information levels are ruled too (DEC-162). Where the security screen's attempts come from is ruled too (DEC-166). Everything else is design detail, decided and listed in section 6.</div>
+<div><b>Status</b>Open to your comments. The wizard library is approved (DEC-148); publishing at a set time (DEC-147), the name for a group’s own Civicsmith (DEC-149) and the group’s API key (K1755) are ruled (section 7). A group whose place Civicsmith doesn’t know yet is ruled too (DEC-150, DEC-151). Connecting a Claude subscription without a command line is ruled too (DEC-156). Who may translate the interface is ruled too (DEC-157). Information levels are ruled too (DEC-162, changed by DEC-175: the lighter level makes guidance wait longer instead of hiding it). Where the security screen's attempts come from is ruled too (DEC-166). Security tools are ruled too (DEC-168). Members' own accounts are ruled too (DEC-172). Opening a high-risk file after warnings is ruled too (DEC-173). Everything else is design detail, decided and listed in section 6.</div>
 </div>
 </header>
 <nav class="idx" aria-label="Sections">
 <a href="#frames">Frames</a><a href="#assistant">The assistant</a><a href="#walk">Journeys and wizards</a><a href="#findin">Find in this</a><a href="#noai">Without the assistant</a><a href="#data">As data</a><a href="#decided6">Decided</a><a href="#question">For you</a><a href="#owed">Owed</a>
 <span class="opts">
  <span class="seg" role="group" aria-label="The assistant"><button type="button" data-ai="1" aria-pressed="true">With the assistant</button><button type="button" data-ai="0" aria-pressed="false">Without</button></span>
- <span class="seg" role="group" aria-label="Explanations (proposal S8)" title="Explanations: Alt+Shift+I switches"><button type="button" data-lvl="1" aria-pressed="false">Marks and names</button><button type="button" data-lvl="2" aria-pressed="true">With guidance</button></span>
+ <span class="seg" role="group" aria-label="Explanations" title="Explanations: Alt+Shift+I switches"><button type="button" data-lvl="2" aria-pressed="true">Explain promptly</button><button type="button" data-lvl="1" aria-pressed="false">On a longer pause</button></span>
  <span class="seg" role="group" aria-label="Device"><button type="button" data-dev="desktop" aria-pressed="true">Desktop</button><button type="button" data-dev="phone" aria-pressed="false">Phone</button></span>
  <span class="seg" role="group" aria-label="Theme"><button type="button" data-th="" aria-pressed="true">Auto</button><button type="button" data-th="light" aria-pressed="false">Light</button><button type="button" data-th="dark" aria-pressed="false">Dark</button></span>
  <label for="srcToggle"><input type="checkbox" id="srcToggle"> Sources</label>
@@ -271,8 +320,8 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 
 <section id="explain">
 <h2 class="sec">Explained where it appears</h2>
-<p class="intro">Every mark on every screen opens its meaning on hover, keyboard focus or tap: grades, strengths, gaps, origin tags, queue kinds, due dates, hints, the weight of every button, and the steps of the path and the ladders. Every mark on the 45 screens carries its explanation, and about 460 names of things the record holds carry a card saying what each is and why it matters on that screen; a click opens it. A question's strength names its weakest part and what would raise it. Names of people, offices and documents (dotted underline) open a card. An explanation waits until the pointer rests for half a second, stays while the pointer is on it, and closes half a second after the pointer leaves; keyboard focus and a tap open it at once (DEC-161). Try it on any screen in the viewer above (DEC-159; your rule 4 of the wide path; the measures map's disclosure, DEC-82).</p>
-<div class="tw" style="margin-top:12px"><table class="mk-table"><thead><tr><th>Element</th><th>Explains itself?</th><th>What it says, or why not</th></tr></thead><tbody><tr><td>The group's name (masthead, public page head)</td><td>Yes · names</td><td>Your group's card; a click opens “Who your group is”. On the public page, only what is public.</td></tr><tr><td>Search, the assistant button, the guidance switch</td><td>Yes · guidance</td><td>What each does; the assistant's says which account serves you.</td></tr><tr><td>The queue count and your initial (masthead)</td><td>Yes · names</td><td>How many items wait and of which kinds; your account. Each opens its screen.</td></tr><tr><td>The band under the masthead</td><td>Yes · marks</td><td>Who can see what you are working on here.</td></tr><tr><td>The rail and the phone tabs</td><td>Yes · guidance</td><td>What each section holds.</td></tr><tr><td>The path</td><td>Yes</td><td>Each step back is a link with its card; the last step is the screen itself.</td></tr><tr><td>The screen's heading</td><td>Yes · guidance</td><td>What the screen is and what you can do there.</td></tr><tr><td>Section headings that name a thing (a project in the queue)</td><td>Yes · names</td><td>Its card, with why it matters here.</td></tr><tr><td>Section headings that only label (“Before you start”)</td><td>No</td><td>What they introduce sits directly beneath them; a tip would repeat it.</td></tr><tr><td>Names of things the record holds, in any text</td><td>Yes · names</td><td>What it is and why it matters here; a click opens it.</td></tr><tr><td>Members, people, offices, projects named anywhere</td><td>Yes · names</td><td>One shared card wherever they appear.</td></tr><tr><td>Grades, strengths, gaps, origin tags, queue kinds, due dates, hints</td><td>Yes · marks</td><td>What the mark means; a strength names its weakest part.</td></tr><tr><td>A button's weight pips</td><td>Yes · marks</td><td>How much the act weighs and what that means.</td></tr><tr><td>A button's label</td><td>No</td><td>The label says the act and the pips say its weight; an act that sends, signs or cannot be undone opens a dialog that explains it in full.</td></tr><tr><td>Row icons</td><td>Yes · guidance</td><td>What kind of thing the row is (a document, a person, an event).</td></tr><tr><td>Wizard marks (“1 wizard starts here”)</td><td>Yes · guidance</td><td>Which wizards, and what a wizard does.</td></tr><tr><td>Steps of a set-up or ceremony</td><td>Yes · guidance</td><td>Done, you are here, or still to do.</td></tr><tr><td>Field labels</td><td>No</td><td>Their help is printed under them, where it is needed while typing.</td></tr><tr><td>Options in a list</td><td>No</td><td>A browser can't show tips on list options; the field's help explains the choice.</td></tr><tr><td>Plain dates and plain counts (“6 members”)</td><td>No</td><td>They mean what they say; a date that is a deadline is a due-date mark, and a count from data is a named calculation.</td></tr><tr><td>The signature and “Made with Civicsmith” (public page foot)</td><td>Yes · names</td><td>How anyone can check the signature; what Civicsmith is and that it neither wrote nor checked the case.</td></tr><tr><td>Text inside quotations and a member's own words</td><td>Names only</td><td>Names in them get their cards; the words themselves are evidence and stay untouched.</td></tr><tr><td>The assistant panel and the wizard guide</td><td>No (beyond their marks)</td><td>Each is itself an explanation; the marks inside them still explain themselves.</td></tr></tbody></table></div><p class="intro" style="margin-top:8px">“Marks” and “names” are always on; “guidance” shows when a member has guidance on (DEC-162). On the 45 screens, 1,946 elements explain themselves (DEC-163).</p>
+<p class="intro">Every mark on every screen opens its meaning on hover, keyboard focus or tap: grades, strengths, gaps, origin tags, queue kinds, due dates, hints, the weight of every button, and the steps of the path and the ladders. Every mark on the 46 screens carries its explanation, and about 460 names of things the record holds carry a card saying what each is and why it matters on that screen; a click opens it. A question's strength names its weakest part and what would raise it. Names of people, offices and documents (dotted underline) open a card. An explanation waits until the pointer rests for half a second, stays while the pointer is on it, and closes half a second after the pointer leaves; keyboard focus and a tap open it at once (DEC-161). Try it on any screen in the viewer above (DEC-159; your rule 4 of the wide path; the measures map's disclosure, DEC-82).</p>
+<div class="tw" style="margin-top:12px"><table class="mk-table"><thead><tr><th>Element</th><th>Explains itself?</th><th>What it says, or why not</th></tr></thead><tbody><tr><td>The group's name (masthead, public page head)</td><td>Yes · names</td><td>Your group's card; a click opens “Who your group is”. On the public page, only what is public.</td></tr><tr><td>Search, the assistant button, the guidance switch</td><td>Yes · guidance</td><td>What each does; the assistant's says which account serves you.</td></tr><tr><td>The queue count and your initial (masthead)</td><td>Yes · names</td><td>How many items wait and of which kinds; your account. Each opens its screen.</td></tr><tr><td>The band under the masthead</td><td>Yes · marks</td><td>Who can see what you are working on here.</td></tr><tr><td>The rail and the phone tabs</td><td>Yes · guidance</td><td>What each section holds.</td></tr><tr><td>The path</td><td>Yes</td><td>Each step back is a link with its card; the last step is the screen itself.</td></tr><tr><td>The screen's heading</td><td>Yes · names, or guidance</td><td>A heading that names a particular thing (a document, a question, a calculation) explains that thing first, as its card does; what the screen is for follows (DEC-177). A heading that names no particular thing (“Members”) says what the screen is for.</td></tr><tr><td>Anything that explains itself, inside something else that does</td><td>Never</td><td>One element, one explanation (DEC-177). A button, a link or an unlabelled mark absorbs what it holds, said after its own; a labelled mark gives its explanation to its label, so names in its reason keep their own cards. The walk check fails on any nesting.</td></tr><tr><td>Section headings that name a thing (a project in the queue)</td><td>Yes · names</td><td>Its card, with why it matters here.</td></tr><tr><td>Section headings that name a method or idea (“Spot-check”, on your comment)</td><td>Yes · guidance</td><td>What it means in this screen's case (“visits a random 40 of the 812 reports the city marked closed…”), and, where a method needs more, a link to its help page. Help pages explain one method each in plain words, opened from where the method is used; the first is “How spot-checks work”.</td></tr><tr><td>Section headings that only label (“Before you start”)</td><td>No</td><td>What they introduce sits directly beneath them; a tip would repeat it.</td></tr><tr><td>Names of things the record holds, in any text</td><td>Yes · names</td><td>What it is and why it matters here; a click opens it.</td></tr><tr><td>Members, people, offices, projects named anywhere</td><td>Yes · names</td><td>One shared card wherever they appear.</td></tr><tr><td>Grades, strengths, gaps, origin tags, queue kinds, due dates, hints</td><td>Yes · marks</td><td>What the mark means; a strength names its weakest part.</td></tr><tr><td>A button (every act)</td><td>Yes · guidance</td><td>What the act does and how it fits the larger work: what it leads to or rests on, who sees it, whether it can be undone (your direction, 7 October; DEC-174). One explanation per button, wherever the pointer rests on it: what the act does always comes first; its weight (Reversible, Reasoned and the rest) follows in lighter type, never in its place. Resting on the weight dots shows it at a mark's pace. An act that sends, signs or cannot be undone still opens a dialog that explains it in full.</td></tr><tr><td>Table column headings</td><td>Yes · names</td><td>What the column shows, in plain words, then that a click sorts the rows by it (again to reverse; a view only, never the record). A column with no heading is not drawn: every column is named.</td></tr><tr><td>Row icons</td><td>Yes · guidance</td><td>What kind of thing the row is (a document, a person, an event).</td></tr><tr><td>Wizard marks (“1 wizard starts here”)</td><td>Yes · guidance</td><td>Which wizards, and what a wizard does.</td></tr><tr><td>Steps of a set-up or ceremony</td><td>Yes · guidance</td><td>Done, you are here, or still to do.</td></tr><tr><td>Field labels</td><td>No</td><td>Their help is printed under them, where it is needed while typing.</td></tr><tr><td>Options in a list</td><td>No</td><td>A browser can't show tips on list options; the field's help explains the choice.</td></tr><tr><td>Plain dates and plain counts (“6 members”)</td><td>No</td><td>They mean what they say; a date that is a deadline is a due-date mark, and a count from data is a named calculation.</td></tr><tr><td>The signature and “Made with Civicsmith” (public page foot)</td><td>Yes · names</td><td>How anyone can check the signature; what Civicsmith is and that it neither wrote nor checked the case.</td></tr><tr><td>Text inside quotations and a member's own words</td><td>Names only</td><td>Names in them get their cards; the words themselves are evidence and stay untouched.</td></tr><tr><td>The assistant panel and the wizard guide</td><td>No (beyond their marks)</td><td>Each is itself an explanation; the marks inside them still explain themselves.</td></tr></tbody></table></div><p class="intro" style="margin-top:8px">“Marks” and “names” are always on; “guidance” shows when a member has guidance on (DEC-162). On the 46 screens, 2,283 elements explain themselves (DEC-163).</p>
 </section>
 
 <section id="findin">
@@ -306,7 +355,7 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 
 <section id="data">
 <h2 class="sec">5. The screens, wizards and acts, as data</h2>
-<p class="intro">So the development process can build the wizard library from this step and not from pictures: a registry of 45 screens and the 234 acts they offer, and the seventeen wizard scripts in the form the requirements set. A check runs both against the requirements: every act is an existing act, a requirement whose act name the development process declares, or one a ruling of yours already owes.</p>
+<p class="intro">So the development process can build the wizard library from this step and not from pictures: a registry of 46 screens and the 242 acts they offer, and the seventeen wizard scripts in the form the requirements set. A check runs both against the requirements: every act is an existing act, a requirement whose act name the development process declares, or one a ruling of yours already owes.</p>
 {{REGSUMMARY}}
 </section>
 
@@ -327,6 +376,9 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 <tr><td>Find in this (DEC-164)</td><td>One control on a document, a held set and a project. The member picks what to find; every result shows its passage, labelled “Found by search”; nothing is recorded until a member records it with the act that makes that kind of fact. “Keep finding this” reruns it as documents arrive. The assistant’s proposals are drawn as later.</td></tr>
 <tr><td>The security screen (DEC-165, on your direction K1875; countries by your ruling DEC-166)</td><td>Settings › Security, administrators only. A period chosen from the last hour to the last 30 days or set dates; the level in a word (Ordinary, Raised, High) against the group's own usual, with one plain sentence; a grid of kinds by hour; totals with the usual and the busiest hour; counts only, and counts by country, never an address. Administrators are told in their queue once, when the level becomes high, never as a routine count. What is counted, the usual and the threshold are worded by the development process.</td></tr>
 <tr><td>Archives (DEC-167, under your ruling K1852)</td><td>A captured ZIP has its own screen: what was found when it opened, then every file with its state: filed and held for review beside it with the archive's grade, already held (a second sighting), a folder, or not filed with its reason named (locked by a password, over a limit). Names are shown exactly as the archive states them. Members vouch for or set aside the files they pick. An archive refused whole says why, and stays captured as it arrived. Held captures shows the archive with its files waiting beside it.</td></tr>
+<tr><td>Opening a file, and security tools (DEC-169, under your rulings on the virus package and DEC-168)</td><td>“Opening a file” says whether a file is low or high risk and why. A low-risk file opens as it is, scanned first if its last check is over a week old. A high-risk file opens in the safe view, a derived copy labelled as such; “Open the original” appears only after a deeper check passes. A file held after a finding shows the finding, its checks as notes (tool, engine, version, date) and its release: by a second, different scanner when only the built-in one found it, otherwise by two members' reasons (your ruling of 7 October). Outside tools run when a member asks for a deeper check, unless they run on the organization's own servers. Nothing records who opened what. Settings › Security lists the built-in tools and those added, each with what it is sent, who receives it, how long it keeps files and whether it shares; adding one shows the same and a test; tools that share are not offered. Setup has an optional step for the organization's own tools.</td></tr>
+<tr><td>Explanations that frame a screen (Your ties, on your comments)</td><td>The explanation of why a screen asks something and who sees it is one panel that folds to a single line: open on a member's first visit, closed after that until opened, the choice remembered for the member; with explanations on a longer pause (DEC-175), they start closed.</td></tr>
+<tr><td>Acting on a table's rows (DEC-176, on your comments)</td><td>A row is acted on where it is. Its name opens a panel directly beneath it: where it came from (source and passage), what is undetermined about it and what evidence would help, and every act on that one row. An undetermined cell opens the same panel at that item. Ticking rows brings the hold strip with the acts for all of them; a filter keeps only the rows with something undetermined, with their count. Sorting keeps each open panel with its row; on a phone each row is a card with every value labelled. Acts on the whole screen stay above the table; a row's acts are nowhere else. The words never promise an answer: more evidence may agree or disagree, and where two sources disagree both stay, shown in tension. Adding evidence never changes a figure: it is a new fact or event beside it, with its own source. The money trail's “When it moved” comes from the event a figure is tied to, never its accounting period.</td></tr>
 </tbody></table></div>
 </section>
 
@@ -338,7 +390,7 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 <section id="owed">
 <h2 class="sec">8. Owed to the development process</h2>
 <div class="cols2">
-<div class="cell"><h4>To build from this step</h4><ul><li>The screen registry (screens/registry.json) as the registry wizard-scripts registers, its acts' op names declared where they are requirement functions today.</li><li>The Civicsmith wizard library (screens/library.json): seventeen scripts, three required.</li><li>A step's optional side trip into another wizard (an addition to the wizard script's step).</li><li>A standing question that runs for a member without the assistant, its matches arriving unread.</li><li>A captured archive's listing (DEC-167): each file's state and its reason when not filed; files held for review beside their archive.</li><li>The security screen (DEC-165): counts of refused and blocked requests by kind and hour, the group's usual, the level and its one notice to administrators.</li><li>“Find in this” (DEC-164): a find over a document, a held set or a project, by kind, each result citing its passage; nothing recorded.</li></ul></div>
+<div class="cell"><h4>To build from this step</h4><ul><li>The screen registry (screens/registry.json) as the registry wizard-scripts registers, its acts' op names declared where they are requirement functions today.</li><li>The Civicsmith wizard library (screens/library.json): seventeen scripts, three required.</li><li>A step's optional side trip into another wizard (an addition to the wizard script's step).</li><li>A standing question that runs for a member without the assistant, its matches arriving unread.</li><li>Opening a file and security tools (DEC-168, DEC-169): the risk and its reasons, the safe view, the deeper check, verdicts as notes, release of a hold, the warning before opening; adding, testing and removing a tool with its handling stated; the optional setup step.</li><li>A captured archive's listing (DEC-167): each file's state and its reason when not filed; files held for review beside their archive.</li><li>The security screen (DEC-165): counts of refused and blocked requests by kind and hour, the group's usual, the level and its one notice to administrators.</li><li>“Find in this” (DEC-164): a find over a document, a held set or a project, by kind, each result citing its passage; nothing recorded.</li></ul></div>
 <div class="cell"><h4>Already owed by your earlier rulings, drawn here</h4><ul><li>Who the group is; the website key and join link; one administrator; asking for a check by expertise; members' own notes and what a court can reach.</li><li>Each member's language, and the group's translations.</li><li>The connect wizard's subscription-token guide (drawn on the Connect screen).</li></ul></div>
 </div>
 </section>
@@ -388,8 +440,8 @@ const REG = {{REG}};
     $('vpos').textContent = `Step ${st.step + 1} of ${steps.length}`;
     $('vdots').innerHTML = steps.map((_, i) => `<button type="button" data-step="${i}" aria-current="${i === st.step}" aria-label="Step ${i + 1}">${i + 1}</button>`).join('');
     $('vprev').disabled = st.step === 0; $('vnext').disabled = st.step === steps.length - 1;
-    const c = { ai: st.ai, wizard: x.wizard, dockAssist: x.dock, v: x.v };
-    const sc = $('vscale'); sc.innerHTML = render(x.s, c);
+    const c = { ai: st.ai, wizard: x.wizard, dockAssist: x.dock, v: x.v, act: x.act };
+    const sc = $('vscale'); sc.innerHTML = render(x.s, c); if (window.CS_TIPFIX) window.CS_TIPFIX(sc);
     $('vdev').dataset.device = st.dev;
     fit();
     const ok = ring(sc, x.act);
@@ -464,7 +516,7 @@ const REG = {{REG}};
              connection: ['Connection', 'how easily someone else could check this link: that this payment, vote, office or person is the one meant'],
              testimony: ['Testimony', 'how easily someone else could check what a witness says'],
              subject: ['Subject match', 'how easily someone else could check that this record is about this person or thing'] },
-    gap: { undetermined: '<b>Undetermined</b>: the record can\'t settle this yet, and the reason is always given. An answer, not an error.',
+    gap: { undetermined: '<b>Undetermined</b>: the record can\'t determine this from what your group holds, and the reason is always given. An answer, not an error.',
            withheld: '<b>Withheld</b>: something is here that you can\'t see, kept back by its source or by who may see it. That it exists is shown, never hidden.',
            unrated: '<b>Unrated</b>: not graded yet.',
            nobody: '<b>Nobody looked</b>: no one has searched for this yet. Not the same as “looked for, not found”.',
@@ -480,8 +532,10 @@ const REG = {{REG}};
     path: { 'Working': '<b>Working</b>: not public; seen by your group\'s members.', 'Shared for review': '<b>Shared for review</b>: named outsiders can read this draft until the owner stops sharing it.', 'Published': '<b>Published</b>: signed and public. It can be corrected by a new edition, never removed.' }
   };
   window.CS_LEVEL = 2;
+  /* a button's weight, said under what the act does (DEC-174 as amended 7 October): one explanation per button */
+  function weightLine(btn) { var w = btn.querySelector('.w'); if (!w) return ''; var n = w.textContent.replace(/[^A-Za-z]/g, ''); return G.weight[n] ? '<span class="more">' + G.weight[n] + ' The dots show how much the act weighs, from one to five.</span>' : ''; }
   function tipFor(el) {
-    if (el.dataset.level && +el.dataset.level > window.CS_LEVEL) return '';
+    if (el.classList.contains('cs-btn')) return (el.dataset.tip || '<b>' + el.textContent.replace(/(Reversible|Reasoned|Terminal|Signed|Outward)\s*$/, '').trim() + '</b>') + weightLine(el);
     if (el.dataset.tip) return el.dataset.tip;
     var c = el.classList;
     if (c.contains('cs-grade')) { var s = G.scale[el.dataset.scale] || ['Grade', '']; var l = el.textContent.trim().slice(-1);
@@ -494,22 +548,36 @@ const REG = {{REG}};
     if (c.contains('cs-hint')) return '<b>Hint · machine work</b>: something the machine marked worth a look, with how it was found and out of how many. A lead, never a finding.';
     if (c.contains('cs-hunch')) return '<b>Hunch</b>: a member\'s suspicion, labelled as one. Never evidence, and it never moves a finding.';
     if (c.contains('cs-tag-outward')) return '<b>Outward</b>: this leaves your group\'s Civicsmith. Someone outside will see it.';
-    if (c.contains('w') && el.closest('.cs-btn')) { var n = el.textContent.replace(/[^A-Za-z]/g, ''); return (G.weight[n] || '') + '<span class="more">The dots show how much the act weighs, from one to five.</span>'; }
     if (el.matches('.cs-path > span')) return G.path[el.textContent.trim()];
     if (el.matches('.cs-ladder > span')) return '<b>' + el.textContent.trim() + '</b>: ' + (el.classList.contains('on') ? 'reached. Click to see how.' : 'not reached yet.');
     if (c.contains('mk-tag')) return el.textContent.trim() === 'Protected' ? '<b>Protected word</b>: it protects members, so a change to it needs a second check before it shows (DEC-157).' : '<b>Local name</b>: the official name stays as it is, with an explanation in the member\'s language beside it.';
     if (c.contains('cs-band')) return '<b>Where you are</b>: this band says who can see what you are working on.';
     return '';
   }
-  var SEL = '.cs-grade,.cs-strength,.cs-gap,.cs-origin,.cs-kind,.cs-due,.cs-hint,.cs-hunch,.cs-tag-outward,.cs-btn .w,.cs-path > span,.cs-ladder > span,.mk-tag,.cs-band,[data-tip]';
+  var SEL = '.cs-grade,.cs-strength,.cs-gap,.cs-origin,.cs-kind,.cs-due,.cs-hint,.cs-hunch,.cs-tag-outward,.cs-btn,.cs-path > span,.cs-ladder > span,.mk-tag,.cs-band,[data-tip]'
+    .split(',').map(function (x) { return x + ':not([data-notip])'; }).join(',');
+  /* One visual element, one explanation (Bob, 7 October: "Mouseovers should never compete for visibility"). Where an element
+     that explains itself holds others that do: a control (button, link) or a mark with no label of its own absorbs theirs,
+     said after its own; a mark with a label (its icon and bold word) gives its explanation to that label, so names in its
+     text keep their own cards beside it, never inside it. check_walk.mjs fails on any nesting left. */
+  function untangle(root) { root.querySelectorAll(SEL).forEach(function (el) {
+    if (el.dataset.untangled) return; var inner = [].filter.call(el.querySelectorAll(SEL), function (x) { return x !== el; }); if (!inner.length) return;
+    el.dataset.untangled = '1'; var own = tipFor(el), b = !el.matches('button,a,li,.cs-strength,.cs-path > span,.cs-ladder > span') && el.querySelector('b');
+    if (b && !inner.some(function (x) { return x.contains(b); })) {
+      var ic = el.querySelector(':scope > svg'); el.setAttribute('data-notip', ''); el.removeAttribute('tabindex'); el.removeAttribute('data-tip');
+      b.setAttribute('data-tip', own); if (ic) ic.setAttribute('data-tip', own); return; }
+    el.setAttribute('data-tip', own + inner.map(function (x) { var t = tipFor(x).replace(/<span class="?more"?>[\s\S]*?<\/span>/g, ''); return t ? '<span class="more">' + t + '</span>' : ''; }).join('')  /* the absorbed one's own click hint dropped: only the holder's click applies */);
+    inner.forEach(function (x) { x.setAttribute('data-notip', ''); x.removeAttribute('data-tip'); if (x.classList.contains('cs-card')) { x.classList.remove('cs-card'); x.removeAttribute('tabindex'); } if (x.matches('.cs-grade')) x.removeAttribute('tabindex'); }); }); }
+  window.CS_TIPFIX = function (root) { untangle(root); mark(root); };
   var tip = document.createElement('div'); tip.className = 'cs-tip cs'; tip.id = 'cs-tip'; tip.setAttribute('role', 'tooltip'); tip.hidden = true; document.body.appendChild(tip);
-  var cur = null, showT = 0, hideT = 0, SHOW_MS = 500, HIDE_MS = 500;  /* DEC-161: Nielsen Norman Group's 0.3–0.5 s, at its upper end */
+  var cur = null, showT = 0, hideT = 0, SHOW_MS = 500, HIDE_MS = 500, LONG_MS = 1500;  /* DEC-175: guidance waits 1.5 s at “on a longer pause” */
+    /* DEC-161: Nielsen Norman Group's 0.3–0.5 s, at its upper end */
   function show(el) { clearTimeout(showT); clearTimeout(hideT); var h = tipFor(el); if (!h) return; if (cur && cur !== el) cur.removeAttribute('aria-describedby'); cur = el; tip.innerHTML = h; tip.hidden = false; el.setAttribute('aria-describedby', 'cs-tip');
     var r = el.getBoundingClientRect(), w = tip.offsetWidth, ht = tip.offsetHeight;
     var x = Math.max(8, Math.min(r.left, innerWidth - w - 8)), y = r.bottom + 6; if (y + ht > innerHeight - 8) y = r.top - ht - 6;
     tip.style.left = x + 'px'; tip.style.top = y + 'px'; }
   function hide() { clearTimeout(showT); clearTimeout(hideT); if (cur) cur.removeAttribute('aria-describedby'); cur = null; tip.hidden = true; }
-  function target(e) { var t = e.target; return t && t.closest ? t.closest(SEL) : null; }
+  function target(e) { var t = e.target; if (!t || !t.closest) return null; var b = t.closest('.cs-btn'); if (b && b.closest('.mk-page')) return b; return t.closest(SEL); }  /* the whole button is one target */
   function mark(root) { (root || document).querySelectorAll('.mk-page ' + SEL.split(',').join(',.mk-page ')).forEach(function (el) {
     if (!el.matches('button,a,input,select,textarea,svg') && !el.closest('button') && !el.hasAttribute('tabindex')) el.setAttribute('tabindex', '0'); }); }
   document.addEventListener('mouseover', function (e) {
@@ -517,19 +585,37 @@ const REG = {{REG}};
     var el = target(e); if (el && !el.closest('.mk-page')) el = null;
     if (el && el === cur) { clearTimeout(hideT); return; }
     clearTimeout(showT);
-    if (el) showT = setTimeout(function () { show(el); }, SHOW_MS);            /* only if the pointer rests there */
+    var onMark = e.target.closest && e.target.closest('.cs-btn .w');  /* resting on the weight marks: a mark's timing (DEC-175) */
+    if (el) showT = setTimeout(function () { show(el); }, !onMark && el.dataset.level && +el.dataset.level > window.CS_LEVEL ? LONG_MS : SHOW_MS);            /* only if the pointer rests there */
     if (cur) { clearTimeout(hideT); hideT = setTimeout(hide, HIDE_MS); }         /* grace before the open one closes */
   });
   document.addEventListener('mouseout', function (e) { var to = e.relatedTarget; if (!to || (!tip.contains(to) && target({ target: to }) !== cur)) { clearTimeout(showT); if (cur) { clearTimeout(hideT); hideT = setTimeout(hide, HIDE_MS); } } });
   document.addEventListener('focusin', function (e) { var el = target(e); if (el && el.closest('.mk-page')) show(el); });  /* keyboard: at once */
   document.addEventListener('focusout', function () { hideT = setTimeout(hide, 50); });
-  function setLevel(n) { window.CS_LEVEL = n; hide(); document.querySelectorAll('.mk-lvlbtn .mk-hide-phone').forEach(function (s) { s.textContent = n === 2 ? 'Guidance' : 'Marks and names'; }); document.querySelectorAll('[data-lvl]').forEach(function (b) { b.setAttribute('aria-pressed', String(+b.dataset.lvl === n)); }); }
+  function setLevel(n) { window.CS_LEVEL = n; hide(); document.querySelectorAll('.mk-lvlbtn .mk-hide-phone').forEach(function (s) { s.textContent = n === 2 ? 'Explain promptly' : 'On a longer pause'; }); document.querySelectorAll('[data-lvl]').forEach(function (b) { b.setAttribute('aria-pressed', String(+b.dataset.lvl === n)); }); }
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hide(); if (e.altKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.code === 'KeyI')) { e.preventDefault(); setLevel(window.CS_LEVEL === 2 ? 1 : 2); } });
+  document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('.mk-sort'); if (!b) return;
+    var th = b.closest('th'), tb = th.closest('table'), body = tb.tBodies[0], i = th.cellIndex, up = th.getAttribute('aria-sort') !== 'ascending';
+    [].forEach.call(tb.tHead.rows[0].cells, function (h) { if (h.hasAttribute('aria-sort')) h.setAttribute('aria-sort', 'none'); });
+    th.setAttribute('aria-sort', up ? 'ascending' : 'descending');
+    var key = function (r) { var c = r.cells[i], t = (c ? (c.hasAttribute('data-sort') ? c.getAttribute('data-sort') : c.textContent) : '').trim(), n = t.replace(/[$,%\s]/g, ''); return { t: t, n: /^-?\d+(\.\d+)?$/.test(n) ? +n : null }; };
+    var rows = [].slice.call(body.rows).filter(function (r) { return !r.classList.contains('mk-detail'); }), ks = rows.map(key), num = ks.every(function (k) { return k.n !== null || !k.t; });
+    rows.map(function (r, j) { return [r, ks[j], j]; }).sort(function (a, b) { if (!a[1].t !== !b[1].t) return a[1].t ? -1 : 1;
+      var d = num ? a[1].n - b[1].n : a[1].t.localeCompare(b[1].t, undefined, { numeric: true, sensitivity: 'base' }); return (up ? d : -d) || a[2] - b[2]; })
+      .forEach(function (x) { var d = x[0].nextElementSibling; body.appendChild(x[0]); if (d && d.classList.contains('mk-detail')) body.appendChild(d); }); });
+  /* DEC-176: open a row's panel in place; an undetermined cell opens it too; picks bring the hold strip; the filter keeps rows with something undetermined */
+  document.addEventListener('click', function (e) { var t = e.target.closest && e.target.closest('.mk-open, .mk-gapbtn'); if (!t || !t.closest('.mk-page')) return;
+    var d = t.closest('.mk-page').querySelector('#' + t.getAttribute('aria-controls')), b = d && d.previousElementSibling.querySelector('.mk-open'); if (!d) return;
+    var open = t.classList.contains('mk-gapbtn') ? true : d.hidden; d.hidden = !open; b.setAttribute('aria-expanded', open); if (open && t.classList.contains('mk-gapbtn')) { var f = d.querySelector('.mk-gapblock button'); if (f) f.focus(); } });
+  document.addEventListener('change', function (e) { if (!e.target.classList || !e.target.classList.contains('mk-pick')) return; var pg = e.target.closest('.mk-page'), n = pg.querySelectorAll('.mk-pick:checked').length, h = pg.querySelector('.mk-rowhold'); if (!h) return;
+    h.hidden = !n; h.querySelector('.n').textContent = n + (n === 1 ? ' figure picked' : ' figures picked'); });
+  document.addEventListener('click', function (e) { var u = e.target.closest && e.target.closest('.mk-unpick'); if (u) { var pg = u.closest('.mk-page'); pg.querySelectorAll('.mk-pick:checked').forEach(function (x) { x.checked = false; }); pg.querySelector('.mk-rowhold').hidden = true; return; }
+    var g = e.target.closest && e.target.closest('.mk-gapfilter'); if (g) { var on = g.getAttribute('aria-pressed') !== 'true'; g.setAttribute('aria-pressed', on); g.closest('.mk-page').querySelector('.mk-rows').classList.toggle('only-gaps', on); } });
   document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('[data-lvl]'); if (b) setLevel(+b.dataset.lvl); if (e.target.closest && e.target.closest('[data-lvltoggle]')) setLevel(window.CS_LEVEL === 2 ? 1 : 2); });
   document.addEventListener('click', function (e) { var g = e.target.closest && e.target.closest('[data-goto]'); if (g && g.closest('.mk-page')) { e.preventDefault(); hide(); var W = window.CS_WALK; if (W && typeof SCR !== 'undefined' && SCR[g.dataset.goto]) { W.st.mode = 'screen'; W.st.id = g.dataset.goto; W.st.step = 0; W.draw(); var v = document.getElementById('vscale'); if (v) v.scrollIntoView({ block: 'nearest' }); } return; }
     var el = target(e); if (el && el.closest('.mk-page') && !el.closest('button') && !el.closest('summary')) { e.preventDefault(); if (cur === el) hide(); else show(el); } });
   window.addEventListener('scroll', hide, true);
-  new MutationObserver(function () { mark(); }).observe(document.body, { childList: true, subtree: true });
+  new MutationObserver(function () { document.querySelectorAll('.mk-page').forEach(untangle); mark(); }).observe(document.body, { childList: true, subtree: true });
   mark(); window.CS_TIP = { tipFor: tipFor, SEL: SEL };
 })();
 </script>

@@ -334,10 +334,15 @@ const seed = async (label, version, persist) => {
   const text = infoMd(DOC);
   const pr = await c.post("promote", {
     bundleId: DOC, base: null, snapKey: `20260918T${String(100000 + seq)}Z_${sha(label).slice(0, 8)}`,
-    meta: { object_type: "information", group: "believe-in-oakland", title: `Bundle ${DOC}`,
+    /* The meta's title is the document's own (`Info <id>`): 0.80.0 refuses an envelope title the document does not
+       bear (C-86.3, ENVELOPE_TITLE_DISAGREES; K1901), and every earlier release takes it as the same name. */
+    meta: { object_type: "information", group: "believe-in-oakland", title: `Info ${DOC}`,
             current_state: "collected", created: NOW, last_updated: NOW },
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [] });
-  t(`${label}: ARMED — ${version} promoted a document through its own op`, pr.ok ?? pr.result?.ok ?? errOf(pr), true);
+  /* The promotion's own verdict, inside the door's envelope when the release wraps it (`{ok, result: {ok, …}}`): the
+     envelope's `ok` says only that the store answered, so it alone would arm this on a refused promotion (K1901). */
+  const promoted = pr && pr.result && typeof pr.result === "object" && "ok" in pr.result ? pr.result : pr;
+  t(`${label}: ARMED — ${version} promoted a document through its own op`, promoted.ok === true ? true : errOf(promoted) ?? promoted.ok, true);
   const legs = [
     await c.raw(`INSERT INTO inquiry_basis (bundle_id,ord,target_id,target_type,role,grade,grade_axis,grade_source,note,at,ground)
                  VALUES (?,?,?,?,?,?,?,?,?,?,?)`, "INQ-2026-9143", 0, DOC, "information", "supports",

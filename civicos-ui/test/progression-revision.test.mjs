@@ -79,10 +79,11 @@ const mf = new Miniflare({
               INSTANCE_NAME: "fixture-group" },
 });
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
+/* T35-74 (F1, K1874): the credential travels in the `Authorization: Bearer` header, never in the address. */
 const post = async (op, body, tok) => rP(await (await mf.dispatchFetch(
-  `http://x/api/?op=${op}${tok ? "&token=" + tok : ""}`, { method:"POST", body: JSON.stringify(body) })).json());
+  `http://x/api/?op=${op}`, { method:"POST", headers: tok ? { authorization: `Bearer ${tok}` } : {}, body: JSON.stringify(body) })).json());
 const get  = async (op, qs, tok) => rP(await (await mf.dispatchFetch(
-  `http://x/api/?op=${op}&token=${tok}&${qs}`)).json());
+  `http://x/api/?op=${op}&${qs}`, { headers: tok ? { authorization: `Bearer ${tok}` } : {} })).json());
 
 /* ---- a REAL enrolled member with a session. The first two roster members are administrators (the
    roster's own rule, intent-write's arrangement); IRIS is the member who declares and revises. ---- */
@@ -117,7 +118,9 @@ const html = (s) => $$(s)._html;
 const CALLED = [];
 async function bridgeFetch(u, opts){
   const url = new URL(u, "http://x");
-  CALLED.push({ op:url.searchParams.get("op"), token:url.searchParams.get("token"), body:opts && opts.body });
+  /* T35-74 (F1): the surface sends its session in the `Authorization: Bearer` header, never the address. */
+  const auth = String((opts && opts.headers && (opts.headers.authorization || opts.headers.Authorization)) || "");
+  CALLED.push({ op:url.searchParams.get("op"), token:auth.startsWith("Bearer ") ? auth.slice(7) : null, body:opts && opts.body });
   return mf.dispatchFetch(url.toString(), opts);
 }
 const ctx = { console, URL, URLSearchParams, JSON, Array, Object, String, Number, Math, Date, RegExp, Promise,

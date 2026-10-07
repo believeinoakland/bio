@@ -2,7 +2,7 @@
    R13), held apart from the class so the release suite reads the same parts without the Durable Object runtime; and
    R24's check of the plane's own `SCREENS`, the registry `answers`' explain read is handed. */
 import { CIVICSMITH_LIBRARY, SCREEN_REGISTRY } from "../wizard-scripts/index.mjs";
-import { MACHINE_REFUSALS, RUNGS } from "../affordances.mjs";
+import { MACHINE_REFUSALS, RUNGS } from "../op-grades/index.mjs";
 import { OPS } from "../op-declarations/index.mjs";
 import { SCREENS } from "./screens.mjs";
 
@@ -12,7 +12,7 @@ import { SCREENS } from "./screens.mjs";
    `wizard-scripts`. */
 export const MACHINE_DRAFTS = Object.freeze(["whatchangedpropose", "escalationreasondraft", "groupdescriptiondraft", "writinghelp"]);
 
-/** R19 (T34; DEC-153; K1818): the acts `affordances` grades `irreversible` (its R2, R42), read from its `RUNGS` at
+/** R19 (T34; DEC-153; K1818, K1907): the acts `op-grades` grades `irreversible` (its R1, R14), read from its `RUNGS` at
  *  registration, so the set follows the grading and is never a copy of it. */
 export const irreversibleActs = (rungs = RUNGS) => Object.keys(rungs).filter((op) => rungs[op] === "irreversible");
 
@@ -20,7 +20,7 @@ export const irreversibleActs = (rungs = RUNGS) => Object.keys(rungs).filter((op
  *  release suite holds `requiredFailures` empty for: the screen registry (`wizard-scripts`' `SCREEN_REGISTRY`, the design
  *  stream's `registry.json` it carries, so the required flows walk the registry's screens; K1869 (2)) and the Civicsmith
  *  library the bundle carries,
- *  the member op table (`op-declarations`), the acts a machine is refused (`affordances`' `MACHINE_REFUSALS`), the
+ *  the member op table (`op-declarations`), the acts a machine is refused (`op-grades`' `MACHINE_REFUSALS`, its R5), the
  *  labelled machine drafts and the irreversible acts (`wizard-scripts` R24's refused set). */
 export const wizardRegistration = () => ({ screens: SCREEN_REGISTRY, ops: OPS, machineRefused: Object.keys(MACHINE_REFUSALS),
                                            machineDrafts: MACHINE_DRAFTS, irreversible: irreversibleActs(),

@@ -100,7 +100,8 @@ test("R22 R25 accountReferenceRemove: the same refusals, by the member's own act
   assert.equal(w.snapshot(), before, "no refusal writes");
   assert.deepEqual(w.c.accountReferenceRemove({ member: "ann", by: "ann" }), { ok: true, removed: true });
   assert.deepEqual(w.c.accountReferenceState({ member: "ann", viewer: "member:ann" }),
-    { ok: true, held: false, kind: null, set_at: null, suggestions: false, standing: false });
+    { ok: true, held: false, kind: null, set_at: null, suggestions: false, standing: false,
+      subscription: { connected: false, since: null } });
   assert.deepEqual(w.c.accountReferenceRemove({ member: "ann", by: "ann" }), { ok: true, removed: false });
   assert.equal((await w.c.accountReferenceFor({ member: "ann", act: { kind: "ask", member: "ann" } })).reason, "NO_ACCOUNT");
   /* a subscription token is removed the same way, by the same act only */
@@ -161,7 +162,8 @@ test("R23 the reference, an API key or a subscription token, is sealed under its
     assert.deepEqual([d.export, d.sight], ["never", "owner"]);
     /* state: the member alone, by either spelling; any other viewer NOT_YOUR_ACCOUNT, writing nothing */
     const mine = w.c.accountReferenceState({ member: "ann", viewer: "member:ann" });
-    assert.deepEqual({ ...mine, set_at: null }, { ok: true, held: true, kind: "apikey", set_at: null, suggestions: true, standing: false });
+    assert.deepEqual({ ...mine, set_at: null }, { ok: true, held: true, kind: "apikey", set_at: null, suggestions: true, standing: false,
+      subscription: { connected: false, since: null } });
     assert.deepEqual(w.c.accountReferenceState({ member: "ann", viewer: "ann" }), mine);
     const before = w.snapshot();
     for (const viewer of ["bob", "second", "admin", "member:admin", "class:admin", "class:ai", "", null, undefined])

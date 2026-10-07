@@ -716,7 +716,41 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    C-29.21 UNKNOWN_SWITCH, C-29.24 GRANT_NOT_HELD, and DEPARTED C-29.16 ACCOUNT_LEVEL_MEMBER_ONLY (retired, never reused).
    ROW_CENSUS (R50) re-pinned to this tree: 1316 rows. Rows a T34 job in layers 3–11 adds or changes are T35's stamp
    (plan Rules (5) 4). */
-export const CATALOG_VERSION = "1.61.0";
+/* 1.62.0 (PROMOTION #33, T35-16, 2026-10-07; N553's tail, K1542, K1545, K1855, K1934, DEC-149): MINOR. The stamp of every
+   row awaiting it at T34's close (T34's layers 3–11, accepted red 4) and of T35's layers 1 and 2, read by diffing R50's
+   census lines of `tranche/T35` after its layer 1 merged against 1.61.0's own (`test/fixtures/row-census-1.61.0.jsonl`:
+   1316 rows, 5f710da0…): sixty-two new rows, five re-keyed (sixty-seven lines arrived, five departed), seventy-eight
+   changed. Each is one a job record names (T34's: SETUP's, WIZARD-SCRIPTS', DUTIES', HYPOTHESES', FOLLOWING's, TASKS',
+   INQUIRY-GRAMMAR's, RATIFICATION's and the DEC-149 sweep's, K1784, K1845, K1846, K1855) or this job's sweep.
+   ARRIVED (62): setup C-64.8 PLACE_NAME_MALFORMED, C-64.9, C-64.10 and C-119.11, C-119.12; wizard-scripts C-131.33–.41;
+   hypotheses C-134.13–.19 (the member's note); following C-137.1–.20 (the new module's family, three codes re-keyed by
+   K1836, K1855 (2)); tasks C-138.1–.15 (the check request); inquiry-grammar's C-2.8 DERIVED_LEG_MALFORMED; ratification
+   C-58.6–.10 (the scheduled check).
+   RE-KEYED, number, `where` and translation unmoved (the old code departed, the new arrived): duties C-133.19
+   DUTY_MEMBER_ACT_ONLY, C-133.21 DUTY_NO_REASON, C-133.24 DUTY_NO_SUCH_PROPOSAL (N608, K1679); hypotheses C-134.5
+   HYPOTHESIS_NO_STATEMENT, C-134.7 HYPOTHESIS_NO_REASON (N608).
+   CHANGED (78), translation, code and number unmoved, nearly all DEC-149's words ("your group's Civicsmith" for the
+   instance, the copy or the plane): this module's C-64.1, C-86.3 and C-102.4–.8 (T35-16's sweep); admission C-29.8,
+   C-32.17, C-38.1, .3, .8, C-64.4, C-78.1; action-grammar C-101.1; action-plans C-124.32 (N601's wording, K1750),
+   C-124.57; capture-requests C-28.1, .4, .6, .8, .16, .17, .20, .21; case-authoring C-120.8, C-136.1; case-import
+   C-130.3, .5, .7; conformance C-113.28; control-plane C-66.6, C-68.2–.4, C-69.1–.5; docket C-129.16, .22; duties C-133.9;
+   entities C-91.1, .2; escalation C-116.44; filing-templates C-125.3, .15; filings C-115.13; local-facts C-126.2;
+   monitoring C-48.8, .9; network-notices C-127.4, .5, .12; public-read C-68.5, C-98.1, .2, .4–.6, .8–.10; queue C-33.44;
+   ratification C-32.14, .15; review C-87.7; run-rules C-33.29, C-109.1, .9, .10; setup C-64.3, C-119.1, .3–.5;
+   wizard-scripts C-131.24.
+   CHANGED IN WHAT THE GATES RUN, no row line moving: none this job knows of beyond the rows above (the arrivals' own
+   arms are counted with their rows). T35's layer 1 added and changed no row; T35's layer 2 (record-core, membership,
+   credentials) is re-pinned in place as each merges (BOB's CHANGE), so T35 names one catalogue.
+   T35 LAYER 2, re-pinned in place: record-core and membership (8937567d88, K1942): record-core ARRIVED C-102.28
+   ANONYMOUS_LEASE and C-102.29–.32 SETTING_NAME_REQUIRED, SETTING_BY_REQUIRED, SETTING_VALUE_REQUIRED, SETTING_INVALID
+   (N655, its R81) and CHANGED C-59.6–.9, C-102.1, .2, .13–.27 (DEC-149, its R82: the `BUILD_FAULT` sentence and "your
+   group's Civicsmith"); membership CHANGED C-55.1, C-96.11, C-102.11, .12 (DEC-149, its R112); credentials (63ef48312c,
+   K1945) ARRIVED C-29.28 AI_CREDENTIAL_BAD_EXPIRY, C-29.29 SUBSCRIPTION_LOGIN_REFUSED, C-96.39 SIGN_IN_PAUSED, C-96.40
+   NOT_SIGNED_IN, C-96.41 RECOVERY_REFUSED, C-96.42 SECURITY_KIND_UNKNOWN, C-96.43 SECURITY_PERIOD_INVALID (its new
+   refusals, R38–R47, K1934 (9)) and CHANGED C-29.1, .3, .5, .22, C-63.1, .2 (DEC-149, its R48).
+   ROW_CENSUS (R50) re-pinned to this tree: 1390 rows. Rows a T35 job in layers 3–11 adds or changes are T36's stamp
+   (plan T35, Rules 9 (2)). */
+export const CATALOG_VERSION = "1.62.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -808,8 +842,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    this module's own census suite, `bio-plane/test/system/row-census.test.mjs` (legacy-tests' until T22's opening, K1006):
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1316,
-  digest: "5f710da02a024ab7f2b1c477f4094f35dc8735328c6ba2629198b3ed80b4218a" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1390,
+  digest: "ff8c67437e16423657f54c504f5c460af81b9b98556b83d833307b9d14981f22" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
@@ -969,8 +1003,8 @@ export async function runGate({ bundleId, image, knownIds, hasCapture, registers
        then there is nothing to verify or to copy under any hash. */
     if (!probe.present && probe.heldInParts)
       errors.push({ check: "PLANE_HELD_IN_PARTS",
-                    detail: `registered capture is held only in parts: this plane's acquisition receipt names `
-                          + `the whole hash, and the working bucket stores the document as its parts, each under `
+                    detail: `registered capture is held only in parts: the acquisition receipt of your group's Civicsmith `
+                          + `names the whole hash, and the working bucket stores the document as its parts, each under `
                           + `its own hash, but the record's data/provenance.json names no parts for it. `
                           + `Publication copies the parts the record names, so name them there, or register `
                           + `the parts rather than the whole`,

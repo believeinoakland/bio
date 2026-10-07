@@ -4,7 +4,10 @@
 import { registerDoctype } from "../../../docprofile/registry.mjs";
 import { registerDoctypes, generic } from "../../../doctypes/index.mjs";
 import { registerLegistar } from "../../../legistar-reader/index.mjs";
-import { registerRosterTypes, ROSTER_TYPES } from "../../../roster-reader/index.mjs";
+import { registerRosterTypes, ROSTER_TYPES, rosterColumns } from "../../../roster-reader/index.mjs";
+import { readerView } from "../../../docprofile/registry.mjs";
+import { viewerPredicate } from "../membership/index.mjs";
+import { parseCsv } from "../calculations/index.mjs";
 import { registerCourtTypes } from "../../../court-doctypes/index.mjs";
 import { registerBudgetTypes } from "../../../budget-doctypes/index.mjs";
 import { factReader } from "../action-clocks/index.mjs";
@@ -25,13 +28,55 @@ export function registerReaders(register = registerDoctype) {
   ];
 }
 
-/** R23 (K1505 (6); people R19): roster-reader's source for `people.staffingAt`. roster-reader reads a roster's header
- *  and holds no store (its R10), so no roster row is read here: the source states its level and reads nothing, never
- *  copying a row into a line (people R18). */
-export const ROSTER_NOT_READ = "roster-reader reads a roster's columns and holds no store; no held roster is read here";
-export const rosterSource = () => ({ organisation, at } = {}) => ({
-  level: "held as a table, not read", rows: [], organisation: organisation ?? null, at: at ?? null,
-  types: ROSTER_TYPES.map((t) => t.key), why: ROSTER_NOT_READ });
+/** R23 (K1505 (6); people R19; N633, K1730; roster-reader R12): the store's read roster-reader's `rosterSource(reads)`
+ *  is handed, `({organisation, viewer}) → {items}`. It answers the held rosters of that organisation (an entity id) the
+ *  viewer may see (membership's sight over the bundle that holds each, `viewerPredicate`; a viewer never sent is an
+ *  in-plane read and sees every one), in roster-reader's item shapes:
+ *  - each capture extraction placed as `staff_roster` or `org_chart` (its `readings`' content type) that entities
+ *    resolved to the organisation (`resolutions`), as a document `{source: {capture_sha}, type, text}`, its text the
+ *    capture's text units in reading order (extraction's `capture_text`);
+ *  - each table calculations holds whose source capture entities resolved to the organisation and whose header
+ *    roster-reader names a roster (its R6, `rosterColumns`, under the reader view roster-reader reads it with), as a
+ *    table `{source: {table}, header, rows}`, its rows the canonical bytes calculations holds for a synchronous read
+ *    (`calc_table_bytes`, its R1), never copied anywhere.
+ *  Synchronous, as a roster source answers; it writes nothing. A read that fails answers `{ok: false, why}`, which
+ *  roster-reader states as "held as a table, not read". */
+export const ROSTER_CONTENT_TYPES = Object.freeze(ROSTER_TYPES.map((t) => t.key));
+export function rosterReads({ sql, sight = viewerPredicate }) {
+  return ({ organisation = null, viewer = null } = {}) => {
+    if (typeof organisation !== "string" || organisation === "") return { ok: false, why: "no organisation was named by its entity id" };
+    try {
+      const g = viewer === null || viewer === undefined ? { sql: "1=1", args: [] } : sight(viewer);
+      const db = sql();
+      const items = [];
+      const types = ROSTER_CONTENT_TYPES.map(() => "?").join(",");
+      for (const r of [...db.exec(`SELECT DISTINCT rd.capture_sha AS sha, rd.content_type AS type FROM readings rd
+                                     JOIN bundles b ON b.bundle_id = rd.bundle_id
+                                    WHERE rd.content_type IN (${types})
+                                      AND rd.capture_sha IN (SELECT capture_sha FROM resolutions WHERE entity_id = ?)
+                                      AND (${g.sql}) ORDER BY rd.capture_sha`, ...ROSTER_CONTENT_TYPES, organisation, ...g.args)]) {
+        const text = [...db.exec(`SELECT text FROM capture_text WHERE capture_sha = ? ORDER BY seq`, r.sha)].map((u) => u.text).join("\n");
+        items.push({ source: { capture_sha: r.sha }, type: r.type, text });
+      }
+      const view = readerView({});
+      for (const t of [...db.exec(`SELECT t.sha AS sha, t.header_json AS header FROM calc_tables t
+                                     JOIN bundles b ON b.bundle_id = t.bundle_id
+                                    WHERE json_extract(t.source_json, '$.capture_sha') IN (SELECT capture_sha FROM resolutions WHERE entity_id = ?)
+                                      AND (${g.sql}) ORDER BY t.sha`, organisation, ...g.args)]) {
+        let header;
+        try { header = JSON.parse(t.header); } catch { continue; }
+        if (!rosterColumns(header, view).roster) continue;
+        const csv = [...db.exec(`SELECT chunk FROM calc_table_bytes WHERE sha = ? ORDER BY seq`, t.sha)].map((c) => c.chunk).join("");
+        const parsed = csv ? parseCsv(csv) : null;
+        const rows = parsed && Array.isArray(parsed.rows) ? parsed.rows.slice(1) : null;
+        items.push(rows ? { source: { table: t.sha }, header, rows } : { source: { table: t.sha }, header });
+      }
+      return { items };
+    } catch (e) {
+      return { ok: false, why: `the store's read of held rosters failed (${String((e && e.message) || e).slice(0, 160)})` };
+    }
+  };
+}
 
 /** K1563 (10), K1654: the seeded offices' two reads (instance-setup R50), asked of instance-setup's instance when it
  *  answers them, else null, so local-facts falls back to the profile and conformance names no entity, each saying so. */
@@ -111,4 +156,29 @@ export function sheetRecompute(env, storeName) {
 export function ratificationWorker({ env, door, namespace }) {
   return { env, stub: { fetch: (u, init) => door(u instanceof Request ? u : new Request(u, init)) },
            get storeName() { return namespace(); } };
+}
+
+/** F16 (K1881, K2038; capture R73, acquisition R42, capture-sources R55, R65): the group's own hosts, built from what
+ *  the object holds, since it cannot see the host a request reached (the door forwards every request as `http://do/`)
+ *  and no binding names it (an install-time binding is N745): the host of the origin the administrator's session
+ *  reached when the group's domain was claimed (`instance-setup`'s `groupIdentity().domain_claim.instance_address`,
+ *  its R7), and, when that host is a `workers.dev` name (`<name>.<subdomain>.workers.dev`), the suffix
+ *  `.<subdomain>.workers.dev`, which holds every fleet member on the account. The claimed domain itself is the group's
+ *  own website, which a member may capture, so it is never one. With nothing recorded the list is empty and the
+ *  own-host checks refuse nothing (capture-sources R65: fail-open, F16 low). Pure; never throws. */
+export function ownHostsOf(identity) {
+  try {
+    const address = identity && identity.domain_claim && identity.domain_claim.instance_address;
+    if (typeof address !== "string" || address === "") return [];
+    const u = new URL(address);
+    if (u.protocol !== "https:" && u.protocol !== "http:") return [];
+    const host = u.hostname.toLowerCase().replace(/\.$/, "");
+    if (!host) return [];
+    const labels = host.split(".");
+    const out = [host];
+    if (labels.length >= 4 && labels.slice(-2).join(".") === "workers.dev") out.push(`.${labels.slice(-3).join(".")}`);
+    return out;
+  } catch {
+    return [];
+  }
 }

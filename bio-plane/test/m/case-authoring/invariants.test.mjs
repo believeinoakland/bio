@@ -73,10 +73,16 @@ test("R28: statement_acknowledgements is declared whole to record-core's purge, 
   assert.equal(w.count("statement_acknowledgements"), 0);
 });
 
-test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3–C-44.5, C-82.2–C-82.8 (C-82.8 new, DEC-88), C-32.6 (and R3's C-33.14), and R56's CALCULATION_NOT_DISCLOSED (new, T33-69) — every refusal carrying its check, code and translation; the family C-120.1–C-120.8 and C-120.10–C-120.16 (C-120.9 withdrawn unstamped; .14–.16 the people a case names, T33-68) is case-disclosures' (its R22, N529), re-exported here and held nowhere in this module's own families (K529)", () => {
+test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3–C-44.5 (and R58's C-44.6, new, N681), C-82.2–C-82.8 (C-82.8 new, DEC-88), C-32.6 (and R3's C-33.14), and R56's CALCULATION_NOT_DISCLOSED (new, T33-69) — every refusal carrying its check, code and translation; the family C-120.1–C-120.8 and C-120.10–C-120.16 (C-120.9 withdrawn unstamped; .14–.16 the people a case names, T33-68) is case-disclosures' (its R22, N529), re-exported here and held nowhere in this module's own families (K529)", () => {
   assert.deepEqual(Object.entries(CASE_DERIVATION_CHECKS).map(([k, v]) => [k, v.check]),
     [["CASE_IDENTITY_AMBIGUOUS", "C-44.1"], ["PUBLISH_DRAFT_NOT_FOUND", "C-44.3"], ["PUBLISH_DRAFT_NOT_THIS_CASE", "C-44.4"],
-     ["PUBLISH_DRAFT_ALREADY_BOUND", "C-44.5"]]);
+     ["PUBLISH_DRAFT_ALREADY_BOUND", "C-44.5"], ["CASE_EDITION_WAITING", "C-44.6"]]);
+  /* C-44.6's translation is the requirements' own, word for word (case-authoring.md, "Row C-44.6") */
+  assert.equal(CASE_DERIVATION_CHECKS.CASE_EDITION_WAITING.translation, "An edition of this case is signed and waiting to "
+    + "be published at the time set. Prepare the next edition after it is published, or cancel it first. Nothing was "
+    + "prepared.");
+  assert.equal(CASE_DERIVATION_CHECKS.CASE_EDITION_WAITING.where,
+    "src/case-authoring/index.mjs #publishCase > is-case-edition-waiting");
   assert.deepEqual(Object.entries(STATEMENT_ACK_CHECKS).map(([k, v]) => [k, v.check]),
     [["STATEMENT_ACK_NO_SUBJECT", "C-82.2"], ["STATEMENT_ACK_ALREADY_SIGNED", "C-82.3"],
      ["STATEMENT_ACK_NOT_A_PARTICIPANT", "C-82.4"], ["STATEMENT_ACK_NO_STATEMENT", "C-82.5"],

@@ -266,7 +266,7 @@ class Calibration {
                regraded: 0,
                why: `${id} records what probe ${cal.probe_id} measured of ${cal.engine} ${cal.version} on `
                   + `${cal.at}: fidelity ${cal.cap ?? "undetermined"}. ${d.why}`
-                  + (obligations ? `` : `. No module derives obligations from calibrations in this instance, so `
+                  + (obligations ? `` : `. No module derives obligations from calibrations in your group's Civicsmith, so `
                                       + `none are named here (null, not none found)`) };
     });
   }
@@ -298,8 +298,8 @@ class Calibration {
                note: r.note ?? null })),
              subjects, subjects_truncated: subj.truncated,
              why: subjects.length
-               ? `this instance probes ${subjects.length} engine(s) on its own account — ` + cadenceSentence()
-               : `no engine is registered for calibration in this instance, so no probe is scheduled `
+               ? `your group's Civicsmith probes ${subjects.length} engine(s) — ` + cadenceSentence()
+               : `no engine is registered for calibration in your group's Civicsmith, so no probe is scheduled `
                  + `and this consumer holds no alarm at all` };
   }
 
@@ -388,7 +388,7 @@ class Calibration {
              cadence_ms: CALIBRATION_CADENCE_MS, cadence: cadenceSentence(),
              next_probe: next,
              measured: false,
-             why: `${engine} is registered for calibration in this instance. Registering is not measuring: no `
+             why: `${engine} is registered for calibration in your group's Civicsmith. Registering is not measuring: no `
                 + `fidelity is claimed for it and nothing rests on it until a probe runs. ${s.last_probe_ms == null
                     ? `Nothing has ever probed it, so a probe is due immediately`
                     : `The next probe is due at its own cadence`} — ${cadenceSentence()}` };
@@ -433,8 +433,8 @@ class Calibration {
     }
     return { due: due.length, subjects: due, truncated, probes_run: 0, calibrations_written: 0,
              why: due.length
-               ? `${due.length} engine(s) are due a calibration probe. This plane runs no derivation engine of its `
-                 + `own, so the probe is OWED and not RUN — and the record says owed rather than quietly treating `
+               ? `${due.length} engine(s) are due a calibration probe. Your group's Civicsmith runs no derivation `
+                 + `engine of its own, so the probe is OWED and not RUN — and the record says owed rather than quietly treating `
                  + `the last measurement as current`
                : `no engine is due a probe` };
   }

@@ -117,7 +117,8 @@ export const REEVALUATION_ACT_CHECKS = Object.freeze({
     check: "C-110.1",
     where: at("#choiceSubject", "is-version-choice"),
     translation: "Only a named member can move a reference to a newer version of a document. The assistant and "
-      + "the plane's own credentials may say a newer version exists; they never choose which one a finding rests on.",
+      + "the record's own machine credentials may say a newer version exists; they never choose which one a finding "
+      + "rests on.",
   },
   MACHINE_CANNOT_KEEP_VERSION: {
     check: "C-110.2",

@@ -2548,6 +2548,7 @@ reasoning recorded in: this entry; `visual-language/components.css` and `visual-
 owed: (BOB) the timings and the three WCAG 1.4.13 conditions in the shell's explanation behaviour when the screens are built.
 
 ### DEC-162 · answered
+amended: 2026-10-07 · DEC-175 (Bob, "S16: as recommended"): the lighter level makes guidance wait 1.5 s instead of hiding it.
 raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob's suggestion: "Maybe every element should have a 'information level'. Level 1s are always active, but those in other levels only when the user has selected an information level that includes them. The information level could be set in the member's settings, but maybe there's also a shortcut key, context menu option, or tag in the heading that they can use to easily switch info levels. Just brainstorming."; question S8)
 for: bob
 question: Whether explanations come in levels a member chooses, and how many.
@@ -2562,6 +2563,7 @@ reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` 
 owed: (BOB) the member's explanation level (a per-member setting, default Guidance, the one-month question); the masthead control and Alt+Shift+I; each element's level (marks and references 1, screen, section and rail guidance 2); the guidance texts as interface words (translation layer, DEC-157); the op behind the registry's `owed:infolevelset DEC-162`.
 
 ### DEC-163 · answered
+amended: 2026-10-07 · DEC-174 (Bob's direction): every act's button explains itself, at the guidance level; the exception for a button's label is withdrawn.
 raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob: "why doesn't, for example, a mouseover of 'Lakeshore Tenants' show? … go through EVERY type of element, every context, and ask 'Why shouldn't there be a mouseover and/or clickover for this?'")
 for: bob-session
 question: Which types of element explain themselves or open something, at which information level (DEC-162), and why the rest do not.
@@ -2631,3 +2633,146 @@ response: **Decided by the design session, 2026-10-06.** (1) A captured archive 
 decided: 2026-10-06 · the design session (P17)
 reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (screen "Archive"; section 6); `screens/mock-screens.js` (`SCR.archive`); `BIO_Interaction_Constructs_v0_1.md` §S.
 owed: (BOB, N688) the read behind `owed:archivelist K1852`: an archive's entries with each one's state and, when not filed, the refusal by name, in member words held for translation; the held list grouping an archive's files beside it; vouching and setting aside across an archive's picked files (the existing acts).
+
+### DEC-168 · answered
+raised: 2026-10-07 · the UX design session with Bob on his primary account (session_01NWPmrrYZbbF8Wkrvp5Y2vx; the development process runs on his secondary account since K1891) (the four questions of meaning in the development process's study of security tools, `build/plan/study-security-tools-N710.md` §8 Q1–Q4 on tranche/T35, open since K1932; brought to Bob here at his offer as S10–S13)
+for: bob
+question: Under K1929 (3) (no file to a service that shares submitted samples): (S10) a vendor that keeps malicious samples for its own research without passing them on; (S11) a service that shares by default but has a private mode; (S12) whether the rule covers web addresses; (S13) what happens when an address check says a site is bad.
+why it is Bob's: who may see what, and what the record must do (P17); the development process's own questions of meaning.
+provisional: such services held in the study's "hold" column; address checks undecided; acquisition's answer to a bad reputation undecided.
+alternative: S10 refuse both vendors; S11 refuse any default-sharing service; S12 addresses are public, any check; S13 refuse the fetch, or ask each time.
+recommendation: S10 allow, keeping stated; S11 allow in forced, checked private mode except ANY.RUN; S12 yes; S13 capture as high risk.
+reversal cost: low.
+response: **Bob, 2026-10-07: "S10: as recommended / S11: as recommended / S12: as recommended / S13: as recommended".** Ruled: (S10) a service that keeps files it judges malicious for its own research, passing them to no one (Sophos Intelix, Palo Alto WildFire), may be added; its keeping is stated plainly before an administrator turns it on, and the administrator confirms it. (S11) A service that shares by default is offered only in its private mode, which the adapter turns on and verifies on every call; when it cannot confirm private mode, nothing is sent. Not offered where the vendor's own terms say submissions are not confidential unless stated (ANY.RUN). (S12) K1929 (3) covers web addresses: an address check never sends the full address to a new party; only checks that send a hash prefix, or Cloudflare's own lookup (the group's host already carries its traffic). (S13) On a bad-reputation answer the document is still captured, graded high risk (file-safety's threat), opens only in the safe view, carries the check's answer as a note, and the member is told.
+decided: 2026-10-07 · Bob
+reasoning recorded in: this entry; S10–S13 on `docs/development/ux-substrate/layouts.html`; Settings › Security in `screens/mock-screens.js`; `BIO_Interaction_Constructs_v0_1.md` §R.
+owed: (BOB, N710) the catalogue as ruled: Sophos Intelix and WildFire from "hold" to the catalogue with their keeping stated and confirmed; MetaDefender Cloud and Falcon in forced private mode, verified per call, refused when unconfirmed; ANY.RUN not offered; web reputation by hash prefix or Cloudflare's lookup only (Google Web Risk's Update API, not Lookup); acquisition captures a bad-reputation address into the high-risk grade with the answer noted (file-safety R6 gains a reason, e.g. `bad_reputation`), and the member told.
+
+### DEC-169 · answered
+amended: 2026-10-07 · K1949 (Bob, "as recommended", B80), folded by the design session: added outside tools run only when a member asks (a deeper check), except a tool on the organization's own servers, which may check every file; the deeper check runs every outside tool added and needs one clean verdict from an engine other than ClamAV; only a hold found by ClamAV alone is released by a second, different engine, an outside engine's finding by two members; a tool whose vendor does not state its sample sharing is not offered; the safe view opens without a deeper check. Drawn in "Opening a file" (the held state now an outside engine's finding) and Security tools ("When it runs").
+amended: 2026-10-07 · DEC-173 (Bob, "S15: as recommended"): a high-risk original may be opened after warnings, without a deeper check, unless a scanner flagged it.
+raised: 2026-10-07 · the UX design session with Bob on his primary account (session_01NWPmrrYZbbF8Wkrvp5Y2vx; the development process runs on his secondary account since K1891) (K1929: "the screens are the design stream's"; the virus package's later users name "the warning before opening, the safe view's label and its one click to the original")
+for: bob-session
+question: How a member meets a file's risk, the safe view, the deeper check and a scan hold, and how an administrator adds security tools.
+why it is Bob's: it is not: design detail beneath K1888, K1890, K1892, K1895, K1913, K1928, K1929 and DEC-168; decided by the design session (P17) and reported.
+provisional: no screens.
+alternative: warnings as dialogs on every open (more friction for low-risk files, which are most).
+recommendation: as decided below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-07.** (1) "Opening a file" states the risk in a word, Low risk or High risk (the `cs-risk` mark), with its reasons in one plain line (handed in, not fetched; contains a macro; from an archive not fetched by the group; …). (2) Low risk: "Open the original"; the checks listed as notes (tool, engine, version, date); a line that it is checked weekly and before first opening. (3) High risk: "Read the safe view" first; the safe view labelled "Derived · a safe copy of the original" with the rule that citations point at the original; "Ask for a deeper check"; "Open the original" appears only once a deeper check passes (a member cannot do it before, so it is not shown, principle 1.4), and opens it to any member for 24 hours. (4) Held after a finding: "Held" (filled), the finding's name and date; the one notice to members who can see the file, naming no one; the safe view (a spreadsheet's figures as data); the notes; release by a reason from each of two members, or by a second, different scanner's clean check with the file read whole; "the machine never can". (5) "Who opens which file is never recorded" is said where a member opens one. (6) Settings › Security › Security tools: the built-in scanner and safe view, each added tool with what it is sent, who receives it, how long it keeps files, whether it shares; Add a tool shows the same as a table, a confirmation where a vendor keeps files (DEC-168 S10), a test with a harmless test file, then Turn it on; the services not offered and why; address checks and bad sites as DEC-168 S12, S13; counts only to a log service. (7) Setup: an optional step for the organization's own tools, "or later in Settings › Security". (8) Add: a site known for malware is still captured, as high risk.
+decided: 2026-10-07 · the design session (P17)
+reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (screens "Opening a file", "Security", "Set up", "Add"; section 6); `screens/mock-screens.js`; `BIO_Interaction_Constructs_v0_1.md` §R.
+owed: (BOB, N706, N707, N710) the ops behind `owed:openoriginal K1888`, `owed:safeview K1888`, `owed:deepercheck K1888`, `owed:releasescanhold K1892` (file-safety R8, R11, R13, R17) and `owed:securitytooladd`, `owed:securitytooltest`, `owed:securitytoolremove K1929` (N710's provider registry and its data-handling statement); the reasons of file-safety R6 in member words held for translation; `originalState` driving whether "Open the original" is drawn; the installer's optional security-tools step. A scanner finding is explained where it appears (Bob's comment, 7 October): its name is a card splitting it into parts (the file kind, the kind of threat, the scanner's variant label), and a "What this is" panel says in plain words what that kind of threat does and that scanners report resemblance, not certainty; owed: a table of finding kinds (downloader, dropper, trojan, macro, exploit, phishing, potentially unwanted, heuristic or suspicious, and others), each with plain words held for translation, and "Civicsmith has no plain description of this name" when none matches.
+
+### DEC-170 · answered
+raised: 2026-10-07 · the UX design session with Bob on his primary account (session_01NWPmrrYZbbF8Wkrvp5Y2vx; the development process runs on his secondary account since K1891) (B79, BOB's question on K1943: does `personexpunge` belong in the larger-screen set?)
+for: bob-session
+question: Whether removing a fact where the law requires it (`personexpunge`) is offered on a phone.
+why it is Bob's: it is not: design detail beneath DEC-122 (signing, publishing and sending finish on a larger screen), DEC-142 and DEC-143; decided by the design session (P17) and reported.
+provisional: BOB's default, not in the larger-screen set.
+alternative: offered on a phone, its dialog carrying the weight.
+recommendation: as decided below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-07.** Yes: `personexpunge` is not offered on a phone. It is graded Irreversible (DEC-143), and affordances R36 already gives every act of that rung `phone: false`, as DEC-122 puts signing, publishing and sending on a larger screen; no entry in `LARGER_SCREEN_ACTS` is needed while its rung is irreversible (add one only if its rung is ever graded otherwise). The reason is the act's, not the dialog's: it cannot be undone by anyone, it cites a court order or law the member should read beside the fact it removes, and an order's deadline is days, not minutes. On a phone the dialog can be read, with "finish on a larger screen"; nothing refuses by device.
+decided: 2026-10-07 · the design session (P17)
+reasoning recorded in: this entry; `screens/mock-screens.js` (the person screen's dialog).
+owed: (BOB) `personexpunge` carries `phone: false` (by its Irreversible rung under affordances R36).
+
+### DEC-171 · answered
+raised: 2026-10-07 · the UX design session with Bob on his primary account (session_01NWPmrrYZbbF8Wkrvp5Y2vx; the development process runs on his secondary account since K1891) (Bob's comment on the layouts page, 7 October: "I wonder if the title of this panel should be reduced to simply 'The assistant'")
+for: bob-session
+question: The name of the settings screen where a member connects the assistant (the registry's `connect`).
+why it is Bob's: member words; Bob's suggestion, taken by the design session (P17).
+provisional: "The assistant and your account".
+alternative: keep the longer name.
+recommendation: "The assistant".
+reversal cost: low.
+response: **Taken, 2026-10-07: Settings › The assistant.** The heading, the path (DEC-154) and the registry's screen name read "The assistant". The screen still says whose account serves the member (their own, the group's key, or none). The docked panel keeps its own label, "The assistant", beside the work; the path tells the two apart (Settings › The assistant is the settings screen).
+decided: 2026-10-07 · the design session, on Bob's suggestion
+reasoning recorded in: this entry; `screens/mock-screens.js` (`SCR.connect`), `mock-shell.js` (`PATH`), `registry.src.py`.
+owed: (BOB) the screen's name as an interface word: "The assistant" under Settings.
+
+### DEC-172 · answered
+raised: 2026-10-07 · the UX design session with Bob on his primary account (session_01NWPmrrYZbbF8Wkrvp5Y2vx; the development process runs on his secondary account since K1891) (Bob's comments on the layouts page, 7 October, on Settings › The assistant: "Why does this situation offer no opportunity for a member choosing to add assistant capabilities using their own account?" and, on the states "a group using only its own key" and "a group without the assistant", "These configurations ... don't allow the user to add their own account. Perhaps they should."; S14 revised, draft B)
+for: bob
+question: Whether a group may stop its members from connecting their own Claude account.
+why it is Bob's: who may send the group's material where (P17); it changes K1757's wording of K1755 (setup's four-way choice).
+provisional: K1757: setup offers the group's key, members' own accounts, both, or none; under "the group's key" or "none" a member cannot connect their own.
+alternative: A, members may always connect their own, no exception; the first S14 options (keep the administrators' four-way choice and explain it).
+recommendation: B, members may always connect their own unless the group keeps its material away from AI.
+reversal cost: low (a setting and its wording; nothing recorded changes).
+response: **Bob, 2026-10-07: "I agree that a group should be able to keep their information away from AIs. But in those situations when administrators have asked for that, that should be explained to members."** Ruled as draft B: (1) a member may always connect their own Claude subscription or API key, which serves only them, whatever the group pays for; (2) the group's settings are two separate choices: whether the group pays (its API key, nothing preselected), and "keep our material away from AI", off by default; (3) an administrator turns it on only with a reason; while it is on, no assistant may be used in the group, the group's key or a member's own; (4) every member is told, on Settings › The assistant, that the group keeps its material away from AI, who turned it on and when, and the reason in the administrator's words, with "if you think this should change, ask an administrator"; (5) "the group's key only" no longer exists; a group that does not pay lets members bring their own; (6) everything else works without the assistant, as before (K1547).
+decided: 2026-10-07 · Bob
+reasoning recorded in: this entry; S14 on `docs/development/ux-substrate/layouts.html`; `screens/mock-screens.js` (setup, Members, Settings › The assistant); the setup wizard's step (`library.src.py`); `BIO_Interaction_Constructs_v0_1.md` §R.
+owed: (BOB) instance-setup R59 restated: setup offers whether the group pays (its key) and the keep-away setting, separately, nothing preselected; the act behind `owed:aikeepaway DEC-172` (on with a required reason, off, by an active administrator; recorded with who and when); account resolution (agent-model `accountFor`, ai-runs, agent-worker) refusing every account, the group's and members' own, while keep-away is on, by a named refusal carrying the reason; a member's own account always accepted otherwise (credentials, admission); the reason, who and when readable by every member; the AI-only acts and drafts absent while it is on, as for a member reached by no account.
+
+### DEC-173 · answered
+raised: 2026-10-07 · the UX design session with Bob on his primary account (session_01NWPmrrYZbbF8Wkrvp5Y2vx; the development process runs on his secondary account since K1891) (Bob's comment on "Opening a file", 7 October: "Should there be an opportunity for members to open a file labeled as high risk without a deeper check (with the proper warnings they must accept)?"; S15)
+for: bob
+question: Whether a member may open a high-risk original without a passing deeper check, after warnings.
+why it is Bob's: it changes his ruling K1888 (3) ("the original needs a fresh deep check before a member may override") and what a member may open.
+provisional: K1888 (3), K1949 (Q6): the original only after a deeper check with a clean engine other than ClamAV; a group with no outside scanner can never open a high-risk original.
+alternative: A, keep the ruling; C, only when an administrator opens that one file up, with a recorded reason.
+recommendation: B.
+reversal cost: low.
+response: **Bob, 2026-10-07: "S15: as recommended".** Ruled (B): (1) for a high-risk file no scanner has flagged (no scan hold) and that the built-in scanner checked within `RESCAN_INTERVAL_MS` (a week), a member may open the original without a deeper check; (2) first the screen states why the file is high risk (its reasons, in member words) and what opening it risks (the file on their device, their device's protections and their sign-in to the group), and the member confirms "I will open it on my own device, not a shared one" and "I will not enable macros or editing"; (3) never for a file under a scan hold, which still needs its release (K1949 (Q7)); (4) who opened it, and who confirmed, is not recorded (K1892); (5) a passing deeper check still opens the original for every member for 24 hours.
+decided: 2026-10-07 · Bob
+reasoning recorded in: this entry; S15 on `docs/development/ux-substrate/layouts.html`; "Opening a file" in `screens/mock-screens.js`; `BIO_Interaction_Constructs_v0_1.md` §R.
+owed: (BOB, with N707) file-safety R8's `override` gains a warned path: `openOriginal` with the member's two confirmations opens a high-risk original when no scan hold applies and a ClamAV `clean` note is newer than `RESCAN_INTERVAL_MS`, refused otherwise by name (`SCAN_HOLD`, `NOT_SCANNED`, a stale-check refusal); `originalState` says which path is open; the act behind `owed:openwithwarning DEC-173`; no record of who opened or confirmed (R10).
+
+### DEC-174 · answered
+amended: 2026-10-07 by the design session, on Bob's comment ("mouseovers of buttons that describe what Reasoned or Reversible means, but say nothing about what the button will actually do"): (2) is replaced. A button has one explanation wherever the pointer rests on it: what the act does always first, its weight after in lighter type; resting on the weight dots shows it at a mark's pace (DEC-175). Where an act's general explanation would be vague in context, the button says what it does there ("Searches every document in Sewer fund transfers for where the $310,000 overhead charge went…"). NOTICE U117.
+raised: 2026-10-07 · the UX design session with Bob on his primary account (session_01NWPmrrYZbbF8Wkrvp5Y2vx; the development process runs on his secondary account since K1891) (Bob, 7 October, on the Document screen's buttons: "Noticing the lack of explanation for these actions provides us with the opportunity to go through all such actions in all screens to add those mouseovers that should be there to help members understand what the action would do and how it fits into the larger context.")
+for: bob-session
+question: Whether every act's button explains itself, and what it says.
+why it is Bob's: it is not: carrying out his direction and DEC-162; it withdraws the design session's own exception in DEC-163; decided by the design session (P17) and reported.
+provisional: DEC-163: a button's label and pips explain it; heavy acts open a dialog.
+alternative: explain only heavy acts.
+recommendation: as decided below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-07, on Bob's direction.** (1) Every act's button, on every screen, explains itself on hover, focus or tap, at the guidance level (DEC-162): its name, then what the act does and how it fits the larger work (what it leads to or rests on, who sees it, whether it can be undone), in one or two plain sentences. (2) The pips keep their own explanation of the act's weight; an act that sends, signs or cannot be undone still opens its dialog. (3) One explanation per act, the same wherever the act appears (207 acts; 277 buttons on the 46 screens); held in `screens/mock-acts.js` as `ACT_HELP`, keyed by op.
+decided: 2026-10-07 · the design session (P17)
+reasoning recorded in: this entry; `screens/mock-acts.js`; `screens/mock-kit.js` (`btn`); `layouts.html` ("Explained where it appears").
+owed: (BOB) each act's explanation as interface words held for translation (DEC-99), shown on the act's control at the guidance level; the texts in `mock-acts.js` as the design's statement of what each act does.
+
+### DEC-175 · answered
+raised: 2026-10-07 · the UX design session with Bob on his primary account (session_01NWPmrrYZbbF8Wkrvp5Y2vx; the development process runs on his secondary account since K1891) (Bob, 7 October: "whether the less detailed level should really disable mouseovers or just increase the delay before a mouseover appears. This way, a member always has access to all descriptive and contextual information while giving them a means to reduce the amount that appears when they're moving actively through the visual elements on the screen."; S16)
+for: bob
+question: Whether the lighter explanation level hides guidance or only makes it wait longer.
+why it is Bob's: it changes his ruling DEC-162 ("S8: B").
+provisional: DEC-162: at "Marks and names", guidance does not appear.
+alternative: B, the same with 2 seconds; C, keep DEC-162.
+recommendation: A, 1.5 seconds.
+reversal cost: low.
+response: **Bob, 2026-10-07: "S16: as recommended".** Ruled: (1) nothing is ever hidden; (2) two settings, named for what they do: "Explain promptly" (every explanation after the pointer rests 0.5 s; DEC-161) and "On a longer pause" (marks and names after 0.5 s; guidance, meaning what screens, sections, rail entries and acts are, after 1.5 s); (3) keyboard focus and a tap show every explanation at once in both, and Escape closes it (WCAG 2.2 1.4.13); (4) the "why we ask" panels still start folded at "On a longer pause"; (5) the switch, the default for new members and the question after a month stay as DEC-162 set them.
+decided: 2026-10-07 · Bob
+reasoning recorded in: this entry; S16 on `docs/development/ux-substrate/layouts.html`; `screens/page.src.html` (the tip timing, `LONG_MS`); `mock-shell.js` (the masthead switch); Settings › Your account; `BIO_Interaction_Constructs_v0_1.md` §V.
+owed: (BOB) the per-member setting's two values renamed ("Explain promptly", "On a longer pause"); guidance-level explanations shown after 1.5 s of rest at the second value instead of withheld; focus and tap immediate in both; the interface words held for translation.
+
+### DEC-176 · answered
+raised: 2026-10-07 · the UX design session with Bob on his primary account (session_01XZRZG4F5h3eL54heRZyusj; the development process runs on his secondary account since K1891) (Bob, 7 October, on the money trail: "I'm not happy about how members acting on lines in the table currently do so by scrolling down to elsewhere in the panel to find references to the item. This is completely unworkable for tables with more than the few shown in the example. The UX should somehow be more direct.")
+for: bob-session
+question: How a member acts on one row, or several rows, of a table.
+why it is Bob's: it is not: carrying out his direction; the pattern is design detail beneath DEC-99 and §V, decided by the design session (P17) and reported.
+provisional: acts on a row's uncertain items gathered in a section below the table (U114).
+alternative: a menu of acts on each row; a separate page per row.
+recommendation: as decided below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-07, on Bob's direction.** (1) A row of a table is acted on where it is. Each row opens, with its name or by keyboard, a panel directly beneath it: where the row came from (its source and passage), what is undetermined about it and what evidence would help (U115's words), and every act on that one row. Opening it never moves the member elsewhere on the screen. (2) An undetermined cell is itself a control: pressing it opens the same panel at that item, with the keyboard on its first act. (3) Ticking rows brings the hold strip (§S) with the acts that apply to all of them, its count, and "Unpick all". (4) A filter above the table keeps only the rows with something undetermined, with their count, so a member can work through them in turn. (5) Sorting keeps each open panel with its row (U110). (6) On a phone each row reads as a card, every value labelled with its column's name, the headings above as sort buttons. (7) A wizard pointing into a row opens that row. (8) Acts on the screen as a whole (reading a new figure, starting a trail) stay above the table; no row's acts are anywhere but in its panel and the hold strip.
+decided: 2026-10-07 · the design session (P17)
+reasoning recorded in: this entry; `screens/mock-screens.js` (`SCR.money`, `mrow`, `gapcell`); `screens/mock-shell.js` (`decorate`, `ring`); `screens/page.src.html` (the panel, card and filter); `layouts.html` (section 6); `BIO_Interaction_Constructs_v0_1.md` §V.
+owed: (BOB) every table of rows in the member screens follows (1)–(8); each row's panel lists the row's undetermined or absent dimensions with the acts that add evidence (U114); the words held for translation.
+
+### DEC-177 · answered
+raised: 2026-10-07 · the UX design session with Bob on his primary account (session_01XZRZG4F5h3eL54heRZyusj; the development process runs on his secondary account since K1891) (Bob, 7 October, on the Calculation screen's title "Reports closed within seven days, FY2025": "I'm seeing similar lack of context in mouseovers on panel titles … I think a check needs to be done to make sure that there aren't ANY visual elements that have more than one mouseover. Mouseovers should never compete for visibility.")
+for: bob-session
+question: How a screen's title explains itself, and what happens when one explaining element holds another.
+why it is Bob's: it is not: carrying out his direction, beneath DEC-159, DEC-163 and DEC-175; decided by the design session (P17) and reported.
+provisional: a title explained the kind of screen only; marks, buttons and step lists could hold names and grades that explained themselves separately (148 such pairs over the 46 screens).
+alternative: drop the inner explanations; drop the outer ones.
+recommendation: as decided below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-07, on Bob's direction.** (1) One visual element, one explanation: no element that explains itself sits inside another that does. (2) Where one holds others: a control (a button or a link), or a mark with no label of its own (a strength, a step, a path or ladder step), absorbs theirs, said after its own in lighter type and without their own click hints; a mark with a label (its icon and bold word, such as "Undetermined") gives its explanation to that label, so names in its reason keep their own cards beside it, never inside it. (3) A screen's title that names a particular thing explains that thing first, as a name's card does, at the level of names: "Reports closed within seven days, FY2025: a fact your group worked out from the Public Works work orders for fiscal year 2025: 812 of 903 pothole reports (89.9%) were marked closed within seven calendar days…"; what the screen is for follows in lighter type. A title that names no particular thing ("Members", "Your queue") says what the screen is for. (4) The screens' walk check (`check_walk.mjs`) fails on any nesting, on every screen, with and without the assistant, on desktop and phone, with every row panel open: 7,994 explaining elements checked, none inside another.
+decided: 2026-10-07 · the design session (P17)
+reasoning recorded in: this entry; `screens/page.src.html` (`untangle`); `screens/mock-refs.js` (`TITLE_HELP`, 26 titles); `screens/mock-shell.js`; `screens/check_walk.mjs`; `layouts.html` (the element table); `BIO_Interaction_Constructs_v0_1.md` §V.
+owed: (BOB) no explaining element inside another in the member screens, with (2)'s rule where one holds others; a title that names a particular thing explains it (its card) before the screen's purpose; a test that fails on any nesting; the words held for translation.

@@ -192,7 +192,7 @@ function pulledKnock({ knockId = "KNOCK-20260930-0a1b2c3d", bytes = "handed in a
     authority_basis: `material handed to the group through its doorbell by an unnamed knocker; no authority is asserted; recorded ${at} for resolution through the task list`,
     provenance_chain: [{
       who: "instance test-instance (CivicOS/0.0.0)",
-      asserts: `these bytes were received at this instance's doorbell as knock ${knockId} at ${received}, `
+      asserts: `these bytes were received at the doorbell of your group's Civicsmith as knock ${knockId} at ${received}, `
              + `and brought into the record by ${by} at ${at}; they were received, not fetched from any address`,
       evidence: "the knock's receipt: its digest, taken as the bytes arrived, and its instant",
       bound: false, via: "doorbell",

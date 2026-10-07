@@ -27,6 +27,11 @@
  *                                  with no primary source is absent, never `UNMEASURED` (R44).
  *   meeting markers, body variants Legistar's own body names (`measures-T33/legistar-events.md` §1–§2, 2026-10-05)
  *   lawful_demands                 Gov. Code §7928.215 as K1493 rules it (R53)
+ *   policy series (T35)            the City's Administrative Instructions, OPD's General Orders, Special Orders and
+ *                                  Training Bulletins, OUSD's Board Policies and Administrative Regulations, each read
+ *                                  on its primary pages 2026-10-07 (the pages and the citations measured are in
+ *                                  `test/fixtures/policies.mjs`), with the header labels they print (R67, R69), and
+ *                                  the CALEA standards OPD's General Orders cite by designation (K1930).
  *   Legistar's ids (T34)           the `body` and `office` spaces, their schemes and the counterparties' BodyIds, from
  *                                  legistar-reader's captured `bodies` and `officerecords` (2026-10-05; R61). The
  *                                  MemberTypes measured (Member, Chair) mapped on the Council only: elsewhere they sit
@@ -315,6 +320,28 @@ export default {
        project_code, program_code, account_code, amount), FY2015-17 `urid-amga` (budget_year_name, …, org, fund, amt) and
        FY2019-21 `m4jd-q2c4` (prog, acct, and one amount column per period such as fy18_19_midcycle_adopted)
        (money-people §2, legistar-events §3; read by BUDGET-DOCTYPES, P9). */
+    /* The labels the families' documents print in their header blocks (R69): an AI's SUBJECT (SUBJECT/AGENCY on AI 544),
+       NUMBER, REFERENCE, EFFECTIVE, SUPERSEDE; a DGO's Effective Date (with or without its colon), New Order or Rev. (the
+       date an older order took effect), Ref (its CALEA references), Index as, Coordinator, Evaluation Coordinator,
+       Evaluation Due Date or Evaluation Date, Automatic Revision Cycle; a Training Bulletin's Index Number; a Special
+       Order's SUBJECT, EFFECTIVE DATE or DATE; OUSD's type lines. Measured on the families' primary pages (2026-10-07
+       policies) and on the 50 policies doctypes captured from them the same day (K1930; `test/fixtures/policies.mjs`).
+       Written without a trailing colon: a reader takes the label with or without one. */
+    policy_headers: [
+      { field: "type", pattern: { re: R`\bADMINISTRATIVE\s+INSTRUCTION\b` }, basis: "2026-10-07 policies" },
+      { field: "type", pattern: { re: R`\bDEPARTMENTAL\s+GENERAL\s+ORDER\b` }, basis: "2026-10-07 policies" },
+      { field: "type", pattern: { re: R`\bSPECIAL\s+ORDER\s+(?:NO\.\s*)?\d` }, basis: "2026-10-07 policies" },
+      { field: "type", pattern: { re: R`\bTRAINING\s+BULLETIN\b` }, basis: "2026-10-07 policies" },
+      { field: "type", pattern: { re: R`^\s*(?:Board\s+Policy|Administrative\s+Regulation)\s*$` }, basis: "2026-10-07 policies" },
+      { field: "number", pattern: { re: R`\bNUMBER\b|\bIndex\s+Number\b` }, basis: "2026-10-07 policies" },
+      { field: "title", pattern: { re: R`\bSUBJECT(?:\/AGENCY)?\b|\bIndex\s+as\b` }, basis: "2026-10-07 policies" },
+      { field: "effective", pattern: { re: R`\bEFFECTIVE(?:\s+DATE)?\b|\bEffective\s+Date\b|\bDATE\b|\bNew\s+Order\b|\bRev\.` }, basis: "2026-10-07 policies" },
+      { field: "supersedes", pattern: { re: R`\bSUPERSEDE\b` }, basis: "2026-10-07 policies" },
+      { field: "reference", pattern: { re: R`\bREFERENCE\b|\bRef\b` }, basis: "2026-10-07 policies" },
+      { field: "coordinator", pattern: { re: R`\b(?:Evaluation\s+)?Coordinator\b` }, basis: "2026-10-07 policies" },
+      { field: "review_due", pattern: { re: R`\bEvaluation\s+(?:Due\s+)?Date\b` }, basis: "2026-10-07 policies" },
+      { field: "revision_cycle", pattern: { re: R`\bAutomatic\s+Revision\s+Cycle\b` }, basis: "2026-10-07 policies" },
+    ],
     budget_headers: [
       { column: "fund", pattern: { re: R`^fund(?:_code)?$`, flags: "i" }, basis: "2026-10-05 money-people, 2026-10-05 legistar-events" },
       { column: "org", pattern: { re: R`^org(?:_code)?$`, flags: "i" }, basis: "2026-10-05 money-people, 2026-10-05 legistar-events" },
@@ -363,6 +390,40 @@ export default {
       basis: "2026-10-05 time-law" },
     { source: "Freedom of Information Act", kind: "statute", issuer: "United States Congress", level: "federal",
       cite: { re: R`\b5\s+U\.?\s?S\.?\s?C\.?\s+§+\s*552\b`, flags: "i" }, basis: "2026-10-05 time-law" },
+    /* Oakland's policy series (R67; K1742, DEC-145 (8)), each family its own entry, its cite measured on the citations its
+       primary pages print (2026-10-07 policies; the pages and strings in `test/fixtures/policies.mjs`). The City's and
+       OPD's families are the City's (level city); OUSD's are a government's at no law level (sector government, R31). */
+    { source: "City of Oakland Administrative Instructions", kind: "policy", issuer: "City Administrator", level: "city",
+      key: "city-administrator", series: { key: "ai", label: "Administrative Instruction" },
+      cite: { re: R`\b(?:(?:City\s+)?Administrative\s+Instruction|A\.I\.|AI)\s+(?:No\.\s*)?(?<number>\d{1,4})\b` }, basis: "2026-10-07 policies" },
+    /* A DGO's number is written padded or not (K-03, K-3; B-06, B-6 in the Special Orders that revise it): its normal form
+       drops the padding and keeps every digit. One portion is printed with it: "DGO K-03: II C". */
+    { source: "Oakland Police Department Departmental General Orders", kind: "policy", issuer: "Office of Chief of Police, Oakland Police Department",
+      level: "city", key: "opd", series: { key: "dgo", label: "Departmental General Order" },
+      cite: { re: R`\b(?:DGOs?|Departmental\s+General\s+Orders?(?:\s+\(DGO\))?)\s+(?<number>([A-Z])-(\d{1,2})(\.\d{1,2})?)(?::\s+(?<portion>[IVX]+(?:\s[A-Z])?)\b)?` },
+      normal: [{ group: 2 }, "-", { group: 3, unpad: true }, { group: 4, default: "" }], basis: "2026-10-07 policies" },
+    { source: "Oakland Police Department Special Orders", kind: "policy", issuer: "Office of Chief of Police, Oakland Police Department",
+      level: "city", key: "opd", series: { key: "so", label: "Special Order" },
+      cite: { re: R`\b(?:Special\s+Orders?|SPECIAL\s+ORDER|SO)\s+(?:NO\.\s*)?(?<number>\d{4})\b` }, basis: "2026-10-07 policies" },
+    /* A Training Bulletin's index number is a roman numeral, a letter and an optional point number, joined by a hyphen or
+       a space (III-P.05, I F.06): its normal form joins them by a hyphen. */
+    { source: "Oakland Police Department Training Bulletins", kind: "policy", issuer: "Office of Chief of Police, Oakland Police Department",
+      level: "city", key: "opd", series: { key: "tb", label: "Training Bulletin" },
+      cite: { re: R`\b(?:Training\s+Bulletins?|TB)\s+(?<number>([IVX]+)[ -]([A-Z])(\.\d{1,2})?)\b` },
+      normal: [{ group: 2 }, "-", { group: 3 }, { group: 4, default: "" }], basis: "2026-10-07 policies" },
+    { source: "Oakland Unified School District Board Policies", kind: "policy", issuer: "Oakland Unified School District Governing Board",
+      sector: "government", key: "ousd", series: { key: "bp", label: "Board Policy" },
+      cite: { re: R`\bBP(?:\/AR)?\s+(?<number>\d{4}(?:\.\d{1,2})?)\b` }, basis: "2026-10-07 policies" },
+    { source: "Oakland Unified School District Administrative Regulations", kind: "policy", issuer: "Oakland Unified School District",
+      sector: "government", key: "ousd", series: { key: "ar", label: "Administrative Regulation" },
+      cite: { re: R`\b(?:BP\/)?AR\s+(?<number>\d{4}(?:\.\d{1,2})?)\b` }, basis: "2026-10-07 policies" },
+    /* The accreditor's standards OPD's General Orders cite in their headers ("Ref: CALEA Standards 15.1.1; 15.1.2", on 12
+       of the orders doctypes captured, K1930): a standard OPD cites, held by its designation (R63, R67). No edition is
+       printed with it. */
+    { source: "CALEA Standards for Law Enforcement Agencies", kind: "standard",
+      issuer: "Commission on Accreditation for Law Enforcement Agencies (CALEA)", sector: "association",
+      key: "calea", series: { key: "standards", label: "CALEA Standard" },
+      cite: { re: R`\bCALEA[\s:]+Standards?:?\s+(?<number>\d{1,3}\.\d{1,2}\.\d{1,2})\b` }, basis: "2026-10-07 policies" },
   ],
   /* Hours only where the office publishes them (M-192). The Controller's Bureau (M-195), the City Council (M-196)
      and the Civil Grand Jury (M-194) publish none, and the State Controller's Office could not be read: their hours

@@ -1,9 +1,6 @@
 # runtime-limits — requirements
 
-**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code today: `bio-plane/src/cpu.mjs`,
-`bio-plane/src/tokens.mjs`. No row of the old plan and no entry in `build/plan/next.md` targets this
-module; every requirement below is met by the code as it stands. N63 folded by a drafting worker for BOB #43,
-2026-09-26: R26 (`unattendedCredential`, K90 (2)); met by RUNTIME-LIMITS #2 (T8, K227). T33's fold, by a requirements worker for BOB #114 on `tranche/T32`, 2026-10-05, from plan entry T33-6 (entry C Q0-7 as K1502 re-scoped it): [K1502's group-account clause replaced by K1755: an administrator may hold a group API key] there was no group-wide Claude account by Bob's K1502, so the copy binds no Claude credential and `INSTANCE_CLAUDE_TOKEN` is retired. R13, R17 and R23 amended; R14 and R15 retired (R13 now answers every `env` alike, so neither can hold); not yet met (T33-6). T34's K1755 fold, by a drafting worker for BOB #123 on `tranche/T34`, 2026-10-06 (K1755: an administrator may hold one Anthropic API key for the group's copy, in `credentials`' sealed table, so "no group-wide Claude account" no longer holds (Bob's K1755); the copy still binds no Claude credential in its environment): R13's `detail`, R23 and Satisfies amended; not yet met (T34).
+**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20); the group's copy binds no Claude credential in its environment (K1502, K1755): R14 and R15 retired. Last changed T35 (T35-4: R13, R23; K1916); every requirement met.
 
 ## Public
 
@@ -77,7 +74,7 @@ set a credential.
   for every `env`, whatever it carries, `INSTANCE_CLAUDE_TOKEN` included: the group's copy binds no Claude
   credential in its environment, and `detail` says that the assistant is reached through a member's own
   Claude account or API key or the group's API key, each held in `credentials` (K1755), never a binding. It reads no binding for a Claude credential, and `INSTANCE_CLAUDE_BINDING` is
-  no longer exported. *(not yet met: T35)*
+  no longer exported.
 - **R14** *(retired: K1502, T33-6; the instance-level Claude credential is retired and R13 answers every `env` alike)*
 - **R15** *(retired: K1502, T33-6; no `env` gives `configured: true`, R13)*
 - **R16** `detail` is `null` exactly when `configured` is `true`, otherwise a string; the return value
@@ -127,7 +124,7 @@ set a credential.
   only by already being present on the `env` object the caller passes at each call; nothing exported here
   can create, change or clear it (DS-3, D-260 §6: minting and setting an account credential is a member act
   elsewhere, never a plane write path). No Claude credential is read from `env` at all (R13, R17; K1502): a
-  member's own account reference and the group's API key are `credentials`' (K1755). *(not yet met: T35)*
+  member's own account reference and the group's API key are `credentials`' (K1755).
 - **R24** `report()` never states a duration for synchronous work: `measured_ms` is always `null`, and
   `note` says why, rather than reporting a zero that would read as a measurement.
 - **R25** No place is named in this module (`build/layers.md`, "No jurisdiction in the product"). It holds

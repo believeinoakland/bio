@@ -70,9 +70,21 @@ CREATE TABLE IF NOT EXISTS duty_transitions (
   by_member      TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS duty_transitions_key ON duty_transitions(duty_id, occurrence_key, seq);
+-- R27: a member's link of an event to the power it uses, for a use recorded without a provision, and its unlinking;
+-- append-only: an unlink is a row of its own and the link stands beside it, shown unlinked.
+CREATE TABLE IF NOT EXISTS duty_use_links (
+  seq            INTEGER PRIMARY KEY AUTOINCREMENT,
+  duty_id        TEXT NOT NULL,
+  event_id       TEXT NOT NULL,
+  act            TEXT NOT NULL,
+  reason         TEXT NOT NULL,
+  by_member      TEXT NOT NULL,
+  at             TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS duty_use_links_duty ON duty_use_links(duty_id, event_id, seq);
 `;
 
-export const DUTIES_TABLE_NAMES = Object.freeze(["duty_proposals", "duties", "duty_versions", "duty_matches", "duty_transitions"]);
+export const DUTIES_TABLE_NAMES = Object.freeze(["duty_proposals", "duties", "duty_versions", "duty_matches", "duty_transitions", "duty_use_links"]);
 
 /** R22: the tables as `record-core.declareTable` takes them (plan T33, Rules (6)). Every table names no bundle: the
  *  whole-store purge clears them, a bundle's purge leaves them. A duty's sight is its source's (R22: `source`); the
@@ -84,6 +96,7 @@ export const DUTIES_TABLES = Object.freeze([
   { name: "duty_versions", keys: [], purge: "clear", expunge: "none", export: "yes", sight: "source", derive: "stored", version_chain: true },
   { name: "duty_matches", keys: [], purge: "clear", expunge: "none", export: "yes", sight: "source", derive: "stored", version_chain: true },
   { name: "duty_transitions", keys: [], purge: "clear", expunge: "none", export: "yes", sight: "source", derive: "stored", version_chain: true },
+  { name: "duty_use_links", keys: [], purge: "clear", expunge: "none", export: "yes", sight: "source", derive: "stored", version_chain: true },
 ]);
 
 export function migrateDuties(sql) {

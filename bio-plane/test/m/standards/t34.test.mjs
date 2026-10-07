@@ -9,7 +9,7 @@ import { proposalLabel } from "../../../src/record-grammar/labels.mjs";
 const codeOf = (r) => (r && r.ok === false ? r.reason : "ok");
 const KEY = "/eli/xx-port-ellery/selectboard/12";
 
-test("R23 a proposed law relation, court link or treatment is labelled through record-grammar's proposalLabel(proposer, \"law_relation\") (its R49), never the standard subject, for a machine and a member proposer alike", () => {
+test("R48 lawPropose, delegated to law-relations (its R2): a proposed law relation, court link or treatment is labelled through record-grammar's proposalLabel(proposer, \"law_relation\") (its R49), never the standard subject, for a machine and a member proposer alike", () => {
   const w = seeded();
   const at = w.passage().contentId, bt = w.passage().contentId, ct = w.passage().contentId;
   const a = w.declare({ cite: "PEBL § 10", text: [at] }).id, b = w.declare({ cite: "PEBL § 20", text: [bt] }).id;
@@ -76,12 +76,13 @@ test("R32 standardsAt answers the held standards whose instrument key is key, wi
   assert.equal(all.truncated, false);
   assert.ok(!all.items.some((i) => i.id === elsewhere));
   const at = w.s.standardsAt({ key: KEY, portion: "12(a)", viewer: V("carol") });
-  assert.deepEqual(at.items, [
+  assert.deepEqual(at.items.map(({ family, says, ...rest }) => rest), [
     { id: v1, instrument: KEY, portion: { path: "12(a)", content_id: t[0] }, period: { from: "2010-01-01", to: "2019-12-31" },
       supersedes: null, superseded_by: v2 },
     { id: v2, instrument: KEY, portion: { path: "12(a)", content_id: t[1] }, period: { from: "2020-01-01", to: null },
       supersedes: v1, superseded_by: null },
   ].sort((a, b) => (a.id < b.id ? -1 : 1)));
+  assert.ok(at.items.every((i) => i.family && i.says), "R33 R45: each item carries its family and the members' words");
   assert.deepEqual(w.s.standardsAt({ key: KEY, portion: "12(b)", viewer: V("carol") }).items.map((i) => i.id), [v3]);
   assert.deepEqual(w.s.standardsAt({ key: KEY, portion: "99", viewer: V("carol") }).items, []);
   assert.deepEqual(w.s.standardsAt({ key: "/eli/xx-port-ellery/selectboard/99", viewer: V("carol") }).items, []);

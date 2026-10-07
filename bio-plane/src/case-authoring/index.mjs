@@ -699,6 +699,27 @@ export class CaseAuthoring {
                detail: `no published case answers to ${theCase}. A case identity is minted by this act and `
                      + `carried in the signed bytes; it is never taken from a caller, because an identity a `
                      + `caller can hand us is one a caller can invent.` };
+    /* R58 (N681; DEC-147 (2), (4)): AN EDITION OF THIS CASE SIGNED AND WAITING TO BE PUBLISHED (publication R66) is
+       asked of publication's one read (its R74), after R7 and before R8, before anything is written or an id is drawn:
+       a new edition is prepared only once the waiting one is published, stopped or cancelled (publication R67, R68), so
+       this act never prepares an edition over, or beside, one a signature already covers. A minted case has none. A
+       case of another project is not answered here: R7's CASE_BELONGS_TO_ANOTHER_PROJECT refuses it below, and
+       nothing of another project's waiting edition is named to this one (R33). */
+    if (theCase) {
+      const waiting = this.publication.waitingEditionOf(theCase);
+      const owner = waiting ? (this.#one(`SELECT project_id FROM cases WHERE case_id=?`, theCase)?.project_id
+                               ?? this.#documentProject(theCase, waiting.edition)) : null;
+      /* DEC-49 REGION is-case-edition-waiting */
+      if (waiting && (!owner || owner === proj))
+        return derivationRefusal("CASE_EDITION_WAITING", {
+          caseId: theCase, edition: Number(waiting.edition), at: waiting.at ?? null, publish_at: waiting.publish_at ?? null,
+          detail: `edition ${waiting.edition} of ${theCase} is signed and waiting to be published`
+                + (waiting.at && waiting.at.date ? ` on ${waiting.at.date} at ${waiting.at.time}`
+                                                   + (waiting.at.zone ? ` (${waiting.at.zone})` : "") : "")
+                + `. The next edition is prepared once it is published, stopped at its time, or cancelled `
+                + `(op=publishatcancel). Nothing was prepared.` });
+      /* END DEC-49 REGION is-case-edition-waiting */
+    }
     /* R8 — D-442: ALREADY_A_CASE_MEMBER IS ASKED OF THE CASE THIS ACT PUBLISHES, AND OF NO OTHER. The same bytes may be
        pinned by several cases (rule 12), and an edition of case X recording this conclusion says nothing about case Y.
        An unsigned preparation still refuses, whichever case it is of. Asked before an id is minted. */
@@ -1559,6 +1580,19 @@ export class CaseAuthoring {
     return named || null;
   }
 
+  /* The project a case edition's document names (publication R40: `case_documents`), signed or not, or null. */
+  #documentProject(caseId, edition) {
+    const d = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND edition=?`, caseId, Number(edition));
+    const named = d ? str((parseFrontmatter(d.text).data || {}).case_project) : "";
+    return named || null;
+  }
+
+  /* R59 (N681): whether `publication` holds this case edition waiting (its R66, R74): signed, for acknowledgeStatement. */
+  #waits(caseId, edition) {
+    const w = this.publication.waitingEditionOf(caseId);
+    return !!(w && Number(w.edition) === Number(edition));
+  }
+
   /* A case's highest published edition, 0 when it has none (publication R40: `published_cases`). */
   #highestEdition(caseId) {
     const t = this.#one(`SELECT MAX(edition) AS m FROM published_cases WHERE case_id=?`, caseId);
@@ -1836,10 +1870,13 @@ export class CaseAuthoring {
         const doc = this.#one(`SELECT case_id, edition, text, ratified_at FROM case_documents
                                WHERE case_id=? AND edition=?`, cid, ed);
         if (!doc || !this.publication.hasCaseStanding(doc, v)) return review.deadAnswer();
+        /* R59 (N681): a document publication holds waiting (its R66, R74) is signed here, as a ratified one is: its
+           signature covers the list, and nothing is re-authored. A cancelled edition's is again a preparation. */
         /* DEC-49 REGION is-statement-ack-signed */
-        if (doc.ratified_at)
+        if (doc.ratified_at || this.#waits(cid, ed))
           return ack("STATEMENT_ACK_ALREADY_SIGNED",
-                     `case ${cid} edition ${ed} is signed, and its completeness block — which lists who `
+                     `case ${cid} edition ${ed} is signed${doc.ratified_at ? "" : " and waiting to be published at its "
+                   + "set time"}, and its completeness block — which lists who `
                    + `acknowledged its statement — is what the signature covers. An acknowledgement now `
                    + `could appear in no signed document of this edition; a published edition is `
                    + `corrected forward, by the next one (DEC-12).`,
@@ -1945,8 +1982,10 @@ export class CaseAuthoring {
     const byLink = !draftId ? null
       : this.#one(`SELECT ${docCols} FROM case_documents WHERE draft_id=? AND ${docMatch}`,
                   draftId, ident.edition, needle, projectLine);
+    /* R59: a document held waiting is signed, so no draft door re-authors it either (publication R21 refuses it). */
     const found = [byIdentity, byLink]
       .filter((d, i, all) => d && all.findIndex((e) => e && e.case_id === d.case_id) === i)
+      .filter((d) => !this.#waits(d.case_id, d.edition))
       .sort((a, b) => (a.case_id < b.case_id ? -1 : a.case_id > b.case_id ? 1 : 0));
     /* R20: keyed by the statement, the project, the identity it was given at and the acknowledger; at no case identity
        the draft is part of what was read (REC-217). A repeat answers `existed: true`. */
@@ -1967,6 +2006,8 @@ export class CaseAuthoring {
     const reauthored = docs.map((d) => this.#reauthorAcknowledgements(d));
     /* REC-217: which case edition, if any, a publisher named this draft for (signed or not). */
     const linkedTo = ident.caseId == null && draftId ? this.#draftLinkOf(draftId) : null;
+    /* R59: an edition held waiting is signed, as a ratified one is. */
+    const linkedSigned = !!(linkedTo && (linkedTo.sig_armored || this.#waits(linkedTo.case_id, linkedTo.edition)));
     return { ok: true, existed: !!same,
              acknowledgement: { kind, by, recipient, grant_id: grantId, at: when,
                                 reason: same ? same.reason ?? null : reason, project,
@@ -1978,12 +2019,12 @@ export class CaseAuthoring {
              ...(linkedTo ? { draft_link: { case_id: linkedTo.case_id, edition: Number(linkedTo.edition),
                                             named_by: linkedTo.authored_by ?? null,
                                             named_at: linkedTo.authored_at ?? null,
-                                            signed: !!linkedTo.sig_armored } } : {}),
+                                            signed: linkedSigned } } : {}),
              listed: linkedTo
                ? `this is a reading of draft ${draftId}, which ${linkedTo.authored_by} named as the draft of `
                    + `edition ${linkedTo.edition} of ${linkedTo.case_id} when publishing it (${linkedTo.authored_at}), `
                    + `so it is a reading of that case (BIO_Publication §3 rule 13). `
-                   + (linkedTo.sig_armored
+                   + (linkedSigned
                      ? `That edition is already SIGNED, and its list is what the signature covers: this reading `
                        + `can appear in no signed document of it, and is recorded as the act it was.`
                      : `Its case document is authored and unsigned, so it now lists this reading (case_documents), `

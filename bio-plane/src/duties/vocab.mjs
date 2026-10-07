@@ -28,4 +28,15 @@ export const CONNECTION_KINDS = Object.freeze([
   Object.freeze({ kind: "owed_to", word: "is owed to", class: "evidentiary" }),
   Object.freeze({ kind: "holds_power", word: "holds the power", class: "evidentiary" }),
   Object.freeze({ kind: "met_by", word: "met by", class: "derived" }),
+  Object.freeze({ kind: "used_in", word: "used in", class: "derived" }),
 ]);
+
+/** R24 (N583; T35: N675, K1799): the form of R9's occurrence key, `OCC-` and 32 lowercase hexadecimal digits, anchored
+ *  at both ends. Stated here, in a file that imports nothing of the record, so a later module that checks a key's form
+ *  (`inquiry-grammar` R15) imports it from this file and loads no record code; `index.mjs` re-exports this same value. */
+export const OCCURRENCE_KEY_RE = Object.freeze(/^OCC-[0-9a-f]{32}$/);
+/** R27: the `events` kinds that use a power (`events` R43, R44). */
+export const USE_KINDS = Object.freeze(["discretion", "waiver", "assessment"]);
+/** R28: the label an overdue review of a policy is answered with: the body's own commitment, never a deadline the law
+ *  sets (K1431, D241). */
+export const NOTICED = "Noticed";

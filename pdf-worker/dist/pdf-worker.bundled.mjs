@@ -40372,7 +40372,7 @@ async function embeddedFileRecord(doc, filespec, sourcePage, rect, name) {
   const ef = doc.dictOf(fs2.EF);
   const streamRef = ef && (ef.F || ef.UF || ef.DOS || ef.Mac || ef.Unix);
   const stream = doc.resolve(streamRef);
-  const label = name || strOf(doc, fs2.UF) || strOf(doc, fs2.F) || null;
+  const label = embeddedName(doc, fs2, name);
   if (!stream || stream.t !== "stream")
     return undeterminedRecord({ page: sourcePage, rect }, "embedded_stream_absent", { name: label });
   const bytes = await doc.streamDecoded(stream);
@@ -40389,6 +40389,9 @@ async function embeddedFileRecord(doc, filespec, sourcePage, rect, name) {
 function strOf(doc, v2) {
   v2 = doc.resolve(v2);
   return v2 && v2.t === "str" ? v2.v : null;
+}
+function embeddedName(doc, fs2, given) {
+  return given || fs2 && (strOf(doc, fs2.UF) || strOf(doc, fs2.F)) || null;
 }
 function deferredOrRefusedRecord(uri, source) {
   const partition = classifyUri(uri);
@@ -41680,6 +41683,136 @@ function extractPageBoxes(doc) {
   }
   return { boxes, of_page };
 }
+var ACTIVE_WALK_DEPTH = 64;
+function extractActive(doc) {
+  const pageOf = /* @__PURE__ */ new Map();
+  for (let idx = 0; idx < doc.pageCount; idx++) {
+    const num = doc._pageOrder[idx];
+    if (!pageOf.has(num)) pageOf.set(num, idx);
+  }
+  for (let idx = 0; idx < doc.pageCount; idx++) {
+    const pm = doc.pageDict(idx);
+    const annots = pm ? doc.resolve(pm.Annots) : null;
+    if (!annots || annots.t !== "arr") continue;
+    for (const a2 of annots.items) if (a2 && a2.t === "ref" && !pageOf.has(a2.n)) pageOf.set(a2.n, idx);
+  }
+  const efNodes = embeddedTreeNodes(doc);
+  const items = [];
+  for (const num of [...doc.objects.keys()].sort((a2, b2) => a2 - b2)) {
+    const page = pageOf.has(num) ? pageOf.get(num) : null;
+    walkActive(
+      doc,
+      doc.objects.get(num),
+      efNodes,
+      0,
+      (kind, key, detail) => items.push({ kind, where: { object: num, page, key }, detail })
+    );
+  }
+  if (doc.notes.includes("objstm_undecodable"))
+    items.push({ kind: "unread", where: null, detail: "objstm_undecodable" });
+  if (doc.isEncrypted()) items.push({ kind: "unread", where: null, detail: "encrypted" });
+  return items;
+}
+function embeddedTreeNodes(doc) {
+  const nodes = /* @__PURE__ */ new Set();
+  const names = doc.root ? doc.dictOf(doc.root.Names) : null;
+  const visit = (v2, depth) => {
+    const node = doc.resolve(v2);
+    if (!node || node.t !== "dict" || depth > 64 || nodes.has(node.map)) return;
+    nodes.add(node.map);
+    const kids = doc.resolve(node.map.Kids);
+    if (kids && kids.t === "arr") for (const kid of kids.items) visit(kid, depth + 1);
+  };
+  if (names) visit(names.EmbeddedFiles, 0);
+  return nodes;
+}
+function walkActive(doc, v2, efNodes, depth, emit) {
+  if (!v2 || typeof v2 !== "object" || depth > ACTIVE_WALK_DEPTH) return;
+  if (v2.t === "arr") {
+    for (const it2 of v2.items) walkActive(doc, it2, efNodes, depth + 1, emit);
+    return;
+  }
+  const map = v2.t === "dict" ? v2.map : v2.t === "stream" ? v2.dict : null;
+  if (!map) return;
+  const found = /* @__PURE__ */ new Set();
+  const once = (kind, key, detail) => {
+    if (!found.has(kind)) {
+      found.add(kind);
+      emit(kind, key, detail);
+    }
+  };
+  const attachment = nameOf(doc, map.Subtype) === "FileAttachment";
+  for (const key of Object.keys(map)) {
+    const val = map[key];
+    switch (key) {
+      case "OpenAction":
+        once("open-action", key, openActionDetail(doc, val));
+        break;
+      case "AA": {
+        const aa2 = doc.dictOf(val);
+        once("additional-actions", key, aa2 ? Object.keys(aa2).map((k2) => "/" + k2) : []);
+        break;
+      }
+      case "JS":
+      case "JavaScript":
+        once("javascript", key, null);
+        break;
+      case "S": {
+        const s2 = nameOf(doc, val);
+        if (s2 === "JavaScript") once("javascript", key, null);
+        else if (s2 === "Launch") once("launch", key, launchTarget(doc, map));
+        break;
+      }
+      case "XFA":
+        once("xfa", key, null);
+        break;
+      case "RichMediaContent":
+        once("rich-media", key, null);
+        break;
+      case "Subtype":
+        if (nameOf(doc, val) === "RichMedia") once("rich-media", key, null);
+        break;
+      case "FS":
+        if (attachment) emit("embedded-file", key, embeddedName(doc, doc.dictOf(val), strOf(doc, map.Contents)));
+        break;
+      case "Filter":
+        if (val && val.t === "name" && val.v === "Standard" && map.R != null && typeof doc.resolve(map.R) === "number")
+          once("encryption", key, doc.resolve(map.R));
+        break;
+      case "Names": {
+        if (!efNodes.has(map)) break;
+        const pairs = doc.resolve(val);
+        if (!pairs || pairs.t !== "arr") break;
+        for (let i2 = 0; i2 + 1 < pairs.items.length; i2 += 2) {
+          const k2 = doc.resolve(pairs.items[i2]);
+          emit("embedded-file", key, embeddedName(doc, doc.dictOf(pairs.items[i2 + 1]), k2 && k2.t === "str" ? k2.v : null));
+        }
+        break;
+      }
+      default:
+        break;
+    }
+    walkActive(doc, val, efNodes, depth + 1, emit);
+  }
+  if (attachment && !("FS" in map)) emit("embedded-file", "FS", embeddedName(doc, null, strOf(doc, map.Contents)));
+}
+function openActionDetail(doc, val) {
+  const r2 = doc.resolve(val);
+  if (!r2) return null;
+  if (r2.t === "arr" || r2.t === "name" || r2.t === "str") return "destination";
+  if (r2.t === "dict") return nameOf(doc, r2.map.S);
+  return null;
+}
+function launchTarget(doc, action) {
+  for (const holder of [action, doc.dictOf(action.Win)]) {
+    if (!holder) continue;
+    const f2 = doc.resolve(holder.F);
+    if (f2 && f2.t === "str") return f2.v;
+    const name = f2 && f2.t === "dict" ? embeddedName(doc, f2.map, null) : null;
+    if (name) return name;
+  }
+  return null;
+}
 async function loadPdf(bytes) {
   const doc = new PdfDoc(bytes);
   doc.scanTopLevel();
@@ -41764,6 +41897,9 @@ async function extractPdfStructure(bytes) {
     /* R33: each page's MediaBox, top-level for `images`' reason (tier 2
        replaces `text`): the bound a `pdf-page` rect is checked against. */
     pageBoxes: extractPageBoxes(doc),
+    /* R36 (K1888): every place the file can act when opened, read and never
+       run; top-level for the same reason. */
+    active: extractActive(doc),
     notes: doc.notes
   };
 }

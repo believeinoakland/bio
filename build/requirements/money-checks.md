@@ -1,6 +1,6 @@
 # money-checks — requirements
 
-**Status** · New product module, layer 5, directly after `money` and before `duties` (plan T33, Rules (2)); split from `money` at creation, with no copy (Choices 9; K1504). Its meaning is the ladders' and the rulings': `BIO_Capability_Ladders_v0_1.md` §5C.4 L3 (amount checks raised as questions), §5C.5 L4 (detectors the machine runs on its own), §2 "Cross-cutting rulings" (machine checks), §10 (machine signals live in the hypothesis layer; a due threshold raises a question), and rulings K1471, K1473, K1491, K1504 (gate: a false-alarm rate of at most 20% on its gold set). Plan entry T33-34, which also moves `progressions` R32 here (T32 A37; Choices 11). Display is gated (plan Rule 7): the checks and detectors are built and their results held, and none is shown before its rate is measured. Every requirement is new; all met at T33-34 (K1584). For BOB's review and Bob's approval (a product module, P17). T34's fold, by a requirements worker for BOB #123 on `tranche/T34`, 2026-10-06, from plan entry T34-63 (N604, N605, N607, N608, N618; K1666, K1668, K1679, K1686): R4 amended (a machine's definition refused `MEMBER_ACT_ONLY`, stated), R6 amended (a stated default budget of 1,000 ms; a detector switched on in no project skipped), R11 amended (`op=moneydetectorsrun` the machine's or an administrator's); R15 (its refusal rows: `NO_CITATION` re-keyed, `check` a catalogue id or null) and R16 (`onDetectorSwitchedOn`, the arming notice) added; not yet met (T34).
+**Status** · In force: a new product module, reviewed (K1505; T33-34; banner cleared K1584), split from `money` at creation with no copy (K1504), taking `progressions` R32; its meaning the canon ladders' and Bob's rulings (K1471, K1473, K1491, K1504). Last changed T35 (T35-33: R17; K1863, DEC-131); every requirement met (K1965).
 
 **Size (P6).** About 600–1,000 lines (est. 15 requirements). Under 4,000.
 
@@ -40,6 +40,9 @@ Terms. A **detector** is `{detector_id, version, label, population, condition, d
 **onDetectorSwitchedOn(module, fn)** (`scheduler` R9's notice; N605, K1666)
 - **R16** One registration per module (a malformed registration, or a second by the same module, refused through `membership`'s `listenerRefusal`, its R81). After `switchDetector` switches a detector on for a project, each registered `fn({detector_id, project})` is called once, after the act's transaction, so `scheduler` arms its `money-detectors` wake at once instead of at the next local day. A switch that leaves the detector as it was, or switches it off, notifies nobody. A throwing `fn` never undoes the act or stops another listener.
 
+**The hint's mark** (T35-33; N694, K1863; DEC-131)
+- **R17** Every answer this module labels "Noticed" that an op relays to a member carries the mark `"Hint · machine work"` (DEC-131's words, exactly, with its middle dot) as `mark`, beside its `label`, which stays `"Noticed"`: each check of `junctionCheck` (R1, `op=moneyjunction`), each check of `amountChecks` (R2, `op=moneyamountchecks`) and each item of `noticed` (R9, `op=moneynoticed`), and the answer that carries them. Any member-facing sentence such an answer composes (a `why`, a derivation's words) calls what the machine raised a "hint", never a "signal". No key, code, `kind` or field is renamed; an answer that is a refusal carries no mark.
+
 **The ops map**
 - **R11** The module publishes `moneyChecksOps(checks, url, body)`, one route arm per act and read above; one append site, stamped by the control plane. `op=moneydetectorsrun` runs R6 only for the machine (`class:daemon`) or an administrator; any other author is refused `NOT_AN_ADMIN` through `membership.notAnAdmin` (its R84), and nothing runs (N618).
 
@@ -66,9 +69,11 @@ Terms. A **detector** is `{detector_id, version, label, population, condition, d
 - `docs/architecture/BIO_Capability_Ladders_v0_1.md` §5C.4 L3, §5C.5 L4 (detectors, K1491), §2 "Cross-cutting rulings" (machine checks), §10 (machine signals live in the hypothesis layer; a due threshold raises a question, never a violation; the machine never concludes; one home per fact).
 - `docs/architecture/BIO_Content_Framework_v0_10.md` §8.2 (junction checks; progressions R32's source).
 - Bob's rulings K1471, K1473, K1491; BOB's K1504 (the 20% gate).
+- DEC-131 ("Hint · machine work", "hint" never "signal"; K1863, N694): R17.
 
 ### Suggestions
 
 - Factory `moneyChecksOf(ctx)` (K61). Tables `money_detectors`, `money_detector_versions`, `money_detector_switches`, `money_detector_results`, `money_detector_gates`.
 - Op names are BOB's (T33-88). The "Noticed" queue item is `notice-producers`' (T33-82), reading R9.
+- **T35 (T35-33).** The mark's string is DEC-131's; `notice-producers` (a later module) exports the same string as `HINT_MARK`, and its R11 marks the queue items it builds from R9. This module holds the string as its own export, and a test in this module's suite asserts it equal, character for character, to DEC-131's text. Tests name each of the three ops' answers with the mark.
 - Open (BOB's): (1) the ladders place amount-free junction checks (one response; payments past the term by date) in `progressions` (§5C.4, R-2 M-E6), while Choices 11 moves R32 whole here: R1 keeps all four clauses here; BOB to confirm or leave the amount-free two in `progressions`; (2) whether R1's junction results are member-declared (shown at once, as `progressions`' findings are) or machine-raised (gated by R9); proposed: shown, since the member declared the flow; (3) who may `recordGate` (proposed: an administrator, recording BOB's desk measurement); (4) the shipped detector list (split contracts under a threshold, change-order growth, payments before approval, vendor concentration as a named quantity) and their gold sets are owed by M-C8.

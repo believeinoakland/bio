@@ -205,7 +205,10 @@ const MEMBER = join(HERE, "..");
 const REPO = join(MEMBER, "..");
 const PLANE = join(REPO, "bio-plane");
 
-const HARNESS = join(MEMBER, "src", "harness.mjs");
+/* R65 (N586, T35): this member re-exports no other module's code, so `src/harness.mjs` is gone, and with it every
+   arm that patched it. Those arms had armed nothing since T33-57 made the file a seven-line re-export (the code they
+   named moved to `agent-harness`, whose own suite holds it). The arms below edit this member's own driver, or the
+   files named beside each. */
 const DRIVER = join(MEMBER, "src", "index.mjs");
 
 const WORK = mkdtempSync(join(tmpdir(), "fl3-control-"));
@@ -235,7 +238,7 @@ const runMember = () => runNamed("agent-worker.test.mjs", "agent-worker");
 const runReq = () => runNamed("requirements.test.mjs", "requirements");
 
 /* FL-7's arms reach ACROSS THE TREE, and they have to. This item's defect had
-   one half in `agent-worker/src/harness.mjs` (the gate's ending) and the other
+   one half in the gate's ending (then `agent-worker/src/harness.mjs`, now `agent-harness`) and the other
    in run-rules (`bio-plane/src/run-rules/rules.mjs`, the catalogue that defines it), and the whole
    point of the fix is that the two are now asserted against EACH OTHER. An arm
    that could only run the member's suites could not measure that at all.
@@ -352,192 +355,6 @@ const anyFailed = (r, re) => r.failed.some((l) => re.test(l));
  * ========================================================================== */
 
 arm({
-  id: "H1", subject: "DEDUP-BEFORE-WRITE IS THE SHAPE OF THE TABLE",
-  what: "`compose` gains a direct edge to `submit`, and nextStep takes it — dedup becomes skippable",
-  mustFail: "the no-compose-to-submit edge arm AND the through-the-op arm that observes basisversions being read before any suggest",
-  /* THE MUST-NOT WAS WRONG ON THE FIRST RUN AND THE ARM WAS RIGHT — recorded,
-     not smoothed. It declared that the F10 arms must HOLD, and 28 assertions
-     failed including every F10 arm. The measurement is a real COUPLING and it is
-     worth having found: **`queue` is DEDUP'S OWN OUTPUT.** Skip dedup and
-     nothing is ever queued, so `submit` has no candidate, so no refusal is ever
-     earned and F10 has nothing to route. The declaration was treating two
-     dependent things as independent. What CAN honestly be required to hold is
-     the gate and the budget arms, which share no state with the queue — and
-     they did. */
-  mustNot: "the gate arm and the budget arms — NOT the F10 arms, which cannot hold: `queue` is dedup's own output, so a run that skips dedup never submits and never earns a refusal to route",
-  file: HARNESS,
-  /* THE FIRST SPELLING OF THIS PATCH MATCHED ZERO TIMES AND THE HARNESS SAID SO
-     RATHER THAN REPORTING THE GREEN RUN UNDERNEATH IT. It assumed the `to:` line
-     was immediately followed by `},\n  submit: {`; `dedup` sits between them.
-     Recorded rather than silently corrected, because "the arm never armed" is
-     the failure mode that looks most like a pass. */
-  find: `       the shape of the table, and this absent edge IS the enforcement. */
-    to:     ["dedup", "close"],`,
-  replace: `       the shape of the table, and this absent edge IS the enforcement. */
-    to:     ["dedup", "submit", "close"],`,
-  run: () => {
-    /* The edge alone is not enough: `nextStep` must actually take it, or the
-       arm proves only that a comment changed. Both halves are patched — this is
-       ONE defence (dedup-before-write) taken down, not two. */
-    const o2 = takeOriginal(HARNESS);
-    patch(HARNESS, `      return { step: "dedup", why: \``, `      if ((state?.candidates || []).length) return { step: "submit", why: \`SKIPPED DEDUP\` };
-      return { step: "dedup", why: \``);
-    const r = runHarness();
-    restore(o2);
-    const edgeArm = anyFailed(r, /NO edge from `compose` to `submit`|goes to `dedup` and to `close`|only row that can reach/);
-    const gateHeld = !anyFailed(r, /gate|investigate/i);
-    const budgetHeld = !anyFailed(r, /exhausted budget stops it and NAMES the bound|ABSENT allowance is not an exhausted one|bound named is deterministic/);
-    return {
-      observed: `${r.pass} pass, ${r.fail} FAIL · dedup edge arms ${edgeArm ? "FAILED" : "did NOT fail"} · gate ${gateHeld ? "held" : "also failed"} · budget ${budgetHeld ? "held" : "also failed"} · (F10 falls with it BY DESIGN — queue is dedup's output)`,
-      asDeclared: r.ran && edgeArm && gateHeld && budgetHeld,
-    };
-  },
-});
-
-arm({
-  id: "H2", subject: "F10 — DENIED MEANS ADJUST, NEVER A VERBATIM RETRY",
-  what: "a refused submit routes straight back to `submit` instead of to `adjust` — the verbatim retry F10 forbids",
-  mustFail: "the F10 routing arms AND the through-the-op arm that PL-3's `repeats` counter stayed at zero",
-  mustNot: "the dedup arms, the gate arm, or the empty-run arm",
-  file: HARNESS,
-  /* RE-ANCHORED T21 (AGENT-WORKER #8): the line occurs twice since `nextPlanStep` (K660) took the same F10 edge, so
-     this arm had NOT ARMED; the anchor now includes the CONTROL_FLOW line's own continuation. */
-  find: "      if (s.refusal) return { step: \"adjust\", why: `the plane refused '${String(s.refusal.code || s.refusal.reason || \"?\")}'; `\n"
-      + "                                                 + `F10 routes",
-  replace: "      if (s.refusal) return { step: \"submit\", why: `the plane refused '${String(s.refusal.code || s.refusal.reason || \"?\")}'; `\n"
-      + "                                                 + `F10 routes",
-  run: () => {
-    const r = runHarness();
-    const routing = anyFailed(r, /refused submit goes to `adjust`|does NOT go back to `submit`|routed to ADJUST/);
-    /* THE COUNTER IS THE POINT. A retry loop that only the budget could see is
-       exactly what F10 exists to make visible, so this half is what separates
-       "the table changed" from "the harm arrived". */
-    const counter = anyFailed(r, /repeats. counter stayed at ZERO|repeats. counter never moved|called twice/);
-    const dedupHeld = !anyFailed(r, /NO edge from `compose` to `submit`|compared against 2 on the record/);
-    return {
-      observed: `${r.pass} pass, ${r.fail} FAIL · F10 routing ${routing ? "FAILED" : "did NOT fail"} · repeats-counter arm ${counter ? "FAILED" : "held"} · dedup ${dedupHeld ? "held" : "also failed"}`,
-      asDeclared: r.ran && routing && counter && dedupHeld,
-    };
-  },
-});
-
-arm({
-  id: "H3", subject: "F10's PRECONDITION — an unadjusted submission is DROPPED",
-  what: "`adjust` returns to `submit` whether or not the submission actually changed",
-  mustFail: "the unadjusted-drops-the-candidate arm AND the through-the-op arm that the same bytes were never sent twice",
-  mustNot: "the dedup arms, the gate, the four-level fan-out, the empty-run arm, or B5b's D-452 arms (a drop with a queue behind it goes to `submit` under this arm as under the fix)",
-  file: HARNESS,
-  find: `      if (!s.adjusted)
-        return { step: "next-pass",`,
-  replace: `      if (false)
-        return { step: "next-pass",`,
-  run: () => {
-    const r = runHarness();
-    /* D-452 (2026-09-24) RENAMED the A3 assertion this arm fails by: "an UNADJUSTED one drops the candidate
-       instead" asserted `next-pass` over a non-empty queue, which was the defect. Its successor with NOTHING
-       behind it is what this arm now fails; B5b's D-452 arms (a drop WITH a queue behind it) must HOLD,
-       because this arm sends that case to `submit` exactly as the fix does. */
-    const dropArm = anyFailed(r, /UNADJUSTED one with NOTHING behind it|DROPPED the candidate|called ONCE|repeats. counter never moved|nothing was adjusted|nothing was resent/);
-    const fanoutHeld = !anyFailed(r, /LEVELS is exactly the plane's set|four spawn payloads/);
-    const d452Held = !anyFailed(r, /^D-452:|^B5b:/);
-    return {
-      observed: `${r.pass} pass, ${r.fail} FAIL · drop/resend arms ${dropArm ? "FAILED" : "did NOT fail"} · fan-out ${fanoutHeld ? "held" : "also failed"} · D-452 arms ${d452Held ? "held" : "also failed"}`,
-      asDeclared: r.ran && dropArm && fanoutHeld && d452Held,
-    };
-  },
-});
-
-arm({
-  id: "H4", subject: "LOOP TERMINATION IS NOT THE MODEL'S (SK-2's review criterion, as code)",
-  what: "`maxPasses` is removed from NOT_JUDGEABLE, so a judgement can set the loop bound",
-  mustFail: "the per-field overreach arm for `maxPasses`, by name, AND the through-the-op JUDGEMENT_OVERREACH arm",
-  mustNot: "the budget arms — the two are different mechanisms and this is what shows it",
-  file: HARNESS,
-  find: `export const NOT_JUDGEABLE = ["pass", "maxPasses", "step", "budget", "mode", "bound", "run", "store", "target"];`,
-  replace: `export const NOT_JUDGEABLE = ["pass", "step", "budget", "mode", "bound", "run", "store", "target"];`,
-  run: () => {
-    const r = runHarness();
-    const named = anyFailed(r, /judgement setting `maxPasses` is REFUSED|JUDGEMENT_OVERREACH|the field is named/);
-    const budgetHeld = !anyFailed(r, /exhausted budget stops it and NAMES the bound|ABSENT allowance is not an exhausted one/);
-    return {
-      observed: `${r.pass} pass, ${r.fail} FAIL · overreach arms ${named ? "FAILED by name" : "did NOT fail"} · budget arms ${budgetHeld ? "held (as declared)" : "also failed"}`,
-      asDeclared: r.ran && named && budgetHeld,
-    };
-  },
-});
-
-arm({
-  id: "H5", subject: "SK-4's GATE IS A ROW IN THIS TABLE",
-  what: "`MODES.investigate.deployed` is flipped to true — investigate-fresh becomes reachable before VF-5 verified CHECK's first live run",
-  mustFail: "the gate arms, pure AND through the op (an investigate run must spend nothing)",
-  mustNot: "ANY other arm — which is precisely what shows the gate is a row and not a side effect of something else",
-  file: HARNESS,
-  find: `  investigate: { deployed: false,`,
-  replace: `  investigate: { deployed: true,`,
-  run: () => {
-    const r = runHarness();
-    const gate = anyFailed(r, /investigate-fresh is NOT deployed|investigate run is CLOSED at the gate|closed at the gate|no sub-session was spawned/);
-    const othersHeld = !anyFailed(r, /dedup|F10|repeats|empty|LEVELS|overreach/i);
-    return {
-      observed: `${r.pass} pass, ${r.fail} FAIL · gate arms ${gate ? "FAILED" : "did NOT fail"} · every other arm ${othersHeld ? "held (as declared)" : "ALSO failed"}`,
-      asDeclared: r.ran && gate && othersHeld,
-    };
-  },
-});
-
-/* ---- E-ARMS, APPENDED 2026-09-14 BY FLEET ON SK-8's DELEGATION: the extract
- * row entered the table NOT deployed, and the record's `order` moved with it in
- * the same commit. Both directions of that pairing are armed here, because the
- * defect each guards against has one half in each tree and only a driver that
- * runs BOTH suites can measure the agreement (F1's precedent). */
-arm({
-  id: "E1", subject: "THE EXTRACT ROW FLIPPED WITHOUT THE RECORD MOVING",
-  what: "`MODES.extract.deployed` is set to true — the EXTRACT role becomes drivable before §7.3(7)'s open question was ever answered",
-  /* RE-POINTED T21 (N467): skillsequencing ARM B4 (only index 0 deployed) is this member's own R44 pin now, in
-     `requirements.test.mjs`, against run-rules' DEPLOYED_MODES; ARM B3 (the set) is its R14 pin. */
-  mustFail: "this suite's NOT-deployed and closed-at-the-gate extract arms, AND requirements.test's R44 pin (MODES' deployed modes are run-rules' DEPLOYED_MODES, the order's first member only)",
-  mustNot: "the CHECK arms, the investigate arms, requirements.test's R14 set pin (the SET is unchanged — only a flag moved)",
-  file: HARNESS,
-  find: `  extract:     { deployed: false,`,
-  replace: `  extract:     { deployed: true,`,
-  run: () => {
-    const r = runHarness();
-    const q = runReq();
-    const gate = anyFailed(r, /it is NOT deployed — §7\.3|extract run is CLOSED at the gate|NOT DEPLOYED YET/);
-    const pin = anyFailed(q, /^R44, R53: MODES' keys are DEPLOYMENT_SEQUENCE\.order/);
-    const held = !anyFailed(r, /CHECK is deployed|investigate-fresh is NOT deployed|investigate run is CLOSED/)
-      && !anyFailed(q, /^R14 \(skillsequencing\): MODES is exactly the recorded set/);
-    return {
-      observed: `harness ${r.pass}/${r.fail} · requirements ${q.pass}/${q.fail} · extract gate arms ${gate ? "FAILED" : "did NOT fail"} · R44 deployed-set pin ${pin ? "FAILED" : "did NOT fail"} · check/investigate/R14 set ${held ? "held" : "ALSO failed"}`,
-      asDeclared: r.ran && q.ran && gate && pin && held,
-    };
-  },
-});
-
-arm({
-  id: "E2", subject: "THE EXTRACT ROW REMOVED WHILE THE RECORD STILL NAMES IT — the other direction of the pairing",
-  what: "the `extract` row is deleted from `MODES` with `DEPLOYMENT_SEQUENCE.order` untouched",
-  /* RE-POINTED T21 (N467): skillsequencing ARM B3 (recorded, not in the table) is requirements.test's R14 set pin. */
-  mustFail: "this suite's row-EXISTS and NOT-DEPLOYED-YET arms (an unknown word again), AND requirements.test's R14 set pin (MODES is exactly the recorded order's members) and its R44 keys pin",
-  mustNot: "the CHECK and investigate arms; the unknown-word arm must still hold, because that is exactly what extract has become",
-  file: HARNESS,
-  find: `  extract:     { deployed: false,`,
-  replace: `  extract_gone: { deployed: false,`,
-  run: () => {
-    const r = runHarness();
-    const q = runReq();
-    const gone = anyFailed(r, /an `extract` row EXISTS|NOT DEPLOYED YET/);
-    const setPin = anyFailed(q, /^R14 \(skillsequencing\): MODES is exactly the recorded set/)
-      && anyFailed(q, /^R44, R53: MODES' keys are DEPLOYMENT_SEQUENCE\.order/);
-    const held = !anyFailed(r, /CHECK is deployed|investigate-fresh is NOT deployed|unknown word's refusal/);
-    return {
-      observed: `harness ${r.pass}/${r.fail} · requirements ${q.pass}/${q.fail} · extract-row arms ${gone ? "FAILED" : "did NOT fail"} · R14/R44 set pins ${setPin ? "FAILED" : "did NOT fail"} · check/investigate/unknown ${held ? "held" : "ALSO failed"}`,
-      asDeclared: r.ran && q.ran && gone && setPin && held,
-    };
-  },
-});
-
-arm({
   id: "H6", subject: "LOG-ALWAYS — the log is written whether or not the run succeeds",
   what: "the driver skips its tick on the terminal step, so the last thing a run did is never recorded",
   mustFail: "the one-entry-per-step arm and the terminal-entry arms; §14b.6's whole point is that the log's value is the FAILURE path",
@@ -563,25 +380,6 @@ arm({
     return {
       observed: `${r.pass} pass, ${r.fail} FAIL · log-always arms ${logArm ? "FAILED" : "did NOT fail"} · gate ${gateHeld ? "held" : "also failed"}`,
       asDeclared: r.ran && logArm && gateHeld,
-    };
-  },
-});
-
-arm({
-  id: "H7", subject: "THE FOUR-LEVEL FAN-OUT, AND THE LEVELS ARE THE PLANE'S",
-  what: "`internet` is dropped from LEVELS — the run searches three levels and reports on a four-level design",
-  mustFail: "the source pin against the plane's OBSERVATION_LEVELS AND the four-sub-sessions arm through the op",
-  mustNot: "the F10 arms or the gate — a member searching fewer levels is a coverage lie, not a control-flow break",
-  file: HARNESS,
-  find: `export const LEVELS = ["meaning", "content", "document", "internet"];`,
-  replace: `export const LEVELS = ["meaning", "content", "document"];`,
-  run: () => {
-    const r = runHarness();
-    const pin = anyFailed(r, /LEVELS is exactly the plane's set|four spawn payloads|one per level|four candidates, one per level|four levels/);
-    const f10Held = !anyFailed(r, /routes to `adjust`|repeats. counter stayed/);
-    return {
-      observed: `${r.pass} pass, ${r.fail} FAIL · level pin + fan-out ${pin ? "FAILED" : "did NOT fail"} · F10 ${f10Held ? "held" : "also failed"}`,
-      asDeclared: r.ran && pin && f10Held,
     };
   },
 });
@@ -633,28 +431,6 @@ arm({
   },
 });
 
-arm({
-  id: "H9", subject: "THE EMPTY-RUN INSTRUMENT (VF-1's owed control 7)",
-  what: "`emptyLevelCandidates` returns nothing, so a run that honestly found nothing emits nothing",
-  mustFail: "the empty-run arms — an empty run and a SILENT FAILURE become indistinguishable, which is exactly what §9's kind exists to prevent",
-  mustNot: "the dedup arms, the F10 arms, or the gate — this is a reporting defect, not a control-flow one, and the suite must be able to tell them apart",
-  file: HARNESS,
-  find: `  const reports = Array.isArray(state?.reports) ? state.reports : [];
-  const out = [];`,
-  replace: `  const reports = [];
-  const out = [];`,
-  run: () => {
-    const r = runHarness();
-    const empty = anyFailed(r, /one candidate, for the one level|FOUR level-empty suggestions|each names its level|COUNTABLE|all four empty produce four candidates/);
-    const f10Held = !anyFailed(r, /routes to `adjust`|repeats. counter stayed at ZERO/);
-    const dedupHeld = !anyFailed(r, /NO edge from `compose` to `submit`/);
-    return {
-      observed: `${r.pass} pass, ${r.fail} FAIL · empty-run arms ${empty ? "FAILED" : "did NOT fail"} · F10 ${f10Held ? "held" : "also failed"} · dedup ${dedupHeld ? "held" : "also failed"}`,
-      asDeclared: r.ran && empty && f10Held && dedupHeld,
-    };
-  },
-});
-
 /* ============================================================================
  * SECTION F7 — FL-7. THE GATE'S ENDING NAMES WHO ACTUALLY ACTED, AND THE
  * HEADER AND THE CATALOGUE ARE HELD TO EACH OTHER IN BOTH DIRECTIONS.
@@ -669,30 +445,6 @@ arm({
  * stays green — which is what proves the two-way assertion is genuinely two
  * assertions and not one written twice.
  * ========================================================================== */
-
-arm({
-  id: "F1", subject: "THE MISATTRIBUTION ITSELF — the gate regresses to the member's word",
-  what: "`gate-mode` closes a refused launch on `cancelled` again, exactly as it did before FL-7. The plane's catalogue is untouched and still defines `mode-not-deployed`",
-  /* RE-POINTED T21 (N467): skillsequencing's D-arms named the misattribution across the tree; this suite's own B7
-     arm names it ("MISATTRIBUTED: …"), and the catalogue's side is run-rules' R1 test, which must stay green. */
-  mustFail: "the harness gate arms, A6b's DIRECTION 2 (one ending, the plane's mode-not-deployed) and the through-the-op B7 arms, INCLUDING the member-attribution arm, which must NAME the misattribution rather than report an unequal string",
-  mustNot: "A6b's DIRECTION 1 (the gate's ending is still a word the catalogue defines, so that half is genuinely undisturbed) — and run-rules' R1 test, whose subject is the catalogue and not the gate, must stay GREEN",
-  file: HARNESS,
-  find: `return { step: "close", bound: "mode-not-deployed",`,
-  replace: `return { step: "close", bound: "cancelled",`,
-  run() {
-    const rh = runHarness();
-    const rules = runRules();
-    const namedIt = /MISATTRIBUTED: a gate refusal recorded as a member cancellation/.test(rh.out);
-    const dir2 = anyFailed(rh, /DIRECTION 2/);
-    const dir1Held = !anyFailed(rh, /DIRECTION 1/);
-    return {
-      observed: `harness ${rh.pass}/${rh.fail} FAIL · run-rules R1 file ${rules.pass}/${rules.fail} FAIL`
-        + ` · DIRECTION 2 failed: ${dir2} · DIRECTION 1 held: ${dir1Held} · the member-attribution arm NAMED it: ${namedIt}`,
-      asDeclared: rh.ran && rules.ran && rh.fail > 0 && rules.fail === 0 && dir2 && dir1Held && namedIt,
-    };
-  },
-});
 
 arm({
   id: "F2", subject: "THE CATALOGUE LOSES THE WORD — the header promises what nothing defines",
@@ -715,28 +467,6 @@ arm({
       observed: `harness ${rh.pass}/${rh.fail} FAIL · run-rules R1/R9 failed: ${vocab} · ai-runs R14 failed: ${opArm}`
         + ` · DIRECTION 1 failed: ${dir1} · A6 gate-step arms ${stepHeld ? "held" : "ALSO failed"}`,
       asDeclared: rh.ran && rules.ran && dep.ran && close.ran && dir1 && vocab && opArm && stepHeld,
-    };
-  },
-});
-
-arm({
-  id: "F3", subject: "ONE DIRECTION ONLY — the header names a DIFFERENT REAL ending",
-  retired: "A6b no longer reads harness.mjs' header prose (N421, T19): it holds what the gate PRODUCES, over every input "
-         + "it refuses, to the plane's RUN_ENDINGS, so a header sentence is no longer a subject. F1 (the gate regressed) and "
-         + "F2 (the catalogue loses the word) still arm the two directions separately.",
-  what: "the header's terminates-on claim is changed from `mode-not-deployed` to `cancelled`. **Both words are real endings the catalogue defines**, so the header -> catalogue direction is satisfied and only the code -> header direction is violated. This is the arm that shows the two directions are two independent assertions rather than one restated",
-  mustFail: "A6b's DIRECTION 2 ALONE (the gate produces `mode-not-deployed`, the header now promises `cancelled`)",
-  mustNot: "A6b's DIRECTION 1 — `cancelled` IS in the catalogue, so that half must stay GREEN, and a run in which both directions fail together would mean this suite holds one assertion written twice",
-  file: HARNESS,
-  find: "terminates on `mode-not-deployed` before",
-  replace: "terminates on `cancelled` before",
-  run() {
-    const rh = runHarness();
-    const dir2 = anyFailed(rh, /DIRECTION 2/);
-    const dir1Held = !anyFailed(rh, /DIRECTION 1/);
-    return {
-      observed: `harness ${rh.pass}/${rh.fail} FAIL · DIRECTION 2 failed: ${dir2} · DIRECTION 1 held GREEN: ${dir1Held}`,
-      asDeclared: rh.ran && rh.fail > 0 && dir2 && dir1Held,
     };
   },
 });
@@ -968,58 +698,6 @@ arm({
  * SECTION D — D-452 (2026-09-24). A DROPPED CANDIDATE DROPS ONE CANDIDATE, NOT THE PASS.
  * ========================================================================== */
 
-arm({
-  id: "T3", subject: "D-451 — THE PROJECT'S QUESTIONS IGNORED: a project run is UNDETERMINED whatever the plane publishes",
-  what: "`runContextTarget` never reads `context.questions` — the member as FL-11 left it, before the plane published "
-    + "the set (`src/harness.mjs`)",
-  mustFail: "harness FT2 (the one cited question is the target), FT2d (its level-empty candidate is FILED, nothing "
-    + "refused SUGGEST_NO_TARGET), FT2g (dedup compared against it) and FT2e (the stated count of several) — each BY NAME",
-  mustNot: "FT2b/FT2c (no call names the project; a reading naming its own cited question lands), FT2f (a plane "
-    + "publishing no set, UNDETERMINED either way), FT0*, and every run over a QUESTION (FT1*)",
-  file: HARNESS,
-  find: `    if (!Array.isArray(ctx.questions))\n`,
-  replace: `    if (true)\n`,
-  run() {
-    const r = runHarness();
-    const failedAsDeclared = [/^FT2 \(D-451\)/, /^FT2d /, /^FT2g /, /^FT2e /].every((re) => anyFailed(r, re));
-    const held = !anyFailed(r, /^FT2b |^FT2c |^FT2f |^FT0|^FT1/);
-    return {
-      observed: `harness ${r.pass}/${r.fail} FAIL · the declared arms failed by name: ${failedAsDeclared} · the MUST-NOT arms held: ${held}`,
-      asDeclared: r.ran && failedAsDeclared && held,
-    };
-  },
-});
-
-arm({
-  id: "D1", subject: "D-452 — THE DEFECT RESTORED: a drop at `adjust` ends the pass",
-  what: "`adjust` with nothing adjusted and a non-empty queue routes back to `next-pass`, as before D-452",
-  mustFail: "harness `D-452: the rest of the pass is written` BY NAME, with the sent-exactly-once, drop-went-to-submit "
-    + "and counts-what-it-wrote D-452 arms and A3's `with candidates queued behind it goes on to submit the REST`; "
-    + "and fanout B6b's `while the legal candidate ahead of it … LANDED` (its level-empty candidate sits behind a drop)",
-  mustNot: "`D-452: the DROPPED candidate was sent ONCE and never landed` and `D-452: nothing was resent verbatim` "
-    + "(the defect loses candidates, it resends none), B5's single-candidate drop, B4's adjust, A3's NOTHING-behind-it "
-    + "arm, B6's empty run and every FT arm",
-  file: HARNESS,
-  find: `      if (!s.adjusted && queue.length)
-        return { step: "submit",`,
-  replace: `      if (!s.adjusted && queue.length)
-        return { step: "next-pass",`,
-  run() {
-    const r = runHarness();
-    const rf = runFanout();
-    const failedAsDeclared = [/^D-452: the rest of the pass is written/, /^D-452: …and each was SENT exactly once/,
-      /^D-452: the drop went on to `submit`/, /^D-452: the run counts what it wrote/,
-      /with candidates queued behind it goes on to `submit` the REST/].every((re) => anyFailed(r, re))
-      && anyFailed(rf, /^while the legal candidate ahead of it in the queue LANDED/);
-    const held = !anyFailed(r, /^D-452: the DROPPED candidate|^D-452: nothing was resent|DROPPED the candidate rather|called ONCE|NOTHING behind it|adjusted version LANDED|^FT|FOUR level-empty/)
-      && !anyFailed(rf, /the illegal candidate did NOT land|^FL-12/);
-    return {
-      observed: `harness ${r.pass}/${r.fail} FAIL · fanout ${rf.pass}/${rf.fail} FAIL · the declared arms failed by name: ${failedAsDeclared} · the MUST-NOT arms held: ${held}`,
-      asDeclared: r.ran && rf.ran && failedAsDeclared && held,
-    };
-  },
-});
-
 /* D2 CAME BACK NOT AS DECLARED ON ITS FIRST RUN (2026-09-24), AND IT WAS THE ARM. It re-queued the
    refused bytes at the queue's HEAD (`unshift`), which is not the liar the row names: the resent `v1` is
    refused again and put back in front, a verbatim-retry loop that starves everything behind it — so
@@ -1060,25 +738,6 @@ arm({
  * CARRIED T21 by AGENT-WORKER #8 (N469): these are the two arms REC-100 declared and ran on 2026-09-18 through its
  * own driver, `bio-plane/test/nc-rec100.mjs` (`aw-steplog`, `aw-refused`), which T20 deleted with the old battery.
  * ========================================================================== */
-
-arm({
-  id: "S1", subject: "REC-100 aw-steplog — a model-judged PRESENT written verbatim",
-  what: "`stepLog` writes the model's PRESENT as PRESENT again, an entry that names nothing found",
-  mustFail: "A8 (REC-100) and section R's REC100-1 and REC100-1b — the REAL plane refuses a PRESENT that names nothing (C-22.10), so the entries are refused and the run's `logged` no longer equals what the record holds",
-  mustNot: "REC100-2 and REC100-2b, which are about surfacing a refused entry, not about which state is written",
-  file: HARNESS,
-  find: `    state:   judgedPresent ? "LOOKED_INDETERMINATE" : s.observed,`,
-  replace: `    state:   s.observed,`,
-  run() {
-    const r = runHarness();
-    const failed = [/^A8 \(REC-100\)/, /^REC100-1:/, /^REC100-1b:/].every((re) => anyFailed(r, re));
-    const held = !anyFailed(r, /^REC100-2:|^REC100-2b:/);
-    return {
-      observed: `harness ${r.pass}/${r.fail} FAIL · A8, REC100-1 and REC100-1b failed by name: ${failed} · REC100-2/2b held: ${held}`,
-      asDeclared: r.ran && failed && held,
-    };
-  },
-});
 
 arm({
   id: "S2", subject: "REC-100 aw-refused — the tick's per-entry refusals left unread",

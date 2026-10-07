@@ -268,3 +268,42 @@ export function shellHtml(stamp = "1") {
     + `<div id="root"></div><script>window.__INITIAL_STATE__={}</script>`
     + "<!--" + "x".repeat(2400) + "-->" + `</body></html>`;
 }
+
+/* ---- a policy in the test profile's series (jurisdictions R68: Port Ellery, not the first profile) ---- */
+
+/** `jurisdictions`' own test profile, whose policy series and header labels differ from the first profile's in every
+ *  field: a Harbour Standing Order numbered `7/24`, its header printed under Port Ellery's labels. */
+export const PE = (() => {
+  const r = combine(list().filter((x) => x.test).map((x) => x.id));
+  if (!r.ok) throw new Error(`the test profile does not combine: ${JSON.stringify(r.errors)}`);
+  return r.view;
+})();
+
+export const PE_POLICY = [
+  "PORT ELLERY HARBOUR AUTHORITY",
+  "HARBOUR STANDING ORDER",
+  "Order No. 07/24",
+  "Concerning: Mooring in the Inner Basin",
+  "In force from: 3 March 2025",
+  "Replaces: HSO 4/19",
+  "Authority: Harbour Act s. 12",
+  "Owner: Deputy Harbour Master",
+  "Review by: XX March 26",
+  "Reviewed every: 1 year",
+  "Page 1 of 2",
+  "I. PURPOSE",
+  "This order sets out how vessels moor in the inner basin.",
+  "II. APPLICABILITY",
+  "This order applies to all vessels over 12 metres and to their masters.",
+  "III. DEFINITIONS",
+  "A. Inner Basin – the water inside the north breakwater.",
+  "B. Master – the person in command of a vessel.",
+  "IV. PROCEDURES",
+  "Responsible Party Action",
+  "Master 1. Request a berth no later than 24 hours before arrival.",
+  "2. Report any damage within three (3) business days.",
+  "Harbour Office 1. Confirm the berth.",
+  "2. Inspect moorings annually.",
+  "V. RECORDS",
+  "A. The Harbour Office keeps each request for two years.",
+].join("\n");

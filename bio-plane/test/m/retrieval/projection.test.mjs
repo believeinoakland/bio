@@ -261,7 +261,8 @@ test("R58: migrate() creates the projection table, its indexes, the keyed text i
   /* The routes: each op answers what the service answers, with the stamps from the query. */
   const url = (op, q = "") => new URL(`http://x/${op}?${q}`);
   const routes = (u, body) => retrievalRoutes(w.retrieval, u, body);
-  assert.deepEqual(Object.keys(routes(url("x"))).sort(), ["contentaxis", "file", "frontier", "image", "index", "list", "meaningrows",
+  /* R73 (T35): op=findin joins the map; its own arm is tested in findin.test.mjs. */
+  assert.deepEqual(Object.keys(routes(url("x"))).sort(), ["contentaxis", "file", "findin", "frontier", "image", "index", "list", "meaningrows",
     "projection", "projectionclear", "projectionplan", "reproject", "search", "searchfields", "searchindexcheck", "select", "selection",
     "selectionlist", "selectionrelease"]);
   assert.equal(routes(url("search", "q=water&viewer=member:vera")).search().total, 1);

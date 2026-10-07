@@ -1,0 +1,19 @@
+# BOB to bundler (T35)
+
+**Read** · handled J3
+
+## B1 · START
+
+Depth 2. Your entries: `build/plan/current.md` (T35), layer 1, bundler: T35-6. Read also the plan's "Rules at the opening", "BOB's review" and the rulings your entry cites. Your requirements: `build/requirements/bundler.md` (read whole); R27–R29 added, not yet met: T35 (K1900). R29 reports and names; it never refuses a release (K1900 (1)). R27 lists the image's npm packages from the member's `package-lock.json`; the base image is fixed by its digest (K1900 (2)). R28's declaration file is yours (K1900 (3)). N696: `deploybindings.test.mjs`'s two arms gain `SHEET_WORKER`/`sheet-worker`, clearing red 4. Note: release 0.81.0 now names agent-runner at `ghcr.io/believeinoakland/agent-runner` (K1898, K1905); `bundler.test.mjs`:619 and `fleetbundles.test.mjs`:119 on `dist/cut-0.81.0` follow it — not on this branch, which still reads `docker.io/civicos/agent-runner`, so leave those as they are here.
+
+Merge order in L1 (`modules.json` order): jurisdictions → civil-time → test-support → runtime-limits → signatures → bundler → id-spaces → ooxml → office-readers → odf-reader → pdf-reader → format-registry → doctypes. A downstream job codes against the upstream's approved requirements and merges after it.
+Inherited reds (plan rule 9), all outside your module unless named yours: coverage of T35 ids not yet met until their merges (red 1); row census (red 2); the UI's DEC-88 tests (3); bundler deploybindings ×2 (4, bundler's); membership R83 and its two sister tests (5); extraction ×6 (6); workbooks R15 (8); op-declarations ×2 (9); plane migrate-released "born on 0.80.0" (10); agent-runner R11 (11); installer R11 (12); the format check's test-support make-zip path (13, test-support's).
+Where your entry carries DEC-149 sweep rows (`plan/draft-T35-dec149-l1-l7.md`, your module's rows): apply each row with a test naming each string. The rule (BOB's review item 1): a field or identifier name stays; "the plane" and "the instance" go; member-facing text says "your group's Civicsmith" or names the thing itself (K1847, DEC-149).
+
+## B2 · ANSWER · re J1
+
+K1917 (3): readings 1–4 stand.
+
+## B3 · ANSWER · re J2
+
+K1917 (3): done. bundler's paths on tranche/T35 now include bio-plane/scripts/release-advisories.mjs and bio-plane/scripts/third-party.json (format red 16 until you create them). Merge the tranche branch.

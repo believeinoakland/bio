@@ -31,6 +31,7 @@ import { parseFrontmatter, isMachineIdentity, createSha256, EARNED_CAPTURE_CEILI
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
+import { ARCHIVE_DEPTH_MAX } from "../ooxml.mjs";
 import { migrateProvenance } from "./schema.mjs";
 import { registerChecks, RECEIVED_NOT_FETCHED, DOORBELL_ORIGIN } from "./register-checks.mjs";
 import { REGISTER_ENTRY_CHECKS, TESTIMONY_CHECKS, VERSION_CHAIN_CHECKS, PROVENANCE_ACT_CHECKS } from "./checks.mjs";
@@ -39,7 +40,7 @@ export { PROVENANCE_SCHEMA } from "./schema.mjs";
 
 /** The tables this module owns (R41): no other module declares, writes or reshapes them. */
 export const PROVENANCE_TABLES = ["register", "captured_locators", "origin_declarations"];
-export { registerChecks, RECEIVED_NOT_FETCHED, DOORBELL_ORIGIN } from "./register-checks.mjs";
+export { registerChecks, RECEIVED_NOT_FETCHED, DOORBELL_ORIGIN, UNPACKED_METHOD } from "./register-checks.mjs";
 export { REGISTER_ENTRY_CHECKS, VERSION_CHAIN_CHECKS, PROVENANCE_ACT_CHECKS, TESTIMONY_CHECKS } from "./checks.mjs";
 
 const hexBytes = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
@@ -90,6 +91,21 @@ export const ARCHIVE_CAPTURE_GRADE = BASIS_GRADES[BASIS_GRADES.indexOf(EARNED_CA
  *  never fetched: no instance asked any address for it, so it earns no fetched letter. The one spelling, exported
  *  for the writer. */
 export const DOORBELL_VIA = "doorbell";
+
+/** R59 · N688 (K1844, K1852): the receipt `via` of a file `acquisition.unpack` cut out of an archive the record holds
+ *  (its R38; R15 here), at the archive's document address followed by `#zip:<index>`, its retrieval locator
+ *  `zip:<archiveSha>!<index>`. Such a file earns exactly what its archive earns. The one spelling, exported for the
+ *  writer and every reader of `via` (R48). */
+export const UNPACKED_VIA = "unpacked";
+/** R59's two answer codes (no catalogue row, as R26's and R51's): the archive's answer passed through, and a chain
+ *  that cannot be read to an archive within the depth bound. */
+export const UNPACKED_FROM_ARCHIVE = "CAPTURE_UNPACKED_FROM_ARCHIVE";
+export const UNPACKED_UNRESOLVED = "CAPTURE_UNPACKED_UNRESOLVED";
+/* R59: the retrieval locator an `unpacked` receipt carries (R15): the archive's capture digest and the entry's 0-based
+   place in its central directory (`ooxml` R27). Read from the receipt, which no caller writes, never from a document. */
+const UNPACKED_LOCATOR = /^zip:([0-9a-fA-F]{64})!(\d+)$/;
+/* R59: between equal answers, the order of the routes; a route no ruling grades never outranks a ruled one. */
+const ROUTE_RANK = { direct: 0, archive: 1, unpacked: 2, doorbell: 3 };
 
 /* PL-10 / D-220. The chain's bound, in the pair every capped read in this
    file publishes: the default a caller gets by saying nothing, and the
@@ -338,9 +354,11 @@ function imageForChecks(image) {
 }
 
 /** The gate's answer (promotion's `runGate`, R27–R29) with the C-18 register arms run over the same image after it:
- *  an error finding joins `findings` and makes `ok` false, a warning adds to `warnings`. */
-export function withRegisterChecks(image, gate) {
-  const found = registerChecks(imageForChecks(image));
+ *  an error finding joins `findings` and makes `ok` false, a warning adds to `warnings`. `resolve` is the record's
+ *  answers an `unpacked` document is judged against (R42; `Provenance.containerResolver`); without one, the ratify
+ *  gate's pure call, its container block's shape is asked alone (the record's facts were asked at the write). */
+export function withRegisterChecks(image, gate, resolve = null) {
+  const found = registerChecks({ ...imageForChecks(image), resolve });
   const errors = found.filter((x) => x.severity === "error")
     .map((x) => ({ check: x.check, detail: x.message, ...(x.repairs ? { repairs: x.repairs } : {}) }));
   const findings = [...(gate.findings || []), ...errors];
@@ -438,7 +456,9 @@ class Provenance {
       for (const f of list) if (f && typeof f.path === "string") img[f.path] = typeof f.text === "string" ? f.text : { blobSha: f.blobSha };
       return img;
     };
-    const now = registerChecks({ ...imageForChecks(asImage(files)), fm: isObj(docFm) ? docFm : imageForChecks(asImage(files)).fm })
+    const resolve = this.containerResolver();
+    const now = registerChecks({ ...imageForChecks(asImage(files)), fm: isObj(docFm) ? docFm : imageForChecks(asImage(files)).fm,
+                                 resolve })
       .filter((x) => x.severity === "error");
     if (!now.length) return null;
     let held = new Set();
@@ -448,7 +468,7 @@ class Provenance {
         const f = this.#record.readFile(bundleId, p);
         if (f) live[p] = typeof f.text === "string" ? f.text : { blobSha: f.blobSha };
       }
-      held = new Set(registerChecks(imageForChecks(live)).filter((x) => x.severity === "error")
+      held = new Set(registerChecks({ ...imageForChecks(live), resolve }).filter((x) => x.severity === "error")
         .map((x) => `${x.check}\u0000${x.message}`));
     }
     const added = now.filter((x) => !held.has(`${x.check}\u0000${x.message}`));
@@ -458,6 +478,25 @@ class Provenance {
       + `rules (C-18) that the version it revises did not fail. Nothing was written.`,
       { bundleId, findings: added.map((x) => ({ check: x.check, detail: x.message, ...(x.code ? { code: x.code } : {}),
                                                 ...(x.repairs ? { repairs: x.repairs } : {}) })) });
+  }
+
+  /** R42 · N688: the record's answers an `unpacked` document is judged against (`register-checks.mjs`'
+   *  `checkContainer`), at the write, in the audit, and for a caller of `withRegisterChecks` that holds this module:
+   *  whether the archive is held (R5), what entry `index` of it earns (R59, read through the archive from the top, as
+   *  a receipt `zip:<sha>!<index>` would be), and the origin of the archive's own document in its home's register. */
+  containerResolver() {
+    return {
+      holds: (a) => { const h = this.registerHolds({ sha: a }); return h.registered === true || h.acquired === true; },
+      gradeVia: (a, index) => this.#unpacked(`zip:${a}!${index}`, 0),
+      archiveOrigin: (a) => {
+        const home = this.homeOf(a);
+        const f = home ? this.#record.readFile(home.bundleId, "data/provenance.json") : null;
+        const reg = f && typeof f.text === "string" ? safeJson(f.text) : null;
+        const doc = (Array.isArray(reg?.documents) ? reg.documents : [])
+          .find((x) => isObj(x) && isObj(x.capture) && bareSha(x.capture.sha256) === a);
+        return doc ? { found: true, origin: doc.origin } : { found: false };
+      },
+    };
   }
 
   /* R1: the register write, after `commit`, in the same transaction. `registered` is this module's clock; the
@@ -875,14 +914,20 @@ class Provenance {
   }
 
   /* ===================================================================== *
-   * R24–R27, R51: THE CAPTURE AXIS FOR ONE CAPTURE, FROM ITS ROUTE.
+   * R24–R27, R51, R59: THE CAPTURE AXIS FOR ONE CAPTURE, FROM ITS ROUTE.
    * ===================================================================== */
 
   /** `captureGrade(captureSha) → {grade, route, determined, basis, why}`. The route is the record's own fact about
    *  WHO SERVED the bytes, written by the fetch that received them (the receipts' `via`), never by a member; the
-   *  issuing authority (D-97) is a different axis and is never read here. No letter above the ceiling is earned. */
+   *  issuing authority (D-97) is a different axis and is never read here. No letter above the ceiling is earned.
+   *  R59: when the receipts name more than one route, each route answers and the strongest answer stands (`#strongest`);
+   *  a file cut out of an archive answers its archive's answer (`#unpacked`). */
   captureGrade(captureSha) {
-    const s = bareSha(captureSha);
+    return this.#grade(bareSha(captureSha), 0);
+  }
+
+  /* One capture's answer; `depth` is how many archives a file's answer has already been read through (R59). */
+  #grade(s, depth) {
     const reg = s ? this.#one(`SELECT authored FROM register WHERE capture_sha = ?`, s) : null;
     /* R27: a member's authored observation earns no capture letter: the axis measures the act of reading a
        document in, which did not happen. Its grade is testimony, which nothing raises. */
@@ -893,36 +938,6 @@ class Provenance {
                   + `observation is graded as testimony, ${TESTIMONY_GRADE}, and nothing raises that` };
     const vias = s ? this.#rows(`SELECT DISTINCT via FROM captured_locators WHERE capture_sha = ? ORDER BY via`, s)
       .map((r) => r.via) : [];
-    /* R24 · D-177: a capture this instance fetched `direct` earns the ceiling, measured. */
-    if (vias.includes("direct"))
-      return { grade: EARNED_CAPTURE_CEILING, route: "direct", determined: true, basis: "measured",
-               why: `this instance fetched these bytes directly from their address, so their capture grade is `
-                  + `${EARNED_CAPTURE_CEILING} by that fact rather than by a member's account` };
-    /* R25 · D-693: read only through an archive replay: one rank below, measured. */
-    if (vias.includes(ARCHIVE_VIA))
-      return { grade: ARCHIVE_CAPTURE_GRADE, route: "archive", determined: ARCHIVE_CAPTURE_GRADE !== null,
-               basis: "measured",
-               why: `this instance fetched these bytes only through an archive replay (${ARCHIVE_VIA}), never from `
-                  + `their publisher: one more party stands between the record and the publisher, so their capture `
-                  + `grade is ${ARCHIVE_CAPTURE_GRADE}, ranked below a direct capture` };
-    /* R51 · N364 (K509 (3)): received through the doorbell, not fetched. A fetched route above, when one was also
-       recorded, is measured and answers first; with none, the bytes earn no fetched letter: a leg on them keeps its
-       author's letter under the ceiling, stated as authored. What the receipt DOES prove is existence: the plane
-       held these bytes at the pull's instant, by its own receipt at the knock's address (the chain of custody from
-       the knock's receipt), so the earliest such receipt is named. */
-    if (vias.includes(DOORBELL_VIA)) {
-      const r = this.#one(`SELECT address, address_norm, first_retrieved FROM captured_locators
-                            WHERE capture_sha = ? AND via = ? ORDER BY first_retrieved, address_norm LIMIT 1`,
-                          s, DOORBELL_VIA);
-      return { grade: null, route: "doorbell", determined: false, basis: RECEIVED_NOT_FETCHED,
-               ceiling: EARNED_CAPTURE_CEILING,
-               received: { address: r.address, address_norm: r.address_norm, at: r.first_retrieved },
-               why: "these bytes were handed to the group through the doorbell and brought in by a member, never "
-                  + "fetched from an address, so no capture grade is measured from how they were fetched. A leg on "
-                  + `them keeps the letter its author gave, under the ceiling (${EARNED_CAPTURE_CEILING}), stated as `
-                  + `authored. That the record held them at ${r.first_retrieved} is proven by this plane's own `
-                  + `receipt at ${r.address}` };
-    }
     /* R26 · D-709: no recorded route at all: stated, never guessed. A leg on it keeps its author's letter, under the
        ceiling, and that letter is the author's account, not a measurement. */
     if (!vias.length)
@@ -931,14 +946,96 @@ class Provenance {
                why: "no fetch route is recorded for these bytes (bytes a provenance document carried, or a member's "
                   + "upload), so no capture grade is measured from how they were fetched. A leg on them keeps the "
                   + `letter its author gave, under the ceiling (${EARNED_CAPTURE_CEILING}), stated as authored` };
-    /* R26: a route no ruling grades is NAMED, and the grade is undetermined. */
+    const answers = [];
+    /* R24 · D-177: a capture fetched `direct` earns the ceiling, measured. */
+    if (vias.includes("direct"))
+      answers.push({ grade: EARNED_CAPTURE_CEILING, route: "direct", determined: true, basis: "measured",
+                     why: `your group's Civicsmith fetched these bytes directly from their address, so their capture `
+                        + `grade is ${EARNED_CAPTURE_CEILING} by that fact rather than by a member's account` });
+    /* R25 · D-693: read only through an archive replay: one rank below, measured. */
+    if (vias.includes(ARCHIVE_VIA))
+      answers.push({ grade: ARCHIVE_CAPTURE_GRADE, route: "archive", determined: ARCHIVE_CAPTURE_GRADE !== null,
+                     basis: "measured",
+                     why: `your group's Civicsmith fetched these bytes only through an archive replay (${ARCHIVE_VIA}), `
+                        + `never from their publisher: one more party stands between the record and the publisher, so `
+                        + `their capture grade is ${ARCHIVE_CAPTURE_GRADE}, ranked below a direct capture` });
+    /* R59 · N688 (K1852 (1)): a file cut out of an archive the record holds: one answer per receipt, each its
+       archive's, in the receipts' locator order so that between two equal archives the answer is always the same. */
+    if (vias.includes(UNPACKED_VIA))
+      for (const r of this.#rows(`SELECT DISTINCT retrieval_locator FROM captured_locators
+                                   WHERE capture_sha = ? AND via = ? ORDER BY retrieval_locator`, s, UNPACKED_VIA))
+        answers.push(this.#unpacked(r.retrieval_locator, depth));
+    /* R51 · N364 (K509 (3)): received through the doorbell, not fetched. A fetched route, when one was also
+       recorded, is measured and answers first; with none, the bytes earn no fetched letter: a leg on them keeps its
+       author's letter under the ceiling, stated as authored. What the receipt DOES prove is existence: the record
+       held these bytes at the pull's instant, by its own receipt at the knock's address (the chain of custody from
+       the knock's receipt), so the earliest such receipt is named. */
+    if (vias.includes(DOORBELL_VIA)) {
+      const r = this.#one(`SELECT address, address_norm, first_retrieved FROM captured_locators
+                            WHERE capture_sha = ? AND via = ? ORDER BY first_retrieved, address_norm LIMIT 1`,
+                          s, DOORBELL_VIA);
+      answers.push({ grade: null, route: "doorbell", determined: false, basis: RECEIVED_NOT_FETCHED,
+                     ceiling: EARNED_CAPTURE_CEILING,
+                     received: { address: r.address, address_norm: r.address_norm, at: r.first_retrieved },
+                     why: "these bytes were handed to the group through the doorbell and brought in by a member, never "
+                        + "fetched from an address, so no capture grade is measured from how they were fetched. A leg "
+                        + `on them keeps the letter its author gave, under the ceiling (${EARNED_CAPTURE_CEILING}), `
+                        + `stated as authored. That the record held them at ${r.first_retrieved} is proven by the `
+                        + `receipt your group's Civicsmith itself made at ${r.address}` });
+    }
+    if (answers.length) return this.#strongest(answers);
+    /* R26: a route no ruling grades is NAMED, and the grade is undetermined. It answers only when no ruled route
+       does (R59: it never outranks a ruled one). */
     return { grade: null, route: vias.join(","), determined: false, basis: "CAPTURE_GRADE_VIA_UNRULED",
              ceiling: EARNED_CAPTURE_CEILING,
              why: `these bytes were served by a route no ruling grades (${vias.join(", ")}), so what they earn on the `
                 + "capture axis is UNDETERMINED" };
   }
 
-  /* ===================================================================== *
+  /* R59: the strongest of several routes' answers: a determined grade before an undetermined one, a higher letter
+     before a lower one, and between equal answers the order direct, archive.org, unpacked, doorbell. The sort is
+     stable, so between two equal `unpacked` answers the first receipt's stands. With one answer this is that answer,
+     so R24, R25, R26 and R51 answer as before for a capture with no `unpacked` receipt. */
+  #strongest(answers) {
+    const letter = (a) => { const i = BASIS_GRADES.indexOf(a.grade); return i === -1 ? Infinity : i; };
+    return [...answers].sort((x, y) => (Number(y.determined === true) - Number(x.determined === true))
+      || (letter(x) - letter(y)) || ((ROUTE_RANK[x.route] ?? Infinity) - (ROUTE_RANK[y.route] ?? Infinity)))[0];
+  }
+
+  /* R59 · N688 (K1844, K1852 (1), (3)): a file cut out of an archive earns exactly what its archive earns. The
+     archive's digest and the entry's index are read from the receipt's retrieval locator (R15), which no caller
+     writes. Every field of the archive's answer is passed through unchanged but `route`, `basis` and `why`, and
+     `archive` names the archive whose route decided it, the entry indexes from it down to this file (outermost
+     first), and that archive's own route and basis. An archive that is itself unpacked is read the same way, through
+     at most `ARCHIVE_DEPTH_MAX` archives (`ooxml` R30); past that, or with a locator not of that form, the answer is
+     undetermined and says why. */
+  #unpacked(locator, depth) {
+    const unresolved = (why) => ({ grade: null, route: "unpacked", determined: false, basis: UNPACKED_UNRESOLVED, why });
+    const m = UNPACKED_LOCATOR.exec(typeof locator === "string" ? locator : "");
+    const index = m ? Number(m[2]) : NaN;
+    if (!m || !Number.isSafeInteger(index))
+      return unresolved(`these bytes were recorded as cut out of an archive, but the receipt names the archive as `
+        + `${JSON.stringify(String(locator ?? "")).slice(0, 100)}, not as zip:<the archive's 64-hex digest>!<the `
+        + "entry's number>, so the archive they came from cannot be read and what they earn on the capture axis is "
+        + "UNDETERMINED");
+    if (depth + 1 > ARCHIVE_DEPTH_MAX)
+      return unresolved(`these bytes were cut out of archives nested more than ${ARCHIVE_DEPTH_MAX} deep, past the `
+        + "depth your group's Civicsmith reads an archive's grade through, so what they earn on the capture axis is "
+        + "UNDETERMINED");
+    const archiveSha = m[1].toLowerCase();
+    const a = this.#grade(archiveSha, depth + 1);
+    if (a.basis === UNPACKED_UNRESOLVED) return unresolved(a.why);
+    const { route, basis, why, archive: inner, ...rest } = a;
+    const archive = route === "unpacked"
+      ? { sha256: inner.sha256, through: [...inner.through, index], route: inner.route, basis: inner.basis }
+      : { sha256: archiveSha, through: [index], route, basis };
+    return { ...rest, route: "unpacked", basis: UNPACKED_FROM_ARCHIVE, archive,
+             why: `these bytes are entry ${index} of an archive the record holds (${archiveSha.slice(0, 16)}…), cut `
+                + "out of it, so on the capture axis they earn exactly what that archive earns, never more and never "
+                + `less. Of the archive: ${why}` };
+  }
+
+  /* =====================================================================
    * R29, R30 · REC-225: A MEMBER'S DECLARED ORIGIN FOR A DOCUMENT. A host serves many offices, so a host is not an
    * origin: the system a document came from is a member's attributed statement, per document, dated and append-only.
    * ===================================================================== */
@@ -1384,7 +1481,7 @@ class Provenance {
         + `paraphrases or summarises them.`, "",
         "## Provenance Notes", "",
         `Authored through op=testify. Observed ${obs}, in the member's own statement; recorded ${recorded}, `
-        + `by this record's clock. The author is stamped by the plane from the signed-in session. It stands on `
+        + `by this record's clock. The author is taken from the signed-in session, not from the request. It stands on `
         + `that member's trust, graded as testimony (MEMBER-KNOWLEDGE-DESIGN.md section 3).`, "",
         "## Session Log", "",
         `### Session ${recorded} | Authored | ${observer}`,
@@ -1399,7 +1496,7 @@ class Provenance {
            named here only by its opaque reference (MK-6, §4.1); the two dates are apart. */
         authored: true, author: observer, observed_at: obs, recorded_at: recorded,
         authority: "the observing member", authority_state: "determined",
-        authority_basis: `the author of these bytes is the signed-in member the plane stamped from the session `
+        authority_basis: `the author of these bytes is the signed-in member taken from the session `
                        + `at op=testify, ${recorded}; the request could not name it`,
         provenance_chain: [{
           who: observer,
@@ -1498,7 +1595,7 @@ export function provenanceOf(host, deps) {
     p.joinPromotion();
     /* N92, record-core R59 (K130): the C-18 register arms (R42–R46) join the audit over the same image the catalogue
        reads, so the audit judges each bundle once, whole, and loses none of them. */
-    record.registerAuditCheck("provenance", ({ raw }) => registerChecks(imageForChecks(raw)));
+    record.registerAuditCheck("provenance", ({ raw }) => registerChecks({ ...imageForChecks(raw), resolve: p.containerResolver() }));
     /* R55, record-core R63: this module's figure for `op=stats` and purge's proof. */
     record.registerCounts("provenance", ["register"], (hid) => p.counts(hid));
   }

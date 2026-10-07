@@ -2,7 +2,7 @@
  * legacy `schema.mjs` at this module's extraction, with the comments that record why it is shaped as it is:
  * `capture_requests` and its indexes, and R46's `capture_request_platforms`. Its three additive columns (`lead_inquiry`, `run_woken_at`, `render`)
  * are in the table as created and are added to a store that predates them by `migrateCaptureRequests`, with R40's
- * `source_reason` and R45's `sweep`. The table is keyed to a bundle by `target` for purge (R35). */
+ * `source_reason`, R45's `sweep` and R50's `co_archive` (T35); R51's `records_requests` (T35) is its own table. The table is keyed to a bundle by `target` for purge (R35). */
 
 export const CAPTURE_REQUESTS_SCHEMA = `
 -- PL-4 / IS-4 / SWEEP section 4b.1: THE CAPTURE-REQUEST DOOR.
@@ -136,7 +136,12 @@ CREATE TABLE IF NOT EXISTS capture_requests (
   -- sweep then, so none was asked. The drain files a request naming one under
   -- that sweep only when link-sweep's scope check admits it, and refuses it
   -- C-28.19 otherwise; it is never quietly filed as an ordinary request.
-  sweep             TEXT
+  sweep             TEXT,
+  -- R50 (T35; K1888 (4)): THE MEMBER'S CO-ARCHIVE CHOICE for this capture: 1
+  -- (ask the co-archive), 0 (ask none), or NULL (the group's setting decides
+  -- at the fetch, acquisition's R43). NULL is the honest value on every row
+  -- written before it: no member chose then. Passed to the fetch unchanged.
+  co_archive        INTEGER
 );
 CREATE INDEX IF NOT EXISTS capture_requests_state ON capture_requests(state, requested_at);
 CREATE INDEX IF NOT EXISTS capture_requests_target ON capture_requests(target);
@@ -173,6 +178,28 @@ CREATE TABLE IF NOT EXISTS capture_request_platforms (
   withdrawn_by      TEXT
 );
 CREATE INDEX IF NOT EXISTS capture_request_platforms_host ON capture_request_platforms(host, withdrawn_at);
+-- R51-R53 (T35; N646, POLICIES L2 PO3; K1724, K1740): A RECORDS REQUEST FOR A
+-- POLICY KNOWN ONLY BY CITATION. The group's own record that it asked the
+-- policy's issuer for its text, and of the answer, by members' acts. It is a
+-- table apart from capture_requests: it carries no address, is never drained
+-- and fetches nothing, and nothing here sends it to anyone. RECORD, not
+-- scratch: the request and its answer are the search a "not found" entry
+-- holds (K1724), so it is purged with the standard it names, by that key.
+CREATE TABLE IF NOT EXISTS records_requests (
+  request           TEXT PRIMARY KEY, -- RR-<instant>-<random>, minted here
+  standard          TEXT NOT NULL,    -- the standard (a bundle id) held 'cited'
+  citation          TEXT NOT NULL,    -- JSON: {cite, cited_by}, copied from the standard at the open
+  addressee         TEXT NOT NULL,    -- JSON: the standard's issuer, as standards holds it
+  opened_by         TEXT NOT NULL,    -- the member who opened it
+  opened_at         TEXT NOT NULL,
+  state             TEXT NOT NULL,    -- open | answered
+  answer            TEXT,             -- produced | none_exists | withheld | no_answer
+  answer_capture    TEXT,             -- the capture the issuer produced (produced only)
+  answer_note       TEXT,             -- the stated ground (withheld only)
+  answered_by       TEXT,
+  answered_at       TEXT
+);
+CREATE INDEX IF NOT EXISTS records_requests_standard ON records_requests(standard, state);
 `;
 
 /** The columns added after the table was first created, each added to a store that predates it. A legacy row's value
@@ -184,6 +211,7 @@ export const CAPTURE_REQUESTS_ADDITIVE = Object.freeze([
   ["render", "INTEGER NOT NULL DEFAULT 0"],
   ["source_reason", "TEXT"],
   ["sweep", "TEXT"],
+  ["co_archive", "INTEGER"],
 ]);
 
 export function migrateCaptureRequests(sql) {

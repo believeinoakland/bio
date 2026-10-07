@@ -80,9 +80,19 @@ const mf = new Miniflare({
               ACCOUNT_SEAL_SECRET: "d528-seal-secret" },   /* a member's account reference is kept sealed (credentials R23) */
 });
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
-const POST = async (q, body) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`,
+/* T35-74 (F1, K1874): a credential travels in the `Authorization: Bearer` header and a review grant's secret in a
+   POST's JSON body, never in an address; the fixture's `token=` and `secret=` are moved there before the plane is asked. */
+const planeAsk = (base, q, init = {}) => {
+  const u = new URL(`${base}/api/?${q}`), t = u.searchParams.get("token"), s = u.searchParams.get("secret");
+  u.searchParams.delete("token"); u.searchParams.delete("secret");
+  const headers = { ...(init.headers || {}), ...(t ? { authorization: `Bearer ${t}` } : {}) };
+  if(s === null) return mf.dispatchFetch(u.toString(), { ...init, headers });
+  const body = { ...(init.body ? JSON.parse(init.body) : {}), secret: s };
+  return mf.dispatchFetch(u.toString(), { ...init, method: "POST", headers, body: JSON.stringify(body) });
+};
+const POST = async (q, body) => rP(await (await planeAsk("http://x", q,
   { method: "POST", body: JSON.stringify(body ?? {}) })).json());
-const GET = async (q) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`)).json());
+const GET = async (q) => rP(await (await planeAsk("http://x", q)).json());
 const E = encodeURIComponent;
 
 try {

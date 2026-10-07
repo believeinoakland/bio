@@ -19,7 +19,8 @@ CREATE TABLE IF NOT EXISTS dated_facts (
   grade         TEXT,
   upper_bound   INTEGER NOT NULL DEFAULT 0,
   by_actor      TEXT,
-  at            TEXT NOT NULL
+  at            TEXT NOT NULL,
+  question      TEXT
 );
 CREATE INDEX IF NOT EXISTS dated_facts_capture ON dated_facts(capture_sha, extent);
 CREATE INDEX IF NOT EXISTS dated_facts_bundle ON dated_facts(bundle_id);
@@ -148,6 +149,42 @@ CREATE TABLE IF NOT EXISTS event_sources (
   capture_sha TEXT NOT NULL,
   at          TEXT NOT NULL
 );
+-- R43-R45, R47, R48 (T35): A USE OF A POWER's facet, one row beside its event (kind discretion, waiver or assessment).
+-- The provision is an opaque standards key (standard, portion). reason_stated is 1 for a cited reason, 0 for "none"
+-- (NULL for an assessment). reason, outcome_cite, scope and each of conditions are cited passages
+-- {capture_sha, bundle_id, extent, content_id}; expiry a civil-time date-time. Never edited: withdrawn, never deleted.
+CREATE TABLE IF NOT EXISTS event_uses (
+  event_id           TEXT PRIMARY KEY,
+  kind               TEXT NOT NULL,
+  provision_standard TEXT,
+  provision_portion  TEXT,
+  reason_stated      INTEGER,
+  reason             TEXT,
+  outcome            TEXT,
+  outcome_cite       TEXT,
+  scope              TEXT,
+  conditions         TEXT,
+  expiry             TEXT,
+  question           TEXT,
+  by_actor           TEXT,
+  at                 TEXT NOT NULL,
+  withdrawn          INTEGER NOT NULL DEFAULT 0,
+  withdrawn_actor    TEXT,
+  withdrawn_at       TEXT,
+  withdrawn_why      TEXT
+);
+CREATE INDEX IF NOT EXISTS event_uses_provision ON event_uses(provision_standard, provision_portion);
+CREATE INDEX IF NOT EXISTS event_uses_kind ON event_uses(kind, withdrawn);
+-- R44, R47: an assessment's standards found unmet, each with the cited passage stating it.
+CREATE TABLE IF NOT EXISTS event_unmet (
+  unmet_id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  event_id           TEXT NOT NULL,
+  provision_standard TEXT NOT NULL,
+  provision_portion  TEXT,
+  cite               TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS event_unmet_event ON event_unmet(event_id, unmet_id);
+CREATE INDEX IF NOT EXISTS event_unmet_provision ON event_unmet(provision_standard, provision_portion);
 -- R4: the capture classes whose readings' stated dates are held after read, changed only by an administrator's act.
 CREATE TABLE IF NOT EXISTS event_read_optin (
   seq      INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -156,3 +193,6 @@ CREATE TABLE IF NOT EXISTS event_read_optin (
   at       TEXT NOT NULL
 );
 `;
+
+/* Columns added after a table's first release, added at boot to a store that predates them (R48, T35). */
+export const EVENTS_ADDED_COLUMNS = Object.freeze([["dated_facts", "question", "TEXT"]]);

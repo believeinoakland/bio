@@ -5,6 +5,7 @@
    case-grammar's readers (its R1, R11, R12), the one reading of the bytes. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { caseTensionsOf } from "../../../src/case-tensions/index.mjs";
 import { world, T0, sha } from "./fixture.mjs";
 import { CASE_DOCUMENT_FORMAT, caseDocumentRequiresMaterials, methodOf, materialsOf, caseDocumentBlocks, gradingFactsOf,
          passagesOf, extractedTextOf, GRADING_FACT_FIELDS } from "../../../src/case-grammar/index.mjs";
@@ -101,7 +102,7 @@ test("R55 (case-disclosures R4, R8, R9, R10): a load-bearing document from a kno
   assert.match(blocks.sources[0].stated, /^Withheld: /, "R55 (case-disclosures R4)'s label and reason");
   /* R55 (case-disclosures R10), publication R60: the attesting member chooses `name`, and their row is re-authored at that level */
   w.st.sql.exec(`INSERT OR IGNORE INTO capture_actors (capture_sha, actor, at) VALUES (?, 'member:alice', ?)`, k, T0);
-  const chose = w.publication.attributeObservation({ caseId: r.caseId, edition: 1, capture: k, level: "name",
+  const chose = caseTensionsOf(w.host).attributeObservation({ caseId: r.caseId, edition: 1, capture: k, level: "name",
                                                      reason: "I stand behind it by name.", by: "alice" });
   assert.equal(chose.ok, true, JSON.stringify(chose).slice(0, 300));
   const after = materialsOf(w.fm(docOf(w, r))).attestations.filter((x) => x.by_kind === "member");

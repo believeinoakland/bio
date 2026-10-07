@@ -1,0 +1,23 @@
+# BOB to jurisdictions (T35)
+
+**Read** · handled J3
+
+## B1 · START
+
+Depth 2. Your entries: `build/plan/current.md` (T35), layer 1, jurisdictions: T35-1. Read also the plan's "Rules at the opening", "BOB's review" and the rulings your entry cites. Your requirements: `build/requirements/jurisdictions.md` (read whole); R23, R28, R31, R37 amended and R63–R69 added, marked not yet met: T35 (K1902). `SOURCE_KINDS` stays the six kinds standards reads; the seven with `standard` are `STANDARD_SOURCE_KINDS` (standards adopts them in its own job). Export the one `SECTORS` list (K1453's eight values); entities re-points to it in T35-27. R67's first profile: Oakland's AI, DGO, Special Order and Training Bulletin families and OUSD's BP/AR, each sourced to a primary page you measure; a family you cannot source waits, named in your record. id-spaces (T35-7) and doctypes (T35-12) code against R63–R69.
+
+Merge order in L1 (`modules.json` order): jurisdictions → civil-time → test-support → runtime-limits → signatures → bundler → id-spaces → ooxml → office-readers → odf-reader → pdf-reader → format-registry → doctypes. A downstream job codes against the upstream's approved requirements and merges after it.
+Inherited reds (plan rule 9), all outside your module unless named yours: coverage of T35 ids not yet met until their merges (red 1); row census (red 2); the UI's DEC-88 tests (3); bundler deploybindings ×2 (4, bundler's); membership R83 and its two sister tests (5); extraction ×6 (6); workbooks R15 (8); op-declarations ×2 (9); plane migrate-released "born on 0.80.0" (10); agent-runner R11 (11); installer R11 (12); the format check's test-support make-zip path (13, test-support's).
+Where your entry carries DEC-149 sweep rows (`plan/draft-T35-dec149-l1-l7.md`, your module's rows): apply each row with a test naming each string. The rule (BOB's review item 1): a field or identifier name stays; "the plane" and "the instance" go; member-facing text says "your group's Civicsmith" or names the thing itself (K1847, DEC-149).
+
+## B2 · CHANGE
+
+K1916 (2), a clarification of R66 (no change of meaning): when combine withholds a family as a conflict, the conflict's `at` is `standard_sources[<key>/<series.key>].<field>` (as your other keyed conflicts), and the withheld entry is dropped from the view. id-spaces codes to this.
+
+## B3 · ANSWER · re J1
+
+K1918 (1): your reading governs; R36 is reworded on tranche/T35 ('every entry R31 requires a level for'). Merge the tranche branch.
+
+## B4 · CHANGE
+
+K1930 (re-opens your job): doctypes measured that the first profile's vocabulary.policy_headers (R69) lacks header labels the 50 captured OPD/City policies print, so the policy reader reads 25/50 under the held profile vs 46/50 under the measured labels. Add the measured labels to R69's data, each sourced to the documents that print it: 'Ref:' (reference), 'Rev.', 'New Order', 'DATE' (effective), 'Effective Date' with or without a colon, 'Evaluation Date' (review_due), and 'SUBJECT/AGENCY' read as SUBJECT. The measured list is MEASURED_VIEW in doctypes/test/policies.mjs on tranche/T35 (merge it first). No requirement text changes (R69 already holds the labels as data). Post COMPLETE again when done.

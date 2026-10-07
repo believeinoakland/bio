@@ -21,7 +21,7 @@ summary = (f"<div class='cols2'><div class='cell'><h4>The screen registry</h4><p
   f"<div class='cell'><h4>The wizard library</h4><p>{len(lib)} wizards, {sum(len(w['versions'][0]['steps']) for w in lib)} steps, {sum(w['required'] for w in lib)} required. "
   f"Every step says what to do and why in at most 300 characters, names a real screen and act, and places only labelled drafts. None names a place, a law or a venue.</p></div></div>"
   f"<div class='tw' style='margin-top:12px'><table class='tbl'><thead><tr><th>Wizard</th><th>Steps</th><th>Starts at</th><th>Journeys</th></tr></thead><tbody>{rows}</tbody></table></div>")
-js = '\n'.join(P(HERE, f) for f in ('mock-kit.js', 'mock-screens.js', 'mock-shell.js', 'mock-refs.js', 'mock-journeys.js'))
+js = '\n'.join(P(HERE, f) for f in ('mock-acts.js', 'mock-kit.js', 'mock-screens.js', 'mock-shell.js', 'mock-refs.js', 'mock-journeys.js'))
 page = P(HERE, 'page.src.html')
 page = page.replace('{{FACES}}', P(VL, 'faces.css').replace('url("fonts/', 'url("visual-language/fonts/')).replace('{{CSS}}', P(VL, 'civicsmith.css'))
 page = page.replace('{{SPRITE}}', P(VL, 'icons.svg')).replace('{{REGSUMMARY}}', summary).replace('{{QUESTION}}', P(HERE, 'question.html'))

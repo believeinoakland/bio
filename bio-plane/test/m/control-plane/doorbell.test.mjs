@@ -8,9 +8,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { O, M, world, call, opCalls, hex64, aik, cred, member, refused, FORGED, QUERY_STAMPS, BODY_STAMPS } from "./harness.mjs";
-const D = await import("../../../src/control-plane/dispatch.mjs");
+const D = await import("../../../src/store-door/dispatch.mjs");
 const { record: fixture } = await import("./record.mjs");
-const P = await import("../../../src/control-plane/pull.mjs");
+const P = await import("../../../src/store-door/pull.mjs");
 const { captureOf, PULL_WITHIN_FAILED_DETAIL } = await import("../../../src/capture/index.mjs");
 const { provenanceOf } = await import("../../../src/provenance/index.mjs");
 const { recordOf } = await import("../../../src/record-core/index.mjs");

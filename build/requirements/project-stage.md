@@ -1,6 +1,6 @@
 # project-stage — requirements
 
-**Status** · DRAFT by a worker for BOB #75, 2026-09-30, on `tranche/T18` before layer 8 starts, for BOB's review; split from `publication` by K617 and K651 (seam read `build/extraction/publication-split.md` §3.3: a module whose code, or whose job, would pass about 4,000 lines is split before its next job, along seams BOB names, with no change to any requirement's meaning). R1–R5 are `publication` R44, R45, R46, R49 and R47, moved with their meaning unchanged (only their cross-references re-pointed; the old id is named on each; `publication` retires each as moved). R6–R9 are copies of `publication` R26, R28, R29 and R34, which hold here as there. Layer 8, after `public-read`, before `ratification`. No `from`. Its code is taken by copy (K624 (1)): the stage constants and helpers (`publication/index.mjs` 94–169), `projectStage` with `#readHeld`, `#stages`, `#earliestLeg`, `#conclusionInstant` and `#workProducts` (1330–1544) and the op entry `projectstage`, into `bio-plane/src/project-stage/`; `publication`'s job, after this one merges, deletes its copy and spreads `projectStageOps` in `store.mjs`' op map. Carried: N300 (K356), N346 (R4, `stages`; met in T14, K470).
+**Status** · In force: split from `publication` for size (K617, K651), meaning unchanged: R1–R5 are `publication` R44, R45, R46, R49 and R47, retired there; R6–R9 are copies of `publication` R26, R28, R29 and R34, holding here as there. Every requirement met (T19 layer 8).
 
 **Size (P6).** About 340 lines.
 

@@ -492,7 +492,7 @@ textarea.cs-input { min-height: 96px; resize: vertical; }
    Rust is attention, so it marks only what is above the usual; the highest step is also textured, and every cell
    names its count on hover, focus or tap, so colour is never the only signal.
    ============================================================ */
-.cs-risk { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; font: 700 var(--t-xs)/1.25 var(--f-sans);
+.cs-risk { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; margin-right: 6px; font: 700 var(--t-xs)/1.25 var(--f-sans);
            letter-spacing: var(--track-caps); text-transform: uppercase; border-radius: var(--r-1); border: 1.5px solid var(--c-rule-strong); color: var(--c-ink-2); }
 .cs-risk[data-risk="raised"] { border-color: var(--c-signal); color: var(--c-signal); }
 .cs-risk[data-risk="high"]   { border-color: var(--c-signal); background: var(--c-signal); color: var(--c-sheet); }

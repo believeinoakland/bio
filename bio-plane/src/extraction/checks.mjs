@@ -26,7 +26,7 @@ export const REEXTRACT_CHECKS = {
   REEXTRACT_FLAG_MALFORMED: {
     check: 'C-51.1',
     where: 'src/extraction/index.mjs pdfStructure > is-reextract',
-    translation: 'That request asked for a re-read in a form this instance does not recognise. It '
+    translation: 'That request asked for a re-read in a form your group\'s Civicsmith does not recognise. It '
       + 'answers ocr=1 or nothing, so that a request for a re-read is never quietly answered with '
       + 'the old text.',
   },
@@ -54,7 +54,7 @@ export const REEXTRACT_CHECKS = {
   REEXTRACT_NO_OCR_MEMBER: {
     check: 'C-51.4',
     where: 'src/extraction/index.mjs pdfStructure > is-reextract',
-    translation: 'This instance has no OCR engine installed, so it cannot re-read a scanned page as '
+    translation: 'Your group\'s Civicsmith has no OCR engine installed, so it cannot re-read a scanned page as '
       + 'text. Nothing was changed. The document stays as it was read when it was captured.',
   },
   /* The record holds no reading of this capture that this caller may see. A

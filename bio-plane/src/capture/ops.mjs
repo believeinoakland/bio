@@ -147,7 +147,7 @@ export async function acquireOp(req, env, store, { json, storeSilent, storeRefus
                                                     storeName }) {
   if (req.method !== "POST") return { response: json({ ok: false, error: "acquire is a POST" }, 405) };
   if (typeof env.CAPTURES?.put !== "function")
-    return { response: storageAbsent("acquire", "this instance has no evidence storage configured") };
+    return { response: storageAbsent("acquire", "your group's Civicsmith has no evidence storage configured") };
   const body = await req.json().catch(() => null);
   const q = new URLSearchParams({ cls: cls || "", member: member ? "1" : "0", sessMember: sessMember || "", store: storeName || "bio" });
   const r = await doAnswer(store.fetch(`http://x/acquire?${q}`, { method: "POST", headers: { "content-type": "application/json" },

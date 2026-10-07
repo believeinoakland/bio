@@ -105,6 +105,16 @@ export const DUTIES_CHECKS = Object.freeze({
   APPEND_ONLY: row(36, "oneHome", "is-duty-append-only",
     "A recorded state of an occurrence, and a version of an obligation, are never changed or removed once written; a "
     + "later record stands beside them. Nothing was changed."),
+  REVIEW_DATE_UNREAD: row(37, "proposeReview", "is-duty-review-date",
+    "A policy's review date is read from the policy's own words, and those words must state one whole calendar date. "
+    + "These do not (a placeholder, a month without its day, or more than one date): they are kept as written and never "
+    + "completed. Nothing was written."),
+  REVIEW_EXTENT_NOT_HELD: row(38, "proposeReview", "is-duty-review-extent",
+    "A policy's review date, and its review cycle, are cited from a passage of that policy's own text the record holds. "
+    + "The passage named is not held, or is not part of that policy's text. Nothing was written."),
+  NOT_A_POWER: row(39, "usesOfPower", "is-duty-power",
+    "The uses of a power are read for a power: something an office may do. This obligation is not one. Nothing was "
+    + "read or written."),
 });
 
 /** A refusal carrying its row. Called with the code as a literal at each site, so the DEC-49 guard reads which code

@@ -577,6 +577,11 @@ const ADDITIVE_COLUMNS = [
      ratification instant in both, which it was, so neither is ever null. */
   ["published_cases", "signed_at", "TEXT"],
   ["published_cases", "published_at", "TEXT"],
+  /* R72 (N649; K1723, K1739): THE PUBLISHED CRITERIA, the standards an edition's members are measured against, each
+     with its edition, citation, access, bindingness on the body and only the passages relied on, frozen with the edition
+     at its commit (a JSON list; `[]` for an edition whose members target no standard). NULL for an edition committed
+     before T35, read as not recorded and never filled. */
+  ["published_cases", "criteria", "TEXT"],
 ];
 
 /* D-734 (BOB #36, D-731 (b)): the path a ratified case document's hash is registered under in `published_shas`. */

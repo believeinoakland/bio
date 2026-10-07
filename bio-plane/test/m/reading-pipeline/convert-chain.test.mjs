@@ -316,5 +316,5 @@ test("R11 R21 (reading-wire): text tier 1 could not determine is a failed readin
   const cid = (await readPdf(w, CID, LEGISTAR("cid.pdf"))).r;
   assert.deepEqual([cid.found, cid.entities, cid.read_from_text, cid.text_tier], [false, [], false, 1]);
   assert.match(cid.basis, /no_tounicode/);
-  assert.match(cid.basis, /no pdf-worker member is bound/, "the tier-2 note");
+  assert.match(cid.basis, /no pdf-worker member is set up in your group's Civicsmith/, "the tier-2 note");
 });

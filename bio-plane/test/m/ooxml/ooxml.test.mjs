@@ -8,6 +8,8 @@ import { crc32 as zcrc32, deflateRawSync } from "node:zlib";
 import { registerHooks } from "node:module";
 import * as M from "../../../src/ooxml.mjs";
 import { buildZip, TYPES, MAIN, contentTypes, opc, odf, prng } from "./zip.mjs";
+import { makeZip } from "../../make-zip.mjs";
+import { makeVbaProject } from "./cfb.mjs";
 
 const {
   hasZipMagic, normalizePartName, readContainer, crc32, readPart,
@@ -15,7 +17,7 @@ const {
   CONTENT_TYPES_PART, CONTAINER_FLAVOURS, discriminate,
   ODF_MIMETYPE_PART, ODF_MANIFEST_PART, ODF_MIMETYPE_MAX_BYTES,
   relsPartFor, parseRels, walkRels, CORE_PROPERTIES_PART, readCoreProperties,
-  withContainerImages,
+  withContainerImages, listArchive, streamMember, readVbaProject, MEMBER_MAX, ARCHIVE_TOTAL_MAX,
 } = M;
 
 const MODULE_URL = new URL("../../../src/ooxml.mjs", import.meta.url).href;
@@ -103,7 +105,7 @@ test("R3 readContainer: every central-directory record in file order, byName fir
   assert.deepEqual(readContainer(lying).entries.map((e) => e.name), ["y"]);
 });
 
-test("R3 readContainer refuses by name: too_short_for_zip, eocd_not_found, zip64, multi-disk, truncated", () => {
+test("R3 readContainer refuses by name: too_short_for_zip, eocd_not_found, zip64_record_invalid, multi-disk, truncated", () => {
   const good = zipOf([{ name: "a", data: "a" }]);
   for (let n = 0; n < 22; n++) assert.deepEqual(readContainer(good.subarray(good.length - n)), { ok: false, why: "too_short_for_zip" });
   assert.deepEqual(readContainer(new Uint8Array(22)), { ok: false, why: "eocd_not_found" });
@@ -114,8 +116,9 @@ test("R3 readContainer refuses by name: too_short_for_zip, eocd_not_found, zip64
   assert.deepEqual(readContainer(beyond), { ok: false, why: "eocd_not_found" });
   const commented = zipOf([{ name: "a", data: "a" }], { comment: "c".repeat(0xffff) });
   assert.equal(readContainer(commented).ok, true);
+  // a ZIP64 sentinel with no well-formed locator and end record behind it is never read as its literal value
   for (const eocd of [{ totalEntries: 0xffff, diskEntries: 0xffff }, { cdSize: 0xffffffff }, { cdOffset: 0xffffffff }]) {
-    assert.deepEqual(readContainer(zipOf([{ name: "a", data: "a" }], { eocd })), { ok: false, why: "zip64_unsupported" }, JSON.stringify(eocd));
+    assert.deepEqual(readContainer(zipOf([{ name: "a", data: "a" }], { eocd })), { ok: false, why: "zip64_record_invalid" }, JSON.stringify(eocd));
   }
   assert.deepEqual(readContainer(zipOf([{ name: "a", data: "a" }, { name: "b", data: "b" }], { eocd: { diskEntries: 1 } })), { ok: false, why: "multi_disk_unsupported" });
   const T = { ok: false, why: "central_directory_truncated" };
@@ -132,6 +135,46 @@ test("R3 readContainer refuses by name: too_short_for_zip, eocd_not_found, zip64
   assert.deepEqual(readContainer(zipOf([{ name: "abcdef", data: "a" }], { eocd: { cdSize: cdSize - 3 } })), T);
   assert.equal(readContainer(one).ok, true);
   for (const x of ODD) assert.equal(readContainer(x).ok, false);
+});
+
+test("R3 readContainer reads ZIP64: the end record's and each record's 64-bit values; zip64_record_invalid when either is missing", async () => {
+  const data = enc("sixty-four ".repeat(500));
+  const z = makeZip([{ name: "a.xml", data: "<a/>" }, { name: "b.bin", data, zip64: true }, { name: "c", data: "s", method: 0, zip64: true }], { zip64: true });
+  const c = readContainer(z);
+  assert.equal(c.ok, true);
+  assert.equal(c.count, 3);
+  const comp = deflateRawSync(data);
+  assert.deepEqual(c.entries[1], { name: "b.bin", method: 8, crc32: zcrc32(data) >>> 0, compressedSize: comp.length, uncompressedSize: data.length, localHeaderOffset: 30 + 5 + deflateRawSync(enc("<a/>")).length });
+  assert.deepEqual([c.entries[2].compressedSize, c.entries[2].uncompressedSize], [1, 1]);
+  assert.deepEqual(await readPart(z, c, "b.bin"), { ok: true, bytes: data });
+  assert.deepEqual(await readPart(z, c, "c"), { ok: true, bytes: enc("s") });
+  // the end record's values are used, not the EOCD's sentinels
+  const many = makeZip(Array.from({ length: 70 }, (_, i) => ({ name: `${i}`, data: `${i}` })), { zip64: true });
+  assert.equal(readContainer(many).count, 70);
+  // a directory record's sentinel whose value its 0x0001 extra field lacks
+  for (const field of ["uncompressedSize", "compressedSize", "localOffset"]) {
+    const bad = makeZip([{ name: "a", data: "a", central: { [field]: 0xffffffff } }]);
+    assert.deepEqual(readContainer(bad), { ok: false, why: "zip64_record_invalid" }, field);
+  }
+  // the locator or end record absent, malformed or out of range
+  const locAt = z.length - 22 - 20;
+  const recAt = locAt - 56;
+  for (const [at, value] of [[locAt, 0], [locAt + 8, recAt + 1], [locAt + 8, 0xfffffff0], [locAt + 4, 1], [locAt + 16, 3], [recAt, 0], [recAt + 4, 40], [recAt + 4, 48], [recAt + 16, 1], [recAt + 20, 1], [recAt + 44, 0x00400000]]) {
+    const broken = z.slice();
+    new DataView(broken.buffer).setUint32(at, value, true);
+    assert.deepEqual(readContainer(broken), { ok: false, why: "zip64_record_invalid" }, `byte ${at} = ${value}`);
+  }
+  const lone = z.slice(z.length - 22);
+  const noRoom = new Uint8Array(30); noRoom.set(lone, 8);
+  assert.deepEqual(readContainer(noRoom), { ok: false, why: "zip64_record_invalid" });
+  // its counts and directory bounds are then held to R3's other refusals
+  assert.deepEqual(readContainer(makeZip([{ name: "a", data: "a" }], { zip64: true, zip64Record: { diskEntries: 2 } })), { ok: false, why: "multi_disk_unsupported" });
+  assert.deepEqual(readContainer(makeZip([{ name: "a", data: "a" }], { zip64: true, zip64Record: { cdSize: 500 } })), { ok: false, why: "central_directory_truncated" });
+  assert.deepEqual(readContainer(makeZip([{ name: "a", data: "a" }], { zip64: true, zip64Record: { entries: 2, diskEntries: 2 } })), { ok: false, why: "central_directory_truncated" });
+  // zip64_unsupported is no longer answered
+  for (const b of [makeZip([{ name: "a", data: "a" }], { zip64: true }), makeZip([{ name: "a", data: "a" }], { eocd: { cdSize: 0xffffffff } })]) {
+    assert.notEqual(readContainer(b).why, "zip64_unsupported");
+  }
 });
 
 /* ------------------------------------------------------------------ R4 */
@@ -233,6 +276,54 @@ test("R5 readPart's named refusals, each carrying the normalized name", async ()
   }
 });
 
+/* ------------------------------------------------------------------ R31 */
+
+test("R31 every part readPart inflates is capped before inflation: MEMBER_MAX, then the file's ARCHIVE_TOTAL_MAX", async () => {
+  const declared = (name, n, data = "x") => ({ name, data, local: { uncompressedSize: n }, central: { uncompressedSize: n } });
+  const inflated = [];
+  const RealDS = globalThis.DecompressionStream;
+  globalThis.DecompressionStream = class extends RealDS { constructor(f) { inflated.push(f); super(f); } };
+  try {
+    // one member over MEMBER_MAX
+    const big = makeZip([declared("big.xml", MEMBER_MAX + 1), { name: "ok.xml", data: "fine" }]);
+    const c = readContainer(big);
+    assert.deepEqual(await readPart(big, c, "/big.xml"), { ok: false, why: "MEMBER_MAX", name: "big.xml", declared: MEMBER_MAX + 1, limit: MEMBER_MAX });
+    // the file's declared total over ARCHIVE_TOTAL_MAX refuses every part, the small ones included
+    for (const part of ["ok.xml", "big.xml"]) {
+      const half = makeZip([declared("h1", ARCHIVE_TOTAL_MAX / 2), declared("h2", ARCHIVE_TOTAL_MAX / 2), { name: "d/", data: "", method: 0, local: { uncompressedSize: 1 }, central: { uncompressedSize: 1 } }, { name: "ok.xml", data: "fine" }]);
+      const r = await readPart(half, readContainer(half), part);
+      assert.deepEqual(r, part === "ok.xml"
+        ? { ok: false, why: "ARCHIVE_TOTAL_MAX", name: "ok.xml", declared: ARCHIVE_TOTAL_MAX + 1 + 4, limit: ARCHIVE_TOTAL_MAX }
+        : { ok: false, why: "part_absent", name: "big.xml" });
+    }
+    assert.deepEqual(inflated, []);
+  } finally {
+    globalThis.DecompressionStream = RealDS;
+  }
+  // at the limits exactly, a part is read
+  const exact = makeZip([{ name: "a.xml", data: "a" }, declared("pad", ARCHIVE_TOTAL_MAX - 1, "")]);
+  assert.deepEqual(await readPart(exact, readContainer(exact), "a.xml"), { ok: true, bytes: enc("a") });
+  // a size that is not a number is never under a limit
+  const odd = { entries: [{ name: "a", uncompressedSize: NaN, method: 0, crc32: 0, compressedSize: 0, localHeaderOffset: 0 }], byName: new Map() };
+  assert.equal((await readPart(new Uint8Array(40), odd, "a")).why, "MEMBER_MAX");
+
+  // every caller states the refusal as it states any other readPart refusal
+  const huge = (name, data = "x") => declared(name, MEMBER_MAX + 1, data);
+  const ct = makeZip([huge("[Content_Types].xml", contentTypes({ "/word/document.xml": TYPES.docx })), { name: "word/document.xml", data: "<d/>" }]);
+  assert.equal((await discriminate(ct)).why, "content_types_unreadable:MEMBER_MAX");
+  const odfBig = makeZip([{ name: "mimetype", data: TYPES.odt, method: 0 }, { name: "META-INF/manifest.xml", data: "<m/>" }, { name: "content.xml", data: "<c/>" }, declared("pad", ARCHIVE_TOTAL_MAX)]);
+  assert.equal((await discriminate(odfBig)).why, "odf_mimetype_unreadable:ARCHIVE_TOTAL_MAX");
+  const rels = makeZip([huge("_rels/.rels"), { name: "word/_rels/document.xml.rels", data: RELS() }]);
+  assert.deepEqual((await walkRels(rels, readContainer(rels))).undetermined, [{ part: "_rels/.rels", why: "MEMBER_MAX" }, { part: "word/_rels/document.xml.rels", why: "ARCHIVE_TOTAL_MAX" }]);
+  const core = makeZip([huge("docProps/core.xml")]);
+  assert.deepEqual(await readCoreProperties(core, readContainer(core)), { ok: false, why: "MEMBER_MAX" });
+  const media = makeZip([{ name: "word/media/a.png", data: "png" }, declared("word/document.xml", ARCHIVE_TOTAL_MAX)]);
+  const out = await withContainerImages({ ok: true }, { ok: true, bytes: media, container: readContainer(media) }, "word/media/");
+  assert.deepEqual(out, { ok: true, images: null, imagesWhy: "media_part_unreadable:word/media/a.png:ARCHIVE_TOTAL_MAX" });
+  const vba = makeZip([huge("word/vbaProject.bin", makeVbaProject({ modules: [] }).bytes)]);
+  assert.deepEqual(await readVbaProject(vba, readContainer(vba), "word/vbaProject.bin"), { ok: false, why: "MEMBER_MAX", part: "word/vbaProject.bin" });
+});
+
 /* ------------------------------------------------------------------ R6–R8 */
 
 test("R6 MEASURED_OOXML_TEXT_BOUND_BYTES is 20 MiB and is sizeGuard's default bound", () => {
@@ -279,15 +370,29 @@ test("R8 sizeGuard: ok iff declaredBytes <= bound, else the stated over_size_bou
 
 /* ------------------------------------------------------------------ R9–R14 */
 
+/* The macro-enabled rows as requirement R10 lists them: twin, variant, main content type. */
+const MACRO = [
+  ["docx", "docm", "application/vnd.ms-word.document.macroEnabled.main+xml"],
+  ["docx", "dotm", "application/vnd.ms-word.template.macroEnabledTemplate.main+xml"],
+  ["xlsx", "xlsm", "application/vnd.ms-excel.sheet.macroEnabled.main+xml"],
+  ["xlsx", "xltm", "application/vnd.ms-excel.template.macroEnabled.main+xml"],
+  ["xlsx", "xlam", "application/vnd.ms-excel.addin.macroEnabled.main+xml"],
+  ["pptx", "pptm", "application/vnd.ms-powerpoint.presentation.macroEnabled.main+xml"],
+  ["pptx", "potm", "application/vnd.ms-powerpoint.template.macroEnabled.main+xml"],
+  ["pptx", "ppsm", "application/vnd.ms-powerpoint.slideshow.macroEnabled.main+xml"],
+  ["pptx", "ppam", "application/vnd.ms-powerpoint.addin.macroEnabled.main+xml"],
+];
+
 test("R9 CONTENT_TYPES_PART is \"[Content_Types].xml\"", () => {
   assert.equal(CONTENT_TYPES_PART, "[Content_Types].xml");
 });
 
-test("R10 CONTAINER_FLAVOURS: the three OPC rows then the three ODF rows; a row with no partMap is OPC", async () => {
+test("R10 CONTAINER_FLAVOURS: the three OPC rows, the macro-enabled rows, then the three ODF rows; a row with no partMap is OPC", async () => {
   assert.deepEqual(CONTAINER_FLAVOURS, [
     { partMap: "opc", flavour: "docx", mainContentType: TYPES.docx, conventionalMainPart: "word/document.xml" },
     { partMap: "opc", flavour: "xlsx", mainContentType: TYPES.xlsx, conventionalMainPart: "xl/workbook.xml" },
     { partMap: "opc", flavour: "pptx", mainContentType: TYPES.pptx, conventionalMainPart: "ppt/presentation.xml" },
+    ...MACRO.map(([flavour, variant, mainContentType]) => ({ partMap: "opc", flavour, variant, mainContentType, conventionalMainPart: MAIN[flavour] })),
     { partMap: "odf", flavour: "odt", mimetype: TYPES.odt, conventionalMainPart: "content.xml" },
     { partMap: "odf", flavour: "ods", mimetype: TYPES.ods, conventionalMainPart: "content.xml" },
     { partMap: "odf", flavour: "odp", mimetype: TYPES.odp, conventionalMainPart: "content.xml" },
@@ -306,12 +411,12 @@ const withoutSignals = ({ signals, ...rest }) => rest;
 test("R11 discriminate: each flavour, from the container's own parts", async () => {
   for (const f of ["docx", "xlsx", "pptx"]) {
     const r = await discriminate(zipOf(opc(f)));
-    assert.deepEqual(withoutSignals(r), { ok: true, format: f, mainPart: MAIN[f], confidence: "high" });
+    assert.deepEqual(withoutSignals(r), { ok: true, format: f, variant: null, mainPart: MAIN[f], confidence: "high" });
     assert.ok(isSignals(r));
   }
   for (const f of ["odt", "ods", "odp"]) {
     const r = await discriminate(zipOf(odf(f)));
-    assert.deepEqual(withoutSignals(r), { ok: true, format: f, mainPart: "content.xml", confidence: "high" });
+    assert.deepEqual(withoutSignals(r), { ok: true, format: f, variant: null, mainPart: "content.xml", confidence: "high" });
     assert.ok(isSignals(r));
   }
   // mainPart is the declared part name, not the conventional one
@@ -319,9 +424,30 @@ test("R11 discriminate: each flavour, from the container's own parts", async () 
   assert.equal((await discriminate(moved)).mainPart, "word/doc2.xml");
   // declared by a Default extension on the conventional main part
   const byDefault = zipOf([{ name: "[Content_Types].xml", data: contentTypes({}, { xml: TYPES.xlsx }) }, { name: "xl/workbook.xml", data: "<w/>" }]);
-  assert.deepEqual(withoutSignals(await discriminate(byDefault)), { ok: true, format: "xlsx", mainPart: "xl/workbook.xml", confidence: "high" });
+  assert.deepEqual(withoutSignals(await discriminate(byDefault)), { ok: true, format: "xlsx", variant: null, mainPart: "xl/workbook.xml", confidence: "high" });
   const byDefaultUpper = zipOf([{ name: "[Content_Types].xml", data: contentTypes({}, { XML: TYPES.pptx }) }, { name: "ppt/presentation.xml", data: "<p/>" }]);
   assert.equal((await discriminate(byDefaultUpper)).format, "pptx");
+});
+
+test("R11 discriminate: a macro-enabled flavour is read as its plain twin, with its variant", async () => {
+  for (const [twin, variant, type] of MACRO) {
+    const declared = zipOf([{ name: "[Content_Types].xml", data: contentTypes({ [`/${MAIN[twin]}`]: type }) }, { name: MAIN[twin], data: "<m/>" }, { name: "word/vbaProject.bin", data: "v" }]);
+    const r = await discriminate(declared);
+    assert.deepEqual(withoutSignals(r), { ok: true, format: twin, variant, mainPart: MAIN[twin], confidence: "high" }, variant);
+    assert.ok(r.signals.some((s) => s.includes(type)));
+    // by a Default extension on the twin's main part too, and with both halves required
+    const byDefault = zipOf([{ name: "[Content_Types].xml", data: contentTypes({}, { xml: type }) }, { name: MAIN[twin], data: "<m/>" }]);
+    assert.equal((await discriminate(byDefault)).variant, variant);
+    const absent = zipOf([{ name: "[Content_Types].xml", data: contentTypes({ [`/${MAIN[twin]}`]: type }) }]);
+    assert.deepEqual(withoutSignals(await discriminate(absent)), { ok: true, format: "undetermined", why: "declared_main_part_absent", flavourDeclared: twin });
+    // a table without the macro rows does not recognise it
+    assert.equal((await discriminate(declared, null, CONTAINER_FLAVOURS.filter((f) => !f.variant))).why, "opc_main_part_unrecognized");
+  }
+  // a caller row's variant is carried; a caller row with none answers null
+  const VSDM = "application/vnd.ms-visio.drawing.macroEnabled.main+xml";
+  const vsdm = zipOf([{ name: "[Content_Types].xml", data: contentTypes({ "/visio/document.xml": VSDM }) }, { name: "visio/document.xml", data: "<v/>" }]);
+  assert.equal((await discriminate(vsdm, null, [{ flavour: "vsdx", variant: "vsdm", mainContentType: VSDM, conventionalMainPart: "visio/document.xml" }])).variant, "vsdm");
+  assert.equal((await discriminate(vsdm, null, [{ flavour: "vsdx", mainContentType: VSDM, conventionalMainPart: "visio/document.xml" }])).variant, null);
 });
 
 test("R11 discriminate: the declared content type is recorded in signals and never used", async () => {
@@ -347,7 +473,7 @@ test("R11 discriminate: not a zip, an unreadable zip, a plain zip", async () => 
   }
   const cases = [
     [zipOf([{ name: "a", data: "a" }], { eocd: { cdSize: 999 } }), "central_directory_truncated"],
-    [zipOf([{ name: "a", data: "a" }], { eocd: { cdOffset: 0xffffffff } }), "zip64_unsupported"],
+    [zipOf([{ name: "a", data: "a" }], { eocd: { cdOffset: 0xffffffff } }), "zip64_record_invalid"],
     [zipOf([{ name: "a", data: "a" }, { name: "b", data: "b" }], { eocd: { diskEntries: 1 } }), "multi_disk_unsupported"],
   ];
   for (const [b, why] of cases) {
@@ -438,7 +564,7 @@ test("R11 discriminate never throws on odd arguments", async () => {
 test("R12 OPC is tried before ODF: a container with both is read as OPC and the ODF branch never runs", async () => {
   const both = zipOf([...odf("odt"), ...opc("docx")]);
   const r = await discriminate(both);
-  assert.deepEqual(withoutSignals(r), { ok: true, format: "docx", mainPart: "word/document.xml", confidence: "high" });
+  assert.deepEqual(withoutSignals(r), { ok: true, format: "docx", variant: null, mainPart: "word/document.xml", confidence: "high" });
   assert.ok(!r.signals.some((s) => s.startsWith("odf:")));
   for (const [ct, why] of [["garbage", "content_types_unparseable"], [contentTypes({ "/x.xml": "application/x" }), "opc_main_part_unrecognized"]]) {
     const b = zipOf([...odf("odt"), { name: "[Content_Types].xml", data: ct }]);
@@ -693,12 +819,30 @@ async function callAll(bytes) {
     relsFor: relsPartFor("word/document.xml"), rels: parseRels(RELS(REL({ Target: "x" }))),
     walk: c.ok ? await walkRels(bytes, c) : null, core: c.ok ? await readCoreProperties(bytes, c) : null,
     images: await withContainerImages({ ok: true }, { ok: true, bytes, container: c.ok ? c : null }, "word/media/"),
+    vba: c.ok ? await readVbaProject(bytes, c, "word/vbaProject.bin") : null,
+    list: await listArchive(bytes),
+    cuts: await cutEvery(bytes),
   };
+}
+/* Every row listArchive answers, cut: its done answer and the bytes' length and CRC-32. */
+async function cutEvery(bytes) {
+  const l = await listArchive(bytes);
+  const out = [];
+  for (const row of l.entries ?? []) {
+    const { chunks, done } = streamMember(bytes, row);
+    let length = 0, crc = 0;
+    const parts = [];
+    for await (const ch of chunks) { length += ch.length; parts.push(ch); }
+    if (parts.length) crc = zcrc32(Buffer.concat(parts)) >>> 0;
+    out.push({ done: await done, length, crc });
+  }
+  return out;
 }
 const richDocx = () => zipOf(opc("docx", [
   { name: "word/_rels/document.xml.rels", data: RELS(REL({ Id: "h", Target: "https://x.example/", TargetMode: "External" })) },
   { name: "docProps/core.xml", data: CORE("<dc:creator>c</dc:creator><cp:revision>3</cp:revision>") },
   { name: "word/media/image1.png", data: "\x89PNG fake" },
+  { name: "word/vbaProject.bin", data: makeVbaProject({ modules: [{ name: "M", source: "Sub AutoOpen()\r\nShell 1\r\nEnd Sub" }] }).bytes },
 ]));
 
 test("R22 pure: no store, no network, no clock; identical inputs give identical results", async () => {
@@ -726,6 +870,13 @@ test("R22 pure: no store, no network, no clock; identical inputs give identical 
   assert.deepEqual(touched, []);
   assert.deepEqual(second, first);
   assert.equal(first[0].d.format, "docx"); assert.equal(first[0].images.images.length, 1);
+  assert.deepEqual(first[0].vba.autoRun, ["AutoOpen"]);
+  assert.equal(first[0].list.count, 7);
+  assert.ok(first[0].cuts.every((x) => x.done.ok));
+  // a range source's read is the caller's: given the same bytes, the same answer
+  const z = richDocx();
+  const rs = { size: z.length, read: async (o, n) => z.slice(o, o + n) };
+  assert.deepEqual(await listArchive(rs), first[0].list);
 });
 
 test("R23 zero runtime dependency: the module imports nothing; inflate is DecompressionStream(deflate-raw), hashing crypto.subtle", async () => {
@@ -753,11 +904,16 @@ test("R23 zero runtime dependency: the module imports nothing; inflate is Decomp
     assert.deepEqual(await readPart(bytes, c, "m/a.png"), { ok: true, bytes: enc("deflated image") });
     const r = await withContainerImages({ ok: true }, { ok: true, bytes, container: c }, "m/");
     assert.equal(r.images[0].part, sha256(enc("deflated image")));
+    // the cut inflates through the same primitive; its streamed digest equals crypto.subtle.digest's
+    const row = (await listArchive(bytes)).entries[0];
+    const { chunks, done } = streamMember(bytes, row);
+    for await (const ch of chunks) void ch;
+    assert.equal((await done).sha256, sha256(enc("deflated image")));
   } finally {
     globalThis.DecompressionStream = RealDS;
     crypto.subtle.digest = realDigest;
   }
-  assert.ok(formats.length >= 2 && formats.every((f) => f === "deflate-raw"));
+  assert.ok(formats.length >= 3 && formats.every((f) => f === "deflate-raw"));
   assert.deepEqual(digests, ["SHA-256"]);
 });
 
@@ -815,6 +971,15 @@ test("R25 never invents structure and never throws on malformed or adversarial b
         assert.ok(!["docx", "xlsx", "pptx", "odt", "ods", "odp"].includes(all.d.format));
       }
       if (all.d.ok && all.d.format === "undetermined") assert.equal(typeof all.d.why, "string");
+      assert.equal(typeof all.list.ok, "boolean");
+      if (!all.list.ok) assert.equal(typeof all.list.why, "string");
+      for (const [i, x] of all.cuts.entries()) {
+        if (!x.done.ok) { assert.equal(typeof x.done.why, "string"); continue; }
+        const row = all.list.entries[i];
+        assert.equal(row.verdict, "ok");
+        assert.deepEqual([x.length, x.crc, x.done.size, x.done.crc32], [row.uncompressed, row.crc32, row.uncompressed, row.crc32]);
+      }
+      if (all.vba && !all.vba.ok) assert.equal(typeof all.vba.why, "string");
       if (all.images.images === null) assert.equal(typeof all.images.imagesWhy, "string");
     }
   }

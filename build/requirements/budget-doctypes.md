@@ -1,6 +1,6 @@
 # budget-doctypes — requirements
 
-**Status** · DRAFT by a requirements worker for BOB #114, 2026-10-05, on `tranche/T33` (open), for BOB's review. New module (K1504, Choices 2; scope §2: later readers each in their own sibling), layer 1 after `court-doctypes`. Plan entry T33-17 (C §(c) ANALYSIS L4, the budget and financial-report readers; departments as dated groupings keyed on org and fund codes, `measures-T33/legistar-events.md` §3; K1468, K1471), entered on GO (K1506; `measures-T33/money-people.md` §1c, §7). Every id is new and not yet met (T33-17). Code today: none.
+**Status** · In force: a new module, reviewed with T33's new modules (K1505; T33-17, K1506). Last changed T33 (R13 re-worded, K1520, K1523); every requirement met (K1539).
 
 **Size (P6).** About 1,000–1,500 lines with tests.
 

@@ -134,7 +134,7 @@ export default {
     if (url.pathname === "/__mock/state")
       return Response.json({ record: RECORD, log: LOG });
     const op = url.searchParams.get("op") || "";
-    const token = url.searchParams.get("token") || "";
+    const token = (req.headers.get("authorization") || "").replace(/^Bearer /, "") || "";
     const store = url.searchParams.get("store") || "";
     LOG.push({ op, token, store, method: req.method });
     /* A refused credential, worded exactly as the plane words one: the code, the
@@ -658,7 +658,7 @@ console.log("\n--- 8 · D-276: the meaning ARM, driven against the REAL plane in
   const mockAsk = async (spelling) => {
     const w = await mf.getWorker("plane-mock");
     return (await (await w.fetch(
-      `http://plane/?op=meaningrows&store=scratch&token=${AIK}&rows=${encodeURIComponent(spelling)}`)).json());
+      `http://plane/?op=meaningrows&store=scratch&rows=${encodeURIComponent(spelling)}`, { headers: { authorization: `Bearer ${AIK}` } })).json());
   };
   const mockBad = await mockAsk("legs");
   const mockGood = await mockAsk(MEANING_ARM);

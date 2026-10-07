@@ -38,7 +38,9 @@ import { captureOf } from "../capture/index.mjs";
 import { credentialsOf } from "../capture-sources/credentials.mjs";
 import { observationLogOf } from "../observation-log/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
-import { runPrincipalGate } from "../run-rules/index.mjs";
+import { runPrincipalGate, runPrincipalOf } from "../run-rules/index.mjs";
+import { normalizeAddress } from "../subresources.mjs";
+import { standardsOf } from "../standards/index.mjs";
 import { migrateCaptureRequests } from "./schema.mjs";
 import { CAPTURE_REQUEST_CHECKS, CAPTURE_SOURCE_CHECKS, CAPTURE_PURPOSES, CAPTURE_UA_MODES, CAPTURE_UA_MODE_ALIASES,
          uaModeOf, userAgentIsLegible } from "./checks.mjs";
@@ -84,6 +86,11 @@ export const MEMBER_ROUTE = "Such a page is captured only by a member's own act 
   + "capture), never by the daemon: nothing was fetched, and your group's Civicsmith uses no login for it.";
 /** R46: the kind of mark a member puts on a host (R41's scope record for a platform), and its one scope. */
 export const PLATFORM_KIND = "platform";
+/** R49 (T35; K1881): the longest address a capture request may carry, in characters; a longer one is refused whole. */
+export const CAPTURE_REQUEST_ADDRESS_MAX = 2048;
+/** R52 (T35): the four answers a records request may record, and the most a withheld ground may say. */
+export const RECORDS_ANSWERS = Object.freeze(["produced", "none_exists", "withheld", "no_answer"]);
+export const RECORDS_GROUND_MAX = 1000;
 /** R4: the fields that would make a request a capture. */
 export const CAPTURE_FIELDS = Object.freeze(["capture_sha", "sha256", "bytes", "content", "provenance_chain", "via", "retrieved"]);
 
@@ -252,8 +259,12 @@ export class CaptureRequests {
     try { host = new URL(address).host.toLowerCase(); } catch { host = null; }
     if (!host)
       return refusal("CAPTURE_REQUEST_NOT_PUBLIC",
-        "this address has no host this plane can read, and the per-host pacing DEC-47 requires is "
+        "this address has no host your group's Civicsmith can read, and the per-host pacing DEC-47 requires is "
         + "computed from one.", { address });
+    /* R49 (T35; F2 as Bob ruled it, K1880; K1881's bound): AN ADDRESS THE RECORD ALREADY HOLDS, query and fragment
+       included, within 2,048 characters; judged here and again at the drain (R14), before anything is written. */
+    const unheld = this.#addressRefused(address, viewer);
+    if (unheld) return unheld;
 
     /* R3: the question the request is accountable to, readable by this viewer; an unseen and an absent one alike. */
     const target = text(args.target).trim();
@@ -323,6 +334,18 @@ export class CaptureRequests {
               + MEMBER_ROUTE });
     }
 
+    /* R50 (T35; K1888 (4)): THE MEMBER'S CO-ARCHIVE CHOICE for this capture. Absent or null leaves it to the group's
+       setting at the fetch; `true` or `false` is a member's choice, taken only under a member's stamp (`member:<id>`, or
+       a credential that member minted); anything else is refused by name. Before anything is written. */
+    const coRaw = args.co_archive ?? null;
+    if (coRaw !== null && coRaw !== true && coRaw !== false)
+      return coArchiveRefusal("malformed", `co_archive=${shown(coRaw)} is not a choice this door reads. Send `
+        + `co_archive: true or false, or nothing to let the group's setting decide.`);
+    if (coRaw !== null && !runPrincipalOf(caller).startsWith("member:"))
+      return coArchiveRefusal("not-a-members", `the choice about a public archive copy is a member's, and this request `
+        + `was not made under a member's own credential. Send no co_archive to let the group's setting decide.`);
+    const coArchive = coRaw === null ? null : coRaw ? 1 : 0;
+
     /* END DEC-49 REGION is-capture-request */
 
     /* R8: the PLANE principal is the caller's stamp (REC-168), the CLAUDE principal the run's: it is the account the
@@ -351,7 +374,8 @@ export class CaptureRequests {
       return { ok: true, request: standing.request, run, target: standing.target, address,
                host: standing.host, purpose: standing.purpose, ua_mode: uaModeOf(standing.ua_mode),
                lead_inquiry: standing.lead_inquiry ?? null, render: standing.render === 1,
-               sweep: standing.sweep ?? null, state: standing.state, requested: false, already: true,
+               sweep: standing.sweep ?? null, co_archive: coArchiveOf(standing.co_archive),
+               state: standing.state, requested: false, already: true,
                principals: { plane: standing.principal_plane, claude: standing.principal_claude } };
 
     /* R6, R7: THE TIME IS THE IN-PROCESS CALLER'S STATED INSTANT (`at`, a test or the scheduler's replay) OR THIS
@@ -368,10 +392,11 @@ export class CaptureRequests {
     }
     this.#sql.exec(
       `INSERT INTO capture_requests (request, run, target, address, host, purpose, ua_mode,
-         principal_plane, principal_claude, state, attempts, requested_at, updated, expires, lead_inquiry, render, sweep)
-       VALUES (?,?,?,?,?,?,?,?,?,'requested',0,?,?,?,?,?,?)`,
+         principal_plane, principal_claude, state, attempts, requested_at, updated, expires, lead_inquiry, render, sweep,
+         co_archive)
+       VALUES (?,?,?,?,?,?,?,?,?,'requested',0,?,?,?,?,?,?,?)`,
       request, run, target, address, host, purpose, uaMode, callerPlane, String(runRow.principal_claude ?? ""),
-      now, now, expires, lead || null, render, sweep);
+      now, now, expires, lead || null, render, sweep, coArchive);
     const written = this.#one(`SELECT * FROM capture_requests WHERE request=?`, request);
     /* R44 (N223): every listener told once, after the write, in the modules' total order; none can change the row or
        the answer. A rejection is swallowed where it lands. */
@@ -384,10 +409,11 @@ export class CaptureRequests {
     return { ok: true, request, run: written.run, target: written.target, address: written.address,
              host: written.host, purpose: written.purpose, ua_mode: written.ua_mode,
              lead_inquiry: written.lead_inquiry ?? null, render: written.render === 1,
-             sweep: written.sweep ?? null, state: written.state, requested: true, already: false,
+             sweep: written.sweep ?? null, co_archive: coArchiveOf(written.co_archive),
+             state: written.state, requested: true, already: false,
              requested_at: written.requested_at, expires: written.expires,
              principals: { plane: written.principal_plane, claude: written.principal_claude },
-             detail: "requested. This instance does not fetch on a caller's timing: the daemon drains "
+             detail: "requested. Your group's Civicsmith does not fetch on a caller's timing: the daemon drains "
                    + "this queue, and DEC-47's conduct rules are applied there." };
   }
 
@@ -399,6 +425,62 @@ export class CaptureRequests {
     const b = this.#one(`SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
                         id, ...gate.args);
     return !!b && normalizeType(b.object_type) === "inquiry";
+  }
+
+  /** R49 (T35; F2, K1880; K1881): null when `address` is within 2,048 characters and is one the record already holds
+   *  for `viewer`, else R49's refusal. Held means equal, character for character once scheme and host are lower-cased,
+   *  to an acquisition receipt's address or retrieval locator (provenance's `captured_locators`, its R48), or to a held
+   *  capture's outbound link with its fragment (capture's `links`, its R27, R57), of a capture the viewer may see
+   *  (membership R43 through the register's bundle; a capture filed in no bundle is visible). Candidates are sought on
+   *  the indexed `address_norm`, then compared exactly. A read that fails holds nothing (fail closed). Never throws. */
+  #addressRefused(address, viewer) {
+    const a = String(address ?? "");
+    if (a.length > CAPTURE_REQUEST_ADDRESS_MAX)
+      return addressRefusal("too-long", `this address is ${a.length} characters long and a capture request carries at `
+        + `most ${CAPTURE_REQUEST_ADDRESS_MAX}; it was refused whole, never cut.`, { bound: CAPTURE_REQUEST_ADDRESS_MAX,
+          length: a.length });
+    if (this.#addressHeld(a, viewer)) return null;
+    return addressRefusal("not-held", `${a.slice(0, 120)} is not an address the record already holds. The assistant's `
+      + `reading may go anywhere, but only an address the record already holds is captured for it: one a held document `
+      + `was captured from, or one a held document links to, exactly as written, its query and anchor included.`,
+      { address: a.slice(0, 300) });
+  }
+
+  #addressHeld(address, viewer) {
+    try {
+      const want = schemeHostLower(address);
+      if (!want || viewerPredicate(viewer).scope === "DENY") return false;
+      const key = normalizeAddress(want);
+      const seen = (sha) => this.#captureSeen(sha, viewer);
+      const has = (q, ...args) => { try { return this.#rows(q, ...args); } catch { return []; } };
+      for (const r of has(`SELECT address, retrieval_locator, capture_sha FROM captured_locators WHERE address_norm = ?`, key))
+        if ((schemeHostLower(r.address) === want || schemeHostLower(r.retrieval_locator) === want) && seen(r.capture_sha))
+          return true;
+      for (const r of has(`SELECT address, fragment, source_capture FROM links WHERE address_norm = ?`, key)) {
+        const raw = String(r.address ?? "");
+        const full = raw.includes("#") || !r.fragment ? raw : `${raw}#${r.fragment}`;
+        if (schemeHostLower(full) === want && seen(r.source_capture)) return true;
+      }
+      /* A retrieval locator differs from its receipt's address (an archived copy's own locator): sought by itself. */
+      for (const r of has(`SELECT retrieval_locator, capture_sha FROM captured_locators WHERE retrieval_locator IN (?, ?)`,
+                          address, want))
+        if (schemeHostLower(r.retrieval_locator) === want && seen(r.capture_sha)) return true;
+      return false;
+    } catch { return false; }
+  }
+
+  /** Whether `viewer` may see the capture `sha`: filed in no bundle, or in a bundle the viewer sees (membership R43,
+   *  through provenance's `register`, its R48). */
+  #captureSeen(sha, viewer) {
+    if (typeof sha !== "string" || !sha) return false;
+    let filed = [];
+    try { filed = this.#rows(`SELECT bundle_id FROM register WHERE capture_sha = ?`, sha); } catch { filed = []; }
+    if (!filed.length) return true;
+    const gate = viewerPredicate(viewer);
+    if (gate.scope === "DENY") return false;
+    if (gate.scope === "member") return true;
+    return !!this.#one(`SELECT 1 AS x FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
+                         WHERE r.capture_sha = ? AND (${gate.sql}) LIMIT 1`, sha, ...gate.args);
   }
 
   /** R10's composer, as a method for the reads' callers. */
@@ -705,11 +787,16 @@ export class CaptureRequests {
                      + `, and DEC-27(b) requires the record to state BOTH: whose plane scope the writes `
                      + `ran under, and WHICH LEVEL of the Claude-account cascade paid. No fetch is made `
                      + `for an act the record could not attribute.` };
+    /* R49 (T35; K1880), DIRECTLY AFTER ATTRIBUTION: the address judged again, so a row filed before R49 held, or returned
+       by R42, is never fetched for an address the record does not hold. Terminal. Sight is the asking member's (the
+       row's plane principal), as the door judged it with that member's viewer. */
+    const unheld = this.#addressRefused(q.address, runPrincipalOf(q.principal_plane));
+    if (unheld) return { ...unheld, ok: false, terminal: true };
     /* CONDUCT 2 — THE PURPOSE TOKEN, before the agent because it is a COMPONENT of the agent. */
     if (!CAPTURE_PURPOSES.includes(q.purpose))
       return { ok: false, terminal: true, code: "CAPTURE_CONDUCT_NO_PURPOSE",
                detail: `'${String(q.purpose || "").slice(0, 40) || "(none)"}' is not one of the purposes `
-                     + `this instance can truthfully name: ${CAPTURE_PURPOSES.join(", ")}. DEC-47 requires `
+                     + `your group's Civicsmith can truthfully name: ${CAPTURE_PURPOSES.join(", ")}. DEC-47 requires `
                      + `an investigation fetch to introduce or reuse a purpose token DELIBERATELY, and `
                      + `borrowing a word that means something else is the disguise SOURCE-ACCESS.md rules out.` };
     /* CONDUCT 1 — THE AGENT, and there are exactly TWO legible forms, legible for different reasons: the member's own
@@ -754,7 +841,7 @@ export class CaptureRequests {
                detail: `${q.host} is in cool-off: it refused us or asked us to slow down, and the `
                      + `per-host governor is holding the interval it named. DEC-47 bounds discovery `
                      + `more tightly than re-fetch because a stranger's server has no relationship `
-                     + `with this instance.` };
+                     + `with your group's Civicsmith.` };
     if ((hostsThisTick.get(q.host) || 0) >= CAPTURE_REQUEST_PER_HOST_PER_TICK)
       return { ok: false, terminal: false, governed: true, condition: "governor-holding-host",
                code: "CAPTURE_CONDUCT_TICK_SPENT",
@@ -776,7 +863,7 @@ export class CaptureRequests {
                              + `request`);
     const check = this.#sweepScope;
     if (!check)
-      return sweepOutOfScope(`no scope check is registered on this instance, so nothing can say that ${name} is `
+      return sweepOutOfScope(`no scope check is registered in your group's Civicsmith, so nothing can say that ${name} is `
                              + `ratified, not held and reaches ${q.address}`);
     let a = null;
     try { a = await check.fn({ sweep: name, locators: [q.address], run: q.run, target: q.target }); } catch { a = null; }
@@ -834,6 +921,9 @@ export class CaptureRequests {
                           agent: q.ua_mode === "member-browser" ? verdict.ua : null, render: q.render === 1,
                           ...(credential ? { credential } : {}),
                           ...(held ? { heldSha: held.capture_sha } : {}),
+                          /* R50: the member's co-archive choice, unchanged (acquisition R43); none when the group's
+                             setting decides. */
+                          ...(q.co_archive === 0 || q.co_archive === 1 ? { coArchive: q.co_archive === 1 } : {}),
                           /* R45: a request its sweep admitted is filed under that sweep, the run its deeming actor,
                              and carries the sweep's scope, so every redirect is judged against it (acquisition R31). */
                           ...(verdict.sweep
@@ -861,7 +951,7 @@ export class CaptureRequests {
                  ? out.render.state : null,
                detail: renderCode ? String((out && out.detail) || "").slice(0, 400) : null };
     } catch {
-      return { ok: false, reason: "the fetch did not complete and this plane did not record why", status: null };
+      return { ok: false, reason: "the fetch did not complete and your group's Civicsmith did not record why", status: null };
     }
   }
 
@@ -930,7 +1020,7 @@ export class CaptureRequests {
                              detail: String((p && p.detail) || "the promotion was refused").slice(0, 300) };
       });
     } catch {
-      return { ok: false, detail: "the promotion did not complete and this plane did not record why" };
+      return { ok: false, detail: "the promotion did not complete and your group's Civicsmith did not record why" };
     }
   }
 
@@ -949,6 +1039,7 @@ export class CaptureRequests {
       updated: r.updated, expires: r.expires, captured_at: r.captured_at,
       lead_inquiry: r.lead_inquiry ?? null, run_woken_at: r.run_woken_at ?? null,
       render: r.render === 1, source_reason: r.source_reason ?? null, sweep: r.sweep ?? null,
+      co_archive: coArchiveOf(r.co_archive),
       /* R25, D-523: what became of a render this instance could not do, in the drain's and op=queue's words. */
       render_deferral: (r.render === 1 && (r.state === "expired" || (r.state === "requested" && r.code)))
         ? (({ code, check, translation }) => ({ state: r.state === "expired" ? "expired" : "deferred",
@@ -1204,6 +1295,184 @@ export class CaptureRequests {
   }
 
   /* ==================================================================== *
+   * R51–R53 — RECORDS REQUESTS FOR A POLICY KNOWN ONLY BY CITATION (T35; N646, POLICIES L2 PO3; K1724, K1740).
+   *
+   * The group's own record that it asked a policy's issuer for its text, and of the answer, each a member's act. A row
+   * here carries no address, is never drained and fetches nothing; nothing here sends it to anyone (`actions`' records
+   * request may name its id). The request and its answer are the search a "not found" entry holds.
+   * ==================================================================== */
+
+  /** `standards`' instance (K61): the read of a standard's sight, issuer, `held` and citation (its R5). */
+  #standards() {
+    const s = this.#deps.standards;
+    return typeof s === "function" ? s() : s;
+  }
+
+  /** R5 of standards as this viewer reads it: `{ok: true, …}` or its refusal (NO_SUCH_STANDARD for an absent or unseen
+   *  one alike, standards R17, relayed whole), never a throw. */
+  #standardFor(id, viewer) {
+    try {
+      const a = this.#standards().standardRead({ id, viewer });
+      return a && typeof a === "object" ? a : null;
+    } catch { return null; }
+  }
+
+  static #recordsEntry(r) {
+    const parse = (t) => { try { return JSON.parse(t); } catch { return null; } };
+    return { request: r.request, standard: r.standard, citation: parse(r.citation), addressee: parse(r.addressee),
+             opened_by: r.opened_by, opened_at: r.opened_at, state: r.state, answer: r.answer ?? null,
+             answer_capture: r.answer_capture ?? null, answer_note: r.answer_note ?? null,
+             answered_by: r.answered_by ?? null, answered_at: r.answered_at ?? null };
+  }
+
+  /** R51 (op=recordsrequestopen): a member opens the group's records request for a standard held `cited`. Refusals in
+   *  order, each writing nothing: a machine or empty `by`; a standard absent or unseen (standards' own answer); one not
+   *  held `cited`. An `open` request for the standard answers with `already: true`. Never throws. */
+  recordsRequestOpen(a = {}, { viewer = null } = {}) {
+    try {
+      const args = a && typeof a === "object" ? a : {};
+      const by = runPrincipalOf(args.by);
+      if (!by.startsWith("member:"))
+        return recordsRefusal("machine", "a records request is opened by a member's own act. Nothing was written.");
+      const standard = text(args.standard).trim();
+      const st = this.#standardFor(standard, viewer);
+      if (!st || st.ok !== true) return st && st.ok === false ? st : this.#standardsUnreadable(standard);
+      if (st.held !== "cited")
+        return recordsRefusal("not-cited", `${standard.slice(0, 80)} is held '${String(st.held ?? "text")}', not 'cited': `
+          + `a records request is opened for a policy known only by a citation. Nothing was written.`,
+          { standard, held: st.held ?? "text" });
+      const standing = this.#one(`SELECT * FROM records_requests WHERE standard=? AND state='open' ORDER BY opened_at LIMIT 1`,
+                                 standard);
+      if (standing) return { ok: true, already: true, ...CaptureRequests.#recordsEntry(standing) };
+      const nowMs = this.#nowMs();
+      const at = stampInstant("second", nowMs);
+      let request = null;
+      for (let i = 0; i < 8 && !request; i++) {
+        const id = `RR-${at.replace(/[-:TZ]/g, "")}-${randomHex(6)}`;
+        if (!this.#one(`SELECT 1 AS x FROM records_requests WHERE request=?`, id)) request = id;
+      }
+      const citation = { cite: st.cite ?? null, cited_by: st.cited_by ?? null };
+      const addressee = st.owner && typeof st.owner === "object" ? st.owner : { issuer: st.issuer ?? null };
+      this.#sql.exec(`INSERT INTO records_requests (request, standard, citation, addressee, opened_by, opened_at, state)
+                      VALUES (?, ?, ?, ?, ?, ?, 'open')`,
+                     request, standard, JSON.stringify(citation), JSON.stringify(addressee), by, at);
+      return { ok: true, already: false,
+               ...CaptureRequests.#recordsEntry(this.#one(`SELECT * FROM records_requests WHERE request=?`, request)) };
+    } catch {
+      return recordsRefusal("unknown-request", "the records request could not be opened, and the reason was not "
+        + "recorded. Nothing was written.", { request: null });
+    }
+  }
+
+  /** standards' answer for a standard it did not answer at all (no instance reachable): as absent, through its R17's
+   *  shape, so this module mints nothing of its own for that condition. */
+  #standardsUnreadable(standard) {
+    return { ok: false, reason: "NO_SUCH_STANDARD", code: "NO_SUCH_STANDARD", check: null, translation: null,
+             standard: standard || null, detail: "no standard answers to that id here." };
+  }
+
+  /** R52 (op=recordsrequestanswer): a member records the issuer's answer, once. Refusals in order, each writing
+   *  nothing: a machine `by`; no request the viewer can see; one already answered; an answer outside the four; a
+   *  `produced` naming no capture the viewer may see; a `withheld` with no ground. Moves the row to `answered` and
+   *  changes nothing else. Never throws. */
+  recordsRequestAnswer(a = {}, { viewer = null } = {}) {
+    try {
+      const args = a && typeof a === "object" ? a : {};
+      const by = runPrincipalOf(args.by);
+      const request = text(args.request).trim();
+      if (!by.startsWith("member:"))
+        return recordsRefusal("machine", "the answer to a records request is recorded by a member's own act. Nothing "
+          + "was written.");
+      const row = request ? this.#one(`SELECT * FROM records_requests WHERE request=?`, request) : null;
+      if (!row || !this.#standardSeen(row.standard, viewer))
+        return recordsRefusal("unknown-request", "no records request you can see answers to that id. Nothing was "
+          + "written.", { request: request || null });
+      if (row.state === "answered")
+        return recordsRefusal("answered", `${request} already holds its answer (${row.answer}), and an answer is never `
+          + `replaced. Nothing was written.`, { request });
+      const answer = typeof args.answer === "string" ? args.answer.trim() : args.answer;
+      if (!RECORDS_ANSWERS.includes(answer))
+        return recordsRefusal("unknown-answer", `answer=${shown(args.answer)} is not one of ${RECORDS_ANSWERS.join(", ")}. `
+          + `Nothing was written.`, { request });
+      const capture = answer === "produced" ? text(args.capture).trim() : "";
+      if (answer === "produced" && !(/^[0-9a-f]{64}$/.test(capture) && this.#captureHeld(capture, viewer)))
+        return recordsRefusal("no-capture", `an answer of 'produced' names the capture of what the issuer produced, one `
+          + `the record holds and you can see; ${capture ? `${capture.slice(0, 64)} is not` : "none was named"}. Nothing `
+          + `was written.`, { request });
+      const note = answer === "withheld" && typeof args.note === "string" ? args.note.trim() : "";
+      if (answer === "withheld" && (!note || note.length > RECORDS_GROUND_MAX))
+        return recordsRefusal("no-ground", `an answer of 'withheld' records the issuer's stated ground in at most `
+          + `${RECORDS_GROUND_MAX} characters; ${note ? `this one is ${note.length}` : "none was given"}. Nothing was `
+          + `written.`, { request });
+      const at = stampInstant("second", this.#nowMs());
+      this.#sql.exec(`UPDATE records_requests SET state='answered', answer=?, answer_capture=?, answer_note=?, answered_by=?,
+                        answered_at=? WHERE request=? AND state='open'`,
+                     answer, capture || null, note || null, by, at, request);
+      return { ok: true, ...CaptureRequests.#recordsEntry(this.#one(`SELECT * FROM records_requests WHERE request=?`, request)) };
+    } catch {
+      return recordsRefusal("unknown-request", "the answer could not be recorded, and the reason was not recorded. "
+        + "Nothing was written.", { request: null });
+    }
+  }
+
+  /** Whether the record holds the capture `sha` (a receipt or a register entry) and the viewer may see it. */
+  #captureHeld(sha, viewer) {
+    const held = (q) => { try { return !!this.#one(q, sha); } catch { return false; } };
+    return (held(`SELECT 1 AS x FROM captured_locators WHERE capture_sha = ? LIMIT 1`)
+            || held(`SELECT 1 AS x FROM register WHERE capture_sha = ? LIMIT 1`))
+      && viewerPredicate(viewer).scope !== "DENY" && this.#captureSeen(sha, viewer);
+  }
+
+  /** R53: whether `viewer` may read the standard (standards' own sight, which keeps a policy from confidential material
+   *  at that material's sight, K1740). */
+  #standardSeen(standard, viewer) {
+    const st = this.#standardFor(standard, viewer);
+    return !!st && st.ok === true;
+  }
+
+  /** R53 (op=recordsrequests): the records requests whose standard the viewer may read, filtered by `standard` and
+   *  `state`, in id order after `after`; `limit` 200 by default, clamped 1…1,000, with `truncated` and `next`. An unseen
+   *  row is absent and counted nowhere. Writes nothing; never throws. */
+  recordsRequests({ standard = null, state = null, after = null, limit = null, viewer = null } = {}) {
+    const cap = clamp(limit, CAPTURE_REQUEST_READ_LIMIT, CAPTURE_REQUEST_READ_MAX);
+    try {
+      if (viewerPredicate(viewer).scope === "DENY") return { count: 0, limit: cap, truncated: false, next: null, requests: [] };
+      const where = ["request > ?"], base = [text(after)];
+      if (standard) { where.push("standard = ?"); base.push(text(standard)); }
+      if (state) { where.push("state = ?"); base.push(text(state)); }
+      const out = [], seen = new Map();
+      let cursor = text(after), more = true;
+      while (out.length <= cap && more) {
+        const page = this.#rows(`SELECT * FROM records_requests WHERE ${where.join(" AND ")} ORDER BY request LIMIT ?`,
+                                cursor, ...base.slice(1), CAPTURE_REQUEST_READ_LIMIT);
+        more = page.length === CAPTURE_REQUEST_READ_LIMIT;
+        for (const r of page) {
+          cursor = r.request;
+          if (!seen.has(r.standard)) seen.set(r.standard, this.#standardSeen(r.standard, viewer));
+          if (seen.get(r.standard)) out.push(r);
+          if (out.length > cap) break;
+        }
+      }
+      const rows = out.slice(0, cap);
+      const truncated = out.length > cap;
+      return { count: rows.length, limit: cap, truncated, next: truncated ? rows[rows.length - 1].request : null,
+               requests: rows.map(CaptureRequests.#recordsEntry) };
+    } catch { return { count: 0, limit: cap, truncated: false, next: null, requests: [] }; }
+  }
+
+  /** R53: one records request by id when its standard is one the viewer may read; null for a blank, unknown or unseen
+   *  id alike. Writes nothing; never throws. */
+  recordsRequestById(a = {}) {
+    try {
+      const { request = null, viewer = null } = a && typeof a === "object" ? a : {};
+      const id = text(request).trim();
+      if (!id) return null;
+      const r = this.#one(`SELECT * FROM records_requests WHERE request=?`, id);
+      return r && this.#standardSeen(r.standard, viewer) ? CaptureRequests.#recordsEntry(r) : null;
+    } catch { return null; }
+  }
+
+  /* ==================================================================== *
    * R46 — THE HOSTS A MEMBER HAS MARKED A LOGIN-GATED PLATFORM (R41's scope record, kind `platform`).
    * ==================================================================== */
 
@@ -1313,7 +1582,7 @@ const CAPTURED_FOR_CHUNK = 100;
 const SWEEP_NAME = /^[^\s#]{1,200}#[a-z0-9][a-z0-9-]{0,39}$/;
 /** R45: what the scope check's `reason` says, in the refusal's words. */
 const SWEEP_REFUSALS = Object.freeze({
-  unknown: "is not a sweep this instance holds", unratified: "is not ratified", held: "is held",
+  unknown: "is not a sweep your group's Civicsmith holds", unratified: "is not ratified", held: "is held",
   "out-of-scope": "does not reach this address",
 });
 
@@ -1337,6 +1606,56 @@ function memberCaptureOnly(extra = {}) {
            translation: row.translation, route: "member", ...extra,
            detail: String(extra.detail || MEMBER_ROUTE) };
   /* END DEC-49 REGION is-capture-member-only */
+}
+
+/** R49 (T35): the one site of C-28.23 and C-28.24, terminal; the door and the drain's conduct both answer through it.
+ *  `extra` rides beside the refusal's fields. */
+function addressRefusal(kind, detail, extra = {}) {
+  /* DEC-49 REGION is-capture-address-held */
+  const code = kind === "too-long" ? "CAPTURE_REQUEST_ADDRESS_TOO_LONG" : "CAPTURE_REQUEST_ADDRESS_NOT_HELD";
+  const row = CAPTURE_REQUEST_CHECKS[code];
+  return { ...extra, ok: false, reason: code, code, check: row.check, translation: row.translation, detail };
+  /* END DEC-49 REGION is-capture-address-held */
+}
+
+/** R50 (T35): the one site of C-28.25 and C-28.26, the door's refusals of a co-archive choice. */
+function coArchiveRefusal(kind, detail) {
+  /* DEC-49 REGION is-capture-co-archive */
+  const code = kind === "malformed" ? "CAPTURE_REQUEST_CO_ARCHIVE_MALFORMED" : "CAPTURE_REQUEST_CO_ARCHIVE_NOT_A_MEMBERS";
+  const row = CAPTURE_REQUEST_CHECKS[code];
+  return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, co_archive: null };
+  /* END DEC-49 REGION is-capture-co-archive */
+}
+
+/** R51, R52 (T35): the one site of C-28.27–C-28.33, the records requests' refusals, each code a literal. */
+function recordsRefusal(kind, detail, extra = {}) {
+  /* DEC-49 REGION is-records-request */
+  const code = kind === "machine" ? "MACHINE_CANNOT_REQUEST_RECORDS"
+    : kind === "not-cited" ? "RECORDS_REQUEST_NOT_CITED"
+    : kind === "no-capture" ? "RECORDS_ANSWER_NO_CAPTURE"
+    : kind === "no-ground" ? "RECORDS_ANSWER_NO_GROUND"
+    : kind === "answered" ? "RECORDS_REQUEST_ANSWERED"
+    : kind === "unknown-answer" ? "RECORDS_ANSWER_UNKNOWN"
+    : "NO_SUCH_RECORDS_REQUEST";
+  const row = CAPTURE_REQUEST_CHECKS[code];
+  return { ...extra, ok: false, reason: code, code, check: row.check, translation: row.translation, detail };
+  /* END DEC-49 REGION is-records-request */
+}
+
+/** R50: a stored co-archive choice as every answer gives it: `true`, `false`, or null (the group's setting decides). */
+function coArchiveOf(v) { return v === 1 || v === true ? true : v === 0 || v === false ? false : null; }
+
+/** R49: an address with its scheme and host lower-cased and nothing else touched (no parsing that re-encodes), or null
+ *  when it has no `scheme://authority`. A user part or port keeps its case; only the host name is lowered. */
+function schemeHostLower(v) {
+  if (typeof v !== "string") return null;
+  const m = /^([A-Za-z][A-Za-z0-9+.-]*):\/\/([^/?#]*)([\s\S]*)$/.exec(v);
+  if (!m) return null;
+  const at = m[2].lastIndexOf("@");
+  const user = at === -1 ? "" : m[2].slice(0, at + 1);
+  const hostPort = at === -1 ? m[2] : m[2].slice(at + 1);
+  const hp = /^(\[[^\]]*\]|[^:]*)(.*)$/.exec(hostPort);
+  return `${m[1].toLowerCase()}://${user}${hp[1].toLowerCase()}${hp[2]}${m[3]}`;
 }
 
 /** A host as a mark names it: a bare host name, lower-cased, no scheme, path, port or user part; else null. */
@@ -1366,6 +1685,10 @@ export const CAPTURE_REQUESTS_TABLES = Object.freeze([
                   version_chain: false }),
   Object.freeze({ name: "capture_request_platforms", purge: "exempt", expunge: "none", export: "admin-only",
                   sight: "group", derive: "stored", version_chain: false }),
+  /* R53 (T35): the records requests, record and not scratch, keyed to the standard they name (purged with it), at its
+     sight, exported. */
+  Object.freeze({ name: "records_requests", keys: Object.freeze(["standard"]), purge: "clear", expunge: "none",
+                  export: "yes", sight: "bundle", derive: "stored", version_chain: false }),
 ]);
 
 const instances = new WeakMap();
@@ -1395,6 +1718,9 @@ export function captureRequestsOf(host, deps = {}) {
       /* R14 (N295): the member-browser agent is inquiry's R44 answer. Reached when the drain asks, not at creation, so
          the one inquiry on this host is the one the plane built with its own deps. */
       inquiry: deps.inquiry || { memberUserAgent: (id) => inquiryOf(host).memberUserAgent(id) },
+      /* R51–R53 (T35): standards' read of a standard (its R5), reached when first asked, so the one standards instance
+         on this host is the one the plane built with its own deps. */
+      standards: deps.standards || (() => standardsOf(host)),
     };
     c = new CaptureRequests(storage, d);
     instances.set(storage, c);
@@ -1444,5 +1770,12 @@ export function captureRequestsOps(c, url, body) {
                                                limit: q("limit"), viewer: q("viewer") }),
     capturerequestretry: () => c.captureRequestRetry({ request: b.request ?? q("request") },
                                                      { viewer: q("viewer"), caller: q("principal") }),
+    /* R51–R53 (T35): `by` is the control plane's principal stamp, never a body field. */
+    recordsrequestopen: () => c.recordsRequestOpen({ standard: b.standard ?? null, by: q("principal") },
+                                                   { viewer: q("viewer") }),
+    recordsrequestanswer: () => c.recordsRequestAnswer({ request: b.request ?? null, answer: b.answer, capture: b.capture,
+                                                         note: b.note, by: q("principal") }, { viewer: q("viewer") }),
+    recordsrequests: () => c.recordsRequests({ standard: q("standard"), state: q("state"), after: q("after"),
+                                               limit: q("limit"), viewer: q("viewer") }),
   };
 }

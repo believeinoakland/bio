@@ -82,8 +82,8 @@
       {
        "screen": "setup",
        "act": "assistantset",
-       "what": "Read what the assistant is (and open More about this if you want the detail), then choose: the group's API key, members' own accounts, both, or none.",
-       "why": "The group's key serves members with no account of their own, at the group's cost. A member's own account always comes first. Everything works without it."
+       "what": "Read what the assistant is (and open More about this for the detail), then choose whether the group pays for it with its own API key, and whether to keep the group's material away from AI.",
+       "why": "The group's key serves members with no account of their own. Any member may connect their own account unless you keep the material away from AI; then members see your reason. Everything works without it."
       },
       {
        "screen": "setup",

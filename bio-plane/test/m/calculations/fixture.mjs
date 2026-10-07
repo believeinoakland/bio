@@ -20,6 +20,7 @@ import { linesOf } from "../../../src/lines/index.mjs";
 import { retrievalOf } from "../../../src/retrieval/index.mjs";
 import { observationLogOf } from "../../../src/observation-log/index.mjs";
 import { calculationsOf } from "../../../src/calculations/index.mjs";
+import { dayRange } from "../../../src/civil-time/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(s, "utf8").digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -86,6 +87,96 @@ export function progressionsProvider() {
   return { feed, proposalsFeed() { return feed; } };
 }
 
+/** events' T35 reads (its R43–R46, built in the same layer, P10): the held uses of powers the test records, each as
+ *  R45's event view with its participants, answered by `usesOf` (R46: filtered, paged, in sight) and `readEvent`;
+ *  every other read is the real module's. `hide(eventId, viewer)` keeps a use from one viewer (R40's sight). */
+export function usesProvider(w) {
+  const uses = [];
+  const hidden = new Map();
+  const seen = (e, viewer) => !(hidden.get(e.event_id) || new Set()).has(viewer);
+  let n = 0;
+  const own = {
+    uses,
+    hide(eventId, viewer) { if (!hidden.has(eventId)) hidden.set(eventId, new Set()); hidden.get(eventId).add(viewer); },
+    /** A use: `when` a day, `[from, to]` a band, or null (placed nowhere); `reason` its words, or "none". */
+    use({ kind = "discretion", decider = null, subject = null, when = null, provision = null, reason = "none", outcome = "granted", grade = "B" } = {}) {
+      const id = `EVT-2026-${String(++n).padStart(16, "0").replace(/^0/, "u")}`;
+      let w8 = null;
+      if (typeof when === "string") { const r = dayRange(when, when, "UTC"); w8 = { ...r, precision: "day", zone: "UTC", value: when }; }
+      else if (Array.isArray(when)) { const r = dayRange(when[0], when[1], "UTC"); w8 = { ...r, precision: "band", zone: "UTC", value: `${when[0]}/${when[1]}` }; }
+      let stated = "none";
+      if (reason !== "none") {
+        const cid = w.passage(reason);
+        const row = w.content.contentRow(cid);
+        stated = { capture_sha: row.capture_sha, extent: typeof row.extent === "string" ? JSON.parse(row.extent) : row.extent };
+      }
+      const e = { event_id: id, kind, status: "held", when: w8, governing: w8 ? 1 : null,
+        attestations: [{ attestation_id: 1, grade }],
+        participants: [...(decider ? [{ entity_id: decider, role: "decider" }] : []), ...(subject ? [{ entity_id: subject, role: "subject" }] : [])],
+        use: { kind, provision, stated_reason: stated, outcome: { value: outcome } } };
+      uses.push(e);
+      return id;
+    },
+    usesOf({ provision = null, decider = null, subject = null, kinds = null, after = null, limit = 100, viewer = null } = {}) {
+      if (Array.isArray(kinds) && kinds.some((k) => !["discretion", "waiver", "assessment"].includes(k)))
+        return { ok: false, reason: "KIND_NOT_DISCRETION", detail: "a use is of kind discretion, waiver or assessment" };
+      const has = (e, role, id) => e.participants.some((p) => p.role === role && p.entity_id === id);
+      const pv = (e) => e.use.provision;
+      let list = uses.filter((e) => seen(e, viewer) && (!kinds || kinds.includes(e.kind))
+        && (!provision || (pv(e) && pv(e).standard === provision.standard && (!provision.portion || pv(e).portion === provision.portion)))
+        && (!decider || has(e, "decider", decider)) && (!subject || has(e, "subject", subject)));
+      /* as R46 answers: placed ones first, those placed nowhere apart, one page over both, `next` continuing it */
+      list = [...list.filter((e) => e.when), ...list.filter((e) => !e.when)];
+      if (after) list = list.slice(list.findIndex((e) => e.event_id === after) + 1);
+      const cap = Math.max(1, Math.min(500, limit));
+      const shown = list.slice(0, cap).map((e) => ({ ...e }));
+      return { ok: true, items: shown.filter((e) => e.when), placed_nowhere: shown.filter((e) => !e.when), count: shown.length,
+        truncated: list.length > cap, next: list.length > cap ? shown.at(-1).event_id : null };
+    },
+    readEvent({ eventId, viewer = null } = {}) {
+      const e = uses.find((x) => x.event_id === eventId);
+      if (!e) return w.events.readEvent({ eventId, viewer });
+      return seen(e, viewer) ? { ok: true, found: true, event: e } : { ok: true, found: false, event_id: eventId };
+    },
+  };
+  return new Proxy(own, { get: (t, k) => (k in t ? t[k] : typeof w.events[k] === "function" ? w.events[k].bind(w.events) : w.events[k]) });
+}
+
+/** standards' T35 reads (its R34, R35, R42, R43, built in the same layer, P10): standards the test holds, each
+ *  `{period, held?, target?, binds?: {body: state}, force?}`, answered by `standardRead`, `inForceAt`, `isMeasure`,
+ *  `bindsAt` and `forcesOf`; every other id and read is the real module's. */
+export function standardsProvider(w) {
+  const held = new Map();
+  let n = 0;
+  const day = (d) => d;
+  const own = {
+    held,
+    add(spec) { const id = `STD-2026-${String(++n).padStart(16, "0").replace(/^0/, "s")}`; held.set(id, { held: "text", ...spec }); return id; },
+    standardRead({ id = null, viewer = null } = {}) {
+      const s = held.get(id);
+      if (!s) return w.standards.standardRead({ id, viewer });
+      return { ok: true, id, period: s.period, held: s.held, ...(s.target ? { target: s.target } : {}) };
+    },
+    inForceAt({ standard = null, date = null, viewer = null, ...rest } = {}) {
+      const s = held.get(standard);
+      if (!s) return w.standards.inForceAt({ standard, date, viewer, ...rest });
+      if (s.held !== "text") return { state: "undetermined", why: "its text is not held, so it is not a measure", standard };
+      const { from, to } = s.period;
+      if ((from && day(date) < from) || (to && day(date) > to)) return { state: "not_in_force", why: `${date} is outside ${from ?? "…"}–${to ?? "…"}`, standard };
+      if (!to) return { state: "undetermined", why: "no end is stated", standard };
+      return { state: "in_force", why: `${date} is within ${from}–${to}`, standard, version: standard };
+    },
+    isMeasure(id, viewer = null) { void viewer; const s = held.get(id); return !!s && s.held === "text"; },
+    bindsAt({ standard = null, body = null, date = null } = {}) {
+      const s = held.get(standard);
+      const state = s && s.binds ? s.binds[body] : undefined;
+      return state ? { state, why: `as the test records it on ${date}` } : { state: "undetermined", why: "whether this law binds the body is not recorded" };
+    },
+    forcesOf({ standard = null } = {}) { const s = held.get(standard); return { ok: true, forces: s && s.force ? [s.force] : [] }; },
+  };
+  return new Proxy(own, { get: (t, k) => (k in t ? t[k] : typeof w.standards[k] === "function" ? w.standards[k].bind(w.standards) : w.standards[k]) });
+}
+
 /* ---- the world ---- */
 
 export function world({ now = NOW, construct = true, profiles = [PROFILE], evidence = true } = {}) {
@@ -141,7 +232,7 @@ export function world({ now = NOW, construct = true, profiles = [PROFILE], evide
   };
   const duties = dutiesOf(host, { record, membership, entities, standards, events, money: realMoney, provenance: prov, content, now: () => clock.now });
   if (typeof duties.migrate === "function") duties.migrate();
-  const lines = linesOf(host, { record });
+  const lines = linesOf(host, { record, provenance: prov, content, entities, events });
   if (typeof lines.migrate === "function") lines.migrate();
   const people = peopleOf(host, { record, membership, entities, provenance: prov, content, events, money: realMoney, duties, lines });
   if (typeof people.migrate === "function") people.migrate();
@@ -155,7 +246,7 @@ export function world({ now = NOW, construct = true, profiles = [PROFILE], evide
   let parties = null;
   const w = {
     st, host, record, membership, promotion, prov, content, clock, ex, ev, c, build, money, entities, standards, retrieval,
-    duties, people, events, progressions,
+    duties, people, events, progressions, lines,
     rows: (q, ...a) => st.rows(q, ...a),
     count: (t) => st.rows(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
     snapshot() {

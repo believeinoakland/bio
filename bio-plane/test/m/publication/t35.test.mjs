@@ -1,0 +1,233 @@
+/* publication — T35 (T35-54): the published criteria (R72; N649, K1723, K1739, K2002), the waiting edition read
+   `case-authoring` calls (R74; N681, K1833), and the row of a stop no publisher could check (R33's C-122.5; N687,
+   K1839). `standards` and `entities` are stand-ins answering exactly the shapes of `standards.standardRead` (its R5),
+   `standards.bindsAt` (its R43) and `entities.readEntity` (its R5); every call they receive is kept. A member's pinned
+   bytes are written as a document bundle stating its `subject_entity` and `basis` legs, since R72 reads only the
+   front matter at the pin (a real inquiry naming a standard would need the standard held for inquiry's own checks).
+   R61's T35 clause and R73 are in `t33.test.mjs` and `door.test.mjs`. Driven at the module's interface. */
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { planeWorld as world, infoMd, V, SIG, NOW } from "./fixture.mjs";
+import { SCHEDULED_CHECK_UNAVAILABLE } from "../../../src/publication/index.mjs";
+import { rowOf } from "../../../src/publication/checks.mjs";
+
+const CASE = "CASE-2026-0001";
+const A = "STD-2026-0001-policy", B = "STD-2026-0002-standard", GONE = "STD-2026-0003-ordinance";
+const CLERK = "ENT-2026-0001", BOARD = "ENT-2026-0002";
+const c = (n) => String(n).repeat(32);
+const C1 = c("a1"), C2 = c("b2"), C3 = c("c3"), C4 = c("d4"), C5 = c("e5"), CX = c("f9");
+const DAY = NOW.slice(0, 10);
+
+/* `standards`, as held: A a free policy whose text holds C1–C3, its `requires` C1 and C3 (C3's words not quoted); B a
+   paywalled standard whose text holds C4 and C5, its `requires` C4. A binds the clerk; nothing else binds anybody. */
+function standardsOf(held = null) {
+  const calls = [];
+  const table = held || {
+    [A]: { designation: "AI 4.12", edition: "2024", issuer: "ENT-2026-0009", owner: { label: "Public Works" }, cite: "AI 4.12 §3",
+           access: "free", texts: [C1, C2, C3], requires: [C1, C3], quoted: { [C1]: "Each request is logged." } },
+    [B]: { designation: "NFPA 1710", edition: "2020 edition", issuer: "NFPA", owner: { label: "NFPA" }, cite: "NFPA 1710 (2020)",
+           access: "paywalled", texts: [C4, C5], requires: [C4], quoted: { [C4]: "Turnout within 80 seconds." } },
+  };
+  const binding = { [`${A}|${CLERK}`]: "binds", [`${A}|${BOARD}`]: "benchmark", [`${B}|${CLERK}`]: "benchmark" };
+  return {
+    calls, table, binding,
+    standardRead({ id, viewer }) {
+      calls.push(["standardRead", id, viewer]);
+      const s = table[id];
+      if (s === "throw") throw new Error("down");
+      if (!s) return { ok: false, reason: "NO_SUCH_STANDARD", code: "NO_SUCH_STANDARD", standard: id };
+      return { ok: true, id, cite: s.cite, kind: "policy", issuer: s.issuer, designation: s.designation, edition: s.edition,
+               access: s.access, owner: { issuer: s.issuer, label: s.owner.label }, requires: s.requires,
+               texts: s.texts.map((t) => ({ content_id: t, standing: null, newer: null })),
+               requires_quoted: s.requires.map((t) => ({ content_id: t, text: s.quoted[t] ?? null })), says: {} };
+    },
+    bindsAt({ standard, body, date, viewer }) {
+      calls.push(["bindsAt", standard, body, date, viewer]);
+      return { ok: true, standard, body, date, state: binding[`${standard}|${body}`] || "undetermined", why: "", rests_on: [] };
+    },
+  };
+}
+const ENTITIES = { [CLERK]: "City Clerk", [BOARD]: "Water Board" };
+const entitiesOf = () => ({ readEntity: ({ entityId }) => (ENTITIES[entityId]
+  ? { ok: true, found: true, entity: { entity_id: entityId, label: ENTITIES[entityId] } }
+  : { ok: true, found: false, entity_id: entityId, entity: null }) });
+
+/* A member: a document bundle whose pinned bytes state `subject` and `legs` ({target, portion?, content?}). */
+function member(w, id, { subject = null, legs = [] } = {}) {
+  const lines = [...(subject ? [`subject_entity: ${subject}`] : []), "basis:",
+    ...legs.flatMap((l) => [`  - target: ${l.target}`, "    role: supports", ...(l.portion ? [`    target_portion: "${l.portion}"`] : []),
+                            ...(l.content ? [`    content_id: ${l.content}`] : [])])];
+  const r = w.promote(id, infoMd(id).replace("references: []", [...lines, "references: []"].join("\n")), "information");
+  assert.equal(r.ok, true, JSON.stringify(r));
+  return { target: id, version_sha: r.bundleSha };
+}
+
+function base({ standards = standardsOf() } = {}) {
+  const w = world({ standards, entities: entitiesOf() });
+  w.member("olive");
+  const proj = w.project("Parks", "olive");
+  w.doc("INFO-2026-0001-minutes");
+  return { w, proj, standards };
+}
+const sign = (w, proj, roles, extra = {}) => {
+  w.prepare(CASE, extra.edition ?? 1, { project: proj, roles, ...(extra.format ? { format: extra.format } : {}) });
+  return w.signCase(CASE, extra.edition ?? 1, { project: proj, roster: roles.map((r) => ({ bundle_id: r.target, version_sha: r.version_sha })),
+                                                ...(extra.signer !== undefined ? { signer: extra.signer } : {}) });
+};
+
+/* ---------------------------------------------------------------- R72 */
+
+test("R72 at a case edition's commit the criteria are one row per distinct (standard, portion, body) a member's legs target at its pinned bytes, in member then leg order, read from standards as the signer on the commit's day: designation, edition, issuer, citation, access, body, binds, only the passages relied on, the label and the access words; R53 answers them, frozen", () => {
+  const { w, proj, standards } = base();
+  const roles = [
+    member(w, "INFO-2026-0101-first", { subject: CLERK, legs: [
+      { target: A, portion: "s.3", content: C1 },          /* a passage of A's text */
+      { target: "INFO-2026-0001-minutes" },                /* not a standard: no row */
+      { target: A, portion: "s.3", content: CX },          /* not among A's text: no passage */
+      { target: A, portion: "s.3", content: C2 },          /* the same row, a second passage, its words not quoted */
+      { target: B }] }),                                   /* no passage named: B's requires passages */
+    member(w, "INFO-2026-0102-second", { subject: BOARD, legs: [
+      { target: A, portion: "s.3", content: C1 },          /* the same portion, another body: its own row */
+      { target: GONE, portion: "s.1" }] }),                /* a standard standards no longer answers */
+    member(w, "INFO-2026-0103-third", { legs: [{ target: B, content: C4 }] }),   /* no body */
+  ];
+  const r = sign(w, proj, roles);
+  assert.equal(r.ok, true, JSON.stringify(r));
+  const criteria = w.p.caseEditionState(CASE, 1).criteria;
+  const row = (o) => ({ standard: null, portion: null, designation: null, edition: null, issuer: null, citation: null, access: null,
+                        body: null, binds: null, passages: null, label: null, access_words: null, ...o });
+  assert.deepEqual(criteria, [
+    row({ standard: A, portion: "s.3", designation: "AI 4.12", edition: "2024", issuer: "Public Works", citation: "AI 4.12 §3",
+          access: "free", body: CLERK, binds: true,
+          passages: [{ content: C1, text: "Each request is logged." }, { content: C2, text: null }],
+          label: "Standard · binds City Clerk", access_words: "Free to read" }),
+    row({ standard: B, designation: "NFPA 1710", edition: "2020 edition", issuer: "NFPA", citation: "NFPA 1710 (2020)",
+          access: "paywalled", body: CLERK, binds: false, passages: [{ content: C4, text: "Turnout within 80 seconds." }],
+          label: "Benchmark · not binding on City Clerk", access_words: "Behind a paywall" }),
+    row({ standard: A, portion: "s.3", designation: "AI 4.12", edition: "2024", issuer: "Public Works", citation: "AI 4.12 §3",
+          access: "free", body: BOARD, binds: false, passages: [{ content: C1, text: "Each request is logged." }],
+          label: "Benchmark · not binding on Water Board", access_words: "Free to read" }),
+    row({ standard: GONE, portion: "s.1", stated: "not held" }),
+    row({ standard: B, designation: "NFPA 1710", edition: "2020 edition", issuer: "NFPA", citation: "NFPA 1710 (2020)",
+          access: "paywalled", body: null, binds: false, passages: [{ content: C4, text: "Turnout within 80 seconds." }],
+          label: "Benchmark · not binding", access_words: "Behind a paywall" }),
+  ]);
+  /* a paywalled standard carries nothing of its text but the passages relied on: its other text never reaches a row */
+  assert.deepEqual(criteria.filter((x) => x.standard === B).map((x) => x.passages.map((q) => q.content)), [[C4], [C4]],
+                   "C5, B's other text, is in no row");
+  /* every read as the signer, on the commit's day; a body of null is never asked about */
+  assert.ok(standards.calls.every((x) => (x[0] === "standardRead" ? x[2] : x[4]) === V("olive")), "the signer reads");
+  assert.deepEqual(standards.calls.filter((x) => x[0] === "bindsAt").map((x) => [x[1], x[2], x[3]]),
+                   [[A, CLERK, DAY], [B, CLERK, DAY], [A, BOARD, DAY]]);
+  /* frozen with the edition: a later change to the standard reaches it only through a later edition */
+  standards.binding[`${A}|${BOARD}`] = "binds";
+  standards.table[A].edition = "2026";
+  assert.deepEqual(w.p.caseEditionState(CASE, 1).criteria, criteria);
+  assert.deepEqual(JSON.parse(w.row(`SELECT criteria FROM published_cases WHERE case_id=? AND edition=1`, CASE).criteria), criteria,
+                   "held on the edition's published_cases row (R40)");
+  const kept = w.snapshot(["published_cases"]);
+  w.record.purge({});
+  assert.deepEqual(w.snapshot(["published_cases"]), kept, "exempt from purge, as the row is");
+  /* a retry of the signed edition writes nothing and reads no standard */
+  const n = standards.calls.length, snap = w.snapshot();
+  assert.equal(w.signCase(CASE, 1, { project: proj, roster: roles.map((x) => ({ bundle_id: x.target, version_sha: x.version_sha })) }).existed, true);
+  assert.deepEqual([w.snapshot(), standards.calls.length], [snap, n]);
+});
+
+test("R72 the founder's signature reads as `admin`; members targeting no standard give criteria []; a standards read that throws is a row stated not held and never refuses the commit; a refused commit records nothing; an edition committed before T35 answers criteria null, stated as not recorded, never filled", () => {
+  const { w, proj, standards } = base({ standards: standardsOf({ [A]: "throw" }) });
+  const roles = [member(w, "INFO-2026-0101-first", { subject: CLERK, legs: [{ target: A, content: C1 }] })];
+  const r = sign(w, proj, roles, { signer: null });
+  assert.equal(r.ok, true, JSON.stringify(r));
+  assert.deepEqual(w.p.caseEditionState(CASE, 1).criteria, [{ standard: A, portion: null, designation: null, edition: null,
+    issuer: null, citation: null, access: null, body: null, binds: null, passages: null, label: null, access_words: null,
+    stated: "not held" }]);
+  assert.deepEqual(standards.calls, [["standardRead", A, "admin"]], "the founder reads as admin");
+  /* members whose legs name no standard */
+  const plain = [member(w, "INFO-2026-0104-plain", { subject: CLERK, legs: [{ target: "INFO-2026-0001-minutes" }] })];
+  w.prepare("CASE-2026-0002", 1, { project: proj, roles: plain });
+  assert.equal(w.signCase("CASE-2026-0002", 1, { project: proj, roster: plain.map((x) => ({ bundle_id: x.target, version_sha: x.version_sha })) }).ok, true);
+  const none = w.p.caseEditionState("CASE-2026-0002", 1);
+  assert.deepEqual([none.criteria, "criteria_detail" in none], [[], false]);
+  /* a refused commit (a pre-/6 preparation) reads no standard and records nothing */
+  const { w: w2, proj: p2, standards: s2 } = base();
+  const r2 = [member(w2, "INFO-2026-0101-first", { subject: CLERK, legs: [{ target: A, content: C1 }] })];
+  assert.equal(sign(w2, p2, r2, { format: "bio-case-document/5" }).reason, "CASE_FORMAT_SUPERSEDED");
+  assert.deepEqual([s2.calls, w2.count("published_cases")], [[], 0]);
+  /* committed before T35: null, stated, and a later boot never fills it */
+  w2.prepare(CASE, 2, { project: p2, roles: r2 });
+  w2.signLegacy(CASE, 2, { project: p2, roster: r2.map((x) => ({ bundle_id: x.target, version_sha: x.version_sha })) });
+  const old = w2.p.caseEditionState(CASE, 2);
+  assert.equal(old.criteria, null);
+  assert.match(old.criteria_detail, /not recorded/);
+  w2.p.migrate();
+  assert.equal(w2.p.caseEditionState(CASE, 2).criteria, null, "never filled");
+  assert.deepEqual(s2.calls, [], "no standard read for an older edition");
+});
+
+/* ---------------------------------------------------------------- R74, R33 (C-122.5) */
+
+const AT = { date: "2026-10-01", time: "09:00" };
+function waiting() {
+  const w = world();
+  w.member("olive");
+  const proj = w.project("Parks", "olive");
+  w.inquiry("INQ-2026-0001");
+  const roles = [{ target: "INQ-2026-0001", version_sha: w.head("INQ-2026-0001") }];
+  for (const id of [CASE, "CASE-2026-0002"]) w.prepare(id, 1, { project: proj, roles });
+  assert.equal(w.record.setSetting("jurisdiction_profiles", ["test-port-ellery"], "admin").ok, true);
+  const sched = (id = CASE, at = AT) => w.record.transact(() => w.p.scheduleEdition({ case: id, edition: 1,
+    docSha: w.row(`SELECT doc_sha FROM case_documents WHERE case_id=? AND edition=1`, id).doc_sha, signature: SIG(1),
+    signer: "olive", deliveredBy: V("olive"), at, checked: {}, by: V("olive") }));
+  return { w, proj, roles, sched };
+}
+
+test("R74 waitingEditionOf answers the case's one waiting edition as {case, edition, doc_sha, at, publish_at}, or null when none was set or it was published, stopped or cancelled; viewer-free, it writes nothing and never throws, a malformed case id answering null", async () => {
+  const { w, sched } = waiting();
+  assert.equal(w.p.waitingEditionOf(CASE), null, "none set");
+  assert.equal(sched().ok, true);
+  const docSha = w.row(`SELECT doc_sha FROM case_documents WHERE case_id=? AND edition=1`, CASE).doc_sha;
+  const before = w.snapshot();
+  assert.deepEqual(w.p.waitingEditionOf(CASE), { case: CASE, edition: 1, doc_sha: docSha,
+    at: { ...AT, zone: "America/Halifax" }, publish_at: "2026-10-01T12:00:00Z" });
+  assert.deepEqual(w.p.waitingEditionOf(` ${CASE} `), w.p.waitingEditionOf(CASE), "the id trimmed");
+  assert.deepEqual(w.snapshot(), before, "writes nothing");
+  assert.equal(w.p.waitingEditionOf("CASE-2026-0002"), null, "another case's edition does not wait");
+  for (const bad of [null, undefined, "", 7, {}, []]) assert.equal(w.p.waitingEditionOf(bad), null, JSON.stringify(bad));
+  /* cancelled, stopped, published: none waits */
+  assert.equal(w.p.publishAtCancel({ case: CASE, edition: 1, by: V("olive") }).ok, true);
+  assert.equal(w.p.waitingEditionOf(CASE), null, "cancelled");
+  sched();
+  await w.p.publishDue("2026-10-01T12:00:00Z");
+  assert.equal(w.p.scheduledEditions({ case: CASE }).editions.at(-1).state, "stopped");
+  assert.equal(w.p.waitingEditionOf(CASE), null, "stopped");
+  const { w: w2, proj, roles, sched: s2 } = waiting();
+  s2();
+  w2.p.registerScheduledPublisher("ratification", { publishScheduled(entry, now) {
+    w2.record.transact(() => w2.p.commitCaseEdition({ case: entry.case, edition: entry.edition, project: proj, scope: "The question.",
+      roster: roles.map((x) => ({ bundle_id: x.target, version_sha: x.version_sha })), sigArmored: entry.signature,
+      attestorKey: "AAAA", attestorMember: entry.signer, gateVersion: "plane-gate/test", deliveredBy: entry.delivered_by, at: now }));
+    return { published: true, published_at: now };
+  } });
+  await w2.p.publishDue("2026-10-01T12:00:00Z");
+  assert.equal(w2.p.scheduledEditions({ case: CASE }).editions[0].state, "published");
+  assert.equal(w2.p.waitingEditionOf(CASE), null, "published");
+  w2.st.db.exec(`DROP TABLE scheduled_editions`);
+  assert.equal(w2.p.waitingEditionOf(CASE), null, "never throws");
+});
+
+test("R33 R67 (N687) a waiting edition no publisher could check is stopped with row C-122.5, SCHEDULED_CHECK_UNAVAILABLE, held in this module's C-122 family: its reasons carry the code, the check and the translation R67 answers", async () => {
+  assert.deepEqual(SCHEDULED_CHECK_UNAVAILABLE, rowOf("SCHEDULED_CHECK_UNAVAILABLE"));
+  assert.deepEqual(SCHEDULED_CHECK_UNAVAILABLE, { code: "SCHEDULED_CHECK_UNAVAILABLE", check: "C-122.5",
+    translation: "This edition was not published at its set time, because the checks it needed then could not be run. "
+      + "Nothing was published. Sign it again to publish it." });
+  for (const pub of [null, { publishScheduled() { throw new Error("boom"); } }, { publishScheduled: () => ({}) }]) {
+    const { w, sched } = waiting();
+    sched();
+    if (pub) w.p.registerScheduledPublisher("ratification", pub);
+    const out = await w.p.publishDue("2026-10-01T12:00:00Z");
+    assert.deepEqual(out.taken[0].reasons, [{ code: "SCHEDULED_CHECK_UNAVAILABLE", check: "C-122.5",
+                                              translation: SCHEDULED_CHECK_UNAVAILABLE.translation }]);
+    assert.deepEqual(w.p.scheduledEditions({}).editions[0].reasons, out.taken[0].reasons, "R69 answers the row");
+  }
+});

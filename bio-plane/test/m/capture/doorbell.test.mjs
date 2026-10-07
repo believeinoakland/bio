@@ -147,7 +147,7 @@ test("R48: the instance limit of 10, RATE_GLOBAL 429 with its row and stated bou
   const r = await c.knock({ content: "g10", sourceAddress: "10.9.9.9", now: t0 });
   assert.deepEqual([r.reason, r.code, r.check, r.translation], ["RATE_GLOBAL", "RATE_GLOBAL", row("RATE_GLOBAL").check, row("RATE_GLOBAL").translation]);
   assert.deepEqual([rateRows(rows), inboxRows(rows), tallied(rows)], [...before, 1]);
-  assert.equal(KNOCK.statedGlobal, "at most 10 knocks to this instance in any 10 minutes, estimated by a sliding window");
+  assert.equal(KNOCK.statedGlobal, "at most 10 knocks to this group's inbox in any 10 minutes, estimated by a sliding window");
   /* a source over its own limit and the instance's is RATE_IP */
   const both = setup();
   for (let i = 0; i < 5; i++) await both.c.knock({ content: `h${i}`, sourceAddress: "10.1.0.1", now: t0 });

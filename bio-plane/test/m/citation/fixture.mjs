@@ -32,7 +32,7 @@ export function world(opts = {}) {
     checkLegExtentGrammar, BASIS_ROLES,
   };
   w.cit = citationOf(host, { record, membership, promotion, content: w.content, retrieval: w.retrieval,
-                              inquiry: w.inq, now: () => NOW });
+                              provenance: prov, inquiry: w.inq, now: () => NOW });
   let n = 0;
   const key = () => `c${++n}`;
   Object.assign(w, {
@@ -67,6 +67,14 @@ export function world(opts = {}) {
       return captured ? c.sha : null;
     },
     inquiry(id, extra = []) { w.put(id, inqMd(id, extra)); return id; },
+    /** What retrieval's "Find in this" answers for `term` over `id`'s captures (R73, kind `term`), as `viewer` sees it:
+     *  each capture's text written as one indexed unit per page first (extraction's index, retrieval's fixture). */
+    find(id, term, { pages = {}, viewer = V("ann") } = {}) {
+      for (const [capSha, texts] of Object.entries(pages)) texts.forEach((t, i) => w.unit(capSha, id, i, t));
+      const r = w.retrieval.findIn({ scope: { ids: [id] }, kinds: ["term"], term, viewer });
+      if (!r.ok) throw new Error(`fixture find refused: ${JSON.stringify(r).slice(0, 400)}`);
+      return r.kinds[0].items;
+    },
     /** A project owned by `owner` (joined), hidden unless `visibility` says otherwise. */
     project(title = "The case", owner = "ann", { extra = [], body = "", visibility } = {}) {
       return w.put(null, projMd(title, extra, body), { author: V(owner), owner, visibility }).bundleId;
@@ -94,7 +102,7 @@ export function world(opts = {}) {
         const v = t[k]; return typeof v === "function" ? v.bind(t) : v;
       } });
       return new Citation({ record: rec, membership, promotion, content: w.content, retrieval: w.retrieval,
-                            inquiry: w.inq, now: () => NOW });
+                            provenance: prov, inquiry: w.inq, now: () => NOW });
     },
   });
   return w;

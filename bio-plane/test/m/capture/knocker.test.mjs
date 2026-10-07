@@ -42,8 +42,9 @@ function setup({ evidence = true, env = {} } = {}) {
 }
 const everything = (rows) => rows(`SELECT name FROM sqlite_master WHERE type='table'`).map((r) => r.name)
   .map((t) => [t, JSON.stringify(rows(`SELECT * FROM ${t}`))]);
-/* Everything but R80's tally, where every refused knock is counted. */
-const TALLY = ["doorbell_tally", "doorbell_limit_last"];
+/* Everything but R80's tally and R85's security tally (credentials' `security_counts`), where every refused knock is
+   counted. */
+const TALLY = ["doorbell_tally", "doorbell_limit_last", "security_counts"];
 const untallied = (rows) => everything(rows).filter(([t]) => !TALLY.includes(t));
 const tallied = (rows) => rows(`SELECT coalesce(sum(refused),0) n FROM doorbell_tally`)[0].n;
 const inboxRows = (rows) => rows(`SELECT count(*) n FROM inbox`)[0].n;
@@ -200,7 +201,7 @@ test("R65 R69 R70 R32: a pull holds the bytes under their own digest, writes one
   assert.equal(doc.provenance_chain.length, 1);
   assert.deepEqual([doc.provenance_chain[0].via, doc.provenance_chain[0].bound], ["doorbell", false]);
   assert.match(doc.provenance_chain[0].who, /^instance inst \(Civicsmith\/9\.9\.9\)$/, "acquisition R16 (DEC-124): the product named Civicsmith");
-  assert.match(doc.provenance_chain[0].asserts, /received at this instance's doorbell as knock .* not fetched/);
+  assert.match(doc.provenance_chain[0].asserts, /received at the doorbell of your group's Civicsmith as knock .* not fetched/);
   assert.deepEqual(doc.attestation_attempts, []);
   assert.ok(doc.profile && doc.profile.format && doc.profile.digests, "R17's profile over the bytes");
   /* R70: the contact is nowhere the pull reaches */

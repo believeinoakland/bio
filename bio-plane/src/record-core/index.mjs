@@ -1,7 +1,7 @@
 /* record-core — the record's storage (layer 2): id allocation, leases, the append-only history and
    manifest of every promotion, the instance's settings, the evidence store, and purge. It holds no
    member, capability or fence (membership's) and decides nothing about what may be committed
-   (promotion's). Requirements: build/requirements/record-core.md (R1–R75).
+   (promotion's). Requirements: build/requirements/record-core.md (R1–R82).
 
    REACHED THROUGH `recordOf(ctx)`: one instance per Durable Object storage, so every module in the
    object shares one transaction depth, one purge declaration list and one evidence binding. The
@@ -14,7 +14,9 @@
    K1493): ids minted from record-grammar's `ID_TABLE`, the counter with no ceiling and the opaque allocator (R1, R40,
    R76); `declareTable` with its classes, `declarePurge` its default form (R21, R46); the derived-cache convention (R77);
    the store gate (R78); expunge with a tombstone (R79). T34 (T34-9; N554, N593, K1728): `CALC` minted opaque (R62, R76);
-   a derived-rebuildable table's `from` (R77); the declaration's two older refusals answered with their rows (R80). */
+   a derived-rebuildable table's `from` (R77); the declaration's two older refusals answered with their rows (R80). T35
+   (T35-13; N655, N664, DEC-49, DEC-149): the lease's and the settings' refusals answered with their rows (R81); every
+   member-facing sentence says "your group's Civicsmith" (R82). */
 import { checkBundle, createSha256, EXTENSION_ARMS, LEGACY_TYPE_ALIASES, ID_TABLE } from "../record-grammar/index.mjs";
 import { RECORD_SCHEMA } from "./schema.mjs";
 import { RECORD_CORE_CHECKS, PER_ITEM_CHECKS } from "./checks.mjs";
@@ -126,7 +128,7 @@ export function mintExhausted(prefix, extra) {
   /* DEC-49 REGION is-mint-exhausted */
   return { ...own, ok: false, reason: "MINT_EXHAUSTED", code: "MINT_EXHAUSTED", check: row.check,
            translation: row.translation, prefix: asked,
-           detail: `the plane could not find a free ${what}id: every one it drew was already taken. Nothing was written.` };
+           detail: `your group's Civicsmith could not find a free ${what}id: every one it drew was already taken. Nothing was written.` };
   /* END DEC-49 REGION is-mint-exhausted */
 }
 
@@ -577,12 +579,14 @@ export class RecordCore {
 
   /* ---- leases (R10–R12, R61) ---- */
 
-  /** R10, R30, R61: the one refusal of an unnamed actor, for taking a lease and for ending one. */
+  /** R10, R30, R61, R81: the one refusal of an unnamed actor, for taking a lease and for ending one, under its row
+   *  (C-102.28, DEC-49); its detail is the sentence it has always carried. */
   static #anonymousLease(actor) {
     if (typeof actor === "string" && actor.trim()) return null;
-    return { ok: false, reason: "ANONYMOUS_LEASE",
-             detail: "a lease is taken under a named actor — a member (from a session) or a machine "
-                   + "identity (token:<class>). An unnamed writer cannot hold the courtesy lock." };
+    /* DEC-49 REGION is-anonymous-lease */
+    return rowRefusal("ANONYMOUS_LEASE", "a lease is taken under a named actor — a member (from a session) or a machine "
+      + "identity (token:<class>). An unnamed writer cannot hold the courtesy lock.");
+    /* END DEC-49 REGION is-anonymous-lease */
   }
 
   /** D-61: a lease is NEVER anonymous. It is a courtesy lock; promotion's CAS on `base` is the
@@ -1760,19 +1764,24 @@ export class RecordCore {
     try { return JSON.parse(r.value); } catch { return null; }
   }
 
-  /** R25, R26: records `value` under `name`, with who set it and when. `jurisdiction_profiles` is an
+  /** R25, R26, R81: records `value` under `name`, with who set it and when. `jurisdiction_profiles` is an
    *  ordered list of profile ids (non-empty strings, no repeats); anything else is refused and nothing
-   *  is recorded. */
+   *  is recorded. The four refusals, in this order, each answer with its row (C-102.29–.32, DEC-49) and one fixed
+   *  sentence; `SETTING_INVALID` keeps `name`. */
   setSetting(name, value, by) {
     const n = String(name ?? "");
-    if (!n) return { ok: false, reason: "SETTING_NAME_REQUIRED" };
-    if (typeof by !== "string" || !by.trim()) return { ok: false, reason: "SETTING_BY_REQUIRED" };
-    if (value === undefined) return { ok: false, reason: "SETTING_VALUE_REQUIRED" };
+    /* DEC-49 REGION is-setting-refused */
+    if (!n) return rowRefusal("SETTING_NAME_REQUIRED", "a setting is recorded under a name, and none was given; nothing was recorded.");
+    if (typeof by !== "string" || !by.trim())
+      return rowRefusal("SETTING_BY_REQUIRED", "a setting is recorded with who set it, and no one was named; nothing was recorded.");
+    if (value === undefined)
+      return rowRefusal("SETTING_VALUE_REQUIRED", "a setting is recorded with a value, and none was given; nothing was recorded.");
     if (n === "jurisdiction_profiles"
         && !(Array.isArray(value) && value.every((v) => typeof v === "string" && v.trim() !== "")
              && new Set(value).size === value.length))
-      return { ok: false, reason: "SETTING_INVALID", name: n,
-               detail: "jurisdiction_profiles is an ordered list of distinct profile ids" };
+      return rowRefusal("SETTING_INVALID", "jurisdiction_profiles is an ordered list of distinct profile ids; nothing was recorded.",
+                        { name: n });
+    /* END DEC-49 REGION is-setting-refused */
     this.#sql.exec(`INSERT INTO settings (name,value,set_by,set_at) VALUES (?,?,?,?)`,
                    n, JSON.stringify(value), by, new Date().toISOString());
     return { ok: true };

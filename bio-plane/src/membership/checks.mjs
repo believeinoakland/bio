@@ -69,15 +69,15 @@ export const MEMBERSHIP_CHECKS = Object.freeze({
   }),
   LISTENER_MALFORMED: Object.freeze({
     check: 'C-102.11', where: at("listenerRefusal", "is-listener-registration"),
-    translation: 'A part of this instance tried to register a listener without naming itself or without a function '
-      + 'to call, so nothing was registered. This is a fault in how the instance was built, not in the record, and '
-      + 'nothing in the record changed.',
+    translation: 'A part of your group\'s Civicsmith tried to register a listener without naming itself or without a '
+      + 'function to call, so nothing was registered. This is a fault in how your group\'s Civicsmith was built, not '
+      + 'in the record, and nothing in the record changed.',
   }),
   LISTENER_DECLARED: Object.freeze({
     check: 'C-102.12', where: at("listenerRefusal", "is-listener-registration"),
-    translation: 'A part of this instance tried to register a listener it had already registered, or one that '
-      + 'another part already holds, so the second registration was refused and the first still stands. This is a '
-      + 'fault in how the instance was built, not in the record, and nothing in the record changed.',
+    translation: 'A part of your group\'s Civicsmith tried to register a listener it had already registered, or one '
+      + 'that another part already holds, so the second registration was refused and the first still stands. This is a '
+      + 'fault in how your group\'s Civicsmith was built, not in the record, and nothing in the record changed.',
   }),
   /* R95 (K774): an enrolment whose password the registered setter could not record (or with no setter registered).
      The next free number of C-96, this module's family for the acts on a member's own row (K107 (3), K174). */
@@ -233,7 +233,7 @@ export const MEMBER_ID_CHECKS = {
   MEMBER_ID_RESERVED: {
     check: 'C-55.1',
     where: 'src/membership/index.mjs memberAdd > is-member-id-reserved',
-    translation: 'That member id is reserved. `admin` is the name this instance gives its founding '
+    translation: 'That member id is reserved. `admin` is the name your group\'s Civicsmith gives its founding '
       + 'administrator, and anything that checks whether someone is an administrator by name would '
       + 'read a member enrolled as `admin` as the founder. Nothing was written. Choose a different id '
       + 'for this person.',
@@ -315,7 +315,7 @@ export const CUSTODIAL_CHECKS = {
   NO_HOLDERS: {
     check: 'C-96.11',
     where: 'src/membership/index.mjs hostingAccessSet > is-hosting-access-holders',
-    translation: 'This records who holds access to the hosting account the group\'s instance runs in, and it '
+    translation: 'This records who holds access to the hosting account your group\'s Civicsmith runs in, and it '
       + 'named nobody. Write the people who hold that access. Nothing was written.',
   },
   /* Membership R19 (§3, "Pairing"): whether a member's cover and handle are shown together is that member's

@@ -1,9 +1,6 @@
 # format-registry — requirements
 
-**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code today: `bio-plane/src/formats.mjs`. No
-row of the old plan and no entry of `build/plan/next.md` targets this module; it holds no local fact
-(no place name, no jurisdiction-specific vocabulary) so "No jurisdiction in the product" (`layers.md`)
-needs no change here. All requirements below are met by the code as it stands today.
+**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). Last changed T35 (T35-11: R28 new, R23 amended; K1844); every requirement met (FORMAT-REGISTRY #2, K1930).
 
 ## Public
 
@@ -57,7 +54,10 @@ that entry's own account.
 - **R22** `parts` and `text` are `null` (a PDF is its own container, and its Tier-1 text rides `structure()`'s own output object). `structure(bytes)` delegates to `pdf-reader`'s `extractPdfStructure(bytes)` and returns its result unchanged.
 
 **The built-in roster**
-- **R23** At module load, before any other caller registers or unregisters anything, the registry holds exactly nine entries, added in this order: `html`, `pdf` (both defined in this module — R17-R22), `docx`, `xlsx`, `pptx` (from `office-readers`), `odt`, `ods`, `odp` (from `odf-reader`), `csv` (from `office-readers`). `listFormats()` returns them in that order until a later `registerFormat`/`unregisterFormat` call changes it.
+- **R23** At module load, before any other caller registers or unregisters anything, the registry holds exactly ten entries, added in this order: `html`, `pdf` (both defined in this module — R17-R22), `docx`, `xlsx`, `pptx` (from `office-readers`), `odt`, `ods`, `odp` (from `odf-reader`), `csv` (from `office-readers`), `zip` (defined in this module — R28). `listFormats()` returns them in that order until a later `registerFormat`/`unregisterFormat` call changes it.
+
+**The built-in `zip` entry**, registered under `"zip"` (N688; K1844, K1852):
+- **R28** `detect(bytes, contentType)`: when `bytes` is truthy, returns `{ format: "zip", confidence: "likely", signals: [...] }` exactly when `ooxml.discriminate(bytes)` (its default table) would answer `{ok:true, format:"zip"}`: the bytes carry the ZIP magic (`ooxml` R1), `ooxml.readContainer` reads their central directory (its R3), and that directory names neither `[Content_Types].xml` nor a `mimetype` member; otherwise `null`. It answers synchronously, from the central directory alone, never inflating a part. An office or OpenDocument file therefore never detects as `zip`, and `zip` is registered last (R23), so the office and ODF entries are asked first in each pass. When `bytes` is falsy: `{ format: "zip", confidence: "likely", signals: [...] }` when `contentType` is exactly `"application/zip"` or `"application/x-zip-compressed"`, else `null`. `parts(bytes)` is `ooxml.listArchive(bytes)` and returns its result unchanged (`ooxml` R27–R28); `structure` and `text` are `null`: an archive's members are read as captures of their own, never through this entry.
 
 ## Private
 
@@ -66,6 +66,7 @@ that entry's own account.
 - `office-readers`: `docxEntry` (`docx.mjs`), `xlsxEntry` (`formats-xlsx.mjs`), `pptxEntry` (`pptx.mjs`), `csvEntry` (`csv.mjs`) — four ready-made format-entry objects (`format`, `detect`, and each's own `parts`/`structure`/`text`, `csvEntry` also `dialect`), registered here unmodified. Their own detection, container-walk, structure and text behaviour is that module's requirement, not this one's.
 - `odf-reader`: `odtEntry`, `odsEntry`, `odpEntry` (`odf.mjs`) — three more ready-made entry objects, registered here unmodified, same division of responsibility.
 - `pdf-reader`: `extractPdfStructure(bytes)` (`pdfstructure.mjs`) — the function the built-in `pdf` entry's `structure` slot delegates to (R22); its own behaviour is `pdf-reader`'s requirement.
+- `ooxml`: `hasZipMagic`, `readContainer` and `listArchive` (T35-11; the edge added at T35's opening, rule 8) — what the built-in `zip` entry's `detect` and `parts` are built on (R28); the listing's behaviour is `ooxml`'s requirement.
 
 ### Invariants
 
@@ -77,9 +78,11 @@ that entry's own account.
 ### Satisfies
 
 - `BIO_Content_Framework_v0_10.md` §4, "One extension shape: the RECOGNISER" and "The axes we know about" — the FORMAT axis, and the claim that a new axis of variation costs a registry entry, not a rewrite.
-- `docs/development/OFFICE-FORMATS.md`, "the format axis as ruled" — this module is what that document calls I7, the registry entry shape, and the place the nine built-in entries are registered.
+- `docs/development/OFFICE-FORMATS.md`, "the format axis as ruled" — this module is what that document calls I7, the registry entry shape, and the place the ten built-in entries are registered.
+- `docs/architecture/BIO_Intake_Doctrine_v1_1.md` §3, "Members of a captured archive" (K1852): an archive is recognised here (R28) so that it can be opened on capture; the members are cut by `acquisition` (N688, K1844).
 
 ### Suggestions
 
 - The module's own header comment frames two dispatch-site doctrines that bind CALLERS, not this module's interface: no format-specific branching outside this registry at either the acquire-time detection site or the read-time structure site, and an entry asserts nothing about meaning and writes nothing. Both are properties of how `index.mjs`/`capture`/`extraction` use `detectFormat`/`getFormat`, and of how `office-readers`/`odf-reader`/`pdf-reader` write their entries — testable in those modules, not by calling this one in isolation.
+- R28's bytes rule should be tested as an equivalence: over `test-support`'s fixtures (plain, ZIP64, hostile) and the office and ODF fixtures, `detect(bytes, null)` answers `zip` exactly when `await ooxml.discriminate(bytes)` answers `format:"zip"`. Acquisition detects on the whole stored bytes only up to its own threshold; a larger archive is recognised by its declared content type (R28's second arm) or by acquisition's own rule (T35-21, R17).
 - `formats.test.mjs`'s existing pattern (register a test-only stub entry through `registerFormat`, drive it through `detectFormat`→`getFormat(...).structure`, then `unregisterFormat` it) is the cheapest way to test R1-R13 and R23 without needing a real office/ODF/PDF fixture.

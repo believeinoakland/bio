@@ -8,6 +8,9 @@ import { planeWorld as world, V, SIG, NOW, sha } from "./fixture.mjs";
 import { PUBLICATION_TABLES, PUBLICATION_EXEMPT, EDITION_STAMP_EFFECTS } from "../../../src/publication/index.mjs";
 import { caseTensionsOf, CASE_TENSIONS_TABLES, PUBLICATION_DOORS } from "../../../src/case-tensions/index.mjs";
 import { caseFilePath, timelineOf } from "../../../src/case-grammar/index.mjs";
+import * as PUB from "../../../src/publication/index.mjs";
+import * as CT from "../../../src/case-tensions/index.mjs";
+import * as CG from "../../../src/case-grammar/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
 const F = "INQ-2026-0001", G = "INQ-2026-0002", DOC = "INFO-2026-0001-minutes", CASE = "CASE-2026-0001";
@@ -32,7 +35,7 @@ function signed(opts = {}) {
 
 /* ---------------------------------------------------------------- R61 */
 
-test("R61 at start this module registers its provider with case-tensions, whose seven doors answer exactly the rows of its tables; every moved name answers through case-tensions; the three tables, the caseMember fact and the revision step are case-tensions'", () => {
+test("R61 at start this module registers its provider with case-tensions, whose seven doors answer exactly the rows of its tables; the three tables, the caseMember fact and the revision step are case-tensions'", () => {
   const { w, proj, roles } = signed();
   const ct = caseTensionsOf(w.host);
   assert.equal(w.p.caseTensionsModule, ct, "created at this module's creation, one per host");
@@ -75,11 +78,7 @@ test("R61 at start this module registers its provider with case-tensions, whose 
   assert.equal(pv.signedDocumentsNaming("case_project:", 1).length, 1, "bounded by limit");
   /* reauthorSection: R21's splice, refusing a signed document */
   assert.equal(pv.reauthorSection({ caseId: CASE, edition: 1, section: "attribution", lines: { frontmatter: [], body: [] } }).reauthored, false);
-  /* the moved names answer exactly as case-tensions does (plan Rules (9) item 4) */
-  assert.deepEqual(w.p.caseRelation(F), ct.caseRelation(F));
-  assert.deepEqual(w.p.caseFlags({}), ct.caseFlags({}));
-  assert.deepEqual(w.p.caseTensions({}), ct.caseTensions({}));
-  assert.deepEqual(w.p.attributionInForce(CASE, 1, F), ct.attributionInForce(CASE, 1, F));
+  /* the op arm is case-tensions' own (its map, spread beside this module's) */
   assert.deepEqual(w.op("attribute", {}, {}), ct.attributeObservation({}), "the op arm is case-tensions'");
   /* the fact and the step are case-tensions': prepared membership, and a revision flagged through its step */
   assert.equal(w.promotion.fact("caseMember", G).value, true);
@@ -88,6 +87,34 @@ test("R61 at start this module registers its provider with case-tensions, whose 
     { case_id: CASE, bundle_id: F, pinned_sha: pin }, { case_id: "CASE-2026-0002", bundle_id: F, pinned_sha: pin }]);
   for (const t of CASE_TENSIONS_TABLES)
     assert.equal([...PUBLICATION_TABLES.map((x) => x.name), ...PUBLICATION_EXEMPT].includes(t.name), false, `${t.name} is not this module's`);
+});
+
+/* N597 (T35): the names case-tensions serves, which this module delegated until each importer re-pointed. */
+const MOVED_METHODS = ["caseTensions", "observationsNamingAuthor", "attributionInForce", "attributionFacts", "attributionStatedFor",
+                       "dischargeCaseFlags", "flagCasesOnRevision", "caseFlags", "attributionStatements", "attributeObservation"];
+const MOVED_EXPORTS = ["ATTRIBUTION_ACT_CHECKS", "CASE_FLAGS_LIMIT", "ATTRIBUTION_REASON_MAX", "CASE_TENSIONS_MAX"];
+
+test("R61 (T35, N597) this module serves none of case-tensions' services and re-exports none of its names: no delegate and no re-exported constant is left; caseRelation alone answers here, exactly as case-tensions' does at every state of the relation; the case-grammar re-exports are unchanged", () => {
+  const { w, proj, roles } = signed();
+  const ct = caseTensionsOf(w.host);
+  for (const name of MOVED_METHODS) {
+    assert.equal(typeof ct[name], "function", `the control: case-tensions serves ${name}`);
+    assert.equal(name in w.p, false, `${name}: no delegate here`);
+  }
+  for (const name of MOVED_EXPORTS) {
+    assert.ok(name in CT, `the control: case-tensions exports ${name}`);
+    assert.equal(name in PUB, false, `${name}: not re-exported here`);
+  }
+  /* caseRelation: pinned by a signed edition, prepared into an unsigned one, in none, and an id nobody holds */
+  w.inquiry(G);
+  w.prepare(CASE, 2, { project: proj, roles: [...roles, { target: G, version_sha: w.head(G) }] });
+  for (const id of [F, G, DOC, "INQ-2026-0099", "", null])
+    assert.deepEqual(w.p.caseRelation(id), ct.caseRelation(id), `caseRelation(${id})`);
+  assert.equal(w.p.caseRelation(F).member, true, "the control: a pinned member answers as one");
+  /* the case-grammar re-exports, unchanged: each the same binding as case-grammar's */
+  for (const name of ["CASE_DOCUMENT_FORMAT", "caseDocumentStatesMemberBlocks", "caseDocumentBlocks", "captureBlockLines",
+                      "sourceBlockLines", "publishedGraphEdges", "ATTRIBUTION_LEVELS", "REAUTHORABLE_SECTIONS", "caseTensionsOf"])
+    assert.equal(PUB[name], CG[name], `${name} is case-grammar's`);
 });
 
 test("R61 a commit discharges the case's outstanding flags through case-tensions, and caseDocumentFacts' attribution facts are case-tensions' (R2)", () => {

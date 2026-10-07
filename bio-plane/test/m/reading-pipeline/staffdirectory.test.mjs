@@ -80,7 +80,7 @@ test("R3 R11 (N391): the same directory with no pdf-worker bound leaves tier 1 s
   assert.equal(r.text_tier, 1);
   assert.deepEqual(r.entities, []);
   assert.notEqual(r.content_type, "staff_directory");
-  assert.match(r.basis, /no pdf-worker member is bound/);
+  assert.match(r.basis, /no pdf-worker member is set up in your group's Civicsmith/);
   assert.match(r.basis, /no_tounicode/);
 });
 

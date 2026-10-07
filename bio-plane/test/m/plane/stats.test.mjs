@@ -113,7 +113,7 @@ test("R10: each owner's figures are registered under its own name, the stats sig
      "projectOwnerVotes", "projectParticipants", "proposedReadings", "suggestRefusals"]);
   assert.equal(rc.registerStatsSource("x", () => ({})).heldBy, "plane");
   assert.equal(retrievalOf(x.ctx).registerLegGrades("x", () => []).declaredBy, "inquiry");
-  assert.equal(promotionOf(x.ctx).registerStep("control-plane", {}).ok, false, "control-plane's step is held under its name");
+  assert.equal(promotionOf(x.ctx).registerStep("store-door", {}).ok, false, "store-door's step is held under its name (K2037)");
   assert.equal(promotionOf(x.ctx).registerStep("plane-held", {}).ok, true, "no step is held as `plane-held`");
 });
 

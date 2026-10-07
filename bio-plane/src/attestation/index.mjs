@@ -30,6 +30,7 @@ import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS, TSA_CONTENT_TY
          ARCHIVE_SERVICE, archiveLocatorFrom } from "../tsa.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { provenanceOf, PROVENANCE_ACT_CHECKS } from "../provenance/index.mjs";
+import { ARCHIVE_DEPTH_MAX } from "../ooxml.mjs";
 import { ATTEST_CHECKS } from "./checks.mjs";
 import { migrateAttestation, ATTESTATION_TABLES, ATTESTATION_EXEMPT } from "./schema.mjs";
 
@@ -104,8 +105,8 @@ export async function attest(body, { head, put, fetch: fetchFn, holds, now = () 
     if (holdsAnswer && holdsAnswer.acquired === true) {
       held = { form: "parts", on: "acquisition_receipt",
                detail: "no object is stored under this hash, because the document was captured in parts "
-                     + "and only its parts are stored, each under its own hash. This plane hashed the "
-                     + "whole document as it arrived and recorded that receipt, which is what this "
+                     + "and only its parts are stored, each under its own hash. Your group's Civicsmith hashed "
+                     + "the whole document as it arrived and recorded that receipt, which is what this "
                      + "attestation rests on." };
     } else {
       /* DEC-49 REGION is-attest-parts */
@@ -114,14 +115,14 @@ export async function attest(body, { head, put, fetch: fetchFn, holds, now = () 
           check: ATTEST_CHECKS.CAPTURE_HELD_IN_PARTS.check, translation: ATTEST_CHECKS.CAPTURE_HELD_IN_PARTS.translation,
           sha256: sha,
           detail: "the record's register names these bytes, but no object is stored under this hash and "
-                + "this plane holds no receipt of having acquired them, which is the shape of a document "
+                + "your group's Civicsmith holds no receipt of having acquired them, which is the shape of a document "
                 + "kept only in parts. A register row is written from what the promoting caller named, so "
                 + "a timestamp is not rested on it alone. Nothing here says the bytes are missing." };
       /* END DEC-49 REGION is-attest-parts */
       return { ok: false, reason: "NO_SUCH_CAPTURE",
                detail: holdsAnswer
                  ? "no object is stored under that hash, the register holds no row for it under a "
-                   + "record that exists, and this plane holds no receipt of having acquired it"
+                   + "record that exists, and your group's Civicsmith holds no receipt of having acquired it"
                  : "no object is stored under that hash, and the store could not be asked whether "
                    + "its register or an acquisition receipt names it, so this is not a finding that "
                    + "the record lacks the bytes" };
@@ -198,7 +199,7 @@ export async function attest(body, { head, put, fetch: fetchFn, holds, now = () 
         kind: "rfc3161", service, sha256: tokenSha, bytes: token.length,
         over: sha,
       },
-      note: "A trusted timestamp over the capture hash. Anyone can check it with openssl ts -verify against the authority's certificate; this plane obtains and stores it, and does not claim to have verified the signature.",
+      note: "A trusted timestamp over the capture hash. Anyone can check it with openssl ts -verify against the authority's certificate; your group's Civicsmith obtains and stores it, and does not claim to have verified the signature.",
       ...(held ? { held } : {}),
     } : {
       reason: "NO_ATTESTATION",
@@ -236,7 +237,8 @@ export function receiptStatement({ instance, retrieved, retrievalLocator, captur
 }
 
 const noKey = () => actRefusal("RECEIPT_NO_KEY",
-  "this instance holds no receipt-signing key it can read, so nothing is signed. The operator binds one as a secret; "
+  "your group's Civicsmith holds no receipt-signing key it can read, so nothing is signed. Whoever hosts your group's "
+  + "Civicsmith sets one as a secret; "
   + "nothing is claimed signed until then");
 
 /* ======================================================================= *
@@ -271,29 +273,82 @@ export class Attestation {
    *  `at` is the instant of the entry's matching attempt, when the entry recorded one. It asks no authority and
    *  verifies no token's signature, and says so. An empty list is the earned "none recorded" only when the home's
    *  register was read; with no home (a capture registered only by its parts has none under the whole's digest) or an
-   *  unreadable register the answer is `undetermined`, with why (provenance R37). */
+   *  unreadable register the answer is `undetermined`, with why (provenance R37).
+   *
+   *  N688 · K1852 (1): a file cut out of a captured archive carries the archive's co-attestation unchanged. When an
+   *  entry naming the capture states `capture.method: "unpacked"` with a `container` block (provenance R42), the same
+   *  read is applied to `container.archive_sha256`, and to that archive's own archive in turn, through at most
+   *  `ARCHIVE_DEPTH_MAX` archives (ooxml R30). Each of an archive's attestations is answered as its entry states it,
+   *  with `inherited: {from, through}`: `from` the archive whose entry records it, `through` the entry indexes from
+   *  that archive down to this capture, outermost first (the shape of provenance R59's `archive.through`). The
+   *  capture's own come first and carry no `inherited`. A chain past the bound, an archive whose register cannot be
+   *  read, or a container block that names no archive, is stated in `undetermined` beside what was read. */
   attestationsOf(captureSha) {
     const s = bareSha(captureSha);
     if (!s || !/^[0-9a-f]{64}$/.test(s))
       return { ok: false, reason: "BAD_SHA", detail: "attestationsOf takes the sha256 of a capture: 64 hex characters" };
+    const own = this.#recordedFor(s);
+    const out = [...own.attestations];
+    const why = own.why ? [own.why] : [];
+    let unpacked = false;
+    /* Each archive this capture (or an archive above it) was cut out of, nearest first, read as the capture's own
+       record is read. `through` is the indexes from the archive just read down to the capture; `depth` the number of
+       archives read on this chain so far. */
+    const climb = (entries, through, depth) => {
+      for (const d of entries) {
+        if (d.capture.method !== "unpacked") continue;
+        unpacked = true;
+        const c = isObj(d.container) ? d.container : null;
+        const archive = c ? bareSha(c.archive_sha256) : null;
+        const index = c ? c.index : null;
+        const named = through.length ? `the archive above it (through entries ${through.join(", ")})` : "this capture";
+        if (!archive || !/^[0-9a-f]{64}$/.test(archive) || !Number.isInteger(index) || index < 0) {
+          why.push(`the record states ${named} was cut out of an archive, but its container block names no archive `
+                 + "digest of 64 hex and whole entry index, so whose attestations it carries cannot be read");
+          continue;
+        }
+        const path = [index, ...through];
+        if (depth >= ARCHIVE_DEPTH_MAX) {
+          why.push(`the archives it was cut out of nest deeper than ARCHIVE_DEPTH_MAX (${ARCHIVE_DEPTH_MAX}): the `
+                 + `archive ${archive} (through entries ${path.join(", ")}) was not read, so its attestations are not here`);
+          continue;
+        }
+        const above = this.#recordedFor(archive);
+        for (const a of above.attestations) out.push({ ...a, inherited: { from: archive, through: path } });
+        if (above.why) why.push(`for the archive ${archive} it was cut out of (through entries ${path.join(", ")}): ${above.why}`);
+        climb(above.entries, path, depth + 1);
+      }
+    };
+    climb(own.entries, [], 0);
     const note = "read from what the record holds: no timestamp authority or archive was asked, and no token's "
-               + "signature was verified here";
+               + "signature was verified here"
+               + (unpacked ? ". This capture was cut out of a captured archive: an attestation marked inherited is "
+                   + "the archive's, recorded for the archive named in `from`, and its token proves the archive existed "
+                   + "at its instant, and so every byte cut out of it" : "");
+    return { ok: true, sha256: s, registered: own.registered, attestations: out,
+             ...(why.length ? { undetermined: why.join("; ") } : {}), note };
+  }
+
+  /* One capture's record, as R7 reads it: whether a register row names it under an existing bundle, the document
+     entries of its home's register that name it (each with a `capture` block), the attestations those entries state,
+     each naming its bundle and path, and why the answer is undetermined, when it is. Reads only; never throws. */
+  #recordedFor(s) {
     const home = this.#provenance.homeOf(s);
-    const answer = (attestations, why) => ({ ok: true, sha256: s, registered: !!home, attestations,
-                                             ...(why ? { undetermined: why } : {}), note });
+    const none = (why) => ({ registered: !!home, entries: [], attestations: [], why });
     if (!home)
-      return answer([], "no register row names this capture under a record that exists, so the record states no "
-                      + "attestation for it; a capture registered only by its parts is named by their digests, not the whole's");
+      return none("no register row names this capture under a record that exists, so the record states no "
+                + "attestation for it; a capture registered only by its parts is named by their digests, not the whole's");
     const PATH = "data/provenance.json";
     const f = this.#record.readFile(home.bundleId, PATH);
-    if (!f) return answer([], `its home ${home.bundleId} carries no ${PATH}`);
-    if (typeof f.text !== "string") return answer([], `its home's ${PATH} is held as a blob, which cannot be read here`);
+    if (!f) return none(`its home ${home.bundleId} carries no ${PATH}`);
+    if (typeof f.text !== "string") return none(`its home's ${PATH} is held as a blob, which cannot be read here`);
     const reg = safeJson(f.text);
-    if (!isObj(reg) || !Array.isArray(reg.documents)) return answer([], `its home's ${PATH} cannot be read as a register`);
+    if (!isObj(reg) || !Array.isArray(reg.documents)) return none(`its home's ${PATH} cannot be read as a register`);
     const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
-    const out = [];
+    const entries = [], out = [];
     for (const d of reg.documents) {
       if (!isObj(d) || !isObj(d.capture) || bareSha(d.capture.sha256) !== s) continue;
+      entries.push(d);
       const tries = Array.isArray(d.attestation_attempts) ? d.attestation_attempts.filter(isObj) : [];
       const when = (match) => { const a = tries.find(match); return a && str(a.attempted) ? { at: a.attempted } : {}; };
       const where = { bundle: home.bundleId, path: PATH };
@@ -316,7 +371,7 @@ export class Attestation {
         out.push({ kind: "co_archive", ...(co.service ? { service: co.service } : {}), locator: co.locator,
                    ...when((a) => a.ok === true && a.kind === "co-archive" && a.archived_locator === co.locator), ...where });
     }
-    return answer(out, null);
+    return { registered: true, entries, attestations: out, why: null };
   }
 
   /* ===================================================================== *

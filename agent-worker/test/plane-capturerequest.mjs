@@ -15,6 +15,10 @@
  *   (3) the run RUNNING — `CAPTURE_REQUEST_NO_RUN` again, as the plane answers it;
  *   (4) `address` a PUBLIC HTTPS locator — `CAPTURE_REQUEST_NOT_PUBLIC` (C-28.2), by record-grammar's own
  *       `isPublicHttpsLocator` (its R19), the exported function itself carried into the mock rather than re-typed;
+ *   (4a) (T35; capture-requests R49, F2, K1880) the address within 2,048 characters — `CAPTURE_REQUEST_ADDRESS_TOO_LONG`
+ *       (C-28.23) — and one the record ALREADY HOLDS, equal character for character once its scheme and host are
+ *       lower-cased, query and fragment included — `CAPTURE_REQUEST_ADDRESS_NOT_HELD` (C-28.24). The record's holdings
+ *       are the mock's `HELD_ADDRESSES` (or the list a suite names), standing for the receipts and links the plane reads;
  *   (5) `target` an inquiry — `CAPTURE_REQUEST_NOT_AN_INQUIRY`.
  * Every code, C-number and translation is read out of capture-requests' `CAPTURE_REQUEST_CHECKS` (C-28, its own
  * since T18) and run-rules' `runPrincipalGate`.
@@ -30,12 +34,20 @@ import { CAPTURE_REQUEST_CHECKS } from "../../bio-plane/src/capture-requests/che
 import { isPublicHttpsLocator } from "../../bio-plane/src/record-grammar/locator.mjs";
 import { runPrincipalGate } from "../../bio-plane/src/run-rules/index.mjs";
 import { INQUIRY_PREFIXES } from "./plane-suggest.mjs";
+import { CAPTURE_REQUEST_ADDRESS_MAX as CAPTURE_REQUEST_ADDRESS_MAX_VALUE } from "../../bio-plane/src/capture-requests/index.mjs";
 
 export const CAPTURE_WIRE_CHECKS = {
   CAPTURE_REQUEST_NO_RUN: CAPTURE_REQUEST_CHECKS.CAPTURE_REQUEST_NO_RUN,
   CAPTURE_REQUEST_NOT_PUBLIC: CAPTURE_REQUEST_CHECKS.CAPTURE_REQUEST_NOT_PUBLIC,
   CAPTURE_REQUEST_NOT_AN_INQUIRY: CAPTURE_REQUEST_CHECKS.CAPTURE_REQUEST_NOT_AN_INQUIRY,
+  CAPTURE_REQUEST_ADDRESS_TOO_LONG: CAPTURE_REQUEST_CHECKS.CAPTURE_REQUEST_ADDRESS_TOO_LONG,
+  CAPTURE_REQUEST_ADDRESS_NOT_HELD: CAPTURE_REQUEST_CHECKS.CAPTURE_REQUEST_ADDRESS_NOT_HELD,
 };
+/** capture-requests R49: the addresses the mock's record holds (a receipt's address or a held capture's link). The
+ *  suites' runs request only these, so a request they file is one the plane would take. */
+export const HELD_ADDRESSES = Object.freeze(["https://example.org/a", "https://example.org/b", "https://example.org/cal",
+  "https://example.org/minutes", "https://example.org/council/minutes"]);
+export { CAPTURE_REQUEST_ADDRESS_MAX } from "../../bio-plane/src/capture-requests/index.mjs";
 const row = (code) => ({ code, reason: code, check: CAPTURE_WIRE_CHECKS[code].check,
                          translation: CAPTURE_WIRE_CHECKS[code].translation });
 const NOT_PRINCIPAL = runPrincipalGate({ caller: "fl12-caller", principal: "fl12-owner",
@@ -43,7 +55,7 @@ const NOT_PRINCIPAL = runPrincipalGate({ caller: "fl12-caller", principal: "fl12
 
 /** The branch, as source. Expects the mock's `op`, `body`, `url` and `S` locals; `run.principal` and
  *  `run.status` are expressions over the mock's own state. Accepted requests are kept in `S.requests`. */
-export const captureRequestBranch = ({ run } = {}) => {
+export const captureRequestBranch = ({ run, held = HELD_ADDRESSES } = {}) => {
   if (!run || !run.principal || !run.status)
     throw new Error("plane-capturerequest.mjs: captureRequestBranch needs { run: { principal, status } }. "
       + "A capture-request mock with no run answers a question the plane refuses.");
@@ -59,7 +71,7 @@ export const captureRequestBranch = ({ run } = {}) => {
       const runId = String(b.run ?? "").trim();
       if (!runId)
         return refused(${JSON.stringify(row("CAPTURE_REQUEST_NO_RUN"))}, { run: null });
-      if (url.searchParams.get("token") !== (${run.principal}))
+      if ((req.headers.get("authorization") || "").replace(/^Bearer /, "") !== (${run.principal}))
         return Response.json({ ok: true, result: { ok: false,
           reason: ${JSON.stringify(NOT_PRINCIPAL.code)}, code: ${JSON.stringify(NOT_PRINCIPAL.code)},
           check: ${JSON.stringify(NOT_PRINCIPAL.check)}, translation: ${JSON.stringify(NOT_PRINCIPAL.translation)},
@@ -72,6 +84,18 @@ export const captureRequestBranch = ({ run } = {}) => {
         return refused(${JSON.stringify(row("CAPTURE_REQUEST_NOT_PUBLIC"))},
           { detail: "'" + (address.slice(0, 80) || "(none)") + "' is not a public https locator.",
             address: address || null });
+      /* capture-requests R49 (T35): within the bound, and an address the record already holds. */
+      if (address.length > ${CAPTURE_REQUEST_ADDRESS_MAX_VALUE})
+        return refused(${JSON.stringify(row("CAPTURE_REQUEST_ADDRESS_TOO_LONG"))},
+          { bound: ${CAPTURE_REQUEST_ADDRESS_MAX_VALUE}, length: address.length });
+      const schemeHostLower = (x) => { const t = String(x), k = t.indexOf("://");
+        if (k < 0) return t;
+        const rest = t.slice(k + 3), e = rest.search(/[?#]|[/]/);
+        const host = e < 0 ? rest : rest.slice(0, e);
+        return t.slice(0, k + 3).toLowerCase() + host.toLowerCase() + rest.slice(host.length); };
+      if (!${JSON.stringify(held)}.some((h) => schemeHostLower(h) === schemeHostLower(address)))
+        return refused(${JSON.stringify(row("CAPTURE_REQUEST_ADDRESS_NOT_HELD"))},
+          { detail: address.slice(0, 120) + " is not an address the record already holds.", address: address.slice(0, 300) });
       const target = String(b.target ?? "").trim();
       if (!target || !${JSON.stringify(INQUIRY_PREFIXES)}.includes(target.split("-")[0]))
         return refused(${JSON.stringify(row("CAPTURE_REQUEST_NOT_AN_INQUIRY"))}, { target: target || null });

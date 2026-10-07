@@ -755,7 +755,7 @@ export class Content {
              + `from one that is undetermined` }
       : target == null
       ? { ceiling: null, determinant: null, by: [],
-          why: `this plane cannot yet evaluate what a ${r.extent_kind} extent covers, so what a leg citing it may claim on `
+          why: `what a ${r.extent_kind} extent covers cannot yet be evaluated, so what a leg citing it may claim on `
              + `the transcription axis is undetermined — stated, and never resolved into the whole document's ceiling` }
       : gradeCeiling(chain, target, covering);
     const out = {
@@ -986,7 +986,7 @@ export class Content {
     /* DEC-49 REGION is-transcribe-portion */
     if (contentCitedAs(extent) === "bytes" || transcriptionAttestExtent(ekind, extent) == null)
       return refusal("TRANSCRIBE_PORTION_UNREADABLE",
-        `${describeExtent(extent)} is a part this plane cannot check a typing against — a second member's attestation `
+        `${describeExtent(extent)} is a part no typing can be checked against — a second member's attestation `
         + `needs a document, a page or a region of a page to scope to, and a transcription nobody could ever attest `
         + `would stand undetermined for good`, { target, extent_kind: ekind ?? null });
     if (!typed.trim())
@@ -1401,8 +1401,8 @@ export class Content {
     const store = this.record.evidenceStore();
     if (!store)
       return { ok: false, reason: "CROP_NO_EVIDENCE_STORE", content_id: r.content_id,
-               detail: "this instance has no evidence store bound, so the capture's bytes cannot be read and no crop was "
-                     + "made. That is a fact about this instance, not about the image" };
+               detail: "your group's Civicsmith has no evidence store set up, so the capture's bytes cannot be read and no "
+                     + "crop was made. That is a fact about how your group's Civicsmith is set up, not about the image" };
     const obj = await store.get(r.capture_sha);
     if (!obj)
       return { ok: false, reason: "CROP_CAPTURE_NOT_HELD", content_id: r.content_id, capture_sha: r.capture_sha,

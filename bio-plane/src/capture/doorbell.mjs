@@ -21,7 +21,7 @@ export const KNOCK = {
 KNOCK.statedPerIp =
   `at most ${KNOCK.perIp} knocks from one source in any ${KNOCK.windowMs / 60000} minutes, estimated by a sliding window`;
 KNOCK.statedGlobal =
-  `at most ${KNOCK.global} knocks to this instance in any ${KNOCK.windowMs / 60000} minutes, estimated by a sliding window`;
+  `at most ${KNOCK.global} knocks to this group's inbox in any ${KNOCK.windowMs / 60000} minutes, estimated by a sliding window`;
 
 /* D-513 / DEC-49 — THE THREE REFUSALS THE DOORBELL MAKES BEFORE THE STORE IS EVER CALLED, each behind ONE governed
  * helper. The envelope refusal and the payload refusal are TWO CONDITIONS with two remedies, so two codes: the
@@ -48,7 +48,7 @@ export function knockPayloadTooLarge(cap, evidence) {
                   + "canned translation (DEC-49). A code with no sentence behind it must not reach a knocker.");
   return { ok: false, reason: "KNOCK_PAYLOAD_TOO_LARGE", code: "KNOCK_PAYLOAD_TOO_LARGE",
            check: row.check, translation: row.translation, maxBytes: cap,
-           detail: evidence ? undefined : "this instance stores knocks inline; large material needs its evidence storage configured" };
+           detail: evidence ? undefined : "this group's inbox stores knocks inline; large material needs its evidence storage configured" };
   /* END DEC-49 REGION is-knock-payload-too-large */
 }
 
@@ -83,14 +83,18 @@ export function knockerSecretWeak() {
   /* END DEC-49 REGION is-knocker-secret-strong */
 }
 
-/** op=knock (R30–R32, R47–R54, R64, R66). `store` is the Durable Object stub; `json`, `requiredArgument`, `storeSilent`,
- *  `storeRefusal` and `doAnswer` (the one reader of a Durable Object's envelope, N247) are the control plane's. The
- *  refusals are tried in R53's order and the first that applies answers. */
-export async function knockOp(req, env, store, { json, requiredArgument, storeSilent, storeRefusal, doAnswer }) {
+/** op=knock (R30–R32, R47–R54, R64, R66, R85). `store` is the Durable Object stub; `json`, `requiredArgument`,
+ *  `storeSilent`, `storeRefusal` and `doAnswer` (the one reader of a Durable Object's envelope, N247) are the control
+ *  plane's, and so is `country` (R85: Cloudflare's two-letter label for the request as the control plane read it, or
+ *  null; never read from the body). The refusals are tried in R53's order and the first that applies answers. */
+export async function knockOp(req, env, store, { json, requiredArgument, storeSilent, storeRefusal, doAnswer, country = null }) {
   if (req.method !== "POST") return json({ ok: false, error: "knock is a POST" }, 405);
-  /* R80: a knock refused here, before the store is asked to keep anything, is counted in the doorbell's tally and
-     nowhere else; the count is the store's, and its failure never changes the refusal's answer. */
-  const refuse = async (answer, status) => { await tallyRefusal(store, doAnswer); return json(answer, status); };
+  const place = typeof country === "string" && country ? country : null;
+  const stamp = place ? `&country=${encodeURIComponent(place)}` : "";
+  /* R80, R85: a knock refused here, before the store is asked to keep anything, is counted in the doorbell's tally and
+     the security tally and nowhere else; the counts are the store's, and their failure never changes the refusal's
+     answer. */
+  const refuse = async (answer, status) => { await tallyRefusal(store, doAnswer, place); return json(answer, status); };
   const raw = await req.arrayBuffer();
   if (raw.byteLength > KNOCK.maxBytes + 4096) return refuse(knockEnvelopeTooLarge(), 413);
   let body; try { body = JSON.parse(new TextDecoder().decode(raw)); } catch { body = null; }
@@ -112,7 +116,7 @@ export async function knockOp(req, env, store, { json, requiredArgument, storeSi
      counted but R80's tally. */
   if (isWeakKnockerSecret(body.knockerSecret)) return refuse(knockerSecretWeak(), 400);
   const source = req.headers.get("cf-connecting-ip") || "unknown";
-  const out = await doAnswer(store.fetch(new Request(`http://do/knock?source=${encodeURIComponent(source)}`, {
+  const out = await doAnswer(store.fetch(new Request(`http://do/knock?source=${encodeURIComponent(source)}${stamp}`, {
     method: "POST", headers: { "content-type": "application/json" },
     body: JSON.stringify({ contentB64: typeof body.contentB64 === "string" ? body.contentB64 : null,
                            content: typeof body.contentB64 === "string" ? null : body.contentText,
@@ -139,11 +143,12 @@ export async function knockOp(req, env, store, { json, requiredArgument, storeSi
                 ...(typeof rec.secret === "string" ? { secret: rec.secret } : {}) }, 200);
 }
 
-/* R80: count one refusal the handler made in the store's tally (`doorbellrefused`). Whatever the store answers, or
-   if it does not, the refusal is answered as it was: a count that cannot be written changes nothing. */
-async function tallyRefusal(store, doAnswer) {
+/* R80, R85: count one refusal the handler made in the store's tallies (`doorbellrefused`), the country as a stamp in
+   the query. Whatever the store answers, or if it does not, the refusal is answered as it was: a count that cannot be
+   written changes nothing. */
+async function tallyRefusal(store, doAnswer, country = null) {
   try {
-    await doAnswer(store.fetch(new Request("http://do/doorbellrefused", {
+    await doAnswer(store.fetch(new Request(`http://do/doorbellrefused${country ? `?country=${encodeURIComponent(country)}` : ""}`, {
       method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ now: Date.now() }) })));
   } catch { /* the tally is status, never a gate */ }
 }

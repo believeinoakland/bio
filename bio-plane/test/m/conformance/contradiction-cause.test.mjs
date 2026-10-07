@@ -173,7 +173,7 @@ test("R9 R4: outcomes_differ is true, with its statement and no duty, when the p
 test("R12 R24: a comparison may name the contradiction inquiry it came from; the proposal records the link and still carries no outcome; an absent, invisible or plain inquiry is NO_SUCH_CONTRADICTION_INQUIRY, one answer; a link the viewer may not see is withheld whole", () => {
   const { w, proj, std, input } = scene();
   const x = w.contradicted();
-  const base = { project: proj, standards: [std], rows: input().rows, proposer: MACHINE, viewer: MACHINE };
+  const base = { project: proj, act: input().act, standards: [std], rows: input().rows, proposer: MACHINE, viewer: MACHINE };
   const p = w.c.comparisonPropose({ ...base, contradiction: x.inquiry });
   assert.equal(p.ok, true, JSON.stringify(p).slice(0, 300));
   assert.equal(p.proposal.contradiction, x.inquiry);

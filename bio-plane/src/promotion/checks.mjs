@@ -162,7 +162,7 @@ export const PROMOTED_TYPE_CHECKS = {
     check: 'C-86.3',
     where: 'src/promotion/index.mjs #promote > is-promoted-title-disagrees',
     translation: 'The document being filed gives itself one name, and the request that carried it gives another. '
-      + 'The record goes by the document, and names are held unique across the instance, so rather than file it under '
+      + 'The record goes by the document, and names are held unique across your group\'s Civicsmith, so rather than file it under '
       + 'a name it does not bear it stops and tells you both. Nothing was written. Send it again with the request '
       + 'naming the document\'s title, or naming none, or change the document first.',
   },
@@ -287,8 +287,8 @@ export const PROMOTION_ROW_CHECKS = {
   GROUP_UNDETERMINED: {
     check: 'C-64.1',
     where: 'src/promotion/index.mjs #promote > is-group-undetermined',
-    translation: 'This copy has not recorded which group it belongs to, and nothing in this request says, so the '
-      + 'record cannot write a document that must name the group that produced it. A copy records its group once: '
+    translation: 'Your group\'s Civicsmith has not recorded which group it belongs to, and nothing in this request says, so the '
+      + 'record cannot write a document that must name the group that produced it. It records its group once: '
       + 'when it is first installed, or by one act of whoever holds its administrator token in the hosting account. '
       + 'Nothing was written.',
   },
@@ -333,36 +333,37 @@ export const PROMOTION_REGISTRATION_CHECKS = {
   FACT_UNAVAILABLE: {
     check: 'C-102.4',
     where: 'src/promotion/index.mjs fact',
-    translation: 'No part of this instance answers that question yet, so there is no answer here, which is '
+    translation: 'No part of your group\'s Civicsmith answers that question yet, so there is no answer here, which is '
       + 'not the same as the answer being no. Nothing was written.',
   },
   FACT_FAILED: {
     check: 'C-102.5',
     where: 'src/promotion/index.mjs fact',
-    translation: 'The part of this instance that answers that question stopped with an error instead of '
+    translation: 'The part of your group\'s Civicsmith that answers that question stopped with an error instead of '
       + 'answering, so there is no answer here, which is not the same as the answer being no. Nothing was '
       + 'written.',
   },
   FACT_MALFORMED: {
     check: 'C-102.6',
     where: 'src/promotion/index.mjs registerFact > is-fact-named',
-    translation: 'A part of this instance tried to offer an answer to a question without naming the question, '
-      + 'itself, or how to answer it, so nothing was registered. This is a fault in how the instance was built, '
-      + 'not in the record, and nothing in the record changed.',
+    translation: 'A part of your group\'s Civicsmith tried to offer an answer to a question without naming the question, '
+      + 'itself, or how to answer it, so nothing was registered. This is a fault in how your group\'s Civicsmith was '
+      + 'built, not in the record, and nothing in the record changed.',
   },
   STEP_MODULE_UNNAMED: {
     check: 'C-102.7',
     where: 'src/promotion/index.mjs registerStep > is-step-named',
-    translation: 'A part of this instance tried to add its own check to every promotion without naming itself, '
-      + 'so nothing was registered. This is a fault in how the instance was built, not in the record, and '
-      + 'nothing in the record changed.',
+    translation: 'A part of your group\'s Civicsmith tried to add its own check to every promotion without naming '
+      + 'itself, so nothing was registered. This is a fault in how your group\'s Civicsmith was built, not in the '
+      + 'record, and nothing in the record changed.',
   },
   STEP_DECLARED: {
     check: 'C-102.8',
     where: 'src/promotion/index.mjs stepDeclared',
-    translation: 'A part of this instance tried to register something it had already registered, or that '
+    translation: 'A part of your group\'s Civicsmith tried to register something it had already registered, or that '
       + 'another part already provides, so the second registration was refused and the first still stands. '
-      + 'This is a fault in how the instance was built, not in the record, and nothing in the record changed.',
+      + 'This is a fault in how your group\'s Civicsmith was built, not in the record, and nothing in the record '
+      + 'changed.',
   },
   CASE_CATALOGUE_FAILED: {
     check: 'C-102.9',
