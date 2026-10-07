@@ -105,7 +105,7 @@ test("R20 (d543-instant-precision convert): op=reviewcopy's in-band date is the 
 });
 
 /* ---------------------------------------------------------------- reviewcopy */
-test("R30, R2 (reviewcopy convert): op=casedocument with a grant secret over the wire — the module's handler is handed the door's reader and digest, only sha256(secret) reaches the store, never the secret, and a secret the store does not honour (revoked, another edition, another case) reads byte for byte as a stranger", async () => {
+test("R30, R2 (reviewcopy convert): op=casedocument with a grant secret over the wire, in the POST body (R59) — the module's handler is handed the door's reader and digest, only sha256(secret) reaches the store, never the secret, and a secret the store does not honour (revoked, another edition, another case) reads byte for byte as a stranger", async () => {
   const LIVE = "rv1_live-holder", REVOKED = "rv1_revoked";
   const doc = { ok: true, case_id: "CASE-2026-0001", edition: 2, ratified: false, text: "the document", doc_sha: "d".repeat(64) };
   const stranger = { ok: false, reason: "NO_CASE_DOCUMENT" };
@@ -115,12 +115,15 @@ test("R30, R2 (reviewcopy convert): op=casedocument with a grant secret over the
   const hooks = {
     publicOp: async (ctx) => publicationDoorOp(ctx.op, ctx.url, ctx.stub, { json: M.json, storeSilent: M.storeSilent,
       storeRefusal: M.storeRefusal, doAnswer: M.doAnswer, sha256Hex: M.sha256Hex, NS_RATIFY, caseRatifyStatement,
-      readerOf: () => M.caseReader(ctx.url, ctx.env, "bio", ctx.presentedAi.cred) }) ?? M.json({ ok: false }, 500),
+      readerOf: () => M.caseReader(ctx.url, ctx.env, "bio", ctx.presentedAi.cred),
+      body: () => ctx.req.clone().json() }) ?? M.json({ ok: false }, 500),
     gatedOp: async () => undefined, publicInstanceGroup: async () => ({ answered: true, result: {} }),
   };
-  const read = async (params) => {
+  /* R59 (publication R73, K2011): the secret travels in the POST body, never the address */
+  const read = async ({ secret, ...params }) => {
     w.env.calls.length = 0;
-    const r = await call(w.env, { op: "casedocument", params, hooks });
+    const r = await call(w.env, { op: "casedocument", params, hooks,
+                                  ...(secret === undefined ? {} : { method: "POST", body: { secret } }) });
     return { r, inner: opCalls(w.env).filter((c) => c.route === "casedocument") };
   };
   const live = await read({ case: doc.case_id, edition: "2", secret: LIVE });
@@ -136,6 +139,11 @@ test("R30, R2 (reviewcopy convert): op=casedocument with a grant secret over the
     assert.deepEqual([x.r.status, x.r.text], [a.r.status, a.r.text], JSON.stringify(params));
     assert.equal(x.r.text.includes(params.secret), false);
   }
+  /* the address form is still honoured for T35's release, and its answer names the deprecation (publication R73) */
+  w.env.calls.length = 0;
+  const q = await call(w.env, { op: "casedocument", params: { case: doc.case_id, edition: "2", secret: LIVE }, hooks, secretIn: "query" });
+  assert.deepEqual([q.r?.status ?? q.status, q.json.text, q.json.deprecated], [200, "the document", "CREDENTIAL_IN_ADDRESS"]);
+  assert.equal("deprecated" in live.r.json, false);
 });
 
 /* ---------------------------------------------------------------- textchain */

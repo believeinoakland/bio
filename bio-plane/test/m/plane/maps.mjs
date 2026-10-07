@@ -1,5 +1,5 @@
 /* R5's statement, for the tests: each module's own ops map, built on a host as its module offers it, in the order the
-   plane's route map spreads them (today's order: `src/plane/store.mjs`' `routes`, then instance-setup's, then control-plane's). */
+   plane's route map spreads them (today's order: `src/plane/store.mjs`' `routes`, then instance-setup's, admission's, then store-door's, K2043). */
 import { actionsOf, actionsOps } from "../../../src/actions/index.mjs";
 import { actionClocksOf, actionClocksOps } from "../../../src/action-clocks/index.mjs";
 import { localFactsOf, localFactsOps } from "../../../src/local-facts/index.mjs";
@@ -52,7 +52,8 @@ import { contentOf, contentOps } from "../../../src/content/index.mjs";
 import { retrievalOf, retrievalRoutes } from "../../../src/retrieval/index.mjs";
 import { wizardScriptsOf, wizardScriptsOps } from "../../../src/wizard-scripts/index.mjs";
 import { instanceSetupOf, instanceSetupOps } from "../../../src/setup.mjs";
-import { controlPlaneRoutes } from "../../../src/control-plane/dispatch.mjs";
+import { controlPlaneRoutes } from "../../../src/store-door/dispatch.mjs";
+import { admissionOf, admissionOps } from "../../../src/admission/window.mjs";
 import { eventsOf, eventsOps } from "../../../src/events/index.mjs";
 import { linesOf, linesOps } from "../../../src/lines/index.mjs";
 import { moneyOf, moneyOps } from "../../../src/money/index.mjs";
@@ -71,6 +72,11 @@ import { followingOf, followingOps } from "../../../src/following/index.mjs";
 export const MODULE_MAPS = [
   ["membership", (c, u, b, e) => membershipOps(membershipOf(c), u, b, e)],
   ["credentials", (c, u, b, e) => credentialsOps(credentialsOf(c), u, b, e)],
+  /* K2042 (acquisition R43): the group's co-archive setting, acquisition's two acts. acquisition exports no ops map of
+     its own (its ops are reached through capture's and control-plane's doors), so the pair is named here as the module's
+     whose methods answer them: the plane adds no behaviour, only the entry (plane R9). */
+  ["acquisition", (c, u, b) => ({ coarchiveset: () => acquisitionOf(c).coArchiveSet({ on: b ? b.on : undefined, by: u.searchParams.get("by") }),
+                                  coarchivestate: () => acquisitionOf(c).coArchiveState() })],
   ["capture", (c, u, b, e) => captureOps(captureOf(c), u, b, e)],
   ["calibration", (c, u, b) => calibrationOps(calibrationOf(c), u, b)],
   ["bias", (c, u, b) => biasOps(biasOf(c), u, b)],
@@ -134,7 +140,8 @@ export const MODULE_MAPS = [
   ["review", (c, u, b) => reviewOps(reviewOf(c), u, b)],
   ["wizard-scripts", (c, u, b) => wizardScriptsOps(wizardScriptsOf(c), u, b)],
   ["instance-setup", (c, u, b, e) => instanceSetupOps(instanceSetupOf(c, e), u, b)],
-  ["control-plane", (c, u, b) => controlPlaneRoutes(c, u, b)],
+  ["admission", (c, u, b) => admissionOps(admissionOf(c), u, b)],
+  ["store-door", (c, u, b) => controlPlaneRoutes(c, u, b)],
 ];
 
 /** Each module's map on host `ctx` for one request, as `[module, map]`, in R5's order. */

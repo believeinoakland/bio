@@ -1,6 +1,6 @@
 /* plane R1–R5: the instance's Durable Object class, the composition root. It builds every module on the object's storage
    in the order below (R2), runs their migrations before any request (R3), hands the alarm to `scheduler` (R4), and answers
-   every store request through `control-plane`'s `dispatch` over the one route map (R5). It holds no construct of its own:
+   every store request through `store-door`'s `dispatch` over the one route map (R5; K2043). It holds no construct of its own:
    no table, no row, no refusal, no op (R9); its own stats sight is `stats.mjs`' (R10). Moved from
    `store.mjs`' constructor, `#migrate`, `alarm`, `onAlarm`, `#nowMs`, `#ownNamespace` and `routes`, and from
    `control-plane/dispatch.mjs`' `Store` (control-plane R35, now this module's R1), with their behaviour unchanged. */
@@ -28,6 +28,7 @@ import { captureRequestsOf, captureRequestsOps } from "../capture-requests/index
 import { recordOf, recordCoreOps } from "../record-core/index.mjs";
 import { registerInquiryGrammar } from "../inquiry-grammar/index.mjs";
 import { governorOf, governorRoutes } from "../host-governor/index.mjs";
+import { acquisitionOf } from "../acquisition/index.mjs";
 import { captureOf, captureOps } from "../capture/index.mjs";
 import { monitoringOf, monitoringOps } from "../monitoring/index.mjs";
 import { linkSweepOf, linkSweepOps } from "../link-sweep/index.mjs";
@@ -66,8 +67,8 @@ import { queueProducersOf } from "../queue-producers/index.mjs";
 import { tasksOf } from "../tasks/index.mjs";
 import { wizardScriptsOf, wizardScriptsOps } from "../wizard-scripts/index.mjs";
 import { instanceSetupOf, instanceSetupOps } from "../setup.mjs";
-import { dispatch, controlPlaneRoutes } from "../control-plane/dispatch.mjs";
-import { promotionStep } from "../control-plane/step.mjs";
+import { dispatch, controlPlaneRoutes } from "../store-door/dispatch.mjs";   /* K1907, K2041: the store's door */
+import { promotionStep } from "../store-door/step.mjs";
 import { registerOwnersCounts, registerStats } from "./stats.mjs";
 import { wizardRegistration } from "./wizards.mjs";
 import { SCREENS } from "./screens.mjs";
@@ -86,18 +87,22 @@ import { answersOf, answersOps } from "../answers/index.mjs";
 import { caseTensionsOf, caseTensionsOps } from "../case-tensions/index.mjs";
 import { followingOf, followingOps } from "../following/index.mjs";
 import { noticeProducersOf } from "../notice-producers/index.mjs";
-import { askOnObject } from "./ask.mjs";
-import { registerReaders, rosterSource, officePorts, dutiesFactOf, retrievalTerms, sheetRecompute,
+import { askOnObject, draftOnObject } from "./ask.mjs";
+import { admissionOf, admissionOps } from "../admission/window.mjs";
+import { archiveUnpackConsumer } from "./unpack.mjs";
+import { rosterSource } from "../../../roster-reader/index.mjs";
+import { credentialsOf as captureCredentialsOf } from "../capture-sources/credentials.mjs";
+import { registerReaders, rosterReads, ownHostsOf, officePorts, dutiesFactOf, retrievalTerms, sheetRecompute,
          ratificationWorker } from "./wiring.mjs";
 
-/* The name control-plane's promotion step (its R42) is registered under. */
-const STEP = "control-plane";
+/* The name store-door's promotion step (its R5, was control-plane R42) is registered under (K2037). */
+const STEP = "store-door";
 
 /* The first module of layer 11 in the modules' total order. `MODULE_ORDER` carries no layers and product code cannot read
    `build/` at run time, so it is named here; `store.test.mjs`' R2 test holds it to `build/modules.json`'s layers. */
 const FIRST_LAYER_11 = "wizard-scripts";
 
-/* The order promotion ranks its steps by: the modules' total order (membership R83), with control-plane's step (its R42;
+/* The order promotion ranks its steps by: the modules' total order (membership R83), with store-door's step (its R5;
    R10) after every module of layers 1–10 and before every later one (K1416: before the first layer-11 module, now
    `wizard-scripts`, N544), the rank the step has held since it was `legacy-store`'s, so every step's checks and
    projections, and the order of refusals, are today's. Promotion ranks a name the order lacks last (its R39). */
@@ -130,7 +135,7 @@ export class Store extends DurableObject {
     registerOwnersCounts(ctx);
     registerStats(ctx);
     /* promotion, built first with the order its steps rank by (membership, then promotion, as provenance's first call
-       built them), so control-plane's step ranks after layer 10 and before every layer-11 module (STEP_ORDER). */
+       built them), so store-door's step ranks after layer 10 and before every layer-11 module (STEP_ORDER). */
     const promotion = promotionOf(ctx, { order: STEP_ORDER });
     /* R16 (N522; K1307): accepted-work's one instance on this host, made here, before inquiry's factory and every reader,
        on this promotion, so its promotion check (its R4) is registered at its rank before the first request. The same
@@ -180,8 +185,9 @@ export class Store extends DurableObject {
        entry from local-facts (civil-time R9). Before people, whose duties read would otherwise build it bare. */
     const duties = dutiesOf(ctx, { factOf: dutiesFactOf(() => localFacts) });
     const people = peopleOf(ctx, { money, duties, events, lines });
-    /* R23 (K1505 (6)): roster-reader's source registered into people (its R19). */
-    people.registerRosterSource("roster-reader", rosterSource());
+    /* R23 (K1505 (6); N633, K1730): roster-reader's source registered into people (its R19), reading the held rosters
+       of an organisation through the store's read composed here (roster-reader R12). */
+    people.registerRosterSource("roster-reader", rosterSource(rosterReads({ sql: () => this.sql })));
     /* explore (K1566): the one read across the registered owners; it holds nothing, so it is kept for the route map. */
     this.explore = exploreOf(ctx, { events, money });
     /* retrieval: its projection and text index join every promotion; R21 (K1593): the projected fields' providers,
@@ -309,7 +315,10 @@ export class Store extends DurableObject {
        registers its ids' seed; it is then registered, once and before the first request, with the bundle's screens and
        library, the member op table, the acts a machine is refused and the labelled machine drafts (its R13). */
     wizardScriptsOf(ctx, { env }).wizardRegister(wizardRegistration());
-    promotion.registerStep(STEP, promotionStep(ctx));   /* R10 (K861): control-plane's step (its R42), the testimony slot and the sight index */
+    /* K2044, K2054 (admission R21): admission's door window, built at its place in layer 11 so its table is made and
+       declared through record-core before the first request; its fingerprint is capture's (its R56). */
+    admissionOf(ctx);
+    promotion.registerStep(STEP, promotionStep(ctx));   /* R10 (K861, K2037): store-door's step (its R5), the testimony slot and the sight index */
     observationLogOf(ctx).listenToCapture(capture);
     schedulerOf(ctx, env);
     /* R3: the migration pass, then scheduler's start. */
@@ -331,10 +340,25 @@ export class Store extends DurableObject {
       Queue.PRODUCER_DEPS.filter((k) => queueDeps[k] !== undefined).map((k) => [k, queueDeps[k]])));
     queueOf(ctx, { ...queueDeps, producers: queueProducers }).migrate();
     tasksOf(ctx, { env }).migrate();
+    /* K1951, K2042, K2046: the daemon's drain of capture's `archive-unpack` events, registered with the scheduler after
+       tasks' `task-drain` (scheduler R8), each event asked of the Worker as `op=unpack` through `SELF`. */
+    schedulerOf(ctx, env).register("plane", archiveUnpackConsumer({ capture: () => captureOf(ctx), env }));
     /* R1: instance-setup started once per object (its `start` is idempotent on one storage), built here first, with the
        queue's producers (K1868 (2)). */
     const instanceSetup = instanceSetupOf(ctx, env, { queueProducers });
-    ctx.blockConcurrencyWhile(async () => instanceSetup.start());
+    ctx.blockConcurrencyWhile(async () => {
+      const started = await instanceSetup.start();
+      /* F16 (K2038; capture R73, capture-sources R65): the group's own hosts, once the store is migrated and started so
+         instance-setup's claim reads, handed once to capture (for acquisition R42, adopted from the first caller that
+         names them) and to capture-sources' credentials (R55, R56); a claim made later is read at the next
+         construction. */
+      let identity = null;
+      try { identity = instanceSetup.groupIdentity(); } catch { identity = null; }
+      const ownHosts = ownHostsOf(identity);
+      captureOf(ctx, { ownHosts });
+      captureCredentialsOf(ctx, { key: env.CAPTURE_CREDENTIALS_KEY ?? null, ownHosts });
+      return started;   /* R1: the blocked work answers instance-setup's start */
+    });
   }
 
   /* R3: record-core's `RECORD_SCHEMA` first, then each owner's `migrate()` in this order. */
@@ -412,6 +436,9 @@ export class Store extends DurableObject {
   /* B2 (K1674, K1684): `op=ask`'s work on the `bio` object, reached over the object's RPC from the door's arm (no route:
      R5). */
   async ask(args) { return askOnObject(this.ctx, this.env, args || {}); }
+  /* R19 (N686; K2038; control-plane R57): a draft's account and grant on the `bio` object, reached over the object's
+     RPC by control-plane's door (no route: R5). */
+  async draft(args) { return draftOnObject(this.ctx, this.env, args || {}); }
 
   /* R4: scheduler's. */
   async alarm() { await schedulerOf(this.ctx, this.env).alarm(); }
@@ -419,11 +446,11 @@ export class Store extends DurableObject {
   /* scheduler's alarm read (its R13), reached over the object's RPC by scheduler's plane test. */
   async schedAlarmAt() { return await schedulerOf(this.ctx, this.env).alarmAt(); }
 
-  /* R1, R5: every store request passes control-plane's one frame. R14 (DEC-113; control-plane R46): it is handed the
+  /* R1, R5: every store request passes store-door's one frame (K2043). R14 (DEC-113; control-plane R46): it is handed the
      object's namespace, R2's own name (`bio` or `scratch`, else `bio`, so an object whose name is unknown is the real
      record's and fails closed), and `actions`' `purgeHeld` (its R60) on this storage, each asked at the purge only. */
   async fetch(req) {
-    return dispatch(req, { routes: (url, body) => this.routes(url, body), membership: () => membershipOf(this.ctx),
+    return dispatch(req, { routes: (url, body, grant) => this.routes(url, body, grant), membership: () => membershipOf(this.ctx),
       namespace: () => this.#ownNamespace() || "bio", purgeHeld: (q) => actionsOf(this.ctx).purgeHeld(q),
       /* B5 (K1685; answers R1, R2): a read served under a grant is recorded in this object's read log, scrubbed. */
       logRead: (entry) => answersOf(this.ctx).logRead(entry) });
@@ -455,11 +482,15 @@ export class Store extends DurableObject {
 
   /* R5: the one route map, every module's own ops map (the `membershipOps` pattern), then instance-setup's, then
      control-plane's, in this order; this module holds no route of its own. */
-  routes(url, body) {
+  routes(url, body, grant = null) {
     const ctx = this.ctx, env = this.env;
     return {
       ...membershipOps(membershipOf(ctx), url, body, env),
       ...credentialsOps(credentialsOf(ctx), url, body, env),
+      /* K2042 (acquisition R43; CONTROL-PLANE #24 J3): the group's co-archive setting, acquisition's one instance per
+         host, at acquisition's place before capture's map; `by` is the door's stamp. */
+      coarchiveset: () => acquisitionOf(ctx).coArchiveSet({ on: body ? body.on : undefined, by: url.searchParams.get("by") }),
+      coarchivestate: () => acquisitionOf(ctx).coArchiveState(),
       ...captureOps(captureOf(ctx), url, body, env),
       ...calibrationOps(calibrationOf(ctx), url, body),
       ...biasOps(biasOf(ctx), url, body),
@@ -535,7 +566,10 @@ export class Store extends DurableObject {
       ...reviewOps(reviewOf(ctx), url, body),
       ...wizardScriptsOps(wizardScriptsOf(ctx), url, body),   /* R19 (N528): the wizard scripts' ops, layer 11 */
       ...instanceSetupOps(instanceSetupOf(ctx, env), url, body),
-      ...controlPlaneRoutes(ctx, url, body),
+      /* K2044, K2054 (admission R21): the Worker's count of a request to a public op, `doorwindow`, store-internal */
+      ...admissionOps(admissionOf(ctx), url, body),
+      /* store-door's map (its R1); the grant its door read from the header is handed on (its R11, K2041) */
+      ...controlPlaneRoutes(ctx, url, body, grant),
     };
   }
 }

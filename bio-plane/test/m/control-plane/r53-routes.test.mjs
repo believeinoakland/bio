@@ -6,14 +6,17 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { O, M, world, call, opCalls, aik, cred, hex64, refused, FORGED } from "./harness.mjs";
-const D = await import("../../../src/control-plane/dispatch.mjs");
+const D = await import("../../../src/store-door/dispatch.mjs");
 const { record } = await import("./record.mjs");
 const { AI_GRANT_OPS, ACCOUNT_CHECKS } = await import("../../../src/credentials/index.mjs");
 const { ASK_PLANE_OPS } = await import("../../../../agent-worker/src/ops.mjs");
 
 const { OPS } = O;
 const OP_STAMPS = O.OP_STAMPS || {};
-const KEYS = ["viewer", "by", "bodyBy", "author", "proposer", "member", "session"];
+/* T35 (op-declarations R30; OP-DECLARATIONS #12 J2): `principal`, `owner`, and the public ops' `source` and `country` */
+const KEYS = ["viewer", "by", "bodyBy", "author", "proposer", "member", "session", "principal", "owner", "source", "country"];
+/* who is calling, as the door knows them on a public op (admission R21): the window's fingerprint, no country unstated */
+const DOOR = { source: "src-test", country: null };
 const MEMBER_ID_BY = ["invitewithdraw", "websitekeycreate", "websitekeyset", "websitekeyrevoke", "joinlinkenable", "joinlinkset",
                       "joinlinkreplace", "joinlinkoff", "courtnoticeset", "groupdescriptionset"];
 const URL0 = new URL("http://do/");
@@ -44,16 +47,19 @@ function callers() {
   const agent = aik();
   const w = world({ creds: { [agent]: cred({ tokenId: "agent-ann", principal: "member:ann", writes: Object.keys(OPS) }) } });
   const bind = (c, token, params = {}) => ({ name: c, token, params, session: false,
-    want: { viewer: `class:${c}`, by: `class:${c}`, bodyBy: `class:${c}`, author: `class:${c}`, proposer: `class:${c}`, member: null, session: null } });
+    want: { viewer: `class:${c}`, by: `class:${c}`, bodyBy: `class:${c}`, author: `class:${c}`, proposer: `class:${c}`, member: null, session: null,
+            principal: `class:${c}`, owner: `class:${c}`, ...DOOR } });
   return { w, list: [
     bind("admin", w.env.ADMIN_TOKEN), bind("member", w.env.MEMBER_TOKEN), bind("probe", w.env.PROBE_TOKEN, { store: "scratch" }),
     { name: "founder", token: w.S.founder, params: {}, session: true,
-      want: { viewer: "admin", by: "admin", bodyBy: "admin", author: "member:admin", proposer: "admin", member: "admin", session: w.S.founder } },
+      want: { viewer: "admin", by: "admin", bodyBy: "admin", author: "member:admin", proposer: "admin", member: "admin", session: w.S.founder,
+              principal: "member:admin", owner: "member:admin", ...DOOR } },
     { name: "ann", token: w.S.ann, params: {}, session: true,
-      want: { viewer: "member:ann", by: "member:ann", bodyBy: "member:ann", author: "member:ann", proposer: "ann", member: "member:ann", session: w.S.ann } },
+      want: { viewer: "member:ann", by: "member:ann", bodyBy: "member:ann", author: "member:ann", proposer: "ann", member: "member:ann", session: w.S.ann,
+              principal: "member:ann", owner: "member:ann", ...DOOR } },
     { name: "agent", token: agent, params: {}, session: false,
       want: { viewer: "member:ann", by: "class:ai/agent-ann", bodyBy: "class:ai/agent-ann", author: "class:ai/agent-ann",
-              proposer: "class:ai/agent-ann", member: null, session: null } },
+              proposer: "class:ai/agent-ann", member: null, session: null, principal: "member:ann/agent-ann", owner: "class:ai", ...DOOR } },
   ] };
 }
 
@@ -74,11 +80,13 @@ test("R53 (K1122, K1674; op-declarations R17–R20): every op T33's owners' maps
   assert.ok(["eventcreate", "explore", "standingset"].every((op) => ops.includes(op)));
 });
 
-test("R53, R17, R29: for every op `OP_STAMPS` declares and every kind of caller its spec admits, each declared key reaches the owner's route as the server's value — in the query, or in the body for `bodyBy` — whatever the caller forged; `member` and `session` are a session's own and absent for every other caller; a key the op does not declare is not set by the door", async () => {
+test("R53, R17, R29: for every op `OP_STAMPS` declares and every kind of caller its spec admits, each declared key reaches the owner's route as the server's value — in the query, in the body for `bodyBy`, in the `x-bio-session` header for `session` (R59) — whatever the caller forged; `member` and `session` are a session's own and absent for every other caller; a key the op does not declare is not set by the door", async () => {
   const { w, list } = callers();
   const forgedQ = Object.fromEntries([...KEYS, "grant"].map((k) => [k, FORGED]));
   let checked = 0, reached = 0;
   for (const [op, keys] of Object.entries(OP_STAMPS)) for (const c of list) {
+    /* R41 (T35): `agentpack` is answered from the untargeted affordances handler (a hook), which stamps its own reads */
+    if (op === "agentpack") continue;
     for (const [params, body] of [[c.params, {}], [{ ...c.params, ...forgedQ }, { by: FORGED, note: "kept" }]]) {
       w.env.calls.length = 0;
       const r = await call(w.env, { op, token: c.token, params, method: OPS[op]?.mutating ? "POST" : "GET",
@@ -91,7 +99,10 @@ test("R53, R17, R29: for every op `OP_STAMPS` declares and every kind of caller 
       const where = `${op} for ${c.name}${params === c.params ? "" : " (forged)"}`;
       assert.equal(inner.params.grant, undefined, `${where}: ?grant`);
       for (const k of keys) {
-        const got = k === "bodyBy" ? (inner.body?.by ?? null) : (inner.params[k] ?? null);
+        /* R59, store-door R9 (K2038 (1)): a stamped session travels in the `x-bio-session` header, never the address */
+        const got = k === "bodyBy" ? (inner.body?.by ?? null) : k === "session" ? (inner.headers["x-bio-session"] ?? null)
+          : (inner.params[k] ?? null);
+        if (k === "session") assert.equal(inner.params.session, undefined, `${where}: ?session`);
         /* R54 (K1863 (7)): membership's administrator acts take `by` as a member id, the custodial acts' expression */
         const want = k === "by" && MEMBER_ID_BY.includes(op)
           ? (c.session ? c.want.proposer : `class:${c.name === "agent" ? "ai" : c.name}`) : c.want[k];
@@ -123,7 +134,7 @@ function grantWorld(extra = {}) {
   return { ...v, GRANT };
 }
 
-test("R53 (K1601, K1674; credentials R28): a token no session or credential holds is asked of credentials as an ask's grant, in `bio`, only for an op on the grant's list; admitted, the read reaches its route with the grant's member as viewer and the grant stamped `grant`, whatever the caller forged; a held grant asking an op it does not admit is refused GRANT_OP_REFUSED; an unknown token, an op off every list and a targeted `affordances` keep admission's NOT_AUTHENTICATED, in the same bytes; a silence is a silence", async () => {
+test("R53 (K1601, K1674; credentials R28): a token no session or credential holds is asked of credentials as an ask's grant, in `bio`, only for an op on the grant's list; admitted, the read reaches its route with the grant's member as viewer and the grant in the `x-bio-grant` header (R59), never the address, whatever the caller forged; a held grant asking an op it does not admit is refused GRANT_OP_REFUSED; an unknown token, an op off every list and a targeted `affordances` keep admission's NOT_AUTHENTICATED, in the same bytes; a silence is a silence", async () => {
   const { env, GRANT, S } = grantWorld();
   const listed = AI_GRANT_OPS.filter((op) => Object.hasOwn(OPS, op) && !OPS[op].mutating);
   assert.ok(listed.includes("search") && listed.length >= 5, listed.join(","));
@@ -135,7 +146,8 @@ test("R53 (K1601, K1674; credentials R28): a token no session or credential hold
     assert.deepEqual(asked.map((c) => [c.ns, c.body]), [["bio", { token: GRANT, op, write: false }]], op);
     const [inner] = opCalls(env).filter((c) => c.route !== "aigrantadmit");
     if (!inner) continue;
-    assert.deepEqual([inner.ns, inner.params.grant, inner.params.q], ["bio", GRANT, "x"], op);
+    /* R59, store-door R9 (K2037 (b)): the grant travels in the internal header, never the address */
+    assert.deepEqual([inner.ns, inner.headers["x-bio-grant"], inner.params.grant, inner.params.q], ["bio", GRANT, undefined, "x"], op);
     if (inner.params.viewer !== undefined) assert.equal(inner.params.viewer, "member:ann", op);
     assert.notEqual(inner.params.by, FORGED, op);
     assert.equal(r.json.tokenClass, "ai");
@@ -177,6 +189,7 @@ test("R53 (K1601, K1674; credentials R28): a token no session or credential hold
   assert.equal(s.status, 200);
   assert.equal(env.calls.some((c) => c.route === "aigrantadmit"), false);
   assert.equal(opCalls(env)[0].params.grant, undefined);
+  assert.equal(opCalls(env)[0].headers["x-bio-grant"], undefined);
 });
 
 test("R53 (K1601, K1674; agent-worker R54): the ask's own four calls (askceiling, askcheck, askusage, the untargeted affordances) are admitted under a held grant beside its list, asked of credentials by the list's first read, and are agent-worker's `ASK_PLANE_OPS` exactly", async () => {
@@ -188,33 +201,12 @@ test("R53 (K1601, K1674; agent-worker R54): the ask's own four calls (askceiling
     const r = await call(env, { op, token: GRANT, method: OPS[op].mutating ? "POST" : "GET", body: OPS[op].mutating ? { usage: {} } : undefined });
     assert.equal(r.status, 200, `${op}: ${r.text.slice(0, 200)}`);
     assert.deepEqual(env.calls.filter((c) => c.route === "aigrantadmit").map((c) => c.body), [{ token: GRANT, op: AI_GRANT_OPS[0], write: false }]);
-    assert.equal(opCalls(env).filter((c) => c.route !== "aigrantadmit")[0].params.grant, GRANT, op);
+    const inner = opCalls(env).filter((c) => c.route !== "aigrantadmit")[0];
+    assert.deepEqual([inner.headers["x-bio-grant"], inner.params.grant], [GRANT, undefined], op);
   }
 });
 
-/* ---- the read log, in the record store's door ---- */
-
-test("R53 (K1674; answers R1, R2): a read the store serves under a grant is handed to `store.logRead` with its grant, op, arguments (query and body, stamps aside), answer and viewer, and answered as logged; no grant, `rule` (which records its own) and an op off the asking scope are answered as served; a store that cannot log is the store's internal error, never an unlogged answer", async () => {
-  const logged = [];
-  const store = (logRead) => ({
-    routes: () => ({ search: () => ({ rows: ["INQ-1", "MTI-2026-0001"] }), rule: () => ({ value: 1 }), askceiling: () => ({ ok: true }) }),
-    membership: () => ({ visibilityOf: () => "hidden", existenceAct: () => null }), ...(logRead ? { logRead } : {}) });
-  const logging = store((e) => { logged.push(e); return { rows: ["INQ-1"], scrubbed: true }; });
-  const go = async (s, path, body) => (await D.dispatch(new Request(`http://do/${path}`, body ? { method: "POST", body: JSON.stringify(body) } : {}), s));
-  const a = await (await go(logging, "search?grant=G1&viewer=member:ann&q=x", { limit: 5 })).json();
-  assert.deepEqual(a, { ok: true, result: { rows: ["INQ-1"], scrubbed: true } });
-  assert.deepEqual(logged, [{ grant: "G1", op: "search", args: { q: "x", limit: 5 }, answer: { rows: ["INQ-1", "MTI-2026-0001"] }, viewer: "member:ann" }]);
-  for (const path of ["search?viewer=member:ann&q=x", "rule?grant=G1&viewer=member:ann", "askceiling?grant=G1&viewer=member:ann"]) {
-    const r = await (await go(logging, path)).json();
-    assert.equal(r.ok, true, path);
-    assert.equal(r.result.scrubbed, undefined, path);
-  }
-  assert.equal(logged.length, 1);
-  const lost = await go(store(null), "search?grant=G1&viewer=member:ann");
-  const body = await lost.json();
-  assert.deepEqual([lost.status, body.reason], [500, "STORE_INTERNAL_ERROR"]);
-  assert.equal(JSON.stringify(body).includes("MTI-"), false, "nothing unlogged is answered");
-});
+/* ---- the read log and the ask's own routes are the store's door's (store-door R11, its own tests) ---- */
 
 test("R53 (K1674; credentials R28): the record store's door routes `aigrantadmit` to credentials' `aiGrantAdmit` (store-internal: no spec, so no caller reaches it through the Worker), answering credentials' own words (negative control: a name no module serves is R26's refusal)", async () => {
   const r = await record();
@@ -225,26 +217,6 @@ test("R53 (K1674; credentials R28): the record store's door routes `aigrantadmit
   refused(await call(env, { op: "aigrantadmit", token: env.ADMIN_TOKEN, method: "POST", body: {} }), 400, "UNKNOWN_OP", "C-69.1");
   const u = await r.go("aigrantnothing", "POST", {});
   assert.deepEqual([u.status, u.json.error], [400, "unknown op: aigrantnothing"]);
-});
-
-test("R53 (K1685; agent-worker R54): the record store's door routes the ask's own calls to their owners with the stamped viewer as the member — askceiling to ai-runs' ceiling check (a member with no account is AI_NO_ACCOUNT; under the ceiling `{ok: true}`), askusage to its ask counter (mode `ask` whatever was sent; a malformed use refused, nothing counted), askcheck to answers' checks over the grant's read log", async () => {
-  const r = await record();
-  const ceil = await r.go("askceiling?viewer=member:ann");
-  assert.deepEqual([ceil.status, ceil.json.ok, ceil.json.result.ok, ceil.json.result.reason], [200, true, false, "AI_NO_ACCOUNT"]);
-  const use = { input_tokens: 10, output_tokens: 5, cache_read_input_tokens: 0, cache_creation_input_tokens: 0, total_cost_usd: null };
-  const u = await r.go("askusage?viewer=member:ann", "POST", { mode: "run", usage: use });
-  assert.deepEqual([u.json.ok, u.json.result.ok, u.json.result.counted], [true, true, 1], JSON.stringify(u.json).slice(0, 300));
-  const counted = r.db.prepare("SELECT member, mode, calls FROM ai_usage").all().map((x) => ({ ...x }));
-  assert.deepEqual(counted.map((x) => [x.member, x.mode]), [["ann", "ask"]]);
-  const bad = await r.go("askusage?viewer=member:ann", "POST", { usage: { input_tokens: "lots" } });
-  assert.equal(bad.json.result.ok, false);
-  assert.equal(r.db.prepare("SELECT COUNT(*) n FROM ai_usage").get().n, 1, "a refused use counts nothing");
-  const noViewer = await r.go("askusage", "POST", { usage: use });
-  assert.equal(noViewer.json.result.ok, false, "no member, nothing counted");
-  const c = await r.go("askcheck?grant=G1&viewer=member:ann", "POST", { answer: { sentences: [] } });
-  assert.equal(c.status, 200, JSON.stringify(c.json).slice(0, 300));
-  assert.equal(c.json.ok, true);
-  assert.ok(c.json.result && typeof c.json.result === "object", JSON.stringify(c.json).slice(0, 300));
 });
 
 test("R53, R29 (K1687): standards' five T33 acts read their author from the body, so the door sets it there — `author`, or `proposer` on `lawpropose` — as the positional identity for a session and the machine's own name otherwise, whatever the caller put in the body (negative control: a caller's body field of its own reaches the route)", async () => {

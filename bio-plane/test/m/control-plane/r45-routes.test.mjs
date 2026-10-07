@@ -223,7 +223,7 @@ test("R45 (DEC-111, K1170; public-read R18, R10): network-notices' public reads 
 });
 
 test("R27, R45: T23's id-carrying reads are classified — `notices` names the project by its own id (the door answers existence first), `whatchangeddrafts` and `directorysubmission` name a case, with the reason (negative control: a project not shown at existence falls through to the route)", async () => {
-  const D = await import("../../../src/control-plane/dispatch.mjs");
+  const D = await import("../../../src/store-door/dispatch.mjs");
   assert.deepEqual(D.PROJECT_NAMING_READS.notices, ["project"]);
   for (const op of ["whatchangeddrafts", "directorysubmission"]) {
     assert.equal(typeof D.PROJECT_NAMING_READS_NOT[op], "string", op);
