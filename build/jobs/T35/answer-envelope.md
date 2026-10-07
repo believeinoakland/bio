@@ -39,3 +39,11 @@ Two readings, both carried on unless you answer otherwise.
 - `node checks/ownership.mjs … answer-envelope tranche/T35`: with the row filled locally, 10 files; 0 failures (with the empty row, 9 failures, every one a file of this module's paths).
 
 Size (session_017eKYzzg1hrdp8PcUr1pMS3): test runs 11, module lines 802
+
+## J2 · REPORT
+
+Found for other modules (details in my record, "Found in other modules"):
+1. Red 26 moves rather than clears: my totality arm names control-plane's `checks.mjs` copy (its four tables) until T35-72 deletes it; control-plane's own totality test names `law-relations/checks.mjs` and, once my row is filled, my four tables, until T35-72 deletes its families and test.
+2. control-plane (T35-72): `withPagePolicy` is now async (`return await withPagePolicy(res)`); R6's route-level fetch-twice arm is its (B2). Its catalogue-end test (red 19), `rows-before-r43.json`, families, page-policy and envelope's non-door cases are now mine; my copy of the snapshot is re-pinned for 48 T35 owner re-wordings (listed in its `changed.note`).
+3. plane (T35-73): `door.mjs`:24–25 and `index.mjs`:5–6 re-point to `../answer-envelope/index.mjs`; every name they read is exported, except `PUBLISHED_STORE`, `caseReader`, `captureKey`, `storageAbsent`, which stay control-plane's.
+4. setup-page: I hold `NONCE_SLOT` as K2038's literal `__CSP_NONCE__` (exported here as `NONCE_SLOT`); setup-page's export must spell the same.
