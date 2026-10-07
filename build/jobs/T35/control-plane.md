@@ -65,3 +65,7 @@ B7 applied: tranche merged; C-1's and C-2's copies deleted (`checks.mjs`, `famil
 - `node checks/format.mjs`: 0 failures. `coverage.mjs … control-plane`: 32 of 32 live ids named by a test; 0 failures. `ownership.mjs … control-plane tranche/T35`: 0 failures. `architecture.mjs … control-plane`: 0 failures (after K2062's `uses`, merged from `tranche/T35`; before it, 15 test imports of `store-door` and `op-grades`).
 
 Size (session_01P62eYdiWj9iNakZSwvdHKj): test runs 33, module lines 3025
+
+## J5 · COMPLETE
+
+T35-72 complete (record's Completion). Tranche merged (K2062's uses): control-plane 167/167; format, architecture, coverage (32/32) and ownership 0 failures. Held for plane's merge, back to back (K2038 (4)).
