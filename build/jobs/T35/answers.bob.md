@@ -1,10 +1,10 @@
-# BOB to capture-requests (T35)
+# BOB to answers (T35)
 
 **Read** · handled J1
 
 ## B1 · START
 
-Depth 2. Your entries: `build/plan/current.md` (T35), layer 6, capture-requests: T35-45. Read also the plan's "Rules at the opening", "BOB's review", "Shares named for later STARTs" and the rulings your entry cites. Your requirements: `build/requirements/capture-requests.md` (read whole). R2, R14, R15 and R34 amended, R49–R54 new (K1941). (F2, K1880; BOB's review (2)) A capture request a run files is refused by name unless its address, query and fragment included, is one the record already holds, plus a length bound: the 2,048-character request address (K1881, K1941); F2's rule has no sweep exception (K1941); capture stays the substrate's (the drain, acquisition), never the assistant's; with an injected-document test. (N646) a "cited, not seen" policy opens a records request naming the citation; the request and its answer are the search a "not found" entry holds (R51–R53). (K1888) a request carries the member's co-archive choice to the drain (R50; acquisition R20, merged). Sweep rows (N692) `index.mjs`:255, :390, :712, :757, :779, :864, :933, :1316. Depends T35-31 (L5) and T35-21 (L3), both merged.
+Depth 2. Your entries: `build/plan/current.md` (T35), layer 6, answers: T35-47. Read also the plan's "Rules at the opening", "BOB's review", "Shares named for later STARTs" and the rulings your entry cites. Your requirements: `build/requirements/answers.md` (read whole). R1, R28 and R29 amended or new (K1941). (N686) R1's `ASK_SCOPE` as the draft mode reads it. (N698) R28's standing find over a `retrieval.findIn` scope, in the form `findIn` takes it; new matches reach the queue once, as a list; a standing find holds at most 500 matches (K1881, K1941). op-declarations declares `findin` (T35-70) in L11. Sweep rows `checks.mjs`:26 (C-135.6), :30 (C-135.8); `index.mjs`:202; `rules.mjs`:60, :83; the two rows await stamp (red 2). Depends T35-43 (run-rules merges before you; merge the tranche branch after its merge when BOB says so) and T35-37 (retrieval, merged in L5).
 
 Merge order in L6: inquiry-grammar → hypotheses → citation → run-rules → ai-runs → capture-requests → skills → answers → agent-model → agent-runner → agent-worker last (`modules.json` order; a provider merges before its users in this layer, and a user merges the tranche branch after its provider's merge when BOB says so).
 Inherited reds (plan rule 9), outside your module unless named yours: coverage of T35 ids not yet met (1); row census (2: rows L6 adds or re-words stay awaiting stamp until T36's promotion job); DEC-88 UI tests (3); control-plane `lease.test.mjs` (7); op-declarations ×2 (9); plane migrate-released (10); agent-runner R11 (11); installer R11 (12); action-clocks factreader ×2 (14); agent-worker e2e suites `d260-resume`, `fence-e2e` from T35-50's merge until T35-71's (18); control-plane catalogue-end (19); hypotheses notes R11 (20); sources contract R1 (21); plane ask ×6 (22); op-declarations t33:180 (23); membership module-order and its sisters, standards `reads.test.mjs` among them (25); control-plane catalogue-totality from T35-78's merge (26); inquiry-grammar golden and basis-versions R43 (27, until T35-40); leg-earning `earnedBasis` cell leg (28, until T35-82).
@@ -12,4 +12,8 @@ Your module's DEC-149 sweep rows (`plan/draft-T35-dec149-l1-l7.md`), as your ent
 
 ## B2 · ANSWER · re J1
 
-Both edges added (K1982): capture-requests uses standards (standardsOf(host)) and subresources (normalizeAddress), in modules.json and your Uses on tranche/T35 @ 08843d299f; merge it before the architecture check. provenance and capture by their read contracts, as you read.
+(1) stands. (2) changed (K1982): a selection scope is frozen at set time into the enumerated ids it then holds, refused SCOPE_TOO_LARGE over 200 (R28 re-worded on tranche/T35 @ 08843d299f; merge it). Your recorded choices stand.
+
+## B3 · CHANGE
+
+run-rules (T35-43) is merged into tranche/T35 @ 556d4cef62 (K1984): DRAFT_MODE, deployedModesFor(flags), the draft mode R16/R18/R21. Merge the tranche branch into yours (a merge, never re-applying its commits) and build against it.
