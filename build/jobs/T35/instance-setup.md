@@ -30,7 +30,7 @@ Size (session_01QZZgwL4ojyBbUL3VUYqwZM): test runs 9, module lines 2522
 
 **Tests and checks** (on the commit below): `node --test bio-plane/test/m/instance-setup/`: tests 108, pass 108, fail 0. `format`: 0 failures. `architecture instance-setup`: 0 failures. `coverage instance-setup`: 48 of 48. `ownership instance-setup tranche/T35`: 2 files, 0 failures.
 
-Size (session_01QZZgwL4ojyBbUL3VUYqwZM): test runs 11, module lines 2520
+Size (session_01QZZgwL4ojyBbUL3VUYqwZM): test runs 11, module lines 2519
 
 ## J1 · QUESTION
 
