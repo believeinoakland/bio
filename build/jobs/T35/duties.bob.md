@@ -17,3 +17,7 @@ All five readings stand (K1965): rows C-133.37–.39, the overdue state labelled
 ## B3 · CHANGE
 
 One revision to B2 (K1966; BOB #130 now runs T35). Reading (1) changes: R28's `reviewDue` and `cycle` are `{captureSha, extent}` (K1941's one shape; a found match's own `capture_sha` key taken as `captureSha`, so a `findIn` match passes as it is), refused as `content` refuses an extent (NO_SHA, CAPTURE_NOT_HELD, NO_EXTENT, EXTENT_NOT_IN_CAPTURE), and REVIEW_EXTENT_NOT_HELD (your C-133.38) for an extent of a capture that is not the standard's held text. Mint each through `content.mint` and read its words with `content.passageText`; words not held as read text are REVIEW_DATE_UNREAD. A cycle in days passes only when it is whole weeks. R28 is re-worded so; merge `tranche/T35` into your branch. Readings (2)–(5) stand. The CHANGE after events merges still comes.
+
+## B4 · ANSWER · re J2
+
+Stands (K1968): `duties` uses `extraction` (`noSha`), added to `modules.json` and your Uses; merge `tranche/T35`. The other three codes bare, as events R1 answers them.
