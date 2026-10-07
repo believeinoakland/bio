@@ -26,5 +26,14 @@ One line per decision. D1–D24 are the study's (`study/investigation`, `synthes
 | D20 | the answer's vocabulary: baselines side by side, no "late" verdict | open |
 | D21 | AI transcription of image-only pages, labelled UNDETERMINED | open |
 | D22 | the bearing note | open |
-| D23 | member-facing names; "nobody assigns steps; no hours or costs" | open (starts stages 1–2); its assignment line is contradicted by Bob's K2075 |
+| D23 | member-facing names; revised on page 1: the "nobody assigns; no hours or costs" line removed (D26, D29 decide it); a name telling the investigation's plan from the action plan | open (starts stages 1–2) |
 | D24 | canon text for the three skill layers, drafted by BOB, ruled by Bob before stage 5 | open |
+| D25 | teams, subgoals and leaders (K2075): A none; **B** subgoal = named part with steps and a team, leader named by an owner, may assign within it and issue its reports, owners lead the project, teams hide nothing; C private team spaces | open (starts stage 2) |
+| D26 | assignments (K2075): A claim only; **B** claim, or owner/subgoal leader assigns to a joined participant who accepts or declines with a reason; reminders only the assignee's own; C binding | open (starts stage 2) |
+| D27 | deadlines and milestones (K2075): **A** named, dated milestones of the group's own, met when their steps are done; B computed stage only | open (starts stage 2) |
+| D28 | removing steps (K2075 "deleted"): A retire all; **B** retire acted-on steps with reason, delete untouched typed steps; C delete any | open (starts stage 2) |
+| D29 | resources (K2075; reverses 2026-09-29 "no budgets" for this plan only): A free list; **B** stated needs and actuals per step by kind, totals per subgoal and project, never per person, money apart from the record's (K1463), connections under the sharer's sight; C plus a checked budget | open |
+| D30 | status reports (K2075): A composed reads only; **B** leader-issued, system-drafted, edited, dated, to the project, no per-member figures, never published, schedule only as the leader's own reminder; C required cadence | open |
+| D31 | AI budget for an investigation (K2075 "optional"): A per-member only; **B** optional owner-set limit over group-key use, told once at the limit, own subscriptions excluded; C cap on own accounts too; with D12 | open |
+
+Bold = this lane's recommendation. Settled as detail by this lane (BOB confirms in requirements): step dependencies (on steps, documents, dated events; derived "waits on"; cycles refused); the plan construct lands in `enquiry` and `investigation`; expertise reuses membership's declared expertise and DEC-135; information is `holdings`. Reading put to Bob for confirmation with D25–D30: Capability Ladders §10 "no drift into case management" read as excluding a general project-management tool (timesheets, Gantt, workload dashboards, member scores), not a plan serving the investigation.
