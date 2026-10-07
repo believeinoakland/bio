@@ -1365,14 +1365,36 @@ SCR.finder = c => ({ rail: 'find', title: 'Find', main: `
   ${gapm('nobody', '<b>Nobody looked</b> in the 2024 council minutes for this yet. ') } ${btn('frontier', 'See where nobody looked')} ${btn('countask', 'Count')}
   <div class="cs-hold mk-hold">${I('hold')}<span><span class="n">2 documents held together</span><span class="drift"> · until 16:40 today</span></span><span class="acts">${btn('select', 'Hold these together')}${btn('owed:findin DEC-164', 'Find in these', { icon: 'search' })}${btn('selectionrelease', 'Let the set go')}</span></div>` });
 
-SCR.capture = c => ({ rail: 'add', title: 'Add', main: `
+/* Add: three tabs, each its own experience. A journey or wizard step opens the tab its act belongs to. */
+const CAPTURE_TAB = { acquire: 'a', capturerequest: 'a', monitor: 'a', capture: 'b', testify: 'c' };
+const tab = (st, k, label) => `<span role="tab" tabindex="0"${st === k ? ' aria-selected="true"' : ''} onclick="var m=this.closest('main');m.dataset.st='${k}';[].forEach.call(this.parentNode.children,function(x){x.removeAttribute('aria-selected')});this.setAttribute('aria-selected','true')" style="cursor:pointer">${label}</span>`;
+SCR.capture = c => { const st = CAPTURE_TAB[c.act || (c.wizard && c.wizard.act)] || ({ file: 'b', saw: 'c' })[c.v] || 'a'; return { rail: 'add', title: 'Add', st, main: `
   ${h1('Add to the record', 'A document from an address or a file, a photo, or what you saw yourself.')}
-  <div class="mk-tabs2" role="tablist"><span aria-selected="true">From an address</span><span>A file or photo</span><span>What I saw or heard</span></div>
-  ${field('mk-url', 'Address', 'https://www.oaklandca.gov/resources/street-maintenance-report-2026', { act: 'acquire', help: 'A copy fetched from the office\'s own site holds up better than one found elsewhere.' })}
-  ${acts(btn('acquire', 'Capture', { tone: 'primary' }), btn('capturerequest', 'Ask for this later'), btn('monitor', 'Watch this address for changes'))}
-  ${note('Capturing through a public archive tells that archive what your group is looking at. A site known for malware is still captured, as high risk: it opens only in a safe view.')}
-  ${sec('A file or photo', `<div class="mk-drop">${I('camera')} Take a photo, or choose a file</div>${acts(btn('capture', 'Capture this file'))}${note('A ZIP archive is opened as it is captured: its files are held for review beside it, each with the archive\'s grade.')}`)}
-  ${sec('What I saw or heard', `${field('mk-obs', 'In your own words', 'On 4 October at 9:10 I visited 6012 Seminary Ave. The pothole reported on 12 September and marked closed on 15 September is still open, about 60 cm across.', { area: true, rec: true })}${field('mk-where', 'Where and when', '6012 Seminary Ave · 4 October 2026, 9:10')}${acts(btn('testify', 'Record what you saw', { tone: 'primary' }))}${note('Your account is testimony: always grade D, labelled as yours, and never discounted for it.')}`)}` });
+  <div class="mk-tabs2" role="tablist">${tab(st, 'a', 'From an address')}${tab(st, 'b', 'A file or photo')}${tab(st, 'c', 'What I saw or heard')}</div>
+  <div class="st st-a"><div style="display:grid;gap:16px">
+   ${field('mk-url', 'Address', 'https://www.oaklandca.gov/resources/street-maintenance-report-2026', { act: 'acquire', help: 'A copy fetched from the office\'s own site holds up better than one found elsewhere.' })}
+   ${acts(btn('acquire', 'Capture', { tone: 'primary' }), btn('capturerequest', 'Ask for this later'), btn('monitor', 'Watch this address for changes'))}
+   ${note('Your group\'s Civicsmith fetches it itself and keeps exactly what the site sent, with when and from where. Capturing through a public archive tells that archive what your group is looking at. A site known for malware is still captured, as high risk: it opens only in a safe view.')}
+  </div></div>
+  <div class="st st-b"><div style="display:grid;gap:16px">
+   <div class="mk-drop">${I('camera')} Take a photo, or choose a file <span class="muted mk-small">· on a phone, the camera opens</span></div>
+   ${sheet(row(I('camera'), '<b>Seminary Ave at 60th.jpg</b><span class="meta">photo · 3.1 MB · taken 4 October 2026, 9:12, by the phone that took it · location in the photo: 6012 Seminary Ave</span>', '<span class="muted">chosen</span>'))}
+   ${checks('How you got it', [['I made it myself: a photo, a recording, my notes', true], ['I was handed it: a printed agenda, a letter', false], ['Someone sent it to me', false], ['I downloaded it from a website', false]], { radio: true })}
+   <p class="mk-small muted" style="margin:-8px 0 0">Downloaded from a website? Capture it from its address instead: a copy your group's Civicsmith fetches itself holds up better.</p>
+   ${field('mk-fwhen', 'Where and when', '6012 Seminary Ave · 4 October 2026, 9:12', { help: 'Filled from the photo where it says; correct it if it is wrong.' })}
+   ${field('mk-fwhat', 'What it shows, in your own words', 'The pothole at 6012 Seminary Ave, about 60 cm across, still open.', { area: true, rec: true })}
+   ${choice('mk-fproj', 'For which project', ['Pothole repairs', 'The Coliseum lease', 'Sewer fund transfers', 'None yet'], 'Pothole repairs')}
+   ${acts(btn('capture', 'Capture this file', { tone: 'primary' }))}
+   ${note('Who made or obtained it, when, and with what are kept with it, so anyone can check where it came from. It waits in Held captures until you or another member vouches for it. A file your group\'s Civicsmith did not fetch itself opens in the safe view until it has been checked. A ZIP archive is opened as it is captured: its files are held for review beside it, each with the archive\'s grade.')}
+  </div></div>
+  <div class="st st-c"><div style="display:grid;gap:16px">
+   ${note('Only what you saw or heard yourself. What someone told you belongs in a note or a hunch, not here.')}
+   ${field('mk-obs', 'In your own words', 'On 4 October at 9:10 I visited 6012 Seminary Ave. The pothole reported on 12 September and marked closed on 15 September is still open, about 60 cm across.', { area: true, rec: true })}
+   ${field('mk-where', 'Where and when', '6012 Seminary Ave · 4 October 2026, 9:10')}
+   <div class="mk-drop">${I('camera')} Add a photo or recording you made then <span class="muted mk-small">· optional; it is kept beside your account</span></div>
+   ${acts(btn('testify', 'Record what you saw', { tone: 'primary' }))}
+   ${note('Your account is testimony: always grade D, labelled as yours, and never discounted for it. A record that says the same thing later, such as an inspection log or a second member\'s account, makes it stronger. Once recorded it is not changed; you can add to it.')}
+  </div></div>` }; };
 
 SCR.held = c => ({ rail: 'add', title: 'Held captures', crumbs: ['Add', 'Held captures'], main: `
   ${h1('Held captures', 'Captured but not yet vouched for. Nothing here is sent to you; it waits.')}
@@ -2559,7 +2581,7 @@ function journeySteps(j, ai) {
     $('vpos').textContent = `Step ${st.step + 1} of ${steps.length}`;
     $('vdots').innerHTML = steps.map((_, i) => `<button type="button" data-step="${i}" aria-current="${i === st.step}" aria-label="Step ${i + 1}">${i + 1}</button>`).join('');
     $('vprev').disabled = st.step === 0; $('vnext').disabled = st.step === steps.length - 1;
-    const c = { ai: st.ai, wizard: x.wizard, dockAssist: x.dock, v: x.v };
+    const c = { ai: st.ai, wizard: x.wizard, dockAssist: x.dock, v: x.v, act: x.act };
     const sc = $('vscale'); sc.innerHTML = render(x.s, c);
     $('vdev').dataset.device = st.dev;
     fit();

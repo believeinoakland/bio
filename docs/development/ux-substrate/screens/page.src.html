@@ -390,7 +390,7 @@ const REG = {{REG}};
     $('vpos').textContent = `Step ${st.step + 1} of ${steps.length}`;
     $('vdots').innerHTML = steps.map((_, i) => `<button type="button" data-step="${i}" aria-current="${i === st.step}" aria-label="Step ${i + 1}">${i + 1}</button>`).join('');
     $('vprev').disabled = st.step === 0; $('vnext').disabled = st.step === steps.length - 1;
-    const c = { ai: st.ai, wizard: x.wizard, dockAssist: x.dock, v: x.v };
+    const c = { ai: st.ai, wizard: x.wizard, dockAssist: x.dock, v: x.v, act: x.act };
     const sc = $('vscale'); sc.innerHTML = render(x.s, c);
     $('vdev').dataset.device = st.dev;
     fit();
