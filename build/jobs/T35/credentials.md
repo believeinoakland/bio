@@ -37,3 +37,7 @@ Size (session_018Ck3Fpjqfuff67UQ1EwxJB): test runs 12, module lines 2504
 ## J1 · REPORT
 
 Found in other modules by my merge (record, Completion, items 1–5): (1) plane ask.test.mjs ×6 writes raw tokens into sessions(token); under R40 the column is token_sha. Plane should sign in through login or insert sha256 of its token. (2) op-declarations t33.test.mjs:180: my seven new routes (signout, signouteverywhere, securitymap, recoverycodesissue, recoverycodesstate, recover, subscriptiondisconnect) have no spec until T35-70. (3) control-plane catalogue-end.test.mjs pins row translations; DEC-149's six re-worded rows trip it (row-census cause, red 2). (4) Until admission stamps source (T35-71), all sign-ins share one window source. (5) The plane bundle is stale (rule 7).
+
+## J2 · COMPLETE
+
+T35-15 done on job/T35/credentials: R1, R4, R12, R15, R16, R30, R35, R37, R38–R48 met and tested; 17 DEC-149 rows applied. Module tests 108/108. Format, architecture and ownership: 0 failures. Coverage: 47/47. Users: new reds only plane ask.test ×6, op-declarations t33:180 and control-plane catalogue-end (REPORT). Record: build/jobs/T35/credentials.md, Completion.
