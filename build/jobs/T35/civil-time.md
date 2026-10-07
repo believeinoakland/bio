@@ -23,3 +23,7 @@
 - `ownership civil-time tranche/T35`: 0 failures (run after the commit below).
 
 Size (session_01FWZ869SsVrV3mffbRFWTNY): test runs 5, module lines 1386
+
+## J1 · REPORT
+
+action-clocks: factreader.test.mjs:64 (/disputed on this instance by member:bob/) and :112 (/cannot be read on this instance: local facts' read failed: storage gone/) pin civil-time's old wording, which reaches them through computeDeadline's why. After T35-2 action-clocks is 51 pass, 2 fail (53/0 on tranche/T35); each regex needs 'this instance' -> 'your group's Civicsmith'. Its comment calendar.test.mjs:2 says the same words. Generated artifacts made stale (§14): bio-plane/src/case-checker/program.mjs and bio-plane/dist/bio-plane.bundled.mjs (both embed civil-time/calendar.mjs).
