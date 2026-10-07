@@ -78,3 +78,16 @@ Tests: `node --test bio-plane/test/m/store-door/`: 36 pass, 0 fail. New: an R9 c
 Checks on HEAD, with my row empty as on the tranche: format 0 failures; architecture 0 failures; coverage 12 ids unnamed and ownership 10 failures, both because the row is empty (expected). With the row filled in locally: architecture 0 failures, coverage 12 of 12 named, ownership 11 files and 0 failures.
 
 Size (session_01MXpTEk4ANkFVxAzUYMNVuY): test runs 12, module lines 533
+
+## J5 · COMPLETE
+
+B5 done. I merged `tranche/T35` (it carries answer-envelope and my merged row) into `job/T35/store-door`. Under `bio-plane/` my branch now has no diff from the tranche.
+
+- **store-door:** `node --test bio-plane/test/m/store-door/` gives 36 pass, 0 fail. It now runs against the real `answer-envelope/checks.mjs`, not a stand-in.
+- **control-plane:** `node --test bio-plane/test/m/control-plane/` gives 182 tests, 94 pass, 88 fail.
+  - The failures are not store-door's. control-plane imports nothing of store-door, and my branch's `bio-plane/` equals the tranche's.
+  - They are the tranche's state since answer-envelope's merge: control-plane's own copies and imports still to be re-wired in T35-72.
+  - For example, `envelope.test.mjs`:289 (R25, Worker door) finds no correlation id, and the R22 decoration and family suites fail. Store-side cases that still import `control-plane/dispatch.mjs` pass, such as envelope's store-door R25 case.
+- **Checks on HEAD, with my row filled in on the tranche:** format 0 failures; architecture 10 files, 94 imports, 0 failures; coverage 12 of 12 ids named, 0 failures; ownership 0 failures (1 file differs from the tranche: my record).
+
+Size (session_01MXpTEk4ANkFVxAzUYMNVuY): test runs 15, module lines 533
