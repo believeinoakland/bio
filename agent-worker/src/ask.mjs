@@ -33,12 +33,27 @@
  * turns, `bytes` of the record's answers read into the model, `wall_ms` from start to answer, `reads` of the record. */
 import { ASK_BOUNDS, askBoundReached } from "../../bio-plane/src/run-rules/index.mjs";
 import { ASK_OPS } from "./ops.mjs";
+import { toolContent } from "./reads.mjs";
 
 /** The ask's bounds: `ASK_BOUNDS`' defaults, the figure an ask declares when it starts (run-rules R17). */
 export const ASK_DECLARED = Object.freeze(Object.fromEntries(Object.entries(ASK_BOUNDS).map(([k, v]) => [k, v.default])));
 export const QUESTION_MAX = 4000;
 export const CONVERSATION_MAX = 40;
 const ARG_MAX = 500;
+
+/** R55, R59 — the one read tool an ask or a draft is offered: an op of `ASK_OPS` (`answers`' `ASK_SCOPE`), its arguments
+ *  as plain values, read under the member's grant. */
+export function readTool() {
+  return {
+    name: "read",
+    description: "read the record through the plane, under the member's grant: one op of the ask's list, with its "
+      + "arguments as plain values. Nothing is answered from your own knowledge: what is not read is not held.",
+    input_schema: { type: "object", properties: {
+      op: { type: "string", enum: [...ASK_OPS] },
+      args: { type: "object", additionalProperties: { type: ["string", "number", "boolean"] } } },
+      required: ["op"], additionalProperties: false },
+  };
+}
 
 /** The ask's model tools: `read` (only `ASK_OPS`) and `done_reading` for the first conversation; `answer` (answers
  *  R3's shape) for the second; `load_layer` in both, gated by the switch that governs the ask (R56). */
@@ -48,15 +63,7 @@ export function askTools(layers) {
     input_schema: { type: "object", properties: { name: { type: "string", enum: layers } }, required: ["name"],
                     additionalProperties: false },
   };
-  const read = {
-    name: "read",
-    description: "read the record through the plane, under the member's grant: one op of the ask's list, with its "
-      + "arguments as plain values. Nothing is answered from your own knowledge: what is not read is not held.",
-    input_schema: { type: "object", properties: {
-      op: { type: "string", enum: [...ASK_OPS] },
-      args: { type: "object", additionalProperties: { type: ["string", "number", "boolean"] } } },
-      required: ["op"], additionalProperties: false },
-  };
+  const read = readTool();
   const done = {
     name: "done_reading",
     description: "end reading: the question as you read it, and at most one clarifying question when it cannot be "
@@ -155,10 +162,10 @@ export async function handleAsk(req, env, deps) {
   const call = (op, query, post) => askPlane(env, op, grant, store, query, post);
   const relayed = (asked, at) => json({ ok: false, reason: "PLANE_REFUSED", code: "PLANE_REFUSED",
     worker: "agent-worker", at,
-    detail: "the plane refused this ask under the member's grant. Its refusal is passed through exactly as the plane "
-          + "worded it.", plane_status: asked.status ?? null, plane: asked.body ?? null }, 403);
+    detail: "the record refused this ask under the member's grant. Its refusal is passed through exactly as it was "
+          + "worded.", plane_status: asked.status ?? null, plane: asked.body ?? null }, 403);
   const silentNow = (asked) => refusal("PLANE_SILENT",
-    "the plane could not be reached, so nothing was read and no model was called. A failure to answer is not an "
+    "the record could not be reached, so nothing was read and no model was called. A failure to answer is not an "
     + "answer.", 502, { detail_from_binding: asked.detail ?? null });
 
   /* (1) THE CEILING, BEFORE ANY MODEL CALL (ai-runs R50), its refusal relayed unchanged (R43). */
@@ -174,7 +181,7 @@ export async function handleAsk(req, env, deps) {
   const pack = publishedPack(pubAnswer.result);
   if (!pack.ok)
     return refusal("PACK_UNDETERMINED",
-      "the plane published no skill pack this ask can be instructed by, so no model was called: an ask answered "
+      "no skill pack this ask can be instructed by was published, so no model was called: an ask answered "
       + `without the pack's closed-book rule would answer from the model's own knowledge (${pack.why}).`, 502);
 
   const reference = (await cascadeToken(account)).reference;
@@ -246,7 +253,9 @@ export async function handleAsk(req, env, deps) {
           if (!got.reached) return { content: { code: "PLANE_SILENT", detail: "the plane did not answer this read; "
                                                   + "what it would have answered is not held" }, error: true };
           const a = planeAnswer(got, admitted.op);
-          const content = a.refused ? (a.refused.plane ?? { code: a.refused.code }) : a.result;
+          /* R63: the model is handed the readers' text and `active` lists only; a field holding bytes is dropped and
+             the drop told beside the answer. */
+          const { content } = toolContent(a.refused ? (a.refused.plane ?? { code: a.refused.code }) : a.result);
           used.bytes += JSON.stringify(content ?? null).length;
           return a.refused ? { content, error: true } : { content };
         },
@@ -277,17 +286,17 @@ export async function handleAsk(req, env, deps) {
       const checked = await call("askcheck", null, { question: body.question, answer: composed.answer });
       if (!checked.reached)
         return await finish(refusedEvent("PLANE_SILENT",
-          "the plane could not be reached to check the answer, so nothing is returned: an unchecked answer is never "
+          "the record could not be reached to check the answer, so nothing is returned: an unchecked answer is never "
           + "shown.", { detail_from_binding: checked.detail ?? null }));
       const c = planeAnswer(checked, "askcheck");
       if (c.refused)
         return await finish(refusedEvent("PLANE_REFUSED",
-          "the plane refused to check the answer, so nothing is returned. Its refusal is passed through exactly as "
-          + "the plane worded it.", { at: "askcheck", plane: c.refused.plane ?? null }));
+          "the record refused to check the answer, so nothing is returned. Its refusal is passed through exactly as "
+          + "it was worded.", { at: "askcheck", plane: c.refused.plane ?? null }));
       const r = c.result || {};
       if (!r.answer || typeof r.answer !== "object")
         return await finish(refusedEvent("ASK_UNCHECKED",
-          "the plane's checks answered without a checked answer, so nothing is returned: an unchecked answer is never "
+          "the record's checks answered without a checked answer, so nothing is returned: an unchecked answer is never "
           + "shown."));
       await finish({ event: "answer", ok: true, answer: r.answer, withheld: Array.isArray(r.withheld) ? r.withheld : [] });
     } catch (e) {

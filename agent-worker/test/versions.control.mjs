@@ -1,4 +1,4 @@
-/* D-220's NEGATIVE CONTROL DRIVER — three arms and the baseline, re-runnable in one step:
+/* D-220's NEGATIVE CONTROL DRIVER — one arm and the baseline (two more went with `src/subsession.mjs`, R65), re-runnable in one step:
  *
  *     node test/versions.control.mjs          # every arm, in order
  *     node test/versions.control.mjs 1        # one arm
@@ -30,7 +30,6 @@ const PEN = join(MEMBER, ".nc-versions");
 const LOG = join(PEN, "run.out");
 const SUITE = join(DIR, "versions.test.mjs");
 const INDEX = join(MEMBER, "src/index.mjs");
-const SUBSESSION = join(MEMBER, "src/subsession.mjs");
 
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 const FLOOR = 200;
@@ -92,27 +91,8 @@ const ARMS = {
       })),
   },
 
-  2: {
-    label: "(2) THE LIAR — the document is keyed by what the five bundles SHARE (their title) instead of the chain's address.",
-    run: () => withReplaced(SUBSESSION,
-      'const key = chain && typeof chain.address_norm === "string" ? chain.address_norm : "";',
-      'const key = chain && typeof chain.address_norm === "string" ? "City Council Calendar" : "";',
-      () => report(runSuite(), {
-        mustFail: "A1 and B2b (two different documents merged into one), B3b's note",
-        mustNot: "B2a's version list (the council calendar's versions are still its own), B0, B1, A3, A4",
-      })),
-  },
-
-  3: {
-    label: "(3) NO DEDUP AT ALL — every citation is its own document, the count D-220 exists to stop.",
-    run: () => withReplaced(SUBSESSION,
-      'const key = chain && typeof chain.address_norm === "string" ? chain.address_norm : "";',
-      'const key = chain && typeof chain.address_norm === "string" ? String(r.citation) : "";',
-      () => report(runSuite(), {
-        mustFail: "A1, A2, B2a, B2b, B2c (the sixty-documents shape)",
-        mustNot: "A3, A4, A5, B0, B1, B2d, B3",
-      })),
-  },
+  /* Arms 2 and 3 patched `src/subsession.mjs`, a re-export since T33-57 that armed nothing; R65 (T35) removed the file
+     and them. `agent-harness`' own suite holds `documentHoldings`. */
 };
 
 const only = process.argv[2];

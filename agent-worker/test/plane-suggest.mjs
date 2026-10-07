@@ -223,7 +223,7 @@ export const suggestBranch = ({ f10 = false, run } = {}) => {
       if (!runId)
         return refused(${JSON.stringify(row("SUGGEST_NO_RUN"))},
           { detail: "pass run=<the run that composed this>.", target: tg, run: null });
-      if (url.searchParams.get("token") !== (${run.principal}))
+      if ((req.headers.get("authorization") || "").replace(/^Bearer /, "") !== (${run.principal}))
         return Response.json({ ok: true, result: { ok: false, wrote: false, evaluated: true, repeated: false,
           reason: ${JSON.stringify(NOT_PRINCIPAL.code)}, code: ${JSON.stringify(NOT_PRINCIPAL.code)},
           check: ${JSON.stringify(NOT_PRINCIPAL.check)}, translation: ${JSON.stringify(NOT_PRINCIPAL.translation)},

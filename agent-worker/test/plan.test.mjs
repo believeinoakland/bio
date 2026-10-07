@@ -87,7 +87,7 @@ function planeStub(cfg = {}) {
       const query = Object.fromEntries([...u.searchParams.entries()].filter(([k]) => !["op", "store", "token"].includes(k)));
       let body = null;
       if (init && init.body) body = JSON.parse(init.body);
-      S.log.push({ op, query, body, token: u.searchParams.get("token") });
+      S.log.push({ op, query, body, token: String(init?.headers?.authorization ?? "").replace(/^Bearer /, "") || null });
       if ((cfg.silent || []).includes(op)) throw new Error("the binding did not answer");
       const staged = (cfg.refuse || {})[op];
       if (staged) return Response.json({ ok: true, result: { ok: false, code: staged, reason: staged, check: "C-0.0" } });

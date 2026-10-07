@@ -63,7 +63,7 @@ function planeStub(rec, cfg) {
     const op = u.searchParams.get("op") || "";
     let body = null;
     if (init && typeof init.body === "string") { try { body = JSON.parse(init.body); } catch { body = null; } }
-    rec.planeCalls.push({ url: String(url), origin: u.origin, op, token: u.searchParams.get("token"),
+    rec.planeCalls.push({ url: String(url), origin: u.origin, op, token: String(init?.headers?.authorization ?? "").replace(/^Bearer /, "") || null,
                           method: init?.method || "GET", query: Object.fromEntries(u.searchParams.entries()), body });
     switch (op) {
       case "whoami": return ok({ tokenClass: "ai", session: false, member: null });

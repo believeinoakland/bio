@@ -136,7 +136,7 @@ export default {
                              suggested: S.suggested, requests: S.requests, spawns: S.spawns, bvIds: S.bvIds,
                              repeats: [...S.refusals.values()].map((r) => r.repeats) });
     const op = url.searchParams.get("op") || "";
-    const token = url.searchParams.get("token") || "";
+    const token = (req.headers.get("authorization") || "").replace(/^Bearer /, "") || "";
     let body = null;
     if (req.method === "POST") { try { body = await req.json(); } catch { body = null; } }
     S.log.push({ op, token, store: url.searchParams.get("store"), method: req.method, body,
@@ -260,7 +260,9 @@ export default {
       if (uses.some((u) => !answered.has(u.id)))
         return Response.json({ type: "error", error: { type: "invalid_request_error", message: "tool_use without tool_result" } }, { status: 400 });
     }
-    const lastIsResult = Array.isArray(last.content) && last.content.some((b) => b.type === "tool_result");
+    /* R61: a judged row opens with the facts as \`read_facts\`' result (ids \`facts_…\`); that is not a turn the model took. */
+    const lastIsResult = Array.isArray(last.content)
+      && last.content.some((b) => b.type === "tool_result" && !String(b.tool_use_id).startsWith("facts_"));
     if (names.includes("report")) {
       const sys = Array.isArray(body.system) ? body.system.map((x) => x.text).join("") : String(body.system);
       const contract = JSON.parse(sys.split("YOUR SPAWN CONTRACT:\\n")[1]);
@@ -1129,8 +1131,9 @@ section("R32, R33 · the cascade: the one account that arrived, at its own level
 
 section("R34 · SURFACE and fleet-member.json");
 {
-  t("R34, R54: SURFACE is {run: POST, ask: POST, version: GET}, every one mutating: false (K1601 (5))", SURFACE,
-    { run: { method: "POST", mutating: false }, ask: { method: "POST", mutating: false }, version: { method: "GET", mutating: false } });
+  t("R34, R54, R59: SURFACE is {run: POST, ask: POST, draft: POST, version: GET}, every one mutating: false (K1601 (5))", SURFACE,
+    { run: { method: "POST", mutating: false }, ask: { method: "POST", mutating: false },
+      draft: { method: "POST", mutating: false }, version: { method: "GET", mutating: false } });
   t("R34: the manifest names the entry, the surface, the test directory and the bundle recipe",
     [MANIFEST.entry, MANIFEST.surface, MANIFEST.testDir, MANIFEST.bundle?.entry, MANIFEST.bundle?.outfile, MANIFEST.bundle?.manifest],
     ["src/index.mjs", "SURFACE", "test", "src/index.mjs", "dist/agent-worker.bundled.mjs", "dist/agent-worker.bundle.json"]);
@@ -1410,8 +1413,9 @@ section("R45 · the committed bundle is a fresh build of src/index.mjs, its mani
   t("R45: a fresh build is byte-identical to the committed bundle", [fresh.checked, fresh.findings], [true, []]);
   const inputs = (stat.manifest?.inputs || []).map((i) => i.path);
   t("R45: the manifest names every input, bio-plane/src/tokens.mjs included",
-    ["../bio-plane/src/tokens.mjs", "src/index.mjs", "src/harness.mjs", "src/subsession.mjs", "src/cascade.mjs", "src/model.mjs"]
-      .filter((p) => !inputs.some((i) => i.endsWith(p.replace(/^\.\.\//, "")))), []);
+    ["../bio-plane/src/tokens.mjs", "src/index.mjs", "src/cascade.mjs", "src/ops.mjs", "src/ask.mjs", "src/draft.mjs", "src/reads.mjs",
+     "../agent-harness/src/harness.mjs", "../agent-harness/src/subsession.mjs", "../agent-model/src/model.mjs"]
+      .filter((p) => !inputs.includes(p)), []);
 }
 
 section("R46 · no place is named in its behaviour or outward text; its account is the project's");

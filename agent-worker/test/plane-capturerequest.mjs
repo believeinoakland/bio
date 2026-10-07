@@ -59,7 +59,7 @@ export const captureRequestBranch = ({ run } = {}) => {
       const runId = String(b.run ?? "").trim();
       if (!runId)
         return refused(${JSON.stringify(row("CAPTURE_REQUEST_NO_RUN"))}, { run: null });
-      if (url.searchParams.get("token") !== (${run.principal}))
+      if ((req.headers.get("authorization") || "").replace(/^Bearer /, "") !== (${run.principal}))
         return Response.json({ ok: true, result: { ok: false,
           reason: ${JSON.stringify(NOT_PRINCIPAL.code)}, code: ${JSON.stringify(NOT_PRINCIPAL.code)},
           check: ${JSON.stringify(NOT_PRINCIPAL.check)}, translation: ${JSON.stringify(NOT_PRINCIPAL.translation)},

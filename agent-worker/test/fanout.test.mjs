@@ -27,7 +27,10 @@
  * copy of the larger mock would be a second thing to keep in step for the sake of
  * machinery this suite never drives.
  */
-/* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/fanout.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs and no runner may discover it: `npm test` and `node --test` take only `*.test.mjs`. THE HARNESS LIVES INSIDE THIS WORKTREE. Every arm is armed ALONE with the other defences held OPEN, every restore is verified BY sha256 AND BY CONTENT (`cmp`), and every arm names what MUST fail AND what MUST NOT.
+/* R65 (N586, T35): `test/fanout.control.mjs` IS GONE. Its arms F1–F8 patched `src/subsession.mjs`, which since T33-57 was
+   a four-line re-export of `agent-harness`' contracts, so none of them armed; R65 removed the file and them. The
+   contracts' own negative arms are `agent-harness`'. The declarations below are kept as the record of what was run.
+   NEGATIVE CONTROL (as it was): DECLARED HERE, RUN BY `test/fanout.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs and no runner may discover it: `npm test` and `node --test` take only `*.test.mjs`. THE HARNESS LIVES INSIDE THIS WORKTREE. Every arm is armed ALONE with the other defences held OPEN, every restore is verified BY sha256 AND BY CONTENT (`cmp`), and every arm names what MUST fail AND what MUST NOT.
    (F1) THE ITEM'S DECLARED CONTROL (IS-9(a)). Neuter the return contract — `checkReport` returns null for everything -> every document-returning arm, pure AND through the op, must FAIL; the spawn-fence arms must HOLD.
    (F2) THE EXACT KEY SET IS THE RULE. Let an unknown key through -> the document-shaped-return arms must FAIL under every spelling; the citation and bound arms must HOLD.
    (F3) THE PROSE BOUND. Remove the summary ceiling -> the over-bound arms must FAIL, and the key-set arms must HOLD — a document arriving inside `summary` passes every other check.
@@ -38,7 +41,7 @@
    (F8) SUB-SESSIONS SHARE NO STATE. Hand every level the same contract object -> the per-level and no-shared-identity arms must FAIL; the return contract must HOLD.
    (F9) OVER-STRICTNESS, nothing broken, and these must PASS.
    (FL-12) THE ADDRESS ARM. Its control is `test/harness.control.mjs` T2 (send `url` again), which drives this suite too: FL-12b must FAIL BY NAME and FL-12a (the mock alone) must HOLD. RUN 2026-09-23: fanout 183/1, AS DECLARED; under T1 (FL-11's seeding dropped) this suite reads 177/7 — every arm where the parent writes a suggestion, and FL-12b, whose request target defaults to the run's.
-   FULL PER-ARM DETAIL AND THE MEASURED FIGURES ARE IN `test/fanout.control.mjs`'s own header.
+   FULL PER-ARM DETAIL AND THE MEASURED FIGURES WERE IN `test/fanout.control.mjs`'s own header (git history).
    D-276's five arms are NOT restated here and are NOT counted here: they belong to `test/agent-worker.control.mjs`, which drives THIS suite as well as its own, and they are enumerated once in `test/agent-worker.test.mjs`'s declaration. Naming them again here would inflate the fleet's arm count with a cross-reference — measured, at the moment of writing this sentence. The one that concerns this file is the world-as-it-shipped arm: with a fixture that says yes to everything, every BEHAVIOURAL assertion here passes over a call the real plane refuses, and the only thing that sees it is the single assertion here that reads the plane's registry instead of the mock. This suite's baseline moved 172 to 175 with D-276.
  * ========================================================================= */
 
@@ -484,7 +487,7 @@ export default {
     const op = url.searchParams.get("op") || "";
     let body = null;
     if (req.method === "POST") { try { body = await req.json(); } catch { body = null; } }
-    S.log.push({ op, token: url.searchParams.get("token") || "", method: req.method, body,
+    S.log.push({ op, token: (req.headers.get("authorization") || "").replace(/^Bearer /, "") || "", method: req.method, body,
                  query: Object.fromEntries(url.searchParams.entries()) });
 
     if (op === "whoami")
@@ -866,8 +869,8 @@ console.log("\n--- FL-12 · the fan-out's internet level files its request by AD
      NEGATIVE CONTROL: `test/harness.control.mjs` T2 (send `url` again) — this arm fails by name. */
   const mf = newMf({});
   const mock = await mf.getWorker("plane-mock");
-  const direct = (await (await mock.fetch(`http://plane/?op=capturerequest&store=scratch&token=${AIK}`,
-    { method: "POST", body: JSON.stringify({ run: "run-1", target: "INQ-1", url: "https://example.org/a" }) })).json()).result ?? {};
+  const direct = (await (await mock.fetch(`http://plane/?op=capturerequest&store=scratch`,
+    { method: "POST", headers: { authorization: `Bearer ${AIK}` }, body: JSON.stringify({ run: "run-1", target: "INQ-1", url: "https://example.org/a" }) })).json()).result ?? {};
   t("FL-12a: a request carrying its locator only as `url` is refused CAPTURE_REQUEST_NOT_PUBLIC (C-28.2) by the mock, as by the plane",
     [direct.code, direct.check], ["CAPTURE_REQUEST_NOT_PUBLIC", "C-28.2"]);
   const out = await (await runOp(mf, { ...base,
