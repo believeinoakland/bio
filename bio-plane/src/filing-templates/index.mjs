@@ -111,6 +111,16 @@ export function noTemplateGrant() {
   /* END DEC-49 REGION is-no-template-grant */
 }
 
+/** R26: a template's handle: its name case-folded, each run of characters other than ASCII letters and digits one `-`,
+ *  no `-` at either end ("Records request" → `records-request`); null for a name with no ASCII letter or digit. */
+export function templateHandle(name) {
+  if (typeof name !== "string") return null;
+  const h = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  return h || null;
+}
+/** R26: how `name` names a template: `@` and a handle. */
+export const TEMPLATE_NAME_REF_RE = /^@[a-z0-9]+(-[a-z0-9]+)*$/;
+
 /** A version's id, `<template>@<version>` (the Terms). */
 export const versionId = (template, version) => `${template}@${version}`;
 /** The parts of a version id, or null. */
@@ -1114,11 +1124,53 @@ export class FilingTemplates {
 
   /* ================================================================ R25: offeredVersion */
 
+  /* R26: the one template `name` (`@<handle>`) names among those not retired that the viewer may see, the most specific
+     scope first: `project`'s own templates (when given), then the group's (widened), then the active profiles'. The
+     first scope holding the handle answers; two there are ambiguous. As `{t}`, or a refusal; writes nothing. */
+  #byName(name, project, viewer) {
+    /* DEC-49 REGION is-template-ref */
+    if (typeof name !== "string" || !TEMPLATE_NAME_REF_RE.test(name))
+      return refuse("TEMPLATE_REF_REFUSED", "a template is named as @ and its name's handle: lower-case letters and digits, "
+        + "runs joined by single hyphens", { name: typeof name === "string" ? name.slice(0, 80) : null });
+    const handle = name.slice(1), proj = str(project);
+    const fits = (t) => t && !t.retired && templateHandle(t.name) === handle && this.#canSee(t, viewer);
+    const group = this.#rows(`SELECT template_id FROM tpl_templates ORDER BY template_id`).map((r) => this.#groupTemplate(r.template_id));
+    const scopes = [
+      proj ? group.filter((t) => t && !t.widened && t.project === proj) : [],
+      group.filter((t) => t && t.widened),
+      this.#profileTemplates(),
+    ];
+    for (const scope of scopes) {
+      const hits = scope.filter(fits);
+      if (hits.length > 1)
+        return refuse("TEMPLATE_NAME_AMBIGUOUS", "two templates you can see go by that name in the same scope, so neither was "
+          + "chosen: name the template by its id", { name });
+      if (hits.length === 1) return { t: hits[0] };
+    }
+    /* END DEC-49 REGION is-template-ref */
+    return this.#noTemplate(null);
+  }
+
   /** R25 (`filings` R28, R31): the version of `template` a filing or briefing may use, with its metadata; the latest
-   *  approved when `version` is absent. Writes nothing. */
-  offeredVersion({ template = null, version = null, viewer = null } = {}) {
-    const t = this.#template(template, viewer);
-    if (!t) return this.#noTemplate(template);
+   *  approved when `version` is absent. R26: `name` (`@<handle>`, with `project` when the draft has one) in place of
+   *  `template` names it as the library does. Writes nothing. */
+  offeredVersion({ template = null, name = null, project = null, version = null, viewer = null } = {}) {
+    const given = (v) => v !== null && v !== undefined && v !== "";
+    if (given(template) === given(name)) {
+      /* DEC-49 REGION is-template-ref */
+      return refuse("TEMPLATE_REF_REFUSED", given(template) ? "a template is named by its id or by its name, not both"
+        : "no template is named: give its id, or @ and its name");
+      /* END DEC-49 REGION is-template-ref */
+    }
+    let t;
+    if (given(name)) {
+      const found = this.#byName(name, project, viewer);
+      if (!found.t) return found;
+      t = found.t;
+    } else {
+      t = this.#template(template, viewer);
+      if (!t) return this.#noTemplate(template);
+    }
     if (t.retired) return this.#retired(t);
     const bad = FilingTemplates.#badBlank(t);
     if (bad) return refuse("TEMPLATE_BLANK_UNKNOWN", `{{${bad}}} is not a blank filings fill, so this template is not offered`,
