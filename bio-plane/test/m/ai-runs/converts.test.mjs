@@ -89,7 +89,7 @@ test("R16, R18 (convert d260-resume): each withheld resumption's wake entry says
   const wakeEntry = (run) => logOf(w, run).find((e) => /the daemon answered/.test(e.detail));
   assert.match(wakeEntry("MEM").detail, /Resumption: NOT dispatched — a member's credential opened it/);
   assert.match(wakeEntry("OTHER").detail, /Resumption: NOT dispatched — another principal opened it/);
-  assert.match(wakeEntry("INST").detail, /Resumption: handed to agent-worker under the instance's organisation credential 'tok-org', which opened this run\./);
+  assert.match(wakeEntry("INST").detail, /Resumption: handed to agent-worker under the organisation credential 'tok-org' of your group's Civicsmith, which opened this run\./);
   /* withheld runs: still running, woken, and nothing after their wake entry */
   for (const run of ["MEM", "OTHER"]) {
     assert.equal((await w.runs.read({ run, viewer: "admin" })).session.status, "running");
@@ -99,13 +99,13 @@ test("R16, R18 (convert d260-resume): each withheld resumption's wake entry says
   /* exactly once */
   const a2 = await w.runs.wake(at("00:00:20"));
   assert.deepEqual([a2.woken, calls.length], [0, 1]);
-  /* the instance cannot resume anything: said in the entry, with the reason */
+  /* nothing can be resumed here: said in the entry, with the reason */
   const u = world({ env: { ...env, AGENT_WORKER: null } });
   await u.group("ann"); u.bundle(INQ);
   await u.runs.open(OPEN({ principalPlane: stamp }));
   u.runs.registerWaitSource("capture-requests", waitSource({ R1: [{ request: "q", state: "captured" }] }));
   await u.runs.wake(at("00:00:10"));
-  assert.match(logOf(u)[0].detail, /Resumption: NOT dispatched — the instance cannot resume anything here \(AGENT_WORKER_UNBOUND\)\./);
+  assert.match(logOf(u)[0].detail, /Resumption: NOT dispatched — your group's Civicsmith cannot resume anything here \(AGENT_WORKER_UNBOUND\)\./);
   /* a dispatch agent-worker refuses carries its code, in the answer and in the run's own last entry */
   answer = { status: 409, body: { ok: false, reason: "RUN_NAMES_A_DIFFERENT_PAYER" } };
   await w.runs.open(OPEN({ run: "PAYER", principalPlane: stamp }));
@@ -247,7 +247,7 @@ test("R9, R40 (convert extractrun, skillpack): the mode refusal echoes the mode 
   await w.group("ann"); w.bundle(INQ);
   const r = await w.runs.open(OPEN({ mode: "extract" }));
   assert.deepEqual([r.started, r.code, r.mode, r.deployed], [false, "AI_RUN_MODE_NOT_DEPLOYED", "extract", ["check"]]);
-  assert.match(r.note, /the mode 'extract' is not deployed on this instance.*today check is deployed\. Nothing was written/);
+  assert.match(r.note, /the mode 'extract' is not deployed in your group's Civicsmith.*today check is deployed\. Nothing was written/);
   const long = await w.runs.open(OPEN({ mode: "m".repeat(80) }));
   assert.equal(long.mode, "m".repeat(60));
   const s = await w.runs.open(OPEN({ skillVersion: "3" }));
@@ -270,4 +270,58 @@ test("R25, R26 (convert rec173-migration-replay): a creation carrying no assista
   /* control: the stamped creation is asked, and spends */
   assert.equal(w.surface("INQ-2026-0101").ok, true);
   assert.deepEqual(w.runs.boundOf("R1", "surfaces"), { allowed: 1, consumed: 1 });
+});
+
+/* R54 (DEC-149; BOB's review item 1): the sweep's five rows, each named and pinned word for word where a member reads it —
+   :895 the mode refusal's `note`, and :1688, :1694, :1698, :1699 the resumption's `says`, which the wake writes into the
+   run's log and `op=airunlog` serves (R24). None says "copy", "instance", "plane" or "server" for the group's Civicsmith;
+   the codes (`withheld`'s values) stay. */
+test("R54: every member-facing string the sweep names says \"your group's Civicsmith\" — index.mjs:895 (AI_RUN_MODE_NOT_DEPLOYED's note), :1688 (dispatched), :1694 (a member's run), :1698 (another principal's run), :1699 (nothing can be resumed), the last four as op=airunlog serves them", async () => {
+  const OLD = /\b(copy|instance|plane|server)\b/i;
+  /* :895 */
+  const w0 = world();
+  await w0.group("ann"); w0.bundle(INQ);
+  const m = await w0.runs.open(OPEN({ mode: "extract" }));
+  assert.equal(m.note, "the mode 'extract' is not deployed in your group's Civicsmith: the modes deploy in one order, each only "
+    + "after the one before it is verified live, and today check is deployed. Nothing was written", "index.mjs:895");
+  assert.equal(OLD.test(m.note), false, m.note);
+  /* :1688, :1694, :1698 */
+  const TOKEN = "instance-ai-secret-value-r54";
+  const AW = { fetch: async () => new Response(JSON.stringify({ ok: true }), { status: 200 }) };
+  const env = { AGENT_WORKER: AW, INSTANCE_AI_TOKEN: TOKEN, STORE: { idFromName: (n) => `id:${n}` } };
+  const w = world({ env });
+  await w.group("ann"); w.bundle(INQ);
+  w.ctx.id = { equals: (x) => x === "id:bio" };
+  w.credentials.aiCredentialMint({ who: "admin", tokenId: "tok-org", secretSha: sha(TOKEN), principalKind: "organisation",
+    taskScope: "investigative", writes: ["airuntick"], note: "the group's key" });
+  const cred = w.credentials.aiCredentialLook({ secretSha: sha(TOKEN) }).credential;
+  const runs = { INST: `${cred.principal}/${cred.tokenId}`, MEM: "member:ann/tok-m", OTHER: "class:ai/other" };
+  for (const [run, principalPlane] of Object.entries(runs)) await w.runs.open(OPEN({ run, principalPlane }));
+  w.runs.registerWaitSource("capture-requests", waitSource({ INST: [{ request: "q1", state: "captured" }],
+    MEM: [{ request: "q2", state: "captured" }], OTHER: [{ request: "q3", state: "captured" }] }));
+  await w.runs.wake(at("00:00:10"));
+  const served = (u, run) => u.runs.log({ run, viewer: "admin" }).entries.map((e) => e.detail).find((d) => /Resumption:/.test(d));
+  const says = (d) => d.slice(d.indexOf("Resumption:"));
+  const rows = {
+    "index.mjs:1688": [served(w, "INST"), "Resumption: handed to agent-worker under the organisation credential 'tok-org' of your group's "
+      + "Civicsmith, which opened this run."],
+    "index.mjs:1694": [served(w, "MEM"), "Resumption: NOT dispatched — a member's credential opened it, and your group's Civicsmith resumes "
+      + "only runs its own organisation credential opened (D-260, DEC-55 (4): continuing a member's run under the group's key would "
+      + "re-attribute its acts). It waits for its own principal."],
+    "index.mjs:1698": [served(w, "OTHER"), "Resumption: NOT dispatched — another principal opened it, and the organisation credential of "
+      + "your group's Civicsmith resumes only the runs it opened."],
+  };
+  /* :1699 */
+  const u = world({ env: { ...env, AGENT_WORKER: null } });
+  await u.group("ann"); u.bundle(INQ);
+  await u.runs.open(OPEN({ principalPlane: runs.INST }));
+  u.runs.registerWaitSource("capture-requests", waitSource({ R1: [{ request: "q", state: "captured" }] }));
+  await u.runs.wake(at("00:00:10"));
+  rows["index.mjs:1699"] = [served(u, "R1"), "Resumption: NOT dispatched — your group's Civicsmith cannot resume anything here "
+    + "(AGENT_WORKER_UNBOUND)."];
+  for (const [row, [detail, want]] of Object.entries(rows)) {
+    assert.equal(typeof detail, "string", `${row}: served in the run's log`);
+    assert.equal(says(detail), want, row);
+    assert.equal(OLD.test(says(detail)), false, `${row}: ${says(detail)}`);
+  }
 });
