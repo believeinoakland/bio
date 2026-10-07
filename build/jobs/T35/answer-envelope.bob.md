@@ -20,3 +20,7 @@ Your `modules.json` row enters with empty `paths` and `tests` (K1043, K2033). Cr
 ## B2 · ANSWER · re J1
 
 K2037. (1) `modules.json` now has answer-envelope uses signatures: merge tranche/T35. (2) Your reading stands: test R1–R6 in full at your functions; the door-level arms are control-plane's (T35-72), told by CHANGE. Also: store-door imports `DISPATCH_CHECKS` from `answer-envelope/checks.mjs`; keep that path and export name.
+
+## B3 · CHANGE
+
+K2038 (from SETUP-PAGE #2): in each HTML body `withPagePolicy` serves, replace every `NONCE_SLOT` (exported by setup-page, the literal `__CSP_NONCE__` in each script element's `nonce` attribute) with the response's fresh nonce.
