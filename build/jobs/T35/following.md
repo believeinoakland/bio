@@ -48,3 +48,7 @@ R20/R21 readings; I am building on them now. Only (2) needs an act from you.
 ## J2 · REPORT
 
 Found in acquisition (T35-21, K1940): its ARCHIVE_CHECKS rows are numbered C-137.1 onward (src/acquisition/checks.mjs:270 on), but C-137 is following's family (K1836, K1856). This turns following's checks.test.mjs:118 red ('C-137 is following's alone'); it is red on tranche/T35 before my job and is not a named accepted red. Proposed fix (acquisition's, or a catalogue ruling): give acquisition's archive rows a family number of their own. I have not weakened the test.
+
+## J3 · COMPLETE
+
+T35-65 applied on the J1 readings (B2, K2025). R20: every held text policy at a public https address is watched with no member act, due every 7 days, author none. Failed reads stay watched; paywalled and reading_room policies answer member_act_required and nothing is fetched. Every version is kept in policy_versions, and captures take the policy's sight; a watch ends on supersession. R21: policyChanges with cursor, limit, sight and amendment_held. following 48/49: the one failure is the C-137 collision in the REPORT, red before this job. notice-producers and scheduler 139/140 (red 31). format, architecture, coverage 21/21, ownership: 0 failures. Nothing deferred. Stale: the plane bundle (not_product). Branch job/T35/following; the record has the summary lines and Size.
