@@ -37,3 +37,7 @@ Size (session_01Jry3dXC9WHUGbknu4WMyTM): test runs 4, module lines 3108
 ## J2 · REPORT
 
 A generated artifact this job made stale (mechanics §14): `pdf-worker/dist/pdf-worker.bundled.mjs` (owned by pdf-worker) inlines `pdfstructure.mjs` and does not carry R36's `active`. pdf-worker's `structure.test.mjs` compares the bundle's output with the live source, so two of its arms now fail: "R7 every other field is extractPdfStructure's own, unchanged" and "R10 the structure fields are kept" (81 pass, 2 fail; 83/0 on the tranche base). No pdf-worker code needs to change. They pass again once the bundle is regenerated at L1's close.
+
+## J3 · COMPLETE
+
+T35-10 done: R36 met (`active`, on J1's readings as B2 confirmed). pdf-reader's tests: 67/67. `pdfstructure.test.mjs`: 170/0. Users: format-registry, budget-doctypes, doctypes and reading-pipeline are green; pdf-worker is 46/47, from the stale bundle in J2. Checks: architecture, coverage (36/36) and ownership have 0 failures; format's one failure is inherited red 13. The record is `build/jobs/T35/pdf-reader.md` § Completion.
