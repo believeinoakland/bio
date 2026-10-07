@@ -9,12 +9,12 @@ import { DOCKET_CHECKS, OUTWARD_ACT_WARNING, RESEND_INVITATION, DOCKET_UNREADABL
 
 const A = V("alice");
 const OLD_NAME = /\b(this|the|our|its) +(civicsmith +|group's +)?(instance|copy|plane)\b/i;
-const NO_SLUG = "Your group's Civicsmith has no group name recorded, and a docket entry is never anonymous. Record the "
-  + "group's name first. Nothing was published.";
+const NO_SLUG = "Your group has no name recorded yet, and a docket entry is never anonymous. Record the group's name "
+  + "first. Nothing was published.";
 const STALE = "Your group's Civicsmith holds no prepared docket entry from you with this fingerprint, it was prepared more "
   + "than an hour ago, or the docket has moved since. Prepare it again and sign what it shows. Nothing was published.";
 
-test("R4 R22 (DEC-149) C-129.16 DOCKET_NO_GROUP_SLUG says \"Your group's Civicsmith has no group name recorded\", not \"This copy\"", () => {
+test("R4 R22 (DEC-149, N685) C-129.16 DOCKET_NO_GROUP_SLUG says \"Your group has no name recorded yet\", as C-127.4 says it, not \"This copy\"", () => {
   const bare = world({ slug: null });
   bare.member("alice");
   bare.P = bare.project("budget", "alice");
@@ -26,7 +26,7 @@ test("R4 R22 (DEC-149) C-129.16 DOCKET_NO_GROUP_SLUG says \"Your group's Civicsm
   assert.doesNotMatch(r.translation, OLD_NAME);
 });
 
-test("R5 R22 (DEC-149) C-129.22 DOCKET_STALE says \"Your group's Civicsmith holds no prepared docket entry from you\", not \"This copy\"", async () => {
+test("R5 R22 (DEC-149, N685) C-129.22 DOCKET_STALE says \"Your group's Civicsmith holds no prepared docket entry from you\", in C-127.12's form, not \"This copy\"", async () => {
   const w = seeded();
   const p = prepare(w, { kind: "response", entry: file(w).entry });
   assert.equal(p.ok, true);
