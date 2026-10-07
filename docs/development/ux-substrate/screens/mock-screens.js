@@ -189,18 +189,19 @@ SCR.connect = c => { const st = CONNECT_ST[c.wizard && c.wizard.act]; const sel 
 
 SCR.ties = c => ({ rail: 'settings', title: 'Your ties', crumbs: ['Settings', 'Your ties'], main: `
   ${h1('Your ties', 'Your work and family connections that could matter to a case, so your group can be open about them.')}
-  <div class="cols2" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px">
-   <details class="cs-sheet mk-details" open style="padding:12px 14px"><summary><b>Why you are asked</b> <span class="muted mk-small">· so readers can trust a case</span></summary><ul class="mk-list mk-small" style="margin:6px 0 0">
+  <details class="cs-sheet mk-details" open style="padding:12px 14px"><summary><b>Why you are asked, and who sees it</b> <span class="muted mk-small">· so readers can trust a case · only you and the administrators see this list</span></summary>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:8px">
+   <div><b class="mk-small">Why you are asked</b><ul class="mk-list mk-small" style="margin:6px 0 0">
     <li>A published case is trusted only if readers know of anything that could pull the people behind it one way. Saying so openly protects you and the group.</li>
     <li>When a case your group publishes concerns one of your ties, the case says so, in the way you choose below.</li>
     <li>Before the group publishes, each member who signs confirms they have no tie they have not listed here.</li>
-    <li>Only what could matter: an employer, a relative in a public body, a business you have an interest in. Not your opinions, politics or private life.</li></ul></details>
-   <details class="cs-sheet mk-details" open style="padding:12px 14px"><summary><b>Who sees it</b> <span class="muted mk-small">· you and the administrators</span></summary><ul class="mk-list mk-small" style="margin:6px 0 0">
+    <li>Only what could matter: an employer, a relative in a public body, a business you have an interest in. Not your opinions, politics or private life.</li></ul></div>
+   <div><b class="mk-small">Who sees it</b><ul class="mk-list mk-small" style="margin:6px 0 0">
     <li><b>Inside the group:</b> only you and the group's administrators. Other members never see this list.</li>
     <li><b>Outside the group:</b> no one, unless a published case concerns the tie. Then its readers see the tie, with or without your handle, as you chose.</li>
     <li>It is kept with your group's records, so a court order could reach it like the rest of them.</li>
-    <li>You can change or remove a tie at any time. A case already published keeps what it said.</li></ul></details>
-  </div>
+    <li>You can change or remove a tie at any time. A case already published keeps what it said.</li></ul></div>
+  </div></details>
   ${sheet(row(I('group'), '<b>Employer</b> · East Bay Transit', '<span class="muted">a case would say: “a member of the group”</span>') + row(I('subject'), '<b>Relative</b> · a cousin on the Planning Commission staff', '<span class="muted">a case would name me</span>'))}
   ${sec('Add a tie', `${choice('mk-tk', 'Kind', ['Employer', 'Relative', 'A business I have an interest in', 'Other'], 'A business I have an interest in')}${field('mk-tw', 'Who', 'Lakeshore Hardware Co-op (member-owner)')}${checks('If a case the group publishes concerns them, the case discloses this tie', [['Naming me by my handle: “Dev, who worked on this case, is a member-owner of Lakeshore Hardware Co-op.”', false], ['Without naming me: “A member of the group who worked on this case is a member-owner of Lakeshore Hardware Co-op.”', true]], { radio: true })}${note('Either way the tie is disclosed to readers of the case. Inside the group, only you and the administrators see this list.')}${acts(btn('declaretie', 'Add this tie', { tone: 'primary' }), btn('withdrawtie', 'Remove a tie'))}`)}` });
 
