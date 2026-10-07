@@ -70,3 +70,7 @@ Size (session_01XCY7KyghJZH9SEre4scpDf): test runs 16, module lines 2952.
 ## J3 · REPORT
 
 law-relations: it exports no minting function for MACHINE_CANNOT_RELATE or LAW_RELATION_NO_CITATION, which standards R40 and R43 answer. standards mints them through law-relations' exported `refusal`, from its rows, in two local functions. Exporting `machineRelate` and `refuseNoCitation` would keep each code at one site (DEC-49). Separately: leg-earning's 'R1 R3 earnedBasis for a cell leg' test fails on tranche/T35 with or without standards' change (not mine; owner unknown to me).
+
+## J4 · COMPLETE
+
+B4 is applied. I merged tranche/T35 @ e7a590241f. IN_FORCE_STATES now names four states, `overridden` included, and a test shows inForce answering `overridden` as inForceAt does (R7). standards: 65 of 66 pass; the one failure is R29, accepted red 25. The format, architecture, coverage (39/39) and ownership checks each show 0 failures. The two local minting functions stay until your CHANGE after law-relations' R21 re-merge. Size (session_01XCY7KyghJZH9SEre4scpDf): test runs 18, module lines 2952.
