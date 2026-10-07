@@ -8,7 +8,10 @@ const { UNATTENDED_BY_DECISION } = O;
 /* Every refusal this module answers, driven at its interface, with the credentials each request carried. */
 async function sweep() {
   const lack = hex64();
-  const { env, S, K } = world({ sessions: { [lack]: member("bea", []) } });
+  const expired = aik();
+  const { env, S, K } = world({ sessions: { [lack]: member("bea", []) },
+                                creds: { [expired]: cred({ tokenId: "agent-lapsed", expired: true, expiresAt: "2026-01-01T00:00:00Z" }) } });
+  K.expired = expired;
   const secrets = [env.ADMIN_TOKEN, env.MEMBER_TOKEN, env.PROBE_TOKEN, env.DAEMON_TOKEN, ...Object.values(S), ...Object.values(K), lack];
   const out = [];
   const d = async (req) => { const r = await gate(env, req); if (r.refusal) out.push(r.refusal); };
@@ -25,6 +28,8 @@ async function sweep() {
   await d({ op: "index", token: K.confined, params: { store: "bio" } });             /* C-78.3 */
   await d({ op: "purge", token: K.ann });                                            /* C-29.6 */
   await d({ op: "index", token: K.revoked, method: "GET" });                         /* C-29.7 */
+  await d({ op: "index", token: K.expired, method: "GET" });                         /* C-29.30 */
+  out.push(A.doorRateLimited(42));                                                   /* C-38.9 */
   for (const asked of [{ writes: ["nope"] }, { writes: ["purge"] }, { writes: [], confinedTo: "bio" }])
     out.push((await A.aiCredentialMint(asked, "member")).refusal);                   /* C-29.8, .9, .10 */
   await d({ op: "adminendorse", token: env.ADMIN_TOKEN });                           /* C-32.17 */
@@ -33,7 +38,7 @@ async function sweep() {
   return { out, secrets };
 }
 
-test("R14: the admission share of the checks is this module's own — C-38.1–C-38.8, C-78.1–C-78.3, C-29.6–C-29.10, C-32.17, C-64.4 — each raised by a gate here, carrying its row's check and words, each row's `where` naming a site in this module", async () => {
+test("R14: the admission share of the checks is this module's own — C-38.1–C-38.9, C-78.1–C-78.3, C-29.6–C-29.10, C-29.30, C-32.17, C-64.4 — each raised by a gate here, carrying its row's check and words, each row's `where` naming a site in this module", async () => {
   const own = {};
   for (const [fam, rows] of Object.entries(C)) {
     assert.match(fam, /_CHECKS$/);
@@ -51,6 +56,7 @@ test("R14: the admission share of the checks is this module's own — C-38.1–C
   assert.deepEqual(got, {
     NOT_AUTHENTICATED: "C-38.1", CLASS_FORBIDDEN: "C-38.2", MACHINE_CREDENTIAL_REQUIRED: "C-38.3", ROOT_OF_TRUST_REQUIRED: "C-38.4",
     NOT_CAPABLE: "C-38.5", SCOPE_REFUSED: "C-38.6", SESSION_ROLE_CANNOT_REACH_OP: "C-38.7", SESSION_ROUTE_NOT_RECORDED: "C-38.8",
+    DOOR_RATE_LIMITED: "C-38.9", AI_CREDENTIAL_EXPIRED: "C-29.30",
     NAMESPACE_UNKNOWN: "C-78.1", NAMESPACE_PINNED: "C-78.2", NAMESPACE_CONFINED: "C-78.3",
     AI_BEYOND_TASK_SCOPE: "C-29.6", AI_CREDENTIAL_REVOKED: "C-29.7", AI_SCOPE_UNKNOWN_OP: "C-29.8",
     AI_SCOPE_BEYOND_MEMBER_REACH: "C-29.9", AI_CONFINEMENT_NOT_SCRATCH: "C-29.10",
@@ -65,7 +71,7 @@ test("R14: the admission share of the checks is this module's own — C-38.1–C
 
 test("R15: no credential, session token or secret appears in any refusal this module answers, and no place is named in its behaviour or outward text", async () => {
   const { out, secrets } = await sweep();
-  assert.ok(out.length >= 19);
+  assert.ok(out.length >= 21);
   for (const r of out) {
     const text = JSON.stringify(r);
     for (const s of secrets) assert.equal(text.includes(s), false, `${r.body.reason} carries a credential`);

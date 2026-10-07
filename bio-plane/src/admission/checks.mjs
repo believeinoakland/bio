@@ -11,7 +11,10 @@
  * T34-87 (DEC-149; K1811, K1821): seven translations call the group's Civicsmith by that name where they said "this
  * instance" or "this copy" — "your group's Civicsmith" to a member or a credential holder (C-38.3, C-38.8, C-78.1,
  * C-29.8, C-32.17, C-64.4, the last two worded as ratification R47), "this group's Civicsmith" to a caller who said
- * who they are not at all (C-38.1). Nothing else changed; the rows await promotion's T35 stamp. */
+ * who they are not at all (C-38.1). Nothing else changed; the rows await promotion's T35 stamp.
+ *
+ * T35-71 (R14): two new rows, C-38.9 DOOR_RATE_LIMITED (R21) and C-29.30 AI_CREDENTIAL_EXPIRED (R10), each with its
+ * test; both await promotion's stamp (T36; plan T35 accepted red 2). */
 
 /* C-38 · THE ADMISSION GATE (REC-79): every refusal a caller meets before their op runs. ADDITIVE ON THE WIRE: each
    refusal keeps its `error` sentence byte-identical beside the code (IC-REC-79). `MACHINE_CREDENTIAL_REQUIRED` is named
@@ -156,6 +159,17 @@ export const ADMISSION_CHECKS = {
     translation: 'That credential is allowed to act, but not on the part of the record this '
       + 'request named. It is confined to its own namespace and this request reached outside it.',
   },
+  /* T35 (R21; F4, K1881): the one limit admission adds, a window per source over the operations anyone may call with
+     no credential. It is a protective limit that refuses only abuse, so the sentence says it is about pace and not
+     about the person, that waiting is the whole remedy, and that the bound and the wait are beside it; it names no
+     address and says nothing of who the caller is, because the window knows neither. Awaiting promotion's stamp (T36). */
+  DOOR_RATE_LIMITED: {
+    check: 'C-38.9',
+    where: 'src/admission/index.mjs doorRateLimited > is-door-window',
+    translation: 'Too many requests reached your group\'s Civicsmith from the same place in a short time, so this one '
+      + 'was turned away before anything was read or changed. It is about the pace, not about you: wait the time '
+      + 'given beside this message and try again. The limit is stated beside it too.',
+  },
 };
 
 /* C-78 · A NAMESPACE (D-456, D-461, D-463). */
@@ -216,6 +230,17 @@ export const AI_SCOPE_CHECKS = {
     translation: 'This agent credential has been withdrawn by a member of the group, so it no longer '
       + 'reaches anything here. The record keeps the entry and the date rather than deleting it, so '
       + 'what it did while it was live remains readable.',
+  },
+  /* T35 (R10; K1934 (5), credentials R42): an agent credential lives for the days it was minted with and is never
+     renewed. Refused by name, as a withdrawn one is, so its holder is told the remedy (a new one) rather than met with
+     a stranger's 401; the entry stays. The next free C-29 number after credentials' T35 rows (C-29.28, C-29.29).
+     Awaiting promotion's stamp (T36). */
+  AI_CREDENTIAL_EXPIRED: {
+    check: 'C-29.30',
+    where: 'src/admission/index.mjs aiTaskScope > is-ai-task-scope',
+    translation: 'This agent credential has reached the end of the time it was created for, so it no longer reaches '
+      + 'anything here. Credentials are not renewed: a member of the group creates a new one to replace it. The '
+      + 'record keeps the entry, so what it did while it was live remains readable.',
   },
 
   /* ---- THE DECLARATION. WHAT MAY BE AUTHORED IN THE FIRST PLACE. ---- */
