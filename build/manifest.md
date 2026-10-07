@@ -1,6 +1,6 @@
 # Build manifest
 
-**Status** · Written by BOB #38, 2026-09-26 (TRANSITION.md T8). The one place that says where the product's build state, requirements canon and tests live (PROCESS-MECHANICS §1). The process itself is defined in `believeinoakland/civicos-process`.
+**Status** · The one place that says where the product's build state, requirements canon and tests live (PROCESS-MECHANICS §1). The process itself is defined in `believeinoakland/civicos-process`.
 
 ## Where things are
 
@@ -18,7 +18,7 @@
 | what Anthropic's plans and terms permit or forbid: verbatim quotes, each with its page, date read and the plan it governs (ids `AT-n`), the questions the pages leave open, and Bob's own choices; every other statement cites it (K1763) | `build/terms/anthropic.md` |
 | every ruling, one line each | `build/rulings.md` |
 | tokens processed per session | `build/metrics/T<n>.csv` (transition sessions under `T0`) |
-| the transition to this process: plan, log, challenges, latest handoff | `docs/development/TRANSITION.md` |
+| the latest handoff (replaced whole at each handoff) | `build/handoff.md` |
 | the old plan, frozen, and its triage | `docs/development/transition/old-plan/` |
 | the restore point from before the new process | branch `snapshot/pre-refactor-2026-09-25` |
 
@@ -61,6 +61,6 @@ Bob's UX design work runs under his **primary account**, outside this process an
 
 ## Starting a session
 
-- **ROOT** (mechanics §2, K156): started by Bob, the parent of every BOB; reads `roles/ROOT.md`. ROOT #1, `session_0183DmvWFhkpLgr7EBFwPZMr` (started by Bob 2026-09-27 ~14:17 UTC), archived 2026-09-30 ~23:22 by BOB #77 on Bob's direction (past 300k tokens; K693). **ROOT #2**, `session_015QfrQQAdENFCG68uwrnxni` (started by Bob 2026-09-30 ~23:27 UTC), recorded by BOB #78 at takeover. **ROOT #3**, `session_01CCdj4Cyw8SixkZAnTPSXVf` (started by Bob on his secondary account 2026-10-01 ~03:42 UTC), recorded by BOB #80 at takeover (K742). ROOT #3 retired and archived 2026-10-02 on Bob's direction (K1259). **ROOT #4**, `session_01Ri7bXUDk5X4uwJa75gnbHM` (started by Bob on his secondary account 2026-10-02 ~22:13 UTC), recorded by BOB #103 at takeover (K1260). ROOT #2 is on Bob's primary account, never archived; BOB #111 (primary) rang it to start BOB #112 on 2026-10-05 (K1434), so it serves BOBs on the primary account while ROOT #4 serves the secondary. ROOT #2 retired and archived 2026-10-05 by BOB #114 on Bob's direction (K1497). **ROOT #5**, `session_0187SrKsqhqzSTqwDk2hzcXy` (started by Bob on his primary account 2026-10-05 ~21:06 UTC), recorded by BOB #114 at takeover (K1499); it serves BOBs on the primary account. ROOT #4 retired and archived 2026-10-07 by BOB #132 on Bob's direction (K2020, K2022). **ROOT #6**, `session_01FXbdTJZyPp3Bhcv7pfVSR1` (started by Bob on his secondary account 2026-10-07 ~20:07 UTC), recorded by BOB #132 at takeover (K2022); it serves BOBs on the secondary account. ROOT #2 and BOB #79 (`session_01DP5ySzhL1NUqbmUK7nxUNH`) belong to the first account and cannot be reached from the secondary one: BOB #79 was not archived by its successor and has no `BOB-final` row (K742).
-- **BOB:** read `roles/BOB.md` in the process repository, then this file, then the latest handoff (TRANSITION.md §6 until the first tranche closes).
+- **ROOT** (mechanics §2, K156): started by Bob, the parent of every BOB; reads `roles/ROOT.md`. Current: **ROOT #6**, `session_01FXbdTJZyPp3Bhcv7pfVSR1` (Bob's secondary account, 2026-10-07; K2022). Earlier ROOTs are archived (rulings K693–K2022).
+- **BOB:** read `roles/BOB.md` in the process repository, then this file, then the latest handoff, `build/handoff.md`.
 - **A module job:** read `roles/JOB.md` in the process repository; BOB's first message names the module and the tranche.
