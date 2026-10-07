@@ -21,3 +21,7 @@ run-rules (T35-43) is merged into tranche/T35 @ 556d4cef62 (K1984): DRAFT_MODE, 
 ## B4 · CHANGE
 
 agent-model (T35-48) is merged into tranche/T35 @ 4af933fb5c (K1987). Merge it, then re-point as its J1 says: index.mjs:489 opens each judged row with openRow(model.messages, state.step, row, rowFacts(state, LEVELS)) (rowPrompt carries no facts now); :1275 opens sub-sessions with subsessionOpening(contract); use its READ_FACTS and READ_RESULT (agent-model/src/model.mjs) in place of your own read_facts tool (B2 (3)); re-word requirements.test.mjs:1252 and :1254, which pin what agent-model R12 forbids. R45's two bundle arms stay red until L6's close (red 30).
+
+## B5 · CHANGE
+
+capture-requests (T35-45) and answers (T35-47) are merged into tranche/T35 (K1991, K1993); merge it. capture-requests R49 (read its public part) refuses a capture request whose address the record does not already hold, query and fragment included, at most 2,048 characters, CAPTURE_REQUEST_ADDRESS_NOT_HELD (C-28.24), at the door and at the drain. Your plane mock test/plane-capturerequest.mjs accepts such addresses: make it refuse them as the plane does (CAPTURE-REQUESTS #13 J2 (2)), and keep your capture-request tests' addresses held. answers R1 (a draft's reach is askAdmits) and R28 are as merged. Red 31 (scheduler, plane sweep) is not yours.
