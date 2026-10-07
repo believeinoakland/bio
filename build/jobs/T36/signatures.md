@@ -4,7 +4,7 @@
 
 ## Completion
 
-**Read whole** (mechanics §17): the START's reading set, 139 KB: `build/requirements/signatures.md`; `record-grammar`'s public part; layer 1's contract (`build/layers.md`); every file of the module's paths and tests (`signpage.mjs` as the render R30 checks byte for byte); plan entry T36-1 and rule 6; K1936, K2072; Distribution §10. Also `PROCESS`-side: roles/JOB.md.
+**Read whole** (mechanics §17): the START's reading set, 139 KB: `build/requirements/signatures.md`; `record-grammar`'s public part; layer 1's contract (`build/layers.md`); every file of the module's paths and tests (`signpage.mjs` as the render R30 checks byte for byte); plan entry T36-1 and rule 6; K1936, K2072; Distribution §10. Also `roles/JOB.md` in the process repository.
 
 **Entries applied.** T36-1 (N712, its share; K1936 Q4 step 1), with BOB's rulings on my readings (B2, K2077):
 - **R43.** Generate offers a passphrase, typed twice (a mismatch makes no key and says so; both fields emptied once read). With one, both private keys are the `wrapKey` form (`BIOKEY1.`) in every box, in "Copy everything" and in `bio-signing-keys.txt`; the page's load reads them back with it and refuses any other or none (unchanged `parseKeyString`, which now also refuses a malformed iteration count rather than deriving with it). With none, the raw form as before, with the development note. Public lines unchanged. With a passphrase, a button offers the release key's raw form once, for the secret store that signs releases: shown on request in its own box, hidden on request, never offered again for that Generate, withdrawn by Forget, and never written to the file or the whole copy. Not offered for the ratification or recovery key.
@@ -15,7 +15,7 @@
 
 **Deferred.** Nothing.
 
-**Found in another module (REPORT J3).** Generated artifact staled by this change (§14): `bio-plane/dist/bio-plane.bundled.mjs` and `.bundle.json` (`not_product`) embed `src/signpage.mjs`; `fleetbundles.test.mjs` adds 4 FAIL on `bio-plane` (STALE BUNDLE, byte identity, manifest sha, comment arm) until BOB regenerates (`node bio-plane/scripts/bundles.mjs`, K1540's order). Before the change it had only inherited red 6 (agent-worker's input list). `release/bio-plane.bundled.mjs` and `newgroup/src/release.mjs` carry the old page as release copies, refreshed by the next release. `newgroup-bundle-fresh` stays green (it bundles `sshsig.mjs`, unchanged).
+**Found in another module (REPORT J2).** Generated artifact staled by this change (§14): `bio-plane/dist/bio-plane.bundled.mjs` and `.bundle.json` (`not_product`) embed `src/signpage.mjs`; `fleetbundles.test.mjs` adds 4 FAIL on `bio-plane` (STALE BUNDLE, byte identity, manifest sha, comment arm) until BOB regenerates (`node bio-plane/scripts/bundles.mjs`, K1540's order). Before the change it had only inherited red 6 (agent-worker's input list). `release/bio-plane.bundled.mjs` and `newgroup/src/release.mjs` carry the old page as release copies, refreshed by the next release. `newgroup-bundle-fresh` stays green (it bundles `sshsig.mjs`, unchanged).
 
 **Tests and checks run.**
 - `node --test bio-plane/test/m/signatures/`: tests 86, pass 86, fail 0, skipped 0 (ssh-keygen and openssl present).
