@@ -102,3 +102,15 @@ test("R15 (DEC-88): C-110.29, VERSION_ADOPT_NO_REASON, is a new row after C-110.
   const r = w.r.adoptVersion({ notice: "RN-any", author: "alice", viewer: "class:admin" });
   assert.deepEqual([r.ok, r.code, r.check, r.translation], [false, "VERSION_ADOPT_NO_REASON", "C-110.29", row.translation]);
 });
+
+test("R15 R24 (DEC-149, T35-52): C-110.1's translation says \"the record's own machine credentials\", never \"the plane\"; the row's code, number and region stay", () => {
+  const row = REEVALUATION_ACT_CHECKS.MACHINE_CANNOT_ADOPT_VERSION;
+  assert.deepEqual([row.check, row.where], ["C-110.1", "src/reevaluation/index.mjs #choiceSubject > is-version-choice"]);
+  assert.equal(row.translation, "Only a named member can move a reference to a newer version of a document. The assistant and "
+    + "the record's own machine credentials may say a newer version exists; they never choose which one a finding rests on.");
+  for (const r of [...Object.values(VERSION_NOTICE_SUBJECT_CHECKS), ...Object.values(REEVALUATION_ACT_CHECKS)])
+    assert.doesNotMatch(r.translation, /\bthe plane\b|\bthe instance\b/i, r.check);
+  /* the refusal an adoption by a machine answers carries it */
+  const r = world().r.adoptVersion({ notice: "RN-any", why: "a reason", author: MACHINE, viewer: "class:admin" });
+  assert.deepEqual([r.code, r.check, r.translation], ["MACHINE_CANNOT_ADOPT_VERSION", "C-110.1", row.translation]);
+});
