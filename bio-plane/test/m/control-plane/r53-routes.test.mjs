@@ -123,7 +123,7 @@ function grantWorld(extra = {}) {
   return { ...v, GRANT };
 }
 
-test("R53 (K1601, K1674; credentials R28): a token no session or credential holds is asked of credentials as an ask's grant, in `bio`, only for an op on the grant's list; admitted, the read reaches its route with the grant's member as viewer and the grant stamped `grant`, whatever the caller forged; a held grant asking an op it does not admit is refused GRANT_OP_REFUSED; an unknown token, an op off every list and a targeted `affordances` keep admission's NOT_AUTHENTICATED, in the same bytes; a silence is a silence", async () => {
+test("R53 (K1601, K1674; credentials R28): a token no session or credential holds is asked of credentials as an ask's grant, in `bio`, only for an op on the grant's list; admitted, the read reaches its route with the grant's member as viewer and the grant in the `x-bio-grant` header (R59), never the address, whatever the caller forged; a held grant asking an op it does not admit is refused GRANT_OP_REFUSED; an unknown token, an op off every list and a targeted `affordances` keep admission's NOT_AUTHENTICATED, in the same bytes; a silence is a silence", async () => {
   const { env, GRANT, S } = grantWorld();
   const listed = AI_GRANT_OPS.filter((op) => Object.hasOwn(OPS, op) && !OPS[op].mutating);
   assert.ok(listed.includes("search") && listed.length >= 5, listed.join(","));
@@ -135,7 +135,8 @@ test("R53 (K1601, K1674; credentials R28): a token no session or credential hold
     assert.deepEqual(asked.map((c) => [c.ns, c.body]), [["bio", { token: GRANT, op, write: false }]], op);
     const [inner] = opCalls(env).filter((c) => c.route !== "aigrantadmit");
     if (!inner) continue;
-    assert.deepEqual([inner.ns, inner.params.grant, inner.params.q], ["bio", GRANT, "x"], op);
+    /* R59, store-door R9 (K2037 (b)): the grant travels in the internal header, never the address */
+    assert.deepEqual([inner.ns, inner.headers["x-bio-grant"], inner.params.grant, inner.params.q], ["bio", GRANT, undefined, "x"], op);
     if (inner.params.viewer !== undefined) assert.equal(inner.params.viewer, "member:ann", op);
     assert.notEqual(inner.params.by, FORGED, op);
     assert.equal(r.json.tokenClass, "ai");
@@ -177,6 +178,7 @@ test("R53 (K1601, K1674; credentials R28): a token no session or credential hold
   assert.equal(s.status, 200);
   assert.equal(env.calls.some((c) => c.route === "aigrantadmit"), false);
   assert.equal(opCalls(env)[0].params.grant, undefined);
+  assert.equal(opCalls(env)[0].headers["x-bio-grant"], undefined);
 });
 
 test("R53 (K1601, K1674; agent-worker R54): the ask's own four calls (askceiling, askcheck, askusage, the untargeted affordances) are admitted under a held grant beside its list, asked of credentials by the list's first read, and are agent-worker's `ASK_PLANE_OPS` exactly", async () => {
@@ -188,7 +190,8 @@ test("R53 (K1601, K1674; agent-worker R54): the ask's own four calls (askceiling
     const r = await call(env, { op, token: GRANT, method: OPS[op].mutating ? "POST" : "GET", body: OPS[op].mutating ? { usage: {} } : undefined });
     assert.equal(r.status, 200, `${op}: ${r.text.slice(0, 200)}`);
     assert.deepEqual(env.calls.filter((c) => c.route === "aigrantadmit").map((c) => c.body), [{ token: GRANT, op: AI_GRANT_OPS[0], write: false }]);
-    assert.equal(opCalls(env).filter((c) => c.route !== "aigrantadmit")[0].params.grant, GRANT, op);
+    const inner = opCalls(env).filter((c) => c.route !== "aigrantadmit")[0];
+    assert.deepEqual([inner.headers["x-bio-grant"], inner.params.grant], [GRANT, undefined], op);
   }
 });
 

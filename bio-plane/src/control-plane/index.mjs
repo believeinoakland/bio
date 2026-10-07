@@ -701,6 +701,8 @@ const PLANE_LIMITS_STATEMENT = "bio-plane-limits/1 subrequests=10000";
    list, by its first read). Admitted, the caller is `ai`, its viewer the grant's member, its grant stamped `grant`
    (answers' arms, the read log); GRANT_OP_REFUSED is answered; anything else keeps admission's answer. */
 const GRANT_OWN_OPS = Object.freeze(["askceiling", "askcheck", "askusage", "affordances"]);
+/* store-door R9 (K2037 (b)): the internal header an ask's grant travels in to the store (store-door's `GRANT_HEADER`). */
+const GRANT_HEADER = "x-bio-grant";
 async function grantAdmit(env, url, op, spec) {
   const own = GRANT_OWN_OPS.includes(op), token = url.searchParams.get("token");
   if ((!own && !AI_GRANT_OPS.includes(op)) || (op === "affordances" && url.searchParams.get("target"))) return {};
@@ -1074,8 +1076,8 @@ export function makeFetch(hooks = {}) {
        caller's query and set by one expression: `viewer` every read's; `by` (query) and `bodyBy` (the body's `by`, below)
        the actor in the viewer's form (a session's viewer; a machine `class:<cls>`, an agent `class:ai/<tokenId>`);
        `author` the positional identity and `proposer` the label, by `QUERY_AUTHOR_ACTIONS`' and `actionlawspropose`'s
-       expressions; `member` and `session` a session's own member and token, never set for another caller. A grant's
-       token is stamped `grant` for its caller alone. */
+       expressions; `member` and `session` a session's own member and token, never set for another caller. An ask grant
+       token travels in the `x-bio-grant` header (below). */
     const declared = OP_STAMPS[op] || [];
     const actor = viaSession ? sessViewer : cls === "ai" ? `${MACHINE_CLASS_PREFIX}ai/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
     const stampOf = { viewer: viaSession ? sessViewer : cls === "ai" ? aiCred.principal : actor, by: actor,
@@ -1085,8 +1087,10 @@ export function makeFetch(hooks = {}) {
       inner.searchParams.delete(k);
       if (stampOf[k] !== null) inner.searchParams.set(k, stampOf[k]);
     }
-    if (Object.hasOwn(OP_STAMPS, op) || AI_GRANT_OPS.includes(op) || GRANT_OWN_OPS.includes(op)) inner.searchParams.delete("grant");
-    if (aiCred?.grant) inner.searchParams.set("grant", aiCred.grant);
+    /* R59, store-door R9 (F1; K2037 (b)): an ask's grant reaches the store in the internal header `x-bio-grant`, never the
+       address: a caller's `grant` parameter is deleted for every op, and the header is set for the grant's caller alone. */
+    inner.searchParams.delete("grant");
+    const withGrant = (init) => (aiCred?.grant ? { ...init, headers: { ...(init.headers || {}), [GRANT_HEADER]: aiCred.grant } } : init);
     /* Who holds a lease is stamped by the server, never taken from the request,
        for BOTH a session and a machine credential — the same impostor rule
        `author`, `by` and `viewer` follow below. A session stamps the member; a
@@ -2986,12 +2990,12 @@ export function makeFetch(hooks = {}) {
        the function `reviewcopy` answers through — so the dead answer a caller outside the fence receives is the
        single read's, status and bytes, and not this handler's generic envelope. */
     if (op === "casedrafts")
-      return reviewAnswer(await doAnswer(stub.fetch(new Request(inner, { method: "GET" }))), op);
+      return reviewAnswer(await doAnswer(stub.fetch(new Request(inner, withGrant({ method: "GET" })))), op);
 
     /* R23 (K421), R30, REC-52: the reply is read through `doAnswer`. The store's own refusal (`BAD_JSON`, an unknown
        route) is relayed at its status; anything that is not JSON carrying a boolean `ok`, or the store's catch, is a
        silence, never relayed (a store's stack included). */
-    const out = await doAnswer(stub.fetch(new Request(inner, { method: req.method, body: passBody })));
+    const out = await doAnswer(stub.fetch(new Request(inner, withGrant({ method: req.method, body: passBody }))));
     if (out.refused) return storeRefusal(out, { store: storeName, tokenClass: cls });
     if (!out.answered) return storeSilent(op, out.correlation);
     const { body, status } = out.reply;

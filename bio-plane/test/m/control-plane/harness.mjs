@@ -53,7 +53,8 @@ export function makeEnv({ sessions = {}, creds = {}, answer = null, omit = [], g
             let body = null;
             try { body = text ? JSON.parse(text) : null; } catch { body = text; }
             const route = u.pathname.slice(1);
-            const call = { ns: id, route, url: u, params: Object.fromEntries(u.searchParams), body, method: req.method };
+            const call = { ns: id, route, url: u, params: Object.fromEntries(u.searchParams), body, method: req.method,
+                           headers: Object.fromEntries(req.headers) };
             calls.push(call);
             if (answer) { const r = await answer(call); if (r) return r; }
             if (route === "session") return ok({ session: sessions[u.searchParams.get("t")] ?? null });
