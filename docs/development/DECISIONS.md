@@ -2659,3 +2659,17 @@ response: **Decided by the design session, 2026-10-07.** (1) "Opening a file" st
 decided: 2026-10-07 · the design session (P17)
 reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (screens "Opening a file", "Security", "Set up", "Add"; section 6); `screens/mock-screens.js`; `BIO_Interaction_Constructs_v0_1.md` §R.
 owed: (BOB, N706, N707, N710) the ops behind `owed:openoriginal K1888`, `owed:safeview K1888`, `owed:deepercheck K1888`, `owed:releasescanhold K1892` (file-safety R8, R11, R13, R17) and `owed:securitytooladd`, `owed:securitytooltest`, `owed:securitytoolremove K1929` (N710's provider registry and its data-handling statement); the reasons of file-safety R6 in member words held for translation; `originalState` driving whether "Open the original" is drawn; the installer's optional security-tools step.
+
+### DEC-170 · answered
+raised: 2026-10-07 · the UX design session with Bob on his primary account (session_01NWPmrrYZbbF8Wkrvp5Y2vx; the development process runs on his secondary account since K1891) (B79, BOB's question on K1943: does `personexpunge` belong in the larger-screen set?)
+for: bob-session
+question: Whether removing a fact where the law requires it (`personexpunge`) is offered on a phone.
+why it is Bob's: it is not: design detail beneath DEC-122 (signing, publishing and sending finish on a larger screen), DEC-142 and DEC-143; decided by the design session (P17) and reported.
+provisional: BOB's default, not in the larger-screen set.
+alternative: offered on a phone, its dialog carrying the weight.
+recommendation: as decided below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-07.** Yes: `personexpunge` is not offered on a phone. It is graded Irreversible (DEC-143), and affordances R36 already gives every act of that rung `phone: false`, as DEC-122 puts signing, publishing and sending on a larger screen; no entry in `LARGER_SCREEN_ACTS` is needed while its rung is irreversible (add one only if its rung is ever graded otherwise). The reason is the act's, not the dialog's: it cannot be undone by anyone, it cites a court order or law the member should read beside the fact it removes, and an order's deadline is days, not minutes. On a phone the dialog can be read, with "finish on a larger screen"; nothing refuses by device.
+decided: 2026-10-07 · the design session (P17)
+reasoning recorded in: this entry; `screens/mock-screens.js` (the person screen's dialog).
+owed: (BOB) `personexpunge` carries `phone: false` (by its Irreversible rung under affordances R36).

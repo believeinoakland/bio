@@ -152,9 +152,9 @@
     {
      "op": "memberadd",
      "label": "Invite a member or a second administrator",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "membership"
+      "setup-page"
      ]
     }
    ],
@@ -198,6 +198,7 @@
      "label": "Read the invitation",
      "status": "declared",
      "modules": [
+      "admission",
       "setup-page"
      ]
     },
@@ -211,6 +212,7 @@
      "label": "Join with a handle and password",
      "status": "declared",
      "modules": [
+      "admission",
       "setup-page"
      ]
     }
@@ -253,9 +255,9 @@
     {
      "op": "memberadd",
      "label": "Invite a member",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "membership"
+      "setup-page"
      ]
     },
     {
@@ -1810,7 +1812,7 @@
     {
      "op": "standardadopt",
      "label": "Adopt a proposed standard",
-     "status": "function",
+     "status": "declared",
      "modules": [
       "standards"
      ]
