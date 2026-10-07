@@ -934,7 +934,7 @@ the rail's section (outside the workspace, the group or "Civicsmith") to the scr
 names the thing shown. The group's members sit under Settings, since "People" are whom the record is about. The rail is 184px by default and its width is each
 member's own, by dragging or the keyboard, down to icons only (DEC-155). Every mark explains itself on hover, focus or tap, a strength
 naming its weakest part, and names open a card (DEC-159, carrying out DEC-82 and DEC-129 rule 4). Every act's button says what
-the act does and how it fits (DEC-174). **RULED 2026-10-07 by Bob (DEC-175, S16, changing DEC-162):** nothing is ever hidden.
+the act does and how it fits (DEC-174), always first, in one explanation with its weight after it; in context it says what it does there. **RULED 2026-10-07 by Bob (DEC-175, S16, changing DEC-162):** nothing is ever hidden.
 A member chooses "Explain promptly" (every explanation after half a second of rest) or "On a longer pause" (marks and names after
 half a second; what screens, sections, rail entries and acts are after a second and a half); keyboard focus and a tap show
 everything at once in both.

@@ -33,12 +33,13 @@ const WEIGHT = {
 };
 const OUTWARD = new Set(['filingrecordsent', 'reviewgrant', 'knock', 'owed_groupprofilevisibility', 'disclosureshown', 'accountreferenceset', 'docketpost', 'publish', 'owed_publishat', 'owed_websitekeymint', 'owed_joinlinkset']);
 const key = op => op.startsWith('owed:') ? 'owed_' + op.slice(5).split(' ')[0] : op;
-/* a button carrying its act and weight. o: {tone, icon, out, quiet, id} */
+/* a button carrying its act and weight. o: {tone, icon, out, quiet, id, help} */
 function btn(op, label, o = {}) {
   const w = o.w || WEIGHT[key(op)] || 2;
   const out = o.out ?? OUTWARD.has(key(op));
   const help = typeof ACT_HELP !== 'undefined' && ACT_HELP[key(op)];
-  return `<button type="button" class="cs-btn"${o.tone ? ` data-tone="${o.tone}"` : ''} data-act="${esc(op)}"${help ? ` data-level="2" data-tip="<b>${esc(label)}</b>: ${esc(help)}"` : ''}>${o.icon ? I(o.icon) : ''}${out ? I('outward') : ''}${esc(label)}<span class="w">${pips(w)}${WNAME[w]}</span></button>`;
+  const say = o.help || help;  // o.help: what this button does here, when the act's general explanation would be vague in context
+  return `<button type="button" class="cs-btn"${o.tone ? ` data-tone="${o.tone}"` : ''} data-act="${esc(op)}"${say ? ` data-level="2" data-tip="<b>${esc(label)}</b>: ${esc(say)}"` : ''}>${o.icon ? I(o.icon) : ''}${out ? I('outward') : ''}${esc(label)}<span class="w">${pips(w)}${WNAME[w]}</span></button>`;
 }
 /* a plain control with no act (navigation, a link) */
 const link = (label, icon) => `<a href="#" onclick="return false" class="cs-btn" data-tone="quiet">${icon ? I(icon) : ''}${esc(label)}</a>`;
