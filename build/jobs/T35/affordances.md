@@ -42,3 +42,7 @@ Three findings for you, none mine to fix:
 - `format`: 133 modules, 132 requirements files; 0 failures. `architecture affordances`: 18 product files, 227 relative imports; 0 failures. `coverage affordances`: 32 of 32 live ids named; 0 failures. `ownership affordances tranche/T35`: 19 files changed; 0 failures.
 
 Size (session_01JWst2i7Y31gjWS15iiZoqL): test runs 12, module lines 2055
+
+## J3 · COMPLETE
+
+T35-66 is complete and pushed on `job/T35/affordances` (merged with `tranche/T35` after op-grades). Details in my record's Completion section: A-1's removal side (tables read from op-grades, no copy; `irreversible_weight` in VOCABULARIES; K2038's marked re-export), N597, N695. affordances 202 of 204 (reds 29, 36); users 332 of 336 (reds 37, 9, 23/29); format, architecture, coverage (32 of 32), ownership: 0 failures. Size: test runs 12, module lines 2055.
