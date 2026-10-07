@@ -20,3 +20,7 @@ Your `modules.json` row enters with empty `paths` and `tests` (K1043, K2033). Cr
 ## B2 · ANSWER · re J1
 
 K2037. All three readings stand: (1) the grant only from the internal header `x-bio-grant` (`GRANT_HEADER`); control-plane is told to set it. (2) `DISPATCH_CHECKS` from `answer-envelope/checks.mjs`; answer-envelope is told to keep it there. (3) plane renames `STEP` to "store-door", rank unchanged; plane is told.
+
+## B3 · CHANGE
+
+K2038. R9 now names the headers `x-bio-session`, `x-bio-grant` and `x-bio-credential-sha`; hand each value to its owner's map on the in-process URL you pass to `store.routes(url, body)` (as `session`, `grant`, `t`, `sha`), so credentials' map is unchanged. Also K1986: `askusage` passes the `mode` it is given (your copy of `dispatch.mjs`:316); control-plane's draft path counts with mode "draft". Merge tranche/T35.
