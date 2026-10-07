@@ -20,6 +20,8 @@ import { SCRATCH, classify, scopeFor, namespaceGate, confinedNamespaceGate, pinn
 /* R22, R41 (K585 (1)): the composed catalogue — the check catalogue, every module's families, this module's own — and the
    one reader of a code's row (`families.mjs`). */
 import { CHECK_FAMILIES, CHECK_FAMILY_FILES, dec49Row } from "./families.mjs";
+/* R57 (T35): the draft asked of agent-worker once every refusal is answered. */
+import { draftDue } from "./draft.mjs";
 import { machineFences, renderPack } from "../skillpack.mjs";
 import { liveToken } from "../tokens.mjs";
 import { SIGN_HTML } from "../signpage.mjs";
@@ -2035,6 +2037,20 @@ export function makeFetch(hooks = {}) {
       sessIdentity, sessRights, sessCaps, aiCred, storeName, stub,
       grantMember: aiCred?.grant ? aiCred.principal : undefined }) : undefined;   /* R53 (K1684): an ask's grant's member */
     if (armed) return op === "affordances" ? publishAffordances(armed, url) : armed;
+    /* R57 (K1983): the rendered pack the door holds for this caller, the untargeted `op=affordances` answer's (R41),
+       sent with a draft that reads nothing of the record; null when none renders. */
+    async function heldPack(ctx) {
+      if (!hooks.gatedOp) return null;
+      const u = new URL(url);
+      u.searchParams.set("op", "affordances");
+      u.searchParams.delete("target");
+      try {
+        const res = await hooks.gatedOp({ ...ctx, req: new Request(u, { method: "GET" }), url: u, op: "affordances" });
+        if (!res) return null;
+        const a = await (await publishAffordances(res, u)).json();
+        return a && a.ok === true && a.result && a.result.pack ? a.result.pack : null;
+      } catch { return null; }
+    }
     /* Who is acting on a project's roster is decided by the SERVER. Set after
        the caller's parameters were copied, so a caller-supplied `by` is
        overwritten rather than honoured: "only an owner may remove" is worth
@@ -2999,6 +3015,24 @@ export function makeFetch(hooks = {}) {
     if (out.refused) return storeRefusal(out, { store: storeName, tokenClass: cls });
     if (!out.answered) return storeSilent(op, out.correlation);
     const { body, status } = out.reply;
+    /* R57 (T35; N686, K1837, K1841): past every refusal of the store's door and of the owner, a draft is asked of the
+       object (`draft.mjs`, wired by plane as its `draft`), with the pack the door holds (R41) and the request's own words;
+       only a member's session reaches these ops (their specs). */
+    if (draftDue(op, body) && viaSession && typeof stub.draft === "function") {
+      let asked = {};
+      try { asked = passBody ? JSON.parse(passBody) : {}; } catch { asked = {}; }
+      if (!asked || typeof asked !== "object" || Array.isArray(asked)) asked = {};
+      const pack = await heldPack({ req, url, env, cls, viaSession, sessMember, sessViewer, sessIdentity, sessRights, sessCaps,
+                                    aiCred, storeName, stub });
+      const drafted = await stub.draft({ op, member: sessMember, session: url.searchParams.get("token"),
+        told: op === "writinghelp" ? asked.told ?? null : asked.answers ?? null,
+        act: op === "writinghelp" ? asked.op ?? null : null, field: op === "writinghelp" ? asked.field ?? null : null,
+        firsthand: body.result.firsthand === true, pack });
+      let d = null;
+      try { d = await drafted.json(); } catch { d = null; }
+      if (!d || typeof d !== "object") return storeSilent(op);
+      return json({ ...d, store: storeName, tokenClass: cls }, drafted.status);
+    }
     /* K383 (capture's C-118.2): an inbox read or disposition naming no knock answers 404, as NO_SUCH_BUNDLE does. */
     if ((op === "inboxget" || op === "inboxresolve") && body.result?.ok === false && body.result.reason === "NO_SUCH_KNOCK")
       return json({ ...body, store: storeName, tokenClass: cls }, 404);
