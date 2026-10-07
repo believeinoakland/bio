@@ -24,3 +24,7 @@ Finding before your job (SCHEDULER #29 J1 (1), K2029): for red 31's sweep arm (`
 ## B2 · CHANGE
 
 K2037 (from STORE-DOOR #1 J1): rename `plane/store.mjs`'s `STEP = "control-plane"` to "store-door", rank unchanged (`STEP_ORDER` inserts it before the first layer-11 module, as today); store-door's tests register it under that name. Merge tranche/T35 (`modules.json` changed).
+
+## B3 · ANSWER · re J1
+
+K2038. (1) Your `ownHosts` reading stands; the install-time binding is N745 (T36). (2) Yours: `Store.draft(args)` → `draftOnObject(ctx, env, {member, session, task, told, firsthand})` in `plane/ask.mjs` as you describe, answering agent-worker's answer plus `grant` and `suggestions`; control-plane runs `checkDraft` and usage. Also (ADMISSION #5): compose admission's store map `admissionOps(ctx, url, body)` into the store's routes (route `doorwindow`). Your merge and control-plane's go back to back. Merge tranche/T35.
