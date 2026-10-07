@@ -1603,6 +1603,63 @@
      "modules": [
       "money"
      ]
+    },
+    {
+     "op": "owed:findin DEC-164",
+     "label": "Look for it in this project",
+     "status": "owed"
+    },
+    {
+     "op": "actioncreate",
+     "label": "Ask the city for the record",
+     "status": "declared",
+     "modules": [
+      "actions"
+     ]
+    },
+    {
+     "op": "createevent",
+     "label": "Record when it moved",
+     "status": "function",
+     "modules": [
+      "events"
+     ]
+    },
+    {
+     "op": "gradenote",
+     "label": "Why B, and what would raise it",
+     "status": "declared",
+     "modules": [
+      "capture"
+     ]
+    },
+    {
+     "op": "acquire",
+     "label": "Get the city's own copy",
+     "status": "declared",
+     "modules": [
+      "acquisition",
+      "capture",
+      "capture-requests",
+      "docket",
+      "extraction"
+     ]
+    },
+    {
+     "op": "checkrequest",
+     "label": "Ask a member who knows budgets",
+     "status": "declared",
+     "modules": [
+      "tasks"
+     ]
+    },
+    {
+     "op": "hypothesishold",
+     "label": "Keep my reading as a hunch",
+     "status": "declared",
+     "modules": [
+      "hypotheses"
+     ]
     }
    ],
    "journeys": [
