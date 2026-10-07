@@ -2243,7 +2243,6 @@
      "label": "Check before publishing",
      "status": "declared",
      "modules": [
-      "affordances",
       "case-authoring"
      ]
     },

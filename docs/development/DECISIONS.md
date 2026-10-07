@@ -2548,6 +2548,7 @@ reasoning recorded in: this entry; `visual-language/components.css` and `visual-
 owed: (BOB) the timings and the three WCAG 1.4.13 conditions in the shell's explanation behaviour when the screens are built.
 
 ### DEC-162 · answered
+amended: 2026-10-07 · DEC-175 (Bob, "S16: as recommended"): the lighter level makes guidance wait 1.5 s instead of hiding it.
 raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob's suggestion: "Maybe every element should have a 'information level'. Level 1s are always active, but those in other levels only when the user has selected an information level that includes them. The information level could be set in the member's settings, but maybe there's also a shortcut key, context menu option, or tag in the heading that they can use to easily switch info levels. Just brainstorming."; question S8)
 for: bob
 question: Whether explanations come in levels a member chooses, and how many.
@@ -2732,3 +2733,17 @@ response: **Decided by the design session, 2026-10-07, on Bob's direction.** (1)
 decided: 2026-10-07 · the design session (P17)
 reasoning recorded in: this entry; `screens/mock-acts.js`; `screens/mock-kit.js` (`btn`); `layouts.html` ("Explained where it appears").
 owed: (BOB) each act's explanation as interface words held for translation (DEC-99), shown on the act's control at the guidance level; the texts in `mock-acts.js` as the design's statement of what each act does.
+
+### DEC-175 · answered
+raised: 2026-10-07 · the UX design session with Bob on his primary account (session_01NWPmrrYZbbF8Wkrvp5Y2vx; the development process runs on his secondary account since K1891) (Bob, 7 October: "whether the less detailed level should really disable mouseovers or just increase the delay before a mouseover appears. This way, a member always has access to all descriptive and contextual information while giving them a means to reduce the amount that appears when they're moving actively through the visual elements on the screen."; S16)
+for: bob
+question: Whether the lighter explanation level hides guidance or only makes it wait longer.
+why it is Bob's: it changes his ruling DEC-162 ("S8: B").
+provisional: DEC-162: at "Marks and names", guidance does not appear.
+alternative: B, the same with 2 seconds; C, keep DEC-162.
+recommendation: A, 1.5 seconds.
+reversal cost: low.
+response: **Bob, 2026-10-07: "S16: as recommended".** Ruled: (1) nothing is ever hidden; (2) two settings, named for what they do: "Explain promptly" (every explanation after the pointer rests 0.5 s; DEC-161) and "On a longer pause" (marks and names after 0.5 s; guidance, meaning what screens, sections, rail entries and acts are, after 1.5 s); (3) keyboard focus and a tap show every explanation at once in both, and Escape closes it (WCAG 2.2 1.4.13); (4) the "why we ask" panels still start folded at "On a longer pause"; (5) the switch, the default for new members and the question after a month stay as DEC-162 set them.
+decided: 2026-10-07 · Bob
+reasoning recorded in: this entry; S16 on `docs/development/ux-substrate/layouts.html`; `screens/page.src.html` (the tip timing, `LONG_MS`); `mock-shell.js` (the masthead switch); Settings › Your account; `BIO_Interaction_Constructs_v0_1.md` §V.
+owed: (BOB) the per-member setting's two values renamed ("Explain promptly", "On a longer pause"); guidance-level explanations shown after 1.5 s of rest at the second value instead of withheld; focus and tap immediate in both; the interface words held for translation.

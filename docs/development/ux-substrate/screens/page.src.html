@@ -218,14 +218,14 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 <div class="meta3">
 <div><b>How to use it</b>Pick a journey, a wizard or a screen in the viewer below, then step through. Switch between with and without the assistant, desktop and phone, light and dark, at the top.</div>
 <div><b>What is real</b>Every button carries the act it would perform and its weight; every wizard step names a screen and an act from the requirements, checked. The data is invented: Lakeshore Tenants, its members Rosa, Dev, Mai, Ana and Teo.</div>
-<div><b>Status</b>Open to your comments. The wizard library is approved (DEC-148); publishing at a set time (DEC-147), the name for a group’s own Civicsmith (DEC-149) and the group’s API key (K1755) are ruled (section 7). A group whose place Civicsmith doesn’t know yet is ruled too (DEC-150, DEC-151). Connecting a Claude subscription without a command line is ruled too (DEC-156). Who may translate the interface is ruled too (DEC-157). Information levels are ruled too (DEC-162). Where the security screen's attempts come from is ruled too (DEC-166). Security tools are ruled too (DEC-168). Members' own accounts are ruled too (DEC-172). Opening a high-risk file after warnings is ruled too (DEC-173). <b>One question is open for you: S16, whether the lighter explanation level hides guidance or only makes it wait longer (section 7).</b> Everything else is design detail, decided and listed in section 6.</div>
+<div><b>Status</b>Open to your comments. The wizard library is approved (DEC-148); publishing at a set time (DEC-147), the name for a group’s own Civicsmith (DEC-149) and the group’s API key (K1755) are ruled (section 7). A group whose place Civicsmith doesn’t know yet is ruled too (DEC-150, DEC-151). Connecting a Claude subscription without a command line is ruled too (DEC-156). Who may translate the interface is ruled too (DEC-157). Information levels are ruled too (DEC-162, changed by DEC-175: the lighter level makes guidance wait longer instead of hiding it). Where the security screen's attempts come from is ruled too (DEC-166). Security tools are ruled too (DEC-168). Members' own accounts are ruled too (DEC-172). Opening a high-risk file after warnings is ruled too (DEC-173). Everything else is design detail, decided and listed in section 6.</div>
 </div>
 </header>
 <nav class="idx" aria-label="Sections">
 <a href="#frames">Frames</a><a href="#assistant">The assistant</a><a href="#walk">Journeys and wizards</a><a href="#findin">Find in this</a><a href="#noai">Without the assistant</a><a href="#data">As data</a><a href="#decided6">Decided</a><a href="#question">For you</a><a href="#owed">Owed</a>
 <span class="opts">
  <span class="seg" role="group" aria-label="The assistant"><button type="button" data-ai="1" aria-pressed="true">With the assistant</button><button type="button" data-ai="0" aria-pressed="false">Without</button></span>
- <span class="seg" role="group" aria-label="Explanations (proposal S8)" title="Explanations: Alt+Shift+I switches"><button type="button" data-lvl="1" aria-pressed="false">Marks and names</button><button type="button" data-lvl="2" aria-pressed="true">With guidance</button></span>
+ <span class="seg" role="group" aria-label="Explanations" title="Explanations: Alt+Shift+I switches"><button type="button" data-lvl="2" aria-pressed="true">Explain promptly</button><button type="button" data-lvl="1" aria-pressed="false">On a longer pause</button></span>
  <span class="seg" role="group" aria-label="Device"><button type="button" data-dev="desktop" aria-pressed="true">Desktop</button><button type="button" data-dev="phone" aria-pressed="false">Phone</button></span>
  <span class="seg" role="group" aria-label="Theme"><button type="button" data-th="" aria-pressed="true">Auto</button><button type="button" data-th="light" aria-pressed="false">Light</button><button type="button" data-th="dark" aria-pressed="false">Dark</button></span>
  <label for="srcToggle"><input type="checkbox" id="srcToggle"> Sources</label>
@@ -338,7 +338,7 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 <tr><td>The security screen (DEC-165, on your direction K1875; countries by your ruling DEC-166)</td><td>Settings › Security, administrators only. A period chosen from the last hour to the last 30 days or set dates; the level in a word (Ordinary, Raised, High) against the group's own usual, with one plain sentence; a grid of kinds by hour; totals with the usual and the busiest hour; counts only, and counts by country, never an address. Administrators are told in their queue once, when the level becomes high, never as a routine count. What is counted, the usual and the threshold are worded by the development process.</td></tr>
 <tr><td>Archives (DEC-167, under your ruling K1852)</td><td>A captured ZIP has its own screen: what was found when it opened, then every file with its state: filed and held for review beside it with the archive's grade, already held (a second sighting), a folder, or not filed with its reason named (locked by a password, over a limit). Names are shown exactly as the archive states them. Members vouch for or set aside the files they pick. An archive refused whole says why, and stays captured as it arrived. Held captures shows the archive with its files waiting beside it.</td></tr>
 <tr><td>Opening a file, and security tools (DEC-169, under your rulings on the virus package and DEC-168)</td><td>“Opening a file” says whether a file is low or high risk and why. A low-risk file opens as it is, scanned first if its last check is over a week old. A high-risk file opens in the safe view, a derived copy labelled as such; “Open the original” appears only after a deeper check passes. A file held after a finding shows the finding, its checks as notes (tool, engine, version, date) and its release: by a second, different scanner when only the built-in one found it, otherwise by two members' reasons (your ruling of 7 October). Outside tools run when a member asks for a deeper check, unless they run on the organization's own servers. Nothing records who opened what. Settings › Security lists the built-in tools and those added, each with what it is sent, who receives it, how long it keeps files and whether it shares; adding one shows the same and a test; tools that share are not offered. Setup has an optional step for the organization's own tools.</td></tr>
-<tr><td>Explanations that frame a screen (Your ties, on your comments)</td><td>The explanation of why a screen asks something and who sees it is one panel that folds to a single line: open on a member's first visit, closed after that until opened, the choice remembered for the member; with explanations set to marks and names only (DEC-162), they start closed.</td></tr>
+<tr><td>Explanations that frame a screen (Your ties, on your comments)</td><td>The explanation of why a screen asks something and who sees it is one panel that folds to a single line: open on a member's first visit, closed after that until opened, the choice remembered for the member; with explanations on a longer pause (DEC-175), they start closed.</td></tr>
 </tbody></table></div>
 </section>
 
@@ -493,7 +493,6 @@ const REG = {{REG}};
   };
   window.CS_LEVEL = 2;
   function tipFor(el) {
-    if (el.dataset.level && +el.dataset.level > window.CS_LEVEL) return '';
     if (el.dataset.tip) return el.dataset.tip;
     var c = el.classList;
     if (c.contains('cs-grade')) { var s = G.scale[el.dataset.scale] || ['Grade', '']; var l = el.textContent.trim().slice(-1);
@@ -515,7 +514,8 @@ const REG = {{REG}};
   }
   var SEL = '.cs-grade,.cs-strength,.cs-gap,.cs-origin,.cs-kind,.cs-due,.cs-hint,.cs-hunch,.cs-tag-outward,.cs-btn .w,.cs-path > span,.cs-ladder > span,.mk-tag,.cs-band,[data-tip]';
   var tip = document.createElement('div'); tip.className = 'cs-tip cs'; tip.id = 'cs-tip'; tip.setAttribute('role', 'tooltip'); tip.hidden = true; document.body.appendChild(tip);
-  var cur = null, showT = 0, hideT = 0, SHOW_MS = 500, HIDE_MS = 500;  /* DEC-161: Nielsen Norman Group's 0.3–0.5 s, at its upper end */
+  var cur = null, showT = 0, hideT = 0, SHOW_MS = 500, HIDE_MS = 500, LONG_MS = 1500;  /* DEC-175: guidance waits 1.5 s at “on a longer pause” */
+    /* DEC-161: Nielsen Norman Group's 0.3–0.5 s, at its upper end */
   function show(el) { clearTimeout(showT); clearTimeout(hideT); var h = tipFor(el); if (!h) return; if (cur && cur !== el) cur.removeAttribute('aria-describedby'); cur = el; tip.innerHTML = h; tip.hidden = false; el.setAttribute('aria-describedby', 'cs-tip');
     var r = el.getBoundingClientRect(), w = tip.offsetWidth, ht = tip.offsetHeight;
     var x = Math.max(8, Math.min(r.left, innerWidth - w - 8)), y = r.bottom + 6; if (y + ht > innerHeight - 8) y = r.top - ht - 6;
@@ -529,13 +529,13 @@ const REG = {{REG}};
     var el = target(e); if (el && !el.closest('.mk-page')) el = null;
     if (el && el === cur) { clearTimeout(hideT); return; }
     clearTimeout(showT);
-    if (el) showT = setTimeout(function () { show(el); }, SHOW_MS);            /* only if the pointer rests there */
+    if (el) showT = setTimeout(function () { show(el); }, el.dataset.level && +el.dataset.level > window.CS_LEVEL ? LONG_MS : SHOW_MS);            /* only if the pointer rests there */
     if (cur) { clearTimeout(hideT); hideT = setTimeout(hide, HIDE_MS); }         /* grace before the open one closes */
   });
   document.addEventListener('mouseout', function (e) { var to = e.relatedTarget; if (!to || (!tip.contains(to) && target({ target: to }) !== cur)) { clearTimeout(showT); if (cur) { clearTimeout(hideT); hideT = setTimeout(hide, HIDE_MS); } } });
   document.addEventListener('focusin', function (e) { var el = target(e); if (el && el.closest('.mk-page')) show(el); });  /* keyboard: at once */
   document.addEventListener('focusout', function () { hideT = setTimeout(hide, 50); });
-  function setLevel(n) { window.CS_LEVEL = n; hide(); document.querySelectorAll('.mk-lvlbtn .mk-hide-phone').forEach(function (s) { s.textContent = n === 2 ? 'Guidance' : 'Marks and names'; }); document.querySelectorAll('[data-lvl]').forEach(function (b) { b.setAttribute('aria-pressed', String(+b.dataset.lvl === n)); }); }
+  function setLevel(n) { window.CS_LEVEL = n; hide(); document.querySelectorAll('.mk-lvlbtn .mk-hide-phone').forEach(function (s) { s.textContent = n === 2 ? 'Explain promptly' : 'On a longer pause'; }); document.querySelectorAll('[data-lvl]').forEach(function (b) { b.setAttribute('aria-pressed', String(+b.dataset.lvl === n)); }); }
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hide(); if (e.altKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.code === 'KeyI')) { e.preventDefault(); setLevel(window.CS_LEVEL === 2 ? 1 : 2); } });
   document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('[data-lvl]'); if (b) setLevel(+b.dataset.lvl); if (e.target.closest && e.target.closest('[data-lvltoggle]')) setLevel(window.CS_LEVEL === 2 ? 1 : 2); });
   document.addEventListener('click', function (e) { var g = e.target.closest && e.target.closest('[data-goto]'); if (g && g.closest('.mk-page')) { e.preventDefault(); hide(); var W = window.CS_WALK; if (W && typeof SCR !== 'undefined' && SCR[g.dataset.goto]) { W.st.mode = 'screen'; W.st.id = g.dataset.goto; W.st.step = 0; W.draw(); var v = document.getElementById('vscale'); if (v) v.scrollIntoView({ block: 'nearest' }); } return; }

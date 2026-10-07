@@ -44,7 +44,7 @@ const ACT_HELP = {
   setpassword: 'Changes your password. Other sessions you have open stay signed in until they end.',
   signerregisterown: 'Registers the key you sign published cases with. Readers check a signature against it.',
   signerrevokeown: 'Withdraws your signing key, for example if it was lost. Cases already signed keep a record that it was withdrawn.',
-  owed_infolevelset: 'Chooses how much Civicsmith explains: marks and names only, or with guidance on every screen.',
+  owed_infolevelset: 'Chooses how quickly explanations open: promptly, or guidance on a longer pause so less opens while you move. Nothing is ever hidden.',
   groupkeynoticeseen: 'Confirms you have read that your questions go to Anthropic under the group\'s account. Asked once, before your first question.',
   disclosureshown: 'Confirms you have read what connecting your own account means: your questions go to Anthropic under your own account and terms.',
   owed_subscriptionsignin: 'Opens Anthropic\'s own sign-in page in a new tab. It gives you a code to paste here; Civicsmith never sees your password.',

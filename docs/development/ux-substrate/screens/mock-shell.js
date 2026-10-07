@@ -42,7 +42,7 @@ function wizardGuide(w) {
 function mast(c, s) {
   return `<header class="cs-mast"><span class="grp">${G.name}</span><span class="spacer"></span>
     <span class="mk-mastsearch">${I('search')}<span>Search</span></span>
-    <button type="button" class="cs-btn mk-lvlbtn" data-tone="quiet" data-lvltoggle aria-label="Explanations: with guidance. Alt+Shift+I switches" data-tip="<b>Explanations</b>: with guidance, screens and the rail also say what they are. Click or press Alt+Shift+I to switch to marks and names only.">${I('question')}<span class="mk-hide-phone">${typeof window !== 'undefined' && window.CS_LEVEL === 1 ? 'Marks and names' : 'Guidance'}</span></button>
+    <button type="button" class="cs-btn mk-lvlbtn" data-tone="quiet" data-lvltoggle aria-label="Explanations: Alt+Shift+I switches" data-tip="<b>Explanations</b>: promptly, every explanation opens when you rest on something for half a second. On a longer pause, marks and names still do; what screens, sections and acts are waits a second and a half, so less opens while you move. Keyboard focus and a tap always show everything at once. Click or press Alt+Shift+I to switch.">${I('question')}<span class="mk-hide-phone">${typeof window !== 'undefined' && window.CS_LEVEL === 1 ? 'On a longer pause' : 'Explain promptly'}</span></button>
     ${c.ai ? `<button type="button" class="cs-btn" data-tone="quiet" aria-label="The assistant">${I('machine')}<span class="mk-hide-phone">Assistant</span></button>` : ''}
     <span class="cs-kind mk-hide-phone" data-kind="todo">${I('queue')}4</span><span class="mk-avatar" aria-label="Mai">M</span></header>`;
 }
