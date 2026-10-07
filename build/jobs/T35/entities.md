@@ -48,3 +48,7 @@ T35-27 applied: R50 (SECTORS imported from jurisdictions, no copy held) and R51 
 - Stale artifact (§14): the plane bundle, as before.
 
 Size (session_01AauqX25foruEiA5tiNQTf8): test runs 8, module lines 2018
+
+## J2 · COMPLETE
+
+B2 applied: R52 namingIn built. It makes one bounded read of the named captures' term rows, with the viewer's gate inside it, and runs R17's own candidate rule over that read (refactored into one shared private rule, namingDocuments unchanged). Reading for you to confirm: the corpus for selectivity and names_uninformative is the named captures the viewer can see, so the answer equals R17 were those captures the whole corpus; the test proves that equality. entities 95/0, retrieval 139/0; format, architecture, coverage (52/52), ownership 0 failures. No op added. Record updated.
