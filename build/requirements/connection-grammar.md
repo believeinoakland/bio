@@ -1,6 +1,6 @@
 # connection-grammar — requirements
 
-**Status** · In force: a new module, reviewed with T33's new modules (K1505; T33-5; K1469, K1470). Last changed T34 (T34-5: R9 amended; R20 new); every requirement met (CONNECTION-GRAMMAR #2, K1735).
+**Status** · In force: a new module, reviewed with T33's new modules (K1505; T33-5; K1469, K1470). Last changed T36 (T36-40: R10 amended, the per-kind hub bound; K2063); R10 marked not yet met (T36), every other requirement met (CONNECTION-GRAMMAR #2, K1735).
 
 **Size (P6).** About 400–700 lines (entries B §(c)).
 
@@ -35,7 +35,7 @@ The one shape every relationship the record holds is presented in, the registry 
 - **R9** The battery each owner runs in its own job (B §(b) option (ii)): over the owner's fixture it checks R1's shape on every item, kinds limited to the owner's, the `at` rule of R6 (one connection in, one out, one undetermined), R7's sight (the fenced item returned to one viewer, absent and uncounted for the other, a missing viewer refused), R8's scope (a hunch item only within its inquiry), paging stable and complete (pages joined equal the unpaged set), the fan-out and hub rules, `derivedId` on every derived item, the `declared` and `hunch` labels, and that two identical calls give identical answers. (N560; K1563 (2)) It also takes the owner's declaration `declares: {undated?, group_wide?}`: `undated: true`, that its kinds state no `valid`, so R6's `at` rule cannot be shown; `group_wide: true`, that it holds no fenced item, so R7's fenced item cannot be shown. A declared check is answered in `inapplicable: [{check, why}]`, never in `failures`, and `ok` is `true` when `failures` is empty; a missing viewer is still refused and checked (R7), and every other check runs as above. Without a declaration nothing is inapplicable, and the answer carries no `inapplicable` key: it reads `{ok, failures}` as before (K1733).
 
 **BOUNDS**
-- **R10** `BOUNDS` is frozen: `depth_default` 8, `depth_max` 10, `fanout` 1,000 per hop, `nodes` 5,000 visited, `hub` 1,000 members, and `time_budget_ms`, a default every walk may lower (K1470; legistar-events §6). `depthOf(requested)` answers 8 for none, the requested depth from 1 to 10, and refuses `DEPTH_OVER_MAX` above 10.
+- **R10** `BOUNDS` is frozen: `depth_default` 8, `depth_max` 10, `fanout` 1,000 per hop, `nodes` 5,000 visited, `hub` 1,000 members, `hub_by_kind`, and `time_budget_ms`, a default every walk may lower (K1470; legistar-events §6). (N566; K1566, K1726, K2063) `hub_by_kind` is the hub bound per kind, frozen: `event_voted` (`events`' kind for a member's vote) 4,000 members; every other kind `hub`'s 1,000, as before (a protective limit, K1881). `depthOf(requested)` answers 8 for none, the requested depth from 1 to 10, and refuses `DEPTH_OVER_MAX` above 10. *(not yet met: T36)*
 
 **derivedId({kind, from, to, as_of, method}) → 64 hex characters**
 - **R11** The SHA-256 of the canonical JSON of the five fields; the same five give the same id, so a leg can cite a derived connection and a checker re-derive it (K1447).
