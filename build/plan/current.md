@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #128 · session_017R4bB844f1xntEwET3adS9 · depth 1
 
-**Jobs** · jurisdictions: JURISDICTIONS #8 session_016ugHTajUHdmuCsGKMnbB4L; civil-time: CIVIL-TIME #3 session_01FWZ869SsVrV3mffbRFWTNY
+**Jobs** · jurisdictions: JURISDICTIONS #8 session_016ugHTajUHdmuCsGKMnbB4L; civil-time: CIVIL-TIME #3 session_01FWZ869SsVrV3mffbRFWTNY; test-support: TEST-SUPPORT #4 session_016FG9ULYTRSS3dhqvhVKfG6
 
 **Sources** · `plan/draft-T35.md` and its checks `plan/draft-T35-checks.md` (items 1–18, the seven verdicts); `plan/draft-T35-dec149-l1-l7.md` (the L1–L7 sweep); `next.md` N551–N705; `archive/T34.md` (left-out table, Rules (5), Close); DEC-142–DEC-167 on `main` (K1885); `plan/draft-T35-security-review.md` with K1874, K1875, K1876, K1878, K1880, K1881, K1882; `plan/study-virus-scanning.md` with K1888, K1890, K1892; `plan/study-cloudflare-security.md`; `modules.json` (order, layers). Sizes: `.mjs`/`.js` lines over each module's `paths` on `tranche/T34` @ `28eb9244aa` (most specific path owns a file, K1821; tests and `dist/` excluded).
 
