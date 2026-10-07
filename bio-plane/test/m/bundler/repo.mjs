@@ -120,6 +120,49 @@ export function addContainerMember(root, name, { bundle = true, marker = {}, con
   if (lock) put(root, `${name}/package-lock.json`, JSON.stringify(lock, null, 2) + "\n");
   return dir;
 }
+/** R25, R27 (T36-2): a container member with TWO classes, as `file-scanner` states itself — a `containers` list, each
+ *  class with its own image, a base pinned by digest and a package statement for its system packages; `bind` once at
+ *  the top level, `max_instances` per class. Its Worker config declares one container per class. `classes` overrides
+ *  the list; `statements` (path → object, or null for none) the statement files; any `marker` key the marker's. */
+export const BASE_A = "sha256:" + "a1".repeat(32), BASE_B = "sha256:" + "b2".repeat(32);
+export const DIGEST_A = "sha256:" + "c3".repeat(32), DIGEST_B = "sha256:" + "d4".repeat(32);
+export const SCANNER_STATEMENTS = {
+  "images/scan.packages.json": { ecosystem: "Debian:12", base: { repository: "docker.io/library/debian", digest: BASE_A },
+    packages: [{ name: "clamav", version: "1.4.3+dfsg-1" }, { name: "clamav-base", version: "1.4.3+dfsg-1" },
+      { name: "ca-certificates", version: "20230311" }] },
+  "images/render.packages.json": { ecosystem: "Debian:12", base: { repository: "docker.io/library/debian", digest: BASE_B },
+    packages: [{ name: "poppler-utils", version: "22.12.0-2" }, { name: "libreoffice-core", version: "4:7.4.7-1" }] },
+};
+/** The two statements' lists as R27 writes them, by hand: sorted by name then version. */
+export const SCANNER_PACKAGES = {
+  FileScanner: [{ name: "ca-certificates", version: "20230311" }, { name: "clamav", version: "1.4.3+dfsg-1" },
+    { name: "clamav-base", version: "1.4.3+dfsg-1" }],
+  SafeViewRenderer: [{ name: "libreoffice-core", version: "4:7.4.7-1" }, { name: "poppler-utils", version: "22.12.0-2" }],
+};
+export function scannerClasses() {
+  return [
+    { class_name: "FileScanner", max_instances: 4,
+      image: { repository: "docker.io/civicos/file-scanner", digest: DIGEST_A, platform: "linux/amd64", port: 3310,
+        schedulingPolicy: "default", base: { repository: "docker.io/library/debian", digest: BASE_A }, packages: "images/scan.packages.json" } },
+    { class_name: "SafeViewRenderer", max_instances: 2,
+      image: { repository: "docker.io/civicos/safe-view", digest: DIGEST_B, platform: "linux/amd64", port: 8080,
+        base: { repository: "docker.io/library/debian", digest: BASE_B }, packages: "images/render.packages.json" } },
+  ];
+}
+export function addScannerMember(root, name, { classes = scannerClasses(), statements = SCANNER_STATEMENTS, marker = {} } = {}) {
+  const dir = join(root, name);
+  addMember(root, name, { services: [] });
+  const cfg = parseCfg(join(dir, "wrangler.jsonc"));
+  cfg.containers = classes.map((c) => ({ class_name: c.class_name, image: "./Dockerfile", max_instances: c.max_instances ?? 1 }));
+  put(root, `${name}/wrangler.jsonc`, jsonc(cfg));
+  const prev = JSON.parse(readFileSync(join(dir, "fleet-member.json"), "utf8"));
+  const m = { ...prev, kind: "container", containers: classes, bind: [{ member: "alpha-worker", binding: "FILE_SCANNER" }], ...marker };
+  for (const k of Object.keys(m)) if (m[k] === undefined) delete m[k];
+  put(root, `${name}/fleet-member.json`, JSON.stringify(m, null, 2));
+  for (const [p, o] of Object.entries(statements || {})) if (o) put(root, `${name}/${p}`, JSON.stringify(o, null, 2) + "\n");
+  return dir;
+}
+
 const parseCfg = (p) => JSON.parse(readFileSync(p, "utf8").split("\n").slice(1).join("\n"));
 
 /** The plane's configuration, as a parsed object, for a fixture or a function test. */
@@ -198,7 +241,7 @@ export function run(root, cwdRel, args, { env = {}, stub = null, timeout = 120_0
   const dLog = join(work, "docker.log");
   writeFileSync(stubFile, JSON.stringify(stub || {}));
   const clean = Object.fromEntries(Object.entries(process.env).filter(([k]) =>
-    !/^(CF_TOKEN|CF_ACCT|CLOUDFLARE_API_TOKEN|INSTANCE_CLAUDE_TOKEN|INSTANCE_AI_TOKEN|BIO_RELEASE_SEED|NODE_OPTIONS|NODE_TEST_CONTEXT)$/.test(k)));
+    !/^(CF_TOKEN|CF_ACCT|CLOUDFLARE_API_TOKEN|INSTANCE_CLAUDE_TOKEN|INSTANCE_AI_TOKEN|BIO_RELEASE_SEED|GITHUB_ACTIONS|NODE_OPTIONS|NODE_TEST_CONTEXT)$/.test(k)));
   const r = spawnSync(process.execPath, ["--import", STUB, ...args], {
     cwd: join(root, cwdRel), encoding: "utf8", timeout,
     env: { ...clean, PATH: `${join(root, ".fakebin")}:${process.env.PATH}`, BUNDLER_STUB: stubFile, BUNDLER_STUB_LOG: stubLog,

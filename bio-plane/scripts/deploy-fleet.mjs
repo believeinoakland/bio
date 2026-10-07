@@ -47,7 +47,9 @@
  * before it: its image, named by digest in its own marker, is pulled and pushed to
  * Cloudflare's registry with the account's token (the project's own copy; a group's
  * copy pulls from the public registry by digest at install, M-Q8), and the generated
- * config's `containers[].image` names that pushed copy. A token that cannot reach
+ * config's `containers[].image` names that pushed copy. A member with several classes
+ * (T36-2) pushes each class's image and points each `containers[]` entry at its own
+ * class's copy, by `class_name`. A token that cannot reach
  * Containers is refused by name before anything is pulled, pushed or deployed —
  * 0.80.0 shipped without its container for exactly that (K1705 (3)).
  *
@@ -60,7 +62,7 @@ import { execFileSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseJsonc } from "./jsonc.mjs";   /* R11: one parser, shared with release-assemble.mjs */
-import { imageReference } from "./fleet-bundle.mjs";   /* R25/R26: one reading of a container's image */
+import { imageReference, markerIsContainer, containerClasses } from "./fleet-bundle.mjs";   /* R24–R26: one reading of a container */
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const argv = process.argv.slice(2);
@@ -100,8 +102,9 @@ if (!existsSync(join(memberDir, "fleet-member.json"))) {
 let marker;
 try { marker = JSON.parse(readFileSync(join(memberDir, "fleet-member.json"), "utf8")); }
 catch (e) { die("UNPARSEABLE_CONFIG", `${member}/fleet-member.json did not parse.`, String(e.message)); }
-/* R24's definition, from the member's own marker: `kind: "container"` and an `image` block. */
-const CONTAINER = marker.kind === "container" && !!marker.image && typeof marker.image === "object";
+/* R24's definition, from the member's own marker: `kind: "container"` and an `image` block (one per class, for a
+   member with several classes). */
+const CONTAINER = markerIsContainer(marker);
 
 const cfgPath = join(memberDir, "wrangler.jsonc");
 if (!existsSync(cfgPath)) die("NO_CONFIG", `"${member}" has no wrangler.jsonc.`);
@@ -140,21 +143,42 @@ if (!cfg.account_id) {
 
 /* R26: what a container member deploys is stated by its own files before any request: the image by digest in its
    marker, and the container in its own config. Neither is defaulted. */
-let image = null;
+/* A member with several classes (T36-2, `file-scanner`) deploys each class's image, and each `containers[]` entry of
+   its own config names the class it runs behind, so the pushed copy reaches the right class and no class deploys
+   without its container. */
+let images = [];   /* [{class_name, reference, digest}], one per class */
+let MULTI = false;
 if (CONTAINER) {
-  const img = imageReference(marker.image);
-  if (img.missing) {
-    die("CONTAINER_UNDESCRIBED",
-      `${member} is a container member and its fleet-member.json does not state ${img.missing} as `
-      + "`<repository>` and `sha256:<64 hex>`.",
-      "The image is deployed only by digest. The release writes the digest when it publishes the image.");
+  const { classes, multi, conflict } = containerClasses({ marker });
+  MULTI = multi;
+  if (conflict) die("CONTAINER_UNDESCRIBED", `${member} is a container member and its fleet-member.json states ${conflict}.`,
+    "A member with several classes names each class's image in its `containers` list, and no top-level image.");
+  for (const cls of classes) {
+    const img = imageReference(cls.image);
+    if (img.missing) {
+      die("CONTAINER_UNDESCRIBED",
+        `${member} is a container member and its fleet-member.json does not state${multi ? `, for its class ${cls.class_name},` : ""} `
+        + `${img.missing} as \`<repository>\` and \`sha256:<64 hex>\`.`,
+        "The image is deployed only by digest. The release writes the digest when it publishes the image.");
+    }
+    images.push({ class_name: cls.class_name, reference: img.reference, digest: cls.image.digest });
   }
   if (!Array.isArray(cfg.containers) || !cfg.containers.length) {
     die("CONTAINER_UNDESCRIBED", `${member} is a container member and its wrangler.jsonc declares no \`containers\`.`,
       "Its Worker would deploy with no container behind its class. The member's own config states the container.");
   }
-  image = img.reference;
-  console.log(`image    : ${image}`);
+  if (multi) {
+    const named = new Set(images.map((i) => i.class_name));
+    const stray = cfg.containers.filter((c) => !c || !named.has(c.class_name)).map((c) => (c && c.class_name) || "(unnamed)");
+    const bare = [...named].filter((n) => !cfg.containers.some((c) => c && c.class_name === n));
+    if (stray.length || bare.length)
+      die("CONTAINER_UNDESCRIBED",
+        `${member}'s wrangler.jsonc \`containers\` and its marker's classes disagree`
+        + `${stray.length ? `: the config names ${stray.join(", ")}, which the marker states no image for` : ""}`
+        + `${bare.length ? `${stray.length ? ";" : ":"} the marker's ${bare.join(", ")} has no container in the config` : ""}.`,
+        "Each class deploys behind its own container, named by its class_name in both files.");
+  }
+  for (const i of images) console.log(`image    : ${MULTI ? `${i.class_name} ` : ""}${i.reference}`);
 }
 
 /* PRE-FLIGHT: every service target must EXIST, checked before the upload rather
@@ -222,25 +246,30 @@ const cfEnv = { ...process.env, CLOUDFLARE_API_TOKEN: TOKEN, CLOUDFLARE_ACCOUNT_
    by its digest, so what is pushed is exactly the image the marker names and a re-run pushes the same tag. A failed
    step exits with its own status, and nothing is deployed after it. */
 if (CONTAINER) {
-  const digest = marker.image.digest;
-  const tag = `${member}:${digest.slice("sha256:".length, "sha256:".length + 12)}`;
-  const steps = [
-    ["docker", ["pull", image], `pull ${image}`],
-    ["docker", ["tag", image, tag], `tag it ${tag}`],
-    [wrangler, ["containers", "push", tag], `push ${tag} to Cloudflare's registry`],
-  ];
-  for (const [cmd, args, what] of steps) {
-    console.log(`\ncontainer: ${what}`);
-    try { execFileSync(cmd, args, { cwd: memberDir, stdio: "inherit", env: cfEnv }); }
-    catch (e) {
-      console.error(`\ncontainer: ${what} FAILED: ${e.message}`);
-      console.error("Nothing was deployed.");
-      process.exit(Number.isInteger(e.status) && e.status !== 0 ? e.status : 1);
+  const pushedOf = new Map();
+  for (const img of images) {
+    const short = img.digest.slice("sha256:".length, "sha256:".length + 12);
+    /* One class keeps the member's own name; several are told apart by class (a tag is lower case). */
+    const tag = `${MULTI ? `${member}-${img.class_name.toLowerCase()}` : member}:${short}`;
+    const steps = [
+      ["docker", ["pull", img.reference], `pull ${img.reference}`],
+      ["docker", ["tag", img.reference, tag], `tag it ${tag}`],
+      [wrangler, ["containers", "push", tag], `push ${tag} to Cloudflare's registry`],
+    ];
+    for (const [cmd, args, what] of steps) {
+      console.log(`\ncontainer: ${what}`);
+      try { execFileSync(cmd, args, { cwd: memberDir, stdio: "inherit", env: cfEnv }); }
+      catch (e) {
+        console.error(`\ncontainer: ${what} FAILED: ${e.message}`);
+        console.error("Nothing was deployed.");
+        process.exit(Number.isInteger(e.status) && e.status !== 0 ? e.status : 1);
+      }
     }
+    pushedOf.set(img.class_name, `registry.cloudflare.com/${cfg.account_id}/${tag}`);
   }
-  const pushed = `registry.cloudflare.com/${cfg.account_id}/${tag}`;
-  cfg.containers = cfg.containers.map((c) => ({ ...c, image: pushed }));
-  console.log(`container: the generated config deploys ${pushed}`);
+  const only = images.length === 1 ? pushedOf.get(images[0].class_name) : null;
+  cfg.containers = cfg.containers.map((c) => ({ ...c, image: MULTI ? pushedOf.get(c.class_name) : only }));
+  for (const c of cfg.containers) console.log(`container: the generated config deploys ${MULTI ? `${c.class_name} ` : ""}${c.image}`);
 }
 
 /* The generated config is a TEMP FILE beside the member's own, so wrangler

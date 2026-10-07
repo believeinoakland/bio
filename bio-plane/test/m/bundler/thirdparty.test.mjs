@@ -15,8 +15,8 @@ import { thirdPartyInventory, checkAdvisories, run as advisories, DECLARATION } 
 import { signerPublicLine } from "../../../scripts/sign-sshsig.mjs";
 import { osvFetch } from "./osvstub.mjs";
 import {
-  makeRepo, addMember, addContainerMember, buildAll, run, snapshot, readJson, writeJson, rm, hex, VERSION, DIGEST,
-  CONTAINER_LOCK, CONTAINER_PACKAGES, PLANE, REAL_ROOT,
+  makeRepo, addMember, addContainerMember, addScannerMember, buildAll, run, snapshot, readJson, writeJson, rm, hex, VERSION, DIGEST,
+  CONTAINER_LOCK, CONTAINER_PACKAGES, PLANE, REAL_ROOT, SCANNER_PACKAGES, SCANNER_STATEMENTS, BASE_A,
 } from "./repo.mjs";
 
 const OSVSTUB = join(dirname(fileURLToPath(import.meta.url)), "osvstub.mjs");
@@ -28,6 +28,8 @@ const put = (root, rel, text) => { mkdirSync(dirname(join(root, rel)), { recursi
 const putJson = (root, rel, obj) => put(root, rel, JSON.stringify(obj, null, 2) + "\n");
 const assemble = (root, args = [], env = {}) => run(root, ".", ["bio-plane/scripts/release-assemble.mjs", ...args], { env });
 const envelope = () => `BIOKEY-RAW1.test.${randomBytes(32).toString("base64")}`;
+/* R30: `--sign` runs only in the GitHub Actions signing environment; these tests stand in for it, with a throwaway key. */
+const SIGNING = { GITHUB_ACTIONS: "true" };
 
 /* ------------------------------------------------------------------------ R27 */
 
@@ -68,7 +70,7 @@ test("R27: the release's container.json part lists the image's packages, signed 
     await buildAll(root);
     const seed = envelope(), signer = signerPublicLine(seed);
     writeJson(join(root, "release/RELEASE.json"), { version: "1.2.2", signer });
-    const r = assemble(root, ["--sign"], { BIO_RELEASE_SEED: seed });
+    const r = assemble(root, ["--sign"], { BIO_RELEASE_SEED: seed, ...SIGNING });
     assert.equal(r.status, 0, r.stdout + r.stderr);
     const bytes = readFileSync(join(root, "release/runner/container.json"));
     const part = JSON.parse(bytes);
@@ -107,7 +109,7 @@ test("R27: a container member whose package-lock.json is missing, does not parse
     for (const [named, arrange] of cases) {
       arrange();
       const before = snapshot(root);
-      const r = assemble(root, ["--sign"], { BIO_RELEASE_SEED: seed });
+      const r = assemble(root, ["--sign"], { BIO_RELEASE_SEED: seed, ...SIGNING });
       refused(r, "CONTAINER_PACKAGES_UNREAD");
       assert.ok(r.stderr.includes(`runner is a container member and ${named}`), `${named}:\n${r.stderr}`);
       assert.doesNotMatch(r.stdout, /guard: /, "refused before any build ran");
@@ -116,7 +118,115 @@ test("R27: a container member whose package-lock.json is missing, does not parse
   } finally { rm(root); }
 });
 
+test("R27: an image whose packages are not npm's lists them from the member's committed package statement for that image, sorted, in its own class's part, signed with it", async () => {
+  const root = await makeRepo({ build: false });
+  try {
+    addScannerMember(root, "scanner");
+    await buildAll(root);
+    const seed = envelope(), signer = signerPublicLine(seed);
+    writeJson(join(root, "release/RELEASE.json"), { version: "1.2.2", signer });
+    const r = assemble(root, ["--sign"], { BIO_RELEASE_SEED: seed, ...SIGNING });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    const rel = readJson(join(root, "release/RELEASE.json"));
+    for (const c of ["FileScanner", "SafeViewRenderer"]) {
+      const bytes = readFileSync(join(root, `release/scanner/container/${c}.json`));
+      const part = JSON.parse(bytes);
+      assert.deepEqual(part.packages, SCANNER_PACKAGES[c], `${c}: its own image's list, by name then version`);
+      assert.deepEqual(Object.keys(part), ["class_name", "image", "scheduling_policy", "max_instances", "bind", "packages"]);
+      assert.deepEqual(rel.fleet.find((m) => m.member === "scanner").parts.find((p) => p.path === `container/${c}.json`),
+        { path: `container/${c}.json`, type: "Container", sha256: hex(bytes), bytes: bytes.length });
+      assert.match(r.stdout, new RegExp(`container/${c}\\.json:Container:${hex(bytes)}:${bytes.length}`), `${c}: in the signed payload`);
+    }
+  } finally { rm(root); }
+});
+
+test("R27: a package statement missing or not parsing, a package without a version, or a statement naming no base digest or another than the marker's is refused CONTAINER_PACKAGES_UNREAD naming it, before anything is written", async () => {
+  const root = await makeRepo({ build: false });
+  try {
+    addScannerMember(root, "scanner");
+    await buildAll(root);
+    const st = join(root, "scanner/images/scan.packages.json");
+    const good = SCANNER_STATEMENTS["images/scan.packages.json"];
+    const other = "sha256:" + "ee".repeat(32);
+    const cases = [
+      ["scanner/images/scan.packages.json is missing", () => rmSync(st)],
+      ["scanner/images/scan.packages.json does not parse", () => writeFileSync(st, "{ torn")],
+      ["scanner/images/scan.packages.json names the package clamav without a version",
+        () => writeJson(st, { ...good, packages: [{ name: "clamav" }] })],
+      ["scanner/images/scan.packages.json names no base image digest", () => writeJson(st, { ...good, base: {} })],
+      [`scanner/images/scan.packages.json was taken against the base ${other}, not the base the marker pins (${BASE_A})`,
+        () => writeJson(st, { ...good, base: { digest: other } })],
+    ];
+    for (const [named, arrange] of cases) {
+      arrange();
+      const before = snapshot(root);
+      const r = assemble(root, ["--dry-run"]);
+      refused(r, "CONTAINER_PACKAGES_UNREAD");
+      assert.ok(r.stderr.includes(`scanner is a container member and ${named}`), `${named}:\n${r.stderr}`);
+      assert.doesNotMatch(r.stdout, /guard: /, "refused before any build ran");
+      assert.deepEqual(snapshot(root), before, `${named}: nothing written`);
+      writeJson(st, good);
+    }
+    assert.equal(assemble(root, ["--dry-run"]).status, 0, "restored, it assembles");
+  } finally { rm(root); }
+});
+
 /* ------------------------------------------------------------------------ R28 */
+
+test("R28: a container member's system packages are listed under the ecosystem its package statement names, for the member that ships them; an unread statement is named in unread", async () => {
+  const root = await makeRepo({ build: false, members: { "alpha-worker": {} } });
+  try {
+    addScannerMember(root, "scanner");
+    putJson(root, DECLARATION, { sources: [] });
+    const inv = thirdPartyInventory(root);
+    assert.deepEqual(inv.unread, []);
+    assert.deepEqual(inv.packages, [...SCANNER_PACKAGES.FileScanner, ...SCANNER_PACKAGES.SafeViewRenderer]
+      .map((p) => ({ ecosystem: "Debian:12", name: p.name, version: p.version, shippedIn: ["scanner"] }))
+      .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0)));
+    rmSync(join(root, "scanner/images/render.packages.json"));
+    const partial = thirdPartyInventory(root);
+    assert.deepEqual(partial.unread, ["scanner/images/render.packages.json is missing"]);
+    assert.ok(partial.packages.some((p) => p.name === "clamav"), "the other image's list is still read");
+    assert.ok(!partial.packages.some((p) => p.name === "poppler-utils"));
+  } finally { rm(root); }
+});
+
+/* ------------------------------------------------------------------------ R28 */
+
+test("R28: a container member's system packages are listed under the ecosystem its package statement names, for the member that ships them; an unread statement is named in unread", async () => {
+  const root = await makeRepo({ build: false, members: { "alpha-worker": {} } });
+  try {
+    addScannerMember(root, "scanner");
+    putJson(root, DECLARATION, { sources: [] });
+    const inv = thirdPartyInventory(root);
+    assert.deepEqual(inv.unread, []);
+    assert.deepEqual(inv.packages, [...SCANNER_PACKAGES.FileScanner, ...SCANNER_PACKAGES.SafeViewRenderer]
+      .map((p) => ({ ecosystem: "Debian:12", name: p.name, version: p.version, shippedIn: ["scanner"] }))
+      .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0)));
+    rmSync(join(root, "scanner/images/render.packages.json"));
+    const partial = thirdPartyInventory(root);
+    assert.deepEqual(partial.unread, ["scanner/images/render.packages.json is missing"]);
+    assert.ok(partial.packages.some((p) => p.name === "clamav"), "the other image's list is still read");
+    assert.ok(!partial.packages.some((p) => p.name === "poppler-utils"));
+  } finally { rm(root); }
+});
+
+test("R29: a system package is asked of OSV under its statement's ecosystem", async () => {
+  const root = await makeRepo({ build: false, members: { "alpha-worker": {} } });
+  try {
+    addScannerMember(root, "scanner");
+    putJson(root, DECLARATION, { sources: [] });
+    await withOsv({ vulns: { "Debian:12|clamav|1.4.3+dfsg-1": [GHSA.id] }, details: { [GHSA.id]: { ...GHSA,
+      affected: [{ package: { ecosystem: "Debian:12", name: "clamav" }, ranges: [{ events: [{ fixed: "1.4.4" }] }] }] } } }, async (calls) => {
+      const { text, exit } = await advisories({ root, now: NOW });
+      assert.equal(exit, 0, text);
+      assert.ok(calls.find((c) => c.path === "/v1/querybatch").body.queries.some((q) => q.package.ecosystem === "Debian:12" && q.package.name === "clamav"));
+      assert.match(text, /^ {2}Debian:12 clamav 1\.4\.3\+dfsg-1 {2}\[scanner\] {2}1 known advisory$/m);
+      assert.match(text, /fixed in 1\.4\.4/);
+    });
+  } finally { rm(root); }
+});
+
 
 const CARGO = `# generated
 version = 4
@@ -398,3 +508,5 @@ test("R29: the command prints the report, writes it as JSON with --out, writes n
     assert.deepEqual(snapshot(root), before);
   } finally { rm(root); rmSync(work, { recursive: true, force: true }); }
 });
+
+

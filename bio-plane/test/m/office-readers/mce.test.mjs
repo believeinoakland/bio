@@ -54,7 +54,8 @@ test("R11 R16 docx tables: a table inside a branch not read is not a table of th
   const tbl = (t) => `<w:tbl><w:tblGrid><w:gridCol/></w:tblGrid><w:tr><w:tc>${F.wp(F.wr(t))}</w:tc></w:tr></w:tbl>`;
   const body = F.wp(box([tbl("boxed")])) + tbl("after");
   const t = await docxEntry.text(F.docx({ body }));
-  assert.deepEqual(t.tables, [{ table: 0, ref: "table 1", rows: 1, cols: 1 }, { table: 1, ref: "table 2", rows: 1, cols: 1 }]);
+  assert.deepEqual(t.tables.map(({ cells, ...x }) => x), [{ table: 0, ref: "table 1", rows: 1, cols: 1 }, { table: 1, ref: "table 2", rows: 1, cols: 1 }]);
+  assert.deepEqual(t.tables.map((x) => x.cells.map((c) => [c.source.ref, c.value])), [[["table 1, A1", "boxed"]], [["table 2, A1", "after"]]]);
   assert.deepEqual(t.paragraphs.map((p) => p.text), ["", "boxed", "after"]);
 });
 

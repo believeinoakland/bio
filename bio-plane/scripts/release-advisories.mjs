@@ -8,7 +8,8 @@
  * named in `unread`, never dropped: an inventory that silently lost a lockfile would report the release clean of
  * exactly what it could not see.
  *
- * The command (R29) asks a public advisory database, OSV, which answers npm, crates.io and PyPI alike, for each
+ * The command (R29) asks a public advisory database, OSV, which answers npm, crates.io, PyPI and the system-package
+ * ecosystems a container member's package statement names (Debian, Alpine, …) alike, for each
  * entry, prints what it said, and names every package with a known advisory. IT REFUSES NOTHING: whether a release
  * goes out over an advisory is the operator's call (K1900 (1)). What it never does is call an entry clean that it
  * did not check: an unread source, an unreachable database or an unreadable answer is "not checked", by name, and
@@ -20,7 +21,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { REPO_ROOT, discoverMembers, isContainer, npmProductionPackages, containerPackages } from "./fleet-bundle.mjs";
+import { REPO_ROOT, discoverMembers, isContainer, npmProductionPackages, containerClasses, classPackages } from "./fleet-bundle.mjs";
 
 export const DECLARATION = "bio-plane/scripts/third-party.json";
 export const ECOSYSTEMS = Object.freeze(["npm", "crates.io", "PyPI"]);
@@ -91,11 +92,14 @@ export function thirdPartyInventory(root = REPO_ROOT) {
     for (const p of r.packages) add("npm", p.name, p.version, shippedIn);
   }
 
-  /* (b) each container member's image packages, R27's own reading. */
+  /* (b) each container member's image packages, R27's own reading, for every class: npm's from the member's lockfile,
+     or a system image's from its package statement, under the ecosystem the statement names (T36-2). */
   for (const m of members.filter((x) => isContainer(x))) {
-    const r = containerPackages(m);
-    if (r.unread) { if (!unread.includes(r.unread)) unread.push(r.unread); continue; }
-    for (const p of r.packages) add("npm", p.name, p.version, m.name);
+    for (const cls of containerClasses(m).classes) {
+      const r = classPackages(m, cls);
+      if (r.unread) { if (!unread.includes(r.unread)) unread.push(r.unread); continue; }
+      for (const p of r.packages) add(r.ecosystem, p.name, p.version, m.name);
+    }
   }
 
   /* (c) the module's declaration of committed third-party code. */

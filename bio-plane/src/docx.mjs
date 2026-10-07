@@ -94,6 +94,9 @@ import {
   CORE_PROPERTIES_PART, readCoreProperties, withContainerImages,
   readVbaProject,
 } from "./ooxml.mjs";
+/* The one A1 column reading (a cycle with formats-xlsx.mjs, which imports
+   this file's shared builders; both sides use only hoisted functions). */
+import { columnLetters } from "./formats-xlsx.mjs";
 
 const UTF8 = new TextDecoder("utf-8", { fatal: false });
 
@@ -547,12 +550,47 @@ async function docxParts(bytes) {
  *  bounding by it would refuse a true address. Where a producer wrote no grid
  *  the widest row's cell count is used, which can only UNDER-state a merged
  *  table's width; that residue is stated here rather than discovered. A
- *  figure this walk could not establish is NULL, never 0. */
+ *  figure this walk could not establish is NULL, never 0.
+ *
+ *  N724 (R11, K1972): each table also lists its `cells`, `[{ row, col, paras }]`
+ *  in row then column order, `row` and `col` 1-based over the table's own
+ *  grid and `paras` the numbers of the paragraphs the cell holds, numbered as
+ *  `walkDocumentBody` numbers them (every `<w:p>` read, as it opens), so the
+ *  caller takes their text from that walk and the two cannot disagree. A
+ *  paragraph belongs to the innermost cell open around it: a nested table's
+ *  paragraphs are its own table's cells', never the outer cell's. A row's
+ *  first cell sits after its `w:gridBefore` columns, and each cell moves the
+ *  next by its `w:gridSpan`. A MERGED cell is one entry at its first grid
+ *  position: a `w:vMerge` continuation joins the restart above it in the same
+ *  column, a legacy `w:hMerge` continuation the cell before it in the row,
+ *  each bringing its paragraphs (in practice empty) so no text is dropped; a
+ *  continuation with nothing to join stands as its own cell. */
 export function walkDocumentTables(xml) {
   const done = [];
   const stack = [];
   let next = 0;
+  let para = -1;  // the last paragraph number given, as walkDocumentBody gives them
   const skipped = mceSkipper(); // N26: a table in a branch not read is not a table of the reading
+  const merge = (v) => (v == null ? null : v === "restart" ? "restart" : "continue");
+  const closeCell = (t) => {
+    const c = t.cell;
+    if (!c) return;
+    t.cell = null;
+    t.nextCol = c.col + c.span;
+    const owner = c.vMerge === "continue" ? t.vOwner.get(c.col)
+      : c.hMerge === "continue" && t.rowCells.length ? t.rowCells[t.rowCells.length - 1] : null;
+    if (owner) { owner.paras.push(...c.paras); return; }
+    const entry = { row: c.row, col: c.col, paras: c.paras };
+    t.cells.push(entry);
+    t.rowCells.push(entry);
+    if (c.vMerge === "restart") t.vOwner.set(c.col, entry);
+    else t.vOwner.delete(c.col);
+  };
+  const finish = (t, rows) => {
+    closeCell(t);
+    done[t.table] = { table: t.table, rows,
+      cols: t.gridCols > 0 ? t.gridCols : (t.maxTc > 0 ? t.maxTc : null), cells: t.cells };
+  };
   TOKEN_RE.lastIndex = 0;
   let m;
   while ((m = TOKEN_RE.exec(xml)) !== null) {
@@ -563,30 +601,44 @@ export function walkDocumentTables(xml) {
     if (skipped(name, closing, selfClosed)) continue;
     const top = stack.length ? stack[stack.length - 1] : null;
     if (closing) {
-      if (name === "tbl" && stack.length) {
-        const t = stack.pop();
-        done[t.table] = { table: t.table, rows: t.rows,
-          cols: t.gridCols > 0 ? t.gridCols : (t.maxTc > 0 ? t.maxTc : null) };
-      } else if (name === "tr" && top) {
+      if (name === "tbl" && stack.length) finish(stack.pop(), top.rows);
+      else if (name === "tr" && top) {
+        closeCell(top);
         if (top.tc > top.maxTc) top.maxTc = top.tc;
-      }
+      } else if (name === "tc" && top) closeCell(top);
       continue;
     }
-    if (name === "tbl" && !selfClosed) stack.push({ table: next++, rows: 0, gridCols: 0, tc: 0, maxTc: 0 });
-    else if (name === "tbl") done[next] = { table: next++, rows: 0, cols: null };
+    if (name === "p") { para++; if (top?.cell) top.cell.paras.push(para); continue; }
+    if (name === "tbl" && !selfClosed) {
+      stack.push({ table: next++, rows: 0, gridCols: 0, tc: 0, maxTc: 0,
+        cells: [], cell: null, nextCol: 1, rowCells: [], vOwner: new Map() });
+    }
+    else if (name === "tbl") done[next] = { table: next++, rows: 0, cols: null, cells: [] };
     else if (!top) continue;
     else if (name === "gridCol") top.gridCols++;
-    else if (name === "tr") { top.rows++; top.tc = 0; }
-    else if (name === "tc") top.tc++;
+    else if (name === "tr") { closeCell(top); top.rows++; top.tc = 0; top.nextCol = 1; top.rowCells = []; }
+    else if (name === "gridBefore") {
+      const n = parseInt(attrsOf(m[2]).val, 10);
+      if (top.tc === 0 && Number.isInteger(n) && n > 0) top.nextCol = 1 + n;
+    }
+    else if (name === "tc") {
+      closeCell(top);
+      top.tc++;
+      top.cell = { row: top.rows, col: top.nextCol, span: 1, vMerge: null, hMerge: null, paras: [] };
+      if (selfClosed) closeCell(top);
+    }
+    else if (!top.cell) continue;
+    else if (name === "gridSpan") {
+      const n = parseInt(attrsOf(m[2]).val, 10);
+      if (Number.isInteger(n) && n > 1) top.cell.span = n;
+    }
+    else if (name === "vMerge") top.cell.vMerge = merge(attrsOf(m[2]).val ?? "continue");
+    else if (name === "hMerge") top.cell.hMerge = merge(attrsOf(m[2]).val ?? "continue");
   }
   /* A table the body never closed (a truncated part) is still a table this
      walk saw open; its figures are what was seen, and its ordinal stands so
      every later table keeps its number. */
-  while (stack.length) {
-    const t = stack.pop();
-    done[t.table] = { table: t.table, rows: t.rows || null,
-      cols: t.gridCols > 0 ? t.gridCols : (t.maxTc > 0 ? t.maxTc : null) };
-  }
+  while (stack.length) { const t = stack.pop(); finish(t, t.rows || null); }
   return done;
 }
 
@@ -817,6 +869,25 @@ async function docxStructure(parts) {
  * text() — <w:t> runs in body order (I7 slot 4)
  * ------------------------------------------------------------------ */
 
+/** N724 (R11, K1972) — a table's cells held as R30 holds a sheet's, so a
+ *  document table's date or amount column can be named as a sheet's is. One
+ *  entry per cell holding text, in row then column order; `value` is the
+ *  cell's text exactly as `document` carries it (its non-empty paragraphs
+ *  newline-joined: `w:ins` in, `w:delText` never), taken from the body walk's
+ *  own paragraphs, never a second reading. A Word table declares no cell type,
+ *  so every cell is `text`, `declared`, `cached` and `formula` null: no date or
+ *  number is inferred (R30's rule, R24). */
+function tableCells(t, paragraphs) {
+  const cells = [];
+  for (const c of t.cells) {
+    const value = c.paras.map((p) => paragraphs[p]?.text ?? "").filter((s) => s.length).join("\n");
+    if (!value) continue;
+    cells.push({ source: docTableRef(t.table, `${columnLetters(c.col)}${c.row}`), value, type: "text",
+      declared: null, cached: null, formula: null });
+  }
+  return cells;
+}
+
 async function docxText(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "docx", reason: parts?.why ?? "PARTS_ABSENT" };
@@ -846,7 +917,8 @@ async function docxText(parts) {
      table); the two branches above that walked nothing say `tables: null`. */
   const tables = walkDocumentTables(parts.documentXml)
     .filter(Boolean)
-    .map((t) => ({ table: t.table, ref: docTableRef(t.table).ref, rows: t.rows, cols: t.cols }));
+    .map((t) => ({ table: t.table, ref: docTableRef(t.table).ref, rows: t.rows, cols: t.cols,
+      cells: tableCells(t, walk.paragraphs) }));
   return {
     ok: true, container: "docx", document, paragraphs, tables,
     undetermined: [],

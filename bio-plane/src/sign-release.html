@@ -22,6 +22,11 @@
   constantly. Keeping routine use away from the supply-chain key is the
   reason they are separate.
 
+  A third key, the recovery key, is a release key kept offline for one
+  use: signing the release that replaces a lost or stolen release key. It
+  carries its own label, bio-release-recovery, in its private and public
+  text, so it is never mistaken for the key it backs up.
+
   The ratification key also signs a project's "working on" notice, in its
   own namespace (bio-working-on), so a signature on a notice can never be
   taken as consent to publish a record, or the reverse. It signs a case's
@@ -99,8 +104,31 @@
       <h2>Make your keys</h2>
       <p>One press makes both keys. Copy the two public keys into the session, and keep
          the private keys wherever you keep things.</p>
-      <button id="gen" class="big">Generate my keys</button>
+      <div class="stack">
+        <div><label for="gen-pass">Passphrase (leave empty for development keys)</label>
+          <input id="gen-pass" type="password" autocomplete="new-password" placeholder="passphrase"></div>
+        <div><label for="gen-pass2">The same passphrase again</label>
+          <input id="gen-pass2" type="password" autocomplete="new-password" placeholder="passphrase"></div>
+        <p class="note">With a passphrase, every private key this page gives you is locked with it, and loading one
+           back asks for it. Keep the passphrase apart from the keys: without it they cannot be used.</p>
+        <button id="gen" class="big">Generate my keys</button>
+      </div>
       <div id="gen-out" class="stack" style="margin-top:18px"></div>
+    </section>
+
+    <section>
+      <h2>Make a recovery key</h2>
+      <p>A second release key, kept offline. It signs one release only: the one that replaces a lost or
+         stolen release key. Make it once, copy its public key into the session, and keep its private key
+         apart from the release key.</p>
+      <div class="stack">
+        <div><label for="rec-pass">Passphrase</label>
+          <input id="rec-pass" type="password" autocomplete="new-password" placeholder="passphrase"></div>
+        <div><label for="rec-pass2">The same passphrase again</label>
+          <input id="rec-pass2" type="password" autocomplete="new-password" placeholder="passphrase"></div>
+        <button id="rec-gen">Make a recovery key</button>
+      </div>
+      <div id="rec-out" class="stack" style="margin-top:18px"></div>
     </section>
 
     <section>
@@ -245,16 +273,24 @@ async function keysFromSeed(seed32) {
   return { priv, raw32 };
 }
 
-/* The two jobs, and the only two labels this page uses. A private key carries
-   its own label, so loading one never asks which job it belongs to. */
+/* The keys this page makes, and the only labels it uses. A private key carries
+   its own label, so loading one never asks which job it belongs to. The
+   recovery key is a release key (it fills the release slot and signs
+   bio-release); its own label is what keeps it from being taken for the key
+   it backs up, in its private text and in its public line's comment. */
 const JOBS = {
   "bio-release": { slot: "release", title: "Release key", what: "signs the software installer" },
   "bio-ratify":  { slot: "ratify",  title: "Ratification key", what: "attests documents for publishing" },
+  "bio-release-recovery": { slot: "release", title: "Recovery key",
+    what: "signs one release only, the one that replaces a lost or stolen release key" },
 };
+/* The two keys one press of Generate makes. */
+const GENERATED = ["bio-release", "bio-ratify"];
 
-/* Private key formats. Raw is the default: a development key is disposable and a
-   passphrase on it is ceremony without a threat. The wrapped form exists for
-   production keys and is recognised automatically on load. */
+/* Private key formats. With no passphrase a key is raw: a development key is
+   disposable and a passphrase on it is ceremony without a threat. With one, every
+   private key the page gives out is the wrapped form, recognised on load, but for
+   the release key's raw form shown once on request for the signing secret. */
 const rawKeyString = (label, seed) => `BIOKEY-RAW1.${label}.${b64(seed)}`;
 
 const KDF_ITER = 600000;
@@ -279,6 +315,7 @@ async function parseKeyString(blob, pass) {
     const [, label, salt, iv, ct, iter] = s.split(".");
     if (!JOBS[label]) throw new Error("that key does not name a job this page knows");
     if (!pass) throw new Error("that key is protected with a passphrase; open the passphrase box below");
+    if (!/^[1-9][0-9]{0,6}$/.test(iter || "")) throw new Error("wrong passphrase, or the key was altered");
     const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);
     const key = await crypto.subtle.deriveKey(
       { name: "PBKDF2", salt: unb64(salt), iterations: Number(iter), hash: "SHA-256" },
@@ -299,7 +336,7 @@ function armed() {
                                     ["ratify", "not-key", "ratification"], ["ratify", "dock-key", "ratification"]]) {
     const k = KEYS[slot];
     $(elId).innerHTML = k
-      ? `<span class="good">Signing as</span> <code>${pubLine(k.raw32, k.label)}</code>`
+      ? `<span class="good">Signing as</span> ${JOBS[k.label].title}: <code>${pubLine(k.raw32, k.label)}</code>`
       : `No ${what} key loaded. Make one on the Keys tab.`;
   }
   $("rel-sign").disabled = !KEYS.release;
@@ -364,24 +401,63 @@ for (const [btn, pane] of PANES) {
 }
 
 /* -------------------------------------------------------------- generate */
+/* What a key file holds: each key's public line and private key, never a raw
+   form when a passphrase was given (the private key is then the wrapped one). */
 function keyReport(made) {
   return Object.entries(made)
     .map(([l, m]) => `# ${JOBS[l].title} (${JOBS[l].what})\npublic:  ${m.pub}\nprivate: ${m.priv}`)
     .join("\n\n") + "\n";
 }
 
-async function generateAll() {
+function download(name, text) {
+  const url = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
+  const a = document.createElement("a");
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* The passphrase typed twice into two fields, which are then emptied: "" for
+   none, or null, with the page's words in `out`, when the two differ. */
+function passphraseOf(a, b, out) {
+  const pass = $(a).value, again = $(b).value;
+  $(a).value = ""; $(b).value = "";
+  if (pass !== again) {
+    $(out).innerHTML = `<p class="warn">The two passphrases differ, so no key was made. Type the same one twice.</p>`;
+    return null;
+  }
+  return pass;
+}
+
+/* One fresh key: its public line, its private key in the form the passphrase
+   decides, and its raw form, which leaves this page only as R43 allows. */
+async function makeKey(label, pass) {
+  const seed = crypto.getRandomValues(new Uint8Array(32));
+  const { raw32 } = await keysFromSeed(seed);
+  const raw = rawKeyString(label, seed);
+  return { seed, pub: pubLine(raw32, label), priv: pass ? await wrapKey(seed, pass, label) : raw, raw };
+}
+
+/* Both keys, loaded into this tab; each entry is { pub, priv, raw }. */
+async function generateAll(pass = "") {
   const made = {};
-  for (const label of Object.keys(JOBS)) {
-    const seed = crypto.getRandomValues(new Uint8Array(32));
-    const { raw32 } = await useSeed(label, seed);
-    made[label] = { pub: pubLine(raw32, label), priv: rawKeyString(label, seed) };
+  for (const label of GENERATED) {
+    const { seed, ...key } = await makeKey(label, pass);
+    await useSeed(label, seed);
+    made[label] = key;
   }
   return made;
 }
 
+/* The release key's raw form, held only until it is shown once or forgotten. */
+let rawOnce = null;
+
 $("gen").onclick = async () => {
-  const made = await generateAll();
+  const pass = passphraseOf("gen-pass", "gen-pass2", "gen-out");
+  if (pass === null) return;
+  $("gen-out").innerHTML = `<p class="note">Making your keys…</p>`;
+  const made = await generateAll(pass);
+  rawOnce = pass ? made["bio-release"].raw : null;
   const bothPub = Object.values(made).map((m) => m.pub).join("\n");
   const all = keyReport(made);
 
@@ -395,21 +471,55 @@ $("gen").onclick = async () => {
     + Object.entries(made).map(([l, m]) =>
         copyBox(`${JOBS[l].title}: private, keep this`, m.priv,
                 `Paste this back into "Load a key you already have" next time you sign. This one ${JOBS[l].what}.`)).join("")
-    + `<p class="note">These are development keys with no passphrase. When Civicsmith goes to real groups,
-         generate fresh keys and protect them. Nothing here carries over.</p>`;
+    + (pass
+      ? `<p class="note">Both private keys are locked with your passphrase. Loading one asks for it,
+           and refuses any other.</p>
+         <div id="raw-once" class="stack"><button id="show-raw" class="ghost">Show the release key's raw form,
+           once, for the secret store that signs releases</button></div>`
+      : `<p class="note">These are development keys with no passphrase. When Civicsmith goes to real groups,
+           generate fresh keys and protect them. Nothing here carries over.</p>`);
 
   $("copy-all").onclick = async (e) => {
     const ok = await copyText(all);
     e.target.textContent = ok ? "Copied" : "Use the boxes below instead";
     setTimeout(() => { e.target.textContent = "Copy everything, keys and all"; }, 1400);
   };
-  $("dl").onclick = () => {
-    const url = URL.createObjectURL(new Blob([all], { type: "text/plain" }));
-    const a = document.createElement("a");
-    a.href = url; a.download = "bio-signing-keys.txt";
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  $("dl").onclick = () => download("bio-signing-keys.txt", all);
+  if (pass) $("show-raw").onclick = showRawOnce;
+};
+
+/* R43's one raw showing: on request, once per Generate, never into a file. */
+function showRawOnce() {
+  const raw = rawOnce;
+  rawOnce = null;
+  if (!raw) return;
+  $("raw-once").innerHTML =
+    copyBox("Release key: raw, for the signing secret only", raw,
+            "Paste this into the secret store that signs releases, then hide it. It is not locked: anyone holding "
+            + "this text can sign as you. This page shows it this once and never puts it in a file.")
+    + `<button id="hide-raw" class="ghost">Hide it</button>`;
+  $("hide-raw").onclick = () => {
+    $("raw-once").innerHTML = `<p class="note">Hidden. This page will not show it again.</p>`;
   };
+}
+
+/* ------------------------------------------------------------ recovery */
+$("rec-gen").onclick = async () => {
+  const pass = passphraseOf("rec-pass", "rec-pass2", "rec-out");
+  if (pass === null) return;
+  const label = "bio-release-recovery";
+  $("rec-out").innerHTML = `<p class="note">Making your recovery key…</p>`;
+  const { pub, priv } = await makeKey(label, pass);
+  const report = keyReport({ [label]: { pub, priv } });
+  $("rec-out").innerHTML =
+    copyBox("Recovery key: public, paste this into the session", pub,
+            "It goes beside the release key's public key. Public keys are public by design.")
+    + copyBox("Recovery key: private, keep this offline", priv,
+              "Keep it apart from the release key. Load it here only to sign the release that replaces a lost "
+              + "or stolen release key." + (pass ? " Loading it asks for your passphrase."
+                : " It has no passphrase: anyone holding this text can use it."))
+    + `<div class="row"><button id="rec-dl" class="ghost">Download as a file</button></div>`;
+  $("rec-dl").onclick = () => download("bio-recovery-key.txt", report);
 };
 
 /* ------------------------------------------------------------------ load */
@@ -425,9 +535,9 @@ $("load").onclick = async () => {
   }
 };
 $("forget").onclick = () => {
-  KEYS.release = null; KEYS.ratify = null; armed();
-  for (const id of ["load-blob", "load-pass"]) $(id).value = "";
-  for (const id of ["gen-out", "rel-out", "rat-out", "not-out", "dock-out"]) $(id).innerHTML = "";
+  KEYS.release = null; KEYS.ratify = null; rawOnce = null; armed();
+  for (const id of ["load-blob", "load-pass", "gen-pass", "gen-pass2", "rec-pass", "rec-pass2"]) $(id).value = "";
+  for (const id of ["gen-out", "rec-out", "rel-out", "rat-out", "not-out", "dock-out"]) $(id).innerHTML = "";
   $("load-out").innerHTML = `<p class="note">Forgotten. Nothing signing-related is left in this tab.</p>`;
 };
 

@@ -73,9 +73,12 @@
  * From the repository root (bundler R21; moved from the old process's `tools/` in T19):
  *   node bio-plane/scripts/bundles.mjs              rebuild every stale bundle, say which
  *   node bio-plane/scripts/bundles.mjs --check      report only; write nothing; 0 all fresh, 1 stale
+ *   node bio-plane/scripts/bundles.mjs --install-dirs
+ *                    print, one per line, each directory whose `npm ci` the byte guard needs, the plane's first
+ *                    (run after the plane's own `npm ci`): the release-sign workflow's install list (R30, R22)
  */
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
@@ -212,11 +215,27 @@ export async function run({ repoRoot = null, check = false, plane = true, log = 
   return left.length || failed.length ? 1 : 0;
 }
 
+/** R30's second step: the directories, besides the plane's, a checkout must `npm ci` in before a release can be
+ *  assembled — each guarded bundle's member that has a `package-lock.json` (its vendored inputs are what the byte
+ *  guard rebuilds from), repository-relative, the plane first, then in discovery's order. Derived from discovery
+ *  (R1), never listed by hand in the workflow. The library needs the plane's own install (esbuild), so the plane's
+ *  `npm ci` comes first. */
+export async function installDirs(repoRoot = null) {
+  const lib = await library();
+  const root = repoRoot || lib.REPO_ROOT;
+  return ["bio-plane", ...lib.discoverMembers(root).filter((m) => m.bundle && existsSync(join(m.abs, "package-lock.json")))
+    .map((m) => m.dir)];
+}
+
 /* Run as a command, never when IMPORTED — compared as RESOLVED PATHS rather than
    by a filename suffix, which an importing test file (`bundles.test.mjs`, retired)
    satisfied on some spellings, and which is how a module that exits the importing
    process gets written. */
 const INVOKED = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (INVOKED && process.argv.includes("--install-dirs")) {
+  for (const d of await installDirs()) console.log(d);
+  process.exit(0);
+}
 if (INVOKED) {
   const check = process.argv.includes("--check");
   process.exit(await run({ check }));
