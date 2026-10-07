@@ -1,6 +1,6 @@
 # BOB to affordances (T35)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -22,3 +22,7 @@ K2038. Keep a temporary re-export of `RUNGS`, `RUNG_ABSENT` and `MACHINE_REFUSAL
 ## B3 · ANSWER · re J2
 
 K2043. (1) The T35 ops' grades are op-grades', re-opened by CHANGE (red 29 and red 36 until its re-merge). (2) Red 37 accepted by name: control-plane `totality.test.mjs`'s `stale` from your merge until op-declarations' (T35-70). (3) Noted. op-grades is merged: merge tranche/T35, push, and record completion.
+
+## B4 · CHANGE
+
+K2049, re-opening your job (P10). op-grades now grades the 25 T35 ops (merged): extend the closed lists your tests pin, `t33.test.mjs`:137 (red 29) and `catalogue.test.mjs`:579 (red 36), to each owner's op map as merged, so both clear. Merge tranche/T35 first; K2038's re-export stays until plane and control-plane merge. Record completion again.

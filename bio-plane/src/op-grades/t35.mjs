@@ -1,4 +1,5 @@
-/* op-grades — R21, R22 (K1943; T35): THE OPS `op-declarations` R30 DECLARES, graded by R5 and R3 with `affordances` R12's
+/* op-grades — R21, R22 (K1943; T35): THE OPS `op-declarations` R30 DECLARES, AND (K2043) THE OTHER OPS IT DECLARES IN
+ * T35 FOR THE OWNERS OF L5 AND L6, graded by R5 and R3 with `affordances` R12's
  * totality holding over them, each grade read from its owner's requirements as R13 and R17 do; and `personexpunge`'s
  * consequence statement (N623, DEC-142), a named exception beside `actionholdrelease` (R8, DEC-113's tier). Data only: no
  * op's behaviour is decided here (P6). `./index.mjs` spreads the four tables into `RUNGS`, `RUNG_ABSENT`, `NON_ACTS` and
@@ -16,6 +17,19 @@ const SESSION_DIRECTED = "session-directed: ends the caller's own session, or ev
 export const T35_RUNGS = {
   /* acquisition R43: a further set takes it back, and it asks no reason (R3) */
   coarchiveset:         "reversible", // a further coarchiveset sets it again
+  /* K2043 (B3): the ops T35's L5 and L6 owners serve that op-declarations declares beside R30's, graded on the same rule */
+  /* standards R35, R37, R40, R43: each refuses an absent reason STANDARD_NO_REASON and is corrected forward (a force
+     withdrawn and declared again, an adoption or imposition superseded by a later one, a benchmark declared again) */
+  standardforce:        "reasoned",   // STANDARD_NO_REASON (standards R35)
+  standardforcewithdraw: "reasoned",  // STANDARD_NO_REASON (standards R35: a correction withdraws a force with a reason)
+  standardrelease:      "reasoned",   // STANDARD_NO_REASON (standards R37: never undone, recorded with who, when and why)
+  standardadoption:     "reasoned",   // STANDARD_NO_REASON (standards R40)
+  standardimpose:       "reasoned",   // STANDARD_NO_REASON (standards R43)
+  standardbenchmark:    "reasoned",   // STANDARD_NO_REASON (standards R43: recorded with who, when and why)
+  /* events R45, duties R27: a recorded use withdrawn, and a use linked or unlinked, each with a reason */
+  usewithdraw:          "reasoned",   // NO_REASON (events R45)
+  uselink:              "reasoned",   // DUTY_NO_REASON (duties R27); useunlink takes it back with its own reason
+  useunlink:            "reasoned",   // DUTY_NO_REASON (duties R27: an unlink keeps the link, shown unlinked)
 };
 
 /* ---- the stated absences ---- */
@@ -31,6 +45,22 @@ export const T35_RUNG_ABSENT = {
   /* credentials R46, R47 (K1888), as signeradd and knockerconsent */
   recoverycodesissue:   { ground: "credential", is: "an administrator issues their own ten one-time recovery codes, shown once and stored as digests (credentials R46)" },
   recover:              { ground: "credential", is: "a recovery code and a new password, reached with no session, set the password and spend the code (credentials R47)" },
+  /* K2043 (B3). events R43, R44: created as eventcreate creates an event; the stated reason is the record's, never the
+     member's account, so on R3's rule neither asks one and no published act takes either back (usewithdraw sets a use
+     aside as withdrawn, the event kept) */
+  discretionrecord:     { ground: "undetermined", is: "a member records one use of a power — an act of discretion or a waiver — as an event with its decider, subject, provision, the reason as the record states it and its outcome (events R43)" },
+  assessmentrecord:     { ground: "undetermined", is: "a member records one accreditation or certification assessment as an event, with the standards it found unmet, each cited (events R44)" },
+  /* calculations R32: freezes the held uses a filter answers at this instant, as recordset freezes a query's ids */
+  usesfreeze:           { ground: "observational", is: "freezes the held uses of powers a member may see, under a filter, as a table input at this instant; a later freeze is another set (calculations R32)" },
+  /* standards R35, duties R28: a proposal stored apart and labelled, as lawpropose and dutypropose */
+  standardforcepropose: { ground: "undetermined", is: "a machine or a member PROPOSES the force of one provision with its citation, stored apart and labelled; a force only when a member confirms it (standards R35)" },
+  reviewpropose:        { ground: "undetermined", is: "a machine or a member PROPOSES a policy's own review date as the body's commitment, stored apart and labelled; never tracked until a member adopts it (duties R28)" },
+  /* capture-requests R51, R52: a member's act on the record that asks no reason; an answer is recorded once and never
+     replaced, and no published act takes either back */
+  recordsrequestopen:   { ground: "undetermined", is: "a member records that the group is asking the issuer of a policy held only by citation for its text; one open request per standard (capture-requests R51)" },
+  recordsrequestanswer: { ground: "undetermined", is: "a member records the issuer's answer to a records request — produced, none exists, withheld or no answer — once, never replaced (capture-requests R52)" },
+  /* credentials R43: the member's own subscription fact cleared, as accountreferenceremove */
+  subscriptiondisconnect: { ground: "credential", is: "a member clears the fact that they are connected through their own subscription; it holds no login (credentials R43)" },
 };
 
 /* ---- every op's NON_ACTS reason (R5) ---- */
@@ -56,6 +86,40 @@ export const T35_NON_ACTS = {
   adminrecoverystep: R("whether the group's second-administrator step is done, to an administrator"),
   agentpack: R("the agent's pack and fences, as op=affordances carries them"),
   credit: "read: public, no credential",
+  /* K2043 (B3) */
+  standardforce: "standard-directed: keyed by a standard and one of its provisions, reached from the standard's text; a "
+    + "member's confirmed force with its citation, moving no bundle",
+  standardforcewithdraw: "standard-directed: keyed by a confirmed force; kept, shown withdrawn with who, when and why",
+  standardforcepropose: "standard-directed: keyed by a standard and one of its provisions; a proposal stored apart and "
+    + "labelled, never a force until a member confirms it",
+  standardrelease: "standard-directed: keyed by a policy held at its source's sight, reached from the policy; its owner "
+    + "moves it to the group's sight, recorded and never undone",
+  standardadoption: "standard-directed: keyed by a standard and the act that adopted it; writes standards' rows and moves "
+    + "no bundle",
+  standardimpose: "standard-directed: keyed by a standard, a body and the law that imposes it; writes standards' rows and "
+    + "moves no bundle",
+  standardbenchmark: "standard-directed: keyed by a standard and a body; a comparison declared, never a finding that the "
+    + "body is bound",
+  forcesof: R("each portion's confirmed force of a standard with its citation, holder and criteria, its proposals apart"),
+  overridesof: R("the overrides naming or made by a standard"),
+  editioninforce: R("the edition a body's adoptions put in force on a date, with the adoption it rests on, or undetermined"),
+  bindsat: R("whether a held standard binds a body on a date, or is a benchmark, or undetermined, with what it rests on"),
+  discretionrecord: "event-directed: keyed by a new EVT- id; writes events' rows and moves no bundle",
+  assessmentrecord: "event-directed: keyed by a new EVT- id; writes events' rows and moves no bundle",
+  usewithdraw: "event-directed: keyed by event; keeps it, shown withdrawn with who, when and why, and moves no bundle",
+  usesof: R("the held uses of powers the viewer may see — acts of discretion, waivers and assessments — never every use made"),
+  usesfreeze: "set-directed: keyed by the frozen set's digest; freezes the held uses a filter answers as a table input",
+  applicationrecipes: R("the recipes of application a member instantiates over a frozen uses table"),
+  uselink: "power-directed: keyed by (power, event); a member's link with its reason, moving no bundle",
+  useunlink: "power-directed: keyed by (power, event); keeps the link, shown unlinked with who, when and why",
+  reviewpropose: "duty-directed: keyed by a new proposal; stored apart and labelled, never tracked until a member adopts it",
+  poweruses: R("the events that use a power held, each with how it is linked and whether its decider is the obligor"),
+  recordsrequestopen: "standard-directed: keyed by a standard held only by citation; writes capture-requests' rows and "
+    + "moves no bundle",
+  recordsrequestanswer: "request-directed: keyed by a records request; its answer recorded once and moves no bundle",
+  recordsrequests: R("the records requests whose standard the viewer may see, each with its answer"),
+  subscriptiondisconnect: "credential governance: a member clears their own subscription fact; the subject is a "
+    + "credential, not a bundle",
 };
 
 /* ---- R21 (N623, DEC-142): `personexpunge`'s consequence statement. Its rung stays `reasoned` (people R12 refuses it
