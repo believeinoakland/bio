@@ -67,8 +67,7 @@ import { instrumentKey, matchSource, referenceKey, sourceCopy, foldCite, isPorti
 import { COPY_STATES, HELD_STATES, ACCESS_STATES, FORCES, POLICY_FORCES, ownerWords, forceWords, bindingWords, heldWords,
          accessWords, notPublicWords } from "./words.mjs";
 import { LawRecords, LAW_RELATIONS, COURT_LINKS, TREATMENTS, CONNECTION_KINDS, CONNECTION_OWNER, IN_FORCE_METHOD,
-         weakestCeiling } from "../law-relations/index.mjs";
-import { refusal as lawRefusal } from "../law-relations/checks.mjs";
+         weakestCeiling, machineRelate, refuseNoCitation } from "../law-relations/index.mjs";
 
 export { STANDARDS_CHECKS } from "./checks.mjs";
 export { STANDARDS_SCHEMA, STANDARDS_TABLES } from "./schema.mjs";
@@ -2094,19 +2093,6 @@ function refuseFieldUnknown(a, keys) {
                    + "was written.", { rejected: unknown, accepted: [...keys] });
   /* END DEC-49 REGION is-standard-field */
   return null;
-}
-
-/* R40, R43: `law-relations`' MACHINE_CANNOT_RELATE and LAW_RELATION_NO_CITATION, answered through its catalogue's
-   rows (it exports no minting function for them; reported to BOB, K1970's CHANGE). */
-function machineRelate(author) {
-  if (str(author) && !isMachineIdentity(str(author))) return null;
-  return lawRefusal("MACHINE_CANNOT_RELATE", "recording an adoption or an imposition is a named member's act; a machine "
-                    + "proposes. Nothing was written.");
-}
-function refuseNoCitation(of, citation) {
-  return lawRefusal("LAW_RELATION_NO_CITATION", `the citation is a content id among the text of ${of}, the passage that `
-                    + "says so, which you may read. Nothing was written.",
-                    { standard: of, citation: typeof citation === "string" ? citation.slice(0, 80) : null });
 }
 
 /** R33: a family's key, composed from its source `key` and series `key` (`jurisdictions` R50, R63). Pure. */
