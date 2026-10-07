@@ -197,7 +197,7 @@ const SCREEN_REFS = {
     ["Council",null,"<b>Council</b> · Oakland City Council · its votes are recorded in minutes on Legistar","Approved amendment 1 in January 2024; no council vote is recorded for the March rent change."],
     ["City Administrator",null,"<b>City Administrator</b> · an office · runs the city's departments and answers to the council","Signed the March 2024 adjustment; no council vote stands behind it in this record."],
     ["We requested the rent schedules","action","<b>Request: the rent schedules</b> · a records request to the Office of the City Clerk · 4 September 2026 · answered 18 September","The group's own act, in its own lane, beside the reply it got."],
-    ["April notice",null,"<b>April notice</b> · the city's notice of the new rent · dated April 2024, month only","Its order against the March adjustment is undetermined; a source dated to the day would settle it."],
+    ["April notice",null,"<b>April notice</b> · the city's notice of the new rent · dated April 2024, month only","Its order against the March adjustment is undetermined; a source dated to the day would help order them."],
     ["Memo on rent indexing","document","<b>Memo on rent indexing</b> · a document · no date on its face","Kept apart until a source dates it; it may show how the 2024 rent was set."]
   ],
   "money": [
