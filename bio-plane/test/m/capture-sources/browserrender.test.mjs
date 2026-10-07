@@ -16,6 +16,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { renderWithBinding, browserBindingRenderer } from "../../../src/browserrender.mjs";
 import { SUBRESOURCE_CAP, SUBRESOURCE_MAX } from "../../../src/subresources.mjs";
+import { renderBlock } from "../../../src/render.mjs";
 
 const HOST = "portal.example.gov";
 const SCALE = 20;
@@ -28,13 +29,48 @@ const later = (fakeMs, fn) => setTimeout(fn, Math.max(0, fakeMs / SCALE));
    browser's own behaviour. `stats` counts sessions and closes; `on` lets a test act at
    a named CDP call (to jump a clock). */
 function fakeBinding(pages, mode = {}, on = {}) {
-  const stats = { acquires: 0, upgrades: 0, closeTargets: 0, browserCloses: 0, socketCloses: 0, lateCloses: 0, calls: [], asked: {} };
+  const stats = { acquires: 0, upgrades: 0, closeTargets: 0, browserCloses: 0, socketCloses: 0, lateCloses: 0, calls: [], asked: {},
+                  sent: [], held: {}, resumed: [] };
   const socket = () => {
     const ls = { message: [], close: [] };
     let closed = false, page = null, key = null;
     const timers = [];
     const deliver = (obj) => setImmediate(() => { if (!closed) for (const f of ls.message) f({ data: JSON.stringify(obj) }); });
-    const ev = (method, params) => deliver({ method, params, sessionId: "S1" });
+    const ev = (method, params, sessionId = "S1") => deliver({ method, params, sessionId });
+    /* R64: the browser's hold. `fetchOn` and `socketsBlocked` are per session; a request on a session with
+       interception on is PAUSED until the driver answers it, and only one let go reaches `stats.sent`. */
+    const fetchOn = new Set(), socketsBlocked = new Set(), pauses = new Map();
+    let pauseN = 0;
+    const hold = (sid, url, type, networkId, frameId = "F1") => new Promise((resolve) => {
+      if (!fetchOn.has(sid)) { stats.sent.push(url); return resolve(true); }
+      const id = "I" + pauseN++;
+      pauses.set(id, (go) => { if (go) stats.sent.push(url); resolve(go); });
+      ev("Fetch.requestPaused", { requestId: id, request: { url }, resourceType: type || "Other", networkId, frameId }, sid);
+    });
+    const runRequests = (rs, sid, prefix) => rs.forEach((r, i) => timers.push(later(r.startAfterMs || 0, async () => {
+      const id = prefix + i;
+      ev("Network.requestWillBeSent", { requestId: id, request: { url: r.url }, type: r.type, frameId: r.frameId || "F1" }, sid);
+      const blocked = () => ev("Network.loadingFailed", { requestId: id, errorText: "net::ERR_BLOCKED_BY_CLIENT" }, sid);
+      if (!(await hold(sid, r.url, r.type, id, r.frameId))) return blocked();
+      if (r.end === "redirect") {
+        ev("Network.requestWillBeSent", { requestId: id, request: { url: r.to }, type: r.type, frameId: "F1", redirectResponse: { status: r.status } }, sid);
+        if (!(await hold(sid, r.to, r.type, id))) return blocked();
+        ev("Network.responseReceived", { requestId: id, type: r.type, frameId: "F1", response: { status: r.toStatus } }, sid);
+        ev("Network.loadingFinished", { requestId: id }, sid);
+        return;
+      }
+      const end = () => {
+        if (typeof r.status === "number") ev("Network.responseReceived", { requestId: id, type: r.type, frameId: r.frameId || "F1", response: { status: r.status } }, sid);
+        if (r.end === "finished") ev("Network.loadingFinished", { requestId: id }, sid);
+        if (r.end === "failed") ev("Network.loadingFailed", { requestId: id, errorText: "net::ERR_FAILED" }, sid);
+        if (r.end === "blocked") ev("Network.loadingFailed", { requestId: id, blockedReason: r.blockedReason }, sid);
+      };
+      if (r.lifeMs) timers.push(later(r.lifeMs, end)); else end();
+    })));
+    const openSockets = (urls, sid, prefix) => urls.forEach((url, i) => {
+      ev("Network.webSocketCreated", { requestId: prefix + i, url }, sid);
+      if (!socketsBlocked.has(sid)) stats.sent.push(url);
+    });
     const ws = {
       accept() {},
       addEventListener(t, f) { ls[t].push(f); },
@@ -45,8 +81,35 @@ function fakeBinding(pages, mode = {}, on = {}) {
         if (on[m.method]) on[m.method](m);
         const ok = (result) => deliver({ id: m.id, result });
         const err = (message) => deliver({ id: m.id, error: { message } });
-        const refuse = (mode.refuse || []).includes(m.method);
+        const sid = m.sessionId || null;
+        const refuse = (mode.refuse || []).includes(m.method) || ((mode.refuseOn || {})[sid] || []).includes(m.method);
         switch (m.method) {
+          case "Fetch.enable":
+            stats.held[sid] = { ...(stats.held[sid] || {}), fetch: m.params.patterns };
+            if (refuse) return err("Fetch.enable unavailable");
+            fetchOn.add(sid); return ok({});
+          case "Network.setBlockedURLs":
+            stats.held[sid] = { ...(stats.held[sid] || {}), blockedURLs: m.params.urls };
+            if (refuse) return err("setBlockedURLs unavailable");
+            if ((m.params.urls || []).includes("ws://*") && (m.params.urls || []).includes("wss://*")) socketsBlocked.add(sid);
+            return ok({});
+          case "Target.setAutoAttach":
+            stats.held[sid] = { ...(stats.held[sid] || {}), autoAttach: m.params };
+            return refuse ? err("setAutoAttach unavailable") : ok({});
+          case "Fetch.continueRequest": case "Fetch.failRequest": {
+            const go = pauses.get(m.params.requestId);
+            if (!go) return err("Invalid InterceptionId.");
+            pauses.delete(m.params.requestId);
+            if (m.method === "Fetch.failRequest") stats.asked.failReason = m.params.errorReason;
+            go(m.method === "Fetch.continueRequest");
+            return ok({});
+          }
+          case "Runtime.runIfWaitingForDebugger": {
+            stats.resumed.push(sid);
+            const child = page && page.child;
+            if (child && sid === "S2") { runRequests(child.requests || [], "S2", "K"); openSockets(child.sockets || [], "S2", "KW"); }
+            return ok({});
+          }
           case "Browser.getVersion": return refuse ? err("no version") : ok({ product: mode.product ?? "HeadlessChrome/124.0.6367.207" });
           case "Target.getTargets": return ok({ targetInfos: mode.notargets ? [] : [{ targetId: "T1", type: "page" }] });
           case "Target.createTarget": stats.asked.createTarget = true; return ok({ targetId: "T-made" });
@@ -54,29 +117,19 @@ function fakeBinding(pages, mode = {}, on = {}) {
           case "Emulation.setDeviceMetricsOverride": case "Emulation.setLocaleOverride": case "Emulation.setTimezoneOverride":
             stats.asked[m.method] = m.params; return refuse ? err("override refused") : ok({});
           case "Network.enable": case "Page.enable": case "Debugger.enable": return refuse ? err(`${m.method} unavailable`) : ok({});
-          case "Page.navigate": {
+          case "Page.navigate": return (async () => {
             key = new URL(m.params.url).pathname; page = pages[key] || { requests: [], scripts: [] };
             if (page.navHang) return;
+            /* The navigation is a request too: held, and refused as the browser refuses one (R64). Its redirect
+               hop, when the page has one, is held again. */
+            if (!(await hold("S1", m.params.url, "Document", "NAV"))) return ok({ frameId: "F1", errorText: "net::ERR_BLOCKED_BY_CLIENT" });
+            if (page.navRedirect && !(await hold("S1", page.navRedirect, "Document", "NAV"))) return ok({ frameId: "F1", errorText: "net::ERR_BLOCKED_BY_CLIENT" });
             if (page.navError) return ok({ frameId: "F1", errorText: page.navError });
             ok({ frameId: "F1", loaderId: "L1" });
-            const rs = page.requests || [];
-            rs.forEach((r, i) => timers.push(later(r.startAfterMs || 0, () => {
-              const id = "R" + i;
-              ev("Network.requestWillBeSent", { requestId: id, request: { url: r.url }, type: r.type, frameId: r.frameId || "F1" });
-              if (r.end === "redirect") {
-                ev("Network.requestWillBeSent", { requestId: id, request: { url: r.to }, type: r.type, frameId: "F1", redirectResponse: { status: r.status } });
-                ev("Network.responseReceived", { requestId: id, type: r.type, frameId: "F1", response: { status: r.toStatus } });
-                ev("Network.loadingFinished", { requestId: id });
-                return;
-              }
-              const end = () => {
-                if (typeof r.status === "number") ev("Network.responseReceived", { requestId: id, type: r.type, frameId: r.frameId || "F1", response: { status: r.status } });
-                if (r.end === "finished") ev("Network.loadingFinished", { requestId: id });
-                if (r.end === "failed") ev("Network.loadingFailed", { requestId: id, errorText: "net::ERR_FAILED" });
-                if (r.end === "blocked") ev("Network.loadingFailed", { requestId: id, blockedReason: r.blockedReason });
-              };
-              if (r.lifeMs) timers.push(later(r.lifeMs, end)); else end();
-            })));
+            runRequests(page.requests || [], "S1", "R");
+            openSockets(page.sockets || [], "S1", "W");
+            /* A frame the page starts, auto-attached and waiting for the driver to resume it. */
+            if (page.child) ev("Target.attachedToTarget", { sessionId: "S2", targetInfo: { targetId: "T2", type: "iframe" }, waitingForDebugger: true });
             /* A page that keeps starting short requests: never quiet. */
             if (page.churn) {
               let n = 0;
@@ -86,8 +139,7 @@ function fakeBinding(pages, mode = {}, on = {}) {
             }
             for (const s of page.scripts || []) ev("Debugger.scriptParsed", { url: s.url, scriptId: "s" });
             if (!page.noLoad) timers.push(later(page.loadAfterMs || 0, () => ev("Page.loadEventFired", { timestamp: 1 })));
-            return;
-          }
+          })();
           case "Network.getResponseBody": {
             if (page && page.bodyHang) return;
             const r = page && (page.requests || [])[Number(String(m.params.requestId).slice(1))];
@@ -244,7 +296,7 @@ test("R21: the environment is answered as asked only where the browser accepted 
   assert.deepEqual([silent.engine, silent.engine_version], [null, null]);
 });
 
-test("R22: every request the page made, typed and by outcome; scripts by URL; null when a domain will not enable", async () => {
+test("R22: every request the page made, typed and by outcome; scripts by URL; null when the debugger domain will not enable (R64: the network domain's refusal fails the render)", async () => {
   const a = await render("/mixed");
   const by = Object.fromEntries(a.requests.map((r) => [r.url, r]));
   assert.deepEqual(by["https://ads.example/p.gif"], { url: "https://ads.example/p.gif", type: "image", outcome: "blocked", blocked_by: "inspector" });
@@ -257,8 +309,13 @@ test("R22: every request the page made, typed and by outcome; scripts by URL; nu
   assert.deepEqual(s.scripts, [{ url: `https://${HOST}/app.js` }]);
   const stream = await render("/stream", { wait: { until: "load", timeout_ms: 15000 } });
   assert.equal(stream.requests.find((r) => r.url.startsWith("https://events.")).outcome, "pending");
-  const noNet = await render("/same", {}, { binding: fakeBinding(PAGES, { refuse: ["Network.enable"] }) });
-  assert.deepEqual([noNet.ok, noNet.requests, noNet.scripts.length], [true, null, 1]);
+  /* R64: the network domain is part of the hold (the socket refusal applies only on an enabled domain), so a render
+     whose network domain will not enable fails by name, before any navigation, instead of answering `requests: null`. */
+  const nb = fakeBinding(PAGES, { refuse: ["Network.enable"] });
+  const noNet = await render("/same", {}, { binding: nb });
+  assert.equal(noNet.ok, false);
+  assert.match(noNet.error, /would not hold this render's requests \(its network domain would not enable: CDP Network\.enable unavailable\), so nothing was rendered/);
+  assert.ok(!nb.stats.calls.includes("Page.navigate"));
   const noDbg = await render("/same", {}, { binding: fakeBinding(PAGES, { refuse: ["Debugger.enable"] }) });
   assert.deepEqual([noDbg.ok, noDbg.scripts, noDbg.requests.length], [true, null, 4]);
 });
@@ -358,4 +415,111 @@ test("R26: after load, a quiet window that excludes requests older than the meas
   assert.deepEqual([idle.wait.long_lived.count, idle.wait.long_lived.urls], [0, []]);
   /* `until: load` is not overridden by the quiet window. */
   assert.equal((await render("/stream", { wait: { until: "load", timeout_ms: 15000 } })).wait.fired, "load");
+});
+
+/* R64 (F19): a page whose scripts ask a literal IP, `localhost`, an `http:` address and the group's own hosts, beside
+   addresses that may go; a frame it starts; two sockets. */
+const OWN = ["plane.grp.example", ".acct.workers.dev"];
+const HOSTILE = {
+  "/hostile": {
+    requests: [
+      { url: `https://${HOST}/hostile`, type: "Document", status: 200, end: "finished" },
+      { url: "https://cdn.example.com/ok.js", type: "Script", status: 200, end: "finished", bodyText: "ok()" },
+      { url: "https://192.168.0.1/admin", type: "XHR", status: 200, end: "finished" },
+      { url: "https://169.254.169.254/latest/meta-data", type: "Fetch", status: 200, end: "finished" },
+      { url: "https://localhost/x", type: "XHR", status: 200, end: "finished" },
+      { url: "http://data.example.gov/feed", type: "XHR", status: 200, end: "finished" },
+      { url: "https://PLANE.grp.example./op?x=1", type: "Fetch", status: 200, end: "finished" },
+      { url: "https://agent.acct.workers.dev/run", type: "XHR", status: 200, end: "finished" },
+      { url: "https://cdn.example.com/hop", type: "XHR", status: 302, end: "redirect", to: "https://plane.grp.example/in", toStatus: 200 },
+      { url: "data:text/plain,hello", type: "Image", status: 200, end: "finished" },
+    ],
+    sockets: ["wss://events.example.com/s", "ws://chat.example.com/s"],
+    child: { requests: [
+      { url: "https://10.0.0.1/frame", type: "Document", status: 200, end: "finished" },
+      { url: "https://frames.example.com/f", type: "Document", status: 200, end: "finished" },
+    ] },
+  },
+  "/hop": { requests: [], navRedirect: "https://plane.grp.example/in" },
+};
+
+test("R64: every request is held in the browser and let go only to a public locator off the group's own hosts", async () => {
+  const b = fakeBinding(HOSTILE);
+  const a = await render("/hostile", { own_hosts: OWN }, { binding: b });
+  assert.equal(a.ok, true);
+  /* The hold is on, for every URL, on the page and on the frame it started, before the navigation. */
+  assert.deepEqual(b.stats.held.S1.fetch, [{ urlPattern: "*", requestStage: "Request" }]);
+  assert.deepEqual(b.stats.held.S1.blockedURLs, ["ws://*", "wss://*"]);
+  assert.deepEqual(b.stats.held.S1.autoAttach, { autoAttach: true, waitForDebuggerOnStart: true, flatten: true });
+  assert.ok(b.stats.calls.indexOf("Fetch.enable") < b.stats.calls.indexOf("Page.navigate"));
+  assert.ok(b.stats.calls.indexOf("Network.setBlockedURLs") < b.stats.calls.indexOf("Page.navigate"));
+  assert.deepEqual(b.stats.held.S2.fetch, [{ urlPattern: "*", requestStage: "Request" }]);
+  assert.deepEqual(b.stats.held.S2.blockedURLs, ["ws://*", "wss://*"]);
+  assert.deepEqual(b.stats.resumed, ["S2"]);
+  assert.equal(b.stats.asked.failReason, "BlockedByClient");
+  /* Only these were ever sent: the page, the public addresses, the hop's first leg, the frame's public load, and the
+     `data:` address, which reaches no host. */
+  assert.deepEqual([...b.stats.sent].sort(), [`https://${HOST}/hostile`, `https://${HOST}/hostile`, "https://cdn.example.com/hop",
+    "https://cdn.example.com/ok.js", "https://frames.example.com/f", "data:text/plain,hello"].sort());
+  /* Each refused one is listed, blocked by its reason, and never answered. */
+  const by = Object.fromEntries(a.requests.map((r) => [r.url, r]));
+  for (const [url, reason] of [["https://192.168.0.1/admin", "NOT_A_PUBLIC_LOCATOR"], ["https://169.254.169.254/latest/meta-data", "NOT_A_PUBLIC_LOCATOR"],
+    ["https://localhost/x", "NOT_A_PUBLIC_LOCATOR"], ["http://data.example.gov/feed", "NOT_A_PUBLIC_LOCATOR"],
+    ["https://PLANE.grp.example./op?x=1", "OWN_HOST"], ["https://agent.acct.workers.dev/run", "OWN_HOST"],
+    ["https://plane.grp.example/in", "OWN_HOST"], ["https://10.0.0.1/frame", "NOT_A_PUBLIC_LOCATOR"],
+    ["wss://events.example.com/s", "NOT_A_PUBLIC_LOCATOR"], ["ws://chat.example.com/s", "NOT_A_PUBLIC_LOCATOR"]]) {
+    assert.ok(by[url], url);
+    assert.deepEqual([by[url].outcome, by[url].blocked_by], ["blocked", reason], url);
+    assert.ok(!("status" in by[url]), url);
+  }
+  assert.deepEqual([by["https://cdn.example.com/ok.js"].outcome, by["https://frames.example.com/f"].outcome], ["completed", "completed"]);
+  assert.equal(by["https://cdn.example.com/hop"].outcome, "completed"); /* the hop let go; its target refused */
+  /* R12 counts them. */
+  const block = renderBlock(a, { pageUrl: `https://${HOST}/hostile`, shellSha: "0".repeat(64), asked: {}, at: "2026-10-07T00:00:00Z" });
+  assert.equal(block.ok, true);
+  assert.equal(block.render.requests.blocked, 10);
+  assert.deepEqual(block.render.requests.blocked_by, { NOT_A_PUBLIC_LOCATOR: 7, OWN_HOST: 3 });
+
+  /* With no own hosts handed in, the own-host arm refuses nothing (F16 low, K1940); the other arm is unchanged. */
+  const open = fakeBinding(HOSTILE);
+  const o = await render("/hostile", {}, { binding: open });
+  const oby = Object.fromEntries(o.requests.map((r) => [r.url, r]));
+  assert.equal(oby["https://agent.acct.workers.dev/run"].outcome, "completed");
+  assert.deepEqual([oby["https://192.168.0.1/admin"].outcome, oby["https://192.168.0.1/admin"].blocked_by], ["blocked", "NOT_A_PUBLIC_LOCATOR"]);
+});
+
+test("R64: a refused navigation fails naming the address; a render whose hold cannot be enabled fails before any navigation", async () => {
+  /* The address asked, refused before a browser is spent on it. */
+  for (const [url, reason] of [["https://plane.grp.example/doc", "OWN_HOST"], ["http://portal.example.gov/doc", "NOT_A_PUBLIC_LOCATOR"],
+    ["https://127.0.0.1/doc", "NOT_A_PUBLIC_LOCATOR"]]) {
+    const b = fakeBinding(HOSTILE);
+    const a = await renderWithBinding(b, { url, own_hosts: OWN, wait: { timeout_ms: 1000 } }, { now: scaled() });
+    assert.equal(a.ok, false);
+    assert.ok(a.error.includes(`could not navigate to ${url}: ${url} was refused before it was sent (${reason}:`), a.error);
+    assert.equal(b.stats.acquires, 0);
+    assert.deepEqual(b.stats.sent, []);
+  }
+  /* A redirect hop of the navigation, refused in the browser, named. */
+  const h = fakeBinding(HOSTILE);
+  const hop = await render("/hop", { own_hosts: OWN }, { binding: h });
+  assert.equal(hop.ok, false);
+  assert.match(hop.error, new RegExp(`could not navigate to https://${HOST}/hop: net::ERR_BLOCKED_BY_CLIENT; https://plane\\.grp\\.example/in was refused before it was sent \\(OWN_HOST:`));
+  assert.deepEqual(h.stats.sent, [`https://${HOST}/hop`]);
+  assert.deepEqual([h.stats.closeTargets, h.stats.browserCloses, h.stats.socketCloses], [1, 1, 1]);
+  /* Interception, the socket rule or the frames' hold will not take: failed by name, nothing navigated or sent. */
+  for (const method of ["Fetch.enable", "Network.setBlockedURLs", "Target.setAutoAttach"]) {
+    const b = fakeBinding(HOSTILE, { refuse: [method] });
+    const a = await render("/hostile", { own_hosts: OWN }, { binding: b });
+    assert.equal(a.ok, false, method);
+    assert.match(a.error, /^the browser would not hold this render's requests \(request interception could not be enabled: .*\), so nothing was rendered$/, method);
+    assert.ok(!b.stats.calls.includes("Page.navigate"), method);
+    assert.deepEqual(b.stats.sent, [], method);
+    assert.deepEqual([b.stats.closeTargets, b.stats.browserCloses, b.stats.socketCloses], [1, 1, 1], method);
+  }
+  /* A frame whose own hold will not take is never resumed, so it sends nothing; the page's render stands. */
+  const c = fakeBinding(HOSTILE, { refuseOn: { S2: ["Fetch.enable"] } });
+  const ca = await render("/hostile", { own_hosts: OWN }, { binding: c });
+  assert.equal(ca.ok, true);
+  assert.deepEqual(c.stats.resumed, []);
+  assert.ok(!c.stats.sent.includes("https://frames.example.com/f"));
 });

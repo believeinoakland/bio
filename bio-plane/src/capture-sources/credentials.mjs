@@ -24,11 +24,16 @@
  * (`#sweep`, `#withdrawRevoked`), which withdraws such a credential then and never answers it. `project` and
  * `group` credentials stay, having been given to the project or the group.
  *
+ * THE GROUP'S OWN HOSTS (F16, R55, R56, R65). A credential is never for the host the group's Civicsmith is reached at
+ * or a fleet member's (`ownHosts`, the composition root's to hand in, read by `own-hosts.mjs`): supplying one is
+ * refused `CAPTURE_CREDENTIAL_OWN_HOST`, and one supplied before that refusal existed is never answered for a fetch.
+ *
  * BOUNDED READS (N189). `credentialsForFetch` reads the one admitted row, its scope rule and order in the SQL
  * (`LIMIT 1`); `credentialList` reads at most `limit` + 1 of the rows the viewer may see, its visibility in the SQL
  * (membership's `viewerPredicate`, R43, for a project's), and publishes the cut. */
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate } from "../membership/index.mjs";
+import { isOwnHost } from "./own-hosts.mjs";
 
 export const CREDENTIAL_KINDS = Object.freeze(["login", "user-agent", "other"]);
 /* Narrowest first: the order R56 chooses in. */
@@ -57,7 +62,7 @@ export const CAPTURE_CREDENTIAL_CHECKS = Object.freeze({
   CAPTURE_CREDENTIAL_NOT_PERMITTED: { check: "C-105.7", where: at("#r63Refusal", "is-credential-permitted"),
     translation: "This member may not supply or withdraw a credential at that scope." },
   CAPTURE_CREDENTIAL_NO_KEY: { check: "C-105.8", where: at("credentialSupply", "is-credential-key-bound"),
-    translation: "No encryption key is bound to this instance, so no credential is stored or used." },
+    translation: "No encryption key is set for your group's Civicsmith, so no credential is stored or used." },
   CAPTURE_CREDENTIAL_NO_SUCH: { check: "C-105.9", where: at("credentialWithdraw", "is-credential-seen"),
     translation: "No credential by that id is visible to you here. One that does not exist and one you may not see are "
       + "answered alike, so this is not a hint either way." },
@@ -67,6 +72,9 @@ export const CAPTURE_CREDENTIAL_CHECKS = Object.freeze({
   CAPTURE_CREDENTIAL_WITHDRAW_FAILED: { check: "C-105.11", where: at("credentialWithdraw", "is-credential-withdrawn"),
     translation: "The credential could not be read or withdrawn just now, so nothing was changed. Try again, and if it "
       + "keeps failing tell an administrator." },
+  CAPTURE_CREDENTIAL_OWN_HOST: { check: "C-105.12", where: at("credentialSupply", "is-credential-host-foreign"),
+    translation: "A credential is never for one of your group's own hosts: the address your group's Civicsmith is "
+      + "reached at, or one of its fleet's. A capture goes only to other sites, so a credential for these is refused." },
 });
 
 /* R58 (N189): the listing's page, a chosen ceiling as membership's (its R48, R82): the caller's to lower, never raise. */
@@ -122,8 +130,10 @@ const OF = new WeakMap();
 
 /** The one credentials store of a Durable Object's storage (the K61 pattern). `key` is the instance's
  *  secret (`env.CAPTURE_CREDENTIALS_KEY`); `record`, `membership` and `now` let a test pass its own. Read on
- *  the first call only. */
-export function credentialsOf(ctx, { key = null, record = null, membership = null, now = null } = {}) {
+ *  the first call only. `ownHosts` (R65: the group's own hosts, the composition root's to build) is taken on any
+ *  call that passes a list, so a caller reaching the store before the composition root does cannot leave it without
+ *  the list; with none ever passed, R55's and R56's own-host arm refuses nothing (fail-open, F16 low). */
+export function credentialsOf(ctx, { key = null, record = null, membership = null, now = null, ownHosts = undefined } = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let c = OF.get(storage);
   if (!c) {
@@ -131,13 +141,15 @@ export function credentialsOf(ctx, { key = null, record = null, membership = nul
                                  key, now });
     OF.set(storage, c);
   }
+  if (Array.isArray(ownHosts)) c.setOwnHosts(ownHosts);
   return c;
 }
 
 export class CaptureCredentials {
-  #sql; #core; #members; #secret; #key = null; #now;
+  #sql; #core; #members; #secret; #key = null; #now; #ownHosts = [];
 
-  constructor({ sql, core, members, key = null, now = null }) {
+  constructor({ sql, core, members, key = null, now = null, ownHosts = [] }) {
+    this.setOwnHosts(ownHosts);
     this.#sql = sql;
     this.#core = core;
     this.#members = members;
@@ -156,6 +168,12 @@ export class CaptureCredentials {
        nothing, since the one registered writes the same table. */
     if (typeof this.#members.onRevoked === "function")
       this.#members.onRevoked("capture-sources", ({ memberId } = {}) => this.#withdrawRevoked(memberId));
+  }
+
+  /** R65: the group's own hosts this store refuses (R55) and never answers for (R56). A copy of the list's strings;
+   *  anything else leaves the list empty. */
+  setOwnHosts(ownHosts) {
+    this.#ownHosts = Array.isArray(ownHosts) ? Object.freeze(ownHosts.filter((h) => typeof h === "string")) : [];
   }
 
   /** The table, created when absent; idempotent. */
@@ -265,7 +283,7 @@ export class CaptureCredentials {
     try {
       /* DEC-49 REGION is-credential-supplier-member */
       if (!this.#active(by))
-        return refusal("CAPTURE_CREDENTIAL_NOT_A_MEMBER", "the supplier named is not an active member of this instance");
+        return refusal("CAPTURE_CREDENTIAL_NOT_A_MEMBER", "the supplier named is not an active member of your group");
       /* END DEC-49 REGION is-credential-supplier-member */
       /* DEC-49 REGION is-credential-kind */
       if (!CREDENTIAL_KINDS.includes(kind))
@@ -277,6 +295,13 @@ export class CaptureCredentials {
         return refusal("CAPTURE_CREDENTIAL_BAD_HOST",
           "the host given is not a bare host name (a credential is for the one host the source that refused is served from)");
       /* END DEC-49 REGION is-credential-host */
+      /* DEC-49 REGION is-credential-host-foreign */
+      /* F16 (R55, R65): a credential for one of the group's own hosts would be handed to the group's own Civicsmith
+         or a fleet member by a capture; refused, nothing written. */
+      if (isOwnHost(h, this.#ownHosts))
+        return refusal("CAPTURE_CREDENTIAL_OWN_HOST",
+          "the host given is one of your group's own (where your group's Civicsmith or its fleet is reached), and a credential is never for one of them");
+      /* END DEC-49 REGION is-credential-host-foreign */
       const given = project !== undefined && project !== null;
       /* DEC-49 REGION is-credential-scope */
       if (!CREDENTIAL_SCOPES.includes(scope) || (given && scope !== "project"))
@@ -299,7 +324,7 @@ export class CaptureCredentials {
       const key = await this.#aesKey();
       /* DEC-49 REGION is-credential-key-bound */
       if (!key)
-        return refusal("CAPTURE_CREDENTIAL_NO_KEY", "no encryption key is bound to this instance, so nothing is stored in the clear");
+        return refusal("CAPTURE_CREDENTIAL_NO_KEY", "no encryption key is set for your group's Civicsmith, so nothing is stored in the clear");
       /* END DEC-49 REGION is-credential-key-bound */
       return await this.#store({ kind, h, secret, scope, project, by, key });
     } catch {
@@ -340,6 +365,9 @@ export class CaptureCredentials {
     try {
       const h = hostNameOf(host);
       if (!h) return none("the fetch names no host a credential can be for, so it goes without credentials");
+      /* F16 (R56, R65): never answered for one of the group's own hosts, one supplied before R55 refused them included. */
+      if (isOwnHost(h, this.#ownHosts))
+        return none(`CAPTURE_CREDENTIAL_OWN_HOST: ${h} is one of your group's own hosts, so no credential is used for it and the fetch goes without credentials`);
       /* A `member` credential is admitted only for its own supplier's request, so the one supplier whose revocation
          could leave such a row unwithdrawn is the requester: met here (R63), then never answered. */
       let who = principalMember(principalPlane);
@@ -357,7 +385,7 @@ export class CaptureCredentials {
         return none(`no credential supplied for ${h} is admitted for this request's scope, so the fetch goes without credentials and the source's refusal stands`);
       const key = await this.#aesKey();
       if (!key)
-        return none("CAPTURE_CREDENTIAL_NO_KEY: no encryption key is bound to this instance, so no credential is used and the source's refusal stands");
+        return none("CAPTURE_CREDENTIAL_NO_KEY: no encryption key is set for your group's Civicsmith, so no credential is used and the source's refusal stands");
       let secret;
       try {
         const pt = await crypto.subtle.decrypt(
@@ -365,7 +393,7 @@ export class CaptureCredentials {
           key, unb64(r.ciphertext));
         secret = new TextDecoder("utf-8", { fatal: true }).decode(pt);
       } catch {
-        return none(`credential ${r.credential_id} will not decrypt under this instance's key, so the fetch goes without credentials and the source's refusal stands`);
+        return none(`credential ${r.credential_id} will not decrypt under the key of your group's Civicsmith, so the fetch goes without credentials and the source's refusal stands`);
       }
       return { credentials: [{ credential: r.credential_id, kind: r.kind, secret, supplied_by: r.supplied_by,
                                scope: r.scope, project: r.project ?? null }], reason: null };

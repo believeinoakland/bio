@@ -74,6 +74,8 @@
  */
 
 import { SUBRESOURCE_CAP, SUBRESOURCE_MAX, SUBRESOURCE_BUDGET } from "./subresources.mjs";
+import { isPublicHttpsLocator } from "./record-grammar/index.mjs";
+import { isOwnHost } from "./capture-sources/own-hosts.mjs";
 
 /* The host the binding ignores; puppeteer's own constant, kept identical so the
    two clients are visibly speaking to the same endpoints. */
@@ -131,6 +133,34 @@ const SERIALISE_MS = 1000;
    collected is `body_unavailable` saying so — its digest reads undetermined. */
 const BODY_PHASE_MS = 10000;
 const BODY_CALL_MS = 5000;
+
+/* F19 (R64; K1881) — EVERY REQUEST A RENDER MAKES IS HELD IN THE BROWSER AND LET GO ONLY TO A PUBLIC LOCATOR OFF THE
+   GROUP'S OWN HOSTS. A rendered page runs its own scripts, and without this they could make the group's browser ask
+   anything: a literal IP, `localhost`, an `http:` address, the group's own Civicsmith or a fleet member. The hold is the
+   browser's request interception (`Fetch.enable` for every URL), enabled on the page and on every frame and worker the
+   page starts (`Target.setAutoAttach`, each child held paused until its own hold is on, and never resumed when it cannot
+   be), before `Page.navigate`. Each paused request is answered `Fetch.continueRequest` or `Fetch.failRequest`
+   (`BlockedByClient`), never sent first. WebSockets are not paused by interception, and none is ever an `https:`
+   locator, so `Network.setBlockedURLs` refuses `ws://*` and `wss://*` on the same targets; the browser applies it only
+   on an enabled network domain, so a render whose network domain will not enable fails, as one whose interception will
+   not. `data:` and `blob:` addresses reach no host and are let go. */
+export const RENDER_BLOCKED_REASONS = Object.freeze({
+  NOT_A_PUBLIC_LOCATOR: "it is not a public https address",
+  OWN_HOST: "its host is one of your group's own (where your group's Civicsmith or its fleet is reached)",
+});
+const FETCH_PATTERNS = Object.freeze([{ urlPattern: "*", requestStage: "Request" }]);
+const SOCKET_PATTERNS = Object.freeze(["ws://*", "wss://*"]);
+const GUARD_CALL_MS = 5000;
+
+/* R64: null when the request may go, else the reason it is held back. */
+function requestRefusal(url, ownHosts) {
+  if (typeof url === "string" && /^(?:data|blob):/i.test(url)) return null;
+  if (!isPublicHttpsLocator(url)) return "NOT_A_PUBLIC_LOCATOR";
+  let host = null;
+  try { host = new URL(url).hostname; } catch { return "NOT_A_PUBLIC_LOCATOR"; }
+  return isOwnHost(host, ownHosts) ? "OWN_HOST" : null;
+}
+const refusedSentence = (url, reason) => `${url} was refused before it was sent (${reason}: ${RENDER_BLOCKED_REASONS[reason]})`;
 
 /** Open a CDP socket on a fresh browser session. Throws with a sentence naming
  *  which of the two calls failed and what it answered — never a bare `undefined`. */
@@ -293,6 +323,11 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
      browser, which happens inside `navMs` only as far as the binding's fetch answers. */
   const navMs = Math.max(1000, Number(asked.navigation_timeout_ms) || 30000);
   const until = typeof asked.wait?.until === "string" ? asked.wait.until : "networkidle";
+  /* R64, R65: the group's own hosts, handed in by the caller; none refuses nothing on that arm (F16 low, K1940). */
+  const ownHosts = Array.isArray(asked.own_hosts) ? asked.own_hosts : [];
+  /* R64: an address the hold would refuse is refused before a browser is spent on it. */
+  const refusedAddress = requestRefusal(String(asked.url || ""), ownHosts);
+  if (refusedAddress) return { ok: false, error: `the browser could not navigate to ${String(asked.url || "")}: ${refusedSentence(String(asked.url || ""), refusedAddress)}` };
   let sess = null, conn = null, targetId = null;
   const started = now();
   const navDeadline = started + navMs;
@@ -363,16 +398,66 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
        and is NOT the same as an empty list (BOB #31 rules exactly that). */
     let requests = new Map(), scripts = [];
     let sawNetwork = false, sawDebugger = false;
-    try { await conn.send("Network.enable", {}, sessionId, navLeft()); sawNetwork = true; } catch { /* requests -> null */ }
+    /* R64: the network domain is part of the hold (the socket refusal is applied only on an enabled domain), so a
+       network domain that will not enable fails the render by name instead of answering `requests: null`. */
+    try { await conn.send("Network.enable", {}, sessionId, navLeft()); sawNetwork = true; }
+    catch (e) { throw new Error(`the browser would not hold this render's requests (its network domain would not enable: ${String((e && e.message) || e).slice(0, 200)}), so nothing was rendered`); }
     try { await conn.send("Page.enable", {}, sessionId, navLeft()); } catch { /* the load event is one of two wait conditions; the other still works */ }
     try { await conn.send("Debugger.enable", {}, sessionId, navLeft()); sawDebugger = true; } catch { /* scripts -> null */ }
 
     let inflight = 0, lastQuietAt = null, loadFired = false, mainFrameId = null, mainStatus = null;
     let quietYoungSince = null;
+    /* R64: requests the hold refused before the network ledger met them, by network id; and the documents refused, so
+       a refused navigation names the address that was refused. */
+    const heldBack = new Map(), refusedDocuments = [];
+    const settle = (r, outcome, blockedBy = null) => {
+      if (!r || r.outcome !== "pending") return;
+      r.outcome = outcome;
+      if (blockedBy) r.blocked_by = blockedBy;
+      inflight--; lastQuietAt = inflight === 0 ? now() : null;
+    };
+    /* R64: the hold on one target (the page, or a frame or worker it started): interception, the socket refusal, and
+       the same for the targets it starts in turn. Throws when any part will not take. */
+    const guard = async (sid, ms) => {
+      await conn.send("Fetch.enable", { patterns: FETCH_PATTERNS }, sid, ms());
+      await conn.send("Network.setBlockedURLs", { urls: SOCKET_PATTERNS }, sid, ms());
+      await conn.send("Target.setAutoAttach", { autoAttach: true, waitForDebuggerOnStart: true, flatten: true }, sid, ms());
+    };
+    /* A frame or worker the page started waits, paused, until its hold is on; one whose hold will not take is never
+       resumed, so it sends nothing. */
+    const guardChild = async (sid) => {
+      try {
+        await conn.send("Network.enable", {}, sid, GUARD_CALL_MS);
+        await guard(sid, () => GUARD_CALL_MS);
+      } catch { return; }
+      try { await conn.send("Runtime.runIfWaitingForDebugger", {}, sid, GUARD_CALL_MS); } catch { /* it stays paused */ }
+    };
     conn.on((m) => {
       const p = m.params || {};
       switch (m.method) {
-        case "Network.requestWillBeSent":
+        case "Fetch.requestPaused": {
+          const url = String(p.request?.url || "");
+          const reason = requestRefusal(url, ownHosts);
+          if (!reason) { conn.send("Fetch.continueRequest", { requestId: p.requestId }, m.sessionId, GUARD_CALL_MS).catch(() => {}); break; }
+          conn.send("Fetch.failRequest", { requestId: p.requestId, errorReason: "BlockedByClient" }, m.sessionId, GUARD_CALL_MS).catch(() => {});
+          if (resourceType(p.resourceType) === "document") refusedDocuments.push({ url, reason, frameId: p.frameId || null });
+          const id = p.networkId;
+          const r = id ? requests.get(id) : null;
+          if (r && r.url === url && r.outcome === "pending") settle(r, "blocked", reason);
+          else if (id) heldBack.set(id, { url, reason });
+          else requests.set(`held:${p.requestId}`, { url, type: resourceType(p.resourceType), outcome: "blocked", status: null,
+                                                     blocked_by: reason, since: now() });
+          break;
+        }
+        case "Target.attachedToTarget":
+          if (typeof p.sessionId === "string" && p.sessionId) guardChild(p.sessionId);
+          break;
+        case "Network.webSocketCreated":
+          /* R64: never an `https:` locator, refused by the socket rule and listed so R12 counts it. */
+          if (p.requestId) requests.set(`ws:${p.requestId}`, { url: String(p.url || ""), type: "websocket", outcome: "blocked",
+                                                               status: null, blocked_by: "NOT_A_PUBLIC_LOCATOR", since: now() });
+          break;
+        case "Network.requestWillBeSent": {
           if (!p.requestId) break;
           /* A REDIRECT REUSES THE requestId. Recording it as a fresh entry would
              double-count the hop; recording nothing would lose the redirect's own
@@ -385,10 +470,14 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
           } else inflight++;
           /* `since` dates the request (this hop of it), for R26's age; any request starting
              restarts R26's quiet window, even one that ends before the next poll. */
-          requests.set(p.requestId, { rid: p.requestId, url: String(p.request?.url || ""), type: resourceType(p.type),
-                                      outcome: "pending", status: null, blocked_by: null, since: now() });
+          const entry = { rid: p.requestId, url: String(p.request?.url || ""), type: resourceType(p.type),
+                          outcome: "pending", status: null, blocked_by: null, since: now() };
+          requests.set(p.requestId, entry);
+          const held = heldBack.get(p.requestId);
+          if (held && held.url === entry.url) { heldBack.delete(p.requestId); settle(entry, "blocked", held.reason); }
           quietYoungSince = null;
           break;
+        }
         case "Network.responseReceived": {
           const r = requests.get(p.requestId);
           if (r) { r.status = Number(p.response?.status) || r.status; if (p.type) r.type = resourceType(p.type); }
@@ -408,15 +497,11 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
           break;
         }
         case "Network.loadingFailed": {
+          /* BLOCKED AND FAILED ARE DIFFERENT FACTS and the record keeps them
+             apart: `blockedReason` is the browser saying a RULE stopped this,
+             and it is the rule's own name, never our word for it. */
           const r = requests.get(p.requestId);
-          if (r && r.outcome === "pending") {
-            /* BLOCKED AND FAILED ARE DIFFERENT FACTS and the record keeps them
-               apart: `blockedReason` is the browser saying a RULE stopped this,
-               and it is the rule's own name, never our word for it. */
-            r.outcome = p.blockedReason ? "blocked" : "failed";
-            if (p.blockedReason) r.blocked_by = String(p.blockedReason);
-            inflight--; lastQuietAt = inflight === 0 ? now() : null;
-          }
+          settle(r, p.blockedReason ? "blocked" : "failed", p.blockedReason ? String(p.blockedReason) : null);
           break;
         }
         case "Page.loadEventFired": loadFired = true; break;
@@ -429,11 +514,19 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
       }
     });
 
+    /* R64: THE HOLD, on before the navigation; a part that will not take fails the render by name, unrendered. */
+    try { await guard(sessionId, navLeft); }
+    catch (e) { throw new Error(`the browser would not hold this render's requests (request interception could not be enabled: ${String((e && e.message) || e).slice(0, 200)}), so nothing was rendered`); }
+
     /* NAVIGATE. A navigation the browser refuses outright (`errorText`) is a
        failed render and says which address and why — it is never a render of
-       `about:blank` reported as the page. */
+       `about:blank` reported as the page. A navigation the hold refused (R64), at
+       the address asked or a redirect hop of it, names the address refused. */
     const nav = await conn.send("Page.navigate", { url: String(asked.url || "") }, sessionId, navLeft());
-    if (nav.errorText) throw new Error(`the browser could not navigate to ${asked.url}: ${nav.errorText}`);
+    if (nav.errorText) {
+      const doc = refusedDocuments.find((d) => d.frameId && d.frameId === nav.frameId) || refusedDocuments[0];
+      throw new Error(`the browser could not navigate to ${asked.url}: ${nav.errorText}${doc ? `; ${refusedSentence(doc.url, doc.reason)}` : ""}`);
+    }
     mainFrameId = nav.frameId || null;
 
     /* THE WAIT, BOUNDED, AND IT SAYS WHICH CONDITION FIRED (WORKER.md: a wait ends

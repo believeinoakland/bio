@@ -340,7 +340,7 @@ export async function keepRenderBodies(answer, { put, sha256 }) {
     if (spent + bytes.length > SUBRESOURCE_BUDGET) { out.push(undet(`the capture's ${SUBRESOURCE_BUDGET}-byte subresource budget was spent, so it was not kept`)); continue; }
     let digest = null;
     try { digest = await sha256(bytes); await put(digest, bytes); }
-    catch (e) { out.push(undet(`the plane could not keep the bytes (${String((e && e.message) || e).slice(0, 200)})`)); continue; }
+    catch (e) { out.push(undet(`your group's Civicsmith could not keep the bytes (${String((e && e.message) || e).slice(0, 200)})`)); continue; }
     kept++; spent += bytes.length;
     out.push({ sha256: digest, bytes: bytes.length, body_as: as, kept: true, ...claim });
   }
@@ -381,7 +381,7 @@ export function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS
       const i = at.get(r);
       const d = Array.isArray(digests) ? digests[i] : null;
       if (d && (HEX64.test(String(d.sha256)) || d.sha256 === "undetermined")) return d;
-      return { sha256: "undetermined", digest_reason: "the plane did not keep this render's subresource bytes",
+      return { sha256: "undetermined", digest_reason: "your group's Civicsmith did not keep this render's subresource bytes",
                ...(HEX64.test(String(r.sha256 || "")) ? { renderer_sha256: r.sha256 } : {}) };
     };
     const rq = answer.requests.filter((r) => r && typeof r === "object" && isStr(r.url));
@@ -477,7 +477,7 @@ export function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS
   else if (firedClass === "undetermined")
     undetermined.push(`completeness: ${isStr(waitFired)
       ? `the renderer reported the wait fired on \`${waitFired}\`, which is neither the `
-        + `\`${(asked.wait && asked.wait.until) || "(none asked)"}\` condition this plane asked for nor a timeout`
+        + `\`${(asked.wait && asked.wait.until) || "(none asked)"}\` condition your group's Civicsmith asked for nor a timeout`
       : "the renderer did not report which wait ended the render"}, so whether the render ran to its `
       + `condition is undetermined and this rendering may be incomplete.`);
 

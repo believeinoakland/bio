@@ -102,7 +102,7 @@ test("R42: driveHop states Google's conversion, from the address and the fetch, 
                       `lives at ${d.address}`])
     assert.ok(h.asserts.includes(part), part);
   for (const part of [`export address ${exp}`, "export format ods (application/vnd.oasis.opendocument.spreadsheet)",
-                      "producer Google Drive export", "COMPOSED BY THIS INSTANCE", "no part of it was read from the request",
+                      "producer Google Drive export", "COMPOSED BY YOUR GROUP'S CIVICSMITH", "no part of it was read from the request",
                       "canonicalised to docs.google.com, though the link named sheets.google.com",
                       "redirected to https://doc-0s.googleusercontent.com/export/abc", "confirmed from the bytes: ods (certain)"])
     assert.ok(h.evidence.includes(part), part);
