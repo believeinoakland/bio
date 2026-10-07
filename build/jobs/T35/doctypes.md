@@ -1,6 +1,6 @@
 # doctypes (T35)
 
-**Status** · session_01Y6hcEDnNpHHyH8SJXrD1tK · depth 2 · COMPLETE · handled B4
+**Status** · session_01Y6hcEDnNpHHyH8SJXrD1tK · depth 2 · COMPLETE · handled B5
 
 ## Completion
 
@@ -16,12 +16,14 @@
 
 **Found in other modules (REPORT J3):** (1) jurisdictions' first profile (R67, R69) lacks header labels the 50 captured documents print: `Ref:` (reference; 13 DGOs), `Rev.`, `New Order` and `DATE` (effective; old DGOs and SOs), `Effective Date` without a colon (boxed DGOs), `EFFECTIVE DATE` is covered, `Evaluation Date` (review_due; A-1, B-14), `SUBJECT/AGENCY` (AI 544); under the held profile the header reading falls from 46 to 25 of 50. The measured list is `MEASURED_VIEW` in `doctypes/test/policies.mjs`. (2) Stale generated artifacts (mechanics §14): `bio-plane/dist/bio-plane.bundled.mjs` and `newgroup/src/release.mjs`'s embedded plane source both carry `doctypes/`; BOB regenerates at L1's close.
 
+**B5 (K1933), re-opened.** Tranche merged (jurisdictions now holds the measured labels). (1) A header is anchored only on a `standard_sources` entry of `kind: "policy"`; a standard's designation never anchors (DGO A-1 had anchored on "CALEA Standard:"); tested in R25 with the test profile's MHSI standard, which anchors only when relabelled a policy series. (2) **R35 re-measured under the held first profile, 2026-10-07: 46 of 50 headers read wholly right (92%, target 90%, K1902 (5))**: type 48/50, number 49/50, title 49/50, effective 47/49, supersedes 6/6, reference 18/18, coordinator 16/17, review_due 8/9, revision_cycle 8/9; section boundaries 45/50. The same four misses as before (AI 580, B-21, N-5, D-12). R35's tests now read the held profile; `MEASURED_VIEW` is kept only as the record of the first measurement. Still in-sample (N709). Tests: doctypes 39/0; roster-reader 22/0, docprofile 35/0, court-doctypes 24/0, reading-pipeline 85/0, events follow 6/0, plane t33 16/0, jurisdictions 102/0. Checks: format, architecture, coverage (36/36), ownership: 0 failures. REPORT J3 (1) is resolved by K1933; J3 (2), the stale bundles, stands.
+
 **Tests and checks run** (on the commit pushed with this record):
 - `node --test doctypes/test/`: pass 39, fail 0 (13 new in `policy.test.mjs`, named R1, R3, R20, R25–R36).
 - Users and upstream, on this branch: roster-reader 22/0, docprofile 35/0, court-doctypes 24/0, bio-plane `test/m/reading-pipeline` 85/0, `test/m/events/follow.test.mjs` 6/0, `test/m/plane/t33.test.mjs` 16/0, jurisdictions 102/0. No layer tests in the manifest.
 - civicos-process checks: format 0 failures; architecture (doctypes) 0 failures; coverage (doctypes) 36 of 36 live ids named, 0 failures; ownership (doctypes, tranche/T35) 0 failures.
 
-Size (session_01Y6hcEDnNpHHyH8SJXrD1tK): test runs 14, module lines 3,459.
+Size (session_01Y6hcEDnNpHHyH8SJXrD1tK): test runs 17, module lines 3,461.
 
 ## J1 · QUESTION
 
@@ -51,3 +53,7 @@ Two findings in other modules (also in my record's Completion).
 ## J4 · COMPLETE
 
 T35-12 complete on `job/T35/doctypes` @ 7b37c159cc (record: Completion). R35 measured first: 46 of 50 headers read wholly right (92%, with Tier 3 per K1924; in-sample, N709), section boundaries 45 of 50; so R25–R34 are built and `policy` is registered after `regulation` (eight types). R36: no earlier fixture changes its verdict. Tests: doctypes 39/0; users and upstream green on this branch (roster-reader, docprofile, court-doctypes, reading-pipeline, events follow, plane t33, jurisdictions). Checks: format, architecture, coverage (36/36), ownership: 0 failures. Findings in REPORT J3.
+
+## J5 · COMPLETE
+
+B5 (K1933) applied on job/T35/doctypes: tranche merged; a header anchors only on a kind:policy series (A-1 no longer anchors on 'CALEA Standard:'; R25 test with the test profile's standard); R35 re-measured under the held first profile: 46 of 50 headers wholly right (92%), per field type 48/50, number 49/50, title 49/50, effective 47/49, supersedes 6/6, reference 18/18, coordinator 16/17, review_due 8/9, revision_cycle 8/9; sections 45/50; recorded in the record's Completion. Tests: doctypes 39/0, users and jurisdictions green. Checks: 0 failures (coverage 36/36). J3 (1) resolved by K1933; J3 (2), stale bundles, stands.
