@@ -28,7 +28,7 @@ screen('security', 'Security', 'working', 'Administrators only: how hard the gro
   [('owed:securitymap K1875','Show the level for a period'),('owed:securitytooladd K1929','Add a security tool'),('owed:securitytooltest K1929','Test a security tool'),('owed:securitytoolremove K1929','Remove a security tool')], [27])
 screen('account', 'Your account', 'working', 'Handle, password, language, expertise, signing key, theme.',
   [('expertisedeclare','Declare your expertise'),('setpassword','Change your password'),('signerregisterown','Register your signing key'),('signerrevokeown','Revoke your signing key'),('owed:memberlanguageset DEC-127','Choose your language'),('owed:infolevelset DEC-162','Choose how much is explained')], [3,16])
-screen('connect', 'The assistant and your account', 'working', 'The member\'s own API key or subscription token, or the group\'s key where it offers one, or none; their daily limit; suggestions on or off (K1547, K1755).',
+screen('connect', 'The assistant', 'working', 'The member\'s own API key or subscription token, or the group\'s key where it offers one, or none; their daily limit; suggestions on or off (K1547, K1755).',
   [('groupkeynoticeseen','Read what the group\'s key means'),('disclosureshown','Read what connecting means'),('owed:subscriptionsignin DEC-156','Open Anthropic\'s sign-in page'),('accountreferenceset','Connect with your own subscription or key'),('aiceilingset','Set your daily limit'),('accountswitchset','Let the assistant suggest unprompted'),('accountreferenceremove','Disconnect')], [4,17])
 screen('ties', 'Your ties', 'working', 'The member\'s own ties, seen only by them and administrators (K1490).',
   [('declaretie','Add a tie'),('withdrawtie','Remove a tie')], [5])

@@ -56,7 +56,7 @@ const PATH = {
   finder: ['Find'], capture: ['Add'], held: ['Add', 'Held captures'], archive: ['Add', 'Held captures', 'Archive'], 'open-file': ['Projects', 'The Coliseum lease', 'Opening a file'],
   'find-in': ['Projects', 'Pothole repairs', 'Find in this'],
   'group-identity': ['Settings', 'Who your group is'], members: ['Settings', 'Members'], security: ['Settings', 'Security'], account: ['Settings', 'Your account'],
-  connect: ['Settings', 'The assistant and your account'], ties: ['Settings', 'Your ties'], notes: ['Settings', 'Your notes'],
+  connect: ['Settings', 'The assistant'], ties: ['Settings', 'Your ties'], notes: ['Settings', 'Your notes'],
   translations: ['Settings', 'Translations'], wizards: ['Settings', 'Wizards'],
   person: ['People', 'Person'], explore: ['People', 'Person', 'Explore connections'],
   project: ['Projects', 'Pothole repairs'], document: ['Projects', 'Pothole repairs', 'Document'],

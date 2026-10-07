@@ -2673,3 +2673,17 @@ response: **Decided by the design session, 2026-10-07.** Yes: `personexpunge` is
 decided: 2026-10-07 · the design session (P17)
 reasoning recorded in: this entry; `screens/mock-screens.js` (the person screen's dialog).
 owed: (BOB) `personexpunge` carries `phone: false` (by its Irreversible rung under affordances R36).
+
+### DEC-171 · answered
+raised: 2026-10-07 · the UX design session with Bob on his primary account (session_01NWPmrrYZbbF8Wkrvp5Y2vx; the development process runs on his secondary account since K1891) (Bob's comment on the layouts page, 7 October: "I wonder if the title of this panel should be reduced to simply 'The assistant'")
+for: bob-session
+question: The name of the settings screen where a member connects the assistant (the registry's `connect`).
+why it is Bob's: member words; Bob's suggestion, taken by the design session (P17).
+provisional: "The assistant and your account".
+alternative: keep the longer name.
+recommendation: "The assistant".
+reversal cost: low.
+response: **Taken, 2026-10-07: Settings › The assistant.** The heading, the path (DEC-154) and the registry's screen name read "The assistant". The screen still says whose account serves the member (their own, the group's key, or none). The docked panel keeps its own label, "The assistant", beside the work; the path tells the two apart (Settings › The assistant is the settings screen).
+decided: 2026-10-07 · the design session, on Bob's suggestion
+reasoning recorded in: this entry; `screens/mock-screens.js` (`SCR.connect`), `mock-shell.js` (`PATH`), `registry.src.py`.
+owed: (BOB) the screen's name as an interface word: "The assistant" under Settings.

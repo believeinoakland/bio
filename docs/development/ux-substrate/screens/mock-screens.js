@@ -161,9 +161,9 @@ SCR.account = c => ({ rail: 'settings', title: 'Your account', crumbs: ['Setting
   ${sec('Elsewhere in your settings', `<div class="mk-links"><a href="#" onclick="return false">${I('machine')}Your Claude account${c.ai ? ' · connected' : ' · not connected'}</a><a href="#" onclick="return false">${I('group')}Your ties</a><a href="#" onclick="return false">${I('case')}Your notes</a></div>`)}` });
 
 const CONNECT_ST = { 'owed:subscriptionsignin DEC-156': 'c', groupkeynoticeseen: 'a', disclosureshown: 'c', accountreferenceset: 'c', aiceilingset: 'c', accountswitchset: 'c', accountreferenceremove: 'b' };
-SCR.connect = c => { const st = CONNECT_ST[c.wizard && c.wizard.act]; const sel = v => v === (st || 'a') ? ' selected' : ''; return { rail: 'settings', title: 'Your Claude account', st, main: `
+SCR.connect = c => { const st = CONNECT_ST[c.wizard && c.wizard.act]; const sel = v => v === (st || 'a') ? ' selected' : ''; return { rail: 'settings', title: 'The assistant', st, main: `
   <div class="mk-mockctl"><label for="mk-st">In this mockup, show the screen for</label> <select id="mk-st" class="cs-input" onchange="this.closest('main').dataset.st=this.value"><option value="a"${sel('a')}>a group offering its key; you have no account of your own</option><option value="b"${sel('b')}>a group offering its key; you connected your own</option><option value="c"${sel('c')}>a group where members bring their own accounts</option><option value="d"${sel('d')}>a group using only its own key</option><option value="e"${sel('e')}>a group without the assistant</option></select></div>
-  ${h1('The assistant and your account', 'Optional. Everything in Civicsmith works without the assistant.')}
+  ${h1('The assistant', 'Optional. Everything in Civicsmith works without the assistant.')}
   <div class="cs-sheet">
    <div class="st st-a">${row(I('group'), '<b>The assistant serves you on Lakeshore Tenants\' API key.</b> The group pays. You have no account of your own connected.', '')}</div>
    <div class="st st-b">${row(I('accepted'), '<b>The assistant serves you on your own Claude account</b> (API key ending …4f2a). Only you use it; you pay for it.', '')}${row(I('group'), 'If you disconnect it, Lakeshore Tenants\' API key serves you instead.', '')}</div>
