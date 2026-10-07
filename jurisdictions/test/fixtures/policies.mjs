@@ -8,7 +8,14 @@
  * Bulletins (TB)" (63) and "City Administrative Instructions" (4); one document of each family was read whole as served.
  * OUSD's board-policy portal lists its Board Policies (BP), Administrative Regulations (AR) and Exhibits, numbered as
  * `0420.0` or `5124`; two posts and one published PDF were read whole. The City Auditor's 9-1-1 audit (2025-10-08) names
- * NENA's standards without a designation, so no standard designation is held (R67). */
+ * NENA's standards without a designation.
+ *
+ * K1930 (BOB's CHANGE B4): doctypes captured 50 of the same families' documents from the same PowerDMS addresses the same
+ * day (`doctypes/test/fixtures/policies.json`, its R35). Read whole here, they print header labels the first reading did
+ * not hold (Ref, Rev., New Order, DATE, Effective Date without its colon, Evaluation Date, SUBJECT/AGENCY), a Special
+ * Order's own number as "SPECIAL ORDER NO. 8011", an AI cited as "Administrative Instruction No. 501", and, on 12 General
+ * Orders, the CALEA standards each cites ("Ref: CALEA Standards 15.1.1"). Those lines are added below, each with the
+ * document that prints it. */
 
 const PDMS = "https://public.powerdms.com/OAKLAND/documents";
 
@@ -16,21 +23,23 @@ export const READ = "2026-10-07";
 
 export const FAMILIES = {
   ai: {
-    pages: [PDMS, `${PDMS}/579540`,
+    pages: [PDMS, `${PDMS}/579540`, `${PDMS}/2108538`, `${PDMS}/97`,
       "https://www.oaklandca.gov/files/assets/city/v/1/city-administrator/documents/ada/ada-policies/ai-123.pdf"],
     /* AI 123's REFERENCE and SUPERSEDE blocks, its text and footer; AI 71's SUPERSEDE block; the directory's names */
     citations: [["AI 123", "123"], ["A.I. 181", "181"], ["A.I. 4502", "4502"], ["AI 70", "70"], ["AI 138", "138"],
       ["Administrative Instruction 139", "139"], ["Administrative Instruction 596", "596"],
-      ["City Administrative Instruction 71", "71"], ["AI 544 - Managing Violence in the Workplace", "544"], ["AI 580 - Race and Equity", "580"]],
+      ["City Administrative Instruction 71", "71"], ["City Administrative Instruction No.\n501, “Procedu", "501"], ["AI 544 - Managing Violence in the Workplace", "544"], ["AI 580 - Race and Equity", "580"]],
     headers: [["type", "          ADMINISTRATIVE INSTRUCTION"],
       ["title", "SUBJECT            Disability Access Policy                      NUMBER         123"],
       ["number", "SUBJECT            Disability Access Policy                      NUMBER         123"],
       ["reference", "REFERENCE          Section 504 of the Rehabilitation Act of      EFFECTIVE 10/13/2017"],
       ["effective", "REFERENCE          Section 504 of the Rehabilitation Act of      EFFECTIVE 10/13/2017"],
-      ["supersedes", "SUPERSEDE          AI 123, dated August 21, 1992"]],
+      ["supersedes", "SUPERSEDE          AI 123, dated August 21, 1992"],
+      /* AI 544 (PowerDMS 2108538) */
+      ["title", "SUBJECT/AGENCY Managing Violence in the Workplace"]],
   },
   dgo: {
-    pages: [PDMS, `${PDMS}/415`, `${PDMS}/442`, "https://cao-94612.s3.us-west-2.amazonaws.com/documents/1893442.pdf"],
+    pages: [PDMS, `${PDMS}/415`, `${PDMS}/442`, `${PDMS}/5`, `${PDMS}/17`, `${PDMS}/25`, `${PDMS}/148`, `${PDMS}/462`, "https://cao-94612.s3.us-west-2.amazonaws.com/documents/1893442.pdf"],
     /* the number as written and its normal form: SO 9196's text and footnote, SO 9205's, the SO names in the directory;
        the directory itself lists `K-03`, `M-03.1`, `M-4.1`, `D-13.1` with no marker */
     citations: [["DGO K-03", "K-03", "K-3"], ["DGO K-04", "K-04", "K-4"], ["DGOs K-03", "K-03", "K-3"], ["DGO K-7", "K-7", "K-7"],
@@ -44,15 +53,20 @@ export const FAMILIES = {
       ["coordinator", "                   ORDER                                                Evaluation Coordinator:"],
       ["title", " NSA Task: 4       Index as:                                         Evaluation Due Date:"],
       ["review_due", " NSA Task: 4       Index as:                                         Evaluation Due Date:"],
-      ["revision_cycle", "                                                               Automatic Revision Cycle:"]],
+      ["revision_cycle", "                                                               Automatic Revision Cycle:"],
+      /* A-17 (PowerDMS 17), B-03 (25), M-19 (462), A-1 (5), I-17 (148) */
+      ["reference", "Ref: CALEA"], ["effective", "New Order"], ["effective", "Rev."], ["effective", "DEPARTMENTAL Effective Date"],
+      ["review_due", "Evaluation Date:"], ["coordinator", "Evaluation Coordinator:"], ["title", "Index as:"]],
   },
   so: {
-    pages: [PDMS, `${PDMS}/2227646`, "https://cao-94612.s3.us-west-2.amazonaws.com/documents/1893442.pdf"],
-    citations: [["Special Order 9196", "9196"], ["SO 9196", "9196"], ["SPECIAL ORDER 9205", "9205"], ["Special Order 9205", "9205"],
+    pages: [PDMS, `${PDMS}/2227646`, `${PDMS}/642`, "https://cao-94612.s3.us-west-2.amazonaws.com/documents/1893442.pdf"],
+    citations: [["SPECIAL ORDER NO. 8011", "8011"], ["Special Order 9196", "9196"], ["SO 9196", "9196"], ["SPECIAL ORDER 9205", "9205"], ["Special Order 9205", "9205"],
       ["SO 8011 Compliance Unit Liaison Policy", "8011"], ["SO 9205 - Banning Carotid Restraint", "9205"]],
     headers: [["type", "                                         SPECIAL ORDER 9196"],
       ["title", "            SUBJECT:         Documentation of the Use of Force1"],
-      ["effective", "    EFFECTIVE DATE:          15 Feb 20"]],
+      ["effective", "    EFFECTIVE DATE:          15 Feb 20"],
+      /* SO 8011 (PowerDMS 642) */
+      ["effective", "DATE: 9 May 03"], ["type", "SPECIAL ORDER NO. 8011"]],
   },
   tb: {
     pages: [PDMS, `${PDMS}/2992094`, `${PDMS}/415`],
@@ -66,6 +80,15 @@ export const FAMILIES = {
       ["number", "                                                                                                Index Number: III-P.05"],
       ["effective", "Effective Date:                                                                        Alpha Index: High Risk Incidents"],
       ["coordinator", "                                                                              Evaluation Coordinator: Training Division"]],
+  },
+  /* The accreditor's standards the General Orders cite (K1930): A-17, B-03, B-14, B-21, E-02, F-05, H-06, M-01, M-04,
+     N-12, P-02 and others among doctypes' 50 */
+  standards: {
+    pages: [`${PDMS}/17`, `${PDMS}/25`, `${PDMS}/35`, `${PDMS}/41`, `${PDMS}/117`, `${PDMS}/477`],
+    citations: [["Ref: CALEA\nStandards 15.1.1;\n15.1.2", "15.1.1"], ["Ref: CALEA\nStandard 22.3.3", "22.3.3"],
+      ["Ref: CALEA\nStandard: 42.2.1", "42.2.1"], ["Ref: CALEA\nStandards 17.4.1-3; 43.1.3", "17.4.1"], ["Ref: CALEA\nStandards 53.1.1;\n53.2.1", "53.1.1"]],
+    not: ["Ref: CALEA\nStandard N/A"],
+    headers: [],
   },
   bp: {
     pages: ["https://www.ousd.org/board-of-ed/board-policy",

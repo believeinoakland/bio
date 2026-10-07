@@ -226,11 +226,13 @@ test("R66 combine: standard sources unioned; a family's label, cite and normal, 
 test("R67 the first profile holds Oakland's AI, DGO, Special Order and Training Bulletin families and OUSD's BP/AR, each read on its primary pages", () => {
   const f = get(FIRST);
   const fam = f.standard_sources.filter((s) => s.series);
-  assert.deepEqual(fam.map((s) => `${s.key}/${s.series.key}`), ["city-administrator/ai", "opd/dgo", "opd/so", "opd/tb", "ousd/bp", "ousd/ar"]);
-  const LEVEL = { ai: ["city", undefined], dgo: ["city", undefined], so: ["city", undefined], tb: ["city", undefined], bp: [undefined, "government"], ar: [undefined, "government"] };
+  assert.deepEqual(fam.map((s) => `${s.key}/${s.series.key}`), ["city-administrator/ai", "opd/dgo", "opd/so", "opd/tb", "ousd/bp", "ousd/ar",
+    "calea/standards"]);
+  const LEVEL = { ai: ["city", undefined], dgo: ["city", undefined], so: ["city", undefined], tb: ["city", undefined], bp: [undefined, "government"],
+    ar: [undefined, "government"], standards: [undefined, "association"] };
   for (const s of fam) {
     const k = s.series.key;
-    assert.equal(s.kind, "policy", k);
+    assert.equal(s.kind, k === "standards" ? "standard" : "policy", k);
     assert.deepEqual([s.level, s.sector], LEVEL[k], k);
     assert.equal(s.basis, `${READ} policies`, `${k}: the dated measurement`);
     assert.ok(FAMILIES[k].pages.length && FAMILIES[k].pages.every((u) => new URL(u).protocol === "https:"), `${k}: each page's address`);
@@ -243,7 +245,7 @@ test("R67 the first profile holds Oakland's AI, DGO, Special Order and Training 
     }
     for (const [line, number, portion] of FAMILIES[k].portions || []) assert.deepEqual([cites(s, line).number, cites(s, line).portion], [number, portion], line);
     /* the lines that cite no item: no family takes them */
-    for (const line of NOT_CITATIONS) assert.equal(cites(s, line), null, `${k}: ${line}`);
+    for (const line of [...NOT_CITATIONS, ...(FAMILIES[k].not || [])]) assert.equal(cites(s, line), null, `${k}: ${line}`);
     assert.equal(rx(s.cite).flags.includes("i") || false, false, `${k}: as printed, case kept`);
   }
   /* each family recognises its own citations only, apart from BP/AR, which cites both families at once */
@@ -254,8 +256,9 @@ test("R67 the first profile holds Oakland's AI, DGO, Special Order and Training 
       assert.equal(cites(s, line), null, `${s.series.key} takes ${k}'s ${line}`);
     }
   }
-  /* no standard designation: no page read names one Oakland adopts (absent, never UNMEASURED or invented) */
-  assert.ok(!f.standard_sources.some((s) => s.kind === "standard"));
+  /* one standard designation: the CALEA standards OPD's General Orders cite (K1930); no edition is printed, so none is read */
+  assert.deepEqual(f.standard_sources.filter((s) => s.kind === "standard").map((s) => s.issuer), ["Commission on Accreditation for Law Enforcement Agencies (CALEA)"]);
+  assert.equal(cites(fam.at(-1), "Ref: CALEA\nStandards 15.1.1;").edition, undefined);
   assert.ok(!f.standard_sources.some((s) => s.basis === "UNMEASURED"));
   /* the view carries them, each tagged with the first profile */
   const v = combine([FIRST]).view.standard_sources.filter((s) => s.series);
