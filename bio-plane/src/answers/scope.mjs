@@ -47,6 +47,12 @@ export function askAdmits(op) {
   return typeof op === "string" && OPS.has(op);
 }
 
+/** R1 (T35; N686, K1837): the whole reach of mode `draft` (`run-rules`' R21) is the asking scope: a draft reads only
+ *  what `askAdmits` admits, through `logRead` under the grant its member's act mints, so R2's removals hold for every
+ *  read it makes. It is not narrowed for a draft (a firsthand field or a member's switch off reads nothing at all, and
+ *  that is the caller's to keep, `wizard-scripts` R25). The same function, so the two cannot drift. */
+export const draftAdmits = askAdmits;
+
 const ID = /^[A-Z]{2,6}-\d{4}-[A-Za-z0-9-]+$/;
 const isTie = (s) => /^MTI-\d{4}-/.test(s);
 const isSource = (s) => typeof s === "string" && /^SRC-\d{4}-/.test(s);

@@ -57,7 +57,7 @@ function standardinforce(args, ctx) {
 
 function profiles(args, ctx) {
   const view = ctx.view();
-  if (!view) return notHeld("meaning", "no jurisdiction profile is active in this copy", null);
+  if (!view) return notHeld("meaning", "no jurisdiction profile is active in your group's Civicsmith", null);
   const section = args.section;
   if (!filled(section) || !(section in view)) return notHeld("meaning", `the active profiles hold no ${section || "section"}`, null);
   const held = view[section];
@@ -80,7 +80,7 @@ function profiles(args, ctx) {
 /** R9: time. */
 function deadlinecompute(args, ctx) {
   const view = ctx.view();
-  if (!view) return notHeld("meaning", "no jurisdiction profile is active in this copy", null);
+  if (!view) return notHeld("meaning", "no jurisdiction profile is active in your group's Civicsmith", null);
   const rule = (view.deadlines || []).find((d) => plain(d) && d.rule === args.rule);
   if (!rule) return notHeld("meaning", `the active profiles hold no deadline rule ${args.rule}`, null);
   if (!sourced(rule) || !filled(rule.citation)) return notHeld("meaning", "the profile holds this rule without a primary source", null);
