@@ -50,3 +50,36 @@ Results:
 One flaw fixed here and reported for `affordances`: `phoneOf` answered an alias by its own id, so `filingrecordsent` read `phone: true` while `filingsent` reads `false`. `phoneOf` now resolves an alias first (R17). `affordances`' copy keeps the flaw until T35-66 imports this one.
 
 Size: test runs 6, module lines 2015.
+
+## Completion (CHANGE B3, K2043)
+
+**Applied.** First merged `tranche/T35` into this branch (dbdcf06d4f). Then graded, in `t35.mjs` under R22's rule (ops op-declarations declares in T35) and R3's rule, each op B3 names, read from its owner's requirements:
+- `reasoned`, each on a code already in `JUSTIFICATION_REFUSALS`:
+  - `STANDARD_NO_REASON`: standards' `standardforce`, `standardforcewithdraw`, `standardrelease`, `standardadoption`, `standardimpose`, `standardbenchmark` (standards R35, R37, R40, R43).
+  - `NO_REASON`: `usewithdraw` (events R45).
+  - `DUTY_NO_REASON`: `uselink` and `useunlink` (duties R27).
+- `undetermined`:
+  - `discretionrecord` and `assessmentrecord`, as `eventcreate`. The stated reason is the record's words, not the member's account (events R43, R44).
+  - `standardforcepropose` and `reviewpropose`, as `lawpropose` and `dutypropose`.
+  - `recordsrequestopen` and `recordsrequestanswer`: no reason is asked, and the answer is never replaced (capture-requests R51, R52).
+- `observational`: `usesfreeze`, as `recordset` (calculations R32).
+- `credential`: `subscriptiondisconnect`, as `accountreferenceremove` (credentials R43).
+- Reads, each a `read:` reason in `NON_ACTS`: `bindsat`, `editioninforce`, `forcesof`, `overridesof`, `usesof`, `applicationrecipes`, `poweruses`, `recordsrequests`.
+- Every write above also has its `NON_ACTS` reason.
+- None of these ops is in `MACHINE_REFUSALS`.
+- OP-DECLARATIONS #12's record on `origin/job/T35/op-declarations` posts no REPORT yet, and its J1 names no op beyond B3's list.
+
+**Found.**
+- `standardrelease` is never undone (standards R37) but is graded `reasoned`, by R3's rule. Whether it should be a named `terminal` exception, as `actionholdrelease` is, is a ruling for BOB.
+- R22's text names only op-declarations R30's ops. These 25 ops sit under its rule; BOB may want to word them into R22.
+- Red 29 (affordances `t33.test.mjs`:137) and red 36 (`catalogue.test.mjs`:579) still fail on `origin/job/T35/affordances` with these tables in place. Each test pins its owners' op maps to an exact list that lacks the new ops. The grades they need are now here; the lists are `affordances`' to extend.
+- Checked through the six owners' op maps: every op they serve is now graded or reasoned, apart from older ungated reads and session ops that are named nowhere by `affordances` R12's rule.
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/op-grades/`: tests 26, pass 26, fail 0 (a new R22 R3 R13 case for B3's ops).
+- format: 0 failures.
+- architecture: 7 product files, 0 failures.
+- coverage: 22 of 22.
+- ownership: run after the commit.
+
+Size (session_013gccXT7dmwA6HqYDk4k5uR): test runs 10, module lines 2079
