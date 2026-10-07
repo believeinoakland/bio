@@ -18,6 +18,6 @@
 **Tests and checks run.**
 - `node --test test/m/attestation/` (bio-plane): tests 32, pass 32, fail 0.
 - Users of attestation (acquisition, capture, cap13-reuse-pages, d57selflink, docket, network-notices, case-disclosures, case-authoring, filings, affordances, control-plane, plane): tests 1119, pass 1112, fail 7, all inherited: plane `ask.test.mjs` ×6 (red 22) and control-plane `catalogue-end.test.mjs` ×1 (red 19); the same 7 fail on `tranche/T35` without this change. `system/migrate-released.test.mjs`: 1 pass.
-- `checks/format.mjs`: 0 failures. `architecture.mjs attestation`: 9 product files, 0 failures. `coverage.mjs attestation`: 10 of 10 live ids, 0 failures. `ownership.mjs attestation tranche/T35`: 0 failures.
+- `checks/format.mjs`: 0 failures. `architecture.mjs attestation`: 11 product files, 0 failures. `coverage.mjs attestation`: 10 of 10 live ids, 0 failures. `ownership.mjs attestation tranche/T35`: 0 failures.
 
 Size (session_01VTQaHgTy8PBDCChE2kLgVw): test runs 9, module lines 613
