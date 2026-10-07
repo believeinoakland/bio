@@ -37,3 +37,9 @@ Six readings of R43–R48 I am building on; carrying on with the job meanwhile. 
 4. **Sight of a facet's citation (R40).** An event is answered as R40 says; within its facet, a cited passage whose capture the viewer may not see is answered `{withheld: true}` (no sha, extent or words) and `says` reads "stated reason: in a document you cannot see". The question (R48) is withheld wholly, as R48 says.
 5. **`createEvent` of kind `discretion`, `waiver` or `assessment`** is refused `USE_NEEDS_ITS_ACT` (a use is held only with its facet, through R43/R44; R6's callers change nothing). A split of a use event (R14) copies the facet, question included, to the new event; a merge leaves the absorbed facet with its alias, read through the kept event's kind.
 6. **Op names** (yours, `op-declarations`): `discretionrecord`, `assessmentrecord`, `usewithdraw`, `usesof`, as the requirements' suggestion names them. `withdrawUse` is any stamped author's act (R45 names no member-only refusal for it).
+
+## J2 · COMPLETE
+
+Done (record: Completion, on 971de001fd). R1 (found extent), R6 (USE_NEEDS_ITS_ACT, B3), R43–R48 met and named by tests; events 54/54; checks clean but law-relations' format entries (red 24).
+
+REPORT for you: my four new ops (discretionrecord, assessmentrecord, usewithdraw, usesof) turn affordances t33.test.mjs:136 (its grading of events' map) and control-plane r53-routes.test.mjs:60 (no spec until T35-70 declares them) red; every other red among events' 29 users is red on tranche/T35 too. The plane bundle is stale (embeds src/events).
