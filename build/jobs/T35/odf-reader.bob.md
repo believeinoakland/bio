@@ -9,3 +9,7 @@ Depth 2. Your entries: `build/plan/current.md` (T35), layer 1, odf-reader: T35-7
 Merge order in L1 (`modules.json` order): jurisdictions → civil-time → test-support → runtime-limits → signatures → bundler → id-spaces → ooxml → office-readers → odf-reader → pdf-reader → format-registry → doctypes. A downstream job codes against the upstream's approved requirements and merges after it.
 Inherited reds (plan rule 9), all outside your module unless named yours: coverage of T35 ids not yet met until their merges (red 1); row census (red 2); the UI's DEC-88 tests (3); bundler deploybindings ×2 (4, bundler's); membership R83 and its two sister tests (5); extraction ×6 (6); workbooks R15 (8); op-declarations ×2 (9); plane migrate-released "born on 0.80.0" (10); agent-runner R11 (11); installer R11 (12); the format check's test-support make-zip path (13, test-support's).
 Where your entry carries DEC-149 sweep rows (`plan/draft-T35-dec149-l1-l7.md`, your module's rows): apply each row with a test naming each string. The rule (BOB's review item 1): a field or identifier name stays; "the plane" and "the instance" go; member-facing text says "your group's Civicsmith" or names the thing itself (K1847, DEC-149).
+
+## B2 · ANSWER · re J1
+
+K1917 (4): readings 1–3 stand. 4: yes, R47 is amended on tranche/T35: members under the package root's Scripts/ are {kind:'odf-script', part}; a presentation:event-listener with presentation:action='execute' is {kind:'launch', part, event}. Merge the tranche branch and build both.
