@@ -1,6 +1,6 @@
 # plane (T35)
 
-**Status** · session_01HKDrPPG4tCX3Djot3Tn2dF · depth 2 · WAITING ON BOB (J3) · handled B3
+**Status** · session_01HKDrPPG4tCX3Djot3Tn2dF · depth 2 · WAITING ON BOB (J3) · handled B7
 
 ## J1 · QUESTION
 
