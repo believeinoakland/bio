@@ -37,3 +37,8 @@ Findings outside installer from T35-75 (also in my record):
 2. Deploy order: the verify step now sends the probe credential only as `Authorization: Bearer` (R15, F1). Today's admission (`bio-plane/src/admission/index.mjs` :180, :431, :440, :552) reads only `?token=`; it reads the header from T35-71 (R20). The installer must not be deployed until `newgroup/src/release.mjs` embeds a release carrying admission R20 (0.81.0 or later, held by K1922). Over an older embed, every new install would read as "not woken up yet". Nothing is deployed in T35; a note for the cut.
 3. installer R15, R41 and R42's `*(not yet met: T35)*` markers can be cleared at the merge.
 4. Optional: the Suggestion's byte-for-byte test against public-read R30's exports needs a test-only `uses` edge, installer to public-read. I tested against R42's literal lines instead. Add the edge if you want it.
+
+## J2 · COMPLETE
+
+T35-75 complete on `job/T35/installer`. Done: K1905's R11 wording (red 12 cleared). R15 (F1): the probe credential travels in the header only, with a sentinel test and a negative control. R41: the Irreversible weight, and a permanence dialog naming the short name; only the confirming act sends /begin. R42: DEC-146's two lines on the install and invitation pages. Also fixed: R18's seed instruction now tells the operator to put the credential in the header, not the address.
+Tests: requirements 41 pass / 0 fail / 2 todo (R13, R24); wizard 208/0; embed 23/0; newgroup-bundle-fresh 3/1 (C: the stale generated bundle, REPORT item 1). Checks: format, architecture, coverage (42/42), ownership, 0 failures each. Deferred: none. Details in the record.
