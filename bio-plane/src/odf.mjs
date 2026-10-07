@@ -733,9 +733,13 @@ async function odfPartsUnguarded(row, bytes) {
  * R32's shape (the OOXML half of the same list):
  *   - a Basic library: every member under the package root's `Basic/`
  *     (`script-lc.xml`, a library's `script-lb.xml`, each module's source);
+ *   - an embedded script: every member under the package root's `Scripts/`
+ *     (the Python, BeanShell and JavaScript macros a document carries; K1917);
  *   - an event binding: every `script:event-listener` in content.xml or
  *     styles.xml, with the event it fires on (`dom:load`, `dom:click`, …) —
- *     the binding is the act, whatever it names;
+ *     the binding is the act, whatever it names — and every
+ *     `presentation:event-listener` whose action is `execute` (a shape that
+ *     launches a program; K1917);
  *   - an embedded object: every member under an `Object …/` sub-document
  *     directory, and the OLE blob an `ObjectReplacements/` rendering stands
  *     for (stored as ONE member, `Object 2`, so only its rendering names it).
@@ -743,35 +747,44 @@ async function odfPartsUnguarded(row, bytes) {
  * the text read met; the listeners need the two parts read, and a part that
  * could not be is stated (`unread`), so `[]` always means "none", never "not
  * looked". Nothing is run, evaluated or resolved: a listener's target is not
- * followed, and a Basic module's source is not read. This asserts no threat:
- * an item says the file CAN act, not that it is malicious. */
+ * followed, and no Basic module's or script's source is read. This asserts
+ * no threat: an item says the file CAN act, not that it is malicious. */
 const STYLES_PART = "styles.xml";
 const SCRIPT_NS = "urn:oasis:names:tc:opendocument:xmlns:script:1.0";
+const PRESENTATION_NS = "urn:oasis:names:tc:opendocument:xmlns:presentation:1.0";
 
-/** The prefixes a part binds to the script namespace; the conventional
- *  `script` when it declares none (a producer that never declares it still
- *  means it). */
-function scriptPrefixes(xml) {
+/** The prefixes a part binds to a namespace; the conventional prefix when it
+ *  declares none (a producer that never declares it still means it). */
+function prefixesFor(xml, ns, conventional) {
   const out = new Set();
   for (const m of xml.matchAll(/\sxmlns:([\w.-]+)\s*=\s*("([^"]*)"|'([^']*)')/g)) {
-    if ((m[3] ?? m[4]) === SCRIPT_NS) out.add(m[1]);
+    if ((m[3] ?? m[4]) === ns) out.add(m[1]);
   }
-  if (!out.size) out.add("script");
+  if (!out.size) out.add(conventional);
   return out;
 }
 
-/** Each `script:event-listener` in a part's markup, in document order, as
- *  the `script:event-name` it binds (null when it names none). */
-function eventListenersIn(xml) {
-  const prefixes = scriptPrefixes(xml);
+/** Each event binding in a part's markup, in document order, as an item
+ *  without its part: a `script:event-listener` as `odf-basic` with the
+ *  `script:event-name` it binds, a `presentation:event-listener` whose
+ *  `presentation:action` is `execute` as `launch` (each `event` null when it
+ *  names none). */
+function eventBindingsIn(xml) {
+  const script = prefixesFor(xml, SCRIPT_NS, "script");
+  const presentation = prefixesFor(xml, PRESENTATION_NS, "presentation");
   const out = [];
   const RE = tokens();
   let m;
   while ((m = RE.exec(xml)) !== null) {
     if (m[1] === undefined || m[0][1] === "/") continue;
     const i = m[1].indexOf(":");
-    if (i < 0 || m[1].slice(i + 1) !== "event-listener" || !prefixes.has(m[1].slice(0, i))) continue;
-    out.push(attrsOf(m[2])["event-name"] ?? null);
+    if (i < 0 || m[1].slice(i + 1) !== "event-listener") continue;
+    const prefix = m[1].slice(0, i);
+    if (script.has(prefix)) out.push({ kind: "odf-basic", event: attrsOf(m[2])["event-name"] ?? null });
+    else if (presentation.has(prefix)) {
+      const attrs = attrsOf(m[2]);
+      if (attrs.action === "execute") out.push({ kind: "launch", event: attrs["event-name"] ?? null });
+    }
   }
   return out;
 }
@@ -797,17 +810,18 @@ async function activeOf(bytes, container, contentXml, contentWhy) {
   const items = [];
   for (const name of names) {
     if (name.startsWith("Basic/")) items.push({ kind: "odf-basic", part: name });
+    else if (name.startsWith("Scripts/")) items.push({ kind: "odf-script", part: name });
     else if (/^Object [^/]*\//.test(name) || replaced.has(name)) items.push({ kind: "embedded-file", part: name });
     else if (name === CONTENT_PART) {
       if (contentXml == null) items.push({ kind: "unread", part: name, why: contentWhy });
-      else for (const event of eventListenersIn(contentXml)) items.push({ kind: "odf-basic", part: name, event });
+      else for (const b of eventBindingsIn(contentXml)) items.push({ kind: b.kind, part: name, event: b.event });
     } else if (name === STYLES_PART) {
       /* styles.xml is inflated for this list alone, so it is bounded the way
          content.xml is (COFF-6's metric, from the central directory first). */
       const g = sizeGuard(declaredTextBytes(container, (n) => n === STYLES_PART).total);
       const read = g.ok ? await readPart(bytes, container, STYLES_PART) : { ok: false, why: g.why };
       if (!read.ok) items.push({ kind: "unread", part: name, why: read.why });
-      else for (const event of eventListenersIn(UTF8.decode(read.bytes))) items.push({ kind: "odf-basic", part: name, event });
+      else for (const b of eventBindingsIn(UTF8.decode(read.bytes))) items.push({ kind: b.kind, part: name, event: b.event });
     }
   }
   return items;

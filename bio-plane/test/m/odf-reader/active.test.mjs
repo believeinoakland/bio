@@ -1,5 +1,5 @@
 /* odf-reader: active content, R47 (K1888, K1903, K1904), in office-readers
- * R32's shape, tested through the three entries' structure() and text(). */
+ * R32's shape (amended by K1917: `odf-script`, `launch`), tested through the three entries' structure() and text(). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { odtEntry, odsEntry, odpEntry } from "../../../src/odf.mjs";
@@ -54,6 +54,9 @@ test("R47 Basic libraries, event listeners and embedded objects, one item per fi
       { name: "ObjectReplacements/Object 1", data: "rendering" },
       { name: "ObjectReplacements/Object 2", data: "rendering" },
       { name: "Pictures/p.png", data: "png" },
+      { name: "Scripts/", data: "" },
+      { name: "Scripts/python/macro.py", data: "import os\nos.system('calc')" },
+      { name: "Scripts/beanshell/Lib/m.bsh", data: "exec(\"calc\");" },
     ];
     const list = members(f, { content, extra });
     // the central directory lists styles.xml first after the mimetype, the body later: the list follows the directory
@@ -72,6 +75,8 @@ test("R47 Basic libraries, event listeners and embedded objects, one item per fi
       { kind: "embedded-file", part: "Object 1/content.xml" },
       { kind: "embedded-file", part: "Object 1/styles.xml" },
       { kind: "embedded-file", part: "Object 2" },
+      { kind: "odf-script", part: "Scripts/python/macro.py" },
+      { kind: "odf-script", part: "Scripts/beanshell/Lib/m.bsh" },
     ]);
   }
 });
@@ -93,6 +98,29 @@ test("R47 an event listener is matched by the script namespace under any prefix;
   ]);
 });
 
+test("R47 a presentation:event-listener is a launch item only when its action is execute, under any prefix bound to the namespace, in content.xml or styles.xml", async () => {
+  const pl = (prefix, action, event = "dom:click") => `<${prefix}:event-listener script:event-name="${event}" ${prefix}:action="${action}" xlink:href="file:///bin/sh"/>`;
+  const content = contentXml("odp", `<draw:page><draw:frame><office:event-listeners>`
+    + pl("presentation", "execute") + pl("presentation", "next-page") + pl("presentation", "show")
+    + pl("p", "execute", "dom:mouseover") + `<presentation:event-listener presentation:action="execute"/>`
+    + `<!-- ${pl("presentation", "execute", "dom:commented")} -->`
+    + listener("dom:dblclick")
+    + `</office:event-listeners></draw:frame></draw:page>`)
+    .replace("<office:document-content ", `<office:document-content ${SCRIPT_NS} xmlns:p="urn:oasis:names:tc:opendocument:xmlns:presentation:1.0" `);
+  const styles = stylesXml(pl("presentation", "execute", "dom:focus"));
+  for (const f of FLAVOURS) {
+    const c = f === "odp" ? content : content.replace("<office:presentation>", `<office:${{ odt: "text", ods: "spreadsheet" }[f]}>`)
+      .replace("</office:presentation>", `</office:${{ odt: "text", ods: "spreadsheet" }[f]}>`);
+    assert.deepEqual(await activeOf(ENTRIES[f], buildZip(members(f, { content: c, extra: [{ name: "styles.xml", data: styles }] }))), [
+      { kind: "launch", part: "content.xml", event: "dom:click" },
+      { kind: "launch", part: "content.xml", event: "dom:mouseover" },
+      { kind: "launch", part: "content.xml", event: null },
+      { kind: "odf-basic", part: "content.xml", event: "dom:dblclick" },
+      { kind: "launch", part: "styles.xml", event: "dom:focus" },
+    ]);
+  }
+});
+
 test("R47 an embedded object is a member under an `Object …/` directory or the source an ObjectReplacements/ part names; nothing else", async () => {
   const extra = [
     { name: "Object 3", data: "a member no rendering names" },
@@ -101,6 +129,8 @@ test("R47 an embedded object is a member under an `Object …/` directory or the
     { name: "sub/Object 1/content.xml", data: "not at the root" },
     { name: "sub/Basic/m.xml", data: "not the root's Basic/" },
     { name: "Object 9/Basic/m.xml", data: "inside a sub-document" },
+    { name: "sub/Scripts/m.py", data: "not the root's Scripts/" },
+    { name: "ScriptsX/m.py", data: "not a Scripts directory" },
   ];
   for (const f of FLAVOURS) {
     assert.deepEqual(await activeOf(ENTRIES[f], buildZip(members(f, { extra }))), [
