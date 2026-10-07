@@ -219,78 +219,92 @@ test("R42: C-18.1 asks an unpacked document's container block, its shape and its
   assert.deepEqual(runPure([archiveDoc(), fileDoc({ grade: null, basis: "CAPTURE_RECEIVED_NOT_FETCHED" })]), []);
 });
 
-/* An archive's bundle as unpack leaves it: the archive's document and the file's beside it, both registered. */
-function fileInto(w, id, docs, { replay = false } = {}) {
-  return w.promoteInfo(id, { captures: [archiveCap, fileCap], docs, pkg: replay ? { replay: true } : {} });
-}
+/* As unpack files them (K1940 (1)): the archive in its own bundle, each file its own Information document in its own
+   bundle beside it, so the archive's document is read through the record, never from the file's own register. */
+const ARCHIVE_ID = "INFO-2026-0001-zip", FILE_ID = "INFO-2026-0002-member";
+const fileArchive = (w, doc = archiveDoc()) => w.promoteInfo(ARCHIVE_ID, { captures: [archiveCap], docs: [doc] });
+const fileMember = (w, doc, opts = {}) => w.promoteInfo(FILE_ID, { captures: [fileCap], docs: [doc], ...opts });
 
 test("R42: at the write, the archive is held, the letter is the archive's (R59) and the origin is the archive's document's", () => {
-  /* The archive's receipt: fetched directly (B). */
-  const fresh = () => { const w = world(); w.prov.recordReceipt({ address: ADDR, addressNorm: NORM, captureSha: sha(ARCHIVE_BYTES), retrieved: T(1) }); return w; };
   const refused = (r, re) => {
     assert.deepEqual([r.ok, r.reason], [false, "PROVENANCE_REGISTER_REFUSED"], JSON.stringify(r));
     assert.ok(r.findings.some((x) => x.check === "C-18.1" && re.test(x.detail)), JSON.stringify(r.findings));
   };
-  let w = fresh();
-  assert.equal(fileInto(w, "INFO-2026-0001-zip", [archiveDoc(), fileDoc()]).ok, true, "filed beside its archive");
-  w = fresh();
-  refused(fileInto(w, "INFO-2026-0001-zip", [archiveDoc(), fileDoc({ grade: "C" })]),
-          /states capture\.grade 'C', but a file earns exactly what its archive earns, B/);
-  w = fresh();
-  refused(fileInto(w, "INFO-2026-0001-zip", [archiveDoc(), fileDoc({ origin: { kind: "sweep", matched_sweep: "s", deeming_actor: "d" } })]),
+  /* The archive fetched directly (B), filed in its bundle. */
+  const w = world();
+  w.prov.recordReceipt({ address: ADDR, addressNorm: NORM, captureSha: sha(ARCHIVE_BYTES), retrieved: T(1) });
+  assert.equal(fileArchive(w).ok, true);
+  const before = w.snapshot();
+  refused(fileMember(w, fileDoc({ grade: "C" })), /states capture\.grade 'C', but a file earns exactly what its archive earns, B/);
+  refused(fileMember(w, fileDoc({ origin: { kind: "sweep", matched_sweep: "s", deeming_actor: "d" } })),
           /its origin is .*"sweep".*, not its archive's, \{"kind":"named_request"\}/);
+  /* Origins are compared as values: the same origin with its keys in another order is the archive's. */
+  const w0 = world();
+  w0.prov.recordReceipt({ addressNorm: NORM, captureSha: sha(ARCHIVE_BYTES), retrieved: T(1) });
+  assert.equal(fileArchive(w0, archiveDoc({ origin: { kind: "sweep", matched_sweep: "s", deeming_actor: "d" } })).ok, true);
+  assert.equal(fileMember(w0, fileDoc({ origin: { deeming_actor: "d", kind: "sweep", matched_sweep: "s" } })).ok, true);
   /* An archive the record neither registers nor holds a receipt for. */
-  w = world();
   const other = sha("an archive nobody holds");
-  refused(fileInto(w, "INFO-2026-0001-zip", [archiveDoc(), fileDoc({ block: container({ archive_sha256: other }) })]),
+  refused(fileMember(w, fileDoc({ block: container({ archive_sha256: other }) })),
           /names archive [0-9a-f]{16}…, which the record neither registers nor holds a receipt for/);
-  /* An archive replayed from an archive (C): the file states C. Received at the doorbell: no letter, the archive's basis. */
-  w = world();
-  w.prov.recordReceipt({ addressNorm: NORM, captureSha: sha(ARCHIVE_BYTES), retrieved: T(1), via: ARCHIVE_VIA });
-  assert.equal(fileInto(w, "INFO-2026-0001-zip", [archiveDoc({ capture: { ...archiveDoc().capture, grade: "C" } }), fileDoc({ grade: "C" })]).ok, true);
-  w = world();
-  w.prov.recordReceipt({ addressNorm: "knock:KNOCK-20260927-0a1b2c3d", captureSha: sha(ARCHIVE_BYTES), retrieved: T(1), via: DOORBELL_VIA });
+  assert.deepEqual(w.snapshot(), before, "no refusal wrote anything");
+  assert.equal(fileMember(w, fileDoc()).ok, true, "filed beside its archive, as unpack writes it");
+  /* An archive replayed from an archive (C): the file states C. */
+  const w2 = world();
+  w2.prov.recordReceipt({ addressNorm: NORM, captureSha: sha(ARCHIVE_BYTES), retrieved: T(1), via: ARCHIVE_VIA });
+  assert.equal(fileArchive(w2, archiveDoc({ capture: { ...archiveDoc().capture, grade: "C" } })).ok, true);
+  assert.equal(fileMember(w2, fileDoc({ grade: "C" })).ok, true);
+  /* An archive received at the doorbell: no letter, and the basis is the archive's. */
+  const w3 = world();
+  w3.prov.recordReceipt({ addressNorm: "knock:KNOCK-20260927-0a1b2c3d", captureSha: sha(ARCHIVE_BYTES), retrieved: T(1), via: DOORBELL_VIA });
   const knockOrigin = { kind: "doorbell", knock_id: "KNOCK-20260927-0a1b2c3d" };
   const knocked = archiveDoc({ origin: knockOrigin });
   knocked.capture = { ...knocked.capture, grade: null, grade_basis: "CAPTURE_RECEIVED_NOT_FETCHED" };
-  refused(fileInto(w, "INFO-2026-0001-zip", [knocked, fileDoc({ grade: "B", origin: knockOrigin })]),
+  assert.equal(fileArchive(w3, knocked).ok, true);
+  refused(fileMember(w3, fileDoc({ grade: "B", origin: knockOrigin })),
           /states capture\.grade 'B', but its archive earns no letter \(CAPTURE_RECEIVED_NOT_FETCHED\)/);
-  refused(fileInto(w, "INFO-2026-0001-zip", [knocked, fileDoc({ grade: null, basis: "measured", origin: knockOrigin })]),
+  refused(fileMember(w3, fileDoc({ grade: null, basis: "measured", origin: knockOrigin })),
           /grade_basis is 'measured', not its archive's, 'CAPTURE_RECEIVED_NOT_FETCHED'/);
-  assert.equal(fileInto(w, "INFO-2026-0001-zip", [knocked, fileDoc({ grade: null, basis: "CAPTURE_RECEIVED_NOT_FETCHED", origin: knockOrigin })]).ok, true);
+  assert.equal(fileMember(w3, fileDoc({ grade: null, basis: "CAPTURE_RECEIVED_NOT_FETCHED", origin: knockOrigin })).ok, true);
 });
 
-test("R42: the archive's document is read from its home when the file is filed elsewhere; none readable is a finding", () => {
+test("R42: an archive held with no document of it to read is a finding: its origin cannot be shown", () => {
+  /* Held by its receipt only: acquired, never filed. */
   const w = world();
   w.prov.recordReceipt({ address: ADDR, addressNorm: NORM, captureSha: sha(ARCHIVE_BYTES), retrieved: T(1) });
-  assert.equal(w.promoteInfo("INFO-2026-0001-zip", { captures: [archiveCap], docs: [archiveDoc()] }).ok, true);
-  assert.equal(w.promoteInfo("INFO-2026-0002-f", { captures: [fileCap], docs: [fileDoc()] }).ok, true,
-               "the origin is the archive's, read from its home");
-  const w2 = world();
-  w2.prov.recordReceipt({ address: ADDR, addressNorm: NORM, captureSha: sha(ARCHIVE_BYTES), retrieved: T(1) });
-  const r = w2.promoteInfo("INFO-2026-0002-f", { captures: [fileCap], docs: [fileDoc()] });
+  const r = fileMember(w, fileDoc());
   assert.equal(r.reason, "PROVENANCE_REGISTER_REFUSED");
+  assert.deepEqual(r.findings.map((x) => x.check), ["C-18.1"]);
   assert.match(r.findings[0].detail, /no register document of that archive can be read, so its origin cannot be shown/);
+  /* Filed in the archive's bundle under another digest's document only: still none of the archive's. */
+  const w2 = world();
+  w2.prov.recordReceipt({ addressNorm: NORM, captureSha: sha(ARCHIVE_BYTES), retrieved: T(1) });
+  const elsewhere = provDoc({ path: archiveCap.path, text: "some other bytes" });
+  const filed = w2.promotion.promote({ bundleId: ARCHIVE_ID, base: null, snapKey: "z", author: "member:alice", meta: { object_type: "information" },
+    files: [{ path: "bundle.md", text: infoMd(ARCHIVE_ID) }, { path: archiveCap.path, text: ARCHIVE_BYTES },
+            { path: "data/provenance.json", text: JSON.stringify({ documents: [elsewhere] }) }],
+    register: [{ sha256: sha(ARCHIVE_BYTES), path: archiveCap.path, encoding: "utf8", bytes: Buffer.byteLength(ARCHIVE_BYTES) }] });
+  assert.equal(filed.ok, true, JSON.stringify(filed));
+  assert.match(fileMember(w2, fileDoc()).findings[0].detail, /no register document of that archive can be read/);
 });
 
 test("R42: the audit and a gate holding the record ask the same; a later direct capture of the file regrades nothing", async () => {
   const w = world();
   w.prov.recordReceipt({ address: ADDR, addressNorm: NORM, captureSha: sha(ARCHIVE_BYTES), retrieved: T(1), via: ARCHIVE_VIA });
-  const docs = [archiveDoc({ capture: { ...archiveDoc().capture, grade: "C" } }), fileDoc({ grade: "C" })];
-  assert.equal(fileInto(w, "INFO-2026-0001-zip", docs).ok, true);
+  assert.equal(fileArchive(w, archiveDoc({ capture: { ...archiveDoc().capture, grade: "C" } })).ok, true);
+  assert.equal(fileMember(w, fileDoc({ grade: "C" })).ok, true);
   /* K1852 (3): the file fetched directly later earns B beside it; the document's C stays the archive's, and is sound. */
   w.prov.recordReceipt({ addressNorm: "e.org/agenda.pdf", captureSha: sha(FILE_BYTES), retrieved: T(4) });
   assert.equal(w.prov.captureGrade(sha(FILE_BYTES)).grade, EARNED_CAPTURE_CEILING);
   const pass = async () => (await w.record.auditPass({ after: "", limit: 10, visible: () => true })).tally["C-18.1"] ?? 0;
   assert.equal(await pass(), 0);
-  /* A bundle held with a wrong letter (a replay) is found by the audit, which holds the record. */
-  const replayed = w.promoteInfo("INFO-2026-0001-zip", { captures: [archiveCap, fileCap], docs: [docs[0], fileDoc({ grade: "B" })],
-                                 base: w.head("INFO-2026-0001-zip").bundleSha, pkg: { replay: true } });
+  /* A file held with a wrong letter (a replay) is found by the audit, which holds the record. */
+  const replayed = fileMember(w, fileDoc({ grade: "B" }), { base: w.head(FILE_ID).bundleSha, pkg: { replay: true } });
   assert.equal(replayed.ok, true, JSON.stringify(replayed));
   assert.equal(await pass(), 1);
   /* The gate: with the module's resolver the record's facts are asked; without one, the shape alone. */
-  const image = { "bundle.md": infoMd("INFO-2026-0001-zip"), "data/provenance.json": JSON.stringify({ documents: [docs[0], fileDoc({ grade: "B" })] }),
-                  [archiveCap.path]: ARCHIVE_BYTES, [fileCap.path]: FILE_BYTES };
+  const image = { "bundle.md": infoMd(FILE_ID), "data/provenance.json": JSON.stringify({ documents: [fileDoc({ grade: "B" })] }),
+                  [fileCap.path]: FILE_BYTES };
   const gate = { gateVersion: "g", ok: true, findings: [], warnings: 0 };
   const held = withRegisterChecks(image, gate, w.prov.containerResolver());
   assert.deepEqual([held.ok, held.findings.map((x) => x.check)], [false, ["C-18.1"]]);

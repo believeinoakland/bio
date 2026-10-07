@@ -59,7 +59,7 @@ const canon = (v) => JSON.stringify(v, (k, x) => (x && typeof x === 'object' && 
  *    gradeVia(sha, index)     R59's answer for entry `index` of archive `sha`
  *    archiveOrigin(sha)       `{found, origin}` of the archive's own document in its home's register
  *  Without it (the ratify gate's pure call) the shape and the method's pairing with the block are asked alone. */
-function checkContainer(ctx, findings, d, i, docs) {
+function checkContainer(ctx, findings, d, i) {
   const cap = d.capture && typeof d.capture === 'object' ? d.capture : null;
   const unpacked = !!cap && cap.method === UNPACKED_METHOD;
   const c = d.container;
@@ -106,11 +106,9 @@ function checkContainer(ctx, findings, d, i, docs) {
     if (stated !== null) findings.push(f('C-18.1', 'error', `provenance documents[${i}] was cut out of archive ${a.slice(0, 16)}… and states capture.grade '${stated}', but its archive earns no letter (${basis}), so neither does the file`));
     if (cap.grade_basis !== basis) findings.push(f('C-18.1', 'error', `provenance documents[${i}] was cut out of archive ${a.slice(0, 16)}… and its capture.grade_basis is '${cap.grade_basis}', not its archive's, '${basis}'`));
   }
-  /* The archive's own document: in this register when the file is filed beside it (unpack files into the archive's
-     bundle), else in the archive's home's register. */
-  const own = docs.find((x) => x && typeof x === 'object' && x !== d && x.capture && typeof x.capture === 'object'
-                               && x.capture.sha256 === a);
-  const found = own ? { found: true, origin: own.origin } : r.archiveOrigin(a) || { found: false };
+  /* The archive's own document, found by its capture digest through the record: its home's live register. Each file
+     is its own document in its own bundle beside the archive (K1940 (1)), so this register never holds it. */
+  const found = r.archiveOrigin(a) || { found: false };
   if (!found.found) findings.push(f('C-18.1', 'error', `provenance documents[${i}] was cut out of archive ${a.slice(0, 16)}…, and no register document of that archive can be read, so its origin cannot be shown to be the archive's`));
   else if (canon(d.origin ?? null) !== canon(found.origin ?? null)) findings.push(f('C-18.1', 'error', `provenance documents[${i}] was cut out of archive ${a.slice(0, 16)}… and its origin is ${canon(d.origin ?? null).slice(0, 120)}, not its archive's, ${canon(found.origin ?? null).slice(0, 120)}`));
 }
@@ -293,7 +291,7 @@ function checkReleaseAuthority(ctx, findings) {
       } else if (!CAPTURE_GRADES.includes(cap.grade)) findings.push(f('C-18.1', 'error', `provenance documents[${i}].capture.grade '${cap.grade}' is not one of: ${CAPTURE_GRADES.join(', ')}`));
       if (!ACTOR_CLASSES.includes(cap.actor_class)) findings.push(f('C-18.1', 'error', `provenance documents[${i}].capture.actor_class '${cap.actor_class}' is not one of: ${ACTOR_CLASSES.join(', ')}`));
     }
-    checkContainer(ctx, findings, d, i, docs);
+    checkContainer(ctx, findings, d, i);
     const or = d.origin;
     /* MK-1: the design's first §7 refusal, stated in the catalogue as well as
        fenced at the write (C-53.7) — an authored observation's origin is the
