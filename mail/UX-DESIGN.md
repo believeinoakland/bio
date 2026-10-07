@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_01NWPmrrYZbbF8Wkrvp5Y2vx · primary · since 2026-10-06
-**Read** · handled BOB B75
+**Read** · handled BOB B77
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -623,3 +623,13 @@ DEC-167 (design session, the surfaces B72 asked for under K1852): a captured arc
 - An archive refused whole says why and stays captured as it arrived. Held captures shows the archive with its files beside it; Add says a ZIP opens as it is captured.
 Folded: BIO_Interaction_Constructs_v0_1.md §S; layouts page (screen "Archive"). On PR #12's branch.
 Owed (DEC-167's owed: line, with N688): the read behind `owed:archivelist K1852` (entries, states, refusals by name in member words); the held list grouping an archive's files; vouching and setting aside across picked files.
+
+## U97 · NOTICE · 2026-10-07 · session_01NWPmrrYZbbF8Wkrvp5Y2vx · primary
+B76 and B77 read. B77's ask done: the registry's `owed:placewanted DEC-150` is the declared op `placewanted`; `personexpunge` noted (already the registry's act).
+- DEC-168 (Bob, "S10–S13: as recommended"; the four questions of `plan/study-security-tools-N710.md` §8, brought to Bob here at his offer). S10: a vendor keeping malicious samples for its own research, passing them to no one (Sophos Intelix, WildFire), is allowed, its keeping stated and confirmed by the administrator. S11: a default-sharing service only in its private mode, forced and verified per call, nothing sent when unconfirmed; ANY.RUN not offered. S12: K1929 (3) covers web addresses: reputation by hash prefix or Cloudflare's lookup only, never a full address to a new party. S13: a bad-reputation address is still captured, graded high risk, safe view only, its answer noted, the member told.
+- DEC-169 (design session, K1929's "screens are the design stream's"): "Opening a file" (risk in a word with reasons; low opens as it is, scanned first past a week; high opens in the safe view, labelled derived, never cited; "Open the original" drawn only once a deeper check passes; a hold shows the finding, the notice naming no one, notes per tool and engine, release by two members' reasons or a second, different engine; "who opens which file is never recorded"). Settings › Security › Security tools (each tool's sends, recipient, file retention, sharing; Add with a table, S10's confirmation, a test, then on; services not offered); an optional setup step; Add's line on bad sites.
+Folded: BIO_Interaction_Constructs_v0_1.md §R; layouts page. On PR #13 (branch restarted from main @ 51ca3e90).
+Owed (DEC-168, DEC-169 owed: lines): N710's catalogue as ruled; acquisition's high-risk capture of a bad-reputation address (a file-safety R6 reason); the ops behind `owed:openoriginal`, `owed:safeview`, `owed:deepercheck K1888`, `owed:releasescanhold K1892`, `owed:securitytooladd`, `owed:securitytooltest`, `owed:securitytoolremove K1929`; R6's reasons in member words; the installer's optional step.
+
+## U98 · MERGE · 2026-10-07 · session_01NWPmrrYZbbF8Wkrvp5Y2vx · primary
+PR #13 (claude/gallant-brown-zg0wc1, restarted from main @ 51ca3e90) is ready to merge at a tranche boundary, as PR #12 was; later commits ride with it. Keep the design session's text in any conflict (K945).
