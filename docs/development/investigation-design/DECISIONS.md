@@ -27,3 +27,4 @@ One line per decision. D1–D24 are the study's (`study/investigation`, `synthes
 | D21 | AI transcription of image-only pages, labelled UNDETERMINED | open |
 | D22 | the bearing note | open |
 | D23 | member-facing names; "nobody assigns steps; no hours or costs" | open (starts stages 1–2); its assignment line is contradicted by Bob's K2075 |
+| D24 | canon text for the three skill layers, drafted by BOB, ruled by Bob before stage 5 | open |
