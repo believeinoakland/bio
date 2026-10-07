@@ -8,8 +8,10 @@
    for a duty's reach and a question's conclusion, is a stand-in built from its stated interface. T33-70: the real
    `entities` (the actor's office entity, the participants) and `events` (the act is an event, with its dated facts and
    participants; a document's own date is a dated fact, which contradiction reads, K1610). The bridge (instance-setup
-   R50) is the test's `offices` map, given as conformance's `officeEntityOf`. Every test drives `conformance` at its
-   interface. */
+   R50) is the test's `offices` map, given as conformance's `officeEntityOf`. T35-61: `calculations` (R29's measures) is
+   a stand-in built from its stated `read` (its R8–R10: asynchronous, the stored results and grade facts, a calculation
+   withheld from a viewer answered exactly as an absent one), holding the test's `calcs`. Every test drives
+   `conformance` at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -179,12 +181,22 @@ export function world({ group = "test-group" } = {}) {
                                                             : { found: false, running: false, refusal: null }));
   /* the bridge, standing in for instance-setup R50: "role|body" → the office entity seeded for it */
   const offices = new Map();
+  /* calculations' read (its R8–R10), standing in: `calcs[id] = {answer, hiddenFrom?}`, `answer` the stored calculation
+     as read answers it; absent and withheld alike `{ok: true, found: false, calc_id}` */
+  const calcs = new Map();
+  const calculations = {
+    async read({ calcId = null, viewer = null } = {}) {
+      const c = calcs.get(calcId);
+      if (!c || !viewer || (c.hiddenFrom || []).includes(viewer)) return { ok: true, found: false, calc_id: calcId };
+      return { ok: true, found: true, calc_id: calcId, ...structuredClone(c.answer) };
+    },
+  };
   const c = conformanceOf(host, { record, membership, promotion, content, inquiry: k, strength, reevaluation,
-                                  publication, standards, contradiction, events, entities, now,
+                                  publication, standards, contradiction, events, entities, calculations, now,
                                   officeEntityOf: ({ role, body }) => offices.get(`${role}|${body}`) ?? null });
   const w = {
     st, host, record, membership, promotion, content, k, strength, reevaluation, publication, standards, contradiction, c,
-    clock, ex, entities, events, offices, view,
+    clock, ex, entities, events, offices, view, calcs,
     row: (q, ...a) => st.sql.exec(q, ...a).toArray()[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a).toArray(),
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`).one().n,
@@ -270,9 +282,9 @@ export function world({ group = "test-group" } = {}) {
       return r.dated_fact.dated_fact_id;
     },
     /** An entity of the registry (`office`, `person`, …), declared by a member. */
-    entity(kind, label) {
+    entity(kind, label, sector = undefined) {
       const r = entities.createEntity({ kind, label, note: `The ${kind} ${label}, registered for the test.`,
-                                        declaredBy: V("olive") });
+                                        declaredBy: V("olive"), ...(sector ? { sector } : {}) });
       if (!r.ok) throw new Error(`fixture entity refused: ${JSON.stringify(r).slice(0, 300)}`);
       return r.entity_id;
     },
@@ -356,7 +368,7 @@ export function world({ group = "test-group" } = {}) {
     },
     /** A standard held by `standards`, declared by a member through its R1 with the declarer's `reason` (DEC-88), its
      *  text a passage of its own document. */
-    standard(cite, { kind = "ordinance", issuer = "The Council", period = { from: "2020-01-01", to: null },
+    standard(cite, { kind = "ordinance", issuer = "Parks Department", period = { from: "2020-01-01", to: null },
                      supersedes = undefined, author = V("olive"), text = null,
                      reason = "The group holds the parks department to this rule." } = {}) {
       const t = text || w.evidence(`INFO-2026-${String(900 + ++n).padStart(4, "0")}-text`).content;

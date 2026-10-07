@@ -83,7 +83,8 @@ test("R8 R12: no comparison answer carries a significance, severity, priority, u
 
 test("R12 R18: a determination may name the proposal it drew on, and the proposal records that; a proposal absent or of another project is refused", () => {
   const { w, proj, std, input } = scene();
-  const p = w.c.comparisonPropose({ project: proj, standards: [std], rows: input().rows, proposer: MACHINE, viewer: MACHINE }).proposal;
+  const p = w.c.comparisonPropose({ project: proj, act: input().act, standards: [std], rows: input().rows, proposer: MACHINE,
+                                    viewer: MACHINE }).proposal;
   const d = w.c.determine(input({ proposal: p.id }));
   assert.deepEqual([d.ok, d.proposal], [true, p.id]);
   const read = w.c.comparisonRead({ id: p.id, viewer: V("pat") });
@@ -92,7 +93,7 @@ test("R12 R18: a determination may name the proposal it drew on, and the proposa
   assert.match(w.text(d.id), new RegExp(`drew_on: ${p.id}`));
   refused(nothing(w, () => w.c.determine(input({ proposal: "CMP-2026-0099" }))), "NO_SUCH_COMPARISON");
   const libs = w.project("Libraries", "olive");
-  const theirs = w.c.comparisonPropose({ project: libs, proposer: MACHINE, viewer: MACHINE }).proposal;
+  const theirs = w.c.comparisonPropose({ project: libs, act: input().act, proposer: MACHINE, viewer: MACHINE }).proposal;
   refused(nothing(w, () => w.c.determine(input({ proposal: theirs.id }))), "NO_SUCH_COMPARISON");
   /* a proposal's read answers as its project's sight says */
   refused(w.c.comparisonRead({ id: p.id, viewer: V("quinn") }), "NO_SUCH_COMPARISON");
@@ -105,7 +106,7 @@ test("R16: determinations, supersessions, flags and proposals are append-only (n
   const { w, input } = scene();
   const tables = CONFORMANCE_TABLES.map((t) => t.name);
   const a = w.c.determine(input());
-  w.c.comparisonPropose({ project: a.project, proposer: MACHINE, viewer: MACHINE });
+  w.c.comparisonPropose({ project: a.project, act: input().act, proposer: MACHINE, viewer: MACHINE });
   const snap1 = w.snapshot(tables);
   const b = w.c.determine(input({ supersedes: a.id, reason: "restated" }));
   w.c.basisChanged({ kind: "finding", subject: F, source: "reopened", since: "2026-09-28T03:00:00Z" });
@@ -135,7 +136,7 @@ test("R16: determinations, supersessions, flags and proposals are append-only (n
 test("R16: no place is named in this module's behaviour or outward text", () => {
   const { w, input } = scene();
   const d = w.c.determine(input());
-  const p = w.c.comparisonPropose({ project: d.project, proposer: MACHINE, viewer: MACHINE }).proposal;
+  const p = w.c.comparisonPropose({ project: d.project, act: input().act, proposer: MACHINE, viewer: MACHINE }).proposal;
   const outward = [...Object.values(CONFORMANCE_CHECKS).map((r) => r.translation), PROPOSAL_SAYS, FLAG_SAYS, p.says,
                    p.label.says, w.text(d.id).replace(/Parks|Director of Parks/g, "")];
   for (const s of outward)

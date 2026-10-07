@@ -40,7 +40,10 @@ test("R9 R19 R25: determinationRead answers R1's fields, the act's event with wh
     [[signer, "signatory", r.event.attestations[0].attestation_id]]);
   assert.match(r.event.participants_say, /never the actor/);
   assert.equal(JSON.stringify(r.act).includes(signer), false, "the person is never the actor");
+  /* R27: the standard binds the act's body (Parks Department issued it), read from standards and labelled so */
   assert.deepEqual(r.standards, [{ standard: std, outcome: "noncompliant", in_force: "in_force", in_force_why: null,
+    body: "Parks Department", binds: true, binds_why: "Parks Department issued it, and it is in force on 2026-03-02",
+    binds_rests_on: [{ issuer: "Parks Department" }], label: "Standard · binds Parks Department",
     rows: [{ requires: "thirty days' public notice before a closure", did: "closed with no notice", reading: "diverges",
              content: [ev.content] }], disagreement: null }]);
   const [f] = r.findings;
@@ -348,7 +351,7 @@ test("R1 R9 R11 R12 R18 R21: the ops route to the services, and the author, prop
   refused(w.op("determination", { id: d.id, viewer: V("quinn") }), "NO_SUCH_DETERMINATION");
   assert.deepEqual(w.op("determinations", { project: proj, live: "true", viewer: V("pat") }).items.map((i) => i.id), [d.id]);
   const p = w.op("comparisonpropose", { author: MACHINE, viewer: MACHINE },
-                 { project: proj, proposer: V("olive"), rows: [], standards: [] });
+                 { project: proj, act: input().act, proposer: V("olive"), rows: [], standards: [] });
   assert.deepEqual([p.ok, p.proposal.proposer, p.proposal.machine_work], [true, MACHINE, true]);
   assert.equal(w.op("comparison", { id: p.proposal.id, viewer: V("pat") }).proposal.id, p.proposal.id);
   /* R21 (N345): comparisonfacts, the viewer the control plane's stamp; the body's viewer never wins */

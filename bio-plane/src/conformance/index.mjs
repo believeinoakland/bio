@@ -34,13 +34,22 @@
  *   strength      `inquiryStrength` (R9).
  *   reevaluation  `onBasisChanged` (R10).
  *   publication   `publishedEditionsOf` (R2, R9, R10; its R37).
- *   standards     `standardRead`, `inForceAt` (R1, R3, R9, R10); `noSuchStandard` (its R17: R1's `NO_SUCH_STANDARD`).
+ *   standards     `standardRead`, `inForceAt` (R1, R3, R9, R10); `noSuchStandard` (its R17: R1's `NO_SUCH_STANDARD`);
+ *                 `bindsAt` (its R43: R27, whether a standard binds the act's body at the act's dates).
+ *   calculations  `read` (its R9: R29's measures, their denominators, populations and derivations). Asynchronous, so an
+ *                 act with a measure row answers a Promise of its answer (every other act answers synchronously).
  *   contradiction `candidatesFor` (R21: the two sides of the candidate a contradiction inquiry took up; N345).
  *   events       `readEvent`, `eventForAct` (R25, R26); `noSuchEvent` its one answer to an absent or unseen event.
- *   entities     `readEntity` (R25: whether the actor's entity is an `office`).
+ *   entities     `readEntity` (R25: whether the actor's entity is an `office`; R28: or an organisation, or a person).
  *   officeEntityOf `({role, body})` → the `office` entity seeded for that office (the bridge, instance-setup R50), or
  *                null; wired by the composition root (as local-facts' `officeOf`). Absent, no office entity is held.
  *   now           the clock for the instants it writes, an ISO string (default: the wall clock, to the second).
+ *
+ * T35 (N651; K1723, K1713): a standard that does not bind the act's body is a benchmark (R27): never `noncompliant`
+ * against it, never called a violation or nonconforming, its `diverges` read "below the benchmark". A comparison may be
+ * of any office's or organisation's act, never a person's (R28); a determination still judges only an office's act. A
+ * row may state what was done as a measure (R29), a `CALC-` count or share with its denominator and population, held
+ * beside the provision and never as the rule.
  *
  * READ CONTRACTS it joins in its own SQL: record-core's `bundles` (`bundle_id`, `object_type`, its R37), through
  * membership's viewer predicate over a determination's project (R11, R15). */
@@ -57,6 +66,7 @@ import { standardsOf, noSuchStandard } from "../standards/index.mjs";
 import { contradictionOf } from "../contradiction/index.mjs";
 import { entitiesOf } from "../entities/index.mjs";
 import { eventsOf, noSuchEvent } from "../events/index.mjs";
+import { calculationsOf } from "../calculations/index.mjs";
 import { localDay } from "../civil-time/index.mjs";
 import { isMachineIdentity, proposalLabel, normalizeType, deriveInquiryTitle, idPattern } from "../record-grammar/index.mjs";
 import { CONFORMANCE_CHECKS, refusal } from "./checks.mjs";
@@ -113,6 +123,22 @@ export const ACTOR_BEFORE_ENTITIES = "this actor was recorded before an act's of
 /** R26: the sentence an act no member has yet linked to an event carries. */
 export const UNALIASED_SAYS = "This act was recorded before acts were events, and no event is linked to it yet. It reads "
   + "as recorded; a member links it to its event (events' aliasAct) before it is determined again.";
+
+/** R28: the entity kinds a comparison's actor may be: an office, or an organisation of any sector (K1453). */
+export const ACTOR_KINDS = Object.freeze(["office", "institution", "body", "movement"]);
+/** R27 (K1723): the words never used of an act against a standard that does not bind its body (whole words, any case). */
+export const NONCONFORMING_WORDS = Object.freeze(["violated", "violates", "violation", "nonconforming", "non-conforming",
+  "nonconformity", "nonconformance"]);
+const NONCONFORMING_RE = new RegExp(`(?<![A-Za-z0-9-])(${NONCONFORMING_WORDS.join("|")})(?![A-Za-z0-9-])`, "i");
+/** R27: how a `diverges` reading against a benchmark is answered (never as a breach). */
+export const BELOW_BENCHMARK = "below the benchmark";
+/** R27: a standard's bindingness on a determination recorded before bindingness was read. */
+export const BINDS_NOT_READ = "this was recorded before whether a standard binds the body was read";
+/** R29: the sentence beside a measure (DEC-145 (8): what the office does, never "practice"). */
+export const MEASURE_SAYS = "What the office does, measured: the calculation's result with what it counted and out of "
+  + "how many, held beside the provision and never as the rule.";
+/** R29: what a measure row's `did` holds in words. */
+const measureWords = (calc) => `what the office does, as measured by ${calc}`;
 
 const ACT_RE = idPattern("ACT");
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -171,12 +197,13 @@ export class Conformance {
 
   constructor({ storage, record, membership, promotion, host = null, content = null, inquiry = null, strength = null,
                 reevaluation = null, publication = null, standards = null, contradiction = null, events = null,
-                entities = null, officeEntityOf = null, now = null } = {}) {
+                entities = null, calculations = null, officeEntityOf = null, now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
-    this.#deps = { host, content, inquiry, strength, reevaluation, publication, standards, contradiction, events, entities };
+    this.#deps = { host, content, inquiry, strength, reevaluation, publication, standards, contradiction, events, entities,
+                   calculations };
     this.officeEntityOf = typeof officeEntityOf === "function" ? officeEntityOf : null;
     this.now = typeof now === "function" ? now : () => stampInstant("second");
   }
@@ -191,6 +218,7 @@ export class Conformance {
   get contradiction() { return this.#deps.contradiction ||= contradictionOf(this.#deps.host); }
   get events() { return this.#deps.events ||= eventsOf(this.#deps.host); }
   get entities() { return this.#deps.entities ||= entitiesOf(this.#deps.host); }
+  get calculations() { return this.#deps.calculations ||= calculationsOf(this.#deps.host); }
 
   migrate() { migrateConformance(this.sql); }
 
@@ -352,35 +380,10 @@ export class Conformance {
         + "shows it. Nothing was written.", missing);
       /* END DEC-49 REGION is-act-complete */
     };
-    const named = str(a.event) ?? str(a.id);
-    /* DEC-49 REGION is-act-event-named */
-    if (!named)
-      return refusal("ACT_NO_EVENT", "the act names no event: a government act is the event that records what was done. "
-        + "Nothing was written.", { part: "event" });
-    /* END DEC-49 REGION is-act-event-named */
-    let eventId = named;
-    if (ACT_RE.test(named)) {
-      let f = null;
-      try { f = this.events.eventForAct(named); } catch { f = null; }
-      const recorded = this.#one(`SELECT * FROM determinations WHERE act_id=? AND project_id=? ORDER BY determination_id DESC
-                                  LIMIT 1`, named, project);
-      if (!f || !f.found || !str(f.event_id)) {
-        if (!recorded) return noSuchEvent(named, { act: named });
-        /* DEC-49 REGION is-act-aliased */
-        return refusal("ACT_NOT_AN_EVENT", `${named} was recorded before acts were events, and no event is linked to it `
-          + "yet. A member links it to its event first. Nothing was written.", { act: named });
-        /* END DEC-49 REGION is-act-aliased */
-      }
-      eventId = f.event_id;
-      if (recorded && a.actor === undefined && a.evidence === undefined)
-        a = { ...a, evidence: safeJson(recorded.act_evidence, []),
-              actor: { role: recorded.act_role, body: recorded.act_body,
-                       ...(recorded.act_entity ? { entity_id: recorded.act_entity } : {}) } };
-    }
-    let read = null;
-    try { read = this.events.readEvent({ eventId, viewer }); } catch { read = null; }
-    if (!read || read.ok === false || !read.found || !isObj(read.event)) return noSuchEvent(named);
-    const ev = read.event;
+    const e = this.#actEvent(a, project, viewer);
+    if (!e.ok) return e;
+    a = e.act;
+    const ev = e.event;
     const actor = isObj(a.actor) ? a.actor : {};
     let entity = null;
     if (actor.entity_id !== undefined && actor.entity_id !== null) {
@@ -409,13 +412,94 @@ export class Conformance {
                               actor: { role, body, entity_id: entity }, evidence: [...new Set(ev0)] } };
   }
 
-  /* R25: whether `id` names an `office` entity (an absent one is not). */
-  #isOffice(id) {
-    if (!id) return false;
+  /* R25, R26 (and R28's comparison): the act's event. `event` (or a pre-T33 `id`) may be an `ACT-` id, resolved through
+     `events.eventForAct`: aliased, it is its event; not, it is `ACT_NOT_AN_EVENT` when this project recorded it and an
+     absent event otherwise. A pre-T33 act named by its `ACT-` id alone takes the actor and evidence it was recorded
+     with. The event is read as `viewer` reads it (`NO_SUCH_EVENT`, absent and unseen alike, events' one answer).
+     Answers `{ok, act, event}` or the refusal. */
+  #actEvent(a, project, viewer) {
+    const named = str(a.event) ?? str(a.id);
+    /* DEC-49 REGION is-act-event-named */
+    if (!named)
+      return refusal("ACT_NO_EVENT", "the act names no event: a government act is the event that records what was done. "
+        + "Nothing was written.", { part: "event" });
+    /* END DEC-49 REGION is-act-event-named */
+    let eventId = named;
+    if (ACT_RE.test(named)) {
+      let f = null;
+      try { f = this.events.eventForAct(named); } catch { f = null; }
+      const recorded = this.#one(`SELECT * FROM determinations WHERE act_id=? AND project_id=? ORDER BY determination_id DESC
+                                  LIMIT 1`, named, project);
+      if (!f || !f.found || !str(f.event_id)) {
+        if (!recorded) return noSuchEvent(named, { act: named });
+        /* DEC-49 REGION is-act-aliased */
+        return refusal("ACT_NOT_AN_EVENT", `${named} was recorded before acts were events, and no event is linked to it `
+          + "yet. A member links it to its event first. Nothing was written.", { act: named });
+        /* END DEC-49 REGION is-act-aliased */
+      }
+      eventId = f.event_id;
+      if (recorded && a.actor === undefined && a.evidence === undefined)
+        a = { ...a, evidence: safeJson(recorded.act_evidence, []),
+              actor: { role: recorded.act_role, body: recorded.act_body,
+                       ...(recorded.act_entity ? { entity_id: recorded.act_entity } : {}) } };
+    }
+    let read = null;
+    try { read = this.events.readEvent({ eventId, viewer }); } catch { read = null; }
+    if (!read || read.ok === false || !read.found || !isObj(read.event)) return noSuchEvent(named);
+    return { ok: true, act: a, event: read.event };
+  }
+
+  /* R28: the act a comparison compares, `{event, actor: {role?, body?, entity_id?}, evidence?}`: R25's event, then the
+     actor, which may be an office or an organisation of any sector (`ACTOR_KINDS`), never a person. An actor names its
+     entity, or its role and body (`ACT_INCOMPLETE` otherwise); a role and body with no entity take the office entity
+     seeded for them, as a determination's do. Evidence is optional on a comparison and kept as given. */
+  #comparedAct(act, project, viewer) {
+    const e = this.#actEvent(isObj(act) ? act : {}, project, viewer);
+    if (!e.ok) return e;
+    const actor = isObj(e.act.actor) ? e.act.actor : {};
+    const role = text(actor.role), body = text(actor.body);
+    let entity = null, kind = null;
+    if (actor.entity_id !== undefined && actor.entity_id !== null) {
+      entity = str(actor.entity_id);
+      kind = this.#entityKind(entity);
+      /* DEC-49 REGION is-actor-not-a-person */
+      if (kind === "person")
+        return refusal("ACTOR_IS_A_PERSON", `${String(actor.entity_id).slice(0, 60)} is a person: an act is compared as the `
+          + "act of an office or an organisation, and the people who took part are the event's participants. Nothing was "
+          + "written.", { entity_id: entity });
+      /* END DEC-49 REGION is-actor-not-a-person */
+      /* DEC-49 REGION is-actor-office-or-organisation */
+      if (!ACTOR_KINDS.includes(kind))
+        return refusal("ACTOR_NOT_AN_OFFICE_OR_ORGANISATION", `${String(actor.entity_id).slice(0, 60)} is not an office or `
+          + "an organisation the record holds. Name the office or organisation whose act this is. Nothing was written.",
+          { entity_id: entity });
+      /* END DEC-49 REGION is-actor-office-or-organisation */
+    } else if (!role || !body) {
+      /* DEC-49 REGION is-act-complete */
+      return refusal("ACT_INCOMPLETE", "the act names the office or organisation that did it, by its entity or by its "
+        + "role and body, never by a person. Nothing was written.", { part: "actor" });
+      /* END DEC-49 REGION is-act-complete */
+    } else if (this.officeEntityOf) {
+      let found = null;
+      try { found = str(this.officeEntityOf({ role, body })); } catch { found = null; }
+      if (found && this.#isOffice(found)) { entity = found; kind = "office"; }
+    }
+    const ev = e.event;
+    const evidence = Array.isArray(e.act.evidence) ? e.act.evidence.map(str).filter(Boolean) : [];
+    return { ok: true, act: { event: ev.event_id, kind: ev.kind ?? null, when: ev.when ?? null, why: ev.why ?? null,
+                              actor: { role, body, entity_id: entity, entity_kind: kind }, evidence: [...new Set(evidence)] } };
+  }
+
+  /* R25, R28: the kind of the entity `id` names, or null when the record holds none. */
+  #entityKind(id) {
+    if (!id) return null;
     let r = null;
     try { r = this.entities.readEntity({ entityId: id, viewer: "class:daemon" }); } catch { r = null; }
-    return !!(r && r.found !== false && isObj(r.entity) && r.entity.kind === "office");
+    return r && r.found !== false && r.ok !== false && isObj(r.entity) ? r.entity.kind ?? null : null;
   }
+
+  /* R25: whether `id` names an `office` entity (an absent one is not). */
+  #isOffice(id) { return this.#entityKind(id) === "office"; }
 
   /* The act as recorded (R9, R25, R26); with `seen` (R24), an evidence content id the viewer may not see leaves the list.
      From T33 it is `{id, event, actor: {role, body, entity_id, entity_why?}, evidence, when}`, `when` the event's as the
@@ -585,6 +669,110 @@ export class Conformance {
     return { ok: true, standards: out };
   }
 
+  /* R27 (K1723): whether each standard binds the act's body, read through `standards.bindsAt` at each of R3's dates, as
+     the viewer reads it; never taken from a caller. The body is the actor's `body` as given (an entity id or the issuer's
+     name, as `bindsAt` matches an issuer), or for an organisation named only by its entity, that entity. Every date
+     `binds`: `true`; every date `benchmark`: `false`; anything else (a date or an answer undetermined, a read refused,
+     the two ends disagreeing) `"undetermined"` with why. Answers a Map from standard id to `{body, binds, why, rests_on,
+     label}`. */
+  #bindings(ids, act, viewer) {
+    const body = act.actor.body ?? act.actor.entity_id ?? null;
+    let bodyLabel = body;
+    if (body) {
+      let e = null;
+      try { e = this.entities.readEntity({ entityId: body, viewer: "class:daemon" }); } catch { e = null; }
+      if (e && e.found !== false && e.ok !== false && isObj(e.entity) && str(e.entity.label)) bodyLabel = e.entity.label;
+    }
+    const dates = Conformance.datesOf(act);
+    const out = new Map();
+    for (const id of ids) {
+      if (out.has(id)) continue;
+      const answers = dates.map((d) => {
+        if (!d.date) return { state: "undetermined", why: d.why, rests_on: [] };
+        if (!body) return { state: "undetermined", why: "the act names no body", rests_on: [] };
+        let r = null;
+        try { r = this.standards.bindsAt({ standard: id, body, date: d.date, viewer }); } catch { r = null; }
+        if (!isObj(r) || r.ok === false || !["binds", "benchmark", "undetermined"].includes(r.state))
+          return { state: "undetermined", rests_on: [],
+                   why: `whether ${id} binds the body could not be read${isObj(r) && r.detail ? ` (${oneLine(r.detail)})` : ""}` };
+        return { state: r.state, why: r.why ?? null, rests_on: Array.isArray(r.rests_on) ? r.rests_on : [], date: d.date };
+      });
+      const all = (state) => answers.every((x) => x.state === state);
+      const binds = all("binds") ? true : all("benchmark") ? false : "undetermined";
+      const open = answers.find((x) => x.state === "undetermined");
+      const why = binds === "undetermined"
+        ? (open ? open.why : "it binds the body at one end of the act's band and not at the other")
+        : answers.map((x) => x.why).filter(Boolean).join("; ") || null;
+      out.set(id, { body, binds, why, rests_on: answers.flatMap((x) => x.rests_on).slice(0, 20),
+                    label: bindingLabel(binds, bodyLabel ?? "the body") });
+    }
+    return out;
+  }
+
+  /* R27: no row text or question of a standard that does not bind the body calls the act a violation or nonconforming.
+     `items` are `{standard, texts}`; the standards are those whose `binds` is `false`. */
+  #benchmarkWords(items, bindings) {
+    for (const { standard, texts } of items) {
+      const b = standard ? bindings.get(standard) : null;
+      if (!b || b.binds !== false) continue;
+      for (const t of texts) {
+        const m = typeof t === "string" ? NONCONFORMING_RE.exec(t) : null;
+        /* DEC-49 REGION is-benchmark-worded */
+        if (m)
+          return refusal("BENCHMARK_CALLED_NONCONFORMING", `${standard} does not bind ${b.body}, so the comparison does not `
+            + `call the act "${m[1]}": say how it compares (below, slower than, or above). Nothing was written.`,
+            { standard, body: b.body, word: m[1] });
+        /* END DEC-49 REGION is-benchmark-worded */
+      }
+    }
+    return null;
+  }
+
+  /* R29: the measures `rows` state as what was done, each read through `calculations.read` as `viewer` reads it, in row
+     order: an entry per row, null for a row whose `did` is words, else `{ok, measure}` or its refusal. A read; writes
+     nothing. */
+  async #measures(rows, viewer) {
+    const list = Array.isArray(rows) ? rows.slice(0, LIMITS.rows) : [];
+    const out = [];
+    for (const r of list) out.push(isObj(r) && isObj(r.did) ? await this.#measureOf(r.did, viewer) : null);
+    return out;
+  }
+
+  /* R29: one measure `{calc, result_key}`: the calculation's result (its `output`), its denominator (an application
+     recipe's, or a ratio's or share's own), its population (an application recipe's frozen uses, or the frozen record
+     sets it counts) and its derivation (the recipe and method version), each from the calculation and never composed
+     here. A calculation absent or unseen answers as calculations answers it, alike; one with no denominator or no
+     population is `MEASURE_NO_DENOMINATOR`. A result key that differs from the calculation's is stated, not refused. */
+  async #measureOf(did, viewer) {
+    const calc = str(did.calc);
+    let r = null;
+    try { r = calc ? await this.calculations.read({ calcId: calc, viewer }) : null; } catch { r = null; }
+    if (!isObj(r) || r.ok === false || !r.found)
+      return { ok: false, reason: "NO_SUCH_CALCULATION", code: "NO_SUCH_CALCULATION", calc,
+               detail: "no calculation answers to that id here, or it is not one you may see. Nothing was written." };
+    const res = isObj(r.results) ? r.results : {};
+    const app = isObj(res.application) ? res.application : null;
+    const output = res.output ?? null;
+    const denominator = app && app.denominator != null ? app.denominator
+      : isObj(output) && output.denominator != null ? output.denominator : null;
+    const inputs = isObj(r.calculation) && Array.isArray(r.calculation.inputs) ? r.calculation.inputs : [];
+    const sets = inputs.filter((i) => isObj(i) && i.kind === "set");
+    const population = app && Array.isArray(app.population) && app.population.length ? app.population
+      : sets.length ? sets.map((i) => ({ input: i.name, set: i.set ?? null, sha: i.sha ?? null })) : null;
+    /* DEC-49 REGION is-measure-denominated */
+    if (denominator == null || !population)
+      return refusal("MEASURE_NO_DENOMINATOR", `${calc} states ${denominator == null ? "no denominator" : "no population"}: `
+        + "a measure of what the office does is shown with what it counted and out of how many. Nothing was written.",
+        { calc, missing: denominator == null ? "denominator" : "population" });
+    /* END DEC-49 REGION is-measure-denominated */
+    const key = str(did.result_key);
+    return { ok: true, measure: { calc, result_key: key, result_key_now: r.result_key ?? null,
+      result_key_differs: !!key && key !== r.result_key, result: output, denominator, population,
+      derivation: { recipe: r.calculation ? r.calculation.recipe ?? null : null, method_version: r.method_version ?? null,
+                    says: app && str(app.derivation) ? app.derivation : "the recipe stored with this calculation" },
+      computed_at: r.computed_at ?? null, says: MEASURE_SAYS } };
+  }
+
   /* R3: standards R20's answer (`{state, why, standard, version}`) as a word and why. A refusal or an unreadable answer
      is undetermined, never in force. */
   #inForce(id, date, viewer) {
@@ -595,8 +783,9 @@ export class Conformance {
     return { date, answer, why: ok ? (r.why ?? null) : (isObj(r) ? (r.detail ?? r.reason ?? null) : "standards did not answer") };
   }
 
-  /* R1: every standard has a row, and every row states what the standard requires, what was done and its reading. */
-  #readRows(rows, standards) {
+  /* R1: every standard has a row, and every row states what the standard requires, what was done and its reading. R29:
+     what was done may be a measure, read beforehand (`measures`, in row order); its refusal is answered here. */
+  #readRows(rows, standards, measures = null) {
     const list = Array.isArray(rows) ? rows : [];
     const named = new Set(standards.map((s) => s.standard));
     const out = [];
@@ -609,16 +798,22 @@ export class Conformance {
     };
     for (const [i, r] of list.entries()) {
       const row = isObj(r) ? r : {};
-      const standard = str(row.standard), requires = text(row.requires), did = text(row.did);
+      const standard = str(row.standard), requires = text(row.requires);
+      let did = text(row.did), measure = null;
       const reading = READINGS.includes(row.reading) ? row.reading : null;
       if (!standard || !named.has(standard))
         return incomplete(`row ${i} names no standard this determination names.`, { row: i });
+      if (isObj(row.did)) {
+        const m = measures ? measures[i] : null;
+        if (m && m.ok === false) return { ...m, row: i };
+        if (m && m.ok) { measure = m.measure; did = measureWords(measure.calc); }
+      }
       if (!requires || !did || !reading)
         return incomplete(`row ${i} states ${[!requires && "what the standard requires", !did && "what was done",
           !reading && `a reading (${READINGS.join(", ")})`].filter(Boolean).join(", ")}: each is required.`, { row: i });
       const content = Array.isArray(row.content) ? row.content.map(str).filter(Boolean).slice(0, LIMITS.evidence)
         : str(row.content) ? [str(row.content)] : [];
-      out.push({ standard, requires, did, reading, content });
+      out.push({ standard, requires, did, reading, content, measure });
     }
     const bare = standards.find((s) => !out.some((r) => r.standard === s.standard));
     if (bare) return incomplete(`${bare.standard} has no row: each standard named is compared.`, { standard: bare.standard });
@@ -704,6 +899,14 @@ export class Conformance {
    *  resting on findings `project` has published. Refusals in R1's order, then R12's proposal and R7's supersession. The
    *  determination and every inquiry it opens land together or not at all (R6). */
   determine(input = {}) {
+    const rows = isObj(input) && Array.isArray(input.rows) ? input.rows : [];
+    if (!rows.some((r) => isObj(r) && isObj(r.did))) return this.#determine(input, null);
+    /* R29: a measure is read first (calculations' read is asynchronous), then the act runs as every other does */
+    const viewer = input.viewer != null ? input.viewer : input.author ?? null;
+    return this.#measures(rows, viewer).then((m) => this.#determine(input, m));
+  }
+
+  #determine(input, measures) {
     const { project = null, act = null, findings = null, standards = null, rows = null, questions = null,
             supersedes = null, reason = null, proposal = null, cause = null, author = null } = isObj(input) ? input : {};
     const viewer = input && input.viewer != null ? input.viewer : author;
@@ -724,7 +927,7 @@ export class Conformance {
     if (!f.ok) return f;
     const s = this.#readStandards(standards, a.act, viewer);
     if (!s.ok) return s;
-    const r = this.#readRows(rows, s.standards);
+    const r = this.#readRows(rows, s.standards, measures);
     if (!r.ok) return r;
     for (const x of s.standards) {
       const outcomes = [...new Set(x.outcomes)];
@@ -735,6 +938,27 @@ export class Conformance {
       /* END DEC-49 REGION is-outcome-stated */
       x.outcome = outcomes[0];
     }
+    /* R27 (K1723): bindingness read, never taken from the input; a noncompliant outcome only against a standard that
+       binds the body, an undetermined bindingness refused the same until a member settles it in `standards` */
+    const bindings = this.#bindings(s.standards.map((x) => x.standard), a.act, viewer);
+    for (const x of s.standards) {
+      const b = bindings.get(x.standard);
+      Object.assign(x, { body: b.body, binds: b.binds, binds_basis: { why: b.why, rests_on: b.rests_on, label: b.label },
+                         label: b.label });
+      /* DEC-49 REGION is-standard-binding */
+      if (x.outcome === "noncompliant" && b.binds !== true)
+        return refusal("STANDARD_NOT_BINDING", b.binds === false
+          ? `${x.standard} does not bind ${b.body} (${b.label}), so the act is not found noncompliant against it: record `
+            + "the comparison as a benchmark (below, slower than, or above). Nothing was written."
+          : `whether ${x.standard} binds ${b.body ?? "the body"} is undetermined (${b.why ?? "not recorded"}), and an act is `
+            + "found noncompliant only against a standard that binds its body: a member settles it in standards first. "
+            + "Nothing was written.", { standard: x.standard, body: b.body, binds: b.binds });
+      /* END DEC-49 REGION is-standard-binding */
+    }
+    const said = (Array.isArray(questions) ? questions : []).map((x) => (isObj(x) ? x.question : x));
+    const worded = this.#benchmarkWords([...r.rows.map((x) => ({ standard: x.standard, texts: [x.requires, x.measure ? null : x.did] })),
+      ...s.standards.map((x) => ({ standard: x.standard, texts: said }))], bindings);
+    if (worded) return worded;
     const qs = this.#readQuestions(questions, s.standards.map((x) => x.outcome), author);
     if (!qs.ok) return qs;
     const sig = this.#refuseSignificance(input);
@@ -788,11 +1012,13 @@ export class Conformance {
         sup.prev ? sup.reason : null, author, at, theAct.event, theAct.actor.entity_id,
         JSON.stringify(theAct.when ?? null));
       standards.forEach((x, i) => this.sql.exec(
-        `INSERT INTO determination_standards (determination_id, ord, standard_id, outcome, in_force, in_force_why)
-         VALUES (?,?,?,?,?,?)`, id, i, x.standard, x.outcome, x.in_force, x.in_force_why));
+        `INSERT INTO determination_standards (determination_id, ord, standard_id, outcome, in_force, in_force_why, body,
+           binds, binds_basis) VALUES (?,?,?,?,?,?,?,?,?)`, id, i, x.standard, x.outcome, x.in_force, x.in_force_why,
+        x.body, JSON.stringify(x.binds), JSON.stringify(x.binds_basis)));
       rows.forEach((x, i) => this.sql.exec(
-        `INSERT INTO determination_rows (determination_id, ord, standard_id, requires, did, reading, content)
-         VALUES (?,?,?,?,?,?,?)`, id, i, x.standard, x.requires, x.did, x.reading, JSON.stringify(x.content)));
+        `INSERT INTO determination_rows (determination_id, ord, standard_id, requires, did, reading, content, measure)
+         VALUES (?,?,?,?,?,?,?,?)`, id, i, x.standard, x.requires, x.did, x.reading, JSON.stringify(x.content),
+        x.measure ? JSON.stringify(x.measure) : null));
       pins.forEach((x, i) => this.sql.exec(
         `INSERT INTO determination_findings (determination_id, ord, finding_id, case_id, edition, version_sha, role, frozen)
          VALUES (?,?,?,?,?,?,?,?)`, id, i, x.finding, x.case, x.edition, x.version_sha, x.role,
@@ -882,10 +1108,9 @@ export class Conformance {
         ? "every row reads aligns, and the member's outcome is noncompliant"
         : s.outcome === "compliant" && readings.includes("diverges")
           ? "a row reads diverges, and the member's outcome is compliant" : null;
-      return { standard: s.standard_id, outcome: s.outcome, in_force: s.in_force, in_force_why: s.in_force_why,
-               rows: mine.map((x) => ({ requires: x.requires, did: x.did, reading: x.reading,
-                                        content: seen.contents(safeJson(x.content, [])) })),
-               disagreement };
+      const b = bindingRead(s);
+      return { standard: s.standard_id, outcome: s.outcome, in_force: s.in_force, in_force_why: s.in_force_why, ...b,
+               rows: mine.map((x) => rowRead(x, b.binds, seen)), disagreement };
     });
     const findings = this.#rows(`SELECT * FROM determination_findings WHERE determination_id=? ORDER BY ord LIMIT ?`,
                                 did, LIMITS.findings).filter((x) => seen.sees(x.finding_id)).map((x) => {
@@ -1074,6 +1299,14 @@ export class Conformance {
    *  rows and questions and never an outcome. It may name `contradiction`, the contradiction inquiry it came from
    *  (inquiry R48, N345): the proposal records the link, and still carries no outcome. */
   comparisonPropose(input = {}) {
+    const rows = isObj(input) && Array.isArray(input.rows) ? input.rows : [];
+    if (!rows.some((r) => isObj(r) && isObj(r.did))) return this.#propose(input, null);
+    /* R29: a measure is read first (calculations' read is asynchronous) */
+    const viewer = input.viewer != null ? input.viewer : input.proposer ?? null;
+    return this.#measures(rows, viewer).then((m) => this.#propose(input, m));
+  }
+
+  #propose(input, measures) {
     const { project = null, act = null, standards = null, rows = null, questions = null, proposer = null,
             contradiction = null } = isObj(input) ? input : {};
     const viewer = input && input.viewer != null ? input.viewer : proposer;
@@ -1094,29 +1327,44 @@ export class Conformance {
       from = this.#contradictionInquiry(contradiction, viewer);
       if (!from.ok) return from;
     }
-    const a = isObj(act) ? act : {};
-    /* R25: the act as proposed, `{event, actor, evidence}`, kept as given and judged only by a member's determination */
-    const theAct = { event: str(a.event) ?? str(a.id),
-                     actor: isObj(a.actor) ? { role: text(a.actor.role), body: text(a.actor.body),
-                                               entity_id: str(a.actor.entity_id) } : null,
-                     evidence: Array.isArray(a.evidence) ? a.evidence.map(str).filter(Boolean) : [] };
+    /* R25, R28: the act read as a determination reads it, its actor an office or an organisation, never a person */
+    const a = this.#comparedAct(act, pid, viewer);
+    if (!a.ok) return a;
+    const theAct = a.act;
     const stds = (Array.isArray(standards) ? standards : []).map((x) => (isObj(x) ? str(x.standard ?? x.id) : str(x)))
       .filter(Boolean);
-    const rs = (Array.isArray(rows) ? rows : []).filter(isObj).map((x) => ({
-      standard: str(x.standard), requires: text(x.requires), did: text(x.did),
-      reading: READINGS.includes(x.reading) ? x.reading : null,
-      content: Array.isArray(x.content) ? x.content.map(str).filter(Boolean).slice(0, LIMITS.evidence) : [] }));
+    const rs = [];
+    for (const [i, x] of (Array.isArray(rows) ? rows : []).entries()) {
+      if (!isObj(x)) continue;
+      let did = text(x.did), measure = null;
+      if (isObj(x.did)) {
+        const m = measures ? measures[i] : null;
+        if (m && m.ok === false) return { ...m, row: i };
+        if (m && m.ok) { measure = m.measure; did = measureWords(measure.calc); }
+      }
+      rs.push({ standard: str(x.standard), requires: text(x.requires), did,
+                reading: READINGS.includes(x.reading) ? x.reading : null,
+                content: Array.isArray(x.content) ? x.content.map(str).filter(Boolean).slice(0, LIMITS.evidence) : [],
+                ...(measure ? { measure } : {}) });
+    }
     const qs = (Array.isArray(questions) ? questions : []).map((x) => (isObj(x) ? x : { question: x }))
       .map((x) => ({ question: text(x.question), inquiry: str(x.inquiry) })).filter((x) => x.question);
+    /* R27: each standard's bindingness on the act's body, read here and never taken from the proposal */
+    const bindings = this.#bindings(stds, theAct, viewer);
+    const worded = this.#benchmarkWords([...rs.map((x) => ({ standard: x.standard, texts: [x.requires, x.measure ? null : x.did] })),
+      ...stds.map((sid) => ({ standard: sid, texts: qs.map((x) => x.question) }))], bindings);
+    if (worded) return worded;
+    const held = [...bindings.entries()].map(([standard, b]) => ({ standard, body: b.body, binds: b.binds, why: b.why,
+                                                                   rests_on: b.rests_on, label: b.label }));
     const at = this.#when();
     const who = str(proposer);
     let id = null;
     this.record.transact(() => {
       id = this.record.allocId("CMP", at.slice(0, 4)).id;
       this.sql.exec(`INSERT INTO comparison_proposals (proposal_id, project_id, act, standards, rows, questions, proposer,
-                       machine, at) VALUES (?,?,?,?,?,?,?,?,?)`,
+                       machine, at, bindings) VALUES (?,?,?,?,?,?,?,?,?,?)`,
                     id, pid, JSON.stringify(theAct), JSON.stringify(stds), JSON.stringify(rs), JSON.stringify(qs), who,
-                    proposalLabel(who, "comparison").machine_work ? 1 : 0, at);
+                    proposalLabel(who, "comparison").machine_work ? 1 : 0, at, JSON.stringify(held));
       if (from)
         this.sql.exec(`INSERT INTO comparison_proposal_contradictions (proposal_id, inquiry_id, candidate, at)
                        VALUES (?,?,?,?)`, id, from.inquiry, from.candidate, at);
@@ -1145,8 +1393,24 @@ export class Conformance {
     const seen = this.#sight(viewer);
     const act = safeJson(r.act, null);
     const hidden = new Set(safeJson(r.standards, []).filter((s) => !seen.sees(s)));
+    /* R27: each standard's bindingness as read at the proposal (one proposed before T35 read none: undetermined) */
+    const held = safeJson(r.bindings, null);
+    const bindings = safeJson(r.standards, []).filter((sid) => !hidden.has(sid)).map((sid) => {
+      const b = Array.isArray(held) ? held.find((x) => isObj(x) && x.standard === sid) : null;
+      return b ? { standard: sid, body: b.body ?? null, binds: b.binds, binds_why: b.why ?? null,
+                   binds_rests_on: Array.isArray(b.rests_on) ? b.rests_on : [], label: b.label ?? null }
+        : { standard: sid, body: null, binds: "undetermined", binds_why: BINDS_NOT_READ, binds_rests_on: [], label: null };
+    });
+    const bindsOf = (sid) => (bindings.find((b) => b.standard === sid) || {}).binds;
     const rows = safeJson(r.rows, []).filter((x) => !isObj(x) || !x.standard || (!hidden.has(x.standard) && seen.sees(x.standard)))
-      .map((x) => (isObj(x) && Array.isArray(x.content) ? { ...x, content: seen.contents(x.content) } : x));
+      .map((x) => {
+        if (!isObj(x)) return x;
+        const says = readingSays(x.reading, bindsOf(x.standard));
+        const { measure, ...rest } = x;
+        return { ...rest, ...(measure ? { did: { calc: measure.calc, result_key: measure.result_key }, measure } : {}),
+                 ...(says ? { reading_says: says } : {}),
+                 ...(Array.isArray(x.content) ? { content: seen.contents(x.content) } : {}) };
+      });
     const questions = safeJson(r.questions, []).map((x) => {
       if (!isObj(x) || !x.inquiry || seen.sees(x.inquiry)) return x;
       const { inquiry: _i, ...rest } = x;
@@ -1155,7 +1419,7 @@ export class Conformance {
     const link = from ? (seen.sees(from.inquiry_id) ? { contradiction: from.inquiry_id } : {}) : { contradiction: null };
     return seen.mark({ id: r.proposal_id, project: r.project_id,
              act: isObj(act) ? { ...act, evidence: seen.contents(act.evidence) } : act,
-             standards: safeJson(r.standards, []).filter((s) => !hidden.has(s)),
+             standards: safeJson(r.standards, []).filter((s) => !hidden.has(s)), bindings,
              rows, questions, proposer: r.proposer ?? null, label,
              machine_work: label.machine_work, at: r.at, says: PROPOSAL_SAYS,
              drawn_on_by: uses.map((u) => ({ determination: u.determination_id, at: u.at })), ...link });
@@ -1247,6 +1511,36 @@ export class Conformance {
   }
 }
 
+/* R27 (DEC-145 (2)): a standard's bindingness on the body in the members' words. */
+function bindingLabel(binds, bodyLabel) {
+  if (binds === true) return `Standard · binds ${bodyLabel}`;
+  if (binds === false) return `Benchmark · not binding on ${bodyLabel}`;
+  return `Whether this binds ${bodyLabel} is not recorded`;
+}
+
+/* R27: a determination's standard's bindingness as recorded (a row written before T35 read none: undetermined). */
+function bindingRead(s) {
+  if (s.binds == null) return { body: null, binds: "undetermined", binds_why: BINDS_NOT_READ, binds_rests_on: [], label: null };
+  const binds = safeJson(s.binds, "undetermined");
+  const basis = safeJson(s.binds_basis, {}) || {};
+  return { body: s.body ?? null, binds, binds_why: basis.why ?? null,
+           binds_rests_on: Array.isArray(basis.rests_on) ? basis.rests_on : [],
+           label: str(basis.label) ?? bindingLabel(binds, s.body ?? "the body") };
+}
+
+/* R1, R27, R29: one comparison row as answered: a `diverges` against a benchmark says so (`reading_says`); a measure
+   is answered with its calculation's result, denominator, population and derivation as held. */
+function rowRead(x, binds, seen) {
+  const measure = safeJson(x.measure, null);
+  const says = readingSays(x.reading, binds);
+  return { requires: x.requires, did: measure ? { calc: measure.calc, result_key: measure.result_key } : x.did,
+           reading: x.reading, ...(says ? { reading_says: says } : {}), ...(measure ? { measure } : {}),
+           content: seen.contents(safeJson(x.content, [])) };
+}
+
+/* R27: a row's reading as answered: `diverges` against a benchmark is "below the benchmark", never a breach. */
+const readingSays = (reading, binds) => (binds === false && reading === "diverges" ? BELOW_BENCHMARK : null);
+
 /* R19, R20: each code's fixed fields; a caller's `extra` adds its own and never replaces one of these. */
 const NO_SUCH_DETERMINATION_DETAIL = "no determination answers to that id here. One you may not see is answered exactly "
   + "as one that does not exist, so this is not a hint either way.";
@@ -1321,11 +1615,15 @@ export function determinationDoc({ id, project, act, pins, standards, rows, ques
     `Done by the office ${oneLine(act.actor.role)}, ${oneLine(act.actor.body)}`
       + `${act.actor.entity_id ? ` (${act.actor.entity_id})` : ` (${NO_OFFICE_ENTITY})`}. Shown by: ${act.evidence.join(", ")}.`, "",
     "## Standards and Outcomes", "",
-    ...standards.map((s) => `- ${s.standard}: ${s.outcome}${s.in_force === "undetermined"
+    ...standards.map((s) => `- ${s.standard}: ${s.outcome}${s.label ? ` (${oneLine(s.label)})` : ""}${s.in_force === "undetermined"
       ? ` (whether it was in force is undetermined: ${oneLine(s.in_force_why)})` : ""}`), "",
     "## Comparison", "",
-    ...rows.map((r) => `- ${r.standard} requires: ${oneLine(r.requires)}. Done: ${oneLine(r.did)}. Reading: ${r.reading}.`
-      + (r.content.length ? ` Shown by: ${r.content.join(", ")}.` : "")), "",
+    ...rows.map((r) => {
+      const binds = (standards.find((s) => s.standard === r.standard) || {}).binds;
+      return `- ${r.standard} requires: ${oneLine(r.requires)}. Done: ${oneLine(r.did)}`
+        + `${r.measure ? ` (${r.measure.calc}${r.measure.result_key ? `, result ${r.measure.result_key}` : ""})` : ""}. `
+        + `Reading: ${readingSays(r.reading, binds) ?? r.reading}.` + (r.content.length ? ` Shown by: ${r.content.join(", ")}.` : "");
+    }), "",
     "## Findings", "",
     ...pins.map((p) => `- ${p.finding}, pinned at ${p.case} edition ${p.edition}${p.version_sha ? ` (${p.version_sha})` : ""}`),
     "", "## Open Questions", "",

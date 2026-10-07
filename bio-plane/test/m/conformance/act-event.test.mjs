@@ -94,7 +94,7 @@ test("R25: ACTOR_NOT_AN_OFFICE (C-113.30) for an entity_id that is not an office
 });
 
 test("R25: an absent entity_id is filled from the office entity seeded for that role and body (the bridge); with none held the actor stands as {role, body, entity_id: null}, stated so", () => {
-  const { w, signer, input } = scene();
+  const { w, signer, input, std } = scene();
   const none = w.c.determine(input());
   assert.deepEqual(none.act.actor, { role: "Director of Parks", body: "Parks Department", entity_id: null,
                                      entity_why: NO_OFFICE_ENTITY });
@@ -106,12 +106,14 @@ test("R25: an absent entity_id is filled from the office entity seeded for that 
   assert.deepEqual(filled.act.actor, { role: "Director of Parks", body: "Parks Department", entity_id: office });
   assert.match(w.text(filled.id), new RegExp(office));
   assert.equal(w.c.determinationRead({ id: none.id, viewer: V("olive") }).act.actor.entity_id, null);
-  /* another office's role and body is not filled from it */
-  const other = w.c.determine(input({ act: { ...input().act, actor: { role: "City Clerk", body: "Office of the Clerk" } } }));
+  /* another office's role and body is not filled from it (compliant: the standard does not bind that body, R27) */
+  const clerk = { act: { ...input().act, actor: { role: "City Clerk", body: "Office of the Clerk" } },
+                  standards: [{ standard: std, outcome: "compliant" }] };
+  const other = w.c.determine(input(clerk));
   assert.equal(other.act.actor.entity_id, null);
   /* a bridge answer that is not an office entity is never taken as the actor's */
   w.offices.set("City Clerk|Office of the Clerk", signer);
-  const wrong = w.c.determine(input({ act: { ...input().act, actor: { role: "City Clerk", body: "Office of the Clerk" } } }));
+  const wrong = w.c.determine(input(clerk));
   assert.deepEqual([wrong.ok, wrong.act.actor.entity_id], [true, null]);
 });
 
@@ -172,9 +174,10 @@ test("R25 R24: a participant the viewer may not see is withheld whole, and an ev
 });
 
 test("R25 R3: the act's date is its event's when: a band read at each end, an event placed nowhere or an undetermined when read as undetermined, stated beside each standard; an upper bound reads its start undetermined and its end", () => {
-  const { w, ev, input } = scene();
+  const { w, ev, input, std } = scene();
   const nowhere = w.event(ev, { date: null });
-  const d = w.c.determine(input({ act: { ...input().act, event: nowhere } }));
+  /* compliant: an act placed nowhere has no date at which a standard is read binding (R27) */
+  const d = w.c.determine(input({ act: { ...input().act, event: nowhere }, standards: [{ standard: std, outcome: "compliant" }] }));
   assert.equal(d.ok, true, JSON.stringify(d).slice(0, 300));
   assert.deepEqual([d.standards[0].in_force, d.act.when], ["undetermined", null]);
   assert.match(d.standards[0].in_force_why, /placed nowhere/);
