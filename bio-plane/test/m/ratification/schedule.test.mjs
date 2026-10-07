@@ -306,7 +306,7 @@ test("R42, R45: what cannot be read at the time stops it (UNREADABLE naming what
   out = await s.w.r.publishScheduled(s.entry(checked), LATER);
   assert.equal(out.stopped[0].cause.code, "UNREADABLE");
   s.w.hold = { held: false };
-  s.w.publication.attributionFacts = () => { throw new Error("the read fell over"); };
+  s.w.caseTensions.attributionFacts = () => { throw new Error("the read fell over"); };
   out = await s.w.r.publishScheduled(s.entry(checked), LATER);
   assert.deepEqual(out.stopped.map((x) => [x.code, x.cause.code]), [["SCHEDULED_CHECK_REFUSED", "UNREADABLE"]]);
   assert.match(out.stopped[0].cause.what[0], /the read fell over/);
