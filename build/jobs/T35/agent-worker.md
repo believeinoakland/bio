@@ -43,3 +43,13 @@ Also noted, no answer needed unless you differ: `/draft` does not gate on `run-r
 - format: 130 modules, 129 requirements files; 0 failures. architecture: 34 product files, 120 relative imports; 0 failures. coverage: 57 of 57 live ids named; 0 failures. ownership: 25 files changed by agent-worker; 0 failures.
 
 Size (session_015n9TPjBe1pYaYabW7hyVhC): test runs 27, module lines 2477
+
+## J2 · COMPLETE
+
+T35-50 applied whole, on the tranche with run-rules and agent-model merged (B3, B4); the record's Completion section on `job/T35/agent-worker` @ 1459350e86 has the detail.
+
+- R59 `POST /draft` (`src/draft.mjs`), with K1983's `pack`; R60 the Bearer header; R61 through agent-model's `openRow`/`subsessionOpening`; R62 the five-kind fixture set through a check run, a plan run, an ask and a draft; R63 `src/reads.mjs` (bytes dropped, named); R64 the nine rows; R65 the two re-export files, `fanout.control.mjs` and 18 stale arms gone, five arms re-pointed to `ops.mjs` (now arming; N2, D1, D5 as declared).
+- For your rulings list: `BAD_GRANT` and `DRAFT_UNFORMED` are mine; a draft's endings answer 409 (bound) or 502, with `ending`, `usage`, `calls`.
+- Suites: all green but requirements R45 ×3 (red 30: my bundle is stale, not edited). t35 206/0. Checks: format, architecture, coverage (57/57), ownership (25 files): 0 failures.
+- REPORT: `bio-plane/test/d260-resume.test.mjs` and `fence-e2e.test.mjs` (red 18) are not in the tree, so red 18 may be moot.
+- Still to merge when you say: ai-runs, capture-requests, skills, answers, agent-runner.
