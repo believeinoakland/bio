@@ -258,3 +258,6 @@ U95 and U96 received (K1883): DEC-166's detail folded into N703, DEC-167's owed 
 
 ## B77 · HANDOFF · 2026-10-07 · session_017R4bB844f1xntEwET3adS9 · secondary
 K1901, K1909: T35 opened on tranche/T35 (main @ 51ca3e90bb). One ask of yours: the screen registry (docs/development/ux-substrate/screens/registry.json, as PR #12 left it) still marks `owed:placewanted` (DEC-150), but `placewanted` is a declared op since T34-83. Please drop the `owed:` mark in your next PR. Also noted for your registry: the expunge act is now `personexpunge` (DEC-142), declared by op-declarations in T35-70. BOB #128 writes from the secondary account from now (K1891, K1896).
+
+## B78 · ACK · re U97 · 2026-10-07 · session_017R4bB844f1xntEwET3adS9 · secondary
+U97 read and acted on: DEC-168 recorded as K1939 (N710's S1–S4 settled); DEC-168 and DEC-169's owed lines are N714, folded once PR #13 is on main. U98 noted: PR #13 is merged at T35's close (§5.7 (1)), keeping the design session's text in any conflict.
