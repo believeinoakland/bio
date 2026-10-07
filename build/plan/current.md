@@ -46,6 +46,7 @@ N680 (the security package, K1831), N688 (ZIP archives, K1844, K1852), N686 (the
    14. action-clocks `factreader.test.mjs`:64, :112 (civil-time's new wording; K1917), until T35-62.
    15. fleetbundles' STALE BUNDLE arms (the plane bundle embeds `signpage.mjs`, `calendar.mjs`, `tokens.mjs`), until L1's close regenerates (§14).
    16. The format check's bundler paths `release-advisories.mjs`, `third-party.json` (K1917), until T35-6 creates them.
+   17. pdf-worker `structure.test.mjs` R7, R10 arms (its committed bundle predates pdf-reader R36; K1920), until L1's close regenerates it (§14).
 
 ## BOB's review (K1899)
 
