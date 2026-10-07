@@ -2,7 +2,8 @@
    role), concerns, within and the five event links, each evidentiary (every one is cited). `neighbours` answers an
    entity's or an event's connections in connection-grammar's shape, each with its evidence and both grade axes, valid at
    the event's own time, through the viewer's sight (R40), from the indexes on `event_participants (entity_id)`,
-   `event_relations (from_event)`, `(to_event)` and `event_concerns (end_id)`. It writes nothing and logs no reader. */
+   `event_relations (from_event)`, `(to_event)` and `event_concerns (end_id)`; a connection to a use of a power carries its
+   facet (R45). It writes nothing and logs no reader. */
 import { validAt } from "../civil-time/index.mjs";
 import { BOUNDS, LOWEST_GRADE } from "../connection-grammar/index.mjs";
 import { BASIS_GRADES } from "../record-grammar/index.mjs";
@@ -50,7 +51,10 @@ export function neighboursOf(k, args) {
     let v;
     try { v = validAt({ valid, basis: null }, a.at, { view: k.view() }); } catch (e) { v = { undetermined: true, why: String(e && e.message || e) }; }
     if (v === "out") return;
-    out.push({ ...c, owner: "events", valid, derived: null, ...(v === "in" ? {} : { undetermined: { why: v && v.why ? v.why : "undetermined at the date asked" } }) });
+    /* R45: a connection to a use of a power carries the use's facet */
+    const kind = k.one(`SELECT kind FROM events WHERE event_id=?`, eventId);
+    const use = kind && ["discretion", "waiver", "assessment"].includes(kind.kind) ? k.facet(eventId, a.viewer) : null;
+    out.push({ ...c, owner: "events", valid, derived: null, ...(use ? { use } : {}), ...(v === "in" ? {} : { undetermined: { why: v && v.why ? v.why : "undetermined at the date asked" } }) });
   };
   const live = (id) => { const e = k.one(`SELECT alias_of FROM events WHERE event_id=?`, id); return e && !e.alias_of; };
   /* took part: an entity's participations, or an event's participants */

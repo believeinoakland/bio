@@ -119,14 +119,14 @@ export function world({ view = testView(), now = null, profiles = true } = {}) {
       return id;
     },
     /* A capture held in the register of `bundleId`, fetched direct (capture grade B), with a reading of `contentType`
-       whose facts are `facts`, through extraction's writer. */
-    capture(name, { bundleId = "INFO-2026-0001-a", project = "", contentType = "text/html", facts = {}, fetched = true, pages = null, extra = {} } = {}) {
+       whose facts are `facts`, through extraction's writer; `units`, its text units, indexed by that writer. */
+    capture(name, { bundleId = "INFO-2026-0001-a", project = "", contentType = "text/html", facts = {}, fetched = true, pages = null, extra = {}, units = null } = {}) {
       const s = sha(name);
       w.bundle(bundleId, { project });
       st.sql.exec(`INSERT OR REPLACE INTO register (capture_sha, bundle_id, path, encoding, bytes, registered) VALUES (?, ?, 'snapshots/x', 'utf8', 1, '2026-09-27T00:00:00Z')`, s, bundleId);
       if (fetched) prov.recordReceipt({ address: `https://example.test/${name}`, addressNorm: `https://example.test/${name}`, captureSha: s,
                                         retrieved: "2026-09-27T00:00:00Z", via: "direct" });
-      x.writeReading({ bundleId, captureSha: s, composed: true,
+      x.writeReading({ bundleId, captureSha: s, composed: true, textUnits: units,
         reading: { content_type: contentType, reader_version: 1, found: true, at: "2026-09-27T00:00:00Z", entities: [],
                    facts, ...extra, ...(pages ? { page_count: pages, text_source: layerChainFor(null, { tier: 1, container: "pdf" }) } : {}) } });
       return s;
