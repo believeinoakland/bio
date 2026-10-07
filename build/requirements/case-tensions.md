@@ -1,6 +1,6 @@
 # case-tensions — requirements
 
-**Status** · New module, split from `publication` by copy (K617; `plan/draft-T33-plan.md` T33-62, Choices 6; scope §2: publication, 4,625 lines, is split so K1480's edition stamp and K1494's published timeline have room), with no change of meaning. Every requirement here is a `publication` requirement moved or copied; its text is kept and only cross-references are re-pointed (a reference to a requirement that moved here is to its id here; one that stays is `publication R<n>` or `publication.<service>`). T33 adds nothing to this module (est 0). Layer 8, after `case-carriage`, before `publication` (L8: … case-carriage → case-tensions → publication → docket …), created by `publication`'s factory as `case-carriage` is (K1024's form). `publication` retires R4, R5, R6, R17, R39, R50 and R60 as moved, re-words R31 and R33 (their shares here), and keeps R26 and R34 (copied here) at its deletion job (T33-63). Every moved requirement was met in `publication`; each is marked not yet met (T33-62) here, the copy being T33's L8 job (accepted red 4).
+**Status** · In force: split from `publication` by copy (K617, K1505; T33-62), meaning unchanged, each id naming its `publication` source, which retires the moved ids; created by `publication`'s factory as `case-carriage` is (K1024's form). Every requirement met (CASE-TENSIONS #1, K1637).
 
 | old (`publication`) | new | |
 |---|---|---|

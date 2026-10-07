@@ -1,6 +1,6 @@
 # ooxml — requirements
 
-**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code today: `bio-plane/src/ooxml.mjs`. No row of the old plan and no entry of `build/plan/next.md` names this module (both checked, 2026-09-25); every requirement below is already met by the code as read. It names no place and holds no local fact, so no jurisdiction line applies. T35's fold, by a drafting worker for BOB #128 on `tranche/T34`, 2026-10-07, from plan entry T35-8: the ZIP archive services (N688; K1844, K1852): R3 amended (ZIP64 read, no longer refused), R27–R30 added (`listArchive`, its verdicts, `streamMember`, the limits by name, with F7's tree limits); R31 added (F18: every part `readPart` inflates, images included, capped at `MEMBER_MAX` and counted against the file's total; K1881); R32–R33 added (K1888: the read of a VBA project, never run); R10 and R11 amended (K1903: the macro-enabled flavour rows, each read as its plain twin with a `variant`); not yet met (T35-8).
+**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). Last changed T35 (T35-8: R3, R10, R11 amended; R27–R33 new; K1844, K1852, K1881, K1888, K1903); every requirement met (K1927).
 
 ## Public
 

@@ -1,6 +1,6 @@
 # network-notices — requirements
 
-**Status** · Requirements for T23, folded at the opening by BOB #94, K1113, DEC-111, K1019, K1031, K1100. Folded by a worker for BOB #98 at T24's opening, 2026-10-02, entries N503 (R4 records the notice id through `record-core.recordOpaqueId`), N504 (R1 asks `provenance.instanceKeyBound`, no probe signature), N505 (R21 gives a revoked key's own `status_at`), N507 (R14's `sealWake` and R17's `attestWake` answer null when idle) and N509 (R1 and R22 answer C-70.1 at `existence`); each not yet met (T24). Folded by a worker for BOB #103, 2026-10-02, entry N520 (DEC-116 item 6): R21's `owners` also keeps a key that signed a public docket entry; not yet met (T27).
+**Status** · In force: folded by BOB #94 at T23's opening (K1113; DEC-111, K1019, K1031, K1100), with later folds reviewed. Last changed T27 (N520: R21); every requirement met (last merged T34, K1835).
 
 **Size (P6).** About 1,300–1,900 lines, well under 4,000.
 

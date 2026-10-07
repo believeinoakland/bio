@@ -1,11 +1,6 @@
 # provenance-routes — requirements
 
-**Status** · Split from `provenance` by N512 (K617's split of a module along seams BOB names; K1193; `build/plan/draft-T25-splits.md` P-1; `build/plan/draft-T25.md` fold 1 and BOB #100's review), with no change of meaning. R1–R6 are `provenance` R19–R23 and R54, in that order, and R7 is its R36. Their text is kept, and only their cross-references are re-pointed (a reference to a requirement that moved here is to its id here; one that stays is `provenance R<n>` or `provenance.<service>`). Five ids carry the part of a `provenance` requirement that concerns the route; `provenance` keeps the rest:
-- R8 is R48's last sentence (`provenance_route_marks`' read contract).
-- R9 is R53's three route arms, under this module's own map.
-- R10 is R55's `routeMarks` figure.
-- R11 is R37's route clause.
-- R12 is R41's `provenance_route_marks`.
+**Status** · In force: split from `provenance` (N512; K617, K1193; folded K1221), meaning unchanged: R1–R12 as the table below maps them, retired or re-worded in `provenance`, never reused; R13 a copy of `provenance` R40, stated in both; the text Bob's rulings (DEC-19, DEC-56, REC-158, K509 (3)) and BOB's (K763, K671) settled. Every requirement met (PROVENANCE-ROUTES #1, K1230).
 
 For R8, the words "part of it on the same terms" are spelled out as those terms, because "it" (the register's contract) stays in `provenance`. R13 is a copy of `provenance` R40, stated in both modules. `provenance` retires R19–R23, R36 and R54 as moved, never reusing them, and re-words R37, R41, R48, R53 and R55. Every moved requirement was met in `provenance`; each is marked not yet met (T25) here, the move itself being T25's L3 job (accepted red 3). The route side moves whole in T25 (K1220, superseding decision 1 of BOB's review of these drafts): this module provides R1–R13 in T25 and owns `provenance_route_marks` and every write to it, the three route arms (R9), `routeMarks` (R10), R11 and R12; `provenance` keeps only pure copies of the names a later layer imports by name until each importer re-points (option B as K1220 reads it). Layer 3, directly after `attestation` and before `capture-sources` (provenance, attestation, provenance-routes). For BOB's review and Bob's approval (a product module, P17); the text is the text Bob's rulings (DEC-19, DEC-56, REC-158, K509 (3)) and BOB's (K763, K671) already settled.
 

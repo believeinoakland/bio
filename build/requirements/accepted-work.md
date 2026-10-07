@@ -1,6 +1,6 @@
 # accepted-work — requirements
 
-**Status** · Requirements for T28, folded by a worker for BOB #104 at T28's opening, entry N522 (DEC-96 items 1 and 4; `plan/draft-T28-n522.md`). A new product module with no `from` (its place is BOB's under P17). It sits in layer 6 directly after `inquiry-grammar`, whose imported-finding reference (its R11) it reads, and before `inquiry`. It is the seam through which modules earlier than `case-import` (L8) read another group's accepted work (P4). Its own T28 job writes its code at `bio-plane/src/accepted-work/` and its tests at `bio-plane/test/m/accepted-work/`, then adds both to its `modules.json` entry (K1043's form). Every requirement is not yet met (T28). N534 (DEC-101 (3), DEC-116 item 8; K1339, K1366) folded by a worker for BOB #107 on `tranche/T31`, 2026-10-03, from `plan/draft-T29-n534.md` §2.1: R1 and R2 widened by the optional `moves` function and `publisherMoves`, R8 added; not yet met (T31 layer 6).
+**Status** · In force: a new seam module, BOB's (P17; K1273, N522), folded at T28's opening; N534's fold reviewed (K1369). Last changed T31 (N534: R1, R2, R8); every requirement met (ACCEPTED-WORK #2, K1378).
 
 **Size (P6).** About 250–400 lines.
 

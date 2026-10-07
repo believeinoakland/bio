@@ -37,7 +37,7 @@ const T33_OPS = new Set([...Object.keys(T33_RUNGS), ...Object.keys(T33_RUNG_ABSE
 import { T34_RUNGS, T34_RUNG_ABSENT, OP_ALIASES } from "../../../src/op-grades/t34.mjs";
 /* K1974 (A-1): the grading tables are `op-grades'`, which holds T35's grades (its R21, R22) to their owners in its own
    `t35.test.mjs`; set aside here as T33's and T34's are. */
-import { T35_RUNGS, T35_RUNG_ABSENT, T35_CONSEQUENCE_STATEMENTS } from "../../../src/op-grades/t35.mjs";
+import { T35_RUNGS, T35_RUNG_ABSENT, T35_NON_ACTS, T35_CONSEQUENCE_STATEMENTS } from "../../../src/op-grades/t35.mjs";
 
 test("R1: ACTS holds exactly the object-directed acts, each at its weight", () => {
   const W = {
@@ -576,7 +576,11 @@ const LAYER9_GATED_READS = ["optionstartpreview" /* N490: action-plans R37 */,
   "standardinforce" /* K1689: gated since T33, a NEEDS row of null (op-declarations) */];
 /* actions' op map holds acts and reads catalogued long before layer 9; only the ops K709 adds join this set. */
 const ACTIONS_NEW = ["actioncreate", "actionpressure", "actionhold" /* K902 */, "action", "actions"];
-test("R3 R7 R12: layer 9's 41 mutating ops each carry a NON_ACTS reason and their ruled rung or stated absence, its "
+/* K2049 (B4): the ops standards adds in T35 (its R35–R43), graded by op-grades in its `t35.mjs` (R22, K2043) and set aside
+   from layer 9's closed set as T33's are, pinned here to standards' map. */
+const STANDARDS_T35 = ["standardforce", "standardforcepropose", "standardforcewithdraw", "standardrelease",
+  "standardadoption", "standardimpose", "standardbenchmark", "forcesof", "overridesof", "editioninforce", "bindsat"];
+test("R3 R7 R12: (K2049: standards' T35 ops pinned apart) layer 9's 41 mutating ops each carry a NON_ACTS reason and their ruled rung or stated absence, its "
    + "19 ungated reads none, its two gated reads (optionstartpreview, N490; standardinforce, K1689) a `read:` reason and no rung, and the op maps "
    + "hold exactly those 62 ops (K264; conformance's comparisonfacts, N345; K705, K709, K727, K902; K992: `templates` is "
    + "filing-templates')", () => {
@@ -589,7 +593,15 @@ test("R3 R7 R12: layer 9's 41 mutating ops each carry a NON_ACTS reason and thei
   /* R40 (K1571, K1658): standards' and action-clocks' T33 ops are graded in t33.mjs and held there (t33.test.mjs) */
   const ops = [...keys(standardsOps), ...keys(conformanceOps), ...keys(consequencesOps), ...keys(filingsOps), ...ESCALATION,
                ...ACTIONS_NEW, ...keys(actionPlansOps), ...keys(actionClocksOps)]
-               .filter((op) => !T33_OPS.has(op) || LAYER9_GATED_READS.includes(op));
+               .filter((op) => (!T33_OPS.has(op) || LAYER9_GATED_READS.includes(op)) && !STANDARDS_T35.includes(op));
+  /* K2049: standards' T35 ops are in its map, each named in op-grades' T35 table — a write with a T35 rung or absence, a
+     read (`read:`) with neither */
+  const standards = keys(standardsOps);
+  assert.deepEqual(STANDARDS_T35.filter((op) => !standards.includes(op)), []);
+  for (const op of STANDARDS_T35) {
+    assert.ok(Object.hasOwn(T35_NON_ACTS, op) && NON_ACTS[op] === T35_NON_ACTS[op], op);
+    assert.equal(Object.hasOwn(T35_RUNGS, op) || Object.hasOwn(T35_RUNG_ABSENT, op), !T35_NON_ACTS[op].startsWith("read:"), op);
+  }
   const mutating = [...Object.keys(LAYER9_RUNGS), ...Object.keys(LAYER9_ABSENT)];
   assert.equal(mutating.length, 41);
   assert.equal(LAYER9_READS.length, 19);

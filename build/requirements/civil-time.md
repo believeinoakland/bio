@@ -1,6 +1,6 @@
 # civil-time — requirements
 
-**Status** · DRAFT by a requirements worker for BOB #114, 2026-10-05, on `tranche/T32`, before T33 opens (§5.9), for BOB's review. New module (K1439; scope §2), layer 1 directly after `jurisdictions`. Plan entry T33-3. Every id is not yet met. The rule fields this file reads are those `jurisdictions` R26 gains in T33-2 (entries A, TIME `jurisdictions`); their exact names are `jurisdictions`' (see Suggestions).
+**Status** · In force: a new module, reviewed with T33's new modules (K1505; T33-3). Every requirement met (CIVIL-TIME #1, K1529).
 
 **Size (P6).** About 1,500–2,500 lines (ladders §4.4).
 

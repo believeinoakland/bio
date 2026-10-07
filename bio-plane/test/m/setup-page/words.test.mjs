@@ -14,7 +14,7 @@ const settle = async () => { for (let i = 0; i < 30; i++) await tick(); };
 
 /* The page's text as a member could meet it: the served bytes less HTML comments and the script's comments. */
 const memberText = (html) => html.replace(/<!--[^]*?-->/g, "")
-  .replace(/<script>([^]*?)<\/script>/g, (_, s) => s.replace(/\/\*[^]*?\*\//g, "").replace(/(^|[^:"'\\])\/\/[^\n]*/g, "$1"));
+  .replace(/<script\b[^>]*>([^]*?)<\/script>/g, (_, s) => s.replace(/\/\*[^]*?\*\//g, "").replace(/(^|[^:"'\\])\/\/[^\n]*/g, "$1"));
 
 /* [row, now, never]: what the page says for each row, and the words it said before DEC-149. A row whose words the script
    draws is read from the script's own sentence in the bytes, and driven below where the script composes it. */
@@ -100,12 +100,13 @@ test("R21 the rows the script composes, driven: the history's order, the publish
 test("R21 no member-facing text of the page calls the group's Civicsmith a copy, an instance, a plane or a server; 'copy' keeps only its other meanings", () => {
   const text = memberText(pageOf({ answered: true, result: { ok: true, group: "river-town" } }))
     .replace(/\b(?:id|for|class|name|data-[a-z-]+)="[^"]*"/g, "")             // ids, classes, binding names
-    .replace(/\$\("[^"]*"\)/g, "").replace(/"#[a-z0-9-]+"/g, "");                // selectors in the script
+    .replace(/\$\("[^"]*"\)/g, "").replace(/"#[a-z0-9-]+"/g, "")                 // selectors in the script
+    .replace(/\bID\(P, "[a-z0-9-]+"\)/g, "");                                     // a block's selectors, by its prefix
   assert.doesNotMatch(text, /\b(?:this|your|the|its)\s+(?:copy|instance|plane|server)\b/i);
   assert.doesNotMatch(text, /\b(?:instance|plane|server)\b/i);
   const copies = [...text.matchAll(/[^.\n]*\bcopy\b[^.\n]*/gi)].map((m) => m[0].trim());
   /* the other meanings only: an archive's own copy, copying a key, copying a signature block or a key line */
-  for (const c of copies) assert.match(c, /its own copy|copy the <b>ratification<\/b> public key|Copy the whole (?:block|line)/, c);
+  for (const c of copies) assert.match(c, /its own copy|copy the <b>ratification<\/b> public key|Copy the whole (?:block|line)|Copy them as text/, c);
   assert.ok(copies.length >= 3, "not vacuous: the other meanings are there");
 });
 

@@ -1,11 +1,6 @@
 # pdf-reader — requirements
 
-**Status** · DRAFT by BOB #37, 2026-09-25 (T6); N9's named services (R18, R19 restated; R30–R32 new) added by BOB #40, 2026-09-26 (K28). Layer 1. Code today: `bio-plane/src/pdfstructure.mjs`.
-R25 (D-591) and R26 (D-627; M-178's figures, K30, K32) met in T1. D-616, also carried against this
-module in the old plan's index, does NOT belong here: its fix (`tier3Extend`/`needsTier3` seeding a
-re-read from the already-transcribed page tail) lives in `bio-plane/src/index.mjs`, reads and writes
-the stored reading, and cannot be met by a module whose layer-1 contract is "no access to the record"
-(`layers.md`) — see Suggestions. T35's fold, by a drafting worker for BOB #128 on `tranche/T34`, 2026-10-07, from plan entry T35-10: R36 added (K1888: R2's answer carries an `active` list, each finding with where it was found, read and never executed); not yet met (T35-10).
+**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20); N9's named services added by BOB (K28). D-616 does not belong here (Suggestions). Last changed T35 (T35-10: R36; K1888); every requirement met (K1920).
 
 ## Public
 
