@@ -39,6 +39,6 @@ In `invariants.test.mjs`, R23's row test now counts R26's two C-115 rows beside 
 - `checks/format.mjs`: 130 modules, 129 requirements files; 0 failures.
 - `checks/architecture.mjs` filing-templates: 10 product files, 32 relative imports; 0 failures.
 - `checks/coverage.mjs` filing-templates: 26 of 26 live requirement ids named by a test; 0 failures.
-- `checks/ownership.mjs` filing-templates tranche/T35: see the line after the commit.
+- `checks/ownership.mjs` filing-templates tranche/T35: 5 files changed; 0 failures.
 
 Size (session_01PyDJe4kpvF85uYt49rEyW4): test runs 6, module lines 1782
