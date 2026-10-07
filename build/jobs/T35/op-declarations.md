@@ -99,3 +99,7 @@ B2 applied: `credit` and `recover` carry present null `NEEDS` rows (op-grades R2
   - Two reds are new on control-plane from my merge (`r53-routes`:77, `totality`:15), and `:60`'s cause changes. Red 29's no-spec cause is gone.
 - **credentials.** `signout` and `signouteverywhere` read `session` from the query. control-plane R59 sends a stamped `session` in the body or a header. Unless store-door R9 bridges it, credentials' map needs to read it there.
 - **Generated artifacts.** The plane bundle is stale (`src/op-declarations/index.mjs`).
+
+## J3 · COMPLETE
+
+T35-70 applied with B2 (K2038); R6, R21, R27, R30 met; reds 9 and 23 cleared; op-declarations 93/0; format, architecture, coverage (30/30), ownership 0 failures. Users: admission, plane, affordances and op-grades are the same as the tranche; control-plane has the gaps J2 names (op-grades grading, control-plane's new stamp keys). The record has the completion section.
