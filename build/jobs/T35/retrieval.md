@@ -65,3 +65,33 @@ T35-37 done. Commits e9a97be0ea and 153c52329c on `job/T35/retrieval`, branched 
 - `ownership.mjs retrieval tranche/T35`: 0 failures.
 
 Size (session_01FeUn5pWXtcyMpN79S2qaN6): test runs 12, module lines 3276
+
+## J4 · COMPLETE
+
+B4 done. I merged `tranche/T35` (at bd314ba4d6 and later) into `job/T35/retrieval`, as a merge with no conflict. Then commit 3dffcceea9.
+
+**Entries applied**
+- **R74 `people`** now reads entities R52 `namingIn` **once per page** of captures. The call takes that page's read captures (at most 200, entities' own bound), kinds `person` and `office`, the viewer, and the kind's own item limit as its page. `namingIn`'s `truncated` is the kind's `truncated`. `namingDocuments` is no longer called. The 200-entity cap (`FIND_PEOPLE_MAX`) and its `truncated_why` are gone. Everything else in J3 stands as it was.
+
+**Deferred**: none.
+
+**Found in other modules** (each fails identically on `tranche/T35` without my change):
+- **control-plane** `r53-routes.test.mjs` R53. Six ops with no spec or `OP_STAMPS` entry: `applicationrecipes`, `assessmentrecord`, `discretionrecord`, `usesfreeze`, `usesof`, `usewithdraw`. None of them is `findin`. These are for op-declarations (T35-70).
+- **control-plane** R22 `CHECK_FAMILIES` totality: red 26.
+- **agent-worker** `test/requirements.test.mjs` fails as a file. It passed (9/0) before this merge.
+
+**Tests and checks**
+- retrieval: 153 tests, 153 pass. The `people` test now checks four things: past 200 followed entities every one is found, there is one `namingIn` per page, `namingDocuments` is never called, and `truncated` comes from `namingIn`'s page.
+- Users of retrieval:
+  - calculations 46/0, inquiry 175/0, citation 55/0, strength 143/0, ai-runs 71/0, answers 34/0, intent 73/0, ratification 212/0, actions 96/0, monitoring 121/0, scheduler 95/0, entities 95/0;
+  - basis-versions 130/1: red 27;
+  - action-clocks 51/2: red 14;
+  - control-plane 179/3: red 19, red 26, and R53 above;
+  - plane 109/6: red 22;
+  - agent-worker 8/1: above.
+- `format.mjs`: 130 modules, 0 failures.
+- `architecture.mjs retrieval`: 28 files, 0 failures.
+- `coverage.mjs retrieval`: 75 of 75 live ids, 0 failures.
+- `ownership.mjs retrieval tranche/T35`: 0 failures.
+
+Size (session_01FeUn5pWXtcyMpN79S2qaN6): test runs 17, module lines 3267
