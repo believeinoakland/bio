@@ -1,6 +1,6 @@
 # affordances (T35)
 
-**Status** · session_01JWst2i7Y31gjWS15iiZoqL · depth 2 · WAITING ON BOB (J1) · handled B1
+**Status** · session_01JWst2i7Y31gjWS15iiZoqL · depth 2 · WAITING ON BOB (J1) · handled B2
 
 ## J1 · QUESTION
 
