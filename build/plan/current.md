@@ -253,7 +253,7 @@ Each line is one job (P8): every T35 entry for that module. Fields: module · (N
 
 **Carried from T34 and earlier** (`archive/T34.md` and `archive/T33.md` left-out tables, re-read at this opening): the measurement rows (C4 A11–A17, C8, T33-M1–M3), the real-group rows (T33-G1–G4), Bob's UX rows (T33-U1–U5, B4/B5, A54, B6–B10…, N487, H3…J11, N493 part, T27-1, C5), the dependency rows (N521, T33-X1, A8, A21, A22/A23 = installer R13, R24 (F11; R32 is met), A41, N538 (4)) and the trigger rows (T33-T1–T5, J7, H13, T28-1, T33-B1) keep their reasons unchanged. The deployment rows (N540, T33-D1–D10, B1–B3, B11/C9, B16, C1–C3) keep "a deployment or measurement": release 0.81.0 (K1876) measures M-Q2 only, which rule 6 uses.
 
-## Proposed modules for the virus package (for Bob; K1888, K1890, K1892)
+## Modules for the virus package (BOB's, decided K2008; added at T36's opening)
 
 What Bob approved (K1888 (4), K1890): the safe view for PDFs and Word files, spreadsheets as data, one click to the original, a weekly re-scan and one before first opening, release by any two members or a second scanner, a per-file threat grade from source and contents (low risk opens the original; high risk opens the safe view, the original only after a fresh deeper check), a per-document deeper check on request (three checks: the readers' structure check, ClamAV in the group's account, a paid multi-engine scanner in private mode, N705). The shares that fit existing modules are in T35 (T35-8, T35-9, T35-10, T35-21, T35-45, T35-46, T35-50, T35-68, T35-69). The rest needs two new modules (Bob's, P17):
 
