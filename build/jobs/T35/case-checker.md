@@ -21,7 +21,7 @@ Code: `bio-plane/src/case-checker/standards.mjs`, exported from the module's ind
 
 **Generated artifact.** `program.mjs` is not stale: R21 is not part of the standalone program (R13 names R1–R11 and R20), and the R13 test ("the committed program.mjs is that build") passes on this branch after merging `tranche/T35`. Nothing for BOB to regenerate for this job.
 
-**Found in another module.** No writer of the case document states a member finding's `subject_entity` (`case-authoring`'s document, `case-grammar`'s blocks), so K2002's body key cannot narrow a member's criteria rows in any document written today: R21 then reads every row of the standard (a member is judged a benchmark's only when every body's row is `binds: false`). R21 reads it from the member's `case_roles:` or `case_conclusions:` row when present. Reported as J3.
+**Found in another module.** No writer of the case document states a member finding's `subject_entity` (`case-authoring`'s document, `case-grammar`'s blocks), so K2002's body key cannot narrow a member's criteria rows in any document written today: R21 then reads every row of the standard (a member is judged a benchmark's only when every body's row is `binds: false`). R21 reads it from the member's `case_roles:` or `case_conclusions:` row when present. Reported as J2.
 
 **Tests and checks.**
 - `node --test bio-plane/test/m/case-checker/`: tests 44, pass 44, fail 0 (R21: 9 tests in `standards.test.mjs`).
