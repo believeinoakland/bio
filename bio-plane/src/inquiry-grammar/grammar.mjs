@@ -19,11 +19,11 @@
  *   - `observation-log`: `LEAD_ID_RE`, a lead id's shape (its R14);
  *   - `civil-time`: `isCalendarDate`, whether a `YYYY-MM-DD` names a real day (its R6; R3 and the hunch's date, T33-43);
  *   - `standards`: `isPortionPath` and `PORTION_PATH_MAX`, a portion path's form (its R31; R13, N583);
- *   - `connection-grammar`: `derivedId`, a derived connection's id (its R11; R17, N582).
- * Each of the last two is read from the file that states it and imports nothing of the record, so this grammar stays
- * pure and the standalone case checker that bundles it carries no store code. `duties`' occurrence key form (its R24)
- * is held here until duties offers it from such a file (R15; K1799, N675): its one statement is `duties/index.mjs`,
- * which imports the store, and a test asserts the copy equal to that export.
+ *   - `connection-grammar`: `derivedId`, a derived connection's id (its R11; R17, N582);
+ *   - `duties`: `OCCURRENCE_KEY_RE`, an occurrence key's form (its R24; R15, N675).
+ * Each of the last three is read from the file that states it and imports nothing of the record (`duties/vocab.mjs`
+ * for the last, T35; K1799), so this grammar stays pure and the standalone case checker that bundles it carries no
+ * store code.
  *
  * Pure (R9): nothing here reads or writes the record, the clock or the network; every function never throws on a
  * document it is handed, and the facts a check needs (the published and earned registries) are handed to it. */
@@ -38,6 +38,7 @@ import { themeLegFindings } from "../connections/checks.mjs";
 import { LEAD_ID_RE } from "../observation-log/checks.mjs";
 import { isPortionPath, PORTION_PATH_MAX } from "../standards/instrument.mjs";
 import { derivedId } from "../connection-grammar/shape.mjs";
+import { OCCURRENCE_KEY_RE } from "../duties/vocab.mjs";
 import { LEAD_CHECKS, INQUIRY_GRAMMAR_CHECKS } from "./checks.mjs";
 
 /** A finding, record-grammar's shape (its R11), with the optional `code` (REC-56 / D-206): a discriminator within a
@@ -1534,10 +1535,9 @@ function calculationLegRefusal(message, repairs) {
 }
 
 const DUTY_CORE = idPattern('DUT').source.slice(1, -1);
-/** R15 (K1799): duties' occurrence key form (its R9, R24), `OCC-` and 32 lowercase hexadecimal digits, held here until
- *  duties states it in a file that imports nothing of the record (N675, T35), which this then imports instead; this
- *  module's test asserts it equal to `duties.OCCURRENCE_KEY_RE`, so the two cannot drift. */
-export const OCCURRENCE_KEY_RE = Object.freeze(/^OCC-[0-9a-f]{32}$/);
+/** R15 (N675; K1799): duties' occurrence key form (its R9, R24), imported from `duties/vocab.mjs`, which imports nothing
+ *  of the record, and re-exported as the same binding, so the form has one statement and no copy here can drift. */
+export { OCCURRENCE_KEY_RE };
 /* the key's form with its anchors dropped, so it sits inside the ref's pattern */
 const OCCURRENCE_KEY = OCCURRENCE_KEY_RE.source.replace(/^\^/, '').replace(/\$$/, '');
 
