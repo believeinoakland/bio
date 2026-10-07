@@ -1,0 +1,29 @@
+{
+  "_comment": "bundler R28 (c): the committed third-party code no production lockfile names. Each source names the member (or bio-plane) that ships it, and either one package {ecosystem, name, version} or a lock file whose packages it lists (format cargo-lock: a Cargo.lock, its crates with no source left out; format pins: a pins file of vendored packages, {packages: [{package, version}]}). Read by thirdPartyInventory in release-advisories.mjs (R28, R29). A member's devDependency whose code is committed or bundled belongs here; a production dependency is read from the lockfile and does not.",
+  "sources": [
+    {
+      "shippedIn": "ocr-worker",
+      "package": { "ecosystem": "npm", "name": "tesseract-wasm", "version": "0.11.0" },
+      "why": "a devDependency whose generated code (src/tesslib.mjs) and assets/tesseract-core.wasm are committed and shipped"
+    },
+    {
+      "shippedIn": "agent-runner",
+      "package": { "ecosystem": "npm", "name": "@cloudflare/containers", "version": "0.3.7" },
+      "why": "a devDependency inlined into agent-runner's committed Worker bundle (K1799)"
+    },
+    {
+      "shippedIn": "sheet-worker",
+      "lock": "sheet-worker/engine/Cargo.lock",
+      "format": "cargo-lock",
+      "ecosystem": "crates.io",
+      "why": "the crates built into the committed assets/sheet-engine.wasm"
+    },
+    {
+      "shippedIn": "bio-plane",
+      "lock": "court-citations/pins.json",
+      "format": "pins",
+      "ecosystem": "PyPI",
+      "why": "the wheels vendored in court-citations/vendor, translated into court-data.mjs, which the plane bundles"
+    }
+  ]
+}

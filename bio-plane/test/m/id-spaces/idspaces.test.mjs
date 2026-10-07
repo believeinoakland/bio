@@ -582,9 +582,9 @@ test("R24 no place is named in the module: every service answers from the view a
   /* the labels are the view's, and every jurisdiction's space names are the same twelve */
   assert.equal(spaces(L).find((s) => s.space === "enactment").label, "bylaw number");
   assert.deepEqual(spaces(L).map((s) => s.space), spaces(H).map((s) => s.space));
-  /* no built-in view survives: the module exports its seven services only (the old adapter under the old names is retired: N105),
+  /* no built-in view survives: the module exports its eight services only (the old adapter under the old names is retired: N105),
      and the old call shapes, which answered over the held profiles, now meet no view */
-  assert.deepEqual(Object.keys(M).sort(), ["judgePair", "parcelStanding", "reach", "recognise", "recogniseCitations", "spaces", "systemOf"]);
+  assert.deepEqual(Object.keys(M).sort(), ["judgePair", "parcelStanding", "reach", "recognise", "recogniseCitations", "recogniseSeries", "spaces", "systemOf"]);
   for (const old of ["cms", "project", "fund", "apn"]) for (const v of ["87551", "C329142", "3100", "011-0836-017-00"])
     assert.equal(recognise(old, v), null, `${old} ${v}`);
   const oldEnd = { rec: { space: "project", value: "C329142", form: "C#####", normal: "C329142" }, system: { origin: "x" } };
