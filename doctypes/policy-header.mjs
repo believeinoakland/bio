@@ -68,9 +68,27 @@ export function policySeries(ctx) {
     const number = numSrc ? compile(`^[ \\t:.,#–—-]*(?:No\\.?|Number)?[ \\t:#]*\\n?[ \\t]*(${numSrc})(?![A-Za-z0-9])`, "i" + flags.replace("i", "")) : null;
     if (!label) continue;
     out.push({ key: `${s.key}.${s.series.key}`, series: s.series.key, issuer: s.key, label, labelText: s.series.label,
+               numberOnly: numSrc ? compile(`^(?<number>${numSrc})$`, flags) : null,
                number, cite: cite ? compile(cite.re, flags + "g") : null, normal: Array.isArray(s.normal) ? s.normal : null });
   }
   return out;
+}
+
+/** A number's normal form from the series' `normal` parts over the match's groups (jurisdictions R3's parts: a
+ *  literal string, or `{group, upper?, unpad?, default?}`, `group` an index or a name); absent, the number as matched. */
+function normalOf(parts, m) {
+  if (!Array.isArray(parts) || !parts.length) return m.groups.number;
+  let out = "";
+  for (const part of parts) {
+    if (typeof part === "string") { out += part; continue; }
+    if (!part || (typeof part.group !== "number" && typeof part.group !== "string")) continue;
+    let g = typeof part.group === "number" ? m[part.group] : (m.groups || {})[part.group];
+    if (g == null) g = typeof part.default === "string" ? part.default : "";
+    if (part.unpad) g = g.replace(/^0+(?=.)/, "");
+    if (part.upper) g = g.toUpperCase();
+    out += g;
+  }
+  return out || m.groups.number;
 }
 
 /** The header labels the view gives, by field (jurisdictions R69). */
@@ -280,9 +298,14 @@ export function readHeader(ctx, raw, locate = () => null) {
                     source: locate(a.start) || null };
     if (a.number) header.number = { text: a.number.text, start: a.number.start, end: a.number.end, source: locate(a.number.start) || null };
   }
+  /* The number, in the series' form, and its normal form (jurisdictions R63, R3): a number read under a number label
+     is the series' only where the series reads it. */
   if (header.number && a) {
-    const n = a.series.number;
-    if (!header.number.normal && n) header.number.normal = header.number.text.replace(/\s+/g, "");
+    const m = a.series.numberOnly ? a.series.numberOnly.exec(header.number.text.trim()) : null;
+    if (!m) {
+      why.number = `"${header.number.text}" is printed as the number, and ${a.series.labelText} does not read a number in that form`;
+      delete header.number;
+    } else header.number.normal = normalOf(a.series.normal, m);
   }
 
   /* The title: printed beside the number ("K-03: USE OF FORCE"), else the order's own name

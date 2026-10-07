@@ -59,3 +59,14 @@ export function score(header, answer) {
     if (h[f] && !(f in answer)) fields[f] = { ok: false, want: null, got: h[f].date || h[f].text };
   return { ok: Object.values(fields).every((x) => x.ok), fields };
 }
+
+export const SECTION_ANSWERS = JSON.parse(fs.readFileSync(new URL("./fixtures/policies-answers.json", import.meta.url), "utf8")).sections;
+const head = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+/** A reading's top-level sections against a member's: the same parts, in the same order, each heading opening as the
+ *  member reads it (where the member's text shows the heading). */
+export function scoreSections(sections, answer) {
+  const top = (sections || []).filter((s) => s.path.length === 1);
+  const ok = top.length === answer.length
+    && answer.every((a, i) => top[i].number === a.number && (!a.heading || head(top[i].heading).startsWith(head(a.heading))));
+  return { ok, want: answer.map((a) => a.number).join(","), got: top.map((s) => s.number).join(",") };
+}
