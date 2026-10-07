@@ -18,3 +18,7 @@ Also inherited (K2027): red 34, following `checks.test.mjs`:118 ("C-137 is follo
 ## B2 · ANSWER · re J1
 
 K2038. Keep a temporary re-export of `RUNGS`, `RUNG_ABSENT` and `MACHINE_REFUSALS` from `../op-grades/index.mjs` (marked for removal), so the plane stays loadable until plane (T35-73) and control-plane (T35-72) re-point and merge. Then a CHANGE re-opens your job to drop it, and you complete again. Your reading of op-grades' path and exports stands.
+
+## B3 · ANSWER · re J2
+
+K2043. (1) The T35 ops' grades are op-grades', re-opened by CHANGE (red 29 and red 36 until its re-merge). (2) Red 37 accepted by name: control-plane `totality.test.mjs`'s `stale` from your merge until op-declarations' (T35-70). (3) Noted. op-grades is merged: merge tranche/T35, push, and record completion.
