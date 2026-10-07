@@ -966,10 +966,12 @@ async function ensureSubdomain(token, acct, slug) {
   return { sub, registered };
 }
 
+/* R15 (T35; F1, K1874): the probe credential travels only in the request's `Authorization: Bearer` header, the form
+   admission R20 reads first, so it is in no address this installer makes, logs or shows. */
 async function verifyInstall(base, probe) {
   for (let i = 0; i < 10; i++) {
     try {
-      const r = await fetch(`${base}/api/?op=selftest&token=${probe}`);
+      const r = await fetch(`${base}/api/?op=selftest`, { headers: { authorization: "Bearer " + probe } });
       const j = await r.json();
       if (j.ok === true && j.bindings?.STORE === true) return j;
     } catch {}
@@ -1480,9 +1482,10 @@ the setup page&#39;s saves, and a new document that names none &mdash; with <spa
 A document that states its own group is kept as it says, and nothing already in your record changes.</p>
 <p>To record it, send one request carrying the ADMIN_TOKEN of your group&#39;s Civicsmith (the one-time password the installer showed you,
 if you kept it; otherwise put a new ADMIN_TOKEN value in your worker&#39;s settings on Cloudflare, which also starts the
-claim step over): <span class="mono">POST ${at}/api/?op=instancegroupseed&amp;token=&hellip;</span> with the body
+claim step over) in its header, never in the address: <span class="mono">POST ${at}/api/?op=instancegroupseed</span> with the
+header <span class="mono">Authorization: Bearer &hellip;</span> and the body
 <span class="mono">{"slug":"your-group-slug"}</span>, then the same request with <span class="mono">&amp;store=scratch</span>
-added, for your scratch record. Each records it once and never again, so check the spelling first;
+added to the address, for your scratch record. Each records it once and never again, so check the spelling first;
 <span class="mono">op=instancegroup</span> shows what is recorded.</p>
 <p class="small">A suggestion, not a default: your group&#39;s Civicsmith was installed under the name <span class="mono">${esc(slug)}</span>.
 Your group&#39;s slug may differ from it: the name an installation is given and the name of the group producing its record need not be

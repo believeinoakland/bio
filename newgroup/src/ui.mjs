@@ -6,7 +6,9 @@
  * installer is run by the publisher of Civicsmith releases (PUBLISHER, the line every page carries), and names no third
  * party. R23: the install page states the two prerequisites the install enforces, and the Containers permission the
  * assistant's subscription path needs. R37: the assistant is offered as optional, nothing preselected. R35 (DEC-122 (3)): every page loads
- * nothing from another origin; its typefaces are the device's own (PAGE_CSS's stacks).
+ * nothing from another origin; its typefaces are the device's own (PAGE_CSS's stacks). R41 (DEC-143): the act that chooses
+ * the short name carries the Irreversible weight and opens a full dialog saying it is permanent. R42 (DEC-146): the one
+ * line saying what Civicsmith is, and its second line, held here once.
  */
 
 import { list as heldProfiles } from "../../jurisdictions/index.mjs";
@@ -16,6 +18,31 @@ export const PUBLISHER = `This installer is run by the publisher of ${PRODUCT} r
 /* The example name is not a place (R22): a group names itself for what it does. */
 export const EXAMPLE_SLUG = "clean-water-coalition";
 export const publisherFooter = () => `<p class="small publisher">${PUBLISHER}</p>`;
+
+/* R42 (DEC-146 (1)-(3)): what Civicsmith is, in one line, and the second line for where there is room; the same two lines
+   as public-read R30's credit page, held here once rather than imported (an import would add the plane's code to this
+   bundle). The invitation page (bio-plane/public/newgroup/index.html) carries the same two lines as static text. */
+export const DESCRIPTION = "Free software for groups that check whether government keeps its own rules and promises.";
+export const WHO = "Neighbourhood and issue groups, newsrooms, professional associations, and public offices checking their own work.";
+const whatBlock = () => `<p class="what">${DESCRIPTION}</p>
+<p class="small who">${WHO}</p>`;
+
+/* R41 (DEC-143, DEC-87, DEC-88): an act that can never be undone shows the Irreversible weight on its button: the five
+   pips of the visual language's acts, the weight's word always beside them. */
+export const IRREVERSIBLE = `<span class="w"><span class="pips" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span>Irreversible</span>`;
+/* R41: the full dialog before /begin is sent in install mode. Its heading names the short name typed (filled in as text
+   by the page's script); its words are the design stream's (layouts, the install screen), with the worker's name added
+   as R41 states it. Only "Install with this short name" sends /begin; "Choose another name", or closing the dialog,
+   sends nothing. */
+export const PERMANENCE = "Your short name is in every address of your group's Civicsmith and beside every signature your "
+  + "members make, and it becomes the name of its worker in your Cloudflare account. It can never be changed, by you or "
+  + "anyone, without installing a new Civicsmith and starting again.";
+const confirmDialog = () => `<dialog id="confirm" aria-labelledby="confirm-h">
+<h2 id="confirm-h">&ldquo;<span class="mono" id="confirm-name"></span>&rdquo; is permanent</h2>
+<p>${PERMANENCE}</p>
+<div class="actions"><button type="button" id="confirm-yes">Install with this short name${IRREVERSIBLE}</button>
+<button type="button" class="quiet" id="confirm-no">Choose another name</button></div>
+</dialog>`;
 
 /* R21 (N10): the jurisdiction profiles an install offers, every held profile but the test ones, each by name and
    coverage. They are `jurisdictions`' data, shown as data (layers.md, "No jurisdiction in the product", rules 1–2): the
@@ -114,10 +141,25 @@ fieldset.profiles legend{padding:0;margin:0 0 8px}
 @keyframes pulse{50%{opacity:.35}}
 .actions{margin-top:8px}
 .publisher{margin-top:34px;border-top:1px solid var(--rule);padding-top:16px}
+.what{font-size:19px;margin:0 0 6px}
+.who{margin:0 0 18px}
+button .w{display:inline-flex;align-items:center;gap:6px;margin-left:12px;padding-left:12px;
+  border-left:1px solid currentColor;font-size:12.5px;font-weight:500}
+.pips{display:inline-flex;gap:2px}
+.pips i{width:6px;height:6px;border-radius:50%;border:1.25px solid currentColor}
+.pips i.on{background:currentColor}
+button.quiet{background:transparent;color:var(--verdigris-dk);border-color:var(--rule);margin-left:8px}
+button.quiet:hover{background:transparent;border-color:var(--verdigris)}
+dialog{max-width:560px;border:1px solid var(--rule);border-left:3px solid var(--signal);background:#F6F7F2;
+  color:var(--ink);padding:22px 24px}
+dialog::backdrop{background:rgba(22,35,46,.45)}
+dialog h2{margin-top:0}
 `;
 
+/* `confirm` (R41, the install page only): the button that chooses the short name carries the Irreversible weight, and
+   pressing it opens the permanence dialog instead of sending /begin. `what` (R42): the page says what Civicsmith is. */
 function page({ title, description, eyebrow, lede, blocks, slugLabel, slugHint,
-  placeholder, buttonText, mode, footer, extra = "" }) {
+  placeholder, buttonText, mode, footer, goNote, extra = "", confirm = false, what = false }) {
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -131,6 +173,7 @@ function page({ title, description, eyebrow, lede, blocks, slugLabel, slugHint,
 <main>
 <p class="eyebrow">${eyebrow}</p>
 <h1>${title}</h1>
+${what ? whatBlock() : ""}
 <p class="lede">${lede}</p>
 
 ${blocks}
@@ -140,11 +183,11 @@ ${blocks}
 <p class="hint" id="slug-hint">${slugHint}</p>
 ${extra}
 
-<button id="go">${buttonText}</button>
+<button id="go">${buttonText}${confirm ? IRREVERSIBLE : ""}</button>
 <p class="err" id="err"></p>
+${confirm ? confirmDialog() : ""}
 
-<p class="small">Pressing the button takes you to dash.cloudflare.com to
-approve the permission, then brings you straight back here.</p>
+<p class="small">${goNote}</p>
 ${footer}
 ${publisherFooter()}
 </main>
@@ -156,10 +199,8 @@ const chosen=[];document.querySelectorAll('input[name="profile"]').forEach(b=>b.
   const i=chosen.indexOf(b.value);if(b.checked&&i<0)chosen.push(b.value);if(!b.checked&&i>=0)chosen.splice(i,1);}));
 $("#slug").addEventListener("input",e=>{const p=e.target.selectionStart;e.target.value=slugify(e.target.value);
   try{e.target.setSelectionRange(p,p)}catch{}});
-$("#go").addEventListener("click",async()=>{
-  const err=$("#err");err.textContent="";
-  const slug=slugify($("#slug").value);
-  if(slug.length<3){err.textContent="The name needs at least 3 characters.";$("#slug").focus();return;}
+async function begin(slug){
+  const err=$("#err");
   $("#go").disabled=true;
   try{
     const r=await fetch("/begin",{method:"POST",headers:{"content-type":"application/json"},
@@ -169,7 +210,19 @@ $("#go").addEventListener("click",async()=>{
     location.href=j.authorize;
   }catch(e){err.textContent="Could not start: "+e.message;}
   finally{$("#go").disabled=false;}
+}
+const dlg=$("#confirm");
+$("#go").addEventListener("click",()=>{
+  const err=$("#err");err.textContent="";
+  const slug=slugify($("#slug").value);
+  if(slug.length<3){err.textContent="The name needs at least 3 characters.";$("#slug").focus();return;}
+  if(!dlg){begin(slug);return;}
+  $("#confirm-name").textContent=slug;dlg.dataset.slug=slug;dlg.showModal();
 });
+if(dlg){
+  $("#confirm-yes").addEventListener("click",()=>{const slug=dlg.dataset.slug;dlg.close();begin(slug);});
+  $("#confirm-no").addEventListener("click",()=>dlg.close());
+}
 </script>
 </body>
 </html>`;
@@ -177,12 +230,14 @@ $("#go").addEventListener("click",async()=>{
 
 export const WIZARD_HTML = page({
   mode: "install",
+  confirm: true,
+  what: true,
   title: `Set up your group's ${PRODUCT}`,
-  description: `Install your group's own ${PRODUCT}, the accountability record, into your own Cloudflare account.`,
+  description: DESCRIPTION,
   eyebrow: `${PRODUCT} &middot; installer`,
-  lede: `In a few minutes your group will have its own ${PRODUCT}, the
-accountability record, running in your own Cloudflare account. Not an account
-of ours: yours, under your control, from the first second.`,
+  lede: `In a few minutes your group will have its own ${PRODUCT}, running in
+your own Cloudflare account. Not an account of ours: yours, under your control,
+from the first second.`,
   blocks: `<div class="card">
 <p style="margin:0"><b>What you need:</b> a Cloudflare account with two
 things turned on. First, the <b>Workers Paid plan</b> ($5 a month): your group's
@@ -220,9 +275,12 @@ ${assistantBlock()}
 <h2>Name your group's Civicsmith</h2>`,
   slugLabel: "A short name for your group",
   slugHint: `Lower-case letters, digits, and hyphens. It becomes part of your
-web address, so pick something you are happy to say out loud.`,
+web address and is recorded beside every signature, and it can never be changed,
+so pick something you are happy to say out loud.`,
   placeholder: EXAMPLE_SLUG,
-  buttonText: "Continue to Cloudflare",
+  buttonText: "Continue with this short name",
+  goNote: `Pressing the button asks you to confirm the short name, then takes you
+to dash.cloudflare.com to approve the permission, and brings you straight back here.`,
   footer: `<p class="small" style="margin-top:34px;border-top:1px solid var(--rule);padding-top:16px">
 Already running your group's Civicsmith and looking for the current release? That is
 <a href="/update">a separate page</a>.</p>`,
@@ -258,6 +316,8 @@ you want it to resume paused assistant runs on its own. It is stored there as a 
 the update sends none and keeps any it already holds. This installer never creates one.</p>`,
   placeholder: EXAMPLE_SLUG,
   buttonText: "Continue to Cloudflare",
+  goNote: `Pressing the button takes you to dash.cloudflare.com to
+approve the permission, then brings you straight back here.`,
   footer: `<p class="small" style="margin-top:34px;border-top:1px solid var(--rule);padding-top:16px">
 Setting up your group's Civicsmith for the first time instead? That is <a href="/">the setup page</a>.</p>`,
 });
