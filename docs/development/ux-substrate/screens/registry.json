@@ -96,15 +96,6 @@
      ]
     },
     {
-     "op": "assistantset",
-     "label": "Choose whether the group pays for the assistant",
-     "status": "declared",
-     "modules": [
-      "instance-setup",
-      "setup-page"
-     ]
-    },
-    {
      "op": "owed:aikeepaway DEC-172",
      "label": "Keep the group's material away from AI, with a reason",
      "status": "owed"
@@ -233,11 +224,12 @@
    "purpose": "What the group is working on, what waits on you, and \"What brought you here?\".",
    "acts": [
     {
-     "op": "projectcreated",
+     "op": "promote",
      "label": "Start a project",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "membership"
+      "control-plane",
+      "promotion"
      ]
     },
     {
@@ -418,12 +410,9 @@
      ]
     },
     {
-     "op": "setpassword",
+     "op": "owed:setpassword DEC-182",
      "label": "Change your password",
-     "status": "function",
-     "modules": [
-      "credentials"
-     ]
+     "status": "owed"
     },
     {
      "op": "signerregisterown",
@@ -817,11 +806,11 @@
      ]
     },
     {
-     "op": "countask",
+     "op": "calculationcreate",
      "label": "Count",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "answers"
+      "calculations"
      ]
     }
    ],
@@ -853,7 +842,8 @@
      "label": "Capture a file or photo",
      "status": "declared",
      "modules": [
-      "capture"
+      "capture",
+      "control-plane"
      ]
     },
     {
@@ -1449,9 +1439,9 @@
      ]
     },
     {
-     "op": "claimidentity",
+     "op": "identityclaim",
      "label": "Say another record is this person",
-     "status": "function",
+     "status": "declared",
      "modules": [
       "people"
      ]
@@ -1810,11 +1800,12 @@
    "purpose": "A court case or regulatory proceeding: parties, register, orders and their dates.",
    "acts": [
     {
-     "op": "registerproceeding",
+     "op": "entitycreate",
      "label": "Register the proceeding",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "entities"
+      "entities",
+      "setup-page"
      ]
     },
     {
@@ -1861,11 +1852,11 @@
    "purpose": "A due date's basis and counting; confirm it; download it (K1431, K1444).",
    "acts": [
     {
-     "op": "deadlinecompute",
+     "op": "clockpropose",
      "label": "Work out the due date",
      "status": "function",
      "modules": [
-      "answers"
+      "action-clocks"
      ]
     },
     {
@@ -2356,6 +2347,11 @@
     {
      "op": "owed:publishat DEC-147",
      "label": "Publish at a set time, checked again then",
+     "status": "owed"
+    },
+    {
+     "op": "owed:obscuremark DEC-180",
+     "label": "Mark who and what to obscure in a photo",
      "status": "owed"
     }
    ],

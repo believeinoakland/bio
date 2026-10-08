@@ -12,10 +12,10 @@
   "level": 2,
   "guide": 6,
   "screen": 94,
-  "act": 461,
+  "act": 457,
   "column": 33,
-  "wizard": 237,
-  "total": 923,
+  "wizard": 239,
+  "total": 921,
   "protected": 345
  },
  "words": [
@@ -1229,12 +1229,6 @@
    "source": "registry.json"
   },
   {
-   "key": "act.assistantset.label.setup",
-   "en": "Choose whether the group pays for the assistant",
-   "protected": true,
-   "source": "registry.json"
-  },
-  {
    "key": "act.owed_aikeepaway.label.setup",
    "en": "Keep the group's material away from AI, with a reason",
    "protected": true,
@@ -1313,7 +1307,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.projectcreated.label.home",
+   "key": "act.promote.label.home",
    "en": "Start a project",
    "protected": true,
    "source": "registry.json"
@@ -1439,7 +1433,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.setpassword.label.account",
+   "key": "act.owed_setpassword.label.account",
    "en": "Change your password",
    "protected": true,
    "source": "registry.json"
@@ -1703,7 +1697,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.countask.label.finder",
+   "key": "act.calculationcreate.label.finder",
    "en": "Count",
    "protected": true,
    "source": "registry.json"
@@ -2081,7 +2075,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.claimidentity.label.person",
+   "key": "act.identityclaim.label.person",
    "en": "Say another record is this person",
    "protected": true,
    "source": "registry.json"
@@ -2303,7 +2297,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.registerproceeding.label.proceeding",
+   "key": "act.entitycreate.label.proceeding",
    "en": "Register the proceeding",
    "protected": true,
    "source": "registry.json"
@@ -2333,7 +2327,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.deadlinecompute.label.due-date",
+   "key": "act.clockpropose.label.due-date",
    "en": "Work out the due date",
    "protected": true,
    "source": "registry.json"
@@ -2627,6 +2621,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_obscuremark.label.ceremony",
+   "en": "Mark who and what to obscure in a photo",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.verify.label.published",
    "en": "Check the signature",
    "protected": true,
@@ -2742,19 +2742,13 @@
   },
   {
    "key": "act.entitycreate.does",
-   "en": "Adds an office or organisation the list does not have yet, with a note on where it comes from.",
+   "en": "Adds something the record does not hold yet, such as an office, an organisation or a court case, with a note on where it comes from.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
    "key": "act.placewanted.does",
    "en": "Names a place Civicsmith does not yet hold rules for. Administrators are told when an update brings it.",
-   "protected": false,
-   "source": "mock-acts.js ACT_HELP"
-  },
-  {
-   "key": "act.assistantset.does",
-   "en": "Decides whether the group pays for the assistant with its own key. Members may still connect their own account unless the group keeps its material away from AI.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -2833,12 +2827,6 @@
   {
    "key": "act.enroll.does",
    "en": "Joins the group with a handle and password. Your handle is how members see you; it need not be your name.",
-   "protected": false,
-   "source": "mock-acts.js ACT_HELP"
-  },
-  {
-   "key": "act.projectcreated.does",
-   "en": "Starts a project: one problem the group wants to get to the bottom of. Questions, documents and plans gather under it.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -2933,7 +2921,7 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.setpassword.does",
+   "key": "act.owed_setpassword.does",
    "en": "Changes your password. Other sessions you have open stay signed in until they end.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
@@ -3191,12 +3179,6 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.countask.does",
-   "en": "Counts what matches, and shows how it was counted.",
-   "protected": false,
-   "source": "mock-acts.js ACT_HELP"
-  },
-  {
    "key": "act.acquire.does",
    "en": "Has your group's Civicsmith fetch this address itself and keep exactly what the site sent, with when and from where.",
    "protected": false,
@@ -3335,6 +3317,18 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
+   "key": "act.clockpropose.does",
+   "en": "Works out a due date from the law and the dates, showing each day counted and each holiday skipped. It proposes the date; a member confirms it.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_obscuremark.does",
+   "en": "Marks anyone in a photo who is not part of a finding, and any number plate, so the copy a published case carries shows them obscured, labelled. The original stays inside the group.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
    "key": "act.standarddeclare.does",
    "en": "Holds this requirement as a standard the city set itself, so questions can test the city against it.",
    "protected": false,
@@ -3451,12 +3445,6 @@
   {
    "key": "act.person.does",
    "en": "Opens this person's page: positions, career and interests, each dated and cited.",
-   "protected": false,
-   "source": "mock-acts.js ACT_HELP"
-  },
-  {
-   "key": "act.claimidentity.does",
-   "en": "Says another record (a name in a document, a register entry) is this same person, with how sure you are and why. Shown as a claim, linked never merged, and it can be withdrawn.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -3593,12 +3581,6 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.registerproceeding.does",
-   "en": "Registers a court case or regulatory proceeding the group follows.",
-   "protected": false,
-   "source": "mock-acts.js ACT_HELP"
-  },
-  {
    "key": "act.recordline.does",
    "en": "Adds a party to the proceeding by its role, citing where it appears.",
    "protected": false,
@@ -3613,12 +3595,6 @@
   {
    "key": "act.courtlink.does",
    "en": "Links a decision to the law or order it interprets, citing the passage.",
-   "protected": false,
-   "source": "mock-acts.js ACT_HELP"
-  },
-  {
-   "key": "act.deadlinecompute.does",
-   "en": "Works out the due date from the law and the dates, showing each day counted and each holiday skipped.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -4266,25 +4242,25 @@
   },
   {
    "key": "wizard.WIZ-c887066cc553dd41.step11.what",
-   "en": "Read what the assistant is (and open More about this for the detail), then choose whether the group pays for it with its own API key, and whether to keep the group's material away from AI.",
+   "en": "Read what the assistant is (and open More about this for the detail), then choose whether to keep the group's material away from AI.",
    "protected": false,
    "source": "library.json"
   },
   {
    "key": "wizard.WIZ-c887066cc553dd41.step11.why",
-   "en": "The group's key serves members with no account of their own. Any member may connect their own account unless you keep the material away from AI; then members see your reason. Everything works without it.",
+   "en": "Any member may connect their own Claude account unless you keep the material away from AI; then members see who chose it and your reason. Everything works without the assistant.",
    "protected": false,
    "source": "library.json"
   },
   {
    "key": "wizard.WIZ-c887066cc553dd41.step12.what",
-   "en": "If you chose the group's key: paste it here. It is never shown again.",
+   "en": "If the group will pay for the assistant, paste its Anthropic API key here. It is never shown again.",
    "protected": false,
    "source": "library.json"
   },
   {
    "key": "wizard.WIZ-c887066cc553dd41.step12.why",
-   "en": "It serves every member with no account of their own; each is told once, before their first question, that it goes to Anthropic under the group's account.",
+   "en": "It serves every member with no account of their own; each is told once, before their first question, that it goes to Anthropic under the group's account. Leave it empty and members bring their own.",
    "protected": false,
    "source": "library.json"
   },
@@ -4482,72 +4458,84 @@
   },
   {
    "key": "wizard.WIZ-426b9c2e8b128b6b.step5.what",
-   "en": "Read what will be disclosed: the timeline as it stands, and any calculation that differs or is not tied to the record.",
+   "en": "Check each photo the case relies on: mark anyone in it who is not part of a finding, and any number plate.",
    "protected": false,
    "source": "library.json"
   },
   {
    "key": "wizard.WIZ-426b9c2e8b128b6b.step5.why",
-   "en": "Readers must see what the case could not settle.",
+   "en": "The public copy shows them obscured and says so; the original stays inside the group.",
    "protected": false,
    "source": "library.json"
   },
   {
    "key": "wizard.WIZ-426b9c2e8b128b6b.step6.what",
-   "en": "Read the group's declared bias as it will appear.",
+   "en": "Read what will be disclosed: the timeline as it stands, and any calculation that differs or is not tied to the record.",
    "protected": false,
    "source": "library.json"
   },
   {
    "key": "wizard.WIZ-426b9c2e8b128b6b.step6.why",
-   "en": "Every published case carries the lens it was made through.",
+   "en": "Readers must see what the case could not settle.",
    "protected": false,
    "source": "library.json"
   },
   {
    "key": "wizard.WIZ-426b9c2e8b128b6b.step7.what",
-   "en": "Preview the public page as a stranger will see it.",
+   "en": "Read the group's declared bias as it will appear.",
    "protected": false,
    "source": "library.json"
   },
   {
    "key": "wizard.WIZ-426b9c2e8b128b6b.step7.why",
-   "en": "This is how a reader with no account meets your work.",
+   "en": "Every published case carries the lens it was made through.",
    "protected": false,
    "source": "library.json"
   },
   {
    "key": "wizard.WIZ-426b9c2e8b128b6b.step8.what",
-   "en": "Each member publishing confirms they have no undeclared tie to anyone the case concerns.",
+   "en": "Preview the public page as a stranger will see it.",
    "protected": false,
    "source": "library.json"
   },
   {
    "key": "wizard.WIZ-426b9c2e8b128b6b.step8.why",
-   "en": "Including anyone paid in its money. A tie disclosed is a strength; one found later is not.",
+   "en": "This is how a reader with no account meets your work.",
    "protected": false,
    "source": "library.json"
   },
   {
    "key": "wizard.WIZ-426b9c2e8b128b6b.step9.what",
-   "en": "Sign with your key.",
+   "en": "Each member publishing confirms they have no undeclared tie to anyone the case concerns.",
    "protected": false,
    "source": "library.json"
   },
   {
    "key": "wizard.WIZ-426b9c2e8b128b6b.step9.why",
-   "en": "Publishing is permanent. Corrections come as a new edition, never by changing this one.",
+   "en": "Including anyone paid in its money. A tie disclosed is a strength; one found later is not.",
    "protected": false,
    "source": "library.json"
   },
   {
    "key": "wizard.WIZ-426b9c2e8b128b6b.step10.what",
-   "en": "Publish now, or choose the time it becomes public, such as when a story citing it runs.",
+   "en": "Sign with your key.",
    "protected": false,
    "source": "library.json"
   },
   {
    "key": "wizard.WIZ-426b9c2e8b128b6b.step10.why",
+   "en": "Publishing is permanent. Corrections come as a new edition, never by changing this one.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-426b9c2e8b128b6b.step11.what",
+   "en": "Publish now, or choose the time it becomes public, such as when a story citing it runs.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-426b9c2e8b128b6b.step11.why",
    "en": "At that time Civicsmith checks again; if anything changed since you signed, it holds the case and tells you. You can cancel or move the time until then.",
    "protected": false,
    "source": "library.json"

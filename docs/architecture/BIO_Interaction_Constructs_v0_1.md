@@ -951,6 +951,14 @@ explanation to its label, so names in its reason keep their own cards. A title n
 
 **A spot-check visit's photo (the design session, 2026-10-08, DEC-178).** Optional: the member's account counts on its own as
 testimony; the visit asks for a photo where one can be taken and says plainly when there is none.
+
+**RULED 2026-10-08 by Bob (DEC-180, S17, through K2108): people in a photo who are not its subject.** A reminder wherever a photo is
+taken or added; inside the group every photo stays as taken; before signing, the ceremony's Photos step has a member mark anyone not
+part of a finding, and any number plate, and the published case carries a copy with those areas obscured, labelled, the original
+kept inside the group. Civicsmith obscures what a member marks; no AI looks at the group's photos.
+
+**Acts that can never be undone, on a phone (the design session, 2026-10-08, DEC-181).** Every act the Irreversible weight marks is
+read on a phone and done on a larger screen, replacing DEC-170's single act.
 ## What this changes about how M8 is built
 
 **Build the constructs, then the capabilities arrive cheaply.** The order that follows:

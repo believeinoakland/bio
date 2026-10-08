@@ -81,15 +81,15 @@
       },
       {
        "screen": "setup",
-       "act": "assistantset",
-       "what": "Read what the assistant is (and open More about this for the detail), then choose whether the group pays for it with its own API key, and whether to keep the group's material away from AI.",
-       "why": "The group's key serves members with no account of their own. Any member may connect their own account unless you keep the material away from AI; then members see your reason. Everything works without it."
+       "act": "owed:aikeepaway DEC-172",
+       "what": "Read what the assistant is (and open More about this for the detail), then choose whether to keep the group's material away from AI.",
+       "why": "Any member may connect their own Claude account unless you keep the material away from AI; then members see who chose it and your reason. Everything works without the assistant."
       },
       {
        "screen": "setup",
        "act": "groupkeyset",
-       "what": "If you chose the group's key: paste it here. It is never shown again.",
-       "why": "It serves every member with no account of their own; each is told once, before their first question, that it goes to Anthropic under the group's account."
+       "what": "If the group will pay for the assistant, paste its Anthropic API key here. It is never shown again.",
+       "why": "It serves every member with no account of their own; each is told once, before their first question, that it goes to Anthropic under the group's account. Leave it empty and members bring their own."
       },
       {
        "screen": "setup",
@@ -224,6 +224,12 @@
        "act": "attribute",
        "what": "Check each person the case names, with the reason they matter to a finding.",
        "why": "A case cannot be signed while any reason is missing."
+      },
+      {
+       "screen": "ceremony",
+       "act": "owed:obscuremark DEC-180",
+       "what": "Check each photo the case relies on: mark anyone in it who is not part of a finding, and any number plate.",
+       "why": "The public copy shows them obscured and says so; the original stays inside the group."
       },
       {
        "screen": "ceremony",
@@ -689,7 +695,7 @@
       },
       {
        "screen": "proceeding",
-       "act": "registerproceeding",
+       "act": "entitycreate",
        "what": "Register the proceeding from its caption: the court, the number, and a neutral label.",
        "why": "A neutral label keeps your own view out of the record's name for it."
       },

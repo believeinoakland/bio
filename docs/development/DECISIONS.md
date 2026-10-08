@@ -2665,6 +2665,7 @@ reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` 
 owed: (BOB, N706, N707, N710) the ops behind `owed:openoriginal K1888`, `owed:safeview K1888`, `owed:deepercheck K1888`, `owed:releasescanhold K1892` (file-safety R8, R11, R13, R17) and `owed:securitytooladd`, `owed:securitytooltest`, `owed:securitytoolremove K1929` (N710's provider registry and its data-handling statement); the reasons of file-safety R6 in member words held for translation; `originalState` driving whether "Open the original" is drawn; the installer's optional security-tools step. A scanner finding is explained where it appears (Bob's comment, 7 October): its name is a card splitting it into parts (the file kind, the kind of threat, the scanner's variant label), and a "What this is" panel says in plain words what that kind of threat does and that scanners report resemblance, not certainty; owed: a table of finding kinds (downloader, dropper, trojan, macro, exploit, phishing, potentially unwanted, heuristic or suspicious, and others), each with plain words held for translation, and "Civicsmith has no plain description of this name" when none matches.
 
 ### DEC-170 · answered
+amended: 2026-10-08 · DEC-181: every act the Irreversible weight marks (not only `personexpunge`) is read on a phone and done on a larger screen.
 raised: 2026-10-07 · the UX design session with Bob on his primary account (session_01NWPmrrYZbbF8Wkrvp5Y2vx; the development process runs on his secondary account since K1891) (B79, BOB's question on K1943: does `personexpunge` belong in the larger-screen set?)
 for: bob-session
 question: Whether removing a fact where the law requires it (`personexpunge`) is offered on a phone.
@@ -2804,3 +2805,45 @@ response: **Decided by the design session, 2026-10-08.** (1) `docs/development/u
 decided: 2026-10-08 · the design session (P17)
 reasoning recorded in: this entry; `screens/build_words.mjs`; `screens/words.json`; `layouts.html` (section 6).
 owed: (BOB, N669, N670) the translation layer's word set from `words.json`, its keys and protected marks; screen sentences keyed as (5) when each screen is built; the one tip that carried an internal code ("(DEC-157)" on the Protected tag) no longer does.
+
+### DEC-180 · answered
+raised: 2026-10-08 · the UX design session with Bob on his secondary account (session_01SCHPX2mpSDpBNA9wprUm5H; the development process runs on the same account since K1891) (BOB's B91, second question: what a group is told about photographing people at a site who are not its subject; question S17)
+for: bob
+question: What happens to people, and number plates, that appear in a photo but are not what it is about, inside the group and in a published case.
+why it is Bob's: who may see what, and a private person's exposure in a published case (doctrine, P17; K1483's rule on people outside any official role).
+provisional: nothing; a photo is kept whole and travels whole with a case that relies on it (K1483).
+alternative: A, remind members and publish as taken; C, never publish such a photo, the case showing the member's account and "photo held by the group".
+recommendation: B, as below.
+reversal cost: low before the screens are built.
+response: **Bob, 2026-10-08, through the development process (K2108, B95): "agreed"**, to recommendation B. Ruled: (1) wherever a member takes or adds a photo, one reminder: frame what you are checking, and leave out people's faces and number plates where you can; (2) inside the group every photo stays as taken; (3) before a case is signed, the publication ceremony's Photos step lists each photo the case relies on, and a member marks anyone in it who is not part of a finding, and any number plate; (4) the copy the published case carries shows the marked areas obscured, labelled "Faces and plates obscured for publication; the group holds the original"; the original stays inside the group; (5) city staff at work are part of what a case is about, so one is obscured only with a reason. Design detail beneath it, answering B97: the member marks the areas and Civicsmith obscures them itself (solid cover over each marked area); no AI vision runs over the group's photos, so keep-away (DEC-172) is untouched and nothing is paid per photo. Should an assistant's proposal of areas be wanted later, a member would still accept each one, and its cost and keep-away make it Bob's, brought by BOB with options.
+decided: 2026-10-08 · Bob (K2108)
+reasoning recorded in: this entry; `screens/question.html` (S17); `screens/mock-screens.js` (the reminder on Add, the ceremony's Photos step); `screens/library.src.py` (Publication ceremony, the photos step); `screens/registry.src.py` (`owed:obscuremark DEC-180`); `layouts.html`; BIO_Interaction_Constructs_v0_1.md §V.
+owed: (BOB, N757) the reminder where a photo is taken or added; the ceremony's Photos step listing every photo the case relies on; marks of who and what to obscure, recorded with the member who made each; the obscured copy, derived from the original and labelled, carried by the published case in the original's place; the original kept inside the group; the act `obscuremark`; the words held for translation (protected: it says who can see something).
+
+### DEC-181 · answered
+raised: 2026-10-08 · the UX design session with Bob on his secondary account (session_01SCHPX2mpSDpBNA9wprUm5H; the development process runs on the same account since K1891) (BOB's B96, question 2: `standardrelease` carries the Irreversible weight (DEC-143) and stays offered on a phone; should it join `personexpunge` (DEC-170) in finishing on a larger screen?)
+for: bob-session
+question: Which acts a phone shows but does not do.
+why it is Bob's: it is not: beneath DEC-122 G1 (signing, publishing and sending finish on a larger screen) and DEC-170; decided by the design session (P17) and reported.
+provisional: DEC-170: `personexpunge` alone, beside the signing, publishing and sending acts.
+alternative: keep the list act by act.
+recommendation: as decided below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-08.** Every act that can never be undone (every op the Irreversible weight marks, DEC-143: today `publish`, `publishat`, `publishatmove`, `personexpunge`, `standardrelease`) is read on a phone and done on a larger screen, where its whole consequence is in view; the phone says where to finish. With DEC-122 G1, a phone also does not sign, publish or send. One rule replaces DEC-170's single act.
+decided: 2026-10-08 · the design session (P17)
+reasoning recorded in: this entry; `layouts.html` (section 1's phone cell, section 6).
+owed: (BOB) the phone rule read from the Irreversible weight's set, not a list of ops.
+
+### DEC-182 · answered
+raised: 2026-10-08 · the UX design session with Bob on his secondary account (session_01SCHPX2mpSDpBNA9wprUm5H; the development process runs on the same account since K1891) (BOB's B96, questions 1 and 3, and B99: five act texts naming no op the product serves, an alias with two texts, the retired `assistantset` still on the setup screen and in its required wizard, the act texts still owed, and the security-tools step's words before Settings › Security exists)
+for: bob-session
+question: Which served op each of the design's acts means, and which act texts the design stream owes.
+why it is Bob's: it is not: the design's own act names and words, beneath DEC-172 and DEC-174; decided by the design session (P17) and reported.
+provisional: PR #13's registry and `mock-acts.js`.
+alternative: drop the five texts.
+recommendation: as decided below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-08.** (1) Re-pointed to served ops, each button keeping its words and, where the op's general text would be vague, a text of its own on that screen: "Start a project" is `promote` (a project starts by promotion, admission R11, membership R71); the Find screen's "Count" is `calculationcreate` (a count with its method shown is a calculation, K1471); "Register the proceeding" is `entitycreate` (a proceeding is an entity of that kind, entities' Terms); "Work it out again" on a due date is `clockpropose` (it proposes; `clockadopt` confirms). The texts `projectcreated`, `countask`, `registerproceeding` and `deadlinecompute` are withdrawn; `clockpropose` has its own; `entitycreate`'s general text now covers every kind. (2) The same-person claim is one op, `identityclaim`: the person screen's button points at it and `claimidentity`'s text is withdrawn. (3) `assistantset` is gone: the setup screen's "Does the group pay?" choice and its button are removed; the required Set up and claim wizard's step points at keeping material away from AI (`aikeepaway`, DEC-172) and its next step at the group's optional key (`groupkeyset`), "leave it empty and members bring their own". (4) A member changing their own password while signed in is owed (`owed:setpassword`, the op credentials R3 names; T36 serves no member path to it). (5) The texts the design stream owes: one for every act a member screen offers, written when the screen offering it is drawn; an op no member screen offers needs none. When op-declarations finds member-session ops a screen offers without a text, BOB names them in one QUESTION and the stream writes them in its next pull request. (6) The setup page's security-tools step, until Settings › Security exists: "Civicsmith scans every file it captures with its own scanner and opens risky ones in a safe view. If your organization already uses a file scanner, a safe-copy maker or a log service, you can add it here, now or later." Once the screen exists: the same, ending "you can add it now, or later in Settings › Security."
+decided: 2026-10-08 · the design session (P17)
+reasoning recorded in: this entry; `screens/registry.src.py`; `screens/mock-acts.js`; `screens/mock-kit.js`; `screens/mock-screens.js` (home, setup, account, find, person, proceeding, due date); `screens/library.src.py` (Set up and claim, Follow a proceeding); `screens/mock-journeys.js` (journeys 8 and 10); `screens/words.json`.
+owed: (BOB) `ACT_HELP` from PR #14's `mock-acts.js` (re-pointed as above; `clockpropose` and `owed_obscuremark` added); the setup step and wizard step on `aikeepaway` and `groupkeyset`; a member's own password change (`setpassword`); the security-tools step's two wordings as (6).
