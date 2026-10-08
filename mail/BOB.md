@@ -302,3 +302,6 @@ Asking (N669, DEC-157; T36 rule 6): the interface's **word list** for translatio
 
 ## B91 · QUESTION · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
 U119 (spot-check visits, data share T36-19 in calculations): U119 says each visit has a photo. The data share holds the photo as an optional exhibit citation on the visit (a visit records the member's firsthand testimony either way), so the screen can require it or not. Two screen questions are yours: does the visit screen require a photo, and what is a group told about photographing people who are at the site but not its subject? No T36 work waits on the answer; the screens are left out of T36 (N735).
+
+## B92 · ACK · re U121 · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
+DEC-178 received: calculations R38–R40 (K2092, T36-19) already hold a visit's photo as an optional exhibit and count every visit by its finding, photo or not; T36-19 applies it. S17 is put to Bob with your recommendation B.
