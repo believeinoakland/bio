@@ -74,4 +74,4 @@ row-census: 8 pass, 0 fail.
 - `checks/coverage.mjs bio promotion`: 56 of 56, 0 failures.
 - `checks/ownership.mjs bio promotion tranche/T38`: 1 failure (the renamed fixture, until the swap).
 
-Size (session_013zZkEVT5VnVz668Zz9kZux): test runs 9, module lines 3473
+Size (session_013zZkEVT5VnVz668Zz9kZux): test runs 9, module lines 3501
