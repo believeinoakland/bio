@@ -79,11 +79,17 @@ CREATE TABLE IF NOT EXISTS captured_locators (
   first_retrieved   TEXT NOT NULL,
   last_retrieved    TEXT NOT NULL,
   observations      INTEGER NOT NULL DEFAULT 1,
+  -- R61 (N714; K2087): the address's web reputation as acquisition R44 recorded it for this fetch, the object
+  -- exactly as given ({tool, listed, categories, checked_at, unanswered?}), as JSON; NULL when none was given. It
+  -- changes no other field, grade or chain. Not part of R48's read contract: R16 and R60 answer it.
+  reputation        TEXT,
   PRIMARY KEY (address_norm, capture_sha, via)
 );
 CREATE INDEX IF NOT EXISTS captured_locators_addr ON captured_locators(address_norm, first_retrieved);
 -- CAP-13: the page count in siteAssets and siteChrome joins on capture_sha.
 CREATE INDEX IF NOT EXISTS captured_locators_sha ON captured_locators(capture_sha);
+-- N730 (K1993 (4)): capture-requests R49 asks a retrieval locator after its indexed reads miss; this keeps it a seek.
+CREATE INDEX IF NOT EXISTS captured_locators_locator ON captured_locators(retrieval_locator);
 
 -- REC-225 (Content Framework v0.10 section 8.3; R29, R30): A MEMBER'S DECLARATION OF THE SYSTEM A
 -- DOCUMENT CAME FROM. A host serves many offices, so a host is not an origin: the office a document
@@ -99,13 +105,15 @@ CREATE TABLE IF NOT EXISTS origin_declarations (
 );
 `;
 
-/* The register's columns added after stores were first written (MK-1 / D-184 / IC-134): the default IS the true
+/* The columns added after stores were first written. The register's (MK-1 / D-184 / IC-134): the default IS the true
    value for every row that can exist before the column did, since no route could author a bundle until
-   op=testify existed; `author` and `observed_at` are NULL on every row that is not authored. */
+   op=testify existed; `author` and `observed_at` are NULL on every row that is not authored. A receipt's
+   `reputation` (R61): NULL on every receipt written before acquisition asked one, which is the truth about it. */
 export const REGISTER_ADDITIVE = [
   ["register", "authored", "INTEGER NOT NULL DEFAULT 0"],
   ["register", "author", "TEXT"],
   ["register", "observed_at", "TEXT"],
+  ["captured_locators", "reputation", "TEXT"],
 ];
 
 /* Creates this module's tables on `sql` (the Durable Object's storage). Idempotent, run at every boot.
