@@ -95,7 +95,8 @@ test("R72 at a case edition's commit the criteria are one row per distinct (stan
   assert.equal(r.ok, true, JSON.stringify(r));
   const criteria = w.p.caseEditionState(CASE, 1).criteria;
   const row = (o) => ({ standard: null, portion: null, designation: null, edition: null, issuer: null, citation: null, access: null,
-                        body: null, binds: null, passages: null, label: null, access_words: null, ...o });
+                        body: null, binds: null, passages: null, label: null, access_words: null,
+                        captures: o.stated ? null : [], ...o });   /* T37: the edition carries no material, so no capture */
   assert.deepEqual(criteria, [
     row({ standard: A, portion: "s.3", designation: "AI 4.12", edition: "2024", issuer: "Public Works", citation: "AI 4.12 §3",
           access: "free", body: CLERK, binds: true,
@@ -141,7 +142,7 @@ test("R72 the founder's signature reads as `admin`; members targeting no standar
   assert.equal(r.ok, true, JSON.stringify(r));
   assert.deepEqual(w.p.caseEditionState(CASE, 1).criteria, [{ standard: A, portion: null, designation: null, edition: null,
     issuer: null, citation: null, access: null, body: null, binds: null, passages: null, label: null, access_words: null,
-    stated: "not held" }]);
+    stated: "not held", captures: null }]);
   assert.deepEqual(standards.calls, [["standardRead", A, "admin"]], "the founder reads as admin");
   /* members whose legs name no standard */
   const plain = [member(w, "INFO-2026-0104-plain", { subject: CLERK, legs: [{ target: "INFO-2026-0001-minutes" }] })];
@@ -259,13 +260,16 @@ test("R75 criteriaFor answers {rows}, exactly the criteria R72's commit records 
   assert.ok(standards.calls.every((x) => (x[0] === "standardRead" ? x[2] : x[4]) === V("olive")), "read as the signer");
   /* the commit by the same signer on the same day records exactly these rows */
   assert.equal(sign(w, proj, roles).ok, true);
-  assert.deepEqual(w.p.caseEditionState(CASE, 1).criteria, pre.rows, "a preparation and its commit cannot disagree");
+  /* T37 (R72's `captures`): the commit adds each row's carried captures beside R75's row, which states none */
+  const bare = (rows) => rows.map(({ captures, ...rest }) => rest);
+  assert.ok(pre.rows.every((r) => !("captures" in r)));
+  assert.deepEqual(bare(w.p.caseEditionState(CASE, 1).criteria), pre.rows, "a preparation and its commit cannot disagree");
   assert.deepEqual(Object.keys(pre), ["rows"]);
   /* a change in the record between them is the one way they differ: the read follows the record, the edition stays frozen */
   standards.binding[`${A}|${BOARD}`] = "binds";
   const later = w.p.criteriaFor({ members: asMembers(roles), signer: "olive", at });
   assert.deepEqual(later.rows.find((r) => r.body === BOARD && r.standard === A).binds, true);
-  assert.deepEqual(w.p.caseEditionState(CASE, 1).criteria, pre.rows);
+  assert.deepEqual(bare(w.p.caseEditionState(CASE, 1).criteria), pre.rows);
   /* another day is read on that day */
   standards.calls.length = 0;
   w.p.criteriaFor({ members: asMembers(roles), signer: "olive", at: "2027-01-02T00:00:00Z" });
