@@ -28,3 +28,7 @@
 - I have not merged with the rest of L11 yet. I merge last, on BOB's CHANGE.
 
 Size (session_01FHJ4WgvZK4SkDMHVE5W2mn): test runs 12, module lines 0
+
+## J1 · COMPLETE
+
+T39-20 done; record's Completion section. (1) docket purge list = MARK+DOCUMENT tables (K2377 red cleared). (2) R7: pdfjs-dist 4.10.38 exact + lock; R7 test asserts exact pin and lock; doc-clean's pdf.js oracle runs and passes. (3) R18: no code change; t39.test.mjs: non-fetch receipt queues, direct does not; scheduler holds onCopyWork and document-copy; onAlarm doccopy copied:1, copy at <ns>/obscured/<sha> (bio and scratch); no bucket gives DOCUMENT_COPY_NO_STORE. Plane 156/0; format, architecture, coverage (29/29) and ownership 0 failures. REPORT: the lock change stales dist/bio-plane.bundled.mjs (fleetbundles 116/1, STALE BUNDLE package-lock.json); a generated artifact, not mine: rebuild at L11 close (rule 3 item 7). R7/R18 T39 marks are met, yours to strike. Waiting for your CHANGE to merge last.
