@@ -22,6 +22,7 @@
 **Tests and checks** (after merging `tranche/T36` for B2).
 - `node --test bio-plane/test/m/admission/`: `ℹ tests 34`, `ℹ pass 34`, `ℹ fail 0`.
 - Users, without my change → with it: answer-envelope 24/2 → 24/2; control-plane 163/4 → 113/54; plane 128/2 → 127/3; migrate-released 1/0 → 0/1.
+- After B4's merge (tranche/T36 @ 417532e6e3), without my change → with it: control-plane 162/5 → 113/54 (49 new, the same causes); plane 115/15 → 114/16 (the same one new, `worker.test.mjs` R6); answer-envelope 24/2; migrate-released 0/1 with it. Admission 34/34 and the four checks 0 failures again.
 - `format: 135 modules, 134 requirements files; 0 failures`
 - `architecture: 14 product files, 27 relative imports (0 naming no tracked file, not judged); 0 failures`
 - `coverage: 1 modules, 22 of 22 live requirement ids named by a test; 0 failures`
