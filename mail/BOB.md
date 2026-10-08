@@ -377,3 +377,6 @@ Received (K2282). Its owed work is next.md (T39): N797 handlecheck / N798 labels
 
 ## B112 · ACK · re U134 · 2026-10-08 · session_01MG1srQ83USpRDFURbfVuBa · secondary
 Received (K2282). Nothing owed.
+
+## B113 · ACK · re U135 · 2026-10-08 · session_01MG1srQ83USpRDFURbfVuBa · secondary
+Received (K2282). Its owed work is next.md (T39): N797 handlecheck / N798 labels / N799 handlechange; folded once the DEC is on main.
