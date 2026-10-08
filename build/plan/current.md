@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #136 · session_01TnHJvpiiYsW7EJvVnDvfEn · depth 1
 
-**Jobs** · connection-grammar: CONNECTION-GRAMMAR #3 session_01H9M3DEa6cwNZgYQXQhaJuf; signatures: SIGNATURES #11 session_01L8Hyorky2d1Lrs1dqmDrCn; bundler: BUNDLER #10 session_01AVSxAcVVnwvGFa9niTqNUo; office-readers: OFFICE-READERS #7 session_012a2UNtTuD5PNQ4KYMYjtA1; doctypes: DOCTYPES #3 session_019F8gBQfqTqF5hBsFcHmxd7; file-scanner: FILE-SCANNER #1 session_011jYjCHjn4qrJrgjofxmpKv; membership: MEMBERSHIP #27 session_01Kozvc5CabUVjWrHpUnjz1Z; credentials: CREDENTIALS #7 session_01DuWUHZfSSRpYU5V4qt2iss; promotion: PROMOTION #34 session_01PfzH458a5tMgwWs1AQfAys; provenance: PROVENANCE #18 session_01B5spSoDUidbVfxwqT7NYMm; acquisition: ACQUISITION #13 session_01UBPYqfwtexSRDSTDJARv1u; capture: CAPTURE #23 session_01J8qhjNNKU3fBhYXuRdt3ne; file-safety: FILE-SAFETY #1 session_017HHK6Ecu8dE2tpWEUqLyxZ; sources: SOURCES #12 session_017pZoLzvWRz5wh27zcPw5dD; reading-pipeline: READING-PIPELINE #7 session_01Bqmqo5KoGA92ZdFBC6tLLW; extraction: EXTRACTION #15 session_01VgbqiWA5e3MLeiVgTNS9KZ; events: EVENTS #4 session_01Lpr5zoWzhMTrc3S8CRoaGd; standards: STANDARDS #10 session_01FvLsCYfWE4S9eeTYtQuB5d; money: MONEY #3 session_01AzpG9vAgA5NEhFJGqSdSUx; people: PEOPLE #5 session_019jdYasEZ5G5btsBgnEcz4B; explore: EXPLORE #3 session_013jCD29K2Ak5HWZGMPQjE64; retrieval: RETRIEVAL #14 session_013mwNsG3YAtaUow5u9nrCBL; calculations: CALCULATIONS #4 session_01JLKQ4KM6RQvEVRSy8fPJcz
+**Jobs** · connection-grammar: CONNECTION-GRAMMAR #3 session_01H9M3DEa6cwNZgYQXQhaJuf; signatures: SIGNATURES #11 session_01L8Hyorky2d1Lrs1dqmDrCn; bundler: BUNDLER #10 session_01AVSxAcVVnwvGFa9niTqNUo; office-readers: OFFICE-READERS #7 session_012a2UNtTuD5PNQ4KYMYjtA1; doctypes: DOCTYPES #3 session_019F8gBQfqTqF5hBsFcHmxd7; file-scanner: FILE-SCANNER #1 session_011jYjCHjn4qrJrgjofxmpKv; membership: MEMBERSHIP #27 session_01Kozvc5CabUVjWrHpUnjz1Z; credentials: CREDENTIALS #7 session_01DuWUHZfSSRpYU5V4qt2iss; promotion: PROMOTION #34 session_01PfzH458a5tMgwWs1AQfAys; provenance: PROVENANCE #18 session_01B5spSoDUidbVfxwqT7NYMm; acquisition: ACQUISITION #13 session_01UBPYqfwtexSRDSTDJARv1u; capture: CAPTURE #23 session_01J8qhjNNKU3fBhYXuRdt3ne; file-safety: FILE-SAFETY #1 session_017HHK6Ecu8dE2tpWEUqLyxZ; sources: SOURCES #12 session_017pZoLzvWRz5wh27zcPw5dD; reading-pipeline: READING-PIPELINE #7 session_01Bqmqo5KoGA92ZdFBC6tLLW; extraction: EXTRACTION #15 session_01VgbqiWA5e3MLeiVgTNS9KZ; events: EVENTS #4 session_01Lpr5zoWzhMTrc3S8CRoaGd; standards: STANDARDS #10 session_01FvLsCYfWE4S9eeTYtQuB5d; money: MONEY #3 session_01AzpG9vAgA5NEhFJGqSdSUx; people: PEOPLE #5 session_019jdYasEZ5G5btsBgnEcz4B; explore: EXPLORE #3 session_013jCD29K2Ak5HWZGMPQjE64; retrieval: RETRIEVAL #14 session_013mwNsG3YAtaUow5u9nrCBL; calculations: CALCULATIONS #4 session_01JLKQ4KM6RQvEVRSy8fPJcz; hypotheses: HYPOTHESES #4 session_011Q6j1JLW7wPn81YSfaL2Qx; citation: CITATION #9 session_01WS6wZwoZkEzr9PB9xGHcPS; skills: SKILLS #15 session_011dND59updNJT3EV6X813vM; answers: ANSWERS #4 session_01NcqCSLewdSY9g7i4K6H25W; agent-worker: AGENT-WORKER #12 session_01Hh9JHb6PPhQvB7xFQFNXPb
 
 **Sources** · `next.md` N706–N747; `current.md` (T35): its "Left out of T35" table, accepted reds 2, 3, 21, 25, 32, "Modules for the virus package (BOB's, decided K2008)", "Shares named for later STARTs", "P6 notes"; `plan/draft-T36-virus-requirements.md` rev. 2 (with K1946, K1949 folded); `modules.json` (order, layers) with L11's split rows from `plan/draft-T35-split-reqs/modules.json.at-L11` (op-grades, answer-envelope, store-door), in force by T36; rulings K1913, K1922, K1924, K1928, K1929, K1936, K1939, K1941, K1946, K1949, K1954, K1955, K1957, K1961, K1972, K1973, K1977, K1983, K1988, K1991, K1993, K1995, K1996, K2002, K2004, K2005, K2007, K2008, K2009, K2015, K2021, K2027, K2038, K2062, K2063 (the questions settled, below). PROCESS-MECHANICS §5.2; PROCESS-DESIGN P10, P19.
 
@@ -113,11 +113,13 @@ Each line is one job (P8): every T36 entry for that module. Fields: module · (N
 ### L8
 
 - **T36-25 · case-grammar** · (N717, its share) a `criteria` kind for offline checking; R13's `archive` and `container` kinds (CASE-CARRIAGE #3); the case document states each member finding's `subject_entity` (in its `case_roles:` or `case_conclusions:` row), so case-checker R21's per-body narrowing (K2002) applies · K1941, K2002, K2004 · req: R13 and new Rs, BOB's wording · depends —.
-- **T36-26 · publication** · (F1's tail, rule 7 (b) met: 0.81.0 deployed before L8, K2111) the query form of a credential refused by name, `CREDENTIAL_IN_ADDRESS` (R73). (N597, its part) drops the `caseRelation` delegate (affordances re-pointed to case-tensions in T35-66) · K1643 · req: none (Uses re-worded) · depends —. **P6:** 3,716 after T35-54 (K2011); this lowers it.
-- **T36-27 · public-read** · (N717, its share) carries case-grammar's `archive` and `container` kinds in the case file · K2004 · req: BOB's wording · depends T36-25.
+- **T36-26 · publication** · (F1's tail, rule 7 (b) met: 0.81.0 deployed before L8, K2111) the query form of a credential refused by name, `CREDENTIAL_IN_ADDRESS` (R73). (N597, its part) drops the `caseRelation` delegate (affordances re-pointed to case-tensions in T35-66). (N717, its share; K2129) R75 `criteriaFor`, the criteria R72 would record, for case-authoring's pre-flight · K1643, K2129 · req: R73 re-worded, R61, R75 (K2129) · depends —. **P6:** 3,716 after T35-54 (K2011); this lowers it.
+- **T36-27 · public-read** · (N717, its share) carries case-grammar's `archive` and `container` kinds in the case file, and the edition's `criteria` file (K2129) · K2004, K2129 · req: R32, R33 (K2129) · depends T36-25.
 - **T36-28 · case-authoring** · (N717, its share) its pre-flight calls case-checker R21 (`checkStandardsUse`); it writes each member finding's `subject_entity` into the case document, so a benchmark beside another body's binding row no longer lets "violated" pass (CASE-CHECKER #6 J2) · K1941, K2002, K2004 · req: BOB's wording · depends T36-25; edge case-authoring uses case-checker (rule 4).
 
-**L8 merge order:** case-grammar → publication → public-read → case-authoring.
+- **T36-51 · case-checker** · (N717, its share; K2129) R14's specification gains `bio-case-file/2`; R22 runs R21 offline over a carried `criteria` file (checks needing `captures` stated unjudged); `program.mjs` regenerated at the close · K2002, K2129 · req: R14, R22 (K2129) · depends T36-25.
+
+**L8 merge order:** `modules.json` order: case-grammar → publication → public-read → case-checker → case-authoring.
 
 ### L9
 
@@ -126,7 +128,7 @@ Each line is one job (P8): every T36 entry for that module. Fields: module · (N
 ### L10
 
 - **T36-44 · following** · (N741) R21's `policyChanges` gains `since` (an instant), so notice-producers R13 reads its 90-day window without the 1,000-change bound cutting the newest · K2038 · req: R21, BOB's wording · depends —.
-- **T36-29 · scheduler** · (N707, its share; rev. 2 §4) the wakes of `file-safety`'s `scanBatch` (daily), `renderBatch`, `deeperBatch` (every few minutes while checks are queued or running) and `forwardSecurityCounts` (hourly), and of the reputation list refresh (`file-scanner` R26, through `file-safety`) · K1913, K1929 · req: new Rs, BOB's wording · depends T36-11 (L3).
+- **T36-29 · scheduler** · (N707, its share; rev. 2 §4) the wakes of `file-safety`'s `scanBatch` (daily), `renderBatch`, `deeperBatch` (every few minutes while checks are queued or running) and `forwardSecurityCounts` (hourly), and of the reputation list refresh (`file-scanner` R26, through `file-safety`) (K2129) option B: the two intervals carried in R24 until `file-safety` offers its own due and wake (N762); the reputation list refresh left out (no `file-safety` service; N762) · K1913, K1929, K2129 · req: R24 (K2129) · depends T36-11 (L3).
 
 **L10 merge order:** following → scheduler.
 
@@ -206,7 +208,7 @@ Near or over about 4,000 if the jobs add as planned: **membership** 3,966 (names
 
 ## Summary
 
-**Jobs per layer:** L1 6, L2 3, L3 5, L4 2, L5 7, L6 5, L7 0, L8 4, L9 1, L10 2, L11 15. **Total 50** (51 if T36-50 joins under rule 7 (a)).
+**Jobs per layer:** L1 6, L2 3, L3 5, L4 2, L5 7, L6 5, L7 0, L8 5, L9 1, L10 2, L11 15. **Total 51** (T36-51 joined L8, K2129; T36-50 not joined, rule 7 (a)).
 
 ## Settled (K2063; BOB's, P17; none was Bob's)
 
