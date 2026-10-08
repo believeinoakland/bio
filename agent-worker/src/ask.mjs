@@ -10,7 +10,7 @@
  *
  *   1. asks the plane whether the member is over their use ceiling (`op=askceiling`, ai-runs R50), before any model
  *      call, relaying a refusal unchanged (R43);
- *   2. reads the pack the ask is instructed by (`op=affordances`, R48), whose `ask` layer carries the closed-book rule;
+ *   2. reads the pack the ask is instructed by (`op=agentpack`, R48), whose `ask` layer carries the closed-book rule;
  *   3. INTERPRETS and READS: one conversation in which the model reads the question (asking at most one clarifying
  *      question, answers R3) and writes its queries, reading the record only through the grant and only the ops of
  *      `ASK_OPS` (R55) — a tool call naming any other op is refused here, before any plane call, and the refusal is
@@ -174,10 +174,10 @@ export async function handleAsk(req, env, deps) {
   if (planeAnswer(ceiling, "askceiling").refused) return relayed(ceiling, "askceiling");
 
   /* (2) THE PACK (R48): its `ask` layer instructs the ask. A pack the plane did not publish whole is not used. */
-  const pub = await call("affordances");
+  const pub = await call("agentpack");
   if (!pub.reached) return silentNow(pub);
-  const pubAnswer = planeAnswer(pub, "affordances");
-  if (pubAnswer.refused) return relayed(pub, "affordances");
+  const pubAnswer = planeAnswer(pub, "agentpack");
+  if (pubAnswer.refused) return relayed(pub, "agentpack");
   const pack = publishedPack(pubAnswer.result);
   if (!pack.ok)
     return refusal("PACK_UNDETERMINED",

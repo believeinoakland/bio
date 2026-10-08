@@ -16,7 +16,7 @@
  *
  * Three drives cover every row that calls the plane: a SUPPLIED check-mode run (an internet target, reports with a
  * citation and an absence, a refused candidate adjusted and resent), a MODEL run (R40, R41, R48: the pack read from
- * `op=affordances`, four sub-sessions reading through `meaningrows`), and a PLAN run (R50–R53: mode `plan` deployed in
+ * `op=agentpack`, four sub-sessions reading through `meaningrows`), and a PLAN run (R50–R53: mode `plan` deployed in
  * THIS PROCESS ONLY, by the edit R42 names, and restored) — plus the refusals before any plane call and the two other
  * routes. NOT a `.test.mjs`: an instrument the suites share, not a suite. */
 import worker from "../src/index.mjs";
@@ -75,7 +75,11 @@ function planeStub(rec, cfg) {
       case "airunlog": return ok({ run: u.searchParams.get("run"), found: true, entries: [], limit: 200, truncated: false });
       case "airunspawn": return ok({ found: true, half: "search", payload: { run: u.searchParams.get("run"),
         context: { type: "inquiry", id: "INQ-421" }, mode: cfg.mode, skill: PACK_VERSION, standard_pair: null } });
-      case "affordances": return ok({ pack: PACK });
+      /* R48 (T36; N695): the pack and its fences, served apart from `affordances` (control-plane R41). */
+      case "agentpack":
+        /* at the envelope's top level, as the real door answers it (control-plane R41), not inside `result` */
+        return Response.json({ ok: true, fences: [], ...(cfg.noPack ? { pack: null, pack_absent: "renderPack: no fences published" }
+                                                                     : { pack: cfg.pack ?? PACK }), store: "scratch", tokenClass: "ai" });
       case "meaningrows": return ok({ ok: true, arm: String(u.searchParams.get("rows") || "").trim().toLowerCase(),
                                       rows: [], count: 0 });
       case "basisversions": return ok({ id: u.searchParams.get("id"), versions: [], limit: 50, truncated: false });
@@ -113,6 +117,9 @@ function planeStub(rec, cfg) {
                                    withheld: cfg.withheld || [] });
       case "askusage": return ok({ ok: true, counted: true });
       default:
+        /* A plane from before T36-37, whose untargeted `affordances` still carries a pack: answered only when a drive
+           asks for it, so a member that read it there would be seen reading it. */
+        if (cfg.affordancesPack && op === "affordances") return ok({ fences: [], pack: cfg.pack ?? PACK });
         if (cfg.ask && ASK_OPS.includes(op)) return ok({ op, rows: [] }); return Response.json({ ok: false, error: "unknown op: " + op }, { status: 400 });
     }
   };
@@ -140,6 +147,13 @@ function envFor(rec, cfg, vars = {}) {
 export const SUBSESSION_LIMIT = 5;
 function modelAnswer(body) {
   const names = (body.tools || []).map((x) => x.name);
+  /* R59: a draft: one read through its grant when it was offered the read tool, then the draft. */
+  if (names.includes("draft")) {
+    const read = body.messages.some((m) => Array.isArray(m.content) && m.content.some((b) => b.type === "tool_result"));
+    if (names.includes("read") && !read)
+      return { content: [{ type: "tool_use", id: "d0", name: "read", input: { op: "search", args: { q: "minutes" } } }] };
+    return { content: [{ type: "tool_use", id: "d1", name: "draft", input: { text: "a labelled draft" } }] };
+  }
   /* R54: the ask's two conversations. Reading: a read outside ASK_OPS (refused here, R55), one inside, then done. */
   if (names.includes("done_reading")) {
     const results = body.messages.filter((m) => Array.isArray(m.content) && m.content.some((b) => b.type === "tool_result")).length;
@@ -185,6 +199,14 @@ async function ask(rec, cfg, path, init, vars) {
 const post = (body) => ({ method: "POST", body: typeof body === "string" ? body : JSON.stringify(withAccount(body)) });
 const postAsIs = (body) => ({ method: "POST", body: JSON.stringify(body) });
 export const GRANT = "aig-inprocess-grant-never-echoed";
+
+/** One drive on its own, recorded: `cfg` configures the plane stub (`noPack`, `affordancesPack`, `pack`, `ask`, …), and
+ *  `body` is posted to `path` as it is given. */
+export async function driveOne(cfg, path, body, vars) {
+  const rec = recorder();
+  await withGlobalFetch(rec, () => ask(rec, cfg, path, postAsIs(body), vars));
+  return rec;
+}
 
 /** THE DRIVES, each recorded on its own and together. `drives` maps a name to its recording. */
 export async function driveMember() {

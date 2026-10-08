@@ -84,7 +84,8 @@ function plane(cfg = {}) {
       case "airunlog": return ok({ found: true, entries: [{ seq: 1, detail: doc }], truncated: false });
       case "airunspawn": return ok({ found: true, half: "search", payload: { run: u.searchParams.get("run"),
         context: { type: "inquiry", id: "INQ-T35" }, mode: cfg.mode ?? "check", skill: PACK.version, standard_pair: null } });
-      case "affordances": return ok(cfg.noPack ? { pack: null, pack_absent: "no fences" } : { pack: cfg.pack ?? PACK });
+      /* control-plane R41: the door answers `agentpack` at the envelope's top level */
+      case "agentpack": return Response.json({ ok: true, fences: [], ...(cfg.noPack ? { pack: null, pack_absent: "no fences" } : { pack: cfg.pack ?? PACK }), store: "scratch", tokenClass: "ai" });
       case "meaningrows": return ok({ ok: true, arm: "leg", rows: [{ id: "row-1", text: doc, ...extra }], count: 1 });
       case "basisversions": return ok({ versions: [{ name: `held ${SENT}` }] });
       case "search": return ok({ hits: [{ bundle_id: "bundle:cited", title: doc, source_locator: "https://example.org/cal", ...extra }] });
@@ -322,9 +323,9 @@ section("R59 · the pack: read as R48 reads it, the writing-help layer, and none
   t("R59: with no pack published, 502 PACK_UNDETERMINED and no model call",
     [noneAtAll.status, noneAtAll.out?.code, noneAtAll.model.length], [502, "PACK_UNDETERMINED", 0]);
   const planeNone = await drive("draft", draftBody({ pack: undefined, grant: GRANT, account: ON }), { planeCfg: { noPack: true } });
-  t("R59: with a grant, the pack is the plane's op=affordances answer under it; none published, 502 PACK_UNDETERMINED, no model call",
+  t("R59: with a grant, the pack is the plane's op=agentpack answer under it; none published, 502 PACK_UNDETERMINED, no model call",
     [planeNone.status, planeNone.out?.code, planeNone.plane.map((c) => c.op), planeNone.model.length],
-    [502, "PACK_UNDETERMINED", ["affordances"], 0]);
+    [502, "PACK_UNDETERMINED", ["agentpack"], 0]);
   const { writing_help: _w, ...withoutLayer } = PACK.disclosed;
   const noLayer = await drive("draft", draftBody({ pack: { ...PACK, disclosed: withoutLayer } }));
   t("R59: a pack with no writing_help layer is not used: 502 PACK_UNDETERMINED, no model call",
@@ -371,15 +372,15 @@ section("R59 · a draft with a grant: reads only through it, only ASK_SCOPE, and
   const r = await drive("draft", draftBody({ grant: GRANT, account: ON, pack: undefined }));
   t("R59: with a grant the model is offered the read tool beside the draft", r.model[0].body.tools.map((x) => x.name), ["read", "draft"]);
   t("R59: the read tool reads only answers' ASK_SCOPE (R55's list)", r.model[0].body.tools[0].input_schema.properties.op.enum, [...ASK_OPS]);
-  t("R59: the pack and the read went to the plane, nothing else", r.plane.map((c) => c.op), ["affordances", "search"]);
+  t("R59: the pack and the read went to the plane, nothing else", r.plane.map((c) => c.op), ["agentpack", "search"]);
   t("R59: what was read reached the model as the read tool's result", toolResultText(r.model[1]).includes(SENT), true);
   const refused = await drive("draft", draftBody({ grant: GRANT, account: ON, pack: undefined }),
     { model: { draftRead: { op: "sources", args: {} } } });
   const res = refused.model[1].body.messages.flatMap((m) => (Array.isArray(m.content) ? m.content : [])).find((b) => b.type === "tool_result");
   t("R59 (R55): a read naming an op outside ASK_SCOPE is refused here, before any plane call, as the tool's result",
-    [refused.plane.map((c) => c.op), res?.is_error, /ASK_OP_REFUSED/.test(String(res?.content))], [["affordances"], true, true]);
+    [refused.plane.map((c) => c.op), res?.is_error, /ASK_OP_REFUSED/.test(String(res?.content))], [["agentpack"], true, true]);
   t("R59: a draft makes no write op, capture request or run row",
-    [r, refused].flatMap((x) => x.plane.map((c) => c.op)).filter((o) => o !== "affordances" && !ASK_OPS.includes(o)), []);
+    [r, refused].flatMap((x) => x.plane.map((c) => c.op)).filter((o) => o !== "agentpack" && !ASK_OPS.includes(o)), []);
 }
 
 section("R59 · a conversation that ends without a draft answers {ok: false, code, detail} naming the ending");
@@ -501,7 +502,7 @@ section("R62 · the injected-document fixtures: a document's instruction makes n
     t(`R62 (${kind}): an ask's only counted call is its usage report, never a record write`,
       askOps.filter((o) => (o in PLANE_OPS && PLANE_OPS[o].mutating) || o === "capturerequest"), []);
     t(`R62 (${kind}): a draft calls no write op at all: only the pack and ASK_OPS reads (R59)`,
-      draftOps.filter((o) => o !== "affordances" && !ASK_OPS.includes(o)), []);
+      draftOps.filter((o) => o !== "agentpack" && !ASK_OPS.includes(o)), []);
     t(`R62 (${kind}): no secret in the ask's or the draft's answer, or any call they made`,
       SECRETS.filter((s) => [ask, draft].some((r) => r.text.includes(s) || r.plane.some((c) => c.rawBody.includes(s) || c.url.includes(s)))), []);
     if (kind === "reveal")

@@ -123,7 +123,7 @@ const t = (label, got, want) => {
 };
 
 /* R37, R53: the op declaration this member exports, pinned here floor and ceiling (N402: never parsed from the plane). */
-const PINNED_READS = ["affordances", "airun", "airunlog", "airunspawn", "availableactions", "basisversions",
+const PINNED_READS = ["agentpack", "airun", "airunlog", "airunspawn", "availableactions", "basisversions",
   "consequencesof", "determination", "meaningrows", "plan", "plans", "profiles", "publishededitions", "search",
   "standard", "versionchain", "whoami"];
 const PINNED_WRITES = ["airunclose", "airuntick", "capturerequest", "optionpropose", "suggest"];
@@ -567,7 +567,8 @@ console.log("\n--- A9 · query-never-load: the ops are PINNED, and every one is 
      the member two READS, `search` and `versionchain` — the `collect` row resolves each citation to its document
      through the record's own version chain (INVESTIGATIVE-SESSION.md §3, consumer (3)), so a document is counted
      ONCE with its versions. Both are non-mutating in the plane's table, which the two arms above hold. */
-  /* R48 added the thirteenth: `affordances`, what the plane publishes, which carries the rendered skill pack.
+  /* R48 added the thirteenth: `affordances`, what the plane publishes, which carried the rendered skill pack; since
+     T36 (N695) it is `agentpack`, the pack and its fences served apart, and `affordances` is no op of this member.
      R53 (K660) adds mode `plan`'s: `plan`, `plans`, its reads (R51) and the write `optionpropose`. */
   t("R37, R53: the pinned op set is exactly the reads and the writes, nothing else",
     Object.keys(PLANE_OPS).sort(), [...PINNED_READS, ...PINNED_WRITES].sort());

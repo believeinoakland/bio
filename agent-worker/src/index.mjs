@@ -177,10 +177,11 @@ import {
   subsessionTools,
 } from "../../agent-model/src/model.mjs";
 
-/* R48 — THE PACK A RUN'S MODEL IS INSTRUCTED BY is the one the plane renders and publishes on its untargeted
- * `op=affordances` answer (`pack`, control-plane R41: `skills.renderPack` over the composed machine fences). This
- * member renders nothing and imports neither the check catalogue nor `skills`' code (N157, §1a), so its bundle carries
- * what it runs; it holds the pack's version to the one the run recorded. */
+/* R48 — THE PACK A RUN'S MODEL IS INSTRUCTED BY is the one the plane renders and serves apart on `op=agentpack`
+ * (`pack`, control-plane R41: `skills.renderPack` over the composed machine fences), never read from the untargeted
+ * `op=affordances` answer (N695). A run, an ask and a draft all read it there. This member renders nothing and
+ * imports neither the check catalogue nor `skills`' code (N157, §1a), so its bundle carries what it runs; it holds the
+ * pack's version to the one the run recorded. */
 
 /* ------------------------------------------------------ THE SEGMENT BOUND
  *
@@ -399,7 +400,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
   /* R48 — THE PACK, AS THE PLANE PUBLISHED IT, HELD TO THE RUN'S RECORD, BEFORE ANY TURN. Only when model turns run:
      until then the pack instructs nothing and this changes nothing. */
   if (model) {
-    const pub = planeAnswer(await call("affordances"), "affordances");
+    const pub = planeAnswer(await call("agentpack"), "agentpack");
     if (pub.silent) return { refusal: planeSilent(pub.silent) };
     if (pub.refused)
       return { refusal: planeRefused(runId, store, { status: 403, body: pub.refused.plane ?? null }) };
@@ -799,7 +800,7 @@ function planeAnswer(asked, at) {
   return { at, result: inner ?? envelope };
 }
 
-/** R48 — the pack on the plane's untargeted `op=affordances` answer (control-plane R41): `{ok, pack}` when it carries
+/** R48 — the pack on the plane's `op=agentpack` answer (control-plane R41): `{ok, pack}` when it carries
  *  one with a version, a resident layer and a disclosed map; otherwise `{ok: false, why}`, naming the plane's own
  *  `pack_absent` when it gave one. A partial pack is never used: its version is undetermined. */
 function publishedPack(answer) {
