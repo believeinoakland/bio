@@ -89,7 +89,12 @@ I wait for op-declarations', admission's and store-door's merges, then merge the
 - `checks/ownership.mjs` control-plane `tranche/T36`: 0 failures.
 - P6: 3,102 lines (+77).
 
-Size (session_014Cxwr3sUfHWE5sRvShuypv): test runs 16, module lines 3102
+
+**B4 (op-declarations merged, K2165):** the tranche branch is merged again (aec90d5cc6) and the suite re-run: 174 pass, 4 fail. The four failures are the admission-dependent R59 arms: `t35-door`'s two tests, `t36-door`'s R59/R28 test, and `converts`' address arm (red 26). Two fixes came out of the re-run:
+- **The door's rule for a byte answer was too loose.** A byte answer is now one at 200/206 carrying its owner's digest header (`x-capture-sha256` or `x-derived-sha256`), not one whose content type is not JSON. A file's own type may be JSON or text, and the envelope sweep (`envelope.test.mjs` R21) found a JSON answer that carried no content type relayed raw.
+- **My tests predicted who each op admits.** They now take admission's answer and require every op to reach its route for some caller.
+
+Size (session_014Cxwr3sUfHWE5sRvShuypv): test runs 19, module lines 3103
 
 ## J3 · COMPLETE
 

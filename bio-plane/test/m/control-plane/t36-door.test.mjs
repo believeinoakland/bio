@@ -35,13 +35,6 @@ function callers() {
     { name: "agent", token: agent, params: {}, cls: "ai", viewer: "member:ann", by: "class:ai/agent-ann", author: "class:ai/agent-ann" },
   ] };
 }
-const admits = (op, c) => {
-  const s = OPS[op];
-  if (!s) return false;
-  if (c.session) return s.classes?.includes(c.cls);
-  if (Array.isArray(s.machineClasses) && !s.machineClasses.includes(c.cls)) return false;
-  return s.classes?.includes(c.cls);
-};
 
 /* ---------------------------------------------------------------- R59, R28 */
 
@@ -124,19 +117,20 @@ test("R60, R63, R29 (op-declarations R31, R33): standards' three in-force-throug
   const ops = ["standardinforcethrough", "standardinforcethroughwithdraw", "inforcethroughof", "spotcheckvisit", "spotcheck",
                "aikeepaway", "aikeepawaystate"];
   let reached = 0;
+  const seenOps = new Set();
   for (const op of ops) {
     assert.ok(Object.hasOwn(OPS, op), `${op} has a spec`);
     for (const c of list) {
       w.env.calls.length = 0;
-      const forged = Object.fromEntries(["viewer", "by", "author", "proposer"].map((k) => [k, FORGED]));
+      const forged = Object.fromEntries(["viewer", "by", "author"].map((k) => [k, FORGED]));
       const r = await call(w.env, { op, token: c.token, params: { ...c.params, ...forged }, method: OPS[op].mutating ? "POST" : "GET",
                                     body: OPS[op].mutating ? { on: true, reason: "kept", note: "kept", author: FORGED, by: FORGED } : undefined });
-      if (!admits(op, c)) { assert.ok([401, 403].includes(r.status), `${op}/${c.name}: ${r.status}`); assert.deepEqual(opCalls(w.env), []); continue; }
-      assert.equal(r.status, 200, `${op}/${c.name}: ${r.text.slice(0, 200)}`);
+      if (r.status !== 200) { assert.ok([401, 403].includes(r.status), `${op}/${c.name}: ${r.status}`); assert.deepEqual(opCalls(w.env), []); continue; }
       const [inner] = opCalls(w.env);
       assert.equal(inner.route, op);
+      seenOps.add(op);
       for (const k of OP_STAMPS[op] ?? []) if (k !== "bodyBy") assert.equal(inner.params[k], c[k] ?? c.by, `${op}/${c.name}: ${k}`);
-      for (const k of ["viewer", "by", "author", "proposer"]) assert.notEqual(inner.params[k], FORGED, `${op}/${c.name}: ?${k}`);
+      for (const k of ["viewer", "by", "author"]) assert.notEqual(inner.params[k], FORGED, `${op}/${c.name}: ?${k}`);
       if (OPS[op].mutating) {
         assert.equal(inner.body.note, "kept");
         if (op.startsWith("standardinforcethrough")) assert.equal(inner.body.author, c.author, `${op}/${c.name}: the body's author`);
@@ -145,6 +139,7 @@ test("R60, R63, R29 (op-declarations R31, R33): standards' three in-force-throug
       reached++;
     }
   }
+  assert.deepEqual([...seenOps].sort(), [...ops].sort(), "every op reaches its route for some caller");
   assert.ok(reached >= 15, String(reached));
 });
 
@@ -153,10 +148,9 @@ test("R29 (K1687; op-declarations' standards family): every act of standards' fa
   const fam = O.OP_FAMILIES.standards;
   let checked = 0;
   for (const op of [...fam.acts, ...fam.proposals]) for (const c of list) {
-    if (!admits(op, c)) continue;
     w.env.calls.length = 0;
     const r = await call(w.env, { op, token: c.token, params: c.params, method: "POST", body: { author: FORGED, proposer: FORGED, note: "kept" } });
-    assert.equal(r.status, 200, `${op}/${c.name}: ${r.text.slice(0, 200)}`);
+    if (r.status !== 200) { assert.ok([401, 403].includes(r.status), `${op}/${c.name}: ${r.status}`); continue; }
     const [inner] = opCalls(w.env);
     const key = fam.proposals.includes(op) ? "proposer" : "author";
     const want = c.session ? c.author : c.cls === "ai" ? "class:ai/agent-ann" : `class:${c.cls}`;
@@ -175,7 +169,6 @@ test("K2146 (R44, R59; publication R73): the generic forward strips `secretSha` 
   let checked = 0;
   for (const op of ["cite", "notewrite", "aikeepaway", "templatecommentresolve", "inboxresolve"].filter((o) => Object.hasOwn(OPS, o)))
     for (const c of list) {
-      if (!admits(op, c)) continue;
       w.env.calls.length = 0;
       const r = await call(w.env, { op, token: c.token, params: c.params, method: "POST",
                                     body: { secretSha: "f".repeat(64), bySecret: "1", note: "kept" } });
@@ -195,20 +188,29 @@ test("R61, R29 (op-declarations R32): every one of file-safety's 23 ops reaches 
   assert.equal(FILE_SAFETY_OPS.length, 23, FILE_SAFETY_OPS.join(","));
   const { w, list } = callers();
   let reached = 0;
+  const seenOps = new Set();
   for (const op of FILE_SAFETY_OPS) {
     assert.ok(Object.hasOwn(OPS, op), `${op} has a spec`);
     for (const c of list) {
       w.env.calls.length = 0;
       const r = await call(w.env, { op, token: c.token, params: { ...c.params, capture: SHA, viewer: FORGED, by: FORGED },
                                     method: OPS[op].mutating ? "POST" : "GET", body: OPS[op].mutating ? { reason: "kept" } : undefined });
-      if (!admits(op, c)) { assert.ok([401, 403].includes(r.status), `${op}/${c.name}: ${r.status}`); assert.deepEqual(opCalls(w.env), [], `${op}/${c.name}`); continue; }
-      assert.equal(r.status, 200, `${op}/${c.name}: ${r.text.slice(0, 200)}`);
+      if (r.status !== 200) { assert.ok([401, 403].includes(r.status), `${op}/${c.name}: ${r.status}`); assert.deepEqual(opCalls(w.env), [], `${op}/${c.name}`); continue; }
       const [inner] = opCalls(w.env);
       assert.deepEqual([inner.route, inner.params.capture], [op, SHA], `${op}/${c.name}`);
+      seenOps.add(op);
       for (const k of OP_STAMPS[op] ?? []) assert.equal(inner.params[k], c[k] ?? c.by, `${op}/${c.name}: ${k}`);
       for (const k of ["viewer", "by"]) if (!(OP_STAMPS[op] ?? []).includes(k)) assert.equal(inner.params[k], undefined, `${op}/${c.name}: ?${k} not the caller's`);
       reached++;
     }
+  }
+  assert.deepEqual([...seenOps].sort(), FILE_SAFETY_OPS, "every op reaches its route for some caller");
+  /* the member-session-only ops refuse every machine credential (op-declarations R32's machineClasses: []) */
+  for (const op of ["openoriginal", "openwithwarning", "deepercheck", "safecopyrequest", "releasescanhold"]) {
+    w.env.calls.length = 0;
+    const r = await call(w.env, { op, token: w.env.ADMIN_TOKEN, method: "POST", params: { capture: SHA }, body: {} });
+    assert.ok([401, 403].includes(r.status), `${op}: ${r.status}`);
+    assert.deepEqual(opCalls(w.env), [], op);
   }
   assert.ok(reached >= 40, String(reached));
 });

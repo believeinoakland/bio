@@ -462,14 +462,15 @@ const BODY_ACTOR = Object.freeze(Object.fromEntries(Object.values(OP_FAMILIES).f
 ])));
 const BODY_ACTOR_KEYS = Object.freeze([...new Set(Object.values(BODY_ACTOR))]);
 
-/* R61, R62: A BYTE ANSWER, AS ITS OWNER GAVE IT. A served file (any answer that is not JSON, at 200 or 206) is relayed whole
+/* R61, R62: A BYTE ANSWER, AS ITS OWNER GAVE IT. A served file (an answer at 200 or 206 carrying its owner's digest header,
+   which no JSON answer carries; a file's own content type may be anything, JSON or text included) is relayed whole
    — its bytes, content type, length and digest header (`x-capture-sha256` for an original, `x-derived-sha256` for a view
    or copy) — with `cache-control: no-store`, and `access-control-allow-origin: *` as `op=capture`'s GET carries it; a JSON
    answer is read through `doAnswer` and enveloped as any answer of the forward (a refusal the owner's, answered as given;
    a silence a silence). Nothing of it is logged, kept or counted here beyond what every answer meets (file-safety R10). */
 async function byteAnswer(res, op, extra) {
-  const type = res.headers.get("content-type") || "";
-  if ((res.status === 200 || res.status === 206) && !/application\/json/i.test(type)) {
+  const file = res.headers.has("x-capture-sha256") || res.headers.has("x-derived-sha256");
+  if ((res.status === 200 || res.status === 206) && file) {
     const headers = new Headers(res.headers);
     headers.set("cache-control", "no-store");
     if (!headers.has("access-control-allow-origin")) headers.set("access-control-allow-origin", "*");
