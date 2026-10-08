@@ -1,6 +1,6 @@
 # bundler (T37)
 
-**Status** · session_01XAuQvFSnT4Qjvv3ReZ1VHj · depth 2 · COMPLETE · handled B0
+**Status** · session_01XAuQvFSnT4Qjvv3ReZ1VHj · depth 2 · COMPLETE · handled B3
 
 ## Completion
 
@@ -42,3 +42,18 @@ Installer tests: none turns red or green (they make their releases in the test; 
 
 Tests: bundler module 91/0; fleetbundles 129/0, no SKIP; deploybindings 37/0; resolveversion 12/0; bundle exit 0; newgroup-bundle-fresh 4/0; `bundles.mjs --check` all fresh. Checks: format, architecture, coverage (30/30), ownership: 0 failures.
 Real `release-assemble.mjs --dry-run` still stops at agent-runner's missing `image.digest` (T33-D1), as before; not this job's.
+
+## Completion after B2, B3 (CHANGE; K2176, K2177)
+
+- Merged `tranche/T37` (with FILE-SCANNER #2, K2177) into the branch.
+- (N773) `system/fleetbundles.test.mjs`:124 re-pointed: file-scanner's images are `docker.io/civicos/file-scanner-scanner` and `docker.io/civicos/file-scanner-renderer` (its R10). The assertion passes. `newgroup`'s ghcr refusal case is left as it is.
+- `node bio-plane/test/system/fleetbundles.test.mjs` on the merged tree → 125 pass, 4 fail. All four are the plane bundle's staleness (sources changed by the tranche's L1 merges: `../file-scanner/src/providers/*.mjs`, `src/docx.mjs`, `src/record-grammar/labels.mjs`): the D-298 arm, byte identity, the manifest's sha256 and the comment-only probe. That is BOB's at the layer close (B3). No other red.
+- `node --test bio-plane/test/m/bundler/*.test.mjs` → 91 pass, 0 fail. `format`, `architecture … bundler`, `coverage … bundler` (30 of 30): 0 failures; `ownership … bundler tranche/T37`: re-run after this commit.
+
+Size (session_01XAuQvFSnT4Qjvv3ReZ1VHj): test runs 14, module lines 8076
+
+## J2 · COMPLETE
+
+B2, B3 done (record: "Completion after B2, B3"). Tranche merged; `fleetbundles.test.mjs`:124 now names file-scanner's `docker.io/civicos/file-scanner-scanner` and `…-renderer`, and passes.
+
+fleetbundles on the merged tree: 125 pass, 4 fail, all four the plane bundle's staleness (the D-298 arm, byte identity, manifest sha256, comment-only probe; sources moved by L1 merges: file-scanner's `src/providers/*.mjs`, `src/docx.mjs`, `src/record-grammar/labels.mjs`). That is yours at the layer close, per B3. Bundler module 91/0; format, architecture, coverage (30/30), ownership: 0 failures.

@@ -114,14 +114,16 @@ console.log("\n--- 1 · every fleet member is DISCOVERED, and every one of them 
    image named by digest, not a Worker bundle — so it is discovered and listed here, and not bundle-guarded below. */
 /* T36-2 (BUNDLER #10; rev. 2 §2 R10): `file-scanner`, the fleet's second container member and its first with two
    classes (T36-5), is listed with each class's image: a two-class member answers its classes' repositories, in its
-   marker's order; a one-class member its one image, as before. */
+   marker's order; a one-class member its one image, as before.
+   RE-POINTED 2026-10-08 (BUNDLER #11, T37-3 B2; K2176, N773): file-scanner's images moved from `ghcr.io`, which
+   Containers cannot pull, to Docker Hub (file-scanner R10). */
 t("members discovered by their own marker file, never a list kept here",
   members.map((m) => m.name), ["agent-runner", "agent-worker", "file-scanner", "ocr-worker", "pdf-worker", "sheet-worker"]);
 t("agent-runner and file-scanner are listed as container members, each with its images (R24)",
   members.filter(isContainer).map((m) => [m.name, m.kind,
     ...(m.containers ? m.containers.map((c) => c.image.repository) : [m.image.repository])]),
   [["agent-runner", "container", "docker.io/civicos/agent-runner"],
-   ["file-scanner", "container", "ghcr.io/believeinoakland/file-scanner-scanner", "ghcr.io/believeinoakland/file-scanner-renderer"]]);
+   ["file-scanner", "container", "docker.io/civicos/file-scanner-scanner", "docker.io/civicos/file-scanner-renderer"]]);
 
 /* D-238. `git stash` is REPOSITORY-WIDE across every worktree and `push -u`
    carries untracked files, so a `pop` can deposit a whole fleet directory —
