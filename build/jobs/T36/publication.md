@@ -51,3 +51,7 @@ Nothing deferred. R30 stays as before (D-246, its own todo).
 3,717 lines before; **3,731 after** (+14: the delegate and the deprecation went, R75 and its comments came). Under about 4,000.
 
 Size (session_01CPZYbhuFESBkajW7tmoEjb): test runs 11, module lines 3731
+
+## J1 · REPORT
+
+Found in other modules (details in my record, 'Found in other modules'): (1) control-plane (T36-37, R59): its generic forward strips BODY_STAMPS (index.mjs:439) but not secretSha or bySecret; publication's store op now reads secretSha from the store request's body (R73), so stripping both from every forwarded caller body keeps a caller from ever supplying the digest. Defence in depth: no path forwards a caller body to the store's casedocument today. (2) plane (T36-49): body.test.mjs:25 and :34 expect the digest in the store address and the address form named deprecated; they re-pin to the body. (3) control-plane (T36-37): converts.test.mjs:108 re-pins (:130 reads the store address; :143-146 the address form). (4) Your START expected the t35-door.test.mjs address arms red: they stay green (they drive control-plane's own reviewcopy/templateread doors, not this door). The plane bundle carries publication/ and is regenerated at the layer close.
