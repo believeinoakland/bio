@@ -43,3 +43,21 @@ Size (session_01Djbnfgfma73t1Qd5xWboXx): test runs 7, module lines 3,543
 ## J2 · COMPLETE
 
 B2 done: tranche/T39 merged (case-grammar), suite re-run: 156/156 pass; format, architecture, coverage and ownership checks 0 failures. program.mjs untouched. Pushed. The merge after case-carriage is still owed on your word.
+
+## B3 (CHANGE): case-carriage merged
+
+Merged `tranche/T39` (case-carriage T39-10, K2377). The suite run against the real case-carriage had 20 failures, all from one cause. R13 now lapses a document carried whole that no receipt shows this copy fetched (`provenance` R62). Every test fixture document carried whole had no receipt, so each commit was refused (or the material was not carried). Code unchanged. Fixtures brought in line with R13, as `case-carriage`'s own fixture does:
+- `fixture.mjs`: `w.receipt(sha, via, locator)` through `provenance.recordReceipt`; `w.doc` gives its capture a `direct` receipt unless one already answers it fetched (so a later publication fixture that records one is not doubled).
+- `archives.test.mjs`: an outer archive gets a `direct` receipt; an inner archive and each member get an `unpacked` receipt naming their archive (`zip:<sha>!<index>`); the plain material gets a `direct` one.
+- `obscured.test.mjs`: the same for its archives and members. The member document in the T39 test keeps no receipt: it is a member's file, carried only as its copy.
+- `casefile.test.mjs`: the co-attestation test's document gets a `direct` receipt.
+
+No assertion was weakened; each test checks what it checked before.
+
+Re-run:
+- `node --test bio-plane/test/m/public-read/`: tests 156, pass 156, fail 0.
+- format: 0 failures. architecture: 0 failures. coverage: 33 of 33; 0 failures. ownership: 0 failures.
+
+**Found in another module (for BOB).** A member document carried whole and refused at the commit is answered `PHOTO_MARKS_CHANGED_SINCE` (C-122.6, "A mark changed after this case was prepared…"), listed under `photos` with why "a member's document travels only as its copy". The code and sentence speak of a photo's marks for a document, which has none. It is publication's commit refusal (or case-carriage's R13 answer it relays); its wording is UX's (C-122.7 `DOCUMENT_COPY_CHANGED_SINCE` may be the intended code once publication merges).
+
+Size (session_01Djbnfgfma73t1Qd5xWboXx): test runs 14, module lines 3,543

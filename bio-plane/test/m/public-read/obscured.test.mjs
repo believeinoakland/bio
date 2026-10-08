@@ -247,6 +247,8 @@ const unpacked = (container, s, file) => ({ file, locator: `https://example.org/
 function holdMember(w, id, text, container) {
   const path = `snapshots/zip-${container.archive_sha256}-${container.index}`;
   promote(w, id, [unpacked(container, sha(text), path)], [{ path, text }]);
+  /* (T39; `case-carriage` R13, K2377) cut from an archive this copy fetched (`provenance` R62) */
+  w.receipt(sha(text), "unpacked", `zip:${container.archive_sha256}!${container.index}`);
   return sha(text);
 }
 
@@ -261,6 +263,7 @@ test("R23 R32 an archive that holds a photo this edition carries as its copy is 
                 archiveSha, ARCH, "snapshots/archive.zip", zip.length, NOW);
   w.st.sql.exec(`INSERT INTO files (bundle_id, path, content, blob_sha, bytes, sha256) VALUES (?, ?, NULL, ?, ?, ?)`,
                 ARCH, "snapshots/archive.zip", archiveSha, zip.length, archiveSha);
+  w.receipt(archiveSha);   // (T39) fetched by this copy (`provenance` R62)
   env.PUBLISHED.m.set(`bio/published/${archiveSha}`, new Uint8Array(zip));
   const memberSha = holdMember(w, MEM, MEMBER_TEXT, containerOf(zip, 0, "minutes.txt", MEMBER_TEXT));
   const picSha = holdMember(w, PIC, PHOTO_TEXT, containerOf(zip, 1, "photo.jpg", PHOTO_TEXT));
@@ -306,6 +309,7 @@ test("R32 R23 the archive pool keeps only what this edition's commit held (K2223
                 archiveSha, ARCH, "snapshots/archive.zip", zip.length, NOW);
   w.st.sql.exec(`INSERT INTO files (bundle_id, path, content, blob_sha, bytes, sha256) VALUES (?, ?, NULL, ?, ?, ?)`,
                 ARCH, "snapshots/archive.zip", archiveSha, zip.length, archiveSha);
+  w.receipt(archiveSha);   // (T39) fetched by this copy (`provenance` R62)
   env.PUBLISHED.m.set(`bio/published/${archiveSha}`, new Uint8Array(zip));
   const memberSha = holdMember(w, MEM, MEMBER_TEXT, containerOf(zip, 0, "minutes.txt", MEMBER_TEXT));
   const picSha = holdMember(w, PIC, PHOTO_TEXT, containerOf(zip, 1, "photo.jpg", PHOTO_TEXT));
