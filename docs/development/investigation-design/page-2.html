@@ -1,0 +1,154 @@
+<title>Steps, Basis, Claims, Findings</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400&display=swap">
+<style>
+/* Same case-file column as the earlier pages: the chain drawn top to bottom as a ledger of linked entries, then what each part is, then the words, then what it means for steps */
+:root{
+  --bg:#f5f6f2; --fg:#1c2220; --muted:#5a6560; --rule:#d3d9d4; --panel:#e9ede8; --card:#fbfcfa;
+  --accent:#2f5d7c; --new:#8a5a12; --newbg:#f3e6cf; --built:#2e6b46; --builtbg:#d9ecdf;
+  --display:"Source Serif 4", Georgia, serif; --body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif; --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#141917;--fg:#e2e8e4;--muted:#9eaaa4;--rule:#2d3632;--panel:#1c2320;--card:#18201d;--accent:#8fbbd9;--new:#e8c07e;--newbg:#3a2d16;--built:#9bd8b2;--builtbg:#1d3a29;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141917;--fg:#e2e8e4;--muted:#9eaaa4;--rule:#2d3632;--panel:#1c2320;--card:#18201d;--accent:#8fbbd9;--new:#e8c07e;--newbg:#3a2d16;--built:#9bd8b2;--builtbg:#1d3a29;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:16px/1.6 var(--body)}
+main{max-width:50rem;margin:0 auto;padding-inline:16px;padding-block:36px 72px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.2;font-weight:600}
+h1{font-size:2.1rem;margin:0 0 .4rem}
+h2{font-size:1.4rem;margin:2.6rem 0 .6rem;padding-top:1.2rem;border-top:1px solid var(--rule)}
+p,li{max-width:68ch}
+.lede{font-size:1.08rem;color:var(--muted);margin:0 0 1.2rem}
+.state{background:var(--panel);border-radius:6px;padding:1rem 1.2rem;display:grid;gap:.5rem}
+.state p{margin:0}
+.state strong{font-family:var(--display)}
+/* the chain */
+.chain{display:grid;gap:0;margin:1.2rem 0}
+.row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,13rem);gap:.8rem;align-items:start}
+.node{background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:.55rem .8rem}
+.node b{font-family:var(--display);font-size:1.05rem}
+.node span{display:block;font-size:.88rem;color:var(--muted)}
+.node.gap{border:2px dashed var(--new);background:var(--newbg)}
+.node.gap b{color:var(--new)}
+.side{font-size:.85rem;color:var(--muted);border-left:2px solid var(--rule);padding-left:.6rem;align-self:center}
+.link{font:600 .78rem var(--mono);color:var(--accent);padding:.3rem 0 .3rem 1.4rem;position:relative}
+.link::before{content:"";position:absolute;left:.6rem;top:0;bottom:0;border-left:2px solid var(--accent)}
+.link::after{content:"";position:absolute;left:calc(.6rem - 4px);bottom:-1px;border:5px solid transparent;border-top-color:var(--accent);border-bottom:0}
+@media (max-width:560px){.row{grid-template-columns:minmax(0,1fr)}.side{border-left:0;padding-left:0}}
+.wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.93rem;min-width:34rem}
+th,td{text-align:left;vertical-align:top;padding:.5rem .6rem;border-bottom:1px solid var(--rule)}
+th{font:600 .74rem var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td:first-child{font-family:var(--display);font-weight:600;white-space:nowrap}
+.senses{display:grid;gap:.8rem}
+.sense{border:1px solid var(--rule);border-radius:6px;padding:.7rem 1rem}
+.sense h3{margin:0 0 .3rem;font-size:1.05rem}
+.sense ol{margin:0;padding-left:1.3rem;display:grid;gap:.15rem;font-size:.95rem}
+.point{border:1px solid var(--rule);border-radius:6px;padding:.8rem 1rem;margin:.7rem 0;display:grid;gap:.35rem}
+.point .id{font:600 .8rem var(--mono);color:var(--accent)}
+.point p{margin:0}
+.rec{font-weight:600}
+.ask{border:2px solid var(--accent);border-radius:8px;padding:1rem 1.2rem;margin-top:2.6rem}
+.ask h2{border:0;margin-top:0;padding-top:0}
+</style>
+<main>
+<h1>Steps, Basis, Claims, Findings</h1>
+<p class="lede">How the parts of an investigation relate in what is built today, where a step would fit, and the words that mean more than one thing. Drawn from the canon and the product's requirements, read in full.</p>
+
+<div class="state">
+<p><strong>The product already has a careful chain</strong> from a question to a published case: evidence links, alternative accounts, a claim, a conclusion, a finding, a case.</p>
+<p><strong>It has no step.</strong> Nothing holds the work an investigation does to get evidence: find a document, ask someone, file a request, visit a site. The only "steps" in the canon belong to the action plan, which decides what to do <em>about</em> a finding, after the investigation.</p>
+<p><strong>Several key words carry two to seven meanings</strong>, "basis" and "finding" most of all. Settling them is part of designing the plan.</p>
+</div>
+
+<h2>The chain, as built</h2>
+<p>Read top to bottom. The dashed box is the part that does not exist.</p>
+<div class="chain">
+<div class="row"><div class="node"><b>Project</b><span>The investigation. Holds its objective and its bar (the strength of evidence it requires).</span></div><div class="side">Owners and participants. Its stage is computed from its questions.</div></div>
+<div class="link">holds one objective, and draws on many questions</div>
+<div class="row"><div class="node"><b>Objective</b><span>What the project is trying to establish. Where it can be measured, its gaps are computed: "the gaps are the work list".</span></div><div class="side">Today only progress over declared flows is computable.</div></div>
+<div class="link">is pursued through</div>
+<div class="row"><div class="node"><b>Question</b><span>Open, set aside, concluded or divided. One question can serve several projects.</span></div><div class="side"><b>Hypotheses</b> (a member's possible explanations) hang here, never as evidence. A question also carries what would prompt a recheck, and dated waits.</div></div>
+<div class="link">is worked on by</div>
+<div class="row"><div class="node gap"><b>Step</b><span>Find a document, ask someone, file a records request, visit a site, watch. Not in the product.</span></div><div class="side"><b>Leads</b> (tips) and private notes sit beside this today, never as evidence.</div></div>
+<div class="link">which yields</div>
+<div class="row"><div class="node"><b>Documents and looks</b><span>Captured documents, each with a grade. A look records what was found, including "looked, absent".</span></div><div class="side">A refusal or silence is recorded too.</div></div>
+<div class="link">which a member links to the question as</div>
+<div class="row"><div class="node"><b>Legs</b><span>Each leg says this document (or another question) supports or cuts against the question. Only a member draws a leg.</span></div><div class="side">A leg never points at an action, a lead, a note or a hypothesis.</div></div>
+<div class="link">grouped into</div>
+<div class="row"><div class="node"><b>Basis</b><span>The question's legs. Members may keep several named versions of it, each a complete alternative account of the support.</span></div><div class="side">Strength is computed from the legs and shown beside the bar, never as one score.</div></div>
+<div class="link">each version carries a</div>
+<div class="row"><div class="node"><b>Claim</b><span>The statement that version supports. A claim is not an object of its own.</span></div><div class="side">Contradictions are pairs of claims or legs that cannot both hold.</div></div>
+<div class="link">which a project adopts by</div>
+<div class="row"><div class="node"><b>Conclusion</b><span>The project adopts the claim of the version it accepts, with what would show it wrong (the falsifier).</span></div><div class="side">A different project may conclude differently on the same question.</div></div>
+<div class="link">and the concluded question is a</div>
+<div class="row"><div class="node"><b>Finding</b><span>A question concluded, at a fixed version.</span></div><div class="side"></div></div>
+<div class="link">which the project publishes in a</div>
+<div class="row"><div class="node"><b>Case</b><span>Findings pinned by version, signed by an owner, against the project's bar.</span></div><div class="side">A determination (compliant or not, against a standard) rests on published findings.</div></div>
+<div class="link">which leads to</div>
+<div class="row"><div class="node"><b>Action plan → actions</b><span>What to do about it. An action is something sent outside the group: a records request, a complaint, a filing.</span></div><div class="side">Replies come back as documents, so the chain loops.</div></div>
+</div>
+
+<h2>Where work-to-do already attaches</h2>
+<div class="wrap"><table>
+<tr><th>part</th><th>what it says about work still to do</th></tr>
+<tr><td>Objective</td><td>Its gaps are computed and offered as proposals; a missing document "is a records request with the request already specified".</td></tr>
+<tr><td>Question</td><td>Every question must say what would prompt a recheck; dated waits say what is awaited, from whom, by when.</td></tr>
+<tr><td>Conclusion</td><td>The falsifier: what would show the claim wrong.</td></tr>
+<tr><td>Strength</td><td>Names the weakest leg and how to raise it.</td></tr>
+<tr><td>Action</td><td>Outward work with legal clocks: planned, active, awaiting a response, resolved.</td></tr>
+<tr><td>To-do</td><td>Work the system routes to a member (an unclear document, a check request). No member can create one.</td></tr>
+<tr><td>Your deferred "backward question"</td><td>"What else would have to be true for this to be credible?" Its answer is a work list. You deferred it (D-165).</td></tr>
+</table></div>
+
+<h2>Words with more than one meaning</h2>
+<div class="senses">
+<div class="sense"><h3>basis</h3><ol>
+<li>a question's legs (its evidence links)</li>
+<li>one named version of those legs, with its claim</li>
+<li>why a date is due: a law, a promise, another step, or the group's own choice</li>
+<li>what an action rests on</li>
+<li>what a machine proposal rests on</li>
+<li>a member's stated grounds for her own testimony</li>
+</ol></div>
+<div class="sense"><h3>finding</h3><ol>
+<li>a concluded question</li>
+<li>something the machine noticed, waiting for a member to take it up</li>
+<li>a check's result</li>
+<li>a recorded absence ("the negative result is a finding")</li>
+<li>a missing document in an expected sequence</li>
+</ol></div>
+<div class="sense"><h3>claim</h3><ol>
+<li>the statement on a basis version</li>
+<li>what a published case asserts</li>
+<li>a case's statement that its material is complete</li>
+<li>a legal claim</li>
+</ol></div>
+<div class="sense"><h3>plan and step</h3><ol>
+<li>the action plan and its steps (what to do about a finding)</li>
+<li>the "Plan" section inside one action</li>
+<li>"an action: a step someone takes"</li>
+<li>wizard steps, and progress steps on a bar</li>
+</ol></div>
+</div>
+
+<h2>What this suggests for the investigation's plan</h2>
+<p>These are my readings from the study, offered for you to react to, not yet questions to rule. Your wording of the plan comes first.</p>
+
+<div class="point"><span class="id">1 · a step is the investigation's own work</span>
+<p>A step is work the group does to get evidence or understanding. When a step goes outside the group (a records request, a request for comment), it starts an action, and "action" keeps its present meaning.</p></div>
+
+<div class="point"><span class="id">2 · a step serves a question</span>
+<p>Most steps serve a question. Some serve an objective's gap, testing a possible explanation, or settling a contradiction. A step that serves nothing has no place in the plan.</p></div>
+
+<div class="point"><span class="id">3 · a step's result is not yet evidence</span>
+<p>A step ends with a document held, a look recorded (including "looked, absent") or a reply. Turning that into a leg on a question stays a member's act, because a leg is what a member stands behind.</p></div>
+
+<div class="point"><span class="id">4 · one meaning each for "finding" and "basis"</span>
+<p>Members would read "finding" only as a concluded question, and "basis" only as what a question rests on. The other senses get other words, drawn by the design stream.</p></div>
+
+<div class="point"><span class="id">5 · the backward question</span>
+<p>"What else would have to be true?" is the natural way to propose steps from a question or a hoped-for action. You deferred it; it may be worth reviving for the plan.</p></div>
+
+<div class="ask">
+<h2>Where this leaves us</h2>
+<p>Nothing needs a ruling yet. When you have reworded the plan in your own terms, these five readings and the chain above are what I would hold it against. Tell me where the picture is wrong or missing something you meant.</p>
+</div>
+</main>
