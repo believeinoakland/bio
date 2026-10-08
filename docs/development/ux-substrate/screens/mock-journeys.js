@@ -26,7 +26,7 @@ const J = [
    noai: 'The request\'s text comes from the group\'s own template instead of the assistant\'s draft. Every other step is the same.' },
  { n: 8, t: 'Checking a deadline\'s basis', who: 'Any member', steps: [
    { s: 'action', act: null, say: 'Mai opens her request and sees "Response due 14 October".' },
-   { s: 'due-date', act: 'deadlinecompute', say: 'She opens "How was this worked out?": the law, the receipt date, the days counted, the holiday skipped.' },
+   { s: 'due-date', act: 'clockpropose', say: 'She opens "How was this worked out?": the law, the receipt date, the days counted, the holiday skipped.' },
    { s: 'due-date', act: 'clockadopt', say: 'She confirms it in one act. If the law left the day uncertain, both dates would show as "Undetermined, because…".' },
    { s: 'queue', act: null, say: 'Later the queue shows it met, met late or overdue: facts, never legal advice.' } ] },
  { n: 9, t: 'Checking a claim about the city\'s performance', who: 'Members; often an analyst or accountant', wiz: 'Check a claim' },
@@ -35,7 +35,7 @@ const J = [
    { s: 'find-in', act: 'recordpersonfact', v: 'project', say: 'He uses "Find in this project" for people and offices: L. Chen is named in 6 of its 14 documents, each with its passage. Nothing is recorded until he records it.' },
    { s: 'person', act: 'person', say: 'He opens the person\'s page: positions over time, each dated and cited.' },
    { s: 'person', act: 'recordpersonfact', say: 'He adds a fact from a captured document: a licence from the state register.' },
-   { s: 'person', act: 'claimidentity', say: '"Lin Chen" in the 2019 minutes: he records "claimed the same person, grade B, because…". Records are linked, never merged.' },
+   { s: 'person', act: 'identityclaim', say: '"Lin Chen" in the 2019 minutes: he records "claimed the same person, grade B, because…". Records are linked, never merged.' },
    { s: 'person', act: null, dock: true, only: 'ai', say: 'He asks the assistant whether Chen held other posts; it answers from what the group holds and says where it looked.' },
    { s: 'person', act: 'followregister', say: 'He asks to be told when the licence register changes for Chen.' } ] },
  { n: 11, t: 'Building a timeline', who: 'Members; the project owner', wiz: 'Build a timeline' },
