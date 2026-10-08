@@ -2,6 +2,33 @@
 
 **Status** · session_01JySMhkj6mMeg3Ua2iHFP87 · depth 2 · RUNNING until 2026-10-08T06:39:37Z (users' tests (answer-envelope, control-plane, plane) with and without my change) · handled B3
 
+## Completion
+
+**Entries applied (T36-36; K2111, K2129, K2130, K2157; N711, N744).** Code `bio-plane/src/admission/` 1,260 → 1,345 lines (`index.mjs` 895, `checks.mjs` 354, `window.mjs` 96).
+- R20 (F1's tail): `presentedCredential` reads the token only from an exact `Authorization: Bearer` header or a JSON body's `token`, and the secret only from the body's `secret`, never from the address. `inAddress` is true exactly when the address names a `token` or `secret` parameter, whatever its value. A new gate, `credentialAddressGate(url[, credential])` (B2's name; K2157), refuses such a request 400 `CREDENTIAL_IN_ADDRESS` (C-38.10). It names the parameters (`named`), never the value or its digest. It is the code's one site, and no answer carries `deprecated`. `queryGate` removes `token` and `secret` from every URL (B3 (4)). Gates handed no credential read none from the URL.
+- R5 (N711): `MEMBER_TOKEN` stays in `BINDINGS` only as the name R5 refuses. `classify` answers `null` for it. `admit` refuses a live one 401 `MEMBER_TOKEN_RETIRED` (C-38.11), first, before any lookup, read or write. All four bindings are still compared in constant time (9 digests for any credential, tested). With no binding set, an old member key is answered `NOT_AUTHENTICATED` (R7). `readerOf` (R16) reads the retired key as no one, with no lookup. A public op judges no credential (B3 (1)).
+- R22 (N744): `securityTally` takes `env` and `doAnswer` and POSTs `{kind, country}` to `bio`'s store-internal route `securitycount` (credentials R50; B3 (2)). The address and headers carry nothing. A failed write is dropped and logged by correlation id only, and never changes the answer. `MEMBER_TOKEN_RETIRED` counts as kind `credential`, with the request's country: the shared key names no member (B3 (3)).
+- R14: two new rows, **C-38.10 `CREDENTIAL_IN_ADDRESS`** (BOB's translation with K2129's protective sentence) and **C-38.11 `MEMBER_TOKEN_RETIRED`**, both awaiting promotion's stamp (T37; plan red 4). No row was re-worded.
+
+**Deferred.** Nothing.
+
+**Reading (mechanics §17, N739).** I measured the reading set as mechanics §3 asks: requirements 24 KB; code 87 KB; tests 108 KB; layer 11's row and the control-plane split section of `layers.md`; the Purposes of the seven used modules (about 4 KB); and the services my Uses names (op-declarations Terms and R2–R6, runtime-limits `liveToken`, credentials R5, R15, R42, R44 and R50, capture R56). The total is about 230 KB, under 300 KB, so I read it all myself and used no workers. I also read whole the plan's rules at the opening, my entry T36-36, K2111, K2129, K2130, K2038 and K1936, the draft sections with their "BOB's review", and the control-plane code that calls my gates (index.mjs:100–126, 255–275, 455–600).
+
+**Found in other modules (also in my REPORT J2).**
+- control-plane (T36-37) must call `credentialAddressGate` directly after R1. It must also hand `env` and `doAnswer` to `securityTally` (index.mjs:120); until then no count is written. 50 of its tests fail with my change (163/4 → 113/54): they call as the member binding or with the address form, and are T36-37's to re-pin.
+- plane (T36-49): `worker.test.mjs` R6 and `test/system/migrate-released.test.mjs` both use `?token=` (the latter `MEMBER_TOKEN`), so they are re-pinned with plane's job.
+- No generated artifact is made stale beyond the plane bundle, which BOB regenerates at layer close.
+
+**Tests and checks** (after merging `tranche/T36` for B2).
+- `node --test bio-plane/test/m/admission/`: `ℹ tests 34`, `ℹ pass 34`, `ℹ fail 0`.
+- Users, without my change → with it: answer-envelope 24/2 → 24/2; control-plane 163/4 → 113/54; plane 128/2 → 127/3; migrate-released 1/0 → 0/1.
+- `format: 135 modules, 134 requirements files; 0 failures`
+- `architecture: 14 product files, 27 relative imports (0 naming no tracked file, not judged); 0 failures`
+- `coverage: 1 modules, 22 of 22 live requirement ids named by a test; 0 failures`
+- `ownership: 12 files changed by admission between tranche/T36 and HEAD; 0 failures`
+
+Size (session_01JySMhkj6mMeg3Ua2iHFP87): test runs 16, module lines 1345
+
 ## J1 · QUESTION
 
 Best readings I am building on (carrying on meanwhile; none blocks me):
