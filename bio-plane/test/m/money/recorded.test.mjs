@@ -49,9 +49,11 @@ test("R24 sight is R21's: a hidden fact is neither answered nor counted, and a c
   assert.deepEqual(s.m.recordedBy({ captureSha: hidden, viewer: BOB }).items.map((i) => i.record), [h]);
   assert.deepEqual(s.m.recordedBy({ captureSha: hidden, viewer: OUTSIDER }), { ok: true, module: "money", capture_sha: hidden, items: [], truncated: false });
   assert.deepEqual(s.m.recordedBy({ captureSha: sha("never held"), viewer: ANN }).items, []);
+  // K2114: a viewer membership refuses is no VIEWER_MISSING: it sees nothing
+  assert.deepEqual(s.m.recordedBy({ captureSha: s.cap, viewer: "not a member" }).items, []);
 });
 
-test("R24 limit clamped 1–500 (default 100) with truncated; VIEWER_MISSING, NO_SHA, EXTENT_MALFORMED; it writes nothing and never throws", () => {
+test("R24 limit clamped 1–500 (default 100) with truncated; VIEWER_MISSING and EXTENT_MALFORMED in events R49's refusal shape, NO_SHA; it writes nothing and never throws", () => {
   const s = seeded();
   for (let i = 0; i < 3; i++) s.rec({ source: { capture_sha: s.cap, extent: page(i + 1) } });
   const one = s.m.recordedBy({ captureSha: s.cap, limit: 1, viewer: ANN });
@@ -59,10 +61,17 @@ test("R24 limit clamped 1–500 (default 100) with truncated; VIEWER_MISSING, NO
   assert.deepEqual([s.m.recordedBy({ captureSha: s.cap, limit: 0, viewer: ANN }).items.length, s.m.recordedBy({ captureSha: s.cap, limit: 3, viewer: ANN }).truncated], [1, false]);
   assert.equal(s.m.recordedBy({ captureSha: s.cap, limit: 9999, viewer: ANN }).items.length, 3);
   const before = s.one(`SELECT count(*) AS n FROM money_facts`).n;
-  assert.equal(s.m.recordedBy({ captureSha: s.cap }).reason, "VIEWER_MISSING");
+  for (const viewer of [undefined, null, ""]) {
+    const r = s.m.recordedBy({ captureSha: s.cap, viewer });
+    assert.deepEqual(Object.keys(r).sort(), ["code", "ok", "reason", "refused", "why"], "events R49's refusal shape (K2116)");
+    assert.deepEqual([r.ok, r.refused, r.code, r.reason], [false, "VIEWER_MISSING", "VIEWER_MISSING", "VIEWER_MISSING"]);
+  }
   assert.equal(s.m.recordedBy({ captureSha: "", viewer: ANN }).reason, "NO_SHA");
-  for (const bad of [{ kind: "bogus" }, "page 3", 3])
-    assert.equal(s.m.recordedBy({ captureSha: s.cap, extent: bad, viewer: ANN }).reason, "EXTENT_MALFORMED", JSON.stringify(bad));
+  for (const bad of [{ kind: "bogus" }, "page 3", 3, { page: 3 }]) {
+    const r = s.m.recordedBy({ captureSha: s.cap, extent: bad, viewer: ANN });
+    assert.deepEqual(Object.keys(r).sort(), ["code", "ok", "reason", "refused", "why"]);
+    assert.equal(r.refused, "EXTENT_MALFORMED", JSON.stringify(bad));
+  }
   assert.doesNotThrow(() => s.m.recordedBy());
   assert.equal(s.one(`SELECT count(*) AS n FROM money_facts`).n, before);
 });

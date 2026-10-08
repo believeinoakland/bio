@@ -708,16 +708,17 @@ export class Money {
 
   /** R24: the money facts whose source is an extent of the capture, each naming who recorded it. A fact on a fact cites
    *  no extent and is no item; a table row's fact cites the capture and no part of it, so its extent is read as
-   *  `document` (content R5). Sight is R21's: a hidden fact is neither answered nor counted. Writes nothing, never
-   *  throws. */
+   *  `document` (content R5). Sight is R21's: a hidden fact is neither answered nor counted, and a viewer membership
+   *  refuses sees nothing. Items are ordered by the canonical extent's string in code-unit order, then the fact's id
+   *  (K2114). Writes nothing, never throws. */
   recordedBy({ captureSha, extent, limit, viewer } = {}) {
     try {
       if (viewer === undefined || viewer === null || viewer === "")
-        return refusal("VIEWER_MISSING", "a read names the member reading; an absent viewer is neither an administrator nor the public");
+        return shapeRefusal("VIEWER_MISSING", "a read names the member reading; an absent viewer is neither an administrator nor the public");
       if (!filled(captureSha)) return refusal("NO_SHA", "who recorded from a passage is read for one capture, by its sha256");
       const asked = extent === undefined || extent === null ? null : extent;
       if (asked !== null && !(isObj(asked) && Object.prototype.hasOwnProperty.call(CONTENT_EXTENT_KINDS, asked.kind)))
-        return refusal("EXTENT_MALFORMED", `an extent is one of content's kinds (${list(Object.keys(CONTENT_EXTENT_KINDS))})`);
+        return shapeRefusal("EXTENT_MALFORMED", `an extent is one of content's kinds (${list(Object.keys(CONTENT_EXTENT_KINDS))})`);
       const n = Number.parseInt(limit ?? LIST_LIMIT_DEFAULT, 10);
       const lim = Number.isFinite(n) ? Math.min(Math.max(n, 1), LIST_LIMIT_MAX) : LIST_LIMIT_DEFAULT;
       const capture = captureSha.trim();
@@ -1181,6 +1182,9 @@ export class Money {
 }
 
 /* ---- helpers ---- */
+
+/* events R49's refusal shape for VIEWER_MISSING and EXTENT_MALFORMED (K2114, K2116): no catalogue row (K231). */
+const shapeRefusal = (code, why) => ({ ok: false, refused: code, code, reason: code, why });
 
 /* An unsigned exact decimal as calc-grammar's figure (R1's range check). */
 const exactFigure = (value) => ({ value: value.replace(/,/g, ""), sign: "+", precision: "exact" });
