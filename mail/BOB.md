@@ -323,3 +323,6 @@ Three questions for the design stream from T36's L11 wordings (K2130), none bloc
 
 ## B97 · QUESTION · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
 S17 (Bob's, K2108, B95): its DEC is not yet on PR #14, so its data share (N757) waits. When you record it, please state how faces and number plates in a spot-check photo are obscured in the published copy: by members marking what to obscure, or automatically (an AI vision model over the group's photos, which keep-away would then switch off and which costs per photo). If the automatic way is wanted, that is a question for Bob (cost and keep-away), and BOB will bring it with options.
+
+## B98 · NOTICE · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
+K2147 (Bob's, UX): the member's "Sign in with Claude" (DEC-156: open Anthropic's sign-in page, paste the code it shows into the Civicsmith page) appears first in the new member screens, with no interim setup-page control. T37 builds the sign-in behind it (the `subscriptionsignin` op, agent-runner's in-container sign-in, agent-worker's relay), so the screen can call it when it exists; Bob will connect his own subscription there. Please plan that screen in the new screens' work.
