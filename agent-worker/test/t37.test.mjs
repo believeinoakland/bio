@@ -120,7 +120,7 @@ section("R66 · each step sent to the member's own instance, the runner's answer
       [r.runner.map((c) => [c.instance, c.path, c.search, c.method]), r.named],
       [[[MEMBER, ROUTES[step], "", "POST"]], [MEMBER]]);
     t(`R66: step ${step}'s request body is ${step === "code" ? "{member, code}" : "{member}"}, nothing else`,
-      JSON.parse(r.runner[0].body), step === "code" ? { member: MEMBER, code: CODE } : { member: MEMBER });
+      JSON.parse(r.runner[0]?.body ?? "null"), step === "code" ? { member: MEMBER, code: CODE } : { member: MEMBER });
     t(`R66: step ${step} answers the runner's answer (200)`, [r.status, r.out],
       [200, JSON.parse(await honest(ROUTES[step], { member: MEMBER }).text())]);
   }
@@ -209,7 +209,7 @@ section("R67, R36 · the code from Anthropic's page reaches that one request's b
   t("R67: every step went to the instance named by its member", drives.flatMap((d) => d.named), [MEMBER, MEMBER, MEMBER, MEMBER]);
   /* Nothing is kept between calls: a state step after a code step sends no code and answers none. */
   const after = await signin({ member: MEMBER, step: "state" });
-  t("R36: nothing is kept between calls (a later step carries no code)", [after.runner[0].body.includes(CODE), after.text.includes(CODE)], [false, false]);
+  t("R36: nothing is kept between calls (a later step carries no code)", [String(after.runner[0]?.body).includes(CODE), after.text.includes(CODE)], [false, false]);
 }
 
 /* ------------------------------------------------------------------------------------------------- the translation draft */
@@ -372,7 +372,7 @@ section("R69 · the model's instructions, its tools and where the words reach it
   const eng = await draft(tdBody({ task: TO_ENGLISH }));
   const ereq = eng.model[0]?.body ?? {};
   t("R69: to_english: the kept word in the user turn only, the draft tool alone",
-    [JSON.stringify(ereq.system).includes(WORD_SENT), userText(ereq).includes(WORD_SENT), (ereq.tools || []).map((x) => x.name)],
+    [String(JSON.stringify(ereq.system)).includes(WORD_SENT), userText(ereq).includes(WORD_SENT), (ereq.tools || []).map((x) => x.name)],
     [false, true, ["draft"]]);
   for (const [label, pack] of [["no pack", undefined], ["a pack with no version", { ...PACK, version: "" }],
                                ["a pack without the layer", { ...PACK, disclosed: { writing_help: PACK.disclosed.writing_help } }],
