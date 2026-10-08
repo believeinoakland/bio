@@ -144,9 +144,10 @@ await member("sam", ["contribute"], "admin");
 /* RE-READ 2026-10-08 (PROMOTION #35, T37): section 2's machine credential was the shared member key, retired in T36
    (admission R5, MEMBER_TOKEN_RETIRED, C-38.11). An agent credential a member mints for it, declaring the promote it
    writes (credentials R12, D-199), is the machine credential now. */
-const AGENT = (await post("aicredentialmint", { tokenId: "d526-agent", principalKind: "member", principalMember: "ruth",
-  taskScope: "investigative", writes: ["promote"], note: "section 2's machine credential" }, RUTH))?.token;
-if (!AGENT) throw new Error("aicredentialmint: no token");
+const AGENT_ANSWER = await post("aicredentialmint", { tokenId: "d526-agent", principalKind: "member", principalMember: "ruth",
+  taskScope: "investigative", writes: ["promote"], note: "section 2's machine credential" }, RUTH);
+const AGENT = AGENT_ANSWER?.token;
+if (!AGENT) throw new Error(`aicredentialmint: no token: ${JSON.stringify(AGENT_ANSWER)}`);
 const OTTO = await member("otto", ["contribute"]);   /* holds NO create_projects */
 
 /* ============================================= 1. D-149's carry-forward (GOVERNING_LAWS_REWRITTEN) */

@@ -128,7 +128,8 @@
    on the stamp commit: its arms in the suite pass.
    RE-PINNED 2026-10-08 (PROMOTION #35, T37-7, T36's red 4, N754): over 1.64.0, the stamp's own lines
    (`fixtures/row-census-1.64.0.jsonl`, written by `row-census.mjs`'s own `censusOf`) on the stamp commit (named in
-   `build/jobs/T37/promotion.md`; 1516 rows, 2e65afaf…, over `tranche/T37` after its layer 1); the 1.63.0 snapshot (no
+   `build/jobs/T37/promotion.md`; 1516 rows, 2e65afaf…, over `tranche/T37` after its layer 1; 1519 rows, 60d892ca…, after membership's and
+   credentials' merges, K2183, K2184); the 1.63.0 snapshot (no
    stamp reads it) renamed to it; T36's layers 3–11 rows (47 new, 19 renumbered C-137 → C-139, 1 retired, 2 changed,
    each named by its job record; none declared here, accepted red 4 at T36's close) stamped in 1.64.0. Re-pinned in
    place as each T37 layer-2 job merges, so T37 names one catalogue. A row a T37 job in layers 3–11 adds or changes turns

@@ -793,7 +793,11 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    CHANGED IN WHAT THE GATES RUN, no row line moving: none a T36 or T37 job record names. T37's layer 1 added and changed
    no row (file-scanner's and image-cover's refusals are no table's). T37's layer 2 (membership, credentials) is
    re-pinned in place as each merges, so T37 names one catalogue.
-   ROW_CENSUS (R50) re-pinned to this tree: 1516 rows. Rows a T37 job in layers 3–11 adds or changes are T38's stamp
+   T37 LAYER 2, re-pinned in place: membership (K2183) added and changed no row; credentials (K2184) ARRIVED C-29.33
+   AI_CREDENTIAL_NO_SECRET, C-96.45 MACHINE_CANNOT_SET_PASSWORD and C-96.46 CURRENT_PASSWORD_WRONG, RE-KEYED C-29.32
+   NO_REASON → AI_KEEP_AWAY_NO_REASON (N755: it no longer shares progressions' C-100.18 code, K231), and CHANGED C-29.31
+   AI_KEPT_AWAY (`where` now `aiKeptAway`, the one site that mints it, N765; words unchanged).
+   ROW_CENSUS (R50) re-pinned to this tree: 1519 rows. Rows a T37 job in layers 3–11 adds or changes are T38's stamp
    (plan T37, Rules 6 (2)). */
 export const CATALOG_VERSION = "1.64.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
@@ -887,8 +891,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    this module's own census suite, `bio-plane/test/system/row-census.test.mjs` (legacy-tests' until T22's opening, K1006):
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1516,
-  digest: "2e65afafa4297c362499077bbfe9619ec255e5373113223b2f55f9b3b735c9e0" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1519,
+  digest: "60d892ca0b04829cd026b93e791b74a9f2fd6062bdc20fd100817bcc909c3d5b" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
