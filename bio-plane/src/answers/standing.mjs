@@ -133,9 +133,10 @@ export function standingQuestionSet(self, { author = null, owner = null, questio
 
 /* R28: a standing find. `findIn` is asked once, under the author's sight, to check the find (its refusal answered as
    given); it writes nothing. Then R15's cadence and end. A selection expires and a standing find outlives it, so a
-   selection is frozen here into the bundle ids it now holds under the author's sight (retrieval's `selectionResolve`,
-   its R19, read under the selection's owner, the control plane's stamp), refused `SCOPE_TOO_LARGE` over 200 (K1982).
-   Then the row. */
+   selection is frozen here into the bundle ids it now holds under the author's sight, read through retrieval's
+   read-only `selectionRead` (its R77; N729, K1991), never `selectionResolve`, under the selection's owner (the control
+   plane's stamp): setting a find extends no selection's life, and each refusal (`NO_SUCH_SELECTION`, `NOT_YOURS`, and
+   `SCOPE_TOO_LARGE` over 200, K1982) writes nothing. Then the row. */
 function setFind(self, { author, owner, question, find, cadence, ends }) {
   const want = findOf(find);
   const retrieval = self.dep("retrieval");
@@ -155,7 +156,10 @@ function setFind(self, { author, owner, question, find, cadence, ends }) {
     ? want.scope.selection : undefined;
   if (handle !== undefined) {
     let sel;
-    try { sel = retrieval.selectionResolve({ handle, viewer: stamp, owner: maker, weight: "report" }); } catch (e) { sel = failed(e); }
+    try {
+      sel = typeof retrieval.selectionRead === "function" ? retrieval.selectionRead({ handle, viewer: stamp, owner: maker })
+        : failed("no selection read is reachable");
+    } catch (e) { sel = failed(e); }
     if (!sel || sel.ok !== true) return sel;
     const ids = Array.isArray(sel.members) ? sel.members : [];
     if (ids.length > FIND_IDS)
