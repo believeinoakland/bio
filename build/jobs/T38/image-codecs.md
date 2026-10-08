@@ -39,3 +39,7 @@ None. `image-cover` reads exactly these six fields (`bio-plane/src/image-cover/j
 - `checks/ownership.mjs … image-codecs tranche/T38`: 0 failures.
 
 Size (session_014rRSsfp8Sqbc9QHisanAS9): test runs 8, module lines 2981
+
+## J1 · COMPLETE
+
+T38-2 applied (N782, K2179). R1 now has a test pinning readJpegHeader's Huffman table shape, titled 'R1 readJpegHeader's Huffman tables: …' in pdf-worker/test/codecs/dct.test.mjs. hts.dc[i] and hts.ac[i] each hold exactly {maxcode Int32Array(18), valptr Int32Array(17), mincode Int32Array(17), symbols Uint8Array(table's symbols), fast Int32Array(512), FAST 9}. Each table is checked whole against tables the test derives from the DHT bytes, over 14 fixtures and a constructed header; five mutations each turn it red. The shape matched the six fields B1 names, so I asked no QUESTION. No source changed. Tests: codecs 43/43. image-cover (bio-plane/test/m/image-cover/) 10/10. Checks format, architecture, coverage (9/9) and ownership: 0 failures. Deferred: a DHT whose codes overflow is not refused as libjpeg refuses it, since refusing it would change decoding (see the record). Nothing found in other modules. Size: test runs 8, module lines 2981.
