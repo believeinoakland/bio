@@ -1,20 +1,19 @@
 /* affordances — ACT_HELP (R48; N726, DEC-174 (3) as amended (U117), DEC-99): the one table of what each act does, one
  * English explanation per op, keyed by op, held for translation (N669 keys the translations by this table's keys).
  *
- * GENERATED ONCE, never edited by hand, from the design stream's `docs/development/ux-substrate/screens/mock-acts.js` as
- * PR #13 merged it to `main` (merge commit 36da334628), 207 entries; a later design text is a re-generation. Each text
- * is the design's, verbatim. Its keys are read as R48 reads them:
+ * GENERATED, never edited by hand, from the design stream's `docs/development/ux-substrate/screens/mock-acts.js` as
+ * PR #14 merged it to `main` (`e08cd35ecb`), 203 entries (T37-27; N776, DEC-182); a later design text is a
+ * re-generation. Each text is the design's, verbatim, in the design's order. Its keys are read as R48 reads them:
  *   - a declared op is that op;
  *   - an alias (`op-grades`' OP_ALIASES, `op-declarations` R21's table) is held under its op, never as a second entry;
- *     where the design gives both an alias and its op a text (`claimidentity`, `identityclaim`) the op's own is held;
  *   - `owed_<op>` is held under `<op>` for the nineteen owed acts declared in T36 (`aikeepaway`, `openoriginal`,
  *     `openwithwarning`, `safeview`, `deepercheck`, `releasescanhold`, `securitytooladd`, `securitytooltest`,
  *     `securitytoolremove`, `archivelist`, `findin`, `groupdescriptiondraft`, `memberlanguageset`, `notedelete`,
- *     `noterevise`, `publishat`, `securitymap`, `startfrom`, `writinghelp`), and under `owed_<op>` for the rest;
- *   - not held, each named back to BOB for the design stream: `projectcreated`, `setpassword`, `countask`,
- *     `registerproceeding`, `deadlinecompute` (no op), `assistantset` (retired, T36-34) and `claimidentity` (an
- *     alias whose op has its own text).
- * So 200 entries: 207 less those seven. The design's order is kept. */
+ *     `noterevise`, `publishat`, `securitymap`, `startfrom`, `writinghelp`), and under `owed_<op>` for the nine not
+ *     declared when this was generated (`infolevelset`, `subscriptionsignin`, `obscuremark`, `setpassword` and the five
+ *     translation ops; T37-31 declares all but `infolevelset`, and a re-generation then holds them under their ops).
+ * PR #14 withdrew `projectcreated`, `countask`, `registerproceeding`, `deadlinecompute` and `claimidentity` and dropped
+ * `assistantset` (DEC-182 (1)–(3)), so every one of its 203 entries is held. */
 export const ACT_HELP = Object.freeze({
   bootstrap: 'Installs Civicsmith in your group\'s own Cloudflare account under this short name. The short name is permanent: it appears in every address and beside every signature.',
   selftest: 'Runs Civicsmith\'s own checks on what was just installed, so you know it works before anyone joins.',
@@ -23,7 +22,7 @@ export const ACT_HELP = Object.freeze({
   groupdomainset: 'Proves your group controls this web address, so published cases can show it as yours.',
   profilesset: 'Chooses the places whose rules apply (deadlines, records laws, holidays) and the group\'s languages. Deadlines and wizards draw on these.',
   officesseed: 'Lists the public offices and seats for your places, so requests and people can be addressed by role.',
-  entitycreate: 'Adds an office or organisation the list does not have yet, with a note on where it comes from.',
+  entitycreate: 'Adds something the record does not hold yet, such as an office, an organisation or a court case, with a note on where it comes from.',
   placewanted: 'Names a place Civicsmith does not yet hold rules for. Administrators are told when an update brings it.',
   aikeepaway: 'Stops every assistant in the group, the group\'s and members\' own. Members see your reason on Settings › The assistant.',
   groupkeyset: 'Holds one Anthropic API key for the group, sealed and never shown again. It serves members with no account of their own, at the group\'s cost.',
@@ -53,6 +52,7 @@ export const ACT_HELP = Object.freeze({
   securitytooltest: 'Sends a harmless test file or address to the tool and shows its answer, so you know it works before relying on it.',
   securitytoolremove: 'Stops using this tool. Notes it already wrote stay on the files they concern.',
   expertisedeclare: 'Says what you know professionally, such as accounting or law. An administrator confirms it; members can then ask you for checks.',
+  owed_setpassword: 'Changes your password. Other sessions you have open stay signed in until they end.',
   signerregister: 'Registers the key you sign published cases with. Readers check a signature against it.',
   signerrevoke: 'Withdraws your signing key, for example if it was lost. Cases already signed keep a record that it was withdrawn.',
   owed_infolevelset: 'Chooses how quickly explanations open: promptly, or guidance on a longer pause so less opens while you move. Nothing is ever hidden.',
@@ -118,6 +118,8 @@ export const ACT_HELP = Object.freeze({
   standingset: 'Keeps asking this as new documents arrive; new matches reach your queue once, as a list.',
   personfact: 'Records a fact about this person from the passage: a position, a credential, an interest. It cites the passage.',
   datedfact: 'Records a dated fact from the passage, citing it, for the timeline.',
+  clockpropose: 'Works out a due date from the law and the dates, showing each day counted and each holiday skipped. It proposes the date; a member confirms it.',
+  owed_obscuremark: 'Marks anyone in a photo who is not part of a finding, and any number plate, so the copy a published case carries shows them obscured, labelled. The original stays inside the group.',
   standarddeclare: 'Holds this requirement as a standard the city set itself, so questions can test the city against it.',
   moneyrecord: 'Reads this figure into a money fact, with its stage and period, citing where it came from.',
   tabledeclare: 'Says what a table\'s columns are, so its figures can be counted through a calculation rather than one by one.',
