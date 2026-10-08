@@ -94,7 +94,23 @@ I wait for op-declarations', admission's and store-door's merges, then merge the
 - **The door's rule for a byte answer was too loose.** A byte answer is now one at 200/206 carrying its owner's digest header (`x-capture-sha256` or `x-derived-sha256`), not one whose content type is not JSON. A file's own type may be JSON or text, and the envelope sweep (`envelope.test.mjs` R21) found a JSON answer that carried no content type relayed raw.
 - **My tests predicted who each op admits.** They now take admission's answer and require every op to reach its route for some caller.
 
-Size (session_014Cxwr3sUfHWE5sRvShuypv): test runs 19, module lines 3103
+
+**B5 (admission, answer-envelope and store-door merged, K2166):** I merged the tranche branch (908332655c), then made these changes:
+- I dropped the guard: the door now imports `credentialAddressGate` and calls it directly.
+- `securityTally` is now handed `env` and `doAnswer` (ADMISSION #6 (a)), so admission R22's count reaches `securitycount`. The harness keeps those counts apart, in `env.countCalls`.
+- `groupRead` treats the retired key as a stranger (ADMISSION #6 (b)). `t36-door` pins it: the public projection, from `bio`, with no `tokenClass`. So does `door-share`.
+- `t36-door` also pins one count per refusal, `{kind, country}` only, and a count that fails changing no answer.
+- Red 33: my three workers re-pinned every caller that used the member binding or an address credential, across 25 files. Where the retired binding was a refusal arm, it is now asserted 401 `MEMBER_TOKEN_RETIRED` (C-38.11) with no op call. Where it was the only bearer caller, another binding class its spec admits stands in, and each class's own `CLASS_FORBIDDEN` controls are kept. Four reached-count floors were lowered to the new real figures, each with a comment (r45, r48, new-ops, option-preview).
+- `envelope.test.mjs`:363 now passes the credential as `caseReader`'s fifth argument.
+- Red 26's address arm passes.
+
+Found and left to BOB: on a public op (`classes: null`, e.g. `groupdescription`) the retired key is read as no one rather than refused 401. `MEMBER_TOKEN_RETIRED` is raised only in admission's `admit`, the gated path. B5 (b) reads that as R5's intent for the group read; whether any other public op must refuse it is admission's.
+
+**Tests:** `node --test bio-plane/test/m/control-plane/`: 180 tests, 180 pass, 0 fail, 0 skipped.
+
+**Checks:** format 0 failures; architecture 0; coverage 36/36, 0 failures; ownership 0 failures (32 files).
+
+Size (session_014Cxwr3sUfHWE5sRvShuypv): test runs 24, module lines 3103
 
 ## J3 · COMPLETE
 
