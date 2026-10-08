@@ -6,9 +6,10 @@
  * credential expiry, a connected subscription as a fact, the count-only security tally with its map and level, and
  * administrators' recovery codes; and, from T36 (T36-7; DEC-172, K1946, K2038), each outside security tool's
  * credentials under R29, the tally's totals for a period, its store-internal route, and the group's setting that keeps
- * its material away from every assistant.
+ * its material away from every assistant; and, from T37 (T37-6; DEC-182 (4), K231, N761), a member's own password
+ * change, the one keep-away read every gate asks, and a mint that carries no digest refused.
  *
- * Requirements: build/requirements/credentials.md (R1–R52; R26 retired). Split from `membership` (K617, K636 BOB-1, K637; T19 layer
+ * Requirements: build/requirements/credentials.md (R1–R53; R26 retired). Split from `membership` (K617, K636 BOB-1, K637; T19 layer
  * 2, CREDENTIALS #1): the code is copied from `membership/index.mjs` and `schema.mjs`, without change of meaning, and
  * reads `members` only through membership's services (`memberFacts`, `sessionRights`, `isAdministrator`,
  * `activeAdmins`, `notAnAdmin`), never by SQL. Who the members are, and what each may do, is membership's; this module
@@ -292,11 +293,66 @@ export class Credentials {
     return { ok: true, role, consumedAt: now };
   }
 
-  /* R3: a salted, derived hash for `role`, replacing any earlier one; never the password. Who may call it is the
-     control plane's rule (`op=setpassword`). */
+  /* R3: a salted, derived hash for `role`, replacing any earlier one; never the password. An in-plane call reached
+     by no route: `enroll`'s setter (R20) and `recover` (R47). A member's own change is `passwordChange`, below. */
   async setPassword({ role, password, iterations = 100000 } = {}) {
     this.#storePassword(role, await Credentials.#hashFor(password, iterations));
     return { ok: true, role };
+  }
+
+  /* R3 (T37; N776, DEC-182 (4)) `op=setpassword`: a signed-in member's or administrator's change of their own
+     password. The role is the role of the live session `session` names, `by` and `session` the control plane's
+     stamps; a `role` in the body is never read, so no op sets another's password. Refusals in order, each writing
+     nothing but its count: a machine credential, the operator's token or no stamp (MACHINE_CANNOT_SET_PASSWORD); no
+     live session (NOT_SIGNED_IN, R39's row); R38's window, under the session's role; a new password under 12
+     characters; a current password that does not derive the stored hash (CURRENT_PASSWORD_WRONG, R41's comparison),
+     the only arm that judges a secret and so the only one counted toward R38's window and R44's tally (`signin`). On
+     success, in one act, the password is set as `setPassword` sets it and every OTHER session of the role ends with
+     the ask grants minted under it (R39); the presenting session stays. Neither password is logged, stored or
+     answered. */
+  async passwordChange({ current = null, password = null, by = null, session = null, source = null, country = null } = {}) {
+    /* DEC-49 REGION is-password-change-own */
+    if (by === null || by === undefined || by === "" || isMachineIdentity(by)) {
+      const row = SIGN_IN_CHECKS.MACHINE_CANNOT_SET_PASSWORD;
+      return { ok: false, reason: "MACHINE_CANNOT_SET_PASSWORD", code: "MACHINE_CANNOT_SET_PASSWORD", check: row.check,
+               translation: row.translation, by: by || null,
+               detail: "a member changes their own password from their own signed-in session. A machine credential, "
+                     + "the operator's bearer and an unstamped call have no member behind them. Nothing was changed." };
+    }
+    /* END DEC-49 REGION is-password-change-own */
+    const s = this.#liveSession(session);
+    if (!s) return Credentials.#notSignedIn();
+    const role = s.role;
+    const gate = await this.#gate({ role, source, country, password: current });
+    if (gate.paused) return gate.paused;
+    if (typeof password !== "string" || password.length < 12)
+      return { ok: false, reason: "PASSWORD_TOO_SHORT", minimum: 12 };
+    const c = this.#one(`SELECT salt, hash, iterations FROM credentials WHERE role=?`, role);
+    const got = c ? await Credentials.#derive(String(current ?? ""), c.salt, c.iterations) : null;
+    if (!c) await Credentials.#payLoginCost(current);
+    /* DEC-49 REGION is-current-password */
+    if (!c || !Credentials.#same(got, c.hash)) {
+      this.#refusedAttempt(gate, country);
+      const row = SIGN_IN_CHECKS.CURRENT_PASSWORD_WRONG;
+      return { ok: false, reason: "CURRENT_PASSWORD_WRONG", code: "CURRENT_PASSWORD_WRONG", check: row.check,
+               translation: row.translation,
+               detail: "the current password given does not derive the hash stored for this account, so the password "
+                     + "was not changed. Nothing was changed." };
+    }
+    /* END DEC-49 REGION is-current-password */
+    const hashed = await Credentials.#hashFor(password);
+    /* asked again in the one act that writes, so a session ended meanwhile changes nothing */
+    const done = this.#tx(() => {
+      const live = this.#liveSession(session);
+      if (!live || live.role !== role) return null;
+      this.#storePassword(role, hashed);
+      const now = Date.now();
+      const others = this.#rows(`SELECT token_sha, expires FROM sessions WHERE role=? AND token_sha<>?`, role,
+        live.token_sha);
+      this.#endSessions(others.map((r) => r.token_sha));
+      return { ok: true, role, ended: others.filter((r) => r.expires >= now).length };
+    });
+    return done ?? Credentials.#notSignedIn();
   }
 
   /* R3's two halves: the derivation (asynchronous), and the write (synchronous, so R47 can make it inside one act with
@@ -432,7 +488,7 @@ export class Credentials {
 
   /* ===== THE SIGN-IN WINDOW (R38; F3, K1881) =====
    *
-   * `claim`, `login` and `recover` share one window, counted per source and per role. A refused attempt is counted in
+   * `claim`, `login`, `recover` and `passwordChange` (R3) share one window, counted per source and per role. A refused attempt is counted in
    * both; at `perSource` estimated for the source, or `perRole` for the role, in any 10 minutes, the next attempt is
    * paused before any password, code or claim is judged. The pause is ONE answer for every arm (whichever bucket is
    * full, a role held or not, a member active or not), at the cost of one password derivation, so neither its words
@@ -482,7 +538,7 @@ export class Credentials {
     /* END DEC-49 REGION is-sign-in-window */
   }
 
-  /* R38: asked first by `claim` (role `admin`), `login` and `recover`. Answers `{paused}`, the pause after its cost and
+  /* R38: asked first by `claim` (role `admin`), `login` and `recover`, and by `passwordChange` after its session. Answers `{paused}`, the pause after its cost and
      its count (R44's `rate`), or the gate's keys for the attempt's counts. */
   async #gate({ role, source, country, password }) {
     const roleKey = await this.#keyed(`role\u0000${String(role ?? "")}`);
@@ -850,6 +906,15 @@ export class Credentials {
         + `${AI_CREDENTIAL_EXPIRY_DAYS.default} when it is left out, and this was not one. Nothing was written.`,
         { expiresInDays: typeof expiresInDays === "number" ? expiresInDays : null });
     /* END DEC-49 REGION is-ai-credential-expiry */
+    /* R53 (N761; K2129): the digest the control plane hands in the body, 64 lowercase hexadecimal characters, or no
+       credential: one recorded without it could never be found by a lookup (R15), so it is refused, writing nothing. */
+    /* DEC-49 REGION is-ai-credential-digest */
+    if (typeof secretSha !== "string" || !/^[0-9a-f]{64}$/.test(secretSha))
+      return refusal("AI_CREDENTIAL_NO_SECRET",
+        "no digest of the credential's secret was handed in (64 lowercase hexadecimal characters, made from the value "
+        + "generated when the credential was asked for), so there is nothing a lookup could ever find this credential "
+        + "by. Nothing was written.");
+    /* END DEC-49 REGION is-ai-credential-digest */
     const base = Date.parse(now);
     const expiresAt = stampSecond((Number.isFinite(base) ? base : Date.now()) + days * DAY_MS);
 
@@ -860,7 +925,7 @@ export class Credentials {
       `INSERT INTO ai_credentials (token_id, secret_sha, principal_kind, principal, task_scope,
          scope_writes, scope_note, minted_by, minted_at, confined_to, expires_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      id, String(secretSha ?? ""), kind, principal, String(taskScope ?? "investigative"),
+      id, secretSha, kind, principal, String(taskScope ?? "investigative"),
       JSON.stringify(declared), String(note ?? ""), String(who), now, confinement, expiresAt);
     return { ok: true, minted: true, credential: this.#aiCredentialPublic(
       this.#one(`SELECT * FROM ai_credentials WHERE token_id=?`, id)) };
@@ -1187,7 +1252,7 @@ export class Credentials {
   /* R24: unseals the member's reference only for that member's own ask, run or standing question, for the one call it
      serves; the caller keeps nothing (agent-model R8). Kept for its callers until they move to `accountFor` (R35). */
   async accountReferenceFor({ member = null, act = null } = {}) {
-    const away = this.#keptAway();   /* R35 (DEC-172): no assistant while the group keeps its material away */
+    const away = this.aiKeptAway();   /* R35 (DEC-172): no assistant while the group keeps its material away */
     if (away) return away;
     const id = Credentials.#ownAct(member, act);
     if (id === null)
@@ -1357,7 +1422,7 @@ export class Credentials {
      material away (R51), every account is refused AI_KEPT_AWAY first, before any is read. `act` as R24's. Writes
      nothing; called only by the modules that run the assistant. */
   async accountFor({ member = null, act = null } = {}) {
-    const away = this.#keptAway();
+    const away = this.aiKeptAway();
     if (away) return away;
     const id = Credentials.#ownAct(member, act);
     if (id === null)
@@ -1411,7 +1476,7 @@ export class Credentials {
     /* DEC-49 REGION is-keep-away-reason */
     if ((turnOn && !given) || (given && length > KEEP_AWAY_REASON.max) || (reason !== null && reason !== undefined
         && typeof reason !== "string"))
-      return Credentials.#row(ACCOUNT_CHECKS, "NO_REASON", `keeping the group's material away from every assistant is `
+      return Credentials.#row(ACCOUNT_CHECKS, "AI_KEEP_AWAY_NO_REASON", `keeping the group's material away from every assistant is `
         + `turned on only with a reason of ${KEEP_AWAY_REASON.min} to ${KEEP_AWAY_REASON.max} characters, which every `
         + `member reads${given ? `; this one has ${length}` : ""}. Nothing was changed.`);
     /* END DEC-49 REGION is-keep-away-reason */
@@ -1420,10 +1485,15 @@ export class Credentials {
     return { ok: true, ...this.aiKeepAwayState() };
   }
 
-  /* R35, R27, R32: AI_KEPT_AWAY, minted here alone, carrying R52's reason, who and when as `keep_away` (the answer's
-     own `reason` is its code); null while the setting is off. */
-  #keptAway() {
-    const st = this.aiKeepAwayState();
+  /* R35 (T37; N765, K231): AI_KEPT_AWAY, minted here alone, carrying R52's reason, who and when as `keep_away` (the
+     answer's own `reason` is its code); null while the setting is off. An in-plane read reached by no route and
+     answered to no viewer: R35, R27 and R32 refuse through it, and every module that gates an assistant on keep-away
+     (instance-setup R55, answers, wizard-scripts, store-door) reads it, never a copy of the condition. A setting that
+     cannot be read is that refusal, saying so, with the three null (fail closed, K2093). Writes nothing; never
+     throws. */
+  aiKeptAway() {
+    let st;
+    try { st = this.aiKeepAwayState(); } catch { st = { on: null, reason: null, set_by: null, set_at: null }; }
     if (st.on === false) return null;
     /* DEC-49 REGION is-kept-away */
     return Credentials.#row(ACCOUNT_CHECKS, "AI_KEPT_AWAY", st.on === true
@@ -1458,7 +1528,7 @@ export class Credentials {
   async aiGrantMint({ member = null, by = null, session = null } = {}) {
     const bar = this.#accountBar(member, by);
     if (bar) return bar;
-    const away = this.#keptAway();   /* R27 mints only for a member R35 serves: none while kept away (DEC-172) */
+    const away = this.aiKeptAway();   /* R27 mints only for a member R35 serves: none while kept away (DEC-172) */
     if (away) return away;
     const id = Credentials.#memberOf(member);
     const sessionSha = typeof session === "string" && session !== "" ? Credentials.#tokenSha(session) : null;
@@ -1482,7 +1552,7 @@ export class Credentials {
     if (id === null || isMachineIdentity(member) || this.#memberFacts(id)?.status !== "active")
       return refuse("ACCOUNT_MEMBER_NOT_ACTIVE", "a standing question runs only for an active member. Nothing was "
         + "minted.");
-    const away = this.#keptAway();   /* R32 mints only for a member R35 serves: none while kept away (DEC-172) */
+    const away = this.aiKeptAway();   /* R32 mints only for a member R35 serves: none while kept away (DEC-172) */
     if (away) return away;
     const serving = this.#servingAccount(id);
     if (!serving) return this.#noAccount(id);
@@ -2023,11 +2093,13 @@ export function credentialsOps(c, url, body, env) {
   const doorStamps = (u) => ({ source: u.searchParams.get("source"), country: u.searchParams.get("country") });
   return {
     /* D-199: `who` is the SERVER'S stamp, and `secretSha` never comes from a caller: the control plane generates the
-       value, hashes it, and this module never sees the value. */
-    aicredentialmint: () => c.aiCredentialMint({
-      ...(body || {}),
-      who: url.searchParams.get("who"),
-      secretSha: url.searchParams.get("secretSha") }),
+       value, hashes it, and this module never sees the value. R53 (N761; K2129): the digest is read from the body
+       only, where the control plane sets it after removing any a caller sent; a `secretSha` in the query is never
+       read, so no digest travels in an internal address. */
+    aicredentialmint: () => {
+      const b = body && typeof body === "object" && !Array.isArray(body) ? body : {};
+      return c.aiCredentialMint({ ...b, who: url.searchParams.get("who"), secretSha: b.secretSha ?? null });
+    },
     aicredentialrevoke: () => c.aiCredentialRevoke({
       tokenId: url.searchParams.get("tokenId"),
       who: url.searchParams.get("who") }),
@@ -2043,7 +2115,14 @@ export function credentialsOps(c, url, body, env) {
        cannot choose the window it is counted in (admission's, T35-71). */
     claim: () => c.claim({ ...(body || {}), tokenFp: url.searchParams.get("fp"), ...doorStamps(url) }),
     login: () => c.login({ ...(body || {}), ...doorStamps(url) }),
-    setpassword: () => c.setPassword(body || {}),
+    /* R3 (T37; DEC-182 (4)): a member's own change, `{current, password}` from the body; the role from the session the
+       control plane authenticated (`session`), `by` its stamp, `source` and `country` the door's; a `role` in the
+       body is never read. */
+    setpassword: () => {
+      const b = body && typeof body === "object" && !Array.isArray(body) ? body : {};
+      return c.passwordChange({ current: b.current ?? null, password: b.password ?? null, by: url.searchParams.get("by"),
+                                session: url.searchParams.get("session"), ...doorStamps(url) });
+    },
     session: () => ({ session: c.session(url.searchParams.get("t")) }),
     /* R39 (F14): the session the control plane authenticated (`session`, its stamp). */
     signout: () => c.signOut({ token: url.searchParams.get("session") }),
