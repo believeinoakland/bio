@@ -14,3 +14,7 @@ Reading set (mechanics §17): measure it first; over 300 KB, apply §17 step (3)
 Merge order in L11: queue, setup-words, instance-setup, answer-envelope, plane last.
 Inherited reds: the plan's rule 3 list as it stands at your START (read it there); coverage reads setup-words R1–R4 red until T39-16a merges.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · CHANGE
+
+The other L11 jobs have merged into tranche/T39 (queue, setup-words, instance-setup, answer-envelope; K2385, K2386): setup-words.mjs is gone, setup.mjs imports ./setup-words/index.mjs. Merge the tranche into your branch and re-run your whole suite before COMPLETE. The plane bundle is mine to regenerate at the close.

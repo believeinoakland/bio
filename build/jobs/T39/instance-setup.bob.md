@@ -1,6 +1,6 @@
 # BOB to instance-setup (T39)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -10,3 +10,7 @@ Reading set (mechanics §17): measure it first. Your requirements, layer 11's ro
 Merge order in L11: setup-words, then instance-setup.
 Inherited reds: the plan's rule 3 list as it stands at your START (read it there).
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · CHANGE
+
+setup-words has merged into tranche/T39 (K2385; bio-plane/src/setup-words/index.mjs, R1–R4). Merge the tranche into your branch, then apply your prepared change: delete bio-plane/src/setup-words.mjs, re-point setup.mjs:41 to ./setup-words/index.mjs, reduce interface-words.test.mjs to R68's share; re-run your suite and store-door's routes test. In your COMPLETE confirm the old path is gone: I drop it from your paths and add setup-words to your uses at the merge.

@@ -1,8 +1,9 @@
-/* GENERATED: do not edit by hand. instance-setup R68 (DEC-179; K2200 (4)): the interface's word list,
+/* GENERATED: do not edit by hand. setup-words R1–R3 (DEC-179; K2200 (4)): the interface's word list,
    docs/development/ux-substrate/screens/words.json at e08cd35ecb (921 words, 345 protected), each
    [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives them, means the en of the
-   word's sibling .means or .does entry (the nearest dotted prefix of at least two segments holding one), or null.
-   Written by the generator recorded in build/jobs/T37/instance-setup.md; words.test.mjs checks it word by word. */
+   word's sibling .means or .does entry (the nearest dotted prefix of at least two segments holding one), or null. The
+   list and each row are frozen (R3). Written by the generator recorded in build/jobs/T39/setup-words.md;
+   bio-plane/test/m/setup-words/word-list.test.mjs checks it word by word. */
 export const WORDS_COMMIT = "e08cd35ecb";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name", "Reversible", null, "Reversible: you can undo this.", true],
@@ -926,4 +927,4 @@ export const WORD_ROWS = Object.freeze([
   ["wizard.WIZ-a8c349d7d71b6bb0.step6.why", "This tells the office what your group is looking at, and starts the clock.", null, null, false],
   ["wizard.WIZ-a8c349d7d71b6bb0.step7.what", "The due date and next checkpoint go into your queue. A next step can wait on the reply.", null, null, false],
   ["wizard.WIZ-a8c349d7d71b6bb0.step7.why", "If no reply comes, the next step is ready without anyone remembering.", null, null, false],
-]);
+].map((row) => Object.freeze(row)));
