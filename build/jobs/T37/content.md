@@ -27,3 +27,7 @@ Size (session_01NPBftQhCWzUZX1ASP6uBqi): test runs 9, module lines 3776
 ## J1 · REPORT
 
 case-checker's generated src/case-checker/program.mjs bundles content/extent.mjs and is stale after T37-10 (extentRelation's cell relations): case-checker R13 fails 'program.mjs is stale' (51/1; 52/0 without my change). Regenerate with node bio-plane/src/case-checker/build-program.mjs at the merge; I did not write it (mechanics §14). Also fixed in my own module: notice.mjs extentBoundUnheld now bounds a cell, shape or table cell by its grid/shape count, not the list alone (R30); tested.
+
+## J2 · COMPLETE
+
+T37-10 applied (R6: sheet-cell/sheet-range and doc-table cells related by their cells, every case tested both ways through the interface). Also R30 flaw fixed in notice.mjs. content 132/0; users retrieval 162/0, basis-versions 131/0, money 70/0, people 46/0, standards 72/0, events 61/0, citation 78/0, case-checker 51/1 (stale program.mjs only, J2). format, architecture, coverage (55/55), ownership: 0 failures. 3,776 lines. Record: build/jobs/T37/content.md.
