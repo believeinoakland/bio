@@ -1,6 +1,6 @@
 # N806 — packaging design (draft for BOB, T39's opening)
 
-**Status** · Drafted by a worker for BOB #143, reviewed by BOB (K2333). BOB's packaging, adopted for T39's opening: §2 and §3 as written. Q2 is moot (K2309: no case has been published). Q1 is put to Bob (K2333); §3's doc-clean step for the document's own metadata waits on his answer.
+**Status** · Drafted by a worker for BOB #143, reviewed by BOB (K2333). BOB's packaging, adopted for T39's opening: §2 and §3 as written. Q2 is moot (K2309: no case has been published). Q1 answered A by Bob (K2334): a member-supplied document's own metadata is removed too (doc-clean R6 below).
 
 Sources: K2315, K2248; `current.md` rule 8; `modules.json`; requirements of image-cover, image-codecs, pdf-reader, pdf-pixels, ooxml, office-readers, odf-reader, format-registry, file-safety, provenance, capture, case-grammar, case-carriage, case-disclosures, publication, public-read, ratification. Code checked: `file-safety/index.mjs`:71, 506–521; `provenance/index.mjs`:960–975; `case-carriage/index.mjs`:196, 430–500; `case-authoring/index.mjs`:651.
 
@@ -61,6 +61,7 @@ No module writes a PDF or a ZIP. `pdf-reader`, `ooxml`, `office-readers` and `od
 - R2 A copy holds no image carrying more than `image-cover` R2 allows. A PDF copy is the latest revision rewritten whole, with no unreachable object, no image `/Metadata` and every `/Thumb` stripped. A package copy is the same set of parts with only image parts changed, and with fixed timestamps and no extra fields.
 - R3 Its refusals are named as in §2.6. An image it cannot strip refuses the whole document; it never answers a partial copy.
 - R4 Pure and deterministic: the same bytes give the same answer. It works within the 128 MB isolate up to `CLEAN_MAX_BYTES` (16 MiB, exported), measured in workerd.
+- R6 *(K2334, Bob's Q1: A)* A member-supplied document's copy also carries none of the document's own metadata: PDF `/Info` and document-level XMP removed; OOXML `docProps/core.xml` and `docProps/app.xml` emptied of author, last-modified-by, company, manager, template, revision, total time and dates (kept valid); ODF `meta.xml` likewise; text, pages and pictures unchanged. A file with neither image metadata nor document metadata answers `clean`.
 - R5 Independent check: `qpdf --check` and pdf.js for PDF output, and a reference unzip and LibreOffice open for packages. The text answered by `pdf-reader` and the office readers is the same for the copy as for the original, and no metadata segment is present.
 
 **image-cover.**

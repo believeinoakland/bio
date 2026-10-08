@@ -13,7 +13,7 @@
 ## Rules at the opening
 
 1. T38's rules hold. Merge order within a layer is `modules.json` order unless a layer says otherwise.
-2. **N806's packaging is K2333** (`plan/draft-T39-N806.md` §2–§3): at the opening `doc-clean` enters `modules.json` in layer 1 directly after `image-cover` (uses `image-cover`, `pdf-reader`, `ooxml`), empty `paths` and `tests` (K1043), with a membership `MODULE_ORDER` (R83) entry in the same act (K657) — so membership takes a T39 job (L2). Its requirements file is written at the opening from §3. Q1 (a member file's own metadata) is Bob's: if he answers before L1's START, its arm joins doc-clean's R2; otherwise it is the next tranche's.
+2. **N806's packaging is K2333** (`plan/draft-T39-N806.md` §2–§3): at the opening `doc-clean` enters `modules.json` in layer 1 directly after `image-cover` (uses `image-cover`, `pdf-reader`, `ooxml`), empty `paths` and `tests` (K1043), with a membership `MODULE_ORDER` (R83) entry in the same act (K657) — so membership takes a T39 job (L2). Its requirements file is written at the opening from §3. Q1 answered A (K2334): doc-clean R6 removes a member-supplied file's own metadata as well.
 3. **Accepted reds expected at the opening (confirmed at T38's close):** (1) coverage: every id marked `*(not yet met: T39)*` until its module's merge; acquisition R45 until T39-4 (N804). (2) row census: rows T38's L3–L11 jobs added or re-worded stay `awaiting stamp` until T39-3 (promotion); rows T39's L3+ jobs add, until T40's stamp. (3) the UI's DEC-88 tests (Bob's), carried. (4) legacy-ui `statement-ack.test.mjs` (N794, K633). (5) bundler `fleetbundles.test.mjs`:237 until T39-1 (N802). (6) membership R83's `MODULE_ORDER` tests from the opening's addition of `doc-clean` until T39-M.
 4. **N797–N799 enter only if DEC-184–DEC-186 are on `main` at the opening** (B117 asked UX-DESIGN for a MERGE at T38's close). If they land, BOB writes their entries at the opening (membership or project-roster `handlecheck`, `handlechange`; publication's fact; case-carriage, case-disclosures, public-read labels; op-declarations, op-grades, control-plane, affordances shares) into the layers below.
 
@@ -23,7 +23,7 @@
 - **T39-1 · bundler** · (N802) `fleetbundles.test.mjs`:237 re-pins agent-worker's 23 inputs from the committed manifest (`signin.mjs`), test only · K2302 · req: none.
 - **T39-2a · image-cover** · (N806) R8 `stripMetadata`, R9 (test) · K2315, K2333 · req: draft §3.
 - **T39-2b · pdf-reader** · (N806) R37 `PdfDoc.objects()` · K2333 · req: draft §3. **P6:** 3,108 + ~60.
-- **T39-2c · doc-clean (new)** · (N806) R1–R5 `cleanDocument` · K2315, K2333 · req: draft §3 · depends T39-2a, T39-2b (merge after both).
+- **T39-2c · doc-clean (new)** · (N806) R1–R6 `cleanDocument` (R6: the document's own metadata, K2334) · K2315, K2333 · req: draft §3 · depends T39-2a, T39-2b (merge after both).
 
 **L1 merge order:** bundler, pdf-reader, image-cover, doc-clean (copy-free; doc-clean uses the other two).
 
@@ -62,7 +62,6 @@
 | N751 | a measurement: no fresh policies |
 | N780 | a deployment: the next release cut (K1501) |
 | N794 | Bob's (K633, K1849) |
-| N796 | Bob's (P17): put to him (K2331) |
+| N796 | Bob's (P17): held with the investigation design lane's related question (K2334); sign-in members' standing questions stay refused meanwhile |
 | N797–N799 | DEC-184–DEC-186 not on `main` (rule 4), unless merged at T38's close |
-| N806 Q1 | Bob's (K2333), unless answered before L1's START |
 | T38's carried rows (`current.md` "Left out of T38") | their reasons unchanged; re-read at the opening |
