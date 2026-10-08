@@ -49,3 +49,7 @@ T36-8's stamp is done and pushed on `job/T36/promotion` @ `db387837ad`, over `tr
 - `checks/ownership.mjs bio promotion tranche/T36`: 1 failure (the new fixture, until the swap).
 
 Size (session_01PfzH458a5tMgwWs1AQfAys): test runs 8, module lines 3443
+
+## J2 · COMPLETE
+
+T36-8 complete on job/T36/promotion (record: ## Completion). CATALOG_VERSION 1.63.0; ROW_CENSUS re-pinned in place after B3: 1470 rows e9ef089b…, the moved rows exactly credentials' four (C-29.31, C-29.32, C-96.44 arrived; C-96.43 where changed), membership none. row-census 8/0; promotion and d526 119/0; credentials, membership and record-core 454/0; architecture 0; coverage 56/56. Format and ownership show only the modules.json fixture swap (1.62.0 → 1.63.0), yours at merge. Stale for L2's close: case-checker program.mjs (R13 ×2) and the plane bundle.
