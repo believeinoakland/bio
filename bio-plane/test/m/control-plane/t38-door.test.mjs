@@ -34,3 +34,31 @@ test("R67 (T38; op-declarations R40): `obscuremarkwithdraw`'s `by` is the sessio
   assert.equal(r.json.ok, false, r.text.slice(0, 200));
   assert.deepEqual(opCalls(w.env).filter((c) => c.route === OP), [], "the bearer reaches no store");
 });
+
+/* ---------------------------------------------------------------- R58's source on a window fault (K2326) */
+
+test("R58 (T38; K2326; admission R21): a public op's `source` is the window's; when the window is not read, the door asks the store no second time with the fingerprint key unbound (the source is then null), and with the key bound stamps the keyed fingerprint made in process (negative control: a window that answers stamps its own source)", async () => {
+  const loginOf = (env) => opCalls(env).filter((c) => c.route === "login");
+  const drive = async (env) => call(env, { op: "login", method: "POST", headers: { "cf-connecting-ip": "203.0.113.7" },
+                                          params: { source: FORGED }, body: { role: "member:ann", password: "pw" } });
+  /* the window answers: its source, one window request */
+  const { w: answered } = callers();
+  await drive(answered.env);
+  assert.deepEqual([answered.env.windowCalls.length, loginOf(answered.env)[0].params.source], [1, "src-test"]);
+  /* the window faults, key unbound: one window request, no second ask, no source */
+  for (const fault of [() => new Response("not json"), () => { throw new Error("down"); }]) {
+    const { w } = callers({ answer: (c) => (c.route === "doorwindow" ? fault() : null) });
+    await drive(w.env);
+    assert.equal(w.env.windowCalls.length, 1, "the store is asked once");
+    const [login] = loginOf(w.env);
+    assert.equal(Object.hasOwn(login.params, "source"), false, "no source stamped, none of the caller's");
+  }
+  /* the window faults, key bound: the fingerprint made in process, still one window request */
+  const { w } = callers({ answer: (c) => (c.route === "doorwindow" ? new Response("not json") : null) });
+  w.env.KNOCK_FINGERPRINT_KEY = "test-fingerprint-key";
+  await drive(w.env);
+  assert.equal(w.env.windowCalls.length, 1);
+  const [login] = loginOf(w.env);
+  assert.match(login.params.source, /^[0-9a-f]{32}$/);
+  assert.notEqual(login.params.source, FORGED);
+});

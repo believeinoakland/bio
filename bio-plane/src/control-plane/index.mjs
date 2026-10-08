@@ -651,7 +651,11 @@ export function makeFetch(hooks = {}) {
          `login` and `recover` take (credentials R1, R4, R47) and capture's knock its `country` (its R85). */
       const windowed = await doorWindowGate({ req, env, op, spec, doAnswer });
       if (windowed.refusal) return refused(windowed.refusal);
-      const source = windowed.source ?? await sourceOf(req, env);
+      /* (T38; K2326) the window's answer carries the source; when the window was not read, `sourceOf` is asked again
+         only where it needs no store (the fingerprint key bound), so a store fault is never asked a second time and the
+         source is then `null`, as admission R21 states for a store that cannot be asked */
+      const source = windowed.source ?? (typeof env.KNOCK_FINGERPRINT_KEY === "string" && env.KNOCK_FINGERPRINT_KEY
+        ? await sourceOf(req, env) : null);
       const country = countryOf(req);
       const doorStamps = new URLSearchParams({ ...(source ? { source } : {}), ...(country ? { country } : {}) }).toString();
       const fp = await fingerprint(env.ADMIN_TOKEN);
