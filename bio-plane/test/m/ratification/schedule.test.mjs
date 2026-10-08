@@ -7,8 +7,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { world, plane, newKey, signCase, cleanCase, fmText, CASE_BODY, V, NOW } from "./fixture.mjs";
-import { caseRatifyOp, publishAtOp, ratificationOp } from "../../../src/ratification/ops.mjs";
+import { world, plane, newKey, signCase, cleanCase, fmText, CASE_BODY, V, NOW, bucketOver } from "./fixture.mjs";
+import { caseRatifyOp, publishAtOp, ratificationOp, obscuredCopyKey } from "../../../src/ratification/ops.mjs";
 import { caseConclusionRowLines, keyFingerprint, CHECKED_PARTS, rowOf } from "../../../src/ratification/index.mjs";
 import { peopleLines, memberTieLines } from "../../../src/case-grammar/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/index.mjs";
@@ -21,9 +21,9 @@ const LATER = "2026-10-09T13:30:00.000Z";
 
 /* A /6 case document Alice (the project's owner, holding an attesting key) may sign, stored unsigned; publication's set
    time services as stand-ins; a hold reader registered unless `reader` is false. `raw` adds front-matter lines. */
-async function setup({ raw = [], reader = true, mutate = (d) => d } = {}) {
+async function setup({ raw = [], reader = true, mutate = (d) => d, worker = null } = {}) {
   const registered = [];
-  const w = world({ steer: { registerScheduledPublisher: (p) => (registered.push(p), { ok: true }) } });
+  const w = world({ steer: { registerScheduledPublisher: (p) => (registered.push(p), { ok: true }) }, worker });
   const key = await newKey(), other = await newKey();
   w.member("alice", { signer: key }); w.member("bo");
   const P = w.project("Team", "alice", { joined: ["bo"] });
@@ -404,4 +404,27 @@ test("R32, R40: ratificationOp routes publishat; any other op is not this module
   const res = await ratificationOp("publishat", p.request({ caseId: CASE, edition: 1, expectedSha: s.docSha, sig: s.sig, at: AT }), p.stub, p.ctx);
   assert.equal(res.status, 200);
   assert.equal(ratificationOp("publishatmove", p.request({}), p.stub, p.ctx), null);
+});
+
+/* R42, R39 (T37; N757; K2206): where the publisher reaches the published bucket, R39's copy follows its commit as it
+   follows R3's: an evidence-held material from `captures/`, a derived one (an obscured copy, case-carriage R1, R11) from
+   where case-carriage holds it, never from `captures/`, each counted in `materials_copied`. */
+test("R42, R39: at its time, with the bucket reachable, the publisher copies each evidence-held and derived material after the commit, a derived one never from captures/, and a missing one never changes the answer", async () => {
+  const captures = new Map(), published = new Map();
+  const env = { CAPTURES: bucketOver(captures), PUBLISHED: bucketOver(published) };
+  const s = await setup({ worker: { env, storeName: "s" } });
+  const A = "a1".repeat(32), D = "d4".repeat(32), E = "e5".repeat(32);
+  const real = s.w.publication.commitCaseEdition;
+  s.w.publication.commitCaseEdition = (a) => ({ ...real(a), materials: [{ sha: A, held: "evidence" }, { sha: D, held: "derived" },
+                                                                          { sha: E, held: "derived" }, { sha: "c3".repeat(32), held: "inline" }] });
+  const bytesA = new TextEncoder().encode("document A"), copyD = new TextEncoder().encode("the obscured copy D");
+  captures.set(`s/captures/${A}`, bytesA); captures.set(obscuredCopyKey("s", D), copyD);
+  captures.set(`s/captures/${E}`, new TextEncoder().encode("the original photo E"));
+  assert.equal(s.w.op("publishat", {}, s.body).ok, true);
+  const out = await s.w.r.publishScheduled(s.entry(s.scheduled[0].checked), LATER);
+  assert.equal(out.published, true, JSON.stringify(out));
+  assert.deepEqual(out.after.materials_copied, { copied: 2, present: 0, missing: [E] });
+  assert.deepEqual([published.get(`s/published/${A}`), published.get(`s/published/${D}`)], [bytesA, copyD]);
+  assert.equal(published.has(`s/published/${E}`), false, "a derived material is never read from captures/");
+  assert.equal(out.after.not_done, undefined);
 });

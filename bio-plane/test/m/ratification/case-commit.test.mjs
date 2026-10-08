@@ -320,5 +320,8 @@ test("R32: casegate reads secretSha from the body only — a secretSha in the qu
   assert.equal(both.reason, "NO_CASE_DOCUMENT", "the query's digest never stands in for, or overrides, the body's");
   const queryOnlyCase = w.op("casegate", { viewer: V("eve"), secretSha: GRANT, case: CASE, edition: 1, docSha }, null);
   assert.equal(queryOnlyCase.reason, "NO_CASE_DOCUMENT", "nor when the rest of the request is read from the query");
-  assert.deepEqual(asked(), [null, GRANT, OTHER, null], "publication is handed the body's digest or none, never the query's");
+  for (const bad of [{ sha: GRANT }, 7, ""])
+    assert.equal(w.op("casegate", { viewer: V("eve"), secretSha: GRANT }, { caseId: CASE, edition: 1, docSha, secretSha: bad }).reason,
+      "NO_CASE_DOCUMENT", `a body digest that is not a string is none: ${JSON.stringify(bad)}`);
+  assert.deepEqual(asked(), [null, GRANT, OTHER, null, null, null, null], "publication is handed the body's digest or none, never the query's");
 });
