@@ -22,3 +22,30 @@ T36-8's stamp is done and pushed on `job/T36/promotion` @ `db387837ad`, over `tr
 - promotion and d526: 118/119. The 1 red is accepted red 3 (`registry.test.mjs`, `MODULE_ORDER`, until T36-6).
 - architecture: 0 failures. coverage: 56/56.
 - format and ownership: 1 failure each, the swap above.
+
+## Completion
+
+**Entry applied (T36-8, T35's red 2 / T36's red 4).**
+- **The stamp.** `CATALOG_VERSION` moves 1.62.0 → **1.63.0** (MINOR), over `tranche/T36` after L1 (`db387837ad`): T35's layers 3–11 rows, 77 new, 44 changed, none departed, each named by its T35 job record (J1). T36's layer 1 moved no row.
+- **Re-pinned in place at L2's merges:** membership (K2090) moved no row. credentials (B3, K2093, `tranche/T36` @ 5b3d7fb633) moved exactly the rows its record names: C-29.31 AI_KEPT_AWAY, C-29.32 NO_REASON and C-96.44 SECURITY_COUNTS_UNREADABLE arrived; C-96.43 SECURITY_PERIOD_INVALID changed its `where` only.
+- **Final `ROW_CENSUS`:** **1470 rows, `e9ef089b7a25c5e6fff51a1ee185b89dccf1c2364389129044b093a8a0d00af8`**. The fixture is `bio-plane/test/fixtures/row-census-1.63.0.jsonl`; 1.62.0's is deleted. `gate.mjs`'s 1.63.0 note lists every row by family. Red 4 is cleared up to L2. Rows T36's L3–L11 jobs add are T37's stamp.
+
+**Deferred.** None.
+
+**Reading (mechanics §17).** I read these whole myself: my requirements; `layers.md` layer 2's row; the plan's rules and T36-8; K1542, K1545, K1855; `row-census.mjs` and `row-census.test.mjs`; `gate.mjs`'s stamp, pin and the 1.62.0 note; and the Purpose of each used module. A worker read the rest of promotion's code and tests in full and grepped the repository for every reader of the version, the pin and the fixture. Its summary was about 3.9 KB, citing file:line. Nothing it left out mattered: the stamp changes no code path, only the constants and the fixture.
+
+**Found in other modules (§14, for BOB at L2's close).**
+- case-checker `src/case-checker/program.mjs`:4 (generated) embeds "1.62.0" and the old `ROW_CENSUS`. Its `program.test.mjs`:19/:23 and :49 stay red until it is regenerated.
+- The plane bundle `dist/bio-plane.bundled.mjs` (generated) carries "1.62.0" twice.
+- `build/modules.json`:39: swap promotion's `tests` entry `row-census-1.62.0.jsonl` → `row-census-1.63.0.jsonl` (BOB's at merge, B2).
+
+**Tests and checks** (final tree, after B3's merge):
+- `node test/system/row-census.test.mjs`: `row-census: 8 pass, 0 fail` (1.63.0, 1470 rows, `e9ef089b…`).
+- `node --test test/m/promotion/ test/d526-refusal-order.test.mjs`: 119 pass, 0 fail. Red 3 cleared with membership's merge.
+- credentials, membership and record-core: 454 pass, 0 fail.
+- `checks/format.mjs`: 1 failure (the `modules.json` entry above).
+- `checks/architecture.mjs bio promotion`: 0 failures.
+- `checks/coverage.mjs bio promotion`: 56 of 56, 0 failures.
+- `checks/ownership.mjs bio promotion tranche/T36`: 1 failure (the new fixture, until the swap).
+
+Size (session_01PfzH458a5tMgwWs1AQfAys): test runs 8, module lines 3420
