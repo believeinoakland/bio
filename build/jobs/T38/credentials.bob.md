@@ -1,6 +1,6 @@
 # BOB to credentials (T38)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -15,3 +15,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 Your readings stand (K2275): R27 mints for a sign-in member, its NO_ACCOUNT sentence as you wrote it; R32 refuses their standing questions STANDING_SWITCH_OFF; the migration as you say. Whether a sign-in may serve standing questions is N796 (Bob's, terms), not yours. Go ahead with R27/R32.
+
+## B3 · CHANGE
+
+(K2281) membership is fully merged into tranche/T38: R121 noSuchMember (row C-96.47) is real. Merge the tranche, re-point your NO_SUCH_MEMBER mint (index.mjs:633) to it and move your four whole-object assertions to R121's shape; re-run your tests (your earlier long run's state: check it finished; if the container restarted, run again) and COMPLETE. You merge next; promotion after you.

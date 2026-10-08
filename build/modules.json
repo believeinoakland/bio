@@ -36,7 +36,7 @@
     {"id": "file-scanner", "layer": 1, "paths": ["file-scanner/"], "tests": ["file-scanner/test/"], "uses": ["runtime-limits", "bundler", "test-support"]},
     {"id": "record-core", "layer": 2, "paths": ["bio-plane/src/record-core/"], "tests": ["bio-plane/test/m/record-core/", "bio-plane/test/stats-disclosure.test.mjs"], "uses": ["record-grammar", "id-spaces", "test-support"]},
     {"id": "membership", "layer": 2, "paths": ["bio-plane/src/membership/"], "tests": ["bio-plane/test/m/membership/", "bio-plane/test/members.test.mjs"], "uses": ["record-grammar", "signatures", "record-core", "test-support"]},
-    {"id": "project-roster", "layer": 2, "paths": [], "tests": [], "uses": ["record-grammar", "record-core", "membership", "test-support"]},
+    {"id": "project-roster", "layer": 2, "paths": ["bio-plane/src/project-roster/"], "tests": ["bio-plane/test/m/project-roster/"], "uses": ["record-grammar", "record-core", "membership", "test-support"]},
     {"id": "credentials", "layer": 2, "paths": ["bio-plane/src/credentials/"], "tests": ["bio-plane/test/m/credentials/"], "uses": ["record-grammar", "record-core", "membership"]},
     {"id": "promotion", "layer": 2, "paths": ["bio-plane/src/gate.mjs", "bio-plane/src/promotion/"], "tests": ["bio-plane/test/m/promotion/", "bio-plane/test/d526-refusal-order.test.mjs", "bio-plane/test/system/row-census.test.mjs", "bio-plane/test/system/row-census.mjs", "bio-plane/test/fixtures/row-census-1.64.0.jsonl"], "uses": ["record-grammar", "signatures", "record-core", "membership", "test-support"]},
     {"id": "host-governor", "layer": 3, "paths": ["bio-plane/src/host-governor/"], "tests": ["bio-plane/test/m/host-governor/"], "uses": ["record-core"]},

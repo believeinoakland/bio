@@ -71,16 +71,11 @@ test("R44 sight is FULL, EXISTENCE (discoverable, a member asking) or NONE; EXIS
     () => w.m.projectLeave({ projectId: "PROJ-D", by: "cal", viewer: V("cal") }),
     () => w.m.projectInvite({ projectId: "PROJ-D", handle: "bob", by: "cal", viewer: V("cal") }),
     () => w.m.projectRemove({ projectId: "PROJ-D", handle: "bob", by: "cal", viewer: V("cal") }),
-    () => w.m.projectOwnerAdd({ projectId: "PROJ-D", handle: "bob", by: "cal", viewer: V("cal") }),
-    () => w.m.projectOwnerRemove({ projectId: "PROJ-D", handle: "ann", by: "cal", reason: "r", viewer: V("cal") }),
-    () => w.m.projectOwnerRescue({ projectId: "PROJ-D", handle: "cal", by: "cal", reason: "r", viewer: V("cal") }),
     () => w.m.projectVisibilitySet({ projectId: "PROJ-D", setting: "hidden", by: "cal", viewer: V("cal") }),
-    () => w.m.projectRequestAnswer({ projectId: "PROJ-D", handle: "cal", answer: "grant", by: "cal", viewer: V("cal") }),
-    () => w.m.projectRequests({ projectId: "PROJ-D", by: "cal", viewer: V("cal") }),
   ];
   for (const c of calls) assert.deepEqual(c(), ex);
-  // a read INSIDE the project is never widened by EXISTENCE
-  assert.equal(w.m.projectVisibility({ projectId: "PROJ-D", viewer: V("cal") }).reason, "NO_SUCH_PROJECT");
+  // a read INSIDE the project is never widened by EXISTENCE (project-roster's reads hold it too, its R19)
+  assert.equal(w.m.projectOwnerArithmetic({ projectId: "PROJ-D", viewer: V("cal") }).live.owners, 0);
   assert.equal(w.m.inSight("PROJ-D", V("cal")), false);
 });
 
@@ -88,15 +83,7 @@ test("R61 every act naming a project the caller cannot see answers byte for byte
   const w = await sightWorld();
   const as = (projectId) => [
     w.m.projectInvite({ projectId, handle: "bob", by: "cal", viewer: V("cal") }),
-    w.m.projectOwnerAdd({ projectId, handle: "bob", by: "cal", viewer: V("cal") }),
-    w.m.projectOwnerRemove({ projectId, handle: "ann", by: "cal", reason: "r", viewer: V("cal") }),
-    w.m.projectOwnerRescue({ projectId, handle: "cal", by: "cal", reason: "r", viewer: V("cal") }),
     w.m.projectVisibilitySet({ projectId, setting: "hidden", by: "cal", viewer: V("cal") }),
-    w.m.projectVisibility({ projectId, viewer: V("cal") }),
-    w.m.projectRequest({ projectId, by: "cal", viewer: V("cal") }),
-    w.m.projectRequestAnswer({ projectId, handle: "cal", answer: "grant", by: "cal", viewer: V("cal") }),
-    w.m.projectRequests({ projectId, by: "cal", viewer: V("cal") }),
-    w.m.projectParticipants({ projectId, by: "cal" }),
     w.m.projectOwnerArithmetic({ projectId, viewer: V("cal") }).live,
   ].map((x) => JSON.stringify(x).replaceAll(projectId, "<id>"));
   assert.deepEqual(as("PROJ-H"), as("PROJ-NEVER"));
@@ -104,7 +91,7 @@ test("R61 every act naming a project the caller cannot see answers byte for byte
   for (const a of as("PROJ-H")) assert.doesNotMatch(a, /NOT_THE_OWNER|NOT_AN_ADMIN|ADMIN_ONLY/);
 });
 
-test("R45 projectVisibilitySet: NOT_A_PROJECT, owners only, two settings; appended with by and reason; hidden lapses requests", async () => {
+test("R45 projectVisibilitySet: NOT_A_PROJECT, owners only, two settings; appended with by and reason; hidden tells R117", async () => {
   const w = await sightWorld();
   w.bundle("INFO-J");
   assert.equal(w.m.projectVisibilitySet({ projectId: "INFO-J", setting: "hidden", by: "ann", viewer: V("ann") }).reason, "NOT_A_PROJECT");
@@ -113,25 +100,45 @@ test("R45 projectVisibilitySet: NOT_A_PROJECT, owners only, two settings; append
       "PROJECT_VISIBILITY_NOT_THE_OWNER", by);
   assert.equal(w.m.projectVisibilitySet({ projectId: "PROJ-H", setting: "public", by: "ann", viewer: V("ann") }).reason,
     "PROJECT_VISIBILITY_UNKNOWN_SETTING");
-  w.m.projectRequest({ projectId: "PROJ-D", comment: "please", by: "cal", viewer: V("cal") });
   const h = w.m.projectVisibilitySet({ projectId: "PROJ-D", setting: "hidden", reason: "closing up", by: "ann", viewer: V("ann") });
-  assert.deepEqual([h.ok, h.setting, h.set_by, h.reason, h.requests_lapsed], [true, "hidden", "ann", "closing up", 1]);
-  assert.deepEqual(w.row(`SELECT state, closed_by FROM project_join_requests`), { state: "lapsed", closed_by: "ann" });
+  assert.deepEqual([h.ok, h.setting, h.set_by, h.reason, h.requests_lapsed], [true, "hidden", "ann", "closing up", 0],
+    "hiding lapses requests through R117's listener; with none registered, 0");
   assert.equal(w.m.visibilityOf("PROJ-D"), "hidden");
   assert.equal(w.m.sight("PROJ-D", V("cal")), Membership.SIGHT_NONE);
   assert.equal(w.m.visibilityOf("PROJ-H"), "hidden", "a project with no record is hidden");
   assert.equal(w.rows(`SELECT * FROM project_visibility WHERE project_id='PROJ-D'`).length, 2, "appended, never overwritten");
 });
 
-test("R46 projectVisibility gives the setting and its history at FULL, else the absent answer", async () => {
+test("R45 R117 hiding tells the one registered listener after the record and the reindex; requests_lapsed its count; discoverable tells nobody", async () => {
   const w = await sightWorld();
-  const v = w.m.projectVisibility({ projectId: "PROJ-D", viewer: V("ann") });
-  assert.deepEqual([v.ok, v.setting, v.recorded, v.history.map((h) => [h.setting, h.set_by])],
-    [true, "discoverable", true, [["discoverable", "ann"]]]);
-  const h = w.m.projectVisibility({ projectId: "PROJ-H", viewer: V("bob") });
-  assert.deepEqual([h.setting, h.recorded, h.history], ["hidden", false, []]);
-  assert.match(h.note, /HIDDEN/);
-  assert.equal(w.m.projectVisibility({ projectId: "PROJ-H", viewer: V("cal") }).reason, "NO_SUCH_PROJECT");
+  const heard = [];
+  let answer = 2;
+  assert.deepEqual(w.m.onProjectHidden("project-roster", (n) => {
+    heard.push({ ...n, setting: w.m.visibilityOf(n.projectId),
+                 recorded: w.row(`SELECT at FROM project_visibility WHERE project_id=? ORDER BY seq DESC LIMIT 1`, n.projectId).at });
+    if (answer === "throw") throw new Error("listener fails");
+    return answer;
+  }), { ok: true, module: "project-roster" });
+  const h = w.m.projectVisibilitySet({ projectId: "PROJ-D", setting: "hidden", by: "ann", viewer: V("ann") });
+  assert.deepEqual([h.ok, h.setting, h.requests_lapsed], [true, "hidden", 2]);
+  assert.equal(heard.length, 1);
+  assert.deepEqual([heard[0].projectId, heard[0].by, heard[0].setting, heard[0].at], ["PROJ-D", "ann", "hidden", h.at]);
+  assert.equal(heard[0].recorded, h.at, "told after the record, with the record's date");
+  const d = w.m.projectVisibilitySet({ projectId: "PROJ-D", setting: "discoverable", by: "ann", viewer: V("ann") });
+  assert.deepEqual([d.ok, "requests_lapsed" in d, heard.length], [true, false, 1], "discoverable tells nobody");
+  for (const a of [0, "throw", -1, 1.5, "3", null]) {
+    answer = a;
+    const r = w.m.projectVisibilitySet({ projectId: "PROJ-D", setting: "hidden", by: "ann", viewer: V("ann") });
+    assert.deepEqual([r.ok, r.requests_lapsed, w.m.visibilityOf("PROJ-D")], [true, 0, "hidden"], String(a));
+    w.m.projectVisibilitySet({ projectId: "PROJ-D", setting: "discoverable", by: "ann", viewer: V("ann") });
+  }
+  /* A refused setting tells nobody. */
+  const before = heard.length;
+  w.m.projectVisibilitySet({ projectId: "PROJ-D", setting: "hidden", by: "bob", viewer: V("bob") });
+  assert.equal(heard.length, before);
+  const again = w.m.onProjectHidden("other", () => 1);
+  assert.deepEqual([again.reason, again.module], ["LISTENER_DECLARED", "project-roster"]);
+  assert.equal(w.m.onProjectHidden("x", 1).reason, "LISTENER_MALFORMED");
 });
 
 test("R47 visibilitySettingRefusal answers the unknown-setting refusal for anything but the two settings", () => {
@@ -141,29 +148,6 @@ test("R47 visibilitySettingRefusal answers the unknown-setting refusal for anyth
     const r = m.visibilitySettingRefusal(bad, null);
     assert.equal(r.reason, "PROJECT_VISIBILITY_UNKNOWN_SETTING", JSON.stringify(bad));
   }
-});
-
-test("R48 projectDirectory: needs a member; discoverable projects not at FULL, own latest request, id order, capped", async () => {
-  const w = await sightWorld();
-  assert.equal(w.m.projectDirectory({ viewer: `${MACHINE_CLASS_PREFIX}member` }).reason, "PROJECT_DIRECTORY_NEEDS_A_MEMBER");
-  assert.equal(w.m.projectDirectory({ viewer: "admin" }).reason, "PROJECT_DIRECTORY_NEEDS_A_MEMBER");
-  for (let i = 0; i < 4; i++) {
-    w.project(`PROJ-X${i}`, `X ${i}`);
-    w.m.projectClaimOwner({ projectId: `PROJ-X${i}`, memberId: "ann" });
-    w.m.projectVisibilitySet({ projectId: `PROJ-X${i}`, setting: "discoverable", by: "ann", viewer: V("ann") });
-  }
-  w.m.projectRequest({ projectId: "PROJ-X1", comment: "hi", by: "cal", viewer: V("cal") });
-  const d = w.m.projectDirectory({ viewer: V("cal") });
-  assert.deepEqual(d.projects.map((p) => [p.id, p.name, p.request?.state ?? null]),
-    [["PROJ-D", "Discoverable D", null], ["PROJ-X0", "X 0", null], ["PROJ-X1", "X 1", "open"], ["PROJ-X2", "X 2", null], ["PROJ-X3", "X 3", null]]);
-  assert.deepEqual([d.limit, d.truncated], [Membership.PROJECT_DIRECTORY_LIMIT, false]);
-  assert.equal(Membership.PROJECT_DIRECTORY_LIMIT, 200);
-  assert.deepEqual(w.m.projectDirectory({ viewer: V("ann") }).projects, [], "a project at FULL is not listed");
-  const cut = w.m.projectDirectory({ viewer: V("cal"), limit: 2 });
-  assert.deepEqual([cut.count, cut.truncated, cut.projects.map((p) => p.id)], [2, true, ["PROJ-D", "PROJ-X0"]]);
-  const exact = w.m.projectDirectory({ viewer: V("cal"), limit: 5 });
-  assert.equal(exact.truncated, false, "measured by reading one past the cap");
-  assert.equal(w.m.projectDirectory({ viewer: V("cal"), limit: 10_000 }).limit, 200, "never raised");
 });
 
 test("R77 existenceAct: C-70.1 (id and name only) at EXISTENCE; null at FULL, at NONE and with no viewer; never throws", async () => {
@@ -207,7 +191,7 @@ test("R77 existenceAct: C-70.1 (id and name only) at EXISTENCE; null at FULL, at
   // it is the one mint of C-70.1: every project-naming act at EXISTENCE answers it byte for byte (R44's list)
   const ex = w.m.existenceAct("PROJ-H", V("cal"));
   assert.deepEqual(w.m.projectJoin({ projectId: "PROJ-H", by: "cal", viewer: V("cal") }), ex);
-  assert.deepEqual(w.m.projectOwnerAdd({ projectId: "PROJ-H", handle: "cal", by: "cal", viewer: V("cal") }), ex);
+  assert.deepEqual(w.m.projectVisibilitySet({ projectId: "PROJ-H", setting: "hidden", by: "cal", viewer: V("cal") }), ex);
 });
 
 test("R43 R44 R80 R76 N357: the founder's member:admin is at FULL sight of every project, as the bare admin is, and names the member admin", async () => {
@@ -227,9 +211,6 @@ test("R43 R44 R80 R76 N357: the founder's member:admin is at FULL sight of every
   assert.deepEqual([viewerPredicate("admin").scope, viewerPredicate(V("admin")).scope], ["member", "member"]);
   assert.equal(w.m.positionalMember(V("admin")), "admin");
   assert.equal(w.m.positionalMember("admin"), null);
-  /* the directory lists what a member sees below FULL: for the founder, nothing; the bare spelling names no member (R48) */
-  assert.deepEqual(w.m.projectDirectory({ viewer: V("admin") }).projects, []);
-  assert.equal(w.m.projectDirectory({ viewer: "admin" }).reason, "PROJECT_DIRECTORY_NEEDS_A_MEMBER");
   /* sight is not authority: the founder's spellings hold no position in a project (R55, R60) */
   assert.equal(w.m.projectAuthority("PROJ-H", V("admin"), "joined", "an act").code, "PROJECT_ACT_NOT_A_PARTICIPANT");
   /* no other member id is widened: a member named like no roster row still sees no project */
