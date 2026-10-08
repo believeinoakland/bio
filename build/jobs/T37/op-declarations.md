@@ -38,6 +38,6 @@ Two readings, each my best, applied now; the job carries on.
 
 **Tests and checks.**
 - `node --test bio-plane/test/m/op-declarations/*.test.mjs`: 113 pass, 1 fail (the R34 partition above).
-- `format`: 0 failures. `architecture`: 0 failures. `coverage`: 39 of 39 live ids, 0 failures. `ownership`: 0 failures (summary line below, after commit).
+- `format`: 136 modules, 0 failures. `architecture`: 0 failures. `coverage`: 39 of 39 live requirement ids named by a test, 0 failures. `ownership`: 7 files changed by op-declarations between tranche/T37 and HEAD; 0 failures.
 
 Size (session_01SsLYQXDrWuDz7QtHaT5dnd): test runs 14, module lines 3275
