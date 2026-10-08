@@ -7066,7 +7066,7 @@ async function readVbaProject(bytes2, container2, partName) {
   }
 }
 
-// src/docx.mjs
+// src/formats-xlsx.mjs
 var UTF82 = new TextDecoder("utf-8", { fatal: false });
 function toBytes2(x) {
   if (x instanceof Uint8Array) return x;
@@ -7078,768 +7078,6 @@ function toBytes2(x) {
   }
 }
 var isBytes = (x) => x instanceof ArrayBuffer || ArrayBuffer.isView(x);
-var DOCX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-var DOCX_TWIN_CONTENT_TYPES = /* @__PURE__ */ new Map([
-  ["application/vnd.ms-word.document.macroEnabled.12", "docm"],
-  ["application/vnd.ms-word.template.macroEnabled.12", "dotm"]
-]);
-var CONTENT_TYPES_PART2 = "[Content_Types].xml";
-var MAIN_PART = "word/document.xml";
-var COMMENTS_PART = "word/comments.xml";
-var EMBEDDINGS_DIR = "word/embeddings/";
-function docParaRef(para, run2 = null) {
-  const ref = { kind: "doc-para", ref: `\xB6${para + 1}`, para };
-  if (run2 != null) ref.run = run2;
-  return ref;
-}
-function docTableRef(table4, cell = null) {
-  const out = { kind: "doc-table", ref: `table ${table4 + 1}${cell != null ? `, ${cell}` : ""}`, table: table4 };
-  if (cell != null) out.cell = cell;
-  return out;
-}
-function decodeEntities(s) {
-  return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, e2) => {
-    if (e2[0] === "#") {
-      const code = e2[1] === "x" || e2[1] === "X" ? parseInt(e2.slice(2), 16) : parseInt(e2.slice(1), 10);
-      return Number.isFinite(code) && code <= 1114111 ? String.fromCodePoint(code) : m;
-    }
-    return { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" }[e2] ?? m;
-  });
-}
-function attrsOf2(raw) {
-  const attrs = {};
-  for (const a of (raw || "").matchAll(/([\w.-]+(?::[\w.-]+)?)\s*=\s*("([^"]*)"|'([^']*)')/g)) {
-    const local = a[1].includes(":") ? a[1].split(":").pop() : a[1];
-    attrs[local] = decodeEntities(a[3] ?? a[4] ?? "");
-  }
-  return attrs;
-}
-var TOKEN_RE = /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<\/?([\w.-]+(?::[\w.-]+)?)((?:[^>"']|"[^"]*"|'[^']*')*?)(\/?)>/g;
-var localOf = (name2) => name2.includes(":") ? name2.split(":").pop() : name2;
-function mceSkipper() {
-  const taken = [];
-  let skip = null;
-  return (name2, closing, selfClosed) => {
-    if (skip) {
-      if (name2 === skip.name) {
-        if (closing) {
-          if (--skip.depth === 0) skip = null;
-        } else if (!selfClosed) skip.depth++;
-      }
-      return true;
-    }
-    if (name2 === "AlternateContent") {
-      if (closing) taken.pop();
-      else if (!selfClosed) taken.push(false);
-      return false;
-    }
-    if ((name2 === "Choice" || name2 === "Fallback") && !closing && taken.length) {
-      const top2 = taken.length - 1;
-      if (taken[top2]) {
-        if (!selfClosed) skip = { name: name2, depth: 1 };
-        return true;
-      }
-      taken[top2] = true;
-    }
-    return false;
-  };
-}
-function walkDocumentBody(xml) {
-  const paragraphs = [];
-  const hyperlinks = [];
-  const bookmarks = /* @__PURE__ */ new Map();
-  const changes = [];
-  const commentRefs = /* @__PURE__ */ new Map();
-  const ridUsage = /* @__PURE__ */ new Map();
-  let para = -1;
-  let run2 = -1;
-  let inPara = false;
-  let last = -1;
-  const outer = [];
-  let textTarget = null;
-  const hyperStack = [];
-  const insStack = [];
-  const delStack = [];
-  const noteRid = (attrs) => {
-    if (!inPara) return;
-    for (const key of ["id", "embed", "link"]) {
-      const v = attrs[key];
-      if (typeof v === "string" && /^rId/.test(v) && !ridUsage.has(v))
-        ridUsage.set(v, { para, run: run2 >= 0 ? run2 : null });
-    }
-  };
-  const appendVisible = (s) => {
-    if (!inPara || !s) return;
-    paragraphs[para].text += s;
-    for (const c of insStack) c.text += s;
-  };
-  const skipped = mceSkipper();
-  TOKEN_RE.lastIndex = 0;
-  let m, prev = 0;
-  while ((m = TOKEN_RE.exec(xml)) !== null) {
-    if (textTarget && m.index > prev) {
-      const data = decodeEntities(xml.slice(prev, m.index));
-      if (textTarget === "t") appendVisible(data);
-      else if (textTarget === "delText" && delStack.length) delStack[delStack.length - 1].text += data;
-    }
-    prev = TOKEN_RE.lastIndex;
-    if (m[1] === void 0) continue;
-    const name2 = localOf(m[1]);
-    const selfClosed = m[3] === "/";
-    const closing = m[0][1] === "/";
-    if (skipped(name2, closing, selfClosed)) {
-      if (!closing && m[2] && m[2].includes("=")) noteRid(attrsOf2(m[2]));
-      continue;
-    }
-    if (closing) {
-      if (name2 === "t" || name2 === "delText") textTarget = null;
-      else if (name2 === "p") {
-        if (outer.length) ({ para, run: run2 } = outer.pop());
-        else inPara = false;
-      } else if (name2 === "hyperlink") {
-        const h = hyperStack.pop();
-        if (h) hyperlinks.push(h);
-      } else if (name2 === "ins") {
-        const c = insStack.pop();
-        if (c) changes.push(c);
-      } else if (name2 === "del") {
-        const c = delStack.pop();
-        if (c) changes.push(c);
-      }
-      continue;
-    }
-    const attrs = m[2] && m[2].includes("=") ? attrsOf2(m[2]) : {};
-    switch (name2) {
-      case "p":
-        if (!selfClosed) {
-          if (inPara) outer.push({ para, run: run2 });
-          para = ++last;
-          run2 = -1;
-          inPara = true;
-          paragraphs.push({ para, text: "" });
-        } else {
-          paragraphs.push({ para: ++last, text: "" });
-          if (!inPara) {
-            para = last;
-            run2 = -1;
-          }
-        }
-        break;
-      case "r":
-        if (inPara && !selfClosed) {
-          run2++;
-          for (const c of hyperStack) if (c.run == null) c.run = run2;
-          for (const c of insStack) if (c.run == null) c.run = run2;
-          for (const c of delStack) if (c.run == null) c.run = run2;
-        }
-        break;
-      case "t":
-        if (!selfClosed) textTarget = "t";
-        break;
-      case "delText":
-        if (!selfClosed) textTarget = "delText";
-        break;
-      case "tab":
-        appendVisible("	");
-        break;
-      case "br":
-      case "cr":
-        appendVisible("\n");
-        break;
-      case "hyperlink":
-        noteRid(attrs);
-        if (!selfClosed && inPara)
-          hyperStack.push({ rid: attrs.id ?? null, anchor: attrs.anchor ?? null, para, run: null });
-        else if (selfClosed && inPara)
-          hyperlinks.push({ rid: attrs.id ?? null, anchor: attrs.anchor ?? null, para, run: null });
-        break;
-      case "ins":
-        if (!selfClosed && inPara)
-          insStack.push({ change: "insertion", author: attrs.author ?? null, date: attrs.date ?? null, text: "", para, run: null });
-        break;
-      case "del":
-        if (!selfClosed && inPara)
-          delStack.push({ change: "deletion", author: attrs.author ?? null, date: attrs.date ?? null, text: "", para, run: null });
-        break;
-      case "bookmarkStart":
-        if (attrs.name != null && !bookmarks.has(attrs.name))
-          bookmarks.set(attrs.name, para >= 0 ? para : 0);
-        break;
-      case "commentReference":
-        if (attrs.id != null && !commentRefs.has(attrs.id))
-          commentRefs.set(attrs.id, { para, run: run2 >= 0 ? run2 : null });
-        break;
-      default:
-        noteRid(attrs);
-    }
-  }
-  return { paragraphs, hyperlinks, bookmarks, changes, commentRefs, ridUsage };
-}
-function parseComments(xml) {
-  if (typeof xml !== "string" || !/<(?:[\w.-]+:)?comments\b/.test(xml)) {
-    return { ok: false, why: "comments_unparseable" };
-  }
-  const comments = [];
-  const re = /<(?:[\w.-]+:)?comment\b((?:[^>"']|"[^"]*"|'[^']*')*?)>([\s\S]*?)<\/(?:[\w.-]+:)?comment>/g;
-  for (const m of xml.matchAll(re)) {
-    const a = attrsOf2(m[1]);
-    const paras = [];
-    for (const pm of m[2].split(/<\/(?:[\w.-]+:)?p>/)) {
-      let text7 = "";
-      for (const t2 of pm.matchAll(/<(?:[\w.-]+:)?t\b[^>]*>([\s\S]*?)<\/(?:[\w.-]+:)?t>/g))
-        text7 += decodeEntities(t2[1]);
-      if (text7) paras.push(text7);
-    }
-    comments.push({
-      id: a.id ?? null,
-      author: a.author ?? null,
-      date: a.date ?? null,
-      initials: a.initials ?? null,
-      text: paras.join("\n")
-    });
-  }
-  return { ok: true, comments };
-}
-function classifyUri2(uri) {
-  const m = /^([a-zA-Z][a-zA-Z0-9+.\-]*):/.exec(uri || "");
-  const scheme = m ? m[1].toLowerCase() : null;
-  if (scheme === "http" || scheme === "https") return "deferred";
-  if (!scheme && uri) return "deferred";
-  return "refused";
-}
-function deferredOrRefusedRecord2(uri, source2) {
-  const partition = classifyUri2(uri);
-  return {
-    partition,
-    wrapper: partition === "deferred" ? linkWrapper.deferred(uri) : linkWrapper.refused(uri),
-    target: { url: uri },
-    source: source2
-  };
-}
-function undeterminedRecord2(source2, why, extra = {}) {
-  return { partition: "undetermined", wrapper: null, target: { why, ...extra }, source: source2 };
-}
-var HEX2 = "0123456789abcdef";
-async function sha256Hex2(u8) {
-  const d = await crypto.subtle.digest("SHA-256", u8);
-  const b = new Uint8Array(d);
-  let out = "";
-  for (let i = 0; i < b.length; i++) out += HEX2[b[i] >> 4] + HEX2[b[i] & 15];
-  return out;
-}
-function resolveRelTarget(relsPart, target) {
-  const t2 = String(target || "");
-  if (t2.startsWith("/")) return normalizePartName(t2);
-  const baseDir = relsPart.replace(/_rels\/[^/]*\.rels$/, "");
-  const segs = (baseDir + t2).split("/");
-  const out = [];
-  for (const s of segs) {
-    if (s === "" || s === ".") continue;
-    if (s === "..") out.pop();
-    else out.push(s);
-  }
-  return out.join("/");
-}
-async function docxParts(bytes2) {
-  const b = toBytes2(bytes2);
-  const d = await discriminate(b);
-  if (!d.ok) return { ok: false, why: d.why, signals: d.signals };
-  if (d.format !== "docx") {
-    return {
-      ok: false,
-      why: d.format === "undetermined" ? d.why : `not_docx:${d.format}`,
-      signals: d.signals
-    };
-  }
-  const container2 = readContainer(b);
-  if (!container2.ok) return { ok: false, why: container2.why, signals: d.signals };
-  const undetermined3 = [];
-  const mainPart = normalizePartName(d.mainPart || MAIN_PART);
-  let declaredTextBytes2 = 0;
-  for (const partName of [mainPart, COMMENTS_PART]) {
-    const e2 = container2.byName.get(partName);
-    if (e2) declaredTextBytes2 += e2.uncompressedSize;
-  }
-  const guardR = sizeGuard(declaredTextBytes2);
-  const guard = guardR.ok ? null : guardR;
-  let documentXml = null;
-  let commentsXml = null;
-  if (!guard) {
-    const main = await readPart(b, container2, mainPart);
-    if (main.ok) documentXml = UTF82.decode(main.bytes);
-    else undetermined3.push({ part: mainPart, why: main.why });
-    if (container2.byName.has(COMMENTS_PART)) {
-      const com = await readPart(b, container2, COMMENTS_PART);
-      if (com.ok) commentsXml = UTF82.decode(com.bytes);
-      else undetermined3.push({ part: COMMENTS_PART, why: com.why });
-    }
-  }
-  const rels = await walkRels(b, container2);
-  let core = null;
-  if (container2.byName.has(CORE_PROPERTIES_PART)) {
-    const c = await readCoreProperties(b, container2);
-    if (c.ok) core = c;
-    else undetermined3.push({ part: CORE_PROPERTIES_PART, why: c.why });
-  }
-  const active = await activeContent(b, container2, rels, "word/");
-  return {
-    ok: true,
-    format: "docx",
-    variant: d.variant ?? null,
-    bytes: b,
-    container: container2,
-    mainPart,
-    documentXml,
-    commentsXml,
-    rels,
-    core,
-    active,
-    guard,
-    undetermined: undetermined3
-  };
-}
-function walkDocumentTables(xml) {
-  const done = [];
-  const stack = [];
-  let next = 0;
-  const skipped = mceSkipper();
-  TOKEN_RE.lastIndex = 0;
-  let m;
-  while ((m = TOKEN_RE.exec(xml)) !== null) {
-    if (m[1] === void 0) continue;
-    const name2 = localOf(m[1]);
-    const closing = m[0][1] === "/";
-    const selfClosed = m[3] === "/";
-    if (skipped(name2, closing, selfClosed)) continue;
-    const top2 = stack.length ? stack[stack.length - 1] : null;
-    if (closing) {
-      if (name2 === "tbl" && stack.length) {
-        const t2 = stack.pop();
-        done[t2.table] = {
-          table: t2.table,
-          rows: t2.rows,
-          cols: t2.gridCols > 0 ? t2.gridCols : t2.maxTc > 0 ? t2.maxTc : null
-        };
-      } else if (name2 === "tr" && top2) {
-        if (top2.tc > top2.maxTc) top2.maxTc = top2.tc;
-      }
-      continue;
-    }
-    if (name2 === "tbl" && !selfClosed) stack.push({ table: next++, rows: 0, gridCols: 0, tc: 0, maxTc: 0 });
-    else if (name2 === "tbl") done[next] = { table: next++, rows: 0, cols: null };
-    else if (!top2) continue;
-    else if (name2 === "gridCol") top2.gridCols++;
-    else if (name2 === "tr") {
-      top2.rows++;
-      top2.tc = 0;
-    } else if (name2 === "tc") top2.tc++;
-  }
-  while (stack.length) {
-    const t2 = stack.pop();
-    done[t2.table] = {
-      table: t2.table,
-      rows: t2.rows || null,
-      cols: t2.gridCols > 0 ? t2.gridCols : t2.maxTc > 0 ? t2.maxTc : null
-    };
-  }
-  return done;
-}
-function docxRenumbering(xml) {
-  if (typeof xml !== "string") return null;
-  const counter = () => {
-    const s = { para: -1, run: -1, inPara: false, last: -1, outer: [] };
-    return {
-      s,
-      openP(selfClosed) {
-        if (!selfClosed) {
-          if (s.inPara) s.outer.push({ para: s.para, run: s.run });
-          s.para = ++s.last;
-          s.run = -1;
-          s.inPara = true;
-          return s.para;
-        }
-        const n = ++s.last;
-        if (!s.inPara) {
-          s.para = n;
-          s.run = -1;
-        }
-        return n;
-      },
-      closeP() {
-        if (s.outer.length) ({ para: s.para, run: s.run } = s.outer.pop());
-        else s.inPara = false;
-      },
-      openR() {
-        return s.inPara ? ++s.run : null;
-      }
-    };
-  };
-  const was = counter(), now = counter();
-  const skipped = mceSkipper();
-  const paragraphs = [], runs = [], tables = [];
-  let tablesNew = 0;
-  TOKEN_RE.lastIndex = 0;
-  let m;
-  while ((m = TOKEN_RE.exec(xml)) !== null) {
-    if (m[1] === void 0) continue;
-    const name2 = localOf(m[1]);
-    const closing = m[0][1] === "/";
-    const selfClosed = m[3] === "/";
-    const skip = skipped(name2, closing, selfClosed);
-    if (closing) {
-      if (name2 === "p") {
-        was.closeP();
-        if (!skip) now.closeP();
-      }
-      continue;
-    }
-    if (name2 === "p") {
-      const old = was.openP(selfClosed);
-      if (skip) paragraphs[old] = { old, new: null, outer: now.s.inPara ? now.s.para : null };
-      else paragraphs[old] = { old, new: now.openP(selfClosed), outer: null };
-    } else if (name2 === "r" && !selfClosed) {
-      const run2 = was.openR();
-      if (run2 == null) continue;
-      const para = was.s.para;
-      if (skip) {
-        const p3 = paragraphs[para];
-        runs.push({ old: { para, run: run2 }, new: null, outer: p3 ? p3.new ?? p3.outer : null });
-      } else runs.push({ old: { para, run: run2 }, new: { para: now.s.para, run: now.openR() }, outer: null });
-    } else if (name2 === "tbl") {
-      tables.push({ old: tables.length, new: skip ? null : tablesNew++ });
-    }
-  }
-  return { paragraphs, runs, tables };
-}
-async function docxStructure(parts) {
-  if (!parts || !parts.ok) {
-    return { ok: false, container: "docx", reason: parts?.why ?? "PARTS_ABSENT" };
-  }
-  const notes = [];
-  const links = [];
-  const walk3 = parts.documentXml ? walkDocumentBody(parts.documentXml) : null;
-  if (!walk3) {
-    notes.push(parts.guard ? "word/document.xml not read: over the size bound (stated in evidentiary.undetermined and by text())" : "word/document.xml unreadable: element references unavailable (stated)");
-  }
-  const docRelsPart = relsPartFor(parts.mainPart);
-  for (const rel of parts.rels.outbound) {
-    if (rel.part === docRelsPart && walk3) {
-      const usages = walk3.hyperlinks.filter((h) => h.rid === rel.id);
-      if (usages.length) {
-        for (const u of usages)
-          links.push(deferredOrRefusedRecord2(rel.target, docParaRef(u.para, u.run)));
-        continue;
-      }
-    }
-    links.push(deferredOrRefusedRecord2(rel.target, null));
-  }
-  for (const u of parts.rels.undetermined) {
-    links.push(undeterminedRecord2(null, "rels_unreadable", { part: u.part, detail: u.why }));
-  }
-  if (walk3) {
-    for (const h of walk3.hyperlinks) {
-      if (h.rid != null || h.anchor == null) continue;
-      const source2 = docParaRef(h.para, h.run);
-      if (walk3.bookmarks.has(h.anchor)) {
-        const targetPara = walk3.bookmarks.get(h.anchor);
-        const fragment = `#para=${targetPara + 1}`;
-        links.push({
-          partition: "anchor",
-          wrapper: linkWrapper.anchor(fragment),
-          target: { para: targetPara, fragment, bookmark: h.anchor },
-          source: source2
-        });
-      } else {
-        links.push(undeterminedRecord2(source2, "bookmark_unresolved", { bookmark: h.anchor }));
-      }
-    }
-  }
-  const embeddingRids = /* @__PURE__ */ new Map();
-  for (const bp of parts.rels.byPart) {
-    if (bp.part !== docRelsPart) continue;
-    for (const r of bp.relationships) {
-      if (r.external || !r.target) continue;
-      const resolved = resolveRelTarget(bp.part, r.target);
-      if (resolved.startsWith(EMBEDDINGS_DIR)) embeddingRids.set(resolved, r.id);
-    }
-  }
-  for (const entry3 of parts.container.entries) {
-    const name2 = normalizePartName(entry3.name);
-    if (!name2.startsWith(EMBEDDINGS_DIR) || name2 === EMBEDDINGS_DIR) continue;
-    const rid = embeddingRids.get(name2) ?? null;
-    const at35 = rid != null && walk3 ? walk3.ridUsage.get(rid) ?? null : null;
-    const source2 = at35 ? docParaRef(at35.para, at35.run) : null;
-    const read3 = await readPart(parts.bytes, parts.container, name2);
-    if (!read3.ok) {
-      links.push(undeterminedRecord2(source2, "embedded_part_unreadable", { part: name2, detail: read3.why }));
-      continue;
-    }
-    const sha2 = await sha256Hex2(read3.bytes);
-    links.push({
-      partition: "intra",
-      wrapper: linkWrapper.intra(sha2),
-      target: { sha256: sha2, name: name2.slice(name2.lastIndexOf("/") + 1), bytes: read3.bytes.length },
-      source: source2
-    });
-  }
-  const counts = { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 };
-  for (const l2 of links) counts[l2.partition]++;
-  const items = [];
-  if (walk3) {
-    for (const c of walk3.changes) {
-      const item3 = {
-        kind: "tracked-change",
-        change: c.change,
-        author: c.author,
-        date: c.date,
-        source: docParaRef(c.para, c.run)
-      };
-      if (c.change === "deletion") item3.superseded = c.text;
-      else item3.text = c.text;
-      items.push(item3);
-    }
-  }
-  const evUndetermined = [...parts.undetermined];
-  if (parts.guard) evUndetermined.push({ part: parts.mainPart, why: "over_size_bound", guard: parts.guard });
-  if (parts.commentsXml != null) {
-    const parsed = parseComments(parts.commentsXml);
-    if (!parsed.ok) evUndetermined.push({ part: COMMENTS_PART, why: parsed.why });
-    else {
-      for (const c of parsed.comments) {
-        const at35 = walk3 && c.id != null ? walk3.commentRefs.get(c.id) ?? null : null;
-        items.push({
-          kind: "comment",
-          id: c.id,
-          author: c.author,
-          date: c.date,
-          initials: c.initials,
-          text: c.text,
-          source: at35 ? docParaRef(at35.para, at35.run) : null
-        });
-      }
-    }
-  }
-  if (parts.core) {
-    items.push({
-      kind: "core-properties",
-      creator: parts.core.creator,
-      lastModifiedBy: parts.core.lastModifiedBy,
-      revision: parts.core.revision,
-      revisionNumber: parts.core.revisionNumber,
-      created: parts.core.created,
-      modified: parts.core.modified,
-      title: parts.core.title,
-      source: null
-    });
-  }
-  const evCounts = {};
-  for (const it of items) evCounts[it.kind] = (evCounts[it.kind] ?? 0) + 1;
-  const evidentiary = {
-    container: "docx",
-    kinds: [...new Set(items.map((it) => it.kind))],
-    items,
-    undetermined: evUndetermined,
-    counts: evCounts
-  };
-  return {
-    ok: true,
-    container: "docx",
-    paragraphs: walk3 ? walk3.paragraphs.length : null,
-    // null = honestly unknown
-    links,
-    counts,
-    evidentiary,
-    notes
-  };
-}
-async function docxText(parts) {
-  if (!parts || !parts.ok) {
-    return { ok: false, container: "docx", reason: parts?.why ?? "PARTS_ABSENT" };
-  }
-  if (parts.guard) {
-    return {
-      ok: true,
-      container: "docx",
-      document: null,
-      paragraphs: [],
-      tables: null,
-      undetermined: [parts.guard],
-      counts: { chars: 0, undetermined: 1 }
-    };
-  }
-  if (parts.documentXml == null) {
-    const stated = parts.undetermined.find((u) => u.part === parts.mainPart);
-    return {
-      ok: true,
-      container: "docx",
-      document: null,
-      paragraphs: [],
-      tables: null,
-      undetermined: [{ reason: "main_part_unreadable", part: parts.mainPart, why: stated?.why ?? "unreadable" }],
-      counts: { chars: 0, undetermined: 1 }
-    };
-  }
-  const walk3 = walkDocumentBody(parts.documentXml);
-  const paragraphs = walk3.paragraphs.map((p3) => ({ para: p3.para, ref: `\xB6${p3.para + 1}`, text: p3.text }));
-  const document = paragraphs.map((p3) => p3.text).filter((t2) => t2.length).join("\n");
-  const tables = walkDocumentTables(parts.documentXml).filter(Boolean).map((t2) => ({ table: t2.table, ref: docTableRef(t2.table).ref, rows: t2.rows, cols: t2.cols }));
-  return {
-    ok: true,
-    container: "docx",
-    document,
-    paragraphs,
-    tables,
-    undetermined: [],
-    counts: { chars: document.length, undetermined: 0 }
-  };
-}
-function coreMetadata(parts) {
-  if (parts?.core) {
-    const c = parts.core;
-    return { metadata: {
-      author: c.creator ?? null,
-      lastModifiedBy: c.lastModifiedBy ?? null,
-      created: c.created ?? null,
-      modified: c.modified ?? null,
-      source: CORE_PROPERTIES_PART
-    }, marker: null };
-  }
-  const stated = Array.isArray(parts?.undetermined) ? parts.undetermined.find((u) => u.part === CORE_PROPERTIES_PART) : null;
-  return {
-    metadata: null,
-    marker: stated ? { reason: "metadata_unreadable", part: CORE_PROPERTIES_PART, why: stated.why } : null
-  };
-}
-function withMetadata(out, parts) {
-  if (!out || !out.ok) return out;
-  const { metadata, marker } = coreMetadata(parts);
-  if (!marker) return { ...out, metadata };
-  return {
-    ...out,
-    metadata,
-    undetermined: [...out.undetermined, marker],
-    counts: { ...out.counts, undetermined: out.counts.undetermined + 1 }
-  };
-}
-var HYPERLINK_REL_RE = /\/relationships\/hyperlink$/;
-async function activeContent(bytes2, container2, rels, dir) {
-  const relsOf = /* @__PURE__ */ new Map();
-  const queue = (part, r) => {
-    if (!relsOf.has(part)) relsOf.set(part, []);
-    relsOf.get(part).push(r);
-  };
-  for (const bp of rels.byPart) queue(bp.part, { relationships: bp.relationships });
-  for (const u of rels.undetermined) queue(u.part, { why: u.why });
-  const active = [];
-  for (const entry3 of container2.entries) {
-    const part = normalizePartName(entry3.name);
-    if (!part || part.endsWith("/")) continue;
-    const last = part.slice(part.lastIndexOf("/") + 1);
-    if (last.toLowerCase() === "vbaproject.bin") {
-      const v = await readVbaProject(bytes2, container2, part);
-      active.push(v.ok ? {
-        kind: "vba-project",
-        part,
-        read: true,
-        why: null,
-        project: v.project,
-        modules: v.modules.map((m) => m.name),
-        autoRun: v.autoRun,
-        suspicious: v.suspicious,
-        undetermined: v.undetermined
-      } : {
-        kind: "vba-project",
-        part,
-        read: false,
-        why: v.why,
-        project: null,
-        modules: null,
-        autoRun: null,
-        suspicious: null,
-        undetermined: null
-      });
-    }
-    const inRels = /(^|\/)_rels\//.test(part);
-    if (!inRels && part.startsWith(`${dir}activeX/`)) active.push({ kind: "activex", part });
-    else if (!inRels && part.startsWith(`${dir}embeddings/`)) {
-      active.push({ kind: /^oleobject/i.test(last) ? "ole-object" : "embedded-file", part });
-    } else if (dir === "xl/" && part.startsWith("xl/macrosheets/")) active.push({ kind: "xl4-macrosheet", part });
-    const read3 = relsOf.get(part)?.shift();
-    if (!read3) continue;
-    if (read3.why != null) {
-      active.push({ kind: "unread", part, why: read3.why });
-      continue;
-    }
-    for (const r of read3.relationships) {
-      if (r.external && !HYPERLINK_REL_RE.test(r.type ?? ""))
-        active.push({ kind: "external-target", part, type: r.type, target: r.target });
-    }
-  }
-  return active;
-}
-function withActive(out, parts) {
-  if (!out || !out.ok) return out;
-  return { ...out, variant: parts.variant ?? null, active: parts.active };
-}
-function detectByContentType(format, plainType, twins, contentType) {
-  if (contentType === plainType) {
-    return { format, confidence: "likely", signals: [`content type "${contentType}"`] };
-  }
-  const variant = typeof contentType === "string" ? twins.get(contentType) : void 0;
-  if (variant) {
-    return { format, confidence: "likely", signals: [
-      `content type "${contentType}"`,
-      `the macro-enabled flavour ${variant}, read as ${format} (R33)`
-    ] };
-  }
-  return null;
-}
-var docxEntry = {
-  format: "docx",
-  detect(bytes2, contentType) {
-    if (bytes2) {
-      if (!hasZipMagic(bytes2)) return null;
-      const container2 = readContainer(bytes2);
-      if (!container2.ok) return null;
-      if (container2.byName.has(CONTENT_TYPES_PART2) && container2.byName.has(MAIN_PART)) {
-        return {
-          format: "docx",
-          confidence: "likely",
-          signals: [
-            "magic: PK\\x03\\x04 with a readable central directory",
-            `part: ${CONTENT_TYPES_PART2} present`,
-            `part: ${MAIN_PART} present`,
-            "likely, not certain: the OPC content-type declaration is deflated \u2014 parts() discriminates"
-          ]
-        };
-      }
-      return null;
-    }
-    return detectByContentType("docx", DOCX_CONTENT_TYPE, DOCX_TWIN_CONTENT_TYPES, contentType);
-  },
-  parts: (bytes2) => docxParts(bytes2),
-  structure: async (partsOrBytes) => {
-    const parts = isBytes(partsOrBytes) ? await docxParts(partsOrBytes) : partsOrBytes;
-    return withActive(await docxStructure(parts), parts);
-  },
-  text: async (partsOrBytes) => {
-    const parts = isBytes(partsOrBytes) ? await docxParts(partsOrBytes) : partsOrBytes;
-    return withContainerImages(withActive(withMetadata(await docxText(parts), parts), parts), parts, "word/media/");
-  }
-};
-
-// src/formats-xlsx.mjs
-var UTF83 = new TextDecoder("utf-8", { fatal: false });
-function toBytes3(x) {
-  if (x instanceof Uint8Array) return x;
-  if (ArrayBuffer.isView(x)) return new Uint8Array(x.buffer, x.byteOffset, x.byteLength);
-  try {
-    return new Uint8Array(x ?? 0);
-  } catch {
-    return new Uint8Array(0);
-  }
-}
-var isBytes2 = (x) => x instanceof ArrayBuffer || ArrayBuffer.isView(x);
 var XLSX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 var XLSX_TWIN_CONTENT_TYPES = /* @__PURE__ */ new Map([
   ["application/vnd.ms-excel.sheet.macroEnabled.12", "xlsm"],
@@ -7889,12 +7127,12 @@ function textRuns(inner) {
   const bare4 = String(inner).replace(/<((?:[\w.-]+:)?rPh)\b[^>]*?(?:\/>|>[\s\S]*?<\/\1>)/g, "");
   return elements(bare4, "t").map((t2) => decodeXmlEntities2(t2.inner)).join("");
 }
-var HEX3 = "0123456789abcdef";
-async function sha256Hex3(u8) {
+var HEX2 = "0123456789abcdef";
+async function sha256Hex2(u8) {
   const d = await crypto.subtle.digest("SHA-256", u8);
   const b = new Uint8Array(d);
   let out = "";
-  for (let i = 0; i < b.length; i++) out += HEX3[b[i] >> 4] + HEX3[b[i] & 15];
+  for (let i = 0; i < b.length; i++) out += HEX2[b[i] >> 4] + HEX2[b[i] & 15];
   return out;
 }
 function sheetCellRef(sheet, cell) {
@@ -8026,7 +7264,7 @@ function resolveTarget(fromPart, target) {
   return base2.join("/");
 }
 async function xlsxParts(bytes2) {
-  const b = toBytes3(bytes2);
+  const b = toBytes2(bytes2);
   const undetermined3 = [];
   const disc = await discriminate(b);
   if (!disc.ok) return { ok: false, why: disc.why, signals: disc.signals };
@@ -8036,7 +7274,7 @@ async function xlsxParts(bytes2) {
   const container2 = readContainer(b);
   const wbRead = await readPart(b, container2, WORKBOOK_PART);
   if (!wbRead.ok) return { ok: false, why: `workbook_unreadable:${wbRead.why}` };
-  const wbXml = UTF83.decode(wbRead.bytes);
+  const wbXml = UTF82.decode(wbRead.bytes);
   const rels = await walkRels(b, container2);
   const relsOf = (part) => rels.byPart.find((p3) => p3.part === relsPartFor(part)) ?? null;
   const relsById = /* @__PURE__ */ new Map();
@@ -8081,7 +7319,7 @@ async function xlsxParts(bytes2) {
         tables.push({ sheet: sheet.name, part, name: null, ref: null, why: `table_part_unreadable:${tr.why}` });
         continue;
       }
-      const t2 = elements(UTF83.decode(tr.bytes), "table")[0];
+      const t2 = elements(UTF82.decode(tr.bytes), "table")[0];
       tables.push({
         sheet: sheet.name,
         part,
@@ -8100,7 +7338,7 @@ async function xlsxParts(bytes2) {
   if (!guard) {
     if (container2.byName.has(SHARED_STRINGS_PART)) {
       const ss = await readPart(b, container2, SHARED_STRINGS_PART);
-      if (ss.ok) sharedStrings = elements(UTF83.decode(ss.bytes), "si").map((si) => textRuns(si.inner));
+      if (ss.ok) sharedStrings = elements(UTF82.decode(ss.bytes), "si").map((si) => textRuns(si.inner));
       else undetermined3.push({ part: SHARED_STRINGS_PART, why: ss.why });
     }
     for (const sheet of sheets) {
@@ -8109,7 +7347,7 @@ async function xlsxParts(bytes2) {
         continue;
       }
       const read3 = await readPart(b, container2, sheet.part);
-      if (read3.ok) sheet.xml = UTF83.decode(read3.bytes);
+      if (read3.ok) sheet.xml = UTF82.decode(read3.bytes);
       else {
         sheet.why = read3.why;
         undetermined3.push({ part: sheet.part, why: read3.why });
@@ -8393,7 +7631,7 @@ async function xlsxStructure(parts) {
       });
       continue;
     }
-    const sha2 = await sha256Hex3(read3.bytes);
+    const sha2 = await sha256Hex2(read3.bytes);
     links.push({
       partition: "intra",
       wrapper: linkWrapper.intra(sha2),
@@ -8562,12 +7800,847 @@ var xlsxEntry = {
      detect→structure works uniformly at the registry seam while a caller that
      already paid for parts() does not pay twice. */
   structure: async (partsOrBytes) => {
-    const parts = isBytes2(partsOrBytes) ? await xlsxParts(partsOrBytes) : partsOrBytes;
+    const parts = isBytes(partsOrBytes) ? await xlsxParts(partsOrBytes) : partsOrBytes;
     return withActive(await xlsxStructure(parts), parts);
   },
   text: async (partsOrBytes) => {
-    const parts = isBytes2(partsOrBytes) ? await xlsxParts(partsOrBytes) : partsOrBytes;
+    const parts = isBytes(partsOrBytes) ? await xlsxParts(partsOrBytes) : partsOrBytes;
     return withContainerImages(withActive(withMetadata(xlsxText(parts), parts), parts), parts, "xl/media/");
+  }
+};
+
+// src/docx.mjs
+var UTF83 = new TextDecoder("utf-8", { fatal: false });
+function toBytes3(x) {
+  if (x instanceof Uint8Array) return x;
+  if (ArrayBuffer.isView(x)) return new Uint8Array(x.buffer, x.byteOffset, x.byteLength);
+  try {
+    return new Uint8Array(x ?? 0);
+  } catch {
+    return new Uint8Array(0);
+  }
+}
+var isBytes2 = (x) => x instanceof ArrayBuffer || ArrayBuffer.isView(x);
+var DOCX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+var DOCX_TWIN_CONTENT_TYPES = /* @__PURE__ */ new Map([
+  ["application/vnd.ms-word.document.macroEnabled.12", "docm"],
+  ["application/vnd.ms-word.template.macroEnabled.12", "dotm"]
+]);
+var CONTENT_TYPES_PART2 = "[Content_Types].xml";
+var MAIN_PART = "word/document.xml";
+var COMMENTS_PART = "word/comments.xml";
+var EMBEDDINGS_DIR = "word/embeddings/";
+function docParaRef(para, run2 = null) {
+  const ref = { kind: "doc-para", ref: `\xB6${para + 1}`, para };
+  if (run2 != null) ref.run = run2;
+  return ref;
+}
+function docTableRef(table4, cell = null) {
+  const out = { kind: "doc-table", ref: `table ${table4 + 1}${cell != null ? `, ${cell}` : ""}`, table: table4 };
+  if (cell != null) out.cell = cell;
+  return out;
+}
+function decodeEntities(s) {
+  return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, e2) => {
+    if (e2[0] === "#") {
+      const code = e2[1] === "x" || e2[1] === "X" ? parseInt(e2.slice(2), 16) : parseInt(e2.slice(1), 10);
+      return Number.isFinite(code) && code <= 1114111 ? String.fromCodePoint(code) : m;
+    }
+    return { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" }[e2] ?? m;
+  });
+}
+function attrsOf2(raw) {
+  const attrs = {};
+  for (const a of (raw || "").matchAll(/([\w.-]+(?::[\w.-]+)?)\s*=\s*("([^"]*)"|'([^']*)')/g)) {
+    const local = a[1].includes(":") ? a[1].split(":").pop() : a[1];
+    attrs[local] = decodeEntities(a[3] ?? a[4] ?? "");
+  }
+  return attrs;
+}
+var TOKEN_RE = /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<\/?([\w.-]+(?::[\w.-]+)?)((?:[^>"']|"[^"]*"|'[^']*')*?)(\/?)>/g;
+var localOf = (name2) => name2.includes(":") ? name2.split(":").pop() : name2;
+function mceSkipper() {
+  const taken = [];
+  let skip = null;
+  return (name2, closing, selfClosed) => {
+    if (skip) {
+      if (name2 === skip.name) {
+        if (closing) {
+          if (--skip.depth === 0) skip = null;
+        } else if (!selfClosed) skip.depth++;
+      }
+      return true;
+    }
+    if (name2 === "AlternateContent") {
+      if (closing) taken.pop();
+      else if (!selfClosed) taken.push(false);
+      return false;
+    }
+    if ((name2 === "Choice" || name2 === "Fallback") && !closing && taken.length) {
+      const top2 = taken.length - 1;
+      if (taken[top2]) {
+        if (!selfClosed) skip = { name: name2, depth: 1 };
+        return true;
+      }
+      taken[top2] = true;
+    }
+    return false;
+  };
+}
+function walkDocumentBody(xml) {
+  const paragraphs = [];
+  const hyperlinks = [];
+  const bookmarks = /* @__PURE__ */ new Map();
+  const changes = [];
+  const commentRefs = /* @__PURE__ */ new Map();
+  const ridUsage = /* @__PURE__ */ new Map();
+  let para = -1;
+  let run2 = -1;
+  let inPara = false;
+  let last = -1;
+  const outer = [];
+  let textTarget = null;
+  const hyperStack = [];
+  const insStack = [];
+  const delStack = [];
+  const noteRid = (attrs) => {
+    if (!inPara) return;
+    for (const key of ["id", "embed", "link"]) {
+      const v = attrs[key];
+      if (typeof v === "string" && /^rId/.test(v) && !ridUsage.has(v))
+        ridUsage.set(v, { para, run: run2 >= 0 ? run2 : null });
+    }
+  };
+  const appendVisible = (s) => {
+    if (!inPara || !s) return;
+    paragraphs[para].text += s;
+    for (const c of insStack) c.text += s;
+  };
+  const skipped = mceSkipper();
+  TOKEN_RE.lastIndex = 0;
+  let m, prev = 0;
+  while ((m = TOKEN_RE.exec(xml)) !== null) {
+    if (textTarget && m.index > prev) {
+      const data = decodeEntities(xml.slice(prev, m.index));
+      if (textTarget === "t") appendVisible(data);
+      else if (textTarget === "delText" && delStack.length) delStack[delStack.length - 1].text += data;
+    }
+    prev = TOKEN_RE.lastIndex;
+    if (m[1] === void 0) continue;
+    const name2 = localOf(m[1]);
+    const selfClosed = m[3] === "/";
+    const closing = m[0][1] === "/";
+    if (skipped(name2, closing, selfClosed)) {
+      if (!closing && m[2] && m[2].includes("=")) noteRid(attrsOf2(m[2]));
+      continue;
+    }
+    if (closing) {
+      if (name2 === "t" || name2 === "delText") textTarget = null;
+      else if (name2 === "p") {
+        if (outer.length) ({ para, run: run2 } = outer.pop());
+        else inPara = false;
+      } else if (name2 === "hyperlink") {
+        const h = hyperStack.pop();
+        if (h) hyperlinks.push(h);
+      } else if (name2 === "ins") {
+        const c = insStack.pop();
+        if (c) changes.push(c);
+      } else if (name2 === "del") {
+        const c = delStack.pop();
+        if (c) changes.push(c);
+      }
+      continue;
+    }
+    const attrs = m[2] && m[2].includes("=") ? attrsOf2(m[2]) : {};
+    switch (name2) {
+      case "p":
+        if (!selfClosed) {
+          if (inPara) outer.push({ para, run: run2 });
+          para = ++last;
+          run2 = -1;
+          inPara = true;
+          paragraphs.push({ para, text: "" });
+        } else {
+          paragraphs.push({ para: ++last, text: "" });
+          if (!inPara) {
+            para = last;
+            run2 = -1;
+          }
+        }
+        break;
+      case "r":
+        if (inPara && !selfClosed) {
+          run2++;
+          for (const c of hyperStack) if (c.run == null) c.run = run2;
+          for (const c of insStack) if (c.run == null) c.run = run2;
+          for (const c of delStack) if (c.run == null) c.run = run2;
+        }
+        break;
+      case "t":
+        if (!selfClosed) textTarget = "t";
+        break;
+      case "delText":
+        if (!selfClosed) textTarget = "delText";
+        break;
+      case "tab":
+        appendVisible("	");
+        break;
+      case "br":
+      case "cr":
+        appendVisible("\n");
+        break;
+      case "hyperlink":
+        noteRid(attrs);
+        if (!selfClosed && inPara)
+          hyperStack.push({ rid: attrs.id ?? null, anchor: attrs.anchor ?? null, para, run: null });
+        else if (selfClosed && inPara)
+          hyperlinks.push({ rid: attrs.id ?? null, anchor: attrs.anchor ?? null, para, run: null });
+        break;
+      case "ins":
+        if (!selfClosed && inPara)
+          insStack.push({ change: "insertion", author: attrs.author ?? null, date: attrs.date ?? null, text: "", para, run: null });
+        break;
+      case "del":
+        if (!selfClosed && inPara)
+          delStack.push({ change: "deletion", author: attrs.author ?? null, date: attrs.date ?? null, text: "", para, run: null });
+        break;
+      case "bookmarkStart":
+        if (attrs.name != null && !bookmarks.has(attrs.name))
+          bookmarks.set(attrs.name, para >= 0 ? para : 0);
+        break;
+      case "commentReference":
+        if (attrs.id != null && !commentRefs.has(attrs.id))
+          commentRefs.set(attrs.id, { para, run: run2 >= 0 ? run2 : null });
+        break;
+      default:
+        noteRid(attrs);
+    }
+  }
+  return { paragraphs, hyperlinks, bookmarks, changes, commentRefs, ridUsage };
+}
+function parseComments(xml) {
+  if (typeof xml !== "string" || !/<(?:[\w.-]+:)?comments\b/.test(xml)) {
+    return { ok: false, why: "comments_unparseable" };
+  }
+  const comments = [];
+  const re = /<(?:[\w.-]+:)?comment\b((?:[^>"']|"[^"]*"|'[^']*')*?)>([\s\S]*?)<\/(?:[\w.-]+:)?comment>/g;
+  for (const m of xml.matchAll(re)) {
+    const a = attrsOf2(m[1]);
+    const paras = [];
+    for (const pm of m[2].split(/<\/(?:[\w.-]+:)?p>/)) {
+      let text7 = "";
+      for (const t2 of pm.matchAll(/<(?:[\w.-]+:)?t\b[^>]*>([\s\S]*?)<\/(?:[\w.-]+:)?t>/g))
+        text7 += decodeEntities(t2[1]);
+      if (text7) paras.push(text7);
+    }
+    comments.push({
+      id: a.id ?? null,
+      author: a.author ?? null,
+      date: a.date ?? null,
+      initials: a.initials ?? null,
+      text: paras.join("\n")
+    });
+  }
+  return { ok: true, comments };
+}
+function classifyUri2(uri) {
+  const m = /^([a-zA-Z][a-zA-Z0-9+.\-]*):/.exec(uri || "");
+  const scheme = m ? m[1].toLowerCase() : null;
+  if (scheme === "http" || scheme === "https") return "deferred";
+  if (!scheme && uri) return "deferred";
+  return "refused";
+}
+function deferredOrRefusedRecord2(uri, source2) {
+  const partition = classifyUri2(uri);
+  return {
+    partition,
+    wrapper: partition === "deferred" ? linkWrapper.deferred(uri) : linkWrapper.refused(uri),
+    target: { url: uri },
+    source: source2
+  };
+}
+function undeterminedRecord2(source2, why, extra = {}) {
+  return { partition: "undetermined", wrapper: null, target: { why, ...extra }, source: source2 };
+}
+var HEX3 = "0123456789abcdef";
+async function sha256Hex3(u8) {
+  const d = await crypto.subtle.digest("SHA-256", u8);
+  const b = new Uint8Array(d);
+  let out = "";
+  for (let i = 0; i < b.length; i++) out += HEX3[b[i] >> 4] + HEX3[b[i] & 15];
+  return out;
+}
+function resolveRelTarget(relsPart, target) {
+  const t2 = String(target || "");
+  if (t2.startsWith("/")) return normalizePartName(t2);
+  const baseDir = relsPart.replace(/_rels\/[^/]*\.rels$/, "");
+  const segs = (baseDir + t2).split("/");
+  const out = [];
+  for (const s of segs) {
+    if (s === "" || s === ".") continue;
+    if (s === "..") out.pop();
+    else out.push(s);
+  }
+  return out.join("/");
+}
+async function docxParts(bytes2) {
+  const b = toBytes3(bytes2);
+  const d = await discriminate(b);
+  if (!d.ok) return { ok: false, why: d.why, signals: d.signals };
+  if (d.format !== "docx") {
+    return {
+      ok: false,
+      why: d.format === "undetermined" ? d.why : `not_docx:${d.format}`,
+      signals: d.signals
+    };
+  }
+  const container2 = readContainer(b);
+  if (!container2.ok) return { ok: false, why: container2.why, signals: d.signals };
+  const undetermined3 = [];
+  const mainPart = normalizePartName(d.mainPart || MAIN_PART);
+  let declaredTextBytes2 = 0;
+  for (const partName of [mainPart, COMMENTS_PART]) {
+    const e2 = container2.byName.get(partName);
+    if (e2) declaredTextBytes2 += e2.uncompressedSize;
+  }
+  const guardR = sizeGuard(declaredTextBytes2);
+  const guard = guardR.ok ? null : guardR;
+  let documentXml = null;
+  let commentsXml = null;
+  if (!guard) {
+    const main = await readPart(b, container2, mainPart);
+    if (main.ok) documentXml = UTF83.decode(main.bytes);
+    else undetermined3.push({ part: mainPart, why: main.why });
+    if (container2.byName.has(COMMENTS_PART)) {
+      const com = await readPart(b, container2, COMMENTS_PART);
+      if (com.ok) commentsXml = UTF83.decode(com.bytes);
+      else undetermined3.push({ part: COMMENTS_PART, why: com.why });
+    }
+  }
+  const rels = await walkRels(b, container2);
+  let core = null;
+  if (container2.byName.has(CORE_PROPERTIES_PART)) {
+    const c = await readCoreProperties(b, container2);
+    if (c.ok) core = c;
+    else undetermined3.push({ part: CORE_PROPERTIES_PART, why: c.why });
+  }
+  const active = await activeContent(b, container2, rels, "word/");
+  return {
+    ok: true,
+    format: "docx",
+    variant: d.variant ?? null,
+    bytes: b,
+    container: container2,
+    mainPart,
+    documentXml,
+    commentsXml,
+    rels,
+    core,
+    active,
+    guard,
+    undetermined: undetermined3
+  };
+}
+function walkDocumentTables(xml) {
+  const done = [];
+  const stack = [];
+  let next = 0;
+  let para = -1;
+  const skipped = mceSkipper();
+  const merge2 = (v) => v == null ? null : v === "restart" ? "restart" : "continue";
+  const closeCell = (t2) => {
+    const c = t2.cell;
+    if (!c) return;
+    t2.cell = null;
+    t2.nextCol = c.col + c.span;
+    const owner = c.vMerge === "continue" ? t2.vOwner.get(c.col) : c.hMerge === "continue" && t2.rowCells.length ? t2.rowCells[t2.rowCells.length - 1] : null;
+    if (owner) {
+      owner.paras.push(...c.paras);
+      return;
+    }
+    const entry3 = { row: c.row, col: c.col, paras: c.paras };
+    t2.cells.push(entry3);
+    t2.rowCells.push(entry3);
+    if (c.vMerge === "restart") t2.vOwner.set(c.col, entry3);
+    else t2.vOwner.delete(c.col);
+  };
+  const finish = (t2, rows3) => {
+    closeCell(t2);
+    done[t2.table] = {
+      table: t2.table,
+      rows: rows3,
+      cols: t2.gridCols > 0 ? t2.gridCols : t2.maxTc > 0 ? t2.maxTc : null,
+      cells: t2.cells
+    };
+  };
+  TOKEN_RE.lastIndex = 0;
+  let m;
+  while ((m = TOKEN_RE.exec(xml)) !== null) {
+    if (m[1] === void 0) continue;
+    const name2 = localOf(m[1]);
+    const closing = m[0][1] === "/";
+    const selfClosed = m[3] === "/";
+    if (skipped(name2, closing, selfClosed)) continue;
+    const top2 = stack.length ? stack[stack.length - 1] : null;
+    if (closing) {
+      if (name2 === "tbl" && stack.length) finish(stack.pop(), top2.rows);
+      else if (name2 === "tr" && top2) {
+        closeCell(top2);
+        if (top2.tc > top2.maxTc) top2.maxTc = top2.tc;
+      } else if (name2 === "tc" && top2) closeCell(top2);
+      continue;
+    }
+    if (name2 === "p") {
+      para++;
+      if (top2?.cell) top2.cell.paras.push(para);
+      continue;
+    }
+    if (name2 === "tbl" && !selfClosed) {
+      stack.push({
+        table: next++,
+        rows: 0,
+        gridCols: 0,
+        tc: 0,
+        maxTc: 0,
+        cells: [],
+        cell: null,
+        nextCol: 1,
+        rowCells: [],
+        vOwner: /* @__PURE__ */ new Map()
+      });
+    } else if (name2 === "tbl") done[next] = { table: next++, rows: 0, cols: null, cells: [] };
+    else if (!top2) continue;
+    else if (name2 === "gridCol") top2.gridCols++;
+    else if (name2 === "tr") {
+      closeCell(top2);
+      top2.rows++;
+      top2.tc = 0;
+      top2.nextCol = 1;
+      top2.rowCells = [];
+    } else if (name2 === "gridBefore") {
+      const n = parseInt(attrsOf2(m[2]).val, 10);
+      if (top2.tc === 0 && Number.isInteger(n) && n > 0) top2.nextCol = 1 + n;
+    } else if (name2 === "tc") {
+      closeCell(top2);
+      top2.tc++;
+      top2.cell = { row: top2.rows, col: top2.nextCol, span: 1, vMerge: null, hMerge: null, paras: [] };
+      if (selfClosed) closeCell(top2);
+    } else if (!top2.cell) continue;
+    else if (name2 === "gridSpan") {
+      const n = parseInt(attrsOf2(m[2]).val, 10);
+      if (Number.isInteger(n) && n > 1) top2.cell.span = n;
+    } else if (name2 === "vMerge") top2.cell.vMerge = merge2(attrsOf2(m[2]).val ?? "continue");
+    else if (name2 === "hMerge") top2.cell.hMerge = merge2(attrsOf2(m[2]).val ?? "continue");
+  }
+  while (stack.length) {
+    const t2 = stack.pop();
+    finish(t2, t2.rows || null);
+  }
+  return done;
+}
+function docxRenumbering(xml) {
+  if (typeof xml !== "string") return null;
+  const counter = () => {
+    const s = { para: -1, run: -1, inPara: false, last: -1, outer: [] };
+    return {
+      s,
+      openP(selfClosed) {
+        if (!selfClosed) {
+          if (s.inPara) s.outer.push({ para: s.para, run: s.run });
+          s.para = ++s.last;
+          s.run = -1;
+          s.inPara = true;
+          return s.para;
+        }
+        const n = ++s.last;
+        if (!s.inPara) {
+          s.para = n;
+          s.run = -1;
+        }
+        return n;
+      },
+      closeP() {
+        if (s.outer.length) ({ para: s.para, run: s.run } = s.outer.pop());
+        else s.inPara = false;
+      },
+      openR() {
+        return s.inPara ? ++s.run : null;
+      }
+    };
+  };
+  const was = counter(), now = counter();
+  const skipped = mceSkipper();
+  const paragraphs = [], runs = [], tables = [];
+  let tablesNew = 0;
+  TOKEN_RE.lastIndex = 0;
+  let m;
+  while ((m = TOKEN_RE.exec(xml)) !== null) {
+    if (m[1] === void 0) continue;
+    const name2 = localOf(m[1]);
+    const closing = m[0][1] === "/";
+    const selfClosed = m[3] === "/";
+    const skip = skipped(name2, closing, selfClosed);
+    if (closing) {
+      if (name2 === "p") {
+        was.closeP();
+        if (!skip) now.closeP();
+      }
+      continue;
+    }
+    if (name2 === "p") {
+      const old = was.openP(selfClosed);
+      if (skip) paragraphs[old] = { old, new: null, outer: now.s.inPara ? now.s.para : null };
+      else paragraphs[old] = { old, new: now.openP(selfClosed), outer: null };
+    } else if (name2 === "r" && !selfClosed) {
+      const run2 = was.openR();
+      if (run2 == null) continue;
+      const para = was.s.para;
+      if (skip) {
+        const p3 = paragraphs[para];
+        runs.push({ old: { para, run: run2 }, new: null, outer: p3 ? p3.new ?? p3.outer : null });
+      } else runs.push({ old: { para, run: run2 }, new: { para: now.s.para, run: now.openR() }, outer: null });
+    } else if (name2 === "tbl") {
+      tables.push({ old: tables.length, new: skip ? null : tablesNew++ });
+    }
+  }
+  return { paragraphs, runs, tables };
+}
+async function docxStructure(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "docx", reason: parts?.why ?? "PARTS_ABSENT" };
+  }
+  const notes = [];
+  const links = [];
+  const walk3 = parts.documentXml ? walkDocumentBody(parts.documentXml) : null;
+  if (!walk3) {
+    notes.push(parts.guard ? "word/document.xml not read: over the size bound (stated in evidentiary.undetermined and by text())" : "word/document.xml unreadable: element references unavailable (stated)");
+  }
+  const docRelsPart = relsPartFor(parts.mainPart);
+  for (const rel of parts.rels.outbound) {
+    if (rel.part === docRelsPart && walk3) {
+      const usages = walk3.hyperlinks.filter((h) => h.rid === rel.id);
+      if (usages.length) {
+        for (const u of usages)
+          links.push(deferredOrRefusedRecord2(rel.target, docParaRef(u.para, u.run)));
+        continue;
+      }
+    }
+    links.push(deferredOrRefusedRecord2(rel.target, null));
+  }
+  for (const u of parts.rels.undetermined) {
+    links.push(undeterminedRecord2(null, "rels_unreadable", { part: u.part, detail: u.why }));
+  }
+  if (walk3) {
+    for (const h of walk3.hyperlinks) {
+      if (h.rid != null || h.anchor == null) continue;
+      const source2 = docParaRef(h.para, h.run);
+      if (walk3.bookmarks.has(h.anchor)) {
+        const targetPara = walk3.bookmarks.get(h.anchor);
+        const fragment = `#para=${targetPara + 1}`;
+        links.push({
+          partition: "anchor",
+          wrapper: linkWrapper.anchor(fragment),
+          target: { para: targetPara, fragment, bookmark: h.anchor },
+          source: source2
+        });
+      } else {
+        links.push(undeterminedRecord2(source2, "bookmark_unresolved", { bookmark: h.anchor }));
+      }
+    }
+  }
+  const embeddingRids = /* @__PURE__ */ new Map();
+  for (const bp of parts.rels.byPart) {
+    if (bp.part !== docRelsPart) continue;
+    for (const r of bp.relationships) {
+      if (r.external || !r.target) continue;
+      const resolved = resolveRelTarget(bp.part, r.target);
+      if (resolved.startsWith(EMBEDDINGS_DIR)) embeddingRids.set(resolved, r.id);
+    }
+  }
+  for (const entry3 of parts.container.entries) {
+    const name2 = normalizePartName(entry3.name);
+    if (!name2.startsWith(EMBEDDINGS_DIR) || name2 === EMBEDDINGS_DIR) continue;
+    const rid = embeddingRids.get(name2) ?? null;
+    const at35 = rid != null && walk3 ? walk3.ridUsage.get(rid) ?? null : null;
+    const source2 = at35 ? docParaRef(at35.para, at35.run) : null;
+    const read3 = await readPart(parts.bytes, parts.container, name2);
+    if (!read3.ok) {
+      links.push(undeterminedRecord2(source2, "embedded_part_unreadable", { part: name2, detail: read3.why }));
+      continue;
+    }
+    const sha2 = await sha256Hex3(read3.bytes);
+    links.push({
+      partition: "intra",
+      wrapper: linkWrapper.intra(sha2),
+      target: { sha256: sha2, name: name2.slice(name2.lastIndexOf("/") + 1), bytes: read3.bytes.length },
+      source: source2
+    });
+  }
+  const counts = { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 };
+  for (const l2 of links) counts[l2.partition]++;
+  const items = [];
+  if (walk3) {
+    for (const c of walk3.changes) {
+      const item3 = {
+        kind: "tracked-change",
+        change: c.change,
+        author: c.author,
+        date: c.date,
+        source: docParaRef(c.para, c.run)
+      };
+      if (c.change === "deletion") item3.superseded = c.text;
+      else item3.text = c.text;
+      items.push(item3);
+    }
+  }
+  const evUndetermined = [...parts.undetermined];
+  if (parts.guard) evUndetermined.push({ part: parts.mainPart, why: "over_size_bound", guard: parts.guard });
+  if (parts.commentsXml != null) {
+    const parsed = parseComments(parts.commentsXml);
+    if (!parsed.ok) evUndetermined.push({ part: COMMENTS_PART, why: parsed.why });
+    else {
+      for (const c of parsed.comments) {
+        const at35 = walk3 && c.id != null ? walk3.commentRefs.get(c.id) ?? null : null;
+        items.push({
+          kind: "comment",
+          id: c.id,
+          author: c.author,
+          date: c.date,
+          initials: c.initials,
+          text: c.text,
+          source: at35 ? docParaRef(at35.para, at35.run) : null
+        });
+      }
+    }
+  }
+  if (parts.core) {
+    items.push({
+      kind: "core-properties",
+      creator: parts.core.creator,
+      lastModifiedBy: parts.core.lastModifiedBy,
+      revision: parts.core.revision,
+      revisionNumber: parts.core.revisionNumber,
+      created: parts.core.created,
+      modified: parts.core.modified,
+      title: parts.core.title,
+      source: null
+    });
+  }
+  const evCounts = {};
+  for (const it of items) evCounts[it.kind] = (evCounts[it.kind] ?? 0) + 1;
+  const evidentiary = {
+    container: "docx",
+    kinds: [...new Set(items.map((it) => it.kind))],
+    items,
+    undetermined: evUndetermined,
+    counts: evCounts
+  };
+  return {
+    ok: true,
+    container: "docx",
+    paragraphs: walk3 ? walk3.paragraphs.length : null,
+    // null = honestly unknown
+    links,
+    counts,
+    evidentiary,
+    notes
+  };
+}
+function tableCells(t2, paragraphs) {
+  const cells = [];
+  for (const c of t2.cells) {
+    const value = c.paras.map((p3) => paragraphs[p3]?.text ?? "").filter((s) => s.length).join("\n");
+    if (!value) continue;
+    cells.push({
+      source: docTableRef(t2.table, `${columnLetters(c.col)}${c.row}`),
+      value,
+      type: "text",
+      declared: null,
+      cached: null,
+      formula: null
+    });
+  }
+  return cells;
+}
+async function docxText(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "docx", reason: parts?.why ?? "PARTS_ABSENT" };
+  }
+  if (parts.guard) {
+    return {
+      ok: true,
+      container: "docx",
+      document: null,
+      paragraphs: [],
+      tables: null,
+      undetermined: [parts.guard],
+      counts: { chars: 0, undetermined: 1 }
+    };
+  }
+  if (parts.documentXml == null) {
+    const stated = parts.undetermined.find((u) => u.part === parts.mainPart);
+    return {
+      ok: true,
+      container: "docx",
+      document: null,
+      paragraphs: [],
+      tables: null,
+      undetermined: [{ reason: "main_part_unreadable", part: parts.mainPart, why: stated?.why ?? "unreadable" }],
+      counts: { chars: 0, undetermined: 1 }
+    };
+  }
+  const walk3 = walkDocumentBody(parts.documentXml);
+  const paragraphs = walk3.paragraphs.map((p3) => ({ para: p3.para, ref: `\xB6${p3.para + 1}`, text: p3.text }));
+  const document = paragraphs.map((p3) => p3.text).filter((t2) => t2.length).join("\n");
+  const tables = walkDocumentTables(parts.documentXml).filter(Boolean).map((t2) => ({
+    table: t2.table,
+    ref: docTableRef(t2.table).ref,
+    rows: t2.rows,
+    cols: t2.cols,
+    cells: tableCells(t2, walk3.paragraphs)
+  }));
+  return {
+    ok: true,
+    container: "docx",
+    document,
+    paragraphs,
+    tables,
+    undetermined: [],
+    counts: { chars: document.length, undetermined: 0 }
+  };
+}
+function coreMetadata(parts) {
+  if (parts?.core) {
+    const c = parts.core;
+    return { metadata: {
+      author: c.creator ?? null,
+      lastModifiedBy: c.lastModifiedBy ?? null,
+      created: c.created ?? null,
+      modified: c.modified ?? null,
+      source: CORE_PROPERTIES_PART
+    }, marker: null };
+  }
+  const stated = Array.isArray(parts?.undetermined) ? parts.undetermined.find((u) => u.part === CORE_PROPERTIES_PART) : null;
+  return {
+    metadata: null,
+    marker: stated ? { reason: "metadata_unreadable", part: CORE_PROPERTIES_PART, why: stated.why } : null
+  };
+}
+function withMetadata(out, parts) {
+  if (!out || !out.ok) return out;
+  const { metadata, marker } = coreMetadata(parts);
+  if (!marker) return { ...out, metadata };
+  return {
+    ...out,
+    metadata,
+    undetermined: [...out.undetermined, marker],
+    counts: { ...out.counts, undetermined: out.counts.undetermined + 1 }
+  };
+}
+var HYPERLINK_REL_RE = /\/relationships\/hyperlink$/;
+async function activeContent(bytes2, container2, rels, dir) {
+  const relsOf = /* @__PURE__ */ new Map();
+  const queue = (part, r) => {
+    if (!relsOf.has(part)) relsOf.set(part, []);
+    relsOf.get(part).push(r);
+  };
+  for (const bp of rels.byPart) queue(bp.part, { relationships: bp.relationships });
+  for (const u of rels.undetermined) queue(u.part, { why: u.why });
+  const active = [];
+  for (const entry3 of container2.entries) {
+    const part = normalizePartName(entry3.name);
+    if (!part || part.endsWith("/")) continue;
+    const last = part.slice(part.lastIndexOf("/") + 1);
+    if (last.toLowerCase() === "vbaproject.bin") {
+      const v = await readVbaProject(bytes2, container2, part);
+      active.push(v.ok ? {
+        kind: "vba-project",
+        part,
+        read: true,
+        why: null,
+        project: v.project,
+        modules: v.modules.map((m) => m.name),
+        autoRun: v.autoRun,
+        suspicious: v.suspicious,
+        undetermined: v.undetermined
+      } : {
+        kind: "vba-project",
+        part,
+        read: false,
+        why: v.why,
+        project: null,
+        modules: null,
+        autoRun: null,
+        suspicious: null,
+        undetermined: null
+      });
+    }
+    const inRels = /(^|\/)_rels\//.test(part);
+    if (!inRels && part.startsWith(`${dir}activeX/`)) active.push({ kind: "activex", part });
+    else if (!inRels && part.startsWith(`${dir}embeddings/`)) {
+      active.push({ kind: /^oleobject/i.test(last) ? "ole-object" : "embedded-file", part });
+    } else if (dir === "xl/" && part.startsWith("xl/macrosheets/")) active.push({ kind: "xl4-macrosheet", part });
+    const read3 = relsOf.get(part)?.shift();
+    if (!read3) continue;
+    if (read3.why != null) {
+      active.push({ kind: "unread", part, why: read3.why });
+      continue;
+    }
+    for (const r of read3.relationships) {
+      if (r.external && !HYPERLINK_REL_RE.test(r.type ?? ""))
+        active.push({ kind: "external-target", part, type: r.type, target: r.target });
+    }
+  }
+  return active;
+}
+function withActive(out, parts) {
+  if (!out || !out.ok) return out;
+  return { ...out, variant: parts.variant ?? null, active: parts.active };
+}
+function detectByContentType(format, plainType, twins, contentType) {
+  if (contentType === plainType) {
+    return { format, confidence: "likely", signals: [`content type "${contentType}"`] };
+  }
+  const variant = typeof contentType === "string" ? twins.get(contentType) : void 0;
+  if (variant) {
+    return { format, confidence: "likely", signals: [
+      `content type "${contentType}"`,
+      `the macro-enabled flavour ${variant}, read as ${format} (R33)`
+    ] };
+  }
+  return null;
+}
+var docxEntry = {
+  format: "docx",
+  detect(bytes2, contentType) {
+    if (bytes2) {
+      if (!hasZipMagic(bytes2)) return null;
+      const container2 = readContainer(bytes2);
+      if (!container2.ok) return null;
+      if (container2.byName.has(CONTENT_TYPES_PART2) && container2.byName.has(MAIN_PART)) {
+        return {
+          format: "docx",
+          confidence: "likely",
+          signals: [
+            "magic: PK\\x03\\x04 with a readable central directory",
+            `part: ${CONTENT_TYPES_PART2} present`,
+            `part: ${MAIN_PART} present`,
+            "likely, not certain: the OPC content-type declaration is deflated \u2014 parts() discriminates"
+          ]
+        };
+      }
+      return null;
+    }
+    return detectByContentType("docx", DOCX_CONTENT_TYPE, DOCX_TWIN_CONTENT_TYPES, contentType);
+  },
+  parts: (bytes2) => docxParts(bytes2),
+  structure: async (partsOrBytes) => {
+    const parts = isBytes2(partsOrBytes) ? await docxParts(partsOrBytes) : partsOrBytes;
+    return withActive(await docxStructure(parts), parts);
+  },
+  text: async (partsOrBytes) => {
+    const parts = isBytes2(partsOrBytes) ? await docxParts(partsOrBytes) : partsOrBytes;
+    return withContainerImages(withActive(withMetadata(await docxText(parts), parts), parts), parts, "word/media/");
   }
 };
 
@@ -11821,11 +11894,11 @@ var client_rendered_default = {
     if (/\bdata-reactroot\b/.test(text7)) signals.push("React root");
     if (/\/reporting-classic-app\//.test(text7)) signals.push("OpenGov reporting app");
     if (/window\.__(?:NUXT|INITIAL_STATE|PRELOADED_STATE)__/.test(text7)) signals.push("a hydration payload");
-    const anchors = (text7.match(/<a\b[^>]*\bhref=/gi) || []).length;
+    const anchors2 = (text7.match(/<a\b[^>]*\bhref=/gi) || []).length;
     const paras = (text7.match(/<p\b/gi) || []).length;
     const body = /<body\b[\s\S]*<\/body>/i.exec(text7);
     const bodyLen = body ? body[0].length : text7.length;
-    if (bodyLen > 2e3 && anchors === 0 && paras <= 1) signals.push("no links and no prose in the body");
+    if (bodyLen > 2e3 && anchors2 === 0 && paras <= 1) signals.push("no links and no prose in the body");
     if (signals.includes("no links and no prose in the body") && signals.length >= 2)
       return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
     if (signals.length >= 2) return { match: true, confidence: CONFIDENCE.LIKELY, signals };
@@ -25510,10 +25583,10 @@ function classifyDivergence(man, files) {
   const { order: order4, entries } = historyWriteOrder(hist.value.entries);
   const walked = entries.length;
   if (!walked) return { rung: "adjudicated", reason: "history manifest has no entries", order: order4, walked };
-  let start = -1, anchor2 = null, recordGap = false;
+  let start = -1, anchor = null, recordGap = false;
   for (let i = 0; i < walked; i++) if (entries[i].base === man.base) {
     start = i;
-    anchor2 = `before ${entries[i].key}`;
+    anchor = `before ${entries[i].key}`;
   }
   for (let i = 0; i < walked; i++) {
     const r = readJson(files, `_history/promotion_${entries[i].key}.json`);
@@ -25524,7 +25597,7 @@ function classifyDivergence(man, files) {
     const b = Array.isArray(r.value.files) ? r.value.files.find((x) => x && x.name === "bundle.md") : null;
     if (b && b.sha256 === man.base && i + 1 > start) {
       start = i + 1;
-      anchor2 = `after ${entries[i].key}`;
+      anchor = `after ${entries[i].key}`;
     }
   }
   if (start === -1)
@@ -25536,7 +25609,7 @@ function classifyDivergence(man, files) {
   const names = Array.isArray(man.files) ? man.files.map((e2) => e2 && e2.name) : [];
   const overlap = names.filter((n) => interveningFiles.has(n));
   if (overlap.length) return { rung: "adjudicated", reason: `overlapping substantive divergence on {${overlap.join(", ")}}`, interveningFiles, order: order4, walked };
-  return { rung: "disjoint-auto", baseKey: anchor2, intervening: intervening.map((e2) => e2.key), interveningFiles, order: order4, walked };
+  return { rung: "disjoint-auto", baseKey: anchor, intervening: intervening.map((e2) => e2.key), interveningFiles, order: order4, walked };
 }
 async function checkDivergence({ files, sha256: sha2562 }, findings) {
   const pending = readJson(files, "PENDING_PROMOTION.json");
@@ -29301,8 +29374,8 @@ var Provenance = class {
         "VERSION_CHAIN_NO_ADDRESS",
         "op=versionchain answers for ONE document address: pass address=<url>. The plane normalises it with the same normaliser the capture wrote it with, so the address you captured is the address that answers."
       );
-    const anchor2 = at35 == null ? "" : String(at35).trim().toLowerCase();
-    if (anchor2 && !/^[0-9a-f]{64}$/.test(anchor2))
+    const anchor = at35 == null ? "" : String(at35).trim().toLowerCase();
+    if (anchor && !/^[0-9a-f]{64}$/.test(anchor))
       return refuse23(
         "VERSION_CHAIN_BAD_ANCHOR",
         `at=${JSON.stringify(String(at35).slice(0, 80))} is not a sha256. A version is anchored by the capture identity of its bytes, which is 64 hex characters.`
@@ -29354,12 +29427,12 @@ var Provenance = class {
       from
     ).map(shape);
     let anchorRow = null, predecessor = null, atIndex = null;
-    if (anchor2) {
-      anchorRow = shape(this.#one(`${CHAIN2} SELECT * FROM chain WHERE capture_sha = ?`, ...args, anchor2));
+    if (anchor) {
+      anchorRow = shape(this.#one(`${CHAIN2} SELECT * FROM chain WHERE capture_sha = ?`, ...args, anchor));
       if (!anchorRow)
         return refuse23(
           "VERSION_CHAIN_NO_SUCH_VERSION",
-          `no version with capture ${anchor2.slice(0, 12)}\u2026 is held at ${addr}. A capture the record does not hold, one filed at a different address, and one inside a project you were not invited to answer identically here, deliberately.`
+          `no version with capture ${anchor.slice(0, 12)}\u2026 is held at ${addr}. A capture the record does not hold, one filed at a different address, and one inside a project you were not invited to answer identically here, deliberately.`
         );
       const before2 = `first_retrieved < ? OR (first_retrieved = ? AND capture_sha < ?)`;
       const beforeArgs = [anchorRow.first_retrieved, anchorRow.first_retrieved, anchorRow.capture_sha];
@@ -33858,8 +33931,8 @@ function dueAtTime(rule, n, zone, view, office, trace) {
   if (!c.length) return dayDt(n, zone);
   return { value: `${dayText(n)}T${hhmm}`, precision: "minute", zone };
 }
-function anchorDays(anchor2, zone, rule, view, cal, trace) {
-  const s = spanOf(anchor2);
+function anchorDays(anchor, zone, rule, view, cal, trace) {
+  const s = spanOf(anchor);
   if (isNo(s)) return s.refused ? s : no2("ANCHOR_UNDETERMINED", `the anchor is undetermined: ${s.why}`);
   if (s.lo === null || s.hi === null) return no2("ANCHOR_UNDETERMINED", `the anchor ${s.dt.value} has an open or unknown end`);
   let first, last;
@@ -33973,7 +34046,7 @@ function preconditions(rule, view) {
   }
   return null;
 }
-function evaluateOn(r, rule, anchor2, view, office, tolled, factOf, list6, zone) {
+function evaluateOn(r, rule, anchor, view, office, tolled, factOf, list6, zone) {
   const trace = { closures: list6, skipped: [], roll: [], notes: [] };
   const cal = calendar({ view, list: list6, office, factOf });
   const needsCal = r.units === "business_hours" || r.count === "business" || r.roll;
@@ -33982,9 +34055,9 @@ function evaluateOn(r, rule, anchor2, view, office, tolled, factOf, list6, zone)
     return { ...m, why: `${m.why}; a business count or a roll needs it (the weekend is never assumed)` };
   }
   if (r.units === "hours" || r.units === "business_hours") {
-    const s = spanOf(anchor2);
+    const s = spanOf(anchor);
     if (isNo(s)) return s.refused ? s : no2("ANCHOR_UNDETERMINED", `the anchor is undetermined: ${s.why}`);
-    if (s.dt.precision !== "minute" && s.dt.precision !== "second" && typeof anchor2 !== "string")
+    if (s.dt.precision !== "minute" && s.dt.precision !== "second" && typeof anchor !== "string")
       return no2("ANCHOR_UNDETERMINED", `an hours rule counts from the anchor's time, and ${s.dt.value} is held at ${s.dt.precision} precision`);
     if (s.twice) trace.notes.push(`${s.dt.value} occurs twice in ${s.dt.zone}; counted from both`);
     const ends = s.twice ? [s.lo, s.hi - 60] : [s.lo];
@@ -33997,7 +34070,7 @@ function evaluateOn(r, rule, anchor2, view, office, tolled, factOf, list6, zone)
     trace.calendar = calendarStated(cal);
     return { due: out.length > 1 ? { candidates: out } : out[0], trace };
   }
-  const a = anchorDays(anchor2, zone, rule, view, cal, trace);
+  const a = anchorDays(anchor, zone, rule, view, cal, trace);
   if (a.refused || a.undetermined) return a;
   if (rule.applies_on !== void 0) {
     const wd = weekdayOf(a.first);
@@ -34042,18 +34115,18 @@ function extend(r, rule, base2, view, office, tolled, zone, trace) {
 }
 function evaluateRule(args) {
   if (!args || typeof args !== "object") throw new TypeError("evaluateRule takes {rule, anchor, view, office?, tolled?, factOf?}");
-  const { rule, anchor: anchor2, view, office = null, tolled, factOf = null, practice = null } = args;
+  const { rule, anchor, view, office = null, tolled, factOf = null, practice = null } = args;
   if (!view || typeof view !== "object") throw new TypeError("evaluateRule needs the jurisdiction view");
-  if (anchor2 === void 0 || anchor2 === null) throw new TypeError("evaluateRule needs the anchor");
+  if (anchor === void 0 || anchor === null) throw new TypeError("evaluateRule needs the anchor");
   if (factOf !== null && typeof factOf !== "function") throw new TypeError("factOf is a function");
-  if (anchor2 && anchor2.undetermined) return no2("ANCHOR_UNDETERMINED", `the anchor is undetermined: ${anchor2.why || "no why given"}`);
+  if (anchor && anchor.undetermined) return no2("ANCHOR_UNDETERMINED", `the anchor is undetermined: ${anchor.why || "no why given"}`);
   const r = readRule(rule);
   if (r.undetermined) return r;
   const pre = preconditions(rule, view);
   if (pre) return pre;
   const tolledSet = tolledDays(tolled);
   if (tolledSet === null) return refuse3("DATE_INVALID", "a tolled span is not {from, to} calendar days in order");
-  const anchorZone = typeof anchor2 === "string" ? "UTC" : anchor2 && anchor2.zone;
+  const anchorZone = typeof anchor === "string" ? "UTC" : anchor && anchor.zone;
   const zone = viewZone(view) || anchorZone;
   const zr = zoneRefusal(zone);
   if (zr) return zr;
@@ -34069,14 +34142,14 @@ function evaluateRule(args) {
     count: r.count ?? null,
     direction: r.direction,
     computation: rule.computation ?? null,
-    anchor: anchor2,
+    anchor,
     zone,
     zone_from: viewZone(view) ? "the view's time_zone" : "the anchor's zone",
     office,
     tolled: Array.isArray(tolled) ? tolled : [],
     runtime: runtimeVersions()
   };
-  const base2 = evaluateOn(r, rule, anchor2, view, office, tolledSet, factOf, r.closures, zone);
+  const base2 = evaluateOn(r, rule, anchor, view, office, tolledSet, factOf, r.closures, zone);
   if (base2.refused) return base2;
   if (base2.undetermined) return { ...base2, trace: { ...head } };
   const trace = { ...head, ...base2.trace };
@@ -34095,7 +34168,7 @@ function evaluateRule(args) {
   if (typeof practice === "string" && !practices.some((p3) => p3.list === practice)) practices.push({ list: practice, basis: null, status: null });
   if (practices.length && r.units !== "hours") {
     out.observed = practices.map((p3) => {
-      const o = evaluateOn({ ...r, closures: p3.list }, rule, anchor2, view, office, tolledSet, factOf, p3.list, zone);
+      const o = evaluateOn({ ...r, closures: p3.list }, rule, anchor, view, office, tolledSet, factOf, p3.list, zone);
       const label = "observed practice";
       if (o.refused || o.undetermined) return { label, closures: p3.list, undetermined: true, code: o.code ?? o.refused, why: o.why };
       return { label, closures: p3.list, basis: p3.basis, status: p3.status, due: o.due, trace: { ...head, ...o.trace } };
@@ -47393,8 +47466,8 @@ function checkEnvelope(e2, ctx) {
         "CONTENT_EXTENT_UNREADABLE",
         `an envelope item is anchored at a paragraph or a slide (${ENVELOPE_ANCHOR_KINDS.join(", ")}) or at nothing. This one is anchored at '${String(isObj8(e2.at) ? e2.at.kind : e2.at).slice(0, 40)}'`
       );
-    const anchor2 = checkContentExtent(e2.at, ctx);
-    if (anchor2) return anchor2;
+    const anchor = checkContentExtent(e2.at, ctx);
+    if (anchor) return anchor;
   }
   if (ctx && ctx.known !== false && !(Array.isArray(ctx.chain) && ctx.chain.length))
     return refusal6(
@@ -60946,14 +61019,18 @@ function recogniseSeries(v, text7) {
 }
 
 // src/connection-grammar/bounds.mjs
+var HUB = 1e3;
+var HUB_BY_KIND = Object.freeze(Object.assign(/* @__PURE__ */ Object.create(null), { event_voted: 4e3 }));
 var BOUNDS = Object.freeze({
   depth_default: 8,
   depth_max: 10,
   fanout: 1e3,
   nodes: 5e3,
-  hub: 1e3,
+  hub: HUB,
+  hub_by_kind: HUB_BY_KIND,
   time_budget_ms: 1e4
 });
+var hubBoundOf = (kind) => typeof kind === "string" && HUB_BY_KIND[kind] !== void 0 ? HUB_BY_KIND[kind] : HUB;
 function depthOf(requested) {
   if (requested === void 0 || requested === null) return BOUNDS.depth_default;
   if (typeof requested !== "number" || !Number.isInteger(requested) || requested < 1) {
@@ -60968,7 +61045,7 @@ var WHY = Object.freeze({
   depth: "the walk reached its depth bound before it was done",
   nodes: `the walk visited its bound of ${BOUNDS.nodes} nodes before it was done`,
   fanout: `a node had more than ${BOUNDS.fanout} connections in one hop, so not every path from it was followed`,
-  hub: `the walk reached a hub (a node with more than ${BOUNDS.hub} connections), which is named, never expanded`,
+  hub: `the walk reached a hub (a node with more connections of one kind than that kind's bound: ${BOUNDS.hub}, a member's vote ${HUB_BY_KIND.event_voted}), which is named, never expanded`,
   time: "the walk used its time budget before it was done"
 });
 var EXHAUSTION_REASONS = Object.freeze(Object.keys(WHY));
@@ -61007,13 +61084,16 @@ function answerFailures(answer, ctx) {
     }
   }
   if (items.length > BOUNDS.fanout) fail("fanout", `a page holds at most ${BOUNDS.fanout} items; this one holds ${items.length}`);
+  const asked = Array.isArray(ctx.kinds) ? ctx.kinds : null;
   if (answer.hub !== void 0) {
     const h = answer.hub;
+    const mine = ctx.ownKinds.filter((k) => !asked || asked.includes(k));
+    const pool = mine.length ? mine : ctx.ownKinds;
+    const bound = pool.length ? Math.min(...pool.map(hubBoundOf)) : BOUNDS.hub;
     if (!isObj11(h) || !Number.isInteger(h.set_size) || !filled2(h.why)) fail("hub", "a hub is answered {set_size, why}");
-    else if (h.set_size <= BOUNDS.hub) fail("hub", `a hub's set exceeds ${BOUNDS.hub}; ${h.set_size} does not`);
+    else if (h.set_size <= bound) fail("hub", `a hub's set of one kind exceeds that kind's bound, here at least ${bound}; ${h.set_size} does not`);
     if (items.length) fail("hub", "a hub is answered with no items, never a partial set shown as whole");
   }
-  const asked = Array.isArray(ctx.kinds) ? ctx.kinds : null;
   const seen = /* @__PURE__ */ new Set();
   for (const item3 of items) {
     const name2 = isObj11(item3) && filled2(item3.id) ? item3.id : "(an item without an id)";
@@ -95551,15 +95631,15 @@ var Progressions = class _Progressions {
       const wi = within3.get(f17.stage_key);
       const iv = readInterval(wi);
       if (!iv || !f17.after_stage) continue;
-      const anchor2 = stageByKey.get(f17.after_stage);
-      if (!anchor2 || !anchor2.present) continue;
+      const anchor = stageByKey.get(f17.after_stage);
+      if (!anchor || !anchor.present) continue;
       out.push({
         finding: f17,
         within_interval: wi,
         interval: iv,
         predecessor_stage: f17.after_stage,
-        documents: anchor2.documents,
-        deadline: this.#deadline(anchor2.documents, wi, iv)
+        documents: anchor.documents,
+        deadline: this.#deadline(anchor.documents, wi, iv)
       });
     }
     return out;
@@ -142209,7 +142289,7 @@ var CaseImport = class _CaseImport {
           { docket: str27(docket) }
         );
       const atMs = typeof at35 === "string" ? Date.parse(at35) : NaN;
-      const readAt2 = Number.isFinite(atMs) ? stampInstant("second", atMs) : this.#stamp();
+      const readAt3 = Number.isFinite(atMs) ? stampInstant("second", atMs) : this.#stamp();
       let out = READ_OUTCOMES.includes(outcome) ? outcome : "unreadable";
       let why = outcome === "unreadable" ? typeof reason === "string" ? reason.slice(0, 200) : null : out === "read" ? null : "outcome_unknown";
       let list6 = null;
@@ -142234,7 +142314,7 @@ var CaseImport = class _CaseImport {
           i.import_id,
           w.rn,
           w.docket,
-          readAt2,
+          readAt3,
           out,
           why,
           isObj33(answer) && Array.isArray(answer.entries) ? answer.entries.length : 0,
@@ -142295,7 +142375,7 @@ var CaseImport = class _CaseImport {
       return {
         ok: true,
         import: i.import_id,
-        at: readAt2,
+        at: readAt3,
         outcome: out,
         ...why ? { reason: why } : {},
         new_entries: rows3.length,
@@ -153968,11 +154048,11 @@ function deadlinecompute(args, ctx) {
   const rule = (view.deadlines || []).find((d) => plain12(d) && d.rule === args.rule);
   if (!rule) return notHeld("meaning", `the active profiles hold no deadline rule ${args.rule}`, null);
   if (!sourced2(rule) || !filled10(rule.citation)) return notHeld("meaning", "the profile holds this rule without a primary source", null);
-  let anchor2 = args.start;
-  if (typeof anchor2 === "string" && /^EVT-/.test(anchor2)) {
+  let anchor = args.start;
+  if (typeof anchor === "string" && /^EVT-/.test(anchor)) {
     const ev = ctx.dep("events");
-    const r = ev ? ev.readEvent({ eventId: anchor2, viewer: ctx.viewer }) : null;
-    if (!r || r.ok === false || !r.found) return notHeld("meaning", `the start event ${anchor2} is not held`, "capturerequest");
+    const r = ev ? ev.readEvent({ eventId: anchor, viewer: ctx.viewer }) : null;
+    if (!r || r.ok === false || !r.found) return notHeld("meaning", `the start event ${anchor} is not held`, "capturerequest");
     const w = r.event && r.event.when;
     if (!w || w === "undetermined" || !w.value) return {
       value: { undetermined: true, why: `the start event has no date the record can read` },
@@ -153981,10 +154061,10 @@ function deadlinecompute(args, ctx) {
       status: "undetermined",
       label: "computed_fact"
     };
-    anchor2 = { value: w.value, precision: w.precision, zone: w.zone };
+    anchor = { value: w.value, precision: w.precision, zone: w.zone };
   }
-  if (!anchor2) return notHeld("meaning", "a deadline is computed from a start event or date", null);
-  const due2 = evaluateRule({ rule, anchor: anchor2, view, office: args.office ?? null });
+  if (!anchor) return notHeld("meaning", "a deadline is computed from a start event or date", null);
+  const due2 = evaluateRule({ rule, anchor, view, office: args.office ?? null });
   if (due2.refused) return notHeld("meaning", `${due2.refused}: ${due2.why}`, null);
   if (due2.undetermined) return {
     value: { undetermined: true, why: due2.why, trace: due2.trace ?? null },
@@ -176937,14 +177017,14 @@ Reason: ${bodyText2(why)}`
   }
   /* The matched instances of a condition (R4), each assembled by progressions and judged; derived, never stored. */
   #measure(cond, viewer) {
-    const key = str32(cond.progression), anchor2 = str32(cond.entity);
-    const related = /* @__PURE__ */ new Set([anchor2]);
+    const key = str32(cond.progression), anchor = str32(cond.entity);
+    const related = /* @__PURE__ */ new Set([anchor]);
     if (cond.relation) {
-      const e2 = this.entities.readEntity({ entityId: anchor2 });
+      const e2 = this.entities.readEntity({ entityId: anchor });
       for (const r of e2 && e2.found && e2.entity && e2.entity.relations || []) {
         if (r.relation !== cond.relation || r.withdrawn) continue;
-        if (r.to_entity === anchor2 && r.from_entity) related.add(r.from_entity);
-        else if (cond.relation === "overlaps" && r.from_entity === anchor2 && r.to_entity) related.add(r.to_entity);
+        if (r.to_entity === anchor && r.from_entity) related.add(r.from_entity);
+        else if (cond.relation === "overlaps" && r.from_entity === anchor && r.to_entity) related.add(r.to_entity);
       }
     }
     const rows3 = this.#rows(
@@ -184864,14 +184944,14 @@ function computeDeadline(d, fm, view, { factOf = null } = {}) {
     const v = view && typeof view === "object" ? view : {};
     const office = civilOffice(actionOffices(fm, v)[0]);
     const zone = actionZone(fm, v) || "UTC";
-    const anchor2 = { value: start, precision: "day", zone };
+    const anchor = { value: start, precision: "day", zone };
     const reads = readsClosed(rule);
     const base2 = { ...rule, observed: void 0 };
     const cache = /* @__PURE__ */ new Map();
     const rec = recorder(factOf, cache);
     let r;
     try {
-      r = evaluateRule({ rule: base2, anchor: anchor2, view: v, office, factOf: rec.read });
+      r = evaluateRule({ rule: base2, anchor, view: v, office, factOf: rec.read });
     } catch (x) {
       r = { undetermined: true, code: "RULE_INVALID", why: `the rule cannot be counted: ${textOf5(x && x.message) || "a malformed rule"}` };
     }
@@ -184896,7 +184976,7 @@ function computeDeadline(d, fm, view, { factOf = null } = {}) {
       try {
         o = evaluateRule({
           rule: { ...base2, closures: rule.observed.closures },
-          anchor: anchor2,
+          anchor,
           view: v,
           office,
           factOf: recorder(factOf, cache).read
@@ -203573,7 +203653,7 @@ function packVersion(pack) {
 }
 
 // src/signpage.mjs
-var SIGN_HTML = '<!doctype html>\n<meta charset="utf-8">\n<title>Civicsmith signing keys</title>\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<!--\n  Signing keys that never leave the person holding them.\n\n  This page is one file with no network access of any kind: no scripts\n  loaded, no fonts fetched, no data sent anywhere. Open it from a local\n  copy. Everything it does happens in the browser tab.\n\n  It produces SSHSIG signatures, the same format `ssh-keygen -Y sign`\n  emits, so anything signed here can be verified by anyone with stock\n  OpenSSH and no Civicsmith code:\n\n      ssh-keygen -Y verify -f allowed_signers -I <you> \\\n                 -n bio-release -s file.sig < file\n\n  Two keys, because they do different jobs. The release key signs the\n  software that installs into other people\'s accounts and is used a few\n  times a year. The ratification key attests documents and is used\n  constantly. Keeping routine use away from the supply-chain key is the\n  reason they are separate.\n\n  The ratification key also signs a project\'s "working on" notice, in its\n  own namespace (bio-working-on), so a signature on a notice can never be\n  taken as consent to publish a record, or the reverse. It signs a case\'s\n  public docket entries in their own namespace too (bio-docket), so an\n  entry\'s signature can never stand for a ratification or a notice.\n-->\n<style>\n  :root {\n    --ink: #16171a; --dim: #5c6069; --line: #d9dce1; --bg: #fbfbfc;\n    --accent: #1c4f8b; --accent-dark: #163f70; --warn: #8a4b00;\n    --good: #15603a; --bad: #93231d; --soft: #f1f3f6;\n  }\n  * { box-sizing: border-box; }\n  body { margin: 0; background: var(--bg); color: var(--ink);\n         font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }\n  main { max-width: 780px; margin: 0 auto; padding: 32px 20px 80px; }\n  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }\n  .sub { color: var(--dim); margin: 0 0 28px; }\n  section { background: #fff; border: 1px solid var(--line); border-radius: 10px;\n            padding: 20px; margin: 0 0 18px; }\n  h2 { font-size: 15px; margin: 0 0 10px; text-transform: uppercase;\n       letter-spacing: 0.06em; color: var(--dim); font-weight: 600; }\n  p { margin: 0 0 12px; }\n  label { display: block; font-weight: 600; margin: 0 0 5px; font-size: 13px; }\n  input, textarea { width: 100%; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;\n                    padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px;\n                    background: #fff; color: var(--ink); }\n  textarea { resize: vertical; }\n  button { font: inherit; font-weight: 600; padding: 9px 16px; border-radius: 6px;\n           border: 1px solid var(--accent); background: var(--accent); color: #fff;\n           cursor: pointer; }\n  button:hover { background: var(--accent-dark); }\n  button.ghost { background: #fff; color: var(--accent); }\n  button.ghost:hover { background: var(--soft); }\n  button:disabled { opacity: .45; cursor: default; background: var(--accent); }\n  button.big { font-size: 17px; padding: 14px 26px; width: 100%; }\n  .stack > * + * { margin-top: 14px; }\n  .keybox { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: var(--soft); }\n  .keybox .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }\n  .keybox label { margin: 0; }\n  .keybox textarea { background: #fff; }\n  .copy { padding: 4px 12px; font-size: 12px; }\n  .note { color: var(--dim); font-size: 13px; margin: 0; }\n  .warn { color: var(--warn); }\n  .good { color: var(--good); }\n  .bad { color: var(--bad); }\n  .tabs { display: flex; gap: 8px; margin: 0 0 18px; flex-wrap: wrap; }\n  .tabs button { background: #fff; color: var(--dim); border-color: var(--line); }\n  .tabs button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }\n  .hide { display: none; }\n  code { background: var(--soft); padding: 1px 5px; border-radius: 4px; font-size: 13px;\n         word-break: break-all; }\n  .status { font-size: 13px; padding: 8px 10px; border-radius: 6px; background: var(--soft); }\n  .row { display: flex; gap: 10px; flex-wrap: wrap; }\n  .row button { flex: 1 1 auto; }\n  details { margin-top: 6px; }\n  summary { cursor: pointer; font-size: 13px; color: var(--dim); font-weight: 600; }\n</style>\n\n<main>\n  <h1>Civicsmith signing keys</h1>\n  <p class="sub">Runs entirely in this tab. Nothing is sent anywhere.</p>\n\n  <div class="tabs">\n    <button id="tab-keys" aria-pressed="true">Keys</button>\n    <button id="tab-release" aria-pressed="false">Sign a release</button>\n    <button id="tab-ratify" aria-pressed="false">Sign a ratification</button>\n    <button id="tab-notice" aria-pressed="false">Sign a notice</button>\n    <button id="tab-docket" aria-pressed="false">Sign a docket entry</button>\n  </div>\n\n  <!-- -------------------------------------------------------------- keys -->\n  <div id="pane-keys">\n    <section>\n      <h2>Make your keys</h2>\n      <p>One press makes both keys. Copy the two public keys into the session, and keep\n         the private keys wherever you keep things.</p>\n      <button id="gen" class="big">Generate my keys</button>\n      <div id="gen-out" class="stack" style="margin-top:18px"></div>\n    </section>\n\n    <section>\n      <h2>Load a key you already have</h2>\n      <p class="note">Paste a private key from a previous run. The key says which job it is for,\n         so there is nothing to choose.</p>\n      <div class="stack">\n        <textarea id="load-blob" rows="3" placeholder="BIOKEY-RAW1....." spellcheck="false"></textarea>\n        <div class="row">\n          <button id="load">Load this key</button>\n          <button id="forget" class="ghost">Forget everything</button>\n        </div>\n      </div>\n      <details>\n        <summary>This key is protected with a passphrase</summary>\n        <div class="stack" style="margin-top:10px">\n          <input id="load-pass" type="password" autocomplete="current-password" placeholder="passphrase">\n        </div>\n      </details>\n      <div id="load-out" style="margin-top:12px"></div>\n    </section>\n  </div>\n\n  <!-- ----------------------------------------------------------- release -->\n  <div id="pane-release" class="hide">\n    <section>\n      <h2>Sign a release</h2>\n      <p>Choose the release asset (<code>bio-plane.bundled.mjs</code>). The signature covers the\n         exact bytes of that file, so a rebuilt asset needs a new signature.</p>\n      <div class="stack">\n        <div id="rel-key" class="status">No release key loaded.</div>\n        <input id="rel-file" type="file">\n        <button id="rel-sign" disabled>Sign these bytes</button>\n      </div>\n      <div class="stack" id="rel-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n\n  <!-- ------------------------------------------------------------ ratify -->\n  <div id="pane-ratify" class="hide">\n    <section>\n      <h2>Sign a ratification</h2>\n      <p>Copy the record id and its current hash from its page in your group\'s Civicsmith. The signature covers\n         both, so it authorizes publishing that exact revision and no other.</p>\n      <div class="stack">\n        <div id="rat-key" class="status">No ratification key loaded.</div>\n        <div><label for="rat-id">Record id</label>\n          <input id="rat-id" placeholder="INFO-2026-5460-sewer-fund-transfers" spellcheck="false"></div>\n        <div><label for="rat-sha">Record hash</label>\n          <input id="rat-sha" placeholder="64 hex characters" spellcheck="false"></div>\n        <button id="rat-sign" disabled>Sign this ratification</button>\n      </div>\n      <div class="stack" id="rat-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n\n  <!-- ------------------------------------------------------------ notice -->\n  <div id="pane-notice" class="hide">\n    <section>\n      <h2>Sign a notice</h2>\n      <p>Copy the notice id, its revision number and its hash from its page in your group\'s Civicsmith. The signature\n         covers all three, so it puts your name to that exact revision of the notice and no other.\n         It is signed with your ratification key.</p>\n      <div class="stack">\n        <div id="not-key" class="status">No ratification key loaded.</div>\n        <div><label for="not-id">Notice id</label>\n          <input id="not-id" placeholder="NOTE-2026-4817" spellcheck="false"></div>\n        <div><label for="not-rev">Revision</label>\n          <input id="not-rev" placeholder="1" inputmode="numeric" spellcheck="false"></div>\n        <div><label for="not-sha">Notice hash</label>\n          <input id="not-sha" placeholder="64 hex characters" spellcheck="false"></div>\n        <button id="not-sign" disabled>Sign this notice</button>\n      </div>\n      <div class="stack" id="not-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n\n  <!-- ------------------------------------------------------------ docket -->\n  <div id="pane-docket" class="hide">\n    <section>\n      <h2>Sign a docket entry</h2>\n      <p>Copy the case id, the entry number and the entry hash from its page in your group\'s Civicsmith. The signature\n         covers all three, so it puts your name to that exact entry on that case\'s public docket and\n         no other. It is signed with your ratification key.</p>\n      <div class="stack">\n        <div id="dock-key" class="status">No ratification key loaded.</div>\n        <div><label for="dock-case">Case id</label>\n          <input id="dock-case" placeholder="CASE-2026-3091" spellcheck="false"></div>\n        <div><label for="dock-seq">Entry number</label>\n          <input id="dock-seq" placeholder="1" inputmode="numeric" spellcheck="false"></div>\n        <div><label for="dock-sha">Entry hash</label>\n          <input id="dock-sha" placeholder="64 hex characters" spellcheck="false"></div>\n        <button id="dock-sign" disabled>Sign this docket entry</button>\n      </div>\n      <div class="stack" id="dock-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n</main>\n\n<script>\n/* ------------------------------------------------------------- helpers */\nconst $ = (id) => document.getElementById(id);\nconst enc = new TextEncoder();\nconst u8 = (...a) => { let n = 0; for (const p of a) n += p.length;\n  const o = new Uint8Array(n); let i = 0; for (const p of a) { o.set(p, i); i += p.length; } return o; };\nconst b64 = (bytes) => { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); };\nconst unb64 = (s) => Uint8Array.from(atob(s.replace(/\\s+/g, "")), (c) => c.charCodeAt(0));\nconst hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");\n\n/* SSH wire encoding: a string is its length as a big-endian uint32, then bytes. */\nconst u32 = (n) => new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);\nconst sshStr = (v) => { const b = typeof v === "string" ? enc.encode(v) : v; return u8(u32(b.length), b); };\n\n/* An ssh-ed25519 public key on the wire, and its authorized_keys line. */\nconst wirePubkey = (raw32) => u8(sshStr("ssh-ed25519"), sshStr(raw32));\nconst pubLine = (raw32, comment) => `ssh-ed25519 ${b64(wirePubkey(raw32))} ${comment}`;\n\n/* What ssh-keygen actually signs: SSHSIG | namespace | reserved | hash alg | H(message).\n   The outer armor wraps a blob that repeats the public key and namespace so a\n   verifier can identify the signer without being told. */\nasync function sshsig(privKey, raw32, namespace, message) {\n  const h = new Uint8Array(await crypto.subtle.digest("SHA-512", message));\n  const signed = u8(enc.encode("SSHSIG"), sshStr(namespace), sshStr(""), sshStr("sha512"), sshStr(h));\n  const sig = new Uint8Array(await crypto.subtle.sign("Ed25519", privKey, signed));\n  const blob = u8(enc.encode("SSHSIG"), u32(1), sshStr(wirePubkey(raw32)),\n                  sshStr(namespace), sshStr(""), sshStr("sha512"),\n                  sshStr(u8(sshStr("ssh-ed25519"), sshStr(sig))));\n  const body = b64(blob).replace(/(.{70})/g, "$1\\n");\n  return `-----BEGIN SSH SIGNATURE-----\\n${body}\\n-----END SSH SIGNATURE-----\\n`;\n}\n\n/* WebCrypto has no seed-to-public-key call, so the public half is read out of a\n   JWK export of the same seed. Ed25519 takes PKCS#8, which for a raw seed is the\n   fixed 16-byte prefix every Ed25519 PKCS#8 key shares, followed by the seed. */\nconst PKCS8_HEAD = new Uint8Array([0x30,0x2e,0x02,0x01,0x00,0x30,0x05,0x06,0x03,0x2b,0x65,0x70,0x04,0x22,0x04,0x20]);\nasync function keysFromSeed(seed32) {\n  const pkcs8 = u8(PKCS8_HEAD, seed32);\n  const priv = await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, false, ["sign"]);\n  const jwk = await crypto.subtle.exportKey("jwk",\n    await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, true, ["sign"]));\n  const raw32 = unb64(jwk.x.replace(/-/g, "+").replace(/_/g, "/"));\n  return { priv, raw32 };\n}\n\n/* The two jobs, and the only two labels this page uses. A private key carries\n   its own label, so loading one never asks which job it belongs to. */\nconst JOBS = {\n  "bio-release": { slot: "release", title: "Release key", what: "signs the software installer" },\n  "bio-ratify":  { slot: "ratify",  title: "Ratification key", what: "attests documents for publishing" },\n};\n\n/* Private key formats. Raw is the default: a development key is disposable and a\n   passphrase on it is ceremony without a threat. The wrapped form exists for\n   production keys and is recognised automatically on load. */\nconst rawKeyString = (label, seed) => `BIOKEY-RAW1.${label}.${b64(seed)}`;\n\nconst KDF_ITER = 600000;\nasync function wrapKey(seed32, pass, label) {\n  const salt = crypto.getRandomValues(new Uint8Array(16));\n  const iv = crypto.getRandomValues(new Uint8Array(12));\n  const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: KDF_ITER, hash: "SHA-256" },\n    base, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);\n  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, seed32));\n  return ["BIOKEY1", label, b64(salt), b64(iv), b64(ct), KDF_ITER].join(".");\n}\n\nasync function parseKeyString(blob, pass) {\n  const s = (blob || "").trim();\n  if (s.startsWith("BIOKEY-RAW1.")) {\n    const [, label, seed] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    return { label, seed: unb64(seed) };\n  }\n  if (s.startsWith("BIOKEY1.")) {\n    const [, label, salt, iv, ct, iter] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    if (!pass) throw new Error("that key is protected with a passphrase; open the passphrase box below");\n    const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n    const key = await crypto.subtle.deriveKey(\n      { name: "PBKDF2", salt: unb64(salt), iterations: Number(iter), hash: "SHA-256" },\n      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);\n    try {\n      const seed = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(iv) }, key, unb64(ct)));\n      return { label, seed };\n    } catch { throw new Error("wrong passphrase, or the key was altered"); }\n  }\n  throw new Error("that does not look like a Civicsmith private key");\n}\n\n/* ---------------------------------------------------------------- state */\nconst KEYS = { release: null, ratify: null };   /* { priv, raw32, label } */\n\nfunction armed() {\n  for (const [slot, elId, what] of [["release", "rel-key", "release"], ["ratify", "rat-key", "ratification"],\n                                    ["ratify", "not-key", "ratification"], ["ratify", "dock-key", "ratification"]]) {\n    const k = KEYS[slot];\n    $(elId).innerHTML = k\n      ? `<span class="good">Signing as</span> <code>${pubLine(k.raw32, k.label)}</code>`\n      : `No ${what} key loaded. Make one on the Keys tab.`;\n  }\n  $("rel-sign").disabled = !KEYS.release;\n  $("rat-sign").disabled = !KEYS.ratify;\n  $("not-sign").disabled = !KEYS.ratify;\n  $("dock-sign").disabled = !KEYS.ratify;\n}\n\nasync function useSeed(label, seed) {\n  const { priv, raw32 } = await keysFromSeed(seed);\n  KEYS[JOBS[label].slot] = { priv, raw32, label };\n  armed();\n  return { priv, raw32 };\n}\n\n/* ---------------------------------------------------- copyable text block */\nlet boxSeq = 0;\nfunction copyBox(labelText, value, hint) {\n  const id = "box" + (++boxSeq);\n  const rows = value.split("\\n").length > 3 ? 7 : 2;\n  return `<div class="keybox">\n    <div class="top"><label for="${id}">${labelText}</label>\n      <button class="copy ghost" data-copy="${id}">Copy</button></div>\n    <textarea id="${id}" rows="${rows}" readonly spellcheck="false">${value.replace(/</g, "&lt;")}</textarea>\n    ${hint ? `<p class="note" style="margin-top:6px">${hint}</p>` : ""}\n  </div>`;\n}\n\n/* Clipboard, with a fallback because a page opened from disk cannot always\n   reach the async clipboard API. */\nasync function copyText(text) {\n  try { await navigator.clipboard.writeText(text); return true; } catch {}\n  try {\n    const ta = document.createElement("textarea");\n    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";\n    document.body.appendChild(ta); ta.select();\n    const ok = document.execCommand("copy");\n    document.body.removeChild(ta);\n    return ok;\n  } catch { return false; }\n}\ndocument.addEventListener("click", async (e) => {\n  const btn = e.target.closest ? e.target.closest("[data-copy]") : null;\n  if (!btn) return;\n  const src = $(btn.getAttribute("data-copy"));\n  const ok = await copyText(src ? src.value : "");\n  const was = btn.textContent;\n  btn.textContent = ok ? "Copied" : "Press Ctrl+C";\n  setTimeout(() => { btn.textContent = was; }, 1400);\n});\n\n/* ------------------------------------------------------------------ tabs */\nconst PANES = [["tab-keys", "pane-keys"], ["tab-release", "pane-release"], ["tab-ratify", "pane-ratify"],\n               ["tab-notice", "pane-notice"], ["tab-docket", "pane-docket"]];\nfor (const [btn, pane] of PANES) {\n  $(btn).onclick = () => {\n    for (const [b, p] of PANES) {\n      $(b).setAttribute("aria-pressed", String(b === btn));\n      $(p).classList.toggle("hide", p !== pane);\n    }\n  };\n}\n\n/* -------------------------------------------------------------- generate */\nfunction keyReport(made) {\n  return Object.entries(made)\n    .map(([l, m]) => `# ${JOBS[l].title} (${JOBS[l].what})\\npublic:  ${m.pub}\\nprivate: ${m.priv}`)\n    .join("\\n\\n") + "\\n";\n}\n\nasync function generateAll() {\n  const made = {};\n  for (const label of Object.keys(JOBS)) {\n    const seed = crypto.getRandomValues(new Uint8Array(32));\n    const { raw32 } = await useSeed(label, seed);\n    made[label] = { pub: pubLine(raw32, label), priv: rawKeyString(label, seed) };\n  }\n  return made;\n}\n\n$("gen").onclick = async () => {\n  const made = await generateAll();\n  const bothPub = Object.values(made).map((m) => m.pub).join("\\n");\n  const all = keyReport(made);\n\n  $("gen-out").innerHTML =\n    copyBox("Both public keys: paste these into the session", bothPub,\n            "Public keys are public by design. This is the only thing that needs to leave this page.")\n    + `<div class="row">\n         <button id="copy-all">Copy everything, keys and all</button>\n         <button id="dl" class="ghost">Download as a file</button>\n       </div>`\n    + Object.entries(made).map(([l, m]) =>\n        copyBox(`${JOBS[l].title}: private, keep this`, m.priv,\n                `Paste this back into "Load a key you already have" next time you sign. This one ${JOBS[l].what}.`)).join("")\n    + `<p class="note">These are development keys with no passphrase. When Civicsmith goes to real groups,\n         generate fresh keys and protect them. Nothing here carries over.</p>`;\n\n  $("copy-all").onclick = async (e) => {\n    const ok = await copyText(all);\n    e.target.textContent = ok ? "Copied" : "Use the boxes below instead";\n    setTimeout(() => { e.target.textContent = "Copy everything, keys and all"; }, 1400);\n  };\n  $("dl").onclick = () => {\n    const url = URL.createObjectURL(new Blob([all], { type: "text/plain" }));\n    const a = document.createElement("a");\n    a.href = url; a.download = "bio-signing-keys.txt";\n    document.body.appendChild(a); a.click(); document.body.removeChild(a);\n    URL.revokeObjectURL(url);\n  };\n};\n\n/* ------------------------------------------------------------------ load */\n$("load").onclick = async () => {\n  try {\n    const { label, seed } = await parseKeyString($("load-blob").value, $("load-pass").value);\n    const { raw32 } = await useSeed(label, seed);\n    $("load-pass").value = "";\n    $("load-out").innerHTML =\n      `<p class="good">${JOBS[label].title} loaded.</p><p class="note"><code>${pubLine(raw32, label)}</code></p>`;\n  } catch (e) {\n    $("load-out").innerHTML = `<p class="bad">${String(e.message || e)}</p>`;\n  }\n};\n$("forget").onclick = () => {\n  KEYS.release = null; KEYS.ratify = null; armed();\n  for (const id of ["load-blob", "load-pass"]) $(id).value = "";\n  for (const id of ["gen-out", "rel-out", "rat-out", "not-out", "dock-out"]) $(id).innerHTML = "";\n  $("load-out").innerHTML = `<p class="note">Forgotten. Nothing signing-related is left in this tab.</p>`;\n};\n\n/* -------------------------------------------------------- sign a release */\n$("rel-sign").onclick = async () => {\n  const f = $("rel-file").files[0];\n  if (!f) return ($("rel-out").innerHTML = `<p class="warn">Choose the release asset first.</p>`);\n  const k = KEYS.release;\n  const bytes = new Uint8Array(await f.arrayBuffer());\n  const sha = hex(await crypto.subtle.digest("SHA-256", bytes));\n  const sig = await sshsig(k.priv, k.raw32, "bio-release", bytes);\n  const manifest = JSON.stringify({ sha256: sha, sig, signer: pubLine(k.raw32, k.label) }, null, 1);\n  $("rel-out").innerHTML = copyBox(\n    `Signature for ${f.name}: paste this into the session`, manifest,\n    `Covers ${bytes.length} bytes hashing to <code>${sha}</code>.`);\n};\n\n/* ----------------------------------------------------- sign a ratification */\n$("rat-sign").onclick = async () => {\n  const id = $("rat-id").value.trim(), sha = $("rat-sha").value.trim().toLowerCase();\n  if (!id) return ($("rat-out").innerHTML = `<p class="warn">Paste the record id.</p>`);\n  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("rat-out").innerHTML = `<p class="warn">The record hash is 64 hex characters.</p>`);\n  const k = KEYS.ratify;\n  const sig = await sshsig(k.priv, k.raw32, "bio-ratify", enc.encode(`bio-ratify ${id} ${sha}\\n`));\n  $("rat-out").innerHTML = copyBox(\n    "Signature: paste this into the ratify box in your group\'s Civicsmith", sig,\n    `Authorizes publishing <code>${id}</code> at exactly that hash. If the record changes before\n     you submit it, your group\'s Civicsmith refuses this signature and you sign the new hash.`);\n};\n\n/* --------------------------------------------------------- sign a notice */\n/* The same bytes as the plane\'s noticeStatement: `bio-working-on <id> <revision>\n   <hash>` and a newline, in the namespace bio-working-on. The fields are checked\n   exactly as the plane checks them, so the page never signs a statement the\n   instance would build differently. An opaque id, as the plane\'s minter draws it:\n   the next line is written by scripts/embed-signpage.mjs from the plane\'s pattern,\n   whose counter is the id table\'s (four digits or more); never edit it by hand. */\nconst OPAQUE_ID_RE = /^[A-Z]+-\\d{4}-\\d{4,}(?:-[a-z0-9]+(?:-[a-z0-9]+)*)?$/;\n$("not-sign").onclick = async () => {\n  const id = $("not-id").value.trim(), rev = $("not-rev").value.trim();\n  const sha = $("not-sha").value.trim().toLowerCase();\n  if (!OPAQUE_ID_RE.test(id)) return ($("not-out").innerHTML = `<p class="warn">Paste the notice id, as your group\'s Civicsmith shows it.</p>`);\n  if (!/^[1-9][0-9]*$/.test(rev) || !Number.isSafeInteger(Number(rev)))\n    return ($("not-out").innerHTML = `<p class="warn">The revision is a whole number, 1 or more.</p>`);\n  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("not-out").innerHTML = `<p class="warn">The notice hash is 64 hex characters.</p>`);\n  const k = KEYS.ratify;\n  const sig = await sshsig(k.priv, k.raw32, "bio-working-on", enc.encode(`bio-working-on ${id} ${rev} ${sha}\\n`));\n  $("not-out").innerHTML = copyBox(\n    "Signature: paste this into the notice box in your group\'s Civicsmith", sig,\n    `Signs revision ${rev} of <code>${id}</code> at exactly that hash. If the notice changes before\n     you post it, your group\'s Civicsmith refuses this signature and you sign the new hash.`);\n};\n\n/* --------------------------------------------------- sign a docket entry */\n/* The same bytes as the plane\'s docketStatement: `bio-docket <case id> <entry\n   number> <hash>` and a newline, in the namespace bio-docket, the fields checked\n   exactly as the plane checks them. */\n$("dock-sign").onclick = async () => {\n  const id = $("dock-case").value.trim(), seq = $("dock-seq").value.trim();\n  const sha = $("dock-sha").value.trim().toLowerCase();\n  if (!OPAQUE_ID_RE.test(id)) return ($("dock-out").innerHTML = `<p class="warn">Paste the case id, as your group\'s Civicsmith shows it.</p>`);\n  if (!/^[1-9][0-9]*$/.test(seq) || !Number.isSafeInteger(Number(seq)))\n    return ($("dock-out").innerHTML = `<p class="warn">The entry number is a whole number, 1 or more.</p>`);\n  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("dock-out").innerHTML = `<p class="warn">The entry hash is 64 hex characters.</p>`);\n  const k = KEYS.ratify;\n  const sig = await sshsig(k.priv, k.raw32, "bio-docket", enc.encode(`bio-docket ${id} ${seq} ${sha}\\n`));\n  $("dock-out").innerHTML = copyBox(\n    "Signature: paste this into the docket box in your group\'s Civicsmith", sig,\n    `Signs entry ${seq} on the docket of <code>${id}</code> at exactly that hash. If the entry changes before\n     you post it, your group\'s Civicsmith refuses this signature and you prepare and sign it again.`);\n};\n\narmed();\n</script>\n';
+var SIGN_HTML = '<!doctype html>\n<meta charset="utf-8">\n<title>Civicsmith signing keys</title>\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<!--\n  Signing keys that never leave the person holding them.\n\n  This page is one file with no network access of any kind: no scripts\n  loaded, no fonts fetched, no data sent anywhere. Open it from a local\n  copy. Everything it does happens in the browser tab.\n\n  It produces SSHSIG signatures, the same format `ssh-keygen -Y sign`\n  emits, so anything signed here can be verified by anyone with stock\n  OpenSSH and no Civicsmith code:\n\n      ssh-keygen -Y verify -f allowed_signers -I <you> \\\n                 -n bio-release -s file.sig < file\n\n  Two keys, because they do different jobs. The release key signs the\n  software that installs into other people\'s accounts and is used a few\n  times a year. The ratification key attests documents and is used\n  constantly. Keeping routine use away from the supply-chain key is the\n  reason they are separate.\n\n  A third key, the recovery key, is a release key kept offline for one\n  use: signing the release that replaces a lost or stolen release key. It\n  carries its own label, bio-release-recovery, in its private and public\n  text, so it is never mistaken for the key it backs up.\n\n  The ratification key also signs a project\'s "working on" notice, in its\n  own namespace (bio-working-on), so a signature on a notice can never be\n  taken as consent to publish a record, or the reverse. It signs a case\'s\n  public docket entries in their own namespace too (bio-docket), so an\n  entry\'s signature can never stand for a ratification or a notice.\n-->\n<style>\n  :root {\n    --ink: #16171a; --dim: #5c6069; --line: #d9dce1; --bg: #fbfbfc;\n    --accent: #1c4f8b; --accent-dark: #163f70; --warn: #8a4b00;\n    --good: #15603a; --bad: #93231d; --soft: #f1f3f6;\n  }\n  * { box-sizing: border-box; }\n  body { margin: 0; background: var(--bg); color: var(--ink);\n         font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }\n  main { max-width: 780px; margin: 0 auto; padding: 32px 20px 80px; }\n  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }\n  .sub { color: var(--dim); margin: 0 0 28px; }\n  section { background: #fff; border: 1px solid var(--line); border-radius: 10px;\n            padding: 20px; margin: 0 0 18px; }\n  h2 { font-size: 15px; margin: 0 0 10px; text-transform: uppercase;\n       letter-spacing: 0.06em; color: var(--dim); font-weight: 600; }\n  p { margin: 0 0 12px; }\n  label { display: block; font-weight: 600; margin: 0 0 5px; font-size: 13px; }\n  input, textarea { width: 100%; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;\n                    padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px;\n                    background: #fff; color: var(--ink); }\n  textarea { resize: vertical; }\n  button { font: inherit; font-weight: 600; padding: 9px 16px; border-radius: 6px;\n           border: 1px solid var(--accent); background: var(--accent); color: #fff;\n           cursor: pointer; }\n  button:hover { background: var(--accent-dark); }\n  button.ghost { background: #fff; color: var(--accent); }\n  button.ghost:hover { background: var(--soft); }\n  button:disabled { opacity: .45; cursor: default; background: var(--accent); }\n  button.big { font-size: 17px; padding: 14px 26px; width: 100%; }\n  .stack > * + * { margin-top: 14px; }\n  .keybox { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: var(--soft); }\n  .keybox .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }\n  .keybox label { margin: 0; }\n  .keybox textarea { background: #fff; }\n  .copy { padding: 4px 12px; font-size: 12px; }\n  .note { color: var(--dim); font-size: 13px; margin: 0; }\n  .warn { color: var(--warn); }\n  .good { color: var(--good); }\n  .bad { color: var(--bad); }\n  .tabs { display: flex; gap: 8px; margin: 0 0 18px; flex-wrap: wrap; }\n  .tabs button { background: #fff; color: var(--dim); border-color: var(--line); }\n  .tabs button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }\n  .hide { display: none; }\n  code { background: var(--soft); padding: 1px 5px; border-radius: 4px; font-size: 13px;\n         word-break: break-all; }\n  .status { font-size: 13px; padding: 8px 10px; border-radius: 6px; background: var(--soft); }\n  .row { display: flex; gap: 10px; flex-wrap: wrap; }\n  .row button { flex: 1 1 auto; }\n  details { margin-top: 6px; }\n  summary { cursor: pointer; font-size: 13px; color: var(--dim); font-weight: 600; }\n</style>\n\n<main>\n  <h1>Civicsmith signing keys</h1>\n  <p class="sub">Runs entirely in this tab. Nothing is sent anywhere.</p>\n\n  <div class="tabs">\n    <button id="tab-keys" aria-pressed="true">Keys</button>\n    <button id="tab-release" aria-pressed="false">Sign a release</button>\n    <button id="tab-ratify" aria-pressed="false">Sign a ratification</button>\n    <button id="tab-notice" aria-pressed="false">Sign a notice</button>\n    <button id="tab-docket" aria-pressed="false">Sign a docket entry</button>\n  </div>\n\n  <!-- -------------------------------------------------------------- keys -->\n  <div id="pane-keys">\n    <section>\n      <h2>Make your keys</h2>\n      <p>One press makes both keys. Copy the two public keys into the session, and keep\n         the private keys wherever you keep things.</p>\n      <div class="stack">\n        <div><label for="gen-pass">Passphrase (leave empty for development keys)</label>\n          <input id="gen-pass" type="password" autocomplete="new-password" placeholder="passphrase"></div>\n        <div><label for="gen-pass2">The same passphrase again</label>\n          <input id="gen-pass2" type="password" autocomplete="new-password" placeholder="passphrase"></div>\n        <p class="note">With a passphrase, every private key this page gives you is locked with it, and loading one\n           back asks for it. Keep the passphrase apart from the keys: without it they cannot be used.</p>\n        <button id="gen" class="big">Generate my keys</button>\n      </div>\n      <div id="gen-out" class="stack" style="margin-top:18px"></div>\n    </section>\n\n    <section>\n      <h2>Make a recovery key</h2>\n      <p>A second release key, kept offline. It signs one release only: the one that replaces a lost or\n         stolen release key. Make it once, copy its public key into the session, and keep its private key\n         apart from the release key.</p>\n      <div class="stack">\n        <div><label for="rec-pass">Passphrase</label>\n          <input id="rec-pass" type="password" autocomplete="new-password" placeholder="passphrase"></div>\n        <div><label for="rec-pass2">The same passphrase again</label>\n          <input id="rec-pass2" type="password" autocomplete="new-password" placeholder="passphrase"></div>\n        <button id="rec-gen">Make a recovery key</button>\n      </div>\n      <div id="rec-out" class="stack" style="margin-top:18px"></div>\n    </section>\n\n    <section>\n      <h2>Load a key you already have</h2>\n      <p class="note">Paste a private key from a previous run. The key says which job it is for,\n         so there is nothing to choose.</p>\n      <div class="stack">\n        <textarea id="load-blob" rows="3" placeholder="BIOKEY-RAW1....." spellcheck="false"></textarea>\n        <div class="row">\n          <button id="load">Load this key</button>\n          <button id="forget" class="ghost">Forget everything</button>\n        </div>\n      </div>\n      <details>\n        <summary>This key is protected with a passphrase</summary>\n        <div class="stack" style="margin-top:10px">\n          <input id="load-pass" type="password" autocomplete="current-password" placeholder="passphrase">\n        </div>\n      </details>\n      <div id="load-out" style="margin-top:12px"></div>\n    </section>\n  </div>\n\n  <!-- ----------------------------------------------------------- release -->\n  <div id="pane-release" class="hide">\n    <section>\n      <h2>Sign a release</h2>\n      <p>Choose the release asset (<code>bio-plane.bundled.mjs</code>). The signature covers the\n         exact bytes of that file, so a rebuilt asset needs a new signature.</p>\n      <div class="stack">\n        <div id="rel-key" class="status">No release key loaded.</div>\n        <input id="rel-file" type="file">\n        <button id="rel-sign" disabled>Sign these bytes</button>\n      </div>\n      <div class="stack" id="rel-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n\n  <!-- ------------------------------------------------------------ ratify -->\n  <div id="pane-ratify" class="hide">\n    <section>\n      <h2>Sign a ratification</h2>\n      <p>Copy the record id and its current hash from its page in your group\'s Civicsmith. The signature covers\n         both, so it authorizes publishing that exact revision and no other.</p>\n      <div class="stack">\n        <div id="rat-key" class="status">No ratification key loaded.</div>\n        <div><label for="rat-id">Record id</label>\n          <input id="rat-id" placeholder="INFO-2026-5460-sewer-fund-transfers" spellcheck="false"></div>\n        <div><label for="rat-sha">Record hash</label>\n          <input id="rat-sha" placeholder="64 hex characters" spellcheck="false"></div>\n        <button id="rat-sign" disabled>Sign this ratification</button>\n      </div>\n      <div class="stack" id="rat-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n\n  <!-- ------------------------------------------------------------ notice -->\n  <div id="pane-notice" class="hide">\n    <section>\n      <h2>Sign a notice</h2>\n      <p>Copy the notice id, its revision number and its hash from its page in your group\'s Civicsmith. The signature\n         covers all three, so it puts your name to that exact revision of the notice and no other.\n         It is signed with your ratification key.</p>\n      <div class="stack">\n        <div id="not-key" class="status">No ratification key loaded.</div>\n        <div><label for="not-id">Notice id</label>\n          <input id="not-id" placeholder="NOTE-2026-4817" spellcheck="false"></div>\n        <div><label for="not-rev">Revision</label>\n          <input id="not-rev" placeholder="1" inputmode="numeric" spellcheck="false"></div>\n        <div><label for="not-sha">Notice hash</label>\n          <input id="not-sha" placeholder="64 hex characters" spellcheck="false"></div>\n        <button id="not-sign" disabled>Sign this notice</button>\n      </div>\n      <div class="stack" id="not-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n\n  <!-- ------------------------------------------------------------ docket -->\n  <div id="pane-docket" class="hide">\n    <section>\n      <h2>Sign a docket entry</h2>\n      <p>Copy the case id, the entry number and the entry hash from its page in your group\'s Civicsmith. The signature\n         covers all three, so it puts your name to that exact entry on that case\'s public docket and\n         no other. It is signed with your ratification key.</p>\n      <div class="stack">\n        <div id="dock-key" class="status">No ratification key loaded.</div>\n        <div><label for="dock-case">Case id</label>\n          <input id="dock-case" placeholder="CASE-2026-3091" spellcheck="false"></div>\n        <div><label for="dock-seq">Entry number</label>\n          <input id="dock-seq" placeholder="1" inputmode="numeric" spellcheck="false"></div>\n        <div><label for="dock-sha">Entry hash</label>\n          <input id="dock-sha" placeholder="64 hex characters" spellcheck="false"></div>\n        <button id="dock-sign" disabled>Sign this docket entry</button>\n      </div>\n      <div class="stack" id="dock-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n</main>\n\n<script>\n/* ------------------------------------------------------------- helpers */\nconst $ = (id) => document.getElementById(id);\nconst enc = new TextEncoder();\nconst u8 = (...a) => { let n = 0; for (const p of a) n += p.length;\n  const o = new Uint8Array(n); let i = 0; for (const p of a) { o.set(p, i); i += p.length; } return o; };\nconst b64 = (bytes) => { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); };\nconst unb64 = (s) => Uint8Array.from(atob(s.replace(/\\s+/g, "")), (c) => c.charCodeAt(0));\nconst hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");\n\n/* SSH wire encoding: a string is its length as a big-endian uint32, then bytes. */\nconst u32 = (n) => new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);\nconst sshStr = (v) => { const b = typeof v === "string" ? enc.encode(v) : v; return u8(u32(b.length), b); };\n\n/* An ssh-ed25519 public key on the wire, and its authorized_keys line. */\nconst wirePubkey = (raw32) => u8(sshStr("ssh-ed25519"), sshStr(raw32));\nconst pubLine = (raw32, comment) => `ssh-ed25519 ${b64(wirePubkey(raw32))} ${comment}`;\n\n/* What ssh-keygen actually signs: SSHSIG | namespace | reserved | hash alg | H(message).\n   The outer armor wraps a blob that repeats the public key and namespace so a\n   verifier can identify the signer without being told. */\nasync function sshsig(privKey, raw32, namespace, message) {\n  const h = new Uint8Array(await crypto.subtle.digest("SHA-512", message));\n  const signed = u8(enc.encode("SSHSIG"), sshStr(namespace), sshStr(""), sshStr("sha512"), sshStr(h));\n  const sig = new Uint8Array(await crypto.subtle.sign("Ed25519", privKey, signed));\n  const blob = u8(enc.encode("SSHSIG"), u32(1), sshStr(wirePubkey(raw32)),\n                  sshStr(namespace), sshStr(""), sshStr("sha512"),\n                  sshStr(u8(sshStr("ssh-ed25519"), sshStr(sig))));\n  const body = b64(blob).replace(/(.{70})/g, "$1\\n");\n  return `-----BEGIN SSH SIGNATURE-----\\n${body}\\n-----END SSH SIGNATURE-----\\n`;\n}\n\n/* WebCrypto has no seed-to-public-key call, so the public half is read out of a\n   JWK export of the same seed. Ed25519 takes PKCS#8, which for a raw seed is the\n   fixed 16-byte prefix every Ed25519 PKCS#8 key shares, followed by the seed. */\nconst PKCS8_HEAD = new Uint8Array([0x30,0x2e,0x02,0x01,0x00,0x30,0x05,0x06,0x03,0x2b,0x65,0x70,0x04,0x22,0x04,0x20]);\nasync function keysFromSeed(seed32) {\n  const pkcs8 = u8(PKCS8_HEAD, seed32);\n  const priv = await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, false, ["sign"]);\n  const jwk = await crypto.subtle.exportKey("jwk",\n    await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, true, ["sign"]));\n  const raw32 = unb64(jwk.x.replace(/-/g, "+").replace(/_/g, "/"));\n  return { priv, raw32 };\n}\n\n/* The keys this page makes, and the only labels it uses. A private key carries\n   its own label, so loading one never asks which job it belongs to. The\n   recovery key is a release key (it fills the release slot and signs\n   bio-release); its own label is what keeps it from being taken for the key\n   it backs up, in its private text and in its public line\'s comment. */\nconst JOBS = {\n  "bio-release": { slot: "release", title: "Release key", what: "signs the software installer" },\n  "bio-ratify":  { slot: "ratify",  title: "Ratification key", what: "attests documents for publishing" },\n  "bio-release-recovery": { slot: "release", title: "Recovery key",\n    what: "signs one release only, the one that replaces a lost or stolen release key" },\n};\n/* The two keys one press of Generate makes. */\nconst GENERATED = ["bio-release", "bio-ratify"];\n\n/* Private key formats. With no passphrase a key is raw: a development key is\n   disposable and a passphrase on it is ceremony without a threat. With one, every\n   private key the page gives out is the wrapped form, recognised on load, but for\n   the release key\'s raw form shown once on request for the signing secret. */\nconst rawKeyString = (label, seed) => `BIOKEY-RAW1.${label}.${b64(seed)}`;\n\nconst KDF_ITER = 600000;\nasync function wrapKey(seed32, pass, label) {\n  const salt = crypto.getRandomValues(new Uint8Array(16));\n  const iv = crypto.getRandomValues(new Uint8Array(12));\n  const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: KDF_ITER, hash: "SHA-256" },\n    base, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);\n  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, seed32));\n  return ["BIOKEY1", label, b64(salt), b64(iv), b64(ct), KDF_ITER].join(".");\n}\n\nasync function parseKeyString(blob, pass) {\n  const s = (blob || "").trim();\n  if (s.startsWith("BIOKEY-RAW1.")) {\n    const [, label, seed] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    return { label, seed: unb64(seed) };\n  }\n  if (s.startsWith("BIOKEY1.")) {\n    const [, label, salt, iv, ct, iter] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    if (!pass) throw new Error("that key is protected with a passphrase; open the passphrase box below");\n    if (!/^[1-9][0-9]{0,6}$/.test(iter || "")) throw new Error("wrong passphrase, or the key was altered");\n    const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n    const key = await crypto.subtle.deriveKey(\n      { name: "PBKDF2", salt: unb64(salt), iterations: Number(iter), hash: "SHA-256" },\n      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);\n    try {\n      const seed = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(iv) }, key, unb64(ct)));\n      return { label, seed };\n    } catch { throw new Error("wrong passphrase, or the key was altered"); }\n  }\n  throw new Error("that does not look like a Civicsmith private key");\n}\n\n/* ---------------------------------------------------------------- state */\nconst KEYS = { release: null, ratify: null };   /* { priv, raw32, label } */\n\nfunction armed() {\n  for (const [slot, elId, what] of [["release", "rel-key", "release"], ["ratify", "rat-key", "ratification"],\n                                    ["ratify", "not-key", "ratification"], ["ratify", "dock-key", "ratification"]]) {\n    const k = KEYS[slot];\n    $(elId).innerHTML = k\n      ? `<span class="good">Signing as</span> ${JOBS[k.label].title}: <code>${pubLine(k.raw32, k.label)}</code>`\n      : `No ${what} key loaded. Make one on the Keys tab.`;\n  }\n  $("rel-sign").disabled = !KEYS.release;\n  $("rat-sign").disabled = !KEYS.ratify;\n  $("not-sign").disabled = !KEYS.ratify;\n  $("dock-sign").disabled = !KEYS.ratify;\n}\n\nasync function useSeed(label, seed) {\n  const { priv, raw32 } = await keysFromSeed(seed);\n  KEYS[JOBS[label].slot] = { priv, raw32, label };\n  armed();\n  return { priv, raw32 };\n}\n\n/* ---------------------------------------------------- copyable text block */\nlet boxSeq = 0;\nfunction copyBox(labelText, value, hint) {\n  const id = "box" + (++boxSeq);\n  const rows = value.split("\\n").length > 3 ? 7 : 2;\n  return `<div class="keybox">\n    <div class="top"><label for="${id}">${labelText}</label>\n      <button class="copy ghost" data-copy="${id}">Copy</button></div>\n    <textarea id="${id}" rows="${rows}" readonly spellcheck="false">${value.replace(/</g, "&lt;")}</textarea>\n    ${hint ? `<p class="note" style="margin-top:6px">${hint}</p>` : ""}\n  </div>`;\n}\n\n/* Clipboard, with a fallback because a page opened from disk cannot always\n   reach the async clipboard API. */\nasync function copyText(text) {\n  try { await navigator.clipboard.writeText(text); return true; } catch {}\n  try {\n    const ta = document.createElement("textarea");\n    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";\n    document.body.appendChild(ta); ta.select();\n    const ok = document.execCommand("copy");\n    document.body.removeChild(ta);\n    return ok;\n  } catch { return false; }\n}\ndocument.addEventListener("click", async (e) => {\n  const btn = e.target.closest ? e.target.closest("[data-copy]") : null;\n  if (!btn) return;\n  const src = $(btn.getAttribute("data-copy"));\n  const ok = await copyText(src ? src.value : "");\n  const was = btn.textContent;\n  btn.textContent = ok ? "Copied" : "Press Ctrl+C";\n  setTimeout(() => { btn.textContent = was; }, 1400);\n});\n\n/* ------------------------------------------------------------------ tabs */\nconst PANES = [["tab-keys", "pane-keys"], ["tab-release", "pane-release"], ["tab-ratify", "pane-ratify"],\n               ["tab-notice", "pane-notice"], ["tab-docket", "pane-docket"]];\nfor (const [btn, pane] of PANES) {\n  $(btn).onclick = () => {\n    for (const [b, p] of PANES) {\n      $(b).setAttribute("aria-pressed", String(b === btn));\n      $(p).classList.toggle("hide", p !== pane);\n    }\n  };\n}\n\n/* -------------------------------------------------------------- generate */\n/* What a key file holds: each key\'s public line and private key, never a raw\n   form when a passphrase was given (the private key is then the wrapped one). */\nfunction keyReport(made) {\n  return Object.entries(made)\n    .map(([l, m]) => `# ${JOBS[l].title} (${JOBS[l].what})\\npublic:  ${m.pub}\\nprivate: ${m.priv}`)\n    .join("\\n\\n") + "\\n";\n}\n\nfunction download(name, text) {\n  const url = URL.createObjectURL(new Blob([text], { type: "text/plain" }));\n  const a = document.createElement("a");\n  a.href = url; a.download = name;\n  document.body.appendChild(a); a.click(); document.body.removeChild(a);\n  URL.revokeObjectURL(url);\n}\n\n/* The passphrase typed twice into two fields, which are then emptied: "" for\n   none, or null, with the page\'s words in `out`, when the two differ. */\nfunction passphraseOf(a, b, out) {\n  const pass = $(a).value, again = $(b).value;\n  $(a).value = ""; $(b).value = "";\n  if (pass !== again) {\n    $(out).innerHTML = `<p class="warn">The two passphrases differ, so no key was made. Type the same one twice.</p>`;\n    return null;\n  }\n  return pass;\n}\n\n/* One fresh key: its public line, its private key in the form the passphrase\n   decides, and its raw form, which leaves this page only as R43 allows. */\nasync function makeKey(label, pass) {\n  const seed = crypto.getRandomValues(new Uint8Array(32));\n  const { raw32 } = await keysFromSeed(seed);\n  const raw = rawKeyString(label, seed);\n  return { seed, pub: pubLine(raw32, label), priv: pass ? await wrapKey(seed, pass, label) : raw, raw };\n}\n\n/* Both keys, loaded into this tab; each entry is { pub, priv, raw }. */\nasync function generateAll(pass = "") {\n  const made = {};\n  for (const label of GENERATED) {\n    const { seed, ...key } = await makeKey(label, pass);\n    await useSeed(label, seed);\n    made[label] = key;\n  }\n  return made;\n}\n\n/* The release key\'s raw form, held only until it is shown once or forgotten. */\nlet rawOnce = null;\n\n$("gen").onclick = async () => {\n  const pass = passphraseOf("gen-pass", "gen-pass2", "gen-out");\n  if (pass === null) return;\n  $("gen-out").innerHTML = `<p class="note">Making your keys\u2026</p>`;\n  const made = await generateAll(pass);\n  rawOnce = pass ? made["bio-release"].raw : null;\n  const bothPub = Object.values(made).map((m) => m.pub).join("\\n");\n  const all = keyReport(made);\n\n  $("gen-out").innerHTML =\n    copyBox("Both public keys: paste these into the session", bothPub,\n            "Public keys are public by design. This is the only thing that needs to leave this page.")\n    + `<div class="row">\n         <button id="copy-all">Copy everything, keys and all</button>\n         <button id="dl" class="ghost">Download as a file</button>\n       </div>`\n    + Object.entries(made).map(([l, m]) =>\n        copyBox(`${JOBS[l].title}: private, keep this`, m.priv,\n                `Paste this back into "Load a key you already have" next time you sign. This one ${JOBS[l].what}.`)).join("")\n    + (pass\n      ? `<p class="note">Both private keys are locked with your passphrase. Loading one asks for it,\n           and refuses any other.</p>\n         <div id="raw-once" class="stack"><button id="show-raw" class="ghost">Show the release key\'s raw form,\n           once, for the secret store that signs releases</button></div>`\n      : `<p class="note">These are development keys with no passphrase. When Civicsmith goes to real groups,\n           generate fresh keys and protect them. Nothing here carries over.</p>`);\n\n  $("copy-all").onclick = async (e) => {\n    const ok = await copyText(all);\n    e.target.textContent = ok ? "Copied" : "Use the boxes below instead";\n    setTimeout(() => { e.target.textContent = "Copy everything, keys and all"; }, 1400);\n  };\n  $("dl").onclick = () => download("bio-signing-keys.txt", all);\n  if (pass) $("show-raw").onclick = showRawOnce;\n};\n\n/* R43\'s one raw showing: on request, once per Generate, never into a file. */\nfunction showRawOnce() {\n  const raw = rawOnce;\n  rawOnce = null;\n  if (!raw) return;\n  $("raw-once").innerHTML =\n    copyBox("Release key: raw, for the signing secret only", raw,\n            "Paste this into the secret store that signs releases, then hide it. It is not locked: anyone holding "\n            + "this text can sign as you. This page shows it this once and never puts it in a file.")\n    + `<button id="hide-raw" class="ghost">Hide it</button>`;\n  $("hide-raw").onclick = () => {\n    $("raw-once").innerHTML = `<p class="note">Hidden. This page will not show it again.</p>`;\n  };\n}\n\n/* ------------------------------------------------------------ recovery */\n$("rec-gen").onclick = async () => {\n  const pass = passphraseOf("rec-pass", "rec-pass2", "rec-out");\n  if (pass === null) return;\n  const label = "bio-release-recovery";\n  $("rec-out").innerHTML = `<p class="note">Making your recovery key\u2026</p>`;\n  const { pub, priv } = await makeKey(label, pass);\n  const report = keyReport({ [label]: { pub, priv } });\n  $("rec-out").innerHTML =\n    copyBox("Recovery key: public, paste this into the session", pub,\n            "It goes beside the release key\'s public key. Public keys are public by design.")\n    + copyBox("Recovery key: private, keep this offline", priv,\n              "Keep it apart from the release key. Load it here only to sign the release that replaces a lost "\n              + "or stolen release key." + (pass ? " Loading it asks for your passphrase."\n                : " It has no passphrase: anyone holding this text can use it."))\n    + `<div class="row"><button id="rec-dl" class="ghost">Download as a file</button></div>`;\n  $("rec-dl").onclick = () => download("bio-recovery-key.txt", report);\n};\n\n/* ------------------------------------------------------------------ load */\n$("load").onclick = async () => {\n  try {\n    const { label, seed } = await parseKeyString($("load-blob").value, $("load-pass").value);\n    const { raw32 } = await useSeed(label, seed);\n    $("load-pass").value = "";\n    $("load-out").innerHTML =\n      `<p class="good">${JOBS[label].title} loaded.</p><p class="note"><code>${pubLine(raw32, label)}</code></p>`;\n  } catch (e) {\n    $("load-out").innerHTML = `<p class="bad">${String(e.message || e)}</p>`;\n  }\n};\n$("forget").onclick = () => {\n  KEYS.release = null; KEYS.ratify = null; rawOnce = null; armed();\n  for (const id of ["load-blob", "load-pass", "gen-pass", "gen-pass2", "rec-pass", "rec-pass2"]) $(id).value = "";\n  for (const id of ["gen-out", "rec-out", "rel-out", "rat-out", "not-out", "dock-out"]) $(id).innerHTML = "";\n  $("load-out").innerHTML = `<p class="note">Forgotten. Nothing signing-related is left in this tab.</p>`;\n};\n\n/* -------------------------------------------------------- sign a release */\n$("rel-sign").onclick = async () => {\n  const f = $("rel-file").files[0];\n  if (!f) return ($("rel-out").innerHTML = `<p class="warn">Choose the release asset first.</p>`);\n  const k = KEYS.release;\n  const bytes = new Uint8Array(await f.arrayBuffer());\n  const sha = hex(await crypto.subtle.digest("SHA-256", bytes));\n  const sig = await sshsig(k.priv, k.raw32, "bio-release", bytes);\n  const manifest = JSON.stringify({ sha256: sha, sig, signer: pubLine(k.raw32, k.label) }, null, 1);\n  $("rel-out").innerHTML = copyBox(\n    `Signature for ${f.name}: paste this into the session`, manifest,\n    `Covers ${bytes.length} bytes hashing to <code>${sha}</code>.`);\n};\n\n/* ----------------------------------------------------- sign a ratification */\n$("rat-sign").onclick = async () => {\n  const id = $("rat-id").value.trim(), sha = $("rat-sha").value.trim().toLowerCase();\n  if (!id) return ($("rat-out").innerHTML = `<p class="warn">Paste the record id.</p>`);\n  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("rat-out").innerHTML = `<p class="warn">The record hash is 64 hex characters.</p>`);\n  const k = KEYS.ratify;\n  const sig = await sshsig(k.priv, k.raw32, "bio-ratify", enc.encode(`bio-ratify ${id} ${sha}\\n`));\n  $("rat-out").innerHTML = copyBox(\n    "Signature: paste this into the ratify box in your group\'s Civicsmith", sig,\n    `Authorizes publishing <code>${id}</code> at exactly that hash. If the record changes before\n     you submit it, your group\'s Civicsmith refuses this signature and you sign the new hash.`);\n};\n\n/* --------------------------------------------------------- sign a notice */\n/* The same bytes as the plane\'s noticeStatement: `bio-working-on <id> <revision>\n   <hash>` and a newline, in the namespace bio-working-on. The fields are checked\n   exactly as the plane checks them, so the page never signs a statement the\n   instance would build differently. An opaque id, as the plane\'s minter draws it:\n   the next line is written by scripts/embed-signpage.mjs from the plane\'s pattern,\n   whose counter is the id table\'s (four digits or more); never edit it by hand. */\nconst OPAQUE_ID_RE = /^[A-Z]+-\\d{4}-\\d{4,}(?:-[a-z0-9]+(?:-[a-z0-9]+)*)?$/;\n$("not-sign").onclick = async () => {\n  const id = $("not-id").value.trim(), rev = $("not-rev").value.trim();\n  const sha = $("not-sha").value.trim().toLowerCase();\n  if (!OPAQUE_ID_RE.test(id)) return ($("not-out").innerHTML = `<p class="warn">Paste the notice id, as your group\'s Civicsmith shows it.</p>`);\n  if (!/^[1-9][0-9]*$/.test(rev) || !Number.isSafeInteger(Number(rev)))\n    return ($("not-out").innerHTML = `<p class="warn">The revision is a whole number, 1 or more.</p>`);\n  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("not-out").innerHTML = `<p class="warn">The notice hash is 64 hex characters.</p>`);\n  const k = KEYS.ratify;\n  const sig = await sshsig(k.priv, k.raw32, "bio-working-on", enc.encode(`bio-working-on ${id} ${rev} ${sha}\\n`));\n  $("not-out").innerHTML = copyBox(\n    "Signature: paste this into the notice box in your group\'s Civicsmith", sig,\n    `Signs revision ${rev} of <code>${id}</code> at exactly that hash. If the notice changes before\n     you post it, your group\'s Civicsmith refuses this signature and you sign the new hash.`);\n};\n\n/* --------------------------------------------------- sign a docket entry */\n/* The same bytes as the plane\'s docketStatement: `bio-docket <case id> <entry\n   number> <hash>` and a newline, in the namespace bio-docket, the fields checked\n   exactly as the plane checks them. */\n$("dock-sign").onclick = async () => {\n  const id = $("dock-case").value.trim(), seq = $("dock-seq").value.trim();\n  const sha = $("dock-sha").value.trim().toLowerCase();\n  if (!OPAQUE_ID_RE.test(id)) return ($("dock-out").innerHTML = `<p class="warn">Paste the case id, as your group\'s Civicsmith shows it.</p>`);\n  if (!/^[1-9][0-9]*$/.test(seq) || !Number.isSafeInteger(Number(seq)))\n    return ($("dock-out").innerHTML = `<p class="warn">The entry number is a whole number, 1 or more.</p>`);\n  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("dock-out").innerHTML = `<p class="warn">The entry hash is 64 hex characters.</p>`);\n  const k = KEYS.ratify;\n  const sig = await sshsig(k.priv, k.raw32, "bio-docket", enc.encode(`bio-docket ${id} ${seq} ${sha}\\n`));\n  $("dock-out").innerHTML = copyBox(\n    "Signature: paste this into the docket box in your group\'s Civicsmith", sig,\n    `Signs entry ${seq} on the docket of <code>${id}</code> at exactly that hash. If the entry changes before\n     you post it, your group\'s Civicsmith refuses this signature and you prepare and sign it again.`);\n};\n\narmed();\n</script>\n';
 
 // src/public-read/credit.mjs
 var CIVICSMITH_DESCRIPTION = "Free software for groups that check whether government keeps its own rules and promises.";
@@ -206808,12 +206888,12 @@ function phaseTimes(phases2, { setAt, judged, track, duty = () => null }) {
       earliest2 = at35;
     } else if (s.when_duty) {
       const led = phases2.filter((o) => o.branches && Object.values(o.branches).includes(id));
-      let anchor2 = led.length ? null : ms4(setAt);
+      let anchor = led.length ? null : ms4(setAt);
       for (const o of led) {
         const j = judged.get(o.id);
-        if (j && o.branches[j.judged] === id && (anchor2 === null || ms4(j.at) < anchor2)) anchor2 = ms4(j.at);
+        if (j && o.branches[j.judged] === id && (anchor === null || ms4(j.at) < anchor)) anchor = ms4(j.at);
       }
-      const t2 = anchor2 === null ? null : duty(p3, iso3(anchor2));
+      const t2 = anchor === null ? null : duty(p3, iso3(anchor));
       if (t2) at35 = ms4(t2);
       earliest2 = at35;
     }
@@ -207992,8 +208072,8 @@ var ActionPlans = class {
       setAt: sc.at,
       judged,
       track: (s) => this.#track(p3, s, viewer),
-      duty: (ph, anchor2) => {
-        const d = this.#dutyStart(ph.starts, anchor2, nowMs, viewer);
+      duty: (ph, anchor) => {
+        const d = this.#dutyStart(ph.starts, anchor, nowMs, viewer);
         starts.set(ph.id, d);
         return d.holds ? d.since : null;
       }
@@ -208015,21 +208095,21 @@ var ActionPlans = class {
    *  the first triggered on or after `anchor`'s day; its state is its latest transition recorded by the read's instant
    *  (duties R14), else its state derived as of the read (duties R9, R10), as duties answers it: a question with its
    *  derivation, never a violation. `since` is when the state began to hold, never before `anchor` or after the read. */
-  #dutyStart(s, anchor2, nowMs, viewer) {
+  #dutyStart(s, anchor, nowMs, viewer) {
     const { duty, occurrence } = s.when_duty;
     const asOf = iso4(nowMs);
     const base2 = { duty, occurrence: occurrence ?? null, state_asked: s.state };
     const none = (says) => ({ ...base2, state: null, holds: false, since: null, says });
     let r;
     try {
-      r = this.duties.occurrencesOf({ dutyId: duty, asOf, ...occurrence ? {} : { from: anchor2.slice(0, 10) }, viewer: dutyViewer(viewer) });
+      r = this.duties.occurrencesOf({ dutyId: duty, asOf, ...occurrence ? {} : { from: anchor.slice(0, 10) }, viewer: dutyViewer(viewer) });
     } catch (e2) {
       if (e2 instanceof ProviderAbsent2) throw e2;
       return none("the obligation's occurrences could not be read");
     }
     if (!ok(r)) return none("the obligation does not answer to this reader");
     const list6 = Array.isArray(r.occurrences) ? r.occurrences : [];
-    const occ = occurrence ? list6.find((x) => x.key === occurrence) : list6.filter((x) => dayIn2(x.trigger && x.trigger.date) !== null && dayIn2(x.trigger.date) >= anchor2.slice(0, 10)).sort((a, b) => dayIn2(a.trigger.date) < dayIn2(b.trigger.date) ? -1 : dayIn2(a.trigger.date) > dayIn2(b.trigger.date) ? 1 : 0)[0];
+    const occ = occurrence ? list6.find((x) => x.key === occurrence) : list6.filter((x) => dayIn2(x.trigger && x.trigger.date) !== null && dayIn2(x.trigger.date) >= anchor.slice(0, 10)).sort((a, b) => dayIn2(a.trigger.date) < dayIn2(b.trigger.date) ? -1 : dayIn2(a.trigger.date) > dayIn2(b.trigger.date) ? 1 : 0)[0];
     if (!occ) return none(occurrence ? "that occurrence of the obligation is not derived as of this read" : "no occurrence of the obligation has been triggered since the phase began to wait");
     const recorded = ((this.duties.transitionsOf({ dutyId: duty, occurrenceKey: occ.key, viewer: dutyViewer(viewer) }) || {}).transitions || []).filter((t2) => typeof t2.at === "string" && msOf2(t2.at) <= nowMs);
     const last = recorded.at(-1) || null;
@@ -208039,7 +208119,7 @@ var ActionPlans = class {
     if (holds2) {
       let t2 = last ? msOf2(last.as_of) : derivedSince(occ, nowMs);
       if (!Number.isFinite(t2) || t2 > nowMs) t2 = nowMs;
-      since = iso4(Math.max(t2, msOf2(anchor2)));
+      since = iso4(Math.max(t2, msOf2(anchor)));
     }
     return {
       ...base2,
@@ -223053,6 +223133,7 @@ var HEADER_FIELDS = Object.freeze([
   "revision_cycle"
 ]);
 var DATE_FIELDS = /* @__PURE__ */ new Set(["effective", "review_due"]);
+var BELOW_TARGET = Object.freeze(["coordinator", "review_due", "revision_cycle"]);
 var ONE_LINE = /* @__PURE__ */ new Set(["number", "revision_cycle"]);
 function groupSource(src, name2) {
   const at35 = src.indexOf(`(?<${name2}>`);
@@ -223145,7 +223226,7 @@ function linesOf4(raw) {
   }
   return out;
 }
-var FURNITURE2 = /^\s*(?:Page\s+\d+\s+of\s+\d+|\d{1,3}|[ivxlc]{1,6}|.*\bTOC\b.*|TABLE OF CONTENTS|Table of Contents)\s*$/i;
+var FURNITURE2 = /^\s*(?:Page\s+\d+\s+of\s+\d+|\d{1,3}|[ivxlc]{1,6}|.*\bTOC\b.*|TABLE OF CONTENTS?)\s*$/i;
 var OUTLINE = /^\s*(?:[IVXL]{1,6}|[A-Z]|\d{1,2}|[a-z])[.)][ \t]+\S/;
 var isBody = (t2) => {
   const words4 = t2.trim().split(/\s+/);
@@ -223159,8 +223240,8 @@ var caps = (t2) => {
 var MONTHS7 = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
 var MON = "(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|June?|July?|Aug(?:ust)?|Sept?(?:ember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)";
 var DATE4 = new RegExp(`(?<![A-Za-z0-9])(?:(?<d1>\\d{1,2})[ \\t]+(?<m1>${MON})\\.?[ \\t]+(?<y1>\\d{4}|\\d{2})|(?<m2>${MON})\\.?[ \\t]+(?<d2>\\d{1,2}),?[ \\t]+(?<y2>\\d{4})|(?<m3>\\d{1,2})/(?<d3>\\d{1,2})/(?<y3>\\d{4}|\\d{2}))(?![A-Za-z0-9])`, "gi");
-var PLACEHOLDER2 = /(?<![A-Za-z0-9])(?:XX|\d{1,2})[ \t]+(?:XX|MMM|[A-Za-z]{3,9})\.?[ \t]+(?:XX|\d{2,4})(?![A-Za-z0-9])/;
-var isPlaceholder = (t2) => PLACEHOLDER2.test(t2) && /\bXX\b|\bMMM\b/.test(t2);
+var PLACEHOLDER2 = /(?<![A-Za-z0-9])(?:XX|DD|\d{1,2})[ \t]+(?:XX|MMM?|[A-Za-z]{3,9})\.?[ \t]+(?:XX|YY(?:YY)?|\d{2,4})(?![A-Za-z0-9])/;
+var isPlaceholder = (t2) => PLACEHOLDER2.test(t2) && /\b(?:XX|MMM?|DD|YY(?:YY)?)\b/.test(t2);
 function readDate3(text7) {
   DATE4.lastIndex = 0;
   const m = DATE4.exec(String(text7 || ""));
@@ -223181,8 +223262,8 @@ function field(raw, start, end2, locate) {
   if (end2 <= start) return null;
   return { text: tidy(raw.slice(start, end2)), start, end: end2, source: locate(start) || null };
 }
-function anchor(raw, series, labels) {
-  let best = null;
+function anchors(raw, series, labels) {
+  const out = [];
   for (const s of series) {
     s.label.lastIndex = 0;
     for (const m of raw.matchAll(s.label)) {
@@ -223205,11 +223286,10 @@ function anchor(raw, series, labels) {
         l2.re.lastIndex = 0;
         return l2.re.test(near);
       })) continue;
-      if (!best || hit.start < best.start || hit.start === best.start && hit.number && !best.number) best = hit;
-      break;
+      out.push(hit);
     }
   }
-  return best;
+  return out.sort((x, y) => x.start - y.start || (y.number ? 1 : 0) - (x.number ? 1 : 0));
 }
 function blockStart(lines2, offset) {
   let i = lines2.findIndex((l2) => offset >= l2.start && offset <= l2.end);
@@ -223229,7 +223309,18 @@ function readHeader2(ctx, raw, locate = () => null) {
   const labels = headerLabels(ctx);
   if (!series.length && !labels.length)
     return { header: null, why: "the active jurisdiction profiles give no policy series and no policy header labels, so no header is read" };
-  const a = anchor(raw, series, labels);
+  const all = anchors(raw, series, labels);
+  const first = all[0] || null;
+  let best = readAt2(raw, labels, first, locate);
+  const fields = (r) => r.header ? HEADER_FIELDS.length - r.header.missing.length : -1;
+  for (const a of all.slice(1)) {
+    if (a.series !== first.series || !a.number || !first.number || a.number.text !== first.number.text) continue;
+    const r = readAt2(raw, labels, a, locate);
+    if (fields(r) > fields(best)) best = r;
+  }
+  return best;
+}
+function readAt2(raw, labels, a, locate) {
   const lines2 = linesOf4(raw);
   const from = a ? blockStart(lines2, a.start) : 0;
   const firstLabel = (() => {
@@ -223312,6 +223403,14 @@ function readHeader2(ctx, raw, locate = () => null) {
       why[s.field] = beside ? "its label is printed with no calendar date beside it or below it in the header" : "its label is printed with nothing beside it";
       continue;
     }
+    if (s.field !== "title") {
+      const nl = raw.indexOf("\n", s.end);
+      const own6 = nl < 0 ? "" : raw.slice(s.end, nl);
+      if (nl >= 0 && nl < vEnd && own6.trim() && !caps(own6)) {
+        const next = raw.slice(nl + 1, raw.indexOf("\n", nl + 1) < 0 ? raw.length : raw.indexOf("\n", nl + 1));
+        if (caps(next)) vEnd = nl;
+      }
+    }
     const f17 = field(raw, s.end, vEnd, locate);
     if (f17) header2[s.field] = f17;
     else why[s.field] = "its label is printed with nothing beside it";
@@ -223377,6 +223476,7 @@ function readHeader2(ctx, raw, locate = () => null) {
     if (d && d.index > 0 && d.index + d.text.length >= header2.title.text.length - 1) header2.title.text = tidy(header2.title.text.slice(0, d.index));
   }
   if (header2.title) delete header2.title.inline;
+  for (const f17 of BELOW_TARGET) if (header2[f17]) header2[f17].measured = "below_target";
   const missing2 = HEADER_FIELDS.filter((f17) => !header2[f17]);
   for (const f17 of missing2) if (!why[f17]) why[f17] = f17 === "type" ? "no line of this text opens with a policy series the active jurisdiction profiles name" : "no label the active jurisdiction profiles give for this field is printed in the header block";
   return { header: { ...header2, missing: missing2, missing_why: why, start: from, end: end2 }, why: null };
