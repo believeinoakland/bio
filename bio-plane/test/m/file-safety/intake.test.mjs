@@ -5,8 +5,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, pdf, sha, enc, T0, DAY } from "./fixture.mjs";
 import { makeZip } from "../../make-zip.mjs";
-import { RESCAN_INTERVAL_MS, DEEPER_CHECK_FRESH_MS, DEEPER_CHECKS_PER_MONTH, SCAN_BATCH_MAX, LOG_COUNT_KINDS, FILE_SAFETY_CHECKS }
-  from "../../../src/file-safety/index.mjs";
+import { RESCAN_INTERVAL_MS, DEEPER_CHECK_FRESH_MS, DEEPER_CHECKS_PER_MONTH, SCAN_BATCH_MAX, LOG_COUNT_KINDS, FILE_SAFETY_CHECKS,
+  FILE_SAFETY_POLL_MS, REPUTATION_REFRESH_MS } from "../../../src/file-safety/index.mjs";
 import * as SCANNER_LIMITS from "../../../../file-scanner/src/limits.mjs";
 
 const row = (code) => ({ check: FILE_SAFETY_CHECKS[code].check, translation: FILE_SAFETY_CHECKS[code].translation });
@@ -132,10 +132,12 @@ test("R3: notes are append-only — no act of this module changes or removes one
   }
 });
 
-test("R21: the constants, exported by name: RESCAN_INTERVAL_MS 604,800,000; DEEPER_CHECK_FRESH_MS 86,400,000; DEEPER_CHECKS_PER_MONTH 900 (a tool's default monthlyLimit); SCAN_BATCH_MAX and LOG_COUNT_KINDS, file-scanner's own", async () => {
+test("R21: the constants, exported by name: RESCAN_INTERVAL_MS 604,800,000; DEEPER_CHECK_FRESH_MS 86,400,000; DEEPER_CHECKS_PER_MONTH 900 (a tool's default monthlyLimit); FILE_SAFETY_POLL_MS 300,000 and REPUTATION_REFRESH_MS 21,600,000 (R39); SCAN_BATCH_MAX and LOG_COUNT_KINDS, file-scanner's own", async () => {
   assert.equal(RESCAN_INTERVAL_MS, 604_800_000);
   assert.equal(DEEPER_CHECK_FRESH_MS, 86_400_000);
   assert.equal(DEEPER_CHECKS_PER_MONTH, 900);
+  assert.equal(FILE_SAFETY_POLL_MS, 300_000);
+  assert.equal(REPUTATION_REFRESH_MS, 21_600_000);
   assert.equal(SCAN_BATCH_MAX, SCANNER_LIMITS.SCAN_BATCH_MAX);
   assert.equal(LOG_COUNT_KINDS, SCANNER_LIMITS.LOG_COUNT_KINDS);
   assert.equal(RESCAN_INTERVAL_MS, 7 * DAY);

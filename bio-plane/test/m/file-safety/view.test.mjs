@@ -64,7 +64,7 @@ test("R11: `safeView` by route: PDFs and office documents answer the image-only 
   refused(await n.fs.renderBatch({}), "RENDERER_ABSENT");
 });
 
-test("R12: `renderBatch` renders queued files after their capture, never inside the capture's act; a view is stored under its own digest outside captures/, labelled derived and naming its original, never registered, a capture, graded or chained; a file under a scan hold still gets and serves its safe view", async () => {
+test("R12: `renderBatch` renders queued files after their capture, never inside the capture's act; a view is stored under its own digest outside captures/, labelled derived and naming its original, never registered, a capture, graded or chained; a file under a scan hold still gets and serves its safe view; it answers {ok, rendered, failed, none, data, copies: {made, failed, queued}, remaining}, copies.queued the safe copies and remaining the files still queued after the batch", async () => {
   const w = world({ scan: { clamav: () => ({ result: "found", findings: ["Pdf.Exploit.R"] }) } });
   const s = await w.capture(pdf(false, "r"));
   assert.equal(w.calls("/render").length, 0, "nothing renders inside the capture");
@@ -86,9 +86,24 @@ test("R12: `renderBatch` renders queued files after their capture, never inside 
   /* rendered once: a second batch asks nothing */
   await w.fs.renderBatch({});
   assert.equal(w.calls("/render").length, 1);
+  /* the whole answer: what is left after a batch, views and copies */
+  const k = world({ scan: { render: (x) => (x === sha(pdf(false, "k3")) ? { code: "RENDER_FAILED" } : enc(`%PDF-1.4 view ${x}`)) } });
+  const ct = await k.tool("glasswall-halo", { config: { host: "halo.example.org" } });
+  k.exec("UPDATE fs_tools SET use = 'routine' WHERE tool_id = ?", ct);
+  /* queued a second apart, so the queue's order is the capture's */
+  for (const bytes of [pdf(false, "k1"), pdf(false, "k2"), pdf(false, "k3"), enc("a,b\n1,2\n"), new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 7])]) {
+    await k.capture(bytes); k.tick(1000);
+  }
+  const first = await k.fs.renderBatch({ limit: 2 });
+  assert.deepEqual(Object.keys(first).sort(), ["copies", "data", "failed", "none", "ok", "remaining", "rendered"]);
+  assert.deepEqual({ ...first, rendered: undefined }, { ok: true, rendered: undefined, failed: 0, none: 0, data: 0, copies: { made: 2, failed: 0, queued: 3 }, remaining: 3 });
+  assert.equal(first.rendered, 2);
+  const second = await k.fs.renderBatch({ limit: 10 });
+  assert.deepEqual(second, { ok: true, rendered: 0, failed: 1, none: 1, data: 1, copies: { made: 3, failed: 0, queued: 0 }, remaining: 0 });
+  assert.deepEqual(await k.fs.renderBatch({}), { ok: true, rendered: 0, failed: 0, none: 0, data: 0, copies: { made: 0, failed: 0, queued: 0 }, remaining: 0 });
 });
 
-test("R33 (K1929 (4)): `requestSafeCopy` asks the first on CDR tool for a rebuilt file, stored under its own digest outside captures/ naming its original and the tool, never registered, a capture, graded or chained; then scanned by ClamAV with a copy note; `safeCopy` answers {kind: copy, derived: true, of, sha256, content_type, removed, tool, original} and its bytes, or NO_SAFE_COPY, SAFE_COPY_PENDING, SAFE_COPY_FAILED with the tool's reason, SAFE_COPY_WITHHELD when its ClamAV note is not clean, and R8's first two; it opens for a high file without a deeper check and under a scan hold; a routine CDR tool queues every file", async () => {
+test("R33 (K1929 (4); N753): `requestSafeCopy` asks the first on CDR tool for a rebuilt file, stored under its own digest outside captures/ naming its original and the tool, never registered, a capture, graded or chained; then scanned by ClamAV with a copy note; `safeCopy` answers {kind: copy, derived: true, of, sha256, content_type, removed, tool, original} and its bytes, or NO_SAFE_COPY, SAFE_COPY_PENDING, SAFE_COPY_FAILED with the tool's reason, SAFE_COPY_WITHHELD when its ClamAV note is not clean, and R8's first two; it opens for a high file without a deeper check and under a scan hold; a routine CDR tool queues every file; the copy's scan reads it where it is stored (file-scanner R2's area derived), a clean verdict releasing it and a found, unknown or not_scanned one withholding it", async () => {
   let copyScan = { result: "clean" };
   let holdThis = null;
   const w = world({ scan: { clamav: (x) => (x === holdThis ? { result: "found", findings: ["Pdf.Exploit.H"] } : { result: "clean" }), copyScan: () => copyScan, cdr: (s) => (s === sha(pdf(true, "unsupported")) ? { code: "CDR_UNSUPPORTED_TYPE" } : { bytes: enc(`rebuilt ${s}`), removed: ["javascript", "open-action"] }) } });
@@ -107,9 +122,9 @@ test("R33 (K1929 (4)): `requestSafeCopy` asks the first on CDR tool for a rebuil
                         tool: "glasswall-halo", original: { may_open: true, path: "warned", why: null } });
   const put = w.bucket.calls.find((c) => c[0] === "put" && c[1] === derivedKey("bio", sha(bytes)));
   assert.deepEqual(put[2].customMetadata, { derived: "true", of: s, kind: "safe-copy", tool: "glasswall-halo" });
-  /* scanned by ClamAV: the copy note, beside the original's notes */
-  const scan = w.calls("/scan").find((c) => c.body.area === "derived");
-  assert.deepEqual(scan.body.targets, [{ capture_sha: sha(bytes), parts: null }]);
+  /* scanned by ClamAV where it is stored, the derived area (file-scanner R2): the copy note, beside the original's notes */
+  const scan = w.calls("/scan").find((c) => c.body.targets.some((t) => t.area === "derived"));
+  assert.deepEqual(scan.body, { store: "bio", targets: [{ capture_sha: sha(bytes), parts: null, area: "derived" }] });
   assert.deepEqual(w.fs.verdictNotes({ captureSha: s }).notes.filter((n) => n.kind === "copy").map((n) => [n.tool, n.result]), [["clamav", "clean"]]);
   /* never a capture, never graded */
   assert.equal(w.row("SELECT COUNT(*) AS n FROM captured_locators WHERE capture_sha = ?", sha(bytes)).n, 0);
@@ -126,11 +141,13 @@ test("R33 (K1929 (4)): `requestSafeCopy` asks the first on CDR tool for a rebuil
   const f = await w.fs.safeCopy({ captureSha: u, viewer: "member:m1" });
   refused(f, "SAFE_COPY_FAILED");
   assert.equal(f.tool_reason, "CDR_UNSUPPORTED_TYPE");
-  /* withheld while its ClamAV note is not clean (today's scanner cannot read a derived file: its answer is NOT_FOUND) */
-  copyScan = { result: "not_scanned", reason: "NOT_FOUND" };
-  const h = await w.capture(pdf(true, "withheld"));
-  assert.equal((await w.fs.requestSafeCopy({ captureSha: h, viewer: "member:m1" })).state, "withheld");
-  refused(await w.fs.safeCopy({ captureSha: h, viewer: "member:m1" }), "SAFE_COPY_WITHHELD");
+  /* (N753) withheld while its ClamAV note is not clean: a not_scanned or unknown verdict, and a found one */
+  for (const [tag, v] of [["ns", { result: "not_scanned", reason: "SIGNATURES_STALE" }], ["unk", { result: "unknown", detail: "LIMIT:x" }]]) {
+    copyScan = v;
+    const h = await w.capture(pdf(true, `withheld ${tag}`));
+    assert.equal((await w.fs.requestSafeCopy({ captureSha: h, viewer: "member:m1" })).state, "withheld", tag);
+    refused(await w.fs.safeCopy({ captureSha: h, viewer: "member:m1" }), "SAFE_COPY_WITHHELD");
+  }
   copyScan = { result: "found", findings: ["Pdf.Trojan.Copy"] };
   const fd = await w.capture(pdf(true, "copyfound"));
   await w.fs.requestSafeCopy({ captureSha: fd, viewer: "member:m1" });
@@ -152,7 +169,7 @@ test("R33 (K1929 (4)): `requestSafeCopy` asks the first on CDR tool for a rebuil
   assert.deepEqual(k.rows("SELECT capture_sha, state FROM fs_copies ORDER BY capture_sha").map((x) => [x.capture_sha, x.state]),
                    [[q1, "queued"], [q2, "queued"]].sort());
   const rb = await k.fs.renderBatch({});
-  assert.deepEqual(rb.copies, { made: 2, failed: 0 });
+  assert.deepEqual(rb.copies, { made: 2, failed: 0, queued: 0 });
   assert.equal((await k.fs.safeCopy({ captureSha: q1, viewer: "member:m1" })).status, 200);
 });
 

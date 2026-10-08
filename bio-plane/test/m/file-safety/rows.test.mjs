@@ -57,17 +57,20 @@ test("R23: no member identity, file name, address or record text reaches file-sc
   await w.fs.openOriginal({ captureSha: s, viewer: "member:m1", warned: WARNED });
   await w.fs.scanStatus({ viewer: "member:boss" });
   await w.fs.forwardSecurityCounts({ from: "2026-01-01T00:00:00Z", to: "2027-01-01T00:00:00Z" });
+  await w.tool("google-web-risk", { credentials: { api_key: "k" } });
+  await w.fs.refreshReputationLists({});
   const calls = w.scanner.calls.filter((c) => c.path !== "/provider/test");
   assert.ok(calls.length >= 10);
-  const ALLOWED = { "/scan": ["store", "targets", "area"], "/render": ["store", "target", "route"], "/provider/scan": ["store", "target", "tool"],
+  const ALLOWED = { "/scan": ["store", "targets"], "/render": ["store", "target", "route"], "/provider/scan": ["store", "target", "tool"],
                     "/provider/sandbox": ["store", "target", "tool"], "/provider/sandbox/result": ["tool", "vendor_ref", "submitted_at"],
-                    "/provider/cdr": ["store", "target", "tool"], "/provider/forward": ["tool", "record"], "/version": null };
+                    "/provider/cdr": ["store", "target", "tool"], "/provider/forward": ["tool", "record"], "/provider/refresh": ["tool"], "/version": null };
   for (const c of calls) {
     assert.ok(c.path in ALLOWED, c.path);
     if (ALLOWED[c.path]) for (const k of Object.keys(c.body)) assert.ok(ALLOWED[c.path].includes(k), `${c.path}: ${k}`);
     if (c.body && c.body.tool) assert.deepEqual(Object.keys(c.body.tool).filter((k) => !["provider_id", "tool_id", "region", "host", "config", "credentials", "handling_confirmed", "monthly_limit_left"].includes(k)), [], "a tool spec only");
     if (c.body && c.body.target) assert.deepEqual(Object.keys(c.body.target).sort(), ["capture_sha", "parts"]);
-    if (c.body && c.body.targets) for (const t of c.body.targets) assert.deepEqual(Object.keys(t).sort(), ["capture_sha", "parts"]);
+    /* a safe copy's target names the derived area it is read from (R33, file-scanner R2) */
+    if (c.body && c.body.targets) for (const t of c.body.targets) assert.ok(["capture_sha,parts", "area,capture_sha,parts"].includes(Object.keys(t).sort().join()), Object.keys(t).join());
   }
   const all = JSON.stringify(calls);
   for (const leak of ["m1", "m2", "boss", "secret-host", "closed-session", "budget-confidential", "secret words", "member names"])
@@ -112,7 +115,7 @@ test("R25: its tables are declared to record-core's purge: a bundle's purge remo
   const w = world({ scan: { clamav: () => ({ result: "found", findings: ["X.Y.Z"] }), copyScan: () => ({ result: "clean" }) } });
   const declared = w.record.declaredTables().filter((d) => d.module === "file-safety");
   assert.deepEqual(declared.map((d) => [d.name, d.purge]), [["fs_files", "clear"], ["fs_notes", "clear"], ["fs_holds", "clear"], ["fs_deeper", "clear"], ["fs_copies", "clear"],
-    ["fs_tools", "exempt"], ["fs_tool_usage", "exempt"], ["fs_tool_events", "exempt"], ["fs_counts", "exempt"]]);
+    ["fs_tools", "exempt"], ["fs_tool_usage", "exempt"], ["fs_tool_events", "exempt"], ["fs_counts", "exempt"], ["fs_wakes", "exempt"]]);
   await w.tool("scanii"); await w.tool("glasswall-halo", { config: { host: "halo.example.org" } });
   const a = await w.capture(pdf(true, "a")), b = await w.capture(pdf(true, "b"));
   w.home(a, "INFO-A"); w.home(b, "INFO-B");
@@ -121,7 +124,8 @@ test("R25: its tables are declared to record-core's purge: a bundle's purge remo
   await w.fs.deeperBatch({});
   const count = (t, s) => w.row(`SELECT COUNT(*) AS n FROM ${t} WHERE capture_sha = ?`, s).n;
   for (const t of ["fs_files", "fs_notes", "fs_holds", "fs_deeper", "fs_copies"]) assert.ok(count(t, a) > 0 && count(t, b) > 0, t);
-  const kept = JSON.stringify([w.rows("SELECT * FROM fs_tools"), w.rows("SELECT * FROM fs_tool_events"), w.rows("SELECT * FROM fs_counts")]);
+  const kept = JSON.stringify([w.rows("SELECT * FROM fs_tools"), w.rows("SELECT * FROM fs_tool_events"), w.rows("SELECT * FROM fs_counts"), w.rows("SELECT * FROM fs_wakes")]);
+  assert.ok(w.rows("SELECT * FROM fs_wakes").length > 0, "the wakes' instants are kept");
   const r = w.record.purge({ bundleId: "INFO-A" });
   assert.equal(r.ok, true);
   for (const t of ["fs_files", "fs_notes", "fs_holds", "fs_deeper", "fs_copies"]) {
@@ -129,7 +133,7 @@ test("R25: its tables are declared to record-core's purge: a bundle's purge remo
     assert.ok(count(t, b) > 0, `${t}: B's kept`);
     assert.ok(r.removed[t] > 0, t);
   }
-  assert.equal(JSON.stringify([w.rows("SELECT * FROM fs_tools"), w.rows("SELECT * FROM fs_tool_events"), w.rows("SELECT * FROM fs_counts")]), kept);
+  assert.equal(JSON.stringify([w.rows("SELECT * FROM fs_tools"), w.rows("SELECT * FROM fs_tool_events"), w.rows("SELECT * FROM fs_counts"), w.rows("SELECT * FROM fs_wakes")]), kept);
   /* the whole store */
   w.record.purge({});
   for (const t of ["fs_files", "fs_notes", "fs_holds", "fs_deeper", "fs_copies"]) assert.equal(w.row(`SELECT COUNT(*) AS n FROM ${t}`).n, 0, t);

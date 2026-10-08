@@ -90,25 +90,69 @@ test("R5: `scanStatus` answers administrators only (NOT_AN_ADMIN otherwise, a ma
   assert.deepEqual([ns.ok, ns.scanner.bound, ns.signatures_age_ms], [true, false, null]);
 });
 
-test("R15: `scanFindings` lists every found note in order, {captureSha, note_id, tool, engine, findings, at}, with a cursor passed back as `after`; no member is named; a viewer reads only files they may see", async () => {
+test("R15: `scanFindings` answers {ok, findings: [{captureSha, note_id, tool, engine, findings, at, held}], cursor, truncated}: every found note (a copy note excluded) in the order written, after `after`, at most `limit` (default 200, clamped to 1–1,000); with `since` only notes at or after it, a `since` that is no instant answering none with since_invalid; `held` true exactly when an open hold covers the note's names at the call; `cursor` the last note answered when more follow, else null; no member is named; a viewer reads only files they may see; it writes nothing and never throws", async () => {
   const bad = new Set([sha(pdf(false, "b1")), sha(pdf(false, "b2")), sha(pdf(false, "b3"))]);
-  const w = world({ scan: { clamav: (s) => (bad.has(s) ? { result: "found", findings: [`Win.Trojan.${s.slice(0, 4)}`] } : { result: "clean" }) } });
+  const w = world({ scan: { clamav: (s) => (bad.has(s) ? { result: "found", findings: [`Win.Trojan.${s.slice(0, 4)}`] } : { result: "clean" }),
+                            copyScan: () => ({ result: "found", findings: ["Pdf.Copy.Found"] }) } });
   const s1 = await w.capture(pdf(false, "b1")); w.tick(1000); await w.capture(pdf(false, "ok")); w.tick(1000);
   const s2 = await w.capture(pdf(false, "b2")); w.tick(1000); const s3 = await w.capture(pdf(false, "b3"));
   await w.fs.scanBatch({});
+  /* a copy's found note is the copy's, never a finding */
+  await w.tool("glasswall-halo", { config: { host: "halo.example.org" } });
+  await w.fs.requestSafeCopy({ captureSha: s1, viewer: "member:m1" });
+  assert.ok(w.rows("SELECT * FROM fs_notes WHERE kind = 'copy' AND result = 'found'").length === 1);
+  const tables = w.tables();
   const all = w.fs.scanFindings({ viewer: "member:m1" });
+  assert.deepEqual([all.ok, all.cursor, all.truncated], [true, null, false], "nothing follows: the cursor is null");
   assert.deepEqual(all.findings.map((f) => f.captureSha), [s1, s2, s3]);
-  assert.deepEqual(Object.keys(all.findings[0]).sort(), ["at", "captureSha", "engine", "findings", "note_id", "tool"]);
-  assert.deepEqual([all.findings[0].tool, all.findings[0].engine, all.findings[0].findings], ["clamav", "clamav", [`Win.Trojan.${s1.slice(0, 4)}`]]);
+  assert.deepEqual(Object.keys(all.findings[0]).sort(), ["at", "captureSha", "engine", "findings", "held", "note_id", "tool"]);
+  const n1 = w.fs.verdictNotes({ captureSha: s1 }).notes.find((n) => n.kind === "scan");
+  assert.deepEqual(all.findings[0], { captureSha: s1, note_id: n1.note_id, tool: "clamav", engine: "clamav", findings: [`Win.Trojan.${s1.slice(0, 4)}`], at: n1.scanned_at, held: true });
   assert.doesNotMatch(JSON.stringify(all), /m1|m2|boss/, "no member is named");
+  /* `after` and `limit`: the cursor is the last note answered while more follow */
   const p1 = w.fs.scanFindings({ limit: 2, viewer: "member:m1" });
-  assert.deepEqual([p1.findings.length, p1.truncated], [2, true]);
+  assert.deepEqual([p1.findings.length, p1.truncated, p1.cursor], [2, true, String(w.row("SELECT seq FROM fs_notes WHERE note_id = ?", p1.findings[1].note_id).seq)]);
   const p2 = w.fs.scanFindings({ after: p1.cursor, limit: 2, viewer: "member:m1" });
-  assert.deepEqual(p2.findings.map((f) => f.captureSha), [s3]);
+  assert.deepEqual([p2.findings.map((f) => f.captureSha), p2.cursor, p2.truncated], [[s3], null, false]);
+  for (const [limit, n] of [[0, 1], [-5, 1], ["x", 3], [null, 3], [1, 1], [2.7, 2], [1_000_000, 3]]) assert.equal(w.fs.scanFindings({ limit, viewer: "member:m1" }).findings.length, n, String(limit));
+  /* the clamp: 1,000 at most, 200 by default */
+  const many = world({ scan: { clamav: () => ({ result: "found", findings: ["X.Y.Z"] }) } });
+  for (let i = 0; i < 1003; i++) many.exec(`INSERT INTO fs_notes (note_id, capture_sha, kind, tool, engine, scanned_at, result, findings) VALUES (?, ?, 'scan', 'clamav', 'clamav', ?, 'found', '["X.Y.Z"]')`,
+    `FSN-${i}`, s1, new Date(T0 + i).toISOString());
+  many.exec(`INSERT INTO fs_files (capture_sha, queued_at) VALUES (?, '2026-10-08T00:00:00Z')`, s1);
+  assert.deepEqual([many.fs.scanFindings({}).findings.length, many.fs.scanFindings({ limit: 5000 }).findings.length, many.fs.scanFindings({ limit: 5000 }).truncated], [200, 1000, true]);
+  /* since: only notes at or after it; the order, after, limit and cursor unchanged */
+  w.tick(DAY);
+  const later = sha(pdf(false, "b4")); bad.add(later);
+  const s4 = await w.capture(pdf(false, "b4"));
+  await w.fs.scanBatch({});
+  const since = new Date(T0 + DAY).toISOString();
+  assert.deepEqual(w.fs.scanFindings({ since, viewer: "member:m1" }).findings.map((f) => f.captureSha), [s4]);
+  assert.deepEqual(w.fs.scanFindings({ since: T0 + DAY, viewer: "member:m1" }).findings.map((f) => f.captureSha), [s4], "an instant in ms too");
+  assert.deepEqual(w.fs.scanFindings({ since: new Date(T0).toISOString(), limit: 2, viewer: "member:m1" }).findings.map((f) => f.captureSha), [s1, s2]);
+  assert.deepEqual(w.fs.scanFindings({ since: new Date(T0).toISOString(), after: p1.cursor, viewer: "member:m1" }).findings.map((f) => f.captureSha), [s3, s4]);
+  for (const bad of ["not an instant", "", {}, NaN]) {
+    const r = w.fs.scanFindings({ since: bad, viewer: "member:m1" });
+    assert.deepEqual([r.ok, r.findings, r.cursor, r.since_invalid], [true, [], null, true], String(bad));
+  }
+  /* held: an open hold covers the names at the call; released, it is false; a pending release still holds */
+  w.fs.releaseScanHold({ captureSha: s2, by: "m1", reason: "a" });
+  assert.equal(w.fs.scanFindings({ viewer: "member:m1" }).findings.find((f) => f.captureSha === s2).held, true, "pending_second still holds");
+  w.fs.releaseScanHold({ captureSha: s2, by: "m2", reason: "b" });
+  assert.deepEqual(w.fs.scanFindings({ viewer: "member:m1" }).findings.map((f) => [f.captureSha, f.held]), [[s1, true], [s2, false], [s3, true], [s4, true]]);
   /* sight */
   w.project("PROJ-1", "m1");
   w.home(s2, "INFO-P", { project: "PROJ-1" });
-  assert.deepEqual(w.fs.scanFindings({ viewer: "member:m2" }).findings.map((f) => f.captureSha), [s1, s3]);
+  assert.deepEqual(w.fs.scanFindings({ viewer: "member:m2" }).findings.map((f) => f.captureSha), [s1, s3, s4]);
+  const sp = w.fs.scanFindings({ viewer: "member:m2", limit: 1, after: w.fs.scanFindings({ viewer: "member:m2", limit: 1 }).cursor });
+  assert.deepEqual(sp.findings.map((f) => f.captureSha), [s3], "a hidden note is passed over, never answered");
+  /* it writes nothing, and never throws */
+  const before = JSON.stringify(w.tables());
+  w.fs.scanFindings({ viewer: "member:m1" }); w.fs.scanFindings({ since: "x" });
+  assert.equal(JSON.stringify(w.tables()), before);
+  assert.ok(tables);
+  w.exec("DROP TABLE fs_notes");
+  assert.deepEqual(w.fs.scanFindings({ viewer: "member:m1" }), { ok: true, findings: [], cursor: null, truncated: false });
 });
 
 test("R16: a found note from any engine of any tool places a scan hold: its original does not open on any path; its safe view, its place in the record, its promotion state and its grade are unchanged; the hold names the finding names and engines it covers", async () => {

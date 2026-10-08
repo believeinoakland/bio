@@ -47,7 +47,10 @@ const verdict = (capture_sha, tool, engine, fields) => ({ capture_sha, tool, eng
      provider[id](sha)    → [{engine, result, findings?}] | {code} (a refusal, e.g. PRIVATE_MODE_NOT_HONOURED)
      sandbox[id](sha)     → {result, findings?} once polled `polls` times | {code}
      cdr(sha)             → {bytes, removed} | {code}
-     copyScan(sha)        → the verdict for a safe copy's scan (default: today's member, NOT_FOUND)
+     copyScan(sha)        → the verdict for a safe copy's scan, read from the derived area (default: clean); a copy
+                            target without `area: "derived"` is read from captures/ and answered NOT_FOUND, as R2 reads it
+     refresh[id]()        → a reputation list refresh's answer (default {ok, list_version, fetched_at}); `NO_LOCAL_LIST`
+                            for a tool with no local list
      test[id]             → {passed, detail}
      render(sha, route)   → bytes | {code, detail}
    Every request is recorded as `{path, body}`. */
@@ -55,6 +58,7 @@ export function scanner(script = {}, { now = () => T0 } = {}) {
   const calls = [];
   const s = { clamav: () => ({ result: "clean" }), provider: {}, sandbox: {}, test: {}, polls: 1, ...script };
   const polled = new Map();
+  const derived = new Set();   /* the copies made, which R2 holds in the derived area only */
   const binding = {
     calls,
     async fetch(req) {
@@ -68,8 +72,9 @@ export function scanner(script = {}, { now = () => T0 } = {}) {
       if (u.pathname === "/scan") {
         const out = [];
         for (const t of body.targets) {
-          if (body.area === "derived") { const c = s.copyScan ? s.copyScan(t.capture_sha) : { result: "not_scanned", reason: "NOT_FOUND" };
+          if (t.area === "derived") { const c = s.copyScan ? s.copyScan(t.capture_sha) : { result: "clean" };
             out.push(verdict(t.capture_sha, "clamav", "clamav", { ...c, now: at })); continue; }
+          if (derived.has(t.capture_sha)) { out.push(verdict(t.capture_sha, "clamav", "clamav", { result: "not_scanned", reason: "NOT_FOUND", now: at })); continue; }
           const c = s.clamav(t.capture_sha);
           if (c === "hang") return new Promise(() => {});
           if (c === "fail") return reply({ ok: false, code: "R2_NOT_CONFIGURED" }, 503);
@@ -108,8 +113,14 @@ export function scanner(script = {}, { now = () => T0 } = {}) {
       if (u.pathname === "/provider/cdr") {
         const r = s.cdr ? s.cdr(body.target.capture_sha) : { bytes: enc(`rebuilt ${body.target.capture_sha}`), removed: ["macros"] };
         if (r.code) return reply({ ok: false, code: r.code }, 422);
+        derived.add(sha(r.bytes));
         return new Response(r.bytes, { status: 200, headers: { "content-type": "application/pdf", "x-derived-sha256": sha(r.bytes),
           "x-of": body.target.capture_sha, "x-output-type": "application/pdf", "x-removed": JSON.stringify(r.removed), "x-tool": body.tool.provider_id } });
+      }
+      if (u.pathname === "/provider/refresh") {
+        const id = body.tool.provider_id;
+        const r = s.refresh && s.refresh[id] ? s.refresh[id]() : { ok: true, list_version: "v1", fetched_at: new Date(at).toISOString() };
+        return reply(r, r.ok === false && r.code ? 400 : 200);
       }
       if (u.pathname === "/provider/test") {
         const t = s.test[body.tool.provider_id] ?? { passed: true, detail: "the EICAR test file answered found" };

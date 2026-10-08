@@ -124,7 +124,8 @@ CREATE TABLE IF NOT EXISTS fs_tool_events (
   seq INTEGER PRIMARY KEY AUTOINCREMENT,
   tool_id TEXT NOT NULL,
   event TEXT NOT NULL,
-  at TEXT NOT NULL
+  at TEXT NOT NULL,
+  reason TEXT
 );
 -- R35: this module's counts by UTC hour, kind and number only.
 CREATE TABLE IF NOT EXISTS fs_counts (
@@ -133,16 +134,26 @@ CREATE TABLE IF NOT EXISTS fs_counts (
   n INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (hour, kind)
 );
+-- R39 (T37): the instants its wakes read (each batch's last run, the last period forwarded, each list's last refresh),
+-- one JSON value per key; no file and no member is named.
+CREATE TABLE IF NOT EXISTS fs_wakes (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);
 `;
+
+/* Columns a table gained after it was first made, added to an older store before the tables are created (R31's
+   event `reason`, T37). */
+export const FILE_SAFETY_ADDITIVE_COLUMNS = Object.freeze([["fs_tool_events", "reason", "TEXT"]]);
 
 /* R25 (record-core R21, R46): the tables, each declared with its classes. A file's rows are keyed to its home bundle
    and cleared by that bundle's purge; the tools, their use, their events and the counts are the group's, not any
-   bundle's, and stay (record-core R23's exemption, as `credentials` keeps its tally). */
+   bundle's, and stay (record-core R23's exemption, as `credentials` keeps its tally); so do the wakes' instants (R39). */
 const fileRow = (name) => ({ name, keys: ["bundle_id"], purge: "clear", expunge: "none", export: "admin-only",
                              sight: "source", derive: "stored", version_chain: false });
 const groupRow = (name) => ({ name, purge: "exempt", expunge: "none", export: "never", sight: "group", derive: "stored",
                               version_chain: false });
 export const FILE_SAFETY_TABLES = Object.freeze([
   fileRow("fs_files"), fileRow("fs_notes"), fileRow("fs_holds"), fileRow("fs_deeper"), fileRow("fs_copies"),
-  groupRow("fs_tools"), groupRow("fs_tool_usage"), groupRow("fs_tool_events"), groupRow("fs_counts"),
+  groupRow("fs_tools"), groupRow("fs_tool_usage"), groupRow("fs_tool_events"), groupRow("fs_counts"), groupRow("fs_wakes"),
 ].map((d) => Object.freeze(d)));
