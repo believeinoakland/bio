@@ -6,7 +6,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { boot, frame, registryOver, providers } from "./fixture.mjs";
+import { boot, frame, registryOver, providers, storage, applyRecordSchema } from "./fixture.mjs";
+import { recordOf } from "../../../src/record-core/index.mjs";
+import { InstanceSetup } from "../../../src/setup.mjs";
 import { get as heldProfile, list as heldList } from "../../../../jurisdictions/index.mjs";
 import { INSTANCE_SETUP_CHECKS, LEGISTAR_SCHEMES, SEED_MACHINE } from "../../../src/setup.mjs";
 
@@ -405,4 +407,58 @@ test("R50 R51 R52 on the first profile as held (N613), measured: each body the p
   /* no contact value reaches the registry */
   const everything = JSON.stringify([[...reg.entities.ents.values()], reg.entities.idents, reg.lines.lines, s]);
   assert.equal(/@|PersonEmail|PersonPhone/.test(everything), false);
+});
+
+/* N756 (K2101): a held capture is read from the record's evidence store with its earliest receipt, and that receipt is
+   read for the one capture through provenance's receiptsOfCapture (its R60), never by reading every receipt. The
+   provenance here is a stand-in coded to R60 (its rows for the capture asked, a sha256: prefix and case ignored),
+   holding many receipts at other captures; its every-receipt read throws, so a module that reached for it fails. */
+test("R51 R52 (N756) a held capture is read with its earliest receipt asked of provenance for that one capture (receiptsOfCapture, its R60), never every receipt; a store holding many receipts at other captures seeds the same as one holding only the three", async () => {
+  const run = async (noise) => {
+    const asked = [];
+    const receipts = [];
+    for (const [sha, cap] of Object.entries(CAPS)) {
+      receipts.push({ capture_sha: sha, address: cap.locator, first_retrieved: "2026-10-06T11:00:00Z", via: "direct" });
+      receipts.push({ capture_sha: sha, address: `${cap.locator}?later`, first_retrieved: "2026-10-06T11:30:00Z", via: "direct" });
+    }
+    for (let i = 0; i < noise; i += 1)
+      receipts.push({ capture_sha: createHash("sha256").update(`other-${i}`).digest("hex"), address: `${API}/bodies`,
+                      first_retrieved: "2026-10-01T00:00:00Z", via: "direct" });
+    const provenance = {
+      receiptsOfCapture({ captureSha = null } = {}) {
+        asked.push(captureSha);
+        const s2 = typeof captureSha === "string" ? captureSha.trim().replace(/^sha256:/, "").toLowerCase() : "";
+        const rows = /^[0-9a-f]{64}$/.test(s2) ? receipts.filter((r) => r.capture_sha === s2) : [];
+        return { capture_sha: rows.length ? s2 : null, rows, observations: rows.length };
+      },
+      receipts() { throw new Error("every receipt was read"); },
+    };
+    const bucket = { get: async (sha) => (CAPS[sha] ? { arrayBuffer: async () => new TextEncoder().encode(CAPS[sha].text).buffer } : null) };
+    const st = storage();
+    const ctx = { storage: st };
+    const real = recordOf(ctx);
+    applyRecordSchema(st);
+    const record = new Proxy(real, { get: (t, k) => (k === "evidenceStore" ? () => bucket
+      : typeof t[k] === "function" ? t[k].bind(t) : t[k]) });
+    let views = { [PID]: profileView() };
+    const reg = await registryOver(() => Object.values(views).flatMap((p2) => p2.identifier_schemes || []));
+    const prov = providers({ admins: ["admin"] });
+    const m = new InstanceSetup(ctx, {}, { record, membership: prov.membership, credentials: prov.credentials,
+      promotion: prov.promotion, scheduler: prov.scheduler, capture: prov.capture, governor: prov.governor,
+      fetch: prov.fetch, sleep: async () => {}, now: () => Date.parse("2026-10-06T12:00:00Z"),
+      jurisdictions: jurisOver(() => views), entities: reg.entities, lines: reg.lines, provenance });
+    await m.start({ firstBoot: false });
+    real.setSetting("jurisdiction_profiles", [PID], "test");
+    m.officesSeed({ by: "admin" });
+    const r = await m.seatsSeed({ ...SHAS, by: "admin" });
+    return { r, asked };
+  };
+  const quiet = await run(0), noisy = await run(500);
+  assert.equal(quiet.r.ok, true, JSON.stringify(quiet.r).slice(0, 300));
+  assert.ok(quiet.r.seeded.length > 0);
+  assert.deepEqual(quiet.asked.sort(), [SHAS.bodies, SHAS.persons, ...SHAS.officerecords].sort(), "one read per capture, each for that capture");
+  assert.deepEqual(noisy.asked.sort(), quiet.asked);
+  assert.deepEqual(noisy.r, quiet.r, "receipts at other captures change nothing");
+  /* the earliest receipt is the capture's instant: the holds lines are dated by it */
+  assert.ok(quiet.r.seeded.some((x) => x.what === "holds" && /on 2026-10-06T11:00:00Z$/.test(x.dated)), JSON.stringify(quiet.r.seeded.filter((x) => x.what === "holds")).slice(0, 300));
 });

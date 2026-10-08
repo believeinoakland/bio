@@ -1,7 +1,7 @@
 /* notice-producers over the real modules it reads (K1563 (1)): each test file builds the provider's own test world
    (people's, money-checks', duties', answers' and inquiry's fixtures: their real modules on a real SQLite database at
    the plane's storage shape) and this module on the same host, the real provider handed in and every other provider a
-   stand-in answering nothing, in the shape its requirements publish (credentials', following's and standards' too, T35). `homesOf` and `optionsOf` are queue's (its R7,
+   stand-in answering nothing, in the shape its requirements publish (credentials', following's and standards' too, T35; file-safety's and provenance's, T36). `homesOf` and `optionsOf` are queue's (its R7,
    R12), passed in by R1; here they record what they were asked and answer a walk that finds nothing above the subjects,
    so a home set is the item's own cases. Every test drives `noticeItems` at its interface. */
 import { noticeProducersOf, NoticeProducers } from "../../../src/notice-producers/index.mjs";
@@ -18,6 +18,10 @@ export const NONE = Object.freeze({
                  securityMap: () => ({ ok: false, reason: "NOT_AN_ADMIN", code: "NOT_AN_ADMIN" }) },
   following: { policyChanges: () => ({ ok: true, changes: [], cursor: null }) },
   standards: { standardRead: ({ id }) => ({ ok: false, reason: "NO_SUCH_STANDARD", id }) },
+  fileSafety: { scanFindings: ({ after }) => ({ ok: true, findings: [], cursor: after ?? null, truncated: false }),
+                securityToolEvents: ({ after }) => ({ ok: true, events: [], cursor: after ?? null, truncated: false }),
+                securityTools: () => ({ ok: true, tools: [] }) },
+  provenance: { homeOf: () => null },
 });
 
 /** This module on `host`, with `real` providers and the rest answering nothing. */

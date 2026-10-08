@@ -8,6 +8,7 @@ import * as A from "../../../src/affordances.mjs";
 import * as G from "../../../src/op-grades/index.mjs";
 import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "../../../src/op-grades/t33.mjs";
 import { T35_RUNGS, T35_RUNG_ABSENT, T35_NON_ACTS } from "../../../src/op-grades/t35.mjs";
+import { T36_NON_ACTS } from "../../../src/op-grades/t36.mjs";
 import { composedVocabularies, plainWord } from "../../../src/affordances/words.mjs";
 import { affordancesOf } from "../../../src/affordances/facts.mjs";
 import { owners, kindOf } from "../../../src/connection-grammar/index.mjs";
@@ -104,9 +105,12 @@ const T33 = {
 /* The ops T33's requirements name whose owners serve them in process but whose route arm is the wiring jobs' (op-declarations
    R17, K1601; instance-setup R50, R53): graded now so the table is total when they are routed. */
 const UNROUTED = { clockpropose: "reversible", capturerequestplatformmark: "reversible",
-  capturerequestplatformunmark: "reversible", officesseed: "substrate", assistantset: "substrate",
+  capturerequestplatformunmark: "reversible", officesseed: "substrate",
   /* B3 (K1689): the ops op-declarations declares beside them */
   seatsseed: "substrate", disclosureshown: "caller-owned", ask: "caller-owned", askusage: "observational" };
+/* op-grades R25 (DEC-172 (5); T36-34): `assistantset`, graded `substrate` here since T33, is retired: it leaves RUNG_ABSENT
+   and NON_ACTS, so R12 reads no stale row for it. */
+const RETIRED = ["assistantset"];
 const UNROUTED_READS = ["capturerequestplatformhosts", "assistantstate", "disclosureof",
   "standardinforce" /* layer 9's read, gated since T33 (K1689) */];
 /* A write op-declarations gives no NEEDS row (UNATTENDED_BY_DECISION): ranked, never named in NON_ACTS (R12). */
@@ -140,12 +144,15 @@ const published = () => new Set([...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].map
 const T35_ADDS = { events: ["discretionrecord", "assessmentrecord", "usewithdraw", "usesof"],
   duties: ["poweruses", "uselink", "useunlink", "reviewpropose"], hypotheses: ["noterevise", "notedelete"],
   calculations: ["usesfreeze", "applicationrecipes"] };
+/* K2120, K2121 (T36): calculations' spot-check visit and its read (its R38, R39; K2092), graded by op-grades R23 in its
+   `t36.mjs`; pinned here so the map stays closed, each at its grade: the visit `reasoned`, the read none. */
+const T36_ADDS = { calculations: { spotcheckvisit: "reasoned", spotcheck: null } };
 
 test("R40 R12: each new module's op map holds exactly the ops graded for it — T33's, and the ops T35 adds (K2049), each "
    + "named in op-grades' T35 table — and each earlier module's map holds the ops T33 adds to it", () => {
   for (const [name, m] of Object.entries(T33)) {
     const keys = keysOf(m.map);
-    const mine = [...Object.keys(m.writes), ...m.reads, ...(T35_ADDS[name] ?? [])];
+    const mine = [...Object.keys(m.writes), ...m.reads, ...(T35_ADDS[name] ?? []), ...Object.keys(T36_ADDS[name] ?? {})];
     if (m.part) assert.deepEqual(mine.filter((op) => !keys.includes(op)), [], name);
     else assert.deepEqual([...keys].sort(), [...mine].sort(), name);
   }
@@ -156,6 +163,15 @@ test("R40 R12: each new module's op map holds exactly the ops graded for it — 
     const write = !T35_NON_ACTS[op].startsWith("read:");
     assert.equal(Object.hasOwn(T35_RUNGS, op) || Object.hasOwn(T35_RUNG_ABSENT, op), write, op);
   }
+  for (const [op, rung] of Object.values(T36_ADDS).flatMap((ops) => Object.entries(ops))) {
+    assert.ok(Object.hasOwn(T36_NON_ACTS, op), op);
+    assert.equal(NON_ACTS[op], T36_NON_ACTS[op], op);
+    assert.equal(RUNGS[op], rung ?? undefined, op);
+    assert.ok(!Object.hasOwn(RUNG_ABSENT, op), op);
+    assert.equal(NON_ACTS[op].startsWith("read: "), rung === null, op);
+  }
+  /* retired: graded and named nowhere */
+  for (const op of RETIRED) assert.equal(gradeOf(op) === null && !Object.hasOwn(NON_ACTS, op), true, op);
 });
 
 test("R40 R3 R27: every write T33 adds carries the grade R27's rule gives it — a rung or one ground, never both — and "

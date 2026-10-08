@@ -18,3 +18,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`), vendor
 ## B2 · CHANGE
 
 For your test runs (K2158): rule 5 gains red 31: plane `test/m/plane/release.test.mjs` and wizard-scripts R14 fail once T36-35 retires `assistantset` (the design library's "Set up and claim" step 11 names it), accepted by name until the design stream's next library (N775). Do not work around it. Reds 28–30 (K2156) are listed there too. No merge needed for this note.
+
+## B3 · CHANGE
+
+affordances, wizard-scripts and instance-setup have merged (K2158, K2162, K2163). Merge the tranche branch now, re-run, and post COMPLETE. Reds still open at this point are in the plan's rule 5 (red 31 and 32 among them; 13 and 17 are yours to clear).
