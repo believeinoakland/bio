@@ -1,0 +1,13 @@
+# BOB to op-declarations (T38)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T38), layer 11, op-declarations: T38-15 (N788). Read also K2300 and K2318 (their lines in `build/rulings.md`) and `build/plan/draft-T38-L11.md`'s section for your module.
+Your requirements: `build/requirements/op-declarations.md` (read whole); R21 amended and R40 new (K2318), not yet met: T38: PR #15's registry owes `obscuremarkwithdraw`, now declared (R40: `by` stamped, `machineClasses: []`, family `case-carriage` in `OP_FAMILIES`); `t37.test.mjs`:175 and `t34` clear; `t37.test.mjs`:125 re-pins `obscuremark`'s machine refusal to `MACHINE_CANNOT_MARK_PHOTO` and `t33.test.mjs`:210 clears with the spec; `index.mjs`:413's comment names the new code. Re-read R34: any op without a text goes in one QUESTION to UX-DESIGN through BOB. Test each changed id by name in the test's title (K874).
+Items 15 (your share) and 18 (your share) are yours.
+Reading set (mechanics §17): measured at this START by `build/plan/reading-sets.py`: 1197 KB (own requirements 51 KB, the used modules' public parts 875 KB, code 272 KB), an over-estimate (it counts each used module's whole public part): read as mechanics §3 asks (each used module's Purpose and the services your Uses names). Measure that set first. At most 300 KB: read it whole and state so in your record. Over: (3) **required, not optional (K2304):** read whole yourself your requirements, layer 11's row of `build/layers.md`, the code and tests your entry changes and the used services your Uses names, and have your own workers read the rest of your code and tests in full and write the summary this task needs (each statement citing file and line), told the task, the requirements it serves and what follows; state in your record what you read whole, the summary's size and what it cites, and whether anything it left out mattered.
+Merge order in L11: `modules.json` order, plane last (K2300); a job that uses a same-layer module merges the tranche into its branch when BOB tells it that module is merged (CHANGE).
+Inherited reds: the plan's rule 6 list as it stands at your START (read it there); only the items named here are yours.
+Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
