@@ -29,6 +29,13 @@
  *  T34-51 (R22, R23): `scheduled-publish` takes each waiting edition at its set time through `publication` (its R67),
  *  re-armed by publication's `onPublishScheduled` (its R71); `answers`' `onStandingSet` (its R27) re-arms the standing
  *  questions. A notice whose registration is refused is a start-up fault, kept and logged (`faults()`), never ignored.
+ *
+ *  T36-29 (R24): four consumers close the registry, each calling `file-safety`, which the plane hands this module
+ *  (`hand`, or `schedulerOf`'s `deps.fileSafety`) once it has built it: `file-scan` (its R4) once a day, `file-render`
+ *  (its R12) and `file-deeper` (its R36) at every firing and every few minutes while work is left, `file-forward` (its
+ *  R35) once each whole UTC hour. `file-safety` states those cadences in words only, so the two intervals are carried
+ *  here by BOB's ruling against R7 (K2129) until it offers its own due and wake (N762). The instants they keep are the
+ *  storage value `sched_files`, never a table (R18); none names a member, a viewer or a file.
  * ========================================================================= */
 import { retrievalOf } from "../retrieval/index.mjs";
 import { connectionsOf } from "../connections/index.mjs";
@@ -69,7 +76,7 @@ export const SCHEDULER_ORDER = Object.freeze([
   "monitor-cadence", "gathering-sweep", "ai-run-reap", "capture-request-drain", "ai-run-wake", "calibration-reprobe",
   "group-domain-recheck", "bias-debt", "intent-age", "notice-sweep", "deadline-recheck", "scheduled-publish", "working-on-seal",
   "working-on-attest", "follow", "duty-transitions", "interest-checks", "money-detectors", "standing-questions",
-  "dated-waits",
+  "dated-waits", "file-scan", "file-render", "file-deeper", "file-forward",
 ]);
 
 /** R2: each consumer's key in `onAlarm`'s answer. The task drain's counts are spread into the answer's own fields. */
@@ -82,6 +89,7 @@ export const SCHEDULER_KEYS = Object.freeze({
   "working-on-seal": "workingonseal", "working-on-attest": "workingonattest", "follow": "follow",
   "duty-transitions": "dutytransitions", "interest-checks": "interestchecks", "money-detectors": "moneydetectors",
   "standing-questions": "standingquestions", "dated-waits": "datedwaits",
+  "file-scan": "filescan", "file-render": "filerender", "file-deeper": "filedeeper", "file-forward": "fileforward",
 });
 
 /** R6: due at every firing. Every other consumer is due only when its owner says so. */
@@ -99,13 +107,22 @@ export const DAILY = Object.freeze(["duty-transitions", "interest-checks", "mone
  *  (duties R13's and people R23's `budgetMs`, 1000 ms), passed until money-checks states its own (R7). */
 export const DETECTORS_BUDGET_MS = 1000;
 
+/** R24: the consumers of `file-safety`, after `dated-waits`. */
+export const FILE_SAFETY_CONSUMERS = Object.freeze(["file-scan", "file-render", "file-deeper", "file-forward"]);
+/** R24 (K2129, against R7 until N762): `file-safety` R4's "daily" re-scan, a day from the last `file-scan` tick. */
+export const FILE_SCAN_EVERY_MS = 86_400_000;
+/** R24 (K2129, against R7 until N762): `file-safety` R36's "every few minutes", the poll while render or deeper work is left. */
+export const FILE_SAFETY_POLL_MS = 300_000;
+
 /* The answer's own fields (R2); a registered consumer's key may not take one. */
 const ANSWER_FIELDS = new Set(["swept", "drained", "created", "folded", "refused", "waiting", "remaining", "rearmed",
                                "nextAt", "probes"]);
 const DRAIN_ZERO = Object.freeze({ drained: 0, created: [], folded: [], refused: [], waiting: [], remaining: 0 });
 const PROBE_KEY = "sched_probe";
 const DAILY_KEY = "sched_daily";
+const FILES_KEY = "sched_files";
 const DAY_MS = 86_400_000;
+const HOUR_MS = 3_600_000;
 const message = (e) => String((e && e.message) || e).slice(0, 500);
 /* An instant in ms as civil-time's instant text, at the second (ISO_TS_RE). */
 const instantText = (ms) => new Date(Math.floor(ms / 1000) * 1000).toISOString().replace(/\.\d{3}Z$/, "Z");
@@ -188,16 +205,18 @@ export class Scheduler {
   #publishTicking = false;
   /* The refused registrations of listenTo, each a start-up fault (R23). */
   #faults = [];
+  /* R24: the file-safety consumers' kept instants, `{[name]: {...}}` as the value `sched_files` holds it (null until read). */
+  #files = null;
 
   /** `storage` is the Durable Object's storage (its alarm, and the probe seam's and the daily consumers' values);
    *  `owners` answers each consumer's owner (`retrieval`, `monitoring`, `connections`, `progressions`, `aiRuns`,
    *  `captureRequests`, `calibration`, `bias`, `intent`, `reevaluation`, `networkNotices`, `linkSweep`, `following`,
-   *  `duties`, `people`, `moneyChecks`, `answers`, `inquiry`, `publication`), each a function returning the owner, so an owner is
-   *  reached only when the registry is built; `zone()` answers the group's time zone or null (R21's local day). */
+   *  `duties`, `people`, `moneyChecks`, `answers`, `inquiry`, `publication`, `fileSafety`), each a function returning the owner, so an
+   *  owner is reached only when the registry is built; `zone()` answers the group's time zone or null (R21's local day). */
   constructor({ storage, env = null, owners = {}, zone = null } = {}) {
     this.#storage = storage;
     this.#env = env || {};
-    this.#owners = owners;
+    this.#owners = { ...owners };
     this.#zone = typeof zone === "function" ? zone : () => null;
   }
 
@@ -242,6 +261,69 @@ export class Scheduler {
   }
 
   #owner(name) { const f = this.#owners[name]; return typeof f === "function" ? f() : null; }
+
+  /* R24: the file-safety consumers' state, read once per instance before a firing, an arm or the start reads it. */
+  async #loadFiles() {
+    if (this.#files || !this.#owners.fileSafety) return;
+    let v = null;
+    try { v = typeof this.#storage.get === "function" ? await this.#storage.get(FILES_KEY) : null; } catch { v = null; }
+    this.#files = v && typeof v === "object" ? v : {};
+  }
+
+  /* R24: the four consumers over `file-safety`. Each keeps its instants in `sched_files`; with none kept it is due at
+     once. A refusal is the tick's answer and keeps the cadence; a tick that throws counts as run, so none spins (R3). */
+  #fileSafety() {
+    const o = () => this.#owner("fileSafety");
+    const st = (n) => (this.#files && this.#files[n]) || {};
+    const keep = (n, v) => { this.#files = { ...(this.#files || {}), [n]: { ...st(n), ...v } }; };
+    const at = (ms) => new Date(ms).toISOString();
+    const refused = (r) => !!(r && r.ok === false);
+    const kept = (v) => typeof v === "number" && Number.isFinite(v);
+    /* file-scan (its R4): at its first firing, then a day from its last tick, and at the next firing while `remaining`. */
+    const scan = {
+      due: (now) => { const s = st("file-scan"); return !kept(s.last) || s.more ? now : s.last + FILE_SCAN_EVERY_MS; },
+      wake: (now) => { const s = st("file-scan"); return !kept(s.last) ? now : s.last + FILE_SCAN_EVERY_MS; },
+      tick: async (now) => {
+        keep("file-scan", { last: now, more: false });
+        const r = await o().scanBatch({ at: at(now) });
+        keep("file-scan", { more: !refused(r) && Number(r && r.remaining) > 0 });
+        return { filescan: r };
+      } };
+    /* file-render (its R12) and file-deeper (its R36): due at every firing; a wake a poll after the tick while its last
+       answer stated work left, else none (a refusal keeps what the answer before it stated). */
+    const batch = (n, key, run, left) => ({
+      due: (now) => now,
+      wake: (now) => { const s = st(n); return !kept(s.last) ? now : s.more ? s.last + FILE_SAFETY_POLL_MS : null; },
+      tick: async (now) => {
+        const was = st(n).more === true;
+        keep(n, { last: now, more: was });
+        const r = await run();
+        keep(n, { more: refused(r) ? was : left(r || {}) });
+        return { [key]: r };
+      } });
+    /* render: `remaining` above 0, or a safe copy queued. Its answer counts the copies made and failed, not those still
+       queued, so a batch that touched any copy may have left more, and is polled once more. */
+    const renderLeft = (r) => Number(r.remaining) > 0 || Number(r.copies && r.copies.queued) > 0
+      || Number(r.copies && r.copies.made) > 0 || Number(r.copies && r.copies.failed) > 0;
+    const deeperLeft = (r) => r.queued == null || r.running == null || Number(r.queued) > 0 || Number(r.running) > 0;
+    /* file-forward (its R35): at the first firing at or after each whole UTC hour, from the `to` of its last call answered
+       `ok` (at its first, the hour before; never more than a day back) to that hour's start, so no period is sent twice. */
+    const hourOf = (ms) => Math.floor(ms / HOUR_MS) * HOUR_MS;
+    const forward = {
+      due: (now) => { const s = st("file-forward"); return !kept(s.hour) ? now : hourOf(now) > s.hour ? hourOf(now) : null; },
+      wake: (now) => { const s = st("file-forward"); return !kept(s.hour) ? now : s.log ? s.hour + HOUR_MS : null; },
+      tick: async (now) => {
+        const s = st("file-forward"), to = hourOf(now);
+        const from = kept(s.to) ? Math.max(s.to, to - DAY_MS) : to - HOUR_MS;
+        keep("file-forward", { hour: to });
+        const r = await o().forwardSecurityCounts({ from: at(from), to: at(to) });
+        if (r && r.ok === true)
+          keep("file-forward", { to, log: (Array.isArray(r.sent) && r.sent.length > 0) || (Array.isArray(r.failed) && r.failed.length > 0) });
+        return { fileforward: r };
+      } };
+    return { "file-scan": scan, "file-render": batch("file-render", "filerender", () => o().renderBatch({}), renderLeft),
+             "file-deeper": batch("file-deeper", "filedeeper", () => o().deeperBatch({}), deeperLeft), "file-forward": forward };
+  }
 
   /* ---- R5, R6: this module's own consumers, each calling its owner's services ---- */
   #own() {
@@ -370,6 +452,7 @@ export class Scheduler {
       due: (now) => (o("inquiry").datedWaitsDue(instantText(now)) === true ? now : null),
       wake: (now) => (o("inquiry").datedWaitsDue(instantText(now)) === true ? now : msOf(o("inquiry").datedWaitsWake(instantText(now)))),
       tick: async (now) => ({ datedwaits: await o("inquiry").datedWaitsTick(instantText(now)) }) };
+    if (this.#owners.fileSafety) Object.assign(c, this.#fileSafety());   /* R24 */
     return c;
   }
 
@@ -437,6 +520,7 @@ export class Scheduler {
   async onAlarm(now = Date.now()) {
     const probe = await this.#probeState(now, true);
     await this.#loadDaily();
+    await this.#loadFiles();
     const reg = this.registry(probe);
     const answers = {};
     const probes = [];
@@ -460,6 +544,9 @@ export class Scheduler {
     if (this.#daily && DAILY.some((n) => reg.some((c) => c.name === n)) && typeof this.#storage.put === "function") {
       /* a storage that cannot hold the value keeps it for this instance alone; the firing still answers */
       try { await this.#storage.put(DAILY_KEY, this.#daily); } catch { /* kept in memory */ }
+    }
+    if (this.#files && FILE_SAFETY_CONSUMERS.some((n) => reg.some((c) => c.name === n)) && typeof this.#storage.put === "function") {
+      try { await this.#storage.put(FILES_KEY, this.#files); } catch { /* kept in memory */ }
     }
     /* R2: the drain's counts (zero when it did not tick); a drain that threw is answered under its key (R3). */
     const { swept = 0, drain = null, ...rest } = answers;
@@ -495,6 +582,7 @@ export class Scheduler {
   async arm(now = Date.now()) {
     const probe = await this.#probeState(now, true);
     await this.#loadDaily();
+    await this.#loadFiles();
     const at = await this.#reconcile(now, this.registry(probe), false);
     if (probe) await this.#storage.put(PROBE_KEY, probe);
     return at;
@@ -508,7 +596,21 @@ export class Scheduler {
     this.#dailyIdle.clear();
     this.#publishHeld = null;
     await this.#loadDaily();
+    await this.#loadFiles();
     return await this.#reconcile(now, this.registry(probe), false);
+  }
+
+  /** R24: the owners the plane builds and hands this module after construction (`fileSafety`, which needs the plane's
+   *  bindings), each an instance or a function answering it. An owner already held is kept. Answers the names taken;
+   *  the plane then starts the scheduler (R11), whose reconcile weighs the new consumers. */
+  hand(owners = {}) {
+    const took = [];
+    for (const [name, v] of Object.entries(owners && typeof owners === "object" ? owners : {})) {
+      if (v === null || v === undefined || this.#owners[name]) continue;
+      this.#owners[name] = typeof v === "function" ? v : () => v;
+      took.push(name);
+    }
+    return { ok: true, handed: took };
   }
 
   /* ---- R13: the test seam, inert unless SCHED_PROBE is set ---- */
@@ -629,7 +731,8 @@ const DAILY_OWNER = Object.freeze([["duty-transitions", "duties"], ["interest-ch
 
 const instances = new WeakMap();
 
-/** The one scheduler of a Durable Object (K61). `deps.owners` replaces the default owners (a test's). */
+/** The one scheduler of a Durable Object (K61). `deps.owners` replaces the default owners (a test's); `deps.fileSafety`
+ *  (R24) is handed to the instance, new or already made. */
 export function schedulerOf(ctx, env = null, deps = {}) {
   let s = instances.get(ctx);
   if (!s) {
@@ -653,5 +756,6 @@ export function schedulerOf(ctx, env = null, deps = {}) {
                    following: followingOf(ctx), publication: publicationOf(ctx), answers: answersOf(ctx),
                    duties: dutiesOf(ctx), people: peopleOf(ctx), moneyChecks: moneyChecksOf(ctx) });
   }
+  if (deps.fileSafety) s.hand({ fileSafety: deps.fileSafety });
   return s;
 }
