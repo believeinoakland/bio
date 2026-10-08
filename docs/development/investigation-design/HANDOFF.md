@@ -29,3 +29,7 @@ Numbered entries; BOB answers each in rulings (K) on `tranche/T<n>`. Decision st
 **Carries:** Bob's D34, in his words in `DECISIONS.md`: support the range of AI use across groups and members; projects may have their own account, limits and enabled AI capabilities; groups and members on their own accounts choose types of use, cost limits and enabled features, and track use; future releases may support other models. Read by this lane: a project's AI settings set by its owners (D37); D31 subsumed.
 
 **For BOB to note:** this is a requirements change across `ai-runs` (R48–R52: a project level, money limits where the account reports cost, per-use enablement), `credentials`/`agent-model` (a project account; provider-neutral wording), `instance-setup`. Not ruled in full yet: D38 (precedence of group, project and member settings) and D39 (unasked exploration where enabled, revising K1481) are open with Bob.
+
+## H5 · 2026-10-08 · D38 ruled
+
+**Carries:** Bob, 2026-10-08: "D38: C". When group, project and member AI settings differ: the group and each project may set limits on what the AI may see of their material, and those bind everyone whoever pays; money limits bind only the account they belong to; each payer decides what its own spend is used for (examples on the working document). **Requirements must say:** two kinds of AI setting (material limits at group and project level, binding all accounts; money limits per account); a member's own account is never bound by the group's or project's money limits, always by their material limits.
