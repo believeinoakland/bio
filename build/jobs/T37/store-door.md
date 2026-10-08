@@ -87,3 +87,7 @@ T37-32 complete on job/T37/store-door: R9 (secretSha removed from the in-process
 - `checks/ownership.mjs`: 4 files, 0 failures.
 
 Size (session_01JNPSatGHX7N9NegWMbM7tR): test runs 19, module lines 582
+
+## J3 · COMPLETE
+
+B3 done: tranche merged; R10's translationdraft test now drives instance-setup's real translationDraftRefusal and translationDraft (both directions; first refusals, AI_KEPT_AWAY with no account read, AI_NO_ACCOUNT, copy ceiling, admitted words). No dispatch.mjs change. store-door 41/0; control-plane+plane 314 pass, the same 8 failing as tranche/T37 (none opened by me; t34-routes R57 :211 among them until T37-33); format, architecture, coverage 13/13, ownership all 0 failures. Record updated.
