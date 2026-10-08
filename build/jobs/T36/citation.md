@@ -1,3 +1,13 @@
 # citation (T36)
 
 **Status** · session_01WS6wZwoZkEzr9PB9xGHcPS · depth 2 · WORKING · handled B0
+
+## J1 · QUESTION
+
+R13 readings I am building on (carry on unless you answer otherwise). No new table and no new Uses edge to another layer's module is needed.
+1. **Finding citing objects.** The capture's home document is `provenance.homeOf(sha)` (Uses already). Citing objects are found by listing `project` and `inquiry` bundles through `record-core` `listByType` and `head` (R36, R41), reading each one's current `bundle.md` and keeping its legs/`cites` edges whose target is that document and whose pin is the capture. Parsed citations are cached in memory per citing object, keyed by its `bundleSha` (no row, so R6 holds). Cost: one `head` per citing object per capture read, plus a parse only when a citing object changed. I chose this over `inquiry.restingOn` (leg-earning's projection; citation's test world does not boot inquiry, so `inquiry_basis` is empty there) and over joining `refs` (connections', not in my Uses). If you would rather have a projection (a capture → citing-object index), that is a table under P6/R6 and yours to decide; I am not adding one.
+2. **The pin.** It is the leg's or edge's `extent_capture`; else, for a leg naming a `content_id`, that content row's capture (`content.contentRow`); else `content.captureFor(target)`, the capture an unpinned citation addresses (content R11, the same one inquiry R12 resolves through). A legacy edge with no `extent_capture` is therefore answered for its document's first-held capture.
+3. **`by` and `at`.** They come from the citing object's history (`record-core` `readImage`, R15): the manifest entries in write order (`seq`), each one's `bundle.md` bytes, and the first entry whose bytes carry the leg (same target, canonical extent and pin) or the `cites` edge (same target). `by` is that entry's `author` and `at` its `created`. When history cannot say (a blob-backed `bundle.md`), the current head's latest entry is used.
+4. **Uses lines to add (BOB's wording):** `retrieval.registerRecordedBy` (R76); `content.canonicalExtent` (R2), `extentRelation` (R6), `CONTENT_EXTENT_KINDS` and `contentRow`; `record-core` `listByType`, `head` and `readImage`; `provenance.homeOf` for R13 as well as R1.
+5. **`NO_SHA`.** It is answered in the shape's refusal form `{ok:false, refused, code, reason, why}`, with no row (extraction's row is not reachable from my Uses). A non-hex sha answers `items: []` (K2116).
+6. **Registration.** It is done in `citationOf` when it first creates the instance (the plane's boot reaches it through run-productions' factory, against `retrievalOf(host)`, the instance `findIn` runs on). A `new Citation(...)` registers nothing.
