@@ -101,7 +101,7 @@ The answer:
 - `agent-model`: `modelCall`, `converse`, `MODEL_FOR_MODE` (its R1–R7; R54, T33-57).
 - `answers`, `credentials`: over the wire only (R54–R56): `ASK_SCOPE` and `AI_GRANT_OPS` read by the tests for R55.
 - `bundler`: `discoverMembers`, `writeMember` (the build).
-- `skills`: `reportsAs` and `DEPLOYMENT_SEQUENCE` (tests only, R44); nothing at runtime: the pack arrives rendered in `op=affordances`' answer (R48; K649 (5)).
+- `skills`: `reportsAs` and `DEPLOYMENT_SEQUENCE` (tests only, R44); nothing at runtime: the pack arrives rendered in `op=agentpack`'s answer (R48; K649 (5); T36, K2135).
 - `run-rules`: `AI_RUN_STATE_MAX_BYTES` and `AI_RUN_STATE_TOO_LARGE` (its R10), which R49 keeps within (N293). (T35) The `draft` mode's bounds (its T35 R) for R59.
 - `ai-runs`, `query-language`, `legacy-checks`: tests only; the suites read `OBSERVATION_LEVELS`, `OBSERVATION_STATES`, `RUN_ENDINGS`, the plane's namespaces and `OPS` table, and `SUGGEST_LEVELS` from the plane's source to pin this member's copies (R44). At runtime it uses them only over the wire.
 
