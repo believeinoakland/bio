@@ -12,3 +12,7 @@ Reading set (mechanics §17, N739): measured at this START: 308 KB by `build/pla
 Merge order in L2: membership → credentials → promotion (last; it stamps the layer's rows).
 Inherited reds (plan rule 5 as extended by K2084), outside your module unless named yours: coverage of T36 ids not yet met (1; file-safety's until L3, credentials R49–R52 until its merge); membership R83 `MODULE_ORDER` and its sister tests (3, until T36-6); row census (4, until T36-8); sources `contract.test.mjs`:108 (5); the UI's DEC-88 tests (7); following C-137 (8); `deploybindings` `FILE_SCANNER` (10, until T36-49); installer R34 test (12, T36-39); op-declarations `t34.test.mjs`:135 (13, T36-35); membership `members.test.mjs` D-57 (14, T36-6). Reds 6 and 9 are cleared.
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · CHANGE
+
+Added to your entry (MEMBERSHIP #27 J1, confirmed; K2089): red 14 is yours. `bio-plane/test/members.test.mjs`:124–126 (the D-57 arm, "neither sentence addresses the caller") reads `.detail` of two `op=login` refusals, both `LOGIN_REFUSAL_DETAIL.SIGN_IN_REFUSED` (`bio-plane/src/credentials/index.mjs`:318–324), which since T35-15's sweep says "Either your group's Civicsmith holds …". Re-word it so it needs no name and addresses no one (DEC-149 allows either; e.g. "Either no active credential is held under that role …"), meaning unchanged, and run `members.test.mjs` (95/0 expected) with your tests. Red 14 clears at your merge.

@@ -1,6 +1,6 @@
 # provenance — requirements
 
-**Status** · In force: approved by Bob 2026-09-26 (a product module, P17; K67), with later folds reviewed. Split (N512; K617, K1193): R19–R23, R36, R54 retired to `provenance-routes` and R31–R34, R39, R49, R56, R57 to `attestation`, never reused; R40 is stated in both new modules too; R58 by BOB's ruling on the seam. Last changed T35 (T35-18: R15, R42, R48 amended; R59 new; K1844, K1852), cross-references re-pointed T35 (K2035); every requirement met (PROVENANCE #17, K1952).
+**Status** · In force: approved by Bob 2026-09-26 (a product module, P17; K67), with later folds reviewed. Split (N512; K617, K1193): R19–R23, R36, R54 retired to `provenance-routes` and R31–R34, R39, R49, R56, R57 to `attestation`, never reused; R40 is stated in both new modules too; R58 by BOB's ruling on the seam. Last changed T36 (T36-9: R60 new, `receiptsOfCapture`; R61 new, a receipt's `reputation`; N730 a Suggestion only; K1973, K1993); R60, R61 marked not yet met (T36), every other requirement met (PROVENANCE #17, K1952).
 
 ## Public
 
@@ -63,6 +63,11 @@ Terms. A **capture** is a byte sequence named by its lowercase hex SHA-256 (`cap
 
 **receipts({addressNorm}) → `{address_norm, rows, observations}`**
 - **R16** Every receipt for the address (all when none is given), ordered by `via`, and the sum of their `observations`.
+- Errors: never throws.
+
+**receiptsOfCapture({captureSha}) → `{capture_sha, rows, observations}`** (N725; K1973)
+- **R60** Every receipt that names the capture, at any address and by any `via`, each row as R16 answers it, ordered by `address_norm` then `via`, and the sum of their `observations`; a reader that wants one capture's receipts (`standards` R38's `version_basis`) reads them here, never by reading every receipt. A `sha:` prefix and case are ignored, as R5's are. With no `captureSha`, or one that is not 64 hex, it answers no rows and `observations` 0, never every receipt. It writes nothing. *(not yet met: T36)*
+- **R61** (N714; K2087) A receipt may carry `reputation`, the answer `acquisition` R44 records for the fetched address (`{tool, listed, categories, checked_at, unanswered?}`): R13 stores it with the receipt exactly as given, R16's and R60's rows answer it, and R47's `onReceipt` payload carries it, `null` when the receipt has none; it changes no other field, grade or chain. *(not yet met: T36)*
 - Errors: never throws.
 
 **versionChain({addressNorm, at, limit, offset, viewer}) → `{ok, address_norm, documents, versions, count, total, limit, offset, truncated, at?, at_index?, predecessor?}` or refusal**
@@ -185,6 +190,7 @@ Terms. A **capture** is a byte sequence named by its lowercase hex SHA-256 (`cap
 - **Testify is here** (K49): the authored flag's only writer and its fence live in one module.
 - `homeCensus` walks every `files` and `history` row: an unbounded scan, admin-only today. Keep it admin-only or page it.
 - D-177, D-693, D-698 and D-709 have built work on `land/worker/D-177`, `D-693`, `D-698`, `D-709` (snapshot branch), judged at the job.
+- **T36 (T36-9).** (N730; K1993 (4)) An index on `captured_locators.retrieval_locator`, so `capture-requests` R49's retrieval-locator read (asked only after the indexed reads miss) does not scan the table. It changes nothing in R48's read contract.
 - **T35 (T35-18).** R59's `archive` names the archive, not the archive's own receipts; a reader that wants the archive's hop reads `captureGrade` or `receipts` for `archive.sha256`. The new bases (`CAPTURE_UNPACKED_FROM_ARCHIVE`, `CAPTURE_UNPACKED_UNRESOLVED`) are answer codes with no catalogue row, as R26's and R51's are. The archive's digest and the index are read from the receipt's retrieval locator (R15), which no caller writes, never from a document. The entry's seven DEC-149 strings (`checks.mjs`:138, :139 (C-103.7); `index.mjs`:899, :905, :923, :1387, :1402) are applied with a test naming each (plan rule 4; `build/plan/draft-T35-dec149-l1-l7.md`), and change no requirement; R59's own `why` sentences follow the same rule ("your group's Civicsmith", never "this instance" or "the plane").
 - **The T25 copies (option B, K1220), deleted in T26 (N516, K1248).** No name moved by N512 is held here any more: `routeFinding` is provenance-routes', `instanceStatement`, `attest` and `attestOp` attestation's. No table has two writers: `provenance_route_marks` is written only by `provenance-routes`, `receipt_keys` and `signed_receipts` only by `attestation` (P7).
 
