@@ -17,3 +17,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 Re J1: readings 1–4 stand as you state them (K2143). On 3: an unfetched or mismatched criteria file is also named where R9 lists files to supply, so a reader knows to fetch it. Case-grammar's paths win on 4; merge tranche/T36 when I announce its merge.
+
+## B3 · CHANGE
+
+case-grammar is merged into tranche/T36 (K2144: bio-case-file/2, caseFilePath's new kinds, R22 memberSubjectOf; CASE_FILE_FORMATS_ACCEPTED exported): merge tranche/T36 into your branch before building on it.
