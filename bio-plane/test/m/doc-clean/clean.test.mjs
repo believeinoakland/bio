@@ -195,6 +195,7 @@ test("R3 EMBEDDED_FILE: a PDF attachment (name tree and annotation), an OOXML em
   refused(await cleanDocument(docx({ extra: [{ name: "word/embeddings/Sheet1.xlsx", data: xlsx() }] })), "EMBEDDED_FILE", /word\/embeddings\/Sheet1\.xlsx/);
   refused(await cleanDocument(xlsx({ extra: [{ name: "xl/vbaProject.bin", data: new Uint8Array(16) }] })), "EMBEDDED_FILE", /xl\/vbaProject\.bin/);
   refused(await cleanDocument(odf("odt", { extra: [{ name: "Object 1/content.xml", data: "<x/>" }] })), "EMBEDDED_FILE", /Object 1\//);
+  refused(await cleanDocument(odf("odt", { extra: [{ name: "Object 2", data: new Uint8Array([0xd0, 0xcf, 0x11, 0xe0]) }] })), "EMBEDDED_FILE", /part Object 2 /);
   refused(await cleanDocument(odf("odt", { manifest: '<manifest:file-entry manifest:full-path="Chart/" manifest:media-type="application/vnd.oasis.opendocument.chart"/>' })), "EMBEDDED_FILE", /Chart\//);
 });
 

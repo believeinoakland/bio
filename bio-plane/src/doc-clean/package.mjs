@@ -133,7 +133,7 @@ export async function cleanPackage(d, family) {
       throw refusal("DOCUMENT_TOO_LARGE", `part ${n} declares ${e.uncompressedSize} bytes, over the ${CLEAN_MAX_PART_BYTES} this module reads`);
     if (family === "ooxml" && (/(^|\/)embeddings\//i.test(n) || /(^|\/)vbaProject\.bin$/i.test(n)))
       throw refusal("EMBEDDED_FILE", `part ${n} is an embedded file`);
-    if (family === "odf" && /^Object [^/]*\//.test(n)) throw refusal("EMBEDDED_FILE", `part ${n} belongs to an embedded object`);
+    if (family === "odf" && /^Object [^/]*(\/|$)/.test(n)) throw refusal("EMBEDDED_FILE", `part ${n} is or belongs to an embedded object`);
   }
   if (family === "odf") {
     const m = await readPart(d, c, ODF_MANIFEST_PART);
