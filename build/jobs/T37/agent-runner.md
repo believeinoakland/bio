@@ -2,6 +2,31 @@
 
 **Status** · session_013WGtsDHseGqHijvVK5BW55 · depth 2 · WORKING · handled B3
 
+## Completion
+
+**Reading set.** Measured at START: 107 KB (under 300 KB), so read whole by this session: `build/requirements/agent-runner.md` (whole, and again after B3's merge), layer 6's row of `build/layers.md`, bundler's Purpose and `writeMember` (R5), every file under `agent-runner/` but the lockfile's body and the generated bundle (`src/*.mjs`, `fleet-member.json`, `wrangler.jsonc`, `Dockerfile`, `package.json`, `scripts/build.mjs`, every test and stub), the plan's T37-16 and T37-17 entries and "Rules at the opening" (rule 3, rule 6), DEC-156, `build/terms/anthropic.md` whole, and K1547, K1755, K1804, K1819, K2074, K2134, K2135, K2147, K2200 in `build/rulings.md`. No worker summaries.
+
+**Entries applied (T37-16; N708's share, DEC-156; N750).**
+- R17–R21: `src/signin.mjs` (new). The binary's own `claude auth login`, with no option, through util-linux `script -q -f -e -c … /dev/null` (a pseudo-terminal; the base's `bsdutils`, nothing installed, R16); the address read from its `visit:` line with terminal escapes stripped, answered as stated only when `https:` on `claude.ai`/`claude.com`/`anthropic.com` or a subdomain (no user, no port), else 502 `SIGNIN_ADDRESS_UNEXPECTED`; 30 s for the address, else 502 `SIGNIN_UNAVAILABLE`; the code typed once with one line end; outcome from `Login successful.` / `Login failed` / `Invalid code` / exit, 60 s at most (K2213), the echo of the code removed and the detail scrubbed; 10 min wait for a code; state from `claude auth status --json` (`loggedIn` and `authMethod: "claude.ai"`), never the file; sign-out by `claude auth logout`, 502 `SIGNOUT_FAILED` keeping the record when the binary fails (K2213); the record `member` (a member id, mode 0600) beside the binary's config directory under the user's home. Routes in `src/entry.mjs` (`POST` only; body over 16 KB or not a JSON object 400 `BAD_REQUEST`; `BAD_MEMBER`; then each route's order as R17–R21 now state, K2213).
+- R2: `credential: {kind: "signin", member}` (`src/runner.mjs`): `NOT_SIGNED_IN` / `NOT_THIS_MEMBER` before anything starts; the query runs with neither credential variable and `CLAUDE_CONFIG_DIR` the stored sign-in's directory, `HOME`/`TMPDIR`/`cwd` in the conversation's temporary directory; afterwards every path the query added under the sign-in's directory is removed (names listed, contents never read), so only the binary's renewal of what it held survives (R9).
+- R7, R10, R13: `fleet-member.json` `egress` exactly `["api.anthropic.com", "platform.claude.com"]` (J1, K2211), applied by the class unchanged (`allowedHosts`); surface lists the four routes. R22: no step after `npm ci`, no login option, no method-picking variable. R23: `terms` `{condition, source, who_agrees: null}`, the two conditions quoted from AT-14 as the register quotes them. No text says the terms allow the sign-in (U-7 (a)–(d) open).
+- R11 (N750): the test derives the published form from `wrangler.jsonc` as it stands. Passes on the tranche's `@sha256:UNPUBLISHED` form and on a published form: a release cut simulated locally (wrangler and marker set to `ghcr.io/believeinoakland/agent-runner@sha256:a187d554…3019`, K2074's digest) passes; T36's test fails on that same form (red 6 reproduced, then cleared). The simulation was reverted.
+- Shared: `src/env.mjs` (new) holds the environment and `scrub` both processes use; `Dockerfile` copies `env.mjs` and `signin.mjs`.
+
+**Generated artifact.** `src/worker.mjs` (a comment) and its input `fleet-member.json` changed, so the bundle was rebuilt with its own command (`npm run build` in `agent-runner/`): `dist/agent-runner.bundled.mjs` sha256 `3e51da31e64ae6885a52d2e249bfe9c71e1538e2bda6a6f04a50fec97707d07a`; bundler's `verifyStatic` and `verifyFresh` report no findings.
+
+**Deferred.** None. The image was not built here: a Docker daemon started in this container, but Docker Hub refused the pinned base's pull (`HEAD …/library/node/manifests/sha256:efd0ab57…` 429 Too Many Requests), so the image is proven at the release's build (K1985). `script`'s presence in the pinned base rests on Debian bookworm's Essential `bsdutils`; the release's build proves it.
+
+**Found in other modules.** agent-worker's suite: 4 of 11 files red (`agent-worker.test.mjs`, `harness.test.mjs`, `requirements.test.mjs`, `versions.test.mjs`: real-plane refusals, R45 bundle static and fresh), the identical failing set on a clean `tranche/T37` @ `1a7867dd5e` without this job's change, so not this job's. No other module's artifact made stale. (agent-worker R66–R67's relay is T37-17's.)
+
+**Tests and checks.**
+- `agent-runner`: `node --test test/` 34 tests, 34 pass, 0 fail (three consecutive runs). Every live id named: R1–R23.
+- `agent-worker` (it uses this module): 11 files, 7 pass, 4 fail, identical on tranche without this change (above).
+- `node checks/format.mjs`: 136 modules, 135 requirements files; 0 failures. `architecture.mjs … agent-runner`: 0 failures. `coverage.mjs … agent-runner`: 23 of 23 live requirement ids named by a test; 0 failures. `ownership.mjs … agent-runner tranche/T37`: 16 files; 0 failures.
+- Final `uses`: `bundler` (unchanged).
+
+Size (session_013WGtsDHseGqHijvVK5BW55): test runs 16, module lines 649
+
 ## J1 · QUESTION
 
 R10's sign-in hosts (K2200), read from the pinned SDK: `@anthropic-ai/claude-agent-sdk` 0.3.289 (lockfile), whose linux-x64 binary is Claude Code 2.1.289 (`manifest.json` `version`, commit 736d26ee). Its production OAuth table (`BASE_API_URL`, `TOKEN_URL`, …) and the `claude auth login` / `auth logout` code read from the binary:

@@ -147,8 +147,10 @@ test('R19 POST /signin/state answers connected from the binary\'s own report, fo
     await signedIn(r);
     assert.deepEqual(await r.post('/signin/state', { member: M }), { status: 200, body: { ok: true, connected: true, member: M } });
     assert.deepEqual(r.claude.runs().at(-1).args, STATUS_ARGS, 'learned from the binary\'s report');
+    const ran = r.claude.runs().length;
     assert.deepEqual(await r.post('/signin/state', { member: OTHER }), { status: 200, body: { ok: true, connected: false, member: OTHER } },
       'another member\'s sign-in is not theirs');
+    assert.equal(r.claude.runs().length, ran, 'another member\'s state runs nothing (R21, K2213)');
     // the instance's disk no longer holding it (a sleep): not connected
     rmSync(creds(r));
     assert.deepEqual(await r.post('/signin/state', { member: M }), { status: 200, body: { ok: true, connected: false, member: M } });
