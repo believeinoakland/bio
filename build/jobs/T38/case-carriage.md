@@ -105,3 +105,13 @@ Findings in other modules from T38-11. The detail is in my record under "Found i
 - **The plane bundle** is staled by this merge (accepted red 8).
 - **For BOB/Bob (N779's scope):** photos embedded in a PDF or office document cited whole leave with their metadata. K2248 speaks of photo captures only.
 - **My requirements' Uses** does not yet name `acquisition` (`archive_entries`, its R45; R8).
+
+## J3 · COMPLETE
+
+T38-11 is complete; the record is on `job/T38/case-carriage`.
+- **Entries applied:** R1, R8 (with J1's reading, B2), R9–R13 (with B3), and R14 `obscureMarkWithdraw` (`op=obscuremarkwithdraw` in `caseCarriageOps`). `MACHINE_CANNOT_MARK_PHOTO` is applied (N790).
+- **Tests:** case-carriage 56 of 56 pass. The four checks pass with 0 failures. publication, case-disclosures and case-authoring: 361 pass, 0 fail.
+- **Merge early (K1750):** publication, public-read, case-disclosures and case-authoring use me.
+- **Red until L11:** the users' new reds are op-declarations ×2 and plane ×1, all owed to the L11 jobs (REPORT J2).
+- **Deferred:** a photo marked only "nothing to obscure" before T38 has no copy until its next mark or withdrawal. This is fail closed: the case is refused until then.
+- **Size:** 984 module lines.
