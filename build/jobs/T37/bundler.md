@@ -29,3 +29,16 @@
 - `format`: 0 failures; `architecture … bundler`: 0 failures; `coverage … bundler`: 30 of 30 live ids named, 0 failures; `ownership … bundler tranche/T37`: 0 failures (re-run after the commit).
 
 Size (session_01XAuQvFSnT4Qjvv3ReZ1VHj): test runs 12, module lines 8073
+
+## J1 · COMPLETE
+
+T37-3 done; record's Completion has the detail. Commit 552465d887 on `job/T37/bundler`.
+
+- (N772; R25) A member whose `wrangler.jsonc` binds R2 buckets or states crons carries a `Worker` part, `worker.json`: `{r2_buckets: [{binding, bucket}], crons}`, bucket by role (`bio-captures` → `captures`, `bio-published` → `published`), crons as stated; signed in `parts=` (statement format unchanged), written under `release/<member>/`, listed in `RELEASE.json`. Another bucket name, a nameless binding, or `r2_buckets`/`triggers.crons` not a list is `[WORKER_UNDESCRIBED]` naming each, before any build or write. Real tree: file-scanner (`CAPTURES`, `17 4 * * *`), pdf-worker, ocr-worker, sheet-worker (`CAPTURES`).
+- (N767) fleetbundles.test.mjs:219's comment names `op=agentpack` since T36-24.
+- Own module: `system/bundle.test.mjs` was red before my change (token in the query; the plane refuses it, C-38.10); it now sends the Authorization header, exit 0. A duplicated R28 test in thirdparty.test.mjs removed.
+
+Installer tests: none turns red or green (they make their releases in the test; `release/RELEASE.json` is unchanged): newgroup requirements 49 pass / 0 fail / 3 todo. At the next release cut, pdf-worker, ocr-worker and sheet-worker are also installed with `CAPTURES` from their part (installed without it today). `newgroup`'s `workerDescriptor` accepts the part as written (tested).
+
+Tests: bundler module 91/0; fleetbundles 129/0, no SKIP; deploybindings 37/0; resolveversion 12/0; bundle exit 0; newgroup-bundle-fresh 4/0; `bundles.mjs --check` all fresh. Checks: format, architecture, coverage (30/30), ownership: 0 failures.
+Real `release-assemble.mjs --dry-run` still stops at agent-runner's missing `image.digest` (T33-D1), as before; not this job's.
