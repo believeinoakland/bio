@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #141 · session_01MG1srQ83USpRDFURbfVuBa · depth 1
 
-**Jobs** · (none started)
+**Jobs** · bundler: BUNDLER #12 session_01UyPgDNZCNdqccnSPgPyQtP; image-codecs: IMAGE-CODECS #3 session_014rRSsfp8Sqbc9QHisanAS9; file-scanner: FILE-SCANNER #3 session_01DMNhj25urK6A68HrWJ3mho
 
 **Sources** · `next.md` N748, N751, N779–N788 (every open entry); `current.md` (T37): its "Left out of T37" table, its rules at the opening (rule 6's accepted reds still open: 2, 3, 20, 22; the host-governor nine of red 17), "P6 notes"; `modules.json` (order, layers); `rulings-active.md` (K617, K624, K657, K1821); rulings K2171, K2179, K2186, K2189, K2200, K2203, K2218, K2220, K2226–K2232; PR #15 (UX-DESIGN's MERGE U132: DEC-183, `words.json`'s `photo.*`), on `main` at T37's close. PROCESS-MECHANICS §5.2, §12.2; PROCESS-DESIGN P4, P6, P8, P10, P17, P18, P19.
 
@@ -32,6 +32,8 @@
    6. host-governor `ops.test.mjs`'s nine tests (T37's red 17 share, C-38.10, C-38.11), until T38-7 (N784).
    7. legacy-ui `statement-ack.test.mjs` (T37's red 22; its earlier M0-107 cause stood at T37's L11 close, K2257): N794, held by K633's hard reason; accepted red by name.
    8. `case-checker/program.mjs` and the plane bundle, staled by any T38 L8 merge, regenerated at L8's close (§5.6 (1)).
+   9. file-safety tests that read file-scanner's `config` lists (`securityToolAdd`'s required check after it deletes `cfg.host`/`cfg.region`), from T38-17's merge until T38-18 (K2264): 29 of its 49 tests (FILE-SCANNER #3 J3: R4, R5, R8–R10, R12–R16, R18, R21–R23, R25, R27–R33, R35, R37, R39–R41, each through a tool add answering `CONFIG_MISSING` host/region); named in T38-18's START.
+   10. `system/resolveversion.test.mjs` ARM 7 (file-scanner at 0.79.0 against the plane's 0.81.0), until file-scanner's re-merge (K2266).
 7. **BOB's acts (no module job):** at the opening, rule 2's boundary (at L2's START), rule 3's choice, rule 4's packaging, every L1 requirement change, the questions to Bob ("For BOB" below). (N781; K1763, K2171) the terms register gains, as AT entries quoted verbatim, the paragraphs "Using the Claude Code name and logo" and "Claude Code remains governed by Anthropic's standard terms … regardless of the platform" (found under "Can customers offer Claude Code in their products?"), at the opening's register edit. T38's release is BOB's (K1501), decided at its close. (N795; K2259) BOB diagnoses the close's refused acts and brings Bob the mechanics change, rendered (K1258), certified by a dry run (P3) before a close relies on it.
 8. **N779 (Bob, K2248; BOB's details, P17):** every photo a published case carries travels as a copy without its metadata, made by `image-cover.coverAreas` with the photo's marks, or with no areas for an unmarked photo (its R1's empty `areas`, R2: nothing of the original but its pixels), so no L1 change; a photo `image-cover` cannot take (R3, e.g. HEIC) refuses the publication as DEC-183's B103 (b) does a marked one, naming it. The group keeps the original with its metadata and fingerprint.
 9. **N793 (K231; BOB's):** `NO_SUCH_MEMBER` (C-64) has one site: membership (T38-4, with its split) provides the helper and the row; instance-setup drops its row; credentials, tasks, setup-page and control-plane call membership's helper in place of minting the code.

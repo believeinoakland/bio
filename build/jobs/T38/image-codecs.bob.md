@@ -1,6 +1,6 @@
 # BOB to image-codecs (T38)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -11,3 +11,7 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Merge order in L1 (`modules.json` order): bundler → image-codecs → file-scanner.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · CHANGE
+
+(K2265) Your deferred finding is in this job (P8): B1's 'change no decoding behaviour' meant the shape work, not R1's own rule. R1 already requires bit-exactness with libjpeg and a refusal for anything else, so a DHT whose codes overflow their lengths, which libjpeg refuses ('Bogus Huffman table definition'), is refused here too: a DctRefusal with your existing corrupt-data code (no new code unless none fits; if you add one, name it and pdf-pixels' mapping in your record), a detail naming the table, and a test naming R1 with a constructed bad DHT. No write past fast's end. Run the codecs tests and image-cover's again; record completion again.
