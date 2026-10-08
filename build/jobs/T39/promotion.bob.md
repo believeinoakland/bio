@@ -11,3 +11,7 @@ Reading set (mechanics §17): measured at this START: 433 KB (own requirements 3
 Merge order in L2: membership → promotion last (it stamps the rows).
 Inherited reds: the plan's rule 3 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Your reading stands (K2358): keep one byte per code unit and fail closed on a code unit above 0xFF, at the release (an error stating its message cannot be encoded as signed) and at the registry root (root_signature_invalid:not_latin1 when enforced); no UTF-8. R31's "read as bytes" is met by hashing the selected copy directly. Test both refusals and that a Latin-1 message verifies as before.
