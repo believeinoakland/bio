@@ -1,6 +1,6 @@
 # agent-worker (T37)
 
-**Status** · session_01WhyJcr7TyurxDxBDdU3eVj · depth 2 · RUNNING until 2026-10-08T11:27:27Z (negative controls (agent-worker/test/*.control.mjs) in a scratch worktree) · handled B1
+**Status** · session_01WhyJcr7TyurxDxBDdU3eVj · depth 2 · RUNNING until 2026-10-08T11:27:27Z (negative controls (agent-worker/test/*.control.mjs) in a scratch worktree) · handled B5
 
 ## J1 · QUESTION
 
