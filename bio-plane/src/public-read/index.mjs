@@ -180,6 +180,7 @@ function outputOf(key, result) {
 export class PublicRead {
   #evidenceBlock = null; // R8: {module, name, fn}, filled once
   #publicReads = new Map(); // R18: name -> {module, params, read}, each name registered once
+  #originalsByEdition = new Map(); // R23 (T38): `case NUL edition` -> the photo originals its signed document states
 
   constructor({ storage, publication, docket } = {}) {
     this.sql = storage.sql;
@@ -483,8 +484,10 @@ export class PublicRead {
                 + "FINDING's own, and since the artifact flip a member of a case's edition 2 may be at its "
                 + "own edition 1. A join on the two numbers does not fail — it silently drops the members "
                 + "the pin exists to name.",
-      shas: this.#rows(
-        `SELECT sha256, bundle_id, path, kind, bytes, published FROM published_shas ORDER BY published`),
+      /* R23 (T38): a photo's original is not listed, as it is not served (`verifySha`). */
+      shas: ((rows, originals) => rows.filter((r) => !originals.has(r.sha256)))(
+        this.#rows(`SELECT sha256, bundle_id, path, kind, bytes, published FROM published_shas ORDER BY published`),
+        this.#photoOriginals([{ kind: "archive" }])),
       altitudes: "a frozen strength pair belongs to a FINDING and travels on that finding's row here. A CASE "
                + "has a scope, a completeness assertion, a bias acknowledgement, editions and a container; "
                + "it has no strength, and "
@@ -547,7 +550,41 @@ export class PublicRead {
   verifySha(sha) {
     const matches = this.#rows(
       `SELECT bundle_id, path, kind, published FROM published_shas WHERE sha256=? ORDER BY published`, sha);
+    /* R23 (T38): a photo's original answers as a hash never published, whatever registered it (R3's NO_PUBLISHED_PART
+       at `publishedbytes`, which asks here first). */
+    if (matches.length && this.#photoOriginals(matches).has(String(sha).toLowerCase()))
+      return { published: false, sha256: sha, matches: [] };
     return { published: matches.length > 0, sha256: sha, matches };
+  }
+
+  /* R23 (T38; N779, K2248; R3): WHAT NO ROUTE OF THIS MODULE SERVES, because it is a photo's original: each `sha` and
+     `text_sha` that a published case edition's signed `materials:` row states with `obscured` (`case-grammar` R12, the
+     original's fingerprints), whatever registered those bytes (another row at the same digest, an earlier edition, another
+     case), and, when `matches` (the published projection's rows for what is asked, or every row) include an archive, each
+     archive the projection shows holding one of them, outward. A signed document never changes, so each edition's
+     document is read once per instance. */
+  #photoOriginals(matches = []) {
+    for (const e of this.#rows(`SELECT case_id, edition FROM published_cases`)) {
+      const k = `${e.case_id}\u0000${Number(e.edition)}`;
+      if (this.#originalsByEdition.has(k)) continue;
+      const state = this.publication.caseEditionState(e.case_id, Number(e.edition));
+      const doc = state ? signedParts(state.document) : null;
+      if (!doc) continue;
+      const rows = (materialsOf(doc.fm) || {}).materials;
+      this.#originalsByEdition.set(k, (Array.isArray(rows) ? rows : []).filter((r) => r && r.obscured != null)
+        .flatMap((r) => [r.sha, r.text_sha]).map((s) => String(s ?? "").toLowerCase()).filter((s) => HEX64.test(s)));
+    }
+    const originals = new Set([...this.#originalsByEdition.values()].flat());
+    if (!originals.size || !matches.some((m) => m && m.kind === "archive")) return originals;
+    const records = new Map();
+    for (const r of this.#rows(`SELECT DISTINCT sha256 FROM published_shas WHERE kind='container'`)) {
+      const c = safeJson(heldText(this.publication.publishedMaterialText(r.sha256)));
+      const member = c && typeof c.member_sha256 === "string" ? c.member_sha256.toLowerCase() : null;
+      const archive = c && typeof c.archive_sha256 === "string" ? c.archive_sha256.toLowerCase() : null;
+      if (member && HEX64.test(archive ?? "") && !records.has(member)) records.set(member, { archive });
+    }
+    for (const a of this.#archivesHolding(originals, { records })) originals.add(a);
+    return originals;
   }
 
   /* REC-14 / DEC-12: the public index ENUMERATES EDITIONS rather than one row
