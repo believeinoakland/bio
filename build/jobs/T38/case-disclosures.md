@@ -103,3 +103,7 @@ T38-12 applied: R6 (a photo never whole; PHOTO_UNCHECKED; NOT_COVERABLE marked o
 - `ownership`: 7 files; 0 failures.
 
 Size (session_016Wyn6CMpXu3twcahXtRYbM): test runs 15, module lines 1972
+
+## J3 · COMPLETE
+
+B2 done: tranche/T38 (case-carriage merged) merged into job/T38/case-disclosures. A new photos.test arm runs R6/R29 over the real case-carriage R10–R14 (mark, withdraw, nothing-to-obscure, refused cover; no stand-in). Nothing moved in the code. case-disclosures 71/71; format, architecture, coverage, ownership 0 failures. Record updated.
