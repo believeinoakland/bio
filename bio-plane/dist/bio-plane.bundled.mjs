@@ -33150,34 +33150,51 @@ var REPUTATION_TIMEOUT_MS = 5e3;
 var REPUTATION_URL = "https://file-scanner/provider/reputation";
 var reputationToolOf = (cap, given5) => given5 !== void 0 ? given5 : cap && cap.reputation !== void 0 ? cap.reputation : null;
 var fileScannerOf = (cap, given5) => given5 || cap && cap.fileScanner || cap && cap.env && cap.env.FILE_SCANNER || null;
-async function addressReputation(address, tool, scanner) {
-  const toolId = tool && typeof tool === "object" && typeof tool.tool_id === "string" ? tool.tool_id : null;
-  const unanswered3 = (code) => ({ tool: toolId, listed: null, categories: [], checked_at: stampSecond2(), unanswered: code });
-  if (tool === null || tool === void 0) return unanswered3("NO_TOOL");
-  if (!scanner || typeof scanner.fetch !== "function") return unanswered3("SCANNER_UNREACHABLE");
+var isToolSpec = (t2) => !!t2 && typeof t2 === "object" && !Array.isArray(t2) && typeof t2.then !== "function";
+async function addressReputation(address, given5, scanner) {
+  const toolIdOf = (t2) => t2 && typeof t2 === "object" && typeof t2.tool_id === "string" ? t2.tool_id : null;
+  const unanswered3 = (code, t2 = null) => ({ tool: toolIdOf(t2), listed: null, categories: [], checked_at: stampSecond2(), unanswered: code });
+  const LATE = Symbol("late");
   let timer = null;
-  try {
-    const asked = (async () => {
-      const res = await scanner.fetch(REPUTATION_URL, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ address, tool })
-      });
-      return res.json();
-    })();
-    const out = await Promise.race([asked, new Promise((r) => {
-      timer = setTimeout(() => r(null), REPUTATION_TIMEOUT_MS);
-    })]);
-    asked.catch(() => {
+  const late = new Promise((r) => {
+    timer = setTimeout(() => r(LATE), REPUTATION_TIMEOUT_MS);
+  });
+  const within3 = (p3) => {
+    Promise.resolve(p3).catch(() => {
     });
-    if (out && out.ok === true)
-      return { tool: toolId, listed: out.listed === true, categories: Array.isArray(out.categories) ? out.categories.filter((c) => typeof c === "string") : [], checked_at: stampSecond2() };
-    if (out && out.ok === false && typeof out.code === "string" && out.code) return unanswered3(out.code);
-    return unanswered3("SCANNER_UNREACHABLE");
-  } catch {
-    return unanswered3("SCANNER_UNREACHABLE");
+    return Promise.race([p3, late]);
+  };
+  try {
+    let tool = given5;
+    if (typeof given5 === "function") {
+      try {
+        tool = await within3((async () => given5())());
+      } catch {
+        return unanswered3("TOOL_UNREADABLE");
+      }
+      if (tool === LATE || tool !== null && !isToolSpec(tool)) return unanswered3("TOOL_UNREADABLE");
+    }
+    if (tool === null || tool === void 0) return unanswered3("NO_TOOL");
+    if (!scanner || typeof scanner.fetch !== "function") return unanswered3("SCANNER_UNREACHABLE", tool);
+    let out;
+    try {
+      out = await within3((async () => {
+        const res = await scanner.fetch(REPUTATION_URL, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ address, tool })
+        });
+        return res.json();
+      })());
+    } catch {
+      return unanswered3("SCANNER_UNREACHABLE", tool);
+    }
+    if (out && out !== LATE && out.ok === true)
+      return { tool: toolIdOf(tool), listed: out.listed === true, categories: Array.isArray(out.categories) ? out.categories.filter((c) => typeof c === "string") : [], checked_at: stampSecond2() };
+    if (out && out !== LATE && out.ok === false && typeof out.code === "string" && out.code) return unanswered3(out.code, tool);
+    return unanswered3("SCANNER_UNREACHABLE", tool);
   } finally {
-    if (timer) clearTimeout(timer);
+    clearTimeout(timer);
   }
 }
 async function profileOf({
@@ -53693,6 +53710,7 @@ function captureOf(ctx, opts = {}) {
     c.ownHosts = Capture.hostsOf(opts.ownHosts);
     given5.add("ownHosts");
   }
+  c.adoptReputation(opts);
   return c;
 }
 function registerGrammar(record) {
@@ -53716,6 +53734,8 @@ var Capture = class _Capture {
   #declared = false;
   #acquisition = null;
   #acquisitionHost = null;
+  #reputationReader = null;
+  #fileScanner = null;
   constructor(storage, {
     record,
     env = {},
@@ -53725,7 +53745,9 @@ var Capture = class _Capture {
     credentials = null,
     acquisition = null,
     acquisitionHost = null,
-    ownHosts = []
+    ownHosts = [],
+    reputation = null,
+    fileScanner = null
   } = {}) {
     this.#storage = storage;
     this.#sql = storage.sql;
@@ -53738,6 +53760,22 @@ var Capture = class _Capture {
     this.#acquisition = acquisition;
     this.#acquisitionHost = acquisitionHost;
     this.ownHosts = _Capture.hostsOf(ownHosts);
+    this.reputation = () => {
+      const reader = this.#reputationReader;
+      return typeof reader === "function" ? reader() : reader ?? null;
+    };
+    this.adoptReputation({ reputation, fileScanner });
+  }
+  /** R73 (T37; N774, K2155): the reputation reader and the `FILE_SCANNER` binding, each adopted from the first caller
+   *  that supplies it; a later one is ignored, never compared (a function has no value to compare) and never refused,
+   *  so R58 stays as it is for `env`. */
+  adoptReputation({ reputation = null, fileScanner = null } = {}) {
+    if (reputation != null && this.#reputationReader == null) this.#reputationReader = reputation;
+    if (fileScanner != null && this.#fileScanner == null) this.#fileScanner = fileScanner;
+  }
+  /** R73: the `FILE_SCANNER` binding handed in, which acquisition (its R44) reaches the scanner through; null with none. */
+  get fileScanner() {
+    return this.#fileScanner;
   }
   /** R73 (T35): acquisition's instance, the one given, else `acquisitionOf` over this host's storage made when first
    *  reached (a record without record-core's table seam, a test's stand-in, reads as none: the archive acts then answer
@@ -166297,6 +166335,24 @@ var FILE_SAFETY_CHECKS = Object.freeze({
     "C-140.39",
     at23("forwardSecurityCounts", "is-forward-period"),
     "The counts are sent for a period from an earlier instant to a later one, and this request named none. Nothing was sent."
+  ),
+  /* R28 (N777; T37): the settings a tool reads, by the names its catalogue entry states. New at T37 (T37-8); the rows
+     await promotion's stamp (plan T37, accepted red 2). */
+  CONFIG_MISSING: row4(
+    "C-140.40",
+    at23("securityToolAdd", "is-config-named"),
+    "This tool needs a setting that was not given, named beside this. Nothing was added."
+  ),
+  CONFIG_UNKNOWN: row4(
+    "C-140.41",
+    at23("securityToolAdd", "is-config-named"),
+    "This tool does not read a setting that was given, named beside this. Remove it and add the tool again. Nothing was added."
+  ),
+  /* R36 (T37): the deeper checks could not be read, so none was started or asked about. */
+  DEEPER_CHECKS_UNREADABLE: row4(
+    "C-140.42",
+    at23("deeperBatch", "is-deeper-readable"),
+    "The deeper checks your group asked for could not be read just now, so none was started or asked about. They are read again on the next round."
   )
 });
 var reason = (translation) => Object.freeze({ translation });
@@ -176471,7 +176527,8 @@ CREATE TABLE IF NOT EXISTS fs_tool_events (
   seq INTEGER PRIMARY KEY AUTOINCREMENT,
   tool_id TEXT NOT NULL,
   event TEXT NOT NULL,
-  at TEXT NOT NULL
+  at TEXT NOT NULL,
+  reason TEXT
 );
 -- R35: this module's counts by UTC hour, kind and number only.
 CREATE TABLE IF NOT EXISTS fs_counts (
@@ -176480,7 +176537,14 @@ CREATE TABLE IF NOT EXISTS fs_counts (
   n INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (hour, kind)
 );
+-- R39 (T37): the instants its wakes read (each batch's last run, the last period forwarded, each list's last refresh),
+-- one JSON value per key; no file and no member is named.
+CREATE TABLE IF NOT EXISTS fs_wakes (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);
 `;
+var FILE_SAFETY_ADDITIVE_COLUMNS = Object.freeze([["fs_tool_events", "reason", "TEXT"]]);
 var fileRow = (name2) => ({
   name: name2,
   keys: ["bundle_id"],
@@ -176509,7 +176573,8 @@ var FILE_SAFETY_TABLES = Object.freeze([
   groupRow("fs_tools"),
   groupRow("fs_tool_usage"),
   groupRow("fs_tool_events"),
-  groupRow("fs_counts")
+  groupRow("fs_counts"),
+  groupRow("fs_wakes")
 ].map((d) => Object.freeze(d)));
 
 // src/file-safety/formats.mjs
@@ -176738,6 +176803,8 @@ var FILE_SAFETY_MODULE = "file-safety";
 var RESCAN_INTERVAL_MS = 6048e5;
 var DEEPER_CHECK_FRESH_MS = 864e5;
 var DEEPER_CHECKS_PER_MONTH = 900;
+var FILE_SAFETY_POLL_MS = 3e5;
+var REPUTATION_REFRESH_MS = 216e5;
 var OVERDUE_MS = 864e5;
 var SCAN_WAIT_MS = 5e3;
 var RELEASE_REASON_MAX = 2e3;
@@ -176778,8 +176845,15 @@ var clamp10 = (n, d, max) => {
   const v = Math.floor(Number(n));
   return Number.isFinite(v) && v >= 1 ? Math.min(v, max) : d;
 };
+var listLimit = (n) => {
+  const v = Math.floor(Number(n));
+  return n === null || n === void 0 || n === "" || !Number.isFinite(v) ? LIST.default : Math.min(Math.max(v, 1), LIST.max);
+};
 var memberOf5 = (x) => typeof x !== "string" || x === "" ? null : x.startsWith("member:") ? x.slice(7) || null : x;
 var monthOf3 = (ms5) => iso(ms5).slice(0, 7);
+var HOUR = 36e5;
+var msOf = (v) => typeof v === "number" ? v : typeof v === "string" && v.trim() ? Date.parse(v) : NaN;
+var FILE_WORK_BATCHES = Object.freeze(["scan", "render", "deeper", "forward", "reputation"]);
 function refusal28(code, detail, extra = {}) {
   const row10 = FILE_SAFETY_CHECKS[code];
   return { ok: false, reason: code, code, check: row10.check, translation: row10.translation, detail, ...extra };
@@ -176832,6 +176906,10 @@ var FileSafety = class _FileSafety {
     return { ok: false };
   }
   migrate() {
+    for (const [table4, column, decl] of FILE_SAFETY_ADDITIVE_COLUMNS) {
+      const have = [...this.sql.exec(`PRAGMA table_info(${table4})`)].map((r) => r.name);
+      if (have.length && !have.includes(column)) this.sql.exec(`ALTER TABLE ${table4} ADD COLUMN ${column} ${decl}`);
+    }
     for (const t2 of FILE_SAFETY_SCHEMA.replace(/--.*$/gm, "").split(";")) if (t2.trim()) this.sql.exec(t2);
     if (!this.#declared && this.record && typeof this.record.declareTable === "function") {
       const r = this.record.declareTable(FILE_SAFETY_MODULE, FILE_SAFETY_TABLES.map((d) => ({ ...d })));
@@ -176840,6 +176918,59 @@ var FileSafety = class _FileSafety {
     return { ok: true };
   }
   #declared = false;
+  /* ===== its cadences' state (R39) and the arming notice (R40) ===== */
+  /* R39: the instants the wakes read, kept in `fs_wakes` so they survive a restart; null when none is kept. */
+  #kept(key) {
+    try {
+      const r = this.#one(`SELECT value FROM fs_wakes WHERE key = ?`, key);
+      return r ? parse12(r.value, null) : null;
+    } catch {
+      return null;
+    }
+  }
+  /* A kept instant that cannot be written never fails the batch it belongs to: the wake then reads the last one kept. */
+  #keep(key, value) {
+    try {
+      this.sql.exec(`INSERT INTO fs_wakes (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value`, key, JSON.stringify(value));
+    } catch {
+    }
+  }
+  #fileWork = [];
+  #answered = /* @__PURE__ */ new Map();
+  /* R40: each batch's last R39 answer, so an act arms only a batch it gives work sooner */
+  /** R40: a later module registers once at start; a second registration by one module, or a malformed one, is refused
+   *  through membership's `listenerRefusal` (its R81). */
+  onFileWork(module, fn) {
+    const refused5 = listenerRefusal(this.#fileWork, module, fn);
+    if (refused5) return refused5;
+    this.#fileWork.push({ module, fn });
+    return { ok: true, module };
+  }
+  /* R40: after the act commits (record-core R66), when `at` is sooner than the batch's last answer, every listener is
+     called once with `{batch, at}`; one that throws or rejects changes nothing. No call names a member, a file or a
+     viewer (R10). */
+  #arm(batch, instant5) {
+    const last = this.#answered.get(batch);
+    const at36 = instant5();
+    if (at36 === null || !Number.isFinite(at36)) return;
+    if (last !== void 0 && last !== null && last <= at36) return;
+    this.#answered.set(batch, at36);
+    const notify = () => {
+      for (const l2 of this.#fileWork) {
+        try {
+          const r = l2.fn({ batch, at: at36 });
+          if (r && typeof r.catch === "function") r.catch(() => {
+          });
+        } catch {
+        }
+      }
+    };
+    try {
+      if (this.record && typeof this.record.afterCommit === "function") this.record.afterCommit(notify);
+      else notify();
+    } catch {
+    }
+  }
   /* R1: every receipt puts its capture in the scan queue and the render queue (R12 renders only a file with a
      safe-view route); a receipt carrying a reputation answer adds a `reputation` note (R34); a routine safe-copy tool
      queues its copy (R32). It runs inside the receipt's own transaction and never refuses, delays or fails it. */
@@ -176848,9 +176979,14 @@ var FileSafety = class _FileSafety {
       const sha2 = shaOf8(event2 && event2.capture_sha);
       if (!HEX6418.test(sha2)) return { ok: true, queued: false };
       const at36 = second(this.now());
+      const fresh = !this.#one(`SELECT 1 AS x FROM fs_files WHERE capture_sha = ?`, sha2);
       this.sql.exec(`INSERT OR IGNORE INTO fs_files (capture_sha, queued_at, render_state) VALUES (?, ?, 'queued')`, sha2, at36);
       if (this.#routineTools("cdr").length)
         this.sql.exec(`INSERT OR IGNORE INTO fs_copies (capture_sha, state, queued_at) VALUES (?, 'queued', ?)`, sha2, at36);
+      if (fresh) {
+        this.#arm("scan", () => this.#scannerBinding() ? this.now() : null);
+        this.#arm("render", () => this.renderWake(this.now()));
+      }
       const rep = event2.reputation;
       if (rep && typeof rep === "object" && typeof rep.listed === "boolean") {
         this.#writeNote(sha2, {
@@ -177120,25 +177256,51 @@ var FileSafety = class _FileSafety {
       state: open.every((h) => h.state === "pending_second") ? "pending_second" : "held"
     };
   }
-  /** R15: every `found` note in order, for the notices of a finding; no member is named. */
-  scanFindings({ after = null, limit = LIST.default, viewer = void 0 } = {}) {
+  /** R15: every `found` note in order, for the notices of a finding; no member is named. With `since`, only notes
+   *  whose `at` is at or after it; `held` read in this same synchronous call; `cursor` null once nothing follows. */
+  scanFindings({ after = null, since = null, limit = LIST.default, viewer = void 0 } = {}) {
     try {
-      const lim = clamp10(limit, LIST.default, LIST.max);
+      const lim = listLimit(limit);
+      const lo = since === null || since === void 0 ? null : msOf(since);
+      if (lo !== null && !Number.isFinite(lo))
+        return {
+          ok: true,
+          findings: [],
+          cursor: null,
+          truncated: false,
+          since_invalid: true,
+          note: "since is not an instant, so no finding is listed"
+        };
       const from = Number.isFinite(Number(after)) && after !== null && after !== "" ? Number(after) : 0;
       const findings = [];
+      const open = /* @__PURE__ */ new Map();
+      const heldNames = (sha2) => {
+        if (!open.has(sha2)) open.set(sha2, new Set(this.#openHolds(sha2).flatMap((h) => parse12(h.names, []))));
+        return open.get(sha2);
+      };
       let last = from, more = false;
       for (const r of this.#rows(`SELECT * FROM fs_notes WHERE result = 'found' AND kind <> 'copy' AND seq > ? ORDER BY seq`, from)) {
+        if (lo !== null && !(msOf(r.scanned_at) >= lo)) continue;
+        if (viewer !== void 0 && this.#held(r.capture_sha, viewer).refused) continue;
         if (findings.length >= lim) {
           more = true;
           break;
         }
         last = r.seq;
-        if (viewer !== void 0 && this.#held(r.capture_sha, viewer).refused) continue;
-        findings.push({ captureSha: r.capture_sha, note_id: r.note_id, tool: r.tool, engine: r.engine, findings: parse12(r.findings, []), at: r.scanned_at });
+        const names = parse12(r.findings, []);
+        findings.push({
+          captureSha: r.capture_sha,
+          note_id: r.note_id,
+          tool: r.tool,
+          engine: r.engine,
+          findings: names,
+          at: r.scanned_at,
+          held: names.some((n) => heldNames(r.capture_sha).has(n))
+        });
       }
-      return { ok: true, findings, cursor: last > from ? String(last) : after ?? null, truncated: more };
+      return { ok: true, findings, cursor: more ? String(last) : null, truncated: more };
     } catch {
-      return { ok: true, findings: [], cursor: after ?? null, truncated: false };
+      return { ok: true, findings: [], cursor: null, truncated: false };
     }
   }
   /** R17: an act of record. The first member's act answers `pending_second`; a second, different member's releases. */
@@ -177553,21 +177715,24 @@ var FileSafety = class _FileSafety {
     );
     return "rendered";
   }
-  /** R12: renders queued files (the scheduler's wake), and makes the safe copies a routine tool queued (R32, R33). */
+  /** R12: renders queued files (the scheduler's wake), and makes the safe copies a routine tool queued (R32, R33); it
+   *  states the copies and the files still queued after it. */
   async renderBatch({ limit = 20 } = {}) {
     try {
+      this.#keep("render", { last: this.now() });
       if (!this.#scannerBinding()) return refusal28("RENDERER_ABSENT", "No safe-view maker is bound beside this copy. Nothing was rendered.");
       const lim = clamp10(limit, 20, SCAN_BATCH_MAX);
       const out = { rendered: 0, failed: 0, none: 0, data: 0 };
       for (const row10 of this.#rows(`SELECT * FROM fs_files WHERE render_state = 'queued' ORDER BY queued_at, capture_sha LIMIT ?`, lim))
         out[await this.#render(row10)]++;
-      const copies = { made: 0, failed: 0 };
+      const copies = { made: 0, failed: 0, queued: 0 };
       const tool = this.#routineTools("cdr")[0];
       if (tool) for (const c of this.#rows(`SELECT * FROM fs_copies WHERE state = 'queued' ORDER BY queued_at LIMIT ?`, lim)) {
         const r = await this.#makeCopy(c.capture_sha, tool);
         if (r === "done" || r === "withheld") copies.made++;
         else copies.failed++;
       }
+      copies.queued = Number(this.#one(`SELECT COUNT(*) AS n FROM fs_copies WHERE state = 'queued'`).n);
       const remaining = Number(this.#one(`SELECT COUNT(*) AS n FROM fs_files WHERE render_state = 'queued'`).n);
       return { ok: true, ...out, copies, remaining };
     } catch {
@@ -177588,6 +177753,7 @@ var FileSafety = class _FileSafety {
     try {
       if (!this.#scannerBinding()) return refusal28("SCANNER_ABSENT", "No scanner is bound beside this copy. No note was written.");
       const now = Number.isFinite(Date.parse(at36)) ? Date.parse(at36) : this.now();
+      this.#keep("scan", { last: now, remaining: 0 });
       const due2 = this.#due(now);
       const batch = due2.slice(0, clamp10(limit, SCAN_BATCH_MAX, SCAN_BATCH_MAX));
       const out = { scanned: 0, found: 0, not_scanned: 0 };
@@ -177617,7 +177783,9 @@ var FileSafety = class _FileSafety {
           }
         }
       }
-      return { ok: true, ...out, remaining: Math.max(0, due2.length - batch.length) };
+      const remaining = Math.max(0, due2.length - batch.length);
+      this.#keep("scan", { last: now, remaining });
+      return { ok: true, ...out, remaining };
     } catch {
       return refusal28("SCANNER_UNREACHABLE", "The scan batch could not be run. No note was written.");
     }
@@ -177669,6 +177837,10 @@ var FileSafety = class _FileSafety {
   static #handlingDigest(handling) {
     return sha256HexSync(canonicalJson(handling));
   }
+  /* R27, R28 (N777): the settings an entry's adapter reads, as `file-scanner` R19 lists them. */
+  static #configOf(d) {
+    return d && Array.isArray(d.config) ? d.config : [];
+  }
   static #toolOut(r) {
     return {
       tool_id: r.tool_id,
@@ -177710,13 +177882,13 @@ var FileSafety = class _FileSafety {
     this.sql.exec(`INSERT INTO fs_tool_usage (tool_id, month, used) VALUES (?, ?, 1)
                    ON CONFLICT(tool_id, month) DO UPDATE SET used = used + 1`, tool.tool_id, monthOf3(this.now()));
   }
-  #event(toolId, event2) {
-    this.sql.exec(`INSERT INTO fs_tool_events (tool_id, event, at) VALUES (?, ?, ?)`, toolId, event2, iso(this.now()));
+  #event(toolId, event2, reason2 = null) {
+    this.sql.exec(`INSERT INTO fs_tool_events (tool_id, event, at, reason) VALUES (?, ?, ?, ?)`, toolId, event2, iso(this.now()), reason2);
   }
   /* R31: a tool that did not honour its private mode is switched off, for the administrators' notice. */
   #switchOff(tool, reason2) {
     this.sql.exec(`UPDATE fs_tools SET state = 'off', off_reason = ? WHERE tool_id = ?`, reason2, tool.tool_id);
-    this.#event(tool.tool_id, "switched_off");
+    this.#event(tool.tool_id, "switched_off", reason2);
   }
   /* R21's tool spec (`file-scanner`), its credentials read from `credentials` for this call only; null when they
      cannot be read. No member and no file is in it (R23). */
@@ -177760,6 +177932,7 @@ var FileSafety = class _FileSafety {
         reach: d.reach,
         template: !!d.template,
         credentials: d.credentials,
+        config: _FileSafety.#configOf(d).map((f17) => ({ name: f17.name, label: f17.label, required: f17.required === true })),
         handling: d.handling,
         handling_digest: _FileSafety.#handlingDigest(d.handling),
         licence_note: d.licence_note ?? null,
@@ -177821,6 +177994,12 @@ var FileSafety = class _FileSafety {
         "file-scanner's R19 refuses the tool's description.",
         { provider_id: id, ...resolved.field ? { field: resolved.field } : {} }
       );
+      const fields = _FileSafety.#configOf(base2);
+      const empty2 = (v) => v === void 0 || v === null || typeof v === "string" && !v.trim() || Array.isArray(v) && !v.length || typeof v === "object" && !Array.isArray(v) && !Object.keys(v).length;
+      const absent = fields.find((f17) => f17.required === true && empty2(cfg[f17.name]));
+      if (absent) return refusal28("CONFIG_MISSING", "A setting the tool's entry names as required was not given.", { provider_id: id, field: absent.name });
+      const stray = Object.keys(cfg).find((k) => !fields.some((f17) => f17.name === k));
+      if (stray !== void 0) return refusal28("CONFIG_UNKNOWN", "A setting was given that the tool's entry does not name.", { provider_id: id, field: stray });
       const d = resolved.descriptor;
       const digest2 = _FileSafety.#handlingDigest(d.handling);
       if (handlingDigest !== digest2) return refusal28("HANDLING_NOT_SHOWN", "handlingDigest is not the tool's current handling_digest.", { provider_id: id, handling_digest: digest2 });
@@ -177899,6 +178078,12 @@ var FileSafety = class _FileSafety {
         tool.tool_id
       );
       this.#event(tool.tool_id, passed ? "test_passed" : "test_failed");
+      this.sql.exec(`DELETE FROM fs_wakes WHERE key = ?`, `reputation:${tool.tool_id}`);
+      if (passed) {
+        const kinds3 = parse12(tool.kinds, []);
+        if (kinds3.includes("log_sink")) this.#arm("forward", () => this.forwardWake(this.now()));
+        if (kinds3.includes("url_reputation")) this.#arm("reputation", () => this.reputationWake(this.now()));
+      }
       return { ok: true, tool_id: tool.tool_id, state: passed ? "on" : "test_failed", passed, detail: detail ?? null, tested_at: at36 };
     } catch {
       return refusal28("SCANNER_UNREACHABLE", "The test could not be run. Nothing was changed.");
@@ -177920,19 +178105,25 @@ var FileSafety = class _FileSafety {
       return refusal28("NO_SUCH_TOOL", "The tool could not be removed. Nothing was changed.", { tool_id: toolId ?? null });
     }
   }
-  /** R31: each add, test, removal and switch, for the administrators' notice; no file is named. */
+  /** R31: each add, test, removal and switch, for the administrators' notice; no file is named. `reason` is a switch
+   *  off's `off_reason`, else null; `cursor` the last event answered when more follow, else null. */
   securityToolEvents({ after = null, limit = LIST.default, viewer = void 0 } = {}) {
     const bar = this.#adminBar(viewer, "reading the security tools' events");
     if (bar) return bar;
     const from = Number.isFinite(Number(after)) && after !== null && after !== "" ? Number(after) : 0;
-    const lim = clamp10(limit, LIST.default, LIST.max);
+    const lim = listLimit(limit);
     const rows3 = this.#rows(`SELECT * FROM fs_tool_events WHERE seq > ? ORDER BY seq LIMIT ?`, from, lim + 1);
-    const page2 = rows3.slice(0, lim);
+    const page2 = rows3.slice(0, lim), more = rows3.length > lim;
     return {
       ok: true,
-      events: page2.map((e2) => ({ tool_id: e2.tool_id, event: e2.event, at: e2.at })),
-      cursor: page2.length ? String(page2[page2.length - 1].seq) : after ?? null,
-      truncated: rows3.length > lim
+      events: page2.map((e2) => ({
+        tool_id: e2.tool_id,
+        event: e2.event,
+        at: e2.at,
+        reason: e2.event === "switched_off" ? e2.reason ?? null : null
+      })),
+      cursor: more ? String(page2[page2.length - 1].seq) : null,
+      truncated: more
     };
   }
   /* R4, R14: one outside scan of one file by one tool: a note per engine's verdict; `PRIVATE_MODE_NOT_HONOURED` switches
@@ -177986,6 +178177,7 @@ var FileSafety = class _FileSafety {
         this.#home(sha2),
         iso(this.now())
       );
+      this.#arm("deeper", () => this.deeperWake(this.now()));
       return { ok: true, captureSha: sha2, state: "queued", check_id: checkId };
     } catch {
       return refusal28("NO_OUTSIDE_TOOL", "The deeper check could not be asked for.", { captureSha: captureSha ?? null });
@@ -178155,25 +178347,41 @@ var FileSafety = class _FileSafety {
     this.#stampHome(sha2);
     return { check_id: row10.check_id, captureSha: sha2, result: result2, note_id: noteId, releases };
   }
-  /** R36: the scheduler's wake while checks are queued or running: queued checks start, running sandboxes are asked. */
+  /** R36: the scheduler's wake while checks are queued or running: queued checks start, running sandboxes are asked.
+   *  Checks that cannot be read answer DEEPER_CHECKS_UNREADABLE, starting and asking nothing. */
   async deeperBatch({ limit = 20 } = {}) {
+    const lim = clamp10(limit, 20, SCAN_BATCH_MAX);
+    let queued, running;
     try {
-      const lim = clamp10(limit, 20, SCAN_BATCH_MAX);
-      const out = { started: 0, polled: 0, done: [] };
-      for (const q10 of this.#rows(`SELECT * FROM fs_deeper WHERE state = 'queued' ORDER BY requested_at LIMIT ?`, lim)) {
+      this.#keep("deeper", { last: this.now(), unreadable: false });
+      queued = this.#rows(`SELECT * FROM fs_deeper WHERE state = 'queued' ORDER BY requested_at LIMIT ?`, lim);
+      running = this.#rows(`SELECT * FROM fs_deeper WHERE state = 'running' ORDER BY requested_at LIMIT ?`, lim);
+      for (const r of [...queued, ...running]) if (!Array.isArray(JSON.parse(r.pending)) || !Array.isArray(JSON.parse(r.checks))) throw new Error("unreadable");
+    } catch {
+      this.#keep("deeper", { last: this.now(), unreadable: true });
+      return refusal28("DEEPER_CHECKS_UNREADABLE", "The deeper checks could not be read. None was started or asked about.");
+    }
+    const out = { started: 0, polled: 0, done: [] };
+    try {
+      for (const q10 of queued) {
         const row10 = await this.#startDeeper(q10);
         out.started++;
         if (!parse12(row10.pending, []).length) out.done.push(this.#finishDeeper(row10));
       }
-      for (const q10 of this.#rows(`SELECT * FROM fs_deeper WHERE state = 'running' ORDER BY requested_at LIMIT ?`, lim)) {
+      for (const q10 of running) {
         const { row: row10, polled } = await this.#pollDeeper(q10);
         out.polled += polled;
         if (!parse12(row10.pending, []).length) out.done.push(this.#finishDeeper(row10));
       }
-      const left2 = (s) => Number(this.#one(`SELECT COUNT(*) AS n FROM fs_deeper WHERE state = ?`, s).n);
+      const left2 = (st) => Number(this.#one(`SELECT COUNT(*) AS n FROM fs_deeper WHERE state = ?`, st).n);
       return { ok: true, ...out, running: left2("running"), queued: left2("queued") };
     } catch {
-      return { ok: true, started: 0, polled: 0, done: [], running: null, queued: null };
+      this.#keep("deeper", { last: this.now(), unreadable: true });
+      return refusal28(
+        "DEEPER_CHECKS_UNREADABLE",
+        "The deeper checks could not be read after some were started; the rest wait for the next round.",
+        { started: out.started, polled: out.polled }
+      );
     }
   }
   /* ===== the safe copy (R33) ===== */
@@ -178211,7 +178419,7 @@ var FileSafety = class _FileSafety {
     });
     const type = r.headers.get("x-output-type") || r.headers.get("content-type") || "application/octet-stream";
     const removed = parse12(r.headers.get("x-removed"), []);
-    const s = await this.#scanner("/scan", { store: this.store, targets: [{ capture_sha: copySha, parts: null }], area: "derived" });
+    const s = await this.#scanner("/scan", { store: this.store, targets: [{ capture_sha: copySha, parts: null, area: "derived" }] });
     const v = s.body && s.body.ok === true && Array.isArray(s.body.verdicts) && s.body.verdicts[0] ? s.body.verdicts[0] : {
       tool: "clamav",
       engine: "clamav",
@@ -178299,22 +178507,34 @@ var FileSafety = class _FileSafety {
       return null;
     }
   }
+  /* R35 (T37): the period the scheduler's wake forwards: from the end of the last period forwarded with `ok` (never more
+     than a day back; at the first, the previous whole UTC hour's start) to the current whole UTC hour's start. */
+  #ownPeriod() {
+    const to = Math.floor(this.now() / HOUR) * HOUR;
+    const kept = this.#kept("forward");
+    const end2 = kept && Number.isFinite(kept.end) ? kept.end : to - HOUR;
+    return { from: Math.max(end2, to - 24 * HOUR), to };
+  }
   /** R35: one counts record for the period, keys exactly LOG_COUNT_KINDS (a figure that could not be read is absent,
-   *  never zero), sent to every `on` log tool. */
+   *  never zero), sent to every `on` log tool. With neither `from` nor `to` (the scheduler's wake) the period is this
+   *  module's own, its end kept once answered `ok`, and an empty period answers `record: null`, so none is sent twice. */
   async forwardSecurityCounts({ from = null, to = null } = {}) {
     try {
-      const f17 = Date.parse(from), t2 = Date.parse(to);
+      const own6 = (from === null || from === void 0) && (to === null || to === void 0);
+      const period = own6 ? this.#ownPeriod() : null;
+      if (period && !(period.from < period.to)) return { ok: true, sent: [], failed: [], record: null };
+      const f17 = period ? period.from : Date.parse(from), t2 = period ? period.to : Date.parse(to);
       if (!Number.isFinite(f17) || !Number.isFinite(t2) || !(f17 < t2)) return refusal28("FORWARD_PERIOD_INVALID", "from and to are instants, from before to. Nothing was sent.");
       const counts = {};
       try {
-        const own6 = Object.fromEntries(FILE_SAFETY_COUNT_KINDS.map((k) => [k, 0]));
+        const own7 = Object.fromEntries(FILE_SAFETY_COUNT_KINDS.map((k) => [k, 0]));
         for (const r of this.#rows(
           `SELECT kind, SUM(n) AS n FROM fs_counts WHERE hour >= ? AND hour < ? GROUP BY kind`,
           Math.ceil(f17 / 36e5),
           Math.ceil(t2 / 36e5)
         ))
-          if (r.kind in own6) own6[r.kind] = Number(r.n);
-        Object.assign(counts, own6);
+          if (r.kind in own7) own7[r.kind] = Number(r.n);
+        Object.assign(counts, own7);
       } catch {
       }
       try {
@@ -178336,9 +178556,153 @@ var FileSafety = class _FileSafety {
         if (r.body && r.body.ok === true) sent.push(tool.tool_id);
         else failed3.push({ tool_id: tool.tool_id, code: r.absent ? "SCANNER_ABSENT" : r.unreachable ? "SCANNER_UNREACHABLE" : r.body && r.body.code || "SERVICE_UNREACHABLE" });
       }
+      if (own6) this.#keep("forward", { end: t2 });
       return { ok: true, sent, failed: failed3, record };
     } catch {
       return refusal28("FORWARD_PERIOD_INVALID", "The counts could not be built. Nothing was sent.");
+    }
+  }
+  /** R41: each `on` reputation tool's local list refreshed through `file-scanner` R26, its spec and credentials read for
+   *  that call only; a tool with no local list is skipped until it is tested again (R29). An in-plane call reached by
+   *  no route. Writes no note and names no file, address or member (R23); never throws. */
+  async refreshReputationLists({ at: at36 = null } = {}) {
+    try {
+      if (!this.#scannerBinding()) return refusal28("SCANNER_ABSENT", "No scanner is bound beside this copy, so no list was refreshed.");
+      const when = Number.isFinite(msOf(at36)) ? msOf(at36) : this.now();
+      const refreshed = [], failed3 = [], skipped = [];
+      for (const tool of this.#onTools("url_reputation")) {
+        const key = `reputation:${tool.tool_id}`, kept = this.#kept(key) || {};
+        if (kept.no_local_list) {
+          skipped.push(tool.tool_id);
+          continue;
+        }
+        const spec = await this.#spec(tool);
+        if (!spec) {
+          failed3.push({ tool_id: tool.tool_id, code: "CREDENTIALS_UNAVAILABLE" });
+          this.#keep(key, { ...kept, tried: when });
+          continue;
+        }
+        const r = await this.#scanner("/provider/refresh", { tool: spec });
+        const b = r.body || null;
+        if (b && b.ok === true) {
+          refreshed.push({ tool_id: tool.tool_id, list_version: b.list_version ?? null, fetched_at: b.fetched_at ?? null });
+          this.#keep(key, { ok_at: when, tried: when });
+        } else if (b && b.code === "NO_LOCAL_LIST") {
+          skipped.push(tool.tool_id);
+          this.#keep(key, { ...kept, no_local_list: true });
+        } else {
+          failed3.push({ tool_id: tool.tool_id, code: r.unreachable ? "SCANNER_UNREACHABLE" : b && (b.code || b.error) || "SERVICE_UNREACHABLE" });
+          this.#keep(key, { ...kept, tried: when });
+        }
+      }
+      return { ok: true, refreshed, failed: failed3, skipped };
+    } catch {
+      return { ok: true, refreshed: [], failed: [], skipped: [] };
+    }
+  }
+  /* ===== its cadences (R39): each batch's due and wake, from its own kept instants; each writes nothing ===== */
+  /* The batch's answer, remembered for R40's "sooner than its last answer". */
+  #answer(batch, at36) {
+    this.#answered.set(batch, at36);
+    return at36;
+  }
+  /** R39: scanBatch's instant. Null with no scanner bound or no file held; `now` while the last batch left files; else
+   *  the earliest a file falls due (R4), a file already due at the last batch (sent and not resolved, or the batch
+   *  refused) no sooner than a poll after it, so none is retried at every wake. */
+  scanWake(now) {
+    try {
+      const n = msOf(now);
+      if (!Number.isFinite(n) || !this.#scannerBinding()) return this.#answer("scan", null);
+      const kept = this.#kept("scan");
+      if (kept && Number(kept.remaining) > 0) return this.#answer("scan", n);
+      const due2 = this.#due(Infinity);
+      if (!due2.length) return this.#answer("scan", null);
+      const lastRun = kept && Number.isFinite(kept.last) ? kept.last : null;
+      const at36 = Math.min(...due2.map((d) => {
+        const since = Number.isFinite(d.since) ? d.since : n;
+        return lastRun !== null && since <= lastRun ? Math.max(since, lastRun + FILE_SAFETY_POLL_MS) : since;
+      }));
+      return this.#answer("scan", Math.max(n, at36));
+    } catch {
+      return null;
+    }
+  }
+  /** R39: renderBatch's instant. Null while no file's view and no safe copy is queued; else the later of `now` and the
+   *  last batch plus FILE_SAFETY_POLL_MS. */
+  renderWake(now) {
+    try {
+      const n = msOf(now);
+      if (!Number.isFinite(n)) return this.#answer("render", null);
+      const views = this.#one(`SELECT 1 AS x FROM fs_files WHERE render_state = 'queued' LIMIT 1`);
+      const copies = this.#one(`SELECT 1 AS x FROM fs_copies WHERE state = 'queued' LIMIT 1`);
+      if (!views && !copies) return this.#answer("render", null);
+      const kept = this.#kept("render");
+      return this.#answer("render", kept && Number.isFinite(kept.last) ? Math.max(n, kept.last + FILE_SAFETY_POLL_MS) : n);
+    } catch {
+      return null;
+    }
+  }
+  /** R39: deeperBatch's instant. Null while no check is queued or running; else the earliest of the last batch plus
+   *  FILE_SAFETY_POLL_MS for a queued check and each running sandbox's next poll, never before `now`; while the checks
+   *  cannot be read, the last batch plus FILE_SAFETY_POLL_MS. */
+  deeperWake(now) {
+    const n = msOf(now);
+    if (!Number.isFinite(n)) return this.#answer("deeper", null);
+    const kept = this.#kept("deeper");
+    const poll = kept && Number.isFinite(kept.last) ? kept.last + FILE_SAFETY_POLL_MS : n;
+    try {
+      if (kept && kept.unreadable) return this.#answer("deeper", Math.max(n, poll));
+      const rows3 = this.#rows(`SELECT state, pending FROM fs_deeper WHERE state IN ('queued', 'running')`);
+      if (!rows3.length) return this.#answer("deeper", null);
+      const instants = [];
+      for (const r of rows3) {
+        if (r.state === "queued") {
+          instants.push(poll);
+          continue;
+        }
+        const pending = JSON.parse(r.pending);
+        if (!Array.isArray(pending) || !pending.length) {
+          instants.push(poll);
+          continue;
+        }
+        for (const p3 of pending) instants.push(Number.isFinite(Number(p3.next_at)) ? Number(p3.next_at) : poll);
+      }
+      return this.#answer("deeper", Math.max(n, Math.min(...instants)));
+    } catch {
+      return this.#answer("deeper", Math.max(n, poll));
+    }
+  }
+  /** R39: forwardSecurityCounts' instant. Null while no log tool is on; else the start of the first whole UTC hour after
+   *  the end of the last period forwarded with `ok` (at the first, the current hour's start). */
+  forwardWake(now) {
+    try {
+      const n = msOf(now);
+      if (!Number.isFinite(n) || !this.#onTools("log_sink").length) return this.#answer("forward", null);
+      const kept = this.#kept("forward");
+      if (!kept || !Number.isFinite(kept.end)) return this.#answer("forward", Math.floor(n / HOUR) * HOUR);
+      return this.#answer("forward", Math.floor(kept.end / HOUR) * HOUR + HOUR);
+    } catch {
+      return null;
+    }
+  }
+  /** R39: refreshReputationLists' instant. Null while no reputation tool with a local list is on; else, for each, its
+   *  last refresh that answered ok plus REPUTATION_REFRESH_MS, or `now` when none has (a tool whose last try failed no
+   *  sooner than a poll after that try), the earliest. */
+  reputationWake(now) {
+    try {
+      const n = msOf(now);
+      if (!Number.isFinite(n)) return this.#answer("reputation", null);
+      const instants = [];
+      for (const tool of this.#onTools("url_reputation")) {
+        const kept = this.#kept(`reputation:${tool.tool_id}`) || {};
+        if (kept.no_local_list) continue;
+        let at36 = Number.isFinite(kept.ok_at) ? kept.ok_at + REPUTATION_REFRESH_MS : n;
+        if (Number.isFinite(kept.tried) && kept.tried !== kept.ok_at) at36 = Math.max(at36, kept.tried + FILE_SAFETY_POLL_MS);
+        instants.push(at36);
+      }
+      return this.#answer("reputation", instants.length ? Math.max(n, Math.min(...instants)) : null);
+    } catch {
+      return null;
     }
   }
 };
@@ -178397,7 +178761,12 @@ function fileSafetyOps(fs, url, body, env) {
     renderbatch: () => fs.renderBatch({ limit: b.limit ?? q10("limit") ?? void 0 }),
     deepercheck: () => fs.requestDeeperCheck({ captureSha: sha2(), viewer: viewer() }),
     deeperbatch: () => fs.deeperBatch({ limit: b.limit ?? q10("limit") ?? void 0 }),
-    scanfindings: () => fs.scanFindings({ after: q10("after") ?? b.after ?? null, limit: q10("limit") ?? b.limit ?? void 0, viewer: viewer() }),
+    scanfindings: () => fs.scanFindings({
+      after: q10("after") ?? b.after ?? null,
+      since: q10("since") ?? b.since ?? null,
+      limit: q10("limit") ?? b.limit ?? void 0,
+      viewer: viewer()
+    }),
     releasescanhold: () => fs.releaseScanHold({ captureSha: sha2(), by: q10("by"), reason: b.reason ?? null }),
     findingkind: () => ({ ok: true, ...findingKind(q10("name") ?? b.name ?? null) }),
     securitytoolcatalogue: () => fs.securityToolCatalogue({ viewer: viewer() }),
@@ -206254,7 +206623,7 @@ var DAILY = Object.freeze(["duty-transitions", "interest-checks", "money-detecto
 var DETECTORS_BUDGET_MS = 1e3;
 var FILE_SAFETY_CONSUMERS = Object.freeze(["file-scan", "file-render", "file-deeper", "file-forward"]);
 var FILE_SCAN_EVERY_MS = 864e5;
-var FILE_SAFETY_POLL_MS = 3e5;
+var FILE_SAFETY_POLL_MS2 = 3e5;
 var ANSWER_FIELDS2 = /* @__PURE__ */ new Set([
   "swept",
   "drained",
@@ -206275,7 +206644,7 @@ var DAY_MS4 = 864e5;
 var HOUR_MS2 = 36e5;
 var message = (e2) => String(e2 && e2.message || e2).slice(0, 500);
 var instantText2 = (ms5) => new Date(Math.floor(ms5 / 1e3) * 1e3).toISOString().replace(/\.\d{3}Z$/, "Z");
-var msOf = (v) => typeof v === "number" && Number.isFinite(v) ? v : typeof v === "string" && Number.isFinite(Date.parse(v)) ? Date.parse(v) : null;
+var msOf2 = (v) => typeof v === "number" && Number.isFinite(v) ? v : typeof v === "string" && Number.isFinite(Date.parse(v)) ? Date.parse(v) : null;
 var nextDate = (date) => new Date(Date.parse(`${date}T00:00:00Z`) + DAY_MS4).toISOString().slice(0, 10);
 function localDayOf3(ms5, zone) {
   if (typeof zone === "string" && zone) {
@@ -206475,7 +206844,7 @@ var Scheduler = class {
       due: (now) => now,
       wake: (now) => {
         const s = st(n);
-        return !kept(s.last) ? now : s.more ? s.last + FILE_SAFETY_POLL_MS : null;
+        return !kept(s.last) ? now : s.more ? s.last + FILE_SAFETY_POLL_MS2 : null;
       },
       tick: async (now) => {
         const was = st(n).more === true;
@@ -206622,7 +206991,7 @@ var Scheduler = class {
     };
     if (this.#owners.publication) {
       const wake = () => {
-        const w = msOf(o("publication").publishWake());
+        const w = msOf2(o("publication").publishWake());
         return w !== null && this.#publishHeld !== null && w <= this.#publishHeld ? null : w;
       };
       c["scheduled-publish"] = {
@@ -206636,7 +207005,7 @@ var Scheduler = class {
             this.#publishTicking = false;
             let w = null;
             try {
-              w = msOf(o("publication").publishWake());
+              w = msOf2(o("publication").publishWake());
             } catch {
               w = null;
             }
@@ -206659,12 +207028,12 @@ var Scheduler = class {
         tick: async (now) => ({ workingonattest: await o("networkNotices").attestTick(now) })
       };
     }
-    const dueOf = (v, now) => v === true ? now : msOf(v);
+    const dueOf = (v, now) => v === true ? now : msOf2(v);
     const counted = (v, now) => typeof v === "number" && v > 0 ? now : null;
     if (this.#owners.following) c["follow"] = {
       /* following R12, R13: batch-bounded, given the rank (R10) */
       due: (now) => dueOf(o("following").followDue(now), now),
-      wake: (now) => msOf(o("following").followWake(now)),
+      wake: (now) => msOf2(o("following").followWake(now)),
       tick: async (now, rank7) => ({ follow: await o("following").followTick(now, rank7) })
     };
     if (this.#owners.duties) c["duty-transitions"] = this.#dailyConsumer(
@@ -206691,12 +207060,12 @@ var Scheduler = class {
     );
     if (this.#owners.answers) c["standing-questions"] = {
       due: (now) => counted(o("answers").standingDue(instantText2(now)), now),
-      wake: (now) => counted(o("answers").standingDue(instantText2(now)), now) !== null ? now : msOf(o("answers").standingWake(instantText2(now))),
+      wake: (now) => counted(o("answers").standingDue(instantText2(now)), now) !== null ? now : msOf2(o("answers").standingWake(instantText2(now))),
       tick: async (now) => ({ standingquestions: await o("answers").standingTick(instantText2(now)) })
     };
     if (this.#owners.inquiry) c["dated-waits"] = {
       due: (now) => o("inquiry").datedWaitsDue(instantText2(now)) === true ? now : null,
-      wake: (now) => o("inquiry").datedWaitsDue(instantText2(now)) === true ? now : msOf(o("inquiry").datedWaitsWake(instantText2(now))),
+      wake: (now) => o("inquiry").datedWaitsDue(instantText2(now)) === true ? now : msOf2(o("inquiry").datedWaitsWake(instantText2(now))),
       tick: async (now) => ({ datedwaits: await o("inquiry").datedWaitsTick(instantText2(now)) })
     };
     if (this.#owners.fileSafety) Object.assign(c, this.#fileSafety());
@@ -213867,7 +214236,7 @@ var hex82 = () => {
   crypto.getRandomValues(b);
   return [...b].map((x) => x.toString(16).padStart(2, "0")).join("");
 };
-var msOf2 = (v) => typeof v !== "string" || !v ? NaN : /^\d{4}-\d{2}-\d{2}$/.test(v) ? Date.parse(`${v}T00:00:00Z`) : Date.parse(v);
+var msOf3 = (v) => typeof v !== "string" || !v ? NaN : /^\d{4}-\d{2}-\d{2}$/.test(v) ? Date.parse(`${v}T00:00:00Z`) : Date.parse(v);
 var iso5 = (ms5) => stampInstant("second", ms5);
 var ok = (r) => r && r.ok !== false;
 var ActionPlans = class {
@@ -213936,7 +214305,7 @@ var ActionPlans = class {
     return f17 && typeof f17.text === "string" ? f17.text : null;
   }
   #nowMs() {
-    return msOf2(this.now());
+    return msOf3(this.now());
   }
   /* ===================================================================== *
    * READING THE PLAN'S ROWS (R6, R22: absent and unseen are one answer)
@@ -214975,7 +215344,7 @@ var ActionPlans = class {
       const held2 = this.duties.readDuty({ dutyId: duty, viewer: dutyViewer(viewer) });
       if (!ok(held2) || held2.found !== true) return noSuchDuty(duty, { index: i });
       if (occurrence === void 0) continue;
-      const r = this.duties.occurrencesOf({ dutyId: duty, asOf, to: dayOf7(msOf2(asOf) + 731 * DAY_MS6), viewer: dutyViewer(viewer) });
+      const r = this.duties.occurrencesOf({ dutyId: duty, asOf, to: dayOf7(msOf3(asOf) + 731 * DAY_MS6), viewer: dutyViewer(viewer) });
       if (!ok(r)) return r.code === "NO_SUCH_DUTY" ? noSuchDuty(duty, { index: i }) : r;
       const keys = new Set((r.occurrences || []).map((x) => x.key));
       for (const t2 of (this.duties.transitionsOf({ dutyId: duty, viewer: dutyViewer(viewer) }) || {}).transitions || []) keys.add(t2.occurrence_key);
@@ -215032,15 +215401,15 @@ var ActionPlans = class {
     const list6 = Array.isArray(r.occurrences) ? r.occurrences : [];
     const occ = occurrence ? list6.find((x) => x.key === occurrence) : list6.filter((x) => dayIn2(x.trigger && x.trigger.date) !== null && dayIn2(x.trigger.date) >= anchor.slice(0, 10)).sort((a, b) => dayIn2(a.trigger.date) < dayIn2(b.trigger.date) ? -1 : dayIn2(a.trigger.date) > dayIn2(b.trigger.date) ? 1 : 0)[0];
     if (!occ) return none(occurrence ? "that occurrence of the obligation is not derived as of this read" : "no occurrence of the obligation has been triggered since the phase began to wait");
-    const recorded = ((this.duties.transitionsOf({ dutyId: duty, occurrenceKey: occ.key, viewer: dutyViewer(viewer) }) || {}).transitions || []).filter((t2) => typeof t2.at === "string" && msOf2(t2.at) <= nowMs);
+    const recorded = ((this.duties.transitionsOf({ dutyId: duty, occurrenceKey: occ.key, viewer: dutyViewer(viewer) }) || {}).transitions || []).filter((t2) => typeof t2.at === "string" && msOf3(t2.at) <= nowMs);
     const last = recorded.at(-1) || null;
     const state = last ? last.state : occ.state;
     const holds2 = state === s.state;
     let since = null;
     if (holds2) {
-      let t2 = last ? msOf2(last.as_of) : derivedSince(occ, nowMs);
+      let t2 = last ? msOf3(last.as_of) : derivedSince(occ, nowMs);
       if (!Number.isFinite(t2) || t2 > nowMs) t2 = nowMs;
-      since = iso5(Math.max(t2, msOf2(anchor)));
+      since = iso5(Math.max(t2, msOf3(anchor)));
     }
     return {
       ...base2,
@@ -215105,7 +215474,7 @@ var ActionPlans = class {
     const { judged: held2, times } = this.#timed(o.p, sc, viewer);
     const t2 = times.get(ph.id);
     const nowMs = this.#nowMs();
-    if (!t2.due || msOf2(t2.due) > nowMs)
+    if (!t2.due || msOf3(t2.due) > nowMs)
       return refusal27("CHECKPOINT_NOT_DUE", t2.started ? `the checkpoint is due ${t2.due}. Nothing was written.` : "the phase has not started, so its checkpoint is not due. Nothing was written.", { due: t2.due });
     if (held2.has(ph.id))
       return refusal27("CHECKPOINT_JUDGED", `that checkpoint was judged ${held2.get(ph.id).judged} by ${held2.get(ph.id).author}. Nothing was written.`, { judged: held2.get(ph.id).judged });
@@ -215500,7 +215869,7 @@ var ActionPlans = class {
     const byId = new Map(options.map((o) => [o.id, o]));
     for (const sc of scenarios) {
       for (const ph of sc.phases) {
-        const start = ph.earliest ? dayOf7(msOf2(ph.earliest)) : null;
+        const start = ph.earliest ? dayOf7(msOf3(ph.earliest)) : null;
         for (const oid of ph.options) {
           const o = byId.get(oid);
           if (o && start) {
@@ -215596,7 +215965,7 @@ var ActionPlans = class {
         const { judged, times } = this.#timed(p3, sc, null, now);
         for (const ph of sc.phases) {
           const t2 = times.get(ph.id);
-          if (!t2.due || msOf2(t2.due) > now || judged.has(ph.id)) continue;
+          if (!t2.due || msOf3(t2.due) > now || judged.has(ph.id)) continue;
           items.push({
             plan: p3.id,
             project: p3.project,
@@ -215605,7 +215974,7 @@ var ActionPlans = class {
             phase: ph.id,
             set_by: sc.author,
             due: t2.due,
-            days_since_due: Math.floor((now - msOf2(t2.due)) / DAY_MS6)
+            days_since_due: Math.floor((now - msOf3(t2.due)) / DAY_MS6)
           });
         }
       }
