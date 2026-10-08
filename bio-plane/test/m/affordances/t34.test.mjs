@@ -149,6 +149,9 @@ test("R21 R4 (DEC-149): the undetermined ground's sentence, served as vocabulari
   const NAMES = /\bthe plane\b|\bthis plane\b|\bthis instance\b|\bthe instance\b|\bthis copy\b|\bserver\b(?!-side)/i;
   assert.equal(NAMES.exec(served), null);
   assert.ok(NAMES.test(served.replace("no refusal establishes", "no refusal in the plane establishes")), "negative control");
+  /* R48's texts name no plane, instance or server either; their "this copy" alone is the design's (a document's copy) */
+  const NAMES_BUT_COPY = /\bthe plane\b|\bthis plane\b|\bthis instance\b|\bthe instance\b|\bserver\b(?!-side)/i;
+  assert.equal(NAMES_BUT_COPY.exec(JSON.stringify(act_help)), null);
 });
 
 /* ---- R44: the no-target answer's writing_help_refused (K1861 (1)) ----------------------------------------------------- */
