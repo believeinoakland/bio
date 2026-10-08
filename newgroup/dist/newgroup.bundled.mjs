@@ -1977,6 +1977,24 @@ var test_port_ellery_default = {
       status: "researched",
       basis: "TEST"
     }
+  ],
+  /* R73: official names, never translated as ordinary words (DEC-157 (6)). */
+  local_names: [
+    {
+      name: "Town Clerk",
+      kind: "office",
+      explanations: [
+        { locale: "en", text: "The town office that keeps the Selectboard's records and receives records requests.", basis: "TEST" },
+        { locale: "es", text: "La oficina municipal que guarda los registros de la Junta y recibe las solicitudes de registros.", basis: "TEST" }
+      ],
+      translations: [{ locale: "es", text: "Secretar\xEDa Municipal", source: "https://www.port-ellery.example/es/secretaria", basis: "TEST" }],
+      basis: "TEST"
+    },
+    { name: "Port Ellery Bylaws", kind: "law", explanations: [
+      { locale: "en", text: "The town's own local laws, numbered by section.", basis: "TEST" }
+    ], basis: "TEST" },
+    { name: "Harbour Renters' Fund", kind: "program", basis: "TEST" },
+    { name: "Marlow County", kind: "place", basis: "TEST" }
   ]
 };
 
@@ -2593,6 +2611,15 @@ var PROPOSAL_STATES = Object.freeze({
     machine_proposed: "a machine credential proposed this law relation, court link or treatment. That is machine work, labelled as machine work: it can propose one and it can never record one. It is not one the record holds until a member records it themselves",
     member_proposed: "a member proposed this law relation, court link or treatment. It is a proposal and not one the record holds until a member records it themselves, and the record holds who proposed it",
     unstated: "the record does not say who proposed this law relation, court link or treatment, and it is not one the record holds until a member records it themselves"
+  }),
+  /* N669 (K1793, K1804; T37, R50; DEC-127 (2), (5), DEC-157 (2)–(4)): a translation of an interface word drafted for a
+     group's language (skills' draft run; instance-setup's workspace) is a draft, shown to members as "Draft", and not the
+     group's wording until a member granted that language adopts it; a machine can draft one and never adopt or confirm
+     one (DEC-157 (4)'s second check is a member's or an administrator's). */
+  translation: Object.freeze({
+    machine_proposed: `a machine credential drafted this translation of an interface word. That is machine work, labelled as machine work: it can draft a translation and it can never adopt or confirm one. It is a draft, shown to members as "Draft", and not the group's wording until a member granted that language adopts it`,
+    member_proposed: `a member proposed this translation of an interface word. It is a draft, shown to members as "Draft", and not the group's wording until a member granted that language adopts it, and the record holds who proposed it`,
+    unstated: `the record does not say who drafted this translation of an interface word. It is a draft, shown to members as "Draft", and not the group's wording until a member granted that language adopts it`
   })
 });
 
@@ -2686,7 +2713,9 @@ var SECTIONS = Object.freeze([
   "identifier_schemes",
   "classification_schemes",
   "lawful_demands",
-  "recurrences"
+  "recurrences",
+  /* T37 (R70) */
+  "local_names"
 ]);
 var SPACES = Object.freeze([
   "enactment",
@@ -2785,6 +2814,7 @@ var FORUM_KINDS = Object.freeze(["court", "commission", "grand_jury", "auditor",
 var CLASSIFICATION_KINDS = Object.freeze(["fund", "organisation", "account", "object", "program", "project", "function"]);
 var DEMAND_COVERS = Object.freeze(["home_address", "phone", "other"]);
 var RRULE_PARTS = Object.freeze(["FREQ", "INTERVAL", "BYDAY", "BYMONTHDAY", "BYSETPOS", "UNTIL"]);
+var LOCAL_NAME_KINDS = Object.freeze(["office", "law", "program", "place"]);
 var TIERS = Object.freeze([1, 2, 3]);
 var CONTACT_HOW = Object.freeze(["web", "email", "phone", "mail"]);
 var TEMPLATE_FIELDS = Object.freeze([
