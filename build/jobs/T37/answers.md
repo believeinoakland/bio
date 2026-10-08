@@ -23,3 +23,7 @@
 - Checks (civicos-process): `format: 136 modules, 135 requirements files; 0 failures`; `architecture: 17 product files, 55 relative imports (0 naming no tracked file, not judged); 0 failures`; `coverage: 1 modules, 29 of 29 live requirement ids named by a test; 0 failures`; `ownership: 7 files changed by answers between tranche/T37 and HEAD; 0 failures`.
 
 Size (session_01XE1mkDC7sPSFEGTbGNanhw): test runs 13, module lines 1581
+
+## J1 · COMPLETE
+
+T37-15 applied (record: Completion). R19: heldBack reads credentials.aiKeptAway() after the copy's switch and before accountFor; kept_away carries the refusal's code and translation only; no account read, no grant, no ceiling ask, no model call; finds told once, answer null; an AI_KEPT_AWAY from accountFor or R32 (race) is kept_away, never no_account; an unreachable or broken credentials is kept_away, fail closed, code and translation null (my reading, recorded). R1: draftAdmits(op, kind) admits nothing for a translation draft or any kind but own_words. answers 46/46; users unchanged (scheduler 5 and op-declarations 3 inherited, identical with and without my change); format, architecture, coverage (29/29), ownership (7 files) 0 failures. R1/R19 not-yet-met marks are BOB's to clear. Nothing found in other modules.
