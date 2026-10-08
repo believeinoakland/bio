@@ -56,3 +56,7 @@ The masking N808 names is real in the message and the registry: `canonicalJson` 
 - `checks/ownership.mjs bio promotion tranche/T39`: 5 files, 0 failures.
 
 Size (session_01D4tF1JLHNsN3tZR6mHerE1): test runs 16, module lines 3578
+
+## J2 · COMPLETE
+
+T39-3 complete on `job/T39/promotion` (record: Completion). R31: C-18.8 verifies over the released bytes (first write-order entry holding the release; bytes hashed as held; unreadable → error), Latin-1 never masked per K2358. R32: C-4.2 never throws on inherited keys. Stamp 1.66.0: ROW_CENSUS 1551 rows, `51c6423a…` (5 new, 1 re-keyed, 1 retired, 2 changed, all T38-recorded; L1's doc-clean/image-cover tables carry no `check`, so no rows). row-census 8/0; promotion+d526 124/1 (rule 3 item 6's MODULE_ORDER red); architecture 0, coverage 56/56, ownership 0; format 1 = your `modules.json` swap to `row-census-1.66.0.jsonl`. If membership's merge moves a row, send a CHANGE and I re-pin in place. program.mjs and the plane bundle are stale (regenerate at L2's close).
