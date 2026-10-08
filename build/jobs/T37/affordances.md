@@ -1,6 +1,6 @@
 # affordances (T37)
 
-**Status** · session_0187SVNmLrMtUDuMD6BfqRLx · depth 2 · COMPLETE · handled B3
+**Status** · session_0187SVNmLrMtUDuMD6BfqRLx · depth 2 · COMPLETE · handled B4
 
 ## J1 · REPORT
 
@@ -89,3 +89,24 @@ Size (session_0187SVNmLrMtUDuMD6BfqRLx): test runs 25, module lines 2280
 ## J3 · COMPLETE
 
 B2 and B3 applied on the merged tranche (record: 'Completion after B2 and B3'). aikeepaway R19 is green (red 14 cleared). Re-pinned with controls: the t31 R36 phone oracle (IRREVERSIBLE_WEIGHT arm) and LARGER_SCREEN_ACTS = [filingsent]; the catalogue reversible band (T37's three translation acts) and undetermined set (obscuremark, translationdraft, translationmark); t34 R45 27 aliases, claimidentity none. The t36 owed_ and claimidentity pins were already met. Wizard library v2: nothing of mine reads it. Module 218/218. Checks: architecture, coverage and ownership 0 failures each; format 1 failure, not mine (modules.json instance-setup path bio-plane/src/setup-words.mjs names no file, present on the tranche without my change).
+
+## Completion after B4
+
+`tranche/T37` merged (op-declarations T37-31, K2249). R48 is re-generated: the eight owed acts T37-31 declares are now held under their ops. They are `subscriptionsignin`, `setpassword`, `obscuremark`, `translationgrant`, `translationdraft`, `translationadopt`, `translationconfirm` and `translationrevert`, each with the design's text verbatim, in the design's order. `owed_infolevelset` stays under its `owed_` key, as op-declarations does not declare `infolevelset`. The table still holds all 203 entries, compared entry by entry with `mock-acts.js` at `e08cd35ecb`. The header comment states the reading.
+
+`t36.test.mjs` re-states the owed sets:
+- `OWED_DECLARED_IN_T37` (the eight) is held under their ops, with no `owed_` key for any of them.
+- The `owed_` set is exactly `owed_infolevelset`.
+- `setpassword` and `obscuremark` are checked against their design texts.
+
+op-declarations' `t36.test.mjs` (R34's partition) is green: 13/0, run together with mine.
+
+**Tests:** `node --test test/m/affordances/`: 218 tests, 218 pass, 0 fail.
+
+**Checks:** format 0 failures (instance-setup's missing path was fixed on the tranche); architecture 0; coverage 34 of 34, 0; ownership 0.
+
+Size (session_0187SVNmLrMtUDuMD6BfqRLx): test runs 28, module lines 2280
+
+## J4 · COMPLETE
+
+B4 applied on the merged tranche (record: 'Completion after B4'). ACT_HELP holds T37-31's eight declared owed acts under their ops; owed_infolevelset stays (infolevelset is undeclared). 203 entries, verbatim. t36 re-stated. op-declarations t36.test.mjs R34 partition green. Module 218/218. Checks: format, architecture, coverage and ownership, 0 failures each.
