@@ -15,8 +15,8 @@
  * store handed in (`capture`'s) reaches it as `store.acquisition`, as it reaches attestation's instance.
  *
  * Every refusal is an answer `{ok: false, reason, code, check, translation, ...}`, never a throw. */
-import { listArchive, streamMember, ARCHIVE_LIMITS, ARCHIVE_DEPTH_MAX, ARCHIVE_TREE_TOTAL_MAX, ARCHIVE_TREE_ENTRIES_MAX }
-  from "../ooxml.mjs";
+import { listArchive, streamMember, ARCHIVE_LIMITS, ARCHIVE_DEPTH_MAX, ARCHIVE_TREE_TOTAL_MAX, ARCHIVE_TREE_ENTRIES_MAX,
+         normalizePartName, CONTENT_TYPES_PART, ODF_MIMETYPE_PART } from "../ooxml.mjs";
 import { createSha256, isMachineIdentity } from "../record-grammar/index.mjs";
 import { partsHeld, UNPACKED_VIA, provenanceOf } from "../provenance/index.mjs";
 import { viewerPredicate, notAnAdmin, membershipOf } from "../membership/index.mjs";
@@ -693,6 +693,13 @@ function entryOf(r, { limit, refused, sees }) {
   return { ...base, state: "waiting", ...(waitsOn ? { waiting_on: waitsOn, limit: FIGURES[waitsOn] ?? null } : { waiting_on: null }) };
 }
 
+/* R41, C-139.20: a capture held and visible that is not an archive; `format` what R17's rule profiled it as, or `part` the
+   office or OpenDocument part its recorded listing names. */
+const notAnArchive = (sha, { format = null, part = null } = {}) => refuse("NOT_AN_ARCHIVE", { archive: sha, format,
+  ...(part ? { part } : {}),
+  detail: `${part ? `this capture is an office or OpenDocument file (its listing names ${part})` : `this capture's bytes are profiled \`${format ?? "undetermined"}\``}, `
+        + "not a ZIP archive, so it has no list of files to show" });
+
 /** R41: `archiveList({archiveSha, viewer, state, limit, after})` answers an archive's entries as R38 recorded them, or, for
  *  an archive held and never opened, as its listing reads now. Writes nothing. */
 export async function archiveList(instOrStore, { archiveSha = null, viewer = null, state = null, limit = LIST_DEFAULT, after = null } = {}) {
@@ -715,9 +722,36 @@ export async function archiveList(instOrStore, { archiveSha = null, viewer = nul
     try { hh = s && p && typeof p.homeOf === "function" ? p.homeOf(s) : null; } catch { hh = null; }
     return hh && inst.sees(viewer, hh.bundleId) ? hh.bundleId : null;
   };
+  const h = inst.header(sha);
+  /* DEC-49 REGION is-not-an-archive
+     R41 (N720, K1955): a capture R17's rule does not profile as `zip` (an office or OpenDocument file included) is not an
+     archive, and is refused by name rather than answered as one whose listing is refused whole. An archive never opened
+     is profiled by R17's one function over its held bytes; an opened one by the same rule's reading of its listing, which
+     R38 recorded whole: a directory naming an OPC content-type map or an ODF `mimetype` is an office or OpenDocument file
+     (format-registry R28, R17's past-bound arm), so a member's `op=unpack` of one never makes it an archive here. */
+  let ev = null, held = null;
+  if (h) {
+    const officePart = inst.entryRows(sha).find((r) => {
+      const n = normalizePartName(r.name || "");
+      return n === CONTENT_TYPES_PART || n === ODF_MIMETYPE_PART;
+    });
+    if (officePart) return notAnArchive(sha, { format: null, part: officePart.name });
+  } else {
+    ev = inst.record && typeof inst.record.evidenceStore === "function" ? inst.record.evidenceStore() : null;
+    held = ev ? await heldParts(inst, {}, ev, sha, null) : { why: "no evidence storage" };
+    if (!held.parts) return notHeld();
+    const total = held.parts.reduce((n, x) => n + x.bytes, 0);
+    let fmt = null;
+    try {
+      const prof = await profileOf({ ev, sha, ct: null, total, multipart: held.parts.length > 1, headers: {}, locator: null,
+        view: undefined, retrieved: stampSecond(), origin: null, parts: held.parts });
+      fmt = prof && prof.format ? prof.format.format : null;
+    } catch { fmt = null; }
+    if (fmt !== "zip") return notAnArchive(sha, { format: fmt });
+  }
+  /* END DEC-49 REGION is-not-an-archive */
   let g = null;
   try { g = p && typeof p.captureGrade === "function" ? await p.captureGrade(sha) : null; } catch { g = null; }
-  const h = inst.header(sha);
   let rows, refused = null, waitLimit = null, bytes = null, entries = 0, declaredTotal = null;
   if (h) {
     rows = inst.entryRows(sha);
@@ -725,9 +759,6 @@ export async function archiveList(instOrStore, { archiveSha = null, viewer = nul
     if (h.depth > ARCHIVE_DEPTH_MAX) waitLimit = "ARCHIVE_DEPTH_MAX";
   } else {
     /* held, never opened: read as it lists now */
-    const ev = inst.record && typeof inst.record.evidenceStore === "function" ? inst.record.evidenceStore() : null;
-    const held = ev ? await heldParts(inst, {}, ev, sha, null) : { why: "no evidence storage" };
-    if (!held.parts) return notHeld();
     const source = partsSource(ev, held.parts);
     const listing = await listArchive(source);
     bytes = source.size;
