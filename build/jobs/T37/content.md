@@ -10,7 +10,7 @@
 
 **A flaw fixed in my own module (R30).** `extentBoundUnheld` (`src/content/notice.mjs`) treated a held sheet, slide or table LIST as the bound of a cell, shape or table cell, so the version notice and `passageAcross` answered `extent_in_newer_capture` for a cell whose grid (or a shape whose slide's shape count) the newer capture's record never held, against R30 ("holds only where the newer capture's context holds the bound tested"). It now asks `containerBoundUndetermined`'s inner levels (`sheet_grid`, `shape_count`, `table_grid`) and answers `bound_not_held`. Test: `notice.test.mjs` R30, eight arms (fails 1 on the old code, passes on the new).
 
-**Found in another module.** `case-checker`'s generated `src/case-checker/program.mjs` bundles `content/extent.mjs` and is stale after this change: its R13 test fails (`program.mjs is stale`), 51/1; passes 52/0 without my change. Not written by me (mechanics §14); reported to BOB (J2).
+**Found in another module.** `case-checker`'s generated `src/case-checker/program.mjs` bundles `content/extent.mjs` and is stale after this change: its R13 test fails (`program.mjs is stale`), 51/1; passes 52/0 without my change. Not written by me (mechanics §14); reported to BOB (J1).
 
 Deferred: none.
 
