@@ -25,3 +25,12 @@ Size (session_01UyPgDNZCNdqccnSPgPyQtP): test runs 8, module lines 8081
 ## J1 · REPORT
 
 Found in file-scanner (bundler R12): file-scanner/package.json `version` and file-scanner/wrangler.jsonc `vars.VERSION` declare 0.79.0; the authority bio-plane/package.json declares 0.81.0. `system/resolveversion.test.mjs` ARM 7 (the live fleet agrees on one version) is red, 11/1, and release-assemble.mjs and deploy.mjs would refuse [VERSION_SKEW] on this tree. Both files are file-scanner's (T38-17, L1); the edit is 0.79.0 -> 0.81.0 at both sites. Not in the plan's rule 6 list.
+
+## J2 · COMPLETE
+
+T38-1 done; record's Completion has the detail. Commit d2f9945fb2 on `job/T38/bundler`.
+
+- (N787; K2218) `system/fleetbundles.test.mjs`:232 re-pinned from the committed manifest: agent-worker 22 -> 23 inputs, `src/signin.mjs` arriving (T37-17), with a dated comment. Red 20 (rule 6 item 5) clears with this merge.
+- Own module: `m/bundler/bundler.test.mjs`'s R24 real-fleet test still pinned agent-runner at ghcr.io; the marker is docker.io/civicos/agent-runner since K2259. Re-pointed: 90/1 -> 91/0.
+
+Tests: bundler module 91/0; fleetbundles 129/0, no SKIP; deploybindings 37/0; bundle exit 0; bundles.mjs --check all fresh; resolveversion 11/1 (file-scanner's version, my REPORT). Checks: format, architecture, coverage (30/30), ownership: 0 failures.
