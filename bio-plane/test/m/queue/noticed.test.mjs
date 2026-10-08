@@ -169,7 +169,13 @@ test("R1, R51, R11, R12: T36's four kinds (notice-producers R12–R15) reach the
   };
   // the Civicsmith's two carry no bundle; the scan finding is homed by its capture's bundle, the policy by none here
   const subjects = { "security-level-high": [], "policy-changed-noticed": ["DOC-2"], "scan-found": ["DOC-1"], "security-tool-off": [] };
-  const w = noticedWorld({ make: (a) => Object.entries(ids).map(([k, id]) => item(id, k, "FINDING", subjects[k], a)) });
+  /* each subject in the shape the merged producer publishes (notice-producers R12–R15: the Civicsmith, no bundle; a scan
+     finding's capture home; the policy) */
+  const shapes = { "security-level-high": { kind: "civicsmith", id: null }, "policy-changed-noticed": { kind: "standard", id: "DOC-2" },
+    "scan-found": { kind: "capture_home", id: "DOC-1", capture: "abc123", note: "NOTE-1" },
+    "security-tool-off": { kind: "civicsmith", id: null, tool: "TOOL-1", provider: null } };
+  const w = noticedWorld({ make: (a) => Object.entries(ids).map(([k, id]) =>
+    item(id, k, "FINDING", subjects[k], a, { subject: shapes[k], recipients: ["alice"] })) });
   const f = w.q.queueFeed({ member: "alice", viewer: "member:alice" });
   assert.equal(f.ok, true, JSON.stringify(f).slice(0, 300));
   const it = byId(f);
