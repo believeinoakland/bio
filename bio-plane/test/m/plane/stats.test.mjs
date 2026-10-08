@@ -13,6 +13,7 @@ import { instanceSetupOf } from "../../../src/setup.mjs";
 import { inquiryOf, legCapped, inquiryLegGrades, Inquiry } from "../../../src/inquiry/index.mjs";
 import { RecordCore } from "../../../src/record-core/index.mjs";
 import { Membership } from "../../../src/membership/index.mjs";
+import { ProjectRoster } from "../../../src/project-roster/index.mjs";
 import { RunProductions } from "../../../src/run-productions/index.mjs";
 import { BasisVersions } from "../../../src/basis-versions/index.mjs";
 import { ObservationLog } from "../../../src/observation-log/index.mjs";
@@ -92,6 +93,7 @@ test("R10: the log counts: the wire's `observationsNonLead` leaves out lead rows
 
 /* Each owner's exported figures, registered under the owner's name (record-core R63). */
 const OWNED = [["record-core", RecordCore.COUNT_KEYS], ["membership", Membership.COUNT_KEYS],
+               ["project-roster", ProjectRoster.COUNT_KEYS],   /* N783 (K2270): `projectOwnerVotes` */
                ["run-productions", RunProductions.COUNT_KEYS], ["inquiry", Inquiry.COUNT_KEYS],
                ["observation-log", ObservationLog.COUNT_KEYS], ["basis-versions", BasisVersions.COUNT_KEYS]];
 
