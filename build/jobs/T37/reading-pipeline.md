@@ -33,3 +33,7 @@
 **R28's mark** "*(not yet met: T37)*" can be struck: it is met.
 
 Size (session_01NrApu29PkaxgKV2pTicqhV): test runs 14, module lines 1452
+
+## J1 · COMPLETE
+
+T37-9 applied (R28: a .docx cell's paras carried as emitted; red 13 fixed; new test on a vertically merged table). Code already passed cell lists through by reference, so only tests changed. Also fixed my three legacy-path suites (d606, tier2-wire, pdf-worker-binding), red on the retired member key in the address. 96/96; format, architecture, coverage 28/28, ownership 0 failures. Two notes for other modules are in the record (extraction's re-read and emittedFieldsOf; retrieval and paras without a unit). R28's mark can be struck.
