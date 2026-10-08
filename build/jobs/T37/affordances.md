@@ -1,6 +1,6 @@
 # affordances (T37)
 
-**Status** · session_0187SVNmLrMtUDuMD6BfqRLx · depth 2 · WORKING · handled B3
+**Status** · session_0187SVNmLrMtUDuMD6BfqRLx · depth 2 · COMPLETE · handled B3
 
 ## J1 · REPORT
 
