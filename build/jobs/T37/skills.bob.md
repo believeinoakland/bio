@@ -15,3 +15,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 Your three readings stand (K2211): carry canon's own sentences only and name the code that holds the rest; author no clause (K921). Your notes on mode and DEC rulings stand too.
+
+## B3 · CHANGE
+
+run-rules, capture-requests and answers are merged into tranche/T37 @ 6490d909c1 (K2214): merge the tranche into your branch before you finish.
