@@ -51,3 +51,7 @@ My best reading, applied in this job (P8: a flaw in my own module's tests); tell
 (1) Transport only: the suite's `GET`/`POST` helpers lift `token=` out of the address into `Authorization: Bearer`. No assertion changes.
 (2) The retired-token arms are re-pinned to admission R5's answer, never loosened. "member token cannot create members" now expects `MEMBER_TOKEN_RETIRED`. The D-157 arms "shared MEMBER_TOKEN receives no cover / still reads the handle roster / no cover reaches it" become one arm, "refused the roster, no `result`, no cover in the answer", plus "no cover value reaches it". "Nor can the shared machine credential" with `administer=true` now expects `MEMBER_TOKEN_RETIRED`. The roster read at :544 ("machine member token reads the roster", 2) moves to an ordinary member's session (`M2`), same count.
 Result: members 95 pass, 0 fail (96 before: three asserts became two).
+
+## J2 · COMPLETE
+
+T37-44 done: MODULE_ORDER re-pinned (image-cover after pdf-pixels); red 9 and promotion's R39/R45/R46 sister test green; progressions R41 (red 4) stays. members.test.mjs repaired on J1's reading (95/0), J1 still open for your answer. membership 173/0; checks 0 failures. Plane bundle stale (old list), for the layer close. Record: Completion.
