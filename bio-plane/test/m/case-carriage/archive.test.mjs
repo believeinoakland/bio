@@ -1,6 +1,7 @@
 /* case-carriage — a document cut out of a captured archive is carried with its archive (R8; N688, K1844, K1852 (1);
    Intake Doctrine §3b): its `container` record, the archive's bytes and the archive's timestamp tokens, outward to the
-   outermost archive, so an outsider checks it with stock tools. The archives are built with `test-support`'s
+   outermost archive, so an outsider checks it with stock tools. (T38) Each archive's listing is recorded as acquisition
+   records it, so R8 can tell that it holds no image. The archives are built with `test-support`'s
    `make-zip.mjs`; the home's `data/provenance.json` states each member as `acquisition` R39 writes it. The outsider's
    check runs `sha256sum`, `unzip` and `openssl` where the runner has them, else their equivalents in-process. */
 import { test } from "node:test";
@@ -89,6 +90,7 @@ function holdArchive(w, bundleId, zip, { token = null, tokenFile = "attestations
   setProvenance(w, bundleId, [entry ? { ...entry, timestamp: { service: "tsa.example", token_file: tokenFile } }
     : { file: "snapshots/archive.zip", capture: { method: "acquire", grade: "B", sha256: s, bytes: z.length },
         timestamp: { service: "tsa.example", token_file: tokenFile } }]);
+  w.listing(s, z);   // acquisition's record of its listing (T38; R8)
   return s;
 }
 /* A member of an archive, its text held inline on its own bundle, its home's provenance stating its `container`. */
@@ -189,6 +191,7 @@ test("R8 a member of a nested archive is carried outward to the outermost: each 
   const innerSha = holdArchive(w, ARCH, inner, { token: innerToken, entry: unpackedEntry(innerC) });
   assert.equal(innerSha, innerC.member_sha256);
   const memberSha = holdMember(w, MEM, MEMBER_TEXT, memberC);
+  w.listing(outerSha, [{ name: "readme.txt" }, { name: "inner.zip", sha256: innerSha }]);   // the inner archive, filed and opened
   const r = w.cc.holdMaterials(caseFm({ materials: [docRow(MEM, memberSha)] }), { caseId: CASE, edition: 1, at: NOW });
   const mr = canonicalJson(memberC), ir = canonicalJson(innerC);
   assert.deepEqual(r.files.map((f) => [f.kind, f.sha256]), [
@@ -251,6 +254,7 @@ test("R8 an archive held inline as text at its digest is held inline under kind 
   const w = world();
   const archiveText = "an archive whose bytes are text";
   const archiveSha = w.doc(ARCH, { text: archiveText });
+  w.listing(archiveSha, [{ name: "m.txt" }]);
   const c = { ...containerOf(Buffer.from(makeZip([{ name: "m.txt", data: MEMBER_TEXT }])), 0, "m.txt", MEMBER_TEXT), archive_sha256: archiveSha };
   const memberSha = holdMember(w, MEM, MEMBER_TEXT, c);
   const r = w.cc.holdMaterials(caseFm({ materials: [docRow(MEM, memberSha)] }), { caseId: CASE, edition: 1, at: NOW });
