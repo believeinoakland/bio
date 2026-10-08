@@ -18,7 +18,7 @@ Keeps every captured file safe to open without touching its bytes, digest or gra
 - **R1** (K1888 (2)) Every acquisition receipt (`provenance.onReceipt`) puts its capture in the scan queue and, when it has a safe-view route (R11), the render queue: a direct, Drive, archive or render fetch, a pulled knock, and each member of an unpacked archive, which is its own capture (K1852 (1), K1882). One row per digest. A receipt carrying a reputation answer (`reputation`, which `acquisition` records on the receipt) adds a `reputation` note (R34). Nothing here delays, changes or refuses the capture or its answer, and a failure here never fails the receipt. *(not yet met: T36)*
 
 **Notes**
-- **R2** `verdictNotes({captureSha, viewer})` → `{ok:true, notes}` oldest first, or `NO_SUCH_CAPTURE`, or membership's sight refusal when the viewer may not see the capture. *(not yet met: T36)*
+- **R2** `verdictNotes({captureSha, viewer})` → `{ok:true, notes}` oldest first, or `NO_SUCH_CAPTURE`, or membership's sight refusal when the viewer may not see the capture. Here and wherever this module names the sight refusal, a capture the viewer may not see answers exactly as an absent one, `NO_SUCH_CAPTURE`, so no answer tells a hidden capture from one never held (DEC-36; as acquisition's `ARCHIVE_NOT_HELD`; K2098). *(not yet met: T36)*
 - **R3** Notes are append-only: none is changed or removed but by the purge of the capture's bundle (R25). A re-scan adds a note. `unknown`, `suspicious` and `not_scanned` are never read as `clean` by any service here. *(not yet met: T36)*
 
 **Scanning**
