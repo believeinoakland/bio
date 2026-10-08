@@ -52,3 +52,34 @@ T36-14 applied in full. Nothing deferred.
 **P6**: module 2,427 lines (src), under 4,000.
 
 Size (session_01Lpr5zoWzhMTrc3S8CRoaGd): test runs 16, module lines 2427
+
+## J3 · COMPLETE
+
+B4 and B5 applied (tranche/T36 @ a263514dc1 merged). Nothing deferred.
+
+**B4 (K2116)**
+- `recordedBy`'s `VIEWER_MISSING` and `EXTENT_MALFORMED` are now answered `{ok: false, refused, code, reason, why}`.
+- I added no catalogue row, so none was removed.
+- A test pins the shape.
+
+**B5 (K2119)**
+- `owner.mjs`'s `neighboursOf` now reads in three steps:
+  1. It reads the node's set as candidates: kind, event and the attestation's sight. The role is filtered in SQL, and live events come through a join.
+  2. It reads every candidate event's time in bulk, through new `index.mjs` `#whensRead`, `#governingMany`, `#whenRows` and `#upperBounds`. The single-event `#whenRead`, `#governing` and `#whenRow` are now these called with one id, so there is one code path. It then judges validity at `at`, and each kind's hub against `hubBoundOf`.
+  3. It builds evidence, grades and facets only for the page's rows. The entity's end grade is memoised per (entity, capture), event grades per event, and the view and zone are read once per call.
+- The answers are unchanged: all 61 events tests pass, including the conformance battery.
+- Measured on a 4,000-`event_voted` member, the four pages together: before 11.5 s (56k queries per page), after 1.2 s (10k per page). The remaining cost is mostly record-core's `readDerived`, one call per event (R10's fail-closed check).
+- New test (P7) in `owner.test.mjs`: four fan-out pages of a 4,000-vote member, joined complete, together under half of `time_budget_ms`; a kind not asked is cheap; a 4,001st vote makes the member a hub. Against the previous owner it fails (11,835 ms).
+
+**Tests and checks**
+- events: tests 61, pass 61, fail 0.
+- Users of events (29 suites plus `system/migrate-released`): every suite passes except the same expected reds as J2:
+  - progressions `order`:12 (red 16);
+  - op-declarations `t33`:192, `t35`:196 (red 17) and `t34`:135 (red 13);
+  - answer-envelope `catalogue-end`:17 (red 18), and `families`:49 (file-safety's `FILE_SAFETY_CHECKS`, reported in J2).
+- explore `mx1a.test.mjs` passes; its events arm runs after my merge.
+- `format`: 0 failures; `architecture events`: 0 failures; `coverage events`: 49 of 49, 0 failures; `ownership events tranche/T36`: 6 files, 0 failures.
+
+**P6**: module 2,502 lines.
+
+Size (session_01Lpr5zoWzhMTrc3S8CRoaGd): test runs 24, module lines 2502
