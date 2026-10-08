@@ -10,3 +10,7 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Merge order in L1 (`modules.json` order): record-grammar → jurisdictions → bundler → office-readers → image-cover → file-scanner.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · CHANGE
+
+bundler (T37-3) is merged into tranche/T37 (K2174): its R25 now emits your signed `Worker` part (`CAPTURES` by role, your cron). Merge tranche/T37 into your branch before your COMPLETE and run your tests against it.
