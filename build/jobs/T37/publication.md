@@ -1,6 +1,6 @@
 # publication (T37)
 
-**Status** · session_01KcUELzqiEGNBwSvB87rKcf · depth 2 · WAITING ON BOB (J2) · handled B2
+**Status** · session_01KcUELzqiEGNBwSvB87rKcf · depth 2 · WORKING · handled B2
 
 ## Record
 
