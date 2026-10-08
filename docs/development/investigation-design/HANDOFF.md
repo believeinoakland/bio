@@ -11,3 +11,9 @@ Numbered entries; BOB answers each in rulings (K) on `tranche/T<n>`. Decision st
 **For requirements when ruled (not yet):** the plan construct widens stage 2 (`enquiry`: subgoals, teams, leaders, assignment with accept/decline, step dependencies, deadlines, milestones, retire/delete, resources; `investigation`: issued status reports). Doctrine fences to carry regardless: DEC-68 (no measuring members), K1892 (no open/download record), DEC-69/DEC-94 (reminders only at the member's request; overdue once; no outside channel), D15 (never published), K1484 C2 row 2 (no role changes sight), Ladders §10 (group's own dates never findings), K1463 (group money unmarked in the world model).
 
 **Owed to the UX stream (after rulings):** the plan's screens (subgoals and teams, assignment accept/decline, milestones, resources, report drafting), and the name that tells the investigation's plan from the action plan (D23).
+
+## H2 · 2026-10-08 · Bob narrows K2075; the relationship study
+
+**Carries:** Bob, 2026-10-08: "It was inaccurate of me to talk about members being assigned roles and for there to be subgoals within a project. As we look at filling in the capabilities of projects I think we should study the relationships between steps, basis, claims, findings, and any other elements." D25 and D26 withdrawn; D27–D31 paused until his wording of the plan settles. The study is `S1-relationships.md`, rendered at https://claude.ai/artifact/6cHHcybJpV3SPf25wVmeLN.
+
+**For BOB to note (no ruling asked):** K2075's assignment and subgoal parts no longer stand as Bob's direction. The study finds no investigative step anywhere in canon or the built modules (the action plan's steps are post-finding); "basis" and "finding" each carry five or six senses across canon.
