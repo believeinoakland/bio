@@ -1,6 +1,6 @@
 # people (T36)
 
-**Status** · session_019jdYasEZ5G5btsBgnEcz4B · depth 2 · WORKING · handled B2
+**Status** · session_019jdYasEZ5G5btsBgnEcz4B · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
