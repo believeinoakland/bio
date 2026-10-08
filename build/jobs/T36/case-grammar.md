@@ -1,6 +1,6 @@
 # case-grammar (T36)
 
-**Status** · session_01BVidzT6qpVnrWbodBnLE5N · depth 2 · WORKING · handled B1
+**Status** · session_01BVidzT6qpVnrWbodBnLE5N · depth 2 · COMPLETE · handled B1
 
 ## Record
 
