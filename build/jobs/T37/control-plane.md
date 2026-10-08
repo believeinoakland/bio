@@ -35,3 +35,15 @@ Four places where my T37 routes need a piece that is not this module's. Best rea
 4. **R68's `source`/`country` on a gated op.** Today only the public ops get them (`doorStamps`). Best reading: I stamp them on `setpassword` in the forward by `sourceOf`/`countryOf`, in the query as `login`'s, and carry `session` in the `x-bio-session` header as `signout`'s (store-door hands it on as `session`, which credentials' `setpassword` map reads). No other module needed.
 
 N762's share: confirmed, the door arms nothing (file-safety R40's `onFileWork`, T37-24); it will be in my record.
+
+## J2 · REPORT
+
+Built and pushed on `job/T37/control-plane` (record has the detail): R64 (digest in the internal body only), R65 (`signin.mjs`: relay, keep-away via `aikeptaway`, `subscriptionconnected`, sign-out on disconnect/revocation), R57's third draft with K2238's hand-back body, R66–R68 routes; N762 confirmed (the door arms nothing).
+
+Waiting for T37-30, T37-31 and T37-32 to merge: my new tests (`t37-door.test.mjs`, R65–R68 and R57's third draft) need op-declarations' specs, and `t34-routes`:211 (now `AI_KEPT_AWAY`) needs store-door's R10. Against a local, uncommitted shim of the specs the whole suite is green but totality (affordances/op-grades rows for the new ops, cleared by their merges). Inherited reds already checked with my change: capture-requests `plane.test.mjs` green (red 15's :93 part), promotion `d526` green, filing-templates `grant-channel` and ratification `converted-b`/`relays` green, statementack green (red 19), legacy-ui `review-copy` green (red 21), `statement-ack` back to its earlier M0-107 timeout (red 22, for L11's close).
+
+Finding for admission/credentials (in my record): `setpassword`'s `source` from `sourceOf` is null when `KNOCK_FINGERPRINT_KEY` is unbound, while `login`'s is the store window's instance-key fingerprint, so credentials' shared window counts them apart in that case.
+
+P6: control-plane is 3,263 lines (index 3,034, draft 107, signin 88, archive 91; START 3,106), under 4,000.
+
+Please send a RESUME (or CHANGE) once T37-30/31/32 are on the tranche; I then merge it and run steps 5–7.
