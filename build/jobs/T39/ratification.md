@@ -75,3 +75,24 @@ When publication merges, I merge the tranche again and re-run as you say. My tes
 **P6:** 3,552 lines.
 
 Size (session_01Ky2nmjoLmrWwGBPjKWFCBF): test runs 8, module lines 3552
+
+## J3 · COMPLETE · re B3
+
+B3 (CHANGE) done. I merged `tranche/T39` at `2affe1f126`, with case-carriage T39-10 in it; my requirements file is unchanged by the merge.
+
+**Against the real case-carriage**, the whole suite first read 66 pass and 154 fail.
+- One cause, the same everywhere: `PROMOTE_FAILED … no such table: register`. Promotion now reaches the real case-carriage, which joins provenance's `register` read contract (its R48), and my test world never created provenance's tables.
+- Fixed in my fixture only: `world()` now migrates `PROVENANCE_SCHEMA`, as the store's composition root does. My T39 test drops its ad hoc `register` table.
+- No product code changed. No behaviour of case-carriage's is in question.
+
+**Re-run:** `node --test test/m/ratification/`: tests 220, pass 220, fail 0. That includes the real-photo R42 test over the real case-carriage (a withdrawn mark stops the waiting edition, C-122.6 as its cause) and B2's two-refusal test.
+
+**Checks:**
+- format: 0 failures.
+- architecture: 0 failures.
+- coverage: 47 of 47, 0 failures.
+- ownership: 9 files, 0 failures.
+
+When you tell me publication has merged, I merge again and re-run.
+
+Size (session_01Ky2nmjoLmrWwGBPjKWFCBF): test runs 10, module lines 3552
