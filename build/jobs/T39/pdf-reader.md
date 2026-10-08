@@ -28,7 +28,7 @@
 - `checks/format.mjs`: 138 modules, 137 requirements files; 0 failures.
 - `checks/architecture.mjs bio pdf-reader`: 16 product files, 20 relative imports; 0 failures.
 - `checks/coverage.mjs bio pdf-reader`: 37 of 37 live requirement ids named by a test; 0 failures.
-- `checks/ownership.mjs bio pdf-reader tranche/T39`: see the line below, run after the commit.
+- `checks/ownership.mjs bio pdf-reader tranche/T39`: 3 files changed by pdf-reader between tranche/T39 and HEAD; 0 failures.
 
 P6: `pdfstructure.mjs` 3,108 → 3,152 lines (+44, under BOB's ~60).
 
