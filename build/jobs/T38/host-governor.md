@@ -23,3 +23,7 @@
 - `format`: 137 modules, 136 requirements files; 0 failures. `architecture … host-governor`: 6 product files, 11 relative imports; 0 failures. `coverage … host-governor`: 27 of 27 live requirement ids named by a test; 0 failures. `ownership … host-governor tranche/T38`: 1 file changed; 0 failures.
 
 Size (session_0169cu6wYS5iQTcatDMjjXq7): test runs 3, module lines 1480
+
+## J1 · REPORT
+
+In my own requirements (yours to word): host-governor R18 still says "Reached by the `admin`, `member` and `probe` classes"; since T36 (admission R5, C-38.11) no binding class `member` exists. The test now checks admin, probe and every session, a member's included. Suggested wording: "Reached by the `admin` and `probe` classes and by every session." No code change needed.
