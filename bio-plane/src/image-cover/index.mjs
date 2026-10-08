@@ -5,10 +5,16 @@
  * `{ok: false, code, detail}`. `format` is "jpeg" or "png"; `width` and `height` are the picture as displayed (its
  * EXIF orientation applied), the frame the areas are given in; `covered` counts the 8x8 blocks (every component's)
  * or the pixels the cover replaced. Pure (R6): no clock, no randomness, no I/O, nothing kept between calls. The
- * JPEG path is `jpeg.mjs`, the PNG path `png.mjs`, the areas and the orientation `geometry.mjs`. */
+ * JPEG path is `jpeg.mjs`, the PNG path `png.mjs`, the areas and the orientation `geometry.mjs`.
+ *
+ * `stripMetadata(bytes)` answers `{ok: true, bytes, format, changed}` or `{ok: false, code, detail}`, synchronously
+ * and never throwing (R8): the image's metadata left behind without re-encoding it, the coded data copied byte for
+ * byte (`strip.mjs`). `format` is "jpeg", "png", "gif", "webp", "jp2" or "j2k"; `changed` is false exactly when
+ * nothing was removed, and then `bytes` equal the input. */
 import { CoverRefusal, checkAreas } from "./geometry.mjs";
 import { coverJpeg } from "./jpeg.mjs";
 import { coverPng } from "./png.mjs";
+import { stripImage } from "./strip.mjs";
 
 /** The largest photo covered, in bytes; a larger one is refused before a byte of it is read (R3, R4). */
 export const COVER_MAX_BYTES = 32 * 1024 * 1024;
@@ -50,5 +56,29 @@ export async function coverAreas(bytes, { areas } = {}) {
   } catch (e) {
     if (e instanceof CoverRefusal) return { ok: false, code: e.code, detail: e.detail };
     throw e;
+  }
+}
+
+/** Every refusal of `stripMetadata`, with what it means (R8). */
+export const STRIP_REFUSALS = Object.freeze({
+  NOT_A_STRIPPABLE_FORMAT: "the image is none of JPEG, PNG, GIF, WebP, JP2 or a J2K codestream, or holds a structure this module cannot judge",
+  PHOTO_TOO_LARGE: "the image is larger, in bytes, than the most this module reads",
+  TRUNCATED_IMAGE_DATA: "the image data ends before the image does",
+  IMAGE_DATA_CORRUPT: "the image's segments, chunks or boxes cannot be walked",
+  ANIMATED_IMAGE: "the image is animated (a GIF of more than one frame, an animated PNG or WebP): one image is allowed",
+});
+
+/** Strip an image's metadata without re-encoding it (R8): what R2 forbids is left behind, the coded data is kept
+ *  byte for byte. Never throws. */
+export function stripMetadata(bytes) {
+  try {
+    const d = bytes instanceof Uint8Array ? bytes : bytes instanceof ArrayBuffer ? new Uint8Array(bytes) : null;
+    if (!d) throw new CoverRefusal("NOT_A_STRIPPABLE_FORMAT", "the image's bytes are not a byte array");
+    if (d.length > COVER_MAX_BYTES)
+      throw new CoverRefusal("PHOTO_TOO_LARGE", `the image is ${d.length} bytes, over the ${COVER_MAX_BYTES} this module reads`);
+    return { ok: true, ...stripImage(d) };
+  } catch (e) {
+    if (e instanceof CoverRefusal) return { ok: false, code: e.code, detail: e.detail };
+    return { ok: false, code: "IMAGE_DATA_CORRUPT", detail: `the image's structure cannot be walked (${e?.message || e})` };
   }
 }
