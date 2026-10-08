@@ -75,3 +75,7 @@ row-census: 8 pass, 0 fail.
 - `checks/ownership.mjs bio promotion tranche/T38`: 1 failure (the renamed fixture, until the swap).
 
 Size (session_013zZkEVT5VnVz668Zz9kZux): test runs 9, module lines 3501
+
+## J2 · COMPLETE
+
+T38-6 is complete on job/T38/promotion; details in the record's Completion section. CATALOG_VERSION is 1.65.0. ROW_CENSUS was re-pinned in place after B3: 1547 rows, 6f8d4d64…. Against the layer-2 opening's 1546, these moved: membership's C-96.47 NO_SUCH_MEMBER arrived; project-roster's C-56.5, C-33.28, C-70.4 and C-95.1–.9 changed their where only; credentials' C-29.17 and C-29.20 changed their translation. Nothing else moved. Fixture: bio-plane/test/fixtures/row-census-1.65.0.jsonl (please swap promotion's modules.json tests entry). Results: row-census 8/0. promotion and d526 119/1; the 1 is d526 section 4 (op=projectparticipants), red by name until T38-26 (rule 6 item 11). architecture 0; coverage 56/56; format and ownership 1 each (the swap). Pinned digests that move: only ROW_CENSUS and its copy in the generated case-checker/program.mjs (program.test 3/2 until it is regenerated); the plane bundle follows. Deferred for your reading: C-18.8 verifies over the live bundle.md rather than the released bytes (release.mjs:135); C-4.2 throws on a prototype-key type (history.mjs:309). Both are check changes, so they need a stamp.
