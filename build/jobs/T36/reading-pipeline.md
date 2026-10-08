@@ -28,3 +28,7 @@ Size (session_01Bqmqo5KoGA92ZdFBC6tLLW): test runs 9, module lines 1452
 ## J1 · REPORT
 
 Generated artifact: bio-plane/dist/bio-plane.bundled.mjs (not_product) is stale from T36-13a (reading-pipeline index.mjs and readingprov.mjs changed); for regeneration at L4's close. Also a wording point in my own requirements: R26 says an uncommitted afterRead answers {ran: []} and also that it answers {ran, failed}; the code follows the first clause (hooks.mjs:44). No change made; yours to word.
+
+## J2 · COMPLETE
+
+T36-13a applied: R28's .docx cells keyed by table ref ({} no tables, null body not read), real-entry and synthetic tests naming R28; own flaw fixed (R18: empty text's why). Module tests 95/0; extraction 127/0, content+events 185/0; format, architecture, coverage (28/28), ownership: 0 failures. Record has the detail. Ready to merge before extraction.
