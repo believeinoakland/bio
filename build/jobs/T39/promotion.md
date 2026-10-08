@@ -1,6 +1,6 @@
 # promotion (T39)
 
-**Status** · session_01D4tF1JLHNsN3tZR6mHerE1 · depth 2 · WORKING · handled B2
+**Status** · session_01D4tF1JLHNsN3tZR6mHerE1 · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
