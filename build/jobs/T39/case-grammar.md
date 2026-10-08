@@ -1,3 +1,9 @@
 # case-grammar (T39)
 
 **Status** · session_015c5pkGR6f8FDqbTSrFjvzi · depth 2 · WORKING · handled B0
+
+## J1 · QUESTION
+
+R14 item 3 (T39-9). A member document's cleaned copy will carry a label (`COPY_CLEANED_LABEL`), and the complete edition today picks its copy line by the label alone: a labelled copy prints `OBSCURED_WORDS.copy`, "Carried as a copy with marked areas covered; the copy's fingerprint (SHA-256): ", then the label. For a member document that line is false (nothing is marked or covered). The row cannot tell a photo from a document (both `kind: document`, no format change), this module cannot import `case-carriage`'s labels, and a marked photo's edition must keep its bytes (case-checker re-renders and compares, check.mjs:507).
+
+My best reading (building it now): the edition reads which kind of copy it is from the copy's own bytes, which the case file carries at `materials/<ref>/obscured` and both callers (public-read R24, case-checker) hand in. A copy whose bytes begin `%PDF-` or `PK\x03\x04` (doc-clean's PDF and OOXML/ODF output) is a cleaned member document and prints a new `OBSCURED_WORDS.cleaned`: "Carried as a cleaned copy, with none of the details of who made it or of its pictures; the copy's fingerprint (SHA-256): ", then its label word for word. Any other copy (an image, or a copy whose bytes are not handed) prints exactly as today, so every photo's edition, marked or not, keeps its bytes. The words are BOB's draft, for the UX stream to re-word. Also: `caseFileManifestCheck`'s `obscured_unnamed` and `original_carried` details say "a photo's place" / "whose photo"; I re-word them to "its original's place" / "whose material" (rule names unchanged; no caller matches those words outside this module's tests, checked by grep). Tell me if you want another rule.
