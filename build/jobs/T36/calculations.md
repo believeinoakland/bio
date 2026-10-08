@@ -78,3 +78,9 @@ My worker read the rest whole (`patterns.mjs`, `tables.mjs`, `application.mjs`, 
 **P6:** `bio-plane/src/calculations/` holds 3,391 lines, under about 4,000.
 
 Size (session_01JLKQ4KM6RQvEVRSy8fPJcz): test runs 6, module lines 3391
+
+## J2 · REPORT
+
+Other modules, from T36-19:
+(a) calculations' map gains `spotcheckvisit` and `spotcheck`. This turns affordances `t33.test.mjs:144` (R40/R12: a new module's map holds exactly its graded ops) red. It also adds "calculations: spotcheckvisit has no spec" to op-declarations `t33.test.mjs:192`, which is already red 17. Both clear when T36-35 declares the two ops (with op-grades and control-plane). op-declarations' `t34:135` (red 13) and `t35:196` fail on the base too.
+(b) The generated plane bundle `bio-plane/dist/bio-plane.bundled.mjs` is stale (calculations' source changed), for layer close.
