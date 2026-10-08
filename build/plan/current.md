@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #143 · session_01YCBYkMVtZpK8zWkFJcsNkZ · depth 1
 
-**Jobs** · bundler: BUNDLER #13 session_01Gr94vczwdnNrPgdvnxrCWd
+**Jobs** · bundler: BUNDLER #13 session_01Gr94vczwdnNrPgdvnxrCWd; pdf-reader: PDF-READER #5 session_01TmZK6qZWMuPDraW8kWN2cb; image-cover: IMAGE-COVER #2 session_01713tY2AEJZPTinfdxFZjHr; doc-clean: DOC-CLEAN #1 session_01RzWTiZh7mVWEYFtHXN4VP5
 
 **At T39's opening (K2339):** T38 closed by PR #17 (`main` @ `147f356dfe`, K2339); `tranche/T39` from it. Drafted during T38 (P18) by BOB #143 and re-checked at the opening: no design-stream `MERGE` came, so rule 4 leaves N797–N799 out; N806 Q1 answered A (K2334); N807 joins L11.
 
@@ -32,8 +32,8 @@
 **L1 merge order:** bundler, pdf-reader, image-cover, doc-clean (copy-free; doc-clean uses the other two).
 
 ### L2
-- **T39-M · membership** · R83's `MODULE_ORDER` names `doc-clean` · K657, K1185 · req: R83 (marked only).
-- **T39-3 · promotion** · (N800) C-18.8 verifies over the released bytes, C-4.2 refuses a prototype-key type, with tests; stamps every row awaiting stamp at T38's close and T39's L1–L2 rows · K2285, K1542 · req: the rows' behaviour, BOB's wording. Merges last in L2.
+- **T39-M · membership** · R83's `MODULE_ORDER` names `doc-clean` (L1) and `setup-words` (L11, tolerated until its job) · K657, K1185, K2343 · req: R83 (`plan/draft-T39-reqs.md`).
+- **T39-3 · promotion** · (N800) C-18.8 verifies over the released bytes, C-4.2 refuses a prototype-key type, with tests; stamps every row awaiting stamp at T38's close and T39's L1–L2 rows; (N808, joined at its START, K279) C-18.8 reads `bundle.md`'s bytes as bytes, not `latin1` (`release.mjs`:30) · K2285, K1542, K2343 · req: the rows' behaviour, BOB's wording. Merges last in L2.
 
 ### L3
 - **T39-4 · acquisition** · (N804) a test naming R45 · K2307 · req: none.
@@ -52,12 +52,16 @@
 - **T39-13 · ratification** · (N805) R67's scheduled stop carries `PHOTO_MARKS_CHANGED_SINCE` and its translation, with a test · K2308.
 - **T39-14 · case-disclosures** · (N806) R6's member-document arm, R7's copy row, C-120 rows with BOB's translations · K2333.
 
+- **T39-17 · case-checker** · (N806) its readable `/3` specification (`spec.mjs`:179–220, its R14) names a member document's cleaned copy beside a photo's for the `obscured` kind; words only, no format change · K2333, K2343 · req: R14's wording.
+
 ### L10
 - **T39-15 · scheduler** · (N806) calls `case-carriage.copyBatch` on `copyWake`, the edge · K2333.
 
 ### L11
-- **T39-16a/b · instance-setup split (N807)** · 4,228 lines (K2337): a new module by copy (the boundary BOB's at L11's START; `setup-words.mjs` the likely seam), then instance-setup deletes its copy and re-points (K624); a membership `MODULE_ORDER` share joins T39-M at the opening.
-- Whatever L1–L10's new codes owe: op-declarations, op-grades, affordances, answer-envelope shares of the C-120/C-122/C-141 rows; plane's composition (case-carriage's listener). Fixed at L11's START from the merged codes.
+- **T39-16a/b · setup-words (new) and instance-setup (N807)** · 4,228 lines (K2337): `setup-words` (in `modules.json` since K2343, layer 11 before instance-setup) takes `bio-plane/src/setup-words.mjs` (929 lines; it imports nothing, only `setup.mjs` imports it) by copy, with its requirements moved from instance-setup's (ids retired "moved to setup-words R<n>"); then instance-setup deletes its copy and re-points (K624). The boundary's detail BOB's at L11's START.
+- Whatever L1–L10's new codes owe: op-declarations, op-grades, affordances, answer-envelope shares of the C-120/C-122/C-141 rows; plane's composition (case-carriage's listener); (N810, K2346) `pdfjs-dist` as a dev dependency of `bio-plane/package.json`, so doc-clean's R5 oracle runs in CI. Fixed at L11's START from the merged codes.
+
+**Requirement text for L2–L10:** `plan/draft-T39-reqs.md` (reviewed, K2343), applied to each module's file before its layer's START.
 
 ## Left out of T39 (one hard reason each)
 

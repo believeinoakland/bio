@@ -236,12 +236,16 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
      this suite reads (`agent-worker/dist/agent-worker.bundle.json`, rebuilt by T37-17; its staleness arm green). One
      arrives and none leaves, the member's own `src/signin.mjs` (R66/R67's sign-in relay), which its `index.mjs` now
      imports (AGENT-WORKER #13, T37-17). */
+  /* RE-PINNED 2026-10-08 (BUNDLER #13, T39-1; N802, K2302, T38's red 16): 23 inputs still, from the committed manifest
+     this suite reads (`agent-worker/dist/agent-worker.bundle.json`, rebuilt by T38-10; its staleness arm green). One
+     renamed and nothing else moves: agent-model's `src/subscription.mjs` is now `src/signin.mjs` (T38-9), which
+     agent-worker reaches across trees for the member's sign-in account (AGENT-WORKER #14, T38-10, N785). */
   t("agent-worker's 23 inputs are all recorded — its seven own modules, agent-harness and agent-model across trees, the plane's denylist, run-rules with what it imports, and record-grammar through observation-log",
     (agent?.inputs || []).map((i) => i.path).sort(),
     [
      "../agent-harness/src/harness.mjs", "../agent-harness/src/subsession.mjs",
      "../agent-model/src/apikey.mjs", "../agent-model/src/model.mjs", "../agent-model/src/outcome.mjs",
-     "../agent-model/src/subscription.mjs",
+     "../agent-model/src/signin.mjs",
      "../bio-plane/src/observation-log/checks.mjs", "../bio-plane/src/observation-log/vocabulary.mjs",
      "../bio-plane/src/record-grammar/actors.mjs", "../bio-plane/src/record-grammar/ids.mjs",
      "../bio-plane/src/run-rules/checks.mjs", "../bio-plane/src/run-rules/deployment.mjs", "../bio-plane/src/run-rules/index.mjs",
