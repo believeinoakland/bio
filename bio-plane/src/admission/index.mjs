@@ -23,6 +23,9 @@
    an expired agent credential is refused by name (R10), the credential-free ops meet one window per source (R21), and
    the refusals R22 names are counted in credentials' security tally.
 
+   T38 (T38-24; N792, K2247): with no `KNOCK_FINGERPRINT_KEY` binding, `sourceOf` asks the store's `doorwindow` with
+   `count: false` for the fingerprint under the instance's key, so `setpassword` and `login` count as one source (R21).
+
    T36 (T36-36; F1's tail, K2111, K2129; N711, K1936 Q3; N744, K2038): a credential or secret in the address is refused
    by name, `CREDENTIAL_IN_ADDRESS` (R20, C-38.10, `credentialAddressGate`, its one site), and never read from there; the
    shared member key is retired, a live `MEMBER_TOKEN` refused `MEMBER_TOKEN_RETIRED` (R5, C-38.11); and R22's tally
@@ -769,9 +772,12 @@ export function doorRateLimited(retryAfter) {
 /* R21 — WHO IS CALLING, AS A KEYED FINGERPRINT: the connecting address as Cloudflare states it (`CF-Connecting-IP`),
    digested as `capture` R56 digests it (HMAC-SHA-256, its first 16 bytes in hex, under the same key). In the Worker
    that key is at hand only when the `KNOCK_FINGERPRINT_KEY` binding is set; otherwise it is capture's own, held in the
-   store, and this answers `null`: the door then stamps the `source` the window's store side answers (`doorWindowGate`,
-   K2038). A request that states no address is one shared source of its own (`UNSTATED_SOURCE`, not a digest, so it
-   never equals one). The address is read here, digested, and dropped; it is never kept, logged or answered. */
+   store, and (T38; N792, K2247) the store makes the fingerprint: asked through `doorwindow` with `count: false`, which
+   counts, refuses and writes nothing, so for one address `setpassword`'s `source` (stamped from here, control-plane R68)
+   equals `login`'s (the window's, `doorWindowGate`) with or without the binding. A store that cannot be asked, or does
+   not answer, gives `null`, named in the log by correlation id only; this never throws. A request that states no address
+   is one shared source of its own (`UNSTATED_SOURCE`, not a digest, so it never equals one). The address is read here,
+   digested or handed to the store in a request's body, and dropped; it is never kept, logged or answered. */
 export const UNSTATED_SOURCE = "unstated";
 function connectingAddress(req) {
   try {
@@ -783,11 +789,33 @@ export async function sourceOf(req, env) {
   const address = connectingAddress(req);
   if (address === null) return UNSTATED_SOURCE;
   const bound = env && typeof env.KNOCK_FINGERPRINT_KEY === "string" && env.KNOCK_FINGERPRINT_KEY ? env.KNOCK_FINGERPRINT_KEY : null;
-  if (!bound) return null;
+  if (!bound) return storeSource(address, env);
   const te = new TextEncoder();
   const key = await crypto.subtle.importKey("raw", te.encode(bound), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const mac = new Uint8Array(await crypto.subtle.sign("HMAC", key, te.encode(address)));
   return hexOf(mac).slice(0, 32);
+}
+
+/* R21 (T38): the store's fingerprint of `address` under capture's instance key, by `doorwindow` with `count: false`, the
+   address in the body of a POST to `bio`'s store and nothing in its address. The reply is read on the door's contract
+   (`ok: true` with a string `source` is an answer; anything else, unreadable included, is not), and the store's own
+   internal error is named in the log by its correlation id alone. `null` when there is no answer. */
+const CORRELATION = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+async function storeSource(address, env) {
+  let out = null;
+  try {
+    if (env && env.STORE && typeof env.STORE.get === "function") {
+      const r = await bioStore(env).fetch(new Request("http://do/doorwindow", {
+        method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ address, count: false }) }));
+      out = await r.json();
+    }
+  } catch { out = null; }
+  const source = out && typeof out === "object" && out.ok === true && out.result && typeof out.result === "object"
+    && typeof out.result.source === "string" && out.result.source !== "" ? out.result.source : null;
+  if (source === null)
+    console.warn(`admission: the caller's source was not read from the store; it is stamped null (correlation ${
+      out && typeof out === "object" && typeof out.correlation === "string" && CORRELATION.test(out.correlation) ? out.correlation : "none"})`);
+  return source;
 }
 
 /* R21 — THE WINDOW, AS THE FIRST GATE OF THE PUBLIC OPS (control-plane R28's order): every request to an op whose spec

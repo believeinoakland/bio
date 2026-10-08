@@ -4,6 +4,9 @@
    R6's lookup, R2, R3, then `admit` and R12) and answers the first refusal, silence or admission. Every test drives the module at its interface. */
 import { createHash, randomBytes } from "node:crypto";
 import assert from "node:assert/strict";
+import { DatabaseSync } from "node:sqlite";
+const { captureOf } = await import("../../../src/capture/index.mjs");
+const { CAPTURE_DERIVED_SCHEMA } = await import("../../../src/capture/schema.mjs");
 
 export const A = await import("../../../src/admission/index.mjs");
 export const C = await import("../../../src/admission/checks.mjs");
@@ -171,3 +174,37 @@ export function refused(r, status, code, check, secrets = []) {
 
 /** The inner requests that are not the credential lookups. */
 export const opCalls = (env) => env.calls.filter((c) => c.route !== "session" && c.route !== "aicredentiallook");
+
+/* R21's store side (`window.mjs`) over a real SQLite database (node:sqlite): a storage, a record-core stub that registers
+   declarations as record-core R21 does, and capture over the same storage (its knock key's table made, so the unbound
+   key is capture's own, its R56). */
+export const W = await import("../../../src/admission/window.mjs");
+export function storeWorld({ env = {} } = {}) {
+  const db = new DatabaseSync(":memory:");
+  const sql = { exec(q, ...a) { const st = db.prepare(q); return st.columns().length ? st.all(...a).map((r) => ({ ...r })) : (st.run(...a), []); } };
+  const storage = { sql, transactionSync(fn) {
+    db.exec("SAVEPOINT t");
+    try { const r = fn(); db.exec("RELEASE t"); return r; } catch (e) { db.exec("ROLLBACK TO t"); db.exec("RELEASE t"); throw e; }
+  } };
+  const knockKey = CAPTURE_DERIVED_SCHEMA.split(";").find((st) => /CREATE TABLE IF NOT EXISTS knock_key\b/.test(st));
+  db.exec(knockKey);
+  const ctx = { storage };
+  const capture = captureOf(ctx, { env });
+  const declared = [];
+  const record = { declareTable(module, entries) { declared.push({ module, entries }); return { ok: true }; } };
+  const a = W.admissionOf(ctx, { record });
+  const ops = (body) => W.admissionOps(a, new URL("http://do/doorwindow"), body);
+  const rows = () => sql.exec(`SELECT * FROM ${W.DOOR_WINDOW_TABLE} ORDER BY source, bucket`);
+  return { db, sql, ctx, capture, declared, record, a, ops, rows };
+}
+
+/** The Worker's env, whose store answers `doorwindow` through the store side's own map (as `store-door` would). */
+export function bridged(w, { answer = null, env = {} } = {}) {
+  const e = makeEnv({ answer: async (call) => {
+    if (answer) { const r = await answer(call); if (r) return r; }
+    if (call.route !== "doorwindow") return null;
+    const route = W.admissionOps(w.a, new URL(call.href), call.body).doorwindow;
+    return new Response(JSON.stringify({ ok: true, result: await route() }));
+  } });
+  return Object.assign(e, env);
+}
