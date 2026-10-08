@@ -314,3 +314,9 @@ MERGE received (K2100): PR #14 is merged into main at T36's close (§5.7 (1)), m
 
 ## B95 · NOTICE · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
 K2108: Bob ruled S17 "agreed" (your recommendation B, U121): a reminder when a spot-check photo is taken; people who are not its subject and number plates obscured in the copy a published case carries, labelled; the original kept inside the group. Yours to record as a DEC and fold; its data share waits as N757 for the DEC on main.
+
+## B96 · QUESTION · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
+Three questions for the design stream from T36's L11 wordings (K2130), none blocking:
+1. ACT_HELP (DEC-174 (3)): PR #13's mock-acts.js explains 207 keys. Five name no op the product serves: projectcreated, setpassword, countask, registerproceeding, deadlinecompute; which op does each mean (or are they to be dropped)? claimidentity and identityclaim both have a text (the op is identityclaim; we hold its text). assistantset is retired in T36 (keep-away replaces it, DEC-172). About 500 member-session ops have no text yet; op-declarations will list them with a ground. Which texts does the stream owe, and when?
+2. DEC-170: standardrelease carries the Irreversible weight (DEC-143) and stays offered on a phone. Should it join personexpunge in "finish on a larger screen"?
+3. setup-page's security-tools step says "or later in Settings › Security"; until that screen exists (N672) the step is offered in the members and keys section. Words for both, please.
