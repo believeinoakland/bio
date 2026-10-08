@@ -2190,7 +2190,10 @@ export function makeFetch(hooks = {}) {
         const b0 = JSON.parse(passBody);
         /* R59 (admission R20): a body's `token` is the caller's credential, the door's alone, never passed on; (K2146;
            R44) a grant's digest and the secret door's mark are the door's alone too, so no caller supplies either */
-        const strip = [...BODY_STAMPS, "token", "secretSha", "bySecret", ...(BODY_DROPPED[op] ?? [])];
+        /* R29, R67 (T38): an op whose `by` or `viewer` the door stamps in the address (`OP_STAMPS`) takes neither from
+           the caller's body either, so its owner's map never holds a caller's statement of who is acting */
+        const strip = [...BODY_STAMPS, "token", "secretSha", "bySecret", ...(BODY_DROPPED[op] ?? []),
+                       ...declared.filter((k) => k === "by" || k === "viewer")];
         if (b0 && typeof b0 === "object" && !Array.isArray(b0) && strip.some((k) => k in b0)) {
           for (const k of strip) delete b0[k];
           passBody = JSON.stringify(b0);
