@@ -14,11 +14,13 @@ import { mkdtempSync, writeFileSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
-import { inflateRawSync } from "node:zlib";
 import { world, stubOf, bucket, V, NOW, sha } from "./fixture.mjs";
 import { bindPublishedPlane, publishedRoutes, assembleCaseContainer } from "../../../src/publication/worker.mjs";
+import { buildCaseFile, isCaseFileManifest } from "../../../src/public-read/casefile.mjs";
+import { inbandQuartet } from "../../../src/inband.mjs";
 import { readContainer, readPart } from "../../../src/ooxml.mjs";
-import { makeZip, crc32 } from "../../make-zip.mjs";
+import { serialiseContainer } from "../../../src/container.mjs";
+import { crc32 } from "../../../src/ooxml.mjs";
 import { canonicalJson } from "../../../src/record-grammar/index.mjs";
 import { CASE_FILE_FORMAT, CASE_FILE_MANIFEST_PATH, caseFileManifestCheck, caseFilePath } from "../../../src/case-grammar/index.mjs";
 
@@ -50,6 +52,12 @@ const docRow = (ref, s) => ({ ref, kind: "document", sha: s, text_sha: null, ori
                               included: true, rests_under: "load_bearing" });
 const coRow = (ref) => ({ ref, by_kind: "co_attestation", by: "tsa.example", level: null, at: NOW, signature: null, recorded_in: null });
 
+/* A captured archive: a stored ZIP written by this module's own serialiser (`../container.mjs`), each entry `{name, data}`. */
+function makeZip(entries) {
+  const z = serialiseContainer(entries.map((e) => ({ name: e.name, bytes: typeof e.data === "string" ? new TextEncoder().encode(e.data) : new Uint8Array(e.data) })));
+  assert.equal(z.ok, true);
+  return z.bytes;
+}
 /* Where an entry's local header sits in the archive. */
 function localOffset(zip, name) {
   const want = Buffer.from(name);
@@ -58,10 +66,10 @@ function localOffset(zip, name) {
   throw new Error(`no local header for ${name}`);
 }
 /* The `container` block `acquisition` writes for entry `index` of `zip` (as case-carriage's own R8 tests write it). */
-function containerOf(zip, index, name, data, method = 8) {
+function containerOf(zip, index, name, data, method = 0) {
   const z = Buffer.from(zip), off = localOffset(z, name);
   return { archive_sha256: hex(z), index, path: name, name_raw: Buffer.from(name).toString("hex"), method,
-           crc32: crc32(Buffer.from(data)), compressed: z.readUInt32LE(off + 18), uncompressed: Buffer.byteLength(data),
+           crc32: crc32(new Uint8Array(Buffer.from(data))), compressed: z.readUInt32LE(off + 18), uncompressed: Buffer.byteLength(data),
            local_offset: off, member_sha256: hex(Buffer.from(data)), dos_time_stated: "1980-01-01T00:00:00",
            name_shared: 1, path_unsafe: false };
 }
@@ -89,15 +97,18 @@ function tokenOver(bytes) {
 }
 
 const infoText = (w, id) => w.text("INFO-2026-0001-minutes").replace(/INFO-2026-0001-minutes/g, id);
-/* A bundle through promotion, with its own `data/provenance.json`; `inline` files are held as text. */
+/* A bundle through promotion; `inline` files are held as text. Its `data/provenance.json` is then set to `documents` as
+   the live file (as case-carriage's own R8 tests set it), so the entries `acquisition` writes for an unpacked member
+   need not pass a promotion's provenance check written for this test. */
 function promote(w, id, documents, inline = []) {
   const r = w.promotion.promote({ bundleId: id, base: null, snapKey: `k-${id}`, author: V("olive"),
     files: [{ path: "bundle.md", text: infoText(w, id) }, ...inline.map((f) => ({ path: f.path, text: f.text })),
-            { path: "data/provenance.json", text: JSON.stringify({ documents }) }],
+            { path: "data/provenance.json", text: JSON.stringify({ documents: [] }) }],
     meta: { object_type: "information" },
     register: inline.filter((f) => f.register).map((f) => ({ sha256: sha(f.text), path: f.path, encoding: "utf8",
                                                             bytes: Buffer.byteLength(f.text) })) });
-  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 400));
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 2000));
+  w.st.sql.exec(`UPDATE files SET content=? WHERE bundle_id=? AND path='data/provenance.json'`, JSON.stringify({ documents }), id);
 }
 /* A blob-backed live file (the evidence store holds its bytes). */
 const blobFile = (w, bundleId, path, blob, bytes) =>
@@ -167,7 +178,7 @@ test("R32 a case resting on an archive member's document carries its container r
   assert.deepEqual(caseFileManifestCheck(m), [], "case-grammar R13's one check finds no departure");
   assert.equal(m.format, CASE_FILE_FORMAT);
   const record = canonicalJson(container);
-  const recPath = caseFilePath("container", [MEM, sha(record)]), arcPath = caseFilePath("archive", [MEM, archiveSha]);
+  const recPath = caseFilePath("container", [MEM, memberSha]), arcPath = caseFilePath("archive", [MEM, archiveSha]);
   assert.equal(typeof recPath, "string");
   assert.equal(typeof arcPath, "string");
   assert.deepEqual(pathOf(m, "container", MEM), [recPath]);
@@ -208,7 +219,8 @@ test("R32 the outsider's three steps run on the built case file: the manifest, u
     else {
       const o = stated.local_offset, start = o + 30 + archive.readUInt16LE(o + 26) + archive.readUInt16LE(o + 28);
       const raw = archive.subarray(start, start + stated.compressed);
-      cut = stated.method === 8 ? inflateRawSync(raw) : raw;
+      assert.equal(stated.method, 0, "a stored entry");
+      cut = raw;
     }
     assert.equal(hex(cut), memberSha, "the cut is the member, at its digest");
     assert.equal(hex(Buffer.from(await read(caseFilePath("document", MEM)))), memberSha, "and the member is carried whole");
@@ -230,8 +242,8 @@ test("R32 a member of a nested archive carries each record and archive outward t
   const w = world(), env = { PUBLISHED: bucket() };
   w.doc("INFO-2026-0001-minutes");
   const inner = Buffer.from(makeZip([{ name: "report.txt", data: MEMBER_TEXT }]));
-  const outer = Buffer.from(makeZip([{ name: "readme.txt", data: OTHER_TEXT }, { name: "inner.zip", data: inner, method: 0 }]));
-  const innerC = containerOf(outer, 1, "inner.zip", inner, 0), memberC = containerOf(inner, 0, "report.txt", MEMBER_TEXT);
+  const outer = Buffer.from(makeZip([{ name: "readme.txt", data: OTHER_TEXT }, { name: "inner.zip", data: inner }]));
+  const innerC = containerOf(outer, 1, "inner.zip", inner), memberC = containerOf(inner, 0, "report.txt", MEMBER_TEXT);
   const outerSha = holdArchive(w, env, OUTER, outer, { token: Buffer.from("OUTER-TOKEN") });
   const innerSha = holdArchive(w, env, ARCH, inner, { token: Buffer.from("INNER-TOKEN"),
                                                        entry: { ...unpacked(innerC, hex(inner)), file: "snapshots/archive.zip" } });
@@ -240,13 +252,13 @@ test("R32 a member of a nested archive carries each record and archive outward t
   assert.deepEqual(caseFileManifestCheck(m), []);
   const mr = canonicalJson(memberC), ir = canonicalJson(innerC);
   assert.deepEqual(pathOf(m, "container", MEM).sort(),
-                   [caseFilePath("container", [MEM, sha(mr)]), caseFilePath("container", [MEM, sha(ir)])].sort());
+                   [caseFilePath("container", [MEM, memberSha]), caseFilePath("container", [MEM, innerSha])].sort());
   assert.deepEqual(pathOf(m, "archive", MEM).sort(),
                    [caseFilePath("archive", [MEM, innerSha]), caseFilePath("archive", [MEM, outerSha])].sort());
   assert.deepEqual(Buffer.from(await read(caseFilePath("archive", [MEM, outerSha]))), outer);
   assert.deepEqual(Buffer.from(await read(caseFilePath("archive", [MEM, innerSha]))), inner);
-  assert.equal(dec(await read(caseFilePath("container", [MEM, sha(ir)]))), ir);
-  assert.deepEqual(out.unheld, []);
+  assert.equal(dec(await read(caseFilePath("container", [MEM, innerSha]))), ir);
+  assert.deepEqual(out.unheld.map((u) => u.what), ["extracted_text"], "nothing of the chain is unheld (the fixture states no extracted text)");
 });
 
 test("R32 bytes that do not hash to the digest registered are not carried and are named in unheld; a material that is not a member carries neither file", async () => {
@@ -297,4 +309,43 @@ test("R33 an edition carrying criteria rows carries them whole in the criteria f
   assert.deepEqual(answered, rows, "R31 answers the frozen rows");
   assert.equal(dec(await read(caseFilePath("criteria"))), canonicalJson(rows));
   assert.equal(m.files.filter((f) => f.kind === "criteria").length, 1, "at most once");
+});
+
+test("R5 R6 a case file stored before T36 (bio-case-file/1) is still recognised and served part by part as written; an unknown format is not a case file", async () => {
+  const w = world(), env = { PUBLISHED: bucket() };
+  w.doc("INFO-2026-0001-minutes");
+  const orig = w.signCase.bind(w);
+  w.signCase = (...a) => { const r = orig(...a); w.st.sql.exec(`UPDATE published_cases SET criteria=NULL WHERE case_id=?`, CASE); return r; };
+  w.member("olive");
+  const proj = w.project("Parks", "olive");
+  w.inquiry(F, { legs: [{ target: "INFO-2026-0001-minutes" }] });
+  const pin = w.head(F);
+  w.prepare(CASE, 1, { project: proj, roles: [{ target: F, version_sha: pin }] });
+  assert.equal(w.signCase(CASE, 1, { project: proj, roster: [{ bundle_id: F, version_sha: pin }] }).ok, true);
+  assert.equal(w.signFinding(F).ok, true);
+  env.PUBLISHED.m.set(`bio/published/${pin}`, new TextEncoder().encode(w.text(F)));
+  /* the case file as T35 built it: no file of a kind `/2` adds, its manifest stating /1 */
+  const facts = await w.read("casefilefacts", { caseId: CASE, edition: 1 });
+  const read = async (x) => { const o = await env.PUBLISHED.get(`bio/published/${x}`); return o ? new Uint8Array(await o.arrayBuffer()) : null; };
+  const built = await buildCaseFile({ facts, group: "parks-group", read });
+  assert.equal(built.ok, true);
+  assert.equal(built.files.some((f) => ["archive", "container", "criteria"].includes(f.kind)), false);
+  const manifest = { ...built.manifest, format: "bio-case-file/1" };
+  for (const f of built.files) env.PUBLISHED.m.set(`bio/published/${f.sha256}`, f.content);
+  const { bytes, quartet } = await inbandQuartet({ subject: manifest, over: "a case file manifest", date: NOW, author: "olive", bar: null });
+  const mSha = quartet.hash.sha256;
+  assert.equal(w.p.recordCaseManifest({ caseId: CASE, edition: 1, manifest, manifestSha: mSha, bytes: bytes.length }).ok, true);
+  env.PUBLISHED.m.set(`bio/published/${mSha}`, bytes);
+  const r = await call(w, env, "publishedbytes", { sha256: mSha, format: "zip", part: 1 });
+  assert.equal(r.status, 200);
+  const zip = await bytesOf(r), zc = readContainer(zip);
+  assert.equal(zc.ok, true);
+  assert.deepEqual(zc.entries.map((e) => e.name), [CASE_FILE_MANIFEST_PATH, ...manifest.files.map((f) => f.path)],
+                   "served as a case file: the manifest at the root, then each file at its path");
+  assert.equal(JSON.parse(dec((await readPart(zip, zc, CASE_FILE_MANIFEST_PATH)).bytes)).format, "bio-case-file/1", "as written");
+  assert.equal(isCaseFileManifest(manifest), true);
+  assert.equal(isCaseFileManifest({ ...manifest, format: CASE_FILE_FORMAT }), true);
+  /* negative control: a format no case file states is not one */
+  assert.equal(isCaseFileManifest({ ...manifest, format: "bio-case-file/9" }), false);
+  assert.equal(isCaseFileManifest({ ...manifest, format: "bio-case-container/6" }), false);
 });

@@ -19,7 +19,7 @@
  * for its size and nothing is left out. */
 
 import { canonicalJson } from "../record-grammar/index.mjs";
-import { CASE_FILE_FORMAT, CASE_FILE_MANIFEST_PATH, caseFilePath, casePartDigest, completeEditionOf, calculationFileText,
+import { CASE_FILE_FORMAT, CASE_FILE_FORMATS_ACCEPTED, CASE_FILE_MANIFEST_PATH, caseFilePath, casePartDigest, completeEditionOf, calculationFileText,
          provOf } from "../case-grammar/index.mjs";
 import { CONTAINER_MAX_BYTES } from "../container.mjs";
 
@@ -114,13 +114,14 @@ export async function buildCaseFile({ facts, group = null, read, maxBytes = CONT
       else await add(caseFilePath("extracted_text", m.ref), "extracted_text", tb);
     }
     /* R32 (N717; K2004): a member document carried whole brings its `container` record and its archive, outward to the
-       outermost, each under the material's ref at the digest the commit registered (`PublicRead.caseFileFacts`); bytes
+       outermost, each under the material's ref (an archive named by its own SHA-256, a record by its member's, `case-grammar`
+       R13) at the digest the commit registered (`PublicRead.caseFileFacts`); bytes
        that do not hash to it are not carried and are named in `unheld`, and an archive the commit did not register is
        named there too. The archive's tokens travel as today, in the material's attestation rows. */
     if (kind === "document" && bytes) for (const a of m.archives || []) {
       const ab = a.registered === false ? null : await held(a.sha, a.text);
       if (!ab) unheld.push({ ref: m.ref, sha: a.sha ?? null, what: a.kind });
-      else await add(caseFilePath(a.kind, [m.ref, a.sha]), a.kind, ab);
+      else await add(caseFilePath(a.kind, [m.ref, a.kind === "container" ? a.member : a.sha]), a.kind, ab);
     }
   }
   /* R33 (K2129): the edition's criteria rows exactly as R31 answers them, once, in canonical JSON; none for an edition
@@ -203,12 +204,7 @@ export async function buildCaseFile({ facts, group = null, read, maxBytes = CONT
   return { ok: true, manifest: manifestOf(assign, count), unheld, files: files.map((f, j) => ({ ...f, part: assign[j] })) };
 }
 
-/* R5, R6: the case-file formats served: the current one, and `bio-case-file/1`, every case file stored before T36, which
-   is served as written (`case-grammar` R13). */
-const CASE_FILE_FORMATS = new Set(["bio-case-file/1", CASE_FILE_FORMAT]);
-/** R5, R6: is this manifest a case file's (`bio-case-file/1` or the current format), rather than a container's from
- *  before T28. */
-export const isCaseFileManifest = (manifest) => !!(manifest && CASE_FILE_FORMATS.has(manifest.format));
+export const isCaseFileManifest = (manifest) => !!(manifest && CASE_FILE_FORMATS_ACCEPTED.includes(manifest.format));
 
 /** R5, R6: one part of a case file in the shape `../container.mjs`' `containerEntries` reads (its `parts[]` and
  *  `layout`), so the part is assembled, and a missing file refused `PART_MISSING` (C-98.5), at that one governed site:
