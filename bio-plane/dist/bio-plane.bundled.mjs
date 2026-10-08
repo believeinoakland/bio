@@ -153787,7 +153787,7 @@ function filingTemplatesOps(m, url, body) {
   const b = body && typeof body === "object" ? body : {};
   const pick3 = (k) => b[k] !== void 0 && b[k] !== null ? b[k] : has3(k) ? q10(k) : null;
   const stamps = { viewer: q10("viewer") };
-  const door = { secretSha: q10("secretSha") };
+  const door = { secretSha: b.secretSha ?? null };
   return {
     templatedraft: () => m.templateDraft({
       template: pick3("template"),
@@ -153827,8 +153827,8 @@ function filingTemplatesOps(m, url, body) {
       version: pick3("version"),
       recipient: pick3("recipient"),
       organisation: pick3("organisation"),
-      secretSha: q10("secretSha"),
       by: q10("author"),
+      ...door,
       ...stamps
     }),
     templategrantrevoke: () => m.templateGrantRevoke({ grant: pick3("grant"), by: q10("author"), ...stamps }),
@@ -153866,16 +153866,17 @@ function filingTemplatesOps(m, url, body) {
       ...door,
       ...stamps
     }),
+    /* control-plane R59: the template doors take a POST, so the two reads take their arguments from the body too */
     templatecomments: () => m.templateComments({
-      template: q10("template"),
-      version: q10("version"),
-      limit: q10("limit"),
+      template: pick3("template"),
+      version: pick3("version"),
+      limit: pick3("limit"),
       author: q10("author"),
       ...door,
       ...stamps
     }),
     templates: () => m.templatesFor({ kind: q10("kind"), profile: q10("profile"), use: q10("use"), state: q10("state"), ...stamps }),
-    templateread: () => m.templateRead({ template: q10("template"), version: q10("version"), author: q10("author"), ...door, ...stamps })
+    templateread: () => m.templateRead({ template: pick3("template"), version: pick3("version"), author: q10("author"), ...door, ...stamps })
   };
 }
 
@@ -175595,12 +175596,12 @@ var CONFORMANCE_CHECKS = Object.freeze({
   },
   ACT_NO_EVENT: {
     check: "C-113.29",
-    where: at27("#actOf", "is-act-event-named"),
+    where: at27("#actEvent", "is-act-event-named"),
     translation: "A government act is the event that records what was done. Name the event. Nothing was written."
   },
   ACT_NOT_AN_EVENT: {
     check: "C-113.31",
-    where: at27("#actOf", "is-act-aliased"),
+    where: at27("#actEvent", "is-act-aliased"),
     translation: "That act was recorded before acts were events, and no event is linked to it yet. A member links it to its event first; then it can be determined again. Nothing was written."
   },
   ACTOR_NOT_AN_OFFICE: {
@@ -175635,7 +175636,7 @@ var CONFORMANCE_CHECKS = Object.freeze({
   },
   OUTCOME_UNKNOWN: {
     check: "C-113.12",
-    where: at27("determine", "is-outcome-stated"),
+    where: at27("#determine", "is-outcome-stated"),
     translation: "Each standard carries the member's outcome: compliant, noncompliant or unclear. One is missing or not one of the three. Nothing was written."
   },
   UNCLEAR_NO_QUESTION: {
@@ -175670,7 +175671,7 @@ var CONFORMANCE_CHECKS = Object.freeze({
   },
   PROPOSAL_CANNOT_DETERMINE: {
     check: "C-113.19",
-    where: at27("comparisonPropose", "is-proposal-outcomeless"),
+    where: at27("#propose", "is-proposal-outcomeless"),
     translation: "A comparison sets out rows and questions for members; it never states whether the act complied. Remove the outcome. Nothing was written."
   },
   NO_SUCH_COMPARISON: {
@@ -175710,7 +175711,7 @@ var CONFORMANCE_CHECKS = Object.freeze({
   },
   STANDARD_NOT_BINDING: {
     check: "C-113.32",
-    where: at27("determine", "is-standard-binding"),
+    where: at27("#determine", "is-standard-binding"),
     translation: "This standard does not bind this body, so the act cannot be found nonconforming against it. Record it as a benchmark comparison: below, slower than, or above. Nothing was written."
   },
   BENCHMARK_CALLED_NONCONFORMING: {
@@ -175720,12 +175721,12 @@ var CONFORMANCE_CHECKS = Object.freeze({
   },
   ACTOR_IS_A_PERSON: {
     check: "C-113.34",
-    where: at27("#comparedActor", "is-actor-not-a-person"),
+    where: at27("#comparedAct", "is-actor-not-a-person"),
     translation: "An act is compared as the act of an office or an organisation. The people who took part are recorded on the act, never as the one who acted. Nothing was written."
   },
   ACTOR_NOT_AN_OFFICE_OR_ORGANISATION: {
     check: "C-113.35",
-    where: at27("#comparedActor", "is-actor-office-or-organisation"),
+    where: at27("#comparedAct", "is-actor-office-or-organisation"),
     translation: "Name the office or organisation whose act this is. Nothing was written."
   },
   MEASURE_NO_DENOMINATOR: {
