@@ -28,6 +28,13 @@ The set measured over 300 KB (own code 204 KB, own tests 284 KB, requirements 35
 
 Size (session_019AZwL2DAm7ic4sUi9n3hkC): test runs 9, module lines 2920
 
+
+## B2 · CHANGE, processed
+
+Merged `tranche/T36` (`a18fbef464`, notice-producers merged, K2160). The merged producer's four kinds and classes (`notice-producers/index.mjs`:95–98) match R1's catalogue exactly. `noticed.test.mjs`' T36 test now uses the producer's own subject shapes (`civicsmith` with no id, `capture_home`, `standard`; :572, :684, :742, :798), and the dispositions hold. Re-run: queue 128/0; `conclude-project` 1/0; `docdates` 1/0; `notice-producers` 73 pass, 0 fail, 1 todo (its own R14 T37 todo); `store-door` 36/36; `system/migrate-released` 1/1; `plane` 128/130 and `answer-envelope` 24/26, the same four inherited reds (red 27, red 11). Checks: format, architecture, coverage (41 of 41), ownership (5 files): 0 failures each.
+
+Size (session_019AZwL2DAm7ic4sUi9n3hkC): test runs 19, module lines 2920
+
 ## J1 · COMPLETE
 
 T36-46 done: R1's four FINDING kinds (security-level-high, policy-changed-noticed, scan-found, security-tool-off) catalogued with their sentences in queuestate.mjs; R12's default disposition holds with no code change. queue tests 128/0; users' only reds are the inherited four (plane red 27, answer-envelope red 11), identical without my change. format, architecture, coverage (41/41), ownership 0 failures. 2,920 lines. The R1 not-yet-met mark is yours to strike. Ready to merge tranche/T36 after notice-producers' merge when you say. Details in my record.
