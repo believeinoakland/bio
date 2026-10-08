@@ -216,7 +216,8 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
      of one fleet member's build inputs, which no module test covers. */
   /* RE-PINNED 2026-10-01 (LEGACY-TESTS #18, T20; K641, K890): 153 -> 13 inputs, from the committed manifest this suite
      reads (`agent-worker/dist/agent-worker.bundle.json`; its staleness arm green). T18 layer 6 (K683) took the catalogue,
-     skills and ai-runs out of the member's build (R48 reads the rendered pack from `op=affordances`), so what is left is
+     skills and ai-runs out of the member's build (R48 read the rendered pack from `op=affordances`; since T36-24 it
+     reads it from `op=agentpack`, K2135), so what is left is
      its five own modules, the plane's `tokens.mjs` (runtime-limits) and run-rules with observation-log's `checks.mjs` and
      `vocabulary.mjs` through it (`build/manifest.md`'s artifact table). The 153-input pin, accepted red since T18 (K641),
      retired with the inputs it named; docprofile's moved files (N441) left this list with them. */

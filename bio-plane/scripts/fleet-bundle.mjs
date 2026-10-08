@@ -452,6 +452,43 @@ export function containerParts(member, memberNames = [], { packages = true } = {
   return { parts };
 }
 
+/* ---- A MEMBER'S OWN BUCKETS AND SCHEDULE (bundler R25; N772, K2155) -----------
+ *
+ * The fleet statement's `services` carry a member's service bindings and nothing else, so a member that binds an R2
+ * bucket or states a cron (`file-scanner`'s `CAPTURES` and its daily refresh; the readers' `CAPTURES`) carries one more
+ * part, type `Worker`, at `worker.json`: `{r2_buckets: [{binding, bucket}], crons}`, copied from the member's own
+ * `wrangler.jsonc` and never defaulted. A bucket is named by its ROLE, never by the account's bucket name, so the
+ * installer binds the copy's own bucket of that role and a later per-copy name needs no new release. The roles are the
+ * plane's two buckets, as this project's configs name them; any other bucket is refused by its binding. The statement's
+ * format is unchanged: the part rides `parts=` like every other. */
+export const WORKER_PART_PATH = "worker.json";
+export const BUCKET_ROLES = Object.freeze({ "bio-captures": "captures", "bio-published": "published" });
+
+/** A member's `Worker` part from its parsed `wrangler.jsonc`: `{part: null}` when it binds no bucket and states no
+ *  cron; `{part: {descriptor, bytes}}`; or `{missing: [what, …]}` naming each binding whose bucket has no role (by its
+ *  binding name) and each list that is not one (`r2_buckets`, `triggers.crons`). Never throws. */
+export function workerPart(cfg) {
+  const c = isBlock(cfg) ? cfg : {};
+  const missing = [];
+  const r2 = c.r2_buckets === undefined ? [] : c.r2_buckets;
+  if (!Array.isArray(r2)) missing.push("r2_buckets");
+  const buckets = [];
+  for (const b of Array.isArray(r2) ? r2 : []) {
+    const binding = isBlock(b) && typeof b.binding === "string" && b.binding ? b.binding : null;
+    const role = binding && typeof b.bucket_name === "string" && Object.hasOwn(BUCKET_ROLES, b.bucket_name) ? BUCKET_ROLES[b.bucket_name] : null;
+    if (!role) { missing.push(binding || "(an R2 bucket binding with no name)"); continue; }
+    buckets.push({ binding, bucket: role });
+  }
+  const triggers = c.triggers === undefined ? {} : c.triggers;
+  const crons = isBlock(triggers) && triggers.crons !== undefined ? triggers.crons : (isBlock(triggers) ? [] : null);
+  if (!Array.isArray(crons) || !crons.every((x) => typeof x === "string" && x.trim()))
+    missing.push("triggers.crons");
+  if (missing.length) return { missing };
+  if (!buckets.length && !crons.length) return { part: null };
+  const descriptor = { r2_buckets: buckets, crons: [...crons] };
+  return { part: { descriptor, bytes: Buffer.from(JSON.stringify(descriptor, null, 2) + "\n") } };
+}
+
 /** The three repository-relative paths a guarded member stands on. */
 export function memberPaths(member, repoRoot = REPO_ROOT) {
   const rel = (p) => repoPath(repoRoot, join(member.abs, p));
