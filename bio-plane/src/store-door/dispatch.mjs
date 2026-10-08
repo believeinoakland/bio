@@ -366,6 +366,11 @@ export function controlPlaneRoutes(ctx, url, body, grant = null) {
     /* R11 (K1674): the Worker's question whether a token is a live ask grant admitting the op (credentials R28),
        store-internal as `wizardrefusaltally`. */
     aigrantadmit: () => credentialsOf(ctx).aiGrantAdmit({ token: b.token, op: b.op, write: b.write }),
+    /* R10 (K2238; control-plane R65): two store-internal routes with no spec (op-declarations R6), each credentials' own
+       answer: the group's keep-away (`{ok: true}` while the group does not keep its material away), and the member's
+       subscription fact, the member the stamped `by`. */
+    aikeptaway: () => credentialsOf(ctx).aiKeptAway() ?? { ok: true },
+    subscriptionconnected: () => credentialsOf(ctx).subscriptionConnected({ member: q("by") }),
     /* R11 (K1685; agent-worker R54): the ask's own calls, each its owner's, the member the stamped viewer: the ceiling
        before any model call (ai-runs R50's `aiUseCheck`; `{ok: true}` when under it), each call's use counted as an
        ask's (its R48), and the answer checked over the grant's read log (answers R4), the grant the header's (R9). */

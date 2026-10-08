@@ -21,11 +21,11 @@ const P = await import("../../../src/store-door/pull.mjs");
 const USE = { input_tokens: 10, output_tokens: 5, cache_read_input_tokens: 0, cache_creation_input_tokens: 0, total_cost_usd: null };
 const URL0 = new URL("http://do/");
 
-test("R1 (N13, N364, N379; K566, K723, K757, K784, K1674): the map this module adds holds queue's, tasks', affordances' and sources' own maps whole, made lazily (no instance built until a route runs), the two own-key acts, the tally, the ask's four store-internal routes, the three drafts and the pull, and nothing else", () => {
+test("R1 (N13, N364, N379; K566, K723, K757, K784, K1674): the map this module adds holds queue's, tasks', affordances' and sources' own maps whole, made lazily (no instance built until a route runs), the two own-key acts, the tally, the ask's four store-internal routes, R10's two (`aikeptaway`, `subscriptionconnected`), the three drafts and the pull, and nothing else", () => {
   const mine = D.controlPlaneRoutes(null, URL0, null);
   const own = (ops) => Object.keys(ops(null, URL0, null));
   const want = new Set([...own(queueOps), ...own(tasksOps), ...own(affordancesOps), ...Object.keys(sourcesOps(null, URL0, null)),
-    "signerregister", "signerrevoke", "wizardrefusaltally", "aigrantadmit", "askceiling", "askusage", "askcheck",
+    "signerregister", "signerrevoke", "wizardrefusaltally", "aigrantadmit", "aikeptaway", "subscriptionconnected", "askceiling", "askusage", "askcheck",
     "groupdescriptiondraft", "writinghelp", "translationdraft", "inboxpullfile"]);
   assert.deepEqual(new Set(Object.keys(mine)), want);
   for (const [op, f] of Object.entries(mine)) assert.equal(typeof f, "function", op);
@@ -227,6 +227,25 @@ test("R10 (K1755; control-plane R29, R30): a draft's handler receives `assistant
   ]);
   const all = JSON.stringify([seen, a.json, b.json]);
   for (const s of ["sk-bea-own-secret", "sk-group-key-secret", "sk-forged"]) assert.equal(all.includes(s), false, s);
+});
+
+test("R10 (K2238; control-plane R65; credentials R35, R43): the store-internal routes `aikeptaway` and `subscriptionconnected` answer credentials' own words — `aiKeptAway()` as given while the group keeps its material away and `{ok: true}` while it does not; `subscriptionConnected` for the member the stamped `by`, whatever the body names (negative control: a member not active is credentials' own refusal, recording nothing)", async () => {
+  const { r, C } = await drafts();
+  assistant(r, false);
+  const kept = await r.go("aikeptaway", "POST", {});
+  assert.deepEqual([kept.status, kept.json.result], [200, C.aiKeptAway()]);
+  assert.equal(kept.json.result.reason, "AI_KEPT_AWAY");
+  assistant(r, true);
+  assert.deepEqual((await r.go("aikeptaway", "POST", {})).json.result, { ok: true });
+  const asked = [];
+  const orig = C.subscriptionConnected.bind(C);
+  C.subscriptionConnected = (a) => { asked.push(a); return orig(a); };
+  const ok = await r.go("subscriptionconnected?by=member:bea", "POST", { member: "member:ann", login: "code-x" });
+  assert.equal(ok.json.result.ok, true, JSON.stringify(ok.json));
+  const no = await r.go("subscriptionconnected?by=member:nobody", "POST", {});
+  assert.equal(no.json.result.reason, "ACCOUNT_MEMBER_NOT_ACTIVE");
+  assert.deepEqual(asked, [{ member: "member:bea" }, { member: "member:nobody" }]);
+  assert.deepEqual(r.db.prepare("SELECT member_id FROM subscription_connections").all().map((x) => x.member_id), ["bea"]);
 });
 
 test("R12: no place is named in this module's behaviour or outward text — every answer the door itself builds (BAD_JSON, unknown op, the internal error, both hold refusals), every reason it lists for a read naming no project, and the filed record and the sentences of the pull (negative control: the pattern finds a place)", async () => {
