@@ -56,3 +56,7 @@ Size (session_017pQAZVD5PcnqYJgECFytfm): test runs 4, module lines 2,083
 ## J1 · REPORT
 
 Found in other modules (record's Completion): (1) standards R43: #bindingOf's adoption branch (standards/index.mjs:1926-1930) answers binds from the adoption's start with no in-force check (R20), so a standard adopted by the body binds after its period ended (inForceAt not_in_force, bindsAt binds, verified) and, with no stated end, after a recorded through or with no record; conformance R27 then accepts noncompliant where R51 says it refuses. Standards' to fix (an N-entry for T37 suggested). (2) conformance's own checks.mjs:176, :181 give C-113.34/.35 the where #comparedActor (the function is #comparedAct); pinned in test/fixtures/row-census-1.63.0.jsonl:224-225 (not mine), so left for promotion's next stamp.
+
+## J2 · COMPLETE
+
+T36-43 complete on job/T36/conformance (record's Completion): t36.test.mjs, 4 tests naming R27 and R3 over a standard known in force through D (accepted at D; STANDARD_NOT_BINDING at D+1 and after withdrawal; R3 undetermined stated at D+1). No code or requirement change. conformance 80/0; format, architecture, coverage (29/29), ownership (2 files) 0 failures. Size 2,083 lines (unchanged).
