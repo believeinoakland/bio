@@ -14,3 +14,7 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Layer 11 has 16 jobs; merge order: wizard-scripts → op-grades → affordances → tasks → notice-producers → queue → setup-page → instance-setup → op-declarations → legacy-ui → installer → admission → answer-envelope → store-door → control-plane → plane (`modules.json` order, except N711's callers before admission); you are 5th.
 Inherited reds: the plan's rule 5 list as it stands at your START (read it there; open at this writing: 1, 4, 7, 10–13, 15–20, 22–24, 26, 27). None is yours. Expect among your users' tests the reds rule 5 names for op-declarations, control-plane and plane until their L11 jobs merge.
 Not part of any reading set: generated artifacts (bundles under `dist/`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Re J1: (a), as you read it (K2155, BOB's). R14 is amended on the tranche branch: the item leaves when its recipient disposes of it (T36); its leaving when no open hold covers the finding waits for `file-safety`'s synchronous `held` on `scanFindings` (N771, T37), marked *(not yet met: T37)*; name that half in a `test.todo` (K208). `threatOf` is out of your Uses. Merge the tranche branch before continuing.
