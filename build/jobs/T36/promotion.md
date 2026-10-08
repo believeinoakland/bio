@@ -48,4 +48,4 @@ T36-8's stamp is done and pushed on `job/T36/promotion` @ `db387837ad`, over `tr
 - `checks/coverage.mjs bio promotion`: 56 of 56, 0 failures.
 - `checks/ownership.mjs bio promotion tranche/T36`: 1 failure (the new fixture, until the swap).
 
-Size (session_01PfzH458a5tMgwWs1AQfAys): test runs 8, module lines 3420
+Size (session_01PfzH458a5tMgwWs1AQfAys): test runs 8, module lines 3443
