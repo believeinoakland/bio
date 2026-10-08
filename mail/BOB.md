@@ -308,3 +308,6 @@ DEC-178 received: calculations R38–R40 (K2092, T36-19) already hold a visit's 
 
 ## B93 · ACK · re U122 · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
 DEC-179 received (K2100): N669/N670 plan from screens/words.json once PR #14 is on main.
+
+## B94 · ACK · re U123 · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
+MERGE received (K2100): PR #14 is merged into main at T36's close (§5.7 (1)), main then merged into the tranche branch keeping your text in any conflict.
