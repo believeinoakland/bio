@@ -204,9 +204,30 @@ export function n26MigratedReading(reading, map, text, { at = null } = {}) {
         if (typeof x === "string") o[k] = x.replace(new RegExp(`${from}(?![0-9])`, "g"), to);
     return o;
   };
-  const OWN = new Set(["text_source", "provenance", "container_extent", "basis", "migrated"]);
+  /* R70 (N724): a document table's cells, keyed by the table's `ref` (reading-pipeline R28). Each key follows its table
+     to `tables[old].new` and each cell's `doc-table` source moves with it; a table N26 no longer reads takes its cells
+     with it. The keys are listed in N26's table order. A cell is not a reference the reading names, so it is not
+     counted in `moved`. `null` (the body not read) and `{}` (no tables) stay as stored. */
+  const moveCells = (cells) => {
+    if (!cells || typeof cells !== "object" || Array.isArray(cells)) return cells;
+    const counted = { ...moved };
+    const keyed = [];
+    for (const [key, list] of Object.entries(cells)) {
+      const m = /^table ([1-9][0-9]*)$/.exec(key);
+      const old = m ? Number(m[1]) - 1 : null;
+      const t = old == null ? null : map.tables[old];
+      const to = old == null || !t ? old : t.new;
+      if (old != null && to == null) continue;
+      keyed.push([to, old == null ? key : `table ${to + 1}`, walk(list)]);
+    }
+    Object.assign(moved, counted);
+    keyed.sort((a, b) => (a[0] == null ? (b[0] == null ? 0 : 1) : b[0] == null ? -1 : a[0] - b[0]));
+    return Object.fromEntries(keyed.map(([, k, v]) => [k, v]));
+  };
+  const OWN = new Set(["text_source", "provenance", "container_extent", "basis", "migrated", "cells"]);
   const next = {};
   for (const [k, v] of Object.entries(reading)) next[k] = OWN.has(k) ? v : walk(v);
+  if (Object.prototype.hasOwnProperty.call(reading, "cells")) next.cells = moveCells(reading.cells);
   next.text_source = reading.text_source.map((s) => (isDocxLayer(s) ? { ...s, reader: N26_READER_MARK } : s));
   const ce = reading.container_extent;
   if (ce && typeof ce === "object") {
