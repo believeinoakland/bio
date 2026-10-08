@@ -67,6 +67,8 @@ The fixture now records a `direct` receipt for `doc()` by default (`w.receipt`).
 
 Size (session_01LmwYYcJzTZXw2vJWwsENHv): test runs 16, module lines 1324
 
+**B2 (CHANGE), applied.** `tranche/T39` was merged in, bringing case-grammar T39-9 (K2374). After the merge, `test/m/case-carriage`: tests 67, pass 67, fail 0. format (138 requirements files), architecture, coverage (17/17) and ownership each report 0 failures. Nothing in this module needed to change. `case-checker/program.mjs` is stale from case-grammar, not from this job, and is accepted by name.
+
 ## J1 · REPORT
 
 T39-10 changes what R1 and R13 answer for a document no receipt fetched (R62 fetched:false), as K2333 intends. Four users' tests go red because their fixtures hold documents with no fetch receipt: publication 128/5 (R22, R57 x3, R58: the commit is refused C-122.6, because R13 now lapses a member document carried whole; T39-11 owes C-122.7 for those rows), case-authoring 140/24 (its fixture ratify is refused the same way), affordances 219/1 (the R14/R8/R18 publication fixture), and plane 150/1 (docket.test.mjs:54 lists case-carriage's purge-cleared tables and now also sees document_copies and document_copy_queue, R12). The fix in each is fixture-only: a direct receipt (provenance recordReceipt) for each document carried whole, and the two table names in plane's list. case-disclosures, scheduler, op-declarations, answer-envelope and control-plane are green. New for promotion's stamp: C-141.11 DOCUMENT_COPY_NO_STORE. One reading of mine, stated in the record: R13 does not lapse a digest the register holds no capture under (R1 answers it unheld, never refused), so publication's never refuses for a material it cannot hold arm keeps holding.
