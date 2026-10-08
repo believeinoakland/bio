@@ -2,9 +2,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { exploreOf, HUB_WORDS, LEAD_SENTENCE } from "../../../src/explore/index.mjs";
-import { BOUNDS, LOWEST_GRADE, createRegistry } from "../../../src/connection-grammar/index.mjs";
+import { BOUNDS, LOWEST_GRADE, createRegistry, hubBoundOf } from "../../../src/connection-grammar/index.mjs";
 import { OBSERVATION_STATES } from "../../../src/observation-log/index.mjs";
-import { AT, INQUIRY, ZONE, valid, ent, conn, world, byOwner, makeStore, makeOwner } from "./fixtures/owners.mjs";
+import { AT, INQUIRY, ZONE, valid, ent, evt, conn, world, byOwner, makeStore, makeOwner } from "./fixtures/owners.mjs";
 
 const V = "alice";
 const A = ent(1), B = ent(2), C = ent(3), D = ent(4), E = ent(5), F = ent(6);
@@ -124,28 +124,41 @@ test("R4 only hops valid at the date are walked; an undetermined hop is walked, 
   assert.deepEqual(ask(x, { at: { value: "1999-01-01", precision: "day", zone: ZONE } }).paths.map(ids), []);
 });
 
-test("R5 bounds: fan-out keeps the first 1,000 of a kind and names the node; a hub is named with its set size and why and not expanded; the node bound and the time budget stop the walk as exhausted; every answer states visited, depth, budget and elapsed", () => {
-  // Fan-out: an owner whose pages carry more than 1,000 of one kind.
+test("R5 bounds: an owner's answer is read page by page to its end within each kind's own bound; items beyond a kind's bound are not walked and the node and kind are named; a hub is named with its kind, bound, set size and why and not expanded for that kind; the node bound and the time budget stop the walk as exhausted; every answer states visited, depth, budget and elapsed", () => {
+  // Fan-out: an owner whose pages carry more than 1,000 of one kind of bound 1,000.
   const many = [];
   for (let i = 0; i < 1200; i++) many.push(conn("line:part_of", A, ent(1000 + i), { id: `f-${String(i).padStart(5, "0")}` }));
   const f = make(many, { opts: { lines: { pageSize: 1000, noHub: true } } }).x;
   const fr = ask(f, { depth: 1 });
-  assert.equal(fr.paths.length, BOUNDS.fanout);
+  assert.equal(fr.paths.length, hubBoundOf("line:part_of"));
   assert.deepEqual(fr.paths.map(ids), many.slice(0, 1000).map((c) => c.id).sort(), "the first 1,000 in the owner's order");
-  assert.equal(fr.fanout_truncated[0].node, A);
-  assert.equal(fr.fanout_truncated[0].kind, "line:part_of");
+  assert.equal(fr.fanout_truncated.length, 1);
+  assert.deepEqual([fr.fanout_truncated[0].node, fr.fanout_truncated[0].kind, fr.fanout_truncated[0].bound], [A, "line:part_of", 1000]);
   assert.equal(fr.complete, false);
+  // A 3,400-vote set (a four-year term at the desk figure) is paged whole across four pages: never cut at one page's fan-out.
+  const log = [];
+  const votes = [];
+  for (let i = 0; i < 3400; i++) votes.push(conn("event_voted", A, evt(1 + i), { id: `v-${String(i).padStart(5, "0")}` }));
+  const vr = ask(make(votes, { opts: { events: { pageSize: 1000, log } } }).x, { depth: 1, kinds: ["event_voted"] });
+  assert.equal(vr.paths.length, 3400, "every vote walked");
+  assert.deepEqual(log.filter((c) => c.node === A).map((c) => c.page ?? 0), [0, 1000, 2000, 3000], "four pages, read to the end");
+  assert.deepEqual([vr.hubs, vr.fanout_truncated, vr.complete], [[], [], true]);
+  // A vote set an owner pages beyond its kind's 4,000 is cut there, the node and kind named with that bound.
+  const over = [];
+  for (let i = 0; i < 4100; i++) over.push(conn("event_voted", A, evt(1 + i), { id: `w-${String(i).padStart(5, "0")}` }));
+  const or = ask(make(over, { opts: { events: { pageSize: 1000, noHub: true } } }).x, { depth: 1, kinds: ["event_voted"] });
+  assert.equal(or.paths.length, hubBoundOf("event_voted"));
+  assert.deepEqual(or.fanout_truncated.map((t) => [t.node, t.kind, t.bound]), [[A, "event_voted", 4000]]);
   // An owner's own `truncated` is named too.
   const t = make(base(), { opts: { lines: { truncatedAt: [A] } } }).x;
   assert.equal(ask(t).fanout_truncated[0].node, A);
-  // A hub: named, its set size and why, not expanded.
+  // A hub: named with its kind, that kind's bound, its set size and why, and not expanded for that kind.
   const hub = [conn("line:part_of", A, B, { id: "to-hub" }), conn("line:part_of", B, C, { id: "beyond" })];
   for (let i = 0; i < 1001; i++) hub.push(conn("line:holds:employee", ent(2000 + i), B));
   const h = ask(make(hub).x);
-  assert.deepEqual(h.paths.map(ids), ["to-hub"], "the hub is reached, never expanded");
+  assert.ok(!h.paths.some((p) => p.hops.some((x) => x.kind === "line:holds:employee")), "the hub's employees are never expanded");
   assert.equal(h.hubs.length, 1);
-  assert.equal(h.hubs[0].node, B);
-  assert.ok(h.hubs[0].set_size > BOUNDS.hub);
+  assert.deepEqual([h.hubs[0].node, h.hubs[0].owner, h.hubs[0].kind, h.hubs[0].bound, h.hubs[0].set_size], [B, "lines", "line:holds:employee", 1000, 1001]);
   assert.ok(h.hubs[0].why.length);
   assert.equal(h.hubs[0].words, HUB_WORDS);
   // The node bound: 5,000 visited, then exhausted.
@@ -170,9 +183,62 @@ test("R5 bounds: fan-out keeps the first 1,000 of a kind and names the node; a h
   assert.equal(s.budget_ms, 25);
   // A budget may be lowered, never raised.
   assert.equal(exploreOf(null, { registry: createRegistry(), budget_ms: 10 ** 9 }).explore({ from: A, at: AT, viewer: V }).budget_ms, BOUNDS.time_budget_ms);
-  for (const r of [fr, h, n, s, ask(make().x)]) {
+  for (const r of [fr, vr, or, h, n, s, ask(make().x)]) {
     for (const k of ["visited", "depth", "budget_ms", "elapsed_ms"]) assert.equal(typeof r[k], "number", k);
   }
+});
+
+test("R20 a hub is judged per kind: a hub answer to a call naming several kinds is asked again for each kind alone, a kind answered in items is walked, only a kind that is a hub alone is named; the calls count toward the budget and reveal nothing hidden", () => {
+  const log = [];
+  const M = ent(3);
+  // Votes over their bound beside meetings under theirs, from one member.
+  const conns = [conn("event_decider", M, evt(1), { id: "meeting-1" }), conn("event_decider", M, evt(2), { id: "meeting-2" })];
+  for (let i = 0; i < 4001; i++) conns.push(conn("event_voted", M, evt(100 + i)));
+  const w = make(conns, { opts: { events: { log } } });
+  const r = w.x.explore({ from: M, at: AT, viewer: V, depth: 1, kinds: ["event_voted", "event_decider"] });
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.paths.map(ids), ["meeting-1", "meeting-2"], "the meetings are walked");
+  assert.deepEqual(r.hubs.map((h) => [h.node, h.owner, h.kind, h.bound, h.set_size, h.words]), [[M, "events", "event_voted", 4000, 4001, HUB_WORDS]]);
+  assert.deepEqual(log.map((c) => c.kinds), [["event_voted", "event_decider"], ["event_voted"], ["event_decider"]], "asked again for each kind alone, and for no kind not asked");
+  for (const c of log) assert.deepEqual([c.node, c.at, c.viewer, c.scope], [M, AT, V, null], "each call R2's, with the same date, viewer and scope");
+  assert.equal(r.owner_calls, 3, "the calls are counted");
+  assert.equal(r.complete, false);
+  // A kind under its bound when asked alone is walked whole; a hub answer to a one-kind call names that kind.
+  log.length = 0;
+  const one = w.x.explore({ from: M, at: AT, viewer: V, depth: 1, kinds: ["event_voted"] });
+  assert.deepEqual([one.hubs.length, one.hubs[0].kind, log.length], [1, "event_voted", 1]);
+  // At 4,000 votes the member is no hub: every vote and meeting walked.
+  const atBound = make(conns.slice(0, 4002)).x.explore({ from: M, at: AT, viewer: V, depth: 1 });
+  assert.deepEqual([atBound.paths.length, atBound.hubs, atBound.fanout_truncated], [4002, [], []]);
+  // The calls count toward the time budget: a clock moving 10 ms per call and a 25 ms budget stop during the re-asks.
+  let clock = 0;
+  const slow = exploreOf(null, { registry: make(conns).registry, now: () => (clock += 10), budget_ms: 25 })
+    .explore({ from: M, at: AT, viewer: V, depth: 1, kinds: ["event_voted", "event_decider"] });
+  assert.equal(slow.truncated, true);
+  assert.match(slow.why, /time budget/);
+  // Sight: votes the viewer may not see neither make the member a hub nor show in the re-asks.
+  const fenced = [...conns.slice(0, 4002), ...Array.from({ length: 5 }, (_, i) => conn("event_voted", M, evt(9000 + i), { id: `hidden-${i}`, seen_by: ["carol"] }))];
+  const alice = make(fenced).x.explore({ from: M, at: AT, viewer: V, depth: 1 });
+  const none = make(conns.slice(0, 4002)).x.explore({ from: M, at: AT, viewer: V, depth: 1 });
+  const strip = (x) => ({ ...x, elapsed_ms: 0 });
+  assert.deepEqual(strip(alice), strip(none), "as if the hidden votes were never held");
+  const carol = make(fenced).x.explore({ from: M, at: AT, viewer: "carol", depth: 1 });
+  assert.deepEqual(carol.hubs.map((h) => [h.kind, h.set_size]), [["event_voted", 4005]]);
+  assert.deepEqual(carol.paths.map(ids), ["meeting-1", "meeting-2"]);
+});
+
+test("R20 R11 the presets' period walks judge a hub per kind: an overlap of one kind is found beside the same person's hub of another", () => {
+  const P = ent(1), Q = ent(2), VOTE = evt(1);
+  const conns = [conn("event_voted", P, VOTE, { id: "p-vote" }), conn("event_voted", Q, VOTE, { id: "q-vote" })];
+  for (let i = 0; i < 1001; i++) conns.push(conn("event_decider", P, evt(100 + i)));
+  const { x } = make(conns);
+  for (const when of [{ at: AT }, { period: { value: "2020/2030", precision: "edtf", zone: ZONE } }]) {
+    const r = x.overlaps({ a: P, b: Q, viewer: V, kinds: ["event_voted", "event_decider"], ...when });
+    assert.deepEqual(r.overlaps.map((o) => [o.node, o.kind]), [[VOTE, "event_voted"]], JSON.stringify(when));
+    assert.deepEqual(r.hubs.map((h) => [h.node, h.kind, h.bound, h.set_size]), [[P, "event_decider", 1000, 1001]]);
+  }
+  const f = x.flowsFrom({ from: P, viewer: V, period: { value: "2020/2030", precision: "edtf", zone: ZONE } });
+  assert.equal(f.ok, true);
 });
 
 test("R6 a declared hop is marked declared at the lowest grade; a hunch is walked only within its inquiry and has no grade; such paths are leads with the sentence; a derived hop carries its derivation", () => {
