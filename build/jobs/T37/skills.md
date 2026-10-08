@@ -21,7 +21,7 @@
 - `node checks/format.mjs .`: 136 modules, 135 requirements files; 0 failures.
 - `node checks/architecture.mjs . skills`: 14 product files, 66 relative imports; 0 failures.
 - `node checks/coverage.mjs . skills`: 39 of 39 live requirement ids named by a test; 0 failures.
-- `node checks/ownership.mjs . skills tranche/T37`: OWNERSHIP_LINE
+- `node checks/ownership.mjs . skills tranche/T37`: 6 files changed by skills between tranche/T37 and HEAD; 0 failures.
 
 Size (session_01DS51oYchEqheueabPH79qD): test runs 9, module lines 2514
 
