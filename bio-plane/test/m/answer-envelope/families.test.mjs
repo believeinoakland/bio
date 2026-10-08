@@ -247,7 +247,7 @@ test("R2, R7 (N520, N522, N526, N533; K1310, K1331): the list reads accepted-wor
     assert.deepEqual(M.dec49Row(code), { check, translation: DK[code].translation }, code);
 });
 
-test("R2, R7 (N529; K1331, K1333; T38: N788, K2310): the list reads case-disclosures' C-120 (`CASE_DISCLOSURE_CHECKS`) in its module's place (after case-import, directly before case-authoring), every one of its rows (C-120.1–C-120.8, C-120.10–C-120.19; .14–.16 since T33, K1638; .17, .18 since T37, K2227; C-120.19 `PHOTO_UNCHECKED` since T38) decorates with its own check and words, C-120.17 `PHOTO_NOT_COVERABLE` and C-120.19 `PHOTO_UNCHECKED` with `words.json`'s `photo.refused.format` and `photo.refused.unchecked` verbatim, case-authoring's file no longer holds them, and C-120.9 is held by no code (negative control: the list without case-disclosures' file misses its family)", async () => {
+test("R2, R7 (N529; K1331, K1333; T38: N788, K2310; T39: N806, K2333) .20–.22: the list reads case-disclosures' C-120 (`CASE_DISCLOSURE_CHECKS`) in its module's place (after case-import, directly before case-authoring), every one of its rows (C-120.1–C-120.8, C-120.10–C-120.22; .14–.16 since T33, K1638; .17, .18 since T37, K2227; C-120.19 `PHOTO_UNCHECKED` since T38; C-120.20–.22, a member document's copy, since T39) decorates with its own check and words, C-120.17 `PHOTO_NOT_COVERABLE` and C-120.19 `PHOTO_UNCHECKED` with `words.json`'s `photo.refused.format` and `photo.refused.unchecked` verbatim, C-120.21 `DOCUMENT_COPY_PENDING` and C-120.22 `DOCUMENT_NOT_CLEANABLE` with case-disclosures' `DOCUMENT_WORDS` `document.refused.pending` and `document.refused.clean` verbatim (BOB's drafts until `words.json` holds the keys), case-authoring's file no longer holds them, and C-120.9 is held by no code (negative control: the list without case-disclosures' file misses its family)", async () => {
   const paths = M.CHECK_FAMILY_FILES.map(([p]) => p);
   const path = "src/case-disclosures/checks.mjs";
   assert.ok(paths.indexOf("src/case-import/checks.mjs") < paths.indexOf(path), paths.join(", "));
@@ -255,7 +255,7 @@ test("R2, R7 (N529; K1331, K1333; T38: N788, K2310): the list reads case-disclos
   const table = (await import(`../../../${path}`)).CASE_DISCLOSURE_CHECKS;
   assert.deepEqual(Object.values(table).map((r) => r.check).sort((a, b) => Number(a.split(".")[1]) - Number(b.split(".")[1])),
     ["C-120.1", "C-120.2", "C-120.3", "C-120.4", "C-120.5", "C-120.6", "C-120.7", "C-120.8", "C-120.10", "C-120.11", "C-120.12", "C-120.13",
-     "C-120.14", "C-120.15", "C-120.16", "C-120.17", "C-120.18", "C-120.19"]);
+     "C-120.14", "C-120.15", "C-120.16", "C-120.17", "C-120.18", "C-120.19", "C-120.20", "C-120.21", "C-120.22"]);
   for (const [code, row] of Object.entries(table)) assert.deepEqual(M.dec49Row(code), { check: row.check, translation: row.translation }, code);
   /* T38 (N788, DEC-183): C-120.17 re-worded and C-120.19 new, each decorating with the protected words `words.json` holds */
   const WORDS = JSON.parse(readFileSync(join(REPO, "docs/development/ux-substrate/screens/words.json"), "utf8")).words;
@@ -264,6 +264,13 @@ test("R2, R7 (N529; K1331, K1333; T38: N788, K2310): the list reads case-disclos
     assert.ok(typeof en(key) === "string" && en(key), key);
     assert.deepEqual(M.dec49Row(code), { check, translation: en(key) }, code);
   }
+  /* T39 (N806, K2333): C-120.21 and C-120.22 decorate with the drafts case-disclosures holds under the UX stream's keys */
+  const { DOCUMENT_WORDS } = await import(`../../../${path}`);
+  for (const [code, check, key] of [["DOCUMENT_COPY_PENDING", "C-120.21", "document.refused.pending"], ["DOCUMENT_NOT_CLEANABLE", "C-120.22", "document.refused.clean"]]) {
+    assert.ok(typeof DOCUMENT_WORDS[key] === "string" && DOCUMENT_WORDS[key], key);
+    assert.deepEqual(M.dec49Row(code), { check, translation: DOCUMENT_WORDS[key] }, code);
+  }
+  assert.equal(M.dec49Row("DOCUMENT_COPY_UNDETERMINED").check, "C-120.20");
   const CA = await import("../../../src/case-authoring/checks.mjs");
   for (const code of Object.keys(table))
     assert.equal(Object.entries(CA).some(([k, v]) => isFamily(k, v) && Object.hasOwn(v, code)), false, `${code} left case-authoring's file`);

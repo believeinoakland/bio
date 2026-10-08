@@ -74,9 +74,10 @@ import * as SKILLS from "../skilldoctrine.mjs";
 import * as ANSWERS from "../answers/checks.mjs";
 import * as INTENT from "../intent/checks.mjs";
 import * as REEVALUATION from "../reevaluation/checks.mjs";
-/* K2226 (T37-50; R7): case-carriage's C-141 (`CASE_CARRIAGE_CHECKS`, the refusals of `obscuremark`), in its place in the
-   module order (directly after reevaluation, before case-tensions). Its `MACHINE_CANNOT_MARK` is also sources' C-121.7,
-   an earlier family, which keeps it: no earlier row moves (DEC-49 arm A is the owners' to settle, not this list's). */
+/* K2226 (T37-50; R7): case-carriage's C-141 (`CASE_CARRIAGE_CHECKS`, the refusals of `obscuremark` and, since T39,
+   `copyBatch`'s C-141.11), in its place in the module order (directly after reevaluation, before case-tensions). Since
+   T38 (K2311) its machine refusal is its own `MACHINE_CANNOT_MARK_PHOTO`, so no code is in both its family and an
+   earlier one, and sources' `MACHINE_CANNOT_MARK` keeps C-121.7: no earlier row moves. */
 import * as CASE_CARRIAGE from "../case-carriage/checks.mjs";
 import * as CASE_TENSIONS from "../case-tensions/checks.mjs";
 import * as PUBLICATION from "../publication/checks.mjs";
