@@ -82,13 +82,13 @@ test("R12 R15 the AI credential routes: `who` and `secretSha` from the query ove
   assert.equal(w.ops("tokenId=t1&who=ann").aicredentialrevoke().already, false);
   assert.deepEqual(Object.keys(w.ops()).sort(), ["accountreference", "accountreferenceremove", "accountreferenceset",
     "accountswitchset", "aicredentiallook", "aicredentialmint", "aicredentialrevoke", "aicredentials", "aigrantmint",
-    "bootstrap", "claim", "groupkeynotice", "groupkeynoticeseen", "groupkeyremove", "groupkeyset", "groupkeystate",
+    "aikeepaway", "aikeepawaystate", "bootstrap", "claim", "groupkeynotice", "groupkeynoticeseen", "groupkeyremove", "groupkeyset", "groupkeystate",
     "groupkeyswitch", "groupswitchset", "keyedservices", "keyedserviceset", "keyedserviceswitch", "login", "recover",
-    "recoverycodesissue", "recoverycodesstate", "securitymap", "session", "setpassword", "signeradd", "signerlist", "signerset",
+    "recoverycodesissue", "recoverycodesstate", "securitycount", "securitymap", "session", "setpassword", "signeradd", "signerlist", "signerset",
     "signout", "signouteverywhere", "subscriptiondisconnect"]);
 });
 
-test("R22 R23 R24 R25 R27 R28 R29 R31 R32 R33 R35 R36 R37 the T33-20 and T34 rows: each id once, across every family, each where naming its one site, frozen; C-29.16 retired with R26 (K1756) and C-29.18 never reused", async () => {
+test("R22 R23 R24 R25 R27 R28 R29 R31 R32 R33 R35 R36 R37 R51 the T33-20, T34 and T36 account rows: each id once, across every family, each where naming its one site, frozen; C-29.16 retired with R26 (K1756) and C-29.18 never reused", async () => {
   const { ACCOUNT_CHECKS, KEYED_SERVICE_CHECKS } = await import("../../../src/credentials/index.mjs");
   const want = {
     MACHINE_CANNOT_HOLD_ACCOUNT: ["C-29.13", W("#accountBar", "is-account-own-act")],
@@ -105,6 +105,8 @@ test("R22 R23 R24 R25 R27 R28 R29 R31 R32 R33 R35 R36 R37 the T33-20 and T34 row
     NO_QUESTION: ["C-29.26", W("aiGrantMintStanding", "is-standing-grant")],
     GROUP_KEY_NOTICE_DUE: ["C-29.27", W("#noticeDue", "is-group-key-notice-seen")],
     SUBSCRIPTION_LOGIN_REFUSED: ["C-29.29", W("subscriptionConnected", "is-subscription-fact")],
+    AI_KEPT_AWAY: ["C-29.31", W("#keptAway", "is-kept-away")],
+    NO_REASON: ["C-29.32", W("aiKeepAwaySet", "is-keep-away-reason")],
     UNKNOWN_KEYED_SERVICE: ["C-96.19", W("#keyedService", "is-keyed-service")],
     KEYED_SERVICE_NO_KEY: ["C-96.20", W("keyedServiceSet", "is-keyed-service-key")],
     KEYED_SERVICE_OFF: ["C-96.21", W("keyedServiceFor", "is-keyed-service-on")],

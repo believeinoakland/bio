@@ -116,12 +116,13 @@ test("R18 R30 every credentials table is declared exempt from purge, and a whole
   assert.equal((await w.c.aiGrantMint({ member: "second", by: "second", session: sess })).ok, true);
   assert.equal((await w.c.groupKeySet({ key: "sk-group", by: "second" })).ok, true);
   assert.equal(w.c.groupKeyNoticeSeen({ member: "second", by: "second" }).ok, true);
+  assert.equal(w.c.aiKeepAwaySet({ on: true, reason: "a review", by: "second" }).ok, true);   /* T36: R51's table */
   const count = () => Object.fromEntries(CREDENTIALS_EXEMPT_TABLES.map((t) => [t, w.row(`SELECT COUNT(*) AS n FROM ${t}`).n]));
   const before = count();
   assert.deepEqual(before, { credentials: 2, sessions: 1, bootstrap: 1, signers: 1, ai_credentials: 1,
     account_references: 1, keyed_services: 1, ai_grants: 1, group_key: 1, group_key_acts: 1, group_key_notices: 1,
     signin_window: 2, security_counts: 1, security_pending: 1, security_key: 1, recovery_codes: 10, recoveries: 1,
-    subscription_connections: 1 });
+    subscription_connections: 1, ai_keep_away: 1 });
   assert.equal(w.rc.purge({}).ok, true);
   assert.deepEqual(count(), before, "a whole-store purge clears none of them");
   assert.equal(w.rc.purge({ bundleId: "second" }).ok, true);
