@@ -99,13 +99,32 @@ add('draft.writing-help.act', 'Help me write this', false, 'mock-kit.js writeHel
 // 4a. Photos in a published case (DEC-180, DEC-183): the reminder, the copy's label and the Photos step's words (protected: they say
 //     who can see something)
 const scr = R('mock-screens.js');
-add('photo.reminder', must(scr, 'mock-screens.js', 'Frame what you are checking, and leave out people\\\'s faces and number plates where you can. If a published case relies on this photo, anyone in it who is not part of a finding, and any number plate, is obscured in the public copy; the original stays inside your group.').replace(/\\'/g, "'"), true, 'mock-screens.js PHOTO_REMINDER');
-add('photo.obscured.label', must(scr, 'mock-screens.js', 'Faces and plates obscured for publication; the group holds the original'), true, 'mock-screens.js ceremony', 'the label the published copy carries');
-add('photo.step.gate', must(scr, 'mock-screens.js', 'Every photo the case relies on must be checked before signing: marked, or “nothing to obscure”. A mark that covers the wrong thing is withdrawn with a reason, never erased. Text read from a photo, such as a number plate, is never published with it; a passage you quote in the case still is.'), true, 'mock-screens.js ceremony');
+add('photo.reminder', must(scr, 'mock-screens.js', 'Frame what you are checking, and leave out people\\\'s faces and number plates where you can. If a published case carries this photo, anyone in it who is not part of a finding, and any number plate, is obscured in the public copy; the original stays inside your group.').replace(/\\'/g, "'"), true, 'mock-screens.js PHOTO_REMINDER');
+add('photo.obscured.label', must(scr, 'mock-screens.js', 'Faces, plates and camera details removed for publication; the group holds the original'), true, 'mock-screens.js ceremony', 'the label a published copy with marked areas carries');
+add('photo.published.label', must(scr, 'mock-screens.js', 'Camera details removed for publication; the group holds the original'), true, 'mock-screens.js ceremony', 'the label every other published photo carries (K2248)');
+add('photo.step.gate', must(scr, 'mock-screens.js', 'Every photo the case carries must be checked before signing, including one that only supports a finding: marked, or “nothing to obscure”. A mark that covers the wrong thing is withdrawn with a reason, never erased. Text read from a photo, such as a number plate, is never published with it; a passage you quote in the case still is.'), true, 'mock-screens.js ceremony');
 add('photo.state.nothing', must(scr, 'mock-screens.js', 'nothing to obscure'), true, 'mock-screens.js ceremony');
 add('photo.refused.format', 'This photo\'s format can\'t be obscured: {photo}. Capture it again as an ordinary photo, or stop relying on it.', true, 'DEC-183', 'PHOTO_NOT_COVERABLE');
 add('photo.refused.changed', 'A mark changed after this case was prepared. Prepare it again before signing.', true, 'DEC-183', 'PHOTO_MARKS_CHANGED_SINCE');
-add('photo.refused.unchecked', 'Signing waits until every photo the case relies on is checked: {photo}.', true, 'DEC-183', 'the Photos step as a gate');
+add('photo.refused.unchecked', 'Signing waits until every photo in the case is checked, including one that only supports a finding: {photo}.', true, 'DEC-183', 'the Photos step as a gate');
+add('photo.refused.changed.signed', 'This case wasn\'t published: a mark on {photo} changed after it was prepared. Prepare it again, and sign it again.', true, 'DEC-187', 'PHOTO_MARKS_CHANGED_SINCE at the commit or a scheduled stop, after signing');
+add('photo.withdraw.refused.machine', 'Only a member can withdraw a mark; the machine never can.', true, 'DEC-187', 'obscuremarkwithdraw by a machine');
+add('photo.withdraw.refused.nomark', 'There is no such mark on {photo}. Open the photo again to see the marks that stand.', true, 'DEC-187', 'obscuremarkwithdraw: no such mark');
+add('photo.withdraw.refused.already', '{member} already withdrew this mark on {date}.', true, 'DEC-187', 'obscuremarkwithdraw: already withdrawn');
+add('photo.withdraw.refused.noreason', 'Say why you are withdrawing this mark. Your reason is kept beside it.', true, 'DEC-187', 'obscuremarkwithdraw: no reason');
+
+// 4b. Choosing a handle (DEC-184): what the field says as a member types
+add('handle.free', '{handle} is free in {group}', false, 'mock-screens.js join');
+must(scr, 'mock-screens.js', 'mai-k is free in Lakeshore Tenants');
+add('handle.taken', '{handle} is already taken in {group}. Try another, such as {suggestion}.', false, 'mock-screens.js join');
+must(scr, 'mock-screens.js', 'is already taken in Lakeshore Tenants. Try another, such as');
+add('handle.changeable', 'You can still change it: none of your work is in a published case yet.', false, 'mock-screens.js account');
+must(scr, 'mock-screens.js', 'You can still change it: none of your work is in a published case yet.');
+add('handle.fixed', 'Your handle is fixed: your work is in a published case ({case}).', false, 'DEC-186');
+add('handle.formerly', 'formerly {handle}', false, 'mock-screens.js members');
+must(scr, 'mock-screens.js', 'formerly dev-o');
+add('handle.characters', 'A handle uses only lower-case letters, digits and hyphens.', false, 'mock-screens.js join');
+must(scr, 'mock-screens.js', 'A handle uses only lower-case letters, digits and hyphens');
 
 // 5. The frame: rail, phone tabs, explanation levels
 for (const [k, name] of W.RAIL) { add(`rail.${k}.name`, name, false, 'mock-shell.js RAIL'); if (W.RAIL_HELP[k]) add(`rail.${k}.holds`, W.RAIL_HELP[k], false, 'mock-refs.js RAIL_HELP'); }

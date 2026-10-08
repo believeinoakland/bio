@@ -7,17 +7,18 @@
   "mark": 55,
   "state": 4,
   "draft": 4,
-  "photo": 7,
+  "photo": 13,
+  "handle": 6,
   "rail": 14,
   "tab": 2,
   "level": 2,
   "guide": 6,
   "screen": 94,
-  "act": 459,
+  "act": 463,
   "column": 33,
   "wizard": 239,
-  "total": 930,
-  "protected": 353
+  "total": 946,
+  "protected": 361
  },
  "words": [
   {
@@ -468,20 +469,27 @@
   },
   {
    "key": "photo.reminder",
-   "en": "Frame what you are checking, and leave out people's faces and number plates where you can. If a published case relies on this photo, anyone in it who is not part of a finding, and any number plate, is obscured in the public copy; the original stays inside your group.",
+   "en": "Frame what you are checking, and leave out people's faces and number plates where you can. If a published case carries this photo, anyone in it who is not part of a finding, and any number plate, is obscured in the public copy; the original stays inside your group.",
    "protected": true,
    "source": "mock-screens.js PHOTO_REMINDER"
   },
   {
    "key": "photo.obscured.label",
-   "en": "Faces and plates obscured for publication; the group holds the original",
+   "en": "Faces, plates and camera details removed for publication; the group holds the original",
    "protected": true,
    "source": "mock-screens.js ceremony",
-   "note": "the label the published copy carries"
+   "note": "the label a published copy with marked areas carries"
+  },
+  {
+   "key": "photo.published.label",
+   "en": "Camera details removed for publication; the group holds the original",
+   "protected": true,
+   "source": "mock-screens.js ceremony",
+   "note": "the label every other published photo carries (K2248)"
   },
   {
    "key": "photo.step.gate",
-   "en": "Every photo the case relies on must be checked before signing: marked, or “nothing to obscure”. A mark that covers the wrong thing is withdrawn with a reason, never erased. Text read from a photo, such as a number plate, is never published with it; a passage you quote in the case still is.",
+   "en": "Every photo the case carries must be checked before signing, including one that only supports a finding: marked, or “nothing to obscure”. A mark that covers the wrong thing is withdrawn with a reason, never erased. Text read from a photo, such as a number plate, is never published with it; a passage you quote in the case still is.",
    "protected": true,
    "source": "mock-screens.js ceremony"
   },
@@ -507,10 +515,81 @@
   },
   {
    "key": "photo.refused.unchecked",
-   "en": "Signing waits until every photo the case relies on is checked: {photo}.",
+   "en": "Signing waits until every photo in the case is checked, including one that only supports a finding: {photo}.",
    "protected": true,
    "source": "DEC-183",
    "note": "the Photos step as a gate"
+  },
+  {
+   "key": "photo.refused.changed.signed",
+   "en": "This case wasn't published: a mark on {photo} changed after it was prepared. Prepare it again, and sign it again.",
+   "protected": true,
+   "source": "DEC-187",
+   "note": "PHOTO_MARKS_CHANGED_SINCE at the commit or a scheduled stop, after signing"
+  },
+  {
+   "key": "photo.withdraw.refused.machine",
+   "en": "Only a member can withdraw a mark; the machine never can.",
+   "protected": true,
+   "source": "DEC-187",
+   "note": "obscuremarkwithdraw by a machine"
+  },
+  {
+   "key": "photo.withdraw.refused.nomark",
+   "en": "There is no such mark on {photo}. Open the photo again to see the marks that stand.",
+   "protected": true,
+   "source": "DEC-187",
+   "note": "obscuremarkwithdraw: no such mark"
+  },
+  {
+   "key": "photo.withdraw.refused.already",
+   "en": "{member} already withdrew this mark on {date}.",
+   "protected": true,
+   "source": "DEC-187",
+   "note": "obscuremarkwithdraw: already withdrawn"
+  },
+  {
+   "key": "photo.withdraw.refused.noreason",
+   "en": "Say why you are withdrawing this mark. Your reason is kept beside it.",
+   "protected": true,
+   "source": "DEC-187",
+   "note": "obscuremarkwithdraw: no reason"
+  },
+  {
+   "key": "handle.free",
+   "en": "{handle} is free in {group}",
+   "protected": false,
+   "source": "mock-screens.js join"
+  },
+  {
+   "key": "handle.taken",
+   "en": "{handle} is already taken in {group}. Try another, such as {suggestion}.",
+   "protected": false,
+   "source": "mock-screens.js join"
+  },
+  {
+   "key": "handle.changeable",
+   "en": "You can still change it: none of your work is in a published case yet.",
+   "protected": false,
+   "source": "mock-screens.js account"
+  },
+  {
+   "key": "handle.fixed",
+   "en": "Your handle is fixed: your work is in a published case ({case}).",
+   "protected": false,
+   "source": "DEC-186"
+  },
+  {
+   "key": "handle.formerly",
+   "en": "formerly {handle}",
+   "protected": false,
+   "source": "mock-screens.js members"
+  },
+  {
+   "key": "handle.characters",
+   "en": "A handle uses only lower-case letters, digits and hyphens.",
+   "protected": false,
+   "source": "mock-screens.js join"
   },
   {
    "key": "rail.home.name",
@@ -1348,6 +1427,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_handlecheck.label.join",
+   "en": "See whether a handle is free",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.enroll.label.join",
    "en": "Join with a handle and password",
    "protected": true,
@@ -1476,6 +1561,12 @@
   {
    "key": "act.expertisedeclare.label.account",
    "en": "Declare your expertise",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_handlechange.label.account",
+   "en": "Change your handle",
    "protected": true,
    "source": "registry.json"
   },
@@ -3376,6 +3467,18 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
+   "key": "act.owed_handlechange.does",
+   "en": "Changes the handle the record shows on your work. Members see your earlier handle beside it. Allowed until your work first appears in a published case; after that it is fixed.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_handlecheck.does",
+   "en": "Checks, as you type, whether this handle can be used in the group: free, already taken, or using characters a handle can't have. It never says who has a handle.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
    "key": "act.owed_obscuremarkwithdraw.does",
    "en": "Withdraws a mark on a photo, with your reason, for example when it covers what the finding shows. The withdrawal is recorded beside the mark; the public copy follows the marks that stand.",
    "protected": false,
@@ -4967,13 +5070,13 @@
   },
   {
    "key": "wizard.WIZ-8e7e2fac33d069f8.step1.what",
-   "en": "Who: their handle, and the cover the group knows them by. Not a legal name.",
+   "en": "Who: a short id for the invitation, and the cover the group knows them by. Not a legal name.",
    "protected": false,
    "source": "library.json"
   },
   {
    "key": "wizard.WIZ-8e7e2fac33d069f8.step1.why",
-   "en": "The record never needs a legal name. Administrators keep the cover so they know who is who.",
+   "en": "They choose their own handle when they join. The record never needs a legal name; administrators keep the cover so they know who is who.",
    "protected": false,
    "source": "library.json"
   },
