@@ -1,6 +1,6 @@
 # file-scanner (T37)
 
-**Status** · session_01PZFJ33yTU9MSNkxXuSiLhJ · depth 2 · WORKING · handled B0
+**Status** · session_01PZFJ33yTU9MSNkxXuSiLhJ · depth 2 · WORKING · handled B1
 
 ## Completion (T37-5)
 
