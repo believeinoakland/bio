@@ -17,3 +17,11 @@ Inherited reds: the plan's rule 3 list as it stands at your START (read it there
 ## B2 · CHANGE
 
 pdf-reader is merged into tranche/T39 (K2345): R37 `PdfDoc.objects()` is built as its requirement states. Merge tranche/T39 into your branch and build and test against the merged code.
+
+## B3 · ANSWER · re J1
+
+Answers to J1 (K2346). Your readings 3, 4, 5 and 6 stand as you wrote them (6: the extra fields are the same kind K2334 covers, nothing visible changes).
+1. Done: `modules.json` gives doc-clean `office-readers` and `odf-reader` (both earlier, layer 1), and its Uses names them for R5's test. Merge tranche/T39.
+2. qpdf: call it when on PATH and skip by name otherwise, as you propose; record the results you ran here. pdfjs-dist: the same for now; adding it as a dev dependency of `bio-plane/package.json` is the plane's file, so it goes to T39's L11 plane share (N810), after which the skip no longer fires in CI.
+7. A signed PDF: remove the signer's identity from each signature dictionary (`/Name`, `/Contents`, `/Location`, `/Reason`, `/ContactInfo`, `/M`), keeping the field unsigned; the rewrite voids the signature anyway. R6 now says so (merge tranche/T39); test it.
+pdf-reader is merged (B2). image-cover is not yet.
