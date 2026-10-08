@@ -32,6 +32,10 @@
    6. agent-runner `surface.test.mjs`:121 (R11), on a release cut only (T36's red 15), until T37-16 (N750).
    7. plane `release.test` R19 (T36's red 31: wizard-scripts' required "Set up and claim" names the retired `assistantset`), until T37-25 carries the library's next version with Bob's approval (N775, R22). T36 closed with no other red open (K2168, K2169).
    9. membership R83's `MODULE_ORDER` test (and its sister tests reading the order), from the opening's addition of `image-cover` to `modules.json` until T37-44 re-pins it (K1185).
+   10. case-checker `program.test.mjs` R13 (its generated `program.mjs` bundles `labels.mjs`, stale from T37-1), until L1's close regenerates it (§5.6 (1); RECORD-GRAMMAR #10 J1).
+   11. op-declarations' three tests reading the screen registry PR #14 changed (R21 R5's `function` acts; R21 R27's `owed` acts; R27 DEC-148's seven owed acts), red on `tranche/T37` since T36's close merged `main`, until T37-31 (RECORD-GRAMMAR #10 J1).
+   12. extraction `r70.test.mjs`:47 (it pins R30's six cell keys; T37-4's `paras` is a seventh), until T37-45 (OFFICE-READERS #8 J1).
+   13. reading-pipeline `emitted.test.mjs`:129 (R28's docx cell shape), until T37-9 (OFFICE-READERS #8 J1).
    8. Rule 4's interim reds (N761, N765), each named at its owner's START.
 7. **BOB's acts (no module job):** at the opening, rule 2's N669 packaging, N757's packaging (K2171: the pixel work in a new pure L1 helper `image-cover` run in the plane, the marks and the copy in `case-carriage`), every L1 requirement change, and the questions to Bob ("For BOB" below) brought rendered with options and a recommendation. T37's release is BOB's (K1501), decided at its close on what its deployment then lets into T38; no longer for M-Q2 (K2147).
 
@@ -73,7 +77,9 @@ Each line is one job (P8): every T37 entry for that module. Fields: module · (N
 - **T37-9 · reading-pipeline** · (N758, its share) R28 carries each `.docx` cell's paragraph ordinals as office-readers R11 emits them (T37-4); a test on a vertically merged table · K2092, K2118 · req: R28 amended, BOB's wording · depends T37-4 (L1).
 - **T37-10 · content** · (N759) `extentRelation` (R6) relates sheet-range and doc-table extents by their cells: a cell inside a range answers `narrower`, two ranges compare, a doc-table cell inside its table `narrower`, so a fact recorded at one cell of a found column is named on that column's result (retrieval R73) (RETRIEVAL #14 J2 (a)) · K2122 · req: content R6 as stated (a flaw), tests · depends —. **P6:** 3,712; the cell relations add perhaps 100–200: the job reports if it would pass about 4,000.
 
-**L4 merge order:** `modules.json` order: reading-pipeline → content.
+- **T37-45 · extraction** (test, and its readings if they should carry it) · (N758, its user; K2173) `test/m/extraction/r70.test.mjs`:47 pins R30's six cell keys: it reads office-readers R11's `paras` (T37-4), and `:110`'s `cell` helper carries it where extraction's readings should, clearing red 12 (OFFICE-READERS #8 J1) · K2118, K2173 · req: none, unless its R30 readings carry `paras` (BOB's wording at the START) · depends T37-4 (L1).
+
+**L4 merge order:** `modules.json` order: reading-pipeline → extraction → content.
 
 ### L5
 
@@ -192,7 +198,7 @@ Measured on `tranche/T36` @ `9c8cc5693c` (L6 running; K1821's rule: own code in 
 
 ## Summary
 
-**Jobs per layer:** L1 6, L2 3, L3 3, L4 2, L5 4, L6 4, L7 0, L8 9, L9 2, L10 1, L11 9. **Total 43** (a plane share possible at L11 from T37-24, not counted).
+**Jobs per layer:** L1 6, L2 3, L3 3, L4 3, L5 4, L6 4, L7 0, L8 9, L9 2, L10 1, L11 9. **Total 44** (a plane share possible at L11 from T37-24, not counted).
 
 ## For BOB (Bob's questions; brought rendered at the opening, K2171)
 
