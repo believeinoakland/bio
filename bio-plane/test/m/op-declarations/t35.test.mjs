@@ -207,7 +207,7 @@ test("R30, R6: every op of R30 is served — by its owner's map (capture's for t
   for (const op of credsT35) assert.ok(keysOf(credentialsOps).includes(op) && Object.hasOwn(OPS, op), op);
   /* negative control */
   assert.deepEqual([...keysOf(credentialsOps), "signoutall"].filter((op) => !Object.hasOwn(OPS, op) && credsT35.length)
-    .filter((op) => !["aicredentiallook", "setpassword", "session"].includes(op)), ["signoutall"]);
+    .filter((op) => !["aicredentiallook", "setpassword", "session", "securitycount"].includes(op)), ["signoutall"]);
 });
 
 test("R6 (T35; N703, K2038): credentials' securitycount, the in-plane write of its R44 that admission reaches through the store, and admission's doorwindow, the store-side count of its R21 window, are store-internal routes with no spec and in no table, beside monitorlook, doorbellrefused, checkaddressees and projectclaimowner (negative control: a declared op is in a table)", () => {

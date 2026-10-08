@@ -1,4 +1,4 @@
-/* op-declarations: WHAT EACH OP IS (R1–R30). Every op's spec, the act lists that drive the stamps and the fences, the
+/* op-declarations: WHAT EACH OP IS (R1–R34). Every op's spec, the act lists that drive the stamps and the fences, the
    session sets, the capability table, the recorded decisions that a verb is not a person's, and the act gate read
    from those tables. It declares; it judges no caller and routes nothing (`admission` and `control-plane` read it).
    Copied from `control-plane/ops.mjs` at the control-plane split (T18, K617, K624 (1), (2)), which control-plane's own
@@ -129,6 +129,10 @@ const OP_KINDS = Object.freeze({
                                needs: "contribute" }),
   settingread: Object.freeze({ spec: { classes: MEMBER_PROBE, mutating: false }, needs: null, stamped: false }),
   sessionend:  Object.freeze({ spec: { classes: SESSION_KINDS, machineClasses: [], mutating: true }, needs: null, stamped: false }),
+  /* T36 (R32; file-safety R8, R10, R13, R33): a member's act on a file they may see that names no actor — opening the
+     original, asking a deeper check or a safe copy — a session's only, no working capability, stamped with the viewer
+     alone (its family's extras): nothing it stamps says who asked, beside the viewer the owner reads sight by. */
+  sightact:    Object.freeze({ spec: { classes: SESSION_KINDS, machineClasses: [], mutating: true }, needs: null, stamped: false }),
 });
 const QUERY = (key) => Object.freeze({ key, at: "query" });
 const BODY = (key) => Object.freeze({ key, at: "body" });
@@ -205,13 +209,17 @@ const OP_FAMILIES = Object.freeze({
   /* calculations R24 (C:A-16): its actor is the stamped viewer. Declaring a table, adopting a binding, ingesting money,
      accepting a calculation, recording a set and switching a pattern refuse a machine (MEMBER_ACT_ONLY, R2, R8, R14,
      R21, R23); a calculation and a recorded draw any author's (R4, R18); the pattern gate an administrator's (R23).
-     T35 (R32, R33): freezing the held uses a member's (MEMBER_ACT_ONLY), the recipes of application a read. */
-  calculations: family({ owner: "calculations", cite: "calculations R24, R32, R33", actor: QUERY("viewer"), ops: {
+     T35 (R32, R33): freezing the held uses a member's (MEMBER_ACT_ONLY), the recipes of application a read. T36 (R31;
+     its R38, R39): a spot-check's visit a member's (MEMBER_ACT_ONLY), `by` stamped as R31 names it beside the viewer
+     calculations reads as its actor; the spot-check's data a read. */
+  calculations: family({ owner: "calculations", cite: "calculations R24, R32, R33, R38, R39; R31", actor: QUERY("viewer"),
+    extra: { spotcheckvisit: ["by"] }, ops: {
     tabledeclare: "member", bindingadopt: "member", moneyingest: "member", calculationcreate: "open",
     calculationaccept: "member", calculationdraw: "open", recordset: "member", patterngate: "admin",
     patternswitch: "member",
     table: "read", tablesat: "read", calculationevaluate: "read", calculation: "read", patterns: "read",
-    usesfreeze: "member", applicationrecipes: "read" } }),
+    usesfreeze: "member", applicationrecipes: "read",
+    spotcheckvisit: "member", spotcheck: "read" } }),
   /* workbooks R15 (K1570): every act a sighted author's, a machine not refused by name (R13); the second check
      refuses only its own author (SELF_CHECK, R11). */
   workbooks: family({ owner: "workbooks", cite: "workbooks R15; K1570", actor: BODY("by"), ops: {
@@ -237,15 +245,18 @@ const OP_FAMILIES = Object.freeze({
      read beside `standardinforce` (R7's alias). T35 (T35-31; its R35, R37, R40, R43): a provision's force declared or
      confirmed, withdrawn, a standard released from its bundle's sight, an adoption, an imposition and a benchmark
      recorded, each a member's (MACHINE_CANNOT_DECLARE_STANDARD, MACHINE_CANNOT_RELATE), `author` the body's; a force
-     proposed by any credential; the forces, overrides, edition in force and whether it binds, reads. */
-  standards: family({ owner: "standards", cite: "standards R20–R30, R35, R37, R40, R43; K1571; R18", actor: BODY("author"),
+     proposed by any credential; the forces, overrides, edition in force and whether it binds, reads. T36 (R31; its
+     R50): a version known in force through a date recorded and withdrawn by a member (MACHINE_CANNOT_DECLARE_STANDARD),
+     and the records read. */
+  standards: family({ owner: "standards", cite: "standards R20–R30, R35, R37, R40, R43, R50; K1571; R18, R31", actor: BODY("author"),
     proposer: BODY("proposer"), ops: {
     lawrelate: "member", lawwithdraw: "member", lawpropose: "proposal", courtlink: "member", courttreat: "member",
     inforceat: "read", standardsfor: "read", lawrelations: "read", lawaddresses: "read", stillstanding: "read",
     citationresolve: "read",
     standardforce: "member", standardforcewithdraw: "member", standardrelease: "member", standardadoption: "member",
     standardimpose: "member", standardbenchmark: "member", standardforcepropose: "proposal",
-    forcesof: "read", overridesof: "read", editioninforce: "read", bindsat: "read" } }),
+    forcesof: "read", overridesof: "read", editioninforce: "read", bindsat: "read",
+    standardinforcethrough: "member", standardinforcethroughwithdraw: "member", inforcethroughof: "read" } }),
   /* credentials (K1544; R20): the member's own account reference, its switches and the ask grant, set by the member
      alone (MACHINE_CANNOT_HOLD_ACCOUNT, NOT_YOUR_ACCOUNT, R22–R27), never an administrator for another member;
      `aigrantmint` also reads the session's own `member` and `session` (R27); the keyed services an administrator's
@@ -255,8 +266,11 @@ const OP_FAMILIES = Object.freeze({
      stamp; the security map, an administrator's read with `by`; recovery codes issued and their state, an
      administrator's own (NOT_AN_ADMIN), `by` stamped; `recover` reached with no credential, as `login` is, its role,
      code and password the body's and `source` and `country` the control plane's (admission R21); and a member's own
-     subscription disconnected (R43; `subscriptionsignin` has no spec, R27). */
-  credentials: family({ owner: "credentials", cite: "credentials R22–R29, R39, R43, R45–R47; K1544; R20, R30", actor: QUERY("by"),
+     subscription disconnected (R43; `subscriptionsignin` has no spec, R27). T36 (R33; its R51, R52; DEC-172): keeping
+     the group's material away from every assistant, an administrator's own act (NOT_AN_ADMIN), `on` and `reason` the
+     body's; its state answered to every active member, stamped nothing. `securitycount` (its R50) is a store-internal
+     route and declared nowhere (R6). */
+  credentials: family({ owner: "credentials", cite: "credentials R22–R29, R39, R43, R45–R47, R51, R52; K1544; R20, R30, R33", actor: QUERY("by"),
     extra: { accountreferenceset: ["member"], accountreferenceremove: ["member"], accountswitchset: ["member"],
              accountreference: ["member"], aigrantmint: ["member", "session"],
              signout: ["session"], signouteverywhere: ["session"], securitymap: ["by"], recoverycodesstate: ["by"],
@@ -270,7 +284,8 @@ const OP_FAMILIES = Object.freeze({
     groupkeyset: "admin", groupkeyremove: "admin", groupkeyswitch: "admin", groupswitchset: "admin",
     groupkeystate: "ownread", groupkeynotice: "ownread", groupkeynoticeseen: "own",
     signout: "sessionend", signouteverywhere: "sessionend", securitymap: "ownread", recoverycodesissue: "admin",
-    recoverycodesstate: "ownread", recover: "door", subscriptiondisconnect: "own" } }),
+    recoverycodesstate: "ownread", recover: "door", subscriptiondisconnect: "own",
+    aikeepaway: "admin", aikeepawaystate: "settingread" } }),
   /* sources (K1550): marking a capture as from a keyed service, its capturer's own act (MACHINE_CANNOT_MARK, R16, R18). */
   sources: family({ owner: "sources", cite: "sources R16, R18; K1550", actor: QUERY("by"), ops: { sourcekeyed: "member" } }),
   /* entities (K1572; R18): a scheme identifier, `resolutiondefect`'s stamp; a machine on a system rule's basis (R43).
@@ -309,10 +324,11 @@ const OP_FAMILIES = Object.freeze({
      (R26; its R60, NOT_AN_ADMIN); the member's screen language, their own act (`machineClasses: []`) and the read
      (R28; its R64); the group's description drafted for its administrator, a session's labelled draft writing nothing,
      `by` and `viewer` stamped (R29; its R65, DEC-152; K1837). T35 (R30; its R66, K1888): the second-administrator
-     step, a session's read answered to an administrator (NOT_AN_ADMIN otherwise). */
+     step, a session's read answered to an administrator (NOT_AN_ADMIN otherwise). T36 (R17; DEC-172): `assistantset` is
+     retired with its owner's act (the assistant's state is derived from credentials' keep-away) and has no spec. */
   "instance-setup": family({ owner: "instance-setup", cite: "instance-setup R50, R52–R54, R60, R64–R66; R17, R26, R28–R30; K1683",
     actor: QUERY("by"), extra: { groupdescriptiondraft: ["by"] }, ops: {
-    officesseed: "admin", seatsseed: "admin", assistantset: "admin", disclosureshown: "own",
+    officesseed: "admin", seatsseed: "admin", disclosureshown: "own",
     assistantstate: "read", disclosureof: "ownread",
     placewanted: "admin", placewantedstate: "ownread", memberlanguageset: "sessionact", memberlanguage: "read",
     groupdescriptiondraft: "ownread", adminrecoverystep: "ownread" } }),
@@ -354,6 +370,25 @@ const OP_FAMILIES = Object.freeze({
     findin: "read" } }),
   /* T35 (R30; public-read R30, DEC-146): the credit page, the same bytes for every caller, stamped nothing. */
   "public-read": family({ owner: "public-read", cite: "public-read R30; R30", ops: { credit: "public" } }),
+  /* T36 (R32; file-safety R2–R38, N714, N707, N710; DEC-169, DEC-173; K1892, K1929): a file's safety, `fileSafetyOps`.
+     The reads by sight — its notes, its threat, what opening it would answer, its safe view and safe copy (byte
+     answers), the findings — `read`, the viewer stamped; a finding's kind explained, the same for every caller, stamped
+     nothing. Opening the original (with `override`, or with `warned`, the member's two confirmations, each a body
+     field never kept), asking a deeper check and asking a safe copy: a member's act on a file they may see, `sightact`,
+     the viewer alone stamped, so nothing names who opened or asked (file-safety R10). Releasing a scan hold an act of
+     record, a member's (MACHINE_CANNOT_RELEASE_HOLD), `contribute`, `by` from the query, `reason` the body's. The
+     security tools read and changed by an administrator's own session (NOT_AN_ADMIN), `securitytooladd`'s
+     `credentials` and `config` the body's. None is on `AI_GRANT_OPS`: the assistant reads a file's text and `active`
+     list only. The scheduler's four wakes are no member's and are declared in `OPS` apart, unattended by decision. */
+  "file-safety": family({ owner: "file-safety", cite: "file-safety R2, R5, R6, R8, R9, R11, R13, R15, R17, R27–R31, R33, R38; R32",
+    actor: QUERY("by"), extra: { openoriginal: ["viewer"], openwithwarning: ["viewer"], deepercheck: ["viewer"],
+                                 safecopyrequest: ["viewer"] }, ops: {
+    verdictnotes: "read", threatof: "read", originalstate: "read", safeview: "read", safecopy: "read",
+    scanfindings: "read", findingkind: "settingread",
+    openoriginal: "sightact", openwithwarning: "sightact", deepercheck: "sightact", safecopyrequest: "sightact",
+    releasescanhold: "member",
+    scanstatus: "ownread", securitytools: "ownread", securitytoolcatalogue: "ownread", securitytoolevents: "ownread",
+    securitytooladd: "admin", securitytooltest: "admin", securitytoolremove: "admin" } }),
 });
 const FAMILY_OPS = frozenList(Object.values(OP_FAMILIES).flatMap((f) => Object.keys(f.kinds)));
 /* T34: a public kind's op is in no session set (every caller reaches it); every other family op is in both. */
@@ -1229,6 +1264,14 @@ const OPS = frozenTable(aliasRows({
   askceiling:      { classes: ["admin", "member"], machineClasses: [], mutating: false },
   askcheck:        { classes: ["admin", "member"], machineClasses: [], mutating: false },
   askusage:        { classes: ["admin", "member"], machineClasses: [], mutating: true  },
+  /* T36 (R32; file-safety R4, R12, R36, R35; K1913): the scheduler's wakes over the files — the due scans, the safe views
+     to render, the deeper checks to start and poll, the hourly counts forwarded — each a binding credential's (the
+     administrator's bearer, the probe, the daemon), no member's, in no session set and unattended by decision below,
+     `taskdrain`'s posture. */
+  scanbatch:       { classes: ["admin", "probe", "daemon"],      mutating: true  },
+  renderbatch:     { classes: ["admin", "probe", "daemon"],      mutating: true  },
+  deeperbatch:     { classes: ["admin", "probe", "daemon"],      mutating: true  },
+  securityforward: { classes: ["admin", "probe", "daemon"],      mutating: true  },
   /* T33 (R17–R20): every family's ops, each from its one entry in `OP_FAMILIES` above. */
   ...FAMILY_SPECS,
 }));
@@ -3010,6 +3053,13 @@ const NEEDS = Object.freeze(aliasRows({
      this table does not carry as stale (its R12), K516's precedent. */
   credit:                null,
   recover:               null,
+  /* T36 (R32): the scheduler's four wakes over the files take NO WORKING CAPABILITY — none is a session's act — and are
+     PRESENT, null, as `moneydetectorsrun`'s, because op-grades grades each (its R24) and affordances' totality reads a
+     graded key this table lacks as stale (its R12), K516's precedent. */
+  scanbatch:             null,
+  renderbatch:           null,
+  deeperbatch:           null,
+  securityforward:       null,
 }));
 
 /* REC-19's act decoration, shared by op=affordances and op=queue (REC-20) so a queue item's options[] and an
@@ -3087,6 +3137,109 @@ const UNATTENDED_BY_DECISION = Object.freeze({
   reproject: "BIO_Membership_Architecture_v2.md §4.10 (BOB #19), citing src/store.mjs, reproject: 'Exposed "
            + "because a deploy runs the bounded pass once at construction and a large store may need more than "
            + "one' — a deploy's maintenance pass, addressed to the operator's credential.",
+  /* T36 (R32; K1913): the scheduler's four wakes over the files, each recorded by its owner's requirement as the
+     scheduler's and no member's. The citations are the requirement's own words. */
+  scanbatch: "build/requirements/file-safety.md R4 (K1913): 'scanBatch({limit, at}) (op=scanbatch; the scheduler's "
+           + "daily wake, an administrator or daemon) sends the due files, oldest due first' — read as the administrator's "
+           + "bearer or the daemon, since a scan batch is no member's act.",
+  renderbatch: "build/requirements/file-safety.md R12 (K1913): 'renderBatch({limit}) (op=renderbatch; the scheduler's "
+             + "wake) renders queued files after their capture, never inside the capture's act.'",
+  deeperbatch: "build/requirements/file-safety.md R36 (K1913): 'deeperBatch({limit}) (op=deeperbatch; the scheduler's "
+             + "wake, every few minutes while checks are queued or running) starts queued checks'.",
+  securityforward: "build/requirements/file-safety.md R35 (K1892, K1913): 'forwardSecurityCounts({from, to}) "
+                 + "(op=securityforward; the scheduler's hourly wake) builds one counts record for the period'.",
 });
 
-export { OPS, RETRIEVAL_READS, READING_READS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS, PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS, OWN_KEY_ACTIONS, CAPTURE_MEMBER_ACTIONS, CAPTURE_VIEWER_ACTIONS, CAPTURE_READS, SOURCE_ACTIONS, SOURCE_READS, PROVENANCE_JUDGEMENT_ACTIONS, CALIBRATION_WRITE_ACTIONS, EXPERTISE_ACTIONS, REGISTRY_ACTIONS, TASK_ACTIONS, QUEUE_ACTIONS, AI_RUN_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, BIAS_ACTIONS, BIAS_DEBT_ACTIONS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS, STANDARDS_ACTIONS, STANDARDS_READS, CONFORMANCE_ACTIONS, CONFORMANCE_READS, CONSEQUENCES_ACTIONS, CONSEQUENCES_READS, FILINGS_ACTIONS, FILINGS_READS, FILING_TEMPLATES_ACTIONS, FILING_TEMPLATES_READS, TEMPLATE_PROPOSAL_ACTIONS, TEMPLATE_DOOR_ACTIONS, TEMPLATE_DOOR_READS, GRANT_SECRET_ACTIONS, LOCAL_FACTS_ACTIONS, LOCAL_FACTS_READS, ESCALATION_ACTIONS, ESCALATION_READS, MONITORING_ACTIONS, LINK_SWEEP_READS, WHAT_CHANGED_PROPOSAL_ACTIONS, WHAT_CHANGED_READS, NETWORK_NOTICES_ACTIONS, NETWORK_NOTICES_READS, NETWORK_NOTICES_BY, NETWORK_NOTICES_PUBLIC_READS, DOCKET_ACTIONS, DOCKET_READS, DOCKET_AUTHOR, DOCKET_BY, DOCKET_PUBLIC_READS, CASE_IMPORT_ACTIONS, CASE_IMPORT_READS, CASE_IMPORT_BY, CASE_CHECKER_PUBLIC_READS, WIZARD_SCRIPTS_ACTIONS, WIZARD_SCRIPTS_AUTHOR, WIZARD_SCRIPTS_BY, WIZARD_PROPOSAL_ACTIONS, WIZARD_PROGRESS_ACTIONS, WIZARD_SCRIPTS_READS, WIZARD_CHECK_READS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, ACTIONS_ACTIONS, ACTIONS_READS, ACTION_CLOCKS_ACTIONS, ACTION_PLANS_ACTIONS, ACTION_PLANS_READS, ACTION_PLANS_PREVIEWS, PLAN_PROPOSAL_ACTIONS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, PLAN_RUN_SCOPE, RECOGNISER_ACTIONS, PROGRESSION_ACTIONS, OP_KINDS, OP_FAMILIES, FAMILY_OPS, FAMILY_SESSION_OPS, OP_ALIASES, ASK_GRANT_OPS, OP_STAMPS, SESSION_OPS, NEEDS, decorateAct, ACT_GATE, UNATTENDED_BY_DECISION };
+/* T36 (R34; N726, its share; DEC-174 (3); K2063 (3)): THE MEMBER OPS WITH NO EXPLANATION IN `affordances`' `ACT_HELP`
+   (its R48), each named under the one ground of why not, grouped by ground (BOB's START, K2130). Every op in
+   `SESSION_OPS.member` is either explained there under its own name or named here, never both, and nothing here names an
+   op `OPS` does not hold. Read at PR #13's `mock-acts.js` as affordances R48 holds it (an alias's text under its op, an
+   `owed_` key under its op once declared): 426 of the member set's ops have no text — 28 aliases, 161 reads, 5 acts no control
+   offers and 232 acts the design has not yet explained, named back to the design stream. No owed act is named: every
+   owed act this module declares has its text, and an owed act no owner serves has no spec (R21, R27). Frozen data
+   (R5); a new member op must be explained or named here, or R34's test fails. */
+const ACT_HELP_ABSENT = Object.freeze({
+  alias: Object.freeze({ ground: "An alias of a declared op (R21): its op's explanation serves it.",
+    ops: frozenList([
+      "addparticipant", "addworkbook", "adoptversion", "bind", "claimidentity", "createevent", "createset", "declare",
+      "declaretie", "exclude", "filingrecordsent", "include", "keepversion", "reconcile", "recordcheck",
+      "recorddatedfact", "recordfact", "recordline", "recordpersonfact", "relate", "ruleanswer", "signerregisterown",
+      "signerrevokeown", "standingquestionend", "standingquestionset", "strengthbarset", "withdrawidentityclaim",
+      "withdrawtie"]) }),
+  read: Object.freeze({ ground: "A read a screen draws from: no control on a screen offers it as an act.",
+    ops: frozenList([
+      "accountreference", "actionholdpreview", "actionquotes", "adminrecoverystep", "aikeepawaystate", "aiusage",
+      "applicationrecipes", "asktallies", "assistantstate", "audit", "baseupdates", "bindsat", "calculation",
+      "calculationevaluate", "captureprogressions", "capturerequestplatformhosts", "career", "checkrequests",
+      "checksof", "citationresolve", "clocklateness", "clocksics", "coarchivestate", "concerns", "connections",
+      "contradictionpairs", "courtnotice", "datedfacts", "directorysubmission", "disclosureof", "docket",
+      "docketinvitation", "docketprepare", "doorbelltally", "dutiesof", "duty", "dutyoccurrences", "dutysetagainst",
+      "dutytransitions", "editioninforce", "entitieskind", "entity", "entitybyalias", "escalationreasondraft",
+      "escalationstatus", "event", "eventforact", "eventsfor", "exceptions", "exploretimeline", "extractproposals",
+      "factsdue", "factstatus", "findingkind", "follows", "forcesof", "governorstate", "groupkeynotice",
+      "groupkeystate", "holderat", "hypotheses", "identity", "importedcase", "importedcases", "inbox", "inboxget",
+      "inforceat", "inforcethroughof", "instance", "interestchecks", "keyedservices", "lawaddresses", "lawrelations",
+      "line", "linesof", "meaningrows", "memberlanguage", "memberties", "money", "moneyamountchecks",
+      "moneycheckparams", "moneydetectors", "moneyjunction", "moneynoticed", "moneyof", "moneyset", "moneysummable",
+      "narrowcandidates", "notes", "noticeprepare", "notices", "originalstate", "overridesof", "partiesof",
+      "patterns", "personcredentials", "personinterests", "personstatements", "placewantedstate", "powersof",
+      "poweruses", "proceedinglinks", "proceedingstatus", "progression", "projectholds", "proposals",
+      "publishschedule", "reading", "readingname", "readingref", "recordsrequests", "recoverycodesstate", "relation",
+      "resolutions", "safecopy", "samepersoncandidates", "scanfindings", "scanstatus", "searchfields",
+      "searchindexcheck", "securitytoolcatalogue", "securitytoolevents", "securitytools", "selection",
+      "selectionlist", "sequence", "snapshotdiff", "snapshots", "sourcepersonlinks", "spotcheck", "staffing",
+      "standardsfor", "standing", "standinganswers", "statementsof", "stillstanding", "structureat", "sweeps",
+      "table", "tablesat", "templatecomments", "templateread", "templates", "textattest", "textprovenance",
+      "threatof", "timeline", "usesof", "verdictnotes", "versionnotice", "whatchangeddrafts", "whowassent",
+      "wizardcandidates", "wizardcheck", "wizardread", "wizardsat", "wizarduse", "workbook", "workbookexport",
+      "workbookinputs", "workbooklint"]) }),
+  nocontrol: Object.freeze({ ground: "A step another act takes, which no control on a screen offers: a promotion's lease and identifier, a run's tick, the count of a check or a wizard's progress.",
+    ops: frozenList([
+      "airuntick", "allocid", "answercheck", "lease", "wizardprogress"]) }),
+  unexplained: Object.freeze({ ground: "An act the design has not yet explained; named back to the design stream (DEC-174 (3)).",
+    ops: frozenList([
+      "actalias", "actionholdrelease", "actionlawspropose", "actionriskpropose", "actionrisktier", "addressedrecord",
+      "addressfrequencyset", "adminresign", "aicredentialmint", "aicredentialrevoke", "aigrantmint", "airunverify",
+      "aliaswithdraw", "ask", "aspirationdeadend", "aspirationdeclare", "aspirationdepart", "aspirationretire",
+      "assessmentrecord", "attesttext", "biasadopt", "biasdebtresolve", "bindingadopt", "calibrate",
+      "calibrationsignal", "calibrationsubject", "captureaccount", "capturerequestplatformmark",
+      "capturerequestplatformunmark", "capturerequestretry", "caseimportdocument", "checkrecord", "checktake",
+      "clockpropose", "coarchiveset", "comparisonpropose", "connect", "connectionchoose", "consequencerecord",
+      "consequencerevise", "contentmint", "contradictionclarify", "contradictiondismiss", "contradictionoptin",
+      "contradictionpropose", "contradictionrecommend", "contradictionresolve", "contradictionrespond",
+      "contradictiontakeup", "counselpacket", "counselpacketexport", "courttreat", "determine", "discharge",
+      "discretionrecord", "dispose", "docketdecline", "docketpressure", "dutyadopt", "dutymatch", "dutypropose",
+      "dutyrevise", "dutytransition", "dutywithdraw", "editacts", "entityalias", "entityidentify", "escalationattach",
+      "escalationdecline", "escalationevaluate", "escalationresume", "escalationsuspend", "eventattest",
+      "eventgovern", "eventimport", "eventmerge", "eventrelationwithdraw", "eventsplit", "exportrender",
+      "extractpropose", "factconfirm", "filemembershipjudge", "filemembershipstore", "followbody",
+      "followpersonquery", "followportal", "goalclose", "goaldeclare", "goallink", "hostingaccessset",
+      "hypothesisrevise", "hypothesiswithdraw", "importacceptwithdraw", "importflagclear", "importunwatch",
+      "inquirydivide", "inquiryground", "interestcheckdefine", "interestcheckgate", "interestcheckswitch",
+      "joinlinkoff", "joinlinkreplace", "joinlinkset", "keyedserviceset", "keyedserviceswitch", "lawpropose",
+      "lawwithdraw", "lead", "leadlook", "leadshare", "linecurrentthrough", "linewithdraw", "linkproject",
+      "memberpairingset", "moneycheckparam", "moneydetectordefine", "moneydetectorgate", "moneydetectorswitch",
+      "moneyfundtype", "moneyingest", "moneysetpropose", "moneywithdraw", "monitorpause", "noticepost",
+      "objectivecondition", "optionrevise", "participantcorrect", "patterngate", "patternswitch", "permeetingbody",
+      "personfactwithdraw", "plansubjectremove", "progressiondefine", "projectfork", "projectleave",
+      "projectowneradd", "projectownerremove", "projectownerrescue", "projectremove", "projectrequest",
+      "projectrequestanswer", "projectrequestwithdraw", "projectvisibilityset", "provenancechain", "provenanceroute",
+      "publishatcancel", "publishatmove", "ratify", "readoptin", "reattest", "recordset", "recordsrequestanswer",
+      "recordsrequestopen", "recoverycodesissue", "reevaluationrecord", "refreshregister", "registerimport",
+      "relationdeclare", "relationwithdraw", "reopen", "resolutiondefect", "resolve", "resolvetestify",
+      "reviewpropose", "ruleservicesswitch", "safecopyrequest", "seatsseed", "signeradd", "signerset", "signout",
+      "signouteverywhere", "sourceconsent", "sourceconsentwithdraw", "sourcedisclose", "sourcekeyed",
+      "sourcepersonlink", "spotcheckvisit", "standardadoption", "standardbenchmark", "standardforce",
+      "standardforcepropose", "standardforcewithdraw", "standardimpose", "standardinforcethrough",
+      "standardinforcethroughwithdraw", "standardpropose", "standardrelease", "standingaiswitch",
+      "subscriptiondisconnect", "templateapprove", "templatecomment", "templatedraft", "templategrantrevoke",
+      "templatepropose", "templateretire", "templatereview", "templatereviewgrant", "templaterevise", "templatesave",
+      "templatesubmit", "themedeclare", "themeplace", "themepropose", "themewithdraw", "theorypropose", "thread",
+      "transcribe", "transcriptionattest", "triage", "unfollow", "unpack", "uselink", "usesfreeze", "useunlink",
+      "usewithdraw", "versionaccept", "versionconsider", "versioncurrent", "versionhide", "versionreject",
+      "versionrevert", "waitlook", "websitekeyrevoke", "websitekeyset", "wizardeditorgrant", "wizardeditorrevoke",
+      "wizardpropose", "workbooklintexplain", "workbookmethodnote", "workbookrecompute", "workbookunbind",
+      "workobjective"]) }),
+});
+
+export { OPS, RETRIEVAL_READS, READING_READS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS, PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS, OWN_KEY_ACTIONS, CAPTURE_MEMBER_ACTIONS, CAPTURE_VIEWER_ACTIONS, CAPTURE_READS, SOURCE_ACTIONS, SOURCE_READS, PROVENANCE_JUDGEMENT_ACTIONS, CALIBRATION_WRITE_ACTIONS, EXPERTISE_ACTIONS, REGISTRY_ACTIONS, TASK_ACTIONS, QUEUE_ACTIONS, AI_RUN_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, BIAS_ACTIONS, BIAS_DEBT_ACTIONS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS, STANDARDS_ACTIONS, STANDARDS_READS, CONFORMANCE_ACTIONS, CONFORMANCE_READS, CONSEQUENCES_ACTIONS, CONSEQUENCES_READS, FILINGS_ACTIONS, FILINGS_READS, FILING_TEMPLATES_ACTIONS, FILING_TEMPLATES_READS, TEMPLATE_PROPOSAL_ACTIONS, TEMPLATE_DOOR_ACTIONS, TEMPLATE_DOOR_READS, GRANT_SECRET_ACTIONS, LOCAL_FACTS_ACTIONS, LOCAL_FACTS_READS, ESCALATION_ACTIONS, ESCALATION_READS, MONITORING_ACTIONS, LINK_SWEEP_READS, WHAT_CHANGED_PROPOSAL_ACTIONS, WHAT_CHANGED_READS, NETWORK_NOTICES_ACTIONS, NETWORK_NOTICES_READS, NETWORK_NOTICES_BY, NETWORK_NOTICES_PUBLIC_READS, DOCKET_ACTIONS, DOCKET_READS, DOCKET_AUTHOR, DOCKET_BY, DOCKET_PUBLIC_READS, CASE_IMPORT_ACTIONS, CASE_IMPORT_READS, CASE_IMPORT_BY, CASE_CHECKER_PUBLIC_READS, WIZARD_SCRIPTS_ACTIONS, WIZARD_SCRIPTS_AUTHOR, WIZARD_SCRIPTS_BY, WIZARD_PROPOSAL_ACTIONS, WIZARD_PROGRESS_ACTIONS, WIZARD_SCRIPTS_READS, WIZARD_CHECK_READS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, ACTIONS_ACTIONS, ACTIONS_READS, ACTION_CLOCKS_ACTIONS, ACTION_PLANS_ACTIONS, ACTION_PLANS_READS, ACTION_PLANS_PREVIEWS, PLAN_PROPOSAL_ACTIONS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, PLAN_RUN_SCOPE, RECOGNISER_ACTIONS, PROGRESSION_ACTIONS, OP_KINDS, OP_FAMILIES, FAMILY_OPS, FAMILY_SESSION_OPS, OP_ALIASES, ASK_GRANT_OPS, OP_STAMPS, SESSION_OPS, NEEDS, decorateAct, ACT_GATE, UNATTENDED_BY_DECISION, ACT_HELP_ABSENT };
