@@ -7,6 +7,8 @@
  * `content`, provenance R48's `register` — through the `io` it is handed, so it holds no store of its own. A target the
  * publisher may not see is not followed and not listed (R17: sight at the act governs). */
 
+import { PHOTO_WORDS } from "./checks.mjs";
+
 /** The material one leg reaches: the passage's own capture when the leg names a content row, else every capture its
  *  document registers. Answers `[{ref, kind, sha}]`; `kind` is `observation` for a member's authored words (provenance
  *  R48's `authored`), else `document`. */
@@ -125,18 +127,25 @@ export function chainsOf(members, io, depth) {
 
 /** R6, R29 (T37; N757; DEC-180 (3), (4); K2206): the states `case-carriage.photoMarks` (its R10) answers a photo. */
 export const PHOTO_STATES = Object.freeze(["marked", "nothing_to_obscure", "unchecked"]);
-/** R29: the Photos step's words for a marked photo whose cover `image-cover` refused (R6's `PHOTO_NOT_COVERABLE`). */
-export const PHOTO_NOT_COVERABLE_WORDS = "This case cannot rely on this photo until it is captured again in a format that "
-  + "can be covered.";
+/** R29 (T38; DEC-183; K2220): the Photos step's words for a photo whose cover `image-cover` refused, marked or not (R6's
+ *  `PHOTO_NOT_COVERABLE`), and for a photo no standing mark has checked (R6's `PHOTO_UNCHECKED`): `words.json`'s
+ *  `photo.refused.format` and `photo.refused.unchecked`, read by key (R22), `{photo}` the photo named. */
+export const PHOTO_NOT_COVERABLE_WORDS = PHOTO_WORDS["photo.refused.format"];
+export const PHOTO_UNCHECKED_WORDS = PHOTO_WORDS["photo.refused.unchecked"];
 const HEX64 = /^[0-9a-f]{64}$/i;
 
 /** R6, R29: one document's marks, as `read()` (`case-carriage.photoMarks({captureSha, viewer})`, its R10) answers them.
  *  Answers `{photo: false}` for a capture that is not an image; `{photo: true, state, marks, copy, refused}` for a
  *  photo, `copy` its current copy's SHA-256 or null and `refused` `{code, detail}` or null; and `{photo: null, unread:
  *  true, why}` when the marks cannot be read: a read that throws or refuses (`NO_SUCH_PHOTO` included), or an answer
- *  R10 does not state, such as a marked photo with neither a copy nor a refused cover. Unread fails closed: R6
- *  refuses it, and never carries it whole. A refused cover governs over a copy an earlier mark left, since that copy
- *  does not cover the later mark's areas (`case-carriage` R11). Never throws. */
+ *  R10 does not state: a mark with no `areas` list, a state that is not the one the standing marks give, or a checked
+ *  photo (`marked` or `nothing_to_obscure`) with neither a copy nor a refused cover. Unread fails closed: R6 refuses
+ *  it, and never carries it whole.
+ *  A WITHDRAWN MARK COUNTS AS WITHDRAWN (T38; `case-carriage` R14): only the marks whose `withdrawn` is null or absent
+ *  stand, and the state must be theirs (`marked` when one has an area, `nothing_to_obscure` when some stand and none
+ *  has, `unchecked` when none stands); `marks` are answered as read, the withdrawn ones with their withdrawals. An
+ *  unchecked photo has no copy (`case-carriage` R11), so none is answered. A refused cover governs over a copy an
+ *  earlier mark left, since that copy does not cover the later mark's areas (`case-carriage` R11). Never throws. */
 export function photoRead(read) {
   const unread = (why) => ({ photo: null, unread: true, why });
   let a = null;
@@ -144,14 +153,19 @@ export function photoRead(read) {
   if (!a || typeof a !== "object" || a.ok !== true)
     return unread(a && typeof a.reason === "string" ? `the marks read answered ${a.reason}` : "the marks could not be read");
   if (a.photo === false) return { photo: false };
-  if (a.photo !== true || !PHOTO_STATES.includes(a.state) || !Array.isArray(a.marks))
+  if (a.photo !== true || !PHOTO_STATES.includes(a.state) || !Array.isArray(a.marks)
+      || a.marks.some((m) => !m || typeof m !== "object" || !Array.isArray(m.areas)))
     return unread("the marks read answered a shape it does not state");
+  const standing = a.marks.filter((m) => m.withdrawn == null);
+  const state = !standing.length ? "unchecked" : standing.some((m) => m.areas.length) ? "marked" : "nothing_to_obscure";
+  if (state !== a.state) return unread(`the marks read answered ${a.state} where the standing marks say ${state}`);
   const copy = a.copy && typeof a.copy === "object" && typeof a.copy.sha256 === "string" && HEX64.test(a.copy.sha256)
     ? a.copy.sha256.toLowerCase() : null;
   const refused = a.refused && typeof a.refused === "object" && typeof a.refused.code === "string"
     ? { code: a.refused.code, detail: a.refused.detail ?? null } : null;
   if ((a.copy != null && !copy) || (a.refused != null && !refused))
     return unread("the marks read answered a shape it does not state");
-  if (a.state === "marked" && !copy && !refused) return unread("the photo is marked but holds neither a copy nor a refused cover");
-  return { photo: true, state: a.state, marks: a.marks, copy: refused ? null : copy, refused };
+  if (state !== "unchecked" && !copy && !refused)
+    return unread(`the photo is checked (${state}) but holds neither a copy nor a refused cover`);
+  return { photo: true, state, marks: a.marks, copy: refused || state === "unchecked" ? null : copy, refused };
 }

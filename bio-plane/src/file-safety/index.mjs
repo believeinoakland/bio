@@ -1012,9 +1012,11 @@ export class FileSafety {
       if (held) return refusal("PROVIDER_HELD", "The catalogue holds this service back.", { provider_id: id, provider_reason: held.missing });
       const base = id ? providerById(id) : null;
       const cfg = config && typeof config === "object" && !Array.isArray(config) ? { ...config } : {};
-      const host = template && typeof template === "object" && typeof template.host === "string" && template.host ? template.host
-        : typeof cfg.host === "string" && cfg.host ? cfg.host : null;
-      const region = typeof cfg.region === "string" && cfg.region ? cfg.region : null;
+      /* `host` (from `config`, or a generic template's `template.host`) and `region` are the spec's own fields
+         (file-scanner R21): held apart from `config`, and given for the entry's list when it names them (T38) */
+      const text = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
+      const host = (template && typeof template === "object" ? text(template.host) : null) || text(cfg.host);
+      const region = text(cfg.region);
       delete cfg.host; delete cfg.region;
       if (!base || (base.template && !host)) return refusal("PROVIDER_UNKNOWN", "No offered service has this name, or a generic tool names no host.", { provider_id: id });
       /* END DEC-49 REGION is-provider-offered */
@@ -1027,15 +1029,20 @@ export class FileSafety {
       const fields = FileSafety.#configOf(base);
       const empty = (v) => v === undefined || v === null || (typeof v === "string" && !v.trim())
         || (Array.isArray(v) && !v.length) || (typeof v === "object" && !Array.isArray(v) && !Object.keys(v).length);
-      const absent = fields.find((f) => f.required === true && empty(cfg[f.name]));
+      const given = { ...cfg, ...(host ? { host } : {}), ...(region ? { region } : {}) };
+      const absent = fields.find((f) => f.required === true && empty(given[f.name]));
       if (absent) return refusal("CONFIG_MISSING", "A setting the tool's entry names as required was not given.", { provider_id: id, field: absent.name });
       const stray = Object.keys(cfg).find((k) => !fields.some((f) => f.name === k));
       if (stray !== undefined) return refusal("CONFIG_UNKNOWN", "A setting was given that the tool's entry does not name.", { provider_id: id, field: stray });
       /* END DEC-49 REGION is-config-named */
       const d = resolved.descriptor;
+      /* the digest the catalogue (R27) answers for the entry, a generic template's own included, is what the
+         administrator saw; the tool keeps the digest of the handling it works under, for a template the handling its
+         maker stated in `config`, computed here (T38) */
+      const shown = FileSafety.#handlingDigest(base.handling);
       const digest = FileSafety.#handlingDigest(d.handling);
       /* DEC-49 REGION is-handling-shown */
-      if (handlingDigest !== digest) return refusal("HANDLING_NOT_SHOWN", "handlingDigest is not the tool's current handling_digest.", { provider_id: id, handling_digest: digest });
+      if (handlingDigest !== shown) return refusal("HANDLING_NOT_SHOWN", "handlingDigest is not the tool's current handling_digest.", { provider_id: id, handling_digest: shown });
       /* END DEC-49 REGION is-handling-shown */
       /* DEC-49 REGION is-retention-confirmed */
       if (d.handling.sample_sharing === "vendor_internal_research" && confirmRetention !== true)
@@ -1542,12 +1549,13 @@ export class FileSafety {
     } catch { return null; }
   }
 
-  /** R39: renderBatch's instant. Null while no file's view and no safe copy is queued; else the later of `now` and the
-   *  last batch plus FILE_SAFETY_POLL_MS. */
+  /** R39: renderBatch's instant. Null with no renderer bound (the scanner binding, as renderBatch refuses
+   *  RENDERER_ABSENT) or while no file's view and no safe copy is queued; else the later of `now` and the last batch
+   *  plus FILE_SAFETY_POLL_MS. */
   renderWake(now) {
     try {
       const n = msOf(now);
-      if (!Number.isFinite(n)) return this.#answer("render", null);
+      if (!Number.isFinite(n) || !this.#scannerBinding()) return this.#answer("render", null);
       const views = this.#one(`SELECT 1 AS x FROM fs_files WHERE render_state = 'queued' LIMIT 1`);
       const copies = this.#one(`SELECT 1 AS x FROM fs_copies WHERE state = 'queued' LIMIT 1`);
       if (!views && !copies) return this.#answer("render", null);

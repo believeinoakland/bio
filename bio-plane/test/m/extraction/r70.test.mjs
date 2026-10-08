@@ -140,7 +140,11 @@ test("R70 R66: N26's migration of a reading carrying cells moves each key to tab
   assert.equal(Object.prototype.hasOwnProperty.call(n26MigratedReading(base, map, text), "cells"), false);
 });
 
-test("R70 R66: a stored pre-N26 reading carrying cells is migrated through the store, its cells keys following the tables", async () => {
+/* A cell as a reading made before N26 could hold it: no `paras`, which only the N26 reader writes (T37-4), so no reading
+   carrying them is migrated (R66, T38; N786: n26.test.mjs proves it). */
+const oldCell = (table, value) => { const c = cell(table, value); delete c.paras; return c; };
+
+test("R70 R66: a stored pre-N26 reading carrying cells (without `paras`, which no pre-N26 reading holds) is migrated through the store, its cells keys following the tables", async () => {
   const w = fresh();
   bundle(w.s, "INFO-1");
   const d = await hold(w.evidence, docx(N26_BODY));
@@ -148,11 +152,11 @@ test("R70 R66: a stored pre-N26 reading carrying cells is migrated through the s
                 entities: [{ ref: "tbl:t", kind: "tbl", key: "t", label: null, facts: {}, source: T(2, "A1") }],
                 text_source: [{ step: "layer", container: "docx", tier: 1 }], text_tier: 1, text_container: "docx",
                 container_extent: { container: "docx", levels: ["paragraphs", "tables"], paragraphs: 8, tables: [{}, {}, {}] },
-                cells: { "table 1": [cell(0, "first")], "table 2": [cell(1, "t in box")], "table 3": [cell(2, "after table")] } };
+                cells: { "table 1": [oldCell(0, "first")], "table 2": [oldCell(1, "t in box")], "table 3": [oldCell(2, "after table")] } };
   w.x.writeReading({ bundleId: "INFO-1", captureSha: d, reading: old, profileFormat: "docx", composed: true });
   const out = await w.x.migrateDocxReadings();
   assert.deepEqual(out.migrated.map((m) => m.capture_sha), [d]);
   const got = w.x.readingOf(d).reading;
-  assert.deepEqual(got.cells, { "table 1": [cell(0, "first")], "table 2": [cell(1, "after table")] });
+  assert.deepEqual(got.cells, { "table 1": [oldCell(0, "first")], "table 2": [oldCell(1, "after table")] });
   assert.deepEqual(got.entities[0].source, T(1, "A1"));
 });

@@ -799,7 +799,35 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    AI_KEPT_AWAY (`where` now `aiKeptAway`, the one site that mints it, N765; words unchanged).
    ROW_CENSUS (R50) re-pinned to this tree: 1519 rows. Rows a T37 job in layers 3–11 adds or changes are T38's stamp
    (plan T37, Rules 6 (2)). */
-export const CATALOG_VERSION = "1.64.0";
+/* 1.65.0 (PROMOTION #36, T38-6, 2026-10-08; T37's red 2 (plan T38, rule 6 item 2); K1542, K2231, K2232): MINOR. The
+   stamp of every row awaiting it at T37's close (T37's layers 3–11) and of T38's layers 1 and 2, read by diffing R50's
+   census lines of `tranche/T38` at its layer 2 against 1.64.0's own (`test/fixtures/row-census-1.64.0.jsonl`: 1519 rows,
+   60d892ca…): twenty-eight new rows, one retired, seven changed. Each is one a T37 job record names (INSTANCE-SETUP's,
+   CASE-CARRIAGE's, CASE-DISCLOSURES', PUBLICATION's, FILE-SAFETY's and CONFORMANCE's).
+   ARRIVED (28): instance-setup C-64.11 TRANSLATION_DIRECTION_UNKNOWN through C-64.26 TRANSLATION_NOTE_REFUSED (the
+   screens' translation, its R67–R75; C-64.18 NO_SUCH_MEMBER among them, N793's one site to follow); case-carriage
+   C-141.1 MACHINE_CANNOT_MARK through C-141.6 AREA_OUTSIDE (the new module's family, `CASE_CARRIAGE_CHECKS`);
+   case-disclosures C-120.17 PHOTO_NOT_COVERABLE, C-120.18 PHOTO_MARKS_UNDETERMINED; publication C-122.6
+   PHOTO_MARKS_CHANGED_SINCE; file-safety C-140.40 CONFIG_MISSING, C-140.41 CONFIG_UNKNOWN, C-140.42
+   DEEPER_CHECKS_UNREADABLE.
+   DEPARTED (1), its number never reused: instance-setup C-119.5 ASSISTANT_OFF (the gate answers credentials'
+   AI_KEPT_AWAY, C-29.31, N765).
+   CHANGED (7), `where` only, code, number, region and translation unmoved, each re-pointed to the function that holds its
+   region (K2231): conformance C-113.12 OUTCOME_UNKNOWN and C-113.32 STANDARD_NOT_BINDING to `#determine`, C-113.19
+   PROPOSAL_CANNOT_DETERMINE to `#propose`, C-113.29 ACT_NO_EVENT and C-113.31 ACT_NOT_AN_EVENT to `#actEvent`, C-113.34
+   ACTOR_IS_A_PERSON and C-113.35 ACTOR_NOT_AN_OFFICE_OR_ORGANISATION to `#comparedAct`.
+   CHANGED IN WHAT THE GATES RUN, no row line moving: none a T37 or T38 job record names. T38's layer 1 (bundler,
+   image-codecs, file-scanner) added and changed no row. T38's layer 2 (project-roster, membership, credentials) is
+   re-pinned in place as each merges, so T38 names one catalogue.
+   T38 LAYER 2, re-pinned in place after all three merged (K2283): project-roster (the membership split, N783) CHANGED
+   C-56.5 TARGET_NOT_JOINED, C-33.28 LAST_OWNER, C-70.4 PROJECT_DIRECTORY_NEEDS_A_MEMBER and C-95.1–.9, `where` only, each
+   now naming `src/project-roster/index.mjs`, numbers, codes and translations unmoved, membership's copies gone;
+   membership ARRIVED C-96.47 NO_SUCH_MEMBER (`noSuchMember`, N793's one site; instance-setup's C-64.18 leaves in T39);
+   credentials CHANGED C-29.17 UNKNOWN_ACCOUNT_KIND and C-29.20 NO_ACCOUNT (translation: the subscription is connected by
+   signing in, N785).
+   ROW_CENSUS (R50) re-pinned to this tree: 1547 rows (1546 over the tranche at its layer 2's opening). Rows a T38 job in layers 3–11 adds or changes are T39's stamp
+   (plan T38, rule 6 item 2). */
+export const CATALOG_VERSION = "1.65.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -891,8 +919,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    this module's own census suite, `bio-plane/test/system/row-census.test.mjs` (legacy-tests' until T22's opening, K1006):
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1519,
-  digest: "60d892ca0b04829cd026b93e791b74a9f2fd6062bdc20fd100817bcc909c3d5b" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1547,
+  digest: "6f8d4d64c1cef0a1a028135eab93c6ece2e4e13d28026e32b4288f63d35fae0c" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();

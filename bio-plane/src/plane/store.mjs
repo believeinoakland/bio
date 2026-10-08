@@ -21,6 +21,7 @@ import { provenanceOps } from "../provenance/ops.mjs";
 import { attestationOf } from "../attestation/index.mjs";
 import { provenanceRoutesOf, provenanceRouteOps } from "../provenance-routes/index.mjs";
 import { membershipOf, membershipOps, viewerPredicate, MODULE_ORDER } from "../membership/index.mjs";
+import { projectRosterOf, projectRosterOps } from "../project-roster/index.mjs";
 import { credentialsOf, credentialsOps } from "../credentials/index.mjs";
 import { observationLogOf, observationLogOps, OBSERVATION_LOG_MODULE } from "../observation-log/index.mjs";
 import { runProductionsOf, runProductionsOps } from "../run-productions/index.mjs";
@@ -406,6 +407,11 @@ export class Store extends DurableObject {
 
     calibrationOf(this.ctx).migrate();
     membershipOf(this.ctx).migrate();
+    /* N783 (K2270, K2294): project-roster, split from membership, directly after it in the modules' order: its three
+       tables (`project_join_requests`, `project_owner_votes`, `project_owner_decisions`), so a fresh store holds them as
+       a migrated one does, declared to purge (its R18). Its first construction is its start: its invitation and hiding
+       listeners (its R15, R16) are registered with membership before the first request. */
+    projectRosterOf(this.ctx).migrate();
     credentialsOf(this.ctx).migrate();   /* after membership's: its listener and claim fact registered */
     provenanceOf(this.ctx).migrate();
     attestationOf(this.ctx).migrate();   /* `receipt_keys`, `signed_receipts` (N512; attestation R10) */
@@ -507,6 +513,9 @@ export class Store extends DurableObject {
     const ctx = this.ctx, env = this.env;
     return {
       ...membershipOps(membershipOf(ctx), url, body, env),
+      /* N783 (K2270): project-roster's ops (`projectowner*`, `projectvisibility`, `projectdirectory`,
+         `projectparticipants`, `projectrequest*`), split from membership, directly after its map. */
+      ...projectRosterOps(projectRosterOf(ctx), url, body, env),
       ...credentialsOps(credentialsOf(ctx), url, body, env),
       /* K2042 (acquisition R43; CONTROL-PLANE #24 J3): the group's co-archive setting, acquisition's one instance per
          host, at acquisition's place before capture's map; `by` is the door's stamp. */
@@ -553,7 +562,7 @@ export class Store extends DurableObject {
       /* K1643: `caseflags` and `attribute` are case-tensions', on the one instance publication's factory made. */
       ...caseTensionsOps(caseTensionsOf(ctx), url, body),
       ...publicationOps(publicationOf(ctx), url, body),
-      /* R18 (T37; K2226): case-carriage's `obscuremark` and `photomarks` (its R9, R10), directly after publication's, over
+      /* R18 (T37; K2226): case-carriage's `obscuremark`, `photomarks` and `obscuremarkwithdraw` (its R9, R10, R14), directly after publication's, over
          the one instance publication's factory made. */
       ...caseCarriageOps(publicationOf(ctx).caseCarriage, url, body),
       /* R15 (N520): docket's member ops; its public reads `docketpublic` and `docketfeed` are public-read's (its R21). */

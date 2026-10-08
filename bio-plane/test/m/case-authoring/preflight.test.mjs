@@ -11,6 +11,10 @@ import * as DISCLOSURES from "../../../src/case-disclosures/index.mjs";
 import { caseDocumentBlocks, unnamedSourceStatement, sourceStatement } from "../../../src/publication/index.mjs";
 import { ARCHIVE_VIA, ARCHIVE_CAPTURE_GRADE } from "../../../src/provenance/index.mjs";
 import { EARNED_CAPTURE_CEILING } from "../../../src/record-grammar/index.mjs";
+import { readFileSync } from "node:fs";
+/* words.json's words, read by key (K2220). */
+const WORDS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url), "utf8"));
+const word = (key) => WORDS.words.find((x) => x.key === key).en;
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", DOC3 = "INFO-2026-0003-c";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
@@ -60,7 +64,7 @@ test("R29 (N529): C-120.4–C-120.7, in the family 'a case's disclosures and its
     "src/case-disclosures/index.mjs hunchDebt > is-hunch-cleared"], "each names the method that raises it there");
 });
 
-test("R29 (N529): C-120.8 and C-120.10–C-120.13 (DEC-112, N522), C-120.14–C-120.16 (the people a case names, T33-68), and C-120.17–C-120.18 (a marked photo, T37; N757), in the same family, moved with their translations word for word to case-disclosures (its R22), each naming its raising method there; C-120.9 is withdrawn and not used", () => {
+test("R29 (N529): C-120.8 and C-120.10–C-120.13 (DEC-112, N522), C-120.14–C-120.16 (the people a case names, T33-68), C-120.17–C-120.18 (a marked photo, T37; N757) and R34's C-120.19 (an unchecked photo, T38; DEC-183), in the same family, held with their translations in case-disclosures (its R22; the photo rows words.json's photo.refused.format and photo.refused.unchecked, read by key), each naming its raising method there; C-120.9 is withdrawn and not used", () => {
   const rows = Object.entries(CASE_DISCLOSURE_CHECKS).slice(7);
   assert.deepEqual(rows.map(([k, v]) => [k, v.check, v.where]), [
     ["RELIED_ON_NOT_PRESENTABLE", "C-120.8", "src/case-disclosures/index.mjs materialsJudged > is-relied-on-presentable"],
@@ -72,7 +76,8 @@ test("R29 (N529): C-120.8 and C-120.10–C-120.13 (DEC-112, N522), C-120.14–C-
     ["PERSON_BASIS_NOT_STANDING", "C-120.15", "src/case-disclosures/index.mjs peopleJudged > is-person-basis-standing"],
     ["TIE_ATTESTATION_MISSING", "C-120.16", "src/case-disclosures/index.mjs tieAttestationJudged > is-tie-attested"],
     ["PHOTO_NOT_COVERABLE", "C-120.17", "src/case-disclosures/index.mjs materialsJudged > is-photo-coverable"],
-    ["PHOTO_MARKS_UNDETERMINED", "C-120.18", "src/case-disclosures/index.mjs materialsJudged > is-photo-marks-determined"]]);
+    ["PHOTO_MARKS_UNDETERMINED", "C-120.18", "src/case-disclosures/index.mjs materialsJudged > is-photo-marks-determined"],
+    ["PHOTO_UNCHECKED", "C-120.19", "src/case-disclosures/index.mjs materialsJudged > is-photo-checked"]]);
   assert.deepEqual(rows.map(([, v]) => v.translation), [
     "A finding this case relies on rests on material your group's Civicsmith does not hold whole, and everything a case relies on travels with it in full. Find a presentable copy, stop relying on the material, or make the finding supporting. Nothing was written.",
     "A finding in this case rests on another group's finding, and this group's acceptance of that edition is not in force. Accept it again, or take the leg out. Nothing was written.",
@@ -82,8 +87,9 @@ test("R29 (N529): C-120.8 and C-120.10–C-120.13 (DEC-112, N522), C-120.14–C-
     "This case names a person without a recorded reason for naming them. Give each person named a basis: their act or position, a tie, an interest, their consent, an earlier publication, or why a private person is named. Nothing was written.",
     "A reason given for naming a person is not one the record holds, or the position it cites was not held on the date of the act. Read the list again. Nothing was written.",
     "Each member who signs a case first attests that they hold no undeclared tie to anyone or anything the case names, including those paid or paying in its money. Attest, or declare the tie first. Nothing was written.",
-    "A photo a finding in this case relies on has people or number plates marked to be obscured, and its format cannot be covered, so the case can neither carry it whole nor leave it out. It is named. Capture the photo again in a format that can be covered, such as a standard JPEG or PNG, or stop relying on it. Nothing was written.",
-    "A photo this case relies on could not be checked for the people and number plates marked in it, so what the published case would show of it is not known. Try again. Nothing was written."]);
+    word("photo.refused.format"),
+    "A photo this case relies on could not be checked for the people and number plates marked in it, so what the published case would show of it is not known. Try again. Nothing was written.",
+    word("photo.refused.unchecked")]);
 });
 
 test("R55 (case-disclosures R16): uncleared hunch debt is UNCLEARED_HUNCH with its row C-120.7, naming every hunch leg, before anything is written; the pre-flight answers it before the first screen", () => {

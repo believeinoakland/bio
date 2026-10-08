@@ -5,8 +5,8 @@
    `docxRenumbering`. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, hold, wp, wr, wtbl, box, docx, bucket } from "./fixture.mjs";
-import { n26MigratedReading, n26Marked, renumberingMoves, N26_READER_MARK } from "../../../src/extraction/index.mjs";
+import { fresh, bundle, hold, wp, wr, wtbl, box, alt, docx, doc, bucket } from "./fixture.mjs";
+import { n26MigratedReading, n26Marked, renumberingMoves, N26_READER_MARK, Extraction } from "../../../src/extraction/index.mjs";
 import { textUnitsFor, layerChainFor, readingProvenance } from "../../../src/reading-pipeline/index.mjs";
 import { docxRenumbering } from "../../../src/docx.mjs";
 import { glyphCount } from "../../../src/textchain.mjs";
@@ -262,4 +262,111 @@ test("R66: on a Durable Object the migration is started by migrate() and carried
   /* no host, no background run */
   const x3 = new Extraction(f.s, { record, membership: f.membership, env: {} });
   assert.equal(x3.startMigrations(), null);
+});
+
+/* ---- T38 (N786): no reading carrying a `.docx` cell's `paras` (office-readers R11) is migrated ---- */
+
+const DOCX_CT = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+const AFTER_N26 = "read after N26 (its reading was written after the migration's cutoff)";
+/* A table cell whose paragraph holds a run-level mc:AlternateContent: the branch not read moves a run and no paragraph,
+   so the paragraph-count check (`oldWalk`) alone does not tell this N26 reading from an old one. */
+const RUN_BODY = wp(wr("head")) + `<w:tbl><w:tblGrid><w:gridCol/></w:tblGrid><w:tr><w:tc>${wp(alt(wr("choice"), wr("fallback")))}</w:tc></w:tr></w:tbl>`;
+
+/* N26's own reading of `body` (`read`, R1): its cells carry `paras`, as every reading since T37-4 does. */
+async function readNow(w, body) {
+  const bytes = docx(body);
+  const d = await hold(w.evidence, bytes);
+  const r = await w.x.read(doc({ digest: d, bytes: bytes.length, ct: DOCX_CT, format: "docx", headers: [["content-type", DOCX_CT]] }));
+  const cells = Object.values(r.reading.cells || {}).flat();
+  assert.ok(cells.length && cells.every((c) => Array.isArray(c.paras) && c.paras.length), "the reading carries cells with paras");
+  assert.equal(renumberingMoves(docxRenumbering(`<w:document><w:body>${body}</w:body></w:document>`)), true,
+               "the document holds a branch N26 does not read");
+  return { d, r };
+}
+const lastKept = (w, d) => w.one(`SELECT rowid AS n, reading FROM reading_history WHERE capture_sha=? ORDER BY seq DESC LIMIT 1`, d);
+/* The object restarting over the same storage, as n26's own restart test builds it: migrate() takes or keeps the cutoff. */
+async function restart(w) {
+  const record = { evidenceStore: () => w.core.evidenceStore(), transact: (fn) => w.core.transact(fn), readFile: () => null };
+  const waited = [];
+  const x = new Extraction(w.s, { record, membership: w.membership, env: {}, host: { waitUntil: (p) => waited.push(p) } });
+  x.migrate();
+  await Promise.all(waited);
+  return x;
+}
+
+test("R66 (T38, N786): a stored reading carrying a .docx cell's `paras`, its last kept row after the migration's cutoff, over a .docx with a branch not read, is skipped read after N26, its `paras` and every row unchanged", async () => {
+  for (const body of [BODY, RUN_BODY]) {
+    const w = fresh();
+    bundle(w.s, "INFO-1");
+    /* two old readings, so the first batch takes the cutoff and leaves the migration not done */
+    const old = await oldReading();
+    for (const c of ["0".repeat(64), "f".repeat(64)])
+      w.x.writeReading({ bundleId: "INFO-1", captureSha: c, reading: old, profileFormat: "docx", composed: true });
+    const first = await w.x.migrateDocxReadings({ limit: 1 });
+    assert.deepEqual([first.done, first.examined], [false, 1]);
+    /* the paras reading, written after the cutoff (a promotion after the migration started) */
+    const { d, r } = await readNow(w, body);
+    w.x.writeReading({ bundleId: "INFO-1", captureSha: d, reading: r.reading, textUnits: r.text_units, profileFormat: "docx" });
+    const notices = [];
+    w.x.onReading("observation-log", (e) => { notices.push(e); return null; });
+    assert.ok(Number(lastKept(w, d).n) > Number(first.cutoff), "its last kept row is after the cutoff");
+    const rowsBefore = ["readings", "reading_history", "reading_refs", "capture_text", "reading_text_source"]
+      .map((t) => w.rows(`SELECT * FROM ${t} WHERE capture_sha=?`, d));
+    const rest = await w.x.migrateDocxReadings();
+    assert.equal(rest.done, true);
+    assert.deepEqual(rest.migrated, []);
+    assert.deepEqual(rest.skipped.filter((s) => s.capture_sha === d).map((s) => s.why), [AFTER_N26]);
+    const got = w.x.readingOf(d).reading;
+    assert.deepEqual(got, r.reading);
+    assert.deepEqual(got.cells, r.reading.cells, "`paras` unchanged");
+    assert.equal(n26Marked(got), false);
+    assert.equal("migrated" in got, false);
+    assert.deepEqual(["readings", "reading_history", "reading_refs", "capture_text", "reading_text_source"]
+      .map((t) => w.rows(`SELECT * FROM ${t} WHERE capture_sha=?`, d)), rowsBefore);
+    assert.equal(notices.length, 0);
+  }
+});
+
+test("R66 (T38, N786): a reading carrying `paras` is never migrated on a store whose migration is done, after a restart, nor after a whole-store purge: the migrations' row survives the purge, so its cutoff is not taken again over the readings written since", async () => {
+  for (const body of [BODY, RUN_BODY]) {
+    const w = fresh({ host: { waitUntil: () => null } });
+    /* the boot took the cutoff over the empty store; its run finds nothing and is done */
+    assert.equal((await w.x.migrateDocxReadings()).done, true);
+    const kept = w.one(`SELECT * FROM reading_migrations WHERE migration='n26-docx'`);
+    assert.deepEqual([kept.cutoff, kept.done], [0, 1]);
+    /* the whole-store purge empties the record, the history's rowids restart, and a reading is written again */
+    const purged = w.core.purge();
+    assert.equal(purged.removed.reading_migrations, undefined, "the migrations' row is exempt from the purge");
+    assert.equal(w.one(`SELECT count(*) c FROM reading_history`).c, 0);
+    bundle(w.s, "INFO-1");
+    const { d, r } = await readNow(w, body);
+    w.x.writeReading({ bundleId: "INFO-1", captureSha: d, reading: r.reading, textUnits: r.text_units, profileFormat: "docx" });
+    /* restart: the row stands, done, its cutoff the boot's (taken again, it would hold this reading's row) */
+    const x2 = await restart(w);
+    assert.deepEqual(w.one(`SELECT * FROM reading_migrations WHERE migration='n26-docx'`), kept);
+    const again = await x2.migrateDocxReadings();
+    assert.deepEqual([again.done, again.examined, again.migrated], [true, 0, []]);
+    const got = w.x.readingOf(d).reading;
+    assert.deepEqual(got, r.reading);
+    assert.equal(n26Marked(got), false);
+    assert.equal(w.one(`SELECT count(*) c FROM reading_history WHERE capture_sha=?`, d).c, 1);
+  }
+});
+
+test("R66 R23 (T38, N786): every write of a reading carrying `paras` leaves its last kept row holding that reading, through promotion's projection, the writer, and a second bundle writing the same reading, so none carrying `paras` lacks a history row", async () => {
+  const w = fresh();
+  bundle(w.s, "INFO-1"); bundle(w.s, "INFO-2");
+  const { d, r } = await readNow(w, BODY);
+  const files = [{ path: "data/provenance.json", text: JSON.stringify({ documents: [{ capture: { sha256: d }, reading: r.reading,
+    text_units: r.text_units, profile: { format: { format: "docx" } } }] }) }];
+  w.x.projectPromotion({ bundleId: "INFO-1", files, author: null });
+  const stored = () => w.one(`SELECT reading FROM readings WHERE capture_sha=?`, d).reading;
+  assert.equal(lastKept(w, d).reading, stored());
+  w.x.writeReading({ bundleId: "INFO-2", captureSha: d, reading: r.reading, textUnits: r.text_units, profileFormat: "docx" });
+  assert.equal(lastKept(w, d).reading, stored());
+  assert.equal(w.one(`SELECT count(*) c FROM reading_history WHERE capture_sha=?`, d).c, 1, "the same reading is not kept again");
+  const changed = { ...r.reading, basis: "read again" };
+  w.x.writeReading({ bundleId: "INFO-2", captureSha: d, reading: changed, textUnits: r.text_units, profileFormat: "docx" });
+  assert.equal(lastKept(w, d).reading, stored());
+  assert.deepEqual(JSON.parse(stored()).cells, r.reading.cells);
 });

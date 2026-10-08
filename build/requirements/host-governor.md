@@ -45,7 +45,7 @@ Paces this instance's outbound fetches, one host at a time, so it leans on anoth
 - **R17** A governor that cannot be reached, or a target whose host cannot be read, never blocks the fetch: it proceeds ungoverned, and a report that cannot be recorded is dropped (politeness, not coordination; K47). A fetch that throws propagates its error, and nothing is reported.
 
 **op=governorstate** (a read)
-- **R18** Reached by the `admin`, `member` and `probe` classes and by every session. `host=` narrows to one host; absent, all. Answers `{ok: true, hosts}` from R13. A store that does not answer is reported as silence (`storeSilent`), never as an empty `{ok: true}`, which would claim the instance is holding nothing.
+- **R18** Reached by the `admin` and `probe` classes and by every session (a member's included; no `member` class since T36, admission R5) and by every session. `host=` narrows to one host; absent, all. Answers `{ok: true, hosts}` from R13. A store that does not answer is reported as silence (`storeSilent`), never as an empty `{ok: true}`, which would claim the instance is holding nothing.
 
 **op=governorconfig** (a write)
 - **R19** Reached by the `admin` and `probe` classes and, among sessions, by the founder's session alone; an enrolled administrator's and a member's session are refused (the refusal and its wording are the session gate's, `admission` R8, split from `control-plane`, K624). Refuses a missing `host` with `NEED_HOST` and a present `appetite_per_min` that is not a positive number with `BAD_APPETITE`; an absent one clears the host's appetite (R11). A store that does not answer is reported as silence, never `{ok: true}`.

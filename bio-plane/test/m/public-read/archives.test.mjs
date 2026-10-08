@@ -53,10 +53,23 @@ const docRow = (ref, s) => ({ ref, kind: "document", sha: s, text_sha: null, ori
 const coRow = (ref) => ({ ref, by_kind: "co_attestation", by: "tsa.example", level: null, at: NOW, signature: null, recorded_in: null });
 
 /* A captured archive: a stored ZIP written by this module's own serialiser (`../container.mjs`), each entry `{name, data}`. */
+const LISTINGS = new Map(); // an archive's SHA-256 -> its entries `[{name, sha256}]`, as `makeZip` built it
 function makeZip(entries) {
-  const z = serialiseContainer(entries.map((e) => ({ name: e.name, bytes: typeof e.data === "string" ? new TextEncoder().encode(e.data) : new Uint8Array(e.data) })));
+  const bytes = entries.map((e) => (typeof e.data === "string" ? new TextEncoder().encode(e.data) : new Uint8Array(e.data)));
+  const z = serialiseContainer(entries.map((e, i) => ({ name: e.name, bytes: bytes[i] })));
   assert.equal(z.ok, true);
+  LISTINGS.set(hex(Buffer.from(z.bytes)), entries.map((e, i) => ({ name: e.name, sha256: hex(Buffer.from(bytes[i])) })));
   return z.bytes;
+}
+/* `acquisition`'s record of an archive's listing (its R38), as its unpack writes it: the opened header (`idx` -1) and one
+   row per entry, filed at its digest. `case-carriage` R8 (T38; K2291 (2)) reads it to tell that an archive holds no image,
+   and carries none whose listing is not recorded. */
+function recordListing(w, archiveSha) {
+  w.st.sql.exec(`CREATE TABLE IF NOT EXISTS archive_entries (archive_sha TEXT NOT NULL, idx INTEGER NOT NULL, name TEXT, kind TEXT,
+                 state TEXT NOT NULL, sha256 TEXT, PRIMARY KEY (archive_sha, idx))`);
+  w.st.sql.exec(`INSERT OR IGNORE INTO archive_entries (archive_sha, idx, state) VALUES (?, -1, 'opened')`, archiveSha);
+  (LISTINGS.get(archiveSha) || []).forEach((e, i) => w.st.sql.exec(`INSERT OR REPLACE INTO archive_entries
+    (archive_sha, idx, name, kind, state, sha256) VALUES (?, ?, ?, 'file', 'filed', ?)`, archiveSha, i, e.name, e.sha256));
 }
 /* Where an entry's local header sits in the archive. */
 function localOffset(zip, name) {
@@ -131,6 +144,7 @@ function holdArchive(w, env, id, zip, { token, entry = null }) {
   blobFile(w, id, "attestations/archive.tsr", hex(token), token.length);
   env.PUBLISHED.m.set(`bio/published/${s}`, new Uint8Array(z));
   env.PUBLISHED.m.set(`bio/published/${hex(token)}`, new Uint8Array(token));
+  recordListing(w, s);
   return s;
 }
 /* A member of an archive, its text held inline on its own bundle, its provenance stating its `container`. */

@@ -43,7 +43,7 @@ afterEach(() => { globalThis.fetch = realFetch; });
 /** A Container DO namespace whose every connection runs `script`: the nth message the module sends is answered
  *  with `script[n](msg)`'s messages (an array; `"close"` closes the socket). */
 function fakeRunner(script = []) {
-  const log = { urls: [], sent: [], opened: 0, closed: 0, ids: 0 };
+  const log = { urls: [], sent: [], opened: 0, closed: 0, ids: 0, names: [], got: [] };
   const stub = {
     async fetch(url, init = {}) {
       log.urls.push(String(url));
@@ -66,17 +66,25 @@ function fakeRunner(script = []) {
       return { status: 101, webSocket: ws };
     },
   };
-  const ns = { newUniqueId() { log.ids += 1; return `id${log.ids}`; }, get() { return stub; } };
+  /* R2: the instance is named by the member (`idFromName`); `newUniqueId` is counted so a test finds it never used. */
+  const ns = {
+    idFromName(name) { log.names.push(name); return `named:${name}`; },
+    newUniqueId() { log.ids += 1; return `id${log.ids}`; },
+    get(id) { log.got.push(id); return stub; },
+  };
   return { ns, stub, log };
 }
+/** A namespace whose every instance is `stub` (for runners scripted by hand). */
+const binding = (stub) => ({ idFromName: (n) => `named:${n}`, newUniqueId() { throw new Error("an unnamed instance"); }, get: () => stub });
 const end = (extra = {}) => ({ ok: true, result: "done", stop_reason: "end_turn", num_turns: 1,
   usage: { input_tokens: 7, output_tokens: 4, cache_read_input_tokens: 0, cache_creation_input_tokens: 1, total_cost_usd: 0.01 },
   ...extra });
 
 const KEY = "sk-ant-api03-SENTINELKEY-0000";
-const TOKEN = "sk-ant-oat01-SENTINELTOKEN-0000";
+const MEMBER = "member-ana-0001";
 const APIKEY = { kind: "apikey", key: KEY };
-const SUB = { kind: "subscription", token: TOKEN };
+const SUB = { kind: "signin", member: MEMBER };
+const SIGNIN_CREDENTIAL = { kind: "signin", member: MEMBER };
 const PACK = { version: 7, resident: { rule: "RESIDENT-LAYER-MARK", disclosable: [{ layer: "law", load_when: "a law question" }] } };
 const TOOLS = [
   { name: "lookup", description: "look", input_schema: { type: "object", properties: { q: { type: "string" } } } },
@@ -112,7 +120,7 @@ test("R1 the model per mode comes from MODEL_FOR_MODE only; the call runs under 
     assert.equal(c.body.model, MODEL_FOR_MODE[mode]);
     assert.equal(c.init.headers["x-api-key"], KEY);
     assert.ok(c.body.system.map((b) => b.text).join("").includes("RESIDENT-LAYER-MARK"), "the pack's resident layer is sent");
-    /* subscription: the conversation request's model is the table's too. */
+    /* sign-in: the conversation request's model is the table's too. */
     const r = fakeRunner([() => [{ tool_use: { id: "u1", name: "answer", input: { v: "y" } } }], () => [end()]]);
     const s = await converse(conv({ mode, reference: SUB, runner: r.ns, model: "claude-chosen-by-caller" }));
     assert.deepEqual(s.answer, { v: "y" });
@@ -131,7 +139,7 @@ test("R1 the model per mode comes from MODEL_FOR_MODE only; the call runs under 
   }
   const rm = fakeRunner([() => [{ tool_use: { id: "u1", name: "answer", input: { v: "m" } } }], () => [end()]]);
   assert.deepEqual((await converse(conv({ reference: { ...SUB, level: "member" }, runner: rm.ns }))).answer, { v: "m" });
-  assert.deepEqual(rm.log.sent[0].credential, { kind: "subscription", secret: TOKEN });
+  assert.deepEqual(rm.log.sent[0].credential, SIGNIN_CREDENTIAL);
   assert.match((await modelCall(undefined, BODY)).refused.message, /group's API key/);
   /* A mode the table does not hold is refused before any call; so is a key of Object's prototype. */
   for (const mode of ["investigate-all", "toString", undefined]) {
@@ -149,7 +157,7 @@ test("R1 the model per mode comes from MODEL_FOR_MODE only; the call runs under 
 
 /* ------------------------------------------------------------------ R2 */
 
-test("R2 the provider follows the reference's kind: apikey to MODEL_ENDPOINT with the key in x-api-key only; subscription to the runner with the token in the credential field only; unusable references and a missing runner are refused with no call", async () => {
+test("R2 the provider follows the reference's kind: apikey to MODEL_ENDPOINT with the key in x-api-key only; signin to the member's own runner instance named by idFromName(member), never a new one, with the credential {kind: signin, member}, for one turn and a conversation alike; unusable references (subscription included) and a missing runner are refused with no call; the runner's NOT_SIGNED_IN and NOT_THIS_MEMBER pass through unchanged", async () => {
   replies.push(json(200, message([{ type: "text", text: "a" }])));
   const r = fakeRunner([() => [end()]]);
   const a = await modelCall(APIKEY, BODY, { runner: r.ns });
@@ -162,39 +170,69 @@ test("R2 the provider follows the reference's kind: apikey to MODEL_ENDPOINT wit
   assert.equal(Object.values(calls[0].init.headers).filter((v) => String(v).includes(KEY)).length, 1);
   assert.equal(r.log.opened, 0, "an API-key turn never reaches the runner");
 
+  /* One turn: the member's own instance, by name; the credential names the member and carries nothing else. */
   const s = await modelCall(SUB, BODY, { runner: r.ns });
   assert.ok(s.result);
-  assert.equal(calls.length, 1, "a subscription turn makes no fetch");
+  assert.equal(calls.length, 1, "a sign-in turn makes no fetch");
   assert.equal(r.log.opened, 1);
+  assert.deepEqual(r.log.names, [MEMBER]);
+  assert.deepEqual(r.log.got, [`named:${MEMBER}`]);
+  assert.equal(r.log.ids, 0, "never a new, unnamed instance");
   assert.deepEqual(r.log.urls, [RUNNER_URL]);
   assert.equal(r.log.upgrade, "websocket");
   const req = r.log.sent[0];
-  assert.deepEqual(req.credential, { kind: "subscription", secret: TOKEN });
-  const { credential, ...rest } = req;
-  assert.ok(!JSON.stringify(rest).includes(TOKEN), "the token is in the credential field and nowhere else");
+  assert.deepEqual(req.credential, SIGNIN_CREDENTIAL);
   assert.deepEqual(Object.keys(req).sort(), ["credential", "max_turns", "model", "prompt", "system", "tools"]);
 
-  /* A stub (not a namespace) is accepted as the binding too. */
-  const r2 = fakeRunner([() => [end()]]);
-  assert.ok((await modelCall(SUB, BODY, { runner: r2.stub })).result);
+  /* A conversation alike, and with a level `member`: every connection it opens is the member's own instance. */
+  const rc = fakeRunner([() => [end({ result: "hm" })]]);
+  const c = await converse(conv({ reference: { ...SUB, level: "member" }, runner: rc.ns, maxTurns: 2 }));
+  assert.equal(c.exhausted, true);
+  assert.equal(rc.log.opened, 2);
+  assert.deepEqual(rc.log.names, [MEMBER, MEMBER]);
+  assert.deepEqual(rc.log.got, [`named:${MEMBER}`, `named:${MEMBER}`]);
+  assert.equal(rc.log.ids, 0);
+  assert.ok(rc.log.sent.every((m) => JSON.stringify(m.credential) === JSON.stringify(SIGNIN_CREDENTIAL)));
+  /* Two members, two instances: each turn goes to its own member's. */
+  const rm = fakeRunner([() => [end()]]);
+  await modelCall({ kind: "signin", member: "member-bo" }, BODY, { runner: rm.ns });
+  await converse(conv({ reference: SUB, runner: rm.ns, maxTurns: 1 }));
+  assert.deepEqual(rm.log.names, ["member-bo", MEMBER]);
+  assert.deepEqual(rm.log.sent.map((m) => m.credential.member), ["member-bo", MEMBER]);
+  assert.equal(rm.log.ids, 0);
 
+  /* The runner's own refusals, with that type, never reworded; on one turn and in a conversation. */
+  for (const code of ["NOT_SIGNED_IN", "NOT_THIS_MEMBER"]) {
+    const t = await modelCall(SUB, BODY, { runner: fakeRunner([() => [{ ok: false, code }]]).ns });
+    assert.deepEqual([t.refused.type, t.refused.status], [code, null]);
+    const cv = await converse(conv({ reference: SUB, runner: fakeRunner([() => [{ ok: false, code, detail: "as said" }]]).ns }));
+    assert.deepEqual([cv.refused.type, cv.refused.message], [code, "as said"]);
+  }
+
+  /* Unusable references, `subscription` (retired with credentials R22) included however it is shaped: no call. */
   const bad = [undefined, null, "sk-x", {}, { kind: "other", key: "k" }, { kind: "apikey" }, { kind: "apikey", key: "" },
-    { kind: "apikey", token: "t" }, { kind: "subscription" }, { kind: "subscription", token: "" },
-    { kind: "subscription", key: "k" }, { kind: "apikey", key: 42 }];
+    { kind: "apikey", token: "t" }, { kind: "apikey", key: 42 },
+    { kind: "subscription" }, { kind: "subscription", token: "sk-ant-oat01-x" }, { kind: "subscription", member: MEMBER },
+    { kind: "subscription", key: "k" },
+    { kind: "signin" }, { kind: "signin", member: "" }, { kind: "signin", member: 7 }, { kind: "signin", member: null },
+    { kind: "signin", member: { id: MEMBER } }, { kind: "signin", key: "k" }];
   const r3 = fakeRunner([() => [end()]]);
   for (const ref of bad) {
     const m = await modelCall(ref, BODY, { runner: r3.ns });
     assert.equal(m.refused.type, "ACCOUNT_REFERENCE_UNUSABLE", JSON.stringify(ref));
-    const c = await converse(conv({ reference: ref, runner: r3.ns }));
-    assert.equal(c.refused.type, "ACCOUNT_REFERENCE_UNUSABLE");
+    const cv = await converse(conv({ reference: ref, runner: r3.ns }));
+    assert.equal(cv.refused.type, "ACCOUNT_REFERENCE_UNUSABLE");
   }
-  for (const runner of [undefined, null]) {
+  /* No runner binding that names an instance: absent, or a bare instance (the module cannot name it). */
+  const bare = fakeRunner([() => [end()]]);
+  for (const runner of [undefined, null, bare.stub, { get: bare.ns.get }, { idFromName: bare.ns.idFromName }]) {
     assert.equal((await modelCall(SUB, BODY, { runner })).refused.type, "RUNNER_NOT_CONFIGURED");
     assert.equal((await converse(conv({ reference: SUB, runner }))).refused.type, "RUNNER_NOT_CONFIGURED");
   }
   assert.equal((await modelCall(SUB, BODY)).refused.type, "RUNNER_NOT_CONFIGURED");
   assert.equal(calls.length, 1);
   assert.equal(r3.log.opened, 0);
+  assert.equal(bare.log.opened, 0);
 });
 
 /* ------------------------------------------------------------------ R3 */
@@ -241,9 +279,9 @@ test("R3 never throws: a throw or a non-JSON body is silent (detail ≤ 200); a 
   assert.ok((await modelCall(APIKEY, cyclic)).silent);
 
   /* The runner: a binding that throws, an upgrade refused, a dropped socket, a non-JSON frame, an error, a refusal. */
-  const throwing = { get() { throw new Error("no such binding"); }, newUniqueId() { return "x"; } };
+  const throwing = { idFromName() { throw new Error("no such binding"); }, get() { throw new Error("no such binding"); } };
   assert.ok((await modelCall(SUB, BODY, { runner: throwing })).silent);
-  const refusing = { fetch: async () => new Response("no", { status: 503 }) };
+  const refusing = binding({ fetch: async () => new Response("no", { status: 503 }) });
   const up = await modelCall(SUB, BODY, { runner: refusing });
   assert.deepEqual([up.refused.status, up.refused.type], [503, "RUNNER_REFUSED"]);
   assert.ok((await modelCall(SUB, BODY, { runner: fakeRunner([() => ["close"]]).ns })).silent);
@@ -317,7 +355,7 @@ test("R5 every outcome that reached the provider carries usage with the five fig
   replies.push({ raw: "nope", status: 500 });
   five((await modelCall(APIKEY, BODY)).usage);
 
-  /* subscription: the runner's figures as it states them, cost included; unstated ones null. */
+  /* sign-in: the runner's figures as it states them, cost included; unstated ones null. */
   const s = await modelCall(SUB, BODY, { runner: fakeRunner([() => [end()]]).ns });
   assert.deepEqual(s.usage, { input_tokens: 7, output_tokens: 4, cache_read_input_tokens: 0, cache_creation_input_tokens: 1,
                               total_cost_usd: 0.01 });
@@ -418,7 +456,7 @@ test("R6 a conversation ends on the final tool, on stopped turns or bytes before
                    { planeSilent: { detail: "p" } });
 });
 
-test("R6 every answer carrying usage carries calls: on the apikey path each request answered with an outcome counts one and a stopped one none; on the subscription path the runner's num_turns, null where it states none", async () => {
+test("R6 every answer carrying usage carries calls: on the apikey path each request answered with an outcome counts one and a stopped one none; on the signin path the runner's num_turns, null where it states none", async () => {
   /* apikey: an answer after a tool round is two calls, equal to the requests the provider saw. */
   let n = calls.length;
   replies.push(json(200, message([toolUse("a", "lookup")])));
@@ -454,7 +492,7 @@ test("R6 every answer carrying usage carries calls: on the apikey path each requ
   /* Every ending of the apikey path that carries usage carries calls. */
   for (const got of [two, ex, st, s0, b0, rf, sl, nj]) assert.ok("usage" in got && "calls" in got);
 
-  /* subscription: one conversation's num_turns as the runner states it. */
+  /* sign-in: one conversation's num_turns as the runner states it. */
   const r = fakeRunner([() => [{ tool_use: { id: "u1", name: "lookup", input: {} } }],
     () => [{ tool_use: { id: "u2", name: "answer", input: { v: 1 } } }], () => [end({ num_turns: 3 })]]);
   const sa = await converse(conv({ reference: SUB, runner: r.ns }));
@@ -490,9 +528,9 @@ test("R6 every answer carrying usage carries calls: on the apikey path each requ
   const z = fakeRunner();
   const sz = await converse(conv({ reference: SUB, runner: z.ns, meter: meter(0) }));
   assert.deepEqual([sz.stopped, sz.calls, z.log.opened], ["turns", 0, 0]);
-  const up = await converse(conv({ reference: SUB, runner: { fetch: async () => new Response("no", { status: 503 }) } }));
+  const up = await converse(conv({ reference: SUB, runner: binding({ fetch: async () => new Response("no", { status: 503 }) }) }));
   assert.deepEqual([up.refused.type, up.calls], ["RUNNER_REFUSED", null]);
-  const thr = await converse(conv({ reference: SUB, runner: { fetch: async () => { throw new Error("gone"); } } }));
+  const thr = await converse(conv({ reference: SUB, runner: binding({ fetch: async () => { throw new Error("gone"); } }) }));
   assert.deepEqual([!!thr.silent, thr.calls], [true, 0], "a binding that threw reached no runner");
   for (const got of [sa, tk, acg, sb, sdk, mx, sz, up, thr]) assert.ok("usage" in got && "calls" in got);
   /* A refusal before any call carries neither. */
@@ -502,7 +540,7 @@ test("R6 every answer carrying usage carries calls: on the apikey path each requ
 
 /* ------------------------------------------------------------------ R7 */
 
-test("R7 on the subscription path only the named tools are offered, each relayed call is performed by onTool with its result sent back on the same connection, and R6's endings hold", async () => {
+test("R7 on the signin path only the named tools are offered, each relayed call is performed by onTool with its result sent back on the same connection, and R6's endings hold", async () => {
   const performed = [];
   const r = fakeRunner([
     () => [{ tool_use: { id: "u1", name: "lookup", input: { q: "a" } } }],
@@ -542,12 +580,11 @@ test("R7 on the subscription path only the named tools are offered, each relayed
   /* Endings: bytes before sending a result; turns; the runner's MAX_TURNS is exhausted; a model that ends without
      answering is asked again in a fresh conversation, up to maxTurns. */
   const rb = fakeRunner([() => [{ tool_use: { id: "b1", name: "lookup", input: { q: "x".repeat(500) } } }]]);
-  const first = JSON.stringify({ credential: { kind: "subscription", secret: TOKEN } }).length;
   const mb = meter(100, 2000);
   const sb = await converse(conv({ reference: SUB, runner: rb.ns, meter: mb, onTool: async () => ({ content: "y".repeat(3000) }) }));
   assert.equal(sb.stopped, "bytes");
   assert.equal(rb.log.sent.length, 1, "the result that would pass the bound was not sent");
-  assert.ok(first > 0 && rb.log.closed === 1);
+  assert.equal(rb.log.closed, 1);
   assert.equal(sb.usage.input_tokens, null, "the closed conversation stated no usage");
   const rt = fakeRunner([() => [{ tool_use: { id: "t1", name: "lookup", input: {} } }]]);
   assert.equal((await converse(conv({ reference: SUB, runner: rt.ns, meter: meter(1) }))).stopped, "turns");
@@ -597,8 +634,8 @@ test("R8 a reference's secret is in no returned value, transcript or console out
     returned.push(await converse(conv({ messages, meter: m })));
     returned.push(messages, m);
     for (const script of [
-      [() => [{ ok: false, code: "SDK_ERROR", detail: `token ${TOKEN} rejected` }]],
-      [() => [end({ stop_reason: "refusal", result: TOKEN })]],
+      [() => [{ ok: false, code: "SDK_ERROR", detail: "rejected" }]],
+      [() => [end({ stop_reason: "refusal", result: "no" })]],
       [() => [{ tool_use: { id: "x", name: "answer", input: {} } }], () => [end()]],
       [() => ["close"]],
     ]) {
@@ -606,8 +643,8 @@ test("R8 a reference's secret is in no returned value, transcript or console out
       returned.push(await converse(conv({ reference: SUB, runner: fakeRunner(script).ns, messages: msgs })), msgs);
       returned.push(await modelCall(SUB, BODY, { runner: fakeRunner(script).ns }));
     }
-    returned.push(await modelCall(SUB, BODY, { runner: { get() { throw new Error(`binding ${TOKEN}`); }, newUniqueId() { return 1; } } }));
-    returned.push(await modelCall(SUB, BODY, { runner: { fetch: async () => { throw new Error(TOKEN); } } }));
+    returned.push(await modelCall(SUB, BODY, { runner: { idFromName() { throw new Error("binding"); }, get() { return null; } } }));
+    returned.push(await modelCall(SUB, BODY, { runner: binding({ fetch: async () => { throw new Error("gone"); } }) }));
     /* A second call without a reference makes no call: nothing from the first was kept. */
     const n = calls.length;
     const r = fakeRunner([() => [end()]]);
@@ -623,7 +660,6 @@ test("R8 a reference's secret is in no returned value, transcript or console out
   const text = JSON.stringify(returned) + out.join("\n");
   assert.ok(returned.length > 10);
   assert.ok(!text.includes(KEY), "the key is nowhere returned or printed");
-  assert.ok(!text.includes(TOKEN), "the token is nowhere returned or printed");
   assert.ok(!text.includes("SENTINEL"));
 });
 
@@ -661,7 +697,7 @@ test("R10 it reaches no address but MODEL_ENDPOINT and the runner binding, and n
   const r = fakeRunner([() => [{ tool_use: { id: "u", name: "answer", input: {} } }], () => [end()]]);
   outward.push(await converse(conv({ reference: SUB, runner: r.ns })));
   outward.push(await modelCall(undefined, BODY), await modelCall(SUB, BODY), await converse(conv({ mode: "nope" })),
-               await modelCall(APIKEY, null), await modelCall(SUB, BODY, { runner: { fetch: async () => new Response("", { status: 500 }) } }));
+               await modelCall(APIKEY, null), await modelCall(SUB, BODY, { runner: binding({ fetch: async () => new Response("", { status: 500 }) }) }));
   assert.ok(calls.length >= 3);
   assert.ok(calls.every((c) => c.url === MODEL_ENDPOINT), "every fetch is to MODEL_ENDPOINT");
   assert.equal(MODEL_ENDPOINT, "https://api.anthropic.com/v1/messages");
@@ -704,10 +740,11 @@ test("R11 a group-level reference is the group's API key, sent exactly as a memb
   /* Refused, no call: a group reference of another kind; a level that is neither member nor group. */
   calls.length = 0;
   const r = fakeRunner([() => [end()]]);
-  const bad = [{ kind: "subscription", level: "group", token: TOKEN }, { kind: "subscription", level: "group", key: GKEY },
+  const bad = [{ kind: "signin", level: "group", member: MEMBER }, { kind: "subscription", level: "group", token: "sk-ant-oat01-x" },
+    { kind: "subscription", level: "group", key: GKEY }, { kind: "signin", level: "operator", member: MEMBER },
     { kind: "other", level: "group", key: GKEY }, { level: "group", key: GKEY },
     { kind: "apikey", level: "admin", key: GKEY }, { kind: "apikey", level: "", key: GKEY }, { kind: "apikey", level: null, key: GKEY },
-    { kind: "apikey", level: "GROUP", key: GKEY }, { kind: "subscription", level: "operator", token: TOKEN }];
+    { kind: "apikey", level: "GROUP", key: GKEY }, { kind: "subscription", level: "operator", token: "sk-ant-oat01-x" }];
   for (const reference of bad) {
     assert.equal((await modelCall(reference, BODY, { runner: r.ns })).refused.type, "ACCOUNT_REFERENCE_UNUSABLE", JSON.stringify(reference));
     assert.equal((await converse(conv({ reference, runner: r.ns }))).refused.type, "ACCOUNT_REFERENCE_UNUSABLE");
@@ -786,7 +823,7 @@ test("R12 record text reaches the model only inside tool results: rowFacts' ever
         assert.deepEqual(sr.content, [{ type: "search_result", source: `${MARK}-src`, title: `${MARK}-title`,
                                         content: [{ type: "text", text: `${MARK}-sr` }], citations: { enabled: true } }]);
       } else {
-        /* subscription: the first conversation ends without answering, so a second one is opened with the transcript
+        /* sign-in: the first conversation ends without answering, so a second one is opened with the transcript
            (results held, read back over the relay). */
         const r = fakeRunner([
           () => [{ tool_use: { id: "r1", name: "read_facts", input: {} } }],
@@ -794,7 +831,7 @@ test("R12 record text reaches the model only inside tool results: rowFacts' ever
           () => [end({ result: "thinking" })],
         ]);
         let opened = 0;
-        const runner = { newUniqueId: () => "x", get: () => ({ fetch: async (u, i) => {
+        const runner = { idFromName: (n) => `named:${n}`, get: () => ({ fetch: async (u, i) => {
           opened += 1;
           if (opened === 1) return r.stub.fetch(u, i);
           return second.stub.fetch(u, i);

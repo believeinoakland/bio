@@ -39,15 +39,47 @@ test("R32 projectInvite: NOT_THE_OWNER, NO_SUCH_HANDLE, NOT_ACTIVE, ALREADY_A_PA
     { state: "invited", owner: 0, invited_by: "ann" });
 });
 
-test("R33 an invitation closes the invitee's open request to join, granted, by the inviting owner", async () => {
+test("R33 R116 an invitation tells the one registered listener inside the act, after its writes; request granted only on a count", async () => {
   const w = await projectWorld();
-  w.m.projectVisibilitySet({ projectId: "PROJ-P", setting: "discoverable", by: "ann", viewer: V("ann") });
-  assert.equal(w.m.projectRequest({ projectId: "PROJ-P", comment: "let me in", by: "dee", viewer: V("dee") }).ok, true);
+  const heard = [];
+  /* The listener stands in for project-roster's (its R15): it sees the invitation already written, and answers a count. */
+  let answer = 1;
+  assert.deepEqual(w.m.onProjectInvited("project-roster", (n) => {
+    heard.push({ ...n, written: w.m.participation(n.projectId, n.memberId) });
+    if (answer === "throw") throw new Error("listener fails");
+    return answer;
+  }), { ok: true, module: "project-roster" });
   const inv = w.m.projectInvite({ projectId: "PROJ-P", handle: "dee", by: "ann", viewer: V("ann") });
-  assert.equal(inv.request, "granted");
-  const r = w.row(`SELECT state, closed_by FROM project_join_requests WHERE member_id='dee'`);
-  assert.deepEqual(r, { state: "granted", closed_by: "ann" });
-  assert.equal(w.rows(`SELECT * FROM project_join_requests WHERE state='open'`).length, 0);
+  assert.deepEqual([inv.ok, inv.state, inv.request], [true, "invited", "granted"]);
+  assert.equal(heard.length, 1);
+  assert.deepEqual([heard[0].projectId, heard[0].memberId, heard[0].by, heard[0].written],
+    ["PROJ-P", "dee", "ann", { state: "invited", owner: false }]);
+  assert.match(heard[0].at, /^\d{4}-\d\d-\d\dT/);
+  assert.equal(w.row(`SELECT created FROM project_participants WHERE member_id='dee'`).created, heard[0].at, "the act's time");
+  /* Anything but a whole number of at least 1, or a throw: the invitation stands, the key absent. */
+  await w.enrol("eve"); await w.enrol("fay"); await w.enrol("gus"); await w.enrol("hal");
+  for (const [who, a] of [["eve", 0], ["fay", "throw"], ["gus", 1.5], ["hal", "2"]]) {
+    answer = a;
+    const r = w.m.projectInvite({ projectId: "PROJ-P", handle: who, by: "ann", viewer: V("ann") });
+    assert.deepEqual([r.ok, "request" in r], [true, false], `${who}: ${a}`);
+    assert.equal(w.m.participation("PROJ-P", who).state, "invited");
+  }
+  /* A refused invitation tells nobody. */
+  const before = heard.length;
+  w.m.projectInvite({ projectId: "PROJ-P", handle: "dee", by: "ann", viewer: V("ann") });
+  w.m.projectInvite({ projectId: "PROJ-P", handle: "eve", by: "bob", viewer: V("bob") });
+  assert.equal(heard.length, before);
+  /* One registration, whoever makes it; malformed refused (R81). */
+  const again = w.m.onProjectInvited("someone-else", () => 1);
+  assert.deepEqual([again.reason, again.module], ["LISTENER_DECLARED", "project-roster"]);
+  assert.equal(w.m.onProjectInvited("", () => 1).reason, "LISTENER_MALFORMED");
+});
+
+test("R33 R116 with no listener registered the invitation stands and its answer has no request key", async () => {
+  const w = await projectWorld();
+  const inv = w.m.projectInvite({ projectId: "PROJ-P", handle: "dee", by: "ann", viewer: V("ann") });
+  assert.deepEqual(inv, { ok: true, projectId: "PROJ-P", handle: "dee", state: "invited" });
+  assert.equal(w.m.onProjectInvited("project-roster", "not a function").reason, "LISTENER_MALFORMED");
 });
 
 test("R34 projectJoin: NOT_INVITED for a non-participant; joined, idempotent, withdraws a request to leave", async () => {
@@ -71,14 +103,14 @@ test("R35 projectLeave: records leaving with a comment, removes nobody; the last
   assert.equal(sole.reason, "LAST_COMMITTED_OWNER");
   // two owners: one may ask to leave; then the other, the last committed one, may not
   w.m.projectJoin({ projectId: "PROJ-P", by: "bob", viewer: V("bob") });
-  assert.equal(w.m.projectOwnerAdd({ projectId: "PROJ-P", handle: "bob", by: "ann", viewer: V("ann") }).ok, true);
+  assert.equal(w.m.participationWrite("ownerOn", { projectId: "PROJ-P", memberId: "bob" }), true);   // project-roster R3's write
   assert.equal(w.m.projectLeave({ projectId: "PROJ-P", by: "bob", viewer: V("bob") }).ok, true);
   const last = w.m.projectLeave({ projectId: "PROJ-P", by: "ann", viewer: V("ann") });
   assert.deepEqual([last.reason, last.owners], ["LAST_COMMITTED_OWNER", ["ann", "bob"]]);
   assert.equal(w.row(`SELECT state FROM project_participants WHERE member_id='ann'`).state, "joined");
 });
 
-test("R36 R63 projectRemove: refusals; removes whether or not they asked; every removal kept and readable", async () => {
+test("R36 projectRemove: refusals; removes whether or not they asked; every removal kept", async () => {
   const w = await projectWorld();
   w.m.projectInvite({ projectId: "PROJ-P", handle: "dee", by: "ann", viewer: V("ann") });   // a participant who stays
   w.m.projectJoin({ projectId: "PROJ-P", by: "dee", viewer: V("dee") });
@@ -92,24 +124,12 @@ test("R36 R63 projectRemove: refusals; removes whether or not they asked; every 
   assert.deepEqual([r.ok, r.removed, r.comment], [true, true, "did not show up"]);
   assert.equal(w.m.projectRemove({ projectId: "PROJ-P", handle: "cal", by: "ann", viewer: V("ann") }).ok, true, "an invited one too");
   assert.equal(w.m.participation("PROJ-P", "bob"), null);
-  assert.equal(w.m.projectParticipants({ projectId: "PROJ-P", by: "eve" }).reason, "NO_SUCH_PROJECT", "not a participant");
-  for (const reader of ["ann", "dee", "second"]) {   // an owner, every participant, an administrator
-    const rm = w.m.projectParticipants({ projectId: "PROJ-P", by: reader }).removals;
-    assert.deepEqual(rm.map((x) => [x.handle, x.removedBy, x.reason]), [["bob", "ann", "did not show up"], ["cal", "ann", null]]);
-    for (const x of rm) assert.match(x.at, /^\d{4}-/);
-  }
-});
-
-test("R37 projectParticipants: a participant or an administrator reads every participant; others NO_SUCH_PROJECT", async () => {
-  const w = await projectWorld();
-  const p = w.m.projectParticipants({ projectId: "PROJ-P", by: "cal" });
-  assert.deepEqual(p.participants.map((x) => [x.handle, x.state, x.owner]),
-    [["ann", "joined", 1], ["bob", "joined", 0], ["cal", "invited", 0]]);
-  for (const x of p.participants) assert.ok("comment" in x);
-  assert.equal(w.m.projectParticipants({ projectId: "PROJ-P", by: "second" }).ok, true);
-  assert.equal(w.m.projectParticipants({ projectId: "PROJ-P", by: "admin" }).ok, true);
-  assert.equal(w.m.projectParticipants({ projectId: "PROJ-P", by: "dee" }).reason, "NO_SUCH_PROJECT");
-  assert.equal(w.m.projectParticipants({ projectId: "NOPE", by: "dee" }).reason, "NO_SUCH_PROJECT");
+  /* Every removal is kept, with who removed whom, when and the owner's reason (R120's project_removals; project-roster
+     R2 reads it to every participant). */
+  const rm = w.rows(`SELECT project_id, member_id, removed_by, comment, at FROM project_removals ORDER BY seq`);
+  assert.deepEqual(rm.map((x) => [x.project_id, x.member_id, x.removed_by, x.comment]),
+    [["PROJ-P", "bob", "ann", "did not show up"], ["PROJ-P", "cal", "ann", null]]);
+  for (const x of rm) assert.match(x.at, /^\d{4}-/);
 });
 
 test("R74 participation answers one member's state in one project and whether an owner, or null", async () => {

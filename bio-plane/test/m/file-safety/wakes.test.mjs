@@ -119,6 +119,21 @@ test("R39: renderWake answers null while no file's view and no safe copy is queu
   for (const bad of [undefined, "x"]) { assert.equal(w.fs.renderWake(bad), null); assert.equal(w.fs.deeperWake(bad), null); }
 });
 
+test("R39 (T38): renderWake answers null with no renderer bound (the scanner binding, as renderBatch refuses RENDERER_ABSENT), as scanWake does with no scanner, while a view is queued; with a renderer bound and a view queued, an instant", async () => {
+  const none = world({ bound: false });
+  await none.capture(pdf(false, "unbound"));
+  assert.ok(none.row("SELECT 1 AS x FROM fs_files WHERE render_state = 'queued'"), "a view is queued");
+  assert.equal(none.fs.renderWake(T0), null, "no renderer bound: null");
+  assert.equal(none.fs.scanWake(T0), null, "as the scan wake with no scanner");
+  assert.equal((await none.fs.renderBatch({})).code, "RENDERER_ABSENT");
+  assert.equal(none.fs.renderWake(T0 + POLL), null, "still null after the refused batch");
+  none.exec("INSERT INTO fs_copies (capture_sha, state, queued_at) VALUES (?, 'queued', '2026-10-08T12:00:00Z')", sha(pdf(false, "unbound")));
+  assert.equal(none.fs.renderWake(T0), null, "a safe copy queued too: null");
+  const bound = world();
+  await bound.capture(pdf(false, "bound"));
+  assert.equal(bound.fs.renderWake(T0), T0, "a renderer bound, a view queued: an instant");
+});
+
 test("R39: forwardWake answers null while no log tool is on, else the start of the first whole UTC hour after the end of the last period forwarded with ok (at the first, the start of the current hour); reputationWake null while no url_reputation tool with a local list is on, else its last refresh that answered ok plus REPUTATION_REFRESH_MS, or now when none has (a failed try retried no sooner than a poll after it); each kept across a restart, writes nothing and never throws", async () => {
   let gwr = () => ({ ok: true, list_version: "v", fetched_at: "x" });
   const w = world({ scan: { refresh: { "google-web-risk": () => gwr(), "cloudflare-intel": () => ({ ok: false, code: "NO_LOCAL_LIST" }) } } });

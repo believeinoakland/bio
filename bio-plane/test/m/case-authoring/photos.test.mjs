@@ -1,7 +1,9 @@
 /* case-authoring (T37; N757; DEC-180 (3), (4); K2206): a marked photo in the document, carried by its copy (R14), and
    the ceremony's Photos step (R34), over the real case-disclosures (its R6, R7, R29) with case-carriage's `photoMarks`
-   (its R10) a stand-in at its interface: each capture's marks state is the test's to set. */
+   (its R10) a stand-in at its interface: each capture's marks state is the test's to set. (T38; DEC-183 (1); K2220,
+   K2303) The Photos step is a gate: signing is refused while any photo the case relies on is unchecked (R34). */
 import { test } from "node:test";
+import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
 import { CASE_DISCLOSURE_CHECKS } from "../../../src/case-authoring/index.mjs";
@@ -11,13 +13,16 @@ import { PHOTO_NOT_COVERABLE_WORDS } from "../../../src/case-disclosures/materia
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", DOC3 = "INFO-2026-0003-c";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
-const COPY = "f".repeat(64);
+const COPY = "f".repeat(64), COPY2 = "e".repeat(64);
+/* words.json's words, read by key (K2220). */
+const WORDS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url), "utf8"));
+const word = (key) => WORDS.words.find((x) => x.key === key).en;
 const AREA = { mark: 1, areas: [{ rect: [0, 0, 10, 10], kind: "person" }], by: "alice", at: "2026-09-27T00:00:00.000Z" };
 const NONE = { mark: 1, areas: [], by: "alice", at: "2026-09-27T00:00:00.000Z" };
 const ANSWERS = {
   marked: { state: "marked", marks: [AREA], copy: { sha256: COPY, covered: 1, width: 10, height: 10 }, refused: null },
   unchecked: { state: "unchecked", marks: [], copy: null, refused: null },
-  nothing: { state: "nothing_to_obscure", marks: [NONE], copy: null, refused: null },
+  nothing: { state: "nothing_to_obscure", marks: [NONE], copy: { sha256: COPY2, covered: 0, width: 10, height: 10 }, refused: null },
   refused: { state: "marked", marks: [AREA], copy: null, refused: { code: "FORMAT_NOT_COVERABLE", detail: "HEIC" } },
 };
 const ratified = (real) => new Proxy(real, { get: (t, p) => (p === "caseRatifyPreflight"
@@ -51,13 +56,14 @@ function refused(r, code) {
     [code, code, CASE_DISCLOSURE_CHECKS[code].check, CASE_DISCLOSURE_CHECKS[code].translation]);
 }
 
-test("R14: a marked photo is stated as carried by its copy — its materials: row included: false with obscured: {copy, label}, the copy's SHA-256 and case-carriage's OBSCURED_LABEL — and the document stores it unsigned; an unchecked photo, one with nothing to obscure and a capture that is no photo travel whole with obscured null", () => {
-  const { w, P, shas } = setup({ states: { [DOC]: "marked", [DOC2]: "unchecked", [DOC3]: "nothing" } });
+test("R14: a marked photo is stated as carried by its copy — its materials: row included: false with obscured: {copy, label}, the copy's SHA-256 and case-carriage's OBSCURED_LABEL — a photo with nothing to obscure by its copy with no label (T38; N779), and the document stores it unsigned; a capture that is no photo travels whole with obscured null", () => {
+  const { w, P, shas } = setup({ states: { [DOC]: "marked", [DOC2]: "nothing" } });
   const r = w.ca.publishCase(args(P, [Q, Q2]));
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 400));
   const rows = Object.fromEntries(materialsOf(w.fm(docOf(w, r))).materials.map((m) => [m.ref, m]));
   assert.deepEqual([rows[DOC].sha, rows[DOC].included, rows[DOC].obscured], [shas[DOC], false, { copy: COPY, label: OBSCURED_LABEL }]);
-  for (const d of [DOC2, DOC3]) assert.deepEqual([rows[d].included, rows[d].obscured], [true, null], d);
+  assert.deepEqual([rows[DOC2].sha, rows[DOC2].included, rows[DOC2].obscured], [shas[DOC2], false, { copy: COPY2, label: null }]);
+  assert.deepEqual([rows[DOC3].included, rows[DOC3].obscured], [true, null]);
   assert.equal(w.row(`SELECT sig_armored FROM case_documents WHERE case_id=?`, r.caseId).sig_armored, null, "stored unsigned");
   /* negative control: with no photo at all, every row travels whole */
   const plain = setup();
@@ -66,8 +72,8 @@ test("R14: a marked photo is stated as carried by its copy — its materials: ro
     [[true, null], [true, null], [true, null]]);
 });
 
-test("R34: steps gains photos after \"what you are leaving out\" — case-disclosures R29's answer over the materials op=publish judged, each photo with its state, marks, copy and words, unchecked counted — and an unchecked photo is never among blockers: the pre-flight is ready; it writes nothing", () => {
-  const { w, P, shas } = setup({ states: { [DOC]: "marked", [DOC2]: "unchecked", [DOC3]: "unchecked" } });
+test("R34: steps gains photos after \"what you are leaving out\" — case-disclosures R29's answer over the materials op=publish judged, each photo with its state, marks, copy and words, unchecked counted — and with every photo checked (marked, or nothing to obscure) the pre-flight is ready; it writes nothing", () => {
+  const { w, P, shas } = setup({ states: { [DOC]: "marked", [DOC2]: "nothing", [DOC3]: "nothing" } });
   const before = w.snapshot();
   const pre = w.ca.publishPreflight(args(P, [Q, Q2], { [Q]: "load_bearing", [Q2]: "supporting" }));
   assert.deepEqual(w.snapshot(), before, "nothing written");
@@ -77,11 +83,11 @@ test("R34: steps gains photos after \"what you are leaving out\" — case-disclo
   assert.equal(step.step, 4);
   assert.deepEqual(step.photos.map((p) => [p.ref, p.sha, p.state, p.copy, p.words, p.relied_on_by]), [
     [DOC, shas[DOC], "marked", COPY, OBSCURED_LABEL, [{ target: Q, role: "load_bearing" }]],
-    [DOC2, shas[DOC2], "unchecked", null, null, [{ target: Q, role: "load_bearing" }]],
-    [DOC3, shas[DOC3], "unchecked", null, null, [{ target: Q2, role: "supporting" }]]]);
+    [DOC2, shas[DOC2], "nothing_to_obscure", COPY2, null, [{ target: Q, role: "load_bearing" }]],
+    [DOC3, shas[DOC3], "nothing_to_obscure", COPY2, null, [{ target: Q2, role: "supporting" }]]]);
   assert.deepEqual(step.photos[0].marks, [AREA]);
-  assert.equal(step.unchecked, 2);
-  assert.deepEqual([pre.ready, pre.first, pre.blockers], [true, null, []], "an unchecked photo blocks nothing");
+  assert.equal(step.unchecked, 0);
+  assert.deepEqual([pre.ready, pre.first, pre.blockers], [true, null, []], "every photo checked: nothing blocks");
   /* no photo reached: the step is stated, empty */
   const plain = setup();
   const none = plain.w.ca.publishPreflight(args(plain.P, [Q]));
@@ -89,6 +95,36 @@ test("R34: steps gains photos after \"what you are leaving out\" — case-disclo
   /* the members refused first: the step says it was not reached, never filled */
   const no = w.ca.publishPreflight({ ...args(P, [Q]), roles: {} });
   assert.match(no.steps[3].stated, /^not reached/);
+});
+
+test("R34 (T38; DEC-183 (1)): signing is refused while any photo the case relies on is unchecked — case-disclosures R6's PHOTO_UNCHECKED, naming each such photo (a supporting member's included), its translation words.json's photo.refused.unchecked, is op=publish's refusal and the pre-flight's first exactly, the step's words for each; among blockers when op=publish refuses earlier; \"nothing to obscure\" clears it; nothing is written", () => {
+  const states = { [DOC]: "marked", [DOC2]: "unchecked", [DOC3]: "unchecked" };
+  const { w, P, shas } = setup({ states });
+  const roles = { [Q]: "load_bearing", [Q2]: "supporting" };
+  const before = w.snapshot();
+  const pub = w.ca.publishCase(args(P, [Q, Q2], roles));
+  refused(pub, "PHOTO_UNCHECKED");
+  assert.equal(CASE_DISCLOSURE_CHECKS.PHOTO_UNCHECKED.translation, word("photo.refused.unchecked"), "read by key");
+  assert.deepEqual(pub.unchecked, [{ ref: DOC2, sha: shas[DOC2], members: [Q] }, { ref: DOC3, sha: shas[DOC3], members: [Q2] }],
+    "each unchecked photo named with the members reaching it, a supporting one's included; the marked one not named");
+  const pre = w.ca.publishPreflight(args(P, [Q, Q2], roles));
+  assert.deepEqual([pre.first, pre.ready, pre.blockers], [pub, false, []]);
+  const step = pre.steps[3];
+  assert.deepEqual(step.photos.map((p) => [p.ref, p.state]), [[DOC, "marked"], [DOC2, "unchecked"], [DOC3, "unchecked"]]);
+  assert.deepEqual(step.photos.map((p) => p.words), [OBSCURED_LABEL, word("photo.refused.unchecked"), word("photo.refused.unchecked")]);
+  assert.equal(step.unchecked, 2);
+  assert.deepEqual(w.snapshot(), before, "nothing written");
+  /* op=publish refuses earlier (the bar): the unchecked photo's refusal is among blockers, once */
+  const low = setup({ states: { [DOC]: "unchecked" }, extra: ["required_strength:", "  capture: A"] });
+  const early = low.w.ca.publishPreflight(args(low.P, [Q]));
+  assert.equal(early.first.reason, "BELOW_PROJECT_STRENGTH");
+  assert.equal(early.blockers.filter((b) => b.reason === "PHOTO_UNCHECKED").length, 1);
+  assert.equal(early.ready, false);
+  /* "nothing to obscure" clears it: the same world, each photo now checked, publishes and the pre-flight is ready */
+  states[DOC2] = states[DOC3] = "nothing";
+  const clear = w.ca.publishPreflight(args(P, [Q, Q2], roles));
+  assert.deepEqual([clear.first, clear.blockers, clear.ready, clear.steps[3].unchecked], [null, [], true, 0]);
+  assert.equal(w.ca.publishCase(args(P, [Q, Q2], roles)).ok, true);
 });
 
 test("R34: case-disclosures R6's PHOTO_NOT_COVERABLE (C-120.17) is op=publish's refusal, answered first by the pre-flight exactly, and among blockers when op=publish refuses earlier; the step names the photo with R29's words; nothing is written", () => {

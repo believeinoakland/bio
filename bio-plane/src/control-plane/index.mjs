@@ -651,7 +651,11 @@ export function makeFetch(hooks = {}) {
          `login` and `recover` take (credentials R1, R4, R47) and capture's knock its `country` (its R85). */
       const windowed = await doorWindowGate({ req, env, op, spec, doAnswer });
       if (windowed.refusal) return refused(windowed.refusal);
-      const source = windowed.source ?? await sourceOf(req, env);
+      /* (T38; K2326) the window's answer carries the source; when the window was not read, `sourceOf` is asked again
+         only where it needs no store (the fingerprint key bound), so a store fault is never asked a second time and the
+         source is then `null`, as admission R21 states for a store that cannot be asked */
+      const source = windowed.source ?? (typeof env.KNOCK_FINGERPRINT_KEY === "string" && env.KNOCK_FINGERPRINT_KEY
+        ? await sourceOf(req, env) : null);
       const country = countryOf(req);
       const doorStamps = new URLSearchParams({ ...(source ? { source } : {}), ...(country ? { country } : {}) }).toString();
       const fp = await fingerprint(env.ADMIN_TOKEN);
@@ -2190,7 +2194,10 @@ export function makeFetch(hooks = {}) {
         const b0 = JSON.parse(passBody);
         /* R59 (admission R20): a body's `token` is the caller's credential, the door's alone, never passed on; (K2146;
            R44) a grant's digest and the secret door's mark are the door's alone too, so no caller supplies either */
-        const strip = [...BODY_STAMPS, "token", "secretSha", "bySecret", ...(BODY_DROPPED[op] ?? [])];
+        /* R29, R67 (T38): an op whose `by` or `viewer` the door stamps in the address (`OP_STAMPS`) takes neither from
+           the caller's body either, so its owner's map never holds a caller's statement of who is acting */
+        const strip = [...BODY_STAMPS, "token", "secretSha", "bySecret", ...(BODY_DROPPED[op] ?? []),
+                       ...declared.filter((k) => k === "by" || k === "viewer")];
         if (b0 && typeof b0 === "object" && !Array.isArray(b0) && strip.some((k) => k in b0)) {
           for (const k of strip) delete b0[k];
           passBody = JSON.stringify(b0);

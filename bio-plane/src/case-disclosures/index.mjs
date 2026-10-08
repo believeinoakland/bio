@@ -3,8 +3,8 @@
  * DEC-81, DEC-96 item 4, DEC-112, DEC-119). The unresolved conflicts on a case's findings (R1); each document's grade and
  * co-attestation, and the owner's acknowledgement of a self-attested one (R2, R3); what may be said of a source (R4); the
  * method the case is signed under (R5); every document and observation a finding's chain reaches, with what this copy
- * holds whole and who attests it, a marked photo carried as its copy (R6–R12), and the photos it relies on for the
- * ceremony's Photos step (R29; T37, N757); another group's work it rests on, with its acceptance and open flags (R13,
+ * holds whole and who attests it, every photo carried only as its copy and an unchecked one refused (R6–R12), and the
+ * photos it relies on for the ceremony's Photos step (R29; T37, N757; T38, DEC-183); another group's work it rests on, with its acceptance and open flags (R13,
  * R14); each reached finding's grading facts and passages (R15); hunch debt (R16); and the people it names, each with a
  * recorded basis, and each signer's attestation of no undeclared tie (R24–R28). Each judgment answers its
  * refusals in order and the rows the case document writes; `case-authoring`'s `publishCase` asks them in its order (its
@@ -72,14 +72,15 @@ import { peopleOf as peopleModuleOf } from "../people/index.mjs";
 import { caseCarriageOf, OBSCURED_LABEL } from "../case-carriage/index.mjs";
 import { CASE_DISCLOSURE_CHECKS } from "./checks.mjs";
 import { basesListed, basisCitation, placesStated, PERSON_PLACES, TIE_LINE_KINDS, TIE_ANONYMOUS_LEVELS } from "./people.mjs";
-import { chainsOf, materialHeld, materialRows, photoRead, PHOTO_NOT_COVERABLE_WORDS } from "./materials.mjs";
+import { chainsOf, materialHeld, materialRows, photoRead, PHOTO_NOT_COVERABLE_WORDS, PHOTO_UNCHECKED_WORDS } from "./materials.mjs";
 import { flagsListed, flagsJudged, acceptedWorkRow } from "./accepted.mjs";
 import { NOT_SHOWN_WORDS, tensionSide, SELF_ATTESTED_SENTENCE } from "./document.mjs";
 
-export { CASE_DISCLOSURE_CHECKS } from "./checks.mjs";
+export { CASE_DISCLOSURE_CHECKS, PHOTO_WORDS } from "./checks.mjs";
 export { PERSON_BASES, PERSON_PLACES, TIE_LINE_KINDS, TIE_ANONYMOUS_LEVELS, basesListed, basisCitation, placesStated,
          peopleLines, memberTieLines, peopleOf, memberTiesOf } from "./people.mjs";
-export { chainsOf, materialHeld, materialRows, photoRead, PHOTO_STATES, PHOTO_NOT_COVERABLE_WORDS } from "./materials.mjs";
+export { chainsOf, materialHeld, materialRows, photoRead, PHOTO_STATES, PHOTO_NOT_COVERABLE_WORDS,
+         PHOTO_UNCHECKED_WORDS } from "./materials.mjs";
 export { flagsListed, acceptedWorkRow, FLAG_SENTENCE, FLAGS_SAY } from "./accepted.mjs";
 export { SELF_ATTESTED_SENTENCE, TENSION_TEMPLATES, HIGHLIGHT_SENTENCE, NOT_SHOWN_WORDS, TENSIONS_DEPTH_STATED,
          tensionSide, tensionTemplate, tensionSentence, tensionsUnreadStated, tensionFrontmatterLines,
@@ -379,15 +380,22 @@ export class CaseDisclosures {
    *  material it reaches with what this copy holds of it (`materialHeld`), and C-120.8 for every load-bearing member
    *  whose chain reaches material not held whole, naming each member and each material. Material only supporting
    *  members reach is listed `included: false` and never refused.
-   *  A PHOTO (T37; N757; DEC-180 (3), (4); K2206): each document's marks are read (`case-carriage.photoMarks`, its R10,
-   *  as `viewer`; `photoRead`) and answered on the material as `photo`. A marked photo with a copy is `included: false`
-   *  with `obscured: {copy, label}`, presentable through its copy, so never C-120.8 for being held so. A marked photo
-   *  whose cover was refused is neither carried whole nor left out: a load-bearing chain reaching it is
-   *  `PHOTO_NOT_COVERABLE`, naming each such photo and member; one only supporting members reach is `included: false`.
-   *  A photo whose marks cannot be read is `included: false` and `PHOTO_MARKS_UNDETERMINED`, naming it, wherever the
-   *  answer decides what travels (`marksDecide`: held whole, or reached by a load-bearing member): fail closed, never
-   *  sent out whole. Supporting-only material not held whole travels in no case, so it is listed `included: false`. An unmarked photo (`nothing_to_obscure`, `unchecked`) is judged as any
-   *  document. Refusals in that order; each writes nothing. Answers `{refusals, materials, refs, findings}`;
+   *  A PHOTO (T37; N757; DEC-180 (3), (4); K2206; T38: N779, K2248; DEC-183 (1), K2220, K2291, K2303): each
+   *  document's marks are read (`case-carriage.photoMarks`, its R10, as `viewer`; `photoRead`, a withdrawn mark counted
+   *  as withdrawn) and answered on the material as `photo`. A photo never travels whole: it is `included: false`
+   *  whatever is held of it, and never C-120.8. In order:
+   *  - a document whose marks cannot be read is `PHOTO_MARKS_UNDETERMINED`, naming it, wherever the answer decides what
+   *    travels (`marksDecide`: held whole, or reached by a load-bearing member): fail closed;
+   *  - an `unchecked` photo (no standing mark) that any member's chain reaches, load-bearing or supporting, is
+   *    `PHOTO_UNCHECKED`, naming each such photo and the members reaching it (K2291's reading of "relies on");
+   *  - a checked photo whose cover was refused, marked or not, is neither carried whole nor left out: a load-bearing
+   *    chain reaching it is `PHOTO_NOT_COVERABLE`, naming each such photo and member; one only supporting members reach
+   *    is listed `included: false` with no `obscured`;
+   *  - otherwise (`marked` or `nothing_to_obscure`, with a copy) it is presentable through its copy, `obscured: {copy,
+   *    label}`, `label` `OBSCURED_LABEL` when `marked`, else null (no label for an unmarked copy, K2291).
+   *  Supporting-only material not held whole travels in no case, so it is listed `included: false`. Each photo
+   *  refusal but the unread carries `photo`, the photos named, which fills its translation's `{photo}`. Refusals:
+   *  C-120.8, then the photos' in that order; each writes nothing. Answers `{refusals, materials, refs, findings}`;
    *  `op=publish` answers the first refusal, `case-authoring` R34's pre-flight lists them all. */
   materialsJudged(prepared, memberRoles, viewer) {
     const gate = viewerPredicate(viewer);
@@ -406,21 +414,25 @@ export class CaseDisclosures {
       const held = materialHeld(m, io);
       const photo = m.kind === "document"
         ? photoRead(() => this.caseCarriage.photoMarks({ captureSha: m.sha, viewer })) : null;
-      const marked = !!(photo && photo.photo === true && photo.state === "marked");
-      const obscured = marked && photo.copy ? { copy: photo.copy, label: OBSCURED_LABEL } : null;
-      const plain = !(photo && photo.unread) && !marked;
+      const isPhoto = !!(photo && photo.photo === true);
+      const obscured = isPhoto && photo.state !== "unchecked" && !photo.refused && photo.copy
+        ? { copy: photo.copy, label: photo.state === "marked" ? OBSCURED_LABEL : null } : null;
+      const plain = !(photo && photo.unread) && !isPhoto;
       return { ...m, held, included: plain && held.whole, obscured, photo };
     });
     const loadBearing = memberRoles.filter((r) => r.role === "load_bearing");
     const byMember = (list, row) => loadBearing
       .map((r) => ({ target: r.target, materials: list.filter((m) => m.members.includes(r.target)).map(row) }))
       .filter((x) => x.materials.length);
+    /* a photo is presentable only through its copy and refused below on its own terms, and the load-bearing unread are
+       PHOTO_MARKS_UNDETERMINED (a copy may yet make them presentable): none is C-120.8 */
     const short = materials.filter((m) => !m.included && m.rests_under === "load_bearing"
-                                          && !(m.photo && (m.photo.unread || m.photo.state === "marked")));
-    /* the load-bearing unread are PHOTO_MARKS_UNDETERMINED below, never C-120.8: a copy may yet make them presentable */
-    const uncoverable = materials.filter((m) => m.rests_under === "load_bearing" && m.photo && m.photo.photo === true
-                                                && m.photo.state === "marked" && m.photo.refused);
+                                          && !(m.photo && (m.photo.unread || m.photo.photo === true)));
     const unread = materials.filter((m) => m.photo && m.photo.unread && marksDecide(m));
+    const unchecked = materials.filter((m) => m.photo && m.photo.photo === true && m.photo.state === "unchecked");
+    const uncoverable = materials.filter((m) => m.rests_under === "load_bearing" && m.photo && m.photo.photo === true
+                                                && m.photo.state !== "unchecked" && m.photo.refused);
+    const photoNamed = (list) => [...new Set(list.map((m) => m.ref))].join(", ");
     const refusals = [];
     /* DEC-49 REGION is-relied-on-presentable */
     if (short.length) {
@@ -433,17 +445,6 @@ export class CaseDisclosures {
               + `relying on the material, or make the finding supporting. Nothing was written.` }));
     }
     /* END DEC-49 REGION is-relied-on-presentable */
-    /* DEC-49 REGION is-photo-coverable */
-    if (uncoverable.length) {
-      const named = byMember(uncoverable, (m) => ({ ref: m.ref, sha: m.sha, refused: m.photo.refused.code }));
-      refusals.push(disclosureRefusal("PHOTO_NOT_COVERABLE", { not_coverable: named,
-        detail: `${uncoverable.length} photo(s) a load-bearing finding of this case relies on are marked to be obscured, `
-              + `and their format cannot be covered (` + named.map((x) => `${x.target}: ` + x.materials.map((m) =>
-                `${m.ref} ${m.sha}, ${m.refused}`).join(", ")).join("; ")
-              + `), so the case can neither carry them whole nor leave them out. Capture each again in a format that `
-              + `can be covered, such as a standard JPEG or PNG, or stop relying on it. Nothing was written.` }));
-    }
-    /* END DEC-49 REGION is-photo-coverable */
     /* DEC-49 REGION is-photo-marks-determined */
     if (unread.length) {
       const named = unread.map((m) => ({ ref: m.ref, sha: m.sha, members: m.members, why: m.photo.why }));
@@ -453,19 +454,40 @@ export class CaseDisclosures {
               + `), so what the published case would show of them is not known. Try again. Nothing was written.` }));
     }
     /* END DEC-49 REGION is-photo-marks-determined */
+    /* DEC-49 REGION is-photo-checked */
+    if (unchecked.length) {
+      const named = unchecked.map((m) => ({ ref: m.ref, sha: m.sha, members: m.members }));
+      refusals.push(disclosureRefusal("PHOTO_UNCHECKED", { unchecked: named, photo: photoNamed(unchecked),
+        detail: `${unchecked.length} photo(s) this case relies on have not been checked for people and number plates to `
+              + `obscure (` + named.map((m) => `${m.ref} ${m.sha}, relied on by ${m.members.join(", ")}`).join("; ")
+              + `). Mark each, or mark it as having nothing to obscure, before signing. Nothing was written.` }));
+    }
+    /* END DEC-49 REGION is-photo-checked */
+    /* DEC-49 REGION is-photo-coverable */
+    if (uncoverable.length) {
+      const named = byMember(uncoverable, (m) => ({ ref: m.ref, sha: m.sha, refused: m.photo.refused.code }));
+      refusals.push(disclosureRefusal("PHOTO_NOT_COVERABLE", { not_coverable: named, photo: photoNamed(uncoverable),
+        detail: `${uncoverable.length} photo(s) a load-bearing finding of this case relies on cannot be covered in their `
+              + `format (` + named.map((x) => `${x.target}: ` + x.materials.map((m) =>
+                `${m.ref} ${m.sha}, ${m.refused}`).join(", ")).join("; ")
+              + `), and a photo travels only as its covered copy, so the case can neither carry them whole nor leave them `
+              + `out. Capture each again as an ordinary photo, or stop relying on it. Nothing was written.` }));
+    }
+    /* END DEC-49 REGION is-photo-coverable */
     return { refusals, materials, refs: chains.refs, findings: chains.findings };
   }
 
-  /** R29 (T37; N757; DEC-180 (3); K2206): the ceremony's Photos step, over the `materials` R6 answered. One entry per
-   *  document material whose capture is a photo, in materials order, `{ref, sha, taken_by, relied_on_by, state, marks,
-   *  copy, refused, words, unread}`: `taken_by` its attesting member (R8: the capture's first actor, as
-   *  `capture.captureAccountsOf` lets `viewer` see them), `relied_on_by` `[{target, role}]` of the members whose chains
-   *  reach it; `state`, `marks`, `copy` (its SHA-256) and `refused` as `photoMarks` answers them (R6's read, `photo`,
-   *  else read here); `words` `OBSCURED_LABEL` for a marked photo with a copy, `PHOTO_NOT_COVERABLE_WORDS` for a refused
-   *  cover, else null. A photo whose marks cannot be read is listed `state: null, unread: true` where R6 refuses it
-   *  (`marksDecide`); unread material R6 does not refuse is no photo it can show.
-   *  `unchecked` counts the photos with no mark: shown, never a refusal, travelling whole as taken. Writes nothing;
-   *  never throws. */
+  /** R29 (T37; N757; DEC-180 (3); K2206; T38: DEC-183 (1), K2220, K2303): the ceremony's Photos step, over the
+   *  `materials` R6 answered. One entry per document material whose capture is a photo, in materials order, `{ref, sha,
+   *  taken_by, relied_on_by, state, marks, copy, refused, words, unread}`: `taken_by` its attesting member (R8: the
+   *  capture's first actor, as `capture.captureAccountsOf` lets `viewer` see them), `relied_on_by` `[{target, role}]` of
+   *  the members whose chains reach it; `state`, `marks` (with their withdrawals), `copy` (its SHA-256) and `refused` as
+   *  `photoMarks` answers them (R6's read, `photo`, else read here); `words` `PHOTO_UNCHECKED_WORDS`
+   *  (`photo.refused.unchecked`) for an unchecked photo, `PHOTO_NOT_COVERABLE_WORDS` (`photo.refused.format`) for a
+   *  refused cover, marked or not, `OBSCURED_LABEL` for a marked photo with a copy, else null. A photo whose marks
+   *  cannot be read is listed `state: null, unread: true` where R6 refuses it (`marksDecide`); unread material R6 does
+   *  not refuse is no photo it can show. `unchecked` counts the photos with no standing mark, each of which blocks
+   *  signing (R6's `PHOTO_UNCHECKED`) and never travels. Writes nothing; never throws. */
   photosOf(materials, memberRoles, viewer) {
     const roleOf = new Map((Array.isArray(memberRoles) ? memberRoles : [])
       .filter((r) => r && typeof r === "object").map((r) => [r.target, r.role ?? null]));
@@ -482,7 +504,8 @@ export class CaseDisclosures {
         photos.push({ ...entry, state: null, marks: null, copy: null, refused: null, words: null, unread: true });
         continue;
       }
-      const words = p.state !== "marked" ? null : p.refused ? PHOTO_NOT_COVERABLE_WORDS : OBSCURED_LABEL;
+      const words = p.state === "unchecked" ? PHOTO_UNCHECKED_WORDS : p.refused ? PHOTO_NOT_COVERABLE_WORDS
+        : p.state === "marked" ? OBSCURED_LABEL : null;
       photos.push({ ...entry, state: p.state, marks: p.marks, copy: p.copy, refused: p.refused, words, unread: false });
     }
     return { photos, unchecked: photos.filter((p) => p.state === "unchecked").length };

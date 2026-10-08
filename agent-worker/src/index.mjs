@@ -37,8 +37,8 @@
  * serves the member's act arrived with the call (R6: the member's own, or the
  * group's API key, as `credentials.accountFor` answers it, K1755; there is no
  * project account) and the run's mode has turns to run: an API key goes to the
- * Messages API, a subscription to Claude Code in the `agent-runner` container
- * through the Container Durable Object binding (R35). A segment whose caller
+ * Messages API, the member's own sign-in to Claude Code in that member's
+ * `agent-runner` instance through the Container Durable Object binding (R35). A segment whose caller
  * supplied the judgements (`judgements` in the body, the stubbed path) runs no
  * turn. The answer's `turns_run` counts the turns that actually ran and
  * `judgement_source` says whose judgements the table applied (`model` or
@@ -1430,7 +1430,9 @@ const planeRefused = (runId, store, asked) =>
  *  API key, which serves that member's act and is still that member's act). There is no project level (R32): a body
  *  still carrying the old cascade's `claude_accounts` is refused naming that field, and a member whom no account
  *  serves has no assistant, refused by name before any plane call (D-260 as K1503 reads it). The secret is read here
- *  for the call it serves and goes no further than `agent-model` (R36). */
+ *  for the call it serves and goes no further than `agent-model` (R36). (T38; N785, K2200) A `signin` account, the
+ *  member's own stored sign-in, is `{kind: "signin", level: "member", member, suggestions: false}` and carries no
+ *  secret: one carrying a `secret`, or a `suggestions` other than `false`, is refused `BAD_ACCOUNT`. */
 async function accountOf(body) {
   if (body.claude_accounts !== undefined)
     return { refusal: refusal("BAD_ACCOUNT",
@@ -1445,12 +1447,13 @@ async function accountOf(body) {
       409, { capability: "unavailable" }) };
   if (typeof a !== "object" || Array.isArray(a) || !ACCOUNT_KINDS.includes(a.kind)
       || !CASCADE_ORDER.includes(a.level) || !LEVEL_KINDS[a.level].includes(a.kind)
-      || typeof a.member !== "string" || !a.member)
+      || typeof a.member !== "string" || !a.member
+      || (a.kind === "signin" && (a.secret !== undefined || (a.suggestions !== undefined && a.suggestions !== false))))
     return { refusal: refusal("BAD_ACCOUNT",
       `account is the account that serves the member's act: {kind, level, secret, member}, kind one of `
       + `${ACCOUNT_KINDS.join(", ")}, level one of ${CASCADE_ORDER.join(", ")} (the group's account an API key only), `
-      + "and member the member whose act it serves. What arrived is not one, and this member judges only what it is "
-      + "handed.",
+      + "and member the member whose act it serves; a signin account is the member's own and carries no secret and "
+      + "no suggestions but false. What arrived is not one, and this member judges only what it is handed.",
       400, { field: "account" }) };
   const cascade = await resolveClaudeCascade(a);
   if (!cascade.available)
@@ -1559,7 +1562,7 @@ async function handleRun(req, env) {
    * control flow nobody could exhaust. */
   /* R58 — MODEL TURNS RUN, through `agent-model`, when the account that serves the member's act arrived (it always has,
      past R6) and the caller supplied no judgements; `judgements` in the body is the stubbed path, in which no turn is taken. The
-     reference is handed to `agent-model` for the calls it serves and kept by nothing here (R33, R36). A subscription's
+     reference is handed to `agent-model` for the calls it serves and kept by nothing here (R33, R36). A sign-in's
      turns reach `agent-runner` through the Container Durable Object binding (R35), passed as it is bound. */
   const bytesBound = Number(env.MAX_SEGMENT_BYTES) > 0 ? Number(env.MAX_SEGMENT_BYTES) : DEFAULT_MAX_SEGMENT_BYTES;
   const meter = segmentMeter({ turnsBound: requested, bytesBound });
