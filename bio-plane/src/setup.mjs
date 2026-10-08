@@ -37,8 +37,8 @@ import { GROUP_SLUG_RE, FLEET_BINDINGS, hostingControlBlock } from "./setup-flee
 /* R67 (K2200, rule 5): a draft translation's label is record-grammar's (its R50); a machine is told apart by its one
    predicate, never by a reading of this module's own. */
 import { proposalLabel, isMachineIdentity } from "./record-grammar/index.mjs";
-/* R68: the interface's word list, generated data carried beside this file. */
-import { WORD_ROWS, WORDS_COMMIT } from "./setup-words.mjs";
+/* R68 (T39, N807): the interface's word list is setup-words' (its R1, R2), read, never copied. */
+import { WORD_ROWS, WORDS_COMMIT } from "./setup-words/index.mjs";
 
 /* R47 (DEC-109; K1038; K1851): the page as composed, setup-page's template with the hosting block in its one slot. */
 export const SETUP_HTML = PAGE_HTML.replace(HOSTING_SLOT, () => hostingControlBlock("notice", { guideHref: ROTATION_GUIDE_HREF }));
@@ -665,8 +665,8 @@ CREATE TABLE IF NOT EXISTS assistant_disclosures (
 
 
 /* =====================================================================
- * R68 (DEC-179; K2200 (4)): THE INTERFACE'S WORD LIST, `words.json` at `WORDS_COMMIT`, each `{key, en, note, means,
- * protected}`. A later list arrives only with a later requirement naming its commit.
+ * R68 (DEC-179; K2200 (4); N807): THE INTERFACE'S WORD LIST, setup-words' `WORD_ROWS` in its order, each exported as a
+ * frozen `{key, en, note, means, protected}`; this module holds no copy of the list.
  * ===================================================================== */
 export const INTERFACE_WORDS = Object.freeze(WORD_ROWS.map(([key, en, note, means, prot]) =>
   Object.freeze({ key, en, note, means, protected: prot })));
