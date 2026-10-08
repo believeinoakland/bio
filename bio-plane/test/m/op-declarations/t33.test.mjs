@@ -32,6 +32,7 @@ import { membershipOps } from "../../../src/membership/index.mjs";
 import { tasksOps } from "../../../src/tasks/index.mjs";
 import { publicationOps } from "../../../src/publication/index.mjs";
 import { wizardScriptsOps } from "../../../src/wizard-scripts/index.mjs";
+import { fileSafetyOps } from "../../../src/file-safety/index.mjs";
 
 const { OPS, SESSION_OPS, NEEDS, UNATTENDED_BY_DECISION, ACT_GATE, OP_FAMILIES, OP_KINDS, FAMILY_OPS, ASK_GRANT_OPS,
         OP_STAMPS, OP_ALIASES } = O;
@@ -49,7 +50,9 @@ const MAPS = { events: eventsOps, lines: linesOps, money: moneyOps, "money-check
   answers: answersOps, following: followingOps, standards: standardsOps, credentials: credentialsOps, sources: sourcesOps,
   entities: entitiesOps, "ai-runs": aiRunsOps, inquiry: inquiryOps, "corpus-export": corpusExportOps, actions: actionsOps,
   "action-clocks": actionClocksOps, "capture-requests": captureRequestsOps, membership: membershipOps, tasks: tasksOps,
-  publication: publicationOps, "wizard-scripts": wizardScriptsOps };
+  publication: publicationOps, "wizard-scripts": wizardScriptsOps,
+  /* T36 (R32): file-safety's map, read for R6's totality */
+  "file-safety": fileSafetyOps };
 const recorder = () => {
   const calls = [];
   const fn = (...args) => { calls.push(args); return { ok: true }; };
@@ -66,7 +69,9 @@ const servedBy = (owner) => Object.keys(build(owner).map);
    Callers' obligations: the control plane routes neither), entities' plan read, credentials' three the plane's own
    admission and login call. */
 const IN_PROCESS = { inquiry: ["basis", "restson"], entities: ["readingnameplan"],
-                     credentials: ["aicredentiallook", "setpassword", "session"],
+                     credentials: ["aicredentiallook", "setpassword", "session",
+                       /* T36 (R33, R6; credentials R50): R44's in-plane write, which admission reaches through the store */
+                       "securitycount"],
                      /* T34 (R22, R6): the check's addressees, read by tasks in process (membership R106) */
                      membership: ["checkaddressees",
                        /* membership's own hop, called inside `projectCreated` (R6's store-internal list, K1864) */
@@ -79,7 +84,7 @@ const IN_PROCESS = { inquiry: ["basis", "restson"], entities: ["readingnameplan"
 const SERVED_ELSEWHERE = { clockpropose: "control-plane (T33-89)", capturerequestplatformmark: "control-plane (T33-89)",
   capturerequestplatformunmark: "control-plane (T33-89)", capturerequestplatformhosts: "control-plane (T33-89)",
   ask: "control-plane (T33-89)", officesseed: "instance-setup (T33-87)", seatsseed: "instance-setup (T33-87)",
-  assistantset: "instance-setup (T33-87)", assistantstate: "instance-setup (T33-87)",
+  assistantstate: "instance-setup (T33-87)",
   disclosureshown: "instance-setup (T33-87)", disclosureof: "instance-setup (T33-87)",
   /* T34's ops whose owners' L11 jobs build them beside this one (their merges come first in L11's order) */
   placewanted: "instance-setup (T34-81)", placewantedstate: "instance-setup (T34-81)",
@@ -94,12 +99,12 @@ const SERVED_ELSEWHERE = { clockpropose: "control-plane (T33-89)", capturereques
 
 test("R19, R17, R18, R20, R5: OP_FAMILIES holds one frozen entry per owner — owner, citation, the actor and proposer stamps as {key, at}, its kinds, and the acts, proposals and reads derived from them — each op in exactly one family and every kind one of OP_KINDS", () => {
   assert.deepEqual(Object.keys(OP_FAMILIES).sort(), ["acquisition", "action-clocks", "actions", "ai-runs", "answers",
-    "calculations", "capture-requests", "corpus-export", "credentials", "duties", "entities", "events", "explore",
+    "calculations", "capture-requests", "corpus-export", "credentials", "duties", "entities", "events", "explore", "file-safety",
     "following", "hypotheses", "inquiry", "instance-setup", "lines", "membership", "money", "money-checks", "people",
     "public-read", "publication", "retrieval", "sources", "standards", "tasks", "wizard-scripts", "workbooks"]);
   assert.deepEqual(Object.keys(OP_KINDS).sort(), ["admin", "daemonact", "door", "member", "open", "own", "ownread",
     "plainread", "proposal", "public", "publishact", "read", "roster", "sessionact", "sessionend", "sessionread",
-    "settingread", "tally"]);
+    "settingread", "sightact", "tally"]);
   const seen = new Set();
   for (const [owner, f] of Object.entries(OP_FAMILIES)) {
     for (const v of [f, f.kinds, f.acts, f.proposals, f.reads, f.extra, ...Object.values(f.extra)]) assert.ok(Object.isFrozen(v), owner);
@@ -153,6 +158,8 @@ test("R19, R2, R3: every family op has the spec and NEEDS row its kind gives —
     daemonact: [{ classes: [...MP, "daemon"], machineClasses: ["daemon", "probe"], mutating: true }, "contribute"],
     settingread: [{ classes: MP, mutating: false }, null],
     sessionend: [{ classes: ["admin", "member"], machineClasses: [], mutating: true }, null],
+    /* T36 (R32) */
+    sightact: [{ classes: ["admin", "member"], machineClasses: [], mutating: true }, null],
   };
   const PUBLIC = ["door", "public"];
   let n = 0;
@@ -329,7 +336,7 @@ test("R19, R4, R5, R30 (K1674, K1683): OP_STAMPS maps every op this module decla
   assert.notDeepEqual([...OP_STAMPS.linerecord], ["viewer", "by"]);
 });
 
-test("R17: clockpropose any credential's, as actionlawspropose (admin, member, probe, mutating, no machineClasses), proposer and viewer stamped; clockadopt a member's (machineClasses []), contribute, author and viewer stamped; clocksics a read; addresseesuggest a read; exportrender a member's stamped viewer (K1640); officesseed and assistantset an administrator's own session, by stamped", () => {
+test("R17: clockpropose any credential's, as actionlawspropose (admin, member, probe, mutating, no machineClasses), proposer and viewer stamped; clockadopt a member's (machineClasses []), contribute, author and viewer stamped; clocksics a read; addresseesuggest a read; exportrender a member's stamped viewer (K1640); officesseed an administrator's own session, by stamped; (T36) assistantset retired, with no spec and in no table", () => {
   const ac = OP_FAMILIES["action-clocks"];
   assert.deepEqual(plain(OPS.clockpropose), plain(OPS.actionlawspropose));
   assert.ok(ac.proposals.includes("clockpropose") && ac.proposer.key === "proposer");
@@ -347,11 +354,16 @@ test("R17: clockpropose any credential's, as actionlawspropose (admin, member, p
   /* K1689: a present null row, affordances grading it; no session set holds it */
   assert.ok(Object.hasOwn(NEEDS, "exportpage") && NEEDS.exportpage === null && !SESSION_OPS.member.has("exportpage"));
   const is = OP_FAMILIES["instance-setup"];
-  for (const op of ["officesseed", "assistantset"]) {
-    assert.equal(is.kinds[op], "admin", op);
-    assert.deepEqual(plain(OPS[op]), { classes: ["admin", "member"], machineClasses: [], mutating: true }, op);
-  }
+  assert.equal(is.kinds.officesseed, "admin");
+  assert.deepEqual(plain(OPS.officesseed), { classes: ["admin", "member"], machineClasses: [], mutating: true });
   assert.deepEqual(is.actor, { key: "by", at: "query" });
+  /* T36 (DEC-172): assistantset is retired — no spec, no row, in no session set, no family, no stamps, no list */
+  const lists = Object.entries(O).filter(([, v]) => Array.isArray(v)).filter(([, l]) => l.includes("assistantset"));
+  assert.ok(!Object.hasOwn(OPS, "assistantset") && !Object.hasOwn(NEEDS, "assistantset") && !Object.hasOwn(OP_STAMPS, "assistantset")
+    && !SESSION_OPS.member.has("assistantset") && !SESSION_OPS.admin.has("assistantset") && !Object.hasOwn(is.kinds, "assistantset")
+    && !Object.hasOwn(UNATTENDED_BY_DECISION, "assistantset") && lists.length === 0, "assistantset is declared");
+  /* negative control: its sibling is declared */
+  assert.ok(Object.hasOwn(OPS, "officesseed") && SESSION_OPS.member.has("officesseed"));
 });
 
 test("R18: entityidentify an act on the record, contribute, by stamped (the body's, as resolutiondefect's) and viewer; lines' acts as entityidentify; structureat, holderat, standardinforce, inforceat and standardsfor reads with a present null row", () => {
