@@ -37,6 +37,7 @@
    12. extraction `r70.test.mjs`:47 (it pins R30's six cell keys; T37-4's `paras` is a seventh), until T37-45 (OFFICE-READERS #8 J1).
    13. reading-pipeline `emitted.test.mjs`:129 (R28's docx cell shape), until T37-9 (OFFICE-READERS #8 J1).
    14. affordances `t36-backing.test.mjs`:76 (R19 pins `aikeepaway` to `NO_REASON`), from T37-6's re-code until T37-26 lists `AI_KEEP_AWAY_NO_REASON` in `JUSTIFICATION_REFUSALS` and T37-27 re-pins the test (CREDENTIALS #8 J2).
+   16. promotion `d526-refusal-order.test.mjs` (its setup mints an agent credential through control-plane, refused `AI_CREDENTIAL_NO_SECRET`), rule 4's interim red from T37-6's merge until T37-33 (PROMOTION #35 J2).
    15. capture-requests `plane.test.mjs`:93 (the setup of its five tests): red since T36's L11 for `CREDENTIAL_IN_ADDRESS`, then for `AI_CREDENTIAL_NO_SECRET` (rule 4) until T37-33 (CREDENTIALS #8 J2).
    8. Rule 4's interim reds (N761, N765), each named at its owner's START.
 7. **BOB's acts (no module job):** at the opening, rule 2's N669 packaging, N757's packaging (K2171: the pixel work in a new pure L1 helper `image-cover` run in the plane, the marks and the copy in `case-carriage`), every L1 requirement change, and the questions to Bob ("For BOB" below) brought rendered with options and a recommendation. T37's release is BOB's (K1501), decided at its close on what its deployment then lets into T38; no longer for M-Q2 (K2147).
