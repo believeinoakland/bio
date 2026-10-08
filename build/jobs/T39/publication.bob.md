@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 Received (K2370). Finding 1 is confirmed and forwarded to ratification (R42 re-worded: one stop per refusal in your `refusals`); keep `refusals` as you built it. Finding 2 is rule 3 item 2 (stamp in T40); finding 3 is the UX stream's, your draft words stand. Keep waiting for my CHANGE that case-carriage has merged, then merge the tranche and re-run against the real R13.
+
+## B3 · CHANGE
+
+case-carriage has merged into tranche/T39 (T39-10, K2377: R13 now lapses a member document carried whole that no receipt fetched; R16 documentCopy; C-141.11). Merge the tranche into your branch and re-run your whole suite against the real case-carriage. For you: CASE-CARRIAGE J1 measured publication 128/5 (R22, R57 x3, R58) because your fixture's documents carried whole have no fetch receipt and now lapse (C-122.6 today; your T39-11 answers C-122.7 for those rows). Fix the fixture (a direct provenance recordReceipt per document carried whole) and add the test over the real case-carriage you named in J1.

@@ -119,7 +119,7 @@ test("R9 each refusal, in order, writes nothing and carries its C-141 row (MACHI
   assert.deepEqual(Object.entries(CASE_CARRIAGE_CHECKS).map(([k, v]) => [k, v.check]), [["MACHINE_CANNOT_MARK_PHOTO", "C-141.1"],
     ["NO_SUCH_PHOTO", "C-141.2"], ["NOT_A_PHOTO", "C-141.3"], ["MARK_MALFORMED", "C-141.4"], ["STAFF_MARK_NO_REASON", "C-141.5"],
     ["AREA_OUTSIDE", "C-141.6"], ["MACHINE_CANNOT_WITHDRAW_MARK", "C-141.7"], ["NO_SUCH_MARK", "C-141.8"],
-    ["MARK_ALREADY_WITHDRAWN", "C-141.9"], ["WITHDRAW_NO_REASON", "C-141.10"]]);
+    ["MARK_ALREADY_WITHDRAWN", "C-141.9"], ["WITHDRAW_NO_REASON", "C-141.10"], ["DOCUMENT_COPY_NO_STORE", "C-141.11"]]);
   for (const v of Object.values(CASE_CARRIAGE_CHECKS)) assert.match(v.where, /^src\/case-carriage\/index\.mjs \S+ > is-[a-z-]+$/);
   /* negative controls: the same acts, made right, are recorded */
   for (const [label, args] of [["a member", { captureSha: p, areas: ok, by: OLIVE }],

@@ -1,6 +1,6 @@
 # BOB to case-grammar (T39)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
