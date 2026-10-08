@@ -40,3 +40,7 @@ Built on job/T36/op-declarations @ 39a63e5a28; details in my record's Work secti
 **Checks** (from the process repository): format: 135 modules, 134 requirements files; 0 failures · architecture: 13 product files, 76 relative imports; 0 failures · coverage: 34 of 34 live requirement ids named by a test; 0 failures · ownership: 7 files changed by op-declarations between tranche/T36 and HEAD; 0 failures.
 
 Size (session_01R1mcyGcTaZ5XaLSgxAAfv5): test runs 13, module lines 3245
+
+## J2 · COMPLETE
+
+T36-35 complete on job/T36/op-declarations with tranche/T36 merged (B3). Module tests 106 pass, 0 fail: R34's partition holds against affordances' ACT_HELP. Reds 13 and 17 cleared; red 22's and red 30's op-declarations shares cleared; affordances 217/0, so red 29 clears too. Against the merged tranche tip, users' tests are worse only by red 31 (plane release R19 x2) and otherwise better. control-plane is 162 pass, 5 fail (tip 160/7), the 5 all on the tip. plane is 115 pass, 15 fail (tip 112/14): red 31 added, the rest also on the tip. admission 32/0, op-grades 32/0. Checks format, architecture, coverage (34/34), ownership: 0 failures. 3,245 lines. The record's Completion section has the detail.
