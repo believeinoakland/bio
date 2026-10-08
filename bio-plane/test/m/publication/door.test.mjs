@@ -8,7 +8,8 @@ import { createHash } from "node:crypto";
 import { planeWorld as world, V, SIG } from "./fixture.mjs";
 import { publicationOps } from "../../../src/publication/index.mjs";
 import { caseTensionsOf, caseTensionsOps } from "../../../src/case-tensions/index.mjs";
-import { publicationDoorOp, PUBLICATION_DOOR_OPS, CREDENTIAL_IN_ADDRESS } from "../../../src/publication/door.mjs";
+import * as DOOR from "../../../src/publication/door.mjs";
+const { publicationDoorOp, PUBLICATION_DOOR_OPS } = DOOR;
 import { NS_RATIFY, caseRatifyStatement } from "../../../src/sshsig.mjs";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -30,14 +31,18 @@ const storeSilent = (op, correlation = undefined) =>
 const sha256Hex = async (v) => createHash("sha256").update(String(v)).digest("hex");
 
 /* The record store's Durable Object: the plane's op map over the world (case-tensions' ops spread beside this module's,
-   as the plane's since T33-90, N597); every request it saw is kept. */
+   as the plane's since T33-90, N597), handed the request's JSON body as store-door's frame hands it; every request it saw
+   is kept (`seen` its address, `bodies` its body's text, or null). */
 function stubOf(w) {
-  const seen = [];
-  return { seen, async fetch(req, init) {
+  const seen = [], bodies = [];
+  return { seen, bodies, async fetch(req, init) {
     const r = typeof req === "string" ? new Request(req, init) : req;
     const url = new URL(r.url);
     seen.push(url);
-    const ops = { ...caseTensionsOps(caseTensionsOf(w.host), url, null), ...publicationOps(w.p, url, null) };
+    const raw = r.body ? await r.text() : "";
+    bodies.push(raw || null);
+    const body = raw ? JSON.parse(raw) : null;
+    const ops = { ...caseTensionsOps(caseTensionsOf(w.host), url, body), ...publicationOps(w.p, url, body) };
     const op = url.pathname.slice(1);
     if (!ops[op]) return Response.json({ ok: false, error: `unknown op: ${op}` }, { status: 400 });
     return Response.json({ ok: true, result: await ops[op]() });
@@ -113,7 +118,7 @@ test("R1 the door's casedocument needs case and edition; the viewer is the door'
   assert.deepEqual(own.body, { ok: true, ...doc, sign: { namespace: NS_RATIFY,
     statement: new TextDecoder().decode(caseRatifyStatement("CASE-2026-0001", 1, doc.doc_sha)) } });
   assert.equal(stub.seen[0].searchParams.get("viewer"), V("olive"), "the stamp crosses, the caller's `viewer` never does");
-  assert.equal(stub.seen[0].searchParams.has("secretSha"), false, "no secret presented: none sent");
+  assert.deepEqual([stub.seen[0].searchParams.has("secretSha"), stub.bodies[0]], [false, null], "no secret presented: none sent");
   /* a reader that cannot be resolved is a silence, never an answer about the document */
   const quiet = await door("casedocument", { case: "CASE-2026-0001", edition: 1 }, stubOf(w), { silent: true });
   assert.deepEqual([quiet.status, quiet.body.reason, quiet.body.op], [502, "STORE_DID_NOT_ANSWER", "session"]);
@@ -154,7 +159,8 @@ test("R1 R73 (reviewcopy's share) a grant secret presented at the door in the re
   const held = await door("casedocument", { case: "CASE-2026-0001", edition: 1 }, stub, { viewer: "", body: { secret } });
   assert.deepEqual([held.status, held.body.ok, held.body.ratified], [200, true, false]);
   assert.equal(held.body.text, w.row(`SELECT text FROM case_documents`).text);
-  assert.equal(stub.seen[0].searchParams.get("secretSha"), grant.secretSha, "the fingerprint, and never the secret");
+  assert.deepEqual(JSON.parse(stub.bodies[0]), { secretSha: grant.secretSha }, "the fingerprint, in the body, and never the secret");
+  assert.equal(stub.seen[0].searchParams.has("secretSha"), false, "never in the store request's address");
   assert.equal(stub.seen[0].toString().includes(encodeURIComponent(secret)), false);
   /* a wrong secret, and an empty one */
   for (const s of ["another secret", ""]) {
@@ -172,46 +178,76 @@ test("R1 R73 (reviewcopy's share) a grant secret presented at the door in the re
   assert.deepEqual([dead.status, dead.body], [404, stranger]);
 });
 
-test("R73 the door reads a review grant's secret from the request body's `secret` (an object, or a function or Promise answering one), never the address; an address secret is still read only when the body carries none, and the answer, admitted or refused, then says CREDENTIAL_IN_ADDRESS; nothing the door writes holds the secret", async () => {
+test("R73 the door reads a review grant's secret only from the request body's `secret` (an object, or a function or Promise answering one), never the address: an address secret is not read, compared or hashed and admits nothing, R1 answering as with no secret; the fingerprint reaches the store in the store request's body, never its address; no answer carries `deprecated` and this module holds no CREDENTIAL_IN_ADDRESS; nothing the door writes holds the secret or its digest", async () => {
   const secret = "the grant's secret", digest = createHash("sha256").update(secret).digest("hex");
   const { w } = prepared();
   const grant = granted(w, secret);
   const fresh = world();
   const stranger = (await door("casedocument", { case: "CASE-2026-0001", edition: 1 }, stubOf(fresh), { viewer: "" })).body;
   const q = { case: "CASE-2026-0001", edition: 1 };
-  /* every form of the body: read, with no deprecation, and only the fingerprint crosses */
+  const answers = [];
+  /* every form of the body: read, and only the fingerprint crosses, in the store request's body */
   for (const [label, body] of [["object", { secret }], ["function", () => ({ secret })], ["async function", async () => ({ secret })],
                                ["promise", Promise.resolve({ secret })]]) {
     const stub = stubOf(w);
     const r = await door("casedocument", q, stub, { viewer: "", body });
+    answers.push(r);
     assert.deepEqual([r.status, r.body.ok, r.body.ratified, "deprecated" in r.body], [200, true, false, false], label);
-    assert.equal(stub.seen[0].searchParams.get("secretSha"), grant.secretSha, label);
+    assert.deepEqual(JSON.parse(stub.bodies[0]), { secretSha: grant.secretSha }, label);
+    assert.equal(stub.seen[0].searchParams.has("secretSha"), false, `${label}: no digest in the store request's address`);
+    assert.equal(stub.seen[0].toString().includes(digest), false, label);
     assert.equal(stub.seen[0].toString().includes(encodeURIComponent(secret)), false, `${label}: the secret never crosses`);
   }
-  /* the body wins over the address: a wrong address secret with the right body secret is read from the body */
+  /* the body's secret is the one read: a wrong address secret beside the right body secret changes nothing */
   const both = await door("casedocument", { ...q, secret: "wrong" }, stubOf(w), { viewer: "", body: { secret } });
   assert.deepEqual([both.status, both.body.ok, "deprecated" in both.body], [200, true, false]);
-  /* the address form, for T35's release: read when the body carries none, the answer naming the deprecation */
+  answers.push(both);
+  /* the right secret in the address alone admits nothing: R1's answer with no secret, no fingerprint sent, whatever
+     the body carries that is no secret */
   for (const body of [undefined, null, {}, { secret: "" }, { secret: 7 }, "secret", [secret], () => { throw new Error("unread"); },
                       Promise.reject(new Error("unread"))]) {
     const stub = stubOf(w);
     const r = await door("casedocument", { ...q, secret }, stub, { viewer: "", body });
-    assert.deepEqual([r.status, r.body.ok, r.body.deprecated], [200, true, CREDENTIAL_IN_ADDRESS], String(body));
-    assert.equal(stub.seen[0].searchParams.get("secretSha"), grant.secretSha);
+    assert.deepEqual([r.status, r.body], [404, stranger], String(body));
+    assert.deepEqual([stub.seen.length, stub.seen[0].searchParams.has("secretSha"), stub.seen[0].searchParams.has("secret"),
+                      stub.bodies[0]], [1, false, false, null], `${String(body)}: the address secret is never passed on`);
+    answers.push(r);
   }
-  assert.equal(CREDENTIAL_IN_ADDRESS, "CREDENTIAL_IN_ADDRESS", "the one name admission and control-plane give it");
-  /* refused through the address: the stranger's answer, with the deprecation; a refusal the store relays carries it too */
-  const wrong = await door("casedocument", { ...q, secret: "another secret" }, stubOf(w), { viewer: "" });
-  assert.deepEqual([wrong.status, wrong.body], [404, { ...stranger, deprecated: CREDENTIAL_IN_ADDRESS }]);
+  /* the address secret is never hashed: the door's hash is asked of the body's secret only */
+  const hashed = [];
+  const url = new URL(`https://plane/?op=casedocument&case=CASE-2026-0001&edition=1&secret=${encodeURIComponent(secret)}`);
+  await publicationDoorOp("casedocument", url, stubOf(w), { json, storeSilent, storeRefusal, doAnswer, NS_RATIFY, caseRatifyStatement,
+    readerOf: async () => ({ viewer: "" }), sha256Hex: async (v) => { hashed.push(v); return sha256Hex(v); } });
+  assert.deepEqual(hashed, [], "an address secret is not hashed");
+  /* a store refusal is relayed as given, with no deprecation */
   const refused = () => Response.json({ ok: false, reason: "BAD_JSON", detail: "no" }, { status: 400 });
   const relayed = await door("casedocument", { ...q, secret }, replying(refused), { viewer: "" });
-  assert.deepEqual([relayed.status, relayed.body], [400, { ok: false, reason: "BAD_JSON", detail: "no", deprecated: CREDENTIAL_IN_ADDRESS }]);
-  /* no secret anywhere: R1's answer unchanged, no fingerprint sent, no deprecation */
+  assert.deepEqual([relayed.status, relayed.body], [400, { ok: false, reason: "BAD_JSON", detail: "no" }]);
+  answers.push(relayed);
+  /* no secret anywhere: R1's answer unchanged, no fingerprint sent */
   const none = await door("casedocument", q, stubOf(w), { viewer: "", body: {} });
   assert.deepEqual([none.status, none.body], [404, stranger]);
-  /* nothing the door answers holds the secret or its digest */
-  for (const r of [both, wrong, relayed, none]) {
+  answers.push(none);
+  /* this module holds no row and no name for the address refusal: admission's gate refuses it before this door runs */
+  assert.equal("CREDENTIAL_IN_ADDRESS" in DOOR, false, "admission's one site (K231), not this module's");
+  /* nothing the door answers holds the secret, its digest or a deprecation */
+  for (const r of answers) {
     assert.equal(JSON.stringify(r.body).includes(secret), false);
     assert.equal(JSON.stringify(r.body).includes(digest), false);
+    assert.equal("deprecated" in r.body, false);
   }
+});
+
+test("R73 the store op reads the fingerprint from its request's body alone: a `secretSha` in the store request's address admits nothing", () => {
+  const secret = "the grant's secret";
+  const { w } = prepared();
+  const grant = granted(w, secret);
+  const url = new URL("http://do/casedocument?case=CASE-2026-0001&edition=1&viewer=");
+  const viaBody = publicationOps(w.p, url, { secretSha: grant.secretSha }).casedocument();
+  assert.deepEqual([viaBody.ok, viaBody.ratified], [true, false], "the body's fingerprint admits the live holder");
+  url.searchParams.set("secretSha", grant.secretSha);
+  const viaAddress = publicationOps(w.p, url, null).casedocument();
+  assert.deepEqual([viaAddress.ok, viaAddress.reason], [false, "NO_CASE_DOCUMENT"], "the address's admits nothing");
+  for (const b of [{}, { secretSha: 7 }, { secretSha: "" }, [grant.secretSha], "x"])
+    assert.equal(publicationOps(w.p, url, b).casedocument().reason, "NO_CASE_DOCUMENT", JSON.stringify(b));
 });

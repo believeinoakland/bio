@@ -11,12 +11,9 @@
  * goes on. The request's body reaches it through the helpers as `body`: the parsed JSON object, or a function answering
  * it (or a Promise of it), the control plane's to pass (R73; F1, K1874). */
 
-/** R73 (F1): the deprecation an answer carries when a review grant's secret was read from the address, the one name
- *  `admission` and `control-plane` give the query form of a credential. */
-export const CREDENTIAL_IN_ADDRESS = "CREDENTIAL_IN_ADDRESS";
-
 /* R73: the request body's `secret`, a non-empty string, or null: a body that is absent, unreadable or not an object
-   carries none. */
+   carries none. The address is never read for it: a request naming `secret` or `token` there is refused
+   `CREDENTIAL_IN_ADDRESS` before this door runs (admission's gate, its R20, which the control plane runs first). */
 async function bodySecret(body) {
   let b = null;
   try { b = typeof body === "function" ? await body() : await body; } catch { b = null; }
@@ -77,19 +74,18 @@ export async function publicationDoorOp(op, url, stub, { json, storeSilent, stor
        and only its fingerprint crosses to the store, which judges it through
        the review copy's one live-grant predicate. Absent, the parameter is
        not sent at all and the answer is REC-130's, unchanged.
-       R73 (F1, K1874): the secret is read from the request BODY's `secret` (a POST with a JSON body), never the address.
-       For T35's release a `secret` in the address is still read when the body carries none, and the answer then says
-       the form is deprecated; its refusal is a later release's, with admission's. */
-    const fromBody = await bodySecret(body);
-    const inAddress = !fromBody && url.searchParams.has("secret");
-    const presented = fromBody ?? (inAddress ? url.searchParams.get("secret") || "" : null);
+       R73 (F1, K1874; K2111): the secret is read from the request BODY's `secret` (a POST with a JSON body) and never
+       from the address, whose `secret` is not read, compared or hashed and admits nothing. Its fingerprint reaches the
+       store in the store request's BODY, never its address. */
+    const presented = await bodySecret(body);
     const docSecret = presented !== null ? await sha256Hex(presented) : "";
-    const deprecated = inAddress ? { deprecated: CREDENTIAL_IN_ADDRESS } : {};
-    const out = await doAnswer(stub.fetch(
-      `http://do/casedocument?case=${encodeURIComponent(caseId)}&edition=${encodeURIComponent(ed)}`
-      + `&viewer=${encodeURIComponent(reader.viewer)}`
-      + (docSecret ? `&secretSha=${docSecret}` : "")));
-    if (out.refused) return inAddress ? json({ ...out.reply.body, ...deprecated }, out.reply.status) : storeRefusal(out);
+    const inner = `http://do/casedocument?case=${encodeURIComponent(caseId)}&edition=${encodeURIComponent(ed)}`
+      + `&viewer=${encodeURIComponent(reader.viewer)}`;
+    const out = await doAnswer(docSecret
+      ? stub.fetch(inner, { method: "POST", headers: { "content-type": "application/json" },
+                            body: JSON.stringify({ secretSha: docSecret }) })
+      : stub.fetch(inner));
+    if (out.refused) return storeRefusal(out);
     if (!out.answered) return storeSilent("casedocument", out.correlation);
     const r = out.result;
     /* THE VERDICT IS DECLARED AS A LITERAL, FIRST, rather than inherited
@@ -98,8 +94,8 @@ export async function publicationDoorOp(op, url, stub, { json, storeSilent, stor
        inside a spread reads as UNCLASSIFIED — which is a place this
        detector's own subject could hide. The spread still carries the
        store's own `ok`, so the two cannot disagree. */
-    if (!r?.ok) return json({ ok: false, ...r, ...deprecated }, 404);
-    return json({ ok: true, ...r, ...deprecated,
+    if (!r?.ok) return json({ ok: false, ...r }, 404);
+    return json({ ok: true, ...r,
                   /* THE STATEMENT TO SIGN, PRINTED. It is the exact bytes
                      `caseRatifyStatement` builds, handed to the member so the
                      signer page, the wizard and a member at a terminal all

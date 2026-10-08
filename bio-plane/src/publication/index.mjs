@@ -26,7 +26,7 @@
  * publication and observation attribution are `case-tensions`', with their three tables and the C-92 rows. This module
  * creates it and registers with it the provider its moved code reads this module's tables and splice through (R61).
  * Since T35 (N597) it serves none of case-tensions' names and re-exports none: each importer reads case-tensions
- * directly. `caseRelation` alone answers here, exactly as case-tensions does, until `affordances` reads it there.
+ * directly. Since T36 (N597, K1643) `caseRelation` is gone too: every reader of a case relation reads case-tensions'.
  *
  * T34 (T34-44, T34-79): the set-wide read of the court-order stamps (R64), the group's self-description as the public is
  * told it (R65), and publishing at a set time (R66–R71, `./schedule.mjs`, its table `scheduled_editions`): a signed
@@ -39,6 +39,10 @@
  * binding on" its body, a copyrighted standard by its edition, citation and access with only the passages relied on.
  * The waiting edition read `case-authoring` calls (R74; N681), C-122.5 for an edition no publisher could check (R33;
  * N687), and the review copy's secret read from the request body, never the address (R73, `./door.mjs`; F1).
+ *
+ * T36 (T36-26): the address's secret admits nothing and its fingerprint reaches the store op in the store request's
+ * body, never its address (R73; K2111); `criteriaFor` answers the criteria a commit would record, for case-authoring's
+ * pre-flight (R75; N717, K2129).
  *
  * REACHED as `publicationOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first
  * call with `deps`, returned to every later caller. At creation it creates its tables and declares them to
@@ -54,7 +58,7 @@
  *                                   `producingGroup`.
  *   credentials    `attestingKeys` (its R11; R2's signers), reached lazily (K757).
  *   inquiry        `exclusionsNaming` (R12).
- *   caseTensions   `attributionFacts` (R2), `dischargeCaseFlags` (R22), `caseRelation` (R61's one delegate); created at
+ *   caseTensions   `attributionFacts` (R2), `dischargeCaseFlags` (R22), the provider registration (R61); created at
  *                  creation on the same host with this module's record, membership, promotion and clock, a given
  *                  `basisVersions`, `contradiction` and `capture` forwarded to it (test injection), and the provider
  *                  (R61) registered with it.
@@ -965,7 +969,7 @@ export class Publication {
                      + "are not disclosed by it, so nothing was committed. Prepare the case again, disclosing them." };
       /* END DEC-49 REGION is-accepted-work-standing */
     }
-    /* R72 (N649): the published criteria, read after every refusal and frozen on the edition's row below. */
+    /* R72 (N649): the published criteria, read after every refusal and frozen on the edition's row below; R75's read. */
     const criteria = this.#criteriaOf(members, when, attestorMember);
     if (!owner)
       this.sql.exec(`INSERT INTO cases (case_id,project_id,opened) VALUES (?,?,?) ON CONFLICT(case_id) DO NOTHING`,
@@ -1052,6 +1056,20 @@ export class Publication {
       }
     }
     return [...rows.values()].map((r) => this.#criterion(r, day, viewer));
+  }
+
+  /** R75 (N717; K2002, K2129): the criteria R72 would record for `members` (each `{bundle_id, version_sha}`, read at
+   *  those bytes) at a commit by `signer` on the UTC day of `at`, composed exactly as the commit composes them (the same
+   *  read), so a preparation and its commit disagree only by a change in the record between them: `{rows}`. Writes
+   *  nothing, is no op, and never throws: a member whose bytes cannot be read contributes no row. */
+  criteriaFor(args = {}) {
+    try {
+      const { members = [], signer = null, at = null } = args && typeof args === "object" ? args : {};
+      const list = (Array.isArray(members) ? members : [])
+        .filter((m) => m && typeof m === "object" && typeof m.bundle_id === "string" && m.bundle_id);
+      const when = str(at) || this.#when();
+      return { rows: this.#criteriaOf(list, when, typeof signer === "string" ? signer : null) };
+    } catch { return { rows: [] }; }
   }
 
   /* R72: one criteria row, as `standards` answers the standard at the commit. */
@@ -1345,9 +1363,7 @@ export class Publication {
 
   /* The case relation and revision flags (R4–R6), the tensions after publication (R50) and observation attribution (R17,
      R39, R60) are `case-tensions`' since T33 (its R1–R7; K617, K1505), retired here as moved, and since T35 (N597) each
-     importer reads them there. `caseRelation` alone answers here, exactly as case-tensions' does, until `affordances`
-     reads it there (T35-66; R61). */
-  caseRelation(id) { return this.caseTensionsModule.caseRelation(id); }
+     importer reads them there; since T36 (K1643) `caseRelation` too, so this module serves none of them (R61). */
 
   /** R61 (K1505 (3), K1634): the provider this module registers with `case-tensions` at start, its seven doors each
    *  answering exactly the rows the moved code read from this module's tables before the split, and the splice (R21).
@@ -2484,8 +2500,9 @@ export function publicationOwns(t) {
   return PUBLICATION_TABLES.some((x) => (typeof x === "string" ? x : x.name) === name) || PUBLICATION_EXEMPT.includes(name);
 }
 
-/** The module's ops (K3), as entries of the plane's op map (`plane/store.mjs`). `viewer`, `by` and `secretSha` are the control
- *  plane's stamps, read from the query, so a caller's own copy in a body never wins. The public reads
+/** The module's ops (K3), as entries of the plane's op map (`plane/store.mjs`). `viewer` and `by` are the control plane's
+ *  stamps, read from the query, so a caller's own copy in a body never wins. `secretSha` (R73) is the door's too, and
+ *  travels in the store request's body, never its address: `op=casedocument` reads it from the body alone (a string). The public reads
  *  (`publishededitions`, `publishedcase`, `publishedmanifest`, `verify`, `publishedlist`) are `public-read`'s
  *  `publicReadOps` and `projectstage` is `project-stage`'s `projectStageOps` since K651; the plane's op map
  *  spreads them beside these (K671). */
@@ -2501,7 +2518,8 @@ export function publicationOps(p, url, body) {
     excludedby: () => p.excludedBy(q("id"), q("viewer")),
     /* REC-130: both carry the viewer the control plane STAMPS, and fail closed on its absence. */
     casedocfacts: () => p.caseDocumentFacts(q("case"), q("edition"), q("viewer")),
-    casedocument: () => p.caseDocument(q("case"), q("edition"), q("viewer"), q("secretSha")),
+    casedocument: () => p.caseDocument(q("case"), q("edition"), q("viewer"),
+                                       typeof b.secretSha === "string" && b.secretSha ? b.secretSha : null),
     /* D-734: internal, the signed text behind a published case-document hash; the control plane re-hashes it. */
     publishedcasedoctext: () => p.publishedCaseDocumentText((q("sha256") || "").toLowerCase()),
     /* R68, R69 (DEC-147): `by` and `viewer` the control plane's stamps; an absent viewer is no viewer at all, never the
