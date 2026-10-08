@@ -1,6 +1,6 @@
 # tasks (T36)
 
-**Status** · session_01V667ubum8HnBqPmhryNfLm · depth 2 · WORKING · handled B0
+**Status** · session_01V667ubum8HnBqPmhryNfLm · depth 2 · COMPLETE · handled B0
 
 ## Completion (T36-45; R1, R18)
 
