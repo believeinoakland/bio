@@ -48,3 +48,12 @@ Three points; I carry on with each best reading.
 ## J2 · REPORT
 
 Built and pushed T37-34 on B2's readings: R1/R8 (N768 per-ref files; the copy-carried row; the sealed archive), R9–R13, C-141 rows, the ops map. 41 of my 47 tests green; the 6 red (obscured.test.mjs: R1's copy row, R8's sealed archive, R13) need case-grammar's R12 `obscured` (T37-40), not yet merged. I am waiting for your word to merge `tranche/T37` after case-grammar, then I run everything and post COMPLETE.
+
+## J3 · COMPLETE
+
+T37-34 complete on `job/T37/case-carriage` (tranche merged @ f3f6002068 and later). Record: Entries applied, Found in other modules, Tests and checks.
+- 48/48 module tests; format, architecture, coverage (13/13), ownership: 0 failures. P6: 392 → 810 lines.
+- **The copy's key (for RATIFICATION R39):** `<store>/obscured/<sha256>` in the CAPTURES bucket (`obscuredKey(store, sha)`, exported), custom metadata `{derived: "obscured", original, label}`; `heldMaterialsOf` lists it `held: "derived"`.
+- Users: publication 121/122 pass, 0 fail; control-plane 180/180; case-disclosures test 14 red on the tranche too; op-declarations' three of rule 6 item 11.
+- **Reds this job makes, both plane's to re-pin (green on the tranche without me):** `plane/disclosures.test.mjs`:67 pins "case-carriage exports no ops map" (R9/R10's `caseCarriageOps`); `plane/docket.test.mjs`:41 pins case-tensions directly after publication among purge-cleared declarers, and the marks tables are purge `clear` (R12), so case-carriage (built by publication's factory) sits between them.
+- REPORTs as B2 asked: the composition root must pass `bucket: env.CAPTURES` and `store` to `caseCarriageOf` (until then no copy is held: fail closed); answer-envelope `families.mjs` must import `case-carriage/checks.mjs` (C-141).
