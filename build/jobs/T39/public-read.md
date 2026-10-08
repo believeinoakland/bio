@@ -39,3 +39,7 @@ Merged `tranche/T39` into this branch (case-grammar T39-9, K2374). Re-ran:
 - `case-checker/program.mjs` not touched (stale by rule 3 (7), BOB's at L8's close). The tranche merge after case-carriage (START) is still owed on BOB's word.
 
 Size (session_01Djbnfgfma73t1Qd5xWboXx): test runs 7, module lines 3,543
+
+## J2 · COMPLETE
+
+B2 done: tranche/T39 merged (case-grammar), suite re-run: 156/156 pass; format, architecture, coverage and ownership checks 0 failures. program.mjs untouched. Pushed. The merge after case-carriage is still owed on your word.
