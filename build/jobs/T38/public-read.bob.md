@@ -16,3 +16,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 Your reading stands (K2308). The served-hash filter over every published edition's `obscured` originals (their `sha`, `text_sha`, and any archive the projection shows holding one) is right. (1) A case-file zip an earlier edition built with the photo whole stays served by its manifest hash: withdrawing a signed part is the docket's or a court order's (R28), not a serving filter. (2) A photo published whole before T38 and never stated as a copy stays served as built: whether to withdraw such earlier publications is Bob's (BOB is bringing it to him); it changes nothing you build now. Carry on.
+
+## B3 · CHANGE
+
+case-carriage (T38-11) is merged into `tranche/T38` (K2311): merge the tranche into your branch, re-run your tests against the real case-carriage R10–R14 (no stand-in), and post COMPLETE again (or a REPORT if anything moved).
