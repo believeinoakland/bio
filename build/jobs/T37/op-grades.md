@@ -35,7 +35,7 @@ T37-26 complete: R18, R25, R26, R27 met; op-grades 35/35, the four checks clean.
 **Tests run:** op-grades 35/35; `affordances` 182/35 (the one above new), `control-plane` 179/1 (unchanged, totality), `plane/wizards` 4/0.
 **Checks:** format: 136 modules, 135 requirements files; 0 failures. architecture: 11 product files, 16 relative imports; 0 failures. coverage: 27 of 27 live requirement ids named by a test; 0 failures. ownership: 11 files changed by op-grades between tranche/T37 and HEAD; 0 failures.
 
-Size (session_01MLFSULGPPdKyw9vxcdawPM): test runs 13, module lines 2308
+Size (session_01MLFSULGPPdKyw9vxcdawPM): test runs 13, module lines 2307
 
 ## J2 · COMPLETE · re B2
 
