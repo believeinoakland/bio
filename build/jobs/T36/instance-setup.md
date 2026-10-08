@@ -1,6 +1,6 @@
 # instance-setup (T36)
 
-**Status** · session_01DU7JcZgKofYj3uee3CqU8X · depth 2 · COMPLETE · handled B1
+**Status** · session_01DU7JcZgKofYj3uee3CqU8X · depth 2 · COMPLETE · handled B2
 
 ## Completion (INSTANCE-SETUP #15, T36-34)
 
