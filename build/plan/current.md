@@ -38,6 +38,7 @@
    12. project-roster `figures-purge.test.mjs`'s two tests over the real record-core (R17, R18: `TABLE_DECLARED`, membership's copy still declares the moved tables), until membership's second merge (its R115) (PROJECT-ROSTER #1 J2, K2278).
    13. answer-envelope `families.test.mjs`'s two totality tests (R2/R7, and T37's case-carriage one), naming `src/project-roster/checks.mjs` as unreached, from project-roster's merge until T38-25 (L11) (PROJECT-ROSTER #1 J2, K2278).
    14. scheduler `files.test.mjs`:288 (render's `RENDERER_ABSENT` tick with no scanner bound), from T38-18's merge until T38-30 (FILE-SAFETY #3 J1, K2293).
+   15. affordances `t36.test.mjs`:40 (R48: 204 texts since PR #15, the table 203), until T38-31; op-declarations `t37.test.mjs`:175 (R21: `obscuremarkwithdraw` owed, no spec), until T38-15 (both from PR #15 on `main` at T37's close; K2300).
 7. **BOB's acts (no module job):** at the opening, rule 2's boundary (at L2's START), rule 3's choice, rule 4's packaging, every L1 requirement change, the questions to Bob ("For BOB" below). (N781; K1763, K2171) the terms register gains, as AT entries quoted verbatim, the paragraphs "Using the Claude Code name and logo" and "Claude Code remains governed by Anthropic's standard terms … regardless of the platform" (found under "Can customers offer Claude Code in their products?"), at the opening's register edit. T38's release is BOB's (K1501), decided at its close. (N795; K2259, K2273) done: mechanics §5.7 (3), §16, §11 changed on Bob's approval; T38's close is the first by a pull request merged with the GitHub merge tool, its proof (V6).
 8. **N779 (Bob, K2248; BOB's details, P17):** every photo a published case carries travels as a copy without its metadata, made by `image-cover.coverAreas` with the photo's marks, or with no areas for an unmarked photo (its R1's empty `areas`, R2: nothing of the original but its pixels), so no L1 change; a photo `image-cover` cannot take (R3, e.g. HEIC) refuses the publication as DEC-183's B103 (b) does a marked one, naming it. The group keeps the original with its metadata and fingerprint.
 9. **N793 (K231; BOB's):** `NO_SUCH_MEMBER` (C-64) has one site: membership (T38-4, with its split) provides the helper and the row; instance-setup drops its row; credentials, tasks, setup-page and control-plane call membership's helper in place of minting the code.
@@ -107,16 +108,18 @@ Each line is one job (P8): every T38 entry for that module. Fields: module · (N
 ### L11
 
 - **T38-14 · op-grades** · (N788) grades `obscuremarkwithdraw` (a member's act, as `obscuremark`) · DEC-183 · req: BOB's wording · depends —. **P6:** 2,233.
-- **T38-15 · op-declarations** · (N788) declares `obscuremarkwithdraw` (`by` stamped, `machineClasses: []`); the `setpassword` text as the screens already have it (DEC-183); R34 re-read, any op without a text named in one QUESTION to UX-DESIGN · DEC-183 · req: R27, a new R, BOB's wording · depends T38-11 (L8). **P6:** 3,245.
+- **T38-15 · op-declarations** · (N788) declares `obscuremarkwithdraw` (`by` stamped, `machineClasses: []`; `OP_FAMILIES`), clearing `t37.test.mjs`:175 (R21: PR #15's registry owes the act); R34 re-read, any op without a text named in one QUESTION to UX-DESIGN · DEC-183 · req: R21 amended, a new R40, BOB's wording (K2300; not R27, the library) · depends T38-11 (L8). **P6:** 3,245.
 - **T38-21 · tasks** · (N793) calls membership's `NO_SUCH_MEMBER` helper (rule 9) · K231 · req: BOB's wording · depends T38-4 (L2).
-- **T38-22 · setup-page** · (N793) as T38-21 · K231 · req: BOB's wording · depends T38-4.
+- ~~T38-22 · setup-page~~ dropped (K2300): setup-page mints no `NO_SUCH_MEMBER`; it only words the code in browser script (`setup-page/index.mjs`:1845).
 - **T38-23 · instance-setup** · (N793) drops its `NO_SUCH_MEMBER` row and calls membership's helper · K231, K2249 · req: BOB's wording · depends T38-4.
 - **T38-24 · admission** · (N792) `sourceOf` answers the store window's fallback (the instance's key) when `KNOCK_FINGERPRINT_KEY` is unbound, so `setpassword` and `login` count as one source · K2247 · req: its `sourceOf` R, BOB's wording · depends —.
 - **T38-25 · answer-envelope** · (N783) `families.mjs`:126 lists project-roster's checks file after membership's, as the split leaves the rows · K2270 · req: none · depends T38-3 (L2).
 - **T38-26 · plane** · (N783) `store.mjs`:509 and `stats.mjs`:25 reach the moved acts through project-roster; the plane's schema assembly takes project-roster's `schema.mjs` (its three tables), so a fresh store holds them as a migrated one does (FILE-SAFETY #3 J2, K2294) · K2270 · req: none · depends T38-3 (L2). Merges last in L11.
-- **T38-16 · control-plane** · (N788) routes `obscuremarkwithdraw` to case-carriage, `by` from the session, unless the opening's check finds case-carriage's ops map (R18, K2226) already carries it; (N793) calls membership's helper · DEC-183, K231 · req: a route R, BOB's wording · depends T38-15. **P6:** 3,263 (K2255).
+- **T38-16 · control-plane** · (N788; K2300) no route code: the plane spreads `caseCarriageOps` and the `by` stamp comes from op-declarations' `OP_FAMILIES`; R67 amended to name `obscuremarkwithdraw`, with a door test in `t37-door.test.mjs`'s pattern (`by` from the session); (N793) no share: control-plane mints no `NO_SUCH_MEMBER` · DEC-183, K231 · req: a route R, BOB's wording · depends T38-15. **P6:** 3,263 (K2255).
 
-**L11 merge order:** `modules.json` order: op-grades → tasks → setup-page → instance-setup → answer-envelope → op-declarations → admission → control-plane → plane.
+- **T38-31 · affordances** · (DEC-183; PR #15) `ACT_HELP` regenerated from PR #15's `mock-acts.js` (204 texts, the `setpassword` text among them), clearing `t36.test.mjs`:40 (R48) · K2300 · req: none · depends —. Joined at L6 (K1741).
+
+**L11 merge order:** `modules.json` order: `modules.json` order (affordances among them, before op-declarations; T38-22 dropped), plane last (K2300).
 
 ## Left out of T38 (one hard reason each)
 
@@ -149,7 +152,7 @@ Measured on `tranche/T37` @ `5fd61bfb68` (K1821). **membership** 3,970: split fi
 
 ## Summary
 
-**Jobs per layer:** L1 3, L2 4, L3 2, L4 1, L5 1, L6 3, L7 0, L8 6, L9 0, L10 1, L11 9. **Total 30** (T38-29, T38-30 joined, K2291, K2293).
+**Jobs per layer:** L1 3, L2 4, L3 2, L4 1, L5 1, L6 3, L7 0, L8 6, L9 0, L10 1, L11 9 (T38-22 dropped, T38-31 joined). **Total 30** (K2291, K2293, K2300).
 
 ## For BOB
 
