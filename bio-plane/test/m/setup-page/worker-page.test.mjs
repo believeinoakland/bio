@@ -82,8 +82,15 @@ const planeAt = async ({ name = FIRST, failing = false } = {}) => {
   return mf;
 };
 const served = async (mf) => { const r = await mf.dispatchFetch("https://copy.example/"); return { status: r.status, type: r.headers.get("content-type") || "", body: await r.text() }; };
-const api = async (mf, q, init) => {
-  const r = await mf.dispatchFetch(`https://copy.example/api/?${q}`, init);
+/* admission R20 (K2166, K2189): a credential is read only from the Authorization header or the body, never the address.
+   The suite names its credential as `token=…` in each call, for readability; `api` lifts it out of the address into
+   `Authorization: Bearer …` before the request is sent, as `bio-plane/test/members.test.mjs` does (K2182). */
+const api = async (mf, q, init = {}) => {
+  const params = new URLSearchParams(q);
+  const token = params.get("token");
+  params.delete("token");
+  const headers = { ...(init.headers || {}), ...(token === null ? {} : { authorization: `Bearer ${token}` }) };
+  const r = await mf.dispatchFetch(`https://copy.example/api/?${params}`, { ...init, headers });
   return { status: r.status, j: await r.json().catch(() => null) };
 };
 const rP = (j) => (j && typeof j === "object" && "result" in j ? j.result : j);

@@ -74,8 +74,10 @@ export const POLICY_CHANGE_DAYS = 90;
 export const POLICY_CHANGES_MAX = 1000;
 /** R13: `following.policyChanges`' page (its R21: at most 200). */
 export const POLICY_CHANGES_PAGE = 200;
-/** R14: the `found` notes one read follows (`file-safety.scanFindings`, oldest first; its R15 has no `since` until T37,
- *  N762, so the bound is stated rather than hidden). */
+/** R14 (T37; N762, K2175): the window of `found` notes read, by the note's age (as R13's), and the notes one read follows.
+ *  Each read starts again at the window's start (`file-safety` R15's `cursor` is null at its end), so a note older than
+ *  the window is never read and never uses up the bound. */
+export const SCAN_FINDINGS_DAYS = 90;
 export const SCAN_FINDINGS_MAX = 1000;
 /** R15: the security tools' events one read follows (`file-safety.securityToolEvents`, its R31). */
 export const TOOL_EVENTS_MAX = 1000;
@@ -174,7 +176,7 @@ export class NoticeProducers {
       inquiry_recheck: { truncated: false },
       security_level: { days: SECURITY_DAYS, truncated: false },
       policy_change: { bound: POLICY_CHANGES_MAX, days: POLICY_CHANGE_DAYS, truncated: false },
-      scan_found: { bound: SCAN_FINDINGS_MAX, truncated: false },
+      scan_found: { bound: SCAN_FINDINGS_MAX, days: SCAN_FINDINGS_DAYS, truncated: false },
       security_tool_off: { bound: TOOL_EVENTS_MAX, truncated: false },
       failed,
     };
@@ -702,20 +704,25 @@ export class NoticeProducers {
   /* ================================================================== R14 · a file held after a scan
    * (file-safety R15, R16–R18, R38; N707, N710, DEC-169 (4), K1892, K1913, K1929). The `found` notes
    * `scanFindings` answers this viewer (a capture the viewer may not see is left out by file-safety and never counted
-   * here, R7), following its cursor to at most the bound, oldest first; one item per note, to this member while active.
+   * here, R7), oldest first; one item per note, to this member while active. (T37; N762, N771, K2175) The read is the
+   * window's: `since` the instant SCAN_FINDINGS_DAYS before the call, from the first page, following `cursor` while
+   * `truncated`, to at most the bound, never from a cursor kept between reads (file-safety's is null at its end).
    * Its subject is the capture's home (provenance.homeOf); its detail names each finding with its engine, tool and day,
    * in findingKind's words, that the safe view stays open and how the original opens again. It names no member and is
    * no hint: a scanner's verdict, not the machine's noticing. It leaves when its recipient disposes of it (queue's, by
-   * its key); its leaving once no open hold covers the finding waits for scanFindings' synchronous `held` (T37, N771,
-   * K2155): file-safety's threatOf is async, and this read is synchronous. */
+   * its key), or when `scanFindings` answers its note `held: false` (no open hold covers that finding any longer, read
+   * in file-safety's same synchronous call): only a note inside the window is read, so only there can it leave on
+   * `held`. A note past the window is not read, so its item is no longer answered: the window is the item's life (K2238,
+   * as R13's window; queue keeps no item, only dispositions). */
   #scanFound(me, viewer, now) {
     if (!this.#active(me)) return { items: [], facts: {} };
+    const since = now - SCAN_FINDINGS_DAYS * DAY_MS;       /* an instant, in ms (file-safety R15: notes at or after it) */
     const found = [];
     let after = null, read = 0, truncated = false;
     for (;;) {
       if (read >= SCAN_FINDINGS_MAX) { truncated = true; break; }
-      const r = this.#fileSafety.scanFindings({ after, limit: Math.min(FILE_SAFETY_PAGE, SCAN_FINDINGS_MAX - read), viewer });
-      if (!r || r.ok !== true || !Array.isArray(r.findings)) throw failure("file-safety");
+      const r = this.#fileSafety.scanFindings({ since, after, limit: Math.min(FILE_SAFETY_PAGE, SCAN_FINDINGS_MAX - read), viewer });
+      if (!r || r.ok !== true || r.since_invalid === true || !Array.isArray(r.findings)) throw failure("file-safety");
       read += r.findings.length;
       found.push(...r.findings);
       if (r.truncated !== true || r.cursor === null || r.cursor === undefined || r.cursor === after) break;
@@ -725,6 +732,7 @@ export class NoticeProducers {
     const items = [];
     for (const f of found) {
       if (!f || !filled(f.captureSha) || !filled(f.note_id)) continue;
+      if (f.held === false) continue;                       /* no open hold covers it any longer: it leaves (N771) */
       let home = null;
       try { const h = this.#provenance.homeOf(f.captureSha); home = h && filled(h.bundleId) ? h.bundleId : null; }
       catch { throw failure("provenance"); }

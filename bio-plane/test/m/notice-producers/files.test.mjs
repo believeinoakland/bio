@@ -7,9 +7,10 @@ import assert from "node:assert/strict";
 import { world, pdf, sha } from "../file-safety/fixture.mjs";
 import { findingKind } from "../../../src/file-safety/index.mjs";
 import { fresh, reader, ofKind, sentences, texts, notHintFailures, JUDGMENT } from "./fixture.mjs";
-import { HINT_MARK, NOTICE_KINDS, SCAN_FINDINGS_MAX, TOOL_EVENTS_MAX } from "../../../src/notice-producers/index.mjs";
+import { HINT_MARK, NOTICE_KINDS, SCAN_FINDINGS_MAX, SCAN_FINDINGS_DAYS, TOOL_EVENTS_MAX } from "../../../src/notice-producers/index.mjs";
 
 const FOUND = "found", OFF = "security-tool-off", KIND = "scan-found";
+const DAY = 86_400_000, WINDOW = SCAN_FINDINGS_DAYS * DAY;
 const NAMES = { bad: "Xls.Downloader.Agent-917", other: "Pdf.Unheard.Variant-1" };
 
 /* A world whose ClamAV finds `NAMES.bad` in the file tagged "bad", and two names in the one tagged "two". */
@@ -61,7 +62,7 @@ test("R14 R7: a finding on a capture the viewer may not see is no item and is no
   assert.deepEqual(mine[0].basis.home, "INFO-P");
   const theirs = read("m2", { now: w.clock.now });
   assert.deepEqual(ofKind(theirs, KIND), []);
-  assert.deepEqual(theirs.facts.scan_found, { bound: SCAN_FINDINGS_MAX, truncated: false }, "a bound and a flag, never a count");
+  assert.deepEqual(theirs.facts.scan_found, { bound: SCAN_FINDINGS_MAX, days: SCAN_FINDINGS_DAYS, truncated: false }, "a bound and a flag, never a count");
   assert.ok(!texts(theirs).some((t) => t.includes(bad) || t.includes("INFO-P") || t.includes("PROJ-1")));
 });
 
@@ -84,29 +85,67 @@ test("R14: its detail states the file is held: the finding names with engine, to
   for (const s of sentences(it)) assert.doesNotMatch(s, JUDGMENT, s);
 });
 
-test("R14: scanFindings is followed by its cursor to at most 1,000 findings, pages of at most 200, as the viewer, facts naming the bound and truncated", async () => {
+/* A stand-in `scanFindings` in file-safety R15's shape over `notes` (each `{at}`, oldest first): `since` keeps the notes at
+   or after it, `after` is the last note answered, `cursor` the last answered while more follow and null at the end. */
+function standIn(w, notes, asked) {
+  return { ...w.fs, securityToolEvents: () => ({ ok: true, events: [], cursor: null, truncated: false }),
+    scanFindings: ({ since, after, limit, viewer }) => {
+      asked.push({ since, after, limit, viewer });
+      const lo = typeof since === "number" ? since : Date.parse(since);
+      const rows = notes.map((n, k) => ({ ...n, k })).filter((n) => n.k > (after === null || after === undefined ? -1 : Number(after)) && Date.parse(n.at) >= lo);
+      const page = rows.slice(0, limit), more = rows.length > limit;
+      return { ok: true, findings: page.map((n) => ({ captureSha: "a".repeat(64), note_id: `FSN-${n.k}`, tool: "clamav", engine: "clamav",
+        findings: [NAMES.bad], at: n.at, held: n.held ?? true })), cursor: more ? String(page[page.length - 1].k) : null, truncated: more };
+    } };
+}
+
+test("R14 (T37): scanFindings is read with since the instant 90 days before the call, from the first page, following cursor while truncated, to at most 1,000 findings in pages of at most 200, as the viewer; facts name the bound and truncated", async () => {
   const { w } = await files();
+  const now = w.clock.now, inside = new Date(now - DAY).toISOString();
   const over = (total) => {
     const asked = [];
-    const fileSafety = { ...w.fs, securityToolEvents: () => ({ ok: true, events: [], cursor: null, truncated: false }),
-      scanFindings: ({ after, limit, viewer }) => {
-        asked.push({ after, limit, viewer });
-        const from = after === null ? 0 : Number(after);
-        const page = Array.from({ length: Math.max(0, Math.min(limit, total - from)) }, (_, k) => ({ captureSha: "a".repeat(64),
-          note_id: `FSN-${from + k}`, tool: "clamav", engine: "clamav", findings: [NAMES.bad], at: "2026-10-08T12:00:00Z" }));
-        return { ok: true, findings: page, cursor: String(from + page.length), truncated: from + page.length < total };
-      } };
-    const r = reader(fresh(w.host, { membership: w.membership, fileSafety, provenance: w.prov })).read("m1", { now: w.clock.now });
+    const notes = Array.from({ length: total }, () => ({ at: inside }));
+    const r = reader(fresh(w.host, { membership: w.membership, fileSafety: standIn(w, notes, asked), provenance: w.prov })).read("m1", { now });
     return { r, asked };
   };
   const at = over(SCAN_FINDINGS_MAX);
   assert.equal(ofKind(at.r, KIND).length, SCAN_FINDINGS_MAX);
-  assert.deepEqual(at.r.facts.scan_found, { bound: SCAN_FINDINGS_MAX, truncated: false });
+  assert.deepEqual(at.r.facts.scan_found, { bound: SCAN_FINDINGS_MAX, days: SCAN_FINDINGS_DAYS, truncated: false });
   const past = over(SCAN_FINDINGS_MAX + 1);
   assert.equal(ofKind(past.r, KIND).length, SCAN_FINDINGS_MAX);
-  assert.deepEqual(past.r.facts.scan_found, { bound: SCAN_FINDINGS_MAX, truncated: true });
-  assert.ok(past.asked.every((a) => a.limit <= 200 && a.viewer === "member:m1"));
-  assert.equal(past.asked.reduce((n, a) => n + a.limit, 0), SCAN_FINDINGS_MAX);
+  assert.deepEqual(past.r.facts.scan_found, { bound: SCAN_FINDINGS_MAX, days: SCAN_FINDINGS_DAYS, truncated: true });
+  for (const { asked } of [at, past]) {
+    assert.ok(asked.every((a) => a.limit <= 200 && a.viewer === "member:m1" && a.since === now - WINDOW), "since, the window's start, on every page");
+    assert.equal(asked[0].after, null, "from the first page");
+    for (let k = 1; k < asked.length; k++) assert.equal(asked[k].after, String(200 * k - 1), "following cursor");
+    assert.equal(asked.reduce((n, a) => n + a.limit, 0), SCAN_FINDINGS_MAX);
+  }
+  /* a short window: one page, cursor null at its end (file-safety R15), and nothing more asked */
+  const one = over(3);
+  assert.equal(one.asked.length, 1);
+  assert.deepEqual(one.r.facts.scan_found, { bound: SCAN_FINDINGS_MAX, days: SCAN_FINDINGS_DAYS, truncated: false });
+});
+
+test("R14 (T37): every read starts again from since, never from a cursor kept between reads, so a finding older than the window is never read and never uses up the bound", async () => {
+  const { w } = await files();
+  const now = w.clock.now;
+  const old = Array.from({ length: SCAN_FINDINGS_MAX + 500 }, (_, k) => ({ at: new Date(now - WINDOW - (k + 1) * 1000).toISOString() }))
+    .reverse();
+  const recent = Array.from({ length: 5 }, (_, k) => ({ at: new Date(now - WINDOW + (k + 1) * 1000).toISOString() }));
+  const asked = [];
+  const n = fresh(w.host, { membership: w.membership, fileSafety: standIn(w, [...old, ...recent], asked), provenance: w.prov });
+  const first = reader(n).read("m1", { now });
+  assert.deepEqual(ofKind(first, KIND).map((i) => i.subject.note), recent.map((_, k) => `FSN-${old.length + k}`));
+  assert.equal(first.facts.scan_found.truncated, false, "1,500 older findings use none of the bound");
+  /* a second read asks again from the first page with the same window, not from the first read's cursor */
+  asked.length = 0;
+  const second = reader(n).read("m1", { now });
+  assert.deepEqual(asked.map((a) => [a.after, a.since]), [[null, now - WINDOW]]);
+  assert.deepEqual(ofKind(second, KIND).map((i) => i.id), ofKind(first, KIND).map((i) => i.id));
+  /* over the real file-safety: the note found at T0 is answered until it leaves the window, then not read at all */
+  const items = (at) => ofKind(reader(fresh(w.host, { membership: w.membership, fileSafety: w.fs, provenance: w.prov })).read("m1", { now: at }), KIND);
+  assert.equal(items(now + WINDOW).length, 1, "at the window's edge, still read");
+  assert.deepEqual(items(now + WINDOW + 1000), [], "past the window: never read");
 });
 
 test("R14 R1: a scanFindings or homeOf that throws or refuses contributes no item and is named in facts.failed; the read writes nothing", async () => {
@@ -115,6 +154,7 @@ test("R14 R1: a scanFindings or homeOf that throws or refuses contributes no ite
   const run = (deps) => reader(fresh(w.host, { membership: w.membership, fileSafety: w.fs, provenance: w.prov, ...deps })).read("m1", { now: w.clock.now });
   for (const [deps, name] of [[{ fileSafety: { ...w.fs, scanFindings: boom, securityToolEvents: w.fs.securityToolEvents.bind(w.fs) } }, "file-safety"],
                               [{ fileSafety: { scanFindings: () => ({ ok: false, code: "X" }), securityToolEvents: () => ({ ok: true, events: [], truncated: false }) } }, "file-safety"],
+                              [{ fileSafety: { scanFindings: () => ({ ok: true, findings: [], cursor: null, truncated: false, since_invalid: true }), securityToolEvents: () => ({ ok: true, events: [], truncated: false }) } }, "file-safety"],
                               [{ provenance: { homeOf: boom } }, "provenance"]]) {
     const r = run(deps);
     assert.deepEqual(ofKind(r, KIND), [], name);
@@ -235,13 +275,22 @@ test("R15 R1: a read that refuses or throws contributes no item and is named in 
   assert.deepEqual(w.tables(), before);
 });
 
-test("R14 (T36): it leaves when its recipient disposes of it: the read answers it, keyed per note, whatever becomes of the hold, so queue's disposal (its key) is what removes it", async () => {
+test("R14 (T37, N771, K2155): it leaves when its recipient disposes of it (the same key on every read while its hold is open) or when scanFindings answers held false, read in the same synchronous call; an item past the window is no longer answered: the window is the item's life (K2238)", async () => {
   const { w, bad, items } = await files();
   const before = items("m1").map((i) => i.id);
   assert.equal(before.length, 1);
+  assert.equal(w.fs.scanFindings({ viewer: "member:m1" }).findings[0].held, true);
+  /* one member's release leaves the hold open (pending a second): the item stays, the same key */
   assert.equal(w.fs.releaseScanHold({ captureSha: bad, by: "m1", reason: "read it" }).state, "pending_second");
+  assert.deepEqual(items("m1").map((i) => i.id), before, "the hold still open: the same key, for queue's disposal");
+  /* a second member's release: no open hold covers the finding, so the item leaves, for every recipient */
   assert.equal(w.fs.releaseScanHold({ captureSha: bad, by: "member:m2", reason: "a false match" }).state, "released");
-  assert.deepEqual(items("m1").map((i) => i.id), before, "the same key: queue holds its recipient's disposal of it");
+  for (const m of ["m1", "m2", "boss"]) assert.deepEqual(items(m), [], m);
+  /* a stand-in answering the same note held true, then false, inside the window: present, then gone */
+  const now = w.clock.now;
+  for (const [held, n] of [[true, 1], [false, 0], [undefined, 1]]) {
+    const r = reader(fresh(w.host, { membership: w.membership, provenance: w.prov,
+      fileSafety: standIn(w, [{ at: new Date(now - DAY).toISOString(), held }], []) })).read("m1", { now });
+    assert.equal(ofKind(r, KIND).length, n, `held ${held}`);
+  }
 });
-
-test.todo("R14 (T37, N771, K2155): it leaves when file-safety answers that no open hold covers that finding any longer (scanFindings' synchronous `held`): file-safety's threatOf is async and noticeItems, read synchronously by queue, cannot await it");

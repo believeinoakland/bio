@@ -147,27 +147,20 @@ const courtBlock = (p) => `<div class="card" id="${p}-cn">
     <div class="actions"><button id="${p}-cn-set">Record this choice</button></div>
     <p class="err" id="${p}-cn-err"></p>
   </div>`;
-/* R18 (DEC-172 (1), (2); credentials R33, R34): whether the group pays for the assistant, a choice of its own with nothing
-   preselected; "the group pays" asks for the key, sent once in the request's body and never shown again. */
-const payBlock = (p) => `<div class="card" id="${p}-gk">
-    <p style="margin:0 0 10px"><b>Does your group pay for the assistant?</b> Nothing is chosen for you, and leaving this
-    unchosen records nothing.</p>
+/* R18 (T37; DEC-182 (3); credentials R33, R34): the group's Anthropic API key, an optional field offered after "Keep our
+   material away from AI". A key typed is sent once, in the request's body, through op=groupkeyset and then
+   op=groupkeyswitch on, and never shown again; a field left empty sends nothing and records nothing. */
+const groupKeyBlock = (p) => `<div class="card" id="${p}-gk">
+    <p style="margin:0 0 10px"><b>Your group's Anthropic API key (optional).</b> Leave it empty and members bring their
+    own.</p>
     <p class="small">A member may always connect their own Claude subscription or API key, which serves only them, unless
-    your group keeps its material away from AI.</p>
+    your group keeps its material away from AI. A key held by the group serves every member who has no account of their
+    own.</p>
     <p class="small" id="${p}-gk-now"></p>
-    <label style="display:flex;gap:8px;align-items:flex-start;font-weight:400">
-      <input type="radio" name="${p}-gk" id="${p}-gk-pays" value="pays" style="width:auto;margin-top:4px">
-      <span><b>The group pays.</b> One Anthropic API key, held by the group, serves every member who has no account of
-      their own.</span></label>
-    <label style="display:flex;gap:8px;align-items:flex-start;font-weight:400">
-      <input type="radio" name="${p}-gk" id="${p}-gk-not" value="not" style="width:auto;margin-top:4px">
-      <span><b>The group does not pay.</b> Nothing is set: members who want the assistant connect their own account.</span></label>
-    <div id="${p}-gk-keybox" hidden>
-      <label for="${p}-gk-key">The group's Anthropic API key</label>
-      <input id="${p}-gk-key" type="password" autocomplete="off" spellcheck="false">
-      <p class="hint">Sent once, in the request's body only. It is held sealed and never shown again, not even here.</p>
-    </div>
-    <div class="actions"><button id="${p}-gk-set">Record this choice</button></div>
+    <label for="${p}-gk-key">The group's Anthropic API key</label>
+    <input id="${p}-gk-key" type="password" autocomplete="off" spellcheck="false">
+    <p class="hint">Sent once, in the request's body only. It is held sealed and never shown again, not even here.</p>
+    <div class="actions"><button id="${p}-gk-set">Record the group's key</button></div>
     <p class="small" id="${p}-gk-said"></p>
     <p class="err" id="${p}-gk-err"></p>
   </div>`;
@@ -396,8 +389,8 @@ ${GROUP_LINE_UNREAD}
   <!-- R29, R16, R15–R18, R30 (K1888; DEC-134, DEC-136 (1), DEC-172, DEC-169): once the claim succeeds, in the same
        section and only here, the founder's recovery codes shown once (R29), then the ask to add a second administrator
        with its statement of dependence and the act itself (R16), then the choices the founder may leave unanswered: who
-       holds the hosting account (R15), whether members are told what a court can reach (R17), whether the group pays for
-       the assistant and whether it keeps its material away from AI (R18), then the optional security tools step (R30).
+       holds the hosting account (R15), whether members are told what a court can reach (R17), whether the group keeps its
+       material away from AI and then the group's optional API key (R18; T37), then the optional security tools step (R30).
        Nothing is gated on any of them. -->
   <div id="claim-after" hidden>
     <div class="okbox"><p style="margin:0">Claimed. The one-time password no longer works, and you are signed in
@@ -413,12 +406,12 @@ ${GROUP_LINE_UNREAD}
       <p class="hint">You can leave this for later: Members and keys shows it until your group has two administrators
       who each hold recovery codes. Nothing waits on it.</p>
     </div>
-    <p class="small">Four choices and one optional step follow. Each can be left for later, and each can be changed at
+    <p class="small">Four settings and one optional step follow. Each can be left for later, and each can be changed at
     any time under Members and keys.</p>
     ${hostingBlock("cl")}
     ${courtBlock("cl")}
-    ${payBlock("cl")}
     ${keepAwayBlock("cl")}
+    ${groupKeyBlock("cl")}
     ${securityBlock("cl")}
     <div class="actions"><button id="claim-on">Go on to your group's Civicsmith</button></div>
   </div>
@@ -738,8 +731,8 @@ ${GROUP_LINE_UNREAD}
   <p class="small"><a class="filelink" href="${ROTATION_GUIDE_HREF}">How to replace the one-time password in the hosting
   account</a>, and when to.</p>
   ${courtBlock("mk")}
-  ${payBlock("mk")}
   ${keepAwayBlock("mk")}
+  ${groupKeyBlock("mk")}
   <h2>Security tools</h2>
   ${securityBlock("mk")}
   <!-- R23 (DEC-152; K1837): who your group is, its focus and purpose (membership R109), with the assistant's help offered
@@ -993,7 +986,7 @@ $("#do-claim").addEventListener("click", async ()=>{
     const l = await api("login", { role: "admin", password: p1 });
     if (!l.result || !l.result.token) { panel(l.result, r.result.consumedAt); return; }
     /* R29, R16, R15–R18: signed in, and kept in the claim's section: the founder's recovery codes first, then the ask
-       for a second administrator, then the three choices. */
+       for a second administrator, then the group's settings. */
     WHO = "admin";
     signIn(l.result, r.result.consumedAt);
     CLAIMED = { login: l.result, at: r.result.consumedAt };
@@ -2049,37 +2042,32 @@ async function courtSet(P){
   } catch(err){ e.textContent = "That did not go through: " + err.message; }
   finally { $(ID(P, "cn-set")).disabled = false; }
 }
-/* ---- whether the group pays for the assistant (R18; credentials R33, R34) ----
-   The group key's state, never the key: held and on to an administrator, on alone to any other member. "The group pays"
-   sends the key once, in the body, through op=groupkeyset and then op=groupkeyswitch on; "the group does not pay" sends
-   nothing. The page never sends op=assistantset (retired, instance-setup R53). */
-async function showPay(P){
+/* ---- the group's API key (R18; T37, DEC-182 (3); credentials R33, R34) ----
+   The group key's state, never the key: held and on to an administrator, on alone to any other member. A key typed
+   is sent once, in the body, through op=groupkeyset and then op=groupkeyswitch on; a field left empty sends nothing and
+   records nothing. The page never sends op=assistantset (retired, instance-setup R53). */
+async function showGroupKey(P){
   let k = null;
   try { k = resultOf(await rec("groupkeystate")); } catch { k = null; }
   const now = $(ID(P, "gk-now"));
   if (k && k.ok !== false && typeof k.held === "boolean")
-    now.textContent = k.held ? "Your group pays: its API key is held, and " + (k.on === true ? "on" : "off") + "." : "Your group does not pay: no group API key is held.";
+    now.textContent = k.held ? "Your group holds an API key, and it is " + (k.on === true ? "on" : "off") + "." : "Your group holds no API key: members bring their own.";
   else if (k && k.ok !== false && typeof k.on === "boolean") now.textContent = "The group's API key is " + (k.on ? "on" : "off") + ".";
-  else now.textContent = "Whether your group pays for the assistant could not be read just now.";
+  else now.textContent = "Whether your group holds an API key could not be read just now.";
 }
-const PAY_CHOICES = ["pays", "not"];
-function payKeyBox(P){ $(ID(P, "gk-keybox")).hidden = checkedOf(P + "-gk", PAY_CHOICES) !== "pays"; }
-async function paySet(P){
+async function groupKeySet(P){
   const e = $(ID(P, "gk-err")); e.textContent = ""; $(ID(P, "gk-said")).textContent = "";
-  const choice = checkedOf(P + "-gk", PAY_CHOICES);
   /* the key is read once and the field emptied at once: it is never shown again, not even here */
-  const key = choice === "pays" ? $(ID(P, "gk-key")).value.trim() : "";
+  const key = $(ID(P, "gk-key")).value.trim();
   $(ID(P, "gk-key")).value = "";
-  if (!choice) { e.textContent = "Choose one, or leave this unchosen: nothing is recorded until you do."; return; }
-  if (choice === "not") { $(ID(P, "gk-said")).textContent = "Nothing was recorded: your group does not pay for the assistant."; return; }
-  if (!key) { e.textContent = "Paste the group's Anthropic API key to pay for the assistant."; return; }
+  if (!key) { $(ID(P, "gk-said")).textContent = "Nothing was recorded: the field is empty, so members bring their own."; return; }
   $(ID(P, "gk-set")).disabled = true;
   try {
     let why = refusalOf(await post("groupkeyset", { key }));
-    if (why) { e.textContent = why; showPay(P); return; }
+    if (why) { e.textContent = why; showGroupKey(P); return; }
     why = refusalOf(await post("groupkeyswitch", { on: true }));
-    if (why) { e.textContent = why; showPay(P); return; }
-    showPay(P);
+    if (why) { e.textContent = why; showGroupKey(P); return; }
+    showGroupKey(P);
   } catch(err){ e.textContent = "That did not go through: " + err.message; }
   finally { $(ID(P, "gk-set")).disabled = false; }
 }
@@ -2112,7 +2100,7 @@ function drawKeepAway(P){
   $(ID(P, "ka-err")).textContent = "";
   $(ID(P, "ka-why")).hidden = s.on;
   $(ID(P, "ka-what")).textContent = s.on
-    ? "Turning it off lets the assistant be used again in your group: through the group's API key if your group pays, and through members' own accounts. Nothing already recorded changes."
+    ? "Turning it off lets the assistant be used again in your group: through the group's API key if one is held and on, and through members' own accounts. Nothing already recorded changes."
     : "Turning it on means no assistant may be used in your group while it is on: not the group's API key, and not a member's own account. Everything else works without the assistant. Every member is shown your reason.";
   $(ID(P, "ka-set")).textContent = s.on ? "Turn it off" : "Keep our material away from AI";
   act.hidden = false;
@@ -2145,8 +2133,9 @@ async function keepAwaySet(P){
    Under the founder's session at the claim (cl), and an administrator's in members and keys (mk). The catalogue is drawn
    as file-safety answers it: each offered tool with its handling (what it is sent, who receives it, the region, how
    long it keeps files and whether it shares them), and the services not offered with their reasons in file-safety's
-   words. Adding a tool asks only what its entry names: its credentials, and settings its vendor names; no key is asked
-   unless a tool is added. The retention confirmation is asked where the vendor keeps files; "every file" is offered
+   words. Adding a tool asks only what its entry names: its credentials, and each field of its config list by its
+   label, sent under its name (T37, N777; a required one before anything is sent, and no field the list does not name);
+   no key is asked unless a tool is added. The retention confirmation is asked where the vendor keeps files; "every file" is offered
    only for a tool on the organization's own servers (file-safety's own rule, injected). The handling shown is the one
    confirmed (its handling_digest); the credentials go once, in the body, and are never shown again; then the test,
    whose outcome is said. Every refusal is stated in file-safety's words and the step goes on. */
@@ -2169,6 +2158,9 @@ function handlingHtml(h){
     + row("How long it keeps results", h.result_retention ?? "not stated")
     + row("Whether it shares them", SHARING[h.sample_sharing] || String(h.sample_sharing ?? "not stated"));
 }
+/* file-safety R27 (N777): an entry's settings, each {name, label, required}; an entry that lists none asks none */
+const configOf = (t)=> Array.isArray(t && t.config) ? t.config.filter((f)=>f && typeof f.name === "string" && f.name)
+  .map((f)=>({ name: f.name, label: typeof f.label === "string" && f.label ? f.label : f.name, required: f.required === true })) : [];
 const toolName = (t)=> t ? [t.vendor, t.product].filter(Boolean).join(" ") || String(t.provider_id || "") : "";
 async function showSecurity(P){
   $(ID(P, "st-form")).hidden = true; STPICK[P] = null;
@@ -2185,9 +2177,8 @@ async function showSecurity(P){
       '<div class="card"><p style="margin:0 0 6px"><b>' + escH(toolName(t)) + '</b> <span class="dim">'
       + escH(listOf(t.kinds, KINDS)) + "</span></p>" + handlingHtml(t.handling)
       + (t.licence_note ? '<p class="small" style="margin:6px 0 0">' + escH(t.licence_note) + "</p>" : "")
-      + (t.template
-        ? '<p class="small" style="margin:6px 0 0">This is a template for a tool your organization runs and describes itself. This page cannot yet ask what it needs; it can be added later.</p>'
-        : '<div class="actions"><button class="st-pick" data-i="' + i + '">Add this tool</button></div>')
+      + (t.template ? '<p class="small" style="margin:6px 0 0">This is a template for a tool your organization runs and describes itself: adding it asks what the tool&#39;s maker states it runs and how it handles files.</p>' : "")
+      + '<div class="actions"><button class="st-pick" data-i="' + i + '">Add this tool</button></div>'
       + "</div>").join("") : '<p class="small">No tool is offered.</p>')
       + (not.length ? "<h3>Services not offered</h3>" + not.map((r)=>'<div class="kv"><span class="k">' + escH(r.provider_id)
         + '</span><span class="v">' + escH(r.words || r.reason || "") + "</span></div>").join("") : "");
@@ -2213,21 +2204,22 @@ async function showTools(P){
 function pickTool(P, i){
   const t = ST[P] && ST[P].offered[i];
   $(ID(P, "st-err")).textContent = ""; $(ID(P, "st-said")).textContent = "";
-  if (!t || t.template) return;
+  if (!t) return;
   STPICK[P] = i;
   const creds = Array.isArray(t.credentials) ? t.credentials : [];
+  const cfg = configOf(t);
   $(ID(P, "st-fields")).innerHTML = "<h3>Adding " + escH(toolName(t)) + "</h3>"
     + '<p class="small">By adding it you confirm the handling shown above.</p>'
     + (creds.length ? creds.map((n, k)=>'<label for="' + P + "-st-cred-" + k + '">' + escH(n) + "</label>"
       + '<input id="' + P + "-st-cred-" + k + '" type="password" autocomplete="off" spellcheck="false">').join("")
       + '<p class="hint">Sent once, in the request&#39;s body only. Held sealed and never shown again, not even here.</p>'
       : '<p class="small">It needs no credential.</p>')
-    + '<label for="' + P + '-st-cfg">Settings its vendor names (optional)</label>'
-    + '<textarea id="' + P + '-st-cfg" rows="2" spellcheck="false"></textarea>'
-    + '<p class="hint">One per line, as name = value: a region, an account or a tenant the vendor&#39;s own setup gives you.</p>';
+    + cfg.map((f, k)=>'<label for="' + P + "-st-cfg-" + k + '">' + escH(f.label) + "</label>"
+      + '<input id="' + P + "-st-cfg-" + k + '" spellcheck="false">'
+      + '<p class="hint">' + (f.required ? "Needed." : "Optional: leave it empty if it does not apply.") + "</p>").join("");
   /* each pick starts empty: nothing typed for another tool is carried over */
   creds.forEach((n, k)=>{ $("#" + P + "-st-cred-" + k).value = ""; });
-  $(ID(P, "st-cfg")).value = "";
+  cfg.forEach((f, k)=>{ $("#" + P + "-st-cfg-" + k).value = ""; });
   $(ID(P, "st-keep")).checked = false; $(ID(P, "st-every")).checked = false;
   $(ID(P, "st-keepbox")).hidden = !(t.handling && t.handling.sample_sharing === "vendor_internal_research");
   $(ID(P, "st-everybox")).hidden = !onOwnServers(t.handling && t.handling.recipient);
@@ -2238,19 +2230,21 @@ async function addTool(P){
   const e = $(ID(P, "st-err")); e.textContent = ""; $(ID(P, "st-said")).textContent = "";
   const t = ST[P] && STPICK[P] !== null ? ST[P].offered[STPICK[P]] : null;
   if (!t) return;
+  /* each field of the entry's config list, asked by its label, sent under its name: a required one empty sends nothing,
+     an optional one empty is left out, and no field the list does not name is sent */
+  const config = {};
+  const cfg = configOf(t);
+  for (const [k, f] of cfg.entries()) {
+    const v = String($("#" + P + "-st-cfg-" + k).value || "").trim();
+    if (v) config[f.name] = v;
+    else if (f.required) { e.textContent = "Fill in " + f.label + ": the tool needs it. Nothing was sent."; return; }
+  }
   const names = Array.isArray(t.credentials) ? t.credentials : [];
+  const missing = names.find((n, k)=>!String($("#" + P + "-st-cred-" + k).value || "").trim());
+  if (missing !== undefined) { e.textContent = "Fill in " + missing + ": the tool needs it. Nothing was sent."; return; }
   /* each credential read once and its field emptied at once */
   const credentials = {};
   names.forEach((n, k)=>{ const x = $("#" + P + "-st-cred-" + k); credentials[n] = String(x.value || "").trim(); x.value = ""; });
-  const missing = names.find((n)=>!credentials[n]);
-  if (missing) { e.textContent = "Fill in " + missing + ": the tool needs it. Nothing was sent."; return; }
-  const config = {};
-  for (const line of String($(ID(P, "st-cfg")).value || "").split(NL)) {
-    if (!line.trim()) continue;
-    const m = /^\\s*([A-Za-z_][A-Za-z0-9_]*)\\s*=\\s*(.*?)\\s*$/.exec(line);
-    if (!m) { e.textContent = "Write each setting as name = value, one per line. Nothing was sent."; return; }
-    config[m[1]] = m[2];
-  }
   const lim = String($(ID(P, "st-limit")).value || "").trim();
   const routine = onOwnServers(t.handling && t.handling.recipient) && $(ID(P, "st-every")).checked === true;
   const body = { providerId: t.provider_id, config, credentials, handlingDigest: t.handling_digest,
@@ -2282,12 +2276,11 @@ async function removeTool(P, toolId){
   } catch(err){ e.textContent = "That did not go through: " + err.message; }
 }
 
-function showSettings(P){ showHosting(P); showCourt(P); showPay(P); openKeepAway(); showSecurity(P); }
+function showSettings(P){ showHosting(P); showCourt(P); openKeepAway(); showGroupKey(P); showSecurity(P); }
 for (const P of ["cl", "mk"]) {
   $(ID(P, "ha-set")).addEventListener("click", ()=>hostingSet(P));
   $(ID(P, "cn-set")).addEventListener("click", ()=>courtSet(P));
-  $(ID(P, "gk-set")).addEventListener("click", ()=>paySet(P));
-  for (const v of PAY_CHOICES) $(ID(P, "gk-" + v)).addEventListener("change", ()=>payKeyBox(P));
+  $(ID(P, "gk-set")).addEventListener("click", ()=>groupKeySet(P));
   $(ID(P, "st-add")).addEventListener("click", ()=>addTool(P));
   $(ID(P, "st-cancel")).addEventListener("click", ()=>{ $(ID(P, "st-form")).hidden = true; STPICK[P] = null; $(ID(P, "st-fields")).innerHTML = ""; });
 }
