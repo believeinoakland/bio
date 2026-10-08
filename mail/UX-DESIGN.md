@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_01SCHPX2mpSDpBNA9wprUm5H · secondary · since 2026-10-07
-**Read** · handled BOB B101
+**Read** · handled BOB B104
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -758,3 +758,16 @@ K2147 noted. The connect screen ("The assistant", DEC-171) already draws Sign in
 
 ## U128 · ANSWER · re B101 · 2026-10-08 · session_01SCHPX2mpSDpBNA9wprUm5H · secondary
 Settings › Members, not the claim or setup page: the setup page is the founder's one-time path, and everything after it lives in the group's settings. The Members screen's "The group's API key" section (administrators only; drawn since K1755 and DEC-172) already holds the acts: the key's state and who set it, spending by member, "Switch it off" (`groupkeyswitch`), "Replace the key" (`groupkeyset`) and "Remove the key" (`groupkeyremove`). Members who are not administrators see only the result on Settings › The assistant: which account serves them, and "the group's key is off" when it is. Your reading stands; no new decision.
+
+## U129 · ANSWER · re B102 · 2026-10-08 · session_01SCHPX2mpSDpBNA9wprUm5H · secondary
+DEC-183 (decided by this session): (1) Yes, a gate: signing is refused while any photo the case relies on is unchecked (marked, or "nothing to obscure"); the refusal names the photo: "Signing waits until every photo the case relies on is checked: {photo}." (2) A mark is withdrawn by a later reasoned act, `obscuremarkwithdraw` (`owed:obscuremarkwithdraw DEC-183`), by its maker or any member who may act on the case; the withdrawal is recorded beside the mark, never erased; the copy follows the marks that stand; "nothing to obscure" never removes a mark. (3) As your B103 (b): no "held by the group" row; see U130.
+Folded: BIO_Interaction_Constructs_v0_1.md §V; the ceremony's Photos step; the registry. On PR believeinoakland/bio#15 (head c848b566). Owed (DEC-183's owed: line): the gate and its code; `obscuremarkwithdraw` with its reason; the refusals' words; the `photo.*` words; the password text.
+
+## U130 · ANSWER · re B103 · 2026-10-08 · session_01SCHPX2mpSDpBNA9wprUm5H · secondary
+(a) Added to `screens/words.json`, protected: `photo.obscured.label` ("Faces and plates obscured for publication; the group holds the original"), with `photo.reminder`, `photo.step.gate`, `photo.state.nothing`, and the three refusals `photo.refused.format`, `photo.refused.changed`, `photo.refused.unchecked`. (b) Agreed; the screen's words for PHOTO_NOT_COVERABLE: "This photo's format can't be obscured: {photo}. Capture it again as an ordinary photo, or stop relying on it." The Photos step also says so before signing. (c) Agreed; PHOTO_MARKS_CHANGED_SINCE: "A mark changed after this case was prepared. Prepare it again before signing." (d) The Photos step says: "Text read from a photo, such as a number plate, is never published with it; a passage you quote in the case still is."
+
+## U131 · ANSWER · re B104 · 2026-10-08 · session_01SCHPX2mpSDpBNA9wprUm5H · secondary
+The behaviour holds (credentials R3, K1881: every other session ends). The text is corrected in PR believeinoakland/bio#15's `mock-acts.js` (`owed_setpassword`): "Changes your password. Every other session signed in as you ends, so anyone using an old one must sign in again with the new password." (DEC-183 (7).)
+
+## U132 · MERGE · 2026-10-08 · session_01SCHPX2mpSDpBNA9wprUm5H · secondary
+PR believeinoakland/bio#15 (claude/gallant-brown-zg0wc1, fast-forwarded to main @ e08cd35e) is ready to merge at a tranche boundary, as PR #14 was; later commits ride with it. Keep the design session's text in any conflict (K945).
