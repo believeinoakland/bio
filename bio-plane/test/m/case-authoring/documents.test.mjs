@@ -1,5 +1,6 @@
-/* case-authoring (T39; N806; K2333, K2374): a member document a case rests on, over the real case-disclosures (its R6,
-   R7, R22) with case-carriage's `documentCopy` (its R16) answered as each test sets it (`w.copies`). R55: `publishCase`
+/* case-authoring (T39; N806; K2333, K2374, K2377): a member document a case rests on, over the real case-disclosures
+   (its R6, R7, R22) and the real case-carriage, whose `documentCopy` (its R16) reads its own record of each document's
+   copy as the test writes it (`w.documentCopy`), or is answered in its place where the test says (`w.copies`). R55: `publishCase`
    answers the first refusal of the first step that refuses, so case-disclosures R6's DOCUMENT_COPY_UNDETERMINED,
    DOCUMENT_COPY_PENDING and DOCUMENT_NOT_CLEANABLE reach `op=publish`'s answer exactly as case-disclosures answers them,
    and the act writes nothing (R18), not even the copy's queueing that R16's read makes inside the act's transaction.
@@ -14,34 +15,37 @@ import { COPY_CLEANED_LABEL } from "../../../src/case-carriage/index.mjs";
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
 const COPY = "c".repeat(64);
-const ANSWERS = {
-  public: { state: "public", copy: null, refused: null },
-  clean: { state: "clean", copy: null, refused: null },
-  copy: { state: "copy", copy: COPY, refused: null },
-  refused: { state: "refused", copy: null, refused: { code: "PDF_ENCRYPTED", detail: "the file is encrypted" } },
-  undetermined: { state: "undetermined", copy: null, refused: null },
-};
+/* `copies` states, each as case-carriage R16 answers it: recorded in its own `document_copies` (`clean`, `copy`,
+   `refused`), unrecorded (`pending`: R16 queues it), fetched by this copy (`public`, answered in place of the real read:
+   a receipt would make it a Grade B capture needing co-attestation, case-disclosures R2), its own `undetermined`
+   answer, or a read that throws (`unread`). */
+const REFUSED = { code: "PDF_ENCRYPTED", detail: "the file is encrypted" };
 const ratified = (real) => new Proxy(real, { get: (t, p) => (p === "caseRatifyPreflight"
   ? () => ({ ok: true, ready: true, refusals: [] }) : typeof t[p] === "function" ? t[p].bind(t) : t[p]) });
 
-/* Q rests on DOC, Q2 on DOC2. `copies` maps a document to its R16 state: "pending" is answered as R16 answers a member
-   document neither queued nor derived, queueing it (a row of the test's `copy_queue`, standing for case-carriage's
-   queue) in the caller's transaction; "unread" is a read that throws; any other key of ANSWERS is that answer. */
+/* Q rests on DOC, Q2 on DOC2, each a member document in the state `copies` gives it (default `clean`). */
 function setup(copies = {}) {
   const w = world({ ratification: ratified });
   w.member("alice");
-  w.st.db.exec(`CREATE TABLE copy_queue (capture_sha TEXT PRIMARY KEY)`);
-  const shas = { [DOC]: w.doc(DOC), [DOC2]: w.doc(DOC2) };
-  for (const [ref, state] of Object.entries(copies))
-    w.copies.set(shas[ref], state === "pending"
-      ? (sha) => { w.st.sql.exec(`INSERT OR IGNORE INTO copy_queue (capture_sha) VALUES (?)`, sha);
-                   return { state: "pending", copy: null, refused: null }; }
-      : state === "unread" ? () => { throw new Error("the copies table could not be read"); }
-      : ANSWERS[state]);
+  const shas = {};
+  for (const ref of [DOC, DOC2]) {
+    const state = copies[ref] ?? "clean";
+    shas[ref] = w.doc(ref, undefined, { copy: null });
+    stateOf(w, shas[ref], state);
+  }
   w.finding(Q, [{ target: DOC }]);
   w.finding(Q2, [{ target: DOC2 }]);
   const P = w.project("Team", "alice", [Q, Q2]);
   return { w, P, shas };
+}
+function stateOf(w, sha, state) {
+  if (state === "clean") w.documentCopy(sha, "clean");
+  else if (state === "copy") w.documentCopy(sha, "copy", { sha256: COPY });
+  else if (state === "refused") w.documentCopy(sha, "refused", { refused: REFUSED });
+  /* "pending": nothing recorded, so R16 answers pending and queues it */
+  else if (state === "public") w.copies.set(sha, { state: "public", copy: null, refused: null });
+  else if (state === "undetermined") w.copies.set(sha, { state: "undetermined", copy: null, refused: null });
+  else if (state === "unread") w.copies.set(sha, () => { throw new Error("the copies table could not be read"); });
 }
 const args = (P, targets, roles) => ({ project: P, targets, viewer: V("alice"), author: "alice", scope: "s",
   statement: "It does not cover the amendments.", subjectPosition: "not_sought", subjectJustification: "A public record.",
@@ -62,7 +66,7 @@ test("R55, R18: a load-bearing member document whose publication copy is still b
   const pub = w.ca.publishCase(args(P, [Q]));
   refused(pub, "DOCUMENT_COPY_PENDING");
   assert.deepEqual([pub.pending, pub.document], [[{ target: Q, materials: [{ ref: DOC, sha: shas[DOC] }] }], DOC]);
-  assert.deepEqual(w.snapshot(), before, "nothing written: the queueing made inside the act is taken back with it");
+  assert.deepEqual(w.snapshot(), before, "nothing written: R16's queueing, made inside the act, is taken back with it");
   const pre = w.ca.publishPreflight(args(P, [Q]));
   assert.deepEqual([pre.first, pre.ready, pre.blockers], [pub, false, []]);
   assert.deepEqual(w.snapshot(), before);
@@ -73,7 +77,8 @@ test("R55, R18: a load-bearing member document whose publication copy is still b
   const rows = rowsOf(sup.w, ok);
   assert.deepEqual([rows[DOC2].sha, rows[DOC2].included, rows[DOC2].obscured], [sup.shas[DOC2], false, null]);
   assert.deepEqual([rows[DOC].included, rows[DOC].obscured], [true, null]);
-  assert.equal(sup.w.count("copy_queue"), 1, "an act that commits keeps R16's queueing");
+  assert.deepEqual(sup.w.rows(`SELECT capture FROM document_copy_queue`), [{ capture: sup.shas[DOC2] }],
+    "an act that commits keeps R16's queueing");
 });
 
 test("R55, R18: a load-bearing member document doc-clean refused — case-disclosures R6's DOCUMENT_NOT_CLEANABLE, naming the document, each load-bearing member and doc-clean's code — is op=publish's answer exactly and the pre-flight's first (R34), writing nothing; a supporting member's only is listed included: false and publishes", () => {
@@ -117,10 +122,9 @@ test("R55: case-disclosures R6's document refusals reach op=publish in R6's orde
   const w = world({ ratification: ratified });
   w.member("alice");
   const D3 = "INFO-2026-0003-c", Q3 = "INQ-2026-0003-q";
-  const s1 = w.doc(DOC), s2 = w.doc(DOC2), s3 = w.doc(D3);
-  w.copies.set(s1, ANSWERS.refused);
-  w.copies.set(s2, { state: "pending", copy: null, refused: null });
-  w.copies.set(s3, ANSWERS.undetermined);
+  const s1 = w.doc(DOC, undefined, { copy: null }), s2 = w.doc(DOC2, undefined, { copy: null }), s3 = w.doc(D3);
+  stateOf(w, s1, "refused");
+  stateOf(w, s3, "undetermined");
   w.finding(Q, [{ target: DOC }]); w.finding(Q2, [{ target: DOC2 }]); w.finding(Q3, [{ target: D3 }]);
   const P = w.project("Team", "alice", [Q, Q2, Q3]);
   const pub = w.ca.publishCase(args(P, [Q, Q2, Q3]));
@@ -131,7 +135,7 @@ test("R55: case-disclosures R6's document refusals reach op=publish in R6's orde
   /* the bar refuses first: every document refusal is a blocker, in R6's order */
   const low = world({ ratification: ratified });
   low.member("alice");
-  low.copies.set(low.doc(DOC), { state: "pending", copy: null, refused: null });
+  low.doc(DOC, undefined, { copy: null });
   low.finding(Q, [{ target: DOC }]);
   const LP = low.project("Team", "alice", [Q], { extra: ["required_strength:", "  capture: A"] });
   const early = low.ca.publishPreflight(args(LP, [Q]));
