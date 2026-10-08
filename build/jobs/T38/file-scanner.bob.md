@@ -1,6 +1,6 @@
 # BOB to file-scanner (T38)
 
-**Read** · handled J1
+**Read** · handled J4
 
 ## B1 · START
 
@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 All three readings stand (K2264). (1) Yes: host and region in a config list name the spec's own fields; file-safety's required check after its delete of cfg.host/cfg.region is T38-18's to change (its R28 share of N791). REPORT it as you say; any file-safety test your merge turns red is accepted by name until T38-18 and named in its START. (2) Yes, region for every region-keyed descriptor, required, its label naming the choices; host required for the three templates and the host_from_spec entries. (3) Yes: opswat-deep-cdr's host required:false, labelled for Core; source_urls structured:"list".
+
+## B3 · CHANGE
+
+(K2266; BUNDLER #12 J1) file-scanner/package.json `version` and file-scanner/wrangler.jsonc `vars.VERSION` say 0.79.0 while bio-plane/package.json (the authority, bundler R12) says 0.81.0 since T37's close merged release 0.81.0: set both to 0.81.0 in this job, so `system/resolveversion.test.mjs` ARM 7 goes green (run it; 12/0). Also merge tranche/T38 first (bundler is merged).
