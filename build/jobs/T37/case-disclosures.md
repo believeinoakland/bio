@@ -73,3 +73,7 @@ T37-41 done (record on job/T37/case-disclosures). R6/R7/R22/R29 applied; new row
 - Still owed: a re-run when case-carriage T37-34 merges (BOB's next CHANGE).
 
 Size (session_016xh7RqppffzGDLer6pVudY): test runs 15, module lines 1907
+
+## J3 · COMPLETE
+
+B2 done: tranche/T37 @ f3f6002068 merged; the two case-grammar round-trip reds pass with no change. case-disclosures tests 68 pass, 0 fail (with a local uncommitted OBSCURED_LABEL line, case-carriage still unmerged); format/architecture/coverage 29 of 29/ownership 0 failures. Awaiting your CHANGE when case-carriage merges.
