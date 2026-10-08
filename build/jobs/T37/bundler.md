@@ -51,3 +51,9 @@ Real `release-assemble.mjs --dry-run` still stops at agent-runner's missing `ima
 - `node --test bio-plane/test/m/bundler/*.test.mjs` → 91 pass, 0 fail. `format`, `architecture … bundler`, `coverage … bundler` (30 of 30): 0 failures; `ownership … bundler tranche/T37`: re-run after this commit.
 
 Size (session_01XAuQvFSnT4Qjvv3ReZ1VHj): test runs 14, module lines 8076
+
+## J2 · COMPLETE
+
+B2, B3 done (record: "Completion after B2, B3"). Tranche merged; `fleetbundles.test.mjs`:124 now names file-scanner's `docker.io/civicos/file-scanner-scanner` and `…-renderer`, and passes.
+
+fleetbundles on the merged tree: 125 pass, 4 fail, all four the plane bundle's staleness (the D-298 arm, byte identity, manifest sha256, comment-only probe; sources moved by L1 merges: file-scanner's `src/providers/*.mjs`, `src/docx.mjs`, `src/record-grammar/labels.mjs`). That is yours at the layer close, per B3. Bundler module 91/0; format, architecture, coverage (30/30), ownership: 0 failures.
