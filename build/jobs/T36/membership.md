@@ -61,3 +61,7 @@ T36-6's re-pin stales one test outside membership: **progressions** `bio-plane/t
 Against progressions' requirements: R41 asks that listeners are told in MODULE_ORDER. The pinned literal restates the order instead of reading it, so it goes stale with every module added to layer 5. Fix for progressions' next job: add `"law-relations"` after `"observation-log"` in the literal, or compare with `modules.json`'s layer 5 as membership's own R83 test does. Proposed as an accepted red (as red 3 was for promotion and standards) until progressions' job. Membership re-pins nothing for it.
 
 Checked green with the re-pin: membership `test/m/membership/` 172/0 (module-order 6/0, t9 10/0); promotion `registry.test.mjs` 18/0; standards `reads.test.mjs` 7/0; every other test naming MODULE_ORDER 207/1 (this one); store-door 36/0 and control-plane 167/0 (their `record.mjs` reads MODULE_ORDER).
+
+## J3 · COMPLETE
+
+T36-6 applied: MODULE_ORDER re-pinned to build/modules.json (file-scanner, file-safety, law-relations, op-grades, answer-envelope, store-door in the file's places); red 3 cleared (module-order, promotion registry 18/0, standards reads 7/0). Red 14 is credentials' sentence (J1), not re-pinned; progressions order.test.mjs:15 stale copy (J2); the plane bundle carries the old list (regenerated at layer close). Membership 172/0; checks format, architecture, coverage (95/95), ownership all 0 failures. P6: 3,969 lines. Record's Completion section has the reading set and runs.
