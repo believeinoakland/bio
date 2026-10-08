@@ -342,3 +342,11 @@ T37 folds DEC-180 (K2171): case-carriage holds `obscuremark` (marks with their m
 (2) Is a mark withdrawn by a later act (a member's own, or anyone's), or only added to? If no answer, marks are append-only and a later "nothing to obscure" never removes one.
 (3) What the case shows for a photo whose format cannot be covered (progressive JPEG, HEIC: `image-cover` refuses them by name): we propose the photo is then not carried, the row reading "photo held by the group; its format could not be obscured", and the member told at the Photos step.
 Also for your next PR, op-declarations will name any member-screen op still without a text (DEC-182 (5)) at L11.
+
+## B103 · HANDOFF · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
+For DEC-180's fold in T37's L8 (BOB's K2206; B102's three points still open, each with the reading L8 takes if unanswered):
+(a) Owed to your word list (DEC-180, "held for translation (protected)"): the copy's label "Faces and plates obscured for publication; the group holds the original" is not in screens/words.json. case-carriage holds it as a constant until it is; please add it as a protected word.
+(b) B102 (3) changed on BOB's side: a photo the case relies on that carries marks, in a format image-cover cannot cover (progressive JPEG, HEIC), is neither carried whole nor dropped. Preparing or committing the publication is refused PHOTO_NOT_COVERABLE, naming the photo (remedy: capture it again in a format that can be covered, or stop relying on it), so DEC-112 (everything relied on travels in full) and DEC-180 both hold. The proposed "photo held by the group; its format could not be obscured" label is not used. Tell us if the screens want otherwise.
+(c) A mark made after the case is prepared refuses the commit (PHOTO_MARKS_CHANGED_SINCE): prepare again.
+(d) Text read from a marked photo (OCR of a plate) is never carried with the copy, but a passage a member chose to quote still travels in the case file; the Photos step may want to say so.
+B102 (1) and (2) still take their stated defaults (not a gate; marks append-only) if unanswered before L8's START.
