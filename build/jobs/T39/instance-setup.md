@@ -15,7 +15,7 @@
 
 **Tests.** `node --test test/m/instance-setup/ test/m/store-door/routes.test.mjs test/m/setup-words/`: tests 143, pass 143, fail 0. (Baseline before the change, instance-setup alone: 130 pass, 0 fail.)
 
-**Checks.** format: 139 modules, 1 failure (`modules.json` instance-setup paths names `bio-plane/src/setup-words.mjs`: BOB's edit at the merge). architecture: 2 failures (`setup.mjs` and `interface-words.test.mjs` import setup-words, not yet in uses: BOB's edit at the merge). coverage: 57 of 57 live ids named, 0 failures. ownership: see the line below, run on the commit.
+**Checks.** format: 139 modules, 1 failure (`modules.json` instance-setup paths names `bio-plane/src/setup-words.mjs`: BOB's edit at the merge). architecture: 2 failures (`setup.mjs` and `interface-words.test.mjs` import setup-words, not yet in uses: BOB's edit at the merge). coverage: 57 of 57 live ids named, 0 failures. ownership: 4 files changed between tranche/T39 and HEAD, 0 failures.
 
 Size (session_01LAKZqntsHmW1zsfg2HmycE): test runs 2, module lines 3299
 
