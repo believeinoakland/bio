@@ -29,3 +29,7 @@ Size (session_013zcnQ4W9BbvuNM5wQzXJFL): test runs 15, module lines 2329
 ## J1 · REPORT
 
 Generated artifact stale (mechanics §14): bio-plane/src/case-checker/program.mjs (it bundles case-grammar; complete.mjs changed), and the plane bundle carrying it. case-checker program.test.mjs R13 is red until L8's close regenerates it: rule 6's accepted red 8. Not rebuilt by hand. Every other user's tests pass with my change (record).
+
+## J2 · COMPLETE
+
+T38-19 applied: R12 every photo stated obscured, an unmarked copy's label null (the grammar already carried it; comments and tests); R14 an unmarked copy listed with both fingerprints and no label (OBSCURED_WORDS.unmarked; noLabel gone), a marked photo's edition byte-identical (pinned 910634ae…). case-grammar 100/0; users green but case-checker program.test.mjs R13 (stale program.mjs, accepted red 8; REPORT J1). format, architecture, coverage 22/22, ownership 0 failures. Nothing deferred. Record: build/jobs/T38/case-grammar.md.
