@@ -76,3 +76,7 @@ T39-10 changes what R1 and R13 answer for a document no receipt fetched (R62 fet
 ## J2 · COMPLETE
 
 T39-10 done. R15 (receipt listener and miss queue, copyBatch with DOCUMENT_COPY_BATCH_MAX 10, DOCUMENT_COPY_RETRY_MS 300000, copyWake), R16 documentCopy (all seven states) and R17 onCopyWork are built, and R1, R8 and R13 are amended (R13 rows carry kind). The copy is held at <store>/obscured/<sha> (customMetadata derived cleaned, original, label COPY_CLEANED_LABEL) and recorded in the append-only document_copies table. C-141.11 DOCUMENT_COPY_NO_STORE is new. test/m/case-carriage: 67/0, including the new documents.test.mjs with explicit R15, R16 and R17 tests run against the real doc-clean. Checks: format, architecture, coverage (17/17) and ownership each report 0 failures. Module 1,324 lines (984 + 340). Users made red by the requirement change: see J2 (fixture-only fixes). The not-yet-met marks are yours to strike. Record: build/jobs/T39/case-carriage.md.
+
+## J3 · COMPLETE
+
+B2 applied. tranche/T39 (case-grammar T39-9) is merged in, with no change needed here. test/m/case-carriage: 67/0. format, architecture, coverage (17/17) and ownership each report 0 failures. J1's report of the four users made red still stands. Correction to J2: its 'see J2' meant J1.
