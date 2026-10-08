@@ -307,6 +307,17 @@ export const QUEUE_FINDING_KINDS = {
                               + "the machine's (K1491) — LIVE: notice-producers R3",
   "standing-answer":            "your standing question found something new; labelled as the assistant's (K1481) "
                               + "— LIVE: notice-producers R4",
+  /* T36-46 (R1; N742, K2038, K2130): what the group's own defences and the policies it follows did, each told once to
+     whom it concerns and disposed of by its recipient (R12's default FINDING disposition; with no project home it is
+     quieted by the item mute). None names a member. Their producer is `notice-producers`' (its R12–R15). */
+  "security-level-high":        "the group's security level became High: an unusual run of refused attempts, or something "
+                              + "got through; counts only, naming no one (DEC-165) — LIVE: notice-producers R12",
+  "policy-changed-noticed":     "a policy the group follows changed at its address without an announced amendment; "
+                              + "review it (DEC-145) — LIVE: notice-producers R13",
+  "scan-found":                 "a file you can see was held after a scanner found something in it; its safe view stays "
+                              + "open (DEC-169) — LIVE: notice-producers R14",
+  "security-tool-off":          "one of the group's security tools was switched off because it did not confirm its private "
+                              + "mode (K1929) — LIVE: notice-producers R15",
 };
 
 /* THE N-NUMBERS — the catalogue's STABLE IDS, allocated when a generator is built and not before
