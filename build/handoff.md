@@ -1,31 +1,30 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #142 (`session_0178ib9gzWRThTx5twPvt6PS`), 2026-10-08 ~19:12 UTC, for BOB #143. Read `build/rulings-active.md` first; this BOB's rulings are K2287–K2327 (and K2328, this handoff).
+**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #143 (`session_01YCBYkMVtZpK8zWkFJcsNkZ`), 2026-10-08 ~21:45 UTC, for BOB #144. Read `build/rulings-active.md` first; this BOB's rulings are K2329–K2368.
 
 ## Open with Bob
 
-None. Answered today: BOB's refresh threshold is 55% of the window (K2287, civicos-process `e0ce857`, `7cfbcf6`); no case has been published yet, so no back-dated photo withdrawal (K2309); images embedded in a file a member uploaded lose their metadata, public documents carried as captured (K2315 → N806, T39, design at T39's opening).
+None. Answered today: N806 Q1 A (K2334); N796 held with the investigation lane, not raised again (K2334); N812's A1–A4 (K2352, K2353: a project's account is an API key, or a member's own subscription only while the project has one member; any one owner sets it; cascade project → member → group, each with its own limits; an account at its limit refuses). Meter 69% at ~21:00 (K2357); pause at 80% (K2341); Bob says when to ask each layer, do not ask before.
 
-## Open with UX-DESIGN (theirs to answer; channel `mail/BOB` B115, B116, unread by them)
+## Open with UX-DESIGN
 
-B115: DEC-183's "relies on" (BOB's reading meanwhile: every photo any chain reaches), a label for an unmarked copy (meanwhile none), the four withdrawal refusals' words (meanwhile BOB's drafts, C-141.7–.10) and who may withdraw (meanwhile any member who may see the photo). B116: `photo.refused.changed` says "before signing" but is answered at the commit. An answer is folded by a new ruling and, if it changes built behaviour, an entry in `next.md`.
+B115/B116 answered (U137, U138: DEC-187). U139/U140: **MERGE of PR #16** (DEC-184–DEC-187) at T39's close (K2348; B118 sent, U141 acknowledged).
 
 ## Where things stand
 
-- **T38** on `tranche/T38`. L1–L10 closed (L7, L9 empty). **L11 running**: merged op-grades (K2322), tasks (K2324), instance-setup (K2323), answer-envelope (K2321), affordances (K2325), op-declarations (K2327), admission (K2326). **Still running:** CONTROL-PLANE #27 (`session_01L6n1QKr1FBq4RCADwXEj7g`; CHANGEs B2 = admission's fallback improvement, fix if small else REPORT; B3 = op-declarations merged) and PLANE #27 (`session_01QxKvksbKPy1qWsAzhjWL99`; merges last in L11).
-- **Reds (plan rule 6):** open items 1–3, 7, 11 (the plane's share: project-roster listeners and ops, `stats.test.mjs`, affordances `plane.test.mjs` ×28, promotion `d526` §4, `migrate-released`), 16 (fleetbundles pin, N802), 18 (plane `disclosures.test.mjs`:74). Coverage: acquisition R45's naming test is N804 (T39), accepted by name.
-- **Next:** merge control-plane, then plane; close L11 (§5.6: regenerate in the manifest's order, `checks/run.mjs`, archive the nine L11 sessions with rows); then close T38 (§5.7).
-- **T38's close (§5.7 as K2273 changed it):** (1) the design stream asked no `MERGE` since PR #15; if `main` moved, merge it into `tranche/T38` first. (2) archive `current.md` as `archive/T38.md` (`CLOSING`). (3) a pull request `tranche/T38` → `main`, merged with the GitHub merge tool (method `merge`), never a direct push; authority: Bob's standing direction in the product's `CLAUDE.md`; this is certification row V6's proof (record it in civicos-process `dryrun/`). A refused step is §16's. (4) delete backstop and WATCH. (5) Bob's meter and the tranche report. (6) open T39 from `next.md` (N779 done; N801–N806 new today).
-- **Release:** none needed at T38's close unless BOB judges one lets held work into T39 (K1501).
-- **Timers** (delete mine by id at takeover): backstop `trig_01Nz11P9keTQWah7SY6W3Vfi` (19:21), WATCH #142 `trig_0138pagBSiYV79DtHP5PRWHC` (20:01, into ROOT).
+- **T38** closed by PR #17 (K2339); **T39** open on `tranche/T39` (plan `build/plan/current.md`). L1, L2, L3, L6 merged and closed; L4, L5, L7 empty. Coverage 0 failures except case-carriage R15, R17 (T39-10, accepted).
+- **L8 running** (started ~21:43, K2367): CASE-GRAMMAR #12 `session_015c5pkGR6f8FDqbTSrFjvzi`, CASE-CARRIAGE #6 `session_01LmwYYcJzTZXw2vJWwsENHv`, PUBLICATION #26 `session_01WbD8jksEcAKJZvuvR4ohT8`, PUBLIC-READ #17 `session_01Djbnfgfma73t1Qd5xWboXx`, RATIFICATION #22 `session_01Ky2nmjoLmrWwGBPjKWFCBF`, CASE-CHECKER #9 `session_013nDuZWRyji4rYH9ax6JrLQ`, CASE-DISCLOSURES #7 `session_017U4puvgg5SbVfxAghkjSpV`. Merge in `modules.json` order; publication, public-read and case-disclosures build against case-carriage's R13/R15/R16 and merge the tranche when told (CHANGE) case-carriage has merged.
+- **L10** ready: requirements applied (K2365), START `starts-T39/scheduler.txt` written.
+- **L11** not yet prepared: T39-16a/b (setup-words split by copy from instance-setup, N807, K2343; `setup-words` in `modules.json` with empty paths; requirements file to write, ids moved "moved to setup-words R<n>"), the plane's composition (case-carriage's `onReceipt` listener, scheduler's consumer) and N810 (`pdfjs-dist` dev dependency of `bio-plane/package.json`), and the L1–L10 new codes' shares (op-declarations, op-grades, affordances, answer-envelope) fixed from the merged codes. Draft and START them while L8 runs (P18).
+- **N812** (AI settings, T40): draft `plan/draft-T40-N812.md`, Bob's answers K2352, K2353, H7 K2350; parts C–E to adopt and fold with one K before T40 opens.
 
 ## Next steps, in order
 
-1. Take over (§5.1): archive BOB #142, its `BOB-final` row under T38; rewrite the channel Writer line (`mail xwriter`); arm backstop and WATCH; delete mine.
-2. Merge control-plane and plane as each completes; close L11; close T38; open T39.
+1. Take over (§5.1): archive BOB #143, its `BOB-final` row under T39; `mail xwriter`; arm backstop and WATCH; delete mine (backstop `trig_012xxgxTkNeCR9xQucCJyP9A`, WATCH `trig_012neKkLEqN7JrCcLkofWGVM`).
+2. Merge L8 jobs as each completes (CHANGE users when case-carriage merges); close L8 (§5.6); start L10, then L11.
+3. Close T39 (§5.7): (1) merge PR #16 into `main` first, ordered by UX-DESIGN's MERGE U140 (K2348); authority Bob's standing direction in the product's `CLAUDE.md` (K1177), standing list `mcp__github__merge_pull_request`; no refusal recorded since K2273; then merge `main` into `tranche/T39` (never a rebase), keeping the design stream's text, and run the checks. (2) archive the plan `CLOSING`. (3) PR `tranche/T39` → `main` merged with the GitHub merge tool, same authority (K2339 did this for T38). (4)–(6) as §5.7. T40 then carries N797–N799, N811 (DEC-184–DEC-187 on `main`), N812, N813, N809 and `next.md`'s rest.
 
 ## Process notes
 
 - After a container restart: `npm ci --ignore-scripts` in agent-runner, `npm ci` in sheet-worker and file-scanner before `fleetbundles`.
-- Every START over 300 KB names mechanics §17 step (3) as required (K2304).
-- Drafting requirements ahead of a layer by workers (draft, then apply, then BOB reviews the diff) worked well this session: `plan/draft-T38-L8.md`, `draft-T38-L11.md`.
+- `mail addjob --name` takes the name with a space ("CASE-CARRIAGE #6").
