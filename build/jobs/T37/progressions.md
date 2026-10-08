@@ -62,3 +62,7 @@ Size (session_01Q8jnptX8F9t9Vmj1SzQSsy): test runs 30, module lines 2127
 ## J3 · QUESTION
 
 B2 (1): R33 makes nextDeadline R17's whole-store next_deadline, so scanning only the thread's instance would change the answer when another instance falls due sooner. My best reading, applied: the whole-store scan runs only when a listener reads nextDeadline, once per thread, with the answer unchanged; scheduler's listener ignores it, so it now costs no scan. If you mean a per-instance deadline instead, R33's text changes first.
+
+## J4 · COMPLETE
+
+B2 applied (K2204). (1) nextDeadline is scanned only when a listener reads it, once per thread, still R17's whole-store answer (my reading, J2); new R33 R17 test, which fails on the old code. (2) The zoneOf comment names its real default. progressions 63/0. Users unchanged: affordances 29 and plane 3 failing (rule 6), scheduler 5 failing, the same with and without the change. format, architecture, coverage (42/42) and ownership all 0 failures.
