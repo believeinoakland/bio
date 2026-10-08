@@ -22,6 +22,16 @@ Deferred: nothing.
 
 - **admission R21 / credentials R38 (`source`):** `login`'s `source` is the store window's fingerprint (`doorWindowGate`, the store's `sourceFingerprint` under `KNOCK_FINGERPRINT_KEY`, else the instance's own key); `setpassword`'s, as R68 says, is `sourceOf`, which answers null when `KNOCK_FINGERPRINT_KEY` is not bound. Bound, the two agree (same HMAC, same 32 hex); unbound, a password change carries no `source` while a login carries the instance-key fingerprint, so credentials' one window (R3, R38) counts them under different sources. A reading for admission: let `sourceOf` fall back as the window does, or have the door ask it of the store.
 
+## Tests and checks (after merging `tranche/T37` with T37-30, T37-31, T37-32; K2252; the local shim of op-declarations dropped, never committed)
+
+- control-plane (`bio-plane/test/m/control-plane/`, 41 files): 192 tests, 192 pass, 0 fail (totality included: the new ops are published and ranked).
+- Inherited reds named at my START: red 19 (`statementack.test.mjs`) green; rule 4's N761 reds green (filing-templates `grant-channel`, ratification `converted-b` and `relays`); red 16 (promotion `d526-refusal-order`) green; red 15's :93 part (capture-requests `plane.test.mjs`) green; N765's `t34-routes.test.mjs`:211 green; op-declarations' R6 totality green (op-declarations 114 of 114). Legacy-ui red 21 (`review-copy.test.mjs`) green; red 22 (`statement-ack.test.mjs`) no longer fails at `reviewgrant` but at its earlier cause, the M0-107 timeout of the recipient's acknowledgement, for L11's close as the plan says.
+- Neighbours run: store-door 41/41, instance-setup 129/129, credentials 129/129, review 39/39, case-authoring 163/163. Plane's own suite is not run here: plane merges after me with `draftOnObject`'s translation shape (K2238 (3b)); my R57 tests drive the object's `draft` through a recorder.
+- `node checks/format.mjs`: 136 modules, 0 failures. `architecture.mjs control-plane`: 45 product files, 0 failures. `coverage.mjs control-plane`: 41 of 41 live ids, 0 failures (R64–R68 each named by a test of its own, K874). `ownership.mjs control-plane tranche/T37`: 13 files, 0 failures.
+- **P6:** 3,263 lines (`index.mjs` 3,010, `archive.mjs` 91, `signin.mjs` 83, `draft.mjs` 79; START 3,106), under 4,000. (J2 gave the per-file split wrongly; these are the counts.)
+
+Size (session_01Ksv4KwMx4iRLKN2msBFfav): test runs 14, module lines 3263
+
 ## J1 · QUESTION
 
 Four places where my T37 routes need a piece that is not this module's. Best reading for each; I build on it now and change if you answer otherwise. (The L11 owners T37-30/31/32 and plane are running beside me, so none of their T37 work is on the tranche yet.)
