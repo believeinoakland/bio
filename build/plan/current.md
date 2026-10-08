@@ -36,6 +36,7 @@
    12. installer `newgroup/test/requirements.test.mjs`:517 (R34), stale since T35-69 (K2084), until T36-39.
    13. op-declarations `t34.test.mjs`:135 (owed acts), stale since PR #13 (K2084), until T36-35.
    14. membership `members.test.mjs` D-57 arm (K2084): credentials' login-refusal sentence (K2089), until T36-7.
+   16. progressions `order.test.mjs`:15 (R41), a hand copy of layer 5's order without `law-relations`, stale from T36-6's merge (K2090), until progressions' next job (N752).
    15. agent-runner `surface.test.mjs`:121 (R11), on a release cut only (K2074, N750).
    11. The catalogue's totality test (`answer-envelope` R7): `file-safety`'s check family, from T36-11's merge until T36-47.
 6. **BOB's acts (no module job):** done at the opening (K2072): N737 (17 L11 files; `legacy-ui` has none), the custody section (Distribution §10), file-scanner's and file-safety's requirements with rule 2's R8–R10 and R38, every L1 entry's requirement change; the design stream asked for the interface's word list (N669, B90); D1–D24 sorted (K2064). Still owed: N739 (each START measures its set) and N746 (the §17 certification on L1's STARTs, recorded in `dryrun/RUNS.md` as D14); the custody section shown to Bob rendered, with its three questions, before L1's START. At L1's close, after T36-2, `.github/workflows/release-sign.yml` (`not_product`, as K1692, K1898) over bundler's commands; its first run waits on Bob's GitHub sitting, walked through.
