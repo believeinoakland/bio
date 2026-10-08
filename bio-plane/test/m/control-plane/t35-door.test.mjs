@@ -1,6 +1,6 @@
 /* control-plane T35 (T35-72): R59 (F1; K1874, K2038, K2044: every credential read once through admission's
-   `presentedCredential`, from a header or a body, never put in an address the door makes; the address form honoured for
-   T35's release and named deprecated) and R58 (the public ops' window first, `source` and `country` stamped, `recover`
+   `presentedCredential`, from a header or a body, never put in an address the door makes; T36 (K2111): the address form
+   refused by admission's gate, C-38.10) and R58 (the public ops' window first, `source` and `country` stamped, `recover`
    relayed, `unpack`'s stamps, sign-out's session). Driven through `makeFetch(hooks)` over the harness's store, which
    records every request the plane makes, the window's and the credential lookups' included. */
 import { test } from "node:test";
@@ -11,37 +11,47 @@ const SENTINEL_SECRET = "rv1_sentinel-secret-0123456789abcdefghij";
 /* every address the plane asked of any store, the window's and the lookups' included */
 const addresses = (env) => [...env.calls, ...env.windowCalls].map((c) => c.url.href);
 
-test("R59 (admission R20; F1): a credential of each kind — a member's session, an agent credential, a binding token — presented in the `Authorization` header or a JSON body's `token` is admitted exactly as in the address, its answer carries `deprecated` only for the address form, and the credential is in no address of any request the plane makes (negative control: the address form's own request carries it in the caller's address only)", async () => {
+test("R59 (admission R20; F1, K2111): a credential of each kind — a member's session, an agent credential, a binding token — presented in the `Authorization` header or a JSON body's `token` is admitted alike, no answer carries `deprecated`, and the credential is in no address of any request the plane makes; in the address, alone or beside a header, it is refused CREDENTIAL_IN_ADDRESS (C-38.10) with no request to any store and the credential in no answer", async () => {
   const { env, S, A } = world();
-  for (const [name, token] of [["session", S.ann], ["agent", A.ann], ["binding", env.MEMBER_TOKEN]]) {
+  for (const [name, token] of [["session", S.ann], ["agent", A.ann], ["binding", env.ADMIN_TOKEN]]) {
     const seen = {};
-    for (const tokenIn of ["header", "body", "query"]) {
+    for (const tokenIn of ["header", "body"]) {
       env.calls.length = 0; env.windowCalls.length = 0;
       const r = await call(env, { op: "search", token, tokenIn, method: "POST", body: { q: "x" } });
-      seen[tokenIn] = [r.status, r.json.tokenClass, r.json.deprecated ?? null];
+      seen[tokenIn] = [r.status, r.json.tokenClass, "deprecated" in r.json];
       for (const href of addresses(env)) assert.equal(href.includes(token), false, `${name}/${tokenIn}: ${href}`);
       const inner = opCalls(env).find((c) => c.route === "search");
       assert.ok(inner, `${name}/${tokenIn}: reached search`);
       assert.equal(JSON.stringify(inner.body).includes(token), false, `${name}/${tokenIn}: the credential is not passed on`);
     }
-    assert.deepEqual(seen.header, [200, seen.header[1], null], name);
+    assert.deepEqual(seen.header, [200, seen.header[1], false], name);
     assert.deepEqual(seen.body, seen.header, `${name}: body as header`);
-    assert.deepEqual(seen.query, [200, seen.header[1], "CREDENTIAL_IN_ADDRESS"], `${name}: the address form, named`);
+    for (const beside of [false, true]) {
+      env.calls.length = 0; env.windowCalls.length = 0;
+      const r = await call(env, { op: "search", token, tokenIn: "query", method: "POST", body: { q: "x" },
+                                  headers: beside ? { authorization: `Bearer ${token}` } : {} });
+      assert.deepEqual([r.status, r.json.reason, r.json.check], [400, "CREDENTIAL_IN_ADDRESS", "C-38.10"], `${name}/address${beside ? "+header" : ""}`);
+      assert.deepEqual([env.calls, env.windowCalls], [[], []], `${name}: no store is asked`);
+      assert.equal(r.text.includes(token), false);
+    }
   }
 });
 
-test("R59, R20, R44: a review grant's and a template grant's secret is read from the POST body's `secret`, only its digest reaches the store, in no address; the address form is honoured and its answer carries `deprecated`; the minting answers' instructions name the body", async () => {
+test("R59, R20, R44: a review grant's and a template grant's secret is read from the POST body's `secret`, only its digest reaches the store, in no address; the address form is refused CREDENTIAL_IN_ADDRESS with no store request; the minting answers' instructions name the body", async () => {
   const { env } = world();
   for (const op of ["reviewcopy", "templateread"]) {
-    for (const secretIn of ["body", "query"]) {
-      env.calls.length = 0;
-      const r = await call(env, { op, secretIn, params: { secret: SENTINEL_SECRET, draft: "D1", version: "TPL-1@1" } });
-      for (const href of addresses(env)) assert.equal(href.includes(SENTINEL_SECRET), false, `${op}/${secretIn}`);
-      const inner = opCalls(env)[0];
-      assert.equal(inner.params.bySecret, "1", op);
-      assert.equal(JSON.stringify(inner.body ?? null).includes(SENTINEL_SECRET), false, op);
-      assert.equal(r.json.deprecated ?? null, secretIn === "query" ? "CREDENTIAL_IN_ADDRESS" : null, `${op}/${secretIn}`);
-    }
+    env.calls.length = 0;
+    const r = await call(env, { op, params: { secret: SENTINEL_SECRET, draft: "D1", version: "TPL-1@1" } });
+    for (const href of addresses(env)) assert.equal(href.includes(SENTINEL_SECRET), false, op);
+    const inner = opCalls(env)[0];
+    assert.equal(inner.params.bySecret, "1", op);
+    assert.equal(JSON.stringify(inner.body ?? null).includes(SENTINEL_SECRET), false, op);
+    assert.equal("deprecated" in (r.json ?? {}), false, op);
+    env.calls.length = 0; env.windowCalls.length = 0;
+    const q = await call(env, { op, secretIn: "query", params: { secret: SENTINEL_SECRET, draft: "D1", version: "TPL-1@1" } });
+    assert.deepEqual([q.status, q.json.reason, q.json.check], [400, "CREDENTIAL_IN_ADDRESS", "C-38.10"], op);
+    assert.deepEqual([env.calls, env.windowCalls], [[], []], op);
+    assert.equal(q.text.includes(SENTINEL_SECRET), false, op);
   }
 });
 

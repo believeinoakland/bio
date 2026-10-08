@@ -134,7 +134,7 @@ function grantWorld(extra = {}) {
   return { ...v, GRANT };
 }
 
-test("R53 (K1601, K1674; credentials R28): a token no session or credential holds is asked of credentials as an ask's grant, in `bio`, only for an op on the grant's list; admitted, the read reaches its route with the grant's member as viewer and the grant in the `x-bio-grant` header (R59), never the address, whatever the caller forged; a held grant asking an op it does not admit is refused GRANT_OP_REFUSED; an unknown token, an op off every list and a targeted `affordances` keep admission's NOT_AUTHENTICATED, in the same bytes; a silence is a silence", async () => {
+test("R53 (K1601, K1674; credentials R28): a token no session or credential holds is asked of credentials as an ask's grant, in `bio`, only for an op on the grant's list; admitted, the read reaches its route with the grant's member as viewer and the grant in the `x-bio-grant` header (R59), never the address, whatever the caller forged; a held grant asking an op it does not admit is refused GRANT_OP_REFUSED; an unknown token, an op off every list and `affordances` (no longer an ask's own call since T36, R41, K2135) keep admission's NOT_AUTHENTICATED, in the same bytes; a silence is a silence", async () => {
   const { env, GRANT, S } = grantWorld();
   const listed = AI_GRANT_OPS.filter((op) => Object.hasOwn(OPS, op) && !OPS[op].mutating);
   assert.ok(listed.includes("search") && listed.length >= 5, listed.join(","));
@@ -152,19 +152,20 @@ test("R53 (K1601, K1674; credentials R28): a token no session or credential hold
     assert.notEqual(inner.params.by, FORGED, op);
     assert.equal(r.json.tokenClass, "ai");
   }
-  /* the untargeted affordances reaches its handler as the grant's agent; targeted, it is not a grant's call */
+  /* `agentpack` reaches the untargeted affordances handler as the grant's agent (R41, K2135); `affordances` itself is not a
+     grant's call */
   const log = [];
   const hooks = { publicOp: async () => M.json({ ok: true }), publicInstanceGroup: async () => ({ answered: true, result: {} }),
                   gatedOp: async (ctx) => { log.push(ctx); return M.json({ ok: true, result: { catalog: [] } }); } };
-  assert.equal((await call(env, { op: "affordances", token: GRANT, hooks })).status, 200);
+  assert.equal((await call(env, { op: "agentpack", token: GRANT, hooks })).status, 200);
   assert.deepEqual([log[0].cls, log[0].viaSession, log[0].aiCred.principal, log[0].aiCred.grant, log[0].grantMember],
                    ["ai", false, "member:ann", GRANT, "member:ann"]);
   /* K1684: grantMember is a grant's alone (negative control: a session's hook context carries none) */
-  await call(env, { op: "affordances", token: S.ann, hooks });
+  await call(env, { op: "agentpack", token: S.ann, hooks });
   assert.equal(log.at(-1).grantMember, undefined);
   const notAuth = await call(env, { op: "search", token: hex64() });
   refused(notAuth, 401, "NOT_AUTHENTICATED", notAuth.json.check);
-  for (const [op, params] of [["affordances", { target: "INQ-1" }], ["cite", {}], ["whoami", {}]]) {
+  for (const [op, params] of [["affordances", {}], ["affordances", { target: "INQ-1" }], ["cite", {}], ["whoami", {}]]) {
     env.calls.length = 0;
     const r = await call(env, { op, token: GRANT, params, hooks });
     assert.deepEqual([r.status, r.json.reason], [401, "NOT_AUTHENTICATED"], op);
@@ -192,10 +193,11 @@ test("R53 (K1601, K1674; credentials R28): a token no session or credential hold
   assert.equal(opCalls(env)[0].headers["x-bio-grant"], undefined);
 });
 
-test("R53 (K1601, K1674; agent-worker R54): the ask's own four calls (askceiling, askcheck, askusage, the untargeted affordances) are admitted under a held grant beside its list, asked of credentials by the list's first read, and are agent-worker's `ASK_PLANE_OPS` exactly", async () => {
-  assert.deepEqual(Object.keys(ASK_PLANE_OPS).sort(), ["affordances", "askceiling", "askcheck", "askusage"]);
+test("R53 (K1601, K1674; agent-worker R54; R41, K2135): the ask's own four calls (askceiling, askcheck, askusage, agentpack) are admitted under a held grant beside its list, asked of credentials by the list's first read, and are agent-worker's `ASK_PLANE_OPS` exactly", async () => {
+  assert.deepEqual(Object.keys(ASK_PLANE_OPS).sort(), ["agentpack", "askceiling", "askcheck", "askusage"]);
   const { env, GRANT } = grantWorld();
-  for (const op of Object.keys(ASK_PLANE_OPS).filter((o) => o !== "affordances")) {
+  /* `agentpack` is answered from the affordances hook, driven in the test above */
+  for (const op of Object.keys(ASK_PLANE_OPS).filter((o) => o !== "agentpack")) {
     assert.ok(Object.hasOwn(OPS, op), `${op} has a spec (op-declarations, K1601)`);
     env.calls.length = 0;
     const r = await call(env, { op, token: GRANT, method: OPS[op].mutating ? "POST" : "GET", body: OPS[op].mutating ? { usage: {} } : undefined });
