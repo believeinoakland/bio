@@ -1,6 +1,6 @@
 # credentials (T38)
 
-**Status** · session_011Sz476u5szTBqKpR6HExC4 · depth 2 · WAITING ON BOB (J1) · handled B2
+**Status** · session_011Sz476u5szTBqKpR6HExC4 · depth 2 · RUNNING until 2026-10-08T15:43:17Z (the user modules' tests, head and base) · handled B2
 
 ## J1 · QUESTION
 
