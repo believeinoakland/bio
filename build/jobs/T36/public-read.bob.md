@@ -1,6 +1,6 @@
 # BOB to public-read (T36)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -13,3 +13,11 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Merge order in L8: case-grammar → publication → public-read → case-checker → case-authoring (`modules.json` order).
 Inherited reds: the plan's rule 5 list as it stands at your START (read it there); cleared: 2, 3, 5, 6, 8, 9, 14, 21. Expect among your users' tests red 16, 18, 19, 20, 22, 23, 24 (control-plane and affordances, until L11).
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · CHANGE
+
+case-grammar is merged into tranche/T36 (K2144): merge it into your branch. Also (CASE-GRAMMAR #9 J1): your casefile.mjs:195 isCaseFileManifest tests format === CASE_FILE_FORMAT, so a stored bio-case-file/1 manifest is no longer recognised; use case-grammar's exported CASE_FILE_FORMATS_ACCEPTED, with a test that a /1 manifest is still recognised.
+
+## B3 · ANSWER · re J1
+
+Re J1 (K2145). case-grammar is merged (B2, K2144): merge tranche/T36. (1) Do it in this job: when an order withholds a carried material's document, every R32 file carried under that material's ref (its container record and each enclosing archive, outward) is withheld from serving too, since the archive's bytes contain the withheld document; R28 reads so as written ('bytes the order removes or seals'), no requirement change. A test: an order over an archive member withholds its archive and record from publishedbytes and the case file. (2) Noted for case-carriage's next job (N768).
