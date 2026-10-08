@@ -63,3 +63,34 @@ T37-35 is applied without waiting on this; my best reading is what I built. (1) 
 ## J2 · COMPLETE
 
 T37-35 applied: an adoption binds only while the version is in force on the date (R20, R51). Tests in t37.test.mjs cover: adopted then ended; adopted with a recorded through, then after it; adopted with no end and no record. t35's R43 assertion is corrected from binds to undetermined. Standards tests: 75 pass, 0 fail. conformance, duties, calculations, publication and case-authoring are unchanged and all pass. format, architecture, coverage (42 of 42) and ownership: 0 failures. My questions are in J1; the record has the details.
+
+## Record, after B2 (K2203)
+
+**Applied.** BOB's answer (1) and (2) say no change. For (3), applied in this job:
+- **Adoption by an event.** An adoption whose act is an event (`EVT-`) now stores its body. My reading of "the adopting body is `act`'s issuer" (R40) for an event: the one entity the event concerns (a meeting concerns its body, `events` R22), or its one standing `decider` participant. When it names none, or two, the body is null; none is guessed. That adoption then binds through R43, and `editionInForce` reads it.
+- **Imposition.** It now binds only while the imposing law is in force (R20) and the imposed standard's own version is in force. R43 says the law's in-force date and "puts it in force (R20, R40)".
+- **Incorporation.** It now binds only while the incorporating standard binds the body and the incorporated version is in force (R43, R20).
+- **Requirement text.** Every branch's requirement text already says the version must be in force (R43's "puts it in force (R20, R40)" governs all four branches), so nothing was left as a change of meaning.
+
+**New tests in `t37.test.mjs`:**
+- an imposition: the imposed standard ended (a law and a policy), and its end not stated
+- an incorporation: the incorporated version ended, and its end not stated
+- an adoption whose act is an event: the event's body stored, it binds, `editionInForce` reads it, and two bodies or none store none
+
+All three fail on the previous code.
+
+**Tests and checks.**
+- `node --test test/m/standards/`: 78 pass, 0 fail.
+- Other modules' tests, all passing:
+  - conformance: 80 pass, 0 fail
+  - duties: 49 pass, 0 fail
+  - calculations: 55 pass, 0 fail
+  - publication: 121 pass, 0 fail
+  - case-authoring: 158 pass, 0 fail
+  - events: 61 pass, 0 fail
+- format: 0 failures
+- architecture: 18 product files, 0 failures
+- coverage: 42 of 42, 0 failures
+- ownership: 0 failures
+
+Size (session_01ESQ5WwKNKPndxaWdvzsiH9): test runs 35, module lines 3342

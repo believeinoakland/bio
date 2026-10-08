@@ -87,3 +87,68 @@ test("R43 R20 adopted with no end stated and no record of it in force, whether t
   assert.equal(adopt(open, "2022-01-01").ok, true);
   assert.equal(w.s.bindsAt({ standard: open, body, date: "2024-06-01" }).state, "undetermined");
 });
+
+test("R43 R20 an imposition binds only while both the imposing law and the imposed standard are in force: imposed, then the standard ended, it binds no longer; the standard's end not stated, undetermined", () => {
+  const w = seeded();
+  const body = w.entity("Port Ellery Selectboard");
+  const lawText = w.passage().contentId;
+  const law = w.declare({ cite: "PEBL § 70", text: [lawText], issuer: "State", period: { from: "2020-01-01", to: "2040-12-31" } }).id;
+  const impose = (standard) => w.s.impositionRecord({ standard, body, law, citation: lawText, reason: REASON, author: V("bob"), viewer: V("bob") });
+  const ended = w.declare({ cite: "Some Code § 4", kind: "statute", issuer: "State", period: { from: "2020-01-01", to: "2024-12-31" } }).id;
+  assert.equal(impose(ended).ok, true);
+  const b = (standard, date) => w.s.bindsAt({ standard, body, date, viewer: V("carol") });
+  const on = b(ended, "2024-06-01");
+  assert.equal(on.state, "binds");
+  assert.ok(on.rests_on.some((x) => x.law === law));
+  assert.equal(b(ended, "2025-06-01").state, "undetermined", "a law nothing puts in force: undetermined, never binds");
+  const policy = w.declare({ cite: "Board Rule A12", kind: "policy", issuer: "Marlow Schools Board", period: { from: "2020-01-01", to: "2024-12-31" } }).id;
+  assert.equal(impose(policy).ok, true);
+  assert.deepEqual([b(policy, "2024-06-01").state, b(policy, "2025-06-01").state], ["binds", "benchmark"]);
+  const open = w.declare({ cite: "Board Rule B7", kind: "policy", issuer: "Marlow Schools Board", period: { from: "2020-01-01", to: null } }).id;
+  assert.equal(impose(open).ok, true);
+  const u = b(open, "2025-06-01");
+  assert.equal(u.state, "undetermined");
+  assert.match(u.why, new RegExp(`${law} imposes it, and the record does not state when it ceased`));
+});
+
+test("R43 R20 an incorporated standard binds only while its own version is in force: incorporated by a binding standard, then ended, it binds no longer; its end not stated, undetermined", () => {
+  const w = seeded();
+  const body = w.entity("Port Ellery Selectboard");
+  const bt = w.passage().contentId;
+  const own = w.declare({ cite: "PEBL § 30", text: [bt], issuer: body, period: { from: "2020-01-01", to: "2040-12-31" } }).id;
+  const ended = w.declare({ cite: MHS, kind: "standard", issuer: "MHSI", period: { from: "2020-01-01", to: "2024-12-31" } }).id;
+  const open = w.declare({ cite: "MHS 404", kind: "standard", issuer: "MHSI", period: { from: "2020-01-01", to: null } }).id;
+  for (const to of [ended, open])
+    assert.equal(w.s.lawRelate({ type: "incorporates", from: own, to, citation: bt, edition: "2020", reason: REASON, author: V("bob") }).ok, true);
+  const b = (standard, date) => w.s.bindsAt({ standard, body, date, viewer: V("carol") });
+  const on = b(ended, "2024-06-01");
+  assert.equal(on.state, "binds");
+  assert.ok(on.rests_on.some((x) => x.incorporated_by === own));
+  assert.equal(b(ended, "2025-06-01").state, "benchmark", "the incorporated version ended");
+  const u = b(open, "2025-06-01");
+  assert.equal(u.state, "undetermined");
+  assert.match(u.why, new RegExp(`${own} incorporates it and binds .*, and the record does not state when it ceased`));
+});
+
+test("R40 R43 an adoption whose act is an event stores the body: the one entity the event concerns or has as decider; that body's adoption binds while the version is in force and editionInForce reads it; an event naming two bodies, or none, stores none", () => {
+  const w = seeded();
+  const body = w.entity("Port Ellery Selectboard"), other = w.entity("Marlow Schools Board");
+  const p = w.passage();
+  const meeting = (concerns) => {
+    const e = w.events.createEvent({ kind: "meeting", concerns, attestations: [{ testimony: "I was there.", value: "2022-01-01" }], by: V("bob") });
+    assert.equal(e.ok, true, JSON.stringify(e).slice(0, 300));
+    return e.event_id;
+  };
+  const std = w.declare({ cite: MHS, kind: "standard", issuer: "MHSI", period: { from: "2020-01-01", to: "2025-12-31" } }).id;
+  const adopt = (act) => w.s.adoptionRecord({ standard: std, act, edition: "2020", from: "2022-01-01", mode: "by_reference",
+                                              citation: p.contentId, reason: REASON, author: V("bob"), viewer: V("bob") });
+  const a = adopt(meeting([body]));
+  assert.equal(a.ok, true, JSON.stringify(a).slice(0, 300));
+  assert.equal(a.adoption.body, body);
+  const b = (date) => w.s.bindsAt({ standard: std, body, date, viewer: V("carol") }).state;
+  assert.deepEqual([b("2021-06-01"), b("2024-06-01"), b("2026-06-01")], ["benchmark", "binds", "benchmark"]);
+  assert.deepEqual([w.s.editionInForce({ standard: std, body, date: "2024-06-01" }).state,
+                    w.s.editionInForce({ standard: std, body, date: "2024-06-01" }).adoption.id], ["in_force", a.adoption.id]);
+  assert.equal(adopt(meeting([body, other])).adoption.body, null, "two bodies: none guessed");
+  assert.equal(adopt(meeting([])).adoption.body, null, "none");
+});
