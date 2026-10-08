@@ -24,3 +24,7 @@
 - P6: 1,443 lines (+27).
 
 Size (session_01V667ubum8HnBqPmhryNfLm): test runs 6, module lines 1443
+
+## J1 · REPORT
+
+Generated artifact made stale: the plane bundle (bio-plane/dist/bio-plane.bundled.mjs) embeds tasks, changed by T36-45; for L11's close regeneration (§14). R1 and R18 are met at my head: their *(not yet met: T36)* marks in build/requirements/tasks.md can be struck at merge. Nothing else outside tasks.
