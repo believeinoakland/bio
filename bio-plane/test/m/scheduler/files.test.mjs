@@ -1,331 +1,299 @@
-/* scheduler — T36 (T36-29; N707, rev. 2 §4; K1913, K1929, K2129): the four consumers of `file-safety` (R24), after
-   `dated-waits`, each calling its owner's service, its answer under its R2 key: `file-scan` (file-safety R4) at its first
-   firing, then a day from its last tick, and at the next firing while `remaining`; `file-render` (its R12) and
-   `file-deeper` (its R36) at every firing, with a wake five minutes after a tick that left work; `file-forward` (its R35)
-   once each whole UTC hour over the period since its last call answered `ok`. The first tests drive a stand-in shaped
-   as file-safety states its services; the last drive the real `file-safety` in its own test world. */
+/* scheduler — T36-29, T37-24 (R24; N707, N762; K1913, K1929, K2129, K2153, K2175, K2188): the five consumers of
+   `file-safety`, after `dated-waits`, each calling its owner's batch, its answer under its R2 key: `file-scan` (its R4),
+   `file-render` (its R12), `file-deeper` (its R36), `file-forward` (its R35, with no period of ours) and `file-reputation`
+   (its R41). Each one's due and wake are what file-safety R39 answers at `now`, asked afresh every time; this module
+   keeps no instant, period or interval for any of them (R7). When the plane hands it file-safety, it registers once with
+   `onFileWork` (its R40), whose call arms the alarm (R9). The first tests drive a stand-in shaped as file-safety states its
+   services (`fixture.mjs`); the last drive the real `file-safety` in its own test world. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { SCHEDULER_ORDER, SCHEDULER_KEYS, RANKED, DAILY, ALWAYS_DUE, FILE_SAFETY_CONSUMERS, FILE_SCAN_EVERY_MS,
-         FILE_SAFETY_POLL_MS, Scheduler, schedulerOf } from "../../../src/scheduler/index.mjs";
+import * as scheduler from "../../../src/scheduler/index.mjs";
 import { world, storage, writes, NOW, FILE_CONSUMERS } from "./fixture.mjs";
 import { world as fsWorld, pdf } from "../file-safety/fixture.mjs";
 
-const FOUR = ["file-scan", "file-render", "file-deeper", "file-forward"];
-const KEYS = ["filescan", "filerender", "filedeeper", "fileforward"];
-const H = 3_600_000, DAY = 86_400_000, POLL = 300_000;
+const { SCHEDULER_ORDER, SCHEDULER_KEYS, RANKED, DAILY, ALWAYS_DUE, FILE_SAFETY_CONSUMERS, SCHED_GRACE_MS, Scheduler, schedulerOf } = scheduler;
+const FIVE = ["file-scan", "file-render", "file-deeper", "file-forward", "file-reputation"];
+const KEYS = ["filescan", "filerender", "filedeeper", "fileforward", "filereputation"];
+const WAKES = ["scanWake", "renderWake", "deeperWake", "forwardWake", "reputationWake"];
+const BATCHES = ["scanBatch", "renderBatch", "deeperBatch", "forwardSecurityCounts", "refreshReputationLists"];
 const iso = (ms) => new Date(ms).toISOString();
-/* NOW is 2026-09-28T12:00:00Z, a whole hour */
-const HOUR = Math.floor(NOW / H) * H;
 const called = (calls, m) => calls.filter(([x]) => x === m).map(([, a]) => a);
-const idle = { "file-scan": { tick: { ok: true, scanned: 0, found: 0, not_scanned: 0, remaining: 0 } } };
+const batchCalls = (calls) => calls.filter(([m]) => BATCHES.some((b) => m === `fileSafety.${b}`));
+/* every one of the five with the wake given (the instant, or null), and the rest of the registry idle */
+const wanting = (wakes) => Object.fromEntries(FIVE.map((n, i) => [n, { wake: wakes[i] }]));
 
-/* ---- the registry ---- */
+/* ---- the registry (R5, R2) ---- */
 
-test("R24, R5, R2: the four stand after dated-waits, in R24's order, each answering under its own key; without file-safety they are absent", () => {
-  assert.deepEqual([...FILE_SAFETY_CONSUMERS], FOUR);
-  assert.deepEqual([...FILE_CONSUMERS], FOUR, "the fixture's list is the module's");
-  assert.deepEqual(SCHEDULER_ORDER.slice(SCHEDULER_ORDER.indexOf("dated-waits")), ["dated-waits", ...FOUR]);
-  assert.deepEqual(FOUR.map((n) => SCHEDULER_KEYS[n]), KEYS);
-  for (const n of FOUR) {
+test("R24, R5, R2: the five stand after dated-waits, in R24's order, each answering under its own key (filescan, filerender, filedeeper, fileforward, filereputation); without file-safety they are absent", () => {
+  assert.deepEqual([...FILE_SAFETY_CONSUMERS], FIVE);
+  assert.deepEqual([...FILE_CONSUMERS], FIVE, "the fixture's list is the module's");
+  assert.deepEqual(SCHEDULER_ORDER.slice(SCHEDULER_ORDER.indexOf("dated-waits")), ["dated-waits", ...FIVE], "last in R5's order");
+  assert.deepEqual(FIVE.map((n) => SCHEDULER_KEYS[n]), KEYS);
+  for (const n of FIVE) {
     assert.equal(RANKED.includes(n), false, `${n}: given its now alone`);
     assert.equal(DAILY.includes(n), false, `${n}: no local day of R21's`);
     assert.equal(ALWAYS_DUE.includes(n), false, `${n}: R6's five are unchanged`);
   }
   const { s } = world({}, null, { daily: true, files: true });
   const names = s.consumers();
-  assert.deepEqual(names.slice(names.indexOf("dated-waits")), ["dated-waits", ...FOUR]);
-  assert.deepEqual(world().s.consumers().filter((n) => FOUR.includes(n)), [], "no file-safety owner: none of the four");
-  assert.deepEqual(new Scheduler({ storage: storage(), owners: {} }).consumers(), []);
+  assert.deepEqual(names.slice(names.indexOf("dated-waits")), ["dated-waits", ...FIVE]);
+  assert.deepEqual(world().s.consumers().filter((n) => FIVE.includes(n)), [], "no file-safety owner: none of the five");
 });
 
-test("R24, R8: the plane hands the file-safety owner after construction (hand, or schedulerOf's deps.fileSafety); the four then join, an owner already held is kept", async () => {
+test("R2, R24: each of the five that ticks answers under its key, the owner's answer as it is; one that did not tick is absent", async () => {
+  const answers = [{ ok: true, scanned: 2, found: 0, not_scanned: 0, remaining: 0 },
+    { ok: true, rendered: 1, failed: 0, none: 0, data: 0, copies: { made: 0, failed: 0, queued: 0 }, remaining: 0 },
+    { ok: true, started: 0, polled: 0, done: [], running: 0, queued: 0 },
+    { ok: true, sent: [], failed: [], record: null },
+    { ok: true, refreshed: [{ tool_id: "rep-1", list_version: "v2", fetched_at: iso(NOW) }], failed: [], skipped: [] }];
+  const { s } = world(Object.fromEntries(FIVE.map((n, i) => [n, { wake: NOW, tick: answers[i] }])));
+  const r = await s.onAlarm(NOW);
+  KEYS.forEach((k, i) => assert.deepEqual(r[k], answers[i], k));
+  const quiet = world(wanting([NOW, null, NOW + 1000, null, null]));
+  const q = await quiet.s.onAlarm(NOW);
+  assert.deepEqual(KEYS.filter((k) => k in q), ["filescan"], "only the one due ticked");
+});
+
+test("R24, R8: the plane hands the file-safety owner after construction (hand, or schedulerOf's deps.fileSafety); the five then join, and an owner already held is kept", async () => {
   const w = world({}, null, { files: true });
   const s = new Scheduler({ storage: storage(), owners: {} });
   assert.deepEqual(s.consumers(), []);
   assert.deepEqual(s.hand({ fileSafety: w.o.fileSafety }), { ok: true, handed: ["fileSafety"] }, "an instance");
-  assert.deepEqual(s.consumers(), FOUR);
+  assert.deepEqual(s.consumers(), FIVE);
   assert.deepEqual(s.hand({ fileSafety: () => null }), { ok: true, handed: [] }, "already held: kept");
   assert.deepEqual(s.hand(null), { ok: true, handed: [] });
-  const r = await s.onAlarm(NOW);
-  for (const k of KEYS) assert.equal(typeof r[k], "object", `${k}: the handed owner ticked`);
-  /* schedulerOf: a test's owners, then the plane's hand on the instance already made */
   const ctx = { storage: storage() };
   const made = schedulerOf(ctx, null, { owners: {} });
   assert.deepEqual(made.consumers(), []);
   assert.equal(schedulerOf(ctx, null, { fileSafety: () => w.o.fileSafety }), made, "the one scheduler of the object");
-  assert.deepEqual(made.consumers(), FOUR);
+  assert.deepEqual(made.consumers(), FIVE);
 });
 
-test("R24, R2: each consumer calls exactly its owner's service, with nothing naming a viewer, a member or a file; its answer is the owner's, under its key", async () => {
-  const answers = { "file-scan": { ok: true, scanned: 2, found: 0, not_scanned: 0, remaining: 0 },
-    "file-render": { ok: true, rendered: 1, failed: 0, none: 0, data: 0, copies: { made: 0, failed: 0 }, remaining: 0 },
-    "file-deeper": { ok: true, started: 0, polled: 0, done: [], running: 0, queued: 0 },
-    "file-forward": { ok: true, sent: [], failed: [] } };
-  const { s, calls } = world(Object.fromEntries(FOUR.map((n) => [n, { tick: answers[n] }])));
+/* ---- each consumer's call ---- */
+
+test("R24: each consumer calls exactly its batch: scanBatch({at}) and refreshReputationLists({at}) with the firing instant, renderBatch({}), deeperBatch({}), and forwardSecurityCounts({}) with neither from nor to (file-safety R35 chooses the period); nothing names a viewer, a member or a file", async () => {
+  const { s, calls } = world(wanting([NOW, NOW, NOW, NOW, NOW]));
+  const at = NOW + 100;   /* inside the grace after each wake */
+  await s.onAlarm(at);
+  assert.deepEqual(called(calls, "fileSafety.scanBatch"), [{ at: iso(at) }]);
+  assert.deepEqual(called(calls, "fileSafety.renderBatch"), [{}]);
+  assert.deepEqual(called(calls, "fileSafety.deeperBatch"), [{}]);
+  assert.deepEqual(called(calls, "fileSafety.forwardSecurityCounts"), [{}], "no from, no to");
+  assert.deepEqual(called(calls, "fileSafety.refreshReputationLists"), [{ at: iso(at) }]);
+  assert.equal(batchCalls(calls).length, 5, "each batch once");
+  assert.doesNotMatch(JSON.stringify(batchCalls(calls).map(([, a]) => a)), /viewer|member|capture|file|name|by/i);
+});
+
+/* ---- due and wake: file-safety R39's, asked afresh ---- */
+
+test("R24: each consumer's due and wake are its R39 wake at now (scanWake, renderWake, deeperWake, forwardWake, reputationWake): due when that instant is within the grace, the alarm the earliest of them, none when every one is null", async () => {
+  /* each wake in turn the earliest; the others later or none */
+  for (let i = 0; i < 5; i++) {
+    const wakes = FIVE.map((_, j) => (j === i ? NOW + 60_000 : j % 2 ? null : NOW + 3_600_000));
+    const { s, st, calls } = world(wanting(wakes));
+    assert.equal(await s.arm(NOW), NOW + 60_000, `${FIVE[i]}: the alarm at its wake`);
+    assert.equal(st.alarm, NOW + 60_000);
+    const early = await s.onAlarm(NOW + 60_000 - SCHED_GRACE_MS - 1);
+    assert.equal(KEYS.some((k) => k in early), false, "not due before its instant, beyond the grace");
+    const r = await s.onAlarm(NOW + 60_000 - SCHED_GRACE_MS);
+    assert.deepEqual(KEYS.filter((k) => k in r), [KEYS[i]], `${FIVE[i]}: due within the grace (R1)`);
+    assert.equal(called(calls, `fileSafety.${WAKES[i]}`).length > 0, true, `${WAKES[i]} asked`);
+  }
+  const none = world(wanting([null, null, null, null, null]));
+  assert.equal(await none.s.arm(NOW), null, "every R39 wake null: no alarm (R15)");
+  const r = await none.s.onAlarm(NOW);
+  assert.equal(KEYS.some((k) => k in r), false, "none due");
+  assert.deepEqual([r.nextAt, none.st.alarm], [null, null]);
+  /* an answer that is not an instant in ms is none */
+  const odd = world(wanting([iso(NOW), "soon", true, NaN, {}]));
+  assert.equal(await odd.s.arm(NOW), null);
+  const o = await odd.s.onAlarm(NOW);
+  assert.equal(KEYS.some((k) => k in o), false);
+});
+
+test("R24, R7: the wakes are asked afresh at every firing, arm and start, each with its now; a wake R39 moves is followed at once, whatever this module saw before", async () => {
+  let scanAt = NOW + 5000;
+  const { s, calls } = world({ "file-scan": { wake: () => scanAt } });
+  assert.equal(await s.start(NOW), NOW + 5000);
+  assert.deepEqual(called(calls, "fileSafety.scanWake"), [NOW], "start asks with its now");
+  scanAt = NOW + 2000;
+  assert.equal(await s.arm(NOW + 1), NOW + 2000, "arm follows the earlier wake");
+  const r = await s.onAlarm(NOW + 2000);
+  assert.ok("filescan" in r);
+  scanAt = NOW + 9_000_000;   /* after the batch, R39 answers a later instant: the reconcile sets it outright */
+  const r2 = await s.onAlarm(NOW + 2001);
+  assert.equal("filescan" in r2, false);
+  assert.equal(r2.nextAt, NOW + 9_000_000);
+  scanAt = NOW + 2001;   /* while the last batch answered remaining above 0, R39 answers now: due at the next firing */
+  assert.ok("filescan" in (await s.onAlarm(NOW + 2001)));
+  assert.ok(called(calls, "fileSafety.scanWake").includes(NOW + 1) && called(calls, "fileSafety.scanWake").includes(NOW + 2001));
+});
+
+test("R7: no interval of this module's for any file-safety consumer: no FILE_SCAN_EVERY_MS or FILE_SAFETY_POLL_MS exported, no other interval, and no instant kept: nothing but the alarm is written however the five tick", async () => {
+  assert.equal("FILE_SCAN_EVERY_MS" in scheduler, false);
+  assert.equal("FILE_SAFETY_POLL_MS" in scheduler, false);
+  const numbers = Object.entries(scheduler).filter(([, v]) => typeof v === "number").map(([k]) => k).sort();
+  assert.deepEqual(numbers, ["DETECTORS_BUDGET_MS", "SCHED_GRACE_MS"], "the grace, and money-checks' budget (R21), alone");
+  const answers = [{ ok: true, remaining: 3 }, { ok: true, remaining: 2, copies: { queued: 1 } }, { ok: true, queued: 1, running: 1 },
+                   { ok: true, sent: ["log-1"], failed: [] }, { ok: false, code: "SCANNER_ABSENT" }];
+  const { s, st } = world(Object.fromEntries(FIVE.map((n, i) => [n, { wake: NOW, tick: answers[i] }])));
+  for (const t of [NOW, NOW + 1000, NOW + 2000]) await s.onAlarm(t);
+  await s.arm(NOW + 3000); await s.start(NOW + 3000);
+  assert.deepEqual(st.log.filter(([m]) => m === "get" || m === "put"), [], "no value read or written for the five");
+  assert.deepEqual([...st.kv.keys()], []);
+  assert.deepEqual([...new Set(writes(st).map(([m]) => m))], ["setAlarm"], "the alarm alone");
+});
+
+test("R24, R11, R18: a restarted instance re-derives the five's wakes from file-safety's durable state; a sched_files value T36 left in storage is ignored, never read, written or obeyed", async () => {
+  const st = storage();
+  st.kv.set("sched_files", { "file-scan": { last: NOW, more: false }, "file-forward": { hour: NOW, to: NOW, log: true } });
+  const a = world(wanting([NOW, null, null, null, null]), null, { st });
+  assert.equal(await a.s.start(NOW + 1000), NOW, "the owner's wake, not the kept day");
+  assert.ok("filescan" in (await a.s.onAlarm(NOW + 1000)), "due though T36's value says it ran");
+  st.alarm = null;
+  const b = world(wanting([null, NOW + 300_000, null, NOW + 3_600_000, NOW + 21_600_000]), null, { st });
+  assert.equal(await b.s.start(NOW + 2000), NOW + 300_000, "the earliest the owner states");
+  assert.equal(st.alarm, NOW + 300_000);
+  assert.deepEqual(st.log.filter(([m, k]) => k === "sched_files"), [], "never read nor written");
+  assert.deepEqual(st.kv.get("sched_files"), { "file-scan": { last: NOW, more: false }, "file-forward": { hour: NOW, to: NOW, log: true } }, "left as it was");
+});
+
+test("R24, R3: a refusal file-safety answers (SCANNER_ABSENT, RENDERER_ABSENT, DEEPER_CHECKS_UNREADABLE, FORWARD_PERIOD_INVALID) is the tick's answer, and the next wake is again R39's; a batch or a wake that throws is answered {error} and every other consumer still ticks", async () => {
+  const refusals = ["SCANNER_ABSENT", "RENDERER_ABSENT", "DEEPER_CHECKS_UNREADABLE", "FORWARD_PERIOD_INVALID", "SCANNER_ABSENT"]
+    .map((code) => ({ ok: false, code, reason: code, detail: "refused" }));
+  const later = [NOW + 86_400_000, NOW + 300_000, NOW + 300_000, NOW + 3_600_000, NOW + 600_000];
+  const fired = new Set();
+  const set = Object.fromEntries(FIVE.map((n, i) => [n, { wake: () => (fired.has(n) ? later[i] : NOW), tick: () => { fired.add(n); return refusals[i]; } }]));
+  const { s } = world(set);
   const r = await s.onAlarm(NOW);
-  FOUR.forEach((n, i) => assert.deepEqual(r[KEYS[i]], answers[n], n));
-  assert.deepEqual(called(calls, "fileSafety.scanBatch"), [{ at: iso(NOW) }], "scanBatch({at: now})");
-  assert.deepEqual(called(calls, "fileSafety.renderBatch"), [{}], "renderBatch({})");
-  assert.deepEqual(called(calls, "fileSafety.deeperBatch"), [{}], "deeperBatch({})");
-  assert.deepEqual(called(calls, "fileSafety.forwardSecurityCounts"), [{ from: iso(HOUR - H), to: iso(HOUR) }],
-    "forwardSecurityCounts({from, to}): at its first, the hour before");
-  assert.equal(calls.filter(([m]) => m.startsWith("fileSafety.")).length, 4, "no other service of file-safety is called");
-  assert.doesNotMatch(JSON.stringify(calls.filter(([m]) => m.startsWith("fileSafety.")).map(([, a]) => a)), /viewer|member|capture|file|name|by/i,
-    "the arguments carry no viewer, member or file");
+  KEYS.forEach((k, i) => assert.deepEqual(r[k], refusals[i], k));
+  assert.equal(r.nextAt, NOW + 300_000, "R39's next wake, the earliest of them");
+  for (const [i, what] of [[0, "tick"], [2, "wake"]]) {
+    const w = world(wanting([NOW, NOW, NOW, NOW, NOW]));
+    w.set[FIVE[i]].throws = what;
+    const b = await w.s.onAlarm(NOW);
+    assert.deepEqual(b[KEYS[i]], { error: `${FIVE[i]} ${what} broke` }, `${FIVE[i]} ${what}`);
+    for (const [j, k] of KEYS.entries()) if (j !== i) assert.ok(k in b, `${k} still ticked`);
+    assert.equal(b.nextAt, NOW, "the reconcile still ran over the others' wakes");
+  }
 });
 
-/* ---- file-scan ---- */
+/* ---- onFileWork (file-safety R40), R9's notice for the five ---- */
 
-test("R24: file-scan is due at its first firing, then once a day from its last tick, and wants its wake at that day", async () => {
-  const { s, st, calls } = world({ ...idle, "file-render": {}, "file-deeper": {}, "file-forward": {} });
-  assert.equal(await s.arm(NOW), NOW, "none kept: due at once");
+test("R24, R9, R17: handed file-safety, the scheduler registers once with onFileWork; each call arms the alarm at once to the earliest wake, writing nothing else and running no batch", async () => {
+  const w = world(wanting([null, null, null, null, null]));
+  const fs = w.o.fileSafety;
+  const st = storage();
+  const s = new Scheduler({ storage: st, owners: {} });
+  s.hand({ fileSafety: fs });
+  s.hand({ fileSafety: fs });
+  assert.deepEqual(called(w.calls, "fileSafety.onFileWork"), ["scheduler"], "registered once, as `scheduler`");
+  assert.equal(fs.listeners.length, 1);
+  assert.deepEqual(s.faults(), []);
+  assert.equal(await s.start(NOW), null, "idle: no alarm");
+  /* a receipt queued: R39's scan wake is now; file-safety tells it after the act commits */
+  w.set["file-scan"].wake = NOW + 10;
+  const before = st.log.length;
+  await fs.listeners[0]({ batch: "scan", at: NOW + 10 });
+  assert.equal(st.alarm, NOW + 10, "armed at that batch's instant");
+  assert.deepEqual(writes({ log: st.log.slice(before) }), [["setAlarm", NOW + 10]], "the alarm alone");
+  assert.deepEqual(batchCalls(w.calls), [], "no batch ran");
+  /* arming never pushes a set alarm later (R4) */
+  w.set["file-scan"].wake = null; w.set["file-reputation"].wake = NOW + 99_000;
+  await fs.listeners[0]({ batch: "reputation", at: NOW + 99_000 });
+  assert.equal(st.alarm, NOW + 10);
+  /* a listener's failure to arm is never thrown into file-safety's act */
+  const broken = new Scheduler({ storage: { ...storage(), getAlarm: async () => { throw new Error("storage gone"); } }, owners: {} });
+  const w2 = world({}, null, { files: true });
+  broken.hand({ fileSafety: w2.o.fileSafety });
+  w2.set["file-scan"] = { wake: NOW };
+  assert.equal(await w2.o.fileSafety.listeners[0]({ batch: "scan", at: NOW }), null);
+});
+
+test("R24, R1: an onFileWork call made inside a firing (a batch that queues more work) arms nothing of its own: the firing's reconcile stands", async () => {
+  const w = world({}, null, { files: true });
+  const st = storage();
+  const s = new Scheduler({ storage: st, owners: {} });
+  s.hand({ fileSafety: w.o.fileSafety });
+  let renderAt = null;
+  w.set["file-scan"] = { wake: NOW, tick: async () => { renderAt = NOW + 300_000; await w.o.fileSafety.listeners[0]({ batch: "render", at: renderAt }); return { ok: true, remaining: 0 }; } };
+  w.set["file-render"] = { wake: () => renderAt };
+  w.set["file-scan"].wake = () => (renderAt === null ? NOW : null);
   const r = await s.onAlarm(NOW);
   assert.ok("filescan" in r);
-  assert.equal(r.nextAt, NOW + FILE_SCAN_EVERY_MS, "the next day, a day from its last tick");
-  assert.equal(FILE_SCAN_EVERY_MS, 86_400_000, "file-safety R4's daily, carried by K2129");
-  for (const t of [NOW + 1, NOW + H, NOW + DAY - 251]) assert.equal("filescan" in (await s.onAlarm(t)), false, `not again at +${t - NOW}`);
-  assert.equal(st.alarm, NOW + DAY);
-  const next = await s.onAlarm(NOW + DAY - 250);
-  assert.ok("filescan" in next, "due within the grace of its day (R1)");
-  assert.deepEqual(called(calls, "fileSafety.scanBatch").map((a) => a.at), [iso(NOW), iso(NOW + DAY - 250)]);
-  assert.equal(next.nextAt, NOW + DAY - 250 + DAY, "a day from that tick");
+  assert.equal(r.nextAt, NOW + 300_000);
+  assert.deepEqual(writes(st), [["setAlarm", NOW + 300_000]], "one alarm write, the reconcile's");
 });
 
-test("R24: while file-scan's last answer stated remaining above 0 it is due again at the next firing, and stops when none remain", async () => {
-  const answers = [{ ok: true, scanned: 50, found: 0, not_scanned: 0, remaining: 7 }, { ok: true, scanned: 7, found: 0, not_scanned: 0, remaining: 0 }];
-  const { s, calls } = world({ "file-scan": { tick: () => answers.shift() } });
-  const r1 = await s.onAlarm(NOW);
-  assert.equal(r1.filescan.remaining, 7);
-  assert.equal(r1.nextAt, NOW + DAY, "its own wake stays the day: the next firing is any consumer's");
-  const r2 = await s.onAlarm(NOW + 60_000);
-  assert.equal(r2.filescan.remaining, 0, "the next firing scanned the rest");
-  assert.equal("filescan" in (await s.onAlarm(NOW + 120_000)), false, "none remaining: not due again before its day");
-  assert.equal(called(calls, "fileSafety.scanBatch").length, 2);
-  assert.equal((await s.arm(NOW + 120_000)), NOW + 60_000 + DAY, "a day from its last tick");
+test("R24, R23: a refused onFileWork registration (LISTENER_DECLARED, LISTENER_MALFORMED), or a file-safety offering none, is a start-up fault in faults(), never ignored; the five still run", async () => {
+  for (const code of ["LISTENER_DECLARED", "LISTENER_MALFORMED"]) {
+    const w = world({ "file-work": { tick: { ok: false, reason: code, detail: "refused" } } }, null, { files: true });
+    const s = new Scheduler({ storage: storage(), owners: {} });
+    s.hand({ fileSafety: w.o.fileSafety });
+    assert.deepEqual(s.faults(), [{ notice: "fileSafety", reason: code, detail: "refused" }], code);
+    assert.deepEqual(s.consumers(), FIVE, "the consumers stand");
+  }
+  const bare = { ...world({}, null, { files: true }).o.fileSafety };
+  delete bare.onFileWork;
+  const s = new Scheduler({ storage: storage(), owners: {} });
+  s.hand({ fileSafety: bare });
+  assert.deepEqual(s.faults().map((f) => [f.notice, f.reason]), [["fileSafety", "NOTICE_ABSENT"]]);
+  const thrower = { ...bare, onFileWork() { throw new Error("no"); } };
+  const s2 = new Scheduler({ storage: storage(), owners: {} });
+  s2.hand({ fileSafety: thrower });
+  assert.deepEqual(s2.faults(), [{ notice: "fileSafety", reason: "NOTICE_THREW", detail: "no" }]);
+  assert.deepEqual(world().s.faults(), [], "no file-safety handed: no fault");
 });
 
-test("R24, R3: a refusal (SCANNER_ABSENT) is file-scan's answer and keeps its daily cadence; a tick that throws is answered {error} and counts as run, so the alarm never spins", async () => {
-  const refusal = { ok: false, code: "SCANNER_ABSENT", reason: "SCANNER_ABSENT", detail: "No scanner is bound beside this copy. No note was written." };
-  const { s, st, set } = world({ "file-scan": { tick: refusal } });
+test("R24 (K1892, K1929): nothing the five pass or answer names who opened a file, and nothing of theirs is kept", async () => {
+  const { s, st, calls } = world(wanting([NOW, NOW, NOW, NOW, NOW]));
   const r = await s.onAlarm(NOW);
-  assert.deepEqual(r.filescan, refusal, "the tick's answer");
-  assert.deepEqual([r.nextAt, st.alarm], [NOW + DAY, NOW + DAY], "kept its cadence");
-  set["file-scan"].throws = "tick";
-  const broke = await s.onAlarm(NOW + DAY);
-  assert.deepEqual(broke.filescan, { error: "file-scan tick broke" });
-  assert.deepEqual([broke.nextAt, st.alarm], [NOW + 2 * DAY, NOW + 2 * DAY], "tried again the next day, not at once");
-});
-
-/* ---- file-render, file-deeper ---- */
-
-test("R24: file-render and file-deeper are due at every firing, each calling its owner's batch", async () => {
-  const { s, calls } = world({ "file-render": {}, "file-deeper": {} });
-  for (const t of [NOW, NOW + 1, NOW + 777, NOW + 2 * DAY]) {
-    const r = await s.onAlarm(t);
-    assert.ok("filerender" in r && "filedeeper" in r, `${t - NOW}`);
-  }
-  assert.equal(called(calls, "fileSafety.renderBatch").length, 4);
-  assert.equal(called(calls, "fileSafety.deeperBatch").length, 4);
-});
-
-test("R24: file-render wants a wake five minutes after a tick whose answer left work (remaining above 0, or a safe copy made or failed, which may leave more queued), else none of its own", async () => {
-  assert.equal(FILE_SAFETY_POLL_MS, 300_000, "file-safety R36's every few minutes, carried by K2129");
-  const none = { ok: true, rendered: 0, failed: 0, none: 0, data: 0, copies: { made: 0, failed: 0 }, remaining: 0 };
-  for (const [what, left, wants] of [["remaining above 0", { ...none, rendered: 20, remaining: 3 }, true],
-                                     ["a safe copy made", { ...none, copies: { made: 2, failed: 0 } }, true],
-                                     ["a safe copy failed", { ...none, copies: { made: 0, failed: 1 } }, true],
-                                     ["a safe copy stated queued", { ...none, copies: { made: 0, failed: 0, queued: 4 } }, true],
-                                     ["nothing left", none, false]]) {
-    const { s, st } = world({ ...idle, "file-render": { tick: left } });
-    const r = await s.onAlarm(NOW);
-    assert.equal(r.nextAt, wants ? NOW + POLL : NOW + DAY, what);
-    assert.equal(st.alarm, r.nextAt, what);
-  }
-  /* the poll fires, finds nothing left, and the wake goes */
-  const answers = [{ ...none, rendered: 20, remaining: 3 }, { ...none, rendered: 3 }];
-  const { s } = world({ ...idle, "file-render": { tick: () => answers.shift() } });
-  assert.equal((await s.onAlarm(NOW)).nextAt, NOW + POLL);
-  assert.equal((await s.onAlarm(NOW + POLL)).nextAt, NOW + DAY, "the queue empty: only file-scan's day remains");
-});
-
-test("R24: file-deeper wants a wake five minutes after a tick while checks are queued or running (or either count is unknown), else none of its own", async () => {
-  const base = { ok: true, started: 0, polled: 0, done: [] };
-  for (const [what, ans, wants] of [["queued", { ...base, queued: 1, running: 0 }, true], ["running", { ...base, queued: 0, running: 2 }, true],
-                                    ["queued unknown", { ...base, queued: null, running: 0 }, true],
-                                    ["running unknown", { ...base, queued: 0, running: null }, true],
-                                    ["none", { ...base, queued: 0, running: 0 }, false]]) {
-    const { s } = world({ ...idle, "file-deeper": { tick: ans } });
-    assert.equal((await s.onAlarm(NOW)).nextAt, wants ? NOW + POLL : NOW + DAY, what);
-  }
-  /* polling every five minutes while a sandbox runs, stopping when none does */
-  const answers = [{ ...base, queued: 1, running: 0 }, { ...base, started: 1, queued: 0, running: 1 }, { ...base, polled: 1, done: [{}], queued: 0, running: 0 }];
-  const { s, calls } = world({ ...idle, "file-deeper": { tick: () => answers.shift() } });
-  let at = NOW;
-  const chain = [];
-  for (let i = 0; i < 5 && at !== NOW + DAY; i++) { chain.push(at); at = (await s.onAlarm(at)).nextAt; }
-  assert.deepEqual(chain, [NOW, NOW + POLL, NOW + 2 * POLL]);
-  assert.equal(at, NOW + DAY, "done: no wake of its own");
-  assert.equal(called(calls, "fileSafety.deeperBatch").length, 3);
-});
-
-test("R24, R3: a refusal (RENDERER_ABSENT) is file-render's answer and keeps its cadence (the poll its last answer asked for); a throw is answered {error} and the poll it kept stands, never at once", async () => {
-  const refusal = { ok: false, code: "RENDERER_ABSENT", reason: "RENDERER_ABSENT", detail: "No safe-view maker is bound beside this copy. Nothing was rendered." };
-  const left = { ok: true, rendered: 20, failed: 0, none: 0, data: 0, copies: { made: 0, failed: 0 }, remaining: 5 };
-  const answers = [left, refusal];
-  const { s, set } = world({ ...idle, "file-render": { tick: () => answers.shift() } });
-  assert.equal((await s.onAlarm(NOW)).nextAt, NOW + POLL);
-  const r = await s.onAlarm(NOW + POLL);
-  assert.deepEqual(r.filerender, refusal);
-  assert.equal(r.nextAt, NOW + 2 * POLL, "work was left before the refusal: still polled");
-  set["file-render"].throws = "tick";
-  const broke = await s.onAlarm(NOW + 2 * POLL);
-  assert.deepEqual(broke.filerender, { error: "file-render tick broke" });
-  assert.equal(broke.nextAt, NOW + 3 * POLL, "a poll after the throw, not at once");
-  /* a refusal with no work known left: no wake of its own */
-  const quiet = world({ ...idle, "file-render": { tick: refusal } });
-  assert.equal((await quiet.s.onAlarm(NOW)).nextAt, NOW + DAY);
-});
-
-/* ---- file-forward ---- */
-
-test("R24: file-forward sends each whole UTC hour once, from the to of its last ok call to the start of the hour; no period twice", async () => {
-  const { s, calls } = world({ ...idle, "file-forward": { tick: { ok: true, sent: ["log-1"], failed: [] } } });
-  const r1 = await s.onAlarm(NOW + 10 * 60_000);
-  assert.deepEqual(r1.fileforward, { ok: true, sent: ["log-1"], failed: [] });
-  assert.equal(r1.nextAt, HOUR + H, "a log tool named: its wake the next whole hour");
-  assert.equal("fileforward" in (await s.onAlarm(HOUR + 50 * 60_000)), false, "the same hour: not again");
-  assert.equal("fileforward" in (await s.onAlarm(HOUR + H - 250)), false, "never before the hour, the grace notwithstanding");
-  const r2 = await s.onAlarm(HOUR + H);
-  assert.ok("fileforward" in r2, "the first firing at the hour");
-  await s.onAlarm(HOUR + 3 * H + 17);   /* two hours without a firing */
-  assert.deepEqual(called(calls, "fileSafety.forwardSecurityCounts"), [
-    { from: iso(HOUR - H), to: iso(HOUR) }, { from: iso(HOUR), to: iso(HOUR + H) }, { from: iso(HOUR + H), to: iso(HOUR + 3 * H) }],
-    "each period follows the last, none sent twice, none skipped");
-});
-
-test("R24: after a refused call (FORWARD_PERIOD_INVALID) the next hour sends from the to of the last ok call, so nothing is lost and nothing sent twice; never more than 24 hours back", async () => {
-  const refusal = { ok: false, code: "FORWARD_PERIOD_INVALID", reason: "FORWARD_PERIOD_INVALID", detail: "The counts could not be built. Nothing was sent." };
-  const answers = [{ ok: true, sent: ["log-1"], failed: [] }, refusal, { ok: true, sent: ["log-1"], failed: [] }];
-  const { s, calls, set } = world({ ...idle, "file-forward": { tick: () => answers.shift() ?? { ok: true, sent: ["log-1"], failed: [] } } });
-  await s.onAlarm(NOW);
-  const r = await s.onAlarm(HOUR + H);
-  assert.deepEqual(r.fileforward, refusal, "the refusal is the tick's answer");
-  assert.equal(r.nextAt, HOUR + 2 * H, "and it keeps its hourly cadence");
-  await s.onAlarm(HOUR + 2 * H);
-  const sent = called(calls, "fileSafety.forwardSecurityCounts");
-  assert.deepEqual(sent[1], { from: iso(HOUR), to: iso(HOUR + H) });
-  assert.deepEqual(sent[2], { from: iso(HOUR), to: iso(HOUR + 2 * H) }, "the refused hour sent with the next");
-  /* two days without a firing: the period starts no more than a day back */
-  await s.onAlarm(HOUR + 50 * H);
-  assert.deepEqual(called(calls, "fileSafety.forwardSecurityCounts")[3], { from: iso(HOUR + 26 * H), to: iso(HOUR + 50 * H) });
-  set["file-forward"].throws = "tick";
-  const broke = await s.onAlarm(HOUR + 51 * H);
-  assert.deepEqual(broke.fileforward, { error: "file-forward tick broke" });
-  assert.equal(broke.nextAt, HOUR + 52 * H, "the hour counted as tried: the next hour, never at once");
-  assert.equal("fileforward" in (await s.onAlarm(HOUR + 51 * H + 1000)), false);
-});
-
-test("R24, R15: file-forward wants a wake only while its last answer named a log tool (sent or failed); with none on it has no wake of its own and is due at the first firing after the next hour", async () => {
-  for (const [what, ans, wants] of [["sent", { ok: true, sent: ["log-1"], failed: [] }, true],
-                                    ["failed", { ok: true, sent: [], failed: [{ tool_id: "log-1", code: "SERVICE_UNREACHABLE" }] }, true],
-                                    ["no log tool on", { ok: true, sent: [], failed: [] }, false]]) {
-    const { s } = world({ ...idle, "file-forward": { tick: ans } });
-    assert.equal((await s.onAlarm(NOW)).nextAt, wants ? HOUR + H : NOW + DAY, what);
-  }
-  const { s, calls } = world({ ...idle, "file-forward": { tick: { ok: true, sent: [], failed: [] } } });
-  await s.onAlarm(NOW);
-  await s.onAlarm(NOW + DAY);   /* file-scan's day: the first firing after the next hour */
-  assert.deepEqual(called(calls, "fileSafety.forwardSecurityCounts")[1], { from: iso(HOUR), to: iso(HOUR + DAY) });
-});
-
-/* ---- the invariants over the four ---- */
-
-test("R24, R15: when every consumer answers no work and no log tool is on, only file-scan's daily wake stays", async () => {
-  const { s, st } = world({}, null, { files: true });
-  const r = await s.onAlarm(NOW);
-  for (const k of KEYS) assert.ok(k in r, `${k}: its first firing`);
-  assert.deepEqual([r.nextAt, st.alarm], [NOW + DAY, NOW + DAY]);
-  assert.equal(await s.arm(NOW + 1000), NOW + DAY);
-});
-
-test("R24, R11, R18: the instants each keeps are the storage value sched_files, never a table; a restarted instance re-derives its wakes from them, and with none kept each is due at once", async () => {
-  const st = storage();
-  const set = { "file-scan": { tick: { ok: true, remaining: 0 } }, "file-render": { tick: { ok: true, remaining: 2, copies: { made: 0, failed: 0 } } },
-                "file-deeper": {}, "file-forward": { tick: { ok: true, sent: ["log-1"], failed: [] } } };
-  const a = world(set, null, { st });
-  assert.equal(await a.s.start(NOW), NOW, "none kept: due at once");
-  await a.s.onAlarm(NOW);
-  assert.deepEqual(st.kv.get("sched_files"), {
-    "file-scan": { last: NOW, more: false }, "file-render": { last: NOW, more: true }, "file-deeper": { last: NOW, more: false },
-    "file-forward": { hour: HOUR, to: HOUR, log: true } });
-  const touched = new Set(st.log.filter(([m]) => m === "put" || m === "get").map(([m, k]) => `${m}:${k}`));
-  assert.deepEqual([...touched].sort(), ["get:sched_files", "put:sched_files"]);
-  /* a fresh instance over the same storage: the wakes re-derived; nothing run again before its time */
-  st.alarm = null;
-  const b = world(set, null, { st });
-  assert.equal(await b.s.start(NOW + 1000), NOW + POLL, "the render poll its last answer asked for");
-  const r = await b.s.onAlarm(NOW + 1000);
-  assert.equal("filescan" in r, false, "scanned today: not again");
-  assert.equal("fileforward" in r, false, "this hour sent: not again");
-  assert.equal(b.calls.filter(([m]) => m === "fileSafety.scanBatch" || m === "fileSafety.forwardSecurityCounts").length, 0);
-  /* a storage holding the alarm alone keeps the state for the instance */
-  const bare = storage(); delete bare.get; delete bare.put;
-  const c = world(set, null, { st: bare });
-  assert.ok("filescan" in (await c.s.onAlarm(NOW)));
-  assert.equal("filescan" in (await c.s.onAlarm(NOW + 1000)), false);
-  /* without file-safety, nothing is read or written for the four */
-  const d = world({}, null);
-  await d.s.onAlarm(NOW); await d.s.arm(NOW); await d.s.start(NOW);
-  assert.deepEqual(d.st.log.filter(([m]) => m === "get" || m === "put"), []);
-});
-
-test("R24, R17, R4: arm and start run none of the four and write nothing but the alarm", async () => {
-  const { s, st, calls } = world({}, null, { files: true });
-  await s.arm(NOW);
-  await s.start(NOW);
-  assert.deepEqual(calls.filter(([m]) => m.startsWith("fileSafety.")), []);
-  assert.deepEqual(writes(st), [["setAlarm", NOW]]);
-});
-
-test("R24 (K1892, K1929): nothing the four keep or answer names who opened a file", async () => {
-  const { s, st } = world({}, null, { files: true });
-  const r = await s.onAlarm(NOW);
-  for (const x of [JSON.stringify(st.kv.get("sched_files")), JSON.stringify(KEYS.map((k) => r[k]))])
-    assert.doesNotMatch(x, /member|viewer|opened|by"|capture_sha|captureSha/i, x);
+  assert.doesNotMatch(JSON.stringify([batchCalls(calls), KEYS.map((k) => r[k])]), /member|viewer|opened|by"|capture_sha|captureSha/i);
+  assert.equal(st.kv.size, 0);
 });
 
 /* ---- against the real file-safety (its own test world, `test/m/file-safety/fixture.mjs`) ---- */
 
-test("R24: against the real file-safety, the first firing scans the held files, renders their safe views, starts no deeper check and forwards the hour's counts to no log tool; the next day re-scans none (a week's ClamAV note is fresh), and the alarm holds file-scan's day alone", async () => {
+/* the earliest of the real file-safety's own R39 wakes at `now` */
+const earliest = (fs, now) => { const ws = WAKES.map((m) => fs[m](now)).filter((x) => x !== null); return ws.length ? Math.min(...ws) : null; };
+
+test("R24, R9: against the real file-safety, a capture received tells onFileWork, which arms the alarm at once; the firing scans and renders it and the alarm is then R39's earliest wake, never the firing instant", async () => {
   const w = fsWorld();
-  for (let i = 1; i <= 3; i++) { await w.capture(pdf(false, `sched-${i}`)); w.tick(1000); }
   const st = storage();
-  const s = new Scheduler({ storage: st, owners: { fileSafety: () => w.fs } });
+  const s = new Scheduler({ storage: st, owners: {} });
+  assert.deepEqual(s.hand({ fileSafety: w.fs }), { ok: true, handed: ["fileSafety"] });
+  assert.deepEqual(s.faults(), [], "the real onFileWork took the listener");
   const T = w.clock.now;
-  assert.equal(await s.arm(T), T, "none kept: wanted at once");
-  const r = await s.onAlarm(T);
+  assert.equal(await s.start(T), null, "nothing held: no wake");
+  for (let i = 1; i <= 3; i++) { await w.capture(pdf(false, `sched-${i}`)); w.tick(1000); }
+  for (let i = 0; i < 20 && st.alarm === null; i++) await new Promise((ok) => setTimeout(ok, 5));
+  /* the listener arms on the runtime's clock (Date.now()), where R39's scan wake is at once */
+  assert.ok(st.alarm !== null && st.alarm <= Date.now(), `armed by the receipt, at once: ${st.alarm}`);
+  const at = w.clock.now;
+  const r = await s.onAlarm(at);
   assert.deepEqual([r.filescan.ok, r.filescan.scanned, r.filescan.remaining], [true, 3, 0], JSON.stringify(r.filescan));
   assert.equal(w.calls("/scan").length, 1, "one batch to the scanner");
   assert.equal(r.filerender.ok, true, JSON.stringify(r.filerender));
-  assert.equal(r.filerender.remaining, 0);
-  assert.deepEqual([r.filedeeper.queued, r.filedeeper.running], [0, 0]);
-  assert.deepEqual([r.fileforward.ok, r.fileforward.sent, r.fileforward.failed], [true, [], []], JSON.stringify(r.fileforward));
-  const hour = Math.floor(T / H) * H;
-  assert.deepEqual(r.fileforward.record.period, { from: iso(hour - H), to: iso(hour) });
-  assert.equal(r.nextAt, T + DAY, "no work left, no log tool on: file-scan's day alone (R15)");
-  w.clock.now = T + DAY;
-  const next = await s.onAlarm(T + DAY);
-  assert.deepEqual([next.filescan.scanned, next.filescan.remaining], [0, 0], "scanned yesterday: not due for a week (file-safety R4)");
-  assert.deepEqual(next.fileforward.record.period, { from: iso(hour), to: iso(Math.floor((T + DAY) / H) * H) });
+  assert.equal(r.nextAt, earliest(w.fs, at), "R39's earliest wake");
+  assert.ok(r.nextAt === null || r.nextAt > at, `no spin: ${r.nextAt} after ${at}`);
+  assert.equal("fileforward" in r, false, "no log tool on: forward wants no wake (R39)");
+  assert.equal("filereputation" in r, false, "no reputation tool on: none (R39)");
+  /* a week on, the re-scan falls due (file-safety R4, R39) */
+  const next = r.nextAt ?? at + 7 * 86_400_000;
+  w.clock.now = next;
+  const again = await s.onAlarm(next);
+  assert.ok("filescan" in again || "filerender" in again, JSON.stringify(again));
 });
 
-test("R24: against the real file-safety with no scanner bound, file-scan answers SCANNER_ABSENT and file-render RENDERER_ABSENT, each the tick's answer, and each keeps its cadence", async () => {
+test("R24: against the real file-safety with no scanner bound, scan wants no wake (R39) and render's refusal RENDERER_ABSENT is its tick's answer, retried at R39's next wake, never at once", async () => {
   const w = fsWorld({ bound: false });
   await w.capture(pdf(false, "sched-unbound"));
   const s = new Scheduler({ storage: storage(), owners: { fileSafety: () => w.fs } });
-  const r = await s.onAlarm(w.clock.now);
-  assert.equal(r.filescan.code, "SCANNER_ABSENT");
+  const now = w.clock.now;
+  assert.equal(w.fs.scanWake(now), null);
+  const r = await s.onAlarm(now);
+  assert.equal("filescan" in r, false, "no scanner bound: not due");
   assert.equal(r.filerender.code, "RENDERER_ABSENT");
-  assert.equal(r.nextAt, w.clock.now + DAY, "the day's re-try, never at once");
+  assert.equal(r.nextAt, earliest(w.fs, now));
+  assert.ok(r.nextAt === null || r.nextAt > now, `never at once: ${r.nextAt}`);
 });
