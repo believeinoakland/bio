@@ -14,6 +14,7 @@
 - An out-of-layer job (an exception to P10's layer order) needs Bob's approval each time; one approval is no precedent. (K1548)
 - Releases are BOB's decision, never asked: cut one only when the deployment or measurement it yields lets held work enter the next tranche; at most one per tranche boundary; never mid-tranche from unmerged work. Each deploy act still needs Bob (§2 below). (K1501, K1759, K1862, K1876)
 - Add protective limits (sign-in caps, rate limits, session and key expiry, size and count caps) without asking and report them; a limit that changes what a member or group may do is Bob's. (K1881)
+- Pause at 80% (Bob, K2341): the meter is asked at each layer close; once Bob reports it at 80% or more, no new layer or job starts; the running layer's jobs finish and merge, the layer closes, and BOB hands off with the tranche open, to resume when Bob says. (K2341)
 - Account switch: once Bob reports his primary meter at about 90% or more, move the work to the secondary account at the next layer close with no job live (handoff, then Bob starts a ROOT there); Bob stops the primary at 95%. Sessions on the other account cannot be rung or archived: leave them, with no `BOB-final` row. The `BOB` row of `build/channels.md` follows the account, changed at a tranche close. (K1820, K1891, K1896, K742, K1897, K1428)
 
 ## 2. Standing approvals and recorded refusals (check before acting, §16)

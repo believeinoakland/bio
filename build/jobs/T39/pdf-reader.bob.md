@@ -1,3 +1,9 @@
+# BOB to pdf-reader (T39)
+
+**Read** · handled J0
+
+## B1 · START
+
 Depth 2. Your entry: `build/plan/current.md` (T39), layer 1, pdf-reader: T39-2b (N806). Read also the plan's "Rules at the opening", K2315, K2333 and K2334 (their lines in `build/rulings.md`), and `build/plan/draft-T39-N806.md` (the packaging; your share is §3's pdf-reader line).
 Your requirements: `build/requirements/pdf-reader.md` (read whole); the new id marked `*(not yet met: T39)*` is yours: `PdfDoc.objects()` answers every object reachable from the latest trailer, with the trailer, never throwing. Its user is the new `doc-clean` (same layer, merging after you), which rewrites a member's PDF from it; keep the answer's shape exactly as the requirement states, since doc-clean is built against it concurrently.
 P6: 3,108 lines before this entry; report if you would pass about 4,000.

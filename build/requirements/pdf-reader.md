@@ -1,6 +1,6 @@
 # pdf-reader — requirements
 
-**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20); N9's named services added by BOB (K28). D-616 does not belong here (Suggestions). Last changed T35 (T35-10: R36; K1888); every requirement met (K1920).
+**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20); N9's named services added by BOB (K28). D-616 does not belong here (Suggestions). Last changed T35 (T35-10: R36; K1888); every requirement met (K1920). Changed at T39's opening (N806; K2333): R37 `objects()` added for `doc-clean`.
 
 ## Public
 
@@ -208,6 +208,7 @@ interface is the members below and nothing else; every other field is private.
 - **R23** `isEncrypted()` reports whether any object in the file carries `/Filter /Standard` with a
   numeric `/R` (the Standard Security Handler dictionary, which the standard requires stay
   unencrypted); cached after the first call.
+- **R37** (T39; N806; K2333) `objects()` answers `{trailer, objects, unresolved}` for the latest revision: `trailer` the resolved dict of the last trailer in file order (a classic `trailer` dict, or an `/Type /XRef` stream's own dict, as R10 chooses it); `objects` every indirect object reachable from it (by any chain of references from its entries), each once, as `{num, gen, value}` in ascending `num`, `value` as `resolve` (R20) answers it, an object from an object stream included as any other; `unresolved` each reference on those chains that cannot be resolved, as `{num, gen}`, `[]` when none. `null` when no trailer can be read. Never throws. *(not yet met: T39)*
 - Errors: no `PdfDoc` method throws on malformed input; a read that cannot resolve returns `null`,
   `false`, or an empty result, per the method's own rule above.
 
@@ -270,6 +271,7 @@ interface is the members below and nothing else; every other field is private.
   doctrine R27 states as an invariant of this module's whole output.
 - `build/layers.md`, "No jurisdiction in the product" (R29).
 - Bob's K1888 (2026-10-06, the virus package: the readers' structure check; `build/plan/study-virus-scanning.md` §3 A, after PDFiD's triage keys): R36.
+- Bob's K2315 (N806, packaged by BOB's K2333: a member document's embedded images leave without their metadata): R37, the object walk `doc-clean`'s rewrite of a PDF reads.
 
 ### Suggestions
 
