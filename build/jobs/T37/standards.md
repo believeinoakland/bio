@@ -55,3 +55,7 @@ None of what it left out mattered.
 - ownership: 0 failures
 
 Size (session_01ESQ5WwKNKPndxaWdvzsiH9): test runs 19, module lines 3317
+
+## J1 · QUESTION
+
+T37-35 is applied without waiting on this; my best reading is what I built. (1) Should R43's adoption branch also apply R40's 'up to the next adoption's', so that a body's later adoption of another edition of the designation ends the earlier edition's binding? My reading: not in this entry. I built it and took it out, because through editionInForce an unread start on any other adoption by the body would make the answer undetermined. (2) A cited or absent standard that a body adopted can no longer bind: R20 answers undetermined because its text is not held (R34). That is as written, but T35's note holds a paywalled standard known from its adopting ordinance as held: cited. Is that intended? (3) Findings in this module, not fixed: an imposition checks only the law in force, not the imposed standard's own period, and an incorporation does not check the incorporated standard's own period, so the three binding branches differ. Also, an adoption whose act is an event stores body null (index.mjs:1766), so it never binds and editionInForce never sees it, though R40 allows an event as the act. Fix them in a CHANGE, or leave them for a later entry?
