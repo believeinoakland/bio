@@ -1,6 +1,6 @@
 # instance-setup (T37)
 
-**Status** · session_01BJWkvPGgpsKkM8XcBPtB1a · depth 2 · WORKING · handled B2
+**Status** · session_01BJWkvPGgpsKkM8XcBPtB1a · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
