@@ -1,6 +1,6 @@
 # admission (T36)
 
-**Status** · session_01JySMhkj6mMeg3Ua2iHFP87 · depth 2 · COMPLETE · handled B4
+**Status** · session_01JySMhkj6mMeg3Ua2iHFP87 · depth 2 · RUNNING until 2026-10-08T07:14:45Z (users' tests after B4's merge) · handled B4
 
 ## Completion
 
