@@ -165,6 +165,29 @@ export function notAParticipant(projectId, by, extra = null) {
   /* END DEC-49 REGION is-not-a-participant */
 }
 
+/* N793 (K231; T38-4). THE ONE ANSWER TO ONE CONDITION: no member answers to the id (or name) a caller was given. This
+   module owns `members`, so `NO_SUCH_MEMBER` is minted here alone and its one row is this module's (C-96.39); every act
+   of any module refusing that condition answers through here (this module's eight; credentials, tasks, setup-page,
+   instance-setup and control-plane in their own jobs). `member` is the id as asked (null when none); the detail is one
+   fixed sentence, the same for every caller. `extra` adds a caller's own fields beside these and never replaces one of
+   them. Writes nothing and never throws. */
+const NO_SUCH_MEMBER_DETAIL = "no member of your group answers to that id here. Nothing was changed.";
+const NO_SUCH_MEMBER_FIXED = new Set(["ok", "reason", "code", "check", "translation", "member", "detail"]);
+export function noSuchMember(memberId, extra = null) {
+  let own = [];
+  try {
+    if (extra && typeof extra === "object" && !Array.isArray(extra))
+      own = Object.entries(extra).filter(([k]) => !NO_SUCH_MEMBER_FIXED.has(k));
+  } catch { own = []; }
+  let member = null;
+  try { member = memberId === null || memberId === undefined ? null : String(memberId).slice(0, 200); } catch { member = null; }
+  /* DEC-49 REGION is-no-such-member */
+  const row = MEMBERSHIP_CHECKS.NO_SUCH_MEMBER;
+  return { ok: false, reason: "NO_SUCH_MEMBER", code: "NO_SUCH_MEMBER", check: row.check,
+           translation: row.translation, member, ...Object.fromEntries(own), detail: NO_SUCH_MEMBER_DETAIL };
+  /* END DEC-49 REGION is-no-such-member */
+}
+
 /* R83 (K289): the modules' total order, `build/modules.json`'s ids in the file's order (which is its layer order, K270).
    Product code cannot read `build/` at run time, so it is held here, the one list every module orders its listeners by
    (this module's R79; promotion, provenance and the later modules import it); this module's R83 test holds it equal to
@@ -173,14 +196,15 @@ export function notAParticipant(projectId, by, extra = null) {
    `connections`. A module the file lists before its job has built it is held here in its place all the same, so its
    listeners order correctly from the day it registers; R83's test names it as not yet built until its merge. T35-14,
    T36-6 (N697, N723; K1864, K1961, K2008): every module the file names is held, whether or not it registers one.
-   T37-44 (K1185, K2171): `image-cover` after `pdf-pixels` in layer 1, as T37's opening placed it. */
+   T37-44 (K1185, K2171): `image-cover` after `pdf-pixels` in layer 1, as T37's opening placed it. T38-4 (N783; K657,
+   K1185, K2270): `project-roster` in layer 2, directly after `membership` and before `credentials`. */
 export const MODULE_ORDER = Object.freeze([
   /* 1 */ "record-grammar", "jurisdictions", "civil-time", "calc-grammar", "connection-grammar", "test-support",
           "runtime-limits", "signatures", "bundler", "court-citations", "id-spaces", "subresources", "ooxml",
           "office-readers", "odf-reader", "pdf-reader", "format-registry", "text-chain", "site-profiles", "docprofile",
           "doctypes", "legistar-reader", "roster-reader", "court-doctypes", "budget-doctypes", "image-codecs",
           "pdf-pixels", "image-cover", "pdf-worker", "ocr-worker", "sheet-worker", "file-scanner",
-  /* 2 */ "record-core", "membership", "credentials", "promotion",
+  /* 2 */ "record-core", "membership", "project-roster", "credentials", "promotion",
   /* 3 */ "host-governor", "provenance", "attestation", "provenance-routes", "capture-sources", "acquisition",
           "capture", "file-safety", "sources",
   /* 4 */ "calibration", "reading-pipeline", "extraction", "content",
@@ -541,7 +565,7 @@ export class Membership {
      pairings are read with `memberPairings`. */
   memberPairingSet({ memberId, published, by = null } = {}) {
     const m = this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId);
-    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    if (!m) return noSuchMember(memberId);   /* N793: C-96.39 minted at its one site */
     const refusal = (code, detail, extra) => Membership.#custodialRefusal(code, detail, extra);   /* C-96.12 */
     /* DEC-49 REGION is-pairing-yours */
     if (by !== memberId && !this.isAdministrator(by))
@@ -670,8 +694,94 @@ export class Membership {
    * thing the record exists to be. What participation scopes is the group's
    * THINKING, which is the material with strategic value before publication.
    */
-  #memberByHandle(handle) {
-    return this.#one(`SELECT member_id, handle, status FROM members WHERE handle=?`, handle);
+  /* R119 (N783): the member whose handle is exactly `handle`, `{member_id, handle, status}`, or null. R32, R36 and
+     `project-roster` R3–R5 and R12 resolve a handle through it. Writes nothing and never throws. */
+  memberByHandle(handle) {
+    if (typeof handle !== "string" || handle === "") return null;
+    try {
+      const r = this.#one(`SELECT member_id, handle, status FROM members WHERE handle=?`, handle);
+      return r ? { member_id: r.member_id, handle: r.handle, status: r.status } : null;
+    } catch { return null; }
+  }
+
+  /* ===== R118 (N783) — THE ONE WRITE OF A PARTICIPATION ROW A LATER MODULE MAKES =====
+   *
+   * `project-roster`'s acts (its R3–R5, R12) have made every check of their own; this writes their row in the caller's
+   * transaction and asks nothing (R120: no later module writes `project_participants` but through here). `invite` adds
+   * the member `invited`, not an owner; `ownerOn` sets an existing participant's owner flag, next in R65's order;
+   * `ownerOff` clears it, the member staying a participant; `rescue` makes the member a `joined` owner, next in R65's
+   * order, adding the row when they hold none and changing no other row. True when it wrote; false, writing nothing, for
+   * an unknown kind, an `invite` whose row exists, and an `ownerOn`/`ownerOff` whose row does not. Never throws. */
+  participationWrite(kind, args = {}) {
+    try {
+      const { projectId, memberId, by = null, comment = null, at = null } = args && typeof args === "object" ? args : {};
+      if (typeof projectId !== "string" || !projectId || typeof memberId !== "string" || !memberId) return false;
+      const when = typeof at === "string" && at ? at : new Date().toISOString();
+      const held = !!this.#one(`SELECT 1 AS x FROM project_participants WHERE project_id=? AND member_id=?`,
+        projectId, memberId);
+      const nextOrder = `(SELECT COALESCE(MAX(owner_order), 0) + 1 FROM project_participants WHERE project_id=?)`;
+      if (kind === "invite") {
+        if (held) return false;
+        this.sql.exec(`INSERT INTO project_participants (project_id,member_id,state,owner,invited_by,created,updated)
+                       VALUES (?,?,'invited',0,?,?,?)`, projectId, memberId, by, when, when);
+        return true;
+      }
+      if (kind === "ownerOn") {
+        if (!held) return false;
+        this.sql.exec(`UPDATE project_participants SET owner=1, owner_order=${nextOrder}, updated=?
+                        WHERE project_id=? AND member_id=?`, projectId, when, projectId, memberId);
+        return true;
+      }
+      if (kind === "ownerOff") {
+        if (!held) return false;
+        this.sql.exec(`UPDATE project_participants SET owner=0, owner_order=NULL, updated=?
+                        WHERE project_id=? AND member_id=?`, when, projectId, memberId);
+        return true;
+      }
+      if (kind === "rescue") {
+        const c = comment === null || comment === undefined ? null : String(comment);
+        this.sql.exec(
+          `INSERT INTO project_participants (project_id,member_id,state,owner,owner_order,invited_by,comment,created,updated)
+           VALUES (?,?,'joined',1,${nextOrder},?,?,?,?)
+           ON CONFLICT(project_id,member_id) DO UPDATE SET owner=1, owner_order=excluded.owner_order, state='joined',
+             updated=excluded.updated`,
+          projectId, memberId, projectId, by, c, when, when);
+        return true;
+      }
+      return false;
+    } catch { return false; }
+  }
+
+  /* ===== R116, R117 (N783, K624; R79's form) — THE TWO NOTICES `project-roster` HEARS =====
+   *
+   * Requests to join are `project-roster`'s (its R10–R14), but two setup acts that stay here change them: an invitation
+   * (R32) closes the invitee's open request `granted` (R33), and setting a project hidden (R45) lapses its open requests.
+   * Each slot takes one registration, whoever makes it (R81's refusals, naming the holder); it is called once, inside the
+   * act and after its writes, in the caller's transaction. A whole number of at least 1 is the count the listener
+   * closed; anything else, a throw, or no listener reads as none, and the act and its answer stand either way. */
+  #invitedListener = null;   // {module, fn}
+  #hiddenListener = null;    // {module, fn}
+
+  onProjectInvited(module, fn) {
+    const refused = listenerRefusal(this.#invitedListener, module, fn);
+    if (refused) return refused;
+    this.#invitedListener = { module, fn };
+    return { ok: true, module };
+  }
+
+  onProjectHidden(module, fn) {
+    const refused = listenerRefusal(this.#hiddenListener, module, fn);
+    if (refused) return refused;
+    this.#hiddenListener = { module, fn };
+    return { ok: true, module };
+  }
+
+  static #tell(listener, notice) {
+    if (!listener) return 0;
+    try {
+      const r = listener.fn(notice);
+      return Number.isInteger(r) && r >= 1 ? r : 0;
+    } catch { return 0; }
   }
 /* Membership Architecture v2 section 7: authority over a project belongs to its
    OWNERS, and to nobody else. An administrator sees every project (7.3, 7.8) and
@@ -1011,12 +1121,11 @@ export class Membership {
        log that just gained a row. Never written from `want` directly — that would be the second copy of
        "the latest act wins", and it is the copy that would agree for free until the day the rule moved. */
     this.reindexProjectSight(projectId);
-    /* REC-150 (§7.14, "The request to join"): SETTING A PROJECT HIDDEN LAPSES EVERY OPEN REQUEST TO IT, recorded as
-       lapsed with the owner who hid it and the same date — the closing fields written once, by the one statement
-       that moves an OPEN row (`WHERE state='open'`), so a request already answered or withdrawn is not rewritten.
-       Setting it discoverable again reopens nothing: a lapsed requester asks again, as after a decline. */
+    /* REC-150, R45, R117 (§7.14, "The request to join"; N783): SETTING A PROJECT HIDDEN LAPSES EVERY OPEN REQUEST TO
+       IT, recorded as lapsed with the owner who hid it and the same date, by R117's listener (`project-roster`, its
+       R16), told after the record and the reindex. Setting it discoverable notifies nobody and reopens nothing. */
     const lapsed = want === "hidden"
-      ? this.#lapseJoinRequests(projectId, by, at) : 0;
+      ? Membership.#tell(this.#hiddenListener, { projectId, by: by ?? null, at }) : 0;
     return { ok: true, projectId, setting: want, set_by: by, reason: why, at,
              ...(want === "hidden" ? { requests_lapsed: lapsed } : {}) };
   }
@@ -1165,8 +1274,8 @@ export class Membership {
    *             writes, and NEVER `joined` — joining is the member's own act by the checkbox (§7.4), and a grant
    *             that wrote `joined` would make the owner's act the member's. DECLINE is recorded with an optional
    *             comment. Administrators and the founder see requests (§7.3) and answer none.
-   *   LAPSE     `#lapseJoinRequests`, from `projectVisibilitySet` — setting a project HIDDEN lapses every open
-   *             request to it, recorded.
+   *   LAPSE     R117's notice, from `projectVisibilitySet` — setting a project HIDDEN lapses every open request to
+   *             it, recorded (`project-roster` R16).
    *   READ      `projectRequests` — a project's requests to its owners and administrators; with no project, the
    *             caller's OWN requests, which it keeps sight of after a lapse, naming only what it already saw.
    * The record is `project_join_requests` (schema.mjs, REC-150's block): append-only at the field. */
@@ -1242,10 +1351,6 @@ export class Membership {
                     WHERE project_id=? AND (? IS NULL OR member_id=?) AND state='open'`,
       state, by, comment, at, projectId, memberId, memberId);
     return before;
-  }
-
-  #lapseJoinRequests(projectId, by, at) {
-    return this.#closeJoinRequests(projectId, null, "lapsed", by, null, at);
   }
 
   static #requestComment(comment) {
@@ -1342,7 +1447,7 @@ export class Membership {
       return refusal("PROJECT_REQUEST_UNKNOWN_ANSWER",
         `${JSON.stringify(want.slice(0, 40))} is not an answer: a request is granted or declined, and nothing `
         + `else. Nothing was written.`);
-    const target = this.#memberByHandle(handle);
+    const target = this.memberByHandle(handle);
     const open = target ? this.#openJoinRequest(projectId, target.member_id) : null;
     if (!open)
       return this.#noOpenRequest(projectId,
@@ -1531,18 +1636,18 @@ export class Membership {
       return { ok: false, reason: "NOT_THE_OWNER",
                detail: "only an owner of this project invites participants to it. An administrator sees "
                      + "every project and directs none of them." };
-    const target = this.#memberByHandle(handle);
+    const target = this.memberByHandle(handle);
     if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
     if (target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };
     if (this.participation(projectId, target.member_id))
       return { ok: false, reason: "ALREADY_A_PARTICIPANT", handle };
     const now = new Date().toISOString();
-    this.sql.exec(
-      `INSERT INTO project_participants (project_id,member_id,state,owner,invited_by,created,updated)
-       VALUES (?,?,'invited',0,?,?,?)`, projectId, target.member_id, by, now, now);
-    /* R33 (REC-226): the same act answers the invitee's open request to join, if they have one: it is closed
-       `granted`, by the owner who invited, so a request never stays open beside the invitation that met it. */
-    const granted = this.#closeJoinRequests(projectId, target.member_id, "granted", by, null, now);
+    this.participationWrite("invite", { projectId, memberId: target.member_id, by, at: now });
+    /* R33, R116 (REC-226; N783): the same act answers the invitee's open request to join, if they have one: R116's
+       listener (`project-roster`, its R15) closes it `granted`, by the owner who invited, so a request never stays open
+       beside the invitation that met it. */
+    const granted = Membership.#tell(this.#invitedListener,
+      { projectId, memberId: target.member_id, by: by ?? null, at: now });
     return { ok: true, projectId, handle, state: "invited", ...(granted ? { request: "granted" } : {}) };
   }
 
@@ -1610,7 +1715,7 @@ export class Membership {
       return { ok: false, reason: "NOT_THE_OWNER",
                detail: "only an owner of this project removes a participant from it. This REVERSES the "
                      + "earlier rule, under which an administrator removed and an owner could not." };
-    const target = this.#memberByHandle(handle);
+    const target = this.memberByHandle(handle);
     if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
     const p = this.participation(projectId, target.member_id);
     /* N335: the NAMED member holds no participation, a different condition from the caller holding none (R87), so it
@@ -1652,7 +1757,7 @@ export class Membership {
     if (!this.isProjectOwner(projectId, by))
       return { ok: false, reason: "NOT_THE_OWNER",
                detail: "only an owner of this project may propose another owner of it" };
-    const target = this.#memberByHandle(handle);
+    const target = this.memberByHandle(handle);
     if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
     if (target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };
     const p = this.participation(projectId, target.member_id);
@@ -1757,7 +1862,7 @@ export class Membership {
     if (blocked) return blocked;
     const why = String(reason ?? "").trim();
     if (!why) return { ok: false, reason: "NO_REASON", detail: "authority changes are recorded with a reason" };
-    const target = this.#memberByHandle(handle);
+    const target = this.memberByHandle(handle);
     if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
     if (target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };
 
@@ -1793,7 +1898,7 @@ export class Membership {
     if (!this.isProjectOwner(projectId, by))
       return { ok: false, reason: "NOT_THE_OWNER",
                detail: "only an owner of this project votes on its ownership" };
-    const target = this.#memberByHandle(handle);
+    const target = this.memberByHandle(handle);
     if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
     if (!this.isProjectOwner(projectId, target.member_id))
       return { ok: false, reason: "NOT_AN_OWNER", handle };
@@ -1881,7 +1986,7 @@ export class Membership {
   /** The member's own statement about themselves. */
   expertiseDeclare({ memberId, label } = {}) {
     const m = this.#one(`SELECT member_id, status FROM members WHERE member_id=?`, memberId);
-    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    if (!m) return noSuchMember(memberId);   /* N793: C-96.39 minted at its one site */
     if (m.status !== "active") return { ok: false, reason: "NOT_ACTIVE" };
     const lab = Membership.#normLabel(label);
     /* N285 (K275, K343): R21's refusal is its own condition, an expertise declared without a readable name, so it has
@@ -1912,7 +2017,7 @@ export class Membership {
         { remedy: "An active administrator of this group can confirm it, for any member, another administrator "
                 + "included." });
     const m = this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId);
-    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    if (!m) return noSuchMember(memberId);   /* N793: C-96.39 minted at its one site */
     const lab = Membership.#normLabel(label);
     const cur = this.#expertiseState(memberId, lab);
     /* An administrator cannot introduce a label. Confirming something never
@@ -2173,7 +2278,7 @@ export class Membership {
     const admins = this.activeAdmins();
     if (!by || !admins.includes(by)) return notAnAdmin(by, "setting a member's capabilities");   /* R84 */
     const m = this.#one(`SELECT member_id, role FROM members WHERE member_id=?`, memberId);
-    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    if (!m) return noSuchMember(memberId);   /* N793: C-96.39 minted at its one site */
     const want = Array.isArray(capabilities) ? capabilities : null;
     if (!want) return { ok: false, reason: "BAD_CAPABILITY", detail: "capabilities is an array" };
     if (want.includes("administer") || m.role === "admin")
@@ -2197,7 +2302,7 @@ export class Membership {
    *  manufactures the majority that ejects the honest ones. */
   async adminEndorse({ memberId, by } = {}) {
     const m = this.#one(`SELECT member_id, status, role, invite_days FROM members WHERE member_id=?`, memberId);
-    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    if (!m) return noSuchMember(memberId);   /* N793: C-96.39 minted at its one site */
     /* N335: C-96.14, this module's row (K275). */
     /* DEC-49 REGION is-endorse-proposed */
     if (m.status !== "proposed") {
@@ -2249,7 +2354,7 @@ export class Membership {
                      + "arrangement in which nobody holds that power, because your group's Civicsmith runs in "
                      + "somebody's hosting account. The remedy is at the hosting account, not here (section 4.6)." };
     const m = this.#one(`SELECT member_id, role, status FROM members WHERE member_id=?`, memberId);
-    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    if (!m) return noSuchMember(memberId);   /* N793: C-96.39 minted at its one site */
     /* D-134: the TARGET is not an administrator — a different fact from the CALLER not being one, which is
        what NOT_AN_ADMIN says at every other site, so it carries its own code and its own canned sentence. */
     const refusal = (code, detail, extra) => Membership.#custodialRefusal(code, detail, extra);
@@ -2564,7 +2669,7 @@ export class Membership {
     if (barSet) return barSet;
     if (!["active", "revoked"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
     const m = this.#one(`SELECT status, role FROM members WHERE member_id=?`, memberId);
-    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    if (!m) return noSuchMember(memberId);   /* N793: C-96.39 minted at its one site */
     /* 4.4: administrator status cannot be taken away by another administrator.
        Revoking an administrator IS taking it away, so it goes through the
        section 4.7 vote or it does not happen. This is what stops an instance
@@ -2686,7 +2791,7 @@ export class Membership {
   inviteWithdraw({ memberId, by = null } = {}) {
     if (!this.isAdministrator(by)) return notAnAdmin(by, "withdrawing an invitation");   /* R84 */
     const m = this.#one(`SELECT status, invite_hash FROM members WHERE member_id=?`, memberId);
-    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    if (!m) return noSuchMember(memberId);   /* N793: C-96.39 minted at its one site */
     /* DEC-49 REGION is-invitation-unused */
     if (m.status !== "invited" || !m.invite_hash)
       return Membership.#rowRefusal("NO_UNUSED_INVITATION",
