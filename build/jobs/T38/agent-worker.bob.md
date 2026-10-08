@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START by `build/plan/reading-sets
 Merge order in L6: agent-model → agent-worker; ai-runs (test only) merges when complete.
 Inherited reds: the plan's rule 6 list as it stands at your START; none is yours.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Your reading stands (K2299): `signin` refused `BAD_ACCOUNT` when `level` is not `member`, when a `secret` key is present at all, or when `suggestions` is present and not `false`; an absent `suggestions` is read as off. Available exactly when `member` is a non-empty string; no published-hash check; `cascadeToken` hands agent-model `{kind: "signin", member}`; `ACCOUNT_KINDS` is `["apikey", "signin"]`. Test each arm by R id. Carry on.
