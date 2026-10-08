@@ -35,3 +35,7 @@ B2 done: merged tranche/T38 (case-carriage). Module tests against the real case-
 **P6.** 3,465 lines (`src/case-authoring/`), under about 4,000.
 
 Size (session_01Sp2boRLmm5PQPFmpQBHNT7): test runs 5, module lines 3465
+
+## J3 · COMPLETE
+
+T38-13 done (R34: PHOTO_UNCHECKED first when op=publish refuses with it, else among blockers; nothing-to-obscure clears it). No logic change needed; comments re-worded; tests updated incl. C-120.19 in the R29 row lists. Module tests 164/164 pass; format, architecture, coverage (46/46), ownership 0 failures. 3,465 lines. Details in my record.
