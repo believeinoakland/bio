@@ -45,3 +45,7 @@ Numbered entries; BOB answers each in rulings (K) on `tranche/T<n>`. Decision st
 ## H8 · 2026-10-08 · D36 ruled; D40 withdrawn
 
 **Carries:** Bob, "D36: C": the system's finds on a question reach, once in the queue, the joined members of every project drawing on it; each member may unfollow or follow a question; nobody receives what she may not already see. D40 withdrawn: Bob confirmed project contents are seen only by participants, hidden or not (his ruling of 2026-09-18 stands). Still open: D35's reading (steps live with a question, the group's general understanding, or one project; a hidden project's steps stay inside it unless shared).
+
+## H9 · 2026-10-08 · D41 ruled A; D27–D30 restated
+
+**Carries:** Bob, "D41: A": a step on a shared question taken from inside a hidden project is on the question, seen wherever the question is, attributed by handle, naming no project; the member is told once at the act (this lane's detail, DEC-69; owed to the UX stream). The model of steps (D32–D36, D41) is complete; D27–D30 are now restated for Bob around it.

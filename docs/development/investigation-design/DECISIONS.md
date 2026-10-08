@@ -80,3 +80,5 @@ This lane's reading (to confirm): a step is shared unless project-specific; it l
 
 **D35 ruled, Bob, 2026-10-08:** "No, a member recording a step doesn't choose which of these it serves. A step taken anywhere is seen wherever it is." Recorded: a step's sight is the sight of the place it is taken (a question: wherever the question is seen; the group: group-wide; a project: its participants); no choice at recording. Open with Bob as D41: a step on a shared question taken from inside a hidden project.
 | D41 | a step on a shared question taken from inside a hidden project: A it is on the question, seen wherever the question is (attributed by handle only, no project named); **B** it stays in the hidden project until a member moves it to the question | open |
+
+**D41 ruled, Bob, 2026-10-08: "D41: A".** A step on a shared question taken from inside a hidden project is on the question, seen wherever the question is seen, attributed by handle, naming no project. This lane's detail (DEC-69, informing at the act once): the member is told once, at the act, that the step will be seen by everyone who sees the question (owed to the UX stream).
