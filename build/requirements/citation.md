@@ -32,14 +32,14 @@ Terms. The **citing object** is the bundle a citation is written into, named by 
 
 ### Uses
 
-- `provenance` (L3): `homeOf` (its R4), the document a found match's capture is held in (R1); a capture with no home, or in a bundle the viewer may not see, answered alike `FOUND_MALFORMED` (K1982).
+- `provenance` (L3): `homeOf` (its R4), the document a found match's capture is held in (R1), and a capture's home document for R13; a capture with no home, or in a bundle the viewer may not see, answered alike `FOUND_MALFORMED` (K1982).
 - `record-grammar`: the shared grammar names this module once read from the check catalogue (frontmatter, types, ids, actors, labels, grades, `SHARED_ACT_CHECKS`), re-pointed in T19 (rule 1); the catalogue rows it owned are in its own code (K808, K820).
-- `record-core`: `recordOf(ctx)`, the `bundles` read contract and a bundle's live files (R37, R41–R43).
+- `record-core`: `recordOf(ctx)`, the `bundles` read contract and a bundle's live files (R37, R41–R43); `listByType`, `head` (R36, R41) and `readImage` (R15), for R13's citing objects and their history.
 - `membership`: the existence answer and sight (`existenceAct`, `inSight`; R44, R61), the one no-such-project answer (`noSuchProject`, R78), `projectAuthority` (R55).
 - `promotion`: `promote`, `INLINE_MAX`.
-- `content`: `captureFor`, `citationExtent` (`legExtent` today, R5).
-- `retrieval`: `selectionResolve` and `answerChanged` (R59); the shape of a `findIn` match (T35-37), read from the caller's `found`, never called (R1).
-- `inquiry`: `earned` (R13), `checkLegExtentGrammar` (R5), `BASIS_ROLES` (R4's vocabulary); its check and projection (R11, R12) judge and project every leg this module writes.
+- `content`: `captureFor`, `citationExtent` (`legExtent` today, R5); `canonicalExtent` (R2), `extentRelation` (R6), `CONTENT_EXTENT_KINDS` and `contentRow`, for R13.
+- `retrieval`: `selectionResolve` and `answerChanged` (R59); `registerRecordedBy` (R76), for R13; the shape of a `findIn` match (T35-37), read from the caller's `found`, never called (R1).
+- `inquiry`: `earned` (R13), `checkLegExtentGrammar` (R5), `BASIS_ROLES` (R4's vocabulary); its check and projection (R11, R12) judge and project every leg this module writes; R13 finds a capture's legs through that projection (K2132).
 
 ### Invariants
 
