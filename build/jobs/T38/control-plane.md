@@ -1,6 +1,6 @@
 # control-plane (T38)
 
-**Status** · session_01L6n1QKr1FBq4RCADwXEj7g · depth 2 · RUNNING until 2026-10-08T19:35:26Z (node --test test/ (whole plane tree)) · handled B0
+**Status** · session_01L6n1QKr1FBq4RCADwXEj7g · depth 2 · RUNNING until 2026-10-08T19:57:35Z (migrate-released on my branch and on tranche/T38, compared) · handled B0
 
 ## Completion
 
