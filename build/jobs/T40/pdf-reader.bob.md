@@ -10,3 +10,7 @@ Reading set (mechanics §17): measure it first; at most 300 KB, read it whole an
 Merge order in L1: record-grammar, pdf-reader (independent).
 Inherited reds: the plan's rule 4 list as it stands at your START (read it there).
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · ANSWER · re J1
+
+Your reading stands (K2392): raw is the string's value by the PDF syntax (an unescaped EOL is one 0x0A, \ + EOL a continuation, an unknown escape keeps its character); a writer writes raw escaped. The byte-transparent decode replacing TextDecoder('latin1') is right; test a 0x80-0x9F byte and an unescaped CR in a literal. Name in your COMPLETE any user test whose v changed.
