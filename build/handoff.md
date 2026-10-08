@@ -1,33 +1,36 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #137 (`session_018V5fijKpqARwKVEdf1W9Ce`), 2026-10-08 ~07:25 UTC, for BOB #138. Read `build/rulings-active.md` first; this BOB's rulings are K2150–K2170.
+**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #138 (`session_01HPS1DqHHqTRjKz5fiM8LfW`), 2026-10-08 ~09:30 UTC, for BOB #139. Read `build/rulings-active.md` first; this BOB's rulings are K2171–K2193.
 
 ## Open with Bob (each waits on him; none blocks the work)
 
-1. **T36's close, step (3)** (§5.7 (3), §16). Fast-forwarding `main` to `tranche/T36`'s closing commit and merging `dist/cut-0.81.0` into `main` were refused before as "Merge Without Review" (K1454, K1906), approved once (K1909), pre-approved for BOB #136's session only (K2137); not on the standing list. BOB #137 did not take them (no approval in its session). Ask Bob in **your** session for: "Approved: at T36's close, fast-forward main to tranche/T36's closing commit, and merge dist/cut-0.81.0 into main. Standing list: not added." Then record the approval ruling (§16 form), act, and `archive/T36.md`'s Status stays `CLOSING` until `main` is at it. Note: `tranche/T36` will have moved past the CLOSING commit by your T37 opening commits only if you write them there; open T37 on `tranche/T37` (below) so `tranche/T36`'s tip stays the closing commit `9ecf2156bd` plus this handoff's commit.
-2. **Key custody, three questions** on https://claude.ai/artifact/TB55RCpWXtBEWUanVnCA3A (unanswered; no comments). Re-watch it from your session (`ArtifactComments` watch).
-3. **Weekly meter reading** for T36's close and T37's opening (§5.2 (3), §5.7 (5)); asked by BOB #137 in its T36 report.
+All three questions are on one rendered page, https://claude.ai/artifact/TuYfyFijT6SayH1mBqSM21 ("T37 Questions for Bob"); re-watch it from your session (`ArtifactComments` watch) and point Bob at it.
+1. **T36's close, step (3)** (§5.7 (3), §16). Fast-forwarding `main` to `tranche/T36`'s tip and merging `dist/cut-0.81.0` into `main` were refused before as "Merge Without Review" (K1454, K1906), approved once (K1909), pre-approved for BOB #136's session only (K2137); not on the standing list. BOB #138 asked Bob for the line in its session (K2171); no answer. Ask again in **your** session: "Approved: at T36's close, fast-forward main to tranche/T36's tip, and merge dist/cut-0.81.0 into main. Standing list: not added." Then record the approval (§16 form) and act; `archive/T36.md` stays `CLOSING` until `main` is at it. `tranche/T36`'s tip is `ceec200633` (the closing commit plus BOB #137's handoff and BOB #138's metrics row).
+2. **Wizard library version 2** (wizard-scripts R22, Bob's approval; plan "For BOB" 1): four scripts ("Set up and claim", "Publication ceremony", "Check a claim", "Follow a proceeding"); recommendation: approve all four. Needed before L11's START (T37-25); a script unapproved then stays at version 1, named, and red 7 / red 31 stays.
+3. **Photo metadata in published photos** (N779; plan "For BOB" 2): recommendation B (every published photo a metadata-free copy, the group keeping the original). Needed before L8's START; if unanswered, N779 stays in `next.md` with its reason.
+4. **Key custody**, three questions on https://claude.ai/artifact/TB55RCpWXtBEWUanVnCA3A (no comments as of 09:30). Re-watch it.
+5. **Weekly meter reading** for T36's close and T37's opening (asked).
 
 ## Where things stand
 
-- **T36 is closed but for step (3).** All 11 layers merged (L7 had no job); K2168 closed L11; K2169: PR #14 (design stream, U123) marked ready and merged into `main` (`e08cd35ecb`) under the standing list (K1177, K1261, as K2068), `main` merged into `tranche/T36` (no conflict), `current.md` archived as `plan/archive/T36.md` (`CLOSING`, outcome and usage written). Checks: format, architecture, coverage 4,211/4,211, channels 0 failures; `fleetbundles`, `newgroup-bundle-fresh` 1/0. T36 reported to Bob (K2170).
-- **Reds still open** (in `archive/T36.md`'s rule 5, each with its owner): 4 (row census → T37-7), 7 (UI DEC-88, Bob's), 15 (release cut only, N750), 16 (progressions → T37-12), 18 (`NO_REASON` → N755), 31 (plane `release.test` R19 → N775: the design library's new version, now on `main` via PR #14, carried by wizard-scripts with Bob's version approval, R22).
-- **T37 is ready to open:** `plan/draft-T37.md` (37 jobs; L1 5, L2 2, L3 3, L4 2, L5 4, L6 4, L8 6, L9 2, L10 1, L11 8), `next.md` N748–N778. Added this session: N769–N778 (K2150, K2153, K2155, K2159–K2161), T37-34 (case-carriage), T37-35 (standards R43), T37-36 (conformance), T37-37 (acquisition), T37-38 (capture), and shares in T37-3, T37-5, T37-8, T37-24, T37-26, T37-27, T37-28.
-- **Now on `main` from PR #14, to fold at T37's opening:** DEC-180 (N757), DEC-181 and DEC-182 (N776: op-grades R26, affordances' `ACT_HELP` from the new `mock-acts.js`, op-declarations R34), DEC-182's `assistantset` removal from the library (N775, needs Bob's version approval: ask him with the opening, P17 UX/policy), DEC-179's `words.json` (N669, N670).
-- **Release notes for the next installer deploy** (K2164): register `connectivity-directory.bind` on the OAuth client (`newgroup/DEPLOY.md` §4); R43's two real public lines wait for Bob's signer sitting. File-scanner's images are on `ghcr.io`, not pullable by Containers (N773, T37-5).
-- **Channel:** UX-DESIGN read through B101; my cursor U128; nothing owed either way. INVESTIGATION-DESIGN's `HANDOFF.md` unchanged at `f53cd6ffbe`.
-- Timers (delete mine by id at takeover): backstop `trig_01Cx3uL9ahYvk1BRmtPrt3kn` (07:29, re-arm while your start is pending), WATCH #137 `trig_014YUQPJncycWRPyoLy9cWyH` (07:47, into ROOT).
+- **T37 is open** on `tranche/T37` (from `tranche/T36`'s tip, K2171; `main` @ `e08cd35ecb` untouched). 46 jobs in `plan/current.md` (folded at the opening with DEC-178, DEC-180–DEC-182, N775–N777; the census adds T37-47 and T37-48). L1 (6 jobs, K2180), L2 (3, K2186) and L3 (3, K2192) are closed: merged, regenerated, checked (format, architecture, coverage 4,227/4,227, channels: 0 failures), sessions archived, rows in `metrics/T37.csv`.
+- **L4 is running** (K2193): READING-PIPELINE #8 `session_01NrApu29PkaxgKV2pTicqhV` (T37-9), EXTRACTION #16 `session_01Afy7CyYbu7EgvpPingjWAQ` (T37-45, test), CONTENT #15 `session_01NPBftQhCWzUZX1ASP6uBqi` (T37-10); STARTs posted (B1 each), started 09:28.
+- **Prepared:** L5's STARTs (`plan/starts-T37/{events,standards,progressions,retrieval}.txt`); retrieval R74 and reading-pipeline R28 worded. Not yet: L6 onward STARTs and requirement wording (L6: capture-requests T37-47, skills, answers, agent-runner, agent-worker; L8's N757 shares are the largest: case-carriage, case-grammar, case-disclosures, public-read, case-checker, case-authoring, publication; write them with a worker's draft and BOB's review, as K2175 did for L2–L3).
+- **Reds:** plan rule 6 items 1–17; item 17 is `plan/t37-red-census.md` (63 `test/m` reds on the tranche @ `4023b1e6e2`, 49 found unnamed, each with its owner and clearing entry, K2189). Host-governor's nine → N784 (T38).
+- **Channel:** UX-DESIGN has not read B102 (BOB's QUESTION on the Photos step: gate, mark withdrawal, uncoverable formats; each with the reading L8 takes if unanswered). INVESTIGATION-DESIGN's `HANDOFF.md` unchanged at `f53cd6ffbe`.
+- **`next.md` (T38):** N748, N751, N779 (Bob's), N780 (images where Containers pull: agent-runner's cut names `ghcr.io`), N781 (terms register: two unquoted paragraphs), N782 (image-codecs R1's table shape), N783 (membership at 3,970 lines: split before its next job), N784.
+- Timers (delete mine by id at takeover): backstop `trig_016qnN8yCDJjVbtxRYkXKL8w` (09:31; re-arm while your start is pending), WATCH #138 `trig_0148yvzyRFgSpuYVWExVpifC` (10:11, into ROOT).
 
 ## Next steps, in order
 
-1. Take over (§5.1): archive BOB #137, its `BOB-final` row under T36; arm your backstop and WATCH; re-watch TB55RC….
-2. Ask Bob for the T36 close line above (Open with Bob 1); act when given.
-3. **Open T37 (§5.2) at once** from `tranche/T36`'s tip (K2072, K2137: not waiting on `main`): create `tranche/T37`; re-read `draft-T37.md` against `archive/T36.md`'s open reds and `next.md`; fold PR #14's DECs (above); legacy census; re-read the terms register entries live (rulings-active §3); measure L1's reading sets (`build/plan/reading-sets.py`); write L1's STARTs; `draft-T37.md` → `current.md`, new `next.md`; tell Bob in one line; start L1.
-4. Alongside (§5.9): L2's STARTs before L1 closes.
+1. Take over (§5.1): archive BOB #138, its `BOB-final` row under T37; arm your backstop and WATCH; re-watch both artifacts.
+2. Ask Bob for the T36 close line (Open with Bob 1) and point him at the questions page.
+3. Watch L4 (§5.4); merge each job (§5.5); close L4 (§5.6: regenerate in the manifest's order, checks, archive, rows); start L5 from the drafted STARTs.
+4. Alongside (§5.9): L6's STARTs and requirement wording, then L8's (N757's shares; UX-DESIGN's B102 answer, if any, folded first).
 
 ## Process notes
 
-- Merge a design-stream PR that is a draft by marking it ready first (`update_pull_request` `draft: false`), then `merge_pull_request` with the head pinned (K2068, K2169).
-- After a container restart: `npm ci --ignore-scripts` in agent-runner, `npm ci` in sheet-worker and file-scanner before `fleetbundles`.
+- A layer close's regeneration can run in a separate `git worktree` (K2186) when the main checkout is busy; never symlink into an existing `node_modules` (link only where none exists), and remove the links before leaving.
 - `mail.mjs addjob --name` needs a literal space (`"<MODULE> #k"`).
-- A layer's start instructions written by a worker need BOB's review for: `modules.json` edges BOB must add at START, requirements' Uses lines not yet folded, and plan text superseded by later rulings (K2152).
+- A job's COMPLETE crossed by a BOB entry stays open until it reads it (K2176); a CHANGE re-opening a merged job is merged again (K2178).
+- After a container restart: `npm ci --ignore-scripts` in agent-runner, `npm ci` in sheet-worker and file-scanner before `fleetbundles` (node_modules survived the one restart this session).
