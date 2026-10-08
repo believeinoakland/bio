@@ -29,6 +29,6 @@
 
 Size (session_01LrhFoLsxK6BYPBNPHwMufT): test runs 9, module lines 3446
 
-## J1 · COMPLETE
+## J1 · REPORT
 
-T36-28 complete on job/T36/case-authoring after merging tranche/T36 (K2146): R60, R61, R29's C-136.2 met, and my module's reevaluation raise moved after the act's last refusal. Against the real criteriaFor: case-authoring 158/158; format, architecture, coverage (45/45) and ownership 0 failures. My users' reds all fail identically on the tranche tip without my work: inherited 11, 18, 19, 20, 22–24, plus three arriving with publication's R73 merge (plane R6 x2, control-plane R30 reviewcopy convert), yours to name as accepted. Nothing deferred. P6: 3,446 lines. Record: build/jobs/T36/case-authoring.md.
+T36-28 built and pushed (f08b189369): R60, R61, R29's C-136.2, and a fix in my module (reevaluation's raise now follows the act's last refusal). Verified with a local, uncommitted stand-in for publication R75 as K2129 words it: 158/158 of my tests, my users' tests failing only as before (inherited reds 11, 18–24), format, architecture, coverage (45/45) and ownership all 0 failures. publishCase now calls publication.criteriaFor on every act, so my tests on the branch are red until publication's R75 merges; I am waiting for publication's and case-grammar's merges into tranche/T36, then I merge it, re-run steps 5–6 and post COMPLETE. Ring me with a CHANGE or RESUME when they are in. One reading, recorded: R61's refusal needs the complete text, so it is always 'first' when reached and never sits in blockers. P6: 3,446 lines.
