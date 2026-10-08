@@ -41,6 +41,7 @@ import { T35_RUNGS, T35_RUNG_ABSENT, T35_NON_ACTS, T35_CONSEQUENCE_STATEMENTS } 
 /* T36 (K2121, K2156): op-grades R23–R25 grade K2092's five ops, file-safety's 23 and credentials' keep-away in its
    `t36.mjs`; each grade is pinned below by name, as its owner's requirements give it, never read back from the table. */
 import { T36_RUNGS, T36_RUNG_ABSENT, T36_NON_ACTS, T36_CONSEQUENCE_STATEMENTS } from "../../../src/op-grades/t36.mjs";
+import { T37_RUNGS, T37_RUNG_ABSENT } from "../../../src/op-grades/t37.mjs";
 
 test("R1: ACTS holds exactly the object-directed acts, each at its weight", () => {
   const W = {
@@ -159,6 +160,11 @@ test("R2 R35 R37 R38: the rung ladder, low to high, and RUNGS' assignment — DE
     "aikeepaway"];
   assert.deepEqual(Object.keys(T36_RUNGS).sort(), [...T36_REASONED].sort());
   want.reasoned.push(...T36_REASONED);
+  /* op-grades R27 (T37; DEC-157 (5)): the three translation acts an administrator's one-act undo takes back, each
+     `reversible`, asking no reason; pinned by name */
+  const T37_REVERSIBLE = ["translationadopt", "translationconfirm", "translationrevert"];
+  assert.deepEqual(Object.keys(T37_RUNGS).sort(), [...T37_REVERSIBLE].sort());
+  want.reversible.push(...T37_REVERSIBLE);
   for (const [a, op] of Object.entries(OP_ALIASES)) if (Object.hasOwn(RUNGS, op)) want[RUNGS[op]].push(a);
   for (const k of Object.keys(want)) want[k].sort();
   assert.deepEqual(bandsOf(RUNGS), want);
@@ -494,14 +500,21 @@ test("R27 R32 R34 R35 R37: no op is graded `undetermined` that the rulings moved
     ...undeterminedOf(T35_RUNG_ABSENT),
     /* op-grades R24 (T36): a member's request on a file, asking no reason, that no act takes back (file-safety R13, R33) */
     "deepercheck", "safecopyrequest",
+    /* op-grades R27 (T37): a member's mark, the assistant's labelled translation drafts and a member's "looks wrong",
+       none asking a reason and none taken back (case-carriage R9, R12; instance-setup's T37 requirements) */
+    "obscuremark", "translationdraft", "translationmark",
     ...Object.keys(OP_ALIASES).filter((a) => RUNG_ABSENT[OP_ALIASES[a]]?.ground === "undetermined")];
   const undetermined = undeterminedOf(RUNG_ABSENT).filter((op) => !LATER.includes(op));
   for (const op of LATER) assert.equal(RUNG_ABSENT[op]?.ground, "undetermined", op);
   assert.deepEqual(undetermined, [...R27_LEFT].sort());
   assert.equal(undetermined.length, 21, "R27's count: DEC-88 moved 57 of the 78 into RUNGS");
   assert.equal(undeterminedOf(RUNG_ABSENT).length, LATER.length + 21,
-    "R27's count reads 30 with R32's, R34's, R35's and R37's five, and R40's, R45's and T36's beside them");
+    "R27's count: 21, with R32's, R34's, R35's and R37's, and R40's, R45's, T36's and T37's beside them");
   assert.deepEqual(undeterminedOf(T36_RUNG_ABSENT), ["deepercheck", "safecopyrequest"]);
+  assert.deepEqual(undeterminedOf(T37_RUNG_ABSENT), ["obscuremark", "translationdraft", "translationmark"]);
+  /* negative control: one of T37's three left out of the pinned list is seen among the rest */
+  assert.deepEqual(undeterminedOf(RUNG_ABSENT).filter((op) => !LATER.includes(op) || op === "translationmark")
+    .filter((op) => !R27_LEFT.includes(op)), ["translationmark"]);
   /* the 78 held before DEC-88: the 21 and the 57 together, each of the 57 now ranked in RUNGS */
   const before78 = ["inboxresolve", "taskforward", "taskresolve", "actioncorrespond", "actionlawspropose",
     "projectfork", "biasadopt", "strengthbar", "entitycreate", "entityalias", "resolve", "attesttext", "thread",

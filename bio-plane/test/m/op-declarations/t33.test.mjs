@@ -33,6 +33,7 @@ import { tasksOps } from "../../../src/tasks/index.mjs";
 import { publicationOps } from "../../../src/publication/index.mjs";
 import { wizardScriptsOps } from "../../../src/wizard-scripts/index.mjs";
 import { fileSafetyOps } from "../../../src/file-safety/index.mjs";
+import { caseCarriageOps } from "../../../src/case-carriage/index.mjs";
 
 const { OPS, SESSION_OPS, NEEDS, UNATTENDED_BY_DECISION, ACT_GATE, OP_FAMILIES, OP_KINDS, FAMILY_OPS, ASK_GRANT_OPS,
         OP_STAMPS, OP_ALIASES } = O;
@@ -52,7 +53,9 @@ const MAPS = { events: eventsOps, lines: linesOps, money: moneyOps, "money-check
   "action-clocks": actionClocksOps, "capture-requests": captureRequestsOps, membership: membershipOps, tasks: tasksOps,
   publication: publicationOps, "wizard-scripts": wizardScriptsOps,
   /* T36 (R32): file-safety's map, read for R6's totality */
-  "file-safety": fileSafetyOps };
+  "file-safety": fileSafetyOps,
+  /* T37 (R38): case-carriage's map, read for R6's totality */
+  "case-carriage": caseCarriageOps };
 const recorder = () => {
   const calls = [];
   const fn = (...args) => { calls.push(args); return { ok: true }; };
@@ -66,10 +69,10 @@ const build = (owner, url = new URL("http://plane/"), body = {}) => {
 const servedBy = (owner) => Object.keys(build(owner).map);
 
 /* The ops served in process only, never routed to a caller (R6's store-internal routes): inquiry's two (inquiry's
-   Callers' obligations: the control plane routes neither), entities' plan read, credentials' three the plane's own
-   admission and login call. */
+   Callers' obligations: the control plane routes neither), entities' plan read, credentials' two the plane's own
+   admission and login call (T37, R39: `setpassword` is a declared op now, routed to its owner's arm). */
 const IN_PROCESS = { inquiry: ["basis", "restson"], entities: ["readingnameplan"],
-                     credentials: ["aicredentiallook", "setpassword", "session",
+                     credentials: ["aicredentiallook", "session",
                        /* T36 (R33, R6; credentials R50): R44's in-plane write, which admission reaches through the store */
                        "securitycount"],
                      /* T34 (R22, R6): the check's addressees, read by tasks in process (membership R106) */
@@ -95,11 +98,19 @@ const SERVED_ELSEWHERE = { clockpropose: "control-plane (T33-89)", capturereques
   /* T35 (R30): the second-administrator step, built by instance-setup's T35 job beside this one; the co-archive
      setting, the acquisition instance's two methods the door routes (control-plane R58) */
   adminrecoverystep: "instance-setup (T35-69)", coarchiveset: "control-plane (T35-72)",
-  coarchivestate: "control-plane (T35-72)" };
+  coarchivestate: "control-plane (T35-72)",
+  /* T37 (R36): the member's own sign-in is the control plane's route to the member's own runner (agent-worker R66) */
+  subscriptionsignin: "control-plane (T37-33)",
+  /* T37 (R35, R37): the interface's translation, built by instance-setup's T37 job beside this one (its R67, R69–R74;
+     the draft routed through the control plane's third draft, T37-33) */
+  translationdraft: "instance-setup (T37-30)", translationgrant: "instance-setup (T37-30)",
+  translationadopt: "instance-setup (T37-30)", translationconfirm: "instance-setup (T37-30)",
+  translationrevert: "instance-setup (T37-30)", translationmark: "instance-setup (T37-30)",
+  translations: "instance-setup (T37-30)", interfacewords: "instance-setup (T37-30)" };
 
 test("R19, R17, R18, R20, R5: OP_FAMILIES holds one frozen entry per owner — owner, citation, the actor and proposer stamps as {key, at}, its kinds, and the acts, proposals and reads derived from them — each op in exactly one family and every kind one of OP_KINDS", () => {
   assert.deepEqual(Object.keys(OP_FAMILIES).sort(), ["acquisition", "action-clocks", "actions", "ai-runs", "answers",
-    "calculations", "capture-requests", "corpus-export", "credentials", "duties", "entities", "events", "explore", "file-safety",
+    "calculations", "capture-requests", "case-carriage", "corpus-export", "credentials", "duties", "entities", "events", "explore", "file-safety",
     "following", "hypotheses", "inquiry", "instance-setup", "lines", "membership", "money", "money-checks", "people",
     "public-read", "publication", "retrieval", "sources", "standards", "tasks", "wizard-scripts", "workbooks"]);
   assert.deepEqual(Object.keys(OP_KINDS).sort(), ["admin", "daemonact", "door", "member", "open", "own", "ownread",

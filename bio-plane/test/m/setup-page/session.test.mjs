@@ -91,7 +91,7 @@ test("R26 every request the page sends under a session carries the token only in
   p.el("#k-key").value = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKGAY bio-ratify"; p.el("#k-who").value = "ada"; await p.el("#k-add").fire(); await settle();
   p.el("#mk-ha-holders").value = "Ada"; await p.el("#mk-ha-set").fire(); await settle();
   p.el("#mk-cn-tell").checked = true; await p.el("#mk-cn-set").fire(); await settle();
-  p.el("#mk-gk-pays").checked = true; p.el("#mk-gk-key").value = "sk-ant-key"; await p.el("#mk-gk-set").fire(); await settle();
+  p.el("#mk-gk-key").value = "sk-ant-key"; await p.el("#mk-gk-set").fire(); await settle();
   p.el("#mk-ka-reason").value = "a reason"; await p.el("#mk-ka-set").fire(); await settle();
   await p.drawn("#mk-st-cat .st-pick", { i: "0" }).fire(); await settle();
   p.el("#mk-st-cred-0").value = "the-tools-key"; await p.el("#mk-st-add").fire(); await settle();

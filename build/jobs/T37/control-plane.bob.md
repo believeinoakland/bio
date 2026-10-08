@@ -1,6 +1,6 @@
 # BOB to control-plane (T37)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -15,3 +15,7 @@ Generated artifact: the plane's bundle `bio-plane/dist/bio-plane.bundled.mjs` (`
 Merge order in L11 (`modules.json` order): wizard-scripts → op-grades → affordances → notice-producers → setup-page → instance-setup → op-declarations → store-door → control-plane → plane.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there, item 17 with `plan/t37-red-census.md`). Yours, cleared by your merge: red 19 (`statementack.test.mjs`:31, from T37-21); rule 4's N761 interim reds named at the owners' STARTs (credentials, review, ratification, case-authoring, filing-templates: each grant test driving an owner through this door), red 16 (promotion `d526-refusal-order.test.mjs`, census row 64) and red 15's :93 part (capture-requests `plane.test.mjs`, `AI_CREDENTIAL_NO_SECRET`); rule 4's N765 interim red `t34-routes.test.mjs`:211 (R57, :222–223), named at T37-30's START; and op-declarations' R6 totality reds for the ops you route (named at T37-31's START). Run each after your merge and name any still red. Red 7 is not yours (T37-25).
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+All four readings stand (K2238), with: (1) store-door adds aikeptaway and subscriptionconnected (its R10, CHANGE sent). (3a) instance-setup answers ASSISTANT_DRAFT_UNAVAILABLE with direction, language, words. (3b) plane extends draftOnObject (CHANGE sent to PLANE #26). (3c) send the pack. (3d) translationdraftrecord's body is instance-setup's: {direction, language, keys?|key, words, draft, not_drafted?} (agent-worker's not_drafted top-level beside draft), by and viewer stamped in the query; no usage field. Merge tranche/T37 (store-door's and instance-setup's requirements changed).

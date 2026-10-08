@@ -1,6 +1,6 @@
 # BOB to instance-setup (T37)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -13,3 +13,7 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Merge order in L11 (`modules.json` order): wizard-scripts → op-grades → affordances → notice-producers → setup-page → instance-setup → op-declarations → store-door → control-plane → plane.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there, item 17 with `plan/t37-red-census.md`); none in the census is yours. Rule 4's interim reds (item 8) that your merge opens, by name: `store-door` `routes.test.mjs`:121 (R10, asserting `ASSISTANT_OFF` at :131–132) until T37-32; `control-plane` `t34-routes.test.mjs`:211 (R57, :222–223) until T37-33; `plane` `ask.test.mjs`:100 (:105) and :264 until T37-48 (K2200 (3)). Each is red because `assistantGate()` now answers `AI_KEPT_AWAY`; confirm the list after your merge and name any other in your COMPLETE.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J2
+
+All five stand (K2238). bio-plane/src/setup-words.mjs is in your paths on tranche/T37 @ c3d980ccad: merge the tranche. Also, from STORE-DOOR #3 and CONTROL-PLANE #26 (written into your R67 at the same commit, read it): export translationDraftRefusal({language, direction, keys?, key?, by}) answering null or R67's first refusal, writing nothing (the door asks it before its gate); past the refusals with an assistant on, translationDraft answers {ok:false, reason:'ASSISTANT_DRAFT_UNAVAILABLE', direction, language, words}; translationdraftrecord's body is your reading 2, by stamped in the query.

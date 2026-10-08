@@ -10,6 +10,7 @@ import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { filingTemplatesOf } from "../../../src/filing-templates/index.mjs";
+import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { wizardScriptsOf, WizardScripts } from "../../../src/wizard-scripts/index.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -84,9 +85,12 @@ export function world({ register = true, reg = {} } = {}) {
   record.setSetting("jurisdiction_profiles", [TEST], "test");
   const now = () => Date.parse(clock.now);
   const filingTemplates = filingTemplatesOf(host, { record, membership, now });
+  /* credentials, real: its keep-away (R35's `aiKeptAway`) is what R24 reads; off until an administrator sets it */
+  const credentials = credentialsOf(host, { record, membership });
+  credentials.migrate();
   let n = 0;
   const w = {
-    st, host, record, membership, clock, filingTemplates,
+    st, host, record, membership, clock, filingTemplates, credentials,
     rows: (q, ...a) => [...st.sql.exec(q, ...a)],
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`).one().n,
     snapshot() {
@@ -114,7 +118,7 @@ export function world({ register = true, reg = {} } = {}) {
                    VALUES (?, ?, ?, ?, 't', 't')`, projectId, memberId, state, owner ? 1 : 0);
     },
   };
-  w.wz = wizardScriptsOf(host, { record, membership, filingTemplates, now });
+  w.wz = wizardScriptsOf(host, { record, membership, filingTemplates, credentials, now });
   if (register) { const r = w.wz.wizardRegister(registration(reg)); if (!r.ok) throw new Error(JSON.stringify(r)); }
   return w;
 }
@@ -136,7 +140,7 @@ export function seeded(opts = {}) {
 /** The object constructed again on the same storage (a Durable Object's next wake), registered with `reg`'s changes. */
 export function restart(w, reg = {}) {
   const x = new WizardScripts({ storage: w.st, record: w.record, membership: w.membership, filingTemplates: w.filingTemplates,
-                                now: () => Date.parse(w.clock.now) });
+                                credentials: w.credentials, now: () => Date.parse(w.clock.now) });
   x.migrate();
   const r = x.wizardRegister(registration(reg));
   if (!r.ok) throw new Error(JSON.stringify(r));

@@ -1,6 +1,6 @@
 # BOB to affordances (T37)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -13,3 +13,15 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Merge order in L11 (`modules.json` order): wizard-scripts → op-grades → affordances → notice-producers → setup-page → instance-setup → op-declarations → store-door → control-plane → plane.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there, item 17 with `plan/t37-red-census.md`). Yours, cleared by your merge: red 14 (`t36-backing.test.mjs`:76, row 28), red 17's affordances rows 1–27 (`plane.test.mjs`) and row 29 (`t36.test.mjs`:36). If your R12 totality test finds the ops op-grades grades (T37-26) without a spec until op-declarations merges (T37-31), name each as red until T37-31 in your COMPLETE.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · CHANGE
+
+(K2242) op-grades T37-26 is merged into tranche/T37. Merge the tranche: your t36-backing aikeepaway test should go green, and re-pin the five tests op-grades names as yours (t31.test.mjs:27 and :49, the R36 phone oracle and LARGER_SCREEN_ACTS; catalogue.test.mjs:110 the reversible list and :479 the undetermined set; t36.test.mjs:49, R48's owed_<op> keys now graded), each to op-grades' answer with its negative control. Then complete again. Wizard-scripts now carries library version 2 (K2241): if your ACT_HELP or tests read the library, re-check after its merge.
+
+## B3 · CHANGE
+
+(K2245) op-grades is re-merged with claimidentity dropped from its alias table (27). Also re-pin catalogue.test.mjs:240 (R45 R12: 28 aliases pinned) and t36.test.mjs:17 (names claimidentity), with your B2 re-pins. Merge the tranche first.
+
+## B4 · CHANGE
+
+(K2249) op-declarations T37-31 is merged: it declares subscriptionsignin, setpassword, translationdraft, translationgrant, translationadopt, translationconfirm, translationrevert and obscuremark. Merge the tranche and re-generate R48 so each owed_<op> text is held under its op (op-declarations t36.test.mjs:292, R34's partition, must go green), with your tests re-stated; then complete again.

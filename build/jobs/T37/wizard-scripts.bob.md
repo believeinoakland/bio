@@ -1,6 +1,6 @@
 # BOB to wizard-scripts (T37)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -15,3 +15,7 @@ Merge order in L11 (`modules.json` order): wizard-scripts → op-grades → affo
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there, item 17 with `plan/t37-red-census.md`); none is yours unless named here. Red 7 (plane `release.test.mjs`:12 and :18, R19, census rows 49–50: "Set up and claim" names `assistantset`) is cleared by your merge exactly when Bob approved "Set up and claim"'s version 2 before this START; otherwise it stays open, named in your COMPLETE, until a later entry. Rule 4's interim red (item 8): none expected from your merge: you read `credentials`, merged in L2, and nothing of `instance-setup`; the store's door refuses a kept-away draft before your handler (`store-door` R10), so store-door's and control-plane's draft tests, which still pin `ASSISTANT_OFF` until T37-32 and T37-33, do not reach your code. Confirm by running them after your merge.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
 At this START (13:05, BOB #140): Bob has not yet approved version 2 (For BOB 1 open), so the library stays at version 1 and red 7 stays open; name it in your COMPLETE. If his approval arrives while you run, BOB sends a CHANGE.
+
+## B2 · CHANGE
+
+(K2241) Bob: 'I don't need to approve wizard scripts.' Your R22 is re-worded on tranche/T37 (merge it): version 2 of all four scripts (Set up and claim, Publication ceremony, Check a claim, Follow a proceeding) from PR #14's library.json @ e08cd35ecb is approved, adopted by BOB under K2241. Carry version 2 for all four (regenerate with build-data.mjs, report the command and commits); red 7 (plane release.test.mjs:12, :18) should clear at your merge: confirm in your COMPLETE.

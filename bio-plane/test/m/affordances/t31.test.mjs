@@ -9,18 +9,21 @@ import { caseImportOps } from "../../../src/case-import/index.mjs";
 import * as ci from "../case-import/fixture.mjs";
 
 const { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, VOCABULARIES, decorate, unaccounted } = A;
-const { NON_ACTS, RUNGS, RUNG_ABSENT, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, LARGER_SCREEN_ACTS } = G;
+const { NON_ACTS, RUNGS, RUNG_ABSENT, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, LARGER_SCREEN_ACTS, IRREVERSIBLE_WEIGHT } = G;
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? ["rung", RUNGS[op]]
   : Object.hasOwn(RUNG_ABSENT, op) ? ["absent", RUNG_ABSENT[op].ground] : null;
 const published = () => [...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS];
 
 /* ============================================================ R36: the phone flag */
-/* The oracle, from R36's text alone, an alias answering as its op (`op-grades` R17, R18: `LARGER_SCREEN_ACTS` names ops). */
-const phoneWant = (alias) => {
+/* The oracle, from R36's text alone, an alias answering as its op (`op-grades` R17, R18: `LARGER_SCREEN_ACTS` names ops);
+   (T37; op-grades R18 as amended, DEC-181) every op in `IRREVERSIBLE_WEIGHT` answers false too, read from that set.
+   `irreversibleArm: false` is the negative control: the rule before T37, which the plane must no longer agree with. */
+const phoneWant = (alias, { irreversibleArm = true } = {}) => {
   const op = Object.hasOwn(G.OP_ALIASES, alias) ? G.OP_ALIASES[alias] : alias;
   const g = gradeOf(op);
   if (g && g[0] === "rung" && ["terminal", "attested", "irreversible"].includes(g[1])) return false;
   if (g && g[0] === "absent" && g[1] === "credential") return false;
+  if (irreversibleArm && IRREVERSIBLE_WEIGHT.includes(op)) return false;
   return !LARGER_SCREEN_ACTS.includes(op);
 };
 
@@ -38,6 +41,13 @@ test("R36: every op the catalogue grades or names, decorated, carries `phone` ex
     [false, false, false, false, false]);
   assert.deepEqual(["docket", "monitor", "cite", "inboxpull", "queuemute", "filingprepare"].map((op) => decorate({ id: op, label: "x" }, null).phone),
     [true, true, true, true, true, true]);
+  /* (T37) the IRREVERSIBLE_WEIGHT arm: standardrelease (its rung `reasoned`) and personexpunge answer false through it;
+     the negative control, the oracle without that arm, disagrees with the plane exactly on the set's members whose
+     other arms answer true */
+  assert.deepEqual(["standardrelease", "personexpunge"].map((op) => decorate({ id: op, label: "x" }, null).phone), [false, false]);
+  const missed = ops.filter((op) => decorate({ id: op, label: "x" }, null).phone !== phoneWant(op, { irreversibleArm: false }));
+  assert.deepEqual(missed.sort(), IRREVERSIBLE_WEIGHT.filter((op) => phoneWant(op, { irreversibleArm: false })).sort());
+  assert.ok(missed.includes("standardrelease"), "the control sees standardrelease");
   /* an op named nowhere is no heavy act: true */
   assert.equal(decorate({ id: "no-such-op", label: "x" }, null).phone, true);
   assert.equal(G.phoneOf("filingsent"), false);
@@ -46,13 +56,17 @@ test("R36: every op the catalogue grades or names, decorated, carries `phone` ex
   assert.equal(decorate({ id: "filingrecordsent", label: "x" }, null).phone, false);
 });
 
-test("R36: filingsent and (op-grades R26, DEC-170) personexpunge are in LARGER_SCREEN_ACTS though their rung is `reasoned`; "
-   + "the set is frozen and holds exactly them, published as VOCABULARIES.larger_screen_acts by reference", () => {
-  assert.deepEqual([...LARGER_SCREEN_ACTS], ["filingsent", "personexpunge"]);
+test("R36: (op-grades R18, R26 as T37 amends them; DEC-181) LARGER_SCREEN_ACTS holds filingsent alone, its rung "
+   + "`reasoned`; personexpunge left it and answers false through IRREVERSIBLE_WEIGHT; no op is in both sets; the set is "
+   + "frozen and published as VOCABULARIES.larger_screen_acts by reference", () => {
+  assert.deepEqual([...LARGER_SCREEN_ACTS], ["filingsent"]);
   assert.equal(RUNGS.filingsent, "reasoned");
   assert.equal(RUNGS.personexpunge, "reasoned");
+  assert.ok(IRREVERSIBLE_WEIGHT.includes("personexpunge"));
+  assert.deepEqual(LARGER_SCREEN_ACTS.filter((op) => IRREVERSIBLE_WEIGHT.includes(op)), []);
   assert.equal(phoneWant("personexpunge"), false);
   assert.equal(decorate({ id: "personexpunge", label: "x" }, null).phone, false);
+  assert.equal(G.phoneOf("personexpunge"), false);
   assert.ok(Object.isFrozen(LARGER_SCREEN_ACTS));
   assert.equal(VOCABULARIES.larger_screen_acts, LARGER_SCREEN_ACTS);
   assert.equal(A.vocabulariesFor(["x"]).larger_screen_acts, LARGER_SCREEN_ACTS);

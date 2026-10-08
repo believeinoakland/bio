@@ -158,14 +158,15 @@ test("R5: MACHINE_REFUSALS maps each act refused a machine by name to its code; 
 });
 
 /* ---- R18 ----------------------------------------------------------------------------------------------------------- */
-test("R18: phoneOf is false at terminal, attested and irreversible, for a credential absence and for LARGER_SCREEN_ACTS "
-   + "(frozen, filingsent and (R26) personexpunge), and true otherwise — reads, captures and everyday acts", () => {
+test("R18: phoneOf is false at terminal, attested and irreversible, for a credential absence, for every op in "
+   + "IRREVERSIBLE_WEIGHT (T37, DEC-181) and for LARGER_SCREEN_ACTS (frozen, filingsent alone, R26), and true otherwise — "
+   + "reads, captures and everyday acts", () => {
   assert.ok(Object.isFrozen(LARGER_SCREEN_ACTS));
-  assert.deepEqual([...LARGER_SCREEN_ACTS], ["filingsent", "personexpunge"]);
+  assert.deepEqual([...LARGER_SCREEN_ACTS], ["filingsent"]);
   /* an alias answers as its op (R17) */
   const expect = (id) => { const op = OP_ALIASES[id] ?? id;
     return !(["terminal", "attested", "irreversible"].includes(RUNGS[op])
-      || RUNG_ABSENT[op]?.ground === "credential" || LARGER_SCREEN_ACTS.includes(op)); };
+      || RUNG_ABSENT[op]?.ground === "credential" || G.IRREVERSIBLE_WEIGHT.includes(op) || LARGER_SCREEN_ACTS.includes(op)); };
   for (const op of new Set([...Object.keys(RUNGS), ...Object.keys(RUNG_ABSENT), ...Object.keys(NON_ACTS)]))
     assert.equal(phoneOf(op), expect(op), op);
   assert.deepEqual(["publish", "retire", "attest", "memberadd", "filingsent", "dispose", "notes", "attesttext",
