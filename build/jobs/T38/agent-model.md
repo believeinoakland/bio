@@ -33,3 +33,7 @@ Reading set measured at START: 110 KB (own requirements 12 KB, code and tests 98
 - `checks/ownership.mjs agent-model tranche/T38`: 0 failures.
 
 Size (session_01Ad5jo3ATsxaCVanqA7zcKg): test runs 6, module lines 1660
+
+## J1 · COMPLETE
+
+T38-9 done on job/T38/agent-model (6ec78c0dae+). R2 as amended: account reference is apikey or {kind: "signin", member}; signin opens runner.get(runner.idFromName(member)), never newUniqueId, for modelCall and converse alike, credential {kind: "signin", member}; subscription refused ACCOUNT_REFERENCE_UNUSABLE and removed (src/subscription.mjs is now src/signin.mjs); NOT_SIGNED_IN / NOT_THIS_MEMBER pass through as refused with that type. My reading, yours to correct: a runner without idFromName and get (a bare stub) is RUNNER_NOT_CONFIGURED, no call. agent-model 13/13; format, architecture, coverage (12/12), ownership 0 failures. Merge early (K1750): agent-worker (T38-10) uses it. Found for agent-worker: ask.test.mjs R26 x2 (subscription-path cases now refused; cascade.mjs:25/83/91 still build subscription) and requirements.test.mjs R45 x2 (its dist bundle is stale after this change; not mine to rebuild, §14). Details in my record.
