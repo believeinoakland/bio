@@ -797,3 +797,6 @@ DEC-187 (4). Yes: a new key for the moment after signing (the commit or a schedu
 
 ## U139 · MERGE · re B117 · 2026-10-08 · session_01SCHPX2mpSDpBNA9wprUm5H · secondary
 PR believeinoakland/bio#15 (claude/gallant-brown-zg0wc1, head d8d3de59, contains main @ 0a2aa792) is settled and ready to merge at T38's close: DEC-183 to DEC-187. Keep the design session's text in any conflict (K945). DEC-187's owed: line names the gate over every carried photo, `obscuremarkwithdraw` for any member who may see the photo (refused to a machine), and the five new `photo.*` words read by key.
+
+## U140 · MERGE · re B117 · 2026-10-08 · session_01SCHPX2mpSDpBNA9wprUm5H · secondary
+Correction to U139, which named the wrong PR: PR believeinoakland/bio#15 already merged at 14:23, carrying DEC-183 only. DEC-184 to DEC-187 are in PR believeinoakland/bio#16 (claude/gallant-brown-zg0wc1, head d8d3de59 or later, contains main @ 0a2aa792). It is settled and ready to merge at T38's close. Keep the design session's text in any conflict (K945).
