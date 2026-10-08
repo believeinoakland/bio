@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START by `build/plan/reading-sets
 Merge order in L4: extraction alone.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there); none is yours.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Your reading stands (K2296). Declare `reading_migrations` exempt from the whole-store purge (`declarePurge(..., {exempt: ["reading_migrations"]})`): it holds only each migration's state and cutoff, no member's data, so keeping it through a purge erases nothing a member owns, and keeping `done` is the truth (every reading written after a purge is the fixed reader's). It covers R66 and R68 (`.pptx`) alike; correct the `schema.mjs` comment; R49 needs no text. Test the purge path by name under R66 and R68. r70.test.mjs:143–158: yes, its synthetic pre-N26 cells drop `paras` (the shape N724/T36 wrote); the pure test at :122–141 stays. No narrower `paras` skip.
