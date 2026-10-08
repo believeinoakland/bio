@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · CHANGE
 
 bundler (T37-3) is merged into tranche/T37 (K2174): its R25 now emits your signed `Worker` part (`CAPTURES` by role, your cron). Merge tranche/T37 into your branch before your COMPLETE and run your tests against it.
+
+## B3 · CHANGE
+
+Clarifying R19/R21's `config` list (K2175, BOB's wording, no file change): it names only the settings a vendor names for its adapter. `host` and `region` are the spec's own fields (R21), never `config` fields. A generic template's `config` list names `engine_family` and `handling` (required; the tool's maker states them), as `securityToolAdd` reads them from `config` today. file-safety R28 (T37-8) refuses `CONFIG_UNKNOWN` for anything else.
