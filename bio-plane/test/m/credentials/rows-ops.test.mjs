@@ -157,8 +157,8 @@ test("R33 R34 R36 R37 the group key's routes: `by` and `viewer` from the query o
 test("R22 R23 R25 R27 R29 the T33-20 routes: `by`, `viewer`, `member` and `session` from the query over the body; the secret from the body only; never answered back", async () => {
   const w = await world().group("ann");
   const sub = await w.ops("by=ann", { member: "ann", kind: "subscription", secret: "sk-route-sub", by: "admin" }).accountreferenceset();
-  assert.deepEqual([sub.ok, sub.kind], [true, "subscription"]);
-  assert.equal(w.ops("member=ann&viewer=member:ann").accountreference().kind, "subscription");
+  assert.equal(sub.reason, "UNKNOWN_ACCOUNT_KIND", "T38: the subscription token retired");
+  assert.equal(w.ops("member=ann&viewer=member:ann").accountreference().held, false);
   const set = await w.ops("by=ann", { member: "ann", kind: "apikey", secret: "sk-route", by: "admin" }).accountreferenceset();
   assert.equal(set.ok, true);
   assert.equal((await w.ops("by=second", { member: "ann", kind: "apikey", secret: "x", by: "ann" }).accountreferenceset()).reason,

@@ -140,10 +140,12 @@ export const ACCOUNT_CHECKS = Object.freeze({
   }),
   /* C-29.16 (ACCOUNT_LEVEL_MEMBER_ONLY) is retired with R26 (K1755, K1756, T34): the group's API key is R33's own act;
      its id is not reused. */
+  /* T38 (T38-5; N708's remainder, K2200): re-worded, the subscription token retired: a subscription is connected by
+     signing in through Claude Code (R43). Awaiting promotion's stamp (T38-6). */
   UNKNOWN_ACCOUNT_KIND: Object.freeze({
     check: 'C-29.17', where: at("accountReferenceSet", "is-account-kind"),
-    translation: 'That is not a kind of Claude account this group can hold. Connect your own API key or your own '
-      + 'Claude subscription token. Nothing was changed.',
+    translation: 'That is not a kind of Claude account this group can hold. Connect your own API key, or connect your '
+      + 'Claude subscription by signing in through Claude Code. Nothing was changed.',
   }),
   /* C-29.18 (ACCOUNT_KIND_NOT_OFFERED) is retired with K1537's hold (K1547, T33-20b); its id is not reused. */
   NO_SECRET: Object.freeze({
@@ -151,12 +153,13 @@ export const ACCOUNT_CHECKS = Object.freeze({
     translation: 'No key or token was given, so there is nothing to connect. Nothing was changed.',
   }),
   /* T34 (K1755, K1757): the words name the group's key, since a member with no account of their own is served by it
-     while it is on (R35). */
+     while it is on (R35). T38 (T38-5; N785, K2200): re-worded, the subscription connected by signing in through Claude
+     Code, never a token. Awaiting promotion's stamp (T38-6). */
   NO_ACCOUNT: Object.freeze({
     check: 'C-29.20', where: at("#noAccount", "is-account-held"),
-    translation: 'No Claude account serves you here: you have not connected your own, and the group\'s own key is not '
-      + 'switched on. Connect your own API key or your own Claude subscription token, or ask an administrator about '
-      + 'the group\'s key. Nothing was changed.',
+    translation: 'No Claude account serves you here: you have not connected your own API key or your Claude '
+      + 'subscription, and the group\'s own key is not switched on. Connect your own API key, sign in with your Claude '
+      + 'subscription through Claude Code, or ask an administrator about the group\'s key. Nothing was changed.',
   }),
   UNKNOWN_SWITCH: Object.freeze({
     check: 'C-29.21', where: at("#switchName", "is-account-switch"),
