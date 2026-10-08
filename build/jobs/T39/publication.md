@@ -1,6 +1,6 @@
 # publication (T39)
 
-**Status** · session_01WbD8jksEcAKJZvuvR4ohT8 · depth 2 · WAITING ON BOB (J1) · handled B0
+**Status** · session_01WbD8jksEcAKJZvuvR4ohT8 · depth 2 · WAITING ON BOB (J1) · handled B2
 
 ## J1 · REPORT
 
