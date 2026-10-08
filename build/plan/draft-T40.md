@@ -44,7 +44,7 @@ No merge order (independent).
 **L6 merge order (N812 part E):** inquiry (independent), run-rules, ai-use, ai-runs (copy then delete), then answers, agent-model, agent-worker.
 
 ### L8 (rule 3)
-- **T40-12 · case-carriage** · (N816, K2380) R15: `copyWake` null while no store is bound; (N798, N811) photo words by key: `photo.withdraw.refused.machine`, `.nomark`, `.already`, `.noreason` replacing C-141.7–.10; `photo.refused.unchecked` re-worded; labels `photo.published.label`, `photo.obscured.label` · DEC-185, DEC-187, K2248, K2348 · req: to draft before L8's START.
+- **T40-12 · case-carriage** · (N818, K2383) a refused `onReceipt` registration a start-up fault; (N816, K2380) R15: `copyWake` null while no store is bound; (N798, N811) photo words by key: `photo.withdraw.refused.machine`, `.nomark`, `.already`, `.noreason` replacing C-141.7–.10; `photo.refused.unchecked` re-worded; labels `photo.published.label`, `photo.obscured.label` · DEC-185, DEC-187, K2248, K2348 · req: to draft before L8's START.
 - **T40-13 · publication** · (N811) `photo.refused.changed.signed` for C-122.6 answered after signing (R57 at the commit); (N799) the fact "this member's work appears in a published case, naming it", registered as membership's handle-change guard; a published case keeps its signing handle · DEC-186, DEC-187 · req: to draft before L8's START · **P6:** 3,799 + ~60: the job measures first and reports before building if it would pass ~4,000 (K617).
 - **T40-14 · public-read** · (N798, N811) every published photo's label by key · DEC-185, DEC-187 · req: to draft.
 - **T40-15 · ratification** · (N811) R42's scheduled stop answers `photo.refused.changed.signed` after signing (N805's stop) · DEC-187, K2370 · req: to draft · after T40-13.

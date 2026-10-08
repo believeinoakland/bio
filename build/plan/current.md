@@ -59,8 +59,14 @@
 - **T39-15 · scheduler** · (N806) calls `case-carriage.copyBatch` on `copyWake`, the edge · K2333.
 
 ### L11
-- **T39-16a/b · setup-words (new) and instance-setup (N807)** · 4,228 lines (K2337): `setup-words` (in `modules.json` since K2343, layer 11 before instance-setup) takes `bio-plane/src/setup-words.mjs` (929 lines; it imports nothing, only `setup.mjs` imports it) by copy, with its requirements moved from instance-setup's (ids retired "moved to setup-words R<n>"); then instance-setup deletes its copy and re-points (K624). The boundary's detail BOB's at L11's START.
-- Whatever L1–L10's new codes owe: op-declarations, op-grades, affordances, answer-envelope shares of the C-120/C-122/C-141 rows; plane's composition (case-carriage's listener); (N810, K2346) `pdfjs-dist` as a dev dependency of `bio-plane/package.json`, so doc-clean's R5 oracle runs in CI. (K2377) affordances' publication fixture (its R14/R8/R18 test) and plane's `docket.test.mjs`:54 (case-carriage's purge-cleared tables now include `document_copies` and `document_copy_queue`, its R12): fixture-only, after case-carriage's R13 change; each red accepted by name until its L11 job. Also answer-envelope's `families.test.mjs` C-120 pin, to include C-120.20–.22 (K2378). Also queue's `bio-plane/test/conclude-project.test.mjs` (`memberadd` sends `token=` in the address, refused C-38.10 `CREDENTIAL_IN_ADDRESS`; red on the tranche before T39's L10, fixture-only: lift the token into `Authorization` as `scheduler/plane.test.mjs` does; K2381). Fixed at L11's START from the merged codes.
+- **T39-16a · setup-words (new)** · (N807) R1–R4: the word list copied to `bio-plane/src/setup-words/index.mjs`, rows frozen · K2337, K2343, K2375 · START `starts-T39/setup-words.txt`.
+- **T39-16b · instance-setup** · (N807) R68 split: re-points to setup-words, deletes its copy · K2375 · START `starts-T39/instance-setup.txt` · after T39-16a.
+- **T39-19 · answer-envelope** (tests only) · `families.test.mjs`:250's C-120 pin gains C-120.20–.22, .21 and .22 decorated with `DOCUMENT_WORDS` verbatim · K2378, K2383.
+- **T39-20 · plane** · `docket.test.mjs`:54's purge list gains `CASE_CARRIAGE_DOCUMENT_TABLES` (K2377); (N810) `pdfjs-dist` 4.10.38 exact in `devDependencies` with its lock, R7's clause and test; R18's T39 clause (case-carriage's receipt listener and the scheduler's reach) with two tests: a non-fetch receipt queues and a `direct` one does not; one `onAlarm` with `CAPTURES` bound copies a queued member PDF under `<namespace>/obscured/<sha>` · K2346, K2377, K2383 · merges last.
+- **T39-21 · queue** (tests only) · `bio-plane/test/conclude-project.test.mjs`: `GET`/`POST` lift `token` into `Authorization` as `scheduler/plane.test.mjs`:42–51 does (admission R20, C-38.10) · K2381, K2383.
+- No other L11 module owes T39 anything (`plan/draft-T39-L11-shares.md` §4; K2383).
+
+**L11 merge order:** queue, setup-words, instance-setup, answer-envelope, plane last.
 
 **Requirement text for L2–L10:** `plan/draft-T39-reqs.md` (reviewed, K2343), applied to each module's file before its layer's START.
 
