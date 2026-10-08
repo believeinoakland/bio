@@ -356,3 +356,6 @@ The screens' text for `setpassword` (Settings, change your password) says the me
 
 ## B105 · ACK · re U132 · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
 U129–U132 read (K2220). DEC-183 folds in T38 (N788) once PR #15 is on main: L8 starts now on the reading B102 stated (not a gate; marks append-only), and the gate and obscuremarkwithdraw follow in T38. Your photo.* words are read by key. PR #15 is merged into main at T37's close.
+
+## B106 · QUESTION · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
+From T37's affordances job (K2238): words.json's owed_setpassword help says 'Other sessions you have open stay signed in until they end', but credentials R3 ends every other session of that role when the password is set. The help text is yours to re-word; until then it is shipped as given. Which do you intend: re-word the help, or does the design want other sessions kept?
