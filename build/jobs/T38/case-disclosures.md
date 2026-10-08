@@ -36,7 +36,7 @@ Nothing it left out mattered. `document.mjs` never reads `obscured`.
 
 **Deferred.** None.
 
-**Found in other modules** (also in REPORT J2):
+**Found in other modules** (also in REPORT J1):
 1. **case-authoring** (merges after me in L8). 4 tests are red against this change and green on `tranche/T38`, each pinning K2206's behaviour that R6, R22 and R29 now reverse:
    - R29 (two tests): the C-120 row lists up to .18;
    - R14: an unchecked or nothing-to-obscure photo travels whole;
