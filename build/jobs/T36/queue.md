@@ -27,3 +27,7 @@ The set measured over 300 KB (own code 204 KB, own tests 284 KB, requirements 35
 **P6.** 2,920 lines (own paths, code only), +11.
 
 Size (session_019AZwL2DAm7ic4sUi9n3hkC): test runs 9, module lines 2920
+
+## J1 · COMPLETE
+
+T36-46 done: R1's four FINDING kinds (security-level-high, policy-changed-noticed, scan-found, security-tool-off) catalogued with their sentences in queuestate.mjs; R12's default disposition holds with no code change. queue tests 128/0; users' only reds are the inherited four (plane red 27, answer-envelope red 11), identical without my change. format, architecture, coverage (41/41), ownership 0 failures. 2,920 lines. The R1 not-yet-met mark is yours to strike. Ready to merge tranche/T36 after notice-producers' merge when you say. Details in my record.
