@@ -3,7 +3,8 @@
    registry), `{id, title, acts, purpose}`: `id` the interface's own name for the screen, `title` as the screen shows it,
    `acts` the ops the screen calls (each one `op-declarations` declares; the release suite holds it), and `purpose` one
    plain sentence, the design stream's where it gives one for that screen (`ux-substrate-v2.json` `surfaces[]`),
-   otherwise the interface's own. Registered with `wizard-scripts` at start (its R13) and handed to `answers`. The calls
+   otherwise the interface's own. Handed to `answers` for its explain read (`wizard-scripts` is registered with its own
+   `SCREEN_REGISTRY`, R19; K1871). The calls
    every screen shares (`login`, `whoami`, `groupidentity`) are not listed per screen. A screen absent here is unknown,
    never guessed; the design stream replaces these entries when its interface ships (K1475). */
 const screen = (id, title, acts, purpose) => Object.freeze({ id, title, acts: Object.freeze(acts), purpose });

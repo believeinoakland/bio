@@ -21,6 +21,7 @@ import { runProductionsOf, runProductionsOps } from "../../../src/run-production
 import { captureRequestsOf, captureRequestsOps } from "../../../src/capture-requests/index.mjs";
 import { recordOf, recordCoreOps } from "../../../src/record-core/index.mjs";
 import { governorOf, governorRoutes } from "../../../src/host-governor/index.mjs";
+import { acquisitionOf } from "../../../src/acquisition/index.mjs";
 import { captureOf, captureOps } from "../../../src/capture/index.mjs";
 import { monitoringOf, monitoringOps } from "../../../src/monitoring/index.mjs";
 import { linkSweepOf, linkSweepOps } from "../../../src/link-sweep/index.mjs";
