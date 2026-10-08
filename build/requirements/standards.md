@@ -171,5 +171,5 @@ None: answered by Bob 2026-09-26 (K102).
 - `standards`' uses gain `legacy-checks`, `membership` and `promotion` (the last for R15, K102).
 - A standard is superseded, never edited; one successor at most (R6).
 - Proposals follow D-149/REC-195's pattern and read `proposalLabel` (subject `standard`) from `legacy-checks` (one composer, never a second copy; K171).
-- Page cap 200, as membership R48 and the other listing services.
+- Page cap 200, as `project-roster` R9 and the other listing services.
 - (T33-31, BOB's details in this fold) `connection-grammar` refuses a kind another owner holds (`KIND_TAKEN`), and `events` holds `amends`: this module registers its law-relation kinds under names of its own (`law_amends` and the like), with the members' words unchanged. R20's tie between two versions both covering a date answers undetermined rather than preferring the later one; the later-over-earlier canon is `contradiction`'s proposal (ladders §6.3 L4), not this read's. The refusal codes of R18–R27 and the op name `lawrelate` are this fold's; `op-declarations` declares the ops (T33-88). The size after T33 is about 1,800–2,600 lines (entries A (c)); `law-relations` splits off only near 4,000.
