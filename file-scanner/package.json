@@ -2,7 +2,7 @@
   "name": "file-scanner",
   "private": true,
   "type": "module",
-  "version": "0.79.0",
+  "version": "0.81.0",
   "description": "The fleet member that scans a capture's duplicate with ClamAV, renders a safe view, mirrors ClamAV's signatures and holds the provider contract for outside security tools.",
   "engines": {
     "node": ">=22"
