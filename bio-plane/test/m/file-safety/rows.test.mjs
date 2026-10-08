@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
-import { world, pdf, sha, enc, infoMd, provDoc } from "./fixture.mjs";
+import { world, pdf, sha, enc } from "./fixture.mjs";
 import { makeZip } from "../../make-zip.mjs";
 import * as FS from "../../../src/file-safety/index.mjs";
 import * as CHECKS from "../../../src/file-safety/checks.mjs";
@@ -16,11 +16,7 @@ const WARNED = { own_device: true, no_macros: true };
 test("R22: the capture's bytes, digest, register entry, grade, promotion state and provenance document are byte-identical before and after scan, hold, release, render, safe copy, reputation note and deeper check", async () => {
   const w = world({ scan: { clamav: () => ({ result: "found", findings: ["Pdf.Exploit.I"] }), copyScan: () => ({ result: "clean" }) } });
   const text = "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R/OpenAction<</S/JavaScript/JS(1)>>>>endobj\n2 0 obj<</Type/Pages/Kids[]/Count 0>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF";
-  const cap = { path: "snapshots/doc.pdf", text };
-  const p = w.promotion.promote({ bundleId: "INFO-2026-0002-doc", snapKey: "k1", author: "member:m1", meta: { object_type: "information" },
-    files: [{ path: "bundle.md", text: infoMd("INFO-2026-0002-doc") }, { path: cap.path, text }, { path: "data/provenance.json", text: JSON.stringify({ documents: [provDoc(cap)] }) }],
-    register: [{ sha256: sha(text), path: cap.path, encoding: "utf8", bytes: Buffer.byteLength(text) }] });
-  assert.equal(p.ok, true, JSON.stringify(p).slice(0, 200));
+  w.promoted("INFO-2026-0002-doc", text);
   const s = await w.capture(text, { reputation: { tool: "rep", listed: true, categories: ["malware"], checked_at: "2026-10-08T11:00:00Z" } });
   const facts = () => JSON.stringify({ bytes: [...w.bucket.held.get(`bio/captures/${s}`)], register: w.rows("SELECT * FROM register"), grade: w.prov.captureGrade(s),
     bundles: w.rows("SELECT * FROM bundles"), files: w.rows("SELECT * FROM files"), history: w.rows("SELECT * FROM history"), manifest: w.rows("SELECT * FROM manifest"),

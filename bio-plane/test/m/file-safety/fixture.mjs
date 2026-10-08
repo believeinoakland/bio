@@ -1,5 +1,5 @@
 /* file-safety's test fixture: the module over the modules it uses, each the real one (record-core, membership,
-   credentials with a seal secret, promotion, provenance, acquisition), on node:sqlite standing in for a Durable Object's
+   credentials with a seal secret, provenance, acquisition), on node:sqlite standing in for a Durable Object's
    storage (provenance's own fixture's `storage`); an evidence bucket that is both record-core's evidence store
    (`bio/captures/<sha>`) and the Worker's `CAPTURES` binding (where the derived files go); and a scripted
    `FILE_SCANNER` binding that answers as `file-scanner`'s Provides state (R1–R8, R19–R31), recording every request so a
@@ -10,7 +10,6 @@ import { storage, infoMd, provDoc } from "../provenance/fixture.mjs";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
-import { promotionOf } from "../../../src/promotion/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { acquisitionOf } from "../../../src/acquisition/index.mjs";
 import { fileSafetyOf } from "../../../src/file-safety/index.mjs";
@@ -138,11 +137,7 @@ export function world({ scan = {}, bound = true, now = T0, scanWaitMs = 50 } = {
   membership.migrate();
   const credentials = credentialsOf(host, { record, membership, sealSecret: "a test seal secret of good length" });
   credentials.migrate();
-  const promotion = promotionOf(host, { record, membership, now: () => new Date(clock.now).toISOString() });
-  promotion.registerFact("producingGroup", "instance-setup", () => "test-group");
-  promotion.registerFact("citedBy", "connections", () => []);
-  promotion.registerFact("caseMember", "publication", () => false);
-  const prov = provenanceOf(host, { record, membership, promotion, now: () => new Date(clock.now).toISOString() });
+  const prov = provenanceOf(host, { record, membership, now: () => new Date(clock.now).toISOString() });
   prov.migrate();
   const acq = acquisitionOf(host, { record, provenance: prov, membership });
   const fsScanner = bound ? scanner(scan, { now: () => clock.now }) : null;
@@ -153,7 +148,7 @@ export function world({ scan = {}, bound = true, now = T0, scanWaitMs = 50 } = {
   for (const [m, role] of [["m1", "member"], ["m2", "member"], ["boss", "admin"]])
     exec(`INSERT INTO members (member_id, cover, role, status, created, updated) VALUES (?, ?, ?, 'active', '2026-01-01', '2026-01-01')`, m, `cover ${m}`, role);
   const w = {
-    st, host, record, membership, credentials, promotion, prov, acq, fs, env, bucket: b, scanner: fsScanner, clock, exec,
+    st, host, record, membership, credentials, prov, acq, fs, env, bucket: b, scanner: fsScanner, clock, exec,
     rows: exec, row: (q, ...a) => exec(q, ...a)[0] ?? null,
     tick(ms) { clock.now += ms; },
     /** Bytes held as a capture: stored, then a receipt as acquisition writes one (R1). */
@@ -172,6 +167,17 @@ export function world({ scan = {}, bound = true, now = T0, scanWaitMs = 50 } = {
             VALUES (?, 'information', 'g', 't', 'collected', '2026-01-01', '2026-01-01', 'x', 1, ?)`, bundleId, project);
       exec(`INSERT INTO register (capture_sha, bundle_id, path, encoding, bytes, registered, authored) VALUES (?, ?, 'snapshots/x', 'binary', 1, '2026-01-01T00:00:00Z', 0)`,
            captureSha, bundleId);
+    },
+    /** A promoted Information document holding one capture, as a promotion leaves it: its bundle row, its live files
+     *  (the capture, `bundle.md`, `data/provenance.json`) and its register row. */
+    promoted(bundleId, text, { path = "snapshots/doc.pdf" } = {}) {
+      const md = infoMd(bundleId), docs = JSON.stringify({ documents: [provDoc({ path, text })] });
+      exec(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha, row_version)
+            VALUES (?, 'information', 'g', 't', 'collected', '2026-01-01', '2026-01-01', ?, 1)`, bundleId, sha(md + docs));
+      for (const [p, t] of [["bundle.md", md], [path, text], ["data/provenance.json", docs]])
+        exec(`INSERT INTO files (bundle_id, path, content, bytes, sha256) VALUES (?, ?, ?, ?, ?)`, bundleId, p, t, Buffer.byteLength(t), sha(t));
+      exec(`INSERT INTO register (capture_sha, bundle_id, path, encoding, bytes, registered, authored) VALUES (?, ?, ?, 'utf8', ?, '2026-01-01T00:00:00Z', 0)`,
+           sha(text), bundleId, path, Buffer.byteLength(text));
     },
     /** A project only `m1` takes part in. */
     project(id = "PROJ-1", member = "m1") {

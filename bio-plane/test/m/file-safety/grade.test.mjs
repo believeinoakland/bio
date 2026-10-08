@@ -130,12 +130,7 @@ test("R6 (K1929 (Q1)): an archive is low only when its source condition holds, i
 
 test("R7: the same capture and notes always give the same answer; computing it writes nothing, and no note or grade changes the capture's grade letter, its state or its provenance document", async () => {
   const w = world({ scan: { clamav: () => ({ result: "found", findings: ["Win.Trojan.Q"] }) } });
-  const r = w.promotion.promote({ bundleId: "INFO-2026-0001-doc", snapKey: "k1", author: "member:m1", meta: { object_type: "information" },
-    files: [{ path: "bundle.md", text: (await import("./fixture.mjs")).infoMd("INFO-2026-0001-doc") },
-            { path: "snapshots/a.txt", text: "the document" },
-            { path: "data/provenance.json", text: JSON.stringify({ documents: [(await import("./fixture.mjs")).provDoc({ path: "snapshots/a.txt", text: "the document" })] }) }],
-    register: [{ sha256: sha("the document"), path: "snapshots/a.txt", encoding: "utf8", bytes: 12 }] });
-  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  w.promoted("INFO-2026-0001-doc", "the document", { path: "snapshots/a.txt" });
   const s = await w.capture("the document");
   const facts = () => JSON.stringify([w.prov.captureGrade(s), w.rows("SELECT * FROM bundles"), w.rows("SELECT * FROM files"), w.rows("SELECT * FROM register"), w.rows("SELECT * FROM captured_locators")]);
   const before = facts(), tables = w.tables();
