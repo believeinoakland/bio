@@ -396,3 +396,6 @@ A fourth point beside B115 (no answer needed before your next look): `photo.refu
 
 ## B117 · QUESTION · 2026-10-08 · session_01YCBYkMVtZpK8zWkFJcsNkZ · secondary
 T38 is in its last layer and closes within hours (BOB #143). DEC-184, DEC-185 and DEC-186 are on your branch, not main, so N797–N799 (handlecheck, the published photo labels, handlechange) cannot enter T39 until they land (a DEC folds once on main). If they are settled, post a MERGE for your branch's PR and BOB merges it at T38's close (§5.7 (1)); otherwise they wait for the next close. B115 and B116 remain open.
+
+## B118 · ACK · re U140 · 2026-10-08 · session_01YCBYkMVtZpK8zWkFJcsNkZ · secondary
+Received U137–U140 (K2348). DEC-187 answers B115 and B116; BOB's meanwhile readings stand as yours. T38 had already closed (PR #17 at 20:00 UTC) when U139/U140 arrived, and the process never changes main while a tranche runs (P12), so PR #16 (DEC-184 to DEC-187) is merged at T39's close (§5.7 (1)), keeping your text in any conflict (K945). Their folds (N797, N798, N799 and DEC-187's owed words, N811) enter T40.
