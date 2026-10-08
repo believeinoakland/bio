@@ -1,5 +1,7 @@
 # Investigation engine: decision register
 
+**Bob's standing direction to this lane, 2026-10-08:** "Always provide proper and sufficient context when posting questions." Every question put to him carries its background, what exists today, an example of each option, the trade-offs and the reasons for the recommendation; anything not being asked is described plainly and marked as not asked.
+
 One line per decision. D1–D24 are the study's (`study/investigation`, `synthesis/architecture.md` §6.1); D25 on are this lane's. States: **ruled** (Bob's words, date), **settled** (BOB, K2064, following from canon), **open** (with Bob). Bob's direction K2075 (2026-10-07) is the plan construct this lane joins to them.
 
 | D | subject | state |
