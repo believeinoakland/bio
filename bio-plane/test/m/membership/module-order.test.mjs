@@ -45,11 +45,35 @@ const T33_NEW = ["civil-time", "calc-grammar", "connection-grammar", "court-cita
   "people", "explore", "calculations", "workbooks", "leg-earning", "hypotheses", "answers", "agent-harness", "agent-model",
   "agent-runner", "case-tensions", "following", "notice-producers"];
 
+/* T36-6 (N723; K1961, K2008, K2084): the modules added since T33, each held in the file's place: `file-scanner` last in
+   layer 1, `file-safety` after `capture` in layer 3, `law-relations` before `standards` in layer 5, and L11's split
+   (`op-grades` before `affordances`, `answer-envelope` and `store-door` after `admission`). Each pair is `[before, id,
+   after]`, so the place is pinned by both neighbours. */
+const SINCE_T33 = [["sheet-worker", "file-scanner", "record-core"], ["capture", "file-safety", "sources"],
+                   ["observation-log", "law-relations", "standards"], ["wizard-scripts", "op-grades", "affordances"],
+                   ["admission", "answer-envelope", "store-door"], ["answer-envelope", "store-door", "control-plane"]];
+/* Listed in the file before its job builds it (K1043's form: empty `paths`), tolerated by name until that merge:
+   `file-safety`, until T36-11 (plan T36, Rules 5 item 2). */
+const T36_NEW = ["file-safety"];
+
+test("R83 T36-6 MODULE_ORDER holds the modules added since T33 in the file's places: file-scanner, file-safety, law-relations, op-grades, answer-envelope, store-door", async () => {
+  const modules = await modulesJson();
+  const layerOf = new Map(modules.map((m) => [m.id, m.layer]));
+  for (const [before, id, after] of SINCE_T33) {
+    const at = MODULE_ORDER.indexOf(id);
+    assert.ok(at > 0, `${id} is held`);
+    assert.deepEqual(MODULE_ORDER.slice(at - 1, at + 2), [before, id, after], `${before} → ${id} → ${after}`);
+  }
+  assert.deepEqual(SINCE_T33.map(([, id]) => layerOf.get(id)), [1, 3, 5, 11, 11, 11], "each in its layer");
+});
+
 test("R83 T33-19a MODULE_ORDER holds plan T33's order: the new modules in their places, local-facts and standards in layer 5, observation-log after connections", async () => {
   const modules = await modulesJson();
   const layerOf = new Map(modules.map((m) => [m.id, m.layer]));
+  /* T33's layers as T33 left them: a module added since (T36-6's) sits between them and moves none of them. */
+  const since = new Set(SINCE_T33.map(([, id]) => id));
   for (const [layer, ids] of Object.entries(T33_LAYERS))
-    assert.deepEqual(MODULE_ORDER.filter((id) => layerOf.get(id) === Number(layer)), ids, `layer ${layer}`);
+    assert.deepEqual(MODULE_ORDER.filter((id) => layerOf.get(id) === Number(layer) && !since.has(id)), ids, `layer ${layer}`);
   for (const run of T33_RUNS) {
     const at = MODULE_ORDER.indexOf(run[0]);
     assert.ok(at >= 0, run[0]);
@@ -60,13 +84,14 @@ test("R83 T33-19a MODULE_ORDER holds plan T33's order: the new modules in their 
   for (const id of T33_NEW) assert.ok(MODULE_ORDER.includes(id), `${id} is held in its place`);
 });
 
-test("R83 T33-19a every module MODULE_ORDER holds is built, its paths on disk; a T33 module listed before its job merges is named as not yet built, by name, and fails nothing", async (t) => {
+test("R83 T33-19a T36-6 every module MODULE_ORDER holds is built, its paths on disk; a T33 or T36 module listed before its job merges is named as not yet built, by name, and fails nothing", async (t) => {
   const modules = await modulesJson();
   const notYet = [];
   for (const m of modules) {
     assert.ok(MODULE_ORDER.includes(m.id), m.id);
     if (!m.paths.length) {
-      assert.ok(T33_NEW.includes(m.id), `${m.id} has no code and is not a T33 module the plan tolerates by name`);
+      assert.ok(T33_NEW.includes(m.id) || T36_NEW.includes(m.id),
+        `${m.id} has no code and is not a T33 or T36 module the plan tolerates by name`);
       notYet.push(m.id);
       continue;
     }
