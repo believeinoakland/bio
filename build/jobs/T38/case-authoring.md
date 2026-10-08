@@ -1,6 +1,6 @@
 # case-authoring (T38)
 
-**Status** · session_01Sp2boRLmm5PQPFmpQBHNT7 · depth 2 · WAITING ON BOB (J1) · handled B1
+**Status** · session_01Sp2boRLmm5PQPFmpQBHNT7 · depth 2 · WAITING ON BOB (J1) · handled B2
 
 ## Progress (CASE-AUTHORING #22)
 
