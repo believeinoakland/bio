@@ -10909,9 +10909,9 @@ var ODF_EVIDENTIARY_NORMALISE = Object.freeze({
     apply: odtNormalisedContentXml
   }
 });
-async function odfEvidentiaryDigest(bytes2, sha256Hex15) {
+async function odfEvidentiaryDigest(bytes2, sha256Hex16) {
   try {
-    return await odfEvidentiaryDigestUnguarded(bytes2, sha256Hex15);
+    return await odfEvidentiaryDigestUnguarded(bytes2, sha256Hex16);
   } catch (e2) {
     return {
       determined: false,
@@ -10921,7 +10921,7 @@ async function odfEvidentiaryDigest(bytes2, sha256Hex15) {
     };
   }
 }
-async function odfEvidentiaryDigestUnguarded(bytes2, sha256Hex15) {
+async function odfEvidentiaryDigestUnguarded(bytes2, sha256Hex16) {
   const b = asBytes(bytes2) ?? new Uint8Array(0);
   const no9 = (flavour2, basis) => ({ determined: false, flavour: flavour2, evidentiary: null, basis });
   let row11 = null;
@@ -10959,7 +10959,7 @@ async function odfEvidentiaryDigestUnguarded(bytes2, sha256Hex15) {
     determined: true,
     flavour,
     over: CONTENT_PART,
-    evidentiary: await sha256Hex15(digested),
+    evidentiary: await sha256Hex16(digested),
     basis: `the sha256 of the .${flavour} package's content.xml member (inflated, length and CRC-32 verified)${norm3 ? `, normalised by ${norm3.name}` : ", no byte rewritten"}, odf-evidentiary v${ODF_EVIDENTIARY_VERSION}; the ZIP envelope, meta.xml, settings.xml, styles.xml, thumbnails and embedded font faces are discounted; measured: ${ODF_EVIDENTIARY_MEASURED[flavour]}`
   };
 }
@@ -30028,12 +30028,12 @@ var hexToBytes = (hex10) => {
   for (let i = 0; i < out.length; i++) out[i] = parseInt(hex10.substr(i * 2, 2), 16);
   return out;
 };
-function timestampRequest(sha256Hex15, nonceBytes) {
+function timestampRequest(sha256Hex16, nonceBytes) {
   const nonce = nonceBytes || crypto.getRandomValues(new Uint8Array(8));
   return {
     der: derSequence(
       derIntegerSmall(1),
-      derSequence(derSequence(OID_SHA256, derNull()), derOctetString(hexToBytes(sha256Hex15))),
+      derSequence(derSequence(OID_SHA256, derNull()), derOctetString(hexToBytes(sha256Hex16))),
       derInteger(nonce),
       derBoolean(true)
     ),
@@ -39954,12 +39954,12 @@ function decodeMmr(d, p3, end2, w, h) {
 }
 function decodeRefinement(mq, ctx, w, h, template, ref, dx, dy, tpgron, at37) {
   const bm = bitmap(w, h);
-  const D = bm.d, R8 = ref.d, rw = ref.w, rh = ref.h;
+  const D = bm.d, R9 = ref.d, rw = ref.w, rh = ref.h;
   if (template === 0) {
     if (at37[1] > 0 || at37[1] === 0 && at37[0] >= 0) throw corrupt("refinement adaptive pixel is not yet decoded");
   }
   const g = (x, y) => x < 0 || x >= w || y < 0 || y >= h ? 0 : D[y * w + x];
-  const r = (x, y) => x < 0 || x >= rw || y < 0 || y >= rh ? 0 : R8[y * rw + x];
+  const r = (x, y) => x < 0 || x >= rw || y < 0 || y >= rh ? 0 : R9[y * rw + x];
   const ctxOf = template === 0 ? (x, y) => {
     const i = x - dx, j = y - dy;
     return g(x - 1, y) | g(x + 1, y - 1) << 1 | g(x, y - 1) << 2 | g(x + at37[0], y + at37[1]) << 3 | r(i + 1, j + 1) << 4 | r(i, j + 1) << 5 | r(i - 1, j + 1) << 6 | r(i + 1, j) << 7 | r(i, j) << 8 | r(i - 1, j) << 9 | r(i + 1, j - 1) << 10 | r(i, j - 1) << 11 | r(i + at37[2], j + at37[3]) << 12;
@@ -41450,7 +41450,7 @@ var LevelRows = class {
     return m % this.R * this.rw;
   }
   arrive() {
-    const k = this.k++, { rw, rh, sw, casx, casy, irr, S: S3, R: R8, buf, line } = this;
+    const k = this.k++, { rw, rh, sw, casx, casy, irr, S: S3, R: R9, buf, line } = this;
     if (k < rh) {
       const low = (k & 1) === casy;
       const A = low ? this.prev : this.lh, B = low ? this.hl : this.hh;
@@ -41460,7 +41460,7 @@ var LevelRows = class {
       for (let i = 0; i < sw; i++) line[casx ? 2 * i + 1 : 2 * i] = a[ao + i];
       for (let i = 0; i < rw - sw; i++) line[casx ? 2 * i : 2 * i + 1] = b[bo + i];
       (irr ? idwt97 : idwt53)(line, rw, casx);
-      const o = k % R8 * rw;
+      const o = k % R9 * rw;
       if (rh === 1) {
         if (!irr && casy) for (let i = 0; i < rw; i++) buf[o + i] = Math.trunc(line[i] / 2);
         else buf.set(line, o);
@@ -41473,7 +41473,7 @@ var LevelRows = class {
     for (let s = 1; s <= S3; s++) {
       const j = k - s;
       if (j < 0 || j >= rh || (j & 1) !== (s & 1 ? casy : 1 - casy)) continue;
-      const o = j % R8 * rw, up = j > 0 ? (j - 1) % R8 * rw : -1, dn = j + 1 < rh ? (j + 1) % R8 * rw : -1;
+      const o = j % R9 * rw, up = j > 0 ? (j - 1) % R9 * rw : -1, dn = j + 1 < rh ? (j + 1) % R9 * rw : -1;
       if (irr) {
         const c = LIFT97[s - 1];
         if (up < 0) for (let i = 0; i < rw; i++) buf[o + i] = f32(buf[o + i] + f32(f32(buf[dn + i] + buf[dn + i]) * c));
@@ -55235,7 +55235,7 @@ var Capture = class _Capture {
       questions: null,
       basis: "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined"
     };
-    const silent = {
+    const silent2 = {
       questions: null,
       basis: `${reader.module} did not answer which questions this document was captured for, so they are undetermined`
     };
@@ -55249,16 +55249,16 @@ var Capture = class _Capture {
     try {
       v = reader.fn({ document: bundleId, viewer, captures });
     } catch {
-      return silent;
+      return silent2;
     }
     if (v && typeof v.then === "function") {
       Promise.resolve(v).catch(() => {
       });
-      return silent;
+      return silent2;
     }
     const list6 = v && typeof v === "object" ? v.questions : null;
     const str42 = (x) => typeof x === "string" && x ? x : null;
-    if (!Array.isArray(list6) || !list6.every((q10) => q10 && typeof q10 === "object" && str42(q10.question) && typeof q10.visible === "boolean" && typeof q10.waiting === "boolean")) return silent;
+    if (!Array.isArray(list6) || !list6.every((q10) => q10 && typeof q10 === "object" && str42(q10.question) && typeof q10.visible === "boolean" && typeof q10.waiting === "boolean")) return silent2;
     const seen = /* @__PURE__ */ new Set(), questions = [];
     for (const q10 of list6) {
       const asker = q10.visible ? str42(q10.asker) : null;
@@ -78689,11 +78689,11 @@ function extendView(parent, field3, cellOf) {
     pick: (idx) => each(parent.pick(idx))
   };
 }
-function joinView(L3, R8, fields, li2, rj) {
-  const merge2 = (l2, r) => [...L3.asArray(l2), ...R8.asArray(r)];
+function joinView(L3, R9, fields, li2, rj) {
+  const merge2 = (l2, r) => [...L3.asArray(l2), ...R9.asArray(r)];
   function* scan() {
     if (!li2.length) return;
-    const right = R8.pick(rj);
+    const right = R9.pick(rj);
     let p3 = 0;
     let i = 0;
     for (const lrow of L3.scan()) {
@@ -78707,7 +78707,7 @@ function joinView(L3, R8, fields, li2, rj) {
   }
   function* pick3(idx) {
     const left2 = L3.pick(idx.map((k) => li2[k]));
-    const right = R8.pick(idx.map((k) => rj[k]));
+    const right = R9.pick(idx.map((k) => rj[k]));
     for (let k = 0; k < idx.length; k++) yield merge2(left2.next().value, right.next().value);
   }
   return { fields, streamed: true, size: li2.length, reader: readers(fields), scan, pick: pick3, asArray: (row11) => row11 };
@@ -79289,9 +79289,9 @@ var RUN = {
   },
   join(st, env, opts) {
     const L3 = env.table(st.left);
-    const R8 = env.table(st.right);
+    const R9 = env.table(st.right);
     const lf = fieldOf(L3, st.on.left, st.as, "the join's left field");
-    const rf = fieldOf(R8, st.on.right, st.as, "the join's right field");
+    const rf = fieldOf(R9, st.on.right, st.as, "the join's right field");
     const set = [];
     let keyOf5;
     if (st.space !== void 0) {
@@ -79328,9 +79328,9 @@ var RUN = {
       };
     }
     const index2 = /* @__PURE__ */ new Map();
-    const readRight = R8.reader(rf.name);
+    const readRight = R9.reader(rf.name);
     let j = 0;
-    for (const row11 of R8.scan()) {
+    for (const row11 of R9.scan()) {
       const v = readRight(row11);
       if (empty(v)) set.push({ side: "right", row: j, why: `"${rf.name}" is empty` });
       else {
@@ -79344,8 +79344,8 @@ var RUN = {
       }
       j += 1;
     }
-    const fields = [...L3.fields, ...R8.fields.map((f17) => ({ ...f17, name: `${st.right}.${f17.name}` }))];
-    const streamed = L3.streamed || R8.streamed;
+    const fields = [...L3.fields, ...R9.fields.map((f17) => ({ ...f17, name: `${st.right}.${f17.name}` }))];
+    const streamed = L3.streamed || R9.streamed;
     const li2 = [];
     const rj = [];
     const rows3 = [];
@@ -79364,14 +79364,14 @@ var RUN = {
             continue;
           }
           const out = { ...lrow };
-          const rrow = R8.list[m];
-          for (const f17 of R8.fields) out[`${st.right}.${f17.name}`] = rrow[f17.name];
+          const rrow = R9.list[m];
+          for (const f17 of R9.fields) out[`${st.right}.${f17.name}`] = rrow[f17.name];
           rows3.push(out);
         }
       }
       i += 1;
     }
-    return { kind: "table", value: streamed ? joinView(L3, R8, fields, li2, rj) : objectTable(fields, rows3), inputRows: L3.size + R8.size, set };
+    return { kind: "table", value: streamed ? joinView(L3, R9, fields, li2, rj) : objectTable(fields, rows3), inputRows: L3.size + R9.size, set };
   },
   sort(st, env) {
     const t2 = env.table(st.from);
@@ -124835,6 +124835,11 @@ function migrateCaseCarriage(sql, storage = null) {
 }
 
 // src/case-carriage/checks.mjs
+var checks_exports32 = {};
+__export(checks_exports32, {
+  CASE_CARRIAGE_CHECKS: () => CASE_CARRIAGE_CHECKS,
+  OBSCURED_LABEL: () => OBSCURED_LABEL
+});
 var at14 = (fn, region) => `src/case-carriage/index.mjs ${fn} > ${region}`;
 var row3 = (check2, where, translation) => Object.freeze({ check: check2, where, translation });
 var OBSCURED_LABEL = "Faces and plates obscured for publication; the group holds the original";
@@ -125607,10 +125612,19 @@ function caseCarriageOf(host, deps) {
   }
   return c;
 }
+function caseCarriageOps(cc, url, body) {
+  const q10 = (k) => url.searchParams.get(k);
+  const b = body && typeof body === "object" ? body : {};
+  const sha2 = () => q10("capture") ?? b.captureSha ?? null;
+  return {
+    obscuremark: () => cc.obscureMark({ captureSha: sha2(), areas: b.areas, by: q10("by") }),
+    photomarks: () => cc.photoMarks({ captureSha: sha2(), viewer: url.searchParams.has("viewer") ? q10("viewer") : "" })
+  };
+}
 
 // src/case-tensions/checks.mjs
-var checks_exports32 = {};
-__export(checks_exports32, {
+var checks_exports33 = {};
+__export(checks_exports33, {
   ATTRIBUTION_ACT_CHECKS: () => ATTRIBUTION_ACT_CHECKS,
   rowOf: () => rowOf6
 });
@@ -129957,8 +129971,8 @@ function projectStageOps(s, url) {
 }
 
 // src/docket/checks.mjs
-var checks_exports33 = {};
-__export(checks_exports33, {
+var checks_exports34 = {};
+__export(checks_exports34, {
   DOCKET_CHECKS: () => DOCKET_CHECKS,
   rowOf: () => rowOf7
 });
@@ -131533,8 +131547,8 @@ function docketOps(m, url, body) {
 }
 
 // src/public-read/checks.mjs
-var checks_exports34 = {};
-__export(checks_exports34, {
+var checks_exports35 = {};
+__export(checks_exports35, {
   CASE_RESOLUTION_CHECKS: () => CASE_RESOLUTION_CHECKS,
   PUBLISHED_READ_CHECKS: () => PUBLISHED_READ_CHECKS,
   PUBLISHED_STORE_CHECKS: () => PUBLISHED_STORE_CHECKS,
@@ -133285,8 +133299,8 @@ function publicReadOps(r, url) {
 }
 
 // src/network-notices/checks.mjs
-var checks_exports35 = {};
-__export(checks_exports35, {
+var checks_exports36 = {};
+__export(checks_exports36, {
   NETWORK_NOTICE_CHECKS: () => NETWORK_NOTICE_CHECKS,
   rowOf: () => rowOf9
 });
@@ -134789,8 +134803,8 @@ function networkNoticesPublicReads(m) {
 }
 
 // src/ratification/checks.mjs
-var checks_exports36 = {};
-__export(checks_exports36, {
+var checks_exports37 = {};
+__export(checks_exports37, {
   CASE_CITATION_VERSIONS: () => CASE_CITATION_VERSIONS,
   CASE_CONCLUSION_CHECKS: () => CASE_CONCLUSION_CHECKS,
   CASE_DOCUMENT_FAMILY: () => CASE_DOCUMENT_FAMILY,
@@ -139657,8 +139671,8 @@ function ratificationOps(r, url, body) {
 }
 
 // src/bias/checks.mjs
-var checks_exports37 = {};
-__export(checks_exports37, {
+var checks_exports38 = {};
+__export(checks_exports38, {
   BIAS_BAR_PHRASING: () => BIAS_BAR_PHRASING,
   BIAS_CHECKS: () => BIAS_CHECKS,
   BIAS_STATEMENT_KINDS: () => BIAS_STATEMENT_KINDS,
@@ -142122,11 +142136,11 @@ function crossFoot(ix) {
   }
   const rowsets = [...groups.values()].filter((g) => g[0].dir === "row" && g.length >= 2);
   const colsets = [...groups.values()].filter((g) => g[0].dir === "col" && g.length >= 2);
-  for (const R8 of rowsets) for (const C2 of colsets) {
-    const sheet = R8[0].f.sheet;
+  for (const R9 of rowsets) for (const C2 of colsets) {
+    const sheet = R9[0].f.sheet;
     if (C2[0].f.sheet !== sheet) continue;
-    const rows3 = R8.map((l2) => l2.line), cols = C2.map((l2) => l2.line);
-    const rFrom = C2[0].from, rTo = C2[0].to, cFrom = R8[0].from, cTo = R8[0].to;
+    const rows3 = R9.map((l2) => l2.line), cols = C2.map((l2) => l2.line);
+    const rFrom = C2[0].from, rTo = C2[0].to, cFrom = R9[0].from, cTo = R9[0].to;
     if (!rows3.every((x) => x >= rFrom && x <= rTo) || !cols.every((x) => x >= cFrom && x <= cTo)) continue;
     if (rows3.length !== rTo - rFrom + 1 || cols.length !== cTo - cFrom + 1) continue;
     const total2 = (ls2) => {
@@ -142138,11 +142152,11 @@ function crossFoot(ix) {
       }
       return acc;
     };
-    const a = total2(R8), b = total2(C2);
+    const a = total2(R9), b = total2(C2);
     if (!a || !b || sameDecimal(a, b)) continue;
-    const corner = cellName(C2[0].f.r, R8[0].f.c);
+    const corner = cellName(C2[0].f.r, R9[0].f.c);
     const show2 = (x) => `${x.sign === "-" ? "-" : ""}${x.value}`;
-    out.push({ kind: "cross_foot", cell: `${sheet}!${corner}`, detail: `the row totals in column ${cellName(1, R8[0].f.c).replace(/1$/, "")} add to ${show2(a)}, the column totals in row ${C2[0].f.r} to ${show2(b)}, over ${cellName(rFrom, cFrom)}:${cellName(rTo, cTo)}` });
+    out.push({ kind: "cross_foot", cell: `${sheet}!${corner}`, detail: `the row totals in column ${cellName(1, R9[0].f.c).replace(/1$/, "")} add to ${show2(a)}, the column totals in row ${C2[0].f.r} to ${show2(b)}, over ${cellName(rFrom, cFrom)}:${cellName(rTo, cTo)}` });
   }
   return out;
 }
@@ -143385,8 +143399,8 @@ function recomputeView(row11) {
 }
 
 // src/case-import/checks.mjs
-var checks_exports38 = {};
-__export(checks_exports38, {
+var checks_exports39 = {};
+__export(checks_exports39, {
   CASE_IMPORT_CHECKS: () => CASE_IMPORT_CHECKS,
   rowOf: () => rowOf11
 });
@@ -146773,8 +146787,8 @@ function caseImportOps(m, url, body) {
 }
 
 // src/case-disclosures/checks.mjs
-var checks_exports39 = {};
-__export(checks_exports39, {
+var checks_exports40 = {};
+__export(checks_exports40, {
   CASE_DISCLOSURE_CHECKS: () => CASE_DISCLOSURE_CHECKS
 });
 var at18 = (fn, region) => `src/case-disclosures/index.mjs ${fn} > ${region}`;
@@ -148625,8 +148639,8 @@ function caseDisclosuresOf(host, deps) {
 }
 
 // src/case-authoring/checks.mjs
-var checks_exports40 = {};
-__export(checks_exports40, {
+var checks_exports41 = {};
+__export(checks_exports41, {
   CASE_DERIVATION_CHECKS: () => CASE_DERIVATION_CHECKS,
   PUBLISH_ACT_CHECKS: () => PUBLISH_ACT_CHECKS,
   STATEMENT_ACK_CHECKS: () => STATEMENT_ACK_CHECKS
@@ -149706,10 +149720,10 @@ var CaseAuthoring = class {
       const r = f17.read;
       if (!r || r.ok === false || r.found === false) continue;
       const differs = !f17.recomputed || f17.recomputed.ok === false || f17.recomputed.agrees !== true;
-      const unbound = (r.grade && Array.isArray(r.grade.inputs) ? r.grade.inputs : []).some((x) => x && x.unbound === true);
+      const unbound2 = (r.grade && Array.isArray(r.grade.inputs) ? r.grade.inputs : []).some((x) => x && x.unbound === true);
       const inputs = (Array.isArray(r.inputs) ? r.inputs : []).filter((x) => x && typeof x === "object");
       for (const x of inputs) if (x.money !== void 0) money.push(...Array.isArray(x.money) ? x.money : [x.money]);
-      judge2(f17.calc, f17.members, differs ? "differs" : unbound ? "unbound" : "agrees", {
+      judge2(f17.calc, f17.members, differs ? "differs" : unbound2 ? "unbound" : "agrees", {
         recipe: r.calculation ? r.calculation.recipe ?? null : null,
         /* case-grammar R18: each input's name and SHA-256 as `read` states it (calculations R9; N596): every input's
            canonical bytes, a figure, money, another calculation, a set, a draw or the threshold as well as a table, so
@@ -149725,8 +149739,8 @@ var CaseAuthoring = class {
       const r = f17.read;
       const status = r.recompute ? r.recompute.status ?? null : null;
       const differs = status === "differs" || (Array.isArray(r.bindings) ? r.bindings : []).some((b) => b && b.agrees === false);
-      const unbound = (Array.isArray(r.inputs) ? r.inputs : []).some((x) => x && x.bound === false);
-      judge2(f17.capture, f17.members, differs ? "differs" : unbound ? "unbound" : status === "agrees" ? "agrees" : "not_recomputed", {
+      const unbound2 = (Array.isArray(r.inputs) ? r.inputs : []).some((x) => x && x.bound === false);
+      judge2(f17.capture, f17.members, differs ? "differs" : unbound2 ? "unbound" : status === "agrees" ? "agrees" : "not_recomputed", {
         recipe: null,
         inputs: [],
         method_version: r.recompute ? [r.recompute.engine, r.recompute.engine_version].filter(Boolean).join(" ") || null : null,
@@ -151868,8 +151882,8 @@ function blanksOf(text7) {
 }
 
 // src/filing-templates/checks.mjs
-var checks_exports41 = {};
-__export(checks_exports41, {
+var checks_exports42 = {};
+__export(checks_exports42, {
   FILING_TEMPLATE_CHECKS: () => FILING_TEMPLATE_CHECKS,
   rowOf: () => rowOf12
 });
@@ -153881,8 +153895,8 @@ function filingTemplatesOps(m, url, body) {
 }
 
 // src/citation/checks.mjs
-var checks_exports42 = {};
-__export(checks_exports42, {
+var checks_exports43 = {};
+__export(checks_exports43, {
   CITE_CHECKS: () => CITE_CHECKS,
   CITE_EXTENT_CHECKS: () => CITE_EXTENT_CHECKS
 });
@@ -155188,8 +155202,8 @@ function citationOps(c, url) {
 }
 
 // src/wizard-scripts/checks.mjs
-var checks_exports43 = {};
-__export(checks_exports43, {
+var checks_exports44 = {};
+__export(checks_exports44, {
   WIZARD_SCRIPTS_CHECKS: () => WIZARD_SCRIPTS_CHECKS,
   rowOf: () => rowOf14
 });
@@ -155570,6 +155584,13 @@ function migrateWizardScripts(sql) {
 
 // src/wizard-scripts/data.mjs
 var LIBRARY_APPROVED = Object.freeze({ by: "Bob", at: "2026-10-06" });
+var LIBRARY_ADOPTED = Object.freeze([
+  Object.freeze({
+    names: Object.freeze(["Set up and claim", "Publication ceremony", "Check a claim", "Follow a proceeding"]),
+    version: 2,
+    approved: Object.freeze({ by: "BOB", at: "2026-10-08", ruling: "K2241" })
+  })
+]);
 var REQUIRED_NAMES = Object.freeze(["Set up and claim", "Welcome a new member", "Publication ceremony"]);
 function deepFreeze3(v) {
   if (v && typeof v === "object" && !Object.isFrozen(v)) {
@@ -155581,44 +155602,45 @@ function deepFreeze3(v) {
 
 // src/wizard-scripts/civicsmith-library.mjs
 var CIVICSMITH_LIBRARY_SOURCE = deepFreeze3({ "commit": "d129238bf3", "path": "docs/development/ux-substrate/screens/library.json", "sha256": "02653a7a88e01facc716119cdc408a7849141432fed67910b8146268b3aa844e" });
+var CIVICSMITH_LIBRARY_ADOPTED_SOURCE = deepFreeze3({ "commit": "e08cd35ecb", "path": "docs/development/ux-substrate/screens/library.json", "sha256": "483a88fd4d4f2715c67773ef02ad5a53e10a195d88229bb3a213d3e54fec06e6" });
 var CIVICSMITH_LIBRARY = deepFreeze3([
-  { "id": "WIZ-c887066cc553dd41", "name": "Set up and claim", "start": "install", "origin": "civicsmith", "scope": "group", "required": true, "version": 1, "steps": [{ "screen": "install", "act": null, "what": "Check you have what is needed: a Cloudflare account and about twenty minutes.", "why": "The free plan works. Workers Paid ($5 a month) adds recomputing spreadsheets and signing in with a Claude subscription. No Claude account is needed to set up." }, { "screen": "install", "act": "bootstrap", "what": "Choose your group's short name, then install. It is not the group's name: you choose that next, and can change it.", "why": "The short name is the fixed label in your addresses and beside every signature, and can never change. A group that wants to stay unnamed picks one that reveals nothing." }, { "screen": "install", "act": "selftest", "what": "Let your group's Civicsmith test itself. Allow it to run the assistant's container if you are asked.", "why": "The test proves it works before anyone relies on it." }, { "screen": "install", "act": null, "what": "Save the one-time password somewhere safe, such as a password manager, then continue.", "why": "It is shown once, and it is how you become the first administrator. Continuing fills it in; if it is lost before you claim, whoever can sign in to the Cloudflare account can set a new one." }, { "screen": "setup", "act": "claim", "what": "Claim with the one-time password, then choose your own password. It is already filled in if you continued from the installer; otherwise type the one you saved.", "why": "Only the person holding the one-time password can become the first administrator. Once you claim, it is spent." }, { "screen": "setup", "act": "groupnameset", "what": "Name the group as people should read it, and add its logo if it has one.", "why": "The group's name heads everything it publishes and can change at any time; the short name you chose at install stays fixed in addresses and signatures." }, { "screen": "setup", "act": "groupdomainset", "what": "If your group has a website, verify its address (optional): place the small file Civicsmith gives you on the site.", "why": "Readers can then confirm that a published case really comes from your group. The public page names the site, so a group that wants to stay unnamed skips this." }, { "screen": "setup", "act": "profilesset", "what": "Choose the places whose rules apply, and the languages your members use.", "why": "Deadlines, holidays and offices come from these places, never from Civicsmith itself. If yours is not listed, choose Other: everything else works, and you enter due dates yourself." }, { "screen": "setup", "act": "officesseed", "what": "Review the offices, seats and holders Civicsmith filled in. Each is marked with where it came from.", "why": "Requests go to offices by role, so correct anything before members rely on it." }, { "screen": "setup", "act": null, "what": "Read who in the group will see facts about people.", "why": "Facts from public documents follow those documents; a project's own notes about a person stay inside the project." }, { "screen": "setup", "act": "assistantset", "what": "Read what the assistant is (and open More about this if you want the detail), then choose: the group's API key, members' own accounts, both, or none.", "why": "The group's key serves members with no account of their own, at the group's cost. A member's own account always comes first. Everything works without it." }, { "screen": "setup", "act": "groupkeyset", "what": "If you chose the group's key: paste it here. It is never shown again.", "why": "It serves every member with no account of their own; each is told once, before their first question, that it goes to Anthropic under the group's account." }, { "screen": "setup", "act": "courtnoticeset", "what": "Choose whether members are told what a court can reach.", "why": "A court order your group cannot defeat can require anything not public to be shown. Some groups want every member told; the explanation is always one tap away." }, { "screen": "setup", "act": "hostingaccess", "what": "Record who holds the hosting account.", "why": "If you are ever unreachable, this is how the group gets back in." }, { "screen": "setup", "act": "memberadd", "what": "Invite your first members, and a second administrator now or later.", "why": "With one administrator the group depends on one person. A second means it is never stuck." }, { "screen": "group-identity", "act": null, "what": "Optional: say who your group is. You will come back here when you finish or stop.", "why": "It shapes how each member is welcomed. It locks nothing and is never required.", "via": "WIZ-4d42b0233d48913f" }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } },
-  { "id": "WIZ-7db08189cc0e58c3", "name": "Welcome a new member", "start": "join", "origin": "civicsmith", "scope": "group", "required": true, "version": 1, "steps": [{ "screen": "join", "act": "memberlanguageset", "what": "Choose your language.", "why": "Everything that follows should be in words you read easily. It starts from your device's setting." }, { "screen": "join", "act": "enroll", "what": "Choose a handle and a password.", "why": "The record shows your handle on your work. It needn't be your legal name: a known name lends credibility, a pen name shields you, and administrators still know who you are." }, { "screen": "home", "act": null, "what": "This is your group's home: what it is working on, and what is waiting on you.", "why": "Come back here whenever you lose your place." }, { "screen": "question", "act": null, "what": `Two things to know first: a question's strength against its project's bar, and "Undetermined".`, "why": "You will see these everywhere. Every other mark is explained where you meet it, one tap away." }, { "screen": "connect", "act": null, "what": "Optional: connect your own Claude account, or skip.", "why": "The assistant serves only you, and every journey works without it.", "via": "WIZ-74328804ddae3503" }, { "screen": "ties", "act": null, "what": "Optional: tell the group about your own ties.", "why": "Only you and the administrators see them, and they let a case disclose a tie honestly.", "via": "WIZ-e2731f1813a43b89" }, { "screen": "home", "act": "startfrom", "what": "Take a first step: join a project, capture a document, or record what you saw.", "why": "One small act is enough to begin. Nothing here has to be done in order." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } },
-  { "id": "WIZ-426b9c2e8b128b6b", "name": "Publication ceremony", "start": "ceremony", "origin": "civicsmith", "scope": "group", "required": true, "version": 1, "steps": [{ "screen": "ceremony", "act": "publishpreflight", "what": "Check what you are publishing: the case, its edition and its scope.", "why": "Publishing is permanent. This is the last look before it." }, { "screen": "ceremony", "act": "publishpreflight", "what": "Check each finding's strength against the bar, and anything still open.", "why": "A reader sees each finding's strengths. Anything still open is disclosed, never hidden." }, { "screen": "case-editor", "act": "statementack", "what": "Read what the case leaves out, and who acknowledged it.", "why": "Saying what a case does not cover is part of its honesty." }, { "screen": "case-editor", "act": "attribute", "what": "Check each person the case names, with the reason they matter to a finding.", "why": "A case cannot be signed while any reason is missing." }, { "screen": "ceremony", "act": "publishtensions", "what": "Read what will be disclosed: the timeline as it stands, and any calculation that differs or is not tied to the record.", "why": "Readers must see what the case could not settle." }, { "screen": "ceremony", "act": null, "what": "Read the group's declared bias as it will appear.", "why": "Every published case carries the lens it was made through." }, { "screen": "ceremony", "act": null, "what": "Preview the public page as a stranger will see it.", "why": "This is how a reader with no account meets your work." }, { "screen": "ceremony", "act": "publish", "what": "Each member publishing confirms they have no undeclared tie to anyone the case concerns.", "why": "Including anyone paid in its money. A tie disclosed is a strength; one found later is not." }, { "screen": "ceremony", "act": "caseratify", "what": "Sign with your key.", "why": "Publishing is permanent. Corrections come as a new edition, never by changing this one." }, { "screen": "ceremony", "act": "publishat", "what": "Publish now, or choose the time it becomes public, such as when a story citing it runs.", "why": "At that time Civicsmith checks again; if anything changed since you signed, it holds the case and tells you. You can cancel or move the time until then." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } },
-  { "id": "WIZ-cb0ad18a17a04233", "name": "Get a record", "start": "finder", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "finder", "act": "search", "what": "Look first: is the record already public? Search what your group holds and where the office publishes.", "why": "Much is public already. A copy from the office's own site holds up better than one found elsewhere." }, { "screen": "capture", "act": "acquire", "what": "If you find it, capture it from its address. Then you are done.", "why": "Capturing keeps a fingerprinted copy that cannot change under you." }, { "screen": "request", "act": "addresseesuggest", "what": "If not, choose the office that holds the records.", "why": "The request goes to the office by its role, so it reaches whoever holds the post that day. You will see who that is." }, { "screen": "request", "act": "actioncreate", "what": "Say plainly what records you want.", "why": "A clear description is harder to refuse, or to answer only in part." }, { "screen": "request", "act": "actionlaws", "what": "Choose the law the request goes under, from your group's places.", "why": "The law sets the office's deadline. Where a faster kind of request fits, it is offered." }, { "screen": "request", "act": "communicationprepare", "what": "Read the draft request and edit it until it is yours.", "why": "The wizard only drafts. The words that are sent are yours.", "draft": { "template": "@records-request" } }, { "screen": "request", "act": "filingapprove", "what": "Approve the text.", "why": "Approving is kept apart from sending, so you can stop between them." }, { "screen": "request", "act": "filingrecordsent", "what": "Send it the way the office accepts requests, then record that you sent it.", "why": "Sending tells the office what your group is looking at. Recording the send starts the clock." }, { "screen": "due-date", "act": "clockadopt", "what": "Confirm the due date worked out from the law. Download it to your calendar if you like.", "why": "You can see exactly how it was counted, and challenge it." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } },
-  { "id": "WIZ-33b5887790b7561b", "name": "Check a claim", "start": "capture", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "capture", "act": "acquire", "what": "Capture the claim where the city made it: a budget, a report to council, a press release.", "why": "The claim itself is your first piece of evidence." }, { "screen": "document", "act": "cite", "what": "Point at the words that make the claim.", "why": "Every later step refers back to exactly what was said." }, { "screen": "project", "act": "promote", "what": "Open the question: do the city's own records support the claim?", "why": "A claim cannot be checked; a question can be answered, or shown undetermined." }, { "screen": "question", "act": "narrow", "what": "Pin down what the claim's words mean: what counts, and over what period. If the city never says, record that.", "why": "A share means nothing until you know what was counted. A gap is recorded as undetermined, with its reason." }, { "screen": "finder", "act": "search", "what": "Get the city's own records behind the claim: online, or by request.", "why": "The claim should be checked against the city's own data, not anyone's impression.", "via": "WIZ-cb0ad18a17a04233" }, { "screen": "calculation", "act": "calculationcreate", "what": "Work it out with the built-in calculation, or bind your own spreadsheet to the captured records.", "why": "The method is shown with the result, so anyone can check it." }, { "screen": "calculation", "act": "calculationdraw", "what": "Plan a spot-check: a recorded random draw picks which records members visit.", "why": "A draw anyone can repeat means no one can say you picked the worst cases." }, { "screen": "capture", "act": "testify", "what": "Members visit and record what they find, with place, date and photo.", "why": "Firsthand checks test whether the records match the street." }, { "screen": "question", "act": "conclude", "what": "Conclude with what the evidence supports, and say what would change it.", "why": "A conclusion that names what would change it is one others can trust." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } },
-  { "id": "WIZ-86b7f4007e3b0e3c", "name": "Your first question", "start": "project", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "project", "act": null, "what": "What drew you in? A problem you live with, a person, a payment or contract, or something you read.", "why": "Any of these is a good start. Civicsmith offers a first step from each." }, { "screen": "project", "act": "promote", "what": "Say what you want to know, as a question.", "why": "A question is something the record can answer: yes, no, or undetermined, and why." }, { "screen": "finder", "act": "search", "what": "Find or capture a document that bears on it.", "why": "Every answer rests on documents anyone could check." }, { "screen": "document", "act": "cite", "what": "Point at the passage that matters.", "why": "Citing a passage, not a whole document, shows exactly what you rely on." }, { "screen": "question", "act": "cite", "what": "Say whether it supports the question or cuts against it.", "why": "Evidence against is kept as carefully as evidence for." }, { "screen": "question", "act": null, "what": "See the question's strength against the project's bar, and what would raise it.", "why": "Strength is two grades, never one score: how well the documents are held and how firmly they are linked." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } },
-  { "id": "WIZ-4d42b0233d48913f", "name": "Say who your group is", "start": "group-identity", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "group-identity", "act": "groupdescriptionset", "what": "What kind of group are you? Pick one or more, or describe your own.", "why": "It shapes how each member is welcomed. It never limits what anyone can do." }, { "screen": "group-identity", "act": "groupdescriptionset", "what": "What do you focus on: issues, places, offices or agencies?", "why": "New members see your focus first when they choose where to start." }, { "screen": "group-identity", "act": "groupdescriptionset", "what": "Why does the group exist? Say it in your own words.", "why": "Your declared bias can start from what you write here." }, { "screen": "group-identity", "act": "groupdescriptionset", "what": "Who should see this: members only, or also your public page and the network directory?", "why": "Members only is the default. A group that wants to stay unnamed keeps it that way." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } },
-  { "id": "WIZ-8e7e2fac33d069f8", "name": "Invite a member", "start": "members", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "members", "act": "memberadd", "what": "Who: their handle, and the cover the group knows them by. Not a legal name.", "why": "The record never needs a legal name. Administrators keep the cover so they know who is who." }, { "screen": "members", "act": "membercaps", "what": "What they may do. Contributing is the default.", "why": "Give only what the person needs; you can change it later." }, { "screen": "members", "act": null, "what": "Send the link yourself. It works once and expires after seven days.", "why": "Civicsmith sends no email, so the link reaches them only through you." }, { "screen": "members", "act": "websitekeycreate", "what": "Or let people join through your website: create a website key, or turn on the reusable join link.", "why": "Anyone let through can see the group's shared work, so each comes with limits and a daily cap." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } },
-  { "id": "WIZ-74328804ddae3503", "name": "Connect your Claude account", "start": "connect", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "connect", "act": null, "what": "The assistant is optional. If your group offers its API key, you can use it already; your own account, if you connect one, always comes first.", "why": "Your own account serves only you. Everything works without the assistant." }, { "screen": "connect", "act": "disclosureshown", "what": "Read what connecting means.", "why": "Your questions, and what is read to answer them, go to Anthropic under your own account." }, { "screen": "connect", "act": "subscriptionsignin", "what": "To connect your Claude subscription, open Anthropic's sign-in page, sign in and approve. Or use an API key, or skip.", "why": "You sign in on Anthropic's own page; Civicsmith never sees your Claude password. Skipping is a real choice: every journey stays open." }, { "screen": "connect", "act": "accountreferenceset", "what": "Copy the code Anthropic's page shows you, paste it here, and connect.", "why": "Your subscription then serves only your own questions. You can disconnect at any time." }, { "screen": "connect", "act": "aiceilingset", "what": "Set your daily limit.", "why": "It caps what the assistant can spend on your account each day. An administrator may set a lower one for the group." }, { "screen": "connect", "act": "accountswitchset", "what": "Choose whether the assistant may suggest things without being asked. It is off unless you turn it on.", "why": "Some members want suggestions; others want quiet." }, { "screen": "connect", "act": "accountreferenceremove", "what": "You can disconnect at any time, here.", "why": "Disconnecting removes the key or token from your group's Civicsmith." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } },
-  { "id": "WIZ-e2731f1813a43b89", "name": "Your ties", "start": "ties", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "ties", "act": "declaretie", "what": "List your employer, relatives, and businesses you have an interest in.", "why": "A case concerning any of them can then disclose the tie honestly." }, { "screen": "ties", "act": null, "what": "Only you and the administrators can see this.", "why": "Your ties never appear in a case unless one concerns it, and then only as you choose." }, { "screen": "ties", "act": "declaretie", "what": "For each tie, choose how a published case discloses it when the case concerns them: naming you by your handle, or as \u201Ca member of the group\u201D.", "why": "Readers learn of the tie either way; not naming you protects you while keeping the case honest." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } },
-  { "id": "WIZ-a15d174f7a2c1dc5", "name": "Follow a proceeding", "start": "capture", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "capture", "act": "acquire", "what": "Capture a filing, or the court's register page.", "why": "The proceeding is registered from what it says about itself." }, { "screen": "proceeding", "act": "registerproceeding", "what": "Register the proceeding from its caption: the court, the number, and a neutral label.", "why": "A neutral label keeps your own view out of the record's name for it." }, { "screen": "proceeding", "act": "recordline", "what": "Add the parties by role.", "why": "Roles say who is suing, who is sued, and who is deciding." }, { "screen": "proceeding", "act": "followregister", "what": "Follow its register: on a schedule, or by your own capture where the register needs a login.", "why": "New filings are flagged, so nothing arrives unseen." }, { "screen": "proceeding", "act": "declare", "what": "Hold each order's requirements as obligations, with their reply dates.", "why": "An order is a standard the office must meet. Its dates go into your queue." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } },
-  { "id": "WIZ-df0b5c4d0ffcdde7", "name": "Follow the money", "start": "capture", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "capture", "act": "acquire", "what": "Capture the budget, financial report or contract.", "why": "Every figure must point back to where it was printed." }, { "screen": "money", "act": "recordfact", "what": "Read just the figures you need, each with its stage and period.", "why": "Proposed, adopted, committed and paid are different facts. Mixing them is how money stories go wrong." }, { "screen": "money", "act": "createset", "what": "Start a money trail.", "why": "A trail gathers the figures one question needs." }, { "screen": "money", "act": "include", "what": "Include or leave out each item, with a reason.", "why": "Your reasons show a reader why the trail adds up the way it does." }, { "screen": "money", "act": "reconcile", "what": "Compare two sources of one figure, or what was committed against what was paid.", "why": "Differences in basis, period or rounding are named, not hidden." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } },
-  { "id": "WIZ-9f2b79390d6940a0", "name": "Build a timeline", "start": "timeline", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "timeline", "act": "createevent", "what": "Record an event from a cited passage: what, when, and how precisely you know the date.", "why": "Every event points at its source. A date you only know roughly is recorded as rough." }, { "screen": "timeline", "act": "addparticipant", "what": "Add who took part and in what role: decided, signed, voted.", "why": "Roles are what make an event useful to a finding." }, { "screen": "timeline", "act": "relate", "what": "Link events: made under, answered, amended.", "why": "Links let a reader follow one thread through the record." }, { "screen": "timeline", "act": "hypothesishold", "what": "Keep a suspected cause as a hunch, never as a fact.", "why": "A hunch is marked as yours and is never evidence." }, { "screen": "timeline", "act": null, "what": "Review the two lanes before the case is signed: what they did, and what we did.", "why": "The timeline is frozen into the case when it is signed." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } },
-  { "id": "WIZ-55930f07cb4e9499", "name": "Keep asking this", "start": "answers", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "answers", "act": "standingquestionset", "what": "Choose how often to check, and until when.", "why": "An end date is required, so no question runs forever." }, { "screen": "answers", "act": null, "what": "The search runs on schedule. With the assistant connected, it reads only what is new, on your account and within your limit.", "why": "Without the assistant, new matches arrive as a list for you to read." }, { "screen": "queue", "act": null, "what": "The answer reaches your queue once.", "why": "Only you see it; it is never shared." }, { "screen": "answers", "act": "standingquestionend", "what": "Stop it any time.", "why": "Stopping is immediate, and nothing further is checked." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } },
-  { "id": "WIZ-4cdbd26939d4cc6d", "name": "Use another group's case", "start": "imported", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "imported", "act": "caseimport", "what": "Import the case into its own read-only project.", "why": "Another group's work stays marked as theirs, and cannot be edited." }, { "screen": "imported", "act": null, "what": "Civicsmith recreates each finding and calculation from the case file. Watch each one's mark.", "why": "Recreated, recreated in part, or did not recreate: you never rely on what you could not check." }, { "screen": "imported", "act": "importaccept", "what": "Accept what recreated, with a reason.", "why": "Accepting names one edition and changes no grade." }, { "screen": "imported", "act": "importwatch", "what": "Watch the publisher's docket for new editions and corrections.", "why": "Anything relying on the case is told when it changes." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } },
-  { "id": "WIZ-af4c9fafc3713f26", "name": "Translate the interface", "start": "translations", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "translations", "act": null, "what": "Choose the language.", "why": "Civicsmith's own translations come with releases. Your group fills gaps and improves wording." }, { "screen": "translations", "act": null, "what": "See the words still untranslated.", "why": "A missing word shows in English, never blank." }, { "screen": "translations", "act": "translationdraft", "what": `Where you can reach the assistant, ask it to draft them all. Each is marked "Draft \xB7 the assistant's".`, "why": "Your task becomes finding its errors. Without the assistant, type them yourself." }, { "screen": "translations", "act": "translationadopt", "what": "Read each draft against the English; keep it or correct it.", "why": "A word becomes the group's only when a granted member who knows the language keeps it." }, { "screen": "translations", "act": "translationconfirm", "what": "A protected word you changed, or typed without a draft, waits for a second check.", "why": "A second granted speaker, or an administrator reading the assistant's back-translation, confirms it. Until then members see the English." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } },
-  { "id": "WIZ-a8c349d7d71b6bb0", "name": "Start and send", "start": "plan", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "plan", "act": "optiondispose", "what": "Choose the option, and say when to be reminded.", "why": "Choosing records why this option, now." }, { "screen": "start-send", "act": "optionstartpreview", "what": "See what starting does, and anything that would stop it.", "why": "Refusals are shown before anything runs." }, { "screen": "start-send", "act": "optionstart", "what": "Start the action, addressed to the office by role.", "why": "The office's holder that day is shown, so you know who will read it." }, { "screen": "start-send", "act": "communicationprepare", "what": "Prepare what is sent. A template or draft is labelled until you make it yours.", "why": "The words that leave the group are always a member's.", "draft": { "template": "@communication" } }, { "screen": "start-send", "act": "filingapprove", "what": "Approve the text.", "why": "Approving is kept apart from sending, so you can stop between them." }, { "screen": "start-send", "act": "filingrecordsent", "what": "Send it, then record that you sent it.", "why": "This tells the office what your group is looking at, and starts the clock." }, { "screen": "due-date", "act": "reminderset", "what": "The due date and next checkpoint go into your queue. A next step can wait on the reply.", "why": "If no reply comes, the next step is ready without anyone remembering." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } }
+  { "id": "WIZ-c887066cc553dd41", "name": "Set up and claim", "start": "install", "origin": "civicsmith", "scope": "group", "required": true, "version": 2, "steps": [{ "screen": "install", "act": null, "what": "Check you have what is needed: a Cloudflare account and about twenty minutes.", "why": "The free plan works. Workers Paid ($5 a month) adds recomputing spreadsheets and signing in with a Claude subscription. No Claude account is needed to set up." }, { "screen": "install", "act": "bootstrap", "what": "Choose your group's short name, then install. It is not the group's name: you choose that next, and can change it.", "why": "The short name is the fixed label in your addresses and beside every signature, and can never change. A group that wants to stay unnamed picks one that reveals nothing." }, { "screen": "install", "act": "selftest", "what": "Let your group's Civicsmith test itself. Allow it to run the assistant's container if you are asked.", "why": "The test proves it works before anyone relies on it." }, { "screen": "install", "act": null, "what": "Save the one-time password somewhere safe, such as a password manager, then continue.", "why": "It is shown once, and it is how you become the first administrator. Continuing fills it in; if it is lost before you claim, whoever can sign in to the Cloudflare account can set a new one." }, { "screen": "setup", "act": "claim", "what": "Claim with the one-time password, then choose your own password. It is already filled in if you continued from the installer; otherwise type the one you saved.", "why": "Only the person holding the one-time password can become the first administrator. Once you claim, it is spent." }, { "screen": "setup", "act": "groupnameset", "what": "Name the group as people should read it, and add its logo if it has one.", "why": "The group's name heads everything it publishes and can change at any time; the short name you chose at install stays fixed in addresses and signatures." }, { "screen": "setup", "act": "groupdomainset", "what": "If your group has a website, verify its address (optional): place the small file Civicsmith gives you on the site.", "why": "Readers can then confirm that a published case really comes from your group. The public page names the site, so a group that wants to stay unnamed skips this." }, { "screen": "setup", "act": "profilesset", "what": "Choose the places whose rules apply, and the languages your members use.", "why": "Deadlines, holidays and offices come from these places, never from Civicsmith itself. If yours is not listed, choose Other: everything else works, and you enter due dates yourself." }, { "screen": "setup", "act": "officesseed", "what": "Review the offices, seats and holders Civicsmith filled in. Each is marked with where it came from.", "why": "Requests go to offices by role, so correct anything before members rely on it." }, { "screen": "setup", "act": null, "what": "Read who in the group will see facts about people.", "why": "Facts from public documents follow those documents; a project's own notes about a person stay inside the project." }, { "screen": "setup", "act": "aikeepaway", "what": "Read what the assistant is (and open More about this for the detail), then choose whether to keep the group's material away from AI.", "why": "Any member may connect their own Claude account unless you keep the material away from AI; then members see who chose it and your reason. Everything works without the assistant." }, { "screen": "setup", "act": "groupkeyset", "what": "If the group will pay for the assistant, paste its Anthropic API key here. It is never shown again.", "why": "It serves every member with no account of their own; each is told once, before their first question, that it goes to Anthropic under the group's account. Leave it empty and members bring their own." }, { "screen": "setup", "act": "courtnoticeset", "what": "Choose whether members are told what a court can reach.", "why": "A court order your group cannot defeat can require anything not public to be shown. Some groups want every member told; the explanation is always one tap away." }, { "screen": "setup", "act": "hostingaccess", "what": "Record who holds the hosting account.", "why": "If you are ever unreachable, this is how the group gets back in." }, { "screen": "setup", "act": "memberadd", "what": "Invite your first members, and a second administrator now or later.", "why": "With one administrator the group depends on one person. A second means it is never stuck." }, { "screen": "group-identity", "act": null, "what": "Optional: say who your group is. You will come back here when you finish or stop.", "why": "It shapes how each member is welcomed. It locks nothing and is never required.", "via": "WIZ-4d42b0233d48913f" }], "author": "civicsmith", "approved": { "by": "BOB", "at": "2026-10-08", "ruling": "K2241" }, "source": "e08cd35ecb", "earlier": [{ "version": 1, "steps": [{ "screen": "install", "act": null, "what": "Check you have what is needed: a Cloudflare account and about twenty minutes.", "why": "The free plan works. Workers Paid ($5 a month) adds recomputing spreadsheets and signing in with a Claude subscription. No Claude account is needed to set up." }, { "screen": "install", "act": "bootstrap", "what": "Choose your group's short name, then install. It is not the group's name: you choose that next, and can change it.", "why": "The short name is the fixed label in your addresses and beside every signature, and can never change. A group that wants to stay unnamed picks one that reveals nothing." }, { "screen": "install", "act": "selftest", "what": "Let your group's Civicsmith test itself. Allow it to run the assistant's container if you are asked.", "why": "The test proves it works before anyone relies on it." }, { "screen": "install", "act": null, "what": "Save the one-time password somewhere safe, such as a password manager, then continue.", "why": "It is shown once, and it is how you become the first administrator. Continuing fills it in; if it is lost before you claim, whoever can sign in to the Cloudflare account can set a new one." }, { "screen": "setup", "act": "claim", "what": "Claim with the one-time password, then choose your own password. It is already filled in if you continued from the installer; otherwise type the one you saved.", "why": "Only the person holding the one-time password can become the first administrator. Once you claim, it is spent." }, { "screen": "setup", "act": "groupnameset", "what": "Name the group as people should read it, and add its logo if it has one.", "why": "The group's name heads everything it publishes and can change at any time; the short name you chose at install stays fixed in addresses and signatures." }, { "screen": "setup", "act": "groupdomainset", "what": "If your group has a website, verify its address (optional): place the small file Civicsmith gives you on the site.", "why": "Readers can then confirm that a published case really comes from your group. The public page names the site, so a group that wants to stay unnamed skips this." }, { "screen": "setup", "act": "profilesset", "what": "Choose the places whose rules apply, and the languages your members use.", "why": "Deadlines, holidays and offices come from these places, never from Civicsmith itself. If yours is not listed, choose Other: everything else works, and you enter due dates yourself." }, { "screen": "setup", "act": "officesseed", "what": "Review the offices, seats and holders Civicsmith filled in. Each is marked with where it came from.", "why": "Requests go to offices by role, so correct anything before members rely on it." }, { "screen": "setup", "act": null, "what": "Read who in the group will see facts about people.", "why": "Facts from public documents follow those documents; a project's own notes about a person stay inside the project." }, { "screen": "setup", "act": "assistantset", "what": "Read what the assistant is (and open More about this if you want the detail), then choose: the group's API key, members' own accounts, both, or none.", "why": "The group's key serves members with no account of their own, at the group's cost. A member's own account always comes first. Everything works without it." }, { "screen": "setup", "act": "groupkeyset", "what": "If you chose the group's key: paste it here. It is never shown again.", "why": "It serves every member with no account of their own; each is told once, before their first question, that it goes to Anthropic under the group's account." }, { "screen": "setup", "act": "courtnoticeset", "what": "Choose whether members are told what a court can reach.", "why": "A court order your group cannot defeat can require anything not public to be shown. Some groups want every member told; the explanation is always one tap away." }, { "screen": "setup", "act": "hostingaccess", "what": "Record who holds the hosting account.", "why": "If you are ever unreachable, this is how the group gets back in." }, { "screen": "setup", "act": "memberadd", "what": "Invite your first members, and a second administrator now or later.", "why": "With one administrator the group depends on one person. A second means it is never stuck." }, { "screen": "group-identity", "act": null, "what": "Optional: say who your group is. You will come back here when you finish or stop.", "why": "It shapes how each member is welcomed. It locks nothing and is never required.", "via": "WIZ-4d42b0233d48913f" }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" }, "source": "d129238bf3" }] },
+  { "id": "WIZ-7db08189cc0e58c3", "name": "Welcome a new member", "start": "join", "origin": "civicsmith", "scope": "group", "required": true, "version": 1, "steps": [{ "screen": "join", "act": "memberlanguageset", "what": "Choose your language.", "why": "Everything that follows should be in words you read easily. It starts from your device's setting." }, { "screen": "join", "act": "enroll", "what": "Choose a handle and a password.", "why": "The record shows your handle on your work. It needn't be your legal name: a known name lends credibility, a pen name shields you, and administrators still know who you are." }, { "screen": "home", "act": null, "what": "This is your group's home: what it is working on, and what is waiting on you.", "why": "Come back here whenever you lose your place." }, { "screen": "question", "act": null, "what": `Two things to know first: a question's strength against its project's bar, and "Undetermined".`, "why": "You will see these everywhere. Every other mark is explained where you meet it, one tap away." }, { "screen": "connect", "act": null, "what": "Optional: connect your own Claude account, or skip.", "why": "The assistant serves only you, and every journey works without it.", "via": "WIZ-74328804ddae3503" }, { "screen": "ties", "act": null, "what": "Optional: tell the group about your own ties.", "why": "Only you and the administrators see them, and they let a case disclose a tie honestly.", "via": "WIZ-e2731f1813a43b89" }, { "screen": "home", "act": "startfrom", "what": "Take a first step: join a project, capture a document, or record what you saw.", "why": "One small act is enough to begin. Nothing here has to be done in order." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" }, "source": "d129238bf3" },
+  { "id": "WIZ-426b9c2e8b128b6b", "name": "Publication ceremony", "start": "ceremony", "origin": "civicsmith", "scope": "group", "required": true, "version": 2, "steps": [{ "screen": "ceremony", "act": "publishpreflight", "what": "Check what you are publishing: the case, its edition and its scope.", "why": "Publishing is permanent. This is the last look before it." }, { "screen": "ceremony", "act": "publishpreflight", "what": "Check each finding's strength against the bar, and anything still open.", "why": "A reader sees each finding's strengths. Anything still open is disclosed, never hidden." }, { "screen": "case-editor", "act": "statementack", "what": "Read what the case leaves out, and who acknowledged it.", "why": "Saying what a case does not cover is part of its honesty." }, { "screen": "case-editor", "act": "attribute", "what": "Check each person the case names, with the reason they matter to a finding.", "why": "A case cannot be signed while any reason is missing." }, { "screen": "ceremony", "act": "obscuremark", "what": "Check each photo the case relies on: mark anyone in it who is not part of a finding, and any number plate.", "why": "The public copy shows them obscured and says so; the original stays inside the group." }, { "screen": "ceremony", "act": "publishtensions", "what": "Read what will be disclosed: the timeline as it stands, and any calculation that differs or is not tied to the record.", "why": "Readers must see what the case could not settle." }, { "screen": "ceremony", "act": null, "what": "Read the group's declared bias as it will appear.", "why": "Every published case carries the lens it was made through." }, { "screen": "ceremony", "act": null, "what": "Preview the public page as a stranger will see it.", "why": "This is how a reader with no account meets your work." }, { "screen": "ceremony", "act": "publish", "what": "Each member publishing confirms they have no undeclared tie to anyone the case concerns.", "why": "Including anyone paid in its money. A tie disclosed is a strength; one found later is not." }, { "screen": "ceremony", "act": "caseratify", "what": "Sign with your key.", "why": "Publishing is permanent. Corrections come as a new edition, never by changing this one." }, { "screen": "ceremony", "act": "publishat", "what": "Publish now, or choose the time it becomes public, such as when a story citing it runs.", "why": "At that time Civicsmith checks again; if anything changed since you signed, it holds the case and tells you. You can cancel or move the time until then." }], "author": "civicsmith", "approved": { "by": "BOB", "at": "2026-10-08", "ruling": "K2241" }, "source": "e08cd35ecb", "earlier": [{ "version": 1, "steps": [{ "screen": "ceremony", "act": "publishpreflight", "what": "Check what you are publishing: the case, its edition and its scope.", "why": "Publishing is permanent. This is the last look before it." }, { "screen": "ceremony", "act": "publishpreflight", "what": "Check each finding's strength against the bar, and anything still open.", "why": "A reader sees each finding's strengths. Anything still open is disclosed, never hidden." }, { "screen": "case-editor", "act": "statementack", "what": "Read what the case leaves out, and who acknowledged it.", "why": "Saying what a case does not cover is part of its honesty." }, { "screen": "case-editor", "act": "attribute", "what": "Check each person the case names, with the reason they matter to a finding.", "why": "A case cannot be signed while any reason is missing." }, { "screen": "ceremony", "act": "publishtensions", "what": "Read what will be disclosed: the timeline as it stands, and any calculation that differs or is not tied to the record.", "why": "Readers must see what the case could not settle." }, { "screen": "ceremony", "act": null, "what": "Read the group's declared bias as it will appear.", "why": "Every published case carries the lens it was made through." }, { "screen": "ceremony", "act": null, "what": "Preview the public page as a stranger will see it.", "why": "This is how a reader with no account meets your work." }, { "screen": "ceremony", "act": "publish", "what": "Each member publishing confirms they have no undeclared tie to anyone the case concerns.", "why": "Including anyone paid in its money. A tie disclosed is a strength; one found later is not." }, { "screen": "ceremony", "act": "caseratify", "what": "Sign with your key.", "why": "Publishing is permanent. Corrections come as a new edition, never by changing this one." }, { "screen": "ceremony", "act": "publishat", "what": "Publish now, or choose the time it becomes public, such as when a story citing it runs.", "why": "At that time Civicsmith checks again; if anything changed since you signed, it holds the case and tells you. You can cancel or move the time until then." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" }, "source": "d129238bf3" }] },
+  { "id": "WIZ-cb0ad18a17a04233", "name": "Get a record", "start": "finder", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "finder", "act": "search", "what": "Look first: is the record already public? Search what your group holds and where the office publishes.", "why": "Much is public already. A copy from the office's own site holds up better than one found elsewhere." }, { "screen": "capture", "act": "acquire", "what": "If you find it, capture it from its address. Then you are done.", "why": "Capturing keeps a fingerprinted copy that cannot change under you." }, { "screen": "request", "act": "addresseesuggest", "what": "If not, choose the office that holds the records.", "why": "The request goes to the office by its role, so it reaches whoever holds the post that day. You will see who that is." }, { "screen": "request", "act": "actioncreate", "what": "Say plainly what records you want.", "why": "A clear description is harder to refuse, or to answer only in part." }, { "screen": "request", "act": "actionlaws", "what": "Choose the law the request goes under, from your group's places.", "why": "The law sets the office's deadline. Where a faster kind of request fits, it is offered." }, { "screen": "request", "act": "communicationprepare", "what": "Read the draft request and edit it until it is yours.", "why": "The wizard only drafts. The words that are sent are yours.", "draft": { "template": "@records-request" } }, { "screen": "request", "act": "filingapprove", "what": "Approve the text.", "why": "Approving is kept apart from sending, so you can stop between them." }, { "screen": "request", "act": "filingrecordsent", "what": "Send it the way the office accepts requests, then record that you sent it.", "why": "Sending tells the office what your group is looking at. Recording the send starts the clock." }, { "screen": "due-date", "act": "clockadopt", "what": "Confirm the due date worked out from the law. Download it to your calendar if you like.", "why": "You can see exactly how it was counted, and challenge it." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" }, "source": "d129238bf3" },
+  { "id": "WIZ-33b5887790b7561b", "name": "Check a claim", "start": "capture", "origin": "civicsmith", "scope": "group", "required": false, "version": 2, "steps": [{ "screen": "capture", "act": "acquire", "what": "Capture the claim where the city made it: a budget, a report to council, a press release.", "why": "The claim itself is your first piece of evidence." }, { "screen": "document", "act": "cite", "what": "Point at the words that make the claim.", "why": "Every later step refers back to exactly what was said." }, { "screen": "project", "act": "promote", "what": "Open the question: do the city's own records support the claim?", "why": "A claim cannot be checked; a question can be answered, or shown undetermined." }, { "screen": "question", "act": "narrow", "what": "Pin down what the claim's words mean: what counts, and over what period. If the city never says, record that.", "why": "A share means nothing until you know what was counted. A gap is recorded as undetermined, with its reason." }, { "screen": "finder", "act": "search", "what": "Get the city's own records behind the claim: online, or by request.", "why": "The claim should be checked against the city's own data, not anyone's impression.", "via": "WIZ-cb0ad18a17a04233" }, { "screen": "calculation", "act": "calculationcreate", "what": "Work it out with the built-in calculation, or bind your own spreadsheet to the captured records.", "why": "The method is shown with the result, so anyone can check it." }, { "screen": "calculation", "act": "calculationdraw", "what": "Plan a spot-check: a recorded random draw picks which records members visit.", "why": "A draw anyone can repeat means no one can say you picked the worst cases." }, { "screen": "capture", "act": "testify", "what": "Members visit and record what they find, with place and date, and a photo where they can take one.", "why": "Firsthand checks test whether the records match the street." }, { "screen": "question", "act": "conclude", "what": "Conclude with what the evidence supports, and say what would change it.", "why": "A conclusion that names what would change it is one others can trust." }], "author": "civicsmith", "approved": { "by": "BOB", "at": "2026-10-08", "ruling": "K2241" }, "source": "e08cd35ecb", "earlier": [{ "version": 1, "steps": [{ "screen": "capture", "act": "acquire", "what": "Capture the claim where the city made it: a budget, a report to council, a press release.", "why": "The claim itself is your first piece of evidence." }, { "screen": "document", "act": "cite", "what": "Point at the words that make the claim.", "why": "Every later step refers back to exactly what was said." }, { "screen": "project", "act": "promote", "what": "Open the question: do the city's own records support the claim?", "why": "A claim cannot be checked; a question can be answered, or shown undetermined." }, { "screen": "question", "act": "narrow", "what": "Pin down what the claim's words mean: what counts, and over what period. If the city never says, record that.", "why": "A share means nothing until you know what was counted. A gap is recorded as undetermined, with its reason." }, { "screen": "finder", "act": "search", "what": "Get the city's own records behind the claim: online, or by request.", "why": "The claim should be checked against the city's own data, not anyone's impression.", "via": "WIZ-cb0ad18a17a04233" }, { "screen": "calculation", "act": "calculationcreate", "what": "Work it out with the built-in calculation, or bind your own spreadsheet to the captured records.", "why": "The method is shown with the result, so anyone can check it." }, { "screen": "calculation", "act": "calculationdraw", "what": "Plan a spot-check: a recorded random draw picks which records members visit.", "why": "A draw anyone can repeat means no one can say you picked the worst cases." }, { "screen": "capture", "act": "testify", "what": "Members visit and record what they find, with place, date and photo.", "why": "Firsthand checks test whether the records match the street." }, { "screen": "question", "act": "conclude", "what": "Conclude with what the evidence supports, and say what would change it.", "why": "A conclusion that names what would change it is one others can trust." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" }, "source": "d129238bf3" }] },
+  { "id": "WIZ-86b7f4007e3b0e3c", "name": "Your first question", "start": "project", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "project", "act": null, "what": "What drew you in? A problem you live with, a person, a payment or contract, or something you read.", "why": "Any of these is a good start. Civicsmith offers a first step from each." }, { "screen": "project", "act": "promote", "what": "Say what you want to know, as a question.", "why": "A question is something the record can answer: yes, no, or undetermined, and why." }, { "screen": "finder", "act": "search", "what": "Find or capture a document that bears on it.", "why": "Every answer rests on documents anyone could check." }, { "screen": "document", "act": "cite", "what": "Point at the passage that matters.", "why": "Citing a passage, not a whole document, shows exactly what you rely on." }, { "screen": "question", "act": "cite", "what": "Say whether it supports the question or cuts against it.", "why": "Evidence against is kept as carefully as evidence for." }, { "screen": "question", "act": null, "what": "See the question's strength against the project's bar, and what would raise it.", "why": "Strength is two grades, never one score: how well the documents are held and how firmly they are linked." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" }, "source": "d129238bf3" },
+  { "id": "WIZ-4d42b0233d48913f", "name": "Say who your group is", "start": "group-identity", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "group-identity", "act": "groupdescriptionset", "what": "What kind of group are you? Pick one or more, or describe your own.", "why": "It shapes how each member is welcomed. It never limits what anyone can do." }, { "screen": "group-identity", "act": "groupdescriptionset", "what": "What do you focus on: issues, places, offices or agencies?", "why": "New members see your focus first when they choose where to start." }, { "screen": "group-identity", "act": "groupdescriptionset", "what": "Why does the group exist? Say it in your own words.", "why": "Your declared bias can start from what you write here." }, { "screen": "group-identity", "act": "groupdescriptionset", "what": "Who should see this: members only, or also your public page and the network directory?", "why": "Members only is the default. A group that wants to stay unnamed keeps it that way." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" }, "source": "d129238bf3" },
+  { "id": "WIZ-8e7e2fac33d069f8", "name": "Invite a member", "start": "members", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "members", "act": "memberadd", "what": "Who: their handle, and the cover the group knows them by. Not a legal name.", "why": "The record never needs a legal name. Administrators keep the cover so they know who is who." }, { "screen": "members", "act": "membercaps", "what": "What they may do. Contributing is the default.", "why": "Give only what the person needs; you can change it later." }, { "screen": "members", "act": null, "what": "Send the link yourself. It works once and expires after seven days.", "why": "Civicsmith sends no email, so the link reaches them only through you." }, { "screen": "members", "act": "websitekeycreate", "what": "Or let people join through your website: create a website key, or turn on the reusable join link.", "why": "Anyone let through can see the group's shared work, so each comes with limits and a daily cap." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" }, "source": "d129238bf3" },
+  { "id": "WIZ-74328804ddae3503", "name": "Connect your Claude account", "start": "connect", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "connect", "act": null, "what": "The assistant is optional. If your group offers its API key, you can use it already; your own account, if you connect one, always comes first.", "why": "Your own account serves only you. Everything works without the assistant." }, { "screen": "connect", "act": "disclosureshown", "what": "Read what connecting means.", "why": "Your questions, and what is read to answer them, go to Anthropic under your own account." }, { "screen": "connect", "act": "subscriptionsignin", "what": "To connect your Claude subscription, open Anthropic's sign-in page, sign in and approve. Or use an API key, or skip.", "why": "You sign in on Anthropic's own page; Civicsmith never sees your Claude password. Skipping is a real choice: every journey stays open." }, { "screen": "connect", "act": "accountreferenceset", "what": "Copy the code Anthropic's page shows you, paste it here, and connect.", "why": "Your subscription then serves only your own questions. You can disconnect at any time." }, { "screen": "connect", "act": "aiceilingset", "what": "Set your daily limit.", "why": "It caps what the assistant can spend on your account each day. An administrator may set a lower one for the group." }, { "screen": "connect", "act": "accountswitchset", "what": "Choose whether the assistant may suggest things without being asked. It is off unless you turn it on.", "why": "Some members want suggestions; others want quiet." }, { "screen": "connect", "act": "accountreferenceremove", "what": "You can disconnect at any time, here.", "why": "Disconnecting removes the key or token from your group's Civicsmith." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" }, "source": "d129238bf3" },
+  { "id": "WIZ-e2731f1813a43b89", "name": "Your ties", "start": "ties", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "ties", "act": "declaretie", "what": "List your employer, relatives, and businesses you have an interest in.", "why": "A case concerning any of them can then disclose the tie honestly." }, { "screen": "ties", "act": null, "what": "Only you and the administrators can see this.", "why": "Your ties never appear in a case unless one concerns it, and then only as you choose." }, { "screen": "ties", "act": "declaretie", "what": "For each tie, choose how a published case discloses it when the case concerns them: naming you by your handle, or as \u201Ca member of the group\u201D.", "why": "Readers learn of the tie either way; not naming you protects you while keeping the case honest." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" }, "source": "d129238bf3" },
+  { "id": "WIZ-a15d174f7a2c1dc5", "name": "Follow a proceeding", "start": "capture", "origin": "civicsmith", "scope": "group", "required": false, "version": 2, "steps": [{ "screen": "capture", "act": "acquire", "what": "Capture a filing, or the court's register page.", "why": "The proceeding is registered from what it says about itself." }, { "screen": "proceeding", "act": "entitycreate", "what": "Register the proceeding from its caption: the court, the number, and a neutral label.", "why": "A neutral label keeps your own view out of the record's name for it." }, { "screen": "proceeding", "act": "recordline", "what": "Add the parties by role.", "why": "Roles say who is suing, who is sued, and who is deciding." }, { "screen": "proceeding", "act": "followregister", "what": "Follow its register: on a schedule, or by your own capture where the register needs a login.", "why": "New filings are flagged, so nothing arrives unseen." }, { "screen": "proceeding", "act": "declare", "what": "Hold each order's requirements as obligations, with their reply dates.", "why": "An order is a standard the office must meet. Its dates go into your queue." }], "author": "civicsmith", "approved": { "by": "BOB", "at": "2026-10-08", "ruling": "K2241" }, "source": "e08cd35ecb", "earlier": [{ "version": 1, "steps": [{ "screen": "capture", "act": "acquire", "what": "Capture a filing, or the court's register page.", "why": "The proceeding is registered from what it says about itself." }, { "screen": "proceeding", "act": "registerproceeding", "what": "Register the proceeding from its caption: the court, the number, and a neutral label.", "why": "A neutral label keeps your own view out of the record's name for it." }, { "screen": "proceeding", "act": "recordline", "what": "Add the parties by role.", "why": "Roles say who is suing, who is sued, and who is deciding." }, { "screen": "proceeding", "act": "followregister", "what": "Follow its register: on a schedule, or by your own capture where the register needs a login.", "why": "New filings are flagged, so nothing arrives unseen." }, { "screen": "proceeding", "act": "declare", "what": "Hold each order's requirements as obligations, with their reply dates.", "why": "An order is a standard the office must meet. Its dates go into your queue." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" }, "source": "d129238bf3" }] },
+  { "id": "WIZ-df0b5c4d0ffcdde7", "name": "Follow the money", "start": "capture", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "capture", "act": "acquire", "what": "Capture the budget, financial report or contract.", "why": "Every figure must point back to where it was printed." }, { "screen": "money", "act": "recordfact", "what": "Read just the figures you need, each with its stage and period.", "why": "Proposed, adopted, committed and paid are different facts. Mixing them is how money stories go wrong." }, { "screen": "money", "act": "createset", "what": "Start a money trail.", "why": "A trail gathers the figures one question needs." }, { "screen": "money", "act": "include", "what": "Include or leave out each item, with a reason.", "why": "Your reasons show a reader why the trail adds up the way it does." }, { "screen": "money", "act": "reconcile", "what": "Compare two sources of one figure, or what was committed against what was paid.", "why": "Differences in basis, period or rounding are named, not hidden." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" }, "source": "d129238bf3" },
+  { "id": "WIZ-9f2b79390d6940a0", "name": "Build a timeline", "start": "timeline", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "timeline", "act": "createevent", "what": "Record an event from a cited passage: what, when, and how precisely you know the date.", "why": "Every event points at its source. A date you only know roughly is recorded as rough." }, { "screen": "timeline", "act": "addparticipant", "what": "Add who took part and in what role: decided, signed, voted.", "why": "Roles are what make an event useful to a finding." }, { "screen": "timeline", "act": "relate", "what": "Link events: made under, answered, amended.", "why": "Links let a reader follow one thread through the record." }, { "screen": "timeline", "act": "hypothesishold", "what": "Keep a suspected cause as a hunch, never as a fact.", "why": "A hunch is marked as yours and is never evidence." }, { "screen": "timeline", "act": null, "what": "Review the two lanes before the case is signed: what they did, and what we did.", "why": "The timeline is frozen into the case when it is signed." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" }, "source": "d129238bf3" },
+  { "id": "WIZ-55930f07cb4e9499", "name": "Keep asking this", "start": "answers", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "answers", "act": "standingquestionset", "what": "Choose how often to check, and until when.", "why": "An end date is required, so no question runs forever." }, { "screen": "answers", "act": null, "what": "The search runs on schedule. With the assistant connected, it reads only what is new, on your account and within your limit.", "why": "Without the assistant, new matches arrive as a list for you to read." }, { "screen": "queue", "act": null, "what": "The answer reaches your queue once.", "why": "Only you see it; it is never shared." }, { "screen": "answers", "act": "standingquestionend", "what": "Stop it any time.", "why": "Stopping is immediate, and nothing further is checked." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" }, "source": "d129238bf3" },
+  { "id": "WIZ-4cdbd26939d4cc6d", "name": "Use another group's case", "start": "imported", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "imported", "act": "caseimport", "what": "Import the case into its own read-only project.", "why": "Another group's work stays marked as theirs, and cannot be edited." }, { "screen": "imported", "act": null, "what": "Civicsmith recreates each finding and calculation from the case file. Watch each one's mark.", "why": "Recreated, recreated in part, or did not recreate: you never rely on what you could not check." }, { "screen": "imported", "act": "importaccept", "what": "Accept what recreated, with a reason.", "why": "Accepting names one edition and changes no grade." }, { "screen": "imported", "act": "importwatch", "what": "Watch the publisher's docket for new editions and corrections.", "why": "Anything relying on the case is told when it changes." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" }, "source": "d129238bf3" },
+  { "id": "WIZ-af4c9fafc3713f26", "name": "Translate the interface", "start": "translations", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "translations", "act": null, "what": "Choose the language.", "why": "Civicsmith's own translations come with releases. Your group fills gaps and improves wording." }, { "screen": "translations", "act": null, "what": "See the words still untranslated.", "why": "A missing word shows in English, never blank." }, { "screen": "translations", "act": "translationdraft", "what": `Where you can reach the assistant, ask it to draft them all. Each is marked "Draft \xB7 the assistant's".`, "why": "Your task becomes finding its errors. Without the assistant, type them yourself." }, { "screen": "translations", "act": "translationadopt", "what": "Read each draft against the English; keep it or correct it.", "why": "A word becomes the group's only when a granted member who knows the language keeps it." }, { "screen": "translations", "act": "translationconfirm", "what": "A protected word you changed, or typed without a draft, waits for a second check.", "why": "A second granted speaker, or an administrator reading the assistant's back-translation, confirms it. Until then members see the English." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" }, "source": "d129238bf3" },
+  { "id": "WIZ-a8c349d7d71b6bb0", "name": "Start and send", "start": "plan", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "plan", "act": "optiondispose", "what": "Choose the option, and say when to be reminded.", "why": "Choosing records why this option, now." }, { "screen": "start-send", "act": "optionstartpreview", "what": "See what starting does, and anything that would stop it.", "why": "Refusals are shown before anything runs." }, { "screen": "start-send", "act": "optionstart", "what": "Start the action, addressed to the office by role.", "why": "The office's holder that day is shown, so you know who will read it." }, { "screen": "start-send", "act": "communicationprepare", "what": "Prepare what is sent. A template or draft is labelled until you make it yours.", "why": "The words that leave the group are always a member's.", "draft": { "template": "@communication" } }, { "screen": "start-send", "act": "filingapprove", "what": "Approve the text.", "why": "Approving is kept apart from sending, so you can stop between them." }, { "screen": "start-send", "act": "filingrecordsent", "what": "Send it, then record that you sent it.", "why": "This tells the office what your group is looking at, and starts the clock." }, { "screen": "due-date", "act": "reminderset", "what": "The due date and next checkpoint go into your queue. A next step can wait on the reply.", "why": "If no reply comes, the next step is ready without anyone remembering." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" }, "source": "d129238bf3" }
 ]);
 
 // src/wizard-scripts/screen-registry.mjs
-var SCREEN_REGISTRY_SOURCE = deepFreeze3({ "commit": "36da334628", "path": "docs/development/ux-substrate/screens/registry.json", "sha256": "cd0a3b6945406f43cb1fc86798c6ef0cb6cf443d96ed3be70ae588fee80bb8c1" });
+var SCREEN_REGISTRY_SOURCE = deepFreeze3({ "commit": "e08cd35ecb", "path": "docs/development/ux-substrate/screens/registry.json", "sha256": "fd0e488c27c514b3f19db70b4d1db245ac7b605ded60313802681bcbb710af4e" });
 var SCREEN_REGISTRY = deepFreeze3([
   { "id": "install", "name": "Install Civicsmith", "purpose": "The installer page: what is needed, the short name, installing the signed release into the group's own account.", "acts": ["bootstrap", "selftest"], "owed": [] },
-  { "id": "setup", "name": "Become your group's first administrator", "purpose": "The founder claims it, names the group, reviews offices and seats, offers the assistant and records the hosting account.", "acts": ["claim", "groupnameset", "groupdomainset", "profilesset", "officesseed", "entitycreate", "placewanted", "assistantset", "groupkeyset", "groupkeyswitch", "aicopyceilingset", "courtnoticeset", "hostingaccess", "memberadd"], "owed": [{ "op": "aikeepaway", "dec": "DEC-172", "at": 8 }, { "op": "securitytooladd", "dec": "K1929", "at": 13 }] },
+  { "id": "setup", "name": "Become your group's first administrator", "purpose": "The founder claims it, names the group, reviews offices and seats, offers the assistant and records the hosting account.", "acts": ["claim", "groupnameset", "groupdomainset", "profilesset", "officesseed", "entitycreate", "placewanted", "groupkeyset", "groupkeyswitch", "aicopyceilingset", "courtnoticeset", "hostingaccess", "memberadd"], "owed": [{ "op": "aikeepaway", "dec": "DEC-172", "at": 7 }, { "op": "securitytooladd", "dec": "K1929", "at": 12 }] },
   { "id": "group-identity", "name": "Who your group is", "purpose": "Kinds, focus and purpose, and who sees them (DEC-132).", "acts": ["groupdescriptionset"], "owed": [{ "op": "groupdescriptiondraft", "dec": "DEC-152", "at": 1 }] },
   { "id": "join", "name": "Your invitation", "purpose": "The invitation link opens here: language, handle, password.", "acts": ["invitelook", "enroll"], "owed": [{ "op": "memberlanguageset", "dec": "DEC-127", "at": 1 }] },
-  { "id": "home", "name": "Your group's home", "purpose": 'What the group is working on, what waits on you, and "What brought you here?".', "acts": ["projectcreated"], "owed": [{ "op": "startfrom", "dec": "DEC-129", "at": 1 }] },
+  { "id": "home", "name": "Your group's home", "purpose": 'What the group is working on, what waits on you, and "What brought you here?".', "acts": ["promote"], "owed": [{ "op": "startfrom", "dec": "DEC-129", "at": 1 }] },
   { "id": "members", "name": "Members", "purpose": "The roster: invitations, capabilities, expertise, administrators, joining through the website.", "acts": ["memberadd", "membercaps", "memberset", "adminendorse", "adminremove", "expertiseconfirm", "invitewithdraw", "websitekeycreate", "joinlinkenable", "groupkeyset", "groupkeyswitch", "groupswitchset", "groupkeyremove"], "owed": [{ "op": "aikeepaway", "dec": "DEC-172", "at": 13 }] },
   { "id": "security", "name": "Security", "purpose": "Administrators only: how hard the group's Civicsmith is being tried over a period they choose, by kind and hour against its usual; counts only; told only when risk is high (K1875, K1874, DEC-165).", "acts": [], "owed": [{ "op": "securitymap", "dec": "K1875", "at": 0 }, { "op": "securitytooladd", "dec": "K1929", "at": 0 }, { "op": "securitytooltest", "dec": "K1929", "at": 0 }, { "op": "securitytoolremove", "dec": "K1929", "at": 0 }] },
-  { "id": "account", "name": "Your account", "purpose": "Handle, password, language, expertise, signing key, theme.", "acts": ["expertisedeclare", "setpassword", "signerregisterown", "signerrevokeown"], "owed": [{ "op": "memberlanguageset", "dec": "DEC-127", "at": 4 }, { "op": "infolevelset", "dec": "DEC-162", "at": 4 }] },
+  { "id": "account", "name": "Your account", "purpose": "Handle, password, language, expertise, signing key, theme.", "acts": ["expertisedeclare", "signerregisterown", "signerrevokeown"], "owed": [{ "op": "setpassword", "dec": "DEC-182", "at": 1 }, { "op": "memberlanguageset", "dec": "DEC-127", "at": 3 }, { "op": "infolevelset", "dec": "DEC-162", "at": 3 }] },
   { "id": "connect", "name": "The assistant", "purpose": "The member's own API key or subscription token, or the group's key where it offers one, or none; their daily limit; suggestions on or off (K1547, K1755).", "acts": ["groupkeynoticeseen", "disclosureshown", "accountreferenceset", "aiceilingset", "accountswitchset", "accountreferenceremove"], "owed": [{ "op": "subscriptionsignin", "dec": "DEC-156", "at": 2 }] },
   { "id": "ties", "name": "Your ties", "purpose": "The member's own ties, seen only by them and administrators (K1490).", "acts": ["declaretie", "withdrawtie"], "owed": [] },
   { "id": "notes", "name": "Your notes", "purpose": "A member's own notes, seen only by them (DEC-136).", "acts": ["notewrite", "noteturn"], "owed": [{ "op": "noterevise", "dec": "DEC-144", "at": 2 }, { "op": "notedelete", "dec": "DEC-144", "at": 2 }, { "op": "writinghelp", "dec": "DEC-153", "at": 2 }] },
   { "id": "translations", "name": "Translations", "purpose": "The interface's words in the group's languages (DEC-127).", "acts": [], "owed": [{ "op": "translationdraft", "dec": "DEC-127", "at": 0 }, { "op": "translationadopt", "dec": "DEC-127", "at": 0 }, { "op": "translationgrant", "dec": "DEC-157", "at": 0 }, { "op": "translationconfirm", "dec": "DEC-157", "at": 0 }, { "op": "translationrevert", "dec": "DEC-157", "at": 0 }] },
   { "id": "wizards", "name": "Wizards", "purpose": "The group's wizard library: offered, drafts, submitted (DEC-121).", "acts": ["wizards", "wizarddraft", "wizardrevise", "wizardsubmit", "wizardapprove", "wizardretire"], "owed": [] },
   { "id": "queue", "name": "Your queue", "purpose": "To do, Noticed and Status, grouped by case (DEC-110, DEC-131).", "acts": ["taskresolve", "taskforward", "proposedispose", "queuesnooze", "queuemute", "adoptversion", "keepversion", "reminderanswer", "promote"], "owed": [] },
-  { "id": "finder", "name": "Find", "purpose": "Search what the group holds; hold a set together; see where nobody looked.", "acts": ["search", "select", "selectionrelease", "frontier", "countask"], "owed": [{ "op": "findin", "dec": "DEC-164", "at": 2 }] },
+  { "id": "finder", "name": "Find", "purpose": "Search what the group holds; hold a set together; see where nobody looked.", "acts": ["search", "select", "selectionrelease", "frontier", "calculationcreate"], "owed": [{ "op": "findin", "dec": "DEC-164", "at": 2 }] },
   { "id": "capture", "name": "Add", "purpose": "Capture a document from an address or a file, photograph a handout, or record what you saw.", "acts": ["acquire", "capture", "testify", "capturerequest", "monitor"], "owed": [{ "op": "writinghelp", "dec": "DEC-153", "at": 5 }] },
   { "id": "held", "name": "Held captures", "purpose": "Captures not yet vouched for, per member and project (DEC-97).", "acts": ["heldcaptures", "release", "heldsetaside", "heldrestore"], "owed": [] },
   { "id": "archive", "name": "Archive", "purpose": "A captured ZIP: every file with its state (filed with the archive's grade and held for review, already held, or not filed with its reason); vouching or setting files aside; an archive refused whole (K1852, DEC-167).", "acts": ["gradenote", "heldsetaside", "release"], "owed": [{ "op": "archivelist", "dec": "K1852", "at": 1 }] },
@@ -155629,14 +155651,14 @@ var SCREEN_REGISTRY = deepFreeze3([
   { "id": "question", "name": "Question", "purpose": "A question and what supports it or cuts against it; strength against the bar; concluding.", "acts": ["cite", "sever", "reinstate", "narrow", "conclude", "withdrawconclusion", "hypothesishold", "planopen", "checkrequest", "heldrestore", "search"], "owed": [] },
   { "id": "answers", "name": "Ask", "purpose": "Ask in plain words (with the assistant) or by search (without); keep asking.", "acts": ["ruleanswer", "search", "standingquestionset", "standingquestionend"], "owed": [] },
   { "id": "assistant", "name": "The assistant panel", "purpose": "Docked beside the screen it serves; runs only on the member's own account.", "acts": ["airunopen", "suggest", "airunclose"], "owed": [] },
-  { "id": "person", "name": "Person", "purpose": "Positions, career, credentials, memberships, interests, statements; same person?", "acts": ["person", "recordpersonfact", "claimidentity", "withdrawidentityclaim", "followregister", "personexpunge"], "owed": [] },
+  { "id": "person", "name": "Person", "purpose": "Positions, career, credentials, memberships, interests, statements; same person?", "acts": ["person", "recordpersonfact", "identityclaim", "withdrawidentityclaim", "followregister", "personexpunge"], "owed": [] },
   { "id": "timeline", "name": "Timeline", "purpose": "What they did and what we did, in two lanes (K1462, K1494).", "acts": ["createevent", "addparticipant", "relate", "recorddatedfact", "hypothesishold"], "owed": [{ "op": "findin", "dec": "DEC-164", "at": 5 }] },
   { "id": "money", "name": "Money trail", "purpose": "Money facts with stage and period; a trail; reconciling sources (K1457, K1468).", "acts": ["recordfact", "createset", "include", "exclude", "reconcile", "committedagainstpaid", "authoritychain", "actioncreate", "createevent", "gradenote", "acquire", "checkrequest", "hypothesishold"], "owed": [{ "op": "findin", "dec": "DEC-164", "at": 7 }] },
   { "id": "calculation", "name": "Calculation", "purpose": "A computed fact with its method, or a member's spreadsheet bound to the record.", "acts": ["calculationcreate", "tabledeclare", "calculationdraw", "addworkbook", "bind", "recordcheck", "calculationaccept", "testify"], "owed": [] },
   { "id": "help", "name": "Help: How spot-checks work", "purpose": "A help page: one method explained in plain words, linked from where it is used (Bob, 7 October).", "acts": [], "owed": [] },
   { "id": "explore", "name": "Explore connections", "purpose": "Chains between a start and an end, each step cited and graded (K1469, K1487).", "acts": ["explore", "explorepreset", "exploreverify", "connectionassert", "promote"], "owed": [] },
-  { "id": "proceeding", "name": "Proceeding", "purpose": "A court case or regulatory proceeding: parties, register, orders and their dates.", "acts": ["registerproceeding", "recordline", "followregister", "declare", "courtlink"], "owed": [] },
-  { "id": "due-date", "name": "How this date was worked out", "purpose": "A due date's basis and counting; confirm it; download it (K1431, K1444).", "acts": ["deadlinecompute", "clockadopt", "reminderset"], "owed": [] },
+  { "id": "proceeding", "name": "Proceeding", "purpose": "A court case or regulatory proceeding: parties, register, orders and their dates.", "acts": ["entitycreate", "recordline", "followregister", "declare", "courtlink"], "owed": [] },
+  { "id": "due-date", "name": "How this date was worked out", "purpose": "A due date's basis and counting; confirm it; download it (K1431, K1444).", "acts": ["clockpropose", "clockadopt", "reminderset"], "owed": [] },
   { "id": "standard", "name": "Standard", "purpose": "A requirement the city set itself, held and searchable.", "acts": ["standarddeclare", "standardadopt", "lawrelate"], "owed": [] },
   { "id": "plan", "name": "Action plan", "purpose": "The approved plan page: subjects, options, scenarios, what each option became (K608 (4)).", "acts": ["plansubjectadd", "optionadd", "optionpropose", "optionadopt", "optiondispose", "scenarioset", "checkpointrecord", "optionstartpreview", "planclose"], "owed": [] },
   { "id": "start-send", "name": "Start and send", "purpose": "The bound start-and-send flow: refusals first, reason in place, approve then record the send (DEC-115).", "acts": ["optionstartpreview", "optionstart", "communicationprepare", "filingprepare", "filingapprove", "filingrecordsent"], "owed": [] },
@@ -155645,7 +155667,7 @@ var SCREEN_REGISTRY = deepFreeze3([
   { "id": "matter", "name": "Matter", "purpose": "One government act: determination, consequences, escalation, actions.", "acts": ["escalationopen", "escalationadvance", "declinetoescalate", "escalationend"], "owed": [] },
   { "id": "case-editor", "name": "Case", "purpose": "Prepare the case: scope, statement, what it leaves out, bias, timeline, people named.", "acts": ["casedraft", "whatchangedpropose", "statementack", "attribute"], "owed": [{ "op": "writinghelp", "dec": "DEC-153", "at": 4 }] },
   { "id": "review-copy", "name": "Review copy", "purpose": "A named outsider's revocable view of the draft.", "acts": ["reviewgrant", "reviewrevoke", "reviewcomment"], "owed": [] },
-  { "id": "ceremony", "name": "Publication ceremony", "purpose": "The required wizard: checks, disclosures, ties confirmed, preview, signing.", "acts": ["publishpreflight", "publishtensions", "caseratify", "publish"], "owed": [{ "op": "publishat", "dec": "DEC-147", "at": 4 }] },
+  { "id": "ceremony", "name": "Publication ceremony", "purpose": "The required wizard: checks, disclosures, ties confirmed, preview, signing.", "acts": ["publishpreflight", "publishtensions", "caseratify", "publish"], "owed": [{ "op": "publishat", "dec": "DEC-147", "at": 4 }, { "op": "obscuremark", "dec": "DEC-180", "at": 4 }] },
   { "id": "published", "name": "Published case", "purpose": "The public page: findings, strengths, timeline, people named, evidence; checkable without the group.", "acts": ["verify", "publishedcase"], "owed": [] },
   { "id": "imported", "name": "Another group's case", "purpose": "An imported case in its read-only project, recreated finding by finding.", "acts": ["caseimport", "importaccept", "importflag", "importwatch"], "owed": [] },
   { "id": "docket", "name": "Docket", "purpose": "The case's public docket: corrections, withdrawals, court orders.", "acts": ["docketfile", "docketpost"], "owed": [] },
@@ -155678,11 +155700,14 @@ function helpRefusedActs({ machineRefused = [], irreversible = [] } = {}) {
 function isReasonField(field3) {
   return typeof field3 === "string" && /reason$/i.test(field3.trim());
 }
-function writingHelpAt(args = {}, refused5 = helpRefusedActs()) {
+var KEPT_AWAY = "AI_KEPT_AWAY";
+var keptAwayCode = (away) => away === null ? null : KEPT_AWAY;
+function writingHelpAt(args = {}, refused5 = helpRefusedActs(), away = void 0) {
   try {
     const { op = null, field: field3 = null, draftHeld = false, assistant = null } = args && typeof args === "object" ? args : {};
     const a = assistant && typeof assistant === "object" ? assistant : {};
-    if (a.on !== true) return { offered: false, code: "ASSISTANT_OFF" };
+    const kept = keptAwayCode(away);
+    if (kept) return { offered: false, code: kept };
     if (!a.account) return { offered: false, code: "AI_NO_ACCOUNT" };
     if (typeof op !== "string" || !op.trim() || refused5.has(op.trim())) return { offered: false, code: "WRITING_HELP_REFUSED" };
     if (isReasonField(field3)) return { offered: false, code: "WRITING_HELP_REASON_FIELD" };
@@ -155882,17 +155907,30 @@ var nameSet2 = (v) => {
   if (isObj40(v)) return new Set(Object.keys(v));
   return /* @__PURE__ */ new Set();
 };
+function libraryVersion(v) {
+  const n = Math.floor(Number(v.version));
+  return Object.freeze({
+    version: Number.isFinite(n) && n >= 1 ? n : 1,
+    steps: canonicalSteps(v.steps),
+    author: str33(v.author) ?? "civicsmith",
+    approved: isObj40(v.approved) ? {
+      by: v.approved.by ?? null,
+      at: v.approved.at ?? null,
+      ...v.approved.ruling ? { ruling: v.approved.ruling } : {}
+    } : { by: null, at: null }
+  });
+}
 function libraryEntry(e2) {
   if (!isObj40(e2) || !str33(e2.id)) return null;
-  const n = Math.floor(Number(e2.version));
+  const latest3 = libraryVersion(e2);
+  const earlier = (Array.isArray(e2.earlier) ? e2.earlier : []).filter(isObj40).map(libraryVersion).filter((v) => v.version < latest3.version);
+  const versions = [...new Map([...earlier, latest3].map((v) => [v.version, v])).values()].sort((a, b) => a.version - b.version);
   return Object.freeze({
     id: str33(e2.id),
     name: typeof e2.name === "string" ? e2.name : "",
     required: e2.required === true,
-    version: Number.isFinite(n) && n >= 1 ? n : 1,
-    steps: canonicalSteps(e2.steps),
-    author: str33(e2.author) ?? "civicsmith",
-    approved: isObj40(e2.approved) ? { by: e2.approved.by ?? null, at: e2.approved.at ?? null } : { by: null, at: null }
+    ...latest3,
+    versions: Object.freeze(versions)
   });
 }
 function screenActs(s, ops) {
@@ -155901,7 +155939,7 @@ function screenActs(s, ops) {
   owed.slice().sort((a, b) => (Number(a.at) || 0) - (Number(b.at) || 0)).forEach((o, i) => {
     acts2.splice(Math.min(Math.max(Number(o.at) || 0, 0), acts2.length - i) + i, 0, o.op);
   });
-  return nameSet2(acts2);
+  return nameSet2(ops ? acts2.filter((a) => ops.has(a)) : acts2);
 }
 function normaliseRegistration({
   screens = [],
@@ -156028,11 +156066,12 @@ function safe2(fn) {
   }
 }
 var WizardScripts = class _WizardScripts {
-  constructor({ storage, record, membership, filingTemplates = null, now = null, env = null } = {}) {
+  constructor({ storage, record, membership, filingTemplates = null, credentials = null, now = null, env = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.templates = filingTemplates;
+    this.credentials = credentials;
     this.now = typeof now === "function" ? now : null;
     this.env = env && typeof env === "object" ? env : {};
     this.reg = null;
@@ -156071,6 +156110,18 @@ var WizardScripts = class _WizardScripts {
   }
   #registration() {
     return this.reg || normaliseRegistration({});
+  }
+  /* R24 item 1 (T37; N765, K231): `credentials.aiKeptAway()` (its R35) as it answers now: null, or its AI_KEPT_AWAY
+     refusal. A credentials that cannot be reached or answers by throwing is no reading of null: undefined, which R24
+     reads as kept away (fail closed, K2093). */
+  #keptAway() {
+    try {
+      if (typeof this.credentials === "function") this.credentials = this.credentials();
+      const c = this.credentials;
+      return c && typeof c.aiKeptAway === "function" ? c.aiKeptAway() : void 0;
+    } catch {
+      return void 0;
+    }
   }
   /* ================================================================ who acts (R18, R19) */
   #member(identity) {
@@ -156232,7 +156283,7 @@ var WizardScripts = class _WizardScripts {
     return this.#one(`SELECT * FROM wiz_revisions WHERE script_id=? AND version=? ORDER BY rid DESC LIMIT 1`, sid, n);
   }
   #steps(s, n) {
-    if (s.origin === "civicsmith") return s.entry.steps.map((x) => ({ ...x }));
+    if (s.origin === "civicsmith") return (_WizardScripts.#libVersion(s, n) || { steps: [] }).steps.map((x) => ({ ...x }));
     const r = this.#latestRevision(s.id, n);
     return r ? parse9(r.steps) || [] : [];
   }
@@ -156240,7 +156291,7 @@ var WizardScripts = class _WizardScripts {
     const p3 = parseVersionId2(asked);
     const n = p3 ? p3.script === s.id ? p3.version : null : /^[1-9][0-9]*$/.test(String(asked ?? "").trim()) ? Number(String(asked).trim()) : null;
     if (n === null) return null;
-    if (s.origin === "civicsmith") return n === s.entry.version ? n : null;
+    if (s.origin === "civicsmith") return _WizardScripts.#libVersion(s, n) ? n : null;
     return this.#one(`SELECT 1 AS x FROM wiz_versions WHERE script_id=? AND version=?`, s.id, n) ? n : null;
   }
   #resolve(asked, viewer) {
@@ -156258,6 +156309,17 @@ var WizardScripts = class _WizardScripts {
   #isBroken(sid, n) {
     const r = this.#one(`SELECT event FROM wiz_breaks WHERE script_id=? AND version=? ORDER BY bid DESC LIMIT 1`, sid, n);
     return !!r && r.event === "broken";
+  }
+  /* R22: a library script's version `n`, or null; its state: the latest `approved`, an earlier one `updated` (R7). */
+  static #libVersion(s, n) {
+    return s.entry.versions.find((v) => v.version === n) || null;
+  }
+  static #libState(s, n) {
+    return n === s.entry.version ? "approved" : _WizardScripts.#libVersion(s, n) ? "updated" : null;
+  }
+  /* The state of version `n` of any script. */
+  #stateAt(s, n) {
+    return s.origin === "civicsmith" ? _WizardScripts.#libState(s, n) : this.#stateOf(this.#events(s.id), n);
   }
   /* The Terms: the offered version's number, or null (retired, none approved, or broken). */
   #offeredNumber(s, events = null) {
@@ -156307,19 +156369,20 @@ var WizardScripts = class _WizardScripts {
   /* R1: one version whole, with its attribution. */
   #versionView(s, n, events) {
     if (s.origin === "civicsmith") {
-      const e2 = s.entry;
+      const e2 = _WizardScripts.#libVersion(s, n);
+      const next = s.entry.versions.find((v2) => v2.version > n);
       return {
         id: versionId2(s.id, n),
         script: s.id,
         version: n,
         steps: this.#steps(s, n),
         sha: stepsSha(e2.steps),
-        state: "approved",
+        state: _WizardScripts.#libState(s, n),
         author: { name: e2.author },
         contributors: [],
         derived_from: null,
-        approved: { by: { name: e2.approved.by }, at: e2.approved.at },
-        updated_by: null,
+        approved: { by: { name: e2.approved.by }, at: e2.approved.at, ...e2.approved.ruling ? { ruling: e2.approved.ruling } : {} },
+        updated_by: next ? versionId2(s.id, next.version) : null,
         ended: null,
         submitted: null,
         revisions: [],
@@ -156579,14 +156642,14 @@ var WizardScripts = class _WizardScripts {
     let source2 = null, target = null, proj = str33(project), base2 = null;
     if (given5(copy)) {
       const r = parseVersionId2(copy) ? this.#resolve(copy, viewer) : null;
-      const st = r ? r.s.origin === "civicsmith" ? "approved" : this.#stateOf(this.#events(r.s.id), r.n) : null;
+      const st = r ? this.#stateAt(r.s, r.n) : null;
       if (st !== "approved") return this.#noWizard(copy);
       base2 = r;
       source2 = { copy: versionId2(r.s.id, r.n), steps: this.#steps(r.s, r.n) };
     } else if (given5(from)) {
       if (parseVersionId2(from)) {
         const r = this.#resolve(from, viewer);
-        const st = r ? r.s.origin === "civicsmith" ? "approved" : this.#stateOf(this.#events(r.s.id), r.n) : null;
+        const st = r ? this.#stateAt(r.s, r.n) : null;
         if (!r || !["approved", "updated"].includes(st)) return this.#noWizard(from);
         target = r.s;
         source2 = { derived: { version: versionId2(r.s.id, r.n) }, steps: this.#steps(r.s, r.n) };
@@ -156705,7 +156768,7 @@ var WizardScripts = class _WizardScripts {
     const on = s.based_on ? parseVersionId2(s.based_on) : null;
     const r = on && typeof asked === "string" ? this.#resolve(asked, viewer) : null;
     if (!r || r.s.id !== on.script || r.n <= on.version) return null;
-    const st = r.s.origin === "civicsmith" ? "approved" : this.#stateOf(this.#events(r.s.id), r.n);
+    const st = this.#stateAt(r.s, r.n);
     return ["approved", "updated"].includes(st) ? { version: versionId2(r.s.id, r.n), steps: this.#steps(r.s, r.n) } : null;
   }
   /* ================================================================ R5: wizardPropose */
@@ -157057,8 +157120,8 @@ var WizardScripts = class _WizardScripts {
     const out = [];
     for (const s of scripts) {
       const events = s.origin === "civicsmith" ? [] : this.#events(s.id);
-      const numbers = s.origin === "civicsmith" ? [s.entry.version] : this.#numbers(s.id);
-      const stateOf2 = (n) => s.origin === "civicsmith" ? "approved" : this.#stateOf(events, n);
+      const numbers = s.origin === "civicsmith" ? s.entry.versions.map((v) => v.version) : this.#numbers(s.id);
+      const stateOf2 = (n) => s.origin === "civicsmith" ? _WizardScripts.#libState(s, n) : this.#stateOf(events, n);
       let pick3;
       if (!st || st === "offered") {
         const n = this.#offeredNumber(s, events);
@@ -157193,7 +157256,7 @@ var WizardScripts = class _WizardScripts {
       const base2 = this.#groupScript(on.script) || this.#libraryScript(on.script);
       if (!live7 || !base2 || !this.#canSee(base2, viewer)) continue;
       const bev = base2.origin === "civicsmith" ? [] : this.#events(base2.id);
-      const numbers = base2.origin === "civicsmith" ? [base2.entry.version] : this.#numbers(base2.id);
+      const numbers = base2.origin === "civicsmith" ? base2.entry.versions.map((v) => v.version) : this.#numbers(base2.id);
       const newer = numbers.filter((n) => n > on.version && (base2.origin === "civicsmith" || ["approved", "updated"].includes(this.#stateOf(bev, n))));
       if (newer.length) out.push({ s, base: base2, on, newer });
     }
@@ -157256,10 +157319,15 @@ var WizardScripts = class _WizardScripts {
   }
   /* ================================================================ R24, R27: writing help */
   /** R24 (in-process): whether the assistant may help word `field` of `op` for this viewer, `{offered: true}` or
-   *  `{offered: false, code}`, against the registration's refused and irreversible acts. Writes nothing; never throws. */
+   *  `{offered: false, code}`: first `AI_KEPT_AWAY` while `credentials.aiKeptAway()` answers its refusal (read here, at
+   *  the call; T37, N765), then `AI_NO_ACCOUNT` where `assistant.account` names none, then the registration's refused
+   *  and irreversible acts. Writes nothing; never throws. */
   writingHelpAt(args = {}) {
+    return this.#helpAt(args, this.#keptAway());
+  }
+  #helpAt(args, away) {
     const { op = null, field: field3 = null, draftHeld = false, assistant = null } = isObj40(args) ? args : {};
-    return writingHelpAt({ op, field: field3, draftHeld, assistant }, this.#registration().helpRefused);
+    return writingHelpAt({ op, field: field3, draftHeld, assistant }, this.#registration().helpRefused, away);
   }
   /** R24 (in-process; B3, K1861 (1): `affordances` R44 reads it through `op=affordancescreens`): the acts the assistant
    *  never helps word, `{named, machine_refused, irreversible}`: `named` this module's frozen list, the other two as
@@ -157272,12 +157340,16 @@ var WizardScripts = class _WizardScripts {
    *  `WRITING_HELP_NOTHING_TOLD`; past them, while the assistant's model turn does not exist (N686, T35; K1837),
    *  `ASSISTANT_DRAFT_UNAVAILABLE`, the field unchanged. The door routes the op itself and calls this with the POST body's
    *  `{op, field, told, draftHeld}`, its own `assistant` (`{on, account: {kind, level}}`, never the key) and the stamps
-   *  (B4, K1863 (7)); its refusals (`ASSISTANT_OFF`, the account's, the ceilings) come first (`control-plane` R57).
+   *  (B4, K1863 (7)); its refusals (keep-away, the account's, the ceilings) come first (`control-plane` R57). A
+   *  keep-away is answered as `credentials` answers it (its R35's row and `keep_away`, K231), never re-minted here.
    *  Writes nothing. */
   writingHelp(args = {}) {
     const { op = null, field: field3 = null, told = null, draftHeld = false, assistant = null } = isObj40(args) ? args : {};
-    const at37 = this.writingHelpAt({ op, field: field3, draftHeld, assistant });
-    if (!at37.offered) return refuse17(at37.code, "the assistant does not help word this field", { op: typeof op === "string" ? op.slice(0, 80) : null });
+    const away = this.#keptAway();
+    const at37 = this.#helpAt({ op, field: field3, draftHeld, assistant }, away);
+    const asked = { op: typeof op === "string" ? op.slice(0, 80) : null };
+    if (!at37.offered && at37.code === KEPT_AWAY && isObj40(away) && away.ok === false) return { ...away, ...asked };
+    if (!at37.offered) return refuse17(at37.code, "the assistant does not help word this field", asked);
     const text7 = typeof told === "string" ? told : Array.isArray(told) ? told.filter((x) => typeof x === "string").join("\n") : "";
     if (!text7.trim() || text7.length > TOLD_MAX)
       return refuse17("WRITING_HELP_NOTHING_TOLD", `tell the assistant what to say, in 1 to ${TOLD_MAX} characters`, { max: TOLD_MAX });
@@ -157321,7 +157393,7 @@ var WizardScripts = class _WizardScripts {
     if (!s) return this.#noWizard(script);
     const me = this.#member(viewer);
     const all = s.origin === "civicsmith" ? this.#isAdmin(me) : this.#isOwner(s.project, me);
-    const numbers = s.origin === "civicsmith" ? [s.entry.version] : all ? this.#numbers(s.id) : this.#rows(`SELECT version FROM wiz_versions WHERE script_id=? AND author=? ORDER BY version`, s.id, me ?? "").map((r) => r.version);
+    const numbers = s.origin === "civicsmith" ? s.entry.versions.map((v) => v.version) : all ? this.#numbers(s.id) : this.#rows(`SELECT version FROM wiz_versions WHERE script_id=? AND author=? ORDER BY version`, s.id, me ?? "").map((r) => r.version);
     if (!all && !(s.origin === "group" && numbers.length))
       return this.#useRefusal("a script's use is read by the owners of its project and its authors");
     const use = [];
@@ -157447,7 +157519,8 @@ function wizardScriptsOf(host, deps) {
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     const filingTemplates = d.filingTemplates || filingTemplatesOf(host, { record, membership });
-    w = new WizardScripts({ ...d, storage, record, membership, filingTemplates, env: d.env ?? host.env ?? null });
+    const credentials = d.credentials || (() => credentialsOf(host, { record, membership }));
+    w = new WizardScripts({ ...d, storage, record, membership, filingTemplates, credentials, env: d.env ?? host.env ?? null });
     instances46.set(host, w);
     w.migrate();
     record.declareTable("wizard-scripts", WIZARD_SCRIPTS_TABLE_CLASSES.map((t2) => ({ ...t2 })));
@@ -157804,8 +157877,8 @@ function migrateAnswers(sql) {
 }
 
 // src/answers/checks.mjs
-var checks_exports44 = {};
-__export(checks_exports44, {
+var checks_exports45 = {};
+__export(checks_exports45, {
   ANSWERS_CHECKS: () => ANSWERS_CHECKS,
   refusal: () => refusal20
 });
@@ -159477,7 +159550,7 @@ var ACT_HELP = Object.freeze({
   groupdomainset: "Proves your group controls this web address, so published cases can show it as yours.",
   profilesset: "Chooses the places whose rules apply (deadlines, records laws, holidays) and the group's languages. Deadlines and wizards draw on these.",
   officesseed: "Lists the public offices and seats for your places, so requests and people can be addressed by role.",
-  entitycreate: "Adds an office or organisation the list does not have yet, with a note on where it comes from.",
+  entitycreate: "Adds something the record does not hold yet, such as an office, an organisation or a court case, with a note on where it comes from.",
   placewanted: "Names a place Civicsmith does not yet hold rules for. Administrators are told when an update brings it.",
   aikeepaway: "Stops every assistant in the group, the group's and members' own. Members see your reason on Settings \u203A The assistant.",
   groupkeyset: "Holds one Anthropic API key for the group, sealed and never shown again. It serves members with no account of their own, at the group's cost.",
@@ -159507,12 +159580,13 @@ var ACT_HELP = Object.freeze({
   securitytooltest: "Sends a harmless test file or address to the tool and shows its answer, so you know it works before relying on it.",
   securitytoolremove: "Stops using this tool. Notes it already wrote stay on the files they concern.",
   expertisedeclare: "Says what you know professionally, such as accounting or law. An administrator confirms it; members can then ask you for checks.",
+  setpassword: "Changes your password. Other sessions you have open stay signed in until they end.",
   signerregister: "Registers the key you sign published cases with. Readers check a signature against it.",
   signerrevoke: "Withdraws your signing key, for example if it was lost. Cases already signed keep a record that it was withdrawn.",
   owed_infolevelset: "Chooses how quickly explanations open: promptly, or guidance on a longer pause so less opens while you move. Nothing is ever hidden.",
   groupkeynoticeseen: "Confirms you have read that your questions go to Anthropic under the group's account. Asked once, before your first question.",
   disclosureshown: "Confirms you have read what connecting your own account means: your questions go to Anthropic under your own account and terms.",
-  owed_subscriptionsignin: "Opens Anthropic's own sign-in page in a new tab. It gives you a code to paste here; Civicsmith never sees your password.",
+  subscriptionsignin: "Opens Anthropic's own sign-in page in a new tab. It gives you a code to paste here; Civicsmith never sees your password.",
   accountreferenceset: "Connects your own Claude subscription or API key. It serves only you, before the group's key.",
   aiceilingset: "Sets the most your own account may spend in a day here, up to the limit the group set.",
   accountswitchset: "Lets the assistant suggest things without being asked. Off unless you turn it on; each suggestion is yours to adopt or ignore.",
@@ -159524,11 +159598,11 @@ var ACT_HELP = Object.freeze({
   noterevise: "Changes your note. Notes are yours alone, so nothing else changes.",
   notedelete: "Deletes your note. If you turned it into something shared, that stays.",
   writinghelp: "Asks the assistant to help word what you are writing, from what you typed. Its words arrive labelled as its draft; nothing is saved until you keep them.",
-  owed_translationdraft: "Asks the assistant to draft translations of Civicsmith's words, labelled as drafts for a speaker to check.",
-  owed_translationadopt: "Keeps a translation so members reading that language see it. Protected words need a second speaker's check first.",
-  owed_translationgrant: "Lets a named member translate Civicsmith's words into one language.",
-  owed_translationconfirm: "Confirms a protected word as a second speaker, so members see it instead of the English.",
-  owed_translationrevert: "Undoes a translation change in one step, back to what it replaced.",
+  translationdraft: "Asks the assistant to draft translations of Civicsmith's words, labelled as drafts for a speaker to check.",
+  translationadopt: "Keeps a translation so members reading that language see it. Protected words need a second speaker's check first.",
+  translationgrant: "Lets a named member translate Civicsmith's words into one language.",
+  translationconfirm: "Confirms a protected word as a second speaker, so members see it instead of the English.",
+  translationrevert: "Undoes a translation change in one step, back to what it replaced.",
   wizards: "Shows the wizards your group can use: Civicsmith's, and those your group wrote.",
   wizarddraft: "Records a new wizard by walking through the steps yourself. It stays a draft until approved.",
   wizardrevise: "Changes a draft wizard's steps or words before it is submitted.",
@@ -159572,6 +159646,8 @@ var ACT_HELP = Object.freeze({
   standingset: "Keeps asking this as new documents arrive; new matches reach your queue once, as a list.",
   personfact: "Records a fact about this person from the passage: a position, a credential, an interest. It cites the passage.",
   datedfact: "Records a dated fact from the passage, citing it, for the timeline.",
+  clockpropose: "Works out a due date from the law and the dates, showing each day counted and each holiday skipped. It proposes the date; a member confirms it.",
+  obscuremark: "Marks anyone in a photo who is not part of a finding, and any number plate, so the copy a published case carries shows them obscured, labelled. The original stays inside the group.",
   standarddeclare: "Holds this requirement as a standard the city set itself, so questions can test the city against it.",
   moneyrecord: "Reads this figure into a money fact, with its stage and period, citing where it came from.",
   tabledeclare: "Says what a table's columns are, so its figures can be counted through a calculation rather than one by one.",
@@ -160255,7 +160331,6 @@ var OP_ALIASES = Object.freeze({
   standingquestionset: "standingset",
   standingquestionend: "standingend",
   recordpersonfact: "personfact",
-  claimidentity: "identityclaim",
   withdrawidentityclaim: "identitywithdraw",
   createevent: "eventcreate",
   addparticipant: "participantadd",
@@ -160416,10 +160491,10 @@ var T36_RUNGS = {
      placing a new hold (its R19) */
   releasescanhold: "reasoned",
   // HOLD_NO_REASON (file-safety R17: empty, or over 2,000 characters)
-  /* R25 (N721; DEC-172). credentials R51: `on: true` without a reason is refused; a later set supersedes on read and the
-     earlier is kept */
+  /* R25 (N721; DEC-172). credentials R51: `on: true` without a reason is refused `AI_KEEP_AWAY_NO_REASON` (C-29.32; T37,
+     N755's follow-on: it answered NO_REASON before); a later set supersedes on read and the earlier is kept */
   aikeepaway: "reasoned"
-  // NO_REASON (credentials R51)
+  // AI_KEEP_AWAY_NO_REASON (credentials R51)
 };
 var T36_RUNG_ABSENT = {
   /* R24. file-safety R13, R33, on R3's rule: a member's request on a file asks no authored reason and no act takes it
@@ -160485,6 +160560,48 @@ var T36_CONSEQUENCE_STATEMENTS = Object.freeze({
   })
 });
 
+// src/op-grades/t37.mjs
+var R8 = (s) => `read: ${s}; writes nothing`;
+var TRANSLATION_WORD = "translation-directed: keyed by a language and an interface word; the group's own wording of Civicsmith's words, shown to members reading that language; moves no bundle";
+var T37_RUNGS = {
+  translationadopt: "reversible",
+  // instance-setup R70: taken back by translationrevert (R72)
+  translationconfirm: "reversible",
+  // instance-setup R71: taken back by translationrevert (R72)
+  translationrevert: "reversible"
+  // instance-setup R72: an undo, itself taken back by a later adoption (R70)
+};
+var T37_RUNG_ABSENT = {
+  /* case-carriage R9, R12 (DEC-180), on R3's rule: a `staff` area's reason is a fact of that area, not a reason that the
+     act revises what stands; marks are append-only, and no act takes one back */
+  obscuremark: { ground: "undetermined", is: "a member marks the areas of a photo to obscure in the published copy, or that it has nothing to obscure; asks no authored reason that the act revises what stands, and marks are append-only, so no act takes one back (case-carriage R9, R12)" },
+  /* credentials R3 (DEC-182 (4)), as signout and signouteverywhere: the caller's own */
+  setpassword: { ground: "caller-owned", is: "a signed-in member or administrator changes their own password, the role from their own session, ending their other sessions (credentials R3)" },
+  /* credentials R43, agent-worker R66, as subscriptiondisconnect: no login is held here */
+  subscriptionsignin: { ground: "credential", is: "a member signs in to their own Claude subscription in their own runner; the sign-in lives there, and no login, code or token is held here (credentials R43, agent-worker R66)" },
+  /* instance-setup R69 (DEC-157 (1)), as wizardeditorgrant and wizardeditorrevoke */
+  translationgrant: { ground: "credential", is: "an administrator grants a named member the right to translate the interface into one language, or revokes it, a revocation appended (instance-setup R69)" },
+  /* instance-setup R67 (K2201), on R3's rule, as whatchangedpropose: drafts are labelled machine work, append-only, never
+     the group's wording until a member adopts one; `to_english` (an administrator's only) adopts and confirms nothing */
+  translationdraft: { ground: "undetermined", is: "the assistant drafts missing words of a language as labelled machine work, never the group's wording until a granted member adopts one, or reads one protected word back into English for an administrator, adopting nothing; asks no authored reason and no act takes it back (instance-setup R67)" },
+  /* instance-setup R73 (DEC-157 (5)), on R3's rule */
+  translationmark: { ground: "undetermined", is: `a member marks a shown word's translation "this translation looks wrong", with an optional note; asks no reason, and no act takes it back, a mark staying open until the word's next adoption or undo (instance-setup R73)` }
+};
+var T37_NON_ACTS = {
+  obscuremark: "photo-directed: keyed by a photo's capture, reached from the Photos step; a member's mark of areas to obscure in the published copy, append-only; moves no bundle",
+  setpassword: "session-directed: the caller's own password, the role from their session; ends their other sessions; moves no bundle",
+  subscriptionsignin: "credential: a member's own sign-in to their own Claude subscription, in their own runner; no login held here; moves no bundle",
+  translationgrant: "setting: a named member's grant for one language, an administrator's act; moves no bundle",
+  translationdraft: "translation-directed: keyed by a language and interface words; drafts labelled machine work for a granted speaker to check (`to_language`), or an administrator's back-translation of one protected word that writes nothing (`to_english`); moves no bundle",
+  translationadopt: TRANSLATION_WORD,
+  translationconfirm: TRANSLATION_WORD,
+  translationrevert: TRANSLATION_WORD,
+  translationmark: TRANSLATION_WORD,
+  photomarks: R8("a photo's marks, oldest first, its state (marked, nothing to obscure or unchecked) and its current obscured copy, to a member who may see it"),
+  translations: R8("every interface word in a language with its state, its shown or awaiting text and who kept it, its drafts, adoptions, confirmations, undos and open marks, and the place's local names, to a granted speaker"),
+  interfacewords: R8("every interface word in a language, the group's shown translation or the English, never blank, with the English beside it")
+};
+
 // src/op-grades/index.mjs
 var RUNG_LADDER = ["reversible", "reasoned", "terminal", "attested", "irreversible"];
 var IRREVERSIBLE_CORRECTION_PATH = "Publishing cannot be undone: what it published never stops answering. Correction always moves FORWARD \u2014 a further edition (a separate document; every published edition stands), or a withdrawal recorded as another attested act, with both standing in the record. Nothing is erased, and nothing is un-said.";
@@ -160533,10 +160650,7 @@ var CONSEQUENCE_STATEMENTS = Object.freeze({
   ...T36_CONSEQUENCE_STATEMENTS
 });
 var LARGER_SCREEN_ACTS = Object.freeze([
-  "filingsent",
-  /* R26 (N719; DEC-170; K1954): expunging a person's value is not offered on a phone. Its rung stays `reasoned` (R21,
-     DEC-142's honest name), so the ladder alone would leave it there; its Irreversible weight and dialog are unchanged. */
-  "personexpunge"
+  "filingsent"
 ]);
 var RUNGS2 = {
   /* ---- irreversible. The op that publishes, as DEC-19 as amended names it, and (R14; DEC-147) the two that set when a
@@ -160952,12 +161066,13 @@ var RUNGS2 = {
      (publication R68); a new signing, published now (`caseratify`) or at a time (`publishat`), takes it back. */
   publishatcancel: "reversible",
   // caseratify or publishat signs it again
-  /* ---- R13 (T33-85): T33's ops, graded in ./t33.mjs, T34's in ./t34.mjs, T35's in ./t35.mjs and T36's in
-     ./t36.mjs. */
+  /* ---- R13 (T33-85): T33's ops, graded in ./t33.mjs, T34's in ./t34.mjs, T35's in ./t35.mjs, T36's in
+     ./t36.mjs and T37's in ./t37.mjs. */
   ...T33_RUNGS,
   ...T34_RUNGS,
   ...T35_RUNGS,
-  ...T36_RUNGS
+  ...T36_RUNGS,
+  ...T37_RUNGS
 };
 var RUNG_ABSENT = {
   /* ---- substrate: how a chosen act lands, or how the store maintains itself. */
@@ -161140,12 +161255,13 @@ var RUNG_ABSENT = {
   wizardeditorgrant: { ground: "credential", is: "an administrator grants a member the advanced editor: a blank start and adding steps (wizard-scripts R8)" },
   wizardeditorrevoke: { ground: "credential", is: "an administrator revokes an advanced-editor grant, appended and never deleted (wizard-scripts R8)" },
   wizardprogress: { ground: "observational", is: "adds one to an unattributed daily tally of a script version's start, step reached or finish; names no member, case or project, and stopping is no event (wizard-scripts R15)" },
-  /* R13 (T33-85): T33's ops, graded in ./t33.mjs, T34's in ./t34.mjs, T35's in ./t35.mjs and T36's in
-     ./t36.mjs. */
+  /* R13 (T33-85): T33's ops, graded in ./t33.mjs, T34's in ./t34.mjs, T35's in ./t35.mjs, T36's in
+     ./t36.mjs and T37's in ./t37.mjs. */
   ...T33_RUNG_ABSENT,
   ...T34_RUNG_ABSENT,
   ...T35_RUNG_ABSENT,
-  ...T36_RUNG_ABSENT
+  ...T36_RUNG_ABSENT,
+  ...T37_RUNG_ABSENT
 };
 var MACHINE_REFUSALS = {
   release: "MACHINE_CANNOT_RELEASE",
@@ -161805,12 +161921,13 @@ var NON_ACTS = {
   /* R16 (DEC-152, DEC-153; K1364, K1837): the assistant's two labelled drafts write nothing, so neither takes a rung. */
   groupdescriptiondraft: "draft: answers a labelled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",
   writinghelp: "draft: answers a labelled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",
-  /* R13 (T33-85): T33's ops, their reasons in ./t33.mjs, T34's in ./t34.mjs, T35's in ./t35.mjs and
-     T36's in ./t36.mjs. */
+  /* R13 (T33-85): T33's ops, their reasons in ./t33.mjs, T34's in ./t34.mjs, T35's in ./t35.mjs,
+     T36's in ./t36.mjs and T37's in ./t37.mjs. */
   ...T33_NON_ACTS,
   ...T34_NON_ACTS,
   ...T35_NON_ACTS,
-  ...T36_NON_ACTS
+  ...T36_NON_ACTS,
+  ...T37_NON_ACTS
 };
 var IRREVERSIBLE_WEIGHT = Object.freeze([
   ...Object.keys(RUNGS2).filter((op) => RUNGS2[op] === "irreversible"),
@@ -161827,6 +161944,7 @@ function phoneOf(id) {
   const op = Object.hasOwn(OP_ALIASES, id) ? OP_ALIASES[id] : id;
   if (Object.hasOwn(RUNGS2, op) && NOT_ON_PHONE_RUNGS.has(RUNGS2[op])) return false;
   if (Object.hasOwn(RUNG_ABSENT, op) && RUNG_ABSENT[op].ground === "credential") return false;
+  if (IRREVERSIBLE_WEIGHT.includes(op)) return false;
   return !LARGER_SCREEN_ACTS.includes(op);
 }
 
@@ -163119,7 +163237,6 @@ var OP_ALIASES2 = Object.freeze({
   withdrawtie: "membertiewithdraw",
   recordpersonfact: "personfact",
   // people
-  claimidentity: "identityclaim",
   withdrawidentityclaim: "identitywithdraw",
   adoptversion: "versionadopt",
   keepversion: "versionkeep",
@@ -163500,13 +163617,17 @@ var OP_FAMILIES = Object.freeze({
      stamp; the security map, an administrator's read with `by`; recovery codes issued and their state, an
      administrator's own (NOT_AN_ADMIN), `by` stamped; `recover` reached with no credential, as `login` is, its role,
      code and password the body's and `source` and `country` the control plane's (admission R21); and a member's own
-     subscription disconnected (R43; `subscriptionsignin` has no spec, R27). T36 (R33; its R51, R52; DEC-172): keeping
+     subscription disconnected (R43). T36 (R33; its R51, R52; DEC-172): keeping
      the group's material away from every assistant, an administrator's own act (NOT_AN_ADMIN), `on` and `reason` the
      body's; its state answered to every active member, stamped nothing. `securitycount` (its R50) is a store-internal
-     route and declared nowhere (R6). */
+     route and declared nowhere (R6). T37 (R36, R39; N708, N776; DEC-156, DEC-182 (4)): a member's own sign-in to their
+     Claude subscription, `by` the stamped member and `step` and `code` the body's only, its handler the control
+     plane's route to the member's own runner (`agent-worker` R66; the fact is credentials R43's); and the caller's
+     change of their own password (its R3), `by`, the presenting `session`, and `source` and `country` stamped (as
+     `signout`'s and `login`'s), `current` and `password` the body's only, no role named (the session's). */
   credentials: family({
     owner: "credentials",
-    cite: "credentials R22\u2013R29, R39, R43, R45\u2013R47, R51, R52; K1544; R20, R30, R33",
+    cite: "credentials R3, R22\u2013R29, R39, R43, R45\u2013R47, R51, R52; K1544; R20, R30, R33, R36, R39",
     actor: QUERY("by"),
     extra: {
       accountreferenceset: ["member"],
@@ -163518,7 +163639,8 @@ var OP_FAMILIES = Object.freeze({
       signouteverywhere: ["session"],
       securitymap: ["by"],
       recoverycodesstate: ["by"],
-      recover: ["source", "country"]
+      recover: ["source", "country"],
+      setpassword: ["session", "source", "country"]
     },
     ops: {
       accountreferenceset: "own",
@@ -163547,7 +163669,9 @@ var OP_FAMILIES = Object.freeze({
       recover: "door",
       subscriptiondisconnect: "own",
       aikeepaway: "admin",
-      aikeepawaystate: "settingread"
+      aikeepawaystate: "settingread",
+      subscriptionsignin: "own",
+      setpassword: "own"
     }
   }),
   /* sources (K1550): marking a capture as from a keyed service, its capturer's own act (MACHINE_CANNOT_MARK, R16, R18). */
@@ -163614,10 +163738,17 @@ var OP_FAMILIES = Object.freeze({
      (R28; its R64); the group's description drafted for its administrator, a session's labelled draft writing nothing,
      `by` and `viewer` stamped (R29; its R65, DEC-152; K1837). T35 (R30; its R66, K1888): the second-administrator
      step, a session's read answered to an administrator (NOT_AN_ADMIN otherwise). T36 (R17; DEC-172): `assistantset` is
-     retired with its owner's act (the assistant's state is derived from credentials' keep-away) and has no spec. */
+     retired with its owner's act (the assistant's state is derived from credentials' keep-away) and has no spec.
+     T37 (R35, R37; its R67, R69–R74; N669, DEC-127 (5), DEC-157; K2200, K2201): the interface's translation, each a
+     session's only with no working capability (the owner's grant gates it, R69): the assistant's draft asked
+     (`translationdraft`, writing labelled drafts or, read back into English, its fact), a speaker granted and revoked
+     and a word's latest change undone (an administrator's, NOT_AN_ADMIN), a word kept, confirmed and marked wrong (a
+     granted speaker's or, the mark, any member's), `by` from the query, every other field the body's; the
+     workspace and the words a member reads, the viewer stamped. `translationdraftrecord` (its R67's record route) is
+     a store-internal route and declared nowhere (R6). */
   "instance-setup": family({
     owner: "instance-setup",
-    cite: "instance-setup R50, R52\u2013R54, R60, R64\u2013R66; R17, R26, R28\u2013R30; K1683",
+    cite: "instance-setup R50, R52\u2013R54, R60, R64\u2013R67, R69\u2013R74; R17, R26, R28\u2013R30, R35, R37; K1683",
     actor: QUERY("by"),
     extra: { groupdescriptiondraft: ["by"] },
     ops: {
@@ -163631,7 +163762,15 @@ var OP_FAMILIES = Object.freeze({
       memberlanguageset: "sessionact",
       memberlanguage: "read",
       groupdescriptiondraft: "ownread",
-      adminrecoverystep: "ownread"
+      adminrecoverystep: "ownread",
+      translationdraft: "own",
+      translationgrant: "admin",
+      translationadopt: "own",
+      translationconfirm: "own",
+      translationrevert: "admin",
+      translationmark: "own",
+      translations: "ownread",
+      interfacewords: "ownread"
     }
   }),
   /* T34 (R22; membership R98–R110, DEC-133, DEC-134, DEC-136; K1749): the group's settings. The administrator's acts
@@ -163750,7 +163889,14 @@ var OP_FAMILIES = Object.freeze({
       securitytooltest: "admin",
       securitytoolremove: "admin"
     }
-  })
+  }),
+  /* T37 (R38; case-carriage R9, R10; N757, DEC-180; K2171, K2206): a photo's marks of who and what to obscure. Marking
+     one an act of record, a member's (MACHINE_CANNOT_MARK), `contribute`, `by` from the query, `captureSha` and `areas`
+     the body's; the marks and the derived copy a session's read, the viewer stamped. None is on `AI_GRANT_OPS`. */
+  "case-carriage": family({ owner: "case-carriage", cite: "case-carriage R9, R10; R38", actor: QUERY("by"), ops: {
+    obscuremark: "member",
+    photomarks: "ownread"
+  } })
 });
 var FAMILY_OPS = frozenList(Object.values(OP_FAMILIES).flatMap((f17) => Object.keys(f17.kinds)));
 var FAMILY_SESSION_OPS = frozenList(Object.values(OP_FAMILIES).flatMap((f17) => Object.keys(f17.kinds).filter((op) => !OP_KINDS[f17.kinds[op]].public)));
@@ -166219,7 +166365,6 @@ var ACT_HELP_ABSENT = Object.freeze({
       "addworkbook",
       "adoptversion",
       "bind",
-      "claimidentity",
       "createevent",
       "createset",
       "declare",
@@ -166318,6 +166463,7 @@ var ACT_HELP_ABSENT = Object.freeze({
       "inforcethroughof",
       "instance",
       "interestchecks",
+      "interfacewords",
       "keyedservices",
       "lawaddresses",
       "lawrelations",
@@ -166346,6 +166492,7 @@ var ACT_HELP_ABSENT = Object.freeze({
       "personcredentials",
       "personinterests",
       "personstatements",
+      "photomarks",
       "placewantedstate",
       "powersof",
       "poweruses",
@@ -166395,6 +166542,7 @@ var ACT_HELP_ABSENT = Object.freeze({
       "textprovenance",
       "threatof",
       "timeline",
+      "translations",
       "usesof",
       "verdictnotes",
       "versionnotice",
@@ -166457,7 +166605,6 @@ var ACT_HELP_ABSENT = Object.freeze({
       "caseimportdocument",
       "checkrecord",
       "checktake",
-      "clockpropose",
       "coarchiveset",
       "comparisonpropose",
       "connect",
@@ -166632,6 +166779,7 @@ var ACT_HELP_ABSENT = Object.freeze({
       "thread",
       "transcribe",
       "transcriptionattest",
+      "translationmark",
       "triage",
       "unfollow",
       "unpack",
@@ -166661,8 +166809,8 @@ var ACT_HELP_ABSENT = Object.freeze({
 });
 
 // src/admission/checks.mjs
-var checks_exports45 = {};
-__export(checks_exports45, {
+var checks_exports46 = {};
+__export(checks_exports46, {
   ADMISSION_CHECKS: () => ADMISSION_CHECKS,
   AI_SCOPE_CHECKS: () => AI_SCOPE_CHECKS,
   GROUP_IDENTITY_FENCE_CHECKS: () => GROUP_IDENTITY_FENCE_CHECKS,
@@ -168047,8 +168195,8 @@ var CaptureCredentials = class _CaptureCredentials {
 };
 
 // src/file-safety/checks.mjs
-var checks_exports46 = {};
-__export(checks_exports46, {
+var checks_exports47 = {};
+__export(checks_exports47, {
   FILE_SAFETY_CHECKS: () => FILE_SAFETY_CHECKS,
   PROVIDER_REASON_WORDS: () => PROVIDER_REASON_WORDS,
   THREAT_REASONS: () => THREAT_REASONS
@@ -168328,8 +168476,8 @@ var PROVIDER_REASON_WORDS = Object.freeze({
 });
 
 // src/money-checks/checks.mjs
-var checks_exports47 = {};
-__export(checks_exports47, {
+var checks_exports48 = {};
+__export(checks_exports48, {
   MONEY_CHECKS_CHECKS: () => MONEY_CHECKS_CHECKS,
   refusal: () => refusal22
 });
@@ -168366,8 +168514,8 @@ function refusal22(code, fields = {}) {
 }
 
 // src/hypotheses/checks.mjs
-var checks_exports48 = {};
-__export(checks_exports48, {
+var checks_exports49 = {};
+__export(checks_exports49, {
   HYPOTHESES_CHECKS: () => HYPOTHESES_CHECKS
 });
 var act = (fn) => `src/hypotheses/index.mjs ${fn}`;
@@ -168472,8 +168620,8 @@ var HYPOTHESES_CHECKS = {
 };
 
 // src/run-rules/checks.mjs
-var checks_exports49 = {};
-__export(checks_exports49, {
+var checks_exports50 = {};
+__export(checks_exports50, {
   AI_RUNS_CHECKS: () => AI_RUNS_CHECKS,
   AI_RUNS_CONTEXT_CHECKS: () => AI_RUNS_CONTEXT_CHECKS,
   AI_RUN_ACT_SHAPE_CHECKS: () => AI_RUN_ACT_SHAPE_CHECKS,
@@ -168960,8 +169108,8 @@ var AI_RUNS_CHECKS = Object.freeze({
 });
 
 // src/run-productions/checks.mjs
-var checks_exports50 = {};
-__export(checks_exports50, {
+var checks_exports51 = {};
+__export(checks_exports51, {
   EXTRACT_PROPOSE_CHECKS: () => EXTRACT_PROPOSE_CHECKS,
   EXTRACT_PROPOSE_CHECK_KEYS: () => EXTRACT_PROPOSE_CHECK_KEYS,
   ROWLESS_CODES: () => ROWLESS_CODES,
@@ -169190,8 +169338,8 @@ var SUGGEST_CHECKS = pick2(SUGGEST_ROWS, SUGGEST_CHECK_KEYS);
 var EXTRACT_PROPOSE_CHECKS = pick2(EXTRACT_PROPOSE_ROWS, EXTRACT_PROPOSE_CHECK_KEYS);
 
 // src/capture-requests/checks.mjs
-var checks_exports51 = {};
-__export(checks_exports51, {
+var checks_exports52 = {};
+__export(checks_exports52, {
   CAPTURE_PURPOSES: () => CAPTURE_PURPOSES,
   CAPTURE_REQUEST_CHECKS: () => CAPTURE_REQUEST_CHECKS,
   CAPTURE_SOURCE_CHECKS: () => CAPTURE_SOURCE_CHECKS,
@@ -175349,8 +175497,8 @@ function judgementLayers() {
 var JUDGEMENT_VERSION = `${JUDGEMENT_ID}@${JUDGEMENT_EDITION}`;
 
 // src/intent/checks.mjs
-var checks_exports52 = {};
-__export(checks_exports52, {
+var checks_exports53 = {};
+__export(checks_exports53, {
   INTENT_CHECKS: () => INTENT_CHECKS,
   refusal: () => refusal25
 });
@@ -175493,8 +175641,8 @@ function refusal25(code, detail, extra) {
 }
 
 // src/review/checks.mjs
-var checks_exports53 = {};
-__export(checks_exports53, {
+var checks_exports54 = {};
+__export(checks_exports54, {
   REVIEW_COPY_CHECKS: () => REVIEW_COPY_CHECKS
 });
 var at26 = (fn, region) => `src/review/index.mjs ${fn} > ${region}`;
@@ -175567,8 +175715,8 @@ var REVIEW_COPY_CHECKS = Object.freeze({
 });
 
 // src/conformance/checks.mjs
-var checks_exports54 = {};
-__export(checks_exports54, {
+var checks_exports55 = {};
+__export(checks_exports55, {
   CONFORMANCE_CHECKS: () => CONFORMANCE_CHECKS,
   refusal: () => refusal26
 });
@@ -175746,8 +175894,8 @@ function refusal26(code, detail, extra = {}) {
 }
 
 // src/consequences/checks.mjs
-var checks_exports55 = {};
-__export(checks_exports55, {
+var checks_exports56 = {};
+__export(checks_exports56, {
   CONSEQUENCES_CHECKS: () => CONSEQUENCES_CHECKS
 });
 var at28 = (fn) => `src/consequences/index.mjs ${fn}`;
@@ -175777,8 +175925,8 @@ var CONSEQUENCES_CHECKS = Object.freeze({
 });
 
 // src/action-clocks/checks.mjs
-var checks_exports56 = {};
-__export(checks_exports56, {
+var checks_exports57 = {};
+__export(checks_exports57, {
   ACTION_CLOCK_CHECKS: () => ACTION_CLOCK_CHECKS
 });
 var ACTION_CLOCK_CHECKS = {
@@ -175827,8 +175975,8 @@ var ACTION_CLOCK_CHECKS = {
 };
 
 // src/filings/checks.mjs
-var checks_exports57 = {};
-__export(checks_exports57, {
+var checks_exports58 = {};
+__export(checks_exports58, {
   FILINGS_CHECKS: () => FILINGS_CHECKS,
   rowOf: () => rowOf16
 });
@@ -176014,8 +176162,8 @@ function rowOf16(code) {
 }
 
 // src/escalation/checks.mjs
-var checks_exports58 = {};
-__export(checks_exports58, {
+var checks_exports59 = {};
+__export(checks_exports59, {
   ESCALATION_CHECKS: () => ESCALATION_CHECKS,
   refusal: () => refusal27
 });
@@ -176243,8 +176391,8 @@ function refusal27(code, detail, extra) {
 }
 
 // src/action-plans/checks.mjs
-var checks_exports59 = {};
-__export(checks_exports59, {
+var checks_exports60 = {};
+__export(checks_exports60, {
   ACTION_PLAN_CHECKS: () => ACTION_PLAN_CHECKS,
   refusal: () => refusal28
 });
@@ -176551,8 +176699,8 @@ function refusal28(code, detail, extra) {
 }
 
 // src/monitoring/checks.mjs
-var checks_exports60 = {};
-__export(checks_exports60, {
+var checks_exports61 = {};
+__export(checks_exports61, {
   CADENCE_ENUM: () => CADENCE_ENUM,
   CRITICALITY_ENUM: () => CRITICALITY_ENUM,
   DRIVE_TICK_CHECKS: () => DRIVE_TICK_CHECKS,
@@ -176725,8 +176873,8 @@ function checkGatheringGrammar(ctx, findings, sweepArm = null) {
 }
 
 // src/following/checks.mjs
-var checks_exports61 = {};
-__export(checks_exports61, {
+var checks_exports62 = {};
+__export(checks_exports62, {
   FOLLOWING_CHECKS: () => FOLLOWING_CHECKS,
   followRefusal: () => followRefusal
 });
@@ -176860,8 +177008,8 @@ function followRefusal(code, detail, extra = {}) {
 }
 
 // src/link-sweep/checks.mjs
-var checks_exports62 = {};
-__export(checks_exports62, {
+var checks_exports63 = {};
+__export(checks_exports63, {
   SWEEP_BOUNDS: () => SWEEP_BOUNDS,
   SWEEP_CADENCES: () => SWEEP_CADENCES,
   SWEEP_CHECKS: () => SWEEP_CHECKS,
@@ -177282,8 +177430,8 @@ function sweepGrammar(s, ids) {
 }
 
 // src/tasks/checks.mjs
-var checks_exports63 = {};
-__export(checks_exports63, {
+var checks_exports64 = {};
+__export(checks_exports64, {
   CHECK_REQUEST_CHECKS: () => CHECK_REQUEST_CHECKS,
   QUEUE_INBOX_CHECKS: () => QUEUE_INBOX_CHECKS,
   QUEUE_MACHINE_CHECKS: () => QUEUE_MACHINE_CHECKS,
@@ -177526,8 +177674,8 @@ var CHECK_REQUEST_CHECKS = Object.freeze({
 });
 
 // src/queue/checks.mjs
-var checks_exports64 = {};
-__export(checks_exports64, {
+var checks_exports65 = {};
+__export(checks_exports65, {
   QUEUE_ACT_CHECKS: () => QUEUE_ACT_CHECKS,
   QUEUE_MINT_CHECKS: () => QUEUE_MINT_CHECKS,
   queueRefusal: () => queueRefusal
@@ -177605,6 +177753,8 @@ __export(setup_exports, {
   INSTANCE_SETUP_SEED_TABLES: () => INSTANCE_SETUP_SEED_TABLES,
   INSTANCE_SETUP_TABLES: () => INSTANCE_SETUP_TABLES,
   INSTANCE_SETUP_TABLE_DECLARATIONS: () => INSTANCE_SETUP_TABLE_DECLARATIONS,
+  INTERFACE_WORDS: () => INTERFACE_WORDS,
+  INTERFACE_WORDS_COMMIT: () => INTERFACE_WORDS_COMMIT,
   InstanceSetup: () => InstanceSetup,
   LEGACY_PROBE_RUN: () => LEGACY_PROBE_RUN,
   LEGISTAR_SCHEMES: () => LEGISTAR_SCHEMES,
@@ -177614,6 +177764,10 @@ __export(setup_exports, {
   RUNTIME_ASYMMETRY: () => RUNTIME_ASYMMETRY,
   SEED_MACHINE: () => SEED_MACHINE,
   SETUP_HTML: () => SETUP_HTML,
+  TRANSLATION_DRAFTER: () => TRANSLATION_DRAFTER,
+  TRANSLATION_DRAFT_MAX: () => TRANSLATION_DRAFT_MAX,
+  TRANSLATION_NOTE_MAX: () => TRANSLATION_NOTE_MAX,
+  TRANSLATION_TEXT_MAX: () => TRANSLATION_TEXT_MAX,
   bootstrapOp: () => bootstrapOp,
   bootstrapReport: () => bootstrapReport,
   cpuProbeOp: () => cpuProbeOp,
@@ -180886,25 +181040,17 @@ var courtBlock = (p3) => `<div class="card" id="${p3}-cn">
     <div class="actions"><button id="${p3}-cn-set">Record this choice</button></div>
     <p class="err" id="${p3}-cn-err"></p>
   </div>`;
-var payBlock = (p3) => `<div class="card" id="${p3}-gk">
-    <p style="margin:0 0 10px"><b>Does your group pay for the assistant?</b> Nothing is chosen for you, and leaving this
-    unchosen records nothing.</p>
+var groupKeyBlock = (p3) => `<div class="card" id="${p3}-gk">
+    <p style="margin:0 0 10px"><b>Your group's Anthropic API key (optional).</b> Leave it empty and members bring their
+    own.</p>
     <p class="small">A member may always connect their own Claude subscription or API key, which serves only them, unless
-    your group keeps its material away from AI.</p>
+    your group keeps its material away from AI. A key held by the group serves every member who has no account of their
+    own.</p>
     <p class="small" id="${p3}-gk-now"></p>
-    <label style="display:flex;gap:8px;align-items:flex-start;font-weight:400">
-      <input type="radio" name="${p3}-gk" id="${p3}-gk-pays" value="pays" style="width:auto;margin-top:4px">
-      <span><b>The group pays.</b> One Anthropic API key, held by the group, serves every member who has no account of
-      their own.</span></label>
-    <label style="display:flex;gap:8px;align-items:flex-start;font-weight:400">
-      <input type="radio" name="${p3}-gk" id="${p3}-gk-not" value="not" style="width:auto;margin-top:4px">
-      <span><b>The group does not pay.</b> Nothing is set: members who want the assistant connect their own account.</span></label>
-    <div id="${p3}-gk-keybox" hidden>
-      <label for="${p3}-gk-key">The group's Anthropic API key</label>
-      <input id="${p3}-gk-key" type="password" autocomplete="off" spellcheck="false">
-      <p class="hint">Sent once, in the request's body only. It is held sealed and never shown again, not even here.</p>
-    </div>
-    <div class="actions"><button id="${p3}-gk-set">Record this choice</button></div>
+    <label for="${p3}-gk-key">The group's Anthropic API key</label>
+    <input id="${p3}-gk-key" type="password" autocomplete="off" spellcheck="false">
+    <p class="hint">Sent once, in the request's body only. It is held sealed and never shown again, not even here.</p>
+    <div class="actions"><button id="${p3}-gk-set">Record the group's key</button></div>
     <p class="small" id="${p3}-gk-said"></p>
     <p class="err" id="${p3}-gk-err"></p>
   </div>`;
@@ -181108,8 +181254,8 @@ ${GROUP_LINE_UNREAD}
   <!-- R29, R16, R15\u2013R18, R30 (K1888; DEC-134, DEC-136 (1), DEC-172, DEC-169): once the claim succeeds, in the same
        section and only here, the founder's recovery codes shown once (R29), then the ask to add a second administrator
        with its statement of dependence and the act itself (R16), then the choices the founder may leave unanswered: who
-       holds the hosting account (R15), whether members are told what a court can reach (R17), whether the group pays for
-       the assistant and whether it keeps its material away from AI (R18), then the optional security tools step (R30).
+       holds the hosting account (R15), whether members are told what a court can reach (R17), whether the group keeps its
+       material away from AI and then the group's optional API key (R18; T37), then the optional security tools step (R30).
        Nothing is gated on any of them. -->
   <div id="claim-after" hidden>
     <div class="okbox"><p style="margin:0">Claimed. The one-time password no longer works, and you are signed in
@@ -181125,12 +181271,12 @@ ${GROUP_LINE_UNREAD}
       <p class="hint">You can leave this for later: Members and keys shows it until your group has two administrators
       who each hold recovery codes. Nothing waits on it.</p>
     </div>
-    <p class="small">Four choices and one optional step follow. Each can be left for later, and each can be changed at
+    <p class="small">Four settings and one optional step follow. Each can be left for later, and each can be changed at
     any time under Members and keys.</p>
     ${hostingBlock("cl")}
     ${courtBlock("cl")}
-    ${payBlock("cl")}
     ${keepAwayBlock("cl")}
+    ${groupKeyBlock("cl")}
     ${securityBlock("cl")}
     <div class="actions"><button id="claim-on">Go on to your group's Civicsmith</button></div>
   </div>
@@ -181450,8 +181596,8 @@ ${GROUP_LINE_UNREAD}
   <p class="small"><a class="filelink" href="${ROTATION_GUIDE_HREF}">How to replace the one-time password in the hosting
   account</a>, and when to.</p>
   ${courtBlock("mk")}
-  ${payBlock("mk")}
   ${keepAwayBlock("mk")}
+  ${groupKeyBlock("mk")}
   <h2>Security tools</h2>
   ${securityBlock("mk")}
   <!-- R23 (DEC-152; K1837): who your group is, its focus and purpose (membership R109), with the assistant's help offered
@@ -181705,7 +181851,7 @@ $("#do-claim").addEventListener("click", async ()=>{
     const l = await api("login", { role: "admin", password: p1 });
     if (!l.result || !l.result.token) { panel(l.result, r.result.consumedAt); return; }
     /* R29, R16, R15\u2013R18: signed in, and kept in the claim's section: the founder's recovery codes first, then the ask
-       for a second administrator, then the three choices. */
+       for a second administrator, then the group's settings. */
     WHO = "admin";
     signIn(l.result, r.result.consumedAt);
     CLAIMED = { login: l.result, at: r.result.consumedAt };
@@ -182761,37 +182907,32 @@ async function courtSet(P){
   } catch(err){ e.textContent = "That did not go through: " + err.message; }
   finally { $(ID(P, "cn-set")).disabled = false; }
 }
-/* ---- whether the group pays for the assistant (R18; credentials R33, R34) ----
-   The group key's state, never the key: held and on to an administrator, on alone to any other member. "The group pays"
-   sends the key once, in the body, through op=groupkeyset and then op=groupkeyswitch on; "the group does not pay" sends
-   nothing. The page never sends op=assistantset (retired, instance-setup R53). */
-async function showPay(P){
+/* ---- the group's API key (R18; T37, DEC-182 (3); credentials R33, R34) ----
+   The group key's state, never the key: held and on to an administrator, on alone to any other member. A key typed
+   is sent once, in the body, through op=groupkeyset and then op=groupkeyswitch on; a field left empty sends nothing and
+   records nothing. The page never sends op=assistantset (retired, instance-setup R53). */
+async function showGroupKey(P){
   let k = null;
   try { k = resultOf(await rec("groupkeystate")); } catch { k = null; }
   const now = $(ID(P, "gk-now"));
   if (k && k.ok !== false && typeof k.held === "boolean")
-    now.textContent = k.held ? "Your group pays: its API key is held, and " + (k.on === true ? "on" : "off") + "." : "Your group does not pay: no group API key is held.";
+    now.textContent = k.held ? "Your group holds an API key, and it is " + (k.on === true ? "on" : "off") + "." : "Your group holds no API key: members bring their own.";
   else if (k && k.ok !== false && typeof k.on === "boolean") now.textContent = "The group's API key is " + (k.on ? "on" : "off") + ".";
-  else now.textContent = "Whether your group pays for the assistant could not be read just now.";
+  else now.textContent = "Whether your group holds an API key could not be read just now.";
 }
-const PAY_CHOICES = ["pays", "not"];
-function payKeyBox(P){ $(ID(P, "gk-keybox")).hidden = checkedOf(P + "-gk", PAY_CHOICES) !== "pays"; }
-async function paySet(P){
+async function groupKeySet(P){
   const e = $(ID(P, "gk-err")); e.textContent = ""; $(ID(P, "gk-said")).textContent = "";
-  const choice = checkedOf(P + "-gk", PAY_CHOICES);
   /* the key is read once and the field emptied at once: it is never shown again, not even here */
-  const key = choice === "pays" ? $(ID(P, "gk-key")).value.trim() : "";
+  const key = $(ID(P, "gk-key")).value.trim();
   $(ID(P, "gk-key")).value = "";
-  if (!choice) { e.textContent = "Choose one, or leave this unchosen: nothing is recorded until you do."; return; }
-  if (choice === "not") { $(ID(P, "gk-said")).textContent = "Nothing was recorded: your group does not pay for the assistant."; return; }
-  if (!key) { e.textContent = "Paste the group's Anthropic API key to pay for the assistant."; return; }
+  if (!key) { $(ID(P, "gk-said")).textContent = "Nothing was recorded: the field is empty, so members bring their own."; return; }
   $(ID(P, "gk-set")).disabled = true;
   try {
     let why = refusalOf(await post("groupkeyset", { key }));
-    if (why) { e.textContent = why; showPay(P); return; }
+    if (why) { e.textContent = why; showGroupKey(P); return; }
     why = refusalOf(await post("groupkeyswitch", { on: true }));
-    if (why) { e.textContent = why; showPay(P); return; }
-    showPay(P);
+    if (why) { e.textContent = why; showGroupKey(P); return; }
+    showGroupKey(P);
   } catch(err){ e.textContent = "That did not go through: " + err.message; }
   finally { $(ID(P, "gk-set")).disabled = false; }
 }
@@ -182824,7 +182965,7 @@ function drawKeepAway(P){
   $(ID(P, "ka-err")).textContent = "";
   $(ID(P, "ka-why")).hidden = s.on;
   $(ID(P, "ka-what")).textContent = s.on
-    ? "Turning it off lets the assistant be used again in your group: through the group's API key if your group pays, and through members' own accounts. Nothing already recorded changes."
+    ? "Turning it off lets the assistant be used again in your group: through the group's API key if one is held and on, and through members' own accounts. Nothing already recorded changes."
     : "Turning it on means no assistant may be used in your group while it is on: not the group's API key, and not a member's own account. Everything else works without the assistant. Every member is shown your reason.";
   $(ID(P, "ka-set")).textContent = s.on ? "Turn it off" : "Keep our material away from AI";
   act.hidden = false;
@@ -182857,8 +182998,9 @@ async function keepAwaySet(P){
    Under the founder's session at the claim (cl), and an administrator's in members and keys (mk). The catalogue is drawn
    as file-safety answers it: each offered tool with its handling (what it is sent, who receives it, the region, how
    long it keeps files and whether it shares them), and the services not offered with their reasons in file-safety's
-   words. Adding a tool asks only what its entry names: its credentials, and settings its vendor names; no key is asked
-   unless a tool is added. The retention confirmation is asked where the vendor keeps files; "every file" is offered
+   words. Adding a tool asks only what its entry names: its credentials, and each field of its config list by its
+   label, sent under its name (T37, N777; a required one before anything is sent, and no field the list does not name);
+   no key is asked unless a tool is added. The retention confirmation is asked where the vendor keeps files; "every file" is offered
    only for a tool on the organization's own servers (file-safety's own rule, injected). The handling shown is the one
    confirmed (its handling_digest); the credentials go once, in the body, and are never shown again; then the test,
    whose outcome is said. Every refusal is stated in file-safety's words and the step goes on. */
@@ -182881,6 +183023,9 @@ function handlingHtml(h){
     + row("How long it keeps results", h.result_retention ?? "not stated")
     + row("Whether it shares them", SHARING[h.sample_sharing] || String(h.sample_sharing ?? "not stated"));
 }
+/* file-safety R27 (N777): an entry's settings, each {name, label, required}; an entry that lists none asks none */
+const configOf = (t)=> Array.isArray(t && t.config) ? t.config.filter((f)=>f && typeof f.name === "string" && f.name)
+  .map((f)=>({ name: f.name, label: typeof f.label === "string" && f.label ? f.label : f.name, required: f.required === true })) : [];
 const toolName = (t)=> t ? [t.vendor, t.product].filter(Boolean).join(" ") || String(t.provider_id || "") : "";
 async function showSecurity(P){
   $(ID(P, "st-form")).hidden = true; STPICK[P] = null;
@@ -182897,9 +183042,8 @@ async function showSecurity(P){
       '<div class="card"><p style="margin:0 0 6px"><b>' + escH(toolName(t)) + '</b> <span class="dim">'
       + escH(listOf(t.kinds, KINDS)) + "</span></p>" + handlingHtml(t.handling)
       + (t.licence_note ? '<p class="small" style="margin:6px 0 0">' + escH(t.licence_note) + "</p>" : "")
-      + (t.template
-        ? '<p class="small" style="margin:6px 0 0">This is a template for a tool your organization runs and describes itself. This page cannot yet ask what it needs; it can be added later.</p>'
-        : '<div class="actions"><button class="st-pick" data-i="' + i + '">Add this tool</button></div>')
+      + (t.template ? '<p class="small" style="margin:6px 0 0">This is a template for a tool your organization runs and describes itself: adding it asks what the tool&#39;s maker states it runs and how it handles files.</p>' : "")
+      + '<div class="actions"><button class="st-pick" data-i="' + i + '">Add this tool</button></div>'
       + "</div>").join("") : '<p class="small">No tool is offered.</p>')
       + (not.length ? "<h3>Services not offered</h3>" + not.map((r)=>'<div class="kv"><span class="k">' + escH(r.provider_id)
         + '</span><span class="v">' + escH(r.words || r.reason || "") + "</span></div>").join("") : "");
@@ -182925,21 +183069,22 @@ async function showTools(P){
 function pickTool(P, i){
   const t = ST[P] && ST[P].offered[i];
   $(ID(P, "st-err")).textContent = ""; $(ID(P, "st-said")).textContent = "";
-  if (!t || t.template) return;
+  if (!t) return;
   STPICK[P] = i;
   const creds = Array.isArray(t.credentials) ? t.credentials : [];
+  const cfg = configOf(t);
   $(ID(P, "st-fields")).innerHTML = "<h3>Adding " + escH(toolName(t)) + "</h3>"
     + '<p class="small">By adding it you confirm the handling shown above.</p>'
     + (creds.length ? creds.map((n, k)=>'<label for="' + P + "-st-cred-" + k + '">' + escH(n) + "</label>"
       + '<input id="' + P + "-st-cred-" + k + '" type="password" autocomplete="off" spellcheck="false">').join("")
       + '<p class="hint">Sent once, in the request&#39;s body only. Held sealed and never shown again, not even here.</p>'
       : '<p class="small">It needs no credential.</p>')
-    + '<label for="' + P + '-st-cfg">Settings its vendor names (optional)</label>'
-    + '<textarea id="' + P + '-st-cfg" rows="2" spellcheck="false"></textarea>'
-    + '<p class="hint">One per line, as name = value: a region, an account or a tenant the vendor&#39;s own setup gives you.</p>';
+    + cfg.map((f, k)=>'<label for="' + P + "-st-cfg-" + k + '">' + escH(f.label) + "</label>"
+      + '<input id="' + P + "-st-cfg-" + k + '" spellcheck="false">'
+      + '<p class="hint">' + (f.required ? "Needed." : "Optional: leave it empty if it does not apply.") + "</p>").join("");
   /* each pick starts empty: nothing typed for another tool is carried over */
   creds.forEach((n, k)=>{ $("#" + P + "-st-cred-" + k).value = ""; });
-  $(ID(P, "st-cfg")).value = "";
+  cfg.forEach((f, k)=>{ $("#" + P + "-st-cfg-" + k).value = ""; });
   $(ID(P, "st-keep")).checked = false; $(ID(P, "st-every")).checked = false;
   $(ID(P, "st-keepbox")).hidden = !(t.handling && t.handling.sample_sharing === "vendor_internal_research");
   $(ID(P, "st-everybox")).hidden = !onOwnServers(t.handling && t.handling.recipient);
@@ -182950,19 +183095,21 @@ async function addTool(P){
   const e = $(ID(P, "st-err")); e.textContent = ""; $(ID(P, "st-said")).textContent = "";
   const t = ST[P] && STPICK[P] !== null ? ST[P].offered[STPICK[P]] : null;
   if (!t) return;
+  /* each field of the entry's config list, asked by its label, sent under its name: a required one empty sends nothing,
+     an optional one empty is left out, and no field the list does not name is sent */
+  const config = {};
+  const cfg = configOf(t);
+  for (const [k, f] of cfg.entries()) {
+    const v = String($("#" + P + "-st-cfg-" + k).value || "").trim();
+    if (v) config[f.name] = v;
+    else if (f.required) { e.textContent = "Fill in " + f.label + ": the tool needs it. Nothing was sent."; return; }
+  }
   const names = Array.isArray(t.credentials) ? t.credentials : [];
+  const missing = names.find((n, k)=>!String($("#" + P + "-st-cred-" + k).value || "").trim());
+  if (missing !== undefined) { e.textContent = "Fill in " + missing + ": the tool needs it. Nothing was sent."; return; }
   /* each credential read once and its field emptied at once */
   const credentials = {};
   names.forEach((n, k)=>{ const x = $("#" + P + "-st-cred-" + k); credentials[n] = String(x.value || "").trim(); x.value = ""; });
-  const missing = names.find((n)=>!credentials[n]);
-  if (missing) { e.textContent = "Fill in " + missing + ": the tool needs it. Nothing was sent."; return; }
-  const config = {};
-  for (const line of String($(ID(P, "st-cfg")).value || "").split(NL)) {
-    if (!line.trim()) continue;
-    const m = /^\\s*([A-Za-z_][A-Za-z0-9_]*)\\s*=\\s*(.*?)\\s*$/.exec(line);
-    if (!m) { e.textContent = "Write each setting as name = value, one per line. Nothing was sent."; return; }
-    config[m[1]] = m[2];
-  }
   const lim = String($(ID(P, "st-limit")).value || "").trim();
   const routine = onOwnServers(t.handling && t.handling.recipient) && $(ID(P, "st-every")).checked === true;
   const body = { providerId: t.provider_id, config, credentials, handlingDigest: t.handling_digest,
@@ -182994,12 +183141,11 @@ async function removeTool(P, toolId){
   } catch(err){ e.textContent = "That did not go through: " + err.message; }
 }
 
-function showSettings(P){ showHosting(P); showCourt(P); showPay(P); openKeepAway(); showSecurity(P); }
+function showSettings(P){ showHosting(P); showCourt(P); openKeepAway(); showGroupKey(P); showSecurity(P); }
 for (const P of ["cl", "mk"]) {
   $(ID(P, "ha-set")).addEventListener("click", ()=>hostingSet(P));
   $(ID(P, "cn-set")).addEventListener("click", ()=>courtSet(P));
-  $(ID(P, "gk-set")).addEventListener("click", ()=>paySet(P));
-  for (const v of PAY_CHOICES) $(ID(P, "gk-" + v)).addEventListener("change", ()=>payKeyBox(P));
+  $(ID(P, "gk-set")).addEventListener("click", ()=>groupKeySet(P));
   $(ID(P, "st-add")).addEventListener("click", ()=>addTool(P));
   $(ID(P, "st-cancel")).addEventListener("click", ()=>{ $(ID(P, "st-form")).hidden = true; STPICK[P] = null; $(ID(P, "st-fields")).innerHTML = ""; });
 }
@@ -209677,6 +209823,932 @@ function hostingControlBlock(cls3 = "notice", { guideHref = null } = {}) {
   return `<div class="${escBlock(cls3)}" id="hosting-control"><p><b>${escBlock(HOSTING_CONTROL.heading)}</b></p>` + HOSTING_CONTROL.sentences.map((s) => `<p>${escBlock(s)}</p>`).join("") + `<p style="margin:0">${guide}</p></div>`;
 }
 
+// src/setup-words.mjs
+var WORDS_COMMIT = "e08cd35ecb";
+var WORD_ROWS = Object.freeze([
+  ["weight.reversible.name", "Reversible", null, "Reversible: you can undo this.", true],
+  ["weight.reasoned.name", "Reasoned", null, "Reasoned: asks for your reason, which becomes part of the record.", true],
+  ["weight.terminal.name", "Terminal", null, "Terminal: ends or removes something; reopening it takes a reason.", true],
+  ["weight.signed.name", "Signed", null, "Signed: signed with your key, and stands under your name.", true],
+  ["weight.irreversible.name", "Irreversible", null, "Irreversible: can never be undone.", true],
+  ["weight.reversible.means", "Reversible: you can undo this.", null, null, true],
+  ["weight.reasoned.means", "Reasoned: asks for your reason, which becomes part of the record.", null, null, true],
+  ["weight.terminal.means", "Terminal: ends or removes something; reopening it takes a reason.", null, null, true],
+  ["weight.signed.means", "Signed: signed with your key, and stands under your name.", null, null, true],
+  ["weight.irreversible.means", "Irreversible: can never be undone.", null, null, true],
+  ["weight.dots.means", "The dots show how much the act weighs, from one to five.", null, null, true],
+  ["mark.scale.capture.name", "Capture", null, "how easily someone else could check that this copy is what its source published, unaltered", true],
+  ["mark.scale.capture.means", "how easily someone else could check that this copy is what its source published, unaltered", null, null, true],
+  ["mark.scale.connection.name", "Connection", null, "how easily someone else could check this link: that this payment, vote, office or person is the one meant", true],
+  ["mark.scale.connection.means", "how easily someone else could check this link: that this payment, vote, office or person is the one meant", null, null, true],
+  ["mark.scale.testimony.name", "Testimony", null, "how easily someone else could check what a witness says", true],
+  ["mark.scale.testimony.means", "how easily someone else could check what a witness says", null, null, true],
+  ["mark.scale.subject.name", "Subject match", null, "how easily someone else could check that this record is about this person or thing", true],
+  ["mark.scale.subject.means", "how easily someone else could check that this record is about this person or thing", null, null, true],
+  ["mark.grade.reading", "A is easiest to check; D rests on a person's word. A grade never says whether something is true.", null, null, true],
+  ["mark.gap.undetermined.name", "Undetermined", null, "Undetermined: the record can't determine this from what your group holds, and the reason is always given. An answer, not an error.", true],
+  ["mark.gap.undetermined.means", "Undetermined: the record can't determine this from what your group holds, and the reason is always given. An answer, not an error.", null, null, true],
+  ["mark.gap.withheld.name", "Withheld", null, "Withheld: something is here that you can't see, kept back by its source or by who may see it. That it exists is shown, never hidden.", true],
+  ["mark.gap.withheld.means", "Withheld: something is here that you can't see, kept back by its source or by who may see it. That it exists is shown, never hidden.", null, null, true],
+  ["mark.gap.unrated.name", "Unrated", null, "Unrated: not graded yet.", true],
+  ["mark.gap.unrated.means", "Unrated: not graded yet.", null, null, true],
+  ["mark.gap.nobody.name", "Nobody looked", null, "Nobody looked: no one has searched for this yet. Not the same as \u201Clooked for, not found\u201D.", true],
+  ["mark.gap.nobody.means", "Nobody looked: no one has searched for this yet. Not the same as \u201Clooked for, not found\u201D.", null, null, true],
+  ["mark.gap.refused.name", "Refused", null, "Refused: Civicsmith won't do this. The reason says why, and what you can do instead.", true],
+  ["mark.gap.refused.means", "Refused: Civicsmith won't do this. The reason says why, and what you can do instead.", null, null, true],
+  ["mark.origin.machine.name", "Machine work", null, "Machine work: made by the assistant or an automatic check, never by a member. It counts only once a member accepts it.", true],
+  ["mark.origin.machine.means", "Machine work: made by the assistant or an automatic check, never by a member. It counts only once a member accepts it.", null, null, true],
+  ["mark.origin.elsewhere.name", "Another group's", null, "Another group's: from another group's published case, recreated here. It counts only once your group accepts it.", true],
+  ["mark.origin.elsewhere.means", "Another group's: from another group's published case, recreated here. It counts only once your group accepts it.", null, null, true],
+  ["mark.origin.unevaluated.name", "Not yet evaluated", null, "Not yet evaluated: no one in your group has judged this yet.", true],
+  ["mark.origin.unevaluated.means", "Not yet evaluated: no one in your group has judged this yet.", null, null, true],
+  ["mark.origin.accepted.name", "Accepted by our group", null, "Accepted by our group: a member accepted it, with a reason you can open.", true],
+  ["mark.origin.accepted.means", "Accepted by our group: a member accepted it, with a reason you can open.", null, null, true],
+  ["mark.origin.flagged.name", "Flagged", null, "Flagged: someone marked this for a second look.", true],
+  ["mark.origin.flagged.means", "Flagged: someone marked this for a second look.", null, null, true],
+  ["mark.origin.search.name", "Found by search", null, "Found by search: Civicsmith matched these words in what your group holds. Nothing is recorded: a member records it, from its passage, with the usual act.", true],
+  ["mark.origin.search.means", "Found by search: Civicsmith matched these words in what your group holds. Nothing is recorded: a member records it, from its passage, with the usual act.", null, null, true],
+  ["mark.kind.todo.name", "To do", null, "To do: something only you can move forward.", true],
+  ["mark.kind.todo.means", "To do: something only you can move forward.", null, null, true],
+  ["mark.kind.noticed.name", "Noticed", null, "Noticed: something changed that you may want to know. Nothing is required of you.", true],
+  ["mark.kind.noticed.means", "Noticed: something changed that you may want to know. Nothing is required of you.", null, null, true],
+  ["mark.kind.status.name", "Status", null, "Status: where something you follow stands.", true],
+  ["mark.kind.status.means", "Status: where something you follow stands.", null, null, true],
+  ["mark.path.working.means", "Working: not public; seen by your group's members.", null, null, true],
+  ["mark.path.shared-for-review.means", "Shared for review: named outsiders can read this draft until the owner stops sharing it.", null, null, true],
+  ["mark.path.published.means", "Published: signed and public. It can be corrected by a new edition, never removed.", null, null, true],
+  ["mark.strength.means", "An answer is only as strong as the weakest thing it depends on: its weakest document copy and its least certain link, side by side, never merged.", null, null, true],
+  ["mark.due.means", "A due date, counted on your group's local day. Open it to see the law or commitment it comes from and how the days were counted.", null, null, true],
+  ["mark.hint.means", "Hint \xB7 machine work: something the machine marked worth a look, with how it was found and out of how many. A lead, never a finding.", null, null, true],
+  ["mark.hunch.means", "Hunch: a member's suspicion, labelled as one. Never evidence, and it never moves a finding.", null, null, true],
+  ["mark.outward.means", "Outward: this leaves your group's Civicsmith. Someone outside will see it.", null, null, true],
+  ["mark.band.means", "Where you are: this band says who can see what you are working on.", null, null, true],
+  ["mark.tag.protected.means", "Protected word: it protects members, so a change to it needs a second check before it shows.", null, null, true],
+  ["mark.tag.local-name.means", "Local name: the official name stays as it is, with an explanation in the member's language beside it.", null, null, true],
+  ["mark.hint.label", "Hint \xB7 machine work", null, "Hint \xB7 machine work: something the machine marked worth a look, with how it was found and out of how many. A lead, never a finding.", true],
+  ["mark.kind.todo.label", "To do", null, "To do: something only you can move forward.", true],
+  ["mark.kind.noticed.label", "Noticed", null, "Noticed: something changed that you may want to know. Nothing is required of you.", true],
+  ["mark.kind.status.label", "Status", null, "Status: where something you follow stands.", true],
+  ["mark.path.working.name", "Working", null, "Working: not public; seen by your group's members.", true],
+  ["mark.path.shared-for-review.name", "Shared for review", null, "Shared for review: named outsiders can read this draft until the owner stops sharing it.", true],
+  ["mark.path.published.name", "Published", null, "Published: signed and public. It can be corrected by a new edition, never removed.", true],
+  ["state.empty", "Nothing here", null, null, false],
+  ["state.loading", "Still loading", null, null, false],
+  ["state.failed", "Could not read this, because {reason}", "the reason always follows", null, false],
+  ["state.undetermined", "Undetermined, because {reason}", "the reason always follows", null, true],
+  ["draft.machine.label", "Draft by the assistant, at your request \xB7 edit it until it is yours", null, null, false],
+  ["draft.template.label", "Draft from your group's template \xB7 edit it until it is yours", null, null, false],
+  ["draft.wizard.label", "Draft from the wizard \xB7 edit it until it is yours", null, null, false],
+  ["draft.writing-help.act", "Help me write this", null, null, false],
+  ["rail.home.name", "Home", null, null, false],
+  ["rail.home.holds", "Home: what your group is working on and what is waiting on you.", null, null, false],
+  ["rail.queue.name", "Queue", null, null, false],
+  ["rail.queue.holds", "Queue: everything waiting on you, in one list.", null, null, false],
+  ["rail.find.name", "Find", null, null, false],
+  ["rail.find.holds", "Find: search what your group holds, or look outside for something new.", null, null, false],
+  ["rail.add.name", "Add", null, null, false],
+  ["rail.add.holds", "Add: capture a document, a file, or what you saw yourself.", null, null, false],
+  ["rail.projects.name", "Projects", null, null, false],
+  ["rail.projects.holds", "Projects: your group's investigations, their questions, plans and cases.", null, null, false],
+  ["rail.people.name", "People", null, null, false],
+  ["rail.people.holds", "People: the people and organisations the record follows. Your own group's members are under Settings.", null, null, false],
+  ["rail.settings.name", "Settings", null, null, false],
+  ["rail.settings.holds", "Settings: your account, your group's members, the assistant, translations and wizards.", null, null, false],
+  ["tab.more.name", "More", null, null, false],
+  ["tab.more.holds", "projects, people and settings.", null, null, false],
+  ["level.prompt.name", "Explain promptly", null, null, false],
+  ["level.pause.name", "On a longer pause", null, null, false],
+  ["guide.stopping", "Stopping is fine: nothing is lost, and nobody is told.", null, null, false],
+  ["guide.showwhere", "Show me where", null, null, false],
+  ["guide.sidetrip", "Side trip: {wizard}. When it finishes or you stop it, you come back to this step.", "the wizard's name in place of {wizard}", null, false],
+  ["guide.draft", "This step places a labelled draft in the field. It becomes yours only when you keep or edit it.", null, null, false],
+  ["guide.press", "Press here when you're ready", null, null, false],
+  ["guide.step", "step {i} of {n}", null, null, false],
+  ["screen.install.name", "Install Civicsmith", null, null, false],
+  ["screen.install.purpose", "Installs Civicsmith in a Cloudflare account your group controls. Here you choose the group's permanent short name and let the installation test itself.", null, null, false],
+  ["screen.setup.name", "Become your group's first administrator", null, null, false],
+  ["screen.setup.purpose", "The first administrator's setup: claim the installation, then name the group, choose its places and languages, and decide how members reach the assistant.", null, null, false],
+  ["screen.group-identity.name", "Who your group is", null, null, false],
+  ["screen.group-identity.purpose", "What kind of group yours is, what it focuses on and why it exists. It shapes how members are welcomed and locks nothing.", null, null, false],
+  ["screen.join.name", "Your invitation", null, null, false],
+  ["screen.join.purpose", "Your invitation to join a group. Choose your language, the name the group will know you by, and a password.", null, null, false],
+  ["screen.home.name", "Your group's home", null, null, false],
+  ["screen.home.purpose", "Your group's home: what it is working on and what is waiting on you. Start here each day.", null, null, false],
+  ["screen.members.name", "Members", null, null, false],
+  ["screen.members.purpose", "Everyone in your group and what each may do. Administrators invite members, set what they may do, and see who holds the hosting account.", null, null, false],
+  ["screen.security.name", "Security", null, null, false],
+  ["screen.security.purpose", "Administrators only: how hard your group's Civicsmith is being tried, by kind and by hour, against its own usual. Counts only; nothing names who tried.", null, null, false],
+  ["screen.account.name", "Your account", null, null, false],
+  ["screen.account.purpose", "Your own settings: your handle, password, signing key, language and expertise.", null, null, false],
+  ["screen.connect.name", "The assistant", null, null, false],
+  ["screen.connect.purpose", "Whether and how the assistant serves you: on your group's key, your own Claude account, or not at all. Set your limit and suggestions here.", null, null, false],
+  ["screen.ties.name", "Your ties", null, null, false],
+  ["screen.ties.purpose", "Your own ties to people or organisations the group may look into. Only you and the administrators see this list.", null, null, false],
+  ["screen.notes.name", "Your notes", null, null, false],
+  ["screen.notes.purpose", "Your private notes. Only you can see them in your group; turn one into an observation, a hunch or a question when you choose.", null, null, false],
+  ["screen.translations.name", "Translations", null, null, false],
+  ["screen.translations.purpose", "The words members see, in your group's languages. Members given the grant translate them, the assistant drafts where it can, and protected words are checked twice.", null, null, false],
+  ["screen.wizards.name", "Wizards", null, null, false],
+  ["screen.wizards.purpose", "Step-by-step walk-throughs of the real screens. Civicsmith's own come with each release; your group can write its own or copy one and change the copy.", null, null, false],
+  ["screen.queue.name", "Your queue", null, null, false],
+  ["screen.queue.purpose", "Your queue: everything waiting on you, in one list. To do needs your act, Noticed is something new nobody has judged, and Status tells you where something stands.", null, null, false],
+  ["screen.finder.name", "Find", null, null, false],
+  ["screen.finder.purpose", "Find what your group holds, or look outside for something it doesn't yet. Capture what you find into the record.", null, null, false],
+  ["screen.capture.name", "Add", null, null, false],
+  ["screen.capture.purpose", "Add something to the record: a document from its address, a file, or what you saw yourself, in your own words.", null, null, false],
+  ["screen.held.name", "Held captures", null, null, false],
+  ["screen.held.purpose", "Captures waiting for a member to vouch for them before they enter the record. Release them, or set them aside with a reason.", null, null, false],
+  ["screen.archive.name", "Archive", null, null, false],
+  ["screen.archive.purpose", "One captured archive and every file in it: which are filed and held for review beside it, which were already held, and which were not filed and why.", null, null, false],
+  ["screen.open-file.name", "Opening a file", null, null, false],
+  ["screen.open-file.purpose", "Before a file opens: whether it is low or high risk and why, its safe view, the checks it has had, and how a held file is released.", null, null, false],
+  ["screen.document.name", "Document", null, null, false],
+  ["screen.document.purpose", "One document as captured: its grade, its passages, its versions and what cites it. Cite a passage from here.", null, null, false],
+  ["screen.find-in.name", "Find in this", null, null, false],
+  ["screen.find-in.purpose", "Look through a document, the documents you are holding together, or a project for people, money, dates, requirements or a word. Each result shows its passage; you record what matters with the usual act.", null, null, false],
+  ["screen.project.name", "Project", null, null, false],
+  ["screen.project.purpose", "A project: its questions, their strength against the project's bar, its members and its stage. Open a question or a plan from here.", null, null, false],
+  ["screen.question.name", "Question", null, null, false],
+  ["screen.question.purpose", "One question: what supports it and what cuts against it, its strength against the bar, and what would change the answer.", null, null, false],
+  ["screen.answers.name", "Ask", null, null, false],
+  ["screen.answers.purpose", "Ask in plain words, with the assistant, or find and count without it. Answers come only from what your group holds, and show where they looked.", null, null, false],
+  ["screen.assistant.name", "The assistant panel", null, null, false],
+  ["screen.assistant.purpose", "A question with the assistant beside it. It answers only from what your group holds and never concludes, signs or sends.", null, null, false],
+  ["screen.person.name", "Person", null, null, false],
+  ["screen.person.purpose", "A person the record follows: positions over time, what they decided and signed, each fact dated and cited.", null, null, false],
+  ["screen.timeline.name", "Timeline", null, null, false],
+  ["screen.timeline.purpose", "What happened, in order: the city's acts and your group's acts in two lanes, never mixed. Undated items are listed apart.", null, null, false],
+  ["screen.money.name", "Money trail", null, null, false],
+  ["screen.money.purpose", "A money trail: figures from budgets and reports, each with its stage and period, included or left out with a reason.", null, null, false],
+  ["screen.calculation.name", "Calculation", null, null, false],
+  ["screen.calculation.purpose", "A calculation shown with its method and inputs, each tied to the record and recomputed when an input changes.", null, null, false],
+  ["screen.help.name", "Help: How spot-checks work", null, null, false],
+  ["screen.help.purpose", "A help page: one of Civicsmith's methods explained in plain words, opened from the screens where it is used.", null, null, false],
+  ["screen.explore.name", "Explore connections", null, null, false],
+  ["screen.explore.purpose", "Chains of connections between people, votes, contracts and payments, each step cited and graded. A chain is a lead until a member cites its documents.", null, null, false],
+  ["screen.proceeding.name", "Proceeding", null, null, false],
+  ["screen.proceeding.purpose", "A court case or legal proceeding: its parties, its register of filings, and orders with their reply dates.", null, null, false],
+  ["screen.due-date.name", "How this date was worked out", null, null, false],
+  ["screen.due-date.purpose", "One due date and how it was worked out: the law or commitment it comes from and how the days were counted.", null, null, false],
+  ["screen.standard.name", "Standard", null, null, false],
+  ["screen.standard.purpose", "A standard the city set itself, held from its document, that questions can test the city against.", null, null, false],
+  ["screen.plan.name", "Action plan", null, null, false],
+  ["screen.plan.purpose", "An action plan: the options for what to do about a problem, the order to try them, and what each waits on.", null, null, false],
+  ["screen.start-send.name", "Start and send", null, null, false],
+  ["screen.start-send.purpose", "Start an option from a plan: prepare what is sent, check who it goes to today, and send it after the warning.", null, null, false],
+  ["screen.request.name", "Request records", null, null, false],
+  ["screen.request.purpose", "Ask an office for records under the law that requires it to answer. The due date is worked out for you.", null, null, false],
+  ["screen.action.name", "Action", null, null, false],
+  ["screen.action.purpose", "One action your group took: what was sent, to whom, when a reply is due, and what came back.", null, null, false],
+  ["screen.matter.name", "Matter", null, null, false],
+  ["screen.matter.purpose", "A matter: what the group is pursuing about one problem, from the first letter to the outcome.", null, null, false],
+  ["screen.case-editor.name", "Case", null, null, false],
+  ["screen.case-editor.purpose", "Prepare a case for publishing: its scope, statement, findings, the people it names and why, its timeline and what it leaves out.", null, null, false],
+  ["screen.review-copy.name", "Review copy", null, null, false],
+  ["screen.review-copy.purpose", "A draft case shared with named outside readers before publishing. Their comments come back here.", null, null, false],
+  ["screen.ceremony.name", "Publication ceremony", null, null, false],
+  ["screen.ceremony.purpose", "The publication ceremony: the last checks, then signing. Publishing is permanent; corrections come as a new edition.", null, null, false],
+  ["screen.published.name", "Published case", null, null, false],
+  ["screen.published.purpose", "A case your group published, as anyone reads it: findings, their strength, the evidence, and how to check it without the group.", null, null, false],
+  ["screen.imported.name", "Another group's case", null, null, false],
+  ["screen.imported.purpose", "Another group's published case, recreated here. Nothing in it counts for your group until a member accepts it with a reason.", null, null, false],
+  ["screen.docket.name", "Docket", null, null, false],
+  ["screen.docket.purpose", "The public record of every edition, correction and withdrawal of your group's cases.", null, null, false],
+  ["screen.inbox.name", "Inbox", null, null, false],
+  ["screen.inbox.purpose", "Material handed to your group through its doorbell. Move it into the record, or discard it with a reason.", null, null, false],
+  ["screen.doorbell.name", "Hand material to the group", null, null, false],
+  ["screen.doorbell.purpose", "Hand material to the group. You need no account; the page says what will happen to what you send.", null, null, false],
+  ["act.bootstrap.label.install", "Install with this short name", null, "Installs Civicsmith in your group's own Cloudflare account under this short name. The short name is permanent: it appears in every address and beside every signature.", true],
+  ["act.selftest.label.install", "Let it test itself", null, "Runs Civicsmith's own checks on what was just installed, so you know it works before anyone joins.", true],
+  ["act.claim.label.setup", "Claim with the one-time password", null, "Makes you the group's first administrator, using the one-time password from installing. Until it is claimed, nobody can use the group's Civicsmith.", true],
+  ["act.groupnameset.label.setup", "Name the group", null, "Sets the name members and readers see. It can be changed later; the short name cannot.", true],
+  ["act.groupdomainset.label.setup", "Verify the web address", null, "Proves your group controls this web address, so published cases can show it as yours.", true],
+  ["act.profilesset.label.setup", "Choose places and languages", null, "Chooses the places whose rules apply (deadlines, records laws, holidays) and the group's languages. Deadlines and wizards draw on these.", true],
+  ["act.officesseed.label.setup", "Review offices and seats", null, "Lists the public offices and seats for your places, so requests and people can be addressed by role.", true],
+  ["act.entitycreate.label.setup", "Add an office yourself", null, "Adds something the record does not hold yet, such as an office, an organisation or a court case, with a note on where it comes from.", true],
+  ["act.placewanted.label.setup", "Name a place not yet listed", null, "Names a place Civicsmith does not yet hold rules for. Administrators are told when an update brings it.", true],
+  ["act.owed_aikeepaway.label.setup", "Keep the group's material away from AI, with a reason", null, "Stops every assistant in the group, the group's and members' own. Members see your reason on Settings \u203A The assistant.", true],
+  ["act.groupkeyset.label.setup", "Hold the group's API key", null, "Holds one Anthropic API key for the group, sealed and never shown again. It serves members with no account of their own, at the group's cost.", true],
+  ["act.groupkeyswitch.label.setup", "Switch the group's key on or off", null, "Turns the group's key on or off without removing it. Members who rely on it are told what changed.", true],
+  ["act.aicopyceilingset.label.setup", "Set the group's daily limit", null, "Sets the most each member may spend on the group's key in a day. At the limit the assistant pauses for them until the next day.", true],
+  ["act.courtnoticeset.label.setup", "Choose whether members are told what a court can reach", null, "Chooses whether members are told, when they join and the first time they record something not public, what a court order could reach.", true],
+  ["act.hostingaccess.label.setup", "Record who holds the hosting account", null, "Records who holds the Cloudflare account. Whoever holds it can reach everything, so the group should know who that is.", true],
+  ["act.owed_securitytooladd.label.setup", "Add a security tool (optional)", null, "Adds a security tool your organisation uses. Before it is turned on you see what it is sent, who receives it and how long it keeps files.", true],
+  ["act.memberadd.label.setup", "Invite a member or a second administrator", null, "Creates an invitation for one person, under the cover the group knows them by. Nothing about them is public.", true],
+  ["act.groupdescriptionset.label.group-identity", "Save who your group is, and who sees it", null, "Saves what your group is, what it focuses on and why, and who may see each part: members only, or also the public.", true],
+  ["act.owed_groupdescriptiondraft.label.group-identity", "Ask the assistant to help write it", null, "Asks the assistant for a draft of your group's description, labelled as its draft. Nothing is saved until you keep it.", true],
+  ["act.invitelook.label.join", "Read the invitation", null, "Shows who invited you, to which group, and what joining means, before you decide.", true],
+  ["act.owed_memberlanguageset.label.join", "Choose your language", null, "Sets the language Civicsmith speaks to you. Documents stay in their own language.", true],
+  ["act.enroll.label.join", "Join with a handle and password", null, "Joins the group with a handle and password. Your handle is how members see you; it need not be your name.", true],
+  ["act.promote.label.home", "Start a project", null, "Opens a question the group will answer with the record, from this hint, chain or suggestion. The source is kept with it.", true],
+  ["act.owed_startfrom.label.home", "Start from\u2026", null, "Starts from where you are: a problem you live with, a document, a deadline, a claim to check or a person. Each opens the right first step.", true],
+  ["act.memberadd.label.members", "Invite a member", null, "Creates an invitation for one person, under the cover the group knows them by. Nothing about them is public.", true],
+  ["act.membercaps.label.members", "Change what a member may do", null, "Changes what a member may do: contribute, administer. The change is recorded with who made it.", true],
+  ["act.memberset.label.members", "Change a member's status", null, "Changes a member's status, for example to inactive. Their past work stays in the record under their handle.", true],
+  ["act.adminendorse.label.members", "Endorse an administrator", null, "Adds your endorsement to make a member an administrator. With one administrator the group depends on one person.", true],
+  ["act.adminremove.label.members", "Remove an administrator", null, "Removes an administrator's powers, with a reason. It cannot leave the group with none.", true],
+  ["act.expertiseconfirm.label.members", "Confirm declared expertise", null, "Confirms a member's declared expertise, so it can be asked for when a check needs it.", true],
+  ["act.invitewithdraw.label.members", "Withdraw an unused invitation", null, "Cancels an invitation nobody has used yet. The link stops working at once.", true],
+  ["act.websitekeycreate.label.members", "Create a website key", null, "Creates a key that lets your group's website invite people, through an open form or an application someone approves.", true],
+  ["act.joinlinkenable.label.members", "Turn on the reusable join link", null, "Turns on one reusable link anyone with it can use to ask to join. You can turn it off at any time.", true],
+  ["act.groupkeyset.label.members", "Hold the group's API key", null, "Holds one Anthropic API key for the group, sealed and never shown again. It serves members with no account of their own, at the group's cost.", true],
+  ["act.groupkeyswitch.label.members", "Switch the group's key on or off", null, "Turns the group's key on or off without removing it. Members who rely on it are told what changed.", true],
+  ["act.groupswitchset.label.members", "Set the group key's suggestions and standing questions", null, "Sets whether, on the group's key, the assistant may suggest things unprompted and keep asking standing questions.", true],
+  ["act.groupkeyremove.label.members", "Remove the group's key", null, "Removes the group's key for good. Members without their own account use Civicsmith without the assistant.", true],
+  ["act.owed_aikeepaway.label.members", "Keep the group's material away from AI, with a reason", null, "Stops every assistant in the group, the group's and members' own. Members see your reason on Settings \u203A The assistant.", true],
+  ["act.owed_securitymap.label.security", "Show the level for a period", null, "Shows how hard your group's Civicsmith was tried over the period you choose, against its usual. Counts only.", true],
+  ["act.owed_securitytooladd.label.security", "Add a security tool", null, "Adds a security tool your organisation uses. Before it is turned on you see what it is sent, who receives it and how long it keeps files.", true],
+  ["act.owed_securitytooltest.label.security", "Test a security tool", null, "Sends a harmless test file or address to the tool and shows its answer, so you know it works before relying on it.", true],
+  ["act.owed_securitytoolremove.label.security", "Remove a security tool", null, "Stops using this tool. Notes it already wrote stay on the files they concern.", true],
+  ["act.expertisedeclare.label.account", "Declare your expertise", null, "Says what you know professionally, such as accounting or law. An administrator confirms it; members can then ask you for checks.", true],
+  ["act.owed_setpassword.label.account", "Change your password", null, "Changes your password. Other sessions you have open stay signed in until they end.", true],
+  ["act.signerregisterown.label.account", "Register your signing key", null, "Registers the key you sign published cases with. Readers check a signature against it.", true],
+  ["act.signerrevokeown.label.account", "Revoke your signing key", null, "Withdraws your signing key, for example if it was lost. Cases already signed keep a record that it was withdrawn.", true],
+  ["act.owed_memberlanguageset.label.account", "Choose your language", null, "Sets the language Civicsmith speaks to you. Documents stay in their own language.", true],
+  ["act.owed_infolevelset.label.account", "Choose how much is explained", null, "Chooses how quickly explanations open: promptly, or guidance on a longer pause so less opens while you move. Nothing is ever hidden.", true],
+  ["act.groupkeynoticeseen.label.connect", "Read what the group's key means", null, "Confirms you have read that your questions go to Anthropic under the group's account. Asked once, before your first question.", true],
+  ["act.disclosureshown.label.connect", "Read what connecting means", null, "Confirms you have read what connecting your own account means: your questions go to Anthropic under your own account and terms.", true],
+  ["act.owed_subscriptionsignin.label.connect", "Open Anthropic's sign-in page", null, "Opens Anthropic's own sign-in page in a new tab. It gives you a code to paste here; Civicsmith never sees your password.", true],
+  ["act.accountreferenceset.label.connect", "Connect with your own subscription or key", null, "Connects your own Claude subscription or API key. It serves only you, before the group's key.", true],
+  ["act.aiceilingset.label.connect", "Set your daily limit", null, "Sets the most your own account may spend in a day here, up to the limit the group set.", true],
+  ["act.accountswitchset.label.connect", "Let the assistant suggest unprompted", null, "Lets the assistant suggest things without being asked. Off unless you turn it on; each suggestion is yours to adopt or ignore.", true],
+  ["act.accountreferenceremove.label.connect", "Disconnect", null, "Disconnects your own account. The group's key serves you instead, if the group has one.", true],
+  ["act.declaretie.label.ties", "Add a tie", null, "Lists a tie that could matter to a case: an employer, a relative in a public body, a business interest. A case that concerns it says so.", true],
+  ["act.withdrawtie.label.ties", "Remove a tie", null, "Removes a tie from your list. A case already published keeps what it said.", true],
+  ["act.notewrite.label.notes", "Write a note", null, "Writes a note only you can see. Use it for thoughts not ready for the group.", true],
+  ["act.noteturn.label.notes", "Turn a note into an observation, hunch or question", null, "Turns your note into something the group shares: an observation, a hunch or a question. The note itself stays private.", true],
+  ["act.owed_noterevise.label.notes", "Revise your note", null, "Changes your note. Notes are yours alone, so nothing else changes.", true],
+  ["act.owed_notedelete.label.notes", "Delete your note", null, "Deletes your note. If you turned it into something shared, that stays.", true],
+  ["act.owed_writinghelp.label.notes", "Help me write this", null, "Asks the assistant to help word what you are writing, from what you typed. Its words arrive labelled as its draft; nothing is saved until you keep them.", true],
+  ["act.owed_translationdraft.label.translations", "Ask the assistant to draft", null, "Asks the assistant to draft translations of Civicsmith's words, labelled as drafts for a speaker to check.", true],
+  ["act.owed_translationadopt.label.translations", "Adopt a translation", null, "Keeps a translation so members reading that language see it. Protected words need a second speaker's check first.", true],
+  ["act.owed_translationgrant.label.translations", "Give a member the grant for a language", null, "Lets a named member translate Civicsmith's words into one language.", true],
+  ["act.owed_translationconfirm.label.translations", "Confirm a protected word", null, "Confirms a protected word as a second speaker, so members see it instead of the English.", true],
+  ["act.owed_translationrevert.label.translations", "Undo a change", null, "Undoes a translation change in one step, back to what it replaced.", true],
+  ["act.wizards.label.wizards", "See the library", null, "Shows the wizards your group can use: Civicsmith's, and those your group wrote.", true],
+  ["act.wizarddraft.label.wizards", "Record a new wizard", null, "Records a new wizard by walking through the steps yourself. It stays a draft until approved.", true],
+  ["act.wizardrevise.label.wizards", "Revise a draft", null, "Changes a draft wizard's steps or words before it is submitted.", true],
+  ["act.wizardsubmit.label.wizards", "Submit for approval", null, "Submits a draft wizard for an administrator to approve before members are offered it.", true],
+  ["act.wizardapprove.label.wizards", "Approve", null, "Approves a wizard so members are offered it where its steps start.", true],
+  ["act.wizardretire.label.wizards", "Retire", null, "Stops offering a wizard. Anyone part-way through can finish.", true],
+  ["act.taskresolve.label.queue", "Act on an item", null, "Does what this item asks, on the screen it concerns. It leaves your queue when done.", true],
+  ["act.taskforward.label.queue", "Forward to a member", null, "Passes this item to another member better placed to act, with a note.", true],
+  ["act.proposedispose.label.queue", "Dismiss with a reason", null, "Dismisses a suggestion or hint with a reason, kept on the record so the same thing is not raised again without cause.", true],
+  ["act.queuesnooze.label.queue", "Snooze to a date", null, "Hides the item until the date you choose, when it comes back.", true],
+  ["act.queuemute.label.queue", "Mute a kind", null, "Stops this kind of item reaching you. You can turn it back on in your settings.", true],
+  ["act.adoptversion.label.queue", "Adopt the newer version", null, "Moves your citations to the newer version of this document. You see what changed first.", true],
+  ["act.keepversion.label.queue", "Keep the version you cited", null, "Keeps citing the version you cited. The newer one stays in the record beside it.", true],
+  ["act.reminderanswer.label.queue", "Answer a reminder", null, "Answers a reminder you set, for example that a reply came or a deadline passed.", true],
+  ["act.promote.label.queue", "Open a question from a hint", null, "Opens a question the group will answer with the record, from this hint, chain or suggestion. The source is kept with it.", true],
+  ["act.search.label.finder", "Search", null, "Searches everything your group holds that you may see: documents, passages, questions, people.", true],
+  ["act.select.label.finder", "Hold these together", null, "Holds the items you picked together so one act can apply to them all. The set is held until the time shown.", true],
+  ["act.owed_findin.label.finder", "Find in these", null, "Looks inside these documents for people, money figures, dates, requirements or a word. Each result shows its passage; nothing is recorded until you record it.", true],
+  ["act.selectionrelease.label.finder", "Let the set go", null, "Lets the held set go. Nothing in it changes.", true],
+  ["act.frontier.label.finder", "See where nobody looked", null, "Shows where nobody has looked yet for this, so the group knows what an answer does not cover.", true],
+  ["act.calculationcreate.label.finder", "Count", null, "Works out a figure from the record, with its method shown so anyone can repeat it.", true],
+  ["act.acquire.label.capture", "Capture from an address", null, "Has your group's Civicsmith fetch this address itself and keep exactly what the site sent, with when and from where.", true],
+  ["act.capture.label.capture", "Capture a file or photo", null, "Adds this file or photo to the record, with who made or obtained it and how. It waits in Held captures until vouched for.", true],
+  ["act.testify.label.capture", "Record what you saw or heard", null, "Records what you saw or heard yourself as testimony: grade D, labelled as yours, never changed afterwards.", true],
+  ["act.capturerequest.label.capture", "Ask for a capture later", null, "Asks for this to be captured later, for example when a site is down. The request waits until it can be fetched.", true],
+  ["act.monitor.label.capture", "Watch this address", null, "Watches this address and tells you when what it publishes changes. Each new version is kept beside the old.", true],
+  ["act.owed_writinghelp.label.capture", "Help me write this", null, "Asks the assistant to help word what you are writing, from what you typed. Its words arrive labelled as its draft; nothing is saved until you keep them.", true],
+  ["act.heldcaptures.label.held", "See held captures", null, "Shows captures waiting for a member to vouch for them before they count.", true],
+  ["act.release.label.held", "Vouch for them", null, "Vouches that each copy is what its source gave, unaltered. It is signed with your name; it can be corrected later, never silently undone.", true],
+  ["act.heldsetaside.label.held", "Set aside with a reason", null, "Sets the picked captures aside with one reason, shown to anyone waiting on them. They can be restored.", true],
+  ["act.heldrestore.label.held", "Restore", null, "Brings a set-aside capture back, with a reason, so it can be vouched for.", true],
+  ["act.gradenote.label.archive", "Read the grade note", null, "Explains this copy's grade: how it was obtained and what would raise it.", true],
+  ["act.owed_archivelist.label.archive", "List the archive's files by state", null, "Lists the archive's files by state: filed, already held, or not filed and why.", true],
+  ["act.heldsetaside.label.archive", "Set aside with a reason", null, "Sets the picked captures aside with one reason, shown to anyone waiting on them. They can be restored.", true],
+  ["act.release.label.archive", "Vouch for them", null, "Vouches that each copy is what its source gave, unaltered. It is signed with your name; it can be corrected later, never silently undone.", true],
+  ["act.owed_openoriginal.label.open-file", "Open the original", null, "Opens the original file on your device. A low-risk file is checked first if its last check is over a week old.", true],
+  ["act.owed_openwithwarning.label.open-file", "Open the original after the warning, without a deeper check", null, "Opens a high-risk original on your own device without a deeper check, after you confirm you will not enable macros or editing.", true],
+  ["act.owed_safeview.label.open-file", "Read the safe view", null, "Shows a safe copy: each page as a picture, or a spreadsheet's figures as data. Nothing in it can run. Cite the original, not this.", true],
+  ["act.owed_deepercheck.label.open-file", "Ask for a deeper check", null, "Runs every check on this file: read whole, the built-in scanner again, and your group's outside tools. A clean result opens the original to everyone for 24 hours.", true],
+  ["act.owed_releasescanhold.label.open-file", "Release, with a reason", null, "Gives your reason to release a file a scanner flagged. A second member's reason releases it; the machine never can.", true],
+  ["act.gradenote.label.document", "Read the grade note", null, "Explains this copy's grade: how it was obtained and what would raise it.", true],
+  ["act.release.label.document", "Vouch for this copy", null, "Vouches that each copy is what its source gave, unaltered. It is signed with your name; it can be corrected later, never silently undone.", true],
+  ["act.cite.label.document", "Cite a passage", null, "Cites this passage in a question, as support or as cutting against it. A citation always points at the original document.", true],
+  ["act.retire.label.document", "Retire", null, "Stops using this copy in new work, with a reason. Questions that cite it are told.", true],
+  ["act.attest.label.document", "Attest", null, "Signs that this copy matches its source, adding your word to the capture. Signed with your key.", true],
+  ["act.identityclaim.label.document", "Say this is a person we follow", null, 'Says this name refers to a person the record already follows, with how sure you are (a grade) and why. It is shown as a claim, "claimed the same person, grade B, because\u2026"; the records are linked, never merged, and anyone can see the reason or withdraw it with theirs.', true],
+  ["act.monitor.label.document", "Watch for changes", null, "Watches this address and tells you when what it publishes changes. Each new version is kept beside the old.", true],
+  ["act.owed_findin.label.document", "Find in this", null, "Looks inside these documents for people, money figures, dates, requirements or a word. Each result shows its passage; nothing is recorded until you record it.", true],
+  ["act.owed_findin.label.find-in", "Find in this", null, "Looks inside these documents for people, money figures, dates, requirements or a word. Each result shows its passage; nothing is recorded until you record it.", true],
+  ["act.standingquestionset.label.find-in", "Keep finding this as documents arrive", null, "Keeps asking this as new documents arrive; new matches reach your queue once, as a list.", true],
+  ["act.recordpersonfact.label.find-in", "Add a fact from this passage", null, "Records a fact about this person from the passage: a position, a credential, an interest. It cites the passage.", true],
+  ["act.recorddatedfact.label.find-in", "Record a dated fact", null, "Records a dated fact from the passage, citing it, for the timeline.", true],
+  ["act.standarddeclare.label.find-in", "Hold this as a standard", null, "Holds this requirement as a standard the city set itself, so questions can test the city against it.", true],
+  ["act.recordfact.label.find-in", "Read into a money fact", null, "Reads this figure into a money fact, with its stage and period, citing where it came from.", true],
+  ["act.tabledeclare.label.find-in", "Declare the table", null, "Says what a table's columns are, so its figures can be counted through a calculation rather than one by one.", true],
+  ["act.cite.label.find-in", "Cite in the question", null, "Cites this passage in a question, as support or as cutting against it. A citation always points at the original document.", true],
+  ["act.search.label.find-in", "See all in Find", null, "Searches everything your group holds that you may see: documents, passages, questions, people.", true],
+  ["act.promote.label.project", "Open a question", null, "Opens a question the group will answer with the record, from this hint, chain or suggestion. The source is kept with it.", true],
+  ["act.owed_findin.label.project", "Find in this project", null, "Looks inside these documents for people, money figures, dates, requirements or a word. Each result shows its passage; nothing is recorded until you record it.", true],
+  ["act.strengthbarset.label.project", "Set the project's bar", null, "Sets how strong an answer must be in this project before the group relies on it.", true],
+  ["act.projectinvite.label.project", "Invite a member to the project", null, "Invites a member into this project, so they can see and work on it.", true],
+  ["act.projectjoin.label.project", "Join", null, "Joins this project to see and work on it.", true],
+  ["act.planopen.label.project", "Plan what to do", null, "Opens a plan: what the group could do about what it found, its options and what each would take.", true],
+  ["act.cite.label.question", "Cite a passage", null, "Cites this passage in a question, as support or as cutting against it. A citation always points at the original document.", true],
+  ["act.sever.label.question", "Remove a citation", null, "Removes this citation from the question, with the reason kept. It can be reinstated.", true],
+  ["act.reinstate.label.question", "Reinstate", null, "Puts a removed citation back on the question.", true],
+  ["act.narrow.label.question", "Narrow the question", null, "Narrows the question to what the record can answer, with the reason. The wider question is kept.", true],
+  ["act.conclude.label.question", "Conclude", null, "Records the group's answer to the question, from what it rests on. It can be withdrawn later, with a reason.", true],
+  ["act.withdrawconclusion.label.question", "Withdraw the conclusion", null, "Withdraws the question's answer, with a reason, for example after new evidence.", true],
+  ["act.hypothesishold.label.question", "Keep a hunch", null, "Keeps a hunch beside the question, labelled as yours. A hunch is never evidence and never moves an answer.", true],
+  ["act.planopen.label.question", "Plan what to do", null, "Opens a plan: what the group could do about what it found, its options and what each would take.", true],
+  ["act.checkrequest.label.question", "Ask for a check by expertise", null, "Asks a member with the right expertise to check this, for example an accountant for figures.", true],
+  ["act.heldrestore.label.question", "Restore a set-aside document, with a reason", null, "Brings a set-aside capture back, with a reason, so it can be vouched for.", true],
+  ["act.search.label.question", "Find another source", null, "Searches everything your group holds that you may see: documents, passages, questions, people.", true],
+  ["act.ruleanswer.label.answers", "Ask", null, "Asks in plain words. The assistant answers only from what your group holds and says where it looked.", true],
+  ["act.search.label.answers", "Search instead", null, "Searches everything your group holds that you may see: documents, passages, questions, people.", true],
+  ["act.standingquestionset.label.answers", "Keep asking this", null, "Keeps asking this as new documents arrive; new matches reach your queue once, as a list.", true],
+  ["act.standingquestionend.label.answers", "Stop asking", null, "Stops asking this question on a schedule.", true],
+  ["act.airunopen.label.assistant", "Ask the assistant to work on this", null, "Asks the assistant to work on what this screen shows. Its results are labelled as machine work and become the group's only when a member accepts them.", true],
+  ["act.suggest.label.assistant", "Suggest", null, "Asks the assistant for suggestions here. Each is labelled as its suggestion, for you to adopt or ignore.", true],
+  ["act.airunclose.label.assistant", "Stop the run", null, "Stops the assistant's run. What it produced so far stays labelled as its draft.", true],
+  ["act.person.label.person", "Open the person", null, "Opens this person's page: positions, career and interests, each dated and cited.", true],
+  ["act.recordpersonfact.label.person", "Add a fact from a document", null, "Records a fact about this person from the passage: a position, a credential, an interest. It cites the passage.", true],
+  ["act.identityclaim.label.person", "Say another record is this person", null, 'Says this name refers to a person the record already follows, with how sure you are (a grade) and why. It is shown as a claim, "claimed the same person, grade B, because\u2026"; the records are linked, never merged, and anyone can see the reason or withdraw it with theirs.', true],
+  ["act.withdrawidentityclaim.label.person", "Withdraw a same-person claim", null, "Withdraws a claim that two records are the same person, with a reason.", true],
+  ["act.followregister.label.person", "Follow a register", null, "Follows a public register (licences, filings) and tells you when an entry for this changes.", true],
+  ["act.personexpunge.label.person", "Remove a fact where the law requires", null, "Removes a recorded value for good where the law or a court requires it. It cannot be undone by anyone; a marker stays where it was.", true],
+  ["act.createevent.label.timeline", "Record an event", null, "Records an event on the timeline from a cited source or your own testimony.", true],
+  ["act.addparticipant.label.timeline", "Add who took part", null, "Adds who took part in an event, by name or by role.", true],
+  ["act.relate.label.timeline", "Link events", null, "Links two events, for example one caused or answered another, citing why.", true],
+  ["act.recorddatedfact.label.timeline", "Record a dated fact", null, "Records a dated fact from the passage, citing it, for the timeline.", true],
+  ["act.hypothesishold.label.timeline", "Keep a suspected cause as a hunch", null, "Keeps a hunch beside the question, labelled as yours. A hunch is never evidence and never moves an answer.", true],
+  ["act.owed_findin.label.timeline", "Look for dates in this project", null, "Looks inside these documents for people, money figures, dates, requirements or a word. Each result shows its passage; nothing is recorded until you record it.", true],
+  ["act.recordfact.label.money", "Read a figure into a money fact", null, "Reads this figure into a money fact, with its stage and period, citing where it came from.", true],
+  ["act.createset.label.money", "Start a money trail", null, "Starts a money trail: the figures and transfers that follow one sum through the city's funds.", true],
+  ["act.include.label.money", "Include with a reason", null, "Includes this figure in the trail, with the reason.", true],
+  ["act.exclude.label.money", "Leave out with a reason", null, "Leaves this figure out of the trail, with the reason, so others see why.", true],
+  ["act.reconcile.label.money", "Compare two sources", null, "Compares two sources' figures for the same thing and shows where they differ.", true],
+  ["act.committedagainstpaid.label.money", "Committed against paid", null, "Compares what was committed with what was paid, period by period.", true],
+  ["act.authoritychain.label.money", "What authorised it", null, "Shows what authorised this money: the vote, contract or rule, each cited.", true],
+  ["act.owed_findin.label.money", "Look for it in this project", null, "Looks inside these documents for people, money figures, dates, requirements or a word. Each result shows its passage; nothing is recorded until you record it.", true],
+  ["act.actioncreate.label.money", "Ask the city for the record", null, "Starts the records request as an action the group follows to its reply.", true],
+  ["act.createevent.label.money", "Record when it moved", null, "Records an event on the timeline from a cited source or your own testimony.", true],
+  ["act.gradenote.label.money", "Why B, and what would raise it", null, "Explains this copy's grade: how it was obtained and what would raise it.", true],
+  ["act.acquire.label.money", "Get the city's own copy", null, "Has your group's Civicsmith fetch this address itself and keep exactly what the site sent, with when and from where.", true],
+  ["act.checkrequest.label.money", "Ask a member who knows budgets", null, "Asks a member with the right expertise to check this, for example an accountant for figures.", true],
+  ["act.hypothesishold.label.money", "Keep my reading as a hunch", null, "Keeps a hunch beside the question, labelled as yours. A hunch is never evidence and never moves an answer.", true],
+  ["act.calculationcreate.label.calculation", "Work it out", null, "Works out a figure from the record, with its method shown so anyone can repeat it.", true],
+  ["act.tabledeclare.label.calculation", "Declare the table", null, "Says what a table's columns are, so its figures can be counted through a calculation rather than one by one.", true],
+  ["act.calculationdraw.label.calculation", "Draw a random sample", null, "Draws a random sample to check by hand, recorded so the draw can be repeated.", true],
+  ["act.addworkbook.label.calculation", "Bind your spreadsheet", null, "Binds your spreadsheet to the record, so its inputs come from cited documents and it can be recomputed.", true],
+  ["act.bind.label.calculation", "Tie an input to the record", null, "Ties one of the spreadsheet's inputs to a cited place in the record.", true],
+  ["act.recordcheck.label.calculation", "Record a second member's check", null, "Records that a second member checked the calculation, with what they found.", true],
+  ["act.calculationaccept.label.calculation", "Accept the result", null, "Accepts the result as a computed fact the group can cite.", true],
+  ["act.testify.label.calculation", "Record what you found at a report", null, "Records what you saw or heard yourself as testimony: grade D, labelled as yours, never changed afterwards.", true],
+  ["act.explore.label.explore", "Explore", null, "Looks for chains of links between two people or organisations, each step cited and graded.", true],
+  ["act.explorepreset.label.explore", "Use a preset", null, 'Uses a ready-made search, such as "money from a vendor to an official".', true],
+  ["act.exploreverify.label.explore", "Check a chain", null, "Checks each step of a chain against its sources and grades it.", true],
+  ["act.connectionassert.label.explore", "Attach a source to a declared step", null, "Attaches a source to a step someone declared, so the step rests on evidence.", true],
+  ["act.promote.label.explore", "Open a question from this chain", null, "Opens a question the group will answer with the record, from this hint, chain or suggestion. The source is kept with it.", true],
+  ["act.entitycreate.label.proceeding", "Register the proceeding", null, "Adds something the record does not hold yet, such as an office, an organisation or a court case, with a note on where it comes from.", true],
+  ["act.recordline.label.proceeding", "Add a party by role", null, "Adds a party to the proceeding by its role, citing where it appears.", true],
+  ["act.followregister.label.proceeding", "Follow its register", null, "Follows a public register (licences, filings) and tells you when an entry for this changes.", true],
+  ["act.declare.label.proceeding", "Hold an order as obligations", null, "Holds an order's requirements as obligations, so the group can check whether they are met and by when.", true],
+  ["act.courtlink.label.proceeding", "Link a decision to what it interprets", null, "Links a decision to the law or order it interprets, citing the passage.", true],
+  ["act.clockpropose.label.due-date", "Work out the due date", null, "Works out a due date from the law and the dates, showing each day counted and each holiday skipped. It proposes the date; a member confirms it.", true],
+  ["act.clockadopt.label.due-date", "Confirm the due date", null, "Confirms the due date, so reminders and the queue use it.", true],
+  ["act.reminderset.label.due-date", "Remind me", null, "Reminds you on a date you choose. Only you see it.", true],
+  ["act.standarddeclare.label.standard", "Hold this as a standard", null, "Holds this requirement as a standard the city set itself, so questions can test the city against it.", true],
+  ["act.standardadopt.label.standard", "Adopt a proposed standard", null, "Adopts a proposed standard as one the group holds the city to.", true],
+  ["act.lawrelate.label.standard", "Relate to a law", null, "Relates the standard to the law it comes from, citing the passage.", true],
+  ["act.plansubjectadd.label.plan", "Add a subject", null, "Adds a subject to the plan: someone or something the group wants to act on.", true],
+  ["act.optionadd.label.plan", "Add an option", null, "Adds an option: one thing the group could do, with what it would take.", true],
+  ["act.optionpropose.label.plan", "Ask the assistant for options", null, "Asks the assistant for options. They wait in the tray, labelled, until a member adopts one.", true],
+  ["act.optionadopt.label.plan", "Adopt a suggestion", null, "Adopts a suggested option into the plan as the group's own.", true],
+  ["act.optiondispose.label.plan", "Choose or decline", null, "Chooses an option or declines it, with the reason kept on the plan.", true],
+  ["act.scenarioset.label.plan", "Lay out a scenario", null, "Lays out what might happen if an option is taken, step by step.", true],
+  ["act.checkpointrecord.label.plan", "Judge a checkpoint", null, "Records how a checkpoint turned out, so the plan reflects what happened.", true],
+  ["act.optionstartpreview.label.plan", "Start\u2026", null, "Shows what starting this option would do and anything that would stop it, before you start.", true],
+  ["act.planclose.label.plan", "Close the plan", null, "Closes the plan, with how it ended. It stays readable.", true],
+  ["act.optionstartpreview.label.start-send", "See what starting does", null, "Shows what starting this option would do and anything that would stop it, before you start.", true],
+  ["act.optionstart.label.start-send", "Start the action", null, "Starts the action: the group begins doing this option, from here to the send.", true],
+  ["act.communicationprepare.label.start-send", "Prepare what is sent", null, "Prepares the text that will be sent, from the group's template or a labelled draft.", true],
+  ["act.filingprepare.label.start-send", "Prepare the filing", null, "Prepares the filing with what the venue requires.", true],
+  ["act.filingapprove.label.start-send", "Approve this text", null, "Approves this exact text for sending. Changing it afterwards needs approving again.", true],
+  ["act.filingrecordsent.label.start-send", "I have sent it", null, "Records that you sent it, when and how. Civicsmith never sends for you; reply deadlines count from here.", true],
+  ["act.addresseesuggest.label.request", "Choose the office", null, "Chooses the office it goes to, by role, so it reaches whoever holds the post that day.", true],
+  ["act.actioncreate.label.request", "Start the request", null, "Starts the records request as an action the group follows to its reply.", true],
+  ["act.actionlaws.label.request", "Choose the law it goes under", null, "Chooses the records law the request goes under. It decides the deadline.", true],
+  ["act.communicationprepare.label.request", "Prepare the text", null, "Prepares the text that will be sent, from the group's template or a labelled draft.", true],
+  ["act.filingapprove.label.request", "Approve this text", null, "Approves this exact text for sending. Changing it afterwards needs approving again.", true],
+  ["act.filingrecordsent.label.request", "I have sent it", null, "Records that you sent it, when and how. Civicsmith never sends for you; reply deadlines count from here.", true],
+  ["act.actionmove.label.action", "Move the action", null, "Moves the action to its next stage, with what happened.", true],
+  ["act.actioncorrespond.label.action", "Record a reply", null, "Records a reply or letter received, with its date, so deadlines and the timeline follow.", true],
+  ["act.actionpressure.label.action", "Mark a reply as pressure", null, "Marks a reply as pressure (a threat, a demand to stop), kept on the record.", true],
+  ["act.reminderset.label.action", "Remind me", null, "Reminds you on a date you choose. Only you see it.", true],
+  ["act.actionhold.label.action", "Record a litigation hold", null, "Records a litigation hold: nothing about this may be removed while it lasts.", true],
+  ["act.escalationopen.label.matter", "Open an escalation", null, "Opens an escalation: taking the matter to a higher body, with the reason.", true],
+  ["act.escalationadvance.label.matter", "Advance", null, "Moves the escalation to its next level, with what happened.", true],
+  ["act.declinetoescalate.label.matter", "Decline to escalate, with a reason", null, "Decides not to escalate, with the reason kept, so the group knows it chose not to.", true],
+  ["act.escalationend.label.matter", "End", null, "Ends the escalation, with how it ended.", true],
+  ["act.casedraft.label.case-editor", "Prepare the draft", null, "Prepares the case's draft from the group's answers and their sources.", true],
+  ["act.whatchangedpropose.label.case-editor", 'Draft "what changed"', null, 'Asks the assistant to draft "what changed" since the last edition, labelled as its draft.', true],
+  ["act.statementack.label.case-editor", "Acknowledge what it leaves out", null, "Acknowledges what the case does not cover, so readers are told.", true],
+  ["act.attribute.label.case-editor", "Name a person with the reason", null, "Names a person in the case with the reason it must, under the group's rules for naming people.", true],
+  ["act.owed_writinghelp.label.case-editor", "Help me write this", null, "Asks the assistant to help word what you are writing, from what you typed. Its words arrive labelled as its draft; nothing is saved until you keep them.", true],
+  ["act.reviewgrant.label.review-copy", "Share for review", null, "Shares the draft with named people outside the group until a date. You can stop sharing at any time.", true],
+  ["act.reviewrevoke.label.review-copy", "Stop sharing", null, "Stops sharing the review copy at once.", true],
+  ["act.reviewcomment.label.review-copy", "Comment", null, "Comments on the draft, for the case's owner to read.", true],
+  ["act.publishpreflight.label.ceremony", "Check before publishing", null, "Checks the case is ready to publish and lists anything that would stop it.", true],
+  ["act.publishtensions.label.ceremony", "See what must be disclosed", null, "Shows what must be disclosed in the case, such as members' ties that concern it.", true],
+  ["act.caseratify.label.ceremony", "Sign with your key", null, "Signs this edition with your key. Readers can check the signature without the group.", true],
+  ["act.publish.label.ceremony", "Publish, with your confirmation of no undeclared tie", null, "Publishes the signed edition for anyone to read. It can never be unpublished; corrections come as a new edition.", true],
+  ["act.owed_publishat.label.ceremony", "Publish at a set time, checked again then", null, "Publishes at a set time. Civicsmith checks again then, and does not publish if anything changed since signing.", true],
+  ["act.owed_obscuremark.label.ceremony", "Mark who and what to obscure in a photo", null, "Marks anyone in a photo who is not part of a finding, and any number plate, so the copy a published case carries shows them obscured, labelled. The original stays inside the group.", true],
+  ["act.verify.label.published", "Check the signature", null, "Checks the case's signature and that it matches what the group signed, without the group's help.", true],
+  ["act.publishedcase.label.published", "Read the case", null, "Reads the published case.", true],
+  ["act.caseimport.label.imported", "Import a case", null, "Imports another group's published case and recreates it here, finding by finding.", true],
+  ["act.importaccept.label.imported", "Accept what recreated", null, "Accepts what recreated, with a reason, so your group can rely on it.", true],
+  ["act.importflag.label.imported", "Flag an issue", null, "Flags an issue in the imported case, kept within your group.", true],
+  ["act.importwatch.label.imported", "Watch the publisher's docket", null, "Watches the other group's docket for corrections to the case.", true],
+  ["act.docketfile.label.docket", "File a docket entry", null, "Files a docket entry: a correction, withdrawal or court order about a published case.", true],
+  ["act.docketpost.label.docket", "Post it", null, "Posts the entry to the public docket, where readers see it beside the case.", true],
+  ["act.inboxpull.label.inbox", "Move into the record", null, "Moves material handed in at the doorbell into the record, where it can be vouched for.", true],
+  ["act.inboxresolve.label.inbox", "Discard with a reason", null, "Discards material handed in, with a reason.", true],
+  ["act.sourcelink.label.inbox", "Record what is known of the source", null, "Records what is known about who handed this in, without exposing them.", true],
+  ["act.knock.label.doorbell", "Hand it over", null, "Hands the material to the group. You need no account; tell them only what you choose.", true],
+  ["act.bootstrap.does", "Installs Civicsmith in your group's own Cloudflare account under this short name. The short name is permanent: it appears in every address and beside every signature.", null, null, true],
+  ["act.selftest.does", "Runs Civicsmith's own checks on what was just installed, so you know it works before anyone joins.", null, null, false],
+  ["act.claim.does", "Makes you the group's first administrator, using the one-time password from installing. Until it is claimed, nobody can use the group's Civicsmith.", null, null, true],
+  ["act.groupnameset.does", "Sets the name members and readers see. It can be changed later; the short name cannot.", null, null, false],
+  ["act.groupdomainset.does", "Proves your group controls this web address, so published cases can show it as yours.", null, null, false],
+  ["act.profilesset.does", "Chooses the places whose rules apply (deadlines, records laws, holidays) and the group's languages. Deadlines and wizards draw on these.", null, null, false],
+  ["act.officesseed.does", "Lists the public offices and seats for your places, so requests and people can be addressed by role.", null, null, false],
+  ["act.entitycreate.does", "Adds something the record does not hold yet, such as an office, an organisation or a court case, with a note on where it comes from.", null, null, false],
+  ["act.placewanted.does", "Names a place Civicsmith does not yet hold rules for. Administrators are told when an update brings it.", null, null, false],
+  ["act.owed_aikeepaway.does", "Stops every assistant in the group, the group's and members' own. Members see your reason on Settings \u203A The assistant.", null, null, false],
+  ["act.groupkeyset.does", "Holds one Anthropic API key for the group, sealed and never shown again. It serves members with no account of their own, at the group's cost.", null, null, false],
+  ["act.groupkeyswitch.does", "Turns the group's key on or off without removing it. Members who rely on it are told what changed.", null, null, false],
+  ["act.aicopyceilingset.does", "Sets the most each member may spend on the group's key in a day. At the limit the assistant pauses for them until the next day.", null, null, false],
+  ["act.courtnoticeset.does", "Chooses whether members are told, when they join and the first time they record something not public, what a court order could reach.", null, null, false],
+  ["act.hostingaccess.does", "Records who holds the Cloudflare account. Whoever holds it can reach everything, so the group should know who that is.", null, null, false],
+  ["act.owed_securitytooladd.does", "Adds a security tool your organisation uses. Before it is turned on you see what it is sent, who receives it and how long it keeps files.", null, null, false],
+  ["act.memberadd.does", "Creates an invitation for one person, under the cover the group knows them by. Nothing about them is public.", null, null, false],
+  ["act.groupdescriptionset.does", "Saves what your group is, what it focuses on and why, and who may see each part: members only, or also the public.", null, null, false],
+  ["act.owed_groupdescriptiondraft.does", "Asks the assistant for a draft of your group's description, labelled as its draft. Nothing is saved until you keep it.", null, null, false],
+  ["act.invitelook.does", "Shows who invited you, to which group, and what joining means, before you decide.", null, null, false],
+  ["act.owed_memberlanguageset.does", "Sets the language Civicsmith speaks to you. Documents stay in their own language.", null, null, false],
+  ["act.enroll.does", "Joins the group with a handle and password. Your handle is how members see you; it need not be your name.", null, null, false],
+  ["act.owed_startfrom.does", "Starts from where you are: a problem you live with, a document, a deadline, a claim to check or a person. Each opens the right first step.", null, null, false],
+  ["act.membercaps.does", "Changes what a member may do: contribute, administer. The change is recorded with who made it.", null, null, false],
+  ["act.memberset.does", "Changes a member's status, for example to inactive. Their past work stays in the record under their handle.", null, null, false],
+  ["act.adminendorse.does", "Adds your endorsement to make a member an administrator. With one administrator the group depends on one person.", null, null, false],
+  ["act.adminremove.does", "Removes an administrator's powers, with a reason. It cannot leave the group with none.", null, null, true],
+  ["act.expertiseconfirm.does", "Confirms a member's declared expertise, so it can be asked for when a check needs it.", null, null, false],
+  ["act.invitewithdraw.does", "Cancels an invitation nobody has used yet. The link stops working at once.", null, null, false],
+  ["act.websitekeycreate.does", "Creates a key that lets your group's website invite people, through an open form or an application someone approves.", null, null, false],
+  ["act.joinlinkenable.does", "Turns on one reusable link anyone with it can use to ask to join. You can turn it off at any time.", null, null, false],
+  ["act.groupswitchset.does", "Sets whether, on the group's key, the assistant may suggest things unprompted and keep asking standing questions.", null, null, false],
+  ["act.groupkeyremove.does", "Removes the group's key for good. Members without their own account use Civicsmith without the assistant.", null, null, false],
+  ["act.owed_securitymap.does", "Shows how hard your group's Civicsmith was tried over the period you choose, against its usual. Counts only.", null, null, false],
+  ["act.owed_securitytooltest.does", "Sends a harmless test file or address to the tool and shows its answer, so you know it works before relying on it.", null, null, false],
+  ["act.owed_securitytoolremove.does", "Stops using this tool. Notes it already wrote stay on the files they concern.", null, null, false],
+  ["act.expertisedeclare.does", "Says what you know professionally, such as accounting or law. An administrator confirms it; members can then ask you for checks.", null, null, false],
+  ["act.owed_setpassword.does", "Changes your password. Other sessions you have open stay signed in until they end.", null, null, false],
+  ["act.signerregisterown.does", "Registers the key you sign published cases with. Readers check a signature against it.", null, null, true],
+  ["act.signerrevokeown.does", "Withdraws your signing key, for example if it was lost. Cases already signed keep a record that it was withdrawn.", null, null, true],
+  ["act.owed_infolevelset.does", "Chooses how quickly explanations open: promptly, or guidance on a longer pause so less opens while you move. Nothing is ever hidden.", null, null, false],
+  ["act.groupkeynoticeseen.does", "Confirms you have read that your questions go to Anthropic under the group's account. Asked once, before your first question.", null, null, false],
+  ["act.disclosureshown.does", "Confirms you have read what connecting your own account means: your questions go to Anthropic under your own account and terms.", null, null, true],
+  ["act.owed_subscriptionsignin.does", "Opens Anthropic's own sign-in page in a new tab. It gives you a code to paste here; Civicsmith never sees your password.", null, null, false],
+  ["act.accountreferenceset.does", "Connects your own Claude subscription or API key. It serves only you, before the group's key.", null, null, true],
+  ["act.aiceilingset.does", "Sets the most your own account may spend in a day here, up to the limit the group set.", null, null, false],
+  ["act.accountswitchset.does", "Lets the assistant suggest things without being asked. Off unless you turn it on; each suggestion is yours to adopt or ignore.", null, null, false],
+  ["act.accountreferenceremove.does", "Disconnects your own account. The group's key serves you instead, if the group has one.", null, null, true],
+  ["act.declaretie.does", "Lists a tie that could matter to a case: an employer, a relative in a public body, a business interest. A case that concerns it says so.", null, null, false],
+  ["act.withdrawtie.does", "Removes a tie from your list. A case already published keeps what it said.", null, null, false],
+  ["act.notewrite.does", "Writes a note only you can see. Use it for thoughts not ready for the group.", null, null, false],
+  ["act.noteturn.does", "Turns your note into something the group shares: an observation, a hunch or a question. The note itself stays private.", null, null, false],
+  ["act.owed_noterevise.does", "Changes your note. Notes are yours alone, so nothing else changes.", null, null, false],
+  ["act.owed_notedelete.does", "Deletes your note. If you turned it into something shared, that stays.", null, null, false],
+  ["act.owed_writinghelp.does", "Asks the assistant to help word what you are writing, from what you typed. Its words arrive labelled as its draft; nothing is saved until you keep them.", null, null, false],
+  ["act.owed_translationdraft.does", "Asks the assistant to draft translations of Civicsmith's words, labelled as drafts for a speaker to check.", null, null, false],
+  ["act.owed_translationadopt.does", "Keeps a translation so members reading that language see it. Protected words need a second speaker's check first.", null, null, false],
+  ["act.owed_translationgrant.does", "Lets a named member translate Civicsmith's words into one language.", null, null, false],
+  ["act.owed_translationconfirm.does", "Confirms a protected word as a second speaker, so members see it instead of the English.", null, null, false],
+  ["act.owed_translationrevert.does", "Undoes a translation change in one step, back to what it replaced.", null, null, false],
+  ["act.wizards.does", "Shows the wizards your group can use: Civicsmith's, and those your group wrote.", null, null, false],
+  ["act.wizarddraft.does", "Records a new wizard by walking through the steps yourself. It stays a draft until approved.", null, null, false],
+  ["act.wizardrevise.does", "Changes a draft wizard's steps or words before it is submitted.", null, null, false],
+  ["act.wizardsubmit.does", "Submits a draft wizard for an administrator to approve before members are offered it.", null, null, false],
+  ["act.wizardapprove.does", "Approves a wizard so members are offered it where its steps start.", null, null, false],
+  ["act.wizardretire.does", "Stops offering a wizard. Anyone part-way through can finish.", null, null, true],
+  ["act.taskresolve.does", "Does what this item asks, on the screen it concerns. It leaves your queue when done.", null, null, false],
+  ["act.taskforward.does", "Passes this item to another member better placed to act, with a note.", null, null, false],
+  ["act.proposedispose.does", "Dismisses a suggestion or hint with a reason, kept on the record so the same thing is not raised again without cause.", null, null, false],
+  ["act.queuesnooze.does", "Hides the item until the date you choose, when it comes back.", null, null, false],
+  ["act.queuemute.does", "Stops this kind of item reaching you. You can turn it back on in your settings.", null, null, false],
+  ["act.adoptversion.does", "Moves your citations to the newer version of this document. You see what changed first.", null, null, false],
+  ["act.keepversion.does", "Keeps citing the version you cited. The newer one stays in the record beside it.", null, null, false],
+  ["act.reminderanswer.does", "Answers a reminder you set, for example that a reply came or a deadline passed.", null, null, false],
+  ["act.promote.does", "Opens a question the group will answer with the record, from this hint, chain or suggestion. The source is kept with it.", null, null, false],
+  ["act.search.does", "Searches everything your group holds that you may see: documents, passages, questions, people.", null, null, false],
+  ["act.select.does", "Holds the items you picked together so one act can apply to them all. The set is held until the time shown.", null, null, false],
+  ["act.owed_findin.does", "Looks inside these documents for people, money figures, dates, requirements or a word. Each result shows its passage; nothing is recorded until you record it.", null, null, false],
+  ["act.selectionrelease.does", "Lets the held set go. Nothing in it changes.", null, null, false],
+  ["act.frontier.does", "Shows where nobody has looked yet for this, so the group knows what an answer does not cover.", null, null, false],
+  ["act.acquire.does", "Has your group's Civicsmith fetch this address itself and keep exactly what the site sent, with when and from where.", null, null, false],
+  ["act.capture.does", "Adds this file or photo to the record, with who made or obtained it and how. It waits in Held captures until vouched for.", null, null, false],
+  ["act.testify.does", "Records what you saw or heard yourself as testimony: grade D, labelled as yours, never changed afterwards.", null, null, false],
+  ["act.capturerequest.does", "Asks for this to be captured later, for example when a site is down. The request waits until it can be fetched.", null, null, false],
+  ["act.monitor.does", "Watches this address and tells you when what it publishes changes. Each new version is kept beside the old.", null, null, false],
+  ["act.heldcaptures.does", "Shows captures waiting for a member to vouch for them before they count.", null, null, false],
+  ["act.release.does", "Vouches that each copy is what its source gave, unaltered. It is signed with your name; it can be corrected later, never silently undone.", null, null, true],
+  ["act.heldsetaside.does", "Sets the picked captures aside with one reason, shown to anyone waiting on them. They can be restored.", null, null, false],
+  ["act.heldrestore.does", "Brings a set-aside capture back, with a reason, so it can be vouched for.", null, null, false],
+  ["act.gradenote.does", "Explains this copy's grade: how it was obtained and what would raise it.", null, null, false],
+  ["act.owed_archivelist.does", "Lists the archive's files by state: filed, already held, or not filed and why.", null, null, false],
+  ["act.owed_openoriginal.does", "Opens the original file on your device. A low-risk file is checked first if its last check is over a week old.", null, null, false],
+  ["act.owed_openwithwarning.does", "Opens a high-risk original on your own device without a deeper check, after you confirm you will not enable macros or editing.", null, null, false],
+  ["act.owed_safeview.does", "Shows a safe copy: each page as a picture, or a spreadsheet's figures as data. Nothing in it can run. Cite the original, not this.", null, null, false],
+  ["act.owed_deepercheck.does", "Runs every check on this file: read whole, the built-in scanner again, and your group's outside tools. A clean result opens the original to everyone for 24 hours.", null, null, false],
+  ["act.owed_releasescanhold.does", "Gives your reason to release a file a scanner flagged. A second member's reason releases it; the machine never can.", null, null, false],
+  ["act.cite.does", "Cites this passage in a question, as support or as cutting against it. A citation always points at the original document.", null, null, false],
+  ["act.retire.does", "Stops using this copy in new work, with a reason. Questions that cite it are told.", null, null, true],
+  ["act.attest.does", "Signs that this copy matches its source, adding your word to the capture. Signed with your key.", null, null, true],
+  ["act.identityclaim.does", 'Says this name refers to a person the record already follows, with how sure you are (a grade) and why. It is shown as a claim, "claimed the same person, grade B, because\u2026"; the records are linked, never merged, and anyone can see the reason or withdraw it with theirs.', null, null, false],
+  ["act.standingquestionset.does", "Keeps asking this as new documents arrive; new matches reach your queue once, as a list.", null, null, false],
+  ["act.recordpersonfact.does", "Records a fact about this person from the passage: a position, a credential, an interest. It cites the passage.", null, null, false],
+  ["act.recorddatedfact.does", "Records a dated fact from the passage, citing it, for the timeline.", null, null, false],
+  ["act.clockpropose.does", "Works out a due date from the law and the dates, showing each day counted and each holiday skipped. It proposes the date; a member confirms it.", null, null, false],
+  ["act.owed_obscuremark.does", "Marks anyone in a photo who is not part of a finding, and any number plate, so the copy a published case carries shows them obscured, labelled. The original stays inside the group.", null, null, false],
+  ["act.standarddeclare.does", "Holds this requirement as a standard the city set itself, so questions can test the city against it.", null, null, false],
+  ["act.recordfact.does", "Reads this figure into a money fact, with its stage and period, citing where it came from.", null, null, false],
+  ["act.tabledeclare.does", "Says what a table's columns are, so its figures can be counted through a calculation rather than one by one.", null, null, false],
+  ["act.strengthbarset.does", "Sets how strong an answer must be in this project before the group relies on it.", null, null, false],
+  ["act.projectinvite.does", "Invites a member into this project, so they can see and work on it.", null, null, false],
+  ["act.projectjoin.does", "Joins this project to see and work on it.", null, null, false],
+  ["act.planopen.does", "Opens a plan: what the group could do about what it found, its options and what each would take.", null, null, false],
+  ["act.sever.does", "Removes this citation from the question, with the reason kept. It can be reinstated.", null, null, false],
+  ["act.reinstate.does", "Puts a removed citation back on the question.", null, null, false],
+  ["act.narrow.does", "Narrows the question to what the record can answer, with the reason. The wider question is kept.", null, null, false],
+  ["act.conclude.does", "Records the group's answer to the question, from what it rests on. It can be withdrawn later, with a reason.", null, null, false],
+  ["act.withdrawconclusion.does", "Withdraws the question's answer, with a reason, for example after new evidence.", null, null, false],
+  ["act.hypothesishold.does", "Keeps a hunch beside the question, labelled as yours. A hunch is never evidence and never moves an answer.", null, null, false],
+  ["act.checkrequest.does", "Asks a member with the right expertise to check this, for example an accountant for figures.", null, null, false],
+  ["act.ruleanswer.does", "Asks in plain words. The assistant answers only from what your group holds and says where it looked.", null, null, false],
+  ["act.standingquestionend.does", "Stops asking this question on a schedule.", null, null, false],
+  ["act.airunopen.does", "Asks the assistant to work on what this screen shows. Its results are labelled as machine work and become the group's only when a member accepts them.", null, null, false],
+  ["act.suggest.does", "Asks the assistant for suggestions here. Each is labelled as its suggestion, for you to adopt or ignore.", null, null, false],
+  ["act.airunclose.does", "Stops the assistant's run. What it produced so far stays labelled as its draft.", null, null, false],
+  ["act.person.does", "Opens this person's page: positions, career and interests, each dated and cited.", null, null, false],
+  ["act.withdrawidentityclaim.does", "Withdraws a claim that two records are the same person, with a reason.", null, null, false],
+  ["act.followregister.does", "Follows a public register (licences, filings) and tells you when an entry for this changes.", null, null, false],
+  ["act.personexpunge.does", "Removes a recorded value for good where the law or a court requires it. It cannot be undone by anyone; a marker stays where it was.", null, null, true],
+  ["act.createevent.does", "Records an event on the timeline from a cited source or your own testimony.", null, null, false],
+  ["act.addparticipant.does", "Adds who took part in an event, by name or by role.", null, null, false],
+  ["act.relate.does", "Links two events, for example one caused or answered another, citing why.", null, null, false],
+  ["act.createset.does", "Starts a money trail: the figures and transfers that follow one sum through the city's funds.", null, null, false],
+  ["act.include.does", "Includes this figure in the trail, with the reason.", null, null, false],
+  ["act.exclude.does", "Leaves this figure out of the trail, with the reason, so others see why.", null, null, false],
+  ["act.reconcile.does", "Compares two sources' figures for the same thing and shows where they differ.", null, null, false],
+  ["act.committedagainstpaid.does", "Compares what was committed with what was paid, period by period.", null, null, false],
+  ["act.authoritychain.does", "Shows what authorised this money: the vote, contract or rule, each cited.", null, null, false],
+  ["act.calculationcreate.does", "Works out a figure from the record, with its method shown so anyone can repeat it.", null, null, false],
+  ["act.calculationdraw.does", "Draws a random sample to check by hand, recorded so the draw can be repeated.", null, null, false],
+  ["act.addworkbook.does", "Binds your spreadsheet to the record, so its inputs come from cited documents and it can be recomputed.", null, null, false],
+  ["act.bind.does", "Ties one of the spreadsheet's inputs to a cited place in the record.", null, null, false],
+  ["act.recordcheck.does", "Records that a second member checked the calculation, with what they found.", null, null, false],
+  ["act.calculationaccept.does", "Accepts the result as a computed fact the group can cite.", null, null, false],
+  ["act.explore.does", "Looks for chains of links between two people or organisations, each step cited and graded.", null, null, false],
+  ["act.explorepreset.does", 'Uses a ready-made search, such as "money from a vendor to an official".', null, null, false],
+  ["act.exploreverify.does", "Checks each step of a chain against its sources and grades it.", null, null, false],
+  ["act.connectionassert.does", "Attaches a source to a step someone declared, so the step rests on evidence.", null, null, false],
+  ["act.recordline.does", "Adds a party to the proceeding by its role, citing where it appears.", null, null, false],
+  ["act.declare.does", "Holds an order's requirements as obligations, so the group can check whether they are met and by when.", null, null, false],
+  ["act.courtlink.does", "Links a decision to the law or order it interprets, citing the passage.", null, null, false],
+  ["act.clockadopt.does", "Confirms the due date, so reminders and the queue use it.", null, null, false],
+  ["act.reminderset.does", "Reminds you on a date you choose. Only you see it.", null, null, false],
+  ["act.standardadopt.does", "Adopts a proposed standard as one the group holds the city to.", null, null, false],
+  ["act.lawrelate.does", "Relates the standard to the law it comes from, citing the passage.", null, null, false],
+  ["act.plansubjectadd.does", "Adds a subject to the plan: someone or something the group wants to act on.", null, null, false],
+  ["act.optionadd.does", "Adds an option: one thing the group could do, with what it would take.", null, null, false],
+  ["act.optionpropose.does", "Asks the assistant for options. They wait in the tray, labelled, until a member adopts one.", null, null, false],
+  ["act.optionadopt.does", "Adopts a suggested option into the plan as the group's own.", null, null, false],
+  ["act.optiondispose.does", "Chooses an option or declines it, with the reason kept on the plan.", null, null, false],
+  ["act.scenarioset.does", "Lays out what might happen if an option is taken, step by step.", null, null, false],
+  ["act.checkpointrecord.does", "Records how a checkpoint turned out, so the plan reflects what happened.", null, null, false],
+  ["act.optionstartpreview.does", "Shows what starting this option would do and anything that would stop it, before you start.", null, null, false],
+  ["act.planclose.does", "Closes the plan, with how it ended. It stays readable.", null, null, true],
+  ["act.optionstart.does", "Starts the action: the group begins doing this option, from here to the send.", null, null, false],
+  ["act.communicationprepare.does", "Prepares the text that will be sent, from the group's template or a labelled draft.", null, null, false],
+  ["act.filingprepare.does", "Prepares the filing with what the venue requires.", null, null, false],
+  ["act.filingapprove.does", "Approves this exact text for sending. Changing it afterwards needs approving again.", null, null, true],
+  ["act.filingrecordsent.does", "Records that you sent it, when and how. Civicsmith never sends for you; reply deadlines count from here.", null, null, true],
+  ["act.addresseesuggest.does", "Chooses the office it goes to, by role, so it reaches whoever holds the post that day.", null, null, false],
+  ["act.actioncreate.does", "Starts the records request as an action the group follows to its reply.", null, null, false],
+  ["act.actionlaws.does", "Chooses the records law the request goes under. It decides the deadline.", null, null, false],
+  ["act.actionmove.does", "Moves the action to its next stage, with what happened.", null, null, false],
+  ["act.actioncorrespond.does", "Records a reply or letter received, with its date, so deadlines and the timeline follow.", null, null, false],
+  ["act.actionpressure.does", "Marks a reply as pressure (a threat, a demand to stop), kept on the record.", null, null, false],
+  ["act.actionhold.does", "Records a litigation hold: nothing about this may be removed while it lasts.", null, null, false],
+  ["act.escalationopen.does", "Opens an escalation: taking the matter to a higher body, with the reason.", null, null, false],
+  ["act.escalationadvance.does", "Moves the escalation to its next level, with what happened.", null, null, false],
+  ["act.declinetoescalate.does", "Decides not to escalate, with the reason kept, so the group knows it chose not to.", null, null, false],
+  ["act.escalationend.does", "Ends the escalation, with how it ended.", null, null, true],
+  ["act.casedraft.does", "Prepares the case's draft from the group's answers and their sources.", null, null, false],
+  ["act.whatchangedpropose.does", 'Asks the assistant to draft "what changed" since the last edition, labelled as its draft.', null, null, false],
+  ["act.statementack.does", "Acknowledges what the case does not cover, so readers are told.", null, null, false],
+  ["act.attribute.does", "Names a person in the case with the reason it must, under the group's rules for naming people.", null, null, false],
+  ["act.reviewgrant.does", "Shares the draft with named people outside the group until a date. You can stop sharing at any time.", null, null, true],
+  ["act.reviewrevoke.does", "Stops sharing the review copy at once.", null, null, true],
+  ["act.reviewcomment.does", "Comments on the draft, for the case's owner to read.", null, null, false],
+  ["act.publishpreflight.does", "Checks the case is ready to publish and lists anything that would stop it.", null, null, false],
+  ["act.publishtensions.does", "Shows what must be disclosed in the case, such as members' ties that concern it.", null, null, false],
+  ["act.caseratify.does", "Signs this edition with your key. Readers can check the signature without the group.", null, null, true],
+  ["act.publish.does", "Publishes the signed edition for anyone to read. It can never be unpublished; corrections come as a new edition.", null, null, true],
+  ["act.owed_publishat.does", "Publishes at a set time. Civicsmith checks again then, and does not publish if anything changed since signing.", null, null, true],
+  ["act.verify.does", "Checks the case's signature and that it matches what the group signed, without the group's help.", null, null, false],
+  ["act.publishedcase.does", "Reads the published case.", null, null, false],
+  ["act.caseimport.does", "Imports another group's published case and recreates it here, finding by finding.", null, null, false],
+  ["act.importaccept.does", "Accepts what recreated, with a reason, so your group can rely on it.", null, null, false],
+  ["act.importflag.does", "Flags an issue in the imported case, kept within your group.", null, null, false],
+  ["act.importwatch.does", "Watches the other group's docket for corrections to the case.", null, null, false],
+  ["act.docketfile.does", "Files a docket entry: a correction, withdrawal or court order about a published case.", null, null, false],
+  ["act.docketpost.does", "Posts the entry to the public docket, where readers see it beside the case.", null, null, true],
+  ["act.inboxpull.does", "Moves material handed in at the doorbell into the record, where it can be vouched for.", null, null, false],
+  ["act.inboxresolve.does", "Discards material handed in, with a reason.", null, null, false],
+  ["act.sourcelink.does", "Records what is known about who handed this in, without exposing them.", null, null, false],
+  ["act.knock.does", "Hands the material to the group. You need no account; tell them only what you choose.", null, null, true],
+  ["column.money.figure.name", "Figure", null, null, false],
+  ["column.money.figure.shows", "What the amount is, in the words of its source: a transfer, a charge, a payment, a grant.", null, null, false],
+  ["column.money.from.name", "From", null, null, false],
+  ["column.money.from.shows", "Who or which fund paid, as the source writes it. The payer is part of the figure itself, never guessed from somewhere else.", null, null, false],
+  ["column.money.to-where-it-went.name", "To, where it went", null, null, false],
+  ["column.money.to-where-it-went.shows", 'Who or which fund received the money, as the source writes it. "Not stated in this source" means this source does not say; record it from another source that does, citing the passage.', null, null, false],
+  ["column.money.when-it-moved.name", "When it moved", null, null, false],
+  ["column.money.when-it-moved.shows", "The day the money actually moved, taken from the event the figure is tied to and the passage that dates it. A budget figure did not move, so it shows when it was adopted instead. Undetermined means no source the group holds gives the day; it is never guessed from the accounting period.", null, null, false],
+  ["column.money.stage.name", "Stage", null, null, false],
+  ["column.money.stage.shows", 'How far along the money was when the source counted it: adopted (budgeted), committed (promised by contract), or actual (spent; "paid" when the source shows the payment). Figures at different stages are compared, never added.', null, null, false],
+  ["column.money.period.name", "Period", null, null, false],
+  ["column.money.period.shows", "The accounting period the source counts the amount in, here the city's fiscal year (FY2022 ran 1 July 2021 to 30 June 2022). It is not the date the money moved: that is in When it moved.", null, null, false],
+  ["column.money.amount.name", "Amount", null, null, false],
+  ["column.money.amount.shows", 'The amount exactly as the source states it. A rounded amount ("about $2 million") keeps its rounding.', null, null, false],
+  ["column.money.source.name", "Source", null, null, false],
+  ["column.money.source.shows", "The document the figure was read from, with its capture grade: how sure the group is that the copy is what the office published. Click the mark for the document.", null, null, false],
+  ["column.money.in-this-trail.name", "In this trail?", null, null, false],
+  ["column.money.in-this-trail.shows", "Whether this figure counts in the trail's comparison, and the member's reason for including it or leaving it out. A figure left out stays listed, with why.", null, null, false],
+  ["column.security.kind.name", "Kind", null, null, false],
+  ["column.security.kind.shows", "The kind of attempt that was turned away. Each counts attempts, not people.", null, null, false],
+  ["column.security.this-period.name", "This period", null, null, false],
+  ["column.security.this-period.shows", "How many of this kind in the period you are looking at.", null, null, false],
+  ["column.security.usual.name", "Usual", null, null, false],
+  ["column.security.usual.shows", "Your group's own median for the same length of time over the four weeks before. Far above it is what makes a period Raised or High.", null, null, false],
+  ["column.security.busiest-hour.name", "Busiest hour", null, null, false],
+  ["column.security.busiest-hour.shows", "The hour with the most of this kind, and its count.", null, null, false],
+  ["column.translations.english.name", "English", null, null, false],
+  ["column.translations.english.shows", "The words as Civicsmith ships them. Protected marks words that carry a ruling and need a second member's check before a translation is used; Local name marks a name kept as it is, with its explanation translated.", null, null, false],
+  ["column.translations.espa-ol.name", "Espa\xF1ol", null, null, false],
+  ["column.translations.espa-ol.shows", "The translation members see. A shaded cell is a draft, not yet shown to anyone.", null, null, false],
+  ["column.translations.where-it-came-from.name", "Where it came from", null, null, false],
+  ["column.translations.where-it-came-from.shows", "Whether the translation came with a Civicsmith release, was typed by a member, or started as the assistant's draft, and whether it still needs its second check.", null, null, false],
+  ["column.sort.how", "Click to sort the rows by this column; click again to reverse. Sorting changes only your view, never the record.", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.name", "Set up and claim", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.step1.what", "Check you have what is needed: a Cloudflare account and about twenty minutes.", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.step1.why", "The free plan works. Workers Paid ($5 a month) adds recomputing spreadsheets and signing in with a Claude subscription. No Claude account is needed to set up.", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.step2.what", "Choose your group's short name, then install. It is not the group's name: you choose that next, and can change it.", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.step2.why", "The short name is the fixed label in your addresses and beside every signature, and can never change. A group that wants to stay unnamed picks one that reveals nothing.", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.step3.what", "Let your group's Civicsmith test itself. Allow it to run the assistant's container if you are asked.", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.step3.why", "The test proves it works before anyone relies on it.", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.step4.what", "Save the one-time password somewhere safe, such as a password manager, then continue.", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.step4.why", "It is shown once, and it is how you become the first administrator. Continuing fills it in; if it is lost before you claim, whoever can sign in to the Cloudflare account can set a new one.", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.step5.what", "Claim with the one-time password, then choose your own password. It is already filled in if you continued from the installer; otherwise type the one you saved.", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.step5.why", "Only the person holding the one-time password can become the first administrator. Once you claim, it is spent.", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.step6.what", "Name the group as people should read it, and add its logo if it has one.", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.step6.why", "The group's name heads everything it publishes and can change at any time; the short name you chose at install stays fixed in addresses and signatures.", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.step7.what", "If your group has a website, verify its address (optional): place the small file Civicsmith gives you on the site.", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.step7.why", "Readers can then confirm that a published case really comes from your group. The public page names the site, so a group that wants to stay unnamed skips this.", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.step8.what", "Choose the places whose rules apply, and the languages your members use.", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.step8.why", "Deadlines, holidays and offices come from these places, never from Civicsmith itself. If yours is not listed, choose Other: everything else works, and you enter due dates yourself.", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.step9.what", "Review the offices, seats and holders Civicsmith filled in. Each is marked with where it came from.", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.step9.why", "Requests go to offices by role, so correct anything before members rely on it.", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.step10.what", "Read who in the group will see facts about people.", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.step10.why", "Facts from public documents follow those documents; a project's own notes about a person stay inside the project.", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.step11.what", "Read what the assistant is (and open More about this for the detail), then choose whether to keep the group's material away from AI.", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.step11.why", "Any member may connect their own Claude account unless you keep the material away from AI; then members see who chose it and your reason. Everything works without the assistant.", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.step12.what", "If the group will pay for the assistant, paste its Anthropic API key here. It is never shown again.", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.step12.why", "It serves every member with no account of their own; each is told once, before their first question, that it goes to Anthropic under the group's account. Leave it empty and members bring their own.", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.step13.what", "Choose whether members are told what a court can reach.", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.step13.why", "A court order your group cannot defeat can require anything not public to be shown. Some groups want every member told; the explanation is always one tap away.", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.step14.what", "Record who holds the hosting account.", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.step14.why", "If you are ever unreachable, this is how the group gets back in.", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.step15.what", "Invite your first members, and a second administrator now or later.", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.step15.why", "With one administrator the group depends on one person. A second means it is never stuck.", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.step16.what", "Optional: say who your group is. You will come back here when you finish or stop.", null, null, false],
+  ["wizard.WIZ-c887066cc553dd41.step16.why", "It shapes how each member is welcomed. It locks nothing and is never required.", null, null, false],
+  ["wizard.WIZ-7db08189cc0e58c3.name", "Welcome a new member", null, null, false],
+  ["wizard.WIZ-7db08189cc0e58c3.step1.what", "Choose your language.", null, null, false],
+  ["wizard.WIZ-7db08189cc0e58c3.step1.why", "Everything that follows should be in words you read easily. It starts from your device's setting.", null, null, false],
+  ["wizard.WIZ-7db08189cc0e58c3.step2.what", "Choose a handle and a password.", null, null, false],
+  ["wizard.WIZ-7db08189cc0e58c3.step2.why", "The record shows your handle on your work. It needn't be your legal name: a known name lends credibility, a pen name shields you, and administrators still know who you are.", null, null, false],
+  ["wizard.WIZ-7db08189cc0e58c3.step3.what", "This is your group's home: what it is working on, and what is waiting on you.", null, null, false],
+  ["wizard.WIZ-7db08189cc0e58c3.step3.why", "Come back here whenever you lose your place.", null, null, false],
+  ["wizard.WIZ-7db08189cc0e58c3.step4.what", `Two things to know first: a question's strength against its project's bar, and "Undetermined".`, null, null, false],
+  ["wizard.WIZ-7db08189cc0e58c3.step4.why", "You will see these everywhere. Every other mark is explained where you meet it, one tap away.", null, null, false],
+  ["wizard.WIZ-7db08189cc0e58c3.step5.what", "Optional: connect your own Claude account, or skip.", null, null, false],
+  ["wizard.WIZ-7db08189cc0e58c3.step5.why", "The assistant serves only you, and every journey works without it.", null, null, false],
+  ["wizard.WIZ-7db08189cc0e58c3.step6.what", "Optional: tell the group about your own ties.", null, null, false],
+  ["wizard.WIZ-7db08189cc0e58c3.step6.why", "Only you and the administrators see them, and they let a case disclose a tie honestly.", null, null, false],
+  ["wizard.WIZ-7db08189cc0e58c3.step7.what", "Take a first step: join a project, capture a document, or record what you saw.", null, null, false],
+  ["wizard.WIZ-7db08189cc0e58c3.step7.why", "One small act is enough to begin. Nothing here has to be done in order.", null, null, false],
+  ["wizard.WIZ-426b9c2e8b128b6b.name", "Publication ceremony", null, null, false],
+  ["wizard.WIZ-426b9c2e8b128b6b.step1.what", "Check what you are publishing: the case, its edition and its scope.", null, null, false],
+  ["wizard.WIZ-426b9c2e8b128b6b.step1.why", "Publishing is permanent. This is the last look before it.", null, null, false],
+  ["wizard.WIZ-426b9c2e8b128b6b.step2.what", "Check each finding's strength against the bar, and anything still open.", null, null, false],
+  ["wizard.WIZ-426b9c2e8b128b6b.step2.why", "A reader sees each finding's strengths. Anything still open is disclosed, never hidden.", null, null, false],
+  ["wizard.WIZ-426b9c2e8b128b6b.step3.what", "Read what the case leaves out, and who acknowledged it.", null, null, false],
+  ["wizard.WIZ-426b9c2e8b128b6b.step3.why", "Saying what a case does not cover is part of its honesty.", null, null, false],
+  ["wizard.WIZ-426b9c2e8b128b6b.step4.what", "Check each person the case names, with the reason they matter to a finding.", null, null, false],
+  ["wizard.WIZ-426b9c2e8b128b6b.step4.why", "A case cannot be signed while any reason is missing.", null, null, false],
+  ["wizard.WIZ-426b9c2e8b128b6b.step5.what", "Check each photo the case relies on: mark anyone in it who is not part of a finding, and any number plate.", null, null, false],
+  ["wizard.WIZ-426b9c2e8b128b6b.step5.why", "The public copy shows them obscured and says so; the original stays inside the group.", null, null, false],
+  ["wizard.WIZ-426b9c2e8b128b6b.step6.what", "Read what will be disclosed: the timeline as it stands, and any calculation that differs or is not tied to the record.", null, null, false],
+  ["wizard.WIZ-426b9c2e8b128b6b.step6.why", "Readers must see what the case could not settle.", null, null, false],
+  ["wizard.WIZ-426b9c2e8b128b6b.step7.what", "Read the group's declared bias as it will appear.", null, null, false],
+  ["wizard.WIZ-426b9c2e8b128b6b.step7.why", "Every published case carries the lens it was made through.", null, null, false],
+  ["wizard.WIZ-426b9c2e8b128b6b.step8.what", "Preview the public page as a stranger will see it.", null, null, false],
+  ["wizard.WIZ-426b9c2e8b128b6b.step8.why", "This is how a reader with no account meets your work.", null, null, false],
+  ["wizard.WIZ-426b9c2e8b128b6b.step9.what", "Each member publishing confirms they have no undeclared tie to anyone the case concerns.", null, null, false],
+  ["wizard.WIZ-426b9c2e8b128b6b.step9.why", "Including anyone paid in its money. A tie disclosed is a strength; one found later is not.", null, null, false],
+  ["wizard.WIZ-426b9c2e8b128b6b.step10.what", "Sign with your key.", null, null, false],
+  ["wizard.WIZ-426b9c2e8b128b6b.step10.why", "Publishing is permanent. Corrections come as a new edition, never by changing this one.", null, null, false],
+  ["wizard.WIZ-426b9c2e8b128b6b.step11.what", "Publish now, or choose the time it becomes public, such as when a story citing it runs.", null, null, false],
+  ["wizard.WIZ-426b9c2e8b128b6b.step11.why", "At that time Civicsmith checks again; if anything changed since you signed, it holds the case and tells you. You can cancel or move the time until then.", null, null, false],
+  ["wizard.WIZ-cb0ad18a17a04233.name", "Get a record", null, null, false],
+  ["wizard.WIZ-cb0ad18a17a04233.step1.what", "Look first: is the record already public? Search what your group holds and where the office publishes.", null, null, false],
+  ["wizard.WIZ-cb0ad18a17a04233.step1.why", "Much is public already. A copy from the office's own site holds up better than one found elsewhere.", null, null, false],
+  ["wizard.WIZ-cb0ad18a17a04233.step2.what", "If you find it, capture it from its address. Then you are done.", null, null, false],
+  ["wizard.WIZ-cb0ad18a17a04233.step2.why", "Capturing keeps a fingerprinted copy that cannot change under you.", null, null, false],
+  ["wizard.WIZ-cb0ad18a17a04233.step3.what", "If not, choose the office that holds the records.", null, null, false],
+  ["wizard.WIZ-cb0ad18a17a04233.step3.why", "The request goes to the office by its role, so it reaches whoever holds the post that day. You will see who that is.", null, null, false],
+  ["wizard.WIZ-cb0ad18a17a04233.step4.what", "Say plainly what records you want.", null, null, false],
+  ["wizard.WIZ-cb0ad18a17a04233.step4.why", "A clear description is harder to refuse, or to answer only in part.", null, null, false],
+  ["wizard.WIZ-cb0ad18a17a04233.step5.what", "Choose the law the request goes under, from your group's places.", null, null, false],
+  ["wizard.WIZ-cb0ad18a17a04233.step5.why", "The law sets the office's deadline. Where a faster kind of request fits, it is offered.", null, null, false],
+  ["wizard.WIZ-cb0ad18a17a04233.step6.what", "Read the draft request and edit it until it is yours.", null, null, false],
+  ["wizard.WIZ-cb0ad18a17a04233.step6.why", "The wizard only drafts. The words that are sent are yours.", null, null, false],
+  ["wizard.WIZ-cb0ad18a17a04233.step7.what", "Approve the text.", null, null, false],
+  ["wizard.WIZ-cb0ad18a17a04233.step7.why", "Approving is kept apart from sending, so you can stop between them.", null, null, false],
+  ["wizard.WIZ-cb0ad18a17a04233.step8.what", "Send it the way the office accepts requests, then record that you sent it.", null, null, false],
+  ["wizard.WIZ-cb0ad18a17a04233.step8.why", "Sending tells the office what your group is looking at. Recording the send starts the clock.", null, null, false],
+  ["wizard.WIZ-cb0ad18a17a04233.step9.what", "Confirm the due date worked out from the law. Download it to your calendar if you like.", null, null, false],
+  ["wizard.WIZ-cb0ad18a17a04233.step9.why", "You can see exactly how it was counted, and challenge it.", null, null, false],
+  ["wizard.WIZ-33b5887790b7561b.name", "Check a claim", null, null, false],
+  ["wizard.WIZ-33b5887790b7561b.step1.what", "Capture the claim where the city made it: a budget, a report to council, a press release.", null, null, false],
+  ["wizard.WIZ-33b5887790b7561b.step1.why", "The claim itself is your first piece of evidence.", null, null, false],
+  ["wizard.WIZ-33b5887790b7561b.step2.what", "Point at the words that make the claim.", null, null, false],
+  ["wizard.WIZ-33b5887790b7561b.step2.why", "Every later step refers back to exactly what was said.", null, null, false],
+  ["wizard.WIZ-33b5887790b7561b.step3.what", "Open the question: do the city's own records support the claim?", null, null, false],
+  ["wizard.WIZ-33b5887790b7561b.step3.why", "A claim cannot be checked; a question can be answered, or shown undetermined.", null, null, false],
+  ["wizard.WIZ-33b5887790b7561b.step4.what", "Pin down what the claim's words mean: what counts, and over what period. If the city never says, record that.", null, null, false],
+  ["wizard.WIZ-33b5887790b7561b.step4.why", "A share means nothing until you know what was counted. A gap is recorded as undetermined, with its reason.", null, null, false],
+  ["wizard.WIZ-33b5887790b7561b.step5.what", "Get the city's own records behind the claim: online, or by request.", null, null, false],
+  ["wizard.WIZ-33b5887790b7561b.step5.why", "The claim should be checked against the city's own data, not anyone's impression.", null, null, false],
+  ["wizard.WIZ-33b5887790b7561b.step6.what", "Work it out with the built-in calculation, or bind your own spreadsheet to the captured records.", null, null, false],
+  ["wizard.WIZ-33b5887790b7561b.step6.why", "The method is shown with the result, so anyone can check it.", null, null, false],
+  ["wizard.WIZ-33b5887790b7561b.step7.what", "Plan a spot-check: a recorded random draw picks which records members visit.", null, null, false],
+  ["wizard.WIZ-33b5887790b7561b.step7.why", "A draw anyone can repeat means no one can say you picked the worst cases.", null, null, false],
+  ["wizard.WIZ-33b5887790b7561b.step8.what", "Members visit and record what they find, with place and date, and a photo where they can take one.", null, null, false],
+  ["wizard.WIZ-33b5887790b7561b.step8.why", "Firsthand checks test whether the records match the street.", null, null, false],
+  ["wizard.WIZ-33b5887790b7561b.step9.what", "Conclude with what the evidence supports, and say what would change it.", null, null, false],
+  ["wizard.WIZ-33b5887790b7561b.step9.why", "A conclusion that names what would change it is one others can trust.", null, null, false],
+  ["wizard.WIZ-86b7f4007e3b0e3c.name", "Your first question", null, null, false],
+  ["wizard.WIZ-86b7f4007e3b0e3c.step1.what", "What drew you in? A problem you live with, a person, a payment or contract, or something you read.", null, null, false],
+  ["wizard.WIZ-86b7f4007e3b0e3c.step1.why", "Any of these is a good start. Civicsmith offers a first step from each.", null, null, false],
+  ["wizard.WIZ-86b7f4007e3b0e3c.step2.what", "Say what you want to know, as a question.", null, null, false],
+  ["wizard.WIZ-86b7f4007e3b0e3c.step2.why", "A question is something the record can answer: yes, no, or undetermined, and why.", null, null, false],
+  ["wizard.WIZ-86b7f4007e3b0e3c.step3.what", "Find or capture a document that bears on it.", null, null, false],
+  ["wizard.WIZ-86b7f4007e3b0e3c.step3.why", "Every answer rests on documents anyone could check.", null, null, false],
+  ["wizard.WIZ-86b7f4007e3b0e3c.step4.what", "Point at the passage that matters.", null, null, false],
+  ["wizard.WIZ-86b7f4007e3b0e3c.step4.why", "Citing a passage, not a whole document, shows exactly what you rely on.", null, null, false],
+  ["wizard.WIZ-86b7f4007e3b0e3c.step5.what", "Say whether it supports the question or cuts against it.", null, null, false],
+  ["wizard.WIZ-86b7f4007e3b0e3c.step5.why", "Evidence against is kept as carefully as evidence for.", null, null, false],
+  ["wizard.WIZ-86b7f4007e3b0e3c.step6.what", "See the question's strength against the project's bar, and what would raise it.", null, null, false],
+  ["wizard.WIZ-86b7f4007e3b0e3c.step6.why", "Strength is two grades, never one score: how well the documents are held and how firmly they are linked.", null, null, false],
+  ["wizard.WIZ-4d42b0233d48913f.name", "Say who your group is", null, null, false],
+  ["wizard.WIZ-4d42b0233d48913f.step1.what", "What kind of group are you? Pick one or more, or describe your own.", null, null, false],
+  ["wizard.WIZ-4d42b0233d48913f.step1.why", "It shapes how each member is welcomed. It never limits what anyone can do.", null, null, false],
+  ["wizard.WIZ-4d42b0233d48913f.step2.what", "What do you focus on: issues, places, offices or agencies?", null, null, false],
+  ["wizard.WIZ-4d42b0233d48913f.step2.why", "New members see your focus first when they choose where to start.", null, null, false],
+  ["wizard.WIZ-4d42b0233d48913f.step3.what", "Why does the group exist? Say it in your own words.", null, null, false],
+  ["wizard.WIZ-4d42b0233d48913f.step3.why", "Your declared bias can start from what you write here.", null, null, false],
+  ["wizard.WIZ-4d42b0233d48913f.step4.what", "Who should see this: members only, or also your public page and the network directory?", null, null, false],
+  ["wizard.WIZ-4d42b0233d48913f.step4.why", "Members only is the default. A group that wants to stay unnamed keeps it that way.", null, null, false],
+  ["wizard.WIZ-8e7e2fac33d069f8.name", "Invite a member", null, null, false],
+  ["wizard.WIZ-8e7e2fac33d069f8.step1.what", "Who: their handle, and the cover the group knows them by. Not a legal name.", null, null, false],
+  ["wizard.WIZ-8e7e2fac33d069f8.step1.why", "The record never needs a legal name. Administrators keep the cover so they know who is who.", null, null, false],
+  ["wizard.WIZ-8e7e2fac33d069f8.step2.what", "What they may do. Contributing is the default.", null, null, false],
+  ["wizard.WIZ-8e7e2fac33d069f8.step2.why", "Give only what the person needs; you can change it later.", null, null, false],
+  ["wizard.WIZ-8e7e2fac33d069f8.step3.what", "Send the link yourself. It works once and expires after seven days.", null, null, false],
+  ["wizard.WIZ-8e7e2fac33d069f8.step3.why", "Civicsmith sends no email, so the link reaches them only through you.", null, null, false],
+  ["wizard.WIZ-8e7e2fac33d069f8.step4.what", "Or let people join through your website: create a website key, or turn on the reusable join link.", null, null, false],
+  ["wizard.WIZ-8e7e2fac33d069f8.step4.why", "Anyone let through can see the group's shared work, so each comes with limits and a daily cap.", null, null, false],
+  ["wizard.WIZ-74328804ddae3503.name", "Connect your Claude account", null, null, false],
+  ["wizard.WIZ-74328804ddae3503.step1.what", "The assistant is optional. If your group offers its API key, you can use it already; your own account, if you connect one, always comes first.", null, null, false],
+  ["wizard.WIZ-74328804ddae3503.step1.why", "Your own account serves only you. Everything works without the assistant.", null, null, false],
+  ["wizard.WIZ-74328804ddae3503.step2.what", "Read what connecting means.", null, null, false],
+  ["wizard.WIZ-74328804ddae3503.step2.why", "Your questions, and what is read to answer them, go to Anthropic under your own account.", null, null, false],
+  ["wizard.WIZ-74328804ddae3503.step3.what", "To connect your Claude subscription, open Anthropic's sign-in page, sign in and approve. Or use an API key, or skip.", null, null, false],
+  ["wizard.WIZ-74328804ddae3503.step3.why", "You sign in on Anthropic's own page; Civicsmith never sees your Claude password. Skipping is a real choice: every journey stays open.", null, null, false],
+  ["wizard.WIZ-74328804ddae3503.step4.what", "Copy the code Anthropic's page shows you, paste it here, and connect.", null, null, false],
+  ["wizard.WIZ-74328804ddae3503.step4.why", "Your subscription then serves only your own questions. You can disconnect at any time.", null, null, false],
+  ["wizard.WIZ-74328804ddae3503.step5.what", "Set your daily limit.", null, null, false],
+  ["wizard.WIZ-74328804ddae3503.step5.why", "It caps what the assistant can spend on your account each day. An administrator may set a lower one for the group.", null, null, false],
+  ["wizard.WIZ-74328804ddae3503.step6.what", "Choose whether the assistant may suggest things without being asked. It is off unless you turn it on.", null, null, false],
+  ["wizard.WIZ-74328804ddae3503.step6.why", "Some members want suggestions; others want quiet.", null, null, false],
+  ["wizard.WIZ-74328804ddae3503.step7.what", "You can disconnect at any time, here.", null, null, false],
+  ["wizard.WIZ-74328804ddae3503.step7.why", "Disconnecting removes the key or token from your group's Civicsmith.", null, null, false],
+  ["wizard.WIZ-e2731f1813a43b89.name", "Your ties", null, null, false],
+  ["wizard.WIZ-e2731f1813a43b89.step1.what", "List your employer, relatives, and businesses you have an interest in.", null, null, false],
+  ["wizard.WIZ-e2731f1813a43b89.step1.why", "A case concerning any of them can then disclose the tie honestly.", null, null, false],
+  ["wizard.WIZ-e2731f1813a43b89.step2.what", "Only you and the administrators can see this.", null, null, false],
+  ["wizard.WIZ-e2731f1813a43b89.step2.why", "Your ties never appear in a case unless one concerns it, and then only as you choose.", null, null, false],
+  ["wizard.WIZ-e2731f1813a43b89.step3.what", "For each tie, choose how a published case discloses it when the case concerns them: naming you by your handle, or as \u201Ca member of the group\u201D.", null, null, false],
+  ["wizard.WIZ-e2731f1813a43b89.step3.why", "Readers learn of the tie either way; not naming you protects you while keeping the case honest.", null, null, false],
+  ["wizard.WIZ-a15d174f7a2c1dc5.name", "Follow a proceeding", null, null, false],
+  ["wizard.WIZ-a15d174f7a2c1dc5.step1.what", "Capture a filing, or the court's register page.", null, null, false],
+  ["wizard.WIZ-a15d174f7a2c1dc5.step1.why", "The proceeding is registered from what it says about itself.", null, null, false],
+  ["wizard.WIZ-a15d174f7a2c1dc5.step2.what", "Register the proceeding from its caption: the court, the number, and a neutral label.", null, null, false],
+  ["wizard.WIZ-a15d174f7a2c1dc5.step2.why", "A neutral label keeps your own view out of the record's name for it.", null, null, false],
+  ["wizard.WIZ-a15d174f7a2c1dc5.step3.what", "Add the parties by role.", null, null, false],
+  ["wizard.WIZ-a15d174f7a2c1dc5.step3.why", "Roles say who is suing, who is sued, and who is deciding.", null, null, false],
+  ["wizard.WIZ-a15d174f7a2c1dc5.step4.what", "Follow its register: on a schedule, or by your own capture where the register needs a login.", null, null, false],
+  ["wizard.WIZ-a15d174f7a2c1dc5.step4.why", "New filings are flagged, so nothing arrives unseen.", null, null, false],
+  ["wizard.WIZ-a15d174f7a2c1dc5.step5.what", "Hold each order's requirements as obligations, with their reply dates.", null, null, false],
+  ["wizard.WIZ-a15d174f7a2c1dc5.step5.why", "An order is a standard the office must meet. Its dates go into your queue.", null, null, false],
+  ["wizard.WIZ-df0b5c4d0ffcdde7.name", "Follow the money", null, null, false],
+  ["wizard.WIZ-df0b5c4d0ffcdde7.step1.what", "Capture the budget, financial report or contract.", null, null, false],
+  ["wizard.WIZ-df0b5c4d0ffcdde7.step1.why", "Every figure must point back to where it was printed.", null, null, false],
+  ["wizard.WIZ-df0b5c4d0ffcdde7.step2.what", "Read just the figures you need, each with its stage and period.", null, null, false],
+  ["wizard.WIZ-df0b5c4d0ffcdde7.step2.why", "Proposed, adopted, committed and paid are different facts. Mixing them is how money stories go wrong.", null, null, false],
+  ["wizard.WIZ-df0b5c4d0ffcdde7.step3.what", "Start a money trail.", null, null, false],
+  ["wizard.WIZ-df0b5c4d0ffcdde7.step3.why", "A trail gathers the figures one question needs.", null, null, false],
+  ["wizard.WIZ-df0b5c4d0ffcdde7.step4.what", "Include or leave out each item, with a reason.", null, null, false],
+  ["wizard.WIZ-df0b5c4d0ffcdde7.step4.why", "Your reasons show a reader why the trail adds up the way it does.", null, null, false],
+  ["wizard.WIZ-df0b5c4d0ffcdde7.step5.what", "Compare two sources of one figure, or what was committed against what was paid.", null, null, false],
+  ["wizard.WIZ-df0b5c4d0ffcdde7.step5.why", "Differences in basis, period or rounding are named, not hidden.", null, null, false],
+  ["wizard.WIZ-9f2b79390d6940a0.name", "Build a timeline", null, null, false],
+  ["wizard.WIZ-9f2b79390d6940a0.step1.what", "Record an event from a cited passage: what, when, and how precisely you know the date.", null, null, false],
+  ["wizard.WIZ-9f2b79390d6940a0.step1.why", "Every event points at its source. A date you only know roughly is recorded as rough.", null, null, false],
+  ["wizard.WIZ-9f2b79390d6940a0.step2.what", "Add who took part and in what role: decided, signed, voted.", null, null, false],
+  ["wizard.WIZ-9f2b79390d6940a0.step2.why", "Roles are what make an event useful to a finding.", null, null, false],
+  ["wizard.WIZ-9f2b79390d6940a0.step3.what", "Link events: made under, answered, amended.", null, null, false],
+  ["wizard.WIZ-9f2b79390d6940a0.step3.why", "Links let a reader follow one thread through the record.", null, null, false],
+  ["wizard.WIZ-9f2b79390d6940a0.step4.what", "Keep a suspected cause as a hunch, never as a fact.", null, null, false],
+  ["wizard.WIZ-9f2b79390d6940a0.step4.why", "A hunch is marked as yours and is never evidence.", null, null, false],
+  ["wizard.WIZ-9f2b79390d6940a0.step5.what", "Review the two lanes before the case is signed: what they did, and what we did.", null, null, false],
+  ["wizard.WIZ-9f2b79390d6940a0.step5.why", "The timeline is frozen into the case when it is signed.", null, null, false],
+  ["wizard.WIZ-55930f07cb4e9499.name", "Keep asking this", null, null, false],
+  ["wizard.WIZ-55930f07cb4e9499.step1.what", "Choose how often to check, and until when.", null, null, false],
+  ["wizard.WIZ-55930f07cb4e9499.step1.why", "An end date is required, so no question runs forever.", null, null, false],
+  ["wizard.WIZ-55930f07cb4e9499.step2.what", "The search runs on schedule. With the assistant connected, it reads only what is new, on your account and within your limit.", null, null, false],
+  ["wizard.WIZ-55930f07cb4e9499.step2.why", "Without the assistant, new matches arrive as a list for you to read.", null, null, false],
+  ["wizard.WIZ-55930f07cb4e9499.step3.what", "The answer reaches your queue once.", null, null, false],
+  ["wizard.WIZ-55930f07cb4e9499.step3.why", "Only you see it; it is never shared.", null, null, false],
+  ["wizard.WIZ-55930f07cb4e9499.step4.what", "Stop it any time.", null, null, false],
+  ["wizard.WIZ-55930f07cb4e9499.step4.why", "Stopping is immediate, and nothing further is checked.", null, null, false],
+  ["wizard.WIZ-4cdbd26939d4cc6d.name", "Use another group's case", null, null, false],
+  ["wizard.WIZ-4cdbd26939d4cc6d.step1.what", "Import the case into its own read-only project.", null, null, false],
+  ["wizard.WIZ-4cdbd26939d4cc6d.step1.why", "Another group's work stays marked as theirs, and cannot be edited.", null, null, false],
+  ["wizard.WIZ-4cdbd26939d4cc6d.step2.what", "Civicsmith recreates each finding and calculation from the case file. Watch each one's mark.", null, null, false],
+  ["wizard.WIZ-4cdbd26939d4cc6d.step2.why", "Recreated, recreated in part, or did not recreate: you never rely on what you could not check.", null, null, false],
+  ["wizard.WIZ-4cdbd26939d4cc6d.step3.what", "Accept what recreated, with a reason.", null, null, false],
+  ["wizard.WIZ-4cdbd26939d4cc6d.step3.why", "Accepting names one edition and changes no grade.", null, null, false],
+  ["wizard.WIZ-4cdbd26939d4cc6d.step4.what", "Watch the publisher's docket for new editions and corrections.", null, null, false],
+  ["wizard.WIZ-4cdbd26939d4cc6d.step4.why", "Anything relying on the case is told when it changes.", null, null, false],
+  ["wizard.WIZ-af4c9fafc3713f26.name", "Translate the interface", null, null, false],
+  ["wizard.WIZ-af4c9fafc3713f26.step1.what", "Choose the language.", null, null, false],
+  ["wizard.WIZ-af4c9fafc3713f26.step1.why", "Civicsmith's own translations come with releases. Your group fills gaps and improves wording.", null, null, false],
+  ["wizard.WIZ-af4c9fafc3713f26.step2.what", "See the words still untranslated.", null, null, false],
+  ["wizard.WIZ-af4c9fafc3713f26.step2.why", "A missing word shows in English, never blank.", null, null, false],
+  ["wizard.WIZ-af4c9fafc3713f26.step3.what", `Where you can reach the assistant, ask it to draft them all. Each is marked "Draft \xB7 the assistant's".`, null, null, false],
+  ["wizard.WIZ-af4c9fafc3713f26.step3.why", "Your task becomes finding its errors. Without the assistant, type them yourself.", null, null, false],
+  ["wizard.WIZ-af4c9fafc3713f26.step4.what", "Read each draft against the English; keep it or correct it.", null, null, false],
+  ["wizard.WIZ-af4c9fafc3713f26.step4.why", "A word becomes the group's only when a granted member who knows the language keeps it.", null, null, false],
+  ["wizard.WIZ-af4c9fafc3713f26.step5.what", "A protected word you changed, or typed without a draft, waits for a second check.", null, null, false],
+  ["wizard.WIZ-af4c9fafc3713f26.step5.why", "A second granted speaker, or an administrator reading the assistant's back-translation, confirms it. Until then members see the English.", null, null, false],
+  ["wizard.WIZ-a8c349d7d71b6bb0.name", "Start and send", null, null, false],
+  ["wizard.WIZ-a8c349d7d71b6bb0.step1.what", "Choose the option, and say when to be reminded.", null, null, false],
+  ["wizard.WIZ-a8c349d7d71b6bb0.step1.why", "Choosing records why this option, now.", null, null, false],
+  ["wizard.WIZ-a8c349d7d71b6bb0.step2.what", "See what starting does, and anything that would stop it.", null, null, false],
+  ["wizard.WIZ-a8c349d7d71b6bb0.step2.why", "Refusals are shown before anything runs.", null, null, false],
+  ["wizard.WIZ-a8c349d7d71b6bb0.step3.what", "Start the action, addressed to the office by role.", null, null, false],
+  ["wizard.WIZ-a8c349d7d71b6bb0.step3.why", "The office's holder that day is shown, so you know who will read it.", null, null, false],
+  ["wizard.WIZ-a8c349d7d71b6bb0.step4.what", "Prepare what is sent. A template or draft is labelled until you make it yours.", null, null, false],
+  ["wizard.WIZ-a8c349d7d71b6bb0.step4.why", "The words that leave the group are always a member's.", null, null, false],
+  ["wizard.WIZ-a8c349d7d71b6bb0.step5.what", "Approve the text.", null, null, false],
+  ["wizard.WIZ-a8c349d7d71b6bb0.step5.why", "Approving is kept apart from sending, so you can stop between them.", null, null, false],
+  ["wizard.WIZ-a8c349d7d71b6bb0.step6.what", "Send it, then record that you sent it.", null, null, false],
+  ["wizard.WIZ-a8c349d7d71b6bb0.step6.why", "This tells the office what your group is looking at, and starts the clock.", null, null, false],
+  ["wizard.WIZ-a8c349d7d71b6bb0.step7.what", "The due date and next checkpoint go into your queue. A next step can wait on the reply.", null, null, false],
+  ["wizard.WIZ-a8c349d7d71b6bb0.step7.why", "If no reply comes, the next step is ready without anyone remembering.", null, null, false]
+]);
+
 // src/setup.mjs
 var SETUP_HTML = PAGE_HTML.replace(HOSTING_SLOT, () => hostingControlBlock("notice", { guideHref: ROTATION_GUIDE_HREF }));
 function setupPage(read3) {
@@ -209767,12 +210839,8 @@ var INSTANCE_SETUP_CHECKS = Object.freeze({
   },
   /* R53–R55 (DEC-172; K1957, K2093; D311): the assistant, read from whether the group keeps its material away from AI
      (credentials R52), and each member's disclosure. C-119.6 (`ASSISTANT_SWITCH_MALFORMED`) retired with the switch
-     (T36-34). */
-  ASSISTANT_OFF: {
-    check: "C-119.5",
-    where: "src/setup.mjs assistantGate > is-assistant-on",
-    translation: "Your group keeps its material away from every assistant, so no question is put to one and nothing runs. The administrator's reason, in their own words, and who set it and when, come with this answer. Nothing was asked."
-  },
+     (T36-34); C-119.5 (`ASSISTANT_OFF`) retired in T37 (N765, K231): the gate answers credentials' `AI_KEPT_AWAY` (its
+     R35), the one site. Neither number is reused. */
   DISCLOSURE_NOT_THE_MEMBERS: {
     check: "C-119.7",
     where: "src/setup.mjs disclosureShown > is-disclosure-shown",
@@ -209821,6 +210889,88 @@ var INSTANCE_SETUP_CHECKS = Object.freeze({
     check: "C-119.12",
     where: "src/setup.mjs memberLanguageSet > is-member-language",
     translation: "A language is chosen by its standard tag, like en, es or zh-Hant, and what was sent is not one. Nothing was changed."
+  },
+  /* R67–R73 (T37-30; N669; DEC-127 (2), (5), DEC-157, DEC-179; K2200, K2201, K2216): the group's translation of the
+     interface. The next free numbers of C-64, awaiting T38's stamp. */
+  TRANSLATION_DIRECTION_UNKNOWN: {
+    check: "C-64.11",
+    where: "src/setup.mjs #draftRequest > is-translation-draft",
+    translation: "The assistant is asked either to draft words your group's language lacks, or to read one kept word back into English, and this request asks for neither. Nothing was sent and nothing was saved."
+  },
+  MACHINE_CANNOT_TRANSLATE: {
+    check: "C-64.12",
+    where: "src/setup.mjs #translationActor > is-translation-actor",
+    translation: "Translating the screens is done by members, each from their own signed-in session. The assistant and other machines can draft a translation for a member to check, and can never grant, keep, confirm, undo or mark one. Nothing was changed."
+  },
+  TRANSLATION_NOT_GRANTED: {
+    check: "C-64.13",
+    where: "src/setup.mjs #translationSpeaker > is-translation-speaker",
+    translation: "Only the administrators, and members an administrator has asked to translate the screens into this language, can work on its words. You have not been asked for this language. Nothing was changed."
+  },
+  NO_SUCH_WORD: {
+    check: "C-64.14",
+    where: "src/setup.mjs #translationWord > is-translation-word",
+    translation: "Each word on the screens is known by its key in the list of the interface's words, and that key is not in the list your group's Civicsmith holds. Nothing was changed."
+  },
+  TRANSLATION_NOT_MISSING: {
+    check: "C-64.15",
+    where: "src/setup.mjs #draftRequest > is-translation-draft",
+    translation: "The assistant drafts only the words your group has not yet translated into this language, and this word already has a kept translation. Change a kept word by keeping a new one. Nothing was sent."
+  },
+  TRANSLATION_KEYS_MALFORMED: {
+    check: "C-64.16",
+    where: "src/setup.mjs #draftRequest > is-translation-draft",
+    translation: "The words to draft are named by their keys: a list of at most 100 different keys, or none to draft the first words still missing. What was sent is not such a list. Nothing was sent."
+  },
+  TRANSLATION_NOTHING_TO_DRAFT: {
+    check: "C-64.17",
+    where: "src/setup.mjs #draftRequest > is-translation-draft",
+    translation: "There is nothing for the assistant to draft: every word asked for is either translated already or an official name, which is shown as it is with its official translation where one is published. Nothing was sent."
+  },
+  NO_SUCH_MEMBER: {
+    check: "C-64.18",
+    where: "src/setup.mjs #translationMember > is-translation-member",
+    translation: "Only an active member of your group can be asked to translate the screens, and the member named is not one. Nothing was changed."
+  },
+  NO_SUCH_DRAFT: {
+    check: "C-64.19",
+    where: "src/setup.mjs translationAdopt > is-translation-adopt",
+    translation: "The draft named is not one the assistant drafted for this word in this language, so it cannot be kept from. Keep the word as you typed it, or choose its draft. Nothing was changed."
+  },
+  TRANSLATION_TEXT_REFUSED: {
+    check: "C-64.20",
+    where: "src/setup.mjs translationAdopt > is-translation-adopt",
+    translation: "A translated word is one line of 1 to 2,000 characters, and it keeps every placeholder in braces, like {name}, exactly as the English has them, so the screen can fill them in. Nothing was changed."
+  },
+  TRANSLATION_NOT_AWAITING: {
+    check: "C-64.21",
+    where: "src/setup.mjs #translationAwaiting > is-translation-awaiting",
+    translation: "Only a protected word kept with changes, or typed without the assistant's draft, waits for a second check, and this word is not waiting for one. Nothing was changed."
+  },
+  TRANSLATION_CONFIRM_SELF: {
+    check: "C-64.22",
+    where: "src/setup.mjs translationConfirm > is-translation-confirm",
+    translation: "A protected word is checked a second time by someone other than the member who kept it: another member asked to translate this language, or an administrator. Nothing was changed."
+  },
+  TRANSLATION_NOT_READ_BACK: {
+    check: "C-64.23",
+    where: "src/setup.mjs translationConfirm > is-translation-confirm",
+    translation: "This word has not been read back into English for its current text, so an administrator cannot yet confirm it. Read it back into English first, then confirm. Nothing was changed."
+  },
+  TRANSLATION_NOTHING_TO_UNDO: {
+    check: "C-64.24",
+    where: "src/setup.mjs translationRevert > is-translation-revert",
+    translation: "This word has never been translated into this language, so there is nothing to undo: members see it in English. Nothing was changed."
+  },
+  TRANSLATION_NOT_SHOWN: {
+    check: "C-64.25",
+    where: "src/setup.mjs translationMark > is-translation-mark",
+    translation: "Only a translation members are shown can be marked as looking wrong, and this word shows no translation in this language yet. Nothing was recorded."
+  },
+  TRANSLATION_NOTE_REFUSED: {
+    check: "C-64.26",
+    where: "src/setup.mjs translationMark > is-translation-mark",
+    translation: "A note on a translation that looks wrong is optional, and when given it is at most 500 characters. Nothing was recorded."
   }
 });
 var refusal30 = (code, detail, extra) => {
@@ -209850,7 +211000,15 @@ var INSTANCE_SETUP_TABLES = Object.freeze([
   "place_wanted",
   "place_seen",
   "place_arrivals",
-  "member_languages"
+  "member_languages",
+  /* R75 (T37; N669): the group's translation of the interface, append-only. */
+  "translation_grants",
+  "translation_drafts",
+  "translation_adoptions",
+  "translation_confirmations",
+  "translation_undos",
+  "translation_marks",
+  "translation_readings"
 ]);
 var TABLE_CLASSES = Object.freeze({
   instance_group: { export: "admin-only", version_chain: false },
@@ -209867,7 +211025,16 @@ var TABLE_CLASSES = Object.freeze({
   place_seen: { export: "never", version_chain: false },
   place_arrivals: { export: "never", version_chain: true },
   /* R64 (DEC-127 (1)): each member's own choice of language, appended. */
-  member_languages: { export: "admin-only", version_chain: true }
+  member_languages: { export: "admin-only", version_chain: true },
+  /* R75 (DEC-127 (4)): the group's translation work, the group's settings' class, exempt from purge; none of it leaves
+     your group's Civicsmith, so none is exported. */
+  translation_grants: { export: "never", version_chain: true },
+  translation_drafts: { export: "never", version_chain: true },
+  translation_adoptions: { export: "never", version_chain: true },
+  translation_confirmations: { export: "never", version_chain: true },
+  translation_undos: { export: "never", version_chain: true },
+  translation_marks: { export: "never", version_chain: true },
+  translation_readings: { export: "never", version_chain: true }
 });
 var INSTANCE_SETUP_SEED_TABLES = Object.freeze(["seed_entities", "seed_lines", "seed_offices", "seed_bodies"]);
 var INSTANCE_SETUP_TABLE_DECLARATIONS = Object.freeze([
@@ -210054,6 +211221,95 @@ CREATE TABLE IF NOT EXISTS member_languages (
   language  TEXT,
   set_at    TEXT NOT NULL
 );
+-- R67-R75 (T37; N669; DEC-127, DEC-157, DEC-179): THE GROUP'S TRANSLATION OF THE INTERFACE. Every table is
+-- append-only: no statement updates or deletes a row. Each name is held by value (the handle) beside the member id.
+-- 'language' is the tag as jurisdictions' isLocale accepts it, in its canonical form.
+-- R69: a grant or a revocation (act 'grant' or 'revoke') of a member's right to translate one language.
+CREATE TABLE IF NOT EXISTS translation_grants (
+  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
+  member     TEXT NOT NULL,
+  member_name TEXT,
+  language   TEXT NOT NULL,
+  act        TEXT NOT NULL CHECK (act IN ('grant','revoke')),
+  by_member  TEXT NOT NULL,
+  by_name    TEXT,
+  at         TEXT NOT NULL
+);
+-- R67: each word the assistant drafted, as it drafted it, labelled machine work; never the group's wording.
+CREATE TABLE IF NOT EXISTS translation_drafts (
+  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
+  language   TEXT NOT NULL,
+  key        TEXT NOT NULL,
+  en         TEXT NOT NULL,
+  text       TEXT NOT NULL,
+  label      TEXT NOT NULL,
+  asked_by   TEXT NOT NULL,
+  asked_name TEXT,
+  at         TEXT NOT NULL
+);
+-- R70: each kept translation. 'act_n' numbers the word's adoptions and undos in one sequence per language and key;
+-- 'prev' is the adoption it replaced (NULL: the English); 'state' is what it was kept as ('shown' or 'awaiting').
+CREATE TABLE IF NOT EXISTS translation_adoptions (
+  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
+  language   TEXT NOT NULL,
+  key        TEXT NOT NULL,
+  act_n      INTEGER NOT NULL,
+  text       TEXT NOT NULL,
+  en         TEXT NOT NULL,
+  state      TEXT NOT NULL CHECK (state IN ('shown','awaiting')),
+  draft      INTEGER,
+  prev       INTEGER,
+  replaced   TEXT,
+  by_member  TEXT NOT NULL,
+  by_name    TEXT,
+  at         TEXT NOT NULL
+);
+-- R71: a confirmation of an awaiting adoption, beside it.
+CREATE TABLE IF NOT EXISTS translation_confirmations (
+  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
+  adoption   INTEGER NOT NULL,
+  language   TEXT NOT NULL,
+  key        TEXT NOT NULL,
+  read_back  INTEGER,
+  by_member  TEXT NOT NULL,
+  by_name    TEXT,
+  at         TEXT NOT NULL
+);
+-- R72: an undo, naming what it undoes (an adoption or an undo) and the adoptions it moves the word from and to.
+CREATE TABLE IF NOT EXISTS translation_undos (
+  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
+  language   TEXT NOT NULL,
+  key        TEXT NOT NULL,
+  act_n      INTEGER NOT NULL,
+  undoes     TEXT NOT NULL CHECK (undoes IN ('adoption','undo')),
+  undoes_seq INTEGER NOT NULL,
+  from_adoption INTEGER,
+  to_adoption   INTEGER,
+  by_member  TEXT NOT NULL,
+  by_name    TEXT,
+  at         TEXT NOT NULL
+);
+-- R73: "this translation looks wrong", open while the word's latest act is still 'act_n'.
+CREATE TABLE IF NOT EXISTS translation_marks (
+  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
+  language   TEXT NOT NULL,
+  key        TEXT NOT NULL,
+  act_n      INTEGER NOT NULL,
+  note       TEXT,
+  by_member  TEXT NOT NULL,
+  by_name    TEXT,
+  at         TEXT NOT NULL
+);
+-- R67's to_english (K2216): the fact of a reading back into English, no text: the SHA-256 of the kept text it read.
+CREATE TABLE IF NOT EXISTS translation_readings (
+  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
+  language   TEXT NOT NULL,
+  key        TEXT NOT NULL,
+  text_sha256 TEXT NOT NULL,
+  by_member  TEXT NOT NULL,
+  by_name    TEXT,
+  at         TEXT NOT NULL
+);
 -- R54 (D311): each time the assistant's disclosure was shown to a member before they connected their own account: who,
 -- the disclosure's version, who recorded it and when. Append-only.
 CREATE TABLE IF NOT EXISTS assistant_disclosures (
@@ -210064,6 +211320,27 @@ CREATE TABLE IF NOT EXISTS assistant_disclosures (
   shown_at  TEXT NOT NULL
 );
 `;
+var INTERFACE_WORDS = Object.freeze(WORD_ROWS.map(([key, en, note, means, prot]) => Object.freeze({ key, en, note, means, protected: prot })));
+var INTERFACE_WORDS_COMMIT = WORDS_COMMIT;
+var WORD_BY_KEY = new Map(INTERFACE_WORDS.map((w) => [w.key, w]));
+var TRANSLATION_DRAFT_MAX = 100;
+var TRANSLATION_TEXT_MAX = 2e3;
+var TRANSLATION_NOTE_MAX = 500;
+var TRANSLATION_DRAFTER = "class:ai";
+var placeholdersOf = (t2) => [...String(t2).matchAll(/\{([^{}\s]+)\}/g)].map((m) => m[1]).sort();
+var samePlaceholders = (a, b) => JSON.stringify(placeholdersOf(a)) === JSON.stringify(placeholdersOf(b));
+var oneLine7 = (t2) => !/[\u0000-\u001f\u007f-\u009f\u2028\u2029]/.test(t2);
+var canonicalTag = (t2) => {
+  try {
+    return Intl.getCanonicalLocales(t2)[0] || t2;
+  } catch {
+    return t2;
+  }
+};
+async function sha256Hex13(text7) {
+  const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(String(text7)));
+  return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
 var ASSISTANT_DISCLOSURE = Object.freeze({
   version: "D311-1",
   meaning: "your questions and the material read to answer them, people's facts included, go to Anthropic under your own account"
@@ -211260,8 +212537,8 @@ var InstanceSetup = class _InstanceSetup {
    * from every assistant, `credentials`' setting (its R51, R52), and a keep-away that cannot be read is read as kept
    * away (K2093). Your group's Civicsmith holds no Claude credential: each member who wants the assistant connects their
    * own account (credentials R22), and whether an account then serves an act is `credentials` R35's. While it is off,
-   * every ask and every run is refused by name (`ASSISTANT_OFF`) through `assistantGate`, which the plane and `answers`
-   * read before any model turn, carrying the administrator's reason; it ends nothing recorded.
+   * every ask and every run is refused by name through `assistantGate`, which answers credentials' `AI_KEPT_AWAY`
+   * (its R35, the one site; T37, N765, K231) as given, carrying the administrator's reason; it ends nothing recorded.
    * ===================================================================== */
   /** R53: `{ok, on, set_by, set_at, reason}` from `credentials.aiKeepAwayState()` (its R52): `on: false` exactly while
    *  the group keeps its material away from AI, with that setting's who, when and reason; a keep-away `on` other than
@@ -211287,18 +212564,22 @@ var InstanceSetup = class _InstanceSetup {
       detail: "whether your group keeps its material away from every assistant could not be read, so it is read as kept away and the assistant is off"
     };
   }
-  /** R55: null while the assistant is on (R53); otherwise the refusal every ask and every run answers, whoever asks and
-   *  whatever account they hold, carrying the keep-away's reason, who set it and when (`keep_away`; null, and said so,
-   *  when the state could not be read). A standing question is not run while it is off. Writes nothing. */
+  /** R55 (T37; N765, K231, K2201): `credentials.aiKeptAway()` (its R35) as given: null while the group does not keep its
+   *  material away, otherwise that service's one `AI_KEPT_AWAY` refusal with its row and `keep_away: {reason, set_by,
+   *  set_at}` (null, and said so, when the setting could not be read). This module holds no copy of the condition and
+   *  no row of its own for it. A provider that throws, which credentials R35 says it never does, is the store's
+   *  silence (R43), never an open gate. Writes nothing. */
   assistantGate() {
-    const st = this.assistantState();
-    if (st.on === true) return null;
-    const keep_away = { reason: st.reason, set_by: st.set_by, set_at: st.set_at };
-    return refusal30(
-      "ASSISTANT_OFF",
-      st.read === false ? "whether your group keeps its material away from every assistant could not be read, so it is read as kept away: no ask is put to an assistant and no run starts. No reason is known." : `an administrator${st.set_by ? ` (${st.set_by})` : ""} chose on ${st.set_at ?? "an unrecorded date"} to keep your group's material away from every assistant, for the reason given with this answer; no ask is put to an assistant and no run starts.`,
-      { set_by: st.set_by, set_at: st.set_at, keep_away, ...st.read === false ? { read: false } : {} }
-    );
+    try {
+      return this.#credentials().aiKeptAway();
+    } catch (e2) {
+      return {
+        ok: false,
+        reason: "STORE_DID_NOT_ANSWER",
+        code: "STORE_DID_NOT_ANSWER",
+        detail: `whether your group keeps its material away from every assistant did not answer (${String(e2 && e2.message || e2).slice(0, 160)}), so no ask is put to an assistant and no run starts.`
+      };
+    }
   }
   /** R54, op=disclosureshown: the disclosure was shown to `member` before they connected their own account. `by` is
    *  the control plane's stamp and must be that member's own session: no one records it on another's behalf. */
@@ -211511,7 +212792,7 @@ var InstanceSetup = class _InstanceSetup {
    *  the control plane's stamp, R29), `NOT_AN_ADMIN` to anyone else, a machine credential included. A provider that does
    *  not answer is the store's silence (R43), never `met: false`. Writes nothing and never throws. */
   adminRecoveryStep({ viewer = null } = {}) {
-    const silent = (what, e2) => ({
+    const silent2 = (what, e2) => ({
       ok: false,
       reason: "STORE_DID_NOT_ANSWER",
       code: "STORE_DID_NOT_ANSWER",
@@ -211522,22 +212803,22 @@ var InstanceSetup = class _InstanceSetup {
     try {
       admin = !!who2 && !/^class:/.test(who2) && this.#membership().isAdministrator(who2) === true;
     } catch (e2) {
-      return silent("the membership read of who is an administrator", e2);
+      return silent2("the membership read of who is an administrator", e2);
     }
     if (!admin) return notAnAdmin(viewer ?? null, "reading the step of two administrators holding recovery codes");
     let admins, codes;
     try {
       admins = this.#membership().activeAdmins();
     } catch (e2) {
-      return silent("the membership read of the administrators", e2);
+      return silent2("the membership read of the administrators", e2);
     }
     try {
       codes = this.#credentials().recoveryCodesState({ by: who2 });
     } catch (e2) {
-      return silent("the read of your recovery codes", e2);
+      return silent2("the read of your recovery codes", e2);
     }
-    if (!Array.isArray(admins)) return silent("the membership read of the administrators", "no list");
-    if (!codes || codes.ok !== true || typeof codes.held !== "boolean") return silent("the read of your recovery codes", "no answer");
+    if (!Array.isArray(admins)) return silent2("the membership read of the administrators", "no list");
+    if (!codes || codes.ok !== true || typeof codes.held !== "boolean") return silent2("the read of your recovery codes", "no answer");
     const administrators = admins.length;
     const remaining = Number.isInteger(codes.remaining) && codes.remaining > 0 ? codes.remaining : 0;
     const codes_held = codes.held === true && remaining > 0;
@@ -211555,7 +212836,7 @@ var InstanceSetup = class _InstanceSetup {
    * ===================================================================== */
   /** R65, op=groupdescriptiondraft, which the door routes itself and calls here in-process (control-plane R57): `by` and
    *  `viewer` are its stamps (R29) and `assistant` is `{on, account}` as it resolved them (never the key); `answers` is
-   *  the request's. The refusals, in order: NOT_AN_ADMIN, ASSISTANT_OFF, the door's account and
+   *  the request's. The refusals, in order: NOT_AN_ADMIN, AI_KEPT_AWAY (R55's gate), the door's account and
    *  ceiling codes (answered there), GROUP_DRAFT_ANSWERS_MALFORMED or GROUP_DRAFT_NO_ANSWERS; then the draft, or, when
    *  the draft cannot be served, ASSISTANT_DRAFT_UNAVAILABLE. `turn` is the door's call to agent-worker's `/draft`
    *  (`{answers, account, holdings}` → `{focus, purpose, readLog}`), else the one this module was built with. */
@@ -211565,7 +212846,7 @@ var InstanceSetup = class _InstanceSetup {
     const off = this.assistantGate();
     if (off) return off;
     if (assistant && typeof assistant === "object" && assistant.on === false)
-      return refusal30("ASSISTANT_OFF", "the assistant is not on for this request, so no question is put to it.");
+      return draftUnavailable("the assistant was not on when this request was resolved, so nothing was drafted and the fields are as they were.");
     const given5 = Array.isArray(answers) && answers.length <= GROUP_DRAFT_ANSWERS_MAX ? answers : null;
     if (!given5 || given5.some((a) => !a || typeof a !== "object" || typeof a.question !== "string" || typeof a.text !== "string" || [...a.text].length > GROUP_DRAFT_ANSWER_MAX))
       return refusal30("GROUP_DRAFT_ANSWERS_MALFORMED", `the answers are a list of at most ${GROUP_DRAFT_ANSWERS_MAX} {question, text}, each text at most ${GROUP_DRAFT_ANSWER_MAX} characters. Nothing was saved.`);
@@ -211596,6 +212877,691 @@ var InstanceSetup = class _InstanceSetup {
     }
     out.note = "a draft: nothing is saved until you edit it and keep it, and then the words are your group's.";
     return out;
+  }
+  /* =====================================================================
+   * THE GROUP'S TRANSLATION OF THE INTERFACE (R67–R75; T37-30; N669; DEC-127 (1), (2), (5), DEC-157, DEC-179; K1793,
+   * K2200, K2201, K2216). An administrator grants named members a language (R69); the assistant drafts the words a
+   * language lacks, each stored as labelled machine work (R67), or a granted member types one; a granted member keeps
+   * it (R70). A protected word (DEC-179 (4)) kept as the assistant drafted it shows at once; changed from the draft, or
+   * typed without one, it waits for a second check (R71): another granted member, or an administrator who has read it
+   * back into English. Every adoption records what it replaced, and an administrator undoes the latest act in one act
+   * (R72); any member may mark a shown word "looks wrong" (R73). Members read the screens word by word in their
+   * language, the English wherever no translation is shown (R74). Every table is append-only and nothing here leaves
+   * your group's Civicsmith (R75).
+   *
+   * A word's history in a language is one numbered sequence of acts (`act_n`), adoptions and undos alike: the latest
+   * act decides which adoption the word shows now (an adoption shows itself; an undo shows its `to_adoption`, null
+   * for the English). An adoption's state is what it was kept as, `awaiting` until a confirmation stands beside it.
+   * ===================================================================== */
+  /* Who someone is, by value, beside their id (R75): their handle, or the id itself for the founder. */
+  #nameOf(id) {
+    try {
+      const f17 = this.#membership().memberFacts?.(id);
+      if (f17 && typeof f17.handle === "string" && f17.handle) return f17.handle;
+    } catch {
+    }
+    return id;
+  }
+  /* An active member: an administrator (the founder included), or a member whose status is `active`. */
+  #isActiveMember(id) {
+    if (typeof id !== "string" || !id) return false;
+    try {
+      if (this.#membership().isAdministrator(id) === true) return true;
+      const f17 = this.#membership().memberFacts?.(id);
+      return !!f17 && f17.status === "active";
+    } catch {
+      return false;
+    }
+  }
+  #isAdmin(id) {
+    try {
+      return typeof id === "string" && !!id && this.#membership().isAdministrator(id) === true;
+    } catch {
+      return false;
+    }
+  }
+  /* Every act here: a person, never a machine (record-grammar R50: machine work can draft and never adopt or confirm). */
+  #translationActor(by) {
+    const who2 = typeof by === "string" ? by.trim() : "";
+    if (!who2 || isMachineIdentity(who2))
+      return refusal30("MACHINE_CANNOT_TRANSLATE", "translating the screens is a member's own act, from their own signed-in session. Nothing was changed.", { by: by ?? null });
+    return null;
+  }
+  /* A tag `jurisdictions.isLocale` accepts (R64's reading), answered in its canonical form, or R64's refusal. */
+  #translationLanguage(language) {
+    const tag2 = typeof language === "string" ? language.trim() : "";
+    if (!isLocale(tag2))
+      return { refused: refusal30("LANGUAGE_MALFORMED", `${tag2 ? `'${tag2.slice(0, 40)}' is not` : "the request names no language, and one is named as"} one well-formed BCP 47 language tag (en, es, zh-Hant). Nothing was changed.`) };
+    return { tag: canonicalTag(tag2) };
+  }
+  /* R68: a word of the list by its key, or NO_SUCH_WORD. */
+  #translationWord(key) {
+    const k = typeof key === "string" ? key.trim() : "";
+    const w = WORD_BY_KEY.get(k);
+    if (!w)
+      return { refused: refusal30("NO_SUCH_WORD", `${k ? `'${k.slice(0, 80)}' is not` : "the request names no word, and one is named by"} a key of the interface's word list. Nothing was changed.`, { key: k || null }) };
+    return { word: w };
+  }
+  /** R69: whether `member` is a granted speaker of `language`: an administrator, or a member holding a live grant
+   *  (granted, not revoked since, and the member active). In-process, for R67 and R70–R74. Never throws. */
+  translationGranted({ member: member2 = null, language = null } = {}) {
+    try {
+      const who2 = typeof member2 === "string" ? member2.trim() : "";
+      const tag2 = typeof language === "string" && isLocale(language.trim()) ? canonicalTag(language.trim()) : null;
+      if (!who2 || !tag2 || isMachineIdentity(who2)) return false;
+      if (this.#isAdmin(who2)) return true;
+      return this.#liveGrant(who2, tag2) && this.#isActiveMember(who2);
+    } catch {
+      return false;
+    }
+  }
+  #liveGrant(member2, tag2) {
+    const r = this.#one(`SELECT act FROM translation_grants WHERE member = ? AND language = ? ORDER BY seq DESC LIMIT 1`, member2, tag2);
+    return !!r && r.act === "grant";
+  }
+  /* R69's NO_SUCH_MEMBER (and R73's "any active member"): `who` is an active member of the group. */
+  #translationMember(who2, nothing) {
+    if (!who2 || isMachineIdentity(who2) || !this.#isActiveMember(who2))
+      return refusal30("NO_SUCH_MEMBER", `${who2 ? `'${String(who2).slice(0, 80)}' is not` : "the request names no member, and one is named as"} an active member of your group. ${nothing}`, { member: who2 || null });
+    return null;
+  }
+  #translationSpeaker(by, tag2) {
+    if (!this.translationGranted({ member: by, language: tag2 }))
+      return refusal30("TRANSLATION_NOT_GRANTED", `working on the words of ${tag2} is for the administrators and the members an administrator has asked to translate it. Nothing was changed.`, { by, language: tag2 });
+    return null;
+  }
+  /** R69, op=translationgrant: an administrator grants a named active member the right to translate the interface into
+   *  `language`, or revokes it (`revoke: true`). A second grant of a live grant, or a second revocation, answers
+   *  `existed: true` with the first. Append-only. */
+  translationGrant({ member: member2 = null, language = null, revoke = false, by = null } = {}) {
+    const machine3 = this.#translationActor(by);
+    if (machine3) return machine3;
+    if (!this.#isAdmin(by)) return notAnAdmin(by ?? null, "asking a member to translate the screens");
+    const lang = this.#translationLanguage(language);
+    if (lang.refused) return lang.refused;
+    const who2 = typeof member2 === "string" ? member2.trim() : "";
+    const notMember = this.#translationMember(who2, "Nothing was changed.");
+    if (notMember) return notMember;
+    const act2 = revoke === true ? "revoke" : "grant";
+    const rows3 = this.#rows(`SELECT seq, act, by_member, by_name, at FROM translation_grants WHERE member = ? AND language = ?
+                             ORDER BY seq`, who2, lang.tag);
+    const last = rows3.length ? rows3[rows3.length - 1] : null;
+    const already = act2 === "grant" ? !!last && last.act === "grant" : !last || last.act === "revoke";
+    if (already) {
+      let i = rows3.length - 1;
+      while (i > 0 && rows3[i - 1].act === act2) i -= 1;
+      const first = rows3[i] && rows3[i].act === act2 ? rows3[i] : null;
+      return {
+        ok: true,
+        existed: true,
+        member: who2,
+        language: lang.tag,
+        act: act2,
+        ...first ? { by: first.by_member, by_name: first.by_name, at: first.at } : {},
+        granted: this.translationGranted({ member: who2, language: lang.tag })
+      };
+    }
+    const at37 = this.#iso();
+    this.#sql.exec(`INSERT INTO translation_grants (member, member_name, language, act, by_member, by_name, at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)`, who2, this.#nameOf(who2), lang.tag, act2, by, this.#nameOf(by), at37);
+    return {
+      ok: true,
+      existed: false,
+      member: who2,
+      language: lang.tag,
+      act: act2,
+      by,
+      at: at37,
+      granted: this.translationGranted({ member: who2, language: lang.tag })
+    };
+  }
+  /* ---- a word's state in a language ---- */
+  /* The word's acts in `tag`: its adoptions, undos and confirmed adoptions, and what it shows now. */
+  #wordHistory(tag2, key) {
+    const adoptions = this.#rows(`SELECT * FROM translation_adoptions WHERE language = ? AND key = ? ORDER BY act_n`, tag2, key);
+    const undos = this.#rows(`SELECT * FROM translation_undos WHERE language = ? AND key = ? ORDER BY act_n`, tag2, key);
+    const confirmed = new Set(this.#rows(`SELECT adoption FROM translation_confirmations WHERE language = ? AND key = ?`, tag2, key).map((r) => r.adoption));
+    return _InstanceSetup.#current(adoptions, undos, confirmed);
+  }
+  /* From a word's acts: the latest act, the adoption shown now (or null, the English) and its state. */
+  static #current(adoptions, undos, confirmed) {
+    const lastA = adoptions.length ? adoptions[adoptions.length - 1] : null;
+    const lastU = undos.length ? undos[undos.length - 1] : null;
+    const latest3 = !lastA && !lastU ? null : !lastU || lastA && lastA.act_n > lastU.act_n ? { kind: "adoption", row: lastA } : { kind: "undo", row: lastU };
+    const shownSeq = !latest3 ? null : latest3.kind === "adoption" ? latest3.row.seq : latest3.row.to_adoption;
+    const adoption = shownSeq == null ? null : adoptions.find((a) => a.seq === shownSeq) || null;
+    const state = !adoption ? "missing" : adoption.state === "shown" || confirmed.has(adoption.seq) ? "shown" : "awaiting";
+    const actN = Math.max(lastA ? lastA.act_n : 0, lastU ? lastU.act_n : 0);
+    return { adoptions, undos, confirmed, latest: latest3, adoption, state, actN };
+  }
+  #translationAwaiting(tag2, word2) {
+    const h = this.#wordHistory(tag2, word2.key);
+    if (h.state !== "awaiting")
+      return { refused: refusal30("TRANSLATION_NOT_AWAITING", `${word2.key} is ${h.state === "missing" ? "not translated" : "shown"} in ${tag2}, so it is not waiting for a second check. Nothing was changed.`, { key: word2.key, language: tag2, state: h.state }) };
+    return { history: h };
+  }
+  /* R74: the active profiles' local names (jurisdictions R70, R72), each with its explanation and official translation
+     in `tag` when held. Never a word to draft, adopt or translate (DEC-157 (6)). */
+  #localNames(tag2) {
+    const ids = this.#activeIds();
+    if (!ids.length) return [];
+    let combined = null;
+    try {
+      combined = this.#juris().combine(ids);
+    } catch {
+      combined = null;
+    }
+    const list6 = combined && combined.ok === true && combined.view && Array.isArray(combined.view.local_names) ? combined.view.local_names : [];
+    const inTag = (xs) => (Array.isArray(xs) ? xs : []).find((x) => x && typeof x.locale === "string" && canonicalTag(x.locale) === tag2) || null;
+    return list6.map((n) => {
+      const ex = inTag(n.explanations), tr = inTag(n.translations);
+      return {
+        name: n.name,
+        kind: n.kind,
+        explanation: ex ? ex.text : null,
+        translation: tr ? { text: tr.text, source: tr.source ?? null } : null,
+        basis: n.basis ?? null
+      };
+    });
+  }
+  /* R67 (DEC-157 (6)): the local name a word's English is, if any (folded as extraction's term fold, exactly). */
+  static #officialFor(word2, names) {
+    const en = normAlias(word2.en);
+    return en ? names.find((n) => typeof n.name === "string" && normAlias(n.name) === en) || null : null;
+  }
+  /* R67: the first refusals, shared by `translationdraft` and its record route, and the words the door sends. */
+  #draftRequest({ language, direction, keys, key, by }) {
+    if (direction !== "to_language" && direction !== "to_english")
+      return { refused: refusal30("TRANSLATION_DIRECTION_UNKNOWN", `the direction is to_language or to_english, and ${direction === void 0 || direction === null ? "none was given" : `'${String(direction).slice(0, 40)}' is neither`}. Nothing was sent.`, { direction: direction ?? null }) };
+    const lang = this.#translationLanguage(language);
+    if (lang.refused) return lang;
+    const machine3 = this.#translationActor(by);
+    if (machine3) return { refused: machine3 };
+    const tag2 = lang.tag;
+    if (direction === "to_english") {
+      if (!this.#isAdmin(by))
+        return { refused: notAnAdmin(by ?? null, "asking the assistant to read a kept word back into English") };
+      const w = this.#translationWord(key);
+      if (w.refused) return w;
+      const aw = this.#translationAwaiting(tag2, w.word);
+      if (aw.refused) return aw;
+      const text7 = aw.history.adoption.text;
+      return { direction, tag: tag2, key: w.word.key, words: [{ key: w.word.key, en: w.word.en, text: text7, protected: w.word.protected }] };
+    }
+    const speaker = this.#translationSpeaker(by, tag2);
+    if (speaker) return { refused: speaker };
+    if (keys !== void 0 && keys !== null && (!Array.isArray(keys) || keys.length < 1 || keys.length > TRANSLATION_DRAFT_MAX || keys.some((k) => typeof k !== "string" || !k.trim()) || new Set(keys.map((k) => k.trim())).size !== keys.length))
+      return { refused: refusal30("TRANSLATION_KEYS_MALFORMED", `the words to draft are a list of 1 to ${TRANSLATION_DRAFT_MAX} different keys, or none for the first words still missing. Nothing was sent.`) };
+    const shown3 = this.#shownAdoptions(tag2);
+    let asked;
+    if (Array.isArray(keys)) {
+      asked = [];
+      for (const k of keys) {
+        const w = this.#translationWord(k);
+        if (w.refused) return w;
+        if (shown3.has(w.word.key))
+          return { refused: refusal30("TRANSLATION_NOT_MISSING", `${w.word.key} already has a kept translation in ${tag2}, so the assistant does not draft it. Nothing was sent.`, { key: w.word.key, language: tag2 }) };
+        asked.push(w.word);
+      }
+    } else {
+      asked = INTERFACE_WORDS.filter((w) => !shown3.has(w.key));
+    }
+    const names = this.#localNames(tag2);
+    const offered_official = [], words5 = [];
+    for (const w of asked) {
+      if (!Array.isArray(keys) && words5.length >= TRANSLATION_DRAFT_MAX) break;
+      const n = _InstanceSetup.#officialFor(w, names);
+      if (n) {
+        offered_official.push({ key: w.key, ...n });
+        continue;
+      }
+      words5.push({ key: w.key, en: w.en, note: w.note, means: w.means, protected: w.protected });
+    }
+    if (!words5.length)
+      return { refused: refusal30(
+        "TRANSLATION_NOTHING_TO_DRAFT",
+        `every word asked for is ${asked.length ? "an official name, shown as it is" : "translated already"} in ${tag2}, so there is nothing to draft. Nothing was sent.`,
+        { language: tag2, offered_official }
+      ) };
+    return { direction, tag: tag2, words: words5, offered_official };
+  }
+  /* The keys that have an adoption standing now in `tag` (shown or awaiting): a word that is not `missing`. */
+  #shownAdoptions(tag2) {
+    const out = /* @__PURE__ */ new Set();
+    for (const { key, adoptions, undos } of this.#languageHistories(tag2)) {
+      const h = _InstanceSetup.#current(adoptions, undos, /* @__PURE__ */ new Set());
+      if (h.adoption) out.add(key);
+    }
+    return out;
+  }
+  /* Every word's acts in `tag`, read once, grouped by key. */
+  #languageHistories(tag2) {
+    const by = /* @__PURE__ */ new Map();
+    const at37 = (k) => {
+      if (!by.has(k)) by.set(k, { key: k, adoptions: [], undos: [], confirmations: [], drafts: [], marks: [] });
+      return by.get(k);
+    };
+    for (const r of this.#rows(`SELECT * FROM translation_adoptions WHERE language = ? ORDER BY act_n`, tag2)) at37(r.key).adoptions.push(r);
+    for (const r of this.#rows(`SELECT * FROM translation_undos WHERE language = ? ORDER BY act_n`, tag2)) at37(r.key).undos.push(r);
+    for (const r of this.#rows(`SELECT * FROM translation_confirmations WHERE language = ? ORDER BY seq`, tag2)) at37(r.key).confirmations.push(r);
+    for (const r of this.#rows(`SELECT * FROM translation_drafts WHERE language = ? ORDER BY seq`, tag2)) at37(r.key).drafts.push(r);
+    for (const r of this.#rows(`SELECT * FROM translation_marks WHERE language = ? ORDER BY seq`, tag2)) at37(r.key).marks.push(r);
+    return [...by.values()];
+  }
+  /** R67 (K2238), in-process: null, or R67's first refusal (the direction, the tag, a machine, `TRANSLATION_NOT_GRANTED`
+   *  or `NOT_AN_ADMIN`, the word, the keys, not missing or not awaiting, nothing left to draft), each code minted here
+   *  alone (K231). store-door's route asks it before its own gate (its R10). Writes nothing; never throws. */
+  translationDraftRefusal({ language = null, direction = void 0, keys = void 0, key = null, by = null } = {}) {
+    try {
+      const req = this.#draftRequest({ language, direction, keys, key, by });
+      return req.refused || null;
+    } catch (e2) {
+      return {
+        ok: false,
+        reason: "STORE_DID_NOT_ANSWER",
+        code: "STORE_DID_NOT_ANSWER",
+        detail: `the words to draft could not be read (${String(e2 && e2.message || e2).slice(0, 160)}). Nothing was sent.`
+      };
+    }
+  }
+  /** R67, op=translationdraft, which the door routes and calls here (store-door R10; control-plane R57's third draft):
+   *  the first refusals (as `translationDraftRefusal`), then R55's gate, then, as the other two drafts do (K2238),
+   *  `ASSISTANT_DRAFT_UNAVAILABLE` carrying the words the door sends to agent-worker's `/draft`, the signal it drafts
+   *  on: `{key, en, note, means, protected}` for each word to draft (`to_language`, with `offered_official`), or the one
+   *  kept word's `{key, en, text, protected}` (`to_english`). Writes nothing: the door hands the answered draft to
+   *  `translationdraftrecord`. `assistant` is the door's `{on, account}`. */
+  translationDraft({ language = null, direction = void 0, keys = void 0, key = null, assistant = null, by = null } = {}) {
+    const req = this.#draftRequest({ language, direction, keys, key, by });
+    if (req.refused) return req.refused;
+    const off = this.assistantGate();
+    if (off) return off;
+    const out = draftUnavailable("the draft is asked of the assistant by the door with these words; nothing is drafted or saved here.");
+    return req.direction === "to_english" ? { ...out, direction: req.direction, language: req.tag, key: req.key, words: req.words } : { ...out, direction: req.direction, language: req.tag, words: req.words, offered_official: req.offered_official };
+  }
+  /** R67, the store-internal route `translationdraftrecord` (no spec): the door hands back the answered draft
+   *  (`draft`, agent-worker R70's: `{words: [{key, text}]}` or `{key, english}`) with the request's `language`,
+   *  `direction` and `keys` or `key`, and `words` as `translationdraft` answered them. The first refusals are asked
+   *  again, so a hand-back that no longer stands records nothing. `to_language`: each asked word answered is stored as
+   *  a draft labelled machine work (record-grammar R50), with who asked and when, unless its placeholders differ from
+   *  its English's or it is no one-line text within bounds (named in `not_drafted`). `to_english`: the reading's fact is
+   *  recorded (K2216: key, language, the SHA-256 of the kept text read, the administrator, the instant), no text. */
+  async translationDraftRecord({
+    language = null,
+    direction = void 0,
+    keys = void 0,
+    key = null,
+    words: words5 = null,
+    draft = null,
+    not_drafted = null,
+    by = null
+  } = {}) {
+    const asked = direction === "to_language" && (keys === void 0 || keys === null) && Array.isArray(words5) ? words5.map((w) => w && typeof w.key === "string" ? w.key : null).filter(Boolean) : keys;
+    const req = this.#draftRequest({ language, direction, keys: asked, key, by });
+    if (req.refused) return req.refused;
+    const unavailable = (why) => draftUnavailable(`${why} Nothing was saved.`);
+    const at37 = this.#iso();
+    const askedBy = this.#nameOf(by);
+    if (req.direction === "to_english") {
+      if (!draft || typeof draft !== "object" || draft.key !== req.key || typeof draft.english !== "string" || !draft.english.trim())
+        return unavailable("the assistant did not answer a reading of this word back into English.");
+      const sent = Array.isArray(words5) && words5[0] && words5[0].key === req.key && typeof words5[0].text === "string" ? words5[0].text : req.words[0].text;
+      this.#sql.exec(
+        `INSERT INTO translation_readings (language, key, text_sha256, by_member, by_name, at) VALUES (?, ?, ?, ?, ?, ?)`,
+        req.tag,
+        req.key,
+        await sha256Hex13(sent),
+        by,
+        askedBy,
+        at37
+      );
+      return {
+        ok: true,
+        key: req.key,
+        language: req.tag,
+        english: draft.english,
+        label: { kind: "machine", asked_by: askedBy },
+        note: "machine work: the reading adopts and confirms nothing. Confirming the word is your own act."
+      };
+    }
+    const got = draft && typeof draft === "object" && Array.isArray(draft.words) ? draft.words : null;
+    if (!got) return unavailable("the assistant did not answer a draft of these words.");
+    const label = proposalLabel(TRANSLATION_DRAFTER, "translation");
+    const drafted = [], refusedHere = [];
+    const answered = /* @__PURE__ */ new Map();
+    for (const d of got) if (d && typeof d.key === "string" && !answered.has(d.key)) answered.set(d.key, d.text);
+    for (const w of req.words) {
+      if (!answered.has(w.key)) {
+        refusedHere.push({ key: w.key, why: "the assistant did not draft it" });
+        continue;
+      }
+      const text7 = answered.get(w.key);
+      if (typeof text7 !== "string" || !text7.trim() || [...text7].length > TRANSLATION_TEXT_MAX || !oneLine7(text7)) {
+        refusedHere.push({ key: w.key, why: `the draft is not one line of 1 to ${TRANSLATION_TEXT_MAX} characters, so it is not stored` });
+        continue;
+      }
+      if (!samePlaceholders(text7, w.en)) {
+        refusedHere.push({ key: w.key, why: "the draft's placeholders in braces differ from the English's, so it is not stored" });
+        continue;
+      }
+      const r = this.#rows(`INSERT INTO translation_drafts (language, key, en, text, label, asked_by, asked_name, at)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING seq`, req.tag, w.key, w.en, text7, JSON.stringify(label), by, askedBy, at37);
+      drafted.push({ id: r[0].seq, key: w.key, text: text7, label, asked_by: askedBy, at: at37 });
+    }
+    const theirs = (Array.isArray(not_drafted) ? not_drafted : []).map((x) => typeof x === "string" ? x : x && x.key).filter((k) => typeof k === "string" && req.words.some((w) => w.key === k));
+    for (const r of refusedHere) if (theirs.includes(r.key)) r.why = "the assistant could not draft it";
+    return {
+      ok: true,
+      language: req.tag,
+      drafted,
+      not_drafted: refusedHere,
+      offered_official: req.offered_official,
+      note: "drafts, labelled machine work: none is your group's wording, and members see none, until a member asked to translate this language keeps it."
+    };
+  }
+  /** R70, op=translationadopt: a granted speaker keeps a word's translation, typed or from a stored draft. */
+  translationAdopt({ language = null, key = null, text: text7 = void 0, draft = null, by = null } = {}) {
+    const machine3 = this.#translationActor(by);
+    if (machine3) return machine3;
+    const lang = this.#translationLanguage(language);
+    if (lang.refused) return lang.refused;
+    const tag2 = lang.tag;
+    const speaker = this.#translationSpeaker(by, tag2);
+    if (speaker) return speaker;
+    const w = this.#translationWord(key);
+    if (w.refused) return w.refused;
+    const word2 = w.word;
+    let d = null;
+    if (draft !== null && draft !== void 0) {
+      const id = typeof draft === "number" ? draft : typeof draft === "string" && /^\d+$/.test(draft.trim()) ? Number(draft.trim()) : NaN;
+      d = Number.isSafeInteger(id) ? this.#one(`SELECT seq, text FROM translation_drafts WHERE seq = ? AND language = ? AND key = ?`, id, tag2, word2.key) : null;
+      if (!d)
+        return refusal30("NO_SUCH_DRAFT", `there is no stored draft ${String(draft).slice(0, 40)} of ${word2.key} in ${tag2}. Nothing was changed.`, { key: word2.key, language: tag2, draft });
+    }
+    if (typeof text7 !== "string" || !text7.trim() || [...text7].length > TRANSLATION_TEXT_MAX || !oneLine7(text7) || !samePlaceholders(text7, word2.en))
+      return refusal30("TRANSLATION_TEXT_REFUSED", typeof text7 === "string" && text7.trim() && [...text7].length <= TRANSLATION_TEXT_MAX && oneLine7(text7) ? `the text's placeholders (${placeholdersOf(text7).map((x) => `{${x}}`).join(", ") || "none"}) differ from the English's (${placeholdersOf(word2.en).map((x) => `{${x}}`).join(", ") || "none"}). Nothing was changed.` : `a translated word is one line of 1 to ${TRANSLATION_TEXT_MAX} characters. Nothing was changed.`, { key: word2.key, language: tag2 });
+    const h = this.#wordHistory(tag2, word2.key);
+    const state = !word2.protected || d && text7 === d.text ? "shown" : "awaiting";
+    const at37 = this.#iso();
+    this.#sql.exec(
+      `INSERT INTO translation_adoptions (language, key, act_n, text, en, state, draft, prev, replaced, by_member, by_name, at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      tag2,
+      word2.key,
+      h.actN + 1,
+      text7,
+      word2.en,
+      state,
+      d ? d.seq : null,
+      h.adoption ? h.adoption.seq : null,
+      h.adoption ? h.adoption.text : null,
+      by,
+      this.#nameOf(by),
+      at37
+    );
+    return {
+      ok: true,
+      language: tag2,
+      key: word2.key,
+      state,
+      replaced: h.adoption ? h.adoption.text : null,
+      at: at37,
+      note: state === "shown" ? "every member reading this language sees it now." : "a protected word changed from the assistant's draft, or typed without one: members see the English until another member asked to translate this language, or an administrator who has read it back into English, confirms it."
+    };
+  }
+  /** R71, op=translationconfirm: an awaiting protected word confirmed, then shown: by a granted speaker who did not keep
+   *  it, or by an administrator holding a reading of its current text back into English (K2216). An administrator who
+   *  holds a grant of the language and did not keep the word is a second granted speaker and needs no reading. */
+  async translationConfirm({ language = null, key = null, by = null } = {}) {
+    const machine3 = this.#translationActor(by);
+    if (machine3) return machine3;
+    const lang = this.#translationLanguage(language);
+    if (lang.refused) return lang.refused;
+    const tag2 = lang.tag;
+    const speaker = this.#translationSpeaker(by, tag2);
+    if (speaker) return speaker;
+    const w = this.#translationWord(key);
+    if (w.refused) return w.refused;
+    const aw = this.#translationAwaiting(tag2, w.word);
+    if (aw.refused) return aw.refused;
+    const adoption = aw.history.adoption;
+    const admin = this.#isAdmin(by);
+    const self = adoption.by_member === by;
+    if (self && !admin)
+      return refusal30("TRANSLATION_CONFIRM_SELF", `you kept this translation of ${w.word.key}, so its second check is someone else's. Nothing was changed.`, { key: w.word.key, language: tag2 });
+    const secondSpeaker = !self && this.#liveGrant(by, tag2) && this.#isActiveMember(by);
+    let readBack2 = null;
+    if (!secondSpeaker) {
+      const sha2 = await sha256Hex13(adoption.text);
+      readBack2 = this.#one(`SELECT seq FROM translation_readings WHERE language = ? AND key = ? AND by_member = ? AND text_sha256 = ?
+                            ORDER BY seq DESC LIMIT 1`, tag2, w.word.key, by, sha2);
+      if (!readBack2)
+        return refusal30("TRANSLATION_NOT_READ_BACK", `${w.word.key} has not been read back into English for its current text in ${tag2}. Read it back into English first, then confirm. Nothing was changed.`, { key: w.word.key, language: tag2 });
+    }
+    const at37 = this.#iso();
+    this.#sql.exec(`INSERT INTO translation_confirmations (adoption, language, key, read_back, by_member, by_name, at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)`, adoption.seq, tag2, w.word.key, readBack2 ? readBack2.seq : null, by, this.#nameOf(by), at37);
+    return {
+      ok: true,
+      language: tag2,
+      key: w.word.key,
+      state: "shown",
+      confirmed_by: by,
+      at: at37,
+      ...readBack2 ? { read_back: true } : {}
+    };
+  }
+  /** R72, op=translationrevert: an administrator undoes the word's latest act in one act: its latest adoption (back to
+   *  what it replaced), or its latest undo (back to the adoption that undo moved from). Appended; nothing changes. */
+  translationRevert({ language = null, key = null, by = null } = {}) {
+    const machine3 = this.#translationActor(by);
+    if (machine3) return machine3;
+    if (!this.#isAdmin(by)) return notAnAdmin(by ?? null, "undoing a translation of the screens");
+    const lang = this.#translationLanguage(language);
+    if (lang.refused) return lang.refused;
+    const tag2 = lang.tag;
+    const w = this.#translationWord(key);
+    if (w.refused) return w.refused;
+    const h = this.#wordHistory(tag2, w.word.key);
+    if (!h.latest)
+      return refusal30(
+        "TRANSLATION_NOTHING_TO_UNDO",
+        `${w.word.key} has never been translated into ${tag2}. Nothing was changed.`,
+        { key: w.word.key, language: tag2 }
+      );
+    const from = h.adoption ? h.adoption.seq : null;
+    const to = h.latest.kind === "adoption" ? h.latest.row.prev ?? null : h.latest.row.from_adoption ?? null;
+    const at37 = this.#iso();
+    this.#sql.exec(
+      `INSERT INTO translation_undos (language, key, act_n, undoes, undoes_seq, from_adoption, to_adoption, by_member, by_name, at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      tag2,
+      w.word.key,
+      h.actN + 1,
+      h.latest.kind,
+      h.latest.row.seq,
+      from,
+      to,
+      by,
+      this.#nameOf(by),
+      at37
+    );
+    const now = this.#wordHistory(tag2, w.word.key);
+    return {
+      ok: true,
+      language: tag2,
+      key: w.word.key,
+      undid: { kind: h.latest.kind, seq: h.latest.row.seq },
+      state: now.state,
+      text: now.adoption ? now.adoption.text : null,
+      at: at37
+    };
+  }
+  /** R73, op=translationmark: any active member marks a shown translation "this translation looks wrong". Open until
+   *  the word's next adoption or undo; a member's second open mark on the word answers `existed: true`. */
+  translationMark({ language = null, key = null, note = null, by = null } = {}) {
+    const machine3 = this.#translationActor(by);
+    if (machine3) return machine3;
+    const lang = this.#translationLanguage(language);
+    if (lang.refused) return lang.refused;
+    const tag2 = lang.tag;
+    const w = this.#translationWord(key);
+    if (w.refused) return w.refused;
+    const h = this.#wordHistory(tag2, w.word.key);
+    if (h.state !== "shown")
+      return refusal30(
+        "TRANSLATION_NOT_SHOWN",
+        `${w.word.key} shows no translation in ${tag2}. Nothing was recorded.`,
+        { key: w.word.key, language: tag2 }
+      );
+    const n = note === null || note === void 0 ? null : typeof note === "string" ? note.trim() : void 0;
+    if (n === void 0 || n !== null && [...n].length > TRANSLATION_NOTE_MAX)
+      return refusal30(
+        "TRANSLATION_NOTE_REFUSED",
+        `a note is text of at most ${TRANSLATION_NOTE_MAX} characters. Nothing was recorded.`,
+        { key: w.word.key, language: tag2 }
+      );
+    const notMember = this.#translationMember(by, "Nothing was recorded.");
+    if (notMember) return notMember;
+    const open = this.#one(`SELECT seq, note, at FROM translation_marks WHERE language = ? AND key = ? AND by_member = ? AND act_n = ?
+                            ORDER BY seq LIMIT 1`, tag2, w.word.key, by, h.actN);
+    if (open) return { ok: true, existed: true, language: tag2, key: w.word.key, note: open.note ?? null, at: open.at };
+    const at37 = this.#iso();
+    this.#sql.exec(
+      `INSERT INTO translation_marks (language, key, act_n, note, by_member, by_name, at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      tag2,
+      w.word.key,
+      h.actN,
+      n || null,
+      by,
+      this.#nameOf(by),
+      at37
+    );
+    return {
+      ok: true,
+      existed: false,
+      language: tag2,
+      key: w.word.key,
+      note: n || null,
+      at: at37,
+      note_for_you: "the members asked to translate this language and the administrators see your mark."
+    };
+  }
+  /** R74, op=translations: the workspace for a granted speaker of `language`: every word in the list's order with its
+   *  state, its shown or awaiting text, `english_changed`, its drafts, its acts newest first and its open marks; and
+   *  the active profiles' local names, offered first and never a word to translate. Writes nothing; never throws. */
+  translations({ language = null, viewer = null } = {}) {
+    try {
+      const machine3 = this.#translationActor(viewer);
+      if (machine3) return machine3;
+      const lang = this.#translationLanguage(language);
+      if (lang.refused) return lang.refused;
+      const tag2 = lang.tag;
+      const speaker = this.#translationSpeaker(viewer, tag2);
+      if (speaker) return speaker;
+      const hist = new Map(this.#languageHistories(tag2).map((h) => [h.key, h]));
+      const counts = { missing: 0, shown: 0, awaiting: 0 };
+      const words5 = INTERFACE_WORDS.map((w) => {
+        const g = hist.get(w.key) || { adoptions: [], undos: [], confirmations: [], drafts: [], marks: [] };
+        const c = _InstanceSetup.#current(g.adoptions, g.undos, new Set(g.confirmations.map((r) => r.adoption)));
+        counts[c.state] += 1;
+        const a = c.adoption;
+        const acts2 = [
+          ...g.adoptions.map((r) => ({
+            act: "adoption",
+            seq: r.seq,
+            text: r.text,
+            en: r.en,
+            kept_as: r.state,
+            draft: r.draft,
+            replaced: r.replaced,
+            by: r.by_member,
+            by_name: r.by_name,
+            at: r.at,
+            n: r.act_n
+          })),
+          ...g.undos.map((r) => ({
+            act: "undo",
+            seq: r.seq,
+            undoes: r.undoes,
+            undoes_seq: r.undoes_seq,
+            by: r.by_member,
+            by_name: r.by_name,
+            at: r.at,
+            n: r.act_n
+          })),
+          ...g.confirmations.map((r) => ({
+            act: "confirmation",
+            seq: r.seq,
+            adoption: r.adoption,
+            read_back: r.read_back !== null,
+            by: r.by_member,
+            by_name: r.by_name,
+            at: r.at
+          }))
+        ].sort((x, y) => x.at < y.at ? 1 : x.at > y.at ? -1 : (y.n ?? 0) - (x.n ?? 0) || y.seq - x.seq);
+        return {
+          key: w.key,
+          en: w.en,
+          note: w.note,
+          means: w.means,
+          protected: w.protected,
+          state: c.state,
+          text: a ? a.text : null,
+          adopted_by: a ? a.by_member : null,
+          adopted_by_name: a ? a.by_name : null,
+          adopted_at: a ? a.at : null,
+          english_changed: c.state === "shown" && !!a && a.en !== w.en,
+          drafts: g.drafts.map((r) => ({
+            id: r.seq,
+            text: r.text,
+            label: JSON.parse(r.label),
+            asked_by: r.asked_by,
+            asked_by_name: r.asked_name,
+            at: r.at
+          })).reverse(),
+          acts: acts2,
+          marks: g.marks.filter((r) => r.act_n === c.actN).map((r) => ({ note: r.note, by: r.by_member, by_name: r.by_name, at: r.at }))
+        };
+      });
+      return { ok: true, language: tag2, words_commit: INTERFACE_WORDS_COMMIT, counts, local_names: this.#localNames(tag2), words: words5 };
+    } catch (e2) {
+      return {
+        ok: false,
+        reason: "STORE_DID_NOT_ANSWER",
+        code: "STORE_DID_NOT_ANSWER",
+        detail: `the translation workspace could not be read (${String(e2 && e2.message || e2).slice(0, 160)}).`
+      };
+    }
+  }
+  /** R74, op=interfacewords: every word for `language` (by default the viewer's own, R64), the group's shown translation
+   *  where one is held and the English otherwise (`fallback: true`), never blank, with `en` beside it. An awaiting word
+   *  answers the English. Writes nothing; never throws. */
+  interfaceWords({ language = void 0, viewer = null } = {}) {
+    try {
+      let tag2 = null;
+      if (language !== void 0 && language !== null && language !== "") {
+        const lang = this.#translationLanguage(language);
+        if (lang.refused) return lang.refused;
+        tag2 = lang.tag;
+      } else {
+        const own6 = this.memberLanguage({ viewer }).language;
+        tag2 = typeof own6 === "string" && isLocale(own6) ? canonicalTag(own6) : null;
+      }
+      const shown3 = /* @__PURE__ */ new Map();
+      if (tag2)
+        for (const g of this.#languageHistories(tag2)) {
+          const c = _InstanceSetup.#current(g.adoptions, g.undos, new Set(g.confirmations.map((r) => r.adoption)));
+          if (c.state === "shown") shown3.set(g.key, c.adoption.text);
+        }
+      return { ok: true, language: tag2, words: INTERFACE_WORDS.map((w) => shown3.has(w.key) ? { key: w.key, text: shown3.get(w.key), en: w.en, fallback: false } : { key: w.key, text: w.en, en: w.en, fallback: true }) };
+    } catch {
+      return {
+        ok: true,
+        language: null,
+        words: INTERFACE_WORDS.map((w) => ({ key: w.key, text: w.en, en: w.en, fallback: true })),
+        detail: "the group's translations could not be read, so every word is shown in English."
+      };
+    }
   }
   /* =====================================================================
    * THE INSTANCE'S OWN LIMITS (K98; R33–R40). What runs here COST, measured, and where the CPU ceiling lies, found
@@ -211789,7 +213755,17 @@ function instanceSetupOps(m, url, body) {
     placewantedstate: () => m.placeWanted({ viewer: q10("viewer") }),
     memberlanguageset: () => m.memberLanguageSet({ ...body || {}, by: q10("by") }),
     memberlanguage: () => m.memberLanguage({ viewer: q10("viewer") }),
-    adminrecoverystep: () => m.adminRecoveryStep({ viewer: q10("viewer") })
+    adminrecoverystep: () => m.adminRecoveryStep({ viewer: q10("viewer") }),
+    /* R67–R74 (T37; N669): the translation ops, and the door's store-internal record route (no spec). */
+    translationdraft: () => m.translationDraft({ ...body || {}, by: q10("by") }),
+    translationdraftrecord: () => m.translationDraftRecord({ ...body || {}, by: q10("by") }),
+    translationgrant: () => m.translationGrant({ ...body || {}, by: q10("by") }),
+    translationadopt: () => m.translationAdopt({ ...body || {}, by: q10("by") }),
+    translationconfirm: () => m.translationConfirm({ ...body || {}, by: q10("by") }),
+    translationrevert: () => m.translationRevert({ ...body || {}, by: q10("by") }),
+    translationmark: () => m.translationMark({ ...body || {}, by: q10("by") }),
+    translations: () => m.translations({ language: q10("language") ?? (body || {}).language, viewer: q10("viewer") }),
+    interfacewords: () => m.interfaceWords({ language: q10("language") ?? (body || {}).language, viewer: q10("viewer") })
   };
 }
 function notAnswered(out, op, { json: json21, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) {
@@ -211992,8 +213968,8 @@ function bootstrapOp(url, env, fp, { stub, json: json21, storeSilent: storeSilen
 }
 
 // src/answer-envelope/checks.mjs
-var checks_exports65 = {};
-__export(checks_exports65, {
+var checks_exports66 = {};
+__export(checks_exports66, {
   BOOTSTRAP_CHECKS: () => BOOTSTRAP_CHECKS,
   DISPATCH_CHECKS: () => DISPATCH_CHECKS,
   REPLAY_CHECKS: () => REPLAY_CHECKS,
@@ -212108,7 +214084,7 @@ var CHECK_FAMILY_FILES = Object.freeze([
   ["src/capture-sources/credentials.mjs", credentials_exports],
   ["src/acquisition/checks.mjs", checks_exports],
   ["src/capture/checks.mjs", checks_exports13],
-  ["src/file-safety/checks.mjs", checks_exports46],
+  ["src/file-safety/checks.mjs", checks_exports47],
   ["src/sources/checks.mjs", checks_exports22],
   ["src/calibration/checks.mjs", checks_exports11],
   ["src/extraction/checks.mjs", checks_exports12],
@@ -212123,52 +214099,53 @@ var CHECK_FAMILY_FILES = Object.freeze([
   ["src/law-relations/checks.mjs", checks_exports21],
   ["src/standards/checks.mjs", checks_exports20],
   ["src/progressions/checks.mjs", checks_exports24],
-  ["src/money-checks/checks.mjs", checks_exports47],
+  ["src/money-checks/checks.mjs", checks_exports48],
   ["src/duties/checks.mjs", checks_exports23],
-  ["src/bias/checks.mjs", checks_exports37],
+  ["src/bias/checks.mjs", checks_exports38],
   ["src/retrieval/checks.mjs", checks_exports19],
   ["src/inquiry-grammar/checks.mjs", checks_exports10],
   ["src/accepted-work/checks.mjs", checks_exports25],
   ["src/inquiry/index.mjs", inquiry_exports],
-  ["src/hypotheses/checks.mjs", checks_exports48],
-  ["src/citation/checks.mjs", checks_exports42],
+  ["src/hypotheses/checks.mjs", checks_exports49],
+  ["src/citation/checks.mjs", checks_exports43],
   ["src/basis-versions/checks.mjs", checks_exports26],
   ["src/strength/checks.mjs", checks_exports28],
   ["src/contradiction/checks.mjs", checks_exports29],
-  ["src/run-rules/checks.mjs", checks_exports49],
-  ["src/run-productions/checks.mjs", checks_exports50],
-  ["src/capture-requests/checks.mjs", checks_exports51],
+  ["src/run-rules/checks.mjs", checks_exports50],
+  ["src/run-productions/checks.mjs", checks_exports51],
+  ["src/capture-requests/checks.mjs", checks_exports52],
   ["src/skilldoctrine.mjs", skilldoctrine_exports],
-  ["src/answers/checks.mjs", checks_exports44],
-  ["src/intent/checks.mjs", checks_exports52],
+  ["src/answers/checks.mjs", checks_exports45],
+  ["src/intent/checks.mjs", checks_exports53],
   ["src/reevaluation/checks.mjs", checks_exports30],
-  ["src/case-tensions/checks.mjs", checks_exports32],
+  ["src/case-carriage/checks.mjs", checks_exports32],
+  ["src/case-tensions/checks.mjs", checks_exports33],
   ["src/publication/checks.mjs", checks_exports31],
-  ["src/docket/checks.mjs", checks_exports33],
-  ["src/public-read/checks.mjs", checks_exports34],
-  ["src/network-notices/checks.mjs", checks_exports35],
-  ["src/ratification/checks.mjs", checks_exports36],
-  ["src/case-import/checks.mjs", checks_exports38],
-  ["src/case-disclosures/checks.mjs", checks_exports39],
-  ["src/case-authoring/checks.mjs", checks_exports40],
-  ["src/review/checks.mjs", checks_exports53],
-  ["src/conformance/checks.mjs", checks_exports54],
-  ["src/consequences/checks.mjs", checks_exports55],
+  ["src/docket/checks.mjs", checks_exports34],
+  ["src/public-read/checks.mjs", checks_exports35],
+  ["src/network-notices/checks.mjs", checks_exports36],
+  ["src/ratification/checks.mjs", checks_exports37],
+  ["src/case-import/checks.mjs", checks_exports39],
+  ["src/case-disclosures/checks.mjs", checks_exports40],
+  ["src/case-authoring/checks.mjs", checks_exports41],
+  ["src/review/checks.mjs", checks_exports54],
+  ["src/conformance/checks.mjs", checks_exports55],
+  ["src/consequences/checks.mjs", checks_exports56],
   ["src/action-grammar/checks.mjs", checks_exports27],
-  ["src/action-clocks/checks.mjs", checks_exports56],
-  ["src/filing-templates/checks.mjs", checks_exports41],
-  ["src/filings/checks.mjs", checks_exports57],
-  ["src/escalation/checks.mjs", checks_exports58],
-  ["src/action-plans/checks.mjs", checks_exports59],
-  ["src/monitoring/checks.mjs", checks_exports60],
-  ["src/following/checks.mjs", checks_exports61],
-  ["src/link-sweep/checks.mjs", checks_exports62],
-  ["src/wizard-scripts/checks.mjs", checks_exports43],
-  ["src/tasks/checks.mjs", checks_exports63],
-  ["src/queue/checks.mjs", checks_exports64],
+  ["src/action-clocks/checks.mjs", checks_exports57],
+  ["src/filing-templates/checks.mjs", checks_exports42],
+  ["src/filings/checks.mjs", checks_exports58],
+  ["src/escalation/checks.mjs", checks_exports59],
+  ["src/action-plans/checks.mjs", checks_exports60],
+  ["src/monitoring/checks.mjs", checks_exports61],
+  ["src/following/checks.mjs", checks_exports62],
+  ["src/link-sweep/checks.mjs", checks_exports63],
+  ["src/wizard-scripts/checks.mjs", checks_exports44],
+  ["src/tasks/checks.mjs", checks_exports64],
+  ["src/queue/checks.mjs", checks_exports65],
   ["src/setup.mjs", setup_exports],
-  ["src/admission/checks.mjs", checks_exports45],
-  ["src/answer-envelope/checks.mjs", checks_exports65]
+  ["src/admission/checks.mjs", checks_exports46],
+  ["src/answer-envelope/checks.mjs", checks_exports66]
 ].map((e2) => Object.freeze(e2)));
 var translated = (row11) => !!row11 && typeof row11 === "object" && typeof row11.translation === "string" && row11.translation !== "";
 function compose3() {
@@ -212382,14 +214359,28 @@ var dispatchRow = (code) => {
 };
 
 // src/control-plane/draft.mjs
-var DRAFT_OPS = Object.freeze(["groupdescriptiondraft", "writinghelp"]);
+var DRAFT_OPS = Object.freeze(["groupdescriptiondraft", "writinghelp", "translationdraft"]);
+var TRANSLATION_DRAFT = "translationdraft";
+var TRANSLATION_RECORD = "translationdraftrecord";
 var FIELD_MAX = Object.freeze({ focus: 1e3, purpose: 4e3 });
 function draftDue(op, body) {
   const r = body && typeof body === "object" ? body.result : null;
   return DRAFT_OPS.includes(op) && !!r && r.ok === false && (r.reason === "ASSISTANT_DRAFT_UNAVAILABLE" || r.code === "ASSISTANT_DRAFT_UNAVAILABLE");
 }
-function draftAsk(op, asked, { member: member2, session, firsthand, pack }) {
+function draftAsk(op, asked, { member: member2, session, firsthand, pack, owner = null }) {
   const b = asked && typeof asked === "object" && !Array.isArray(asked) ? asked : {};
+  if (op === TRANSLATION_DRAFT) {
+    const o = owner && typeof owner === "object" ? owner : {};
+    return {
+      op,
+      member: member2,
+      session,
+      pack,
+      direction: o.direction ?? b.direction ?? null,
+      language: o.language ?? b.language ?? null,
+      words: Array.isArray(o.words) ? o.words : null
+    };
+  }
   return {
     op,
     member: member2,
@@ -212560,6 +214551,78 @@ async function promoteArchive({ stub, doAnswer: doAnswer2, docs, project = null,
     }
   }
   return { promoted, not_promoted };
+}
+
+// src/control-plane/signin.mjs
+var SIGNIN_STEPS = Object.freeze(["start", "code", "state", "signout"]);
+var KEPT_AWAY_STEPS = Object.freeze(["start", "code"]);
+var unbound = () => ({ status: 503, body: {
+  ok: false,
+  reason: "AGENT_WORKER_UNBOUND",
+  detail: "your group's Civicsmith has no assistant bound to it, so nothing was sent to your sign-in."
+} });
+var silent = (why) => ({ status: 502, body: {
+  ok: false,
+  reason: "AGENT_WORKER_SILENT",
+  detail: `the assistant member ${why}. Nothing was kept.`
+} });
+function leaverOf(op, asked, result2, by) {
+  if (!result2 || typeof result2 !== "object" || result2.ok !== true) return null;
+  const a = asked && typeof asked === "object" && !Array.isArray(asked) ? asked : {};
+  const memberOf6 = (id) => typeof id === "string" && id.trim() !== "" ? id.startsWith("member:") ? id : `member:${id}` : null;
+  if (op === "subscriptiondisconnect") return typeof by === "string" && by ? by : null;
+  if (op === "memberset" && a.status === "revoked") return memberOf6(result2.memberId ?? a.memberId);
+  if (op === "adminremove" && result2.removed === true) return memberOf6(result2.memberId ?? a.memberId);
+  return null;
+}
+async function send(env, payload) {
+  const w = env && env.AGENT_WORKER;
+  if (!w || typeof w.fetch !== "function") return unbound();
+  let res;
+  try {
+    res = await w.fetch("https://agent-worker/signin", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+  } catch {
+    return silent("did not answer");
+  }
+  let body;
+  try {
+    body = await res.json();
+  } catch {
+    return silent("answered no JSON");
+  }
+  if (!body || typeof body !== "object" || Array.isArray(body)) return silent("answered no JSON object");
+  return { status: res.status, body };
+}
+async function subscriptionSignin({ env, member: member2, asked, store }) {
+  const a = asked && typeof asked === "object" && !Array.isArray(asked) ? asked : {};
+  const step = typeof a.step === "string" ? a.step : null;
+  if (KEPT_AWAY_STEPS.includes(step)) {
+    const kept = await store("aikeptaway", { method: "POST", body: "{}" });
+    if (kept.refused || !kept.answered) return { unread: kept };
+    const k = kept.result;
+    if (!k || typeof k !== "object" || k.ok !== true)
+      return { status: 403, body: { ok: false, ...k && typeof k === "object" ? k : {} } };
+  }
+  const payload = { member: member2, step: a.step ?? null, ...step === "code" ? { code: a.code } : {} };
+  const out = await send(env, payload);
+  if ((step === "code" || step === "state") && out.body?.ok === true && out.body.connected === true && (out.body.member === void 0 || out.body.member === member2)) {
+    try {
+      await store(`subscriptionconnected?by=${encodeURIComponent(member2)}`, { method: "POST", body: "{}" });
+    } catch {
+    }
+  }
+  return out;
+}
+async function signoutLeaver(env, member2) {
+  if (!member2) return;
+  try {
+    await send(env, { member: member2, step: "signout" });
+  } catch {
+  }
 }
 
 // src/skillpack.mjs
@@ -213072,7 +215135,7 @@ async function fingerprint(v) {
   const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(v));
   return [...new Uint8Array(b)].slice(0, 8).map((x) => x.toString(16).padStart(2, "0")).join("");
 }
-async function sha256Hex13(v) {
+async function sha256Hex14(v) {
   const b = await crypto.subtle.digest("SHA-256", typeof v === "string" ? new TextEncoder().encode(v) : v);
   return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 }
@@ -213106,9 +215169,10 @@ async function templateGrantDoor({ req, url, env, op, spec, presentedAi, stub, c
   const inner = new URL(`http://do/${op}`);
   for (const [k, v] of url.searchParams) inner.searchParams.set(k, v);
   for (const k of ["token", "op", "store", "secret", "secretSha", "bySecret", ...QUERY_STAMPS]) inner.searchParams.delete(k);
+  let digest2 = null;
   if (credential.secret !== null) {
     inner.searchParams.set("bySecret", "1");
-    inner.searchParams.set("secretSha", await sha256Hex13(credential.secret || ""));
+    digest2 = await sha256Hex14(credential.secret || "");
   } else {
     const admitted = await admit({
       url,
@@ -213126,15 +215190,16 @@ async function templateGrantDoor({ req, url, env, op, spec, presentedAi, stub, c
     inner.searchParams.set("author", admitted.caller.identity);
   }
   let body;
-  if (req.method === "POST") {
+  if (req.method === "POST" || digest2 !== null) {
     let b = {};
-    try {
+    if (req.method === "POST") try {
       b = JSON.parse(await req.text() || "{}");
     } catch {
       b = {};
     }
     if (!b || typeof b !== "object" || Array.isArray(b)) b = {};
     for (const k of [...BODY_STAMPS, ...QUERY_STAMPS, "secretSha", "bySecret", "secret", "token"]) delete b[k];
+    if (digest2 !== null) b.secretSha = digest2;
     body = JSON.stringify(b);
   }
   const out = await doAnswer(stub.fetch(new Request(inner, body === void 0 ? { method: "GET" } : { method: "POST", body })));
@@ -213317,9 +215382,13 @@ var BODY_STAMPS = Object.freeze([
   "migrationReplay"
 ]);
 var STATED_STATUS_OPS = Object.freeze(["inbox", "inboxpull", "inboxresolve", "heldsetaside", "heldrestore"]);
-var NOT_ROUTED = Object.freeze(["assistantset", "securitycount"]);
+var NOT_ROUTED = Object.freeze(["assistantset", "securitycount", "translationdraftrecord"]);
 var BYTE_OPS = Object.freeze(["openoriginal", "openwithwarning", "safeview", "safecopy"]);
-var BODY_ONLY = Object.freeze({ securitytooladd: Object.freeze(["credentials", "config"]) });
+var BODY_ONLY = Object.freeze({
+  securitytooladd: Object.freeze(["credentials", "config"]),
+  setpassword: Object.freeze(["current", "password", "role"])
+});
+var BODY_DROPPED = Object.freeze({ setpassword: Object.freeze(["role"]) });
 var BODY_ACTOR = Object.freeze(Object.fromEntries(Object.values(OP_FAMILIES).flatMap((f17) => [
   ...f17.actor?.at === "body" && f17.actor.key !== "by" ? f17.acts.map((op) => [op, f17.actor.key]) : [],
   ...f17.proposer?.at === "body" && f17.proposer.key !== "by" ? f17.proposals.map((op) => [op, f17.proposer.key]) : []
@@ -213338,6 +215407,16 @@ async function byteAnswer(res, op, extra) {
   if (!out.answered) return storeSilent(op, out.correlation);
   const { body, status } = out.reply;
   return json18({ ...body, ...extra }, status);
+}
+function withDigest(text7, secretSha) {
+  let b;
+  try {
+    b = text7 ? JSON.parse(text7) : {};
+  } catch {
+    return text7;
+  }
+  if (!b || typeof b !== "object" || Array.isArray(b)) b = {};
+  return JSON.stringify({ ...b, secretSha });
 }
 function warnedOf(url) {
   const w = url.searchParams.get("warned");
@@ -213484,9 +215563,9 @@ function makeFetch(hooks = {}) {
             if (url.searchParams.get(k)) q10.set(k, (url.searchParams.get(k) || "").trim());
         }
         if (op === "reviewcopy" && url.searchParams.get("limit")) q10.set("limit", url.searchParams.get("limit"));
+        const digest2 = bySecret ? await sha256Hex14(credential.secret || "") : null;
         if (bySecret) {
           q10.set("bySecret", "1");
-          q10.set("secretSha", await sha256Hex13(credential.secret || ""));
         } else {
           const reader = await caseReader(url, env, "bio", presentedAi.cred, credential);
           if (reader.silent) return storeSilent(reader.silent, reader.correlation);
@@ -213505,7 +215584,7 @@ function makeFetch(hooks = {}) {
           }
           if (reason2 !== null) q10.set("reason", reason2);
         }
-        let commentBody = null;
+        let innerBody = digest2 === null ? null : { secretSha: digest2 };
         if (op === "reviewcomment") {
           let b = {};
           try {
@@ -213513,11 +215592,15 @@ function makeFetch(hooks = {}) {
           } catch {
             b = {};
           }
-          commentBody = JSON.stringify({ text: typeof b?.text === "string" ? b.text : "" });
+          innerBody = { text: typeof b?.text === "string" ? b.text : "", ...innerBody || {} };
         }
         const out2 = await doAnswer(stub2.fetch(
           `http://do/${op}?${q10}`,
-          commentBody === null ? void 0 : { method: "POST", body: commentBody }
+          innerBody === null ? void 0 : {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(innerBody)
+          }
         ));
         return reviewAnswer(out2, op);
       }
@@ -213621,7 +215704,11 @@ function makeFetch(hooks = {}) {
       /* T35 (op-declarations R30; K1972): `principal`, the run verbs' expression; `owner`, a selection's owner (the
          stamp a selection scope is read under) */
       principal: viaSession ? sessIdentity : cls3 === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls3}`,
-      owner: viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls3}`
+      owner: viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls3}`,
+      /* R68 (admission R21; T37): who is calling, as on `login` (R58): the window's keyed fingerprint of the connecting
+         address and Cloudflare's country, the door's alone, read only for an op that declares them */
+      ...declared2.includes("source") ? { source: await sourceOf3(req, env) } : {},
+      ...declared2.includes("country") ? { country: countryOf(req) } : {}
     };
     inner.searchParams.delete("session");
     let sessionCarried = null;
@@ -213927,6 +216014,12 @@ function makeFetch(hooks = {}) {
         { store: storeName, tokenClass: cls3 }
       );
     }
+    if (op === "subscriptionsignin") {
+      const stored2 = (path2, init) => doAnswer(stub.fetch(new Request(`http://do/${path2}`, init)));
+      const signed3 = await subscriptionSignin({ env, member: stampOf2.by, asked: reqBody, store: stored2 });
+      if (signed3.unread) return signed3.unread.refused ? storeRefusal(signed3.unread) : storeSilent(op, signed3.unread.correlation);
+      return json18(signed3.body, signed3.status);
+    }
     const armed = hooks.gatedOp ? await hooks.gatedOp({
       req,
       url,
@@ -214018,7 +216111,7 @@ function makeFetch(hooks = {}) {
     if (passBody) {
       try {
         const b0 = JSON.parse(passBody);
-        const strip3 = [...BODY_STAMPS, "token", "secretSha", "bySecret"];
+        const strip3 = [...BODY_STAMPS, "token", "secretSha", "bySecret", ...BODY_DROPPED[op] ?? []];
         if (b0 && typeof b0 === "object" && !Array.isArray(b0) && strip3.some((k) => k in b0)) {
           for (const k of strip3) delete b0[k];
           passBody = JSON.stringify(b0);
@@ -214257,10 +216350,14 @@ function makeFetch(hooks = {}) {
       if (mint.refusal) return refused5(mint.refusal);
       const secret = mint.secret;
       inner.searchParams.set("who", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls3}`);
-      inner.searchParams.set("secretSha", mint.secretSha);
       const minted = await doAnswer(stub.fetch(new Request(
         inner,
-        { method: req.method, body: JSON.stringify({ ...asked, writes: mint.writes, confinedTo: mint.confinedTo }) }
+        { method: "POST", body: JSON.stringify({
+          ...asked,
+          writes: mint.writes,
+          confinedTo: mint.confinedTo,
+          secretSha: mint.secretSha
+        }) }
       )));
       if (minted.refused) return storeRefusal(minted, { op, store: storeName, tokenClass: cls3 });
       if (!minted.answered) return storeSilent("aicredentialmint", minted.correlation);
@@ -214278,8 +216375,7 @@ function makeFetch(hooks = {}) {
     }
     if (op === "reviewgrant") {
       const { secret, secretSha } = await reviewGrantSecret();
-      inner.searchParams.set("secretSha", secretSha);
-      const issued = await doAnswer(stub.fetch(new Request(inner, { method: req.method, body: passBody })));
+      const issued = await doAnswer(stub.fetch(new Request(inner, { method: "POST", body: withDigest(passBody, secretSha) })));
       if (issued.refused) return storeRefusal(issued, { op, store: storeName, tokenClass: cls3 });
       if (!issued.answered) return storeSilent("reviewgrant", issued.correlation);
       if (!issued.result || issued.result.ok !== true)
@@ -214293,8 +216389,7 @@ function makeFetch(hooks = {}) {
     }
     if (op === "templatereviewgrant") {
       const { secret, secretSha } = await reviewGrantSecret();
-      inner.searchParams.set("secretSha", secretSha);
-      const issued = await doAnswer(stub.fetch(new Request(inner, { method: req.method, body: passBody })));
+      const issued = await doAnswer(stub.fetch(new Request(inner, { method: "POST", body: withDigest(passBody, secretSha) })));
       if (issued.refused) return storeRefusal(issued, { op, store: storeName, tokenClass: cls3 });
       if (!issued.answered) return storeSilent("templatereviewgrant", issued.correlation);
       if (!issued.result || issued.result.ok !== true)
@@ -214318,6 +216413,8 @@ function makeFetch(hooks = {}) {
     if (out.refused) return storeRefusal(out, { store: storeName, tokenClass: cls3 });
     if (!out.answered) return storeSilent(op, out.correlation);
     const { body, status } = out.reply;
+    const leaver = leaverOf(op, reqBody, body.result, stampOf2.by);
+    if (leaver) await signoutLeaver(env, leaver);
     if (op === "unpack" && body.result && body.result.ok === true) {
       const docs = archiveDocuments("unpack", body.result);
       if (docs.length || Array.isArray(body.result.documents)) {
@@ -214358,7 +216455,8 @@ function makeFetch(hooks = {}) {
         member: sessMember,
         session: credential.token,
         firsthand: body.result.firsthand === true,
-        pack
+        pack,
+        owner: body.result
       });
       const res = await stub.draft(ask2);
       let drafted = null;
@@ -214374,6 +216472,31 @@ function makeFetch(hooks = {}) {
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ mode: "draft", usage: drafted.usage ?? null, calls: drafted.calls })
         })));
+      if (op === TRANSLATION_DRAFT) {
+        if (drafted.ok !== true) {
+          const { grant: _g, ...given5 } = drafted;
+          return json18({ ...given5, ok: false, store: storeName, tokenClass: cls3 }, res.status >= 400 ? res.status : 502);
+        }
+        const at37 = new URL(`http://x/${TRANSLATION_RECORD}`);
+        for (const k of ["by", "viewer"]) if (inner.searchParams.has(k)) at37.searchParams.set(k, inner.searchParams.get(k));
+        const handed = {
+          direction: ask2.direction,
+          language: ask2.language,
+          ...Array.isArray(asked.keys) ? { keys: asked.keys } : {},
+          ...asked.key !== void 0 ? { key: asked.key } : {},
+          words: ask2.words,
+          draft: drafted.draft ?? null,
+          ...Array.isArray(drafted.not_drafted) ? { not_drafted: drafted.not_drafted } : {}
+        };
+        const recorded = await doAnswer(stub.fetch(new Request(at37, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(handed)
+        })));
+        if (recorded.refused) return storeRefusal(recorded, { store: storeName, tokenClass: cls3 });
+        if (!recorded.answered) return storeSilent(TRANSLATION_RECORD, recorded.correlation);
+        return json18({ ...recorded.reply.body, store: storeName, tokenClass: cls3 }, recorded.reply.status);
+      }
       const shaped = checkedDraft(ask2, drafted, res.status, sessViewer);
       return shaped.body.ok === true ? json18({ ok: true, result: shaped.body, store: storeName, tokenClass: cls3 }, 200) : json18({ ...shaped.body, store: storeName, tokenClass: cls3 }, shaped.status);
     }
@@ -214403,7 +216526,7 @@ async function publicationDoorOp(op, url, stub, {
   storeRefusal: storeRefusal2,
   doAnswer: doAnswer2,
   readerOf: readerOf2,
-  sha256Hex: sha256Hex15,
+  sha256Hex: sha256Hex16,
   NS_RATIFY: NS_RATIFY2,
   caseRatifyStatement: caseRatifyStatement2,
   body = null
@@ -214433,7 +216556,7 @@ async function publicationDoorOp(op, url, stub, {
     const reader = await readerOf2();
     if (reader.silent) return storeSilent2(reader.silent, reader.correlation);
     const presented = await bodySecret(body);
-    const docSecret = presented !== null ? await sha256Hex15(presented) : "";
+    const docSecret = presented !== null ? await sha256Hex16(presented) : "";
     const inner = `http://do/casedocument?case=${encodeURIComponent(caseId)}&edition=${encodeURIComponent(ed)}&viewer=${encodeURIComponent(reader.viewer)}`;
     const out = await doAnswer2(docSecret ? stub.fetch(inner, {
       method: "POST",
@@ -223054,6 +225177,7 @@ var SECURITY_READ_HOURS = 48;
 var POLICY_CHANGE_DAYS = 90;
 var POLICY_CHANGES_MAX2 = 1e3;
 var POLICY_CHANGES_PAGE = 200;
+var SCAN_FINDINGS_DAYS = 90;
 var SCAN_FINDINGS_MAX = 1e3;
 var TOOL_EVENTS_MAX = 1e3;
 var FILE_SAFETY_PAGE = 200;
@@ -223179,7 +225303,7 @@ var NoticeProducers = class _NoticeProducers {
       inquiry_recheck: { truncated: false },
       security_level: { days: SECURITY_DAYS, truncated: false },
       policy_change: { bound: POLICY_CHANGES_MAX2, days: POLICY_CHANGE_DAYS, truncated: false },
-      scan_found: { bound: SCAN_FINDINGS_MAX, truncated: false },
+      scan_found: { bound: SCAN_FINDINGS_MAX, days: SCAN_FINDINGS_DAYS, truncated: false },
       security_tool_off: { bound: TOOL_EVENTS_MAX, truncated: false },
       failed: failed3
     };
@@ -223835,14 +225959,19 @@ var NoticeProducers = class _NoticeProducers {
   /* ================================================================== R14 · a file held after a scan
    * (file-safety R15, R16–R18, R38; N707, N710, DEC-169 (4), K1892, K1913, K1929). The `found` notes
    * `scanFindings` answers this viewer (a capture the viewer may not see is left out by file-safety and never counted
-   * here, R7), following its cursor to at most the bound, oldest first; one item per note, to this member while active.
+   * here, R7), oldest first; one item per note, to this member while active. (T37; N762, N771, K2175) The read is the
+   * window's: `since` the instant SCAN_FINDINGS_DAYS before the call, from the first page, following `cursor` while
+   * `truncated`, to at most the bound, never from a cursor kept between reads (file-safety's is null at its end).
    * Its subject is the capture's home (provenance.homeOf); its detail names each finding with its engine, tool and day,
    * in findingKind's words, that the safe view stays open and how the original opens again. It names no member and is
    * no hint: a scanner's verdict, not the machine's noticing. It leaves when its recipient disposes of it (queue's, by
-   * its key); its leaving once no open hold covers the finding waits for scanFindings' synchronous `held` (T37, N771,
-   * K2155): file-safety's threatOf is async, and this read is synchronous. */
+   * its key), or when `scanFindings` answers its note `held: false` (no open hold covers that finding any longer, read
+   * in file-safety's same synchronous call): only a note inside the window is read, so only there can it leave on
+   * `held`. A note past the window is not read, so its item is no longer answered: the window is the item's life (K2238,
+   * as R13's window; queue keeps no item, only dispositions). */
   #scanFound(me, viewer, now) {
     if (!this.#active(me)) return { items: [], facts: {} };
+    const since = now - SCAN_FINDINGS_DAYS * DAY_MS7;
     const found3 = [];
     let after = null, read3 = 0, truncated4 = false;
     for (; ; ) {
@@ -223850,8 +225979,8 @@ var NoticeProducers = class _NoticeProducers {
         truncated4 = true;
         break;
       }
-      const r = this.#fileSafety.scanFindings({ after, limit: Math.min(FILE_SAFETY_PAGE, SCAN_FINDINGS_MAX - read3), viewer });
-      if (!r || r.ok !== true || !Array.isArray(r.findings)) throw failure("file-safety");
+      const r = this.#fileSafety.scanFindings({ since, after, limit: Math.min(FILE_SAFETY_PAGE, SCAN_FINDINGS_MAX - read3), viewer });
+      if (!r || r.ok !== true || r.since_invalid === true || !Array.isArray(r.findings)) throw failure("file-safety");
       read3 += r.findings.length;
       found3.push(...r.findings);
       if (r.truncated !== true || r.cursor === null || r.cursor === void 0 || r.cursor === after) break;
@@ -223861,6 +225990,7 @@ var NoticeProducers = class _NoticeProducers {
     const items = [];
     for (const f17 of found3) {
       if (!f17 || !filled12(f17.captureSha) || !filled12(f17.note_id)) continue;
+      if (f17.held === false) continue;
       let home = null;
       try {
         const h = this.#provenance.homeOf(f17.captureSha);
@@ -226647,7 +228777,10 @@ async function draftOnObject(ctx, env, {
   act: act2 = null,
   field: field3 = null,
   firsthand = false,
-  pack = null
+  pack = null,
+  direction = null,
+  language = null,
+  words: words5 = null
 } = {}) {
   const who2 = member2 === null || member2 === void 0 || member2 === "" ? null : `member:${idOf3(member2)}`;
   const readOf = (grant2) => {
@@ -226684,20 +228817,16 @@ async function draftOnObject(ctx, env, {
   } catch {
     suggestions = false;
   }
+  const translation = op === "translationdraft";
   let grant = null;
-  if (suggestions && firsthand !== true) {
+  if (suggestions && firsthand !== true && !translation) {
     const g = await c.aiGrantMint({ member: who2, by: who2, session });
     if (!g || g.ok !== true) return out(403, g, null, suggestions);
     grant = g.token;
   }
-  const task = op === "writinghelp" ? { op, act: act2, field: field3 } : { op };
-  const body = JSON.stringify({
-    task,
-    told,
-    account: { kind: ref.kind, level: ref.level, secret: ref.key, member: who2, suggestions },
-    ...grant ? { grant } : pack != null ? { pack } : {},
-    ...firsthand === true ? { firsthand: true } : {}
-  });
+  const task = op === "writinghelp" ? { op, act: act2, field: field3 } : translation ? { op, direction, language, words: words5 } : { op };
+  const account = { kind: ref.kind, level: ref.level, secret: ref.key, member: who2, suggestions };
+  const body = JSON.stringify(translation ? { task, account, ...pack != null ? { pack } : {} } : { task, told, account, ...grant ? { grant } : pack != null ? { pack } : {}, ...firsthand === true ? { firsthand: true } : {} });
   ref = null;
   let res;
   try {
@@ -226726,7 +228855,7 @@ async function publicOp({ req, url, env, op, stub, fp, presentedAi, credential =
       storeSilent,
       storeRefusal,
       doAnswer,
-      sha256Hex: sha256Hex13,
+      sha256Hex: sha256Hex14,
       NS_RATIFY,
       caseRatifyStatement,
       readerOf: () => caseReader(url, env, "bio", presentedAi.cred, credential),
@@ -228070,6 +230199,7 @@ var headerOf = (req, name2) => {
 function grantOf(req) {
   return headerOf(req, GRANT_HEADER2);
 }
+var SECRET_SHA_PARAM = "secretSha";
 var HANDED = Object.freeze([[SESSION_HEADER2, ["session", "t"]], [GRANT_HEADER2, ["grant"]], [CREDENTIAL_SHA_HEADER, ["sha"]]]);
 function handOn(req, url) {
   for (const [name2, keys] of HANDED) {
@@ -228082,17 +230212,20 @@ function underGrant(store, grant, asked, op, body, answer) {
   const { grant: _g, viewer, ...args } = asked;
   return store.logRead({ grant, op, args: { ...args, ...body && typeof body === "object" ? body : {} }, answer, viewer });
 }
-async function assistantFor(ctx, by, adminOnly) {
+async function assistantFor(ctx, by) {
   const member2 = typeof by === "string" && by ? by : null;
-  if (adminOnly && !membershipOf(ctx).isAdministrator(member2 && member2.startsWith("member:") ? member2.slice(7) : member2))
-    return { refusal: notAnAdmin(member2, "asking the assistant to draft the group's description") };
-  const off = instanceSetupOf(ctx).assistantGate();
-  if (off) return { refusal: off };
+  const away = credentialsOf(ctx).aiKeptAway();
+  if (away) return { refusal: away };
   const use = aiRunsOf(ctx).aiUseCheck({ member: member2 });
   if (use) return { refusal: use };
   const account = await credentialsOf(ctx).accountFor({ member: member2, act: { kind: "ask", member: member2 } });
   if (!account || account.ok !== true) return { refusal: account || { ok: false, reason: "NO_ACCOUNT" } };
-  return { assistant: { on: true, account: { kind: account.kind, level: account.level } } };
+  return { assistant: { on: instanceSetupOf(ctx).assistantState().on, account: { kind: account.kind, level: account.level } } };
+}
+function adminRefusal(ctx, by) {
+  const member2 = typeof by === "string" && by ? by : null;
+  if (membershipOf(ctx).isAdministrator(member2 && member2.startsWith("member:") ? member2.slice(7) : member2)) return null;
+  return notAnAdmin(member2, "asking the assistant to draft the group's description");
 }
 async function dispatch(req, store) {
   const url = new URL(req.url);
@@ -228114,6 +230247,7 @@ async function dispatch(req, store) {
   }
   try {
     const grant = grantOf(req);
+    url.searchParams.delete(SECRET_SHA_PARAM);
     const asked = Object.fromEntries(url.searchParams);
     handOn(req, url);
     const map = store.routes(url, body, grant);
@@ -228148,6 +230282,11 @@ function controlPlaneRoutes(ctx, url, body, grant = null) {
     /* R11 (K1674): the Worker's question whether a token is a live ask grant admitting the op (credentials R28),
        store-internal as `wizardrefusaltally`. */
     aigrantadmit: () => credentialsOf(ctx).aiGrantAdmit({ token: b.token, op: b.op, write: b.write }),
+    /* R10 (K2238; control-plane R65): two store-internal routes with no spec (op-declarations R6), each credentials' own
+       answer: the group's keep-away (`{ok: true}` while the group does not keep its material away), and the member's
+       subscription fact, the member the stamped `by`. */
+    aikeptaway: () => credentialsOf(ctx).aiKeptAway() ?? { ok: true },
+    subscriptionconnected: () => credentialsOf(ctx).subscriptionConnected({ member: q10("by") }),
     /* R11 (K1685; agent-worker R54): the ask's own calls, each its owner's, the member the stamped viewer: the ceiling
        before any model call (ai-runs R50's `aiUseCheck`; `{ok: true}` when under it), each call's use counted as an
        ask's (its R48), and the answer checked over the grant's read log (answers R4), the grant the header's (R9). */
@@ -228157,11 +230296,13 @@ function controlPlaneRoutes(ctx, url, body, grant = null) {
        refuses any other (its R48). */
     askusage: () => aiRunsOf(ctx).countAskUsage({ member: q10("viewer"), mode: b.mode ?? "ask", usage: b.usage ?? null, calls: b.calls }),
     askcheck: () => answersOf(ctx).check({ answer: b.answer ?? null, grant, viewer: q10("viewer"), mode: "ask" }),
-    /* R10: the two drafts, routed here over their owners' map entries (plane spreads this map last), the assistant
-       resolved first (`assistantFor`); the handler's own arguments from the body, the stamps from the query, and a
-       caller's `assistant` never read. */
+    /* R10: the three drafts, routed here over their owners' map entries (plane spreads this map last), the handler's own
+       first refusal and then the assistant resolved (`assistantFor`); the handler's own arguments from the body, the
+       stamps from the query, and a caller's `assistant` never read. */
     groupdescriptiondraft: async () => {
-      const a = await assistantFor(ctx, q10("by"), true);
+      const first = adminRefusal(ctx, q10("by"));
+      if (first) return first;
+      const a = await assistantFor(ctx, q10("by"));
       return a.refusal ?? instanceSetupOf(ctx).groupDescriptionDraft({
         answers: b.answers,
         assistant: a.assistant,
@@ -228169,8 +230310,18 @@ function controlPlaneRoutes(ctx, url, body, grant = null) {
         by: q10("by")
       });
     },
+    /* R10 (N669; K2200, K2201): both directions; instance-setup's own first refusal (the direction, the language, a
+       machine, `TRANSLATION_NOT_GRANTED` or, for `to_english`, `NOT_AN_ADMIN`, the word) before keep-away. */
+    translationdraft: async () => {
+      const setup = instanceSetupOf(ctx);
+      const args = { language: b.language, direction: b.direction, keys: b.keys, key: b.key, by: q10("by") };
+      const first = setup.translationDraftRefusal(args);
+      if (first) return first;
+      const a = await assistantFor(ctx, q10("by"));
+      return a.refusal ?? setup.translationDraft({ ...args, assistant: a.assistant });
+    },
     writinghelp: async () => {
-      const a = await assistantFor(ctx, q10("by"), false);
+      const a = await assistantFor(ctx, q10("by"));
       return a.refusal ?? wizardScriptsOf(ctx).writingHelp({
         op: b.op,
         field: b.field,
@@ -232334,7 +234485,7 @@ var K3 = new Uint32Array([
   3204031479,
   3329325298
 ]);
-function sha256Hex14(str42) {
+function sha256Hex15(str42) {
   const bytes2 = new TextEncoder().encode(String(str42));
   const len = bytes2.length;
   const padded = new Uint8Array(len + 9 + 63 >> 6 << 6);
@@ -232456,7 +234607,7 @@ function structure(ctx, raw, form, locate) {
   const definitions = readDefinitions(raw, sections, locate);
   const exceptions = readExceptions(raw, sections, form, ctx, locate);
   const digests2 = {};
-  for (const s of sections) digests2[s.path.join("/")] = sha256Hex14(raw.slice(s.start, s.end).replace(/\s+/g, " ").trim());
+  for (const s of sections) digests2[s.path.join("/")] = sha256Hex15(raw.slice(s.start, s.end).replace(/\s+/g, " ").trim());
   return {
     sections,
     sections_why,
@@ -233381,7 +235532,7 @@ function readPolicy(ctx, raw, locate = () => null) {
   const applicability = readApplicability(raw, sections, from, locate);
   const timeframes = readTimeframes(raw, sections, from, locate);
   const digests2 = {};
-  for (const s of sections) digests2[s.path.join("/")] = sha256Hex14(raw.slice(s.start, s.end).replace(/\s+/g, " ").trim());
+  for (const s of sections) digests2[s.path.join("/")] = sha256Hex15(raw.slice(s.start, s.end).replace(/\s+/g, " ").trim());
   const lists = { sections, definitions, applicability, responsibilities: responsibilities.rows, timeframes };
   const counts = {};
   for (const k of READINGS3) {
@@ -235737,13 +237888,11 @@ var Store = class extends DurableObject {
       retrieval,
       credentials: credentialsOf(ctx),
       ceilingRefusal: (member2, at37) => aiRunsOf(ctx, env).aiUseCheck({ member: member2, at: at37 }),
-      /* K1690 (instance-setup R55): the copy's assistant switch, read before any model turn. */
-      assistantGate: () => instanceSetupOf(ctx, env).assistantGate(),
       /* R24 (Q1-7): the screens registry the plane carries, for its explain read. */
       screens: SCREENS
     });
     reevaluationOf(ctx, { env, acceptedWork, calculations });
-    publicationOf(ctx, { acceptedWork });
+    publicationOf(ctx, { acceptedWork, bucket: env.CAPTURES ?? null, store: () => this.#ownNamespace() || "bio" });
     caseTensionsOf2(ctx);
     const docket = docketOf(ctx, { env });
     publicReadOf(ctx, { docket });
@@ -235991,6 +238140,9 @@ var Store = class extends DurableObject {
       /* K1643: `caseflags` and `attribute` are case-tensions', on the one instance publication's factory made. */
       ...caseTensionsOps(caseTensionsOf2(ctx), url, body),
       ...publicationOps(publicationOf(ctx), url, body),
+      /* R18 (T37; K2226): case-carriage's `obscuremark` and `photomarks` (its R9, R10), directly after publication's, over
+         the one instance publication's factory made. */
+      ...caseCarriageOps(publicationOf(ctx).caseCarriage, url, body),
       /* R15 (N520): docket's member ops; its public reads `docketpublic` and `docketfeed` are public-read's (its R21). */
       ...docketOps(docketOf(ctx), url, body),
       ...publicReadOps(publicReadOf(ctx), url),
