@@ -1,6 +1,6 @@
 # admission (T36)
 
-**Status** · session_01JySMhkj6mMeg3Ua2iHFP87 · depth 2 · RUNNING until 2026-10-08T06:39:37Z (users' tests (answer-envelope, control-plane, plane) with and without my change) · handled B3
+**Status** · session_01JySMhkj6mMeg3Ua2iHFP87 · depth 2 · COMPLETE · handled B3
 
 ## Completion
 
