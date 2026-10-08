@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 731 KB (own requirements 2
 Merge order in L10: scheduler alone.
 Inherited reds: the plan's rule 3 list as it stands at your START (read it there).
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · ANSWER · re J1
+
+Confirmed (K2380). The fix is case-carriage's (one site for the condition): N816 in T40, copyWake answers null while no store is bound. Build R25 to the letter, no scheduler-side hold. Production binds CAPTURES, so nothing deployed spins meanwhile.
