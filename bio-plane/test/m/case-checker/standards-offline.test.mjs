@@ -1,7 +1,8 @@
-/* case-checker: how a case uses its standards, judged offline over a carried `criteria` file (R22; N717, K2129), at the
-   interface `checkCaseFile`. The case file is the fixture's whole case (`./fixture.mjs`), its member A measured against a
-   paywalled benchmark and C against a free standard that binds its body, with the edition's criteria rows as
-   `public-read` R33 carries them: R72's rows with their labels, and no `captures`. */
+/* case-checker: how a case uses its standards, judged offline over a carried `criteria` file (R22; N717, K2129; N763,
+   K2140), at the interface `checkCaseFile`. The case file is the fixture's whole case (`./fixture.mjs`), its member A
+   measured against a paywalled benchmark and C against a free standard that binds its body, with the edition's criteria
+   rows as `public-read` R33 carries them: R72's rows with their labels. A row frozen before T37 carries no `captures`;
+   one frozen since carries the captures the edition itself carries (`publication` R72 as amended, T37). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as CC from "../../../src/case-checker/index.mjs";
@@ -19,13 +20,15 @@ const LOOSE = sha("a passage no finding relies on");
 const ALL_RECREATED = { [A]: "recreated", [C]: "recreated", [B]: "recreated" };
 const results = (answer) => Object.fromEntries(answer.findings.map((f) => [f.finding, f.result]));
 
-/** The criteria rows as `publication` R72 froze them and `public-read` R31 serves them; no row carries `captures`. */
+/** The criteria rows as `publication` R72 froze them before T37 and `public-read` R31 serves them: no row carries
+ *  `captures`. `since(rows, captures)` is the same rows as R72 freezes them since T37, each row's `captures` given. */
 const criteria = () => [
   { standard: BENCH, portion: null, designation: "Peer response times", edition: "2024", issuer: "an association", citation: "PRT 2024",
     access: "paywalled", body: BODY, binds: false, passages: [{ content: RELIED, text: "The lease was approved without a vote." }],
     label: "Benchmark · not binding on the board", access_words: "Behind a paywall" },
   { standard: CODE, portion: "s. 4", designation: "Lease code", edition: "2023", issuer: "the council", citation: "LC s. 4",
     access: "free", body: BODY, binds: true, passages: [], label: "Standard · binds the board", access_words: "Free to read" }];
+const since = (rows, captures = {}) => rows.map((r) => (r.stated === "not held" ? { ...r, captures: null } : { ...r, captures: captures[r.standard] ?? [] }));
 /** Each member's standard leg in the signed grading facts: A on the benchmark, C on the binding code. */
 const facts = () => {
   const f = gradingFacts();
@@ -54,9 +57,8 @@ test("R22 R1: with no criteria file standards_use is null, in a /1 case file and
   assert.equal((await CC.checkCaseFile({ parts: [] })).standards_use, null);
 });
 
-test("R22: a /2 case file carrying a criteria file answers standards_use, R21 over the case document, the file's rows, the materials and the passages; a paywalled row with no captures is named unjudged for COPYRIGHTED_TEXT_CARRIED, a free one is not; no finding's result changes", async () => {
+test("R22: a /2 case file carrying a criteria file answers standards_use, R21 over the case document, the file's rows, the materials and the passages; a paywalled row frozen before T37 (no captures) is named unjudged for COPYRIGHTED_TEXT_CARRIED, a free one is not; no finding's result changes", async () => {
   const r = await check();
-  assert.equal(r.format, CG.CASE_FILE_FORMAT);
   assert.equal(r.format, "bio-case-file/2");
   assert.deepEqual(r.integrity.departures, []);
   assert.deepEqual(r.standards_use, { ok: true, unjudged: [blind()] });
@@ -128,6 +130,44 @@ test("R22 R9 R2: a criteria file listed but not carried answers standards_use no
   assert.deepEqual(changed.integrity.documents.wanted, [{ path, kind: "criteria", sha256: fileSha, detail: `${path} is carried with other bytes; fetch the file whose SHA-256 is ${fileSha}` }]);
   assert.deepEqual(results(changed), ALL_RECREATED);
   assert.equal(changed.complete_edition.equal, true, changed.complete_edition.detail);
+});
+
+test("R22 (T37; N763, K2140): rows frozen with their captures are judged offline exactly as R21 judges them at the ceremony: a carried capture of a paywalled standard is COPYRIGHTED_TEXT_CARRIED, an unrelied passage COPYRIGHTED_PASSAGE_UNRELIED, empty captures nothing; only a row frozen before T37 is named unjudged, never filled; no finding's result changes", async () => {
+  /* the paywalled benchmark's capture is not one the edition carries: R72 freezes no capture for it, and nothing is refused or unjudged */
+  const none = await check({ criteria: since(criteria()) });
+  assert.deepEqual(none.standards_use, { ok: true });
+  assert.deepEqual(results(none), ALL_RECREATED);
+  assert.equal(none.complete_edition.equal, true, none.complete_edition.detail);
+  /* its capture is the minutes, which the edition lists included: true: the whole text travels, refused by name */
+  const carried = await check({ criteria: since(criteria(), { [BENCH]: [MINUTES_SHA] }) });
+  assert.deepEqual(carried.standards_use, { ok: false, refusals: [{ code: "COPYRIGHTED_TEXT_CARRIED", standard: BENCH, sha: MINUTES_SHA }] });
+  assert.deepEqual(results(carried), ALL_RECREATED);
+  /* a passage of it no finding relies on, beside the carried capture: every departure named */
+  const loose = since(criteria(), { [BENCH]: [MINUTES_SHA] }); loose[0].passages.push({ content: LOOSE, text: "the whole chapter" });
+  const both = await check({ criteria: loose, claims: { [A]: "The board violated the peer average.", [C]: "Fine." } });
+  assert.deepEqual(both.standards_use, { ok: false, refusals: [{ code: "COPYRIGHTED_TEXT_CARRIED", standard: BENCH, sha: MINUTES_SHA },
+    { code: "COPYRIGHTED_PASSAGE_UNRELIED", standard: BENCH, content: LOOSE },
+    { code: "BENCHMARK_CALLED_NONCONFORMING", finding: A, standard: BENCH, word: "violated" }] });
+  assert.deepEqual(results(both), ALL_RECREATED);
+  /* the answer is R21's own over the same arguments, nothing added */
+  const cf = caseFile(opts({ criteria: loose }));
+  const read = CC.readCaseFile(cf.parts);
+  const text = new TextDecoder().decode(read.files.find((f) => f.kind === "case_document").content);
+  const fm = parseFrontmatter(text).data;
+  const passages = Object.entries(CG.passagesOf(fm)).flatMap(([finding, rows]) => rows.map((p) => ({ ...p, finding })));
+  assert.deepEqual((await CC.checkCaseFile({ parts: cf.parts })).standards_use,
+    CC.checkStandardsUse({ text, criteria: loose, materials: CG.materialsOf(fm).materials, passages }));
+  /* a row frozen before T37 beside one frozen since: only it is named unjudged; its capture is never filled from the
+     materials, so the minutes travelling whole is not refused for it */
+  const mixed = [criteria()[0], ...since([criteria()[1]])];
+  const old = await check({ criteria: mixed });
+  assert.deepEqual(old.standards_use, { ok: true, unjudged: [blind()] });
+  const room = since(criteria()); room[1].access = "reading_room";
+  assert.deepEqual((await check({ criteria: [criteria()[0], room[1]] })).standards_use, { ok: true, unjudged: [blind()] });
+  /* a row stated not held carries captures: null and is named as R21 names it, not as a row frozen before T37 */
+  const held = since([{ standard: BENCH, portion: null, designation: null, edition: null, issuer: null, citation: null, access: null,
+    body: null, binds: null, passages: null, label: null, access_words: null, stated: "not held" }]);
+  assert.deepEqual((await check({ criteria: held })).standards_use, { ok: true, unjudged: [{ standard: BENCH, portion: null, body: null }] });
 });
 
 test("R22: a criteria file that is not a list of rows answers R21's MALFORMED, and never throws", async () => {
