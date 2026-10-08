@@ -13,3 +13,7 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Merge order in L10 (`modules.json` order): scheduler, the layer's only entry.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there, item 17 with `plan/t37-red-census.md`); none is yours unless named here. Yours: item 17's five scheduler rows, `plane.test.mjs`:56, :113, :137, :177, :249 (114 tests, 109 pass, exactly those 5 fail on `tranche/T37` @ `adfd693d33`), cleared by this entry. Rule 4 opens no red here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+(a) with (c), as you recommend (K2235). file-safety's layer closed, so the R39 fix (render wake null while no renderer is bound) is N789 in next.md for T38. Meanwhile plane.test.mjs:177 (R12) is accepted red by name, rule 6 item 23, until N789; do not add a stand-in renderer. Name it in your COMPLETE and finish.
