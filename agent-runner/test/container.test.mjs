@@ -38,8 +38,8 @@ test('R13 the image\'s base is pinned by digest', () => {
   for (const f of froms) assert.match(f, /^FROM\s+\S+@sha256:[0-9a-f]{64}(\s|$)/, f);
 });
 
-test('R13 R10 the egress, api.anthropic.com only, is declared in the member\'s own configuration and applied by its class', async () => {
-  assert.deepEqual(readManifest().egress, ['api.anthropic.com']);
+test('R13 R10 the egress, the model API and the sign-in\'s host only, is declared in the member\'s own configuration and applied by its class', async () => {
+  assert.deepEqual(readManifest().egress, ['api.anthropic.com', 'platform.claude.com']);
   // the image trusts the CA through which HTTPS egress is applied, and passes it to the query (runner R2's env)
   assert.match(read('../Dockerfile'), /NODE_EXTRA_CA_CERTS=\/etc\/cloudflare\/certs\/cloudflare-containers-ca\.crt/);
   const restore = installRuntime();
@@ -57,20 +57,21 @@ test('R13 R10 the egress, api.anthropic.com only, is declared in the member\'s o
     assert.ok(https.some((i) => i.host === '*'), 'all HTTPS goes through the outbound proxy');
     assert.ok(http.some((i) => i.host === '*'), 'all HTTP goes through the outbound proxy');
     for (const i of ctx.seen.intercepts) {
-      assert.deepEqual(i.props.allowedHosts, ['api.anthropic.com']);
+      assert.deepEqual(i.props.allowedHosts, ['api.anthropic.com', 'platform.claude.com']);
       assert.equal(i.props.enableInternet, false);
     }
-    // the proxy with those props: the model API passes, anything else is refused
+    // the proxy with those props: the model API and the sign-in's token host pass, anything else is refused
     const passed = [];
     globalThis.fetch = async (req) => { passed.push(new URL(req.url).hostname); return new Response('{}', { status: 200 }); };
     const proxy = new mod.ContainerProxy({ props: https[0].props }, {});
-    for (const url of ['https://api.anthropic.com/v1/messages', 'http://api.anthropic.com/']) {
+    for (const url of ['https://api.anthropic.com/v1/messages', 'http://api.anthropic.com/', 'https://platform.claude.com/v1/oauth/token']) {
       assert.equal((await proxy.fetch(new Request(url, { method: 'POST' }))).status, 200, url);
     }
-    for (const url of ['https://example.com/', 'https://statsig.anthropic.com/', 'http://169.254.169.254/latest', 'https://api.anthropic.com.evil.test/']) {
+    for (const url of ['https://example.com/', 'https://statsig.anthropic.com/', 'http://169.254.169.254/latest', 'https://api.anthropic.com.evil.test/',
+      'https://claude.ai/', 'https://claude.com/cai/oauth/authorize', 'https://x.platform.claude.com/', 'https://mcp-proxy.anthropic.com/']) {
       assert.equal((await proxy.fetch(new Request(url))).status, 520, url);
     }
-    assert.deepEqual(passed, ['api.anthropic.com', 'api.anthropic.com']);
+    assert.deepEqual(passed, ['api.anthropic.com', 'api.anthropic.com', 'platform.claude.com']);
   } finally { globalThis.fetch = fetch0; restore(); await image.stop(); }
 });
 

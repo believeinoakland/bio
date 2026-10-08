@@ -207,11 +207,19 @@ test("R21 a standing find reads one record read, retrieval's findIn, under its a
   assert.equal(w.calls.length, 0);
 });
 
-test("R1 the draft's reach is the asking scope: draftAdmits admits exactly what askAdmits admits; a draft's reads go through logRead under its grant with R2's removals, and write no R13 count", () => {
+test("R1 the draft's reach is the asking scope: draftAdmits admits exactly what askAdmits admits; a draft's reads go through logRead under its grant with R2's removals, and write no R13 count; a translation draft reads nothing of the record, the asking scope included", () => {
   const w = findWorld();
-  assert.equal(draftAdmits, askAdmits, "one function, so the two cannot drift");
-  for (const e of ASK_SCOPE) assert.equal(draftAdmits(e.op), true, e.op);
-  for (const op of ["standingset", "findin", "sources", "export", "purge", "entitycreate", "", null]) assert.equal(draftAdmits(op), false, String(op));
+  for (const e of ASK_SCOPE) {
+    assert.equal(draftAdmits(e.op), true, e.op);
+    assert.equal(draftAdmits(e.op, "own_words"), true, e.op);
+    /* (T37; N669, K2200) run-rules R22: a translation draft's reach is nothing; any other kind reads nothing (fail closed) */
+    for (const kind of ["translation", "vibes", null, 7]) assert.equal(draftAdmits(e.op, kind), false, `${e.op} ${kind}`);
+  }
+  for (const op of ["standingset", "findin", "sources", "export", "purge", "entitycreate", "", null, undefined, 7, {}]) {
+    assert.equal(draftAdmits(op), askAdmits(op), String(op));
+    assert.equal(draftAdmits(op), false, String(op));
+    assert.equal(draftAdmits(op, "translation"), false, String(op));
+  }
   const before = tables(w);
   const read = w.a.logRead({ grant: "g-draft", viewer: VERA, op: "search", args: { q: "budget" },
                              answer: { ok: true, count: 3, hits: [{ bundle_id: "INFO-OUT" }, { bundle_id: w.proj }, { tie_id: "MTI-2026-0001-x" }] } });

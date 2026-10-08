@@ -14,8 +14,9 @@
  *                        governing zone (its R69), so a question is checked and run on one day boundary (N584).
  *   query                query-language's `savedForm` (its R30).
  *   relations, zone      each a function: the relations and the zone, used only where `retrieval` gives none.
- *   credentials          the account that serves the author (its R35, `accountFor`) and the standing question's
- *                        grant (its R32, `aiGrantMintStanding`), for R19.
+ *   credentials          whether the group keeps its material away from AI (its R35, `aiKeptAway`, the one site of
+ *                        `AI_KEPT_AWAY`, K231), the account that serves the author (its R35, `accountFor`) and the
+ *                        standing question's grant (its R32, `aiGrantMintStanding`), for R19.
  *   ceilingRefusal       `(member, at)` → null or ai-runs' ceiling refusal (its R50), until ai-runs merges.
  *   combine              `jurisdictions.combine` (default), over the active profiles (`record-core` R26).
  *   now                  the module's clock, an ISO instant (default: the wall clock).

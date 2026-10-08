@@ -44,8 +44,11 @@ const mf = new Miniflare({
 after(() => mf.dispose());
 
 const unwrap = (r) => (r && typeof r === "object" && "result" in r ? r.result : r);
-const call = async (op, tok, body, headers = {}) => {
-  const r = await mf.dispatchFetch(`http://x/api/?op=${op}&token=${tok}`,
+/* admission R20 (T36-36, K2166; C-38.10): a credential is read only from the Authorization header or the body, never
+   the address, so the helper sends it as `Authorization: Bearer …` (as membership's members.test.mjs, K2182) */
+const call = async (op, tok, body, extra = {}) => {
+  const headers = tok === undefined ? { ...extra } : { ...extra, authorization: `Bearer ${tok}` };
+  const r = await mf.dispatchFetch(`http://x/api/?op=${op}`,
     body === undefined ? { headers } : { method: "POST", body: JSON.stringify(body), headers });
   return { status: r.status, body: unwrap(await r.json()) };
 };
@@ -62,6 +65,9 @@ async function world() {
   };
   const RUTH = await enrol("ruth", "admin", ["contribute", "publish"]);
   await enrol("sam", "admin", ["contribute"]);
+  /* admission R5 (T36-36, K2166; C-38.11): the shared member token `mem-cr` is retired, so the member class is tested
+     through an enrolled member's own session, one with `contribute` and one without (as K2182 read membership's) */
+  const MEMBER = await enrol("mel", "member", ["contribute"]);
   const NOCON = await enrol("nocon", "member", []);
   const md = (id) => ["---", `id: ${id}`, "object_type: inquiry", "schema: inquiry@1", 'title: "What?"',
     "current_state: open", "prior_state: null", 'created: "2026-07-01T00:00:00Z"', 'last_updated: "2026-07-01T00:00:00Z"',
@@ -90,29 +96,38 @@ async function world() {
     skillVersion: "investigative-session@1", biasManifest: null, bounds: [{ bound: "fetches", allowed: 5, unit: "requests" }],
     leaseMs: 900000 })).body;
   assert.equal(run.started, true, JSON.stringify(run));
-  const AI = (await call("aicredentialmint", RUTH, { tokenId: "no-writes", principalKind: "member", principalMember: "ruth",
-    taskScope: "investigative", writes: [], note: "reads only" })).body.token;
   /* R49 (T35): a member captures the index page, so every address it links to is one the record already holds */
   const idx = (await call("acquire", RUTH, { locator: "https://index.example.org/list.html", subresources: true })).body;
   assert.equal(idx.ok, true, JSON.stringify(idx).slice(0, 400));
-  setup = { RUTH, NOCON, AI };
+  setup = { RUTH, MEMBER, NOCON };
   return setup;
 }
 
 test("R30 capturerequest: admin, member with contribute and probe; capturerequestdrain: admin, probe and daemon, no member class; capturerequests: admin, member and probe; the daemon reaches no read of the queue; no op admits the ai class by name", async () => {
-  const { RUTH, NOCON, AI } = await world();
+  const { RUTH, MEMBER, NOCON } = await world();
+  /* the ai credential is minted here, not in `world()`, and its mint is asserted, so an arm below never runs with no
+     credential at all and passes for the wrong reason (the mint waits on credentials' T37-33, plan rule 4) */
+  const minted = (await call("aicredentialmint", RUTH, { tokenId: "no-writes", principalKind: "member", principalMember: "ruth",
+    taskScope: "investigative", writes: [], note: "reads only" })).body;
+  const AI = minted && minted.token;
+  assert.equal(typeof AI, "string", JSON.stringify(minted).slice(0, 300));
   const ask = { run: "RUN-CR-1", address: "https://src.example.org/a.pdf", target: "INQ-2026-9000-cr", purpose: "investigate" };
   /* capturerequest */
-  for (const tok of ["adm-cr", "mem-cr", "prb-cr", RUTH]) assert.equal(forbidden(await call("capturerequest", tok, ask)), false, tok);
+  for (const tok of ["adm-cr", MEMBER, "prb-cr", RUTH]) assert.equal(forbidden(await call("capturerequest", tok, ask)), false, tok);
   assert.equal(forbidden(await call("capturerequest", "dmn-cr", ask)), true, "daemon");
   const nocon = await call("capturerequest", NOCON, ask);
   assert.equal(nocon.status, 403, "a member session without contribute");
   /* capturerequestdrain */
   for (const tok of ["adm-cr", "prb-cr", "dmn-cr"]) assert.equal(forbidden(await call("capturerequestdrain", tok, {})), false, tok);
-  assert.equal(forbidden(await call("capturerequestdrain", "mem-cr", {})), true, "the member class");
-  assert.equal((await call("capturerequestdrain", RUTH, {})).status, 403, "a member's session");
+  /* the member class reaches the drain only through a member's session now (admission R5), and a session is refused
+     the unattended path before its class is weighed (C-38.3): refused, nothing drained, for either role */
+  for (const [tok, who] of [[MEMBER, "the member class"], [RUTH, "a member's session"]]) {
+    const r = await call("capturerequestdrain", tok, {});
+    assert.deepEqual([r.status, r.body.reason, "configured" in r.body, "drained" in r.body],
+      [403, "MACHINE_CREDENTIAL_REQUIRED", false, false], who);
+  }
   /* capturerequests */
-  for (const tok of ["adm-cr", "mem-cr", "prb-cr", RUTH]) assert.equal(forbidden(await call("capturerequests", tok)), false, tok);
+  for (const tok of ["adm-cr", MEMBER, "prb-cr", RUTH]) assert.equal(forbidden(await call("capturerequests", tok)), false, tok);
   assert.equal(forbidden(await call("capturerequests", "dmn-cr")), true, "the daemon reaches no read of the queue");
   /* an ai credential reaches an op only through the writes its record declares (D-199), never as a class the OPS row
      names: one that declares no writes reaches neither mutating op */

@@ -27,11 +27,11 @@ const sections = () => ({
 });
 const strings = (v) => typeof v === "string" ? [v] : v && typeof v === "object" ? Object.values(v).flatMap(strings) : [];
 
-test("R36 R5 the writing_help layer, in disclosed after suggestions and before wizard_scripts: authored, its load_when R36's sentence, its body the clauses of DEC-153 (Interaction Constructs §P), Roles §3 rules 1, 7, 9 and the pilot's §3, each found by R21's normaliser", () => {
+test("R36 R5 the writing_help layer, in disclosed after suggestions and before interface_translation (R39): authored, its load_when R36's sentence, its body the clauses of DEC-153 (Interaction Constructs §P), Roles §3 rules 1, 7, 9 and the pilot's §3, each found by R21's normaliser", () => {
   const { disclosed, resident } = renderPack(published({ catalog: helpCatalog() }));
   const keys = Object.keys(disclosed);
   assert.equal(keys.indexOf("writing_help"), keys.indexOf("suggestions") + 1, "after suggestions");
-  assert.equal(keys.indexOf("wizard_scripts"), keys.indexOf("writing_help") + 1, "and before wizard_scripts");
+  assert.equal(keys.indexOf("interface_translation"), keys.indexOf("writing_help") + 1, "and before interface_translation (R39)");
   const layer = disclosed.writing_help;
   assert.equal(layer.sourcing, "authored");
   assert.equal(SOURCING.writing_help, "authored");
