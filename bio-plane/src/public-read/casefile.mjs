@@ -2,11 +2,11 @@
  * R17; DEC-112 (2), (3); Publication §5C; K1315, K1316). What a published case edition carries so that anybody can check
  * it, and recreate its findings, without this instance: the signed case document and its signature, the complete
  * edition, each finding's published bytes, signature, grading facts and passages, every included material whole with its
- * extracted text, the attestations, each calculation with every input it names, and the signing keys. Built once, by the Worker's assembly (`assembleCaseContainer`,
+ * extracted text, each photo carried as its obscured copy (never its original), the attestations, each calculation with every input it names, and the signing keys. Built once, by the Worker's assembly (`assembleCaseContainer`,
  * `../publication/worker.mjs`), from what the published projection holds (`PublicRead.caseFileFacts`) and the published
  * bucket; served part by part (`op=publishedbytes&sha256=<manifest>&format=zip&part=<n>`).
  *
- * THE FORMAT IS `case-grammar`'s (its R13, `bio-case-file/1`): every path is `caseFilePath`'s, the manifest is
+ * THE FORMAT IS `case-grammar`'s (its R13, `CASE_FILE_FORMAT`; a stored `bio-case-file/1` is served as written): every path is `caseFilePath`'s, the manifest is
  * `CASE_FILE_MANIFEST_PATH` at each part's root, the files are listed in path order and each part's digest is
  * `casePartDigest`'s; this file writes the format and decides nothing it states. What is this module's (K1315, reported):
  * each file sits at its path directly under the part's root; an attestation is named `<n>-<by_kind>.json` under its
@@ -19,7 +19,7 @@
  * for its size and nothing is left out. */
 
 import { canonicalJson } from "../record-grammar/index.mjs";
-import { CASE_FILE_FORMAT, CASE_FILE_MANIFEST_PATH, caseFilePath, casePartDigest, completeEditionOf, calculationFileText,
+import { CASE_FILE_FORMAT, CASE_FILE_FORMATS_ACCEPTED, CASE_FILE_MANIFEST_PATH, caseFilePath, casePartDigest, completeEditionOf, calculationFileText,
          provOf } from "../case-grammar/index.mjs";
 import { CONTAINER_MAX_BYTES } from "../container.mjs";
 
@@ -42,6 +42,10 @@ export async function keyFingerprint(keyB64) {
   return `SHA256:${b64(d).replace(/=+$/, "")}`;
 }
 
+/* R23 (T37): why a material is named unheld because a photo of this edition travels as its copy. */
+export const ORIGINAL_NOT_CARRIED = "these are the bytes of a photo this case carries as its obscured copy; the original is not carried";
+export const ARCHIVE_HOLDS_ORIGINAL = "the archive holds a photo this case carries obscured";
+
 /* R6: the assembly's one statement that it built nothing, naming what it could not read. */
 const notAssembled = (cause, what) => ({ ok: false, reason: "CASE_FILE_NOT_ASSEMBLED", cause, ...what,
   detail: "the case edition is published and its findings answer by hash; its case file was not built, because it would "
@@ -62,7 +66,8 @@ const entryCost = (name, bytes) => bytes + utf8(name).length * 2 + 76;
 /** R23, R24, R6: the case file for one case edition, from `facts` (`PublicRead.caseFileFacts`, the published projection)
  *  and `read(sha)` (the published bucket's bytes by hash, or null). `group` is the publishing group's slug. Answers
  *  `{ok: true, manifest, files: [{path, kind, sha256, bytes, part, content}], unheld}`, `unheld` naming each included
- *  material the projection holds no bytes for at its stated digest (the checker then shows it missing, K1316); or
+ *  material the projection holds no bytes for at its stated digest (the checker then shows it missing, K1316), and each
+ *  obscured copy not held at its digest (T37); or
  *  `CASE_FILE_NOT_ASSEMBLED` naming what it could not read, where a part a finding published cannot be read at its hash
  *  or the signed document's bytes do not hash to its digest: a case file that would leave out what it must carry is
  *  never built. It is a statement inside an act that has committed, never a refusal (R6). `maxBytes` is the part bound
@@ -105,6 +110,9 @@ export async function buildCaseFile({ facts, group = null, read, maxBytes = CONT
   };
   for (const m of facts.materials) {
     const kind = m.kind === "observation" ? "observation" : "document";
+    /* R23 (T37): bytes a photo carried as its copy shares are its original's, which never travel. */
+    if (m.original_of_copy) { unheld.push({ ref: m.ref, sha: m.sha ?? null, what: kind === "observation" ? "text" : "bytes",
+                                            why: ORIGINAL_NOT_CARRIED }); continue; }
     const bytes = await held(m.sha, m.bytes_text);
     if (!bytes) unheld.push({ ref: m.ref, sha: m.sha ?? null, what: kind === "observation" ? "text" : "bytes" });
     else await add(caseFilePath(kind, m.ref), kind, bytes);
@@ -113,7 +121,29 @@ export async function buildCaseFile({ facts, group = null, read, maxBytes = CONT
       if (!tb) unheld.push({ ref: m.ref, sha: m.text_sha ?? null, what: "extracted_text" });
       else await add(caseFilePath("extracted_text", m.ref), "extracted_text", tb);
     }
+    /* R32 (N717; K2004): a member document carried whole brings its `container` record and its archive, outward to the
+       outermost, each under the material's ref (an archive named by its own SHA-256, a record by its member's, `case-grammar`
+       R13) at the digest the commit registered (`PublicRead.caseFileFacts`); bytes
+       that do not hash to it are not carried and are named in `unheld`, and an archive the commit did not register is
+       named there too. The archive's tokens travel as today, in the material's attestation rows. */
+    if (kind === "document" && bytes) for (const a of m.archives || []) {
+      const ab = a.registered === false ? null : await held(a.sha, a.text);
+      if (!ab) unheld.push({ ref: m.ref, sha: a.sha ?? null, what: a.kind, ...(a.holds_original ? { why: ARCHIVE_HOLDS_ORIGINAL } : {}) });
+      else await add(caseFilePath(a.kind, [m.ref, a.kind === "container" ? a.member : a.sha]), a.kind, ab);
+    }
   }
+  /* R23 (T37; N757; DEC-180 (4)): each photo carried as its copy, one file of kind `obscured` under its row's ref, at the
+     SHA-256 `obscured.copy` names, read by that hash from the published bucket and only where the commit registered it
+     under that ref; never the original's bytes, its extracted text, or an archive or container record of it. A copy
+     not registered, or whose bytes do not hash to that digest, is not carried and is named in `unheld`. */
+  for (const o of facts.obscured || []) {
+    const bytes = o.registered ? await held(o.copy) : null;
+    if (!bytes) unheld.push({ ref: o.ref, sha: o.copy ?? null, what: "obscured" });
+    else await add(caseFilePath("obscured", o.ref), "obscured", bytes);
+  }
+  /* R33 (K2129): the edition's criteria rows exactly as R31 answers them, once, in canonical JSON; none for an edition
+     whose criteria were not recorded (committed before T35). */
+  if (Array.isArray(facts.criteria)) await add(caseFilePath("criteria"), "criteria", utf8(canonicalJson(facts.criteria)));
   const nth = new Map();
   for (const a of facts.attestations) {
     const n = (nth.get(a.row.ref) || 0) + 1;
@@ -191,8 +221,7 @@ export async function buildCaseFile({ facts, group = null, read, maxBytes = CONT
   return { ok: true, manifest: manifestOf(assign, count), unheld, files: files.map((f, j) => ({ ...f, part: assign[j] })) };
 }
 
-/** R5, R6: is this manifest a case file's (`bio-case-file/1`), rather than a container's from before T28. */
-export const isCaseFileManifest = (manifest) => !!(manifest && manifest.format === CASE_FILE_FORMAT);
+export const isCaseFileManifest = (manifest) => !!(manifest && CASE_FILE_FORMATS_ACCEPTED.includes(manifest.format));
 
 /** R5, R6: one part of a case file in the shape `../container.mjs`' `containerEntries` reads (its `parts[]` and
  *  `layout`), so the part is assembled, and a missing file refused `PART_MISSING` (C-98.5), at that one governed site:

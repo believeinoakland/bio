@@ -66,7 +66,11 @@ test("R11 docx text: <w:t> joined per paragraph, deleted text never in it, inser
   ]);
   assert.equal(t.document, "A+ins\tb\nc\nr1c1\nin\nwide\n&<☺");
   assert.ok(!t.document.includes("gone"));
-  assert.deepEqual(t.tables, [{ table: 0, ref: "table 1", rows: 2, cols: 3 }, { table: 1, ref: "table 2", rows: 1, cols: 1 }]);
+  const tc = (table, cell, value, paras) => ({ source: { kind: "doc-table", ref: `table ${table + 1}, ${cell}`, table, cell }, value, type: "text", declared: null, cached: null, formula: null, paras });
+  assert.deepEqual(t.tables, [
+    { table: 0, ref: "table 1", rows: 2, cols: 3, cells: [tc(0, "A1", "r1c1", [1]), tc(0, "A2", "wide", [4])] },
+    { table: 1, ref: "table 2", rows: 1, cols: 1, cells: [tc(1, "A1", "in", [2])] },
+  ]);
   assert.deepEqual((await docxEntry.text(F.docx({ body: F.wp(F.wr("x")) }))).tables, [], "a body with no tables is an empty list");
   assert.equal((await docxEntry.text(F.docx({ mainCd: F.CORRUPT }))).tables, null, "an unread body is null, never []");
 });

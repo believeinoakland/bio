@@ -750,7 +750,56 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    refusals, R38–R47, K1934 (9)) and CHANGED C-29.1, .3, .5, .22, C-63.1, .2 (DEC-149, its R48).
    ROW_CENSUS (R50) re-pinned to this tree: 1390 rows. Rows a T35 job in layers 3–11 adds or changes are T36's stamp
    (plan T35, Rules 9 (2)). */
-export const CATALOG_VERSION = "1.62.0";
+/* 1.63.0 (PROMOTION #34, T36-8, 2026-10-08; T35's red 2, T36's red 4; K1542, K1545, K1855): MINOR. The stamp of every
+   row awaiting it at T35's close (T35's layers 3–11) and of T36's layers 1 and 2, read by diffing R50's census lines of
+   `tranche/T36` after its layer 1 merged against 1.62.0's own (`test/fixtures/row-census-1.62.0.jsonl`: 1390 rows,
+   ff8c6743…): seventy-seven new rows, none departed, forty-four changed. Each is one a T35 job record names.
+   ARRIVED (77): standards C-112.33–.52, .54–.58 (25); law-relations C-112.53 LAW_RELATION_NO_EDITION; acquisition
+   C-137.1–.19 (the archive family, its R29, stamped here under following's numbers, each row counted as its own; T36-10
+   renumbered them C-139.1–.19, N738, red 8 cleared, and 1.64.0 stamps them there, N754); capture-requests C-28.23–.33; capture-sources C-105.12 CAPTURE_CREDENTIAL_OWN_HOST;
+   conformance C-113.32–.36; filing-templates C-115.45, .46; publication C-122.5 SCHEDULED_CHECK_UNAVAILABLE; duties
+   C-133.37–.39; answers C-135.13 STANDING_NEEDS_SEARCH; admission C-29.30 AI_CREDENTIAL_EXPIRED, C-38.9
+   DOOR_RATE_LIMITED; citation C-33.52, C-33.53, C-45.14–.16; case-authoring C-44.6 CASE_EDITION_WAITING.
+   CHANGED (44), code and number unmoved: law-relations C-112.23, .24, .26–.32 (`where` moved out with law.mjs, C-112.29
+   re-worded); standards C-112.3, C-112.21; acquisition C-28.13, C-48.1, .4, .7, C-68.1, C-83.1, .3, .4, .5, .8, C-128.1
+   (DEC-149); answer-envelope C-61.1, C-69.2–.5 (`where` re-pointed by the L11 split); hypotheses C-134.13–.16 (`where`);
+   answers C-135.6, .8; capture C-85.3, .4; extraction C-51.1, .4; provenance C-103.7; attestation C-89.1; capture-sources
+   C-105.8; reevaluation C-110.1; intent C-111.24; docket C-129.16; bias C-26.2 (each DEC-149's words).
+   CHANGED IN WHAT THE GATES RUN, no row line moving: none a T35 or T36 job record names. T36's layer 1 added and
+   changed no row; T36's layer 2 (membership, credentials) is re-pinned in place as each merges (BOB's CHANGE), so T36
+   names one catalogue.
+   T36 LAYER 2, re-pinned in place: membership (K2090) added and changed no row; credentials (5b3d7fb633, K2093) ARRIVED
+   C-29.31 AI_KEPT_AWAY and C-29.32 NO_REASON (the keep-away act, DEC-172) and C-96.44 SECURITY_COUNTS_UNREADABLE (the
+   counts read), and CHANGED C-96.43 SECURITY_PERIOD_INVALID (`where` now `#periodRefusal`, words unchanged).
+   ROW_CENSUS (R50) re-pinned to this tree: 1470 rows. Rows a T36 job in layers 3–11 adds or changes are T37's stamp
+   (plan T36, Rules 5 (4)). */
+/* 1.64.0 (PROMOTION #35, T37-7, 2026-10-08; T36's red 4, N754, N755; K1542, K1545, K1855, K2027, K2100, K2101): MINOR.
+   The stamp of every row awaiting it at T36's close (T36's layers 3–11) and of T37's layers 1 and 2, read by diffing
+   R50's census lines of `tranche/T37` after its layer 1 closed against 1.63.0's own
+   (`test/fixtures/row-census-1.63.0.jsonl`: 1470 rows, e9ef089b…): forty-seven new rows, nineteen renumbered (sixty-six
+   lines arrived, twenty departed), one retired, two changed. Each is one a T36 job record names (ADMISSION's,
+   STANDARDS', INSTANCE-SETUP's, CASE-AUTHORING's, ACQUISITION's and FILE-SAFETY's).
+   ARRIVED (47): admission C-38.10 CREDENTIAL_IN_ADDRESS, C-38.11 MEMBER_TOKEN_RETIRED; standards C-112.59
+   THROUGH_INVALID, .60 THROUGH_NO_SOURCE, .61 THROUGH_AFTER_CHECK, .62 NO_SUCH_RECORD; case-authoring C-136.2
+   STANDARDS_USE_REFUSED; acquisition C-139.20 NOT_AN_ARCHIVE (its R41); file-safety C-140.1 FILE_NOT_HELD through
+   C-140.39 FORWARD_PERIOD_INVALID (the new module's family, `FILE_SAFETY_CHECKS`, 39 rows).
+   RENUMBERED (19), code, `where` and translation unmoved (the old number departed, the new arrived): acquisition's
+   archive family C-137.1–.19 → C-139.1–.19, in the same order (N738, K2027; following keeps C-137.1–.20).
+   DEPARTED (1), its number never reused: instance-setup C-119.6 ASSISTANT_SWITCH_MALFORMED (the switch retired with
+   `assistantset`).
+   CHANGED (2), code and number unmoved: standards C-112.41 FORCE_TEXT_NOT_HELD (`where` now `refuseTextNotHeld`, words
+   unchanged); instance-setup C-119.5 ASSISTANT_OFF (translation: the group keeps its material away from every
+   assistant, the administrator's reason coming with the answer).
+   CHANGED IN WHAT THE GATES RUN, no row line moving: none a T36 or T37 job record names. T37's layer 1 added and changed
+   no row (file-scanner's and image-cover's refusals are no table's). T37's layer 2 (membership, credentials) is
+   re-pinned in place as each merges, so T37 names one catalogue.
+   T37 LAYER 2, re-pinned in place: membership (K2183) added and changed no row; credentials (K2184) ARRIVED C-29.33
+   AI_CREDENTIAL_NO_SECRET, C-96.45 MACHINE_CANNOT_SET_PASSWORD and C-96.46 CURRENT_PASSWORD_WRONG, RE-KEYED C-29.32
+   NO_REASON → AI_KEEP_AWAY_NO_REASON (N755: it no longer shares progressions' C-100.18 code, K231), and CHANGED C-29.31
+   AI_KEPT_AWAY (`where` now `aiKeptAway`, the one site that mints it, N765; words unchanged).
+   ROW_CENSUS (R50) re-pinned to this tree: 1519 rows. Rows a T37 job in layers 3–11 adds or changes are T38's stamp
+   (plan T37, Rules 6 (2)). */
+export const CATALOG_VERSION = "1.64.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -842,8 +891,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    this module's own census suite, `bio-plane/test/system/row-census.test.mjs` (legacy-tests' until T22's opening, K1006):
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1390,
-  digest: "ff8c67437e16423657f54c504f5c460af81b9b98556b83d833307b9d14981f22" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1519,
+  digest: "60d892ca0b04829cd026b93e791b74a9f2fd6062bdc20fd100817bcc909c3d5b" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();

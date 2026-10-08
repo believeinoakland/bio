@@ -47,7 +47,8 @@ function plane(cfg = {}) {
     if (cfg.silent?.includes(op)) return new Response("<html>", { status: 502 });
     switch (op) {
       case "askceiling": return cfg.ceiling ? ok(CEILING) : ok({ ok: true, reached: false });
-      case "affordances": return ok(cfg.noPack ? { pack: null, pack_absent: "no fences" } : { pack: PACK });
+      /* control-plane R41: the door answers `agentpack` at the envelope's top level */
+      case "agentpack": return Response.json({ ok: true, fences: [], ...(cfg.noPack ? { pack: null, pack_absent: "no fences" } : { pack: PACK }), tokenClass: "ai" });
       case "askcheck":
         if (cfg.checkRefused) return Response.json({ ok: false, reason: "GRANT_EXPIRED", check: "C-29.30" }, { status: 403 });
         return ok({ ok: true, answer: { ...(body?.answer || {}), sentences: [] },
@@ -175,10 +176,10 @@ section("R54 · interpret, read through the grant, compose, check, and return on
     ["answer", true, [], ["ANSWER_CITES_UNREAD"]]);
   t("R54: the model's own sentence never reached the member: only the checked answer did", r.text.includes("Ruth held it."), false);
   t("R54: the calls, in order: the ceiling, the pack, the reads, the usage, the checks",
-    r.plane.map((x) => x.op), ["askceiling", "affordances", "eventsfor", "askusage", "askusage", "askcheck"]);
+    r.plane.map((x) => x.op), ["askceiling", "agentpack", "eventsfor", "askusage", "askusage", "askcheck"]);
   t("R54: every plane call went under the grant and nothing else", [...new Set(r.plane.map((x) => x.token))], [GRANT]);
   t("R54: it writes no run row and no observation: no run op was called",
-    r.plane.filter((x) => PLANE_OPS[x.op] && !["affordances", "search", "meaningrows", "standard", "profiles"].includes(x.op)).map((x) => x.op), []);
+    r.plane.filter((x) => PLANE_OPS[x.op] && !["agentpack", "search", "meaningrows", "standard", "profiles"].includes(x.op)).map((x) => x.op), []);
   const usage = r.plane.filter((x) => x.op === "askusage").map((x) => x.body);
   /* agent-model R6: on the API-key path each request answered counts one call, so each conversation's `calls` is the
      number of requests the model API received for it (reading's offer `done_reading`, composing's `answer`). */

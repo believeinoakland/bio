@@ -3,36 +3,25 @@
 import { mkdtemp, mkdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { DETAIL_MAX, QUIET, PATH, passed, scrub } from './env.mjs';
+import { memberOk } from './signin.mjs';
 
 export const RELAY_SERVER = 'relay';
-export const DETAIL_MAX = 300;
+export { DETAIL_MAX, scrub };
 export const MAX_TURNS_BOUND = 100;
 const CREDENTIAL_VAR = { subscription: 'CLAUDE_CODE_OAUTH_TOKEN', apikey: 'ANTHROPIC_API_KEY' };
 const TOOL_NAME = /^[A-Za-z0-9_-]{1,64}$/;
-// Claude Code's own traffic other than the model's API (telemetry, error reports, updates) is switched off (R10).
-const QUIET = {
-  DISABLE_TELEMETRY: '1', DISABLE_ERROR_REPORTING: '1', DISABLE_AUTOUPDATER: '1',
-  CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: '1',
-};
-const PATH = '/usr/local/bin:/usr/bin:/bin';
-// The one variable of the process environment a query inherits: the CA through which the container's HTTPS egress is
-// applied (src/worker.mjs, R10). It names a file, never a secret.
-const PASSED = ['NODE_EXTRA_CA_CERTS'];
-const passed = () => Object.fromEntries(PASSED.filter((k) => process.env[k]).map((k) => [k, process.env[k]]));
 
 const fail = (code, detail) => ({ ok: false, code, detail });
 const num = (x) => (typeof x === 'number' && Number.isFinite(x) ? x : null);
 
-// Never lets the secret out: every outward string passes through here (R8).
-export function scrub(text, secret, max = DETAIL_MAX) {
-  let s = String(text ?? '');
-  if (secret) s = s.split(secret).join('[redacted]');
-  return s.slice(0, max);
-}
-
+// The request's credential: a secret for one variable, or (T37) the member whose stored sign-in in this instance the
+// query runs under (R2, R21); null when it carries none usable.
 export function credentialOf(request) {
   const c = request && request.credential;
-  if (!c || typeof c !== 'object' || !CREDENTIAL_VAR[c.kind] || typeof c.secret !== 'string' || !c.secret) return null;
+  if (!c || typeof c !== 'object') return null;
+  if (c.kind === 'signin') return memberOk(c.member) ? { signin: c.member, secret: '' } : null;
+  if (!CREDENTIAL_VAR[c.kind] || typeof c.secret !== 'string' || !c.secret) return null;
   return { variable: CREDENTIAL_VAR[c.kind], secret: c.secret };
 }
 
@@ -86,8 +75,9 @@ export function relayServer(sdk, tools, relay) {
 }
 
 // Runs `request` over `channel` ({send(obj), close()}); returns the handlers the connection feeds:
-// `toolResult(frame)` and `closed()`. The answer is sent on the channel and the promise resolves with it.
-export function converse(sdk, request, channel, { tmpRoot = tmpdir(), version = '0' } = {}) {
+// `toolResult(frame)` and `closed()`. The answer is sent on the channel and the promise resolves with it. `signin` is
+// the instance's own sign-in (src/signin.mjs), which a `signin` credential's query runs under (R2, R21).
+export function converse(sdk, request, channel, { tmpRoot = tmpdir(), version = '0', signin = null } = {}) {
   const cred = credentialOf(request);
   const pending = new Map();
   let ended = false, n = 0;
@@ -110,6 +100,15 @@ export function converse(sdk, request, channel, { tmpRoot = tmpdir(), version = 
     if (!cred) return answer(fail('NO_CREDENTIAL', 'the request carries no usable credential'));
     const fault = shapeFault(request);
     if (fault) return answer(fail('BAD_REQUEST', fault));
+    // A `signin` query runs under the stored sign-in made for its member, else starts nothing (R2, R21).
+    let kept = null;
+    if (cred.signin) {
+      const why = signin ? await signin.serves(cred.signin) : 'NOT_SIGNED_IN';
+      if (why === 'NOT_THIS_MEMBER') return answer(fail(why, 'this instance\'s sign-in was made for another member'));
+      if (why) return answer(fail(why, 'this instance holds no sign-in made for this member'));
+      if (ended) return null;
+      kept = await signin.paths();
+    }
     const dir = await mkdtemp(join(tmpRoot, 'agent-runner-'));
     let stderr = '';
     try {
@@ -134,10 +133,12 @@ export function converse(sdk, request, channel, { tmpRoot = tmpdir(), version = 
         allowedTools: request.tools.map((t) => `mcp__${RELAY_SERVER}__${t.name}`),
         permissionMode: 'dontAsk',
         cwd: join(dir, 'work'),
+        // Either the request's secret in its one variable, or neither variable and the stored sign-in's own
+        // directory, where Claude Code authenticates as its sign-in left it (AT-27); never both (AT-24).
         env: {
-          PATH, ...passed(), HOME: join(dir, 'home'), TMPDIR: join(dir, 'tmp'), CLAUDE_CONFIG_DIR: dir, ...QUIET,
+          PATH, ...passed(), HOME: join(dir, 'home'), TMPDIR: join(dir, 'tmp'), ...QUIET,
           CLAUDE_AGENT_SDK_CLIENT_APP: `agent-runner/${version}`,
-          [cred.variable]: cred.secret,
+          ...(cred.signin ? { CLAUDE_CONFIG_DIR: signin.configDir } : { CLAUDE_CONFIG_DIR: dir, [cred.variable]: cred.secret }),
         },
         abortController: abort,
         stderr: (s) => { stderr = (stderr + s).slice(-4096); },
@@ -159,6 +160,8 @@ export function converse(sdk, request, channel, { tmpRoot = tmpdir(), version = 
       return answer(fail('SDK_ERROR', scrub((e && e.message) || e, cred.secret)));
     } finally {
       await rm(dir, { recursive: true, force: true });
+      // Of the stored sign-in's directory only what the binary held before stays, renewed or not (R9).
+      if (kept) await signin.keepOnly(kept);
     }
   };
   handlers.done = run();

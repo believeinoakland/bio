@@ -1,7 +1,8 @@
 /* standards' tables (requirements: `build/requirements/standards.md`, R14; K4: new, nothing moved). A standard is a
  * record document of its own type (R15): its bundle, history and manifest are record-core's. What is stored here is
  * what the reads answer from without parsing documents: each declaration as it was made, its text's content ids, each
- * proposal and each adoption; since T35, each force, override, release, body's adoption, imposition and benchmark. The
+ * proposal and each adoption; since T35, each force, override, release, body's adoption, imposition and benchmark;
+ * since T36, each record of a version known in force through a date and its withdrawal (R50). The
  * law relations' five tables are `law-relations`' (K1961). Every row is written once and never updated or removed (R14): a correction is a new
  * standard that supersedes the old one (R6), and "what supersedes it" is read from the successor's row. Each table is
  * declared to record-core's purge. */
@@ -135,6 +136,30 @@ CREATE TABLE IF NOT EXISTS standard_benchmarks (
   author         TEXT NOT NULL,
   at             TEXT NOT NULL
 );
+-- T36 (R50): a member's record that one version is known in force through a date, from a held capture extent of the
+-- source checked that day; withdrawn in standard_in_force_through_withdrawals, never edited (R14).
+CREATE TABLE IF NOT EXISTS standard_in_force_through (
+  record_id      TEXT PRIMARY KEY,
+  standard_id    TEXT NOT NULL,
+  through        TEXT NOT NULL,
+  capture_sha    TEXT NOT NULL,
+  extent_json    TEXT NOT NULL,
+  content_id     TEXT NOT NULL,
+  checked        TEXT NOT NULL,
+  checked_day    TEXT,
+  reason         TEXT NOT NULL,
+  author         TEXT NOT NULL,
+  at             TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS standard_in_force_through_standard ON standard_in_force_through(standard_id, record_id);
+CREATE INDEX IF NOT EXISTS standard_in_force_through_capture ON standard_in_force_through(capture_sha);
+CREATE TABLE IF NOT EXISTS standard_in_force_through_withdrawals (
+  record_id      TEXT PRIMARY KEY,
+  standard_id    TEXT NOT NULL,
+  reason         TEXT NOT NULL,
+  withdrawn_by   TEXT NOT NULL,
+  withdrawn_at   TEXT NOT NULL
+);
 `;
 
 /** R18, R19: the columns T33 adds to `standards`, each added to a table created before it and never filled: a standard
@@ -172,6 +197,8 @@ export const STANDARDS_TABLES = Object.freeze([
   { name: "standard_body_adoptions", keys: ["standard_id"] },
   { name: "standard_impositions", keys: ["standard_id"] },
   { name: "standard_benchmarks", keys: ["standard_id"] },
+  { name: "standard_in_force_through", keys: ["standard_id"] },
+  { name: "standard_in_force_through_withdrawals", keys: ["standard_id"] },
 ].map((t) => Object.freeze({ ...t, ...CLASSES })));
 
 /** Creates the tables where absent, and adds R1's `reason` column (DEC-88) and R18–R19's columns to a `standards` table

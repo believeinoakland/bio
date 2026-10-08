@@ -10,7 +10,7 @@ import { CATALOG_VERSION } from "../../../src/gate.mjs";
 import { GRADING_METHOD_VERSIONS } from "../../../src/strength/method.mjs";
 import { METHOD as CALC_METHOD } from "../../../src/calc-grammar/index.mjs";
 import { captureAccountStatement, ratifyStatement, NS_RELEASE } from "../../../src/sshsig.mjs";
-import { caseFile, caseFiles, gradingFacts, byId, sha, keyFor, calcRow, CALC, CALC_INPUT, CALC_INPUT_SHA, A, B, C, MINUTES, MEMO, MEMO_BYTES, MEMO_ACCOUNT, MINUTES_BYTES, REF, GROUP, CASE } from "./fixture.mjs";
+import { caseFile, caseFiles, gradingFacts, byId, sha, keyFor, calcRow, CALC, CALC_INPUT, CALC_INPUT_SHA, COPY_BYTES, COPY_SHA, OBSCURED_LABEL, A, B, C, MINUTES, MEMO, MEMO_BYTES, MEMO_ACCOUNT, MINUTES_BYTES, REF, GROUP, CASE } from "./fixture.mjs";
 
 const passagesOfFixture = () => Object.fromEntries([A, B, C].map((id) => [id, JSON.parse(caseFiles().texts.get(CG.caseFilePath("passages", id)))]));
 const check = (opts = {}, args = {}) => CC.checkCaseFile({ parts: caseFile(opts).parts, ...args });
@@ -22,7 +22,9 @@ test("R1 R11: a clean case file recreates every finding, members and the finding
   for (const parts of [1, 2, 3]) {
     const r = await check({ parts });
     assert.deepEqual(Object.keys(r).sort(), ["calculations", "case", "checker", "complete_edition", "edition", "findings", "format", "group", "integrity",
-      "publication_checks", "rests_on_another_group", "rests_on_another_group_statement", "signatures", "statement"]);
+      "obscured", "publication_checks", "rests_on_another_group", "rests_on_another_group_statement", "signatures", "standards_use", "statement"]);
+    assert.equal(r.standards_use, null);     /* R22: no criteria file */
+    assert.deepEqual(r.obscured, []);        /* R1, R8: no material carried as its copy */
     assert.equal(r.format, "bio-case-file/1"); assert.equal(r.case, CASE); assert.equal(r.edition, 2); assert.equal(r.group, GROUP);
     assert.deepEqual(r.checker, { grading_versions: [...GRADING_METHOD_VERSIONS], checks_version: CATALOG_VERSION, calc_versions: [CALC_METHOD] });
     assert.deepEqual(r.calculations, []);
@@ -45,6 +47,7 @@ test("R1: pure and never throws: any input answers the whole answer, malformed i
     assert.equal(r.integrity.intact, false);
     assert.ok(r.integrity.departures.length > 0);
     assert.ok(Array.isArray(r.findings));
+    assert.deepEqual(r.obscured, []);
   }
   /* a manifest that is not the format: each departure named; the findings it lists do not recreate */
   const r = await check({ manifest: (m) => { m.format = "bio-case-file/9"; } });
@@ -287,13 +290,90 @@ test("R8: every material a load-bearing chain reaches is listed included and car
   assert.ok(byId(gone)[A].missing.some((e) => e.check === "presentability" && e.origin === "https://records.example/minutes.pdf"));
 });
 
-test("R9: a document supplied later that matches a missing file's fingerprint fills the gap and the finding is re-checked; one that matches nothing is named and never used", async () => {
+test("R8 R1 (T37; N757, DEC-180 (4), K2206): a photo carried as its copy is presentable when the copy is carried at its digest, its extracted text and the original's bytes not asked; the answer's obscured states each such row with its label; a /3 case file recreates", async () => {
+  const r = await check({ obscureMemo: true });
+  assert.equal(r.format, "bio-case-file/3");
+  assert.deepEqual(r.integrity.departures, []);
+  assert.deepEqual(results(r), ALL_RECREATED);
+  assert.deepEqual(r.obscured, [{ ref: MEMO, sha: sha(MEMO_BYTES), copy: COPY_SHA, label: OBSCURED_LABEL }]);
+  assert.equal(r.complete_edition.equal, true, r.complete_edition.detail);
+  assert.equal(r.integrity.files.find((f) => f.kind === "obscured").state, "intact");
+  /* the attestations of the photo are checked as before: the member's account is over the original's SHA-256 */
+  assert.deepEqual(r.signatures.attestations.filter((a) => a.ref === MEMO).map((a) => [a.by_kind, a.state]), [["member", "checked"], ["group", "checked"]]);
+  /* R16: the same arguments, the same answer */
+  assert.equal(canonicalJson(r), canonicalJson(await check({ obscureMemo: true })));
+});
+
+test("R8 R9 R2 (T37; N757): a copy listed but not carried is missing naming the copy, for each finding whose chain reaches it (presentability for a load-bearing member), and supplied later it fills; carried with other bytes it differs", async () => {
+  const path = CG.caseFilePath("obscured", MEMO);
+  const cf = caseFile({ obscureMemo: true, edit: (b) => b.delete(path) });
+  const gone = await CC.checkCaseFile({ parts: cf.parts });
+  assert.deepEqual(results(gone), { [A]: "recreated_in_part", [C]: "recreated", [B]: "recreated_in_part" });
+  const fetch = new RegExp(`the copy of the document ${MEMO} carried in its place, its marked areas obscured, is not carried; fetch the file whose SHA-256 is ${COPY_SHA}`);
+  assert.ok(byId(gone)[A].missing.some((e) => e.check === "presentability" && e.copy === COPY_SHA && e.sha256 === COPY_SHA && fetch.test(e.detail)));
+  assert.ok(byId(gone)[B].missing.some((e) => e.check === "integrity" && e.copy === COPY_SHA && fetch.test(e.detail)));
+  /* the original's bytes and extracted text are not asked, and nothing differs */
+  for (const id of [A, B]) {
+    assert.deepEqual(byId(gone)[id].differs, [], id);
+    assert.equal(byId(gone)[id].missing.some((e) => e.sha256 === sha(MEMO_BYTES)), false, id);
+  }
+  assert.deepEqual(gone.integrity.documents.wanted.map((w) => [w.path, w.kind, w.sha256]), [[path, "obscured", COPY_SHA]]);
+  assert.deepEqual(gone.obscured, [{ ref: MEMO, sha: sha(MEMO_BYTES), copy: COPY_SHA, label: OBSCURED_LABEL }]);
+  /* R9: the copy's bytes supplied later fill it */
+  const filled = await CC.checkCaseFile({ parts: cf.parts, documents: [Buffer.from(COPY_BYTES)] });
+  assert.deepEqual(results(filled), ALL_RECREATED);
+  assert.deepEqual(filled.integrity.documents.used, [COPY_SHA]);
+  /* the original's bytes supplied fill nothing: the case names the copy */
+  const original = await CC.checkCaseFile({ parts: cf.parts, documents: [Buffer.from(MEMO_BYTES)] });
+  assert.equal(byId(original)[A].result, "recreated_in_part");
+  assert.deepEqual(original.integrity.documents.unmatched.map((u) => u.sha256), [sha(MEMO_BYTES)]);
+  /* R2: carried with other bytes, it differs for each finding whose chain reaches it */
+  const other = await check({ obscureMemo: true, edit: (b) => b.set(path, Buffer.from("%PDF-1.7 the memo, uncovered")) });
+  assert.equal(byId(other)[A].result, "did_not_recreate");
+  assert.equal(byId(other)[B].result, "did_not_recreate");
+  assert.ok(has(byId(other)[A].differs, "integrity", /materials\/INFO-2026-0002-memo\/obscured does not match the manifest/));
+  assert.equal(byId(other)[C].result, "recreated");
+});
+
+test("R8 R2 (T37; case-grammar R13): a case file that also carries the original of a photo carried as its copy departs, and no finding recreates; one naming a copy no file carries departs too", async () => {
+  const both = await check({ obscureMemo: true, mutate: (t) => t.set(CG.caseFilePath("document", MEMO), MEMO_BYTES) });
+  assert.ok(both.integrity.departures.length > 0);
+  assert.equal(both.integrity.intact, false);
+  assert.deepEqual(new Set(Object.values(results(both))), new Set(["did_not_recreate"]));
+  assert.ok(both.findings.every((f) => f.differs.some((e) => e.check === "integrity" && e.about === "case file")));
+  /* the row names a copy the case file does not list at all: a departure, and the copy is named to fetch */
+  const unlisted = await check({ obscureMemo: true, mutate: (t) => t.delete(CG.caseFilePath("obscured", MEMO)) });
+  assert.ok(unlisted.integrity.departures.length > 0);
+  assert.deepEqual(new Set(Object.values(results(unlisted))), new Set(["did_not_recreate"]));
+  assert.ok(byId(unlisted)[A].missing.some((e) => e.check === "presentability" && e.copy === COPY_SHA));
+  /* an obscured file no row names departs */
+  const stray = await check({ mutate: (t) => t.set(CG.caseFilePath("obscured", MINUTES), COPY_BYTES) });
+  assert.ok(stray.integrity.departures.length > 0);
+  assert.deepEqual(new Set(Object.values(results(stray))), new Set(["did_not_recreate"]));
+});
+
+test("R8 R14 (T37): a /2 case file and a /1 one, which carry no copy, still recreate as they did, with obscured []", async () => {
+  for (const [opts, format] of [[{}, "bio-case-file/1"], [{ criteria: [] }, "bio-case-file/2"]]) {
+    const r = await check(opts);
+    assert.equal(r.format, format);
+    assert.deepEqual(r.integrity.departures, [], format);
+    assert.deepEqual(results(r), ALL_RECREATED, format);
+    assert.deepEqual(r.obscured, [], format);
+  }
+});
+
+test("R9: a document supplied later that matches a missing file's fingerprint fills the gap and the finding is re-checked; one that matches nothing is named and never used; every file to supply is named (K2143)", async () => {
   const cf = caseFile({ edit: (b) => b.delete(CG.caseFilePath("document", MINUTES)) });
   const before = await CC.checkCaseFile({ parts: cf.parts });
   assert.equal(byId(before)[A].result, "recreated_in_part");
   const after = await CC.checkCaseFile({ parts: cf.parts, documents: [Buffer.from(MINUTES_BYTES)] });
   assert.deepEqual(results(after), ALL_RECREATED);
   assert.deepEqual(after.integrity.documents.used, [sha(MINUTES_BYTES)]);
+  /* the files to supply (K2143): named before, in the manifest's order; none once supplied */
+  const path = CG.caseFilePath("document", MINUTES);
+  assert.deepEqual(before.integrity.documents.wanted, [{ path, kind: "document", sha256: sha(MINUTES_BYTES), detail: `${path} is not carried; fetch the file whose SHA-256 is ${sha(MINUTES_BYTES)}` }]);
+  assert.deepEqual(after.integrity.documents.wanted, []);
+  assert.deepEqual((await check()).integrity.documents.wanted, []);
   assert.equal(after.integrity.files.find((f) => f.path === CG.caseFilePath("document", MINUTES)).state, "supplied");
   const stranger = await CC.checkCaseFile({ parts: cf.parts, documents: [Buffer.from("some other document")] });
   assert.equal(byId(stranger)[A].result, "recreated_in_part");
@@ -329,6 +409,10 @@ test("R9 R20 R11 (N599): a supplied document whose SHA-256 is a calculation inpu
   filledRight(otherAfter);
   assert.equal(otherAfter.integrity.files.find((f) => f.path.includes(CALC_INPUT_SHA)).state, "differs");
   assert.equal(otherAfter.integrity.intact, false);
+  /* carried with other bytes: wanted until a document fills it */
+  assert.deepEqual(otherBefore.integrity.documents.wanted.map((w) => [w.kind, w.sha256]), [["calculation", CALC_INPUT_SHA]]);
+  assert.match(otherBefore.integrity.documents.wanted[0].detail, /is carried with other bytes; fetch the file whose SHA-256 is/);
+  assert.deepEqual(otherAfter.integrity.documents.wanted, []);
   /* bytes that are not the input fill nothing and are named; bytes matching an input carried intact are not used */
   const stranger = await CC.checkCaseFile({ parts: absent.parts, documents: [Buffer.from(CALC_INPUT.replace('"60"', '"61"'))] });
   assert.equal(stranger.calculations[0].result, "not_recomputed");

@@ -171,22 +171,22 @@ export function notAParticipant(projectId, by, extra = null) {
    the file, so a change there fails the suite until the list follows. T33-19a (K1438, K1504): re-pinned to plan T33's
    Rules (2), its new modules in their places, `local-facts` and `standards` in layer 5 and `observation-log` after
    `connections`. A module the file lists before its job has built it is held here in its place all the same, so its
-   listeners order correctly from the day it registers; R83's test names it as not yet built until its merge. T35-14
-   (N697, K1864): every module the file names is held, whether or not it registers a listener (`case-catalogue`,
-   `machinery-producers` and `setup-page` register none today). */
+   listeners order correctly from the day it registers; R83's test names it as not yet built until its merge. T35-14,
+   T36-6 (N697, N723; K1864, K1961, K2008): every module the file names is held, whether or not it registers one.
+   T37-44 (K1185, K2171): `image-cover` after `pdf-pixels` in layer 1, as T37's opening placed it. */
 export const MODULE_ORDER = Object.freeze([
   /* 1 */ "record-grammar", "jurisdictions", "civil-time", "calc-grammar", "connection-grammar", "test-support",
           "runtime-limits", "signatures", "bundler", "court-citations", "id-spaces", "subresources", "ooxml",
           "office-readers", "odf-reader", "pdf-reader", "format-registry", "text-chain", "site-profiles", "docprofile",
           "doctypes", "legistar-reader", "roster-reader", "court-doctypes", "budget-doctypes", "image-codecs",
-          "pdf-pixels", "pdf-worker", "ocr-worker", "sheet-worker",
+          "pdf-pixels", "image-cover", "pdf-worker", "ocr-worker", "sheet-worker", "file-scanner",
   /* 2 */ "record-core", "membership", "credentials", "promotion",
   /* 3 */ "host-governor", "provenance", "attestation", "provenance-routes", "capture-sources", "acquisition",
-          "capture", "sources",
+          "capture", "file-safety", "sources",
   /* 4 */ "calibration", "reading-pipeline", "extraction", "content",
-  /* 5 */ "entities", "events", "lines", "local-facts", "connections", "observation-log", "standards", "progressions",
-          "money", "money-checks", "duties", "people", "explore", "bias", "query-language", "retrieval", "calculations",
-          "workbooks",
+  /* 5 */ "entities", "events", "lines", "local-facts", "connections", "observation-log", "law-relations", "standards",
+          "progressions", "money", "money-checks", "duties", "people", "explore", "bias", "query-language", "retrieval",
+          "calculations", "workbooks",
   /* 6 */ "inquiry-grammar", "accepted-work", "leg-earning", "inquiry", "hypotheses", "citation", "basis-versions",
           "strength", "contradiction", "run-rules", "ai-runs", "run-productions", "capture-requests", "skills",
           "answers", "agent-harness", "agent-model", "agent-runner", "agent-worker",
@@ -197,9 +197,9 @@ export const MODULE_ORDER = Object.freeze([
   /* 9 */ "conformance", "consequences", "action-grammar", "actions", "action-clocks", "filing-templates", "filings",
           "escalation", "action-plans",
   /* 10 */ "monitoring", "following", "link-sweep", "scheduler",
-  /* 11 */ "wizard-scripts", "affordances", "tasks", "machinery-producers", "queue-producers", "notice-producers",
-           "queue", "setup-page", "instance-setup", "op-declarations", "admission", "control-plane", "plane", "legacy-ui",
-           "installer",
+  /* 11 */ "wizard-scripts", "op-grades", "affordances", "tasks", "machinery-producers", "queue-producers",
+           "notice-producers", "queue", "setup-page", "instance-setup", "op-declarations", "admission",
+           "answer-envelope", "store-door", "control-plane", "plane", "legacy-ui", "installer",
 ]);
 
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);

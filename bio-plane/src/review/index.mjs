@@ -765,21 +765,24 @@ export function reviewOwns(t) {
   return REVIEW_TABLES.some((x) => x.name === name);
 }
 
-/** The module's ops (K3), as entries of the plane store's op map (`plane/store.mjs`). Every identity (`author`,
- *  `viewer`, `secretSha`, `bySecret`) is the control plane's stamp, read from the query and spread after the body, so a
- *  body naming one is overwritten, never honoured (R22). */
+/** The module's ops (K3), as entries of the plane store's op map (`plane/store.mjs`). Every identity is the control
+ *  plane's stamp (R22): `author`, `viewer` and `bySecret` are read from the query and spread after the body, so a body
+ *  naming one is overwritten, never honoured; `secretSha` (a grant's fingerprint) is read from the body only, where the
+ *  control plane sets it after removing any a caller sent, and a `secretSha` in the query is never read (R29; N761). */
 export function reviewOps(r, url, body) {
   const q = (k) => url.searchParams.get(k);
   const b = body && typeof body === "object" ? body : {};
+  /* R29: the fingerprint's one channel, so no digest travels in an internal address. */
+  const sha = b.secretSha ?? null;
   return {
     /* REC-149: `viewer` is stamped, and asked only for existence. */
     casedraft: () => r.act({ ...b, act: "draft", author: q("author"), viewer: q("viewer") }),
     reviewgrant: () => r.act({ act: "grant", draft: b.draft ?? q("draft"), recipient: b.recipient ?? q("recipient"),
-                               author: q("author"), secretSha: q("secretSha") }),
+                               author: q("author"), secretSha: sha }),
     reviewrevoke: () => r.act({ act: "revoke", grant: b.grant ?? q("grant"), author: q("author") }),
-    reviewcopy: () => r.copy({ draft: q("draft"), secretSha: q("secretSha"), viewer: q("viewer"),
+    reviewcopy: () => r.copy({ draft: q("draft"), secretSha: sha, viewer: q("viewer"),
                                bySecret: q("bySecret") === "1", limit: q("limit") }),
-    reviewcomment: () => r.comment({ draft: q("draft"), secretSha: q("secretSha"), viewer: q("viewer"),
+    reviewcomment: () => r.comment({ draft: q("draft"), secretSha: sha, viewer: q("viewer"),
                                      bySecret: q("bySecret") === "1", text: b.text }),
     /* REC-198: the store fails closed on an absent `viewer`. */
     casedrafts: () => r.list({ project: q("project"), viewer: q("viewer"), limit: q("limit") }),

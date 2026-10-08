@@ -1,6 +1,6 @@
 # membership — requirements
 
-**Status** · In force: approved by Bob 2026-09-26 (a product module, P17), with his rulings as R62 and R63; later folds reviewed, DEC-132 to DEC-136 Bob's. Split for size (K617, K636, K637, K653): sessions, passwords, signer keys and AI credentials moved to `credentials`, their ids retired here with pointers. Last changed T35 (T35-14: R83, R108 amended; R112 new; K1779, K1864), cross-references re-pointed T35 (K2035); every requirement met (MEMBERSHIP #26, K1942).
+**Status** · In force: approved by Bob 2026-09-26 (a product module, P17), with his rulings as R62 and R63; later folds reviewed, DEC-132 to DEC-136 Bob's. Split for size (K617, K636, K637, K653): sessions, passwords, signer keys and AI credentials moved to `credentials`, their ids retired here with pointers. Last changed T37 (T37-44: R83 re-pinned, no text change, now naming `image-cover`; K1185, K2171), before that T36 (T36-6: R83 re-pinned, no text change, its rule naming every module `build/modules.json` names, now `file-scanner`, `file-safety`, `law-relations`, `op-grades`, `answer-envelope`, `store-door` with them; K1961, K2008), cross-references re-pointed T35 (K2035); every requirement met (MEMBERSHIP #27, K2090).
 
 ## Public
 

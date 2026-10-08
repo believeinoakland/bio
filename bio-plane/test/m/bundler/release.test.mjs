@@ -19,8 +19,8 @@ import { fleetStatement, NS_FLEET, NS_RELEASE, verifySshsig } from "../../../src
 import { signSshsig, signerPublicLine } from "../../../scripts/sign-sshsig.mjs";
 import { renderSignpage } from "../../../scripts/embed-signpage.mjs";
 import {
-  makeRepo, addMember, addContainerMember, buildAll, run, snapshot, readJson, writeJson, rm, hex, planeConfig, VERSION,
-  ACCOUNT, PLANE, DIGEST, CONTAINER_PACKAGES,
+  makeRepo, addMember, addContainerMember, addScannerMember, buildAll, run, snapshot, readJson, writeJson, rm, hex, planeConfig,
+  VERSION, ACCOUNT, PLANE, DIGEST, CONTAINER_PACKAGES, SCANNER_PACKAGES, DIGEST_A, DIGEST_B, scannerClasses,
 } from "./repo.mjs";
 
 const refused = (r, code) => {
@@ -552,6 +552,8 @@ test("R21: it rebuilds each stale member by its own npm run build, reports rebui
 
 const assemble = (root, args = [], env = {}) => run(root, ".", ["bio-plane/scripts/release-assemble.mjs", ...args], { env });
 const envelope = () => `BIOKEY-RAW1.test.${randomBytes(32).toString("base64")}`;
+/* R30: `--sign` runs only in the GitHub Actions signing environment; these tests stand in for it, with a throwaway key. */
+const SIGNING = { GITHUB_ACTIONS: "true" };
 
 /** The payload R22 must sign, computed here from the fixture's files and configs. */
 function expectedPayload(root, version = VERSION) {
@@ -565,11 +567,27 @@ function expectedPayload(root, version = VERSION) {
     });
     /* R25: a container member's descriptor, written here from its marker's fields by hand. */
     const mk = readJson(join(m.abs, "fleet-member.json"));
-    if (mk.kind === "container") {
+    if (mk.kind === "container" && Array.isArray(mk.containers)) {
+      /* R25, R27 (T36-2): one part per class, each with its own image and its statement's packages (SCANNER_PACKAGES). */
+      for (const c of mk.containers) {
+        const b = Buffer.from(JSON.stringify({ class_name: c.class_name, image: `${c.image.repository}@${c.image.digest}`,
+          scheduling_policy: "default", max_instances: c.max_instances ?? mk.max_instances, bind: c.bind ?? mk.bind,
+          packages: SCANNER_PACKAGES[c.class_name] }, null, 2) + "\n");
+        parts.push({ path: `container/${c.class_name}.json`, type: "Container", sha256: hex(b), bytes: b.length, buf: b });
+      }
+    } else if (mk.kind === "container") {
       /* R27: the image's packages, as the fixture's lockfile states them (CONTAINER_PACKAGES, by hand), last. */
       const b = Buffer.from(JSON.stringify({ class_name: mk.class_name, image: `${mk.image.repository}@${mk.image.digest}`,
         scheduling_policy: "default", max_instances: mk.max_instances, bind: mk.bind, packages: CONTAINER_PACKAGES }, null, 2) + "\n");
       parts.push({ path: "container.json", type: "Container", sha256: hex(b), bytes: b.length, buf: b });
+    }
+    /* R25 (N772): the Worker part, written here from the config by hand, each bucket by its role. */
+    const ROLE = { "bio-captures": "captures", "bio-published": "published" };
+    const r2 = (cfg.r2_buckets || []).map((x) => ({ binding: x.binding, bucket: ROLE[x.bucket_name] }));
+    const crons = (cfg.triggers && cfg.triggers.crons) || [];
+    if (r2.length || crons.length) {
+      const b = Buffer.from(JSON.stringify({ r2_buckets: r2, crons }, null, 2) + "\n");
+      parts.push({ path: "worker.json", type: "Worker", sha256: hex(b), bytes: b.length, buf: b });
     }
     return { member: m.name, asset: `${m.name}.bundled.mjs`, sha256: hex(art(m)), bytes: art(m).length,
       compat: { date: cfg.compatibility_date, flags: cfg.compatibility_flags || [] },
@@ -671,7 +689,7 @@ test("R23: --sign signs the plane in bio-release and the payload in bio-release-
   try {
     const seed = envelope(), signer = signerPublicLine(seed);
     writeJson(join(root, "release/RELEASE.json"), { version: "1.2.2", signer });
-    const r = assemble(root, ["--sign"], { BIO_RELEASE_SEED: seed });
+    const r = assemble(root, ["--sign"], { BIO_RELEASE_SEED: seed, ...SIGNING });
     assert.equal(r.status, 0, r.stdout + r.stderr);
     assert.ok(!(r.stdout + r.stderr).includes(seed.split(".")[2]), "the seed is never printed");
     const { payload, members, plane } = expectedPayload(root);
@@ -704,12 +722,12 @@ test("R23: without --sign the fleet signature comes from --fleet-sig and the pla
     };
     const expectRefused = (code, rel, args, env) => { const { r, unchanged } = attempt(rel, args, env); refused(r, code); assert.ok(unchanged, `${code}: nothing written`); };
 
-    expectRefused("NO_SEED", { signer }, ["--sign"]);
-    expectRefused("SIGNING_FAILED", { signer }, ["--sign"], { BIO_RELEASE_SEED: "not-an-envelope" });
+    expectRefused("NO_SEED", { signer }, ["--sign"], SIGNING);
+    expectRefused("SIGNING_FAILED", { signer }, ["--sign"], { BIO_RELEASE_SEED: "not-an-envelope", ...SIGNING });
     expectRefused("NO_PLANE_SIG", { signer }, []);
     expectRefused("PLANE_SIG_DOES_NOT_COVER_ASSET", { signer, sig: signSshsig(seed, Buffer.from("older plane"), NS_RELEASE) }, []);
-    expectRefused("PLANE_SIG_DOES_NOT_COVER_ASSET", { signer: signerPublicLine(envelope()) }, ["--sign"], { BIO_RELEASE_SEED: seed });
-    expectRefused("PLANE_SIG_DOES_NOT_COVER_ASSET", {}, ["--sign"], { BIO_RELEASE_SEED: seed });
+    expectRefused("PLANE_SIG_DOES_NOT_COVER_ASSET", { signer: signerPublicLine(envelope()) }, ["--sign"], { BIO_RELEASE_SEED: seed, ...SIGNING });
+    expectRefused("PLANE_SIG_DOES_NOT_COVER_ASSET", {}, ["--sign"], { BIO_RELEASE_SEED: seed, ...SIGNING });
     expectRefused("NO_FLEET_SIG", { signer, sig: goodPlane }, []);
     writeFileSync(sigFile, signSshsig(seed, payload + "member dropped\n", NS_FLEET));
     expectRefused("FLEET_SIG_REJECTED", { signer, sig: goodPlane }, ["--fleet-sig", sigFile]);
@@ -784,7 +802,7 @@ test("R25: a container member's container.json part (type Container, its marker'
 
     const seed = envelope(), signer = signerPublicLine(seed);
     writeJson(join(root, "release/RELEASE.json"), { version: "1.2.2", signer });
-    const r = assemble(root, ["--sign"], { BIO_RELEASE_SEED: seed });
+    const r = assemble(root, ["--sign"], { BIO_RELEASE_SEED: seed, ...SIGNING });
     assert.equal(r.status, 0, r.stdout + r.stderr);
     const rel = readJson(join(root, "release/RELEASE.json"));
     assert.deepEqual(rel.fleet, members);
@@ -820,7 +838,7 @@ test("R25: a container member with a Worker bundle whose marker lacks a field of
       mutate(m);
       writeJson(marker, m);
       const before = snapshot(root);
-      const r = assemble(root, ["--sign"], { BIO_RELEASE_SEED: seed });
+      const r = assemble(root, ["--sign"], { BIO_RELEASE_SEED: seed, ...SIGNING });
       refused(r, "CONTAINER_UNDESCRIBED");
       assert.ok(r.stderr.includes(`runner is a container member and its fleet-member.json does not state ${field}.`), `${field}:\n${r.stderr}`);
       assert.doesNotMatch(r.stdout, /guard: /, `${field}: refused before any build ran`);
@@ -847,7 +865,7 @@ test("R25: a container member that declares no Worker bundle is left out of the 
 
     const seed = envelope(), signer = signerPublicLine(seed);
     writeJson(join(root, "release/RELEASE.json"), { version: "1.2.2", signer });
-    const r = assemble(root, ["--sign"], { BIO_RELEASE_SEED: seed });
+    const r = assemble(root, ["--sign"], { BIO_RELEASE_SEED: seed, ...SIGNING });
     assert.equal(r.status, 0, r.stdout + r.stderr);
     assert.deepEqual(readJson(join(root, "release/RELEASE.json")).fleet.map((e) => e.member), ["alpha-worker", "beta-worker"]);
     assert.equal(existsSync(join(root, "release/runner")), false);
@@ -942,5 +960,347 @@ test("R26: a container member with no pinned digest, or whose config declares no
     assert.equal(push.status, 6, "the push's failure is the exit");
     assert.deepEqual(push.wrangler.map((w) => w.args[0]), ["containers"], "no deploy after a failed push");
     assert.equal(existsSync(gen), false);
+  } finally { rm(root); }
+});
+
+/* ------------------------------------------- R25, R26: a member with two classes (T36-2) */
+
+test("R25: a container member with two classes carries one Container part per class, container/<class>.json, each its own image, covered by the fleet signature and written under <member>/", async () => {
+  const root = await makeRepo({ build: false });
+  try {
+    addScannerMember(root, "scanner");
+    await buildAll(root);
+    const { payload, members, bufs } = expectedPayload(root);
+    const scanner = members.find((m) => m.member === "scanner");
+    assert.deepEqual(scanner.parts.map((p) => [p.path, p.type]),
+      [["container/FileScanner.json", "Container"], ["container/SafeViewRenderer.json", "Container"]]);
+    assert.equal(JSON.parse(bufs["scanner/container/FileScanner.json"]).image, `docker.io/civicos/file-scanner@${DIGEST_A}`);
+    assert.equal(JSON.parse(bufs["scanner/container/SafeViewRenderer.json"]).image, `docker.io/civicos/safe-view@${DIGEST_B}`);
+    for (const p of scanner.parts) assert.ok(payload.includes(`${p.path}:Container:${p.sha256}:${p.bytes}`), p.path);
+
+    const dry = assemble(root, ["--dry-run"]);
+    assert.equal(dry.status, 0, dry.stdout + dry.stderr);
+    assert.ok(dry.stdout.includes(payload), "the payload the fleet signature covers carries both descriptors' hashes");
+
+    const seed = envelope(), signer = signerPublicLine(seed);
+    writeJson(join(root, "release/RELEASE.json"), { version: "1.2.2", signer });
+    const r = assemble(root, ["--sign"], { BIO_RELEASE_SEED: seed, ...SIGNING });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    const rel = readJson(join(root, "release/RELEASE.json"));
+    assert.deepEqual(rel.fleet, members);
+    for (const c of ["FileScanner", "SafeViewRenderer"])
+      assert.ok(readFileSync(join(root, `release/scanner/container/${c}.json`)).equals(bufs[`scanner/container/${c}.json`]), c);
+    assert.equal(existsSync(join(root, "release/scanner/container.json")), false, "no one-class part beside them");
+    assert.ok(sshVerify(signer, rel.fleetSig, Buffer.from(payload), NS_FLEET));
+  } finally { rm(root); }
+});
+
+test("R25: a class of a two-class member lacking a field is refused CONTAINER_UNDESCRIBED naming the class and the field, before anything is built or written", async () => {
+  const root = await makeRepo({ build: false });
+  try {
+    addScannerMember(root, "scanner");
+    await buildAll(root);
+    const marker = join(root, "scanner/fleet-member.json");
+    const good = readFileSync(marker);
+    const cases = [
+      ["for its class SafeViewRenderer, image.digest", (m) => { m.containers[1].image.digest = null; }],
+      ["for its class FileScanner, max_instances", (m) => { m.containers[0].max_instances = 0; }],
+      ["for its class FileScanner, bind", (m) => { delete m.bind; }],
+      ["for its class FileScanner, class_name", (m) => { m.containers[1].class_name = "FileScanner"; }],
+    ];
+    for (const [named, mutate] of cases) {
+      const m = JSON.parse(good);
+      mutate(m);
+      writeJson(marker, m);
+      const before = snapshot(root);
+      const r = assemble(root, ["--dry-run"]);
+      refused(r, "CONTAINER_UNDESCRIBED");
+      assert.ok(r.stderr.includes(`scanner is a container member and its fleet-member.json does not state, ${named}.`), `${named}:\n${r.stderr}`);
+      assert.doesNotMatch(r.stdout, /guard: /, `${named}: refused before any build ran`);
+      assert.deepEqual(snapshot(root), before, `${named}: nothing written`);
+    }
+    writeFileSync(marker, good);
+    assert.equal(assemble(root, ["--dry-run"]).status, 0, "restored, it assembles");
+  } finally { rm(root); }
+});
+
+test("R26: deploy-fleet pushes each class's image of a two-class member by digest and points each of its config's containers at its own class's pushed copy", async () => {
+  const root = await makeRepo({ build: false });
+  try {
+    addScannerMember(root, "scanner");
+    const tracked = join(root, "scanner/wrangler.jsonc");
+    const trackedBefore = readFileSync(tracked);
+    const r = fleet(root, ["scanner", "--instance", SLUG], { stub: containerStub({ serving: { scanner: JSON.stringify({ version: VERSION }) } }) });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    const refA = `docker.io/civicos/file-scanner@${DIGEST_A}`, refB = `docker.io/civicos/safe-view@${DIGEST_B}`;
+    const tagA = `scanner-filescanner:${"c3".repeat(6)}`, tagB = `scanner-safeviewrenderer:${"d4".repeat(6)}`;
+    assert.deepEqual(r.docker.map((d) => d.args), [["pull", refA], ["tag", refA, tagA], ["pull", refB], ["tag", refB, tagB]]);
+    assert.deepEqual(r.wrangler.map((w) => w.args.slice(0, 3)), [["containers", "push", tagA], ["containers", "push", tagB], ["deploy", "-c", r.wrangler[2].args[2]]]);
+    const want = parseJsonc(trackedBefore.toString());
+    want.containers = want.containers.map((c) => ({ ...c, image: `registry.cloudflare.com/${ACCOUNT}/${c.class_name === "FileScanner" ? tagA : tagB}` }));
+    assert.deepEqual(JSON.parse(r.wrangler[2].config), want, "each class's container names its own pushed copy");
+    assert.ok(readFileSync(tracked).equals(trackedBefore), "the tracked config is never written");
+  } finally { rm(root); }
+});
+
+test("R26: a two-class member whose class states no digest, or whose config's containers and marker's classes disagree, is refused CONTAINER_UNDESCRIBED before any request", async () => {
+  const root = await makeRepo({ build: false });
+  try {
+    const cls = scannerClasses();
+    cls[1].image.digest = null;
+    addScannerMember(root, "scanner", { classes: cls });
+    const nod = fleet(root, ["scanner", "--instance", SLUG, "--dry-run"], { stub: containerStub() });
+    refused(nod, "CONTAINER_UNDESCRIBED");
+    assert.match(nod.stderr, /does not state, for its class SafeViewRenderer, image\.digest/);
+    assert.deepEqual([nod.calls, nod.docker, nod.wrangler], [[], [], []]);
+
+    addScannerMember(root, "scanner");
+    const cfgPath = join(root, "scanner/wrangler.jsonc");
+    const cfg = parseJsonc(readFileSync(cfgPath, "utf8"));
+    writeJson(cfgPath, { ...cfg, containers: [cfg.containers[0], { ...cfg.containers[1], class_name: "Renderer" }] });
+    const dis = fleet(root, ["scanner", "--instance", SLUG], { stub: containerStub() });
+    refused(dis, "CONTAINER_UNDESCRIBED");
+    assert.match(dis.stderr, /the config names Renderer, which the marker states no image for; the marker's SafeViewRenderer has no container in the config/);
+    assert.deepEqual([dis.calls, dis.docker, dis.wrangler], [[], [], []]);
+  } finally { rm(root); }
+});
+
+/* ------------------------------------------------------- R25: a member's Worker part (N772, K2155) */
+
+/** Rewrites a fixture member's wrangler.jsonc with `change` applied to its parsed config. */
+const editConfig = (root, member, change) => {
+  const p = join(root, member, "wrangler.jsonc");
+  const c = parseJsonc(readFileSync(p, "utf8"));
+  change(c);
+  writeJson(p, c);
+};
+
+test("R25: a member whose wrangler.jsonc binds R2 buckets or states crons carries one Worker part, worker.json, each bucket by its role and the crons as stated, covered by the fleet signature, written under <member>/ and listed; a member with neither carries none", async () => {
+  const root = await makeRepo({ build: false, members: { "alpha-worker": {}, "beta-worker": { assets: { "assets/model.bin": "MODEL-1" } },
+    "gamma-worker": {}, "delta-worker": {} } });
+  try {
+    editConfig(root, "alpha-worker", (c) => { c.r2_buckets = [{ binding: "CAPTURES", bucket_name: "bio-captures" },
+      { binding: "PUBLISHED", bucket_name: "bio-published" }]; c.triggers = { crons: ["17 4 * * *", "0 */6 * * *"] }; });
+    editConfig(root, "beta-worker", (c) => { c.r2_buckets = [{ binding: "CAPTURES", bucket_name: "bio-captures" }]; });
+    editConfig(root, "gamma-worker", (c) => { c.triggers = { crons: ["5 1 * * 1"] }; });
+    editConfig(root, "delta-worker", (c) => { c.r2_buckets = []; c.triggers = { crons: [] }; });
+    addScannerMember(root, "scanner");
+    editConfig(root, "scanner", (c) => { c.r2_buckets = [{ binding: "CAPTURES", bucket_name: "bio-captures" }]; c.triggers = { crons: ["17 4 * * *"] }; });
+    await buildAll(root);
+    const { payload, members, bufs } = expectedPayload(root);
+    const part = (m) => JSON.parse(bufs[`${m}/worker.json`]);
+    assert.deepEqual(part("alpha-worker"), { r2_buckets: [{ binding: "CAPTURES", bucket: "captures" }, { binding: "PUBLISHED", bucket: "published" }],
+      crons: ["17 4 * * *", "0 */6 * * *"] });
+    assert.deepEqual(part("beta-worker"), { r2_buckets: [{ binding: "CAPTURES", bucket: "captures" }], crons: [] }, "buckets alone");
+    assert.deepEqual(part("gamma-worker"), { r2_buckets: [], crons: ["5 1 * * 1"] }, "crons alone");
+    assert.deepEqual(Object.keys(part("alpha-worker")), ["r2_buckets", "crons"]);
+    assert.equal(bufs["delta-worker/worker.json"], undefined, "empty lists: no part");
+    assert.ok(!JSON.stringify(Object.keys(bufs).filter((k) => k.endsWith("worker.json")).map((k) => bufs[k].toString())).includes("bio-captures"),
+      "never the account's bucket name");
+    assert.deepEqual(members.find((m) => m.member === "scanner").parts.map((p) => [p.path, p.type]),
+      [["container/FileScanner.json", "Container"], ["container/SafeViewRenderer.json", "Container"], ["worker.json", "Worker"]],
+      "a container member carries both");
+    assert.deepEqual(members.find((m) => m.member === "beta-worker").parts.map((p) => p.path), ["assets/model.bin", "worker.json"]);
+    assert.match(payload, /^bio-release-fleet\/2\n/, "the statement's format is unchanged");
+    for (const m of ["alpha-worker", "beta-worker", "gamma-worker", "scanner"]) {
+      const p = members.find((x) => x.member === m).parts.find((x) => x.path === "worker.json");
+      assert.match(payload, new RegExp(`^member ${m} .*worker\\.json:Worker:${p.sha256}:${p.bytes}`, "m"), `${m}: in the signed payload`);
+    }
+    assert.doesNotMatch(payload, /^member delta-worker .*worker\.json/m);
+
+    const dry = assemble(root, ["--dry-run"]);
+    assert.equal(dry.status, 0, dry.stdout + dry.stderr);
+    assert.ok(dry.stdout.includes(payload), "the payload the fleet signature covers carries each Worker part's hash");
+
+    const seed = envelope(), signer = signerPublicLine(seed);
+    writeJson(join(root, "release/RELEASE.json"), { version: "1.2.2", signer });
+    const r = assemble(root, ["--sign"], { BIO_RELEASE_SEED: seed, ...SIGNING });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    const rel = readJson(join(root, "release/RELEASE.json"));
+    assert.deepEqual(rel.fleet, members);
+    assert.ok(sshVerify(signer, rel.fleetSig, Buffer.from(payload), NS_FLEET));
+    for (const m of ["alpha-worker", "beta-worker", "gamma-worker", "scanner"])
+      assert.ok(readFileSync(join(root, `release/${m}/worker.json`)).equals(bufs[`${m}/worker.json`]), `${m}: the exact bytes hashed`);
+    assert.equal(existsSync(join(root, "release/delta-worker/worker.json")), false);
+    for (const m of ["alpha-worker", "scanner"]) assert.equal(existsSync(join(root, m, "worker.json")), false, "never written into the member's tree");
+
+    /* The installer's own reading of the part (newgroup's workerDescriptor, its R44) takes it as written. */
+    const ng = await import(pathToFileURL(join(PLANE, "..", "newgroup/src/index.mjs")).href);
+    assert.deepEqual(ng.workerDescriptor(readFileSync(join(root, "release/alpha-worker/worker.json"))), { ok: true, d: part("alpha-worker") });
+    assert.deepEqual(ng.workerDescriptor(readFileSync(join(root, "release/scanner/worker.json"))), { ok: true, d: part("scanner") });
+  } finally { rm(root); }
+});
+
+test("R25: a bucket whose role is neither captures nor published is refused WORKER_UNDESCRIBED naming the binding, as is a list that is not one, before anything is built or written; a declared part at worker.json is refused", async () => {
+  const root = await makeRepo();
+  try {
+    const cfgPath = join(root, "alpha-worker/wrangler.jsonc");
+    const good = readFileSync(cfgPath);
+    const cases = [
+      ["ARCHIVE", (c) => { c.r2_buckets = [{ binding: "CAPTURES", bucket_name: "bio-captures" }, { binding: "ARCHIVE", bucket_name: "my-archive" }]; }],
+      ["CAPTURES, PUBLISHED", (c) => { c.r2_buckets = [{ binding: "CAPTURES", bucket_name: "acct-captures" }, { binding: "PUBLISHED" }]; }],
+      ["(an R2 bucket binding with no name)", (c) => { c.r2_buckets = [{ bucket_name: "bio-captures" }]; }],
+      ["r2_buckets", (c) => { c.r2_buckets = { binding: "CAPTURES", bucket_name: "bio-captures" }; }],
+      ["triggers.crons", (c) => { c.triggers = { crons: "17 4 * * *" }; }],
+      ["triggers.crons", (c) => { c.triggers = { crons: ["17 4 * * *", ""] }; }],
+      ["triggers.crons", (c) => { c.triggers = ["17 4 * * *"]; }],
+    ];
+    for (const [named, change] of cases) {
+      editConfig(root, "alpha-worker", change);
+      const before = snapshot(root);
+      const r = assemble(root, ["--dry-run"]);
+      refused(r, "WORKER_UNDESCRIBED");
+      assert.ok(r.stderr.includes(`alpha-worker's wrangler.jsonc does not state, as the release's Worker part needs, ${named}.`), `${named}:\n${r.stderr}`);
+      assert.doesNotMatch(r.stdout, /guard: /, `${named}: refused before any build ran`);
+      assert.deepEqual(snapshot(root), before, `${named}: nothing written`);
+      writeFileSync(cfgPath, good);
+    }
+    assert.equal(assemble(root, ["--dry-run"]).status, 0, "restored, it assembles");
+
+    /* A member's own upload part may not take the Worker part's path. */
+    editConfig(root, "beta-worker", (c) => { c.r2_buckets = [{ binding: "CAPTURES", bucket_name: "bio-captures" }];
+      c.rules.push({ type: "Data", globs: ["worker.json"] }); });
+    const mk = join(root, "beta-worker/fleet-member.json");
+    const marker = readJson(mk);
+    marker.bundle.assets.push("worker.json");
+    writeJson(mk, marker);
+    writeFileSync(join(root, "beta-worker/worker.json"), "{}");
+    await buildAll(root);
+    const before = snapshot(root);
+    const clash = assemble(root, ["--dry-run"]);
+    refused(clash, "WORKER_UNDESCRIBED");
+    assert.match(clash.stderr, /beta-worker declares an upload part named worker\.json, which is the Worker part's own path\./);
+    assert.deepEqual(snapshot(root), before, "nothing written");
+  } finally { rm(root); }
+});
+
+/* ------------------------------------------------------------------------ R30 */
+
+const ENVSPY = join(import.meta.dirname, "envspy.mjs");
+
+test("R30: --sign outside the GitHub Actions signing environment is refused NOT_SIGNING_ENVIRONMENT before the seed is read, before any build, writing nothing", async () => {
+  const root = await makeRepo();
+  try {
+    const seed = envelope();
+    writeJson(join(root, "release/RELEASE.json"), { version: "1.2.2", signer: signerPublicLine(seed) });
+    const before = snapshot(root);
+    for (const env of [{ BIO_RELEASE_SEED: seed }, { BIO_RELEASE_SEED: "not-an-envelope" }, {}, { BIO_RELEASE_SEED: seed, GITHUB_ACTIONS: "false" }]) {
+      const r = assemble(root, ["--sign"], env);
+      refused(r, "NOT_SIGNING_ENVIRONMENT");
+      assert.equal(r.status, 1);
+      assert.doesNotMatch(r.stderr, /NO_SEED|SIGNING_FAILED/, "refused before the seed is looked at: neither its absence nor its shape is reached");
+      assert.doesNotMatch(r.stdout, /guard: |signed:/, "before any build, and nothing signed");
+      assert.ok(!(r.stdout + r.stderr).includes(seed.split(".")[2]), "the seed is never printed");
+      assert.deepEqual(snapshot(root), before, "nothing written");
+    }
+  } finally { rm(root); }
+});
+
+test("R30: no command a session runs reads BIO_RELEASE_SEED or writes a signature: assembly, the payload and plane asset it writes, completion from signatures made elsewhere, the refused --sign, the bundle survey and the advisory report", async () => {
+  const root = await makeRepo();
+  const work = mkdtempSync(join(tmpdir(), "bundler-r30-"));
+  try {
+    const seed = envelope(), signer = signerPublicLine(seed);
+    const { payload, plane } = expectedPayload(root);
+    writeJson(join(root, "release/RELEASE.json"), { version: "1.2.2", signer });
+    /* The signatures, made "in the signing environment": here, by the test with a throwaway key. */
+    writeFileSync(join(work, "fleet.sig"), signSshsig(seed, payload, NS_FLEET));
+    writeFileSync(join(work, "plane.sig"), signSshsig(seed, plane.buf, NS_RELEASE));
+    writeJson(join(work, "osv.json"), {});
+    const spy = join(work, "spy.log");
+    const session = [
+      ["bio-plane/scripts/release-assemble.mjs", "--dry-run"],
+      ["bio-plane/scripts/release-assemble.mjs", "--version", VERSION, "--emit-payload", join(work, "p.txt"), "--emit-plane", join(work, "plane.mjs")],
+      ["bio-plane/scripts/release-assemble.mjs", "--sign"],
+      ["bio-plane/scripts/release-assemble.mjs", "--version", VERSION, "--fleet-sig", join(work, "fleet.sig"), "--plane-sig", join(work, "plane.sig")],
+      ["bio-plane/scripts/bundles.mjs", "--check"],
+      ["bio-plane/scripts/bundles.mjs", "--install-dirs"],
+      ["--import", join(import.meta.dirname, "osvstub.mjs"), "bio-plane/scripts/release-advisories.mjs"],
+    ];
+    for (const args of session) {
+      const r = run(root, ".", ["--import", ENVSPY, ...args], { env: { BIO_RELEASE_SEED: seed, ENV_SPY_LOG: spy, OSV_STUB: join(work, "osv.json") } });
+      const asked = existsSync(spy) ? readFileSync(spy, "utf8") : "";
+      assert.equal(asked, "", `${args.join(" ")} asked for BIO_RELEASE_SEED:\n${asked}`);
+      assert.ok(!(r.stdout + r.stderr).includes("BEGIN SSH SIGNATURE"), `${args.join(" ")} printed no signature`);
+      assert.ok(!(r.stdout + r.stderr).includes(seed.split(".")[2]), "the seed is never printed");
+    }
+    /* The completion wrote the release from the signatures it was given, never from ones it made. */
+    const rel = readJson(join(root, "release/RELEASE.json"));
+    assert.equal(rel.sig, readFileSync(join(work, "plane.sig"), "utf8"));
+    assert.equal(rel.fleetSig, readFileSync(join(work, "fleet.sig"), "utf8"));
+  } finally { rm(root); rmSync(work, { recursive: true, force: true }); }
+});
+
+test("R30: assembly writes what is to be signed — the fleet payload and the plane asset, exactly — without the seed, and nothing in the repository", async () => {
+  const root = await makeRepo();
+  const work = mkdtempSync(join(tmpdir(), "bundler-r30w-"));
+  try {
+    const { payload, plane } = expectedPayload(root);
+    const before = snapshot(root);
+    const r = assemble(root, ["--version", VERSION, "--dry-run", "--emit-payload", join(work, "p.txt"), "--emit-plane", join(work, "plane.mjs")]);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.equal(readFileSync(join(work, "p.txt"), "utf8"), payload, "the payload signed in bio-release-fleet");
+    assert.ok(readFileSync(join(work, "plane.mjs")).equals(plane.buf), "the plane asset signed in bio-release, byte for byte");
+    assert.match(r.stdout, new RegExp(`plane asset written to ${join(work, "plane.mjs").replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`));
+    assert.deepEqual(snapshot(root), before, "nothing in the repository written");
+  } finally { rm(root); rmSync(work, { recursive: true, force: true }); }
+});
+
+test("R30: a release is completed from signatures made elsewhere only when R23's checks accept them: --plane-sig and --fleet-sig, each verified by stock ssh-keygen for the release's signer", async () => {
+  const root = await makeRepo();
+  const work = mkdtempSync(join(tmpdir(), "bundler-r30c-"));
+  try {
+    const seed = envelope(), signer = signerPublicLine(seed), other = envelope();
+    const { payload, plane } = expectedPayload(root);
+    const relPath = join(root, "release/RELEASE.json");
+    const fsig = join(work, "fleet.sig"), psig = join(work, "plane.sig");
+    writeFileSync(fsig, signSshsig(seed, payload, NS_FLEET));
+    const attempt = (planeSig, extra = []) => {
+      writeJson(relPath, { version: "1.2.2", signer, sig: signSshsig(seed, Buffer.from("an older plane"), NS_RELEASE) });
+      writeFileSync(psig, planeSig);
+      const before = snapshot(root);
+      const r = assemble(root, ["--version", VERSION, "--fleet-sig", fsig, "--plane-sig", psig, ...extra]);
+      return { r, unchanged: JSON.stringify(snapshot(root)) === JSON.stringify(before) };
+    };
+    for (const [why, sig] of [["another key", signSshsig(other, plane.buf, NS_RELEASE)], ["another namespace", signSshsig(seed, plane.buf, NS_FLEET)],
+      ["other bytes", signSshsig(seed, Buffer.from("not the plane"), NS_RELEASE)]]) {
+      const { r, unchanged } = attempt(sig);
+      refused(r, "PLANE_SIG_DOES_NOT_COVER_ASSET");
+      assert.ok(unchanged, `${why}: nothing written`);
+    }
+    writeFileSync(fsig, signSshsig(other, payload, NS_FLEET));
+    const badFleet = attempt(signSshsig(seed, plane.buf, NS_RELEASE));
+    refused(badFleet.r, "FLEET_SIG_REJECTED");
+    assert.ok(badFleet.unchanged);
+    writeFileSync(fsig, signSshsig(seed, payload, NS_FLEET));
+    const good = signSshsig(seed, plane.buf, NS_RELEASE);
+    const { r } = attempt(good);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    const rel = readJson(relPath);
+    assert.equal(rel.sig, good, "--plane-sig, not RELEASE.json's older sig");
+    assert.ok(sshVerify(signer, rel.sig, plane.buf, NS_RELEASE) && sshVerify(signer, rel.fleetSig, Buffer.from(payload), NS_FLEET));
+  } finally { rm(root); rmSync(work, { recursive: true, force: true }); }
+});
+
+test("R30: the commands the signing workflow calls, in order, by their usage lines: the installs listed, the dry run, then --sign in the signing environment completes the release", async () => {
+  const root = await makeRepo({ members: { "alpha-worker": {}, "beta-worker": { assets: { "assets/model.bin": "MODEL-1" } }, "gamma-worker": { vendored: true } } });
+  try {
+    /* 1–2: the plane's install, then the directories the byte guard needs, derived from discovery. */
+    const inst = run(root, ".", ["bio-plane/scripts/bundles.mjs", "--install-dirs"]);
+    assert.equal(inst.status, 0, inst.stderr);
+    assert.deepEqual(inst.stdout.trim().split("\n"), ["bio-plane", "gamma-worker"], "the plane first, then each guarded member with a lockfile");
+    /* 3: every R22 check, nothing written. */
+    const before = snapshot(root);
+    const dry = assemble(root, ["--version", VERSION, "--dry-run"]);
+    assert.equal(dry.status, 0, dry.stdout + dry.stderr);
+    assert.deepEqual(snapshot(root), before);
+    /* 4: in the signing environment, signed, verified, written. */
+    const seed = envelope(), signer = signerPublicLine(seed);
+    writeJson(join(root, "release/RELEASE.json"), { version: "1.2.2", signer });
+    const r = assemble(root, ["--version", VERSION, "--sign"], { BIO_RELEASE_SEED: seed, ...SIGNING });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    const { payload, plane } = expectedPayload(root);
+    const rel = readJson(join(root, "release/RELEASE.json"));
+    assert.ok(sshVerify(signer, rel.sig, plane.buf, NS_RELEASE) && sshVerify(signer, rel.fleetSig, Buffer.from(payload), NS_FLEET));
   } finally { rm(root); }
 });

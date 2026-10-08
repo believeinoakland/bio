@@ -26,7 +26,11 @@ const mf = new Miniflare({
 });
 MF = mf;
 after(() => mf.dispose());
-const get = async (q) => { const r = await mf.dispatchFetch(`http://x/api/?${q}`); return { status: r.status, body: await r.json() }; };
+/* admission R20 (F1; K2166): a credential travels in the `Authorization` header, never in the address. */
+const get = async (q, token = null) => {
+  const r = await mf.dispatchFetch(`http://x/api/?${q}`, token ? { headers: { authorization: `Bearer ${token}` } } : {});
+  return { status: r.status, body: await r.json() };
+};
 
 test("R6: the Worker's module exports `default { fetch }` and `Store`, and nothing else", () => {
   assert.deepEqual(Object.keys(entry).sort(), ["Store", "default"]);
@@ -51,17 +55,31 @@ test("R6: in the runtime, the door answers through the hooks: the version, the s
   assert.equal(boot.status, 200);
   assert.equal(boot.body.ok, true);
   assert.equal(boot.body.version ?? boot.body.result?.version, "9.9.9");
-  const aff = await get("op=affordances&token=adm-plane");   /* the gated hook: affordances' handler */
+  const aff = await get("op=affordances", "adm-plane");   /* the gated hook: affordances' handler */
   assert.equal(aff.status, 200, JSON.stringify(aff.body));
   assert.ok(Array.isArray(aff.body.result.catalog));
-  const q = await get("op=queue&token=adm-plane");   /* queue's door */
+  const q = await get("op=queue", "adm-plane");   /* queue's door */
   assert.equal(q.status, 200, JSON.stringify(q.body));
-  const stats = await get("op=stats&token=adm-plane");   /* the generic forward to the store's frame (R1, R5) */
+  const stats = await get("op=stats", "adm-plane");   /* the generic forward to the store's frame (R1, R5) */
   assert.equal(stats.status, 200);
   assert.equal(typeof stats.body.result.bundles, "number");
+  /* negative control (admission R20, C-38.10; K2166): the same credential in the address admits nothing; the door refuses
+     it by name, 400 `CREDENTIAL_IN_ADDRESS`, before any store is asked, and its answer never carries the credential. */
+  const inAddress = await get("op=stats&token=adm-plane");
+  assert.equal(inAddress.status, 400, JSON.stringify(inAddress.body));
+  assert.equal(inAddress.body.ok, false);
+  assert.equal(inAddress.body.code, "CREDENTIAL_IN_ADDRESS");
+  assert.equal(inAddress.body.reason, "CREDENTIAL_IN_ADDRESS");
+  assert.equal(inAddress.body.check, "C-38.10");
+  assert.equal(inAddress.body.result, undefined, "no stats answered");
+  assert.equal(JSON.stringify(inAddress.body).includes("adm-plane"), false, "the credential is in no answer");
+  /* and beside a valid header it is still refused: the address is never read as a credential */
+  const both = await mf.dispatchFetch("http://x/api/?op=stats&token=adm-plane", { headers: { authorization: "Bearer adm-plane" } });
+  const bothBody = await both.json();
+  assert.deepEqual([both.status, bothBody.code, bothBody.check], [400, "CREDENTIAL_IN_ADDRESS", "C-38.10"]);
 });
 
-test("R7, R21 (N625, K1683): `wrangler.jsonc`'s `main` names the Worker's entry, its bindings as the deployment has them, `SHEET_WORKER` among its services", () => {
+test("R7, R21, R27 (N625, K1683; rev. 2 §4): `wrangler.jsonc`'s `main` names the Worker's entry, its bindings as the deployment has them, `SHEET_WORKER` and `FILE_SCANNER` (the fleet member `file-scanner`) among its services", () => {
   const cfg = jsonc(readFileSync(join(PLANE, "wrangler.jsonc"), "utf8"));
   assert.equal(cfg.main, "src/plane/index.mjs");
   assert.ok(existsSync(join(PLANE, cfg.main)));
@@ -71,7 +89,7 @@ test("R7, R21 (N625, K1683): `wrangler.jsonc`'s `main` names the Worker's entry,
   assert.deepEqual(cfg.r2_buckets, [{ binding: "CAPTURES", bucket_name: "bio-captures" }, { binding: "PUBLISHED", bucket_name: "bio-published" }]);
   assert.deepEqual(cfg.services, [{ binding: "PDF_WORKER", service: "pdf-worker" }, { binding: "AGENT_WORKER", service: "agent-worker" },
                                   { binding: "OCR_WORKER", service: "ocr-worker" }, { binding: "SHEET_WORKER", service: "sheet-worker" },
-                                  { binding: "SELF", service: "bio-plane" }]);
+                                  { binding: "FILE_SCANNER", service: "file-scanner" }, { binding: "SELF", service: "bio-plane" }]);
   assert.deepEqual(cfg.browser, { binding: "BROWSER" });
   assert.equal(cfg.account_id, "20b533579290b9b93168345edd3b7f72");
   assert.deepEqual(cfg.compatibility_flags, ["nodejs_compat"]);

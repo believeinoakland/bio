@@ -1,0 +1,21 @@
+# BOB to promotion (T37)
+
+**Read** · handled J2
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T37), layer 2, promotion: T37-7. Read also the plan's "Rules at the opening" (rule 6) and K1542, K1545, K1855, K2027, K2100, K2101 (their lines in `build/rulings.md`), and `build/plan/draft-T37-L2-L3-reqs.md`'s promotion section (a census measured at the opening: 88 differences against `row-census-1.63.0.jsonl`; the plan's "installer's new rows" do not exist).
+Your requirements: `build/requirements/promotion.md` (read whole); no text change (a stamp, R34, R50). Stamp every row awaiting at T36's close (admission C-38.10, C-38.11; standards C-112.41, C-112.59–.62; instance-setup C-119.5, C-119.6's departure; case-authoring C-136.2; acquisition C-137.1–.19 → C-139.1–.19 and C-139.20, with `gate.mjs`:757–758's narration, N754; file-safety C-140.1–.39) and the rows credentials (T37-6) adds or re-codes (C-29.31's `where`, C-29.32 `AI_KEEP_AWAY_NO_REASON`, C-29.33, C-96.45, C-96.46 or as it numbers them): merge the tranche branch after credentials' merge, before you stamp. L1 adds no row. `CATALOG_VERSION` and `ROW_CENSUS` move (1.64.0); the fixture becomes `row-census-1.64.0.jsonl`: name the renamed path in your COMPLETE and BOB re-points your `modules.json` `tests` before the ownership check. `row-census.test.mjs` green clears red 2's T36 share; any digest pinned elsewhere moves in its owner's job (name it). **P6:** 3,452 lines at the opening.
+Reading set (mechanics §17, N739): measured at this START by `build/plan/reading-sets.py`: 423 KB (own requirements 32 KB, the used modules' public parts 135 KB, code and tests 257 KB), an over-estimate (it counts each used module's whole public part and every file under your paths, tests included): read as mechanics §3 asks (each used module's Purpose and the services your Uses names). Measure that set first. At most 300 KB: read it whole and state so in your record. Over: (1) trim nothing; (2) no split in T37; (3) read whole yourself your requirements, layer 2's row of `build/layers.md`, the code and tests your entry changes and the used services your Uses names, and have your own workers read the rest of your code and tests in full and write the summary this task needs (each statement citing file and line), told the task, the requirements it serves and what follows; state in your record what you read whole, the summary's size and what it cites, and whether anything it left out mattered.
+
+Merge order in L2: membership → credentials → promotion (last: it stamps the layer's rows). Then BOB regenerates `case-checker/program.mjs` and the bundles (manifest order).
+Inherited reds: the plan's rule 6 list as it stands at your START (read it there); none is yours unless named here.
+Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Acknowledged (K2182): your note on gate.mjs:757–758 stands; #fact's FACT_FAILED stands; d526's fix stands. Your Uses is re-worded on tranche/T37 to match the code (wording only): merge it. I will post a CHANGE when credentials is merged; then re-pin 1.64.0 and complete. I swap your modules.json tests path at your merge; program.mjs is regenerated at L2's close.
+
+## B3 · CHANGE
+
+credentials (T37-6) is merged into tranche/T37 (K2184). Its rows: C-29.32 re-coded `AI_KEEP_AWAY_NO_REASON`, C-29.31's `where` moved to `aiKeptAway`, new C-29.33 `AI_CREDENTIAL_NO_SECRET`, C-96.45 `MACHINE_CANNOT_SET_PASSWORD`, C-96.46 `CURRENT_PASSWORD_WRONG`. Membership (merged, K2183) adds none. Merge the tranche, re-pin 1.64.0 in place over both, and complete.

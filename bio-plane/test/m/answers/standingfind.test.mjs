@@ -37,7 +37,10 @@ function findWorld() {
     w.unit(c.sha, `INFO-C${w.n}`, 0, text);
     return c;
   };
-  w.retrieval.zone();   /* the plane makes every module's tables at boot (retrieval R69) */
+  /* the plane makes every module's tables at boot: retrieval's zone meets local-facts (its R69), and the four recording
+     modules a find reads (its R73's `recorded`, K2122) are made now, before any test takes its snapshot */
+  w.retrieval.zone();
+  w.retrieval.recordedReads();
   return w;
 }
 const setFind = (w, over = {}) => w.a.standingQuestionSet({ author: ANN, find: { scope: { project: w.proj }, kinds: ["requirements", "money"] },
@@ -204,11 +207,19 @@ test("R21 a standing find reads one record read, retrieval's findIn, under its a
   assert.equal(w.calls.length, 0);
 });
 
-test("R1 the draft's reach is the asking scope: draftAdmits admits exactly what askAdmits admits; a draft's reads go through logRead under its grant with R2's removals, and write no R13 count", () => {
+test("R1 the draft's reach is the asking scope: draftAdmits admits exactly what askAdmits admits; a draft's reads go through logRead under its grant with R2's removals, and write no R13 count; a translation draft reads nothing of the record, the asking scope included", () => {
   const w = findWorld();
-  assert.equal(draftAdmits, askAdmits, "one function, so the two cannot drift");
-  for (const e of ASK_SCOPE) assert.equal(draftAdmits(e.op), true, e.op);
-  for (const op of ["standingset", "findin", "sources", "export", "purge", "entitycreate", "", null]) assert.equal(draftAdmits(op), false, String(op));
+  for (const e of ASK_SCOPE) {
+    assert.equal(draftAdmits(e.op), true, e.op);
+    assert.equal(draftAdmits(e.op, "own_words"), true, e.op);
+    /* (T37; N669, K2200) run-rules R22: a translation draft's reach is nothing; any other kind reads nothing (fail closed) */
+    for (const kind of ["translation", "vibes", null, 7]) assert.equal(draftAdmits(e.op, kind), false, `${e.op} ${kind}`);
+  }
+  for (const op of ["standingset", "findin", "sources", "export", "purge", "entitycreate", "", null, undefined, 7, {}]) {
+    assert.equal(draftAdmits(op), askAdmits(op), String(op));
+    assert.equal(draftAdmits(op), false, String(op));
+    assert.equal(draftAdmits(op, "translation"), false, String(op));
+  }
   const before = tables(w);
   const read = w.a.logRead({ grant: "g-draft", viewer: VERA, op: "search", args: { q: "budget" },
                              answer: { ok: true, count: 3, hits: [{ bundle_id: "INFO-OUT" }, { bundle_id: w.proj }, { tie_id: "MTI-2026-0001-x" }] } });
@@ -217,4 +228,42 @@ test("R1 the draft's reach is the asking scope: draftAdmits admits exactly what 
   assert.equal(w.a.logRead({ grant: "g-draft", viewer: VERA, op: "standingset", answer: {} }).reason, "GRANT_OP_REFUSED");
   assert.equal(w.a.readLog("g-draft").answered("INFO-OUT"), true);
   assert.deepEqual(tables(w), before, "a draft's reads write nothing: no tally, no row");
+});
+
+test("R28 (N729; K1991) a selection is read at set time through retrieval's read-only selectionRead, never selectionResolve: setting a find leaves the selection's life and every selection row byte-identical; NO_SUCH_SELECTION (an expired selection left unswept), NOT_YOURS and SCOPE_TOO_LARGE each write nothing", async () => {
+  const w = findWorld();
+  w.arrive("The clerk shall file the report.");
+  const sel = await w.retrieval.selectionCreate({ owner: ANN, viewer: ANN, ids: ["INFO-C1", "INFO-OUT"] });
+  const ids = [];
+  for (let i = 0; i < 201; i++) { const id = `INFO-S${i}`; w.doc(id, {}, {}); ids.push(id); }
+  const big = await w.retrieval.selectionCreate({ owner: ANN, viewer: ANN, ids });
+  const resolved = [];
+  const realResolve = w.retrieval.selectionResolve;
+  w.retrieval.selectionResolve = (...a) => { resolved.push(a); return realResolve.apply(w.retrieval, a); };
+  const selRows = () => JSON.stringify([w.rows(`SELECT * FROM selections ORDER BY handle`),
+                                        w.rows(`SELECT * FROM selection_items ORDER BY handle, ord`)]);
+  const scope = (handle) => ({ find: { scope: { selection: handle }, kinds: ["requirements"] } });
+  w.clock.sel += 1000;
+  /* each refusal writes nothing: no question, and no selection row touched */
+  const quiet = tables(w), rows0 = selRows();
+  assert.equal(code(setFind(w, { ...scope(sel.handle), author: VERA })), "NOT_YOURS");
+  const tooBig = setFind(w, scope(big.handle));
+  assert.deepEqual([code(tooBig), tooBig.limit, tooBig.got], ["SCOPE_TOO_LARGE", 200, 201]);
+  assert.equal(code(setFind(w, scope("sel-none"))), "NO_SUCH_SELECTION");
+  assert.deepEqual(tables(w), quiet, "no refusal writes a row");
+  assert.equal(selRows(), rows0, "no refusal extends a selection's life");
+  /* a find set over a selection freezes its ids and extends nothing */
+  const q = setFind(w, scope(sel.handle));
+  assert.equal(q.ok, true, JSON.stringify(q));
+  assert.deepEqual(q.find.scope, { ids: ["INFO-C1", "INFO-OUT"] });
+  assert.equal(selRows(), rows0, "the selection's expires and rows are byte-identical after the set");
+  assert.equal(resolved.length, 0, "selectionResolve is never called");
+  /* an expired selection, not yet swept: refused NO_SUCH_SELECTION, left as it was, nothing written */
+  w.clock.sel += 10 * 60 * 1000;
+  const n = w.count("standing_questions"), rows1 = selRows();
+  assert.equal(code(setFind(w, scope(sel.handle))), "NO_SUCH_SELECTION");
+  assert.equal(w.count("standing_questions"), n);
+  assert.equal(selRows(), rows1, "the expired selection is not swept");
+  assert.equal(w.count("selections"), 2);
+  assert.equal(resolved.length, 0);
 });

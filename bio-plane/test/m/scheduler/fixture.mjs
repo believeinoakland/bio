@@ -122,6 +122,29 @@ export function owners(set = {}) {
       publishWake: () => rec("publication.publishWake", [], v("scheduled-publish", "wake", null)),
       publishDue: async (now) => rec("publication.publishDue", [now], v("scheduled-publish", "tick", now, { ok: true, taken: [] })),
     },
+    /* T36-29, T37-24 (R24): a stand-in shaped as file-safety R4, R12, R36, R35 and R41, each answering a Promise; its
+       R39 wakes (each consumer's `wake` in `set`, the instant in ms or null, none by default); and its R40 notice,
+       `onFileWork`, whose listeners it keeps (`listeners`) and whose answer is `set["file-work"].tick` ({ok: true}). */
+    fileSafety: {
+      listeners: [],
+      scanWake: (now) => rec("fileSafety.scanWake", [now], v("file-scan", "wake", now)),
+      renderWake: (now) => rec("fileSafety.renderWake", [now], v("file-render", "wake", now)),
+      deeperWake: (now) => rec("fileSafety.deeperWake", [now], v("file-deeper", "wake", now)),
+      forwardWake: (now) => rec("fileSafety.forwardWake", [now], v("file-forward", "wake", now)),
+      reputationWake: (now) => rec("fileSafety.reputationWake", [now], v("file-reputation", "wake", now)),
+      refreshReputationLists: async (a) => rec("fileSafety.refreshReputationLists", [a], v("file-reputation", "tick", a,
+        { ok: true, refreshed: [], failed: [], skipped: [] })),
+      onFileWork(module, fn) {
+        const r = v("file-work", "tick", null, { ok: true });
+        if (r && r.ok) this.listeners.push(fn);
+        return rec("fileSafety.onFileWork", [module], r);
+      },
+      scanBatch: async (a) => rec("fileSafety.scanBatch", [a], v("file-scan", "tick", a, { ok: true, scanned: 0, found: 0, not_scanned: 0, remaining: 0 })),
+      renderBatch: async (a) => rec("fileSafety.renderBatch", [a], v("file-render", "tick", a,
+        { ok: true, rendered: 0, failed: 0, none: 0, data: 0, copies: { made: 0, failed: 0 }, remaining: 0 })),
+      deeperBatch: async (a) => rec("fileSafety.deeperBatch", [a], v("file-deeper", "tick", a, { ok: true, started: 0, polled: 0, done: [], running: 0, queued: 0 })),
+      forwardSecurityCounts: async (a) => rec("fileSafety.forwardSecurityCounts", [a], v("file-forward", "tick", a, { ok: true, sent: [], failed: [] })),
+    },
     inquiry: {
       datedWaitsDue: (now) => rec("inquiry.datedWaitsDue", [now], v("dated-waits", "due", now, false)),
       datedWaitsWake: (now) => rec("inquiry.datedWaitsWake", [now], v("dated-waits", "wake", now)),
@@ -135,12 +158,16 @@ export function owners(set = {}) {
  *  first pass at once, so a world includes them only when a test asks (`daily`), or names one of them in `set`. */
 export const DAILY_OWNERS = Object.freeze({ "duty-transitions": "duties", "interest-checks": "people", "money-detectors": "moneyChecks" });
 
+/** R24's five consumers: a world includes `file-safety` only when a test asks (`files`), or names one of them in `set`. */
+export const FILE_CONSUMERS = Object.freeze(["file-scan", "file-render", "file-deeper", "file-forward", "file-reputation"]);
+
 /** A scheduler over a fresh storage and the owners above; `env` its bindings; `zone` the group's time zone. */
-export function world(set = {}, env = null, { daily = false, zone = null, st = null } = {}) {
+export function world(set = {}, env = null, { daily = false, files = false, zone = null, st = null } = {}) {
   const store = st || storage();
   const w = owners(set || {});
   const of = { ...w.of };
   for (const [name, owner] of Object.entries(DAILY_OWNERS)) if (!daily && !(set && name in set)) delete of[owner];
+  if (!files && !FILE_CONSUMERS.some((n) => set && n in set)) delete of.fileSafety;
   const s = new Scheduler({ storage: store, env, owners: of, zone: () => zone });
   return { s, st: store, calls: w.calls, o: w.o, set };
 }

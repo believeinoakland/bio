@@ -1,0 +1,49 @@
+# credentials (T36)
+
+**Status** · session_01DuWUHZfSSRpYU5V4qt2iss · depth 2 · COMPLETE · handled B2
+
+## Completion (T36-7)
+
+**Read whole, as mechanics §3 asks** (reading set about 230 KB, under 300 KB): `build/requirements/credentials.md`; membership's Purpose and the services my Uses name (R64, R68, R79, R81, R83, R84, R86, R92, R94, R95); record-core's `transact`, `declarePurge`, `declareTable`; record-grammar's `isMachineIdentity`, `MACHINE_CLASS_PREFIX`; `file-safety`'s R28, R30, R35; layer 2's contract in `build/layers.md`; the plan's T36-7 entry and "Rules at the opening"; K1929, K1946, K1957, K2038, K2081 and DEC-172 whole; every file of `bio-plane/src/credentials/` and `bio-plane/test/m/credentials/`.
+
+**Entries applied (T36-7):**
+- R29 (K1946 T1): `keyedServiceSet`, `keyedServiceSwitch`, `keyedServiceFor`, `keyedServices` take `security:<tool_id>` (tool id 1–120 of `[A-Za-z0-9._-]`; `SECURITY_SERVICE_PREFIX` exported) beside `courtlistener`. A key is a string or a set of named fields (`{name: value}`, names 1–64 of `[A-Za-z0-9._-]`, values non-blank strings), sealed as one value (its JSON under the AAD kind `fields`, new additive column `keyed_services.form`, NULL read as `key`) and answered by `keyedServiceFor` as the object set. A set with no key (`key` null or absent) deletes the row: the key is gone and the service off (`{ok, service, held: false, removed}`). `keyedServices()` lists the named services, then each `security:` row.
+- R35 (DEC-172, K1957): `accountFor` asks keep-away first, before any account is read, refusing `AI_KEPT_AWAY` with `keep_away: {reason, set_by, set_at}` (R52's state; the answer's own `reason` is its code); `aiGrantMint` (after R22's own-act bar) and `aiGrantMintStanding` (after its active-member arm) refuse the same, minting nothing; `accountReferenceFor` (R24, no caller left but kept) refuses the same, so no door to a member's own reference stays open. Otherwise a member's own reference is answered whatever the group key's state. K1757's "the group's key only": no code in this module enforced it (the own reference was already asked first); its wording is retired from the group-key section's comment.
+- R45 (N743): `securityLevel` answers a failure `{level: null, levelAt: null}`.
+- R49 (K1946 T3): `securityTotals({from, to})`, in-plane, the five kinds summed over countries and unplaced counts for hours starting in `[from, to)`; `SECURITY_PERIOD_INVALID` (R45's row, now minted in one place, `#periodRefusal`, for R45 and R49); counts that cannot be read `SECURITY_COUNTS_UNREADABLE` with `failure`, never zeros.
+- R50 (N744): `securitycount` in `credentialsOps`, store-internal, `{kind, country}` from the body only, answering as R44.
+- R51, R52: `aiKeepAwaySet({on, reason, by})` (`op=aikeepaway`; `#adminBar`, so `NOT_AN_ADMIN` through membership for anyone else and every machine) appends to the new table `ai_keep_away` (declared purge-exempt, `export: "admin-only"`, `sight: "group"`) and answers `{ok, on, reason, set_by, set_at}`; `aiKeepAwayState()` answers the latest set, off with nulls before any; route `aikeepawaystate` answers it.
+
+**Rows added or changed (for promotion's stamp, T36-8):** new C-29.31 `AI_KEPT_AWAY` (`#keptAway > is-kept-away`), C-29.32 `NO_REASON` (`aiKeepAwaySet > is-keep-away-reason`), C-96.44 `SECURITY_COUNTS_UNREADABLE` (`securityTotals > is-security-counts-read`); changed `where` of C-96.43 `SECURITY_PERIOD_INVALID` (now `#periodRefusal > is-security-period`, one site for R45 and R49). C-29.30 is admission's, so mine start at .31.
+
+**My readings (QUESTION J1):** (1) "a set with no key removes" holds for every keyed service, `courtlistener` included, and "no key" is `null` or absent, while a key given but empty (blank string, empty set, blank or non-string field, bad name, any other value) stays `KEYED_SERVICE_NO_KEY`; (2) the state read's route is `aikeepawaystate`, answering no viewer field (who reaches it is the spec's, as `keyedservices`); (3) a keep-away setting that cannot be read is `on: null` and R35 then refuses `AI_KEPT_AWAY` (fail closed); (4) a reason is 1–2,000 characters counted as code points and not blank, kept in the administrator's words untrimmed; a reason given with `on: false` is held to the same bounds; (5) `securitycount`'s `{kind, country}` come from the body (as admission's `doorwindow`), not the query.
+
+**Found in other modules (REPORT J2):** op-declarations: `t33.test.mjs`:192 (R19, R6: "credentials: aikeepaway has no spec") and `t35.test.mjs`:196 (R30's negative control now lists `aikeepaway`, `aikeepawaystate`, `securitycount`) go red with this merge, and `t34.test.mjs`:135 (red 13) now also lists `aikeepaway`, all until T36-35 declares `aikeepaway` and `aikeepawaystate` and names `securitycount` among the in-process routes. instance-setup (T36-34): `aiKeepAwayState().on` may be `null` (unread); `assistantState` should read anything but `false` as kept away. file-safety (T36-11): `keyedServiceSet` with no key returns `{ok, service, held: false, removed}`; `keyedServiceFor` answers a set as the object set. No generated artifact touched.
+
+**Deferred:** none.
+
+**Tests and checks:** `node --test test/m/credentials/` 119 pass, 0 fail. Users of changed services: notice-producers 61/0, answers 43/0, ai-runs 74/0, store-door 36/0, affordances 208/0, plane 130/0, op-grades 26/0, instance-setup 108/0, admission 32/0, control-plane 167/0; op-declarations 90/3 (1 before: red 13; 2 new, above). `format`: 135 modules, 0 failures. `architecture`: 19 product files, 50 relative imports, 0 failures. `coverage`: 51 of 51 live ids, 0 failures. `ownership` vs `tranche/T36`: 10 files, 0 failures. P6: 2,690 lines (2,504 at the opening).
+
+Size (session_01DuWUHZfSSRpYU5V4qt2iss): test runs 8, module lines 2690
+
+## J1 · QUESTION
+
+My readings, applied (record, 'My readings'); answer only to overrule. (1) R29's 'a set with no key removes' holds for every keyed service, courtlistener included; 'no key' is key null or absent (the row is deleted, the service off); a key given but empty (blank string, empty set, blank or non-string field, bad field name, other values) stays KEYED_SERVICE_NO_KEY. (2) R52's route is 'aikeepawaystate' (no viewer field; who reaches it is the spec's, as keyedservices). (3) A keep-away setting that cannot be read answers on: null and R35 refuses AI_KEPT_AWAY (fail closed). (4) A reason is 1-2,000 code points, not blank, kept untrimmed; one given with on: false is held to the same bounds. (5) securitycount takes {kind, country} from the body, as doorwindow does.
+
+## J2 · REPORT
+
+Other modules. op-declarations (T36-35): t33.test.mjs:192 ('credentials: aikeepaway has no spec') and t35.test.mjs:196 (R30's negative control lists aikeepaway, aikeepawaystate, securitycount) go red with this merge; t34.test.mjs:135 (red 13) also lists aikeepaway. All clear when T36-35 declares aikeepaway and aikeepawaystate and names securitycount among the in-process routes. Suggest accepting the two as reds until T36-35. instance-setup (T36-34): aiKeepAwayState().on may be null (unread): read anything but false as kept away. file-safety (T36-11): keyedServiceSet with no key answers {ok, service, held: false, removed}; keyedServiceFor answers a set of fields as the object set. No generated artifact touched.
+
+## J3 · COMPLETE
+
+T36-7 done: R29 (security:<tool_id>, sets of fields, a set with no key removes), R35 (AI_KEPT_AWAY before any account; R27, R32, R24 the same; own reference always served otherwise), R45 (level: null on failure), R49 securityTotals, R50 securitycount route, R51 aiKeepAwaySet, R52 aiKeepAwayState. Rows for T36-8: new C-29.31 AI_KEPT_AWAY, C-29.32 NO_REASON, C-96.44 SECURITY_COUNTS_UNREADABLE; changed where of C-96.43 SECURITY_PERIOD_INVALID (#periodRefusal). New table ai_keep_away; additive column keyed_services.form. Tests 119/0; format, architecture, coverage (51/51), ownership 0 failures; users' suites green but op-declarations (J2). 2,690 lines. Record: build/jobs/T36/credentials.md on job/T36/credentials.
+
+## Completion of B2 (CHANGE; K2089, red 14)
+
+R4's `SIGN_IN_REFUSED` detail (`LOGIN_REFUSAL_DETAIL`) re-worded to need no name and address no one, meaning unchanged: "Either no active credential is held under that role …" and "… which roles hold a credential." (DEC-149 allows either; D-57). R48's test re-pinned to the new words, with a D-57 arm (no "you", "your", "yours"). No row changed (the detail is not a row's translation). Tests: `test/m/credentials/` 119 pass, 0 fail; `node test/members.test.mjs` 96 pass, 0 fail (BOB expected 95; the suite now holds 96). Checks: format, architecture, coverage (51/51), ownership: 0 failures.
+
+Size (session_01DuWUHZfSSRpYU5V4qt2iss): test runs 10, module lines 2689
+
+## J4 · COMPLETE
+
+B2 done: SIGN_IN_REFUSED's detail re-worded ('Either no active credential is held under that role …'; '… which roles hold a credential.'), meaning unchanged, no row changed; R48's test re-pinned with a D-57 arm. credentials 119/0; members.test.mjs 96/0 (the suite holds 96, not 95). Checks 0 failures. Red 14 clears at my merge.

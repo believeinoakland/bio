@@ -36,18 +36,20 @@ This answers the one question the sandbox could not: whether the token
 exchange succeeds. While signed in to the new account (the OAuth client is
 private, so only this account's members can authorize it), run a real
 install named `bio-smoke`. Approve the permission screen. The progress page
-should walk through every step and end with an address, a one-time password,
-and two credentials. Open the address, claim it with a real password, and
+should walk through every step and end with an address, a one-time password
+and the probe credential. Open the address, claim it with a real password, and
 confirm the setup page reaches its healthy panel.
 
 If the very first step fails with a handshake error, the suspects in order
 are: the redirect URL on the OAuth client not being character-identical to
 `https://newgroup.believeinoakland.workers.dev/callback`, and the scope
 names on the client not matching `workers-scripts.write`, `workers-r2.write`,
-`account-settings.read`, `containers.write`. The fourth was added for the
-assistant's container member (T33-91). Add it to the OAuth client's registered
-scopes BEFORE deploying an installer that asks it, or every sign-in is refused
-on Cloudflare's consent screen.
+`account-settings.read`, `containers.write`, `connectivity-directory.bind`. The
+fourth was added for the assistant's container member (T33-91), the fifth for
+binding the Workers VPC service an operator names for a tunnelled security tool
+(T36, installer R45). Add each to the OAuth client's registered scopes BEFORE
+deploying an installer that asks it, or every sign-in is refused on
+Cloudflare's consent screen.
 
 ## 5. Clean up the smoke test
 

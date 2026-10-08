@@ -105,12 +105,12 @@ test("R20 (d543-instant-precision convert): op=reviewcopy's in-band date is the 
 });
 
 /* ---------------------------------------------------------------- reviewcopy */
-test("R30, R2 (reviewcopy convert): op=casedocument with a grant secret over the wire, in the POST body (R59) — the module's handler is handed the door's reader and digest, only sha256(secret) reaches the store, never the secret, and a secret the store does not honour (revoked, another edition, another case) reads byte for byte as a stranger", async () => {
+test("R30, R2, R59 (reviewcopy convert; publication R73, K2146): op=casedocument with a grant secret over the wire, in the POST body — the module's handler is handed the door's reader, only sha256(secret) reaches the store (in its request's body, never its address), never the secret, and a secret the store does not honour (revoked, another edition, another case) reads byte for byte as a stranger; the address form is refused CREDENTIAL_IN_ADDRESS with no store request", async () => {
   const LIVE = "rv1_live-holder", REVOKED = "rv1_revoked";
   const doc = { ok: true, case_id: "CASE-2026-0001", edition: 2, ratified: false, text: "the document", doc_sha: "d".repeat(64) };
   const stranger = { ok: false, reason: "NO_CASE_DOCUMENT" };
   const w = world({ answer: (c) => c.route === "casedocument"
-    ? reply({ ok: true, result: c.params.secretSha === sha(LIVE) && c.params.case === doc.case_id && c.params.edition === "2" ? doc : stranger })
+    ? reply({ ok: true, result: c.body?.secretSha === sha(LIVE) && c.params.case === doc.case_id && c.params.edition === "2" ? doc : stranger })
     : null });
   const hooks = {
     publicOp: async (ctx) => publicationDoorOp(ctx.op, ctx.url, ctx.stub, { json: M.json, storeSilent: M.storeSilent,
@@ -128,10 +128,10 @@ test("R30, R2 (reviewcopy convert): op=casedocument with a grant secret over the
   };
   const live = await read({ case: doc.case_id, edition: "2", secret: LIVE });
   assert.deepEqual([live.r.status, live.r.json.text], [200, "the document"], live.r.text.slice(0, 300));
-  assert.equal(live.inner[0].params.secretSha, sha(LIVE));
+  assert.deepEqual([live.inner[0].body.secretSha, live.inner[0].params.secretSha], [sha(LIVE), undefined]);
   assert.equal(JSON.stringify(live.inner[0]).includes(LIVE) || live.r.text.includes(LIVE), false, "the secret never travels");
   const anon = await read({ case: doc.case_id, edition: "2" });
-  assert.equal("secretSha" in anon.inner[0].params, false);
+  assert.equal("secretSha" in anon.inner[0].params || "secretSha" in (anon.inner[0].body ?? {}), false);
   for (const params of [{ case: doc.case_id, edition: "2", secret: REVOKED }, { case: doc.case_id, edition: "3", secret: LIVE },
                         { case: "CASE-2026-0002", edition: "2", secret: LIVE }]) {
     const x = await read(params);
@@ -139,10 +139,13 @@ test("R30, R2 (reviewcopy convert): op=casedocument with a grant secret over the
     assert.deepEqual([x.r.status, x.r.text], [a.r.status, a.r.text], JSON.stringify(params));
     assert.equal(x.r.text.includes(params.secret), false);
   }
-  /* the address form is still honoured for T35's release, and its answer names the deprecation (publication R73) */
+  /* (T36; K2111) the address form is refused by admission's gate (C-38.10), before the store is asked; no answer carries
+     `deprecated` */
   w.env.calls.length = 0;
   const q = await call(w.env, { op: "casedocument", params: { case: doc.case_id, edition: "2", secret: LIVE }, hooks, secretIn: "query" });
-  assert.deepEqual([q.r?.status ?? q.status, q.json.text, q.json.deprecated], [200, "the document", "CREDENTIAL_IN_ADDRESS"]);
+  assert.deepEqual([q.status, q.json.reason, q.json.check], [400, "CREDENTIAL_IN_ADDRESS", "C-38.10"]);
+  assert.deepEqual(w.env.calls, []);
+  assert.equal(q.text.includes(LIVE), false);
   assert.equal("deprecated" in live.r.json, false);
 });
 

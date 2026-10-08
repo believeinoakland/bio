@@ -49,7 +49,8 @@ test("R44 securityCount: one count of a known kind for the current UTC hour and 
   assert.deepEqual(w.rows(`PRAGMA table_info(security_counts)`).map((c) => c.name), ["kind", "hour", "country", "count"],
     "no address, fingerprint, handle, role, op, path, time within the hour or content");
   assert.ok(!JSON.stringify(w.rows(`SELECT * FROM security_counts`)).includes("203.0.113.9"));
-  assert.ok(!Object.keys(w.ops()).some((op) => /securitycount|securitylevel/.test(op)), "reached by no route");
+  /* reached by no route a caller reaches: only the store-internal `securitycount` (R50, its own test) */
+  assert.deepEqual(Object.keys(w.ops()).filter((op) => /securitycount|securitylevel/.test(op)), ["securitycount"]);
 });
 
 test("R44 counts older than 90 days are dropped", async () => {
@@ -274,7 +275,7 @@ test("R45 the level: an hour is unusual at 10 or more and more than five times i
     ["High", iso((HOUR - 5) * H)], "the unusual hour came first");
 });
 
-test("R45 securityLevel answers {level, levelAt} over the 24 hours ending at the call; reached by no route; writes nothing; never throws", async () => {
+test("R45 securityLevel answers {level, levelAt} over the 24 hours ending at the call; reached by no route; writes nothing; never throws, a failure answered {level: null, levelAt: null} (N743), never Ordinary", async () => {
   const w = await world().group();
   lay(w, "rate", HOUR - 30, 40);
   await at(NOW, () => assert.deepEqual(w.c.securityLevel(), { level: "Ordinary", levelAt: null }, "30 hours ago is outside it"));
@@ -287,5 +288,8 @@ test("R45 securityLevel answers {level, levelAt} over the 24 hours ending at the
   w.sql.exec(`DELETE FROM security_counts WHERE kind='through'`);
   assert.equal(w.snapshot(), before, "it writes nothing");
   const broken = Object.create(Object.getPrototypeOf(w.c));
-  assert.deepEqual(w.c.securityLevel.call(broken), { level: "Ordinary", levelAt: null });
+  assert.deepEqual(w.c.securityLevel.call(broken), { level: null, levelAt: null }, "a failure is a failure, never Ordinary");
+  /* the counts' table gone: the same failure */
+  w.sql.exec(`DROP TABLE security_counts`);
+  await at(NOW, () => assert.deepEqual(w.c.securityLevel(), { level: null, levelAt: null }));
 });

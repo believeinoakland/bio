@@ -30,6 +30,7 @@ import { registerInquiryGrammar } from "../inquiry-grammar/index.mjs";
 import { governorOf, governorRoutes } from "../host-governor/index.mjs";
 import { acquisitionOf } from "../acquisition/index.mjs";
 import { captureOf, captureOps } from "../capture/index.mjs";
+import { fileSafetyOf, fileSafetyOps } from "../file-safety/index.mjs";
 import { monitoringOf, monitoringOps } from "../monitoring/index.mjs";
 import { linkSweepOf, linkSweepOps } from "../link-sweep/index.mjs";
 import { connectionsOf, connectionsOps } from "../connections/index.mjs";
@@ -54,6 +55,7 @@ import { acceptedWorkOf } from "../accepted-work/index.mjs";
 import { checkCaseFile, registerCaseCheckerPublicReads } from "../case-checker/index.mjs";
 import { caseImportOf, caseImportOps } from "../case-import/index.mjs";
 import { caseDisclosuresOf } from "../case-disclosures/index.mjs";
+import { caseCarriageOps } from "../case-carriage/index.mjs";
 import { publicReadOf, publicReadOps } from "../public-read/index.mjs";
 import { projectStageOf, projectStageOps } from "../project-stage/index.mjs";
 import { networkNoticesOf, networkNoticesOps } from "../network-notices/index.mjs";
@@ -214,16 +216,17 @@ export class Store extends DurableObject {
     answersOf(ctx, { standards, content: contentOf(ctx), events, entities: entitiesOf(ctx), lines, people, duties,
       calculations, retrieval, credentials: credentialsOf(ctx),
       ceilingRefusal: (member, at) => aiRunsOf(ctx, env).aiUseCheck({ member, at }),
-      /* K1690 (instance-setup R55): the copy's assistant switch, read before any model turn. */
-      assistantGate: () => instanceSetupOf(ctx, env).assistantGate(),
       /* R24 (Q1-7): the screens registry the plane carries, for its explain read. */
       screens: SCREENS });
     /* reevaluation before actions: actions reaches conformance, which reaches reevaluation, and a factory reads its
        `deps` on the first call only, so created there it would never see `env` (its R25). */
     reevaluationOf(ctx, { env, acceptedWork, calculations });
     /* publication (K365): built here, after reevaluation, so its case reads are registered with reevaluation (its R41,
-       R43; reevaluation R26) before anything runs. Built lazily, a sweep an alarm reached before any op found none. */
-    publicationOf(ctx, { acceptedWork });
+       R43; reevaluation R26) before anything runs. Built lazily, a sweep an alarm reached before any op found none.
+       R18 (T37; K2226): handed the evidence bucket (`CAPTURES`) and the store's namespace, read as record-core's evidence
+       prefix reads it (R2), which its factory forwards to the case-carriage it creates, so a photo's obscured copy is held
+       (case-carriage R11; without them the mark is recorded with no copy, fail closed). */
+    publicationOf(ctx, { acceptedWork, bucket: env.CAPTURES ?? null, store: () => this.#ownNamespace() || "bio" });
     /* R23 (K1505 (3), K1643; publication R61): case-tensions, which publication's factory builds and registers its
        provider with (the seven doors), is the one instance per host the route map reaches. */
     caseTensionsOf(ctx);
@@ -262,13 +265,18 @@ export class Store extends DurableObject {
     /* R18 (N529; K1333): case-disclosures, at its place after case-import and before case-authoring in the modules'
        order, built here with the attestation instance above, so case-authoring's lazy getter finds that one instance per
        host (case-disclosures R23). It holds no table and no op. case-carriage (N532) needs no line here: publication's
-       factory (above) creates it eagerly, its two tables made and declared at every boot (case-carriage R6; K1024). */
+       factory (above) creates it eagerly, with the bucket and namespace handed there, its tables made and declared at
+       every boot (case-carriage R6, R12; K1024); its ops are routed in R5's map over that one instance. */
     caseDisclosuresOf(ctx, { attestation });
     biasOf(ctx, { env });
     /* R12 (K1061; inquiry R53, bias R40): inquiry's findings registered with bias as kind `finding`, after bias is built
        with its environment above (its factory reads its deps on the first call only), so a lens change raises a debt on
        a finding concluded under it. */
     biasOf(ctx).registerWorkProducts("finding", inquiryFindings(ctx, biasOf(ctx)));
+    /* K2141 (citation R13, retrieval R76): citation made here, explicitly, before run-productions and before the first
+       request, so its `recordedBy` read is registered with retrieval at boot and does not wait on run-productions'
+       factory reaching it. */
+    citationOf(ctx);
     /* run-productions: created after content, connections, strength and citation, so it declares its tables to purge
        (R17) and registers its candidates with basis-versions (R14). ai-runs is handed over as its own module (its
        R28–R29). */
@@ -292,6 +300,12 @@ export class Store extends DurableObject {
        first `airunopen` arrives; built lazily, that open is refused AI_RUN_MODE_UNCHECKED. */
     actionPlansOf(ctx);
     const capture = captureOf(ctx, { env, attestation });   /* the acquisition act signs its receipt through `cap.attestation` */
+    /* R26 (rev. 2 §4; K2063 (10)): file-safety, directly after capture in the modules' order, built here with this
+       environment (the `FILE_SCANNER` binding and the `CAPTURES` bucket; the evidence store and its prefix are
+       record-core's, R2) and the object's own namespace, since its factory reads its deps on the first call only. Its
+       first construction is its start: its `provenance.onReceipt` listener (its R1) is registered before the first
+       request. Its tables are made and declared to purge in R3's pass. */
+    const fileSafety = fileSafetyOf(ctx, { env, store: this.#ownNamespace() || "bio" });
     /* capture-requests: its table, its `sweep` resolver and its drain; the run sight it reads is ai-runs' (its R28),
        and it registers its wait source with ai-runs (ai-runs R41). Built before link-sweep and handed to it, so
        link-sweep's sweep scope check (its R12) is registered at construction and a sweep-named request drained before
@@ -320,7 +334,10 @@ export class Store extends DurableObject {
     admissionOf(ctx);
     promotion.registerStep(STEP, promotionStep(ctx));   /* R10 (K861, K2037): store-door's step (its R5), the testimony slot and the sight index */
     observationLogOf(ctx).listenToCapture(capture);
-    schedulerOf(ctx, env);
+    /* R26 (K2153; scheduler R24): file-safety handed to the scheduler as the owner of its four batch consumers
+       (`file-scan`, `file-render`, `file-deeper`, `file-forward`) before its start, since its default owners do not
+       build it. */
+    schedulerOf(ctx, env, { fileSafety });
     /* R3: the migration pass, then scheduler's start. */
     ctx.blockConcurrencyWhile(async () => this.#migrate());
     ctx.blockConcurrencyWhile(async () => schedulerOf(ctx, env).start());
@@ -354,8 +371,11 @@ export class Store extends DurableObject {
          construction. */
       let identity = null;
       try { identity = instanceSetup.groupIdentity(); } catch { identity = null; }
-      const ownHosts = ownHostsOf(identity);
-      captureOf(ctx, { ownHosts });
+      /* R28 (N745; installer R47): the copy's own hosts the installer binds, `OWN_HOSTS`, joined with the claim's. */
+      const ownHosts = ownHostsOf(identity, env.OWN_HOSTS);
+      /* R29 (K2087, K2130; acquisition R44): capture (for acquisition) is handed the `FILE_SCANNER` binding and a reader
+         of file-safety's reputation tool, asked at each acquisition, never a value read once here. */
+      captureOf(ctx, { ownHosts, fileScanner: env.FILE_SCANNER ?? null, reputation: () => fileSafety.reputationTool() });
       captureCredentialsOf(ctx, { key: env.CAPTURE_CREDENTIALS_KEY ?? null, ownHosts });
       return started;   /* R1: the blocked work answers instance-setup's start */
     });
@@ -396,6 +416,7 @@ export class Store extends DurableObject {
     inquiryOf(this.ctx).migrate();
     governorOf(this.ctx, { env: this.env }).migrate();
     captureOf(this.ctx).migrate();
+    fileSafetyOf(this.ctx).migrate();   /* R26: its tables, declared to purge (its R25), directly after capture's */
     extractionOf(this.ctx).migrate();
     observationLogOf(this.ctx).migrate();   /* before the run log folds into its tables below */
     runProductionsOf(this.ctx).migrate();
@@ -492,6 +513,8 @@ export class Store extends DurableObject {
       coarchiveset: () => acquisitionOf(ctx).coArchiveSet({ on: body ? body.on : undefined, by: url.searchParams.get("by") }),
       coarchivestate: () => acquisitionOf(ctx).coArchiveState(),
       ...captureOps(captureOf(ctx), url, body, env),
+      /* R26: file-safety's ops (op-declarations R32), at its place directly after capture's map. */
+      ...fileSafetyOps(fileSafetyOf(ctx), url, body, env),
       ...calibrationOps(calibrationOf(ctx), url, body),
       ...biasOps(biasOf(ctx), url, body),
       ...extractionOps(extractionOf(ctx), url, body, env),
@@ -530,6 +553,9 @@ export class Store extends DurableObject {
       /* K1643: `caseflags` and `attribute` are case-tensions', on the one instance publication's factory made. */
       ...caseTensionsOps(caseTensionsOf(ctx), url, body),
       ...publicationOps(publicationOf(ctx), url, body),
+      /* R18 (T37; K2226): case-carriage's `obscuremark` and `photomarks` (its R9, R10), directly after publication's, over
+         the one instance publication's factory made. */
+      ...caseCarriageOps(publicationOf(ctx).caseCarriage, url, body),
       /* R15 (N520): docket's member ops; its public reads `docketpublic` and `docketfeed` are public-read's (its R21). */
       ...docketOps(docketOf(ctx), url, body),
       ...publicReadOps(publicReadOf(ctx), url),

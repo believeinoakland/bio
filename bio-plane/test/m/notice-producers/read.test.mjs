@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { world } from "../money-checks/fixture.mjs";
 import { fresh, reader, byId, texts, sentences, snapshot } from "./fixture.mjs";
 import { list as profiles } from "../../../../jurisdictions/index.mjs";
-import { NOTICE_KINDS, NOTICE_PROJECTS_MAX, DUTIES_MAX, POLICY_CHANGES_MAX, POLICY_CHANGE_DAYS } from "../../../src/notice-producers/index.mjs";
+import { NOTICE_KINDS, NOTICE_PROJECTS_MAX, DUTIES_MAX, POLICY_CHANGES_MAX, POLICY_CHANGE_DAYS, SCAN_FINDINGS_MAX, SCAN_FINDINGS_DAYS, TOOL_EVENTS_MAX } from "../../../src/notice-producers/index.mjs";
 import { SECURITY_DAYS } from "../../../src/credentials/index.mjs";
 
 const NOW = "2026-10-06T12:00:00Z";
@@ -39,6 +39,12 @@ function providers(calls = []) {
     following: { policyChanges: () => ({ ok: true, cursor: null, changes: [{ watch: 7, standard: "STD-1", address: "https://example.org/p",
       before: { capture: "a".repeat(64), at: "2026-09-01T00:00:00Z" }, after: { capture: "b".repeat(64), at: "2026-10-01T00:00:00Z" }, amendment_held: false }] }) },
     standards: { standardRead: ({ id }) => ({ ok: true, id, cite: "a policy", declared_by: "member:alice" }) },
+    fileSafety: { scanFindings: () => ({ ok: true, truncated: false, cursor: "1", findings: [{ captureSha: "c".repeat(64), note_id: "FSN-1",
+      tool: "clamav", engine: "clamav", findings: ["Xls.Downloader.Agent-917"], at: NOW }] }),
+      securityToolEvents: () => ({ ok: true, truncated: false, cursor: "2", events: [{ tool_id: "scanii-1", event: "added", at: "2026-10-01T00:00:00Z" },
+        { tool_id: "scanii-1", event: "switched_off", at: "2026-10-05T00:00:00Z" }] }),
+      securityTools: () => ({ ok: true, tools: [{ tool_id: "scanii-1", provider_id: "scanii", state: "off", off_reason: "PRIVATE_MODE_NOT_HONOURED" }] }) },
+    provenance: { homeOf: () => ({ bundleId: P }) },
   };
 }
 /* membership as the real one answers, with alice an administrator besides (R12's recipient). */
@@ -55,7 +61,7 @@ function setup(over = {}) {
   return { w, n, calls, ...reader(n) };
 }
 
-test("R1: every item R2–R6, R12 and R13 derive for this member and viewer, each homed through homesOf and carrying its options; facts state each producer's bound and truncated", () => {
+test("R1: every item R2–R6 and R12–R15 derive for this member and viewer, each homed through homesOf and carrying its options; facts state each producer's bound and truncated", () => {
   const { read, asked } = setup((w) => ({ membership: adminAlice(w.membership) }));
   const r = read("alice", { now: NOW });
   const m = byId(r);
@@ -63,7 +69,8 @@ test("R1: every item R2–R6, R12 and R13 derive for this member and viewer, eac
     `FINDING::interest-check-noticed::CHK-1::r-${P}`, `FINDING::money-detector-noticed::md-1::m-${P}`,
     "FINDING::standing-answer::STQ-1::1", "FINDING::temporal-expectation-due::DUT-1::OCC-1::overdue",
     "OBLIGATION::inquiry-recheck-due::INQ-1::2026-10-01", "FINDING::security-level-high::2026-10-06T11:00:00Z",
-    `FINDING::policy-changed-noticed::7::${"b".repeat(64)}`].sort());
+    `FINDING::policy-changed-noticed::7::${"b".repeat(64)}`, `FINDING::scan-found::${"c".repeat(64)}::FSN-1`,
+    "FINDING::security-tool-off::scanii-1::2026-10-05T00:00:00Z"].sort());
   for (const it of r.items) {
     assert.equal(it.class, NOTICE_KINDS[it.kind], it.kind);
     assert.ok(it.case && Array.isArray(it.case.ancestors), "a home set from the walk passed in");
@@ -76,6 +83,7 @@ test("R1: every item R2–R6, R12 and R13 derive for this member and viewer, eac
     money_detector: { truncated: false }, standing_answer: { bound: 1000, truncated: false },
     temporal_expectation: { bound: DUTIES_MAX, truncated: false }, inquiry_recheck: { truncated: false },
     security_level: { days: SECURITY_DAYS, truncated: false }, policy_change: { bound: POLICY_CHANGES_MAX, days: POLICY_CHANGE_DAYS, truncated: false },
+    scan_found: { bound: SCAN_FINDINGS_MAX, days: SCAN_FINDINGS_DAYS, truncated: false }, security_tool_off: { bound: TOOL_EVENTS_MAX, truncated: false },
     failed: [] });
 });
 
@@ -88,11 +96,12 @@ test("R1: with no walk and no options passed, an item is ungrouped and carries o
 
 test("R1: writes nothing and never throws; a provider that throws contributes no item and is named in facts.failed, the others still answer", () => {
   const boom = () => { throw new Error("down"); };
-  const { w, read } = setup({ people: { checkResults: boom, listChecks: boom }, inquiry: { datedWaits: boom }, following: { policyChanges: boom } });
+  const { w, read } = setup({ people: { checkResults: boom, listChecks: boom }, inquiry: { datedWaits: boom }, following: { policyChanges: boom },
+    fileSafety: { scanFindings: boom, securityToolEvents: boom } });
   const before = snapshot((q) => w.st.sql.exec(q));
   const r = read("alice", { now: NOW });
   assert.deepEqual(snapshot((q) => w.st.sql.exec(q)), before);
-  assert.deepEqual(r.facts.failed, ["people", "inquiry", "following"]);
+  assert.deepEqual(r.facts.failed, ["people", "inquiry", "following", "file-safety"]);
   assert.deepEqual(r.items.map((i) => i.kind).sort(), ["money-detector-noticed", "standing-answer", "temporal-expectation-due"]);
   /* a provider throwing part-way contributes nothing at all */
   let calls = 0;

@@ -276,7 +276,7 @@ test("R8 a document that is not a member is held exactly as R1 states: another m
   }
 });
 
-test("R8 two members of one archive hold the archive and its token once; an archive whose record names an archive already walked ends the walk", () => {
+test("R8 (N768; K2145) two members of one archive: the archive and its token are written and listed once, and answered in files once under each member's ref; an archive whose record names an archive already walked ends the walk", () => {
   const w = world();
   const zip = Buffer.from(makeZip([{ name: "a.txt", data: OTHER_TEXT }, { name: "b.txt", data: MEMBER_TEXT }]));
   const token = Buffer.from("THE-TOKEN");
@@ -284,9 +284,31 @@ test("R8 two members of one archive hold the archive and its token once; an arch
   const a = holdMember(w, "INFO-2026-0013-a", OTHER_TEXT, containerOf(zip, 0, "a.txt", OTHER_TEXT));
   const b = holdMember(w, MEM, MEMBER_TEXT, containerOf(zip, 1, "b.txt", MEMBER_TEXT));
   const r = w.cc.holdMaterials(caseFm({ materials: [docRow("INFO-2026-0013-a", a), docRow(MEM, b)] }), { caseId: CASE, edition: 1, at: NOW });
-  assert.deepEqual(r.files.map((f) => f.kind), ["document", "container", "archive", "attestation", "document", "container"]);
-  assert.equal(r.files.filter((f) => f.sha256 === archiveSha).length, 1);
-  assert.equal(r.files.filter((f) => f.sha256 === hex(token)).length, 1);
+  assert.deepEqual(r.files.map((f) => [f.kind, f.ref]), [["document", "INFO-2026-0013-a"], ["container", "INFO-2026-0013-a"],
+    ["archive", "INFO-2026-0013-a"], ["attestation", "INFO-2026-0013-a"], ["document", MEM], ["container", MEM], ["archive", MEM],
+    ["attestation", MEM]]);
+  /* each shared item once under each ref, so publication registers it under both (public-read carries it for both) */
+  for (const s of [archiveSha, hex(token)])
+    assert.deepEqual(r.files.filter((f) => f.sha256 === s).map((f) => f.ref), ["INFO-2026-0013-a", MEM]);
+  assert.ok(r.files.every((f) => f.path === `materials/${f.sha256}`));
+  /* held once: one entry in the edition's list, and nothing twice */
+  assert.equal(r.materials.filter((m) => m.sha === archiveSha).length, 1);
+  assert.equal(r.materials.filter((m) => m.sha === hex(token)).length, 1);
+  assert.equal(new Set(r.materials.map((m) => m.sha)).size, r.materials.length);
+  assert.deepEqual(w.cc.heldMaterialsOf(CASE, 1), r.materials);
+  /* a shared container record (the same block stated for two refs) is answered once under each too */
+  const w3 = world();
+  const z3 = Buffer.from(makeZip([{ name: "m.txt", data: MEMBER_TEXT }]));
+  holdArchive(w3, ARCH, z3, { token: null, tokenFile: "attestations/none.tsr" });
+  const m3 = holdMember(w3, MEM, MEMBER_TEXT, containerOf(z3, 0, "m.txt", MEMBER_TEXT));
+  const r3 = w3.cc.holdMaterials(caseFm({ materials: [docRow(MEM, m3), docRow("INFO-2026-0014-again", m3)] }), { caseId: CASE, edition: 1, at: NOW });
+  const record = canonicalJson(containerOf(z3, 0, "m.txt", MEMBER_TEXT));
+  assert.deepEqual(r3.files.filter((f) => f.kind === "container").map((f) => [f.sha256, f.ref]),
+                   [[sha(record), MEM], [sha(record), "INFO-2026-0014-again"]]);
+  assert.equal(w3.row(`SELECT COUNT(*) AS n FROM published_material_texts WHERE sha256=?`, sha(record)).n, 1);
+  /* negative control: one member alone answers each item once */
+  const one = w.cc.holdMaterials(caseFm({ materials: [docRow(MEM, b)] }), { caseId: CASE, edition: 2, at: NOW });
+  assert.equal(one.files.filter((f) => f.sha256 === archiveSha).length, 1);
   /* a cycle: the archive's own entry states it was cut from the member */
   const w2 = world();
   const z2 = Buffer.from(makeZip([{ name: "m.txt", data: MEMBER_TEXT }]));

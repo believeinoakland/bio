@@ -9,7 +9,8 @@
  * one extracted text (R17, `./facts.mjs`), the case file's format (R13, `./casefile.mjs`), the
  * complete edition (R14, `./complete.mjs`), a finding's standing against the bar (R15, `./standing.mjs`), the
  * calculations a case rests on with their PROV-O rendering (R18, R19, `./calculations.mjs`), the published timeline
- * (R20, `./timeline.mjs`) and the people a case names with its signers' ties (R21, `./people.mjs`). It reads no table,
+ * (R20, `./timeline.mjs`), the people a case names with its signers' ties (R21, `./people.mjs`) and a member's subject
+ * (R22, `./subject.mjs`). It reads no table,
  * holds no store and never throws.
  *
  * Split from `publication` by copy (K651, K624 (1)): the format block of `publication/checks.mjs`, and `fmSafe`,
@@ -37,11 +38,12 @@ export { WHAT_CHANGED_HEAD, WHAT_CHANGED_ORIGINS, whatChangedText, whatChangedBl
          LENS_NONE_SENTENCE, LENS_UNDETERMINED_SENTENCE, lensStatementKey, lensBlockLines, lensSectionLines, lensOf,
          editionStatementsOf } from "./edition.mjs";
 export { WORKING_ON_KEY, NOTICE_REFERENCE_PATTERN, isNoticeReference, workingOnLines, workingOnOf } from "./reference.mjs";
-export { METHOD_FIELDS, methodBlockLines, methodOf, MATERIAL_FIELDS, MATERIAL_ATTESTATION_FIELDS, MATERIAL_KINDS,
+export { METHOD_FIELDS, methodBlockLines, methodOf, MATERIAL_FIELDS, MATERIAL_OBSCURED_FIELDS, MATERIAL_ATTESTATION_FIELDS, MATERIAL_KINDS,
          MATERIAL_RESTS_UNDER, ATTESTATION_BY_KINDS, ATTESTATION_LEVELS, ANONYMOUS_ATTESTATION_LEVELS,
          GROUP_ATTESTATION_SIGNATURE, materialsLines, materialAttestationLines, materialBlockLines, materialsOf, ACCEPTED_WORK_FIELDS, ACCEPTED_WORK_FLAG_FIELDS,
          PAIR_AXES, pairLine, pairOf, acceptedWorkBlockLines, acceptedWorkOf } from "./materials.mjs";
-export { CASE_FILE_FORMAT, CASE_FILE_MANIFEST_PATH, CASE_FILE_PROV_PATH, CASE_FILE_KINDS, CASE_FILE_SINGLE_KINDS, CASE_FILE_MANIFEST_FIELDS,
+export { CASE_FILE_FORMAT, CASE_FILE_FORMAT_V2, CASE_FILE_FORMAT_V1, CASE_FILE_FORMATS_ACCEPTED, CASE_FILE_MANIFEST_PATH, CASE_FILE_PROV_PATH,
+         CASE_FILE_KINDS, CASE_FILE_V2_KINDS, CASE_FILE_V3_KINDS, CASE_FILE_ORIGINAL_KINDS, CASE_FILE_SINGLE_KINDS, CASE_FILE_OPTIONAL_SINGLE_KINDS, CASE_FILE_MANIFEST_FIELDS,
          CASE_FILE_KEY_FIELDS, CASE_FILE_PART_FIELDS, CASE_FILE_FILE_FIELDS, caseFilePath, caseFileEntryOf,
          casePartDigest, caseFileManifestCheck } from "./casefile.mjs";
 export { GRADING_FACT_FIELDS, PASSAGE_FIELDS, gradingFactsLines, passagesLines, gradingFactsOf, passagesOf,
@@ -51,8 +53,9 @@ export { CALCULATION_FIELDS, RECOMPUTE_STATUSES, calculationsLines, calculations
          calculationFileText } from "./calculations.mjs";
 export { TIMELINE_FIELDS, TIMELINE_LANES, timelineLines, timelineOf } from "./timeline.mjs";
 export { PEOPLE_FIELDS, MEMBER_TIE_FIELDS, peopleLines, memberTieLines, peopleOf, memberTiesOf } from "./people.mjs";
+export { memberSubjectOf } from "./subject.mjs";
 export { COMPLETE_EDITION_HEADINGS, TIMELINE_HEADING, CALCULATIONS_HEADING, TIMELINE_LANE_WORDS, RECOMPUTE_WORDS, TWO_STRENGTHS_SENTENCE, GRADE_MEANINGS, PRODUCT_NAMES, editionProductOf,
-         madeWithLine, CHECKER_READS, completeEditionOf } from "./complete.mjs";
+         madeWithLine, CHECKER_READS, OBSCURED_WORDS, completeEditionOf } from "./complete.mjs";
 
 
 /** MK-7 — THE ATTRIBUTION LEVELS (MEMBER-KNOWLEDGE-DESIGN.md §4, §4.6), MOST PROTECTIVE FIRST (R2).

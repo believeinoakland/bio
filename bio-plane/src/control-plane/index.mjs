@@ -1,4 +1,4 @@
-/* control-plane: THE INSTANCE'S DOOR (R1–R59). The Worker's HTTP entry — routing and the stamps (the answer's envelope
+/* control-plane: THE INSTANCE'S DOOR (R1–R68). The Worker's HTTP entry — routing and the stamps (the answer's envelope
    and decoration are `answer-envelope`'s, the store's door `store-door`'s, since the split, K1907, K1974) — moved from legacy-index (`index.mjs`) at control-plane's extraction (T12, K3, K93). Who may call an op is
    `admission`'s and what each op is `op-declarations'` (the split, K617, K624 (2)): this door calls admission's gates in
    R28's order and reads op-declarations' tables. An op's own handler is its module's: `makeFetch(hooks)` takes the
@@ -15,18 +15,21 @@ import { evidenceStorageAbsent } from "../acquisition/index.mjs";
 import { SCRATCH, classify, scopeFor, namespaceGate, confinedNamespaceGate, pinnedNamespaceGate,
          aiCredentialPresented, admit, bearerFence, readerOf, aiCredentialMint, reviewGrantSecret,
          projectCreationGate, queryGate } from "../admission/index.mjs";
-/* T35 (admission R20–R22; F1, F4, N703; K2044): the credential read once from the header or the body (the address only
-   for T35's release, and then named deprecated), the public ops' window and the caller's source and country, and the
-   security tally of every refusal the door gives or relays. */
-import { presentedCredential, CREDENTIAL_IN_ADDRESS, doorWindowGate, sourceOf, countryOf, securityTally } from "../admission/index.mjs";
+/* T35 (admission R20–R22; F1, F4, N703; K2044): the credential read once from the header or the body, the public ops'
+   window and the caller's source and country, and the security tally of every refusal the door gives or relays. (T36;
+   K2111) A credential in the address is refused by admission's gate (its R20, C-38.10), the code's one site. */
+import { presentedCredential, doorWindowGate, sourceOf, countryOf, securityTally } from "../admission/index.mjs";
+import { credentialAddressGate } from "../admission/index.mjs";
 /* answer-envelope (its R1–R8; the split, K1907, K1974): the envelope, its decoration, the store's answer read once, the
    internal-error answer, the row readers, the page policy and the composed catalogue the published fences read (R41). */
 import { json, doAnswer, storeRefusal, storeSilent, relayAnswer, planeInternalError, replayRow, requiredArgument,
          installationRow, dispatchRow, withPagePolicy, CHECK_FAMILIES } from "../answer-envelope/index.mjs";
 /* R57 (T35): the draft asked of agent-worker once every refusal is answered. */
-import { draftDue, draftAsk, checkedDraft } from "./draft.mjs";
+import { draftDue, draftAsk, checkedDraft, TRANSLATION_DRAFT, TRANSLATION_RECORD } from "./draft.mjs";
 /* R58 (T35): the promotions of what an unpack files. */
 import { archiveDocuments, promoteArchive } from "./archive.mjs";
+/* R65 (T37): a member's own Claude sign-in, relayed to their own runner, and its sign-out when they leave. */
+import { subscriptionSignin, leaverOf, signoutLeaver } from "./signin.mjs";
 import { machineFences, renderPack } from "../skillpack.mjs";
 import { liveToken } from "../tokens.mjs";
 import { SIGN_HTML } from "../signpage.mjs";
@@ -51,7 +54,7 @@ import { OPS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, 
          DOCKET_BY } from "../op-declarations/index.mjs";
 /* R53 (K1674): the stamps T33's ops declare, op → keys (op-declarations R17–R20); R55 (K1863 (7)): the registry's
    aliases, alias → op (its R21). */
-import { OP_STAMPS, OP_ALIASES } from "../op-declarations/index.mjs";
+import { OP_STAMPS, OP_ALIASES, OP_FAMILIES } from "../op-declarations/index.mjs";
 /* R53 (K1601, K1674): an ask's grant reads only its list (credentials R28). */
 import { AI_GRANT_OPS } from "../credentials/index.mjs";
 
@@ -107,24 +110,27 @@ async function tallySessionRefusal(res, session) {
 }
 
 /* R59 (admission R20, R22; F1, N703; K2044): ON THE WAY OUT. A refusal the door gives or relays, at either of the two
-   levels R22 decorates, is handed once to admission's `securityTally` (a tally that fails never changes the answer); and
-   every JSON answer to a request whose credential was read from its address carries `deprecated: "CREDENTIAL_IN_ADDRESS"`
-   at its top level, beside `store` and `tokenClass`, the one name admission and publication use. */
-async function outOfAddress(res, seen, req) {
+   levels R22 decorates, is handed once to admission's `securityTally`, after the answer is composed; a tally that fails
+   never changes the answer. (T36; K2111) No answer carries `deprecated`: a credential in the address is refused. */
+async function tallyOnTheWayOut(res, seen, req, env) {
   if (!res || !/application\/json/i.test(res.headers.get("content-type") || "")) return res;
   let body;
   try { body = await res.clone().json(); } catch { return res; }
   if (!body || typeof body !== "object" || Array.isArray(body)) return res;
   const refusal = body.ok === false ? body : body.result && typeof body.result === "object" && body.result.ok === false ? body.result : null;
   if (refusal) {
-    try { await securityTally({ op: seen.op, answer: refusal, presented: { token: seen.credential?.token ?? null, cred: seen.cred }, req }); }
+    /* admission R22 (ADMISSION #6, K2166): handed the store and the reader, so the count reaches `securitycount` */
+    try { await securityTally({ op: seen.op, answer: refusal, presented: { token: seen.credential?.token ?? null, cred: seen.cred }, req,
+                                env, doAnswer }); }
     catch { /* the tally is status, never a gate */ }
   }
-  if (!seen.credential?.inAddress || body.deprecated === CREDENTIAL_IN_ADDRESS) return res;
-  const headers = new Headers(res.headers);
-  headers.delete("content-length");
-  return new Response(JSON.stringify({ ...body, deprecated: CREDENTIAL_IN_ADDRESS }), { status: res.status, statusText: res.statusText, headers });
+  return res;
 }
+
+/* R59, R28 (admission R20; F1, K2111): A CREDENTIAL IN THE ADDRESS IS REFUSED, by admission's gate (C-38.10, the code's
+   one site), which this door runs directly after admission R1 and before any other gate, public op, owner's door or
+   store request; its refusal is relayed as given. */
+const addressGate = (url) => credentialAddressGate(url);
 
 /* REC-22: the ONE namespace the public read path answers from. An instance has
    one published record, so op=publishedcase and op=publishedbytes are pinned
@@ -152,8 +158,7 @@ async function sha256Hex(v) {
    `#noReviewCopy` is carried at 404 with nothing added, so a caller outside the fence reads the same status and the
    same bytes from the single read (`reviewcopy`) and from the list (`casedrafts`); a store that did not answer is a
    silence, stated as one. */
-/* R59 (admission R20): `extra` is `{deprecated}` for a secret read from the address, put in the answer before the in-band
-   hash is taken, so the hash is over the answer exactly as served. */
+/* `extra` is put in the answer before the in-band hash is taken, so the hash is over the answer exactly as served. */
 async function reviewAnswer(out, op, extra = {}) {
   if (out.refused) return storeRefusal(out, extra);   /* R23: the store's own refusal, at its status */
   if (!out.answered) return storeSilent(op, out.correlation);
@@ -203,10 +208,12 @@ async function templateGrantDoor({ req, url, env, op, spec, presentedAi, stub, c
   const inner = new URL(`http://do/${op}`);
   for (const [k, v] of url.searchParams) inner.searchParams.set(k, v);
   for (const k of ["token", "op", "store", "secret", "secretSha", "bySecret", ...QUERY_STAMPS]) inner.searchParams.delete(k);
-  /* R59 (admission R20): the secret is the body's `secret` (the address's only for T35's release) */
+  /* R59 (admission R20): the secret is the body's `secret`, never the address's; R64 (N761): its digest crosses in the
+     internal request's body alone (`secretSha`), beside the door's mark `bySecret` in the query */
+  let digest = null;
   if (credential.secret !== null) {
     inner.searchParams.set("bySecret", "1");
-    inner.searchParams.set("secretSha", await sha256Hex(credential.secret || ""));
+    digest = await sha256Hex(credential.secret || "");
   } else {
     const admitted = await admit({ url, env, op, spec: { ...spec, classes: ["admin", "member"], machineClasses: [] },
                                    method: req.method, presented: presentedAi, doAnswer, credential });
@@ -216,11 +223,12 @@ async function templateGrantDoor({ req, url, env, op, spec, presentedAi, stub, c
     inner.searchParams.set("author", admitted.caller.identity);
   }
   let body;
-  if (req.method === "POST") {
+  if (req.method === "POST" || digest !== null) {
     let b = {};
-    try { b = JSON.parse((await req.text()) || "{}"); } catch { b = {}; }
+    if (req.method === "POST") try { b = JSON.parse((await req.text()) || "{}"); } catch { b = {}; }
     if (!b || typeof b !== "object" || Array.isArray(b)) b = {};
     for (const k of [...BODY_STAMPS, ...QUERY_STAMPS, "secretSha", "bySecret", "secret", "token"]) delete b[k];
+    if (digest !== null) b.secretSha = digest;
     body = JSON.stringify(b);
   }
   const out = await doAnswer(stub.fetch(new Request(inner, body === undefined ? { method: "GET" } : { method: "POST", body })));
@@ -379,22 +387,22 @@ async function knockerConsent(req, store) {
   return json({ ...rec, ok: true }, 200);
 }
 
-/* R41 (K585 (1), K674 (1); agent-worker R48, N157): THE PUBLISHED FENCES AND THE RENDERED PACK, the door's decoration of
-   the untargeted `op=affordances` answer (affordances R17's, whose handler answers it): `fences`, skills' `machineFences`
-   over `CHECK_FAMILIES`, and `pack`, `renderPack` over that same answer with its `fences`, whole with its `version`. A
-   member's agent reads both from here and imports no catalogue. A render that throws publishes `pack: null` and
-   `pack_absent` (its sentence), never a partial pack, so a reader refuses it. A targeted answer, and any answer that is
-   not `ok: true` with a result, passes unchanged. */
-async function publishAffordances(res, url) {
-  if (url.searchParams.get("target")) return res;
+/* R41 (K585 (1), K674 (1); agent-worker R48, N157; T36: N695, K2135): THE PUBLISHED FENCES AND THE RENDERED PACK, served
+   by `op=agentpack` alone, from the untargeted `op=affordances` answer (affordances R17's, whose handler answers it):
+   `fences`, skills' `machineFences` over `CHECK_FAMILIES`, and `pack`, `renderPack` over that same answer with its
+   `fences`, whole with its `version`. A member's agent reads both from there and imports no catalogue. A render that
+   throws answers `pack: null` and `pack_absent` (its sentence), never a partial pack, so a reader refuses it. Null for an
+   answer that is not `ok: true` with a result. Since T36 the untargeted `op=affordances` answer is the handler's as it
+   stands, with neither key. */
+async function packOf(res) {
   let body;
-  try { body = await res.clone().json(); } catch { return res; }
-  if (!body || body.ok !== true || !body.result || typeof body.result !== "object" || Array.isArray(body.result)) return res;
-  const published = { ...body.result, fences: machineFences(CHECK_FAMILIES) };
+  try { body = await res.clone().json(); } catch { return null; }
+  if (!body || body.ok !== true || !body.result || typeof body.result !== "object" || Array.isArray(body.result)) return null;
+  const fences = machineFences(CHECK_FAMILIES);
   let pack = null, absent = null;
-  try { pack = renderPack(published); }
+  try { pack = renderPack({ ...body.result, fences }); }
   catch (e) { absent = String((e && e.message) || "the pack could not be rendered").slice(0, 500); }
-  return json({ ...body, result: { ...published, pack, ...(pack ? {} : { pack_absent: absent }) } }, res.status);
+  return { fences, pack, ...(pack ? {} : { pack_absent: absent }) };
 }
 
 /* N336 (installer R20, K649 (6)): THE PLANE'S LIMITS, stated in its code so the bundle a release signs carries them, equal
@@ -412,15 +420,16 @@ const PLANE_LIMITS_STATEMENT = "bio-plane-limits/1 subrequests=10000";
    (`affordances` untargeted), the door then asks credentials in `bio` whether a live grant admits it (the four, off the
    list, by its first read). Admitted, the caller is `ai`, its viewer the grant's member, its grant stamped `grant`
    (answers' arms, the read log); GRANT_OP_REFUSED is answered; anything else keeps admission's answer. */
-/* R41 (T35): `agentpack` is admitted under a grant as the untargeted `affordances` is (op-declarations R30). */
-const GRANT_OWN_OPS = Object.freeze(["askceiling", "askcheck", "askusage", "affordances", "agentpack"]);
+/* R41 (T35): `agentpack` is admitted under a grant (op-declarations R30); (T36; K2135) the ask reads the pack there alone
+   (agent-worker R48, its `ASK_PLANE_OPS`), so the untargeted `affordances` is no longer one of the ask's own calls. */
+const GRANT_OWN_OPS = Object.freeze(["askceiling", "askcheck", "askusage", "agentpack"]);
 /* store-door R9 (K2037 (b)): the internal header an ask's grant travels in to the store (store-door's `GRANT_HEADER`). */
 const GRANT_HEADER = "x-bio-grant";
 /* store-door R9 (K2038 (1)): the internal header a stamped session travels in to the store. */
 const SESSION_HEADER = "x-bio-session";
 async function grantAdmit(env, url, op, spec, token) {
   const own = GRANT_OWN_OPS.includes(op);
-  if ((!own && !AI_GRANT_OPS.includes(op)) || (op === "affordances" && url.searchParams.get("target"))) return {};
+  if (!own && !AI_GRANT_OPS.includes(op)) return {};
   const out = await doAnswer(env.STORE.get(env.STORE.idFromName("bio")).fetch(new Request("http://do/aigrantadmit", {
     method: "POST", body: JSON.stringify({ token, op: own ? AI_GRANT_OPS[0] : op, write: own ? false : spec.mutating }) })));
   if (!out.answered) return { silent: { op: "aigrantadmit", correlation: out.correlation } };
@@ -440,6 +449,66 @@ const BODY_STAMPS = Object.freeze(["actorIdentity", "actorViewer", "actorMemberI
                                    "migrationReplay"]);
 /* R36, R23 (K1037): the ops whose refusals state their own HTTP status in `result.status`, which the forward answers. */
 const STATED_STATUS_OPS = Object.freeze(["inbox", "inboxpull", "inboxresolve", "heldsetaside", "heldrestore"]);
+/* R53 (T36; DEC-172, instance-setup R53) and R63: `assistantset` is retired and `securitycount` store-internal, so a
+   request naming either is answered as an op with no spec (R2), whatever any table holds. */
+/* R66 (op-declarations R37; instance-setup R67): `translationdraftrecord` is the door's own store-internal call after a
+   translation draft, never a caller's. */
+const NOT_ROUTED = Object.freeze(["assistantset", "securitycount", "translationdraftrecord"]);
+/* R61 (N714, N707, N710; DEC-169, DEC-173; file-safety R8, R11, R33): file-safety's four byte answers, relayed as the owner
+   answers them, never enveloped; `openwithwarning` takes `warned` from the body (a GET's query `warned`, its JSON, is
+   carried there). R62: a member's or an `ai` credential's `op=capture` GET is answered by the first two. */
+const BYTE_OPS = Object.freeze(["openoriginal", "openwithwarning", "safeview", "safecopy"]);
+/* R61 (file-safety R28; op-declarations R32): `securitytooladd`'s secrets are the body's alone, never the address's. */
+/* R68 (op-declarations R39; credentials R3): `setpassword`'s two passwords are the body's alone, and it names no role in
+   either place (the role is the session's): a `role` in the address leaves with them, and one in the body is deleted
+   (`BODY_DROPPED`). */
+const BODY_ONLY = Object.freeze({ securitytooladd: Object.freeze(["credentials", "config"]),
+                                  setpassword: Object.freeze(["current", "password", "role"]) });
+const BODY_DROPPED = Object.freeze({ setpassword: Object.freeze(["role"]) });
+/* R60, R29 (K1687; op-declarations' families): the acts whose owner reads its actor from the BODY under a key that is not
+   `by` (`bodyBy`, R53, sets that one) — standards' `author`, its proposals' `proposer` — op → key, derived once from the
+   families, so a family's new act is stamped as its others are. */
+const BODY_ACTOR = Object.freeze(Object.fromEntries(Object.values(OP_FAMILIES).flatMap((f) => [
+  ...(f.actor?.at === "body" && f.actor.key !== "by" ? f.acts.map((op) => [op, f.actor.key]) : []),
+  ...(f.proposer?.at === "body" && f.proposer.key !== "by" ? f.proposals.map((op) => [op, f.proposer.key]) : []),
+])));
+const BODY_ACTOR_KEYS = Object.freeze([...new Set(Object.values(BODY_ACTOR))]);
+
+/* R61, R62: A BYTE ANSWER, AS ITS OWNER GAVE IT. A served file (an answer at 200 or 206 carrying its owner's digest header,
+   which no JSON answer carries; a file's own content type may be anything, JSON or text included) is relayed whole
+   — its bytes, content type, length and digest header (`x-capture-sha256` for an original, `x-derived-sha256` for a view
+   or copy) — with `cache-control: no-store`, and `access-control-allow-origin: *` as `op=capture`'s GET carries it; a JSON
+   answer is read through `doAnswer` and enveloped as any answer of the forward (a refusal the owner's, answered as given;
+   a silence a silence). Nothing of it is logged, kept or counted here beyond what every answer meets (file-safety R10). */
+async function byteAnswer(res, op, extra) {
+  const file = res.headers.has("x-capture-sha256") || res.headers.has("x-derived-sha256");
+  if ((res.status === 200 || res.status === 206) && file) {
+    const headers = new Headers(res.headers);
+    headers.set("cache-control", "no-store");
+    if (!headers.has("access-control-allow-origin")) headers.set("access-control-allow-origin", "*");
+    return new Response(res.body, { status: res.status, headers });
+  }
+  const out = await doAnswer(Promise.resolve(res));
+  if (out.refused) return storeRefusal(out, extra);
+  if (!out.answered) return storeSilent(op, out.correlation);
+  const { body, status } = out.reply;
+  return json({ ...body, ...extra }, status);
+}
+/* R64 (N761; F1's rule for digests): a body carrying the digest a door minted or hashed as `secretSha`, beside the request's
+   own fields (already stripped of any `secretSha` or `bySecret` a caller sent, R17). A body that is not JSON is passed as
+   sent, so the store refuses it in its own words and no grant is made; the digest is then in no request at all. */
+function withDigest(text, secretSha) {
+  let b;
+  try { b = text ? JSON.parse(text) : {}; } catch { return text; }
+  if (!b || typeof b !== "object" || Array.isArray(b)) b = {};
+  return JSON.stringify({ ...b, secretSha });
+}
+/* R61: a GET's query `warned` (`{"own_device":true,"no_macros":true}`), read as JSON, else as the text sent, for the body. */
+function warnedOf(url) {
+  const w = url.searchParams.get("warned");
+  if (w === null) return undefined;
+  try { return JSON.parse(w); } catch { return w; }
+}
 export function makeFetch(hooks = {}) {
   /* R25: the door's one outermost catch. */
   /* R50: `seen.session` is set once admission has admitted a member's session, so a refusal answered to it is tallied;
@@ -449,7 +518,7 @@ export function makeFetch(hooks = {}) {
     let res;
     try { res = await fetch(req, env, seen); } catch (e) { res = planeInternalError(e, req); }
     await tallySessionRefusal(res, seen.session);
-    res = await outOfAddress(res, seen, req);
+    res = await tallyOnTheWayOut(res, seen, req, env);
     return await withPagePolicy(res);
   };
   planeDoor.limits = PLANE_LIMITS;
@@ -458,7 +527,7 @@ export function makeFetch(hooks = {}) {
   async function fetch(req, env, seen = { session: null }) {
     const url = new URL(req.url);
     /* R59 (admission R20; F1, K2044): the credential this request presents, read once — the `Authorization` header's, else
-       a JSON body's `token`, else (T35's release only) the address's — and every gate below judges it and no other. */
+       a JSON body's `token`, never the address's — and every gate below judges it and no other. */
     let reqBody = null;
     if (req.method === "POST")
       try { reqBody = JSON.parse((await req.clone().text()) || "null"); } catch { reqBody = null; }
@@ -515,6 +584,8 @@ export function makeFetch(hooks = {}) {
         && (url.pathname === "/" || url.pathname === "") && !url.searchParams.get("op")) {
       const pageNamespace = namespaceGate(url);   /* admission R1 */
       if (pageNamespace) return json(pageNamespace.body, pageNamespace.status);
+      const pageAddress = addressGate(url);   /* R59: admission R20, before the page's read */
+      if (pageAddress) return json(pageAddress.body, pageAddress.status);
       const pageStore = url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio";
       return new Response(setupPage(await hooks.publicInstanceGroup(env, pageStore, "groupidentitypublic")),
         { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
@@ -527,7 +598,7 @@ export function makeFetch(hooks = {}) {
        handler, its stamps and its answer, so the two answer alike. */
     if (Object.hasOwn(OP_ALIASES, op)) op = OP_ALIASES[op];
     seen.op = op;
-    let spec = Object.hasOwn(OPS, op) ? OPS[op] : undefined;   /* R2: the table's own keys only */
+    let spec = Object.hasOwn(OPS, op) && !NOT_ROUTED.includes(op) ? OPS[op] : undefined;   /* R2: the table's own keys only */
     /* R36 (N364; capture R32, R65): a knock resolved to `pulled` is R65's pull, so it is routed as `op=inboxpull` before
        any gate: every gate, stamp and answer it meets is the pull's, the promotion included, and no pull files a capture
        without its bundle. The body is read from a copy; the other statuses stay `inboxresolve`'s. */
@@ -558,6 +629,10 @@ export function makeFetch(hooks = {}) {
     const refused = (r) => json(r.body, r.status);
     const unknownNamespace = namespaceGate(url);
     if (unknownNamespace) return refused(unknownNamespace);
+    /* R59, R28 (admission R20; K2111): a credential or secret in the address, refused C-38.10 directly after R1, before
+       any credential is judged, any public op runs or any store is asked */
+    const inAddress = addressGate(url);
+    if (inAddress) return refused(inAddress);
     /* R28 (K1861 (6)): admission's query gate, which never refuses: what an op may take only from the body (a door's key,
        link and cover; the group key) and a public door's `token` leave the URL before anything reads it (R54, R56). */
     queryGate(url, op, credential);
@@ -640,9 +715,11 @@ export function makeFetch(hooks = {}) {
           for (const k of ["case", "edition"])
             if (url.searchParams.get(k)) q.set(k, (url.searchParams.get(k) || "").trim());
         if (op === "reviewcopy" && url.searchParams.get("limit")) q.set("limit", url.searchParams.get("limit"));
+        /* R64 (N761): the grant's digest crosses in the internal request's body alone, never its query; the door's mark
+           `bySecret` stays in the query, where the owners read it */
+        const digest = bySecret ? await sha256Hex(credential.secret || "") : null;
         if (bySecret) {
           q.set("bySecret", "1");
-          q.set("secretSha", await sha256Hex(credential.secret || ""));
         } else {
           const reader = await caseReader(url, env, "bio", presentedAi.cred, credential);   /* admission's `readerOf` */
           if (reader.silent) return storeSilent(reader.silent, reader.correlation);
@@ -660,15 +737,16 @@ export function makeFetch(hooks = {}) {
           }
           if (reason !== null) q.set("reason", reason);
         }
-        let commentBody = null;
+        let innerBody = digest === null ? null : { secretSha: digest };
         if (op === "reviewcomment") {
           let b = {};
           try { b = req.method === "POST" ? JSON.parse((await req.text()) || "{}") : {}; } catch { b = {}; }
-          commentBody = JSON.stringify({ text: typeof b?.text === "string" ? b.text : "" });
+          innerBody = { text: typeof b?.text === "string" ? b.text : "", ...(innerBody || {}) };
         }
         const out = await doAnswer(stub.fetch(`http://do/${op}?${q}`,
-          commentBody === null ? undefined : { method: "POST", body: commentBody }));
-        return reviewAnswer(out, op, credential.inAddress ? { deprecated: CREDENTIAL_IN_ADDRESS } : {});
+          innerBody === null ? undefined : { method: "POST", headers: { "content-type": "application/json" },
+                                             body: JSON.stringify(innerBody) }));
+        return reviewAnswer(out, op);
       }
       /* The sign-in and the invitation's two steps, relayed to the store's routes (credentials' `login`, membership's
          `invitelook` and `enroll`) and answered through R24's relay (D-679). The invitation ops answer from the store
@@ -815,6 +893,8 @@ export function makeFetch(hooks = {}) {
     /* R44: a grant's digest and the secret door's mark are the door's alone (the mints below, the four grant doors), so a
        caller's copy reaches no admitted op. */
     for (const k of ["secretSha", "bySecret"]) inner.searchParams.delete(k);
+    /* R61 (op-declarations R32): what an op takes from the body alone leaves the address the store is asked at */
+    if (Object.hasOwn(BODY_ONLY, op)) for (const k of BODY_ONLY[op]) inner.searchParams.delete(k);
     /* R53 (K1122, K1674; op-declarations R17–R20): T33'S OPS' STAMPS, each declared key (`OP_STAMPS`) deleted from the
        caller's query and set by one expression: `viewer` every read's; `by` (query) and `bodyBy` (the body's `by`, below)
        the actor in the viewer's form (a session's viewer; a machine `class:<cls>`, an agent `class:ai/<tokenId>`);
@@ -829,7 +909,11 @@ export function makeFetch(hooks = {}) {
       /* T35 (op-declarations R30; K1972): `principal`, the run verbs' expression; `owner`, a selection's owner (the
          stamp a selection scope is read under) */
       principal: viaSession ? sessIdentity : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`,
-      owner: viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}` };
+      owner: viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`,
+      /* R68 (admission R21; T37): who is calling, as on `login` (R58): the window's keyed fingerprint of the connecting
+         address and Cloudflare's country, the door's alone, read only for an op that declares them */
+      ...(declared.includes("source") ? { source: await sourceOf(req, env) } : {}),
+      ...(declared.includes("country") ? { country: countryOf(req) } : {}) };
     /* R59, store-door R9 (K2038 (1)): a stamped `session` is a credential, so it reaches the store in the internal header
        `x-bio-session`, never the address; store-door hands it to the owner's map in process. A caller's `session`
        parameter is deleted for every op. */
@@ -1795,9 +1879,9 @@ export function makeFetch(hooks = {}) {
     }
     /* R28: an op whose handler is a module's, reached through plane's hooks, answers here, after the R14 fences and R16;
        undefined falls through to the forward. */
-    /* R41 (T35; N695, K1717, K1864): `op=agentpack` serves the fences and the rendered pack apart, the very values the
-       untargeted `op=affordances` answer carries for this caller now: the affordances handler is asked untargeted and
-       the door's decoration read off its answer; a refusal or a silence is answered as that handler gives it. */
+    /* R41 (T35, T36; N695, K1717, K1864, K2135): `op=agentpack` alone serves the fences and the rendered pack: the
+       affordances handler is asked untargeted (with no request body: the read takes none) and `packOf` read off its
+       answer; a refusal or a silence is answered as that handler gives it. */
     if (op === "agentpack") {
       const u = new URL(url);
       u.searchParams.set("op", "affordances");
@@ -1806,12 +1890,9 @@ export function makeFetch(hooks = {}) {
         op: "affordances", cls, viaSession, sessMember, sessViewer, sessIdentity, sessRights, sessCaps, aiCred, storeName, stub,
         grantMember: aiCred?.grant ? aiCred.principal : undefined }) : undefined;
       if (!res) return storeSilent("agentpack");
-      const published = await publishAffordances(res, u);
-      let b = null;
-      try { b = await published.clone().json(); } catch { b = null; }
-      if (!b || b.ok !== true || !b.result || typeof b.result !== "object") return published;
-      const { fences, pack, pack_absent } = b.result;
-      return json({ ok: true, fences, pack: pack ?? null, ...(pack ? {} : { pack_absent }), store: storeName, tokenClass: cls }, 200);
+      const served = await packOf(res);
+      if (!served) return res;
+      return json({ ok: true, ...served, store: storeName, tokenClass: cls }, 200);
     }
     /* R58 (K2042 (2)): the promotions after an unpack, Worker-side, one act each, with `op=promote`'s stamps for this
        caller; the archive's project is the request body's `project`, read from a copy before the handler reads the body. */
@@ -1833,13 +1914,37 @@ export function makeFetch(hooks = {}) {
                                           who: archiveWho });
       return json({ ...b, ...done }, res.status);
     }
+    /* R62 (rev. 2 conflict (c); K1888 (3), K1892; DEC-173; BOB's review (8), K2130): A MEMBER'S OPENING OF AN ORIGINAL GOES
+       THROUGH `file-safety`. A member's session's or an `ai` credential's GET of a capture's bytes is answered as
+       `file-safety.openOriginal({captureSha, viewer})` answers it (its R8), at the store's `openoriginal` route — with
+       `warned` in the query, `openwithwarning` with `warned` in its body — never by capture's own read, so no route opens
+       a file file-safety would keep to its safe view. Only the digest and the viewer travel; nothing here keeps, logs or
+       counts who asked for which file (file-safety R10). The binding classes keep capture's own answer (plane's hook). */
+    if (op === "capture" && req.method === "GET" && (viaSession || cls === "ai")) {
+      const warned = warnedOf(url);
+      const at = new URL(`http://x/${warned === undefined ? "openoriginal" : "openwithwarning"}`);
+      at.searchParams.set("capture", (url.searchParams.get("sha256") || "").toLowerCase());
+      at.searchParams.set("viewer", viaSession ? sessViewer : aiCred.principal);
+      return byteAnswer(await stub.fetch(new Request(at, warned === undefined ? { method: "GET" }
+        : { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ warned }) })), op,
+        { store: storeName, tokenClass: cls });
+    }
+    /* R65 (T37; N708, DEC-156; agent-worker R66): a member's own Claude sign-in goes to their own runner, `member` the
+       door's `by` stamp and `step` and `code` the body's (`signin.mjs`); only a member's session reaches the op (its
+       spec). Nothing of it reaches the record but the fact `credentials` R43 keeps. */
+    if (op === "subscriptionsignin") {
+      const stored = (path, init) => doAnswer(stub.fetch(new Request(`http://do/${path}`, init)));
+      const signed = await subscriptionSignin({ env, member: stampOf.by, asked: reqBody, store: stored });
+      if (signed.unread) return signed.unread.refused ? storeRefusal(signed.unread) : storeSilent(op, signed.unread.correlation);
+      return json(signed.body, signed.status);
+    }
     const armed = hooks.gatedOp ? await hooks.gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer,
       sessIdentity, sessRights, sessCaps, aiCred, storeName, stub,
       grantMember: aiCred?.grant ? aiCred.principal : undefined }) : undefined;   /* R53 (K1684): an ask's grant's member */
     if (armed && op === "acquire") return promoteAcquired(armed);
-    if (armed) return op === "affordances" ? publishAffordances(armed, url) : armed;
-    /* R57 (K1983): the rendered pack the door holds for this caller, the untargeted `op=affordances` answer's (R41),
-       sent with a draft that reads nothing of the record; null when none renders. */
+    if (armed) return armed;
+    /* R57 (K1983): the rendered pack the door holds for this caller, `op=agentpack`'s (R41), sent with a draft that reads
+       nothing of the record; null when none renders. */
     async function heldPack(ctx) {
       if (!hooks.gatedOp) return null;
       const u = new URL(url);
@@ -1848,8 +1953,7 @@ export function makeFetch(hooks = {}) {
       try {
         const res = await hooks.gatedOp({ ...ctx, req: new Request(u, { method: "GET" }), url: u, op: "affordances" });
         if (!res) return null;
-        const a = await (await publishAffordances(res, u)).json();
-        return a && a.ok === true && a.result && a.result.pack ? a.result.pack : null;
+        return (await packOf(res))?.pack ?? null;
       } catch { return null; }
     }
     /* Who is acting on a project's roster is decided by the SERVER. Set after
@@ -2084,9 +2188,11 @@ export function makeFetch(hooks = {}) {
     if (passBody) {
       try {
         const b0 = JSON.parse(passBody);
-        /* R59 (admission R20): a body's `token` is the caller's credential, the door's alone, never passed on */
-        if (b0 && typeof b0 === "object" && !Array.isArray(b0) && [...BODY_STAMPS, "token"].some((k) => k in b0)) {
-          for (const k of [...BODY_STAMPS, "token"]) delete b0[k];
+        /* R59 (admission R20): a body's `token` is the caller's credential, the door's alone, never passed on; (K2146;
+           R44) a grant's digest and the secret door's mark are the door's alone too, so no caller supplies either */
+        const strip = [...BODY_STAMPS, "token", "secretSha", "bySecret", ...(BODY_DROPPED[op] ?? [])];
+        if (b0 && typeof b0 === "object" && !Array.isArray(b0) && strip.some((k) => k in b0)) {
+          for (const k of strip) delete b0[k];
           passBody = JSON.stringify(b0);
         }
       } catch { /* the DO will refuse the malformed body with its own words */ }
@@ -2619,18 +2725,18 @@ export function makeFetch(hooks = {}) {
        layer's expression (`QUERY_AUTHOR_ACTIONS` above): the positional identity for a session, `class:<cls>` or
        `class:ai/<tokenId>` for a machine, which standards refuses BY NAME at a declaration or an adoption
        (MACHINE_CANNOT_DECLARE_STANDARD) and labels as machine work on a proposal. An empty POST body is stamped too. */
-    /* K1687: standards' five T33 acts read `author` (`lawpropose` `proposer`) from the body too, as these do. */
-    const standardsT33 = ["lawrelate", "lawwithdraw", "lawpropose", "courtlink", "courttreat"].includes(op);
-    if ((STANDARDS_ACTIONS.includes(op) || standardsT33) && req.method === "POST") {
+    /* K1687: standards' five T33 acts read `author` (`lawpropose` `proposer`) from the body too, as these do; (T35, T36;
+       R60) so does every act and proposal of its family (`BODY_ACTOR`): T35's force, release, adoption, imposition and
+       benchmark acts, which reached it with no author, and the two in-force-through acts (standards R50). */
+    if ((STANDARDS_ACTIONS.includes(op) || Object.hasOwn(BODY_ACTOR, op)) && req.method === "POST") {
       try {
         const b = passBody ? JSON.parse(passBody) : {};
         if (b && typeof b === "object" && !Array.isArray(b)) {
           const who = viaSession ? sessIdentity
             : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
             : `${MACHINE_CLASS_PREFIX}${cls}`;
-          delete b.author;
-          delete b.proposer;
-          if (op === "standardpropose" || op === "lawpropose") b.proposer = who; else b.author = who;
+          for (const k of ["author", "proposer", ...BODY_ACTOR_KEYS]) delete b[k];
+          b[Object.hasOwn(BODY_ACTOR, op) ? BODY_ACTOR[op] : op === "standardpropose" ? "proposer" : "author"] = who;
           passBody = JSON.stringify(b);
         }
       } catch { /* the DO will refuse the malformed body with its own words */ }
@@ -2735,9 +2841,10 @@ export function makeFetch(hooks = {}) {
       if (mint.refusal) return refused(mint.refusal);
       const secret = mint.secret;
       inner.searchParams.set("who", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
-      inner.searchParams.set("secretSha", mint.secretSha);
+      /* R64 (N761; credentials R53): the digest in the internal request's body alone, never its query */
       const minted = await doAnswer(stub.fetch(new Request(inner,
-        { method: req.method, body: JSON.stringify({ ...asked, writes: mint.writes, confinedTo: mint.confinedTo }) })));
+        { method: "POST", body: JSON.stringify({ ...asked, writes: mint.writes, confinedTo: mint.confinedTo,
+                                                  secretSha: mint.secretSha }) })));
       if (minted.refused) return storeRefusal(minted, { op, store: storeName, tokenClass: cls });
       if (!minted.answered) return storeSilent("aicredentialmint", minted.correlation);
       if (!minted.result || minted.result.ok !== true)
@@ -2765,8 +2872,8 @@ export function makeFetch(hooks = {}) {
      * prefix — not an id, and not derivable from one. */
     if (op === "reviewgrant") {
       const { secret, secretSha } = await reviewGrantSecret();   /* admission R13 */
-      inner.searchParams.set("secretSha", secretSha);
-      const issued = await doAnswer(stub.fetch(new Request(inner, { method: req.method, body: passBody })));
+      /* R64 (N761): the digest in the internal request's body alone, never its query */
+      const issued = await doAnswer(stub.fetch(new Request(inner, { method: "POST", body: withDigest(passBody, secretSha) })));
       if (issued.refused) return storeRefusal(issued, { op, store: storeName, tokenClass: cls });
       if (!issued.answered) return storeSilent("reviewgrant", issued.correlation);
       if (!issued.result || issued.result.ok !== true)
@@ -2787,8 +2894,8 @@ export function makeFetch(hooks = {}) {
        while the grant is live, and nothing else. */
     if (op === "templatereviewgrant") {
       const { secret, secretSha } = await reviewGrantSecret();   /* admission R13 */
-      inner.searchParams.set("secretSha", secretSha);
-      const issued = await doAnswer(stub.fetch(new Request(inner, { method: req.method, body: passBody })));
+      /* R64 (N761): the digest in the internal request's body alone, never its query */
+      const issued = await doAnswer(stub.fetch(new Request(inner, { method: "POST", body: withDigest(passBody, secretSha) })));
       if (issued.refused) return storeRefusal(issued, { op, store: storeName, tokenClass: cls });
       if (!issued.answered) return storeSilent("templatereviewgrant", issued.correlation);
       if (!issued.result || issued.result.ok !== true)
@@ -2804,6 +2911,15 @@ export function makeFetch(hooks = {}) {
       }, store: storeName, tokenClass: cls }, 200);
     }
 
+    /* R61: file-safety's byte answers, at the store's route of their own name, relayed as the owner answers them. */
+    if (BYTE_OPS.includes(op)) {
+      const warned = op === "openwithwarning" && req.method === "GET" ? warnedOf(url) : undefined;
+      inner.searchParams.delete("warned");
+      const init = warned === undefined ? { method: req.method, body: passBody }
+        : { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ warned }) };
+      return byteAnswer(await stub.fetch(new Request(inner, withGrant(init))), op, { store: storeName, tokenClass: cls });
+    }
+
     /* REC-198: the list of a project's drafts answers in the review copy's OWN shape — through `reviewAnswer`,
        the function `reviewcopy` answers through — so the dead answer a caller outside the fence receives is the
        single read's, status and bytes, and not this handler's generic envelope. */
@@ -2817,6 +2933,10 @@ export function makeFetch(hooks = {}) {
     if (out.refused) return storeRefusal(out, { store: storeName, tokenClass: cls });
     if (!out.answered) return storeSilent(op, out.correlation);
     const { body, status } = out.reply;
+    /* R65 (credentials R16, R43): a member who disconnects their subscription, or is revoked, is signed out of their own
+       runner, after the act and whatever the runner answers; the act's answer is unchanged. */
+    const leaver = leaverOf(op, reqBody, body.result, stampOf.by);
+    if (leaver) await signoutLeaver(env, leaver);
     /* R58 (K2042 (2)): what an `op=unpack` filed is promoted, one act each, and named in the answer */
     if (op === "unpack" && body.result && body.result.ok === true) {
       const docs = archiveDocuments("unpack", body.result);
@@ -2835,7 +2955,7 @@ export function makeFetch(hooks = {}) {
       const pack = await heldPack({ req, url, env, cls, viaSession, sessMember, sessViewer, sessIdentity, sessRights, sessCaps,
                                     aiCred, storeName, stub });
       const ask = draftAsk(op, asked, { member: sessMember, session: credential.token,
-                                       firsthand: body.result.firsthand === true, pack });
+                                       firsthand: body.result.firsthand === true, pack, owner: body.result });
       const res = await stub.draft(ask);
       let drafted = null;
       try { drafted = await res.json(); } catch { drafted = null; }
@@ -2845,6 +2965,28 @@ export function makeFetch(hooks = {}) {
         await doAnswer(stub.fetch(new Request(`http://do/askusage?viewer=${encodeURIComponent(sessViewer)}`, { method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ mode: "draft", usage: drafted.usage ?? null, calls: drafted.calls }) })));
+      /* (T37; N669, K2201; instance-setup R67) a translation is checked by its owner (its placeholders), never here: its
+         answered draft is handed to the owner's store-internal `translationdraftrecord`, with the door's stamps, and that
+         route's answer is the op's. An ending or a silence is answered as for the other two, and nothing is recorded. */
+      if (op === TRANSLATION_DRAFT) {
+        if (drafted.ok !== true) {
+          const { grant: _g, ...given } = drafted;
+          return json({ ...given, ok: false, store: storeName, tokenClass: cls }, res.status >= 400 ? res.status : 502);
+        }
+        const at = new URL(`http://x/${TRANSLATION_RECORD}`);
+        for (const k of ["by", "viewer"]) if (inner.searchParams.has(k)) at.searchParams.set(k, inner.searchParams.get(k));
+        /* K2238 (3d): the hand-back's body is instance-setup's — the asked `keys` (or `key`) beside what the owner answered
+           and what agent-worker drafted — and it re-runs its refusals before recording anything */
+        const handed = { direction: ask.direction, language: ask.language,
+                         ...(Array.isArray(asked.keys) ? { keys: asked.keys } : {}), ...(asked.key !== undefined ? { key: asked.key } : {}),
+                         words: ask.words, draft: drafted.draft ?? null,
+                         ...(Array.isArray(drafted.not_drafted) ? { not_drafted: drafted.not_drafted } : {}) };
+        const recorded = await doAnswer(stub.fetch(new Request(at, { method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify(handed) })));
+        if (recorded.refused) return storeRefusal(recorded, { store: storeName, tokenClass: cls });
+        if (!recorded.answered) return storeSilent(TRANSLATION_RECORD, recorded.correlation);
+        return json({ ...recorded.reply.body, store: storeName, tokenClass: cls }, recorded.reply.status);
+      }
       const shaped = checkedDraft(ask, drafted, res.status, sessViewer);
       return shaped.body.ok === true ? json({ ok: true, result: shaped.body, store: storeName, tokenClass: cls }, 200)
         : json({ ...shaped.body, store: storeName, tokenClass: cls }, shaped.status);
@@ -2862,7 +3004,7 @@ export function makeFetch(hooks = {}) {
   }
 }
 export { PUBLISHED_STORE, sha256Hex, fingerprint, caseReader, reviewAnswer, captureKey, migrationReplayOf, DRIVE_PROVENANCE_PATH,
-         publishAffordances, storageAbsent, PLANE_LIMITS, PLANE_LIMITS_STATEMENT };
+         storageAbsent, PLANE_LIMITS, PLANE_LIMITS_STATEMENT };
 /* K624 (1), (2): admission's namespace names, read through this door by plane's hooks and by the fleet members' pin
    (`members-pin.test.mjs`); the door itself calls admission directly. */
 export { SCRATCH, NAMESPACES } from "../admission/index.mjs";

@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import * as CG from "../../../src/case-grammar/index.mjs";
 import { doc, sha, NOW, V } from "./helpers.mjs";
-import { manifestFor, caseFileFixture, digest } from "./casefile-fixture.mjs";
+import { manifestFor, caseFileFixture, digest, editionInput } from "./casefile-fixture.mjs";
 
 const V6 = "bio-case-document/6";
 const OLDER = ["bio-case-document/5", "bio-case-document/4", "bio-case-document/3", "bio-case-document/2",
@@ -79,7 +79,8 @@ test("R12 the materials: and material_attestations: blocks round-trip as flat ro
   assert.deepEqual(fm.materials.map((r) => Object.keys(r)), MATERIALS.map(() => [...CG.MATERIAL_FIELDS]), "flat rows");
   assert.deepEqual(fm.material_attestations.map((r) => Object.keys(r)), ATTESTATIONS.map(() => [...CG.MATERIAL_ATTESTATION_FIELDS]));
   const m = CG.materialsOf(fm);
-  assert.deepEqual(m.materials, MATERIALS, "every material as written, included and rests_under as handed");
+  assert.deepEqual(m.materials, MATERIALS.map((r) => ({ ...r, obscured: null })),
+                   "every material as written, included and rests_under as handed; a row stating no obscured answers null");
   assert.deepEqual(m.attestations, [
     ATTESTATIONS[0],
     { ...ATTESTATIONS[1], by: null, signature: null },
@@ -100,7 +101,7 @@ test("R12 the writer says nothing it was not handed: a kind or rests_under outsi
     attestations: [{ ref: "R", by_kind: "friend", by: "x", level: "name", signature: "s" },
                    { ref: "R", by_kind: "member", by: "y", level: "boss", signature: "t" }] }))));
   assert.deepEqual(odd.materials, [{ ref: "R", kind: null, sha: null, text_sha: null, origin: null, archived_copy: null,
-                                     included: false, rests_under: null }]);
+                                     included: false, rests_under: null, obscured: null }]);
   assert.deepEqual(odd.attestations, [
     { ref: "R", by_kind: null, by: "x", level: null, at: null, signature: "s", recorded_in: null },
     { ref: "R", by_kind: "member", by: null, level: null, at: null, signature: null, recorded_in: null }],
@@ -236,11 +237,15 @@ test("R1 DEC-119 a source whose identity is withheld is stated as Withheld with 
 /* ===== R13 ===== */
 
 test("R13 K1318 the case file's format: its token, its kinds, one path per kind read back, and a part fingerprinted over its files", () => {
-  assert.equal(CG.CASE_FILE_FORMAT, "bio-case-file/1");
+  assert.equal(CG.CASE_FILE_FORMAT, "bio-case-file/3");
+  assert.equal(CG.CASE_FILE_FORMAT_V2, "bio-case-file/2");
+  assert.deepEqual([...CG.CASE_FILE_FORMATS_ACCEPTED], ["bio-case-file/3", "bio-case-file/2", "bio-case-file/1"]);
+  assert.deepEqual([...CG.CASE_FILE_V2_KINDS], ["archive", "container", "criteria"]);
+  assert.deepEqual([...CG.CASE_FILE_V3_KINDS], ["obscured"]);
   assert.equal(CG.CASE_FILE_MANIFEST_PATH, "manifest.json");
   assert.deepEqual([...CG.CASE_FILE_KINDS], ["case_document", "case_signature", "complete_edition", "finding",
     "finding_signature", "grading_facts", "passages", "document", "extracted_text", "observation", "attestation",
-    "calculation"]);
+    "calculation", "archive", "container", "criteria", "obscured"]);
   assert.deepEqual([...CG.CASE_FILE_MANIFEST_FIELDS], ["format", "group", "case", "edition", "case_document_sha", "keys", "parts", "files"]);
   assert.deepEqual([...CG.CASE_FILE_FILE_FIELDS], ["path", "sha256", "bytes", "part", "kind"]);
   assert.deepEqual([...CG.CASE_FILE_PART_FIELDS], ["index", "sha256", "bytes"]);
@@ -253,20 +258,29 @@ test("R13 K1318 the case file's format: its token, its kinds, one path per kind 
     grading_facts: [F, `findings/${F}/grading-facts.json`], passages: [F, `findings/${F}/passages.json`],
     document: [R, `materials/${R}/document`], extracted_text: [R, `materials/${R}/extracted.txt`],
     observation: [R, `materials/${R}/observation.md`], attestation: [[R, "account-1.txt"], `attestations/${R}/account-1.txt`],
-    calculation: ["CALC-2026-0001", "calculations/CALC-2026-0001/calculation.json"] };
+    calculation: ["CALC-2026-0001", "calculations/CALC-2026-0001/calculation.json"],
+    archive: [[R, sha("zip")], `materials/${R}/archives/${sha("zip")}`],
+    container: [[R, sha("member")], `materials/${R}/containers/${sha("member")}.json`],
+    criteria: [null, "criteria.json"], obscured: [R, `materials/${R}/obscured`] };
   assert.deepEqual(Object.keys(spelled), [...CG.CASE_FILE_KINDS], "every kind has its path");
   for (const [kind, [key, path]] of Object.entries(spelled)) {
     assert.equal(CG.caseFilePath(kind, key), path, kind);
     const e = CG.caseFileEntryOf(path);
     assert.equal(e.kind, kind);
     if (["finding", "finding_signature", "grading_facts", "passages"].includes(kind)) assert.equal(e.finding, F);
-    if (["document", "extracted_text", "observation"].includes(kind)) assert.equal(e.ref, R);
+    if (["document", "extracted_text", "observation", "archive", "container", "obscured"].includes(kind)) assert.equal(e.ref, R);
   }
+  assert.equal(CG.caseFileEntryOf(`materials/${R}/archives/${sha("zip")}`).archive, sha("zip"));
+  assert.equal(CG.caseFileEntryOf(`materials/${R}/containers/${sha("member")}.json`).member, sha("member"));
   for (const [kind, key] of [["finding", "../x"], ["finding", ""], ["document", "a/b"], ["attestation", "x"], ["nope", "x"],
-                             ["finding", null], ["attestation", ["a", "../b"]]])
+                             ["finding", null], ["attestation", ["a", "../b"]], ["archive", R], ["archive", [R, "ABC"]],
+                             ["container", ["../x", sha("m")]], ["container", [R, sha("m"), 1]], ["obscured", "../x"],
+                             ["obscured", [R, sha("c")]]])
     assert.equal(CG.caseFilePath(kind, key), null, `${kind} ${key}`);
   for (const path of ["manifest.json", "/case.md", "findings/x/other.md", "findings/../x/finding.md", "materials/r/document/x",
-                      "attestations/r/../x", "case.MD", "", null, 7, "findings/.x/finding.md"])
+                      "attestations/r/../x", "case.MD", "", null, 7, "findings/.x/finding.md",
+                      `materials/r/archives/${sha("z")}.json`, `materials/r/containers/${sha("m")}`, "materials/r/archives/abc",
+                      `materials/r/other/${sha("z")}`, "criteria.JSON", `materials/r/obscured/${sha("c")}`, "materials/r/obscured.jpg"])
     assert.equal(CG.caseFileEntryOf(path), null, String(path));
   /* K1318: the part's fingerprint: one line per file of the part, in path order, and the sum of their sizes */
   const files = [{ path: "b", sha256: sha("b"), bytes: 2, part: 1 }, { path: "a", sha256: sha("a"), bytes: 3, part: 1 },
@@ -292,7 +306,7 @@ test("R13 caseFileManifestCheck names every way a manifest departs from the rule
   const file = (i, over) => ({ ...manifest, files: manifest.files.map((f, j) => (j === i ? { ...f, ...over } : f)) });
   const doc0 = manifest.files.findIndex((f) => f.kind === "case_document");
   const cases = [
-    [set("format", "bio-case-file/2"), "format:format"],
+    [set("format", "bio-case-file/4"), "format:format"],
     [set("group", "Lakeshore Tenants"), "group:group"],
     [set("case", ""), "case:case"],
     [set("edition", 0), "edition:edition"],
@@ -333,4 +347,77 @@ test("R13 caseFileManifestCheck names every way a manifest departs from the rule
   const before = JSON.stringify(manifest);
   assert.deepEqual(CG.caseFileManifestCheck(manifest), CG.caseFileManifestCheck(manifest));
   assert.equal(JSON.stringify(manifest), before);
+});
+
+/* ===== R13: bio-case-file/2's kinds, and a /1 file read as written (N717, K2004) ===== */
+
+const R = "INFO-2026-0001-minutes";
+const ZIP = "the outer zip's bytes";
+const INNER = "the inner zip's bytes";
+/* A `/2` manifest: the fixture's files, plus a member's chain (its container record and its archive, then the archive's
+   own container record and its archive, outward) under the minutes' ref, and the edition's criteria. */
+const v2Files = (manifest, extra = []) => [...manifest.files,
+  { path: CG.caseFilePath("container", [R, sha("the minutes' bytes")]), sha256: sha("rec1"), bytes: 4, part: 1, kind: "container" },
+  { path: CG.caseFilePath("archive", [R, sha(INNER)]), sha256: sha(INNER), bytes: 21, part: 1, kind: "archive" },
+  { path: CG.caseFilePath("container", [R, sha(INNER)]), sha256: sha("rec2"), bytes: 4, part: 1, kind: "container" },
+  { path: CG.caseFilePath("archive", [R, sha(ZIP)]), sha256: sha(ZIP), bytes: 21, part: 1, kind: "archive" },
+  { path: CG.caseFilePath("criteria"), sha256: sha("[]"), bytes: 2, part: 1, kind: "criteria" }, ...extra];
+
+test("R13 a bio-case-file/2 manifest carrying each new kind (archive, container, criteria) meets the rule, read as written, and so does a /3 one; one with none of them does too", () => {
+  const { manifest } = caseFileFixture();
+  for (const format of [CG.CASE_FILE_FORMAT_V2, CG.CASE_FILE_FORMAT]) {
+    assert.deepEqual(CG.caseFileManifestCheck(manifestFor(v2Files(manifest), { format })), [], format);
+    assert.deepEqual(CG.caseFileManifestCheck(manifestFor(v2Files(manifest), { format }), { materials: [] }), [], `${format} with its rows`);
+    assert.deepEqual(CG.caseFileManifestCheck(manifestFor(manifest.files, { format })), [], format);
+  }
+  const v2 = manifestFor(v2Files(manifest), { format: CG.CASE_FILE_FORMAT_V2 });
+  /* split into parts: the chain in its own part */
+  const split = manifestFor(v2.files.map((f) => ({ ...f, part: CG.CASE_FILE_V2_KINDS.includes(f.kind) ? 2 : 1 })), { format: CG.CASE_FILE_FORMAT_V2 });
+  assert.deepEqual(CG.caseFileManifestCheck(split), []);
+  /* every path read back names its kind, ref and hash */
+  const read = v2.files.filter((f) => CG.CASE_FILE_V2_KINDS.includes(f.kind)).map((f) => JSON.stringify(CG.caseFileEntryOf(f.path)));
+  assert.deepEqual(new Set(read), new Set([{ kind: "archive", ref: R, archive: sha(INNER) }, { kind: "archive", ref: R, archive: sha(ZIP) },
+    { kind: "container", ref: R, member: sha(INNER) }, { kind: "container", ref: R, member: sha("the minutes' bytes") },
+    { kind: "criteria" }].map((e) => JSON.stringify(e))));
+});
+
+test("R13 the /2 departures: an archive or container under a ref that carries no document, two criteria files, an archive listed under another hash; each named", () => {
+  const { manifest } = caseFileFixture();
+  const rules = (files, format = CG.CASE_FILE_FORMAT_V2) => CG.caseFileManifestCheck(manifestFor(files, { format })).map((d) => d.rule);
+  const O = "INFO-2026-0009-observation";
+  for (const [kind, key] of [["archive", [O, sha("x")]], ["container", [O, sha("y")]], ["archive", ["INFO-2026-0077-gone", sha("x")]]]) {
+    const f = { path: CG.caseFilePath(kind, key), sha256: kind === "archive" ? key[1] : sha("r"), bytes: 1, part: 1, kind };
+    const got = CG.caseFileManifestCheck(manifestFor(v2Files(manifest, [f]), { format: CG.CASE_FILE_FORMAT_V2 }));
+    assert.deepEqual(got.map((d) => d.rule), ["chain_without_document"], `${kind} under ${key[0]}`);
+    assert.match(got[0].detail, /carries no document under that ref/);
+  }
+  const twice = v2Files(manifest).flatMap((f) => (f.kind === "criteria" ? [f, { ...f }] : [f]));
+  assert.equal(rules(twice).includes("criteria"), true, "at most one criteria file");
+  assert.equal(rules(twice).includes("path_twice"), true);
+  const misnamed = v2Files(manifest).map((f) => (f.kind === "archive" ? { ...f, sha256: sha("other") } : f));
+  assert.equal(rules(misnamed).includes("archive_sha"), true, "an archive is named by its own SHA-256");
+  /* a container at an archive's path, or the reverse, is a path_kind departure */
+  const swapped = v2Files(manifest).map((f) => (f.kind === "container" ? { ...f, kind: "archive" } : f));
+  assert.equal(rules(swapped).includes("path_kind"), true);
+});
+
+test("R13 a bio-case-file/1 case file is read as written: one naming none of /2's kinds meets the rule, one naming any is a departure", () => {
+  const { manifest } = caseFileFixture();
+  assert.equal(manifest.format, CG.CASE_FILE_FORMAT_V1);
+  assert.deepEqual(CG.caseFileManifestCheck(manifest), [], "an older /1 manifest still passes");
+  for (const kind of CG.CASE_FILE_V2_KINDS) {
+    const files = v2Files(manifest).filter((f) => !CG.CASE_FILE_V2_KINDS.includes(f.kind) || f.kind === kind);
+    const got = CG.caseFileManifestCheck(manifestFor(files, { format: CG.CASE_FILE_FORMAT_V1 }));
+    assert.equal(got.some((d) => d.rule === "kind_format" && d.detail.includes(kind) && d.detail.includes("bio-case-file/2's")), true, `${kind} in a /1 manifest`);
+    assert.equal(got.every((d) => d.rule === "kind_format"), true, JSON.stringify(got));
+  }
+});
+
+test("R13 R14 the complete edition renders from the case file's other files only: adding the /2 kinds leaves its bytes unchanged", () => {
+  const { manifest, files } = caseFileFixture();
+  const base = CG.completeEditionOf(editionInput(manifest, files));
+  const more = new Map(files);
+  const v2 = manifestFor(v2Files(manifest), { format: CG.CASE_FILE_FORMAT_V2 });
+  for (const f of v2.files) if (!more.has(f.path)) more.set(f.path, f.kind === "criteria" ? "[]" : "bytes");
+  assert.equal(CG.completeEditionOf(editionInput(v2, more)), base);
 });

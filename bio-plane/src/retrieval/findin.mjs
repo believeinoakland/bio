@@ -17,6 +17,7 @@
  * whole document in its place (a reader's silence is not a member's citation of the whole). */
 import { isCalendarDate } from "../civil-time/index.mjs";
 import { parseFigure } from "../calc-grammar/index.mjs";
+import { extentRelation } from "../content/index.mjs";
 
 /* R74: the kinds, closed (DEC-164 (2)). */
 export const FIND_KINDS = Object.freeze(["people", "money", "dates", "requirements", "events", "term"]);
@@ -35,6 +36,14 @@ export const FIND_EVENT_TYPES = Object.freeze(["meeting_minutes", "meeting_agend
 export const FIND_PEOPLE_KINDS = Object.freeze(["person", "office"]);
 /* The one origin every match carries ("Found by search", DEC-164 (4)). */
 export const FIND_ORIGIN = "search";
+/* R73 (N715; DEC-164 (4)): the recording modules whose `recordedBy` reads a find calls, in the modules' total order,
+   ahead of every read R76 registers; the bound each read is called with; what stands in `recorded_not_read` while no
+   later module is registered. */
+export const RECORDED_BY_MODULES = Object.freeze(["events", "standards", "money", "people"]);
+export const RECORDED_BY_LIMIT = 500;
+export const RECORDED_NONE_REGISTERED = "no later module's records were read: none registered";
+/* R73: the relations under which a recorded item is the match's: the same extent, one inside it, one around it. */
+const RECORDED_RELATIONS = Object.freeze(["same", "narrower", "wider"]);
 
 /* R75 (DEC-99): the matchers' words, held per language in this one place and nowhere else in this module's code: a
    frozen map from a BCP 47 primary language subtag to its vocabularies. A language is added by adding its set, with
@@ -190,6 +199,7 @@ export function matchRequirements(text, set) {
 
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 const A1 = /^\$?([A-Z]{1,3})\$?(\d{1,7})$/i;
+const PLAIN_NUMBER = new RegExp(`^(?:${NUMBER})$`);
 const colNum = (c) => [...c.toUpperCase()].reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0);
 
 export class Finder {
@@ -218,13 +228,17 @@ export class Finder {
         if (!d.reading && !d.units.length && !d.cells) { skip(c, "not extracted: no reading of this capture is held"); continue; }
         if (!d.units.length && !d.cells) { skip(c, "no text: this capture's reading holds no text to search"); continue; }
         const lang = d.language || language;
-        const set = lang ? FIND_MATCHERS[lang] : null;
+        const set = lang && Object.hasOwn(FIND_MATCHERS, lang) ? FIND_MATCHERS[lang] : null;
         if (!set) {
           skip(c, lang ? `no matcher for ${lang} yet`
             : "no matcher for this capture's language yet: neither its reading nor the active profiles state a language");
           continue;
         }
-        if (kind === "requirements") this.#requirements(c, d, set, add);
+        if (kind === "requirements") {
+          /* Its words are read from the text units alone: a reading holding only typed cells is not read for it. */
+          if (!d.units.length) skip(c, "no text: this capture's reading holds typed cells but no text unit to read sentences from");
+          else this.#requirements(c, d, set, add);
+        }
         else this.#figures(kind, c, d, set, add);
       }
       const truncated = acc.truncated || acc.items.length > limit;
@@ -234,6 +248,46 @@ export class Finder {
       return { kind, items, count: items.length, truncated, nothing, ...(nothing ? { says: "Nothing here" } : {}),
                not_read: acc.not_read };
     });
+  }
+
+  /** R73, R76 (N715; K1941, K2063): who recorded each match. Every read (`r.recordedReads()`: the four recording
+   *  modules' `recordedBy`, then each registered one) is called once per capture of `captures`, under `viewer`, with
+   *  `limit` RECORDED_BY_LIMIT; each item whose extent stands to the match's (a table item's `table.extent`) as `same`,
+   *  `narrower` or `wider` (`content.extentRelation`) is in the match's `recorded`, `relation` that answer. A read
+   *  that throws, rejects, refuses or answers another shape is in `not_read` with why and changes nothing else; a
+   *  promise is never awaited (a find is synchronous), and its rejection is caught. Answers `{read, not_read}`. */
+  recorded(kinds, captures, viewer) {
+    const reads = this.r.recordedReads();
+    const got = new Map(captures.map((c) => [c.capture_sha, []]));
+    const read = [], not_read = [];
+    for (const rd of reads) {
+      if (!rd.read) { not_read.push({ module: rd.module, why: rd.why, captures: captures.length }); continue; }
+      let failed = null, n = 0;
+      for (const c of captures) {
+        const a = callRead(rd.read, c.capture_sha, viewer);
+        if (a.why) { n++; failed = failed || a.why; continue; }
+        got.get(c.capture_sha).push({ module: rd.module, items: a.items, truncated: a.truncated });
+      }
+      if (failed) not_read.push({ module: rd.module, why: failed, captures: n });
+      else if (captures.length) read.push(rd.module);
+    }
+    if (!reads.some((rd) => rd.registered)) not_read.push({ module: null, why: RECORDED_NONE_REGISTERED });
+    for (const k of kinds)
+      for (const m of k.items) {
+        const answers = got.get(m.capture_sha) || [];
+        const at = m.table ? m.table.extent : m.extent;
+        m.recorded = [];
+        for (const a of answers)
+          for (const it of a.items) {
+            const relation = relationOf(at, it.extent);
+            if (!RECORDED_RELATIONS.includes(relation)) continue;
+            m.recorded.push({ module: a.module, record: it.record ?? null, kind: it.kind ?? null, field: it.field ?? null,
+                              extent: it.extent ?? null, relation, by: it.by ?? null, at: it.at ?? null,
+                              withdrawn: it.withdrawn === true });
+          }
+        if (answers.some((a) => a.truncated)) m.recorded_truncated = true;
+      }
+    return { read, not_read };
   }
 
   /* One capture's reading (content type, language, typed cells, items) and its text units in reading order. */
@@ -259,11 +313,17 @@ export class Finder {
       ...(kind === "money" ? { figure: m.figure, ...(m.figure ? {} : { figure_why: m.figure_why }) }
         : { date: m.date, ...(m.date_why ? { date_why: m.date_why } : {}),
             ...(m.deadline ? { deadline: true, period: m.period } : {}) }) });
-    const sheets = d.cells ? new Set(Object.keys(d.cells).filter((s) => Array.isArray(d.cells[s]))) : new Set();
+    const { sheets, tables } = heldCells(d.cells);
+    /* N724 (K1972): a document table whose cells the reading holds: its date or amount columns are read from the
+       cells, and the paragraphs of those columns' cells are not matched again (one result, never one per cell). */
+    const docTables = tables.map((t) => ({ ...t, ...this.#columns(kind, t.cells, set) }));
+    const skipped = paragraphsOf(docTables, d.units);
     for (const u of d.units) {
       const e = u.extentObj;
       /* A sheet whose typed cells the reading holds is read by its cells below, not by its rendered text. */
       if (e && e.kind === "sheet-range" && sheets.has(e.sheet)) continue;
+      if (e && e.kind === "doc-table" && docTables.some((t) => t.table === e.table)) continue;
+      if (skipped.has(u)) continue;
       const found = match(u.text, set);
       if (!found.length) continue;
       if (u.extent_kind === "doc-table") {
@@ -277,17 +337,41 @@ export class Finder {
       }
       for (const m of found) add(item(m, u.text, e));
     }
+    for (const t of docTables)
+      for (const col of t.columns) {
+        const extent = { kind: "doc-table", table: t.table };
+        add({ kind, table: { capture_sha: c.capture_sha, extent, column: col.col, rows: col.rows },
+              words: col.words, capture_sha: c.capture_sha, extent, origin: FIND_ORIGIN });
+      }
     for (const sheet of [...sheets].sort()) this.#sheet(kind, c, sheet, d.cells[sheet], set, match, add, item);
   }
 
-  /* One sheet's typed cells: the first row read is its header; a column every one of whose other cells is a date (or
-     an amount: a number under a header naming a currency, or a value the money matcher reads whole) is one table
-     result; every other cell is matched on its own words. */
+  /* One sheet's typed cells: each date or amount column (`#columns`) is one table result; every other cell is matched
+     on its own words. */
   #sheet(kind, c, sheet, cells, set, match, add, item) {
+    const { held, columns, done } = this.#columns(kind, cells, set);
+    for (const col of columns) {
+      const extent = { kind: "sheet-range", sheet, range: `${col.col}${col.first}:${col.col}${col.last}` };
+      add({ kind, table: { capture_sha: c.capture_sha, extent, column: col.col, rows: col.rows },
+            words: col.words, capture_sha: c.capture_sha, extent, origin: FIND_ORIGIN });
+    }
+    for (const x of held) {
+      if (done.has(x) || x.cell.value == null) continue;
+      const text = String(x.cell.value);
+      for (const m of match(text, set)) add(item(m, text, { kind: "sheet-cell", sheet, cell: `${x.at.col}${x.at.row}` }));
+    }
+  }
+
+  /* A grid's typed cells (a sheet's, or a document table's, each cell's `source.cell` in A1): the first row read is its
+     header; a column every one of whose other cells is a date (or an amount: a number, or a value written as a plain
+     number, under a header naming a currency, or a value the money matcher reads whole) is one result. Answers the
+     cells placed (`held`), the columns (`{col, words, rows, first, last}`) and the cells they take (`done`). */
+  #columns(kind, cells, set) {
     const at = (cell) => { const m = cell && cell.source && typeof cell.source.cell === "string" ? A1.exec(cell.source.cell) : null;
                            return m ? { col: m[1].toUpperCase(), row: Number(m[2]) } : null; };
     const held = cells.map((cell) => ({ cell, at: at(cell) })).filter((x) => x.at);
-    if (!held.length) return;
+    const columns = [], done = new Set();
+    if (!held.length) return { held, columns, done };
     const top = Math.min(...held.map((x) => x.at.row));
     const cols = new Map();
     for (const x of held) {
@@ -299,8 +383,8 @@ export class Finder {
       || (x.cell.type === "text" && whole(x.cell.value, matchDates(String(x.cell.value ?? "").trim(), set).filter((m) => m.date)));
     const headerMoney = (h) => !!h && patterns(set).currencyMark.test(String(h.value ?? ""));
     const isAmount = (x, h) => (x.cell.type === "number" && headerMoney(h))
+      || (x.cell.type === "text" && headerMoney(h) && PLAIN_NUMBER.test(String(x.cell.value ?? "").trim()))
       || (x.cell.type === "text" && whole(x.cell.value, matchMoney(String(x.cell.value ?? "").trim(), set)));
-    const done = new Set();
     for (const col of [...cols.keys()].sort((a, b) => colNum(a) - colNum(b))) {
       const { header, body } = cols.get(col);
       const filled = body.filter((x) => x.cell.value != null && String(x.cell.value).trim() !== "");
@@ -308,17 +392,11 @@ export class Finder {
       const fits = kind === "dates" ? filled.every(isDate) : filled.every((x) => isAmount(x, header));
       if (!fits) continue;
       const rows = filled.map((x) => x.at.row);
-      const extent = { kind: "sheet-range", sheet, range: `${col}${Math.min(...rows)}:${col}${Math.max(...rows)}` };
-      add({ kind, table: { capture_sha: c.capture_sha, extent, column: col, rows: filled.length },
-            words: cutWords(header && header.value != null && String(header.value).trim() ? header.value : `column ${col}`),
-            capture_sha: c.capture_sha, extent, origin: FIND_ORIGIN });
+      columns.push({ col, rows: filled.length, first: Math.min(...rows), last: Math.max(...rows),
+                     words: cutWords(header && header.value != null && String(header.value).trim() ? header.value : `column ${col}`) });
       for (const x of body) done.add(x);
     }
-    for (const x of held) {
-      if (done.has(x) || x.cell.value == null) continue;
-      const text = String(x.cell.value);
-      for (const m of match(text, set)) add(item(m, text, { kind: "sheet-cell", sheet, cell: `${x.at.col}${x.at.row}` }));
-    }
+    return { held, columns, done };
   }
 
   #requirements(c, d, set, add) {
@@ -352,12 +430,18 @@ export class Finder {
       if (data.get(c.capture_sha).reading) read.push(c.capture_sha);
       else skip(c, "not extracted: no reading of this capture is held");
     }
+    if (!read.length) return;
+    /* DEC-98: a page whose names could not be read is in `not_read`, never "Nothing here". */
+    const unread = (why) => { for (const c of captures) if (read.includes(c.capture_sha)) skip(c, why); };
     const entities = this.r.entitiesFor();
-    if (!read.length || !entities) return;
+    if (!entities) { unread("not read: the followed people and offices could not be read"); return; }
     /* entities R52 (K1972): R17's candidates for every followed person and office over this page's captures, in one
        bounded read; its page is this kind's own, so its `truncated` is this kind's. */
     const ans = entities.namingIn({ captureShas: read, kinds: [...FIND_PEOPLE_KINDS], limit, viewer });
-    if (!ans || ans.ok !== true) return;
+    if (!ans || ans.ok !== true) {
+      unread(`not read: the followed people and offices could not be read${ans && ans.reason ? ` (${String(ans.reason).slice(0, 80)})` : ""}`);
+      return;
+    }
     if (ans.truncated) acc.truncated = true;
     const byId = new Map((ans.entities || []).map((e) => [e.entity_id, { entity_id: e.entity_id, kind: e.entity_kind, label: e.entity_label }]));
     const found = (ans.candidates || []).filter((cand) => byId.has(cand.entity_id))
@@ -419,4 +503,56 @@ export function extentOfSource(source) {
     return { extent, extent_why: null };
   }
   return { extent: null, extent_why: "the reading does not say where in the document this was read" };
+}
+
+/* R73 (N715): one recorder read for one capture: its items and `truncated`, or `{why}` when it threw, answered a
+   promise (never awaited: a find is synchronous; a rejection is caught here), refused, or answered another shape than
+   `events` R49's. */
+function callRead(read, captureSha, viewer) {
+  let a;
+  try { a = read({ captureSha, limit: RECORDED_BY_LIMIT, viewer }); }
+  catch (e) { return { why: `the read threw: ${String((e && e.message) || e).slice(0, 200)}` }; }
+  if (a && typeof a.then === "function") {
+    Promise.resolve(a).catch(() => {});
+    return { why: "the read answered a promise: it is called in process, synchronously" };
+  }
+  if (a && typeof a === "object" && a.ok === false)
+    return { why: `the read refused: ${String(a.code ?? a.reason ?? "no reason given").slice(0, 200)}` };
+  if (!a || typeof a !== "object" || a.ok !== true || !Array.isArray(a.items)
+      || !a.items.every((it) => it && typeof it === "object" && !Array.isArray(it)))
+    return { why: "the read answered another shape than events R49's" };
+  return { items: a.items, truncated: a.truncated === true };
+}
+
+/* R73: how a recorded item's extent (content's canonical form, or an extent object) stands to a match's. */
+function relationOf(match, extent) {
+  const e = typeof extent === "string" ? safeJson(extent) : extent;
+  try { return extentRelation(match, e); } catch { return "unreadable"; }
+}
+
+/* A reading's `cells` split by what holds them: a workbook's sheets (by name) and a document's tables (N724; by
+   their `doc-table` ordinal, each table's cells all naming that table), in table order. */
+function heldCells(cells) {
+  const sheets = new Set(), tables = [];
+  for (const [name, list] of Object.entries(cells || {})) {
+    if (!Array.isArray(list)) continue;
+    const src = list.map((c) => (c && c.source && typeof c.source === "object" ? c.source : null));
+    const table = src.length && src[0] && src[0].kind === "doc-table" && Number.isInteger(src[0].table) ? src[0].table : null;
+    if (table !== null && src.every((x) => x && x.kind === "doc-table" && x.table === table)) tables.push({ table, ref: name, cells: list });
+    else sheets.add(name);
+  }
+  return { sheets, tables: tables.sort((a, b) => a.table - b.table) };
+}
+
+/* N758 (K2118, K2197): the paragraph units (`doc-para`) of the cells a document table's date or amount columns took,
+   which are not matched again. Each cell names the ordinals of the paragraphs its text was read from (`paras`,
+   office-readers R11, carried by reading-pipeline R28), so its paragraphs are found exactly, a vertically merged cell's
+   included, never by matching its lines. An ordinal naming no unit (a whitespace-only paragraph, or one the wire bound
+   dropped) is passed over; a cell naming no `paras` (a reading made before N758) names no paragraph. */
+function paragraphsOf(docTables, units) {
+  const taken = new Set();
+  for (const t of docTables)
+    for (const x of t.done)
+      for (const p of Array.isArray(x.cell.paras) ? x.cell.paras : []) if (Number.isInteger(p)) taken.add(p);
+  return new Set(units.filter((u) => u.extentObj && u.extentObj.kind === "doc-para" && taken.has(u.extentObj.para)));
 }

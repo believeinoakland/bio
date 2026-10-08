@@ -3,7 +3,7 @@
  * (`bio-calc/1`) over declared canonical tables, money facts, cited figures and counts over the record, with its
  * denominators, grade facts and method, stored under its result key and recomputed at acceptance, at publication and
  * in the checker, never on a read (R8). It holds the tables (R1–R3), the money ingest writer (R14), the recorded draw
- * (R18), fact-based rankings (R17), the patterns of application a member measures (R32–R37, `./application.mjs`:
+ * (R18) with the spot-check visits to its items and the estimate over them (R38–R40), fact-based rankings (R17), the patterns of application a member measures (R32–R37, `./application.mjs`:
  * never the machine's, never "Noticed") and the machine's patterns (R22, R23, `./patterns.mjs`), held in the hypothesis
  * layer and shown only after a measured false-alarm rate. A total is a `CALC-` and is never re-entered as a money fact
  * (R13); `compare` yields a labelled computed fact, never a verdict (R5, R27).
@@ -29,8 +29,8 @@
  * catalogue row yet (T34 stamps T33's new rows): each answers `{ok: false, reason, detail}`. */
 
 import { canonicalJson, sha256HexSync, isHypothesisId, isMachineIdentity, idPattern } from "../record-grammar/index.mjs";
-import { checkRecipe, evaluate as evaluateRecipe, resultKey, METHOD, parseFigure, draw as drawFrame, interval }
-  from "../calc-grammar/index.mjs";
+import { checkRecipe, evaluate as evaluateRecipe, resultKey, METHOD, parseFigure, draw as drawFrame, interval, divide,
+  multiply, RATIO_DEFAULT } from "../calc-grammar/index.mjs";
 import { validAt, fiscalPeriod, isCalendarDate, localDay } from "../civil-time/index.mjs";
 import { recognise } from "../idspaces.mjs";
 import { recordOf } from "../record-core/index.mjs";
@@ -71,6 +71,17 @@ export const ENGINE_STEP = "third-party engine";
 export const USES_MAX = Math.floor(TABLE_MAX_CELLS / USES_FIELDS.length);
 /** R11: the cause each listener is told. */
 export const INPUT_CHANGED = "calculation_input_changed";
+/** R18 (T36): the most characters a draw's question holds. */
+export const QUESTION_MAX = 2000;
+/** R38: a visit's finding against its draw's question. */
+export const VISIT_FINDINGS = Object.freeze(["yes", "no", "could_not_tell"]);
+/** R39: a drawn item's standing over its visits. */
+export const STANDINGS = Object.freeze(["yes", "no", "disagree", "could_not_tell", "not_visited"]);
+/** R40: what the interval over visits assumes, stated with every estimate over a draw that carries a question. */
+export const VISIT_ASSUMPTION = "The interval treats the judged items as a simple random draw from the set: it assumes that the drawn items not judged are like those judged, and it says nothing else of them.";
+/** R40: the canonical table an estimate over visits is computed over, one row per drawn item (R9: its bytes). */
+const STANDING_FIELDS = Object.freeze([{ name: "item", type: "string" }, { name: "standing", type: "string" }, { name: "visits", type: "number" }]);
+
 /** R17 (K1471, K1473): words naming a judgment, never a measured quantity a ranking may order by. */
 const JUDGMENT_WORDS = /\b(score|importance|important|suspicion|suspicious|significance|significant|severity|severe|risk|centrality|central|most connected|influence|influential|ranking score)\b/i;
 /** R17: fields naming a kind of link: a measure over rows of more than one is a measure across mixed kinds. */
@@ -212,6 +223,35 @@ function firstDifference(a, b, path = "results") {
     for (let i = 0; i < a.length; i++) { const d = firstDifference(a[i], b[i], `${path}[${i}]`); if (d) return d; }
   }
   return { path, stored: a ?? null, recomputed: b ?? null };
+}
+
+/* R39: a drawn item's standing over its visits' findings: `yes` or `no` when those finding yes or no all agree (a
+   could_not_tell beside them not counting against them), `disagree` when they find both (both kept, never picked,
+   U115), `could_not_tell` when every visit finds that, `not_visited` when there is none. */
+function standingOf(findings) {
+  const yes = findings.includes("yes"), nay = findings.includes("no");
+  if (yes && nay) return "disagree";
+  if (yes) return "yes";
+  if (nay) return "no";
+  return findings.length ? "could_not_tell" : "not_visited";
+}
+
+/* R38, R39: a visit as it is answered: its visitor, the testimony's observed_at, the instant it was recorded, its grade
+   the testimony's (D), never stronger. */
+const visitAnswer = (v) => ({ visit: v.seq, item: v.item, finding: v.finding, testimony: v.testimony, exhibits: parse(v.exhibits_json) || [],
+  visitor: v.visitor, observed_at: v.observed_at ?? null, recorded_at: v.recorded_at, grade: TESTIMONY });
+
+/* R40: the recipe of an estimate over visits, over the draw input `name` (one row per drawn item with its standing):
+   the share of judged items found yes, with its denominator, and the items that could not be judged, each counted by
+   its reason. Only calc-grammar computes (R25). */
+function visitRecipe(name) {
+  const apart = ["could_not_tell", "disagree", "not_visited"].flatMap((s) => [
+    { op: "select", from: name, where: [{ field: "standing", test: "eq", value: s }], as: `${s}_items` },
+    { op: "count", from: `${s}_items`, as: s }]);
+  return { method: METHOD, inputs: [{ name, kind: "table" }], steps: [
+    { op: "select", from: name, where: [{ field: "standing", test: "in", value: ["yes", "no"] }], as: "judged_items" },
+    { op: "select", from: "judged_items", where: [{ field: "standing", test: "eq", value: "yes" }], as: "yes_items" },
+    { op: "share", part: "yes_items", whole: "judged_items", as: "share_judged" }, ...apart], output: "share_judged" };
 }
 
 export class Calculations {
@@ -686,6 +726,17 @@ export class Calculations {
       } else {
         const d = typeof ref === "string" ? this.#one(`SELECT * FROM calc_draws WHERE draw_key=?`, ref) : null;
         if (!d || !this.#sees(d.project, viewer)) { missing(inp.name, String(ref)); break; }
+        if (d.question !== null && d.question !== undefined) {
+          /* R40: a draw that carries a question is bound as its visits stand, one row per drawn item with its standing,
+             its bytes that table's canonical CSV; a visit the viewer may not see withholds it whole (R10, R39) */
+          if (!this.#seesDraw(d, viewer)) { missing(inp.name, String(ref)); break; }
+          const st = this.#standingTable(d);
+          bound[inp.name] = st.table; hashes[inp.name] = st.sha; canon[inp.name] = st.text;
+          refs.push({ name: inp.name, kind, ref: d.draw_key });
+          described.push({ name: inp.name, kind, ref: d.draw_key, draw: { frame_size: d.frame_size, n: d.n, seed: d.seed, method: d.method, set: d.set_sha, question: d.question },
+            grade: TESTIMONY, why: "its items are judged by members' visits, each testimony (D), and nothing raises it (R40)" });
+          continue;
+        }
         const sample = parse(d.sample_json) || [];
         let table;
         if (d.set_kind === "table") {
@@ -704,7 +755,7 @@ export class Calculations {
         bound[inp.name] = table; held(inp.name, { set: d.set_sha, kind: d.set_kind, seed: d.seed, n: d.n, method: d.method });
         if (hashes[inp.name] !== d.draw_key) { hashes[inp.name] = d.draw_key; canon[inp.name] = null; }
         refs.push({ name: inp.name, kind, ref: d.draw_key });
-        described.push({ name: inp.name, kind, ref: d.draw_key, draw: { frame_size: d.frame_size, n: d.n, seed: d.seed, method: d.method, set: d.set_sha },
+        described.push({ name: inp.name, kind, ref: d.draw_key, draw: { frame_size: d.frame_size, n: d.n, seed: d.seed, method: d.method, set: d.set_sha, question: null },
           grade: null, not_graded: true, why: "a recorded draw is graded as the set it was drawn from; the draw itself is a mechanical, reproducible step" });
       }
     }
@@ -775,8 +826,19 @@ export class Calculations {
     if (!CALCULATION_KINDS.includes(kind)) return no("UNKNOWN_KIND", `a calculation's kind is one of ${CALCULATION_KINDS.join(", ")}. Nothing was written.`);
     const money = described.filter((d) => d.kind === "money");
     if (kind === "estimate") {
-      if (!described.some((d) => d.kind === "draw"))
+      const draws = described.filter((d) => d.kind === "draw");
+      if (!draws.length)
         return no("ESTIMATE_WITHOUT_DRAW", "a population estimate is answered only over a recorded draw (a seeded draw over a frozen set), with its exact interval (K1448). Nothing was written.");
+      const asked = draws.find((d) => d.draw.question !== null);
+      if (asked) {
+        /* R40: an estimate over visits runs its own recipe over the one draw whose items members visited */
+        if (described.length !== 1)
+          return no("ESTIMATE_INPUTS", "an estimate over visits takes one input: the draw, carrying its question, whose items members visited. Nothing was written.");
+        const composed = visitRecipe(asked.name);
+        if (recipe !== null && recipe !== undefined && canonicalJson(recipe) !== canonicalJson(composed))
+          return no("RECIPE_NOT_TEMPLATE", "an estimate over visits runs the recipe composed over its draw's standings (the share of judged items found yes, and those not judged counted by their reason); the recipe given is not it. Nothing was written.");
+        return { ok: true, recipe: composed, visits: { input: asked.name, draw: asked.draw } };
+      }
     }
     if (kind === "unit_cost") {
       if (money.length !== 1) return no("NO_BUYS", "a unit cost is one money input's amount over what it buys. Nothing was written.");
@@ -1012,7 +1074,28 @@ export class Calculations {
       results.bases = plan.bases;
       results.bases_says = `adopted on ${plan.bases.adopted.join(", ")} basis; actual on ${plan.bases.actual.join(", ")} basis`;
     }
-    if (kind === "estimate") {
+    if (kind === "estimate" && plan && plan.visits) {
+      /* R40: share_judged, the interval over the judged items, estimate_count, what was counted apart, the assumption */
+      const at = (n) => (e.trace.find((t) => t.step === n) || {}).output ?? null;
+      const whole = (f) => (plain(f) && f.precision === "exact" && f.sign === "+" && /^\d+$/.test(f.value || "") ? Number(f.value) : null);
+      const share = e.result;
+      const judged = plain(share) ? whole(share.denominator) : null, yes = plain(share) ? whole(share.numerator) : null;
+      if (!judged || yes === null)
+        return no("NOTHING_JUDGED", "no drawn item is judged yet: no item's visits find yes or no, so there is nothing to estimate from. Nothing was written.", { counted_apart: { could_not_tell: at("could_not_tell"), disagree: at("disagree"), not_visited: at("not_visited") } });
+      const N = plan.visits.draw.frame_size;
+      const confidence = terms && terms.confidence !== undefined ? String(terms.confidence) : "0.95";
+      const iv = interval({ frame_size: N, sample_size: judged, successes: yes, confidence });
+      if (iv.refused) return no(iv.refused, `the estimate's interval cannot be computed: ${iv.why}. Nothing was written.`);
+      const fig = (k) => ({ value: String(k), sign: "+", precision: "exact" });
+      results.share_judged = share;
+      results.interval = { low: iv.low, high: iv.high, low_share: divide(fig(iv.low), fig(N), RATIO_DEFAULT), high_share: divide(fig(iv.high), fig(N), RATIO_DEFAULT),
+        confidence, frame_size: N, sample_size: judged, successes: yes, method: iv.method, seed: plan.visits.draw.seed,
+        says: `low and high are counts of the set's ${N} items, and beside them shares of it, over the ${judged} drawn items judged` };
+      results.estimate_count = multiply(share.value, fig(N));
+      results.counted_apart = { could_not_tell: at("could_not_tell"), disagree: at("disagree"), not_visited: at("not_visited"), steps: counted,
+        says: "drawn items that could not be judged, counted apart by their reason, never as no and never as zero" };
+      results.assumption = VISIT_ASSUMPTION;
+    } else if (kind === "estimate") {
       const dr = b.inputs.find((d) => d.kind === "draw").draw;
       const succ = e.result;
       const x = plain(succ) && succ.precision === "exact" && succ.sign === "+" && /^\d+$/.test(succ.value || "") ? Number(succ.value) : null;
@@ -1167,6 +1250,47 @@ export class Calculations {
     return { ok: true, calc_id: c.calc_id, accepted_by: by, accepted_at: at, recompute_status: "agrees" };
   }
 
+  /* R10, R39: may `viewer` see a recorded draw's project and the set it was drawn from (a table's sight, or every drawn
+     member of a record set)? Synchronous. */
+  #seesDrawn(d, viewer) {
+    if (!d || !this.#sees(d.project, viewer)) return false;
+    if (d.set_kind === "table") { const t = this.#one(`SELECT sha, bundle_id FROM calc_tables WHERE sha=?`, d.set_sha); return !!t && this.#seesTable(t, viewer); }
+    return (parse(d.sample_json) || []).every((id) => this.#sees(id, viewer));
+  }
+
+  /* R38, R39: may `viewer` see a capture the register holds (provenance R48: its bundle's sight)? */
+  #seesCapture(captureSha, viewer) {
+    const r = typeof captureSha === "string" && captureSha ? this.#one(`SELECT bundle_id FROM register WHERE capture_sha=?`, captureSha) : null;
+    return !!r && this.#sees(r.bundle_id, viewer);
+  }
+
+  /* R10, R39: a draw `viewer` may see: its set, and every visit's testimony and exhibits. */
+  #seesDraw(d, viewer) {
+    if (!this.#seesDrawn(d, viewer)) return false;
+    for (const v of this.#rows(`SELECT testimony, exhibits_json FROM calc_visits WHERE draw_key=?`, d.draw_key))
+      if (!this.#seesCapture(v.testimony, viewer) || !(parse(v.exhibits_json) || []).every((x) => this.#seesCapture(x, viewer))) return false;
+    return true;
+  }
+
+  /* R39: each drawn item, in drawn order, with its visits in recorded order and its standing. */
+  #standings(d) {
+    const sample = (parse(d.sample_json) || []).map(String);
+    const of = new Map(sample.map((k) => [k, []]));
+    for (const v of this.#rows(`SELECT * FROM calc_visits WHERE draw_key=? ORDER BY seq`, d.draw_key)) if (of.has(v.item)) of.get(v.item).push(visitAnswer(v));
+    return sample.map((item) => ({ item, standing: standingOf(of.get(item).map((v) => v.finding)), visits: of.get(item) }));
+  }
+
+  /* R40: the draw's visits as they stand, held as a canonical table, one row per drawn item (`item`, `standing`,
+     `visits`): its rows, its canonical CSV and that CSV's SHA-256 (R9). */
+  #standingTable(d) {
+    const items = this.#standings(d);
+    const tb = tableBuilder(STANDING_FIELDS.map((f) => f.name), STANDING_FIELDS);
+    for (const it of items) tb.push([it.item, it.standing, String(it.visits.length)]);
+    const built = tb.finish();
+    return { table: { fields: STANDING_FIELDS.map((f) => ({ ...f })), rows: items.map((it) => ({ item: it.item, standing: it.standing, visits: String(it.visits.length) })) },
+      sha: built.sha, text: new TextDecoder().decode(built.bytes) };
+  }
+
   /* R10: may `viewer` see every input (and the project) of this calculation? */
   /* Synchronous, so a registration asked synchronously (duties R12) can use it; a port answering a promise is read as
      not seen (fail closed). */
@@ -1184,11 +1308,7 @@ export class Calculations {
       } else if (i.input_kind === "figure") { const r = this.content.contentRow(i.ref); ok = !!r && this.#sees(r.bundle_id, viewer); }
       else if (i.input_kind === "calculation") { const o = this.#one(`SELECT * FROM calculations WHERE calc_id=?`, i.ref); ok = !!o && this.#visible(o, viewer, memo); }
       else if (i.input_kind === "set") { const s = this.#one(`SELECT project, ids_json FROM calc_sets WHERE set_sha=?`, i.ref); ok = !!s && this.#sees(s.project, viewer) && (parse(s.ids_json) || []).every((id) => this.#sees(id, viewer)); }
-      else if (i.input_kind === "draw") {
-        const d = this.#one(`SELECT project, set_kind, set_sha, sample_json FROM calc_draws WHERE draw_key=?`, i.ref);
-        if (d && d.set_kind === "table") { const t = this.#one(`SELECT sha, bundle_id FROM calc_tables WHERE sha=?`, d.set_sha); ok = this.#sees(d.project, viewer) && !!t && this.#seesTable(t, viewer); }
-        else ok = !!d && this.#sees(d.project, viewer) && (parse(d.sample_json) || []).every((id) => this.#sees(id, viewer));
-      }
+      else if (i.input_kind === "draw") { const d = this.#one(`SELECT * FROM calc_draws WHERE draw_key=?`, i.ref); ok = !!d && this.#seesDraw(d, viewer); }
       if (!ok) return false;
     }
     memo.set(c.calc_id, true);
@@ -1229,6 +1349,13 @@ export class Calculations {
         const o = this.#one(`SELECT * FROM calculations WHERE calc_id=?`, inp.calculation);
         const g = o ? this.#gradeFacts(o).capture : { grade: null, why: "not held" };
         per.push({ name: inp.name, kind: "calculation", ref: inp.calculation, grade: g.grade, why: `its own capture axis: ${g.why}`, engine: null, engine_measured: null }); continue;
+      }
+      if (inp.draw !== undefined) {
+        const d = this.#one(`SELECT question FROM calc_draws WHERE draw_key=?`, inp.draw);
+        if (d && d.question !== null && d.question !== undefined) {
+          per.push({ name: inp.name, kind: "draw", ref: inp.draw, grade: TESTIMONY, why: "its items are judged by members' visits, each testimony (D), and nothing raises it (R40)", engine: null, engine_measured: null });
+          continue;
+        }
       }
       per.push({ name: inp.name, kind: inp.set !== undefined ? "set" : "draw", ref: inp.set ?? inp.draw, grade: null, not_graded: true,
         why: "the record's own ids carry no capture grade; the method that froze or drew them is disclosed", engine: null, engine_measured: null });
@@ -1496,8 +1623,10 @@ export class Calculations {
    * DRAWS AND FROZEN SETS (R18, R21)
    * ===================================================================== */
 
-  /** R18: `draw({set, n, seed?, by, project?})` over a frozen set: a table's sha or a frozen record set's sha. */
-  draw({ set = null, n = null, seed = null, by = null, project = null } = {}) {
+  /** R18: `draw({set, n, seed?, question?, by, project?})` over a frozen set: a table's sha or a frozen record set's sha.
+   *  A question (1 to 2,000 characters) is the words each drawn item is judged by when members visit it (R38); a draw
+   *  differing from another only in its question is its own draw and reproduces the same sample. */
+  draw({ set = null, n = null, seed = null, question = null, by = null, project = null } = {}) {
     if (!stamped(by)) return no("NO_AUTHOR", "a draw is recorded under the control plane's stamp. Nothing was written.");
     const ref = typeof set === "string" ? set : plain(set) ? (set.table ?? set.set ?? null) : null;
     if (!SHA.test(ref ?? "")) return no("NO_SET", "a draw is over a frozen set: a table's sha256 or a frozen record set's sha256. Nothing was written.");
@@ -1511,33 +1640,118 @@ export class Calculations {
     if (!Number.isSafeInteger(n)) return no("BAD_N", "a draw names how many to draw, a whole number. Nothing was written.");
     const usedSeed = seed === null || seed === undefined ? randomSeed() : seed;
     if (typeof usedSeed !== "string") return no("BAD_SEED", "a seed is text. Nothing was written.");
+    const asked = question === null || question === undefined ? null : typeof question === "string" ? question.trim() : "";
+    if (asked !== null && !(asked.length && [...asked].length <= QUESTION_MAX))
+      return no("BAD_QUESTION", `a draw's question is the words each drawn item is judged by: text of 1 to ${QUESTION_MAX} characters. Nothing was written.`);
     const d = drawFrame({ frame, n, seed: usedSeed });
     if (d.refused) return no(d.refused, `${d.why}. Nothing was written.`);
-    const key = sha({ set: ref, kind, seed: usedSeed, n, method: d.method });
+    /* a draw without a question keeps the key it had before questions (T36) */
+    const key = sha({ set: ref, kind, seed: usedSeed, n, method: d.method, ...(asked !== null ? { question: asked } : {}) });
     const held = this.#one(`SELECT * FROM calc_draws WHERE draw_key=?`, key);
     const answer = (r) => ({ ok: true, draw: r.draw_key, set: r.set_sha, set_kind: r.set_kind, seed: r.seed, n: r.n, frame_size: r.frame_size,
-      frame_hash: r.frame_hash, method: r.method, sample: parse(r.sample_json), drawn_by: r.drawn_by, drawn_at: r.drawn_at,
+      frame_hash: r.frame_hash, method: r.method, sample: parse(r.sample_json), question: r.question ?? null, drawn_by: r.drawn_by, drawn_at: r.drawn_at,
       says: "a seeded, recorded random draw over a frozen set: anyone with the set, the seed and SHA-256 reproduces it" });
     if (held) return { ...answer(held), already: true };
     const at = this.now();
     this.record.transact(() => {
-      this.sql.exec(`INSERT INTO calc_draws (draw_key, project, set_kind, set_sha, frame_hash, frame_size, n, seed, method, sample_json, drawn_by, drawn_at)
-                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`, key, project ? str(project) : null, kind, ref, d.frame_hash, frame.length, n, usedSeed,
-        d.method, json(d.sample), by, at);
+      this.sql.exec(`INSERT INTO calc_draws (draw_key, project, set_kind, set_sha, frame_hash, frame_size, n, seed, method, sample_json, drawn_by, drawn_at, question)
+                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`, key, project ? str(project) : null, kind, ref, d.frame_hash, frame.length, n, usedSeed,
+        d.method, json(d.sample), by, at, asked);
       return { ok: true };
     });
     return answer(this.#one(`SELECT * FROM calc_draws WHERE draw_key=?`, key));
+  }
+
+  /* R18: a recorded draw drawn again from its set, seed and method: `{reproduced, sample}`. */
+  #reproduce(d) {
+    const frame = d.set_kind === "table" ? Array.from({ length: d.frame_size }, (_, i) => String(i))
+      : parse((this.#one(`SELECT ids_json FROM calc_sets WHERE set_sha=?`, d.set_sha) || {}).ids_json) || [];
+    const again = drawFrame({ frame, n: d.n, seed: d.seed });
+    return { reproduced: !again.refused && canonicalJson(again.sample) === d.sample_json.replace(/\s/g, "") && again.frame_hash === d.frame_hash,
+      sample: again.sample ?? null };
   }
 
   /** R18: a recorded draw, reproduced from its set, seed and method: `{reproduced, sample}`. */
   reproduceDraw({ draw: key = null, viewer = null } = {}) {
     const d = typeof key === "string" ? this.#one(`SELECT * FROM calc_draws WHERE draw_key=?`, key) : null;
     if (!d || !this.#sees(d.project, viewer)) return { ok: true, found: false };
-    const frame = d.set_kind === "table" ? Array.from({ length: d.frame_size }, (_, i) => String(i))
-      : parse((this.#one(`SELECT ids_json FROM calc_sets WHERE set_sha=?`, d.set_sha) || {}).ids_json) || [];
-    const again = drawFrame({ frame, n: d.n, seed: d.seed });
-    return { ok: true, found: true, draw: d.draw_key, reproduced: !again.refused && canonicalJson(again.sample) === d.sample_json.replace(/\s/g, "")
-      && again.frame_hash === d.frame_hash, sample: again.sample ?? null };
+    return { ok: true, found: true, draw: d.draw_key, ...this.#reproduce(d) };
+  }
+
+  /* ===================================================================== *
+   * SPOT-CHECKS: VISITS TO DRAWN ITEMS (R38–R40)
+   * ===================================================================== */
+
+  /** R38: `recordVisit({draw, item, testimony, finding, exhibits?, by})` (`op=spotcheckvisit`): a member's visit to one
+   *  drawn item, held as testimony tied to that item: `testimony` the capture of the visitor's own firsthand
+   *  observation (provenance's `testify`, an authored register entry whose author is the visitor), `finding` yes, no or
+   *  could_not_tell against the draw's question, `exhibits` further held captures the visitor may see (a photo, never
+   *  required). Append-only: a member who visits again records a new visit. Calculations over the draw become stale
+   *  (R11, R40). */
+  recordVisit({ draw: key = null, item = null, testimony = null, finding = null, exhibits = null, by = null } = {}) {
+    if (!stamped(by) || isMachine(by)) return no("MEMBER_ACT_ONLY", "a visit is a member's own firsthand act; the machine never records one. Nothing was written.");
+    const d = typeof key === "string" ? this.#one(`SELECT * FROM calc_draws WHERE draw_key=?`, key) : null;
+    if (!d || !this.#seesDraw(d, by)) return no("NO_SUCH_DRAW", "no recorded draw answers to that key here, or it is not one you may see. Nothing was written.");
+    if (d.question === null || d.question === undefined)
+      return no("NO_QUESTION", "this draw carries no question, so there is nothing a visit's finding answers; draw again with the question its items are judged by. Nothing was written.");
+    if (!(typeof item === "string" && (parse(d.sample_json) || []).map(String).includes(item)))
+      return no("NOT_DRAWN", "the item named is not one of the draw's drawn items. Nothing was written.", { item: typeof item === "string" ? item : null });
+    const capture = typeof testimony === "string" ? testimony.trim() : "";
+    const t = capture ? this.#one(`SELECT capture_sha, bundle_id, authored, author, observed_at FROM register WHERE capture_sha=?`, capture) : null;
+    if (!t || Number(t.authored) !== 1 || !this.#sees(t.bundle_id, by))
+      return no("NOT_TESTIMONY", "the testimony is the capture of a firsthand observation recorded through testify, one you may see; this is not one. Nothing was written.");
+    if (t.author !== by) return no("NOT_YOUR_TESTIMONY", "a visit rests on the visitor's own observation; this testimony was recorded by another member. Nothing was written.");
+    if (!VISIT_FINDINGS.includes(finding))
+      return no("BAD_FINDING", `a visit's finding is one of ${VISIT_FINDINGS.join(", ")}, against the draw's question. Nothing was written.`);
+    const list = exhibits === null || exhibits === undefined ? [] : exhibits;
+    if (!Array.isArray(list)) return no("NO_SUCH_EXHIBIT", "exhibits are a list of held captures you may see. Nothing was written.", { exhibit: null });
+    const cited = [];
+    for (const x of list) {
+      const k = typeof x === "string" ? x.trim() : "";
+      if (!k || !this.#seesCapture(k, by))
+        return no("NO_SUCH_EXHIBIT", "an exhibit names a capture that is not held, or is not one you may see. Nothing was written.", { exhibit: typeof x === "string" ? x : null });
+      if (!cited.includes(k)) cited.push(k);
+    }
+    const at = this.now();
+    let seq = 0;
+    this.record.transact(() => {
+      seq = this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM calc_visits WHERE draw_key=?`, d.draw_key).n + 1;
+      this.sql.exec(`INSERT INTO calc_visits (draw_key, seq, project, item, testimony, finding, exhibits_json, visitor, observed_at, recorded_at)
+                     VALUES (?,?,?,?,?,?,?,?,?,?)`, d.draw_key, seq, d.project ?? null, item, t.capture_sha, finding, json(cited), by, t.observed_at ?? null, at);
+      /* R40: an estimate over this draw computed before the visit becomes stale; its stored results never change */
+      this.#stale(d.draw_key, "visit_recorded");
+      return { ok: true };
+    });
+    const v = this.#one(`SELECT * FROM calc_visits WHERE draw_key=? AND seq=?`, d.draw_key, seq);
+    const standing = standingOf(this.#rows(`SELECT finding FROM calc_visits WHERE draw_key=? AND item=?`, d.draw_key, item).map((r) => r.finding));
+    return { ok: true, draw: d.draw_key, ...visitAnswer(v), standing,
+      says: "a visit is the visitor's testimony tied to one drawn item: kept as recorded, never changed, and graded as testimony (D)" };
+  }
+
+  /** R39: `spotCheck({draw, viewer})` (`op=spotcheck`): a spot-check's data: the draw (its set and the set's size, n,
+   *  the seed and method, whether it reproduces), its question, each drawn item with its visits in recorded order and
+   *  its standing, the counts (summing to n), and the estimates held over the draw with their recompute status. It
+   *  computes no estimate (R8). A draw the viewer may not see, or one any of whose visits' testimony or exhibits the
+   *  viewer may not see, answers `{found: false}` exactly as an absent one. Writes nothing; never throws. */
+  spotCheck(args = {}) {
+    const absent = { ok: true, found: false };
+    try {
+      const { draw: key = null, viewer = null } = plain(args) ? args : {};
+      const d = typeof key === "string" && stamped(viewer) ? this.#one(`SELECT * FROM calc_draws WHERE draw_key=?`, key) : null;
+      if (!d || !this.#seesDraw(d, viewer)) return absent;
+      const items = this.#standings(d);
+      const counts = Object.fromEntries(["yes", "no", "could_not_tell", "disagree", "not_visited"].map((s) => [s, items.filter((i) => i.standing === s).length]));
+      counts.judged = counts.yes + counts.no;
+      const estimates = this.#rows(`SELECT * FROM calculations WHERE kind='estimate' AND calc_id IN (SELECT calc_id FROM calc_inputs WHERE input_kind='draw' AND ref=?)
+                                    ORDER BY created_at, rowid`, d.draw_key)
+        .filter((c) => this.#visible(c, viewer))
+        .map((c) => ({ calc_id: c.calc_id, recompute_status: c.recompute_status, computed_at: c.computed_at, accepted: !!c.accepted_by }));
+      return { ok: true, found: true,
+        draw: { draw: d.draw_key, set: d.set_sha, set_kind: d.set_kind, set_size: d.frame_size, n: d.n, seed: d.seed, method: d.method,
+          frame_hash: d.frame_hash, reproduced: this.#reproduce(d).reproduced, drawn_by: d.drawn_by, drawn_at: d.drawn_at },
+        question: d.question ?? null, items, counts, estimates,
+        says: "each drawn item stands as its visits find it; visits that find both yes and no are kept in tension and never picked between, and an item not judged is counted apart by its reason, never as no or as zero. No estimate is computed here." };
+    } catch { return absent; }
   }
 
   /** R21: `freezeSet({query, by, project?})`: the ids a saved query answers for the asking member (`retrieval`'s
@@ -2007,6 +2221,8 @@ export function calculationsOps(c, url, body) {
     calculationaccept: () => c.accept({ calcId: q(url, "id") ?? b.calcId, by }),
     calculation: () => c.read({ calcId: q(url, "id") ?? b.calcId, viewer }),
     calculationdraw: () => c.draw({ ...strip(b), by }),
+    spotcheckvisit: () => c.recordVisit({ ...strip(b), by }),
+    spotcheck: () => c.spotCheck({ draw: q(url, "draw") ?? b.draw ?? null, viewer }),
     recordset: () => c.freezeSet({ ...strip(b), by }),
     usesfreeze: () => c.freezeUses({ ...strip(b), by }),
     applicationrecipes: () => c.applicationRecipes(),

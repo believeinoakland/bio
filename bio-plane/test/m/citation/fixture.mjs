@@ -2,13 +2,14 @@
    provenance, content, retrieval with its selections), on a real SQLite database (node:sqlite) standing in for a Durable
    Object's storage, built on retrieval's own fixture world. One provider is partly the test's: `inquiry`'s R13 earned registry answers what a test
    sets in `w.earned`; its R5 leg grammar and R4 roles are inquiry's own exports (the factory's default, the real
-   registry, is tested apart). Every test drives
+   registry, is tested apart). With `{inquiry: true}` the real `inquiry` is booted on the host first, so its check and
+   leg projection (its R11, R12) join every promotion and R13 reads the projection back (`restingOn`, K2132). Every test drives
    `citation` at its interface. */
 import { world as retrievalWorld, V, sha, provDoc, T0 } from "../retrieval/fixture.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
 import { Citation, citationOf } from "../../../src/citation/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/frontmatter.mjs";
-import { BASIS_ROLES, checkLegExtentGrammar } from "../../../src/inquiry/index.mjs";
+import { BASIS_ROLES, checkLegExtentGrammar, inquiryOf } from "../../../src/inquiry/index.mjs";
 
 export { V, sha, T0 };
 export const NOW = Date.parse("2026-09-28T01:02:03Z");
@@ -18,8 +19,19 @@ export function world(opts = {}) {
   const w = retrievalWorld({ members: ["ann", "vera", "ivy"], admins: ["adm"], ...opts });
   const { host, record, membership, promotion, prov, st } = w;
   w.content = contentOf(host, { record, membership, provenance: prov,
-    extraction: { readingOf: () => null, unitsOf: () => ({ units: [], state: null }), capturesReadFor: () => [],
+    /* With a booted inquiry its write judges a leg's part against the capture's reading (content R7): every capture is
+       then read as three pages of its own text layer. */
+    extraction: { readingOf: () => (opts.inquiry ? { chain: [{ step: "layer", tier: 1 }], pageCount: 3, reading: { page_boxes: null },
+                                                      textContainer: null, captureFormat: null } : null), unitsOf: () => ({ units: [], state: null }), capturesReadFor: () => [],
                   onReading: () => ({ ok: true }) } });
+  /* retrieval's world stands in `inquiry_basis` and `connections` with the columns its reads need; a booted inquiry
+     makes the real ones (leg-earning's and connections' schemas), so the stand-ins go first. */
+  if (opts.inquiry) w.st.db.exec("DROP TABLE IF EXISTS inquiry_basis; DROP TABLE IF EXISTS connections;");
+  const booted = opts.inquiry
+    ? inquiryOf(host, { record, membership, promotion, content: w.content, provenance: prov, retrieval: w.retrieval }) : null;
+  /* inquiry's own lazy services and schemas, made and migrated now as the plane's boot does (plane R3), so the tables its
+     check and projection read and write exist. */
+  if (booted) { booted.connections.migrate(); booted.migrate(); }
   w.earned = {};                // target → {grade, why}: what inquiry's registry earns for a leg
   w.earnedCalls = [];
   w.inq = {
@@ -30,6 +42,7 @@ export function world(opts = {}) {
       return { subject_entity: subject, earned: { connection } };
     },
     checkLegExtentGrammar, BASIS_ROLES,
+    ...(booted ? { restingOn: (t) => booted.restingOn(t) } : {}),
   };
   w.cit = citationOf(host, { record, membership, promotion, content: w.content, retrieval: w.retrieval,
                               provenance: prov, inquiry: w.inq, now: () => NOW });

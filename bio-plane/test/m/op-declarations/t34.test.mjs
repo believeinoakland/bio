@@ -58,10 +58,14 @@ const ROOT = new URL("../../../../", import.meta.url);
 const registry = JSON.parse(readFileSync(new URL("docs/development/ux-substrate/screens/registry.json", ROOT), "utf8"));
 const actsOf = (status) => [...new Set(registry.screens.flatMap((s) => s.acts).filter((a) => a.status === status).map((a) => a.op))];
 
-/* R21: the five functions no op serves, each named back to BOB (op-declarations J1) */
-const UNSERVED = ["countask", "deadlinecompute", "projectcreated", "registerproceeding", "setpassword"];
+/* R21 (T37; DEC-182 (1), (4)): the registry as PR #14 left it names no function no op serves. The five T34 named back
+   to BOB are gone from its functions: four withdrawn, their buttons re-pointed to declared ops, and `setpassword` an
+   owed act declared under its own name (R39). */
+const UNSERVED = [];
+const WITHDRAWN = { projectcreated: "promote", countask: "calculationcreate", registerproceeding: "entitycreate",
+                    deadlinecompute: "clockpropose" };
 
-test("R21, R5: every act the screen registry marks `function` is an op under its lowercased name — already an op, or an alias in the one frozen table OP_ALIASES — but for the functions no op serves, which have no spec and are in no table (negative control: an unaliased name is seen)", () => {
+test("R21, R5: every act the screen registry marks `function` is an op under its lowercased name — already an op, or an alias in the one frozen table OP_ALIASES — and on PR #14's registry no function is unserved: the four DEC-182 (1) withdraws are no function and no op, their buttons' ops declared, and setpassword is owed (negative control: an unaliased name is seen)", () => {
   const fns = actsOf("function");
   assert.ok(fns.length >= 60, `${fns.length} functions`);
   for (const f of fns) {
@@ -70,6 +74,11 @@ test("R21, R5: every act the screen registry marks `function` is an op under its
     else assert.ok(Object.hasOwn(OPS, f), `${f}: no spec`);
   }
   for (const f of UNSERVED) assert.ok(fns.includes(f), `${f} is no registry function`);
+  for (const [f, op] of Object.entries(WITHDRAWN)) {
+    assert.ok(!fns.includes(f) && inNoTable(f), `${f} is still a function or has a spec`);
+    assert.ok(Object.hasOwn(OPS, op), `${op}: no spec`);
+  }
+  assert.ok(!fns.includes("setpassword") && actsOf("owed").some((a) => a.startsWith("owed:setpassword ")));
   assert.ok(Object.isFrozen(OP_ALIASES));
   for (const [al, op] of Object.entries(OP_ALIASES)) {
     assert.ok(fns.includes(al), `${al} is no registry function`);
@@ -123,7 +132,7 @@ test("R21: each alias names the function its op's arm calls — driven through t
     assert.ok(calls.some(([k]) => String(k).toLowerCase() === al), `${owner}.${op} calls ${calls.map(([k]) => String(k))}, not ${al}`);
     checked++;
   }
-  assert.ok(checked >= 22, `${checked} aliases driven`);
+  assert.ok(checked >= 21, `${checked} aliases driven`);
   /* the four outside the families are the act lists' (their owners' arms read in J1: credentials' signerRegisterOwn and
      signerRevokeOwn, reevaluation's adoptVersion and keepVersion, strength's strengthBarSet, filings' filingRecordSent) */
   assert.deepEqual(Object.keys(OP_ALIASES).length - checked, 6);
@@ -132,15 +141,21 @@ test("R21: each alias names the function its op's arm calls — driven through t
   assert.ok(!calls.some(([k]) => String(k).toLowerCase() === "createevent"));
 });
 
-test("R21, R27 (K1901): an act the registry marks `owed` is no op until its ruling's op is declared under its own name, and then it is that op, read as served with no alias made (placewanted among them, though the registry still marks it); no spec names `owed:`; the owed acts no owner serves have no spec", () => {
+test("R21, R27 (K1901; T36, K2084; T37, K2159, K2171): an act the registry marks `owed` is no op until its ruling's op is declared under its own name, and then it is that op, read as served with no alias made — on PR #14's registry the ten T34's and T35's ops declare, the nine R32 and R33 declare and the eight T37 declares (R35–R39), `owed:placewanted` gone; no spec names `owed:`; infolevelset, the one owed act no owner serves, has no spec", () => {
   for (const op of Object.keys(OPS)) assert.ok(!op.includes(":") && !op.includes(" "), op);
   const owed = actsOf("owed").map((a) => a.replace(/^owed:/, "").split(" ")[0]);
-  /* the registry as PR #12 left it: the owed acts whose ops this module declares under those names (T34's and T35's) */
+  /* the registry as PR #13 left it (T36): the owed acts whose ops this module declares under those names — T34's and
+     T35's ten, and the nine R32 and R33 declare (DEC-168–DEC-173); the registry no longer marks `placewanted` */
   const DECLARED = ["archivelist", "findin", "groupdescriptiondraft", "memberlanguageset", "notedelete", "noterevise",
-                    "placewanted", "publishat", "securitymap", "startfrom", "writinghelp"];
-  /* and the owed acts no owner serves in T35 (R27: subscriptionsignin, N708; the translation acts, N669) */
-  const UNDECLARED = ["infolevelset", "subscriptionsignin", "translationadopt", "translationconfirm", "translationdraft",
-                      "translationgrant", "translationrevert"];
+                    "publishat", "securitymap", "startfrom", "writinghelp",
+                    "aikeepaway", "deepercheck", "openoriginal", "openwithwarning", "releasescanhold", "safeview",
+                    "securitytooladd", "securitytooltest", "securitytoolremove",
+                    /* T37 (PR #14, `e08cd35ecb`): R38's, R39's, R36's and the five translation acts of R35 and R37 */
+                    "obscuremark", "setpassword", "subscriptionsignin", "translationadopt", "translationconfirm",
+                    "translationdraft", "translationgrant", "translationrevert"];
+  assert.ok(!owed.includes("placewanted") && Object.hasOwn(OPS, "placewanted"));
+  /* and the one owed act no owner serves in T37 */
+  const UNDECLARED = ["infolevelset"];
   assert.deepEqual([...new Set(owed)].sort(), [...DECLARED, ...UNDECLARED].sort());
   for (const op of DECLARED) {
     assert.ok(Object.hasOwn(OPS, op), `${op} is owed and declared: no spec`);
@@ -231,10 +246,11 @@ test("R24, R20: the group's API key — groupkeyset, groupkeyremove, groupkeyswi
   assert.deepEqual(stamps("ask"), ["member", "viewer"]);
   assert.deepEqual(plain(OPS.ask), { classes: ["admin", "member"], machineClasses: [], mutating: true });
   for (const op of Object.keys(OPS)) assert.doesNotMatch(op, /^(group|project|instance)subscription|^project(account|claude|credential|key)/, op);
-  /* T35 (R27, R30): the one subscription op is a member's own disconnection (credentials R43); the sign-in has no spec */
-  assert.deepEqual(Object.keys(OPS).filter((op) => /subscription/.test(op)), ["subscriptiondisconnect"]);
+  /* T35 (R27, R30): the member's own disconnection (credentials R43); T37 (R36): and their own sign-in — the two
+     subscription ops, each a member's own act, neither a group's or a project's */
+  assert.deepEqual(Object.keys(OPS).filter((op) => /subscription/.test(op)).sort(), ["subscriptiondisconnect", "subscriptionsignin"]);
   assert.equal(OP_FAMILIES.credentials.kinds.subscriptiondisconnect, "own");
-  assert.ok(inNoTable("subscriptionsignin"));
+  assert.equal(OP_FAMILIES.credentials.kinds.subscriptionsignin, "own");
 });
 
 test("R25: publishat with caseratify's gate — admin, member, probe, a member session's only (machineClasses []), NEEDS publish, both sets, caseratify's act lists and stamps; publishatmove and publishatcancel mutating, NEEDS publish, by stamped (query); publishschedule a read, viewer stamped, a present null; none in a bearer fence; each served by its owner (negative control)", async () => {
@@ -272,16 +288,21 @@ test("R26: placewanted an administrator's own session (officesseed's spec), by s
   for (const op of ["placewanted", "placewantedstate"]) assert.ok(both(op) && OPS[op].classes !== null, op);
 });
 
-test("R27 (T35; N701, K1869 (3)): DEC-148's library marks seven acts owed — memberlanguageset and startfrom (Welcome a new member), publishat (Publication ceremony), translationdraft and translationadopt (Translate the interface), subscriptionsignin and translationconfirm (optional scripts) — the first three declared under their own names, in both session sets; the four no owner serves in T35 given no spec and in no table", () => {
+test("R27 (T35; N701, K1869 (3); T37, its T35 and T36 sentences retired): DEC-148's library marks seven acts owed — memberlanguageset and startfrom (Welcome a new member), publishat (Publication ceremony), translationdraft and translationadopt (Translate the interface), subscriptionsignin and translationconfirm (optional scripts) — and all seven are declared under their own names, in both session sets", () => {
   const SERVED = ["memberlanguageset", "publishat", "startfrom"];
+  /* T37: served now (R35, R36, R37) */
   const UNSERVED_OWED = ["subscriptionsignin", "translationadopt", "translationconfirm", "translationdraft"];
-  for (const op of SERVED) assert.ok(Object.hasOwn(OPS, op) && both(op), op);
-  for (const op of UNSERVED_OWED) assert.ok(inNoTable(op), op);
+  for (const op of [...SERVED, ...UNSERVED_OWED]) assert.ok(Object.hasOwn(OPS, op) && both(op), op);
+  for (const op of [...SERVED, ...UNSERVED_OWED]) assert.ok(!Object.hasOwn(OP_ALIASES, op) && !Object.values(OP_ALIASES).includes(op), op);
   const lib = JSON.stringify(JSON.parse(readFileSync(new URL("docs/development/ux-substrate/screens/library.json", ROOT), "utf8")));
   const owed = [...new Set([...lib.matchAll(/owed:([a-z]+)/g)].map((m) => m[1]))];
-  assert.deepEqual(owed.sort(), [...SERVED, ...UNSERVED_OWED].sort());
-  /* negative control: a declared op is not inNoTable */
-  assert.ok(!inNoTable("publishat"));
+  /* the library file as PR #14 left it also marks two acts owed by later rulings, each declared under its own name:
+     `aikeepaway` (DEC-172; R33) and `obscuremark` (DEC-180; R38) */
+  const LATER = ["aikeepaway", "obscuremark"];
+  for (const op of LATER) assert.ok(Object.hasOwn(OPS, op) && both(op) && !Object.hasOwn(OP_ALIASES, op), op);
+  assert.deepEqual(owed.sort(), [...SERVED, ...UNSERVED_OWED, ...LATER].sort());
+  /* negative control: a declared op is not inNoTable, an undeclared one is */
+  assert.ok(!inNoTable("publishat") && inNoTable("infolevelset"));
 });
 
 test("R28: memberlanguageset a member's own act (admin, member, probe; machineClasses []), mutating, by stamped, a present null; memberlanguage and startfrom reads, viewer stamped, a present null; each in both sets and in neither bearer fence", () => {

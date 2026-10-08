@@ -116,6 +116,24 @@
    declared here, accepted red 4 at T34's close) and this job's DEC-149 rows stamped in 1.62.0. Re-pinned in place as each
    T35 layer-2 job merges (BOB's CHANGE), so T35 names one catalogue. A row a T35 job in layers 3–11 adds or changes turns
    this suite red, accepted by name until T36's layer-2 stamp (plan T35, Rules 9 (2)), so none is declared. Negative
+   control re-run on the stamp commit: its arms in the suite pass.
+   RE-PINNED 2026-10-08 (PROMOTION #34, T36-8, T35's red 2): over 1.63.0, the stamp's own lines
+   (`fixtures/row-census-1.63.0.jsonl`, written by `row-census.mjs`'s own `censusOf`) on the stamp commit (named in
+   `build/jobs/T36/promotion.md`; 1467 rows, a72e0b63…, over `tranche/T36` after its layer 1; 1470 rows, e9ef089b…, after membership's and
+   credentials' merges, K2090, K2093); the 1.62.0 snapshot (no
+   stamp reads it) deleted; T35's layers 3–11 rows (77 new, 44 changed, none departed, each named by its job record;
+   none declared here, accepted red 4 at T35's close) stamped in 1.63.0. Re-pinned in place as each T36 layer-2 job
+   merges (BOB's CHANGE), so T36 names one catalogue. A row a T36 job in layers 3–11 adds or changes turns this suite
+   red, accepted by name until T37's layer-2 stamp (plan T36, Rules 5 (4)), so none is declared. Negative control re-run
+   on the stamp commit: its arms in the suite pass.
+   RE-PINNED 2026-10-08 (PROMOTION #35, T37-7, T36's red 4, N754): over 1.64.0, the stamp's own lines
+   (`fixtures/row-census-1.64.0.jsonl`, written by `row-census.mjs`'s own `censusOf`) on the stamp commit (named in
+   `build/jobs/T37/promotion.md`; 1516 rows, 2e65afaf…, over `tranche/T37` after its layer 1; 1519 rows, 60d892ca…, after membership's and
+   credentials' merges, K2183, K2184); the 1.63.0 snapshot (no
+   stamp reads it) renamed to it; T36's layers 3–11 rows (47 new, 19 renumbered C-137 → C-139, 1 retired, 2 changed,
+   each named by its job record; none declared here, accepted red 4 at T36's close) stamped in 1.64.0. Re-pinned in
+   place as each T37 layer-2 job merges, so T37 names one catalogue. A row a T37 job in layers 3–11 adds or changes turns
+   this suite red, accepted by name until T38's layer-2 stamp (plan T37, Rules 6 (2)), so none is declared. Negative
    control re-run on the stamp commit: its arms in the suite pass. */
 import "../stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import assert from "node:assert/strict";
@@ -134,8 +152,8 @@ const FIXTURE = (v) => fileURLToPath(new URL(`./fixtures/row-census-${v}.jsonl`,
    carries the line as the stamp read it (so the stamp's census can be rebuilt); `arrived` names the row by check and
    code (its line is the tree's). */
 const AWAITING_STAMP = [
-  /* RE-ANCHORED 2026-10-07 (PROMOTION #33, T35-16): over 1.62.0, the stamp's own lines (`fixtures/row-census-1.62.0.jsonl`,
-     as re-pinned at each T35 layer-2 merge). T34's layers 3–11 rows were never declared (accepted red 4) and are stamped in 1.62.0. None
+  /* RE-ANCHORED 2026-10-08 (PROMOTION #35, T37-7): over 1.64.0, the stamp's own lines (`fixtures/row-census-1.64.0.jsonl`,
+     as re-pinned at each T37 layer-2 merge). T36's layers 3–11 rows were never declared (accepted red 4) and are stamped in 1.64.0. None
      is open (see the header). */
 ];
 /* COMPOSITIONS AWAITING STAMP: a change to which checks a gate runs moves no row, so the census cannot see it; each is
@@ -146,7 +164,7 @@ const AWAITING_STAMP = [
    retired; no T17 job names a composition change. LEGACY-TESTS #19 (T21, 2026-10-01): intent's registration changed its
    ids after the 1.51.0 stamp (INTENT #9, no row), declared for T22. */
 const COMPOSITIONS_AWAITING = [
-  /* PROMOTION #33 (T35, 2026-10-07): re-anchored at 1.62.0; no T34 or T35 job record names a composition change, and
+  /* PROMOTION #35 (T37, 2026-10-08): re-anchored at 1.64.0; no T36 or T37 job record names a composition change, and
      none is open. */
 ];
 /* The plane's suite shape: every arm printed PASS or FAIL with its reason, the tally last, the exit its verdict. */

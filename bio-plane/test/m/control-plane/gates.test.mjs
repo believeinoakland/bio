@@ -74,7 +74,7 @@ test("R16: an asserted replay is kept only for the admin class without a session
   /* every other caller's replay is deleted — verified bytes or not — and the promotion goes on as an ordinary one */
   for (const verified of [true, false]) {
     const w = replayWorld(verified ? {} : { holdBytes: false });
-    for (const [token, params] of [[w.env.MEMBER_TOKEN, {}], [w.env.PROBE_TOKEN, { store: "scratch" }], [w.S.founder, {}], [w.S.ann, {}]]) {
+    for (const [token, params] of [[w.env.PROBE_TOKEN, { store: "scratch" }], [w.S.founder, {}], [w.S.ann, {}]]) {
       w.env.calls.length = 0;
       const r = await call(w.env, { op: "promote", token, params, method: "POST", body: w.body });
       assert.equal(r.status, 200);
@@ -119,7 +119,7 @@ test("R28: the gates run in one order — admission R1, R2, R3, the public ops (
   /* R10's export refusal before R11 and R13 for a session */
   await drive({ op: "export", token: S.bare }, "ROOT_OF_TRUST_REQUIRED");
   /* R11 before R6's scope refusal: probe asking an op it lacks, in bio */
-  const notProbe = GATED.find((k) => !OPS[k].classes.includes("probe") && OPS[k].classes.includes("member") && !Array.isArray(OPS[k].machineClasses));
+  const notProbe = GATED.find((k) => !OPS[k].classes.includes("probe") && OPS[k].classes.includes("admin") && !Array.isArray(OPS[k].machineClasses));
   await drive({ op: notProbe, token: env.PROBE_TOKEN, params: { store: "bio" } }, "CLASS_FORBIDDEN");
   /* R12 before R14: an agent asking a governance act */
   const wide = aik();
@@ -128,6 +128,10 @@ test("R28: the gates run in one order — admission R1, R2, R3, the public ops (
   assert.equal(g.json.reason, "AI_BEYOND_TASK_SCOPE");
   /* R11 before R14: daemon asking a governance act */
   await drive({ op: "adminendorse", token: env.DAEMON_TOKEN }, "CLASS_FORBIDDEN");
+  /* admission R5 (T36, K2166): the retired shared member key is refused by name before anything is looked up or forwarded */
+  const retired = await drive({ op: notProbe, token: env.MEMBER_TOKEN, params: { store: "bio" } }, "MEMBER_TOKEN_RETIRED");
+  refused(retired, 401, "MEMBER_TOKEN_RETIRED", "C-38.11");
+  assert.equal(env.calls.length, 0, "not even a lookup");
   /* R13 before R14/R16: a session without contribute asking promote with a replay */
   const bare = await drive({ op: "promote", token: S.bare, body: { replay: true } }, "NOT_CAPABLE");
   assert.equal(bare.json.needs, "contribute");
@@ -137,7 +141,7 @@ test("R28: the gates run in one order — admission R1, R2, R3, the public ops (
   /* negative controls: each request with its first failing condition removed meets the next gate, not the first */
   await drive({ op: "adminendorse", token: env.PROBE_TOKEN, params: { store: "scratch" } }, "OPERATOR_TOKEN_CANNOT_GOVERN");
   env.calls.length = 0;
-  assert.equal((await call(env, { op: notProbe, token: env.MEMBER_TOKEN, params: { store: "bio" } })).status, 200);
+  assert.equal((await call(env, { op: notProbe, token: env.ADMIN_TOKEN, params: { store: "bio" } })).status, 200);
 });
 
 test("R28: admission R12's refusals come before the op — a module handler (hooks.gatedOp) willing to serve every op is never asked when a fence refuses", async () => {
@@ -147,7 +151,8 @@ test("R28: admission R12's refusals come before the op — a module handler (hoo
   const hooks = { publicOp: async () => M.json({ ok: true }),
                   gatedOp: async (c) => { asked.push(c.op); return M.json({ ok: true, servedBy: "hook", op: c.op }); } };
   for (const [op, token, params, code] of [["adminendorse", env.ADMIN_TOKEN, {}, "OPERATOR_TOKEN_CANNOT_GOVERN"],
-                                           ["membercaps", env.MEMBER_TOKEN, {}, "OPERATOR_TOKEN_CANNOT_GOVERN"],
+                                           ["membercaps", env.PROBE_TOKEN, { store: "scratch" }, "OPERATOR_TOKEN_CANNOT_GOVERN"],
+                                           ["membercaps", env.MEMBER_TOKEN, {}, "MEMBER_TOKEN_RETIRED"],
                                            ["groupnameset", env.PROBE_TOKEN, { store: "scratch" }, "GROUP_IDENTITY_NEEDS_SESSION"]]) {
     asked.length = 0; env.calls.length = 0;
     const r = await call(env, { op, token, params, hooks, method: "POST", body: w.body });
@@ -174,9 +179,10 @@ test("R28: R16's replay refusal comes before the op — a module handler (hooks.
   }
   /* negative controls: a verified replay, and an ordinary promotion by any caller, reach the handler with the body whole */
   const ok = replayWorld();
-  for (const [token, body] of [[ok.env.ADMIN_TOKEN, ok.body], [ok.env.MEMBER_TOKEN, ok.body], [ok.S.ann, { ...ok.body, replay: false }]]) {
+  for (const [token, body, params] of [[ok.env.ADMIN_TOKEN, ok.body, {}], [ok.env.PROBE_TOKEN, ok.body, { store: "scratch" }],
+                                       [ok.S.ann, { ...ok.body, replay: false }, {}]]) {
     asked.length = 0;
-    const r = await call(ok.env, { op: "promote", token, hooks, method: "POST", body });
+    const r = await call(ok.env, { op: "promote", token, params, hooks, method: "POST", body });
     assert.equal(r.json.servedBy, "hook");
     assert.deepEqual(JSON.parse(asked[0].body), body);
   }

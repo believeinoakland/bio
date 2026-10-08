@@ -17,7 +17,8 @@ function callers() {
   const bind = (c, token, params = {}) => ({ name: c, token, params, ns: params.store ?? "bio",
     viewer: `class:${c}`, identity: `class:${c}`, member: `class:${c}`, author: `token:${c}`, machine: `class:${c}`, principal: `class:${c}` });
   return { w, agent, list: [
-    bind("admin", w.env.ADMIN_TOKEN), bind("member", w.env.MEMBER_TOKEN), bind("probe", w.env.PROBE_TOKEN, { store: "scratch" }),
+    /* admission R5 (K2166): the shared member binding is retired, so it is no caller here (its refusal is tested in R28's arm) */
+    bind("admin", w.env.ADMIN_TOKEN), bind("probe", w.env.PROBE_TOKEN, { store: "scratch" }),
     { name: "founder", token: w.S.founder, params: {}, ns: "bio", viewer: "admin", identity: "member:admin", member: "admin",
       author: "admin", machine: "admin", principal: "member:admin" },
     { name: "ann", token: w.S.ann, params: {}, ns: "bio", viewer: "member:ann", identity: "member:ann", member: "ann",
@@ -100,7 +101,7 @@ test("R17: resolutiondefect's `by` is stamped into an empty POST body too, and a
   assert.deepEqual([g.body, g.params.by], [null, undefined]);
 });
 
-test("R28 (admission R8–R11): the acts are in both session sets with `contribute`, the reads need nothing (six by a null row, K516); negative controls — the daemon class is refused CLASS_FORBIDDEN, a session without contribute NOT_CAPABLE, an agent credential not declaring the write AI_BEYOND_TASK_SCOPE, and nothing is forwarded", async () => {
+test("R28 (admission R8–R11): the acts are in both session sets with `contribute`, the reads need nothing (six by a null row, K516); negative controls — the daemon class is refused CLASS_FORBIDDEN, the retired shared member binding MEMBER_TOKEN_RETIRED, a session without contribute NOT_CAPABLE, an agent credential not declaring the write AI_BEYOND_TASK_SCOPE, and nothing is forwarded", async () => {
   const bare = hex64(), narrow = aik();
   const { env, S } = world({ sessions: { [bare]: member("bea", []) },
                              creds: { [narrow]: cred({ tokenId: "agent-narrow", writes: ["cite"] }) } });
@@ -116,8 +117,13 @@ test("R28 (admission R8–R11): the acts are in both session sets with `contribu
       refused(await call(env, { op, token, method: "POST", body: {} }), status, code, check);
       assert.equal(opCalls(env).length, 0, `${op}: forwarded after ${code}`);
     }
-    /* the same caller shapes admitted: a session holding contribute, the member binding, a read by the narrow agent */
-    for (const token of [S.ann, env.MEMBER_TOKEN, ...(spec.mutating ? [] : [narrow, bare])]) {
+    /* admission R5 (K2166): the retired shared member binding gives no class, so it is refused by name, nothing forwarded */
+    env.calls.length = 0;
+    refused(await call(env, { op, token: env.MEMBER_TOKEN, method: "POST", body: {} }), 401, "MEMBER_TOKEN_RETIRED", "C-38.11");
+    assert.equal(opCalls(env).length, 0, `${op}: forwarded for the retired member binding`);
+    /* the same caller shapes admitted: a session holding contribute, a binding class the row admits (the admin binding, in
+       the retired member binding's place), a read by the narrow agent */
+    for (const token of [S.ann, env.ADMIN_TOKEN, ...(spec.mutating ? [] : [narrow, bare])]) {
       env.calls.length = 0;
       const r = await call(env, { op, token, method: "POST", body: {} });
       assert.equal(r.status, 200, `${op}: ${r.text.slice(0, 160)}`);

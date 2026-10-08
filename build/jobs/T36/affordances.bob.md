@@ -1,0 +1,21 @@
+# BOB to affordances (T36)
+
+**Read** · handled J2
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T36), layer 11, affordances: T36-31. Read also the plan's "Rules at the opening", K2130 (its line in `build/rulings.md`, and the draft it cites, `build/plan/draft-T36-L11-reqs.md`, your section and its "BOB's review"; Suggestions bind nothing), K2121 and the rulings your entry cites.
+Your requirements: `build/requirements/affordances.md` (read whole); R48 `ACT_HELP` and R49 `act_help` are yours (K2130). `ACT_HELP` is generated once from `docs/development/ux-substrate/screens/mock-acts.js` as PR #13 merged it (merge commit `36da334628`; byte-identical on `tranche/T36`), that commit named in its header, never edited by hand; name back to BOB, in your COMPLETE, every key R48 does not hold (aliases' second texts such as `claimidentity`, the five names no op serves, `assistantset`); the design stream was asked (K2130). Not yours, though the plan's entry names it: N722's "The assistant" (`affordances` R50 was dropped; wizard-scripts T36-52 carries it, K2130 (4)).
+Re-pin `test/m/affordances/catalogue.test.mjs`:583 and `t33.test.mjs`:144 for K2092's five ops once op-grades R23 grades them (K2121), clearing reds 20 and 19; no requirement changes for them.
+New edge: affordances uses file-safety (plan rule 4 as K2130 corrected it: R12's totality and R19's backing over `op-grades` R24, `HOLD_NO_REASON`, `file-safety` R17); it is in `modules.json` and your Uses names it (BOB added at this START, K2152): read `file-safety`'s Purpose and the services R12 and R19 need from it (its ops map, R17).
+P6: 2,052 lines on `tranche/T36` (own `paths`, code only, tests excluded; +about 240: the table); report if the module would pass about 4,000 lines.
+
+Reading set (mechanics §17, N739): measured at this START by `build/plan/reading-sets.py`: 1445 KB (before the `file-safety` edge, whose public part adds 22 KB), an over-estimate (it counts each used module's whole public part; it counts no tests): read as mechanics §3 asks (each used module's Purpose and the services your Uses names). Measure that set first. At most 300 KB: read it whole and state so in your record. Over: (1) trim nothing; (2) no split in T36; (3) read whole yourself your requirements, layer 11's row of `build/layers.md`, the code and tests your entry changes and the used services your Uses names, and have your own workers read the rest of your code and tests in full and write the summary this task needs (each statement citing file and line), told the task (T36-31), the requirements it serves and what follows (op-declarations R34, which tests every member op against your `ACT_HELP`, and control-plane R41, which serves your answer); state in your record what you read whole, the summary's size and what it cites, and whether anything it left out mattered.
+
+Layer 11 has 16 jobs; merge order: wizard-scripts → op-grades → affordances → tasks → notice-producers → queue → setup-page → instance-setup → op-declarations → legacy-ui → installer → admission → answer-envelope → store-door → control-plane → plane (`modules.json` order, except N711's callers before admission); you are 3rd. Merge the tranche branch after op-grades' merge when BOB says so: your re-pins read its grades.
+Inherited reds: the plan's rule 5 list as it stands at your START (read it there; open at this writing: 1, 4, 7, 10–13, 15–20, 22–24, 26, 27). Yours: 19 (`t33.test.mjs`:144) and 20 (`catalogue.test.mjs`:583). Expect among your users' tests the reds rule 5 names for op-declarations, control-plane and plane until their L11 jobs merge.
+Not part of any reading set: generated artifacts (bundles under `dist/`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+op-grades has merged (K2156). Merge the tranche branch now and re-pin: reds 19 and 20, your R48 arm, and red 28 (its new reds in your tests: `catalogue.test.mjs`:107, :470, :909; `plane.test.mjs`:614; `t31.test.mjs`:49; `t33.test.mjs`:161, :197), all yours in T36-31 over its grades. Red 29 (`t33.test.mjs`:214, `assistantset` against op-declarations' rows) clears when T36-35 merges, not by you. K2092's five ops lacking texts: noted for op-declarations R34's `ACT_HELP_ABSENT`.

@@ -48,7 +48,10 @@
  * handed to the plane's `answers` checks before anything is returned. `POST
  * /draft` (R59) is a member's labelled draft of their own words, made the same
  * way, read only under a grant the door sends when the draft may read, and
- * checked by the door before the member sees it.
+ * checked by the door before the member sees it. `POST /signin` (R66, R67)
+ * relays one step of a member's own Claude sign-in to that member's own
+ * `agent-runner` instance on the same `RUNNER` binding and holds nothing of it:
+ * no plane call, no model turn.
  *
  * WHAT IT MUST NOT DO (fleet rules 2/3, inherited from I6 and asserted in the
  * suite behaviourally, at this member's interface — what it reads from `env`,
@@ -82,7 +85,9 @@
  *     member's act (the member's own reference, or the group's API key, held
  *     sealed in `credentials`, K1755) arrive PER CALL and are never stored,
  *     logged or echoed, so this member cannot act except while somebody is
- *     asking it to. The copy binds no Claude credential in its environment.
+ *     asking it to; so does the code from Anthropic's page a member's own
+ *     sign-in takes (R66, R67), sent only to that member's own runner instance.
+ *     The copy binds no Claude credential in its environment.
  *   - JUDGE ITS OWN SCOPE. D-199 (2): what an agent may reach is a row a member
  *     AUTHORED, read from the record at the plane's gate by `aiTaskScope`. A copy
  *     of that judgement here would be a second enforcement point that drifts from
@@ -147,6 +152,8 @@ import { toolContent, droppedNote } from "./reads.mjs";
 import { handleAsk } from "./ask.mjs";
 /* R59 — `POST /draft`, in its own file. */
 import { handleDraft } from "./draft.mjs";
+/* R66, R67 — `POST /signin`, the relay of a member's own sign-in to their own runner instance, in its own file. */
+import { handleSignin } from "./signin.mjs";
 
 /* R49, N293 — THE CEILING ON A RUN'S PUBLISHED STATE IS run-rules' (its R10), read from its own module and never
  * copied. run-rules is pure (no storage, no clock), so this is the one plane module in the bundle beside `tokens.mjs`. */
@@ -177,10 +184,11 @@ import {
   subsessionTools,
 } from "../../agent-model/src/model.mjs";
 
-/* R48 — THE PACK A RUN'S MODEL IS INSTRUCTED BY is the one the plane renders and publishes on its untargeted
- * `op=affordances` answer (`pack`, control-plane R41: `skills.renderPack` over the composed machine fences). This
- * member renders nothing and imports neither the check catalogue nor `skills`' code (N157, §1a), so its bundle carries
- * what it runs; it holds the pack's version to the one the run recorded. */
+/* R48 — THE PACK A RUN'S MODEL IS INSTRUCTED BY is the one the plane renders and serves apart on `op=agentpack`
+ * (`pack`, control-plane R41: `skills.renderPack` over the composed machine fences), never read from the untargeted
+ * `op=affordances` answer (N695). A run, an ask and a draft all read it there. This member renders nothing and
+ * imports neither the check catalogue nor `skills`' code (N157, §1a), so its bundle carries what it runs; it holds the
+ * pack's version to the one the run recorded. */
 
 /* ------------------------------------------------------ THE SEGMENT BOUND
  *
@@ -274,6 +282,7 @@ export const SURFACE = {
   run:     { method: "POST", mutating: false },
   ask:     { method: "POST", mutating: false },
   draft:   { method: "POST", mutating: false },
+  signin:  { method: "POST", mutating: false },
   version: { method: "GET",  mutating: false },
 };
 
@@ -399,7 +408,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
   /* R48 — THE PACK, AS THE PLANE PUBLISHED IT, HELD TO THE RUN'S RECORD, BEFORE ANY TURN. Only when model turns run:
      until then the pack instructs nothing and this changes nothing. */
   if (model) {
-    const pub = planeAnswer(await call("affordances"), "affordances");
+    const pub = planeAnswer(await call("agentpack"), "agentpack");
     if (pub.silent) return { refusal: planeSilent(pub.silent) };
     if (pub.refused)
       return { refusal: planeRefused(runId, store, { status: 403, body: pub.refused.plane ?? null }) };
@@ -799,7 +808,7 @@ function planeAnswer(asked, at) {
   return { at, result: inner ?? envelope };
 }
 
-/** R48 — the pack on the plane's untargeted `op=affordances` answer (control-plane R41): `{ok, pack}` when it carries
+/** R48 — the pack on the plane's `op=agentpack` answer (control-plane R41): `{ok, pack}` when it carries
  *  one with a version, a resident layer and a disclosed map; otherwise `{ok: false, why}`, naming the plane's own
  *  `pack_absent` when it gave one. A partial pack is never used: its version is undetermined. */
 function publishedPack(answer) {
@@ -1687,6 +1696,7 @@ export default {
     if (req.method === "POST" && (path === "run" || path === "")) return handleRun(req, env);
     if (req.method === "POST" && path === "ask") return handleAsk(req, env, ASK_DEPS);
     if (req.method === "POST" && path === "draft") return handleDraft(req, env, ASK_DEPS);
-    return refusal("UNKNOWN", "POST /run, POST /ask, POST /draft or GET /version only.", 404);
+    if (req.method === "POST" && path === "signin") return handleSignin(req, env, ASK_DEPS);
+    return refusal("UNKNOWN", "POST /run, POST /ask, POST /draft, POST /signin or GET /version only.", 404);
   },
 };

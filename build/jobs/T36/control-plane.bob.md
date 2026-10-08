@@ -1,0 +1,34 @@
+# BOB to control-plane (T36)
+
+**Read** · handled J5
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T36), layer 11, control-plane: T36-37. Read also the plan's "Rules at the opening", K2130 (its line in `build/rulings.md`, and the draft it cites, `build/plan/draft-T36-L11-reqs.md`, your section and its "BOB's review"; Suggestions bind nothing), K2129 (with `build/plan/draft-T36-L8-L10-reqs.md`'s "F1's tail in L11" section and its "BOB's review", for R59 and R28), K2126, K2135, K2146 and the rulings your entry cites.
+Your requirements: `build/requirements/control-plane.md` (read whole); R28 and R59 (F1's tail: admission's R20 gate right after R1, `CREDENTIAL_IN_ADDRESS` relayed as given, K2129), R41, R53 (`assistantset` not routed), R60–R63 are yours (K2130). R62 gates a member's and an `ai` credential's byte reads through `file-safety` (BOB's review (8)). R64 was dropped: the plane's composition hands acquisition the reputation tool and `FILE_SCANNER` (plane R29, BOB's review (9)); your routes carry neither.
+Where the byte answers are served (the entry has the START name it): `op=capture`'s GET is served in the Worker by `capture/ops.mjs`'s `captureObjectOp` (:73; the bytes and `x-capture-sha256` at :96–99), reached through `captureOp` from `plane/door.mjs`:74; serve `openoriginal`, `openwithwarning`, `safeview`, `safecopy` on that path and method. `plane/door.mjs` is plane's file: if R62's gate must sit there, ask BOB (a `QUESTION`).
+Also yours: (K2146) your generic forward strips `secretSha` and `bySecret` from every caller body, as it strips `BODY_STAMPS` (`index.mjs`:439); (K2135) once you route the new ops and serve `agentpack` alone (today forwarded to the hook as `affordances`, `index.mjs`:1801–1806), re-pin reds 22–24. R41: a search at this START found no product reader of the untargeted answer's `pack` or `fences` besides agent-worker, which reads `op=agentpack` since T36-24; check your tests and name any other you find (K2087). K2126: agent-worker (merged in L6) ships with or before this change in the same release. N761 (`secretSha` in internal queries, `index.mjs`:209, :645) is T37's (T37-33), not yours.
+New edge (plan rule 4): control-plane uses file-safety (`fileSafetyOps`, `openOriginal`); it is in `modules.json` and your Uses names it (BOB added at this START, K2152): read `file-safety`'s Purpose and R8, R9, R11, R33 and its ops map.
+P6: 3,025 lines on `tranche/T36` (own `paths`, code only, tests excluded; +about 150–250 as drafted); report if the module would pass about 4,000 lines.
+
+Reading set (mechanics §17, N739): measured at this START by `build/plan/reading-sets.py`: 1660 KB (before the `file-safety` edge, whose public part adds 22 KB), an over-estimate (it counts each used module's whole public part; it counts no tests): read as mechanics §3 asks (each used module's Purpose and the services your Uses names). Measure that set first. At most 300 KB: read it whole and state so in your record. Over: (1) trim nothing; (2) no split in T36; (3) read whole yourself your requirements, layer 11's row of `build/layers.md`, the code and tests your entry changes and the used services your Uses names, and have your own workers read the rest of your code and tests in full and write the summary this task needs (each statement citing file and line), told the task (T36-37), the requirements it serves and what follows (the plane, which composes your door last); state in your record what you read whole, the summary's size and what it cites, and whether anything it left out mattered.
+
+Layer 11 has 16 jobs; merge order: wizard-scripts → op-grades → affordances → tasks → notice-producers → queue → setup-page → instance-setup → op-declarations → legacy-ui → installer → admission → answer-envelope → store-door → control-plane → plane (`modules.json` order, except N711's callers before admission); you are 15th. Merge the tranche branch after op-declarations', admission's and store-door's merges when BOB says so (your entry depends on T36-35, T36-36, T36-48).
+Inherited reds: the plan's rule 5 list as it stands at your START (read it there; open at this writing: 1, 4, 7, 10–13, 15–20, 22–24, 26, 27). Yours: 22 (`test/m/control-plane/r53-routes.test.mjs`:70), 23 (:196, its loop at :198), 24 (`members-pin.test.mjs`:54) and 26 (`converts.test.mjs`:108, failing at :130, and its :145 arm). Expect plane's 10 and 27 until its job merges.
+Not part of any reading set: generated artifacts (bundles under `dist/`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Re J1 (K2157): (1) routed: `store-door` gains R13 (a map answer that is a `Response` is returned as given); STORE-DOOR #2 applies it. Relay the store's non-JSON answer as you describe. (2) admission's gate is `credentialAddressGate(url)`, answering `null` or `{status: 400, body}` (admission R20 re-worded); call it directly after `namespaceGate`. ADMISSION #6 provides it; until it merges, test against that name. (3) your reading stands (`warned` is not a credential, K1874). Merge the tranche branch before continuing.
+
+## B3 · CHANGE
+
+instance-setup has merged (K2162): `assistantSet` and `op=assistantset` are gone. Merge the tranche branch now and re-point your tests that used them to `credentials.aiKeepAwaySet` (keep-away off is the assistant on): red 32 in the plan's rule 5 names yours. Then post COMPLETE (again).
+
+## B4 · CHANGE
+
+op-declarations has merged (K2165). Merge the tranche branch now and re-run; admission merges next, then answer-envelope, store-door, control-plane and plane.
+
+## B5 · CHANGE
+
+admission, answer-envelope and store-door have merged (K2166). Merge the tranche branch now: drop the guard around `credentialAddressGate`, re-pin your MEMBER_TOKEN and address callers (red 33's control-plane share), and apply ADMISSION #6's two findings for you: (a) hand `securityTally` `env` and `doAnswer` from `outOfAddress` (index.mjs:120) so admission R22's count reaches `securitycount`; (b) `groupRead` (index.mjs:270) now reads the retired key as a stranger (R5's intent; test it). Then post COMPLETE; plane merges after you.

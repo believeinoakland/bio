@@ -2,9 +2,11 @@
  * `build/requirements/case-checker.md` R14, R15; K1134 (1); DEC-112 (3) "an open specification").
  *
  * Written from `case-grammar` R11–R13 (the case document's `method:`, `materials:` and `material_attestations:` blocks
- * and the case file) and from what this checker checks (R1–R11, R18, R20), so that anyone can write a checker of their own
+ * and the case file) and from what this checker checks (R1–R11, R18, R20, R22), so that anyone can write a checker of their own
  * from it. Each version's text is held here whole and served by `casefilespec` (R15). Its version names the format it
  * specifies. No place is named in it (R17). */
+
+import { NONCONFORMING_WORDS } from "./standards.mjs";
 
 const V1 = `# The case file, format bio-case-file/1
 
@@ -116,7 +118,118 @@ A checker answers, for each finding (a member, or a finding a member's chain rea
 11. Calculations. Each \`calculations:\` row is recomputed by the \`bio-calc/1\` engine over the inputs the case file carries, each first checked against its SHA-256, at the method version the row states, and answered \`agrees\`, \`differs\` or \`not_recomputed\`. A result or result key that recomputes differently differs, naming the result, the stated and the recomputed value; an input absent or unlike its hash, or a method version the checker does not hold, is missing. A row the document discloses as differing or unbound is answered with that disclosure, and is not counted as differing for being so. A workbook, or a value from another engine, is answered \`not_recomputed\`, recomputed by the publishing copy's engine, never as agreeing. A finding whose chain rests on a calculation takes its entries.
 `;
 
+/* R14 (T36; N717, K2129): version 2 is version 1 with the kinds `case-grammar` R13 adds (`archive`, `container`,
+   `criteria`), the member's subject (its R22) and the check of the standards' use over the criteria (R22, through R21).
+   Each change names the text of version 1 it replaces; `edit` keeps the text unchanged where it does not find it, and
+   the specification's test reads every addition in version 2, so a change that does not land is seen there. */
+const edit = (text, changes) => changes.reduce((t, [from, to]) => t.replace(from, to), text);
+const words = NONCONFORMING_WORDS.map((w) => `\`${w}\``);
+const V2 = edit(V1, [
+  ["# The case file, format bio-case-file/1\n\nThis document specifies version 1 of the case file:",
+   "# The case file, format bio-case-file/2\n\nThis document specifies version 2 of the case file:"],
+  ["answers the same as the checker Civicsmith runs.\n",
+   "answers the same as the checker Civicsmith runs.\n\nVersion 2 adds three kinds of file to version 1 (`archive`, `container` and "
+   + "`criteria`, section 3) and one check (rule 12, section 8). A `bio-case-file/1` case file is read as written, by its own "
+   + "specification, which is held beside this one: its manifest names none of the kinds version 2 adds, and a `bio-case-file/1` "
+   + "manifest naming one departs from its format.\n"],
+  ["- `format`: `bio-case-file/1`.", "- `format`: `bio-case-file/2`."],
+  ["which must be the rendering of the signed rows.\n",
+   "which must be the rendering of the signed rows.\n"
+   + "- `archive` at `materials/<ref>/archives/<sha256>`: the captured bytes, whole, of the archive a carried document was unpacked "
+   + "from, named by their SHA-256; and `container` at `materials/<ref>/containers/<sha256>.json`: that document's container record, "
+   + "the canonical JSON (section 7) naming the document and its archive by SHA-256, named by the document's SHA-256. Each is carried "
+   + "under the `ref` of the material whose chain it belongs to, and the same pair again for that archive's own archive, outward to "
+   + "the outermost. An `archive` or `container` file under a `ref` that carries no `document` departs. The archive's timestamp "
+   + "tokens travel as `attestation`. Their fingerprints are checked like any file's (rule 1); recreating a finding does not need "
+   + "them.\n"
+   + "- `criteria` at `criteria.json`, at most once: the criteria the case edition measures against, as the publishing copy froze "
+   + "them when it committed the edition, a JSON list in canonical JSON. There is one row for each distinct standard, portion and "
+   + "body that a leg of a member finding targets, each `{standard, portion, designation, edition, issuer, citation, access, body, "
+   + "binds, passages, label, access_words}`: `access` is `free`, `reading_room` or `paywalled`; `body` the entity the member "
+   + "finding's subject is, or null; `binds` true only when the standard, at that edition, binds that body, else false (a "
+   + "benchmark); `passages` the passages of the standard's text the members' legs target, each `{content, text}`, `content` a "
+   + "passage's content id and `text` its quoted words or null. A standard whose `access` is not `free` carries nothing of its "
+   + "text but those passages. A standard no longer held is a row with its `standard` and `portion`, every other field null, and "
+   + "`stated: \"not held\"`. A case edition committed before criteria were recorded carries no criteria file.\n"],
+  ["`case_roles` (per member `{target, role, version_sha, edition}`, `role` `load_bearing` or `supporting`, `version_sha` the SHA-256 of the member's published bytes).",
+   "`case_roles` (per member `{target, role, version_sha, edition, subject_entity}`, `role` `load_bearing` or `supporting`, "
+   + "`version_sha` the SHA-256 of the member's published bytes, `subject_entity` the entity the member's pinned bytes state as "
+   + "their subject, or null; a row may leave it out).\n- `case_conclusions:` per member `{target, claim, claim_detail, "
+   + "subject_entity, …}`: what the member concludes, as the case states it. A member's subject is its `case_roles:` row's "
+   + "`subject_entity`, else its `case_conclusions:` row's, else none.\n- `case_scope` and the `completeness:` block's "
+   + "`statement`: the case's own statement of what it covers and what it does not."],
+  [/\n$/, "\n12. Standards' use. When the case file carries a `criteria` file, the checker judges how the case uses the standards it "
+   + "measures against, beside the results: it changes no finding's result. A row stated `not held` is not judged, and is named. "
+   + "Every departure is named, never only the first:\n"
+   + "   - A standard whose `access` is not `free` travels only as the passages a finding relies on. A `materials:` row listed "
+   + "`included: true` whose `sha` is one of the captures holding that standard's text departs (`COPYRIGHTED_TEXT_CARRIED`). The "
+   + "case file does not carry which captures hold a standard's text, so this is not judged offline: each such row is named as "
+   + "not judged for this check.\n"
+   + "   - A passage of such a standard that no finding relies on departs (`COPYRIGHTED_PASSAGE_UNRELIED`): one of its row's "
+   + "`passages` whose `content` is the `content_id` of no `passages:` row.\n"
+   + `   - A member finding whose rows are all \`binds: false\` (it rests on no standard that binds its body) never uses the words ${words.slice(0, -1).join(", ")} `
+   + `or ${words[words.length - 1]}, as whole words in any letter case, in its \`case_conclusions:\` \`claim\` or \`claim_detail\`, or in the `
+   + "case's `case_scope` or `completeness:` `statement` (`BENCHMARK_CALLED_NONCONFORMING`). A member's rows are those of the "
+   + "standards its own `standard` legs in `grading_facts:` target whose `body` is the member's subject, or every row of those "
+   + "standards when the case states no subject; a member with no such row is not judged. The case document's body is not read: it "
+   + "prints quoted passages, whose own words may say otherwise.\n"],
+]);
+
+/* R14 (T37; N757, N763; K2206; DEC-180 (4)): version 3 is version 2 with the `obscured` kind and the `materials:` row's
+   `obscured` field (`case-grammar` R12, R13), the presentability of a photo carried as its copy (R8), and the criteria
+   rows' `captures` (`publication` R72), over which R22 judges the copyrighted standards' arms offline. Built as version 2
+   is, by named changes; the specification's test reads every addition. */
+const V3 = edit(V2, [
+  ["# The case file, format bio-case-file/2\n\nThis document specifies version 2 of the case file:",
+   "# The case file, format bio-case-file/3\n\nThis document specifies version 3 of the case file:"],
+  [/\nVersion 2 adds three kinds of file to version 1 [^\n]*\n/,
+   "\nVersion 2 added three kinds of file to version 1 (`archive`, `container` and `criteria`, section 3) and one check (rule 12, "
+   + "section 8). Version 3 adds one kind of file to version 2 (`obscured`, section 3), the `obscured` fields of a `materials:` "
+   + "row (section 4) and their checks (rules 1 and 7), and the criteria rows' `captures` (section 3, rule 12). A `bio-case-file/2` "
+   + "or `bio-case-file/1` case file is read as written, by its own specification, each held beside this one: a `bio-case-file/2` "
+   + "manifest names no `obscured` file, a `bio-case-file/1` manifest none of the kinds versions 2 and 3 add, and a manifest naming "
+   + "a kind its format lacks departs from its format.\n"],
+  ["- `format`: `bio-case-file/2`.", "- `format`: `bio-case-file/3`."],
+  ["binds, passages, label, access_words}`:", "binds, passages, captures, label, access_words}`:"],
+  ["A standard whose `access` is not `free` carries nothing of its text but those passages.",
+   "A standard whose `access` is not `free` carries nothing of its text but those passages. `captures` is the SHA-256 of each "
+   + "capture holding one of the row's `passages` that the edition's `materials:` lists `included: true`, each once, in the order "
+   + "first met: a capture the edition does not carry is never stated. A row recorded before captures were (a case edition "
+   + "committed before them) has no `captures` field, and it is never filled."],
+  ["`stated: \"not held\"`. A case edition committed before criteria were recorded carries no criteria file.\n",
+   "`stated: \"not held\"` (its `captures` null). A case edition committed before criteria were recorded carries no criteria file.\n"
+   + "- `obscured` at `materials/<ref>/obscured`: the copy of a photo carried in place of its original, its marked areas covered "
+   + "solid, its bytes whole at the SHA-256 the photo's `materials:` row names as `obscured_copy` (section 4), under that row's "
+   + "`ref`, at most one per `ref`. An `obscured` file no row names, a row naming a copy no file carries at that SHA-256, and, for "
+   + "a row stating `obscured_copy`, a `document`, `extracted_text`, `archive` or `container` file under its `ref` at the "
+   + "original's fingerprints (the original never travels) each depart (rule 1).\n"],
+  ["Material whose source's identity is withheld is listed like any other.\n",
+   "Material whose source's identity is withheld is listed like any other. A `document` row may state `obscured_copy` and "
+   + "`obscured_label`: the photo travels as a copy with the areas a member marked obscured, never whole. The row then states "
+   + "`included: false`, and its `sha`, `text_sha`, `origin` and `archived_copy` stay the original's; `obscured_copy` is the "
+   + "SHA-256 of the copy and `obscured_label` the sentence the published case shows beside the material. A row without them "
+   + "travels as before.\n"],
+  ["So a case file published before `/7` still renders its own carried edition byte for byte.\n",
+   "So a case file published before `/7` still renders its own carried edition byte for byte. A photo carried as its copy is "
+   + "listed with the original's fingerprint, the copy's fingerprint and its label, word for word; an edition stating no copy "
+   + "renders as it did before version 3.\n"],
+  ["Not carried is missing; not listed, or listed as not included, differs.\n",
+   "Not carried is missing; not listed, or listed as not included, differs. A row stating `obscured_copy` (a photo carried as "
+   + "its copy) is presentable when the case file carries an `obscured` file at that SHA-256 under its `ref`, whose bytes rule 1 "
+   + "checks; else the copy is missing, for each finding whose chain reaches it. Its extracted text and the original's bytes are "
+   + "not asked, since the original never travels, so a passage relied on in such a photo cannot be found and is missing (rule "
+   + "3). The answer lists each such row, `{ref, sha, copy, label}`, in the document's order, so its label is stated beside it.\n"],
+  ["The case file does not carry which captures hold a standard's text, so this is not judged offline: each such row is named as "
+   + "not judged for this check.\n",
+   "Those captures are its row's `captures`. A row with no `captures` field (recorded before them) is not judged for this check, "
+   + "and its standard is named as not judged for it.\n"],
+  ["one of its row's `passages` whose `content` is the `content_id` of no `passages:` row.\n",
+   "one of its row's `passages` whose `content` is the `content_id` of no `passages:` row, or a `passages:` row whose "
+   + "`capture_sha` is one of its row's `captures` and on which no finding relies (every `passages:` row a case file carries "
+   + "is a finding's, so offline only the first can depart).\n"],
+]);
+
 /** R14: every specification held, by the format it specifies. */
-export const CASE_FILE_SPECS = Object.freeze({ "bio-case-file/1": V1 });
+export const CASE_FILE_SPECS = Object.freeze({ "bio-case-file/1": V1, "bio-case-file/2": V2, "bio-case-file/3": V3 });
 /** R15: the versions held, oldest first. */
 export const CASE_FILE_SPEC_VERSIONS = Object.freeze(Object.keys(CASE_FILE_SPECS));

@@ -41,7 +41,7 @@ Committed files built by `bundler` (`bio-plane/scripts/fleet-bundle.mjs`, `write
 | `pdf-worker/dist/pdf-worker.bundled.mjs`, `.bundle.json` | `pdf-worker` | `pdf-worker/`: `npm run build` | `pdf-worker`, and `pdf-reader`, `subresources`, `runtime-limits` files |
 | `ocr-worker/dist/ocr-worker.bundled.mjs`, `.bundle.json` | `ocr-worker` | `ocr-worker/`: `npm run build` (re-renders `src/tesslib.mjs` when `tesseract-wasm` is installed) | `ocr-worker`, `pdf-pixels`, `image-codecs`, plane `pdfstructure` (and `subresources`, `cpu`) |
 | `agent-runner/dist/agent-runner.bundled.mjs`, `.bundle.json` | `agent-runner` | `agent-runner/`: `npm run build` (bundler's `writeMember`; `@cloudflare/containers` 0.3.7 inlined as a vendored input; K1799) | `agent-runner`, through `bundler` |
-| `agent-worker/dist/agent-worker.bundled.mjs`, `.bundle.json` | `agent-worker` | `agent-worker/`: `npm run build` | `agent-worker`, the plane's `bio-plane/src/tokens.mjs` (runtime-limits) and `run-rules` (with observation-log's `checks.mjs` and `vocabulary.mjs` through it, and record-grammar's `ids.mjs` through those since T33-30; K1598); no catalogue, skills or ai-runs input since T18 layer 6 (R48 reads the rendered pack from `op=affordances`; K683) |
+| `agent-worker/dist/agent-worker.bundled.mjs`, `.bundle.json` | `agent-worker` | `agent-worker/`: `npm run build` | `agent-worker`, the plane's `bio-plane/src/tokens.mjs` (runtime-limits) and `run-rules` (with observation-log's `checks.mjs` and `vocabulary.mjs` through it, and record-grammar's `ids.mjs` through those since T33-30; K1598); no catalogue, skills or ai-runs input since T18 layer 6 (R48 reads the rendered pack from `op=agentpack` since T36-24, K2135; K683) |
 | `newgroup/dist/newgroup.bundled.mjs` | `installer` | `newgroup/`: `npm run build` | `installer`, and `signatures` (`sshsig.mjs`) and `record-grammar` (`document.mjs`; found at T24 L1, K1182) |
 | `bio-plane/src/case-checker/program.mjs` (the standalone checker, with its own SHA-256) | `case-checker` | repository root: `node bio-plane/src/case-checker/build-program.mjs` | `case-checker` and the modules it uses (record-grammar, signatures, content, strength, case-grammar), through `bundler` (K1315; verified byte-identical by case-checker's own test) |
 | `court-citations/court-data.mjs` (reporters-db and courts-db, translated) | `court-citations` | repository root: `node court-citations/build.mjs` (check: `--check`) | the vendored, pinned packages under `court-citations/vendor/` (K1518) |
@@ -59,6 +59,10 @@ Bob's UX design work runs under his **primary account**, outside this process an
 - Entries left out as "Bob's: UX" (K633; N470 and the legacy-ui shares in `plan/next.md`) wait on that stream's outcome, not on a question from this process.
 - `main` can move while a tranche runs when that stream lands: a tranche's close then merges `main` into the tranche branch (never a rebase or force) and runs the checks before the fast-forward.
 - A report to Bob says what this process did; it never presents that stream's decisions as this process's work.
+
+## Parallel work: the investigation design lane (Bob, 2026-10-07; K2076)
+
+Bob's design of the investigation engine and the project as an investigation (K1627, K2064, K2075) runs in its own session, **INVESTIGATION-DESIGN** (#1: `session_01MoJa8LUVd6PRJDtgoSdRvj`, started by BOB #134), on branch `design/investigation`, writing only `docs/development/investigation-design/`. It works with Bob directly and records his decisions as D-numbers (the study's D1–D24, new ones from D25), never K or DEC. Its `HANDOFF.md` (entries `H<n>`) is read by BOB at takeover and at every backstop check; BOB folds each hand-off into requirements (N748) and answers with the K that folds it. Its screens are owed to the UX design stream. A successor (`#n+1`) is started by the BOB of the day when the lane asks.
 
 ## Starting a session
 

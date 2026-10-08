@@ -2,16 +2,16 @@
  *
  * The rung ladder and each writing op's rung, or the one ground on which it has none (R1–R3); the consequence statements
  * published beside a rung (R4, R8, R21); the codes that back a `reasoned` rung (R1); the ops refused to a machine by name
- * and every other gated op's reason (R5); the owners' ops, graded (R6–R17, R22); the advisory phone set (R18); the
- * Irreversible weight (R21); and the alias table that gives an alias its op's grade (R17).
+ * and every other gated op's reason (R5); the owners' ops, graded (R6–R17, R22–R25, R27); the advisory phone set (R18,
+ * R26); the Irreversible weight (R21); and the alias table that gives an alias its op's grade (R17).
  *
  * DATA ONLY, AND IT IMPORTS NOTHING OF ANOTHER MODULE (R19, R20). It decides no op's behaviour: each grade is read from
  * its owner's requirements, and `affordances`, which uses this module, checks that every op is graded and every rung
  * backed (its R12, R19, R20) and publishes these very objects in its `VOCABULARIES` (its R4). Names written in the
  * comments below (`STATES`, `decorateAct`, `ACTS`, `CAPTURE_ACTS`, `deriveActs`, `unaccounted`) are `affordances`'.
  *
- * T33's, T34's and T35's ops are graded in `./t33.mjs`, `./t34.mjs` and `./t35.mjs`, spread into the tables below; each
- * of those files imports nothing, so the spread closes no cycle. */
+ * T33's, T34's, T35's, T36's and T37's ops are graded in `./t33.mjs`, `./t34.mjs`, `./t35.mjs`, `./t36.mjs` and
+ * `./t37.mjs`, spread into the tables below; each of those files imports nothing, so the spread closes no cycle. */
 
 /* R13 (T33-85): the grades and reasons of every op T33 adds, spread into RUNGS, RUNG_ABSENT and NON_ACTS below. */
 import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "./t33.mjs";
@@ -20,6 +20,10 @@ import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "./t33.mjs";
 import { T34_RUNGS, T34_RUNG_ABSENT, T34_NON_ACTS, OP_ALIASES, aliased } from "./t34.mjs";
 /* R21, R22 (K1943): T35's grades and reasons, and `personexpunge`'s consequence statement. */
 import { T35_RUNGS, T35_RUNG_ABSENT, T35_NON_ACTS, T35_CONSEQUENCE_STATEMENTS } from "./t35.mjs";
+/* R23–R25 (K2092, K2130): T36's grades and reasons, and `openwithwarning`'s consequence statement. */
+import { T36_RUNGS, T36_RUNG_ABSENT, T36_NON_ACTS, T36_CONSEQUENCE_STATEMENTS } from "./t36.mjs";
+/* R27 (N757, N776, N669; T37): T37's grades and reasons. */
+import { T37_RUNGS, T37_RUNG_ABSENT, T37_NON_ACTS } from "./t37.mjs";
 export { OP_ALIASES, aliased } from "./t34.mjs";
 
 /* ===========================================================================
@@ -178,6 +182,15 @@ export const JUSTIFICATION_REFUSALS = [
   "DUTY_NO_REASON", "HYPOTHESIS_NO_REASON",
   /* R17 (tasks R15): a check's `concern` says why, refused absent or blank. */
   "CHECK_NO_REASON",
+  /* R23 (K2092): a spot-check visit's testimony, the visitor's own firsthand words (calculations R38), is its reason, as
+     `testify`'s words are (`TESTIMONY_NO_WORDS` above): `NOT_TESTIMONY` refuses a visit whose testimony is not the
+     visitor's authored observation, so it joins as the member's own account, by name, on R23's ruling — not as an
+     object demanded (the deliberate exclusions above stay out). R24 (N707): a scan hold's release says why (file-safety
+     R17), refused empty or over 2,000 characters; its own code, apart from `HOLD_REFUSED` (K231, K2103). */
+  "NOT_TESTIMONY", "HOLD_NO_REASON",
+  /* R25 (T37; N755's follow-on; K2175): `credentials` R51 answers `aikeepaway`'s `on: true` without a reason in its own
+     word for it (C-29.32), where it answered NO_REASON; `NO_REASON` stays for the ops that still answer it. */
+  "AI_KEEP_AWAY_NO_REASON",
 ];
 
 /* THE GROUNDS ON WHICH A MUTATING OP HAS NO RUNG. Written ONCE here and pointed
@@ -260,14 +273,20 @@ export const CONSEQUENCE_STATEMENTS = Object.freeze({
       + "is next opened. This cannot be undone." }),
   /* R21 (N623, DEC-142): `personexpunge`'s, written in ./t35.mjs beside its grades. */
   ...T35_CONSEQUENCE_STATEMENTS,
+  /* R24 (DEC-173 (2)): `openwithwarning`'s, written in ./t36.mjs beside its ground. */
+  ...T36_CONSEQUENCE_STATEMENTS,
 });
 
-/* R18 (DEC-122 (1); K1363 B5): THE ACTS KEPT FOR A LARGER SCREEN BEYOND WHAT THE LADDER ALREADY SAYS. Every decorated act
- * carries an advisory `phone` flag (`phoneOf` below): false at the heavy rungs and for a credential act, and false for
- * the acts named here, whose rung alone would leave them on the phone — `filingsent`, DEC-122's "sending", is `reasoned`.
+/* R18 (DEC-122 (1); K1363 B5): THE ACTS KEPT FOR A LARGER SCREEN BEYOND WHAT THE LADDER AND THE IRREVERSIBLE WEIGHT
+ * ALREADY SAY. Every decorated act carries an advisory `phone` flag (`phoneOf` below): false at the heavy rungs, for a
+ * credential act and (DEC-181) for every op in `IRREVERSIBLE_WEIGHT`, and false for the acts named here, whose rung alone
+ * would leave them on the phone — `filingsent`, DEC-122's "sending", is `reasoned`. (R26, T37: `personexpunge` left this
+ * set; it answers `false` through `IRREVERSIBLE_WEIGHT`, so no op is in both.)
  * Advisory only: nothing refuses by device and the plane cannot know one. Published as
  * `VOCABULARIES.larger_screen_acts`, the same frozen array, so a change of the phone set is a change here only. */
-export const LARGER_SCREEN_ACTS = Object.freeze(["filingsent"]);
+export const LARGER_SCREEN_ACTS = Object.freeze([
+  "filingsent",
+]);
 
 
 /* THE ASSIGNMENT. Every entry carries the source or the enforcement that BACKS
@@ -555,10 +574,13 @@ export const RUNGS = {
      (publication R68); a new signing, published now (`caseratify`) or at a time (`publishat`), takes it back. */
   publishatcancel:       "reversible", // caseratify or publishat signs it again
 
-  /* ---- R13 (T33-85): T33's ops, graded in ./t33.mjs, T34's in ./t34.mjs and T35's in ./t35.mjs. */
+  /* ---- R13 (T33-85): T33's ops, graded in ./t33.mjs, T34's in ./t34.mjs, T35's in ./t35.mjs, T36's in
+     ./t36.mjs and T37's in ./t37.mjs. */
   ...T33_RUNGS,
   ...T34_RUNGS,
   ...T35_RUNGS,
+  ...T36_RUNGS,
+  ...T37_RUNGS,
 };
 
 
@@ -755,10 +777,13 @@ export const RUNG_ABSENT = {
   wizardeditorgrant:    { ground: "credential", is: "an administrator grants a member the advanced editor: a blank start and adding steps (wizard-scripts R8)" },
   wizardeditorrevoke:   { ground: "credential", is: "an administrator revokes an advanced-editor grant, appended and never deleted (wizard-scripts R8)" },
   wizardprogress:       { ground: "observational", is: "adds one to an unattributed daily tally of a script version's start, step reached or finish; names no member, case or project, and stopping is no event (wizard-scripts R15)" },
-  /* R13 (T33-85): T33's ops, graded in ./t33.mjs, T34's in ./t34.mjs and T35's in ./t35.mjs. */
+  /* R13 (T33-85): T33's ops, graded in ./t33.mjs, T34's in ./t34.mjs, T35's in ./t35.mjs, T36's in
+     ./t36.mjs and T37's in ./t37.mjs. */
   ...T33_RUNG_ABSENT,
   ...T34_RUNG_ABSENT,
   ...T35_RUNG_ABSENT,
+  ...T36_RUNG_ABSENT,
+  ...T37_RUNG_ABSENT,
 };
 
 /* D-311 · THE ACTS A MACHINE CREDENTIAL'S CLASS IS REFUSED BY NAME, each with the code its store
@@ -1436,10 +1461,13 @@ export const NON_ACTS = {
   /* R16 (DEC-152, DEC-153; K1364, K1837): the assistant's two labelled drafts write nothing, so neither takes a rung. */
   groupdescriptiondraft: "draft: answers a labelled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",
   writinghelp: "draft: answers a labelled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",
-  /* R13 (T33-85): T33's ops, their reasons in ./t33.mjs, T34's in ./t34.mjs and T35's in ./t35.mjs. */
+  /* R13 (T33-85): T33's ops, their reasons in ./t33.mjs, T34's in ./t34.mjs, T35's in ./t35.mjs,
+     T36's in ./t36.mjs and T37's in ./t37.mjs. */
   ...T33_NON_ACTS,
   ...T34_NON_ACTS,
   ...T35_NON_ACTS,
+  ...T36_NON_ACTS,
+  ...T37_NON_ACTS,
 };
 
 /* R21 (N657, DEC-143): THE IRREVERSIBLE WEIGHT. An act that can never be undone shows the Irreversible weight on its
@@ -1461,13 +1489,16 @@ Object.assign(RUNG_ABSENT, aliased(RUNG_ABSENT));
 Object.assign(NON_ACTS, aliased(NON_ACTS));
 
 /* R18 (DEC-122 (1); K1363 B5): the advisory phone flag — false at the rungs `terminal`, `attested` and `irreversible`,
- * for an absence on the `credential` ground, and for `LARGER_SCREEN_ACTS`; true otherwise, so reads, captures and
- * everyday acts are phone acts. Nothing refuses by it. An alias answers as its op (R17): `LARGER_SCREEN_ACTS` names
- * ops, so `filingrecordsent` is kept for a larger screen as `filingsent` is. */
+ * for an absence on the `credential` ground, (T37; DEC-181) for every op in `IRREVERSIBLE_WEIGHT`, read from that set at
+ * the call and never copied, so an op later given the weight leaves the phone with no change here, and for
+ * `LARGER_SCREEN_ACTS`; true otherwise, so reads, captures and everyday acts are phone acts. Nothing refuses by it. An
+ * alias answers as its op (R17): both sets name ops, so `filingrecordsent` is kept for a larger screen as `filingsent`
+ * is. */
 const NOT_ON_PHONE_RUNGS = new Set(["terminal", "attested", "irreversible"]);
 export function phoneOf(id) {
   const op = Object.hasOwn(OP_ALIASES, id) ? OP_ALIASES[id] : id;
   if (Object.hasOwn(RUNGS, op) && NOT_ON_PHONE_RUNGS.has(RUNGS[op])) return false;
   if (Object.hasOwn(RUNG_ABSENT, op) && RUNG_ABSENT[op].ground === "credential") return false;
+  if (IRREVERSIBLE_WEIGHT.includes(op)) return false;
   return !LARGER_SCREEN_ACTS.includes(op);
 }

@@ -1,6 +1,6 @@
 # case-grammar — requirements
 
-**Status** · In force: split from `publication` for size (K617, K651), meaning unchanged: R1 is `publication` R20, retired there; R6 and R7 copies of its R28 and R34; DEC folds approved by Bob (K1019), R9's first lens sentence Bob's (DEC-117). R21 is a copy of `case-disclosures` R28's block spelling, so `ratification` R41 reads the signed document's ties (K1816). Last changed T34 (R21); every requirement met (K1832).
+**Status** · In force: split from `publication` for size (K617, K651), meaning unchanged: R1 is `publication` R20, retired there; R6 and R7 copies of its R28 and R34; DEC folds approved by Bob (K1019), R9's first lens sentence Bob's (DEC-117). R21 is a copy of `case-disclosures` R28's block spelling, so `ratification` R41 reads the signed document's ties (K1816). Last changed T36 (T36-25: R13 `bio-case-file/2`, R22; K2129, K2144) and T37 (T37-40: R12, R13 (`bio-case-file/3`, the `obscured` kind), R14 amended; N757; K2108, K2171, K2206; DEC-180); those marked not yet met (T37), every other requirement met.
 
 **Size (P6).** About 425 lines. Pure: it reads no table and holds no store.
 
@@ -50,7 +50,9 @@ The case document's grammar, one spelling for every module: the formats and thei
   - `group`: the group vouches for the material by signing the case. `by` is the group's slug, and `signature` is the literal `case`: the case document's own signature covers the row.
 
   The rows are flat, as R1's blocks are (K549). `materialsLines(rows)` and `materialAttestationLines(rows)` write them, the one spelling (K1317); `materialsOf(fm)` reads both blocks back. A document without them answers null. Pure; never throws. Material whose source's identity is withheld is listed like any other material. (DEC-112 (3)(4)(5); DEC-119 (1); K1134 Q6, BOB's decision 15; K1275, K1277)
-- **R13** `CASE_FILE_FORMAT` is `bio-case-file/1`.
+
+  (T37; N757; DEC-180 (4), K2108, K2206) A `document` row may state `obscured`: the photo travels as a copy with its marked areas obscured, never whole. The row then states `included: false`, and its `sha`, `text_sha`, `origin` and `archived_copy` stay the original's. `obscured` is written flat on the row as `obscured_copy` and `obscured_label`, as R1's acknowledgement fields are, and `materialsOf` reads it back as `obscured: {copy, label}`: `copy` the SHA-256 of the copy (`case-carriage` R11), `label` the sentence the published case shows beside the material (`case-carriage`'s `OBSCURED_LABEL`). A row without it answers `obscured: null`. It is an optional field of the current case document format, with no new format version, as R10's `working_on` and R22's `subject_entity` are: a document without it reads as before. Pure; never throws.
+- **R13** `CASE_FILE_FORMAT` is `bio-case-file/3` (T37; N757, K2206). `bio-case-file/2` (T36; N717, K2004) and `bio-case-file/1` case files are read as written: a `/2` manifest names no `obscured` file and a `/1` manifest none of the kinds `/2` adds, and a manifest naming a kind its format lacks is a departure.
   - **The manifest** names: the format; the source group's slug; the case, edition and case document's SHA-256; the signing keys with their fingerprints; each part (one file of a case file that is split), with its index, SHA-256 and bytes, where a part's SHA-256 is over the lines `<path> <sha256> <bytes>\n` of its files in path order and its bytes are the sum of its files' bytes (a part holding the manifest cannot list its own digest; `casePartDigest(files, index)` is the one spelling, K1315, K1318); the manifest is `manifest.json` (`CASE_FILE_MANIFEST_PATH`) at each part's root, and each file sits at its `caseFilePath` path directly under the root, files listed in path order (K1318); and every file, with its path, SHA-256, bytes, part and kind.
   - **The kinds** are:
     - `case_document`, `case_signature`, `complete_edition`;
@@ -60,13 +62,16 @@ The case document's grammar, one spelling for every module: the formats and thei
     - `document` (captured bytes, whole), `extracted_text` and `observation` (its text, whole);
     - `attestation` (a signed account, a timestamp token, a co-archive record);
     - `calculation` (one calculation a member's chain reaches, as R18's row, with each input it names travelling as the file its input hash names).
+        - `archive` (the captured bytes, whole, of the archive a carried member document was unpacked from, `case-carriage` R8) and `container` (that member's `container` record as `case-carriage` R8 holds it, `record-grammar`'s canonical JSON naming the member and its archive by SHA-256); each under the ref of the material whose chain it belongs to, the same pair again for that archive's own archive, outward to the outermost; an `archive` or `container` file under a ref that carries no `document` is a departure. The archive's timestamp tokens stay `attestation`. (CASE-CARRIAGE #3; K2004)
+        - `criteria` (the edition's criteria rows, as `publication` R72 froze them and its R53 answers them, in canonical JSON), at most once in a case file; absent for an edition whose criteria were not recorded (committed before T35). It lets the rows a case measures against be read offline. (N717; K1941)
+        - `obscured` (T37; N757; DEC-180 (4)): the copy of a photo carried in place of its original, its bytes whole at the SHA-256 the photo's `materials:` row names as `obscured.copy` (R12), under that row's ref. An `obscured` file no row names, a row naming a copy no file carries at that SHA-256, and, for a row stating `obscured`, a `document`, `extracted_text`, `archive` or `container` file under its ref at the original's digests (the original never travels) are each a departure.
   - **The check.** `caseFileManifestCheck(manifest)` answers every way a manifest departs from this rule, each named, or none. Pure; never throws.
 
   This is the one spelling of the format for `public-read` R23, `case-checker` and `case-import`. Its readable specification is `case-checker` R14 (K1134 (1)). (DEC-112 (3); Publication §5C)
 - **R14** `completeEditionOf(caseFile)` renders the complete edition from a case file's other files: `caseFile` is `{format, group, case, edition, case_document_sha, keys, files: [{path, kind, sha256, bytes, content}]}`, every file but the complete edition, with no part (K1315). The result is one HTML file with every style inline, no script and no external reference, so it opens with nothing installed and no network. There is no length limit and nothing is left out for length. Its order is:
   1. the claims;
   2. each finding, opening with its standing line (R15), then its two grades with their plain meanings (DEC-82), then its chain down to the exact passages relied on, each quoted with its location. A chain reaching an imported finding reference (`inquiry-grammar` R11) prints, at that leg: the acceptance (who accepted which edition, when and why); the recreation result and gaps; each disclosed flag; and the source case file named by group, case, edition and manifest SHA-256, as the place to check that finding. The chain stops there. The words are the UX stream's; until it gives them, one plain sentence for each (DEC-96 item 4; N522);
-  3. every document and observation in `materials:`, with its fingerprint, origin and archived copy (one not included says so), and its attestations (R12). For material from a source whose identity is withheld, the source is shown as "Withheld" with its reason (`case-disclosures` R4) (DEC-119 (1), K1275);
+  3. every document and observation in `materials:`, with its fingerprint, origin and archived copy (one not included says so), and its attestations (R12). For material from a source whose identity is withheld, the source is shown as "Withheld" with its reason (`case-disclosures` R4) (DEC-119 (1), K1275). (T37; N757) A photo carried as its copy (R12's `obscured`) is listed with the original's fingerprint, the copy's fingerprint and its label, word for word; an edition whose document states no `obscured` renders exactly the bytes it rendered before T37;
   4. what was searched;
   5. the declared bias (the lens section, R9);
   6. disclosed contradictions;
@@ -113,6 +118,9 @@ The case document's grammar, one spelling for every module: the formats and thei
 
 - **R21** `peopleLines(rows)` and `memberTieLines(rows)` spell the case document's `people:` block (one row per person: `{person, places, basis, citation, words}`) and `member_ties:` block (one row per tie a signer attests: `{row, signer, at, entity, kind, level, shown}`), flat as R1's blocks; `peopleOf(fm)` and `memberTiesOf(fm)` read them back from parsed front matter, each field a string or null, answering empty lists for a document without them. Pure; never throws.
 
+*A member's subject* (T36; N717; K2002, K2004)
+- **R22** Each `case_roles:` row (one per member finding, `case-authoring` R14) may state `subject_entity`: the entity id the member's pinned bytes state as their own `subject_entity`, or null when they state none. `memberSubjectOf(fm, finding)` answers it from that member's `case_roles:` row, else from its `case_conclusions:` row, else null. It is an optional field of the current case document format, with no new format version, as R10's `working_on` is: a document that states no member's subject answers null for each, and `case-checker` R21 then reads every body's rows of that member's standards (K2002). Pure; never throws. (N717; K2002, K2004)
+
 ## Private
 
 ### Uses
@@ -136,6 +144,7 @@ The case document's grammar, one spelling for every module: the formats and thei
 - DEC-112 response 4 (1)–(5) and `BIO_Publication_v0_1.md` §5C (R11–R15), with K1134 (1) and Q6, and DEC-119 (R12, R14; K1275); DEC-117 (R9, N524).
 - DEC-96 item 4 (R14's leg on another group's work, R16; N522, K1273).
 - DEC-122 (2) (R14: print and the complete edition are always light; N528).
+- DEC-180 (4) (Bob, K2108): the copy a published case carries, labelled, the original kept inside the group (R12–R14; N757, K2206).
 - DEC-101 (1)(2) and `BIO_Publication_v0_1.md` §5A (R8); DEC-103 and `BIO_Declared_Bias_v0_1.md`, "RULED 2026-10-01 by Bob (DEC-103)" (R9; its two closing sentences drafted by BOB from that document's "Why this exists" and "The two-audience choice, made knowingly"); K1019.
 
 ### Suggestions

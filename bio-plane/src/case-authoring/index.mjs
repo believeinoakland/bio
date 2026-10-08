@@ -40,7 +40,8 @@
  *   bias                 `biasManifest` (R14).
  *   observations         observation-log's `missingCauseAt` (R17).
  *   reevaluation         `raise` (R15).
- *   publication          `storeCaseDocument`, `reauthorSection`, `hasCaseStanding`, `reviewProvider` (its R21, R23).
+ *   publication          `storeCaseDocument`, `reauthorSection`, `hasCaseStanding`, `reviewProvider` (its R21, R23),
+ *                        `criteriaFor` (its R75; R61).
  *   caseTensions         `caseRelation`, `attributionStatements` (case-tensions R1, R5; T33-62).
  *   calculations, workbooks   R56's gather (calculations R8–R10, workbooks R2). events   R57's timeline (its R28–R30).
  *   ratification         `caseConclusionFor`, `editionsRecordingConclusion` (its R1).
@@ -49,6 +50,7 @@
  *                        order: its one instance on this host, which the composition builds with the dependencies it
  *                        reads (N536); this module hands it none and reads none of them itself.
  *   now                  the clock for the instants it writes, `(precision) => ISO string` (default: the wall clock).
+ * `case-checker`'s `checkStandardsUse` (its R21; R61) is pure and imported, never a dependency.
  *
  * READ CONTRACTS it joins in its own SQL, each named at its statement: record-core's `bundles` (R37); publication's
  * `cases`, `published_cases`, `published_case_members`, `published_bundles`, `case_documents` (R40); review's
@@ -70,7 +72,9 @@ import { networkNoticesOf } from "../network-notices/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, OBJECT_TYPES, BASIS_GRADES,
          isPublicHttpsLocator, proposalLabel, idPattern } from "../record-grammar/index.mjs";
 /* R56, R57 (T33): case-grammar's `calculationsLines` and `timelineLines` (its R18, R20), the one spelling of each block. */
-import { SECTIONS, calculationsLines, timelineLines } from "../case-grammar/index.mjs";
+import { SECTIONS, calculationsLines, timelineLines, materialsOf, passagesOf } from "../case-grammar/index.mjs";
+/* R61 (N717; K2129): how a case uses the standards it measures against, judged by `case-checker`'s pure R21. */
+import { checkStandardsUse } from "../case-checker/standards.mjs";
 import { calculationsOf } from "../calculations/index.mjs";
 import { workbooksOf } from "../workbooks/index.mjs";
 import { eventsOf } from "../events/index.mjs";
@@ -145,9 +149,26 @@ const inputsHashed = (r) => (r.calculation && Array.isArray(r.calculation.inputs
 const CHAIN_DEPTH_MAX = 16;
 /** R55 (case-disclosures R24): an entity id in an authored sentence, record-grammar's one spelling of it. */
 const ENTITY_ID = idPattern("ENT");
+/* R60 (N717; case-grammar R22): the `subject_entity` a member's pinned bytes state, or null when they state none (an
+   inquiry's own gate admits only an entity id there, inquiry-grammar's C-2.8). */
+const subjectStated = (fm) => (fm && typeof fm.subject_entity === "string" && ENTITY_ID.test(fm.subject_entity.trim())
+  ? fm.subject_entity.trim() : null);
 /* R55 (case-disclosures R27): the signer's attestation of no undeclared tie is the act's own: `tieAttested: true` from the
    publishing owner, stamped with the author and the act's instant (R25), never a body's names or times. */
 const attestedBy = (who, tieAttested, at) => (tieAttested === true ? [{ signer: who, at }] : null);
+/** R61: each of `case-checker` R21's refusals, named to the publisher in one sentence. */
+function standardsUseWords(r) {
+  switch (r && r.code) {
+    case "COPYRIGHTED_TEXT_CARRIED":
+      return `The case would carry whole the capture ${r.sha} of ${r.standard}, a standard that is not free to read.`;
+    case "COPYRIGHTED_PASSAGE_UNRELIED":
+      return `The case quotes passage ${r.content} of ${r.standard}, a standard that is not free to read, and no finding relies on it.`;
+    case "BENCHMARK_CALLED_NONCONFORMING":
+      return `${r.finding} rests only on benchmarks of ${r.standard}, which binds no body it is measured against, and the case calls it "${r.word}".`;
+    default:
+      return `The case's use of its standards could not be judged (${r && r.field ? r.field : "its arguments"} malformed).`;
+  }
+}
 /* R3's set: `targets` as a list, a comma-separated string, or the one `target`. */
 const membersOf = (targets, target) => [...new Set((Array.isArray(targets) ? targets
   : typeof targets === "string" && targets.trim() ? targets.split(",") : target ? [target] : [])
@@ -902,13 +923,9 @@ export class CaseAuthoring {
                        : {}),
                      /* R15 — REC-17 / DEC-12: a NEW edition of the finding above 1 surfaces the re-evaluation
                         obligation on everything whose basis names it (reevaluation R7); bytes another case already
-                        carried across are the edition a leg already rests on, so nothing moved under anybody. */
-                     ...(!already && memberEdition > 1
-                       ? { reevaluation: run.preflight
-                           ? { source: "edition", edition: memberEdition, raised_when: "published" }
-                           : this.reevaluation.raise({ target: memberId, source: "edition", since: when,
-                                                      edition: memberEdition, viewer }) }
-                       : {}) });
+                        carried across are the edition a leg already rests on, so nothing moved under anybody. Raised
+                        below, after the act's last refusal (R61), so no listener hears of an edition never made. */
+                     ...(!already && memberEdition > 1 ? { reevaluation: null } : {}) });
     }
 
     /* R14 — CASE-5b / DEC-72: THE CASE DOCUMENT, AUTHORED HERE, after every member's pin is known, naming the whole
@@ -993,6 +1010,8 @@ export class CaseAuthoring {
       author: who, at: when, searched, conclusions: conclusionRows,
       statementBy: writer.by, statementByStated: writer.stated,
       frozen, manifest, acks, citations,
+      /* R60: each member's subject as its pinned bytes state it. */
+      subjects: new Map(prepared.map((p) => [p.id, subjectStated(p.fm)])),
       attributions,
       /* R55: each tension entry, the owner's words marked as the owner's, acknowledged by the `author` stamp at this act. */
       tensions: read.entries.map((e) => ({ ...e, words: listed.byCandidate.get(e.candidate).words,
@@ -1015,6 +1034,22 @@ export class CaseAuthoring {
       timelineBlock: timelineLines(timeline.rows),
       peopleBlock: peopleLines(peopleJ.rows), memberTiesBlock: memberTieLines(tiesJ.rows),
     });
+    /* R61 (N717; K2002, K2129): THE STANDARDS THIS CASE MEASURES AGAINST, JUDGED OVER THE TEXT IT WOULD STORE, the act's
+       last refusal (`#standardsUse`). Nothing is written on a refusal: the act's transaction takes back every row. */
+    const standardsUse = this.#standardsUse(docText, written, who, when);
+    /* DEC-49 REGION is-standards-use */
+    if (standardsUse.ok === false)
+      return actRefusal("STANDARDS_USE_REFUSED", { refusals: standardsUse.refusals, unjudged: standardsUse.unjudged,
+        detail: `${standardsUse.refusals.map(standardsUseWords).join(" ")} A published case carries a standard that is not `
+              + "free to read only as the passages a finding relies on, and a finding that rests only on benchmarks "
+              + "says \"slower than\" or \"below\", never \"violated\" or \"nonconforming\" (K1723, K1739). Change the "
+              + "case and prepare it again. Nothing was prepared." });
+    /* END DEC-49 REGION is-standards-use */
+    /* R15: the raise for each new member edition above 1, now that nothing refuses; the pre-flight's rolled-back run
+       states it and raises nothing (R34). */
+    for (const f of written) if (f.reevaluation === null)
+      f.reevaluation = run.preflight ? { source: "edition", edition: f.edition, raised_when: "published" }
+        : this.reevaluation.raise({ target: f.target, source: "edition", since: when, edition: f.edition, viewer });
     const docBytes = new TextEncoder().encode(docText);
     /* publication R21: stored unsigned, replacing an unsigned document of this case edition and never a signed one; the
        exclusions are projected in the same write. What this act answers with is what the store holds after the call. */
@@ -1066,6 +1101,8 @@ export class CaseAuthoring {
                                ? { acknowledgements_unbindable_writer_undetermined: acks.unboundWriterUndetermined }
                                : {}) },
              author: who, at: when, weight: "single",
+             /* R61: each criteria row stated "not held", not judged, beside an act that succeeds. */
+             ...(standardsUse.unjudged.length ? { unjudged: standardsUse.unjudged } : {}),
              /* THERE IS NO CASE-LEVEL `strength` KEY AND THERE MUST NEVER BE ONE (R24). */
              next: `review the CASE DOCUMENT (op=casedocument&case=${theCase}&edition=${edition}) and `
                + `ratify it (op=caseratify): it carries the case's scope, its completeness assertion, its `
@@ -1079,6 +1116,33 @@ export class CaseAuthoring {
                  : `Then ratify EACH of these ${written.length} findings (op=ratify): every finding is signed `
                  + `on its own bytes because the finding is the unit of truth, and this case edition becomes `
                  + `servable as a container when the last of them lands.`) };
+  }
+
+  /** R61 (N717, N648; K1723, K1739, K2002): `case-checker.checkStandardsUse` (its R21) over the complete text `text`:
+   *  `criteria`, the rows `publication.criteriaFor` (its R75) answers for the members at the bytes R13 pins (`written`),
+   *  with the publisher `signer` and the act's instant `at`, each also carrying `captures`, the captures holding its
+   *  passages (`content`'s read contract, its R45); `materials` and `passages`, the document's own `materials:` and
+   *  `passages:` rows (`case-grammar` R12, R17) read back from `text`. Answers `{ok, refusals?, unjudged}`. */
+  #standardsUse(text, written, signer, at) {
+    const read = this.publication.criteriaFor({ members: written.map((f) => ({ bundle_id: f.target, version_sha: f.bundleSha })),
+                                                signer, at });
+    const rows = (read && Array.isArray(read.rows) ? read.rows : []).filter((r) => r && typeof r === "object");
+    const contents = [...new Set(rows.flatMap((r) => (Array.isArray(r.passages) ? r.passages : [])
+      .map((q) => (q && typeof q.content === "string" ? q.content : null)).filter(Boolean)))];
+    const captureOf = new Map();
+    for (let i = 0; i < contents.length; i += SEARCHED_CHUNK) {
+      const part = contents.slice(i, i + SEARCHED_CHUNK);
+      for (const r of this.#rows(`SELECT content_id, capture_sha FROM content WHERE content_id IN (${part.map(() => "?").join(",")})`,
+                                 ...part))
+        if (typeof r.capture_sha === "string" && r.capture_sha) captureOf.set(r.content_id, r.capture_sha);
+    }
+    const criteria = rows.map((r) => ({ ...r, captures: [...new Set((Array.isArray(r.passages) ? r.passages : [])
+      .map((q) => q && captureOf.get(q.content)).filter(Boolean))] }));
+    const fm = parseFrontmatter(text).data || {};
+    const materials = (materialsOf(fm) || {}).materials || [];
+    const passages = Object.values(passagesOf(fm) || {}).flat();
+    const judged = checkStandardsUse({ text, criteria, materials, passages });
+    return { ...judged, unjudged: Array.isArray(judged.unjudged) ? judged.unjudged : [] };
   }
 
   /** R38 (DEC-101 (1)(2); K1019, K1025): the "What changed" statement of an edition above 1, `{text, draft?}`. Absent, not
@@ -1404,11 +1468,12 @@ export class CaseAuthoring {
    *  would store, with `author` as signer. It answers `{ok: true, wrote: false, ready, first, blockers, steps}`:
    *  - `first` is exactly the refusal `op=publish` would give (DEC-8), or null when it would publish;
    *  - `blockers` is every other refusal reachable independently: each load-bearing member's shortfall on each axis of
-   *    the bar (R6), and `case-disclosures`' R16 (hunch debt), R2, R6, R13, R14, and R1 as R32 reads it (R53), and
+   *    the bar (R6), and `case-disclosures`' R16 (hunch debt), R2, R6 (its photo refusals included), R13, R14, and R1
+   *    as R32 reads it (R53), and
    *    ratification R18's list (reached only when the
    *    act would publish, since it reads the document's bytes);
    *  - `ready` is true only when there is neither and ratification's list was read;
-   *  - `steps` is the five steps' content (DEC-80 item 2), read from the same run.
+   *  - `steps` is the six steps' content (DEC-80 item 2; the Photos step, DEC-180 (3)), read from the same run.
    *  The rolled-back run does not raise re-evaluation (R15): its listeners are told synchronously and must not hear of
    *  an edition that was never made. It writes nothing.
    *
@@ -1464,7 +1529,10 @@ export class CaseAuthoring {
           found.push(...accepted.refusals);
           const flags = D.flagsJudged(accepted.editions, a.flagsDisclosed ?? null);
           found.push(...flags.refusals);
-          rests = { accepted: accepted.rows, flags };
+          /* R34 (N757; DEC-180 (3); K2206): the ceremony's Photos step, `case-disclosures` R29 over the materials R6
+             answered, as op=publish judges them. An unchecked photo is never a blocker; R6's photo refusals already are. */
+          rests = { accepted: accepted.rows, flags,
+                    photos: D.photosOf(reached.materials, partition.memberRoles, a.viewer ?? null) };
           /* R56's undisclosed calculations, and its R25's and R27's people and signers (R34), as op=publish asks them. */
           const calc = this.#calculationsJudged(judged.prepared, partition.memberRoles, a.calculationsDisclosed ?? null,
                                                 calculationFacts);
@@ -1508,8 +1576,9 @@ export class CaseAuthoring {
     return { reached: false, refusals: [undetermined], why: undetermined.detail ?? "ratification's pre-flight is undetermined" };
   }
 
-  /* R34: the five steps (DEC-80 item 2), each read from the rolled-back run when it published, and each part it could
-     not reach stated as not reached, never filled. Step three carries R32's read as the ceremony shows it. */
+  /* R34: the six steps (DEC-80 item 2; the Photos step, DEC-180 (3)), each read from the rolled-back run when it
+     published, and each part it could not reach stated as not reached, never filled. Step three carries R32's read as
+     the ceremony shows it. */
   #preflightSteps(a, answer, seen, ratify, notice = null, rests = null) {
     const ok = !!(answer && answer.ok === true);
     const notReached = ok ? null : `not reached: op=publish refuses first (${answer ? answer.reason : "no answer"})`;
@@ -1551,10 +1620,15 @@ export class CaseAuthoring {
                    /* R34 (DEC-112 (5)): each source the case shows as "Withheld" (`case-disclosures` R4). */
                    withheld: seen.sources.filter((x) => x.basis === null) }
                : { stated: notReached }) },
-      { step: 4, name: "the edition this creates",
+      /* R34 (N757; DEC-180 (3); K2206): each photo the case relies on, its marks and state, and how many are unchecked
+         (`case-disclosures` R29). An unchecked photo travels whole as taken and blocks nothing. */
+      { step: 4, name: "photos",
+        ...(rests ? { photos: rests.photos.photos, unchecked: rests.photos.unchecked }
+                  : { stated: "not reached: the members or their roles are refused first" }) },
+      { step: 5, name: "the edition this creates",
         ...(ok ? { case: answer.caseId, edition: answer.edition, minted: answer.minted, members: seen.memberEditions }
                : { stated: notReached }) },
-      { step: 5, name: "sign", signer: str(a.author) || null,
+      { step: 6, name: "sign", signer: str(a.author) || null,
         ratification: ratify.reached ? { reached: true, refusals: ratify.refusals }
                                      : { reached: false, why: ratify.why },
         next: ok ? `op=caseratify over op=publish's document (case ${answer.caseId}, edition ${answer.edition})`
@@ -2350,9 +2424,13 @@ export function caseAuthoringOps(c, url, body) {
       viewer: q("viewer"), proposedBy: q("author") }),
     /* R39: the case's drafts, oldest first. */
     whatchangeddrafts: () => c.whatChangedDrafts({ case: q("case") || b.case || null, viewer: q("viewer") }),
-    /* R19–R21: the review copy's two doors, and a member's third subject (an unsigned case document). */
+    /* R19–R21: the review copy's two doors, and a member's third subject (an unsigned case document). R62 (N761;
+       K2175): the grant's digest is read from the BODY only, where the control plane sets it after removing any a
+       caller sent; a `secretSha` in the query is never read, so it opens no door (the dead answer), and no digest
+       travels in an internal address. */
     statementack: () => c.acknowledgeStatement({ draft: q("draft"), caseId: q("case"), edition: q("edition"),
-      secretSha: q("secretSha"), viewer: q("viewer"), bySecret: q("bySecret") === "1",
+      secretSha: typeof b.secretSha === "string" ? b.secretSha : null, viewer: q("viewer"),
+      bySecret: q("bySecret") === "1",
       /* R19 (DEC-88): the acknowledger's words, from the query as the subject is; absent stays absent. */
       reason: q("reason") ?? undefined }),
   };

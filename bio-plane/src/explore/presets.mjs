@@ -2,7 +2,6 @@
 /* explore: the presets (R10) and overlaps (R11). Each preset is the one walk (walk.mjs) over a kind set, never a
    walker of its own (R15). A preset's set is a rule over the registry, read on every call, so a kind an owner
    registers later joins the preset that names it with no change here. */
-import { BOUNDS } from '../connection-grammar/index.mjs';
 import { checkWalkArgs, walk, resolveKinds } from './walk.mjs';
 import { kindsByOwner, makeReader } from './reader.mjs';
 import { intersect, spanOfValidity, spanOfWindow } from './intervals.mjs';
@@ -141,14 +140,17 @@ export function overlaps(ctx, arg) {
   };
 }
 
-/** How many others hold a step of `kind` to `node` in the span, counted from the owner's answer; a hub by its set size. */
+/**
+ * How many others hold a step of `kind` to `node` in the span, counted from the owner's answer read whole within the
+ * kind's bound (R5), `at_least` when the owner held more than it; a hub by its set size, judged for the kind alone (R20).
+ */
 function sharedSet(ctx, reader, { kind, node, span, a, b }) {
   const owner = ctx.registry.kindOf(kind)?.owner;
-  const hubsBefore = reader.s.hubs.length;
+  const hubsBefore = reader.s.hubs.length, cutBefore = reader.s.fanout.length;
   const items = reader.read(owner, node, [kind]);
   if (!items) {
     const hub = reader.s.hubs.length > hubsBefore ? reader.s.hubs[reader.s.hubs.length - 1] : null;
-    if (hub) return { hub: true, set_size: hub.set_size, words: `with ${hub.set_size} others held; ${hub.words}` };
+    if (hub) return { hub: true, kind: hub.kind, bound: hub.bound, set_size: hub.set_size, words: `with ${hub.set_size} others held; ${hub.words}` };
     return { held: null, why: 'the owner did not answer this record\'s set' };
   }
   const held = new Set(), undetermined = new Set();
@@ -161,5 +163,5 @@ function sharedSet(ctx, reader, { kind, node, span, a, b }) {
   }
   for (const o of held) undetermined.delete(o);
   return { held: held.size, undetermined: undetermined.size, words: `with ${held.size} others held${undetermined.size ? ` (and ${undetermined.size} not settled)` : ''}`,
-    ...(items.length >= BOUNDS.fanout ? { at_least: true } : {}) };
+    ...(reader.s.fanout.length > cutBefore ? { at_least: true } : {}) };
 }

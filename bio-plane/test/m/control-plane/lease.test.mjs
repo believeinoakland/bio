@@ -22,7 +22,8 @@ function callers() {
   const w = world({ creds: { [agent]: cred({ tokenId: "agent-ann", principal: "member:ann", writes: ["lease", "promote"] }) } });
   return { w, list: [
     ["ann's member session", w.S.ann, {}, "ann"], ["the founder's session", w.S.founder, {}, "admin"],
-    ["the admin binding", w.env.ADMIN_TOKEN, {}, "token:admin"], ["the member binding (the daemon)", w.env.MEMBER_TOKEN, {}, "token:member"],
+    /* admission R5 (K2166): the shared member binding is retired, so it is no longer one of the callers */
+    ["the admin binding", w.env.ADMIN_TOKEN, {}, "token:admin"],
     ["the probe binding", w.env.PROBE_TOKEN, { store: "scratch" }, "token:probe"], ["an agent credential", agent, {}, "token:ai"],
   ] };
 }

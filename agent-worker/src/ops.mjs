@@ -29,7 +29,7 @@ export const PLANE_OPS = {
   basisversions:  { mutating: false, why: "PL-1's version set — what DEDUP compares against, read before any write" },
   search:         { mutating: false, why: "D-220 — which held record a citation names, and the source address its bytes name" },
   versionchain:   { mutating: false, why: "D-220 / PL-10 — every version at that address, so a document is counted ONCE" },
-  affordances:    { mutating: false, why: "R48 — what the plane publishes, which the skill pack is rendered from before any model turn" },
+  agentpack:      { mutating: false, why: "R48 — the rendered skill pack and its fences, read apart from what else the plane publishes, before any model turn (N695)" },
   /* R51, R53 (K660) — MODE `plan`'s reads, under the run's credential and nothing else. Their op names are held in
      `agent-harness`' `PLAN_READS`, beside the rows that call them. */
   plan:              { mutating: false, why: "R51 — the run's action plan: its subjects, options and proposals (action-plans R6)" },
@@ -69,12 +69,12 @@ export const ASK_OPS = Object.freeze([
 
 /* R54 (K1601 (3), (4)) — THE ASK'S OWN CALLS, which are not reads of the record and so not in `ASK_OPS`: the control
  * plane admits them under a grant beside the grant's list. `askceiling` is asked before any model call (ai-runs R50);
- * `affordances` carries the pack the ask is instructed by (R48, untargeted, no member data); `askcheck` hands the
+ * `agentpack` carries the pack the ask is instructed by (R48, control-plane R41, no member data); `askcheck` hands the
  * answer to `answers`' checks over the read log the plane holds for the grant (its R4); `askusage` reports each model
  * call's `usage` (ai-runs R48's `countAskUsage`). */
 export const ASK_PLANE_OPS = Object.freeze({
   askceiling:  { mutating: false, why: "R54 — the member's use ceiling, before any model call (ai-runs R50)" },
-  affordances: { mutating: false, why: "R54, R48 — the rendered pack whose `ask` layer instructs the ask" },
+  agentpack:   { mutating: false, why: "R54, R48 — the rendered pack whose `ask` layer instructs the ask" },
   askcheck:    { mutating: false, why: "R54 — answers' checks over the read log the plane holds for the grant (answers R4)" },
   askusage:    { mutating: true,  why: "R54 — each model call's usage, counted for the member (ai-runs R48's countAskUsage)" },
 });

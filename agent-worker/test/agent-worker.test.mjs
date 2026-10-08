@@ -610,10 +610,19 @@ console.log("\n--- 8 · D-276: the meaning ARM, driven against the REAL plane in
     compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
     durableObjects: { STORE: { className: "Store", useSQLite: true } },
     r2Buckets: ["CAPTURES", "PUBLISHED"],
-    bindings: { ADMIN_TOKEN: "adm-d276", MEMBER_TOKEN: "mem-d276", PROBE_TOKEN: "prb-d276", VERSION: "test" },
+    bindings: { ADMIN_TOKEN: "adm-d276", PROBE_TOKEN: "prb-d276", VERSION: "test" },
   });
+  /* Asked as an enrolled member signed in with their own password: the shared member token is retired (C-38.11), and
+     a credential travels in the Authorization header only (C-38.10). */
+  const post = async (op, token, body) => { const j = await (await plane.dispatchFetch(`http://x/api/?op=${op}`, { method: "POST",
+    headers: token ? { authorization: `Bearer ${token}` } : {}, body: JSON.stringify(body) })).json();
+    return j && typeof j === "object" && "result" in j ? j.result : j; };
+  const invited = await post("memberadd", "adm-d276", { memberId: "dana", cover: "c-dana", role: "member", capabilities: ["contribute"] });
+  await post("enroll", null, { invite: invited.invite, handle: "dana", password: "dana-passphrase-1" });
+  const session = (await post("login", null, { role: "member:dana", password: "dana-passphrase-1" })).token;
   const askArm = async (spelling) => (await (await plane.dispatchFetch(
-    `http://x/api/?op=meaningrows&token=mem-d276&limit=1&rows=${encodeURIComponent(spelling)}`)).json());
+    `http://x/api/?op=meaningrows&limit=1&rows=${encodeURIComponent(spelling)}`,
+    { headers: { authorization: `Bearer ${session}` } })).json());
 
   /* THE PLANE NORMALISES `rows` — `String(input.rows).trim().toLowerCase()` in
      `Store#meaningRows` — so a member spelling the arm `"LEG"` or `" leg "` is

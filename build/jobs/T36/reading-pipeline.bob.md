@@ -1,0 +1,15 @@
+# BOB to reading-pipeline (T36)
+
+**Read** · handled J2
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T36), layer 4, reading-pipeline: T36-13a. Read also the plan's "Rules at the opening", K2092 (its line in `build/rulings.md`), and the rulings your entry cites.
+Your requirements: `build/requirements/reading-pipeline.md` (read whole). R28 amended (K2092): a `.docx` reading's `cells` keyed by table `ref` as `office-readers` R11 emits them (`{}` for no tables, `null` when the body was not read). R28 is already named by older tests (K874): add a test that names R28 and asserts a `.docx` table's cells, so coverage reads green only for the new arm. Extraction (T36-13) merges after you and relies on this; merge early.
+P6: report if the module would pass about 4,000 lines.
+
+Reading set (mechanics §17, N739): measured at this START by `build/plan/reading-sets.py`: 351 KB, an over-estimate (it counts each used module's whole public part): read as mechanics §3 asks (each used module's Purpose and the services your Uses names). Measure that set first. At most 300 KB: read it whole and state so in your record. Over: (1) trim nothing; (2) no split in T36; (3) read whole yourself your requirements, layer 4's row of `build/layers.md`, the code and tests your entry changes and the used services your Uses names, and have your own workers read the rest of your code and tests in full and write the summary this task needs (each statement citing file and line), told the task, the requirements it serves and what follows; state in your record what you read whole, the summary's size and what it cites, and whether anything it left out mattered.
+
+Merge order in L4 (K2092): reading-pipeline → extraction.
+Inherited reds (plan rule 5 as extended by K2090, K2093, K2094), outside your module unless named yours: coverage of T36 ids not yet met (1); the format check's file-safety paths (2, until T36-11); row census (4: rows L3–L11 add stay awaiting stamp until T37); the UI's DEC-88 tests (7); `deploybindings` `FILE_SCANNER` (10, T36-49); catalogue totality for file-safety's family (11, until T36-47); installer R34 test (12, T36-39); op-declarations `t34.test.mjs`:135 (13, T36-35); agent-runner `surface.test.mjs`:121 on a release cut (15); progressions `order.test.mjs`:15 (16); op-declarations `t33.test.mjs`:192, `t35.test.mjs`:196 (17, T36-35); any of L3's still open when you start (the plan's list at that moment). Reds 3, 6, 9 and 14 are cleared.
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.

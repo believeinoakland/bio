@@ -46,7 +46,7 @@ test("R13: nothing to install and no network: the program imports only Node's ow
     assert.equal(CC.PROGRAM.includes(net), false, net);
 });
 
-test("R13 R16 R20: run offline from an empty directory, the program prints each finding's result first and then the same answer checkCaseFile gives on the same parts, byte-identical", async () => {
+test("R13 R16 R20 R22: run offline from an empty directory, the program prints each finding's result first and then the same answer checkCaseFile gives on the same parts, byte-identical", async () => {
   const dir = mkdtempSync(join(tmpdir(), "case-checker-"));
   try {
     writeFileSync(join(dir, "case-checker.mjs"), CC.PROGRAM);
@@ -67,6 +67,15 @@ test("R13 R16 R20: run offline from an empty directory, the program prints each 
       const json = out.slice(out.indexOf("{"));
       assert.equal(canonicalJson(JSON.parse(json)), canonicalJson(expected));
     }
+    /* R22 in the program: a /2 case file carrying a criteria file, judged offline by the bundled R21 */
+    const v2 = caseFile({ criteria: [{ standard: "STD-2026-0001-x", portion: null, designation: "x", edition: "1", issuer: "x", citation: "x",
+      access: "paywalled", body: null, binds: false, passages: [], label: "Benchmark · not binding", access_words: "Behind a paywall" }] });
+    writeFileSync(join(dir, "v2.zip"), v2.parts[0]);
+    const v2out = JSON.parse(run("v2.zip").replace(/^[^{]*/s, ""));
+    assert.equal(v2out.format, "bio-case-file/2");
+    assert.equal(canonicalJson(v2out), canonicalJson(await CC.checkCaseFile({ parts: v2.parts })));
+    assert.deepEqual(v2out.standards_use.unjudged.map((u) => [u.standard, u.check]), [["STD-2026-0001-x", "COPYRIGHTED_TEXT_CARRIED"]]);
+    assert.match(CC.PROGRAM.split("\n")[0], /^\/\/ Civicsmith case checker \(bio-case-file\/1, bio-case-file\/2, bio-case-file\/3\)\./);
     assert.match(run("part1.zip", "part2.zip").split("\n")[0], new RegExp(`^${A}: Recreated in part$`));
     assert.equal(JSON.parse(run("part1.zip", "part2.zip").replace(/^[^{]*/s, "")).calculations[0].result, "agrees");
     /* a file it cannot read: exit status 2, saying so */

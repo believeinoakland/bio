@@ -1,10 +1,11 @@
 /* Fixture owners of connections, written the way each owner's job writes its `neighbours` (connection-grammar R6–R8):
    in-memory rows indexed at both ends, sight by `seen_by`, hunches only within their inquiry, validity through
-   civil-time, pages of 100, a hub named above 1,000. Their rows sit in one store so a test can count every table's
+   civil-time, pages of 100, a hub judged per kind against that kind's bound (`hubBoundOf`: a member's vote 4,000, every
+   other kind 1,000; connection-grammar R6, R10), its set size that kind's. Their rows sit in one store so a test can count every table's
    rows before and after an exploration (explore R9). The kinds stand in for the owners not yet built (lines, events,
    money, duties, people, hypotheses); each owner's own job registers its real ones. */
 import { validAt } from "../../../../src/civil-time/index.mjs";
-import { BOUNDS, createRegistry, derivedId, DECLARED_LABEL, HUNCH_LABEL } from "../../../../src/connection-grammar/index.mjs";
+import { createRegistry, hubBoundOf, derivedId, DECLARED_LABEL, HUNCH_LABEL } from "../../../../src/connection-grammar/index.mjs";
 
 export const ZONE = "America/Los_Angeles";
 export const AT = { value: "2026-03-01", precision: "day", zone: ZONE };
@@ -105,7 +106,12 @@ export function makeOwner(store, owner, rows, opt = {}) {
       const { seen_by, ...item } = c;
       set.push(v === "in" ? item : { ...item, undetermined: { why: v.why ?? "undetermined" } });
     }
-    if (set.length > BOUNDS.hub && !opt.noHub) return { items: [], hub: { set_size: set.length, why: `more than ${BOUNDS.hub} connections` } };
+    if (!opt.noHub) {
+      const perKind = new Map();
+      for (const c of set) perKind.set(c.kind, (perKind.get(c.kind) ?? 0) + 1);
+      const over = [...perKind].filter(([k, n]) => n > hubBoundOf(k)).sort((x, y) => y[1] - x[1])[0];
+      if (over) return { items: [], hub: { set_size: over[1], why: `more than ${hubBoundOf(over[0])} connections of one kind` } };
+    }
     const start = typeof page === "number" ? page : 0;
     const items = set.slice(start, start + size);
     const out = start + size < set.length ? { items, next: start + size } : { items };

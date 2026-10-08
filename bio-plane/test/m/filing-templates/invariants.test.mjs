@@ -185,7 +185,7 @@ test("K927 the migration takes each template filings R26 saved as a draft of ori
   assert.deepEqual(seeded().ft.migrateFromFilings(), { migrated: 0 });
 });
 
-test("the ops map: each op reads the control plane's stamps from the query, never the body, and a filing source through templatedraft is refused", () => {
+test("the ops map: each op reads the control plane's stamps author and viewer from the query, never the body, and secretSha from the body, never the query (R27); a filing source through templatedraft is refused", () => {
   const w = seeded();
   const op = (name, query, body = {}) => {
     const url = new URL(`https://plane.example/op?${new URLSearchParams(query)}`);
@@ -202,11 +202,13 @@ test("the ops map: each op reads the control plane's stamps from the query, neve
   assert.equal(op("templatedraft", { author: A, viewer: A }, { project: w.P, kind: "records_request", use: "file", profiles: [TEST],
                                                               name: "F", text: TEXT, from: { filing: "FIL-1", sha: sha(TEXT) } }).reason, "TEMPLATE_FROM_REFUSED");
   assert.equal(op("templaterevise", { author: B, viewer: B }, { version: d.version, text: "r {{group}}" }).ok, true);
-  assert.equal(op("templatereviewgrant", { author: A, viewer: A, secretSha: secret("o") }, { version: d.version, recipient: "R", organisation: "O",
-                                                                                          secretSha: secret("body") }).ok, true);
+  /* R27: the grant's digest is read from the body only; the query's is never read */
+  assert.equal(op("templatereviewgrant", { author: A, viewer: A, secretSha: secret("query") }, { version: d.version, recipient: "R", organisation: "O",
+                                                                                              secretSha: secret("o") }).ok, true);
   assert.equal(op("templatesubmit", { author: A, viewer: A }, { version: d.version, reviewers: ["frank"] }).ok, true);
-  assert.equal(op("templatereview", { secretSha: secret("o") }, { outcome: "no_concerns", scope: "s" }).ok, true);
-  assert.equal(op("templatereview", { secretSha: secret("body") }, { outcome: "no_concerns", scope: "s" }).reason, "NO_TEMPLATE_GRANT");
+  assert.equal(op("templatereview", { secretSha: secret("query") }, { outcome: "no_concerns", scope: "s", secretSha: secret("o") }).ok, true);
+  assert.equal(op("templatereview", { secretSha: secret("o") }, { outcome: "no_concerns", scope: "s" }).reason, "MACHINE_CANNOT_REVIEW_TEMPLATE",
+               "a live digest in the query alone opens no door: answered as a call carrying none");
   assert.equal(op("templateapprove", { author: B, viewer: B }, { version: d.version }).ok, true);
   assert.equal(op("templates", { viewer: A }).templates[0].id, d.template);
   assert.equal(op("templateread", { viewer: A, template: d.template }).version.id, d.version);

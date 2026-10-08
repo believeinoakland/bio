@@ -124,7 +124,8 @@ The one write path by which a bundle enters or changes in the record. It holds t
 ### Uses
 
 - `record-core`: `transact` and `commit` (R2, R3; every row R3 writes goes through them), `mintOpaqueId` and `mintExhausted` (its R62) (a project's id, R19; N322), `bundleInfo`, and `readImage`, whose write order R30 depends on (record-core R16).
-- `membership`: the producing group (R13), project ownership and joined authority (R19), and the sight predicate (R20, R23); `notAParticipant` (R87), R43's `NOT_A_PARTICIPANT` (N335).
+- `record-grammar` (the id grammar and vocabulary its checks read) and `test-support` (tests only).
+- `membership`: project ownership and joined authority (R19), the sight predicate (R20, R23), `notAParticipant` (R87, R43's `NOT_A_PARTICIPANT`, N335), `noSuchProject`, `existenceAct`, `projectCreated`, `visibilityOf`, `visibilitySettingRefusal`, `CUSTODIAL_CHECKS` and `MODULE_ORDER` (R39's listener order). The producing group (R13) is the registered fact `producingGroup` (R39–R40), not a membership service (K2182, PROMOTION #35 J1).
 - `signatures`: `verifySshsig` (R31). Listed in `modules.json` (K10, K62).
 - Later modules' facts, checks and projections reach this module only through R39–R40, never by a use.
 - Its own since T18 (K647): C-86 `PROMOTED_TYPE_CHECKS`, C-97 `PROJECT_CREATION_VISIBILITY_CHECKS` (`checks.mjs`), `withProducingGroup` (`text.mjs`), `projectNameKey` and C-77's `checkProjectNameUniqueness` (`names.mjs`), `MECHANICAL_FIELD_SETS` (`history.mjs`; the catalogue's copy held until T19 for monitoring's tests).

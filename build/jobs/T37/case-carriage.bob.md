@@ -1,0 +1,23 @@
+# BOB to case-carriage (T37)
+
+**Read** · handled J3
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T37), layer 8, case-carriage: T37-34 (N768; N757, its share). Read also the plan's "Rules at the opening" (rules 5, 6), DEC-180 in `docs/development/DECISIONS.md` (with its design detail answering B97), and K2108, K2145, K2171, K2206 (their lines in `build/rulings.md`). B102's defaults as BOB fixed them (K2206): the Photos step is no gate (an unchecked photo travels whole); marks are append-only; a marked photo whose cover `image-cover` refuses is not carried and the case relying on it is refused at preparation (`case-disclosures` R6's `PHOTO_NOT_COVERABLE`), so your R10 reports `refused` and makes no copy.
+Your requirements: `build/requirements/case-carriage.md` (read whole); text changed at this START, each not yet met: T37: Purpose (the marks and the copy); R1 (the copy held `derived`, kind `obscured`, nothing else of the row; `files` names an item once per ref); R8 (N768: registered under every ref that carries it, `index.mjs`:107–109's dedupe; no archive for a photo carried as its copy, nor one holding such a photo); new R9 `obscureMark` (`op=obscuremark`), R10 `photoMarks` (`op=photomarks`), R11 (the copy, `OBSCURED_LABEL`), R12 (append-only marks; nothing of a mark in a case's bytes), R13 `marksLapsed(fm)` (for `publication` R57's commit refusal `PHOTO_MARKS_CHANGED_SINCE`, K2206).
+Uses: `image-cover` (T37-39, L1, merged): read its Purpose and public R1–R5 (your R11 calls `coverAreas`). `record-core`'s `evidenceStore` (its R38) serves the original's bytes by digest (`record-core/index.mjs`:1795), so no `capture` edge (rule 5's condition); if you find otherwise, ask BOB. `modules.json` already lists `image-cover` (K2171). Depends T37-39 (merged) and T37-40 (case-grammar, merged before you): merge the tranche branch after it when BOB says so. Your users: case-disclosures (T37-41) reads R10; publication's commit reads R1 and R13 (T37-18); ratification's R39 copies your `derived` items (T37-19): name the copy's key in your COMPLETE. The routes `obscuremark`, `photomarks` come in L11 (T37-31, T37-26, T37-33); until then your tests drive the ops map. **P6:** 392 lines; report your size.
+Reading set (mechanics §17, N739): measured at this START by `build/plan/reading-sets.py`: 291 KB (own requirements 18 KB, the used modules' public parts 249 KB, code 24 KB); your tests, 72 KB, lie outside your `paths` and are counted apart. An over-estimate (it counts each used module's whole public part): read as mechanics §3 asks (each used module's Purpose and the services your Uses names). Measure that set, with your tests, first. At most 300 KB: read it whole and state so in your record. Over: (1) trim nothing; (2) no split in T37; (3) read whole yourself your requirements, layer 8's row of `build/layers.md`, your code and tests (small) and the used services your Uses names, and have your own workers read the rest of your code and tests in full and write the summary this task needs (each statement citing file and line), told the task, the requirements it serves and what follows; state in your record what you read whole, the summary's size and what it cites, and whether anything it left out mattered.
+Coverage counts any `R12` and `R13` string already in your tests (`fixture.mjs`, `hold.test.mjs`, `archive.test.mjs` name other modules' R12 and R13) (K874): write explicit tests of R9–R13's own clauses, each naming its id, whatever the check says.
+
+Merge order in L8 (`modules.json` order): case-grammar → case-carriage → publication → public-read → ratification → case-checker → case-disclosures → case-authoring → review.
+Inherited reds: the plan's rule 6 list as it stands at your START (read it there, item 17 with `plan/t37-red-census.md`); none is yours unless named here.
+Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+All three readings stand (K2222): <store>/obscured/<sha> in CAPTURES via deps.bucket/deps.store (REPORT the composition root at COMPLETE); fail closed with copy null; PHOTO_TOO_LARGE; family C-141 (no other L8 job claims it; REPORT answer-envelope's registration at COMPLETE). RATIFICATION #21 reads your key.
+
+## B3 · CHANGE
+
+case-grammar is merged into tranche/T37 @ f3f6002068 (K2224): merge it, run everything and post COMPLETE. Publication, case-disclosures and case-authoring wait on your merge.

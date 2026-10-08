@@ -58,14 +58,17 @@ const mf = new Miniflare({
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
-  bindings: { INSTANCE_NAME: "believe-in-oakland", ADMIN_TOKEN: "adm-d526", MEMBER_TOKEN: "mem-d526", VERSION: "test" },
+  bindings: { INSTANCE_NAME: "believe-in-oakland", ADMIN_TOKEN: "adm-d526", VERSION: "test" },
 });
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
+/* RE-READ 2026-10-08 (PROMOTION #35, T37): a credential travels in the Authorization header, never the address, which
+   admission refuses CREDENTIAL_IN_ADDRESS (C-38.10, T36 L11); a call with no credential sends none. */
+const auth = (token) => (token ? { headers: { Authorization: `Bearer ${token}` } } : {});
 const get = async (qs, token = "adm-d526") =>
-  rP(await (await mf.dispatchFetch(`http://x/api/?token=${token}&${qs}`)).json());
+  rP(await (await mf.dispatchFetch(`http://x/api/?${qs}`, auth(token))).json());
 const post = async (op, body, token) =>
-  rP(await (await mf.dispatchFetch(`http://x/api/?op=${op}&token=${token}`,
-    { method: "POST", body: JSON.stringify(body) })).json());
+  rP(await (await mf.dispatchFetch(`http://x/api/?op=${op}`,
+    { method: "POST", body: JSON.stringify(body), ...auth(token) })).json());
 
 const HEAD = (id, type, schema, title, state) => [
   "---", ...(id ? [`id: ${id}`] : []), `object_type: ${type}`, ...(type === "project" ? ['objective: "Fixture objective."'] : []), `schema: ${schema}`,
@@ -138,6 +141,13 @@ const member = async (id, caps, role = "member") => {
 /* Two administrators first (ADMINS_FIRST), then the two members the arms need. */
 const RUTH = await member("ruth", ["contribute", "create_projects"], "admin");
 await member("sam", ["contribute"], "admin");
+/* RE-READ 2026-10-08 (PROMOTION #35, T37): section 2's machine credential was the shared member key, retired in T36
+   (admission R5, MEMBER_TOKEN_RETIRED, C-38.11). An agent credential a member mints for it, declaring the promote it
+   writes (credentials R12, D-199), is the machine credential now. */
+const AGENT_ANSWER = await post("aicredentialmint", { tokenId: "d526-agent", principalKind: "member", principalMember: "ruth",
+  taskScope: "investigative", writes: ["promote"], note: "section 2's machine credential" }, RUTH);
+const AGENT = AGENT_ANSWER?.token;
+if (!AGENT) throw new Error(`aicredentialmint: no token: ${JSON.stringify(AGENT_ANSWER)}`);
 const OTTO = await member("otto", ["contribute"]);   /* holds NO create_projects */
 
 /* ============================================= 1. D-149's carry-forward (GOVERNING_LAWS_REWRITTEN) */
@@ -171,7 +181,7 @@ for (const [label, env] of ENVELOPES) {
   /* RE-ANCHORED 2026-10-01 (LEGACY-TESTS #18, T20): inquiry R11 runs inquiry-grammar R1 at the write (K681), so a
      document with no `surfaced_by` is refused BASIS_REFUSED before the surfacing gate this arm is about. */
   const r = await promote({ id, text: inquiryMd(id, { surfacedBy: "agent" }), metaType: env === null ? "inquiry" : env, state: "open",
-                            title: "Where did it go", token: "mem-d526" });
+                            title: "Where did it go", token: AGENT });
   /* UPDATED 2026-09-26 (T3, legacy-tests; promotion R39 as K62 wrote it): this fence is a check its owner REGISTERS
      with promotion (`ai-runs`' `registerStep` since its extraction; legacy-store's in T3, now retired), and
      promotion's own refusals run before every registered check, so MISLABELLED meets D-510's ENVELOPE_TYPE_DISAGREES

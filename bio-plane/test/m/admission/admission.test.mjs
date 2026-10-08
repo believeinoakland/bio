@@ -73,7 +73,8 @@ test("R8: a session reaching a mutating op outside its kind's set is refused 403
 
 test("R9: a binding class not in the op's classes is refused 403 CLASS_FORBIDDEN (C-38.2); a caller not arriving by a session is judged by machineClasses where the spec gives it", async () => {
   const { env, S } = world();
-  const bindings = { admin: env.ADMIN_TOKEN, member: env.MEMBER_TOKEN, probe: env.PROBE_TOKEN, daemon: env.DAEMON_TOKEN };
+  /* the three binding classes (R5, T36: no member binding exists) */
+  const bindings = { admin: env.ADMIN_TOKEN, probe: env.PROBE_TOKEN, daemon: env.DAEMON_TOKEN };
   for (const op of GATED) {
     const spec = OPS[op];
     for (const [c, token] of Object.entries(bindings)) {
@@ -91,14 +92,15 @@ test("R9: a binding class not in the op's classes is refused 403 CLASS_FORBIDDEN
                                && !OPS[k].machineClasses.includes("member") && SESSION_OPS.member.has(k));
   assert.ok(mc.includes("memberadd"));
   for (const op of mc) {
-    assert.equal((await gate(env, { op, token: env.MEMBER_TOKEN })).refusal?.body.reason, "CLASS_FORBIDDEN", op);
+    for (const [c, token] of Object.entries(bindings).filter(([c]) => !OPS[op].machineClasses.includes(c)))
+      assert.equal((await gate(env, { op, token, params: c === "probe" ? { store: "scratch" } : {} })).refusal?.body.reason, "CLASS_FORBIDDEN", `${op}/${c}`);
     assert.notEqual((await gate(env, { op, token: S.ann })).refusal?.body.reason, "CLASS_FORBIDDEN", op);
   }
   /* a session whose kind the op's classes lack (a read, past R8) */
   for (const op of GATED.filter((k) => !OPS[k].mutating && !OPS[k].classes.includes("member")))
     refused(await gate(env, { op, token: S.ann, method: "GET" }), 403, "CLASS_FORBIDDEN", "C-38.2");
   /* operator-attest, risk-tier, livefire: a bearer the row admits reaches the op as not a session, its class named */
-  for (const op of ["ratify", "caseratify", "promote"]) for (const c of ["admin", "member", "probe"]) {
+  for (const op of ["ratify", "caseratify", "promote"]) for (const c of ["admin", "probe"]) {
     const r = await gate(env, { op, token: bindings[c], params: c === "probe" ? { store: "scratch" } : {} });
     assert.deepEqual([r.caller.cls, r.caller.viaSession, r.caller.member, r.caller.caps], [c, false, null, null], `${op}/${c}`);
   }
@@ -145,7 +147,7 @@ test("R11: a session missing the op's capability is refused 403 NOT_CAPABLE (C-3
     assert.deepEqual([body.op, body.needs, body.held], [op, NEEDS[op], []]);
     assert.equal(opCalls(env).length, 0);
     assert.notEqual((await gate(env, { op, token: S.ann })).refusal?.body.reason, "NOT_CAPABLE", op);
-    const bound = await gate(env, { op, token: env.MEMBER_TOKEN });
+    const bound = await gate(env, { op, token: env.ADMIN_TOKEN });
     assert.notEqual(bound.refusal?.body.reason, "NOT_CAPABLE", op);
     if (bound.caller) assert.equal(bound.caller.caps, null, "a binding class holds no capabilities");
   }
@@ -168,7 +170,7 @@ test("R12: a bearer asking adminendorse, adminremove or membercaps is refused 40
   const { env, S } = world();
   assert.deepEqual([...GOVERNANCE_ACTIONS].sort(), ["adminendorse", "adminremove", "membercaps"]);
   assert.deepEqual([...IDENTITY_ACTIONS].sort(), ["groupdomainset", "groupnameset"]);
-  const bearers = { admin: env.ADMIN_TOKEN, member: env.MEMBER_TOKEN, probe: env.PROBE_TOKEN };
+  const bearers = { admin: env.ADMIN_TOKEN, probe: env.PROBE_TOKEN };
   for (const [op, code, check] of [...GOVERNANCE_ACTIONS.map((o) => [o, "OPERATOR_TOKEN_CANNOT_GOVERN", "C-32.17"]),
                                    ...IDENTITY_ACTIONS.map((o) => [o, "GROUP_IDENTITY_NEEDS_SESSION", "C-64.4"])]) {
     for (const [c, token] of Object.entries(bearers)) {
@@ -184,12 +186,17 @@ test("R12: a bearer asking adminendorse, adminremove or membercaps is refused 40
   for (const op of ["index", "promote", "memberadd"]) assert.equal(A.bearerFence(op, { cls: "admin", viaSession: false }), null);
 });
 
-test("R5–R12: the admission runs in one order — R1, R6's agent lookup, R2, R3, the public ops, then the class with R8's session gate, R7, R10 or R9, R11, R4's scope refusal, then R12 — and stops at the first refusal", async () => {
+test("R5–R12, R20: the admission runs in one order — R1, R20's address gate, R6's agent lookup, R2, R3, the public ops, then the class with R8's session gate, R7, R10 or R9, R11, R4's scope refusal, then R12 — and stops at the first refusal", async () => {
   const { env, S, K } = world();
   const code = async (req) => (await gate(env, { ...req })).refusal?.body.reason;
   /* R1 before the credential is looked up */
   env.calls.length = 0;
   assert.equal(await code({ op: "index", token: K.confined, params: { store: "nope" } }), "NAMESPACE_UNKNOWN");
+  assert.equal(await code({ op: "index", token: K.confined, via: "query", params: { store: "nope" } }), "NAMESPACE_UNKNOWN");
+  assert.equal(env.calls.length, 0);
+  /* R20 after R1 and before the lookup, the confinement, the pin, the public ops and the admission */
+  for (const op of ["index", "knock", "websiteinvite", "adminendorse"])
+    assert.equal(await code({ op, token: K.confined, via: "query", params: { store: "bio" } }), "CREDENTIAL_IN_ADDRESS", op);
   assert.equal(env.calls.length, 0);
   /* R2 before R3 (the confined credential set to scratch, the pinned public op refuses), and before admission */
   assert.equal(await code({ op: "knock", token: K.confined }), "NAMESPACE_PINNED");
@@ -203,7 +210,8 @@ test("R5–R12: the admission runs in one order — R1, R6's agent lookup, R2, R
   /* export's refusal before R9 and R11 for a session lacking every capability */
   assert.equal(await code({ op: "export", token: S.bare }), "ROOT_OF_TRUST_REQUIRED");
   /* R9 before R4's scope refusal: probe asking an op it lacks, in bio */
-  const notProbe = GATED.find((k) => !OPS[k].classes.includes("probe") && OPS[k].classes.includes("member") && !Array.isArray(OPS[k].machineClasses));
+  const notProbe = GATED.find((k) => !OPS[k].classes.includes("probe") && OPS[k].classes.includes("member") && OPS[k].classes.includes("admin")
+                                    && !Array.isArray(OPS[k].machineClasses));
   assert.equal(await code({ op: notProbe, token: env.PROBE_TOKEN, params: { store: "bio" } }), "CLASS_FORBIDDEN");
   /* R10 before R12: an agent declaring a governance act; R9 before R12: the daemon */
   const wide = aik();
@@ -216,5 +224,5 @@ test("R5–R12: the admission runs in one order — R1, R6's agent lookup, R2, R
   assert.equal(await code({ op: "adminendorse", token: env.PROBE_TOKEN, params: { store: "bio" } }), "SCOPE_REFUSED");
   /* negative controls: each with its first failing condition removed meets the next gate */
   assert.equal(await code({ op: "adminendorse", token: env.PROBE_TOKEN, params: { store: "scratch" } }), "OPERATOR_TOKEN_CANNOT_GOVERN");
-  assert.ok((await gate(env, { op: notProbe, token: env.MEMBER_TOKEN, params: { store: "bio" } })).caller);
+  assert.ok((await gate(env, { op: notProbe, token: env.ADMIN_TOKEN, params: { store: "bio" } })).caller);
 });

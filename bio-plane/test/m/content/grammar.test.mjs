@@ -115,6 +115,53 @@ test("R6: extentRelation answers same, narrower, wider, disjoint or unreadable",
   assert.equal(extentRelation(env, { ...env, n: 1 }), "disjoint");
 });
 
+test("R6: extentRelation relates a sheet's cells and ranges, and a table's cells, by the cells they name (N759)", () => {
+  const C = (cell, sheet = "S") => ({ kind: "sheet-cell", sheet, ...(cell === undefined ? {} : { cell }) });
+  const R = (range, sheet = "S") => ({ kind: "sheet-range", sheet, range });
+  const T = (table, cell) => ({ kind: "doc-table", table, ...(cell === undefined ? {} : { cell }) });
+  const both = (outer, inner, rel, back) => {
+    assert.equal(extentRelation(outer, inner), rel, `${JSON.stringify(outer)} / ${JSON.stringify(inner)}`);
+    assert.equal(extentRelation(inner, outer), back, `${JSON.stringify(inner)} / ${JSON.stringify(outer)}`);
+  };
+  /* a cell inside a range: narrower, and the range wider; every corner and the inside, $ and case read away */
+  for (const cell of ["B2", "B10", "D2", "D10", "C5", "$c$5", "d10"]) both(R("B2:D10"), C(cell), "narrower", "wider");
+  both(R("D10:B2"), C("C5"), "narrower", "wider");
+  /* a cell outside the range, by a row or a column, or on another sheet: disjoint */
+  for (const cell of ["A5", "E5", "C1", "C11", "A1", "Z99"]) both(R("B2:D10"), C(cell), "disjoint", "disjoint");
+  both(R("B2:D10"), C("C5", "T"), "disjoint", "disjoint");
+  /* a cell and its one-cell range name one place */
+  both(R("C5:C5"), C("C5"), "same", "same");
+  both(R("C5"), C("$C$5"), "same", "same");
+  /* two ranges: same, narrower, wider, disjoint (apart, or overlapping with neither inside the other) */
+  both(R("B2:D10"), R("$D$10:b2"), "same", "same");
+  both(R("A1:Z100"), R("B2:D10"), "narrower", "wider");
+  both(R("B2:D10"), R("B2:D9"), "narrower", "wider");
+  both(R("B2:D10"), R("C1:C10"), "disjoint", "disjoint");
+  both(R("B2:D10"), R("E1:F4"), "disjoint", "disjoint");
+  both(R("B2:D10"), R("C5:E12"), "disjoint", "disjoint");
+  both(R("B2:D10", "S"), R("B2:D10", "T"), "disjoint", "disjoint");
+  /* the whole sheet holds every cell and range on it */
+  both(C(undefined), R("B2:D10"), "narrower", "wider");
+  both(C(undefined), C("B2"), "narrower", "wider");
+  both(C(undefined, "T"), R("B2:D10"), "disjoint", "disjoint");
+  /* a table's cell inside its table: narrower; another cell or another table: disjoint; the same: same */
+  both(T(0), T(0, "B3"), "narrower", "wider");
+  both(T(0, "B3"), T(0, "$b$3"), "same", "same");
+  both(T(0), T(0), "same", "same");
+  both(T(0, "B3"), T(0, "B4"), "disjoint", "disjoint");
+  both(T(0), T(1, "B3"), "disjoint", "disjoint");
+  /* a table and a sheet are different documents' grids: disjoint; the document holds them all */
+  both(T(0, "B3"), C("B3"), "disjoint", "disjoint");
+  both(T(0), R("A1:C3"), "disjoint", "disjoint");
+  for (const e of [C("B3"), R("A1:C3"), T(0), T(0, "B3")]) both({ kind: "document" }, e, "narrower", "wider");
+  /* a missing coarse field, or a cell or range present and unreadable, is unreadable, never narrower */
+  for (const bad of [{ kind: "sheet-range", range: "A1:B2" }, { kind: "sheet-cell", cell: "A1" }, R("A1:"), R(undefined),
+                     C("1A"), C(7), { kind: "doc-table", cell: "A1" }, T(-1), T(0, "B"), T(0, 3)]) {
+    const grid = bad.kind === "doc-table" ? [T(0), T(0, "B3")] : [R("A1:Z100"), C("B3"), C(undefined)];
+    for (const ok of grid) both(ok, bad, "unreadable", "unreadable");
+  }
+});
+
 test("R7: checkContentExtent refuses what the context bounds, with the figure in detail (C-45.1, C-45.2, C-45.11, C-45.12)", () => {
   const out = (e, c) => { const r = checkContentExtent(e, ctxOf(c)); assert.equal(code(r), "CONTENT_EXTENT_OUT_OF_RANGE", JSON.stringify(e)); assert.equal(r.check, "C-45.1"); return r; };
   assert.match(out({ kind: "pdf-page", page: 3 }, { pageCount: 3 }).detail, /3 page/);

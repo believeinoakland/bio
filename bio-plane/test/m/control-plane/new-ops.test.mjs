@@ -16,7 +16,8 @@ function callers() {
   const bind = (c, token, params = {}) => ({ name: c, token, params, ns: params.store ?? "bio", session: false,
     viewer: `class:${c}`, by: `class:${c}`, author: `class:${c}` });
   return { w, list: [
-    bind("admin", w.env.ADMIN_TOKEN), bind("member", w.env.MEMBER_TOKEN), bind("probe", w.env.PROBE_TOKEN, { store: "scratch" }),
+    /* admission R5 (K2166): the shared member binding is retired, so it is no caller here (its refusal is tested below) */
+    bind("admin", w.env.ADMIN_TOKEN), bind("probe", w.env.PROBE_TOKEN, { store: "scratch" }),
     { name: "founder", token: w.S.founder, params: {}, ns: "bio", session: true, viewer: "admin", by: "admin", author: "member:admin" },
     { name: "ann", token: w.S.ann, params: {}, ns: "bio", session: true, viewer: "member:ann", by: "ann", author: "member:ann" },
     { name: "agent", token: agent, params: {}, ns: "bio", session: false, viewer: "member:ann", by: "class:ai", author: "class:ai/agent-ann" },
@@ -71,17 +72,22 @@ test("R2, R17, R29 (K1037, K1108): each new op is declared and routed through th
       reached++;
     }
   }
-  assert.ok(reached >= 80 && checked > 100, `${reached} ${checked}`);
+  /* 74 reached; the floor was 80 while the retired member binding (admission R5, K2166) was a caller */
+  assert.ok(reached >= 74 && checked > 100, `${reached} ${checked}`);
 });
 
-test("R28 (capture R80; admission R8–R10): `doorbelltally` is a member session's alone — every bearer class CLASS_FORBIDDEN and an agent credential AI_BEYOND_TASK_SCOPE, nothing forwarded; negative control: a session reads it", async () => {
+test("R28 (capture R80; admission R8–R10): `doorbelltally` is a member session's alone — every bearer class CLASS_FORBIDDEN, the retired shared member binding MEMBER_TOKEN_RETIRED, and an agent credential AI_BEYOND_TASK_SCOPE, nothing forwarded; negative control: a session reads it", async () => {
   const wide = aik();
   const { env, S } = world({ creds: { [wide]: cred({ tokenId: "agent-wide", writes: Object.keys(OPS) }) } });
-  for (const [token, params] of [[env.ADMIN_TOKEN, {}], [env.MEMBER_TOKEN, {}], [env.PROBE_TOKEN, { store: "scratch" }], [env.DAEMON_TOKEN, {}]]) {
+  for (const [token, params] of [[env.ADMIN_TOKEN, {}], [env.PROBE_TOKEN, { store: "scratch" }], [env.DAEMON_TOKEN, {}]]) {
     env.calls.length = 0;
     refused(await call(env, { op: "doorbelltally", token, params }), 403, "CLASS_FORBIDDEN", "C-38.2");
     assert.equal(opCalls(env).length, 0);
   }
+  /* admission R5 (K2166): the retired shared member binding gives no class at all */
+  env.calls.length = 0;
+  refused(await call(env, { op: "doorbelltally", token: env.MEMBER_TOKEN }), 401, "MEMBER_TOKEN_RETIRED", "C-38.11");
+  assert.equal(opCalls(env).length, 0, "forwarded for the retired member binding");
   env.calls.length = 0;
   refused(await call(env, { op: "doorbelltally", token: wide }), 403, "AI_BEYOND_TASK_SCOPE", "C-29.6");
   assert.equal(opCalls(env).length, 0);

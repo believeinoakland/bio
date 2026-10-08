@@ -175,3 +175,86 @@ test("R41: memberOf answers every archive a capture was filed from or found in, 
   /* the module-level archiveList through the store reaches the same instance */
   assert.equal((await archiveList(w.store, { archiveSha: sha(z1), viewer: ADMIN })).archive.sha256, sha(z1));
 });
+
+/* R41 (N720, K1955): a capture held and visible that R17's rule does not profile as `zip` is NOT_AN_ARCHIVE, with its row
+   (C-139.20), never an archive whose listing is refused whole. */
+const NOT_AN_ARCHIVE = row("NOT_AN_ARCHIVE");
+const docxOf = (pad = "") => makeZip([{ name: "[Content_Types].xml", data: '<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"/>' },
+                                      { name: "word/document.xml", data: `<w:document>${pad}</w:document>`, method: pad ? 0 : 8 }]);
+const odtOf = (pad = "") => makeZip([{ name: "mimetype", data: "application/vnd.oasis.opendocument.text", method: 0 },
+                                     { name: "content.xml", data: `<office:document-content>${pad}</office:document-content>`, method: pad ? 0 : 8 }]);
+
+test("R41: NOT_AN_ARCHIVE, with its row, for a capture held and visible that R17's rule does not profile as zip: a plain file, an office file and an OpenDocument file (both ZIP containers), within and past the read's bound, captured or only held; it writes nothing; a plain ZIP archive is listed (negative control)", async () => {
+  const w = world();
+  const s = sight(w);
+  const hold = async (bytes, url = URL1) => { await w.b.put(`bio/captures/${sha(bytes)}`, bytes);
+    w.prov.recordReceipt({ address: url, addressNorm: url, captureSha: sha(bytes), retrieved: "2026-01-01T00:00:00Z", via: "direct" }); };
+  /* past ODF_DIGEST_MAX a capture is stored in parts (R10), which its home's document names (provenance R6): R17's arm over
+     the stored parts decides */
+  const big = "x".repeat(9 * 1024 * 1024);
+  let n = 0;
+  const holdInParts = async (bytes) => {
+    const url = `https://files.example/big-${++n}`;
+    const c = await run(w, { [url]: () => new Response(bytes, { headers: { "content-type": "application/octet-stream" } }) }, { locator: url });
+    assert.equal(c.body.document.parts.length, 2, "held in parts");
+    s.bundle(`INFO-BIG-${n}`);
+    w.prov.homes[sha(bytes)] = `INFO-BIG-${n}`;
+    w.prov.named[sha(bytes)] = c.body.document.parts.map((x) => ({ sha256: x.sha256, bytes: x.bytes }));
+    return c;
+  };
+  const cases = [["a plain text file", new TextEncoder().encode("just words, no archive"), hold], ["an office (OPC) file", docxOf(), hold],
+                 ["an OpenDocument file", odtOf(), hold], ["an office file past the bound", docxOf(big), holdInParts],
+                 ["an OpenDocument file past the bound", odtOf(big), holdInParts]];
+  for (const [what, bytes, put] of cases) {
+    await put(bytes);
+    const before = w.rows("SELECT COUNT(*) AS n FROM archive_entries")[0].n + w.prov.receipts.length;
+    const r = await w.acq.archiveList({ archiveSha: sha(bytes), viewer: ADMIN });
+    assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation, r.archive], [false, "NOT_AN_ARCHIVE", "NOT_AN_ARCHIVE", NOT_AN_ARCHIVE.check, NOT_AN_ARCHIVE.translation, sha(bytes)], what);
+    assert.notEqual(r.format, "zip", what);
+    assert.equal("entries" in r || "summary" in r, false, `${what}: no listing is answered`);
+    assert.equal(w.rows("SELECT COUNT(*) AS n FROM archive_entries")[0].n + w.prov.receipts.length, before, `${what}: it writes nothing`);
+  }
+  /* an office file captured through acquire is profiled, not opened, and answered the same */
+  const docx = docxOf("captured");
+  const c = await run(w, { "https://files.example/report.docx": () => new Response(docx, { headers: { "content-type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document" } }) },
+                      { locator: "https://files.example/report.docx" });
+  assert.deepEqual([c.status, c.body.unpack], [200, undefined], "an office file is not opened on capture (R40)");
+  assert.equal((await w.acq.archiveList({ archiveSha: sha(docx), viewer: ADMIN })).reason, "NOT_AN_ARCHIVE");
+  /* negative controls: a plain ZIP archive, within and past the bound, held and never opened, is listed */
+  const small = makeZip([{ name: "a", data: "a" }]);
+  await hold(small);
+  const l = await w.acq.archiveList({ archiveSha: sha(small), viewer: ADMIN });
+  assert.deepEqual([l.ok, l.archive.opened, l.archive.refused], [true, false, null]);
+  const bigZip = makeZip([{ name: "big", data: big, method: 0 }, { name: "b", data: "b" }]);
+  const cz = await holdInParts(bigZip);
+  assert.equal(cz.body.document.profile.format.format, "zip", "R17 profiles it zip past the bound");
+  const lb = await w.acq.archiveList({ archiveSha: sha(bigZip), viewer: ADMIN });
+  assert.deepEqual([lb.ok, lb.archive.refused], [true, null]);
+});
+
+test("R41: an office file opened before T36 (R38 now refuses one, K2100) is still NOT_AN_ARCHIVE, read from its recorded listing; an archive not visible answers ARCHIVE_NOT_HELD first, so the refusal says nothing of what a hidden capture is", async () => {
+  const w = world();
+  const s = sight(w);
+  for (const bytes of [docxOf("opened"), odtOf("opened")]) {
+    await w.b.put(`bio/captures/${sha(bytes)}`, bytes);
+    w.prov.recordReceipt({ address: URL1, addressNorm: URL1, captureSha: sha(bytes), retrieved: "2026-01-01T00:00:00Z", via: "direct" });
+    /* opened as R38 opened any held ZIP container before T36: acquire's internal call, which asks no profile again */
+    const u = await unpack(w.store, { archiveSha: sha(bytes), by: "member:m1", cls: "member", member: true },
+                           { automatic: true, parts: [{ sha256: sha(bytes), bytes: bytes.length }] });
+    assert.equal(u.ok, true, "opened, with its listing recorded");
+    const r = await w.acq.archiveList({ archiveSha: sha(bytes), viewer: ADMIN });
+    assert.deepEqual([r.reason, r.check, r.translation], ["NOT_AN_ARCHIVE", NOT_AN_ARCHIVE.check, NOT_AN_ARCHIVE.translation]);
+    assert.match(r.part, /^(\[Content_Types\]\.xml|mimetype)$/);
+  }
+  /* sight comes first: a hidden office file answers exactly as a capture not held */
+  const hidden = docxOf("hidden");
+  await w.b.put(`bio/captures/${sha(hidden)}`, hidden);
+  w.prov.recordReceipt({ address: URL1, addressNorm: URL1, captureSha: sha(hidden), retrieved: "2026-01-01T00:00:00Z", via: "direct" });
+  s.bundle("PROJ-9"); s.bundle("INFO-9", "PROJ-9");
+  w.prov.homes[sha(hidden)] = "INFO-9";
+  const r = await w.acq.archiveList({ archiveSha: sha(hidden), viewer: "member:outsider" });
+  assert.deepEqual([r.reason, r.check, "format" in r], ["ARCHIVE_NOT_HELD", row("ARCHIVE_NOT_HELD").check, false]);
+  /* negative control: a project participant is told what it is */
+  s.join("PROJ-9", "insider");
+  assert.equal((await w.acq.archiveList({ archiveSha: sha(hidden), viewer: "member:insider" })).reason, "NOT_AN_ARCHIVE");
+});

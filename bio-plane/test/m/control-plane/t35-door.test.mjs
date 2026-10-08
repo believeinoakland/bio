@@ -1,6 +1,6 @@
 /* control-plane T35 (T35-72): R59 (F1; K1874, K2038, K2044: every credential read once through admission's
-   `presentedCredential`, from a header or a body, never put in an address the door makes; the address form honoured for
-   T35's release and named deprecated) and R58 (the public ops' window first, `source` and `country` stamped, `recover`
+   `presentedCredential`, from a header or a body, never put in an address the door makes; T36 (K2111): the address form
+   refused by admission's gate, C-38.10) and R58 (the public ops' window first, `source` and `country` stamped, `recover`
    relayed, `unpack`'s stamps, sign-out's session). Driven through `makeFetch(hooks)` over the harness's store, which
    records every request the plane makes, the window's and the credential lookups' included. */
 import { test } from "node:test";
@@ -11,37 +11,47 @@ const SENTINEL_SECRET = "rv1_sentinel-secret-0123456789abcdefghij";
 /* every address the plane asked of any store, the window's and the lookups' included */
 const addresses = (env) => [...env.calls, ...env.windowCalls].map((c) => c.url.href);
 
-test("R59 (admission R20; F1): a credential of each kind — a member's session, an agent credential, a binding token — presented in the `Authorization` header or a JSON body's `token` is admitted exactly as in the address, its answer carries `deprecated` only for the address form, and the credential is in no address of any request the plane makes (negative control: the address form's own request carries it in the caller's address only)", async () => {
+test("R59 (admission R20; F1, K2111): a credential of each kind — a member's session, an agent credential, a binding token — presented in the `Authorization` header or a JSON body's `token` is admitted alike, no answer carries `deprecated`, and the credential is in no address of any request the plane makes; in the address, alone or beside a header, it is refused CREDENTIAL_IN_ADDRESS (C-38.10) with no request to any store and the credential in no answer", async () => {
   const { env, S, A } = world();
-  for (const [name, token] of [["session", S.ann], ["agent", A.ann], ["binding", env.MEMBER_TOKEN]]) {
+  for (const [name, token] of [["session", S.ann], ["agent", A.ann], ["binding", env.ADMIN_TOKEN]]) {
     const seen = {};
-    for (const tokenIn of ["header", "body", "query"]) {
+    for (const tokenIn of ["header", "body"]) {
       env.calls.length = 0; env.windowCalls.length = 0;
       const r = await call(env, { op: "search", token, tokenIn, method: "POST", body: { q: "x" } });
-      seen[tokenIn] = [r.status, r.json.tokenClass, r.json.deprecated ?? null];
+      seen[tokenIn] = [r.status, r.json.tokenClass, "deprecated" in r.json];
       for (const href of addresses(env)) assert.equal(href.includes(token), false, `${name}/${tokenIn}: ${href}`);
       const inner = opCalls(env).find((c) => c.route === "search");
       assert.ok(inner, `${name}/${tokenIn}: reached search`);
       assert.equal(JSON.stringify(inner.body).includes(token), false, `${name}/${tokenIn}: the credential is not passed on`);
     }
-    assert.deepEqual(seen.header, [200, seen.header[1], null], name);
+    assert.deepEqual(seen.header, [200, seen.header[1], false], name);
     assert.deepEqual(seen.body, seen.header, `${name}: body as header`);
-    assert.deepEqual(seen.query, [200, seen.header[1], "CREDENTIAL_IN_ADDRESS"], `${name}: the address form, named`);
+    for (const beside of [false, true]) {
+      env.calls.length = 0; env.windowCalls.length = 0;
+      const r = await call(env, { op: "search", token, tokenIn: "query", method: "POST", body: { q: "x" },
+                                  headers: beside ? { authorization: `Bearer ${token}` } : {} });
+      assert.deepEqual([r.status, r.json.reason, r.json.check], [400, "CREDENTIAL_IN_ADDRESS", "C-38.10"], `${name}/address${beside ? "+header" : ""}`);
+      assert.deepEqual([env.calls, env.windowCalls], [[], []], `${name}: no store is asked`);
+      assert.equal(r.text.includes(token), false);
+    }
   }
 });
 
-test("R59, R20, R44: a review grant's and a template grant's secret is read from the POST body's `secret`, only its digest reaches the store, in no address; the address form is honoured and its answer carries `deprecated`; the minting answers' instructions name the body", async () => {
+test("R59, R20, R44: a review grant's and a template grant's secret is read from the POST body's `secret`, only its digest reaches the store, in no address; the address form is refused CREDENTIAL_IN_ADDRESS with no store request; the minting answers' instructions name the body", async () => {
   const { env } = world();
   for (const op of ["reviewcopy", "templateread"]) {
-    for (const secretIn of ["body", "query"]) {
-      env.calls.length = 0;
-      const r = await call(env, { op, secretIn, params: { secret: SENTINEL_SECRET, draft: "D1", version: "TPL-1@1" } });
-      for (const href of addresses(env)) assert.equal(href.includes(SENTINEL_SECRET), false, `${op}/${secretIn}`);
-      const inner = opCalls(env)[0];
-      assert.equal(inner.params.bySecret, "1", op);
-      assert.equal(JSON.stringify(inner.body ?? null).includes(SENTINEL_SECRET), false, op);
-      assert.equal(r.json.deprecated ?? null, secretIn === "query" ? "CREDENTIAL_IN_ADDRESS" : null, `${op}/${secretIn}`);
-    }
+    env.calls.length = 0;
+    const r = await call(env, { op, params: { secret: SENTINEL_SECRET, draft: "D1", version: "TPL-1@1" } });
+    for (const href of addresses(env)) assert.equal(href.includes(SENTINEL_SECRET), false, op);
+    const inner = opCalls(env)[0];
+    assert.equal(inner.params.bySecret, "1", op);
+    assert.equal(JSON.stringify(inner.body ?? null).includes(SENTINEL_SECRET), false, op);
+    assert.equal("deprecated" in (r.json ?? {}), false, op);
+    env.calls.length = 0; env.windowCalls.length = 0;
+    const q = await call(env, { op, secretIn: "query", params: { secret: SENTINEL_SECRET, draft: "D1", version: "TPL-1@1" } });
+    assert.deepEqual([q.status, q.json.reason, q.json.check], [400, "CREDENTIAL_IN_ADDRESS", "C-38.10"], op);
+    assert.deepEqual([env.calls, env.windowCalls], [[], []], op);
+    assert.equal(q.text.includes(SENTINEL_SECRET), false, op);
   }
 });
 
@@ -55,8 +65,19 @@ test("R59 (store-door R9; credentials R39): `signout` and `signouteverywhere` ca
     assert.deepEqual([inner.headers["x-bio-session"], inner.params.session], [S.ann, undefined], op);
     for (const href of addresses(env)) assert.equal(href.includes(S.ann), false, op);
   }
-  /* a machine credential reaches neither (op-declarations R30) */
-  assert.equal((await call(env, { op: "signout", token: env.MEMBER_TOKEN, method: "POST", body: {} })).status, 403);
+  /* a machine credential reaches neither (op-declarations R30): every binding class refused CLASS_FORBIDDEN before the store */
+  for (const op of ["signout", "signouteverywhere"])
+    for (const [k, params] of [["ADMIN_TOKEN", {}], ["PROBE_TOKEN", { store: "scratch" }], ["DAEMON_TOKEN", {}]]) {
+      env.calls.length = 0;
+      const r = await call(env, { op, token: env[k], params, method: "POST", body: {} });
+      assert.deepEqual([r.status, r.json.reason, r.json.check], [403, "CLASS_FORBIDDEN", "C-38.2"], `${op} ${k}`);
+      assert.deepEqual(opCalls(env), [], `${op} ${k}`);
+    }
+  /* admission R5 (K2166): the retired shared member binding is refused 401 MEMBER_TOKEN_RETIRED, nothing asked of the store */
+  env.calls.length = 0;
+  const m = await call(env, { op: "signout", token: env.MEMBER_TOKEN, method: "POST", body: {} });
+  assert.deepEqual([m.status, m.json.reason, m.json.check], [401, "MEMBER_TOKEN_RETIRED", "C-38.11"]);
+  assert.deepEqual(opCalls(env), []);
 });
 
 test("R58 (admission R21; F4): every public op meets the door's window first — refused there, it answers DOOR_RATE_LIMITED 429 with the bound stated and nothing of the op runs; an op that is not public never asks the window", async () => {
@@ -107,9 +128,15 @@ test("R58 (acquisition R38, R40; capture R73): `op=unpack` reaches capture's pas
     assert.deepEqual([inner.params.cls, inner.params.member], [cls, member], cls);
     assert.notEqual(inner.params.by, FORGED);
   }
-  /* a member's caller-only class is refused before the store (op-declarations R30's classes) */
+  /* a class the op does not name is refused before the store (op-declarations R30's classes): the admin binding */
   env.calls.length = 0;
-  assert.equal((await call(env, { op: "unpack", token: env.MEMBER_TOKEN, method: "POST", body: {} })).status, 403);
+  const a = await call(env, { op: "unpack", token: env.ADMIN_TOKEN, method: "POST", body: {} });
+  assert.deepEqual([a.status, a.json.reason, a.json.check], [403, "CLASS_FORBIDDEN", "C-38.2"]);
+  assert.deepEqual(opCalls(env), []);
+  /* admission R5 (K2166): the retired shared member binding is refused 401 MEMBER_TOKEN_RETIRED before the store */
+  env.calls.length = 0;
+  const m = await call(env, { op: "unpack", token: env.MEMBER_TOKEN, method: "POST", body: {} });
+  assert.deepEqual([m.status, m.json.reason, m.json.check], [401, "MEMBER_TOKEN_RETIRED", "C-38.11"]);
   assert.deepEqual(opCalls(env), []);
   void hex64;
 });

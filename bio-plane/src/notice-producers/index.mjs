@@ -1,9 +1,9 @@
-/* notice-producers — the feed's newer producers (requirements: `build/requirements/notice-producers.md`, R1–R13).
+/* notice-producers — the feed's newer producers (requirements: `build/requirements/notice-producers.md`, R1–R15).
  * A new seam after `queue-producers` with no copy (plan T33-82; Choices 8 and 23): each producer derives, on read and
  * writing nothing, the items one provider's facts earn for a viewer, naming each item's subjects and homes for `queue`
  * to home, offer, mint and publish, exactly as `queue-producers` does for the rest.
  *
- *   noticeItems    queue's one read of this module (R1): every item R2–R6, R12, R13 derive for a member and viewer, each homed
+ *   noticeItems    queue's one read of this module (R1): every item R2–R6, R12–R15 derive for a member and viewer, each homed
  *                  through queue's walk and carrying queue's options (both passed in), with `facts` stating each
  *                  producer's bound and `truncated`, and `failed`, the providers that threw.
  *
@@ -14,11 +14,14 @@
  *   R6  inquiry-recheck-due      OBLIGATION (K1505 (15), K1522), inquiry.datedWaits, to the wait's setter alone
  *   R12 security-level-high      FINDING, credentials.securityLevel/securityMap  once per High episode, to administrators
  *   R13 policy-changed-noticed   FINDING, following.policyChanges        a policy's silent change, DEC-145 (5)'s words
+ *   R14 scan-found               FINDING, file-safety.scanFindings       a file held after a scan, to who may see it
+ *   R15 security-tool-off        FINDING, file-safety.securityToolEvents a tool switched off, to administrators
  *
  * REACHED as `noticeProducersOf(host, deps)` (K1563 (1)): one instance per Durable Object storage. It registers nothing
  * and holds no check row: it refuses nothing. `deps` (each defaults to its module's instance on the same host, reached
- * lazily when first asked): membership, people, moneyChecks, duties, answers, inquiry, credentials, following, standards;
- * and `view`, the jurisdiction view whose time zone R13's date is read in (the profile's, when not given).
+ * lazily when first asked): membership, people, moneyChecks, duties, answers, inquiry, credentials, following, standards,
+ * fileSafety, provenance;
+ * and `view`, the jurisdiction view whose time zone R13's, R14's and R15's dates are read in (the profile's, when not given).
  *
  * R7 (queue's homes walk) and R12 (queue's options) stay in queue: `noticeItems` takes them as `homesOf(subjectIds)`
  * and `optionsOf(subjectIds)`, closed over the read's viewer and identity by queue, held for one synchronous read.
@@ -38,6 +41,8 @@ import { inquiryOf } from "../inquiry/index.mjs";
 import { credentialsOf, SECURITY_THRESHOLD, SECURITY_DAYS } from "../credentials/index.mjs";
 import { followingOf } from "../following/index.mjs";
 import { standardsOf } from "../standards/index.mjs";
+import { fileSafetyOf, findingKind } from "../file-safety/index.mjs";
+import { provenanceOf } from "../provenance/index.mjs";
 
 /* The walk queue passes in answers this shape; with none passed, an item is ungrouped rather than given a home. */
 const UNGROUPED = Object.freeze({ state: "determined", ungrouped: true, reasons: [], depth_bound: null, ancestors: [] });
@@ -69,6 +74,19 @@ export const POLICY_CHANGE_DAYS = 90;
 export const POLICY_CHANGES_MAX = 1000;
 /** R13: `following.policyChanges`' page (its R21: at most 200). */
 export const POLICY_CHANGES_PAGE = 200;
+/** R14 (T37; N762, K2175): the window of `found` notes read, by the note's age (as R13's), and the notes one read follows.
+ *  Each read starts again at the window's start (`file-safety` R15's `cursor` is null at its end), so a note older than
+ *  the window is never read and never uses up the bound. */
+export const SCAN_FINDINGS_DAYS = 90;
+export const SCAN_FINDINGS_MAX = 1000;
+/** R15: the security tools' events one read follows (`file-safety.securityToolEvents`, its R31). */
+export const TOOL_EVENTS_MAX = 1000;
+/** R14, R15: the page asked of `file-safety`'s lists (its R15, R31: at most 1,000 a page). */
+export const FILE_SAFETY_PAGE = 200;
+/** R15: the event `file-safety` lists when it switches a tool off (its R31: `PRIVATE_MODE_NOT_HONOURED`), and the one
+ *  that turns it on again (its R29). */
+export const TOOL_SWITCHED_OFF = "switched_off";
+export const TOOL_TEST_PASSED = "test_passed";
 /** The kinds this module raises, with their class (queue R1's `classOfKind` gains them, T33-83; T35-67). */
 export const NOTICE_KINDS = Object.freeze({
   "interest-check-noticed": "FINDING",
@@ -78,6 +96,8 @@ export const NOTICE_KINDS = Object.freeze({
   "inquiry-recheck-due": "OBLIGATION",
   "security-level-high": "FINDING",
   "policy-changed-noticed": "FINDING",
+  "scan-found": "FINDING",
+  "security-tool-off": "FINDING",
 });
 
 const HOUR_MS = 3600e3, DAY_MS = 24 * HOUR_MS;
@@ -129,6 +149,8 @@ export class NoticeProducers {
   get #credentials() { return this.#dep("credentials", () => credentialsOf(this.#host)); }
   get #following() { return this.#dep("following", () => followingOf(this.#host)); }
   get #standards() { return this.#dep("standards", () => standardsOf(this.#host)); }
+  get #fileSafety() { return this.#dep("fileSafety", () => fileSafetyOf(this.#host)); }
+  get #provenance() { return this.#dep("provenance", () => provenanceOf(this.#host)); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #homesOf(ids) { return this.#homesFn ? this.#homesFn(ids || []) : { ...UNGROUPED }; }
@@ -154,6 +176,8 @@ export class NoticeProducers {
       inquiry_recheck: { truncated: false },
       security_level: { days: SECURITY_DAYS, truncated: false },
       policy_change: { bound: POLICY_CHANGES_MAX, days: POLICY_CHANGE_DAYS, truncated: false },
+      scan_found: { bound: SCAN_FINDINGS_MAX, days: SCAN_FINDINGS_DAYS, truncated: false },
+      security_tool_off: { bound: TOOL_EVENTS_MAX, truncated: false },
       failed,
     };
     const run = (provider, fn) => {
@@ -172,6 +196,8 @@ export class NoticeProducers {
       run("inquiry", () => ({ fact: "inquiry_recheck", ...this.#waitsDue(me, viewer, at) }));
       run("credentials", () => ({ fact: "security_level", ...this.#securityHigh(me, at) }));
       run("following", () => ({ fact: "policy_change", ...this.#policyChanges(me, viewer, at) }));
+      run("file-safety", () => ({ fact: "scan_found", ...this.#scanFound(me, viewer, at) }));
+      run("file-safety", () => ({ fact: "security_tool_off", ...this.#toolsOff(me, viewer, at) }));
       return { items, facts };
     } catch {
       return { items: [], facts: { ...facts, failed: [...new Set([...failed, "notice-producers"])] } };
@@ -610,24 +636,21 @@ export class NoticeProducers {
 
   /* ================================================================== R13 · a policy's silent change
    * (following R21; N652, K1727, K1740, DEC-145 (5)). The changes `policyChanges` answers this viewer whose later
-   * capture is no older than the window and whose `amendment_held` is false, following its cursor to at most the bound
-   * of changes read (`facts` states it, and `truncated`). Each goes to the member who declared the policy in
+   * capture is no older than the window, read through `since` (T36: never by filtering an unbounded read, so a change
+   * older than the window is never read and never uses up the bound), whose `amendment_held` is false, following its
+   * cursor to at most the bound of changes read (`facts` states it, and `truncated`). Each goes to the member who declared the policy in
    * `standards` while that member is active, else to the administrators, and only while the recipient sees it (the
    * read is the recipient's own). Its detail is DEC-145 (5)'s sentence, nothing more: never what the change means. */
   #policyChanges(me, viewer, now) {
-    const since = now - POLICY_CHANGE_DAYS * DAY_MS;
+    const since = now - POLICY_CHANGE_DAYS * DAY_MS;       /* an instant, in ms (following R21 reads it to the whole second at or after) */
     const changes = [];
     let after = null, read = 0, truncated = false;
     for (;;) {
       if (read >= POLICY_CHANGES_MAX) { truncated = true; break; }
-      const r = this.#following.policyChanges({ after, limit: Math.min(POLICY_CHANGES_PAGE, POLICY_CHANGES_MAX - read), viewer });
-      if (!r || r.ok === false || !Array.isArray(r.changes)) throw failure("following");
+      const r = this.#following.policyChanges({ since, after, limit: Math.min(POLICY_CHANGES_PAGE, POLICY_CHANGES_MAX - read), viewer });
+      if (!r || r.ok === false || r.since_invalid === true || !Array.isArray(r.changes)) throw failure("following");
       read += r.changes.length;
-      for (const c of r.changes) {
-        const t = c && c.after ? Date.parse(c.after.at) : NaN;
-        if (!Number.isFinite(t) || t < since || c.amendment_held !== false) continue;
-        changes.push(c);
-      }
+      for (const c of r.changes) if (c && c.after && c.amendment_held === false) changes.push(c);
       if (r.cursor === null || r.cursor === undefined || r.changes.length === 0) break;
       after = r.cursor;
     }
@@ -678,7 +701,131 @@ export class NoticeProducers {
     return { items, facts: { truncated } };
   }
 
-  /** R13: the profile's time zone (the jurisdiction view's), or null when none is held. */
+  /* ================================================================== R14 · a file held after a scan
+   * (file-safety R15, R16–R18, R38; N707, N710, DEC-169 (4), K1892, K1913, K1929). The `found` notes
+   * `scanFindings` answers this viewer (a capture the viewer may not see is left out by file-safety and never counted
+   * here, R7), oldest first; one item per note, to this member while active. (T37; N762, N771, K2175) The read is the
+   * window's: `since` the instant SCAN_FINDINGS_DAYS before the call, from the first page, following `cursor` while
+   * `truncated`, to at most the bound, never from a cursor kept between reads (file-safety's is null at its end).
+   * Its subject is the capture's home (provenance.homeOf); its detail names each finding with its engine, tool and day,
+   * in findingKind's words, that the safe view stays open and how the original opens again. It names no member and is
+   * no hint: a scanner's verdict, not the machine's noticing. It leaves when its recipient disposes of it (queue's, by
+   * its key), or when `scanFindings` answers its note `held: false` (no open hold covers that finding any longer, read
+   * in file-safety's same synchronous call): only a note inside the window is read, so only there can it leave on
+   * `held`. A note past the window is not read, so its item is no longer answered: the window is the item's life (K2238,
+   * as R13's window; queue keeps no item, only dispositions). */
+  #scanFound(me, viewer, now) {
+    if (!this.#active(me)) return { items: [], facts: {} };
+    const since = now - SCAN_FINDINGS_DAYS * DAY_MS;       /* an instant, in ms (file-safety R15: notes at or after it) */
+    const found = [];
+    let after = null, read = 0, truncated = false;
+    for (;;) {
+      if (read >= SCAN_FINDINGS_MAX) { truncated = true; break; }
+      const r = this.#fileSafety.scanFindings({ since, after, limit: Math.min(FILE_SAFETY_PAGE, SCAN_FINDINGS_MAX - read), viewer });
+      if (!r || r.ok !== true || r.since_invalid === true || !Array.isArray(r.findings)) throw failure("file-safety");
+      read += r.findings.length;
+      found.push(...r.findings);
+      if (r.truncated !== true || r.cursor === null || r.cursor === undefined || r.cursor === after) break;
+      after = r.cursor;
+    }
+    const zone = this.#zone();
+    const items = [];
+    for (const f of found) {
+      if (!f || !filled(f.captureSha) || !filled(f.note_id)) continue;
+      if (f.held === false) continue;                       /* no open hold covers it any longer: it leaves (N771) */
+      let home = null;
+      try { const h = this.#provenance.homeOf(f.captureSha); home = h && filled(h.bundleId) ? h.bundleId : null; }
+      catch { throw failure("provenance"); }
+      const names = (Array.isArray(f.findings) ? f.findings : []).filter(filled);
+      const day = NoticeProducers.#localDate(f.at, zone);
+      const by = `${f.engine ? `${f.engine}, ` : ""}the tool ${f.tool ?? "not named"}`;
+      const explained = names.map((n) => ({ name: n, ...findingKind(n) }));
+      const said = explained.length
+        ? explained.map((k) => `${k.name}: ${k.words.replace(/\.?$/, ".")}`).join(" ")
+        : "The scanner named no finding.";
+      items.push({
+        id: `FINDING::scan-found::${f.captureSha}::${f.note_id}`, class: "FINDING", kind: "scan-found",
+        by: "a scanner's",
+        case: home ? this.#homesAt([home], viewer) : this.#homesOf([]),
+        subject: { kind: "capture_home", id: home, capture: f.captureSha, note: f.note_id },
+        summary: `A file you can see was held after a scan found ${names.length === 1 ? names[0] : names.length ? `${names.length} things` : "something"} in it`,
+        detail: `This file is held: on ${day} ${by} found ${names.length ? names.join(", ") : "something"} in it. ${said} `
+              + "Its safe view stays open. The original opens again only when two members each release the hold with a "
+              + "reason, or when a second, different engine's clean check releases a hold the built-in scanner alone "
+              + "placed; the machine never can.",
+        basis: { source: "file-safety.scanFindings", capture: f.captureSha, note: f.note_id, tool: f.tool ?? null,
+                 engine: f.engine ?? null, at: f.at ?? null, findings: explained, home, zone,
+                 detail: "a scanner's `found` note (file-safety R15) places a scan hold (its R16): the original does not "
+                       + "open, the safe view stays; two members' releases (its R17) or a second engine's clean check of a "
+                       + "hold the built-in scanner alone placed (its R18) open it again." },
+        age: ageFrom(f.at, now, "no_scan_instant"),
+        assignee: null, assignee_role: null,
+        recipients: [me],
+        options: this.#optionsOf(home ? [home] : []),
+      });
+    }
+    return { items, facts: { truncated } };
+  }
+
+  /* ================================================================== R15 · a security tool switched off
+   * (file-safety R27, R29, R31; K1929). To an active administrator alone: the events `securityToolEvents` answers
+   * under the administrator's own viewer, following its cursor to at most the bound; one item per event that switched
+   * a tool off (`PRIVATE_MODE_NOT_HONOURED`), until the tool is on again (a passed test since, or `securityTools`
+   * answering it `on`). It names the tool, never a file or a member. */
+  #toolsOff(me, viewer, now) {
+    let admins;
+    try { admins = (this.#membership.activeAdmins() || []).map(bare); } catch { throw failure("membership"); }
+    if (!admins.includes(me)) return { items: [], facts: {} };
+    const events = [];
+    let after = null, read = 0, truncated = false;
+    for (;;) {
+      if (read >= TOOL_EVENTS_MAX) { truncated = true; break; }
+      const r = this.#fileSafety.securityToolEvents({ after, limit: Math.min(FILE_SAFETY_PAGE, TOOL_EVENTS_MAX - read), viewer });
+      if (!r || r.ok !== true || !Array.isArray(r.events)) throw failure("file-safety");
+      read += r.events.length;
+      events.push(...r.events);
+      if (r.truncated !== true || r.cursor === null || r.cursor === undefined || r.cursor === after) break;
+      after = r.cursor;
+    }
+    const offs = events.map((e, i) => ({ e, i })).filter(({ e }) => e && e.event === TOOL_SWITCHED_OFF && filled(e.tool_id) && filled(e.at));
+    if (!offs.length) return { items: [], facts: { truncated } };
+    const t = this.#fileSafety.securityTools({ viewer });
+    if (!t || t.ok !== true || !Array.isArray(t.tools)) throw failure("file-safety");
+    const tools = new Map(t.tools.filter((x) => x && filled(x.tool_id)).map((x) => [x.tool_id, x]));
+    const zone = this.#zone();
+    const items = [];
+    for (const { e, i } of offs) {
+      const tool = tools.get(e.tool_id);
+      if (tool && tool.state === "on") continue;
+      if (events.slice(i + 1).some((x) => x && x.tool_id === e.tool_id && x.event === TOOL_TEST_PASSED)) continue;
+      const name = tool && filled(tool.provider_id) ? `${tool.provider_id} (${e.tool_id})` : e.tool_id;
+      items.push({
+        id: `FINDING::security-tool-off::${e.tool_id}::${e.at}`, class: "FINDING", kind: "security-tool-off",
+        by: "the group's Civicsmith",
+        case: this.#homesOf([]),
+        subject: { kind: "civicsmith", id: null, tool: e.tool_id, provider: tool ? tool.provider_id ?? null : null },
+        summary: `A security tool was switched off: ${name}`,
+        detail: `The security tool ${name} was switched off on ${NoticeProducers.#localDate(e.at, zone)} because it did not `
+              + "confirm the private mode its handling requires. It stays off until an administrator tests it again.",
+        basis: { source: "file-safety.securityToolEvents", tool: e.tool_id, event: e.event, at: e.at,
+                 off_reason: tool ? tool.off_reason ?? null : null, state: tool ? tool.state ?? null : null, zone,
+                 detail: "a tool answering PRIVATE_MODE_NOT_HONOURED is switched off (file-safety R31) and is used again "
+                       + "only once an administrator's test passes (its R29)." },
+        age: ageFrom(e.at, now, "no_event_instant"),
+        assignee: null, assignee_role: null,
+        recipients: [me],
+        options: this.#optionsOf([]),
+      });
+    }
+    return { items, facts: { truncated } };
+  }
+
+  /** R14: whether this member is active (membership's member facts); a membership that throws is its failure. */
+  #active(me) {
+    try { return (this.#membership.memberFacts(me) || {}).status === "active"; } catch { throw failure("membership"); }
+  }
+
+  /** R13, R14, R15: the profile's time zone (the jurisdiction view's), or null when none is held. */
   #zone() {
     try {
       let view = this.#deps.view;
@@ -694,7 +841,7 @@ export class NoticeProducers {
     } catch { return null; }
   }
 
-  /** R13: the local day of an instant in `zone` (civil-time), as `following` reads it, the UTC day when none is held. */
+  /** R13, R14, R15: the local day of an instant in `zone` (civil-time), as `following` reads it, the UTC day when none is held. */
   static #localDate(at, zone) {
     try { const d = localDay(at, zone || "UTC"); if (typeof d === "string") return d; } catch { /* below */ }
     return dayOf(at) ?? "an earlier date";

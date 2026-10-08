@@ -15,11 +15,12 @@ const writes = (w) => w.st.statements.filter((q) => /^\s*(INSERT|UPDATE|DELETE|R
 async function world({ on = true, turn = undefined } = {}) {
   const w = await boot({ env: { INSTANCE_NAME: "river-town" }, more: turn ? { groupDraftTurn: turn } : {} });
   w.prov.admins = new Set(["admin"]);
-  if (on) w.m.assistantSet({ on: true, by: "admin" });
+  /* R53 (T36): the assistant is off exactly while the group keeps its material away from AI (credentials R52) */
+  if (!on) w.prov.keepAway = { on: true, reason: "Our material stays here.", set_by: "admin", set_at: "2026-10-08T09:00:00Z" };
   return w;
 }
 
-test("R65 the refusals, in order: NOT_AN_ADMIN (membership R84) before anything; ASSISTANT_OFF (R55) while the switch is off; GROUP_DRAFT_ANSWERS_MALFORMED (C-64.10) and GROUP_DRAFT_NO_ANSWERS (C-64.9) over the answers; each writes nothing", async () => {
+test("R65 the refusals, in order: NOT_AN_ADMIN (membership R84) before anything; AI_KEPT_AWAY (R55, credentials R35, T37) while the group keeps its material away; ASSISTANT_DRAFT_UNAVAILABLE when the door resolved no assistant though the gate is open (no AI_KEPT_AWAY minted here, K231); GROUP_DRAFT_ANSWERS_MALFORMED (C-64.10) and GROUP_DRAFT_NO_ANSWERS (C-64.9) over the answers; each writes nothing", async () => {
   const w = await world({ on: false });
   const before = writes(w);
   for (const by of [null, "", "ruth", "class:ai"]) {
@@ -27,11 +28,11 @@ test("R65 the refusals, in order: NOT_AN_ADMIN (membership R84) before anything;
     assert.deepEqual([r.ok, r.reason, r.check], [false, "NOT_AN_ADMIN", "C-96.1"], String(by));
   }
   const off = await w.m.groupDescriptionDraft({ answers: "not even a list", assistant: ASSISTANT, viewer: "admin", by: "admin" });
-  assert.deepEqual([off.ok, off.reason, off.check], [false, "ASSISTANT_OFF", "C-119.5"]);
-  w.m.assistantSet({ on: true, by: "admin" });
+  assert.deepEqual([off.ok, off.reason, off.check], [false, "AI_KEPT_AWAY", "C-29.31"]);
+  w.prov.keepAway = { on: false, reason: null, set_by: null, set_at: null };
   const mark = writes(w);
   const doorOff = await w.m.groupDescriptionDraft({ answers: ANSWERS, assistant: { on: false }, viewer: "admin", by: "admin" });
-  assert.equal(doorOff.reason, "ASSISTANT_OFF");
+  assert.equal(doorOff.reason, "ASSISTANT_DRAFT_UNAVAILABLE");
   const long = "x".repeat(GROUP_DRAFT_ANSWER_MAX + 1);
   for (const answers of [undefined, null, "text", {}, [null], [{ text: "a" }], [{ question: "q", text: 7 }], [{ question: "q", text: long }],
                          Array.from({ length: GROUP_DRAFT_ANSWERS_MAX + 1 }, () => ({ question: "q", text: "a" }))]) {

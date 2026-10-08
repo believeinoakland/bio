@@ -40,7 +40,8 @@ function callers() {
   const bind = (c, token, params = {}) => ({ name: c, token, params, ns: params.store ?? "bio", session: false,
     viewer: `class:${c}`, identity: `class:${c}`, proposer: `class:${c}` });
   return { w, list: [
-    bind("admin", w.env.ADMIN_TOKEN), bind("member", w.env.MEMBER_TOKEN), bind("probe", w.env.PROBE_TOKEN, { store: "scratch" }),
+    /* admission R5 (K2166): the shared member binding is retired, so it is no caller here (its refusal is tested below) */
+    bind("admin", w.env.ADMIN_TOKEN), bind("probe", w.env.PROBE_TOKEN, { store: "scratch" }),
     bind("daemon", w.env.DAEMON_TOKEN),
     { name: "founder", token: w.S.founder, params: {}, ns: "bio", session: true, viewer: "admin", identity: "member:admin", proposer: "admin" },
     { name: "ann", token: w.S.ann, params: {}, ns: "bio", session: true, viewer: "member:ann", identity: "member:ann", proposer: "ann" },
@@ -91,7 +92,7 @@ test("R45, R2, R26: each of T23's ops is declared, a route of its owner's own ma
     assert.equal(r.json.store, c.ns);
     reached++;
   }
-  assert.ok(reached >= 30, String(reached));
+  assert.ok(reached >= 28, String(reached));   /* 28 callers-by-ops; the floor was 30 while the retired member binding (admission R5, K2166) was one of them */
   /* negative control: an op no owner serves */
   for (const op of ["noticewithdraw", "sweepsall", "whatchanged"]) {
     assert.equal(Object.hasOwn(OPS, op), false, op);
@@ -131,17 +132,21 @@ test("R45, R17, R29: each op's stamps are the server's value from the credential
   assert.ok(checked >= 70, String(checked));
 });
 
-test("R45, R28 (network-notices R1, R24; admission R8–R10): each notice op is refused to every caller not arriving by a member's session — the operator's token and every bearer class CLASS_FORBIDDEN, an AI credential declaring every write AI_BEYOND_TASK_SCOPE — and nothing is read or written; negative control: a member's session and the founder's reach each", async () => {
+test("R45, R28 (network-notices R1, R24; admission R8–R10): each notice op is refused to every caller not arriving by a member's session — the operator's token and every bearer class CLASS_FORBIDDEN, the retired shared member binding MEMBER_TOKEN_RETIRED, an AI credential declaring every write AI_BEYOND_TASK_SCOPE — and nothing is read or written; negative control: a member's session and the founder's reach each", async () => {
   const wide = aik();
   const { env, S } = world({ creds: { [wide]: cred({ tokenId: "agent-wide", writes: Object.keys(OPS) }) } });
   for (const op of NOTICE) {
     const method = OPS[op].mutating ? "POST" : "GET";
     const body = method === "POST" ? { project: "PROJ-1", digest: "d", signature: "s" } : undefined;
-    for (const [token, params] of [[env.ADMIN_TOKEN, {}], [env.MEMBER_TOKEN, {}], [env.PROBE_TOKEN, { store: "scratch" }], [env.DAEMON_TOKEN, {}]]) {
+    for (const [token, params] of [[env.ADMIN_TOKEN, {}], [env.PROBE_TOKEN, { store: "scratch" }], [env.DAEMON_TOKEN, {}]]) {
       env.calls.length = 0;
       refused(await call(env, { op, token, params: { ...params, project: "PROJ-1" }, method, body }), 403, "CLASS_FORBIDDEN", "C-38.2");
       assert.equal(opCalls(env).length, 0, `${op}: forwarded for a binding class`);
     }
+    /* admission R5 (K2166): the retired shared member binding gives no class at all */
+    env.calls.length = 0;
+    refused(await call(env, { op, token: env.MEMBER_TOKEN, params: { project: "PROJ-1" }, method, body }), 401, "MEMBER_TOKEN_RETIRED", "C-38.11");
+    assert.equal(opCalls(env).length, 0, `${op}: forwarded for the retired member binding`);
     env.calls.length = 0;
     refused(await call(env, { op, token: wide, params: { project: "PROJ-1" }, method, body }), 403, "AI_BEYOND_TASK_SCOPE", "C-29.6");
     assert.equal(opCalls(env).length, 0, `${op}: forwarded for an agent`);

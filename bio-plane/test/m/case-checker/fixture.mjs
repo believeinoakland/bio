@@ -59,6 +59,11 @@ export function calcRow(over = {}) {
   return { calc: CALC, recipe: CALC_RECIPE, inputs, method_version: CALC_METHOD, results: { [key]: result }, result_key: key,
            recompute: "agrees", disclosed: null, ...over };
 }
+/* R8 (DEC-180 (4)): the memo as a photo carried as its copy, its marked areas covered (`case-carriage` R11's copy and
+   label; `case-grammar` R12's `obscured`). */
+export const COPY_BYTES = "%PDF-1.7 the memo, faces and plates covered";
+export const COPY_SHA = sha(COPY_BYTES);
+export const OBSCURED_LABEL = "Faces and plates obscured for publication; the group holds the original";
 export const ACCOUNT = "I pulled it from the records office's box on the 3rd.";
 export const MEMO_ACCOUNT = "A clerk handed me this memo in person.";
 
@@ -101,7 +106,7 @@ const rows = (key, list) => (list.length ? [`${key}:`, ...list.flatMap((r) => Ob
 /** The case document's text, `/6` unless `format` names another (`/7`, T31). */
 export function caseDocument({ format = "bio-case-document/6", pairs, bar = { declared: true, capture: "B", connection: "C" }, findings = { [A]: "load_bearing", [C]: "supporting" },
                               pins, materials, attestations, accounts, accepted = [], edition = 2, recorded = null,
-                              facts = {}, passages = {}, calculations = [] } = {}) {
+                              facts = {}, passages = {}, calculations = [], extra = [] } = {}) {
   const roster = Object.keys(findings);
   const rec = recorded || pairs;
   const fm = [
@@ -134,6 +139,7 @@ export function caseDocument({ format = "bio-case-document/6", pairs, bar = { de
     "case_strength_grounds: []",
     "required_strength:", `  declared: ${bar.declared}`, "  source: project", `  capture: ${bar.capture ?? "null"}`,
     `  connection: ${bar.connection ?? "null"}`, '  detail: ""',
+    ...extra,
     "---"];
   const body = ["", `# Case ${CASE} — edition ${edition}`, "", ...CG.whatChangedSectionLines("Added the 2019 minutes."),
                 "## Scope", "", "Who approved the lease.", "", "## What This Excludes", "", "the 2019 permits", ""];
@@ -166,8 +172,9 @@ export function caseFiles(opts = {}) {
   for (const [id, list] of Object.entries(passages)) put("passages", id, JSON.stringify(list));
   put("document", MINUTES, MINUTES_BYTES);
   put("extracted_text", MINUTES, extracted(MINUTES_UNITS));
-  put("document", MEMO, MEMO_BYTES);
-  put("extracted_text", MEMO, extracted(MEMO_UNITS));
+  /* the original never travels when the memo is carried as its copy (`case-grammar` R13) */
+  if (opts.obscureMemo) put("obscured", MEMO, opts.copyBytes ?? COPY_BYTES);
+  else { put("document", MEMO, MEMO_BYTES); put("extracted_text", MEMO, extracted(MEMO_UNITS)); }
   put("observation", OBS, OBS_TEXT);
   const calculations = opts.calculations || (opts.withCalculation ? [calcRow(opts.calcRow)] : []);
   /* each row's file, its inputs by their hashes and the PROV-O rendering, as `public-read` R23 packs them */
@@ -178,7 +185,8 @@ export function caseFiles(opts = {}) {
     { ref: MINUTES, kind: "document", sha: MINUTES_SHA, text_sha: sha(extracted(MINUTES_UNITS)), origin: "https://records.example/minutes.pdf",
       archived_copy: "https://archive.example/minutes", included: true, rests_under: "load_bearing" },
     { ref: MEMO, kind: "document", sha: MEMO_SHA, text_sha: sha(extracted(MEMO_UNITS)), origin: "Withheld: the source did not consent to be named",
-      archived_copy: null, included: opts.memoIncluded ?? true, rests_under: "load_bearing" },
+      archived_copy: null, included: opts.obscureMemo ? false : opts.memoIncluded ?? true, rests_under: "load_bearing",
+      ...(opts.obscureMemo ? { obscured: { copy: COPY_SHA, label: OBSCURED_LABEL } } : {}) },
     { ref: OBS, kind: "observation", sha: OBS_SHA, text_sha: null, origin: "a member's observation", archived_copy: null, included: true,
       rests_under: "supporting" }];
   const accounts = [
@@ -195,8 +203,10 @@ export function caseFiles(opts = {}) {
     { ref: OBS, by_kind: "member", by: null, level: "group", at: NOW }];
   const doc = caseDocument({ format: opts.format, pairs, findings, pins, materials, attestations, accounts, accepted, bar: opts.bar,
     recorded: opts.recorded ? opts.recorded(pairs) : null, facts: opts.signedFacts || facts, passages: opts.signedPassages || passages,
-    calculations });
+    calculations, extra: opts.docLines || [] });
   put("case_document", null, doc);
+  /* R22: the edition's criteria rows, as `public-read` R33 carries them (a list in canonical JSON; text as given) */
+  if (opts.criteria !== undefined) put("criteria", null, typeof opts.criteria === "string" ? opts.criteria : canonicalJson(opts.criteria));
   put("case_signature", null, sign(opts.caseSigner || "group", caseRatifyStatement(CASE, 2, sha(doc))));
   if (opts.mutate) opts.mutate(texts);
   return { texts, pairs, facts };
@@ -210,7 +220,11 @@ export function manifestFor(listed, { keys = ["group", "alice", "bob"], over = {
     return { index, ...CG.casePartDigest(files, index) };
   });
   const doc = files.find((f) => f.kind === "case_document");
-  return { format: "bio-case-file/1", group: GROUP, case: CASE, edition: 2, case_document_sha: doc ? doc.sha256 : null,
+  /* a case file carrying the kind `/3` adds is `/3`, one carrying a kind `/2` adds `/2` (`case-grammar` R13); else `/1`,
+     as every case file before T36 */
+  const v3 = files.some((f) => f.kind === "obscured");
+  const v2 = files.some((f) => ["archive", "container", "criteria"].includes(f.kind));
+  return { format: v3 ? "bio-case-file/3" : v2 ? "bio-case-file/2" : "bio-case-file/1", group: GROUP, case: CASE, edition: 2, case_document_sha: doc ? doc.sha256 : null,
            keys: keys.map((k) => ({ key: keyFor(k).line, fingerprint: fingerprintOf(keyFor(k).b64) })), parts, files, ...over };
 }
 

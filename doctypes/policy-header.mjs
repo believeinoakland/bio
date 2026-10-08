@@ -27,6 +27,10 @@ import { readerView, vocabulary, vocabRegex } from "../docprofile/doctypes/index
 export const HEADER_FIELDS = Object.freeze(["type", "number", "title", "effective", "supersedes", "reference",
                                             "coordinator", "review_due", "revision_cycle"]);
 const DATE_FIELDS = new Set(["effective", "review_due"]);
+/* The fields R35's out-of-sample measure (2026-10-07, 24 fresh policies) read correctly for fewer than 90% of the
+   policies printing them: each carries `measured: "below_target"`, so a member checks it before relying on it, until a
+   later out-of-sample measure reads it at 90% or more (R26; K2079). */
+export const BELOW_TARGET = Object.freeze(["coordinator", "review_due", "revision_cycle"]);
 const ONE_LINE = new Set(["number", "revision_cycle"]);
 
 /* ------------------------------------------------------------------ the view's series */
@@ -114,7 +118,7 @@ function linesOf(raw) {
 }
 /* Page furniture, the same in any document: a page counter, a bare page number or roman
    numeral, a table of contents' marker. */
-const FURNITURE = /^\s*(?:Page\s+\d+\s+of\s+\d+|\d{1,3}|[ivxlc]{1,6}|.*\bTOC\b.*|TABLE OF CONTENTS|Table of Contents)\s*$/i;
+const FURNITURE = /^\s*(?:Page\s+\d+\s+of\s+\d+|\d{1,3}|[ivxlc]{1,6}|.*\bTOC\b.*|TABLE OF CONTENTS?)\s*$/i;
 /* An outline heading opening a line: I., IV., A., 1., a., 1) — place-free. */
 const OUTLINE = /^\s*(?:[IVXL]{1,6}|[A-Z]|\d{1,2}|[a-z])[.)][ \t]+\S/;
 /* Body text: a line of prose, eight words or more and mostly lower case, as no header value is
@@ -133,9 +137,10 @@ const caps = (t) => { const letters = t.replace(/[^A-Za-z]/g, ""); return letter
 const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
 const MON = "(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|June?|July?|Aug(?:ust)?|Sept?(?:ember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)";
 const DATE = new RegExp(`(?<![A-Za-z0-9])(?:(?<d1>\\d{1,2})[ \\t]+(?<m1>${MON})\\.?[ \\t]+(?<y1>\\d{4}|\\d{2})|(?<m2>${MON})\\.?[ \\t]+(?<d2>\\d{1,2}),?[ \\t]+(?<y2>\\d{4})|(?<m3>\\d{1,2})/(?<d3>\\d{1,2})/(?<y3>\\d{4}|\\d{2}))(?![A-Za-z0-9])`, "gi");
-/* A date with blanks left in it ("XX XX 21", "XX MMM 20", "XX March 26"): a placeholder, kept as written. */
-const PLACEHOLDER = /(?<![A-Za-z0-9])(?:XX|\d{1,2})[ \t]+(?:XX|MMM|[A-Za-z]{3,9})\.?[ \t]+(?:XX|\d{2,4})(?![A-Za-z0-9])/;
-const isPlaceholder = (t) => PLACEHOLDER.test(t) && /\bXX\b|\bMMM\b/.test(t);
+/* A date with blanks left in it ("XX XX 21", "XX MMM 20", "XX March 26", "DD MMM YY"): a placeholder, kept as
+   written. */
+const PLACEHOLDER = /(?<![A-Za-z0-9])(?:XX|DD|\d{1,2})[ \t]+(?:XX|MMM?|[A-Za-z]{3,9})\.?[ \t]+(?:XX|YY(?:YY)?|\d{2,4})(?![A-Za-z0-9])/;
+const isPlaceholder = (t) => PLACEHOLDER.test(t) && /\b(?:XX|MMM?|DD|YY(?:YY)?)\b/.test(t);
 
 /** A whole calendar date read off `text`, or null. A two-digit year is read 00–49 as the
  *  2000s and 50–99 as the 1900s, which the 50 measured headers bear out (1981 to 2024). */
@@ -166,10 +171,10 @@ function field(raw, start, end, locate) {
   return { text: tidy(raw.slice(start, end)), start, end, source: locate(start) || null };
 }
 
-/** Where the header is anchored: the first line opening with a series' label, with its number
- *  where the series prints it beside the label. */
-function anchor(raw, series, labels) {
-  let best = null;
+/** Where a header may be anchored: each line opening with a series' label, with its number where the series prints
+ *  it beside the label, first the earliest (with a number where two begin together). */
+function anchors(raw, series, labels) {
+  const out = [];
   for (const s of series) {
     s.label.lastIndex = 0;
     for (const m of raw.matchAll(s.label)) {
@@ -189,11 +194,10 @@ function anchor(raw, series, labels) {
       for (let k = 0; k < 6 && stop >= 0; k++) stop = raw.indexOf("\n", stop + 1);
       const near = raw.slice(m.index, stop < 0 ? raw.length : stop);
       if (!labels.some((l) => { l.re.lastIndex = 0; return l.re.test(near); })) continue;
-      if (!best || hit.start < best.start || (hit.start === best.start && hit.number && !best.number)) best = hit;
-      break;
+      out.push(hit);
     }
   }
-  return best;
+  return out.sort((x, y) => x.start - y.start || (y.number ? 1 : 0) - (x.number ? 1 : 0));
 }
 
 /** Where the header block begins: the anchor's line, and the lines above it a boxed layout prints there (labels,
@@ -211,14 +215,30 @@ function blockStart(lines, offset) {
   return lines[i].start;
 }
 
-/** The header block of a policy (R26), or `{header: null, why}`. */
+/** The header block of a policy (R26), or `{header: null, why}`. The block is the first anchor's; where the same
+ *  series and number anchor again further on and that block reads more fields, it is that one: a revision
+ *  memorandum's running header ("DEPARTMENTAL GENERAL ORDER D-4 Effective Date:") prints the order's name and one
+ *  field above the order's own header. */
 export function readHeader(ctx, raw, locate = () => null) {
   raw = String(raw || "");
   const series = policySeries(ctx);
   const labels = headerLabels(ctx);
   if (!series.length && !labels.length)
     return { header: null, why: "the active jurisdiction profiles give no policy series and no policy header labels, so no header is read" };
-  const a = anchor(raw, series, labels);
+  const all = anchors(raw, series, labels);
+  const first = all[0] || null;
+  let best = readAt(raw, labels, first, locate);
+  const fields = (r) => (r.header ? HEADER_FIELDS.length - r.header.missing.length : -1);
+  for (const a of all.slice(1)) {
+    if (a.series !== first.series || !a.number || !first.number || a.number.text !== first.number.text) continue;
+    const r = readAt(raw, labels, a, locate);
+    if (fields(r) > fields(best)) best = r;
+  }
+  return best;
+}
+
+/** The header block read from one anchor (or, with none, from the first label). */
+function readAt(raw, labels, a, locate) {
   const lines = linesOf(raw);
   const from = a ? blockStart(lines, a.start) : 0;
   /* The block's end: the first line after the anchor (or, with none, after the first label)
@@ -289,6 +309,17 @@ export function readHeader(ctx, raw, locate = () => null) {
       why[s.field] = beside ? "its label is printed with no calendar date beside it or below it in the header"
         : "its label is printed with nothing beside it";
       continue;
+    }
+    /* A value printed beside its label ends at its line where the next line is set in capitals and the value is not:
+       that line is the order's own name under the block, not the value's continuation. The title is excepted: an
+       old layout prints index terms under its label, then the name, which the title reading below takes. */
+    if (s.field !== "title") {
+      const nl = raw.indexOf("\n", s.end);
+      const own = nl < 0 ? "" : raw.slice(s.end, nl);
+      if (nl >= 0 && nl < vEnd && own.trim() && !caps(own)) {
+        const next = raw.slice(nl + 1, raw.indexOf("\n", nl + 1) < 0 ? raw.length : raw.indexOf("\n", nl + 1));
+        if (caps(next)) vEnd = nl;
+      }
     }
     const f = field(raw, s.end, vEnd, locate);
     if (f) header[s.field] = f; else why[s.field] = "its label is printed with nothing beside it";
@@ -361,6 +392,7 @@ export function readHeader(ctx, raw, locate = () => null) {
   }
 
   if (header.title) delete header.title.inline;
+  for (const f of BELOW_TARGET) if (header[f]) header[f].measured = "below_target";
   const missing = HEADER_FIELDS.filter((f) => !header[f]);
   for (const f of missing) if (!why[f]) why[f] = f === "type"
     ? "no line of this text opens with a policy series the active jurisdiction profiles name"

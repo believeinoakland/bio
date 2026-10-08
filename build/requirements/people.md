@@ -1,6 +1,6 @@
 # people — requirements
 
-**Status** · In force: a new product module, reviewed (K1505; T33-36; banner cleared K1592); its meaning the canon ladders' and Bob's rulings (K1443, K1452, K1453, K1455, K1465, K1471, K1473, K1483–K1493, K1504). Last changed T35 (T35-35: R9, R24; K1865, K1863); every requirement met (K1970).
+**Status** · In force: a new product module, reviewed (K1505; T33-36; banner cleared K1592); its meaning the canon ladders' and Bob's rulings (K1443, K1452, K1453, K1455, K1465, K1471, K1473, K1483–K1493, K1504). Last changed T36 (T36-17: R36 new, who recorded from a passage; K1941, K2063, K2092); R36 marked not yet met (T36), every other requirement met (K1970).
 
 **Size (P6).** New. Expected 1,800–2,300 lines (constructs-2 §4.1), under the 4,000 mark. M-P5 (the person read at 50,000 lines) and M-P6 (false merges) run inside the job.
 
@@ -65,6 +65,9 @@ Terms. A **person** is an `entities` entity of kind `person`. A **viewer** is th
 **The ops map**
 - **R27** The module publishes `peopleOps(people, url, body)`, route arms keyed by the op names above, each answering what its service answers, its stamps from the control plane. Which credential reaches each op is `op-declarations'`.
 
+**recordedBy({captureSha, extent?, limit?, viewer})** (T36; N715)
+- **R36** Answers in `events` R49's shape over: person facts whose citation is an extent of the capture (R9; `kind: "person_fact"`, `field: "citation"`, `withdrawn` per R11), and identity claims whose evidence cites one (R1; `kind: "identity_claim"`, `field: "evidence"`, `withdrawn` per R4). Sight is R31's, an `address` or `contact` fact answered only as R10 admits (the item carries no value). Never an item: an expunged row (R12), a member's tie (R20), the protected source link (R21: this read answers exactly as if none were held), an interest-check result (R23). (N715; DEC-164 (4); K1941, K2063)
+
 ## Private
 
 ### Uses
@@ -75,10 +78,10 @@ Terms. A **person** is an `entities` entity of kind `person`. A **viewer** is th
 - `connection-grammar`: the shape, `registerOwner`, `ownerConformance` (R26).
 - `record-core`: `allocId`/opaque minting, `transact`, `declareTable` (R33), the derived-cache convention (R6), expunge with tombstone (R12); the `bundles` read contract (its R37: `object_type`), for R9's question (T35-35).
 - `membership`: `viewerPredicate`, `inSight`, `listenerRefusal`, `MODULE_ORDER`, `notAnAdmin`.
-- `provenance`, `content`: the citation and the capture's visibility (R9, R10, R25).
+- `provenance`, `content`: the citation and the capture's visibility (R9, R10, R25). Since T36, `content`'s `extentRelation`, `canonicalExtent` (R36).
 - `sources`: the source's existence (R21).
 - `entities`: `has`, `readEntity` (kind, aliases, scheme identifiers), `noSuchEntity`, `noEntity`.
-- `events`: `statementsOf`, `eventsFor`, `sequence` (R16).
+- `events`: `statementsOf`, `eventsFor`, `sequence` (R16). Since T36, R49's shape for R36 (an existing edge).
 - `lines`: `linesOf` (`holds`, `educated_at`, `credentialed_by`, `owns_interest_in`, `related_to`, `associate_of`), `structureAt` (R14, R15, R18, R22).
 - `money`: `moneyOf` (R15, R22).
 - `duties`: `dutiesOf` (R14).
@@ -108,6 +111,7 @@ Terms. A **person** is an `entities` entity of kind `person`. A **viewer** is th
 - **Scheduler.** `scheduler` (T33-80) registers a consumer that calls `evaluateChecks` on the one alarm with a stated budget; `notice-producers` (T33-82) registers `onCheckResult`.
 - **Rosters.** `calculations` registers a roster source; `roster-reader` is in layer 1 and cannot call this module, so `plane` registers its reader (open point).
 - **T35 (T35-35).** R24's mark replaces the old `detail` sentence (`index.mjs`:1348, `#resultView`, read by R25's `#tell` at :1399); `notice-producers` R11 marks its own queue items. Tests: a result answered by `op=interestchecks` and one told to a listener each carry the mark; R9 with a found extent at its capture's grade; the question withheld from a viewer outside its project.
+- **T36 (T36-17; K2092).** Key tests for R36: a person fact recorded from a found extent named with its member; a fact inside a hidden project neither answered nor counted; a source link held on the same extent absent from every answer; an expunged fact absent.
 - **Tests.** Negative controls for every refusal; R2 with an identifier held on one end only (refused A); R5 with a `not_same_as` inside a component; R6 rebuild-and-compare; R8 on a generated fixture of same-name officials (two Michael Houstons and a thousand others); R10 a machine address write refused; R12 each ground; R21 every other read silent; R24 gated; M-P5 a person read at 50,000 lines within the response budget.
 
 ## Open for Bob

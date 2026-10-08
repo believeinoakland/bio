@@ -26,9 +26,9 @@ test("the slug grammar: 3 to 40 of a-z, 0-9 and '-', beginning and ending with a
     assert.ok(!GROUP_SLUG_RE.test(bad), JSON.stringify(bad));
 });
 
-test("the fleet's member binding names: one pair per member, each name a binding the plane reads (R17)", () => {
+test("R17 the fleet's member binding names: one pair per member, each name a binding the plane reads; T36 (K2152) adds file-scanner as FILE_SCANNER", () => {
   assert.deepEqual(FLEET_BINDINGS, [["agent-worker", "AGENT_WORKER"], ["pdf-worker", "PDF_WORKER"], ["ocr-worker", "OCR_WORKER"],
-    ["sheet-worker", "SHEET_WORKER"], ["agent-runner", "AGENT_RUNNER"]]);
+    ["sheet-worker", "SHEET_WORKER"], ["agent-runner", "AGENT_RUNNER"], ["file-scanner", "FILE_SCANNER"]]);
   /* one pair per member and one member per binding */
   assert.equal(new Set(FLEET_BINDINGS.map(([m]) => m)).size, FLEET_BINDINGS.length);
   assert.equal(new Set(FLEET_BINDINGS.map(([, b]) => b)).size, FLEET_BINDINGS.length);
@@ -56,6 +56,11 @@ test("R17 members=1: each member's own /version through its binding: SERVING, UN
   });
   for (const m of ["agent-worker", "pdf-worker", "ocr-worker"]) assert.equal(silent[m].state, "SILENT", m);
   assert.match(silent["ocr-worker"].why, /connection refused/);
+  /* (T36, K2152) the scanner is read through FILE_SCANNER like every other member, under its own name */
+  const scan = await memberVersions({ FILE_SCANNER: answering({ ok: true, name: "file-scanner", version: "0.1.0" }) });
+  assert.deepEqual(scan["file-scanner"], { binding: "FILE_SCANNER", state: "SERVING", version: "0.1.0" });
+  assert.deepEqual((await memberVersions({}))["file-scanner"], { binding: "FILE_SCANNER", state: "UNBOUND" });
+  assert.equal((await memberVersions({ FILE_SCANNER: answering({ name: "pdf-worker", version: "1" }) }))["file-scanner"].state, "MISNAMED");
 });
 
 test("R17 members=1: a member that does not answer within 4 seconds reads SILENT", { timeout: 10000 }, async () => {
@@ -73,10 +78,13 @@ test("N348 this module holds no Durable Object door or class of its own: its rou
   assert.equal("instanceSetupStore" in S, false);
   assert.equal(typeof S.instanceSetupOps, "function");
   const ops = S.instanceSetupOps(null, new URL("http://do/"), null);
-  assert.deepEqual(Object.keys(ops).sort(), ["adminrecoverystep", "assistantset", "assistantstate", "cpuprobeend", "cpuprobestart", "cpuprobestate", "disclosureof",
+  assert.deepEqual(Object.keys(ops).sort(), ["adminrecoverystep", "assistantstate", "cpuprobeend", "cpuprobestart", "cpuprobestate", "disclosureof",
     "disclosureshown", "groupdomainset", "groupidentity", "groupidentitypublic",
     "groupnameset", "instancegroup", "instancegrouppublic", "instancegroupseed", "memberlanguage",
     "memberlanguageset", "officesseed", "placewanted", "placewantedstate", "profiles", "profilesset",
-    "recordcpuprobestep", "runtimeobservations", "seatsseed"]);
+    "recordcpuprobestep", "runtimeobservations", "seatsseed",
+    /* T37 (R67–R74): the translation ops and the door's store-internal record route */
+    "translationadopt", "translationconfirm", "translationdraft", "translationdraftrecord", "translationgrant",
+    "translationmark", "translationrevert", "translations", "interfacewords"].sort());
   for (const f of Object.values(ops)) assert.equal(typeof f, "function");
 });

@@ -8,7 +8,6 @@ import assert from "node:assert/strict";
 import { store } from "./fixture.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { askOp, draftOnObject } from "../../../src/plane/ask.mjs";
-import { instanceSetupOf } from "../../../src/setup.mjs";
 import { answersOf } from "../../../src/answers/index.mjs";
 
 const SEAL = "a-long-seal-secret-for-the-test-only";
@@ -28,10 +27,11 @@ async function world({ account = true, worker = true } = {}) {
                         { status: 200, headers: { "content-type": "application/x-ndjson" } }); } };
   const x = await store({ env });
   const sql = x.ctx.storage.sql;
-  /* the copy's assistant switched on by an administrator (instance-setup R53) */
+  /* the copy's assistant on: keep-away switched off by an administrator (credentials R51; instance-setup R53 derives the
+     assistant's state from it, K2162) */
   sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
             VALUES ('ada', 'Cover ada', 'h_ada', 'admin', 'active', '["contribute"]', 't', 't')`);
-  const on = instanceSetupOf(x.ctx).assistantSet({ on: true, by: "ada" });
+  const on = credentialsOf(x.ctx).aiKeepAwaySet({ on: false, by: "ada" });
   assert.equal(on.ok, true, JSON.stringify(on));
   sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
             VALUES ('ann', 'Cover ann', 'h_ann', 'member', 'active', '["contribute"]', 't', 't')`);
@@ -97,14 +97,35 @@ test("B2 negative controls: no account, another's session, and no assistant memb
   assert.equal(none.asks.length + x.asks.length + unbound.asks.length, 0, "nothing reached agent-worker");
 });
 
-test("B7 (K1690; instance-setup R55): while the copy's assistant is off, an ask is refused ASSISTANT_OFF before any grant is minted or any account read", async () => {
+/* N765 (instance-setup R55, credentials R35; K231, K2200 (3)): the one keep-away refusal, as `credentials.aiKeptAway()`
+   mints it and instance-setup's `assistantGate()` answers it, with the administrator's reason, who and when. */
+function keptAway(body, label) {
+  assert.equal(body.ok, false, label);
+  assert.equal(body.reason, "AI_KEPT_AWAY", label);
+  assert.equal(body.code, "AI_KEPT_AWAY", label);
+  assert.equal(body.check, "C-29.31", label);
+  assert.equal(typeof body.translation, "string", label);
+  assert.ok(body.translation.length > 0, label);
+  assert.equal(body.keep_away.reason, "kept away for the test", label);
+  assert.equal(body.keep_away.set_by, "ada", label);
+  assert.equal(typeof body.keep_away.set_at, "string", label);
+  assert.equal(JSON.stringify(body).includes("ASSISTANT_OFF"), false, `${label}: ASSISTANT_OFF is retired`);
+}
+
+test("B7 (K1690, K2162; N765: instance-setup R55, credentials R35, R51): while the group keeps its material away, an ask is refused AI_KEPT_AWAY, carrying the administrator's reason, before any grant is minted or any account read; switched back, it is asked", async () => {
   const x = await world();
-  assert.equal(instanceSetupOf(x.ctx).assistantSet({ on: false, by: "ada" }).ok, true);
+  assert.equal(credentialsOf(x.ctx).aiKeepAwaySet({ on: true, reason: "kept away for the test", by: "ada" }).ok, true);
   const r = await x.s.ask({ member: "member:ann", session: SESSION, question: "q" });
   assert.equal(r.status, 403);
-  assert.equal((await r.json()).reason, "ASSISTANT_OFF");
+  const body = await r.json();
+  keptAway(body, "ask");
+  assert.deepEqual(body, JSON.parse(JSON.stringify(credentialsOf(x.ctx).aiKeptAway())), "credentials' refusal as given");
   assert.equal(x.asks.length, 0, "nothing reached agent-worker");
   assert.equal([...x.ctx.storage.sql.exec(`SELECT count(*) c FROM ai_grants`)][0].c, 0, "no grant minted");
+  /* negative control: keep-away switched off again, the same ask is asked */
+  assert.equal(credentialsOf(x.ctx).aiKeepAwaySet({ on: false, by: "ada" }).ok, true);
+  assert.equal((await x.s.ask({ member: "member:ann", session: SESSION, question: "q" })).status, 200);
+  assert.equal(x.asks.length, 1);
 });
 
 test("B2 (control-plane R53; F1, admission R20): the door's arm asks the bio object only for a member's own session or a presented grant's member, reading the credential from the Authorization header, else the body's token, else (T35 only) the query; any other caller is refused", async () => {
@@ -240,6 +261,29 @@ test("R19 (N686; DEC-153 (2), K1841 (2), K2041): with the member's suggestions o
   assert.equal([...x.ctx.storage.sql.exec(`SELECT count(*) c FROM ai_grants`)][0].c, 1, "one grant, the first draft's");
 });
 
+test("R19 (T37; K2238; agent-worker R68, run-rules R22): a translation draft carries its task {op, direction, language, words}, the account and the door's pack to /draft, and no told, grant or firsthand, even with the member's suggestions on", async () => {
+  const x = await world();
+  assert.equal(credentialsOf(x.ctx).accountSwitchSet({ member: "member:ann", switch: "suggestions", on: true, by: "member:ann" }).ok, true);
+  const words = [{ key: "nav.home", en: "Home", note: "the first screen", means: "where a member starts", protected: false }];
+  const TPACK = { layers: ["interface_translation"] };
+  for (const direction of ["to_language", "to_english"]) {
+    const asked = { op: "translationdraft", member: "ann", session: SESSION, pack: TPACK, direction, language: "es", words };
+    const res = await x.s.draft(asked);
+    const r = await res.json();
+    assert.equal(res.status, 200);
+    assert.deepEqual([r.grant, r.suggestions, r.read], [null, true, []], "no grant, so no read log");
+    const [u, body] = x.asks.at(-1);
+    assert.equal(u, "https://agent-worker/draft");
+    assert.deepEqual(body, { task: { op: "translationdraft", direction, language: "es", words }, pack: TPACK,
+      account: { kind: "apikey", level: "member", secret: "sk-ant-zz-ann", member: "member:ann", suggestions: true } }, direction);
+  }
+  assert.equal([...x.ctx.storage.sql.exec(`SELECT count(*) c FROM ai_grants`)][0].c, 0, "no grant minted for a translation");
+  /* negative control: the same member's writing-help draft, suggestions on, is sent a grant in place of the pack */
+  const w = await draft(x);
+  assert.match(w.body.grant, /^[0-9a-f]{64}$/);
+  assert.equal(x.asks.at(-1)[1].pack, undefined);
+});
+
 test("R19 (N686; credentials R35, R37): a member with no account of their own is served by the group's key, carried as level `group` with the group's suggestions switch", async () => {
   const x = await world({ account: false });
   const c = credentialsOf(x.ctx);
@@ -254,14 +298,16 @@ test("R19 (N686; credentials R35, R37): a member with no account of their own is
   assert.match(r.body.grant, /^[0-9a-f]{64}$/);
 });
 
-test("R19 negative controls (N686): no assistant member, the assistant off, no account, a session not the member's, and a member that does not answer each end the draft in their owner's words at their status, nothing asked or nothing kept", async () => {
+test("R19 negative controls (N686; N765): no assistant member, the group keeping its material away (AI_KEPT_AWAY), no account, a session not the member's, and a member that does not answer each end the draft in their owner's words at their status, nothing asked or nothing kept", async () => {
   const unbound = await world({ worker: false });
   const r1 = await draft(unbound);
   assert.deepEqual([r1.status, r1.body.reason], [503, "AGENT_WORKER_UNBOUND"]);
   const off = await world();
-  assert.equal(instanceSetupOf(off.ctx).assistantSet({ on: false, by: "ada" }).ok, true);
+  assert.equal(credentialsOf(off.ctx).aiKeepAwaySet({ on: true, reason: "kept away for the test", by: "ada" }).ok, true);
   const r2 = await draft(off);
-  assert.deepEqual([r2.status, r2.body.reason], [403, "ASSISTANT_OFF"]);
+  assert.equal(r2.status, 403);
+  keptAway(r2.body, "draft");   /* N765: AI_KEPT_AWAY, as for an ask (instance-setup R55) */
+  assert.deepEqual([r2.body.grant, r2.body.suggestions, r2.body.read], [null, false, []], "before any account or grant");
   const none = await world({ account: false });
   const r3 = await draft(none);
   assert.equal(r3.status, 409);

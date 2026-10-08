@@ -21,6 +21,7 @@ import { runProductionsOf, runProductionsOps } from "../../../src/run-production
 import { captureRequestsOf, captureRequestsOps } from "../../../src/capture-requests/index.mjs";
 import { recordOf, recordCoreOps } from "../../../src/record-core/index.mjs";
 import { governorOf, governorRoutes } from "../../../src/host-governor/index.mjs";
+import { acquisitionOf } from "../../../src/acquisition/index.mjs";
 import { captureOf, captureOps } from "../../../src/capture/index.mjs";
 import { monitoringOf, monitoringOps } from "../../../src/monitoring/index.mjs";
 import { linkSweepOf, linkSweepOps } from "../../../src/link-sweep/index.mjs";
@@ -41,6 +42,7 @@ import { caseAuthoringOf, caseAuthoringOps } from "../../../src/case-authoring/i
 import { ratificationOf, ratificationOps } from "../../../src/ratification/index.mjs";
 import { publicationOf, publicationOps } from "../../../src/publication/index.mjs";
 import { docketOf, docketOps } from "../../../src/docket/index.mjs";
+import { caseCarriageOps } from "../../../src/case-carriage/index.mjs";
 import { caseImportOf, caseImportOps } from "../../../src/case-import/index.mjs";
 import { publicReadOf, publicReadOps } from "../../../src/public-read/index.mjs";
 import { projectStageOf, projectStageOps } from "../../../src/project-stage/index.mjs";
@@ -68,6 +70,7 @@ import { hypothesesOf, hypothesesOps } from "../../../src/hypotheses/index.mjs";
 import { answersOf, answersOps } from "../../../src/answers/index.mjs";
 import { caseTensionsOf, caseTensionsOps } from "../../../src/case-tensions/index.mjs";
 import { followingOf, followingOps } from "../../../src/following/index.mjs";
+import { fileSafetyOf, fileSafetyOps } from "../../../src/file-safety/index.mjs";
 
 export const MODULE_MAPS = [
   ["membership", (c, u, b, e) => membershipOps(membershipOf(c), u, b, e)],
@@ -78,6 +81,7 @@ export const MODULE_MAPS = [
   ["acquisition", (c, u, b) => ({ coarchiveset: () => acquisitionOf(c).coArchiveSet({ on: b ? b.on : undefined, by: u.searchParams.get("by") }),
                                   coarchivestate: () => acquisitionOf(c).coArchiveState() })],
   ["capture", (c, u, b, e) => captureOps(captureOf(c), u, b, e)],
+  ["file-safety", (c, u, b, e) => fileSafetyOps(fileSafetyOf(c), u, b, e)],   /* R26: directly after capture's */
   ["calibration", (c, u, b) => calibrationOps(calibrationOf(c), u, b)],
   ["bias", (c, u, b) => biasOps(biasOf(c), u, b)],
   ["extraction", (c, u, b, e) => extractionOps(extractionOf(c), u, b, e)],
@@ -110,6 +114,8 @@ export const MODULE_MAPS = [
   ["corpus-export", (c, u) => corpusExportOps(corpusExportOf(c), (k) => u.searchParams.get(k))],
   ["case-tensions", (c, u, b) => caseTensionsOps(caseTensionsOf(c), u, b)],
   ["publication", (c, u, b) => publicationOps(publicationOf(c), u, b)],
+  /* plane R18 (T37; K2226): case-carriage's map, over the one instance publication's factory made */
+  ["case-carriage", (c, u, b) => caseCarriageOps(publicationOf(c).caseCarriage, u, b)],
   ["docket", (c, u, b) => docketOps(docketOf(c), u, b)],
   ["public-read", (c, u) => publicReadOps(publicReadOf(c), u)],
   ["project-stage", (c, u) => projectStageOps(projectStageOf(c), u)],

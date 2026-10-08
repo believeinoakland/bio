@@ -26,7 +26,7 @@
  * publication and observation attribution are `case-tensions`', with their three tables and the C-92 rows. This module
  * creates it and registers with it the provider its moved code reads this module's tables and splice through (R61).
  * Since T35 (N597) it serves none of case-tensions' names and re-exports none: each importer reads case-tensions
- * directly. `caseRelation` alone answers here, exactly as case-tensions does, until `affordances` reads it there.
+ * directly. Since T36 (N597, K1643) `caseRelation` is gone too: every reader of a case relation reads case-tensions'.
  *
  * T34 (T34-44, T34-79): the set-wide read of the court-order stamps (R64), the group's self-description as the public is
  * told it (R65), and publishing at a set time (R66–R71, `./schedule.mjs`, its table `scheduled_editions`): a signed
@@ -39,6 +39,14 @@
  * binding on" its body, a copyrighted standard by its edition, citation and access with only the passages relied on.
  * The waiting edition read `case-authoring` calls (R74; N681), C-122.5 for an edition no publisher could check (R33;
  * N687), and the review copy's secret read from the request body, never the address (R73, `./door.mjs`; F1).
+ *
+ * T36 (T36-26): the address's secret admits nothing and its fingerprint reaches the store op in the store request's
+ * body, never its address (R73; K2111); `criteriaFor` answers the criteria a commit would record, for case-authoring's
+ * pre-flight (R75; N717, K2129).
+ *
+ * T37 (T37-18): each criteria row freezes `captures`, only the captures holding its passages that the edition carries
+ * (R72; N763, K2140), so case-checker judges a copyrighted text carried offline; and the commit refuses a photo marked
+ * since the case was prepared, `PHOTO_MARKS_CHANGED_SINCE` (R57, C-122.6; N757, DEC-180 (4), K2206).
  *
  * REACHED as `publicationOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first
  * call with `deps`, returned to every later caller. At creation it creates its tables and declares them to
@@ -54,14 +62,15 @@
  *                                   `producingGroup`.
  *   credentials    `attestingKeys` (its R11; R2's signers), reached lazily (K757).
  *   inquiry        `exclusionsNaming` (R12).
- *   caseTensions   `attributionFacts` (R2), `dischargeCaseFlags` (R22), `caseRelation` (R61's one delegate); created at
+ *   caseTensions   `attributionFacts` (R2), `dischargeCaseFlags` (R22), the provider registration (R61); created at
  *                  creation on the same host with this module's record, membership, promotion and clock, a given
  *                  `basisVersions`, `contradiction` and `capture` forwarded to it (test injection), and the provider
  *                  (R61) registered with it.
  *   caseCarriage   `holdMaterials`, `heldMaterialsOf`, `publishedMaterialText`, `acceptedWorkLapsed`, `sourcesLapsed`
- *                  (its R1–R5), for R51, R57 and R59 (N532); created at creation with this module's storage, record,
+ *                  (its R1–R5) and `marksLapsed` (its R13), for R51, R57 and R59 (N532, N757); created at creation with this module's storage, record,
  *                  membership, promotion and clock, so its two tables exist and are declared at every boot (its R6). A
- *                  given `sources`, `acceptedWork` or `extraction` is forwarded to it (test injection).
+ *                  given `sources`, `acceptedWork` or `extraction` is forwarded to it (test injection), and a given
+ *                  `bucket` and `store` (T37, K2226: the evidence bucket and namespace its R11's obscured copy needs).
  *   reevaluation   `registerCaseParts` (its R26), at creation only (R41, R43).
  *   standards      `standardRead` (its R5) and `bindsAt` (its R43), at a case edition's commit only (R72).
  *   entities       `readEntity` (its R5): a criteria row's body by name (R72).
@@ -69,8 +78,8 @@
  *                  (its R4); its ops are spread by the plane's op map (`corpusExportOps`, N483), and nothing here calls it.
  *   now            the clock for the instants it writes, an ISO string (default: the wall clock).
  *
- * READ CONTRACTS it joins in its own SQL: record-core's `bundles` (R21's type column, the standing test) and
- * provenance's `register` (R42's captures). */
+ * READ CONTRACTS it joins in its own SQL: record-core's `bundles` (R21's type column, the standing test),
+ * provenance's `register` (R42's captures) and content's `content` (its R45; R72's `captures`). */
 
 import { recordOf, instantOrder } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, listenerRefusal } from "../membership/index.mjs";
@@ -97,7 +106,7 @@ import * as schedule from "./schedule.mjs";
    importers import exactly what they imported. */
 import { caseDocumentStatesMemberBlocks, caseDocumentBlocks, SECTIONS, REAUTHORABLE_SECTIONS, signedCitations,
          publishedGraphEdges, caseDocumentRequiresMaterials, calculationsOf, timelineOf,
-         caseFilePath } from "../case-grammar/index.mjs";
+         caseFilePath, materialsOf } from "../case-grammar/index.mjs";
 
 export { CASE_SOURCES_CHECKS } from "./checks.mjs";
 export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3,
@@ -189,13 +198,14 @@ export class Publication {
 
   constructor({ storage, record, membership, promotion, host = null, inquiry = null, basisVersions = null,
                 contradiction = null, sources = null, credentials = null, corpusExport = null, acceptedWork = null,
-                capture = null, extraction = null, standards = null, entities = null, now = null } = {}) {
+                capture = null, extraction = null, standards = null, entities = null, bucket = null, store = null,
+                now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
     this.#deps = { host, storage, inquiry, basisVersions, contradiction, sources, credentials, corpusExport, acceptedWork,
-                   capture, extraction, standards, entities };
+                   capture, extraction, standards, entities, bucket, store };
     this.now = typeof now === "function" ? now : () => new Date().toISOString();
   }
 
@@ -221,10 +231,13 @@ export class Publication {
   }
   /* N532: case-carriage, one per host, forwarded the uses a test gave this module (its Suggestions' factory). */
   get caseCarriage() {
-    const { host, storage, sources, acceptedWork, extraction } = this.#deps;
+    const { host, storage, sources, acceptedWork, extraction, bucket, store } = this.#deps;
+    /* (T37; K2226) the evidence bucket and the store's namespace, when given, so case-carriage holds an obscured copy
+       (its R11); the plane passes them. */
     return caseCarriageOf(host, { storage, record: this.record, membership: this.membership, promotion: this.promotion,
                                   now: this.now, ...(sources ? { sources } : {}), ...(acceptedWork ? { acceptedWork } : {}),
-                                  ...(extraction ? { extraction } : {}) });
+                                  ...(extraction ? { extraction } : {}), ...(bucket ? { bucket } : {}),
+                                  ...(store != null ? { store } : {}) });
   }
   get corpusExport() {
     return this.#deps.corpusExport ||= corpusExportOf(this.#deps.host, { storage: this.#deps.storage, record: this.record,
@@ -947,6 +960,20 @@ export class Publication {
                      + "published; this edition was not, and a new preparation leaves the detail out." };
       /* END DEC-49 REGION is-source-consent-withdrawn */
     }
+    /* R57 (T37; N757, DEC-180 (4), K2206): A PHOTO MARKED SINCE THE CASE WAS PREPARED IS RE-READ AT THE COMMIT, R51's
+       pattern, after it and before R59: every `materials:` row case-carriage answers lapsed (its R13: an obscured row whose
+       copy is no longer the photo's current copy, a photo carried whole now marked, marks that cannot be read) stops the
+       commit, nothing written; the remedy is a new preparation. */
+    const answered = this.caseCarriage.marksLapsed(docFm);
+    const marks = Array.isArray(answered) ? answered : [{ ref: null, sha: null, why: "the photos' marks could not be read" }];
+    if (marks.length) {
+      /* DEC-49 REGION is-photo-marks-current */
+      return { ok: false, reason: "PHOTO_MARKS_CHANGED_SINCE", ...rowOf("PHOTO_MARKS_CHANGED_SINCE"), caseId: id,
+               edition: ed, photos: marks.slice(0, 200).map((m) => ({ ref: m?.ref ?? null, sha: m?.sha ?? null, why: m?.why ?? null })),
+               detail: `${marks.length} photo(s) this case document carries were marked after the case was prepared, so `
+                     + "nothing was committed. Prepare the case again." };
+      /* END DEC-49 REGION is-photo-marks-current */
+    }
     /* R59 (DEC-96 items 1, 4; N522): ANOTHER GROUP'S WORK THE DOCUMENT RESTS ON IS RE-READ AT THE COMMIT, R51's pattern.
        Each `accepted_work:` row's acceptance must still be in force at its edition, and every open flag on that edition
        must be one `accepted_work_flags:` discloses, read through case-carriage (its R4); otherwise nothing is committed
@@ -965,8 +992,8 @@ export class Publication {
                      + "are not disclosed by it, so nothing was committed. Prepare the case again, disclosing them." };
       /* END DEC-49 REGION is-accepted-work-standing */
     }
-    /* R72 (N649): the published criteria, read after every refusal and frozen on the edition's row below. */
-    const criteria = this.#criteriaOf(members, when, attestorMember);
+    /* R72 (N649): the published criteria, read after every refusal and frozen on the edition's row below; R75's read. */
+    const criteria = this.#withCaptures(this.#criteriaOf(members, when, attestorMember), docFm);
     if (!owner)
       this.sql.exec(`INSERT INTO cases (case_id,project_id,opened) VALUES (?,?,?) ON CONFLICT(case_id) DO NOTHING`,
                     id, project ?? null, when);
@@ -1054,6 +1081,20 @@ export class Publication {
     return [...rows.values()].map((r) => this.#criterion(r, day, viewer));
   }
 
+  /** R75 (N717; K2002, K2129): the criteria R72 would record for `members` (each `{bundle_id, version_sha}`, read at
+   *  those bytes) at a commit by `signer` on the UTC day of `at`, composed exactly as the commit composes them (the same
+   *  read), so a preparation and its commit disagree only by a change in the record between them: `{rows}`. Writes
+   *  nothing, is no op, and never throws: a member whose bytes cannot be read contributes no row. */
+  criteriaFor(args = {}) {
+    try {
+      const { members = [], signer = null, at = null } = args && typeof args === "object" ? args : {};
+      const list = (Array.isArray(members) ? members : [])
+        .filter((m) => m && typeof m === "object" && typeof m.bundle_id === "string" && m.bundle_id);
+      const when = str(at) || this.#when();
+      return { rows: this.#criteriaOf(list, when, typeof signer === "string" ? signer : null) };
+    } catch { return { rows: [] }; }
+  }
+
   /* R72: one criteria row, as `standards` answers the standard at the commit. */
   #criterion({ standard, portion, body, named, requires }, day, viewer) {
     let s = null;
@@ -1075,6 +1116,33 @@ export class Publication {
              body, binds, passages: ids.map((c) => ({ content: c, text: quoted.has(c) ? quoted.get(c) : null })),
              label: binds ? `Standard · binds ${name}` : body ? `Benchmark · not binding on ${name}` : "Benchmark · not binding",
              access_words: ACCESS_WORDS[s.access] ?? null };
+  }
+
+  /* R72 (T37; N763, K2140): each row's `captures`, the SHA-256 of each capture holding one of its passages (`content`'s
+     read contract, its R45, as case-authoring R61 reads it) that the edition's `materials:` block lists `included: true`,
+     each once, in the order first met. A capture the edition does not carry is never stated, so no withheld capture's
+     digest is published; a row stated "not held" carries `captures: null`. An unreadable `content` table states none.
+     A `materials:` row's `included` is read as case-carriage reads it (`true`, or the string a flat block may hold). */
+  #withCaptures(rows, fm) {
+    let carried = new Set();
+    try {
+      const m = materialsOf(fm);
+      carried = new Set((m && Array.isArray(m.materials) ? m.materials : [])
+        .filter((r) => r && typeof r === "object" && (r.included === true || r.included === "true"))
+        .map((r) => str(r.sha).toLowerCase()).filter((x) => HEX64.test(x)));
+    } catch { carried = new Set(); }
+    const contents = [...new Set(rows.flatMap((r) => (Array.isArray(r.passages) ? r.passages : [])
+      .map((q) => (q && typeof q.content === "string" ? q.content : null)).filter(Boolean)))];
+    const captureOf = new Map();
+    try {
+      /* one bound list, never a variable per id (workerd refuses about 100 bound variables, D-390) */
+      if (contents.length)
+        for (const r of this.#rows(`SELECT content_id, capture_sha FROM content
+                                     WHERE content_id IN (SELECT value FROM json_each(?))`, JSON.stringify(contents)))
+          if (typeof r.capture_sha === "string" && r.capture_sha) captureOf.set(r.content_id, r.capture_sha.toLowerCase());
+    } catch { captureOf.clear(); }
+    return rows.map((r) => ({ ...r, captures: r.stated === "not held" || !Array.isArray(r.passages) ? null
+      : [...new Set(r.passages.map((q) => q && captureOf.get(q.content)).filter((c) => c && carried.has(c)))] }));
   }
 
   /* R72: an entity's name as `entities` holds it; its id when it holds none. */
@@ -1345,9 +1413,7 @@ export class Publication {
 
   /* The case relation and revision flags (R4–R6), the tensions after publication (R50) and observation attribution (R17,
      R39, R60) are `case-tensions`' since T33 (its R1–R7; K617, K1505), retired here as moved, and since T35 (N597) each
-     importer reads them there. `caseRelation` alone answers here, exactly as case-tensions' does, until `affordances`
-     reads it there (T35-66; R61). */
-  caseRelation(id) { return this.caseTensionsModule.caseRelation(id); }
+     importer reads them there; since T36 (K1643) `caseRelation` too, so this module serves none of them (R61). */
 
   /** R61 (K1505 (3), K1634): the provider this module registers with `case-tensions` at start, its seven doors each
    *  answering exactly the rows the moved code read from this module's tables before the split, and the splice (R21).
@@ -2484,8 +2550,9 @@ export function publicationOwns(t) {
   return PUBLICATION_TABLES.some((x) => (typeof x === "string" ? x : x.name) === name) || PUBLICATION_EXEMPT.includes(name);
 }
 
-/** The module's ops (K3), as entries of the plane's op map (`plane/store.mjs`). `viewer`, `by` and `secretSha` are the control
- *  plane's stamps, read from the query, so a caller's own copy in a body never wins. The public reads
+/** The module's ops (K3), as entries of the plane's op map (`plane/store.mjs`). `viewer` and `by` are the control plane's
+ *  stamps, read from the query, so a caller's own copy in a body never wins. `secretSha` (R73) is the door's too, and
+ *  travels in the store request's body, never its address: `op=casedocument` reads it from the body alone (a string). The public reads
  *  (`publishededitions`, `publishedcase`, `publishedmanifest`, `verify`, `publishedlist`) are `public-read`'s
  *  `publicReadOps` and `projectstage` is `project-stage`'s `projectStageOps` since K651; the plane's op map
  *  spreads them beside these (K671). */
@@ -2501,7 +2568,8 @@ export function publicationOps(p, url, body) {
     excludedby: () => p.excludedBy(q("id"), q("viewer")),
     /* REC-130: both carry the viewer the control plane STAMPS, and fail closed on its absence. */
     casedocfacts: () => p.caseDocumentFacts(q("case"), q("edition"), q("viewer")),
-    casedocument: () => p.caseDocument(q("case"), q("edition"), q("viewer"), q("secretSha")),
+    casedocument: () => p.caseDocument(q("case"), q("edition"), q("viewer"),
+                                       typeof b.secretSha === "string" && b.secretSha ? b.secretSha : null),
     /* D-734: internal, the signed text behind a published case-document hash; the control plane re-hashes it. */
     publishedcasedoctext: () => p.publishedCaseDocumentText((q("sha256") || "").toLowerCase()),
     /* R68, R69 (DEC-147): `by` and `viewer` the control plane's stamps; an absent viewer is no viewer at all, never the

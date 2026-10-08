@@ -1,7 +1,7 @@
 /* admission's test harness: a fake `env` whose `STORE` is shaped like a Durable Object namespace and records every
    inner request, the reader the door passes in (`doAnswer`'s contract: `{answered, result, correlation?}`), the
-   callers, and a `gate` driver that runs the gates in the door's order (R1, R17/R19's query gate, R6's lookup, R2,
-   R3, then `admit` and R12) and answers the first refusal, silence or admission. Every test drives the module at its interface. */
+   callers, and a `gate` driver that runs the gates in the door's order (R1, R20's address gate, R17/R19's query gate,
+   R6's lookup, R2, R3, then `admit` and R12) and answers the first refusal, silence or admission. Every test drives the module at its interface. */
 import { createHash, randomBytes } from "node:crypto";
 import assert from "node:assert/strict";
 
@@ -96,18 +96,21 @@ export function world(opts = {}) {
   return { env, S, K };
 }
 
+/** The door's `presentedCredential` answer for `token` sent in a JSON body, for the gates called on their own. */
+export const presenting = (token) => A.presentedCredential({ body: token === undefined ? null : { token } });
+
 export const urlOf = (params = {}) => {
   const u = new URL("https://plane.example/api");
   for (const [k, v] of Object.entries(params)) if (v !== undefined) u.searchParams.set(k, v);
   return u;
 };
 
-/** A request carrying `token` as R20 reads one: `via` "query" (the address, T35's deprecated form), "header"
- *  (`Authorization: Bearer`) or "body" (a JSON body's `token`). Answers `{ url, req, body }`. */
-export function requestOf({ token, params = {}, via = "query", method = "POST", extraBody = {} } = {}) {
+/** A request carrying `token`: `via` "header" (`Authorization: Bearer`, the default), "body" (a JSON body's `token`)
+ *  or "query" (the address, which R20 refuses). Answers `{ url, req, body }`. */
+export function requestOf({ token, params = {}, via = "header", method = "POST", extraBody = {} } = {}) {
   const url = urlOf({ ...params, ...(via === "query" ? { token } : {}) });
   const headers = new Headers();
-  if (via === "header" && token !== undefined) headers.set("authorization", `Bearer ${token}`);
+  if (via === "header" && token !== undefined && token !== null && token !== "") headers.set("authorization", `Bearer ${token}`);
   const body = method === "GET" ? null : { ...extraBody, ...(via === "body" && token !== undefined ? { token } : {}) };
   const req = new Request(url, { method, headers, ...(body ? { body: JSON.stringify(body) } : {}) });
   return { url, req, body };
@@ -115,14 +118,16 @@ export function requestOf({ token, params = {}, via = "query", method = "POST", 
 
 /** The gates in the door's order, for a request naming `op` with `token` and `params`. Answers one of
  *  `{ refusal }`, `{ silent }`, `{ public: true, url }` (a public op past R1–R3) or `{ caller, url, credential }`.
- *  `via` sends the credential as R20 reads one ("query" by default, the form every test before T35 sent). */
-export async function gate(env, { op, token, params = {}, method = "POST", tables, via = "query" }) {
+ *  `via` sends the credential: "header" by default, "body", or "query" (refused by R20's gate). */
+export async function gate(env, { op, token, params = {}, method = "POST", tables, via = "header" }) {
   const { url, req, body } = requestOf({ token, params, via, method });
   const spec = Object.hasOwn(O.OPS, op) ? O.OPS[op] : undefined;
   assert.ok(spec, `test asks an op with a spec: ${op}`);
   const ns = A.namespaceGate(url);
   if (ns) return { refusal: ns };
   const credential = A.presentedCredential({ req, url, body });
+  const inAddress = A.credentialAddressGate(url, credential);
+  if (inAddress) return { refusal: inAddress };
   A.queryGate(url, op, credential);
   const presented = await A.aiCredentialPresented(url, env, doAnswer, { credential, op });
   if (presented.silent) return { silent: presented.silent };

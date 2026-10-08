@@ -48,8 +48,9 @@ export async function askOnObject(ctx, env, { member, session = null, grant = nu
   const w = env && env.AGENT_WORKER;
   if (!w || typeof w.fetch !== "function")
     return json({ ok: false, reason: "AGENT_WORKER_UNBOUND", detail: "your group's Civicsmith has no assistant bound to it. Nothing was asked." }, 503);
-  /* K1690 (instance-setup R55): while the copy's assistant is off, every ask is refused ASSISTANT_OFF, before any grant
-     is minted or any account read. */
+  /* K1690, N765 (instance-setup R55; credentials R35; K231, K2200 (3)): while the group keeps its material away from
+     every assistant, or that setting cannot be read, every ask is refused as instance-setup's `assistantGate()` answers
+     it, `credentials`' `AI_KEPT_AWAY` row as given, before any grant is minted or any account read. */
   const off = instanceSetupOf(ctx, env).assistantGate();
   if (off) return json(off, 403);
   const c = credentialsOf(ctx);
@@ -85,18 +86,22 @@ export async function askOnObject(ctx, env, { member, session = null, grant = nu
 /** plane R19 (N686; K1837, K1841, K2038, K2041, K2062; control-plane R57, agent-worker R59, credentials R27, R35, R37):
  *  on the `bio` object, the draft's account and grant, the `/draft` twin of `askOnObject`. control-plane's door, past
  *  every refusal its own and the owner's, asks it with `draftAsk`'s shape, `{op, member, session, told, act, field,
- *  firsthand, pack}`. While the copy's assistant is off it is refused `ASSISTANT_OFF` (instance-setup R55); it resolves
+ *  firsthand, pack}`. While the group keeps its material away it is refused `AI_KEPT_AWAY` as instance-setup's
+ *  `assistantGate()` answers it (its R55; credentials R35; N765); it resolves
  *  the account that serves the member's own act (`accountFor`, an `ask`-kind act: a draft is the member's own read-only
  *  ask), reads that account's `suggestions` switch (the member's own reference's, credentials R25; the group key's, its
  *  R37), mints the member's ask grant only when `suggestions` is on and the field is not firsthand (DEC-153 (2), K1841
  *  (2)), and posts `{task, told, account, grant?, pack?, firsthand?}` to agent-worker's `/draft` in its R6 wire shape,
- *  the pack the door holds sent only with no grant (agent-worker R59). It answers a Response at agent-worker's status:
+ *  the pack the door holds sent only with no grant (agent-worker R59). (T37; K2238) A translation draft
+ *  (`op: "translationdraft"`, agent-worker R68) is posted as `{task: {op, direction, language, words}, account, pack}`:
+ *  no `told`, no `firsthand`, and never a grant (it reads nothing of the record, run-rules R22). It answers a Response at agent-worker's status:
  *  agent-worker's JSON as given (or the refusal that ended it first) with `grant` (null when none), `suggestions` and
  *  `read`, the strings of that grant's read log on this object (`answers.readLog`, its R1, R2; `[]` with no grant), so
  *  the door checks the draft against them (`wizard-scripts.checkDraft`) and counts its usage. The door answers the
  *  member and never the grant. The secret leaves the object only in that one call. */
 export async function draftOnObject(ctx, env, { op = null, member = null, session = null, told = null, act = null, field = null,
-                                                firsthand = false, pack = null } = {}) {
+                                                firsthand = false, pack = null, direction = null, language = null,
+                                                words = null } = {}) {
   const who = member === null || member === undefined || member === "" ? null : `member:${idOf(member)}`;
   const readOf = (grant) => {
     if (!grant) return [];
@@ -108,7 +113,7 @@ export async function draftOnObject(ctx, env, { op = null, member = null, sessio
   const w = env && env.AGENT_WORKER;
   if (!w || typeof w.fetch !== "function")
     return out(503, { ok: false, reason: "AGENT_WORKER_UNBOUND", detail: "your group's Civicsmith has no assistant bound to it. Nothing was drafted." });
-  const off = instanceSetupOf(ctx, env).assistantGate();
+  const off = instanceSetupOf(ctx, env).assistantGate();   /* N765: `AI_KEPT_AWAY`, as for an ask, before any account */
   if (off) return out(403, off);
   const c = credentialsOf(ctx);
   let ref = await c.accountFor({ member: who, act: { kind: "ask", member: who } });
@@ -118,15 +123,19 @@ export async function draftOnObject(ctx, env, { op = null, member = null, sessio
     if (ref.level === "member") { const st = c.accountReferenceState({ member: who, viewer: who }); suggestions = !!(st && st.ok === true && st.suggestions === true); }
     else { const g = c.groupKeySwitches(); suggestions = !!(g && g.suggestions === true); }
   } catch { suggestions = false; }
+  /* (T37; K2238; agent-worker R68, run-rules R22) a translation draft reads nothing of the record: no grant is minted
+     whatever the switch, and its task is the owner's `{direction, language, words}` with the pack, no `told`. */
+  const translation = op === "translationdraft";
   let grant = null;
-  if (suggestions && firsthand !== true) {
+  if (suggestions && firsthand !== true && !translation) {
     const g = await c.aiGrantMint({ member: who, by: who, session });
     if (!g || g.ok !== true) return out(403, g, null, suggestions);
     grant = g.token;
   }
-  const task = op === "writinghelp" ? { op, act, field } : { op };
-  const body = JSON.stringify({ task, told, account: { kind: ref.kind, level: ref.level, secret: ref.key, member: who, suggestions },
-                                ...(grant ? { grant } : pack != null ? { pack } : {}), ...(firsthand === true ? { firsthand: true } : {}) });
+  const task = op === "writinghelp" ? { op, act, field } : translation ? { op, direction, language, words } : { op };
+  const account = { kind: ref.kind, level: ref.level, secret: ref.key, member: who, suggestions };
+  const body = JSON.stringify(translation ? { task, account, ...(pack != null ? { pack } : {}) }
+    : { task, told, account, ...(grant ? { grant } : pack != null ? { pack } : {}), ...(firsthand === true ? { firsthand: true } : {}) });
   ref = null;
   let res;
   try {

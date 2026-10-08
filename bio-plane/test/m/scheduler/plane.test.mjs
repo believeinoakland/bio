@@ -21,7 +21,7 @@ const mf = new Miniflare({
   script: readFileSync(join(SRC, "plane", "index.mjs"), "utf8"), modulesRules: [{ type: "ESModule", include: ["**/*.mjs"] }],
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } }, r2Buckets: ["CAPTURES", "PUBLISHED"],
-  bindings: { ADMIN_TOKEN: "adm-sch", MEMBER_TOKEN: "mem-sch", PROBE_TOKEN: "prb-sch", DAEMON_TOKEN: "dmn-sch",
+  bindings: { ADMIN_TOKEN: "adm-sch", PROBE_TOKEN: "prb-sch", DAEMON_TOKEN: "dmn-sch",
               VERSION: "1.0.0", INSTANCE_NAME: "sch-plane", GOVERNOR_APPETITE_PER_MIN: "600000",
               CAPTURE_REQUEST_TICK_MS: "3600000", MONITOR_TICK_MS: "3600000",
               ACCOUNT_SEAL_SECRET: "sched-plane-seal-secret" },   /* a member's account reference is kept sealed (credentials R23) */
@@ -39,9 +39,30 @@ MF = mf;
 after(() => mf.dispose());
 
 const rP = (r) => (r && typeof r === "object" && "result" in r ? r.result : r);
-const GET = async (q) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`)).json());
-const POST = async (q, body) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`,
-  { method: "POST", body: JSON.stringify(body ?? {}) })).json());
+/* admission R20 (C-38.10, K2189): a credential is read only from the Authorization header or the body, never the
+   address. The suite names its credential as `token=…` in each call, for readability; `send` lifts it out of the
+   address into `Authorization: Bearer …` before the request is sent (as membership's members.test.mjs, K2182). */
+const send = (q, init = {}) => {
+  const params = new URLSearchParams(q);
+  const token = params.get("token");
+  params.delete("token");
+  const headers = token === null ? {} : { authorization: `Bearer ${token}` };
+  return mf.dispatchFetch(`http://x/api/?${params}`, { ...init, headers });
+};
+const GET = async (q) => rP(await (await send(q)).json());
+const POST = async (q, body) => rP(await (await send(q, { method: "POST", body: JSON.stringify(body ?? {}) })).json());
+/* An enrolled member's session (admission R5, C-38.11: the shared member token is retired): added by the
+   administrator, enrolled with its invitation, signed in. An ordinary member once the group has its two
+   administrators; before then, an administrator (membership's ADMINS_FIRST). */
+async function enrolled(memberId) {
+  const add = (role) => POST("op=memberadd&token=adm-sch",
+    { memberId, cover: `cover for ${memberId}`, role, capabilities: ["contribute", "publish", "create_projects"] });
+  let a = await add("member");
+  if (a.reason === "ADMINS_FIRST") a = await add("admin");
+  const en = await POST("op=enroll", { invite: a.invite, handle: memberId, password: `${memberId}-passphrase-1` });
+  assert.equal(en.ok, true, JSON.stringify({ a, en }).slice(0, 300));
+  return (await POST("op=login", { role: `member:${memberId}`, password: `${memberId}-passphrase-1` })).token;
+}
 const store = async () => { const ns = await mf.getDurableObjectNamespace("STORE"); return ns.get(ns.idFromName("bio")); };
 
 test("R5, R8: the plane's registry is R5's consumers, the later ones registered by their own modules (tasks, queue, instance-setup) in their R5 places", async () => {
@@ -67,7 +88,7 @@ test("R9: a selection created on an idle instance leaves the alarm armed at the 
 
 /* An information bundle carrying one captured document whose reading names an ordinance, in the register's shape
    op=acquire writes (C-18.1), so op=resolve has a reference to resolve. */
-async function promoteReading(id, captureSha, ref) {
+async function promoteReading(id, captureSha, ref, token) {
   const C = "2026-09-01T00:00:00Z", loc = `https://fixture.invalid/${id}.bin`, file = `snapshots/${id}.bin`;
   const md = ["---", `id: ${id}`, "object_type: information", "schema: information@1", `title: "Reading ${id}"`,
     "current_state: collected", "prior_state: null", `created: ${C}`, `last_updated: ${C}`, "produced_by:",
@@ -84,7 +105,7 @@ async function promoteReading(id, captureSha, ref) {
     reading: { content_type: "meeting_calendar", reader_version: 1, found: true, at: C,
                entities: [{ ref, kind: "ordinance", key: ref.split(":")[1], label: `Ordinance ${ref}` }] } };
   const prov = JSON.stringify({ documents: [doc] });
-  return await POST("op=promote&token=mem-sch", { bundleId: id, base: null, snapKey: `${id}-s`, author: "sch", register: [],
+  return await POST(`op=promote&token=${token}`, { bundleId: id, base: null, snapKey: `${id}-s`, author: "sch", register: [],
     meta: { object_type: "information", group: "a-group", title: `Reading ${id}`, current_state: "collected", created: C, last_updated: C },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
             { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
@@ -112,19 +133,20 @@ async function fileCapture(id, doc, token) {
 
 test("R9: a resolution that marks an entity leaves the alarm armed at the connection sweep's wake (entities R13, connections R18)", async () => {
   const obj = await store();
-  const ent = await POST("op=entitycreate&token=mem-sch", { kind: "ordinance", label: "A Rent Ordinance",
+  const MIA = await enrolled("mia");
+  const ent = await POST(`op=entitycreate&token=${MIA}`, { kind: "ordinance", label: "A Rent Ordinance",
     note: "The rent ordinance the fixture readings name, registered so a resolution can mark it.", aliases: ["ordinance:24680"] });
   assert.equal(ent.ok, true, JSON.stringify(ent));
   const capA = sha("sched-resolve-A"), capB = sha("sched-resolve-B");
   for (const [id, c] of [["INFO-2026-0001-sch", capA], ["INFO-2026-0002-sch", capB]]) {
-    const pr = await promoteReading(id, c, "ordinance:24680");
+    const pr = await promoteReading(id, c, "ordinance:24680", MIA);
     assert.equal(pr.ok, true, JSON.stringify(pr).slice(0, 300));
   }
   await obj.onAlarm(Date.now());
   const before = await obj.schedAlarmAt();
   const t0 = Date.now();
   for (const c of [capA, capB]) {
-    const r = await POST("op=resolve&token=mem-sch", { captureSha: c });
+    const r = await POST(`op=resolve&token=${MIA}`, { captureSha: c });
     assert.equal(r.resolved?.[0]?.entity_id, ent.entity_id, JSON.stringify(r).slice(0, 300));
   }
   const at = await obj.schedAlarmAt();

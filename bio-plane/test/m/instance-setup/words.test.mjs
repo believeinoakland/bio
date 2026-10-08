@@ -24,7 +24,7 @@ test("R63 the check rows' translations (T34-87: setup.mjs :1701, :1731, :1742, :
   assert.match(T("GROUP_ALREADY_RECORDED"), /^Your group's Civicsmith has its group recorded already, and it is recorded once/);   // :1701
   assert.match(T("PROFILES_NOT_ADMIN"), /profiles your group's Civicsmith reads its local facts from\. Nothing was changed\.$/);  // :1731
   assert.match(T("UNKNOWN_PROFILE"), /^Your group's Civicsmith holds no jurisdiction profile by that name/);                       // :1742
-  assert.match(T("ASSISTANT_OFF"), /^The assistant is switched off for your group's Civicsmith, so no question is put to it/);    // :1755
+  assert.equal("ASSISTANT_OFF" in INSTANCE_SETUP_CHECKS, false, "T37 (N765): C-119.5 retired; the gate answers credentials' row");
   assert.match(T("PROFILE_IS_TEST"), /so no group's Civicsmith reads local facts from it\./);
   for (const [code, row] of Object.entries(INSTANCE_SETUP_CHECKS)) assert.doesNotMatch(row.translation, RETIRED, code);
 });
@@ -37,23 +37,21 @@ test("R63 R47 the hosting block's words (T34-87: setup-fleet.mjs :22, :24, :25, 
   for (const s of [HOSTING_CONTROL.heading, ...HOSTING_CONTROL.sentences]) assert.doesNotMatch(s, RETIRED, s);
 });
 
-test("R63 R53 R55 the assistant's sentences (T34-87: setup.mjs :2925, :2933, :2945, :2947, :2958, :2959) say your group's Civicsmith", async () => {
+test("R63 R53 R55 the assistant's sentences (T36: the keep-away state and its refusal, set and unread) say your group's material or your group's Civicsmith, never the retired words", async () => {
   const w = await world();
+  w.prov.keepAway = { on: true, reason: "Kept here.", set_by: "admin", set_at: "2026-10-08T09:00:00Z" };
+  const kept = w.m.assistantGate();
+  assert.equal(kept.reason, "AI_KEPT_AWAY", "T37: credentials' refusal, as given");
+  assert.match(kept.detail, /the group keeps its material away from every assistant/);
+  w.prov.keepAway = { on: null, reason: null, set_by: null, set_at: null };
   const stateDetail = w.m.assistantState().detail;
-  assert.match(stateDetail, /never been switched on for your group's Civicsmith, so it is off/);                                    // :2925
-  const never = w.m.assistantGate();
-  assert.match(never.detail, /never been switched on for your group's Civicsmith; no ask is put to it/);                          // :2959
-  const refused = w.m.assistantSet({ on: true, by: "ruth" });
-  assert.match(refused.detail, /switching the assistant on or off for your group's Civicsmith/);                                  // :2933
-  const on = w.m.assistantSet({ on: true, by: "admin" });
-  assert.match(on.note, /^the assistant is on for your group's Civicsmith\./);                                                    // :2945
-  const off = w.m.assistantSet({ on: false, by: "admin" });
-  assert.match(off.note, /^the assistant is off for your group's Civicsmith: no ask is put to it/);                               // :2947
-  assert.match(w.m.assistantGate().detail, /switched the assistant off for your group's Civicsmith on /);                         // :2958
-  /* NOT_AN_ADMIN's sentence after the act's phrase is membership's (its R84; its DEC-149 share is N664, T35) */
-  for (const s of [stateDetail, never.detail, refused.detail.split(" is an administrator's act")[0], on.note,
-                   off.note, w.m.assistantGate().detail])
-    assert.doesNotMatch(s, RETIRED, s);
+  assert.match(stateDetail, /^whether your group keeps its material away from every assistant could not be read/);
+  const unread = w.m.assistantGate();
+  assert.match(unread.detail, /^whether the group keeps its material away from every assistant could not be read/);
+  /* this module's own sentence on the gate: a provider that throws is the store's silence */
+  const thrown = (await boot({ prov: { ...w.prov, credentials: { aiKeptAway() { throw new Error("x"); } } } })).m.assistantGate();
+  assert.match(thrown.detail, /^whether your group keeps its material away from every assistant did not answer/);
+  for (const s of [kept.detail, stateDetail, unread.detail, kept.translation, thrown.detail]) assert.doesNotMatch(s, RETIRED, s);
 });
 
 test("R63 the profiles' and the group identity's sentences (T34-87: setup.mjs :2245, :2451, :2479, :2493, :2502) say your group's Civicsmith", async () => {
@@ -106,7 +104,6 @@ test("R63 every sentence the new acts answer (R60, R62, R64, R65) is free of the
   take(w.m.memberLanguageSet({ language: null, by: "ruth" }));
   take(await w.m.groupDescriptionDraft({ answers: [], by: "ruth" }));
   take(await w.m.groupDescriptionDraft({ answers: [], by: "admin" }));
-  w.m.assistantSet({ on: true, by: "admin" });
   take(await w.m.groupDescriptionDraft({ answers: "x", by: "admin" }));
   take(await w.m.groupDescriptionDraft({ answers: [{ question: "q", text: "" }], by: "admin" }));
   assert.ok(said.length >= 12);

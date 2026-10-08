@@ -3,7 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, MEMBER, OUTSIDER, ZONE } from "./fixture.mjs";
-import { ownerConformance, owners, kindOf, neighbours as registryRead, BOUNDS } from "../../../src/connection-grammar/index.mjs";
+import { ownerConformance, owners, kindOf, neighbours as registryRead, BOUNDS, hubBoundOf } from "../../../src/connection-grammar/index.mjs";
 
 const doc = { kind: "document" };
 const AT = { value: "2026-03-10", precision: "day", zone: ZONE };
@@ -74,4 +74,76 @@ test("R35 a node with more than the hub bound of connections is answered hub wit
   assert.equal(r.hub.set_size, BOUNDS.hub + 1);
   assert.equal(w.ev.neighbours({ node: p, at: AT, viewer: OUTSIDER, scope: null }).hub.set_size, BOUNDS.hub + 1);
   assert.equal(w.ev.neighbours({ node: p, at: AT, viewer: "member:nobody-at-all", scope: null }).hub.set_size, BOUNDS.hub + 1);
+});
+
+test("R35 a hub is judged per kind with connection-grammar's hubBoundOf (T36-14, K2079): 1,500 event_voted connections are answered in pages, 1,500 of another kind answered hub, never the whole set against BOUNDS.hub", () => {
+  const w = world();
+  const voter = w.entity("Vera Voter"), attendee = w.entity("Pat Present");
+  const s = w.capture("votes");
+  const f = w.ev.recordDatedFact({ captureSha: s, extent: doc, kind: "meeting", value: "2026-03-10", method: "m", by: MEMBER }).dated_fact.dated_fact_id;
+  const value = w.ev.view().vocabulary.vote_values[0].value;
+  const N = 1500;
+  assert.ok(N > BOUNDS.hub && N > hubBoundOf("event_present") && N <= hubBoundOf("event_voted") && N > BOUNDS.fanout);
+  for (let i = 0; i < N; i++) {
+    w.ev.createEvent({ kind: "vote", attestations: [{ datedFactId: f }], participants: [{ entityId: voter, role: "voted", voteValue: value, attestation: 0 }], by: MEMBER });
+    w.ev.createEvent({ kind: "meeting", attestations: [{ datedFactId: f }], participants: [{ entityId: attendee, role: "present", attestation: 0 }], by: MEMBER });
+  }
+  /* the vote kind's bound (4,000) is not reached: the set is paged at the fan-out, pages joined equal the whole */
+  const ask = (node, page) => w.ev.neighbours({ node, at: AT, viewer: MEMBER, scope: null, ...(page !== undefined ? { page } : {}) });
+  const p1 = ask(voter);
+  assert.equal(p1.hub, undefined);
+  assert.equal(p1.items.length, BOUNDS.fanout);
+  assert.equal(p1.next, BOUNDS.fanout);
+  const p2 = ask(voter, p1.next);
+  assert.equal(p2.items.length, N - BOUNDS.fanout);
+  assert.equal(p2.next, undefined);
+  const ids = [...p1.items, ...p2.items].map((i) => i.id);
+  assert.equal(new Set(ids).size, N);
+  assert.ok([...p1.items, ...p2.items].every((i) => i.kind === "event_voted"));
+  /* through the registry, which judges each kind against its own bound (connection-grammar R19), it passes whole */
+  const viaRegistry = registryRead({ owner: "events", node: voter, kinds: ["event_voted"], at: AT, viewer: MEMBER, scope: null, host: w.host });
+  assert.equal(viaRegistry.refused, undefined);
+  assert.equal(viaRegistry.items.length, BOUNDS.fanout);
+  /* another kind over its bound of 1,000 is a hub, named with its set size and no items */
+  const h = ask(attendee);
+  assert.deepEqual(h.items, []);
+  assert.equal(h.hub.set_size, N);
+  assert.match(h.hub.why, /event_present/);
+  /* a node holding both: the kind over its bound makes it a hub; asked the vote kind alone, it is paged */
+  w.ev.createEvent({ kind: "vote", attestations: [{ datedFactId: f }], participants: [{ entityId: attendee, role: "voted", voteValue: value, attestation: 0 }], by: MEMBER });
+  assert.equal(ask(attendee).hub.set_size, N);
+  const only = w.ev.neighbours({ node: attendee, kinds: ["event_voted"], at: AT, viewer: MEMBER, scope: null });
+  assert.deepEqual([only.hub, only.items.length], [undefined, 1]);
+});
+
+test("R35 a page costs its slice (T36-14, K2119): a member with 4,000 event_voted connections, the vote kind's own bound, is answered in four pages of the fan-out, together well within connection-grammar's time budget; one more vote makes the member a hub", () => {
+  const w = world();
+  const voter = w.entity("Vic Voter");
+  const s = w.capture("term");
+  const f = w.ev.recordDatedFact({ captureSha: s, extent: doc, kind: "meeting", value: "2026-03-10", method: "m", by: MEMBER }).dated_fact.dated_fact_id;
+  const value = w.ev.view().vocabulary.vote_values[0].value;
+  const N = hubBoundOf("event_voted");
+  assert.equal(N, 4000);
+  const vote = () => w.ev.createEvent({ kind: "vote", attestations: [{ datedFactId: f }], participants: [{ entityId: voter, role: "voted", voteValue: value, attestation: 0 }], by: MEMBER });
+  for (let i = 0; i < N; i++) vote();
+  const t0 = Date.now(), ids = [];
+  let page = 0, pages = 0;
+  do {
+    const r = w.ev.neighbours({ node: voter, kinds: ["event_voted"], at: AT, viewer: MEMBER, scope: null, page });
+    assert.equal(r.hub, undefined);
+    assert.ok(r.items.length <= BOUNDS.fanout);
+    ids.push(...r.items.map((i) => i.id));
+    pages++;
+    page = r.next;
+  } while (page !== undefined);
+  const spent = Date.now() - t0;
+  assert.equal(pages, N / BOUNDS.fanout);
+  assert.equal(new Set(ids).size, N, "the pages joined are the whole set");
+  assert.ok(spent < BOUNDS.time_budget_ms / 2, `four pages took ${spent} ms; the walk's whole budget is ${BOUNDS.time_budget_ms} ms`);
+  /* a kind not asked costs nothing of the vote set */
+  const t1 = Date.now();
+  assert.deepEqual(w.ev.neighbours({ node: voter, kinds: ["event_present"], at: AT, viewer: MEMBER, scope: null }).items, []);
+  assert.ok(Date.now() - t1 < 200, "a kind not asked is filtered in the store");
+  vote();
+  assert.equal(w.ev.neighbours({ node: voter, at: AT, viewer: MEMBER, scope: null }).hub.set_size, N + 1);
 });

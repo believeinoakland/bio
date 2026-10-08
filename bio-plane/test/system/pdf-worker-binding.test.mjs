@@ -95,8 +95,29 @@ const pdfWorker = {
   r2Buckets: ["CAPTURES"], bindings: { VERSION: "test" },
 };
 
-const put = (mf, bytes, sha) => mf.dispatchFetch(`http://x/api/capture?token=${MEM}&sha256=${sha}`, { method: "PUT", body: bytes });
-const structure = (mf, sha) => mf.dispatchFetch(`http://x/api/pdfstructure?token=${MEM}&sha256=${sha}`);
+/* A member's own session (the shared member key is retired, MEMBER_TOKEN_RETIRED): enrolled by the administrator and
+   signed in with the member's password; every credential travels in the Authorization header, never the address
+   (CREDENTIAL_IN_ADDRESS). One per plane, kept for its later calls. */
+const SESSIONS = new WeakMap();
+const signIn = async (mf) => {
+  if (SESSIONS.has(mf)) return SESSIONS.get(mf);
+  const post = async (q, body, token) => {
+    const j = await (await mf.dispatchFetch(`http://x/api/?${q}`, { method: "POST", body: JSON.stringify(body),
+      headers: token ? { authorization: `Bearer ${token}` } : {} })).json();
+    return j && typeof j === "object" && "result" in j ? j.result : j;
+  };
+  const add = await post("op=memberadd", { memberId: "m1", cover: "cover for m1", role: "member", capabilities: ["contribute"] }, "adm-bind-test");
+  if (!add || !add.invite) throw new Error(`memberadd: ${JSON.stringify(add)}`);
+  const en = await post("op=enroll", { invite: add.invite, handle: "m1", password: "m1-passphrase-bind" });
+  if (!en || !en.ok) throw new Error(`enroll: ${JSON.stringify(en)}`);
+  const lg = await post("op=login", { role: "member:m1", password: "m1-passphrase-bind" });
+  if (!lg || !lg.token) throw new Error(`login: ${JSON.stringify(lg)}`);
+  const h = { authorization: `Bearer ${lg.token}` };
+  SESSIONS.set(mf, h);
+  return h;
+};
+const put = async (mf, bytes, sha) => mf.dispatchFetch(`http://x/api/capture?sha256=${sha}`, { method: "PUT", headers: await signIn(mf), body: bytes });
+const structure = async (mf, sha) => mf.dispatchFetch(`http://x/api/pdfstructure?sha256=${sha}`, { headers: await signIn(mf) });
 
 /* ---- WITH the binding: a CID/no-ToUnicode doc comes back with Tier-2 text ---- */
 console.log("\n--- plane WITH the pdf-worker binding: Tier 1 could not decode, Tier 2 (through the binding) does ---");

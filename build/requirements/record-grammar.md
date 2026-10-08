@@ -91,6 +91,9 @@ The record's shared grammar, below every module that reads or writes a document:
 **T34's addition** (N568; K1571; `standards` R23, R26, R27, R30)
 - **R49** (amends R38, R42, R44, R45) `PROPOSAL_STATES` gains, after `wizard`, `law_relation`: a frozen table of the three keys, each sentence saying, in its state, that a law relation, a court link or a treatment is proposed and is not one the record holds until a member records it themselves; for `machine_proposed`, that it is machine work, labelled as machine work, which can propose one and can never record one (K1443). `proposalLabel(proposedBy, "law_relation")` answers as R38 says, so `standards`' `lawPropose` labels through this subject and not through `standard`; the `RangeError` for an unknown subject names the twelve subjects. The other tables and their sentences are unchanged.
 
+**T37's addition** (N669; DEC-127 (2), (5), DEC-157 (2)–(4); K1793, K1804)
+- **R50** (amends R38, R49) `PROPOSAL_STATES` gains, after `law_relation`, `translation`: a frozen table of the three keys, each sentence saying, in its state, that the wording is a draft translation of an interface word, shown to members as "Draft" and not the group's wording until a member granted that language adopts it; for `machine_proposed`, that it is machine work, labelled as machine work, which can draft a translation and can never adopt or confirm one. `proposalLabel(proposedBy, "translation")` answers as R38 says; the `RangeError` for an unknown subject names the thirteen subjects. The other tables and their sentences are unchanged.
+
 ## Private
 
 ### Uses

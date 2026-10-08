@@ -7,7 +7,7 @@ import { createRegistry } from './registry.mjs';
 
 export { CLASSES, DECLARED_LABEL, HUNCH_LABEL, LOWEST_GRADE, derivedId, isRecordId } from './shape.mjs';
 export { FORBIDDEN_WORDS, createRegistry } from './registry.mjs';
-export { BOUNDS, depthOf, exhausted, EXHAUSTION_REASONS } from './bounds.mjs';
+export { BOUNDS, depthOf, exhausted, EXHAUSTION_REASONS, hubBoundOf } from './bounds.mjs';
 export { chainGrade, chainLabel, orderPaths } from './walk.mjs';
 export { ownerConformance } from './conformance.mjs';
 

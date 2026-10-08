@@ -8,6 +8,7 @@ import { getFormat } from "../../../src/formats.mjs";
 import { fresh, hold, doc, member, withEntry, i2, noText, ocrAnswer } from "./fixture.mjs";
 import { registerDoctype } from "../../../../docprofile/registry.mjs";
 import { registerDoctypes } from "../../../../doctypes/index.mjs";
+import { makeZip } from "../../make-zip.mjs";
 
 /* K1737: docprofile registers no content type of its own, so this suite registers doctypes' readers, as the plane's
    store does. */
@@ -53,10 +54,11 @@ test("R28: the real csv entry's reading carries its one sheet's cells exactly as
   assert.equal(r.reading.metadata, null);
 });
 
-test("R28: a document that is no workbook has no cells; metadata is the entry's as emitted, or null: an office text with metadata, a PDF read through tier 3, text read as text, an entry that throws, and a failed reading", async () => {
+test("R28: a document that is neither a workbook nor a .docx has no cells; metadata is the entry's as emitted, or null: an office text with metadata and tables, a PDF read through tier 3, text read as text, an entry that throws, and a failed reading", async () => {
   const w = fresh({ env: { OCR_WORKER: member((b) => ocrAnswer(b.pages)) } });
-  const word = await withEntry({ format: "t28d", text: async () => ({ ok: true, container: "docx", document: "Agenda",
-      paragraphs: [{ para: 0, text: "Agenda" }], metadata: META, counts: { chars: 6, undetermined: 0 }, undetermined: [] }) },
+  const word = await withEntry({ format: "t28d", text: async () => ({ ok: true, container: "odt", document: "Agenda",
+      paragraphs: [{ para: 0, text: "Agenda" }], tables: [{ table: 0, ref: "table 1", rows: 1, cols: 1, cells: [] }],
+      metadata: META, counts: { chars: 6, undetermined: 0 }, undetermined: [] }) },
     async () => { const d = await hold(w.evidence, "t28d bytes"); return w.read(doc({ digest: d, format: "t28d", ct: "application/x" })); });
   assert.deepEqual(word.reading.metadata, META);
   assert.equal("cells" in word.reading, false);
@@ -101,4 +103,108 @@ test("R28 R23: emittedFieldsOf, the piece a re-read composes, answers the same r
   assert.deepEqual(got, { metadata: null, cells: { S: c, T: null, U: null } });
   assert.equal(got.cells.S, c, "the entry's own list, not a copy that could drift");
   assert.deepEqual(emittedFieldsOf({ sheets: [] }), { metadata: null, cells: {} });
+});
+
+/* N724 (K1972, K2092): a `.docx` document's tables, read through the real docx entry over a package built here. */
+const W = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';
+const wp = (t) => `<w:p><w:r><w:t xml:space="preserve">${t}</w:t></w:r></w:p>`;
+const wtc = (...inner) => `<w:tc>${inner.length ? inner.join("") : "<w:p/>"}</w:tc>`;
+const wtr = (...cells) => `<w:tr>${cells.join("")}</w:tr>`;
+const wtbl = (cols, ...rows) => `<w:tbl><w:tblGrid>${"<w:gridCol/>".repeat(cols)}</w:tblGrid>${rows.join("")}</w:tbl>`;
+const DOCX_MAIN = "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml";
+const docxBytes = (body) => makeZip([
+  { name: "[Content_Types].xml", data: `<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">`
+      + `<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>`
+      + `<Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="${DOCX_MAIN}"/></Types>` },
+  { name: "_rels/.rels", data: `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`
+      + `<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>` },
+  { name: "word/document.xml", data: `<?xml version="1.0"?><w:document ${W}><w:body>${body}</w:body></w:document>` },
+]);
+const DOCX_CT = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+const readDocx = async (w, bytes) => {
+  const d = await hold(w.evidence, bytes);
+  return w.read(doc({ digest: d, bytes: bytes.length, ct: DOCX_CT, format: "docx" }));
+};
+/* A cell as the real docx entry emits it (office-readers R11 as amended, N758): its `paras` are the `para` ordinals of
+   the paragraphs its text was read from. */
+const dc = (ref, value, paras) => ({ source: { kind: "doc-table", ref, table: Number(ref.match(/^table (\d+)/)[1]) - 1, cell: ref.split(", ")[1] },
+                                     value, type: "text", declared: null, cached: null, formula: null, paras });
+
+test("R28: a .docx reading carries cells keyed by each table's ref, exactly as the real docx entry emits them: a table of dates and amounts, and a nested table under its own key", async () => {
+  const body = wp("Disclosure")
+    + wtbl(2, wtr(wtc(wp("Date")), wtc(wp("Amount"))), wtr(wtc(wp("2026-03-14")), wtc(wp("$1,250.00"))))
+    + wtbl(1, wtr(wtc(wp("Outer"), wtbl(1, wtr(wtc(wp("Inner")))))));
+  const bytes = docxBytes(body);
+  const entry = getFormat("docx");
+  const own = await entry.text(await entry.parts(bytes));
+  assert.equal(own.container, "docx");
+  assert.deepEqual(own.tables.map((t) => t.ref), ["table 1", "table 2", "table 3"]);
+  const w = fresh();
+  const r = await readDocx(w, bytes);
+  assert.equal(r.reading.text_container, "docx");
+  assert.deepEqual(r.reading.cells, Object.fromEntries(own.tables.map((t) => [t.ref, t.cells])));
+  assert.deepEqual(r.reading.cells["table 1"], [dc("table 1, A1", "Date", [1]), dc("table 1, B1", "Amount", [2]),
+                                                dc("table 1, A2", "2026-03-14", [3]), dc("table 1, B2", "$1,250.00", [4])]);
+  assert.deepEqual(r.reading.cells["table 3"], [dc("table 3, A1", "Inner", [6])], "the nested table is its own key");
+  assert.deepEqual(JSON.parse(JSON.stringify(r.reading)).cells, r.reading.cells, "the cells survive the wire");
+});
+
+test("R28: a vertically merged .docx table: each cell's paras carried exactly as the real docx entry emits them, the merged cell's paragraphs from every row it spans included, each naming the paragraphs its value was read from", async () => {
+  const restart = (...inner) => `<w:tc><w:tcPr><w:vMerge w:val="restart"/></w:tcPr>${inner.join("")}</w:tc>`;
+  const cont = (...inner) => `<w:tc><w:tcPr><w:vMerge/></w:tcPr>${inner.join("")}</w:tc>`;
+  const body = wp("Contributions")
+    + wtbl(3, wtr(wtc(wp("Fund")), wtc(wp("Date")), wtc(wp("Amount"))),
+              wtr(restart(wp("General Fund")), wtc(wp("2026-01-05")), wtc(wp("$500.00"))),
+              wtr(cont(wp("(continued)")), wtc(wp("2026-02-09")), wtc(wp("$75.00"), wp("refunded"))),
+              wtr(cont(), wtc(wp("2026-03-01")), wtc(wp("$20.00"))))
+    + wp("End");
+  const bytes = docxBytes(body);
+  const entry = getFormat("docx");
+  const own = await entry.text(await entry.parts(bytes));
+  const w = fresh();
+  const r = await readDocx(w, bytes);
+  assert.deepEqual(r.reading.cells, Object.fromEntries(own.tables.map((t) => [t.ref, t.cells])), "carried as emitted");
+  const got = r.reading.cells["table 1"];
+  assert.deepEqual(got, [
+    dc("table 1, A1", "Fund", [1]), dc("table 1, B1", "Date", [2]), dc("table 1, C1", "Amount", [3]),
+    dc("table 1, A2", "General Fund\n(continued)", [4, 7]), dc("table 1, B2", "2026-01-05", [5]), dc("table 1, C2", "$500.00", [6]),
+    dc("table 1, B3", "2026-02-09", [8]), dc("table 1, C3", "$75.00\nrefunded", [9, 10]),
+    dc("table 1, B4", "2026-03-01", [11]), dc("table 1, C4", "$20.00", [12]),
+  ], "the merged cell names the paragraphs of every row it spans");
+  /* Every cell's paras name, in reading order, exactly the paragraphs its value was read from, so a reader finds them
+     without matching lines. */
+  const byPara = new Map(own.paragraphs.map((p) => [p.para, p.text]));
+  for (const c of got) assert.equal(c.paras.map((n) => byPara.get(n)).join("\n"), c.value, c.source.ref);
+  assert.deepEqual(JSON.parse(JSON.stringify(r.reading)).cells, r.reading.cells, "the paras survive the wire");
+});
+
+test("R28: a .docx body with no tables reads cells {}, one not read (over its size guard or unreadable) reads cells null, kept distinct; metadata as emitted", async () => {
+  const w = fresh();
+  const plain = await readDocx(w, docxBytes(wp("No tables here")));
+  assert.deepEqual(plain.reading.cells, {});
+  /* The real entry's two branches that walk no body (over the guard; a main part it cannot read) say `tables: null`. */
+  const unread = await withEntry({ format: "t28u", text: async () => ({ ok: true, container: "docx", document: null, paragraphs: [],
+      tables: null, metadata: null, undetermined: [{ reason: "size_guard" }], counts: { chars: 0, undetermined: 1 } }) },
+    async () => { const d = await hold(w.evidence, "t28u bytes"); return w.read(doc({ digest: d, format: "t28u", ct: "application/x" })); });
+  assert.equal(unread.reading.cells, null);
+  assert.equal("cells" in unread.reading, true, "null, never absent");
+  const empty = await withEntry({ format: "t28e", text: async () => ({ ok: true, container: "docx", document: "x", paragraphs: [{ para: 0, text: "x" }],
+      tables: [], metadata: META, undetermined: [], counts: { chars: 1, undetermined: 0 } }) },
+    async () => { const d = await hold(w.evidence, "t28e bytes"); return w.read(doc({ digest: d, format: "t28e", ct: "application/x" })); });
+  assert.deepEqual(empty.reading.cells, {});
+  assert.deepEqual(empty.reading.metadata, META);
+});
+
+test("R28 R23: emittedFieldsOf over a .docx text: cells by table ref, the entry's own lists unaltered, {} for no tables, null for tables null, a table with no ref no key", () => {
+  const c1 = [dc("table 1, A1", "2026-01-01", [0])], c2 = [dc("table 2, A1", "nested", [1])];
+  const t = { container: "docx", metadata: null, tables: [{ table: 0, ref: "table 1", rows: 1, cols: 1, cells: c1 },
+    { table: 1, ref: "table 2", rows: 1, cols: 1, cells: c2 }, { table: 2, ref: "table 3", rows: 0, cols: null }, { table: 3, cells: c1 }, null] };
+  const pristine = structuredClone(t);
+  const got = emittedFieldsOf(t);
+  assert.deepEqual(got, { metadata: null, cells: { "table 1": c1, "table 2": c2, "table 3": null } });
+  assert.equal(got.cells["table 1"], c1, "the entry's own list, not a copy");
+  assert.deepEqual(t, pristine);
+  assert.deepEqual(emittedFieldsOf({ container: "docx", tables: [] }), { metadata: null, cells: {} });
+  assert.deepEqual(emittedFieldsOf({ container: "docx", tables: null }), { metadata: null, cells: null });
+  assert.deepEqual(emittedFieldsOf({ container: "pptx", tables: [{ ref: "table 1", cells: c1 }] }), { metadata: null });
 });

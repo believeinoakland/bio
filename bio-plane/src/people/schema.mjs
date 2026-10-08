@@ -57,6 +57,7 @@ CREATE TABLE IF NOT EXISTS person_facts (
   question         TEXT
 );
 CREATE INDEX IF NOT EXISTS person_facts_person ON person_facts(person, kind);
+CREATE INDEX IF NOT EXISTS person_facts_capture ON person_facts(capture_sha);
 -- THE CONTACT FACTS (R10; K1485 row 9, K1493): an address or contact a member recorded from a cited document. Export
 -- class never; never published; answered only to a viewer who may see the citing capture.
 CREATE TABLE IF NOT EXISTS person_contacts (
@@ -75,6 +76,7 @@ CREATE TABLE IF NOT EXISTS person_contacts (
   question         TEXT
 );
 CREATE INDEX IF NOT EXISTS person_contacts_person ON person_contacts(person);
+CREATE INDEX IF NOT EXISTS person_contacts_capture ON person_contacts(capture_sha);
 -- MEMBERS' OWN TIES (R20; K1490): a member's declared tie to a registered entity, seen by that member and
 -- administrators only, with the attribution level the member chose for its disclosure.
 CREATE TABLE IF NOT EXISTS member_ties (

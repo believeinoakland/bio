@@ -226,7 +226,7 @@ test("R7: a found is cited at report weight, whatever the caller sends", () => {
   assert.deepEqual([r.ok, r.weight], [true, "report"]);
 });
 
-test("R12: every member-facing string calls the group's own Civicsmith \"your group's Civicsmith\" or needs no name — the sweep row index.mjs:378, INQUIRY_UNAVAILABLE's detail, and every row's translation", async () => {
+test("R12, R13: every member-facing string calls the group's own Civicsmith \"your group's Civicsmith\" or needs no name — the sweep row index.mjs:378, INQUIRY_UNAVAILABLE's detail, and every row's translation", async () => {
   const { w, match, p, q } = setup();
   const bare = new Citation({ record: w.record, membership: w.membership, promotion: w.promotion, content: w.content,
                               retrieval: w.retrieval, provenance: w.prov, now: () => NOW });
@@ -255,4 +255,9 @@ test("R12: every member-facing string calls the group's own Civicsmith \"your gr
     w.cit.reinstate({ project: p, handle: h, ...ANN, reason: "y" })];
   assert.ok(answers.filter((a) => typeof a.detail === "string").length >= 15, "the details are read (a control)");
   for (const a of answers) if (typeof a.detail === "string") assert.doesNotMatch(a.detail, FORBIDDEN, a.reason);
+  /* R13's read (T36): its refusals' words too. */
+  const whys = [w.cit.recordedBy({ captureSha: "a".repeat(64) }), w.cit.recordedBy({ viewer: V("ann") }),
+                w.cit.recordedBy({ captureSha: "a".repeat(64), viewer: V("ann"), extent: { kind: "nope" } })];
+  assert.deepEqual(whys.map((x) => x.code), ["VIEWER_MISSING", "NO_SHA", "EXTENT_MALFORMED"]);
+  for (const x of whys) assert.doesNotMatch(x.why, FORBIDDEN, x.code);
 });

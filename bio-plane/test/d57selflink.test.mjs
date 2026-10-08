@@ -77,8 +77,26 @@ const mf = new Miniflare({
 });
 
 console.log("\n--- a self-linking page, captured through op=acquire ---");
-const acq = await (await mf.dispatchFetch("http://x/api/?op=acquire&token=mem-d57",
-  { method: "POST", body: JSON.stringify({ locator: CAL, authority: "City of Oakland", subresources: true }) })).json();
+/* A member's own session (the shared member key is retired, MEMBER_TOKEN_RETIRED): enrolled by the administrator and
+   signed in with the member's password; every credential travels in the Authorization header, never the address
+   (CREDENTIAL_IN_ADDRESS). */
+const signIn = async () => {
+  const post = async (q, body, token) => {
+    const j = await (await mf.dispatchFetch(`http://x/api/?${q}`, { method: "POST", body: JSON.stringify(body),
+      headers: token ? { authorization: `Bearer ${token}` } : {} })).json();
+    return j && typeof j === "object" && "result" in j ? j.result : j;
+  };
+  const add = await post("op=memberadd", { memberId: "m1", cover: "cover for m1", role: "member", capabilities: ["contribute"] }, "adm-d57");
+  if (!add || !add.invite) throw new Error(`memberadd: ${JSON.stringify(add)}`);
+  const en = await post("op=enroll", { invite: add.invite, handle: "m1", password: "m1-passphrase-d57" });
+  if (!en || !en.ok) throw new Error(`enroll: ${JSON.stringify(en)}`);
+  const lg = await post("op=login", { role: "member:m1", password: "m1-passphrase-d57" });
+  if (!lg || !lg.token) throw new Error(`login: ${JSON.stringify(lg)}`);
+  return { authorization: `Bearer ${lg.token}` };
+};
+const MEMBER = await signIn();
+const acq = await (await mf.dispatchFetch("http://x/api/?op=acquire",
+  { method: "POST", headers: MEMBER, body: JSON.stringify({ locator: CAL, authority: "City of Oakland", subresources: true }) })).json();
 t("the page is acquired", acq.ok, true);
 const SHA = acq.document && acq.document.capture && acq.document.capture.sha256;
 t("and names its capture", /^[0-9a-f]{64}$/.test(SHA || ""), true);
@@ -90,7 +108,7 @@ const st = ns.get(ns.idFromName("bio"));
 const call = async (path, body) => (await st.fetch("http://x" + path, body
   ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : {})).json();
 
-const first = await (await mf.dispatchFetch(`http://x/api/?op=links&token=mem-d57&capture=${SHA}`)).json();
+const first = await (await mf.dispatchFetch(`http://x/api/?op=links&capture=${SHA}`, { headers: MEMBER })).json();
 t("op=links answers for the capture", first.ok, true);
 const T = first.at;
 t("and states the retrieval instant the verdicts are judged against", typeof T === "string" && !!Date.parse(T), true);
@@ -105,7 +123,7 @@ await call("/recordcapturedlocator", { address: B_URL, addressNorm: normalizeAdd
 await call("/recordcapturedlocator", { address: C_URL, addressNorm: normalizeAddress(C_URL), captureSha: C1,
   retrieved: T });
 
-const res = await (await mf.dispatchFetch(`http://x/api/?op=links&token=mem-d57&capture=${SHA}`)).json();
+const res = await (await mf.dispatchFetch(`http://x/api/?op=links&capture=${SHA}`, { headers: MEMBER })).json();
 t("op=links resolves through the surface the UI reads", res.ok, true);
 const deferred = (res.links || []).filter((l) => l.resolution !== "anchor" && l.resolution !== "intra");
 const by = Object.fromEntries(deferred.map((l) => [l.address_norm, l]));

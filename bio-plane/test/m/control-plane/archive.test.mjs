@@ -62,11 +62,12 @@ test("R58 (K2042 (2)): after an acquire whose answer carries `unpack`, the archi
 
 test("R58: a refused promotion is named in `not_promoted` with its code and undoes neither the archive's promotion nor another file's; a machine caller promotes under its own name; no project leaves the bundle in none", async () => {
   const w = archiveWorld(acquired({ ok: true, documents: files }), [S("b")]);
-  const r = await call(w.env, { op: "acquire", token: w.env.MEMBER_TOKEN, method: "POST", hooks: w.hooks, body: {} });
+  /* the machine caller is the daemon binding (admission R5, K2166: the shared member binding is retired) */
+  const r = await call(w.env, { op: "acquire", token: w.env.DAEMON_TOKEN, method: "POST", hooks: w.hooks, body: {} });
   assert.deepEqual(r.json.promoted.map((x) => x.sha256), [S("a"), S("c")]);
   assert.deepEqual(r.json.not_promoted, [{ sha256: S("b"), code: "FILE_DIGEST_MISMATCH" }]);
   const p = w.env.calls.filter((c) => c.route === "promote");
-  assert.deepEqual([p[0].body.author, "actorMemberId" in p[0].body, p[0].body.assistantPrincipal], ["token:member", false, "class:member"]);
+  assert.deepEqual([p[0].body.author, "actorMemberId" in p[0].body, p[0].body.assistantPrincipal], ["token:daemon", false, "class:daemon"]);
   assert.equal(/^project:/m.test(p[0].body.files[0].text), false);
   /* `archiveDocuments` reads only an answer that is ok, with an unpack that is ok, and documents with a digest */
   assert.deepEqual(archiveDocuments("acquire", { ok: true, document: archive, unpack: { ok: false } }), []);

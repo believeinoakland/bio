@@ -3,7 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, V, SECRET, OTHER_SECRET, sha } from "./fixture.mjs";
-import { RECORD_CORE_CHECKS } from "../../../src/record-core/index.mjs";
+import { RECORD_CORE_CHECKS, mintExhausted } from "../../../src/record-core/index.mjs";
 
 const COLUMNS = ["knock_id", "source_id", "capture_sha", "bytes", "received"];
 const VALUE = "Unmistakable Value 5510";
@@ -105,7 +105,9 @@ test("R1 a source id that cannot be drawn answers record-core's mintExhausted fo
     assert.equal(r.check, row.check);
     assert.equal(r.check, "C-59.6");
     assert.equal(r.translation, row.translation);
-    assert.equal(r.detail, "the plane could not find a free source id: every one it drew was already taken. Nothing was written.");
+    /* the detail as record-core R82 words it (T35-13; DEC-149): the group's own Civicsmith, never "the plane" */
+    assert.equal(r.detail, "your group's Civicsmith could not find a free source id: every one it drew was already taken. Nothing was written.");
+    assert.deepEqual(r, mintExhausted("SRC"), "record-core's one answer, nothing of this module's added or replaced");
   }
   assert.deepEqual(w.snapshot(), before, "nothing is written: the pseudonym's knock read beside it is not bound either");
   /* a source already minted still answers */

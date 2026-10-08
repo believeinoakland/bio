@@ -2,7 +2,8 @@
  * refusal this module answers carries its code, its catalogue row and the member's translation.
  *
  * C-122.1 (R51, N364) is a family of its own here: a case's sources; C-122.2 (R58, DEC-112) and C-122.3, C-122.4 (R59,
- * N522) join it at T28, and C-122.5 (R67's stop when no publisher could check a waiting edition; R33, N687) at T35.
+ * N522) join it at T28, C-122.5 (R67's stop when no publisher could check a waiting edition; R33, N687) at T35, and
+ * C-122.6 (R57's photo marked since preparation; N757, K2206) at T37.
  * C-92.1–.9 and C-92.13 (the attribution act) moved with the act to `case-tensions` (its R9; T33-62, T33-63), numbers
  * and translations unchanged, and left this table, so no row id is held twice.
  *
@@ -60,6 +61,15 @@ export const CASE_SOURCES_CHECKS = {
     where: 'src/publication/schedule.mjs unchecked > is-scheduled-check-available',
     translation: 'This edition was not published at its set time, because the checks it needed then could not be run. '
       + 'Nothing was published. Sign it again to publish it.',
+  },
+  /* C-122.6 (R33, R57; N757, DEC-180 (4), K2206): a photo the case carries was marked since the case was prepared (its
+     copy no longer the photo's current copy, a photo carried whole now marked, or marks that cannot be read), read
+     through case-carriage (its R13) at the commit; the remedy is a new preparation. BOB's draft, awaiting its stamp. */
+  PHOTO_MARKS_CHANGED_SINCE: {
+    check: 'C-122.6',
+    where: 'src/publication/index.mjs commitCaseEdition > is-photo-marks-current',
+    translation: 'A photo this case carries was marked again after the case was prepared, so the copy it would publish '
+      + 'is not the one the group marked. Prepare the case again. Nothing was published.',
   },
 };
 

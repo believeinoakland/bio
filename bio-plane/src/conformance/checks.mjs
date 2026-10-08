@@ -22,7 +22,9 @@
  * K1723, K1713) adds C-113.32 `STANDARD_NOT_BINDING`, C-113.33 `BENCHMARK_CALLED_NONCONFORMING` (R27), C-113.34
  * `ACTOR_IS_A_PERSON`, C-113.35 `ACTOR_NOT_AN_OFFICE_OR_ORGANISATION` (R28) and C-113.36 `MEASURE_NO_DENOMINATOR` (R29),
  * their translations BOB's drafts, awaiting stamp until T36's promotion job (plan T35, accepted red 2). R29's absent or
- * unseen calculation is `calculations`' answer, `NO_SUCH_CALCULATION`, with no row of this module's. */
+ * unseen calculation is `calculations`' answer, `NO_SUCH_CALCULATION`, with no row of this module's. T37-36 (N770):
+ * each `where` names the function that holds its region (C-113.12, .19, .29, .31, .32, .34, .35 re-pointed), codes,
+ * numbers and translations unchanged; awaiting stamp until T38's promotion job. */
 
 const at = (fn, region) => `src/conformance/index.mjs ${fn} > ${region}`;
 
@@ -48,11 +50,11 @@ export const CONFORMANCE_CHECKS = Object.freeze({
       + 'person), and the record that shows it. A part is missing or unreadable. Nothing was written.',
   },
   ACT_NO_EVENT: {
-    check: 'C-113.29', where: at("#actOf", "is-act-event-named"),
+    check: 'C-113.29', where: at("#actEvent", "is-act-event-named"),
     translation: 'A government act is the event that records what was done. Name the event. Nothing was written.',
   },
   ACT_NOT_AN_EVENT: {
-    check: 'C-113.31', where: at("#actOf", "is-act-aliased"),
+    check: 'C-113.31', where: at("#actEvent", "is-act-aliased"),
     translation: 'That act was recorded before acts were events, and no event is linked to it yet. A member links it to '
       + 'its event first; then it can be determined again. Nothing was written.',
   },
@@ -88,7 +90,7 @@ export const CONFORMANCE_CHECKS = Object.freeze({
       + 'diverge or are open. A standard has no row, or a row is missing a part. Nothing was written.',
   },
   OUTCOME_UNKNOWN: {
-    check: 'C-113.12', where: at("determine", "is-outcome-stated"),
+    check: 'C-113.12', where: at("#determine", "is-outcome-stated"),
     translation: 'Each standard carries the member\'s outcome: compliant, noncompliant or unclear. One is missing or '
       + 'not one of the three. Nothing was written.',
   },
@@ -123,7 +125,7 @@ export const CONFORMANCE_CHECKS = Object.freeze({
     translation: 'Superseding a determination says why it is superseded. Give the reason. Nothing was written.',
   },
   PROPOSAL_CANNOT_DETERMINE: {
-    check: 'C-113.19', where: at("comparisonPropose", "is-proposal-outcomeless"),
+    check: 'C-113.19', where: at("#propose", "is-proposal-outcomeless"),
     translation: 'A comparison sets out rows and questions for members; it never states whether the act complied. '
       + 'Remove the outcome. Nothing was written.',
   },
@@ -163,7 +165,7 @@ export const CONFORMANCE_CHECKS = Object.freeze({
       + 'never chooses it. Nothing was written.',
   },
   STANDARD_NOT_BINDING: {
-    check: 'C-113.32', where: at("determine", "is-standard-binding"),
+    check: 'C-113.32', where: at("#determine", "is-standard-binding"),
     translation: 'This standard does not bind this body, so the act cannot be found nonconforming against it. Record it '
       + 'as a benchmark comparison: below, slower than, or above. Nothing was written.',
   },
@@ -173,12 +175,12 @@ export const CONFORMANCE_CHECKS = Object.freeze({
       + 'nonconforming. Say how it compares: below, slower than, or above. Nothing was written.',
   },
   ACTOR_IS_A_PERSON: {
-    check: 'C-113.34', where: at("#comparedActor", "is-actor-not-a-person"),
+    check: 'C-113.34', where: at("#comparedAct", "is-actor-not-a-person"),
     translation: 'An act is compared as the act of an office or an organisation. The people who took part are recorded '
       + 'on the act, never as the one who acted. Nothing was written.',
   },
   ACTOR_NOT_AN_OFFICE_OR_ORGANISATION: {
-    check: 'C-113.35', where: at("#comparedActor", "is-actor-office-or-organisation"),
+    check: 'C-113.35', where: at("#comparedAct", "is-actor-office-or-organisation"),
     translation: 'Name the office or organisation whose act this is. Nothing was written.',
   },
   MEASURE_NO_DENOMINATOR: {

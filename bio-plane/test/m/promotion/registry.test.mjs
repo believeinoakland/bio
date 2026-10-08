@@ -99,6 +99,26 @@ test("R40: a fact with no registered provider refuses the act that needs it with
   assert.deepEqual([x.reason, x.fact], ["FACT_UNAVAILABLE", "caseMember"]);
 });
 
+/* PROMOTION #35 (T37): a provider that throws refuses the act that reads it FACT_FAILED (C-102.5) with its row, as
+   `fact` answers it (R40), never a raw failure of the act (R37); nothing is written (R2). */
+test("R40 R37 R2: a fact whose provider throws refuses the act FACT_FAILED with its row, naming the fact; nothing is written", () => {
+  const bare = makePromotion({ facts: false });
+  bare.p.registerFact("producingGroup", "legacy-store", () => { throw new Error("the group is unreadable"); });
+  const r = bare.p.promote(create(ID, infoDoc(ID)));
+  assert.deepEqual([r.ok, r.reason, r.code, r.check, r.fact], [false, "FACT_FAILED", "FACT_FAILED", "C-102.5", "producingGroup"]);
+  assert.equal(typeof r.translation, "string");
+  assert.match(r.detail, /the group is unreadable/);
+  assert.equal(bare.record.head(ID), null, "a refused promotion writes nothing");
+  const reopen = makePromotion({ facts: false });
+  reopen.p.registerFact("producingGroup", "legacy-store", () => "test-group");
+  reopen.p.registerFact("caseMember", "publication", () => { throw new Error("no case index"); });
+  const inq = doc({ id: "INQ-2026-0001", object_type: "inquiry", title: "Q", current_state: "concluded", created: T0, last_updated: T0 });
+  assert.equal(reopen.p.promote({ ...create("INQ-2026-0001", inq), replay: true }).ok, true);
+  const x = reopen.p.reopen({ target: "INQ-2026-0001", reason: "why", viewer: "member:a", author: "member:a" });
+  assert.deepEqual([x.ok, x.reason, x.check, x.fact], [false, "FACT_FAILED", "C-102.5", "caseMember"]);
+  assert.equal(reopen.record.head("INQ-2026-0001").currentState, "concluded", "the inquiry is not reopened");
+});
+
 test("R35: promote, reopen and runCaseGate make no network call; runGate's one outside question is hasCapture; times are the clock's or the document's", async () => {
   const fetch0 = globalThis.fetch;
   let calls = 0;

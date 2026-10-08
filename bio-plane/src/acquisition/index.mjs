@@ -546,7 +546,7 @@ export function evidenceStorageAbsent(op, error, { code = true } = {}) {
 const ownHostsOf = (cap, given) => (Array.isArray(given) ? given : cap && Array.isArray(cap.ownHosts) ? cap.ownHosts : null);
 const hostnameOf = (u) => { try { return new URL(u).hostname.toLowerCase(); } catch { return null; } };
 const onOwnHost = (u, ownHosts) => !!ownHosts && isOwnHost(hostnameOf(u), ownHosts);
-/* R42, C-137.18: the refusal, naming the host; nothing was fetched or filed. */
+/* R42, C-139.18: the refusal, naming the host; nothing was fetched or filed. */
 function ownHostRefused(locator, extra = {}) {
   const row = ARCHIVE_CHECKS.OWN_HOST_REFUSED;
   return { ok: false, reason: "OWN_HOST_REFUSED", code: "OWN_HOST_REFUSED", check: row.check, translation: row.translation,
@@ -554,12 +554,12 @@ function ownHostRefused(locator, extra = {}) {
            detail: `${hostnameOf(locator)} is one of your group's own hosts; nothing was fetched or filed` };
 }
 
-/** R1–R23, R40, R42, R43. The one act that fetches and files. `opts`: `cls` (the control plane's caller class), `member`
- *  (whether the caller is a member session), `sessMember` (that member), `storeName`, `ownHosts` (R42), and — only from
- *  the in-process drain, never from a request — `captureRequest` (the draining row's address, purpose, agent, render
- *  flag and the member's co-archive choice, K58). Answers `{status, body}`. */
+/** R1–R23, R40, R42–R44. The one act that fetches and files. `opts`: `cls` (the control plane's caller class), `member`
+ *  (whether the caller is a member session), `sessMember` (that member), `storeName`, `ownHosts` (R42), `reputation` (a spec, null or a reader) and
+ *  `fileScanner` (R44), and — only from the in-process drain, never from a request — `captureRequest` (the draining
+ *  row's address, purpose, agent, render flag and the member's co-archive choice, K58). Answers `{status, body}`. */
 export async function acquire(cap, body0, { cls = null, member = false, sessMember = null, storeName = "bio", captureRequest = null,
-                                           ownHosts = null } = {}) {
+                                           ownHosts = null, reputation: reputationTool = undefined, fileScanner = null } = {}) {
   const body = body0 && typeof body0 === "object" ? { ...body0 } : {};
   const answer = (status, b) => ({ status, body: b });
   const op = "acquire";
@@ -761,6 +761,12 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
                     : "the render allowance could not be read, so the render is deferred rather than run unmetered." });
   }
   /* END DEC-49 REGION is-render-admit */
+
+  /* R44: the document's public address asked of the scanner before any fetch of it, on every arm that fetches one (a
+     continuation fetches none and has returned above): the archive arm's `address`, the Drive link as given, else the
+     locator. */
+  const reputation = await addressReputation(archiveAsked || (driveCapture ? driveCapture.address : locator),
+    reputationToolOf(cap, reputationTool), fileScannerOf(cap, fileScanner));
 
   /* R3, R32: the memento, found through the archive's TimeGate or TimeMap; its raw bytes are answered unread, so the
      bytes this call files are the bytes the choice is made over (`chooseMemento`, below). */
@@ -1093,7 +1099,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   try {
     await cap.provenance?.recordReceipt?.({ address: addressIsDerived ? documentAddress : (resolvedUrl || locator),
       addressNorm: addressIsDerived ? addrNorm : normalizeAddress(resolvedUrl || locator), captureSha: sha, retrieved,
-      via, retrievalLocator: locator });
+      via, retrievalLocator: locator, reputation });
   } catch { /* an unfiled receipt is not a failed capture */ }
   /* R16, capture R69: the member this capture's document names as its actor is recorded as one who captured these bytes. */
   const actor = member && typeof sessMember === "string" && sessMember ? sessMember : null;
@@ -1247,8 +1253,57 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     ...(subsSkipped ? { subresources_skipped: subsSkipped } : {}),
     ...(receiptSignature ? { receipt_signature: receiptSignature } : {}),
     ...(unpacked ? { unpack: unpacked } : {}),
+    /* R44: what the scanner said of the address, stated to the caller as the receipt records it */
+    reputation,
     store: storeName, tokenClass: cls, note: ACQUIRE_GRADE_NOTE,
   });
+}
+
+/* R44 (N714, N710; K1929 (2), K1939 (DEC-168 S12, S13), K1946 T2; T37, N774, K2155): THE ADDRESS'S REPUTATION, ASKED
+   BEFORE THE FETCH. The tool and the `FILE_SCANNER` binding come from the caller (`opts`, else the store handed in, as
+   R42's list does; the binding also from its `env`), never from a body. The tool is a `url_reputation` spec
+   (file-scanner R21), null, or a READER: a function answering either, or a promise of either, called once for this
+   acquisition (so the tool is read at each one, never once at start, `plane` R29) and awaited within the same bound as
+   the lookup. A reader that throws, rejects, outlasts the bound or answers anything but a spec or null is no answer,
+   `TOOL_UNREADABLE`. The scanner is asked `POST /provider/reputation` (its R25) with the address and the spec only. Its
+   answer never refuses, changes or grades the fetch: it is recorded on the receipt and stated in the answer. No answer is
+   recorded as such, never as `listed: false`. The reader and the lookup together are bounded, so they never delay the
+   fetch past `REPUTATION_TIMEOUT_MS` (chosen, not measured); never throws. */
+export const REPUTATION_TIMEOUT_MS = 5000;
+const REPUTATION_URL = "https://file-scanner/provider/reputation";
+const reputationToolOf = (cap, given) => (given !== undefined ? given : cap && cap.reputation !== undefined ? cap.reputation : null);
+const fileScannerOf = (cap, given) => given || (cap && cap.fileScanner) || (cap && cap.env && cap.env.FILE_SCANNER) || null;
+/* A spec as a reader may answer it: an object (the scanner judges its fields, R21); anything else is unreadable. */
+const isToolSpec = (t) => !!t && typeof t === "object" && !Array.isArray(t) && typeof t.then !== "function";
+async function addressReputation(address, given, scanner) {
+  const toolIdOf = (t) => (t && typeof t === "object" && typeof t.tool_id === "string" ? t.tool_id : null);
+  const unanswered = (code, t = null) => ({ tool: toolIdOf(t), listed: null, categories: [], checked_at: stampSecond(), unanswered: code });
+  /* One bound over the reader and the lookup; whatever arrives after it is not read. */
+  const LATE = Symbol("late");
+  let timer = null;
+  const late = new Promise((r) => { timer = setTimeout(() => r(LATE), REPUTATION_TIMEOUT_MS); });
+  const within = (p) => { Promise.resolve(p).catch(() => { /* an answer arriving after the bound is not read */ }); return Promise.race([p, late]); };
+  try {
+    let tool = given;
+    if (typeof given === "function") {
+      try { tool = await within((async () => given())()); } catch { return unanswered("TOOL_UNREADABLE"); }
+      if (tool === LATE || (tool !== null && !isToolSpec(tool))) return unanswered("TOOL_UNREADABLE");
+    }
+    if (tool === null || tool === undefined) return unanswered("NO_TOOL");
+    if (!scanner || typeof scanner.fetch !== "function") return unanswered("SCANNER_UNREACHABLE", tool);
+    let out;
+    try {
+      out = await within((async () => {
+        const res = await scanner.fetch(REPUTATION_URL, { method: "POST", headers: { "content-type": "application/json" },
+                                                          body: JSON.stringify({ address, tool }) });
+        return res.json();
+      })());
+    } catch { return unanswered("SCANNER_UNREACHABLE", tool); }
+    if (out && out !== LATE && out.ok === true)
+      return { tool: toolIdOf(tool), listed: out.listed === true, categories: Array.isArray(out.categories) ? out.categories.filter((c) => typeof c === "string") : [], checked_at: stampSecond() };
+    if (out && out !== LATE && out.ok === false && typeof out.code === "string" && out.code) return unanswered(out.code, tool);
+    return unanswered("SCANNER_UNREACHABLE", tool);
+  } finally { clearTimeout(timer); }
 }
 
 /** R17: the profile of a capture the store holds under `sha`: docprofile's `identify` over the headers, the document

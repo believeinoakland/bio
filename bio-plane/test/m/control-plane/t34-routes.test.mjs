@@ -132,8 +132,16 @@ test("R55 (op-declarations R23; tasks R13–R16): tasks' five check-request ops 
     if (keys.includes("by")) assert.equal(inner.params.by, "member:ann", op);
     assert.equal(JSON.stringify(inner.params).includes(FORGED), false, op);
     env.calls.length = 0;
+    for (const [token, params] of [[env.ADMIN_TOKEN, {}], [env.PROBE_TOKEN, { store: "scratch" }], [env.DAEMON_TOKEN, {}]]) {
+      env.calls.length = 0;
+      const m = await call(env, { op, token, params, method: OPS[op].mutating ? "POST" : "GET", body: OPS[op].mutating ? {} : undefined });
+      refused(m, 403, "CLASS_FORBIDDEN", "C-38.2");
+      assert.deepEqual(opCalls(env), [], `${op}: nothing reached the store`);
+    }
+    /* admission R5 (T36, K2166): the retired shared member key is refused by name, nothing reaching the store */
+    env.calls.length = 0;
     const m = await call(env, { op, token: env.MEMBER_TOKEN, method: OPS[op].mutating ? "POST" : "GET", body: OPS[op].mutating ? {} : undefined });
-    assert.equal(m.status, 403, op);
+    refused(m, 401, "MEMBER_TOKEN_RETIRED", "C-38.11");
     assert.deepEqual(opCalls(env), [], `${op}: nothing reached the store`);
   }
 });
@@ -153,12 +161,17 @@ test("R56, R30 (credentials R33, R34, R36; admission R19): the group key's seven
     assert.equal(Object.hasOwn(inner.params, "key") && op === "groupkeyset", false, `${op}: no key in the address`);
     assert.equal(JSON.stringify(inner.params).includes(FORGED), false, op);
     if (op === "groupkeyset") assert.equal(inner.body.key, "sk-in-the-body");
-    for (const token of [env.ADMIN_TOKEN, env.MEMBER_TOKEN]) {
+    for (const token of [env.ADMIN_TOKEN, env.DAEMON_TOKEN]) {
       env.calls.length = 0;
       const m = await call(env, { op, token, method: OPS[op].mutating ? "POST" : "GET", body: OPS[op].mutating ? {} : undefined });
       assert.equal(m.status, 403, `${op}: a machine credential`);
       assert.deepEqual(opCalls(env), []);
     }
+    /* admission R5 (T36, K2166): the retired shared member key is refused by name, and carries no key either */
+    env.calls.length = 0;
+    const retired = await call(env, { op, token: env.MEMBER_TOKEN, method: OPS[op].mutating ? "POST" : "GET", body: OPS[op].mutating ? {} : undefined });
+    refused(retired, 401, "MEMBER_TOKEN_RETIRED", "C-38.11");
+    assert.deepEqual(opCalls(env), []);
   }
   /* through the record store's door over credentials' map, as plane composes it: the key set, refused to a member who is
      no administrator, and read back, never in an answer */
@@ -195,7 +208,7 @@ async function drafts() {
   return { r, C, seen, code };
 }
 
-test("R57 (instance-setup R55, R65; run-rules R20; ai-runs R50, R52; credentials R35, R36): before either draft's handler the door answers, in order, `groupdescriptiondraft`'s NOT_AN_ADMIN, ASSISTANT_OFF, AI_NO_ACCOUNT, the member's and the copy's ceilings, and credentials' own refusal of the account (the group key's notice unread), each before any handler is asked (negative control: once every one is cleared the handler is reached)", async () => {
+test("R57 (instance-setup R55, R65; run-rules R20; ai-runs R50, R52; credentials R35, R36; T37: N765, K231): before either draft's handler the door answers, in order, `groupdescriptiondraft`'s NOT_AN_ADMIN, AI_KEPT_AWAY (credentials' one row, in place of ASSISTANT_OFF), AI_NO_ACCOUNT, the member's and the copy's ceilings, and credentials' own refusal of the account (the group key's notice unread), each before any handler is asked (negative control: once every one is cleared the handler is reached)", async () => {
   const { r, C, seen, code } = await drafts();
   const gdd = (by) => r.go(`groupdescriptiondraft?by=${by}&viewer=${by}`, "POST", { answers: [{ question: "q", text: "t" }] });
   const help = (by) => r.go(`writinghelp?by=${by}&viewer=${by}`, "POST", { op: "notewrite", field: "text", told: "what I saw" });
@@ -203,10 +216,13 @@ test("R57 (instance-setup R55, R65; run-rules R20; ai-runs R50, R52; credentials
   assert.equal(code(await gdd("member:bea")), "NOT_AN_ADMIN");
   assert.equal(code(await gdd("class:admin")), "NOT_AN_ADMIN");
   assert.equal(code(await gdd("")), "NOT_AN_ADMIN");
-  /* the assistant off */
-  assert.equal(code(await gdd("member:ann")), "ASSISTANT_OFF");
-  assert.equal(code(await help("member:bea")), "ASSISTANT_OFF");
-  assert.equal(instanceSetupOf(r.ctx).assistantSet({ on: true, by: "admin" }).ok, true);
+  /* the assistant off: the group keeps its material away from every assistant (credentials R51; instance-setup R53 since
+     T36, K2162), answered as credentials' `aiKeptAway()` answers it (its R35, the one site; store-door R10, N765), then
+     lets it back */
+  assert.equal(C.aiKeepAwaySet({ on: true, reason: "kept away while we decide", by: "admin" }).ok, true);
+  assert.equal(code(await gdd("member:ann")), "AI_KEPT_AWAY");
+  assert.equal(code(await help("member:bea")), "AI_KEPT_AWAY");
+  assert.equal(C.aiKeepAwaySet({ on: false, by: "admin" }).ok, true);
   /* no account serves */
   assert.equal(code(await gdd("member:ann")), "AI_NO_ACCOUNT");
   assert.equal(code(await help("member:bea")), "AI_NO_ACCOUNT");
@@ -236,7 +252,7 @@ test("R57 (instance-setup R55, R65; run-rules R20; ai-runs R50, R52; credentials
 
 test("R57, R29, R30 (K1755): a draft's handler receives `assistant` as the door resolved it — `{on: true, account: {kind, level}}`, the member's own account or the group's key, never the key — its own arguments from the body and `by` and `viewer` as stamped; a caller's `assistant` is never read (negative control: no secret appears in anything handed over or answered)", async () => {
   const { r, C, seen } = await drafts();
-  assert.equal(instanceSetupOf(r.ctx).assistantSet({ on: true, by: "admin" }).ok, true);
+  assert.equal(C.aiKeepAwaySet({ on: false, by: "admin" }).ok, true);   /* the assistant on: nothing kept away (K2162) */
   assert.equal((await C.accountReferenceSet({ member: "member:bea", kind: "apikey", secret: "sk-bea-own-secret", by: "member:bea" })).ok, true);
   assert.equal((await C.groupKeySet({ key: "sk-group-key-secret", by: "admin" })).ok, true);
   assert.equal(C.groupKeySwitch({ on: true, by: "admin" }).ok, true);
@@ -274,11 +290,16 @@ test("R57, R29 (op-declarations R15, R29): `groupdescriptiondraft`, `writinghelp
     assert.equal(inner.route, op);
     for (const k of want) assert.equal(inner.params[k], "member:ann", `${op}: ${k}`);
     assert.equal(JSON.stringify(inner.params).includes(FORGED), false, op);
-    for (const token of [env.ADMIN_TOKEN, env.MEMBER_TOKEN]) {
+    for (const token of [env.ADMIN_TOKEN, env.DAEMON_TOKEN]) {
       env.calls.length = 0;
       assert.equal((await call(env, { op, token, method: post ? "POST" : "GET", body: post ? {} : undefined })).status, 403, op);
       assert.deepEqual(opCalls(env), []);
     }
+    /* admission R5 (T36, K2166): the retired shared member key is refused by name before the store */
+    env.calls.length = 0;
+    refused(await call(env, { op, token: env.MEMBER_TOKEN, method: post ? "POST" : "GET", body: post ? {} : undefined }),
+            401, "MEMBER_TOKEN_RETIRED", "C-38.11");
+    assert.deepEqual(opCalls(env), []);
   }
 });
 

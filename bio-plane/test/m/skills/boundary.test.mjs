@@ -4,13 +4,16 @@ import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 import { renderPack, packVersion, SOURCING } from "../../../src/skillpack.mjs";
 import { RESEARCH_BOUNDARY_CLAUSES, RESEARCH_BOUNDARY_NOTE, RECORD_CONTENT_IS_DATA, DISCOVERY_IS_NOT_CAPTURE,
-         FILES_AS_EXTRACTED_TEXT, ASK_CLAUSES, LEGAL_LOOKUP_CLAUSES, LADDERS_SOURCE, ROLES_SOURCE, askLayer,
+         FILES_AS_EXTRACTED_TEXT, HELD_ADDRESS_ONLY, CAPTURE_CLAUSES, ASK_CLAUSES, LEGAL_LOOKUP_CLAUSES, LADDERS_SOURCE, ROLES_SOURCE, askLayer,
          actionPlanningLayer, controlFlowAuthority } from "../../../src/skilldoctrine.mjs";
 import { ROOT, read, foundIn, section, canonDocuments, published } from "./fixture.mjs";
 
-/* The canon paragraphs the boundary is quoted from: ladders §9.4, and Roles §3 rule 11 (K1880, K1888). */
+/* The canon paragraphs the boundary is quoted from: ladders §9.4, Roles §3 rule 11 (K1880, K1888) and rule 12 (K1899's
+   F2 rule, K1993). */
 const s94 = () => section(read(LADDERS_SOURCE), "9.4 ");
-const rule11 = () => section(read(ROLES_SOURCE), "3. The rules").split("\n").find((l) => l.startsWith("11. ")) ?? "";
+const rule = (n) => section(read(ROLES_SOURCE), "3. The rules").split("\n").find((l) => l.startsWith(`${n}. `)) ?? "";
+const rule11 = () => rule(11);
+const rule12 = () => rule(12);
 const CHECKS = { ANSWER_X: { check: "C-200.1", translation: "t" } };
 const entry = (id, mode) => ({ id, label: `the ${id} act`, mode });
 const planningCatalog = () => [...published().catalog,
@@ -35,11 +38,12 @@ test("R37 R2 the resident research_boundary carries §9.4's record-content-as-da
   assert.equal(renderPack(published()).resident.research_boundary.note, RESEARCH_BOUNDARY_NOTE);
 });
 
-test("R38 the research_boundary also carries Roles §3 rule 11's two clauses: (a) discovery is not capture (K1880), (b) files only as the readers' text, the active list a fact (K1888), each found by R21's normaliser", () => {
+test("R38 (a) (b) the research_boundary carries Roles §3 rule 11's two clauses: (a) discovery is not capture (K1880), (b) files only as the readers' text, the active list a fact (K1888), each found by R21's normaliser", () => {
   assert.ok(canonDocuments().has(ROLES_SOURCE));
   const r11 = rule11();
   assert.ok(r11.length > 0 && /K1880/.test(r11) && /K1888/.test(r11), "rule 11 is where it was");
-  assert.deepEqual(RESEARCH_BOUNDARY_CLAUSES, [RECORD_CONTENT_IS_DATA, DISCOVERY_IS_NOT_CAPTURE, FILES_AS_EXTRACTED_TEXT]);
+  assert.deepEqual(RESEARCH_BOUNDARY_CLAUSES, [RECORD_CONTENT_IS_DATA, DISCOVERY_IS_NOT_CAPTURE, FILES_AS_EXTRACTED_TEXT,
+                                             HELD_ADDRESS_ONLY]);
   for (const c of [DISCOVERY_IS_NOT_CAPTURE, FILES_AS_EXTRACTED_TEXT]) {
     assert.deepEqual([c.source, c.section], [ROLES_SOURCE, "§3"]);
     assert.ok(foundIn(r11, c.text), `in rule 11: ${c.text}`);
@@ -69,13 +73,49 @@ test("R37 R38 R4 the research boundary is resident and never disclosable: no dis
   assert.notEqual(packVersion({ ...rest, resident: residentWithout }), version);
 });
 
-test("R28 R33 the capture clause: the action planning and law lookup layers carry R38 (a)'s clause, the very object, found in rule 11", () => {
+test("R38 (c) the research_boundary carries Roles §3 rule 12's clause (N731, K1993): the run's own capture request names only an address the record holds, and a found page not held is the member's to acquire, found by R21's normaliser", () => {
+  const r12 = rule12();
+  assert.ok(r12.length > 0 && /K1899/.test(r12) && /K1993/.test(r12), "rule 12 is where it was");
+  assert.deepEqual([HELD_ADDRESS_ONLY.source, HELD_ADDRESS_ONLY.section], [ROLES_SOURCE, "§3"]);
+  assert.ok(foundIn(r12, HELD_ADDRESS_ONLY.text), "in rule 12");
+  assert.ok(!foundIn(rule11(), HELD_ADDRESS_ONLY.text), "rule 11, Bob's, is unchanged and does not hold it");
+  for (const re of [/own capture request names only an address the record already holds/, /any other is refused by name/,
+                    /a page the assistant found on a public site that the record does not hold is the member's to acquire/,
+                    /names it to the member and never asks for its capture/])
+    assert.match(HELD_ADDRESS_ONLY.text, re);
+  /* The lookup can miss: the opposite rule is not found. */
+  assert.ok(!foundIn(r12, HELD_ADDRESS_ONLY.text.replace("never asks for its capture", "asks for its capture")));
+  for (const pub of [published(), published({ answer_checks: CHECKS }), published({ catalog: planningCatalog() })]) {
+    const { resident } = renderPack(pub);
+    assert.equal(resident.research_boundary.clauses[3], HELD_ADDRESS_ONLY, "resident, in every pack");
+    assert.ok(!resident.disclosable.some((d) => d.layer === "research_boundary"), "listed by no disclosable entry");
+  }
+  assert.deepEqual(controlFlowAuthority(HELD_ADDRESS_ONLY.text), []);
+});
+
+test("R33 the law lookup layer's capture clauses are R38 (a)'s and (c)'s, the very objects the resident layer carries", () => {
+  assert.deepEqual(CAPTURE_CLAUSES, [DISCOVERY_IS_NOT_CAPTURE, HELD_ADDRESS_ONLY]);
+  assert.deepEqual(LEGAL_LOOKUP_CLAUSES.slice(-2), CAPTURE_CLAUSES);
+  const pack = renderPack(published({ catalog: planningCatalog() }));
+  const lookup = pack.disclosed.legal_lookup.body.clauses;
+  for (const c of CAPTURE_CLAUSES) {
+    assert.ok(lookup.includes(c), c.text);
+    assert.ok(pack.resident.research_boundary.clauses.includes(c), "the same object, resident");
+  }
+  assert.equal(lookup.filter((c) => /capture request names only/.test(c.text)).length, 1, "never a second copy");
+  assert.ok(foundIn(rule11(), DISCOVERY_IS_NOT_CAPTURE.text) && foundIn(rule12(), HELD_ADDRESS_ONLY.text));
+});
+
+test("R28 the action planning layer's capture clauses are R38 (a)'s and (c)'s, the very objects, as R33's", () => {
   const planning = actionPlanningLayer(planningCatalog());
-  assert.equal(planning.body.capture, DISCOVERY_IS_NOT_CAPTURE, "R28's body adds it");
-  assert.equal(renderPack(published({ catalog: planningCatalog() })).disclosed.action_planning.body.capture, DISCOVERY_IS_NOT_CAPTURE);
-  assert.ok(LEGAL_LOOKUP_CLAUSES.includes(DISCOVERY_IS_NOT_CAPTURE), "R33's body adds it");
-  assert.equal(renderPack(published({ catalog: planningCatalog() })).disclosed.legal_lookup.body.clauses.at(-1), DISCOVERY_IS_NOT_CAPTURE);
-  assert.ok(foundIn(rule11(), DISCOVERY_IS_NOT_CAPTURE.text));
+  assert.equal(planning.body.capture, CAPTURE_CLAUSES, "R28's body carries them");
+  const pack = renderPack(published({ catalog: planningCatalog() }));
+  assert.equal(pack.disclosed.action_planning.body.capture, CAPTURE_CLAUSES);
+  for (const c of pack.disclosed.action_planning.body.capture) {
+    assert.ok(pack.resident.research_boundary.clauses.includes(c), "the same object, resident");
+    assert.ok(pack.disclosed.legal_lookup.body.clauses.includes(c), "the same object the law lookup carries");
+    assert.deepEqual(controlFlowAuthority(c.text), []);
+  }
   assert.deepEqual(actionPlanningLayer(published().catalog).body, {}, "absent, the layer carries nothing");
 });
 
@@ -87,7 +127,7 @@ test("R37 R38 R16 R24 R26 no clause or note of the research boundary carries con
   assert.ok(controlFlowAuthority("Keep searching until every site is read.").length > 0, "the scan can fire");
 });
 
-test("R37 R1 a research boundary clause not held: renderPack throws naming it and renders nothing", () => {
+test("R37 R38 R1 a research boundary clause not held, (c)'s included: renderPack throws naming it and renders nothing", () => {
   /* The clauses are this module's own constants, so a child replaces skilldoctrine's export with each clause emptied
      or dropped, and drives the same renderPack (R1's arm for observation-log uses the same pattern). */
   const file = join(ROOT, "bio-plane/src/skilldoctrine.mjs");
@@ -101,10 +141,37 @@ test("R37 R1 a research boundary clause not held: renderPack throws naming it an
     const { published } = await import(${JSON.stringify("file://" + join(ROOT, "bio-plane/test/m/skills/fixture.mjs"))});
     try { renderPack(published()); console.log("RENDERED"); } catch (e) { console.log("THREW " + e.message); }`],
     { encoding: "utf8" });
-  for (const expr of ["(c) => c.slice(0, 2)", "(c) => []", "(c) => undefined", "(c) => [c[0], { ...c[1], text: '' }, c[2]]",
-                      "(c) => [{ ...c[0], text: '  ' }, c[1], c[2]]", "(c) => [c[0], c[1], null]"]) {
+  for (const expr of ["(c) => c.slice(0, 2)", "(c) => c.slice(0, 3)", "(c) => []", "(c) => undefined",
+                      "(c) => [c[0], { ...c[1], text: '' }, c[2], c[3]]", "(c) => [{ ...c[0], text: '  ' }, c[1], c[2], c[3]]",
+                      "(c) => [c[0], c[1], null, c[3]]", "(c) => [c[0], c[1], c[2], { ...c[3], text: '' }]"]) {
     const out = run(expr);
     assert.match(out, /^THREW .*research boundary.*not held/m, `${expr}: ${out}`);
   }
   assert.match(run("(c) => c"), /^RENDERED/m, "the control: the real clauses render");
+});
+
+test("R11 R38 every pack's version moves with (c): the same pack rendered over T35's three clauses is another version", () => {
+  const file = join(ROOT, "bio-plane/src/skilldoctrine.mjs");
+  const out = execFileSync(process.execPath, ["--experimental-test-module-mocks", "--no-warnings", "--input-type=module", "-e", `
+    import { mock } from "node:test";
+    const real = { ...(await import(${JSON.stringify(file + "?real")})) };
+    mock.module(${JSON.stringify("file://" + file)}, { namedExports: { ...real,
+      RESEARCH_BOUNDARY_CLAUSES: [...real.RESEARCH_BOUNDARY_CLAUSES.slice(0, 3), { ...real.HELD_ADDRESS_ONLY }] } });
+    const { renderPack } = await import(${JSON.stringify("file://" + join(ROOT, "bio-plane/src/skillpack.mjs"))});
+    const { published } = await import(${JSON.stringify("file://" + join(ROOT, "bio-plane/test/m/skills/fixture.mjs"))});
+    console.log("SAME " + renderPack(published()).version);`], { encoding: "utf8" });
+  const now = renderPack(published()).version;
+  assert.equal(/^SAME (\S+)$/m.exec(out)[1], now, "the control: equal clauses render the same version");
+  /* T35's pack: the resident boundary without (c). */
+  const pack = renderPack(published());
+  const { version, ...rest } = pack;
+  const t35 = { ...rest, resident: { ...rest.resident, research_boundary: { ...rest.resident.research_boundary,
+    clauses: RESEARCH_BOUNDARY_CLAUSES.slice(0, 3) } } };
+  assert.notEqual(packVersion(t35), version);
+  for (const pub of [published({ catalog: planningCatalog() }), published({ answer_checks: CHECKS })]) {
+    const p = renderPack(pub);
+    const { version: v, ...r } = p;
+    assert.notEqual(packVersion({ ...r, resident: { ...r.resident, research_boundary: { ...r.resident.research_boundary,
+      clauses: RESEARCH_BOUNDARY_CLAUSES.slice(0, 3) } } }), v);
+  }
 });

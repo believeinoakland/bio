@@ -51,7 +51,8 @@ test("R2 (N402): an agent credential naming the member's writes reaches every op
                                 body: AGENT_OPS[op].mutating ? {} : undefined });
     assert.notEqual(r.status, 401, op);
     assert.notEqual(r.status, 403, `${op}: ${r.text.slice(0, 200)}`);
-    assert.ok(log.includes(op) || op === "whoami", `${op} reached no handler`);
+    /* R41 (K2135): `agentpack` is answered from the untargeted affordances handler, which the door asks under that name */
+    assert.ok(log.includes(op) || op === "whoami" || (op === "agentpack" && log.includes("affordances")), `${op} reached no handler`);
   }
   for (const op of writes) {
     const r = await call(env, { op, token: narrow, method: "POST", body: {} });

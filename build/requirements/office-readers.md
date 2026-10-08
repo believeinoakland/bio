@@ -1,6 +1,6 @@
 # office-readers — requirements
 
-**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). R11's csv bound stays the OOXML figure (20 MiB) until measured on a deployed plane (DIST-14). Last changed T35 (T35-9: R12, R32 amended; R32, R33 new; K1881, K1888, K1903); every requirement met (K1931).
+**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). R11's csv bound stays the OOXML figure (20 MiB) until measured on a deployed plane (DIST-14). Last changed T36 (T36-3: R11 amended, a `.docx` table's cells; K1972); every requirement met (OFFICE-READERS #7, K2078).
 
 ## Public
 
@@ -136,7 +136,17 @@ xlsx and csv), or `{ok:false, container, reason}` when `parts` failed.
     `[{para, ref, text}]`, one per `<w:p>` read, in document order (including inside tables); in each `mc:AlternateContent` (ECMA-376 Part 3) only the first `mc:Choice` is read, or the `mc:Fallback` when there is no `mc:Choice`, nested ones alike, and a branch not selected is not read (no paragraph, run, text, hyperlink, tracked change, bookmark, comment reference or table of it; N26, K747).
     `tables` is `[{table, ref, rows, cols}]` for every `<w:tbl>` in document order
     (nested included), or `null` when the body was not read (never confused with the empty
-    list, which means a body with no tables).
+    list, which means a body with no tables). (N724; K1972) Each table also carries `cells`,
+    held as R30 holds a sheet's: `[{source, value, type, declared, cached, formula}]`, one per
+    cell holding text, in row then column order over the table's own grid; `source` is the
+    cell's `doc-table` reference with its `cell` (R16); `value` is the cell's text as this
+    walk reads it into `document` (its paragraphs newline-joined, `w:delText` never, `w:ins`
+    in); `type` is always `text` and `declared`, `cached` and `formula` are `null` (a Word
+    table declares no cell type, so no date or number is inferred). A nested table's cells are
+    its own table's. (N758; K2118) Each cell also carries `paras`: the `para` ordinals
+    (of `paragraphs`) of the paragraphs its text was read from, in reading order, so a reader
+    finds a cell's paragraphs exactly, a vertically merged cell's included, without matching
+    lines.
   - `pptx`: `document` is slide text only, newline-joined, in deck order — speaker notes
     are NEVER in it. `slides` is `[{slide, ref, part, hidden, shapes, text}]`, one per deck
     entry; a hidden slide's `text` IS populated and its `hidden` is `true` (DEC-5: the

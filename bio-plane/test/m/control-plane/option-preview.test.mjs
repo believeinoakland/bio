@@ -17,7 +17,7 @@ function callers() {
   const w = world({ creds: { [agent]: cred({ tokenId: "agent-ann", principal: "member:ann", writes: Object.keys(OPS) }) } });
   return { w, list: [
     { name: "admin", token: w.env.ADMIN_TOKEN, params: {}, ns: "bio", viewer: "class:admin", author: "class:admin" },
-    { name: "member", token: w.env.MEMBER_TOKEN, params: {}, ns: "bio", viewer: "class:member", author: "class:member" },
+    /* admission R5 (K2166): the shared member binding is retired, so it is no caller here (its refusal is tested below) */
     { name: "probe", token: w.env.PROBE_TOKEN, params: { store: "scratch" }, ns: "scratch", viewer: "class:probe", author: "class:probe" },
     { name: "founder", token: w.S.founder, params: {}, ns: "bio", viewer: "admin", author: "member:admin" },
     { name: "ann", token: w.S.ann, params: {}, ns: "bio", viewer: "member:ann", author: "member:ann" },
@@ -25,7 +25,7 @@ function callers() {
   ] };
 }
 
-test("R26, R2 (N490; op-declarations R11, action-plans R37): optionstartpreview is declared a read (classes admin, member, probe; in both session sets) and is a route of action-plans' own map, and the door forwards it to that route in the caller's namespace with the caller's own parameters, for every caller its row admits (negative controls: the daemon class is refused, nothing forwarded; a near name no owner serves is `unknown op`)", async () => {
+test("R26, R2 (N490; op-declarations R11, action-plans R37): optionstartpreview is declared a read (classes admin, member, probe; in both session sets) and is a route of action-plans' own map, and the door forwards it to that route in the caller's namespace with the caller's own parameters, for every caller its row admits (negative controls: the daemon class is refused, the retired shared member binding MEMBER_TOKEN_RETIRED, nothing forwarded; a near name no owner serves is `unknown op`)", async () => {
   assert.deepEqual([OPS[OP].classes, OPS[OP].mutating], [["admin", "member", "probe"], false]);
   assert.ok(SESSION_OPS.member.has(OP) && SESSION_OPS.admin.has(OP), "in both session sets");
   assert.ok(Object.keys(actionPlansOps(null, new URL("http://do/"), null)).includes(OP), "a route of action-plans' map");
@@ -43,6 +43,9 @@ test("R26, R2 (N490; op-declarations R11, action-plans R37): optionstartpreview 
   w.env.calls.length = 0;
   refused(await call(w.env, { op: OP, token: w.env.DAEMON_TOKEN, params: { plan: "PLAN-1" } }), 403, "CLASS_FORBIDDEN", "C-38.2");
   assert.equal(opCalls(w.env).length, 0, "nothing forwarded for the daemon");
+  w.env.calls.length = 0;
+  refused(await call(w.env, { op: OP, token: w.env.MEMBER_TOKEN, params: { plan: "PLAN-1" } }), 401, "MEMBER_TOKEN_RETIRED", "C-38.11");
+  assert.equal(opCalls(w.env).length, 0, "nothing forwarded for the retired member binding");
   for (const op of ["optionstartpreviews", "optionpreview"]) {
     refused(await call(w.env, { op, token: w.S.ann }), 400, "UNKNOWN_OP", "C-69.1");
     assert.equal(opCalls(w.env).length, 0, op);
@@ -77,7 +80,7 @@ test("R17, R29 (N490; op-declarations R11): optionstartpreview is stamped author
       driven++;
     }
   }
-  assert.equal(driven, 24);
+  assert.equal(driven, 20);   /* five callers × two methods × forged or not (the retired member binding no longer one) */
   /* negative control: a read of the same module carries no author */
   w.env.calls.length = 0;
   await call(w.env, { op: "plan", token: w.S.ann, params: { id: "P", author: FORGED } });

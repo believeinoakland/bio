@@ -1,20 +1,29 @@
 /* The listener order after the re-pin (R41; R-2 L-E7; membership R83 as T33-19a re-pinned it): every layer 5–8 module
    of the re-pinned order, and scheduler, registered on R33's slot in a scrambled order, is called in MODULE_ORDER, and
    the thread and its answer are the same as with no listener at all. progressions registers on no other module's
-   slot (entities, promotion, scheduler), so R33's slot is its only listener order. */
+   slot (entities, promotion, scheduler), so R33's slot is its only listener order. The layers are read from
+   build/modules.json, as membership's R83 test reads them (T37-12, K2090), so a module added to a layer never stales
+   this test. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { seeded, MEMBER } from "./fixture.mjs";
 import { MODULE_ORDER } from "../../../src/membership/index.mjs";
 
-const between = (a, b) => MODULE_ORDER.slice(MODULE_ORDER.indexOf(a), MODULE_ORDER.indexOf(b) + 1);
+const modulesJson = async () =>
+  JSON.parse(await readFile(new URL("../../../../build/modules.json", import.meta.url), "utf8")).modules;
 
 test("R41: the layer 5–8 listeners of the re-pinned order, and scheduler, are told in MODULE_ORDER; each answer unchanged", async () => {
-  const L5to8 = between("entities", "review");
-  // the re-pinned layer 5 as plan T33 Rules (2) gives it
-  assert.deepEqual(between("entities", "workbooks"), ["entities", "events", "lines", "local-facts", "connections", "observation-log",
-    "standards", "progressions", "money", "money-checks", "duties", "people", "explore", "bias", "query-language", "retrieval",
-    "calculations", "workbooks"]);
+  const file = await modulesJson();
+  const inLayers = (lo, hi) => file.filter((m) => m.layer >= lo && m.layer <= hi).map((m) => m.id);
+  /* the re-pinned order: layer 5, and layers 5–8, are each one run of MODULE_ORDER, in the file's order */
+  for (const ids of [inLayers(5, 5), inLayers(5, 8)]) {
+    assert.ok(ids.length && ids.includes("progressions"), "the file names progressions in layer 5");
+    const at = MODULE_ORDER.indexOf(ids[0]);
+    assert.deepEqual(MODULE_ORDER.slice(at, at + ids.length), ids);
+  }
+  const L5to8 = inLayers(5, 8);
+  assert.ok(!L5to8.includes("scheduler"), "scheduler is layer 10's");
   const modules = [...L5to8, "scheduler"];
   const run = async (register) => {
     const w = seeded();

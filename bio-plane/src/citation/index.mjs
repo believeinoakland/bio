@@ -2,7 +2,8 @@
  * On a case (a `project`) a citation is a `cites` edge in the case's `references[]`; on a question (an `inquiry`) it is
  * a leg of the question's `basis[]`, with the target in its references too. This module holds that act (`cite`, R1–R3),
  * its withdrawal and restoration on a case (`sever`, `reinstate`, R4: status changes, never deletions) and the one rule
- * of what may be cited now (`retiredNotCitable`, R5). It judges nothing about a leg's grammar, grade or the basis
+ * of what may be cited now (`retiredNotCitable`, R5), and the read of who cited a captured passage (`recordedBy`, R13,
+ * `./recorded.mjs`), registered with `retrieval` (its R76) where `citationOf` first makes it. It judges nothing about a leg's grammar, grade or the basis
  * graph: it composes legs, and `inquiry` judges them at the write (its R11), as it judges every other leg.
  *
  * Extracted from the legacy modules (T7, T6-2; K3, K64, K83, K102, N55): `store.mjs` (`cite`, `#edgeTransition`,
@@ -27,10 +28,13 @@
  *                unless a test passes its own.
  *   provenance   `{homeOf}` (provenance R4): the document a found match's capture is held in (R1, T35); by default
  *                `provenanceOf(host)`.
- *   inquiry      `{earned, checkLegExtentGrammar, BASIS_ROLES}` (inquiry R13, R5, R4): the earned registry that fills a
+ *   inquiry      `{earned, checkLegExtentGrammar, BASIS_ROLES, restingOn}` (inquiry R13, R5, R4, R12): the earned registry that fills a
  *                leg's grade, the one leg-part grammar, and the role vocabulary; by default `inquiryOf(host)`'s
  *                registry with the grammar and roles inquiry exports. One lacking any of the three refuses citing onto
- *                a question `INQUIRY_UNAVAILABLE` (never written ungraded by default).
+ *                a question `INQUIRY_UNAVAILABLE` (never written ungraded by default); `restingOn`, the leg projection
+ *                read back, is how R13 finds a capture's legs.
+ *   storage      the Durable Object's storage (default `host.storage`): R13 reads record-core's `bundles` contract (its R37)
+ *                through its `sql` in one statement.
  *   now          the module's clock, milliseconds since the epoch (default: the wall clock). */
 
 import { normalizeType, OBJECT_TYPES } from "../record-grammar/types.mjs";
@@ -45,9 +49,11 @@ import { retrievalOf, answerChanged } from "../retrieval/index.mjs";
 import { inquiryOf, checkLegExtentGrammar, BASIS_ROLES } from "../inquiry/index.mjs";
 import { CITE_CHECKS, CITE_EXTENT_CHECKS } from "./checks.mjs";
 import { spliceEdgeStatus, spliceReferences, spliceBasis, setScalar, appendSessionLog } from "./splice.mjs";
+import { recordedBy } from "./recorded.mjs";
 
 export { CITE_CHECKS, CITE_EXTENT_CHECKS } from "./checks.mjs";
 export { spliceEdgeStatus, spliceReferences, spliceBasis, legExtentLines } from "./splice.mjs";
+export { RECORDED_LIMIT_DEFAULT, RECORDED_LIMIT_MAX } from "./recorded.mjs";
 
 /** R1: citing writes one frontmatter entry per cited record into a single `bundle.md`, so the edges one citing object
  *  can carry are bounded by the inline bound (1 MiB), not by a selection's size. MEASURED at 83 bytes per edge for the
@@ -106,8 +112,14 @@ const rand = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.
 /* ------------------------------------------------------------------ the module */
 
 export class Citation {
-  constructor({ record, membership, promotion, content, retrieval, provenance = null, inquiry = null, now } = {}) {
+  /* R13: each citing object's citations, parsed once per version of its bytes (keyed by its `bundleSha`); memory, not a
+     row (R6). */
+  #recorded = new Map();
+
+  constructor({ record, membership, promotion, content, retrieval, provenance = null, inquiry = null, storage = null, now } = {}) {
     this.record = record;
+    /* R13: the store, for one read of record-core's `bundles` contract (its R37); absent, R13 reads it bundle by bundle. */
+    this.sql = storage && storage.sql ? storage.sql : null;
     this.provenance = provenance;
     this.membership = membership;
     this.promotion = promotion;
@@ -133,6 +145,12 @@ export class Citation {
       return !!h && String(h.currentState ?? "").trim() === "retired";
     } catch { return false; }
   }
+
+  /* ---- R13 ---- */
+
+  /** R13 (T36; N715, DEC-164 (4)): who cited an extent of `captureSha`, in `events` R49's shape, over the legs and `cites`
+   *  edges the citing objects' current bytes hold, each naming who first wrote it. Writes nothing; never throws. */
+  recordedBy(args = {}) { return recordedBy(this, this.#recorded, args); }
 
   /* ---- the citing object, R1 and R4's shared opening ---- */
 
@@ -806,9 +824,11 @@ export class Citation {
 
 const instances = new WeakMap();
 
-/* inquiry's three services this module builds against (inquiry R13, R5, R4), from its instance and its exports. */
+/* inquiry's services this module builds against (inquiry R13, R5, R4, and R12's leg projection read back for R13,
+   `restingOn`; K2132), from its instance and its exports. */
 export function inquiryServices(k) {
-  return { earned: (subject, targets, contentIds) => k.earned(subject, targets, contentIds), checkLegExtentGrammar, BASIS_ROLES };
+  return { earned: (subject, targets, contentIds) => k.earned(subject, targets, contentIds), checkLegExtentGrammar, BASIS_ROLES,
+           restingOn: (targetId) => k.restingOn(targetId) };
 }
 
 export function citationOf(host, deps) {
@@ -822,8 +842,12 @@ export function citationOf(host, deps) {
     const retrieval = d.retrieval || retrievalOf(host, { record, membership, promotion });
     const inquiry = d.inquiry || inquiryServices(inquiryOf(host, { record, membership, promotion, content }));
     const provenance = d.provenance || provenanceOf(host, { record, membership, promotion });
-    c = new Citation({ ...d, record, membership, promotion, content, retrieval, provenance, inquiry });
+    c = new Citation({ ...d, storage: d.storage || host.storage, record, membership, promotion, content, retrieval, provenance, inquiry });
     instances.set(host, c);
+    /* R13 (retrieval R76): the read registered once, at start, against the one retrieval instance `findIn` runs on (the
+       plane's boot reaches this factory before the first request). A stand-in that offers no registration is left alone. */
+    if (retrieval && typeof retrieval.registerRecordedBy === "function")
+      retrieval.registerRecordedBy("citation", (a) => c.recordedBy(a));
   }
   return c;
 }

@@ -23,7 +23,8 @@ const store = (extra = null) => (c) => {
   if (!DOORS.includes(c.route) && c.route !== "templatereviewgrant") return null;
   if (c.route === "templatereviewgrant") return ok({ ok: true, grant: "TRG-2026-0001", version: "TPL-1@1" });
   if (c.params.bySecret === "1")
-    return ok(c.params.secretSha === sha(LIVE) ? { ok: true, version: "TPL-1@1", through: "grant" } : noTemplateGrant());
+    /* R64 (N761; filing-templates R27): the digest is read from the internal request's body, as the module reads it */
+    return ok(c.body?.secretSha === sha(LIVE) ? { ok: true, version: "TPL-1@1", through: "grant" } : noTemplateGrant());
   return ok({ ok: true, version: "TPL-1@1", through: "member", viewer: c.params.viewer, author: c.params.author });
 };
 const door = (w, op, x = {}) => call(w.env, { op, method: MUTATING.has(op) ? "POST" : "GET",
@@ -54,7 +55,9 @@ test("R44: templatereviewgrant is answered as reviewgrant is — admission's rev
   assert.equal(r.json.result.grant, "TRG-2026-0001");
   const inner = opCalls(w.env).filter((c) => c.route === "templatereviewgrant");
   assert.equal(inner.length, 1);
-  assert.equal(inner[0].params.secretSha, sha(secret), "the store holds the digest of the value returned");
+  /* R64 (N761): the digest in the internal request's body alone, never its query */
+  assert.equal(inner[0].body.secretSha, sha(secret), "the store holds the digest of the value returned");
+  assert.equal(Object.hasOwn(inner[0].params, "secretSha"), false);
   assert.equal(Object.hasOwn(inner[0].params, "bySecret"), false);
   assert.equal(JSON.stringify([inner[0].params, inner[0].body]).includes(secret), false, "the value never crosses");
   /* a second grant gets a fresh secret */
@@ -85,12 +88,14 @@ test("R44: templateread, templatecomments, templatereview and templatecomment ad
     assert.equal(inner[0].route, op);
     assert.equal(inner[0].ns, "bio");
     assert.equal(inner[0].params.bySecret, "1", op);
-    assert.equal(inner[0].params.secretSha, sha(LIVE), op);
+    /* R64 (N761): the digest in the body alone, the mark `bySecret` in the query */
+    assert.equal(inner[0].body?.secretSha, sha(LIVE), op);
+    assert.equal(Object.hasOwn(inner[0].params, "secretSha"), false, op);
     assert.equal(inner[0].params.version, "TPL-1@1", op);
     for (const k of ["secret", "viewer", "author", "by", "token", "identity"]) assert.equal(Object.hasOwn(inner[0].params, k), false, `${op} ${k}`);
     if (MUTATING.has(op)) {
       assert.equal(inner[0].method, "POST");
-      assert.deepEqual(inner[0].body, { version: "TPL-1@1", text: "x" }, op);
+      assert.deepEqual(inner[0].body, { version: "TPL-1@1", text: "x", secretSha: sha(LIVE) }, op);
     }
     assert.equal(JSON.stringify([inner[0].params, inner[0].body]).includes(LIVE), false, `${op}: the secret never crosses`);
   }
@@ -125,6 +130,7 @@ test("R44: every caller the grant does not admit receives filing-templates' dead
       const inner = opCalls(w.env);
       assert.equal(inner.length, 1);
       assert.equal(Object.hasOwn(inner[0].params, "secretSha") || Object.hasOwn(inner[0].params, "bySecret"), false, op);
+      assert.equal(Object.hasOwn(inner[0].body ?? {}, "secretSha"), false, op);
     }
   }
   /* one answer, whoever built it (the door for a stranger, the module for a dead secret) and whichever door was asked */

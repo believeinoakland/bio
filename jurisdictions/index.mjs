@@ -19,7 +19,9 @@ export const SECTIONS = Object.freeze(["id", "name", "covers", "test", "spaces",
   "counterparties", "action_kinds", "deadlines", "legal_organisations", "holidays", "locale", "time_zone",
   /* T33 (R46–R54) */
   "weekend", "computation", "fiscal_year", "law_ranks", "instrument_key", "proceeding_kinds", "proceeding_flows",
-  "identifier_schemes", "classification_schemes", "lawful_demands", "recurrences"]);
+  "identifier_schemes", "classification_schemes", "lawful_demands", "recurrences",
+  /* T37 (R70) */
+  "local_names"]);
 /* R3: `account`, `object`, `vendor`, `proceeding` (K1452) and `person` (one form per person scheme) are T33's; `body` and
    `office` (a legislative system's body and office-record numbers, N569, N613) T34's, and `institution` (one form per
    institution scheme, N574, K1729). */
@@ -86,6 +88,8 @@ export const DEMAND_COVERS = Object.freeze(["home_address", "phone", "other"]);
 /* R54: `civil-time`'s RFC 5545 subset (its R20). */
 export const RRULE_PARTS = Object.freeze(["FREQ", "INTERVAL", "BYDAY", "BYMONTHDAY", "BYSETPOS", "UNTIL"]);
 const RRULE_FREQS = ["WEEKLY", "MONTHLY", "YEARLY"];
+/* R70: what an official local name names (DEC-157 (6)). */
+export const LOCAL_NAME_KINDS = Object.freeze(["office", "law", "program", "place"]);
 export const TIERS = Object.freeze([1, 2, 3]);
 export const CONTACT_HOW = Object.freeze(["web", "email", "phone", "mail"]);
 /* R39: a venue's evidence standard is named in at most this many characters; the grades it admits are
@@ -170,6 +174,8 @@ export function isLocale(v) {
     return Intl.getCanonicalLocales(v).length === 1;
   } catch { return false; }
 }
+/** A locale's canonical form, so `es-mx` and `es-MX` name one language (R72's key). */
+const localeKey = (v) => { try { return Intl.getCanonicalLocales(v)[0]; } catch { return String(v); } };
 
 /** Whether `b` is a basis a profile may carry. `TEST` only in a test profile (R2). */
 export function basisValid(b, test = false) {
@@ -1178,6 +1184,48 @@ function validateInto(p, errors) {
     str(`${at}.citation`, r.citation, "citation");
     statusBasis(at, r);
   });
+
+  /* R70, R71: official local names (DEC-157 (6)), never translated as ordinary words. An explanation says what the
+     name is, in a language; a translation is one an office publishes, with its source, resting on a measurement of
+     that publication. One name of one kind once in the profile, and one explanation and one translation per
+     language under it (R72's keys). */
+  if (own(p, "local_names")) {
+    const seen = new Set();
+    list("local_names", p.local_names).forEach((n, i) => {
+      const at = `local_names[${i}]`;
+      if (!entry(at, n)) return;
+      fields(at, n, ["name", "kind", "explanations", "translations", "basis"]);
+      str(`${at}.name`, n.name, "name");
+      if (!LOCAL_NAME_KINDS.includes(n.kind)) err(`${at}.kind`, "KIND_INVALID", `kind is one of ${LOCAL_NAME_KINDS.join(", ")}`);
+      else if (isStr(n.name)) {
+        const k = `${n.name}\u0000${n.kind}`;
+        if (seen.has(k)) err(`${at}.name`, "VALUE_INVALID", `the ${n.kind} '${n.name}' is given twice`);
+        seen.add(k);
+      }
+      for (const [f, extra] of [["explanations", []], ["translations", ["source"]]]) {
+        if (!own(n, f)) continue;
+        const locales = new Set();
+        list(`${at}.${f}`, n[f]).forEach((x, j) => {
+          const xa = `${at}.${f}[${j}]`;
+          if (!entry(xa, x)) return;
+          fields(xa, x, ["locale", "text", ...extra, "basis"]);
+          if (!isLocale(x.locale)) err(`${xa}.locale`, "LOCALE_INVALID", "locale is one well-formed BCP 47 language tag");
+          else if (locales.has(localeKey(x.locale))) err(`${xa}.locale`, "VALUE_INVALID", `${f === "explanations" ? "an explanation" : "a translation"} in ${x.locale} is given twice`);
+          else locales.add(localeKey(x.locale));
+          str(`${xa}.text`, x.text, "text");
+          if (f === "translations") {
+            if (!own(x, "source") || x.source === undefined || x.source === null || x.source === "")
+              err(`${xa}.source`, "SOURCE_MISSING", "an official translation names the publication it is read from, by address or citation");
+            else str(`${xa}.source`, x.source, "source");
+            /* R70: a translation rests on a measurement of its publication (R73: none invented) */
+            if (basis(xa, x) && !(test && x.basis === "TEST") && !basisParts(x.basis).every((b) => MEASUREMENT_REF.test(b)))
+              err(`${xa}.basis`, "BASIS_INVALID", "an official translation rests on a measurement of its publication (M-<n> or a dated entry)");
+          } else basis(xa, x);
+        });
+      }
+      basis(at, n);
+    });
+  }
 }
 
 /* Why an RRULE is outside civil-time's subset (its R20), or null. `EXDATE` is a property of its own, not a part. */
@@ -1680,6 +1728,49 @@ function merge(profiles) {
   }
   for (const sec of ["proceeding_kinds", "identifier_schemes", "classification_schemes", "recurrences"])
     if (has(sec)) { const v = []; for (const p of profiles) union(v, p[sec], p.id); view[sec] = strip(v); }
+
+  /* local names (R72): unioned under their name and kind; under one name and kind, an explanation or a translation in
+     one language is one value per key, so two different official translations of one name in one language are a
+     conflict and neither is kept. A translation's text is its value; the sources of one text are joined, as a
+     deadline's citations are (R29). */
+  if (has("local_names")) {
+    const byName = new Map();
+    for (const p of profiles) for (const n of p.local_names || []) {
+      const k = `${n.name}\u0000${n.kind}`;
+      if (!byName.has(k)) byName.set(k, []);
+      byName.get(k).push({ profile: p.id, n });
+    }
+    view.local_names = [];
+    for (const given of byName.values()) {
+      const { name, kind } = given[0].n;
+      const e = { name, kind };
+      for (const f of ["explanations", "translations"]) {
+        if (!given.some((g) => own(g.n, f))) continue;
+        const byLocale = new Map();
+        for (const g of given) for (const x of g.n[f] || []) {
+          const l = localeKey(x.locale);
+          if (!byLocale.has(l)) byLocale.set(l, []);
+          byLocale.get(l).push({ profile: g.profile, value: x.text, x, basis: x.basis });
+        }
+        e[f] = [];
+        for (const [l, vals] of byLocale) {
+          if (!agree(vals)) {
+            conflict(`local_names[${name}/${kind}].${f}[${l}]`, vals.map(({ x, ...v }) => v), f === "translations"
+              ? `the active profiles give different official translations of ${name} in ${l}, so none is given: the name is shown as it is`
+              : `the active profiles explain ${name} differently in ${l}, so no explanation is given there`);
+            continue;
+          }
+          const kept = keep(vals.map((v) => ({ ...v, value: v.x })));
+          if (f === "translations") kept.source = [...new Set(vals.map((v) => v.x.source))].join("; ");
+          e[f].push(kept);
+        }
+      }
+      e.basis = given[0].n.basis;
+      e.profile = given[0].profile;
+      e.bases = given.map((g) => ({ profile: g.profile, basis: g.n.basis }));
+      view.local_names.push(e);
+    }
+  }
 
   return { view, conflicts };
 }

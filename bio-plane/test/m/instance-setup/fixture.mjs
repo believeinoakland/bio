@@ -7,6 +7,7 @@ import { DatabaseSync } from "node:sqlite";
 import { webcrypto } from "node:crypto";
 import { RECORD_SCHEMA, recordOf } from "../../../src/record-core/index.mjs";
 import { InstanceSetup, instanceSetupOps } from "../../../src/setup.mjs";
+import { ACCOUNT_CHECKS } from "../../../src/credentials/index.mjs";
 
 export const WORKERD_PATTERN_CAP = 50;
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -90,6 +91,21 @@ export function providers({ admins = ["admin", "member:ada"] } = {}) {
       governorAdmit({ host }) { governed.push(["admit", host]); return p.governorHold ? { admitted: false, reason: p.governorHold } : { admitted: true, wait_ms: 0 }; },
       governorReport({ host, status }) { governed.push(["report", host, status]); return { recorded: true }; },
     },
+    /* credentials R52's keep-away state, as a stand-in coded to its requirement: off before any set; a test sets
+       `keepAway` to what the setting answers (`on` true, false, or null when it could not be read). */
+    keepAway: { on: false, reason: null, set_by: null, set_at: null },
+    credentials: {
+      aiKeepAwayState: () => ({ ...p.keepAway }),
+      /* credentials R35 (T37): null while not kept away; otherwise its one AI_KEPT_AWAY refusal, its row as credentials
+         holds it, carrying the setting as `keep_away` (the three null when the setting could not be read). */
+      aiKeptAway: () => (p.keepAway.on === false ? null : {
+        ok: false, reason: "AI_KEPT_AWAY", code: "AI_KEPT_AWAY", check: ACCOUNT_CHECKS.AI_KEPT_AWAY.check,
+        translation: ACCOUNT_CHECKS.AI_KEPT_AWAY.translation,
+        detail: p.keepAway.on === true ? "the group keeps its material away from every assistant, so no account was read or used. Nothing was sent."
+          : "whether the group keeps its material away from every assistant could not be read, so no account was read or used. Nothing was sent.",
+        keep_away: p.keepAway.on === true ? { reason: p.keepAway.reason, set_by: p.keepAway.set_by, set_at: p.keepAway.set_at }
+          : { reason: null, set_by: null, set_at: null } }),
+    },
     /* The domain's answer: a function of the URL, or a thrown error. */
     answer: () => new Response("", { status: 404 }),
     fetch: async (url, init) => { fetched.push({ url: String(url), init }); return p.answer(String(url), init); },
@@ -108,7 +124,7 @@ export async function boot({ st = null, env = {}, prov = null, now = null, more 
   const record = recordOf(ctx);                 // the first-boot witness, before any table is made
   applyRecordSchema(store);                     // the record's schema pass (CREATE IF NOT EXISTS)
   const p = prov || providers();
-  const deps = { record, membership: p.membership, promotion: p.promotion, scheduler: p.scheduler, capture: p.capture,
+  const deps = { record, membership: p.membership, credentials: p.credentials, promotion: p.promotion, scheduler: p.scheduler, capture: p.capture,
                  governor: p.governor, fetch: p.fetch, sleep: async () => {}, ...(now ? { now } : {}), ...more };
   const m = new InstanceSetup(ctx, env, deps);
   const started = await m.start();

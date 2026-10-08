@@ -8,7 +8,7 @@ import { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, cred
 const credentialsOpsNoVersion = (w) => credentialsOps(w.c, new URL("http://x/"), null, {});
 const W = (fn, region) => `src/credentials/index.mjs ${fn} > ${region}`;
 
-test("R6 R9 R12 R14 R15 the rows: ids and words as copied, each where naming its one site in this module, frozen, one row per id", () => {
+test("R6 R9 R12 R14 R15 R53 the rows: ids and words as copied, each where naming its one site in this module, frozen, one row per id", () => {
   const want = {
     SIGNER_MEMBER_NOT_ENROLLED: ["C-63.1", W("#signerMemberBar", "is-signer-member-attesting"), /has not enrolled yet/],
     SIGNER_MEMBER_NOT_ACTIVE: ["C-63.2", W("#signerMemberBar", "is-signer-member-attesting"), /membership is not active/],
@@ -19,6 +19,7 @@ test("R6 R9 R12 R14 R15 the rows: ids and words as copied, each where naming its
     AI_CREDENTIAL_UNKNOWN: ["C-29.5", W("aiCredentialRevoke", "is-ai-credential-revoke"), /no agent credential by that name/],
     AI_CREDENTIAL_PRINCIPAL_NOT_THE_MINTER: ["C-29.11", W("aiCredentialMint", "is-ai-credential-mint"), /member who creates it/],
     AI_CREDENTIAL_BAD_EXPIRY: ["C-29.28", W("aiCredentialMint", "is-ai-credential-expiry"), /from 1 to 365, and 90/],
+    AI_CREDENTIAL_NO_SECRET: ["C-29.33", W("aiCredentialMint", "is-ai-credential-digest"), /could never be used/],
     BAD_KEY: ["C-96.8", W("signerAdd", "is-signer-key-shape"), /begins AAAA/],
     SIGNER_KEY_HELD_BY_ANOTHER: ["C-96.15", W("signerRegisterOwn", "is-signer-key-held"),
       /^This key is registered to another member, so it cannot be yours\. Make a new key in this browser\. Nothing was changed\.$/],
@@ -41,7 +42,7 @@ test("R6 R9 R12 R14 R15 the rows: ids and words as copied, each where naming its
   assert.equal(new Set(ids).size, ids.length, "one row per id");
 });
 
-test("R1 R2 R3 R4 R5 the sign-in routes: bootstrap (with the store's build), claim (fingerprint from the query), login, setpassword, session", async () => {
+test("R1 R2 R3 R4 R5 the sign-in routes: bootstrap (with the store's build), claim (fingerprint from the query), login, setpassword (a member's own change, R3: the session and `by` from the query, never a body's role), session", async () => {
   const w = world();
   assert.deepEqual(w.ops("fp=fp-1").bootstrap(), { claimed: false, rearmed: false, consumedAt: null, storeVersion: "test-build" });
   assert.equal(credentialsOpsNoVersion(w).bootstrap().storeVersion, null, "no VERSION bound: null, never a default");
@@ -49,9 +50,13 @@ test("R1 R2 R3 R4 R5 the sign-in routes: bootstrap (with the store's build), cla
   assert.equal(c.ok, true);
   assert.deepEqual(w.ops("fp=fp-1").bootstrap().claimed, true, "the query's fingerprint was recorded, not the body's");
   assert.deepEqual(w.ops("fp=fp-forged").bootstrap().rearmed, true);
-  assert.deepEqual(await w.ops("", { role: "member:x", password: PASSWORD("x") }).setpassword(), { ok: true, role: "member:x" });
   const l = await w.ops("", { role: "admin", password: FOUNDER_PASSWORD }).login();
   assert.equal(l.ok, true);
+  assert.equal((await w.ops("", { role: "member:x", password: PASSWORD("x") }).setpassword()).reason, "MACHINE_CANNOT_SET_PASSWORD",
+    "no stamp, no change; a body's role is no stamp");
+  assert.equal((await w.ops(`by=admin&session=${l.token}`, { role: "member:x", current: FOUNDER_PASSWORD, password: "founder-new-pass-1" })
+    .setpassword()).role, "admin", "the session's role, never the body's");
+  assert.equal(w.row(`SELECT role FROM credentials WHERE role='member:x'`), null);
   assert.equal((await w.ops("", null).login()).reason, "SIGN_IN_REFUSED");
   assert.equal(w.ops(`t=${l.token}`).session().session.role, "admin");
   assert.deepEqual(w.ops("t=nope").session(), { session: null });
@@ -68,12 +73,12 @@ test("R6 R7 R8 the key routes: signeradd and signerset take `by` from the query 
   assert.deepEqual(w.ops().signerlist(), w.c.signerList());
 });
 
-test("R12 R15 the AI credential routes: `who` and `secretSha` from the query over the body; revoke by the query's tokenId; the list; the internal look", async () => {
+test("R12 R15 R53 the AI credential routes: `who` from the query over the body, `secretSha` from the body only, never the query; revoke by the query's tokenId; the list; the internal look", async () => {
   const w = await world().group("ann");
-  const m = w.ops(`who=ann&secretSha=${"a".repeat(64)}`,
-    { who: "admin", secretSha: "b".repeat(64), tokenId: "t1", principalKind: "member" }).aicredentialmint();
+  const m = w.ops(`who=ann&secretSha=${"b".repeat(64)}`,
+    { who: "admin", secretSha: "a".repeat(64), tokenId: "t1", principalKind: "member" }).aicredentialmint();
   assert.deepEqual([m.ok, m.credential.mintedBy, m.credential.principal], [true, "ann", "member:ann"]);
-  assert.equal(w.row(`SELECT secret_sha FROM ai_credentials`).secret_sha, "a".repeat(64));
+  assert.equal(w.row(`SELECT secret_sha FROM ai_credentials`).secret_sha, "a".repeat(64), "the body's digest, never the query's");
   assert.equal(w.ops("who=class:ai", { tokenId: "t2", principalKind: "member", who: "ann" }).aicredentialmint().reason,
     "AI_CREDENTIAL_MINT_NOT_A_MEMBER");
   assert.equal(w.ops(`sha=${"a".repeat(64)}`).aicredentiallook().credential.tokenId, "t1");
@@ -82,13 +87,13 @@ test("R12 R15 the AI credential routes: `who` and `secretSha` from the query ove
   assert.equal(w.ops("tokenId=t1&who=ann").aicredentialrevoke().already, false);
   assert.deepEqual(Object.keys(w.ops()).sort(), ["accountreference", "accountreferenceremove", "accountreferenceset",
     "accountswitchset", "aicredentiallook", "aicredentialmint", "aicredentialrevoke", "aicredentials", "aigrantmint",
-    "bootstrap", "claim", "groupkeynotice", "groupkeynoticeseen", "groupkeyremove", "groupkeyset", "groupkeystate",
+    "aikeepaway", "aikeepawaystate", "bootstrap", "claim", "groupkeynotice", "groupkeynoticeseen", "groupkeyremove", "groupkeyset", "groupkeystate",
     "groupkeyswitch", "groupswitchset", "keyedservices", "keyedserviceset", "keyedserviceswitch", "login", "recover",
-    "recoverycodesissue", "recoverycodesstate", "securitymap", "session", "setpassword", "signeradd", "signerlist", "signerset",
+    "recoverycodesissue", "recoverycodesstate", "securitycount", "securitymap", "session", "setpassword", "signeradd", "signerlist", "signerset",
     "signout", "signouteverywhere", "subscriptiondisconnect"]);
 });
 
-test("R22 R23 R24 R25 R27 R28 R29 R31 R32 R33 R35 R36 R37 the T33-20 and T34 rows: each id once, across every family, each where naming its one site, frozen; C-29.16 retired with R26 (K1756) and C-29.18 never reused", async () => {
+test("R22 R23 R24 R25 R27 R28 R29 R31 R32 R33 R35 R36 R37 R51 the T33-20, T34 and T36 account rows: each id once, across every family, each where naming its one site, frozen; C-29.16 retired with R26 (K1756) and C-29.18 never reused", async () => {
   const { ACCOUNT_CHECKS, KEYED_SERVICE_CHECKS } = await import("../../../src/credentials/index.mjs");
   const want = {
     MACHINE_CANNOT_HOLD_ACCOUNT: ["C-29.13", W("#accountBar", "is-account-own-act")],
@@ -105,6 +110,8 @@ test("R22 R23 R24 R25 R27 R28 R29 R31 R32 R33 R35 R36 R37 the T33-20 and T34 row
     NO_QUESTION: ["C-29.26", W("aiGrantMintStanding", "is-standing-grant")],
     GROUP_KEY_NOTICE_DUE: ["C-29.27", W("#noticeDue", "is-group-key-notice-seen")],
     SUBSCRIPTION_LOGIN_REFUSED: ["C-29.29", W("subscriptionConnected", "is-subscription-fact")],
+    AI_KEPT_AWAY: ["C-29.31", W("aiKeptAway", "is-kept-away")],   /* T37: one site, the read every gate asks (K231) */
+    AI_KEEP_AWAY_NO_REASON: ["C-29.32", W("aiKeepAwaySet", "is-keep-away-reason")],   /* T37: re-coded, its number unmoved */
     UNKNOWN_KEYED_SERVICE: ["C-96.19", W("#keyedService", "is-keyed-service")],
     KEYED_SERVICE_NO_KEY: ["C-96.20", W("keyedServiceSet", "is-keyed-service-key")],
     KEYED_SERVICE_OFF: ["C-96.21", W("keyedServiceFor", "is-keyed-service-on")],

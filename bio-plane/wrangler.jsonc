@@ -12,7 +12,7 @@
   "compatibility_date": "2026-07-01",
   "compatibility_flags": ["nodejs_compat"],
 
-  "vars": { "VERSION": "0.79.0" },
+  "vars": { "VERSION": "0.81.0" },
 
   // The store. new_sqlite_classes is required: SQLite-backed Durable Objects
   // are a different storage backend from the legacy key-value one and cannot
@@ -29,6 +29,8 @@
   //
   // CAPTURES  working corpus. Everything lands here on intake, ratified or
   //           not. Private. Backs the working-scope AI Search instance.
+  //           Also holds, outside `<store>/captures/`, file-safety's derived
+  //           files and case-carriage's obscured copies (`<store>/obscured/`).
   // PUBLISHED ratified material only, written by the publisher as the act of
   //           ratification. Public. Backs the published-scope instance.
   //
@@ -82,9 +84,9 @@
   // 1042`, 7 ms, every time — while the service binding to the same script
   // answered 200. Two probe passes were lost to that.
   //
-  // INERT UNTIL DIST DEPLOYS THE MEMBER, exactly as PDF_WORKER shipped: nothing
-  // in `src/` reads this binding yet (FL-3 is the first caller), so an instance
-  // that has not installed the fleet is unaffected. Deploying the member and
+  // Read by `op=ask` and the drafts (`src/plane/ask.mjs`); with no member
+  // deployed each is refused AGENT_WORKER_UNBOUND, so an instance that has not
+  // installed the fleet is otherwise unaffected. Deploying the member and
   // teaching the installer to install a THREE-member fleet is DIST's (DS-1/DS-4,
   // D-115/D-116) — a slot-less area cannot deploy a Worker.
   // OCR_WORKER (I9, CPDF-10). The THIRD fleet member and the Tier-3 OCR path:
@@ -110,11 +112,18 @@
   // `ctx.recompute`) reaches the sheet-worker member over it. sheet-worker ships
   // inactive and answers "not enabled" until an administrator enables it; with
   // the binding absent a recompute records "not recomputed here: no engine bound".
+  //
+  // FILE_SCANNER (plane R27, R26, R29; file-scanner R10; rev. 2 §4): the file-scanner member, a container
+  // fleet member holding ClamAV and the safe-view renderer, which `file-safety` scans, renders and asks the
+  // group's outside security tools through, and `acquisition` asks an address's reputation through. Its own
+  // bindings (CAPTURES, SCANNER, RENDERER, optional SECURITY_VPC) and cron are the member's and the
+  // installer's, not the plane's. Absent, a scan answers SCANNER_ABSENT and the record is otherwise unchanged.
   "services": [
     { "binding": "PDF_WORKER",   "service": "pdf-worker" },
     { "binding": "AGENT_WORKER", "service": "agent-worker" },
     { "binding": "OCR_WORKER",   "service": "ocr-worker" },
     { "binding": "SHEET_WORKER", "service": "sheet-worker" },
+    { "binding": "FILE_SCANNER", "service": "file-scanner" },
     { "binding": "SELF",         "service": "bio-plane" }
   ],
 

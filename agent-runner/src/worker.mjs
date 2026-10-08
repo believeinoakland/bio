@@ -19,7 +19,9 @@ export { ContainerProxy };
 
 export class AgentRunner extends Container {
   defaultPort = member.image.port;
-  // A conversation's instance (agent-model opens one per conversation) sleeps soon after its connection ends (R9).
+  // A conversation's instance (agent-model opens one per conversation) sleeps soon after its connection ends (R9). A
+  // member's own instance sleeps too, and its disk, the stored sign-in on it included, is fresh after: the loss shows
+  // as R19's `connected: false` and R2's `NOT_SIGNED_IN` (K2200).
   sleepAfter = '2m';
   enableInternet = false;
   allowedHosts = [...member.egress];

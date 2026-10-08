@@ -112,11 +112,18 @@ const members = discoverMembers(REPO_ROOT);
 console.log("\n--- 1 · every fleet member is DISCOVERED, and every one of them is GUARDED ---");
 /* T34-6 (BUNDLER #8; N578, bundler R24): `agent-runner` is the fleet's first CONTAINER member — its deliverable is an
    image named by digest, not a Worker bundle — so it is discovered and listed here, and not bundle-guarded below. */
+/* T36-2 (BUNDLER #10; rev. 2 §2 R10): `file-scanner`, the fleet's second container member and its first with two
+   classes (T36-5), is listed with each class's image: a two-class member answers its classes' repositories, in its
+   marker's order; a one-class member its one image, as before.
+   RE-POINTED 2026-10-08 (BUNDLER #11, T37-3 B2; K2176, N773): file-scanner's images moved from `ghcr.io`, which
+   Containers cannot pull, to Docker Hub (file-scanner R10). */
 t("members discovered by their own marker file, never a list kept here",
-  members.map((m) => m.name), ["agent-runner", "agent-worker", "ocr-worker", "pdf-worker", "sheet-worker"]);
-t("agent-runner is listed as a container member, with its image (R24)",
-  members.filter(isContainer).map((m) => [m.name, m.kind, m.image.repository]),
-  [["agent-runner", "container", "docker.io/civicos/agent-runner"]]);
+  members.map((m) => m.name), ["agent-runner", "agent-worker", "file-scanner", "ocr-worker", "pdf-worker", "sheet-worker"]);
+t("agent-runner and file-scanner are listed as container members, each with its images (R24)",
+  members.filter(isContainer).map((m) => [m.name, m.kind,
+    ...(m.containers ? m.containers.map((c) => c.image.repository) : [m.image.repository])]),
+  [["agent-runner", "container", "docker.io/civicos/agent-runner"],
+   ["file-scanner", "container", "docker.io/civicos/file-scanner-scanner", "docker.io/civicos/file-scanner-renderer"]]);
 
 /* D-238. `git stash` is REPOSITORY-WIDE across every worktree and `push -u`
    carries untracked files, so a `pop` can deposit a whole fleet directory —
@@ -211,7 +218,8 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
      of one fleet member's build inputs, which no module test covers. */
   /* RE-PINNED 2026-10-01 (LEGACY-TESTS #18, T20; K641, K890): 153 -> 13 inputs, from the committed manifest this suite
      reads (`agent-worker/dist/agent-worker.bundle.json`; its staleness arm green). T18 layer 6 (K683) took the catalogue,
-     skills and ai-runs out of the member's build (R48 reads the rendered pack from `op=affordances`), so what is left is
+     skills and ai-runs out of the member's build (R48 read the rendered pack from `op=affordances`; since T36-24 it
+     reads it from `op=agentpack`, K2135), so what is left is
      its five own modules, the plane's `tokens.mjs` (runtime-limits) and run-rules with observation-log's `checks.mjs` and
      `vocabulary.mjs` through it (`build/manifest.md`'s artifact table). The 153-input pin, accepted red since T18 (K641),
      retired with the inputs it named; docprofile's moved files (N441) left this list with them. */
@@ -221,7 +229,10 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
      added the member's own `ask.mjs` and `ops.mjs`; observation-log's `checks.mjs` brings record-grammar's `ids.mjs`
      and `actors.mjs` (T33-30). `src/harness.mjs`, `src/model.mjs` and `src/subsession.mjs` left: the first and last
      are re-export files the build no longer reaches (N586), the second moved to agent-model. */
-  t("agent-worker's 20 inputs are all recorded — its four own modules, agent-harness and agent-model across trees, the plane's denylist, run-rules with what it imports, and record-grammar through observation-log",
+  /* RE-PINNED 2026-10-07 (BUNDLER #10, T36-2; N733, T35's red 32): 20 -> 22 inputs, from the committed manifest this
+     suite reads (`agent-worker/dist/agent-worker.bundle.json`; its staleness arm green). Two arrive and none leave, the
+     member's own `src/draft.mjs` and `src/reads.mjs`, which its `index.mjs` now imports (agent-worker's T35 job). */
+  t("agent-worker's 22 inputs are all recorded — its six own modules, agent-harness and agent-model across trees, the plane's denylist, run-rules with what it imports, and record-grammar through observation-log",
     (agent?.inputs || []).map((i) => i.path).sort(),
     [
      "../agent-harness/src/harness.mjs", "../agent-harness/src/subsession.mjs",
@@ -231,7 +242,8 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
      "../bio-plane/src/record-grammar/actors.mjs", "../bio-plane/src/record-grammar/ids.mjs",
      "../bio-plane/src/run-rules/checks.mjs", "../bio-plane/src/run-rules/deployment.mjs", "../bio-plane/src/run-rules/index.mjs",
      "../bio-plane/src/run-rules/rules.mjs", "../bio-plane/src/run-rules/skill-version.mjs",
-     "../bio-plane/src/tokens.mjs", "src/ask.mjs", "src/cascade.mjs", "src/index.mjs", "src/ops.mjs",
+     "../bio-plane/src/tokens.mjs", "src/ask.mjs", "src/cascade.mjs", "src/draft.mjs", "src/index.mjs", "src/ops.mjs",
+     "src/reads.mjs",
     ]);
   t("and it vendors nothing: the member still imports NOTHING from npm",
     (agent?.vendoredInputs || []).length, 0);

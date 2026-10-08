@@ -11,6 +11,7 @@ import { reevaluationOf } from "../../../src/reevaluation/index.mjs";
 import { publicReadOf } from "../../../src/public-read/index.mjs";
 import { networkNoticesOf } from "../../../src/network-notices/index.mjs";
 import { docketOf, docketOps, DOCKET_TABLES } from "../../../src/docket/index.mjs";
+import { CASE_CARRIAGE_MARK_TABLES } from "../../../src/case-carriage/index.mjs";
 
 const DK = [...DOCKET_TABLES];
 const tableNames = (x) => [...x.ctx.storage.sql.exec(`SELECT name FROM sqlite_master WHERE type='table'`)].map((r) => r.name);
@@ -38,13 +39,23 @@ test("R15: construction builds docket, which creates its tables and declares the
   assert.equal(rc.declarePurge("zz-probe", ["zz_none"]).ok, true);
 });
 
-test("R15, R2, R23 (K1643): docket is built after publication and case-tensions (which declares between them, its tables made by publication's factory) and before network-notices and layer 9, as the purge declarations show", async () => {
-  const order = declarers(await store());
+test("R15, R2, R18, R23 (K1643; T37, K2226): docket is built after publication, case-carriage (its marks tables declared to purge by publication's factory, directly after publication's) and case-tensions (whose tables publication's factory also makes), and before network-notices and layer 9, as the purge declarations show", async () => {
+  const x = await store();
+  const order = declarers(x);
   const at = (m) => { const i = order.indexOf(m); assert.notEqual(i, -1, m); return i; };
-  assert.equal(at("case-tensions"), at("publication") + 1, "case-tensions directly after publication");
+  assert.equal(at("case-carriage"), at("publication") + 1, "case-carriage directly after publication");
+  assert.equal(at("case-tensions"), at("case-carriage") + 1, "case-tensions directly after case-carriage");
   assert.equal(at("docket"), at("case-tensions") + 1, "docket directly after case-tensions");
   assert.ok(at("docket") < at("network-notices"), "before network-notices");
   assert.ok(at("docket") < at("conformance"), "before layer 9");
+  /* case-carriage's purgeable tables are exactly its marks and copies; its held materials stay exempt (its R6, R12) */
+  const rc = recordOf(x.ctx);
+  const mine = Object.keys(rc.purge().removed).filter((t) => rc.declarePurge("zz-probe", [t]).declaredBy === "case-carriage");
+  assert.deepEqual(mine.sort(), CASE_CARRIAGE_MARK_TABLES.map((t) => t.name).sort());
+  /* and a whole-store purge clears a mark it holds */
+  x.ctx.storage.sql.exec(`INSERT INTO photo_marks (capture, areas, by, at) VALUES (?, '[]', 'member:olive', 't')`, "a".repeat(64));
+  rc.purge();
+  assert.equal(one(x, `SELECT count(*) c FROM photo_marks`).c, 0);
 });
 
 test("R15, R3: a store written before docket opens with its tables, and a second construction changes nothing", async () => {

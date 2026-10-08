@@ -182,3 +182,68 @@ test("R21 policyChanges answers one entry per kept capture differing from the on
   assert.match(all.note, /never a finding/);
   assert.equal(OUTSIDER.startsWith("member:"), true);
 });
+
+test("R21 with since (an instant), only changes whose later capture's instant is at or after it are answered, across pages, the order, after, limit and cursor unchanged; a since that is not an instant answers none with since_invalid", async () => {
+  const w = world();
+  const ids = [1, 2, 3, 4, 5].map((i) => `STD-2026-000${i}-policy`);
+  const addr = (i) => `https://ellery.example/policies/p${i}`;
+  ids.forEach((id, i) => policy(w, { id, address: addr(i), bundle: `INFO-2026-03${10 + i}-p` }));
+  w.f.follows({ viewer: MEMBER });
+  /* 92 weekly reads, each changing all five policies: 460 changes, 5 at each read's instant */
+  const READS = 92, WINDOW_FROM = 50;
+  for (let k = 0; k < READS; k++) {
+    ids.forEach((_, i) => w.serve(addr(i), `p${i} v${k}`));
+    w.t = DUE + k * 7 * DAY;
+    await w.f.followTick(w.t);
+  }
+  const stamp = (k) => new Date(DUE + k * 7 * DAY).toISOString().replace(/\.000Z$/, "Z");
+  const readAll = (x) => {
+    const out = [];
+    let after = null;
+    for (let i = 0; i < 100; i++) {
+      const r = w.f.policyChanges({ viewer: MEMBER, ...x, after });
+      assert.equal(r.ok, true);
+      assert.ok(r.changes.length <= (x.limit ?? 200));
+      out.push(...r.changes);
+      if (!r.cursor) return out;
+      after = r.cursor;
+    }
+    throw new Error("the cursor never ended");
+  };
+  const all = readAll({});
+  assert.equal(all.length, READS * 5, "without since, every change, as before");
+  assert.ok(all.every((c, i, a) => i === 0 || a[i - 1].after.at <= c.after.at));
+  /* the window from read 50: exactly the changes at or after its instant, oldest first, across pages of 200 */
+  const since = stamp(WINDOW_FROM);
+  const first = w.f.policyChanges({ viewer: MEMBER, since });
+  assert.equal(first.changes.length, 200);
+  assert.ok(first.cursor);
+  assert.equal(first.since_invalid, undefined);
+  assert.equal(first.changes[0].after.at, since, "a change at since itself is answered: the window reads from its start");
+  const windowed = readAll({ since });
+  assert.deepEqual(windowed, all.filter((c) => c.after.at >= since));
+  assert.equal(windowed.length, (READS - WINDOW_FROM) * 5);
+  /* paging by limit and cursor is unchanged within the window */
+  assert.deepEqual(readAll({ since, limit: 7 }), windowed);
+  /* `after` still bounds from its cursor: since and after together read the later of the two starts */
+  const early = w.f.policyChanges({ viewer: MEMBER, limit: 3 });
+  assert.deepEqual(w.f.policyChanges({ viewer: MEMBER, since, after: early.cursor, limit: 5 }).changes, windowed.slice(0, 5));
+  const deep = w.f.policyChanges({ viewer: MEMBER, since, limit: 12 });
+  assert.deepEqual(w.f.policyChanges({ viewer: MEMBER, since, after: deep.cursor, limit: 5 }).changes, windowed.slice(12, 17));
+  /* compared as an instant: a fraction after a read's second excludes that read; ms since the epoch read alike */
+  assert.equal(readAll({ since: `${stamp(WINDOW_FROM).slice(0, 19)}.250Z` })[0].after.at, stamp(WINDOW_FROM + 1));
+  assert.deepEqual(readAll({ since: DUE + WINDOW_FROM * 7 * DAY }), windowed);
+  assert.deepEqual(readAll({ since: "2026-10-07T00:00:00+00:00" }), all, "a since before every change answers them all");
+  assert.deepEqual(w.f.policyChanges({ viewer: MEMBER, since: stamp(READS) }), { ok: true, changes: [], cursor: null,
+    note: first.note }, "a since after every change answers none, and it is not invalid");
+  /* sight still applies within the window */
+  ids.slice(1).forEach((id) => { w.policies.find((p) => p.id === id).readers = [MEMBER]; });
+  assert.deepEqual(readAll({ since, viewer: BOB }), windowed.filter((c) => c.standard === ids[0]));
+  /* a since that is not an instant: none, said so */
+  for (const bad of ["", " ", "last week", "2026-13-40T00:00:00Z", NaN, Infinity, {}, [], true]) {
+    const r = w.f.policyChanges({ viewer: MEMBER, since: bad });
+    assert.deepEqual([r.ok, r.changes, r.cursor, r.since_invalid], [true, [], null, true], JSON.stringify(bad));
+    assert.match(r.note, /not an instant/);
+  }
+  assert.equal(w.f.policyChanges({ viewer: MEMBER, since: null }).changes.length, 200, "no since: no window");
+});

@@ -21,6 +21,8 @@
  *                    `isAdministrator` (R64), `projectOwners` (R65), `activeAdmins` (R86), `inSight` (R80); and
  *                    `viewerPredicate` (R43), `notAnAdmin` (R84).
  *   filingTemplates  `offeredVersion` (its R25), for a `{template}` draft (R2, R12).
+ *   credentials      `aiKeptAway` (its R35; T37, N765, K231): whether the group keeps its material away from AI, read
+ *                    at each writing-help call (R24, R27), the one reading of keep-away; reached on first need.
  *   now              the instance clock, milliseconds (default `env.BIO_NOW_MS`, else the wall clock).
  *
  * No place, law, venue or wording of a script is named here (R20). */
@@ -28,6 +30,7 @@
 import { recordOf, stampInstant, mintExhausted } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, notAnAdmin } from "../membership/index.mjs";
 import { filingTemplatesOf } from "../filing-templates/index.mjs";
+import { credentialsOf } from "../credentials/index.mjs";
 import { isMachineIdentity } from "../record-grammar/actors.mjs";
 import { proposalLabel } from "../record-grammar/labels.mjs";
 import { sha256HexSync } from "../record-grammar/sha256.mjs";
@@ -36,15 +39,15 @@ import { WIZARD_SCRIPTS_TABLES, WIZARD_SCRIPTS_TABLE_CLASSES, WIZARD_SCRIPTS_MIN
 import { CIVICSMITH_LIBRARY } from "./civicsmith-library.mjs";
 import { SCREEN_REGISTRY } from "./screen-registry.mjs";
 import { FRONT_DOORS } from "./front-doors.mjs";
-import { helpRefusedActs, writingHelpAt, FIRSTHAND_ACTS, TOLD_MAX, WRITING_HELP_NAMED } from "./writing-help.mjs";
+import { helpRefusedActs, writingHelpAt, FIRSTHAND_ACTS, TOLD_MAX, WRITING_HELP_NAMED, KEPT_AWAY } from "./writing-help.mjs";
 
 export { WIZARD_SCRIPTS_CHECKS } from "./checks.mjs";
 export { WIZARD_SCRIPTS_SCHEMA, WIZARD_SCRIPTS_TABLES, WIZARD_SCRIPTS_TABLE_CLASSES } from "./schema.mjs";
-export { CIVICSMITH_LIBRARY, CIVICSMITH_LIBRARY_SOURCE } from "./civicsmith-library.mjs";
+export { CIVICSMITH_LIBRARY, CIVICSMITH_LIBRARY_SOURCE, CIVICSMITH_LIBRARY_ADOPTED_SOURCE } from "./civicsmith-library.mjs";
 export { SCREEN_REGISTRY, SCREEN_REGISTRY_SOURCE } from "./screen-registry.mjs";
 export { FRONT_DOORS } from "./front-doors.mjs";
 export { checkDraft, writingHelpAt, helpRefusedActs, isReasonField, factsOf, sentencesOf, FIRSTHAND_ACTS, HELP_NAMED_REFUSED, HELP_SET_TIME_REFUSED,
-         WRITING_HELP_NAMED, TOLD_MAX } from "./writing-help.mjs";
+         WRITING_HELP_NAMED, TOLD_MAX, KEPT_AWAY } from "./writing-help.mjs";
 
 /* ---------------------------------------------------------------- the vocabularies */
 
@@ -172,24 +175,35 @@ const nameSet = (v) => {
   if (isObj(v)) return new Set(Object.keys(v));
   return new Set();
 };
-/* A library entry as R1 holds it, or null for one that is not an entry. */
+/* One version of a library entry: its number, steps, author and approval (R1, R22). */
+function libraryVersion(v) {
+  const n = Math.floor(Number(v.version));
+  return Object.freeze({ version: Number.isFinite(n) && n >= 1 ? n : 1, steps: canonicalSteps(v.steps), author: str(v.author) ?? "civicsmith",
+                         approved: isObj(v.approved) ? { by: v.approved.by ?? null, at: v.approved.at ?? null,
+                                                          ...(v.approved.ruling ? { ruling: v.approved.ruling } : {}) } : { by: null, at: null } });
+}
+/* A library entry as R1 holds it, or null for one that is not an entry: its latest version (`version`, `steps`,
+   `author`, `approved`) and every version, `versions`, oldest first, each earlier one `updated` by the next (R22's
+   adopted versions, K2241; R7's rule). */
 function libraryEntry(e) {
   if (!isObj(e) || !str(e.id)) return null;
-  const n = Math.floor(Number(e.version));
-  return Object.freeze({ id: str(e.id), name: typeof e.name === "string" ? e.name : "", required: e.required === true,
-                         version: Number.isFinite(n) && n >= 1 ? n : 1, steps: canonicalSteps(e.steps),
-                         author: str(e.author) ?? "civicsmith",
-                         approved: isObj(e.approved) ? { by: e.approved.by ?? null, at: e.approved.at ?? null } : { by: null, at: null } });
+  const latest = libraryVersion(e);
+  const earlier = (Array.isArray(e.earlier) ? e.earlier : []).filter(isObj).map(libraryVersion).filter((v) => v.version < latest.version);
+  const versions = [...new Map([...earlier, latest].map((v) => [v.version, v])).values()].sort((a, b) => a.version - b.version);
+  return Object.freeze({ id: str(e.id), name: typeof e.name === "string" ? e.name : "", required: e.required === true, ...latest,
+                         versions: Object.freeze(versions) });
 }
 /* R13: a screen's registered acts: its `acts`, and each `owed` act whose op the member op table declares, at its place
-   in the file's order (DEC-148; K1785); with no op table, no owed act is registered. */
+   in the file's order (DEC-148; K1785); with no op table, no owed act is registered. With an op table (T37; N776,
+   K2171), an act whose op the table does not hold is not registered either, owed or not, so the screens registered,
+   `wizardsAt` and R12 answer one registry: no screen lists an act R12 refuses as unknown. */
 function screenActs(s, ops) {
   const acts = Array.isArray(s.acts) ? [...s.acts] : [...nameSet(s.acts)];
   const owed = (Array.isArray(s.owed) ? s.owed : []).filter((o) => isObj(o) && typeof o.op === "string" && ops && ops.has(o.op));
   owed.slice().sort((a, b) => (Number(a.at) || 0) - (Number(b.at) || 0)).forEach((o, i) => {
     acts.splice(Math.min(Math.max(Number(o.at) || 0, 0), acts.length - i) + i, 0, o.op);
   });
-  return nameSet(acts);
+  return nameSet(ops ? acts.filter((a) => ops.has(a)) : acts);
 }
 /** R13: a registration's parts, normalised: the screens by id, the ops (null when none was given), the acts a machine is
  *  refused, the labelled machine drafts and the library. */
@@ -328,11 +342,12 @@ export function requiredFailures({ screens = [], ops = null, machineRefused = []
 /* ================================================================ the module */
 
 export class WizardScripts {
-  constructor({ storage, record, membership, filingTemplates = null, now = null, env = null } = {}) {
+  constructor({ storage, record, membership, filingTemplates = null, credentials = null, now = null, env = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.templates = filingTemplates;
+    this.credentials = credentials;   /* the module, or a function reaching it on first need */
     this.now = typeof now === "function" ? now : null;
     this.env = env && typeof env === "object" ? env : {};
     this.reg = null;
@@ -352,6 +367,16 @@ export class WizardScripts {
   /* R15, R16: the day, and nothing finer. */
   #day() { return this.#when().slice(0, 10); }
   #registration() { return this.reg || normaliseRegistration({}); }
+  /* R24 item 1 (T37; N765, K231): `credentials.aiKeptAway()` (its R35) as it answers now: null, or its AI_KEPT_AWAY
+     refusal. A credentials that cannot be reached or answers by throwing is no reading of null: undefined, which R24
+     reads as kept away (fail closed, K2093). */
+  #keptAway() {
+    try {
+      if (typeof this.credentials === "function") this.credentials = this.credentials();
+      const c = this.credentials;
+      return c && typeof c.aiKeptAway === "function" ? c.aiKeptAway() : undefined;
+    } catch { return undefined; }
+  }
 
   /* ================================================================ who acts (R18, R19) */
 
@@ -488,7 +513,7 @@ export class WizardScripts {
   #numbers(sid) { return this.#rows(`SELECT version FROM wiz_versions WHERE script_id=? ORDER BY version`, sid).map((r) => r.version); }
   #latestRevision(sid, n) { return this.#one(`SELECT * FROM wiz_revisions WHERE script_id=? AND version=? ORDER BY rid DESC LIMIT 1`, sid, n); }
   #steps(s, n) {
-    if (s.origin === "civicsmith") return s.entry.steps.map((x) => ({ ...x }));
+    if (s.origin === "civicsmith") return (WizardScripts.#libVersion(s, n) || { steps: [] }).steps.map((x) => ({ ...x }));
     const r = this.#latestRevision(s.id, n);
     return r ? parse(r.steps) || [] : [];
   }
@@ -497,7 +522,7 @@ export class WizardScripts {
     const n = p ? (p.script === s.id ? p.version : null)
       : /^[1-9][0-9]*$/.test(String(asked ?? "").trim()) ? Number(String(asked).trim()) : null;
     if (n === null) return null;
-    if (s.origin === "civicsmith") return n === s.entry.version ? n : null;
+    if (s.origin === "civicsmith") return WizardScripts.#libVersion(s, n) ? n : null;
     return this.#one(`SELECT 1 AS x FROM wiz_versions WHERE script_id=? AND version=?`, s.id, n) ? n : null;
   }
   #resolve(asked, viewer) {
@@ -516,6 +541,12 @@ export class WizardScripts {
     const r = this.#one(`SELECT event FROM wiz_breaks WHERE script_id=? AND version=? ORDER BY bid DESC LIMIT 1`, sid, n);
     return !!r && r.event === "broken";
   }
+  /* R22: a library script's version `n`, or null; its state: the latest `approved`, an earlier one `updated` (R7). */
+  static #libVersion(s, n) { return s.entry.versions.find((v) => v.version === n) || null; }
+  static #libState(s, n) { return n === s.entry.version ? "approved" : WizardScripts.#libVersion(s, n) ? "updated" : null; }
+  /* The state of version `n` of any script. */
+  #stateAt(s, n) { return s.origin === "civicsmith" ? WizardScripts.#libState(s, n) : this.#stateOf(this.#events(s.id), n); }
+
   /* The Terms: the offered version's number, or null (retired, none approved, or broken). */
   #offeredNumber(s, events = null) {
     if (s.retired) return null;
@@ -553,10 +584,12 @@ export class WizardScripts {
   /* R1: one version whole, with its attribution. */
   #versionView(s, n, events) {
     if (s.origin === "civicsmith") {
-      const e = s.entry;
-      return { id: versionId(s.id, n), script: s.id, version: n, steps: this.#steps(s, n), sha: stepsSha(e.steps), state: "approved",
+      const e = WizardScripts.#libVersion(s, n);
+      const next = s.entry.versions.find((v) => v.version > n);
+      return { id: versionId(s.id, n), script: s.id, version: n, steps: this.#steps(s, n), sha: stepsSha(e.steps), state: WizardScripts.#libState(s, n),
                author: { name: e.author }, contributors: [], derived_from: null,
-               approved: { by: { name: e.approved.by }, at: e.approved.at }, updated_by: null, ended: null, submitted: null,
+               approved: { by: { name: e.approved.by }, at: e.approved.at, ...(e.approved.ruling ? { ruling: e.approved.ruling } : {}) },
+               updated_by: next ? versionId(s.id, next.version) : null, ended: null, submitted: null,
                revisions: [], recorded: null, created_at: e.approved.at, broken: false };
     }
     const v = this.#one(`SELECT * FROM wiz_versions WHERE script_id=? AND version=?`, s.id, n);
@@ -784,14 +817,14 @@ export class WizardScripts {
     let source = null, target = null, proj = str(project), base = null;
     if (given(copy)) {
       const r = parseVersionId(copy) ? this.#resolve(copy, viewer) : null;
-      const st = r ? (r.s.origin === "civicsmith" ? "approved" : this.#stateOf(this.#events(r.s.id), r.n)) : null;
+      const st = r ? this.#stateAt(r.s, r.n) : null;
       if (st !== "approved") return this.#noWizard(copy);
       base = r;
       source = { copy: versionId(r.s.id, r.n), steps: this.#steps(r.s, r.n) };
     } else if (given(from)) {
       if (parseVersionId(from)) {
         const r = this.#resolve(from, viewer);
-        const st = r ? (r.s.origin === "civicsmith" ? "approved" : this.#stateOf(this.#events(r.s.id), r.n)) : null;
+        const st = r ? this.#stateAt(r.s, r.n) : null;
         if (!r || !["approved", "updated"].includes(st)) return this.#noWizard(from);
         target = r.s;
         source = { derived: { version: versionId(r.s.id, r.n) }, steps: this.#steps(r.s, r.n) };
@@ -894,7 +927,7 @@ export class WizardScripts {
     const on = s.based_on ? parseVersionId(s.based_on) : null;
     const r = on && typeof asked === "string" ? this.#resolve(asked, viewer) : null;
     if (!r || r.s.id !== on.script || r.n <= on.version) return null;
-    const st = r.s.origin === "civicsmith" ? "approved" : this.#stateOf(this.#events(r.s.id), r.n);
+    const st = this.#stateAt(r.s, r.n);
     return ["approved", "updated"].includes(st) ? { version: versionId(r.s.id, r.n), steps: this.#steps(r.s, r.n) } : null;
   }
 
@@ -1157,8 +1190,8 @@ export class WizardScripts {
     const out = [];
     for (const s of scripts) {
       const events = s.origin === "civicsmith" ? [] : this.#events(s.id);
-      const numbers = s.origin === "civicsmith" ? [s.entry.version] : this.#numbers(s.id);
-      const stateOf = (n) => (s.origin === "civicsmith" ? "approved" : this.#stateOf(events, n));
+      const numbers = s.origin === "civicsmith" ? s.entry.versions.map((v) => v.version) : this.#numbers(s.id);
+      const stateOf = (n) => (s.origin === "civicsmith" ? WizardScripts.#libState(s, n) : this.#stateOf(events, n));
       let pick;
       if (!st || st === "offered") { const n = this.#offeredNumber(s, events); pick = n === null ? [] : [n]; }
       else if (st === "retired") pick = s.retired ? numbers : [];
@@ -1282,7 +1315,7 @@ export class WizardScripts {
       const base = this.#groupScript(on.script) || this.#libraryScript(on.script);
       if (!live || !base || !this.#canSee(base, viewer)) continue;   /* R20: no pair names a base the viewer may not see */
       const bev = base.origin === "civicsmith" ? [] : this.#events(base.id);
-      const numbers = base.origin === "civicsmith" ? [base.entry.version] : this.#numbers(base.id);
+      const numbers = base.origin === "civicsmith" ? base.entry.versions.map((v) => v.version) : this.#numbers(base.id);
       const newer = numbers.filter((n) => n > on.version
         && (base.origin === "civicsmith" || ["approved", "updated"].includes(this.#stateOf(bev, n))));
       if (newer.length) out.push({ s, base, on, newer });
@@ -1341,10 +1374,15 @@ export class WizardScripts {
   /* ================================================================ R24, R27: writing help */
 
   /** R24 (in-process): whether the assistant may help word `field` of `op` for this viewer, `{offered: true}` or
-   *  `{offered: false, code}`, against the registration's refused and irreversible acts. Writes nothing; never throws. */
+   *  `{offered: false, code}`: first `AI_KEPT_AWAY` while `credentials.aiKeptAway()` answers its refusal (read here, at
+   *  the call; T37, N765), then `AI_NO_ACCOUNT` where `assistant.account` names none, then the registration's refused
+   *  and irreversible acts. Writes nothing; never throws. */
   writingHelpAt(args = {}) {
+    return this.#helpAt(args, this.#keptAway());
+  }
+  #helpAt(args, away) {
     const { op = null, field = null, draftHeld = false, assistant = null } = isObj(args) ? args : {};
-    return writingHelpAt({ op, field, draftHeld, assistant }, this.#registration().helpRefused);
+    return writingHelpAt({ op, field, draftHeld, assistant }, this.#registration().helpRefused, away);
   }
 
   /** R24 (in-process; B3, K1861 (1): `affordances` R44 reads it through `op=affordancescreens`): the acts the assistant
@@ -1359,12 +1397,16 @@ export class WizardScripts {
    *  `WRITING_HELP_NOTHING_TOLD`; past them, while the assistant's model turn does not exist (N686, T35; K1837),
    *  `ASSISTANT_DRAFT_UNAVAILABLE`, the field unchanged. The door routes the op itself and calls this with the POST body's
    *  `{op, field, told, draftHeld}`, its own `assistant` (`{on, account: {kind, level}}`, never the key) and the stamps
-   *  (B4, K1863 (7)); its refusals (`ASSISTANT_OFF`, the account's, the ceilings) come first (`control-plane` R57).
+   *  (B4, K1863 (7)); its refusals (keep-away, the account's, the ceilings) come first (`control-plane` R57). A
+   *  keep-away is answered as `credentials` answers it (its R35's row and `keep_away`, K231), never re-minted here.
    *  Writes nothing. */
   writingHelp(args = {}) {
     const { op = null, field = null, told = null, draftHeld = false, assistant = null } = isObj(args) ? args : {};
-    const at = this.writingHelpAt({ op, field, draftHeld, assistant });
-    if (!at.offered) return refuse(at.code, "the assistant does not help word this field", { op: typeof op === "string" ? op.slice(0, 80) : null });
+    const away = this.#keptAway();
+    const at = this.#helpAt({ op, field, draftHeld, assistant }, away);
+    const asked = { op: typeof op === "string" ? op.slice(0, 80) : null };
+    if (!at.offered && at.code === KEPT_AWAY && isObj(away) && away.ok === false) return { ...away, ...asked };
+    if (!at.offered) return refuse(at.code, "the assistant does not help word this field", asked);
     const text = typeof told === "string" ? told : Array.isArray(told) ? told.filter((x) => typeof x === "string").join("\n") : "";
     /* DEC-49 REGION is-writing-help-request */
     if (!text.trim() || text.length > TOLD_MAX)
@@ -1415,7 +1457,7 @@ export class WizardScripts {
     if (!s) return this.#noWizard(script);
     const me = this.#member(viewer);
     const all = s.origin === "civicsmith" ? this.#isAdmin(me) : this.#isOwner(s.project, me);
-    const numbers = s.origin === "civicsmith" ? [s.entry.version]
+    const numbers = s.origin === "civicsmith" ? s.entry.versions.map((v) => v.version)
       : all ? this.#numbers(s.id) : this.#rows(`SELECT version FROM wiz_versions WHERE script_id=? AND author=? ORDER BY version`, s.id, me ?? "").map((r) => r.version);
     if (!all && !(s.origin === "group" && numbers.length))
       return this.#useRefusal("a script's use is read by the owners of its project and its authors");
@@ -1523,7 +1565,8 @@ export function wizardScriptsOf(host, deps) {
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     const filingTemplates = d.filingTemplates || filingTemplatesOf(host, { record, membership });
-    w = new WizardScripts({ ...d, storage, record, membership, filingTemplates, env: d.env ?? host.env ?? null });
+    const credentials = d.credentials || (() => credentialsOf(host, { record, membership }));   /* R24: on first need */
+    w = new WizardScripts({ ...d, storage, record, membership, filingTemplates, credentials, env: d.env ?? host.env ?? null });
     instances.set(host, w);
     w.migrate();
     record.declareTable("wizard-scripts", WIZARD_SCRIPTS_TABLE_CLASSES.map((t) => ({ ...t })));

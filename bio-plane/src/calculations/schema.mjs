@@ -1,6 +1,6 @@
 /* calculations' tables (requirements: `build/requirements/calculations.md`, R29). Each is declared explicitly to
  * record-core (`declareTable`, its R21): tables, bindings, ingests, calculations, their inputs and results, draws,
- * frozen sets and frozen uses export `yes`; the machine's pattern definitions, results, gates and switches export
+ * frozen sets, frozen uses and spot-check visits export `yes`; the machine's pattern definitions, results, gates and switches export
  * `admin-only`. Every row naming a project is keyed to it for purge; a table and what is made from it are keyed to its
  * source's bundle (a frozen uses table to its project).
  * Rows are appended and never rewritten, except a calculation's `recompute_status`, `accepted_*` and its latest
@@ -118,7 +118,24 @@ CREATE TABLE IF NOT EXISTS calc_draws (
   method        TEXT NOT NULL,
   sample_json   TEXT NOT NULL,
   drawn_by      TEXT NOT NULL,
-  drawn_at      TEXT NOT NULL
+  drawn_at      TEXT NOT NULL,
+  -- R18 (T36): the words each drawn item is judged by when members visit it, or null
+  question      TEXT
+);
+-- R38 (T36): a member's visit to one drawn item, appended and never changed or removed: the testimony (a provenance
+-- capture, authored by the visitor) tied to the item, its finding against the draw's question, and its exhibits.
+CREATE TABLE IF NOT EXISTS calc_visits (
+  draw_key      TEXT NOT NULL,
+  seq           INTEGER NOT NULL,
+  project       TEXT,
+  item          TEXT NOT NULL,
+  testimony     TEXT NOT NULL,
+  finding       TEXT NOT NULL,
+  exhibits_json TEXT NOT NULL,
+  visitor       TEXT NOT NULL,
+  observed_at   TEXT,
+  recorded_at   TEXT NOT NULL,
+  PRIMARY KEY (draw_key, seq)
 );
 -- R21: a frozen record set, keyed by the sha256 of its sorted ids.
 CREATE TABLE IF NOT EXISTS calc_sets (
@@ -202,6 +219,7 @@ export const CALCULATIONS_TABLES = Object.freeze([
   cls("calc_inputs", { export: "yes", sight: "bundle", keys: ["project"] }),
   cls("calc_recomputes", { export: "yes", sight: "bundle", keys: ["project"], version_chain: true }),
   cls("calc_draws", { export: "yes", sight: "bundle", keys: ["project"] }),
+  cls("calc_visits", { export: "yes", sight: "bundle", keys: ["project"] }),
   cls("calc_sets", { export: "yes", sight: "bundle", keys: ["project"] }),
   cls("calc_uses", { export: "yes", sight: "bundle", keys: ["project"] }),
   cls("calc_pattern_results", { export: "admin-only", sight: "group", keys: [] }),
@@ -212,7 +230,7 @@ export const CALCULATIONS_TABLES = Object.freeze([
 ]);
 
 /* Columns added to a table after it was first made: [table, column, declaration]. */
-const ADDED = Object.freeze([["calculations", "input_shas_json", "TEXT"]]);
+const ADDED = Object.freeze([["calculations", "input_shas_json", "TEXT"], ["calc_draws", "question", "TEXT"]]);
 
 /** Creates the tables where absent, and adds a column added since a table was made. Idempotent. */
 export function migrateCalculations(sql) {
