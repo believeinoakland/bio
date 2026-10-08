@@ -206,7 +206,7 @@ export class Queue {
    * from facts the store ALREADY holds, on the same read and with no table and
    * no stored state: see the REC-32 block below. The remaining catalogue kinds
    * stay unbuilt, and that is a gap in the CATALOGUE (queuestate.mjs's
-   * vocabulary names all eleven) rather than a gap in this class.
+   * vocabularies name every kind) rather than a gap in this class.
    * ======================================================================== */
 
   /** The classes this producer EMITS. `class` is NOT NULL on the producer:
