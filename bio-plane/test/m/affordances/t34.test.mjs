@@ -237,10 +237,17 @@ test("R45 R3 R7 R12 R19: every op T34 declares in op-declarations R22–R24, R26
     assert.deepEqual(A.unaccounted([{ op, mutating: false, gated: true }]).unpublished, [op], `${op}, carried gated, is seen`);
 });
 
-test("R45 R12: each of op-declarations R21's 28 aliases (K2059: `expunge` dropped, no op since K1901) takes its op's very grade and reason through one frozen table — "
+test("R45 R12: each of op-declarations R21's 27 aliases (K2059: `expunge` dropped, no op since K1901; K2245, DEC-182 (2): "
+   + "`claimidentity` dropped, its text withdrawn) takes its op's very grade and reason through one frozen table — "
    + "an alias never differs from its op — and with the alias rows nothing is unaccounted", () => {
   assert.ok(Object.isFrozen(OP_ALIASES));
-  assert.equal(Object.keys(OP_ALIASES).length, 28);
+  assert.equal(Object.keys(OP_ALIASES).length, 27);
+  /* K2245 (DEC-182 (2)): the same-person claim is one op, `identityclaim`; `claimidentity` is no alias and takes no grade
+     or reason of its own, while its op keeps its own */
+  assert.equal(Object.hasOwn(OP_ALIASES, "claimidentity"), false);
+  assert.equal(gradeOf("claimidentity"), null);
+  assert.equal(Object.hasOwn(NON_ACTS, "claimidentity"), false);
+  assert.notEqual(gradeOf("identityclaim"), null);
   /* K2054, K2059: `expunge` is no alias (no op since K1901); `personexpunge` is a declared op of its own */
   assert.equal(Object.hasOwn(OP_ALIASES, "expunge"), false);
   assert.equal(Object.values(OP_ALIASES).includes("personexpunge"), false);

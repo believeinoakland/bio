@@ -60,3 +60,28 @@ Size (session_0187SVNmLrMtUDuMD6BfqRLx): test runs 19, module lines 2280
 ## J2 · COMPLETE
 
 T37-27 applied; the record's Completion section has the detail. ACT_HELP is re-generated from mock-acts.js @ e08cd35ecb (203 held; nine owed_ acts until declared). plane.test.mjs: credentials go in the Authorization header; R18 uses nell's session; R20's machine is ADM (no ai credential can be minted before T37-33); the retired MEM is pinned to admission R5. 28/0. t36 counts are re-stated. t36-backing aikeepaway is re-pinned to AI_KEEP_AWAY_NO_REASON: red until op-grades T37-26 merges, proven green with it locally. Module: 218 tests, 217 pass, 1 fail (that one). Checks: 0 failures each. Reds named: op-declarations t36.test.mjs:291 (clockpropose) until T37-31; the eight owed acts' re-keying after T37-31; dist bundle stale.
+
+## Completion after B2 and B3
+
+`tranche/T37` merged (op-grades T37-26, re-merged with 27 aliases). The `t36-backing` `aikeepaway` test is now green with no further change (red 14 cleared). Re-pinned to op-grades' answers, each with its negative control:
+
+- **`t31.test.mjs` R36 oracle:** it gains op-grades R18's arm as T37 amends it: every op in `IRREVERSIBLE_WEIGHT`, read from that set, answers `false`.
+  - It checks `standardrelease` and `personexpunge` explicitly.
+  - Control: the oracle without that arm disagrees with the plane exactly on the set's members whose other arms answer `true`, `standardrelease` among them.
+- **`t31.test.mjs` `LARGER_SCREEN_ACTS` (R26):** the set holds `filingsent` alone. `personexpunge` left it and answers `false` through `IRREVERSIBLE_WEIGHT`, and no op is in both sets.
+- **`catalogue.test.mjs` reversible band (:110):** T37's three translation acts (`translationadopt`, `translationconfirm`, `translationrevert`) are pinned by name, with `T37_RUNGS`' keys exact. The existing misband and unranked controls still hold.
+- **`catalogue.test.mjs` undetermined set (:479):**
+  - `obscuremark`, `translationdraft` and `translationmark` are pinned, with `T37_RUNG_ABSENT`'s undetermined set exact.
+  - Control: one of the three left out of the pinned list is seen.
+  - The assertion's stale message ("reads 30") is corrected.
+- **`t34.test.mjs` R45 (:240):** 27 aliases. `claimidentity` is no alias and takes no grade or reason, while `identityclaim` keeps its own.
+- **`t36.test.mjs`:49 and :17:** already met by my first completion. The `owed_` set is pinned exactly, with no "not graded" proxy, and `claimidentity` is named only as withdrawn (absent from the design and from `ACT_HELP`).
+- **Wizard library version 2 (K2241):** none of my code or tests reads the library's content. Plane R37 checks only that each offered script starts on a registered screen and that none is a draft, read live; it passes on the merged tranche.
+
+**Tests:** `node --test test/m/affordances/`: 218 tests, 218 pass, 0 fail.
+
+**Checks:**
+- format: 1 failure, and not mine: `build/modules.json`'s instance-setup paths entry `bio-plane/src/setup-words.mjs` names no file. It is the same on the merged tranche without my changes.
+- architecture: 0 failures. coverage: 34 of 34; 0 failures. ownership: 0 failures.
+
+Size (session_0187SVNmLrMtUDuMD6BfqRLx): test runs 25, module lines 2280
