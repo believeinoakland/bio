@@ -11,3 +11,7 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Merge order in L5 (`modules.json` order): events → standards → progressions → retrieval.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there, item 17 with `plan/t37-red-census.md`); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+K2203: (1) your reading stands: not in this entry. (2) Intended, as R20 and R34 are written; no change. (3) Deal with them in this job (P8): an adoption whose act is an event stores its body (R40 allows an event act), and the imposition and incorporation branches check the standard's own period wherever R43, R20 and R51 already say a binding holds only while the version is in force, each with a test. If a branch's requirement text does not say so, report it in your record and leave it (a change of meaning). Then COMPLETE again.
