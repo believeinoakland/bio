@@ -175,7 +175,61 @@ const V2 = edit(V1, [
    + "prints quoted passages, whose own words may say otherwise.\n"],
 ]);
 
+/* R14 (T37; N757, N763; K2206; DEC-180 (4)): version 3 is version 2 with the `obscured` kind and the `materials:` row's
+   `obscured` field (`case-grammar` R12, R13), the presentability of a photo carried as its copy (R8), and the criteria
+   rows' `captures` (`publication` R72), over which R22 judges the copyrighted standards' arms offline. Built as version 2
+   is, by named changes; the specification's test reads every addition. */
+const V3 = edit(V2, [
+  ["# The case file, format bio-case-file/2\n\nThis document specifies version 2 of the case file:",
+   "# The case file, format bio-case-file/3\n\nThis document specifies version 3 of the case file:"],
+  [/\nVersion 2 adds three kinds of file to version 1 [^\n]*\n/,
+   "\nVersion 2 added three kinds of file to version 1 (`archive`, `container` and `criteria`, section 3) and one check (rule 12, "
+   + "section 8). Version 3 adds one kind of file to version 2 (`obscured`, section 3), the `obscured` fields of a `materials:` "
+   + "row (section 4) and their checks (rules 1 and 7), and the criteria rows' `captures` (section 3, rule 12). A `bio-case-file/2` "
+   + "or `bio-case-file/1` case file is read as written, by its own specification, each held beside this one: a `bio-case-file/2` "
+   + "manifest names no `obscured` file, a `bio-case-file/1` manifest none of the kinds versions 2 and 3 add, and a manifest naming "
+   + "a kind its format lacks departs from its format.\n"],
+  ["- `format`: `bio-case-file/2`.", "- `format`: `bio-case-file/3`."],
+  ["binds, passages, label, access_words}`:", "binds, passages, captures, label, access_words}`:"],
+  ["A standard whose `access` is not `free` carries nothing of its text but those passages.",
+   "A standard whose `access` is not `free` carries nothing of its text but those passages. `captures` is the SHA-256 of each "
+   + "capture holding one of the row's `passages` that the edition's `materials:` lists `included: true`, each once, in the order "
+   + "first met: a capture the edition does not carry is never stated. A row recorded before captures were (a case edition "
+   + "committed before them) has no `captures` field, and it is never filled."],
+  ["`stated: \"not held\"`. A case edition committed before criteria were recorded carries no criteria file.\n",
+   "`stated: \"not held\"` (its `captures` null). A case edition committed before criteria were recorded carries no criteria file.\n"
+   + "- `obscured` at `materials/<ref>/obscured`: the copy of a photo carried in place of its original, its marked areas covered "
+   + "solid, its bytes whole at the SHA-256 the photo's `materials:` row names as `obscured_copy` (section 4), under that row's "
+   + "`ref`, at most one per `ref`. An `obscured` file no row names, a row naming a copy no file carries at that SHA-256, and, for "
+   + "a row stating `obscured_copy`, a `document`, `extracted_text`, `archive` or `container` file under its `ref` at the "
+   + "original's fingerprints (the original never travels) each depart (rule 1).\n"],
+  ["Material whose source's identity is withheld is listed like any other.\n",
+   "Material whose source's identity is withheld is listed like any other. A `document` row may state `obscured_copy` and "
+   + "`obscured_label`: the photo travels as a copy with the areas a member marked obscured, never whole. The row then states "
+   + "`included: false`, and its `sha`, `text_sha`, `origin` and `archived_copy` stay the original's; `obscured_copy` is the "
+   + "SHA-256 of the copy and `obscured_label` the sentence the published case shows beside the material. A row without them "
+   + "travels as before.\n"],
+  ["So a case file published before `/7` still renders its own carried edition byte for byte.\n",
+   "So a case file published before `/7` still renders its own carried edition byte for byte. A photo carried as its copy is "
+   + "listed with the original's fingerprint, the copy's fingerprint and its label, word for word; an edition stating no copy "
+   + "renders as it did before version 3.\n"],
+  ["Not carried is missing; not listed, or listed as not included, differs.\n",
+   "Not carried is missing; not listed, or listed as not included, differs. A row stating `obscured_copy` (a photo carried as "
+   + "its copy) is presentable when the case file carries an `obscured` file at that SHA-256 under its `ref`, whose bytes rule 1 "
+   + "checks; else the copy is missing, for each finding whose chain reaches it. Its extracted text and the original's bytes are "
+   + "not asked, since the original never travels, so a passage relied on in such a photo cannot be found and is missing (rule "
+   + "3). The answer lists each such row, `{ref, sha, copy, label}`, in the document's order, so its label is stated beside it.\n"],
+  ["The case file does not carry which captures hold a standard's text, so this is not judged offline: each such row is named as "
+   + "not judged for this check.\n",
+   "Those captures are its row's `captures`. A row with no `captures` field (recorded before them) is not judged for this check, "
+   + "and its standard is named as not judged for it.\n"],
+  ["one of its row's `passages` whose `content` is the `content_id` of no `passages:` row.\n",
+   "one of its row's `passages` whose `content` is the `content_id` of no `passages:` row, or a `passages:` row whose "
+   + "`capture_sha` is one of its row's `captures` and on which no finding relies (every `passages:` row a case file carries "
+   + "is a finding's, so offline only the first can depart).\n"],
+]);
+
 /** R14: every specification held, by the format it specifies. */
-export const CASE_FILE_SPECS = Object.freeze({ "bio-case-file/1": V1, "bio-case-file/2": V2 });
+export const CASE_FILE_SPECS = Object.freeze({ "bio-case-file/1": V1, "bio-case-file/2": V2, "bio-case-file/3": V3 });
 /** R15: the versions held, oldest first. */
 export const CASE_FILE_SPEC_VERSIONS = Object.freeze(Object.keys(CASE_FILE_SPECS));

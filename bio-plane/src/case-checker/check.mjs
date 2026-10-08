@@ -141,10 +141,7 @@ function readParts(parts) {
     try { manifest = JSON.parse(manifestText); } catch { departures.push("the manifest is not JSON"); }
     if (manifest !== null && !isObj(manifest)) { departures.push("the manifest is not a JSON object"); manifest = null; }
   }
-  if (manifest) {
-    const named = caseFileManifestCheck(manifest);
-    for (const d of Array.isArray(named) ? named : []) departures.push(departureWords(d));
-  }
+  const manifestAt = departures.length;     /* the manifest's own departures are named here, once the files are read */
   const m = manifest || {};
   const listedParts = Array.isArray(m.parts) ? m.parts.filter(isObj) : [];
   const files = (Array.isArray(m.files) ? m.files.filter(isObj) : []).map((f) => {
@@ -189,8 +186,27 @@ function readParts(parts) {
   const listedNames = new Set(files.map((f) => f.path));
   for (const z of zips) for (const name of z.entries.keys())
     if (name !== mpath && !listedNames.has(name)) departures.push(`part ${z.given} given carries ${name}, which the manifest does not list`);
+  /* `case-grammar` R13: the manifest's departures, those relative to the case document's `materials:` rows (an
+     `obscured` copy and its row) among them when the case document is carried as the manifest lists it. */
+  if (manifest) {
+    const named = caseFileManifestCheck(manifest, { materials: carriedMaterials(files) });
+    departures.splice(manifestAt, 0, ...(Array.isArray(named) ? named : []).map(departureWords));
+  }
   return { manifest, files, departures, parts: partStates };
 }
+
+/* The case document's `materials:` rows (`case-grammar` R12), read from the carried case document when it is the bytes
+   the manifest lists; null otherwise, so only what the manifest alone shows is checked. */
+function carriedMaterials(files) {
+  const doc = files.find((f) => f.kind === "case_document" && f.content);
+  if (!doc) return null;
+  const p = parseFrontmatter(textOf(doc.content));
+  const read = isObj(p.data) ? materialsOf(p.data) : null;
+  return isObj(read) && Array.isArray(read.materials) ? read.materials.filter(isObj) : null;
+}
+
+/** R8 (`case-grammar` R12's `obscured`): the copy a material row travels as, `{copy, label}`, or null. */
+const obscuredOf = (mat) => (isObj(mat) && isObj(mat.obscured) && typeof mat.obscured.copy === "string" ? mat.obscured : null);
 
 /* ============================================================ the chain a finding rests on */
 
@@ -249,7 +265,7 @@ function malformed(departures, manifest) {
     integrity: { intact: false, departures, parts: [], files: [], documents: { used: [], unmatched: [], wanted: [] } },
     signatures: { case: null, findings: [], attestations: [], keys_checked: false, keys_statement: KEYS_NOT_CHECKED_STATEMENT },
     publication_checks: { ran: false, findings: [], unasked: [], stated_version: null, checker_version: CATALOG_VERSION, statement: null },
-    calculations: [], standards_use: null,
+    calculations: [], standards_use: null, obscured: [],
     findings: members.map((f) => ({ finding: f, role: null, result: "did_not_recreate", missing: [],
       differs: departures.map((d) => entry("integrity", "case file", d)), pair: null, bar_met: null })),
     complete_edition: { equal: null, detail: "the case file could not be read, so its complete edition was not compared" },
@@ -642,9 +658,23 @@ async function check({ parts, documents = [], keys = null }) {
       for (const u of chain.unlisted) differs.push(entry("presentability", id, `${id}'s chain reaches ${u.kind} ${u.target}, which the case document's materials do not list`));
     for (const mat of chain.mats) {
       const what = `${mat.kind === "observation" ? "the observation" : "the document"} ${mat.ref}`;
+      const lb = isMember && role === "load_bearing";
+      /* R8 (DEC-180 (4)): a row carried as its copy is presentable when a file of kind `obscured` is carried at the copy's
+         SHA-256 (R2 checks its bytes); its extracted text and the original's bytes are not asked: the original never
+         travels. */
+      const ob = obscuredOf(mat);
+      if (ob) {
+        const f = files.find((x) => x.kind === "obscured" && x.ref === mat.ref && x.sha256 === ob.copy) || null;
+        if (f && f.entry) differs.push(f.entry);
+        else if (!f || !f.content)
+          missing.push(entry(lb ? "presentability" : "integrity", id, `the copy of ${what} carried in its place, its marked areas obscured, is not carried; fetch the file whose SHA-256 is ${ob.copy}`, { sha256: ob.copy, copy: ob.copy }));
+        for (const e of attestationFails.get(mat.ref) || []) differs.push({ ...e, about: id });
+        for (const e of attestationGaps.get(mat.ref) || []) missing.push({ ...e, about: id });
+        continue;
+      }
       const fetch = `fetch the ${mat.kind === "observation" ? "observation" : "document"} whose SHA-256 is ${mat.sha}${mat.origin ? `, from ${mat.origin}` : ""}${mat.archived_copy ? ` (archived at ${mat.archived_copy})` : ""}`;
       const needs = mat.kind === "observation" ? [["observation", mat.sha]] : [["document", mat.sha], ["extracted_text", mat.text_sha]];
-      if (isMember && role === "load_bearing" && mat.included !== true)
+      if (lb && mat.included !== true)
         differs.push(entry("presentability", id, `${id} is load-bearing and rests on ${what}, which the case lists as not travelling whole`, { sha256: mat.sha }));
       for (const [kind, signedSha] of needs) {
         const f = fileOf(kind, "ref", mat.ref);
@@ -652,7 +682,7 @@ async function check({ parts, documents = [], keys = null }) {
           differs.push(entry("integrity", id, `${kind === "extracted_text" ? `the carried extracted text of ${what}` : `the carried ${what.replace(/^the /, "")}`} is not the bytes the signed case fingerprints (${signedSha})`, { sha256: signedSha }));
         if (f && f.entry) differs.push(f.entry);
         else if ((!f || !f.content) && (mat.included === true || (f && f.state === "missing")))
-          missing.push(entry(isMember && role === "load_bearing" ? "presentability" : "integrity", id, `${what}${kind === "extracted_text" ? "'s extracted text" : ""} is not carried; ${fetch}`, { sha256: f ? f.sha256 : mat.sha, ...(mat.origin ? { origin: mat.origin } : {}) }));
+          missing.push(entry(lb ? "presentability" : "integrity", id, `${what}${kind === "extracted_text" ? "'s extracted text" : ""} is not carried; ${fetch}`, { sha256: f ? f.sha256 : mat.sha, ...(mat.origin ? { origin: mat.origin } : {}) }));
       }
       for (const e of attestationFails.get(mat.ref) || []) differs.push({ ...e, about: id });
       for (const e of attestationGaps.get(mat.ref) || []) missing.push({ ...e, about: id });
@@ -696,6 +726,7 @@ async function check({ parts, documents = [], keys = null }) {
     publication_checks,
     calculations,
     standards_use,
+    obscured: materials.filter(obscuredOf).map((x) => ({ ref: str(x.ref), sha: str(x.sha), copy: x.obscured.copy, label: str(x.obscured.label) })),
     findings: findingsOut.map((f) => ({ finding: f.finding, role: f.role, result: f.result, missing: f.missing, differs: f.differs, pair: f.pair, bar_met: f.bar_met })),
     complete_edition,
     rests_on_another_group: restsOn, rests_on_another_group_statement: REST_ON_ANOTHER_GROUP_STATEMENT,
@@ -706,17 +737,21 @@ const dedupe = (list) => { const seen = new Set(); return list.filter((e) => { c
 
 /* ============================================================ standards' use, offline (R22) */
 
-/** R22: the sentence beside a standard whose captures the case file does not carry, so whether its whole text travels
- *  is not judged here. The UX stream's words, later. */
+/** R22: the sentence beside a row frozen before T37, which carries no `captures` (`publication` R72), so whether its
+ *  standard's whole text travels is not judged here; stated, never filled. The UX stream's words, later. */
 export const CAPTURES_NOT_CARRIED_STATEMENT = "Whether this standard's whole text travels with the case is not judged "
-  + "here, because the case file does not carry which captures hold its text.";
+  + "here, because its row was recorded before the case file said which captures hold its text.";
 
 /** R22: R21 (`checkStandardsUse`) over the case document, the carried `criteria` file's rows, the document's
  *  `materials:` rows and its passages (each with the finding relying on it); null when the case file lists no
- *  `criteria` file. A row carries no `captures` offline (`publication` R72 does not freeze them), so for each judged row
- *  of a standard whose `access` is not `free` and that carries none, `COPYRIGHTED_TEXT_CARRIED` is not judged and the
- *  row is named in `unjudged` with that check. A file listed but not carried, or carried with other bytes, is answered
- *  `{ok: null, detail}` naming the file to fetch. It changes no finding's result. Pure; never throws. */
+ *  `criteria` file. Each row carries `captures` as `publication` R72 froze them (only the captures the edition carries,
+ *  T37), so `COPYRIGHTED_TEXT_CARRIED` and `COPYRIGHTED_PASSAGE_UNRELIED` are judged offline over them exactly as R21
+ *  judges them at the ceremony. A row frozen before T37 carries no `captures`: for a judged row of a standard whose
+ *  `access` is not `free`, `COPYRIGHTED_TEXT_CARRIED`, the check that needs them, is not judged for it and its standard
+ *  is named in `unjudged` with that check. (`COPYRIGHTED_PASSAGE_UNRELIED` does not need them offline: its row's own
+ *  passages are judged, and every passage a case file carries is a finding's, `case-grammar` R17.) A file listed but
+ *  not carried, or carried with other bytes, is answered `{ok: null, detail}` naming the file to fetch. It changes no
+ *  finding's result. Pure; never throws. */
 function standardsUseOf({ files, docText, materials, signedPassages, fileOf }) {
   const f = fileOf("criteria", null);
   if (!f) return null;
@@ -734,7 +769,7 @@ function standardsUseOf({ files, docText, materials, signedPassages, fileOf }) {
     for (const r of Array.isArray(rows) ? rows : []) if (isObj(r)) passages.push({ ...factFields(r), finding });
   const r = checkStandardsUse({ text: docText, criteria: criteria === undefined ? null : criteria, materials, passages });
   if (!Array.isArray(criteria) || r.refusals?.some((x) => x.code === "MALFORMED")) return r;
-  const blind = criteria.filter((c) => c.stated !== "not held" && c.access !== "free" && !(Array.isArray(c.captures) && c.captures.length))
+  const blind = criteria.filter((c) => c.stated !== "not held" && c.access !== "free" && !Array.isArray(c.captures))
     .map((c) => ({ standard: c.standard, portion: c.portion ?? null, body: c.body ?? null, check: "COPYRIGHTED_TEXT_CARRIED",
                    detail: CAPTURES_NOT_CARRIED_STATEMENT }));
   return blind.length ? { ...r, unjudged: [...(r.unjudged || []), ...blind] } : r;
