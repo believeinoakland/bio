@@ -64,10 +64,20 @@ export const TIMELINE = [
   { lane: "they_did", ord: 2, when: "nowhere", label: "An undated memo circulated.", ref: null, source: { capture: sha("memo") } },
 ];
 
+/** T37 (N757): a photo the case carries as its copy (R12's `obscured`), its original's bytes and its copy's, and the
+    label `case-carriage` gives it (its `OBSCURED_LABEL`, as its R11 words it). */
+export const PHOTO = "INFO-2026-0004-photo";
+export const PHOTO_BYTES = "JPEG the original photo, faces and a plate visible";
+export const PHOTO_COPY_BYTES = "JPEG the copy, the marked areas covered";
+export const OBSCURED_LABEL = "Faces and plates obscured for publication; the group holds the original";
+export const PHOTO_ROW = { ref: PHOTO, kind: "document", sha: sha(PHOTO_BYTES), text_sha: sha("the photo's text"),
+  origin: "a member's capture", archived_copy: null, included: false, rests_under: "load_bearing",
+  obscured: { copy: sha(PHOTO_COPY_BYTES), label: OBSCURED_LABEL } };
+
 /** The case document's text, `/7` (the format written) unless `format` says otherwise; `t33` adds R18's and R20's
-    blocks. */
+    blocks; `photo` adds a third material, a photo carried as its copy (T37). */
 export function caseDocument({ bar = { declared: true, capture: "B", connection: "C" }, blocks = true,
-                               format = CG.CASE_DOCUMENT_FORMAT, t33 = false } = {}) {
+                               format = CG.CASE_DOCUMENT_FORMAT, t33 = false, photo = false } = {}) {
   const fm = [
     "---", `format: ${format}`, "case_id: CASE-2026-0001", "case_edition: 2", "case_project: PROJ-2026-0001-parks",
     'case_scope: "Who approved the lease, and on what record."',
@@ -93,7 +103,7 @@ export function caseDocument({ bar = { declared: true, capture: "B", connection:
       materials: [{ ref: MINUTES, kind: "document", sha: MINUTES_SHA, text_sha: sha("the minutes' text"), origin: "https://records.example/m.pdf",
                     archived_copy: "https://archive.example/m", included: true, rests_under: "load_bearing" },
                   { ref: OBS, kind: "observation", sha: sha("obs"), text_sha: null, origin: "a member's observation",
-                    archived_copy: null, included: false, rests_under: "supporting" }],
+                    archived_copy: null, included: false, rests_under: "supporting" }, ...(photo ? [PHOTO_ROW] : [])],
       attestations: [{ ref: MINUTES, by_kind: "member", by: V("heron"), level: "group", at: NOW, signature: "SIG" },
                      { ref: MINUTES, by_kind: "project", by: "PROJ-2026-0001-parks", at: NOW, recorded_in: MINUTES },
                      { ref: MINUTES, by_kind: "group", by: "lakeshore-tenants" },
@@ -122,7 +132,7 @@ export function caseDocument({ bar = { declared: true, capture: "B", connection:
   return format === CG.CASE_DOCUMENT_FORMAT_V6 ? text.replace(/\n {4}undetermined: null(?=\n)/g, "") : text;
 }
 
-/** A whole case file: `{manifest, files}`, `files` a Map of path to text, the complete edition rendered from the rest. */
+/** A whole case file: `{manifest, files}` (`format` the case file's, `bio-case-file/1` unless `fileFormat` says), `files` a Map of path to text, the complete edition rendered from the rest. */
 export function caseFileFixture(opts = {}) {
   const text = new Map([
     [CG.caseFilePath("case_document"), caseDocument(opts)],
@@ -140,12 +150,14 @@ export function caseFileFixture(opts = {}) {
     ...(opts.t33 ? [[CG.caseFilePath("calculation", CALCS[0].calc), CG.calculationFileText(CALCS[0])],
                     [CG.caseFilePath("calculation", [CALCS[0].calc, sha(INPUT_BYTES)]), INPUT_BYTES],
                     [CG.caseFilePath("calculation", "prov"), CG.provOf(CALCS)]] : []),
+    ...(opts.photo ? [[CG.caseFilePath("obscured", PHOTO), PHOTO_COPY_BYTES]] : []),
   ]);
   const listed = (m) => [...m].map(([path, t]) => ({ path, sha256: sha(t), bytes: bytesOf(t), part: 1,
                                                      kind: CG.caseFileEntryOf(path).kind }));
-  const edition = CG.completeEditionOf(editionInput(manifestFor(listed(text)), text));
+  const over = opts.fileFormat ? { format: opts.fileFormat } : {};
+  const edition = CG.completeEditionOf(editionInput(manifestFor(listed(text), over), text));
   text.set(CG.caseFilePath("complete_edition"), edition);
-  return { manifest: manifestFor(listed(text)), files: text };
+  return { manifest: manifestFor(listed(text), over), files: text };
 }
 
 /** R14's input (K1315 (4)) from a manifest and a Map of path to content: the manifest's facts and every file but the

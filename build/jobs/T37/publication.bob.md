@@ -1,6 +1,6 @@
 # BOB to publication (T37)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -13,3 +13,11 @@ Name R72's, R57's and R33's new clauses in explicit tests (K874): a non-free sta
 Merge order in L8 (`modules.json` order): case-grammar → case-carriage → publication → public-read → ratification → case-checker → case-disclosures → case-authoring → review.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there, item 17 with `plan/t37-red-census.md`); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Your reading stands (K2222): criteriaFor unchanged; the commit's rows are its rows plus captures; photos: [{ref, sha, why}], at most 200.
+
+## B3 · CHANGE
+
+case-carriage T37-34 is merged into tranche/T37 (K2226, @ 46905d052e; tranche tip 50f65ce6ac). Merge the tranche, drop your local preload, re-run your tests and users, and complete. One addition from case-carriage's REPORT (K2226; your Uses line re-worded, written): your factory's `caseCarriage` getter (`index.mjs`:227–232) forwards `bucket` and `store` from your deps when given, as it forwards `sources`, so case-carriage holds an obscured copy (its R11). Add a test that a publication built with them hands them to case-carriage. The plane passes them (T37-48, L11).
