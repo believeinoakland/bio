@@ -1,9 +1,9 @@
 /* people (layer 5; T33-36, K1452, K1455, K1483–K1493): the people the record is about, held fully and never judged.
-   `build/requirements/people.md` R1–R35. Identity claims that LINK two person records and never merge them, with the
+   `build/requirements/people.md` R1–R36. Identity claims that LINK two person records and never merge them, with the
    derived identity cluster (R1–R8); dated person facts and their lawful removal (R9–R12); the reads that gather a
    person's positions, career, credentials, interests, statements and acts from their owning modules (R13–R17);
    staffing as of a date (R18–R19); members' own ties (R20); the protected link from a source to a person (R21) and its
-   internal sight read (R34); the machine's interest checks, held in the hypothesis layer and shown only past their gate
+   internal sight read (R34); who recorded what from a passage, in events R49's shape (R36); the machine's interest checks, held in the hypothesis layer and shown only past their gate
    (R22–R25), with their arming notice (R35); the connection owner of the identity kinds (R26) and the ops map (R27).
    CORRECTED FORWARD (R4, R11; N617): every act is stamped (`by`, never null: `NO_BY`), and nothing is edited in place: a
    replaced source link or gate is kept beside the one that replaced it.
@@ -17,7 +17,7 @@ import { isMachineIdentity, BASIS_GRADES, sha256HexSync, canonicalJson } from ".
 import { validAt, compare, isCalendarDate, bounds } from "../civil-time/index.mjs";
 import { defaultRegistry, BOUNDS } from "../connection-grammar/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
-import { contentOf, checkContentExtent, canonicalExtent } from "../content/index.mjs";
+import { contentOf, checkContentExtent, canonicalExtent, extentRelation, CONTENT_EXTENT_KINDS } from "../content/index.mjs";
 import { sourcesOf } from "../sources/index.mjs";
 import { noSuchEntity, noEntity, entitiesOf } from "../entities/index.mjs";
 import { eventsOf } from "../events/index.mjs";
@@ -59,6 +59,9 @@ export const CLUSTER_CLAIMS_MAX = 1000;
 export const READ_LIST_MAX = 500;
 export const CANDIDATES_DEFAULT = 50;
 export const CANDIDATES_MAX = 200;
+/* R36 (events R49): a read by capture and extent answers 1–500 items, 100 when no limit is given. */
+export const RECORDED_BY_DEFAULT = 100;
+export const RECORDED_BY_MAX = 500;
 /* R24 (K1504, M-C8): a machine check's results are shown only at a measured false-alarm rate at most this. */
 export const GATE_RATE_MAX = 0.2;
 /* R24 (DEC-131; N694, K1863): the mark every answered check result carries where it reaches a member, DEC-131's words
@@ -814,6 +817,68 @@ export class People {
     if (this.#one(`SELECT 1 AS x FROM identity_claims WHERE claim_id=?`, id)) return { table: "identity_claims", key: { claim_id: id } };
     if (this.#one(`SELECT 1 AS x FROM member_ties WHERE tie_id=?`, id)) return { table: "member_ties", key: { tie_id: id } };
     return null;
+  }
+
+  /* ===================================================================== *
+   * WHO RECORDED WHAT FROM A PASSAGE (R36; N715, DEC-164 (4)), in events R49's one shape.
+   * ===================================================================== */
+
+  /** R36: the rows of this module citing an extent of `captureSha`, each naming who recorded it: person facts by their
+   *  citation (R9, the contact table's among them, carrying no value as no item does) and identity claims by each end
+   *  of their evidence (R1). With `extent`, only rows whose extent stands `same`, `narrower` or `wider` to it
+   *  (`content.extentRelation`). Sight is R31's: a capture the viewer may not see answers `items: []` as an absent one,
+   *  and a claim made inside a project the viewer may not see is neither answered nor counted. An expunged row (R12) is
+   *  gone; a member's tie, the protected source link and a check's result cite no capture and are never items, so a
+   *  held link answers exactly as none. Writes nothing; never throws; an in-process read, not an op. */
+  /* events R49 (K2116, K231): the shape's two own refusals, carrying their code and no catalogue row. */
+  static #shapeRefusal(code, why) { return { ok: false, refused: code, code, reason: code, why }; }
+
+  recordedBy({ captureSha, extent = null, limit = null, viewer = null } = {}) {
+    if (viewer === undefined || viewer === null || (typeof viewer === "string" && viewer.trim() === ""))
+      return People.#shapeRefusal("VIEWER_MISSING", "a read names the member reading, stamped by the control plane; with none, nothing is answered");
+    if (!filled(captureSha)) return refuse("NO_SHA", "the read names the capture whose passages were cited (captureSha)");
+    const want = extent === undefined || extent === null ? null : extent;
+    if (want !== null && !(isObj(want) && typeof want.kind === "string" && Object.prototype.hasOwnProperty.call(CONTENT_EXTENT_KINDS, want.kind)))
+      return People.#shapeRefusal("EXTENT_MALFORMED", `an extent is one of content's kinds (${Object.keys(CONTENT_EXTENT_KINDS).join(", ")}) with its fields`);
+    const n = Number(limit);
+    const cap = limit === null || limit === undefined || limit === "" || !Number.isFinite(n) ? RECORDED_BY_DEFAULT
+      : Math.max(1, Math.min(Math.floor(n), RECORDED_BY_MAX));
+    const head = { ok: true, module: MODULE, capture_sha: captureSha };
+    try {
+      if (!this.#seesCapture(captureSha, viewer)) return { ...head, items: [], truncated: false };
+      const items = [];
+      const put = (record, kind, field, given, by, at, withdrawn) => {
+        const cited = isObj(given) ? given : { kind: "document" };   /* a citation naming no part is the document (content R5) */
+        let relation = null;
+        if (want !== null) {
+          relation = extentRelation(want, cited);
+          if (!["same", "narrower", "wider"].includes(relation)) return;
+        }
+        const canonical = canonicalExtent(cited);
+        items.push({ module: MODULE, record, kind, field, extent: json(canonical), relation, by: by ?? null, at,
+                     withdrawn: !!withdrawn, canonical });
+      };
+      for (const table of ["person_facts", "person_contacts"])
+        for (const f of this.#rows(`SELECT fact_id, extent_json, by_actor, at, withdrawn_at FROM ${table} WHERE capture_sha=?`, captureSha))
+          put(f.fact_id, "person_fact", "citation", json(f.extent_json), f.by_actor, f.at, f.withdrawn_at);
+      for (const c of this.#rows(`SELECT claim_id, evidence_json, project, by_actor, at, withdrawn_at FROM identity_claims
+                                  WHERE instr(evidence_json, ?) > 0`, captureSha)) {
+        if (!this.#seesProject(c.project, viewer)) continue;
+        const ev = json(c.evidence_json);
+        for (const end of ["a", "b"])
+          if (isObj(ev) && isObj(ev[end]) && ev[end].captureSha === captureSha)
+            put(c.claim_id, "identity_claim", "evidence", ev[end].extent, c.by_actor, c.at, c.withdrawn_at);
+      }
+      const key = (x) => [x.canonical, x.record, x.field];
+      items.sort((x, y) => {
+        const a = key(x), b = key(y);
+        for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] < b[i] ? -1 : 1;
+        return 0;
+      });
+      return { ...head, items: items.slice(0, cap).map(({ canonical: _c, ...item }) => item), truncated: items.length > cap };
+    } catch {
+      return { ...head, items: [], truncated: false };
+    }
   }
 
   /* ===================================================================== *

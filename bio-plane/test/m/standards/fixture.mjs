@@ -89,11 +89,12 @@ export function profile(id, sources) {
 export const src = (source, re, extra = {}) => ({ source, kind: "statute", issuer: `Issuer of ${source}`, level: "state",
                                                   cite: { re }, basis: "TEST", ...extra });
 
-/** `written`: profile objects the test wrote, which the instance setting names by id; `jurisdictions.combine` (the
+/** `provenance(prov)`, when given, answers the provenance standards reads in place of content's (R38, R50: a test's
+ *  wrapper over the real one). `written`: profile objects the test wrote, which the instance setting names by id; `jurisdictions.combine` (the
  *  real one) is handed the object for such an id and the id itself for a held profile. `combine` replaces it with a
  *  provider the test controls. */
 export function world({ now = NOW, profiles = [TEST_PROFILE], written = [], construct = true, combine: combineWith = null,
-                        events = null, keyedStore = null, citationLookup = null } = {}) {
+                        events = null, keyedStore = null, citationLookup = null, provenance = null } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -119,7 +120,7 @@ export function world({ now = NOW, profiles = [TEST_PROFILE], written = [], cons
     capturesReadFor: () => [],
     onReading: () => ({ ok: true }),
   };
-  /* content builds provenance on the same host (standards does not use provenance); the fixture reaches it there to
+  /* content builds provenance on the same host (standards reads it through content unless a test wraps it); the fixture reaches it there to
      migrate it and to record where a capture was retrieved from, for R5's newer capture. */
   const content = contentOf(host, { record, membership, extraction, now: () => clock.now });
   const prov = content.provenance;
@@ -143,7 +144,8 @@ export function world({ now = NOW, profiles = [TEST_PROFILE], written = [], cons
   const build = () => standardsOf(host, { record, membership, promotion, content, now: () => clock.now,
                                           combine: combineWith || ((ids) => combine(ids.map((id) => byId.get(id) ?? id))),
                                           events: () => ev, entities, capture, ...(keyedStore ? { keyedStore } : {}),
-                                          ...(citationLookup ? { citationLookup } : {}) });
+                                          ...(citationLookup ? { citationLookup } : {}),
+                                          ...(provenance ? { provenance: provenance(prov) } : {}) });
   const s = construct ? build() : null;
   let n = 0;
   const w = {

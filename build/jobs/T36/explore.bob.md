@@ -13,3 +13,7 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Merge order in L5: events → standards → money → people → explore → retrieval (after the four) → calculations.
 Inherited reds: the plan's rule 5 list as it stands at your START (read it there); reds 3, 5, 6, 8, 9 and 14 are cleared. Expect red 16 (progressions `order.test.mjs`:15) and red 18 (answer-envelope `catalogue-end.test.mjs`:17, credentials' `NO_REASON`) among your users' tests.
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+J1 (K2119, K2122): events is merged with the fix (four pages of a 4,000-vote member in ~1.2 s). Merge tranche/T36 @ b1c7c9279b, run your real-owner arm (mx1a-events.test.mjs), record elapsed_ms beside K1726's, and post COMPLETE.
