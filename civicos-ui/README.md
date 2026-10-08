@@ -20,8 +20,8 @@ steps are in `docs/CIVICOS_UI_STATE.md`; read that first.
 ## Live (development)
 
 `https://civicos.believeinoakland.workers.dev`. Leave the plane address blank,
-then sign in with the administrator password, or paste a `MEMBER_TOKEN` under
-"use a token" for read access.
+then sign in with a member's handle and password (or the administrator
+password). The page takes no pasted token (T36-38, N711).
 
 ## Not the plane
 

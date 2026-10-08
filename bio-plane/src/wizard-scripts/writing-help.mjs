@@ -15,7 +15,7 @@ export const HELP_SET_TIME_REFUSED = Object.freeze(["publishat", "publishatmove"
  *  `groupdescriptionset` (B3, K1861 (1): affordances R44 reads it through `writingHelpRefused`). */
 export const WRITING_HELP_NAMED = Object.freeze([...HELP_NAMED_REFUSED, ...HELP_SET_TIME_REFUSED]);
 /** R25: the acts whose field records what the member saw, where the draft words only what the member told it (DEC-153
- *  (2): "testimony stays the witness's"). The registry's capture and notes screens hold one such act today. */
+ *  (2): "testimony stays the witness's"). The registry's capture and calculation screens hold one such act today. */
 export const FIRSTHAND_ACTS = Object.freeze(["testify"]);
 /** R27: the most a member tells the assistant in one request. */
 export const TOLD_MAX = 4000;
