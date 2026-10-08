@@ -7,7 +7,10 @@
    is a stand-in the test controls: the run gate `ai-runs` registers with contradiction (its R13; `runs`), and, unless
    a test asks for the real one, `case-import`'s reads (`importsStandIn`); the real one's checker is scripted at
    case-checker's R1 and its re-evaluation listener answered. `case-carriage`'s `photoMarks` (its R10; T37, N757) is a
-   stand-in the test controls (`marksStandIn`): every capture is no photo unless a test marks it one. `people` is handed a stand-in for `duties` (a person's
+   stand-in the test controls (`marksStandIn`): every capture is no photo unless a test marks it one; with `realCarriage`
+   (T38) the real `case-carriage` is composed on this host instead (`w.carriage`), its photo's original read from an
+   evidence store stand-in keyed by digest (`w.evidence`), its copy held in a bucket stand-in, and `image-cover`'s
+   `coverAreas` a stand-in the test scripts (`w.cover`), so its R10–R14 answer as they do. `people` is handed a stand-in for `duties` (a person's
    duties are no read of this module's), and `entities` is built on the host directly, not reached through inquiry's
    instance (K1619). Every test drives `case-disclosures` at its interface: its services, its renderers, its exports. */
 import { DatabaseSync } from "node:sqlite";
@@ -32,6 +35,7 @@ import { linesOf } from "../../../src/lines/index.mjs";
 import { moneyOf } from "../../../src/money/index.mjs";
 import { peopleOf } from "../../../src/people/index.mjs";
 import { caseDisclosuresOf } from "../../../src/case-disclosures/index.mjs";
+import { caseCarriageOf } from "../../../src/case-carriage/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -63,7 +67,7 @@ export const ADMIN = "class:admin";
 
 /** `deps` replaces any dependency the module is handed (a scripted one, or one that throws); `realImports` composes
  *  the real `case-import` in place of the stand-in. */
-export function world({ group = "test-group", deps = {}, realImports = false } = {}) {
+export function world({ group = "test-group", deps = {}, realImports = false, realCarriage = false } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -143,8 +147,25 @@ export function world({ group = "test-group", deps = {}, realImports = false } =
     : importsStandIn();
   if (!realImports) strength.acceptedWork.registerAcceptedWork("case-import", imports.registration);
   const marks = marksStandIn();
+  /* T38: the real case-carriage (its R10–R14), over an evidence store and a bucket stand-in and a scripted cover */
+  const evidence = new Map(), bucket = new Map();
+  const cover = { refuse: null, calls: [] };
+  let carriage = null;
+  if (realCarriage) {
+    record.evidenceStore = () => ({
+      head: async (d) => (evidence.has(String(d)) ? { size: evidence.get(String(d)).length } : null),
+      get: async (d) => (evidence.has(String(d)) ? { arrayBuffer: async () => Uint8Array.from(evidence.get(String(d))).buffer } : null),
+      put: async () => null });
+    carriage = caseCarriageOf(host, { record, membership, promotion, now: () => clock.now, store: "bio",
+      bucket: { put: async (k, b) => { bucket.set(k, b); return {}; }, get: async (k) => bucket.get(k) ?? null },
+      cover: async (bytes, { areas }) => {
+        cover.calls.push(areas);
+        if (cover.refuse) return { ok: false, code: cover.refuse, detail: `refused: ${cover.refuse}` };
+        return { ok: true, bytes: Uint8Array.from([...bytes, areas.length]), covered: areas.length, width: 8, height: 8 };
+      } });
+  }
   const w = {
-    marks, imports, checks, st, host, record, membership, promotion, prov, content, inquiry, strength, contradiction, runs, clock,
+    marks, carriage, evidence, cover, imports, checks, st, host, record, membership, promotion, prov, content, inquiry, strength, contradiction, runs, clock,
     capture, sources, attestation, extraction: ex, entities, events, lines, money, people,
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a),
@@ -157,7 +178,7 @@ export function world({ group = "test-group", deps = {}, realImports = false } =
   };
   w.cd = caseDisclosuresOf(host, { record, inquiry, strength, contradiction, provenance: prov, attestation, capture,
     sources, extraction: ex, promotion, caseImport: imports, entities, events, lines, money, people, membership,
-    caseCarriage: marks, now: () => clock.now, ...deps });
+    caseCarriage: carriage || marks, now: () => clock.now, ...deps });
   let n = 0;
   Object.assign(w, {
     head: (id) => record.head(id)?.bundleSha ?? null,
@@ -179,9 +200,10 @@ export function world({ group = "test-group", deps = {}, realImports = false } =
     },
     /** An information bundle registering one capture whose provenance document carries `extra`; its text indexed
      *  whole unless `indexed: false`; fetched `direct` by this instance unless `receipt: false` (a Grade B capture,
-     *  provenance R13, R24). Answers the capture's sha. */
-    doc(id, extra = {}, { receipt = false, text = `bytes of ${id}`, indexed = true } = {}) {
-      const c = { path: "snapshots/c0.txt", text, sha: sha(text) };
+     *  provenance R13, R24); registered at `snapshots/<name>` (a `.png` name makes it a photo to the real case-carriage,
+     *  its bytes put in the evidence store). Answers the capture's sha. */
+    doc(id, extra = {}, { receipt = false, text = `bytes of ${id}`, indexed = true, name = "c0.txt" } = {}) {
+      const c = { path: `snapshots/${name}`, text, sha: sha(text) };
       const r = promotion.promote({ bundleId: id, base: null, snapKey: `k${++n}`, author: V("alice"),
         files: [{ path: "bundle.md", text: infoMd(id) }, { path: c.path, text: c.text },
                 { path: "data/provenance.json", text: JSON.stringify({ documents: [{ ...provDoc(c), ...extra }] }) }],
@@ -189,6 +211,7 @@ export function world({ group = "test-group", deps = {}, realImports = false } =
         register: [{ sha256: c.sha, path: c.path, encoding: "utf8", bytes: Buffer.byteLength(c.text) }] });
       if (!r.ok) throw new Error(`fixture doc refused: ${JSON.stringify(r).slice(0, 400)}`);
       if (indexed) w.indexText(c.sha, id);
+      evidence.set(c.sha, Buffer.from(c.text, "utf8"));
       if (receipt) prov.recordReceipt({ address: `https://example.org/${id}`, addressNorm: `example.org/${id}`,
                                         captureSha: c.sha, retrieved: T0, via: "direct" });
       return c.sha;

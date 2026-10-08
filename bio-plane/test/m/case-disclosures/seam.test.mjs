@@ -35,11 +35,14 @@ const ROWS = [
   ["PERSON_BASIS_NOT_STANDING", "C-120.15", "peopleJudged", "A reason given for naming a person is not one the record holds, or the position it cites was not held on the date of the act. Read the list again. Nothing was written."],
   ["TIE_ATTESTATION_MISSING", "C-120.16", "tieAttestationJudged", "Each member who signs a case first attests that they hold no undeclared tie to anyone or anything the case names, including those paid or paying in its money. Attest, or declare the tie first. Nothing was written."],
   /* R22's new rows (T37; N757, K2206), R6's, numbered provisionally until their stamp; the translations are BOB's drafts */
-  ["PHOTO_NOT_COVERABLE", "C-120.17", "materialsJudged", "A photo a finding in this case relies on has people or number plates marked to be obscured, and its format cannot be covered, so the case can neither carry it whole nor leave it out. It is named. Capture the photo again in a format that can be covered, such as a standard JPEG or PNG, or stop relying on it. Nothing was written."],
+  /* T38 (DEC-183; K2220, K2303): C-120.17 re-worded to `words.json`'s `photo.refused.format`, verbatim */
+  ["PHOTO_NOT_COVERABLE", "C-120.17", "materialsJudged", "This photo's format can't be obscured: {photo}. Capture it again as an ordinary photo, or stop relying on it."],
   ["PHOTO_MARKS_UNDETERMINED", "C-120.18", "materialsJudged", "A photo this case relies on could not be checked for the people and number plates marked in it, so what the published case would show of it is not known. Try again. Nothing was written."],
+  /* T38 (DEC-183 (1); K2220, K2303): R6's PHOTO_UNCHECKED, numbered provisionally until its stamp, `photo.refused.unchecked` verbatim */
+  ["PHOTO_UNCHECKED", "C-120.19", "materialsJudged", "Signing waits until every photo the case relies on is checked: {photo}."],
 ];
 
-test("R22: C-120.1–C-120.8, C-120.10–C-120.13 and the new rows C-120.14–C-120.16 (R25's PERSON_BASIS_UNRECORDED and PERSON_BASIS_NOT_STANDING, R27's TIE_ATTESTATION_MISSING) and C-120.17–C-120.18 (R6's PHOTO_NOT_COVERABLE and PHOTO_MARKS_UNDETERMINED) are this module's own table (CASE_DISCLOSURE_CHECKS), ids, codes and translations as the requirements state them word for word, each `where` naming this module's raising method; C-120.9 is never used", () => {
+test("R22: C-120.1–C-120.8, C-120.10–C-120.13 and the new rows C-120.14–C-120.16 (R25's PERSON_BASIS_UNRECORDED and PERSON_BASIS_NOT_STANDING, R27's TIE_ATTESTATION_MISSING) C-120.17–C-120.18 (R6's PHOTO_NOT_COVERABLE and PHOTO_MARKS_UNDETERMINED) and C-120.19 (R6's PHOTO_UNCHECKED, T38) are this module's own table (CASE_DISCLOSURE_CHECKS), ids, codes and translations as the requirements state them word for word, each `where` naming this module's raising method; C-120.9 is never used", () => {
   assert.deepEqual(Object.keys(CASE_DISCLOSURE_CHECKS), ROWS.map(([code]) => code));
   assert.ok(Object.isFrozen(CASE_DISCLOSURE_CHECKS));
   const w = world();
@@ -82,15 +85,18 @@ test("R22: each row's method raises its code, with the row's check and translati
   const m = world(); m.member("alice"); m.doc(DOC, {}, { indexed: false }); m.finding(Q, [{ target: DOC }]);
   assert.deepEqual(raised(m.cd.materialsJudged(m.prepared([Q]), m.roles([Q]), V("alice")).refusals), [row("RELIED_ON_NOT_PRESENTABLE")]);
   assert.deepEqual(m.cd.materialsJudged(m.prepared([Q]), m.roles([Q], [Q]), V("alice")).refusals, []);
-  /* C-120.17, C-120.18 */
+  /* C-120.17, C-120.18, C-120.19 */
   const ph = world(); ph.member("alice"); const pc = ph.doc(DOC); ph.finding(Q, [{ target: DOC }]);
+  const judgedPh = (supporting = []) => ph.cd.materialsJudged(ph.prepared([Q]), ph.roles([Q], supporting), V("alice")).refusals;
   ph.marks.photo(pc, { state: "marked", refused: "PNG_INTERLACED" });
-  assert.deepEqual(raised(ph.cd.materialsJudged(ph.prepared([Q]), ph.roles([Q]), V("alice")).refusals), [row("PHOTO_NOT_COVERABLE")]);
-  assert.deepEqual(ph.cd.materialsJudged(ph.prepared([Q]), ph.roles([Q], [Q]), V("alice")).refusals, []);
+  assert.deepEqual(raised(judgedPh()), [row("PHOTO_NOT_COVERABLE")]);
+  assert.deepEqual(judgedPh([Q]), []);
   ph.marks.read = () => ({ ok: false, reason: "NO_SUCH_PHOTO" });
-  assert.deepEqual(raised(ph.cd.materialsJudged(ph.prepared([Q]), ph.roles([Q]), V("alice")).refusals), [row("PHOTO_MARKS_UNDETERMINED")]);
+  assert.deepEqual(raised(judgedPh()), [row("PHOTO_MARKS_UNDETERMINED")]);
   ph.marks.read = null; ph.marks.photo(pc, { state: "unchecked" });
-  assert.deepEqual(ph.cd.materialsJudged(ph.prepared([Q]), ph.roles([Q]), V("alice")).refusals, []);
+  assert.deepEqual(raised(judgedPh()), [row("PHOTO_UNCHECKED")]);
+  ph.marks.photo(pc, { state: "nothing_to_obscure", copy: "c".repeat(64) });
+  assert.deepEqual(judgedPh(), []);
   /* C-120.10 */
   const a = world({ deps: { caseImport: { acceptanceOf: () => null, importedCase: () => null } } });
   assert.deepEqual(raised(a.cd.acceptedWorkJudged([{ member: Q, leg_of: Q, ord: 0, ref: `imported:${"a".repeat(64)}/INQ-2026-0042-x` }], V("alice")).refusals),
