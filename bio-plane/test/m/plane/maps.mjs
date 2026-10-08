@@ -15,6 +15,7 @@ import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { provenanceOps } from "../../../src/provenance/ops.mjs";
 import { provenanceRoutesOf, provenanceRouteOps } from "../../../src/provenance-routes/index.mjs";
 import { membershipOf, membershipOps, viewerPredicate } from "../../../src/membership/index.mjs";
+import { projectRosterOf, projectRosterOps } from "../../../src/project-roster/index.mjs";
 import { credentialsOf, credentialsOps } from "../../../src/credentials/index.mjs";
 import { observationLogOf, observationLogOps, OBSERVATION_LOG_MODULE } from "../../../src/observation-log/index.mjs";
 import { runProductionsOf, runProductionsOps } from "../../../src/run-productions/index.mjs";
@@ -74,6 +75,7 @@ import { fileSafetyOf, fileSafetyOps } from "../../../src/file-safety/index.mjs"
 
 export const MODULE_MAPS = [
   ["membership", (c, u, b, e) => membershipOps(membershipOf(c), u, b, e)],
+  ["project-roster", (c, u, b, e) => projectRosterOps(projectRosterOf(c), u, b, e)],   /* N783 (K2270): directly after membership's */
   ["credentials", (c, u, b, e) => credentialsOps(credentialsOf(c), u, b, e)],
   /* K2042 (acquisition R43): the group's co-archive setting, acquisition's two acts. acquisition exports no ops map of
      its own (its ops are reached through capture's and control-plane's doors), so the pair is named here as the module's

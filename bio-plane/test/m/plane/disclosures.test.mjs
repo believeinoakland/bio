@@ -71,7 +71,7 @@ test("R18, R3: a store written before case-carriage opens with its tables, and a
   assert.deepEqual(shape(await store({ db })), was);
 });
 
-test("R18, R5 (T37; K2226): case-disclosures has no ops map; case-carriage's (`obscuremark`, `photomarks`) is routed directly after publication's, over the one instance publication's factory made, and the route map is every module's own maps, unchanged", async () => {
+test("R18, R5 (T37, T38; K2226, K2311): case-disclosures has no ops map; case-carriage's (`obscuremark`, `photomarks`, `obscuremarkwithdraw`) is routed directly after publication's, over the one instance publication's factory made, and the route map is every module's own maps, unchanged", async () => {
   assert.deepEqual(Object.keys(disclosures).filter((k) => /Ops$|Routes$/.test(k)), [], "case-disclosures exports no ops map");
   assert.deepEqual(Object.keys(carriage).filter((k) => /Ops$|Routes$/.test(k)), ["caseCarriageOps"]);
   assert.equal(MODULE_MAPS.some(([m]) => m === "case-disclosures"), false);
@@ -80,6 +80,12 @@ test("R18, R5 (T37; K2226): case-disclosures has no ops map; case-carriage's (`o
   const x = await store(), u = new URL("http://do/");
   const union = [...new Set(MODULE_MAPS.flatMap(([, f]) => Object.keys(f(x.ctx, u, null, x.env))))];
   assert.deepEqual(Object.keys(x.s.routes(u, null)).sort(), union.sort());
+  /* case-carriage's whole map, pinned, and in the route map directly after publication's last op */
+  const CC_OPS = ["obscuremark", "photomarks", "obscuremarkwithdraw"];
+  const pub = Object.keys(MODULE_MAPS.find(([m]) => m === "publication")[1](x.ctx, u, null, x.env));
+  assert.deepEqual(Object.keys(MODULE_MAPS.find(([m]) => m === "case-carriage")[1](x.ctx, u, null, x.env)), CC_OPS);
+  const keys = Object.keys(x.s.routes(u, null));
+  assert.deepEqual(keys.slice(keys.indexOf(pub.at(-1)) + 1, keys.indexOf(pub.at(-1)) + 1 + CC_OPS.length), CC_OPS);
   /* each of case-carriage's ops answers what that one instance answers (its refusal for a digest no photo holds) */
   const none = "e".repeat(64);
   const marks = await x.call(`/photomarks?capture=${none}&viewer=${OLIVE}`);
@@ -87,8 +93,14 @@ test("R18, R5 (T37; K2226): case-disclosures has no ops map; case-carriage's (`o
   assert.deepEqual(marks, JSON.parse(JSON.stringify(caseCarriageOf(x.ctx).photoMarks({ captureSha: none, viewer: OLIVE }))));
   const mark = await x.call(`/obscuremark?capture=${none}&by=${OLIVE}`, { areas: [{ rect: [0, 0, 2, 2], kind: "person" }] });
   assert.equal(mark.reason, "NO_SUCH_PHOTO", JSON.stringify(mark));
-  /* negative control: a machine is refused by name before any photo is read, through the same route */
-  assert.equal((await x.call(`/obscuremark?capture=${none}&by=daemon`, { areas: [] })).reason, "MACHINE_CANNOT_MARK");
+  const gone = await x.call(`/obscuremarkwithdraw?capture=${none}&by=${OLIVE}`, { mark: "MARK-none", reason: "wrong area" });
+  assert.equal(gone.reason, "NO_SUCH_PHOTO", JSON.stringify(gone));
+  assert.deepEqual(gone, JSON.parse(JSON.stringify(await caseCarriageOf(x.ctx).obscureMarkWithdraw({ captureSha: none, mark: "MARK-none",
+    reason: "wrong area", by: OLIVE }))));
+  /* negative control: a machine is refused by name before any photo is read, through the same routes */
+  assert.equal((await x.call(`/obscuremark?capture=${none}&by=daemon`, { areas: [] })).reason, "MACHINE_CANNOT_MARK_PHOTO");
+  assert.equal((await x.call(`/obscuremarkwithdraw?capture=${none}&by=daemon`, { mark: "MARK-none", reason: "x" })).reason,
+               "MACHINE_CANNOT_WITHDRAW_MARK");
 });
 
 /* A photo held only in the evidence bucket at record-core's key (`<namespace>/captures/<sha>`, R2), registered in an
