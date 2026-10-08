@@ -1,6 +1,6 @@
 # case-carriage (T37)
 
-**Status** · session_013UybDevdS9DJfUx9eqiUuX · depth 2 · RUNNING until 2026-10-08T11:56:50Z (users' tests (control-plane, plane)) · handled B3
+**Status** · session_013UybDevdS9DJfUx9eqiUuX · depth 2 · COMPLETE · handled B3
 
 ## Reading set (mechanics §17, N739)
 
