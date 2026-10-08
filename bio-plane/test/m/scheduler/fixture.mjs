@@ -145,6 +145,20 @@ export function owners(set = {}) {
       deeperBatch: async (a) => rec("fileSafety.deeperBatch", [a], v("file-deeper", "tick", a, { ok: true, started: 0, polled: 0, done: [], running: 0, queued: 0 })),
       forwardSecurityCounts: async (a) => rec("fileSafety.forwardSecurityCounts", [a], v("file-forward", "tick", a, { ok: true, sent: [], failed: [] })),
     },
+    /* T39-15 (R25): a stand-in shaped as case-carriage R15 and R17: `copyWake(now)` (the `document-copy` consumer's `wake`
+       in `set`, the instant in ms or null, none by default), `copyBatch({limit})` answering a Promise, and `onCopyWork`,
+       whose listeners it keeps (`listeners`) and whose answer is `set["copy-work"].tick` ({ok: true, module}). */
+    caseCarriage: {
+      listeners: [],
+      copyWake: (now) => rec("caseCarriage.copyWake", [now], v("document-copy", "wake", now)),
+      copyBatch: async (a) => rec("caseCarriage.copyBatch", [a], v("document-copy", "tick", a,
+        { ok: true, copied: 0, clean: 0, public: 0, refused: 0, failed: 0, remaining: 0 })),
+      onCopyWork(module, fn) {
+        const r = v("copy-work", "tick", null, { ok: true, module });
+        if (r && r.ok) this.listeners.push(fn);
+        return rec("caseCarriage.onCopyWork", [module], r);
+      },
+    },
     inquiry: {
       datedWaitsDue: (now) => rec("inquiry.datedWaitsDue", [now], v("dated-waits", "due", now, false)),
       datedWaitsWake: (now) => rec("inquiry.datedWaitsWake", [now], v("dated-waits", "wake", now)),
@@ -161,13 +175,17 @@ export const DAILY_OWNERS = Object.freeze({ "duty-transitions": "duties", "inter
 /** R24's five consumers: a world includes `file-safety` only when a test asks (`files`), or names one of them in `set`. */
 export const FILE_CONSUMERS = Object.freeze(["file-scan", "file-render", "file-deeper", "file-forward", "file-reputation"]);
 
+/** R25's consumer: a world includes `case-carriage` only when a test asks (`copies`), or names it in `set`. */
+export const COPY_CONSUMER = "document-copy";
+
 /** A scheduler over a fresh storage and the owners above; `env` its bindings; `zone` the group's time zone. */
-export function world(set = {}, env = null, { daily = false, files = false, zone = null, st = null } = {}) {
+export function world(set = {}, env = null, { daily = false, files = false, copies = false, zone = null, st = null } = {}) {
   const store = st || storage();
   const w = owners(set || {});
   const of = { ...w.of };
   for (const [name, owner] of Object.entries(DAILY_OWNERS)) if (!daily && !(set && name in set)) delete of[owner];
   if (!files && !FILE_CONSUMERS.some((n) => set && n in set)) delete of.fileSafety;
+  if (!copies && !(set && COPY_CONSUMER in set)) delete of.caseCarriage;
   const s = new Scheduler({ storage: store, env, owners: of, zone: () => zone });
   return { s, st: store, calls: w.calls, o: w.o, set };
 }
