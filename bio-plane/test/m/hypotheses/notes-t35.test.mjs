@@ -3,10 +3,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, ANN, OUTSIDER, BOSS, INQ, E1, E2 } from "./fixture.mjs";
-import { hypothesesOps, hypothesesOf, HYPOTHESES_CHECKS, NOTE_MAX_BYTES, NOTES_SCHEMA } from "../../../src/hypotheses/index.mjs";
+import { hypothesesOps, hypothesesOf, HYPOTHESES_CHECKS, NOTE_MAX_BYTES } from "../../../src/hypotheses/index.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 
 const row = (code) => HYPOTHESES_CHECKS[code];
+/** The notes table as T34 made it: one number sequence for the whole group, no `revised`. */
+const T34_MEMBER_NOTES = `CREATE TABLE member_notes (note_id INTEGER PRIMARY KEY AUTOINCREMENT, member TEXT NOT NULL, text TEXT NOT NULL, at TEXT NOT NULL)`;
 const url = (op) => new URL(`https://plane.example/?op=${op}`);
 const notesRows = (w) => w.rows(`SELECT * FROM member_notes ORDER BY note_id`);
 const turnRows = (w) => w.rows(`SELECT * FROM member_note_turns ORDER BY seq`);
@@ -115,12 +117,16 @@ test("R13 noteDelete deletes one note `by` kept, for good, answering {ok, note, 
   for (const by of [null, "", "class:ai", "class:daemon", "token:abc"]) expect({ note, by }, "MACHINE_CANNOT_NOTE");
   const absent = expect({ note: 99999, by: ANN }, "NO_SUCH_NOTE");
   for (const n of [null, "x", -1, 0, 1.5]) expect({ note: n, by: ANN }, "NO_SUCH_NOTE");
-  same(expect({ note, by: OUTSIDER }, "NO_SUCH_NOTE"), absent);
+  /* another's: a number of Ann's that the asker does not hold (since T36 each member numbers their own notes, N727) */
+  assert.ok(keep !== theirs);
+  same(expect({ note: keep, by: OUTSIDER }, "NO_SUCH_NOTE"), absent);
   same(expect({ note, by: BOSS }, "NO_SUCH_NOTE"), absent);
+  same(expect({ note: keep, by: BOSS }, "NO_SUCH_NOTE"), absent);
   expect({ note, by: "admin" }, "MACHINE_CANNOT_NOTE");
   const d = w.h.noteDelete({ note, by: ANN });
   assert.deepEqual(d, { ok: true, note, deleted: true });
-  assert.deepEqual(notesRows(w).map((r) => r.note_id), [keep, theirs], "only that note's row went");
+  assert.deepEqual(notesRows(w).map((r) => [r.member, r.note_id]).sort(), [["ann", keep], ["outsider", theirs]].sort(),
+    "only that note's row went, whatever number another member's note carries");
   assert.deepEqual(turnRows(w), [], "its turns went with it");
   assert.equal(JSON.stringify(w.h.read({ hypothesisId: h.id, viewer: ANN })), hypothesis, "the hypothesis the turn made is unchanged");
   /* already deleted: one answer with the absent; and no act reaches it again */
@@ -133,7 +139,10 @@ test("R13 noteDelete deletes one note `by` kept, for good, answering {ok, note, 
 test("R14 no history and no marker: after a revision no row of the store holds the earlier text; after a deletion none holds the note, its text, its turns or a sign it existed; a later note never takes a deleted note's number", () => {
   const w = world();
   w.bundle(INQ);
-  const before = everything(w).replace(/^sqlite_sequence:.*$/m, "");
+  /* the number's high-water mark (R14's own means of never reusing a number): the shared sequence's before T36, the
+     member's own mark since (N727), which holds only that member's last number */
+  const unmarked = (t) => t.replace(/^sqlite_sequence:.*$/m, "").replace(/^member_note_numbers:.*$/m, "");
+  const before = unmarked(everything(w));
   const { note } = w.h.noteWrite({ text: "a secret first draft about ENT-2026-0001", by: ANN });
   w.h.noteTurn({ note, into: "question", by: ANN, made: "INQ-2026-0077-q" });
   w.h.noteRevise({ note, text: "a second, kinder draft", by: ANN });
@@ -142,7 +151,8 @@ test("R14 no history and no marker: after a revision no row of the store holds t
   const after = everything(w);
   for (const trace of ["kinder draft", "INQ-2026-0077-q"]) assert.ok(!after.includes(trace), trace);
   /* every table but the number's high-water mark (R14's own means of never reusing a number) is as before the note */
-  assert.equal(after.replace(/^sqlite_sequence:.*$/m, ""), before, "nothing marks that it existed");
+  assert.equal(unmarked(after), before, "nothing marks that it existed");
+  assert.deepEqual(w.rows(`SELECT * FROM member_note_numbers`), [{ member: "ann", last: note }], "the mark: the member's last number, nothing else");
   /* the deleted number is never answered again */
   const next = [];
   for (let i = 0; i < 3; i++) next.push(w.h.noteWrite({ text: `n${i}`, by: ANN }).note);
@@ -176,8 +186,7 @@ test("R15 a revision overwrites the note's row and a deletion removes the row an
   /* an older copy: the notes table as T34 made it, without `revised` */
   const old = world();
   old.st.db.exec(`DROP TABLE member_notes`);
-  old.st.db.exec(NOTES_SCHEMA.match(/CREATE TABLE IF NOT EXISTS member_notes \([\s\S]*?\);/)[0]
-    .replace(/,\s*revised[^\n]*\n/, "\n").replace(/--[^\n]*/g, ""));
+  old.st.db.exec(T34_MEMBER_NOTES);
   old.st.db.exec(`INSERT INTO member_notes (member, text, at) VALUES ('ann', 'kept in T34', '2026-10-01T00:00:00.000Z')`);
   const host = { storage: old.st };
   const record = recordOf(host, { evidence: null, evidencePrefix: "bio/captures/" });

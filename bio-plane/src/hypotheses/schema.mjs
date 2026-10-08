@@ -35,20 +35,28 @@ CREATE INDEX IF NOT EXISTS hypothesis_revisions_bundle ON hypothesis_revisions (
 export const HYPOTHESES_TABLES = Object.freeze(["hypotheses", "hypothesis_revisions"]);
 
 /* A member's own notes (R11–R15; DEC-136 (2), (3)). A note is keyed by a number of its own (`note_id`), never a record
-   id, so no leg, reference, citation, connection, search or count names one (R14). `member_notes` holds the words as
-   last kept: a revision overwrites them in place, keeping no earlier text (R11, R15); `member_note_turns` each turn of
-   a note into an observation, a hunch or a question, appended; `member_note_told` the one time a member was answered
-   the court statement (R11). A deletion removes the note's row and its turns in one act, and AUTOINCREMENT keeps a
-   deleted note's number from ever being taken again (R13, R14). Each is its author's alone. */
+   id, so no leg, reference, citation, connection, search or count names one (R14). The number is the member's own
+   (T36; N727): `member_notes` is keyed by `(member, note_id)`, and each member's next number is drawn from that member's
+   high-water mark in `member_note_numbers`, never from a sequence shared across members, so a member's numbers, their
+   order and their gaps depend only on that member's own notes. The mark, not the largest number held, keeps a deleted
+   note's number from ever being taken again (R13, R14), and it holds no text and no count of anyone else's notes.
+   `member_notes` holds the words as last kept: a revision overwrites them in place, keeping no earlier text (R11, R15);
+   `member_note_turns` each turn of a note into an observation, a hunch or a question, appended; `member_note_told` the
+   one time a member was answered the court statement (R11). A deletion removes the note's row and its turns in one act.
+   Each is its author's alone. */
 export const NOTES_SCHEMA = `
 CREATE TABLE IF NOT EXISTS member_notes (
-  note_id       INTEGER PRIMARY KEY AUTOINCREMENT,
   member        TEXT NOT NULL,      -- the member who kept it; the only one answered it
+  note_id       INTEGER NOT NULL,   -- the member's own number for it, from that member's mark
   text          TEXT NOT NULL,      -- the member's words, as last kept
   at            TEXT NOT NULL,
-  revised       TEXT                -- the instant of its last revision, or null
+  revised       TEXT,               -- the instant of its last revision, or null
+  PRIMARY KEY (member, note_id)
 );
-CREATE INDEX IF NOT EXISTS member_notes_of ON member_notes (member, note_id);
+CREATE TABLE IF NOT EXISTS member_note_numbers (
+  member        TEXT PRIMARY KEY,
+  last          INTEGER NOT NULL    -- the last number this member's notes took
+);
 CREATE TABLE IF NOT EXISTS member_note_turns (
   seq           INTEGER PRIMARY KEY AUTOINCREMENT,
   note_id       INTEGER NOT NULL,
@@ -57,7 +65,7 @@ CREATE TABLE IF NOT EXISTS member_note_turns (
   made_id       TEXT NOT NULL,      -- the id the member's act answered
   at            TEXT NOT NULL
 );
-CREATE INDEX IF NOT EXISTS member_note_turns_of ON member_note_turns (note_id, seq);
+CREATE INDEX IF NOT EXISTS member_note_turns_member ON member_note_turns (member, note_id, seq);
 CREATE TABLE IF NOT EXISTS member_note_told (
   member        TEXT PRIMARY KEY,
   at            TEXT NOT NULL
@@ -68,3 +76,6 @@ CREATE TABLE IF NOT EXISTS member_note_told (
 export const NOTES_ADDED_COLUMNS = Object.freeze([Object.freeze(["member_notes", "revised", "TEXT"])]);
 
 export const NOTES_TABLES = Object.freeze(["member_notes", "member_note_turns", "member_note_told"]);
+/* R14 (T36): each member's high-water mark, exempt from purge as `record-core`'s id counter is (its R23), so a number
+   once taken is never taken again, purged store or not. */
+export const NOTE_NUMBERS_TABLE = "member_note_numbers";
