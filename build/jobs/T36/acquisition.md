@@ -58,3 +58,7 @@ Measured at the start: own requirements 49 KB; code 191 KB; tests 330 KB (`readi
 - **P6:** the module is 2,927 lines of source (tests 4,400), under the mark.
 
 Size (session_01UBPYqfwtexSRDSTDJARv1u): test runs 9, module lines 2927
+
+## J1 · REPORT
+
+Four findings (record, 'Found in other modules and in my own'). (1) acquisition R38: unpack checks no profile, so a member's op=unpack opens an office or OpenDocument file as an archive; R41 now answers it NOT_AN_ARCHIVE. I recommend amending R38 to refuse NOT_AN_ARCHIVE too (a requirement change, yours). (2) promotion gate.mjs:757-758 stamps acquisition's C-137.1-.19: in T37 they are C-139.1-.19, plus the new C-139.20. (3) bio-plane/dist/bio-plane.bundled.mjs is stale (not_product, regenerated at layer close). (4) The DEC-149 line citations in dec149.test titles and in my Suggestions were already stale at the tranche tip (historical T35 lines); nothing fails. Detail decisions for rulings.md are in the record: REPUTATION_TIMEOUT_MS 5000; reputation carried only on a filed capture; categories kept as strings only; the scanner reached at binding.fetch on /provider/reputation.
