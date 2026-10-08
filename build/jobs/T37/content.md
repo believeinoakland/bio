@@ -18,7 +18,7 @@ Deferred: none.
 - content: `node --test test/m/content/` · tests 132, pass 132, fail 0.
 - Users of `extentRelation` (a changed service's users): retrieval 162/0, basis-versions 131/0, money 70/0, people 46/0, standards 72/0, events 61/0, citation 78/0, case-checker 51/1 (R13 stale `program.mjs` only, above).
 - Layer tests: none named in `build/manifest.md`.
-- `format: 136 modules, 135 requirements files; 0 failures` · `architecture: 25 product files, 75 relative imports (0 naming no tracked file, not judged); 0 failures` · `coverage: 1 modules, 55 of 55 live requirement ids named by a test; 0 failures` · ownership: below, after the commit.
+- `format: 136 modules, 135 requirements files; 0 failures` · `architecture: 25 product files, 75 relative imports (0 naming no tracked file, not judged); 0 failures` · `coverage: 1 modules, 55 of 55 live requirement ids named by a test; 0 failures` · `ownership: 6 files changed by content between tranche/T37 and HEAD; 0 failures`.
 
 P6: 3,776 lines (3,719 at the opening), under 4,000.
 
