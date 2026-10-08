@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { handle } from '../src/handler.mjs';
 import { SAFE_VIEW_DPI, SAFE_VIEW_PAGES_MAX, SCAN_MAX_BYTES } from '../src/limits.mjs';
 import { makePdf, content } from '../../pdf-worker/test/make-pdf.mjs';
-import { memoryBucket, putCapture, rendererImage, depsWith, post, enc, sha, rendererPresent } from './helpers.mjs';
+import { memoryBucket, putCapture, putDerived, rendererImage, depsWith, post, enc, sha, rendererPresent } from './helpers.mjs';
 
 const skip = !rendererPresent && 'LibreOffice and Poppler are not installed';
 const FONT = '/Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >>';
@@ -125,6 +125,22 @@ test('R7 refusals by name: R1\'s and R2\'s, ENCRYPTED, NOT_RENDERABLE, TIME_LIMI
   const failing = depsWith({ bucket, renderer: async () => new Response(JSON.stringify({ ok: false, code: 'RENDER_FAILED', message: 'x'.repeat(900) }), { status: 500 }) });
   const [s, b] = await answer({ store: 'bio', target: pdf, route: 'pdf' }, failing);
   assert.deepEqual([s, b.code, b.message.length], [500, 'RENDER_FAILED', 300]);
+});
+
+test('R7 R2 a derived target (area "derived") renders from ${store}/derived/<sha> as a capture does; any other area is BAD_TARGET', { skip }, async () => {
+  const { bucket, deps } = await rendering();
+  const view = putDerived(bucket, richPdf(1));
+  const r = await call(deps, { store: 'bio', target: view, route: 'pdf' });
+  assert.equal(r.status, 200);
+  assert.equal(r.headers.get('x-pages'), '1');
+  await r.arrayBuffer();
+  assert.ok(bucket.calls.every(([, k]) => !k.includes('/captures/')), 'nothing read under captures/');
+  const capture = putCapture(bucket, richPdf(2));
+  assert.deepEqual([(await call(deps, { store: 'bio', target: { ...capture, area: 'derived' }, route: 'pdf' })).status], [404]);
+  for (const area of ['captures', 'x', false]) {
+    const b = await call(deps, { store: 'bio', target: { ...view, area }, route: 'pdf' });
+    assert.deepEqual([b.status, await b.json()], [400, { ok: false, code: 'BAD_TARGET' }], String(area));
+  }
 });
 
 test('R14 the render\'s directory is gone when its answer arrives', { skip }, async () => {

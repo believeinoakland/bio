@@ -8,7 +8,7 @@ import { SCAN_BATCH_MAX, SIGNATURES_MAX_AGE_MS, SCAN_MAX_BYTES } from '../src/li
 import { parseScan } from '../container/scanner.mjs';
 import { makeZip } from '../../bio-plane/test/make-zip.mjs';
 import { onePage } from '../../pdf-worker/test/make-pdf.mjs';
-import { memoryBucket, putCapture, mirrorTestSet, scannerImage, depsWith, post, enc, EICAR, NOW, toolsPresent } from './helpers.mjs';
+import { memoryBucket, putCapture, putDerived, mirrorTestSet, scannerImage, depsWith, post, enc, EICAR, NOW, toolsPresent } from './helpers.mjs';
 
 const skip = !toolsPresent && 'clamscan and sigtool are not installed';
 const call = async (deps, body) => { const r = await handle(post('/scan', body), deps); return { status: r.status, body: await r.json() }; };
@@ -61,6 +61,39 @@ test('R2 each target is read as a copy, parts in order with their own digests, t
     ['not_scanned', 'NOT_FOUND'], ['not_scanned', 'DIGEST_MISMATCH'], ['not_scanned', 'DIGEST_MISMATCH']]);
   assert.deepEqual(body.verdicts.map((v) => v.capture_sha), [whole.capture_sha, parts.capture_sha, missing.capture_sha, tampered.capture_sha, 'd'.repeat(64)]);
   for (const [k, v] of before) assert.deepEqual(bucket.objects.get(k), v, `${k} unchanged`);
+});
+
+test('R2 a target with area "derived" is read from ${store}/derived/<sha> and checked and answered exactly as a capture is; any other area is BAD_TARGET', { skip }, async () => {
+  const { bucket, deps } = await scanning();
+  mirrorTestSet(bucket);
+  const view = putDerived(bucket, enc('%PDF-1.7 a safe view of page images'));
+  const copy = putDerived(bucket, EICAR, { split: 20 });
+  const onlyCapture = { ...putCapture(bucket, enc('stored as a capture only')), area: 'derived' };
+  const tampered = putDerived(bucket, enc('abcdefghij'), { split: 5 });
+  bucket.objects.set(`bio/derived/${tampered.parts[1].sha256}`, enc('XXXXX'));
+  const wrongWhole = { capture_sha: 'd'.repeat(64), parts: putDerived(bucket, enc('0123456789'), { split: 5 }).parts, area: 'derived' };
+  const derivedOnly = putDerived(bucket, enc('a derived copy, not a capture'));
+  const asCapture = { capture_sha: derivedOnly.capture_sha, parts: null };
+  const others = ['captures', 'derived/', 'DERIVED', '', null, 1, ['derived'], { area: 'derived' }].map((area) => ({ ...view, area }));
+  const before = new Map(bucket.objects);
+  bucket.calls.length = 0;
+  const { body } = await call(deps, { store: 'bio', targets: [view, copy, onlyCapture, tampered, wrongWhole, asCapture, ...others] });
+  assert.deepEqual(body.verdicts.map((v) => [v.result, v.reason]), [['clean', undefined], ['found', undefined], ['not_scanned', 'NOT_FOUND'],
+    ['not_scanned', 'DIGEST_MISMATCH'], ['not_scanned', 'DIGEST_MISMATCH'], ['not_scanned', 'NOT_FOUND'], ...others.map(() => ['not_scanned', 'BAD_TARGET'])]);
+  assert.deepEqual(body.verdicts.slice(0, 6).map((v) => v.capture_sha), [view.capture_sha, copy.capture_sha, onlyCapture.capture_sha, tampered.capture_sha, 'd'.repeat(64), asCapture.capture_sha]);
+  for (const v of body.verdicts.slice(0, 2)) assert.deepEqual([v.tool, v.engine], ['clamav', 'clamav']);
+  const read = bucket.calls.filter(([op]) => op === 'get' || op === 'head').map(([, k]) => k).filter((k) => !k.startsWith('clamav/'));
+  const derived = new Set([view, copy, onlyCapture, tampered, wrongWhole].flatMap((t) => (t.parts ? t.parts.map((p) => `bio/derived/${p.sha256}`) : [`bio/derived/${t.capture_sha}`])));
+  assert.deepEqual(read.filter((k) => !derived.has(k)), [`bio/captures/${asCapture.capture_sha}`], 'a derived target reads only derived/; one without an area only captures/');
+  for (const [k, v] of before) assert.deepEqual(bucket.objects.get(k), v, `${k} unchanged`);
+  // TOO_LARGE as for a capture, with nothing read
+  bucket.head = async (key) => { bucket.calls.push(['head', key]); return key === `bio/derived/${'e'.repeat(64)}` ? { size: SCAN_MAX_BYTES + 1 } : null; };
+  bucket.calls.length = 0;
+  const big = await call(deps, { store: 'scratch', targets: [{ capture_sha: 'e'.repeat(64), parts: null, area: 'derived' }] });
+  assert.equal(big.body.verdicts[0].reason, 'NOT_FOUND', 'each store reads only its own derived area');
+  const big2 = await call(deps, { store: 'bio', targets: [{ capture_sha: 'e'.repeat(64), parts: null, area: 'derived' }] });
+  assert.equal(big2.body.verdicts[0].reason, 'TOO_LARGE');
+  assert.ok(!bucket.calls.some(([op, k]) => op === 'get' && !k.startsWith('clamav/')), 'nothing was read');
 });
 
 test('R2 over SCAN_MAX_BYTES is TOO_LARGE with nothing read', { skip }, async () => {

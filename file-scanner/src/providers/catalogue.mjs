@@ -1,7 +1,8 @@
 /* The catalogue (R20) and engine families (R31). Every offered descriptor passes R19 (a test pins it); its `handling`
  * is the study's statement (`build/plan/study-security-tools-N710.md`, `study-scanner-N705.md`), read on the date it
- * states. A generic transport is a template: the administrator's statement (`spec.config.engine_family`,
- * `spec.config.handling`) and the spec's `host` complete it, and R19 validates the result (`resolveDescriptor`). */
+ * states. Each descriptor's `config` names the settings its adapter reads (R19, N777). A generic transport is a
+ * template: the administrator's statement (`spec.config.engine_family`, `spec.config.handling`) and the spec's `host`
+ * complete it, and R19 validates the result (`resolveDescriptor`). */
 import { validateDescriptor, normaliseFamily } from './descriptor.mjs';
 
 const READ_ON = '2026-10-07';
@@ -10,8 +11,18 @@ const ADMIN = 'stated by the administrator';
 
 const descriptor = (d) => Object.freeze({
   mode_required: null, mode_check: null, credentials: [], read_on: READ_ON, ...d,
+  config: Object.freeze((d.config || []).map((f) => Object.freeze({ ...f }))),
   handling: Object.freeze({ never_sends: NEVER, sub_processors: [], ...d.handling }),
 });
+
+// R19 (N777): the settings each adapter reads from the spec's `config`, by name, so a settings page asks each one.
+const field = (name, label, required) => ({ name, label, required });
+const TEMPLATE_CONFIG = (familyRequired) => [
+  field('engine_family', 'The engines the tool runs, as its maker names them', familyRequired),
+  field('handling', 'The tool\'s statement of what it receives, keeps and shares', true),
+  field('source_urls', 'Where that statement is published', false),
+];
+const AZURE_TENANT = field('tenant_id', 'Microsoft Entra tenant ID', true);
 
 // MetaDefender reports one result per engine; the engines its tiers run, as OPSWAT names them (N705 §2.2; the list is
 // this adapter's assumption, wider than any one tier). An engine it reports outside this list is answered under
@@ -74,6 +85,8 @@ export const PROVIDERS = Object.freeze([
     licence_note: 'the organization\'s own licence', source_urls: ['https://www.opswat.com/docs/mdcore/metadefender-core'] }),
   descriptor({ provider_id: 'icap', vendor: ADMIN, product: 'any ICAP server (RFC 3507)', kinds: ['scan'],
     transport: 'icap', reach: 'public', hosts: [], template: true, engine_family: [ADMIN], test_probe: { kind: 'eicar' },
+    config: [...TEMPLATE_CONFIG(true), field('service', 'ICAP service name (default avscan)', false),
+      field('tls', 'Connect over TLS (port 11344 unless the address names one)', false)],
     handling: { sends: ['file_bytes'], recipient: ADMIN, region: ADMIN, file_retention: ADMIN, result_retention: ADMIN,
       sample_sharing: 'none' },
     licence_note: 'the organization\'s own server and licence', source_urls: [] }),
@@ -81,6 +94,8 @@ export const PROVIDERS = Object.freeze([
     kinds: ['scan'], transport: 'azure_blob', reach: 'public', max_bytes: 2_147_483_648,
     hosts: ['*.blob.core.windows.net', 'login.microsoftonline.com'], engine_family: ['microsoft-defender'],
     credentials: ['client_id', 'client_secret'], test_probe: { kind: 'eicar' },
+    config: [AZURE_TENANT, field('storage_account', 'Azure storage account name', true),
+      field('container', 'Blob container the files are scanned in', true)],
     handling: { sends: ['file_bytes'], recipient: 'Microsoft (the organization\'s own Azure storage account)',
       region: 'the storage account\'s region; content read within it',
       file_retention: 'the service does not retain the scanned content; this adapter deletes the blob after the result',
@@ -131,6 +146,7 @@ export const PROVIDERS = Object.freeze([
     kinds: ['sandbox'], transport: 'https', reach: 'public', max_bytes: 104_857_600,
     hosts: { 'us-1': ['api.crowdstrike.com'], 'us-2': ['api.us-2.crowdstrike.com'], 'eu-1': ['api.eu-1.crowdstrike.com'] },
     engine_family: ['crowdstrike'], credentials: ['client_id', 'client_secret'], test_probe: { kind: 'eicar' },
+    config: [field('environment_id', 'Sandbox environment ID (default 160, Windows 10 64-bit)', false)],
     mode_required: Object.freeze({ params: Object.freeze({ is_confidential: 'true' }),
       description: 'community access off: every upload confidential' }),
     mode_check: 'GET /falconx/entities/settings/v1 before each send: community access is off for the API client',
@@ -157,6 +173,7 @@ export const PROVIDERS = Object.freeze([
   descriptor({ provider_id: 'cloudflare-intel', vendor: 'Cloudflare, Inc.', product: 'Cloudflare URL intelligence',
     kinds: ['url_reputation'], transport: 'https', reach: 'public', hosts: ['api.cloudflare.com'],
     engine_family: ['cloudflare-intel'], credentials: ['api_token'],
+    config: [field('account_id', 'Cloudflare account ID', true)],
     test_probe: { kind: 'test_address', address: 'https://malware.testcategory.com/' },
     handling: { sends: ['url'], recipient: 'Cloudflare, Inc. (the group\'s own account)', region: 'Cloudflare\'s network',
       file_retention: 'no file is sent', result_retention: 'not stated', sample_sharing: 'none' },
@@ -181,6 +198,8 @@ export const PROVIDERS = Object.freeze([
   descriptor({ provider_id: 'sentinel', vendor: 'Microsoft Corporation', product: 'Microsoft Sentinel (Logs Ingestion API)',
     kinds: ['log_sink'], transport: 'https', reach: 'public', hosts: ['*.ingest.monitor.azure.com', 'login.microsoftonline.com'],
     engine_family: ['sentinel'], credentials: ['client_id', 'client_secret'], test_probe: { kind: 'zero_counts' },
+    config: [AZURE_TENANT, field('endpoint', 'Data collection endpoint host', true),
+      field('dcr_id', 'Data collection rule immutable ID', true), field('stream', 'Stream name in the rule', true)],
     handling: { sends: ['counts'], recipient: 'Microsoft (the organization\'s own workspace)', region: 'the workspace\'s region',
       file_retention: 'no file is sent', result_retention: 'as the workspace keeps its logs', sample_sharing: 'none' },
     licence_note: 'the organization\'s own Azure workspace',
@@ -190,24 +209,28 @@ export const PROVIDERS = Object.freeze([
     hosts: { us: ['us-chronicle.googleapis.com', 'oauth2.googleapis.com'], europe: ['europe-chronicle.googleapis.com', 'oauth2.googleapis.com'],
       'asia-southeast1': ['asia-southeast1-chronicle.googleapis.com', 'oauth2.googleapis.com'] },
     engine_family: ['google-secops'], credentials: ['service_account_key'], test_probe: { kind: 'zero_counts' },
+    config: [field('project', 'Google Cloud project ID', true), field('location', 'Instance location', true),
+      field('instance', 'Instance (customer) ID', true), field('log_type', 'Log type the counts are imported as', true)],
     handling: { sends: ['counts'], recipient: 'Google LLC (the organization\'s own instance)', region: 'the instance\'s region',
       file_retention: 'no file is sent', result_retention: 'as the instance keeps its logs', sample_sharing: 'none' },
     licence_note: 'the organization\'s own instance', source_urls: ['https://docs.cloud.google.com/chronicle/docs/reference/ingestion-methods'] }),
   descriptor({ provider_id: 'elastic', vendor: 'Elasticsearch B.V.', product: 'Elastic (_bulk API)', kinds: ['log_sink'],
     transport: 'https', reach: 'public', hosts: [], host_from_spec: true, engine_family: ['elastic'],
     credentials: ['api_key'], test_probe: { kind: 'zero_counts' },
+    config: [field('index', 'Index the counts are written to (default civicsmith-security-counts)', false)],
     handling: { sends: ['counts'], recipient: 'the organization\'s own Elastic deployment', region: 'where it runs',
       file_retention: 'no file is sent', result_retention: 'as the organization keeps its logs', sample_sharing: 'none' },
     licence_note: 'the organization\'s own deployment', source_urls: ['https://www.elastic.co/docs/api/doc/elasticsearch/operation/operation-bulk'] }),
   descriptor({ provider_id: 'syslog-tls', vendor: ADMIN, product: 'any syslog collector (RFC 5424 over TLS)', kinds: ['log_sink'],
     transport: 'syslog_tls', reach: 'public', hosts: [], template: true, engine_family: ['syslog'],
-    test_probe: { kind: 'zero_counts' },
+    test_probe: { kind: 'zero_counts' }, config: TEMPLATE_CONFIG(false),
     handling: { sends: ['counts'], recipient: ADMIN, region: ADMIN, file_retention: 'no file is sent',
       result_retention: ADMIN, sample_sharing: 'none' },
     licence_note: 'the organization\'s own collector', source_urls: [] }),
   descriptor({ provider_id: 'https-webhook', vendor: ADMIN, product: 'any HTTPS endpoint taking a JSON POST', kinds: ['log_sink'],
     transport: 'https', reach: 'public', hosts: [], template: true, engine_family: ['webhook'], credentials: ['token'],
     test_probe: { kind: 'zero_counts' },
+    config: [...TEMPLATE_CONFIG(false), field('path', 'Path on the endpoint (default /)', false)],
     handling: { sends: ['counts'], recipient: ADMIN, region: ADMIN, file_retention: 'no file is sent',
       result_retention: ADMIN, sample_sharing: 'none' },
     licence_note: 'the organization\'s own endpoint', source_urls: [] }),
@@ -239,8 +262,10 @@ export function resolveDescriptor(d, spec) {
   if (!d.template) return { ok: true, descriptor: d };
   const config = (spec && spec.config) || {};
   const host = spec && spec.host;
+  // A statement that is not a list is left as given, so R19 refuses it by name rather than this throwing.
+  const family = (v) => (Array.isArray(v) ? normaliseFamily(v) : v);
   const resolved = { ...d, template: undefined, hosts: host ? [String(host).split(':')[0]] : [],
-    engine_family: d.kinds.includes('scan') ? (config.engine_family && normaliseFamily(config.engine_family)) : normaliseFamily(config.engine_family || d.engine_family),
+    engine_family: d.kinds.includes('scan') ? family(config.engine_family) : family(config.engine_family || d.engine_family),
     handling: { ...d.handling, ...(config.handling || {}) }, source_urls: config.source_urls || [] };
   delete resolved.template;
   resolved.host_from_spec = true;

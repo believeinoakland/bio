@@ -59,6 +59,20 @@ export function putCapture(bucket, bytes, { store = 'bio', split } = {}) {
   return { capture_sha, parts };
 }
 
+/** Stores `bytes` as a derived copy (a safe view or safe copy file-safety wrote under `derived/`) and answers its
+ *  target, `area: "derived"` (R2). */
+export function putDerived(bucket, bytes, { store = 'bio', split } = {}) {
+  const capture_sha = sha(bytes);
+  if (!split) { bucket.objects.set(`${store}/derived/${capture_sha}`, bytes); return { capture_sha, parts: null, area: 'derived' }; }
+  const parts = [];
+  for (let i = 0; i < bytes.length; i += split) {
+    const p = bytes.subarray(i, i + split);
+    bucket.objects.set(`${store}/derived/${sha(p)}`, p);
+    parts.push({ sha256: sha(p), bytes: p.length });
+  }
+  return { capture_sha, parts, area: 'derived' };
+}
+
 /** The test signature set (EICAR's MD5 as an `.hdb`), placed in the bucket as the mirror's current set. */
 export function mirrorTestSet(bucket, { published = new Date(NOW - 3_600_000).toISOString(), set = 'rtest1' } = {}) {
   const hdb = enc(`${createHash('md5').update(EICAR).digest('hex')}:${EICAR.length}:Eicar-Test-Signature\n`);

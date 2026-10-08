@@ -1514,7 +1514,7 @@ var fleet_member_default = {
     {
       class_name: "FileScanner",
       image: {
-        repository: "ghcr.io/believeinoakland/file-scanner-scanner",
+        repository: "docker.io/civicos/file-scanner-scanner",
         digest: null,
         platform: "linux/amd64",
         port: 8080,
@@ -1543,7 +1543,7 @@ var fleet_member_default = {
     {
       class_name: "SafeViewRenderer",
       image: {
-        repository: "ghcr.io/believeinoakland/file-scanner-renderer",
+        repository: "docker.io/civicos/file-scanner-renderer",
         digest: null,
         platform: "linux/amd64",
         port: 8080,
@@ -1655,15 +1655,18 @@ var BOUNDS = Object.freeze({
 import { createHash } from "node:crypto";
 var HEX64 = /^[0-9a-f]{64}$/;
 var WRITABLE = /^(clamav|reputation)\/[A-Za-z0-9._/-]+$/;
-var captureKey = (store, sha) => `${store}/captures/${sha}`;
+var AREAS = Object.freeze({ captures: "captures", derived: "derived" });
+var objectKey = (store, area, sha) => `${store}/${AREAS[area]}/${sha}`;
 function normaliseTarget(t) {
   if (!t || typeof t !== "object" || Array.isArray(t) || !HEX64.test(t.capture_sha || "")) return null;
-  if (t.parts === null || t.parts === void 0) return { capture_sha: t.capture_sha, parts: null };
+  if (t.area !== void 0 && t.area !== "derived") return null;
+  const area = t.area === "derived" ? "derived" : "captures";
+  if (t.parts === null || t.parts === void 0) return { capture_sha: t.capture_sha, parts: null, area };
   if (!Array.isArray(t.parts) || t.parts.length === 0) return null;
   for (const p of t.parts) {
     if (!p || typeof p !== "object" || !HEX64.test(p.sha256 || "") || !Number.isSafeInteger(p.bytes) || p.bytes < 0) return null;
   }
-  return { capture_sha: t.capture_sha, parts: t.parts.map((p) => ({ sha256: p.sha256, bytes: p.bytes })) };
+  return { capture_sha: t.capture_sha, parts: t.parts.map((p) => ({ sha256: p.sha256, bytes: p.bytes })), area };
 }
 var knownStore = (s) => typeof s === "string" && NAMESPACES.includes(s);
 async function sizeTarget(bucket, store, t, max = SCAN_MAX_BYTES) {
@@ -1672,20 +1675,20 @@ async function sizeTarget(bucket, store, t, max = SCAN_MAX_BYTES) {
     if (declared > max) return { ok: false, reason: "TOO_LARGE" };
     let total = 0;
     for (const p of t.parts) {
-      const h2 = await bucket.head(captureKey(store, p.sha256));
+      const h2 = await bucket.head(objectKey(store, t.area, p.sha256));
       if (!h2) return { ok: false, reason: "NOT_FOUND" };
       if (h2.size !== p.bytes) return { ok: false, reason: "DIGEST_MISMATCH" };
       total += h2.size;
     }
     return { ok: true, bytes: total };
   }
-  const h = await bucket.head(captureKey(store, t.capture_sha));
+  const h = await bucket.head(objectKey(store, t.area, t.capture_sha));
   if (!h) return { ok: false, reason: "NOT_FOUND" };
   if (h.size > max) return { ok: false, reason: "TOO_LARGE" };
   return { ok: true, bytes: h.size };
 }
 function targetStream(bucket, store, t) {
-  const keys = t.parts ? t.parts.map((p) => [captureKey(store, p.sha256), p.sha256]) : [[captureKey(store, t.capture_sha), null]];
+  const keys = t.parts ? t.parts.map((p) => [objectKey(store, t.area, p.sha256), p.sha256]) : [[objectKey(store, t.area, t.capture_sha), null]];
   const whole = createHash("sha256");
   let settle;
   const outcome = new Promise((r) => {
@@ -2051,6 +2054,7 @@ var FIELDS = [
   "hosts",
   "engine_family",
   "credentials",
+  "config",
   "test_probe",
   "handling",
   "mode_required",
@@ -2066,6 +2070,18 @@ var str = (v) => typeof v === "string" && v.length > 0;
 var strList = (v, nonEmpty) => Array.isArray(v) && (!nonEmpty || v.length > 0) && v.every(str);
 var stated = (v, check) => v === NOT_STATED || check(v);
 var hostName = (h) => str(h) && /^(\*\.)?[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(h);
+var CONFIG_NAME = /^[a-z][a-z0-9_]*$/;
+function configList(v) {
+  if (!Array.isArray(v)) return false;
+  const names2 = /* @__PURE__ */ new Set();
+  for (const f of v) {
+    if (!f || typeof f !== "object" || Array.isArray(f)) return false;
+    if (Object.keys(f).length !== 3 || !CONFIG_NAME.test(f.name || "") || !str(f.label) || typeof f.required !== "boolean") return false;
+    if (names2.has(f.name)) return false;
+    names2.add(f.name);
+  }
+  return true;
+}
 function malformed(d) {
   if (!d || typeof d !== "object" || Array.isArray(d)) return "descriptor";
   for (const k of Object.keys(d)) if (!FIELDS.includes(k) && !OWN.includes(k)) return k;
@@ -2085,6 +2101,7 @@ function malformed(d) {
   } else return "hosts";
   if (!strList(d.engine_family, true)) return "engine_family";
   if (!strList(d.credentials, false)) return "credentials";
+  if (!configList(d.config)) return "config";
   if (!d.test_probe || !PROBES.includes(d.test_probe.kind) || d.test_probe.kind === "test_address" && !str(d.test_probe.address)) return "test_probe";
   const h = d.handling;
   if (!h || typeof h !== "object" || Array.isArray(h)) return "handling";
@@ -2105,8 +2122,8 @@ function malformed(d) {
 }
 function validateDescriptor(d) {
   try {
-    const field = malformed(d);
-    if (field) return { ok: false, code: "DESCRIPTOR_MALFORMED", field };
+    const field2 = malformed(d);
+    if (field2) return { ok: false, code: "DESCRIPTOR_MALFORMED", field: field2 };
     const h = d.handling;
     if (h.sample_sharing === "third_parties" || h.sample_sharing === "public") return { ok: false, code: "PROVIDER_SHARES_SAMPLES" };
     if (h.sample_sharing === NOT_STATED) return { ok: false, code: "HANDLING_NOT_STATED" };
@@ -2138,8 +2155,16 @@ var descriptor = (d) => Object.freeze({
   credentials: [],
   read_on: READ_ON,
   ...d,
+  config: Object.freeze((d.config || []).map((f) => Object.freeze({ ...f }))),
   handling: Object.freeze({ never_sends: NEVER, sub_processors: [], ...d.handling })
 });
+var field = (name, label, required) => ({ name, label, required });
+var TEMPLATE_CONFIG = (familyRequired) => [
+  field("engine_family", "The engines the tool runs, as its maker names them", familyRequired),
+  field("handling", "The tool's statement of what it receives, keeps and shares", true),
+  field("source_urls", "Where that statement is published", false)
+];
+var AZURE_TENANT = field("tenant_id", "Microsoft Entra tenant ID", true);
 var METADEFENDER_ENGINES = [
   "ahnlab",
   "antiy",
@@ -2305,6 +2330,11 @@ var PROVIDERS = Object.freeze([
     template: true,
     engine_family: [ADMIN],
     test_probe: { kind: "eicar" },
+    config: [
+      ...TEMPLATE_CONFIG(true),
+      field("service", "ICAP service name (default avscan)", false),
+      field("tls", "Connect over TLS (port 11344 unless the address names one)", false)
+    ],
     handling: {
       sends: ["file_bytes"],
       recipient: ADMIN,
@@ -2328,6 +2358,11 @@ var PROVIDERS = Object.freeze([
     engine_family: ["microsoft-defender"],
     credentials: ["client_id", "client_secret"],
     test_probe: { kind: "eicar" },
+    config: [
+      AZURE_TENANT,
+      field("storage_account", "Azure storage account name", true),
+      field("container", "Blob container the files are scanned in", true)
+    ],
     handling: {
       sends: ["file_bytes"],
       recipient: "Microsoft (the organization's own Azure storage account)",
@@ -2464,6 +2499,7 @@ var PROVIDERS = Object.freeze([
     engine_family: ["crowdstrike"],
     credentials: ["client_id", "client_secret"],
     test_probe: { kind: "eicar" },
+    config: [field("environment_id", "Sandbox environment ID (default 160, Windows 10 64-bit)", false)],
     mode_required: Object.freeze({
       params: Object.freeze({ is_confidential: "true" }),
       description: "community access off: every upload confidential"
@@ -2525,6 +2561,7 @@ var PROVIDERS = Object.freeze([
     hosts: ["api.cloudflare.com"],
     engine_family: ["cloudflare-intel"],
     credentials: ["api_token"],
+    config: [field("account_id", "Cloudflare account ID", true)],
     test_probe: { kind: "test_address", address: "https://malware.testcategory.com/" },
     handling: {
       sends: ["url"],
@@ -2594,6 +2631,12 @@ var PROVIDERS = Object.freeze([
     engine_family: ["sentinel"],
     credentials: ["client_id", "client_secret"],
     test_probe: { kind: "zero_counts" },
+    config: [
+      AZURE_TENANT,
+      field("endpoint", "Data collection endpoint host", true),
+      field("dcr_id", "Data collection rule immutable ID", true),
+      field("stream", "Stream name in the rule", true)
+    ],
     handling: {
       sends: ["counts"],
       recipient: "Microsoft (the organization's own workspace)",
@@ -2620,6 +2663,12 @@ var PROVIDERS = Object.freeze([
     engine_family: ["google-secops"],
     credentials: ["service_account_key"],
     test_probe: { kind: "zero_counts" },
+    config: [
+      field("project", "Google Cloud project ID", true),
+      field("location", "Instance location", true),
+      field("instance", "Instance (customer) ID", true),
+      field("log_type", "Log type the counts are imported as", true)
+    ],
     handling: {
       sends: ["counts"],
       recipient: "Google LLC (the organization's own instance)",
@@ -2643,6 +2692,7 @@ var PROVIDERS = Object.freeze([
     engine_family: ["elastic"],
     credentials: ["api_key"],
     test_probe: { kind: "zero_counts" },
+    config: [field("index", "Index the counts are written to (default civicsmith-security-counts)", false)],
     handling: {
       sends: ["counts"],
       recipient: "the organization's own Elastic deployment",
@@ -2665,6 +2715,7 @@ var PROVIDERS = Object.freeze([
     template: true,
     engine_family: ["syslog"],
     test_probe: { kind: "zero_counts" },
+    config: TEMPLATE_CONFIG(false),
     handling: {
       sends: ["counts"],
       recipient: ADMIN,
@@ -2688,6 +2739,7 @@ var PROVIDERS = Object.freeze([
     engine_family: ["webhook"],
     credentials: ["token"],
     test_probe: { kind: "zero_counts" },
+    config: [...TEMPLATE_CONFIG(false), field("path", "Path on the endpoint (default /)", false)],
     handling: {
       sends: ["counts"],
       recipient: ADMIN,
@@ -2723,11 +2775,12 @@ function resolveDescriptor(d, spec) {
   if (!d.template) return { ok: true, descriptor: d };
   const config = spec && spec.config || {};
   const host = spec && spec.host;
+  const family = (v2) => Array.isArray(v2) ? normaliseFamily(v2) : v2;
   const resolved = {
     ...d,
     template: void 0,
     hosts: host ? [String(host).split(":")[0]] : [],
-    engine_family: d.kinds.includes("scan") ? config.engine_family && normaliseFamily(config.engine_family) : normaliseFamily(config.engine_family || d.engine_family),
+    engine_family: d.kinds.includes("scan") ? family(config.engine_family) : family(config.engine_family || d.engine_family),
     handling: { ...d.handling, ...config.handling || {} },
     source_urls: config.source_urls || []
   };
@@ -2811,7 +2864,7 @@ function makeNet(deps, d, spec, started) {
   async function http(url, init = {}) {
     const u = new URL(url);
     if (u.protocol !== "https:" && u.protocol !== "http:") throw new ToolError("HOST_NOT_ALLOWED", { host: u.host });
-    if (u.username || u.password) throw new ToolError("CREDENTIAL_IN_ADDRESS");
+    if (u.username || u.password) throw new ToolError("TOOL_ADDRESS_HAS_CREDENTIAL");
     guard(u.hostname, u.port);
     if (left() <= 0) throw new ToolError("TIME_LIMIT");
     const via = d.reach === "tunnel" ? deps.vpc && ((req) => deps.vpc.fetch(req)) : (req) => deps.fetch(req);
@@ -3664,7 +3717,9 @@ function checkSpec(deps, spec, kind) {
   if (regional && !(spec.region in base.hosts)) return { ok: false, code: "REGION_UNKNOWN", provider_id: id };
   const needsHost = base.template || base.host_from_spec || regional && base.hosts[spec.region].length === 0;
   if (needsHost && !(typeof spec.host === "string" && spec.host)) return { ok: false, code: "PROVIDER_UNKNOWN", provider_id: id };
-  const r = resolveDescriptor(base, spec);
+  const config = configOf(base, spec);
+  if (config.missing) return { ok: false, code: "CONFIG_MISSING", field: config.missing, provider_id: id };
+  const r = resolveDescriptor(base, { ...spec, config: config.config });
   if (!r.ok) return { ...r, provider_id: id };
   const d = r.descriptor;
   if (!d.kinds.includes(kind)) return { ok: false, code: "KIND_NOT_OFFERED", provider_id: id };
@@ -3678,14 +3733,24 @@ function checkSpec(deps, spec, kind) {
   if (spec.host && portPart(spec.host, 0) === 25) return { ok: false, code: "PORT_REFUSED", provider_id: id };
   if (!TOOL_ID.test(String(spec.tool_id || ""))) return { ok: false, code: "TOOL_SPEC_MALFORMED", field: "tool_id", provider_id: id };
   if (spec.monthly_limit_left !== void 0 && !(Number(spec.monthly_limit_left) > 0)) return { ok: false, code: "MONTHLY_LIMIT_REACHED", provider_id: id };
-  return { ok: true, d, adapter: ADAPTERS[kind][id] };
+  return { ok: true, d, adapter: ADAPTERS[kind][id], config: config.config };
+}
+var present = (v) => v !== void 0 && v !== null && v !== "";
+function configOf(d, spec) {
+  const given = spec.config && typeof spec.config === "object" && !Array.isArray(spec.config) ? spec.config : {};
+  const config = {};
+  for (const f of d.config) {
+    const v = Object.hasOwn(given, f.name) ? given[f.name] : void 0;
+    if (present(v)) config[f.name] = v;
+    else if (f.required) return { missing: f.name };
+  }
+  return { config: Object.freeze(config) };
 }
 function contextOf(deps, spec, c, started) {
-  const config = spec.config && typeof spec.config === "object" ? spec.config : {};
   return {
     spec,
     d: c.d,
-    config,
+    config: c.config,
     bucket: deps.bucket,
     now: deps.now,
     maxAge: REPUTATION_LIST_MAX_AGE_MS,

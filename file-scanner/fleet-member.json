@@ -23,7 +23,7 @@
     {
       "class_name": "FileScanner",
       "image": {
-        "repository": "ghcr.io/believeinoakland/file-scanner-scanner",
+        "repository": "docker.io/civicos/file-scanner-scanner",
         "digest": null,
         "platform": "linux/amd64",
         "port": 8080,
@@ -52,7 +52,7 @@
     {
       "class_name": "SafeViewRenderer",
       "image": {
-        "repository": "ghcr.io/believeinoakland/file-scanner-renderer",
+        "repository": "docker.io/civicos/file-scanner-renderer",
         "digest": null,
         "platform": "linux/amd64",
         "port": 8080,
