@@ -59,7 +59,7 @@ Readings J1 (2) and (3) stand (B2): byte answers are Responses from the ops map 
 5. **answer-envelope** `R7, R2` ("every code decorated before the catalogue's end …") and **row-census** fail on the tranche tip without my change too (not mine).
 
 Rows added, each awaiting stamp (T37's promotion job), all in `src/file-safety/checks.mjs` `FILE_SAFETY_CHECKS`:
-- C-140.1 NO_SUCH_CAPTURE awaiting stamp
+- C-140.1 FILE_NOT_HELD awaiting stamp
 - C-140.2 SCANNER_ABSENT awaiting stamp
 - C-140.3 SCANNER_UNREACHABLE awaiting stamp
 - C-140.4 NOT_SCANNED awaiting stamp
@@ -74,8 +74,8 @@ Rows added, each awaiting stamp (T37's promotion job), all in `src/file-safety/c
 - C-140.13 RENDERER_ABSENT awaiting stamp
 - C-140.14 NO_OUTSIDE_TOOL awaiting stamp
 - C-140.15 DEEPER_CHECK_BUDGET_SPENT awaiting stamp
-- C-140.16 MACHINE_CANNOT_RELEASE awaiting stamp
-- C-140.17 NO_REASON awaiting stamp
+- C-140.16 MACHINE_CANNOT_RELEASE_HOLD awaiting stamp
+- C-140.17 HOLD_NO_REASON awaiting stamp
 - C-140.18 NOT_HELD awaiting stamp
 - C-140.19 SAME_MEMBER awaiting stamp
 - C-140.20 PROVIDER_REFUSED awaiting stamp
@@ -109,7 +109,13 @@ Deferred: nothing of my own module. P6: 3,679 lines with tests (1,971 source), u
 - The modules I use, on my branch: provenance 111/111, acquisition 152/152, capture 153/153, sources 30/30, credentials 119/119, membership 172/172; answer-envelope 25 pass, 1 fail (fails identically on the tranche tip); row-census fails on the tranche tip (red 4) and, with my paths filled, also lists my 39 rows arriving (accepted red 4 until T37).
 - `node checks/format.mjs`: 0 failures. With my `paths` and `tests` filled in a local, uncommitted copy of `modules.json`: `architecture.mjs` 14 product files, 58 relative imports, 0 failures; `coverage.mjs` 38 of 38 live ids named by a test, 0 failures; `ownership.mjs` 15 files, 0 failures. Without them (as committed) architecture judges 0 files and coverage and ownership fail on the empty entry (red 2's file-safety half, which clears when BOB fills them).
 
-Size (session_017HHK6Ecu8dE2tpWEUqLyxZ): test runs 31, module lines 3679
+## CHANGE B4 (K2103): no code shared with another module's row
+
+- Merged `tranche/T36` @ 541c7268ca (R2 re-worded). Re-coded: C-140.1 `NO_SUCH_CAPTURE` → `FILE_NOT_HELD` (a hidden capture still answers exactly as an absent one, K2098), C-140.16 `MACHINE_CANNOT_RELEASE` → `MACHINE_CANNOT_RELEASE_HOLD`, C-140.17 `NO_REASON` → `HOLD_NO_REASON`; check ids, translations and sites unchanged. Finding 3 above is closed by it.
+- Every other C-140 code checked against every earlier (and later) module's rows by a new test (rows.test.mjs, "R2, R24 (K231, K2103)"): it reads every exported `_CHECKS` family of every other module's files in `modules.json`, finds no shared code, and as its negative control sees the three old codes in their owners' rows.
+- Tests: file-safety 43/43; provenance 111/111, acquisition 152/152, capture 153/153, sources 30/30. Checks with my paths filled (uncommitted copy): format, architecture, coverage (38 of 38), ownership: 0 failures each.
+
+Size (session_017HHK6Ecu8dE2tpWEUqLyxZ): test runs 38, module lines 3711
 
 ## J3 · COMPLETE
 

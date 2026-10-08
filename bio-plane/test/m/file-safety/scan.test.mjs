@@ -135,16 +135,16 @@ test("R16: a found note from any engine of any tool places a scan hold: its orig
   assert.ok(tool);
 });
 
-test("R17: `releaseScanHold` is an act of record: MACHINE_CANNOT_RELEASE for a machine or AI identity, NO_REASON for an empty reason or one over 2,000 characters, NOT_HELD, SAME_MEMBER when `by` made the pending act; the first act answers pending_second, a second by a different member releases it, {state: released, by: [a, b]}", async () => {
+test("R17: `releaseScanHold` is an act of record: MACHINE_CANNOT_RELEASE_HOLD for a machine or AI identity, HOLD_NO_REASON for an empty reason or one over 2,000 characters, NOT_HELD, SAME_MEMBER when `by` made the pending act; the first act answers pending_second, a second by a different member releases it, {state: released, by: [a, b]}", async () => {
   const w = world({ scan: { clamav: (s) => (s === sha(pdf(false, "h")) ? { result: "found", findings: ["Doc.Dropper.Agent-1"] } : { result: "clean" }) } });
   const s = await w.capture(pdf(false, "h"));
   const clean = await w.capture(pdf(false, "c"));
   await w.fs.scanBatch({});
   for (const by of ["class:daemon", "claude", "agent", "", null]) {
     const r = w.fs.releaseScanHold({ captureSha: s, by, reason: "fine" });
-    assert.deepEqual({ code: r.code, ...{ check: r.check, translation: r.translation } }, { code: "MACHINE_CANNOT_RELEASE", ...row("MACHINE_CANNOT_RELEASE") }, String(by));
+    assert.deepEqual({ code: r.code, ...{ check: r.check, translation: r.translation } }, { code: "MACHINE_CANNOT_RELEASE_HOLD", ...row("MACHINE_CANNOT_RELEASE_HOLD") }, String(by));
   }
-  for (const reason of ["", "   ", null, "x".repeat(2001)]) assert.equal(w.fs.releaseScanHold({ captureSha: s, by: "m1", reason }).code, "NO_REASON");
+  for (const reason of ["", "   ", null, "x".repeat(2001)]) assert.equal(w.fs.releaseScanHold({ captureSha: s, by: "m1", reason }).code, "HOLD_NO_REASON");
   assert.equal(w.fs.releaseScanHold({ captureSha: s, by: "m1", reason: "x".repeat(2000) }).state, "pending_second", "2,000 characters is a reason");
   assert.equal(w.fs.releaseScanHold({ captureSha: clean, by: "m1", reason: "r" }).code, "NOT_HELD");
   const same = w.fs.releaseScanHold({ captureSha: s, by: "m1", reason: "again" });

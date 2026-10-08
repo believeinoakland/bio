@@ -67,7 +67,7 @@ test("R1, R34: a receipt carrying a reputation answer adds a `reputation` note (
   assert.equal((await w.fs.threatOf({ captureSha: clean })).threat, "low");
 });
 
-test("R2: `verdictNotes` answers the capture's notes oldest first, each {note_id, kind, tool, engine, engine_version, signatures, scanned_at, result, findings} with reason, checks and vendor_ref when they apply; NO_SUCH_CAPTURE for a digest the record holds nothing under (and a malformed one), and exactly the same answer for a capture the viewer may not see (K2098)", async () => {
+test("R2: `verdictNotes` answers the capture's notes oldest first, each {note_id, kind, tool, engine, engine_version, signatures, scanned_at, result, findings} with reason, checks and vendor_ref when they apply; FILE_NOT_HELD for a digest the record holds nothing under (and a malformed one), and exactly the same answer for a capture the viewer may not see (K2098)", async () => {
   const w = world({ scan: { clamav: (s) => (s === sha(pdf(false, "f")) ? { result: "found", findings: ["Pdf.Exploit.X-1"] } : { result: "not_scanned", reason: "SIGNATURES_STALE" }) } });
   const s = await w.capture(pdf(false, "f"));
   const t = await w.capture(pdf(false, "t"));
@@ -89,8 +89,8 @@ test("R2: `verdictNotes` answers the capture's notes oldest first, each {note_id
   /* refusals */
   for (const bad of [sha("never held"), "zz", null]) {
     const x = w.fs.verdictNotes({ captureSha: bad, viewer: "member:m1" });
-    assert.equal(x.code, "NO_SUCH_CAPTURE");
-    assert.deepEqual({ check: x.check, translation: x.translation }, row("NO_SUCH_CAPTURE"));
+    assert.equal(x.code, "FILE_NOT_HELD");
+    assert.deepEqual({ check: x.check, translation: x.translation }, row("FILE_NOT_HELD"));
   }
   /* sight: a capture homed in a project m2 does not take part in */
   w.project("PROJ-1", "m1");
@@ -99,9 +99,9 @@ test("R2: `verdictNotes` answers the capture's notes oldest first, each {note_id
   const hidden = w.fs.verdictNotes({ captureSha: s, viewer: "member:m2" });
   /* K2098: exactly as an absent one, so a hidden capture cannot be told from one never held */
   const never = w.fs.verdictNotes({ captureSha: sha("never held either"), viewer: "member:m2" });
-  assert.equal(hidden.code, "NO_SUCH_CAPTURE");
+  assert.equal(hidden.code, "FILE_NOT_HELD");
   assert.deepEqual({ ...hidden, captureSha: null }, { ...never, captureSha: null });
-  assert.equal(w.fs.verdictNotes({ captureSha: s, viewer: "" }).code, "NO_SUCH_CAPTURE", "an unstamped viewer sees nothing");
+  assert.equal(w.fs.verdictNotes({ captureSha: s, viewer: "" }).code, "FILE_NOT_HELD", "an unstamped viewer sees nothing");
   assert.equal(w.fs.verdictNotes({ captureSha: s, viewer: "member:boss" }).ok, true, "an administrator sees every capture");
 });
 

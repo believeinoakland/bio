@@ -185,3 +185,35 @@ test("R38: `findingKind(name)` answers {file_kind, threat_kind, variant, words}:
   assert.ok(Object.isFrozen(FINDING_KINDS) && FINDING_KINDS.every(Object.isFrozen));
   assert.ok(enc && FS.fileSafetyOps);
 });
+
+test("R2, R24 (K231, K2103): no refusal code of this module shares a code another module's row holds: every exported family (a `_CHECKS` object of rows) of every other module's files in build/modules.json is read, and none holds a code of FILE_SAFETY_CHECKS", async () => {
+  const repo = new URL("../../../../", import.meta.url);
+  const modules = JSON.parse(readFileSync(new URL("build/modules.json", repo), "utf8")).modules;
+  const own = new Set(Object.keys(FILE_SAFETY_CHECKS));
+  const shared = [], readFiles = [], others = new Set();
+  for (const m of modules.filter((x) => x.id !== "file-safety")) {
+    for (const p of m.paths || []) {
+      if (!p.startsWith("bio-plane/src/")) continue;
+      const files = p.endsWith("/") ? readdirSync(new URL(p, repo)).filter((f) => f.endsWith(".mjs")).map((f) => p + f) : p.endsWith(".mjs") ? [p] : [];
+      for (const f of files) {
+        if (!/_CHECKS\b/.test(readFileSync(new URL(f, repo), "utf8"))) continue;
+        let ns;
+        try { ns = await import(new URL(f, repo).href); } catch { continue; }
+        readFiles.push(f);
+        for (const [name, table] of Object.entries(ns)) {
+          if (!name.endsWith("_CHECKS") || !table || typeof table !== "object") continue;
+          for (const [code, r] of Object.entries(table)) {
+            if (!r || typeof r.check !== "string") continue;
+            others.add(code);
+            if (own.has(code)) shared.push(`${code} (${m.id} ${f} ${name})`);
+          }
+        }
+      }
+    }
+  }
+  assert.ok(readFiles.length > 40, `the families were read (${readFiles.length} files)`);
+  assert.ok(readFiles.includes("bio-plane/src/credentials/checks.mjs") && readFiles.includes("bio-plane/src/sources/checks.mjs"));
+  assert.deepEqual(shared, []);
+  /* negative control: the codes this module held before K2103 are seen in their owners' rows */
+  for (const code of ["NO_SUCH_CAPTURE", "MACHINE_CANNOT_RELEASE", "NO_REASON"]) assert.ok(others.has(code), code);
+});

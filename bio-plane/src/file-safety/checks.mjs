@@ -20,7 +20,7 @@ const row = (check, where, translation) => Object.freeze({ check, where, transla
    =========================================================================== */
 export const FILE_SAFETY_CHECKS = Object.freeze({
   /* R2, R6, R8, R9, R11, R13, R33: the digest names nothing the record holds. */
-  NO_SUCH_CAPTURE: row('C-140.1', at("#held", "is-capture-held"),
+  FILE_NOT_HELD: row('C-140.1', at("#held", "is-capture-held"),
     'Your group\'s Civicsmith holds no captured file under that digest, so there is nothing to check or open.'),
   /* R4, R8 (K1928 Q4): the scanner is not installed beside this copy. */
   SCANNER_ABSENT: row('C-140.2', at("scanBatch", "is-scanner-bound"),
@@ -73,10 +73,10 @@ export const FILE_SAFETY_CHECKS = Object.freeze({
     'Every outside tool your group uses for deeper checks has used its allowance for this month, so no check was '
       + 'asked for. The allowance starts again on the first of the month.'),
   /* R17 (Intake Doctrine §4a): a release is a person's act. */
-  MACHINE_CANNOT_RELEASE: row('C-140.16', at("releaseScanHold", "is-release-by-member"),
+  MACHINE_CANNOT_RELEASE_HOLD: row('C-140.16', at("releaseScanHold", "is-release-by-member"),
     'Releasing a scan hold is a judgement two members make and answer for; the machine never can. Nothing was '
       + 'released.'),
-  NO_REASON: row('C-140.17', at("releaseScanHold", "is-release-reason"),
+  HOLD_NO_REASON: row('C-140.17', at("releaseScanHold", "is-release-reason"),
     'Releasing a scan hold needs your reason, which the record keeps beside the release: up to two thousand '
       + 'characters. Nothing was released.'),
   NOT_HELD: row('C-140.18', at("releaseScanHold", "is-hold-open"),

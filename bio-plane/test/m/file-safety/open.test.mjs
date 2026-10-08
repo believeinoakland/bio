@@ -19,15 +19,15 @@ const refused = (r, code) => {
   assert.deepEqual({ ok: r.ok, code: r.code, check: r.check, translation: r.translation }, { ok: false, code, ...row(code) });
 };
 
-test("R8: a low file opens as capture.getCapture serves it when a ClamAV clean note is newer than a week; else the scan before first opening runs on demand: clean opens, found places the hold and answers SCAN_HOLD, not_scanned or unknown answer NOT_SCANNED with the reason, a scan not finished within the call SCAN_PENDING; with no scanner bound the bytes open, stated not_scanned SCANNER_ABSENT; NO_SUCH_CAPTURE and the sight refusal (NO_SUCH_CAPTURE, K2098) first", async () => {
+test("R8: a low file opens as capture.getCapture serves it when a ClamAV clean note is newer than a week; else the scan before first opening runs on demand: clean opens, found places the hold and answers SCAN_HOLD, not_scanned or unknown answer NOT_SCANNED with the reason, a scan not finished within the call SCAN_PENDING; with no scanner bound the bytes open, stated not_scanned SCANNER_ABSENT; FILE_NOT_HELD and the sight refusal (FILE_NOT_HELD, K2098) first", async () => {
   let next = { result: "clean" };
   const w = world({ scan: { clamav: () => next } });
   const bytes = pdf(false, "low");
   const s = await w.capture(bytes);
   /* the first two refusals */
-  refused(await w.fs.openOriginal({ captureSha: sha("not held"), viewer: "member:m1" }), "NO_SUCH_CAPTURE");
+  refused(await w.fs.openOriginal({ captureSha: sha("not held"), viewer: "member:m1" }), "FILE_NOT_HELD");
   w.project("PROJ-1", "m1"); w.home(s, "INFO-P", { project: "PROJ-1" });
-  assert.equal((await w.fs.openOriginal({ captureSha: s, viewer: "member:m2" })).code, "NO_SUCH_CAPTURE");
+  assert.equal((await w.fs.openOriginal({ captureSha: s, viewer: "member:m2" })).code, "FILE_NOT_HELD");
   /* no note yet: the scan runs on demand, clean, and it opens; the note is written */
   await opened(await w.fs.openOriginal({ captureSha: s, viewer: "member:m1" }), s, bytes);
   assert.equal(w.calls("/scan").length, 1);
@@ -151,7 +151,7 @@ test("R9: `originalState` answers {may_open, path, why}, what R8 would answer no
   const sb = await n.fs.originalState({ captureSha: b, viewer: "member:m1" });
   assert.deepEqual([sb.may_open, sb.path, sb.why], [false, null, "NOT_SCANNED"]);
   /* the refusals R8 answers first */
-  assert.equal((await w.fs.originalState({ captureSha: sha("none"), viewer: "member:m1" })).code, "NO_SUCH_CAPTURE");
+  assert.equal((await w.fs.originalState({ captureSha: sha("none"), viewer: "member:m1" })).code, "FILE_NOT_HELD");
 });
 
 test("R10 (K1892; DEC-173 (4)): no record of who opened, downloaded or asked about which file: two members open files, one by the warned path, ask for notes, grades, states, safe views and a deeper check, and neither member's id nor any confirmation is in any row this module wrote, any line it logged or any record it forwarded", async () => {

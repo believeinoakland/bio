@@ -55,9 +55,9 @@ test("R11: `safeView` by route: PDFs and office documents answer the image-only 
   refused(await w.fs.safeView({ captureSha: await w.capture(new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])), viewer: "member:m1" }), "NO_SAFE_VIEW");
   refused(await w.fs.safeView({ captureSha: await w.capture(makeZip([{ name: "a", data: "a" }])), viewer: "member:m1" }), "NO_SAFE_VIEW");
   /* R8's first two */
-  refused(await w.fs.safeView({ captureSha: sha("nothing"), viewer: "member:m1" }), "NO_SUCH_CAPTURE");
+  refused(await w.fs.safeView({ captureSha: sha("nothing"), viewer: "member:m1" }), "FILE_NOT_HELD");
   w.project("PROJ-1", "m1"); w.home(p, "INFO-P", { project: "PROJ-1" });
-  assert.equal((await w.fs.safeView({ captureSha: p, viewer: "member:m2" })).code, "NO_SUCH_CAPTURE");
+  assert.equal((await w.fs.safeView({ captureSha: p, viewer: "member:m2" })).code, "FILE_NOT_HELD");
   /* no renderer bound */
   const n = world({ bound: false });
   refused(await n.fs.safeView({ captureSha: await n.capture(pdf(false, "n")), viewer: "member:m1" }), "RENDERER_ABSENT");
@@ -137,10 +137,10 @@ test("R33 (K1929 (4)): `requestSafeCopy` asks the first on CDR tool for a rebuil
   refused(await w.fs.safeCopy({ captureSha: fd, viewer: "member:m1" }), "SAFE_COPY_WITHHELD");
   assert.equal((await w.fs.threatOf({ captureSha: fd })).scan_hold, null, "a copy's finding holds the copy back, not the original");
   /* R8's first two */
-  refused(await w.fs.safeCopy({ captureSha: sha("x"), viewer: "member:m1" }), "NO_SUCH_CAPTURE");
-  refused(await w.fs.requestSafeCopy({ captureSha: sha("x"), viewer: "member:m1" }), "NO_SUCH_CAPTURE");
+  refused(await w.fs.safeCopy({ captureSha: sha("x"), viewer: "member:m1" }), "FILE_NOT_HELD");
+  refused(await w.fs.requestSafeCopy({ captureSha: sha("x"), viewer: "member:m1" }), "FILE_NOT_HELD");
   w.project("PROJ-1", "m1"); w.home(s, "INFO-P", { project: "PROJ-1" });
-  assert.equal((await w.fs.safeCopy({ captureSha: s, viewer: "member:m2" })).code, "NO_SUCH_CAPTURE");
+  assert.equal((await w.fs.safeCopy({ captureSha: s, viewer: "member:m2" })).code, "FILE_NOT_HELD");
   assert.ok(tool);
   /* a routine CDR tool queues every captured file, made at the render wake (R32). No catalogued CDR descriptor states
      the organization's own servers as its recipient today (reported to BOB), so the tool's use is set as R28 would

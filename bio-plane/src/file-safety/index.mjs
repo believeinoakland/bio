@@ -181,15 +181,15 @@ export class FileSafety {
     } catch { return []; }
   }
 
-  /* R2 and every service naming a capture (K2098): `NO_SUCH_CAPTURE` for a digest the record holds nothing under, and the
+  /* R2 and every service naming a capture (K2098): `FILE_NOT_HELD` for a digest the record holds nothing under, and the
      same answer, byte for byte, for a capture whose home the viewer may not see (membership R43), so no answer tells a
      hidden capture from one never held (DEC-36); else null. A viewer left out is an in-plane caller, which sees every
      capture. */
   #held(captureSha, viewer) {
     const sha = shaOf(captureSha);
     /* DEC-49 REGION is-capture-held */
-    if (!HEX64.test(sha)) return { sha, refused: refusal("NO_SUCH_CAPTURE", "captureSha names a capture by its SHA-256, 64 hex.", { captureSha: captureSha ?? null }) };
-    const absent = () => ({ sha, refused: refusal("NO_SUCH_CAPTURE", "No capture this viewer may see is held under this digest. Nothing was read.", { captureSha: sha }) });
+    if (!HEX64.test(sha)) return { sha, refused: refusal("FILE_NOT_HELD", "captureSha names a capture by its SHA-256, 64 hex.", { captureSha: captureSha ?? null }) };
+    const absent = () => ({ sha, refused: refusal("FILE_NOT_HELD", "No capture this viewer may see is held under this digest. Nothing was read.", { captureSha: sha }) });
     const home = this.#home(sha);
     const known = !!home || !!this.#one(`SELECT 1 AS x FROM fs_files WHERE capture_sha = ?`, sha) || this.#receiptsOf(sha).length > 0;
     if (!known) return absent();
@@ -304,7 +304,7 @@ export class FileSafety {
       const h = this.#held(captureSha, viewer);
       if (h.refused) return h.refused;
       return { ok: true, captureSha: h.sha, notes: this.#notesOf(h.sha).map(FileSafety.#note) };
-    } catch { return refusal("NO_SUCH_CAPTURE", "The notes could not be read. Nothing was read.", { captureSha: captureSha ?? null }); }
+    } catch { return refusal("FILE_NOT_HELD", "The notes could not be read. Nothing was read.", { captureSha: captureSha ?? null }); }
   }
 
   /* ===== the counts (R35): kind and hour only ===== */
@@ -372,11 +372,11 @@ export class FileSafety {
     try {
       /* DEC-49 REGION is-release-by-member */
       if (typeof by !== "string" || !by.trim() || isMachineIdentity(by) || by.startsWith(MACHINE_CLASS_PREFIX) || !memberOf(by))
-        return refusal("MACHINE_CANNOT_RELEASE", "A scan hold is released by members only; this act names none. Nothing was released.", { by: by ?? null });
+        return refusal("MACHINE_CANNOT_RELEASE_HOLD", "A scan hold is released by members only; this act names none. Nothing was released.", { by: by ?? null });
       /* END DEC-49 REGION is-release-by-member */
       /* DEC-49 REGION is-release-reason */
       if (typeof reason !== "string" || !reason.trim() || reason.length > RELEASE_REASON_MAX)
-        return refusal("NO_REASON", `A release's reason is 1 to ${RELEASE_REASON_MAX} characters. Nothing was released.`);
+        return refusal("HOLD_NO_REASON", `A release's reason is 1 to ${RELEASE_REASON_MAX} characters. Nothing was released.`);
       /* END DEC-49 REGION is-release-reason */
       const viewer = by.startsWith("member:") || by === "admin" ? by : `member:${by}`;
       const h = this.#held(captureSha, viewer);
@@ -534,7 +534,7 @@ export class FileSafety {
       const h = this.#held(captureSha, viewer);
       if (h.refused) return h.refused;
       return { ok: true, captureSha: h.sha, ...(await this.#grade(h.sha, [], new Map())) };
-    } catch { return refusal("NO_SUCH_CAPTURE", "The grade could not be computed. Nothing was read.", { captureSha: captureSha ?? null }); }
+    } catch { return refusal("FILE_NOT_HELD", "The grade could not be computed. Nothing was read.", { captureSha: captureSha ?? null }); }
   }
 
   /* ===== opening the original (R8, R9; DEC-173) ===== */
@@ -624,7 +624,7 @@ export class FileSafety {
   /* The capture's bytes exactly as `capture`'s R21 get serves them (`x-capture-sha256` equal to the digest). */
   async #serveOriginal(sha, stated) {
     const ev = this.#evidence();
-    if (!ev) return json(refusal("NO_SUCH_CAPTURE", "Your group's Civicsmith holds no evidence store, so no bytes can be served.", { captureSha: sha }), 404);
+    if (!ev) return json(refusal("FILE_NOT_HELD", "Your group's Civicsmith holds no evidence store, so no bytes can be served.", { captureSha: sha }), 404);
     const env = { CAPTURES: { get: (k) => ev.get(k), head: (k) => ev.head(k), put: () => null } };
     const res = await captureObjectOp(new Request(`http://x/?sha256=${sha}`), new URL(`http://x/?sha256=${sha}`), env,
       { json, storageAbsent: (op, d) => json({ ok: false, reason: "STORAGE_ABSENT", detail: d }, 503),
