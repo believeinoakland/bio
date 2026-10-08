@@ -66,3 +66,7 @@ T36-41 (N740): capture's R45 now pages past a cursor, but **neither drainer pass
 - plane `unpack.mjs`:43 reads the first 1000 `archive-unpack` events, and events at its retry limit stay queued, so past 1000 such events, newer ones are never seen. Same fix.
 - The tasks test stand-ins (`test/m/tasks/world.mjs`:115, `ledger.test.mjs`:53, 76) ignore `after` and need it once tasks passes it.
 - The plane bundle (`not_product`'s) carries the old `taskEvents`; it is stale until the layer close regenerates it (§14).
+
+## J2 · COMPLETE
+
+T36-41 done on `job/T36/capture` @ 19caf03cda. R45: each event carries an opaque `cursor`; `after` reads past its place (enqueued, digest, then kind for ties), whether or not its event is still queued; anything else is read as absent (from the head). capture 155/155, R45's users (tasks, plane unpack, queue) 229/229; format, architecture, coverage (58/58), ownership (4 files) 0 failures. Drainers' adoption: J1. Deferred: nothing. 3,800 lines. Record: `build/jobs/T36/capture.md` § Completion.
