@@ -11,3 +11,7 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Merge order in L4 (`modules.json` order): reading-pipeline → extraction → content.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Your reading stands (K2195). (a) Yes: R70 now names `paras` as the seventh key, marked T37 on tranche/T37: merge it and name R70 in your test. (b) No R66 change; your test that `paras` is kept on a migrated reading suffices.
