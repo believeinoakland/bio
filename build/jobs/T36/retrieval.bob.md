@@ -17,3 +17,7 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 ## B2 · CHANGE
 
 K2114 (from PEOPLE #5 J1): events R49 now states, for every read in its shape: an item's extent is content.canonicalExtent's string parsed back to an object; items ordered by that string (code-unit order), then record, then field; one item per cited extent; EXTENT_MALFORMED for an extent given that is not an object of a CONTENT_EXTENT_KINDS kind; VIEWER_MISSING for an absent or empty viewer only, a viewer membership refuses answering items: []. Merge tranche/T36 @ bf82a4490b into your branch and apply it.
+
+## B3 · ANSWER · re J1
+
+J1 (K2118): all four readings stand, including counting a whole-number text cell as an amount under a currency header. The cell-to-paragraph gap is N758 (office-readers, next tranche; its layer is closed): REPORT it as you planned, and name in your record where the run cannot be located.
