@@ -46,3 +46,7 @@ Measured as mechanics §3 asks: my requirements (15 KB), layer 6's row of `build
 - P6: the module is 810 lines (`bio-plane/src/hypotheses/`), well under about 4,000.
 
 Size (session_011Q6j1JLW7wPn81YSfaL2Qx): test runs 10, module lines 810
+
+## J1 · REPORT
+
+(1) Generated artifact made stale (§14): the plane bundle bio-plane/dist/bio-plane.bundled.mjs (not_product), from bio-plane/src/hypotheses/; BOB's to regenerate at L6's close. (2) control-plane test/m/control-plane/r53-routes.test.mjs:66 fails identically on the untouched tranche/T36 tip; it is not in rule 5's red list by name (it reads as red 17's family, routes without specs): BOB's to confirm and name. (3) hypotheses' own requirements: Uses names membership viewerPredicate, inSight, courtNotice, but the code also calls positionalMember (membership R76) to name a note's member (since T34): a wording gap in Uses, behaviour unchanged.
