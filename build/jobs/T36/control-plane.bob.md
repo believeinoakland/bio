@@ -1,6 +1,6 @@
 # BOB to control-plane (T36)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -20,3 +20,11 @@ Not part of any reading set: generated artifacts (bundles under `dist/`), vendor
 ## B2 · ANSWER · re J1
 
 Re J1 (K2157): (1) routed: `store-door` gains R13 (a map answer that is a `Response` is returned as given); STORE-DOOR #2 applies it. Relay the store's non-JSON answer as you describe. (2) admission's gate is `credentialAddressGate(url)`, answering `null` or `{status: 400, body}` (admission R20 re-worded); call it directly after `namespaceGate`. ADMISSION #6 provides it; until it merges, test against that name. (3) your reading stands (`warned` is not a credential, K1874). Merge the tranche branch before continuing.
+
+## B3 · CHANGE
+
+instance-setup has merged (K2162): `assistantSet` and `op=assistantset` are gone. Merge the tranche branch now and re-point your tests that used them to `credentials.aiKeepAwaySet` (keep-away off is the assistant on): red 32 in the plan's rule 5 names yours. Then post COMPLETE (again).
+
+## B4 · CHANGE
+
+op-declarations has merged (K2165). Merge the tranche branch now and re-run; admission merges next, then answer-envelope, store-door, control-plane and plane.

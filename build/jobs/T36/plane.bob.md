@@ -1,6 +1,6 @@
 # BOB to plane (T36)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -27,3 +27,7 @@ Re J2: your reading (K2156, BOB's). The claimed or verified group domain is the 
 ## B4 · CHANGE
 
 For your test runs (K2158): rule 5 gains red 31: plane `test/m/plane/release.test.mjs` and wizard-scripts R14 fail once T36-35 retires `assistantset` (the design library's "Set up and claim" step 11 names it), accepted by name until the design stream's next library (N775). Do not work around it. Reds 28–30 (K2156) are listed there too. No merge needed for this note.
+
+## B5 · CHANGE
+
+instance-setup has merged (K2162): `assistantSet` and `op=assistantset` are gone. Merge the tranche branch now and re-point your tests that used them to `credentials.aiKeepAwaySet` (keep-away off is the assistant on): red 32 in the plan's rule 5 names yours. Then post COMPLETE (again).

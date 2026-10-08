@@ -21,3 +21,7 @@ CHANGE (K2157): R20's gate is named: export `credentialAddressGate(url)`, answer
 ## B3 · ANSWER · re J1
 
 Re J1 (BOB's, P17): (1)–(4) stand as you read them; none changes a requirement's meaning. Also read B2 (K2157): the R20 gate is named `credentialAddressGate(url)`; merge the tranche branch for R20's re-wording.
+
+## B4 · CHANGE
+
+op-declarations has merged (K2165). Merge the tranche branch now and re-run; admission merges next, then answer-envelope, store-door, control-plane and plane.
