@@ -1,6 +1,6 @@
 # publication (T36)
 
-**Status** · session_01CPZYbhuFESBkajW7tmoEjb · depth 2 · WORKING · handled B0
+**Status** · session_01CPZYbhuFESBkajW7tmoEjb · depth 2 · WORKING · handled B1
 
 PUBLICATION #23 · T36-26 · B1 START handled.
 
@@ -37,7 +37,7 @@ Nothing deferred. R30 stays as before (D-246, its own todo).
 - `format`: 135 modules, 134 requirements files; 0 failures.
 - `architecture publication`: 26 product files, 103 relative imports; 0 failures.
 - `coverage publication`: 51 of 51 live requirement ids named by a test; 0 failures.
-- `ownership publication tranche/T36`: see the final run below.
+- `ownership publication tranche/T36`: 6 files changed by publication; 0 failures.
 
 ## Found in other modules (REPORT to BOB)
 
@@ -49,3 +49,5 @@ Nothing deferred. R30 stays as before (D-246, its own todo).
 ## P6
 
 3,717 lines before; **3,731 after** (+14: the delegate and the deprecation went, R75 and its comments came). Under about 4,000.
+
+Size (session_01CPZYbhuFESBkajW7tmoEjb): test runs 11, module lines 3731
