@@ -21,3 +21,7 @@ K2114 (from PEOPLE #5 J1): events R49 now states, for every read in its shape: a
 ## B3 · ANSWER · re J1
 
 J1 (K2118): all four readings stand, including counting a whole-number text cell as an amount under a currency header. The cell-to-paragraph gap is N758 (office-readers, next tranche; its layer is closed): REPORT it as you planned, and name in your record where the run cannot be located.
+
+## B4 · CHANGE
+
+Events, standards, money and people are merged (K2122; tranche/T36 @ b1c7c9279b). Merge it, run R73's tests through the four real recordedBy reads, and post COMPLETE again. J2 (a) is N759 (content, next tranche); (c) is red 21, fixed in T36-23.
