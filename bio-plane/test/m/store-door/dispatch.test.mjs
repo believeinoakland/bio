@@ -119,6 +119,32 @@ test("R2: a read naming a project (PROJECT_NAMING_READS) asked with a stamped vi
   assert.equal(t.log.some((e) => e.kind === "existence"), false);
 });
 
+test("R2 (T36-48; K2063, K2152; file-safety R2, R6, R9, R11, R15, R31, R33, R38): file-safety's reads that take a parameter — `verdictnotes`, `threatof`, `originalstate`, `safeview`, `safecopy` (a capture's digest), `scanfindings` and `securitytoolevents` (a cursor), `findingkind` (a finding name) — are listed as naming no project, each with its reason, so a discoverable project's id in any of their own parameters, query or body, is never asked of membership and the route answers; none is among the reads naming a project (negative control: the same id at a read naming a project is answered existence first)", async () => {
+  const { fileSafetyOps } = await import("../../../src/file-safety/index.mjs");
+  const served = new Set(Object.keys(fileSafetyOps(null, new URL("http://do/"), null, null)));
+  const READS = { verdictnotes: ["capture", "captureSha"], threatof: ["capture", "captureSha"], originalstate: ["capture", "captureSha"],
+                  safeview: ["capture", "captureSha"], safecopy: ["capture", "captureSha"], scanfindings: ["after", "limit"],
+                  findingkind: ["name"], securitytoolevents: ["after", "limit"] };
+  const DIGEST = "`captureSha` is a CAPTURE's digest";
+  const P = "PROJ-seen";
+  for (const [op, params] of Object.entries(READS)) {
+    assert.ok(served.has(op), `${op} is file-safety's route`);
+    assert.equal(Object.hasOwn(PROJECT_NAMING_READS, op), false, `${op} names no project`);
+    assert.equal(typeof PROJECT_NAMING_READS_NOT[op], "string", `${op} listed with its reason`);
+    if (params[0] === "capture") assert.equal(PROJECT_NAMING_READS_NOT[op], DIGEST, op);
+    else for (const p of params) assert.match(PROJECT_NAMING_READS_NOT[op], new RegExp("`" + p + "`"), `${op}'s reason names ${p}`);
+    for (const p of params) {
+      const s = fakeStore({ discoverable: [P], existence: [P] });
+      const r = await go(s, `${op}?viewer=member:ann&${p}=${P}`, { method: "POST", body: JSON.stringify({ [p]: P }) });
+      assert.deepEqual([r.status, r.json.result], [200, { answered: op }], `${op}.${p}`);
+      assert.equal(s.log.some((e) => e.kind === "membership"), false, `${op}.${p}: membership asked`);
+    }
+  }
+  /* negative control: the same id, a read naming a project */
+  const n = fakeStore({ discoverable: [P], existence: [P] });
+  assert.equal((await go(n, `image?viewer=member:ann&id=${P}`)).json.result.reason, "PROJECT_SEEN_NOT_A_PARTICIPANT");
+});
+
 test("R3 (DEC-113, DEC-36; actions R58): `projectholds` is among the reads naming no project, with the reason that a project not seen at FULL is answered `held: null`, so its existence answer is not run; `actionholdrelease`, `actionholdpreview` and `projectholds` pass R1's frame to the map they are routed through, with the request's own parameters and body and nothing of the door's added (negative control: a read naming a project is still asked)", async () => {
   assert.equal(typeof PROJECT_NAMING_READS_NOT.projectholds, "string");
   assert.match(PROJECT_NAMING_READS_NOT.projectholds, /held: null/);

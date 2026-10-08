@@ -142,6 +142,14 @@ export const PROJECT_NAMING_READS_NOT = Object.freeze({
     + "and case-import answers a non-member as if none exists (its R4)",
   importedcase: "`import` is an IMPORT's id (the SHA-256 of its source group, case and lens), never a bundle id, and "
     + "case-import answers a non-member with the same bytes as an absent import (its R4)",
+  /* T36-48 (K2063): file-safety's reads that take a parameter: a capture's digest, a cursor over its own rows or a
+     scanner's finding name, never a bundle id. */
+  verdictnotes: "`captureSha` is a CAPTURE's digest", threatof: "`captureSha` is a CAPTURE's digest",
+  originalstate: "`captureSha` is a CAPTURE's digest", safeview: "`captureSha` is a CAPTURE's digest",
+  safecopy: "`captureSha` is a CAPTURE's digest",
+  scanfindings: "`after` is a cursor over file-safety's FINDING notes and `limit` a count, never a bundle id (file-safety R15)",
+  findingkind: "`name` is a scanner's FINDING name, explained from the name alone, never a bundle id (file-safety R38)",
+  securitytoolevents: "`after` is a cursor over the security tools' EVENTS and `limit` a count, never a bundle id (file-safety R31)",
 });
 
 /* R2 (REC-196): the answer for a read naming a discoverable project's own id, asked by a caller at EXISTENCE: C-70.1
