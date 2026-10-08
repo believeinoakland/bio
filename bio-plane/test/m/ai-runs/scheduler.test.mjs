@@ -120,7 +120,7 @@ test("R16: through the wait source — an outstanding request extends the lease;
   assert.equal((await w3.runs.wake(at("00:00:10"))).held, 25);
 });
 
-test("R18, R52 (K1514, K1615, K1755): a woken run is dispatched only when its principal is the instance's organisation ai credential, on record and unrevoked, carrying the account credentials.accountFor answers for its member's act (their own reference, else the group's API key) and no instance account; otherwise the decision is withheld and named (NO_ACCOUNT when no account serves the member); the call is bounded and no secret enters the record", async () => {
+test("R18, R52 (K1514, K1615, K1755): a woken run is dispatched only when its principal is the instance's organisation ai credential, on record and unrevoked, carrying the account credentials.accountFor answers for its member's act (their own reference, else their own sign-in with no secret key, else the group's API key) and no instance account; otherwise the decision is withheld and named (NO_ACCOUNT when no account serves the member); the call is bounded and no secret enters the record", async () => {
   const TOKEN = "instance-ai-secret-value-7f3c";
   const bound = (w, store = "bio") => { w.ctx.id = { equals: (x) => x === `id:${store}` }; };
   const env = (aw, extra = {}) => ({ AGENT_WORKER: aw, INSTANCE_AI_TOKEN: TOKEN, INSTANCE_CLAUDE_TOKEN: "claude-account-x",
