@@ -157,6 +157,11 @@ function stampGroup(files, slug) {
 const factUnavailable = (fact, detail) => ({ ok: false, reason: "FACT_UNAVAILABLE", code: "FACT_UNAVAILABLE",
   check: PROMOTION_REGISTRATION_CHECKS.FACT_UNAVAILABLE.check, translation: PROMOTION_REGISTRATION_CHECKS.FACT_UNAVAILABLE.translation, fact, detail });
 
+/* R40: a fact whose provider threw (C-102.5), at `fact` and at the acts that read one. */
+const factFailed = (fact, e) => ({ ok: false, reason: "FACT_FAILED", code: "FACT_FAILED",
+  check: PROMOTION_REGISTRATION_CHECKS.FACT_FAILED.check, translation: PROMOTION_REGISTRATION_CHECKS.FACT_FAILED.translation,
+  fact, detail: `the module that provides the fact '${fact}' could not answer: ${cut(e && e.message ? e.message : e, 200)}` });
+
 /* R39, R40, R47 (K231, N254): a second registration of what one registrant already holds (a step, a fact, the case
    catalogue) is refused here, the one site that mints STEP_DECLARED (C-102.8); `held` names what was registered twice. */
 function stepDeclared(held, detail) {
@@ -263,11 +268,7 @@ class Promotion {
       return factUnavailable(typeof name === "string" ? name : null,
                              `no module provides the fact '${cut(name, 80)}', so it has no value here; it is not false.`);
     try { return { ok: true, fact: name, value: held.fn(...args) }; }
-    catch (e) {
-      return { ok: false, reason: "FACT_FAILED", code: "FACT_FAILED", check: PROMOTION_REGISTRATION_CHECKS.FACT_FAILED.check,
-               translation: PROMOTION_REGISTRATION_CHECKS.FACT_FAILED.translation, fact: name,
-               detail: `the module that provides the fact '${name}' could not answer: ${cut(e && e.message ? e.message : e, 200)}` };
-    }
+    catch (e) { return factFailed(name, e); }
   }
 
   registerFact(name, module, fn) {
@@ -289,7 +290,10 @@ class Promotion {
     const held = this.#facts.get(name);
     if (!held) return factUnavailable(name, `no module provides the fact '${name}' this act needs, so the act `
                                             + `is refused rather than answered as if it were false. Nothing was written.`);
-    return { ok: true, value: held.fn(...args) };
+    /* R37, R40 (PROMOTION #35, T37): a provider that throws refuses the act FACT_FAILED with its row, as `fact` answers
+       it, never a raw failure of the whole act. */
+    try { return { ok: true, value: held.fn(...args) }; }
+    catch (e) { return factFailed(name, e); }
   }
 
   /* ---------------------------------------------------------------- R47, R33: the case-document catalogue */
