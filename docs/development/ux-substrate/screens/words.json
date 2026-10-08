@@ -7,7 +7,7 @@
   "mark": 55,
   "state": 4,
   "draft": 4,
-  "photo": 8,
+  "photo": 13,
   "handle": 6,
   "rail": 14,
   "tab": 2,
@@ -17,8 +17,8 @@
   "act": 463,
   "column": 33,
   "wizard": 239,
-  "total": 941,
-  "protected": 356
+  "total": 946,
+  "protected": 361
  },
  "words": [
   {
@@ -469,7 +469,7 @@
   },
   {
    "key": "photo.reminder",
-   "en": "Frame what you are checking, and leave out people's faces and number plates where you can. If a published case relies on this photo, anyone in it who is not part of a finding, and any number plate, is obscured in the public copy; the original stays inside your group.",
+   "en": "Frame what you are checking, and leave out people's faces and number plates where you can. If a published case carries this photo, anyone in it who is not part of a finding, and any number plate, is obscured in the public copy; the original stays inside your group.",
    "protected": true,
    "source": "mock-screens.js PHOTO_REMINDER"
   },
@@ -489,7 +489,7 @@
   },
   {
    "key": "photo.step.gate",
-   "en": "Every photo the case relies on must be checked before signing: marked, or “nothing to obscure”. A mark that covers the wrong thing is withdrawn with a reason, never erased. Text read from a photo, such as a number plate, is never published with it; a passage you quote in the case still is.",
+   "en": "Every photo the case carries must be checked before signing, including one that only supports a finding: marked, or “nothing to obscure”. A mark that covers the wrong thing is withdrawn with a reason, never erased. Text read from a photo, such as a number plate, is never published with it; a passage you quote in the case still is.",
    "protected": true,
    "source": "mock-screens.js ceremony"
   },
@@ -515,10 +515,45 @@
   },
   {
    "key": "photo.refused.unchecked",
-   "en": "Signing waits until every photo the case relies on is checked: {photo}.",
+   "en": "Signing waits until every photo in the case is checked, including one that only supports a finding: {photo}.",
    "protected": true,
    "source": "DEC-183",
    "note": "the Photos step as a gate"
+  },
+  {
+   "key": "photo.refused.changed.signed",
+   "en": "This case wasn't published: a mark on {photo} changed after it was prepared. Prepare it again, and sign it again.",
+   "protected": true,
+   "source": "DEC-187",
+   "note": "PHOTO_MARKS_CHANGED_SINCE at the commit or a scheduled stop, after signing"
+  },
+  {
+   "key": "photo.withdraw.refused.machine",
+   "en": "Only a member can withdraw a mark; the machine never can.",
+   "protected": true,
+   "source": "DEC-187",
+   "note": "obscuremarkwithdraw by a machine"
+  },
+  {
+   "key": "photo.withdraw.refused.nomark",
+   "en": "There is no such mark on {photo}. Open the photo again to see the marks that stand.",
+   "protected": true,
+   "source": "DEC-187",
+   "note": "obscuremarkwithdraw: no such mark"
+  },
+  {
+   "key": "photo.withdraw.refused.already",
+   "en": "{member} already withdrew this mark on {date}.",
+   "protected": true,
+   "source": "DEC-187",
+   "note": "obscuremarkwithdraw: already withdrawn"
+  },
+  {
+   "key": "photo.withdraw.refused.noreason",
+   "en": "Say why you are withdrawing this mark. Your reason is kept beside it.",
+   "protected": true,
+   "source": "DEC-187",
+   "note": "obscuremarkwithdraw: no reason"
   },
   {
    "key": "handle.free",

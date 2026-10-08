@@ -956,7 +956,7 @@ testimony; the visit asks for a photo where one can be taken and says plainly wh
 taken or added; inside the group every photo stays as taken; before signing, the ceremony's Photos step has a member mark anyone not
 part of a finding, and any number plate, and the published case carries a copy with those areas obscured, labelled, the original
 kept inside the group. Civicsmith obscures what a member marks; no AI looks at the group's photos. The Photos step is a gate: signing
-waits until every relied-on photo is checked; a mark is withdrawn only by a later reasoned act, never erased (DEC-183).
+waits until every photo the case carries is checked, including one that only supports a finding; a mark is withdrawn only by a later reasoned act, by any member who may see the photo and never by the machine, and is never erased (DEC-183, DEC-187). A mark changed after signing stops the publication until the case is prepared and signed again (DEC-187).
 
 **Choosing a handle (the design session, 2026-10-08, DEC-184, on Bob's comment).** As a member types a handle, the field says whether it
 is free in the group, taken, or uses characters a handle can't have; it never says who has a handle.

@@ -2850,6 +2850,7 @@ reasoning recorded in: this entry; `screens/registry.src.py`; `screens/mock-acts
 owed: (BOB) `ACT_HELP` from PR #14's `mock-acts.js` (re-pointed as above; `clockpropose` and `owed_obscuremark` added); the setup step and wizard step on `aikeepaway` and `groupkeyset`; a member's own password change (`setpassword`); the security-tools step's two wordings as (6).
 
 ### DEC-183 · answered
+amended: 2026-10-08 · DEC-187: the gate covers every photo the case carries; any member who may see a photo may withdraw a mark on it; the withdrawal's refusals and the after-signing words.
 raised: 2026-10-08 · the UX design session with Bob on his secondary account (session_01SCHPX2mpSDpBNA9wprUm5H; the development process runs on the same account since K1891) (BOB's B102, B103 and B104, folding DEC-180 in T37 and the password text)
 for: bob-session
 question: Whether the ceremony's Photos step stops signing; whether a mark can be withdrawn; what a member sees when a photo cannot be covered or its marks change; and what changing a password does to other sessions.
@@ -2905,3 +2906,17 @@ response: **Bob, 2026-10-08: "S18: B".** Ruled: (1) a member may change their ow
 decided: 2026-10-08 · Bob
 reasoning recorded in: this entry; `screens/question.html` (S18); `screens/mock-screens.js` (joining's help, Your account's "Your handle", Members' "formerly"); `screens/mock-refs.js`; `screens/registry.src.py` (`owed:handlechange DEC-186`); `journeys.html` (journey 3); `screens/words.json` (`handle.*`); BIO_Interaction_Constructs_v0_1.md §V.
 owed: (BOB) a requirement in membership: `handlechange` for a member's own handle, refused once any of their work is in a published case (a code naming the case) and refused for a handle taken or not allowed (R12, R16); the earlier handles kept and shown to members as "formerly"; published cases keep the handle they were signed with; the words held for translation.
+
+### DEC-187 · answered
+raised: 2026-10-08 · the UX design session with Bob on his secondary account (session_01SCHPX2mpSDpBNA9wprUm5H; the development process runs on the same account since K1891) (BOB's B115 and B116, for T38's L8 case-disclosures, case-carriage and case-grammar)
+for: bob-session
+question: Which photos the Photos step's gate covers; whether an unmarked published photo is labelled; who may withdraw a mark and the words for its refusals; what a member sees when marks change after signing.
+why it is Bob's: it is not: screen detail beneath DEC-180 (K2108) and K2248, and the design session's own DEC-183 and DEC-185; decided by the design session (P17) and reported.
+provisional: BOB's readings in B115 (every photo any chain reaches; no label; any member who may see the photo; BOB's draft words) and B116 (the words verbatim).
+alternative: only photos a load-bearing chain reaches block signing.
+recommendation: as decided below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-08.** (1) BOB's reading holds: the gate covers every photo the case carries, every photo any member's chain reaches, including one that only supports a finding, because every carried photo is published and DEC-180 lets no one be published by oversight. The words say "carries" instead of "relies on": "Signing waits until every photo in the case is checked, including one that only supports a finding: {photo}." (2) Already answered by DEC-185 (PR believeinoakland/bio#15): an unmarked published photo is labelled "Camera details removed for publication; the group holds the original" (`photo.published.label`); the marked label is `photo.obscured.label`. (3) BOB's reading holds and corrects DEC-183's wording: marks are kept per photo, so any member who may see the photo may withdraw a mark, as for marking; only a member, never the machine. The refusals: "Only a member can withdraw a mark; the machine never can."; "There is no such mark on {photo}. Open the photo again to see the marks that stand."; "{member} already withdrew this mark on {date}."; "Say why you are withdrawing this mark. Your reason is kept beside it." (4) A mark changed after signing, met at the commit or a scheduled stop: "This case wasn't published: a mark on {photo} changed after it was prepared. Prepare it again, and sign it again." (`photo.refused.changed.signed`); `photo.refused.changed` stays for the moment before signing.
+decided: 2026-10-08 · the design session (P17)
+reasoning recorded in: this entry; `screens/mock-screens.js` (the ceremony's Photos step, the photo reminder); `screens/build_words.mjs`, `screens/words.json` (`photo.*`); `layouts.html` (section 6).
+owed: (BOB, T38 L8 or T39) the gate over every carried photo; `obscuremarkwithdraw` open to any member who may see the photo, refused to a machine; the four withdrawal refusals and `photo.refused.changed.signed` read by key from `words.json`.
