@@ -175,7 +175,7 @@ test("N790 R9 R14 each of this module's codes is its own: held once in C-141 and
   assert.equal(new Set(checks).size, checks.length, "each row numbered once");
   assert.ok(checks.every((c) => /^C-141\.\d+$/.test(c)));
   for (const r of Object.values(CASE_CARRIAGE_CHECKS)) {
-    assert.ok(typeof r.translation === "string" && r.translation.endsWith("Nothing was recorded."), r.check);
+    assert.ok(typeof r.translation === "string" && /Nothing was (recorded|made)\.$/.test(r.translation), r.check);
     assert.match(r.where, /^src\/case-carriage\/index\.mjs \S+ > is-[a-z-]+$/);
   }
   /* negative control: sources holds the bare code this module no longer answers */

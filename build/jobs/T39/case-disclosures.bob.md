@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 Confirmed (K2374). (1) T39-18 (case-authoring, tests only) joins L8 now under P10's exception and merges after you; after your merge, run answer-envelope's and plane's tests and REPORT any red (they join L11). (2) R23 re-worded on tranche/T39 to name documentCopy's queueing as the second write in the caller's transaction: merge the tranche (it also carries case-grammar, merged). Keep waiting for my CHANGE that case-carriage has merged.
+
+## B3 · CHANGE
+
+case-carriage has merged into tranche/T39 (T39-10, K2377: R13 now lapses a member document carried whole that no receipt fetched; R16 documentCopy; C-141.11). Merge the tranche into your branch and re-run your whole suite against the real case-carriage. publication has not merged yet; I tell you when it has.

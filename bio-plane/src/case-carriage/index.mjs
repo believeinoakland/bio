@@ -14,6 +14,11 @@
  * this module owns the two tables of held materials (`./schema.mjs`, exempt from purge, R6), the marks and the copies'
  * withdrawals and derivations (R12), and names no place (R7). Its own refusals (R9, R10, R14) are rows of C-141
  * (`./checks.mjs`).
+ * (T39; N806, K2315, K2333) A member document, one this copy did not fetch (provenance R62), is carried only as its
+ * cleaned copy from `doc-clean` (no picture or document metadata), or whole when it carries none (R1, R13): this
+ * module queues it from each receipt that is not a fetch and from each miss (R15, R16), derives the copy on the
+ * scheduler's wake (`copyBatch`, `copyWake`; R17 `onCopyWork` the arming notice) and answers its state synchronously
+ * (`documentCopy`). Its archive is never carried (R8). Inside the group every document stays as it came.
  *
  * Split from `publication` by copy (K617, K624 (1), N532, K1332; seam map `build/extraction/publication-split-2.md`):
  * R57's holding (`#holdMaterials`, `#registered`, `#fileRow`, `#tokenFiles`, `heldMaterialsOf`,
@@ -38,6 +43,9 @@
  *                  `captures/`. The original is read through record-core's `evidenceStore` (its R38). Unbound, no copy
  *                  is made (R11 then answers `copy: null`, so a case cannot carry the photo).
  *   cover          `image-cover`'s `coverAreas` (a test may pass its own).
+ *   provenance     (T39; R15–R17) `fetchedByThisCopy` (its R62) and `onReceipt` (its R47); the listener is registered
+ *                  once, at creation.
+ *   clean          `doc-clean`'s `cleanDocument` (a test may pass its own).
  *
  * READ CONTRACTS it joins in its own SQL: provenance's `register` (its R48: `capture_sha`, `bundle_id`, `path`, `bytes`),
  * record-core's `bundles` (its R37), sources' `source_knocks` (its R15) and (T38; R8, K2291 (2); asked of BOB in J1)
@@ -49,16 +57,19 @@ import { promotionOf } from "../promotion/index.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { createSha256, canonicalJson, isMachineIdentity } from "../record-grammar/index.mjs";
 import { coverAreas, COVER_MAX_BYTES } from "../image-cover/index.mjs";
+import { cleanDocument, CLEAN_MAX_BYTES } from "../doc-clean/index.mjs";
+import { listenerRefusal } from "../membership/index.mjs";
+import { provenanceOf, FETCHED_VIAS } from "../provenance/index.mjs";
 import { sourcesOf } from "../sources/index.mjs";
 import { extractionOf } from "../extraction/index.mjs";
 import { acceptedWorkOf } from "../accepted-work/index.mjs";
 import { materialsOf, extractedTextOf, acceptedWorkOf as acceptedWorkBlocksOf, caseDocumentBlocks,
          sourceRowsStanding } from "../case-grammar/index.mjs";
-import { CASE_CARRIAGE_EXEMPT, CASE_CARRIAGE_MARK_TABLES, migrateCaseCarriage } from "./schema.mjs";
-import { CASE_CARRIAGE_CHECKS, OBSCURED_LABEL } from "./checks.mjs";
+import { CASE_CARRIAGE_EXEMPT, CASE_CARRIAGE_MARK_TABLES, CASE_CARRIAGE_DOCUMENT_TABLES, migrateCaseCarriage } from "./schema.mjs";
+import { CASE_CARRIAGE_CHECKS, OBSCURED_LABEL, COPY_CLEANED_LABEL } from "./checks.mjs";
 
-export { CASE_CARRIAGE_SCHEMA, CASE_CARRIAGE_EXEMPT, CASE_CARRIAGE_MARK_TABLES } from "./schema.mjs";
-export { CASE_CARRIAGE_CHECKS, OBSCURED_LABEL } from "./checks.mjs";
+export { CASE_CARRIAGE_SCHEMA, CASE_CARRIAGE_EXEMPT, CASE_CARRIAGE_MARK_TABLES, CASE_CARRIAGE_DOCUMENT_TABLES } from "./schema.mjs";
+export { CASE_CARRIAGE_CHECKS, OBSCURED_LABEL, COPY_CLEANED_LABEL } from "./checks.mjs";
 
 /** R1: the most items one `unheld` answer names. */
 export const UNHELD_MAX = 1000;
@@ -74,8 +85,13 @@ export const STAFF_REASON_MAX = 2000;
 export const WITHDRAW_REASON_MAX = 2000;
 /** R13: the most rows one `marksLapsed` answer names. */
 export const MARKS_LAPSED_MAX = 200;
-/** R11: where a photo's obscured copy is held, under its own digest, outside `captures/`. */
+/** R11: where a photo's obscured copy is held, under its own digest, outside `captures/`; (T39; R15) a member
+ *  document's cleaned copy too, so `ratification` R39 copies both one way. */
 export const obscuredKey = (store, sha) => `${store}/obscured/${sha}`;
+/** R15: the most queued documents one `copyBatch` derives: its default and its bound. */
+export const DOCUMENT_COPY_BATCH_MAX = 10;
+/** R15: how long after a failed read of the evidence store a queued document is tried again. */
+export const DOCUMENT_COPY_RETRY_MS = 300000;
 
 /* R9, R10: a photo is told by the type recorded with its capture, else its register path's extension (synchronous). */
 const IMAGE_EXT = /\.(jpe?g|jfif|png|gif|webp|heic|heif|avif|tiff?|bmp)$/i;
@@ -84,6 +100,13 @@ const ARCHIVE_EXT = /\.zip$/i;
 /* R1, R8 (T38; N779): why a photo, or an archive holding an image, is not carried. */
 export const PHOTO_ONLY_AS_COPY = "a photo travels only as its copy";
 export const ARCHIVE_HOLDS_IMAGE = "the archive holds an image, and an image leaves only as its copy";
+/* R1, R8, R13 (T39; N806, K2333): why a member document carried whole, or a member's archive, is not carried. */
+export const MEMBER_DOCUMENT_ONLY_AS_COPY = "a member's document travels only as its copy";
+export const ARCHIVE_SUPPLIED_BY_MEMBER = "the archive was supplied by a member, and a member's file leaves only as its copy";
+/* R13: why a member document's row lapses when its state cannot be read. */
+const DOCUMENT_UNREAD = "the document's copy could not be read, so it cannot be confirmed";
+/* R16: the answer when the tables or R62 cannot be read (fail closed). */
+const UNDETERMINED = Object.freeze({ state: "undetermined", copy: null, refused: null });
 /* R11: image-cover's refusals that leave a mark recorded with no copy (every one but the areas' own). */
 const COVER_REFUSED = new Set(["NOT_A_COVERABLE_FORMAT", "UNSUPPORTED_JPEG_PROCESS", "PNG_INTERLACED", "PHOTO_TOO_LARGE",
                                "TRUNCATED_IMAGE_DATA", "IMAGE_DATA_CORRUPT"]);
@@ -112,14 +135,18 @@ export class CaseCarriage {
   #deps;
 
   #chains = new Map();   // R11: one derivation at a time per capture
+  #copyWork = [];        // R17: the modules told when a member document is queued
 
   constructor({ storage, record, membership = null, promotion = null, host = null, extraction = null, sources = null,
-                acceptedWork = null, now = null, bucket = null, store = null, cover = null } = {}) {
+                acceptedWork = null, now = null, bucket = null, store = null, cover = null, provenance = null,
+                clean = null } = {}) {
     this.storage = storage;
     this.sql = storage.sql;
     this.bucket = bucket && typeof bucket.put === "function" ? bucket : null;
     this.store = store;
     this.cover = typeof cover === "function" ? cover : coverAreas;
+    this.clean = typeof clean === "function" ? clean : cleanDocument;
+    this.provenance = provenance;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
@@ -158,7 +185,9 @@ export class CaseCarriage {
    *  Bytes held only in the evidence store are answered `held: "evidence"`, for ratification R39 to copy. (T37; N757) A
    *  row listed `included: false` whose `obscured` names a copy carries that copy alone, `held: "derived"`, kind
    *  `obscured`, nothing of the original. (T38; N779) A row listed `included: true` whose capture is a photo, or is an
-   *  archive holding an image, is not held but answered unheld, so no original photo's bytes leave. Each SHA-256 is held
+   *  archive holding an image, is not held but answered unheld, so no original photo's bytes leave. (T39; N806) Nor is
+   *  a member document (R15) whose copy state (R16) is not `clean`; one carried whole carries none of R8's files. A
+   *  member document's copy is carried as a photo's is. Each SHA-256 is held
    *  once per call and named in `files` once for each ref that carries it (R8; N768). Answers `{materials, unheld, files}`, `files` for the caller to register by hash; a material
    *  it cannot hold is answered, never refused. Never throws. */
   holdMaterials(fm, { caseId = null, edition = null, at = null } = {}) {
@@ -203,9 +232,12 @@ export class CaseCarriage {
         else miss("observation", "your group's Civicsmith holds no text of that observation at its digest");
         continue;
       }
+      if (!inlineOk && !(home && !inline)) { miss("document", "your group's Civicsmith holds no bytes of that document at its digest"); continue; }
+      /* (T39; N806, K2333) a member document is carried whole only when it carries nothing doc-clean removes */
+      const member = this.#memberOf(sha);
+      if (member && member.state !== "clean") { miss("document", MEMBER_DOCUMENT_ONLY_AS_COPY); continue; }
       if (inlineOk) hold(ref, "document", sha, inline.content);
-      else if (home && !inline) hold(ref, "document", sha, null, Number(home.bytes));
-      else { miss("document", "your group's Civicsmith holds no bytes of that document at its digest"); continue; }
+      else hold(ref, "document", sha, null, Number(home.bytes));
       /* its extracted text */
       const textSha = str(m.text_sha).toLowerCase();
       let text = null;
@@ -218,8 +250,9 @@ export class CaseCarriage {
       else miss("extracted_text", "your group's Civicsmith holds no whole extracted text of that document at its stated digest");
       /* its timestamp tokens, as the capture's home provenance names them (K1315, K1322) */
       this.#holdTokens(ref, home, sha, hold, unheld);
-      /* R8 (N688; K1844): a member of a captured archive, carried with its archive, outward to the outermost */
-      this.#holdArchives(ref, home, sha, hold, unheld, images);
+      /* R8 (N688; K1844): a member of a captured archive, carried with its archive, outward to the outermost; (T39) a
+         member document carries none of R8's files */
+      if (!member) this.#holdArchives(ref, home, sha, hold, unheld, images);
     }
     /* The writes, after every read: each text once, and the edition's list once (a second call writes nothing new). */
     try {
@@ -258,7 +291,8 @@ export class CaseCarriage {
    *  document, an archive not held, or a token not held is named unheld and never refused; the first two stop the walk,
    *  since nothing further out can be checked against them. An archive already walked in this call ends it (a cycle).
    *  (T37; N757; T38: N779, K2291 (2)) An archive that holds any image would carry the original: it is named unheld for
-   *  this material and ends the walk (`images` keeps each archive's verdict for the call). */
+   *  this material and ends the walk (`images` keeps each archive's verdict for the call). (T39; N806, K2333) So does an
+   *  archive this copy did not fetch (provenance R62): a member's file leaves only as its copy. */
   #holdArchives(ref, home, sha, hold, unheld, images = new Map()) {
     const walked = new Set([sha]);
     let cur = sha, at = home;
@@ -281,6 +315,10 @@ export class CaseCarriage {
       const inlineOk = !!inline && shaOf(inline.content) === archive;
       if (!inlineOk && !(aHome && !inline)) {
         unheld.push({ ref: ref || null, kind: "archive", sha256: archive, why: "the archive is not held" });
+        return;
+      }
+      if (this.#fetched(archive) !== true) {
+        unheld.push({ ref: ref || null, kind: "archive", sha256: archive, why: ARCHIVE_SUPPLIED_BY_MEMBER });
         return;
       }
       if (this.#holdsImage(archive, images)) {
@@ -413,12 +451,14 @@ export class CaseCarriage {
   }
 
   /* R1 (T37; N757; DEC-180 (4)): a photo carried as its copy holds the copy alone, `derived`, kind `obscured`, when
-     R11 holds it under that digest for that original; else it is named unheld. */
+     R11 holds it under that digest for that original; (T39; N806) a member document's copy likewise, where R15 holds
+     it; else it is named unheld. */
   #holdCopy(ref, sha, ob, hold, unheld) {
     let r = null;
     try {
       if (HEX64.test(ob.copy) && HEX64.test(sha))
-        r = this.#one(`SELECT bytes FROM photo_copies WHERE capture=? AND sha256=? LIMIT 1`, sha, ob.copy);
+        r = this.#one(`SELECT bytes FROM photo_copies WHERE capture=? AND sha256=? LIMIT 1`, sha, ob.copy)
+          || this.#one(`SELECT bytes FROM document_copies WHERE capture=? AND sha256=? AND state='copy' LIMIT 1`, sha, ob.copy);
     } catch { r = null; }
     if (r) hold(ref, "obscured", ob.copy, null, Number.isInteger(r.bytes) ? r.bytes : null, true);
     else unheld.push({ ref: ref || null, kind: "obscured", sha256: ob.copy || null, why: "the obscured copy is not held" });
@@ -440,6 +480,13 @@ export class CaseCarriage {
       return this.#rows(`SELECT r.bundle_id, r.path, r.bytes FROM register r JOIN bundles b ON b.bundle_id=r.bundle_id
                          WHERE r.capture_sha=? ORDER BY r.bundle_id`, sha);
     } catch { return []; }
+  }
+
+  /* R13: whether the register homes a capture on a bundle that exists: true, false, or null when it cannot be read. */
+  #held(sha) {
+    try {
+      return !!this.#one(`SELECT 1 AS x FROM register r JOIN bundles b ON b.bundle_id=r.bundle_id WHERE r.capture_sha=? LIMIT 1`, sha);
+    } catch { return null; }
   }
 
   /* R1, R8: whether acquisition recorded a listing for this capture (it was opened as an archive). */
@@ -704,12 +751,16 @@ export class CaseCarriage {
      with OBSCURED_LABEL only when it covers an area (T38; case-grammar R12: an unmarked copy has no label); never
      registered, never a capture. True when held. */
   async #holdCopyBytes(copySha, bytes, original, covers) {
+    return this.#putDerived(copySha, bytes, { derived: "obscured", original, ...(covers ? { label: OBSCURED_LABEL } : {}) });
+  }
+
+  /* R11, R15: a derived copy's bytes at `<store>/obscured/<sha>` with its labels; true when held. */
+  async #putDerived(copySha, bytes, customMetadata) {
     if (!this.bucket) return false;
     let ns = "bio";
     try { const s = typeof this.store === "function" ? this.store() : this.store; if (str(s)) ns = str(s); } catch { ns = "bio"; }
     try {
-      await this.bucket.put(obscuredKey(ns, copySha), bytes, { sha256: copySha,
-        customMetadata: { derived: "obscured", original, ...(covers ? { label: OBSCURED_LABEL } : {}) } });
+      await this.bucket.put(obscuredKey(ns, copySha), bytes, { sha256: copySha, customMetadata });
       return true;
     } catch { return false; }
   }
@@ -724,9 +775,12 @@ export class CaseCarriage {
   /** R13 (T37; N757; K2206; T38: N779, DEC-183 (2)): the `materials:` rows whose photo's marks no longer match what the
    *  row states: a row stating `obscured` whose copy is not the photo's current copy (so a withdrawal since preparation
    *  is a lapse), and a photo row carried whole (`included: true`), always; each `{ref, sha, why}`, at most 200; `[]`
-   *  when none; a document that is not a photo, carried whole, never lapses here (B3, K2308). Marks that cannot be read
+   *  when none; a document this copy fetched, carried whole, never lapses here (B3, K2308; T39). Marks that cannot be read
    *  answer the row lapsed (fail closed). Each `why` names its cause: a mark added or withdrawn since preparation, a
-   *  photo carried whole, or marks unreadable. Synchronous; writes nothing; never throws. */
+   *  photo carried whole, or marks unreadable. (T39; N806, K2333) Each row names its `kind`, `photo` or `document`: a
+   *  member document's row lapses when it states a copy that is not the document's current copy (R16), when it carries
+   *  the document whole and its state is not `clean`, and when its state cannot be read (fail closed). Synchronous;
+   *  writes nothing; never throws. */
   marksLapsed(fm) {
     let rows = null;
     try { const m = materialsOf(fm); rows = m && Array.isArray(m.materials) ? m.materials : null; } catch { rows = null; }
@@ -737,7 +791,23 @@ export class CaseCarriage {
       if (!ob && !whole) continue;
       const ref = str(m.ref) || null, sha = str(m.sha).toLowerCase();
       if (!ob) {
-        if (HEX64.test(sha) && this.#isPhoto(sha)) out.push({ ref, sha, why: PHOTO_ONLY_AS_COPY });
+        if (!HEX64.test(sha)) continue;
+        if (this.#isPhoto(sha)) { out.push({ ref, sha, kind: "photo", why: PHOTO_ONLY_AS_COPY }); continue; }
+        /* (T39; N806) a member document carried whole stands only while its state is `clean`; a digest the record
+           holds no capture under is no member document (R1 answers it unheld, never refused) */
+        const held = this.#held(sha);
+        const member = held === false ? null : held === null ? UNDETERMINED : this.#memberOf(sha);
+        if (member && member.state === "undetermined") out.push({ ref, sha, kind: "document", why: DOCUMENT_UNREAD });
+        else if (member && member.state !== "clean") out.push({ ref, sha, kind: "document", why: MEMBER_DOCUMENT_ONLY_AS_COPY });
+        continue;
+      }
+      /* (T39; N806) a row carrying a member document's copy: it stands while that copy is the document's current one */
+      if (HEX64.test(sha) && !this.#isPhoto(sha)) {
+        let s = UNDETERMINED;
+        try { s = this.#documentState(sha); } catch { s = UNDETERMINED; }
+        if (s.state === "undetermined") out.push({ ref, sha, kind: "document", why: DOCUMENT_UNREAD });
+        else if (!(s.state === "copy" && s.copy === ob.copy))
+          out.push({ ref, sha, kind: "document", why: "the document's copy is no longer the one the case names, so the case must be prepared again" });
         continue;
       }
       let view = null;
@@ -745,11 +815,232 @@ export class CaseCarriage {
         const { marks, last } = this.#marksOf(sha);
         view = CaseCarriage.#view(marks, last);
       } catch { view = null; }
-      if (!view) out.push({ ref, sha: sha || null, why: "the photo's marks could not be read, so its copy cannot be confirmed" });
+      if (!view) out.push({ ref, sha: sha || null, kind: "photo", why: "the photo's marks could not be read, so its copy cannot be confirmed" });
       else if (!(view.copy && view.copy.sha256 === ob.copy))
-        out.push({ ref, sha, why: "a mark on the photo was added or withdrawn since the case was prepared, so its copy is no longer the one the case names" });
+        out.push({ ref, sha, kind: "photo", why: "a mark on the photo was added or withdrawn since the case was prepared, so its copy is no longer the one the case names" });
     }
     return out.slice(0, MARKS_LAPSED_MAX);
+  }
+
+  /* ---- a member document and its copy (R15–R17; T39, N806, K2315, K2333) ---- */
+
+  /* R15, R16: provenance R62 for one capture: true when this copy fetched it, false when not, null when it cannot be
+     asked (fail closed: never read as fetched). */
+  #fetched(sha) {
+    try {
+      const p = this.provenance;
+      const a = p && typeof p.fetchedByThisCopy === "function" ? p.fetchedByThisCopy(sha) : null;
+      return a && typeof a === "object" && typeof a.fetched === "boolean" ? a.fetched : null;
+    } catch { return null; }
+  }
+
+  /* R16: a capture's state from this module's tables and R62 alone, writing nothing: `{state, copy, refused}`, with
+     `missing` when it is a member document neither queued nor derived. Throws when the tables cannot be read. */
+  #documentState(sha) {
+    if (this.#isPhoto(sha)) return { state: "photo", copy: null, refused: null };
+    const fetched = this.#fetched(sha);
+    if (fetched === null) return UNDETERMINED;
+    if (fetched) return { state: "public", copy: null, refused: null };
+    const last = this.#one(`SELECT state, sha256, refused_code, refused_detail FROM document_copies WHERE capture=?
+                            ORDER BY seq DESC LIMIT 1`, sha);
+    if (last && last.state === "clean") return { state: "clean", copy: null, refused: null };
+    if (last && last.state === "copy" && HEX64.test(String(last.sha256 ?? ""))) return { state: "copy", copy: last.sha256, refused: null };
+    if (last && last.state === "refused")
+      return { state: "refused", copy: null, refused: { code: last.refused_code ?? null, detail: last.refused_detail ?? null } };
+    const queued = !!this.#one(`SELECT 1 AS x FROM document_copy_queue WHERE capture=?`, sha);
+    return queued ? { state: "pending", copy: null, refused: null } : { state: "pending", copy: null, refused: null, missing: true };
+  }
+
+  /* R1, R13: a capture's state when it is a member document (R15's term), else null (fetched, or a photo); its state
+     `undetermined` when it cannot be read. Writes nothing. */
+  #memberOf(sha) {
+    let s = UNDETERMINED;
+    try { s = this.#documentState(sha); } catch { s = UNDETERMINED; }
+    return s.state === "public" || s.state === "photo" ? null : s;
+  }
+
+  /** R16 (T39; N806, K2333): a capture's copy state, synchronously, from this module's tables and provenance R62 alone
+   *  (no bucket read), for `case-disclosures` R6 inside a preparation's transaction: `{state, copy, refused}`, `state`
+   *  `public` (fetched by this copy: carried as captured), `clean` (carried whole), `copy` (`copy` the cleaned copy's
+   *  SHA-256), `refused` (`refused` doc-clean's `{code, detail}`), `pending` (queued), `undetermined` (its tables or
+   *  R62 could not be read: fail closed) or `photo` (its copy is R10's). A member document neither queued nor derived
+   *  is queued (R15) and answered `pending`: the one write it makes. Never throws. */
+  documentCopy(captureSha) {
+    try {
+      const sha = digestOf(captureSha);
+      if (!HEX64.test(sha)) return { ...UNDETERMINED };
+      const s = this.#documentState(sha);
+      if (s.missing) this.#enqueue(sha);
+      return { state: s.state, copy: s.copy, refused: s.refused };
+    } catch { return { ...UNDETERMINED }; }
+  }
+
+  /* R15: one queue row for `sha`, inside whatever transaction is open (the act's); when it is new, R17's listeners are
+     told after the act commits. Throws when the row cannot be written. */
+  #enqueue(sha) {
+    this.sql.exec(`INSERT OR IGNORE INTO document_copy_queue (capture, queued) VALUES (?, ?)`, sha, this.#when(null));
+    const added = Number((this.#one(`SELECT changes() AS n`) || {}).n) > 0;
+    if (added) this.#armCopyWork();
+    return added;
+  }
+
+  /* R17: after the act commits (record-core R66), every registered listener is called once with `{at}`, R15's
+     `copyWake` as it then stands; one that throws or rejects changes nothing of the act. No call names a member or a
+     file. */
+  #armCopyWork() {
+    if (!this.#copyWork.length) return;
+    const notify = () => {
+      let at = null;
+      try { at = this.copyWake(this.#nowMs()); } catch { at = null; }
+      for (const l of this.#copyWork) {
+        try { const r = l.fn({ at }); if (r && typeof r.catch === "function") r.catch(() => {}); } catch { /* R17: nothing of the act */ }
+      }
+    };
+    try { if (this.record && typeof this.record.afterCommit === "function") this.record.afterCommit(notify); else notify(); } catch { /* never the act's */ }
+  }
+
+  /* The module's clock, in milliseconds. */
+  #nowMs() {
+    let ms = NaN;
+    try { ms = Date.parse(this.now()); } catch { ms = NaN; }
+    return Number.isFinite(ms) ? ms : Date.now();
+  }
+
+  /** R15 (T39): registers the receipt listener with provenance (its R47), once; the factory calls it at creation. */
+  start() {
+    try {
+      const p = this.provenance;
+      if (p && typeof p.onReceipt === "function") return p.onReceipt("case-carriage", (e) => this.#onReceipt(e));
+    } catch { /* a listener that cannot register leaves receipts unchanged; R16's miss still queues */ }
+    return { ok: false };
+  }
+
+  /** R17 (T39; N806): a later module (`scheduler`, its R25) registers once at start to be told when a member document
+   *  is queued; a second registration by one module, or a `fn` that is not a function, is refused through membership's
+   *  `listenerRefusal` (its R81). */
+  onCopyWork(module, fn) {
+    const refused = listenerRefusal(this.#copyWork, module, fn);
+    if (refused) return refused;
+    this.#copyWork.push({ module, fn });
+    return { ok: true, module };
+  }
+
+  /* R15: provenance R47's listener: a receipt that is not a fetch (its `via` not in FETCHED_VIAS, R62) queues its
+     capture, once per digest, inside the receipt's transaction; one already derived is not queued again. It never
+     refuses, delays or fails the receipt. */
+  #onReceipt(event) {
+    try {
+      const via = String((event && event.via) || "direct");
+      const sha = digestOf(event && event.capture_sha);
+      if (FETCHED_VIAS.includes(via) || !HEX64.test(sha)) return { ok: true, queued: false };
+      if (this.#one(`SELECT 1 AS x FROM document_copies WHERE capture=? LIMIT 1`, sha)) return { ok: true, queued: false };
+      return { ok: true, queued: this.#enqueue(sha) };
+    } catch { return { ok: true, queued: false }; }
+  }
+
+  /** R15 (T39; N806, K2333; the scheduler's wake, no route): derives the copies of queued member documents, oldest
+   *  first, at most `limit` (default and bound DOCUMENT_COPY_BATCH_MAX), skipping one whose failed read is not yet
+   *  DOCUMENT_COPY_RETRY_MS old. Each is asked R62 again (fetched since: recorded `public`, no copy); one whose
+   *  register byte count is over doc-clean's CLEAN_MAX_BYTES is recorded refused `DOCUMENT_TOO_LARGE` unread; else its
+   *  bytes are read from the evidence store by digest and cleaned: `clean` recorded with no copy, a copy held at
+   *  `<store>/obscured/<sha>` (labelled derived, naming its original; never registered, never a capture) and recorded,
+   *  a refusal recorded with doc-clean's `{code, detail}`. A read that fails, or a copy that cannot be held, leaves the
+   *  document queued and stamps the try. A photo found queued leaves the queue (its copy is R11's). Answers
+   *  `{ok: true, copied, clean, public, refused, failed, remaining}`, or DOCUMENT_COPY_NO_STORE (deriving nothing)
+   *  with no evidence store or bucket bound. No act changes, replaces or hides the original. Never rejects. */
+  copyBatch({ limit = null } = {}) {
+    return this.#serially("\u0000copyBatch", () => this.#copyBatch(limit)).catch(() =>
+      ({ ok: true, copied: 0, clean: 0, public: 0, refused: 0, failed: 0, remaining: this.#queued() }));
+  }
+
+  async #copyBatch(limit) {
+    let ev = null;
+    try { ev = this.record.evidenceStore(); } catch { ev = null; }
+    if (!ev || !this.bucket)
+      return refusal("DOCUMENT_COPY_NO_STORE", "no evidence store is bound to read a member's document from and hold its copy in");
+    const n = Number.isSafeInteger(limit) && limit > 0 ? Math.min(limit, DOCUMENT_COPY_BATCH_MAX) : DOCUMENT_COPY_BATCH_MAX;
+    const now = this.#nowMs();
+    const due = this.#rows(`SELECT capture, queued, tried FROM document_copy_queue ORDER BY queued, capture`)
+      .filter((q) => q.tried == null || !(Date.parse(q.tried) + DOCUMENT_COPY_RETRY_MS > now)).slice(0, n);
+    const out = { ok: true, copied: 0, clean: 0, public: 0, refused: 0, failed: 0 };
+    for (const q of due) {
+      let r = null;
+      try { r = await this.#copyOne(q.capture, ev); } catch { r = null; }
+      try {
+        const at = this.#when(null);
+        if (!r || r.failed) {
+          this.sql.exec(`UPDATE document_copy_queue SET tried=? WHERE capture=?`, at, q.capture);
+          out.failed++;
+        } else this.record.transact(() => {
+          if (!r.photo)
+            this.sql.exec(`INSERT INTO document_copies (capture, state, sha256, bytes, format, refused_code, refused_detail, at)
+                           VALUES (?,?,?,?,?,?,?,?)`, q.capture, r.state, r.sha256 ?? null, r.bytes ?? null, r.format ?? null,
+                          r.code ?? null, r.detail ?? null, at);
+          this.sql.exec(`DELETE FROM document_copy_queue WHERE capture=?`, q.capture);
+          if (!r.photo) out[r.state === "copy" ? "copied" : r.state]++;
+        });
+      } catch { out.failed++; }
+    }
+    return { ...out, remaining: this.#queued() };
+  }
+
+  /* R15: the count of documents still queued (null when it cannot be read). */
+  #queued() {
+    try { return Number(this.#one(`SELECT COUNT(*) AS n FROM document_copy_queue`).n); } catch { return null; }
+  }
+
+  /* R15: one queued capture's outcome: `{photo}`, `{state, ...}` to record, or `{failed}` to try again later. */
+  async #copyOne(sha, ev) {
+    if (this.#isPhoto(sha)) return { photo: true };
+    const fetched = this.#fetched(sha);
+    if (fetched === null) return { failed: true };
+    if (fetched) return { state: "public" };
+    const tooLarge = (size) => ({ state: "refused", code: "DOCUMENT_TOO_LARGE",
+      detail: `the document is ${size} bytes, over the ${CLEAN_MAX_BYTES} a copy is made from` });
+    const stated = Math.max(-1, ...this.#homes(sha).map((h) => Number(h.bytes)).filter(Number.isFinite));
+    if (stated > CLEAN_MAX_BYTES) return tooLarge(stated);
+    let bytes = null;
+    try {
+      const h = await ev.head(sha);
+      if (h && Number.isFinite(h.size) && h.size > CLEAN_MAX_BYTES) return tooLarge(h.size);
+      const o = await ev.get(sha);
+      if (o && typeof o.arrayBuffer === "function") bytes = new Uint8Array(await o.arrayBuffer());
+    } catch { bytes = null; }
+    if (!bytes || createSha256().update(bytes).hex() !== sha) return { failed: true };
+    if (bytes.length > CLEAN_MAX_BYTES) return tooLarge(bytes.length);
+    const c = await this.clean(bytes);
+    if (!c || typeof c !== "object") return { failed: true };
+    if (c.ok === false)
+      return { state: "refused", code: String(c.code ?? "DOCUMENT_UNREADABLE"), detail: typeof c.detail === "string" ? c.detail : null };
+    const format = typeof c.format === "string" ? c.format : null;
+    if (c.ok === true && c.clean === true) return { state: "clean", format };
+    if (!(c.ok === true && c.bytes instanceof Uint8Array)) return { failed: true };
+    const copySha = createSha256().update(c.bytes).hex();
+    if (!(await this.#putDerived(copySha, c.bytes, { derived: "cleaned", original: sha, label: COPY_CLEANED_LABEL })))
+      return { failed: true };
+    return { state: "copy", sha256: copySha, bytes: c.bytes.length, format };
+  }
+
+  /** R15 (T39; N806): when `copyBatch` next has work, as `file-safety` R39's wakes answer: null while nothing is queued;
+   *  `now` while a queued document has not been tried since it was queued; else the earliest retry instant (its last
+   *  try plus DOCUMENT_COPY_RETRY_MS), never before `now`. In the form `now` was given (milliseconds, or an ISO
+   *  string). The instants live in this module's tables, so the answer survives a restart. Writes nothing; never
+   *  throws (null when the queue cannot be read). */
+  copyWake(now) {
+    try {
+      const n = typeof now === "number" ? now : typeof now === "string" ? Date.parse(now) : NaN;
+      if (!Number.isFinite(n)) return null;
+      const form = (ms) => (typeof now === "number" ? ms : new Date(ms).toISOString());
+      const rows = this.#rows(`SELECT tried FROM document_copy_queue`);
+      if (!rows.length) return null;
+      let at = Infinity;
+      for (const r of rows) {
+        const t = r.tried == null ? NaN : Date.parse(r.tried);
+        if (!Number.isFinite(t)) return now;
+        at = Math.min(at, t + DOCUMENT_COPY_RETRY_MS);
+      }
+      return at <= n ? now : form(at);
+    } catch { return null; }
   }
 }
 
@@ -757,8 +1048,9 @@ const instances = new WeakMap();
 
 /** The one instance for a host (K61). The first call creates it with `deps` (a test passes its own), creates its
  *  tables, and declares them to record-core in one call: the two of held materials exempt from purge (R6), the marks
- *  and their withdrawals and copies with their classes (R12); the answer is kept as `purgeDeclaration` and
- *  `marksDeclaration`. */
+ *  and their withdrawals and copies with their classes (R12), and (T39) the queue and record of member documents'
+ *  copies; the answer is kept as `purgeDeclaration` and `marksDeclaration`. It registers R15's receipt listener with
+ *  provenance (its R47). */
 export function caseCarriageOf(host, deps) {
   let c = instances.get(host);
   if (!c) {
@@ -767,16 +1059,18 @@ export function caseCarriageOf(host, deps) {
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
-    c = new CaseCarriage({ ...d, host, storage, record, membership, promotion });
+    const provenance = d.provenance || provenanceOf(host, { record, membership, promotion });
+    c = new CaseCarriage({ ...d, host, storage, record, membership, promotion, provenance });
     instances.set(host, c);
     c.migrate();
     /* One declaration, so the module holds one place in record-core's order: the two published tables with the classes
        `declarePurge`'s default form gave them (exempt, R6), and the marks, withdrawals and copies with theirs (R12). */
     const declared = record.declareTable("case-carriage", [...CASE_CARRIAGE_EXEMPT.map((name) => ({ name, purge: "exempt",
       expunge: "none", export: "admin-only", sight: "group", derive: "stored", version_chain: false })),
-      ...CASE_CARRIAGE_MARK_TABLES.map((t) => ({ ...t }))]);
+      ...CASE_CARRIAGE_MARK_TABLES.map((t) => ({ ...t })), ...CASE_CARRIAGE_DOCUMENT_TABLES.map((t) => ({ ...t }))]);
     c.purgeDeclaration = declared;
     c.marksDeclaration = declared;
+    c.start();   // R15 (T39): the receipt listener, registered once, at creation
   }
   return c;
 }

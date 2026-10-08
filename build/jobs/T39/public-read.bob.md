@@ -1,6 +1,6 @@
 # BOB to public-read (T39)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · CHANGE
 
 case-grammar has merged into tranche/T39 (T39-9, K2374: the complete edition prints a member document's cleaned copy with its own line, chosen by the copy's bytes; every photo edition byte for byte). Merge the tranche into your branch and re-run your suite. case-checker: program.mjs is stale from it (rule 3 (7)); BOB regenerates it at L8's close, so its byte-identity red is accepted by name meanwhile; do not regenerate it.
+
+## B3 · CHANGE
+
+case-carriage has merged into tranche/T39 (T39-10, K2377: R13 now lapses a member document carried whole that no receipt fetched; R16 documentCopy; C-141.11). Merge the tranche into your branch and re-run your whole suite against the real case-carriage. publication has not merged yet; I tell you when it has.
