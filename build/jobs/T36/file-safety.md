@@ -127,3 +127,7 @@ T36-11 applied: the whole module, new, R1–R38, with B2 (K2098: a hidden captur
 - Checks: format 0 failures; with my paths filled in an uncommitted copy of `modules.json`, architecture, coverage (38 of 38) and ownership: 0 failures each.
 - Findings for other modules (record, "Found in other modules"): (1) file-scanner reads targets only under `captures/` (N753); (2) file-scanner's catalogue states no recipient as exactly "the organization", so R32 is read by its words, and no catalogued CDR tool can take routine use; (3) `NO_SUCH_CAPTURE` and `MACHINE_CANNOT_RELEASE` are also sources' and ratification's codes: at T36-47 `dec49Row` would decorate them with my rows (I precede both); (4) the users' wiring (route map with four byte answers, `reputationTool()`, the wakes); no generated artifact is stale (nothing imports the module yet).
 - P6: 3,679 lines with tests (1,971 source). Detail decisions for `rulings.md` are in my record.
+
+## J4 · COMPLETE · re B4
+
+B4 (K2103) applied on tranche/T36 @ 541c7268ca: C-140.1 FILE_NOT_HELD (hidden still answered exactly as absent), C-140.16 MACHINE_CANNOT_RELEASE_HOLD, C-140.17 HOLD_NO_REASON; check ids, words and sites unchanged. A new test (rows.test.mjs, R2/R24) reads every _CHECKS family of every other module's files and finds no shared code (negative control: it sees the three old codes in their owners' rows). file-safety 43/43; provenance, acquisition, capture, sources green; format, architecture, coverage 38/38, ownership 0 failures with my paths filled. Rows awaiting stamp in my record re-named.
