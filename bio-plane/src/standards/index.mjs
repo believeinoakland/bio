@@ -43,7 +43,11 @@
  * T35 (T35-31): how much of a standard is held (text, cited, absent), its family, force per provision, the copy and what
  * it says of itself, sight from its source and its release, versions from captures, overrides, the source of force,
  * designation, edition and issuer, adoptions and the edition in force, access, targets, binding or benchmark, the
- * members' words (`./words.mjs`), a found extent and the question beside a declaration (R33–R47). */
+ * members' words (`./words.mjs`), a found extent and the question beside a declaration (R33–R47).
+ *
+ * T36 (T36-15): a version read from captures reads only their own receipts (R38, `provenance.receiptsOfCapture`); who
+ * recorded what from a passage, in `events` R49's shape (R49, `recordedBy`); and a version known in force through a date
+ * by a member's record from a source checked that day (R50), which R20 reads where no end is stated (R51). */
 
 import { isMachineIdentity } from "../record-grammar/actors.mjs";
 import { normalizeType } from "../record-grammar/types.mjs";
@@ -52,7 +56,7 @@ import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { contentOf, contentIdFor, canonicalExtent, describeExtent, extentRelation,
-         checkContentExtent } from "../content/index.mjs";
+         CONTENT_EXTENT_KINDS } from "../content/index.mjs";
 import { noSha } from "../extraction/index.mjs";
 import { combine as combineProfiles, STANDARD_SOURCE_KINDS } from "../../../jurisdictions/index.mjs";
 import { entitiesOf, noSuchEntity } from "../entities/index.mjs";
@@ -2071,14 +2075,15 @@ export class Standards {
    *  standard's text (R41). An in-process read: writes nothing, never throws. */
   recordedBy({ captureSha = null, extent = null, limit = null, viewer = null } = {}) {
     try {
-      if (typeof viewer !== "string" || !viewer.trim())
+      if (viewer === null || viewer === undefined || (typeof viewer === "string" && !viewer.trim()))
         return readRefusal("VIEWER_MISSING", "a read names the member reading; an absent viewer is neither an administrator "
                            + "nor the public");
       if (typeof captureSha !== "string" || !captureSha.trim())
         return noSha("who recorded something from a passage is read for a captured document, by its capture sha256");
       let asked = null;
       if (extent !== null && extent !== undefined) {
-        if (!isObj(extent) || extentRelation(extent, extent) === "unreadable" || extentUnreadable(extent))
+        /* K2114: an extent given that is not an object of one of content's kinds */
+        if (!isObj(extent) || !Object.prototype.hasOwnProperty.call(CONTENT_EXTENT_KINDS, extent.kind))
           return readRefusal("EXTENT_MALFORMED", "the extent named is not one the record can read");
         asked = extent;
       }
@@ -2086,21 +2091,25 @@ export class Standards {
         ? Math.min(FOR_LIMIT_MAX, Math.max(1, Number(limit))) : FOR_LIMIT_DEFAULT;
       const sha = captureSha.trim().replace(/^sha256:/i, "").toLowerCase();
       const base = { ok: true, module: CONNECTION_OWNER, capture_sha: sha };
-      if (!/^[0-9a-f]{64}$/.test(sha) || !this.#captureVisible(sha, viewer)) return { ...base, items: [], truncated: false };
+      /* a viewer membership refuses (K2114) sees nothing, as a capture not held or not visible */
+      if (typeof viewer !== "string" || !/^[0-9a-f]{64}$/.test(sha) || !this.#captureVisible(sha, viewer))
+        return { ...base, items: [], truncated: false };
       const items = new Map();
       const readable = new Map();
       const may = (sid) => { if (!readable.has(sid)) readable.set(sid, this.#readable(sid, viewer)); return readable.get(sid); };
       const add = (record, kind, field, sid, ext, by, at, withdrawn) => {
         if (!may(sid)) return;
+        /* K2114: the extent as content's canonical string parsed back to an object; ordered by that string */
         const canon = typeof ext === "string" ? ext : canonicalExtent(ext);
+        const object = safeJson(canon);
         let relation = null;
         if (asked) {
-          relation = extentRelation(asked, typeof ext === "string" ? safeJson(ext) : ext);
+          relation = extentRelation(asked, object);
           if (!["same", "narrower", "wider"].includes(relation)) return;
         }
         const key = JSON.stringify([canon, record, field]);
-        if (!items.has(key)) items.set(key, { module: CONNECTION_OWNER, record, kind, field, extent: canon, relation, by, at,
-                                              withdrawn: !!withdrawn });
+        if (!items.has(key)) items.set(key, { canon, item: { module: CONNECTION_OWNER, record, kind, field, extent: object, relation,
+                                                             by, at, withdrawn: !!withdrawn } });
       };
       /* the capture's content rows, each content id read as its extent (content's read contract, R45) */
       const ext = new Map(this.#rows(`SELECT content_id, extent FROM content WHERE capture_sha=?`, sha).map((r) => [r.content_id, r.extent]));
@@ -2128,7 +2137,9 @@ export class Standards {
                                   AS gone FROM standard_in_force_through t WHERE t.capture_sha=?`, sha))
         add(r.record_id, "in_force_through", "source", r.standard_id, ext.get(r.content_id) ?? safeJson(r.extent_json),
             r.author, r.at, r.gone);
-      const all = [...items.values()].sort((x, y) => cmp(x.extent, y.extent) || cmp(x.record, y.record) || cmp(x.field, y.field));
+      const all = [...items.values()]
+        .sort((x, y) => cmp(x.canon, y.canon) || cmp(x.item.record, y.item.record) || cmp(x.item.field, y.item.field))
+        .map((x) => x.item);
       return { ...base, items: all.slice(0, n), truncated: all.length > n };
     } catch {
       return { ok: true, module: CONNECTION_OWNER, capture_sha: typeof captureSha === "string" ? captureSha.trim().toLowerCase() : null,
@@ -2136,10 +2147,11 @@ export class Standards {
     }
   }
 
-  /* R49: whether the viewer may see a bundle holding the capture (record-core's files, or a content row's document). */
+  /* R49: whether the viewer may see a bundle holding the capture (provenance's `register`, its R48 read contract, or a
+     content row's document, content R45). */
   #captureVisible(sha, viewer) {
     const bundles = new Set([
-      ...this.#rows(`SELECT DISTINCT bundle_id FROM files WHERE blob_sha=?`, sha).map((r) => r.bundle_id),
+      ...this.#rows(`SELECT DISTINCT bundle_id FROM register WHERE capture_sha=?`, sha).map((r) => r.bundle_id),
       ...this.#rows(`SELECT DISTINCT bundle_id FROM content WHERE capture_sha=?`, sha).map((r) => r.bundle_id)]);
     return [...bundles].some((b) => b && this.membership.inSight(b, viewer));
   }
@@ -2153,8 +2165,12 @@ export class Standards {
                                   (SELECT content_id FROM content WHERE capture_sha=?)`, sha)) ids.add(r.standard_id);
       for (const r of this.#rows(`SELECT standard_id FROM standards WHERE portion_content IN
                                   (SELECT content_id FROM content WHERE capture_sha=?)`, sha)) ids.add(r.standard_id);
-      for (const r of this.#rows(`SELECT standard_id FROM standards WHERE json_extract(target_json, '$.definition') IN
-                                  (SELECT content_id FROM content WHERE capture_sha=?)`, sha)) ids.add(r.standard_id);
+      /* the passages that need not be among the standard's own text (R19, R42; K2116) */
+      for (const r of this.#rows(`SELECT standard_id FROM standards WHERE json_extract(target_json, '$.definition') IN (${OWN})
+                                  OR json_extract(target_json, '$.period.content_id') IN (${OWN}) OR current_through_basis IN (${OWN})
+                                  OR json_extract(period_basis_json, '$.from.passage') IN (${OWN})
+                                  OR json_extract(period_basis_json, '$.to.passage') IN (${OWN})`, sha, sha, sha, sha, sha))
+        ids.add(r.standard_id);
     }
     for (const r of this.#rows(`SELECT standard_id FROM standards WHERE instr(coalesce(held_json,''), ?) > 0
                                 OR instr(coalesce(version_basis_json,''), ?) > 0`, sha, sha)) ids.add(r.standard_id);
@@ -2183,7 +2199,14 @@ export class Standards {
     if (vb && Array.isArray(vb.captures) && vb.captures.includes(sha)) out.push(["version_basis", { kind: "document" }]);
     id("force_source", (safeJson(row.force_source_json) || {}).citation);
     const t = safeJson(row.target_json);
-    if (t) { id("target.metric", t.metric && t.metric.content_id); id("target.definition", t.definition); }
+    if (t) {
+      id("target.metric", t.metric && t.metric.content_id); id("target.definition", t.definition);
+      id("target.period", t.period && t.period.content_id);
+    }
+    /* K2116: a codifier copy's current-through basis and a period's cited passages (R19) */
+    id("current_through.basis", row.current_through_basis);
+    const pb = safeJson(row.period_basis_json) || {};
+    for (const side of ["from", "to"]) id(`period_basis.${side}`, pb[side] && pb[side].passage);
     return out;
   }
 
@@ -2384,14 +2407,8 @@ function refuseTextNotHeld(sid, held) {
    why, no catalogue row (the code is shared by every module's read in `events` R49's shape). */
 const readRefusal = (code, why) => ({ ok: false, refused: code, reason: code, code, why });
 
-/* R49: an extent whose form content cannot read (its shape check's unreadable or out-of-space answer); a check that
-   asks only for the capture's chain or page boxes is about the capture, not the form, and reads as readable. */
-function extentUnreadable(extent) {
-  try {
-    const r = checkContentExtent(extent, { known: false });
-    return !!r && (r.code === "CONTENT_EXTENT_UNREADABLE" || r.code === "CONTENT_EXTENT_NOT_USER_SPACE");
-  } catch { return true; }
-}
+/* R49: the content ids of one capture (content's read contract, R45), as a subquery bound to the capture's digest. */
+const OWN = "SELECT content_id FROM content WHERE capture_sha=?";
 
 /* R49: compare two strings for a stable order. */
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);

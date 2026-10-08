@@ -236,7 +236,7 @@ test("R51 R7 R43 a version with no stated end, known in force through a date, an
   assert.deepEqual(both.versions.sort(), [v1.id, v2.id].sort());
 });
 
-test("R49 recordedBy answers, in events R49's shape, every row of this module citing the capture, a content id read as its row's capture and extent: a standard's text, portion, requires, cited_by, search, copy_claimed, version_basis, force_source and target, a force's citation and criteria, an adoption's, an imposition's and an in-force-through record's source; by the act's author, at its instant, withdrawn for a superseded standard and a withdrawn force or record; never a proposal and never text; ordered, clamped and truncated; a capture not held or not visible answers none; VIEWER_MISSING, NO_SHA, EXTENT_MALFORMED", () => {
+test("R49 recordedBy answers, in events R49's shape, every row of this module citing the capture, a content id read as its row's capture and extent: a standard's text, portion, requires, cited_by, search, copy_claimed, version_basis, force_source, target (metric, definition, recurrence), current_through basis and period_basis passages (K2116), a force's citation and criteria, an adoption's, an imposition's and an in-force-through record's source; by the act's author, at its instant, withdrawn for a superseded standard and a withdrawn force or record; never a proposal and never text; each extent content's canonical string parsed back to an object and ordered by that string (K2114); clamped and truncated; a capture not held or not visible, or a viewer membership refuses, answers none; VIEWER_MISSING, NO_SHA, EXTENT_MALFORMED", () => {
   const w = seeded();
   const body = w.entity("Harbour Master");
   const p = w.passage("cited-doc", { text: "The harbour master shall answer within 5 days." });
@@ -247,7 +247,9 @@ test("R49 recordedBy answers, in events R49's shape, every row of this module ci
   const A = policy(w, { issuer: body, text: [c], portion: { path: "1", content_id: c }, requires: [c],
                         copy_claimed: { says: "draft", extent: c }, force_source: { kind: "resolution", citation: c },
                         target: { metric: { words: "days to answer", content_id: c }, threshold: { comparator: "at_most", value: "5", unit: "days" },
-                                  period: { from: null, to: null }, definition: c } });
+                                  period: { recurrence: "each quarter", content_id: c }, definition: c },
+                        current_through: { date: "2026-08-01", basis: c }, period: { from: "2020-01-01", to: null },
+                        period_basis: { from: { passage: c } } });
   assert.equal(A.ok, true, JSON.stringify(A).slice(0, 400));
   w.clock.now = "2026-09-11T00:00:00.000Z";
   const B = w.declare({ text: [c], author: V("carol"), viewer: V("carol") });
@@ -275,10 +277,11 @@ test("R49 recordedBy answers, in events R49's shape, every row of this module ci
   const r = w.s.recordedBy({ captureSha: X, viewer: V("carol") });
   assert.deepEqual(Object.keys(r).sort(), ["capture_sha", "items", "module", "ok", "truncated"]);
   assert.deepEqual([r.ok, r.module, r.capture_sha, r.truncated], [true, "standards", X, false]);
-  const page = canonicalExtent(PAGE0);
+  const page = JSON.parse(canonicalExtent(PAGE0));
   const got = r.items.map((i) => `${i.record}|${i.kind}|${i.field}`).sort();
   const want = [
-    ...["text", "portion", "requires", "copy_claimed", "force_source", "target.metric", "target.definition"].map((x) => `${A.id}|standard|${x}`),
+    ...["text", "portion", "requires", "copy_claimed", "force_source", "target.metric", "target.definition", "target.period",
+        "current_through.basis", "period_basis.from"].map((x) => `${A.id}|standard|${x}`),
     `${B.id}|standard|text`, `${C.id}|standard|cited_by`, `${D.id}|standard|search`,
     `${f.force.id}|force|citation`, `${f.force.id}|force|criteria`, `${ad.adoption.id}|adoption|citation`,
     `${im.imposition.id}|imposition|citation`, `${rec.record.id}|in_force_through|source`,
@@ -296,7 +299,7 @@ test("R49 recordedBy answers, in events R49's shape, every row of this module ci
   assert.deepEqual([item(f.force.id, "citation").withdrawn, item(ad.adoption.id, "citation").by], [true, V("carol")]);
   assert.equal(item(rec.record.id, "source").withdrawn, false);
   /* the order: canonical extent, then record, then field */
-  const order = r.items.map((i) => [i.extent, i.record, i.field]);
+  const order = r.items.map((i) => [canonicalExtent(i.extent), i.record, i.field]);
   assert.deepEqual(order, [...order].sort((a, b) => (a.join("\u0000") < b.join("\u0000") ? -1 : 1)));
   /* a withdrawn record is marked */
   w.s.inForceThroughWithdraw({ record: rec.record.id, reason: REASON, author: V("bob") });
@@ -320,13 +323,17 @@ test("R49 recordedBy answers, in events R49's shape, every row of this module ci
   assert.deepEqual(w.s.recordedBy({ captureSha: X, viewer: "nobody" }).items, []);
   /* refusals, each writing nothing */
   const before = w.snapshot();
-  for (const v of [null, undefined, "", "  ", 7]) assert.equal(w.s.recordedBy({ captureSha: X, viewer: v }).refused, "VIEWER_MISSING");
+  for (const v of [null, undefined, "", "  "]) assert.equal(w.s.recordedBy({ captureSha: X, viewer: v }).refused, "VIEWER_MISSING");
+  for (const v of [7, "nobody", "member:"]) assert.deepEqual(w.s.recordedBy({ captureSha: X, viewer: v }).items, [], "a viewer membership refuses sees nothing");
   for (const s of [null, "", 7]) {
     const n = w.s.recordedBy({ captureSha: s, viewer: V("carol") });
     assert.deepEqual([n.reason, n.check], ["NO_SHA", EXTRACTION_CHECKS.NO_SHA.check]);
   }
-  for (const e of ["page 1", { kind: "nonsense" }, { kind: "pdf-page" }, { kind: "pdf-page", page: "x" }])
-    assert.equal(w.s.recordedBy({ captureSha: X, extent: e, viewer: V("carol") }).refused, "EXTENT_MALFORMED");
+  for (const e of ["page 1", [PAGE0], {}, { kind: "nonsense" }]) {
+    const m = w.s.recordedBy({ captureSha: X, extent: e, viewer: V("carol") });
+    assert.deepEqual([m.ok, m.refused, m.code, m.reason, typeof m.why], [false, "EXTENT_MALFORMED", "EXTENT_MALFORMED", "EXTENT_MALFORMED", "string"]);
+  }
+  assert.equal(w.s.recordedBy({ captureSha: X, extent: { kind: "pdf-page" }, viewer: V("carol") }).ok, true, "a content kind is not malformed");
   assert.doesNotThrow(() => w.s.recordedBy());
   assert.deepEqual(w.snapshot(), before);
 });
@@ -340,8 +347,8 @@ test("R49 version_basis cites each capture whole, as document, and a hidden capt
                           version_basis: { captures: [v1.capSha, v2.capSha] } });
   const of1 = w.s.recordedBy({ captureSha: v1.capSha, viewer: V("carol") }).items;
   assert.deepEqual(of1.map((i) => [i.record, i.field, i.extent, i.withdrawn]),
-                   [[neu.id, "version_basis", canonicalExtent({ kind: "document" }), false],
-                    [old, "text", canonicalExtent(PAGE0), true]]);
+                   [[neu.id, "version_basis", { kind: "document" }, false],
+                    [old, "text", JSON.parse(canonicalExtent(PAGE0)), true]]);
   assert.deepEqual(w.s.recordedBy({ captureSha: v1.capSha, extent: PAGE0, viewer: V("carol") }).items.map((i) => [i.field, i.relation]),
                    [["version_basis", "wider"], ["text", "same"]]);
   /* a capture filed only in a hidden project: its rows are answered to its owner and to no one else */
