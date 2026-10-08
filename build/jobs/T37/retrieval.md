@@ -36,3 +36,7 @@ R74 (T37-13): a `.docx` reading stored before N758 (T36's office-readers emitted
 ## J2 · REPORT
 
 extraction: n26MigratedReading.moveCells (extraction/index.mjs:213-224) moves doc-table cell sources but not the cells' paras ordinals (office-readers R11, N758). It matters only if a reading carrying paras were migrated from pre-N26 numbering, which looks impossible in practice; named so extraction's requirements can say so or the migration renumber them.
+
+## J3 · COMPLETE
+
+T37-13 applied: R74 finds a .docx table's paragraphs by its cells' paras (line matching removed; an ordinal with no unit passed over, K2197; a cell with no paras names none, K2202). Tests: vertically merged table (two cases), ordinal with no unit (whitespace, wire-dropped, pre-N758), and N759 (a fact at one cell named narrower on its column, sheet and .docx). Also fixed three findIn flaws in my module (people and requirements never 'Nothing here' over an unread capture; R75 own-property language lookup), each tested. retrieval 168/0; answers 44/0, citation 78/0; format, architecture, coverage 77/77, ownership: 0 failures. 3,474 lines. Record: build/jobs/T37/retrieval.md.
