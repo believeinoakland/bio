@@ -142,3 +142,22 @@ test("R62: a read that fails answers not fetched with no routes (fail closed), a
     w.st.sql.exec = exec;
   }
 });
+
+test("R62: the answer is exactly {fetched, routes, archive}, keys in that order, digests bare lowercase, no wrapper", () => {
+  const w = world();
+  const zip = sha("shape zip"), f = sha("shape file");
+  receipt(w, zip, "direct");
+  cut(w, zip, 0, f, `zip:${zip.toUpperCase()}!0`);
+  const cases = [
+    [`sha256:${f.toUpperCase()}`, { fetched: true, routes: ["unpacked"], archive: zip }],
+    [zip, { fetched: true, routes: ["direct"], archive: null }],
+    [sha("absent"), { fetched: false, routes: [], archive: null }],
+    ["not a digest", { fetched: false, routes: [], archive: null }],
+  ];
+  for (const [asked, want] of cases) {
+    const got = w.prov.fetchedByThisCopy(asked);
+    assert.deepEqual(Object.keys(got), ["fetched", "routes", "archive"], asked);
+    assert.deepEqual(got, want, asked);
+    if (got.archive !== null) assert.match(got.archive, /^[0-9a-f]{64}$/);
+  }
+});
