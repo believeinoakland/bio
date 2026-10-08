@@ -17,3 +17,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 Take the full fix in this job (K2223): the pool keeps only what this edition's commit held, through publication.heldMaterialsOf(case, edition); your Uses line now names it on tranche/T37 (merge it). Keep your narrower walk too. Your second reading stands.
+
+## B3 · CHANGE
+
+case-grammar is merged into tranche/T37 @ f3f6002068 (K2224): merge it. The case file you write takes CASE_FILE_FORMAT (/3), the copy at caseFilePath("obscured", ref) (case-grammar R13).
