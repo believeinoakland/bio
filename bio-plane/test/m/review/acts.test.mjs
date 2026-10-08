@@ -1,9 +1,9 @@
-/* review: the authoring acts, draft, grant and revoke (R1–R7, R27), at `act`, and the op map's stamps (R22). */
+/* review: the authoring acts, draft, grant and revoke (R1–R7, R27), at `act`, and the op map's stamps (R22, R29). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { standard, P, Q, V, SECRET, NOW } from "./fixture.mjs";
 import { REVIEW_COPY_CHECKS, REVIEW_DRAFT_FIELDS, REVIEW_RECIPIENT_MAX, REVIEW_DRAFT_MAX, reviewOps,
-         caseIdentitySentence } from "../../../src/review/index.mjs";
+         caseIdentitySentence, noReviewCopy } from "../../../src/review/index.mjs";
 import { PROJECT_VISIBILITY_CHECKS } from "../../../src/membership/index.mjs";
 import { mintExhausted, RECORD_CORE_CHECKS } from "../../../src/record-core/index.mjs";
 
@@ -231,8 +231,8 @@ test("R22: every authorship field is the control plane's stamp, never a body's",
   let s = w.row(`SELECT * FROM case_drafts WHERE draft_id=?`, d.draftId);
   assert.deepEqual([s.created_by, s.updated_by, s.statement_by], ["ed", "ed", "ed"]);
   refused(ops({}, { project: P, author: "ann" }).casedraft(), "MACHINE_CANNOT_REVIEW");
-  const g = ops({ author: "ann", secretSha: SECRET(1) }, { draft: d.draftId, recipient: "R", author: "ed",
-                                                          secretSha: SECRET(9) }).reviewgrant();
+  /* R29: the fingerprint is the control plane's body stamp; `author` stays the query's */
+  const g = ops({ author: "ann" }, { draft: d.draftId, recipient: "R", author: "ed", secretSha: SECRET(1) }).reviewgrant();
   assert.deepEqual([g.ok, g.issuedBy], [true, "ann"]);
   assert.equal(w.row(`SELECT secret_sha FROM review_grants WHERE grant_id=?`, g.grantId).secret_sha, SECRET(1));
   refused(ops({}, { draft: d.draftId, recipient: "R", author: "ann", secretSha: SECRET(2) }).reviewgrant(), "MACHINE_CANNOT_REVIEW");
@@ -240,14 +240,53 @@ test("R22: every authorship field is the control plane's stamp, never a body's",
   /* a comment's author is the stamped viewer or the stamped secret's grant */
   const c = ops({ draft: d.draftId, viewer: V("ed") }, { text: "hi", author: "ann", viewer: V("ann") }).reviewcomment();
   assert.deepEqual([c.comment.author_kind, c.comment.author], ["member", "ed"]);
-  const rc = ops({ secretSha: SECRET(1), bySecret: "1" }, { text: "hi", author: "ann" }).reviewcomment();
+  const rc = ops({ bySecret: "1" }, { text: "hi", author: "ann", secretSha: SECRET(1) }).reviewcomment();
   assert.deepEqual([rc.comment.author_kind, rc.comment.author, rc.comment.grant_id], ["recipient", g.grantId, g.grantId]);
-  assert.equal(ops({ secretSha: SECRET(1) }, { text: "hi" }).reviewcomment().code, "NO_REVIEW_COPY",
+  assert.equal(ops({}, { text: "hi", secretSha: SECRET(1), bySecret: "1" }).reviewcomment().code, "NO_REVIEW_COPY",
     "bySecret is a stamp too: without it the secret is not a door");
   /* the read and the list take their viewer from the stamp */
   assert.equal(ops({ draft: d.draftId, viewer: V("out") }, { viewer: V("ann") }).reviewcopy().code, "NO_REVIEW_COPY");
   assert.equal(ops({ project: P, viewer: V("out") }, { viewer: V("ann") }).casedrafts().code, "NO_REVIEW_COPY");
   assert.equal(ops({ project: P, viewer: V("ivy") }, {}).casedrafts().ok, true);
+});
+
+test("R29: reviewgrant, reviewcopy and reviewcomment take secretSha from the body only, never the query; bySecret, author and viewer stay query stamps", () => {
+  const w = standard();
+  const url = (q) => new URL(`https://x/?${new URLSearchParams(q)}`);
+  const ops = (q, body) => reviewOps(w.r, url(q), body);
+  const d = draft(w, "ann");
+  /* reviewgrant: a fingerprint in the query only is never read, so the grant is refused for want of one, writing nothing */
+  const before = w.snapshot();
+  for (const body of [{}, { secretSha: null }, { secretSha: "" }, undefined, null])
+    refused(ops({ author: "ann", secretSha: SECRET(1) }, body === undefined ? undefined
+      : { draft: d.draftId, recipient: "R", ...(body || {}) }).reviewgrant(),
+      body === undefined ? "REVIEW_NOT_PROJECT_OWNER" : "REVIEW_NO_SECRET");
+  refused(ops({ author: "ann", secretSha: SECRET(1), draft: d.draftId, recipient: "R" }, {}).reviewgrant(), "REVIEW_NO_SECRET");
+  assert.deepEqual(w.snapshot(), before, "a query fingerprint writes no grant");
+  /* the body's fingerprint is the one recorded, whatever the query says */
+  const g = ops({ author: "ann", secretSha: SECRET(9) }, { draft: d.draftId, recipient: "R", secretSha: SECRET(1) }).reviewgrant();
+  assert.equal(g.ok, true);
+  assert.equal(w.row(`SELECT secret_sha FROM review_grants WHERE grant_id=?`, g.grantId).secret_sha, SECRET(1));
+  assert.equal(w.count("review_grants"), 1);
+  /* reviewcopy and reviewcomment: the grant door opens on the body's fingerprint (positive control) ... */
+  const copy = ops({ draft: d.draftId, bySecret: "1" }, { secretSha: SECRET(1) }).reviewcopy();
+  assert.deepEqual([copy.ok, copy.reader], [true, "recipient"]);
+  const c = ops({ draft: d.draftId, bySecret: "1" }, { secretSha: SECRET(1), text: "seen" }).reviewcomment();
+  assert.deepEqual([c.ok, c.comment.author_kind, c.comment.grant_id], [true, "recipient", g.grantId]);
+  /* ... and on a query fingerprint answers the dead answer, byte-identical, writing no comment */
+  const dead = JSON.stringify(noReviewCopy());
+  const comments = w.count("review_comments");
+  for (const body of [{}, { secretSha: null }, { secretSha: SECRET(9) }]) {
+    assert.equal(JSON.stringify(ops({ draft: d.draftId, bySecret: "1", secretSha: SECRET(1) }, body).reviewcopy()), dead);
+    assert.equal(JSON.stringify(ops({ bySecret: "1", secretSha: SECRET(1) }, body).reviewcopy()), dead);
+    assert.equal(JSON.stringify(ops({ draft: d.draftId, bySecret: "1", secretSha: SECRET(1) },
+                                    { ...body, text: "hi" }).reviewcomment()), dead);
+  }
+  assert.equal(w.count("review_comments"), comments, "a query fingerprint writes no comment");
+  /* bySecret, author and viewer stay query stamps: in the body they are not read */
+  assert.equal(JSON.stringify(ops({ draft: d.draftId }, { secretSha: SECRET(1), bySecret: "1", viewer: V("ann") }).reviewcopy()), dead);
+  assert.equal(ops({ draft: d.draftId, viewer: V("ann") }, { secretSha: SECRET(1) }).reviewcopy().reader, "member");
+  refused(ops({}, { draft: d.draftId, recipient: "R", secretSha: SECRET(2), author: "ann" }).reviewgrant(), "MACHINE_CANNOT_REVIEW");
 });
 
 test("R4, R6: an opaque id standing in a live row when the module starts is never drawn again, even after a purge deletes the row", async () => {
