@@ -41,3 +41,7 @@ Size (session_012BekBB8UfaZQaG1nz8xvro): test runs 12, module lines 1374
 ## J2 · REPORT
 
 Generated artifact staled (mechanics §14): the plane bundle dist/bio-plane.bundled.mjs (not_product) is stale from this job's sources (case-checker check.mjs, index.mjs, spec.mjs, standards.mjs, program.mjs); fleetbundles.test.mjs names each as STALE BUNDLE. For your regeneration at L8's close. program.mjs itself is regenerated on this branch (sha256 3516af48…c4dc) and you regenerate it again at the close, after case-authoring.
+
+## J3 · COMPLETE
+
+T36-51 applied on J1's readings as B2/K2143 answered: R22 standards_use (R21 offline over a carried criteria file; copyrighted rows with no captures named unjudged for COPYRIGHTED_TEXT_CARRIED; an unfetched or mismatched file answered ok: null and named in integrity.documents.wanted); R14 bio-case-file/2 specification beside /1, casefilespec answers both. Tests: case-checker 52 pass, 0 fail; users case-import 88, case-authoring 151, plane 130 pass, 0 fail. Checks: format, architecture, coverage (22 of 22), ownership: 0 failures each. program.mjs regenerated; plane bundle stale (J2). Record: build/jobs/T36/case-checker.md.
