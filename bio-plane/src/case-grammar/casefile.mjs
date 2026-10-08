@@ -1,10 +1,10 @@
-/* case-grammar — the case file's format, `bio-case-file/1` (requirements: `build/requirements/case-grammar.md` R13;
- * DEC-112 (3), `BIO_Publication_v0_1.md` §5C "The case file"; K1134 (1)). The one spelling of the format for
+/* case-grammar — the case file's format, `bio-case-file/2`, a `/1` file read as written (requirements: `build/requirements/case-grammar.md` R13;
+ * DEC-112 (3), `BIO_Publication_v0_1.md` §5C "The case file"; K1134 (1); N717, K2004). The one spelling of the format for
  * `public-read` (its R23, which writes it), `case-checker` (which checks it, and whose R14 is its readable
  * specification) and `case-import` (which imports it). Pure; nothing here throws.
  *
  * THE MANIFEST, as `manifest.json` at the root of each part carries it (canonical JSON, `record-grammar` R12):
- *   {format: "bio-case-file/1", group, case, edition, case_document_sha,
+ *   {format: "bio-case-file/2", group, case, edition, case_document_sha,       (or "bio-case-file/1", read as written)
  *    keys:  [{key, fingerprint}],                        the signing keys, each an SSH public key and its fingerprint
  *    parts: [{index, sha256, bytes}],                    one per part, indexed from 1, in order
  *    files: [{path, sha256, bytes, part, kind}]}         every file, in path order, each in exactly one part
@@ -24,20 +24,31 @@
  *   calculations/<calc>/calculation.json                                 a calculation a member's chain reaches (R18's row)
  *   calculations/<calc>/inputs/<sha256>                                  each input it names, named by its hash (C:A-12)
  *   calculations/prov.jsonld                                             the calculations' PROV-O rendering (R19), once
- * The three calculation paths are one kind, `calculation` (R13); `caseFileEntryOf` tells them apart. */
+ *   materials/<ref>/archives/<sha256>                                    `/2`: an archive a carried member was unpacked from
+ *   materials/<ref>/containers/<sha256>.json                             `/2`: the container record of the member so named
+ *   criteria.json                                                        `/2`: the edition's criteria rows, at most once
+ * The three calculation paths are one kind, `calculation` (R13); `caseFileEntryOf` tells them apart. An archive is
+ * named by its own SHA-256 and a container record by its member's (`case-carriage` R8), so the pair for a member, then
+ * for its archive (itself a member of an outer archive), outward to the outermost, sit side by side under the ref of the
+ * material whose chain they belong to. A `/1` manifest names none of the `/2` kinds. */
 
 import { sha256HexSync } from "../record-grammar/index.mjs";
 
-/** R13: the format token. */
-export const CASE_FILE_FORMAT = "bio-case-file/1";
+/** R13: the format token written, and the formats read as written (newest first). */
+export const CASE_FILE_FORMAT = "bio-case-file/2";
+export const CASE_FILE_FORMAT_V1 = "bio-case-file/1";
+export const CASE_FILE_FORMATS_ACCEPTED = Object.freeze([CASE_FILE_FORMAT, CASE_FILE_FORMAT_V1]);
 /** R13: the manifest's name at each part's root. No file of the case file may take it. */
 export const CASE_FILE_MANIFEST_PATH = "manifest.json";
 /** R13: every kind of file a case file carries. */
 export const CASE_FILE_KINDS = Object.freeze(["case_document", "case_signature", "complete_edition", "finding",
   "finding_signature", "grading_facts", "passages", "document", "extracted_text", "observation", "attestation",
-  "calculation"]);
-/** R13: the kinds a case file carries exactly once. */
+  "calculation", "archive", "container", "criteria"]);
+/** R13: the kinds `/2` adds, which a `/1` manifest never names. */
+export const CASE_FILE_V2_KINDS = Object.freeze(["archive", "container", "criteria"]);
+/** R13: the kinds a case file carries exactly once, and the kinds it carries at most once. */
 export const CASE_FILE_SINGLE_KINDS = Object.freeze(["case_document", "case_signature", "complete_edition"]);
+export const CASE_FILE_OPTIONAL_SINGLE_KINDS = Object.freeze(["criteria"]);
 /** R13: the fields of the manifest, of a key, of a part and of a file, in order. */
 export const CASE_FILE_MANIFEST_FIELDS = Object.freeze(["format", "group", "case", "edition", "case_document_sha", "keys",
   "parts", "files"]);
@@ -52,7 +63,7 @@ const FINGERPRINT = /^SHA256:[A-Za-z0-9+/]{43}$/;
 const SLUG = /^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/;
 
 const SINGLE_PATHS = Object.freeze({ case_document: "case.md", case_signature: "case.md.sig",
-                                     complete_edition: "complete-edition.html" });
+                                     complete_edition: "complete-edition.html", criteria: "criteria.json" });
 const FINDING_FILES = Object.freeze({ finding: "finding.md", finding_signature: "finding.md.sig",
                                       grading_facts: "grading-facts.json", passages: "passages.json" });
 const MATERIAL_FILES = Object.freeze({ document: "document", extracted_text: "extracted.txt",
@@ -60,13 +71,19 @@ const MATERIAL_FILES = Object.freeze({ document: "document", extracted_text: "ex
 /** R13, R19: where the calculations' PROV-O rendering travels, once per case file. */
 export const CASE_FILE_PROV_PATH = "calculations/prov.jsonld";
 const CALCULATION_FILE = "calculation.json";
+/* `/2` (K2004): under a material's ref, an archive named by its SHA-256, a container record by its member's. */
+const CHAIN_DIRS = Object.freeze({ archive: "archives", container: "containers" });
+const chainLeaf = (kind, sha) => (kind === "container" ? `${sha}.json` : sha);
 
 /** R13: the path a file of `kind` is carried at. `key` is the finding id (the finding kinds), the material's ref (the
- *  material kinds), `[ref, name]` (an attestation), or for a `calculation` its id (the row), `[calc, sha256]` (one of
- *  its inputs) or `"prov"` (R19's rendering, `CASE_FILE_PROV_PATH`); the single kinds take none. Null for anything this
- *  format does not spell. */
+ *  material kinds), `[ref, name]` (an attestation), `[ref, sha256]` (an `archive`, by the archive's SHA-256; a
+ *  `container`, by its member's), or for a `calculation` its id (the row), `[calc, sha256]` (one of its inputs) or
+ *  `"prov"` (R19's rendering, `CASE_FILE_PROV_PATH`); the single kinds (and `criteria`) take none. Null for anything
+ *  this format does not spell. */
 export function caseFilePath(kind, key = null) {
   if (Object.hasOwn(SINGLE_PATHS, kind)) return SINGLE_PATHS[kind];
+  if (Object.hasOwn(CHAIN_DIRS, kind)) return Array.isArray(key) && key.length === 2 && SEGMENT.test(String(key[0] ?? ""))
+    && HEX64.test(String(key[1] ?? "")) ? `materials/${key[0]}/${CHAIN_DIRS[kind]}/${chainLeaf(kind, key[1])}` : null;
   if (Object.hasOwn(FINDING_FILES, kind)) return SEGMENT.test(String(key ?? "")) ? `findings/${key}/${FINDING_FILES[kind]}` : null;
   if (Object.hasOwn(MATERIAL_FILES, kind)) return SEGMENT.test(String(key ?? "")) ? `materials/${key}/${MATERIAL_FILES[kind]}` : null;
   if (kind === "attestation" && Array.isArray(key) && key.length === 2 && key.every((k) => SEGMENT.test(String(k ?? ""))))
@@ -80,8 +97,9 @@ export function caseFilePath(kind, key = null) {
   return null;
 }
 
-/** R13: what a path spells: `{kind, finding?, ref?, name?, calc?, input?, prov?}`, or null for a path this format does
- *  not spell. */
+/** R13: what a path spells: `{kind, finding?, ref?, name?, calc?, input?, prov?, archive?, member?}` (`archive` the
+ *  archive's SHA-256, `member` the SHA-256 of the member a container record names), or null for a path this format
+ *  does not spell. */
 export function caseFileEntryOf(path) {
   if (typeof path !== "string") return null;
   for (const [kind, p] of Object.entries(SINGLE_PATHS)) if (path === p) return { kind };
@@ -90,6 +108,12 @@ export function caseFileEntryOf(path) {
   if (parts.length === 4 && parts[0] === "calculations" && SEGMENT.test(parts[1]) && parts[1] !== "prov.jsonld"
       && parts[2] === "inputs" && HEX64.test(parts[3]))
     return { kind: "calculation", calc: parts[1], input: parts[3] };
+  if (parts.length === 4 && parts[0] === "materials" && SEGMENT.test(parts[1])) {
+    const kind = Object.keys(CHAIN_DIRS).find((k) => CHAIN_DIRS[k] === parts[2]);
+    const sha = kind === "container" ? (parts[3].endsWith(".json") ? parts[3].slice(0, -5) : "") : parts[3];
+    if (!kind || !HEX64.test(sha)) return null;
+    return kind === "archive" ? { kind, ref: parts[1], archive: sha } : { kind, ref: parts[1], member: sha };
+  }
   if (parts.length !== 3 || !SEGMENT.test(parts[1])) return null;
   const [top, key, leaf] = parts;
   if (top === "findings") {
@@ -118,8 +142,9 @@ export function casePartDigest(files, index) {
 const plain = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 const shown = (v) => { try { const s = JSON.stringify(v); return s === undefined ? String(v) : s.slice(0, 120); } catch { return "an unreadable value"; } };
 
-/** R13: every way `manifest` departs from `bio-case-file/1`, each `{at, rule, detail}` (`at` the field's place, `rule`
- *  a short name, `detail` one sentence), in the manifest's order; `[]` when it departs in none. Pure; never throws. */
+/** R13: every way `manifest` departs from the format it states (`bio-case-file/2`, or `/1` read as written: the kinds
+ *  `/2` adds are departures in it), each `{at, rule, detail}` (`at` the field's place, `rule` a short name, `detail`
+ *  one sentence), in the manifest's order; `[]` when it departs in none. Pure; never throws. */
 export function caseFileManifestCheck(manifest) {
   const out = [];
   const no = (at, rule, detail) => out.push({ at, rule, detail });
@@ -128,10 +153,12 @@ export function caseFileManifestCheck(manifest) {
       no("manifest", "not_a_manifest", `a case file's manifest is an object, and this is ${shown(manifest)}`);
       return out;
     }
+    const v1 = manifest.format === CASE_FILE_FORMAT_V1;
+    const format = v1 ? CASE_FILE_FORMAT_V1 : CASE_FILE_FORMAT;
     for (const k of Object.keys(manifest))
-      if (!CASE_FILE_MANIFEST_FIELDS.includes(k)) no(k, "unknown_field", `the manifest has no field ${shown(k)} in ${CASE_FILE_FORMAT}`);
-    if (manifest.format !== CASE_FILE_FORMAT)
-      no("format", "format", `the format is ${CASE_FILE_FORMAT}, and this manifest states ${shown(manifest.format)}`);
+      if (!CASE_FILE_MANIFEST_FIELDS.includes(k)) no(k, "unknown_field", `the manifest has no field ${shown(k)} in ${format}`);
+    if (!CASE_FILE_FORMATS_ACCEPTED.includes(manifest.format))
+      no("format", "format", `the format is ${CASE_FILE_FORMAT} (or ${CASE_FILE_FORMAT_V1}, read as written), and this manifest states ${shown(manifest.format)}`);
     if (typeof manifest.group !== "string" || !SLUG.test(manifest.group))
       no("group", "group", `the source group is named by its slug, and this manifest states ${shown(manifest.group)}`);
     if (typeof manifest.case !== "string" || !SEGMENT.test(manifest.case))
@@ -181,7 +208,9 @@ export function caseFileManifestCheck(manifest) {
       for (const k of Object.keys(f)) if (!CASE_FILE_FILE_FIELDS.includes(k)) no(`${at}.${k}`, "unknown_field", `a file has no field ${shown(k)}`);
       const entry = caseFileEntryOf(f.path);
       if (!CASE_FILE_KINDS.includes(f.kind)) no(`${at}.kind`, "kind", `a file's kind is one of ${CASE_FILE_KINDS.join(", ")}, and this is ${shown(f.kind)}`);
-      if (!entry) no(`${at}.path`, "path", `${shown(f.path)} is not a path ${CASE_FILE_FORMAT} spells for any file`);
+      if (v1 && CASE_FILE_V2_KINDS.includes(f.kind))
+        no(`${at}.kind`, "kind_format", `a ${CASE_FILE_FORMAT_V1} case file carries no ${f.kind}: that kind is ${CASE_FILE_FORMAT}'s`);
+      if (!entry) no(`${at}.path`, "path", `${shown(f.path)} is not a path ${format} spells for any file`);
       else if (CASE_FILE_KINDS.includes(f.kind) && entry.kind !== f.kind)
         no(`${at}.path`, "path_kind", `${shown(f.path)} is where a ${entry.kind} is carried, and this file says it is a ${f.kind}`);
       if (typeof f.path === "string") {
@@ -191,6 +220,8 @@ export function caseFileManifestCheck(manifest) {
       if (typeof f.sha256 !== "string" || !HEX64.test(f.sha256)) no(`${at}.sha256`, "sha256", `a file's SHA-256 is 64 lower-case hex digits, and this is ${shown(f.sha256)}`);
       else if (entry && entry.input && f.sha256 !== entry.input)
         no(`${at}.sha256`, "input_sha", `a calculation's input is named by its SHA-256, and ${shown(f.path)} is listed with another`);
+      else if (entry && entry.archive && f.sha256 !== entry.archive)
+        no(`${at}.sha256`, "archive_sha", `an archive is named by its SHA-256, and ${shown(f.path)} is listed with another`);
       if (!Number.isSafeInteger(f.bytes) || f.bytes < 0) no(`${at}.bytes`, "bytes", `a file's size is a whole number of bytes, and this is ${shown(f.bytes)}`);
       if (!indices.has(f.part) || f.part == null) no(`${at}.part`, "part", `a file is in one of the parts listed, and this one names ${shown(f.part)}`);
       if (CASE_FILE_KINDS.includes(f.kind)) kinds.set(f.kind, [...(kinds.get(f.kind) || []), f]);
@@ -204,6 +235,20 @@ export function caseFileManifestCheck(manifest) {
     if (files) for (const kind of CASE_FILE_SINGLE_KINDS) {
       const n = (kinds.get(kind) || []).length;
       if (n !== 1) no("files", kind, `a case file carries exactly one ${kind}, and this one lists ${n}`);
+    }
+    if (files) for (const kind of CASE_FILE_OPTIONAL_SINGLE_KINDS) {
+      const n = (kinds.get(kind) || []).length;
+      if (n > 1) no("files", kind, `a case file carries at most one ${kind}, and this one lists ${n}`);
+    }
+    /* K2004: an archive or a container record belongs to a carried member document's chain, so its ref carries one */
+    if (files) {
+      const documents = new Set((kinds.get("document") || []).map((f) => caseFileEntryOf(f.path)?.ref).filter(Boolean));
+      (files || []).forEach((f, i) => {
+        if (!plain(f) || !Object.hasOwn(CHAIN_DIRS, f.kind)) return;
+        const entry = caseFileEntryOf(f.path);
+        if (entry && entry.kind === f.kind && !documents.has(entry.ref))
+          no(`files[${i}].path`, "chain_without_document", `${shown(f.path)} is a ${f.kind} under ${shown(entry.ref)}, and the case file carries no document under that ref`);
+      });
     }
     const doc = (kinds.get("case_document") || [])[0];
     if (doc && typeof manifest.case_document_sha === "string" && doc.sha256 !== manifest.case_document_sha)
