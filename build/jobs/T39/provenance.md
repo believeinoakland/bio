@@ -23,3 +23,7 @@
 2. `dec149.test.mjs` titles cite `index.mjs` line numbers from T35 (:899 …). Those numbers were already stale before this job and assert nothing.
 
 Size (session_01Cwa88YYi7hCLFZzpdk7gAE): test runs 8, module lines 2770
+
+## J1 · COMPLETE
+
+T39-5 done. R62 fetchedByThisCopy and FETCHED_VIAS are in provenance/index.mjs. The new fetched.test.mjs tests every route START named, and the function also joins R15's no-write test and R40's no-place test. test/m/provenance: 120/0. I also fixed the inherited red mk6-bundle-names-no-author (one of my tests paths): it sent credentials in the address, which C-38.10 refuses; it now uses the Authorization header, 10 pass, 0 fail. Checks: format, architecture, coverage (47/47) and ownership (6 files) each report 0 failures. For file-safety (T39-6): replace #sourceOf and its own FETCHED_VIAS with provenance's; its bound is a literal 3. R62's not-yet-met mark is yours to strike. Record: build/jobs/T39/provenance.md.
