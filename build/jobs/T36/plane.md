@@ -60,3 +60,18 @@ Red 32's plane share (`ask.test.mjs`, `door.test.mjs`:112) is cleared. Everythin
 - format: 0 failures. architecture: 42 product files, 401 relative imports; 0 failures. coverage: 29 of 29 live ids named; 0 failures. ownership: 11 files changed by plane between tranche/T36 and HEAD; 0 failures.
 
 Size (session_01CpnMPx9Wsow6FqTJSxJGhK): test runs 13, module lines 1551
+
+## J5 · COMPLETE
+
+B6 applied: `tranche/T36` merged (`45110dbcc0`); commit `4d93c07a2e` re-pins red 33's plane share (admission R5, R20; K2166):
+- `worker.test.mjs` R6: the gated calls (`affordances`, `queue`, `stats`) present the administrator's binding in the `Authorization` header; a negative control: the same credential in the address answers 401.
+- `test/system/migrate-released.test.mjs`: `client(mf, {current})`. The released planes (0.58.0–0.80.0, fixed signed bytes) are driven exactly as they shipped (`?token=`, the member binding by default); the current plane reads its credential from the `Authorization` header, and a call the released planes made with the retired member binding is made with the administrator's binding (a header credential; no `MEMBER_TOKEN` reaches the current plane). Sections 0 and `verifyCurrent` (both boots) use the current form.
+
+**Tests and checks (after the merge)**
+- `node test/system/migrate-released.test.mjs`: 585 pass, 0 fail.
+- `node --test test/m/plane/`: tests 144, pass 141, fail 2, todo 1. The 2 are accepted red 31 (`release.test.mjs` R19 and its negative control: "Set up and claim" step 11 names `assistantset`, `WIZARD_ACT_UNKNOWN`), not worked around (B4). The todo is R29's reader (N774).
+- format, architecture, coverage (29 of 29), ownership (12 files): 0 failures each.
+
+Everything in J3 and J4 stands. Ready to merge last, after control-plane, when you say.
+
+Size (session_01CpnMPx9Wsow6FqTJSxJGhK): test runs 16, module lines 1551
