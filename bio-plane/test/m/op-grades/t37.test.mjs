@@ -1,17 +1,19 @@
 /* op-grades: T37's grades (R27) and the phone rule read from the Irreversible weight (R18, R26), at the module's exports.
    The ops T37 declares — case-carriage's photo marks, credentials' own password change and subscription sign-in, and
-   instance-setup's translation of the interface — each graded by R5 and R3. */
+   instance-setup's translation of the interface — each graded by R5 and R3; `obscuremark` `reversible` since T38 (R28),
+   a withdrawal taking a mark back. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, CONSEQUENCE_STATEMENTS, IRREVERSIBLE_WEIGHT, LARGER_SCREEN_ACTS,
          OP_ALIASES, phoneOf } from "../../../src/op-grades/index.mjs";
 import { T37_RUNGS, T37_RUNG_ABSENT, T37_NON_ACTS } from "../../../src/op-grades/t37.mjs";
+import { T38_RUNGS } from "../../../src/op-grades/t38.mjs";
 
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 const isRead = (op) => NON_ACTS[op].startsWith("read: ") && /writes nothing$/.test(NON_ACTS[op]) && NON_ACTS[op].length > 30;
 
 /* ---- R27 ----------------------------------------------------------------------------------------------------------- */
-const R27_WRITES = { obscuremark: "undetermined", setpassword: "caller-owned", subscriptionsignin: "credential",
+const R27_WRITES = { obscuremark: "reversible", setpassword: "caller-owned", subscriptionsignin: "credential",
   translationgrant: "credential", translationdraft: "undetermined", translationmark: "undetermined",
   translationadopt: "reversible", translationconfirm: "reversible", translationrevert: "reversible" };
 const R27_READS = ["photomarks", "translations", "interfacewords"];
@@ -19,7 +21,7 @@ const WORD = "translation-directed: keyed by a language and an interface word; t
   + "words, shown to members reading that language; moves no bundle";
 const R27_REASONS = {
   obscuremark: "photo-directed: keyed by a photo's capture, reached from the Photos step; a member's mark of areas to "
-    + "obscure in the published copy, append-only; moves no bundle",
+    + "obscure in the published copy; withdrawn only by a reasoned act, never erased (R28); moves no bundle",
   setpassword: "session-directed: the caller's own password, the role from their session; ends their other sessions; "
     + "moves no bundle",
   subscriptionsignin: "credential: a member's own sign-in to their own Claude subscription, in their own runner; no login "
@@ -31,9 +33,10 @@ const R27_REASONS = {
   translationadopt: WORD, translationconfirm: WORD, translationrevert: WORD, translationmark: WORD,
 };
 
-test("R27: T37's ops — obscuremark, translationdraft and translationmark `undetermined`, setpassword `caller-owned`, "
+test("R27 (T38: R28): T37's ops — translationdraft and translationmark `undetermined`, setpassword `caller-owned`, "
    + "subscriptionsignin and translationgrant `credential`, translationadopt, translationconfirm and translationrevert "
-   + "`reversible` — each with R27's reason; the reads photomarks, translations and interfacewords `read:` and ungraded; "
+   + "`reversible`, and obscuremark `reversible` since T38 (R28 moved it from RUNG_ABSENT), its reason naming the "
+   + "reasoned withdrawal — each with R27's reason; the reads photomarks, translations and interfacewords `read:` and ungraded; "
    + "none a machine refusal; subscriptionsignin and translationgrant off the phone, every other a phone act", () => {
   const got = Object.fromEntries(Object.keys(R27_WRITES).map((op) => [op, gradeOf(op)]));
   assert.deepEqual(got, R27_WRITES);
@@ -56,13 +59,20 @@ test("R27: T37's ops — obscuremark, translationdraft and translationmark `unde
     assert.ok(!IRREVERSIBLE_WEIGHT.includes(op), op);
     assert.ok(!LARGER_SCREEN_ACTS.includes(op), op);
   }
+  /* (T38) obscuremark is no longer stated absent, and nothing names it `undetermined` */
+  assert.ok(!Object.hasOwn(RUNG_ABSENT, "obscuremark"));
   /* negative control */
   assert.notDeepEqual({ ...got, translationrevert: "reasoned" }, R27_WRITES);
+  assert.notDeepEqual({ ...got, obscuremark: "undetermined" }, R27_WRITES);
 });
 
-test("R27: T37's tables hold exactly these ops, none both graded and stated absent", () => {
+test("R27 R28: T37's tables hold exactly these ops, obscuremark's rung in T38's table since R28 moved it, none both "
+   + "graded and stated absent", () => {
   assert.deepEqual(Object.keys(T37_RUNGS).sort(), ["translationadopt", "translationconfirm", "translationrevert"]);
-  assert.deepEqual([...Object.keys(T37_RUNGS), ...Object.keys(T37_RUNG_ABSENT)].sort(), Object.keys(R27_WRITES).sort());
+  assert.ok(!Object.hasOwn(T37_RUNG_ABSENT, "obscuremark"));
+  assert.equal(T38_RUNGS.obscuremark, "reversible");
+  assert.deepEqual([...Object.keys(T37_RUNGS), ...Object.keys(T37_RUNG_ABSENT), "obscuremark"].sort(),
+    Object.keys(R27_WRITES).sort());
   assert.deepEqual(Object.keys(T37_NON_ACTS).sort(), [...Object.keys(R27_WRITES), ...R27_READS].sort());
   assert.deepEqual(Object.keys(T37_RUNGS).filter((op) => Object.hasOwn(RUNG_ABSENT, op)), []);
   assert.deepEqual(Object.keys(T37_RUNG_ABSENT).filter((op) => Object.hasOwn(RUNGS, op)), []);

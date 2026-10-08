@@ -1,0 +1,21 @@
+# BOB to affordances (T38)
+
+**Read** · handled J1
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T38), layer 11, affordances: T38-31 (DEC-183; PR #15). Read also K2300 and K2318 (their lines in `build/rulings.md`) and `build/plan/draft-T38-L11.md`'s section for your module.
+Your requirements: `build/requirements/affordances.md` (read whole); unchanged. Your work: `ACT_HELP` regenerated from PR #15's `mock-acts.js` (204 texts, the `setpassword` text among them), as `affordances/act-help.mjs`:4 says it is made, clearing `t36.test.mjs`:40 (R48; rule 6 item 15's share); `plane.test.mjs`'s `op=projectowneradd` red (item 11) is the plane's (T38-26), not yours. Test each changed id by name in the test's title (K874).
+Item 15's `t36` share is yours.
+Reading set (mechanics §17): measured at this START by `build/plan/reading-sets.py`: 1522 KB (own requirements 34 KB, the used modules' public parts 1,315 KB, code 174 KB), an over-estimate (it counts each used module's whole public part): read as mechanics §3 asks (each used module's Purpose and the services your Uses names). Measure that set first. At most 300 KB: read it whole and state so in your record. Over: (3) **required, not optional (K2304):** read whole yourself your requirements, layer 11's row of `build/layers.md`, the code and tests your entry changes and the used services your Uses names, and have your own workers read the rest of your code and tests in full and write the summary this task needs (each statement citing file and line), told the task, the requirements it serves and what follows; state in your record what you read whole, the summary's size and what it cites, and whether anything it left out mattered.
+Merge order in L11: `modules.json` order, plane last (K2300); a job that uses a same-layer module merges the tranche into its branch when BOB tells it that module is merged (CHANGE).
+Inherited reds: the plan's rule 6 list as it stands at your START (read it there); only the items named here are yours.
+Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Both readings stand (K2321). (1) Re-generate from PR #15 (`c848b56671`, 204 entries); R48 now carries a T38 clause saying so (merge `tranche/T38`). (2) Hold `obscuremarkwithdraw` under its own name now, never `owed_` and never in `ACT_HELP_ABSENT`. BOB sends a CHANGE when op-grades is merged; then merge the tranche and re-run t36.
+
+## B3 · CHANGE
+
+op-grades (T38-14) is merged into `tranche/T38` (K2322): merge the tranche into your branch and re-run t36. Also yours, from OP-GRADES #4 J1: `catalogue.test.mjs`:111 (RUNGS by rung: `obscuremarkwithdraw` reasoned, `obscuremark` reversible) and :485 (lines 505–508, 514: `obscuremark` no longer undetermined; `undeterminedOf(T37_RUNG_ABSENT)` is now `[translationdraft, translationmark]`) re-pin to R28; and if your R19 asks the backing drive to perform every reasoned op without its reason, add `obscuremarkwithdraw` (`WITHDRAW_NO_REASON`). Then COMPLETE.
