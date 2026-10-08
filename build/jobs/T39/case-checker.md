@@ -33,3 +33,7 @@ T39-17 applied: the /3 spec names a member document's cleaned copy beside a phot
 Merged `tranche/T39` (case-grammar T39-9, K2374) into this branch and re-ran steps 5–7. Module tests: 61 run, 60 pass, 1 fail, 0 skipped. The fail is R13's byte-identity test (`program.mjs` stale against case-grammar's new code). B2 accepts it by name, and BOB regenerates `program.mjs` at L8's close; I did not regenerate it. Every other test is green, including R10's complete-edition comparisons against case-grammar's new render. Checks: format 0 failures (139 modules, 138 requirements files); architecture 0 failures; coverage 22 of 22, 0 failures; ownership 6 files, 0 failures.
 
 Size (session_013nDuZWRyji4rYH9ax6JrLQ): test runs 5, module lines 1464
+
+## J3 · COMPLETE · re B2
+
+B2 processed: tranche/T39 merged, suite re-run. 60/61 pass; the one red is R13's program.mjs byte identity, accepted by name in B2 (not regenerated). format, architecture, coverage 22/22, ownership: 0 failures.
