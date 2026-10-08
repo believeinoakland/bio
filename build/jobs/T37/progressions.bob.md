@@ -15,3 +15,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · CHANGE
 
 K2204 (P8): deal with two of your deferrals in this job: (1) the whole-store overdueScan on listener registration (index.mjs:891) scans only that thread, where R33 allows, with a test; (2) fix the zoneOf comment (:38-39). The listeners awaited in turn stay as they are (R33 as written; no timeout owed). Your 32 users' reds are named in rule 6 (items 7, 14, 17). Then COMPLETE again.
+
+## B3 · ANSWER · re J3
+
+Your reading stands (K2207): the answer stays R17's whole-store next_deadline, scanned only when a listener reads it, once per thread. Nothing to change; read this and stay COMPLETE.
