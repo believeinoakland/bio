@@ -4,7 +4,7 @@
    time (R15, R16), its cited relations (R17–R20), `ACT-` aliases (R21), Legistar and register following (R22–R25, R38;
    `follow.mjs`), the reads (R26–R34), the connection owner (R35), the ops map (R36), the read contract (R37) and, since
    T35, the uses of a power: acts of discretion, waivers and assessments with their facets and `usesOf` (R43–R48;
-   `uses.mjs`). It
+   `uses.mjs`) and, since T36, who recorded something from a passage (R49; `recorded.mjs`). It
    never stores a sequence, an amount, an absence or the group's own acts, and never infers a cause (R39–R42).
    Reached through `eventsOf(ctx)` (K61). Members see these as the timeline (K1462). */
 import { recordOf } from "../record-core/index.mjs";
@@ -24,6 +24,7 @@ import { readDate, whenOf, sequenceOf, spanOfBound, placeAgainst, orderByWhen } 
 import { followedImport, followedRegister, datesOfReading, READ_DATE_CLASSES } from "./follow.mjs";
 import { neighboursOf, OWNER_KINDS } from "./owner.mjs";
 import { USE_KINDS, OUTCOMES, recordDiscretion, recordAssessment, withdrawUse, facetOf, usesOf } from "./uses.mjs";
+import { recordedBy } from "./recorded.mjs";
 
 export { EVENTS_SCHEMA, EVENT_CHECKS, USE_KINDS, OUTCOMES };
 
@@ -632,26 +633,47 @@ export class Events {
     });
   }
 
-  /* R8: the governing attestation of an event: the latest choice still on it, else the first dated attestation. */
-  #governing(eventId) {
-    const chosen = this.#one(`SELECT a.* FROM event_choices c JOIN event_attestations a ON a.attestation_id = c.attestation_id
-                               WHERE c.event_id=? AND a.event_id=? AND a.serves='event' AND a.value IS NOT NULL
-                               ORDER BY c.choice_id DESC LIMIT 1`, eventId, eventId);
-    return chosen || this.#one(`SELECT * FROM event_attestations WHERE event_id=? AND serves='event' AND value IS NOT NULL
-                                 ORDER BY attestation_id LIMIT 1`, eventId);
+  /* R8: the governing attestation of each event: the latest choice still on it, else the first dated attestation. Read
+     for many events in a few queries (R35's pages, T36-14), each answer the same as one event's alone. */
+  #governingMany(eventIds) {
+    const ids = [...new Set(eventIds)], out = new Map();
+    for (let i = 0; i < ids.length; i += 400) {
+      const part = ids.slice(i, i + 400), marks = part.map(() => "?").join(",");
+      for (const a of this.#rows(`SELECT c.event_id AS chosen_for, a.* FROM event_choices c JOIN event_attestations a ON a.attestation_id = c.attestation_id
+                                  WHERE c.event_id IN (${marks}) AND a.event_id = c.event_id AND a.serves='event' AND a.value IS NOT NULL
+                                  ORDER BY c.choice_id DESC`, ...part)) {
+        const { chosen_for, ...row } = a;
+        if (!out.has(chosen_for)) out.set(chosen_for, row);
+      }
+      for (const a of this.#rows(`SELECT * FROM event_attestations WHERE event_id IN (${marks}) AND serves='event' AND value IS NOT NULL
+                                  ORDER BY attestation_id`, ...part))
+        if (!out.has(a.event_id)) out.set(a.event_id, a);
+    }
+    return out;
   }
-  #upperBound(a) {
-    if (!a || !a.dated_fact_id) return 0;
-    const f = this.#one(`SELECT upper_bound FROM dated_facts WHERE dated_fact_id=?`, a.dated_fact_id);
-    return f ? Number(f.upper_bound) : 0;
+  #governing(eventId) { return this.#governingMany([eventId]).get(eventId) ?? null; }
+  /* R24: which of these attestations' dated facts are upper bounds. */
+  #upperBounds(atts) {
+    const ids = [...new Set(atts.filter((a) => a && a.dated_fact_id).map((a) => a.dated_fact_id))], out = new Set();
+    for (let i = 0; i < ids.length; i += 400) {
+      const part = ids.slice(i, i + 400);
+      for (const f of this.#rows(`SELECT dated_fact_id FROM dated_facts WHERE upper_bound=1 AND dated_fact_id IN (${part.map(() => "?").join(",")})`, ...part))
+        out.add(f.dated_fact_id);
+    }
+    return out;
   }
-  /* R9: the when_cache row an event's governing attestation gives (all nulls when no attestation is dated). */
-  #whenRow(eventId) {
-    const g = this.#governing(eventId);
-    const w = g ? whenOf({ value: g.value, precision: g.precision, zone: g.zone, upper_bound: this.#upperBound(g) }) : null;
-    return { event_id: eventId, start: w ? w.start : null, end: w ? w.end : null, precision: w ? w.precision : null,
-             zone: w ? w.zone : null, value: w ? w.value : null, attestation_id: g ? Number(g.attestation_id) : null };
+  /* R9: the when_cache row each event's governing attestation gives (all nulls when no attestation is dated). */
+  #whenRows(eventIds) {
+    const gov = this.#governingMany(eventIds), upper = this.#upperBounds([...gov.values()]), out = new Map();
+    for (const eventId of eventIds) {
+      const g = gov.get(eventId) ?? null;
+      const w = g ? whenOf({ value: g.value, precision: g.precision, zone: g.zone, upper_bound: upper.has(g.dated_fact_id) ? 1 : 0 }) : null;
+      out.set(eventId, { event_id: eventId, start: w ? w.start : null, end: w ? w.end : null, precision: w ? w.precision : null,
+                         zone: w ? w.zone : null, value: w ? w.value : null, attestation_id: g ? Number(g.attestation_id) : null });
+    }
+    return out;
   }
+  #whenRow(eventId) { return this.#whenRows([eventId]).get(eventId); }
   /* R77 (record-core): the rule the derived table is rebuilt by. */
   #rebuildWhen(scope) {
     const ids = scope && scope.event_id ? [scope.event_id]
@@ -689,16 +711,25 @@ export class Events {
     this.#record.afterCommit(() => { for (const l of fns) { try { l.fn({ ...told }); } catch { /* R16: after commit, the write stands */ } } });
   }
 
-  /* R10: an event's when as read: the held cache, failing closed when it differs from its rebuild. */
-  #whenRead(eventId) {
-    const held = this.#one(`SELECT * FROM event_when_cache WHERE event_id=?`, eventId);
-    const stale = (() => { try { return this.#record.readDerived("events", "event_when_cache", eventId).stale; } catch { return true; } })();
-    const rebuilt = this.#whenRow(eventId);
-    const same = held && ["start", "end", "precision", "zone", "value", "attestation_id"]
-      .every((k) => String(held[k] ?? "") === String(rebuilt[k] ?? ""));
-    if (!held || stale || !same) return { when: "undetermined", why: "cache stale", governing: null };
-    return { when: Events.#whenOfRow(held), governing: held.attestation_id };
+  /* R10: an event's when as read: the held cache, failing closed when it differs from its rebuild. Read for many events
+     at once (R35's pages), each answer the same as one event's alone. */
+  #whensRead(eventIds) {
+    const ids = [...new Set(eventIds)], held = new Map(), out = new Map();
+    for (let i = 0; i < ids.length; i += 400) {
+      const part = ids.slice(i, i + 400);
+      for (const r of this.#rows(`SELECT * FROM event_when_cache WHERE event_id IN (${part.map(() => "?").join(",")})`, ...part)) held.set(r.event_id, r);
+    }
+    const rebuilt = this.#whenRows(ids);
+    for (const id of ids) {
+      const h = held.get(id), r = rebuilt.get(id);
+      const stale = (() => { try { return this.#record.readDerived("events", "event_when_cache", id).stale; } catch { return true; } })();
+      const same = h && ["start", "end", "precision", "zone", "value", "attestation_id"].every((k) => String(h[k] ?? "") === String(r[k] ?? ""));
+      out.set(id, !h || stale || !same ? { when: "undetermined", why: "cache stale", governing: null }
+                                         : { when: Events.#whenOfRow(h), governing: h.attestation_id });
+    }
+    return out;
   }
+  #whenRead(eventId) { return this.#whensRead([eventId]).get(eventId); }
 
   /* ===================================================================== *
    * PARTICIPANTS (R11–R13).
@@ -1237,6 +1268,9 @@ export class Events {
   /** R46: the held uses a viewer may see, filtered, in R31's order: a population, never a census. */
   usesOf(args = {}) { return usesOf(this.#kernel(), args); }
 
+  /** R49: who recorded each row this module holds that cites an extent of a capture; an in-process read, no arm of R36. */
+  recordedBy(args = {}) { return recordedBy(this.#kernel(), args); }
+
   /* R45: an entity's label as the reader may read it, else its id. */
   #entityLabel(entityId, viewer) {
     try {
@@ -1262,6 +1296,7 @@ export class Events {
       tx: (fn) => this.#tx(fn), holdFact: (x) => this.#holdFact(x), insert: (t, r) => this.#insert(t, r),
       addAttestation: (e, r, by, serves) => this.#addAttestation(e, r, by, serves), sameAttestation: (e, r) => this.#sameAttestation(e, r),
       setWhen: (e) => this.#setWhen(e), resolve: (e) => this.#resolve(e), governing: (e) => this.#governing(e),
+      governingMany: (ids) => this.#governingMany(ids), whensRead: (ids) => this.#whensRead(ids),
       whenRead: (e) => this.#whenRead(e), visibleAttestations: (e, v) => this.#visibleAttestations(e, v),
       resolutionGrade: (en, a) => this.#resolutionGrade(en, a), captureGrade: (s) => this.#captureGrade(s),
       voteMatch: (v) => this.#voteMatch(v, { fromSource: true }), tell: (c) => this.#tell(c), allocEvent: () => this.#record.allocId("EVT", this.#instant().slice(0, 4)),

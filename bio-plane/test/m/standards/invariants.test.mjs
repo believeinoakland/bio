@@ -7,7 +7,8 @@ import { get as profileOf } from "../../../../jurisdictions/index.mjs";
 
 const TABLES = ["standards", "standard_texts", "standard_proposals", "standard_adoptions", "standard_forces",
                 "standard_force_withdrawals", "standard_force_proposals", "standard_overrides", "standard_releases",
-                "standard_body_adoptions", "standard_impositions", "standard_benchmarks"];
+                "standard_body_adoptions", "standard_impositions", "standard_benchmarks", "standard_in_force_through",
+                "standard_in_force_through_withdrawals"];
 
 test("R11 nothing a machine writes is a standard: R1 and R10 by a member are its only writers; a raw promotion of a standard, by a member or a machine, and any revision of one are refused STANDARD_WRITTEN_ELSEWHERE; a replay is admitted", () => {
   const w = seeded();
@@ -59,7 +60,7 @@ test("R12 no service accepts or answers a judgment of a standard's merit: a fiel
                         "supersedes", "superseded_by", "proposal", "bundleSha", "texts", "says", "instrument", "portion",
                         "requires", "copy", "current_through", "period_basis", "requires_quoted", "family", "owner", "held",
                         "version_basis", "overrides", "force_source", "designation", "edition", "designation_read", "edition_read", "access", "target", "question",
-                        "sight"]);
+                        "sight", "in_force_through"]);
   for (const answer of [r, w.s.standardRead({ id: r.id, viewer: V("carol") }), w.s.standardsIn({ viewer: V("carol") }).items[0]])
     for (const k of Object.keys(answer)) assert.ok(keys.has(k), `an answer carries only what the record holds: ${k}`);
   const words = /\b(merit|desirab|good law|bad law|unjust|fair|rating|score)\w*/i;
@@ -106,7 +107,7 @@ test("R14 declarations, supersessions, proposals and adoptions are append-only, 
     for (const t of TABLES) assert.deepEqual(now[t].slice(0, prev[t].length), prev[t], `${t}: an earlier row is unchanged`);
     prev = now;
   }
-  assert.deepEqual(TABLES.map((t) => prev[t].length), [3, 3, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
+  assert.deepEqual(TABLES.map((t) => prev[t].length), [3, 3, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
   /* a single-bundle purge clears one standard's rows; the whole-store form every row */
   const id = prev.standards[0].standard_id;
   const one = w.record.purge({ bundleId: id });

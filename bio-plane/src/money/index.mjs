@@ -1,11 +1,12 @@
 /* money (layer 5): money as stated amounts (`build/requirements/money.md`). Each money fact `MNY-` is one source's
    reading of one amount with its kind, phase or stage, basis, period, parties and funds and two grades, written at one
    append site (R1–R6), withdrawn and read (R7–R9); the summation rule (R10), reconciliation by the dimension that
-   differs (R11), money sets (R12–R13), committed against paid (R14) and the chain of authority (R15) are reads that
-   compute and store no total. The module presents each fact as one edge from payer to payee (R16), tells later
-   modules of every change (R23), publishes its closed lists (R17) and its ops (R18), and states the facts table as a
-   read contract (R19). One home per fact is checked at the store's gate (R20); a fact follows its source's sight
-   (R21). No field marks a fact as the group's own (R6, K1463).
+   differs (R11), money sets (R12–R13) with a trail set's rows (R25), committed against paid (R14) and the chain of
+   authority (R15) are reads that compute and store no total. The module presents each fact as one edge from payer to
+   payee (R16), tells later modules of every change (R23), publishes its closed lists (R17) and its ops (R18), states
+   the facts table as a read contract (R19) and answers who recorded a fact from a passage (R24). One home per fact is
+   checked at the store's gate (R20); a fact follows its source's sight (R21). No field marks a fact as the group's own
+   (R6, K1463).
 
    Reached through `moneyOf(ctx, opts)` (K61). `events` and `lines` are their modules' instances for `ctx` unless given
    (`eventsOf`, `linesOf`); `calculations`, which comes after money in the order, is the injected port
@@ -14,7 +15,7 @@ import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { entitiesOf, noEntity, noSuchEntity, gradeRank } from "../entities/index.mjs";
-import { checkContentExtent, canonicalExtent, describeExtent } from "../content/index.mjs";
+import { checkContentExtent, canonicalExtent, describeExtent, extentRelation, CONTENT_EXTENT_KINDS } from "../content/index.mjs";
 import { eventsOf, noSuchEvent } from "../events/index.mjs";
 import { linesOf } from "../lines/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
@@ -36,6 +37,10 @@ export const LIST_LIMIT_MAX = 500;
 export const REASON_MAX = 2000;
 /* A label or a party's words as written, at most. */
 const TEXT_MAX = 2000;
+/* R25: a party the fact's source does not state, in the members' words; the event kinds that single out when money
+   moved among several a fact concerns. */
+const NOT_STATED = "not stated in this source";
+const MOVING_EVENTS = Object.freeze(["payment", "transfer"]);
 /* How deep a chain of facts citing facts is followed to its capture. */
 const SOURCE_DEPTH_MAX = 32;
 
@@ -699,6 +704,42 @@ export class Money {
     return best;
   }
 
+  /* ---- R24: who recorded a fact from a passage (events R49's shape) ---- */
+
+  /** R24: the money facts whose source is an extent of the capture, each naming who recorded it. A fact on a fact cites
+   *  no extent and is no item; a table row's fact cites the capture and no part of it, so its extent is read as
+   *  `document` (content R5). Sight is R21's: a hidden fact is neither answered nor counted, and a viewer membership
+   *  refuses sees nothing. Items are ordered by the canonical extent's string in code-unit order, then the fact's id
+   *  (K2114). Writes nothing, never throws. */
+  recordedBy({ captureSha, extent, limit, viewer } = {}) {
+    try {
+      if (viewer === undefined || viewer === null || viewer === "")
+        return shapeRefusal("VIEWER_MISSING", "a read names the member reading; an absent viewer is neither an administrator nor the public");
+      if (!filled(captureSha)) return refusal("NO_SHA", "who recorded from a passage is read for one capture, by its sha256");
+      const asked = extent === undefined || extent === null ? null : extent;
+      if (asked !== null && !(isObj(asked) && Object.prototype.hasOwnProperty.call(CONTENT_EXTENT_KINDS, asked.kind)))
+        return shapeRefusal("EXTENT_MALFORMED", `an extent is one of content's kinds (${list(Object.keys(CONTENT_EXTENT_KINDS))})`);
+      const n = Number.parseInt(limit ?? LIST_LIMIT_DEFAULT, 10);
+      const lim = Number.isFinite(n) ? Math.min(Math.max(n, 1), LIST_LIMIT_MAX) : LIST_LIMIT_DEFAULT;
+      const capture = captureSha.trim();
+      const g = this.#gate("f.sight_bundle", viewer);
+      const items = [];
+      for (const r of this.#rows(`SELECT f.fact_id, f.source_extent, f.by, f.at, f.withdrawn_at FROM money_facts f
+           WHERE f.source_capture_sha=? AND f.source_fact IS NULL AND (${g.sql})`, capture, ...g.args)) {
+        const own = r.source_extent ? JSON.parse(r.source_extent) : { kind: "document" };
+        const relation = asked === null ? null : extentRelation(asked, own);
+        if (asked !== null && !["same", "narrower", "wider"].includes(relation)) continue;
+        items.push({ module: "money", record: r.fact_id, kind: "money_fact", field: "source", extent: JSON.parse(canonicalExtent(own)),
+                     relation, by: r.by, at: r.at, withdrawn: !!r.withdrawn_at, order: canonicalExtent(own) });
+      }
+      items.sort((a, b) => (a.order < b.order ? -1 : a.order > b.order ? 1 : a.record < b.record ? -1 : a.record > b.record ? 1 : 0));
+      return { ok: true, module: "money", capture_sha: capture, items: items.slice(0, lim).map(({ order: _o, ...i }) => i),
+               truncated: items.length > lim };
+    } catch (e) {
+      return refusal("READ_FAILED", `who recorded from this capture could not be read: ${String(e && e.message ? e.message : e).slice(0, 200)}`);
+    }
+  }
+
   /* ---- R9: an entity's money ---- */
 
   moneyOf({ entity, period, kinds, phases, limit, viewer } = {}) {
@@ -858,8 +899,80 @@ export class Money {
     const props = this.#rows(`SELECT * FROM money_set_proposals WHERE set_id=? AND adopted_act IS NULL ORDER BY proposal_id`, setId)
       .filter((p) => this.#factRow(p.fact_id, viewer ?? ""))
       .map((p) => ({ proposal_id: p.proposal_id, fact_id: p.fact_id, method: p.method, by: p.by, at: p.at, label: "proposed by the machine; not included" }));
+    if (set.purpose === "trail") {
+      /* R25: each included fact's, and each open proposal's fact's, trail row. */
+      const v = viewer ?? "";
+      const included = st.inclusions.map((i) => this.#factRow(i.fact_id, v)).filter(Boolean);
+      for (const e of [...st.inclusions, ...props]) e.trail = this.#trailRow(this.#factRow(e.fact_id, v), included, v);
+    }
     return { ok: true, found: true, set: { set_id: set.set_id, purpose: set.purpose, label: set.label, concerns: set.concerns, by: set.by, at: set.at },
              inclusions: st.inclusions, exclusions: st.exclusions, proposals: props };
+  }
+
+  /* R25: one fact's trail row, read from the fact, the events it concerns and the set's other inclusions; writes
+     nothing. Each part is what the source states, never filled from another fact, an event's participants or an
+     entity's role, and never placed by the fact's period. */
+  #trailRow(row, included, viewer) {
+    const capture = this.#rootCapture(row);
+    const end = (p) => {
+      const out = {};
+      for (const k of ["entity", "fund", "account", "as_written"]) if (row[`${p}_${k}`] !== null) out[k] = row[`${p}_${k}`];
+      if (!Object.keys(out).length) return { stated: false, says: NOT_STATED };
+      return { stated: true, party: out, grade: this.#partyGrade(capture, row[`${p}_entity`] ?? row[`${p}_fund`]) };
+    };
+    const moved = this.#moved(row, viewer);
+    const concerns = new Set(this.#rows(`SELECT concerns FROM money_concerns WHERE fact_id=?`, row.fact_id).map((r) => r.concerns));
+    let compared = null;
+    if (row.phase !== "actual" && !row.withdrawn_at) {
+      const actuals = included.filter((r) => r.fact_id !== row.fact_id && r.phase === "actual" && !r.withdrawn_at
+        && this.#rows(`SELECT concerns FROM money_concerns WHERE fact_id=?`, r.fact_id).some((c) => concerns.has(c.concerns)));
+      compared = actuals.map((r) => ({ fact_id: r.fact_id, reconcile: this.reconcile({ a: row.fact_id, b: r.fact_id, viewer }) }));
+    }
+    const g = this.#gate("f.sight_bundle", viewer);
+    const adjustments = this.#rows(`SELECT f.fact_id, f.sign, f.amount, f.amount_low, f.amount_high, f.as_read, f.phase, f.withdrawn_at
+        FROM money_facts f WHERE f.adjusts=? AND (${g.sql}) ORDER BY f.at, f.fact_id`, row.fact_id, ...g.args)
+      .map((a) => ({ fact_id: a.fact_id, sign: a.sign, amount: a.amount ?? { low: a.amount_low, high: a.amount_high }, as_read: a.as_read,
+                     phase: a.phase, withdrawn: !!a.withdrawn_at }));
+    const from = end("from"), to = end("to");
+    const gaps = [...(from.stated ? [] : ["from"]), ...(to.stated ? [] : ["to"]), ...(moved.state === "undetermined" ? ["moved"] : []),
+                  ...(row.basis === "undetermined" ? ["basis"] : [])];
+    return { from, to, moved, ...(compared === null ? {} : { compared, budget_only: compared.length === 0 }),
+             adjustments, ...(adjustments.length ? { adjustments_says: "beside the fact, never netted into it" } : {}),
+             ...(row.withdrawn_at ? { withdrawn: true } : {}), gaps };
+  }
+  /* R25's `moved`: from the events the fact concerns (events R26), never from its period. */
+  #moved(row, viewer) {
+    const ids = this.#rows(`SELECT concerns FROM money_concerns WHERE fact_id=? AND ref_kind='event' ORDER BY concerns`, row.fact_id).map((r) => r.concerns);
+    const ev = this.#ev();
+    const events = [];
+    if (ev && typeof ev.readEvent === "function")
+      for (const id of ids) {
+        let r = null;
+        try { r = ev.readEvent({ eventId: id, viewer }); } catch { r = null; }
+        if (r && r.found && r.event) events.push(r.event);
+      }
+    const dated = (e) => e.when !== null && e.when !== undefined && e.when !== "undetermined";
+    const dating = (e) => ({ when: e.when, event: e.event_id,
+      attestation: (e.attestations || []).find((a) => a.attestation_id === e.governing) ?? null });
+    if (row.phase !== "actual") {
+      const d = events.filter(dated);
+      return { state: "did_not_move", phase: row.phase, when: d.length === 1 ? d[0].when : null, ...(d.length === 1 ? { event: d[0].event_id } : {}) };
+    }
+    const undetermined = (why, extra = {}) => ({ state: "undetermined", why, ...extra });
+    if (!ev) return undetermined("events is not wired here, so no event the fact concerns is read");
+    if (!events.length) return undetermined("the fact concerns no event, so when the money moved is not stated; its accounting period does not date it");
+    let one = events.length === 1 ? events[0] : null;
+    if (!one) {
+      const flows = events.filter((e) => MOVING_EVENTS.includes(e.kind));
+      if (flows.length !== 1)
+        return undetermined(`the fact concerns ${events.length} events and ${flows.length ? "more than one" : "none"} of them is a payment or transfer, so none is singled out`,
+          { events: events.map((e) => e.event_id) });
+      one = flows[0];
+    }
+    if (!dated(one))
+      return undetermined(one.when === "undetermined" ? `the event ${one.event_id}'s date is undetermined (${one.why ?? "not settled"})`
+        : `the event ${one.event_id} is placed nowhere: no attestation dates it`, { event: one.event_id });
+    return { state: "dated", ...dating(one) };
   }
   /* The latest act on each fact governs; every earlier one is kept (R12). */
   #setState(setId, viewer, at = null) {
@@ -1069,6 +1182,9 @@ export class Money {
 }
 
 /* ---- helpers ---- */
+
+/* events R49's refusal shape for VIEWER_MISSING and EXTENT_MALFORMED (K2114, K2116): no catalogue row (K231). */
+const shapeRefusal = (code, why) => ({ ok: false, refused: code, code, reason: code, why });
 
 /* An unsigned exact decimal as calc-grammar's figure (R1's range check). */
 const exactFigure = (value) => ({ value: value.replace(/,/g, ""), sign: "+", precision: "exact" });

@@ -43,7 +43,11 @@
  * T35 (T35-31): how much of a standard is held (text, cited, absent), its family, force per provision, the copy and what
  * it says of itself, sight from its source and its release, versions from captures, overrides, the source of force,
  * designation, edition and issuer, adoptions and the edition in force, access, targets, binding or benchmark, the
- * members' words (`./words.mjs`), a found extent and the question beside a declaration (R33–R47). */
+ * members' words (`./words.mjs`), a found extent and the question beside a declaration (R33–R47).
+ *
+ * T36 (T36-15): a version read from captures reads only their own receipts (R38, `provenance.receiptsOfCapture`); who
+ * recorded what from a passage, in `events` R49's shape (R49, `recordedBy`); and a version known in force through a date
+ * by a member's record from a source checked that day (R50), which R20 reads where no end is stated (R51). */
 
 import { isMachineIdentity } from "../record-grammar/actors.mjs";
 import { normalizeType } from "../record-grammar/types.mjs";
@@ -51,12 +55,14 @@ import { proposalLabel } from "../record-grammar/labels.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
-import { contentOf, contentIdFor } from "../content/index.mjs";
+import { contentOf, contentIdFor, canonicalExtent, describeExtent, extentRelation,
+         CONTENT_EXTENT_KINDS } from "../content/index.mjs";
+import { noSha } from "../extraction/index.mjs";
 import { combine as combineProfiles, STANDARD_SOURCE_KINDS } from "../../../jurisdictions/index.mjs";
 import { entitiesOf, noSuchEntity } from "../entities/index.mjs";
 import { captureOf } from "../capture/index.mjs";
 import { parseFigure } from "../calc-grammar/index.mjs";
-import { validAt, localDay } from "../civil-time/index.mjs";
+import { validAt, localDay, isCalendarDate } from "../civil-time/index.mjs";
 import { eventsOf } from "../events/index.mjs";
 import { registerOwner, isRecordId } from "../connection-grammar/index.mjs";
 import { citationLookup as acquisitionCitationLookup } from "../acquisition/index.mjs";
@@ -118,6 +124,8 @@ const PROJECT_OF = "CASE WHEN b.object_type='project' THEN b.bundle_id ELSE b.pr
 /* R41: a member viewer, `member:<id>`, never a machine credential. */
 const isMemberViewer = (v) => typeof v === "string" && /^member:./.test(v) && !isMachineIdentity(v);
 const ADOPT_KEYS = Object.freeze([...DECLARE_KEYS, "proposal"]);
+/* R50: the fields of `inForceThroughRecord`. */
+const THROUGH_KEYS = Object.freeze(["standard", "through", "source", "reason", "author", "viewer"]);
 
 const str = (v) => (typeof v === "string" ? v.trim() : "");
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
@@ -609,9 +617,8 @@ export class Standards {
     if (!f.supersedes) return { ok: false, why: "a version read from two captures names the version it supersedes" };
     const [e, l] = v.captures.map((c) => c.trim().toLowerCase());
     if (e === l) return { ok: false, why: "the two captures are one; their texts do not differ" };
-    let rows = [];
-    try { rows = (this.provenance.receipts({}).rows || []).filter((r) => r.capture_sha === e || r.capture_sha === l); }
-    catch { rows = []; }
+    /* T36 (N725): each named capture's own receipts (`provenance.receiptsOfCapture`, its R60), never every receipt */
+    const rows = [e, l].flatMap((c) => this.#receiptsOf(c));
     const pairs = [];
     for (const re of rows.filter((r) => r.capture_sha === e))
       for (const rl of rows.filter((r) => r.capture_sha === l && r.address_norm === re.address_norm))
@@ -622,6 +629,16 @@ export class Standards {
     return { ok: true, basis: { captures: [e, l], address: pair.address, after: pair.after, through: pair.through,
                                 says: "the period starts after the earlier capture and on or before the later one: it rests on "
                                     + "the captures, never on an enactment date" } };
+  }
+
+  /* R38, R50: the receipts naming one capture (`provenance.receiptsOfCapture`, its R60), each as its R16 answers it;
+     none when provenance cannot answer. */
+  #receiptsOf(captureSha) {
+    try {
+      const p = this.provenance;
+      const r = p && typeof p.receiptsOfCapture === "function" ? p.receiptsOfCapture({ captureSha }) : null;
+      return r && Array.isArray(r.rows) ? r.rows : [];
+    } catch { return []; }
   }
 
   /* R39: designation and edition as the cite reads them, a declared one kept as declared with the difference stated;
@@ -1029,7 +1046,10 @@ export class Standards {
     const withheld = (a.access === "reading_room" || a.access === "paywalled") && !isMemberViewer(viewer);
     const quoted = a.requires.map((contentId) => ({ content_id: contentId,
                                                     text: withheld ? null : this.content.passageText(contentId) }));
-    return { ok: true, ...a, texts, requires_quoted: quoted, ...(withheld ? { text_withheld: TEXT_WITHHELD } : {}),
+    /* R50: the standing records of the version known in force through a date */
+    const through = this.#throughRecords(sid).filter((x) => !x.withdrawn);
+    return { ok: true, ...a, texts, requires_quoted: quoted, in_force_through: through,
+             ...(withheld ? { text_withheld: TEXT_WITHHELD } : {}),
              says: { ...a.says, note: "a standard as the record holds it: what it is and where it comes from, never "
                  + "whether it is a good one. Each passage of its text says whether a newer capture of its document still "
                  + "holds it; nothing is moved." } };
@@ -1204,6 +1224,18 @@ export class Standards {
         : missing.length ? `${missing.join("; ")}, so whether it was in force on ${date} is undetermined`
         : (v && v.why) || `whether it was in force on ${date} is undetermined`;
     }
+    /* R51: a version whose end is not stated (a null `to`, or an end event with no when), known in force through a date
+       by a member's standing record (R50): a date within {from, to: through} is in force, naming the record; any other
+       date answers as before. An end a relation states but whose effective date is not read stays as it is. A stated
+       end decides as before, the record answered beside it. */
+    const known = this.#throughOf(row.standard_id);
+    if (known && state === "undetermined" && p.to === null && !p.unread) {
+      let k;
+      try {
+        k = validAt({ valid: { from: bound("from"), to: known.through, precision: "day", zone } }, { value: date, precision: "day", zone });
+      } catch { k = null; }
+      if (k === "in") { state = "in_force"; why = known.says; }
+    }
     /* codifier lag (`measures-T33/time-law.md` §4): a codifier's copy speaks only through its current-through date */
     if (state !== "not_in_force" && row.copy === "codifier" && row.current_through && date > row.current_through) {
       const later = row.instrument ? this.#one(`SELECT standard_id FROM standards WHERE instrument=? AND standard_id<>?
@@ -1212,7 +1244,19 @@ export class Standards {
       if (!later) { state = "undetermined"; why = `versions after ${row.current_through} not held: this copy is a codifier's, `
                                                  + `current through ${row.current_through}, and ${date} is after it`; }
     }
-    return { state, why, period: { from: p.from, to: p.to }, bound_by: p.bound_by };
+    return { state, why, period: { from: p.from, to: p.to }, bound_by: p.bound_by, ...(known ? { known_through: known } : {}) };
+  }
+
+  /* R51: the latest `through` among a version's standing records (R50), with its source, author and the words naming it;
+     null when none stands. */
+  #throughOf(standardId) {
+    const r = this.#one(`SELECT t.* FROM standard_in_force_through t WHERE t.standard_id=? AND NOT EXISTS
+                           (SELECT 1 FROM standard_in_force_through_withdrawals w WHERE w.record_id=t.record_id)
+                         ORDER BY t.through DESC, t.record_id DESC LIMIT 1`, standardId);
+    if (!r) return null;
+    const source = sourceWords(r.capture_sha, safeJson(r.extent_json));
+    return { record: r.record_id, through: r.through, source, by: r.author,
+             says: `known in force through ${r.through}, from ${source}, recorded by ${r.author}` };
   }
 
   /** R20: `inForceAt({key | standard, portion?, date, viewer?})` → `{state, why, standard, version}`. With a standard,
@@ -1228,7 +1272,8 @@ export class Standards {
         const v = this.#versionAt(row, date, viewer);
         return { ok: true, date, state: v.state, why: v.why, standard: row.standard_id,
                  version: { standard: row.standard_id, ...v.period, bound_by: v.bound_by },
-                 ...(v.overridden_by ? { overridden_by: v.overridden_by } : {}) };
+                 ...(v.overridden_by ? { overridden_by: v.overridden_by } : {}),
+                 ...(v.known_through ? { in_force_through: v.known_through } : {}) };
       }
       const p = portion == null || portion === "" ? null : String(portion);
       const rows = this.#rows(`SELECT * FROM standards WHERE instrument=? ${p !== null ? "AND portion_path=?" : ""}
@@ -1242,7 +1287,8 @@ export class Standards {
       const inn = vs.filter((v) => v.state === "in_force" || v.state === "overridden"), unsure = vs.filter((v) => v.state === "undetermined");
       if (inn.length === 1 && !unsure.length)
         return { ...base, state: inn[0].state, why: inn[0].why, standard: inn[0].id, version: { standard: inn[0].id, ...inn[0].period },
-                 ...(inn[0].overridden_by ? { overridden_by: inn[0].overridden_by } : {}) };
+                 ...(inn[0].overridden_by ? { overridden_by: inn[0].overridden_by } : {}),
+                 ...(inn[0].known_through ? { in_force_through: inn[0].known_through } : {}) };
       if (inn.length > 1)
         return { ...base, state: "undetermined", standard: null, version: null, versions: inn.map((v) => v.id),
                  why: `${inn.map((v) => v.id).join(" and ")} each cover ${date}; none is preferred, so which was in force is undetermined` };
@@ -1452,11 +1498,7 @@ export class Standards {
     const sid = str(a.standard);
     const row = this.#row(sid);
     if (!row || !this.#readable(sid, viewer ?? INTERNAL_READER)) return noSuchStandard(sid || null, { id: sid || null });
-    /* DEC-49 REGION is-force-text-held */
-    if ((row.held || "text") !== "text")
-      return refusal("FORCE_TEXT_NOT_HELD", `${sid} is held ${row.held}, without its text, so no provision's force is read `
-                     + "from it. Nothing was written.", { standard: sid, held: row.held });
-    /* END DEC-49 REGION is-force-text-held */
+    if ((row.held || "text") !== "text") return refuseTextNotHeld(sid, row.held);
     if (!isPortionPath(a.portion) || (row.portion_path && a.portion.trim() !== row.portion_path))
       return portionUnknown(sid, a.portion);
     const portion = a.portion.trim();
@@ -1918,6 +1960,257 @@ export class Standards {
   }
 
   /* ===================================================================== *
+   * T36: KNOWN IN FORCE THROUGH A DATE (R50, R51) AND WHO RECORDED FROM A PASSAGE (R49)
+   * ===================================================================== */
+
+  /** R50: `inForceThroughRecord` (`op=standardinforcethrough`): by a member's act, that one version is known to be in
+   *  force through `through`, from a held capture extent of the source checked that day. Append-only; the record takes
+   *  the standard's sight (R14, R37). A source with a receipt is checked against the day it was last retrieved. */
+  inForceThroughRecord(args = {}) {
+    const a = isObj(args) ? args : {};
+    const byMachine = machineRefusal(a.author);
+    if (byMachine) return byMachine;
+    const unknown = refuseFieldUnknown(a, THROUGH_KEYS);
+    if (unknown) return unknown;
+    const viewer = a.viewer ?? null;
+    const reader = viewer ?? str(a.author);
+    const sid = str(a.standard);
+    const row = this.#row(sid);
+    if (!row || !this.#readable(sid, reader)) return noSuchStandard(sid || null, { id: sid || null });
+    if ((row.held || "text") !== "text") return refuseTextNotHeld(sid, row.held);
+    const from = this.#periodOf(row, viewer).from;
+    /* DEC-49 REGION is-through-date */
+    if (!isCalendarDate(a.through) || (from !== null && a.through < from))
+      return refusal("THROUGH_INVALID", isCalendarDate(a.through)
+        ? `${a.through} is before ${from}, when ${sid} came into force. Nothing was written.`
+        : "through is a day written YYYY-MM-DD that exists. Nothing was written.",
+        { through: typeof a.through === "string" ? a.through.slice(0, 40) : null, from });
+    /* END DEC-49 REGION is-through-date */
+    const src = a.source;
+    const srcRow = isObj(src) && Object.keys(src).every((k) => k === "captureSha" || k === "extent")
+      && typeof src.captureSha === "string" && isObj(src.extent) ? this.#extentRow(src.captureSha, src.extent, reader) : null;
+    /* DEC-49 REGION is-through-sourced */
+    if (!srcRow)
+      return refusal("THROUGH_NO_SOURCE", "a version known in force through a date names the source checked that day: "
+                     + "source {captureSha, extent}, a passage of a held capture you may see. Nothing was written.");
+    /* END DEC-49 REGION is-through-sourced */
+    const captureSha = src.captureSha.trim().toLowerCase();
+    const last = this.#receiptsOf(captureSha).map((r) => r.last_retrieved).filter((x) => typeof x === "string")
+      .sort().pop() ?? null;
+    let checkedDay = null;
+    if (last) {
+      try { checkedDay = localDay(last, this.#zone()); } catch { checkedDay = null; }
+      if (checkedDay === null) checkedDay = last.slice(0, 10);
+      /* DEC-49 REGION is-through-checked */
+      if (a.through > checkedDay)
+        return refusal("THROUGH_AFTER_CHECK", `the source was last retrieved on ${checkedDay}, and ${a.through} is after it. `
+                       + "Nothing was written.", { through: a.through, last_retrieved: checkedDay });
+      /* END DEC-49 REGION is-through-checked */
+    }
+    const fault = reasonFault(a.reason);
+    if (fault) return refuseReason(fault);
+    return this.record.transact(() => {
+      const at = this.#when();
+      const id = `through-${rand(12)}`;
+      this.sql.exec(`INSERT INTO standard_in_force_through (record_id, standard_id, through, capture_sha, extent_json, content_id,
+                       checked, checked_day, reason, author, at) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+                    id, sid, a.through, captureSha, JSON.stringify(src.extent), srcRow.content_id, last ? "retrieved" : "stated",
+                    checkedDay, a.reason, str(a.author), at);
+      return { ok: true, record: this.#throughAnswer(this.#one(`SELECT * FROM standard_in_force_through WHERE record_id=?`, id)) };
+    });
+  }
+
+  #throughAnswer(r) {
+    const w = this.#one(`SELECT * FROM standard_in_force_through_withdrawals WHERE record_id=?`, r.record_id);
+    const extent = safeJson(r.extent_json);
+    return { id: r.record_id, standard: r.standard_id, through: r.through,
+             source: { captureSha: r.capture_sha, extent, content_id: r.content_id, says: sourceWords(r.capture_sha, extent) },
+             checked: r.checked, ...(r.checked === "retrieved" ? { checked_day: r.checked_day } : {}),
+             reason: r.reason, by: r.author, at: r.at,
+             withdrawn: w ? { by: w.withdrawn_by, at: w.withdrawn_at, reason: w.reason } : null };
+  }
+
+  /** R50: withdraw a record, kept with who, when and why; a repeat answers `already: true`. */
+  inForceThroughWithdraw({ record = null, reason = null, author = null, viewer = null } = {}) {
+    const byMachine = machineRefusal(author);
+    if (byMachine) return byMachine;
+    const r = typeof record === "string" && record ? this.#one(`SELECT * FROM standard_in_force_through WHERE record_id=?`, record) : null;
+    /* DEC-49 REGION is-through-record-held */
+    if (!r || !this.#readable(r.standard_id, viewer ?? str(author)))
+      return refusal("NO_SUCH_RECORD", "no record of a version known in force through a date answers to that id here. "
+                     + "Nothing was written.", { record: str(record) || null });
+    /* END DEC-49 REGION is-through-record-held */
+    const fault = reasonFault(reason);
+    if (fault) return refuseReason(fault);
+    const w = this.#one(`SELECT * FROM standard_in_force_through_withdrawals WHERE record_id=?`, r.record_id);
+    if (w) return { ok: true, already: true, record: r.record_id,
+                    withdrawn: { by: w.withdrawn_by, at: w.withdrawn_at, reason: w.reason } };
+    return this.record.transact(() => {
+      const at = this.#when();
+      this.sql.exec(`INSERT INTO standard_in_force_through_withdrawals (record_id, standard_id, reason, withdrawn_by, withdrawn_at)
+                     VALUES (?,?,?,?,?)`, r.record_id, r.standard_id, reason, str(author), at);
+      return { ok: true, record: r.record_id, withdrawn: { by: str(author), at, reason },
+               says: "withdrawn, never deleted: the record stays, read as withdrawn" };
+    });
+  }
+
+  /** R50: every record of a standard, standing and withdrawn, with its source, how it was checked, author and time. */
+  inForceThroughOf({ standard = null, viewer = null } = {}) {
+    const sid = str(standard);
+    if (!sid) return refuseNoId("inforcethroughof");
+    if (!this.#row(sid) || !this.#readable(sid, viewer)) return refuseNoSuchStandard(sid);
+    const all = this.#throughRecords(sid);
+    return { ok: true, standard: sid, records: all.filter((x) => !x.withdrawn), withdrawn: all.filter((x) => x.withdrawn) };
+  }
+
+  #throughRecords(sid) {
+    return this.#rows(`SELECT * FROM standard_in_force_through WHERE standard_id=? ORDER BY through, record_id`, sid)
+      .map((r) => this.#throughAnswer(r));
+  }
+
+  /** R49: `recordedBy({captureSha, extent?, limit?, viewer})`, in `events` R49's shape: every row of this module that
+   *  cites an extent of the capture (a content id read as its row's capture and extent, `content` R45), each with the
+   *  field citing it, who recorded it and when, and whether it is withdrawn or superseded. A row is answered only to a
+   *  viewer who may read its standard (R14, R37); a capture not held or not visible answers no items. No item carries a
+   *  standard's text (R41). An in-process read: writes nothing, never throws. */
+  recordedBy({ captureSha = null, extent = null, limit = null, viewer = null } = {}) {
+    try {
+      if (viewer === null || viewer === undefined || (typeof viewer === "string" && !viewer.trim()))
+        return readRefusal("VIEWER_MISSING", "a read names the member reading; an absent viewer is neither an administrator "
+                           + "nor the public");
+      if (typeof captureSha !== "string" || !captureSha.trim())
+        return noSha("who recorded something from a passage is read for a captured document, by its capture sha256");
+      let asked = null;
+      if (extent !== null && extent !== undefined) {
+        /* K2114: an extent given that is not an object of one of content's kinds */
+        if (!isObj(extent) || !Object.prototype.hasOwnProperty.call(CONTENT_EXTENT_KINDS, extent.kind))
+          return readRefusal("EXTENT_MALFORMED", "the extent named is not one the record can read");
+        asked = extent;
+      }
+      const n = Number.isInteger(Number(limit)) && limit !== null && limit !== ""
+        ? Math.min(FOR_LIMIT_MAX, Math.max(1, Number(limit))) : FOR_LIMIT_DEFAULT;
+      const sha = captureSha.trim().replace(/^sha256:/i, "").toLowerCase();
+      const base = { ok: true, module: CONNECTION_OWNER, capture_sha: sha };
+      /* a viewer membership refuses (K2114) sees nothing, as a capture not held or not visible */
+      if (typeof viewer !== "string" || !/^[0-9a-f]{64}$/.test(sha) || !this.#captureVisible(sha, viewer))
+        return { ...base, items: [], truncated: false };
+      const items = new Map();
+      const readable = new Map();
+      const may = (sid) => { if (!readable.has(sid)) readable.set(sid, this.#readable(sid, viewer)); return readable.get(sid); };
+      const add = (record, kind, field, sid, ext, by, at, withdrawn) => {
+        if (!may(sid)) return;
+        /* K2114: the extent as content's canonical string parsed back to an object; ordered by that string */
+        const canon = typeof ext === "string" ? ext : canonicalExtent(ext);
+        const object = safeJson(canon);
+        let relation = null;
+        if (asked) {
+          relation = extentRelation(asked, object);
+          if (!["same", "narrower", "wider"].includes(relation)) return;
+        }
+        const key = JSON.stringify([canon, record, field]);
+        if (!items.has(key)) items.set(key, { canon, item: { module: CONNECTION_OWNER, record, kind, field, extent: object, relation,
+                                                             by, at, withdrawn: !!withdrawn } });
+      };
+      /* the capture's content rows, each content id read as its extent (content's read contract, R45) */
+      const ext = new Map(this.#rows(`SELECT content_id, extent FROM content WHERE capture_sha=?`, sha).map((r) => [r.content_id, r.extent]));
+      const superseded = (sid) => this.#successorOf(sid) !== null;
+      for (const sr of this.#standardsCiting(sha, ext)) {
+        const w = superseded(sr.standard_id);
+        for (const [field, e] of this.#citedIn(sr, sha, ext))
+          add(sr.standard_id, "standard", field, sr.standard_id, e, sr.declared_by, sr.declared_at, w);
+      }
+      const ids = [...ext.keys()];
+      const inIds = (col) => (ids.length ? `${col} IN (SELECT content_id FROM content WHERE capture_sha=?)` : "0");
+      for (const f of this.#rows(`SELECT f.*, (SELECT 1 FROM standard_force_withdrawals w WHERE w.force_id=f.force_id) AS gone
+                                  FROM standard_forces f WHERE ${inIds("f.citation")} OR ${inIds("f.criteria")}
+                                  ORDER BY f.force_id`, ...(ids.length ? [sha, sha] : []))) {
+        if (ext.has(f.citation)) add(f.force_id, "force", "citation", f.standard_id, ext.get(f.citation), f.author, f.at, f.gone);
+        if (ext.has(f.criteria)) add(f.force_id, "force", "criteria", f.standard_id, ext.get(f.criteria), f.author, f.at, f.gone);
+      }
+      if (ids.length) {
+        for (const r of this.#rows(`SELECT * FROM standard_body_adoptions WHERE ${inIds("citation")}`, sha))
+          add(r.adoption_id, "adoption", "citation", r.standard_id, ext.get(r.citation), r.author, r.at, false);
+        for (const r of this.#rows(`SELECT * FROM standard_impositions WHERE ${inIds("citation")}`, sha))
+          add(r.imposition_id, "imposition", "citation", r.standard_id, ext.get(r.citation), r.author, r.at, false);
+      }
+      for (const r of this.#rows(`SELECT t.*, (SELECT 1 FROM standard_in_force_through_withdrawals w WHERE w.record_id=t.record_id)
+                                  AS gone FROM standard_in_force_through t WHERE t.capture_sha=?`, sha))
+        add(r.record_id, "in_force_through", "source", r.standard_id, ext.get(r.content_id) ?? safeJson(r.extent_json),
+            r.author, r.at, r.gone);
+      const all = [...items.values()]
+        .sort((x, y) => cmp(x.canon, y.canon) || cmp(x.item.record, y.item.record) || cmp(x.item.field, y.item.field))
+        .map((x) => x.item);
+      return { ...base, items: all.slice(0, n), truncated: all.length > n };
+    } catch {
+      return { ok: true, module: CONNECTION_OWNER, capture_sha: typeof captureSha === "string" ? captureSha.trim().toLowerCase() : null,
+               items: [], truncated: false, undetermined: { why: "the rows citing this capture could not be read here" } };
+    }
+  }
+
+  /* R49: whether the viewer may see a bundle holding the capture (provenance's `register`, its R48 read contract, or a
+     content row's document, content R45). */
+  #captureVisible(sha, viewer) {
+    const bundles = new Set([
+      ...this.#rows(`SELECT DISTINCT bundle_id FROM register WHERE capture_sha=?`, sha).map((r) => r.bundle_id),
+      ...this.#rows(`SELECT DISTINCT bundle_id FROM content WHERE capture_sha=?`, sha).map((r) => r.bundle_id)]);
+    return [...bundles].some((b) => b && this.membership.inSight(b, viewer));
+  }
+
+  /* R49: the standards whose row cites the capture: a text, portion, requirement, copy claim, force source or target
+     passage among its content ids, a `cited_by` or searched place of the capture, or a capture of its version basis. */
+  #standardsCiting(sha, ext) {
+    const ids = new Set();
+    if (ext.size) {
+      for (const r of this.#rows(`SELECT DISTINCT standard_id FROM standard_texts WHERE content_id IN
+                                  (SELECT content_id FROM content WHERE capture_sha=?)`, sha)) ids.add(r.standard_id);
+      for (const r of this.#rows(`SELECT standard_id FROM standards WHERE portion_content IN
+                                  (SELECT content_id FROM content WHERE capture_sha=?)`, sha)) ids.add(r.standard_id);
+      /* the passages that need not be among the standard's own text (R19, R42; K2116) */
+      for (const r of this.#rows(`SELECT standard_id FROM standards WHERE json_extract(target_json, '$.definition') IN (${OWN})
+                                  OR json_extract(target_json, '$.period.content_id') IN (${OWN}) OR current_through_basis IN (${OWN})
+                                  OR json_extract(period_basis_json, '$.from.passage') IN (${OWN})
+                                  OR json_extract(period_basis_json, '$.to.passage') IN (${OWN})`, sha, sha, sha, sha, sha))
+        ids.add(r.standard_id);
+    }
+    for (const r of this.#rows(`SELECT standard_id FROM standards WHERE instr(coalesce(held_json,''), ?) > 0
+                                OR instr(coalesce(version_basis_json,''), ?) > 0`, sha, sha)) ids.add(r.standard_id);
+    return [...ids].sort().map((id) => this.#row(id)).filter(Boolean);
+  }
+
+  /* R49: each field of one standard's row citing the capture, with the extent cited (canonical, or the object). */
+  #citedIn(row, sha, ext) {
+    const out = [];
+    const id = (field, c) => { if (typeof c === "string" && ext.has(c)) out.push([field, ext.get(c)]); };
+    const at = (field, x) => {
+      if (isObj(x) && typeof x.captureSha === "string" && x.captureSha.trim().toLowerCase() === sha && isObj(x.extent))
+        out.push([field, x.extent]);
+    };
+    for (const c of this.#texts(row.standard_id)) id("text", c);
+    id("portion", row.portion_content);
+    for (const c of safeJson(row.requires_json) || []) id("requires", c);
+    const held = safeJson(row.held_json);
+    if (row.held === "cited") at("cited_by", held);
+    if (row.held === "absent" && held) {
+      for (const p of held.places || []) at("search", p);
+      at("search", held.answer);
+    }
+    id("copy_claimed", (safeJson(row.copy_claimed_json) || {}).extent);
+    const vb = safeJson(row.version_basis_json);
+    if (vb && Array.isArray(vb.captures) && vb.captures.includes(sha)) out.push(["version_basis", { kind: "document" }]);
+    id("force_source", (safeJson(row.force_source_json) || {}).citation);
+    const t = safeJson(row.target_json);
+    if (t) {
+      id("target.metric", t.metric && t.metric.content_id); id("target.definition", t.definition);
+      id("target.period", t.period && t.period.content_id);
+    }
+    /* K2116: a codifier copy's current-through basis and a period's cited passages (R19) */
+    id("current_through.basis", row.current_through_basis);
+    const pb = safeJson(row.period_basis_json) || {};
+    for (const side of ["from", "to"]) id(`period_basis.${side}`, pb[side] && pb[side].passage);
+    return out;
+  }
+
+  /* ===================================================================== *
    * PROPOSALS (R9, R10)
    * ===================================================================== */
 
@@ -2102,6 +2395,31 @@ export function familyKey(family) {
   return k && s ? `${k}/${s}` : null;
 }
 
+/* R35, R50: a standard held without its text, so nothing is read from its words (minted here, DEC-49). */
+function refuseTextNotHeld(sid, held) {
+  /* DEC-49 REGION is-force-text-held */
+  return refusal("FORCE_TEXT_NOT_HELD", `${sid} is held ${held}, without its text, so nothing is read from its words. `
+                 + "Nothing was written.", { standard: sid, held });
+  /* END DEC-49 REGION is-force-text-held */
+}
+
+/* R49: a read's refusal (`VIEWER_MISSING`, `EXTENT_MALFORMED`), answered as the connection reads answer one: a code and
+   why, no catalogue row (the code is shared by every module's read in `events` R49's shape). */
+const readRefusal = (code, why) => ({ ok: false, refused: code, reason: code, code, why });
+
+/* R49: the content ids of one capture (content's read contract, R45), as a subquery bound to the capture's digest. */
+const OWN = "SELECT content_id FROM content WHERE capture_sha=?";
+
+/* R49: compare two strings for a stable order. */
+const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+
+/* R50, R51: a source capture extent in words: the capture's first twelve hex digits and the extent's human form. */
+function sourceWords(captureSha, extent) {
+  let where = "";
+  try { where = describeExtent(isObj(extent) ? extent : {}); } catch { where = ""; }
+  return `capture ${String(captureSha).slice(0, 12)}${where ? `, ${where}` : ""}`;
+}
+
 /* R18, R19, R33, R39, R40: a field not in the form it takes, named. */
 function refuseFieldInvalid(field, why) {
   /* DEC-49 REGION is-standard-law-field */
@@ -2264,6 +2582,11 @@ export function standardsOps(s, url, body) {
     bindsat: () => s.bindsAt({ standard: qp("id"), body: qp("body"), date: qp("date"), viewer: qp("viewer") }),
     standardimpose: () => s.impositionRecord({ ...b, viewer: qp("viewer") }),
     standardbenchmark: () => s.benchmarkDeclare({ ...b, viewer: qp("viewer") }),
+    /* T36-15: R50 (the ops are declared by op-declarations, T36-35) */
+    standardinforcethrough: () => s.inForceThroughRecord({ ...b, viewer: qp("viewer") }),
+    standardinforcethroughwithdraw: () => s.inForceThroughWithdraw({ record: b.record ?? null, reason: b.reason ?? null,
+                                                                     author: b.author ?? null, viewer: qp("viewer") }),
+    inforcethroughof: () => s.inForceThroughOf({ standard: qp("id"), viewer: qp("viewer") }),
   };
 }
 
