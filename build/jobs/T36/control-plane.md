@@ -1,6 +1,6 @@
 # control-plane (T36)
 
-**Status** · session_014Cxwr3sUfHWE5sRvShuypv · depth 2 · WORKING · handled B2
+**Status** · session_014Cxwr3sUfHWE5sRvShuypv · depth 2 · WAITING ON BOB (J2) · handled B2
 
 ## J1 · QUESTION
 
