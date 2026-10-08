@@ -93,3 +93,7 @@ B2 done: tranche/T37 @ f3f6002068 merged; the two case-grammar round-trip reds p
   - carries.test.mjs:49 (R55) is already red on `tranche/T37` alone (1 fail there): case-grammar's `materialsOf` now answers `obscured: null`. Its expected rows need `obscured: null`.
 
 Size (session_016xh7RqppffzGDLer6pVudY): test runs 21, module lines 1918
+
+## J4 · COMPLETE
+
+B3 done: tranche @ 50f65ce6ac merged, on real case-carriage (no local line). case-disclosures 68 pass, 0 fail; format/architecture/coverage 29 of 29/ownership 0 failures. One refinement of my fail-closed reading (BOB's to overrule): case-authoring R17 (document.test.mjs:244) showed a supporting-only finding on captures nobody holds being refused PHOTO_MARKS_UNDETERMINED (photoMarks answers NO_SUCH_PHOTO). Now an unreadable marks read refuses only where it decides what travels: held whole, or reached by a load-bearing member (then PHOTO_MARKS_UNDETERMINED, not C-120.8). Supporting-only material not held whole stays included:false and unrefused, as before T37, and photosOf does not list it. Nothing unread ever travels whole. REPORT for case-authoring T37-21: 155 pass, 3 fail. Its two R29 tests pin C-120.1–.16 (now .17/.18). carries.test.mjs:49 R55 is already red on the tranche alone (case-grammar's materialsOf answers obscured: null; its expected rows need it).
