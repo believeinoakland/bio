@@ -11,3 +11,7 @@ Reading set (mechanics §17): measured at this START: 335 KB (own requirements 4
 Merge order in L2: project-roster (copy) → membership (delete, R83) → credentials → promotion last.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Your readings stand (K2275): R27 mints for a sign-in member, its NO_ACCOUNT sentence as you wrote it; R32 refuses their standing questions STANDING_SWITCH_OFF; the migration as you say. Whether a sign-in may serve standing questions is N796 (Bob's, terms), not yours. Go ahead with R27/R32.
