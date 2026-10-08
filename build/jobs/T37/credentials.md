@@ -1,3 +1,7 @@
 # credentials (T37)
 
 **Status** · session_01GuauzcfoPk2o1oN8DhnUGQ · depth 2 · WORKING · handled B1
+
+## J1 · QUESTION
+
+My readings, applied; answer only to overrule. (1) R3 passwordChange: an absent or empty `by` is refused MACHINE_CANNOT_SET_PASSWORD with machine credentials and the operator's token (no member behind it, as R9 reads an unstamped call). (2) Only CURRENT_PASSWORD_WRONG counts toward R38's window and R44's tally (`signin`), as R44's list names only 'a password change's current password'; MACHINE_CANNOT_SET_PASSWORD, NOT_SIGNED_IN and PASSWORD_TOO_SHORT count nothing (the caller is signed in and no secret is judged). A pause still counts as R44's `rate` (R38). (3) A successful change is not a sign-in or recovery: it is no `through` and drops no waiting places (DEC-166). (4) `ended` counts the other sessions of the role that were live; expired rows of the role are removed with them. If the presenting session ends between judging and writing, nothing is written and NOT_SIGNED_IN is answered. (5) The new rows are in C-96 beside R38's (C-96.45 MACHINE_CANNOT_SET_PASSWORD, C-96.46 CURRENT_PASSWORD_WRONG, both in SIGN_IN_CHECKS) and C-29.33 AI_CREDENTIAL_NO_SECRET in the mint's family. (6) R53's refusal comes after R12's existing refusals (who, principal, identity, expiry), so a caller is told about itself and the record before the digest; the digest must be exactly /^[0-9a-f]{64}$/, with no trimming or lower-casing. (7) aiKeptAway() answers the very object R35, R27, R32 and R24 return (they return it unchanged).
