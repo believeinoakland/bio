@@ -31,3 +31,7 @@
 - Generated artifacts: none written. The plane's bundle reads `families.mjs`, so `bio-plane/dist/bio-plane.bundled.mjs` is stale until BOB regenerates it at the layer close (§14).
 
 Size (session_01BmcB3y9dDwSPZqzcGo2Nkg): test runs 3, module lines 5 (src) + 20 (tests)
+
+## J1 · COMPLETE
+
+T38-25 done (items 13, 11's share, 17). families.mjs reads project-roster's checks after membership's; families.test.mjs pins C-120.19 PHOTO_UNCHECKED and C-120.17/.19's words.json words, and MACHINE_CANNOT_MARK_PHOTO (C-141.1). answer-envelope 28/0 (was 24/4); format, architecture, coverage, ownership 0 failures. For BOB: R7 needs a T38 clause and the Uses line project-roster (record); the plane bundle is stale until the layer close. Record: build/jobs/T38/answer-envelope.md on job/T38/answer-envelope.
