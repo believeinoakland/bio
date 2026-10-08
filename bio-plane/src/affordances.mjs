@@ -116,6 +116,9 @@ export { affordancesOf, affordancesOps } from "./affordances/facts.mjs";
 /* R17 (T19): `op=affordances`, the composition and the door's arm, with the gate and the stamps handed in by the control
    plane. */
 export { affordancesAnswer, affordancesOp } from "./affordances/door.mjs";
+/* R48 (N726; DEC-174 (3), DEC-99): the one table of what each act does, generated once from the design stream's text;
+   R49 serves it, the very object, in the answer with no target. */
+export { ACT_HELP } from "./affordances/act-help.mjs";
 /* K1974 (`plan/draft-T35-splits.md` A-1): THE GRADING TABLES ARE `op-grades'` (its R1–R22): the ladder, its correction
    path, the `reasoned` family, the absence grounds, the consequence statements, the larger-screen acts, the Irreversible
    weight, `RUNGS`, `RUNG_ABSENT`, `MACHINE_REFUSALS`, `NON_ACTS` and `phoneOf`. Read here by reference and never copied

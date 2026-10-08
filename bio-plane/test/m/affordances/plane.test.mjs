@@ -12,7 +12,7 @@ import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, VOCABULARIES, deriveActs, decorate, PER_ITEM_MAX } from "../../../src/affordances.mjs";
+import { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, VOCABULARIES, deriveActs, decorate, PER_ITEM_MAX, ACT_HELP } from "../../../src/affordances.mjs";
 import { MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, RUNGS, RUNG_ABSENT } from "../../../src/op-grades/index.mjs";
 import * as actionGrammar from "../../../src/action-grammar/index.mjs";
 import { list as listProfiles, combine as combineProfiles } from "../../../../jurisdictions/index.mjs";
@@ -321,10 +321,12 @@ test("R17 R37: with no target, the catalogue — each act decorated with applies
   /* R17's six keys, all present; the control plane's door may add its own decoration beside them (`fences`, `pack`:
      control-plane R41, K585 (1), K730) and nothing else */
   const SIX = ["capture_acts", "catalog", "detail", "set_acts", "target", "vocabularies", "screens", "wizard_scripts" /* R37 */,
-    "answer_checks" /* K1601 */, "writing_help_refused" /* R44 */];
+    "answer_checks" /* K1601 */, "writing_help_refused" /* R44 */, "act_help" /* R49 */];
   assert.deepEqual(SIX.filter((k) => !Object.hasOwn(r, k)), []);
   assert.deepEqual(Object.keys(r).filter((k) => !SIX.includes(k) && !["fences", "pack"].includes(k)), []);
   assert.equal(r.target, null);
+  /* R49: ACT_HELP (R48), every key and text, through the wire */
+  assert.deepEqual(r.act_help, { ...ACT_HELP });
   assert.deepEqual(r.catalog.map((a) => a.id), ACTS.map((a) => a.id));
   for (const [i, a] of r.catalog.entries()) {
     const d = decorate(ACTS[i], null);
