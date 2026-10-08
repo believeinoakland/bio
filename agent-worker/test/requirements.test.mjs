@@ -6,7 +6,7 @@
  * miniflare's `outboundService` puts behind every global `fetch`. The pure exports the requirements name
  * (`CONTROL_FLOW`, `nextStep`, `checkReport`, `resolveClaudeCascade`, `cascadeToken`, `SURFACE`) are driven
  * directly. The plane's own vocabularies are IMPORTED from the plane's modules, never retyped (R44), and the one
- * thing only the real plane can answer — what `op=affordances` publishes, and which namespaces exist — is asked of
+ * thing only the real plane can answer — what `op=agentpack` serves, and which namespaces exist — is asked of
  * the real plane, stood up here in workerd.
  *
  * Both mocks are reconfigured between arms through `/__mock/reset` and `/__model/reset`, so one workerd instance
@@ -83,11 +83,12 @@ const real = new Miniflare({
   durableObjects: { STORE: { className: "Store", useSQLite: true } }, r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { ADMIN_TOKEN: "adm-req", MEMBER_TOKEN: "mem-req", PROBE_TOKEN: "prb-req", VERSION: "test" },
 });
-const PUBLISHED = (await (await real.dispatchFetch("http://x/api/?op=affordances&token=mem-req")).json());
+const PUBLISHED = (await (await real.dispatchFetch("http://x/api/?op=agentpack",
+  { headers: { authorization: "Bearer mem-req" } })).json());
 const PUBLISHED_ANSWER = PUBLISHED && typeof PUBLISHED === "object" && "result" in PUBLISHED ? PUBLISHED.result : PUBLISHED;
-/* R48 (N157, §1a): the member reads the pack the plane renders and publishes on this answer (`pack`, control-plane
-   agent-harness R7) and renders nothing itself. The answer here is the real plane's with a STUB pack in place of the one it renders,
-   carrying what the member reads (version, resident, disclosed), so a run's recorded skill can name it. */
+/* R48 (N157, §1a; T36, N695): the member reads the pack the plane renders and serves apart on `op=agentpack` (`pack`,
+   control-plane R41) and renders nothing itself. The answer here is the real plane's with a STUB pack in place of the one
+   it renders, carrying what the member reads (version, resident, disclosed), so a run's recorded skill can name it. */
 const PACK = Object.freeze({
   id: "investigative-session", edition: "stub", version: "investigative-session@stub+0123456789abcdef",
   resident: { objective: { text: "find what the record holds, and state what it does not" },
@@ -96,8 +97,8 @@ const PACK = Object.freeze({
                                body: [{ text: "no single confidence score" }] } },
 });
 const PUBLISHED_WITH_PACK = { ...PUBLISHED_ANSWER, pack: PACK };
-/* The real answer with no pack at all: since control-plane agent-harness R7 the real plane publishes one, so R48's no-pack arm
-   takes the key away rather than relying on the plane to omit it. */
+/* The real answer with no pack at all: the real plane serves one, so R48's no-pack arm takes the key away rather than
+   relying on the plane to omit it. */
 const { pack: _realPack, pack_absent: _realAbsent, ...PUBLISHED_NO_PACK } = PUBLISHED_ANSWER || {};
 const planeNamespaces = (await (await real.dispatchFetch("http://x/api/?op=whoami&token=mem-req&store=biosmoke")).json()).namespaces;
 await real.dispose();
@@ -172,7 +173,8 @@ export default {
       if (CFG.leakBias) payload.bias = { in_force: true, manifest: { statements_sha: "LENS-REQ" } };
       return Response.json({ ok: true, result: { found: true, half: "search", payload } });
     }
-    if (op === "affordances") return Response.json({ ok: true, result: CFG.published ?? {} });
+    /* control-plane R41: the door answers \`agentpack\` at the envelope's top level, as the real plane does above */
+    if (op === "agentpack") return Response.json({ ...(CFG.published ?? {}), ok: true });
     ${meaningRowsBranch("CFG.meaningRows || []")}
     ${versionReadBranches()}
     if (op === "basisversions") {
@@ -1140,19 +1142,23 @@ section("R34 · SURFACE and fleet-member.json");
 }
 
 /* ============================================================ R58, agent-harness R7, R48: model turns */
-section("R48 · in the model mode the pack is the one the plane publishes, and a run under another pack is refused before any turn");
+section("R48 · in the model mode the pack is the one the plane serves on op=agentpack, and a run under another pack is refused before any turn");
 {
+  t("R48: the REAL plane's op=agentpack answers {ok: true, fences, pack} apart, the pack with its version, resident and disclosed layers",
+    [PUBLISHED?.ok, PUBLISHED_ANSWER?.ok, Array.isArray(PUBLISHED_ANSWER?.fences), typeof PUBLISHED_ANSWER?.pack?.version,
+     typeof PUBLISHED_ANSWER?.pack?.resident, typeof PUBLISHED_ANSWER?.pack?.disclosed],
+    [true, true, true, "string", "object", "object"]);
   await reset(mf, { skill: "investigative-session@1+0000000000000000" });
   const r = await runOp(mf, { ...base, account: ACCOUNTS });
   t("R48: the recorded skill version is not the published pack's -> 409 SKILL_VERSION_MISMATCH carrying both",
     [r.status, r.out.code, r.out.recorded, r.out.rendered], [409, "SKILL_VERSION_MISMATCH", "investigative-session@1+0000000000000000", PACK.version]);
-  t("R48: refused before any turn, after the payer check (R10), from the untargeted op=affordances",
+  t("R48: refused before any turn, after the payer check (R10), from op=agentpack read under the run's credential, never op=affordances",
     [(await modelState(mf)).calls.length, (await planeState(mf)).log.map((l) => l.op),
-     (await planeState(mf)).log.filter((l) => l.op === "affordances").map((l) => l.query.target ?? null)],
-    [0, ["whoami", "airun", "affordances"], [null]]);
-  await reset(mf, { refuse_op: { affordances: { status: 403, body: { ok: false, reason: "AI_BEYOND_TASK_SCOPE", check: "C-29.9" } } } });
+     (await planeState(mf)).log.filter((l) => l.op === "agentpack").map((l) => l.token)],
+    [0, ["whoami", "airun", "agentpack"], [AIK]]);
+  await reset(mf, { refuse_op: { agentpack: { status: 403, body: { ok: false, reason: "AI_BEYOND_TASK_SCOPE", check: "C-29.9" } } } });
   const ref = await runOp(mf, { ...base, account: ACCOUNTS });
-  t("R48: a refused op=affordances -> 403 PLANE_REFUSED, no turn", [ref.status, ref.out.reason, (await modelState(mf)).calls.length], [403, "PLANE_REFUSED", 0]);
+  t("R48: a refused op=agentpack -> 403 PLANE_REFUSED, no turn", [ref.status, ref.out.reason, (await modelState(mf)).calls.length], [403, "PLANE_REFUSED", 0]);
   await reset(mf, { published: { ...PUBLISHED_ANSWER, pack: null, pack_absent: "renderPack: no fences published" } });
   const absent = await runOp(mf, { ...base, account: ACCOUNTS });
   t("R48: an answer whose pack the plane could not render -> 409 carrying both versions, the published one UNDETERMINED, no turn",
@@ -1172,7 +1178,7 @@ section("R48 · in the model mode the pack is the one the plane publishes, and a
   await reset(mf, {});
   await runOp(mf, { ...base, account: ACCOUNTS, judgements: J() });
   t("R48: until turns run it changes nothing: the supplied mode never asks for the pack",
-    (await planeState(mf)).log.some((l) => l.op === "affordances"), false);
+    (await planeState(mf)).log.some((l) => l.op === "agentpack" || l.op === "affordances"), false);
   const bundle = JSON.parse(readFileSync(fileURLToPath(new URL("../dist/agent-worker.bundle.json", import.meta.url)), "utf8"));
   const inputs = (bundle.inputs || []).map((i) => String(i.path ?? i.file ?? i));
   t("R48: it renders nothing and imports neither the check catalogue nor skills' code: no such input in its bundle",
@@ -1318,7 +1324,7 @@ section("R37 · it judges no scope; PLANE_OPS is exactly its ops, and it calls n
   /* R53 (K660) adds mode plan's: plan, plans, the R51 reads, and the write optionpropose. */
   t("R37, R53: PLANE_OPS is exactly the reads and the writes the plane makes",
     [Object.keys(PLANE_OPS).filter((o) => !PLANE_OPS[o].mutating).sort(), Object.keys(PLANE_OPS).filter((o) => PLANE_OPS[o].mutating).sort()],
-    [["affordances", "airun", "airunlog", "airunspawn", "availableactions", "basisversions", "consequencesof", "determination",
+    [["agentpack", "airun", "airunlog", "airunspawn", "availableactions", "basisversions", "consequencesof", "determination",
       "meaningrows", "plan", "plans", "profiles", "publishededitions", "search", "standard", "versionchain", "whoami"],
      ["airunclose", "airuntick", "capturerequest", "optionpropose", "suggest"]]);
   await seen(mf);
