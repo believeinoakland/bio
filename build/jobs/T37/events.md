@@ -58,3 +58,7 @@ Nothing it left out mattered. One risk it named stays: a raw `storage.transactio
 **Suggestion (BOB's to take or not).** Proposed for events' T37 Suggestions: "(T37-11) A walk's per-node reads of a hub's votes are answered from the hub's pages: M-X1a through the real owner ~0.85 s of 10 s at 4,000 votes (was 8.1–8.5 s)."
 
 Size (session_01DWZn96yS9yBWvB4GvqMSf6): test runs 14, module lines 2607
+
+## J1 · COMPLETE
+
+T37-11 done: a hub's vote events read in pages; per-node answers kept while total_changes() is unchanged and outside any transaction. M-X1a through the real owner 837–877 ms of 10,000 at 4,000 votes (was 5,276 here; 8.1–8.5 s in EXPLORE #3). New test pages.test.mjs (R35/R40/R10): 4,000-vote shape 721–763 ms, every answer equal to the node computed alone; invalidation and rollback. events+explore+connection-grammar 128/0; whole suite 60 inherited reds, same on base, none mine. Checks format, architecture, coverage 49/49, ownership 0 failures. No requirement text changed; a proposed Suggestion is in my record for you to take or not. Record on job/T37/events.
