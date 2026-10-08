@@ -79,6 +79,13 @@ const refuse = followRefusal;
 const json = (v) => { try { return v == null ? null : JSON.parse(v); } catch { return null; } };
 const ms = (s) => Date.parse(s);
 const instant = (t) => stampInstant("second", t);
+/* R21: an instant (ms since the epoch, or a non-empty string `Date.parse` reads, record-core R48's "readable instant")
+   as the first whole second at or after it, in the record's `…:SSZ` spelling; else null (as `bias` R44 reads one). */
+function wholeSecondFrom(v) {
+  const t = typeof v === "number" ? v : typeof v === "string" && v.trim() ? Date.parse(v) : NaN;
+  if (!Number.isFinite(t)) return null;
+  try { return instant(Math.ceil(t / 1000) * 1000); } catch { return null; }
+}
 
 /* ---- the instance (K61) ---- */
 
@@ -730,17 +737,26 @@ export class Following {
   }
 
   /** R21: the policy changes a member reviews as "Noticed": one entry per kept version whose bytes differ from the one
-   *  before, in order of the later capture's instant (then of keeping), after the cursor `after`, at most `limit`. A
-   *  change in a policy the viewer may not read is left out whole. Writes nothing; says nothing of what a change means. */
-  policyChanges({ after = null, limit = null, viewer = null } = {}) {
+   *  before, in order of the later capture's instant (then of keeping), after the cursor `after`, at most `limit`;
+   *  with `since`, only those whose later capture's instant is at or after it (T36, N741), the order, `after`, `limit`
+   *  and `cursor` unchanged. A `since` that is not an instant answers none and says so (`since_invalid`, as `bias`
+   *  R44's). A change in a policy the viewer may not read is left out whole. Writes nothing; says nothing of what a
+   *  change means. */
+  policyChanges({ after = null, since = null, limit = null, viewer = null } = {}) {
     const n = Number.isInteger(Number(limit)) && limit !== null && limit !== ""
       ? Math.min(POLICY_CHANGES_MAX, Math.max(1, Number(limit))) : POLICY_CHANGES_MAX;
+    const lo = since === null || since === undefined ? null : wholeSecondFrom(since);
+    if (since !== null && since !== undefined && lo === null)
+      return { ok: true, changes: [], cursor: null, since_invalid: true,
+               note: "since is not an instant, so no policy change is listed" };
     const from = said(String(after ?? "")) ? this.#one(`SELECT change_id, at FROM policy_versions WHERE change_id=?`, Number(after)) : null;
+    /* every later capture's `at` is the tick's whole-second stamp (`instant`), so the instants compare as text */
     const rows = this.#rows(`SELECT v.change_id, v.follow_id, v.capture_sha, v.at, p.capture_sha AS before_sha, p.at AS before_at, f.subject
                              FROM policy_versions v JOIN policy_versions p ON p.follow_id = v.follow_id AND p.seq = v.seq - 1
                              JOIN follows f ON f.follow_id = v.follow_id
-                             WHERE v.capture_sha <> p.capture_sha ${from ? "AND (v.at > ? OR (v.at = ? AND v.change_id > ?))" : ""}
-                             ORDER BY v.at, v.change_id`, ...(from ? [from.at, from.at, Number(from.change_id)] : []));
+                             WHERE v.capture_sha <> p.capture_sha ${lo ? "AND v.at >= ?" : ""}
+                               ${from ? "AND (v.at > ? OR (v.at = ? AND v.change_id > ?))" : ""}
+                             ORDER BY v.at, v.change_id`, ...(lo ? [lo] : []), ...(from ? [from.at, from.at, Number(from.change_id)] : []));
     const seen = new Map();
     const changes = [];
     let more = false;
