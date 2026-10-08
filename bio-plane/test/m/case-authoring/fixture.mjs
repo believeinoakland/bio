@@ -3,7 +3,8 @@
    reevaluation, publication, ratification, contradiction, network-notices), on a real SQLite database (node:sqlite) standing in for a Durable Object's
    storage. What a later module fills is a stand-in the test controls: the run gate `ai-runs` registers with
    contradiction (its R13; `runs` below), the review provider (publication R23, which
-   `review` registers once extracted) and its `case_drafts` table (review R26's read contract). Every test drives
+   `review` registers once extracted) and its `case_drafts` table (review R26's read contract); and what case-carriage's
+   `documentCopy` (its R16) answers of a member document's publication copy (`copies` below). Every test drives
    `case-authoring` at its interface: `publishCase`, `acknowledgeStatement`, `statementAcknowledgements`, its ops, its
    exports. */
 import { DatabaseSync } from "node:sqlite";
@@ -29,6 +30,7 @@ import { sourcesOf } from "../../../src/sources/index.mjs";
 import { networkNoticesOf } from "../../../src/network-notices/index.mjs";
 import { caseAuthoringOf } from "../../../src/case-authoring/index.mjs";
 import { caseDisclosuresOf } from "../../../src/case-disclosures/index.mjs";
+import { caseCarriageOf } from "../../../src/case-carriage/index.mjs";
 import { parseImportedFindingRef, importedFindingRef } from "../../../src/inquiry-grammar/index.mjs";
 import { caseImportOf } from "../../../src/case-import/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
@@ -77,6 +79,9 @@ export const AUTHORED = Object.freeze({
   /* R55 (case-disclosures R27): the publishing owner attests holding no undeclared tie to anything the case names */
   tieAttested: true,
 });
+
+/* case-carriage R16 (T39; N806): what `documentCopy` answers a document this copy fetched, carried as captured. */
+export const FETCHED_COPY = Object.freeze({ state: "public", copy: null, refused: null });
 
 /* R38: what changed in an edition above 1, as a member writes it (the fixture's `publish` sends it on every act). */
 export const WHAT_CHANGED = Object.freeze({ text: "The amendments were requested and are now excluded by name." });
@@ -277,10 +282,21 @@ export function world({ group = "test-group", provider = true, now = null, recor
                                "caseImport", "promotion", "inquiry", "strength", "entities", "lines", "money", "people",
                                "caseCarriage"];
   const given = (k) => Object.fromEntries(Object.entries(deps).filter(([d]) => k(d)));
+  /* case-carriage (layer 8), the real one on this host (a photo's marks, its R10), but for a member document's
+     publication copy (its R16, T39; N806), which case-disclosures R6 asks of every document that is no photo: `copies`
+     maps a capture's digest to the answer the test sets, or to a function of the digest answering it (which may write,
+     as R16's queueing does, or throw); every other capture is answered `public` (`FETCHED_COPY`), a document this copy
+     fetched, as the fixture's documents state they were acquired. A test's own `deps.caseCarriage` replaces it whole. */
+  w.copies = new Map();
+  const carriage = caseCarriageOf(host);
+  const caseCarriage = new Proxy(carriage, { get: (t, p) => (p === "documentCopy"
+    ? (captureSha) => { const a = w.copies.get(captureSha); return typeof a === "function" ? a(captureSha) : a ?? { ...FETCHED_COPY }; }
+    : typeof t[p] === "function" ? t[p].bind(t) : t[p]) });
   const disclosures = caseDisclosuresOf(host, { storage: st, entities, events, lines, money, people, membership,
     now: () => clock.now, record: caseRecord, contradiction, provenance: prov, attestation, capture, sources,
-    extraction: ex, caseImport: imports, promotion, inquiry, strength,
+    extraction: ex, caseImport: imports, promotion, inquiry, strength, caseCarriage,
     ...given((d) => READ_BY_DISCLOSURES.includes(d)) });
+  w.disclosures = disclosures;
   /* `inquiry` (a wrap) changes only what case-authoring reads of inquiry: R56's and R57's tests give a finding legs on a
      calculation or an event, which inquiry's own gate does not yet admit at promotion (C-2.8). */
   w.ca = caseAuthoringOf(host, { record: caseRecord, membership, basisVersions,

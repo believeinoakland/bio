@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
-import { world, V } from "./fixture.mjs";
+import { world, V, FETCHED_COPY } from "./fixture.mjs";
 import { CASE_DISCLOSURE_CHECKS } from "../../../src/case-authoring/index.mjs";
 import { materialsOf } from "../../../src/case-grammar/index.mjs";
 import { OBSCURED_LABEL } from "../../../src/case-carriage/index.mjs";
@@ -29,14 +29,15 @@ const ratified = (real) => new Proxy(real, { get: (t, p) => (p === "caseRatifyPr
   ? () => ({ ok: true, ready: true, refusals: [] }) : typeof t[p] === "function" ? t[p].bind(t) : t[p]) });
 
 /* Q rests on DOC and DOC2, Q2 on DOC3. `states` maps a capture's digest to its marks answer, "unread" to a read that
-   throws; any other capture is answered not a photo, as case-carriage answers a capture that is not an image. */
+   throws; any other capture is answered not a photo, as case-carriage answers a capture that is not an image, and its
+   publication copy (`documentCopy`, case-carriage R16; T39, N806) as a document this copy fetched, carried as captured. */
 function setup({ states = {}, extra = [] } = {}) {
   const shas = {};
   const caseCarriage = { photoMarks: ({ captureSha }) => {
     const s = states[Object.keys(shas).find((k) => shas[k] === captureSha)];
     if (s === "unread") throw new Error("the marks table could not be read");
     return s ? { ok: true, capture: captureSha, photo: true, ...ANSWERS[s] } : { ok: true, capture: captureSha, photo: false };
-  } };
+  }, documentCopy: () => ({ ...FETCHED_COPY }) };
   const w = world({ deps: { caseCarriage }, ratification: ratified });
   w.member("alice");
   shas[DOC] = w.doc(DOC); shas[DOC2] = w.doc(DOC2); shas[DOC3] = w.doc(DOC3);

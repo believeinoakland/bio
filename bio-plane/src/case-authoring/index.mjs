@@ -1507,50 +1507,58 @@ export class CaseAuthoring {
     const who = str(a.author);
     const auth = who && !isMachineIdentity(who) ? this.#authority(a.project ?? null, a.viewer ?? null, who) : null;
     let judged = null, partition = null, tensions = null, rests = null;
+    /* R34: IT WRITES NOTHING. These reads reach the two writes `case-disclosures` makes inside its caller's transaction
+       (its R23: a source id's minting, and a member document's copy queued by `case-carriage.documentCopy`, its R16;
+       T39, N806), so they run inside a transaction this pre-flight rolls back, as the act's own run above does. */
     if (auth && auth.ok !== false) {
-      const set = Array.isArray(a.targets) ? a.targets
-                : typeof a.targets === "string" && a.targets.trim() ? a.targets.split(",") : a.target ? [a.target] : [];
-      const members = [...new Set(set.map((x) => str(x)).filter(Boolean))];
-      judged = members.length ? this.#judgeMembers(members, auth.proj, a.viewer ?? null, auth.gate) : null;
-      if (judged && judged.ok !== false) {
-        partition = this.#rolesOf(judged.prepared, a.roles ?? null, members);
-        if (partition.ok !== false) found.push(...this.#barJudged(auth.proj, partition.loadBearing).shortfalls);
-        /* `case-disclosures`' judgments, as R55 asks them (R53). */
-        const D = this.disclosures;
-        const hunch = D.hunchDebt(judged.prepared);
-        if (hunch) found.push(hunch);
-        if (partition.ok !== false) {
-          const resting = D.restingCaptures(judged.prepared);
-          const facts = new Map([...new Set(resting.map((r) => r.capture))].map((sha) => [sha, D.captureFacts(sha)]));
-          found.push(...D.selfAttestedJudged(resting, facts, partition.memberRoles, a.selfAttested ?? null).refusals);
-          /* its R6, then R53: its R13's acceptances and R14's flags, read as op=publish reads them. */
-          const reached = D.materialsJudged(judged.prepared, partition.memberRoles, a.viewer ?? null);
-          found.push(...reached.refusals);
-          const accepted = D.acceptedWorkJudged(reached.refs, a.viewer ?? null);
-          found.push(...accepted.refusals);
-          const flags = D.flagsJudged(accepted.editions, a.flagsDisclosed ?? null);
-          found.push(...flags.refusals);
-          /* R34 (N757; DEC-180 (3); K2206): the ceremony's Photos step, `case-disclosures` R29 over the materials R6
-             answered, as op=publish judges them. (T38; DEC-183 (1); K2220, K2303) The step is a gate: R6's photo
-             refusals, `PHOTO_UNCHECKED` (each photo any chain reaches with no standing mark), `PHOTO_NOT_COVERABLE` and
-             `PHOTO_MARKS_UNDETERMINED`, are in `reached.refusals` above, so each is `first` when op=publish refuses
-             with it and among `blockers` otherwise. */
-          rests = { accepted: accepted.rows, flags,
-                    photos: D.photosOf(reached.materials, partition.memberRoles, a.viewer ?? null) };
-          /* R56's undisclosed calculations, and its R25's and R27's people and signers (R34), as op=publish asks them. */
-          const calc = this.#calculationsJudged(judged.prepared, partition.memberRoles, a.calculationsDisclosed ?? null,
-                                                calculationFacts);
-          if (calc.refusal) found.push(calc.refusal);
-          const authored = { statement: str(a.statement), scope: str(a.scope), justification: str(a.subjectJustification),
-                             bias: str(a.biasAcknowledgement), excluded: Array.isArray(a.excluded) ? a.excluded : [] };
-          const { named } = this.#namedInCase(judged.prepared, auth.proj, a.viewer ?? null, authored, calc.money || []);
-          found.push(...D.peopleJudged(named, a.peopleBases ?? null, a.viewer ?? null).refusals);
-          found.push(...D.tieAttestationJudged([who], named, named.money_parties || [],
-            attestedBy(who, a.tieAttested ?? null, this.#when("second")), a.viewer ?? null).refusals);
-        }
-        tensions = D.tensionsJudged(judged.prepared, a.viewer ?? null, a.tensionsDisclosed ?? null);
-        found.push(...tensions.refusals);
-      }
+      try {
+        this.record.transact(() => {
+          const set = Array.isArray(a.targets) ? a.targets
+                    : typeof a.targets === "string" && a.targets.trim() ? a.targets.split(",") : a.target ? [a.target] : [];
+          const members = [...new Set(set.map((x) => str(x)).filter(Boolean))];
+          judged = members.length ? this.#judgeMembers(members, auth.proj, a.viewer ?? null, auth.gate) : null;
+          if (judged && judged.ok !== false) {
+            partition = this.#rolesOf(judged.prepared, a.roles ?? null, members);
+            if (partition.ok !== false) found.push(...this.#barJudged(auth.proj, partition.loadBearing).shortfalls);
+            /* `case-disclosures`' judgments, as R55 asks them (R53). */
+            const D = this.disclosures;
+            const hunch = D.hunchDebt(judged.prepared);
+            if (hunch) found.push(hunch);
+            if (partition.ok !== false) {
+              const resting = D.restingCaptures(judged.prepared);
+              const facts = new Map([...new Set(resting.map((r) => r.capture))].map((sha) => [sha, D.captureFacts(sha)]));
+              found.push(...D.selfAttestedJudged(resting, facts, partition.memberRoles, a.selfAttested ?? null).refusals);
+              /* its R6, then R53: its R13's acceptances and R14's flags, read as op=publish reads them. */
+              const reached = D.materialsJudged(judged.prepared, partition.memberRoles, a.viewer ?? null);
+              found.push(...reached.refusals);
+              const accepted = D.acceptedWorkJudged(reached.refs, a.viewer ?? null);
+              found.push(...accepted.refusals);
+              const flags = D.flagsJudged(accepted.editions, a.flagsDisclosed ?? null);
+              found.push(...flags.refusals);
+              /* R34 (N757; DEC-180 (3); K2206): the ceremony's Photos step, `case-disclosures` R29 over the materials R6
+                 answered, as op=publish judges them. (T38; DEC-183 (1); K2220, K2303) The step is a gate: R6's photo
+                 refusals, `PHOTO_UNCHECKED` (each photo any chain reaches with no standing mark), `PHOTO_NOT_COVERABLE` and
+                 `PHOTO_MARKS_UNDETERMINED`, are in `reached.refusals` above, so each is `first` when op=publish refuses
+                 with it and among `blockers` otherwise. */
+              rests = { accepted: accepted.rows, flags,
+                        photos: D.photosOf(reached.materials, partition.memberRoles, a.viewer ?? null) };
+              /* R56's undisclosed calculations, and its R25's and R27's people and signers (R34), as op=publish asks them. */
+              const calc = this.#calculationsJudged(judged.prepared, partition.memberRoles, a.calculationsDisclosed ?? null,
+                                                    calculationFacts);
+              if (calc.refusal) found.push(calc.refusal);
+              const authored = { statement: str(a.statement), scope: str(a.scope), justification: str(a.subjectJustification),
+                                 bias: str(a.biasAcknowledgement), excluded: Array.isArray(a.excluded) ? a.excluded : [] };
+              const { named } = this.#namedInCase(judged.prepared, auth.proj, a.viewer ?? null, authored, calc.money || []);
+              found.push(...D.peopleJudged(named, a.peopleBases ?? null, a.viewer ?? null).refusals);
+              found.push(...D.tieAttestationJudged([who], named, named.money_parties || [],
+                attestedBy(who, a.tieAttested ?? null, this.#when("second")), a.viewer ?? null).refusals);
+            }
+            tensions = D.tensionsJudged(judged.prepared, a.viewer ?? null, a.tensionsDisclosed ?? null);
+            found.push(...tensions.refusals);
+          }
+          throw PREFLIGHT_ROLLBACK;
+        });
+      } catch (e) { if (e !== PREFLIGHT_ROLLBACK) throw e; }
     }
     found.push(...ratify.refusals);
     const same = (x, y) => JSON.stringify(x) === JSON.stringify(y);
