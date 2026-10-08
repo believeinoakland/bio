@@ -137,13 +137,36 @@ const realMember = (maxBytes) => ({
   bindings: { VERSION: "test", ...(maxBytes ? { MAX_PDF_BYTES: String(maxBytes) } : {}) },
 });
 
-const put = (mf, arm) => mf.dispatchFetch(
-  `http://x/api/capture?token=${MEM}&sha256=${SHA[arm]}`, { method: "PUT", body: BYTES[arm] });
-const structure = async (mf, arm) =>
-  (await mf.dispatchFetch(`http://x/api/pdfstructure?token=${MEM}&sha256=${SHA[arm]}`)).json();
+/* A member's own session (the shared member key is retired, MEMBER_TOKEN_RETIRED): enrolled by the administrator and
+   signed in with the member's password; every credential travels in the Authorization header, never the address
+   (CREDENTIAL_IN_ADDRESS). One per plane, kept for its later calls. */
+const SESSIONS = new WeakMap();
+const signIn = async (mf) => {
+  if (SESSIONS.has(mf)) return SESSIONS.get(mf);
+  const post = async (q, body, token) => {
+    const j = await (await mf.dispatchFetch(`http://x/api/?${q}`, { method: "POST", body: JSON.stringify(body),
+      headers: token ? { authorization: `Bearer ${token}` } : {} })).json();
+    return j && typeof j === "object" && "result" in j ? j.result : j;
+  };
+  const add = await post("op=memberadd", { memberId: "m1", cover: "cover for m1", role: "member", capabilities: ["contribute"] }, "adm-rec98");
+  if (!add || !add.invite) throw new Error(`memberadd: ${JSON.stringify(add)}`);
+  const en = await post("op=enroll", { invite: add.invite, handle: "m1", password: "m1-passphrase-rec98" });
+  if (!en || !en.ok) throw new Error(`enroll: ${JSON.stringify(en)}`);
+  const lg = await post("op=login", { role: "member:m1", password: "m1-passphrase-rec98" });
+  if (!lg || !lg.token) throw new Error(`login: ${JSON.stringify(lg)}`);
+  const h = { authorization: `Bearer ${lg.token}` };
+  SESSIONS.set(mf, h);
+  return h;
+};
+const putSha = async (mf, sha, bytes) =>
+  mf.dispatchFetch(`http://x/api/capture?sha256=${sha}`, { method: "PUT", headers: await signIn(mf), body: bytes });
+const structureSha = async (mf, sha) =>
+  (await mf.dispatchFetch(`http://x/api/pdfstructure?sha256=${sha}`, { headers: await signIn(mf) })).json();
+const put = (mf, arm) => putSha(mf, SHA[arm], BYTES[arm]);
+const structure = (mf, arm) => structureSha(mf, SHA[arm]);
 const acquire = async (mf, arm) => (await (await mf.dispatchFetch(
-  `http://x/api/?op=acquire&token=${MEM}`,
-  { method: "POST", body: JSON.stringify({ locator: `https://oakland.legistar.com/${MANIFEST[arm]}`,
+  `http://x/api/?op=acquire`,
+  { method: "POST", headers: await signIn(mf), body: JSON.stringify({ locator: `https://oakland.legistar.com/${MANIFEST[arm]}`,
                                            authority: "City Clerk" }) })).json());
 
 const tiersOf = (text) => (text && Array.isArray(text.pages) ? text.pages : []).map((p) => p.tier ?? null);
@@ -432,8 +455,8 @@ console.log("\n--- D-251 through the wire: a producer marker is not lost when ti
     ["ocr", "ABBYY FineReader 15"]);
 
   const mf = new Miniflare({ workers: [plane(), realMember()] });
-  await mf.dispatchFetch(`http://x/api/capture?token=${MEM}&sha256=${sha}`, { method: "PUT", body: bytes });
-  const out = await (await mf.dispatchFetch(`http://x/api/pdfstructure?token=${MEM}&sha256=${sha}`)).json();
+  await putSha(mf, sha, bytes);
+  const out = await structureSha(mf, sha);
   t("THROUGH THE OP: tier 2 answered", [out.ok, out.tier, out.text.document], [true, 2, "Hello Oakland 2026"]);
   /* READ DEFENSIVELY, AND THAT IS A CONTROL FINDING RATHER THAN CAUTION. The A1
      arm (call site 1 removed) hands back the MEMBER'S object, which carries no
@@ -487,8 +510,8 @@ console.log("\n--- D-251 through the wire: a producer marker is not lost when ti
      `needsTier2`'s own zero-char case), the member answers, and the wholesale
      branch runs at the real call site. */
   const encSha = hex(encBytes);
-  await mf.dispatchFetch(`http://x/api/capture?token=${MEM}&sha256=${encSha}`, { method: "PUT", body: encBytes });
-  const encOut = await (await mf.dispatchFetch(`http://x/api/pdfstructure?token=${MEM}&sha256=${encSha}`)).json();
+  await putSha(mf, encSha, encBytes);
+  const encOut = await structureSha(mf, encSha);
   t("THROUGH THE OP the encrypted document still says WHY its /Info could not be read",
     encOut.text.producer && encOut.text.producer.why, "encrypted");
   await mf.dispose();

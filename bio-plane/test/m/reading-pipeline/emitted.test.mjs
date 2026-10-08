@@ -125,8 +125,10 @@ const readDocx = async (w, bytes) => {
   const d = await hold(w.evidence, bytes);
   return w.read(doc({ digest: d, bytes: bytes.length, ct: DOCX_CT, format: "docx" }));
 };
-const dc = (ref, value) => ({ source: { kind: "doc-table", ref, table: Number(ref.match(/^table (\d+)/)[1]) - 1, cell: ref.split(", ")[1] },
-                              value, type: "text", declared: null, cached: null, formula: null });
+/* A cell as the real docx entry emits it (office-readers R11 as amended, N758): its `paras` are the `para` ordinals of
+   the paragraphs its text was read from. */
+const dc = (ref, value, paras) => ({ source: { kind: "doc-table", ref, table: Number(ref.match(/^table (\d+)/)[1]) - 1, cell: ref.split(", ")[1] },
+                                     value, type: "text", declared: null, cached: null, formula: null, paras });
 
 test("R28: a .docx reading carries cells keyed by each table's ref, exactly as the real docx entry emits them: a table of dates and amounts, and a nested table under its own key", async () => {
   const body = wp("Disclosure")
@@ -141,10 +143,39 @@ test("R28: a .docx reading carries cells keyed by each table's ref, exactly as t
   const r = await readDocx(w, bytes);
   assert.equal(r.reading.text_container, "docx");
   assert.deepEqual(r.reading.cells, Object.fromEntries(own.tables.map((t) => [t.ref, t.cells])));
-  assert.deepEqual(r.reading.cells["table 1"], [dc("table 1, A1", "Date"), dc("table 1, B1", "Amount"),
-                                                dc("table 1, A2", "2026-03-14"), dc("table 1, B2", "$1,250.00")]);
-  assert.deepEqual(r.reading.cells["table 3"], [dc("table 3, A1", "Inner")], "the nested table is its own key");
+  assert.deepEqual(r.reading.cells["table 1"], [dc("table 1, A1", "Date", [1]), dc("table 1, B1", "Amount", [2]),
+                                                dc("table 1, A2", "2026-03-14", [3]), dc("table 1, B2", "$1,250.00", [4])]);
+  assert.deepEqual(r.reading.cells["table 3"], [dc("table 3, A1", "Inner", [6])], "the nested table is its own key");
   assert.deepEqual(JSON.parse(JSON.stringify(r.reading)).cells, r.reading.cells, "the cells survive the wire");
+});
+
+test("R28: a vertically merged .docx table: each cell's paras carried exactly as the real docx entry emits them, the merged cell's paragraphs from every row it spans included, each naming the paragraphs its value was read from", async () => {
+  const restart = (...inner) => `<w:tc><w:tcPr><w:vMerge w:val="restart"/></w:tcPr>${inner.join("")}</w:tc>`;
+  const cont = (...inner) => `<w:tc><w:tcPr><w:vMerge/></w:tcPr>${inner.join("")}</w:tc>`;
+  const body = wp("Contributions")
+    + wtbl(3, wtr(wtc(wp("Fund")), wtc(wp("Date")), wtc(wp("Amount"))),
+              wtr(restart(wp("General Fund")), wtc(wp("2026-01-05")), wtc(wp("$500.00"))),
+              wtr(cont(wp("(continued)")), wtc(wp("2026-02-09")), wtc(wp("$75.00"), wp("refunded"))),
+              wtr(cont(), wtc(wp("2026-03-01")), wtc(wp("$20.00"))))
+    + wp("End");
+  const bytes = docxBytes(body);
+  const entry = getFormat("docx");
+  const own = await entry.text(await entry.parts(bytes));
+  const w = fresh();
+  const r = await readDocx(w, bytes);
+  assert.deepEqual(r.reading.cells, Object.fromEntries(own.tables.map((t) => [t.ref, t.cells])), "carried as emitted");
+  const got = r.reading.cells["table 1"];
+  assert.deepEqual(got, [
+    dc("table 1, A1", "Fund", [1]), dc("table 1, B1", "Date", [2]), dc("table 1, C1", "Amount", [3]),
+    dc("table 1, A2", "General Fund\n(continued)", [4, 7]), dc("table 1, B2", "2026-01-05", [5]), dc("table 1, C2", "$500.00", [6]),
+    dc("table 1, B3", "2026-02-09", [8]), dc("table 1, C3", "$75.00\nrefunded", [9, 10]),
+    dc("table 1, B4", "2026-03-01", [11]), dc("table 1, C4", "$20.00", [12]),
+  ], "the merged cell names the paragraphs of every row it spans");
+  /* Every cell's paras name, in reading order, exactly the paragraphs its value was read from, so a reader finds them
+     without matching lines. */
+  const byPara = new Map(own.paragraphs.map((p) => [p.para, p.text]));
+  for (const c of got) assert.equal(c.paras.map((n) => byPara.get(n)).join("\n"), c.value, c.source.ref);
+  assert.deepEqual(JSON.parse(JSON.stringify(r.reading)).cells, r.reading.cells, "the paras survive the wire");
 });
 
 test("R28: a .docx body with no tables reads cells {}, one not read (over its size guard or unreadable) reads cells null, kept distinct; metadata as emitted", async () => {
@@ -165,7 +196,7 @@ test("R28: a .docx body with no tables reads cells {}, one not read (over its si
 });
 
 test("R28 R23: emittedFieldsOf over a .docx text: cells by table ref, the entry's own lists unaltered, {} for no tables, null for tables null, a table with no ref no key", () => {
-  const c1 = [dc("table 1, A1", "2026-01-01")], c2 = [dc("table 2, A1", "nested")];
+  const c1 = [dc("table 1, A1", "2026-01-01", [0])], c2 = [dc("table 2, A1", "nested", [1])];
   const t = { container: "docx", metadata: null, tables: [{ table: 0, ref: "table 1", rows: 1, cols: 1, cells: c1 },
     { table: 1, ref: "table 2", rows: 1, cols: 1, cells: c2 }, { table: 2, ref: "table 3", rows: 0, cols: null }, { table: 3, cells: c1 }, null] };
   const pristine = structuredClone(t);

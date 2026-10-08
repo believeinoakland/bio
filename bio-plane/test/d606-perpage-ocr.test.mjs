@@ -87,7 +87,28 @@ const planeDef = (ocr) => ({
               GOVERNOR_APPETITE_PER_MIN: "600000", GOVERNOR_SUBRESOURCE_STAGGER_MS: "0" },
   outboundService: serve,
 });
-const acquire = async (mf, path) => (await (await mf.dispatchFetch("http://x/api/?op=acquire&token=mem-606", { method: "POST",
+/* A member's own session (the shared member key is retired, MEMBER_TOKEN_RETIRED): enrolled by the administrator and
+   signed in with the member's password; every credential travels in the Authorization header, never the address
+   (CREDENTIAL_IN_ADDRESS). One per plane, kept for its later calls. */
+const SESSIONS = new WeakMap();
+const signIn = async (mf) => {
+  if (SESSIONS.has(mf)) return SESSIONS.get(mf);
+  const post = async (q, body, token) => {
+    const j = await (await mf.dispatchFetch(`http://x/api/?${q}`, { method: "POST", body: JSON.stringify(body),
+      headers: token ? { authorization: `Bearer ${token}` } : {} })).json();
+    return j && typeof j === "object" && "result" in j ? j.result : j;
+  };
+  const add = await post("op=memberadd", { memberId: "m1", cover: "cover for m1", role: "member", capabilities: ["contribute"] }, "adm-606");
+  if (!add || !add.invite) throw new Error(`memberadd: ${JSON.stringify(add)}`);
+  const en = await post("op=enroll", { invite: add.invite, handle: "m1", password: "m1-passphrase-606" });
+  if (!en || !en.ok) throw new Error(`enroll: ${JSON.stringify(en)}`);
+  const lg = await post("op=login", { role: "member:m1", password: "m1-passphrase-606" });
+  if (!lg || !lg.token) throw new Error(`login: ${JSON.stringify(lg)}`);
+  const h = { authorization: `Bearer ${lg.token}` };
+  SESSIONS.set(mf, h);
+  return h;
+};
+const acquire = async (mf, path) => (await (await mf.dispatchFetch("http://x/api/?op=acquire", { method: "POST", headers: await signIn(mf),
   body: JSON.stringify({ locator: "https://oakland.legistar.com" + path, authority: "City Clerk" }) })).json());
 
 /* THE STUB MEMBER: the real member's chunk rule (lowest page taken, the rest deferred) and envelope, and nothing else.
