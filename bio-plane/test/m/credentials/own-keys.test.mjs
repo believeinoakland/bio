@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, PASSWORD } from "./fixture.mjs";
 import { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS } from "../../../src/credentials/index.mjs";
+import { noSuchMember } from "../../../src/membership/index.mjs";
 
 const keyRow = (w, k) => w.row(`SELECT member_id, status, status_by, origin, registered_by, comment FROM signers WHERE key_b64=?`, k);
 const listed = (w, k) => w.c.signerList().signers.find((s) => s.key_b64 === k);
@@ -50,7 +51,7 @@ test("R9 refusals in order, each writing nothing: no member behind the caller (C
     ["SIGNER_MEMBER_NOT_ENROLLED", "C-63.1", SIGNER_ENROLMENT_CHECKS.SIGNER_MEMBER_NOT_ENROLLED.translation, "cal", false]);
   const dee = reg(w, "dee", "AAAAannkey");
   assert.deepEqual([dee.reason, dee.member_status, dee.enrolled], ["SIGNER_MEMBER_NOT_ACTIVE", "revoked", true]);
-  for (const by of ["nobody", "admin"]) assert.deepEqual(reg(w, by, "AAAAnew"), { ok: false, reason: "NO_SUCH_MEMBER" }, by);
+  for (const by of ["nobody", "admin"]) assert.deepEqual(reg(w, by, "AAAAnew"), noSuchMember(by), by);
   /* SIGNER_KEY_HELD_BY_ANOTHER: exactly its fields and row, naming no one */
   const held = reg(w, "bob", "AAAAannkey", "mine now");
   assert.deepEqual(Object.keys(held).sort(), ["check", "code", "detail", "ok", "reason", "translation"]);

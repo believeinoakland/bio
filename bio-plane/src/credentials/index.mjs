@@ -27,7 +27,7 @@
  */
 import { MACHINE_CLASS_PREFIX, isMachineIdentity, sha256HexSync } from "../record-grammar/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
-import { Membership, membershipOf, notAnAdmin } from "../membership/index.mjs";
+import { Membership, membershipOf, notAnAdmin, noSuchMember } from "../membership/index.mjs";
 import { CREDENTIALS_SCHEMA, CREDENTIALS_ADDITIVE_COLUMNS, CREDENTIALS_TABLES } from "./schema.mjs";
 export { CREDENTIALS_EXEMPT_TABLES, CREDENTIALS_TABLES } from "./schema.mjs";
 import { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, ACCOUNT_CHECKS,
@@ -646,7 +646,7 @@ export class Credentials {
    * beside the code. Answers null when the member may attest. */
   #signerMemberBar(memberId) {
     const m = this.#memberFacts(memberId);
-    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    if (!m) return noSuchMember(memberId);   /* membership R121 (N793; K231): the one site that mints NO_SUCH_MEMBER */
     if (m.status === "active") return null;
     const enrolled = typeof m.handle === "string" && m.handle !== "";
     const refusal = (code, detail) => {
