@@ -15,3 +15,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 Both readings stand (K2321). (1) Re-generate from PR #15 (`c848b56671`, 204 entries); R48 now carries a T38 clause saying so (merge `tranche/T38`). (2) Hold `obscuremarkwithdraw` under its own name now, never `owed_` and never in `ACT_HELP_ABSENT`. BOB sends a CHANGE when op-grades is merged; then merge the tranche and re-run t36.
+
+## B3 · CHANGE
+
+op-grades (T38-14) is merged into `tranche/T38` (K2322): merge the tranche into your branch and re-run t36. Also yours, from OP-GRADES #4 J1: `catalogue.test.mjs`:111 (RUNGS by rung: `obscuremarkwithdraw` reasoned, `obscuremark` reversible) and :485 (lines 505–508, 514: `obscuremark` no longer undetermined; `undeterminedOf(T37_RUNG_ABSENT)` is now `[translationdraft, translationmark]`) re-pin to R28; and if your R19 asks the backing drive to perform every reasoned op without its reason, add `obscuremarkwithdraw` (`WITHDRAW_NO_REASON`). Then COMPLETE.
