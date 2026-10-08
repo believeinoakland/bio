@@ -14,7 +14,9 @@
 
 **Tests and checks.** `node --test test/m/extraction/`: tests 132, pass 132, fail 0 (red 12 cleared; it was 131/1 before). No layer tests (manifest). No service changed. `format`: 136 modules, 135 requirements files; 0 failures. `architecture`: 28 product files, 105 relative imports; 0 failures. `coverage`: 46 of 46 live requirement ids named by a test; 0 failures. `ownership` (vs tranche/T37): 0 failures.
 
-Size (session_01Afy7CyYbu7EgvpPingjWAQ): test runs 4, module lines 2741
+**B2 (K2195).** Merged `tranche/T37` (R70 now names `paras`, marked T37); the first R70 test's title names `paras` as the seventh key, and it already pins them field for field; R66 unchanged as answered. Re-run after the merge: extraction 132/0; format, architecture, coverage 46/46, ownership (3 files) 0 failures each.
+
+Size (session_01Afy7CyYbu7EgvpPingjWAQ): test runs 5, module lines 2741
 
 ## J1 · QUESTION
 

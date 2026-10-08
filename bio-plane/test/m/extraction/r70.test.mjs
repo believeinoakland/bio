@@ -30,7 +30,7 @@ async function readDocx(w, body) {
   return { d, bytes, r };
 }
 
-test("R70 R1 R19 R30: a .docx table of dates and amounts read from its bytes carries its cells keyed by table ref, written by R19 and answered by readingOf unchanged, field for field as office-readers emitted them", async () => {
+test("R70 R1 R19 R30: a .docx table of dates and amounts read from its bytes carries its cells keyed by table ref, written by R19 and answered by readingOf unchanged, field for field as office-readers emitted them, the seventh key `paras` included", async () => {
   const w = fresh();
   bundle(w.s, "INFO-1");
   const { d, bytes, r } = await readDocx(w, BODY);
