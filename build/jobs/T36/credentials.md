@@ -25,3 +25,7 @@
 **Tests and checks:** `node --test test/m/credentials/` 119 pass, 0 fail. Users of changed services: notice-producers 61/0, answers 43/0, ai-runs 74/0, store-door 36/0, affordances 208/0, plane 130/0, op-grades 26/0, instance-setup 108/0, admission 32/0, control-plane 167/0; op-declarations 90/3 (1 before: red 13; 2 new, above). `format`: 135 modules, 0 failures. `architecture`: 19 product files, 50 relative imports, 0 failures. `coverage`: 51 of 51 live ids, 0 failures. `ownership` vs `tranche/T36`: 10 files, 0 failures. P6: 2,690 lines (2,504 at the opening).
 
 Size (session_01DuWUHZfSSRpYU5V4qt2iss): test runs 8, module lines 2690
+
+## J1 · QUESTION
+
+My readings, applied (record, 'My readings'); answer only to overrule. (1) R29's 'a set with no key removes' holds for every keyed service, courtlistener included; 'no key' is key null or absent (the row is deleted, the service off); a key given but empty (blank string, empty set, blank or non-string field, bad field name, other values) stays KEYED_SERVICE_NO_KEY. (2) R52's route is 'aikeepawaystate' (no viewer field; who reaches it is the spec's, as keyedservices). (3) A keep-away setting that cannot be read answers on: null and R35 refuses AI_KEPT_AWAY (fail closed). (4) A reason is 1-2,000 code points, not blank, kept untrimmed; one given with on: false is held to the same bounds. (5) securitycount takes {kind, country} from the body, as doorwindow does.
