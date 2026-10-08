@@ -55,3 +55,7 @@
 - `checks/ownership.mjs control-plane tranche/T38`: 5 files changed; 0 failures.
 
 Size (session_01L6n1QKr1FBq4RCADwXEj7g): test runs 14, module lines 3,270 (code; tests 6,755)
+
+## J1 · COMPLETE
+
+T38-16 done: R67's obscuremarkwithdraw routed with no route code; door test t38-door.test.mjs over the real declaration (B3 merged). Fixed in my module: a door-stamped by/viewer (OP_STAMPS) is now stripped from the POST body too (R29). B2 (K2326): the public ops' sourceOf fallback runs only with KNOCK_FINGERPRINT_KEY bound, so a store fault is asked once; tested (R58), with a negative control. control-plane + op-declarations 311/311; four checks 0 failures. Whole tree 9,034/8,985/38 fail, the same 38 failing on bare tranche/T38 (none mine). Record: build/jobs/T38/control-plane.md.
