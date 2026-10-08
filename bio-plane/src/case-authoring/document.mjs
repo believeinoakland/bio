@@ -1,5 +1,5 @@
 /* The case document's text and the acknowledgement list's two renderings (requirements:
- * `build/requirements/case-authoring.md`, R14, R16, R17, R20, R21, R22, R26). Pure: nothing here touches a table, so a
+ * `build/requirements/case-authoring.md`, R14, R16, R17, R20, R21, R22, R26, R60). Pure: nothing here touches a table, so a
  * suite can render a document without a store and the gate can be run against bytes this file produced. Moved from
  * `store.mjs` (`#caseDocumentText`, `CASE_CITATION_WORDS`, the `#ack…Lines` family, `#withheldWriterStated`,
  * `#statementSha`; `#fmSafe` is case-grammar's since N424); the comments moved with them, shortened where they only
@@ -166,6 +166,7 @@ export function withheldWriterStated(withheld, writerBy) {
  *  sentences as the publisher typed them, and every fact the caller read from the record at the act (`searched`,
  *  `conclusions`, `frozen`, `manifest`, `acks`, `citations`, `attributions`, the writer). Nothing here is composed,
  *  summarised or inferred, and no case-level strength has anywhere to be written (R24).
+ *  `subjects` maps each member to the `subject_entity` its pinned bytes state, or null (R60).
  *
  *  `statementBy` null is UNDETERMINED and is STATED, never filled in from `author` (R21, R26). `searched` is required:
  *  a document that cannot say what was searched fails the ceremony instead (R11). `frozen` maps each member to
@@ -179,7 +180,7 @@ export function withheldWriterStated(withheld, writerBy) {
 export function caseDocumentText({ caseId, edition, project, workingOn = null, scope, bias, bar, roster, roles, pins,
                                    statement, position, justification, excluded, author, at,
                                    statementBy = null, statementByStated = "",
-                                   searched, conclusions = [], frozen, manifest = null,
+                                   searched, conclusions = [], frozen, manifest = null, subjects = null,
                                    acks = { statementSha: null, truncated: false, rows: [] },
                                    citations = [], attributions = [], tensions = [],
                                    tensionsUnread = [], captures = [], sources = [], whatChanged = null,
@@ -257,7 +258,10 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
       `    role: ${roleOf.get(m) ?? "null"}`,
       `    version_sha: ${pins.get(m) ?? "null"}`,
       /* D-442: THE MEMBER'S OWN PUBLISHED EDITION of the pinned bytes, beside the pin it numbers (rule 12 (b)). */
-      `    edition: ${frozenOf(m) ? frozenOf(m).edition : "null"}`]),
+      `    edition: ${frozenOf(m) ? frozenOf(m).edition : "null"}`,
+      /* R60 (N717; case-grammar R22): the subject the member's pinned bytes state, so `case-checker` R21 reads only the
+         criteria rows of that body; null when they state none, never another member's or the inquiry's current one. */
+      `    subject_entity: ${(subjects && subjects.get(m)) || "null"}`]),
     /* REC-135 / §7.1 item 4 — THE CONCLUSION EACH MEMBER ENTERED THIS CASE ON, AND WHOSE IT WAS. A `no_project` row is
        a DISCLOSURE, not a defect; `claim_state: undetermined` is a first-class answer, never an empty claim. The rows
        are `ratification`'s one writer of them, so what an edition records and what `editionsRecordingConclusion`

@@ -1,4 +1,5 @@
-/* case-authoring's invariants and refusal rows (requirements: `build/requirements/case-authoring.md`, R1, R3, R7, R9, R19, R29).
+/* case-authoring's invariants and refusal rows (requirements: `build/requirements/case-authoring.md`, R1, R3, R7, R9, R19, R29,
+ * R61).
  * DEC-49: every refusal this module answers from a row carries its code, its catalogue row and the member's translation.
  *
  * Moved here from the check catalogue with their ids, codes and translations unchanged (K6, R29): C-44.1 and C-44.3–C-44.5
@@ -8,7 +9,7 @@
  * enforces it. C-32.6 (`MACHINE_CANNOT_PUBLISH`) and C-33.14 (`NO_STATEMENT`) were copied
  * into `PUBLISH_ACT_CHECKS` (T18; R1, R3, R29; K695), ids, codes, `where`s and translations unchanged, and stamped by
  * promotion in T19; the catalogue and its copies are deleted (K529). R56's `CALCULATION_NOT_DISCLOSED` joins
- * `PUBLISH_ACT_CHECKS` in T33 (R29). The family C-120, "a case's disclosures and its
+ * `PUBLISH_ACT_CHECKS` in T33 (R29), R61's `STANDARDS_USE_REFUSED` (C-136.2) in T36. The family C-120, "a case's disclosures and its
  * pre-flight", moved whole to `case-disclosures`' own `checks.mjs` with its ids, codes and translations (its R22; N529);
  * no copy is held here (K529), and `index.mjs` re-exports it for this module's importers. */
 
@@ -44,6 +45,18 @@ export const PUBLISH_ACT_CHECKS = Object.freeze({
     translation: 'A calculation a load-bearing finding rests on gives a different result when your group\'s Civicsmith '
       + 'recomputes it, or rests on a figure typed in without a source, and this publication does not say so. List it '
       + 'with your own words, and publish again; the published case will state it. Nothing was published.',
+  },
+  /* R61 (T36; N717, N648; K1723, K1739, K2002, K2129): the case uses a standard as a published case may not
+     (`case-checker` R21: a copyrighted standard's whole text, a passage of one no finding relies on, or a benchmark
+     called "violated"). The next free number of C-136; its translation is BOB's draft (K2129), its member words the UX
+     stream's to revise, awaiting promotion's stamp (rule 17). */
+  STANDARDS_USE_REFUSED: {
+    check: 'C-136.2',
+    where: at('#publishCase', 'is-standards-use'),
+    translation: 'This case uses a standard as a published case may not: it would carry the whole text of a standard '
+      + 'that is not free to read, quote a passage of one that no finding relies on, or call a finding that rests only '
+      + 'on benchmarks "violated" or "nonconforming". Each is named below. Change the case and prepare it again. '
+      + 'Nothing was prepared.',
   },
 });
 
