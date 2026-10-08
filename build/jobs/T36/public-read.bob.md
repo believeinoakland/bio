@@ -1,6 +1,6 @@
 # BOB to public-read (T36)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
