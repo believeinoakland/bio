@@ -128,7 +128,7 @@ test("R53: recordcapturedlocator takes the listeners' context out of the body an
   assert.deepEqual(heard[0].context, { authorityKind: "run", authority: "RUN-1", actorClass: "plane", actor: "member:ruth", observe: true });
   assert.deepEqual({ ...w.row(`SELECT * FROM captured_locators`) }, { address_norm: "e.org/a", address: "https://e.org/a",
     capture_sha: sha("a"), via: "direct", retrieval_locator: "https://e.org/a?x", first_retrieved: "2026-09-27T01:00:00Z",
-    last_retrieved: "2026-09-27T01:00:00Z", observations: 1 });
+    last_retrieved: "2026-09-27T01:00:00Z", observations: 1, reputation: null });
   /* The observer's refusal is reported as it answered; nothing written is reported false. */
   const refused = ops(w, "", { ...body, observe: false, actorClass: "member" }, { observer: "observation-log" }).recordcapturedlocator();
   assert.deepEqual([refused.recorded, refused.observation, refused.observation_written, refused.observation_refused],
