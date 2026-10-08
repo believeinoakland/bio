@@ -1,6 +1,6 @@
 # setup-words — requirements
 
-**Status** · In force: split from `instance-setup` by copy for size (K617, K624; N807; K2337, K2343), meaning unchanged: R1–R3 carry `instance-setup` R68's list share, which is re-worded there and keeps the object form and its export.. Layer 11, directly before `instance-setup`.
+**Status** · In force: split from `instance-setup` by copy for size (K617, K624; N807; K2337, K2343), meaning unchanged: R1–R3 carry `instance-setup` R68's list share, which is re-worded there and keeps the object form and its export. Layer 11, directly before `instance-setup`.
 
 **Size (P6).** 929 lines of generated data (`setup-words.mjs`:1–929), no code; `instance-setup` about 3,300 after its copy goes (4,228 at T38's close, K2337).
 
