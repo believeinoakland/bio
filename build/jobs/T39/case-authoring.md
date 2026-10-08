@@ -21,3 +21,7 @@
 - `format: 139 modules, 137 requirements files; 0 failures`; `architecture: 28 product files, 153 relative imports (0 naming no tracked file, not judged); 0 failures`; `coverage: 1 modules, 46 of 46 live requirement ids named by a test; 0 failures`; `ownership: 7 files changed by case-authoring between tranche/T39 and HEAD; 0 failures`.
 
 Size (session_01KsXLvmNX6T1sjWsVXjcN7x): test runs 4, module lines 3473
+
+## J1 · COMPLETE
+
+T39-18 done (record's Completion). The fixture and photos.test.mjs's stand-in answer documentCopy (case-carriage R16): public unless a test sets it. New documents.test.mjs: R55 relays case-disclosures R6's DOCUMENT_COPY_UNDETERMINED, DOCUMENT_COPY_PENDING and DOCUMENT_NOT_CLEANABLE as op=publish's answer and as the pre-flight's first, writing nothing (R18), with negative controls; R14's cleaned-copy row. R29's census names C-120.20–.22. One flaw in my own module fixed: publishPreflight's independent reads ran outside any transaction, so R16's queueing would have survived a pre-flight (R34: it writes nothing). They now run inside a transaction it rolls back. On a scratch merge with case-disclosures' branch and a stand-in case-carriage: 164/20/144 before, 169/169/0 after. On this branch alone: 165/162/3, all three waiting on case-carriage's COPY_CLEANED_LABEL and case-disclosures' rows. Checks: format, architecture and ownership 0 failures; coverage 46 of 46. Waiting for your CHANGEs to merge the tranche and re-run.
