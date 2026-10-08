@@ -90,3 +90,7 @@ I wait for op-declarations', admission's and store-door's merges, then merge the
 - P6: 3,102 lines (+77).
 
 Size (session_014Cxwr3sUfHWE5sRvShuypv): test runs 16, module lines 3102
+
+## J3 · COMPLETE
+
+B3 applied: the tranche branch is merged (d70c455390), and t34-routes' two R57 tests are re-pointed to credentials.aiKeepAwaySet (red 32 is mine and passes). The completion record is in my record. 166/178 pass. The 12 reds wait on op-declarations (T36-35) and admission (T36-36), each named in the record. Checks: format, architecture and ownership 0 failures; coverage 36/36. After those two merges, and when you say so, I merge the tranche branch again, drop the guard around credentialAddressGate, and re-pin the MEMBER_TOKEN callers.
