@@ -77,19 +77,27 @@ export function jp2() {
     ...box("xml ", [...enc("<x>JP2SECRET</x>")]), ...box("jp2c", code)]);
 }
 
-/** A minimal EMF: its header record and EOF, holding `inner` (raw bytes in a comment record) when given. */
-export function emf(inner = new Uint8Array(0)) {
+/** A minimal EMF: its header record (with `description`, UTF-16, when given) and EOF, holding `inner` (raw bytes
+ *  in a comment record) when given. */
+export function emf(inner = new Uint8Array(0), description = "") {
   const pad = (inner.length + 3) & ~3;
   const rec = (type, body) => { const b = Buffer.alloc(8 + body.length); b.writeUInt32LE(type, 0); b.writeUInt32LE(8 + body.length, 4); Buffer.from(body).copy(b, 8); return b; };
-  const head = Buffer.alloc(80);
+  const desc = Buffer.from(description, "utf16le");
+  const head = Buffer.alloc(80 + ((desc.length + 3) & ~3));
   head.write(" EMF", 32, "latin1");
   head.writeUInt32LE(0x10000, 36);
+  if (desc.length) { head.writeUInt32LE(description.length, 52); head.writeUInt32LE(88, 56); desc.copy(head, 80); }
   const comment = Buffer.alloc(4 + pad); comment.writeUInt32LE(inner.length, 0); Buffer.from(inner).copy(comment, 4);
   const records = [rec(1, head), ...(inner.length ? [rec(70, comment)] : []), rec(14, Buffer.alloc(12))];
   const all = Buffer.concat(records);
   all.writeUInt32LE(all.length, 48);
   return new Uint8Array(all);
 }
+
+/** A JBIG2 segment: number, type, data (no referred-to segments, a one-byte page association). */
+export const jbig2Segment = (num, type, data) => new Uint8Array([...be32(num), type, 0, 1, ...be32(data.length), ...data]);
+/** An extension segment holding an ASCII comment. */
+export const jbig2Comment = (num, text) => jbig2Segment(num, 62, [0x20, 0, 0, 0, ...enc(text), 0]);
 
 // ---- PDFs ----
 
@@ -182,7 +190,7 @@ export function xlsx({ extra = [] } = {}) {
     { name: "xl/_rels/workbook.xml.rels", data: RELS([["rId1", "officeDocument/2006/relationships/worksheet", "worksheets/sheet1.xml"]]) },
     { name: "xl/worksheets/sheet1.xml", data: `${XML}<worksheet ${X}><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>Line</t></is></c><c r="B1"><v>125</v></c></row></sheetData></worksheet>` },
     { name: "xl/worksheets/_rels/sheet1.xml.rels", data: RELS([["rId1", "officeDocument/2006/relationships/comments", "../comments1.xml"]]) },
-    { name: "xl/comments1.xml", data: `${XML}<comments ${X}><authors><author>COMMENTERSECRET</author></authors><commentList><comment ref="A1" authorId="0"><text><r><t>Check the total</t></r></text></comment></commentList></comments>` },
+    { name: "xl/comments1.xml", data: `${XML}<comments ${X}><authors><author>COMMENTERSECRET</author></authors><commentList><comment ref="A1" authorId="0"><text><r><rPr><b/><sz val="9"/></rPr><t>COMMENTERSECRET:</t></r><r><rPr><sz val="9"/></rPr><t xml:space="preserve">\nCheck the total</t></r></text></comment></commentList></comments>` },
     { name: "xl/media/image1.jpeg", data: jpeg() },
     { name: "docProps/core.xml", data: CORE },
     { name: "docProps/app.xml", data: APP("Excel") },

@@ -4,6 +4,7 @@
  * refusal's detail (a part or an object). `imageKind(bytes)` names an image format from its leading bytes, or `null`
  * when the bytes are not an image this module knows. Nothing here reads a name or a declared type. */
 import { stripMetadata } from "../image-cover/index.mjs";
+import { editXml } from "./xml.mjs";
 
 export class CleanRefusal extends Error {
   constructor(code, detail) {
@@ -50,6 +51,20 @@ export function imageKind(d) {
   return null;
 }
 
+/** What kind of video or audio `d` is, from its leading bytes, or `null` (R3 `EMBEDDED_MEDIA`, K2351). */
+export function mediaKind(d) {
+  if (d.length >= 12 && ascii(d, 4, 4) === "ftyp" && !imageKind(d)) return "a video or audio file (ISO media)";
+  if (d.length >= 12 && ascii(d, 0, 4) === "RIFF" && ["AVI ", "WAVE", "RMID", "CDXA"].includes(ascii(d, 8, 4))) return `a ${ascii(d, 8, 4).trim()} file`;
+  if (d.length >= 12 && ascii(d, 0, 4) === "FORM" && ["AIFF", "AIFC"].includes(ascii(d, 8, 4))) return "an AIFF file";
+  if (at(d, 0, 0x1a, 0x45, 0xdf, 0xa3)) return "a Matroska or WebM file";
+  if (at(d, 0, 0x30, 0x26, 0xb2, 0x75, 0x8e, 0x66, 0xcf, 0x11)) return "a Windows Media file";
+  if (at(d, 0, 0x49, 0x44, 0x33) || (d[0] === 0xff && (d[1] & 0xe0) === 0xe0 && d[1] < 0xfe && (d[1] & 0x06) !== 0 && d[2] >> 4 !== 15 && ((d[2] >> 2) & 3) !== 3)) return "an MPEG audio file";
+  if (d.length >= 4 && ["OggS", "fLaC", "MThd", ".snd", "FLV\x01"].includes(ascii(d, 0, 4))) return "an audio or video file";
+  if (at(d, 0, 0, 0, 1, 0xba) || at(d, 0, 0, 0, 1, 0xb3) || (d[0] === 0x47 && d[188] === 0x47 && d.length > 376 && d[376] === 0x47)) return "an MPEG video file";
+  if (at(d, 0, 0x23, 0x21, 0x41, 0x4d, 0x52)) return "an AMR audio file";
+  return null;
+}
+
 /** The local name of an XML document's first element (after a BOM, the declaration, comments, processing
  *  instructions and a doctype), lower-cased, read from at most its first 4 KB; `null` when it does not start as XML. */
 export function rootElement(d) {
@@ -91,6 +106,67 @@ async function gunzip(d, max) {
   }
 }
 
+/** Gzip `d` afresh (no name, comment or time in its header). */
+async function gzip(d) {
+  const reader = new Blob([d]).stream().pipeThrough(new CompressionStream("gzip")).getReader();
+  const parts = [];
+  let n = 0;
+  for (;;) { const { done, value } = await reader.read(); if (done) break; parts.push(value); n += value.length; }
+  const out = new Uint8Array(n);
+  let o = 0;
+  for (const p of parts) { out.set(p, o); o += p.length; }
+  out[4] = out[5] = out[6] = out[7] = 0;
+  out[9] = 0xff;
+  return out;
+}
+
+/** An EMF with its header's description string (the producing application and the picture's name) emptied: its
+ *  characters zeroed and its length and offset set to 0 (R6, K2351). */
+function emfWithoutDescription(d) {
+  const n = u32le(d, 60), off = u32le(d, 64);
+  if (d.length < 68 || u32le(d, 4) < 88 || (n === 0 && off === 0)) return { bytes: d, changed: false };
+  const out = d.slice();
+  if (off >= 88 && off + 2 * n <= Math.min(out.length, u32le(d, 4))) out.fill(0, off, off + 2 * n);
+  out.fill(0, 60, 68);
+  return { bytes: out, changed: true };
+}
+
+/** An SVG's editor-namespace elements and attributes (Inkscape, Sodipodi, Adobe) removed (R6, K2351). */
+const SVG_RULES = { removeNs: ["editor"] };
+
+/** A JBIG2 segment stream (as a PDF embeds it, without a file header) with its comment extension segments
+ *  dropped, every other segment copied as it is (R6, K2351). Throws a refusal when its segments cannot be walked. */
+export function jbig2WithoutComments(d, where) {
+  const keep = [];
+  let o = 0, changed = false;
+  const bad = (why) => new CleanRefusal("IMAGE_NOT_CLEANABLE", `${where}: a JBIG2 stream whose segments cannot be walked (${why})`);
+  while (o < d.length) {
+    const start = o;
+    if (o + 6 > d.length) throw bad("a truncated segment header");
+    const num = ((d[o] << 24) | (d[o + 1] << 16) | (d[o + 2] << 8) | d[o + 3]) >>> 0, flags = d[o + 4];
+    o += 5;
+    let count = d[o] >> 5;
+    if (count === 7) { count = ((d[o] & 0x1f) << 24 | d[o + 1] << 16 | d[o + 2] << 8 | d[o + 3]) >>> 0; o += 4 + Math.ceil((count + 1) / 8); }
+    else if (count > 4) throw bad("a malformed referred-to count");
+    else o += 1;
+    o += count * (num <= 256 ? 1 : num <= 65536 ? 2 : 4) + (flags & 0x40 ? 4 : 1);
+    if (o + 4 > d.length) throw bad("a truncated segment header");
+    const len = ((d[o] << 24) | (d[o + 1] << 16) | (d[o + 2] << 8) | d[o + 3]) >>> 0;
+    o += 4;
+    if (len === 0xffffffff) throw bad("a segment of unstated length");
+    if (o + len > d.length) throw bad("a segment longer than the stream");
+    const ext = (flags & 0x3f) === 62 && len >= 4 ? (((d[o] << 24) | (d[o + 1] << 16) | (d[o + 2] << 8) | d[o + 3]) >>> 0) & 0x7fffffff : null;
+    o += len;
+    if (ext === 0x20000000 || ext === 0x20000002) { changed = true; continue; }
+    keep.push(d.subarray(start, o));
+  }
+  if (!changed) return { bytes: d, changed: false };
+  const out = new Uint8Array(keep.reduce((k, x) => k + x.length, 0));
+  let w = 0;
+  for (const x of keep) { out.set(x, w); w += x.length; }
+  return { bytes: out, changed: true };
+}
+
 /** A gzip member's header rewritten to carry no name, comment, extra field or time; the deflate data and trailer
  *  unchanged. `null` when the header cannot be walked. */
 function bareGzip(d) {
@@ -129,19 +205,25 @@ export async function cleanImage(bytes, kind, where, maxInflated) {
     case "emf": case "wmf": case "svm": {
       const held = holdsRaster(bytes);
       if (held) throw new CleanRefusal("IMAGE_NOT_CLEANABLE", `${where}: ${NAMES[kind]} image holding ${held} image`);
-      return { bytes, changed: false };
+      return kind === "emf" ? emfWithoutDescription(bytes) : { bytes, changed: false };
     }
     case "svg": {
       const s = ascii(bytes, 0, bytes.length);
       const m = /<([\w.-]+:)?(image|metadata)(?=[\s/>])/i.exec(s);
       if (m) throw new CleanRefusal("IMAGE_NOT_CLEANABLE", `${where}: an SVG image with an <${m[2].toLowerCase()}> element`);
-      return { bytes, changed: false };
+      const out = editXml(bytes, SVG_RULES);
+      return { bytes: out, changed: out !== bytes };
     }
     case "gzip": {
       const inner = await gunzip(bytes, maxInflated);
       if (!inner) throw new CleanRefusal("IMAGE_NOT_CLEANABLE", `${where}: a compressed image that cannot be read whole`);
       const k = imageKind(inner);
-      if (k && k !== "gzip") await cleanImage(inner, k, where, maxInflated);
+      const media = k ? null : mediaKind(inner);
+      if (media) throw new CleanRefusal("EMBEDDED_MEDIA", `${where}: ${media}, compressed`);
+      if (k && k !== "gzip") {
+        const r = await cleanImage(inner, k, where, maxInflated);
+        if (r.changed) return { bytes: await gzip(r.bytes), changed: true };
+      }
       const bare = bareGzip(bytes);
       if (!bare) throw new CleanRefusal("IMAGE_NOT_CLEANABLE", `${where}: a compressed image whose header cannot be read`);
       return { bytes: bare, changed: bare !== bytes };

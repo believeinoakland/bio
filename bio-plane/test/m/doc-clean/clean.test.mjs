@@ -9,7 +9,7 @@ import { cleanDocument, CLEAN_MAX_BYTES, CLEAN_MAX_PART_BYTES, CLEAN_REFUSALS } 
 import { openPdf } from "../../../src/pdfstructure.mjs";
 import { readContainer, readPart, readCoreProperties } from "../../../src/ooxml.mjs";
 import { SECRETS, enc, latin, has, jpeg, jpegCoded, png, pngCoded, gif, jp2, pdf, incremental, objStm, makePdf, makeZip,
-  docx, xlsx, pptx, odf, emf, unzipCopy } from "./fixtures.mjs";
+  docx, xlsx, pptx, odf, emf, jbig2Segment, jbig2Comment, unzipCopy } from "./fixtures.mjs";
 
 const refused = (r, code, detail) => {
   assert.deepEqual(Object.keys(r).sort(), ["code", "detail", "ok"], "nothing answered but the refusal");
@@ -363,6 +363,74 @@ test("R6 the edits find each namespace by the prefix the part declares, in eithe
   assert.deepEqual([...c.subarray(0, 2)], [0xff, 0xfe]);
   assert.equal(Buffer.from(c.subarray(2)).toString("utf16le"), core.replace("<e:creator xml:lang='en'>AUTHORSECRET</e:creator>", "").replace("<k:lastModifiedBy/>", "").replace("<t:modified>2019-03-04</t:modified>", ""));
   assert.equal(latin(part(r.bytes, "word/document.xml").data), doc.replace("q:author='CHANGERSECRET' q:date='2019-03-04'", "q:author=''"));
+});
+
+test("R3 EMBEDDED_MEDIA: a video or audio part (MP4, QuickTime, WAV, MP3, Ogg, WebM), a PDF RichMedia, 3D, screen or sound object, each named", async () => {
+  const media = [["ppt/media/media1.mp4", new Uint8Array([0, 0, 0, 24, ...enc("ftypisom"), 0, 0, 2, 0, ...enc("isommp41"), 0, 0, 0, 8, ...enc("free")])],
+    ["ppt/media/media2.mov", new Uint8Array([0, 0, 0, 20, ...enc("ftypqt  "), 0, 0, 2, 0, ...enc("qt  ")])],
+    ["ppt/media/media3.wav", new Uint8Array([...enc("RIFF"), 36, 0, 0, 0, ...enc("WAVEfmt ")])], ["ppt/media/media4.mp3", new Uint8Array([...enc("ID3"), 4, 0, 0, 0, 0, 0, 0])],
+    ["ppt/media/media5.ogg", enc("OggS\0\x02")], ["ppt/media/media6.webm", new Uint8Array([0x1a, 0x45, 0xdf, 0xa3, 0x9f, 0x42, 0x86, 0x81])]];
+  for (const [name, data] of media) refused(await cleanDocument(docx({ extra: [{ name, data }] })), "EMBEDDED_MEDIA", new RegExp(`part ${name.replace(/\./g, "\\.")}: `));
+  refused(await cleanDocument(odf("odp", { extra: [{ name: "Media/clip.mp4", data: media[0][1] }] })), "EMBEDDED_MEDIA", /Media\/clip\.mp4/);
+  for (const [annot, more] of [["/Subtype /RichMedia /RichMediaContent << >>", []], ["/Subtype /3D /3DD 10 0 R", [{ dict: "<< /Type /3D /Subtype /U3D >>", data: enc("U3D") }]],
+    ["/Subtype /Screen /A << /S /Rendition >>", []], ["/Subtype /Sound /Sound 10 0 R", [{ dict: "<< /Type /Sound /R 8000 >>", data: new Uint8Array(8) }]]])
+    refused(await cleanDocument(pdf({ page: "/Annots [9 0 R]", more: [`<< /Type /Annot ${annot} /Rect [0 0 9 9] >>`, ...more] })), "EMBEDDED_MEDIA", /object (9|10): /);
+});
+
+test("R6 K2351 OOXML printer settings and custom XML parts are removed with their relationships, overrides and r:id references", async () => {
+  const x = partsOf(xlsx()).map((p) => ({ name: p.name, data: p.name === "xl/worksheets/sheet1.xml" ? latin(p.data).replace("</sheetData>", '</sheetData><pageSetup orientation="portrait" r:id="rId2"/>')
+    : p.name === "xl/worksheets/_rels/sheet1.xml.rels" ? latin(p.data).replace("</Relationships>", '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/printerSettings" Target="../printerSettings/printerSettings1.bin"/></Relationships>')
+    : p.name === "xl/_rels/workbook.xml.rels" ? latin(p.data).replace("</Relationships>", '<Relationship Id="rId9" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXml" Target="../customXml/item1.xml"/></Relationships>')
+    : p.name === "[Content_Types].xml" ? latin(p.data).replace("</Types>", '<Default Extension="bin" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.printerSettings"/><Override PartName="/customXml/itemProps1.xml" ContentType="application/vnd.openxmlformats-officedocument.customXmlProperties+xml"/></Types>')
+    : p.data }));
+  const r = await cleanDocument(makeZip([...x, { name: "xl/printerSettings/printerSettings1.bin", data: Buffer.from("\\\\PRINTER\\PATHSECRET\0", "utf16le") },
+    { name: "customXml/item1.xml", data: "<p:properties xmlns:p='x'><Owner>CUSTOMSECRET</Owner></p:properties>" }, { name: "customXml/itemProps1.xml", data: "<ds:datastoreItem xmlns:ds='y'/>" },
+    { name: "customXml/_rels/item1.xml.rels", data: '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="t" Target="itemProps1.xml"/></Relationships>' }]));
+  assert.equal(r.ok, true, r.detail);
+  const names = partsOf(r.bytes).map((p) => p.name);
+  assert.ok(!names.some((n) => /printerSettings|customXml/.test(n)), names.join());
+  assert.ok(!latin(part(r.bytes, "xl/worksheets/_rels/sheet1.xml.rels").data).includes("printerSettings"));
+  assert.ok(latin(part(r.bytes, "xl/worksheets/_rels/sheet1.xml.rels").data).includes("comments1.xml"));
+  assert.ok(latin(part(r.bytes, "xl/worksheets/sheet1.xml").data).includes('<pageSetup orientation="portrait"/>'));
+  assert.ok(!latin(part(r.bytes, "xl/_rels/workbook.xml.rels").data).includes("customXml"));
+  assert.ok(!latin(part(r.bytes, "[Content_Types].xml").data).includes("itemProps1") && latin(part(r.bytes, "[Content_Types].xml").data).includes('Extension="bin"'));
+  for (const p of partsOf(r.bytes)) assert.deepEqual(secretsIn(p.data), [], p.name);
+});
+
+test("R6 K2351 an EMF's description, an SVG's editor-namespace markup and a legacy Excel comment's leading author run are removed; the pictures and the comment's own text kept", async () => {
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:i="http://ns.adobe.com/AdobeIllustrator/10.0/" inkscape:export-filename="/home/PATHSECRET/a.png" width="2" height="2"><sodipodi:namedview id="n" inkscape:current-layer="l"><inkscape:grid/></sodipodi:namedview><i:pgf>PRIVATESECRET</i:pgf><rect width="1" height="1" inkscape:label="APPSECRET"/></svg>';
+  const r = await cleanDocument(docx({ extra: [{ name: "word/media/d.emf", data: emf(new Uint8Array(0), "APPSECRET 1.0\0PATHSECRET\0\0") }, { name: "word/media/e.svg", data: svg },
+    { name: "word/media/f.emz", data: gzipSync(Buffer.from(emf(new Uint8Array(0), "APPSECRET\0\0"))) }] }));
+  assert.equal(r.ok, true, r.detail);
+  assert.deepEqual(r.images, { stripped: 5, unchanged: 0 });
+  const e = part(r.bytes, "word/media/d.emf").data;
+  assert.equal(e.length, emf(new Uint8Array(0), "APPSECRET 1.0\0PATHSECRET\0\0").length);
+  assert.deepEqual([...e.subarray(60, 68)], new Array(8).fill(0));
+  assert.equal(latin(part(r.bytes, "word/media/e.svg").data), '<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:i="http://ns.adobe.com/AdobeIllustrator/10.0/" width="2" height="2"><rect width="1" height="1"/></svg>');
+  assert.deepEqual([...gunzipSync(part(r.bytes, "word/media/f.emz").data).subarray(60, 68)], new Array(8).fill(0));
+  for (const p of partsOf(r.bytes)) assert.deepEqual(secretsIn(p.data), [], p.name);
+  const x = await cleanDocument(xlsx());
+  assert.ok(latin(part(x.bytes, "xl/comments1.xml").data).includes('<text><r><rPr><sz val="9"/></rPr><t xml:space="preserve">\nCheck the total</t></r></text>'));
+  const kept = await cleanDocument(makeZip(partsOf(xlsx()).map((p) => ({ name: p.name, data: p.name === "xl/comments1.xml" ? latin(p.data).replace("COMMENTERSECRET:</t>", "Note:</t>") : p.data }))));
+  assert.ok(latin(part(kept.bytes, "xl/comments1.xml").data).includes("<b/><sz val=\"9\"/></rPr><t>Note:</t>"), "a bold run that names no author is the comment's own text");
+});
+
+test("R6 K2351 a JBIG2 image's and its globals' comment segments are dropped, every other segment kept byte for byte", async () => {
+  const info = jbig2Segment(1, 48, [0, 0, 0, 8, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]), end = jbig2Segment(3, 49, []);
+  const image = new Uint8Array([...info, ...jbig2Comment(2, "COMSECRET"), ...end]);
+  const globals = deflateSync(Buffer.from([...jbig2Comment(0, "XMPSECRET"), ...jbig2Segment(4, 53, [1, 2])]));
+  const r = await cleanDocument(pdf({ more: [{ dict: "<< /Type /XObject /Subtype /Image /Width 8 /Height 8 /BitsPerComponent 1 /ImageMask true /Filter /JBIG2Decode /DecodeParms << /JBIG2Globals 10 0 R >> >>", data: image },
+    { dict: "<< /Filter /FlateDecode >>", data: globals }], ops: "/Im2 Do", page: "/Resources << /XObject << /Im1 8 0 R /Im2 9 0 R >> /Font << /F1 5 0 R >> >>" }));
+  assert.equal(r.ok, true, r.detail);
+  assert.deepEqual(secretsIn(r.bytes), []);
+  const { doc, read } = await pdfObjects(r.bytes);
+  const jb = read.objects.find((o) => o.value.t === "stream" && o.value.dict.Filter?.v === "JBIG2Decode");
+  assert.deepEqual(doc.streamRawBytes(jb.value), new Uint8Array([...info, ...end]));
+  const g = read.objects.find((o) => o.num === jb.value.dict.DecodeParms.map.JBIG2Globals.n).value;
+  assert.equal(g.dict.Filter, undefined);
+  assert.deepEqual(doc.streamRawBytes(g), jbig2Segment(4, 53, [1, 2]));
+  assert.equal(r.images.stripped, 2);
+  refused(await cleanDocument(pdf({ more: [{ dict: "<< /Subtype /Image /Width 8 /Height 8 /Filter /JBIG2Decode >>", data: new Uint8Array([0, 0, 0, 1, 48, 0, 1, 255, 255, 255, 255]) }], ops: "/Im2 Do", page: "/Resources << /XObject << /Im1 8 0 R /Im2 9 0 R >> /Font << /F1 5 0 R >> >>" })), "IMAGE_NOT_CLEANABLE", /object 9: a JBIG2 stream/);
 });
 
 // ---- R7, R8, R9 ----

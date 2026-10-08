@@ -5,8 +5,10 @@
  * `rules` names elements and attributes as `[ns, local]`, `ns` a key of `NS` (resolved through the prefixes the part
  * declares, never assumed) or `""` for an unqualified attribute:
  *   remove: elements removed, content and all;     empty: elements whose content is removed;
- *   attrs:  `{el, attr, value}`: the attribute `attr` (on the element `el`, or on any) set to `""`, or removed when
- *           `value` is null;                        drop: `{el, when}`: elements removed whose attributes `when` accepts.
+ *   attrs:  `{el, attr, value, when}`: the attribute `attr` (on the element `el`, or on any; whose value `when`
+ *           accepts, when given) set to `""`, or removed when `value` is null;
+ *   drop:   `{el, when}`: elements removed whose attributes `when` accepts;
+ *   removeNs: namespaces whose every element (content and all) and attribute is removed.
  * Every byte outside an edited tag or a removed content is copied as it was. A part in UTF-16 is edited as UTF-8 and
  * written back as UTF-16. Edits only shorten, so a part can be edited in its own buffer. */
 
@@ -27,6 +29,10 @@ export const NS = {
   rel: ["http://schemas.openxmlformats.org/package/2006/relationships"],
   ct: ["http://schemas.openxmlformats.org/package/2006/content-types"],
   meta: ["urn:oasis:names:tc:opendocument:xmlns:meta:1.0"],
+  r: [...OOXML("officeDocument/2006/relationships"), "http://purl.oclc.org/ooxml/officeDocument/relationships"],
+  editor: ["http://www.inkscape.org/namespaces/inkscape", "http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd",
+    ...["AdobeIllustrator/10.0", "AdobeSVGViewerExtensions/3.0", "Extensibility/1.0", "Graphs/1.0", "Variables/1.0", "SaveForWeb/1.0",
+      "ImageReplacement/1.0", "Flows/1.0", "GenericCustomNamespace/1.0", "XPath/1.0"].map((n) => `http://ns.adobe.com/${n}/`)],
   manifest: ["urn:oasis:names:tc:opendocument:xmlns:manifest:1.0"],
 };
 const URI_NS = new Map(Object.entries(NS).flatMap(([k, uris]) => uris.map((u) => [u, k])));
@@ -95,7 +101,8 @@ export function editXml(bytes, rules, inPlace = false) {
   return edit(bytes, rules, inPlace);
 }
 
-function edit(d, { remove = [], empty = [], attrs = [], drop = [] }, inPlace) {
+function edit(d, { remove = [], empty = [], attrs = [], drop = [], removeNs = [] }, inPlace) {
+  const wholeNs = new Set(removeNs);
   const removeSet = new Set(remove.map(key)), emptySet = new Set(empty.map(key));
   const dropBy = new Map(drop.map((r) => [key(r.el), r.when]));
   const locals = new Set([...remove, ...empty, ...drop.map((r) => r.el), ...attrs.filter((r) => r.el).map((r) => r.el)].map((x) => x[1]));
@@ -137,18 +144,21 @@ function edit(d, { remove = [], empty = [], attrs = [], drop = [] }, inPlace) {
       for (const a of t.attrs) if (a.name === "xmlns" || a.name.startsWith("xmlns:")) prefixes.set(a.name === "xmlns" ? "" : a.name.slice(6), str(d, a.vs, a.ve));
       const [prefix, local] = split(t.name);
       const el = locals.has(local) ? key([nsOf(prefix), local]) : null;
-      if (el && (removeSet.has(el) || dropBy.get(el)?.(Object.fromEntries(t.attrs.map((a) => [a.name, str(d, a.vs, a.ve)]))))) {
+      if ((wholeNs.size && wholeNs.has(nsOf(prefix))) || el && (removeSet.has(el) || dropBy.get(el)?.(Object.fromEntries(t.attrs.map((a) => [a.name, str(d, a.vs, a.ve)]))))) {
         changed = true;
         if (!t.self) skip = { name: t.name, depth: 1, keepEnd: false };
         continue;
       }
       let edits = null;
+      if (wholeNs.size)
+        for (const a of t.attrs) { const ap = split(a.name)[0]; if (ap && ap !== "xmlns" && wholeNs.has(nsOf(ap))) (edits ??= new Map()).set(a, null); }
       if (attrLocals.size)
         for (const a of t.attrs) {
           const [ap, al] = split(a.name);
           if (!attrLocals.has(al)) continue;
           const ans = ap ? nsOf(ap) : "";
-          const rule = attrs.find((r) => r.attr[1] === al && r.attr[0] === ans && (!r.el || (r.el[1] === local && r.el[0] === nsOf(prefix))));
+          const rule = attrs.find((r) => r.attr[1] === al && r.attr[0] === ans && (!r.el || (r.el[1] === local && r.el[0] === nsOf(prefix))) &&
+            (!r.when || r.when(str(d, a.vs, a.ve))));
           if (rule && (rule.value === null || a.ve > a.vs)) (edits ??= new Map()).set(a, rule.value);
         }
       if (!edits) copy(lt, t.end);

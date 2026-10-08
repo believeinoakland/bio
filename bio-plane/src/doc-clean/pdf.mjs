@@ -6,7 +6,7 @@
  * 0, object streams expanded, a classic cross-reference table and a trailer of `/Size` and `/Root` alone. An object
  * the walk no longer reaches (an earlier revision's, `/Info`, an XMP stream) is not written. */
 import { openPdf } from "../pdfstructure.mjs";
-import { CleanRefusal, cleanImage, imageKind, latin1 } from "./images.mjs";
+import { CleanRefusal, cleanImage, imageKind, jbig2WithoutComments, latin1 } from "./images.mjs";
 
 /** Keys removed from every dictionary: document and object metadata, applications' private data, edit dates. */
 const DROP_EVERYWHERE = new Set(["Metadata", "PieceInfo", "LastModified"]);
@@ -16,6 +16,11 @@ const DROP_FROM_ANNOT = ["M", "CreationDate"];
  *  (R6, K2346). A signature field loses its `/V`, so it stays unsigned; the catalog loses `/Perms` and `/DSS`, which
  *  hold signatures and certificates too. The rewrite voids any signature in any case. */
 const DROP_FROM_SIG = new Set(["Name", "Contents", "Location", "Reason", "ContactInfo", "M", "ByteRange", "Cert", "Prop_Build", "Prop_AuthTime", "Prop_AuthType"]);
+
+/** What makes a dictionary embedded media (R3 `EMBEDDED_MEDIA`, K2351): a RichMedia, 3D, movie, sound or screen
+ *  annotation, a media clip, a sound object, a 3D stream. */
+const MEDIA_SUBTYPES = new Set(["RichMedia", "3D", "Movie", "Sound", "Screen", "U3D", "PRC"]);
+const MEDIA_TYPES = new Set(["MediaClip", "Sound", "RichMediaContent", "3DRef"]);
 
 const nameOf = (v) => (v && v.t === "name" ? v.v : null);
 const filtersOf = (dict) => {
@@ -69,6 +74,11 @@ export async function cleanPdf(d, maxInflated) {
       if (isImage) {
         let changed = Boolean(value.dict.Metadata);
         const coded = filters.at(-1);
+        if (coded === "JBIG2Decode") {
+          if (filters.length > 1) throw refusal("IMAGE_NOT_CLEANABLE", `object ${num}: a JBIG2 image under another filter`);
+          const r = jbig2WithoutComments(bytes, `object ${num}`);
+          if (r.changed) { bytes = r.bytes; changed = true; }
+        }
         if (coded === "DCTDecode" || coded === "DCT" || coded === "JPXDecode") {
           if (filters.length > 1) throw refusal("IMAGE_NOT_CLEANABLE", `object ${num}: a ${coded === "JPXDecode" ? "JPEG 2000" : "JPEG"} image under another filter`);
           const kind = imageKind(bytes);
@@ -78,8 +88,20 @@ export async function cleanPdf(d, maxInflated) {
         }
         if (changed) images.stripped++; else images.unchanged++;
       }
+      let streamDict = dict;
+      if (ctx.globals.has(num)) {
+        const plain = filters.length ? await doc.streamDecoded(value) : raw;
+        if (!plain) throw refusal("IMAGE_NOT_CLEANABLE", `object ${num}: JBIG2 globals that cannot be decoded`);
+        const r = jbig2WithoutComments(plain, `object ${num}`);
+        if (r.changed) {
+          bytes = r.bytes;
+          streamDict = { ...dict };
+          delete streamDict.Filter;
+          delete streamDict.DecodeParms;
+        }
+      }
       if (ed.removed || bytes !== raw) removed = true;
-      out.set(num, { dict, bytes });
+      out.set(num, { dict: streamDict, bytes });
     } else {
       const v = rewrite(value, ed, ctx.annots.has(num));
       if (ed.removed) removed = true;
@@ -92,9 +114,9 @@ export async function cleanPdf(d, maxInflated) {
 }
 
 /** What the walk needs to know of an object before it reaches it: which numbers are annotations, content streams
- *  (whose inline images are read) and page thumbnails. */
+ *  (whose inline images are read), page thumbnails and JBIG2 globals. */
 function context(table) {
-  const annots = new Set(), content = new Set(), thumbs = new Set();
+  const annots = new Set(), content = new Set(), thumbs = new Set(), globals = new Set();
   const refsIn = (v, into) => {
     if (!v) return;
     if (v.t === "ref") into.add(v.n);
@@ -102,11 +124,13 @@ function context(table) {
   };
   const deref = (v) => (v && v.t === "ref" ? table.get(v.n) : v);
   for (const v of table.values()) {
-    const map = v && v.t === "dict" ? v.map : null;
+    const map = v && v.t === "dict" ? v.map : v && v.t === "stream" ? v.dict : null;
     if (!map) continue;
     if (map.Annots) refsIn(deref(map.Annots), annots);
     if (nameOf(map.Type) === "Page") refsIn(deref(map.Contents)?.t === "arr" ? deref(map.Contents) : map.Contents, content);
     if (map.Thumb) refsIn(map.Thumb, thumbs);
+    const parms = deref(map.DecodeParms);
+    for (const p of parms?.t === "arr" ? parms.items.map(deref) : [parms]) if (p && p.t === "dict") refsIn(p.map.JBIG2Globals, globals);
     const procs = deref(map.CharProcs);
     if (procs && procs.t === "dict") for (const p of Object.values(procs.map)) refsIn(p, content);
     const ap = deref(map.AP);
@@ -117,7 +141,7 @@ function context(table) {
         else if (a && a.t === "dict") for (const x of Object.values(a.map)) refsIn(x, content);
       }
   }
-  return { annots, content, thumbs };
+  return { annots, content, thumbs, globals };
 }
 
 /** `v` with R6's keys taken out, sharing every part that does not change (the reader's own values are never changed);
@@ -137,8 +161,10 @@ function rewrite(v, ed, annot = false) {
       return items ? { t: "arr", items } : v;
     }
     case "dict": {
-      if (v.map.EF) throw refusal("EMBEDDED_FILE", `object ${ed.num}: a file specification carrying an embedded file`);
       const type = nameOf(v.map.Type), sub = nameOf(v.map.Subtype);
+      if (MEDIA_SUBTYPES.has(sub) || MEDIA_TYPES.has(type) || v.map.RichMediaContent)
+        throw refusal("EMBEDDED_MEDIA", `object ${ed.num}: ${sub ? `a ${sub}` : `a ${type ?? "RichMedia"}`} object`);
+      if (v.map.EF) throw refusal("EMBEDDED_FILE", `object ${ed.num}: a file specification carrying an embedded file`);
       const isAnnot = annot || type === "Annot", isSig = type === "Sig" || type === "DocTimeStamp";
       const keys = Object.keys(v.map);
       let map = null;

@@ -23,6 +23,7 @@ export const CLEAN_REFUSALS = Object.freeze({
   EMBEDDED_FILE: "the document carries an embedded file: a PDF attachment, an office file's embedding or macro project, or an ODF embedded object",
   IMAGE_NOT_CLEANABLE: "an embedded image is of a kind whose metadata cannot be stripped",
   HTML_EMBEDS_IMAGE: "the HTML document embeds an image as a data: URI",
+  EMBEDDED_MEDIA: "the document carries a video, audio, RichMedia or 3D part, whose own metadata can hold a time and place",
   ARCHIVE: "the file is a ZIP archive, not an office package; a member-supplied archive is never carried",
   NOT_A_CLEANABLE_FORMAT: "the file is of no format this module cleans",
   DOCUMENT_TOO_LARGE: "the document, or one of its parts, is larger than this module reads",

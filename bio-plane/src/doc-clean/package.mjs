@@ -5,7 +5,7 @@
  * no comment; only image parts and the parts holding R6's metadata change (`xml.mjs` edits them). Parts are read,
  * edited and compressed one at a time, so the working set is about one part's size twice (R4). */
 import { readContainer, readPart, crc32, normalizePartName, ODF_MANIFEST_PART, CORE_PROPERTIES_PART } from "../ooxml.mjs";
-import { CleanRefusal, cleanImage, imageKind, latin1 } from "./images.mjs";
+import { CleanRefusal, cleanImage, imageKind, mediaKind, latin1 } from "./images.mjs";
 import { editXml } from "./xml.mjs";
 
 /** The most uncompressed bytes one part may declare: the largest the plane's isolate holds with its working copies
@@ -13,16 +13,26 @@ import { editXml } from "./xml.mjs";
 export const CLEAN_MAX_PART_BYTES = 32 * 1024 * 1024;
 
 const CUSTOM_PART = "docProps/custom.xml";
+/** The OOXML parts R6 removes (K2334, K2351): custom properties, custom XML data (which can carry a document
+ *  library's properties, people's names among them) and printer settings (a printer's name). */
+const REMOVED_PART = (n) => n === CUSTOM_PART || /^customXml\//i.test(n) || /(^|\/)printerSettings\//i.test(n);
 const named = (el, attrs, value = "") => attrs.map((a) => ({ el, attr: ["", a], value }));
 
-/** R6's edits (`xml.mjs` rules) for one part of an OOXML package, or `null` when the part holds none. */
-function ooxmlRules(name, removed) {
-  const n = name.toLowerCase();
+/** R6's edits (`xml.mjs` rules) for one part of an OOXML package, or `null` when the part holds none. `dropped` is
+ *  the relationship ids of this part (or, for a `.rels` part, of its source) whose targets are removed. */
+function ooxmlRules(name, removed, dropped) {
+  const own = ownRules(name.toLowerCase(), name, removed);
+  if (!dropped?.size) return own;
+  const r = own ?? {};
+  if (/(^|\/)_rels\/[^/]*\.rels$/.test(name)) return { ...r, drop: [...(r.drop ?? []), { el: ["rel", "Relationship"], when: (a) => dropped.has(a.Id) }] };
+  return { ...r, attrs: [...(r.attrs ?? []), { attr: ["r", "id"], value: null, when: (v) => dropped.has(v) }] };
+}
+
+function ownRules(n, name, removed) {
   if (name === CORE_PROPERTIES_PART)
     return { remove: [["dc", "creator"], ["cp", "lastModifiedBy"], ["cp", "revision"], ["cp", "lastPrinted"], ["dcterms", "created"], ["dcterms", "modified"]] };
   if (name === "docProps/app.xml") return { remove: ["Application", "AppVersion", "Company", "Manager", "Template", "TotalTime"].map((l) => ["ep", l]) };
   if (name === "[Content_Types].xml" && removed.size) return { drop: [{ el: ["ct", "Override"], when: (a) => removed.has(normalizePartName(a.PartName ?? "")) }] };
-  if (name === "_rels/.rels" && removed.size) return { drop: [{ el: ["rel", "Relationship"], when: (a) => removed.has(normalizePartName(a.Target ?? "")) }] };
   if (n === "word/_rels/settings.xml.rels") return { drop: [{ el: ["rel", "Relationship"], when: (a) => /\/attachedTemplate$/.test(a.Type ?? "") }] };
   if (/^word\/.+\.xml$/.test(n))
     return {
@@ -33,7 +43,7 @@ function ooxmlRules(name, removed) {
   if (n === "ppt/commentauthors.xml") return { attrs: named(["p", "cmAuthor"], ["name", "initials"]) };
   if (n === "ppt/authors.xml") return { attrs: named(["p188", "author"], ["name", "initials", "userId", "providerId"]) };
   if (/^ppt\/comments\/[^/]+\.xml$/.test(n)) return { attrs: named(["p", "cm"], ["dt"], null) };
-  if (/^xl\/(?:comments[^/]*|comments\/[^/]+)\.xml$/.test(n)) return { empty: [["x", "author"]] };
+  if (/^xl\/(?:comments[^/]*|comments\/[^/]+)\.xml$/.test(n)) return { empty: [["x", "author"]], authorRuns: true };
   if (/^xl\/persons\/[^/]+\.xml$/.test(n)) return { attrs: named(["xtc", "person"], ["displayName", "userId", "providerId"]) };
   if (/^xl\/revisions\/[^/]+\.xml$/.test(n)) return { attrs: [...named(["x", "header"], ["userName"]), ...named(["x", "userInfo"], ["name"])] };
   if (n === "xl/workbook.xml") return { attrs: named(["x", "fileSharing"], ["userName"]), remove: [["x15ac", "absPath"]] };
@@ -47,6 +57,24 @@ function odfRules(name) {
       ["dc", "creator"], ["dc", "date"]] };
   if (/\.xml$/i.test(name) && name !== ODF_MANIFEST_PART) return { empty: [["dc", "creator"], ["dc", "date"], ["meta", "creator-initials"]] };
   return null;
+}
+
+/** A legacy Excel comment's text without its leading author run: the first run of a comment's `<text>`, bold, whose
+ *  text is one of the part's authors followed by a colon, as Excel writes it (R6, K2351). Read before the authors are
+ *  emptied. */
+function withoutAuthorRuns(bytes) {
+  const s = latin1(bytes);
+  const authors = new Set([...s.matchAll(/<(?:[\w.-]+:)?author>([^<]*)<\/(?:[\w.-]+:)?author>/g)].map((m) => `${m[1]}:`));
+  if (!authors.size) return bytes;
+  const t = s.replace(/(<([\w.-]+:)?text>)\s*(<\2r>(?:(?!<\/\2r>)[\s\S])*?<\/\2r>)/g, (whole, open, p, run) => {
+    const bold = new RegExp(`<${p ?? ""}b(?:\\s+val="(?:1|true)")?\\s*/>`).test(run);
+    const text = new RegExp(`<${p ?? ""}t(?:\\s[^>]*)?>([^<]*)</${p ?? ""}t>`).exec(run)?.[1];
+    return bold && text !== undefined && authors.has(text.trim()) ? open : whole;
+  });
+  if (t === s) return bytes;
+  const out = new Uint8Array(t.length);
+  for (let i = 0; i < t.length; i++) out[i] = t.charCodeAt(i);
+  return out;
 }
 
 // ---- the ZIP ----
@@ -120,6 +148,33 @@ function plainZip(d, entries) {
 const refusal = (code, detail) => new CleanRefusal(code, detail);
 const why = (r) => `part ${r.name ?? "?"} cannot be read (${r.why})`;
 
+/** For each `.rels` part that names a removed part, the ids of those relationships, keyed both by the `.rels` part
+ *  and by its source part (whose `r:id` attributes naming them are removed too). */
+async function relsToRemoved(d, c, names, removed) {
+  const out = new Map();
+  for (const n of names) {
+    const m = /^(.*?)_rels\/([^/]*)\.rels$/.exec(n);
+    if (!m || removed.has(n)) continue;
+    const r = await readPart(d, c, n);
+    if (!r.ok) throw refusal("DOCUMENT_UNREADABLE", why(r));
+    const ids = new Set();
+    for (const t of latin1(r.bytes).matchAll(/<(?:[\w.-]+:)?Relationship(?=[\s/>])((?:[^>"']|"[^"]*"|'[^']*')*)>/g)) {
+      const attr = (k) => new RegExp(`\\s${k}\\s*=\\s*(?:"([^"]*)"|'([^']*)')`).exec(t[1])?.slice(1).find((x) => x !== undefined);
+      if (attr("TargetMode") === "External") continue;
+      const target = attr("Target") ?? "";
+      const resolved = target.startsWith("/") ? normalizePartName(target) : resolvePath(m[1], target);
+      if (removed.has(resolved) && attr("Id")) ids.add(attr("Id"));
+    }
+    if (ids.size) { out.set(n, ids); out.set(m[1] + m[2], ids); }
+  }
+  return out;
+}
+const resolvePath = (dir, target) => {
+  const parts = [];
+  for (const seg of (dir + target).split("/")) { if (seg === "..") parts.pop(); else if (seg !== "." && seg !== "") parts.push(seg); }
+  return parts.join("/");
+};
+
 /** Clean an OOXML (`family` "ooxml") or ODF ("odf") package. Answers `{clean:true}` or `{clean:false, bytes, images}`. */
 export async function cleanPackage(d, family) {
   const c = readContainer(d);
@@ -147,7 +202,8 @@ export async function cleanPackage(d, family) {
         throw refusal("EMBEDDED_FILE", `part ${path} is an embedded object`);
     }
   }
-  const removed = new Set(family === "ooxml" && names.has(CUSTOM_PART) ? [CUSTOM_PART] : []);
+  const removed = new Set(family === "ooxml" ? [...names].filter(REMOVED_PART) : []);
+  const dropped = removed.size ? await relsToRemoved(d, c, names, removed) : new Map();
   const images = { stripped: 0, unchanged: 0 };
   const parts = [];
   let changed = removed.size > 0;
@@ -157,13 +213,16 @@ export async function cleanPackage(d, family) {
     const r = await readPart(d, c, e.name);
     if (!r.ok) throw refusal(r.why === "ARCHIVE_TOTAL_MAX" || r.why === "MEMBER_MAX" ? "DOCUMENT_TOO_LARGE" : "DOCUMENT_UNREADABLE", why(r));
     let bytes = r.bytes;
+    const media = n.endsWith("/") ? null : mediaKind(bytes);
+    if (media) throw refusal("EMBEDDED_MEDIA", `part ${n}: ${media}`);
     const kind = n.endsWith("/") ? null : imageKind(bytes);
     if (kind) {
       const out = await cleanImage(bytes, kind, `part ${n}`, CLEAN_MAX_PART_BYTES);
       if (out.changed) { bytes = out.bytes; images.stripped++; } else images.unchanged++;
     } else {
-      const rules = family === "ooxml" ? ooxmlRules(n, removed) : odfRules(n);
-      if (rules) bytes = editXml(bytes, rules, e.method === 8);
+      const rules = family === "ooxml" ? ooxmlRules(n, removed, dropped.get(n)) : odfRules(n);
+      if (rules?.authorRuns) bytes = withoutAuthorRuns(bytes);
+      if (rules) bytes = editXml(bytes, rules, e.method === 8 && bytes === r.bytes);
     }
     if (bytes !== r.bytes) changed = true;
     parts.push({ name: e.name, method: e.method, size: bytes.length, crc: crc32(bytes), data: e.method === 8 ? await deflateRaw(bytes) : bytes });
