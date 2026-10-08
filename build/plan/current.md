@@ -1,6 +1,6 @@
 # Plan T36
 
-**Status** · OPEN · BOB #135 · session_018Kd6VZEgGZNbFHvGKz9e5d · depth 1
+**Status** · OPEN · BOB #136 · session_01TnHJvpiiYsW7EJvVnDvfEn · depth 1
 
 **Jobs** · connection-grammar: CONNECTION-GRAMMAR #3 session_01H9M3DEa6cwNZgYQXQhaJuf; signatures: SIGNATURES #11 session_01L8Hyorky2d1Lrs1dqmDrCn; bundler: BUNDLER #10 session_01AVSxAcVVnwvGFa9niTqNUo; office-readers: OFFICE-READERS #7 session_012a2UNtTuD5PNQ4KYMYjtA1; doctypes: DOCTYPES #3 session_019F8gBQfqTqF5hBsFcHmxd7; file-scanner: FILE-SCANNER #1 session_011jYjCHjn4qrJrgjofxmpKv; membership: MEMBERSHIP #27 session_01Kozvc5CabUVjWrHpUnjz1Z; credentials: CREDENTIALS #7 session_01DuWUHZfSSRpYU5V4qt2iss; promotion: PROMOTION #34 session_01PfzH458a5tMgwWs1AQfAys; provenance: PROVENANCE #18 session_01B5spSoDUidbVfxwqT7NYMm; acquisition: ACQUISITION #13 session_01UBPYqfwtexSRDSTDJARv1u; capture: CAPTURE #23 session_01J8qhjNNKU3fBhYXuRdt3ne; file-safety: FILE-SAFETY #1 session_017HHK6Ecu8dE2tpWEUqLyxZ; sources: SOURCES #12 session_017pZoLzvWRz5wh27zcPw5dD; reading-pipeline: READING-PIPELINE #7 session_01Bqmqo5KoGA92ZdFBC6tLLW; extraction: EXTRACTION #15 session_01VgbqiWA5e3MLeiVgTNS9KZ; events: EVENTS #4 session_01Lpr5zoWzhMTrc3S8CRoaGd; standards: STANDARDS #10 session_01FvLsCYfWE4S9eeTYtQuB5d; money: MONEY #3 session_01AzpG9vAgA5NEhFJGqSdSUx; people: PEOPLE #5 session_019jdYasEZ5G5btsBgnEcz4B; explore: EXPLORE #3 session_013jCD29K2Ak5HWZGMPQjE64; retrieval: RETRIEVAL #14 session_013mwNsG3YAtaUow5u9nrCBL; calculations: CALCULATIONS #4 session_01JLKQ4KM6RQvEVRSy8fPJcz
 
