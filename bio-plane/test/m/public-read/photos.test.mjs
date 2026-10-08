@@ -1,18 +1,18 @@
 /* public-read — every published photo travels only as its copy without metadata (R23, R3, R5; T38: N779, K2248, K2303).
    A `/7` case edition carries two real photos: a phone JPEG with marked areas, and a screenshot PNG with nothing to obscure,
    each full of camera and editor metadata (EXIF with make and GPS, XMP, ICC, text chunks; `image-cover`'s own fixtures).
-   Each row states `obscured` (`case-grammar` R12): the marked one with the label, the unmarked one with none. The copies
-   are what `case-carriage` R11 derives, `image-cover.coverAreas` over the original with the marks' areas or with none; the
-   commit's registration (`publication` R57) and the published bucket's copy (`ratification` R39) are stood in for as in
-   `obscured.test.mjs`. The originals' bytes are put in the published bucket as well, so that only this module's own
-   decisions keep them from being served. The case file is then read back as a stranger reads it. */
+   The real `case-carriage` marks them (`obscureMark`, its R9: areas on one, "nothing to obscure" on the other), derives
+   each copy (its R11, through `image-cover`) into the evidence bucket, and holds it at the commit (its R1, through
+   `publication` R57); each row states `obscured` (`case-grammar` R12) with the copy `photoMarks` answers (its R10), the
+   marked one with the label, the unmarked one with none. Only `ratification` R39's copy of held bytes to the published
+   bucket is stood in for (it is the Worker's). The originals' bytes are put in the published bucket as well, so that only
+   this module's own decisions keep them from being served. The case file is then read back as a stranger reads it. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { world, stubOf, bucket, V, NOW, sha } from "./fixture.mjs";
 import { bindPublishedPlane, publishedRoutes, assembleCaseContainer } from "../../../src/publication/worker.mjs";
-import { coverAreas } from "../../../src/image-cover/index.mjs";
 import { readContainer, readPart } from "../../../src/ooxml.mjs";
 import { caseFilePath, materialsOf } from "../../../src/case-grammar/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
@@ -37,7 +37,10 @@ const photo = (name) => new Uint8Array(readFileSync(new URL(`../image-cover/fixt
 
 const CASE = "CASE-2026-0001", F = "INQ-2026-0001", DOC = "INFO-2026-0001-minutes";
 const MARKED = "INFO-2026-0030-street", PLAIN = "INFO-2026-0031-screen";
-const LABEL = "Faces and plates obscured for publication; the group holds the original";
+/* `case-carriage`'s `OBSCURED_LABEL` (its R11), word for word, and where its R11 holds a copy (`<store>/obscured/<sha>`):
+   case-carriage is reached here only through the world `publication` builds, as public-read reaches nothing of it. */
+const OBSCURED_LABEL = "Faces and plates obscured for publication; the group holds the original";
+const obscuredKey = (store, s) => `${store}/obscured/${s}`;
 /* What the originals carry beside their pixels (`image-cover`'s fixtures, `make-fixtures.py`): none may leave. */
 const METADATA = ["TestCam", "Phone One", "PhoneOS", "PersonInImage", "http://ns.adobe.com", "XML:com.adobe.xmp", "ICC_PROFILE",
                   "MPF\0", "taken by member", "face-region", "member 7"];
@@ -78,8 +81,9 @@ function metadataIn(d) {
   return found;
 }
 
-/* A photo held as a capture of its own bundle, its bytes binary in the evidence store, as a member's upload is. */
-function holdPhoto(w, id, bytes) {
+/* A photo held as a capture of its own bundle, its bytes binary in the evidence store and its type recorded, as a
+   member's upload is. */
+function holdPhoto(w, evidence, id, bytes, contentType) {
   const s = hex(bytes), path = `snapshots/${id}.bin`;
   const r = w.promotion.promote({ bundleId: id, base: null, snapKey: `k-${id}`, author: V("olive"),
     files: [{ path: "bundle.md", text: w.text(DOC).replace(new RegExp(DOC, "g"), id) },
@@ -87,43 +91,52 @@ function holdPhoto(w, id, bytes) {
     meta: { object_type: "information" } });
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 2000));
   w.st.sql.exec(`UPDATE files SET content=? WHERE bundle_id=? AND path='data/provenance.json'`, JSON.stringify({ documents: [
-    { file: path, capture: { method: "upload", grade: "B", sha256: s, bytes: bytes.length } }] }), id);
+    { file: path, capture: { method: "acquire", grade: "B", sha256: s, encoding: "binary", bytes: bytes.length,
+                             content_type: contentType } }] }), id);
   w.st.sql.exec(`INSERT INTO register (capture_sha, bundle_id, path, encoding, bytes, registered) VALUES (?, ?, ?, 'binary', ?, ?)`,
                 s, id, path, bytes.length, NOW);
   w.st.sql.exec(`INSERT INTO files (bundle_id, path, content, blob_sha, bytes, sha256) VALUES (?, ?, NULL, ?, ?, ?)`,
                 id, path, s, bytes.length, s);
+  evidence.set(s, bytes);
   return s;
-}
-/* `publication` R57's registration of a copy under its row's ref, and `ratification` R39's copy to the published bucket. */
-function registerCopy(w, env, ref, bytes) {
-  const s = hex(bytes);
-  w.st.sql.exec(`INSERT INTO published_shas (sha256,bundle_id,path,kind,bytes,published) VALUES (?,?,?,?,?,?)
-                 ON CONFLICT(sha256,bundle_id,path) DO NOTHING`, s, ref, `materials/${s}`, "obscured", bytes.length, NOW);
-  env.PUBLISHED.m.set(`bio/published/${s}`, bytes);
 }
 const row = (ref, s, extra = {}) => ({ ref, kind: "document", sha: s, text_sha: null, origin: null, archived_copy: null,
                                        included: true, rests_under: "load_bearing", ...extra });
 
 async function scene() {
-  const w = world(), env = { PUBLISHED: bucket() };
+  /* record-core's evidence store (its R38) over a map keyed by digest, and the evidence bucket the copies are held in */
+  const evidence = new Map(), evBucket = bucket();
+  const w = world({ carriage: { bucket: evBucket, store: "bio" } }), env = { PUBLISHED: bucket() };
+  w.record.evidenceStore = () => ({ head: async (d) => (evidence.has(d) ? { size: evidence.get(d).length } : null),
+    get: async (d) => (evidence.has(d) ? { arrayBuffer: async () => evidence.get(d).slice().buffer } : null),
+    put: async (d, b) => { evidence.set(d, b); } });
   w.doc(DOC);
   const docSha = w.row(`SELECT capture_sha FROM register WHERE bundle_id=?`, DOC).capture_sha;
   const originals = { [MARKED]: photo("phone-420-o6.jpg"), [PLAIN]: photo("screenshot-rgba-o6.png") };
   /* the fixtures carry the metadata this file says they do (the claim's own control) */
   for (const [ref, b] of Object.entries(originals)) assert.ok(metadataIn(b).length > 0, `${ref}'s original carries metadata`);
-  const shas = { [MARKED]: holdPhoto(w, MARKED, originals[MARKED]), [PLAIN]: holdPhoto(w, PLAIN, originals[PLAIN]) };
-  /* `case-carriage` R11: the marked photo's copy over its marks' areas, the unmarked one's with none */
-  const marked = await coverAreas(originals[MARKED], { areas: [[60, 120, 130, 176], [0, 0, 9, 9]] });
-  const plain = await coverAreas(originals[PLAIN], { areas: [] });
-  assert.equal(marked.ok && plain.ok, true);
-  assert.ok(marked.covered > 0 && plain.covered === 0);
-  const copies = { [MARKED]: marked.bytes, [PLAIN]: plain.bytes };
-  const materials = [row(DOC, docSha),
-    row(MARKED, shas[MARKED], { included: false, obscured: { copy: hex(copies[MARKED]), label: LABEL } }),
-    row(PLAIN, shas[PLAIN], { included: false, obscured: { copy: hex(copies[PLAIN]), label: null } })];
-
-  if (w.p.caseCarriage && typeof w.p.caseCarriage.marksLapsed === "function") w.p.caseCarriage.marksLapsed = () => [];
   w.member("olive");
+  const shas = { [MARKED]: holdPhoto(w, evidence, MARKED, originals[MARKED], "image/jpeg"),
+                 [PLAIN]: holdPhoto(w, evidence, PLAIN, originals[PLAIN], "image/png") };
+  /* `case-carriage` R9–R11: a mark with areas on one, "nothing to obscure" on the other; each derives its copy */
+  const cc = w.p.caseCarriage;
+  const marked = await cc.obscureMark({ captureSha: shas[MARKED], by: V("olive"),
+    areas: [{ rect: [60, 120, 130, 176], kind: "person" }, { rect: [0, 0, 9, 9], kind: "plate" }] });
+  const plain = await cc.obscureMark({ captureSha: shas[PLAIN], by: V("olive"), areas: [] });
+  assert.equal(marked.ok && plain.ok, true, JSON.stringify([marked, plain]).slice(0, 600));
+  const copies = {}, copySha = {};
+  for (const [ref, state] of [[MARKED, "marked"], [PLAIN, "nothing_to_obscure"]]) {
+    const pm = cc.photoMarks({ captureSha: shas[ref], viewer: V("olive") });
+    assert.equal(pm.ok, true, JSON.stringify(pm).slice(0, 400));
+    assert.deepEqual([pm.state, pm.refused], [state, null]);
+    copySha[ref] = pm.copy.sha256;
+    copies[ref] = new Uint8Array(await (await evBucket.get(obscuredKey("bio", copySha[ref]))).arrayBuffer());
+    assert.equal(hex(copies[ref]), copySha[ref]);
+  }
+  const materials = [row(DOC, docSha),
+    row(MARKED, shas[MARKED], { included: false, obscured: { copy: copySha[MARKED], label: OBSCURED_LABEL } }),
+    row(PLAIN, shas[PLAIN], { included: false, obscured: { copy: copySha[PLAIN], label: null } })];
+
   const proj = w.project("Parks", "olive");
   w.inquiry(F, { legs: materials.map((m) => ({ target: m.ref })) });
   const pin = w.head(F);
@@ -132,8 +145,12 @@ async function scene() {
   assert.equal(signed.ok, true, JSON.stringify(signed).slice(0, 400));
   assert.equal(w.signFinding(F).ok, true);
   env.PUBLISHED.m.set(`bio/published/${pin}`, new TextEncoder().encode(w.text(F)));
+  /* `ratification` R39's copy, after the commit, of what the commit held under each row's ref to the published bucket;
+     the originals beside them, so that only this module keeps them from being served */
   for (const ref of [MARKED, PLAIN]) {
-    registerCopy(w, env, ref, copies[ref]);
+    const held = w.row(`SELECT kind FROM published_shas WHERE sha256=? AND bundle_id=?`, copySha[ref], ref);
+    assert.equal(held && held.kind, "obscured", `${ref}: the commit held its copy`);
+    env.PUBLISHED.m.set(`bio/published/${copySha[ref]}`, copies[ref]);
     env.PUBLISHED.m.set(`bio/published/${shas[ref]}`, originals[ref]);
   }
   const out = await assembleCaseContainer({ env, stub: stubOf(w), storeName: "bio",
@@ -148,7 +165,7 @@ async function scene() {
 
 test("R23 a marked photo and a photo with nothing to obscure each travel only as one file of kind obscured, the copy without metadata: no file of the case file is an original, holds an original's bytes, or carries EXIF beyond the orientation, XMP or any other metadata; the included document beside them travels whole", async () => {
   const { out, m, zips, originals, shas, copies, docSha, rows } = await scene();
-  assert.deepEqual(rows.filter((r) => r.obscured).map((r) => [r.ref, r.obscured.label]), [[MARKED, LABEL], [PLAIN, null]],
+  assert.deepEqual(rows.filter((r) => r.obscured).map((r) => [r.ref, r.obscured.label]), [[MARKED, OBSCURED_LABEL], [PLAIN, null]],
                    "both rows state obscured as signed, the unmarked one with no label");
   for (const ref of [MARKED, PLAIN]) {
     assert.deepEqual(m.files.filter((f) => f.path.startsWith(`materials/${ref}/`)).map((f) => [f.path, f.kind, f.sha256]),
