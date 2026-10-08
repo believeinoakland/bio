@@ -57,7 +57,7 @@ The fixture now records a `direct` receipt for `doc()` by default (`w.receipt`).
 
 **Deferred.** None. The `*(not yet met: T39)*` marks on Purpose, R1, R8, R13 and R15–R17 are BOB's to strike.
 
-**Found in other modules (REPORT J2).** I ran the tests of every module that uses case-carriage (`modules.json`). Each failure below comes from the requirement change itself, not from a defect in case-carriage. Their fixtures hold documents with no fetch receipt, which R62 now reads as member-supplied:
+**Found in other modules (REPORT J1).** I ran the tests of every module that uses case-carriage (`modules.json`). Each failure below comes from the requirement change itself, not from a defect in case-carriage. Their fixtures hold documents with no fetch receipt, which R62 now reads as member-supplied:
 1. **`publication`:** 128/5 (was 133/0). R22, R57 ×3, R58: their documents have no receipt, so R13 lapses them and the commit is refused with C-122.6 `PHOTO_MARKS_CHANGED_SINCE`. R13's document rows are owed C-122.7 by T39-11. The fix is a `direct` receipt for each fixture document carried whole (or an R13 `kind: "document"` arm, T39-11).
 2. **`case-authoring`:** 140/24 (was 164/0). Its fixture's ratify is refused for the same reason.
 3. **`affordances`:** 219/1 (was 220/0). Its R14/R8/R18 publication fixture, same reason.
