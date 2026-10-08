@@ -78,3 +78,23 @@ Unchanged by my change: inherited reds 19 (`t33.test.mjs`:144) and 20 (`catalogu
 - P6: 2,233 lines in own `paths` (was 2,091), well under 4,000.
 
 Size (session_018EabQi5zSA3RkWTcx2iV9M): test runs 12, module lines 2233
+
+## J1 · COMPLETE
+
+T36-30 is complete and pushed on job/T36/op-grades. My record's Completion section has the details.
+
+R23–R26 are applied in a new t36.mjs. It covers K2092's five ops, all 23 file-safety ops, and aikeepaway. openwithwarning gets DEC-173's dialog statement beside its observational ground. assistantset's rows are retired. NOT_TESTIMONY and HOLD_NO_REASON join JUSTIFICATION_REFUSALS, and personexpunge joins LARGER_SCREEN_ACTS (phoneOf false). op-grades tests: 32/0. format, architecture, coverage (26/26) and ownership: 0 failures. P6: 2,233 lines.
+
+Reds my change makes, for you to accept by name. Each is a test pinning the tables as they stood before R23–R26:
+(1) affordances catalogue.test.mjs:107: RUNGS pin; T36-31.
+(2) affordances catalogue.test.mjs:470: undetermined count 25, now with deepercheck and safecopyrequest; T36-31.
+(3) affordances catalogue.test.mjs:909: CONSEQUENCE_STATEMENTS keys; T36-31.
+(4) affordances plane.test.mjs:614: R19's drives must reach the five new reasoned ops (STANDARD_NO_REASON, NOT_TESTIMONY, HOLD_NO_REASON, NO_REASON at their owners); T36-31.
+(5) affordances t31.test.mjs:49: LARGER_SCREEN_ACTS pinned to filingsent; T36-31.
+(6) affordances t33.test.mjs:161 and :197: t33's tables pinned with assistantset; T36-31.
+(7) affordances t33.test.mjs:214: assistantset unpublished and unranked against op-declarations' rows; T36-35.
+(8) control-plane totality.test.mjs:17: the 30 new ops read stale, and assistantset unpublished and unranked; T36-35 and T36-37.
+
+Inherited reds 19 and 20 still fail, now with the ops graded but not yet pinned; T36-31 re-pins them. op-declarations' three failures and plane wizards are unchanged before and after.
+
+Size: test runs 12, module lines 2233.
