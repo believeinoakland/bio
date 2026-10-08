@@ -19,9 +19,14 @@
    statement about the caller.
 
    T35 (T35-71; F1, F4, F12, N703, K1934 (5)): every gate judges the credential `presentedCredential` answers (R20: the
-   `Authorization` header's, else the JSON body's, else, for T35's release only, the query's), the binding classes are
-   compared as digests in constant time (R5), an expired agent credential is refused by name (R10), the credential-free
-   ops meet one window per source (R21), and the refusals R22 names are counted in credentials' security tally. */
+   `Authorization` header's, else the JSON body's), the binding classes are compared as digests in constant time (R5),
+   an expired agent credential is refused by name (R10), the credential-free ops meet one window per source (R21), and
+   the refusals R22 names are counted in credentials' security tally.
+
+   T36 (T36-36; F1's tail, K2111, K2129; N711, K1936 Q3; N744, K2038): a credential or secret in the address is refused
+   by name, `CREDENTIAL_IN_ADDRESS` (R20, C-38.10, `credentialAddressGate`, its one site), and never read from there; the
+   shared member key is retired, a live `MEMBER_TOKEN` refused `MEMBER_TOKEN_RETIRED` (R5, C-38.11); and R22's tally
+   reaches credentials through the store's internal route `securitycount` (credentials R50). */
 import { liveToken, sha256hex } from "../tokens.mjs";
 import { MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
 import { OPS, SESSION_OPS, NEEDS, UNATTENDED_BY_DECISION, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS } from "../op-declarations/index.mjs";
@@ -105,19 +110,15 @@ export const BODY_ONLY_FIELDS = Object.freeze({
   joinlinkinvite: Object.freeze(["cover", "link"]),
   groupkeyset: Object.freeze(["key"]),
 });
-/* R20 (T35) — and when the door passes its `presentedCredential` answer, a query `token` or `secret` beside a
-   credential the header or body carried is removed too, so it is not read, compared or passed on by any later reader of the URL. */
+/* R20 (T36) — and a query `token` or `secret` is removed whatever the op: no credential is read from the address
+   (`credentialAddressGate` has refused a request that names one before this runs), so none is kept there for a later
+   reader of the URL to read, compare, pass on or log. `credential`, the door's `presentedCredential` answer, is taken
+   for the callers that pass it and changes nothing. */
 export function queryGate(url, op, credential = null) {
+  void credential;
   const fields = Object.hasOwn(BODY_ONLY_FIELDS, op) ? BODY_ONLY_FIELDS[op] : [];
   for (const k of fields) url.searchParams.delete(k);
-  if (PUBLIC_DOORS.includes(op)) url.searchParams.delete("token");
-  if (credential && typeof credential === "object") {
-    const q = presentedCredential({ url });
-    /* the query's token is the one presented only when it equals it and the credential was read from the address */
-    if (credential.token && (credential.token !== q.token || !credential.inAddress)) url.searchParams.delete("token");
-    if (credential.secret !== null && credential.secret !== undefined && !(q.secret === credential.secret && q.inAddress))
-      url.searchParams.delete("secret");
-  }
+  for (const k of ADDRESS_CREDENTIALS) url.searchParams.delete(k);
   return null;
 }
 
@@ -165,63 +166,86 @@ export function scopeFor(cls, url) {
  * AUTHENTICATION (R5–R7)
  * =================================================================================================================== */
 
-/* R20 (F1; K1874) — WHERE A CREDENTIAL IS READ: a request's header or body, never its address. `{ token, secret,
-   inAddress }`, and it never throws, whatever `req`, `url` and `body` are:
+/* R20 (F1; K1874; K2111) — WHERE A CREDENTIAL IS READ: a request's header or body, never its address. `{ token,
+   secret, inAddress }`, and it never throws, whatever `req`, `url` and `body` are:
      - `token` (a session token, an `aik-` credential, an ask's grant, a binding token): the `Authorization` header when
        it is exactly `Bearer <value>` (the scheme in any case, one space, printable characters and no space), else a JSON
-       object body's non-empty string `token`, else, for T35's release only, the query's `token`. A header in any other
-       form presents no token of its own.
-     - `secret` (a review or template grant's): the JSON body's string `secret`, else, for T35's release only, the
-       query's.
-     - `inAddress`: true exactly when either value was read from the query. A header's or body's value is always the
-       one used; a query value beside it is not read.
+       object body's non-empty string `token`. A header in any other form presents no token of its own.
+     - `secret` (a review or template grant's): the JSON body's string `secret`.
+     - `inAddress`: true exactly when the address names a `token` or a `secret` parameter, whatever its value and
+       whether or not the header or body carries one too. Nothing is read from there: `credentialAddressGate` refuses
+       the request.
    `body` is what the door parsed once (a GET has none). */
 const BEARER = /^bearer ([\x21-\x7e]+)$/i;
+const ADDRESS_CREDENTIALS = Object.freeze(["token", "secret"]);
+function addressNames(url) {
+  try {
+    const q = url && url.searchParams ? url.searchParams : null;
+    return q ? ADDRESS_CREDENTIALS.filter((k) => q.has(k)) : [];
+  } catch { return []; }
+}
 export function presentedCredential({ req = null, url = null, body = null } = {}) {
-  let token = null, secret = null, inAddress = false;
+  let token = null, secret = null;
   try {
     const h = req && req.headers && typeof req.headers.get === "function" ? req.headers.get("authorization") : null;
     const m = typeof h === "string" ? BEARER.exec(h) : null;
     if (m) token = m[1];
   } catch { token = null; }
   const b = body && typeof body === "object" && !Array.isArray(body) ? body : null;
-  let q = null;
-  try { q = url && url.searchParams ? url.searchParams : null; } catch { q = null; }
   if (!token && b && typeof b.token === "string" && b.token !== "") token = b.token;
-  if (!token && q) {
-    const t = q.get("token");
-    if (typeof t === "string" && t !== "") { token = t; inAddress = true; }
-  }
   if (b && typeof b.secret === "string") secret = b.secret;
-  else if (q && q.has("secret")) { secret = q.get("secret") ?? ""; inAddress = true; }
-  return { token, secret, inAddress };
+  return { token, secret, inAddress: addressNames(url).length > 0 };
 }
 
-/* R20: what a request whose credential was read from its address carries in its answer (control-plane adds it); the
-   one name `publication` R73 uses for its review door. */
+/* R20 (F1; K2111, K2129) — A CREDENTIAL IN THE ADDRESS IS REFUSED BY NAME, 400 `CREDENTIAL_IN_ADDRESS` (C-38.10), the
+   code's one site (K231): `control-plane` runs this directly after R1 (its R28), before any credential is judged, any
+   public op runs or the store is asked. An address is kept in logs and browser history, so a credential placed there
+   is no longer only its holder's; the request is refused rather than served, and the value is never compared, looked
+   up, passed on or logged. The refusal names the parameters the address named (`named`, `token` and/or `secret`) and
+   neither the value nor its digest (R15). `credential` is the door's `presentedCredential` answer when it has one;
+   either way the address is judged. `null` or the refusal. */
 export const CREDENTIAL_IN_ADDRESS = "CREDENTIAL_IN_ADDRESS";
+export function credentialAddressGate(url, credential = null) {
+  const named = addressNames(url);
+  if (!named.length && !(credential && typeof credential === "object" && credential.inAddress === true)) return null;
+  /* DEC-49 REGION is-credential-in-address */
+  return { status: 400, body: { ok: false, reason: "CREDENTIAL_IN_ADDRESS", ...admissionRow("CREDENTIAL_IN_ADDRESS"),
+    error: "a credential was sent in the request's address; send it in the Authorization header or the body",
+    detail: `this request's web address names ${named.length ? named.map((k) => `'${k}'`).join(" and ") : "a credential"}, `
+      + `and a credential or a secret is read only from the request's Authorization header (\`Bearer <value>\`) or `
+      + `its JSON body, never from its address, where it is kept in logs and browser history. It was not read, `
+      + `compared or looked up, and nothing was read or written.`,
+    named } };
+  /* END DEC-49 REGION is-credential-in-address */
+}
 
-/* The credential a gate judges: the door's `presentedCredential` answer when it passes one, else the URL's alone (a
-   caller written before R20, which hands this module no request or body). */
+/* The credential a gate judges: the door's `presentedCredential` answer when it passes one, else what the URL alone
+   presents, which is none (R20: never the address). */
 const credentialOf = (credential, url) =>
   credential && typeof credential === "object" ? credential : presentedCredential({ url });
 
-/* R5 (REC-33, DEC-37; T35, F12) — THE FOUR BINDING CLASSES. A token equal to a binding gives its class only while the
+/* R5 (REC-33, DEC-37; T35, F12) — THE BINDING CLASSES. A token equal to a binding gives its class only while the
    binding is LIVE (set, and never a published value: runtime-limits `liveToken`). Checked in the order admin, member,
    probe, daemon, so one value bound twice gives the WIDER class rather than a silent narrowing. The daemon class is the
    unattended path, not the monitor: a later unattended consumer belongs here, not in a fifth class.
    IN CONSTANT TIME: the presented value and each binding are compared as their SHA-256 digests (equal length whatever
    was sent), every byte of all four, with no early exit, and every binding's liveness is asked, so the time taken says
-   neither whether a binding matched, nor which, nor where two values first differ. */
+   neither whether a binding matched, nor which, nor where two values first differ.
+   T36 (N711; K1936 Q3): NO BINDING CLASS `member` EXISTS. `MEMBER_TOKEN` stays in `BINDINGS` only as the name R5
+   refuses: a value equal to a live one is `RETIRED` (`bindingOf`), gives no class (`classify` answers `null`), and is
+   refused `MEMBER_TOKEN_RETIRED` by `admit`. It is still compared with the other three, so the time taken does not tell
+   whether a `MEMBER_TOKEN` is bound. */
 const digestOf = async (v) => new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(String(v))));
 function sameDigest(a, b) {
   let d = 0;
   for (let i = 0; i < 32; i++) d |= a[i] ^ b[i];
   return d === 0;
 }
-const BINDINGS = Object.freeze([["ADMIN_TOKEN", "admin"], ["MEMBER_TOKEN", "member"], ["PROBE_TOKEN", "probe"],
+const RETIRED = "retired";
+const BINDINGS = Object.freeze([["ADMIN_TOKEN", "admin"], ["MEMBER_TOKEN", RETIRED], ["PROBE_TOKEN", "probe"],
                                 ["DAEMON_TOKEN", "daemon"]]);
-export async function classify(token, env) {
+/* The binding a token is equal to, as its class, or `RETIRED` for a live `MEMBER_TOKEN`, or `null`. */
+async function bindingOf(token, env) {
   if (typeof token !== "string" || token === "") return null;
   const presented = await digestOf(token);
   const verdicts = [];
@@ -234,6 +258,10 @@ export async function classify(token, env) {
   let cls = null;
   for (let i = BINDINGS.length - 1; i >= 0; i--) if (verdicts[i]) cls = BINDINGS[i][1];
   return cls;
+}
+export async function classify(token, env) {
+  const b = await bindingOf(token, env);
+  return b === RETIRED ? null : b;
 }
 
 /* The presented shape of an agent credential. Deliberately NOT the 64-hex of a session token, so "an agent credential
@@ -509,7 +537,7 @@ export function projectCreationGate(caps) {
 
 /* R5–R11 — THE ADMISSION (REC-79, C-38): every refusal a caller meets before their op runs, in this order, for a gated
    op (`spec.classes` a list; the namespace gates R1–R3 and the public ops come first, at the door):
-     a binding class (R5), else the presented agent credential (R6, `presented` from `aiCredentialPresented`), else a
+     a binding class (R5; the retired member key refused MEMBER_TOKEN_RETIRED), else the presented agent credential (R6, `presented` from `aiCredentialPresented`), else a
      session token resolved (R6) and judged: `export` refused (R8's ROOT_OF_TRUST_REQUIRED, section 8.1), then the
      session gate (R8); no class (R7); the agent's task scope (R10) or the class list (R9: `machineClasses` for a caller
      not arriving by a session, where the spec gives it); the session's capability (R11); the landing (R4).
@@ -520,14 +548,24 @@ export function projectCreationGate(caps) {
    judged here; absent, the URL's alone. */
 export async function admit({ url, env, op, spec, method, presented, doAnswer, tables = DECLARED, credential = null }) {
   const t = credentialOf(credential, url).token;
-  let cls = await classify(t, env);
+  const bound = await bindingOf(t, env);
+  let cls = bound === RETIRED ? null : bound;
   let viaSession = false, sess = null, halves = { member: null, viewer: null, identity: null };
   let aiCred = null;
-  if (!cls && presented?.cred) { cls = "ai"; aiCred = presented.cred; }
+  if (!cls && bound !== RETIRED && presented?.cred) { cls = "ai"; aiCred = presented.cred; }
 
   /* DEC-49 REGION is-admission
      A store silence in here (`{ silent }`) is not an admission refusal: the plane declines to say anything about who
      somebody is when it could not look (REC-52), and the door answers it with its own code. */
+  /* R5 (T36; N711, K1936 Q3): the shared member key is retired. A live `MEMBER_TOKEN` presented gives no class and is
+     refused by name, before anything is looked up, read or written; a value once held and no longer bound is any
+     unknown credential (R7). 401: it authenticates nobody. */
+  if (bound === RETIRED)
+    return { refusal: { status: 401, body: { ok: false, reason: "MEMBER_TOKEN_RETIRED", ...admissionRow("MEMBER_TOKEN_RETIRED"),
+      error: "the shared member key is retired",
+      detail: "this request presented the group's shared member key, which is retired: it no longer signs anybody in, "
+            + "and nothing was read or written. A member signs in with their own password, and an agent uses an "
+            + "agent credential a member creates for it." } } };
   if (!cls) {
     if (t && SESSION_TOKEN_SHAPE.test(t)) {
       const looked = await sessionPresented(t, env, doAnswer);
@@ -644,7 +682,10 @@ export async function readerOf(url, env, storeName, presented, doAnswer, credent
   const c = credentialOf(credential, url);
   const t = c.token;
   if (!t) return { viewer: "" };
-  const cls = await classify(t, env);
+  const bound = await bindingOf(t, env);
+  /* R5 (T36): the retired member key is no one, and nothing is looked up for it */
+  if (bound === RETIRED) return { viewer: "" };
+  const cls = bound;
   if (cls) {
     const scope = scopeFor(cls, url);
     const inScope = OPS.index.classes.includes(cls) && !scope.error && scope.name === storeName;
@@ -777,7 +818,10 @@ export async function doorWindowGate({ req = null, env = null, spec = null, doAn
 }
 
 /* R22 (N703; K1875; DEC-165, DEC-166; credentials R44) — THE REFUSALS COUNTED IN THE SECURITY TALLY, and their kind. */
-const CREDENTIAL_REFUSED_ANYWHERE = Object.freeze(["AI_CREDENTIAL_REVOKED", "AI_CREDENTIAL_EXPIRED"]);
+const CREDENTIAL_REFUSED_ANYWHERE = Object.freeze(["AI_CREDENTIAL_REVOKED", "AI_CREDENTIAL_EXPIRED", "MEMBER_TOKEN_RETIRED"]);
+/* The refusals whose credential names no member, whatever its shape: the retired key is the group's shared one (its
+   64-hex shape is a session's, but it is nobody's). */
+const NAMES_NO_MEMBER = Object.freeze(["MEMBER_TOKEN_RETIRED"]);
 const CREDENTIAL_REFUSED_AT = Object.freeze({
   invitelook: Object.freeze(["NO_SUCH_INVITATION"]),
   enroll: Object.freeze(["NO_SUCH_INVITATION"]),
@@ -822,13 +866,30 @@ export function securityKindOf({ op = null, answer = null, presented = null } = 
 
 /* R22 — ONE COUNT PER REFUSAL, through `credentials.securityCount({kind, country})` (its R44). This module answers
    it for each refusal it gives and `control-plane` calls it for each refusal it relays. Only the kind and the country
-   would cross: no address, fingerprint, credential, handle, role, op or time. THE STORE WRITE IS DEFERRED (K2038, to
-   T36, N744): credentials' map has no `securitycount` route yet, so this classifies and answers what it would count,
-   `{ kind, country }`, or `null`, and writes nothing; it never throws and never changes the refusal. */
-export async function securityTally({ op = null, answer = null, presented = null, req = null } = {}) {
+   cross: no address, fingerprint, credential, handle, role, op or time.
+   T36 (N744, K2038; credentials R50): THE COUNT IS WRITTEN through the store's internal route `securitycount`, which
+   no caller reaches (op-declarations R6), POSTed to `bio`'s store (the instance's one tally) with `{kind, country}` in
+   its body and nothing in its address, and read through the door's reader `doAnswer` when it is handed one. `env` is
+   the Worker's; without a store there is nowhere to write and nothing is sent. It answers `{ kind, country }`, what it
+   counted, or `null` for a refusal not counted; a count that cannot be written is dropped (named in the log by
+   correlation id only), it never throws and never changes the refusal. */
+export async function securityTally({ op = null, answer = null, presented = null, req = null, env = null, doAnswer = null } = {}) {
+  let counted = null;
   try {
     const kind = securityKindOf({ op, answer, presented });
     if (!kind) return null;
-    return { kind, country: namesMember(presented) ? null : countryOf(req) };
+    const anyone = NAMES_NO_MEMBER.includes(refusalCode(answer));
+    counted = { kind, country: !anyone && namesMember(presented) ? null : countryOf(req) };
   } catch { return null; }
+  try {
+    if (env && env.STORE && typeof env.STORE.get === "function") {
+      const asked = bioStore(env).fetch(new Request("http://do/securitycount", {
+        method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(counted) }));
+      const out = typeof doAnswer === "function" ? await doAnswer(asked) : { answered: !!(await asked) };
+      if (!out || !out.answered)
+        console.warn(`admission: a security count was not written and is dropped (correlation ${
+          out && typeof out.correlation === "string" ? out.correlation : "none"})`);
+    }
+  } catch { console.warn("admission: a security count was not written and is dropped (correlation none)"); }
+  return counted;
 }

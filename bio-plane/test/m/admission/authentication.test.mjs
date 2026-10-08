@@ -2,7 +2,7 @@
    caller with no class. Carries the converts `fence`, `daemon-token` and `publishedcase` (their admission share). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { A, O, world, gate, urlOf, refused, doAnswer, opCalls, sha, hex64, aik } from "./harness.mjs";
+import { A, O, world, gate, urlOf, presenting, refused, doAnswer, opCalls, sha, hex64, aik } from "./harness.mjs";
 import { PUBLISHED_TOKEN_HASHES } from "../../../src/tokens.mjs";
 
 const { OPS } = O;
@@ -14,16 +14,20 @@ async function published(value, fn) {
   try { return await fn(); } finally { PUBLISHED_TOKEN_HASHES.delete(h); }
 }
 
-test("R5: a token equal to ADMIN_TOKEN, MEMBER_TOKEN, PROBE_TOKEN or DAEMON_TOKEN (checked in that order) gives that class only while the binding is live; any other token gives no binding class", async () => {
+test("R5: a token equal to ADMIN_TOKEN, PROBE_TOKEN or DAEMON_TOKEN (checked in the order admin, member, probe, daemon) gives that class only while the binding is live; MEMBER_TOKEN gives no class (T36); any other token gives no binding class", async () => {
   const { env } = world();
-  for (const [k, c] of [["ADMIN_TOKEN", "admin"], ["MEMBER_TOKEN", "member"], ["PROBE_TOKEN", "probe"], ["DAEMON_TOKEN", "daemon"]])
-    assert.equal(await A.classify(env[k], env), c);
-  /* the order: one value bound twice is the earlier class */
+  for (const [k, c] of [["ADMIN_TOKEN", "admin"], ["MEMBER_TOKEN", null], ["PROBE_TOKEN", "probe"], ["DAEMON_TOKEN", "daemon"]])
+    assert.equal(await A.classify(env[k], env), c, k);
+  /* the order: one value bound twice is the earlier class (the retired member key before probe and daemon) */
   const same = world();
   same.env.MEMBER_TOKEN = same.env.ADMIN_TOKEN;
   same.env.DAEMON_TOKEN = same.env.PROBE_TOKEN;
   assert.equal(await A.classify(same.env.ADMIN_TOKEN, same.env), "admin");
   assert.equal(await A.classify(same.env.PROBE_TOKEN, same.env), "probe");
+  const before = world();
+  before.env.PROBE_TOKEN = before.env.MEMBER_TOKEN;
+  assert.equal(await A.classify(before.env.MEMBER_TOKEN, before.env), null);
+  refused(await gate(before.env, { op: "index", token: before.env.MEMBER_TOKEN, method: "GET" }), 401, "MEMBER_TOKEN_RETIRED", "C-38.11");
   /* not live: a published value never authenticates (negative control: the same value unpublished does) */
   for (const k of ["ADMIN_TOKEN", "MEMBER_TOKEN", "PROBE_TOKEN", "DAEMON_TOKEN"]) {
     const v = env[k];
@@ -32,7 +36,8 @@ test("R5: a token equal to ADMIN_TOKEN, MEMBER_TOKEN, PROBE_TOKEN or DAEMON_TOKE
       refused(await gate(env, { op: "selftest", token: v, params: k === "PROBE_TOKEN" ? { store: "scratch" } : {}, method: "GET" }),
               401, "NOT_AUTHENTICATED", "C-38.1", [v]);
     });
-    assert.notEqual(await A.classify(v, env), null, k);
+    if (k === "MEMBER_TOKEN") refused(await gate(env, { op: "selftest", token: v, method: "GET" }), 401, "MEMBER_TOKEN_RETIRED", "C-38.11", [v]);
+    else assert.notEqual(await A.classify(v, env), null, k);
   }
   /* not live: an unset or empty binding; the empty or absent token */
   const unset = world({ omit: ["MEMBER_TOKEN", "DAEMON_TOKEN"] });
@@ -70,9 +75,12 @@ test("R6: an aik-<64 hex> token is resolved once per request against bio's crede
   assert.deepEqual([conf.caller.cls, conf.caller.aiCred.confinedTo, conf.caller.storeName], ["ai", "scratch", "scratch"]);
   /* aiCredentialPresented: nothing presented, another shape, unknown: no store asked or no credential */
   env.calls.length = 0;
-  for (const t of [undefined, hex64(), env.ADMIN_TOKEN, "aik-short"]) assert.deepEqual(await A.aiCredentialPresented(urlOf({ token: t }), env, doAnswer), { cred: null });
+  for (const t of [undefined, hex64(), env.ADMIN_TOKEN, "aik-short"])
+    assert.deepEqual(await A.aiCredentialPresented(urlOf({}), env, doAnswer, { credential: presenting(t) }), { cred: null });
+  /* R20: an agent credential in the address alone is not read, so not looked up */
+  assert.deepEqual(await A.aiCredentialPresented(urlOf({ token: K.ann }), env, doAnswer), { cred: null });
   assert.equal(env.calls.length, 0);
-  assert.deepEqual(await A.aiCredentialPresented(urlOf({ token: aik() }), env, doAnswer), { cred: null });
+  assert.deepEqual(await A.aiCredentialPresented(urlOf({}), env, doAnswer, { credential: presenting(aik()) }), { cred: null });
   /* session: in bio even when the call addresses scratch; the founder and a member, each resolved into its halves */
   env.calls.length = 0;
   const s = await gate(env, { op: "index", token: S.ann, params: { store: "scratch" }, method: "GET" });
@@ -109,7 +117,7 @@ test("R7: a caller with no class is refused 401 NOT_AUTHENTICATED (C-38.1), for 
     assert.equal(opCalls(env).length, 0);
   }
   /* negative controls: a binding class and a session are admitted */
-  assert.ok((await gate(env, { op: "index", token: env.MEMBER_TOKEN, method: "GET" })).caller);
+  assert.ok((await gate(env, { op: "index", token: env.ADMIN_TOKEN, method: "GET" })).caller);
   assert.ok((await gate(env, { op: "index", token: S.ann, method: "GET" })).caller);
 });
 

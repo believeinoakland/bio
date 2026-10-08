@@ -1,6 +1,6 @@
 # BOB to control-plane (T36)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -28,3 +28,7 @@ instance-setup has merged (K2162): `assistantSet` and `op=assistantset` are gone
 ## B4 · CHANGE
 
 op-declarations has merged (K2165). Merge the tranche branch now and re-run; admission merges next, then answer-envelope, store-door, control-plane and plane.
+
+## B5 · CHANGE
+
+admission, answer-envelope and store-door have merged (K2166). Merge the tranche branch now: drop the guard around `credentialAddressGate`, re-pin your MEMBER_TOKEN and address callers (red 33's control-plane share), and apply ADMISSION #6's two findings for you: (a) hand `securityTally` `env` and `doAnswer` from `outOfAddress` (index.mjs:120) so admission R22's count reaches `securitycount`; (b) `groupRead` (index.mjs:270) now reads the retired key as a stranger (R5's intent; test it). Then post COMPLETE; plane merges after you.

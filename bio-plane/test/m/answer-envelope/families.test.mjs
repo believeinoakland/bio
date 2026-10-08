@@ -329,3 +329,30 @@ test("R7, R2 (K1961, K1974; red 26): the list reads law-relations' rows (`LAW_RE
   const missing = await unreached(M.CHECK_FAMILY_FILES.filter(([p]) => p !== path));
   assert.ok(missing.includes(`bio-plane/${path} LAW_RELATIONS_CHECKS`), missing.join(", "));
 });
+
+test("R7, R2 (T36; K2130, K2103; red 11): the list reads file-safety's rows (`FILE_SAFETY_CHECKS`, C-140) from its own file, directly after capture's and before sources' (its place in `build/modules.json`), every one of them decorates with its own check and words, and no row of an earlier family moves: no file-safety code is held by any other listed family, so `FILE_NOT_HELD` decorates with C-140.1 while `NO_SUCH_CAPTURE` keeps sources' row and `MACHINE_CANNOT_RELEASE` ratification's (negative control: the list without file-safety's file misses its family)", async () => {
+  const paths = M.CHECK_FAMILY_FILES.map(([p]) => p);
+  const path = "src/file-safety/checks.mjs";
+  assert.equal(paths.indexOf("src/capture/checks.mjs") + 1, paths.indexOf(path), paths.join(", "));
+  assert.equal(paths.indexOf(path) + 1, paths.indexOf("src/sources/checks.mjs"), paths.join(", "));
+  const order = MODULES.map((m) => m.id);
+  assert.ok(order.indexOf("capture") < order.indexOf("file-safety") && order.indexOf("file-safety") < order.indexOf("sources"), order.join(", "));
+  const table = (await import(`../../../${path}`)).FILE_SAFETY_CHECKS;
+  assert.ok(Object.keys(table).length >= 39, String(Object.keys(table).length));
+  for (const [code, row] of Object.entries(table)) {
+    assert.match(row.check, /^C-140\.\d+$/, code);
+    assert.deepEqual(M.dec49Row(code), { check: row.check, translation: row.translation }, code);
+  }
+  /* no earlier (or later) family holds a file-safety code, so adding the family moves no other row */
+  for (const [p, ns] of M.CHECK_FAMILY_FILES) if (p !== path)
+    for (const [k, v] of Object.entries(ns)) if (isFamily(k, v))
+      for (const code of Object.keys(table)) assert.equal(Object.hasOwn(v, code), false, `${code} is also in ${p} ${k}`);
+  assert.equal(M.dec49Row("FILE_NOT_HELD").check, "C-140.1");
+  const own = async (p, code) => { const ns = await import(`../../../${p}`);
+    const r = Object.entries(ns).filter(([k, v]) => isFamily(k, v) && v[code]?.translation).map(([, v]) => v[code])[0];
+    return { check: r.check ?? null, translation: r.translation }; };
+  assert.deepEqual(M.dec49Row("NO_SUCH_CAPTURE"), await own("src/sources/checks.mjs", "NO_SUCH_CAPTURE"));
+  assert.deepEqual(M.dec49Row("MACHINE_CANNOT_RELEASE"), await own("src/ratification/checks.mjs", "MACHINE_CANNOT_RELEASE"));
+  const missing = await unreached(M.CHECK_FAMILY_FILES.filter(([p]) => p !== path));
+  assert.ok(missing.includes(`bio-plane/${path} FILE_SAFETY_CHECKS`), missing.join(", "));
+});

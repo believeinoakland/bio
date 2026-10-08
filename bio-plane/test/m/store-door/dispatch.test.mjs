@@ -119,6 +119,32 @@ test("R2: a read naming a project (PROJECT_NAMING_READS) asked with a stamped vi
   assert.equal(t.log.some((e) => e.kind === "existence"), false);
 });
 
+test("R2 (T36-48; K2063, K2152; file-safety R2, R6, R9, R11, R15, R31, R33, R38): file-safety's reads that take a parameter — `verdictnotes`, `threatof`, `originalstate`, `safeview`, `safecopy` (a capture's digest), `scanfindings` and `securitytoolevents` (a cursor), `findingkind` (a finding name) — are listed as naming no project, each with its reason, so a discoverable project's id in any of their own parameters, query or body, is never asked of membership and the route answers; none is among the reads naming a project (negative control: the same id at a read naming a project is answered existence first)", async () => {
+  const { fileSafetyOps } = await import("../../../src/file-safety/index.mjs");
+  const served = new Set(Object.keys(fileSafetyOps(null, new URL("http://do/"), null, null)));
+  const READS = { verdictnotes: ["capture", "captureSha"], threatof: ["capture", "captureSha"], originalstate: ["capture", "captureSha"],
+                  safeview: ["capture", "captureSha"], safecopy: ["capture", "captureSha"], scanfindings: ["after", "limit"],
+                  findingkind: ["name"], securitytoolevents: ["after", "limit"] };
+  const DIGEST = "`captureSha` is a CAPTURE's digest";
+  const P = "PROJ-seen";
+  for (const [op, params] of Object.entries(READS)) {
+    assert.ok(served.has(op), `${op} is file-safety's route`);
+    assert.equal(Object.hasOwn(PROJECT_NAMING_READS, op), false, `${op} names no project`);
+    assert.equal(typeof PROJECT_NAMING_READS_NOT[op], "string", `${op} listed with its reason`);
+    if (params[0] === "capture") assert.equal(PROJECT_NAMING_READS_NOT[op], DIGEST, op);
+    else for (const p of params) assert.match(PROJECT_NAMING_READS_NOT[op], new RegExp("`" + p + "`"), `${op}'s reason names ${p}`);
+    for (const p of params) {
+      const s = fakeStore({ discoverable: [P], existence: [P] });
+      const r = await go(s, `${op}?viewer=member:ann&${p}=${P}`, { method: "POST", body: JSON.stringify({ [p]: P }) });
+      assert.deepEqual([r.status, r.json.result], [200, { answered: op }], `${op}.${p}`);
+      assert.equal(s.log.some((e) => e.kind === "membership"), false, `${op}.${p}: membership asked`);
+    }
+  }
+  /* negative control: the same id, a read naming a project */
+  const n = fakeStore({ discoverable: [P], existence: [P] });
+  assert.equal((await go(n, `image?viewer=member:ann&id=${P}`)).json.result.reason, "PROJECT_SEEN_NOT_A_PARTICIPANT");
+});
+
 test("R3 (DEC-113, DEC-36; actions R58): `projectholds` is among the reads naming no project, with the reason that a project not seen at FULL is answered `held: null`, so its existence answer is not run; `actionholdrelease`, `actionholdpreview` and `projectholds` pass R1's frame to the map they are routed through, with the request's own parameters and body and nothing of the door's added (negative control: a read naming a project is still asked)", async () => {
   assert.equal(typeof PROJECT_NAMING_READS_NOT.projectholds, "string");
   assert.match(PROJECT_NAMING_READS_NOT.projectholds, /held: null/);
@@ -323,4 +349,34 @@ test("R11 (K1674, K1685, K1798, K1986; credentials R28, ai-runs R48, R50, answer
   assert.equal(c.status, 200, JSON.stringify(c.json).slice(0, 300));
   assert.equal(c.json.ok, true);
   assert.ok(c.json.result && typeof c.json.result === "object", JSON.stringify(c.json).slice(0, 300));
+});
+
+test("R13 (K2157; control-plane R61): a route-map answer that is a `Response` — file-safety's byte answers `openoriginal`, `openwithwarning`, `safeview`, `safecopy` — is returned as given, its status, headers and bytes unchanged, never wrapped in R1's envelope, under an ask's grant header too (nothing logged); a refusal those routes answer as an object is enveloped as any answer (negative control: a plain object answer is wrapped)", async () => {
+  const { fileSafetyOps } = await import("../../../src/file-safety/index.mjs");
+  const served = new Set(Object.keys(fileSafetyOps(null, new URL("http://do/"), null, null)));
+  const BYTES = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x00, 0xff, 0x10]);
+  for (const op of ["openoriginal", "openwithwarning", "safeview", "safecopy"]) {
+    assert.ok(served.has(op), `${op} is file-safety's route`);
+    for (const status of [200, 206]) {
+      const made = [];
+      const logged = [];
+      const store = {
+        routes: () => ({ [op]: async () => { const r = new Response(BYTES, { status, headers: { "content-type": "application/pdf",
+          "x-capture-sha256": "a".repeat(64), "cache-control": "no-store" } }); made.push(r); return r; } }),
+        membership: () => ({ visibilityOf: () => "discoverable", existenceAct: () => null }),
+        logRead: (e) => { logged.push(e); return e.answer; },
+      };
+      const res = await D.dispatch(new Request(`http://do/${op}?viewer=member:ann&capture=${"a".repeat(64)}`,
+        { method: "POST", headers: { [GRANT_HEADER]: "G1" }, body: JSON.stringify({ warned: { own_device: true, no_macros: true } }) }), store);
+      assert.equal(res, made[0], `${op}: the owner's Response itself`);
+      assert.equal(res.status, status);
+      assert.deepEqual([res.headers.get("content-type"), res.headers.get("x-capture-sha256"), res.headers.get("cache-control")],
+                       ["application/pdf", "a".repeat(64), "no-store"]);
+      assert.deepEqual(new Uint8Array(await res.arrayBuffer()), BYTES, `${op}: the bytes unchanged`);
+      assert.deepEqual(logged, [], `${op}: nothing logged`);
+    }
+    /* a refusal answered as an object is enveloped; negative control */
+    const refused = await go({ routes: () => ({ [op]: () => ({ ok: false, reason: "SCAN_HOLD" }) }), membership: () => null }, `${op}?viewer=member:ann`);
+    assert.deepEqual([refused.status, refused.json], [200, { ok: true, result: { ok: false, reason: "SCAN_HOLD" } }]);
+  }
 });

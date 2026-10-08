@@ -108,6 +108,16 @@ async function drafts() {
   return { r, C, seen, code };
 }
 
+/* The assistant on or off as instance-setup's `assistantState()` answers it (R10 reads it through `assistantGate`): the
+   group's keep-away, credentials' (its R51; DEC-172), from which instance-setup derives it (its R53; K2162): keep-away
+   off is the assistant on. */
+function assistant(r, on) {
+  const k = credentialsOf(r.ctx).aiKeepAwaySet(on ? { on: false, by: "ann" } : { on: true, reason: "kept away for this test", by: "ann" });
+  assert.equal(k.ok, true, JSON.stringify(k));
+  const setup = instanceSetupOf(r.ctx);
+  assert.equal(setup.assistantState().on, on);
+}
+
 test("R10 (instance-setup R55, R65; run-rules R20; ai-runs R50, R52; credentials R35, R36): before either draft's handler the door answers, in order, `groupdescriptiondraft`'s NOT_AN_ADMIN, ASSISTANT_OFF, AI_NO_ACCOUNT, the member's and the copy's ceilings, and credentials' own refusal of the account (the group key's notice unread), each before any handler is asked (negative control: once every one is cleared the handler is reached)", async () => {
   const { r, C, seen, code } = await drafts();
   const gdd = (by) => r.go(`groupdescriptiondraft?by=${by}&viewer=${by}`, "POST", { answers: [{ question: "q", text: "t" }] });
@@ -117,9 +127,10 @@ test("R10 (instance-setup R55, R65; run-rules R20; ai-runs R50, R52; credentials
   assert.equal(code(await gdd("class:admin")), "NOT_AN_ADMIN");
   assert.equal(code(await gdd("")), "NOT_AN_ADMIN");
   /* the assistant off */
+  assistant(r, false);
   assert.equal(code(await gdd("member:ann")), "ASSISTANT_OFF");
   assert.equal(code(await help("member:bea")), "ASSISTANT_OFF");
-  assert.equal(instanceSetupOf(r.ctx).assistantSet({ on: true, by: "admin" }).ok, true);
+  assistant(r, true);
   /* no account serves */
   assert.equal(code(await gdd("member:ann")), "AI_NO_ACCOUNT");
   assert.equal(code(await help("member:bea")), "AI_NO_ACCOUNT");
@@ -149,7 +160,7 @@ test("R10 (instance-setup R55, R65; run-rules R20; ai-runs R50, R52; credentials
 
 test("R10 (K1755; control-plane R29, R30): a draft's handler receives `assistant` as the door resolved it — `{on: true, account: {kind, level}}`, the member's own account or the group's key, never the key — its own arguments from the body and `by` and `viewer` as stamped; a caller's `assistant` is never read (negative control: no secret appears in anything handed over or answered)", async () => {
   const { r, C, seen } = await drafts();
-  assert.equal(instanceSetupOf(r.ctx).assistantSet({ on: true, by: "admin" }).ok, true);
+  assistant(r, true);
   assert.equal((await C.accountReferenceSet({ member: "member:bea", kind: "apikey", secret: "sk-bea-own-secret", by: "member:bea" })).ok, true);
   assert.equal((await C.groupKeySet({ key: "sk-group-key-secret", by: "admin" })).ok, true);
   assert.equal(C.groupKeySwitch({ on: true, by: "admin" }).ok, true);
