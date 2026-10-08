@@ -63,3 +63,12 @@ Finding asked for at START. PR #13's registry (now carried, 36da334628) still ma
 Also:
 (2) registeredScreens and wizardRegistry still list a declared act the op table lacks, while wizardcheck refuses it (index.mjs:187, 273). That is R13 as worded, left as is for your call.
 (3) bio-plane/dist/bio-plane.bundled.mjs is stale (screen-registry.mjs changed).
+
+## J2 · COMPLETE
+
+T36-52 applied.
+- SCREEN_REGISTRY re-taken by build-data.mjs from 36da334628; connect is 'The assistant'; 47 screens.
+- Library unchanged at d129238bf3: build-data.mjs now names each file's own commit.
+- OWED_ACT now reads 'owed:<op> Kn' as well as DEC-n, so PR #13's K-owed acts are no longer dropped.
+- wizard-scripts tests 65/0. Users' reds unchanged and inherited. format, architecture, coverage and ownership: 0 failures.
+- Record has the detail; REPORT J2 has the findings.
