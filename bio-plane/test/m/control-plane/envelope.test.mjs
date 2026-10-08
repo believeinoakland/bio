@@ -44,7 +44,7 @@ test("R21: every answer is JSON with access-control-allow-origin *; a forwarded 
   for (const [status, body] of [[200, { ok: true, result: { a: 1 } }], [207, { ok: true, result: [1, 2], extra: "kept" }],
                                 [404, { ok: true, result: { ok: false, reason: "NO_SUCH_BUNDLE" } }]]) {
     const f = world({ answer: (c) => (c.route === "index" ? reply(body, status)() : null) });
-    for (const [token, params, st, tc] of [[f.env.MEMBER_TOKEN, {}, "bio", "member"], [f.env.PROBE_TOKEN, {}, "scratch", "probe"],
+    for (const [token, params, st, tc] of [[f.env.ADMIN_TOKEN, {}, "bio", "admin"], [f.env.PROBE_TOKEN, {}, "scratch", "probe"],
                                            [f.S.ann, { store: "scratch" }, "scratch", "member"], [f.A.ann, {}, "bio", "ai"]]) {
       const r = await call(f.env, { op: "index", token, params });
       assert.equal(r.status, status);
@@ -356,11 +356,13 @@ test("R23, R25 (N349): every silence the door answers itself carries the correla
       assert.equal(r.text.includes("boom") || r.text.includes("/srv/"), false, route);
     }
   }
-  /* caseReader's own lookup, for a caller that hands it no resolved row: the silence carries the correlation too */
+  /* caseReader's own lookup, for a caller that hands it no resolved row: the silence carries the correlation too. The
+     credential is handed over as the door's `presentedCredential` reads it (R59, admission R20), never from the address */
   for (const [token, route] of [[aik(), "aicredentiallook"], [hex64(), "session"]]) {
     for (const [body, carried] of [[failed, corr], [{ ok: false }, undefined]]) {
       const w = world({ answer: (c) => (c.route === route ? reply(body, 500)() : null) });
-      const got = await M.caseReader(new URL(`https://plane.example/api?token=${token}`), w.env, "bio", undefined);
+      const got = await M.caseReader(new URL("https://plane.example/api"), w.env, "bio", undefined,
+                                     { token, secret: null, inAddress: false });
       assert.deepEqual(got, carried ? { silent: route, correlation: carried } : { silent: route, correlation: undefined }, route);
     }
   }

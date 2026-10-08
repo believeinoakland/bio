@@ -23,7 +23,7 @@ function callers() {
   const ai = (name, token, principal, tokenId) => ({ name, token, params: {}, viewer: principal, identity: principal,
     administer: "0", own: [principal, "class:ai", `class:ai/${tokenId}`, `${principal}/${tokenId}`, "token:ai", ""] });
   return { w, list: [
-    bind("admin", w.env.ADMIN_TOKEN), bind("member", w.env.MEMBER_TOKEN), bind("probe", w.env.PROBE_TOKEN, { store: "scratch" }),
+    bind("admin", w.env.ADMIN_TOKEN), bind("probe", w.env.PROBE_TOKEN, { store: "scratch" }),
     bind("daemon", w.env.DAEMON_TOKEN),
     sess("founder", w.S.founder, "admin", "admin", "1"), sess("ann", w.S.ann, "ann", "member:ann", "0"),
     sess("dee (administers)", admAdmin, "dee", "member:dee", "1"),
@@ -96,11 +96,11 @@ test("R17: the founder's session author is `admin`, a member's its id; origin is
   assert.deepEqual([b.ownerMemberId, b.actorMemberId, b.author, "migrationReplay" in b], ["ann", "ann", "ann", false]);
   /* a bearer's creation carries no owner and no acting member */
   env.calls.length = 0;
-  await call(env, { op: "promote", token: env.MEMBER_TOKEN, method: "POST",
+  await call(env, { op: "promote", token: env.ADMIN_TOKEN, method: "POST",
                     body: { base: null, meta: { object_type: "project" }, ownerMemberId: "mallory", actorMemberId: "mallory",
                             files: [{ path: "bundle.md", text: md }] } });
   const m = opCalls(env)[0].body;
-  assert.deepEqual(["ownerMemberId" in m, "actorMemberId" in m, m.author, m.assistantPrincipal], [false, false, "token:member", "class:member"]);
+  assert.deepEqual(["ownerMemberId" in m, "actorMemberId" in m, m.author, m.assistantPrincipal], [false, false, "token:admin", "class:admin"]);
 });
 
 /* Note for BOB (not a test): R17's list of stamped values and the code differ in wording — many binding-class authors are
@@ -173,7 +173,7 @@ test("R18: memberlist's administer is 1 exactly for a session that administers a
   const a = await who(w.S.ann);
   assert.deepEqual([a.tokenClass, a.session, a.member, a.handle, a.administer, a.rootOfTrust, a.confinedTo],
                    ["member", true, "ann", "ann", false, false, null]);
-  for (const [token, c, params, adm] of [[env.ADMIN_TOKEN, "admin", {}, true], [env.MEMBER_TOKEN, "member", {}, false],
+  for (const [token, c, params, adm] of [[env.ADMIN_TOKEN, "admin", {}, true],
                                          [env.PROBE_TOKEN, "probe", { store: "scratch" }, false]]) {
     const m = await who(token, params);
     assert.deepEqual([m.tokenClass, m.session, m.member, m.handle, m.administer, m.rootOfTrust, m.capabilities, m.confinedTo],
@@ -227,8 +227,8 @@ test("R20: reviewcopy, reviewcomment and statementack admit a grant's secret, of
   assert.ok(lc.json.inband);
   /* without a secret the caller's own credential is resolved and stamped as the viewer */
   env.calls.length = 0;
-  await call(env, { op: "reviewcopy", token: env.MEMBER_TOKEN, params: { draft: "D1", viewer: FORGED } });
-  assert.equal(opCalls(env)[0].params.viewer, "class:member");
+  await call(env, { op: "reviewcopy", token: env.ADMIN_TOKEN, params: { draft: "D1", viewer: FORGED } });
+  assert.equal(opCalls(env)[0].params.viewer, "class:admin");
   env.calls.length = 0;
   await call(env, { op: "reviewcopy", params: { draft: "D1", viewer: FORGED } });
   assert.equal(opCalls(env)[0].params.viewer, "");
