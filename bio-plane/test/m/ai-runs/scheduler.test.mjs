@@ -125,10 +125,13 @@ test("R18, R52 (K1514, K1615, K1755): a woken run is dispatched only when its pr
   const bound = (w, store = "bio") => { w.ctx.id = { equals: (x) => x === `id:${store}` }; };
   const env = (aw, extra = {}) => ({ AGENT_WORKER: aw, INSTANCE_AI_TOKEN: TOKEN, INSTANCE_CLAUDE_TOKEN: "claude-account-x",
                                       STORE: { idFromName: (n) => `id:${n}` }, AI_RUN_DISPATCH_WAIT_MS: "50", ...extra });
-  const setup = async (e, { principal = ORG, mint = "organisation", revoke = false, store = "bio", kind = null, groupKey = false } = {}) => {
+  const setup = async (e, { principal = ORG, mint = "organisation", revoke = false, store = "bio", kind = null, groupKey = false,
+                            signin = false } = {}) => {
     const w = world({ env: e });
-    await w.group("ann", groupKey ? { noAccount: ["ann"] } : {});
+    await w.group("ann", groupKey || signin ? { noAccount: ["ann"] } : {});
     if (kind) await w.account("ann", kind, `${kind}-secret-of-ann`);
+    /* credentials R43: ann connected through her Claude subscription's own sign-in, held as a fact, no reference */
+    if (signin) assert.equal(w.credentials.subscriptionConnected({ member: "member:ann" }).ok, true);
     /* K1755: the group's API key, set and switched on by an administrator, its notice read by ann (credentials R33, R36) */
     if (groupKey) {
       assert.equal((await w.credentials.groupKeySet({ key: "group-key-secret", by: "admin" })).ok, true);
@@ -168,11 +171,13 @@ test("R18, R52 (K1514, K1615, K1755): a woken run is dispatched only when its pr
     assert.equal(JSON.stringify(w1.rows(`SELECT * FROM ai_runs`)).includes(secret), false);
     assert.equal(JSON.stringify(d).includes(secret), false);
   }
-  /* a subscription token travels as a subscription, never re-labelled an API key (K1553) */
-  const sub = await setup(env(aw), { principal: stamp, kind: "subscription" });
+  /* (T38; K2283, K2290) a member connected through their subscription (credentials R43) with no reference travels as
+     their own sign-in, `{kind: "signin", level: "member", member, suggestions: false}`, with no `secret` key at all
+     (agent-worker R6), never re-labelled an API key (K1553) */
+  const sub = await setup(env(aw), { principal: stamp, signin: true });
   assert.equal((await decision(sub)).dispatch.state, "DISPATCHED");
-  assert.deepEqual(aw.calls[1].body.account, { kind: "subscription", level: "member", secret: "subscription-secret-of-ann",
-                                               member: "member:ann", suggestions: false });
+  assert.deepEqual(aw.calls[1].body.account, { kind: "signin", level: "member", member: "member:ann", suggestions: false });
+  assert.equal("secret" in aw.calls[1].body.account, false, "a sign-in carries no secret key");
   /* K1615 (agent-worker R56): the member's own suggestions switch rides with the reference — on when they turned it on */
   const on = await setup(env(aw), { principal: stamp });
   assert.equal(on.credentials.accountSwitchSet({ member: "member:ann", switch: "suggestions", on: true, by: "member:ann" }).ok, true);
