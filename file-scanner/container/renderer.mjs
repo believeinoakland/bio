@@ -13,7 +13,7 @@ import { pipeline } from 'node:stream/promises';
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 import { json, run, serve, freshDir, removeDir } from './common.mjs';
-import { RENDER_TIME_MS } from '../src/limits.mjs';
+import { RENDER_TIME_MS, SAFE_VIEW_DPI, SAFE_VIEW_PAGES_MAX } from '../src/limits.mjs';
 
 const renderTimeMs = () => Number(process.env.RENDER_TIME_MS || RENDER_TIME_MS);
 const SOFFICE = process.env.SOFFICE || 'soffice';
@@ -99,8 +99,9 @@ async function render(req, res, url) {
 
 async function work(req, res, url, dir) {
   const route = url.searchParams.get('route');
-  const dpi = Number(url.searchParams.get('dpi') || 150);
-  const max = Number(url.searchParams.get('max') || 500);
+  const bound = (name, fallback) => { const n = Number(url.searchParams.get(name)); return Number.isSafeInteger(n) && n > 0 ? n : fallback; };
+  const dpi = bound('dpi', SAFE_VIEW_DPI);
+  const max = bound('max', SAFE_VIEW_PAGES_MAX);
   if (route !== 'pdf' && route !== 'office') return refuse(res, 400, 'NOT_RENDERABLE', 'route must be pdf or office');
   const deadline = Date.now() + renderTimeMs();
   const left = () => Math.max(1, deadline - Date.now());

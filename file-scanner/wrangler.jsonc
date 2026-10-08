@@ -36,13 +36,13 @@
   "containers": [
     {
       "class_name": "FileScanner",
-      "image": "ghcr.io/believeinoakland/file-scanner-scanner@sha256:UNPUBLISHED",
+      "image": "docker.io/civicos/file-scanner-scanner@sha256:UNPUBLISHED",
       "instance_type": "standard-1",
       "max_instances": 3
     },
     {
       "class_name": "SafeViewRenderer",
-      "image": "ghcr.io/believeinoakland/file-scanner-renderer@sha256:UNPUBLISHED",
+      "image": "docker.io/civicos/file-scanner-renderer@sha256:UNPUBLISHED",
       "instance_type": "standard-1",
       "max_instances": 3
     }

@@ -96,6 +96,21 @@ test('R10 the marker states a container member with two digest-pinned classes, i
   for (const c of containerClasses(member).classes) assert.equal(classPackages(member, c).ecosystem, 'Debian:12');
 });
 
+test('R10 both images are named in a registry Cloudflare Containers pull from, as agent-runner\'s is: Docker Hub, never ghcr.io, in the marker and the configuration alike; digests unpublished until the release', () => {
+  const runner = JSON.parse(readFileSync(new URL('../../agent-runner/fleet-member.json', import.meta.url), 'utf8'));
+  const registry = (r) => r.split('/').slice(0, 2).join('/');
+  assert.equal(registry(runner.image.repository), 'docker.io/civicos', 'agent-runner\'s image is published on Docker Hub');
+  const m = marker();
+  assert.deepEqual(m.containers.map((c) => c.image.repository), ['docker.io/civicos/file-scanner-scanner', 'docker.io/civicos/file-scanner-renderer']);
+  for (const c of m.containers) {
+    assert.equal(registry(c.image.repository), registry(runner.image.repository), `${c.class_name}: agent-runner's registry`);
+    assert.equal(c.image.digest, null, 'the release cut publishes it (K1898, K1905)');
+  }
+  assert.deepEqual(wrangler().containers.map((c) => c.image), ['docker.io/civicos/file-scanner-scanner@sha256:UNPUBLISHED',
+    'docker.io/civicos/file-scanner-renderer@sha256:UNPUBLISHED']);
+  for (const t of [text('fleet-member.json'), text('wrangler.jsonc'), text('Dockerfile.scanner'), text('Dockerfile.renderer')]) assert.ok(!t.includes('ghcr.io'), 'never ghcr.io');
+});
+
 test('R10 the configuration: the classes by class_name with the marker\'s images, their bindings, the bucket, the trigger, no VPC binding by default', () => {
   const w = wrangler();
   const m = marker();

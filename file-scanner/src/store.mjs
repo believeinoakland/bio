@@ -1,4 +1,5 @@
-/* The group's bucket, as this member uses it: targets read as copies (R1, R2), and the only writes it makes, under
+/* The group's bucket, as this member uses it: targets read as copies (R1, R2), from `captures/` or, for a target
+ * with `area: "derived"`, from `derived/` (a safe view or safe copy file-safety stored, N753), and the only writes it makes, under
  * `clamav/` (R6) and `reputation/` (R26) (R11). Every write and delete in the module goes through `writeObject` and
  * `deleteObject`; a test reads every storage call in the sources and finds no other. */
 import { createHash } from 'node:crypto';
@@ -7,17 +8,22 @@ import { NAMESPACES, SCAN_MAX_BYTES } from './limits.mjs';
 const HEX64 = /^[0-9a-f]{64}$/;
 const WRITABLE = /^(clamav|reputation)\/[A-Za-z0-9._/-]+$/;
 
-export const captureKey = (store, sha) => `${store}/captures/${sha}`;
+/** R2: the areas a target is read from: a capture's (no `area`), or a derived copy's (`area: "derived"`). */
+export const AREAS = Object.freeze({ captures: 'captures', derived: 'derived' });
+export const objectKey = (store, area, sha) => `${store}/${AREAS[area]}/${sha}`;
+export const captureKey = (store, sha) => objectKey(store, 'captures', sha);
 
-/** R1: a target's shape, or null when it is malformed (`BAD_TARGET`). */
+/** R1: a target's shape, or null when it is malformed (`BAD_TARGET`): any `area` but `"derived"`, when one is stated. */
 export function normaliseTarget(t) {
   if (!t || typeof t !== 'object' || Array.isArray(t) || !HEX64.test(t.capture_sha || '')) return null;
-  if (t.parts === null || t.parts === undefined) return { capture_sha: t.capture_sha, parts: null };
+  if (t.area !== undefined && t.area !== 'derived') return null;
+  const area = t.area === 'derived' ? 'derived' : 'captures';
+  if (t.parts === null || t.parts === undefined) return { capture_sha: t.capture_sha, parts: null, area };
   if (!Array.isArray(t.parts) || t.parts.length === 0) return null;
   for (const p of t.parts) {
     if (!p || typeof p !== 'object' || !HEX64.test(p.sha256 || '') || !Number.isSafeInteger(p.bytes) || p.bytes < 0) return null;
   }
-  return { capture_sha: t.capture_sha, parts: t.parts.map((p) => ({ sha256: p.sha256, bytes: p.bytes })) };
+  return { capture_sha: t.capture_sha, parts: t.parts.map((p) => ({ sha256: p.sha256, bytes: p.bytes })), area };
 }
 
 export const knownStore = (s) => typeof s === 'string' && NAMESPACES.includes(s);
@@ -29,14 +35,14 @@ export async function sizeTarget(bucket, store, t, max = SCAN_MAX_BYTES) {
     if (declared > max) return { ok: false, reason: 'TOO_LARGE' };
     let total = 0;
     for (const p of t.parts) {
-      const h = await bucket.head(captureKey(store, p.sha256));
+      const h = await bucket.head(objectKey(store, t.area, p.sha256));
       if (!h) return { ok: false, reason: 'NOT_FOUND' };
       if (h.size !== p.bytes) return { ok: false, reason: 'DIGEST_MISMATCH' };
       total += h.size;
     }
     return { ok: true, bytes: total };
   }
-  const h = await bucket.head(captureKey(store, t.capture_sha));
+  const h = await bucket.head(objectKey(store, t.area, t.capture_sha));
   if (!h) return { ok: false, reason: 'NOT_FOUND' };
   if (h.size > max) return { ok: false, reason: 'TOO_LARGE' };
   return { ok: true, bytes: h.size };
@@ -46,7 +52,7 @@ export async function sizeTarget(bucket, store, t, max = SCAN_MAX_BYTES) {
  *  checked against `capture_sha`. `outcome` settles when the stream ends: `{ok:true}` or `{ok:false, reason}`; on a
  *  mismatch the stream errors, so nothing downstream takes the bytes as whole. */
 export function targetStream(bucket, store, t) {
-  const keys = t.parts ? t.parts.map((p) => [captureKey(store, p.sha256), p.sha256]) : [[captureKey(store, t.capture_sha), null]];
+  const keys = t.parts ? t.parts.map((p) => [objectKey(store, t.area, p.sha256), p.sha256]) : [[objectKey(store, t.area, t.capture_sha), null]];
   const whole = createHash('sha256');
   let settle;
   const outcome = new Promise((r) => { settle = r; });

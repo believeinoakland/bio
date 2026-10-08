@@ -8,7 +8,7 @@ import { PROVIDERS, engineFamily } from '../src/providers/catalogue.mjs';
 import { callHosts } from '../src/providers/net.mjs';
 import { LOG_COUNT_KINDS, PROVIDER_TIMEOUT_MS, SANDBOX_TIMEOUT_MS, REPUTATION_LIST_MAX_AGE_MS } from '../src/limits.mjs';
 import { makeZip } from '../../bio-plane/test/make-zip.mjs';
-import { memoryBucket, putCapture, depsWith, post, enc, EICAR, NOW } from './helpers.mjs';
+import { memoryBucket, putCapture, putDerived, depsWith, post, enc, EICAR, NOW } from './helpers.mjs';
 import { vendorNet, vendorSockets, specs, infected, has, WEB_RISK_TEST } from './vendors.mjs';
 
 const SCAN = ['scanii', 'metadefender-cloud', 'metadefender-core', 'icap', 'defender-storage', 'sophos-intelix'];
@@ -95,6 +95,37 @@ test('R5 not_scanned: TOO_LARGE (nothing sent), SERVICE_REFUSED with the status,
   const bad = await w.jsonCall('/provider/scan', { store: 'bio', target: { capture_sha: 'nope' }, tool: w.specs.scanii });
   assert.equal(bad.body.verdicts[0].reason, 'BAD_TARGET');
   assert.deepEqual((await w.jsonCall('/provider/scan', { store: 'x', target: t, tool: w.specs.scanii })).body, { ok: false, code: 'NAMESPACE_UNKNOWN' });
+});
+
+test('R5 R2 a derived target (area "derived") is read from ${store}/derived/<sha>, checked as a capture is, and sent; any other area is BAD_TARGET, nothing sent', async () => {
+  const w = world();
+  const copy = putDerived(w.bucket, EICAR, { split: 16 });
+  const r = await w.jsonCall('/provider/scan', { store: 'bio', target: copy, tool: w.specs.scanii });
+  assert.deepEqual(r.body.verdicts.map((v) => [v.capture_sha, v.result]), [[copy.capture_sha, 'found']]);
+  assert.ok(w.bucket.calls.every(([, k]) => !k.includes('/captures/')), 'nothing read under captures/');
+  assert.ok(w.net.seen.some((x) => infected(x.bytes)), 'the derived copy\'s bytes were sent');
+  const missing = await w.jsonCall('/provider/scan', { store: 'bio', target: { ...putCapture(w.bucket, enc('a capture')), area: 'derived' }, tool: w.specs.scanii });
+  assert.equal(missing.body.verdicts[0].reason, 'NOT_FOUND');
+  const n = w.net.seen.length;
+  for (const area of ['captures', 'other', 7]) {
+    const v = (await w.jsonCall('/provider/scan', { store: 'bio', target: { ...copy, area }, tool: w.specs.scanii })).body.verdicts[0];
+    assert.deepEqual([v.result, v.reason], ['not_scanned', 'BAD_TARGET'], String(area));
+  }
+  assert.equal(w.net.seen.length, n, 'nothing sent for a bad area');
+});
+
+test('R5 an outside tool\'s address carrying a user name or password is refused TOOL_ADDRESS_HAS_CREDENTIAL and nothing is sent', async () => {
+  for (const host of ['user:pw@halo.example.org', 'user@halo.example.org', ':pw@halo.example.org']) {
+    const w = world();
+    const doc = putCapture(w.bucket, DOCM);
+    const r = await w.jsonCall('/provider/cdr', { store: 'bio', target: doc, tool: { ...w.specs['glasswall-halo'], host } });
+    assert.deepEqual(r.body, { ok: false, code: 'TOOL_ADDRESS_HAS_CREDENTIAL' }, host);
+    const f = await w.jsonCall('/provider/forward', { tool: { ...w.specs.elastic, host: host.replace('halo', 'elastic') }, record: RECORD });
+    assert.deepEqual(f.body, { ok: false, code: 'TOOL_ADDRESS_HAS_CREDENTIAL' }, host);
+    const s = await w.jsonCall('/provider/scan', { store: 'bio', target: putCapture(w.bucket, EICAR), tool: { ...w.specs['metadefender-core'], host: host.replace('halo', 'mdcore') } });
+    assert.deepEqual([s.body.verdicts[0].result, s.body.verdicts[0].reason], ['not_scanned', 'TOOL_ADDRESS_HAS_CREDENTIAL'], host);
+    assert.equal(w.net.seen.length, 0, `${host}: nothing sent`);
+  }
 });
 
 test('R22 private mode per call: confirmed, refused before anything is sent, contradicted by the vendor\'s answer', async () => {
