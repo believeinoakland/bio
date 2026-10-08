@@ -1,6 +1,6 @@
 # image-cover (T37)
 
-**Status** · session_01A8wyDuP1JUCkDvsGN291AL · depth 2 · WORKING · handled B2
+**Status** · session_01A8wyDuP1JUCkDvsGN291AL · depth 2 · COMPLETE · handled B2
 
 ## Reading set (mechanics §17, N739)
 
