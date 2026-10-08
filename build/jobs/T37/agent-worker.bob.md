@@ -13,3 +13,7 @@ Generated artifact: your committed bundle `agent-worker/dist/agent-worker.bundle
 Merge order in L6 (`modules.json` order): capture-requests → skills → answers → agent-runner → agent-worker.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there, item 17 with `plan/t37-red-census.md`); none is yours (red 6 is agent-runner's, cleared by T37-16).
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+All three readings stand (K2211): (1) exactly one tool, the final draft tool, nothing else; (2) SURFACE gains signin; (3) no guard; your own RUNNER_SILENT detail never carries the code.
