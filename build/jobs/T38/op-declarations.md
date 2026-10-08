@@ -1,6 +1,6 @@
 # op-declarations (T38)
 
-**Status** · session_0155C7iEVSHTFRejHaePSxwy · depth 2 · WORKING · handled B1
+**Status** · session_0155C7iEVSHTFRejHaePSxwy · depth 2 · COMPLETE · handled B1
 
 ## Completion (T38-15)
 
