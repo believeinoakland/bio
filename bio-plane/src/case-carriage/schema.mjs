@@ -1,4 +1,4 @@
-/* case-carriage's tables (requirements: `build/requirements/case-carriage.md`; R1, R2, R3, R6; R9–R12). Copied from
+/* case-carriage's tables (requirements: `build/requirements/case-carriage.md`; R1, R2, R3, R6; R9–R12; R15, R16). Copied from
  * `publication`'s schema with their comments (K624 (1), seam map `build/extraction/publication-split-2.md` §2). The names
  * and columns are unchanged, so a store's existing rows stay: `CREATE TABLE IF NOT EXISTS`. Both are content-addressed,
  * append-only and exempt from purge (R6): a held text or list is never rewritten or removed. */
@@ -83,6 +83,36 @@ CREATE TABLE IF NOT EXISTS photo_copies (
 );
 CREATE INDEX IF NOT EXISTS photo_copies_capture ON photo_copies (capture, seq);
 CREATE INDEX IF NOT EXISTS photo_copies_sha ON photo_copies (sha256);
+
+-- R15, R16, R12 (T39; N806, K2333): THE QUEUE OF MEMBER DOCUMENTS AWAITING THEIR COPY. One row per digest, written by
+-- the receipt listener (a receipt that is not a fetch) or by documentCopy's miss, inside that act's transaction;
+-- removed when copyBatch records the document's outcome. tried is the instant of the last read of the evidence store
+-- that failed (null until one does): copyWake reads queued and tried, so its answer survives a restart.
+CREATE TABLE IF NOT EXISTS document_copy_queue (
+  capture TEXT PRIMARY KEY,
+  queued  TEXT NOT NULL,
+  tried   TEXT
+);
+CREATE INDEX IF NOT EXISTS document_copy_queue_order ON document_copy_queue (queued, capture);
+
+-- R15, R16, R12 (T39; N806, K2333): THE RECORD OF EACH MEMBER DOCUMENT'S COPY, one row per outcome copyBatch records,
+-- in the order made (seq); the latest row for a capture is its state. state public (fetched since it was queued; no
+-- copy), clean (it carries nothing doc-clean removes; carried whole), copy (sha256 the cleaned copy, held under
+-- <store>/obscured/<sha256> beside a photo's, labelled derived and naming its original), refused (doc-clean's code and
+-- detail). A copy's record is never a capture, never registered. Append-only, as a photo's copies are.
+CREATE TABLE IF NOT EXISTS document_copies (
+  seq            INTEGER PRIMARY KEY AUTOINCREMENT,
+  capture        TEXT NOT NULL,
+  state          TEXT NOT NULL CHECK (state IN ('public','clean','copy','refused')),
+  sha256         TEXT,
+  bytes          INTEGER,
+  format         TEXT,
+  refused_code   TEXT,
+  refused_detail TEXT,
+  at             TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS document_copies_capture ON document_copies (capture, seq);
+CREATE INDEX IF NOT EXISTS document_copies_sha ON document_copies (sha256);
 `;
 
 /** R6: the tables purge never clears. */
@@ -94,6 +124,11 @@ const marksClasses = (name) => Object.freeze({ name, purge: "clear", expunge: "n
                                                derive: "stored", version_chain: true });
 export const CASE_CARRIAGE_MARK_TABLES = Object.freeze([marksClasses("photo_marks"), marksClasses("photo_mark_withdrawals"),
                                                         marksClasses("photo_copies")]);
+
+/** R12 (T39; N806): the queue and the record of member documents' copies, declared with their classes: the record as
+ *  the copies of photos are (append-only); the queue a work list whose row goes when its outcome is recorded. */
+export const CASE_CARRIAGE_DOCUMENT_TABLES = Object.freeze([
+  Object.freeze({ ...marksClasses("document_copy_queue"), version_chain: false }), marksClasses("document_copies")]);
 
 /** Creates the tables; idempotent, every boot. A store whose `published_case_materials` predates `derived` (T37) is
  *  rebuilt once with every row kept, in one transaction where the storage offers one, since SQLite cannot widen a

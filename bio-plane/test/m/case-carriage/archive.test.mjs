@@ -91,6 +91,7 @@ function holdArchive(w, bundleId, zip, { token = null, tokenFile = "attestations
     : { file: "snapshots/archive.zip", capture: { method: "acquire", grade: "B", sha256: s, bytes: z.length },
         timestamp: { service: "tsa.example", token_file: tokenFile } }]);
   w.listing(s, z);   // acquisition's record of its listing (T38; R8)
+  w.receipt(s);      // (T39) fetched by this copy (provenance R62), so it may be carried
   return s;
 }
 /* A member of an archive, its text held inline on its own bundle, its home's provenance stating its `container`. */
