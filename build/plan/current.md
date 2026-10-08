@@ -1,6 +1,6 @@
 # Plan T36
 
-**Status** · OPEN · BOB #134 · session_01NrV6M5qXNkuHFroNuTCcu3 · depth 1
+**Status** · OPEN · BOB #135 · session_018Kd6VZEgGZNbFHvGKz9e5d · depth 1
 
 **Jobs** · connection-grammar: CONNECTION-GRAMMAR #3 session_01H9M3DEa6cwNZgYQXQhaJuf; signatures: SIGNATURES #11 session_01L8Hyorky2d1Lrs1dqmDrCn; bundler: BUNDLER #10 session_01AVSxAcVVnwvGFa9niTqNUo; office-readers: OFFICE-READERS #7 session_012a2UNtTuD5PNQ4KYMYjtA1; doctypes: DOCTYPES #3 session_019F8gBQfqTqF5hBsFcHmxd7; file-scanner: FILE-SCANNER #1 session_011jYjCHjn4qrJrgjofxmpKv; membership: MEMBERSHIP #27 session_01Kozvc5CabUVjWrHpUnjz1Z; credentials: CREDENTIALS #7 session_01DuWUHZfSSRpYU5V4qt2iss; promotion: PROMOTION #34 session_01PfzH458a5tMgwWs1AQfAys
 
