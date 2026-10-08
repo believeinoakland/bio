@@ -1,6 +1,6 @@
 # case-disclosures — requirements
 
-**Status** · In force: split from `case-authoring` for size (K617; N529, K1333, which governs over the seam read), meaning unchanged: R1–R16 name their `case-authoring` ids, retired there; R17–R21 are copies that hold here as there; R22 holds the C-120 family moved whole. The disclosure renderers live only here: `case-authoring` imports them and keeps no copy (K1333). Last changed T34 (R22's C-120.8, K1828) and T37 (T37-41: R6, R7, R22 amended; R29 new; N757; K2206; DEC-180); those marked not yet met (T37), every other requirement met (K1834).
+**Status** · In force: split from `case-authoring` for size (K617; N529, K1333, which governs over the seam read), meaning unchanged: R1–R16 name their `case-authoring` ids, retired there; R17–R21 are copies that hold here as there; R22 holds the C-120 family moved whole. The disclosure renderers live only here: `case-authoring` imports them and keeps no copy (K1333). Last changed T34 (R22's C-120.8, K1828) and T37 (T37-41: R6, R7, R22 amended; R29 new; N757; K2206; DEC-180) and T39 (T39-14: R6, R7, R22 amended; N806; K2333); those marked not yet met (T37, T39), every other requirement met (K1834).
 
 
 **Size (P6).** About 1,210 lines.
@@ -89,6 +89,14 @@ This module judges each against the owner's lists and the record at the act, and
   - **The refusal.** `RELIED_ON_NOT_PRESENTABLE` (C-120.8) names each load-bearing member and each material its chain reaches that is not held whole.
   - **Supporting only.** Material only supporting members reach, and not held whole, is listed `included: false` and never refused.
   - **A photo** (T37; N757; DEC-180 (3), (4); K2206; T38: N779, K2248; DEC-183 (1), K2220). A document material whose capture `case-carriage.photoMarks` (its R10) answers `photo: true` never travels whole. In order: marks that cannot be read are `PHOTO_MARKS_UNDETERMINED`, naming the photo (fail closed). An `unchecked` photo (no standing mark) that any member's chain reaches is refused `PHOTO_UNCHECKED` (a new C-120 row, R22), naming each such photo and member. A photo whose cover `image-cover` refused, marked or not, is `PHOTO_NOT_COVERABLE` when a load-bearing chain reaches it; when only supporting chains reach it, it is listed `included: false` with no `obscured`. Otherwise (`marked` or `nothing_to_obscure`, with a copy) it is answered `included: false` with `obscured: {copy, label}`: `copy` its current copy's SHA-256, `label` `OBSCURED_LABEL` when `marked`, else null. It is presentable through its copy and never `RELIED_ON_NOT_PRESENTABLE` for being held so. A withdrawn mark counts as withdrawn (`case-carriage` R14). Each refusal writes nothing.
+  - **A member document** (T39; N806; K2315, K2333). A document material that is not a photo, whose capture `case-carriage.documentCopy` (its R16) answers, is judged by that state, in this order:
+    1. `undetermined` is `DOCUMENT_COPY_UNDETERMINED`, naming the document (fail closed), whichever chain reaches it;
+    2. `pending` is `DOCUMENT_COPY_PENDING`, naming the document, when a load-bearing chain reaches it; when only supporting chains reach it, it is listed `included: false` with no `obscured`;
+    3. `refused` is `DOCUMENT_NOT_CLEANABLE`, naming the document and `doc-clean`'s reason (`refused.code`), when a load-bearing chain reaches it; when only supporting chains reach it, it is listed `included: false` with no `obscured`;
+    4. `copy` is answered `included: false` with `obscured: {copy, label}`, `label` `case-carriage`'s `COPY_CLEANED_LABEL`. It is presentable through its copy and never `RELIED_ON_NOT_PRESENTABLE` for being held so;
+    5. `clean` and `public` are judged as any document, by what is held (the rest of R6).
+
+    Each refusal writes nothing. A member-supplied archive the chain reaches through a member document is never carried (`case-carriage` R8). *(not yet met: T39)*
 - **R7** (was `case-authoring` R45) `disclosureBlocks(…)` answers the `materials:` and `material_attestations:` rows (`case-grammar` R12) for every material R6 answered, with:
   - its fingerprint, its extracted text's fingerprint, its origin and archived copy;
   - whether it is included;
@@ -100,6 +108,7 @@ This module judges each against the owner's lists and the record at the act, and
 
   No table and no act holds the project's or the group's attestation. A side the publisher could not see is never listed (R17).
   - (T37; N757) A photo R6 answers with `obscured` is written with its fingerprint, its extracted text's fingerprint, its origin and archived copy, `included: false`, and `obscured: {copy, label}` (`case-grammar` R12); its attestations as any document's.
+  - (T39; N806) A member document R6 answers with `obscured` is written as a photo's copy row is: its fingerprint, its extracted text's fingerprint, its origin and archived copy (the original's), `included: false`, `obscured: {copy, label}` (`case-grammar` R12), and its attestations as any document's. *(not yet met: T39)*
 - **R8** (was `case-authoring` R46) Terms for R6–R12.
   - **Off-the-record.** A capture is off-the-record when its `source` is a knocker or a hand-carried source and R4 states its identity "Withheld".
   - **Attesting member.** Its attesting member is the capture's `actor` (`acquisition` R16; for a pulled knock, the member who pulled it, `capture` R65).
@@ -178,7 +187,7 @@ This module judges each against the owner's lists and the record at the act, and
 - `entities`, `people` (T33-68): the person entity and its identity cluster, `interestsOf`, `tiesConcerning` (its R20) (R24, R25, R27).
 - `events`, `lines` (T33-68): `readEvent`, `holderAt` and a line's validity (R25), timeline participants (R24).
 - `money` (T33-68): a cited money fact's parties (R24, R27).
-- `case-carriage` (T37; K2171's edge): `photoMarks`, `OBSCURED_LABEL` (its R10, R11; R6, R7, R29).
+- `case-carriage` (T37; K2171's edge): `photoMarks`, `OBSCURED_LABEL` (its R10, R11; R6, R7, R29); `documentCopy`, `COPY_CLEANED_LABEL` (its R16, R15; T39, R6, R7).
 
 ### Invariants
 
@@ -187,7 +196,7 @@ This module judges each against the owner's lists and the record at the act, and
 - **R19** (copy of `case-authoring` R24) No row composes a case-level strength: every pair is per member and per axis.
 - **R20** (copy of `case-authoring` R22) Everything a row asserts arrived as an argument or was read from the record at the call. Nothing is composed, summarised or inferred.
 - **R21** (copy of `case-authoring` R30) No place is named in this module's behaviour or outward text.
-- **R22** (`case-authoring` R29's share) C-120.1–C-120.8 and C-120.10–C-120.13, the family "a case's disclosures and its pre-flight" (`CASE_DISCLOSURE_CHECKS`), are held in this module's own table with their ids, codes and translations unchanged, each `where` naming this module's raising method. C-120.9 is withdrawn and never reused. R25's `PERSON_BASIS_UNRECORDED` and `PERSON_BASIS_NOT_STANDING` and R27's `TIE_ATTESTATION_MISSING` are new rows of this family (C-120.14 onward, numbered at their stamp; translations drafted by BOB, re-wordable by the UX stream). A change to any moves `CATALOG_VERSION` (rule 17). (T37; N757; K2206) R6's `PHOTO_NOT_COVERABLE` and `PHOTO_MARKS_UNDETERMINED` are new rows of this family, numbered at their stamp, their translations BOB's drafts (below), re-wordable by the UX stream. (T38; DEC-183; K2220) R6's `PHOTO_UNCHECKED` is a new row of this family, numbered at its stamp. Its translation is `words.json`'s `photo.refused.unchecked`, and `PHOTO_NOT_COVERABLE`'s is now `photo.refused.format`. Both are read by key, protected, `{photo}` the photo named.
+- **R22** (`case-authoring` R29's share) C-120.1–C-120.8 and C-120.10–C-120.13, the family "a case's disclosures and its pre-flight" (`CASE_DISCLOSURE_CHECKS`), are held in this module's own table with their ids, codes and translations unchanged, each `where` naming this module's raising method. C-120.9 is withdrawn and never reused. R25's `PERSON_BASIS_UNRECORDED` and `PERSON_BASIS_NOT_STANDING` and R27's `TIE_ATTESTATION_MISSING` are new rows of this family (C-120.14 onward, numbered at their stamp; translations drafted by BOB, re-wordable by the UX stream). A change to any moves `CATALOG_VERSION` (rule 17). (T37; N757; K2206) R6's `PHOTO_NOT_COVERABLE` and `PHOTO_MARKS_UNDETERMINED` are new rows of this family, numbered at their stamp, their translations BOB's drafts (below), re-wordable by the UX stream. (T38; DEC-183; K2220) R6's `PHOTO_UNCHECKED` is a new row of this family, numbered at its stamp. Its translation is `words.json`'s `photo.refused.unchecked`, and `PHOTO_NOT_COVERABLE`'s is now `photo.refused.format`. Both are read by key, protected, `{photo}` the photo named. (T39; N806; K2333) R6's `DOCUMENT_COPY_UNDETERMINED`, `DOCUMENT_COPY_PENDING` and `DOCUMENT_NOT_CLEANABLE` are new rows of this family, numbered at their stamp. Their translations are BOB's drafts (below), re-wordable by the UX stream. `DOCUMENT_NOT_CLEANABLE`'s is read by key `document.refused.clean` and `DOCUMENT_COPY_PENDING`'s by `document.refused.pending`, protected, `{document}` the document named, once the UX stream holds the keys. Until then the module's table holds the draft. *(not yet met: T39)*
 - **R23** (the seam, K617)
   - Every service is synchronous.
   - It never throws on a failed read of another module (that read states less, never more).
@@ -214,6 +223,9 @@ Rows C-120.1–C-120.8 and C-120.10–C-120.13 (R22), with their translations, m
 | (T37, at its stamp) | `PHOTO_NOT_COVERABLE` | (T38; `photo.refused.format`) "This photo's format can't be obscured: {photo}. Capture it again as an ordinary photo, or stop relying on it." |
 | (T37, at its stamp) | `PHOTO_MARKS_UNDETERMINED` | "A photo this case relies on could not be checked for the people and number plates marked in it, so what the published case would show of it is not known. Try again. Nothing was written." |
 | (T38, at its stamp) | `PHOTO_UNCHECKED` | (`photo.refused.unchecked`) "Signing waits until every photo the case relies on is checked: {photo}." |
+| (T39, at its stamp) | `DOCUMENT_NOT_CLEANABLE` | (`document.refused.clean`) "A document a member supplied can't be cleaned of the details that could show who made it: {document}. Capture it from where it was published, supply a plainer copy, or stop relying on it." |
+| (T39, at its stamp) | `DOCUMENT_COPY_PENDING` | (`document.refused.pending`) "The publication copy of a document a member supplied is still being made: {document}. Try again in a few minutes." |
+| (T39, at its stamp) | `DOCUMENT_COPY_UNDETERMINED` | "A document this case relies on could not be checked for the details a member's file can carry, so what the published case would show of it is not known. Try again. Nothing was written." |
 
 ### Satisfies
 
@@ -223,6 +235,7 @@ Rows C-120.1–C-120.8 and C-120.10–C-120.13 (R22), with their translations, m
 - DEC-96 item 4 (R12–R14; N522, K1273).
 - `BIO_Publication_v0_1.md` §3 rule 4; DEC-20 (R16).
 - DEC-180 (3), (4) (Bob, K2108): R6, R7, R29; with DEC-112 (4) kept whole, a marked photo that cannot be covered refused rather than carried whole or left out (K2206; N757).
+- K2315 (Bob's C), K2333, K2334 (N806): R6, R7, R22.
 
 ### Suggestions
 

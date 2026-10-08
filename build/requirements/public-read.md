@@ -1,6 +1,6 @@
 # public-read — requirements
 
-**Status** · In force: split from `publication` for size (K617, K651), meaning unchanged: R1–R9 name their `publication` ids, retired there (R15's third sentence stays `publication`'s); R10–R15 are copies of `publication` R25–R29 and R34, holding here as there; R16 states K651's seam; DEC folds approved by Bob (K1019). Last changed T36 (T36-27: R32, R33; K2004, K2129, K2145) and T37 (T37-42: R3, R23 amended; N757; K2206; DEC-180); those marked not yet met (T37), every other requirement met (PUBLIC-READ #13, K2016).
+**Status** · In force: split from `publication` for size (K617, K651), meaning unchanged: R1–R9 name their `publication` ids, retired there (R15's third sentence stays `publication`'s); R10–R15 are copies of `publication` R25–R29 and R34, holding here as there; R16 states K651's seam; DEC folds approved by Bob (K1019). Last changed T36 (T36-27: R32, R33; K2004, K2129, K2145) and T37 (T37-42: R3, R23 amended; N757; K2206; DEC-180) and T39 (T39-12: R23 worded for a member document's copy; N806; K2333); those marked not yet met (T37), every other requirement met (PUBLIC-READ #13, K2016).
 
 **Size (P6).** About 1,915 lines: ~940 of the store side and 974 of the Worker files.
 
@@ -47,7 +47,7 @@ Terms are `publication`'s (a case, an edition, the case document, a pin, the pub
   - the signed case document and its signature;
   - the complete edition (R24);
   - each member's published bytes and signature, and each finding a member's chain reaches, with its grading facts and its passages;
-  - every material the `materials:` block lists `included: true`, whole, with its extracted text (`publication` R57); (T37; N757; T38: N779, K2248) and, for each photo, which the case carries only as its copy, the copy as one file of kind `obscured` under that row's ref, at the SHA-256 `obscured.copy` names, read from the published projection by that hash, never the original's bytes, its metadata, its extracted text, or an archive or container record of it (R32); no route of this module serves a photo's original; a copy whose bytes do not hash to that digest is not carried and is named in `unheld`. The case file states `bio-case-file/3` (`case-grammar` R13);
+  - every material the `materials:` block lists `included: true`, whole, with its extracted text (`publication` R57); (T37; N757; T38: N779, K2248) and, for each material the case carries only as its copy (a photo, `case-carriage` R11, or a member document's cleaned copy, its R15; T39, N806), the copy as one file of kind `obscured` under that row's ref, at the SHA-256 `obscured.copy` names, read from the published projection by that hash, never the original's bytes, its metadata, its extracted text, or an archive or container record of it (R32); no route of this module serves the original of a material carried as its copy; a copy whose bytes do not hash to that digest is not carried and is named in `unheld`. The case file states `bio-case-file/3` (`case-grammar` R13);
   - the attestations the block lists;
   - each calculation the `calculations:` block lists (`case-grammar` R18) and each input it names, by the hash the row states, so the checker can recompute it (`case-checker`);
   - the signing keys.
@@ -108,6 +108,7 @@ Terms are `publication`'s (a case, an edition, the case document, a pin, the pub
 - DEC-116 items 7 and 8, DEC-100 item 2, and `BIO_Publication_v0_1.md` §5D ("Withdrawal": the stamp; "How the docket travels": the public page and the per-case feed): R20, R21 (N520). DEC-101 response 3 (a citing copy's daily read without the captures' bytes): R25 (N534).
 - DEC-147 (5) (Bob's "S1: B", 2026-10-06: the public page shows when the edition was signed and when it was published): R29; K1784, K1790 (T34-46).
 - DEC-180 (4) (Bob, K2108): a marked photo travels as its labelled copy, never whole (R3, R23; N757, K2206).
+- K2333 (N806): R23's wording.
 - DEC-146 (the one line saying what Civicsmith is, on the page the credit links to; K1774): R30 (N660). The installer's use of the same line is `installer`'s (T35-50).
 - DEC-101 and `BIO_Publication_v0_1.md` §5A (R3's `what_changed`); DEC-103 and `BIO_Declared_Bias_v0_1.md`, "RULED 2026-10-01 by Bob (DEC-103)" (R3's `lens`); K1019.
 
