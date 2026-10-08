@@ -177,7 +177,7 @@ test("R51 R52 the routes: aikeepaway takes `by` from the query over the body; ai
 
 async function servedWorld() {
   const w = await world().group("ann", "bob");
-  await w.c.accountReferenceSet({ member: "ann", kind: "subscription", secret: "sk-ant-oat01-ANN", by: "ann" });
+  await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ant-api03-ANN", by: "ann" });
   w.c.accountSwitchSet({ member: "ann", switch: "standing", on: true, by: "ann" });
   await w.c.groupKeySet({ key: "sk-ant-api03-GROUP", by: "admin" });
   w.c.groupKeySwitch({ on: true, by: "admin" });
@@ -262,10 +262,11 @@ test("R35 otherwise a member's own reference is always answered when held, whate
   await served("keep-away set off");
   w.c.groupKeyRemove({ by: "admin" });
   await served("the group key removed");
-  /* a subscription token likewise; and bob with none is served by nothing once the group key is gone */
-  await w.c.accountReferenceSet({ member: "bob", kind: "subscription", secret: "sk-ant-oat01-BOB", by: "bob" });
+  /* bob's own key likewise, the group key gone; and with none he is served by nothing */
+  assert.equal((await w.c.accountFor({ member: "bob", act: { kind: "run", member: "bob" } })).reason, "NO_ACCOUNT");
+  await w.c.accountReferenceSet({ member: "bob", kind: "apikey", secret: "sk-BOB-own", by: "bob" });
   assert.deepEqual(await w.c.accountFor({ member: "bob", act: { kind: "run", member: "bob" } }),
-    { ok: true, kind: "subscription", level: "member", key: "sk-ant-oat01-BOB" });
+    { ok: true, kind: "apikey", level: "member", key: "sk-BOB-own" });
 });
 
 /* ===== R49: the counts for a period ===== */

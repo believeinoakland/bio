@@ -34,7 +34,10 @@
    8. `case-checker/program.mjs` and the plane bundle, staled by any T38 L8 merge, regenerated at L8's close (§5.6 (1)).
    9. file-safety tests that read file-scanner's `config` lists (`securityToolAdd`'s required check after it deletes `cfg.host`/`cfg.region`), from T38-17's merge until T38-18 (K2264): 29 of its 49 tests (FILE-SCANNER #3 J3: R4, R5, R8–R10, R12–R16, R18, R21–R23, R25, R27–R33, R35, R37, R39–R41, each through a tool add answering `CONFIG_MISSING` host/region); named in T38-18's START.
    10. `system/resolveversion.test.mjs` ARM 7 (file-scanner at 0.79.0 against the plane's 0.81.0), until file-scanner's re-merge (K2266).
-7. **BOB's acts (no module job):** at the opening, rule 2's boundary (at L2's START), rule 3's choice, rule 4's packaging, every L1 requirement change, the questions to Bob ("For BOB" below). (N781; K1763, K2171) the terms register gains, as AT entries quoted verbatim, the paragraphs "Using the Claude Code name and logo" and "Claude Code remains governed by Anthropic's standard terms … regardless of the platform" (found under "Can customers offer Claude Code in their products?"), at the opening's register edit. T38's release is BOB's (K1501), decided at its close. (N795; K2259) BOB diagnoses the close's refused acts and brings Bob the mechanics change, rendered (K1258), certified by a dry run (P3) before a close relies on it.
+   11. From membership's second merge (its copy of the moved project acts deleted) until T38-26 (plane, L11): the plane registers no project-roster listener (R15, R16) and spreads none of its ops (`projectrequest*`, `projectdirectory`, `projectowner*`, `projectvisibility`, `projectparticipants`); a test that drives those ops or that closing through the plane is red by name, named in its owner's START (MEMBERSHIP #29 J2, K2276). At membership's second merge (J4, K2281): affordances `plane.test.mjs` (28, `op=projectowneradd`), promotion `d526-refusal-order.test.mjs` section 4 (`op=projectparticipants`), plane `stats.test.mjs` (2, `projectOwnerVotes`), all until T38-26; answer-envelope `catalogue-end.test.mjs` (`LAST_OWNER`'s row), until T38-25; bias `debt.test.mjs`:103 (its setup calls the moved `projectOwnerAdd`), until T38-27. ai-runs `scheduler.test.mjs`:171–175 (a `subscription` reference, refused since T38-5), until T38-28 (K2283).
+   12. project-roster `figures-purge.test.mjs`'s two tests over the real record-core (R17, R18: `TABLE_DECLARED`, membership's copy still declares the moved tables), until membership's second merge (its R115) (PROJECT-ROSTER #1 J2, K2278).
+   13. answer-envelope `families.test.mjs`'s two totality tests (R2/R7, and T37's case-carriage one), naming `src/project-roster/checks.mjs` as unreached, from project-roster's merge until T38-25 (L11) (PROJECT-ROSTER #1 J2, K2278).
+7. **BOB's acts (no module job):** at the opening, rule 2's boundary (at L2's START), rule 3's choice, rule 4's packaging, every L1 requirement change, the questions to Bob ("For BOB" below). (N781; K1763, K2171) the terms register gains, as AT entries quoted verbatim, the paragraphs "Using the Claude Code name and logo" and "Claude Code remains governed by Anthropic's standard terms … regardless of the platform" (found under "Can customers offer Claude Code in their products?"), at the opening's register edit. T38's release is BOB's (K1501), decided at its close. (N795; K2259, K2273) done: mechanics §5.7 (3), §16, §11 changed on Bob's approval; T38's close is the first by a pull request merged with the GitHub merge tool, its proof (V6).
 8. **N779 (Bob, K2248; BOB's details, P17):** every photo a published case carries travels as a copy without its metadata, made by `image-cover.coverAreas` with the photo's marks, or with no areas for an unmarked photo (its R1's empty `areas`, R2: nothing of the original but its pixels), so no L1 change; a photo `image-cover` cannot take (R3, e.g. HEIC) refuses the publication as DEC-183's B103 (b) does a marked one, naming it. The group keeps the original with its metadata and fingerprint.
 9. **N793 (K231; BOB's):** `NO_SUCH_MEMBER` (C-64) has one site: membership (T38-4, with its split) provides the helper and the row; instance-setup drops its row; credentials, tasks, setup-page and control-plane call membership's helper in place of minting the code.
 
@@ -58,7 +61,7 @@ Each line is one job (P8): every T38 entry for that module. Fields: module · (N
 - **T38-5 · credentials** · (N785, its share; K2200) R35 answers a connected member (R43) with a `signin` account (agent-runner R2's `{kind: "signin", member}`, T37-16). (N708's remainder) R22's `subscription` kind retired, its replacement built in T37's L6. (N793) calls membership's `NO_SUCH_MEMBER` helper (rule 9) · K1819, K2134, K2200, K231 · req: R35, R22, BOB's wording · depends T38-4 (N793's helper). **P6:** 2,793.
 - **T38-6 · promotion** · (T37's rule 6 item 2) stamps every row awaiting stamp at T37's close (rows T37's L3–L11 jobs added or re-worded, conformance's seven C-113 rows among them) and the rows T38's L1–L2 jobs add or re-code (T38-5's, the split's moved rows if any `where` moves), so `row-census.test.mjs` is green; the catalogue version moves, any pinned digest moves in its owner's job · K1542, K2231, K2232 · req: none (a stamp) · depends T38-4, T38-5. **P6:** 3,473 (its table grows by rows, not logic).
 
-**L2 merge order:** project-roster (copy) → membership (delete, R83) → credentials → promotion last (it stamps the layer's rows). Then the regeneration order (`case-checker/program.mjs`, the plane bundle).
+**L2 merge order (K2275):** membership (R113–R121, N793, R83; its copy still in place) → project-roster (copy) → membership again (delete)  → credentials → promotion last (it stamps the layer's rows). Then the regeneration order (`case-checker/program.mjs`, the plane bundle).
 
 ### L3
 
@@ -72,9 +75,14 @@ Each line is one job (P8): every T38 entry for that module. Fields: module · (N
 
 - **T38-8 · extraction** · (N786) `n26MigratedReading.moveCells` (`extraction/index.mjs`:213–224) moves a doc-table cell's sources but not its `paras` ordinals (office-readers R11): the job checks which holds and R66 states it (a migrated reading's `paras` renumbered with its paragraphs, or no reading carrying `paras` predates N26), with a test (RETRIEVAL #15 J2) · K2203 · req: R66, BOB's wording at the START · depends —. **P6:** 2,741.
 
+### L5
+
+- **T38-27 · bias** (test only) · (N783) `test/m/bias/debt.test.mjs`:103's setup makes an owner through project-roster's R3 (or membership R118 `participationWrite("ownerOn", …)`), not the moved `membership.projectOwnerAdd` · K2281 · req: none · depends T38-3, T38-4 (L2).
+
 ### L6
 
 - **T38-9 · agent-model** · (N785, its share) R2 takes credentials' `signin` account (T38-5) and opens that member's named instance, not `newUniqueId` (`subscription.mjs`:106) · K2200 · req: R2 amended, BOB's wording · depends T38-5 (L2). **P6:** 766.
+- **T38-28 · ai-runs** (test only) · (N708's remainder) `test/m/ai-runs/scheduler.test.mjs`:171–175 sets a `subscription` reference, now refused `UNKNOWN_ACCOUNT_KIND` (credentials R22, T38-5): drop that case or carry the `signin` account as agent-model's R2 takes it (T38-9) · K2283 · req: none · depends T38-5 (L2).
 - **T38-10 · agent-worker** · (N785, its share) R6 carries the `signin` account to agent-model (T38-9), so a conversation runs on the member's own stored sign-in · K2200 · req: R6 amended, BOB's wording · depends T38-9. Adds no `src/` file, or its START names the bundler pin's red until T39 (bundler's L1 job is merged). **P6:** 2,767 (`dist/` bundle excluded).
 
 **L6 merge order:** `modules.json` order: agent-model → agent-worker.
@@ -134,7 +142,7 @@ Measured on `tranche/T37` @ `5fd61bfb68` (K1821). **membership** 3,970: split fi
 
 ## Summary
 
-**Jobs per layer:** L1 3, L2 4, L3 2, L4 1, L5 0, L6 2, L7 0, L8 5, L9 0, L10 0, L11 9. **Total 26.**
+**Jobs per layer:** L1 3, L2 4, L3 2, L4 1, L5 1, L6 3, L7 0, L8 5, L9 0, L10 0, L11 9. **Total 28.**
 
 ## For BOB
 

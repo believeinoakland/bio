@@ -7,7 +7,9 @@
  * administrators' recovery codes; and, from T36 (T36-7; DEC-172, K1946, K2038), each outside security tool's
  * credentials under R29, the tally's totals for a period, its store-internal route, and the group's setting that keeps
  * its material away from every assistant; and, from T37 (T37-6; DEC-182 (4), K231, N761), a member's own password
- * change, the one keep-away read every gate asks, and a mint that carries no digest refused.
+ * change, the one keep-away read every gate asks, and a mint that carries no digest refused; and, from T38 (T38-5;
+ * N785, N708's remainder, K2200), a member connected through their subscription served by their own sign-in, and the
+ * stored subscription token retired.
  *
  * Requirements: build/requirements/credentials.md (R1–R53; R26 retired). Split from `membership` (K617, K636 BOB-1, K637; T19 layer
  * 2, CREDENTIALS #1): the code is copied from `membership/index.mjs` and `schema.mjs`, without change of meaning, and
@@ -25,7 +27,7 @@
  */
 import { MACHINE_CLASS_PREFIX, isMachineIdentity, sha256HexSync } from "../record-grammar/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
-import { Membership, membershipOf, notAnAdmin } from "../membership/index.mjs";
+import { Membership, membershipOf, notAnAdmin, noSuchMember } from "../membership/index.mjs";
 import { CREDENTIALS_SCHEMA, CREDENTIALS_ADDITIVE_COLUMNS, CREDENTIALS_TABLES } from "./schema.mjs";
 export { CREDENTIALS_EXEMPT_TABLES, CREDENTIALS_TABLES } from "./schema.mjs";
 import { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, ACCOUNT_CHECKS,
@@ -33,10 +35,12 @@ import { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, ACCO
 export { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, ACCOUNT_CHECKS,
          KEYED_SERVICE_CHECKS, SIGN_IN_CHECKS } from "./checks.mjs";
 
-/* R22 (K1502, K1547): the kinds of a member's own Claude account reference: `apikey` (the member's own API key) and
-   `subscription` (the member's own subscription token, from `claude setup-token`). Both are held, sealed and used
-   alike, for that member alone. The group's own key is an API key only (R33). */
-export const ACCOUNT_KINDS = Object.freeze(["apikey", "subscription"]);
+/* R22 (K1502, K1547): the kind of a member's own Claude account reference: `apikey` (the member's own API key), held,
+   sealed and used for that member alone. (T38; N708's remainder, K2200) `subscription`, a stored `claude setup-token`
+   token, is retired: a member's subscription is reached through the hosted Claude Code's own sign-in (R43, R35), never
+   a stored token, and a reference of that kind stored before T38 is removed at `migrate`. The group's own key is an API
+   key only (R33). */
+export const ACCOUNT_KINDS = Object.freeze(["apikey"]);
 /* R25, R37 (K1479, K1500): the two switches, a member's reference's and the group key's alike. */
 export const ACCOUNT_SWITCHES = Object.freeze(["suggestions", "standing"]);
 /* R27: an ask grant's life, in seconds (it also ends with the member's session). */
@@ -163,7 +167,19 @@ export class Credentials {
        row has no `expires_at`, since every mint records one, so a later boot finds none to give. */
     this.sql.exec(`UPDATE ai_credentials SET expires_at=? WHERE expires_at IS NULL`,
       stampSecond(Date.now() + AI_CREDENTIAL_EXPIRY_DAYS.default * DAY_MS));
+    this.#tx(() => this.#retiredReferences());
     this.declareTables();
+  }
+
+  /* R22, R35 (T38; N708's remainder, K2200): a reference of a kind no longer held (`subscription`, a stored token) is
+     never answered, and is removed here as the member's own removal removes one (R22): the row goes, and with it every
+     standing question's grant minted for that member (R32). The member's `accountReferenceState` then shows none (R23).
+     A later boot finds none to remove. */
+  #retiredReferences() {
+    const kinds = ACCOUNT_KINDS.map(() => "?").join(",");
+    this.sql.exec(`DELETE FROM ai_grants WHERE kind='standing' AND member_id IN
+                   (SELECT member_id FROM account_references WHERE kind NOT IN (${kinds}))`, ...ACCOUNT_KINDS);
+    this.sql.exec(`DELETE FROM account_references WHERE kind NOT IN (${kinds})`, ...ACCOUNT_KINDS);
   }
 
   /* R40 (F13): a store whose sessions are held as tokens (the `token` column) is carried over, once, to their SHA-256
@@ -630,7 +646,7 @@ export class Credentials {
    * beside the code. Answers null when the member may attest. */
   #signerMemberBar(memberId) {
     const m = this.#memberFacts(memberId);
-    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    if (!m) return noSuchMember(memberId);   /* membership R121 (N793; K231): the one site that mints NO_SUCH_MEMBER */
     if (m.status === "active") return null;
     const enrolled = typeof m.handle === "string" && m.handle !== "";
     const refusal = (code, detail) => {
@@ -1022,8 +1038,7 @@ export class Credentials {
 
   /* ===== EACH MEMBER'S OWN CLAUDE ACCOUNT (R22–R25; T33-20, K1502, K1503) =====
    *
-   * A member who wants the assistant may bring their own account: an API key or a subscription token, held only by the
-   * member's own act, SEALED at rest under that member (R23), and never shown, listed, logged or exported: no answer
+   * A member who wants the assistant may bring their own account: an API key, held only by the member's own act, SEALED at rest under that member (R23), and never shown, listed, logged or exported: no answer
    * below carries the secret or a digest of it, except R24's and R35's, which unseal it for the one call they serve.
    * The group's own API key, set by an administrator, serves members who hold none while it is on (R33–R37; K1755). */
 
@@ -1073,8 +1088,9 @@ export class Credentials {
     /* DEC-49 REGION is-account-held */
     return Credentials.#row(ACCOUNT_CHECKS, "NO_ACCOUNT", ownOnly
       ? "this member holds no Claude account reference of their own. Nothing was used or written."
-      : "no Claude account serves this member: they hold no reference of their own, and the group's key is not held or "
-        + "not on, so there is no assistant for them. Nothing was used.", { member });
+      : "no Claude account serves this member: they hold no reference of their own, they are not connected through "
+        + "their subscription, and the group's key is not held or not on, so there is no assistant for them. Nothing was "
+        + "used.", { member });
     /* END DEC-49 REGION is-account-held */
   }
 
@@ -1141,15 +1157,17 @@ export class Credentials {
     } catch { return null; }
   }
 
-  /* R22: one reference for `member`, of either kind, replacing any earlier one of either kind, by that member's own act.
+  /* R22: one reference for `member`, of the one kind (`apikey`; `subscription` refused since T38), replacing any earlier
+     one, by that member's own act.
      Answers `{ok, kind, set_at}` and never the secret. A replacement keeps the member's switches (R25); only removal turns them off. */
   async accountReferenceSet({ member = null, kind = null, secret = null, by = null } = {}) {
     const bar = this.#accountBar(member, by);
     if (bar) return bar;
     /* DEC-49 REGION is-account-kind */
     if (!ACCOUNT_KINDS.includes(kind))
-      return Credentials.#row(ACCOUNT_CHECKS, "UNKNOWN_ACCOUNT_KIND", `the kinds your group's Civicsmith holds are `
-        + `${ACCOUNT_KINDS.join(" and ")}. Nothing was written.`);
+      return Credentials.#row(ACCOUNT_CHECKS, "UNKNOWN_ACCOUNT_KIND", `the kind your group's Civicsmith holds is `
+        + `${ACCOUNT_KINDS.join(" and ")}; a Claude subscription is connected through Claude Code's own sign-in, never `
+        + `held as a token. Nothing was written.`);
     /* END DEC-49 REGION is-account-kind */
     const empty = Credentials.#noSecret(secret);
     if (empty) return empty;
@@ -1183,7 +1201,7 @@ export class Credentials {
     if (id === null || typeof member !== "string" || Credentials.#memberOf(viewer) !== id || isMachineIdentity(viewer))
       return Credentials.#notYours("a member's Claude account is seen only by that "
         + "member. Nothing was read.");
-    const r = this.#one(`SELECT kind, set_at, suggestions, standing FROM account_references WHERE member_id=?`, id);
+    const r = this.#reference(id, "kind, set_at, suggestions, standing");
     const sub = this.#one(`SELECT since FROM subscription_connections WHERE member_id=?`, id);
     return { ok: true, held: !!r, kind: r ? r.kind : null, set_at: r ? r.set_at : null,
              suggestions: !!(r && r.suggestions), standing: !!(r && r.standing),
@@ -1197,7 +1215,8 @@ export class Credentials {
    * sign-in lives where the Claude Code binary wrote it, in the member's own agent-runner container. THIS MODULE HOLDS
    * THE FACT ONLY: that the member is connected, and since when. It never takes the login, the code from Anthropic's
    * page, a token, or a digest of any of them; a call carrying anything but the member is refused, recording nothing.
-   * In T35 the fact serves no act: `accountFor` (R35) and the ask grant (R27) do not read it (plan T35 rule 6; N708). */
+   * Since T38 (N785, K2200) `accountFor` (R35) reads it: a member with no reference of their own who is connected is
+   * served by their own sign-in, `{kind: "signin", level: "member", member}`, which carries no secret. */
 
   /* R43: an in-plane call, reached by no route and answered to no viewer. */
   subscriptionConnected(args = {}) {
@@ -1215,6 +1234,9 @@ export class Credentials {
     this.sql.exec(`INSERT OR IGNORE INTO subscription_connections (member_id, since) VALUES (?,?)`, id, stampSecond());
     return { ok: true, member: id, since: this.#one(`SELECT since FROM subscription_connections WHERE member_id=?`, id).since };
   }
+
+  /* R43, R35: whether the member is connected through their subscription (the fact R35 reads). */
+  #connected(id) { return !!this.#one(`SELECT member_id FROM subscription_connections WHERE member_id=?`, id); }
 
   /* R43: the member's own act (R22's refusals) clears it; so does their revocation (R16). */
   subscriptionDisconnect({ member = null, by = null } = {}) {
@@ -1236,9 +1258,16 @@ export class Credentials {
     return id;
   }
 
+  /* R22–R25, R35: the member's reference row (the columns asked), only of a kind held (ACCOUNT_KINDS): a retired kind
+     stored before its retirement is never answered (T38), whatever a store holds before `migrate` has run. */
+  #reference(id, columns) {
+    const kinds = ACCOUNT_KINDS.map(() => "?").join(",");
+    return this.#one(`SELECT ${columns} FROM account_references WHERE member_id=? AND kind IN (${kinds})`, id, ...ACCOUNT_KINDS);
+  }
+
   /* R24, R35: a member's own reference, unsealed, or a refusal (ACCOUNT_SEAL_UNAVAILABLE); null when none is held. */
   async #ownReference(id) {
-    const r = this.#one(`SELECT kind, sealed, iv FROM account_references WHERE member_id=?`, id);
+    const r = this.#reference(id, "kind, sealed, iv");
     if (!r) return null;
     const unsealable = this.#seal();
     if (unsealable) return unsealable;
@@ -1269,7 +1298,7 @@ export class Credentials {
     const unknown = Credentials.#switchName(name);
     if (unknown) return unknown;
     const id = Credentials.#memberOf(member);
-    if (!this.#one(`SELECT member_id FROM account_references WHERE member_id=?`, id)) return this.#noAccount(id, true);
+    if (!this.#reference(id, "member_id")) return this.#noAccount(id, true);
     this.sql.exec(`UPDATE account_references SET ${name}=? WHERE member_id=?`, on === true ? 1 : 0, id);
     return { ok: true, switch: name, on: on === true };
   }
@@ -1408,17 +1437,21 @@ export class Credentials {
   }
 
   /* R35's choice without unsealing: which account serves an active member's act now, 'member', 'group' or null, and
-     the switches that govern it (R25, R37). */
+     the switches that govern it (R25, R37). (T38; K2275) A member's own sign-in (R43) serves at level 'member' with no
+     switch of its own: R25's belong to a reference and R37's to the group key, so both read off for it. */
   #servingAccount(id) {
-    const own = this.#one(`SELECT suggestions, standing FROM account_references WHERE member_id=?`, id);
+    const own = this.#reference(id, "suggestions, standing");
     if (own) return { level: "member", suggestions: !!own.suggestions, standing: !!own.standing };
+    if (this.#connected(id)) return { level: "member", signin: true, suggestions: false, standing: false };
     const g = this.#groupKeyFacts();
     return g.on ? { level: "group", suggestions: g.suggestions, standing: g.standing } : null;
   }
 
   /* R35: the account that serves a member's act: their own reference when held, `{kind, level: "member", key}`,
-     whatever the group key's state (DEC-172 (1), (5)); else the group key when held and on, `{kind: "apikey", level:
-     "group", key}`, for an active member who has read its notice (R36); else NO_ACCOUNT. While the group keeps its
+     whatever the group key's state (DEC-172 (1), (5)); else (T38; N785, K2200), when they are connected through their
+     subscription (R43), their own sign-in, `{kind: "signin", level: "member", member}`, carrying no secret (agent-runner
+     R2 opens that member's sign-in); else the group key when held and on, `{kind: "apikey", level: "group", key}`, for
+     an active member who has read its notice (R36); else NO_ACCOUNT. While the group keeps its
      material away (R51), every account is refused AI_KEPT_AWAY first, before any is read. `act` as R24's. Writes
      nothing; called only by the modules that run the assistant. */
   async accountFor({ member = null, act = null } = {}) {
@@ -1430,6 +1463,7 @@ export class Credentials {
         + "Nothing was used.");
     const own = await this.#ownReference(id);
     if (own) return own.ok ? { ok: true, kind: own.kind, level: "member", key: own.secret } : own;
+    if (this.#connected(id)) return { ok: true, kind: "signin", level: "member", member: id };
     if (!this.#groupKeyFacts().on) return this.#noAccount(id);
     if (this.#memberFacts(id)?.status !== "active")
       return Credentials.#row(ACCOUNT_CHECKS, "ACCOUNT_MEMBER_NOT_ACTIVE", "the group's key serves only acts of active "
@@ -1523,8 +1557,10 @@ export class Credentials {
     return { ok: true, token, expires };
   }
 
-  /* R27: at the member's own act under their own live session; refused NO_ACCOUNT when no account serves them (R35),
-     and GROUP_KEY_NOTICE_DUE when the group key would serve them and they have not read its notice (R36). */
+  /* R27: at the member's own act under their own live session; refused NO_ACCOUNT when no account serves them (R35:
+     no reference of their own, not connected through their subscription, and the group key not held or off; T38,
+     K2275), and GROUP_KEY_NOTICE_DUE when the group key would serve them and they have not read its notice (R36). A
+     member served by their own sign-in is granted, no notice asked. */
   async aiGrantMint({ member = null, by = null, session = null } = {}) {
     const bar = this.#accountBar(member, by);
     if (bar) return bar;
@@ -1545,7 +1581,8 @@ export class Credentials {
     return this.#mintGrant(id, sessionSha, Math.min(Date.now() + AI_GRANT_TTL_SECONDS * 1000, s.expires), "ask");
   }
 
-  /* R32: a standing question's grant, for `answers` R19 only (not routed): shaped as R27's, minted with no session. */
+  /* R32: a standing question's grant, for `answers` R19 only (not routed): shaped as R27's, minted with no session. A
+     member served by their own sign-in is refused STANDING_SWITCH_OFF: no switch governs it (T38; K2275, N796). */
   async aiGrantMintStanding({ member = null, question = null } = {}) {
     const id = Credentials.#memberOf(member);
     const refuse = (code, detail) => Credentials.#row(ACCOUNT_CHECKS, code, detail, { member: id });
@@ -1559,7 +1596,8 @@ export class Credentials {
     /* DEC-49 REGION is-standing-grant */
     if (!serving.standing)
       return refuse("STANDING_SWITCH_OFF", `standing questions are off for the ${serving.level === "group"
-        ? "group's key" : "member's own account"}, which would serve this one. Nothing was minted.`);
+        ? "group's key" : serving.signin ? "member's own sign-in, which has no standing switch" : "member's own account"}, `
+        + "which would serve this one. Nothing was minted.");
     if (typeof question !== "string" || question.trim() === "")
       return refuse("NO_QUESTION", "no standing question was named. Nothing was minted.");
     /* END DEC-49 REGION is-standing-grant */

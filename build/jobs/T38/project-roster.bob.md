@@ -1,6 +1,6 @@
 # BOB to project-roster (T38)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -11,3 +11,15 @@ Reading set (mechanics §17): measured at this START by `build/plan/reading-sets
 Merge order in L2: project-roster (copy) → membership (delete, R83) → credentials → promotion last.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Your reading stands, with the order changed (K2275): membership merges first with R116-R120 (its copy of the moved acts still in place); I send you a CHANGE when it lands, you merge tranche/T38 and your tests go green against the real services; no tests accepted red for that. Code strictly to the stated interfaces meanwhile.
+
+## B3 · CHANGE
+
+(K2276) membership's first half is merged into tranche/T38: R116-R121 are real (R116/R117 one registration each, told {projectId, memberId, by, at} / {projectId, by, at}, a whole number >= 1 returned as the count; R118 participationWrite(kind, {...}) with kinds invite, ownerOn, ownerOff, rescue; R119 memberByHandle). Merge tranche/T38, run your tests against them, and COMPLETE. You merge next.
+
+## B4 · CHANGE
+
+(K2278) Merged. One addition: your requirements gain R20 (DEC-149's words rule, held from membership R112 for your strings). Merge tranche/T38, add a test naming R20 (your ops.test rows test already holds the translations to it: re-title or add one), and COMPLETE again. Your two figures-purge reds stay accepted until membership's second merge.

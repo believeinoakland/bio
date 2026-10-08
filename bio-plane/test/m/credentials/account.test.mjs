@@ -1,5 +1,5 @@
 /* Each member's own Claude account reference (R22–R25; T33-20, T33-20b, K1502, K1503, K1547), at the interface: an API
-   key or a subscription token, held only by the member's own act, sealed at rest under that member, never shown or
+   key (T38: the subscription token retired, refused UNKNOWN_ACCOUNT_KIND; K2200), held only by the member's own act, sealed at rest under that member, never shown or
    exported, unsealed only for that member's own asks, runs and standing questions; the member's two switches. A set
    naming any principal but the acting member is refused as R22 refuses another member (R26 retired, K1755, K1756);
    the group's own key is R33's act (`group-key.test.mjs`). */
@@ -9,7 +9,7 @@ import { world, SEAL } from "./fixture.mjs";
 import { ACCOUNT_CHECKS, ACCOUNT_KINDS, ACCOUNT_SWITCHES, credentialsOf } from "../../../src/credentials/index.mjs";
 
 const SENTINEL = "sk-ant-SENTINEL-7f3a9c";
-const SUB = "sk-ant-oat01-SUBSCRIPTION-SENTINEL-51d2";   /* a subscription token's shape, from `claude setup-token` */
+const SUB = "sk-ant-oat01-SUBSCRIPTION-SENTINEL-51d2";   /* a subscription token's shape, from `claude setup-token`: refused since T38 */
 const refusal = (code) => ({ ok: false, reason: code, code, check: ACCOUNT_CHECKS[code].check,
                              translation: ACCOUNT_CHECKS[code].translation });
 const shape = (r) => ({ ok: r.ok, reason: r.reason, code: r.code, check: r.check, translation: r.translation });
@@ -35,11 +35,11 @@ test("R22 accountReferenceSet: refusals in order, each writing nothing; the memb
   /* ACCOUNT_MEMBER_NOT_ACTIVE: invited, revoked, absent (the founder holds no roster row) */
   for (const id of ["cal", "dee", "ghost", "admin"])
     assert.deepEqual(shape(await set(w, id, id)), refusal("ACCOUNT_MEMBER_NOT_ACTIVE"), id);
-  /* UNKNOWN_ACCOUNT_KIND for anything but the two kinds; NO_SECRET, for either kind */
-  for (const kind of [null, undefined, "", "APIKEY", "Subscription", "subscription ", "setup-token", "oauth", "organisation", 7])
+  /* UNKNOWN_ACCOUNT_KIND for anything but `apikey`, the retired `subscription` included (T38); NO_SECRET */
+  for (const kind of ["subscription", null, undefined, "", "APIKEY", "Subscription", "subscription ", "setup-token", "oauth", "organisation", 7])
     assert.deepEqual(shape(await w.c.accountReferenceSet({ member: "ann", kind, secret: SENTINEL, by: "ann" })),
       refusal("UNKNOWN_ACCOUNT_KIND"), String(kind));
-  for (const kind of ["apikey", "subscription"])
+  for (const kind of ["apikey"])
     for (const secret of [null, undefined, "", "   ", 7])
       assert.deepEqual(shape(await w.c.accountReferenceSet({ member: "ann", kind, secret, by: "ann" })),
         refusal("NO_SECRET"), `${kind} ${String(secret)}`);
@@ -50,8 +50,8 @@ test("R22 accountReferenceSet: refusals in order, each writing nothing; the memb
     assert.deepEqual(shape(await w.c.accountReferenceSet({ member, kind: "subscription", secret: SUB, by })), refusal(code),
       `subscription ${member} by ${by}`);
   assert.equal(w.snapshot(), before, "no refusal writes");
-  /* the two kinds (K1547); the held-back refusal is retired */
-  assert.deepEqual(ACCOUNT_KINDS, ["apikey", "subscription"]);
+  /* the one kind (T38: `subscription` retired); the held-back refusal is retired */
+  assert.deepEqual(ACCOUNT_KINDS, ["apikey"]);
   assert.ok(Object.isFrozen(ACCOUNT_KINDS));
   assert.ok(!("ACCOUNT_KIND_NOT_OFFERED" in ACCOUNT_CHECKS));
   /* the member's own act, by either spelling of the stamp */
@@ -64,23 +64,18 @@ test("R22 accountReferenceSet: refusals in order, each writing nothing; the memb
   assert.equal((await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann-2", by: "ann" })).ok, true);
   assert.equal(w.row(`SELECT COUNT(*) AS n FROM account_references WHERE member_id='ann'`).n, 1);
   assert.equal((await w.c.accountReferenceFor({ member: "ann", act: { kind: "ask", member: "ann" } })).secret, "sk-ann-2");
-  /* the subscription kind (T33-20b): held by the member's own act, answering the same shape, never the token */
-  const sub = await w.c.accountReferenceSet({ member: "ann", kind: "subscription", secret: SUB, by: "member:ann" });
-  assert.deepEqual(Object.keys(sub).sort(), ["kind", "ok", "set_at"]);
-  assert.deepEqual([sub.ok, sub.kind], [true, "subscription"]);
-  assert.match(sub.set_at, /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/);
-  /* one reference per member, whichever kind: a token replaces a key, and a key replaces a token, switches kept (R25) */
+  /* T38: a subscription token is refused UNKNOWN_ACCOUNT_KIND, writing nothing; ann's key stands, switches kept */
   w.c.accountSwitchSet({ member: "ann", switch: "standing", on: true, by: "ann" });
-  assert.equal(w.row(`SELECT COUNT(*) AS n FROM account_references WHERE member_id='ann'`).n, 1);
+  const held = w.snapshot();
+  const sub = await w.c.accountReferenceSet({ member: "ann", kind: "subscription", secret: SUB, by: "member:ann" });
+  assert.deepEqual(shape(sub), refusal("UNKNOWN_ACCOUNT_KIND"));
+  assert.match(sub.detail, /a Claude subscription is connected through Claude Code's own sign-in, never held as a token/);
+  assert.ok(!JSON.stringify(sub).includes(SUB), "never the token");
+  assert.equal(w.snapshot(), held, "nothing written");
   assert.deepEqual(await w.c.accountReferenceFor({ member: "ann", act: { kind: "run", member: "ann" } }),
-    { ok: true, kind: "subscription", secret: SUB });
-  assert.equal((await set(w, "ann", "ann")).kind, "apikey");
-  assert.deepEqual(await w.c.accountReferenceFor({ member: "ann", act: { kind: "ask", member: "ann" } }),
-    { ok: true, kind: "apikey", secret: SENTINEL });
-  assert.equal((await w.c.accountReferenceSet({ member: "ann", kind: "subscription", secret: SUB, by: "ann" })).ok, true);
+    { ok: true, kind: "apikey", secret: "sk-ann-2" });
   const st = w.c.accountReferenceState({ member: "ann", viewer: "ann" });
-  assert.deepEqual([st.held, st.kind, st.suggestions, st.standing], [true, "subscription", false, true]);
-  assert.equal(w.row(`SELECT COUNT(*) AS n FROM account_references WHERE member_id='ann'`).n, 1);
+  assert.deepEqual([st.held, st.kind, st.suggestions, st.standing], [true, "apikey", false, true]);
   /* bob's own reference stood through all of ann's */
   assert.deepEqual(await w.c.accountReferenceFor({ member: "bob", act: { kind: "ask", member: "bob" } }),
     { ok: true, kind: "apikey", secret: "sk-bob" });
@@ -104,19 +99,13 @@ test("R22 R25 accountReferenceRemove: the same refusals, by the member's own act
       subscription: { connected: false, since: null } });
   assert.deepEqual(w.c.accountReferenceRemove({ member: "ann", by: "ann" }), { ok: true, removed: false });
   assert.equal((await w.c.accountReferenceFor({ member: "ann", act: { kind: "ask", member: "ann" } })).reason, "NO_ACCOUNT");
-  /* a subscription token is removed the same way, by the same act only */
-  await w.c.accountReferenceSet({ member: "ann", kind: "subscription", secret: SUB, by: "ann" });
-  w.c.accountSwitchSet({ member: "ann", switch: "suggestions", on: true, by: "ann" });
-  assert.deepEqual(shape(w.c.accountReferenceRemove({ member: "ann", by: "second" })), refusal("NOT_YOUR_ACCOUNT"));
-  assert.deepEqual(w.c.accountReferenceRemove({ member: "ann", by: "member:ann" }), { ok: true, removed: true });
-  assert.equal((await w.c.accountReferenceFor({ member: "ann", act: { kind: "run", member: "ann" } })).reason, "NO_ACCOUNT");
   /* a new reference starts with both switches off */
   await set(w, "ann", "ann");
   const s = w.c.accountReferenceState({ member: "ann", viewer: "ann" });
   assert.deepEqual([s.held, s.suggestions, s.standing], [true, false, false]);
 });
 
-test("R23 the reference, an API key or a subscription token, is sealed under its member: stored only encrypted, no digest, never in any answer, list, log, error or export; its state to the member alone", async () => {
+test("R23 the reference, an API key, is sealed under its member: stored only encrypted, no digest, never in any answer, list, log, error or export; its state to the member alone", async () => {
   const logs = [];
   const orig = { log: console.log, warn: console.warn, error: console.error, info: console.info };
   for (const k of Object.keys(orig)) console[k] = (...a) => logs.push(a.map(String).join(" "));
@@ -126,8 +115,9 @@ test("R23 the reference, an API key or a subscription token, is sealed under its
     const keep = async (p) => { const r = await p; answers.push(r); return r; };
     await keep(set(w, "ann", "ann"));
     await keep(set(w, "ann", "bob"));                                   // a refusal
-    await keep(w.c.accountReferenceSet({ member: "bob", kind: "subscription", secret: SUB, by: "bob" }));
-    await keep(w.c.accountReferenceSet({ member: "bob", kind: "subscription", secret: SUB, by: "ann" }));   // a refusal
+    await keep(w.c.accountReferenceSet({ member: "bob", kind: "apikey", secret: SUB, by: "bob" }));
+    await keep(w.c.accountReferenceSet({ member: "bob", kind: "apikey", secret: SUB, by: "ann" }));   // a refusal
+    await keep(w.c.accountReferenceSet({ member: "bob", kind: "subscription", secret: SUB, by: "bob" }));   // retired (T38)
     await keep(w.c.accountSwitchSet({ member: "ann", switch: "suggestions", on: true, by: "ann" }));
     for (const viewer of ["ann", "member:ann", "bob", "second", "admin", "class:admin", null])
       await keep(w.c.accountReferenceState({ member: "ann", viewer }));
@@ -154,8 +144,8 @@ test("R23 the reference, an API key or a subscription token, is sealed under its
       const row = w.row(`SELECT * FROM account_references WHERE member_id=?`, id);
       assert.deepEqual(Object.keys(row).sort(), ["iv", "kind", "member_id", "sealed", "set_at", "standing", "suggestions"]);
     }
-    assert.equal(w.row(`SELECT kind FROM account_references WHERE member_id='bob'`).kind, "subscription");
-    assert.equal(w.c.accountReferenceState({ member: "bob", viewer: "member:bob" }).kind, "subscription");
+    assert.equal(w.row(`SELECT kind FROM account_references WHERE member_id='bob'`).kind, "apikey");
+    assert.equal(w.c.accountReferenceState({ member: "bob", viewer: "member:bob" }).kind, "apikey");
     assert.deepEqual(shape(w.c.accountReferenceState({ member: "bob", viewer: "second" })), refusal("NOT_YOUR_ACCOUNT"));
     /* its table is declared never exported, seen by its owner alone (R30) */
     const d = w.core.declared.get("account_references").classes;
@@ -169,13 +159,7 @@ test("R23 the reference, an API key or a subscription token, is sealed under its
     for (const viewer of ["bob", "second", "admin", "member:admin", "class:admin", "class:ai", "", null, undefined])
       assert.deepEqual(shape(w.c.accountReferenceState({ member: "ann", viewer })), refusal("NOT_YOUR_ACCOUNT"), String(viewer));
     assert.equal(w.snapshot(), before);
-    /* sealed UNDER ITS MEMBER AND ITS KIND: a token relabelled a key does not open */
-    w.sql.exec(`UPDATE account_references SET kind='apikey' WHERE member_id='bob'`);
-    assert.equal((await w.c.accountReferenceFor({ member: "bob", act: { kind: "ask", member: "bob" } })).reason,
-      "ACCOUNT_SEAL_UNAVAILABLE");
-    w.sql.exec(`UPDATE account_references SET kind='subscription' WHERE member_id='bob'`);
-    assert.deepEqual(await w.c.accountReferenceFor({ member: "bob", act: { kind: "ask", member: "bob" } }),
-      { ok: true, kind: "subscription", secret: SUB });
+    assert.equal((await w.c.accountReferenceFor({ member: "bob", act: { kind: "ask", member: "bob" } })).secret, SUB);
     /* sealed UNDER ITS MEMBER: bob's row moved under ann does not open, so no other member's act reaches it */
     w.sql.exec(`UPDATE account_references SET sealed=(SELECT sealed FROM account_references WHERE member_id='bob'),
                 iv=(SELECT iv FROM account_references WHERE member_id='bob') WHERE member_id='ann'`);
@@ -188,17 +172,17 @@ test("R23 the reference, an API key or a subscription token, is sealed under its
   } finally { Object.assign(console, orig); }
 });
 
-test("R23 with no seal secret bound a reference of either kind is neither stored nor read (ACCOUNT_SEAL_UNAVAILABLE), writing nothing", async () => {
+test("R23 with no seal secret bound a reference is neither stored nor read (ACCOUNT_SEAL_UNAVAILABLE), writing nothing", async () => {
   const w = await accountWorld({ sealSecret: null });
   const before = w.snapshot();
   assert.deepEqual(shape(await set(w, "ann", "ann")), refusal("ACCOUNT_SEAL_UNAVAILABLE"));
   assert.deepEqual(shape(await w.c.accountReferenceSet({ member: "ann", kind: "subscription", secret: SUB, by: "ann" })),
-    refusal("ACCOUNT_SEAL_UNAVAILABLE"));
+    refusal("UNKNOWN_ACCOUNT_KIND"), "the retired kind is refused before the seal is asked");
   assert.equal(w.snapshot(), before);
   assert.ok(SEAL.length > 0);
 });
 
-test("R24 accountReferenceFor unseals a key or a token only for the member's own ask, run or standing question; any other act NOT_YOUR_ACCOUNT; none NO_ACCOUNT by name", async () => {
+test("R24 accountReferenceFor unseals a key only for the member's own ask, run or standing question; any other act NOT_YOUR_ACCOUNT; none NO_ACCOUNT by name", async () => {
   const w = await accountWorld();
   await set(w, "ann", "ann");
   for (const kind of ["ask", "run", "standing"])
@@ -214,12 +198,12 @@ test("R24 accountReferenceFor unseals a key or a token only for the member's own
   assert.deepEqual([shape(none), none.member], [refusal("NO_ACCOUNT"), "bob"]);
   assert.match(none.detail, /no Claude account reference of their own/);
   assert.equal(w.snapshot(), before, "it writes nothing");
-  /* a subscription token likewise: only for bob's own ask, run or standing question, answered with its kind */
-  await w.c.accountReferenceSet({ member: "bob", kind: "subscription", secret: SUB, by: "bob" });
+  /* bob's key likewise: only for bob's own ask, run or standing question */
+  await w.c.accountReferenceSet({ member: "bob", kind: "apikey", secret: SUB, by: "bob" });
   for (const kind of ["ask", "run", "standing"])
     for (const member of ["bob", "member:bob"])
       assert.deepEqual(await w.c.accountReferenceFor({ member: "bob", act: { kind, member } }),
-        { ok: true, kind: "subscription", secret: SUB }, `${kind} ${member}`);
+        { ok: true, kind: "apikey", secret: SUB }, `${kind} ${member}`);
   const held = w.snapshot();
   for (const act of [null, { kind: "ask" }, { kind: "ask", member: "ann" }, { kind: "run", member: "second" },
                      { kind: "standing", member: "admin" }, { kind: "export", member: "bob" }, { kind: "run", member: "class:ai" }])

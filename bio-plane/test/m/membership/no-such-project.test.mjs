@@ -65,28 +65,19 @@ test("R78 every act of this module answering the condition answers through it, b
   const w = await nspWorld();
   const acts = (projectId, by = "cal", viewer = V("cal")) => ({
     projectInvite: w.m.projectInvite({ projectId, handle: "cal", by, viewer }),
-    projectOwnerAdd: w.m.projectOwnerAdd({ projectId, handle: "cal", by, viewer }),
-    projectOwnerRemove: w.m.projectOwnerRemove({ projectId, handle: "ann", by, reason: "r", viewer }),
-    projectOwnerRescue: w.m.projectOwnerRescue({ projectId, handle: "cal", by, reason: "r", viewer }),
     projectVisibilitySet: w.m.projectVisibilitySet({ projectId, setting: "hidden", by, viewer }),
-    projectVisibility: w.m.projectVisibility({ projectId, viewer }),
-    projectRequest: w.m.projectRequest({ projectId, by, viewer }),
-    projectRequestAnswer: w.m.projectRequestAnswer({ projectId, handle: "cal", answer: "grant", by, viewer }),
-    projectRequests: w.m.projectRequests({ projectId, by, viewer }),
-    projectParticipants: w.m.projectParticipants({ projectId, by }),
   });
   for (const id of ["PROJ-NEVER", "PROJ-H"])
     for (const [name, got] of Object.entries(acts(id))) assert.deepEqual(got, noSuchProject(id), `${name} ${id}`);
   // an unrecognised viewer sees nothing, and is answered the same (a machine credential sees everything, R43)
   for (const [name, got] of Object.entries(acts("PROJ-H", "cal", "junk")))
-    if (name !== "projectRequest" && name !== "projectParticipants")   // those two ask who asks first (R49, R37)
-      assert.deepEqual(got, noSuchProject("PROJ-H"), `${name} junk viewer`);
+    assert.deepEqual(got, noSuchProject("PROJ-H"), `${name} junk viewer`);
   // R31: an id that names nothing
   assert.deepEqual(w.m.projectClaimOwner({ projectId: "PROJ-NEVER", memberId: "cal" }), noSuchProject("PROJ-NEVER"));
   // and never at EXISTENCE, which is R77's answer, nor at FULL
   assert.equal(w.m.projectInvite({ projectId: "PROJ-D", handle: "cal", by: "cal", viewer: V("cal") }).reason,
     "PROJECT_SEEN_NOT_A_PARTICIPANT");
-  assert.equal(w.m.projectVisibility({ projectId: "PROJ-H", viewer: V("ann") }).ok, true);
+  assert.equal(w.m.projectVisibilitySet({ projectId: "PROJ-H", setting: "hidden", by: "ann", viewer: V("ann") }).ok, true);
   // through the ops too
   assert.deepEqual(w.ops(`projectId=PROJ-H&handle=cal&by=cal&viewer=${encodeURIComponent(V("cal"))}`).projectinvite(),
     noSuchProject("PROJ-H"));

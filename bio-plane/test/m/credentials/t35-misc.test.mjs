@@ -107,16 +107,18 @@ test("R43 subscriptionConnected records that an active member is connected, with
   assert.ok(!Object.keys(w.ops()).some((op) => op === "subscriptionconnected"), "reached by no route");
 });
 
-test("R43 R23 accountReferenceState answers it to the member alone as subscription {connected, since}; subscriptionDisconnect is the member's own act (R22's refusals); in T35 neither accountFor nor the ask grant reads it", async () => {
+test("R43 R23 accountReferenceState answers it to the member alone as subscription {connected, since}; subscriptionDisconnect is the member's own act (R22's refusals); since T38 accountFor and the ask grant read it (R35, R27)", async () => {
   const w = await world().group("ann", "bob");
   const since = w.c.subscriptionConnected({ member: "ann" }).since;
   assert.deepEqual(w.c.accountReferenceState({ member: "ann", viewer: "ann" }).subscription, { connected: true, since });
   assert.deepEqual(w.c.accountReferenceState({ member: "bob", viewer: "bob" }).subscription, { connected: false, since: null });
   for (const viewer of ["bob", "second", "admin"]) assert.equal(w.c.accountReferenceState({ member: "ann", viewer }).reason, "NOT_YOUR_ACCOUNT");
-  /* served by nothing: no reference of her own, no group key */
-  assert.equal((await w.c.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } })).reason, "NO_ACCOUNT");
+  /* T38: served by her own sign-in (R35); bob, not connected, by nothing */
+  assert.deepEqual(await w.c.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } }),
+    { ok: true, kind: "signin", level: "member", member: "ann" });
+  assert.equal((await w.c.accountFor({ member: "bob", act: { kind: "ask", member: "bob" } })).reason, "NO_ACCOUNT");
   const s = (await w.c.login({ role: "member:ann", password: PASSWORD("ann") })).token;
-  assert.equal((await w.c.aiGrantMint({ member: "ann", by: "ann", session: s })).reason, "NO_ACCOUNT");
+  assert.equal((await w.c.aiGrantMint({ member: "ann", by: "ann", session: s })).ok, true, "T38: the ask grant too (R27, K2275)");
   const before = w.snapshot();
   for (const [by, code] of [[null, "MACHINE_CANNOT_HOLD_ACCOUNT"], ["class:ai", "MACHINE_CANNOT_HOLD_ACCOUNT"],
                             ["bob", "NOT_YOUR_ACCOUNT"], ["second", "NOT_YOUR_ACCOUNT"], ["admin", "NOT_YOUR_ACCOUNT"]])
@@ -124,6 +126,7 @@ test("R43 R23 accountReferenceState answers it to the member alone as subscripti
   assert.equal(w.snapshot(), before);
   assert.deepEqual(w.c.subscriptionDisconnect({ member: "ann", by: "member:ann" }), { ok: true, disconnected: true });
   assert.deepEqual(w.c.accountReferenceState({ member: "ann", viewer: "ann" }).subscription, { connected: false, since: null });
+  assert.equal((await w.c.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } })).reason, "NO_ACCOUNT", "disconnected: served by nothing");
   assert.deepEqual(w.c.subscriptionDisconnect({ member: "ann", by: "ann" }), { ok: true, disconnected: false });
   assert.deepEqual(w.ops("by=bob", { member: "ann" }).subscriptiondisconnect(), { ok: true, disconnected: false }, "the route acts for the stamped member only");
 });
@@ -163,11 +166,11 @@ test("R30 T35's tables are declared through declareTable, each never exported an
 
 test("R35 accountFor answers {ok, kind, level, key} and nothing else, the shape agent-worker R6 carries on the wire with `key` as `secret`", async () => {
   const w = await world().group("ann", "bob");
-  await w.c.accountReferenceSet({ member: "ann", kind: "subscription", secret: "sk-ant-oat01-ann", by: "ann" });
+  await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ant-api03-ann", by: "ann" });
   await w.c.groupKeySet({ key: "sk-group", by: "admin" });
   w.c.groupKeySwitch({ on: true, by: "admin" });
   w.c.groupKeyNoticeSeen({ member: "bob", by: "bob" });
-  for (const [m, level, kind, key] of [["ann", "member", "subscription", "sk-ant-oat01-ann"], ["bob", "group", "apikey", "sk-group"]]) {
+  for (const [m, level, kind, key] of [["ann", "member", "apikey", "sk-ant-api03-ann"], ["bob", "group", "apikey", "sk-group"]]) {
     const r = await w.c.accountFor({ member: m, act: { kind: "run", member: m } });
     assert.deepEqual(r, { ok: true, kind, level, key }, m);
     const wire = { kind: r.kind, level: r.level, secret: r.key, member: m };
@@ -277,7 +280,7 @@ test("R48 the 17 sweep rows (DEC-149): each member-facing string says \"your gro
   has(unsealed.detail, "your group's Civicsmith has no seal secret set, so a key cannot be kept sealed or read.");
   /* index :822 */
   has((await w.c.accountReferenceSet({ member: "ann", kind: "oauth", secret: "sk", by: "ann" })).detail,
-    "the kinds your group's Civicsmith holds are apikey and subscription.");
+    "the kind your group's Civicsmith holds is apikey; a Claude subscription is connected through Claude Code's own sign-in");
   /* index :231, :237 (R4's SIGN_IN_REFUSED detail), re-worded to need no name and address no one (K2089; D-57) */
   const refused = await w.c.login({ role: "member:nobody", password: "wrong-passphrase", source: "s" });
   has(refused.detail, "Either no active credential is held under that role");

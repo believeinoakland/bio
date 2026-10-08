@@ -1,37 +1,28 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #140 (`session_01YMzxtfn4tJD7REiG3cRbrQ`), 2026-10-08 ~13:50 UTC, for BOB #141. Read `build/rulings-active.md` first; this BOB's rulings are K2226–K2250 (and K2251, this handoff).
+**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #141 (`session_01MG1srQ83USpRDFURbfVuBa`), 2026-10-08 ~16:15 UTC, for BOB #142. Read `build/rulings-active.md` first; this BOB's rulings are K2253–K2283 (and K2284, this handoff).
 
 ## Open with Bob
 
-1. **Key custody**, three questions on https://claude.ai/artifact/TB55RCpWXtBEWUanVnCA3A (no comments as of 13:50). Re-watch it (`ArtifactComments` watch) and point Bob at it.
-2. **T37's close, step (3)** (§5.7 (3), §16), when L11 closes: fast-forwarding `main` to `tranche/T37`'s closing commit is refused as "Merge Without Review" (K1454, K1906), approved once per close (K1909, K2069, K2137, K2240); not on the standing list. Ask Bob in **your** session for: "Approved: at T37's close, fast-forward main to tranche/T37's closing commit. Standing list: not added." Record it (§16 form), then act.
-3. Everything else is answered: T36 closed (K2240, `main` @ `096424f11f`); wizard scripts are BOB's (K2241, version 2 adopted); photo metadata B (K2248: the group keeps it, published photos do not; N779 in T38; K2243/K2246 (1) superseded); sign-in persistence A (K2246 (2)); meter 57% at ~13:20 (K2240). The questions page https://claude.ai/artifact/TuYfyFijT6SayH1mBqSM21 is now stale (all four answered): republish it or leave it.
+None. Answered today: the close's refusals (K2273: mechanics §5.7 (3), §16, §11 changed, civicos-process `ead818c`); key custody (K2277, Distribution §10); meter 60% at ~15:05 (K2274). Coming to him later: N796 (a sign-in serving unattended standing questions: terms, his), brought rendered with the register's entries when T39's plan is drafted.
 
 ## Where things stand
 
-- **T37** on `tranche/T37`. L1–L10 closed (L8 K2229, L9 K2234, L10 K2237). `main` moved at T36's close (K2240): at T37's close merge `main` into the tranche first (never a rebase) and run the checks (§5.7 (1)).
-- **L11 running** (K2237), eleven jobs (addresses in the plan's Jobs line). Merged: op-grades (K2242, K2245), notice-producers (K2244), setup-page (K2245), wizard-scripts, instance-setup, op-declarations, answer-envelope (K2249), affordances (re-merged K2250). Open:
-  - STORE-DOOR #3: merged (K2252).
-  - CONTROL-PLANE #26: RESUME B3 sent (K2252); merge when COMPLETE.
-  - PLANE #26: CHANGE B3 (merge tranche, re-pin `door.test.mjs`:111 to 33 routes, ask.test reds should clear); merges last; strike its R29 mark at the merge (it made the todo a test).
-  - L11 order: … → store-door → control-plane → plane.
-- **Reds:** plan rule 6 items 1–26 (7, 19, 25 cleared). At L11's close check item 22 (legacy-ui `statement-ack.test.mjs`, its M0-107 timeout) and send it to `next.md` if it stands; items 21, 16, 15 and rule 4's (item 8) should clear with T37-33.
-- **L11 close (§5.6):** regenerate in the manifest's order (`program.mjs`, `court-data.mjs`, `node bio-plane/scripts/bundles.mjs`, newgroup); `fleetbundles` expects red 20 only; `checks/run.mjs`; archive the eleven sessions, rows from their `Size` lines.
-- **T37's close (§5.7):** (1) PR #15 (UX-DESIGN U132 MERGE) into `main` with `mcp__github__merge_pull_request` (standing list, K1177), then merge `main` into the tranche; (2) archive the plan `CLOSING` with outcomes and usage; (3) fast-forward `main` (Open with Bob 2); (4)–(6) timers, report, open T38.
-- **T38 prepared:** `build/plan/draft-T38.md` (a helper's draft, reviewed; BOB #140's notes at its end: N789–N793, N779 back in, T38-16's route question) and `next.md` (N779, N782–N793). Open T38 from it at once after the close.
-- **Channel:** UX-DESIGN has not read B106–B110 (B106 setpassword help-text question; B107 K2241 notice; B108–B110 photo metadata notices, B110 the final: B). INVESTIGATION-DESIGN `HANDOFF.md` unchanged at `f53cd6ffbe`.
-- **Timers** (delete mine by id at takeover): backstop `trig_014RCwQkDorpkEpj75EhBftE` (14:08; re-arm while your start is pending), WATCH #140 `trig_018eqJcxWoGe1QhK7NZdRumz` (14:49, into ROOT). Artifacts watched by my session: the two pages above.
+- **T37 closed** (K2261, `main` @ `0a2aa79231`). **T38** on `tranche/T38` (opened K2262 from `plan/current.md`, 28 jobs after K2270–K2283).
+- **L1 closed** (K2269). **L2 running**: project-roster (K2278, K2280), membership both halves (K2276, K2281) and credentials (K2283) merged; **PROMOTION #36** got CHANGE B3 (stamp after L2's merges); merge it when COMPLETE (fix its `modules.json` `tests` fixture swap `row-census-1.64.0.jsonl` → its new version at the merge), then close L2 (§5.6: regenerate in the manifest's order; `program.mjs` embeds the catalogue version), archive the four L2 sessions with rows, start L3 (§5.3).
+- **Requirements still to write before their layer's START** (each plan entry says `req:`): L3 file-safety R39, R28 (N789, N791; START names rule 6 item 9's 29 reds); L4 extraction R66; L5 bias (test only); L6 agent-model R2, agent-worker R6, ai-runs (test only); L8 case-grammar R12, case-carriage R1/R8/R11/R12/R9 + new R (N779, N790, N788), public-read R23, case-disclosures R6/R22, case-authoring R34; L11 op-grades, tasks, setup-page, instance-setup, answer-envelope, op-declarations, admission, control-plane (check first whether case-carriage's ops map already routes `obscuremarkwithdraw`), plane (spread project-roster's ops and register its R15/R16/R17: clears rule 6 item 11). Plan rule 8 (N779: no L1 change; uncoverable photo refuses publication) and rule 9 (N793) govern.
+- **Reds:** plan rule 6 items 1–13 (item 4, 5, 10, 12 cleared).
+- **T38's close (§5.7, as changed by K2273):** step (3) is now a pull request from `tranche/T38` to `main` merged with the GitHub merge tool, never a direct push; it is certification row V6's proof (record it). Design PR: the UX session keeps committing to `claude/gallant-brown-zg0wc1` after PR #15 merged; merge a new PR only on its `MERGE`.
+- **Channel:** UX-DESIGN U133–U136 read and ACKed (B111–B114): N797–N799 in `next.md`. INVESTIGATION-DESIGN `HANDOFF.md` unchanged at `f53cd6ffbe`.
+- **Timers** (delete mine by id at takeover): backstop `trig_01RH691euepGG8tnKK2Y6Cr9` (16:09, fired; re-arm while my successor starts), WATCH #141 `trig_0145DBKKEpPUW6Y5usasPSab` (16:50, into ROOT). Artifacts watched: close-refusals page (resolved) and key custody page (answered).
 
 ## Next steps, in order
 
-1. Take over (§5.1): archive BOB #140, its `BOB-final` row under T37; arm your backstop and WATCH; re-watch the key-custody page.
-2. Watch L11 (§5.4): merge store-door, RESUME control-plane, merge it, then plane.
-3. Close L11 (§5.6), then close T37 (§5.7), asking Bob for step (3) in your session.
-4. Open T38 from `draft-T38.md` (§5.2).
+1. Take over (§5.1): archive BOB #141, its `BOB-final` row under T38; arm backstop and WATCH.
+2. Merge promotion, close L2, write L3's requirements and STARTs, start L3. Keep going layer by layer.
 
 ## Process notes
 
-- `mail.mjs addjob --name` needs the name with its space ("PLANE #26").
 - After a container restart: `npm ci --ignore-scripts` in agent-runner, `npm ci` in sheet-worker and file-scanner before `fleetbundles`.
-- Merges on `main` go through a worktree (`/home/user/bio-merge`, detached; reset it to the branch you need).
+- Check a row id across all of `bio-plane/src` before naming one (K2279).
+- Edit `modules.json` as text, never by re-serialising it (it reformats the file).
