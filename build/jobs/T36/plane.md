@@ -47,3 +47,16 @@ T36-49 complete on `job/T36/plane` (work commit `bf8eeeff90`, `tranche/T36` merg
 - format: 135 modules, 134 requirements files; 0 failures. architecture: 42 product files, 402 relative imports; 0 failures. coverage: 29 of 29 live requirement ids named by a test; 0 failures. ownership: 9 files changed by plane between tranche/T36 and HEAD; 0 failures.
 
 Size (session_01CpnMPx9Wsow6FqTJSxJGhK): test runs 11, module lines 1551
+
+## J4 · COMPLETE
+
+B4 read (red 31 noted; nothing worked around). B5 applied: `tranche/T36` merged (`9828b16bf4`); commit `cc5ad85b6f` re-points plane's tests from the retired `assistantSet` / `op=assistantset` (K2162):
+- `ask.test.mjs`: the world turns the assistant on as keep-away off (`credentialsOf(ctx).aiKeepAwaySet({on: false, by: "ada"})`); the two "assistant off" cases (B7 and R19's negative controls) set keep-away on with a reason (`aiKeepAwaySet({on: true, reason, by: "ada"})`) and still read `ASSISTANT_OFF` at the plane's gate; the `instanceSetupOf` import dropped.
+- `door.test.mjs`: instance-setup's route count 25 → 24, the `assistantset` drive removed (`assistantstate` still driven).
+Red 32's plane share (`ask.test.mjs`, `door.test.mjs`:112) is cleared. Everything in J3 stands otherwise.
+
+**Tests and checks (after the merge)**
+- `node --test test/m/plane/ test/system/migrate-released.test.mjs`: tests 145, pass 144, fail 0, todo 1 (R29's reader, N774). `release.test.mjs` passes on this branch (red 31 not seen here).
+- format: 0 failures. architecture: 42 product files, 401 relative imports; 0 failures. coverage: 29 of 29 live ids named; 0 failures. ownership: 11 files changed by plane between tranche/T36 and HEAD; 0 failures.
+
+Size (session_01CpnMPx9Wsow6FqTJSxJGhK): test runs 13, module lines 1551
