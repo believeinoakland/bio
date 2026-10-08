@@ -21,3 +21,7 @@
 - `format`: 0 failures; `architecture … bundler`: 0 failures; `coverage … bundler`: 30 of 30 live ids named, 0 failures; `ownership … bundler tranche/T38`: 0 failures (re-run after the commit).
 
 Size (session_01UyPgDNZCNdqccnSPgPyQtP): test runs 8, module lines 8081
+
+## J1 · REPORT
+
+Found in file-scanner (bundler R12): file-scanner/package.json `version` and file-scanner/wrangler.jsonc `vars.VERSION` declare 0.79.0; the authority bio-plane/package.json declares 0.81.0. `system/resolveversion.test.mjs` ARM 7 (the live fleet agrees on one version) is red, 11/1, and release-assemble.mjs and deploy.mjs would refuse [VERSION_SKEW] on this tree. Both files are file-scanner's (T38-17, L1); the edit is 0.79.0 -> 0.81.0 at both sites. Not in the plan's rule 6 list.
