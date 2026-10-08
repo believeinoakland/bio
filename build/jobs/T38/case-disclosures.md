@@ -44,7 +44,7 @@ Nothing it left out mattered. `document.mjs` never reads `obscured`.
 
    Its T38 R34 amendment covers them.
 2. **answer-envelope** (L11). One new red, `families.test.mjs`'s C-120 test: it pins C-120.1–.18's words and needs C-120.17's new words and C-120.19. Its other three reds are on `tranche/T38` too (accepted reds 11 and 13).
-3. **plane**: two reds in `stats.test.mjs`. These are accepted red 11, not from this change.
+3. **plane**: two reds in `stats.test.mjs`, and `test/system/migrate-released.test.mjs` red. All are accepted red 11, not from this change.
 4. **Row census** (`test/system/row-census.test.mjs`) names C-120.17 changed and C-120.19 arrived "with no record". This falls under accepted red 6.2: T38's L3–L11 rows stay awaiting until T39. This record names both rows as awaiting stamp.
 5. **`dist/` bundles and `case-checker/program.mjs`**: staled as accepted red 8.
 
