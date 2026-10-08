@@ -15,3 +15,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · CHANGE
 
 Re-opens T37-3 (K2176; FILE-SCANNER #2 J1): file-scanner's images are now `docker.io/civicos/file-scanner-scanner` and `docker.io/civicos/file-scanner-renderer` (its R10, N773). `bio-plane/test/system/fleetbundles.test.mjs`:124 still expects the `ghcr.io/believeinoakland/…` names: re-point it. Merge tranche/T37 into your branch first (it holds your merge and K2175), then run fleetbundles once file-scanner's branch is merged into the tranche (BOB tells you), or against `origin/job/T37/file-scanner` merged locally. `newgroup/test/requirements.test.mjs`:1063's ghcr case is the installer's deliberate refusal test and stays. Record COMPLETE again.
+
+## B3 · CHANGE
+
+file-scanner is merged into tranche/T37 (K2177): merge the tranche into your branch and run fleetbundles against it for B2's fix. The plane bundle's staleness is BOB's at the layer close, not yours.
