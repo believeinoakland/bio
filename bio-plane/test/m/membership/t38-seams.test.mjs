@@ -1,5 +1,5 @@
 /* T38-4 (N783; K2270, K2271): the seams `project-roster` codes against — R118 `participationWrite`, R119 `memberByHandle`,
-   R120 the read contract — and N793's one site of `NO_SUCH_MEMBER` (K231). */
+   R120 the read contract — and R121, N793's one site of `NO_SUCH_MEMBER` (K231). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
@@ -113,7 +113,7 @@ test("R120 the read contract: the stated tables and columns exist under those na
     [{ member_id: "ann", state: "joined", owner: 1, owner_order: 1 }]);
 });
 
-test("N793 noSuchMember is the one site of NO_SUCH_MEMBER: its row C-96.39, the id as asked, a fixed detail, extra beside never replacing; never throws", () => {
+test("R121 N793 noSuchMember is the one site of NO_SUCH_MEMBER: its row C-96.39, the id as asked, a fixed detail, extra beside never replacing; never throws", () => {
   const row = MEMBERSHIP_CHECKS.NO_SUCH_MEMBER;
   assert.equal(row.check, "C-96.39");
   assert.match(row.where, /noSuchMember > is-no-such-member$/);
@@ -130,7 +130,7 @@ test("N793 noSuchMember is the one site of NO_SUCH_MEMBER: its row C-96.39, the 
   assert.equal(noSuchMember("a", [1]).reason, "NO_SUCH_MEMBER");
 });
 
-test("N793 every act of this module refusing an unknown member answers through noSuchMember, byte for byte", async () => {
+test("R121 N793 every act of this module refusing an unknown member answers through noSuchMember, byte for byte", async () => {
   const w = await world().group("ann");
   await w.enrol("adm2", "admin");
   const same = (r) => assert.deepEqual(r, noSuchMember("ghost"), JSON.stringify(r));

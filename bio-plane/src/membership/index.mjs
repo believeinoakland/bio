@@ -1,6 +1,7 @@
 /* membership — who the members are and what each may do; projects as working groups, sight, and the fence.
  *
- * Requirements: build/requirements/membership.md (R4–R111; T34's R10–R13, R84 and R97–R111 (T34-10; DEC-132 to
+ * Requirements: build/requirements/membership.md (R4–R121; T38's R116–R121, project-roster's seams and N793's
+ * `noSuchMember` (T38-4; N783, N793, K2270, K2271, K2275), and R83's order with `project-roster`; T34's R10–R13, R84 and R97–R111 (T34-10; DEC-132 to
  * DEC-136, K1745); T33's R83 order (T33-19a: plan T33's Rules (2), K1438, K1504);
  * T32's R83 order (wizard-scripts, N544, K1396); T28's R83
  * order (accepted-work, case-checker, case-import; K1292, K1299); T27's R83 order (docket, N520, K1256); T25's R83 order (attestation, provenance-routes,
