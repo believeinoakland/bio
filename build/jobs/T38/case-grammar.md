@@ -22,6 +22,6 @@ Read whole myself, as B1 measured it (246 KB): `build/requirements/case-grammar.
 
 - `node --test test/m/case-grammar/` (from `bio-plane/`): tests 100, pass 100, fail 0. No layer tests named for layer 8.
 - Users (R14's rendering changed): case-carriage 48/0, case-tensions 23/0, publication 130/0, docket 59/0, public-read 153/0, case-catalogue 16/0, ratification 216/0, case-import 88/0, case-disclosures 68/0, case-authoring 163/0; case-checker 59 pass, 1 fail (`program.test.mjs` R13, the stale `program.mjs`: accepted red 8).
-- `format`: 137 modules, 136 requirements files; 0 failures. `architecture`: 33 product files, 102 relative imports; 0 failures. `coverage`: 22 of 22 live requirement ids named by a test; 0 failures. `ownership … tranche/T38`: run after the commit, below.
+- `format`: 137 modules, 136 requirements files; 0 failures. `architecture`: 33 product files, 102 relative imports; 0 failures. `coverage`: 22 of 22 live requirement ids named by a test; 0 failures. `ownership … tranche/T38`: 6 files changed by case-grammar; 0 failures.
 
 Size (session_013zcnQ4W9BbvuNM5wQzXJFL): test runs 15, module lines 2329
