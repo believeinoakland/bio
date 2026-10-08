@@ -17,3 +17,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · CHANGE
 
 (K2238; AFFORDANCES #24 J1) PR #14 gives clockpropose its own help text (DEC-182 (1)): drop it from ACT_HELP_ABSENT (R34's partition, t36.test.mjs:291). That test goes red at affordances' merge and green at yours (rule 6 item 25). After your merge, affordances re-generates R48 under your declared ops.
+
+## B3 · ANSWER · re J1
+
+Both readings stand (K2239): claimidentity leaves OP_ALIASES and everything derived from it (DEC-182 (2)); R27's owed set is the nine the library marks. I tell OP-GRADES #3 to drop claimidentity from its alias copy.
