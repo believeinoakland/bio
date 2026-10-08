@@ -1,6 +1,6 @@
 # provenance — requirements
 
-**Status** · In force: approved by Bob 2026-09-26 (a product module, P17; K67), with later folds reviewed. Split (N512; K617, K1193): R19–R23, R36, R54 retired to `provenance-routes` and R31–R34, R39, R49, R56, R57 to `attestation`, never reused; R40 is stated in both new modules too; R58 by BOB's ruling on the seam. Last changed T36 (T36-9: R60 new, `receiptsOfCapture`; N730 a Suggestion only; K1973, K1993); R60 marked not yet met (T36), every other requirement met (PROVENANCE #17, K1952).
+**Status** · In force: approved by Bob 2026-09-26 (a product module, P17; K67), with later folds reviewed. Split (N512; K617, K1193): R19–R23, R36, R54 retired to `provenance-routes` and R31–R34, R39, R49, R56, R57 to `attestation`, never reused; R40 is stated in both new modules too; R58 by BOB's ruling on the seam. Last changed T36 (T36-9: R60 new, `receiptsOfCapture`; R61 new, a receipt's `reputation`; N730 a Suggestion only; K1973, K1993); R60, R61 marked not yet met (T36), every other requirement met (PROVENANCE #17, K1952).
 
 ## Public
 
@@ -67,6 +67,7 @@ Terms. A **capture** is a byte sequence named by its lowercase hex SHA-256 (`cap
 
 **receiptsOfCapture({captureSha}) → `{capture_sha, rows, observations}`** (N725; K1973)
 - **R60** Every receipt that names the capture, at any address and by any `via`, each row as R16 answers it, ordered by `address_norm` then `via`, and the sum of their `observations`; a reader that wants one capture's receipts (`standards` R38's `version_basis`) reads them here, never by reading every receipt. A `sha:` prefix and case are ignored, as R5's are. With no `captureSha`, or one that is not 64 hex, it answers no rows and `observations` 0, never every receipt. It writes nothing. *(not yet met: T36)*
+- **R61** (N714; K2087) A receipt may carry `reputation`, the answer `acquisition` R44 records for the fetched address (`{tool, listed, categories, checked_at, unanswered?}`): R13 stores it with the receipt exactly as given, R16's and R60's rows answer it, and R47's `onReceipt` payload carries it, `null` when the receipt has none; it changes no other field, grade or chain. *(not yet met: T36)*
 - Errors: never throws.
 
 **versionChain({addressNorm, at, limit, offset, viewer}) → `{ok, address_norm, documents, versions, count, total, limit, offset, truncated, at?, at_index?, predecessor?}` or refusal**
