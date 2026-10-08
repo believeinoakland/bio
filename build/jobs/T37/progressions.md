@@ -58,3 +58,7 @@ T37-12 applied: order.test.mjs (R41) reads layers 5 and 5–8 from modules.json,
 - format, architecture and coverage (42 of 42): 0 failures. Ownership (5 files): 0 failures.
 
 Size (session_01Q8jnptX8F9t9Vmj1SzQSsy): test runs 30, module lines 2127
+
+## J3 · QUESTION
+
+B2 (1): R33 makes nextDeadline R17's whole-store next_deadline, so scanning only the thread's instance would change the answer when another instance falls due sooner. My best reading, applied: the whole-store scan runs only when a listener reads nextDeadline, once per thread, with the answer unchanged; scheduler's listener ignores it, so it now costs no scan. If you mean a per-instance deadline instead, R33's text changes first.
