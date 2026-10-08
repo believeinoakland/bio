@@ -31,3 +31,7 @@ Size (session_01J5DSe7QQUQDbseHcbcKr3x): test runs 7, module lines 2340
 ## J1 · REPORT
 
 T38-14 makes three reds in other modules, each from the grade R27/R28 require (record, 'Found in other modules'): (1) affordances catalogue.test.mjs:111 pins RUNGS by rung without obscuremarkwithdraw (reasoned) and obscuremark (reversible); (2) affordances catalogue.test.mjs:485 (lines 505-508, 514) pins obscuremark undetermined in LATER and in undeterminedOf(T37_RUNG_ABSENT), now [translationdraft, translationmark]; (3) control-plane totality.test.mjs:20 reads obscuremarkwithdraw stale until op-declarations T38-15 declares it, clearing with that merge. (1) and (2) are affordances' to re-pin (AFFORDANCES #25, L11, after op-grades). Possible gap, not red: affordances R19's backing drive does not yet perform obscuremarkwithdraw without a reason (WITHDRAW_NO_REASON).
+
+## J2 · COMPLETE
+
+T38-14 done: R28 (t38.mjs: obscuremarkwithdraw reasoned on WITHDRAW_NO_REASON, joined to JUSTIFICATION_REFUSALS; obscuremark reversible) and R27 amended (obscuremark out of T37_RUNG_ABSENT, its reason naming the reasoned withdrawal; t37.mjs names MACHINE_CANNOT_MARK_PHOTO). op-grades tests 37/37; format, architecture, coverage (28/28), ownership: 0 failures. Three reds elsewhere: REPORT J1. Nothing deferred.
