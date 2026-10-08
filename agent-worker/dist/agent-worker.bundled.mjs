@@ -3074,7 +3074,7 @@ async function apikeyTurn(key, serialized) {
   return { result: body, usage };
 }
 
-// ../agent-model/src/subscription.mjs
+// ../agent-model/src/signin.mjs
 var RUNNER_URL = "https://agent-runner/conversation";
 var ANSWERED = "received";
 var AFTER_ANSWER = "not performed: the answer ended this step";
@@ -3113,9 +3113,9 @@ ${text(m && m.content)}`).join("\n\n");
 var systemText = (system) => Array.isArray(system) ? system.map((b) => String((b && b.text) ?? "")).join("\n\n") : String(system ?? "");
 var plainTools = (tools) => (Array.isArray(tools) ? tools : []).map((t) => ({ name: t.name, description: t.description, input_schema: t.input_schema }));
 var offeredTools = (tools, held) => [...plainTools(tools), ...held.size ? [plainTools([READ_RESULT])[0]] : []];
-function conversationRequest(token, { model, system, messages, tools, maxTurns }) {
+function conversationRequest(member, { model, system, messages, tools, maxTurns }) {
   return {
-    credential: { kind: "subscription", secret: token },
+    credential: { kind: "signin", member },
     model,
     system: systemText(system),
     prompt: renderTranscript(messages),
@@ -3135,20 +3135,18 @@ function answeredHere(u, messages) {
   }
   return null;
 }
-async function openRunner(runner, token) {
+async function openRunner(runner, member) {
   let res;
   try {
-    const stub = typeof runner.fetch === "function" ? runner : runner.get(runner.newUniqueId());
-    res = await stub.fetch(RUNNER_URL, { headers: { Upgrade: "websocket" } });
+    res = await runner.get(runner.idFromName(member)).fetch(RUNNER_URL, { headers: { Upgrade: "websocket" } });
   } catch (e) {
-    return silent(e && e.message || e, token);
+    return silent(e && e.message || e);
   }
   const ws = res && res.webSocket;
   if (!ws) return refused(
     res ? res.status : null,
     "RUNNER_REFUSED",
-    `the runner answered ${res ? res.status : "nothing"} without a connection`,
-    token
+    `the runner answered ${res ? res.status : "nothing"} without a connection`
   );
   const queue = [], waiting = [];
   let ended = null;
@@ -3173,7 +3171,7 @@ async function openRunner(runner, token) {
     ws.addEventListener("close", (ev) => push({ closed: true, detail: `the runner closed the connection (${ev && ev.code})` }));
     ws.addEventListener("error", () => push({ closed: true, detail: "the runner's connection failed" }));
   } catch (e) {
-    return silent(e && e.message || e, token);
+    return silent(e && e.message || e);
   }
   return {
     send(text) {
@@ -3198,14 +3196,14 @@ async function openRunner(runner, token) {
     }
   };
 }
-function ending(m, usage, token) {
+function ending(m, usage) {
   if (m.ok === false)
-    return m.code === "MAX_TURNS" ? { exhausted: true, usage } : { ...refused(null, m.code ?? null, m.detail ?? "", token), usage };
-  if (m.stop_reason === "refusal") return { ...refused(200, "refusal", m.result ?? "", token), usage };
+    return m.code === "MAX_TURNS" ? { exhausted: true, usage } : { ...refused(null, m.code ?? null, m.detail ?? ""), usage };
+  if (m.stop_reason === "refusal") return { ...refused(200, "refusal", m.result ?? ""), usage };
   return null;
 }
-async function subscriptionConverse({
-  token,
+async function signinConverse({
+  member,
   runner,
   model,
   system,
@@ -3222,11 +3220,11 @@ async function subscriptionConverse({
   let k = 0;
   const unstated = () => sumUsage(usage, usageOf(null));
   while (k < maxTurns) {
-    const serialized = JSON.stringify(conversationRequest(token, { model, system, messages, tools, maxTurns: maxTurns - k }));
+    const serialized = JSON.stringify(conversationRequest(member, { model, system, messages, tools, maxTurns: maxTurns - k }));
     const stop = charge(serialized);
     if (stop) return { ...stop, usage, calls };
     k += 1;
-    const conn = await openRunner(runner, token);
+    const conn = await openRunner(runner, member);
     if (!conn.send) return conn.silent ? { ...conn, usage, calls } : { ...conn, usage: unstated(), calls: null };
     conn.send(serialized);
     let answer = null;
@@ -3234,7 +3232,7 @@ async function subscriptionConverse({
       const m = await conn.next();
       if (m.closed) {
         if (answer) return { answer, usage: unstated(), calls: null };
-        return { ...silent(m.detail, token), usage: unstated(), calls: null };
+        return { ...silent(m.detail), usage: unstated(), calls: null };
       }
       if (m.tool_use) {
         const u = m.tool_use;
@@ -3285,7 +3283,7 @@ async function subscriptionConverse({
       usage = sumUsage(usage, usageOf(m.usage));
       calls = sumCalls(calls, callsOf(m.num_turns));
       if (answer) return { answer, usage, calls };
-      const end = ending(m, usage, token);
+      const end = ending(m, usage);
       if (end) return { ...end, calls };
       messages.push({ role: "assistant", content: [{ type: "text", text: String(m.result || "(no answer)") }] });
       messages.push({ role: "user", content: `Answer by calling the \`${finalTool}\` tool.` });
@@ -3318,21 +3316,22 @@ function usable(reference) {
   if (reference.level !== void 0 && !LEVELS2.includes(reference.level)) return null;
   if (reference.level === "group" && reference.kind !== "apikey") return null;
   if (reference.kind === "apikey" && typeof reference.key === "string" && reference.key) return { kind: "apikey", secret: reference.key };
-  if (reference.kind === "subscription" && typeof reference.token === "string" && reference.token)
-    return { kind: "subscription", secret: reference.token };
+  if (reference.kind === "signin" && typeof reference.member === "string" && reference.member)
+    return { kind: "signin", member: reference.member };
   return null;
 }
+var runnerBinding = (runner) => !!runner && typeof runner.idFromName === "function" && typeof runner.get === "function";
 function precheck(reference, runner) {
   const ref = usable(reference);
   if (!ref) return { refusal: refused(
     null,
     "ACCOUNT_REFERENCE_UNUSABLE",
-    `a model turn runs only under the account reference that serves a member's act: {kind: "apikey", key} or {kind: "subscription", token}, the member's own, or the group's API key {kind: "apikey", level: "group", key}`
+    `a model turn runs only under the account reference that serves a member's act: {kind: "apikey", key} or {kind: "signin", member}, the member's own, or the group's API key {kind: "apikey", level: "group", key}`
   ) };
-  if (ref.kind === "subscription" && !runner) return { refusal: refused(
+  if (ref.kind === "signin" && !runnerBinding(runner)) return { refusal: refused(
     null,
     "RUNNER_NOT_CONFIGURED",
-    "a subscription runs in the agent runner, and no runner binding was passed"
+    "a sign-in runs in the member's own agent runner instance, and no runner binding that names one was passed"
   ) };
   return { ref };
 }
@@ -3365,9 +3364,9 @@ async function converse({
     meter.bytes += serialized.length;
     return null;
   };
-  if (ref.kind === "subscription")
-    return subscriptionConverse({
-      token: ref.secret,
+  if (ref.kind === "signin")
+    return signinConverse({
+      member: ref.member,
       runner,
       model,
       system,
