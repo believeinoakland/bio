@@ -18,10 +18,11 @@ const RETIRED = ["assistantset"];
 const OWED_DECLARED_IN_T36 = ["aikeepaway", "openoriginal", "openwithwarning", "safeview", "deepercheck", "releasescanhold",
   "securitytooladd", "securitytooltest", "securitytoolremove", "archivelist", "findin", "groupdescriptiondraft",
   "memberlanguageset", "notedelete", "noterevise", "publishat", "securitymap", "startfrom", "writinghelp"];
-/* The owed acts op-declarations does not declare as this job merges (T37-31, after it, declares all but
-   `infolevelset`): held under `owed_<op>` until then, as R48 reads them. */
-const OWED_UNDECLARED = ["infolevelset", "subscriptionsignin", "obscuremark", "setpassword", "translationgrant",
-  "translationdraft", "translationadopt", "translationconfirm", "translationrevert"];
+/* The owed acts op-declarations declares in T37 (T37-31, K2249), held under their ops since; and the one it does not
+   declare, held under `owed_<op>` (R48). */
+const OWED_DECLARED_IN_T37 = ["subscriptionsignin", "setpassword", "obscuremark", "translationgrant", "translationdraft",
+  "translationadopt", "translationconfirm", "translationrevert"];
+const OWED_UNDECLARED = ["infolevelset"];
 /* The design's ops that no `NEEDS` row gates (reads and doors before a session: the install, the self-test, the
    invitation, the searches, the public reads), so `op-grades`' gated totality names none of them. */
 const UNGATED = ["bootstrap", "selftest", "hostingaccess", "invitelook", "search", "frontier", "verify", "publishedcase"];
@@ -32,13 +33,14 @@ const gradedOrPublished = (op) => [G.RUNGS, G.RUNG_ABSENT, G.NON_ACTS].some((t) 
 
 /* R48's reading of a design key: the key it is held under. */
 const heldAs = (k) => {
-  if (k.startsWith("owed_")) return OWED_DECLARED_IN_T36.includes(k.slice(5)) ? k.slice(5) : k;
+  if (k.startsWith("owed_")) return [...OWED_DECLARED_IN_T36, ...OWED_DECLARED_IN_T37].includes(k.slice(5)) ? k.slice(5) : k;
   return Object.hasOwn(OP_ALIASES, k) ? OP_ALIASES[k] : k;
 };
 
 test("R48: ACT_HELP is a frozen module constant holding exactly the design's 203 texts (PR #14, e08cd35ecb), verbatim, "
    + "each under the key R48 reads it as, in the design's order: aliases under their op, the nineteen owed acts declared "
-   + "in T36 under their op, the nine still undeclared under owed_<op>; the withdrawn texts and assistantset nowhere", () => {
+   + "in T36 and the eight declared in T37 under their op, infolevelset still under owed_<op>; the withdrawn texts and "
+   + "assistantset nowhere", () => {
   assert.ok(Object.isFrozen(ACT_HELP));
   assert.equal(Object.keys(DESIGN).length, 203);
   for (const k of [...WITHDRAWN, ...RETIRED]) {
@@ -53,12 +55,13 @@ test("R48: ACT_HELP is a frozen module constant holding exactly the design's 203
   for (const t of Object.values(ACT_HELP)) assert.ok(typeof t === "string" && t.trim().length > 0);
   /* DEC-182 (1), (4) and DEC-180: `clockpropose` has its own text; setpassword and obscuremark are owed */
   assert.equal(ACT_HELP.clockpropose, DESIGN.clockpropose);
-  assert.equal(ACT_HELP.owed_setpassword, DESIGN.owed_setpassword);
-  assert.equal(ACT_HELP.owed_obscuremark, DESIGN.owed_obscuremark);
+  assert.equal(ACT_HELP.setpassword, DESIGN.owed_setpassword);
+  assert.equal(ACT_HELP.obscuremark, DESIGN.owed_obscuremark);
+  assert.equal(ACT_HELP.owed_infolevelset, DESIGN.owed_infolevelset);
 });
 
 test("R48: no key is an alias or a retired op; every alias the design explains is answered by its op's entry; the owed_ "
-   + "keys are exactly the nine owed acts op-declarations does not yet declare, none under a T36-declared op; every other "
+   + "keys are exactly the owed acts op-declarations does not declare (infolevelset), none under a T36- or T37-declared op; every other "
    + "key is an op op-grades grades or names, or one of the design's ungated ops", () => {
   const keys = Object.keys(ACT_HELP);
   for (const k of keys) {
@@ -68,11 +71,14 @@ test("R48: no key is an alias or a retired op; every alias the design explains i
   /* each alias the design explains is answered by its op's entry, never as a second one */
   for (const [a, op] of Object.entries(OP_ALIASES)) if (Object.hasOwn(DESIGN, a)) assert.ok(Object.hasOwn(ACT_HELP, op), `${a} → ${op}`);
   assert.equal(ACT_HELP.identityclaim, DESIGN.identityclaim);
-  /* owed keys: only those still owed (op-grades grades some of them before op-declarations declares them, T37-26) */
+  /* owed keys: only those still owed */
   const owed = keys.filter((k) => k.startsWith("owed_"));
   assert.deepEqual(owed.sort(), OWED_UNDECLARED.map((op) => `owed_${op}`).sort());
   for (const op of OWED_UNDECLARED) assert.equal(Object.hasOwn(ACT_HELP, op), false, `${op} is held only as owed_${op}`);
-  for (const op of OWED_DECLARED_IN_T36) assert.equal(Object.hasOwn(ACT_HELP, `owed_${op}`), false, op);
+  for (const op of [...OWED_DECLARED_IN_T36, ...OWED_DECLARED_IN_T37]) {
+    assert.equal(Object.hasOwn(ACT_HELP, `owed_${op}`), false, op);
+    assert.ok(Object.hasOwn(ACT_HELP, op), `${op} is held under its op`);
+  }
   /* every other key is an op */
   for (const k of keys.filter((k) => !k.startsWith("owed_")))
     assert.ok(gradedOrPublished(k) || UNGATED.includes(k), `${k} is an op op-grades grades or names`);

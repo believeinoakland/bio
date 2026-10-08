@@ -9,9 +9,10 @@
  *   - `owed_<op>` is held under `<op>` for the nineteen owed acts declared in T36 (`aikeepaway`, `openoriginal`,
  *     `openwithwarning`, `safeview`, `deepercheck`, `releasescanhold`, `securitytooladd`, `securitytooltest`,
  *     `securitytoolremove`, `archivelist`, `findin`, `groupdescriptiondraft`, `memberlanguageset`, `notedelete`,
- *     `noterevise`, `publishat`, `securitymap`, `startfrom`, `writinghelp`), and under `owed_<op>` for the nine not
- *     declared when this was generated (`infolevelset`, `subscriptionsignin`, `obscuremark`, `setpassword` and the five
- *     translation ops; T37-31 declares all but `infolevelset`, and a re-generation then holds them under their ops).
+ *     `noterevise`, `publishat`, `securitymap`, `startfrom`, `writinghelp`) and the eight op-declarations declares in T37
+ *     (T37-31, K2249: `subscriptionsignin`, `setpassword`, `obscuremark`, `translationgrant`, `translationdraft`,
+ *     `translationadopt`, `translationconfirm`, `translationrevert`), and under `owed_<op>` for the one still undeclared
+ *     (`infolevelset`);
  * PR #14 withdrew `projectcreated`, `countask`, `registerproceeding`, `deadlinecompute` and `claimidentity` and dropped
  * `assistantset` (DEC-182 (1)–(3)), so every one of its 203 entries is held. */
 export const ACT_HELP = Object.freeze({
@@ -52,13 +53,13 @@ export const ACT_HELP = Object.freeze({
   securitytooltest: 'Sends a harmless test file or address to the tool and shows its answer, so you know it works before relying on it.',
   securitytoolremove: 'Stops using this tool. Notes it already wrote stay on the files they concern.',
   expertisedeclare: 'Says what you know professionally, such as accounting or law. An administrator confirms it; members can then ask you for checks.',
-  owed_setpassword: 'Changes your password. Other sessions you have open stay signed in until they end.',
+  setpassword: 'Changes your password. Other sessions you have open stay signed in until they end.',
   signerregister: 'Registers the key you sign published cases with. Readers check a signature against it.',
   signerrevoke: 'Withdraws your signing key, for example if it was lost. Cases already signed keep a record that it was withdrawn.',
   owed_infolevelset: 'Chooses how quickly explanations open: promptly, or guidance on a longer pause so less opens while you move. Nothing is ever hidden.',
   groupkeynoticeseen: 'Confirms you have read that your questions go to Anthropic under the group\'s account. Asked once, before your first question.',
   disclosureshown: 'Confirms you have read what connecting your own account means: your questions go to Anthropic under your own account and terms.',
-  owed_subscriptionsignin: 'Opens Anthropic\'s own sign-in page in a new tab. It gives you a code to paste here; Civicsmith never sees your password.',
+  subscriptionsignin: 'Opens Anthropic\'s own sign-in page in a new tab. It gives you a code to paste here; Civicsmith never sees your password.',
   accountreferenceset: 'Connects your own Claude subscription or API key. It serves only you, before the group\'s key.',
   aiceilingset: 'Sets the most your own account may spend in a day here, up to the limit the group set.',
   accountswitchset: 'Lets the assistant suggest things without being asked. Off unless you turn it on; each suggestion is yours to adopt or ignore.',
@@ -70,11 +71,11 @@ export const ACT_HELP = Object.freeze({
   noterevise: 'Changes your note. Notes are yours alone, so nothing else changes.',
   notedelete: 'Deletes your note. If you turned it into something shared, that stays.',
   writinghelp: 'Asks the assistant to help word what you are writing, from what you typed. Its words arrive labelled as its draft; nothing is saved until you keep them.',
-  owed_translationdraft: 'Asks the assistant to draft translations of Civicsmith\'s words, labelled as drafts for a speaker to check.',
-  owed_translationadopt: 'Keeps a translation so members reading that language see it. Protected words need a second speaker\'s check first.',
-  owed_translationgrant: 'Lets a named member translate Civicsmith\'s words into one language.',
-  owed_translationconfirm: 'Confirms a protected word as a second speaker, so members see it instead of the English.',
-  owed_translationrevert: 'Undoes a translation change in one step, back to what it replaced.',
+  translationdraft: 'Asks the assistant to draft translations of Civicsmith\'s words, labelled as drafts for a speaker to check.',
+  translationadopt: 'Keeps a translation so members reading that language see it. Protected words need a second speaker\'s check first.',
+  translationgrant: 'Lets a named member translate Civicsmith\'s words into one language.',
+  translationconfirm: 'Confirms a protected word as a second speaker, so members see it instead of the English.',
+  translationrevert: 'Undoes a translation change in one step, back to what it replaced.',
   wizards: 'Shows the wizards your group can use: Civicsmith\'s, and those your group wrote.',
   wizarddraft: 'Records a new wizard by walking through the steps yourself. It stays a draft until approved.',
   wizardrevise: 'Changes a draft wizard\'s steps or words before it is submitted.',
@@ -119,7 +120,7 @@ export const ACT_HELP = Object.freeze({
   personfact: 'Records a fact about this person from the passage: a position, a credential, an interest. It cites the passage.',
   datedfact: 'Records a dated fact from the passage, citing it, for the timeline.',
   clockpropose: 'Works out a due date from the law and the dates, showing each day counted and each holiday skipped. It proposes the date; a member confirms it.',
-  owed_obscuremark: 'Marks anyone in a photo who is not part of a finding, and any number plate, so the copy a published case carries shows them obscured, labelled. The original stays inside the group.',
+  obscuremark: 'Marks anyone in a photo who is not part of a finding, and any number plate, so the copy a published case carries shows them obscured, labelled. The original stays inside the group.',
   standarddeclare: 'Holds this requirement as a standard the city set itself, so questions can test the city against it.',
   moneyrecord: 'Reads this figure into a money fact, with its stage and period, citing where it came from.',
   tabledeclare: 'Says what a table\'s columns are, so its figures can be counted through a calculation rather than one by one.',
