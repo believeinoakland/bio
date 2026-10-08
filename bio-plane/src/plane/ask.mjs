@@ -92,13 +92,16 @@ export async function askOnObject(ctx, env, { member, session = null, grant = nu
  *  ask), reads that account's `suggestions` switch (the member's own reference's, credentials R25; the group key's, its
  *  R37), mints the member's ask grant only when `suggestions` is on and the field is not firsthand (DEC-153 (2), K1841
  *  (2)), and posts `{task, told, account, grant?, pack?, firsthand?}` to agent-worker's `/draft` in its R6 wire shape,
- *  the pack the door holds sent only with no grant (agent-worker R59). It answers a Response at agent-worker's status:
+ *  the pack the door holds sent only with no grant (agent-worker R59). (T37; K2238) A translation draft
+ *  (`op: "translationdraft"`, agent-worker R68) is posted as `{task: {op, direction, language, words}, account, pack}`:
+ *  no `told`, no `firsthand`, and never a grant (it reads nothing of the record, run-rules R22). It answers a Response at agent-worker's status:
  *  agent-worker's JSON as given (or the refusal that ended it first) with `grant` (null when none), `suggestions` and
  *  `read`, the strings of that grant's read log on this object (`answers.readLog`, its R1, R2; `[]` with no grant), so
  *  the door checks the draft against them (`wizard-scripts.checkDraft`) and counts its usage. The door answers the
  *  member and never the grant. The secret leaves the object only in that one call. */
 export async function draftOnObject(ctx, env, { op = null, member = null, session = null, told = null, act = null, field = null,
-                                                firsthand = false, pack = null } = {}) {
+                                                firsthand = false, pack = null, direction = null, language = null,
+                                                words = null } = {}) {
   const who = member === null || member === undefined || member === "" ? null : `member:${idOf(member)}`;
   const readOf = (grant) => {
     if (!grant) return [];
@@ -120,15 +123,19 @@ export async function draftOnObject(ctx, env, { op = null, member = null, sessio
     if (ref.level === "member") { const st = c.accountReferenceState({ member: who, viewer: who }); suggestions = !!(st && st.ok === true && st.suggestions === true); }
     else { const g = c.groupKeySwitches(); suggestions = !!(g && g.suggestions === true); }
   } catch { suggestions = false; }
+  /* (T37; K2238; agent-worker R68, run-rules R22) a translation draft reads nothing of the record: no grant is minted
+     whatever the switch, and its task is the owner's `{direction, language, words}` with the pack, no `told`. */
+  const translation = op === "translationdraft";
   let grant = null;
-  if (suggestions && firsthand !== true) {
+  if (suggestions && firsthand !== true && !translation) {
     const g = await c.aiGrantMint({ member: who, by: who, session });
     if (!g || g.ok !== true) return out(403, g, null, suggestions);
     grant = g.token;
   }
-  const task = op === "writinghelp" ? { op, act, field } : { op };
-  const body = JSON.stringify({ task, told, account: { kind: ref.kind, level: ref.level, secret: ref.key, member: who, suggestions },
-                                ...(grant ? { grant } : pack != null ? { pack } : {}), ...(firsthand === true ? { firsthand: true } : {}) });
+  const task = op === "writinghelp" ? { op, act, field } : translation ? { op, direction, language, words } : { op };
+  const account = { kind: ref.kind, level: ref.level, secret: ref.key, member: who, suggestions };
+  const body = JSON.stringify(translation ? { task, account, ...(pack != null ? { pack } : {}) }
+    : { task, told, account, ...(grant ? { grant } : pack != null ? { pack } : {}), ...(firsthand === true ? { firsthand: true } : {}) });
   ref = null;
   let res;
   try {

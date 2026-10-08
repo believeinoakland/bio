@@ -261,6 +261,29 @@ test("R19 (N686; DEC-153 (2), K1841 (2), K2041): with the member's suggestions o
   assert.equal([...x.ctx.storage.sql.exec(`SELECT count(*) c FROM ai_grants`)][0].c, 1, "one grant, the first draft's");
 });
 
+test("R19 (T37; K2238; agent-worker R68, run-rules R22): a translation draft carries its task {op, direction, language, words}, the account and the door's pack to /draft, and no told, grant or firsthand, even with the member's suggestions on", async () => {
+  const x = await world();
+  assert.equal(credentialsOf(x.ctx).accountSwitchSet({ member: "member:ann", switch: "suggestions", on: true, by: "member:ann" }).ok, true);
+  const words = [{ key: "nav.home", en: "Home", note: "the first screen", means: "where a member starts", protected: false }];
+  const TPACK = { layers: ["interface_translation"] };
+  for (const direction of ["to_language", "to_english"]) {
+    const asked = { op: "translationdraft", member: "ann", session: SESSION, pack: TPACK, direction, language: "es", words };
+    const res = await x.s.draft(asked);
+    const r = await res.json();
+    assert.equal(res.status, 200);
+    assert.deepEqual([r.grant, r.suggestions, r.read], [null, true, []], "no grant, so no read log");
+    const [u, body] = x.asks.at(-1);
+    assert.equal(u, "https://agent-worker/draft");
+    assert.deepEqual(body, { task: { op: "translationdraft", direction, language: "es", words }, pack: TPACK,
+      account: { kind: "apikey", level: "member", secret: "sk-ant-zz-ann", member: "member:ann", suggestions: true } }, direction);
+  }
+  assert.equal([...x.ctx.storage.sql.exec(`SELECT count(*) c FROM ai_grants`)][0].c, 0, "no grant minted for a translation");
+  /* negative control: the same member's writing-help draft, suggestions on, is sent a grant in place of the pack */
+  const w = await draft(x);
+  assert.match(w.body.grant, /^[0-9a-f]{64}$/);
+  assert.equal(x.asks.at(-1)[1].pack, undefined);
+});
+
 test("R19 (N686; credentials R35, R37): a member with no account of their own is served by the group's key, carried as level `group` with the group's suggestions switch", async () => {
   const x = await world({ account: false });
   const c = credentialsOf(x.ctx);
