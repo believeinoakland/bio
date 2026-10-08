@@ -1,6 +1,6 @@
 # BOB to capture (T37)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -11,3 +11,7 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Merge order in L3 (`modules.json` order): acquisition → capture → file-safety.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · CHANGE
+
+acquisition (T37-37) is merged into tranche/T37 (K2190): merge it, run t37.test.mjs end to end, and complete.
