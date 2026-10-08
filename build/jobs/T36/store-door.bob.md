@@ -18,3 +18,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`), vendor
 ## B2 · CHANGE
 
 CHANGE (K2157; CONTROL-PLANE #25 J1 (1)): new R13 in your requirements: a route-map answer that is a `Response` (file-safety's byte answers `openoriginal`, `openwithwarning`, `safeview`, `safecopy`) is returned as given, never wrapped in R1's envelope (`dispatch.mjs`:305). Merge the tranche branch, apply it with a test naming R13, and post COMPLETE again. Your J1 (2): instance-setup R55 now states `assistantGate()` stays, name and shape (K2157).
+
+## B3 · CHANGE
+
+instance-setup has merged (K2162): `assistantSet` and `op=assistantset` are gone. Merge the tranche branch now and re-point your tests that used them to `credentials.aiKeepAwaySet` (keep-away off is the assistant on): red 32 in the plan's rule 5 names yours. Then post COMPLETE (again).
