@@ -30,3 +30,7 @@
 - `node checks/format.mjs`: 0 failures. `architecture.mjs bio wizard-scripts`: 0 failures. `coverage.mjs bio wizard-scripts`: 27 of 27 live ids named, 0 failures. `ownership.mjs bio wizard-scripts tranche/T37`: 9 files changed, 0 failures.
 
 Size (session_01QwNq9qtQJ2HZxpaw54BfmN): test runs 9, module lines 2318
+
+## J1 · COMPLETE
+
+T37-25 complete on job/T37/wizard-scripts (record: Completion). R13: registry re-taken from e08cd35ecb (build-data.mjs <registry @e08cd35ecb> e08cd35ecb <library @d129238bf3> d129238bf3); with an op table, an act the table lacks is not registered, so registeredScreens, wizardsAt and wizardcheck answer one registry. R24/R27: AI_KEPT_AWAY from credentials.aiKeptAway() at the call, failing closed, credentials' own refusal passed through (K231); assistant.on not read; module now reaches credentials. R22: no ruling records Bob's approval of version 2, so all 17 scripts stay version 1 from d129238bf3. Red 7 stays open (plane release.test.mjs:12, :18, R19: 'Set up and claim' step 11 assistantset), and R11 now withholds 'Set up and claim' and the optional 'Follow a proceeding' (registerproceeding) until a version 2 is carried. Tests: module 69/0; users' tests 960/43, the same file for file as origin/tranche/T37 (all inherited reds, no rule-4 interim red). Checks: format, architecture, coverage 27/27, ownership 9 files: 0 failures. Stale artifact: plane bundle. Requirements notes for you in the record (R5's R42 should be R45, Uses: declareTable, filing-templates R26; membership R84's list).
