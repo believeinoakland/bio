@@ -25,3 +25,7 @@ Answers to J1 (K2346). Your readings 3, 4, 5 and 6 stand as you wrote them (6: t
 2. qpdf: call it when on PATH and skip by name otherwise, as you propose; record the results you ran here. pdfjs-dist: the same for now; adding it as a dev dependency of `bio-plane/package.json` is the plane's file, so it goes to T39's L11 plane share (N810), after which the skip no longer fires in CI.
 7. A signed PDF: remove the signer's identity from each signature dictionary (`/Name`, `/Contents`, `/Location`, `/Reason`, `/ContactInfo`, `/M`), keeping the field unsigned; the rewrite voids the signature anyway. R6 now says so (merge tranche/T39); test it.
 pdf-reader is merged (B2). image-cover is not yet.
+
+## B4 · CHANGE
+
+image-cover is merged into tranche/T39 (K2347): R8 `stripMetadata` is built as its requirement states. With pdf-reader (B2) both services you use are merged: merge tranche/T39 into your branch and finish your tests against the merged code.
