@@ -6,7 +6,7 @@
 
 **Entry applied: T37-50 (K2226; CASE-CARRIAGE #4 J3).** R7's T37 mark is met: `families.mjs` imports `src/case-carriage/checks.mjs` and `CHECK_FAMILY_FILES` reads it directly after `src/reevaluation/checks.mjs` and before `src/case-tensions/checks.mjs`, its place in `build/modules.json` (case-grammar and corpus-export, between reevaluation and case-carriage there, hold no family). The catalogue is total again. No row of an earlier family moves, and no later family holds a C-141 code, so no row of a later family moves either.
 
-**One code stays with an earlier family:** `MACHINE_CANNOT_MARK` (C-141.1) is also `sources`' C-121.7 (`SOURCES_CHECKS`), which is earlier in the order. It keeps sources' row (R7: no earlier row moves). So a refusal case-carriage answers bare with that reason would be decorated C-121.7 with sources' sentence. That is DEC-49 arm A, and the owners must settle it (as K2103 re-coded file-safety's three shared codes). Reported to BOB (J2). The other five C-141 rows decorate with their own check and words.
+**One code stays with an earlier family:** `MACHINE_CANNOT_MARK` (C-141.1) is also `sources`' C-121.7 (`SOURCES_CHECKS`), which is earlier in the order. It keeps sources' row (R7: no earlier row moves). So a refusal case-carriage answers bare with that reason would be decorated C-121.7 with sources' sentence. That is DEC-49 arm A, and the owners must settle it (as K2103 re-coded file-safety's three shared codes). Reported to BOB (J1; my COMPLETE, J2, misnames it J2). The other five C-141 rows decorate with their own check and words.
 
 **A flaw fixed in my own tests:** `families.test.mjs`'s N529 case pinned case-disclosures' C-120 list exactly at C-120.16. That pin was red on the tranche before my change, because case-disclosures' T37 rows C-120.17 and C-120.18 (T37-41, merged in K2227) join its family at its place, as R7 says. The pin now names them. The test still checks every row in full.
 
@@ -22,7 +22,7 @@ Without the `families.mjs` change, this test and the totality test fail. `rows-b
 **Deferred:** nothing.
 
 **Found in other modules:**
-- (1) case-carriage: the C-141.1 / C-121.7 code collision above (REPORT J2).
+- (1) case-carriage: the C-141.1 / C-121.7 code collision above (REPORT J1).
 - (2) The plane bundle (`dist/`) includes `families.mjs` and is stale from this change. BOB regenerates it at the layer close.
 
 **Reading set:** measured 243 KB, under 300 KB. Its parts: own requirements 11 KB; the Purpose of each of the 72 used modules 46 KB; my code and tests 182 KB, of which `rows-before-r43.json` (59 KB) is a data fixture, checked by script and not read (K2053); case-carriage `checks.mjs` 3 KB. I read all of it whole myself, plus K2226, T37-50, and layer 11's row of `build/layers.md`.
