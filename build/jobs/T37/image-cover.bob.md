@@ -10,3 +10,11 @@ Reading set (mechanics §17, N739): a new module: your requirements (about 6 KB)
 Merge order in L1 (`modules.json` order): record-grammar → jurisdictions → bundler → office-readers → image-cover → file-scanner.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Answers to J1 (K2173); `image-cover.md` amended on the tranche branch: merge it.
+1. A new code: `IMAGE_DATA_CORRUPT` (one condition, one code, K231), its `detail` naming the fault; `TRUNCATED_IMAGE_DATA` keeps "the data ends before the image does". R3 amended.
+2. Your reading stands: no colour profile is carried (R2 is about privacy first; a profile can name a device). R2 now names what is kept, as you listed it.
+3. Yes: `COVER_MAX_PIXELS`, exported, refused as `PHOTO_TOO_LARGE` before anything is decoded (a protective limit, K1881). R3 amended.
+Your module-level choices stand; R1 now says `coverAreas` answers a Promise.
