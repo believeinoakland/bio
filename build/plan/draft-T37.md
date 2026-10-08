@@ -2,7 +2,7 @@
 
 **Status** · DRAFT, reviewed by BOB #136 (K2140; For BOB 1 open with Bob, K2139) (prepared during T36, P18). Becomes `current.md` the moment T36 closes (PROCESS-MECHANICS §5.2); BOB re-reads it then against what T36's L6–L11 left.
 
-**Sources** · `next.md` N748–N767 (every open entry); `current.md` (T36): its "Left out of T36" table (rows whose reason ends with T36: N708, K2134), its accepted reds (rule 5: 1, 4, 7, 15, 16, 18 still open at L6, K2138), "P6 notes"; `modules.json` (order, layers); `rulings-active.md`; rulings K2064, K2074, K2075, K2079, K2084, K2090, K2099, K2100, K2101, K2108, K2118, K2122, K2124–K2138; for N708 K1804, K1819, K2110, K2131, K2133–K2135; for N669 K1793, K1804, K1869, K1883; PR #14 (DEC-178, DEC-179 `screens/words.json`, read on GitHub at `58ab1a7f34`). PROCESS-MECHANICS §5.2, §12.2; PROCESS-DESIGN P10, P18, P19.
+**Sources** · `next.md` N748–N770 (every open entry); `current.md` (T36): its "Left out of T36" table (rows whose reason ends with T36: N708, K2134), its accepted reds (rule 5: 1, 4, 7, 15, 16, 18 still open at L6, K2138), "P6 notes"; `modules.json` (order, layers); `rulings-active.md`; rulings K2064, K2074, K2075, K2079, K2084, K2090, K2099, K2100, K2101, K2108, K2118, K2122, K2124–K2138; for N708 K1804, K1819, K2110, K2131, K2133–K2135; for N669 K1793, K1804, K1869, K1883; PR #14 (DEC-178, DEC-179 `screens/words.json`, read on GitHub at `58ab1a7f34`). PROCESS-MECHANICS §5.2, §12.2; PROCESS-DESIGN P10, P18, P19.
 
 **At T37's opening (assumed):** every T36 entry is merged (T36-1 … T36-52; T36-50 not joined, K2131); T37 opens from `tranche/T36`'s tip whether or not `main` has moved yet (K2137); PR #14 (UX-DESIGN's MERGE U123: DEC-178, DEC-179's interface word list, 923 words, 345 protected) is merged to `main` at T36's close (§5.7 (1), K2100), so "the word list does not exist" is no hard reason in T37 and N669 enters. S17's DEC is not on PR #14 (its `DECISIONS.md` records DEC-178 and DEC-179 only), so N757 keeps its reason. Still hard reasons: the new screens' shell (N672), which nothing in T36 or T37 builds; every deployment or measurement no T37 entry takes.
 
@@ -70,7 +70,9 @@ Each line is one job (P8): every T37 entry for that module. Fields: module · (N
 - **T37-12 · progressions** (test only) · (N752) `test/m/progressions/order.test.mjs`:15 (R41) reads layer 5's order from `modules.json` (as membership's R83 test does), clearing red 4 (MEMBERSHIP #27 J2) · K2090 · req: none · depends —.
 - **T37-13 · retrieval** · (N758, its user) R74 finds a `.docx` table's paragraphs by the cells' ordinals (T37-4, T37-9), not by matching cell lines in order; a test on a vertically merged table. (N759, its user) a test that a fact recorded at one cell of a found column is named on that column's R73 result through content's relation (T37-10) · K2118, K2122 · req: R74 amended, BOB's wording · depends T37-9, T37-10 (L4). **P6:** 3,484; the job reports if it would pass about 4,000.
 
-**L5 merge order:** `modules.json` order: events → progressions → retrieval.
+- **T37-35 · standards** · (N769) R43's adoption branch binds only while the version is in force on the date (R20, R51); tests: adopted then ended, adopted with a recorded `through` then after it, adopted with no end and no record · K2150 · req: none (R43 as written) · depends —.
+
+**L5 merge order:** `modules.json` order: events → standards → progressions → retrieval.
 
 ### L6
 
@@ -89,10 +91,13 @@ Each line is one job (P8): every T37 entry for that module. Fields: module · (N
 - **T37-21 · case-authoring** · (N761, its share) its store map reads `secretSha` (`index.mjs`:2355) from the body or a header, never the query · K2129 · req: the store-map read, BOB's wording · depends —. Reads T36-28's result. **P6:** 3,365.
 - **T37-22 · review** · (N761, its share) its store map reads `secretSha` (`index.mjs`:778–782) from the body or a header, never the query (its comment at :769 re-worded) · K2129 · req: the store-map read, BOB's wording · depends —.
 
-**L8 merge order:** `modules.json` order: publication → ratification → case-checker → case-authoring → review. (K2140: N763 is BOB's as restricted to carried captures.)
+- **T37-34 · case-carriage** · (N768) R8's `hold` registers a record or archive two included materials share under each material's ref, so `published_shas` names every ref that carries it (public-read carries it for both, K2145); a test of two materials sharing an archive · K2145 · req: R8, BOB's wording · depends —.
+
+**L8 merge order:** `modules.json` order: case-carriage → publication → ratification → case-checker → case-authoring → review. (K2140: N763 is BOB's as restricted to carried captures.)
 
 ### L9
 
+- **T37-36 · conformance** · (N770) C-113.34 and C-113.35's `where` names `#comparedAct`; the census rows re-worded wait for T38's stamp, accepted red by name (K1680) · K2150 · req: none · depends T37-35 (L5, R27's tests read its R43).
 - **T37-23 · filing-templates** · (N761, its share) `templateReviewGrant` and its door read `secretSha` from the body or a header, never the query · K2129 · req: the store-map read, BOB's wording · depends —.
 
 ### L10
@@ -160,7 +165,7 @@ Each line is one job (P8): every T37 entry for that module. Fields: module · (N
 
 ## Entries carried from `next.md` (N748–N767) and T36's table
 
-Wholly in T37: N750, N752, N753, N754, N755, N758, N759, N760, N761, N762, N764, N765, N767. In part: N708 (R22's retirement and M-Q2 out), N669 (screens out), N701 (its `subscriptionsignin` and `translationconfirm`, T37-31). Conditional: N763 (For BOB 2), N756 (if T36-34 left it). Left out: N748, N751, N757, N670. Superseded: N766.
+Wholly in T37: N750, N752, N753, N754, N755, N758, N759, N760, N761, N762, N764, N765, N767, N768, N769, N770. In part: N708 (R22's retirement and M-Q2 out), N669 (screens out), N701 (its `subscriptionsignin` and `translationconfirm`, T37-31). Conditional: N763 (For BOB 2), N756 (if T36-34 left it). Left out: N748, N751, N757, N670. Superseded: N766.
 
 ## P6 notes
 
@@ -168,7 +173,7 @@ Measured on `tranche/T36` @ `9c8cc5693c` (L6 running; K1821's rule: own code in 
 
 ## Summary
 
-**Jobs per layer:** L1 5, L2 2, L3 1, L4 2, L5 3, L6 4, L7 0, L8 5, L9 1, L10 1, L11 8. **Total 32** (a plane share possible at L11 from T37-24, not counted).
+**Jobs per layer:** L1 5, L2 2, L3 1, L4 2, L5 4, L6 4, L7 0, L8 6, L9 2, L10 1, L11 8. **Total 35** (a plane share possible at L11 from T37-24, not counted).
 
 ## For BOB (meaning that might be Bob's; not decided here)
 
