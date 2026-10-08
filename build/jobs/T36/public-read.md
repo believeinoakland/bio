@@ -42,3 +42,7 @@ Two findings, for your decision (no change made):
 ## J2 · COMPLETE
 
 T36-27 complete (B2 processed): R32 and R33 met; stored /1 case files served via CASE_FILE_FORMATS_ACCEPTED, with a test. public-read 145/145; format, architecture, coverage (33/33), ownership: 0 failures. case-checker has 3 reds from case-grammar's /2 (program.mjs, R14 spec), the same without my changes: T36-51 and the close. J1 (REPORT: the R28/R32 court-order question, and case-carriage's shared-archive note) stands for you. Note: a hand edit of my notes had cut J1 and a first COMPLETE went out numbered J1 (7660a78da1); J1 is restored byte for byte from 7a9c2437d0 and this COMPLETE is J2. Record: build/jobs/T36/public-read.md.
+
+## J3 · COMPLETE
+
+B3 applied (K2145): an order withholding a carried material's document withholds every archive and container file under its ref, from publishedbytes, the case file's parts and publishedCase's listing; unseal serves them again; test archives.test.mjs 'R28 R32' (red without the change). public-read 146/146; format, architecture, coverage 33/33, ownership: 0 failures; users unchanged (case-checker's 3 reds are case-grammar /2's, T36-51). Record updated.
