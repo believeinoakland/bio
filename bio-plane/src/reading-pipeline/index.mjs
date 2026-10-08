@@ -842,8 +842,12 @@ export function containerExtentOf(i2text, { pdfPaints = null, fmt = null } = {})
 /* R28 (T33-24; C:A-5; K1556): the entry's document `metadata` as it emitted it (office-readers R31), or null; and, for
    a workbook (a text with a `sheets` list), `cells`: each named sheet's cells as the entry emitted them
    (office-readers R30, odf-reader R46), or null where it emitted none (over its size guard). Neither is altered; a
-   sheet with no name is no key, since a key would be one this module made up. No text, or no entry: metadata null
-   and no `cells`. */
+   sheet with no name is no key, since a key would be one this module made up. N724 (K1972, K2092): for a `.docx`
+   text (container `docx`), `cells` keyed by each table's `ref` (`table <n+1>`, office-readers R16), its cells as the
+   entry emitted them (office-readers R11's `tables[].cells`), nested tables under their own keys as the entry lists
+   them; `{}` for a body with no tables, and null when `tables` is null (the body not read, or over its size guard),
+   three facts kept apart (R21). A table with no `ref` is no key, as a sheet with no name. No text, or no entry:
+   metadata null and no `cells`; any other document: no `cells`. */
 export function emittedFieldsOf(i2text) {
   const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
   const out = { metadata: isObj(i2text) && isObj(i2text.metadata) ? i2text.metadata : null };
@@ -852,6 +856,14 @@ export function emittedFieldsOf(i2text) {
     for (const sh of i2text.sheets)
       if (isObj(sh) && typeof sh.name === "string") cells[sh.name] = Array.isArray(sh.cells) ? sh.cells : null;
     out.cells = cells;
+  } else if (isObj(i2text) && i2text.container === "docx") {
+    if (!Array.isArray(i2text.tables)) out.cells = null;
+    else {
+      const cells = {};
+      for (const t of i2text.tables)
+        if (isObj(t) && typeof t.ref === "string" && t.ref) cells[t.ref] = Array.isArray(t.cells) ? t.cells : null;
+      out.cells = cells;
+    }
   }
   return out;
 }
@@ -1103,7 +1115,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     planeVersion, member });
   /* N139 (R17): the counts of exactly the text the reader was handed; none when no text was. */
   { const n = textCountsOf(classifiedText); if (n) Object.assign(reading, n); }
-  /* R28: the entry's metadata, or null, and a workbook's cells, as emitted. */
+  /* R28: the entry's metadata, or null, and a workbook's or a `.docx` document's cells, as emitted. */
   Object.assign(reading, emittedFieldsOf(emitted));
   /* R13: absent when no entry answered a decoding choice. */
   if (readDialect !== undefined) reading.dialect = readDialect;

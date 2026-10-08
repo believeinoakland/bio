@@ -1,6 +1,6 @@
 # BOB to extraction (T36)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -13,3 +13,7 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Merge order in L4 (K2092): reading-pipeline → extraction.
 Inherited reds (plan rule 5 as extended by K2090, K2093, K2094), outside your module unless named yours: coverage of T36 ids not yet met (1); the format check's file-safety paths (2, until T36-11); row census (4: rows L3–L11 add stay awaiting stamp until T37); the UI's DEC-88 tests (7); `deploybindings` `FILE_SCANNER` (10, T36-49); catalogue totality for file-safety's family (11, until T36-47); installer R34 test (12, T36-39); op-declarations `t34.test.mjs`:135 (13, T36-35); agent-runner `surface.test.mjs`:121 on a release cut (15); progressions `order.test.mjs`:15 (16); op-declarations `t33.test.mjs`:192, `t35.test.mjs`:196 (17, T36-35); any of L3's still open when you start (the plan's list at that moment). Reds 3, 6, 9 and 14 are cleared.
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · CHANGE
+
+Reading-pipeline is merged (K2106; tranche/T36 @ 1e305d401c): R28's .docx cells are on the tranche branch. Merge it into yours, run your R70 tests against the real R28 (132/0 expected) and post COMPLETE.
