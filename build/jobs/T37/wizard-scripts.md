@@ -52,3 +52,7 @@ T37-25 complete on job/T37/wizard-scripts (record: Completion). R13: registry re
 - `format`: 1 failure (above, not mine). `architecture`, `coverage` (27/27) and `ownership` (12 files): 0 failures each.
 
 Size (session_01QwNq9qtQJ2HZxpaw54BfmN): test runs 13, module lines 2379
+
+## J3 · COMPLETE
+
+B2 processed (record: 'B2 · CHANGE processed'). tranche/T37 merged. Version 2 of the four K2241 scripts is carried from e08cd35ecb, approved {BOB, 2026-10-08, K2241}; each version 1 is kept, updated, readable and not offered; the other 13 stay version 1 from d129238bf3 (identical at e08cd35ecb). Command: build-data.mjs <registry @e08cd35ecb> e08cd35ecb <library @d129238bf3> d129238bf3 <library @e08cd35ecb> e08cd35ecb. Red 7 does NOT clear at my merge, it moves: Set up and claim now passes, but plane release.test.mjs:12/:18 (R19) fails on Publication ceremony v2 step 5, obscuremark (owed, DEC-180), until T37-31 (op-declarations) declares it; until then R11 withholds the ceremony. Tests: module 69/0; users' tests 1054/45, identical to the tranche tip. Checks: architecture, coverage 27/27, ownership 12 files: 0 failures; format 1 failure, not mine (modules.json: instance-setup paths names bio-plane/src/setup-words.mjs, no file).
