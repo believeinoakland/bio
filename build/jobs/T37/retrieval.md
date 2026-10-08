@@ -17,7 +17,7 @@
 
 **Deferred (minor, my module, not this entry's; for a later retrieval job):** a `{selection}` scope's refusal carries no `code` field (`index.mjs`:1583); `whole` is false for any cursor, even one before the first sha (:1547), so "Nothing here" is withheld there (never falsely said); a capture held by two bundles is searched for `term` only through its lowest visible bundle (:1570), which the gate already admits.
 
-**Found in another module (for BOB; not reported as a REPORT, judged not to need one):** `extraction`'s N26 migration (`n26MigratedReading.moveCells`, `extraction/index.mjs`:213–224) moves `doc-table` sources but not `paras` ordinals; it only matters if a reading carrying `paras` were ever migrated from pre-N26 numbering, which its age makes impossible in practice.
+**Found in another module (REPORT J2):** `extraction`'s N26 migration (`n26MigratedReading.moveCells`, `extraction/index.mjs`:213–224) moves `doc-table` sources but not `paras` ordinals; it only matters if a reading carrying `paras` were ever migrated from pre-N26 numbering, which its age makes impossible in practice.
 
 **Tests and checks.**
 - retrieval: `node --test bio-plane/test/m/retrieval/` · tests 168, pass 168, fail 0.
