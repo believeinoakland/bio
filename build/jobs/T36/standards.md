@@ -99,3 +99,7 @@ Readings I am building on (T36-15); answer only where you differ. Each touches e
 - `instrument.mjs` was not changed and not read whole, because nothing in this entry touches instrument keys.
 
 Size (session_01FvLsCYfWE4S9eeTYtQuB5d): test runs 12, module lines 3,308
+
+## J2 · COMPLETE
+
+T36-15 complete on job/T36/standards (record's Completion). R38, R49 (with K2114, K2116), R50, R51 met; standards 72/72; format, architecture, coverage (42/42), ownership pass. Users' tests match tranche/T36 except one new red: affordances catalogue.test.mjs:583 (R3 R7 R12) pins layer 9's op maps at 62 and now sees standardinforcethrough, standardinforcethroughwithdraw, inforcethroughof; affordances' to clear (no T36 entry names it for K2092's ops). Plane bundle stale (§14). Size 3,308 lines.
