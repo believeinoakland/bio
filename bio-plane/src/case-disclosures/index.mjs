@@ -17,9 +17,10 @@
  * comment's requirement id is this module's; an id of `case-authoring`'s is named as its.
  *
  * THE SEAM (R23). Every service is synchronous and never throws on a failed read of another module: that read states
- * less, never more. It writes nothing of its own; the one write it reaches is `sources.sourceOf`'s minting of a source
- * id (R4), inside the caller's transaction, so the caller can roll it back. It holds no table and no op, so it declares
- * nothing to purge and registers nothing.
+ * less, never more. It writes nothing of its own; it reaches two writes, each inside the caller's transaction, so the
+ * caller can roll it back: `sources.sourceOf`'s minting of a source id (R4), and (T39) `case-carriage.documentCopy`'s
+ * queueing of a member document neither queued nor derived (R6; its R16; K2374). It holds no table and no op, so it
+ * declares nothing to purge and registers nothing.
  *
  * REACHED as `caseDisclosuresOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the
  * first call with `deps`, returned to every later caller. `deps` (each reached through its factory on the same host
