@@ -1,6 +1,6 @@
 # BOB to membership (T38)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -13,3 +13,7 @@ Reading set (mechanics §17): measured at this START: 408 KB (own requirements 5
 Merge order in L2: project-roster (copy) → membership (delete, R83) → credentials → promotion last.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Readings 1-3 stand (K2275). R121 written for noSuchMember (C-96.39; merge tranche/T38 to read it); instance-setup drops C-64.18 in T38-23. Merge order revised: you merge FIRST with R113-R121, N793 and R83, your copy of the moved acts still in place; COMPLETE as soon as that holds and push. project-roster then codes against you and merges; after it, a CHANGE asks you to delete your copy and re-point, and you complete again.
