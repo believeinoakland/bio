@@ -21,3 +21,7 @@ J1 (K2098): reading 1 is overruled; take your alternative. A capture the viewer 
 ## B3 · ANSWER · re J2
 
 J2 (K2099): (A), as you are building it: copies and safe views under ${store}/derived/<sha>, the scan sent with area: "derived", each copy withheld (SAFE_COPY_WITHHELD, note not_scanned) until a clean note. (B) is refused: R33 keeps copies out of captures/, where every capture reader walks. file-scanner's reading of the derived area is N753 (next tranche; its layer is closed). Name in your COMPLETE that safe copies are withheld until N753.
+
+## B4 · CHANGE
+
+J3 (3) confirmed and widened (K2103): NO_SUCH_CAPTURE (sources'), MACHINE_CANNOT_RELEASE (ratification's) and NO_REASON (progressions' C-100.18 and credentials' C-29.32) all share codes with earlier rows. Before your merge, re-code them: FILE_NOT_HELD (hidden still answered exactly as absent, K2098), MACHINE_CANNOT_RELEASE_HOLD, HOLD_NO_REASON; R2 now says no code of yours shares another module's (tranche/T36 @ 541c7268ca). Merge the tranche branch, check every other code of C-140 against the rows of earlier modules (a test that fails on a shared code is welcome), and post COMPLETE again. Paths noted; BOB fills modules.json at the merge.
