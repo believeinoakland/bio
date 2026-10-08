@@ -36,3 +36,25 @@ Size (session_01Q8jnptX8F9t9Vmj1SzQSsy): test runs 20, module lines 2114
 ## J1 · COMPLETE
 
 T37-12 applied: order.test.mjs (R41) reads layers 5 and 5–8 from modules.json, so red 4 clears. Also fixed in my module: instance.test.mjs (R33) no longer pins a literal call order; progressionsOf caches its instance only after declareTable and registerFigures succeed (R42), with a new test. progressions 62/0. Users' tests 1104/32, the same 32 failing without my change (affordances 29, plane 3). format, architecture, coverage (42/42) and ownership all 0 failures. Deferrals are in the record.
+
+## B2 · CHANGE (K2204)
+
+**Applied.**
+- (1) R33 says `nextDeadline` is R17's `next_deadline` at the thread's instant, and that is the whole store's earliest deadline. A scan of the thread's own instance would change that answer whenever another instance falls due sooner. My reading of "only that thread where R33 allows" is therefore this: the whole-store scan runs only when a listener reads `nextDeadline`, and then once for the thread, with the answer unchanged (J2 QUESTION).
+  - Each listener now gets its own event, with `nextDeadline` as a memoised enumerable getter (index.mjs, `threadInstance`).
+  - Scheduler's listener ignores the event (scheduler/index.mjs:680), so a thread with scheduler listening now costs no scan.
+- (2) The `zoneOf` comment now names its real default, `governingZone(localFactsOf(host, {record}))`, and what it answers (`{zone: null, why}` when none or several zones govern).
+- The awaited listeners stay as they are (K2204).
+
+**Test.** New: instance.test.mjs "R33 R17: a listener's nextDeadline is the whole store's next deadline at the thread's instant, scanned only when a listener reads it, once per thread". It shows:
+- a listener that ignores the deadline costs no events reads;
+- two listeners that read it share one scan, each gets its own event, and both get the store's deadline (another instance's, earlier than this thread's).
+- It fails on the old code (12/1, "no scan for a listener that ignores the deadline") and passes with the change.
+
+**Tests and checks.**
+- progressions: `tests 63, pass 63, fail 0`.
+- Users: affordances 188/29 and plane 140/3 (rule 6 items 7, 14, 17). Calculations, control-plane, inquiry, intent, money-checks, queue, queue-producers and store-door have 0 failures.
+- scheduler, which registers on R33: 109/5. The same 5 fail with the change stashed (identical `✖` lines). They concern requests, promotion clocks, entities and selection sweeps, none of them progressions.
+- format, architecture and coverage (42 of 42): 0 failures. Ownership (5 files): 0 failures.
+
+Size (session_01Q8jnptX8F9t9Vmj1SzQSsy): test runs 30, module lines 2127
