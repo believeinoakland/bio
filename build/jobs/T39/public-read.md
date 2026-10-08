@@ -61,3 +61,7 @@ Re-run:
 **Found in another module (for BOB).** A member document carried whole and refused at the commit is answered `PHOTO_MARKS_CHANGED_SINCE` (C-122.6, "A mark changed after this case was prepared…"), listed under `photos` with why "a member's document travels only as its copy". The code and sentence speak of a photo's marks for a document, which has none. It is publication's commit refusal (or case-carriage's R13 answer it relays); its wording is UX's (C-122.7 `DOCUMENT_COPY_CHANGED_SINCE` may be the intended code once publication merges).
 
 Size (session_01Djbnfgfma73t1Qd5xWboXx): test runs 14, module lines 3,543
+
+## J3 · COMPLETE
+
+B3 done: tranche/T39 merged (case-carriage). 20 tests went red for one reason: R13 lapses a document carried whole with no fetch receipt, and the fixtures' carried documents had none. Code unchanged. Fixtures now give such documents their receipts (direct; unpacked naming the archive for members), as case-carriage's own fixture does; no assertion weakened. 156/156 pass; format, architecture, coverage and ownership checks 0 failures. Pushed. For you: a member document refused at the commit is answered PHOTO_MARKS_CHANGED_SINCE (C-122.6, 'A mark changed…') under 'photos'. That wording is wrong for a document (detail in my record). Waiting on your word for publication's merge.
