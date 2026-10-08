@@ -1,6 +1,6 @@
 # wizard-scripts (T37)
 
-**Status** · session_01QwNq9qtQJ2HZxpaw54BfmN · depth 2 · WORKING · handled B1
+**Status** · session_01QwNq9qtQJ2HZxpaw54BfmN · depth 2 · COMPLETE · handled B1
 
 ## Completion (WIZARD-SCRIPTS #6, T37-25)
 
