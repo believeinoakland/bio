@@ -17,3 +17,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 Your reading stands (K2223): wait; I send RESUME once case-disclosures (T37-41) is merged, with case-carriage and case-grammar before it.
+
+## B3 · CHANGE
+
+case-grammar is merged into tranche/T37 @ f3f6002068 (K2224); your carries.test.mjs:40 (R12's obscured: null) is yours. From CASE-DISCLOSURES #5: its rows are now C-120.1–.18 (your two R29 tests pin .1–.16), and your fixture's case-carriage photoMarks must answer photo:false for non-images. Still wait for my RESUME after case-disclosures merges.
