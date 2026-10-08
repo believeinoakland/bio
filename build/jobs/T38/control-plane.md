@@ -25,7 +25,7 @@
 
 **Found in other modules:** none caused by this job. The whole plane tree, `node --test test/` in `bio-plane`, ran 9,034 tests: 8,985 pass, 38 fail.
 - I re-ran the files holding 37 of the failures on a worktree of `origin/tranche/T38` without my commits (affordances, plane, `conclude-project`, `d526-refusal-order`, `mk6-bundle-names-no-author`, `stats-disclosure`, `fleetbundles`, `row-census`). The same 37 fail by name there (372 tests, 335 pass, 37 fail on both trees).
-- The 38th failure is `test/system/migrate-released.test.mjs`; its comparison is below.
+- The 38th failure, `test/system/migrate-released.test.mjs`, fails alike on both trees (1 test, 0 pass, 1 fail).
 - I leave matching all of these to rule 6 to BOB.
 
 **Reading (mechanics §17, option 3; K2304).** The set is over 300 KB: own requirements 48 KB, code 249 KB and tests about 490 KB.
