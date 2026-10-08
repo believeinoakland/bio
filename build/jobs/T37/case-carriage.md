@@ -2,6 +2,10 @@
 
 **Status** · session_013UybDevdS9DJfUx9eqiUuX · depth 2 · WORKING · handled B2
 
+## Progress (to be completed at COMPLETE)
+
+Built and pushed (commit fe45992c9a): R1/R8 per-ref `files` (N768) and the copy-carried row (N757); R8's sealed archive; R9 `obscureMark`, R10 `photoMarks`, R11 the copy (`<store>/obscured/<sha>`), R12 the marks' declaration and append-only tables, R13 `marksLapsed`; `checks.mjs` (C-141); `caseCarriageOps`. Tests: `marks.test.mjs` (R9–R12, 12 green), `obscured.test.mjs` (R1, R8, R13: 6 red until case-grammar T37-40 merges its R12 `obscured`). Next step: merge `tranche/T37` after case-grammar's merge, run every test and the four checks, then COMPLETE.
+
 ## J1 · QUESTION
 
 Three points; I carry on with each best reading.
