@@ -90,6 +90,19 @@ export function world({ events = true, lines = true, calculations = true, now = 
       if (!r.ok) throw new Error(`fixture event refused: ${r.reason}: ${r.detail}`);
       return r.event_id ?? r.event?.event_id;
     },
+    /* A document's dated fact on the seeded capture (events R1), for an attestation that dates an event (R25). */
+    datedFact(value, kind = "issued") {
+      const r = ev.recordDatedFact({ captureSha: w.cap, extent: { kind: "document" }, kind, value,
+                                     method: "read by a member", by: ANN });
+      if (!r.ok) throw new Error(`fixture dated fact refused: ${r.reason}: ${r.detail}`);
+      return r.dated_fact.dated_fact_id;
+    },
+    /* A real event dated by that fact's attestation. */
+    datedEvent(kind, value, concerns = []) {
+      const r = ev.createEvent({ kind, concerns, attestations: [{ datedFactId: w.datedFact(value) }], by: ANN });
+      if (!r.ok) throw new Error(`fixture dated event refused: ${r.reason}: ${r.detail}`);
+      return r.event_id;
+    },
     relate(from, to, kind) {
       const r = ev.relate({ from, to, kind, attestation: { testimony: `the minutes say the ${kind}` }, by: ANN });
       if (!r.ok) throw new Error(`fixture relation refused: ${r.reason}: ${r.detail}`);
@@ -151,7 +164,7 @@ export function seeded(opts = {}) {
   const general = w.entity("fund", "General Fund");
   const harbour = w.entity("fund", "Harbour Fund");
   const contract = w.entity("contract", "Dredging contract");
-  const cap = w.held("INFO-1", sha("ledger"));
+  const cap = w.cap = w.held("INFO-1", sha("ledger"));
   const fact = (over = {}) => ({
     amount: "1250000.00", as_read: "$1,250,000.00", currency: "USD", sign: "+", precision: "exact", kind: "expenditure",
     phase: "actual", stage: "paid", basis: "modified accrual", period: { fiscal: "FY2013-14" },
