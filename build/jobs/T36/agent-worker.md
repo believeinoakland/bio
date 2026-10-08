@@ -63,3 +63,12 @@ Things I found outside my module. Details and citations are in my record's Compl
 3. Wording, yours: my requirements' Uses line for `skills`, and the manifest's generated-artifact row for my bundle, still say the pack is read from `op=affordances`.
 4. bundler, a comment only: `fleetbundles.test.mjs`:219 says the same.
 5. Release order (K2126): deploy agent-worker with or before T36-37.
+
+## J2 · COMPLETE
+
+T36-24 is complete on `job/T36/agent-worker` @ c9b73480ab.
+- R48, R37 and R59 now read the pack from `op=agentpack`, never from `op=affordances`, for a run, an ask and a draft.
+- New suite `t36.test.mjs` (20/0) names each id. It fails 2/18 against the old source.
+- The bundle is rebuilt with its own command, and `fleetbundles` passes.
+- All 11 module test files pass. format, architecture, coverage (57/57) and ownership: 0 failures.
+- Nothing deferred. My findings in other modules are in J1.
