@@ -51,6 +51,10 @@ const secondOf = (iso) => String(iso).replace(/\.\d+Z$/, "Z");
 function safeJson(text) {
   try { return JSON.parse(text); } catch { return null; }
 }
+/* A receipt as R16 and R60 answer it: every column, `reputation` (R61) read back to the object stored, null when none. */
+const RECEIPT_COLUMNS = "address_norm, address, capture_sha, via, retrieval_locator, first_retrieved, last_retrieved, "
+                      + "observations, reputation";
+const receiptRow = (r) => ({ ...r, reputation: typeof r.reputation === "string" ? safeJson(r.reputation) : null });
 /* A digest as the register keys it: a `sha256:` prefix and case ignored (R5). */
 const bareSha = (v) => (typeof v === "string" ? v.trim().replace(/^sha256:/, "").toLowerCase() : null);
 
@@ -867,9 +871,16 @@ class Provenance {
    *  interval as instants: two spellings of one instant never sort apart. A `retrieved` in any readable ISO spelling
    *  is re-spelled to its whole second (the fraction dropped); none, or one that names no instant, takes this module's
    *  clock, the instant of the plane's own write. */
-  recordReceipt({ address, addressNorm, captureSha, retrieved, via = "direct", retrievalLocator = null, context = null } = {}) {
+  /*  R61 (N714; K2087): `reputation`, the answer acquisition R44 recorded for the fetched address, is stored with the
+   *  receipt exactly as given (a plain object, as JSON; anything else is no reputation), answered by R16 and R60, and
+   *  handed to the listeners as this write gave it, null when it gave none. A repeat that gives one replaces the
+   *  stored answer (the newest lookup speaks for the address); one that gives none keeps it, as `retrieval_locator`
+   *  is kept. It changes no other field, grade or chain. */
+  recordReceipt({ address, addressNorm, captureSha, retrieved, via = "direct", retrievalLocator = null, reputation = null,
+                  context = null } = {}) {
     if (!addressNorm || !captureSha) return { recorded: false };
     const v = String(via || "direct");
+    const rep = isObj(reputation) ? reputation : null;
     const asked = typeof retrieved === "string" && retrieved ? Date.parse(retrieved) : NaN;
     const clock = Date.parse(this.#now());
     const when = stampInstant("second", Number.isFinite(asked) ? asked : Number.isFinite(clock) ? clock : Date.now());
@@ -880,16 +891,17 @@ class Provenance {
         captureSha, addressNorm, v) || { n: 0, same: 0 };
       const observation = Number(seen.n) === 0 ? "new" : Number(seen.same) > 0 ? "unchanged" : "changed";
       this.#sql.exec(
-        `INSERT INTO captured_locators (address_norm, address, capture_sha, via, retrieval_locator, first_retrieved, last_retrieved, observations)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+        `INSERT INTO captured_locators (address_norm, address, capture_sha, via, retrieval_locator, first_retrieved, last_retrieved, observations, reputation)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)
          ON CONFLICT(address_norm, capture_sha, via) DO UPDATE SET
            first_retrieved   = MIN(first_retrieved, excluded.first_retrieved),
            last_retrieved    = MAX(last_retrieved,  excluded.last_retrieved),
            retrieval_locator = COALESCE(excluded.retrieval_locator, retrieval_locator),
-           observations      = observations + 1`,
-        addressNorm, address || addressNorm, captureSha, v, retrievalLocator, when, when);
+           observations      = observations + 1,
+           reputation        = COALESCE(excluded.reputation, reputation)`,
+        addressNorm, address || addressNorm, captureSha, v, retrievalLocator, when, when, rep ? JSON.stringify(rep) : null);
       const event = { address: address || addressNorm, address_norm: addressNorm, capture_sha: captureSha, via: v,
-                      retrieval_locator: retrievalLocator, retrieved: when, observation, context };
+                      retrieval_locator: retrievalLocator, retrieved: when, observation, reputation: rep, context };
       const listeners = this.#listeners.map(({ module, fn }) => {
         try {
           const out = fn(event);
@@ -907,9 +919,23 @@ class Provenance {
    *  establishes that a link was contemporaneous (LINK-FIDELITY.md), REC-26. */
   receipts({ addressNorm = null } = {}) {
     const rows = addressNorm
-      ? this.#rows(`SELECT * FROM captured_locators WHERE address_norm = ? ORDER BY via`, addressNorm)
-      : this.#rows(`SELECT * FROM captured_locators ORDER BY address_norm, via`);
-    return { address_norm: addressNorm, rows: rows.map((r) => ({ ...r })),
+      ? this.#rows(`SELECT ${RECEIPT_COLUMNS} FROM captured_locators WHERE address_norm = ? ORDER BY via`, addressNorm)
+      : this.#rows(`SELECT ${RECEIPT_COLUMNS} FROM captured_locators ORDER BY address_norm, via`);
+    return { address_norm: addressNorm, rows: rows.map(receiptRow),
+             observations: rows.reduce((n, r) => n + r.observations, 0) };
+  }
+
+  /** R60 · N725 (K1973): every receipt that names one capture, at any address and by any `via`, each row as R16
+   *  answers it, ordered by `address_norm` then `via`, and their summed observations: one seek on the
+   *  `captured_locators_sha` index, so a reader of one capture's receipts (`standards` R38's `version_basis`) never
+   *  reads every receipt. A `sha256:` prefix and case are ignored (R5); no digest, or one that is not 64 hex, answers
+   *  no rows, never every receipt. Writes nothing. */
+  receiptsOfCapture({ captureSha = null } = {}) {
+    const s = bareSha(captureSha);
+    const ok = typeof s === "string" && /^[0-9a-f]{64}$/.test(s);
+    const rows = ok ? this.#rows(`SELECT ${RECEIPT_COLUMNS} FROM captured_locators WHERE capture_sha = ?
+                                   ORDER BY address_norm, via`, s) : [];
+    return { capture_sha: ok ? s : null, rows: rows.map(receiptRow),
              observations: rows.reduce((n, r) => n + r.observations, 0) };
   }
 

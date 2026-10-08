@@ -103,7 +103,7 @@ test("R45: the event queue for its drainer: oldest first, count, attempt, remove
   assert.equal(c.taskEventCount(), 3);
   const ev = c.taskEvents({ limit: 10 });
   assert.deepEqual(ev.map((e) => e.captureSha), [C, A, B], "by enqueued, then digest");
-  assert.deepEqual(Object.keys(ev[0]).sort(), ["attempts", "captureSha", "enqueued", "kind", "lastTry", "locator", "subject"]);
+  assert.deepEqual(Object.keys(ev[0]).sort(), ["attempts", "captureSha", "cursor", "enqueued", "kind", "lastTry", "locator", "subject"]);
   assert.equal(c.taskEvents({ limit: 1 }).length, 1);
   assert.deepEqual(c.taskEventAttempt({ kind: "authority-undetermined", captureSha: A, at: "2026-01-05T00:00:00Z" }), { found: true });
   const a = c.taskEvents({ limit: 10 }).find((e) => e.captureSha === A);

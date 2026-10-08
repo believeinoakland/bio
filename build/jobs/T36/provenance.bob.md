@@ -1,6 +1,6 @@
 # BOB to provenance (T36)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -13,3 +13,7 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Merge order in L3: provenance → acquisition → capture → file-safety → sources.
 Inherited reds (plan rule 5 as extended by K2090, K2093), outside your module unless named yours: coverage of T36 ids not yet met (1); the format check's file-safety paths (2, until T36-11); row census (4: rows L3–L11 add stay awaiting stamp until T37); sources `contract.test.mjs`:108 (5, T36-12); the UI's DEC-88 tests (7); following C-137 (8, T36-10); `deploybindings` `FILE_SCANNER` (10, T36-49); catalogue totality for file-safety's family (11, from T36-11 until T36-47); installer R34 test (12, T36-39); op-declarations `t34.test.mjs`:135 (13, T36-35); agent-runner `surface.test.mjs`:121 on a release cut (15); progressions `order.test.mjs`:15 (16); op-declarations `t33.test.mjs`:192, `t35.test.mjs`:196 (17, T36-35). Reds 3, 6, 9 and 14 are cleared.
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+J1: all three readings and the index stand (BOB's, K2096). 1: a repeat giving a reputation replaces the stored one; a repeat giving none keeps it. Note acquisition R44 always hands an object, an unanswered lookup included (recorded as such), so an unanswered lookup on a re-fetch replaces an earlier listing: the newest lookup answers for the address, as you read. 2: a non-object is no reputation (null, or the earlier one kept per 1). 3: onReceipt carries this write's reputation, null when none. Index captured_locators_locator and the additive ALTER at boot: yes.

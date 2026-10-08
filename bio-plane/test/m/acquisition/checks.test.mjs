@@ -18,30 +18,35 @@ const EXPECTED = {
   DRIVE_EXPORT_IS_THE_SHELL: "C-48.5", DRIVE_EXPORT_UNREACHABLE: "C-48.6", DRIVE_EXPORT_BYTES_ARE_THE_SHELL: "C-48.7",
   EVIDENCE_STORAGE_NOT_CONFIGURED: "C-68.1",
   SWEEP_SCOPE_MISSING: "C-128.1", SWEEP_REDIRECT_OUT_OF_SCOPE: "C-128.2",
-  /* C-137 (T35, N688, F16, K1888): driven by their own refusals in unpack.test.mjs, own-host.test.mjs, co-archive.test.mjs */
-  ARCHIVE_NOT_HELD: "C-137.1", ARCHIVE_UNREADABLE: "C-137.2", ARCHIVE_AMBIGUOUS: "C-137.3", UNPACK_NOT_PERMITTED: "C-137.4",
-  MEMBER_ENCRYPTED: "C-137.5", MEMBER_METHOD_UNSUPPORTED: "C-137.6", MEMBER_AMBIGUOUS: "C-137.7", MEMBER_CORRUPT: "C-137.8",
-  MEMBER_MAX: "C-137.9", ARCHIVE_RATIO_MAX: "C-137.10", ARCHIVE_ENTRIES_MAX: "C-137.11", ARCHIVE_TOTAL_MAX: "C-137.12",
-  ARCHIVE_DEPTH_MAX: "C-137.13", ARCHIVE_TREE_TOTAL_MAX: "C-137.14", ARCHIVE_TREE_ENTRIES_MAX: "C-137.15",
-  UNPACK_DAILY_BYTES: "C-137.16", UNPACK_DAILY_ENTRIES: "C-137.17", OWN_HOST_REFUSED: "C-137.18", CO_ARCHIVE_SETTING_INVALID: "C-137.19",
+  /* C-139 (T35, N688, F16, K1888; numbered C-137 until T36, N738, K2027): driven by their own refusals in unpack.test.mjs,
+     own-host.test.mjs, co-archive.test.mjs and archivelist.test.mjs (C-139.20, R41's NOT_AN_ARCHIVE, T36) */
+  ARCHIVE_NOT_HELD: "C-139.1", ARCHIVE_UNREADABLE: "C-139.2", ARCHIVE_AMBIGUOUS: "C-139.3", UNPACK_NOT_PERMITTED: "C-139.4",
+  MEMBER_ENCRYPTED: "C-139.5", MEMBER_METHOD_UNSUPPORTED: "C-139.6", MEMBER_AMBIGUOUS: "C-139.7", MEMBER_CORRUPT: "C-139.8",
+  MEMBER_MAX: "C-139.9", ARCHIVE_RATIO_MAX: "C-139.10", ARCHIVE_ENTRIES_MAX: "C-139.11", ARCHIVE_TOTAL_MAX: "C-139.12",
+  ARCHIVE_DEPTH_MAX: "C-139.13", ARCHIVE_TREE_TOTAL_MAX: "C-139.14", ARCHIVE_TREE_ENTRIES_MAX: "C-139.15",
+  UNPACK_DAILY_BYTES: "C-139.16", UNPACK_DAILY_ENTRIES: "C-139.17", OWN_HOST_REFUSED: "C-139.18", CO_ARCHIVE_SETTING_INVALID: "C-139.19",
+  NOT_AN_ARCHIVE: "C-139.20",
 };
 
-test("R29 R31: this module's table holds exactly C-48.1–C-48.7, C-83.1–C-83.8, C-28.13, C-68.1, R31's C-128.1–C-128.2 and T35's C-137.1–C-137.19, each with its code, number, a translation and a where naming this module's site (C-68.1's its one raiser's, K850)", () => {
+test("R29 R31: this module's table holds exactly C-48.1–C-48.7, C-83.1–C-83.8, C-28.13, C-68.1, R31's C-128.1–C-128.2 and the archive family C-139.1–C-139.20 (C-137.1–C-137.19 renumbered in order, N738), each with its code, number, a translation and a where naming this module's site (C-68.1's its one raiser's, K850)", () => {
   assert.deepEqual(Object.fromEntries(Object.entries(ACQUISITION_CHECKS).map(([k, v]) => [k, v.check])), EXPECTED);
   assert.deepEqual(Object.keys(DRIVE_CAPTURE_CHECKS).sort(), Object.keys(EXPECTED).filter((k) => k.startsWith("DRIVE_")).sort(), "C-48.8 and C-48.9 are monitoring's");
   assert.deepEqual(Object.keys(RENDER_CAPTURE_CHECKS).sort(), Object.keys(EXPECTED).filter((k) => k.startsWith("RENDER_")).sort());
   assert.deepEqual(Object.keys(CAPTURE_REQUEST_ARM_CHECKS), ["CAPTURE_NOT_DRAINING"], "the rest of C-28 is capture-requests'");
   assert.deepEqual(Object.keys(INSTALLATION_CHECKS), ["EVIDENCE_STORAGE_NOT_CONFIGURED"], "the rest of C-68 is control-plane's and publication's");
   assert.deepEqual(Object.keys(SWEEP_SCOPE_CHECKS), ["SWEEP_SCOPE_MISSING", "SWEEP_REDIRECT_OUT_OF_SCOPE"], "R31's two rows");
-  assert.deepEqual(Object.keys(ARCHIVE_CHECKS), Object.keys(EXPECTED).filter((k) => EXPECTED[k].startsWith("C-137.")), "C-137, in order");
+  assert.deepEqual(Object.keys(ARCHIVE_CHECKS), Object.keys(EXPECTED).filter((k) => EXPECTED[k].startsWith("C-139.")), "C-139, in order");
+  /* N738 (K2027): C-137 is following's alone; no row of this module carries a C-137 id, and the renumbering kept each row's order */
+  assert.deepEqual(Object.values(ACQUISITION_CHECKS).filter((r) => /^C-137\b/.test(r.check)), []);
+  assert.deepEqual(Object.values(ARCHIVE_CHECKS).map((r) => r.check), Array.from({ length: 20 }, (_, i) => `C-139.${i + 1}`));
   for (const [code, row] of Object.entries(ACQUISITION_CHECKS)) {
     assert.ok(typeof row.translation === "string" && row.translation.length > 40, code);
-    assert.match(row.where, /^src\/acquisition\/(index|unpack)\.mjs (acquire|evidenceStorageAbsent|unpack|coArchiveSet) > is-[a-z-]+/, code);
+    assert.match(row.where, /^src\/acquisition\/(index|unpack)\.mjs (acquire|evidenceStorageAbsent|unpack|archiveList|coArchiveSet) > is-[a-z-]+/, code);
     assert.ok(Object.isFrozen(row), `${code} is frozen`);
     assert.ok(!/oakland|alameda/i.test(row.translation), `${code}: R30, no place in outward text`);
   }
   assert.ok(Object.isFrozen(ACQUISITION_CHECKS) && Object.isFrozen(DRIVE_CAPTURE_CHECKS) && Object.isFrozen(RENDER_CAPTURE_CHECKS) && Object.isFrozen(INSTALLATION_CHECKS) && Object.isFrozen(SWEEP_SCOPE_CHECKS) && Object.isFrozen(ARCHIVE_CHECKS));
-  /* DEC-167 (3), R29: C-137's words carry no offset, method number or figure: those travel in the answer's own fields */
+  /* DEC-167 (3), R29: C-139's words carry no offset, method number or figure: those travel in the answer's own fields */
   for (const [code, row] of Object.entries(ARCHIVE_CHECKS)) {
     assert.doesNotMatch(row.translation, /\d/, `${code}: no figure in the member's words`);
     assert.doesNotMatch(row.translation, /this instance|this copy|the plane|the instance/i, `${code}: DEC-149's voice`);

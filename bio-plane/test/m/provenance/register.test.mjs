@@ -485,6 +485,7 @@ test("R48: the whole-second respelling runs at every boot under workerd's 50-byt
   /* The receipt services run under the same cap. */
   w.prov.recordReceipt({ addressNorm: "e.org/new", captureSha: s, retrieved: "2026-09-27T06:00:00.5Z" });
   w.prov.receipts({ addressNorm: "e.org/new" });
+  w.prov.receiptsOfCapture({ captureSha: s });
   w.prov.versionChain({ addressNorm: "e.org/new", viewer: V("x") });
   w.prov.registerHolds({ sha: s });
   assert.deepEqual(refused, []);

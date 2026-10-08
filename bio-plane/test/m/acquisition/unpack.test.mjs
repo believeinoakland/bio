@@ -238,9 +238,11 @@ test("R38: refusals, each writing nothing: BAD_SHA, ARCHIVE_NOT_HELD (no receipt
   w.prov.recordReceipt({ address: URL1, addressNorm: URL1, captureSha: sha(z), retrieved: "2026-01-01T00:00:00Z", via: "direct" });
   await w.b.put(`bio/captures/${sha(z)}`, makeZip([{ name: "a", data: "b" }]));
   assert.equal((await unpack(w.store, { archiveSha: sha(z), ...M })).reason, "ARCHIVE_NOT_HELD");
-  /* unreadable: not an archive at all; and an end record declaring more entries than ARCHIVE_ENTRIES_MAX */
-  for (const [bytes, why, limit] of [[enc("not an archive at all, just text"), "eocd_not_found", undefined],
-                                     [makeZip([{ name: "a", data: "a" }], { eocd: { entries: 10001, diskEntries: 10001 } }), "ARCHIVE_ENTRIES_MAX", ARCHIVE_LIMITS.ARCHIVE_ENTRIES_MAX]]) {
+  /* unreadable: an archive of more entries than ARCHIVE_ENTRIES_MAX (R17 profiles it zip; its listing refuses it whole). A
+     capture that is not an archive at all, or whose end record only claims that many entries, is not profiled zip and is
+     NOT_AN_ARCHIVE since T36 (K2100: below) */
+  const many = makeZip(Array.from({ length: ARCHIVE_LIMITS.ARCHIVE_ENTRIES_MAX + 1 }, (_, i) => ({ name: `f${i}`, data: "x", method: 0 })));
+  for (const [bytes, why, limit] of [[many, "ARCHIVE_ENTRIES_MAX", ARCHIVE_LIMITS.ARCHIVE_ENTRIES_MAX]]) {
     w = world(); await hold(w, bytes);
     u = await unpack(w.store, { archiveSha: sha(bytes), ...M });
     assert.deepEqual([u.reason, u.why, u.limit, u.check], ["ARCHIVE_UNREADABLE", why, limit, row("ARCHIVE_UNREADABLE")[0]], why);
@@ -327,4 +329,35 @@ test("R40 R38: an archive that cannot be opened never fails its capture: the ref
   const z = makeZip([{ name: "a", data: "a" }]);
   const b = await capture(bare, z);
   assert.deepEqual([b.status, b.body.unpack.ok, b.body.unpack.reason], [200, false, "ARCHIVE_RECORD_UNAVAILABLE"]);
+});
+
+test("R38 (K2100): a held capture R17's rule does not profile as zip (a plain file, an office file, an OpenDocument file) is refused NOT_AN_ARCHIVE with its row, exactly as R41 refuses it, after ARCHIVE_NOT_HELD and before any listing; nothing is filed or recorded (negative control: a plain ZIP opens)", async () => {
+  const M = { by: "member:m1", cls: "member", member: true };
+  const hold = async (w, bytes) => { await w.b.put(`bio/captures/${sha(bytes)}`, bytes);
+    w.prov.recordReceipt({ address: URL1, addressNorm: URL1, captureSha: sha(bytes), retrieved: "2026-01-01T00:00:00Z", via: "direct" }); };
+  const docx = makeZip([{ name: "[Content_Types].xml", data: "<Types/>" }, { name: "word/document.xml", data: "<w:document/>" }]);
+  const odt = makeZip([{ name: "mimetype", data: "application/vnd.oasis.opendocument.text", method: 0 }, { name: "content.xml", data: "<c/>" }]);
+  const claims = makeZip([{ name: "a", data: "a" }], { eocd: { entries: 10001, diskEntries: 10001 } });
+  for (const [what, bytes] of [["plain text", enc("not an archive at all, just text")], ["a PDF", PDF], ["an office file", docx], ["an OpenDocument file", odt],
+                               ["an end record claiming entries it does not hold", claims]]) {
+    /* not held comes first: the same bytes unreceipted answer ARCHIVE_NOT_HELD */
+    const w0 = world();
+    assert.equal((await unpack(w0.store, { archiveSha: sha(bytes), ...M })).reason, "ARCHIVE_NOT_HELD", what);
+    const w = world();
+    await hold(w, bytes);
+    const receipts = w.prov.receipts.length;
+    const u = await unpack(w.store, { archiveSha: sha(bytes), ...M });
+    assert.deepEqual([u.ok, u.reason, u.code, u.check, u.translation, u.archive], [false, "NOT_AN_ARCHIVE", "NOT_AN_ARCHIVE", ...row("NOT_AN_ARCHIVE"), sha(bytes)], what);
+    assert.notEqual(u.format, "zip", what);
+    assert.deepEqual([w.rows("SELECT COUNT(*) AS n FROM archive_entries")[0].n, w.prov.receipts.length], [0, receipts], `${what}: nothing recorded or filed`);
+    /* exactly as R41 refuses it */
+    const l = await w.acq.archiveList({ archiveSha: sha(bytes), viewer: "class:admin" });
+    assert.deepEqual([l.reason, l.check, l.translation, l.format], [u.reason, u.check, u.translation, u.format], what);
+  }
+  /* negative control: a plain ZIP held the same way opens */
+  const w = world();
+  const z = makeZip([{ name: "a", data: "a" }]);
+  await hold(w, z);
+  const u = await unpack(w.store, { archiveSha: sha(z), ...M });
+  assert.deepEqual([u.ok, u.documents.length], [true, 1]);
 });
