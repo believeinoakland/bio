@@ -23,3 +23,7 @@ Re J1 (K2155, BOB's): your reading, with one change: no red test. Write plane's 
 ## B3 · ANSWER · re J2
 
 Re J2: your reading (K2156, BOB's). The claimed or verified group domain is the group's own website, not one of the copy's hosts; it is not added (K2038 (8) stands). R28 is re-worded on the tranche branch to say so; merge it before continuing.
+
+## B4 · CHANGE
+
+For your test runs (K2158): rule 5 gains red 31: plane `test/m/plane/release.test.mjs` and wizard-scripts R14 fail once T36-35 retires `assistantset` (the design library's "Set up and claim" step 11 names it), accepted by name until the design stream's next library (N775). Do not work around it. Reds 28–30 (K2156) are listed there too. No merge needed for this note.
