@@ -11,6 +11,11 @@
  *   materials:              one row per document or observation any member's chain reaches: `ref`, `kind` (`document`
  *                           or `observation`), `sha`, `text_sha`, `origin`, `archived_copy`, `included` (whether it
  *                           travels whole), `rests_under` (`load_bearing` or `supporting`).
+ *                           (T37; N757; DEC-180 (4)) A `document` row may also state `obscured_copy` and
+ *                           `obscured_label`: the photo travels as its copy with marked areas obscured, never whole,
+ *                           so the row states `included: false` and keeps the original's `sha`, `text_sha`, `origin`
+ *                           and `archived_copy`; read back as `obscured: {copy, label}`. An optional field of `/7`,
+ *                           with no new format (K2206): a row without it is written and read exactly as before.
  *   material_attestations:  one row per attestation of a material: `ref`, `by_kind` (`member`, `co_attestation`,
  *                           `project`, `group`), `by`, `level`, `at`, `signature`, `recorded_in`.
  *   accepted_work:          one row per (member, leg) whose chain reaches another group's finding (`inquiry-grammar`
@@ -77,6 +82,8 @@ export const MATERIAL_ATTESTATION_FIELDS = Object.freeze(["ref", "by_kind", "by"
 export const MATERIAL_KINDS = Object.freeze(["document", "observation"]);
 export const MATERIAL_RESTS_UNDER = Object.freeze(["load_bearing", "supporting"]);
 export const ATTESTATION_BY_KINDS = Object.freeze(["member", "co_attestation", "project", "group"]);
+/** R12 (T37; N757): the two flat fields a `document` row carried as its copy adds, after `rests_under`, in order. */
+export const MATERIAL_OBSCURED_FIELDS = Object.freeze(["obscured_copy", "obscured_label"]);
 /** R12: the levels a member's attestation is stated at (`publication` R17's four), and the two that name nobody. */
 export const ATTESTATION_LEVELS = Object.freeze(["group", "project", "cover", "name"]);
 export const ANONYMOUS_ATTESTATION_LEVELS = Object.freeze(["group", "project"]);
@@ -84,10 +91,21 @@ export const ANONYMOUS_ATTESTATION_LEVELS = Object.freeze(["group", "project"]);
 export const GROUP_ATTESTATION_SIGNATURE = "case";
 
 /* A material row as written: a `kind` or `rests_under` outside its words is written null (undetermined, never a
-   guess), and `included` true only when handed true, so nothing is said to travel whole that was not. */
-const materialRow = (r) => ({ ref: r.ref ?? null, kind: oneOf(r.kind, MATERIAL_KINDS), sha: r.sha ?? null,
-  text_sha: r.text_sha ?? null, origin: r.origin ?? null, archived_copy: r.archived_copy ?? null,
-  included: r.included === true, rests_under: oneOf(r.rests_under, MATERIAL_RESTS_UNDER) });
+   guess), and `included` true only when handed true, so nothing is said to travel whole that was not. A `document` row
+   handed `obscured` (an object) is written with its two flat fields, a copy that is not a SHA-256 or a label that is
+   not a sentence written null (so a reader finds the copy missing, never a guess), and `included: false` whatever it
+   is handed: the original never travels (T37; N757). */
+const HEX64 = /^[0-9a-f]{64}$/;
+const obscuredOf = (o) => (o && typeof o === "object" && !Array.isArray(o)
+  ? { obscured_copy: typeof o.copy === "string" && HEX64.test(o.copy) ? o.copy : null,
+      obscured_label: typeof o.label === "string" && o.label.trim() ? o.label : null } : null);
+const materialRow = (r) => {
+  const kind = oneOf(r.kind, MATERIAL_KINDS);
+  const obscured = kind === "document" ? obscuredOf(r.obscured) : null;
+  return { ref: r.ref ?? null, kind, sha: r.sha ?? null, text_sha: r.text_sha ?? null, origin: r.origin ?? null,
+           archived_copy: r.archived_copy ?? null, included: !obscured && r.included === true,
+           rests_under: oneOf(r.rests_under, MATERIAL_RESTS_UNDER), ...obscured };
+};
 /* An attestation row as written, each kind's rule applied whatever it is handed. */
 const attestationRow = (r) => {
   const byKind = oneOf(r.by_kind, ATTESTATION_BY_KINDS);
@@ -101,9 +119,14 @@ const attestationRow = (r) => {
 };
 
 /** R12 (K1317): the `materials:` block's lines, from `[{ref, kind, sha, text_sha, origin, archived_copy, included,
- *  rests_under}]`, in the order given; `materials: []` when there are none. */
+ *  rests_under, obscured?}]`, in the order given; `materials: []` when there are none. A `document` row handed
+ *  `obscured: {copy, label}` adds `obscured_copy` and `obscured_label` after `rests_under` and is written `included:
+ *  false`; every other row is written byte for byte as before T37. */
 export function materialsLines(rows) {
-  return rowsBlock("materials", objects(rows).map(materialRow), MATERIAL_FIELDS);
+  const written = objects(rows).map(materialRow);
+  if (!written.length) return ["materials: []"];
+  return ["materials:", ...written.flatMap((r) => [...MATERIAL_FIELDS, ...("obscured_copy" in r ? MATERIAL_OBSCURED_FIELDS : [])]
+    .map((f, i) => `${i ? "   " : "  -"} ${f}: ${scalar(r[f])}`))];
 }
 
 /** R12 (K1317): the `material_attestations:` block's lines, from `[{ref, by_kind, by, level, at, signature,
@@ -121,9 +144,11 @@ export function materialBlockLines(given) {
 }
 
 /** R12: the two blocks read back from a `/6` document's front matter, in the document's order: `{materials: [{ref,
- *  kind, sha, text_sha, origin, archived_copy, included, rests_under}], attestations: [{ref, by_kind, by, level, at,
+ *  kind, sha, text_sha, origin, archived_copy, included, rests_under, obscured}], attestations: [{ref, by_kind, by, level, at,
  *  signature, recorded_in}]}`; a block the document does not carry answers null, and a document carrying neither (or
- *  any other format) answers null. `included` reads true only when the bytes say true. Pure; never throws. */
+ *  any other format) answers null. `included` reads true only when the bytes say true. `obscured` is `{copy, label}`
+ *  for a `document` row stating either flat field (a field not stated reads null, undetermined), else null (T37). Pure;
+ *  never throws. */
 export function materialsOf(fm) {
   try {
     const d = frontOf(fm);
@@ -132,12 +157,21 @@ export function materialsOf(fm) {
     if (!has("materials") && !has("material_attestations")) return null;
     return {
       materials: has("materials")
-        ? objects(d.materials).map((r) => ({ ...read(r, MATERIAL_FIELDS), included: bool(r.included) === true })) : null,
+        ? objects(d.materials).map((r) => ({ ...read(r, MATERIAL_FIELDS), included: bool(r.included) === true,
+                                             obscured: obscuredRead(r) })) : null,
       attestations: has("material_attestations") ? objects(d.material_attestations).map((r) => read(r, MATERIAL_ATTESTATION_FIELDS)) : null,
     };
   } catch {
     return null;
   }
+}
+
+/* R12 (T37): a row's `obscured` read back: only a `document` row carries it, and stating either field states it, even
+   as null (a copy written null is a copy not carried, never a row carried whole). */
+const str = (v) => (typeof val(v) === "string" ? v : null);
+function obscuredRead(r) {
+  if (val(r.kind) !== "document" || !MATERIAL_OBSCURED_FIELDS.some((f) => Object.hasOwn(r, f))) return null;
+  return { copy: str(r.obscured_copy), label: str(r.obscured_label) };
 }
 
 /* ===== R16 — ANOTHER GROUP'S WORK THE CASE RESTS ON (DEC-96 item 4; N522) ===== */
