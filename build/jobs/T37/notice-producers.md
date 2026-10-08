@@ -32,3 +32,7 @@ Options:
 Recommendation: (a). It is what R13 already does, it holds R14's bound, and it needs no other module. A finding still held after 90 days stays visible where the file is (file-safety R16: the original doesn't open, the screens show the hold), so the member isn't left blind.
 
 I am building (a) now: the windowed read (`since` = 90 days before the call; first page, then `cursor` while `truncated`; at most 1,000), and no item for a finding answered `held: false`. My tests state (a). If you pick (b) or (c), I'll bring the job in line.
+
+## J2 · COMPLETE
+
+T37-28 applied: R14 reads scanFindings by since (90 days before the call), from the first page, following cursor while truncated, at most 1,000; an item leaves on held false. 74 pass / 0 fail / 0 todo; format, architecture, coverage (15/15), ownership (4 files) 0 failures. Built on J1's reading (a), still open: past the window an item is no longer answered. R14's T37 marks are yours to strike once J1 is answered. Record: build/jobs/T37/notice-producers.md.
