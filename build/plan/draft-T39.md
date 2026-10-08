@@ -52,6 +52,7 @@
 - **T39-15 · scheduler** · (N806) calls `case-carriage.copyBatch` on `copyWake`, the edge · K2333.
 
 ### L11
+- **T39-16a/b · instance-setup split (N807)** · 4,228 lines (K2337): a new module by copy (the boundary BOB's at L11's START; `setup-words.mjs` the likely seam), then instance-setup deletes its copy and re-points (K624); a membership `MODULE_ORDER` share joins T39-M at the opening.
 - Whatever L1–L10's new codes owe: op-declarations, op-grades, affordances, answer-envelope shares of the C-120/C-122/C-141 rows; plane's composition (case-carriage's listener). Fixed at L11's START from the merged codes.
 
 ## Left out of T39 (one hard reason each)
