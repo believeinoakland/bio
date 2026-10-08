@@ -1,6 +1,6 @@
 # provenance (T39)
 
-**Status** · session_01Cwa88YYi7hCLFZzpdk7gAE · depth 2 · COMPLETE · handled B1
+**Status** · session_01Cwa88YYi7hCLFZzpdk7gAE · depth 2 · COMPLETE · handled B2
 
 ## Completion (T39-5, N806)
 
