@@ -180,7 +180,7 @@ function outputOf(key, result) {
 export class PublicRead {
   #evidenceBlock = null; // R8: {module, name, fn}, filled once
   #publicReads = new Map(); // R18: name -> {module, params, read}, each name registered once
-  #originalsByEdition = new Map(); // R23 (T38): `case NUL edition` -> the photo originals its signed document states
+  #originalsByEdition = new Map(); // R23 (T38): `case NUL edition` -> the originals of the material its signed document states as carried by copy
 
   constructor({ storage, publication, docket } = {}) {
     this.sql = storage.sql;
@@ -484,10 +484,10 @@ export class PublicRead {
                 + "FINDING's own, and since the artifact flip a member of a case's edition 2 may be at its "
                 + "own edition 1. A join on the two numbers does not fail — it silently drops the members "
                 + "the pin exists to name.",
-      /* R23 (T38): a photo's original is not listed, as it is not served (`verifySha`). */
+      /* R23 (T38): the original of a material carried as its copy is not listed, as it is not served (`verifySha`). */
       shas: ((rows, originals) => rows.filter((r) => !originals.has(r.sha256)))(
         this.#rows(`SELECT sha256, bundle_id, path, kind, bytes, published FROM published_shas ORDER BY published`),
-        this.#photoOriginals([{ kind: "archive" }])),
+        this.#copiedOriginals([{ kind: "archive" }])),
       altitudes: "a frozen strength pair belongs to a FINDING and travels on that finding's row here. A CASE "
                + "has a scope, a completeness assertion, a bias acknowledgement, editions and a container; "
                + "it has no strength, and "
@@ -550,20 +550,21 @@ export class PublicRead {
   verifySha(sha) {
     const matches = this.#rows(
       `SELECT bundle_id, path, kind, published FROM published_shas WHERE sha256=? ORDER BY published`, sha);
-    /* R23 (T38): a photo's original answers as a hash never published, whatever registered it (R3's NO_PUBLISHED_PART
+    /* R23 (T38): the original of a material carried as its copy answers as a hash never published, whatever registered it (R3's NO_PUBLISHED_PART
        at `publishedbytes`, which asks here first). */
-    if (matches.length && this.#photoOriginals(matches).has(String(sha).toLowerCase()))
+    if (matches.length && this.#copiedOriginals(matches).has(String(sha).toLowerCase()))
       return { published: false, sha256: sha, matches: [] };
     return { published: matches.length > 0, sha256: sha, matches };
   }
 
-  /* R23 (T38; N779, K2248; R3): WHAT NO ROUTE OF THIS MODULE SERVES, because it is a photo's original: each `sha` and
+  /* R23 (T38; N779, K2248; R3): WHAT NO ROUTE OF THIS MODULE SERVES, because it is the original of a material
+     carried as its copy (a photo, or from T39 a member document, N806): each `sha` and
      `text_sha` that a published case edition's signed `materials:` row states with `obscured` (`case-grammar` R12, the
      original's fingerprints), whatever registered those bytes (another row at the same digest, an earlier edition, another
      case), and, when `matches` (the published projection's rows for what is asked, or every row) include an archive, each
      archive the projection shows holding one of them, outward. A signed document never changes, so each edition's
      document is read once per instance. */
-  #photoOriginals(matches = []) {
+  #copiedOriginals(matches = []) {
     for (const e of this.#rows(`SELECT case_id, edition FROM published_cases`)) {
       const k = `${e.case_id}\u0000${Number(e.edition)}`;
       if (this.#originalsByEdition.has(k)) continue;
@@ -1152,8 +1153,8 @@ export class PublicRead {
    *  - `materials`: each `materials:` row (`case-grammar` R12) listed `included: true`, with what `publication` holds of
    *    it (its R57): a text held inline (`publishedMaterialText`), or the hash the published bucket holds it under;
    *    a document's `archives`, the `container` records and archives its commit registered for it, outward (R32), an
-   *    archive that holds a photo carried as its copy answered unregistered (`holds_original`); a row at the digest of
-   *    such a photo answers `original_of_copy` and nothing of its bytes;
+   *    archive that holds a material carried as its copy answered unregistered (`holds_original`); a row at the digest of
+   *    such an original answers `original_of_copy` and nothing of its bytes;
    *  - `obscured` (T37; N757): each row stating `obscured` (`case-grammar` R12), never an included material: its ref, the
    *    copy's SHA-256 and label as signed, and whether the commit registered the copy under that ref (`registered`);
    *  - `criteria`: the edition's frozen criteria rows, or null when not recorded (R33);
@@ -1295,7 +1296,7 @@ export class PublicRead {
       chain.push({ kind: "container", sha: rec.sha, text: rec.text, member: cur });
       if (walked.has(rec.archive)) break;
       walked.add(rec.archive);
-      /* R23 (T37): an archive that holds a photo this edition carries as its copy holds the original's bytes: it is carried
+      /* R23 (T37): an archive that holds a material this edition carries as its copy holds the original's bytes: it is carried
          for no material, named unheld, and the walk stops there (as `case-carriage` R8 holds it at the commit). */
       if (holdsOriginal.has(rec.archive)) { chain.push({ kind: "archive", sha: rec.archive, text: null, member: cur, registered: false,
                                                           holds_original: true }); break; }
@@ -1306,7 +1307,7 @@ export class PublicRead {
     return chain;
   }
 
-  /* R23 (T37): every archive the pool shows holding one of `originals` (a photo this edition carries as its copy), directly
+  /* R23 (T37): every archive the pool shows holding one of `originals` (a material this edition carries as its copy), directly
      or through an archive it holds, outward: the records naming each original as a member, then their archives, and so
      on. An original whose record the published projection does not hold is found by no walk here; `case-carriage` R8
      registers no such archive for the edition at the commit. */
@@ -1393,8 +1394,9 @@ export class PublicRead {
     if (HEX64.test(String(manifestSha ?? ""))) items.push({ sha256: manifestSha, paths: ["manifest.json", "MANIFEST.json"] });
     const files = manifest && Array.isArray(manifest.files) ? manifest.files
       : manifest && Array.isArray(manifest.parts) ? manifest.parts : [];
-    /* R28 with R23 (T37; K2145's reading): an obscured copy is the photo with areas covered, so an order naming the photo
-       (its `document` path under the row's ref, or its original's hash) withholds the copy too. */
+    /* R28 with R23 (T37; K2145's reading): an obscured copy is the material's own copy (a photo with areas covered, a
+       member document cleaned), so an order naming the material (its `document` path under the row's ref, or its
+       original's hash) withholds the copy too. */
     const originalOf = new Map();
     if (files.some((f) => f && f.kind === "obscured")) {
       const signed = signedParts(doc);

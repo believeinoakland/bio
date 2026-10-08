@@ -1,4 +1,5 @@
-/* public-read — a photo carried as its copy (R3, R23; T37; N757; DEC-180 (4); K2206). A `/7` case edition's `materials:` row
+/* public-read — a photo carried as its copy (R3, R23; T37; N757; DEC-180 (4); K2206), and from T39 a member document
+   carried as its cleaned copy (N806; K2333; at the end of this file). A `/7` case edition's `materials:` row
    states `obscured: {copy, label}` (`case-grammar` R12): the photo travels as a copy with its marked areas covered, the row
    `included: false`, its `sha` the original's. The commit registers the copy under the row's ref as kind `obscured`
    (`publication` R57 through `case-carriage` R1) and `ratification` R39 copies its bytes to the published bucket; this file
@@ -42,8 +43,8 @@ const COPY_SHA = hex(COPY);
 
 const docRow = (ref, s, extra = {}) => ({ ref, kind: "document", sha: s, text_sha: null, origin: null, archived_copy: null,
                                           included: true, rests_under: "load_bearing", ...extra });
-const copyRow = (ref, original, copy = COPY_SHA) =>
-  docRow(ref, original, { included: false, obscured: { copy, label: LABEL } });
+const copyRow = (ref, original, copy = COPY_SHA, label = LABEL) =>
+  docRow(ref, original, { included: false, obscured: { copy, label } });
 const capOf = (w, id) => w.row(`SELECT capture_sha FROM register WHERE bundle_id=?`, id).capture_sha;
 
 /* `publication` R57's registration of an obscured copy (`case-carriage` R1's `files` row: `materials/<sha>`, kind
@@ -323,4 +324,88 @@ test("R32 R23 the archive pool keeps only what this edition's commit held (K2223
                "neither the archive nor the original, though edition 1 registered the archive under MEM's ref");
   assert.deepEqual(two.out.unheld.filter((u) => u.what === "archive").map((u) => [u.ref, u.sha]), [[MEM, archiveSha]]);
   assert.deepEqual(under(two.m, PIC).map((f) => f.kind), ["obscured"]);
+});
+
+/* ---- a member document carried as its cleaned copy (R23 as worded at T39; N806; K2333). `case-carriage` R15 derives
+   the copy with `doc-clean.cleanDocument` from the original's bytes; this fixture's copy is that derivation, from a PDF a
+   member supplied whose `/Info` names who made it: `CLEANED` is `cleanDocument(pdfText())`'s `bytes` as doc-clean answered
+   them at T39, held here because this module does not use `doc-clean` (any bytes would do: public-read never reads
+   inside a copy). The commit's registration and `ratification` R39's copy stand in as
+   above (`registerCopy`). The original was registered under the row's ref before (as an edition before T39 carried a
+   member document whole), its bytes in the published bucket: whatever registered it, it is never served. */
+
+const MEMDOC = "INFO-2026-0030-letter";
+const CLEANED_LABEL = "Details of who made this file, and of its pictures, removed for publication; the group holds the original";
+function pdfText() {
+  const page = "BT /F1 12 Tf 72 720 Td (The letter the member was sent) Tj ET";
+  const objs = ["<< /Type /Catalog /Pages 2 0 R >>", "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
+    `<< /Length ${page.length} >>\nstream\n${page}\nendstream`, "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    "<< /Author (Olive Memberson) /Producer (A Word Processor 9) /CreationDate (D:20260101120000Z) >>"];
+  let out = "%PDF-1.4\n";
+  const offs = objs.map((o, i) => { const at = out.length; out += `${i + 1} 0 obj\n${o}\nendobj\n`; return at; });
+  const x = out.length;
+  out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n` + offs.map((o) => `${String(o).padStart(10, "0")} 00000 n \n`).join("");
+  return `${out}trailer\n<< /Size ${objs.length + 1} /Root 1 0 R /Info 6 0 R >>\nstartxref\n${x}\n%%EOF\n`;
+}
+const CLEANED = Buffer.from("JVBERi0xLjQKJeLjz9MKMSAwIG9iago8PC9UeXBlIC9DYXRhbG9nIC9QYWdlcyAyIDAgUj4+CmVuZG9iagoyIDAgb2JqCjw8L1R5cGUgL1BhZ2VzIC9LaWRzIFszIDAgUl0gL0NvdW50IDE+PgplbmRvYmoKMyAwIG9iago8PC9UeXBlIC9QYWdlIC9QYXJlbnQgMiAwIFIgL01lZGlhQm94IFswIDAgNjEyIDc5Ml0gL0NvbnRlbnRzIDQgMCBSIC9SZXNvdXJjZXMgPDwvRm9udCA8PC9GMSA1IDAgUj4+Pj4+PgplbmRvYmoKNCAwIG9iago8PC9MZW5ndGggNjE+PgpzdHJlYW0KQlQgL0YxIDEyIFRmIDcyIDcyMCBUZCAoVGhlIGxldHRlciB0aGUgbWVtYmVyIHdhcyBzZW50KSBUaiBFVAplbmRzdHJlYW0KZW5kb2JqCjUgMCBvYmoKPDwvVHlwZSAvRm9udCAvU3VidHlwZSAvVHlwZTEgL0Jhc2VGb250IC9IZWx2ZXRpY2E+PgplbmRvYmoKeHJlZgowIDYKMDAwMDAwMDAwMCA2NTUzNSBmDQowMDAwMDAwMDE1IDAwMDAwIG4NCjAwMDAwMDAwNjIgMDAwMDAgbg0KMDAwMDAwMDExNyAwMDAwMCBuDQowMDAwMDAwMjM3IDAwMDAwIG4NCjAwMDAwMDAzNDYgMDAwMDAgbg0KdHJhaWxlcgo8PC9TaXplIDYgL1Jvb3QgMSAwIFI+PgpzdGFydHhyZWYKNDE0CiUlRU9GCg==", "base64");
+/* A member's file, captured as a document with no receipt (`provenance` R62 answers it not fetched): one capture of its
+   own, the PDF's bytes. */
+function memberDocument(w, id, text) {
+  const path = `snapshots/${id}.pdf`;
+  promote(w, id, [{ file: path, capture: { method: "upload", grade: "B", sha256: sha(text), encoding: "utf8",
+                                           bytes: Buffer.byteLength(text) } }], [{ path, text }]);
+  return sha(text);
+}
+
+test("R23 a member document carried as its cleaned copy (case-carriage R15) is carried as one file of kind obscured at the SHA-256 obscured.copy names and served by that hash; its original is never carried or served, though registered before under the row's ref", async () => {
+  const w = world(), env = { PUBLISHED: bucket() };
+  w.doc(DOC);
+  const docSha = capOf(w, DOC);
+  const text = pdfText(), original = memberDocument(w, MEMDOC, text);
+  assert.equal(capOf(w, MEMDOC), original, "the original is the capture the row names");
+  const copy = new Uint8Array(CLEANED), copySha = hex(copy);
+  assert.notEqual(copySha, original);
+  assert.equal(Buffer.from(copy).includes(Buffer.from("Olive Memberson")), false, "the copy names nobody");
+  const { m, read, rows, out } = await publish(w, env, [docRow(DOC, docSha), copyRow(MEMDOC, original, copySha, CLEANED_LABEL)], {
+    before: () => {
+      registerCopy(w, env, MEMDOC, copy);
+      w.st.sql.exec(`INSERT INTO published_shas (sha256,bundle_id,path,kind,bytes,published) VALUES (?,?,?,?,?,?)
+                     ON CONFLICT(sha256,bundle_id,path) DO NOTHING`, original, MEMDOC, `materials/${original}`, "document",
+                    Buffer.byteLength(text), NOW);
+      env.PUBLISHED.m.set(`bio/published/${original}`, new TextEncoder().encode(text));
+    } });
+  assert.deepEqual(caseFileManifestCheck(m, { materials: rows }), []);
+  /* the case file: the copy, one file of kind obscured under the row's ref, its bytes whole */
+  const path = caseFilePath("obscured", MEMDOC);
+  assert.deepEqual(under(m, MEMDOC).map((f) => [f.path, f.kind, f.sha256, f.bytes]), [[path, "obscured", copySha, copy.length]]);
+  assert.deepEqual(Buffer.from(await read(path)), Buffer.from(copy));
+  assert.equal(out.unheld.some((u) => u.ref === MEMDOC), false, "the copy is held");
+  /* never the original: no file at its digest, no file whose bytes are it */
+  assert.equal(m.files.some((f) => f.sha256 === original), false);
+  for (const f of m.files) assert.notEqual(hex(Buffer.from(await read(f.path))), original, f.path);
+  /* R3: the row as signed, the label word for word */
+  const c = w.read("publishedcase", { id: CASE });
+  const row = c.materials.materials.find((r) => r.ref === MEMDOC);
+  assert.deepEqual(row.obscured, { copy: copySha, label: CLEANED_LABEL });
+  assert.equal(row.sha, original);
+  assert.equal(row.included, false);
+  /* R5: the copy is served by its hash */
+  const got = await call(w, env, "publishedbytes", { sha256: copySha });
+  assert.equal(got.status, 200);
+  assert.deepEqual(Buffer.from(await bytesOf(got)), Buffer.from(copy));
+  assert.equal(w.pr.verifySha(copySha).published, true);
+  /* the original is served by no route, though registered under the ref and in the bucket: as a hash never published */
+  const never = await (await call(w, env, "publishedbytes", { sha256: sha("never existed anywhere") })).json();
+  const r = await call(w, env, "publishedbytes", { sha256: original });
+  assert.equal(r.status, 404);
+  const ob = await r.json();
+  assert.equal(ob.reason, "NO_PUBLISHED_PART");
+  assert.deepEqual({ ...ob, sha256: null }, { ...never, sha256: null });
+  assert.deepEqual(w.pr.verifySha(original), { published: false, sha256: original, matches: [] });
+  assert.equal(w.pr.publishedManifest().shas.some((x) => x.sha256 === original), false);
+  assert.equal(w.pr.publishedManifest().shas.some((x) => x.sha256 === copySha), true);
+  /* negative control: the included material beside it is carried whole and served */
+  assert.deepEqual(under(m, DOC).map((f) => f.kind), ["document"]);
+  assert.equal((await call(w, env, "publishedbytes", { sha256: docSha })).status, 200);
 });
