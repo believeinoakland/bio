@@ -498,8 +498,8 @@
     },
     {
       "path": "src/answers/index.mjs",
-      "bytes": 17807,
-      "sha256": "d529fd1d755630fdfdd970a6ec2c031ca5732f33b0d498eba68d4541dffe8f79"
+      "bytes": 17930,
+      "sha256": "827fec24a6faacb6afbf762d18ec7332ccf37936f9ff741d9dd17a6215c0e23a"
     },
     {
       "path": "src/answers/ops.mjs",
@@ -528,8 +528,8 @@
     },
     {
       "path": "src/answers/standing.mjs",
-      "bytes": 29180,
-      "sha256": "b45bb85bad0cb1a7aad5a3eb968fc23a6bf1dc40711fba833de20549f9a9f053"
+      "bytes": 29457,
+      "sha256": "83777b8bd111090f7ce81df3eef004092e9463102bff49498981337b74ab3c6e"
     },
     {
       "path": "src/attestation/checks.mjs",
