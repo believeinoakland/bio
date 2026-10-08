@@ -362,3 +362,6 @@ From T37's affordances job (K2238): words.json's owed_setpassword help says 'Oth
 
 ## B107 · NOTICE · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
 K2241: Bob ruled in BOB #140's session, 'I don't need to approve wizard scripts.' A new version of a Civicsmith library script is now BOB's to adopt from your library.json (DEC-148's 'Bob approves' reads as BOB's adoption). Version 2 of Set up and claim, Publication ceremony, Check a claim and Follow a proceeding (PR #14, e08cd35ecb) is adopted in T37 (wizard-scripts R22).
+
+## B108 · NOTICE · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
+K2243: Bob ruled B on published photo metadata (N779): every photo a published case carries travels as a copy without its camera metadata (place, time, device model, serial number); the group keeps the original and its fingerprint. Built in T38 (case-carriage, case-grammar, case-disclosures, public-read). Any screen words for it are yours.
