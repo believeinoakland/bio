@@ -31,3 +31,11 @@ T38-17 applied on `job/T38/file-scanner` @ 5631af3d46.
 **Tests and checks.** `node --test file-scanner/test/`: pass 53, fail 0. `npm run build` (file-scanner): bundle rebuilt, `fleetbundles.test.mjs` file-scanner rows PASS (fresh, byte-identical); the suite's one FAIL is red 5 (agent-worker), plus the plane bundle STALE note. No layer tests (manifest). format: 136 modules, 135 requirements files; 0 failures. architecture: 45 product files, 87 relative imports; 0 failures. coverage: 31 of 31 live requirement ids named by a test; 0 failures. ownership: 10 files changed by file-scanner between tranche/T38 and HEAD; 0 failures.
 **P6:** 2,791 lines before, 2,825 after (own code, tests and bundles excluded).
 Size (session_01DMNhj25urK6A68HrWJ3mho): test runs 12, module lines 2825
+
+## J5 · COMPLETE
+
+B3 (K2266) applied on `job/T38/file-scanner` @ c2457bc52c, after merging `tranche/T38` (bundler merged).
+**Change.** `file-scanner/package.json` `version` and `wrangler.jsonc` `vars.VERSION` 0.79.0 → 0.81.0; `package-lock.json` regenerated (`npm install --package-lock-only`), not hand-edited; bundle rebuilt (`npm run build`: the bundle's bytes unchanged, sha256 6c557be2…, its manifest re-written).
+**Tests and checks.** `system/resolveversion.test.mjs`: 12 PASS, 0 FAIL (ARM 7, 7b, 7c among them). `node --test file-scanner/test/`: pass 53, fail 0. `fleetbundles.test.mjs`: file-scanner rows PASS; its only FAILs are bio-plane's (bundle STALE through file-safety's import of my catalogue, J2 item 2; regenerated at L1's close); red 5 gone with bundler's merge. format: 0 failures. architecture: 45 product files, 87 relative imports; 0 failures. coverage: 31 of 31; 0 failures. ownership: 13 files changed by file-scanner between tranche/T38 and HEAD; 0 failures. J4's entries and reports otherwise stand.
+**P6:** 2,825 lines (unchanged).
+Size (session_01DMNhj25urK6A68HrWJ3mho): test runs 17, module lines 2825
