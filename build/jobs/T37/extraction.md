@@ -1,6 +1,6 @@
 # extraction (T37)
 
-**Status** · session_01Afy7CyYbu7EgvpPingjWAQ · depth 2 · COMPLETE · handled B1
+**Status** · session_01Afy7CyYbu7EgvpPingjWAQ · depth 2 · COMPLETE · handled B2
 
 ## Completion (T37-45)
 
