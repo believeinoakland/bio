@@ -60,3 +60,7 @@ Nothing it left out mattered. One thing it pointed out did matter: seam.test lis
 **P6 (size).** The module is now 1,907 lines, against the estimate of about 1,770.
 
 Size (session_016xh7RqppffzGDLer6pVudY): test runs 14, module lines 1907
+
+## J1 · COMPLETE
+
+T37-41 done (record on job/T37/case-disclosures). R6/R7/R22/R29 applied; new rows C-120.17 PHOTO_NOT_COVERABLE, C-120.18 PHOTO_MARKS_UNDETERMINED (provisional, awaiting stamp). Depends at merge: case-carriage T37-34 must merge first (index.mjs imports OBSCURED_LABEL; module does not load before it); 2 tests red until case-grammar T37-40 (round-trip of obscured through materialsOf: carries.test.mjs:75, photos.test.mjs:184). REPORT for case-authoring T37-21: its two R29 tests pin C-120.1–.16 (now .17/.18); its fixture reaches real case-carriage, whose photoMarks must answer photo:false for non-images (with that stub: 156 pass, 2 fail = those). Reading: an unreadable marks read (incl. NO_SUCH_PHOTO) on any reached document fails closed as PHOTO_MARKS_UNDETERMINED. Size 1,907 lines (est. 1,770). Ready to re-run on CHANGE after the upstream merges.
