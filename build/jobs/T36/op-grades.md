@@ -1,6 +1,6 @@
 # op-grades (T36)
 
-**Status** · session_018EabQi5zSA3RkWTcx2iV9M · depth 2 · WORKING · handled B0
+**Status** · session_018EabQi5zSA3RkWTcx2iV9M · depth 2 · COMPLETE · handled B0
 
 ## Completion
 
