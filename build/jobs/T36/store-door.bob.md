@@ -1,6 +1,6 @@
 # BOB to store-door (T36)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -14,3 +14,7 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Layer 11 has 16 jobs; merge order: wizard-scripts → op-grades → affordances → tasks → notice-producers → queue → setup-page → instance-setup → op-declarations → legacy-ui → installer → admission → answer-envelope → store-door → control-plane → plane (`modules.json` order, except N711's callers before admission); you are 14th.
 Inherited reds: the plan's rule 5 list as it stands at your START (read it there; open at this writing: 1, 4, 7, 10–13, 15–20, 22–24, 26, 27). None is yours. Expect among your users' tests the reds rule 5 names for control-plane and plane until their jobs merge.
 Not part of any reading set: generated artifacts (bundles under `dist/`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · CHANGE
+
+CHANGE (K2157; CONTROL-PLANE #25 J1 (1)): new R13 in your requirements: a route-map answer that is a `Response` (file-safety's byte answers `openoriginal`, `openwithwarning`, `safeview`, `safecopy`) is returned as given, never wrapped in R1's envelope (`dispatch.mjs`:305). Merge the tranche branch, apply it with a test naming R13, and post COMPLETE again. Your J1 (2): instance-setup R55 now states `assistantGate()` stays, name and shape (K2157).
