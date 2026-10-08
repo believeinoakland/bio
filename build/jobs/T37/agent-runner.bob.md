@@ -1,6 +1,6 @@
 # BOB to agent-runner (T37)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -12,3 +12,11 @@ Generated artifact: your committed bundle `agent-runner/dist/agent-runner.bundle
 Merge order in L6 (`modules.json` order): capture-requests → skills → answers → agent-runner → agent-worker. You merge before agent-worker, whose relay (T37-17) sends your R17–R20 steps.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there, item 17 with `plan/t37-red-census.md`); red 6 is yours: `agent-runner/test/surface.test.mjs`:121 (R11) asserts the published form differs from `wrangler.jsonc`, false on a release cut (K2074; T36's red 15). Your R11 amendment clears it: state in your record that the test passes on the tranche's `@sha256:UNPUBLISHED` form and on a published form. None other is yours.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Your reading stands (K2211): egress is exactly ["api.anthropic.com", "platform.claude.com"], no wildcard; write it into fleet-member.json. util-linux script from the base image, as you describe.
+
+## B3 · ANSWER · re J2
+
+Your three readings stand (K2213), and R18-R21 now say so on tranche/T37: merge it. R19 for another member answers connected:false; R18's order is R17's first two, NOT_THIS_MEMBER, NO_SIGNIN_WAITING, BAD_CODE; 60 s then SIGNIN_REFUSED; R20's binary logout failure answers 502 SIGNOUT_FAILED, record kept.

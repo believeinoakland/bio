@@ -127,12 +127,12 @@ Each line is one job (P8): every T37 entry for that module. Fields: module · (N
 
 ### L9
 
-- **T37-36 · conformance** · (N770) C-113.34 and C-113.35's `where` names `#comparedAct`; the census rows re-worded wait for T38's stamp, accepted red by name (K1680) · K2150 · req: none · depends T37-35 (L5, R27's tests read its R43).
-- **T37-23 · filing-templates** · (N761, its share) `templateReviewGrant` and its door read `secretSha` from the body only, never the query (K2175) · K2129 · req: the store-map read, BOB's wording · depends —.
+- **T37-36 · conformance** · (N770) C-113.34 and C-113.35's `where` names `#comparedAct`; the census rows re-worded wait for T38's stamp, accepted red by name (K1680) · K2150 · req: none · depends T37-35 (L5, R27's tests read its R43). (K2212) req: none; its merge leaves `row-census.test`'s two pinned rows red until T38's stamp (rule 6 item 2).
+- **T37-23 · filing-templates** · (N761, its share) `templateReviewGrant` and its door read `secretSha` from the body only, never the query (K2175) · K2129 · req: the store-map read, BOB's wording · depends —. (K2212) req: Terms sentence, R27 new (written).
 
 ### L10
 
-- **T37-24 · scheduler** · (N762, its share; R2's key list names `filescan`, `filerender`, `filedeeper`, `fileforward`, K2153) R24 reads `file-safety`'s own due and wake (T37-8, R39) for five keys, `filereputation` the fifth (`refreshReputationLists`, R41), and registers with `onFileWork` (R40) (K2175); its two carried intervals leave (R7, K2129 option B ends) · K2129, K2130 (K2189) its `plane.test.mjs` `GET`/`POST` (:42–43) send `Authorization` and the four `mem-sch` uses become a member's session (red 17's five). · req: R24, R7, BOB's wording · depends T37-8 (L3). Reads T36-29's result. If the plane's composition must hand scheduler something new, that is named at this START and joins as a plane share at L11 (K279), not counted below.
+- **T37-24 · scheduler** · (N762, its share; R2's key list names `filescan`, `filerender`, `filedeeper`, `fileforward`, K2153) R24 reads `file-safety`'s own due and wake (T37-8, R39) for five keys, `filereputation` the fifth (`refreshReputationLists`, R41), and registers with `onFileWork` (R40) (K2175); its two carried intervals leave (R7, K2129 option B ends) · K2129, K2130 (K2189) its `plane.test.mjs` `GET`/`POST` (:42–43) send `Authorization` and the four `mem-sch` uses become a member's session (red 17's five). · req: R24, R7, BOB's wording · depends T37-8 (L3). Reads T36-29's result. If the plane's composition must hand scheduler something new, that is named at this START and joins as a plane share at L11 (K279), not counted below. (K2212) req: R2 (five file-safety keys, K2153 (5)), R7, R24 (written); `uses` names file-safety; census rows 54–58 are its own.
 
 ### L11
 

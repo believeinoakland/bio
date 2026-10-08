@@ -1,6 +1,6 @@
 # BOB to agent-worker (T37)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -13,3 +13,15 @@ Generated artifact: your committed bundle `agent-worker/dist/agent-worker.bundle
 Merge order in L6 (`modules.json` order): capture-requests → skills → answers → agent-runner → agent-worker.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there, item 17 with `plan/t37-red-census.md`); none is yours (red 6 is agent-runner's, cleared by T37-16).
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+All three readings stand (K2211): (1) exactly one tool, the final draft tool, nothing else; (2) SURFACE gains signin; (3) no guard; your own RUNNER_SILENT detail never carries the code.
+
+## B3 · CHANGE
+
+From RUN-RULES #9 (K2213): run-rules exports TRANSLATION_DRAFT_MAX_WORDS (100) beside DRAFT_KINDS and draftMayRead. Once run-rules is merged into tranche/T37 (BOB says so), merge the tranche and have R70 read that figure, holding no 100 of its own.
+
+## B4 · CHANGE
+
+run-rules, capture-requests and answers are merged into tranche/T37 @ 6490d909c1 (K2214): merge the tranche into your branch before you finish.
