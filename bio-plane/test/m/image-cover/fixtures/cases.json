@@ -1,0 +1,875 @@
+{
+ "reference": {
+  "pillow": "12.3.0",
+  "libjpeg_turbo": "3.1.4.1",
+  "zlib": "1.3"
+ },
+ "cases": [
+  {
+   "file": "phone-420-o6.jpg",
+   "areas": [
+    [
+     60,
+     120,
+     130,
+     176
+    ],
+    [
+     0,
+     0,
+     9,
+     9
+    ]
+   ],
+   "format": "jpeg",
+   "width": 157,
+   "height": 203,
+   "covered": 150,
+   "cover_rects": [
+    [
+     45,
+     112,
+     141,
+     176
+    ],
+    [
+     0,
+     0,
+     13,
+     16
+    ]
+   ],
+   "bleed": 1,
+   "mode": "RGB",
+   "cover": [
+    0,
+    0,
+    0
+   ],
+   "outside_sha256": "348e5b884a9ca57c588b66c7cc129759b484917943a838c7748f3c6d929ef32f"
+  },
+  {
+   "file": "444-o3.jpg",
+   "areas": [
+    [
+     70,
+     20,
+     130,
+     85
+    ],
+    [
+     100,
+     40,
+     400,
+     60
+    ],
+    [
+     -30,
+     -30,
+     5,
+     5
+    ]
+   ],
+   "format": "jpeg",
+   "width": 150,
+   "height": 101,
+   "covered": 237,
+   "cover_rects": [
+    [
+     70,
+     13,
+     134,
+     85
+    ],
+    [
+     94,
+     37,
+     150,
+     61
+    ],
+    [
+     0,
+     0,
+     6,
+     5
+    ]
+   ],
+   "bleed": 0,
+   "mode": "RGB",
+   "cover": [
+    0,
+    0,
+    0
+   ],
+   "outside_sha256": "ef87a1a21a6ea0b57d323d44274f010d6a4f714470e5c72be5e16ea9137cc4f2"
+  },
+  {
+   "file": "grey-o8-optimised.jpg",
+   "areas": [
+    [
+     40,
+     20,
+     90,
+     70
+    ]
+   ],
+   "format": "jpeg",
+   "width": 131,
+   "height": 97,
+   "covered": 49,
+   "cover_rects": [
+    [
+     40,
+     17,
+     96,
+     73
+    ]
+   ],
+   "bleed": 0,
+   "mode": "L",
+   "cover": [
+    0
+   ],
+   "outside_sha256": "3d3ff3e51a1144162a5efe9113e9cd41883d23c7736e66960b54c84c23714c9e"
+  },
+  {
+   "file": "422-o5.jpg",
+   "areas": [
+    [
+     10,
+     60,
+     70,
+     110
+    ]
+   ],
+   "format": "jpeg",
+   "width": 90,
+   "height": 170,
+   "covered": 128,
+   "cover_rects": [
+    [
+     8,
+     48,
+     72,
+     112
+    ]
+   ],
+   "bleed": 1,
+   "mode": "RGB",
+   "cover": [
+    0,
+    0,
+    0
+   ],
+   "outside_sha256": "0475fe7801bdcc36f651557a2e888e449ec5db52f48d7caf616b34e2084a0ef2"
+  },
+  {
+   "file": "q100-upright-empty.jpg",
+   "areas": [],
+   "format": "jpeg",
+   "width": 64,
+   "height": 48,
+   "covered": 0,
+   "cover_rects": [],
+   "bleed": 1,
+   "mode": "RGB",
+   "cover": [
+    0,
+    0,
+    0
+   ],
+   "outside_sha256": "7567027993bc3d114c61551e445e4182d9efbe0afdcc481b16c53628b6625ccd"
+  },
+  {
+   "file": "q100-upright.jpg",
+   "areas": [
+    [
+     8,
+     8,
+     41,
+     41
+    ]
+   ],
+   "format": "jpeg",
+   "width": 64,
+   "height": 48,
+   "covered": 54,
+   "cover_rects": [
+    [
+     0,
+     0,
+     48,
+     48
+    ]
+   ],
+   "bleed": 1,
+   "mode": "RGB",
+   "cover": [
+    0,
+    0,
+    0
+   ],
+   "outside_sha256": "aeb73b5cd5e9eda6979c3045e67fedc0d7825a080cab0a6dcfd6fb35aacd84dc"
+  },
+  {
+   "file": "o2.jpg",
+   "areas": [
+    [
+     3,
+     7,
+     21,
+     29
+    ]
+   ],
+   "format": "jpeg",
+   "width": 70,
+   "height": 50,
+   "covered": 24,
+   "cover_rects": [
+    [
+     0,
+     0,
+     22,
+     32
+    ]
+   ],
+   "bleed": 1,
+   "mode": "RGB",
+   "cover": [
+    0,
+    0,
+    0
+   ],
+   "outside_sha256": "bd5d603bc4b1cb5c83fc807295db0b6e0ff7876b37af26c823549d480b4a7bc2"
+  },
+  {
+   "file": "o2.png",
+   "areas": [
+    [
+     3,
+     7,
+     21,
+     29
+    ]
+   ],
+   "format": "png",
+   "width": 70,
+   "height": 50,
+   "covered": 396,
+   "cover_rects": [
+    [
+     3,
+     7,
+     21,
+     29
+    ]
+   ],
+   "bleed": 0,
+   "mode": "RGBA",
+   "cover": [
+    0,
+    0,
+    0,
+    255
+   ],
+   "outside_sha256": "adf298e9ce1a19ad635a19cf024a5625ce7bc08cf2b4f355c2012d9bea56b7ba"
+  },
+  {
+   "file": "o3.png",
+   "areas": [
+    [
+     3,
+     7,
+     21,
+     29
+    ]
+   ],
+   "format": "png",
+   "width": 70,
+   "height": 50,
+   "covered": 396,
+   "cover_rects": [
+    [
+     3,
+     7,
+     21,
+     29
+    ]
+   ],
+   "bleed": 0,
+   "mode": "RGBA",
+   "cover": [
+    0,
+    0,
+    0,
+    255
+   ],
+   "outside_sha256": "1e5cd2c70c144e7a65bbb4da27107f19400e9e0ca6e43563782d4ea21da6325c"
+  },
+  {
+   "file": "o4.jpg",
+   "areas": [
+    [
+     3,
+     7,
+     21,
+     29
+    ]
+   ],
+   "format": "jpeg",
+   "width": 70,
+   "height": 50,
+   "covered": 24,
+   "cover_rects": [
+    [
+     0,
+     2,
+     32,
+     34
+    ]
+   ],
+   "bleed": 1,
+   "mode": "RGB",
+   "cover": [
+    0,
+    0,
+    0
+   ],
+   "outside_sha256": "5f922117901c472d4ca5e072c12cc7ce158a839d2c92f56227915dcb0b08984e"
+  },
+  {
+   "file": "o4.png",
+   "areas": [
+    [
+     3,
+     7,
+     21,
+     29
+    ]
+   ],
+   "format": "png",
+   "width": 70,
+   "height": 50,
+   "covered": 396,
+   "cover_rects": [
+    [
+     3,
+     7,
+     21,
+     29
+    ]
+   ],
+   "bleed": 0,
+   "mode": "RGBA",
+   "cover": [
+    0,
+    0,
+    0,
+    255
+   ],
+   "outside_sha256": "7503c9f3e255d530363d622e72936a0181207ffa04e2fd5f14878206b697a3e2"
+  },
+  {
+   "file": "o5.png",
+   "areas": [
+    [
+     3,
+     7,
+     21,
+     29
+    ]
+   ],
+   "format": "png",
+   "width": 50,
+   "height": 70,
+   "covered": 396,
+   "cover_rects": [
+    [
+     3,
+     7,
+     21,
+     29
+    ]
+   ],
+   "bleed": 0,
+   "mode": "RGBA",
+   "cover": [
+    0,
+    0,
+    0,
+    255
+   ],
+   "outside_sha256": "4a137019ea677eb17f5c15c4cc79f46ab7722da7910e75697c23781bf8afa5ad"
+  },
+  {
+   "file": "o7.jpg",
+   "areas": [
+    [
+     3,
+     7,
+     21,
+     29
+    ]
+   ],
+   "format": "jpeg",
+   "width": 50,
+   "height": 70,
+   "covered": 24,
+   "cover_rects": [
+    [
+     2,
+     6,
+     34,
+     38
+    ]
+   ],
+   "bleed": 1,
+   "mode": "RGB",
+   "cover": [
+    0,
+    0,
+    0
+   ],
+   "outside_sha256": "4aee9037b981ca21555077bb6ebc9f9dd952496b90f3321eb1f5f06406598381"
+  },
+  {
+   "file": "o7.png",
+   "areas": [
+    [
+     3,
+     7,
+     21,
+     29
+    ]
+   ],
+   "format": "png",
+   "width": 50,
+   "height": 70,
+   "covered": 396,
+   "cover_rects": [
+    [
+     3,
+     7,
+     21,
+     29
+    ]
+   ],
+   "bleed": 0,
+   "mode": "RGBA",
+   "cover": [
+    0,
+    0,
+    0,
+    255
+   ],
+   "outside_sha256": "0ae4d3f39fd830cfbfc853729dc3ff68ae31aebf1540c815e1829a8bf7d920bd"
+  },
+  {
+   "file": "o8.png",
+   "areas": [
+    [
+     3,
+     7,
+     21,
+     29
+    ]
+   ],
+   "format": "png",
+   "width": 50,
+   "height": 70,
+   "covered": 396,
+   "cover_rects": [
+    [
+     3,
+     7,
+     21,
+     29
+    ]
+   ],
+   "bleed": 0,
+   "mode": "RGBA",
+   "cover": [
+    0,
+    0,
+    0,
+    255
+   ],
+   "outside_sha256": "53ae7074281225894ce8641ed3d9becbe0811eb96b28852802ed308117aa6735"
+  },
+  {
+   "file": "adobe-ycc.jpg",
+   "areas": [
+    [
+     0,
+     0,
+     16,
+     16
+    ]
+   ],
+   "format": "jpeg",
+   "width": 48,
+   "height": 40,
+   "covered": 12,
+   "cover_rects": [
+    [
+     0,
+     0,
+     16,
+     16
+    ]
+   ],
+   "bleed": 0,
+   "mode": "RGB",
+   "cover": [
+    0,
+    0,
+    0
+   ],
+   "outside_sha256": "a4c9581724e52e34b69fb94b60420581560d3c637777113d233cdfaafc08024e"
+  },
+  {
+   "file": "screenshot-rgba-o6.png",
+   "areas": [
+    [
+     10,
+     60,
+     70,
+     100
+    ]
+   ],
+   "format": "png",
+   "width": 87,
+   "height": 121,
+   "covered": 2400,
+   "cover_rects": [
+    [
+     10,
+     60,
+     70,
+     100
+    ]
+   ],
+   "bleed": 0,
+   "mode": "RGBA",
+   "cover": [
+    0,
+    0,
+    0,
+    255
+   ],
+   "outside_sha256": "9c95336b410338e527d91b69f2c448fa3a6fa9d6a163d74ca61f9c1c33bb81d2"
+  },
+  {
+   "file": "rgb-many-idat.png",
+   "areas": [
+    [
+     20,
+     10,
+     51,
+     46
+    ]
+   ],
+   "format": "png",
+   "width": 77,
+   "height": 55,
+   "covered": 1116,
+   "cover_rects": [
+    [
+     20,
+     10,
+     51,
+     46
+    ]
+   ],
+   "bleed": 0,
+   "mode": "RGBA",
+   "cover": [
+    0,
+    0,
+    0,
+    255
+   ],
+   "outside_sha256": "ffcb524370ea6bc2fb1090e007a58424b973c2dc40747e8fe51b629b78b4e3c4"
+  },
+  {
+   "file": "palette-room.png",
+   "areas": [
+    [
+     10,
+     10,
+     50,
+     50
+    ]
+   ],
+   "format": "png",
+   "width": 64,
+   "height": 64,
+   "covered": 1600,
+   "cover_rects": [
+    [
+     10,
+     10,
+     50,
+     50
+    ]
+   ],
+   "bleed": 0,
+   "mode": "RGBA",
+   "cover": [
+    0,
+    0,
+    0,
+    255
+   ],
+   "outside_sha256": "a3af71797e6bcf64984711eca03e56a68260df0ea11cd4695f213e8faf60118b"
+  },
+  {
+   "file": "palette-full.png",
+   "areas": [
+    [
+     0,
+     30,
+     64,
+     40
+    ]
+   ],
+   "format": "png",
+   "width": 64,
+   "height": 64,
+   "covered": 640,
+   "cover_rects": [
+    [
+     0,
+     30,
+     64,
+     40
+    ]
+   ],
+   "bleed": 0,
+   "mode": "RGBA",
+   "cover": [
+    18,
+    18,
+    18,
+    255
+   ],
+   "outside_sha256": "b4b947690304e3827606019e9a98947d9198191332ece4145c28b5838c0e9a92"
+  },
+  {
+   "file": "grey.png",
+   "areas": [
+    [
+     5,
+     5,
+     30,
+     30
+    ]
+   ],
+   "format": "png",
+   "width": 45,
+   "height": 33,
+   "covered": 625,
+   "cover_rects": [
+    [
+     5,
+     5,
+     30,
+     30
+    ]
+   ],
+   "bleed": 0,
+   "mode": "RGBA",
+   "cover": [
+    0,
+    0,
+    0,
+    255
+   ],
+   "outside_sha256": "4bb62a9b8d5c88c9a68c512e8158617e847e5a5b1fedc00dd2881428150b1d2a"
+  },
+  {
+   "file": "grey-alpha.png",
+   "areas": [
+    [
+     0,
+     0,
+     45,
+     1
+    ],
+    [
+     44,
+     0,
+     45,
+     33
+    ]
+   ],
+   "format": "png",
+   "width": 45,
+   "height": 33,
+   "covered": 77,
+   "cover_rects": [
+    [
+     0,
+     0,
+     45,
+     1
+    ],
+    [
+     44,
+     0,
+     45,
+     33
+    ]
+   ],
+   "bleed": 0,
+   "mode": "RGBA",
+   "cover": [
+    0,
+    0,
+    0,
+    255
+   ],
+   "outside_sha256": "6ea00f263c85270398f27aca1eb11f24c4d252b472bd5af5ac14f3f376656fab"
+  }
+ ],
+ "refusals": [
+  {
+   "file": "refuse-progressive.jpg",
+   "code": "UNSUPPORTED_JPEG_PROCESS",
+   "areas": [
+    [
+     0,
+     0,
+     10,
+     10
+    ]
+   ]
+  },
+  {
+   "file": "refuse-arithmetic.jpg",
+   "code": "UNSUPPORTED_JPEG_PROCESS",
+   "areas": [
+    [
+     0,
+     0,
+     10,
+     10
+    ]
+   ]
+  },
+  {
+   "file": "refuse-lossless.jpg",
+   "code": "UNSUPPORTED_JPEG_PROCESS",
+   "areas": [
+    [
+     0,
+     0,
+     10,
+     10
+    ]
+   ]
+  },
+  {
+   "file": "refuse-12bit.jpg",
+   "code": "UNSUPPORTED_JPEG_PROCESS",
+   "areas": [
+    [
+     0,
+     0,
+     10,
+     10
+    ]
+   ]
+  },
+  {
+   "file": "refuse-truncated.jpg",
+   "code": "TRUNCATED_IMAGE_DATA",
+   "areas": [
+    [
+     0,
+     0,
+     10,
+     10
+    ]
+   ]
+  },
+  {
+   "file": "refuse-heic.heic",
+   "code": "NOT_A_COVERABLE_FORMAT",
+   "areas": [
+    [
+     0,
+     0,
+     10,
+     10
+    ]
+   ]
+  },
+  {
+   "file": "refuse-interlaced.png",
+   "code": "PNG_INTERLACED",
+   "areas": [
+    [
+     0,
+     0,
+     10,
+     10
+    ]
+   ]
+  },
+  {
+   "file": "refuse-16bit.png",
+   "code": "NOT_A_COVERABLE_FORMAT",
+   "areas": [
+    [
+     0,
+     0,
+     10,
+     10
+    ]
+   ]
+  },
+  {
+   "file": "refuse-truncated.png",
+   "code": "TRUNCATED_IMAGE_DATA",
+   "areas": [
+    [
+     0,
+     0,
+     10,
+     10
+    ]
+   ]
+  },
+  {
+   "file": "refuse-crc.png",
+   "code": "IMAGE_DATA_CORRUPT",
+   "areas": [
+    [
+     0,
+     0,
+     10,
+     10
+    ]
+   ]
+  },
+  {
+   "file": "444-o3.jpg",
+   "code": "AREA_OUTSIDE",
+   "areas": [
+    [
+     0,
+     0,
+     10,
+     10
+    ],
+    [
+     150,
+     0,
+     160,
+     10
+    ]
+   ]
+  }
+ ]
+}
