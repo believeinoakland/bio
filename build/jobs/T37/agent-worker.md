@@ -33,7 +33,7 @@
 
 **Deferred.** `cascade.control.mjs` arms 1 and 3 still match nothing (`if (cascade && !cascade.available)`, gone since K1502's cascade rewrite). `cascade.test.mjs`:8–12 already names this, and the control exits on arm 1. Re-anchoring them means re-deriving what the cascade's refusal path now is. That is outside this entry and needs no new behaviour, so it is left for the next agent-worker job that touches the cascade.
 
-**Found in other modules (REPORT J3).**
+**Found in other modules (REPORT J2).**
 1. **bundler**, red from this merge. `bio-plane/test/system/fleetbundles.test.mjs`:232–235 pins agent-worker's bundle at 22 inputs. It is now 23, because `src/signin.mjs` is an input. The other fleetbundles arms pass, including agent-worker's byte identity.
 2. **installer.** `newgroup/dist/newgroup.bundled.mjs` carries agent-worker's bundle, so it is stale from this change. It is regenerated at the layer close (manifest §14).
 3. **Requirement text, BOB's.** R34 still reads `{run: POST, version: GET}`, while SURFACE holds run, ask, draft, signin and version (K2211 (2)). `fleet-member.json`:26's note ("both routes") and `wrangler.jsonc`:117–127's comment on RUNNER are prose of mine that the next job can refresh.
