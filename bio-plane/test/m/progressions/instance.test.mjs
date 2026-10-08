@@ -292,3 +292,37 @@ test("R24: grades, findings and deadlines are derived on read, never stored", as
     for (const c of ["finding", "findings", "overdue", "deadline", "instance_grade", "open_finding_count"]) assert.ok(!cols.includes(c), `${t}.${c}`);
   }
 });
+
+test("R33 R17: a listener's nextDeadline is the whole store's next deadline at the thread's instant, scanned only when a listener reads it, once per thread", async () => {
+  const w = seeded();
+  w.define();
+  w.entity("ENT-2");
+  w.resolve("ENT-2", "se", "INFO-A", "A");
+  w.fact("sa", "2026-09-01");
+  w.fact("se", "2026-08-20");
+  w.clock.now = "2026-09-05T00:00:00.000Z";
+  // another instance whose award falls due first: the deadline the listener reads is the store's, not this thread's
+  assert.equal((await T(w, [{ stage: "need", captureSha: "se" }], { entityId: "ENT-2" })).ok, true);
+  const reads = () => w.ev.reads;
+  // a listener that never reads nextDeadline costs no scan: the events reads are those of a thread with no listener
+  const quiet = seeded(); quiet.define(); quiet.fact("sa", "2026-09-01"); quiet.clock.now = w.clock.now;
+  const q0 = quiet.ev.reads;
+  await T(quiet, [{ stage: "need", captureSha: "sa" }]);
+  const unheard = quiet.ev.reads - q0;
+  const blind = seeded(); blind.define(); blind.fact("sa", "2026-09-01"); blind.clock.now = w.clock.now;
+  blind.p.onThreaded("scheduler", () => {});
+  const b0 = blind.ev.reads;
+  await T(blind, [{ stage: "need", captureSha: "sa" }]);
+  assert.equal(blind.ev.reads - b0, unheard, "no scan for a listener that ignores the deadline");
+  // two listeners that read it: one scan between them, each its own event with the same whole-store answer
+  const seen = [], events = [];
+  for (const m of ["bias", "scheduler"]) w.p.onThreaded(m, (e) => { events.push(e); seen.push([m, e.nextDeadline, reads()]); });
+  const r = await T(w, [{ stage: "need", captureSha: "sa" }]);
+  assert.equal(r.ok, true);
+  const store = w.p.overdueScan(Date.parse(r.at)).next_deadline;
+  assert.equal(store, Date.parse("2026-09-20T04:00:00.000Z"));   // ENT-2's award: 2026-08-20 + 30 days, ending in the zone
+  assert.deepEqual(seen.map(([m, d]) => [m, d]), [["bias", store], ["scheduler", store]]);
+  assert.equal(seen[1][2], seen[0][2], "the second listener's read scanned nothing more");
+  assert.notEqual(events[0], events[1]);
+  assert.deepEqual(events[0], { progressionKey: "proc", entityId: "ENT-1", nextDeadline: store });
+});
