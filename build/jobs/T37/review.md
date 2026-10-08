@@ -37,3 +37,7 @@
 - `format`: 136 modules, 0 failures. `architecture`: 8 product files, 37 imports, 0 failures. `coverage`: 29 of 29 live ids, 0 failures. `ownership` vs `tranche/T37`: 0 failures.
 
 Size (session_01DttDRmaX4Aw5sCLrbvM1Uo): test runs 8, module lines 1028
+
+## J1 · REPORT
+
+Other modules. (1) legacy-ui: civicos-ui/test/statement-ack.test.mjs is red on tranche/T37 @ 0303f8861b before my change (the recipient's acknowledgement wait times out, M0-107), and no rule 6 item names it. With my change it fails earlier, at its fixture's reviewgrant (REVIEW_NO_SECRET, rule 4, until T37-33). (2) Rule 4 (N761): civicos-ui/test/review-copy.test.mjs is green on tranche/T37 and red with my change (its fixture's reviewgrant is refused REVIEW_NO_SECRET; deadPage then throws at :471) until control-plane (index.mjs:2836, :2858) sends secretSha in the body, T37-33. No test/m test changes colour.
