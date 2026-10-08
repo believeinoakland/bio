@@ -43,3 +43,7 @@ Size (session_01TJ4PTCM3iSyJeRYmdDY3L3): test runs 12, module lines 2248
 ## J1 · REPORT
 
 T39-6 built against R62's text and pushed (77f2345af5): R6's source reads provenance.fetchedByThisCopy, source = its answer as given; FETCHED_VIAS, UNPACKED and #sourceOf deleted; fail closed when the answer is unreadable. New R6 test: source deep-equals R62 for every arm (direct, archive.org, capture-request, knock, no receipt, archive member, nested member, knocked archive's member) and the literal {fetched, routes, archive} shape. Against a scratch stand-in of R62 (never committed): file-safety 53/0; format, architecture, coverage 41/41, ownership 0 failures. On the tranche today 8 of 53 fail, only because R62 is absent. For PROVENANCE: byte for byte today's needs R62 to answer exactly {fetched, routes, archive} in that key order, bare lowercase digests, no wrapper. Waiting for your word that provenance has merged.
+
+## J2 · COMPLETE
+
+T39-6 done on the merged tranche: R6's source condition reads provenance R62 fetchedByThisCopy, source = its answer as given; FETCHED_VIAS, UNPACKED and #sourceOf deleted; fail closed on an unreadable answer. file-safety 53/0, provenance 120/0; negative controls (ignore fetched, drop archive, fail open) each caught; format, architecture, coverage 41/41 and ownership 0 failures. index.mjs 1,678 -> 1,668 lines. Stales the plane bundle (old FETCHED_VIAS in dist), regenerated at the layer close. R6's T39 mark may be struck. Details in my record.
