@@ -86,7 +86,7 @@ T37-32 complete on job/T37/store-door: R9 (secretSha removed from the in-process
 - `checks/coverage.mjs`: 13 of 13, 0 failures.
 - `checks/ownership.mjs`: 4 files, 0 failures.
 
-Size (session_01JNPSatGHX7N9NegWMbM7tR): test runs 19, module lines 582
+Size (session_01JNPSatGHX7N9NegWMbM7tR): test runs 19, module lines 577
 
 ## J3 · COMPLETE
 
