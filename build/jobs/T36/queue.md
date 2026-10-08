@@ -38,3 +38,7 @@ Size (session_019AZwL2DAm7ic4sUi9n3hkC): test runs 19, module lines 2920
 ## J1 · COMPLETE
 
 T36-46 done: R1's four FINDING kinds (security-level-high, policy-changed-noticed, scan-found, security-tool-off) catalogued with their sentences in queuestate.mjs; R12's default disposition holds with no code change. queue tests 128/0; users' only reds are the inherited four (plane red 27, answer-envelope red 11), identical without my change. format, architecture, coverage (41/41), ownership 0 failures. 2,920 lines. The R1 not-yet-met mark is yours to strike. Ready to merge tranche/T36 after notice-producers' merge when you say. Details in my record.
+
+## J3 · COMPLETE · re B2
+
+B2 done: merged tranche/T36 (notice-producers in); its four kinds match R1's catalogue; my T36 test now uses its real subject shapes. queue 128/0, notice-producers 73/0 (+1 own todo), store-door 36/36, migrate-released 1/1; plane and answer-envelope only the inherited four reds (27, 11). format, architecture, coverage 41/41, ownership 0 failures. Ready to merge after affordances and tasks.
