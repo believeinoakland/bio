@@ -58,7 +58,7 @@ Each line is one job (P8): every T38 entry for that module. Fields: module · (N
 - **T38-5 · credentials** · (N785, its share; K2200) R35 answers a connected member (R43) with a `signin` account (agent-runner R2's `{kind: "signin", member}`, T37-16). (N708's remainder) R22's `subscription` kind retired, its replacement built in T37's L6. (N793) calls membership's `NO_SUCH_MEMBER` helper (rule 9) · K1819, K2134, K2200, K231 · req: R35, R22, BOB's wording · depends T38-4 (N793's helper). **P6:** 2,793.
 - **T38-6 · promotion** · (T37's rule 6 item 2) stamps every row awaiting stamp at T37's close (rows T37's L3–L11 jobs added or re-worded, conformance's seven C-113 rows among them) and the rows T38's L1–L2 jobs add or re-code (T38-5's, the split's moved rows if any `where` moves), so `row-census.test.mjs` is green; the catalogue version moves, any pinned digest moves in its owner's job · K1542, K2231, K2232 · req: none (a stamp) · depends T38-4, T38-5. **P6:** 3,473 (its table grows by rows, not logic).
 
-**L2 merge order:** project-roster (copy) → membership (delete, R83) → credentials → promotion last (it stamps the layer's rows). Then the regeneration order (`case-checker/program.mjs`, the plane bundle).
+**L2 merge order (K2275):** membership (R113–R121, N793, R83; its copy still in place) → project-roster (copy) → membership again (delete)  → credentials → promotion last (it stamps the layer's rows). Then the regeneration order (`case-checker/program.mjs`, the plane bundle).
 
 ### L3
 
