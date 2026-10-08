@@ -43,6 +43,7 @@
    8. Rule 4's interim reds (N761, N765), each named at its owner's START.
    18. case-checker `program.test.mjs` (R13): `program.mjs` stale from T37-40's merge until L8's close regenerates it (K2206).
    19. Rule 4's N761 interim red in L8: control-plane `statementack.test.mjs`:31 from T37-21's merge until T37-33 (K2206).
+   20. bundler `fleetbundles.test.mjs`:232 (agent-worker's 22 inputs pinned; 23 since T37-17), from T37-17's merge until N787 (T38) (K2218).
 7. **BOB's acts (no module job):** at the opening, rule 2's N669 packaging, N757's packaging (K2171: the pixel work in a new pure L1 helper `image-cover` run in the plane, the marks and the copy in `case-carriage`), every L1 requirement change, and the questions to Bob ("For BOB" below) brought rendered with options and a recommendation. T37's release is BOB's (K1501), decided at its close on what its deployment then lets into T38; no longer for M-Q2 (K2147).
 
 ## Entries
