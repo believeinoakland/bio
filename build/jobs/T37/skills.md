@@ -38,3 +38,9 @@ Also, mine (recorded, not asked): the layer carries `mode` as run-rules' `DRAFT_
 ## J2 · COMPLETE
 
 T37-14 applied: the interface_translation layer (R39), R5's order. 94/94 skills tests; format, architecture, coverage (39 of 39), ownership: 0 failures. J1's readings as B2 ruled (K2211). Completion in my record; nothing deferred.
+
+## Completion, after B3 (K2214)
+
+Merged `tranche/T37` @ 6490d909c1 (run-rules, capture-requests, answers) into my branch; no conflict, no change to my code needed (run-rules' `DRAFT_MODE.mode` is still `draft`, read, never typed). Re-run: `node --test bio-plane/test/m/skills/`: tests 94, pass 94, fail 0; format 0 failures; architecture (15 product files, 71 relative imports) 0 failures; coverage 39 of 39, 0 failures; ownership 6 files, 0 failures.
+
+Size (session_01DS51oYchEqheueabPH79qD): test runs 10, module lines 2514
