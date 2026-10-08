@@ -1,6 +1,6 @@
 # op-grades (T37)
 
-**Status** · session_01MLFSULGPPdKyw9vxcdawPM · depth 2 · COMPLETE · handled B1
+**Status** · session_01MLFSULGPPdKyw9vxcdawPM · depth 2 · COMPLETE · handled B2
 
 ## Completion (T37-26)
 
@@ -27,3 +27,16 @@ Size (session_01MLFSULGPPdKyw9vxcdawPM): test runs 9, module lines 2307
 ## J1 · COMPLETE
 
 T37-26 complete: R18, R25, R26, R27 met; op-grades 35/35, the four checks clean. New reds in users, each an expected re-pin, named in my Completion: control-plane totality.test.mjs:17 (stale R27 ops, until T37-31); affordances t31.test.mjs:27 and :49 (R36 phone oracle and the pinned LARGER_SCREEN_ACTS), catalogue.test.mjs:110 (reversible list) and :479 (undetermined set), t36.test.mjs:49 (R48 owed_<op> keys now graded); all for T37-27. Red 14 as you said. Nothing deferred.
+
+## Completion of B2 (CHANGE; K2239, DEC-182 (2))
+
+**Applied:** `claimidentity` dropped from `OP_ALIASES` (`t34.mjs`; its comment says why); `owners.test.mjs`' R17 test now pins 27 aliases and that `claimidentity` takes no grade, `identityclaim` still graded. No merge of `tranche/T37` (B2 asked none; no file I read changed).
+**Found in another module:** `affordances` `catalogue.test.mjs`:240 (R45 R12) pins 28 aliases; red from my merge until affordances re-pins (T37-27), agreeing with op-declarations once it drops the alias. `affordances` `t36.test.mjs`:17 still names `claimidentity` as an alias with its own text (affordances', T37-27).
+**Tests run:** op-grades 35/35; `affordances` 182/35 (the one above new), `control-plane` 179/1 (unchanged, totality), `plane/wizards` 4/0.
+**Checks:** format: 136 modules, 135 requirements files; 0 failures. architecture: 11 product files, 16 relative imports; 0 failures. coverage: 27 of 27 live requirement ids named by a test; 0 failures. ownership: 11 files changed by op-grades between tranche/T37 and HEAD; 0 failures.
+
+Size (session_01MLFSULGPPdKyw9vxcdawPM): test runs 13, module lines 2307
+
+## J2 · COMPLETE · re B2
+
+B2 applied: claimidentity dropped from OP_ALIASES (27 now), owners.test.mjs re-pinned; op-grades 35/35, checks clean. One new red for T37-27: affordances catalogue.test.mjs:240 (R45 R12) pins 28 aliases; its t36.test.mjs:17 still names claimidentity.
