@@ -58,3 +58,7 @@ Numbered entries; BOB answers each in rulings (K) on `tranche/T<n>`. Decision st
 ## H11 · 2026-10-08 · the working document restructured
 
 **Carries:** at Bob's request, `investigation-design.html` now leads with the design as one whole (rulings D32–D41 folded in), a Grandview walk-through, then only the open questions (D27–D30), the AI-stage decisions to come, research, Bob's words and the register. This lane's own details, marked in the document and changeable: step dependencies and "by when" (notification rules); a find shows which account paid only to that account's owners, so it never reveals which project asked; a project's "no AI" covers what is its own (project steps, notes, interview, and any question or document only it draws on), shared material following the group's setting. D7 is read as mostly answered and D12 as partly answered by D34/D39.
+
+## H12 · 2026-10-08 · D42 and D43: two audiences; actions later
+
+**Carries:** D42 (Bob: the investigation design must serve both the assistant-enabled member with any complaint and a highly efficient non-assistant workflow, "Both audiences must be optimally served"); D43 (Bob: Civicsmith should support members throughout the action plan; "Not today, but ... we need to research explore, and design the requirements, capabilities, use cases, and UX of actions"). For BOB: D43 is a future design effort like this lane, BOB's to schedule; it builds on `BIO_Action_v0_1.md` and the earlier Actions session's rulings.
