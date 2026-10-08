@@ -106,3 +106,7 @@ op-declarations' `t36.test.mjs` (R34's partition) is green: 13/0, run together w
 **Checks:** format 0 failures (instance-setup's missing path was fixed on the tranche); architecture 0; coverage 34 of 34, 0; ownership 0.
 
 Size (session_0187SVNmLrMtUDuMD6BfqRLx): test runs 28, module lines 2280
+
+## J4 · COMPLETE
+
+B4 applied on the merged tranche (record: 'Completion after B4'). ACT_HELP holds T37-31's eight declared owed acts under their ops; owed_infolevelset stays (infolevelset is undeclared). 203 entries, verbatim. t36 re-stated. op-declarations t36.test.mjs R34 partition green. Module 218/218. Checks: format, architecture, coverage and ownership, 0 failures each.
