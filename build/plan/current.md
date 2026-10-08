@@ -1,6 +1,6 @@
 # Plan T37
 
-**Status** · OPEN · BOB #138 · session_01HPS1DqHHqTRjKz5fiM8LfW · depth 1
+**Status** · OPEN · BOB #139 · session_016oKjUAn88dFdM5zvpXMqy4 · depth 1
 
 **Jobs** · record-grammar: RECORD-GRAMMAR #10 session_01DAQTevxD8WUdaHnDusXB4x; jurisdictions: JURISDICTIONS #9 session_01GXf5ZNcTJXDDTB6mcusumT; bundler: BUNDLER #11 session_01XAuQvFSnT4Qjvv3ReZ1VHj; office-readers: OFFICE-READERS #8 session_01LP5svq8XNYaHCh7k7jeXoZ; image-cover: IMAGE-COVER #1 session_01A8wyDuP1JUCkDvsGN291AL; file-scanner: FILE-SCANNER #2 session_01PZFJ33yTU9MSNkxXuSiLhJ; membership: MEMBERSHIP #28 session_01Cp2NRbxdmMxPhCZerTfGF4; credentials: CREDENTIALS #8 session_01GuauzcfoPk2o1oN8DhnUGQ; promotion: PROMOTION #35 session_01WiFA4XkxDJf5nB8LQz8tAt; acquisition: ACQUISITION #14 session_01G5k1CQoyCMyhGevtvZwFkg; capture: CAPTURE #24 session_016W2PkTbyjCcRGjNxZ7W1bN; file-safety: FILE-SAFETY #2 session_012hj83mp9G2GYcwFaSkn8TU; reading-pipeline: READING-PIPELINE #8 session_01NrApu29PkaxgKV2pTicqhV; extraction: EXTRACTION #16 session_01Afy7CyYbu7EgvpPingjWAQ; content: CONTENT #15 session_01NPBftQhCWzUZX1ASP6uBqi
 
