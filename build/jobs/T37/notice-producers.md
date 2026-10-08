@@ -1,6 +1,6 @@
 # notice-producers (T37)
 
-**Status** · session_01NtKgWhTs8dgUsdu2kZ9cnc · depth 2 · COMPLETE · handled B1
+**Status** · session_01NtKgWhTs8dgUsdu2kZ9cnc · depth 2 · COMPLETE · handled B2
 
 ## Record
 
