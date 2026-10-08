@@ -20,3 +20,7 @@ Also (K2236, before your start): `test/m/plane/t36.test.mjs`:176 is red from T37
 ## B2 · CHANGE
 
 (K2238; CONTROL-PLANE #26 J1 (3b)) Your ask's draftOnObject (plane/ask.mjs:98) also carries a translation draft: task {op: 'translationdraft', direction, language, words}, with account and pack, and no told, grant or firsthand; control-plane passes direction, language and words in the ask. Add a test of that shape beside the other two drafts.
+
+## B3 · CHANGE
+
+(K2249) wizard-scripts, affordances, instance-setup, op-declarations and answer-envelope are merged. Merge the tranche: your ask.test reds (N765) should go green; re-pin door.test.mjs:111 (it pins 24 instance-setup routes, now 33) with its control; re-run and complete again. You still merge last, after store-door and control-plane.
