@@ -261,22 +261,40 @@ async function occurrenceStates(self, ids, author, now) {
   return out;
 }
 
+/* R19 (T37; N765, K231, K2200): keep-away as credentials' one site answers it (its R35, `aiKeptAway()`): null while
+ * the group does not keep its material away; otherwise its `AI_KEPT_AWAY` refusal, which is also its answer when the
+ * setting cannot be read (fail closed, K2093). Only the refusal's code and translation are carried. A credentials that
+ * cannot be reached, or cannot answer, is not a reading of null: kept away, fail closed, with no row to carry. */
+function keptAway(creds) {
+  let away;
+  try { away = creds && typeof creds.aiKeptAway === "function" ? creds.aiKeptAway() : undefined; } catch { away = undefined; }
+  if (away === null) return null;
+  const row = away && typeof away === "object" && away.ok === false;
+  return { condition: "kept_away", code: row ? away.code || away.reason || null : null,
+           translation: row ? away.translation ?? null : null };
+}
+
 /* R19, R26: what holds the AI half back, or null with the grant it reads under when every condition holds. In order:
- * the copy's switch (K1481; Rule 7), the answerer's deployment, an account serving the author's act (credentials R35:
- * their own reference, else the group's key while held and on, K1755; none is R26's `no_account`), the author's use
- * ceiling (ai-runs), and last the grant credentials mints for the author (its R32), whose refusal names the standing
- * switch of the account that would serve (R25, R37). The grant is minted only when it would be used. */
+ * the copy's switch (K1481; Rule 7), the answerer's deployment, keep-away (credentials R35's `aiKeptAway()`, read
+ * before any account: while it holds no account is read and no grant minted, DEC-172), an account serving the
+ * author's act (credentials R35: their own reference, else the group's key while held and on, K1755; none is R26's
+ * `no_account`), the author's use ceiling (ai-runs), and last the grant credentials mints for the author (its R32),
+ * whose refusal names the standing switch of the account that would serve (R25, R37). The grant is minted only when it
+ * would be used. */
 async function heldBack(self, r, at) {
   const author = r.author;
   if (self.record.getSetting(STANDING_AI_SETTING) !== true) return { held: { condition: "switch_off", switch: "copy" } };
   if (!self.answerer) return { held: { condition: "not_deployed" } };
   const creds = self.dep("credentials");
+  const away = keptAway(creds);
+  if (away) return { held: away };
   const act = { kind: "standing", member: author };
   let acct = null;
   try { acct = creds && typeof creds.accountFor === "function" ? await creds.accountFor({ member: author, act }) : null; }
   catch { acct = null; }
   if (!acct || acct.ok !== true) {
     const code = acct ? acct.code || acct.reason || null : null;
+    if (code === "AI_KEPT_AWAY") return { held: { condition: "kept_away", code, translation: acct.translation ?? null } };
     return { held: { condition: "no_account", ...(code && code !== "NO_ACCOUNT" ? { code, translation: acct.translation ?? null } : {}) } };
   }
   const level = acct.level === "group" ? "group" : "member";
@@ -290,6 +308,8 @@ async function heldBack(self, r, at) {
   try { g = await creds.aiGrantMintStanding({ member: author, question: r.question }); } catch { g = null; }
   if (!g || g.ok !== true || typeof g.token !== "string") {
     const code = g ? g.code || g.reason || null : null;
+    /* keep-away turned on since it was read: never reported as `no_account` (R19) */
+    if (code === "AI_KEPT_AWAY") return { held: { condition: "kept_away", code, translation: g.translation ?? null } };
     if (code === "STANDING_SWITCH_OFF") return { held: { condition: "switch_off", switch: level } };
     if (code === "NO_ACCOUNT" || code === "ACCOUNT_MEMBER_NOT_ACTIVE")
       return { held: { condition: "no_account", ...(code !== "NO_ACCOUNT" ? { code, translation: g.translation ?? null } : {}) } };

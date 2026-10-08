@@ -151,8 +151,8 @@ import { RUN_BOUNDS, RUN_ENDINGS, AI_RUN_CHECKS } from "./run-rules/index.mjs";
    source-scan proving it holds no control-flow authority). Two deliverables with
    two suites, and the pack composes them. */
 import { judgementLayers, actionPlanningLayer, filingDraftingLayer, editionStatementLayer, wizardAuthoringLayer,
-         legalLookupLayer, askLayer, suggestionsLayer, writingHelpLayer, RESEARCH_BOUNDARY_CLAUSES, RESEARCH_BOUNDARY_NOTE,
-         SKILL_CHECKS, SKILL_CHECK_KEYS } from "./skilldoctrine.mjs";
+         legalLookupLayer, askLayer, suggestionsLayer, writingHelpLayer, interfaceTranslationLayer,
+         RESEARCH_BOUNDARY_CLAUSES, RESEARCH_BOUNDARY_NOTE, SKILL_CHECKS, SKILL_CHECK_KEYS } from "./skilldoctrine.mjs";
 export { SKILL_CHECKS, SKILL_CHECK_KEYS };
 /* N345. The recommender's prompt is contradiction's (its R41): measured on the blind fixture of dissolved pairs
    under its digest, and carried here unchanged as the words a run recommends under (R27). The digest is checked
@@ -256,6 +256,8 @@ export const SOURCING = {
   suggestions:    "authored",   /* skilldoctrine.mjs, ladders §2's suggestion switch, DEC-27 (R35) */
   writing_help:   "authored",   /* skilldoctrine.mjs, Interaction Constructs §P (DEC-153), Roles §3, pilot §3 (R36) */
   writing_help_unpublished: "absent", /* while op=affordances publishes no writing help act (R36) */
+  interface_translation: "authored", /* skilldoctrine.mjs, Interaction Constructs §L, DEC-127, DEC-157, DEC-179 (R39) */
+  interface_translation_unpublished: "absent", /* while op=affordances publishes no translation draft act (R39) */
   research_boundary: "authored", /* skilldoctrine.mjs, ladders §9.4 and Roles §3 rules 11, 12, resident (R2, R37, R38) */
   wizard_scripts: "absent",     /* absent until the plane publishes wizard scripts — see the header (R9) */
   wizard_scripts_published: "driven", /* op=affordances .wizard_scripts, validated against .screens (R10) */
@@ -522,6 +524,10 @@ export function disclosedLayers({ vocabularies, catalog, captureActs, wizardScri
     /* R36 (DEC-153; K1841). The doctrine a run drafting in a member's own-words field works under, with its acts read
        from the published catalogue; a stated absence while the plane publishes no writing help act. */
     writing_help: writingHelpLayer(catalog),
+    /* R39 (N669; DEC-127, DEC-157, DEC-179; K2200). The doctrine a run drafting the interface words a group's language
+       lacks, or reading a kept word back into English, works under, with its acts read from the published catalogue
+       and record-grammar's translation label; a stated absence while the plane publishes no translation draft act. */
+    interface_translation: interfaceTranslationLayer(catalog),
     wizard_scripts: Array.isArray(wizardScripts) ? {
       load_when: "the run guides a member through a path to a result, or must say which steps reach it",
       sourcing: SOURCING.wizard_scripts_published,

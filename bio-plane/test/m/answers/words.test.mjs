@@ -53,4 +53,17 @@ test("R29 the refusals' details and the not-held reasons it answers: the rule se
     w.a.tallies({ viewer: V("bob") }),
   ];
   for (const a of answers) for (const s of said(a)) assert.doesNotMatch(s, BANNED, s);
+  /* (T37; N765) the kept_away condition and the translation it carries, credentials' row (its R35), as a run answers it */
+  assert.equal(w.a.standingAiSwitch({ on: true, by: V("alice") }).ok, true);
+  w.a.registerStandingAnswerer("agent-worker", async () => null);
+  assert.equal((await w.credentials.aiKeepAwaySet({ on: true, reason: "A review of the assistant.", by: V("alice") })).ok, true);
+  const q = w.a.standingQuestionSet({ author: V("bob"), question: "q", query: "title:budget", cadence: "daily", ends: "2026-12-31" });
+  await w.a.standingTick(w.clock.now);
+  w.document("budget one", { title: "Budget one" });
+  w.at("2026-10-06T15:00:00.000Z");
+  const run = (await w.a.standingTick(w.clock.now)).ran.find((x) => x.id === q.id);
+  assert.equal(run.held_back.condition, "kept_away");
+  const words = said([run, w.a.standingAnswersFor({ member: V("bob") })]);
+  assert.ok(words.includes(run.held_back.translation) && words.length >= 2);
+  for (const s of words) assert.doesNotMatch(s, BANNED, s);
 });
