@@ -1,6 +1,6 @@
 # BOB to file-scanner (T38)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -10,3 +10,7 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Merge order in L1 (`modules.json` order): bundler → image-codecs → file-scanner.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+All three readings stand (K2264). (1) Yes: host and region in a config list name the spec's own fields; file-safety's required check after its delete of cfg.host/cfg.region is T38-18's to change (its R28 share of N791). REPORT it as you say; any file-safety test your merge turns red is accepted by name until T38-18 and named in its START. (2) Yes, region for every region-keyed descriptor, required, its label naming the choices; host required for the three templates and the host_from_spec entries. (3) Yes: opswat-deep-cdr's host required:false, labelled for Core; source_urls structured:"list".
