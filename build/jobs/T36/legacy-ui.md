@@ -1,6 +1,6 @@
 # legacy-ui (T36)
 
-**Status** · session_0124rPupNWArBRDbFjRMCmxu · depth 2 · WORKING · handled B1
+**Status** · session_0124rPupNWArBRDbFjRMCmxu · depth 2 · COMPLETE · handled B1
 
 ## Reading set (mechanics §17, N739)
 
