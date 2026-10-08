@@ -95,7 +95,9 @@ Each line is one job (P8): every T38 entry for that module. Fields: module · (N
 - **T38-12 · case-disclosures** · (N779) states the copy as it states an obscured one; (N788 (1); DEC-183, superseding K2206's "never blocks") `photosOf`'s unchecked state is a gate: R6/R22 re-worded so a photo the case relies on that is unchecked blocks signing, named (`photo.refused.unchecked`); a withdrawn mark read as withdrawn (T38-11) · K2206, K2220; DEC-183 · req: R6, R22 amended, BOB's · depends T38-11. **P6:** 1,918.
 - **T38-13 · case-authoring** · (N788 (1)) signing refused while any photo the case relies on is unchecked, naming it (R34's `blockers`; words `photo.refused.unchecked`) · K2220; DEC-183 · req: R34 amended, BOB's · depends T38-12. **P6:** 3,460; small.
 
-**L8 merge order:** `modules.json` order: case-grammar → case-carriage → public-read → case-disclosures → case-authoring.
+- **T38-29 · publication** · (N788; DEC-183 (4)) C-122.6 `PHOTO_MARKS_CHANGED_SINCE` takes `words.json`'s `photo.refused.changed` (quoted verbatim, citing the key); a withdrawal since preparation (case-carriage R14) is such a change · K2291; DEC-183 · req: its C-122.6 row's words, BOB's · depends T38-11. Joined before L8's START (K1741).
+
+**L8 merge order:** `modules.json` order: case-grammar → case-carriage → publication → public-read → case-disclosures → case-authoring.
 
 ### L11
 
