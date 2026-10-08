@@ -56,6 +56,10 @@ Nothing they left out mattered. Their one finding (no key file in the repository
 
 Size (session_01GYw15sH4ZFnPt65uzKiDe9): test runs 24, module lines 2608
 
+**After B3 · CHANGE (K2162)** · merged `tranche/T36` (instance-setup merged: `FLEET_BINDINGS` now names `file-scanner` → `FILE_SCANNER`; `assistantSet` retired). No installer test or code used `assistantSet` or `op=assistantset` (searched `newgroup/` and the bundle-fresh test); red 32 names none of mine. Re-run: `requirements.test.mjs` pass 49, fail 0, todo 3 (R44 now green, item 2 above closed); wizard 208/0; embed 23/0; bundle-fresh 3/1 ((C), item 1); format, architecture, coverage 47/47, ownership 9 files: 0 failures.
+
+Size (session_01GYw15sH4ZFnPt65uzKiDe9): test runs 30, module lines 2608
+
 ## J1 · QUESTION
 
 R46 and R45 scopes (START's ask; K2130 (7)). Confirmed today by one `GET /client/v4/oauth/scopes` (392 scopes, success) and Cloudflare's documentation:
