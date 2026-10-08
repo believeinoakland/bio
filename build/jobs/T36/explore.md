@@ -2,6 +2,20 @@
 
 **Status** · session_013jCD29K2Ak5HWZGMPQjE64 · depth 2 · RUNNING until 2026-10-08T03:20:55Z (users' tests (hypotheses, affordances, op-declarations, plane)) · handled B1
 
+## Reading set (mechanics §17, N739)
+
+Measured at the start with `build/plan/reading-sets.py`: 153 KB (own requirements 14 KB, used public parts 98 KB as an over-estimate, code 42 KB), tests about 52 KB: under 300 KB, so **read whole myself**: my requirements; layer 5's row of `build/layers.md`; my entry T36-42, the plan's "Rules at the opening", K2092, K1566, K1726, K2063; every file of `bio-plane/src/explore/` and `bio-plane/test/m/explore/` (fixture included); of each used module the Purpose and the services my Uses names (`connection-grammar`'s public part whole, with R19 and `bounds.mjs`; `civil-time` R22–R23 `validAt`; `observation-log` R1's vocabulary; `money` R9, R16; `duties` R18; `events` R28, R30, R35 and its T36-14 note, with `events/owner.mjs`, the owner the proving test reads, and its test fixture). No workers.
+
+## Entries applied (T36-42)
+
+- **R5.** `reader.mjs`: an owner's answer for a node is read page by page to its end; each kind's items are kept to that kind's own bound, `connection-grammar.hubBoundOf(kind)` (4,000 for `event_voted`, 1,000 else), never cut at one page's fan-out. Items an owner pages beyond a kind's bound are not walked and `fanout_truncated` names the node, the kind and the bound. Paging stops once past the sum of the asked kinds' bounds (nothing beyond is walked); the time budget bounds a paging that never ends. The old 100-page guard (`PAGE_LIMIT`, an export nothing else read) is gone: a 4,000-vote set at a 10-item page would have been cut by it.
+- **R20.** A hub entry is `{node, owner, kind, bound, set_size, why, words}`. A hub answer to a call naming several of an owner's kinds is asked again for each kind alone (same `at`, `viewer`, `scope`); a kind answered in items is walked, a kind answered as a hub alone is named; a kind refused alone is named in `owner_refusals` and the others still walked. Every call goes through the reader, so it counts toward `owner_calls` and the budget, and the presets' and overlaps' period walks (`sharedSet` too, whose hub now names its kind and bound; `at_least` now means the owner held more than the kind's bound) judge hubs the same way. `unread` entries met twice on re-asks are listed once.
+- Tests: `walk.test.mjs` R5 (each bound; the 3,400-vote set paged whole across four pages; a vote set cut at 4,000; a hub named with kind, bound, set size) and two R20 tests (the mixed call of votes over their bound beside meetings under theirs, re-asked per kind and for no kind not asked; at 4,000 no hub; the re-asks counted and stopping on the budget; hidden votes neither making a hub nor showing; overlaps at a date and over a period beside a hub of another kind). `fixtures/owners.mjs` judges a hub per kind as connection-grammar R6 now says. `mx1a.test.mjs` gains R20's arms over fixture owners (4,000 votes walked whole within the budget; 4,001 a hub for votes alone with the member's other kind walked). `mx1a-events.test.mjs`: the same arms through `events`' real registered owner, waiting on T36-14 (see J1).
+
+## Next (if restarted)
+
+Wait for BOB's CHANGE (T36-14 merged): merge `tranche/T36`, run `mx1a-events.test.mjs`, record the measured `elapsed_ms` beside K1726's 266–283 ms, re-run steps 5–7.
+
 ## J1 · REPORT
 
 **To route to events (T36-14, running now): its `neighbours` (R35) is too slow for R20's proving test, at the interface.** Measured on `job/T36/explore` over events' own test world (`test/m/events/fixture.mjs`, node:sqlite), one member with 4,000 `vote` events as `voted`:
