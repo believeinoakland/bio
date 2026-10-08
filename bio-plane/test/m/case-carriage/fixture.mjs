@@ -42,10 +42,15 @@ export function world() {
                                   put: (d, b) => ev.put(String(d), b) });
   const bucket = bucketStandIn();
   const cc = caseCarriageOf(host, { record, membership, promotion, sources: src, acceptedWork, extraction,
-                                    now: () => w.clock.now, bucket, store: "bio" });
-  let n = 0;
+                                    now: () => w.clock.now, bucket, store: "bio", provenance: w.prov });
+  let n = 0, r = 0;
   return Object.assign(w, {
     src, acceptedWork, units, unitCalls, cc, evidence: ev, bucket,
+    /** (T39; R15) a receipt for `captureSha` through provenance (its R13), `via` default `direct`: a capture this copy
+     *  fetched (its R62); `doorbell` a pulled knock; `unpacked` with `locator` a file cut from an archive. */
+    receipt(captureSha, via = "direct", locator = null) {
+      return w.prov.recordReceipt({ addressNorm: `e.org/r${++r}`, captureSha, retrieved: NOW, via, retrievalLocator: locator });
+    },
     member(id, { role = "member", status = "active" } = {}) {
       st.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
                    VALUES (?, ?, ?, ?, ?, '["contribute"]', 't', 't')`, id, `Cover ${id}`, `h_${id}`, role, status);
@@ -59,8 +64,9 @@ export function world() {
       return [...st.sql.exec(`SELECT source_id FROM source_knocks WHERE knock_id=?`, knockId)][0].source_id;
     },
     /** A document (an information bundle) whose one capture is `text`, held inline; `files` added beside it, and
-     *  `prov` extra fields on its provenance document. */
-    doc(id, { text = `the text of ${id}`, files = [], prov = {} } = {}) {
+     *  `prov` extra fields on its provenance document. (T39) Fetched by this copy (a `direct` receipt, provenance R62)
+     *  unless `fetched` is false, so it is carried as captured. */
+    doc(id, { text = `the text of ${id}`, files = [], prov = {}, fetched = true } = {}) {
       const path = `snapshots/${id}.txt`;
       const res = promotion.promote({ bundleId: id, base: null, snapKey: `cc${++n}`, author: V("alice"),
         files: [{ path: "bundle.md", text: infoMd(id) }, { path, text }, ...files,
@@ -68,6 +74,7 @@ export function world() {
         meta: { object_type: "information" },
         register: [{ sha256: sha(text), path, encoding: "utf8", bytes: Buffer.byteLength(text) }] });
       if (!res.ok) throw new Error(`fixture doc refused: ${JSON.stringify(res).slice(0, 400)}`);
+      if (fetched) w.receipt(sha(text));
       return sha(text);
     },
     /** A member's firsthand observation, through provenance's `testify`: `{id, sha, text}`. */
