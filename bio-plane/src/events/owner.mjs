@@ -3,9 +3,9 @@
    entity's or an event's connections in connection-grammar's shape, each with its evidence and both grade axes, valid at
    the event's own time, through the viewer's sight (R40), from the indexes on `event_participants (entity_id)`,
    `event_relations (from_event)`, `(to_event)` and `event_concerns (end_id)`; a connection to a use of a power carries its
-   facet (R45). It writes nothing and logs no reader. */
+   facet (R45). A hub is judged per kind against `hubBoundOf(kind)` (T36-14). It writes nothing and logs no reader. */
 import { validAt } from "../civil-time/index.mjs";
-import { BOUNDS, LOWEST_GRADE } from "../connection-grammar/index.mjs";
+import { BOUNDS, LOWEST_GRADE, hubBoundOf } from "../connection-grammar/index.mjs";
 import { BASIS_GRADES } from "../record-grammar/index.mjs";
 
 const ROLE_WORDS = { actor: "acted in", organizer: "organised", mover: "moved", seconder: "seconded", voted: "voted in",
@@ -92,8 +92,12 @@ export function neighboursOf(k, args) {
       push({ id: `events:${kind}:${r.relation_id}`, from: r.from_event, to: r.to_event, kind, evidence: evidence(x),
              grade: { assertion: grade(x.grade), ends: [grade(evGrade(r.from_event)), grade(evGrade(r.to_event))] } }, r.from_event);
     }
-  if (out.length > BOUNDS.hub)
-    return { items: [], hub: { set_size: out.length, why: `this node has more than ${BOUNDS.hub} connections of these kinds; it is named, never expanded` } };
+  /* R35 (connection-grammar R6, R10; K2079): a hub is judged per kind, each kind against its own bound */
+  const perKind = new Map();
+  for (const c of out) perKind.set(c.kind, (perKind.get(c.kind) || 0) + 1);
+  const over = [...perKind].filter(([kind, n]) => n > hubBoundOf(kind)).sort((p, q) => (p[0] < q[0] ? -1 : 1))[0];
+  if (over)
+    return { items: [], hub: { set_size: over[1], why: `this node has ${over[1]} connections of the kind ${over[0]}, more than that kind's bound of ${hubBoundOf(over[0])}; it is named, never expanded` } };
   const start = Number.isInteger(a.page) && a.page > 0 ? a.page : 0;
   const items = out.slice(start, start + BOUNDS.fanout);
   return { items, ...(start + BOUNDS.fanout < out.length ? { next: start + BOUNDS.fanout } : {}) };

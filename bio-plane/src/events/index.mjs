@@ -4,7 +4,7 @@
    time (R15, R16), its cited relations (R17–R20), `ACT-` aliases (R21), Legistar and register following (R22–R25, R38;
    `follow.mjs`), the reads (R26–R34), the connection owner (R35), the ops map (R36), the read contract (R37) and, since
    T35, the uses of a power: acts of discretion, waivers and assessments with their facets and `usesOf` (R43–R48;
-   `uses.mjs`). It
+   `uses.mjs`) and, since T36, who recorded something from a passage (R49; `recorded.mjs`). It
    never stores a sequence, an amount, an absence or the group's own acts, and never infers a cause (R39–R42).
    Reached through `eventsOf(ctx)` (K61). Members see these as the timeline (K1462). */
 import { recordOf } from "../record-core/index.mjs";
@@ -24,6 +24,7 @@ import { readDate, whenOf, sequenceOf, spanOfBound, placeAgainst, orderByWhen } 
 import { followedImport, followedRegister, datesOfReading, READ_DATE_CLASSES } from "./follow.mjs";
 import { neighboursOf, OWNER_KINDS } from "./owner.mjs";
 import { USE_KINDS, OUTCOMES, recordDiscretion, recordAssessment, withdrawUse, facetOf, usesOf } from "./uses.mjs";
+import { recordedBy } from "./recorded.mjs";
 
 export { EVENTS_SCHEMA, EVENT_CHECKS, USE_KINDS, OUTCOMES };
 
@@ -1236,6 +1237,9 @@ export class Events {
   withdrawUse(args = {}) { return withdrawUse(this.#kernel(), args); }
   /** R46: the held uses a viewer may see, filtered, in R31's order: a population, never a census. */
   usesOf(args = {}) { return usesOf(this.#kernel(), args); }
+
+  /** R49: who recorded each row this module holds that cites an extent of a capture; an in-process read, no arm of R36. */
+  recordedBy(args = {}) { return recordedBy(this.#kernel(), args); }
 
   /* R45: an entity's label as the reader may read it, else its id. */
   #entityLabel(entityId, viewer) {
