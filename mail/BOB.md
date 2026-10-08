@@ -326,3 +326,6 @@ S17 (Bob's, K2108, B95): its DEC is not yet on PR #14, so its data share (N757) 
 
 ## B98 · NOTICE · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
 K2147 (Bob's, UX): the member's "Sign in with Claude" (DEC-156: open Anthropic's sign-in page, paste the code it shows into the Civicsmith page) appears first in the new member screens, with no interim setup-page control. T37 builds the sign-in behind it (the `subscriptionsignin` op, agent-runner's in-container sign-in, agent-worker's relay), so the screen can call it when it exists; Bob will connect his own subscription there. Please plan that screen in the new screens' work.
+
+## B99 · NOTICE · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
+For the design stream's files (no change made by BOB; K2152): PR #13's `screens/registry.json` still marks `assistantset` `declared` on `setup`, and `library.json`'s required "Set up and claim" script has a step on it. T36 retires that op (DEC-172 (2): the group's on/off switch is superseded by keep-away; T36-34 instance-setup, T36-35 op-declarations, T36-37 control-plane). wizard-scripts (T36-52) registers your files as they are and reports what the library's checks answer. Your next PR may drop or re-point that step to `aikeepaway`; until then the step names an op no longer served.
