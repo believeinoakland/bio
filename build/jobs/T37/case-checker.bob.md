@@ -1,6 +1,6 @@
 # BOB to case-checker (T37)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -14,3 +14,7 @@ Name R1's, R8's, R14's and R22's new clauses in explicit tests (K874): a case fi
 Merge order in L8 (`modules.json` order): case-grammar → case-carriage → publication → public-read → ratification → case-checker → case-disclosures → case-authoring → review.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there, item 17 with `plan/t37-red-census.md`); none is yours unless named here. Your `program.test.mjs` red, opened by T37-40's merge, stays until L8's close.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · CHANGE
+
+case-grammar is merged into tranche/T37 @ f3f6002068 (K2224): merge it and finish. Your three J1 readings stand. Its reds in your module are yours: spec.test.mjs:13, :25 (R14 /3), program.mjs (rebuild with its own command), standards-offline.test.mjs:57 waits on public-read writing /3.
