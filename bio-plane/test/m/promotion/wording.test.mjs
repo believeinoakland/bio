@@ -17,7 +17,7 @@ const pd = (title, extra = {}) => doc({ object_type: "project", title, current_s
 const mk = (title, extra = {}) => ({ base: null, snapKey: `p-${title}`, author: "member:ann", ownerMemberId: "ann",
   files: [{ path: "bundle.md", text: pd(title) }], meta: {}, ...extra });
 
-test("R28 (gate.mjs:972): PLANE_HELD_IN_PARTS says the acquisition receipt of your group's Civicsmith names the whole hash", async () => {
+test("R28 (gate.mjs runGate): PLANE_HELD_IN_PARTS says the acquisition receipt of your group's Civicsmith names the whole hash", async () => {
   const r = await runGate({ bundleId: "INFO-2026-0001", image: { "bundle.md": infoDoc("INFO-2026-0001") }, knownIds: new Set(),
     registers: [{ path: "data/p.pdf", capture_sha: "a".repeat(64), bytes: 10 }],
     hasCapture: async () => ({ present: false, heldInParts: true }) });
@@ -96,7 +96,7 @@ test("R39 (checks.mjs:363, :365, C-102.8): STEP_DECLARED says a part of your gro
   }
 });
 
-test("R19 (index.mjs:169, :624): NAME_TAKEN and NO_TITLE say a project's name is unique across your group's Civicsmith", () => {
+test("R19 (index.mjs NAME_TAKEN, #promote): NAME_TAKEN and NO_TITLE say a project's name is unique across your group's Civicsmith", () => {
   const { p } = makePromotion();
   assert.equal(p.promote(mk("Sewer Fund")).ok, true);
   const taken = p.promote(mk("  sewer   FUND "));
@@ -108,7 +108,7 @@ test("R19 (index.mjs:169, :624): NAME_TAKEN and NO_TITLE say a project's name is
   for (const x of [taken, untitled]) assert.doesNotMatch(x.detail, RETIRED);
 });
 
-test("R19 (index.mjs:405, :413, :416): a project's creation is refused in words naming the record as what mints its id and writes it in, the field names kept", () => {
+test("R19 (index.mjs is-project-id-supplied, is-project-id-bytes): a project's creation is refused in words naming the record as what mints its id and writes it in, the field names kept", () => {
   const { p } = makePromotion();
   const supplied = p.promote({ ...mk("Sewer Fund"), bundleId: "PROJ-2026-0001-x" });
   assert.equal(supplied.reason, "PROJECT_ID_SUPPLIED");
@@ -125,7 +125,7 @@ test("R19 (index.mjs:405, :413, :416): a project's creation is refused in words 
   for (const x of [supplied, unreadable, inBytes]) assert.doesNotMatch(x.detail, RETIRED);
 });
 
-test("R41 (index.mjs:903): PROJECT_FORK_ID_SUPPLIED says a fork's id is minted by the record and returned as newId, the field name kept", () => {
+test("R41 (index.mjs is-project-fork-id-supplied): PROJECT_FORK_ID_SUPPLIED says a fork's id is minted by the record and returned as newId, the field name kept", () => {
   const { p } = makePromotion();
   const r = p.forkProject({ projectId: "PROJ-2026-0001-x", newId: "PROJ-2026-0002-y", title: "Fork", by: "bob" });
   assert.equal(r.reason, "PROJECT_FORK_ID_SUPPLIED");
