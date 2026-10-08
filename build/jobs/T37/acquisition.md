@@ -55,6 +55,6 @@ R44's `*(not yet met: T37)*` marker is BOB's to lift (a requirements file).
   - `monitoring`: 121 tests, 0 fail.
 - The same failing tests by name on `tranche/T37` before my change (stash compared): none is mine. Capture's three (R21 R27 R73 through `captureOp`, `cap13`, `d57selflink`) and plane R6 fail on `CREDENTIAL_IN_ADDRESS` in a control-plane request. Rule 6 names that cause under red 15 but does not list these four tests. They are reported to BOB.
 - `format`: 136 modules, 0 failures. `architecture`: 23 product files, 103 imports, 0 failures. `coverage`: 44 of 44 live ids, 0 failures. `ownership` vs `tranche/T37`: 3 files, 0 failures.
-- P6: module lines below.
+- P6: 2,954 lines (`src/acquisition/*.mjs`).
 
-Size (session_01G5k1CQoyCMyhGevtvZwFkg): test runs 14, module lines 4,343
+Size (session_01G5k1CQoyCMyhGevtvZwFkg): test runs 14, module lines 2,954
