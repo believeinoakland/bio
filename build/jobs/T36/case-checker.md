@@ -37,3 +37,7 @@ R22 details, my best reading (I proceed on it; answer only if you want otherwise
 P6: 1,374 lines without the generated `program.mjs`, well under 4,000.
 
 Size (session_012BekBB8UfaZQaG1nz8xvro): test runs 12, module lines 1374
+
+## J2 · REPORT
+
+Generated artifact staled (mechanics §14): the plane bundle dist/bio-plane.bundled.mjs (not_product) is stale from this job's sources (case-checker check.mjs, index.mjs, spec.mjs, standards.mjs, program.mjs); fleetbundles.test.mjs names each as STALE BUNDLE. For your regeneration at L8's close. program.mjs itself is regenerated on this branch (sha256 3516af48…c4dc) and you regenerate it again at the close, after case-authoring.
