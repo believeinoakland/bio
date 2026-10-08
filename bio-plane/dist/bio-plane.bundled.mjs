@@ -171132,7 +171132,7 @@ var AiRuns = class _AiRuns {
       account: {
         kind: ref.kind,
         level: ref.level,
-        secret: ref.key,
+        ...ref.kind === "signin" ? {} : { secret: ref.key },
         member: `member:${d.payer}`,
         suggestions
       }
@@ -172037,7 +172037,7 @@ var AiRuns = class _AiRuns {
   }
   /** R52 (K1755): which account serves `member`'s act now, read without unsealing, for the synchronous checks (an ask's
    *  ceiling check, the wake's decision): `member` when they hold a reference of their own (credentials R23's state, asked
-   *  as that member), else `group` when the group's API key is on and they are an active member (credentials R34's
+   *  as that member) or are connected through their subscription (its R43; T38, K2299), else `group` when the group's API key is on and they are an active member (credentials R34's
    *  state, asked as that member: it answers `{on}` to an active member alone), else null. R35's choice, as its own
    *  order makes it. */
   #accountServing(member2) {
@@ -172045,6 +172045,7 @@ var AiRuns = class _AiRuns {
     try {
       const s = c.accountReferenceState({ member: as, viewer: as });
       if (s && s.ok === true && s.held === true) return "member";
+      if (s && s.ok === true && s.subscription && s.subscription.connected === true) return "member";
     } catch {
     }
     try {
@@ -172055,7 +172056,7 @@ var AiRuns = class _AiRuns {
     }
   }
   /** R52 (K1503, K1755): the account `credentials.accountFor` (its R35) answers for `member`'s act of `kind` (`run`):
-   *  `{level, kind, key}` when one serves it; else `{refusal}`: `NO_ACCOUNT` read as this module's `AI_NO_ACCOUNT`, any
+   *  `{level, kind, key}` when one serves it (`key` null for the member's own sign-in, T38; K2299); else `{refusal}`: `NO_ACCOUNT` read as this module's `AI_NO_ACCOUNT`, any
    *  other refusal of that service (the group key's notice not yet read, a member not active, the seal) relayed as it
    *  came. The caller keeps the key for the one call it serves, or not at all. */
   async #accountFor(member2, kind2) {
@@ -172067,6 +172068,8 @@ var AiRuns = class _AiRuns {
     }
     if (a && a.ok === true && typeof a.key === "string" && (a.level === "member" || a.level === "group"))
       return { level: a.level, kind: a.kind, key: a.key };
+    if (a && a.ok === true && a.kind === "signin" && a.level === "member")
+      return { level: "member", kind: "signin", key: null };
     if (!a || a.code === "NO_ACCOUNT" || typeof a.code !== "string") return { refusal: this.#noAccount(member2, "A run") };
     const { ok: _ok, ...rest } = a;
     return { refusal: { ok: false, ...rest } };
