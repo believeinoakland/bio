@@ -11,3 +11,7 @@ Reading set (mechanics §17): measured at this START by `build/plan/reading-sets
 Merge order in L11: `modules.json` order, plane last (K2300); a job that uses a same-layer module merges the tranche into its branch when BOB tells it that module is merged (CHANGE).
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there); only the items named here are yours.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Both readings stand (K2321). (1) Re-generate from PR #15 (`c848b56671`, 204 entries); R48 now carries a T38 clause saying so (merge `tranche/T38`). (2) Hold `obscuremarkwithdraw` under its own name now, never `owed_` and never in `ACT_HELP_ABSENT`. BOB sends a CHANGE when op-grades is merged; then merge the tranche and re-run t36.
