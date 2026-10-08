@@ -37,3 +37,7 @@ Without the `families.mjs` change, this test and the totality test fail. `rows-b
 - `ownership` vs `tranche/T37`: 3 files changed; 0 failures.
 
 Size (session_01VgkuxsW3PKQd1yNMcwCU82): test runs 10, module lines 811
+
+## J1 · REPORT
+
+case-carriage: MACHINE_CANNOT_MARK (C-141.1, src/case-carriage/checks.mjs) is also sources' C-121.7 (SOURCES_CHECKS), an earlier family. Under R7 (no earlier row moves) the composed catalogue keeps sources' row, so a refusal with that reason that case-carriage answers bare is decorated C-121.7 with sources' sentence, and C-141.1 never reaches the wire through R2. DEC-49 arm A: a code held twice. Suggested: case-carriage re-codes it (e.g. MACHINE_CANNOT_MARK_PHOTO), as K2103 did for file-safety's shared codes; my R7 test (families.test.mjs, T37; K2226) passes either way. Also: dist/ plane bundle stale from families.mjs (layer close).
