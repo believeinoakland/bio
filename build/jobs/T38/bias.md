@@ -1,6 +1,6 @@
 # bias (T38)
 
-**Status** · session_01H5SGMsATdVSiwtbHK79v41 · depth 2 · WORKING · handled B1
+**Status** · session_01H5SGMsATdVSiwtbHK79v41 · depth 2 · COMPLETE · handled B1
 
 ### Work (BIAS #12)
 
