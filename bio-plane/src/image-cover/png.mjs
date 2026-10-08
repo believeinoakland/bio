@@ -24,7 +24,7 @@ const CRC_TABLE = (() => {
   }
   return t;
 })();
-function crc32(...parts) {
+export function crc32(...parts) {
   let c = 0xffffffff;
   for (const buf of parts) for (let i = 0; i < buf.length; i++) c = CRC_TABLE[(c ^ buf[i]) & 0xff] ^ (c >>> 8);
   return (c ^ 0xffffffff) >>> 0;

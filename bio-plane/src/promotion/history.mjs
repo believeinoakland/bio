@@ -6,7 +6,7 @@
  * its write-order rank. A walk that needs "the promotion before" takes `seq` order, never key order, whose lexical
  * order is not a clock. An image with no `seq` on every entry is still walked, in key order, and the finding says so. */
 
-import { parseFrontmatter, canonicalJson, vocabFor, normalizeType, STATES } from "../record-grammar/index.mjs";
+import { parseFrontmatter, canonicalJson, normalizeType, STATES } from "../record-grammar/index.mjs";
 import { EMPTY_STRING_SHA } from "../record-core/index.mjs";
 
 const f = (check, severity, message, repairs) => ({ check, severity, message, ...(repairs ? { repairs } : {}) });
@@ -253,7 +253,8 @@ export async function checkDivergence({ files, sha256 }, findings) {
  *  the table and `forming -> investigating`, `investigating -> matured` and `closed -> investigating` stopped being
  *  edges. A move "under earlier rules" is one dated at or before its type's fence. */
 export const STATE_MOVE_FENCED_SINCE = { bias: "2026-09-24", project: "2026-10-01", "*": "2026-09-26" };
-const fenceOf = (t) => STATE_MOVE_FENCED_SINCE[t] ?? STATE_MOVE_FENCED_SINCE["*"];
+const own = (o, k) => (o !== null && typeof o === "object" && Object.prototype.hasOwnProperty.call(o, k) ? o[k] : undefined);
+const fenceOf = (t) => own(STATE_MOVE_FENCED_SINCE, t) ?? STATE_MOVE_FENCED_SINCE["*"];
 
 /** The record's own state moves for a bundle, from its image: consecutive recorded versions of bundle.md, in write
  *  order, whose `current_state` differs, where the later promotion's base is the bundle.md digest the earlier one's
@@ -291,8 +292,12 @@ export function recordedMoves(files) {
 export function checkStateHistory({ fm, files }, findings) {
   if (!fm || typeof fm !== "object") return;
   const ot = fm.object_type;
-  const spec = vocabFor(STATES, ot);
-  if (!spec) return;
+  /* A type the state tables do not hold as their own (R32, T39): an inherited key (`toString`, `constructor`,
+     `__proto__`) names no table, so it is answered as any type with none, no finding of C-4.2's; the type check is the
+     catalogue's. `vocabFor`'s lookup (the name, else its alias), held to own keys. */
+  const key = own(STATES, ot) !== undefined ? ot : normalizeType(ot);
+  const spec = own(STATES, key);
+  if (!spec || own(spec, "edges") === undefined) return;
   const hist = Array.isArray(fm.state_history) ? fm.state_history : [];
   const fence = fenceOf(normalizeType(ot));
   const corroborating = hist.length ? recordedMoves(files) : [];
@@ -306,8 +311,8 @@ export function checkStateHistory({ fm, files }, findings) {
       if (!(k in e)) findings.push(f("C-4.2", "error", `state_history[${i}] missing '${k}'`));
     if (prevTs && e.timestamp && e.timestamp < prevTs) findings.push(f("C-4.2", "error", `state_history[${i}] is out of chronological order`));
     prevTs = e.timestamp || prevTs;
-    const edges = spec.edges[e.from_state];
-    if (edges && !edges.includes(e.to_state)) {
+    const edges = own(spec.edges, e.from_state);
+    if (Array.isArray(edges) && !edges.includes(e.to_state)) {
       const k = corroborating.findIndex((m) => m.from === e.from_state && m.to === e.to_state
         && typeof m.date === "string" && m.date.slice(0, 10) <= fence);
       if (k >= 0) {

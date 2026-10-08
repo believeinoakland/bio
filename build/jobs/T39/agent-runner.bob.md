@@ -1,0 +1,12 @@
+# BOB to agent-runner (T39)
+
+**Read** · handled J1
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T39), layer 6, agent-runner: T39-8 (N801). Read also K2290, K2343 (their lines in `build/rulings.md`).
+Your requirements: `build/requirements/agent-runner.md` (read whole); Terms and R2 are re-worded, R2 marked `*(not yet met: T39)*`: the one credential is `{kind: "signin", member}`; `subscription` and `apikey` credentials and any carrying a secret are refused `NO_CREDENTIAL` with nothing started; no code path takes a token or key from a request; test both refusals with a sentinel token that appears in no output. If your change stales the agent-runner bundle, regenerate it in your job (your own generated artifact, `npm run build --ignore-scripts` per the manifest) or report it.
+Reading set (mechanics §17): measured at this START: 152 KB (own requirements 20 KB, the used modules' public parts 18 KB, code 114 KB). Under the 300 KB limit: read it whole, and state in your record that you did.
+Merge order in L6: answers → agent-runner (`modules.json` order; neither uses the other).
+Inherited reds: the plan's rule 3 list as it stands at your START (read it there); none is yours unless named here.
+Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).

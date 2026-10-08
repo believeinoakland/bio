@@ -145,12 +145,19 @@ function holdArchive(w, env, id, zip, { token, entry = null }) {
   env.PUBLISHED.m.set(`bio/published/${s}`, new Uint8Array(z));
   env.PUBLISHED.m.set(`bio/published/${hex(token)}`, new Uint8Array(token));
   recordListing(w, s);
+  /* (T39) fetched by this copy (`provenance` R62): the outermost directly, an inner archive cut from its archive */
+  if (entry && entry.container) cutFrom(w, s, entry.container);
+  else w.receipt(s);
   return s;
 }
+/* (T39; `case-carriage` R13, K2377) a member cut from an archive is carried whole only as one this copy fetched
+   (`provenance` R62): its `unpacked` receipt names the archive, itself fetched. */
+const cutFrom = (w, s, container) => w.receipt(s, "unpacked", `zip:${container.archive_sha256}!${container.index}`);
 /* A member of an archive, its text held inline on its own bundle, its provenance stating its `container`. */
 function holdMember(w, id, text, container) {
   const path = `snapshots/zip-${container.archive_sha256}-${container.index}`;
   promote(w, id, [{ ...unpacked(container, sha(text)), file: path }], [{ path, text, register: true }]);
+  cutFrom(w, sha(text), container);
   return sha(text);
 }
 /* The case edition over F, resting on `materials`, signed, F published, F's bytes in the bucket; assembled. */
@@ -280,6 +287,7 @@ test("R32 bytes that do not hash to the digest registered are not carried and ar
   env.PUBLISHED.m.set(`bio/published/${archiveSha}`, new TextEncoder().encode("not the archive"));
   promote(w, PLAIN, [{ file: "snapshots/plain.txt", capture: { method: "acquire", grade: "B", sha256: sha("plain words"), bytes: 11 } }],
           [{ path: "snapshots/plain.txt", text: "plain words", register: true }]);
+  w.receipt(sha("plain words"));   // (T39) fetched by this copy (`provenance` R62), so carried whole
   const { m, out } = await publish(w, env, [docRow(MEM, memberSha), docRow(PLAIN, sha("plain words"))]);
   assert.deepEqual(caseFileManifestCheck(m), []);
   assert.equal(pathOf(m, "archive", MEM).length, 0, "the wrong bytes are never carried under the archive's name");
@@ -368,6 +376,7 @@ test("R28 R32 an order over a carried archive member withholds its archive and c
   const { w, env, zip, archiveSha, memberSha } = scene();
   promote(w, PLAIN, [{ file: "snapshots/plain.txt", capture: { method: "acquire", grade: "B", sha256: sha("plain words"), bytes: 11 } }],
           [{ path: "snapshots/plain.txt", text: "plain words", register: true }]);
+  w.receipt(sha("plain words"));   // (T39) fetched by this copy (`provenance` R62), so carried whole
   const { out, m } = await publish(w, env, [docRow(MEM, memberSha), docRow(PLAIN, sha("plain words"))]);
   const rec = m.files.find((f) => f.kind === "container"), arc = m.files.find((f) => f.kind === "archive");
   assert.ok(rec && arc && arc.sha256 === archiveSha && zip.length === arc.bytes);

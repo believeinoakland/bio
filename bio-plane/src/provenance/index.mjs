@@ -108,6 +108,10 @@ export const UNPACKED_UNRESOLVED = "CAPTURE_UNPACKED_UNRESOLVED";
 /* R59: the retrieval locator an `unpacked` receipt carries (R15): the archive's capture digest and the entry's 0-based
    place in its central directory (`ooxml` R27). Read from the receipt, which no caller writes, never from a document. */
 const UNPACKED_LOCATOR = /^zip:([0-9a-fA-F]{64})!(\d+)$/;
+/** R62 · N806 (K2333): the routes by which this copy fetched a capture itself: a direct fetch (Drive and render fetches
+ *  record `direct` too), an archive replay, a capture request's fetch. A doorbell's file was handed in, not fetched.
+ *  The one list, exported for every reader of the source condition (`file-safety` R6, `case-carriage` R15). */
+export const FETCHED_VIAS = Object.freeze(["direct", ARCHIVE_VIA, "capture-request"]);
 /* R59: between equal answers, the order of the routes; a route no ruling grades never outranks a ruled one. */
 const ROUTE_RANK = { direct: 0, archive: 1, unpacked: 2, doorbell: 3 };
 
@@ -1059,6 +1063,42 @@ class Provenance {
              why: `these bytes are entry ${index} of an archive the record holds (${archiveSha.slice(0, 16)}…), cut `
                 + "out of it, so on the capture axis they earn exactly what that archive earns, never more and never "
                 + `less. Of the archive: ${why}` };
+  }
+
+  /** R62 · N806 (K2333): whether this copy fetched the capture itself, the one definition of the source condition
+   *  (lifted from `file-safety` R6). `fetched` when a receipt naming the capture (R60) has a `via` in `FETCHED_VIAS`
+   *  (no `via` reads `direct`, R13), or when an `unpacked` receipt's locator names an archive for which this rule
+   *  answers `fetched`, walking outward through at most `ARCHIVE_DEPTH_MAX` archives (one such receipt suffices,
+   *  K1949). A knock, a capture with no receipt, and a file cut from an archive not itself fetched answer `false`. A
+   *  walk that meets a digest twice, runs past the bound or reads a malformed locator ends that path not fetched. A
+   *  read that fails answers `false` with no routes: fail closed. Writes nothing. */
+  fetchedByThisCopy(captureSha) {
+    try {
+      return this.#fetched(bareSha(captureSha), []);
+    } catch {
+      return { fetched: false, routes: [], archive: null };
+    }
+  }
+
+  /* R62: one capture's answer; `walked` is the digests already read on this path, innermost first. */
+  #fetched(s, walked) {
+    if (typeof s !== "string" || !/^[0-9a-f]{64}$/.test(s)) return { fetched: false, routes: [], archive: null };
+    const rows = this.#rows(`SELECT via, retrieval_locator FROM captured_locators WHERE capture_sha = ?
+                              ORDER BY address_norm, via`, s);
+    const routes = [...new Set(rows.map((r) => r.via || "direct"))].sort();
+    if (rows.some((r) => FETCHED_VIAS.includes(r.via || "direct"))) return { fetched: true, routes, archive: null };
+    const path = [...walked, s];
+    let first = null;
+    for (const r of rows) {
+      if (r.via !== UNPACKED_VIA) continue;
+      const m = UNPACKED_LOCATOR.exec(typeof r.retrieval_locator === "string" ? r.retrieval_locator : "");
+      if (!m || !Number.isSafeInteger(Number(m[2]))) continue;
+      const archive = m[1].toLowerCase();
+      first ??= archive;
+      if (path.includes(archive) || walked.length + 1 > ARCHIVE_DEPTH_MAX) continue;
+      if (this.#fetched(archive, path).fetched) return { fetched: true, routes, archive };
+    }
+    return { fetched: false, routes, archive: first };
   }
 
   /* =====================================================================

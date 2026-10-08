@@ -64,7 +64,7 @@ test("R29 (N529): C-120.4–C-120.7, in the family 'a case's disclosures and its
     "src/case-disclosures/index.mjs hunchDebt > is-hunch-cleared"], "each names the method that raises it there");
 });
 
-test("R29 (N529): C-120.8 and C-120.10–C-120.13 (DEC-112, N522), C-120.14–C-120.16 (the people a case names, T33-68), C-120.17–C-120.18 (a marked photo, T37; N757) and R34's C-120.19 (an unchecked photo, T38; DEC-183), in the same family, held with their translations in case-disclosures (its R22; the photo rows words.json's photo.refused.format and photo.refused.unchecked, read by key), each naming its raising method there; C-120.9 is withdrawn and not used", () => {
+test("R29 (N529): C-120.8 and C-120.10–C-120.13 (DEC-112, N522), C-120.14–C-120.16 (the people a case names, T33-68), C-120.17–C-120.18 (a marked photo, T37; N757) R34's C-120.19 (an unchecked photo, T38; DEC-183) and C-120.20–C-120.22 (a member document's publication copy undetermined, pending or not cleanable, T39; N806; numbered provisionally until promotion's stamp), in the same family, held with their translations in case-disclosures (its R22; the photo rows words.json's photo.refused.format and photo.refused.unchecked, read by key), each naming its raising method there; C-120.9 is withdrawn and not used", () => {
   const rows = Object.entries(CASE_DISCLOSURE_CHECKS).slice(7);
   assert.deepEqual(rows.map(([k, v]) => [k, v.check, v.where]), [
     ["RELIED_ON_NOT_PRESENTABLE", "C-120.8", "src/case-disclosures/index.mjs materialsJudged > is-relied-on-presentable"],
@@ -77,7 +77,10 @@ test("R29 (N529): C-120.8 and C-120.10–C-120.13 (DEC-112, N522), C-120.14–C-
     ["TIE_ATTESTATION_MISSING", "C-120.16", "src/case-disclosures/index.mjs tieAttestationJudged > is-tie-attested"],
     ["PHOTO_NOT_COVERABLE", "C-120.17", "src/case-disclosures/index.mjs materialsJudged > is-photo-coverable"],
     ["PHOTO_MARKS_UNDETERMINED", "C-120.18", "src/case-disclosures/index.mjs materialsJudged > is-photo-marks-determined"],
-    ["PHOTO_UNCHECKED", "C-120.19", "src/case-disclosures/index.mjs materialsJudged > is-photo-checked"]]);
+    ["PHOTO_UNCHECKED", "C-120.19", "src/case-disclosures/index.mjs materialsJudged > is-photo-checked"],
+    ["DOCUMENT_COPY_UNDETERMINED", "C-120.20", "src/case-disclosures/index.mjs materialsJudged > is-document-copy-determined"],
+    ["DOCUMENT_COPY_PENDING", "C-120.21", "src/case-disclosures/index.mjs materialsJudged > is-document-copy-made"],
+    ["DOCUMENT_NOT_CLEANABLE", "C-120.22", "src/case-disclosures/index.mjs materialsJudged > is-document-cleanable"]]);
   assert.deepEqual(rows.map(([, v]) => v.translation), [
     "A finding this case relies on rests on material your group's Civicsmith does not hold whole, and everything a case relies on travels with it in full. Find a presentable copy, stop relying on the material, or make the finding supporting. Nothing was written.",
     "A finding in this case rests on another group's finding, and this group's acceptance of that edition is not in force. Accept it again, or take the leg out. Nothing was written.",
@@ -89,7 +92,11 @@ test("R29 (N529): C-120.8 and C-120.10–C-120.13 (DEC-112, N522), C-120.14–C-
     "Each member who signs a case first attests that they hold no undeclared tie to anyone or anything the case names, including those paid or paying in its money. Attest, or declare the tie first. Nothing was written.",
     word("photo.refused.format"),
     "A photo this case relies on could not be checked for the people and number plates marked in it, so what the published case would show of it is not known. Try again. Nothing was written.",
-    word("photo.refused.unchecked")]);
+    word("photo.refused.unchecked"),
+    /* T39 (N806): case-disclosures R22's drafts, word for word, until words.json holds their keys */
+    "A document this case relies on could not be checked for the details a member's file can carry, so what the published case would show of it is not known. Try again. Nothing was written.",
+    "The publication copy of a document a member supplied is still being made: {document}. Try again in a few minutes.",
+    "A document a member supplied can't be cleaned of the details that could show who made it: {document}. Capture it from where it was published, supply a plainer copy, or stop relying on it."]);
 });
 
 test("R55 (case-disclosures R16): uncleared hunch debt is UNCLEARED_HUNCH with its row C-120.7, naming every hunch leg, before anything is written; the pre-flight answers it before the first screen", () => {

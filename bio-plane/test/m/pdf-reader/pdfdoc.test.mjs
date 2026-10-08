@@ -1,5 +1,5 @@
 /* pdf-reader: requirement-named tests for the PdfDoc reader and the module's
- * invariants (build/requirements/pdf-reader.md R18-R25, R27-R29), at the
+ * invariants (build/requirements/pdf-reader.md R18-R25, R27-R29, R37), at the
  * module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -222,4 +222,110 @@ test("R29: the general parameters (0.25 em, 0.1 em, form depth 8, the OCR table)
   assert.equal((await extractPdfStructure(chain(9))).text.undetermined[0].reason, "form_text_unread");
   const p = (await extractPdfStructure(doc([{ content: "" }], { objs: { 91: "<< /Producer (readiris 17) >>" }, trailer: "trailer\n<< /Root 1 0 R /Info 91 0 R >>\n" }))).text.producer;
   assert.equal(p.ocr.marker, "readiris");
+});
+
+/* R37: what `objects()` answers for a document, made comparable: the trailer as a
+   plain object, and each listed object beside the value `resolve` gives for it. */
+const plain = (m) => ({ ...m });
+const nums = (list) => list.map((o) => o.num);
+
+test("R37: objects() is the last trailer and every object reachable from it, each once, ascending, valued as resolve answers it", async () => {
+  const bytes = build({
+    1: "<< /Type /Catalog /Pages 2 0 R /Extra [5 0 R << /Deep 8 2 R >> 9 3 R 5 0 R] >>",
+    2: "<< /Type /Pages /Kids [3 0 R] /Count 1 /Back 1 0 R >>",  // a cycle of dictionaries
+    3: "<< /Type /Page /Parent 2 0 R /Contents 4 0 R >>",
+    4: { data: "BT ET" },
+    5: "6 0 R",                                                  // a chain of bare references
+    6: "42",
+    8: "<< /Old true >>",
+    20: "<< /Producer (first revision) >>",
+    30: "<< /Orphan true >>",
+  }, { trailer: "trailer\n<< /Root 1 0 R /Info 20 0 R >>\n",
+       tail: "8 2 obj\n0\nendobj\n9 3 obj\n<< /Gen 3 >>\nendobj\n21 0 obj\n<< /Producer (second) >>\nendobj\n"
+           + "trailer\n<< /Root 1 0 R /Info 21 0 R /Prev 9 >>\n" });
+  const d = await openPdf(bytes);
+  const got = d.objects();
+  assert.deepEqual(Object.keys(got).sort(), ["objects", "trailer", "unresolved"]);
+  assert.deepEqual(plain(got.trailer), { Root: ref(1), Info: ref(21), Prev: 9 });
+  // the earlier revision's /Info (20) and an object nothing names (30) are not reachable
+  assert.deepEqual(nums(got.objects), [1, 2, 3, 4, 5, 6, 8, 9, 21]);
+  for (const o of got.objects) {
+    assert.deepEqual(Object.keys(o), ["num", "gen", "value"]);
+    assert.equal(o.value, d.resolve({ t: "ref", n: o.num, g: o.gen }), `object ${o.num}`);
+  }
+  const by = (n) => got.objects.find((o) => o.num === n);
+  assert.deepEqual([by(5).value, by(6).value], [42, 42]);
+  assert.deepEqual([by(8).gen, by(8).value], [2, 0]);  // the later definition wins, with its own generation
+  assert.equal(by(9).gen, 3);
+  assert.equal(by(1).gen, 0);
+  assert.equal(Buffer.from(await d.streamDecoded(by(4).value)).toString("latin1"), "BT ET");
+  assert.deepEqual(got.unresolved, []);
+});
+
+test("R37: an xref stream's own dict is the trailer when it is last; objects in an object stream are listed as any other", async () => {
+  const inner = ["<< /Producer (packed) >>", "[62 0 R]"];
+  const header = `60 0 61 ${inner[0].length + 1} `;
+  const objs = {
+    1: "<< /Type /Catalog /Pages 2 0 R /Meta 61 0 R >>",
+    2: "<< /Type /Pages /Kids [] >>",
+    62: "(loose)",
+    70: { dict: `/Type /ObjStm /N 2 /First ${header.length} /Filter /FlateDecode`, data: flate(header + inner.join(" ")) },
+    95: { dict: "/Type /XRef /Root 1 0 R /Info 60 0 R /W [1 2 1] /Size 96", data: "" },
+  };
+  const d = await openPdf(build(objs, { trailer: "" }));
+  const got = d.objects();
+  assert.deepEqual(plain(got.trailer), { Type: { t: "name", v: "XRef" }, Root: ref(1), Info: ref(60), W: { t: "arr", items: [1, 2, 1] }, Size: 96, Length: 0 });
+  assert.deepEqual(nums(got.objects), [1, 2, 60, 61, 62]);   // neither the container (70) nor the xref stream (95)
+  assert.equal(got.objects[2].value.map.Producer.v, "packed");
+  assert.equal(got.objects[2].gen, 0);
+  assert.deepEqual(got.unresolved, []);
+  // file order decides between the two shapes, as R10's choice does
+  const classicFirst = await openPdf(build(objs, { header: "%PDF-1.7\ntrailer\n<< /Root 2 0 R >>\n", trailer: "" }));
+  assert.equal(plain(classicFirst.objects().trailer).Type.v, "XRef");
+  const classicLast = await openPdf(build(objs, { trailer: "trailer\n<< /Root 2 0 R >>\n" }));
+  assert.deepEqual(plain(classicLast.objects().trailer), { Root: ref(2) });
+  assert.deepEqual(nums(classicLast.objects().objects), [2]);
+});
+
+test("R37: every reference on those chains that cannot be resolved is listed once as {num, gen}", async () => {
+  const bad = { dict: "/Type /ObjStm /N 1 /First 5 /Filter /FlateDecode", data: "not deflate" };  // would hold 61
+  const d = await openPdf(build({
+    1: "<< /Type /Catalog /Pages 2 0 R /A [99 3 R 99 3 R 61 0 R 80 0 R 82 0 R] /B << /C 83 0 R >> >>",
+    2: "<< /Type /Pages /Kids [] /Again 99 3 R >>",
+    70: bad,
+    80: "81 0 R",   // a cycle of bare references: neither resolves
+    81: "80 0 R",
+    82: "null",     // resolves to nothing
+    83: "<< /Next 84 1 R >>",
+  }, { trailer: "trailer\n<< /Root 1 0 R /Encrypt 98 0 R >>\n" }));
+  const got = d.objects();
+  assert.deepEqual(nums(got.objects), [1, 2, 83]);
+  assert.deepEqual(got.unresolved, [{ num: 61, gen: 0 }, { num: 80, gen: 0 }, { num: 81, gen: 0 },
+    { num: 82, gen: 0 }, { num: 84, gen: 1 }, { num: 98, gen: 0 }, { num: 99, gen: 3 }]);
+  for (const u of got.unresolved) assert.equal(d.resolve({ t: "ref", n: u.num, g: u.gen }), null);
+});
+
+test("R37: null when no trailer can be read; a long chain is walked whole; never throws", async () => {
+  assert.equal((await openPdf(build({ 1: "<< /Type /Catalog >>" }, { trailer: "" }))).objects(), null);
+  assert.equal((await openPdf(build({ 1: "<< /Type /Catalog >>" }, { trailer: "trailer\n[1 0 R]\n" }))).objects(), null);
+  const chain = {};
+  for (let k = 1; k <= 5000; k++) chain[k] = k < 5000 ? `<< /Next ${k + 1} 0 R >>` : "<< /End true >>";
+  const long = (await openPdf(build(chain, { trailer: "trailer\n<< /Root 1 0 R >>\n" }))).objects();
+  assert.equal(long.objects.length, 5000);
+  assert.deepEqual(long.unresolved, []);
+  const good = build({ 1: "<< /Type /Catalog /Pages 2 0 R >>", 2: "<< /Type /Pages /Kids [3 0 R] >>", 3: "<< /Type /Page /Parent 2 0 R >>" },
+    { trailer: "trailer\n<< /Root 1 0 R /Size 4 >>\n" });
+  for (let n = 0; n <= good.length; n += 3) {
+    const d = await openPdf(good.subarray(0, n));
+    const got = d && d.objects();
+    assert.ok(got === null || (got && Array.isArray(got.objects) && Array.isArray(got.unresolved)), `cut at ${n}`);
+  }
+  let seed = 11;
+  const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) & 0xff;
+  for (let k = 0; k < 40; k++) {
+    const u = new Uint8Array([...bytesOf("%PDF-1.7\ntrailer << /Root 1 0 R >>\n"), ...new Uint8Array(300).map(rnd)]);
+    const got = (await openPdf(u)).objects();
+    assert.ok(got === null || Array.isArray(got.objects));
+  }
+  assert.doesNotThrow(() => new PdfDoc(good).objects());   // before any read step: answers, never throws
 });

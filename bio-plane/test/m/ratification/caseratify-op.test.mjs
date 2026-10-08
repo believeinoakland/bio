@@ -152,7 +152,7 @@ test("R2, R4: the ceremonies' dispatch answers op=caseratify and op=ratify throu
   assert.deepEqual(p.fetched, [], "nothing was asked of the store");
 });
 
-test("R38: a case document carrying a malformed working_on is refused GATE_REFUSED with C-41.17 before any write; a notice id commits", async () => {
+test("R8 (case-catalogue R3, once R38 here): a case document carrying a malformed working_on is refused GATE_REFUSED with C-41.17 before any write; a notice id commits", async () => {
   const bad = await setup({ mutate: (d) => ({ ...d, working_on: "not-a-notice" }) });
   const r = await bad.run();
   assert.deepEqual([r.status, r.body.reason, r.body.findings.map((x) => x.check)], [409, "GATE_REFUSED", ["C-41.17"]]);

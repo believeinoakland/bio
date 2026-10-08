@@ -1,0 +1,79 @@
+# doc-clean (T39)
+
+**Status** · session_01RzWTiZh7mVWEYFtHXN4VP5 · depth 2 · COMPLETE · handled B5
+
+## Completion
+
+**Paths for `modules.json`** · `paths`: `bio-plane/src/doc-clean/`; `tests`: `bio-plane/test/m/doc-clean/`. Checks below were run with these filled in locally (not committed: `modules.json` is BOB's).
+
+**Reading set** · read whole (about 170 KB, under the 300 KB limit): `build/requirements/doc-clean.md`; the public parts of `image-cover`, `pdf-reader`, `ooxml`, `office-readers`, `odf-reader` and `test-support` (the last two readers read whole only after B3 added them to my Uses); layer 1's row and contract in `build/layers.md`; `build/plan/current.md` (entry T39-2c and the rules at the opening); `build/plan/draft-T39-N806.md`; K2248, K2315, K2333, K2334, K2340 in `build/rulings.md`; `pdf-worker/test/make-pdf.mjs`, `bio-plane/src/image-cover/index.mjs`, image-cover's `measure.test.mjs` (as the R4 pattern). No fixture of another module was read. `PdfDoc`'s value shapes (`{t:"dict", map}`, `{t:"stream", dict}`, strings as one character a byte or decoded UTF-16) were learned by probing its interface, not by reading `pdfstructure.mjs`.
+
+**Entry applied** · T39-2c (N806; K2315, K2333, K2334, K2340, K2346): new module, R1–R9.
+- `index.mjs` · `cleanDocument(bytes)`, `CLEAN_MAX_BYTES` (16 MiB), `CLEAN_MAX_PART_BYTES` (32 MiB, a package part's declared size), `CLEAN_REFUSALS`. Format from the bytes (R1): `%PDF-` in the first KB; a ZIP through `ooxml.discriminate` (a twin named by its plain twin; a plain ZIP `ARCHIVE`); a compound file `ENCRYPTED` when it holds an `EncryptedPackage`, else `NOT_A_CLEANABLE_FORMAT`; otherwise text (UTF-8, UTF-16 by BOM, or single-byte with no control byte), HTML when any HTML tag appears (whatever the encoding) and refused `HTML_EMBEDS_IMAGE` on a `data:image` URI (also entity-escaped); RTF, XML/SVG, PostScript and MIME refused `NOT_A_CLEANABLE_FORMAT`. Never throws (an unexpected fault answers `DOCUMENT_UNREADABLE`).
+- `pdf.mjs` · `objects()` read; any `unresolved` refused `DOCUMENT_UNREADABLE` (J1 3); walk from `/Root` only, so `/Info`, earlier revisions, XMP and orphans are not written; `/Metadata`, `/PieceInfo`, `/LastModified` dropped everywhere; an annotation's `/T` (not a widget's), `/M`, `/CreationDate`; a signature's identity keys, a signature field's `/V`, the catalog's `/Perms` and `/DSS` (K2346); `/EF` anywhere or an `/EmbeddedFile` stream `EMBEDDED_FILE`; every DCT/JPX stream (and `/Thumb`) stripped by `image-cover.stripMetadata`, a JPEG or JPEG 2000 under another filter refused; content streams (pages, forms, patterns, Type 3 glyphs, appearances) decoded and scanned for an inline DCT image; written as one object per number in old-number order, generation 0, classic xref, trailer `/Size` `/Root` only. The reader's values are shared, never mutated. `clean:true` only when nothing is removed and the file is one revision whose every object (object streams' included) is kept.
+- `package.mjs` · duplicates, part size, `embeddings/`, `vbaProject.bin`, ODF `Object N` (directory or file) and manifest-listed ODF sub-documents, ODF encryption checked before reading; each part read through `readPart`, images by their bytes (`images.mjs`), metadata parts edited (`xml.mjs`); `docProps/custom.xml` removed with its relationship and override; a fresh ZIP, same order, original methods, 1980-01-01 00:00, no extra field or comment; `clean:true` only when nothing changed and the original ZIP already has that form.
+- `images.mjs` · JPEG, PNG, GIF, WebP, JP2/J2K stripped (refusals relayed under their own codes, `detail` naming the part or object); TIFF, HEIC/AVIF, JPEG XL, a BMP with a colour profile or holding a JPEG/PNG, an EMF/WMF/SVM holding a JPEG or PNG, an SVG with `<image>`/`<metadata>` refused `IMAGE_NOT_CLEANABLE`; an EMZ/WMZ/SVGZ checked inside and its gzip header written without name or time.
+- `xml.mjs` · one byte-level pass, prefixes from the part's own declarations, edits only shorten, so a freshly inflated part is edited in its own buffer (R4).
+- R6 beyond the listed fields (J1 6, accepted in B3): as J1 6, plus R6's K2346 signatures.
+
+**R4 measured (workerd through Miniflare, `measure.test.mjs`, three runs)** · peak resident growth includes the 16 MiB request body and the answer. 16 MiB PDF (400 pages, 1,000 objects in an object stream, 8 large JPEGs with EXIF): 176–255 ms, 75–91 MB. 16 MiB PDF of ~135,000 small annotation objects: 920–1,206 ms, 72–89 MB. 16 MiB .docx (a 32 MiB `document.xml` with a tracked change in every paragraph, stored JPEGs): 791–1,109 ms, 65–89 MB. Before the byte editor and the shared PDF values the same files took 365 MB and 126 MB, so `CLEAN_MAX_PART_BYTES` (32 MiB) is the bound these figures hold for.
+
+**Tests** (`bio-plane/test/m/doc-clean/`, every fixture written in the tests; no binary fixture)
+- `clean.test.mjs` (R1, R2, R3, R6, R7, R8, R9): 26 tests. `oracles.test.mjs` (R5): `qpdf --check` (qpdf 11.9.0), pdf.js (pdfjs-dist 4.10.38, via `$PDFJS_DIST`), pdf-reader's text, pages and images, Info-ZIP `unzip -t`, LibreOffice 24 (to PDF, spreadsheets to CSV, text compared through `pdftotext`), and office-readers/odf-reader `text()` equal but for R6's metadata and image content addresses, with no author or date left in their evidentiary items. `measure.test.mjs` (R4).
+- `node --test "test/m/doc-clean/**/*.test.mjs"` with `PDFJS_DIST` set: tests 33, pass 33, fail 0, skipped 0. Without it: the pdf.js test skips by name (32 pass, 1 skipped), per B3 2 until N810.
+- Negative controls (each alone, restored from the commit): keeping `/Metadata` fails 4 of 26; skipping the XML edits fails 5 of 26.
+- LibreOffice 24 cannot load the hand-written .ods fixture at all (comment or not, `settings.xml` or not); the LibreOffice check uses a spreadsheet LibreOffice writes itself from the .xlsx fixture, which is also a real-world case.
+- Layer tests: none named in the manifest. No module uses doc-clean yet; no generated artifact includes it (the plane does not import it until case-carriage does), so none is staled.
+
+**Checks** (with the paths above filled in locally)
+- `checks/format.mjs bio`: 139 modules, 137 requirements files; 0 failures.
+- `checks/architecture.mjs bio doc-clean`: 9 product files, 28 relative imports; 0 failures.
+- `checks/coverage.mjs bio doc-clean`: 9 of 9 live requirement ids named by a test; 0 failures.
+- `checks/ownership.mjs bio doc-clean tranche/T39`: 10 files changed by doc-clean between tranche/T39 and HEAD; 0 failures.
+
+**Deferred** · none of the requirements. Not built (outside R2/R6's words, for BOB): video and audio parts (`ppt/media/*.mp4`, PDF RichMedia/3D) carry their own metadata (an MP4's creation time, a phone's GPS) and pass unchanged as non-images; a JBIG2 stream's comment segments; an EMF's description string (the producing application); SVG editor attributes (`inkscape:export-filename`); `xl/printerSettings` (a printer's name); `customXml/` items (SharePoint properties can name people).
+
+**Found in other modules**
+- `pdf-reader` (R20/R37 values): a string starting `FE FF` is answered as decoded UTF-16 and an odd-length one loses its last byte, so a binary string (rare outside `/ID`, encryption and signatures, all now removed or refused) cannot be written back byte for byte. And R22's `streamDecoded` answers a Promise, which its text ("returns") does not say.
+- `office-readers` / Excel: a legacy Excel comment's text usually begins with its author's name in bold (Excel writes it there); R6 keeps a comment's own text, so that name stays. Bob's or BOB's call whether R6 should remove a leading `Name:` run.
+- `pdfjs-dist` as bio-plane's dev dependency: N810 (B3).
+
+Size (session_01RzWTiZh7mVWEYFtHXN4VP5): test runs 30, module lines 877 (code) + 983 (tests) = 1,860, 3% over P6's 1,200–1,800 estimate.
+
+## Completion of B5 (K2351)
+
+**Applied** · R3 `EMBEDDED_MEDIA` and R6's K2351 removals, each tested:
+- `EMBEDDED_MEDIA`, judged from the bytes: ISO media (MP4, QuickTime, 3GP, M4A; any `ftyp` that is not HEIF/AVIF), WAV/AVI, AIFF, Matroska/WebM, ASF/WMV, MP3 (ID3 or a frame header, never a UTF-16 byte-order mark), Ogg, FLAC, MIDI, MPEG video, AMR, also inside a gzip part; in a PDF a RichMedia, 3D, Movie, Sound or Screen annotation, a media clip, a sound object, a U3D/PRC stream. Each named by part or object.
+- OOXML `customXml/` and any `printerSettings/` parts removed; every internal relationship whose target resolves to a removed part dropped from its `.rels`, and the source part's `r:id` attributes naming it removed (Excel's `<pageSetup r:id>`), the content-type overrides too (`docProps/custom.xml` now goes the same way).
+- An EMF's header description (the producing application, the picture's name) zeroed, with its count and offset set to 0; inside an EMZ the EMF is re-gzipped with no name or time.
+- An SVG's Inkscape, Sodipodi and Adobe (Illustrator, SVG viewer, Extensibility, Graphs, Variables, SaveForWeb, ImageReplacement, Flows, GenericCustomNamespace, XPath) elements, with their content, and attributes removed (`xml.mjs` gains whole-namespace removal and value-conditional attributes).
+- JBIG2 comment extension segments (ASCII and Unicode, types 0x20000000 and 0x20000002) dropped from a `JBIG2Decode` image and from its `JBIG2Globals` (a Flate-compressed globals stream is decoded first and written unfiltered when changed); a segment stream that cannot be walked, or a segment of unstated length, is refused `IMAGE_NOT_CLEANABLE`.
+- A legacy Excel comment's first run removed when it is bold and its text is one of the part's authors followed by a colon (read before the authors are emptied); a bold run naming no author stays, as the comment's own text.
+
+**Tests and checks**
+- `clean.test.mjs` gains 4 tests (one R3, three R6); the xlsx fixture's comment now carries Excel's real author run. `node --test "test/m/doc-clean/**/*.test.mjs"` with `PDFJS_DIST`: tests 37, pass 37, fail 0, skipped 0.
+- Negative control: without the media refusal, the R3 media test fails (29 pass, 1 fail); restored.
+- R4 re-measured after the change: 16 MiB PDF 910 ms / 79.5 MB; small-object PDF 1,201 ms / 84.1 MB; 16 MiB .docx 1,116 ms / 65.7 MB.
+- `checks/format.mjs bio`: 139 modules, 137 requirements files; 0 failures. `checks/architecture.mjs bio doc-clean`: 9 product files, 29 relative imports; 0 failures. `checks/coverage.mjs bio doc-clean`: 9 of 9; 0 failures. `checks/ownership.mjs bio doc-clean tranche/T39`: 10 files; 0 failures (with `modules.json`'s committed paths).
+
+Size (session_01RzWTiZh7mVWEYFtHXN4VP5): test runs 36, module lines 1,055 (code) + 1,059 (tests) = 2,114, under P6's 4,000 report line.
+
+## J1 · QUESTION
+
+Building on these readings; none blocks me. Answer only where you disagree.
+
+1. **Uses (needs your act).** R5's test compares `office-readers` (docx/xlsx/pptx entries' `text`) and `odf-reader` (odt/ods/odp `text`) for original and copy; the architecture check counts test imports, so `doc-clean`'s `uses` needs `office-readers` and `odf-reader` (both earlier in the order, layer 1). Please add them with `paths`/`tests`.
+2. **Oracles.** `qpdf` and `pdfjs-dist` are not in the repository (no module's dev dependency; `bio-plane/package.json` is not mine). My tests call `qpdf --check` when it is on PATH and pdf.js from `pdfjs-dist` resolvable from `bio-plane` (or `$PDFJS_DIST`), and skip those checks by name otherwise, as test-support's make-zip test does for `unzip`/Python. I installed both in this session and will record their results. Whether to add `pdfjs-dist` as a dev dependency is yours.
+3. **R3 DOCUMENT_UNREADABLE, fail closed.** A PDF whose `objects()` answers any `unresolved` reference is refused `DOCUMENT_UNREADABLE` naming the object (it may be an object the reader could not decode, and a copy without it would be partial, R8); likewise a content stream that cannot be decoded (so inline images cannot be checked), a reachable `/ObjStm` or `/XRef` stream, a duplicate part name, or a part `readPart` refuses.
+4. **R4 memory.** Besides the 16 MiB file limit, a package part declaring more than a per-part bound (set from the workerd measurement, about 32 MiB uncompressed) is refused `DOCUMENT_TOO_LARGE` naming the part: a 16 MiB ZIP can declare 256 MiB parts, which would not fit the 128 MB isolate.
+5. **R1 text and HTML.** `text` is bytes that decode as UTF-8 (or UTF-16 with a BOM, or single-byte text with no control bytes but tab, CR, LF, FF). HTML is judged by WHATWG's MIME-sniffing tags on the decoded text, so a UTF-16 HTML file is still checked for `data:image`. Text-shaped formats that can carry images or authorship (`{\rtf`, `<?xml`/SVG, `%!PS`, MIME mail) are `NOT_A_CLEANABLE_FORMAT`. CFB files: an `EncryptedPackage` stream (an encrypted OOXML) is `ENCRYPTED`, any other CFB (.doc, .xls) `NOT_A_CLEANABLE_FORMAT`. A ZIP `discriminate` leaves `undetermined` because a part is unreadable is `DOCUMENT_UNREADABLE`; any other undetermined ZIP is `NOT_A_CLEANABLE_FORMAT`.
+6. **R6, a little more than listed (same kind, nothing visible changed).** PDF: `/Metadata` and `/PieceInfo` removed from every dictionary (an application's private data can hold a whole original file), `/LastModified` everywhere, an annotation's `/CreationDate`; `/T` and `/M` removed from every annotation except a `Widget` (whose `/T` is a form field's name, not an author); trailer `/ID` not carried. OOXML: Word's `w:date` on comments and changes; `word/people.xml` names and user ids; PowerPoint's modern `ppt/authors.xml`; Excel's `xl/persons` and shared-workbook revision `userName`s; `x15ac:absPath` (a local folder path naming the user) and `fileSharing@userName`; `w:attachedTemplate` with its external relationship (a template path). ODF: `meta:user-defined` (as `custom.xml`), `meta:printed-by`, `meta:print-date`, annotations' `meta:creator-initials`.
+7. **Found, not built (yours).** A digitally signed PDF: the signature dictionary names the signer (`/Name`, the certificate in `/Contents`, `/Location`, `/Reason`) and the rewrite invalidates the signature anyway. My reading: outside R6's list, carried as it is. Tell me if it should be refused or removed.
+
+## J2 · COMPLETE
+
+T39-2c done: doc-clean R1-R9 built (cleanDocument; PDF rewritten whole from its latest revision, OOXML/ODF repackaged, every image through image-cover.stripMetadata, R6 incl. K2346 signatures; refusals by name). Please set modules.json paths [bio-plane/src/doc-clean/] and tests [bio-plane/test/m/doc-clean/]. doc-clean 33/33 (pdf.js via PDFJS_DIST; without it 1 skip by name until N810); qpdf, pdf.js, unzip -t, LibreOffice oracles pass; format, architecture, coverage 9/9, ownership 0 failures with those paths filled in locally. R4 in workerd: 16 MiB PDF ~0.2 s / <=91 MB, 135k-object PDF ~1 s / <=89 MB, 16 MiB docx ~1 s / <=89 MB (incl. body and answer). 877 code + 983 test lines (3% over P6's estimate). No artifact staled. Findings for you (record): videos and other non-image parts keep their own metadata; Excel legacy comment text begins with its author's name; pdf-reader's binary strings beginning FE FF and R22's async streamDecoded. Details in my record.
+
+## J3 · COMPLETE · re B5
+
+B5 (K2351) done: EMBEDDED_MEDIA (video/audio parts by their bytes; PDF RichMedia, 3D, movie, sound, screen, media clips); customXml and printerSettings parts removed with their relationships, overrides and r:id references; EMF descriptions zeroed (EMZ re-gzipped); SVG Inkscape/Sodipodi/Adobe markup removed; JBIG2 comment segments dropped (image and globals); Excel's bold leading author run removed. doc-clean 37/37 with pdf.js; format, architecture, coverage 9/9, ownership 0 failures on the committed paths. R4 re-measured: <=84 MB. 1,055 code + 1,059 test lines. Details in my record.

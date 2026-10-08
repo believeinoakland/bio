@@ -1,16 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, writeFileSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { writeFileSync, readdirSync } from 'node:fs';
+import { join, dirname } from 'node:path';
 import net from 'node:net';
-import { stubSdk, success, request, startRunner, conversation, filesUnder, until } from './helpers.mjs';
+import { stubSdk, success, request, startRunner, conversation, filesUnder, until, MEMBER, SENTINEL } from './helpers.mjs';
 
-const SECRET = request().credential.secret;
 const QUIET = ['DISABLE_TELEMETRY', 'DISABLE_ERROR_REPORTING', 'DISABLE_AUTOUPDATER', 'CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC'];
 
 test('R1 one query per request, Claude Code with nothing of its own on, captured at the SDK boundary', async () => {
   const { calls, sdk } = stubSdk(async () => success());
-  const r = await startRunner(sdk);
+  const r = await startRunner(sdk, { signedIn: MEMBER });
   try {
     const req = request({ max_turns: 7 });
     const { final } = await conversation(r.base, req);
@@ -35,54 +34,72 @@ test('R1 one query per request, Claude Code with nothing of its own on, captured
   } finally { await r.stop(); }
 });
 
-test('R2 the credential is only in that query\'s environment, which replaces the process environment whole', async () => {
-  for (const [kind, variable, other] of [['subscription', 'CLAUDE_CODE_OAUTH_TOKEN', 'ANTHROPIC_API_KEY'],
-    ['apikey', 'ANTHROPIC_API_KEY', 'CLAUDE_CODE_OAUTH_TOKEN']]) {
-    let dirDuring;
-    const { calls, sdk } = stubSdk(async (call) => { dirDuring = existsSync(call.options.env.CLAUDE_CONFIG_DIR); return success(); });
-    const r = await startRunner(sdk);
-    process.env.AGENT_RUNNER_TEST_LEAK = 'process-only';
-    const ca0 = process.env.NODE_EXTRA_CA_CERTS;
-    delete process.env.NODE_EXTRA_CA_CERTS;
-    try {
-      const { final } = await conversation(r.base, request({ credential: { kind, secret: SECRET } }));
-      assert.equal(final.ok, true);
-      const env = calls[0].options.env;
-      assert.equal(env[variable], SECRET);
-      assert.ok(!(other in env));
-      assert.ok(!('AGENT_RUNNER_TEST_LEAK' in env), 'nothing of the process environment is inherited');
-      assert.deepEqual(Object.keys(env).sort(), ['CLAUDE_AGENT_SDK_CLIENT_APP', 'CLAUDE_CONFIG_DIR', 'HOME', 'PATH', 'TMPDIR',
-        variable, ...QUIET].sort());
-      assert.equal(process.env[variable], undefined, 'the runner never sets the credential in its own environment');
-      assert.ok(env.CLAUDE_CONFIG_DIR.startsWith(r.tmpRoot));
-      assert.ok(dirDuring, 'the config directory exists while the query runs');
-      await until(() => !existsSync(env.CLAUDE_CONFIG_DIR));
-      // the one variable passed from the process: the container CA's path (R10's egress), when the image sets it
-      process.env.NODE_EXTRA_CA_CERTS = '/etc/cloudflare/certs/cloudflare-containers-ca.crt';
-      await conversation(r.base, request({ credential: { kind, secret: SECRET } }));
-      assert.deepEqual(Object.keys(calls[1].options.env).sort(), [...Object.keys(env), 'NODE_EXTRA_CA_CERTS'].sort());
-      assert.equal(calls[1].options.env.NODE_EXTRA_CA_CERTS, process.env.NODE_EXTRA_CA_CERTS);
-    } finally {
-      delete process.env.AGENT_RUNNER_TEST_LEAK;
-      if (ca0 === undefined) delete process.env.NODE_EXTRA_CA_CERTS; else process.env.NODE_EXTRA_CA_CERTS = ca0;
-      await r.stop();
-    }
+test('R2 a conversation runs under the stored sign-in made for its member, in an environment that replaces the process environment whole, with neither credential variable', async () => {
+  const { calls, sdk } = stubSdk(async () => success());
+  const r = await startRunner(sdk, { signedIn: MEMBER });
+  process.env.AGENT_RUNNER_TEST_LEAK = 'process-only';
+  const ca0 = process.env.NODE_EXTRA_CA_CERTS;
+  delete process.env.NODE_EXTRA_CA_CERTS;
+  try {
+    const { final } = await conversation(r.base, request());
+    assert.equal(final.ok, true);
+    const env = calls[0].options.env;
+    assert.ok(!('AGENT_RUNNER_TEST_LEAK' in env), 'nothing of the process environment is inherited');
+    assert.deepEqual(Object.keys(env).sort(), ['CLAUDE_AGENT_SDK_CLIENT_APP', 'CLAUDE_CONFIG_DIR', 'HOME', 'PATH', 'TMPDIR', ...QUIET].sort(),
+      'neither CLAUDE_CODE_OAUTH_TOKEN nor ANTHROPIC_API_KEY');
+    assert.equal(env.CLAUDE_CONFIG_DIR, r.signin.configDir, 'no fresh directory: the stored sign-in\'s own, as the binary left it');
+    for (const k of ['HOME', 'TMPDIR']) assert.ok(env[k].startsWith(r.tmpRoot), `${k} is the query's temporary directory`);
+    await until(() => readdirSync(r.tmpRoot).length === 0);
+    // the one variable passed from the process: the container CA's path (R10's egress), when the image sets it
+    process.env.NODE_EXTRA_CA_CERTS = '/etc/cloudflare/certs/cloudflare-containers-ca.crt';
+    await conversation(r.base, request());
+    assert.deepEqual(Object.keys(calls[1].options.env).sort(), [...Object.keys(env), 'NODE_EXTRA_CA_CERTS'].sort());
+    assert.equal(calls[1].options.env.NODE_EXTRA_CA_CERTS, process.env.NODE_EXTRA_CA_CERTS);
+  } finally {
+    delete process.env.AGENT_RUNNER_TEST_LEAK;
+    if (ca0 === undefined) delete process.env.NODE_EXTRA_CA_CERTS; else process.env.NODE_EXTRA_CA_CERTS = ca0;
+    await r.stop();
   }
 });
 
-test('R2 a request with no credential, another kind or an empty secret answers NO_CREDENTIAL and starts nothing', async () => {
+test('R2 R8 every credential but {kind: "signin", member} answers NO_CREDENTIAL and starts nothing; a sentinel token in a subscription or apikey credential is in no output', async () => {
+  const logged = [];
+  const orig = { log: console.log, error: console.error, warn: console.warn, out: process.stdout.write, err: process.stderr.write };
   const { calls, sdk } = stubSdk(async () => success());
-  const r = await startRunner(sdk);
+  // signed in for MEMBER, so no refusal below is for want of a sign-in
+  const r = await startRunner(sdk, { signedIn: MEMBER });
+  const ran = r.claude.runs().length;
+  const frames = [];
+  console.log = console.error = console.warn = (...a) => { logged.push(a.join(' ')); };
+  process.stdout.write = process.stderr.write = (s) => { logged.push(String(s)); return true; };
+  let files = [], made = null, ranAfter = null;
   try {
-    for (const credential of [undefined, null, {}, { kind: 'password', secret: 'x' }, { kind: 'subscription', secret: '' },
-      { kind: 'apikey' }, { kind: 'apikey', secret: 42 }, 'subscription']) {
+    for (const credential of [
+      { kind: 'subscription', secret: SENTINEL }, { kind: 'apikey', secret: SENTINEL },
+      { kind: 'subscription', member: MEMBER, secret: SENTINEL }, { kind: 'apikey', member: MEMBER, secret: SENTINEL },
+      { kind: 'signin', member: MEMBER, secret: SENTINEL }, { kind: 'signin', member: MEMBER, secret: '' },
+      { kind: 'subscription', member: MEMBER }, { kind: 'apikey', member: MEMBER }, { kind: 'password', secret: 'x' },
+      undefined, null, {}, 'signin', ['signin'], { kind: 'signin' }, { kind: 'signin', member: '' }, { kind: 'signin', member: 7 },
+      { kind: 'signin', member: [MEMBER] }, { member: MEMBER }]) {
       const req = request(); if (credential === undefined) delete req.credential; else req.credential = credential;
-      const { final } = await conversation(r.base, req);
-      assert.deepEqual({ ok: final.ok, code: final.code }, { ok: false, code: 'NO_CREDENTIAL' });
+      const got = await conversation(r.base, req);
+      frames.push(...got.frames);
+      assert.deepEqual({ ok: got.final.ok, code: got.final.code }, { ok: false, code: 'NO_CREDENTIAL' }, JSON.stringify(credential));
     }
-    assert.equal(calls.length, 0);
-    assert.deepEqual(readdirSync(r.tmpRoot), [], 'no temporary directory was made');
-  } finally { await r.stop(); }
+    made = readdirSync(r.tmpRoot);
+    ranAfter = r.claude.runs().length;
+    files = [...filesUnder(r.tmpRoot), ...filesUnder(r.signinRoot)];
+  } finally {
+    Object.assign(console, { log: orig.log, error: orig.error, warn: orig.warn });
+    process.stdout.write = orig.out; process.stderr.write = orig.err;
+    await r.stop();
+  }
+  assert.equal(calls.length, 0, 'no query started');
+  assert.equal(ranAfter, ran, 'the binary was not run');
+  assert.deepEqual(made, [], 'no temporary directory was made');
+  assert.ok(!JSON.stringify(frames).includes(SENTINEL), 'the sentinel is in no answer');
+  assert.ok(!logged.join('\n').includes(SENTINEL), 'nor in a log line');
+  assert.ok(files.every((f) => !f.text.includes(SENTINEL)), 'nor in a file');
 });
 
 test('R3 the model sees only the request\'s tools; each call is relayed and the caller\'s result returned unchanged', async () => {
@@ -93,7 +110,7 @@ test('R3 the model sees only the request\'s tools; each call is relayed and the 
     await callTool('Bash', { command: 'ls' });
     return success();
   });
-  const r = await startRunner(sdk);
+  const r = await startRunner(sdk, { signedIn: MEMBER });
   try {
     const tools = [
       { name: 'search', description: 'Search', input_schema: { type: 'object', properties: { q: { type: 'string' } }, required: ['q'] } },
@@ -124,7 +141,7 @@ test('R4 the end is answered with result, stop_reason, num_turns and usage as th
   ];
   for (const [res, want] of cases) {
     const { sdk } = stubSdk(async () => res);
-    const r = await startRunner(sdk);
+    const r = await startRunner(sdk, { signedIn: MEMBER });
     try {
       const { final, code } = await conversation(r.base, request());
       assert.deepEqual(final, want);
@@ -144,7 +161,7 @@ test('R4 errors: the SDK erring, max_turns reached, a bad request; detail at mos
   ];
   for (const [script, code] of cases) {
     const { sdk } = stubSdk(script);
-    const r = await startRunner(sdk);
+    const r = await startRunner(sdk, { signedIn: MEMBER });
     try {
       const { final } = await conversation(r.base, request());
       assert.equal(final.ok, false);
@@ -154,7 +171,7 @@ test('R4 errors: the SDK erring, max_turns reached, a bad request; detail at mos
     } finally { await r.stop(); }
   }
   const { calls, sdk } = stubSdk(async () => success());
-  const r = await startRunner(sdk);
+  const r = await startRunner(sdk, { signedIn: MEMBER });
   try {
     for (const bad of ['not json', '[1]', request({ model: '' }), request({ max_turns: 0 }), request({ tools: [{ name: 'a b' }] }),
       request({ tools: [{ name: 'a', description: '', input_schema: {} }, { name: 'a', description: '', input_schema: {} }] })]) {
@@ -173,7 +190,7 @@ test('R4 a closed connection aborts the query', async () => {
     aborted = signal.aborted;
     return success();
   });
-  const r = await startRunner(sdk);
+  const r = await startRunner(sdk, { signedIn: MEMBER });
   try {
     const { final } = await conversation(r.base, request(), undefined, { closeAfterRelay: true });
     assert.equal(final, undefined);
@@ -183,57 +200,28 @@ test('R4 a closed connection aborts the query', async () => {
   } finally { await r.stop(); }
 });
 
-test('R8 a sentinel secret is in no answer, relay, error, log line or file after the query', async () => {
-  const logged = [];
-  const orig = { log: console.log, error: console.error, warn: console.warn, out: process.stdout.write, err: process.stderr.write };
-  const grab = (...a) => { logged.push(a.join(' ')); };
-  let leftBehind = [];
-  const { sdk } = stubSdk(async (call, { callTool }) => {
-    call.options.stderr(`auth with ${SECRET}\n`);
-    writeFileSync(join(call.options.env.CLAUDE_CONFIG_DIR, '.credentials.json'), SECRET);
-    await callTool('search', { q: 'x' });
-    throw new Error(`401 for token ${SECRET}`);
-  });
-  const r = await startRunner(sdk);
-  console.log = console.error = console.warn = grab;
-  process.stdout.write = process.stderr.write = (s) => { logged.push(String(s)); return true; };
-  let frames;
-  try {
-    ({ frames } = await conversation(r.base, request(), () => ({ content: 'ok' })));
-    await until(() => readdirSync(r.tmpRoot).length === 0);
-    leftBehind = filesUnder(r.tmpRoot);
-  } finally {
-    Object.assign(console, { log: orig.log, error: orig.error, warn: orig.warn });
-    process.stdout.write = orig.out; process.stderr.write = orig.err;
-    await r.stop();
-  }
-  assert.ok(frames.some((f) => f.tool_use), 'a relay was sent');
-  assert.equal(frames.at(-1).code, 'SDK_ERROR');
-  assert.ok(!JSON.stringify(frames).includes(SECRET));
-  assert.ok(!logged.join('\n').includes(SECRET));
-  assert.ok(leftBehind.every((f) => !f.text.includes(SECRET)));
-});
-
 test('R9 nothing survives a conversation; a second request on a fresh connection sees nothing of the first', async () => {
   const seen = [];
   const { calls, sdk } = stubSdk(async (call) => {
     const env = call.options.env;
-    seen.push(filesUnder(env.CLAUDE_CONFIG_DIR).map((f) => f.path));
+    seen.push(filesUnder(dirname(env.HOME)).map((f) => f.path));
     writeFileSync(join(env.HOME, 'notes'), 'first');
     writeFileSync(join(env.TMPDIR, 'scratch'), 'first');
     writeFileSync(join(call.options.cwd, 'work'), 'first');
     return success();
   });
-  const r = await startRunner(sdk);
+  const r = await startRunner(sdk, { signedIn: MEMBER });
   try {
     await conversation(r.base, request());
     await until(() => readdirSync(r.tmpRoot).length === 0);
     await conversation(r.base, request());
     await until(() => readdirSync(r.tmpRoot).length === 0);
-    const [a, b] = calls.map((c) => c.options.env);
-    assert.notEqual(a.CLAUDE_CONFIG_DIR, b.CLAUDE_CONFIG_DIR);
-    for (const env of [a, b]) for (const k of ['HOME', 'TMPDIR']) assert.ok(env[k].startsWith(env.CLAUDE_CONFIG_DIR));
-    for (const c of calls) assert.ok(c.options.cwd.startsWith(c.options.env.CLAUDE_CONFIG_DIR));
+    const dirs = calls.map((c) => dirname(c.options.env.HOME));
+    assert.notEqual(dirs[0], dirs[1]);
+    calls.forEach((c, i) => {
+      assert.ok(dirs[i].startsWith(r.tmpRoot));
+      for (const p of [c.options.env.TMPDIR, c.options.cwd]) assert.ok(p.startsWith(dirs[i]));
+    });
     assert.deepEqual(seen, [[], []], 'each query starts in an empty directory');
     assert.deepEqual(readdirSync(r.tmpRoot), []);
   } finally { await r.stop(); }
@@ -244,7 +232,7 @@ test('R10 its only egress is the model API: no outbound connection of its own, C
   const connect = net.Socket.prototype.connect;
   const fetch0 = globalThis.fetch;
   const { calls, sdk } = stubSdk(async (call, { callTool }) => { await callTool('search', { q: 'x' }); return success(); });
-  const r = await startRunner(sdk);
+  const r = await startRunner(sdk, { signedIn: MEMBER });
   net.Socket.prototype.connect = function (...a) {
     const first = Array.isArray(a[0]) ? a[0][0] : a[0];
     const o = typeof first === 'object' ? first : { port: first, host: a[1] };

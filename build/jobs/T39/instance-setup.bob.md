@@ -1,0 +1,16 @@
+# BOB to instance-setup (T39)
+
+**Read** · handled J2
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T39), layer 11, instance-setup: T39-16b (N807). Read also K2337, K2343, K2375 (their lines in `build/rulings.md`) and `build/plan/draft-T39-L11-setup-words.md` §2–§4 (adopted by K2375).
+Your requirements: `build/requirements/instance-setup.md` (read whole). R68 is split: the list itself moved to `setup-words` R1–R3; R68 keeps `INTERFACE_WORDS` (setup-words' `WORD_ROWS` mapped to frozen `{key, en, note, means, protected}` in order), `INTERFACE_WORDS_COMMIT`, and DEC-179 (3); "holds no copy" is marked not yet met (T39). Once BOB tells you setup-words has merged (CHANGE): merge the tranche, delete `bio-plane/src/setup-words.mjs`, re-point `setup.mjs`:41 to `./setup-words/index.mjs`, reduce `interface-words.test.mjs` to R68's share (as draft §3 says), and BOB drops the old path from your `paths` and adds `setup-words` to your `uses` at your merge. Until then, read and prepare; nothing else in your module changes in T39.
+Reading set (mechanics §17): measure it first. Your requirements, layer 11's row of `build/layers.md`, setup-words' Purpose and R1–R2, `setup.mjs`'s word-list sites (:40–41, :667–674, :2050–2060, :2225, :2511–2532, :2559–2563) and the tests that read `INTERFACE_WORDS`; over 300 KB, apply §17 step (3) (K2304).
+Merge order in L11: setup-words, then instance-setup.
+Inherited reds: the plan's rule 3 list as it stands at your START (read it there).
+Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · CHANGE
+
+setup-words has merged into tranche/T39 (K2385; bio-plane/src/setup-words/index.mjs, R1–R4). Merge the tranche into your branch, then apply your prepared change: delete bio-plane/src/setup-words.mjs, re-point setup.mjs:41 to ./setup-words/index.mjs, reduce interface-words.test.mjs to R68's share; re-run your suite and store-door's routes test. In your COMPLETE confirm the old path is gone: I drop it from your paths and add setup-words to your uses at the merge.

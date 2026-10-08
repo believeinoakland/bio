@@ -39949,7 +39949,8 @@ var PdfDoc = class {
   constructor(bytes) {
     this.bytes = bytes;
     this.s = LATIN1.decode(bytes);
-    this.objects = /* @__PURE__ */ new Map();
+    this._objs = /* @__PURE__ */ new Map();
+    this._gens = /* @__PURE__ */ new Map();
     this.pageIndexByObj = /* @__PURE__ */ new Map();
     this._pageOrder = [];
     this.pageCount = 0;
@@ -39976,12 +39977,15 @@ var PdfDoc = class {
       const num = parseInt(m2[1], 10);
       const bodyStart = m2.index + m2[0].length;
       const r2 = parseValueSafe(s2, bodyStart);
-      if (r2) this.objects.set(num, r2.value);
+      if (r2) {
+        this._objs.set(num, r2.value);
+        this._gens.set(num, parseInt(m2[2], 10));
+      }
     }
   }
   resolve(v2, seen = 0) {
     while (v2 && v2.t === "ref" && seen < 64) {
-      v2 = this.objects.get(v2.n);
+      v2 = this._objs.get(v2.n);
       seen++;
     }
     if (v2 && v2.t === "ref") return null;
@@ -40060,7 +40064,7 @@ var PdfDoc = class {
    *  uncompressed one is the safer read). */
   async loadObjectStreams() {
     const streams = [];
-    for (const v2 of this.objects.values()) {
+    for (const v2 of this._objs.values()) {
       if (v2 && v2.t === "stream") {
         const type = v2.dict.Type;
         if (type && type.t === "name" && type.v === "ObjStm") streams.push(v2);
@@ -40081,9 +40085,9 @@ var PdfDoc = class {
         const objNum = header[i2 * 2];
         const off = header[i2 * 2 + 1];
         if (!Number.isFinite(objNum) || !Number.isFinite(off)) continue;
-        if (this.objects.has(objNum)) continue;
+        if (this._objs.has(objNum)) continue;
         const r2 = parseValueSafe(inner, first + off);
-        if (r2) this.objects.set(objNum, r2.value);
+        if (r2) this._objs.set(objNum, r2.value);
       }
     }
   }
@@ -40091,7 +40095,7 @@ var PdfDoc = class {
    *  object-number order if the tree cannot be walked (leniency). */
   buildPageIndex() {
     let root = null;
-    for (const v2 of this.objects.values()) {
+    for (const v2 of this._objs.values()) {
       const map = v2 && v2.t === "dict" ? v2.map : null;
       if (map && map.Type && map.Type.t === "name" && map.Type.v === "Catalog") {
         root = map;
@@ -40122,7 +40126,7 @@ var PdfDoc = class {
     }
     if (this.pageIndexByObj.size === 0) {
       const pages = [];
-      for (const [num, v2] of this.objects) {
+      for (const [num, v2] of this._objs) {
         const map = v2 && (v2.t === "dict" ? v2.map : v2.t === "stream" ? v2.dict : null);
         if (map && map.Type && map.Type.t === "name" && map.Type.v === "Page") pages.push(num);
       }
@@ -40154,7 +40158,7 @@ var PdfDoc = class {
   isEncrypted() {
     if (this._encrypted !== void 0) return this._encrypted;
     let enc = false;
-    for (const v2 of this.objects.values()) {
+    for (const v2 of this._objs.values()) {
       const map = v2 && (v2.t === "dict" ? v2.map : v2.t === "stream" ? v2.dict : null);
       if (!map) continue;
       const filter = map.Filter;
@@ -40184,26 +40188,67 @@ var PdfDoc = class {
    *  `loadObjectStreams` so an /Info living inside an object stream resolves. */
   infoDict() {
     if (this._info !== void 0) return this._info;
+    const cands = this._trailers().filter((map) => map.Info && map.Info.t === "ref").map((map) => map.Info);
+    for (let i2 = cands.length - 1; i2 >= 0; i2--) {
+      const map = this.dictOf(cands[i2]);
+      if (map) return this._info = map;
+    }
+    return this._info = null;
+  }
+  /** Every trailer dict in file order: each classic `trailer << … >>` and each
+   *  `/Type /XRef` stream's own dict, by where it sits. R10 and R37 both choose
+   *  from this one list, so the two cannot disagree about which is the last. */
+  _trailers() {
     const cands = [];
     const re2 = /\btrailer\b/g;
     let m2;
     while (m2 = re2.exec(this.s)) {
       const r2 = parseValueSafe(this.s, m2.index + 7);
-      const map = r2 && r2.value && r2.value.t === "dict" ? r2.value.map : null;
-      if (map && map.Info && map.Info.t === "ref") cands.push([m2.index, map.Info]);
+      if (r2 && r2.value && r2.value.t === "dict") cands.push([m2.index, r2.value.map]);
     }
-    for (const v2 of this.objects.values()) {
-      if (!v2 || v2.t !== "stream") continue;
-      const type = v2.dict.Type;
-      if (!(type && type.t === "name" && type.v === "XRef")) continue;
-      if (v2.dict.Info && v2.dict.Info.t === "ref") cands.push([v2.start, v2.dict.Info]);
+    for (const v2 of this._objs.values()) {
+      const type = v2 && v2.t === "stream" ? v2.dict.Type : null;
+      if (type && type.t === "name" && type.v === "XRef") cands.push([v2.start, v2.dict]);
     }
-    cands.sort((a2, b2) => a2[0] - b2[0]);
-    for (let i2 = cands.length - 1; i2 >= 0; i2--) {
-      const map = this.dictOf(cands[i2][1]);
-      if (map) return this._info = map;
+    return cands.sort((a2, b2) => a2[0] - b2[0]).map((c2) => c2[1]);
+  }
+  /** R37: the latest revision as a rewrite reads it — the last trailer, every
+   *  indirect object reachable from it by any chain of references (each once,
+   *  ascending, its value as `resolve` answers it, its generation the one its
+   *  winning definition states), and every reference on those chains that
+   *  resolves to nothing. An object no chain reaches (an earlier revision's, an
+   *  object stream's container) is not in it. Null without a readable trailer;
+   *  never throws. The walk is iterative, so a deep or cyclic file cannot
+   *  exhaust the stack. */
+  objects() {
+    try {
+      const trailers = this._trailers();
+      if (!trailers.length) return null;
+      const trailer = trailers[trailers.length - 1];
+      const found = /* @__PURE__ */ new Map(), missing = /* @__PURE__ */ new Map(), queue = [];
+      const refsIn = (v2) => {
+        for (const stack = [v2]; stack.length; ) {
+          const x2 = stack.pop();
+          if (!x2 || typeof x2 !== "object") continue;
+          if (x2.t === "ref") queue.push(x2);
+          else if (x2.t === "arr") for (const it2 of x2.items) stack.push(it2);
+          else if (x2.t === "dict" || x2.t === "stream") for (const it2 of Object.values(x2.t === "dict" ? x2.map : x2.dict)) stack.push(it2);
+        }
+      };
+      refsIn({ t: "dict", map: trailer });
+      for (let i2 = 0; i2 < queue.length; i2++) {
+        const { n: n2, g: g2 } = queue[i2];
+        if (found.has(n2) || missing.has(n2)) continue;
+        const value = this.resolve({ t: "ref", n: n2, g: g2 });
+        if (value === null) missing.set(n2, { num: n2, gen: g2 });
+        else found.set(n2, { num: n2, gen: this._gens.get(n2) ?? 0, value });
+        refsIn(this._objs.get(n2));
+      }
+      const asc = (m2) => [...m2.values()].sort((a2, b2) => a2.num - b2.num);
+      return { trailer, objects: asc(found), unresolved: asc(missing) };
+    } catch {
+      return null;
     }
-    return this._info = null;
   }
 };
 function numberVal(v2) {
@@ -41698,11 +41743,11 @@ function extractActive(doc) {
   }
   const efNodes = embeddedTreeNodes(doc);
   const items = [];
-  for (const num of [...doc.objects.keys()].sort((a2, b2) => a2 - b2)) {
+  for (const num of [...doc._objs.keys()].sort((a2, b2) => a2 - b2)) {
     const page = pageOf.has(num) ? pageOf.get(num) : null;
     walkActive(
       doc,
-      doc.objects.get(num),
+      doc._objs.get(num),
       efNodes,
       0,
       (kind, key, detail) => items.push({ kind, where: { object: num, page, key }, detail })

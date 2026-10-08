@@ -100,7 +100,7 @@ test("R40: no place is named in the module's behaviour or outward text", async (
   texts.push(w.prov.captureGrade(a.sha), w.prov.captureGrade(sha("none")), w.prov.declareOrigin({ bundleId: "x", by: "" }));
   texts.push(w.prov.registerHolds({ sha: a.sha, bundle: "INFO-2026-0001-a" }), w.prov.registeredFor("INFO-2026-0001-a"));
   texts.push(w.prov.recordReceipt({ addressNorm: "e.org/a", captureSha: a.sha }), w.prov.receipts({}),
-             w.prov.receiptsOfCapture({ captureSha: a.sha }));
+             w.prov.receiptsOfCapture({ captureSha: a.sha }), w.prov.fetchedByThisCopy(a.sha));
   /* Every refusal row this module exports. */
   texts.push(Object.values(CHECKS));
   for (const x of texts) assert.equal(place.test(JSON.stringify(x)), false, JSON.stringify(x).slice(0, 200));

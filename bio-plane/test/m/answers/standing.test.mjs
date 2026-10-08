@@ -1,6 +1,7 @@
 /* Standing questions (R15–R21), at the interface, over the real retrieval (its saved-query runner, R70), duties and
-   credentials. The scheduler's tick is driven with the test's clock; the ceiling and the standing answerer are the
-   test's providers (ai-runs not merged; J1 (5)). The copy is in the test profile's zone, so "today" is a local day. */
+   credentials. The scheduler's tick is driven with the test's clock; the ceiling (ai-runs' `aiUseCheck`, which the
+   composition root hands in as `ceilingRefusal`) and the standing answerer are the test's providers (J1 (5)). The copy
+   is in the test profile's zone, so "today" is a local day. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { answersWorld, answer, V } from "./fixture.mjs";
@@ -267,6 +268,54 @@ test("R19 keep-away is never reported as no_account, nor an account's refusal as
                        { aiKeptAway: () => undefined }])
     assert.deepEqual(await step(creds), { condition: "kept_away", code: null, translation: null }, "fail closed, no row to carry");
   assert.equal(calls.length, 0);
+});
+
+test("R19 the sign-in arm (T39; N803, K2304, K2343): an author served by their own Claude sign-in has the ceiling read as for any account, then R32 refuses STANDING_SWITCH_OFF (N796 held): held back {switch_off, member}, never no_account or kept_away; no account carried, no grant minted, no model called; the finds told once, answer null", async () => {
+  const w = answersWorld();
+  const calls = [], touched = [];
+  const real = w.credentials;
+  w.a.deps.credentials = new Proxy(real, { get: (t, k) => { const v = t[k]; return typeof v === "function" ? (...a) => { touched.push(String(k)); return v.apply(t, a); } : v; } });
+  w.a.resolved.delete("credentials");
+  /* every condition but the sign-in's missing switch would let it run: the copy's switch and the answerer */
+  assert.equal(w.a.standingAiSwitch({ on: true, by: ALICE }).ok, true);
+  w.a.registerStandingAnswerer("agent-worker", async (x) => { calls.push(x); return answer(); });
+  /* carol holds no reference of her own and the group no key: her sign-in is what serves her (credentials R35, R43) */
+  assert.equal((await real.subscriptionConnected({ member: "carol" })).ok, true);
+  const acct = await real.accountFor({ member: "carol", act: { kind: "standing", member: CAROL } });
+  assert.deepEqual([acct.ok, acct.kind, acct.level, acct.member], [true, "signin", "member", "carol"]);
+  const minted = await real.aiGrantMintStanding({ member: CAROL, question: "q" });
+  assert.equal(minted.code ?? minted.reason, "STANDING_SWITCH_OFF", "R32 refuses a sign-in's standing question");
+  const q = set(w, { author: CAROL });
+  await w.a.standingTick(w.clock.now);
+  let n = 0;
+  const step = async () => {
+    w.document(`budget ${++n}`, { title: `Budget ${n}` });
+    w.at(new Date(Date.parse("2026-10-07T15:00:00.000Z") + (n - 1) * 86400000).toISOString());
+    touched.length = 0;
+    const mine = (await w.a.standingTick(w.clock.now)).ran.find((x) => x.id === q.id);
+    assert.equal(mine.new_found, true);
+    return mine.held_back;
+  };
+  const grants = () => w.rows(`SELECT * FROM ai_grants`).length;
+  const held = { condition: "switch_off", switch: "member" };
+  assert.deepEqual(await step(), held);
+  assert.deepEqual(touched, ["aiKeptAway", "accountFor", "aiGrantMintStanding"], "keep-away, the account, then the grant");
+  assert.deepEqual(w.ceiling.asked.map((x) => x.member), ["carol"], "the ceiling read as for any account, before the grant");
+  assert.equal(calls.length, 0, "no model called"); assert.equal(grants(), 0, "no grant minted");
+  /* the ceiling's refusal holds it back first, as for any account */
+  w.ceiling.refusal = { ok: false, code: "AI_USE_CEILING_REACHED", translation: "You have reached your own daily limit." };
+  assert.deepEqual(await step(), { condition: "ceiling", code: "AI_USE_CEILING_REACHED", translation: "You have reached your own daily limit." });
+  assert.deepEqual(touched, ["aiKeptAway", "accountFor"], "no grant asked for past the ceiling");
+  w.ceiling.refusal = null;
+  assert.deepEqual(await step(), held);
+  /* the run's new finds reach the author once, as R26's do: answer null, and nothing of the account is kept */
+  const entries = w.a.standingAnswersFor({ member: CAROL }).entries;
+  assert.equal(entries.length, 3);
+  for (const e of entries) { assert.equal(e.answer, null); assert.equal(e.finds.ids.length, 1); assert.equal(e.label, STANDING_LABEL); }
+  assert.deepEqual(entries.at(-1).held_back, held);
+  assert.deepEqual(w.a.standingAnswersFor({ member: CAROL, after: entries.at(-1).run }).entries, [], "told once");
+  assert.doesNotMatch(JSON.stringify(w.rows(`SELECT * FROM standing_runs`)), /signin|no_account|kept_away/);
+  assert.equal(calls.length, 0); assert.equal(grants(), 0);
 });
 
 test("R20 standingAnswersFor answers a member's own new-find runs, once each, in run order after `after`, at most 200, with a cursor, labelled machine work from the standing question; nothing of another member's", async () => {

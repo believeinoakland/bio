@@ -1,0 +1,9 @@
+Depth 2. You build a new module. Your entry: `build/plan/current.md` (T39), layer 1, doc-clean: T39-2c (N806). Read also the plan's "Rules at the opening", K2248, K2315, K2333 and K2334 (Bob's: a member-supplied document's own metadata is removed too) in `build/rulings.md`, and `build/plan/draft-T39-N806.md` whole (the packaging, the refusals, the tests).
+Your requirements: `build/requirements/doc-clean.md` (read whole; every id is yours, marked `*(not yet met: T39)*`). `modules.json` lists you with empty `paths` and `tests` (K1043): create `bio-plane/src/doc-clean/` and `bio-plane/test/m/doc-clean/` and name them in your COMPLETE; BOB fills them in before your ownership check.
+You use two services built concurrently in this layer: image-cover's `stripMetadata` and pdf-reader's `PdfDoc.objects()`. Build and test against their requirement text; merge the tranche branch into yours when BOB tells you each has merged (CHANGE), and finish your tests against the merged code. You merge last in L1.
+Test fixtures: generate them in tests (`test-support`'s zip helper, small PDFs written by your tests); no binary fixture over 64 KB. Measure R4's size limit in the plane's isolate as the requirement says, or state in your record how you measured it.
+P6: a new module, expected about 1,200–1,800 lines; report if you would pass about 4,000.
+Reading set (mechanics §17): 64 KB (its own requirements and the used modules' public parts), under the 300 KB limit: read it whole, and state in your record that you did.
+Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+Merge order in L1: bundler → pdf-reader → image-cover → doc-clean (doc-clean uses the other two and merges last).
+Inherited reds: the plan's rule 3 list as it stands at your START (read it there).

@@ -11,7 +11,7 @@ import { reevaluationOf } from "../../../src/reevaluation/index.mjs";
 import { publicReadOf } from "../../../src/public-read/index.mjs";
 import { networkNoticesOf } from "../../../src/network-notices/index.mjs";
 import { docketOf, docketOps, DOCKET_TABLES } from "../../../src/docket/index.mjs";
-import { CASE_CARRIAGE_MARK_TABLES } from "../../../src/case-carriage/index.mjs";
+import { CASE_CARRIAGE_MARK_TABLES, CASE_CARRIAGE_DOCUMENT_TABLES } from "../../../src/case-carriage/index.mjs";
 
 const DK = [...DOCKET_TABLES];
 const tableNames = (x) => [...x.ctx.storage.sql.exec(`SELECT name FROM sqlite_master WHERE type='table'`)].map((r) => r.name);
@@ -48,10 +48,11 @@ test("R15, R2, R18, R23 (K1643; T37, K2226): docket is built after publication, 
   assert.equal(at("docket"), at("case-tensions") + 1, "docket directly after case-tensions");
   assert.ok(at("docket") < at("network-notices"), "before network-notices");
   assert.ok(at("docket") < at("conformance"), "before layer 9");
-  /* case-carriage's purgeable tables are exactly its marks and copies; its held materials stay exempt (its R6, R12) */
+  /* case-carriage's purgeable tables are exactly its marks, photo copies and member documents' queue and copies (its R12;
+     T39, K2377); its held materials stay exempt (its R6, R12) */
   const rc = recordOf(x.ctx);
   const mine = Object.keys(rc.purge().removed).filter((t) => rc.declarePurge("zz-probe", [t]).declaredBy === "case-carriage");
-  assert.deepEqual(mine.sort(), CASE_CARRIAGE_MARK_TABLES.map((t) => t.name).sort());
+  assert.deepEqual(mine.sort(), [...CASE_CARRIAGE_MARK_TABLES, ...CASE_CARRIAGE_DOCUMENT_TABLES].map((t) => t.name).sort());
   /* and a whole-store purge clears a mark it holds */
   x.ctx.storage.sql.exec(`INSERT INTO photo_marks (capture, areas, by, at) VALUES (?, '[]', 'member:olive', 't')`, "a".repeat(64));
   rc.purge();

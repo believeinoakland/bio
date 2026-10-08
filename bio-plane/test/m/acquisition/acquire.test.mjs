@@ -137,7 +137,7 @@ test("R3 R32: the archive arm needs an eligible address, finds a memento through
   assert.equal(look.body.chosen.digest, sha("archived bytes"), "the row is over the bytes received");
   assert.ok(Array.isArray(look.body.rejected) && look.body.rejected.length === 1, "the refused memento is named");
   assert.deepEqual([lw.prov.receipts.length, lw.b.calls.filter((c) => c[0] === "put").length], [0, 0], "nothing captured or stored");
-assert.equal((await lookup(w, routes, { address: "https://fresh.example/" })).body.reason, "NOT_ELIGIBLE");
+  assert.equal((await lookup(w, routes, { address: "https://fresh.example/" })).body.reason, "NOT_ELIGIBLE");
   assert.equal((await lookup(w, routes, { address: "ftp://x" })).body.reason, "BAD_ADDRESS");
 });
 
@@ -679,12 +679,11 @@ test("R20 R28: every capture asks attestation's attest for a timestamp and, wher
 
 test("R8 R25 R26: acquire writes no bundle or register row, keeps the raw bytes under their own digest beside separate derived artifacts, and answers no reading", async () => {
   const w = world();
-  const count = () => w.rows(`SELECT (SELECT count(*) FROM bundles) b, (SELECT count(*) FROM files) f, (SELECT count(*) FROM history) h, (SELECT count(*) FROM manifest) m`)[0];
+  const count = () => w.rows(`SELECT (SELECT count(*) FROM bundles) b, (SELECT count(*) FROM files) f, (SELECT count(*) FROM history) h, (SELECT count(*) FROM manifest) m, (SELECT count(*) FROM register) r`)[0];
   const before = { ...count() };
   const routes = { "https://s.example/p": () => page(SITE()), "https://s.example/s.css": () => new Response("x{}", { headers: { "content-type": "text/css" } }) };
   const r = await run(w, routes, { locator: "https://s.example/p", subresources: true });
-  assert.deepEqual({ ...count() }, before, "no bundle, file, history or manifest row");
-  assert.ok(!("registerHolds" in w.prov && w.prov.register), "no register write is asked");
+  assert.deepEqual({ ...count() }, before, "no bundle, file, history, manifest or register row");
   const d = r.body.document;
   assert.ok(w.held(d.capture.sha256));
   assert.equal(sha(w.bytesOf(d.capture.sha256)), d.capture.sha256, "the raw bytes as served");

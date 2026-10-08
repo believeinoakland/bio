@@ -66,10 +66,6 @@ export const WARNED = Object.freeze({ own_device: true, no_macros: true });
 export const FILE_SAFETY_COUNT_KINDS = Object.freeze(["files_scanned", "files_found", "holds_placed", "holds_released",
   "deeper_checks", "sandbox_submissions", "safe_views", "safe_copies", "reputation_listed"]);
 const CREDENTIAL_COUNT_KINDS = Object.freeze(["signin", "credential", "rate", "handover", "through"]);
-/* R6: the routes by which this copy fetched a file itself (direct, Drive and render all record `direct`; a web
-   archive `archive.org`; a capture request's fetch `capture-request`). A doorbell's file was handed in. */
-export const FETCHED_VIAS = Object.freeze(["direct", "archive.org", "capture-request"]);
-const UNPACKED = "unpacked";
 /* R32: the use a tool is put to, and the recipient a routine tool must have (its own servers). */
 export const TOOL_USES = Object.freeze(["on_request", "routine"]);
 /* The catalogue states that recipient in words ("the organization's own MetaDefender Core server", "Microsoft (the
@@ -503,21 +499,15 @@ export class FileSafety {
 
   /* ===== the threat grade (R6, R7, R20) ===== */
 
-  /* R6's source condition: some receipt is a fetch by this copy, or the file was cut from an archive whose own source
-     condition holds (K1949: one such receipt suffices). `path` is the archives already walked, so a chain that meets
-     a digest twice, or runs past `ARCHIVE_DEPTH_MAX` levels, ends not fetched. */
-  #sourceOf(sha, path = []) {
-    const rows = this.#receiptsOf(sha);
-    const routes = [...new Set(rows.map((r) => r.via || "direct"))].sort();
-    if (rows.some((r) => FETCHED_VIAS.includes(r.via || "direct"))) return { fetched: true, routes, archive: null };
-    for (const r of rows.filter((x) => x.via === UNPACKED)) {
-      const m = /^zip:([0-9a-f]{64})!(\d+)$/.exec(r.retrieval_locator || "");
-      if (!m || path.includes(m[1]) || path.length >= 3) continue;
-      if (this.#sourceOf(m[1], [...path, sha]).fetched) return { fetched: true, routes, archive: m[1] };
-    }
-    const first = rows.find((x) => x.via === UNPACKED);
-    const m = first ? /^zip:([0-9a-f]{64})!/.exec(first.retrieval_locator || "") : null;
-    return { fetched: false, routes, archive: m ? m[1] : null };
+  /* R6's source condition is provenance's one definition, its R62 (N806, K2333): a fetch by this copy, or a file cut
+     from an archive whose own answer is fetched. Its answer is `source` as given; one that cannot be read is not
+     fetched (R62 fails closed the same way). */
+  async #fetched(sha) {
+    try {
+      const a = await this.provenance.fetchedByThisCopy(sha);
+      if (a && typeof a === "object" && typeof a.fetched === "boolean") return a;
+    } catch { /* below */ }
+    return { fetched: false, routes: [], archive: null };
   }
 
   /* An archive's whole listing, every page, read as an in-plane caller (the viewer's sight was asked first). */
@@ -542,8 +532,8 @@ export class FileSafety {
     if (cache.has(sha)) return cache.get(sha);
     const reasons = [];
     const add = (code, extra) => { if (!reasons.some((r) => r.code === code)) reasons.push(reasonOf(code, extra)); };
-    const source = this.#sourceOf(sha);
-    if (!source.fetched) add("source_not_fetched");
+    const source = await this.#fetched(sha);
+    if (source.fetched !== true) add("source_not_fetched");
     const bytes = await this.#bytes(sha);
     const format = bytes ? formatOf(bytes) : "unknown";
     let active = null, archive = null;

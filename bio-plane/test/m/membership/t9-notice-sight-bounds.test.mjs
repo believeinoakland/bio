@@ -42,7 +42,7 @@ test("R79 a revocation (R20) notifies every listener once, inside the act, after
   const r = w.m.memberSet({ memberId: "ann", status: "revoked", by: "second" });
   assert.equal(r.ok, true);
   assert.deepEqual(heard.map(([mod, n]) => [mod, n.memberId, n.by]), [["capture-sources", "ann", "second"], ["second-module", "ann", "second"]],
-    "once per listener, in the order they registered");
+    "once per listener, in MODULE_ORDER (an unknown module last)");
   assert.match(heard[0][1].at, /^\d{4}-\d\d-\d\dT/);
   assert.deepEqual(Object.keys(heard[0][1]).sort(), ["at", "by", "memberId"]);
   assert.deepEqual(seen, [["revoked", 0]]);

@@ -1,0 +1,13 @@
+# BOB to image-cover (T39)
+
+**Read** · handled J1
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T39), layer 1, image-cover: T39-2a (N806). Read also the plan's "Rules at the opening", K2248, K2315, K2333 and K2334 (their lines in `build/rulings.md`), and `build/plan/draft-T39-N806.md` (the packaging; your share is §2 item 3 and §3's image-cover lines).
+Your requirements: `build/requirements/image-cover.md` (read whole); the new ids marked `*(not yet met: T39)*` are yours: `stripMetadata` removes every segment, chunk or box R2 forbids from JPEG (any process), PNG, GIF, WebP and JP2/J2K without re-encoding (the coded data byte-identical), and a reference decoder's pixels for the output equal the input's. Its user is the new `doc-clean` (same layer, merging after you), built against the requirement concurrently: keep the answer's shape exactly as stated.
+Coverage (K874, K2340): R8 and R9 already read as named by older tests by chance; name each in a new test of its own, so coverage reads them truly.
+Reading set (mechanics §17): 55 KB, under the 300 KB limit: read it whole, and state in your record that you did.
+Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+Merge order in L1: bundler → pdf-reader → image-cover → doc-clean (doc-clean uses the other two and merges last).
+Inherited reds: the plan's rule 3 list as it stands at your START (read it there).

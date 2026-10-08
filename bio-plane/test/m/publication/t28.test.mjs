@@ -195,6 +195,8 @@ test("R57 a document's bytes held only in the evidence store are registered and 
   const { w, proj, roles } = base();
   const big = sha("bytes held in the evidence store only");
   w.st.sql.exec(`INSERT INTO register (capture_sha, bundle_id, path, encoding, bytes, registered) VALUES (?, ?, 'snapshots/big.pdf', 'binary', 999, ?)`, big, DOC, NOW);
+  /* fetched by this copy (provenance R62), so case-carriage carries it whole as captured (its R13; T39) */
+  assert.equal(w.prov.recordReceipt({ addressNorm: "example.org/big.pdf", captureSha: big, retrieved: NOW, via: "direct" }).recorded, true);
   const docSha = sha(textOf(DOC));
   w.units.set(docSha, { units: UNITS, state: "partial" });
   const materials = [
@@ -229,6 +231,8 @@ test("R57 (K1315) the timestamp tokens an included document's provenance names a
             { path: "attestations/stamp.tsr", text: token }, { path: "data/provenance.json", text: JSON.stringify(prov) }],
     meta: { object_type: "information" }, register: [{ sha256: sha(body), path: `snapshots/${id}.txt`, encoding: "utf8", bytes: Buffer.byteLength(body) }] });
   assert.equal(res.ok, true, JSON.stringify(res).slice(0, 300));
+  /* fetched by this copy (provenance R62), so case-carriage carries it whole as captured (its R13; T39) */
+  assert.equal(w.prov.recordReceipt({ addressNorm: `example.org/${id}`, captureSha: sha(body), retrieved: NOW, via: "direct" }).recorded, true);
   w.prepare(CASE, 1, { project: proj, roles, materials: [{ ref: id, kind: "document", sha: sha(body), text_sha: null, included: true, rests_under: "load_bearing" }] });
   const r = w.signCase(CASE, 1, { project: proj, roster: roster(roles) });
   assert.deepEqual(r.materials, [{ sha: sha(body), held: "inline" }, { sha: sha(token), held: "inline" }]);

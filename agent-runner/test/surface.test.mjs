@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import net from 'node:net';
-import { stubSdk, success, request, startRunner, conversation } from './helpers.mjs';
+import { stubSdk, success, request, startRunner, conversation, MEMBER } from './helpers.mjs';
 import { imageReference, readManifest } from '../src/manifest.mjs';
 import { parseJsonc } from '../../bio-plane/scripts/jsonc.mjs';
 
@@ -113,7 +113,7 @@ test('R11 no place is named in its behaviour, outward text or configuration; the
     read('../src/worker.mjs'), read('../src/entry.mjs'), read('../src/runner.mjs'), read('../src/ws.mjs'), read('../src/manifest.mjs'),
     read('../src/env.mjs'), read('../src/signin.mjs')];
   const { sdk } = stubSdk(async (call, { callTool }) => { await callTool('search', {}); return success(); });
-  const r = await startRunner(sdk);
+  const r = await startRunner(sdk, { signedIn: MEMBER });
   try {
     texts.push(await (await fetch(`http://${r.base}/version`)).text(), await (await fetch(`http://${r.base}/x`)).text());
     texts.push(JSON.stringify((await conversation(r.base, request())).frames));

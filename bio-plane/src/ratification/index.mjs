@@ -67,7 +67,7 @@ import { operatorCaseRefusal, machineCaseRefusal, testimonyCaseRefusal, attribut
          anonymousTestimonyRefusal } from "./refusals.mjs";
 import { release, examineMember, PLANE_VIEWER } from "./release.mjs";
 import { retire } from "./retire.mjs";
-import { checkedOf, checkedDiffers, scheduleUncheckableRefusal, scheduledStop, refusedStop,
+import { checkedOf, checkedDiffers, scheduleUncheckableRefusal, scheduledStop, refusedStop, commitStops,
          unreadableStop } from "./schedule.mjs";
 import { copyMaterials } from "./ops.mjs";
 import { verifySshsig, caseRatifyStatement, NS_RATIFY } from "../sshsig.mjs";
@@ -866,7 +866,7 @@ export class Ratification {
       const done = this.#commitPlan(plan, { sigArmored: sig, attestorKey: keyB64, attestorMember: signer, gateVersion,
                                             deliveredBy }, hold);
       if (!done || !done.ok || done.existed) {
-        stopped.push(refusedStop(done && done.existed ? { reason: "CASE_EDITION_ALREADY_RATIFIED" } : done));
+        stopped.push(...commitStops(done && done.existed ? { reason: "CASE_EDITION_ALREADY_RATIFIED" } : done));
         return { ok: false, stopped };
       }
       return done;

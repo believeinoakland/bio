@@ -180,13 +180,25 @@ export function scheduledStop(code, extra = {}) {
   /* END DEC-49 REGION is-scheduled-stop */
 }
 
-/** R42: the stop entry for a refusal one of signing's checks answers again at the set time. */
+/** R42: the stop entry for a refusal one of signing's checks, or the commit itself, answers at the set time: its `cause`
+ *  carries the refusal's own code, and its check and translation exactly as it answered them, when it has a row (the
+ *  commit's C-122.6 `PHOTO_MARKS_CHANGED_SINCE` among them; T39, N805, K2308). */
 export function refusedStop(refusal) {
   const r = refusal && typeof refusal === "object" ? refusal : {};
   return scheduledStop("SCHEDULED_CHECK_REFUSED", { cause: { code: r.reason ?? r.code ?? "UNREADABLE",
+    ...(typeof r.check === "string" ? { check: r.check } : {}),
     ...(typeof r.translation === "string" ? { translation: r.translation } : {}),
     ...(typeof r.detail === "string" ? { detail: r.detail } : {}),
     ...(Array.isArray(r.findings) ? { findings: r.findings } : {}) } });
+}
+
+/** R42 (K2370): the stop entries for a refusal of the commit itself, one per refusal it answers: each of its
+ *  `refusals` (publication R57 answers C-122.6 and C-122.7 there when both hold, the first also at top level), else
+ *  the one refusal it is. */
+export function commitStops(refusal) {
+  const list = refusal && typeof refusal === "object" && Array.isArray(refusal.refusals)
+    ? refusal.refusals.filter((r) => r && typeof r === "object") : [];
+  return (list.length ? list : [refusal]).map(refusedStop);
 }
 
 /** R42: the stop entry for what could not be read at the set time: a read that fails stops, never passes. */

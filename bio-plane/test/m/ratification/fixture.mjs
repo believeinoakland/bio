@@ -12,6 +12,7 @@
 import { DatabaseSync } from "node:sqlite";
 import { createHash, webcrypto } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
+import { PROVENANCE_SCHEMA } from "../../../src/provenance/schema.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { registerInquiryGrammar } from "../../../src/inquiry-grammar/index.mjs";
@@ -96,10 +97,13 @@ export const bucketOver = (m) => ({
   put: async (k, v) => { m.set(k, v instanceof Uint8Array ? v : new TextEncoder().encode(String(v))); },
 });
 
-export function world({ steer = {}, worker = null } = {}) {
+export function world({ steer = {}, worker = null, carriage = null } = {}) {
   const st = storage();
   const host = { storage: st };
   for (const t of bare(RECORD_SCHEMA).split(";")) if (t.trim()) st.db.exec(t);
+  /* provenance's tables (its R48 read contract: `register`), which the real case-carriage joins when promotion reaches
+     it (T39, K2377); the rows are the test's, as the store's composition root would migrate the tables */
+  for (const t of bare(PROVENANCE_SCHEMA).split(";")) if (t.trim()) st.db.exec(t);
   /* record-core R38's evidence store, over an in-memory bucket (keys `bio/captures/<digest>`); R4's gate probes it */
   const evidence = new Map();
   const record = recordOf(host, { evidence: bucketOver(evidence), evidencePrefix: "bio/captures/" });
@@ -144,7 +148,10 @@ export function world({ steer = {}, worker = null } = {}) {
   const realPub = publicationOf(host, { storage: st, record, membership, promotion, now: () => NOW,
     inquiry: { exclusionsNaming: () => [] }, basisVersions: { testimonyReach: () => bv.reach },
     /* reevaluation R26: publication registers its R41 and R43 at creation (K359); nothing here reads them */
-    reevaluation: { registerCaseParts: () => ({ ok: true }) } });
+    reevaluation: { registerCaseParts: () => ({ ok: true }) },
+    /* (T39) case-carriage's evidence bucket and store namespace, forwarded by publication (its `caseCarriage`), so a
+       test can mark a real photo and carry its obscured copy (case-carriage R9–R14) */
+    ...(carriage || {}) });
   const calls = [];
   const pub = { facts: new Map(), pins: new Map(), resting: new Map(), claims: new Map(), committed: [] };
   /* publication R38's cursor answer (N308), over `pub.resting`'s list for a bundle: one pin per entry, in list order,

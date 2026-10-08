@@ -113,9 +113,9 @@ test("R14 R8 R22 (T37; N757, N763; K2206): bio-case-file/3 states the obscured k
   /* the materials row (case-grammar R12): the original's fingerprints stay, the copy and its label */
   assert.match(SPEC, /The row then states `included: false`, and its `sha`, `text_sha`, `origin` and `archived_copy` stay the original's; `obscured_copy` is the SHA-256 of the copy and `obscured_label` the sentence the published case shows beside the material/);
   /* R8: presentable when the copy is carried at its digest, else missing; its label stated in the answer */
-  assert.match(SPEC, /\n7\. Presentability\.[^\n]*A row stating `obscured_copy` \(a photo carried as its copy\) is presentable when the case file carries an `obscured` file at that SHA-256 under its `ref`, whose bytes rule 1 checks; else the copy is missing[^\n]*Its extracted text and the original's bytes are not asked[^\n]*`\{ref, sha, copy, label\}`/);
+  assert.match(SPEC, /\n7\. Presentability\.[^\n]*A row stating `obscured_copy` \(a photo or a member document carried as its copy\) is presentable when the case file carries an `obscured` file at that SHA-256 under its `ref`, whose bytes rule 1 checks; else the copy is missing[^\n]*Its extracted text and the original's bytes are not asked[^\n]*`\{ref, sha, copy, label\}`/);
   /* case-grammar R14: the complete edition lists the copy */
-  assert.match(SPEC, /A photo carried as its copy is listed with the original's fingerprint, the copy's fingerprint and its label, word for word/);
+  assert.match(SPEC, /A material carried as its copy \(a photo, or a member document's cleaned copy\) is listed with the original's fingerprint, the copy's fingerprint and its label, word for word, when it has one/);
   /* R22 (N763): the criteria rows' captures, only those the edition carries; a row recorded before them is not judged for COPYRIGHTED_TEXT_CARRIED */
   assert.ok(SPEC.includes("binds, passages, captures, label, access_words}`"));
   assert.match(SPEC, /`captures` is the SHA-256 of each capture holding one of the row's `passages` that the edition's `materials:` lists `included: true`, each once, in the order first met: a capture the edition does not carry is never stated/);
@@ -124,6 +124,29 @@ test("R14 R8 R22 (T37; N757, N763; K2206): bio-case-file/3 states the obscured k
   /* /3 keeps every rule of /2 */
   for (const h of ["Integrity", "Signatures", "Passages", "Grades", "The bar", "Publication checks", "Presentability", "Completion",
                    "The complete edition", "Another group's work", "Calculations", "Standards' use"]) assert.match(SPEC, new RegExp(`\\n\\d+\\. ${h}\\.`), h);
+});
+
+test("R14 (T39; N806; K2333, K2343): bio-case-file/3 names a member document's cleaned copy beside a photo's copy as material the obscured kind carries in place of its original, at every place it speaks of the copy, with no format change", () => {
+  const SPEC = CC.CASE_FILE_SPECS[V3];
+  const at = (from, to) => SPEC.slice(SPEC.indexOf(from), SPEC.indexOf(to, SPEC.indexOf(from)));
+  /* section 3, the kind: both copies, each said for what it carries */
+  const kind = at("- `obscured` at `materials/<ref>/obscured`:", "\n");
+  assert.match(kind, /the copy of a material carried in place of its original: a photo's copy, carrying nothing of the original but its pixels, its marked areas, if any, covered solid; or a member document's cleaned copy, every picture in it and the document itself carrying none of their details/);
+  assert.match(kind, /at the SHA-256 the material's `materials:` row names as `obscured_copy`/);
+  /* section 4, the materials row: a member document travels as its copy, and the case states it for each */
+  const row = at("- `materials:`", "\n");
+  assert.match(row, /the material travels as its copy, never whole: a photo with the areas a member marked obscured, or a document a member supplied with the details of who made it, and of its pictures, removed/);
+  assert.match(row, /A published case states it for every photo it carries and for every member document it carries as its copy/);
+  /* rules 3 and 7 speak of the material, not only a photo */
+  assert.match(at("\n7. Presentability.", "\n8."), /\(a photo or a member document carried as its copy\)[^\n]*a passage relied on in such material cannot be found/);
+  /* nowhere is the obscured kind still a photo's alone */
+  for (const old of ["the copy of a photo carried in place of its original", "the photo travels as a copy", "A photo carried as its copy is", "(a photo carried as its copy)", "in such a photo"])
+    assert.equal(SPEC.includes(old), false, old);
+  /* words only: the format, its kinds and the row's fields are as /3 had them */
+  assert.equal(CG.CASE_FILE_FORMAT, V3);
+  assert.ok(SPEC.includes("- `format`: `bio-case-file/3`."));
+  for (const w of ["obscured", "obscured_copy", "obscured_label"]) assert.ok(codeOf(SPEC).has(w), w);
+  for (const v of [V1, V2]) assert.equal(CC.CASE_FILE_SPECS[v].includes("member document"), false, v);
 });
 
 test("R15 (DEC-149): at start the module registers casechecker and casefilespec with public-read, credential-free; a second registration is refused", async () => {

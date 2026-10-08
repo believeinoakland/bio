@@ -138,6 +138,9 @@ Terms. A **capture** is a byte sequence named by its lowercase hex SHA-256 (`cap
 **The C-103 rows the split modules answer through** (N512; BOB's ruling on the seam, decision 6 of `build/plan/draft-T25.md`)
 - **R58** This module exports `PROVENANCE_ACT_CHECKS` (C-103), each row `{check, where, translation}` with its code, number and translation unchanged, and `DOORBELL_ORIGIN` (R51's origin kind). `attestation` answers `RECEIPT_MALFORMED` (C-103.6) and `RECEIPT_NO_KEY` (C-103.7) through it (its R4, R5), and `provenance-routes` answers `NO_BUNDLE` (C-103.3) through it (its R2) and reads `DOORBELL_ORIGIN` (its R1); each row's `where` names the site that raises it, in whichever module that is.
 
+**fetchedByThisCopy(captureSha) → `{fetched, routes, archive}`** (N806; K2333)
+- **R62** Whether this copy fetched the capture itself: the one definition of the source condition that `file-safety` R6 and `case-carriage` R15 read (lifted from `file-safety`, K2333). `fetched` is true when any receipt naming the capture (R60) has a `via` in `FETCHED_VIAS` (exported: `direct`, `archive.org`, `capture-request`; a receipt with no `via` reads `direct`, R13; direct, Drive and render fetches all record `direct`); or when the capture has an `unpacked` receipt (R59) whose retrieval locator names an archive (`zip:<archiveSha>!<index>`) for which this rule answers `fetched: true`, walking outward through at most `ARCHIVE_DEPTH_MAX` archives (`ooxml` R30; one such receipt suffices, K1949). Otherwise false: a pulled knock (`doorbell`, R51), a capture with no receipt (R26's `unrecorded`), a file cut from an archive not itself fetched. A walk that meets a digest twice, runs past the bound, or reads a locator not naming a 64-hex digest and a whole index ends that path not fetched. `routes` is the sorted set of the capture's own receipts' `via`s; `archive` the archive whose answer decided `fetched: true`, else the first archive an `unpacked` receipt names, else null. A `sha:` prefix and case are ignored, as in R5. It writes nothing and never throws: a read that fails answers `fetched: false` (fail closed), with `routes: []`.
+
 ## Private
 
 ### Uses
@@ -147,7 +150,7 @@ Terms. A **capture** is a byte sequence named by its lowercase hex SHA-256 (`cap
 - `membership`: `viewerPredicate` and `sight` (R2's holder, R17, R29); the producing group (R28; not yet a named service in membership's Provides).
 - `promotion`: `promote` (R28) and `registerStep` (R1–R3, R42–R46, R52).
 - `membership`, also: `listenerRefusal` (its R81) and `MODULE_ORDER` (its R83) for R47 and R52.
-- `ooxml`: `ARCHIVE_DEPTH_MAX` (its R30), the bound on R59's recursion (N688; a `modules.json` edge, BOB's, at T35-18's START).
+- `ooxml`: `ARCHIVE_DEPTH_MAX` (its R30), the bound on R59's and R62's recursion (N688; a `modules.json` edge, BOB's, at T35-18's START).
 - (`signatures`' names and `isPublicHttpsLocator` leave with `attestation`, and `getSetting`, `OBSERVATION_STATES`, `registerAuditFinding` and `ROUTE_MARK_CHECKS` with `provenance-routes` (N512); the pure copies kept through T25 were deleted in T26, N516.)
 
 ### Invariants

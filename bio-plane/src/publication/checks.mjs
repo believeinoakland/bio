@@ -4,7 +4,8 @@
  * C-122.1 (R51, N364) is a family of its own here: a case's sources; C-122.2 (R58, DEC-112) and C-122.3, C-122.4 (R59,
  * N522) join it at T28, C-122.5 (R67's stop when no publisher could check a waiting edition; R33, N687) at T35, and
  * C-122.6 (R57's photo marks changed since preparation; N757, K2206) at T37, its translation `words.json`'s
- * `photo.refused.changed` since T38 (DEC-183 (4)).
+ * `photo.refused.changed` since T38 (DEC-183 (4)), and C-122.7 (R57's member document copy changed since preparation;
+ * N806, K2333) at T39.
  * C-92.1–.9 and C-92.13 (the attribution act) moved with the act to `case-tensions` (its R9; T33-62, T33-63), numbers
  * and translations unchanged, and left this table, so no row id is held twice.
  *
@@ -72,6 +73,17 @@ export const CASE_SOURCES_CHECKS = {
     check: 'C-122.6',
     where: 'src/publication/index.mjs commitCaseEdition > is-photo-marks-current',
     translation: 'A mark changed after this case was prepared. Prepare it again before signing.',
+  },
+  /* C-122.7 (R33, R57; N806, K2333): a document a member supplied that the case carries is not carried as its current
+     publication copy (a copy no longer the document's current copy, a document carried whole that needs a copy, or one
+     whose state cannot be read), read through case-carriage's `document` rows (its R13) at the commit; the remedy is a
+     new preparation. The translation is BOB's draft, re-wordable by the UX stream (proposed key
+     `document.refused.changed`). */
+  DOCUMENT_COPY_CHANGED_SINCE: {
+    check: 'C-122.7',
+    where: 'src/publication/index.mjs commitCaseEdition > is-document-copy-current',
+    translation: 'A document a member supplied now needs a different publication copy from the one this case was '
+      + 'prepared with. Prepare the case again. Nothing was published.',
   },
 };
 

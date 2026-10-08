@@ -38,26 +38,26 @@ test("R29 (DEC-149): no row this module holds speaks of \"this instance\" or \"t
   assert.equal(ROWS.length, 12, "the sweep's twelve checks.mjs rows");
 });
 
-test("R29 (DEC-149, index.mjs:536): acquire without evidence storage says \"your group's Civicsmith has no evidence storage configured\", never \"this instance has no evidence storage configured\"", async () => {
+test("R29 (DEC-149, index.mjs:569): acquire without evidence storage says \"your group's Civicsmith has no evidence storage configured\", never \"this instance has no evidence storage configured\"", async () => {
   const r = await run(world({ evidence: false }), {}, { locator: "https://a.example/x" });
   assert.equal(r.body.error, "your group's Civicsmith has no evidence storage configured");
   assert.doesNotMatch(JSON.stringify(r.body), OLD);
 });
 
-test("R1 (DEC-149, index.mjs:544): the capture-request arm's refusal says \"your group's Civicsmith fetches a requested document only from inside its own drain\"", async () => {
+test("R1 (DEC-149, index.mjs:577): the capture-request arm's refusal says \"your group's Civicsmith fetches a requested document only from inside its own drain\"", async () => {
   const r = await run(world(), {}, { via: "capture-request", locator: "https://a.example/x" });
   assert.match(r.body.detail, /^your group's Civicsmith fetches a requested document only from inside its own drain/);
   assert.doesNotMatch(r.body.detail, /this instance fetches a requested document/);
 });
 
-test("R4 (DEC-149, index.mjs:625): a supplied hop fact's refusal says the facts are \"DERIVED by your group's Civicsmith\"", async () => {
+test("R4 (DEC-149, index.mjs:658): a supplied hop fact's refusal says the facts are \"DERIVED by your group's Civicsmith\"", async () => {
   const r = await run(world(), {}, { locator: "https://docs.google.com/document/d/1AbCdEfGhIjKlMnOp/edit", export_address: "https://x.example/" });
   assert.equal(r.body.reason, "DRIVE_HOP_FACT_SUPPLIED");
   assert.match(r.body.detail, /the producer are DERIVED by your group's Civicsmith from the file id/);
   assert.doesNotMatch(r.body.detail, /DERIVED by this instance/);
 });
 
-test("R5 (DEC-149, index.mjs:715): a render over the concurrency cap says \"renders are running in your group's Civicsmith, which runs at most\"", async () => {
+test("R5 (DEC-149, index.mjs:752): a render over the concurrency cap says \"renders are running in your group's Civicsmith, which runs at most\"", async () => {
   const env = { RENDERER: { fetch: async () => new Response("{}") } };
   const w = world({ env });
   for (let i = 0; i < 10; i++) w.store.renderAdmit({ allowanceMs: 1e12, reserveMs: 1000, cap: 10 });
@@ -67,7 +67,7 @@ test("R5 (DEC-149, index.mjs:715): a render over the concurrency cap says \"rend
   assert.doesNotMatch(r.body.detail, /running on this instance/);
 });
 
-test("R4 (DEC-149, index.mjs:826): an unreachable Drive export says the export address \"your group's Civicsmith composed from the\" document's id", async () => {
+test("R4 (DEC-149, index.mjs:878): an unreachable Drive export says the export address \"your group's Civicsmith composed from the\" document's id", async () => {
   const exp = "https://docs.google.com/document/d/1AbCdEfGhIjKlMnOp/export?format=odt";
   const r = await run(world(), { [exp]: new Response("no", { status: 404 }) }, { locator: "https://docs.google.com/document/d/1AbCdEfGhIjKlMnOp/edit" });
   assert.equal(r.body.reason, "DRIVE_EXPORT_UNREACHABLE");
@@ -75,7 +75,7 @@ test("R4 (DEC-149, index.mjs:826): an unreachable Drive export says the export a
   assert.doesNotMatch(r.body.detail, /which this instance composed/);
 });
 
-test("R36 (DEC-149, keyed.mjs:64): an unknown keyed service's refusal says \"the keyed services your group's Civicsmith speaks to are\"", async () => {
+test("R36 (DEC-149, keyed.mjs:65): an unknown keyed service's refusal says \"the keyed services your group's Civicsmith speaks to are\"", async () => {
   const r = await keyedFetch({}, { service: "nowhere" });
   assert.equal(r.reason, "UNKNOWN_KEYED_SERVICE");
   assert.match(r.detail, /^the keyed services your group's Civicsmith speaks to are courtlistener; nothing was fetched$/);

@@ -82,10 +82,29 @@ export const PLAIN_PHOTO_ROW = { ref: PLAIN_PHOTO, kind: "document", sha: sha(PL
   origin: "a member's capture", archived_copy: null, included: false, rests_under: "supporting",
   obscured: { copy: sha(PLAIN_PHOTO_COPY_BYTES), label: null } };
 
+/** T39 (N806, K2333): a member document the case carries as its cleaned copy (`case-carriage` R15), its original's
+    bytes and its copy's (a PDF, as `doc-clean` writes one), and the label `case-carriage` gives it (its
+    `COPY_CLEANED_LABEL`, as BOB's draft words it). `MEMBER_DOC_OOXML_COPY_BYTES` is the same copy as a zip package. */
+export const MEMBER_DOC = "INFO-2026-0006-lease-draft";
+export const MEMBER_DOC_BYTES = "%PDF-1.7 the member's own file, its author and its pictures' details inside";
+export const MEMBER_DOC_COPY_BYTES = "%PDF-1.7 the cleaned copy, no author, no pictures' details";
+export const MEMBER_DOC_OOXML_COPY_BYTES = "PK\x03\x04 the cleaned copy as a word-processing package";
+export const COPY_CLEANED_LABEL = "Details of who made this file, and of its pictures, removed for publication; the group holds the original";
+export const MEMBER_DOC_ROW = { ref: MEMBER_DOC, kind: "document", sha: sha(MEMBER_DOC_BYTES), text_sha: sha("the lease draft's text"),
+  origin: "a member's file", archived_copy: null, included: false, rests_under: "load_bearing",
+  obscured: { copy: sha(MEMBER_DOC_COPY_BYTES), label: COPY_CLEANED_LABEL } };
+
+/** The member document's copy bytes and its row, by the copy's format (`true` or `"pdf"`, or `"ooxml"`). */
+export const memberDocCopyBytes = (as) => (as === "ooxml" ? MEMBER_DOC_OOXML_COPY_BYTES : MEMBER_DOC_COPY_BYTES);
+export const memberDocRow = (as) => ({ ...MEMBER_DOC_ROW, obscured: { ...MEMBER_DOC_ROW.obscured, copy: sha(memberDocCopyBytes(as)) } });
+
 /** The case document's text, `/7` (the format written) unless `format` says otherwise; `t33` adds R18's and R20's
-    blocks; `photo` adds a third material, a photo carried as its copy (T37); `plainPhoto` an unmarked one (T38). */
+    blocks; `photo` adds a third material, a photo carried as its copy (T37); `plainPhoto` an unmarked one (T38);
+    `memberDoc` a member document carried as its cleaned copy (T39), its copy a PDF or, with `memberDoc: "ooxml"`, a zip
+    package. */
 export function caseDocument({ bar = { declared: true, capture: "B", connection: "C" }, blocks = true,
-                               format = CG.CASE_DOCUMENT_FORMAT, t33 = false, photo = false, plainPhoto = false } = {}) {
+                               format = CG.CASE_DOCUMENT_FORMAT, t33 = false, photo = false, plainPhoto = false,
+                               memberDoc = false } = {}) {
   const fm = [
     "---", `format: ${format}`, "case_id: CASE-2026-0001", "case_edition: 2", "case_project: PROJ-2026-0001-parks",
     'case_scope: "Who approved the lease, and on what record."',
@@ -112,7 +131,7 @@ export function caseDocument({ bar = { declared: true, capture: "B", connection:
                     archived_copy: "https://archive.example/m", included: true, rests_under: "load_bearing" },
                   { ref: OBS, kind: "observation", sha: sha("obs"), text_sha: null, origin: "a member's observation",
                     archived_copy: null, included: false, rests_under: "supporting" }, ...(photo ? [PHOTO_ROW] : []),
-                  ...(plainPhoto ? [PLAIN_PHOTO_ROW] : [])],
+                  ...(plainPhoto ? [PLAIN_PHOTO_ROW] : []), ...(memberDoc ? [memberDocRow(memberDoc)] : [])],
       attestations: [{ ref: MINUTES, by_kind: "member", by: V("heron"), level: "group", at: NOW, signature: "SIG" },
                      { ref: MINUTES, by_kind: "project", by: "PROJ-2026-0001-parks", at: NOW, recorded_in: MINUTES },
                      { ref: MINUTES, by_kind: "group", by: "lakeshore-tenants" },
@@ -161,6 +180,7 @@ export function caseFileFixture(opts = {}) {
                     [CG.caseFilePath("calculation", "prov"), CG.provOf(CALCS)]] : []),
     ...(opts.photo ? [[CG.caseFilePath("obscured", PHOTO), PHOTO_COPY_BYTES]] : []),
     ...(opts.plainPhoto ? [[CG.caseFilePath("obscured", PLAIN_PHOTO), PLAIN_PHOTO_COPY_BYTES]] : []),
+    ...(opts.memberDoc ? [[CG.caseFilePath("obscured", MEMBER_DOC), memberDocCopyBytes(opts.memberDoc)]] : []),
   ]);
   const listed = (m) => [...m].map(([path, t]) => ({ path, sha256: sha(t), bytes: bytesOf(t), part: 1,
                                                      kind: CG.caseFileEntryOf(path).kind }));
