@@ -49,6 +49,7 @@
    23. scheduler `plane.test.mjs`:177 (R12: the request does not expire within 1000 alarms, because file-safety R39's render wake never goes null with no renderer bound), from T37-24's merge until N789 (T38) (SCHEDULER #31 J1; K2235).
    24. plane `t36.test.mjs`:176 (:187 pins T36's every-firing `filedeeper`), from T37-24's merge until T37-48 re-pins it (SCHEDULER #31 J2; K2236).
    25. op-declarations `t36.test.mjs`:291 (R34: `clockpropose` both explained and named absent), from T37-27's merge until T37-31's (AFFORDANCES #24 J1; K2238).
+   26. From T37-26's merge (OP-GRADES #3 J1; K2242): control-plane `totality.test.mjs`:17 (R27's ops) until T37-31; affordances `t31.test.mjs`:27, :49, `catalogue.test.mjs`:110, :479, `t36.test.mjs`:49 until affordances re-pins them (CHANGE, T37-27).
 7. **BOB's acts (no module job):** at the opening, rule 2's N669 packaging, N757's packaging (K2171: the pixel work in a new pure L1 helper `image-cover` run in the plane, the marks and the copy in `case-carriage`), every L1 requirement change, and the questions to Bob ("For BOB" below) brought rendered with options and a recommendation. T37's release is BOB's (K1501), decided at its close on what its deployment then lets into T38; no longer for M-Q2 (K2147).
 
 ## Entries
