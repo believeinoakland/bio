@@ -41,8 +41,17 @@ after(() => mf.dispose());
 
 const sha = (v) => createHash("sha256").update(v).digest("hex");
 const unwrap = (r) => (r && typeof r === "object" && "result" in r ? r.result : r);
+/* admission R20 (T36-36, K2166): a credential is read only from the Authorization header or the body, never the
+   address (`CREDENTIAL_IN_ADDRESS`, C-38.10). The suite still names its credential as `token=…` in each call, for
+   readability, as membership's members.test.mjs does (K2182); `call` lifts it out of the address into
+   `Authorization: Bearer …` before the request is sent, so no request here carries a credential in its address. */
 const call = async (q, body) => {
-  const r = await mf.dispatchFetch(`http://x/api/?${q}`, body === undefined ? {} : { method: "POST", body: JSON.stringify(body) });
+  const params = new URLSearchParams(q);
+  const token = params.get("token");
+  params.delete("token");
+  const headers = token === null ? {} : { authorization: `Bearer ${token}` };
+  const r = await mf.dispatchFetch(`http://x/api/?${params}`,
+    body === undefined ? { headers } : { method: "POST", body: JSON.stringify(body), headers });
   return { status: r.status, body: await r.json() };
 };
 const GET = async (q) => unwrap((await call(q)).body);
@@ -435,7 +444,7 @@ test("R21: every label, prompt, ground and vocabulary op=affordances hands a sur
 test("R18: each roster act is offered exactly where its act accepts the caller (the release precedent: refused only "
    + "by a parameter), for every caller and project in the fixture — projectleave is driven by the test below", async () => {
   const CALLERS = [["iris", W.IRIS], ["pam", W.PAM], ["olga", W.OLGA], ["zed", W.ZED], ["ruth", W.RUTH],
-    ["founder", W.FOUNDER], ["MEM", MEM], ["ADM", ADM]];
+    ["founder", W.FOUNDER], ["nell", W.NELL], ["ADM", ADM]];
   const PROJECTS = ["PA", "PB", "PC", "PR"];
   const NOBODY = "__no_such_handle_aff__";
   const PARAM_ONLY = new Set(["NO_SUCH_HANDLE", "VOTES_SHORT"]);
@@ -471,7 +480,7 @@ test("R18 R9 R10: projectjoin and projectleave are each offered exactly where th
    + "caller and project — join to a participant not yet joined, leave to the joined (an owner only while another owner "
    + "is committed) — and a machine is offered and accepted neither", async () => {
   const CALLERS = [["iris", W.IRIS], ["pam", W.PAM], ["olga", W.OLGA], ["zed", W.ZED], ["ruth", W.RUTH],
-    ["founder", W.FOUNDER], ["MEM", MEM], ["ADM", ADM]];
+    ["founder", W.FOUNDER], ["nell", W.NELL], ["ADM", ADM]];
   const PROJECTS = ["PA", "PB", "PC", "PR"];
   const states = async () => {
     const m = new Map();
@@ -503,7 +512,7 @@ test("R18 R9 R10: projectjoin and projectleave are each offered exactly where th
     const mine = rows.filter((r) => r.act === act);
     assert.ok(mine.some((r) => r.offered) && mine.some((r) => !r.offered), `${act} offered somewhere and withheld somewhere`);
   }
-  assert.deepEqual(rows.filter((r) => ["MEM", "ADM"].includes(r.who) && (r.offered || r.accepted)).map((r) => `${r.act}@${r.p}`), []);
+  assert.deepEqual(rows.filter((r) => r.who === "ADM" && (r.offered || r.accepted)).map((r) => `${r.act}@${r.p}`), []);
   /* the positions, as measured: join for the invitee and the leaving, not the joined; leave for the joined, not the
      only owner (iris@PA, refused LAST_COMMITTED_OWNER) */
   const at = (act, who, p) => rows.find((r) => r.act === act && r.who === who && r.p === p);
@@ -677,32 +686,35 @@ test("R19 R2: inquiryground is `reasoned` where it revises what stands — a FIR
 /* ============================================================ R20: the machine map */
 test("R20: MACHINE_REFUSALS equals, both ways, the acts whose method answers a machine credential with a MACHINE_* "
    + "code, and each code is that answer; a machine is offered none of them", async () => {
-  const sel = (ids) => W.sel(MEM, ids);
+  /* the machine is the instance's administrator credential (`token:admin`, a machine identity): the shared member
+     credential this drove before is retired (admission R5, K2166; its answer is pinned below), and an ai credential
+     cannot be minted through the door until control-plane T37-33 hands its digest in the body (credentials R53) */
+  const sel = (ids) => W.sel(ADM, ids);
   const INQ = W.INQ, INFO = W.INFO, ACTN = W.ACTN, PA = W.PA;
   const DRIVE = {
-    release: async () => GET(`op=release&token=${MEM}&handle=${await sel([INFO])}&acknowledgment=a&mitigation=m`),
-    retire: async () => GET(`op=retire&token=${MEM}&handle=${await sel([W.INFO2])}&reason=r`),
-    dispose: async () => GET(`op=dispose&token=${MEM}&handle=${await sel([W.INQ2])}&to=deferred&reason=r`),
-    conclude: () => GET(`op=conclude&token=${MEM}&target=${E(INQ)}&conclusion=c&falsifier=f`),
-    withdrawconclusion: () => GET(`op=withdrawconclusion&token=${MEM}&target=${E(INQ)}&project=${PA}&reason=r`),
-    reopen: () => GET(`op=reopen&token=${MEM}&target=${E(INQ)}&reason=r`),
-    publish: () => POST(`op=publish&token=${MEM}`, { target: INQ, project: PA, roles: { [INQ]: "load_bearing" } }),
-    inquirydivide: () => POST(`op=inquirydivide&token=${MEM}&target=${E(INQ)}&reason=r`, { children: [] }),
-    inquiryground: () => POST(`op=inquiryground&token=${MEM}&target=${E(INQ)}&reason=r`, { grounds: [] }),
-    actionmove: () => GET(`op=actionmove&token=${MEM}&target=${E(ACTN)}&to=active&reason=r`),
-    actioncorrespond: () => GET(`op=actioncorrespond&token=${MEM}&target=${E(ACTN)}&direction=sent&at=2026-07-01&account=x`),
-    actionlaws: () => POST(`op=actionlaws&token=${MEM}&target=${E(ACTN)}`, { laws: [{ level: "state", citation: "a statute" }] }),
-    actionrisktier: () => POST(`op=actionrisktier&token=${MEM}&target=${E(ACTN)}`, { tier: 3, reason: "a machine's view" }),
-    versionaccept: () => GET(`op=versionaccept&token=${MEM}&target=${E(INQ)}&version=v1&reason=r`),
-    versionreject: () => GET(`op=versionreject&token=${MEM}&target=${E(INQ)}&version=v1&reason=r`),
-    versionconsider: () => GET(`op=versionconsider&token=${MEM}&target=${E(INQ)}&version=v1&reason=r`),
-    versionrevert: () => GET(`op=versionrevert&token=${MEM}&target=${E(INQ)}&version=v1&reason=r`),
-    versioncurrent: () => GET(`op=versioncurrent&token=${MEM}&target=${E(INQ)}&version=v1&project=${PA}&reason=r`),
-    versionhide: () => GET(`op=versionhide&token=${MEM}&target=${E(INQ)}&version=v1&reason=r`),
-    cite: async () => GET(`op=cite&token=${MEM}&project=${PA}&handle=${await sel([INFO])}&note=basis`),
-    sever: async () => GET(`op=sever&token=${MEM}&project=${PA}&handle=${await sel([INFO])}&reason=r`),
-    reinstate: async () => GET(`op=reinstate&token=${MEM}&project=${PA}&handle=${await sel([INFO])}&reason=r`),
-    projectvisibilityset: () => POST(`op=projectvisibilityset&token=${MEM}&projectId=${PA}&setting=discoverable`),
+    release: async () => GET(`op=release&token=${ADM}&handle=${await sel([INFO])}&acknowledgment=a&mitigation=m`),
+    retire: async () => GET(`op=retire&token=${ADM}&handle=${await sel([W.INFO2])}&reason=r`),
+    dispose: async () => GET(`op=dispose&token=${ADM}&handle=${await sel([W.INQ2])}&to=deferred&reason=r`),
+    conclude: () => GET(`op=conclude&token=${ADM}&target=${E(INQ)}&conclusion=c&falsifier=f`),
+    withdrawconclusion: () => GET(`op=withdrawconclusion&token=${ADM}&target=${E(INQ)}&project=${PA}&reason=r`),
+    reopen: () => GET(`op=reopen&token=${ADM}&target=${E(INQ)}&reason=r`),
+    publish: () => POST(`op=publish&token=${ADM}`, { target: INQ, project: PA, roles: { [INQ]: "load_bearing" } }),
+    inquirydivide: () => POST(`op=inquirydivide&token=${ADM}&target=${E(INQ)}&reason=r`, { children: [] }),
+    inquiryground: () => POST(`op=inquiryground&token=${ADM}&target=${E(INQ)}&reason=r`, { grounds: [] }),
+    actionmove: () => GET(`op=actionmove&token=${ADM}&target=${E(ACTN)}&to=active&reason=r`),
+    actioncorrespond: () => GET(`op=actioncorrespond&token=${ADM}&target=${E(ACTN)}&direction=sent&at=2026-07-01&account=x`),
+    actionlaws: () => POST(`op=actionlaws&token=${ADM}&target=${E(ACTN)}`, { laws: [{ level: "state", citation: "a statute" }] }),
+    actionrisktier: () => POST(`op=actionrisktier&token=${ADM}&target=${E(ACTN)}`, { tier: 3, reason: "a machine's view" }),
+    versionaccept: () => GET(`op=versionaccept&token=${ADM}&target=${E(INQ)}&version=v1&reason=r`),
+    versionreject: () => GET(`op=versionreject&token=${ADM}&target=${E(INQ)}&version=v1&reason=r`),
+    versionconsider: () => GET(`op=versionconsider&token=${ADM}&target=${E(INQ)}&version=v1&reason=r`),
+    versionrevert: () => GET(`op=versionrevert&token=${ADM}&target=${E(INQ)}&version=v1&reason=r`),
+    versioncurrent: () => GET(`op=versioncurrent&token=${ADM}&target=${E(INQ)}&version=v1&project=${PA}&reason=r`),
+    versionhide: () => GET(`op=versionhide&token=${ADM}&target=${E(INQ)}&version=v1&reason=r`),
+    cite: async () => GET(`op=cite&token=${ADM}&project=${PA}&handle=${await sel([INFO])}&note=basis`),
+    sever: async () => GET(`op=sever&token=${ADM}&project=${PA}&handle=${await sel([INFO])}&reason=r`),
+    reinstate: async () => GET(`op=reinstate&token=${ADM}&project=${PA}&handle=${await sel([INFO])}&reason=r`),
+    projectvisibilityset: () => POST(`op=projectvisibilityset&token=${ADM}&projectId=${PA}&setting=discoverable`),
     /* N345: contradiction's route in the durable object (the control plane routes it at layer 11), with the author
        stamp a machine credential's call carries */
     contradictionresolve: () => DO(`contradictionresolve?viewer=admin&author=${E("token:member")}`,
@@ -717,17 +729,32 @@ test("R20: MACHINE_REFUSALS equals, both ways, the acts whose method answers a m
   assert.deepEqual(objectActs.filter((k) => !(k in DRIVE)), [], "every object-directed act is driven");
   /* the offer side first, before any drive moves an object */
   const leak = [];
-  for (const tok of [MEM, ADM]) for (const id of [INFO, INQ, ACTN, PA])
+  for (const tok of [ADM]) for (const id of [INFO, INQ, ACTN, PA])
     for (const k of await offered(tok, id)) if (k in MACHINE_REFUSALS || ROSTER.includes(k)) leak.push(`${id}:${k}`);
   assert.deepEqual(leak, []);
   /* the over-strictness arm (d311's share): an act the store does not refuse a machine is still offered to it */
-  const citeOffered = (await offered(MEM, INFO)).includes("cite");
+  const citeOffered = (await offered(ADM, INFO)).includes("cite");
   const answered = {};
   for (const k of objectActs) answered[k] = codeOf(await DRIVE[k]());
   assert.deepEqual([citeOffered, answered.cite], [true, "ok"], "a machine is offered cite and performs it");
   const refused = Object.fromEntries(Object.entries(answered).filter(([, c]) => /^MACHINE_/.test(String(c))));
   assert.deepEqual(refused, Object.fromEntries(objectActs.filter((k) => k in MACHINE_REFUSALS).map((k) => [k, MACHINE_REFUSALS[k]])));
   assert.ok(Object.keys(refused).length > 0 && objectActs.some((k) => !(k in refused)));
+});
+
+/* admission R5 (T36-36, K2166): the shared member credential is retired, refused before any act or read, so it is
+   offered nothing and performs nothing; this pins that answer where the suite used to drive it as a machine. */
+test("R18 R20: the retired shared member credential is refused MEMBER_TOKEN_RETIRED (admission R5) — op=affordances "
+   + "answers it no catalogue and no acts, and an act it asks for is refused before it runs", async () => {
+  for (const q of ["op=affordances", `op=affordances&target=${E(W.INFO)}`]) {
+    const r = await call(`${q}&token=${MEM}`);
+    assert.equal(r.status, 401, q);
+    assert.equal(r.body.reason, "MEMBER_TOKEN_RETIRED", q);
+    assert.ok(!("result" in r.body), q);
+  }
+  assert.deepEqual(await offered(MEM, W.INFO), []);
+  assert.equal(codeOf(await POST(`op=projectjoin&token=${MEM}&projectId=${W.PA}`)), "MEMBER_TOKEN_RETIRED");
+  assert.equal(codeOf(await POST(`op=select&token=${MEM}&kind=enumerated`, { ids: [W.INFO] })), "MEMBER_TOKEN_RETIRED");
 });
 
 /* ============================================================ R22: nothing here writes */

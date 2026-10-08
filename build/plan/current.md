@@ -30,7 +30,7 @@
    4. progressions `order.test.mjs`:15 (R41; T36's red 16), until T37-12 (N752).
    5. answer-envelope `catalogue-end.test.mjs`:17 (R7, R2; T36's red 18: credentials' `NO_REASON` C-29.32 shares progressions' C-100.18), until T37-6 (N755) and T37-7's stamp.
    6. agent-runner `surface.test.mjs`:121 (R11), on a release cut only (T36's red 15), until T37-16 (N750).
-   7. plane `release.test` R19 (T36's red 31: wizard-scripts' required "Set up and claim" names the retired `assistantset`), until T37-25 carries the library's next version with Bob's approval (N775, R22). T36 closed with no other red open (K2168, K2169).
+   7. ~~plane `release.test` R19 (T36's red 31: wizard-scripts' required "Set up and claim" names the retired `assistantset`), until T37-25 carries the library's next version with Bob's approval (N775, R22). T36 closed with no other red open (K2168, K2169).~~ cleared: `release.test.mjs` 5/0 after T37-25 (version 2, K2241) and T37-31's merges (K2249).
    9. membership R83's `MODULE_ORDER` test (and its sister tests reading the order), from the opening's addition of `image-cover` to `modules.json` until T37-44 re-pins it (K1185).
    10. case-checker `program.test.mjs` R13 (its generated `program.mjs` bundles `labels.mjs`, stale from T37-1), until L1's close regenerates it (§5.6 (1); RECORD-GRAMMAR #10 J1).
    11. op-declarations' three tests reading the screen registry PR #14 changed (R21 R5's `function` acts; R21 R27's `owed` acts; R27 DEC-148's seven owed acts), red on `tranche/T37` since T36's close merged `main`, until T37-31 (RECORD-GRAMMAR #10 J1).
@@ -49,6 +49,7 @@
    23. scheduler `plane.test.mjs`:177 (R12: the request does not expire within 1000 alarms, because file-safety R39's render wake never goes null with no renderer bound), from T37-24's merge until N789 (T38) (SCHEDULER #31 J1; K2235).
    24. plane `t36.test.mjs`:176 (:187 pins T36's every-firing `filedeeper`), from T37-24's merge until T37-48 re-pins it (SCHEDULER #31 J2; K2236).
    25. op-declarations `t36.test.mjs`:291 (R34: `clockpropose` both explained and named absent), from T37-27's merge until T37-31's (AFFORDANCES #24 J1; K2238).
+   26. From T37-26's merge (OP-GRADES #3 J1; K2242): control-plane `totality.test.mjs`:17 (R27's ops) until T37-31; affordances `t31.test.mjs`:27, :49, `catalogue.test.mjs`:110, :479, `t36.test.mjs`:49 until affordances re-pins them (CHANGE, T37-27). Also from its re-merge (J2, `claimidentity` dropped): affordances `catalogue.test.mjs`:240 (28 aliases pinned) and `t36.test.mjs`:17, until affordances re-pins them.
 7. **BOB's acts (no module job):** at the opening, rule 2's N669 packaging, N757's packaging (K2171: the pixel work in a new pure L1 helper `image-cover` run in the plane, the marks and the copy in `case-carriage`), every L1 requirement change, and the questions to Bob ("For BOB" below) brought rendered with options and a recommendation. T37's release is BOB's (K1501), decided at its close on what its deployment then lets into T38; no longer for M-Q2 (K2147).
 
 ## Entries

@@ -78,7 +78,7 @@ const R22_READS = ["archivelist", "coarchivestate", "findin", "entitieskind", "s
 
 test("R22 R3: every op op-declarations R30 declares is graded — coarchiveset `reversible`, unpack `undetermined`, the "
    + "note revise and delete and both sign-outs `caller-owned`, the recovery acts `credential` — each with R22's reason, "
-   + "the reads `read:`, credit public; none a machine refusal and subscriptionsignin ungraded", () => {
+   + "the reads `read:`, credit public; none a machine refusal; subscriptionsignin, which had no op in T35, in none of T35's tables (R27 grades it in T37)", () => {
   const got = Object.fromEntries(Object.keys(R22_WRITES).map((op) => [op, gradeOf(op)]));
   assert.deepEqual(got, R22_WRITES);
   assert.deepEqual([...Object.keys(T35_RUNGS), ...Object.keys(T35_RUNG_ABSENT)].sort(),
@@ -103,8 +103,7 @@ test("R22 R3: every op op-declarations R30 declares is graded — coarchiveset `
     [...Object.keys(R22_WRITES), ...R22_READS, "credit", ...Object.keys(B3_WRITES), ...B3_READS].sort());
   const ALL = [...Object.keys(R22_WRITES), ...R22_READS, "credit"];
   assert.deepEqual(ALL.filter((op) => Object.hasOwn(MACHINE_REFUSALS, op)), []);
-  assert.equal(gradeOf("subscriptionsignin"), null);
-  assert.ok(!Object.hasOwn(NON_ACTS, "subscriptionsignin"));
+  for (const t of [T35_RUNGS, T35_RUNG_ABSENT, T35_NON_ACTS]) assert.ok(!Object.hasOwn(t, "subscriptionsignin"));
   /* R18 over them: the sign-outs are phone acts, the recovery acts are not */
   assert.deepEqual(["signout", "signouteverywhere", "recoverycodesissue", "recover", "unpack", "coarchiveset"].map(phoneOf),
     [true, true, false, false, true, true]);

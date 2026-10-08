@@ -1,6 +1,6 @@
 # BOB to store-door (T37)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -16,3 +16,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 Your reading stands (K2238): instance-setup exports translationDraftRefusal({language, direction, keys?, key?, by}); INSTANCE-SETUP #16 is told. Also (CONTROL-PLANE #26's need, written into your R10 @ c3d980ccad): add two store-internal routes with no spec to controlPlaneRoutes beside aigrantadmit: aikeptaway -> credentialsOf(ctx).aiKeptAway() ?? {ok:true}; subscriptionconnected -> credentialsOf(ctx).subscriptionConnected({member: q('by')}). Merge the tranche first.
+
+## B3 · CHANGE
+
+(K2249) instance-setup T37-30 is merged with translationDraftRefusal and translationDraft as K2238 states. Merge the tranche, replace your stand-in with the real module, re-run your tests and users' (control-plane, plane), and complete again.

@@ -1,6 +1,6 @@
 /* op-grades: T36's grades (R23–R26), at the module's exports. The five ops K2092 adds, the 23 ops of `file-safety`
-   (with `openwithwarning`'s DEC-173 statement), `credentials`' keep-away with `assistantset` retired, and DEC-170's
-   `personexpunge` kept for a larger screen; each graded by R5 and R3. */
+   (with `openwithwarning`'s DEC-173 statement), `credentials`' keep-away with `assistantset` retired (its code re-coded in T37), and
+   `personexpunge` kept for a larger screen (DEC-170, through IRREVERSIBLE_WEIGHT since DEC-181); each graded by R5 and R3. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, CONSEQUENCE_STATEMENTS, IRREVERSIBLE_WEIGHT,
@@ -105,10 +105,13 @@ test("R24 R4 (DEC-173 (2)): openwithwarning carries a frozen dialog statement be
 });
 
 /* ---- R25 ----------------------------------------------------------------------------------------------------------- */
-test("R25: aikeepaway `reasoned` on NO_REASON with its setting reason; aikeepawaystate `read:`; neither a machine "
-   + "refusal; securitycount ungraded; assistantset retired from RUNG_ABSENT and NON_ACTS", () => {
+test("R25: aikeepaway `reasoned` on AI_KEEP_AWAY_NO_REASON (T37: credentials R51's own code, C-29.32), NO_REASON "
+   + "staying for the other ops, with its setting reason; aikeepawaystate `read:`; neither a machine refusal; "
+   + "securitycount ungraded; assistantset retired from RUNG_ABSENT and NON_ACTS", () => {
   assert.equal(gradeOf("aikeepaway"), "reasoned");
-  assert.ok(JUSTIFICATION_REFUSALS.includes("NO_REASON"));
+  assert.ok(JUSTIFICATION_REFUSALS.includes("AI_KEEP_AWAY_NO_REASON"));
+  assert.ok(JUSTIFICATION_REFUSALS.includes("NO_REASON"), "NO_REASON stays for the ops that still answer it");
+  assert.equal(JUSTIFICATION_REFUSALS.filter((c) => c === "AI_KEEP_AWAY_NO_REASON").length, 1);
   assert.equal(NON_ACTS.aikeepaway, "setting: whether the group keeps its material away from every assistant, an "
     + "administrator's act with a reason; moves no bundle");
   assert.ok(isRead("aikeepawaystate"));
@@ -133,15 +136,17 @@ test("R23 R24 R25: T36's tables hold exactly these ops, none both graded and sta
 });
 
 /* ---- R26 ----------------------------------------------------------------------------------------------------------- */
-test("R26 R18 (DEC-170): LARGER_SCREEN_ACTS holds personexpunge, so phoneOf answers false for it; its `reasoned` rung, "
-   + "its Irreversible weight and its consequence statement are unchanged", () => {
+test("R26 R18 (T37; DEC-181, replacing DEC-170): personexpunge leaves LARGER_SCREEN_ACTS, which holds filingsent alone, "
+   + "and phoneOf still answers false for it through IRREVERSIBLE_WEIGHT; no op is in both sets; its `reasoned` rung, its "
+   + "Irreversible weight and its consequence statement are unchanged", () => {
   assert.ok(Object.isFrozen(LARGER_SCREEN_ACTS));
-  assert.ok(LARGER_SCREEN_ACTS.includes("personexpunge"));
+  assert.deepEqual([...LARGER_SCREEN_ACTS], ["filingsent"]);
+  assert.deepEqual(LARGER_SCREEN_ACTS.filter((op) => IRREVERSIBLE_WEIGHT.includes(op)), []);
   assert.equal(phoneOf("personexpunge"), false);
   assert.equal(RUNGS.personexpunge, "reasoned");
   assert.ok(IRREVERSIBLE_WEIGHT.includes("personexpunge"));
   assert.equal(CONSEQUENCE_STATEMENTS.personexpunge.friction, "dialog");
-  /* standardrelease stays a phone act (K2130: put to the design stream) */
-  assert.equal(phoneOf("standardrelease"), true);
+  /* R18 (T37): standardrelease, in IRREVERSIBLE_WEIGHT, moves from true to false; a reasoned act outside both stays */
+  assert.equal(phoneOf("standardrelease"), false);
   assert.equal(phoneOf("releasescanhold"), true);
 });
