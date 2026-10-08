@@ -81,6 +81,17 @@ const DRIVES = [
   ["memberlanguage?viewer=member:nobody", "GET"],
   /* instance-setup's T35 route (R66): the two-administrators recovery step, read by an administrator */
   ["adminrecoverystep?viewer=admin", "GET"],
+  /* instance-setup's T37 routes (R67–R74; N669, K2249): the translation workspace, each driven by a caller it refuses or
+     answers alike on both objects; `translationdraftrecord` is the door's store-internal call (control-plane R66) */
+  ["translationdraft?by=member:nobody", "POST", { direction: "to_language", language: "es", keys: ["nav.home"] }],
+  ["translationdraftrecord?by=member:nobody", "POST", { language: "es", words: [] }],
+  ["translationgrant?by=member:nobody", "POST", { member: "member:nobody", language: "es" }],
+  ["translationadopt?by=member:nobody", "POST", { language: "es", key: "nav.home", text: "Inicio" }],
+  ["translationconfirm?by=member:nobody", "POST", { language: "es", key: "nav.home" }],
+  ["translationrevert?by=member:nobody", "POST", { language: "es", adoption: 1 }],
+  ["translationmark?by=member:nobody", "POST", { language: "es", key: "nav.home" }],
+  ["translations?language=es&viewer=member:nobody", "GET"],
+  ["interfacewords?language=es&viewer=member:nobody", "GET"],
 ];
 const req = ([path, method, body]) => new Request(`http://do/${path}`, body === undefined ? { method } : { method, body: JSON.stringify(body) });
 /* Instants differ between two runs; everything else must not. */
@@ -108,9 +119,9 @@ test("R1: the class whose fetch is control-plane's door: at construction it star
   assert.equal(started(await settle(other))[0].started, true);
 });
 
-test("R1, R5 (K1690, K1870, K2162): instance-setup's twenty-four routes are part of the route map beside every module's, and each answers through the door, in the door's envelope, what its own route answers called directly", async () => {
+test("R1, R5 (K1690, K1870, K2162, K2249): instance-setup's thirty-three routes are part of the route map beside every module's, and each answers through the door, in the door's envelope, what its own route answers called directly", async () => {
   const ops = Object.keys(S.instanceSetupOps(null, new URL("http://do/"), null));
-  assert.equal(ops.length, 24);
+  assert.equal(ops.length, 33);
   assert.deepEqual([...new Set(DRIVES.map(([p]) => p.split("?")[0]))].sort(), [...ops].sort(), "every route is driven");
   const now = object(), before = object();
   const store = new Store(now.ctx, now.env);
@@ -136,6 +147,10 @@ test("R1, R5 (K1690, K1870, K2162): instance-setup's twenty-four routes are part
   assert.deepEqual([alloc.status, (await alloc.json()).ok], [200, true]);
   const none = await store.fetch(new Request("http://do/nosuchroute"));
   assert.deepEqual([none.status, await none.json()], [400, { ok: false, error: "unknown op: nosuchroute" }]);
+  /* negative control: a translation route's name with a typo is no route of instance-setup's and none of the door's */
+  assert.equal(map.includes("translationadopts"), false);
+  const typo = await store.fetch(req(["translationadopts?by=member:nobody", "POST", {}]));
+  assert.deepEqual([typo.status, (await typo.json()).error], [400, "unknown op: translationadopts"]);
 });
 
 test("R1: an instance-setup route passes the door's body read — a non-JSON POST to instancegroupseed is 400 BAD_JSON and nothing is written; an empty body is null", async () => {

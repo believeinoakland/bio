@@ -55,6 +55,7 @@ import { acceptedWorkOf } from "../accepted-work/index.mjs";
 import { checkCaseFile, registerCaseCheckerPublicReads } from "../case-checker/index.mjs";
 import { caseImportOf, caseImportOps } from "../case-import/index.mjs";
 import { caseDisclosuresOf } from "../case-disclosures/index.mjs";
+import { caseCarriageOps } from "../case-carriage/index.mjs";
 import { publicReadOf, publicReadOps } from "../public-read/index.mjs";
 import { projectStageOf, projectStageOps } from "../project-stage/index.mjs";
 import { networkNoticesOf, networkNoticesOps } from "../network-notices/index.mjs";
@@ -215,16 +216,17 @@ export class Store extends DurableObject {
     answersOf(ctx, { standards, content: contentOf(ctx), events, entities: entitiesOf(ctx), lines, people, duties,
       calculations, retrieval, credentials: credentialsOf(ctx),
       ceilingRefusal: (member, at) => aiRunsOf(ctx, env).aiUseCheck({ member, at }),
-      /* K1690 (instance-setup R55): the copy's assistant switch, read before any model turn. */
-      assistantGate: () => instanceSetupOf(ctx, env).assistantGate(),
       /* R24 (Q1-7): the screens registry the plane carries, for its explain read. */
       screens: SCREENS });
     /* reevaluation before actions: actions reaches conformance, which reaches reevaluation, and a factory reads its
        `deps` on the first call only, so created there it would never see `env` (its R25). */
     reevaluationOf(ctx, { env, acceptedWork, calculations });
     /* publication (K365): built here, after reevaluation, so its case reads are registered with reevaluation (its R41,
-       R43; reevaluation R26) before anything runs. Built lazily, a sweep an alarm reached before any op found none. */
-    publicationOf(ctx, { acceptedWork });
+       R43; reevaluation R26) before anything runs. Built lazily, a sweep an alarm reached before any op found none.
+       R18 (T37; K2226): handed the evidence bucket (`CAPTURES`) and the store's namespace, read as record-core's evidence
+       prefix reads it (R2), which its factory forwards to the case-carriage it creates, so a photo's obscured copy is held
+       (case-carriage R11; without them the mark is recorded with no copy, fail closed). */
+    publicationOf(ctx, { acceptedWork, bucket: env.CAPTURES ?? null, store: () => this.#ownNamespace() || "bio" });
     /* R23 (K1505 (3), K1643; publication R61): case-tensions, which publication's factory builds and registers its
        provider with (the seven doors), is the one instance per host the route map reaches. */
     caseTensionsOf(ctx);
@@ -263,7 +265,8 @@ export class Store extends DurableObject {
     /* R18 (N529; K1333): case-disclosures, at its place after case-import and before case-authoring in the modules'
        order, built here with the attestation instance above, so case-authoring's lazy getter finds that one instance per
        host (case-disclosures R23). It holds no table and no op. case-carriage (N532) needs no line here: publication's
-       factory (above) creates it eagerly, its two tables made and declared at every boot (case-carriage R6; K1024). */
+       factory (above) creates it eagerly, with the bucket and namespace handed there, its tables made and declared at
+       every boot (case-carriage R6, R12; K1024); its ops are routed in R5's map over that one instance. */
     caseDisclosuresOf(ctx, { attestation });
     biasOf(ctx, { env });
     /* R12 (K1061; inquiry R53, bias R40): inquiry's findings registered with bias as kind `finding`, after bias is built
@@ -550,6 +553,9 @@ export class Store extends DurableObject {
       /* K1643: `caseflags` and `attribute` are case-tensions', on the one instance publication's factory made. */
       ...caseTensionsOps(caseTensionsOf(ctx), url, body),
       ...publicationOps(publicationOf(ctx), url, body),
+      /* R18 (T37; K2226): case-carriage's `obscuremark` and `photomarks` (its R9, R10), directly after publication's, over
+         the one instance publication's factory made. */
+      ...caseCarriageOps(publicationOf(ctx).caseCarriage, url, body),
       /* R15 (N520): docket's member ops; its public reads `docketpublic` and `docketfeed` are public-read's (its R21). */
       ...docketOps(docketOf(ctx), url, body),
       ...publicReadOps(publicReadOf(ctx), url),
