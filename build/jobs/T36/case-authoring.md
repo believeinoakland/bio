@@ -18,7 +18,9 @@
 
 **Tests and checks (on my branch with a local, uncommitted stand-in for publication R75 as K2129 words it, `{rows: #criteriaOf(members, at, signer)}`; to re-run on the merged tranche).** case-authoring: 158 tests, 158 pass, 0 fail (new `standards.test.mjs`: R60, R61 ×5, R61 with R15). Users' tests: review 38/38; plane 130/130; affordances 206/208, control-plane 164/167 and answer-envelope 24/26, each failing exactly as without my change (inherited reds 11, 18, 19, 20, 22, 23, 24). Checks: format 0 failures; architecture 0 failures; coverage 45 of 45 live ids, 0 failures; ownership to re-run on the commit.
 
-**Next:** once publication (R75) and case-grammar (R22) are merged into `tranche/T36`, merge it here, re-run steps 5–6, and post COMPLETE.
+**B2 (CHANGE).** Merged `tranche/T36` (case-grammar K2144) into my branch, cleanly; R60's test now also reads the rows back through case-grammar's `memberSubjectOf` (R22). Read since: layer 8's row and its case-authoring section of `build/layers.md` (nothing bears on this entry). Re-run with the local R75 stand-in: 158/158.
+
+**Next:** once publication (R75) is merged into `tranche/T36`, merge it here, re-run steps 5–6, and post COMPLETE.
 
 ## J1 · REPORT
 

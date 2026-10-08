@@ -9,7 +9,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, V } from "./fixture.mjs";
 import { PUBLISH_ACT_CHECKS } from "../../../src/case-authoring/index.mjs";
-import { materialsOf, passagesOf } from "../../../src/case-grammar/index.mjs";
+import { materialsOf, passagesOf, memberSubjectOf } from "../../../src/case-grammar/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/json.mjs";
 
 const DOC = "INFO-2026-0001-a", SDOC = "INFO-2026-0002-std";
@@ -80,6 +80,8 @@ test("R60: each case_roles row states the subject_entity its member's pinned byt
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 400));
   const text = w.row(`SELECT text FROM case_documents WHERE case_id=? AND edition=?`, r.caseId, r.edition).text;
   assert.deepEqual(w.fm(text).case_roles.map((x) => [x.target, x.subject_entity]), [[Q, A], [Q2, null]]);
+  /* read back as case-grammar R22 reads it, the one reader case-checker R21 shares */
+  assert.deepEqual([Q, Q2].map((m) => memberSubjectOf(w.fm(text), m)), [A, null]);
   /* the lines, one spelling: after each row's edition, the id bare or the literal null */
   assert.match(text, new RegExp(`  - target: ${Q}\\n    role: load_bearing\\n    version_sha: ${w.head(Q)}\\n    edition: 1\\n`
     + `    subject_entity: ${A}\\n`));
