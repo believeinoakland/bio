@@ -10,7 +10,9 @@
  * every unit, direction and anchor, fiscal years, law ranks, proceedings, schemes, a lawful demand, recurrences. T34's (R62):
  * vote values, response statuses, a MemberType map, a counterparty with ids, within and organisation, and schemes for a
  * body, a seat and an institution. T35's (R68): policy series of a government issuer at a level and at none, a company's,
- * a standard whose designation reads an edition, a series whose normal form removes formatting, and policy headers. */
+ * a standard whose designation reads an edition, a series whose normal form removes formatting, and policy headers. T37's
+ * (R73): an official local name of each kind, one explained in two languages and one with an official translation and
+ * its source. */
 const R = String.raw;
 
 /* R40: a template's whole attribution, as filing-templates reads a profile template (its R15); every blank in
@@ -424,5 +426,17 @@ export default {
       { date: "2026-01-01", name: "New Year's Day" }, { date: "2026-03-17", name: "Harbour Day" },
       { date: "2026-12-25", name: "Christmas Day" }],
       status: "researched", basis: "TEST" },
+  ],
+  /* R73: official names, never translated as ordinary words (DEC-157 (6)). */
+  local_names: [
+    { name: "Town Clerk", kind: "office", explanations: [
+      { locale: "en", text: "The town office that keeps the Selectboard's records and receives records requests.", basis: "TEST" },
+      { locale: "es", text: "La oficina municipal que guarda los registros de la Junta y recibe las solicitudes de registros.", basis: "TEST" }],
+      translations: [{ locale: "es", text: "Secretaría Municipal", source: "https://www.port-ellery.example/es/secretaria", basis: "TEST" }],
+      basis: "TEST" },
+    { name: "Port Ellery Bylaws", kind: "law", explanations: [
+      { locale: "en", text: "The town's own local laws, numbered by section.", basis: "TEST" }], basis: "TEST" },
+    { name: "Harbour Renters' Fund", kind: "program", basis: "TEST" },
+    { name: "Marlow County", kind: "place", basis: "TEST" },
   ],
 };
