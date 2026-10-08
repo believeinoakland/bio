@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #143 · session_01YCBYkMVtZpK8zWkFJcsNkZ · depth 1
 
-**Jobs** · bundler: BUNDLER #13 session_01Gr94vczwdnNrPgdvnxrCWd
+**Jobs** · bundler: BUNDLER #13 session_01Gr94vczwdnNrPgdvnxrCWd; pdf-reader: PDF-READER #5 session_01TmZK6qZWMuPDraW8kWN2cb; image-cover: IMAGE-COVER #2 session_01713tY2AEJZPTinfdxFZjHr; doc-clean: DOC-CLEAN #1 session_01RzWTiZh7mVWEYFtHXN4VP5
 
 **At T39's opening (K2339):** T38 closed by PR #17 (`main` @ `147f356dfe`, K2339); `tranche/T39` from it. Drafted during T38 (P18) by BOB #143 and re-checked at the opening: no design-stream `MERGE` came, so rule 4 leaves N797–N799 out; N806 Q1 answered A (K2334); N807 joins L11.
 
