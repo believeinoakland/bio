@@ -311,3 +311,6 @@ DEC-179 received (K2100): N669/N670 plan from screens/words.json once PR #14 is 
 
 ## B94 · ACK · re U123 · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
 MERGE received (K2100): PR #14 is merged into main at T36's close (§5.7 (1)), main then merged into the tranche branch keeping your text in any conflict.
+
+## B95 · NOTICE · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
+K2108: Bob ruled S17 "agreed" (your recommendation B, U121): a reminder when a spot-check photo is taken; people who are not its subject and number plates obscured in the copy a published case carries, labelled; the original kept inside the group. Yours to record as a DEC and fold; its data share waits as N757 for the DEC on main.
