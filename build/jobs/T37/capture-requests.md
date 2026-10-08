@@ -24,3 +24,7 @@
 - ownership: 1 file changed; 0 failures.
 
 Size (session_01UfHSTpAjFzV8dzVbcaskFH): test runs 7, module lines 0 (test lines +25 −10)
+
+## J1 · COMPLETE
+
+T37-47 applied (test only, plane.test.mjs). Changes: credential sent in the Authorization header; mem-cr replaced by enrolled member sessions; the drain's member-class arm re-pinned to the session's 403 MACHINE_CREDENTIAL_REQUIRED (C-38.3) with nothing drained; the ai mint moved into the R30 test and asserted, since an unchecked failed mint left AI undefined and its arm could pass for the wrong reason. Results: 4 of 5 pass now. R30 (:108) fails only at the mint (AI_CREDENTIAL_NO_SECRET, T37-33). With the mint skipped, a throwaway run passed 5/5. Module suite: 102/1. format, architecture, coverage and ownership: 0 failures. Details are in the record.
