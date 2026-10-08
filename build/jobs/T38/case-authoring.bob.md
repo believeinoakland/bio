@@ -16,3 +16,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · CHANGE
 
 case-carriage (T38-11) is merged into `tranche/T38` (K2311): merge the tranche into your branch, re-run your tests against the real case-carriage R10–R14 (no stand-in), and post COMPLETE again (or a REPORT if anything moved).
+
+## B3 · CHANGE
+
+case-disclosures (T38-12) is merged into `tranche/T38` (K2312): merge the tranche into your branch, finish your tests and checks, and post COMPLETE.
