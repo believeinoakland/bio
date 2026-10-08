@@ -669,7 +669,7 @@ export class CaseCarriage {
         row.refused_detail = typeof c.detail === "string" ? c.detail : null;
       } else if (c && c.ok === true && c.bytes instanceof Uint8Array) {
         const copySha = createSha256().update(c.bytes).hex();
-        if (await this.#holdCopyBytes(copySha, c.bytes, sha))
+        if (await this.#holdCopyBytes(copySha, c.bytes, sha, rects.length > 0))
           Object.assign(row, { sha256: copySha, bytes: c.bytes.length, covered: c.covered, width: c.width, height: c.height });
       }
     }
@@ -700,15 +700,16 @@ export class CaseCarriage {
     } catch { return null; }
   }
 
-  /* R11: the copy, held under its own digest at `<store>/obscured/<sha>`, labelled derived and naming its original;
-     never registered, never a capture. True when held. */
-  async #holdCopyBytes(copySha, bytes, original) {
+  /* R11: the copy, held under its own digest at `<store>/obscured/<sha>`, labelled derived and naming its original,
+     with OBSCURED_LABEL only when it covers an area (T38; case-grammar R12: an unmarked copy has no label); never
+     registered, never a capture. True when held. */
+  async #holdCopyBytes(copySha, bytes, original, covers) {
     if (!this.bucket) return false;
     let ns = "bio";
     try { const s = typeof this.store === "function" ? this.store() : this.store; if (str(s)) ns = str(s); } catch { ns = "bio"; }
     try {
       await this.bucket.put(obscuredKey(ns, copySha), bytes, { sha256: copySha,
-        customMetadata: { derived: "obscured", original, label: OBSCURED_LABEL } });
+        customMetadata: { derived: "obscured", original, ...(covers ? { label: OBSCURED_LABEL } : {}) } });
       return true;
     } catch { return false; }
   }

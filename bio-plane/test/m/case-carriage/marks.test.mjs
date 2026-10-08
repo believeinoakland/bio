@@ -140,6 +140,8 @@ test("R9 R11 areas: [] records \"nothing to obscure\" and derives the photo's co
   assert.deepEqual(none.copy, { sha256: none.copy.sha256, covered: 0, width: W, height: H }, "a copy, nothing covered");
   assertCovers(copyOf(w, none.copy.sha256), original, [], "every pixel the original's");
   assert.equal(copyOf(w, none.copy.sha256).chunks.includes("tEXt"), false, "nothing of the original but its pixels");
+  assert.deepEqual(w.bucket.held.get(obscuredKey("bio", none.copy.sha256)).opts.customMetadata, { derived: "obscured", original: p },
+                   "labelled derived, naming its original; no OBSCURED_LABEL, since nothing is covered");
   assert.equal(w.count("photo_copies"), 1);
   const marked = await w.cc.obscureMark({ captureSha: p, areas: [area([3, 3, 9, 9])], by: BEN });
   assert.equal(marked.state, "marked");
