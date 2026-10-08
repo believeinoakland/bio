@@ -1,6 +1,6 @@
 # notice-producers (T36)
 
-**Status** · session_014RE9GRKMXoXK4GGwKBuTgt · depth 2 · WORKING · handled B2
+**Status** · session_014RE9GRKMXoXK4GGwKBuTgt · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
