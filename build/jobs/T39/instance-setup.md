@@ -1,6 +1,6 @@
 # instance-setup (T39)
 
-**Status** · session_01LAKZqntsHmW1zsfg2HmycE · depth 2 · WORKING · handled B2
+**Status** · session_01LAKZqntsHmW1zsfg2HmycE · depth 2 · COMPLETE · handled B2
 
 
 ## Completion (T39-16b)
