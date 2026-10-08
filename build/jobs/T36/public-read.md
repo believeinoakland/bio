@@ -25,8 +25,14 @@
 - `format`: 135 modules, 134 requirements files; 0 failures. `architecture public-read`: 44 product files, 146 relative imports; 0 failures (the test archives are written with this module's own `container.mjs` and `ooxml`'s `crc32`, so no `test-support` edge is needed). `coverage public-read`: 33 of 33 live ids named; 0 failures. `ownership public-read tranche/T36`: 4 files changed; 0 failures.
 - P6: 3,406 lines (paths), well under 4,000.
 
+*Repair:* this record's J1 REPORT was cut by a hand edit of the notes and the COMPLETE then posted as J1; J1 restored byte for byte from 7a9c2437d0 and COMPLETE re-posted as J2.
+
 Size (session_01BL4TP2ShNVLY5f5dC9jEtM): test runs 14, module lines 3406
 
-## J1 · COMPLETE
+## J1 · REPORT
 
-T36-27 complete (B2 processed): R32 and R33 met, stored /1 case files served via CASE_FILE_FORMATS_ACCEPTED with a test. public-read 145/145; format, architecture, coverage (33/33), ownership: 0 failures. case-checker has 3 reds from case-grammar's /2 (program.mjs, R14 spec), the same without my changes: T36-51 and the close. J1's R28/R32 question stands for you. Record: build/jobs/T36/public-read.md.
+Progress: R32 and R33 written and tested on my branch (649c49fd17), waiting on case-grammar's merge (`caseFilePath` for `archive`, `container`, `criteria`; `/2`). Until then every /6 assembly states CASE_FILE_NOT_ASSEMBLED on my branch, as expected. Please announce case-grammar's merge.
+
+Two findings, for your decision (no change made):
+1. R28 and R32 (my module; R28 sits in "Open for Bob"). A court order that removes or seals a carried member document by its hash or path does not reach the member's archive, which R32 now carries under its own hash and path and which `publishedbytes` serves: the archive's bytes contain the withheld member, so `unzip -p` recovers it. R28 says "bytes the order removes or seals are withheld from serving"; whether an order over a member extends to the archives (and container records) carried for it is a policy reading. My recommendation: extend it (withhold every R32 file carried under that material's ref when its document is withheld), as a CHANGE in a later tranche or now if you rule it; I can do it in this job in ~20 lines if you say so.
+2. case-carriage (R8, its `hold` dedupe, `case-carriage/index.mjs`:107–109): a record or archive two included materials share is registered once per commit, under the first material's ref only. I read the chain over every included ref of the edition, so public-read carries it for both; but `published_shas` names only one ref for it. No defect against case-carriage's own requirements as written; noted for its next job.
