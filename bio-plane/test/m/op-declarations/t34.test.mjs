@@ -141,7 +141,7 @@ test("R21: each alias names the function its op's arm calls — driven through t
   assert.ok(!calls.some(([k]) => String(k).toLowerCase() === "createevent"));
 });
 
-test("R21, R27 (K1901; T36, K2084; T37, K2159, K2171): an act the registry marks `owed` is no op until its ruling's op is declared under its own name, and then it is that op, read as served with no alias made — on PR #14's registry the ten T34's and T35's ops declare, the nine R32 and R33 declare and the eight T37 declares (R35–R39), `owed:placewanted` gone; no spec names `owed:`; infolevelset, the one owed act no owner serves, has no spec", () => {
+test("R21, R27 (K1901; T36, K2084; T37, K2159, K2171; T38, K2300): an act the registry marks `owed` is no op until its ruling's op is declared under its own name, and then it is that op, read as served with no alias made — on PR #14's registry the ten T34's and T35's ops declare, the nine R32 and R33 declare the eight T37 declares (R35–R39) and, on PR #15's registry, R40's obscuremarkwithdraw (T38), `owed:placewanted` gone; no spec names `owed:`; infolevelset, the one owed act no owner serves, has no spec", () => {
   for (const op of Object.keys(OPS)) assert.ok(!op.includes(":") && !op.includes(" "), op);
   const owed = actsOf("owed").map((a) => a.replace(/^owed:/, "").split(" ")[0]);
   /* the registry as PR #13 left it (T36): the owed acts whose ops this module declares under those names — T34's and
@@ -152,9 +152,11 @@ test("R21, R27 (K1901; T36, K2084; T37, K2159, K2171): an act the registry marks
                     "securitytooladd", "securitytooltest", "securitytoolremove",
                     /* T37 (PR #14, `e08cd35ecb`): R38's, R39's, R36's and the five translation acts of R35 and R37 */
                     "obscuremark", "setpassword", "subscriptionsignin", "translationadopt", "translationconfirm",
-                    "translationdraft", "translationgrant", "translationrevert"];
+                    "translationdraft", "translationgrant", "translationrevert",
+                    /* T38 (PR #15, `c848b56671`): R40's */
+                    "obscuremarkwithdraw"];
   assert.ok(!owed.includes("placewanted") && Object.hasOwn(OPS, "placewanted"));
-  /* and the one owed act no owner serves in T37 */
+  /* and the one owed act no owner serves in T37 and T38 */
   const UNDECLARED = ["infolevelset"];
   assert.deepEqual([...new Set(owed)].sort(), [...DECLARED, ...UNDECLARED].sort());
   for (const op of DECLARED) {
