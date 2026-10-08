@@ -202,14 +202,14 @@ test("R13 marksLapsed answers a row whose copy is no longer the photo's current 
   assert.deepEqual(whole(), lapsed, "marked");
   /* a mark since: the obscured row lapses */
   await w.cc.obscureMark({ captureSha: p, areas: [area([10, 10, 14, 14], "plate")], by: OLIVE });
-  assert.deepEqual(w.cc.marksLapsed(fm()), [{ ref: PHOTO, sha: p, why: "the photo's obscured copy is no longer its current copy" }]);
+  assert.deepEqual(w.cc.marksLapsed(fm()), [{ ref: PHOTO, sha: p, why: "a mark on the photo was added or withdrawn since the case was prepared, so its copy is no longer the one the case names" }]);
   /* prepared again on the current copy, it stands */
   const current = w.cc.photoMarks({ captureSha: p, viewer: OLIVE }).copy.sha256;
   assert.deepEqual(w.cc.marksLapsed(caseFm({ materials: [obscuredRow(PHOTO, p, current)] })), []);
   /* a withdrawal since (DEC-183 (2)): the copy is re-derived, so the row lapses; withdrawing every mark leaves no copy */
   await w.cc.obscureMarkWithdraw({ captureSha: p, mark: 4, reason: "the plate is the group's own", by: OLIVE });
   assert.deepEqual(w.cc.marksLapsed(caseFm({ materials: [obscuredRow(PHOTO, p, current)] })).map((x) => x.why),
-                   ["the photo's obscured copy is no longer its current copy"]);
+                   ["a mark on the photo was added or withdrawn since the case was prepared, so its copy is no longer the one the case names"]);
   const again = w.cc.photoMarks({ captureSha: p, viewer: OLIVE }).copy.sha256;
   assert.equal(again, copy, "the marks standing are those of the first copy, so its pixels again");
   assert.deepEqual(w.cc.marksLapsed(caseFm({ materials: [obscuredRow(PHOTO, p, again)] })), []);
@@ -231,7 +231,7 @@ test("R13 marks that cannot be read answer each row lapsed (fail closed); at mos
   const plain = w.photo("INFO-2026-0021-plain", makePng(8, 8));
   w.st.sql.exec(`DROP TABLE photo_marks`);
   assert.deepEqual(w.cc.marksLapsed(caseFm({ materials: [obscuredRow(PHOTO, p, copy), docRow("INFO-2026-0021-plain", plain)] })), [
-    { ref: PHOTO, sha: p, why: "the photo's marks could not be read" },
+    { ref: PHOTO, sha: p, why: "the photo's marks could not be read, so its copy cannot be confirmed" },
     { ref: "INFO-2026-0021-plain", sha: plain, why: "a photo travels only as its copy" }]);
   assert.equal(MARKS_LAPSED_MAX, 200);
   const many = Array.from({ length: 205 }, (_, i) => obscuredRow(`INFO-2026-${String(1000 + i)}-x`, sha(`p${i}`), copy));

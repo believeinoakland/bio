@@ -724,8 +724,9 @@ export class CaseCarriage {
   /** R13 (T37; N757; K2206; T38: N779, DEC-183 (2)): the `materials:` rows whose photo's marks no longer match what the
    *  row states: a row stating `obscured` whose copy is not the photo's current copy (so a withdrawal since preparation
    *  is a lapse), and a photo row carried whole (`included: true`), always; each `{ref, sha, why}`, at most 200; `[]`
-   *  when none. Marks that cannot be read answer the row lapsed (fail closed). Synchronous; writes nothing; never
-   *  throws. */
+   *  when none; a document that is not a photo, carried whole, never lapses here (B3, K2308). Marks that cannot be read
+   *  answer the row lapsed (fail closed). Each `why` names its cause: a mark added or withdrawn since preparation, a
+   *  photo carried whole, or marks unreadable. Synchronous; writes nothing; never throws. */
   marksLapsed(fm) {
     let rows = null;
     try { const m = materialsOf(fm); rows = m && Array.isArray(m.materials) ? m.materials : null; } catch { rows = null; }
@@ -744,9 +745,9 @@ export class CaseCarriage {
         const { marks, last } = this.#marksOf(sha);
         view = CaseCarriage.#view(marks, last);
       } catch { view = null; }
-      if (!view) out.push({ ref, sha: sha || null, why: "the photo's marks could not be read" });
+      if (!view) out.push({ ref, sha: sha || null, why: "the photo's marks could not be read, so its copy cannot be confirmed" });
       else if (!(view.copy && view.copy.sha256 === ob.copy))
-        out.push({ ref, sha, why: "the photo's obscured copy is no longer its current copy" });
+        out.push({ ref, sha, why: "a mark on the photo was added or withdrawn since the case was prepared, so its copy is no longer the one the case names" });
     }
     return out.slice(0, MARKS_LAPSED_MAX);
   }
