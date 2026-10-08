@@ -11,15 +11,17 @@
 - `n26MigratedReading` (R66, the suggestion's ask): a reading carrying `cells` has each `table <n+1>` key moved to `tables[old].new`, its cells' `doc-table` sources moved with it, the cells of a table N26 no longer reads dropped, the keys listed in N26's table order; cells are not counted in `migrated.n26.moved` (they are not references the reading names); `null`, `{}` and an absent `cells` stay as stored.
 - New `bio-plane/test/m/extraction/r70.test.mjs`, five tests naming R70: from `.docx` bytes holding a table of dates and amounts (and a second table) through `read`, `writeReading` and `readingOf` (and `readingFor`), asserting the cells field for field as the docx entry emits them; `{}` for a body with no tables, a stored `null`, and a pre-R70 reading with no `cells`, kept distinct (R45); R23's history keeping the pre-cells reading and the new one by digest; N26's pure migration and its run through the store moving `cells` keys.
 
-**Waiting** · The three read-path tests fail until T36-13a (reading-pipeline R28's docx share) is merged: today `emittedFieldsOf` gives `cells` for a workbook only. Checked against a local, uncommitted stand-in for that change (docx `cells` keyed by table `ref`, null when `tables` is null): 132 of 132 extraction tests passed; the stand-in was removed. Per B1 I merge the tranche branch when BOB's CHANGE says reading-pipeline has merged, then re-run.
+**Merged** · B2 (CHANGE): `tranche/T36` @ 1e305d401c (reading-pipeline T36-13a, R28's `.docx` cells; K2106) merged into this branch; the R70 read-path tests now run against the real R28. Before it, the three read-path tests had been checked against a local, uncommitted stand-in for R28's docx share, since removed.
 
 **Deferred** · none. **Found elsewhere** · none.
 
-**Tests so far** · `node --test bio-plane/test/m/extraction/`: tests 132, pass 129, fail 3 (the three R70 read-path tests above, waiting on T36-13a). Layer tests: none (manifest).
+**Tests** · `node --test bio-plane/test/m/extraction/`: tests 132, pass 132, fail 0. As a user of reading-pipeline's R28, its own tests: `node --test bio-plane/test/m/reading-pipeline/`: tests 92, pass 92, fail 0. Layer tests: none (manifest).
 
-**Checks so far** · `format.mjs`: 135 modules, 134 requirements files; 0 failures. `architecture.mjs extraction`: 27 product files, 101 relative imports; 0 failures. `coverage.mjs extraction`: 46 of 46 live requirement ids named by a test; 0 failures. `ownership.mjs extraction tranche/T36`: 3 files changed; 0 failures.
+**Checks** · `format.mjs`: 135 modules, 134 requirements files; 0 failures. `architecture.mjs extraction`: 28 product files, 105 relative imports; 0 failures. `coverage.mjs extraction`: 46 of 46 live requirement ids named by a test; 0 failures. `ownership.mjs extraction tranche/T36`: 3 files changed; 0 failures. The requirement's `*(not yet met: T36)*` markers on R70 and on the T36 suggestion are BOB's to clear at merge.
 
 **P6** · 2,741 lines in the module's source files, under about 4,000.
+
+Size (session_01VgbqiWA5e3MLeiVgTNS9KZ): test runs 7, module lines 2741
 
 ## J1 · REPORT
 
