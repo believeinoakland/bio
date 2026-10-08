@@ -1468,7 +1468,8 @@ export class CaseAuthoring {
    *  would store, with `author` as signer. It answers `{ok: true, wrote: false, ready, first, blockers, steps}`:
    *  - `first` is exactly the refusal `op=publish` would give (DEC-8), or null when it would publish;
    *  - `blockers` is every other refusal reachable independently: each load-bearing member's shortfall on each axis of
-   *    the bar (R6), and `case-disclosures`' R16 (hunch debt), R2, R6 (its photo refusals included), R13, R14, and R1
+   *    the bar (R6), and `case-disclosures`' R16 (hunch debt), R2, R6 (its photo refusals included: `PHOTO_UNCHECKED`,
+   *    signing refused while a photo the case relies on is unchecked, T38; DEC-183 (1)), R13, R14, and R1
    *    as R32 reads it (R53), and
    *    ratification R18's list (reached only when the
    *    act would publish, since it reads the document's bytes);
@@ -1530,7 +1531,10 @@ export class CaseAuthoring {
           const flags = D.flagsJudged(accepted.editions, a.flagsDisclosed ?? null);
           found.push(...flags.refusals);
           /* R34 (N757; DEC-180 (3); K2206): the ceremony's Photos step, `case-disclosures` R29 over the materials R6
-             answered, as op=publish judges them. An unchecked photo is never a blocker; R6's photo refusals already are. */
+             answered, as op=publish judges them. (T38; DEC-183 (1); K2220, K2303) The step is a gate: R6's photo
+             refusals, `PHOTO_UNCHECKED` (each photo any chain reaches with no standing mark), `PHOTO_NOT_COVERABLE` and
+             `PHOTO_MARKS_UNDETERMINED`, are in `reached.refusals` above, so each is `first` when op=publish refuses
+             with it and among `blockers` otherwise. */
           rests = { accepted: accepted.rows, flags,
                     photos: D.photosOf(reached.materials, partition.memberRoles, a.viewer ?? null) };
           /* R56's undisclosed calculations, and its R25's and R27's people and signers (R34), as op=publish asks them. */
@@ -1621,7 +1625,8 @@ export class CaseAuthoring {
                    withheld: seen.sources.filter((x) => x.basis === null) }
                : { stated: notReached }) },
       /* R34 (N757; DEC-180 (3); K2206): each photo the case relies on, its marks and state, and how many are unchecked
-         (`case-disclosures` R29). An unchecked photo travels whole as taken and blocks nothing. */
+         (`case-disclosures` R29). (T38; DEC-183 (1)) An unchecked photo never travels and blocks signing: its
+         refusal, `PHOTO_UNCHECKED`, is `first` or among `blockers` (R34), its words R29's. */
       { step: 4, name: "photos",
         ...(rests ? { photos: rests.photos.photos, unchecked: rests.photos.unchecked }
                   : { stated: "not reached: the members or their roles are refused first" }) },
