@@ -1,28 +1,31 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #141 (`session_01MG1srQ83USpRDFURbfVuBa`), 2026-10-08 ~16:15 UTC, for BOB #142. Read `build/rulings-active.md` first; this BOB's rulings are K2253–K2283 (and K2284, this handoff).
+**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #142 (`session_0178ib9gzWRThTx5twPvt6PS`), 2026-10-08 ~19:12 UTC, for BOB #143. Read `build/rulings-active.md` first; this BOB's rulings are K2287–K2327 (and K2328, this handoff).
 
 ## Open with Bob
 
-None. Answered today: the close's refusals (K2273: mechanics §5.7 (3), §16, §11 changed, civicos-process `ead818c`); key custody (K2277, Distribution §10); meter 60% at ~15:05 (K2274). Coming to him later: N796 (a sign-in serving unattended standing questions: terms, his), brought rendered with the register's entries when T39's plan is drafted.
+None. Answered today: BOB's refresh threshold is 55% of the window (K2287, civicos-process `e0ce857`, `7cfbcf6`); no case has been published yet, so no back-dated photo withdrawal (K2309); images embedded in a file a member uploaded lose their metadata, public documents carried as captured (K2315 → N806, T39, design at T39's opening).
+
+## Open with UX-DESIGN (theirs to answer; channel `mail/BOB` B115, B116, unread by them)
+
+B115: DEC-183's "relies on" (BOB's reading meanwhile: every photo any chain reaches), a label for an unmarked copy (meanwhile none), the four withdrawal refusals' words (meanwhile BOB's drafts, C-141.7–.10) and who may withdraw (meanwhile any member who may see the photo). B116: `photo.refused.changed` says "before signing" but is answered at the commit. An answer is folded by a new ruling and, if it changes built behaviour, an entry in `next.md`.
 
 ## Where things stand
 
-- **T37 closed** (K2261, `main` @ `0a2aa79231`). **T38** on `tranche/T38` (opened K2262 from `plan/current.md`, 28 jobs after K2270–K2283).
-- **L1 closed** (K2269). **L2 running**: project-roster (K2278, K2280), membership both halves (K2276, K2281) and credentials (K2283) merged; promotion merged (K2285; catalogue 1.65.0, census 1,547 rows). **Close L2 now** (§5.6: regenerate in the manifest's order; `program.mjs` embeds the catalogue version), archive the four L2 sessions with rows, start L3 (§5.3).
-- **Requirements still to write before their layer's START** (each plan entry says `req:`): L3 file-safety R39, R28 (N789, N791; START names rule 6 item 9's 29 reds); L4 extraction R66; L5 bias (test only); L6 agent-model R2, agent-worker R6, ai-runs (test only); L8 case-grammar R12, case-carriage R1/R8/R11/R12/R9 + new R (N779, N790, N788), public-read R23, case-disclosures R6/R22, case-authoring R34; L11 op-grades, tasks, setup-page, instance-setup, answer-envelope, op-declarations, admission, control-plane (check first whether case-carriage's ops map already routes `obscuremarkwithdraw`), plane (spread project-roster's ops and register its R15/R16/R17: clears rule 6 item 11). Plan rule 8 (N779: no L1 change; uncoverable photo refuses publication) and rule 9 (N793) govern.
-- **Reds:** plan rule 6 items 1–13 (item 4, 5, 10, 12 cleared).
-- **T38's close (§5.7, as changed by K2273):** step (3) is now a pull request from `tranche/T38` to `main` merged with the GitHub merge tool, never a direct push; it is certification row V6's proof (record it). Design PR: the UX session keeps committing to `claude/gallant-brown-zg0wc1` after PR #15 merged; merge a new PR only on its `MERGE`.
-- **Channel:** UX-DESIGN U133–U136 read and ACKed (B111–B114): N797–N799 in `next.md`. INVESTIGATION-DESIGN `HANDOFF.md` unchanged at `f53cd6ffbe`.
-- **Timers** (delete mine by id at takeover): backstop `trig_01RH691euepGG8tnKK2Y6Cr9` (16:09, fired; re-arm while my successor starts), WATCH #141 `trig_0145DBKKEpPUW6Y5usasPSab` (16:50, into ROOT). Artifacts watched: close-refusals page (resolved) and key custody page (answered).
+- **T38** on `tranche/T38`. L1–L10 closed (L7, L9 empty). **L11 running**: merged op-grades (K2322), tasks (K2324), instance-setup (K2323), answer-envelope (K2321), affordances (K2325), op-declarations (K2327), admission (K2326). **Still running:** CONTROL-PLANE #27 (`session_01L6n1QKr1FBq4RCADwXEj7g`; CHANGEs B2 = admission's fallback improvement, fix if small else REPORT; B3 = op-declarations merged) and PLANE #27 (`session_01QxKvksbKPy1qWsAzhjWL99`; merges last in L11).
+- **Reds (plan rule 6):** open items 1–3, 7, 11 (the plane's share: project-roster listeners and ops, `stats.test.mjs`, affordances `plane.test.mjs` ×28, promotion `d526` §4, `migrate-released`), 16 (fleetbundles pin, N802), 18 (plane `disclosures.test.mjs`:74). Coverage: acquisition R45's naming test is N804 (T39), accepted by name.
+- **Next:** merge control-plane, then plane; close L11 (§5.6: regenerate in the manifest's order, `checks/run.mjs`, archive the nine L11 sessions with rows); then close T38 (§5.7).
+- **T38's close (§5.7 as K2273 changed it):** (1) the design stream asked no `MERGE` since PR #15; if `main` moved, merge it into `tranche/T38` first. (2) archive `current.md` as `archive/T38.md` (`CLOSING`). (3) a pull request `tranche/T38` → `main`, merged with the GitHub merge tool (method `merge`), never a direct push; authority: Bob's standing direction in the product's `CLAUDE.md`; this is certification row V6's proof (record it in civicos-process `dryrun/`). A refused step is §16's. (4) delete backstop and WATCH. (5) Bob's meter and the tranche report. (6) open T39 from `next.md` (N779 done; N801–N806 new today).
+- **Release:** none needed at T38's close unless BOB judges one lets held work into T39 (K1501).
+- **Timers** (delete mine by id at takeover): backstop `trig_01Nz11P9keTQWah7SY6W3Vfi` (19:21), WATCH #142 `trig_0138pagBSiYV79DtHP5PRWHC` (20:01, into ROOT).
 
 ## Next steps, in order
 
-1. Take over (§5.1): archive BOB #141, its `BOB-final` row under T38; arm backstop and WATCH.
-2. Merge promotion, close L2, write L3's requirements and STARTs, start L3. Keep going layer by layer.
+1. Take over (§5.1): archive BOB #142, its `BOB-final` row under T38; rewrite the channel Writer line (`mail xwriter`); arm backstop and WATCH; delete mine.
+2. Merge control-plane and plane as each completes; close L11; close T38; open T39.
 
 ## Process notes
 
 - After a container restart: `npm ci --ignore-scripts` in agent-runner, `npm ci` in sheet-worker and file-scanner before `fleetbundles`.
-- Check a row id across all of `bio-plane/src` before naming one (K2279).
-- Edit `modules.json` as text, never by re-serialising it (it reformats the file).
+- Every START over 300 KB names mechanics §17 step (3) as required (K2304).
+- Drafting requirements ahead of a layer by workers (draft, then apply, then BOB reviews the diff) worked well this session: `plan/draft-T38-L8.md`, `draft-T38-L11.md`.

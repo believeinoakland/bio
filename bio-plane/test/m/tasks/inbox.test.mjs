@@ -8,6 +8,7 @@ import { world, inbox, ev, host, NOW, iso } from "./world.mjs";
 import { tasksOf, tasksOps, Tasks, TASK_DRAIN_BACKSTOP_MS, TASK_DRAIN_RETRY_LIMIT, QUEUE_MACHINE_CHECKS, TASK_ACTOR_CHECKS, QUEUE_INBOX_CHECKS, checkInboxGrammar,
          TASKS_TABLES, tasksOwns } from "../../../src/tasks/index.mjs";
 import { mintExhausted } from "../../../src/record-core/index.mjs";
+import { noSuchMember, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 import { schedulerOf } from "../../../src/scheduler/index.mjs";
 import { Connections } from "../../../src/connections/index.mjs";
 
@@ -474,6 +475,38 @@ test("R3: taskForward's refusals in order, then forwarded with its history; task
   assert.deepEqual([fs.weight, fs.applied], ["per-item", 1]);
   assert.equal(w.t.taskForward({ items: [], actor: "bob" }).reason, "SET_NO_ITEMS");
   assert.equal(Tasks.PER_ITEM_MAX > 0, true);
+});
+
+test("R3 (T38, N793; K231): taskForward to no active member answers NO_SUCH_MEMBER through membership's noSuchMember (its R121, C-96.47), member the to asked, its row and sentence membership's; nothing is written", () => {
+  const w = box();
+  w.member("alice"); w.member("bob"); w.member("ada", { role: "admin" });
+  w.member("gone", { status: "revoked" }); w.member("waiting", { status: "invited" });
+  w.bundle(DOC); w.bundle(DOC2);
+  w.task("TASK-2026-0001-a", DOC, { assignee: "alice", role: "project-manager" });
+  w.task("TASK-2026-0002-b", DOC2);
+  const rows = () => w.all(`SELECT * FROM tasks ORDER BY id`);
+  const before = rows();
+  const row = MEMBERSHIP_CHECKS.NO_SUCH_MEMBER;
+  assert.equal(row.check, "C-96.47", "the row is membership's");
+  const asked = [["gone", "gone"], ["waiting", "waiting"], ["nobody", "nobody"], ["", ""], [null, null], [undefined, null], [7, null]];
+  for (const [id, actor] of [["TASK-2026-0001-a", "alice"], ["TASK-2026-0001-a", "ada"], ["TASK-2026-0002-b", "bob"]])
+    for (const [to, member] of asked) {
+      const r = w.t.taskForward({ id, to, actor, now: iso(NOW) });
+      assert.deepEqual(r, noSuchMember(member), `${id} by ${actor} to ${String(to)}`);
+      assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation, r.member],
+        [false, "NO_SUCH_MEMBER", "NO_SUCH_MEMBER", row.check, row.translation, member]);
+      assert.equal(r.detail, noSuchMember("x").detail, "R121's one fixed sentence, never this module's own");
+    }
+  assert.deepEqual(rows(), before, "nothing was written");
+  // its place in R3's order: after TASK_NOT_YOURS, before ALREADY_THEIRS
+  assert.equal(w.t.taskForward({ id: "TASK-2026-0001-a", to: "nobody", actor: "bob" }).code, "TASK_NOT_YOURS");
+  assert.equal(w.t.taskForward({ id: "TASK-2026-0001-a", to: "alice", actor: "alice" }).reason, "ALREADY_THEIRS");
+  // the set form carries the same answer per item
+  const set = w.t.taskForward({ items: [{ id: "TASK-2026-0002-b" }], to: "gone", actor: "bob" });
+  assert.deepEqual([set.applied, set.items[0].outcome], [0, "retained"]);
+  const { index, outcome, asked: a, ...answer } = set.items[0];
+  assert.deepEqual(answer, noSuchMember("gone"));
+  assert.deepEqual(rows(), before);
 });
 
 test("R3: an administrator resolves another member's task; the founder's session is one", async () => {

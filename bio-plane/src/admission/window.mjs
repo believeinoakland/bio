@@ -44,11 +44,15 @@ class DoorWindow {
 
   /* R21: one request to a public op, asked of `address`'s window at `now`: refused at an estimate of `limit` or more
      (counting nothing), else counted. `{ source, refused: false }` or `{ source, refused: true, stated, retryAfter }`;
-     `source` is the fingerprint, for the stamps control-plane passes on (credentials R38's `source`). */
-  async doorWindow({ address = null, now = null } = {}) {
-    const nowMs = now !== null && now !== "" && Number.isFinite(Number(now)) ? Number(now) : Date.now();
+     `source` is the fingerprint, for the stamps control-plane passes on (credentials R38's `source`).
+     T38 (N792; K2247): `count: false` asks the fingerprint alone, for `sourceOf` when the Worker holds no key: `{ source }`,
+     and the window is neither read, counted, refused nor written (no row, no dropped bucket). Only exactly `false` asks
+     so; any other value counts, as every request to a public op does. */
+  async doorWindow({ address = null, now = null, count = true } = {}) {
     const stated = typeof address === "string" && address.trim() !== "";
     const source = stated ? String(await this.fingerprint(address.trim())) : UNSTATED_SOURCE;
+    if (count === false) return { source };
+    const nowMs = now !== null && now !== "" && Number.isFinite(Number(now)) ? Number(now) : Date.now();
     const { limit, windowMs } = DOOR_WINDOW;
     const bucket = Math.floor(nowMs / windowMs);
     const elapsedFrac = (nowMs - bucket * windowMs) / windowMs;
@@ -87,10 +91,12 @@ export function admissionOf(ctx, deps = {}) {
 }
 
 /* The ops this module answers, as entries of the plane's one route map (plane R5). `doorwindow` is store-internal
-   (op-declarations R6): the Worker's own count of a request to a public op, the address in the body, never the query. */
+   (op-declarations R6): the Worker's own count of a request to a public op, the address in the body, never the query;
+   with the body's `count: false` (T38; R21), the fingerprint alone, nothing counted or written. */
 export function admissionOps(a, url, body) {
   const b = body && typeof body === "object" && !Array.isArray(body) ? body : {};
   return {
-    doorwindow: () => a.doorWindow({ address: typeof b.address === "string" ? b.address : null, now: b.now ?? null }),
+    doorwindow: () => a.doorWindow({ address: typeof b.address === "string" ? b.address : null, now: b.now ?? null,
+                                     count: b.count !== false }),
   };
 }

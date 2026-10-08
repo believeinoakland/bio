@@ -5,9 +5,11 @@
  * its owner's requirements as R13, R17, R22 and R23–R25 do. Data only: no op's behaviour is decided here (P6).
  * `./index.mjs` spreads the three tables into `RUNGS`, `RUNG_ABSENT` and `NON_ACTS`. This file imports nothing, so the
  * spread closes no cycle. None of these ops is in `MACHINE_REFUSALS`, which holds only `affordances`' `ACTS` (R5,
- * `affordances` R20): `case-carriage` (`MACHINE_CANNOT_MARK`), `credentials` (`MACHINE_CANNOT_SET_PASSWORD`) and
- * `instance-setup` (`MACHINE_CANNOT_TRANSLATE`) refuse a machine themselves. No consequence statement, vocabulary or
- * prompt is added. `subscriptionsignin` had no op and no grade in T35 (`./t35.mjs`); it is graded here. */
+ * `affordances` R20): `case-carriage` (`MACHINE_CANNOT_MARK_PHOTO`, its own code since T38, K2311), `credentials`
+ * (`MACHINE_CANNOT_SET_PASSWORD`) and `instance-setup` (`MACHINE_CANNOT_TRANSLATE`) refuse a machine themselves. No
+ * consequence statement, vocabulary or prompt is added. `subscriptionsignin` had no op and no grade in T35 (`./t35.mjs`);
+ * it is graded here. (T38; R28) `obscuremark` left `T37_RUNG_ABSENT`: a withdrawal (`obscuremarkwithdraw`) takes a mark
+ * back, so `./t38.mjs` grades it `reversible`; its reason stays here. */
 
 const R = (s) => `read: ${s}; writes nothing`;
 const TRANSLATION_WORD = "translation-directed: keyed by a language and an interface word; the group's own wording of "
@@ -24,9 +26,8 @@ export const T37_RUNGS = {
 
 /* ---- the stated absences ---- */
 export const T37_RUNG_ABSENT = {
-  /* case-carriage R9, R12 (DEC-180), on R3's rule: a `staff` area's reason is a fact of that area, not a reason that the
-     act revises what stands; marks are append-only, and no act takes one back */
-  obscuremark:        { ground: "undetermined", is: "a member marks the areas of a photo to obscure in the published copy, or that it has nothing to obscure; asks no authored reason that the act revises what stands, and marks are append-only, so no act takes one back (case-carriage R9, R12)" },
+  /* `obscuremark` (case-carriage R9) stood here, `undetermined` on R3's rule, until T38: R28 moves it to `RUNGS`
+     (`./t38.mjs`) as `reversible`, a withdrawal (case-carriage R14) taking a mark back */
   /* credentials R3 (DEC-182 (4)), as signout and signouteverywhere: the caller's own */
   setpassword:        { ground: "caller-owned", is: "a signed-in member or administrator changes their own password, the role from their own session, ending their other sessions (credentials R3)" },
   /* credentials R43, agent-worker R66, as subscriptiondisconnect: no login is held here */
@@ -43,7 +44,7 @@ export const T37_RUNG_ABSENT = {
 /* ---- every op's NON_ACTS reason (R5) ---- */
 export const T37_NON_ACTS = {
   obscuremark: "photo-directed: keyed by a photo's capture, reached from the Photos step; a member's mark of areas to "
-    + "obscure in the published copy, append-only; moves no bundle",
+    + "obscure in the published copy; withdrawn only by a reasoned act, never erased (R28); moves no bundle",
   setpassword: "session-directed: the caller's own password, the role from their session; ends their other sessions; "
     + "moves no bundle",
   subscriptionsignin: "credential: a member's own sign-in to their own Claude subscription, in their own runner; no login "
