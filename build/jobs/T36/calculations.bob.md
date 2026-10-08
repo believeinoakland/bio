@@ -13,3 +13,7 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Merge order in L5: events → standards → money → people → explore → retrieval (after the four) → calculations.
 Inherited reds: the plan's rule 5 list as it stands at your START (read it there); reds 3, 5, 6, 8, 9 and 14 are cleared. Expect red 16 (progressions `order.test.mjs`:15) and red 18 (answer-envelope `catalogue-end.test.mjs`:17, credentials' `NO_REASON`) among your users' tests.
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+J1 (K2115): your reading stands. provenance R48's read contract now lists register.observed_at (tranche/T36 @ bf37b4ce24); read it with capture_sha, bundle_id, authored and author in your own SQL. No provenance service is added. Merge the tranche branch when convenient.
