@@ -113,13 +113,13 @@ test("R120 the read contract: the stated tables and columns exist under those na
     [{ member_id: "ann", state: "joined", owner: 1, owner_order: 1 }]);
 });
 
-test("R121 N793 noSuchMember is the one site of NO_SUCH_MEMBER: its row C-96.39, the id as asked, a fixed detail, extra beside never replacing; never throws", () => {
+test("R121 N793 noSuchMember is the one site of NO_SUCH_MEMBER: its row C-96.47, the id as asked, a fixed detail, extra beside never replacing; never throws", () => {
   const row = MEMBERSHIP_CHECKS.NO_SUCH_MEMBER;
-  assert.equal(row.check, "C-96.39");
+  assert.equal(row.check, "C-96.47");
   assert.match(row.where, /noSuchMember > is-no-such-member$/);
   const r = noSuchMember("zed");
   assert.deepEqual(Object.keys(r).sort(), ["check", "code", "detail", "member", "ok", "reason", "translation"]);
-  assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation, r.member], [false, "NO_SUCH_MEMBER", "NO_SUCH_MEMBER", "C-96.39", row.translation, "zed"]);
+  assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation, r.member], [false, "NO_SUCH_MEMBER", "NO_SUCH_MEMBER", "C-96.47", row.translation, "zed"]);
   assert.equal(noSuchMember(undefined).member, null);
   assert.equal(noSuchMember(null, { task: "T-1" }).detail, r.detail, "one fixed sentence for every caller");
   const x = noSuchMember("zed", { task: "T-1", reason: "MINE", detail: "mine", member: "other", ok: true });

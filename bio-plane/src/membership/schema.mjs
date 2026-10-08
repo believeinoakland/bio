@@ -91,33 +91,7 @@ CREATE TABLE IF NOT EXISTS project_sight (
 CREATE INDEX IF NOT EXISTS project_sight_setting ON project_sight(setting, project_id);
 -- =========================================================================
 
--- REC-150 (Membership Architecture v2 section 7, item 7.14, "The request to join", BOB #16): a member outside a
--- DISCOVERABLE project asks to be added. ONE ROW PER REQUEST, and the record is APPEND-ONLY AT THE FIELD: the
--- asking fields (project, member, the name the member was shown, the comment, the date) are written once at the
--- ask and never touched, and the closing fields (state, closed_by, closed_comment, closed_at) are written ONCE,
--- by the one statement that moves an OPEN row to a terminal state -- every closing UPDATE carries
--- WHERE state = 'open', so a closed row is never rewritten and nothing is ever deleted but by purge.
--- project_name is the name AS SHOWN when the member asked: after a project goes HIDDEN the requester keeps sight
--- of their own request, which names only what they already saw, so it must not read the live title.
--- AT MOST ONE OPEN REQUEST PER MEMBER PER PROJECT is the partial unique index below, held by the schema and
--- asked again by the store (which refuses by name before the index would). Keyed on project_id, a bundle id, so
--- both purge arms clear it with the project (the project_visibility precedent).
-CREATE TABLE IF NOT EXISTS project_join_requests (
-  seq            INTEGER PRIMARY KEY AUTOINCREMENT,
-  project_id     TEXT NOT NULL,
-  member_id      TEXT NOT NULL,
-  project_name   TEXT,
-  comment        TEXT,
-  asked_at       TEXT NOT NULL,
-  state          TEXT NOT NULL CHECK (state IN ('open','withdrawn','granted','declined','lapsed')),
-  closed_by      TEXT,
-  closed_comment TEXT,
-  closed_at      TEXT
-);
-CREATE INDEX IF NOT EXISTS project_join_requests_project ON project_join_requests(project_id, seq);
-CREATE INDEX IF NOT EXISTS project_join_requests_member ON project_join_requests(member_id, project_id, seq);
-CREATE UNIQUE INDEX IF NOT EXISTS project_join_requests_one_open
-  ON project_join_requests(project_id, member_id) WHERE state = 'open';
+-- T38 (N783, K2270): project_join_requests, project_owner_votes and project_owner_decisions are project-roster's.
 -- Project participation, Membership Architecture v2 section 7. Keyed on member_id and not on handle: a handle is
 -- what the RECORD shows and is the member's own, and keying participation on a display name would make the graph
 -- depend on a field the member picked. Invitations arrive BY handle (7.2) and are resolved here.
@@ -154,33 +128,6 @@ CREATE TABLE IF NOT EXISTS member_expertise (
   created   TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS mx_member ON member_expertise(member_id, label);
-
--- Section 7.10 owner governance: the OPEN votes, one row per voter per proposal. Separate from admin_votes
--- because the arithmetic differs at two and sharing the table would invite sharing the tally. A carried
--- decision's votes are copied into project_owner_decisions (R42) and then cleared, so a later proposal about
--- the same member starts from no votes.
-CREATE TABLE IF NOT EXISTS project_owner_votes (
-  project_id TEXT NOT NULL,
-  kind       TEXT NOT NULL,
-  target     TEXT NOT NULL,
-  voter      TEXT NOT NULL,
-  reason     TEXT,
-  created    TEXT NOT NULL,
-  PRIMARY KEY (project_id, kind, target, voter)
-);
-
--- R42 (sections 7.10, 7.13): EVERY OWNERSHIP DECISION, KEPT. One row per carried addition, removal or rescue,
--- naming its deciders and their reasons (JSON arrays), append-only; every participant of the project reads it.
-CREATE TABLE IF NOT EXISTS project_owner_decisions (
-  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
-  project_id TEXT NOT NULL,
-  kind       TEXT NOT NULL CHECK (kind IN ('add','remove','rescue')),
-  target     TEXT NOT NULL,
-  deciders   TEXT NOT NULL,
-  reasons    TEXT NOT NULL,
-  at         TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS project_owner_decisions_project ON project_owner_decisions(project_id, seq);
 
 -- R63 (Bob, 2026-09-26): EVERY REMOVAL AN OWNER MAKES, KEPT, with who removed whom, when, and the owner's reason;
 -- every participant of the project reads it. Append-only.
@@ -274,11 +221,12 @@ export const MEMBERSHIP_ADDITIVE_COLUMNS = [
   ["project_participants", "owner_order", "INTEGER"],
 ];
 
-/* R59, R111: the tables purge never clears (identity, governance and the group's own settings) and those keyed by project, cleared with it. The
+/* R115, R111: the tables purge never clears (identity, governance and the group's own settings) and those keyed by project, cleared with it. The
    credential tables (credentials, sessions, bootstrap, signers, ai_credentials) are `credentials`', exempt by its
    R18. */
 export const MEMBERSHIP_EXEMPT_TABLES = ["members", "member_expertise", "admin_votes", "hosting_access",
   /* R111 (T34): the doors, the group's description and the court-notice setting. */
   "join_doors", "group_description", "court_notice"];
-export const MEMBERSHIP_PROJECT_TABLES = ["project_participants", "project_owner_votes", "project_owner_decisions",
-  "project_removals", "project_visibility", "project_sight", "project_join_requests"];
+/* R115 (T38): participation, visibility and the sight index, with R36's removals; the owner votes, decisions and requests
+   to join are `project-roster`'s, declared by it (its R18). */
+export const MEMBERSHIP_PROJECT_TABLES = ["project_participants", "project_removals", "project_visibility", "project_sight"];

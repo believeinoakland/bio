@@ -155,33 +155,6 @@ test("R113 memberPairings (R19) is bounded and says so: the first limit by handl
   assert.deepEqual([op.pairings.length, op.truncated], [1, true]);
 });
 
-test("R82 the votes behind R39's and R40's deciders: behind the deciders are the current owners' only, read bounded by the owner count", async () => {
-  const w = await world().group("ann", "bob", "cal", "dee", "eve");
-  w.project("PROJ-P");
-  w.m.projectClaimOwner({ projectId: "PROJ-P", memberId: "ann" });
-  for (const h of ["bob", "cal", "dee", "eve"]) {
-    w.m.projectInvite({ projectId: "PROJ-P", handle: h, by: "ann", viewer: V("ann") });
-    w.m.projectJoin({ projectId: "PROJ-P", by: h, viewer: V(h) });
-  }
-  const add = (handle, by) => w.m.projectOwnerAdd({ projectId: "PROJ-P", handle, by, viewer: V(by) });
-  add("bob", "ann");
-  // a vote on record from a member who is not an owner (eve) never counts, whatever the table holds
-  w.sql.exec(`INSERT INTO project_owner_votes (project_id,kind,target,voter,reason,created) VALUES ('PROJ-P','add','cal','eve',NULL,'t')`);
-  const c = add("cal", "ann");
-  assert.deepEqual([c.reason, c.have, c.awaiting], ["CONSENSUS_REQUIRED", ["ann"], ["bob"]]);
-  const d = add("cal", "bob");
-  assert.deepEqual([d.ok, d.deciders], [true, ["ann", "bob"]], "eve's vote is not a decider");
-  // removal at three: the target does not vote; a non-owner's vote on record never counts; reasons follow the voters
-  w.sql.exec(`INSERT INTO project_owner_votes (project_id,kind,target,voter,reason,created) VALUES ('PROJ-P','remove','cal','dee','from dee','t')`);
-  const rm = (handle, by, reason) => w.m.projectOwnerRemove({ projectId: "PROJ-P", handle, by, reason, viewer: V(by) });
-  const v1 = rm("cal", "ann", "a");
-  assert.deepEqual([v1.reason, v1.have, v1.deciders], ["VOTES_SHORT", 1, ["ann"]]);
-  const v2 = rm("cal", "bob", "b");
-  assert.deepEqual([v2.ok, v2.deciders, v2.reasons], [true, ["ann", "bob"], ["a", "b"]]);
-  const kept = w.m.projectParticipants({ projectId: "PROJ-P", by: "eve" }).ownership.at(-1);
-  assert.deepEqual([kept.kind, kept.deciders, kept.reasons], ["remove", ["ann", "bob"], ["a", "b"]]);
-});
-
 test("R79 listeners are told in the modules' total order (build/modules.json's layer order), an unknown module last", async () => {
   const { modules } = JSON.parse(await readFile(new URL("../../../../build/modules.json", import.meta.url), "utf8"));
   const byLayer = [...modules].map((m, i) => ({ id: m.id, layer: m.layer, i })).sort((a, b) => (a.layer - b.layer) || (a.i - b.i));
