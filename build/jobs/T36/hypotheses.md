@@ -29,7 +29,7 @@ Measured as mechanics §3 asks: my requirements (15 KB), layer 6's row of `build
 
 **Deferred:** nothing.
 
-**Found in other modules / artifacts (REPORT J2):**
+**Found in other modules / artifacts (REPORT J1):**
 - The plane bundle `bio-plane/dist/bio-plane.bundled.mjs` (`not_product`) is stale from this change's source (§14). It is BOB's to regenerate at L6's close.
 - `control-plane` `test/m/control-plane/r53-routes.test.mjs`:66 fails identically on the untouched `tranche/T36` tip. It is not in rule 5's red list by name; it looks like red 17's family (routes without specs), but that is BOB's to confirm.
 - My own requirements' Uses names `membership`'s `viewerPredicate`, `inSight` and `courtNotice`, but the code also calls `positionalMember` (membership R76) to name a note's member (since T34). This is a wording gap in Uses for BOB; the behaviour is unchanged.
