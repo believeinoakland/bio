@@ -35,8 +35,12 @@ import { PROJECTION_COLUMNS, PROJECTION_INDEXED, PROJECTION_TABLE, PROJECTION_RE
 import { Frontier, FRONTIER_LIMIT_DEFAULT, FRONTIER_LIMIT_MAX, FRONTIER_INTERNET_NOTE } from "./frontier.mjs";
 import { FIELD_VIEWS, FIELD_VIEW_PREFIX, TERMS_TABLE, TERMS_SCHEMA, TERM_FIELDS, fieldRelation, termRows } from "./fields.mjs";
 import { entitiesOf } from "../entities/index.mjs";
+import { eventsOf } from "../events/index.mjs";
+import { standardsOf } from "../standards/index.mjs";
+import { moneyOf } from "../money/index.mjs";
+import { peopleOf } from "../people/index.mjs";
 import { Finder, FIND_KINDS, FIND_CAPTURES_PER_CALL, FIND_IDS_MAX, FIND_ITEMS_DEFAULT, FIND_ITEMS_MAX,
-         FIND_TERM_MAX } from "./findin.mjs";
+         FIND_TERM_MAX, RECORDED_BY_MODULES } from "./findin.mjs";
 
 export { MEANING_READ_CHECKS, SELECTION_CHECKS } from "./checks.mjs";
 export { projectionOf, PROJECTION_COLS, PROJECTION_LIMIT_DEFAULT, PROJECTION_LIMIT_MAX } from "./projection.mjs";
@@ -45,7 +49,7 @@ export { SELECTION_ID_CHUNK, PROJECTION_TABLE, PROJECTION_RELATION } from "./sch
 export { FIELD_VIEWS, FIELD_VIEW_PREFIX, TERMS_TABLE, TERM_FIELDS } from "./fields.mjs";
 export { FIND_KINDS, FIND_MATCHERS, FIND_CAPTURES_PER_CALL, FIND_IDS_MAX, FIND_ITEMS_DEFAULT, FIND_ITEMS_MAX,
          FIND_WORDS_MAX, FIND_TERM_MAX, FIND_EVENT_TYPES, FIND_PEOPLE_KINDS, FIND_ORIGIN, matchMoney, matchDates,
-         matchRequirements, cutWords } from "./findin.mjs";
+         matchRequirements, cutWords, RECORDED_BY_MODULES, RECORDED_BY_LIMIT, RECORDED_NONE_REGISTERED } from "./findin.mjs";
 /* R33, R71: the names of the tables this module declares. */
 export const RETRIEVAL_TABLES = Object.freeze([...RETRIEVAL_PURGE.map((t) => t.name), TERMS_TABLE]);
 export { FRONTIER_LIMIT_DEFAULT, FRONTIER_LIMIT_MAX, FRONTIER_INTERNET_NOTE };
@@ -127,6 +131,7 @@ export class Retrieval {
   #hiddenRuns = null;           // R39: {module, fn}
   #selectionListeners = [];     // R52: {module, fn, seq}
   #fields = [];                 // R62: {module, field, table, key, col, seq}
+  #recordedBy = [];             // R76: {module, fn, seq}
   /* R61, R62: the second argument of every `compile` this module runs: the projection through this module's own
      relation (query-language R25), and each registered field through its owner's (its R26). */
   #via = Object.freeze({ projection: PROJECTION_RELATION });
@@ -141,10 +146,13 @@ export class Retrieval {
   #money = null;
   /* R74's `people`: entities' name lookup (its R17). `undefined`: the host's own, made when first asked. */
   #entities;
+  /* R73's `recorded`: the four recording modules whose `recordedBy` reads it calls, each an instance or a function
+     answering one; a module not handed is the host's own, made when first asked. */
+  #recorders;
 
   constructor({ storage, record, membership, promotion, extraction, observation = null, now = null, selectionNow = null,
                 order = null, terms = null, localFacts = undefined, combine = combineProfiles, host = null, money = null,
-                entities = undefined }) {
+                entities = undefined, recorders = null }) {
     this.#storage = storage;
     this.#sql = storage.sql;
     this.record = record;
@@ -164,6 +172,8 @@ export class Retrieval {
     this.#money = money && typeof money === "object" ? money : null;
     this.#combine = typeof combine === "function" ? combine : null;
     this.#entities = entities;
+    this.#recorders = new Map(RECORDED_BY_MODULES.map((m) =>
+      [m, recorders && typeof recorders === "object" && recorders[m] !== undefined ? recorders[m] : undefined]));
     this.frontierReader = new Frontier(this);
     this.finder = new Finder(this);
   }
@@ -341,6 +351,42 @@ export class Retrieval {
     this.#selectionListeners.push({ module, fn, seq: this.#selectionListeners.length });
     this.#selectionListeners.sort((a, b) => (this.#rank(a.module) - this.#rank(b.module)) || (a.seq - b.seq));
     return { ok: true, module };
+  }
+
+  /** R76 (N715; K31, K2063): a later module's read by capture and extent, `fn({captureSha, extent?, limit, viewer})`
+   *  answering in `events` R49's shape, which R73 calls for every capture a find reads, after the four it names. A
+   *  malformed registration, or a second by the same module, is refused by membership's `listenerRefusal` (its R81);
+   *  the four R73 names are held already, so none of them registers here. Reads run in the modules' total order. */
+  registerRecordedBy(module, fn) {
+    const held = [...RECORDED_BY_MODULES.map((m) => ({ module: m })), ...this.#recordedBy];
+    const refused = listenerRefusal(held, module, fn);
+    if (refused) return refused;
+    this.#recordedBy.push({ module, fn, seq: this.#recordedBy.length });
+    this.#recordedBy.sort((a, b) => (this.#rank(a.module) - this.#rank(b.module)) || (a.seq - b.seq));
+    return { ok: true, module };
+  }
+
+  /** R73, R76: the reads a find calls, in order: `events`, `standards`, `money` and `people`'s `recordedBy`, then each
+   *  registered one. `read` is null, with why, for a module whose instance offers none; `registered` says which. */
+  recordedReads() {
+    const own = RECORDED_BY_MODULES.map((m) => {
+      let inst = this.#recorders.get(m);
+      if (inst === undefined) {
+        inst = null;
+        const make = { events: eventsOf, standards: standardsOf, money: moneyOf, people: peopleOf }[m];
+        try { if (this.#host) inst = make(this.#host); } catch { inst = null; }
+        this.#recorders.set(m, inst);
+      }
+      if (typeof inst === "function") {
+        try { inst = inst(); } catch { inst = null; }
+        this.#recorders.set(m, inst);
+      }
+      return inst && typeof inst.recordedBy === "function"
+        ? { module: m, read: (a) => inst.recordedBy(a), registered: false }
+        : { module: m, read: null, registered: false,
+            why: inst ? `${m} offers no recordedBy read` : `${m} is not reachable here` };
+    });
+    return [...own, ...this.#recordedBy.map((r) => ({ module: r.module, read: r.fn, registered: true }))];
   }
 
   /* ---- the T33 fields, the local day, the compile (R68, R69) ---- */
@@ -1205,8 +1251,31 @@ export class Retrieval {
     if (!owner || sel.owner !== owner)
       return { ok: false, reason: "NOT_YOURS", detail: "a selection is readable only by the credential that made it" };
     const now = new Date(this.#selNowMs());
-    this.#sql.exec(`UPDATE selections SET touched=?, expires=? WHERE handle=?`,
-      now.toISOString(), new Date(now.getTime() + SELECTION_TTL_MS).toISOString(), handle);
+    const expires = new Date(now.getTime() + SELECTION_TTL_MS).toISOString();
+    this.#sql.exec(`UPDATE selections SET touched=?, expires=? WHERE handle=?`, now.toISOString(), expires, handle);
+    return this.#selectionAnswer(sel, viewer, weight, expires);
+  }
+
+  /** R77 (N729; K1991, K2092): what `selectionResolve` answers at `weight: "report"` — the members re-resolved under
+   *  the current viewer, with the drift; NO_SUCH_SELECTION for an unknown, released or expired handle, NOT_YOURS for
+   *  another owner's — and it writes nothing: no sweep, no extended life, no column of any selection row changed, so an
+   *  expired selection not yet swept answers NO_SUCH_SELECTION and stays as it was. `expires` is the selection's own.
+   *  Never throws: a selection that cannot be read answers as one not held. Not an op (`answers` R28 reads it). */
+  selectionRead(args) {
+    const none = { ok: false, reason: "NO_SUCH_SELECTION", detail: "unknown, released, or expired" };
+    try {
+      const { handle = null, viewer = null, owner = null } = args && typeof args === "object" ? args : {};
+      const sel = typeof handle === "string" && handle ? this.#one(`SELECT * FROM selections WHERE handle=?`, handle) : null;
+      if (!sel || sel.expires < this.#nowIso()) return none;
+      if (!owner || sel.owner !== owner)
+        return { ok: false, reason: "NOT_YOURS", detail: "a selection is readable only by the credential that made it" };
+      return this.#selectionAnswer(sel, viewer, "report", sel.expires);
+    } catch { return { ...none, detail: "the selection could not be read, so it is answered as one not held" }; }
+  }
+
+  /* R19, R20, R77: one selection's answer under `viewer` at `weight`, `expires` the life it now has. */
+  #selectionAnswer(sel, viewer, weight, expires) {
+    const handle = sel.handle;
     const tally = { applied: 0 };
     const { members, drift } = this.#selectionMembers(sel, viewer, tally);
     const moved = drift.revised.length + drift.removed + drift.added > 0;
@@ -1222,14 +1291,14 @@ export class Retrieval {
                       detail: "this action changes state, so it will not run against a set that moved "
                             + "since it was selected. Look at the selection again and re-select." } : {}),
       drift, members: stopped ? [] : members.map((m) => m.bundle_id),
-      expires: new Date(now.getTime() + SELECTION_TTL_MS).toISOString(),
+      expires,
       gate: { applied: tally.applied },
     };
     /* END DEC-49 REGION is-selection-moved */
   }
 
   /* R19's re-resolution of a selection's members under the current viewer, and its drift; read-only (it is the read
-     both `selectionResolve` and R73's selection scope make, and only the former extends the selection's life). */
+     both `selectionResolve` and `selectionRead` make, and only the former extends the selection's life). */
   #selectionMembers(sel, viewer, tally) {
     const handle = sel.handle;
     const drift = { revised: [], purged: [], hidden: [], added: 0, removed: 0, kind: sel.kind };
@@ -1440,8 +1509,9 @@ export class Retrieval {
    *  (every capture the viewer may not see is left out and counted nowhere, R29); the kinds are answered by
    *  `findin.mjs`'s matchers over at most `FIND_CAPTURES_PER_CALL` captures, in capture-sha order, `next` naming where
    *  to continue. `owner` is the control plane's owner stamp, which a selection scope is read under (R19: a selection
-   *  is its maker's); it defaults to the viewer. It writes nothing: a selection named as the scope is read without
-   *  extending its life, and no observation, fact or reading is written; it calls no model. */
+   *  is its maker's); it defaults to the viewer. It writes nothing: a selection named as the scope is read through
+   *  `selectionRead` (R77), never extending its life, and no observation, fact or reading is written; it calls no
+   *  model. Each match carries `recorded`, who recorded it (R76's reads; `findin.mjs`). */
   findIn({ scope = null, kinds = null, term = null, limit = null, cursor = null, viewer = null, owner = null } = {}) {
     const no = (reason, detail, extra = {}) => ({ ok: false, reason, code: reason, detail, ...extra });
     if (typeof viewer !== "string" || !viewer)
@@ -1475,8 +1545,11 @@ export class Retrieval {
     const next = remaining.length > page.length ? page[page.length - 1].capture_sha : null;
     const found = this.finder.find({ captures: page, kinds: wanted, term: words, limit: cap, viewer,
                                      whole: after === null && next === null });
+    /* R73, R76 (N715): who recorded each match, through the recording modules' reads by capture. */
+    const recorded = this.finder.recorded(found, page, viewer);
     return { ok: true, scope: { form, [form]: value, captures: resolved.captures.length },
-             kinds: found, captures_read: page.length, limit: cap, captures_limit: FIND_CAPTURES_PER_CALL, next };
+             kinds: found, captures_read: page.length, limit: cap, captures_limit: FIND_CAPTURES_PER_CALL, next,
+             recorded_read: recorded.read, recorded_not_read: recorded.not_read };
   }
 
   /* R73's scope, resolved under the viewer's sight to the captures it holds (`[{capture_sha, bundle_id}]`, one entry
@@ -1505,14 +1578,10 @@ export class Retrieval {
         return no("CAPTURE_NOT_HELD", "this record holds no capture with that fingerprint that you may see");
       held.forEach(keep);
     } else if (form === "selection") {
-      const handle = typeof value === "string" ? value : "";
-      const sel = handle ? this.#one(`SELECT * FROM selections WHERE handle=?`, handle) : null;
-      if (!sel || sel.expires < this.#nowIso())
-        return { ok: false, reason: "NO_SUCH_SELECTION", detail: "unknown, released, or expired" };
-      if (sel.owner !== owner)
-        return { ok: false, reason: "NOT_YOURS", detail: "a selection is readable only by the credential that made it" };
-      const { members } = this.#selectionMembers(sel, viewer, { applied: 0 });
-      holdOf(members.map((m) => m.bundle_id));
+      /* R77: read, never resolved, so the find extends no selection's life and writes nothing (N729). */
+      const sel = this.selectionRead({ handle: typeof value === "string" ? value : "", viewer, owner });
+      if (sel.ok !== true) return { ok: false, reason: sel.reason, detail: sel.detail };
+      holdOf(sel.members);
     } else if (form === "ids") {
       const list = Array.isArray(value) ? [...new Set(value.filter((v) => typeof v === "string" && v).map((v) => v.trim()))] : [];
       if (list.length > FIND_IDS_MAX)
@@ -1598,7 +1667,8 @@ const instances = new WeakMap();
  *  `observation` (`observationOf` over observation-log's factory by default), `now` (milliseconds; the clock the
  *  projection's action facts are judged at), `selectionNow` (the selections' clock, the wall clock by default),
  *  and `order` (the modules' total order listeners and decorations run in; membership's `MODULE_ORDER` by default). At creation it declares its
- *  tables to purge (R33), joins every promotion (R1) and registers its figures (R67). */
+ *  tables to purge (R33), joins every promotion (R1), registers its figures (R67) and reaches the four recording
+ *  modules R73 reads (`recorders`, each the host's own unless handed). */
 export function retrievalOf(host, deps) {
   let r = instances.get(host);
   if (!r) {
@@ -1618,6 +1688,9 @@ export function retrievalOf(host, deps) {
       throw new Error(`retrieval: record-core refused its table declaration: ${answer.reason} (${answer.table})`);
     r.joinPromotion();
     registerFigures(r);
+    /* R73: the four recording modules are reached now, as the plane makes every module before any request, so no
+       find is the first touch that makes one (and its tables). */
+    r.recordedReads();
   }
   return r;
 }
