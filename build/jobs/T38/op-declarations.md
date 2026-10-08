@@ -27,7 +27,7 @@ Rule 6 items 15 and 18, my shares:
 **Deferred.** Nothing.
 
 **Found in other modules.**
-- **control-plane:** `t*`'s R2/R41 test ("affordances' unaccounted over the door's op table") goes red on my branch alone: `unpublished` and `unranked` each list `obscuremarkwithdraw`. The cause is op-grades' grade (T38-14), not control-plane. I merged `origin/job/T38/op-grades` (its J2 COMPLETE) with my branch in a scratch worktree and ran control-plane: 192 pass, 0 fail. So once op-grades and op-declarations are both merged, it is green.
+- **control-plane:** `totality.test.mjs`'s R2/R41 test ("affordances' unaccounted over the door's op table") goes red on my branch alone: `unpublished` and `unranked` each list `obscuremarkwithdraw`. The cause is op-grades' grade (T38-14), not control-plane. I merged `origin/job/T38/op-grades` (its J2 COMPLETE) with my branch in a scratch worktree and ran control-plane: 192 pass, 0 fail. So once op-grades and op-declarations are both merged, it is green.
 - **affordances:** 29 tests fail identically with and without my change (the set is unchanged, compared test by test; among them R48's 203/204, T38-31's). None is mine.
 - **admission** 34/0 and **op-grades** 35/0 with my change.
 
