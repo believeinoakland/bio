@@ -113,6 +113,7 @@ Terms. An **act** is `{id, label, weight, types, applies(facts, type), prompt?}`
 - (T35; K1974) `op-grades`: the grading tables and `phoneOf` (A-1; R4, R11, R12, R19, R20, R36), read by reference, never copied.
 - (T35) `people`: `personexpunge`'s grade and refusal (its R12; R46). The owners of R47's ops (`acquisition`, `capture`, `hypotheses`, `retrieval`, `entities`, `public-read`, `credentials`, `instance-setup`), for R12's totality and R19's backing, each already among this module's uses or earlier in `build/modules.json`.
 - `jurisdictions`: `list`, `get`, `combine` (R25's place names, R26's `action_kind`; K212).
+- (T38; K2330) `case-carriage`: its test fixture (`world`, `makePng`), read only by `t38-backing.test.mjs` to drive `obscuremarkwithdraw` at its owner's interface (R19).
 - `inquiry`: `DISPOSITIONS` (R6). `progressions`: `STAGE_REQUIREDNESS`. `entities`: `ENTITY_KINDS`, `RELATION_KINDS`. `action-grammar`: `RISK_TIERS`, `actionKinds` (its R1) and the other action vocabularies (its R2) (R26); `content`: its vocabularies.
 - `intent`: its open proposal, the backing of R19's `triage` (K221).
 - `inquiry`: R46's vocabularies (R4; N345). `contradiction`: `DISMISSAL_REASONS` (its R31; R4; N345); `candidateSidesSeen` (its R56; R14's `contradiction_sides_seen`, N365).
