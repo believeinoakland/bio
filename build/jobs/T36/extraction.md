@@ -1,6 +1,6 @@
 # extraction (T36)
 
-**Status** · session_01VgbqiWA5e3MLeiVgTNS9KZ · depth 2 · WAITING ON BOB (J1) · handled B2
+**Status** · session_01VgbqiWA5e3MLeiVgTNS9KZ · depth 2 · COMPLETE · handled B2
 
 ## Work
 
