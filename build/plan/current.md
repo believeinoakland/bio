@@ -2,6 +2,8 @@
 
 **Status** · OPEN · BOB #138 · session_01HPS1DqHHqTRjKz5fiM8LfW · depth 1
 
+**Jobs** · record-grammar: RECORD-GRAMMAR #10 session_01DAQTevxD8WUdaHnDusXB4x
+
 **Sources** · `next.md` N748–N774 (every open entry); `current.md` (T36): its "Left out of T36" table (rows whose reason ends with T36: N708, K2134), its accepted reds (rule 5: 1, 4, 7, 15, 16, 18 still open at L6, K2138), "P6 notes"; `modules.json` (order, layers); `rulings-active.md`; rulings K2064, K2074, K2075, K2079, K2084, K2090, K2099, K2100, K2101, K2108, K2118, K2122, K2124–K2138; for N708 K1804, K1819, K2110, K2131, K2133–K2135; for N669 K1793, K1804, K1869, K1883; PR #14, merged to `main` at `e08cd35ecb` (DEC-178–DEC-182, DEC-179's `screens/words.json`); at the opening (BOB #138, K2171) a worker's fold of DEC-178, DEC-180–DEC-182, N775–N778, reviewed by BOB. PROCESS-MECHANICS §5.2, §12.2; PROCESS-DESIGN P10, P18, P19.
 
 **At T37's opening (assumed):** every T36 entry is merged (T36-1 … T36-52; T36-50 not joined, K2131); T37 opens from `tranche/T36`'s tip whether or not `main` has moved yet (K2137); PR #14 (UX-DESIGN's MERGE U123: DEC-178, DEC-179's interface word list, 923 words, 345 protected) is merged to `main` at T36's close (§5.7 (1), K2100), so "the word list does not exist" is no hard reason in T37 and N669 enters. PR #14 also carries DEC-180 (S17, Bob's K2108), DEC-181 and DEC-182, so N757 and N776 enter (K2171). Still hard reasons: the new screens' shell (N672), which nothing in T36 or T37 builds; every deployment or measurement no T37 entry takes.
