@@ -33,3 +33,7 @@ My readings, applied (record, 'My readings'); answer only to overrule. (1) R29's
 ## J2 · REPORT
 
 Other modules. op-declarations (T36-35): t33.test.mjs:192 ('credentials: aikeepaway has no spec') and t35.test.mjs:196 (R30's negative control lists aikeepaway, aikeepawaystate, securitycount) go red with this merge; t34.test.mjs:135 (red 13) also lists aikeepaway. All clear when T36-35 declares aikeepaway and aikeepawaystate and names securitycount among the in-process routes. Suggest accepting the two as reds until T36-35. instance-setup (T36-34): aiKeepAwayState().on may be null (unread): read anything but false as kept away. file-safety (T36-11): keyedServiceSet with no key answers {ok, service, held: false, removed}; keyedServiceFor answers a set of fields as the object set. No generated artifact touched.
+
+## J3 · COMPLETE
+
+T36-7 done: R29 (security:<tool_id>, sets of fields, a set with no key removes), R35 (AI_KEPT_AWAY before any account; R27, R32, R24 the same; own reference always served otherwise), R45 (level: null on failure), R49 securityTotals, R50 securitycount route, R51 aiKeepAwaySet, R52 aiKeepAwayState. Rows for T36-8: new C-29.31 AI_KEPT_AWAY, C-29.32 NO_REASON, C-96.44 SECURITY_COUNTS_UNREADABLE; changed where of C-96.43 SECURITY_PERIOD_INVALID (#periodRefusal). New table ai_keep_away; additive column keyed_services.form. Tests 119/0; format, architecture, coverage (51/51), ownership 0 failures; users' suites green but op-declarations (J2). 2,690 lines. Record: build/jobs/T36/credentials.md on job/T36/credentials.
