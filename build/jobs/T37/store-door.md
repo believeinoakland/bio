@@ -58,3 +58,7 @@ Until it lands I test the route with a stub instance-setup, so nothing waits on 
 - `checks/ownership.mjs`: 4 files, 0 failures.
 
 Size (session_01JNPSatGHX7N9NegWMbM7tR): test runs 12, module lines 577
+
+## J2 · COMPLETE
+
+T37-32 complete on job/T37/store-door: R9 (secretSha removed from the in-process URL; body as it arrived) and R10 (AI_KEPT_AWAY from credentials.aiKeptAway(), then aiUseCheck, then accountFor; {on} from assistantState; translationdraft via translationDraftRefusal per K2238; B2's aikeptaway and subscriptionconnected). store-door 41/0; coverage 13/13; architecture, ownership 0. Notes: translationdraft is tested against a stand-in until T37-30 merges (re-run then); format fails only on modules.json's not-yet-present setup-words.mjs (instance-setup's); control-plane t34-routes.test.mjs:211 is rule 4's named red until T37-33. Details in my record.
