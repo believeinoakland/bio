@@ -32,3 +32,12 @@ Size (session_01FHJ4WgvZK4SkDMHVE5W2mn): test runs 12, module lines 0
 ## J1 · COMPLETE
 
 T39-20 done; record's Completion section. (1) docket purge list = MARK+DOCUMENT tables (K2377 red cleared). (2) R7: pdfjs-dist 4.10.38 exact + lock; R7 test asserts exact pin and lock; doc-clean's pdf.js oracle runs and passes. (3) R18: no code change; t39.test.mjs: non-fetch receipt queues, direct does not; scheduler holds onCopyWork and document-copy; onAlarm doccopy copied:1, copy at <ns>/obscured/<sha> (bio and scratch); no bucket gives DOCUMENT_COPY_NO_STORE. Plane 156/0; format, architecture, coverage (29/29) and ownership 0 failures. REPORT: the lock change stales dist/bio-plane.bundled.mjs (fleetbundles 116/1, STALE BUNDLE package-lock.json); a generated artifact, not mine: rebuild at L11 close (rule 3 item 7). R7/R18 T39 marks are met, yours to strike. Waiting for your CHANGE to merge last.
+
+## After B2 (CHANGE: the other L11 jobs merged)
+
+- Merged `origin/tranche/T39` into `job/T39/plane` with no conflict, then ran `npm ci` in `bio-plane`.
+- Plane suite: 156 pass, 0 fail. doc-clean's pdf.js oracle still runs and passes (5 pass, 1 skipped, the skip not pdf.js).
+- Checks after the merge: format 0 failures; coverage 29/29 ids, 0 failures; ownership 6 files, 0 failures. Architecture first showed 1 failure: `t39.test.mjs` imported `test/m/doc-clean/fixtures.mjs`, and plane does not list doc-clean in its Uses. Fixed: the test now builds its own one-page PDF whose `/Info` names a maker, which doc-clean still rewrites (`copied: 1`). Architecture is now 0 failures.
+- Whole module suite `node --test bio-plane/test/m/`: 9,137 pass, 1 fail, 1 skipped, 11 todo. The one failure is filings' `test/m/filings/outward.test.mjs`:136 (R25: an exhibit's capture grade reads `'B'` where the test expects `null`). It fails the same way, 5 pass / 1 fail, on a clean checkout of `origin/tranche/T39`. So it is not this job's change, and not on the plan's rule 3 list. Reported to BOB.
+
+Size (session_01FHJ4WgvZK4SkDMHVE5W2mn): test runs 18, module lines 0
