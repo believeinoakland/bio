@@ -1,6 +1,6 @@
 # reading-pipeline (T36)
 
-**Status** · session_01Bqmqo5KoGA92ZdFBC6tLLW · depth 2 · WORKING · handled B1
+**Status** · session_01Bqmqo5KoGA92ZdFBC6tLLW · depth 2 · COMPLETE · handled B1
 
 ## Completion (READING-PIPELINE #7, T36-13a)
 
