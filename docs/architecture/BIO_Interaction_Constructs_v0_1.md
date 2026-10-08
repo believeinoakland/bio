@@ -960,6 +960,8 @@ waits until every relied-on photo is checked; a mark is withdrawn only by a late
 
 **Choosing a handle (the design session, 2026-10-08, DEC-184, on Bob's comment).** As a member types a handle, the field says whether it
 is free in the group, taken, or uses characters a handle can't have; it never says who has a handle.
+**RULED 2026-10-08 by Bob (DEC-186, "S18: B"):** a member may change their own handle until their work first appears in a published
+case, after which it is fixed; members see the earlier handle beside the new one.
 
 **Acts that can never be undone, on a phone (the design session, 2026-10-08, DEC-181).** Every act the Irreversible weight marks is
 read on a phone and done on a larger screen, replacing DEC-170's single act.

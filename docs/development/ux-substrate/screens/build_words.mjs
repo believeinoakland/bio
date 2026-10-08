@@ -113,6 +113,11 @@ add('handle.free', '{handle} is free in {group}', false, 'mock-screens.js join')
 must(scr, 'mock-screens.js', 'mai-k is free in Lakeshore Tenants');
 add('handle.taken', '{handle} is already taken in {group}. Try another, such as {suggestion}.', false, 'mock-screens.js join');
 must(scr, 'mock-screens.js', 'is already taken in Lakeshore Tenants. Try another, such as');
+add('handle.changeable', 'You can still change it: none of your work is in a published case yet.', false, 'mock-screens.js account');
+must(scr, 'mock-screens.js', 'You can still change it: none of your work is in a published case yet.');
+add('handle.fixed', 'Your handle is fixed: your work is in a published case ({case}).', false, 'DEC-186');
+add('handle.formerly', 'formerly {handle}', false, 'mock-screens.js members');
+must(scr, 'mock-screens.js', 'formerly dev-o');
 add('handle.characters', 'A handle uses only lower-case letters, digits and hyphens.', false, 'mock-screens.js join');
 must(scr, 'mock-screens.js', 'A handle uses only lower-case letters, digits and hyphens');
 

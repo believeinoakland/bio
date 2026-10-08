@@ -106,6 +106,7 @@ const ACT_HELP = {
   recordpersonfact: 'Records a fact about this person from the passage: a position, a credential, an interest. It cites the passage.',
   recorddatedfact: 'Records a dated fact from the passage, citing it, for the timeline.',
   clockpropose: 'Works out a due date from the law and the dates, showing each day counted and each holiday skipped. It proposes the date; a member confirms it.',
+  owed_handlechange: 'Changes the handle the record shows on your work. Members see your earlier handle beside it. Allowed until your work first appears in a published case; after that it is fixed.',
   owed_handlecheck: 'Checks, as you type, whether this handle can be used in the group: free, already taken, or using characters a handle can\'t have. It never says who has a handle.',
   owed_obscuremarkwithdraw: 'Withdraws a mark on a photo, with your reason, for example when it covers what the finding shows. The withdrawal is recorded beside the mark; the public copy follows the marks that stand.',
   owed_obscuremark: 'Marks anyone in a photo who is not part of a finding, and any number plate, so the copy a published case carries shows them obscured, labelled. The original stays inside the group.',

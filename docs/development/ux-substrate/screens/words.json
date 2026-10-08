@@ -8,17 +8,17 @@
   "state": 4,
   "draft": 4,
   "photo": 8,
-  "handle": 3,
+  "handle": 6,
   "rail": 14,
   "tab": 2,
   "level": 2,
   "guide": 6,
   "screen": 94,
-  "act": 461,
+  "act": 463,
   "column": 33,
   "wizard": 239,
-  "total": 936,
-  "protected": 355
+  "total": 941,
+  "protected": 356
  },
  "words": [
   {
@@ -531,6 +531,24 @@
    "en": "{handle} is already taken in {group}. Try another, such as {suggestion}.",
    "protected": false,
    "source": "mock-screens.js join"
+  },
+  {
+   "key": "handle.changeable",
+   "en": "You can still change it: none of your work is in a published case yet.",
+   "protected": false,
+   "source": "mock-screens.js account"
+  },
+  {
+   "key": "handle.fixed",
+   "en": "Your handle is fixed: your work is in a published case ({case}).",
+   "protected": false,
+   "source": "DEC-186"
+  },
+  {
+   "key": "handle.formerly",
+   "en": "formerly {handle}",
+   "protected": false,
+   "source": "mock-screens.js members"
   },
   {
    "key": "handle.characters",
@@ -1508,6 +1526,12 @@
   {
    "key": "act.expertisedeclare.label.account",
    "en": "Declare your expertise",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_handlechange.label.account",
+   "en": "Change your handle",
    "protected": true,
    "source": "registry.json"
   },
@@ -3404,6 +3428,12 @@
   {
    "key": "act.clockpropose.does",
    "en": "Works out a due date from the law and the dates, showing each day counted and each holiday skipped. It proposes the date; a member confirms it.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_handlechange.does",
+   "en": "Changes the handle the record shows on your work. Members see your earlier handle beside it. Allowed until your work first appears in a published case; after that it is fixed.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },

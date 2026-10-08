@@ -415,6 +415,11 @@
      ]
     },
     {
+     "op": "owed:handlechange DEC-186",
+     "label": "Change your handle",
+     "status": "owed"
+    },
+    {
      "op": "owed:setpassword DEC-182",
      "label": "Change your password",
      "status": "owed"

@@ -2864,6 +2864,7 @@ reasoning recorded in: this entry; `screens/mock-screens.js` (the ceremony's Pho
 owed: (BOB, T37 L8 and L11) signing refused while a relied-on photo is unchecked (a code naming the photo); `obscuremarkwithdraw` with its reason, recorded beside the mark, the copy following standing marks; the refusals' words as (3) and (4); the `photo.*` words from `words.json`; the password text as (7).
 
 ### DEC-184 · answered
+amended: 2026-10-08 · DEC-186 (Bob, S18: B): a handle may be changed until the member's work first appears in a published case; the screens say so.
 raised: 2026-10-08 · the UX design session with Bob on his secondary account (session_01SCHPX2mpSDpBNA9wprUm5H; the development process runs on the same account since K1891) (Bob's comment on the layouts page's joining screen, field "Your handle": "I assume that the system is enforcing the restriction that every handle be unique within a group. The user should be getting visual feedback saying whether the handle they're choosing is unique or not.")
 for: bob-session
 question: What a member sees while choosing a handle.
@@ -2890,3 +2891,17 @@ response: **Decided by the design session, 2026-10-08.** (1) Every photo a publi
 decided: 2026-10-08 · the design session (P17), beneath Bob's K2248
 reasoning recorded in: this entry; `screens/mock-screens.js` (the Photos step); `screens/question.html` (S17's record); `screens/words.json` (`photo.obscured.label`, `photo.published.label`).
 owed: (BOB, N779 in T38) the two labels on published photos, read by key; the Photos step's sentence.
+
+### DEC-186 · answered
+raised: 2026-10-08 · the UX design session with Bob on his secondary account (session_01SCHPX2mpSDpBNA9wprUm5H; the development process runs on the same account since K1891) (found answering Bob's comment on the handle field, DEC-184: no op changes a handle after joining, while the screens had said it could be; question S18)
+for: bob
+question: Whether a member may change their handle after joining, and until when.
+why it is Bob's: what Civicsmith must do (a requirement), and how a member appears on published, signed work (P17).
+provisional: membership as built: a handle is set once, at enrolment (R16), and never changed.
+alternative: A, fixed at joining; C, changeable any time, published cases keeping the handle they were signed with.
+recommendation: B, as below.
+reversal cost: low before the screens are built.
+response: **Bob, 2026-10-08: "S18: B".** Ruled: (1) a member may change their own handle until their work first appears in a published case; from then on it is fixed, because published cases are signed and permanent; (2) inside the group members see the earlier handle beside the new one ("formerly mai-k"), so a change never hides earlier work; (3) the new handle must be free in the group and follow a handle's characters, checked as the member types (DEC-184).
+decided: 2026-10-08 · Bob
+reasoning recorded in: this entry; `screens/question.html` (S18); `screens/mock-screens.js` (joining's help, Your account's "Your handle", Members' "formerly"); `screens/mock-refs.js`; `screens/registry.src.py` (`owed:handlechange DEC-186`); `journeys.html` (journey 3); `screens/words.json` (`handle.*`); BIO_Interaction_Constructs_v0_1.md §V.
+owed: (BOB) a requirement in membership: `handlechange` for a member's own handle, refused once any of their work is in a published case (a code naming the case) and refused for a handle taken or not allowed (R12, R16); the earlier handles kept and shown to members as "formerly"; published cases keep the handle they were signed with; the words held for translation.
