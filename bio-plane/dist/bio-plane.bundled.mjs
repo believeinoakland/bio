@@ -208624,7 +208624,8 @@ var SCHEDULER_ORDER = Object.freeze([
   "file-scan",
   "file-render",
   "file-deeper",
-  "file-forward"
+  "file-forward",
+  "file-reputation"
 ]);
 var SCHEDULER_KEYS = Object.freeze({
   "selection-sweep": "swept",
@@ -208656,7 +208657,8 @@ var SCHEDULER_KEYS = Object.freeze({
   "file-scan": "filescan",
   "file-render": "filerender",
   "file-deeper": "filedeeper",
-  "file-forward": "fileforward"
+  "file-forward": "fileforward",
+  "file-reputation": "filereputation"
 });
 var ALWAYS_DUE = Object.freeze(["selection-sweep", "task-drain", "archive-monitor", "connection-derive", "overdue-scan"]);
 var RANKED = Object.freeze([
@@ -208669,9 +208671,7 @@ var RANKED = Object.freeze([
 ]);
 var DAILY = Object.freeze(["duty-transitions", "interest-checks", "money-detectors"]);
 var DETECTORS_BUDGET_MS = 1e3;
-var FILE_SAFETY_CONSUMERS = Object.freeze(["file-scan", "file-render", "file-deeper", "file-forward"]);
-var FILE_SCAN_EVERY_MS = 864e5;
-var FILE_SAFETY_POLL_MS2 = 3e5;
+var FILE_SAFETY_CONSUMERS = Object.freeze(["file-scan", "file-render", "file-deeper", "file-forward", "file-reputation"]);
 var ANSWER_FIELDS2 = /* @__PURE__ */ new Set([
   "swept",
   "drained",
@@ -208687,9 +208687,7 @@ var ANSWER_FIELDS2 = /* @__PURE__ */ new Set([
 var DRAIN_ZERO = Object.freeze({ drained: 0, created: [], folded: [], refused: [], waiting: [], remaining: 0 });
 var PROBE_KEY = "sched_probe";
 var DAILY_KEY = "sched_daily";
-var FILES_KEY = "sched_files";
 var DAY_MS4 = 864e5;
-var HOUR_MS2 = 36e5;
 var message = (e2) => String(e2 && e2.message || e2).slice(0, 500);
 var instantText2 = (ms5) => new Date(Math.floor(ms5 / 1e3) * 1e3).toISOString().replace(/\.\d{3}Z$/, "Z");
 var msOf2 = (v) => typeof v === "number" && Number.isFinite(v) ? v : typeof v === "string" && Number.isFinite(Date.parse(v)) ? Date.parse(v) : null;
@@ -208769,8 +208767,8 @@ var Scheduler = class {
   #publishTicking = false;
   /* The refused registrations of listenTo, each a start-up fault (R23). */
   #faults = [];
-  /* R24: the file-safety consumers' kept instants, `{[name]: {...}}` as the value `sched_files` holds it (null until read). */
-  #files = null;
+  /* true while onAlarm runs: an `onFileWork` call made inside a batch leaves the arming to its reconcile (R1, R24). */
+  #firing = false;
   /** `storage` is the Durable Object's storage (its alarm, and the probe seam's and the daily consumers' values);
    *  `owners` answers each consumer's owner (`retrieval`, `monitoring`, `connections`, `progressions`, `aiRuns`,
    *  `captureRequests`, `calibration`, `bias`, `intent`, `reevaluation`, `networkNotices`, `linkSweep`, `following`,
@@ -208850,85 +208848,29 @@ var Scheduler = class {
     const f17 = this.#owners[name2];
     return typeof f17 === "function" ? f17() : null;
   }
-  /* R24: the file-safety consumers' state, read once per instance before a firing, an arm or the start reads it. */
-  async #loadFiles() {
-    if (this.#files || !this.#owners.fileSafety) return;
-    let v = null;
-    try {
-      v = typeof this.#storage.get === "function" ? await this.#storage.get(FILES_KEY) : null;
-    } catch {
-      v = null;
-    }
-    this.#files = v && typeof v === "object" ? v : {};
-  }
-  /* R24: the four consumers over `file-safety`. Each keeps its instants in `sched_files`; with none kept it is due at
-     once. A refusal is the tick's answer and keeps the cadence; a tick that throws counts as run, so none spins (R3). */
+  /* R24: the five consumers over `file-safety`, each its due and wake R39's answer for its batch at `now`, asked afresh
+     every time, so nothing is kept here (R7, R18). An answer that is not an instant in ms is none. A refusal is the
+     tick's answer, and the next wake is again R39's. */
   #fileSafety() {
     const o = () => this.#owner("fileSafety");
-    const st = (n) => this.#files && this.#files[n] || {};
-    const keep2 = (n, v) => {
-      this.#files = { ...this.#files || {}, [n]: { ...st(n), ...v } };
-    };
-    const at37 = (ms5) => new Date(ms5).toISOString();
-    const refused5 = (r) => !!(r && r.ok === false);
-    const kept = (v) => typeof v === "number" && Number.isFinite(v);
-    const scan = {
-      due: (now) => {
-        const s = st("file-scan");
-        return !kept(s.last) || s.more ? now : s.last + FILE_SCAN_EVERY_MS;
-      },
-      wake: (now) => {
-        const s = st("file-scan");
-        return !kept(s.last) ? now : s.last + FILE_SCAN_EVERY_MS;
-      },
-      tick: async (now) => {
-        keep2("file-scan", { last: now, more: false });
-        const r = await o().scanBatch({ at: at37(now) });
-        keep2("file-scan", { more: !refused5(r) && Number(r && r.remaining) > 0 });
-        return { filescan: r };
-      }
-    };
-    const batch = (n, key, run2, left2) => ({
-      due: (now) => now,
-      wake: (now) => {
-        const s = st(n);
-        return !kept(s.last) ? now : s.more ? s.last + FILE_SAFETY_POLL_MS2 : null;
-      },
-      tick: async (now) => {
-        const was = st(n).more === true;
-        keep2(n, { last: now, more: was });
-        const r = await run2();
-        keep2(n, { more: refused5(r) ? was : left2(r || {}) });
-        return { [key]: r };
-      }
+    const at37 = (now) => new Date(now).toISOString();
+    const ms5 = (v) => typeof v === "number" && Number.isFinite(v) ? v : null;
+    const consumer = (key, wake, run2) => ({
+      due: (now) => ms5(o()[wake](now)),
+      wake: (now) => ms5(o()[wake](now)),
+      tick: async (now) => ({ [key]: await run2(now) })
     });
-    const renderLeft = (r) => Number(r.remaining) > 0 || Number(r.copies && r.copies.queued) > 0 || Number(r.copies && r.copies.made) > 0 || Number(r.copies && r.copies.failed) > 0;
-    const deeperLeft = (r) => r.queued == null || r.running == null || Number(r.queued) > 0 || Number(r.running) > 0;
-    const hourOf2 = (ms5) => Math.floor(ms5 / HOUR_MS2) * HOUR_MS2;
-    const forward = {
-      due: (now) => {
-        const s = st("file-forward");
-        return !kept(s.hour) ? now : hourOf2(now) > s.hour ? hourOf2(now) : null;
-      },
-      wake: (now) => {
-        const s = st("file-forward");
-        return !kept(s.hour) ? now : s.log ? s.hour + HOUR_MS2 : null;
-      },
-      tick: async (now) => {
-        const s = st("file-forward"), to = hourOf2(now);
-        const from = kept(s.to) ? Math.max(s.to, to - DAY_MS4) : to - HOUR_MS2;
-        keep2("file-forward", { hour: to });
-        const r = await o().forwardSecurityCounts({ from: at37(from), to: at37(to) });
-        if (r && r.ok === true)
-          keep2("file-forward", { to, log: Array.isArray(r.sent) && r.sent.length > 0 || Array.isArray(r.failed) && r.failed.length > 0 });
-        return { fileforward: r };
-      }
-    };
     return {
-      "file-scan": scan,
-      "file-render": batch("file-render", "filerender", () => o().renderBatch({}), renderLeft),
-      "file-deeper": batch("file-deeper", "filedeeper", () => o().deeperBatch({}), deeperLeft),
-      "file-forward": forward
+      "file-scan": consumer("filescan", "scanWake", (now) => o().scanBatch({ at: at37(now) })),
+      /* its R4 */
+      "file-render": consumer("filerender", "renderWake", () => o().renderBatch({})),
+      /* its R12 */
+      "file-deeper": consumer("filedeeper", "deeperWake", () => o().deeperBatch({})),
+      /* its R36 */
+      "file-forward": consumer("fileforward", "forwardWake", () => o().forwardSecurityCounts({})),
+      /* its R35: its own period */
+      "file-reputation": consumer("filereputation", "reputationWake", (now) => o().refreshReputationLists({ at: at37(now) }))
+      /* its R41 */
     };
   }
   /* ---- R5, R6: this module's own consumers, each calling its owner's services ---- */
@@ -209195,45 +209137,43 @@ var Scheduler = class {
   async onAlarm(now = Date.now()) {
     const probe = await this.#probeState(now, true);
     await this.#loadDaily();
-    await this.#loadFiles();
     const reg = this.registry(probe);
     const answers = {};
     const probes = [];
     const rank7 = (items, at37 = now) => this.rank(items, at37);
-    for (const c of reg) {
-      let d2;
-      try {
-        d2 = c.due(now);
-      } catch (e2) {
-        answers[c.key] = { error: message(e2) };
-        continue;
+    this.#firing = true;
+    try {
+      for (const c of reg) {
+        let d2;
+        try {
+          d2 = c.due(now);
+        } catch (e2) {
+          answers[c.key] = { error: message(e2) };
+          continue;
+        }
+        if (d2 === null || d2 === void 0 || d2 > now + SCHED_GRACE_MS) continue;
+        let r;
+        try {
+          r = await c.tick(now, RANKED.includes(c.name) ? rank7 : void 0);
+        } catch (e2) {
+          answers[c.key] = { error: message(e2) };
+          continue;
+        }
+        if (c.probe) {
+          probes.push(c.name);
+          continue;
+        }
+        const v = r && typeof r === "object" && c.key in r ? r[c.key] : r;
+        if (v !== null && v !== void 0) answers[c.key] = v;
       }
-      if (d2 === null || d2 === void 0 || d2 > now + SCHED_GRACE_MS) continue;
-      let r;
-      try {
-        r = await c.tick(now, RANKED.includes(c.name) ? rank7 : void 0);
-      } catch (e2) {
-        answers[c.key] = { error: message(e2) };
-        continue;
-      }
-      if (c.probe) {
-        probes.push(c.name);
-        continue;
-      }
-      const v = r && typeof r === "object" && c.key in r ? r[c.key] : r;
-      if (v !== null && v !== void 0) answers[c.key] = v;
+    } finally {
+      this.#firing = false;
     }
     const nextAt = await this.#reconcile(now, reg, true, answers);
     if (probe) await this.#storage.put(PROBE_KEY, probe);
     if (this.#daily && DAILY.some((n) => reg.some((c) => c.name === n)) && typeof this.#storage.put === "function") {
       try {
         await this.#storage.put(DAILY_KEY, this.#daily);
-      } catch {
-      }
-    }
-    if (this.#files && FILE_SAFETY_CONSUMERS.some((n) => reg.some((c) => c.name === n)) && typeof this.#storage.put === "function") {
-      try {
-        await this.#storage.put(FILES_KEY, this.#files);
       } catch {
       }
     }
@@ -209292,7 +209232,6 @@ var Scheduler = class {
   async arm(now = Date.now()) {
     const probe = await this.#probeState(now, true);
     await this.#loadDaily();
-    await this.#loadFiles();
     const at37 = await this.#reconcile(now, this.registry(probe), false);
     if (probe) await this.#storage.put(PROBE_KEY, probe);
     return at37;
@@ -209305,12 +209244,14 @@ var Scheduler = class {
     this.#dailyIdle.clear();
     this.#publishHeld = null;
     await this.#loadDaily();
-    await this.#loadFiles();
     return await this.#reconcile(now, this.registry(probe), false);
   }
   /** R24: the owners the plane builds and hands this module after construction (`fileSafety`, which needs the plane's
-   *  bindings), each an instance or a function answering it. An owner already held is kept. Answers the names taken;
-   *  the plane then starts the scheduler (R11), whose reconcile weighs the new consumers. */
+   *  bindings), each an instance or a function answering it. An owner already held is kept. A `fileSafety` taken is
+   *  registered with once, through its `onFileWork` (its R40), R9's notice for the five: each call runs `arm` at once
+   *  (told after the act commits, record-core's `afterCommit`), except inside a firing, whose own reconcile stands; a
+   *  refused or impossible registration is a start-up fault (`faults()`), as R23's. Answers the names taken; the plane
+   *  then starts the scheduler (R11), whose reconcile weighs the new consumers. */
   hand(owners2 = {}) {
     const took = [];
     for (const [name2, v] of Object.entries(owners2 && typeof owners2 === "object" ? owners2 : {})) {
@@ -209318,7 +209259,27 @@ var Scheduler = class {
       this.#owners[name2] = typeof v === "function" ? v : () => v;
       took.push(name2);
     }
+    if (took.includes("fileSafety")) {
+      let r;
+      try {
+        const fs = this.#owner("fileSafety");
+        r = fs && typeof fs.onFileWork === "function" ? fs.onFileWork("scheduler", () => this.#firing ? null : this.arm().catch(() => null)) : { ok: false, reason: "NOTICE_ABSENT", detail: "the file-safety owner offers no onFileWork" };
+      } catch (e2) {
+        r = { ok: false, reason: "NOTICE_THREW", detail: message(e2) };
+      }
+      this.#fault("fileSafety", r);
+    }
     return { ok: true, handed: took };
+  }
+  /* A notice's registration answered `{ok: false}`: kept as a start-up fault and logged (R23, R24). */
+  #fault(notice, r) {
+    if (!(r && r.ok === false)) return;
+    const fault = { notice, reason: r.reason ?? r.code ?? null, detail: r.detail ?? null };
+    this.#faults.push(fault);
+    try {
+      console.error(`scheduler: the ${notice} notice refused its registration`, JSON.stringify(fault));
+    } catch {
+    }
   }
   /* ---- R13: the test seam, inert unless SCHED_PROBE is set ---- */
   #probeSpecs() {
@@ -209437,19 +209398,10 @@ var Scheduler = class {
     if (duties2) out.duties = duties2.onDutyTracked("scheduler", poke("duty-transitions"));
     if (people) out.people = people.onChecksChanged("scheduler", poke("interest-checks"));
     if (moneyChecks) out.moneyChecks = moneyChecks.onDetectorSwitchedOn("scheduler", poke("money-detectors"));
-    for (const [notice, r] of Object.entries(out)) {
-      if (r && r.ok === false) {
-        const fault = { notice, reason: r.reason ?? r.code ?? null, detail: r.detail ?? null };
-        this.#faults.push(fault);
-        try {
-          console.error(`scheduler: the ${notice} notice refused its registration`, JSON.stringify(fault));
-        } catch {
-        }
-      }
-    }
+    for (const [notice, r] of Object.entries(out)) this.#fault(notice, r);
     return out;
   }
-  /** R23: the registrations listenTo was refused, each `{notice, reason, detail}`: start-up faults, reported, never
+  /** R23, R24: the registrations listenTo and hand were refused, each `{notice, reason, detail}`: start-up faults, reported, never
    *  ignored. Empty when every notice took its listener. */
   faults() {
     return this.#faults.map((f17) => ({ ...f17 }));
@@ -223118,8 +223070,8 @@ var NOTICE_KINDS = Object.freeze({
   "scan-found": "FINDING",
   "security-tool-off": "FINDING"
 });
-var HOUR_MS3 = 36e5;
-var DAY_MS7 = 24 * HOUR_MS3;
+var HOUR_MS2 = 36e5;
+var DAY_MS7 = 24 * HOUR_MS2;
 var failure = (provider) => Object.assign(new Error(`${provider} did not answer`), { provider });
 var filled12 = (v) => typeof v === "string" && v.trim() !== "";
 var bare3 = (m) => {
@@ -223722,18 +223674,18 @@ var NoticeProducers = class _NoticeProducers {
   /** R12: the episode reaching `now`: its first hour's start, the `through` count since, and whether the read reached
    *  the days kept still High. `securityMap` refusing is a failure of the provider (R1). */
   #episode(by, now) {
-    const cur = Math.floor(now / HOUR_MS3);
+    const cur = Math.floor(now / HOUR_MS2);
     const floor = cur - SECURITY_DAYS * 24;
     const hours = /* @__PURE__ */ new Map();
     let lo = cur + 1;
     const load = () => {
       const fromH = Math.max(floor, lo - SECURITY_READ_HOURS);
       if (fromH >= lo) return false;
-      const to = lo === cur + 1 ? now : lo * HOUR_MS3;
-      const m = this.#credentials.securityMap({ from: instantOf3(fromH * HOUR_MS3), to: instantOf3(to), by: `member:${by}` });
+      const to = lo === cur + 1 ? now : lo * HOUR_MS2;
+      const m = this.#credentials.securityMap({ from: instantOf3(fromH * HOUR_MS2), to: instantOf3(to), by: `member:${by}` });
       if (!m || m.ok !== true || m.step !== "hour" || !Array.isArray(m.buckets)) throw failure("credentials");
       for (const b of m.buckets) {
-        const h = Math.floor(Date.parse(b.start) / HOUR_MS3);
+        const h = Math.floor(Date.parse(b.start) / HOUR_MS2);
         if (!Number.isFinite(h)) continue;
         hours.set(h, {
           through: Number(b.counts && b.counts.through) || 0,
@@ -223776,7 +223728,7 @@ var NoticeProducers = class _NoticeProducers {
     }
     let through = 0;
     for (let h = start; h <= cur; h++) through += (hours.get(h) || { through: 0 }).through;
-    return { start: start * HOUR_MS3, through, truncated: truncated4 };
+    return { start: start * HOUR_MS2, through, truncated: truncated4 };
   }
   /* ================================================================== R13 · a policy's silent change
    * (following R21; N652, K1727, K1740, DEC-145 (5)). The changes `policyChanges` answers this viewer whose later
