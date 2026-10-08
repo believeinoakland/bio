@@ -1418,10 +1418,12 @@ export class Ratification {
   }
 }
 
-/* R39: the SHA-256s of the materials publication's commit (its R57) or `heldMaterialsOf` answers held only in the
-   evidence store, from a list or `{materials}`; anything else is none. */
+/* R39: the materials publication's commit (its R57) or `heldMaterialsOf` answers held outside the record's inline text,
+   as `{sha, held}`, from a list or `{materials}`: `evidence` (only in the evidence store) and `derived` (an obscured
+   copy, case-carriage R1, R11; T37); anything else is none. */
+const COPIED_HOLDS = new Set(["evidence", "derived"]);
 const evidenceShas = (x) => (Array.isArray(x) ? x : Array.isArray(x?.materials) ? x.materials : [])
-  .filter((m) => m && m.held === "evidence" && typeof m.sha === "string").map((m) => m.sha);
+  .filter((m) => m && COPIED_HOLDS.has(m.held) && typeof m.sha === "string").map((m) => ({ sha: m.sha, held: m.held }));
 
 const instances = new WeakMap();
 
@@ -1463,7 +1465,9 @@ export function ratificationOf(host, deps) {
 /** R32: the module's store-half ops (K3), spread into the plane's op map (`plane/store.mjs`): `gatefacts` (R7), `ratifygate` (R4's
  *  gate, N417), `casegate` (R2's gate), `caseratify` (R3), `publishat` (R40) and `publish` (R5), the internal hops of the two ceremonies,
  *  `release` (R20–R27) and `retire` (R28–R31). `viewer`, and release's and retire's `owner` and `author`, are the
- *  control plane's stamps, read from the query, never from the body. */
+ *  control plane's stamps, read from the query, never from the body. `casegate`'s grant digest `secretSha` is the one
+ *  exception: read from the internal request's body only, where the control plane sets it after removing any a caller
+ *  sent; a `secretSha` in the query is never read (N761; K2129, K2175). */
 export function ratificationOps(r, url, body) {
   const q = (k) => url.searchParams.get(k);
   const b = body && typeof body === "object" ? body : {};
@@ -1472,7 +1476,7 @@ export function ratificationOps(r, url, body) {
     ratifygate: () => r.ratifyGate(b),
     casegate: () => r.caseGate({ caseId: b.caseId ?? q("case"), edition: Number(b.edition ?? q("edition")),
                                  docSha: b.docSha ?? q("docSha"), viewer: q("viewer") ?? null,
-                                 secretSha: q("secretSha") ?? null }),
+                                 secretSha: b.secretSha ?? null }),
     caseratify: () => r.ratifyCaseDocument(b),
     publishat: () => r.publishAt(b),
     casetestimony: () => r.caseTestimony(b),

@@ -300,3 +300,25 @@ test("R2, R3, R7, R18: the attribution facts, the testimony and attribution read
   for (const k of ["observationsNamingAuthor", "attributionStatedFor", "attributionFacts"])
     assert.ok(w.calls.some((x) => x[0] === k), `case-tensions' ${k} was asked`);
 });
+
+/* R32 (T37; N761; K2129, K2175): `casegate`'s grant digest is read from the internal request's body only, where the
+   control plane sets it after removing any a caller sent; a `secretSha` in the query is never read, so it admits no
+   grant. Publication's facts here admit the case only for the grant's digest, as a grant reader would. */
+test("R32: casegate reads secretSha from the body only — a secretSha in the query alone admits no grant, one in the body does, and the query's never overrides the body's", async () => {
+  const { w, docSha, text } = setup();
+  const GRANT = "9".repeat(64), OTHER = "8".repeat(64);
+  const facts = { ok: true, doc: { case_id: CASE, edition: 1, doc_sha: docSha, text }, memberBasis: null, priorCase: null };
+  w.publication.caseDocumentFacts = (c, e, viewer, secretSha) =>
+    (secretSha === GRANT ? facts : { ok: false, reason: "NO_CASE_DOCUMENT" });
+  const asked = () => w.calls.filter((c) => c[0] === "caseDocumentFacts").map((c) => c[4]);
+  const viaQuery = w.op("casegate", { viewer: V("eve"), secretSha: GRANT }, { caseId: CASE, edition: 1, docSha });
+  assert.equal(viaQuery.reason, "NO_CASE_DOCUMENT", "a secretSha in the query alone admits no grant");
+  const viaBody = w.op("casegate", { viewer: V("eve") }, { caseId: CASE, edition: 1, docSha, secretSha: GRANT });
+  assert.equal(typeof viaBody.gateVersion, "string", JSON.stringify(viaBody).slice(0, 300));
+  assert.notEqual(viaBody.reason, "NO_CASE_DOCUMENT", "the body's digest admits the grant");
+  const both = w.op("casegate", { viewer: V("eve"), secretSha: GRANT }, { caseId: CASE, edition: 1, docSha, secretSha: OTHER });
+  assert.equal(both.reason, "NO_CASE_DOCUMENT", "the query's digest never stands in for, or overrides, the body's");
+  const queryOnlyCase = w.op("casegate", { viewer: V("eve"), secretSha: GRANT, case: CASE, edition: 1, docSha }, null);
+  assert.equal(queryOnlyCase.reason, "NO_CASE_DOCUMENT", "nor when the rest of the request is read from the query");
+  assert.deepEqual(asked(), [null, GRANT, OTHER, null], "publication is handed the body's digest or none, never the query's");
+});
