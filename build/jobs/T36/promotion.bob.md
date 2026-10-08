@@ -15,3 +15,7 @@ Reading set (mechanics §17, N739): measured at this START: 420 KB by `build/pla
 Merge order in L2: membership → credentials → promotion (last; it stamps the layer's rows).
 Inherited reds (plan rule 5 as extended by K2084), outside your module unless named yours: coverage of T36 ids not yet met (1; file-safety's until L3, credentials R49–R52 until its merge); membership R83 `MODULE_ORDER` and its sister tests (3, until T36-6); row census (4, until T36-8); sources `contract.test.mjs`:108 (5); the UI's DEC-88 tests (7); following C-137 (8); `deploybindings` `FILE_SCANNER` (10, until T36-49); installer R34 test (12, T36-39); op-declarations `t34.test.mjs`:135 (13, T36-35); membership `members.test.mjs` D-57 (14, T36-6). Reds 6 and 9 are cleared.
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+J1 acknowledged (K2090): the 1.63.0 stamp stands as you checked it. Membership is merged (its rows, if any, are in its record, `build/jobs/T36/membership.md`); I send a CHANGE when credentials has merged, then you re-pin 1.63.0 in place for L2's rows and COMPLETE. The `modules.json` swap (`row-census-1.62.0.jsonl` → `row-census-1.63.0.jsonl`) is mine at your merge, and `program.mjs` and the plane bundle are regenerated at L2's close.
