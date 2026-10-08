@@ -179485,8 +179485,9 @@ var FileSafety = class _FileSafety {
       if (held2) return refusal29("PROVIDER_HELD", "The catalogue holds this service back.", { provider_id: id, provider_reason: held2.missing });
       const base2 = id ? providerById(id) : null;
       const cfg = config && typeof config === "object" && !Array.isArray(config) ? { ...config } : {};
-      const host = template && typeof template === "object" && typeof template.host === "string" && template.host ? template.host : typeof cfg.host === "string" && cfg.host ? cfg.host : null;
-      const region = typeof cfg.region === "string" && cfg.region ? cfg.region : null;
+      const text7 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
+      const host = (template && typeof template === "object" ? text7(template.host) : null) || text7(cfg.host);
+      const region = text7(cfg.region);
       delete cfg.host;
       delete cfg.region;
       if (!base2 || base2.template && !host) return refusal29("PROVIDER_UNKNOWN", "No offered service has this name, or a generic tool names no host.", { provider_id: id });
@@ -179498,13 +179499,15 @@ var FileSafety = class _FileSafety {
       );
       const fields = _FileSafety.#configOf(base2);
       const empty2 = (v) => v === void 0 || v === null || typeof v === "string" && !v.trim() || Array.isArray(v) && !v.length || typeof v === "object" && !Array.isArray(v) && !Object.keys(v).length;
-      const absent = fields.find((f17) => f17.required === true && empty2(cfg[f17.name]));
+      const given5 = { ...cfg, ...host ? { host } : {}, ...region ? { region } : {} };
+      const absent = fields.find((f17) => f17.required === true && empty2(given5[f17.name]));
       if (absent) return refusal29("CONFIG_MISSING", "A setting the tool's entry names as required was not given.", { provider_id: id, field: absent.name });
       const stray = Object.keys(cfg).find((k) => !fields.some((f17) => f17.name === k));
       if (stray !== void 0) return refusal29("CONFIG_UNKNOWN", "A setting was given that the tool's entry does not name.", { provider_id: id, field: stray });
       const d = resolved.descriptor;
+      const shown3 = _FileSafety.#handlingDigest(base2.handling);
       const digest2 = _FileSafety.#handlingDigest(d.handling);
-      if (handlingDigest !== digest2) return refusal29("HANDLING_NOT_SHOWN", "handlingDigest is not the tool's current handling_digest.", { provider_id: id, handling_digest: digest2 });
+      if (handlingDigest !== shown3) return refusal29("HANDLING_NOT_SHOWN", "handlingDigest is not the tool's current handling_digest.", { provider_id: id, handling_digest: shown3 });
       if (d.handling.sample_sharing === "vendor_internal_research" && confirmRetention !== true)
         return refusal29("RETENTION_NOT_CONFIRMED", "The vendor keeps samples for its own research; confirmRetention is not true.", { provider_id: id });
       const creds = credentials && typeof credentials === "object" && !Array.isArray(credentials) ? credentials : {};
@@ -180129,12 +180132,13 @@ var FileSafety = class _FileSafety {
       return null;
     }
   }
-  /** R39: renderBatch's instant. Null while no file's view and no safe copy is queued; else the later of `now` and the
-   *  last batch plus FILE_SAFETY_POLL_MS. */
+  /** R39: renderBatch's instant. Null with no renderer bound (the scanner binding, as renderBatch refuses
+   *  RENDERER_ABSENT) or while no file's view and no safe copy is queued; else the later of `now` and the last batch
+   *  plus FILE_SAFETY_POLL_MS. */
   renderWake(now) {
     try {
       const n = msOf(now);
-      if (!Number.isFinite(n)) return this.#answer("render", null);
+      if (!Number.isFinite(n) || !this.#scannerBinding()) return this.#answer("render", null);
       const views = this.#one(`SELECT 1 AS x FROM fs_files WHERE render_state = 'queued' LIMIT 1`);
       const copies = this.#one(`SELECT 1 AS x FROM fs_copies WHERE state = 'queued' LIMIT 1`);
       if (!views && !copies) return this.#answer("render", null);
