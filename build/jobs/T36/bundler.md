@@ -82,3 +82,7 @@ Merged `tranche/T36` (file-scanner merged as a two-class member).
 Tests and checks: `node --test test/m/bundler/` → 88 pass, 0 fail. `fleetbundles` → 125 pass, 4 fail (the plane's stale bundle only; no SKIP). `deploybindings` → 35 passed, 2 failed (red 10). `resolveversion` → 12 pass. format, architecture, coverage (30/30), ownership: 0 failures.
 
 Size (session_01AVSxAcVVnwvGFa9niTqNUo): test runs 15, module lines 7861
+
+## J4 · COMPLETE · re B3
+
+B3 applied on job/T36/bundler (tranche merged): fleetbundles lists a two-class member's images (file-scanner's scanner and renderer repositories; one-class unchanged); the TypeError is gone and red 9 cleared. Also fixed in my module: R28's real-repository test found file-scanner's bundle inlining @cloudflare/containers 0.3.7 undeclared; added to third-party.json. Not mine: the plane's committed bundle is stale after L1's merges (connection-grammar, doctypes' policy-header, docx, signpage), 4 plane assertions in fleetbundles, for your regeneration at L1's close. Tests: module 88/88; fleetbundles 125 pass, 4 fail (the plane's staleness only, no SKIP); deploybindings 35/2 (red 10); resolveversion 12/0. Checks format, architecture, coverage 30/30, ownership: 0 failures.
