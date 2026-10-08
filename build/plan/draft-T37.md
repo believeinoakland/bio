@@ -55,7 +55,7 @@ Each line is one job (P8): every T37 entry for that module. Fields: module · (N
 
 ### L3
 
-- **T37-8 · file-safety** · (N762, its share) offers its own due and wake for `scanBatch`, `renderBatch`, `deeperBatch`, `forwardSecurityCounts`; an arming notice when a check is queued; a reputation-list refresh service (`file-scanner` R26, with the tool's credentials); R15 `scanFindings` gains `since` (N741's shape) for notice-producers R14 (K2130). (N753, its user) a test that a safe copy whose derived-area scan answers `clean` is released (R33), now that T37-5 scans it · K2099, K2129, K2130 · req: new Rs, R15 amended, BOB's wording · depends T37-5 (L1). **P6:** 1,971.
+- **T37-8 · file-safety** · (N762, its share; with K2153's: `renderBatch` states the copies still queued, file-scan's wake while a backlog remains, `deeperBatch`'s unreadable table answered without null) offers its own due and wake for `scanBatch`, `renderBatch`, `deeperBatch`, `forwardSecurityCounts`; an arming notice when a check is queued; a reputation-list refresh service (`file-scanner` R26, with the tool's credentials); R15 `scanFindings` gains `since` (N741's shape) for notice-producers R14 (K2130). (N753, its user) a test that a safe copy whose derived-area scan answers `clean` is released (R33), now that T37-5 scans it · K2099, K2129, K2130 · req: new Rs, R15 amended, BOB's wording · depends T37-5 (L1). **P6:** 1,971.
 
 ### L4
 
@@ -102,7 +102,7 @@ Each line is one job (P8): every T37 entry for that module. Fields: module · (N
 
 ### L10
 
-- **T37-24 · scheduler** · (N762, its share) R24 reads `file-safety`'s own due and wake (T37-8) and the reputation-list refresh; its two carried intervals leave (R7, K2129 option B ends) · K2129, K2130 · req: R24, R7, BOB's wording · depends T37-8 (L3). Reads T36-29's result. If the plane's composition must hand scheduler something new, that is named at this START and joins as a plane share at L11 (K279), not counted below.
+- **T37-24 · scheduler** · (N762, its share; R2's key list names `filescan`, `filerender`, `filedeeper`, `fileforward`, K2153) R24 reads `file-safety`'s own due and wake (T37-8) and the reputation-list refresh; its two carried intervals leave (R7, K2129 option B ends) · K2129, K2130 · req: R24, R7, BOB's wording · depends T37-8 (L3). Reads T36-29's result. If the plane's composition must hand scheduler something new, that is named at this START and joins as a plane share at L11 (K279), not counted below.
 
 ### L11
 
