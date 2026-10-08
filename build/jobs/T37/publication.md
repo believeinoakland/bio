@@ -23,3 +23,7 @@
 R72's `captures` and R75 `criteriaFor`. R75 says its rows are "exactly as R72 composes it" and that the commit records the rows it answers; R72's new `captures` depends on the edition's `materials:` block, which `criteriaFor({members, signer, at})` does not receive (case-authoring R61 computes its own unfiltered captures from `content`).
 My reading, which I am building on: `criteriaFor` answers its rows unchanged (no `captures` key); the commit's rows are exactly `criteriaFor`'s plus `captures` (filtered by the edition's `included: true` materials; `null` on a "not held" row). R75's existing test compares the commit's rows with `captures` set aside. No change to R75's text needed unless you want it stated.
 Also: the refusal names the lapsed rows as `photos: [{ref, sha, why}]` (at most 200), beside `reason`, `code`, `check`, `translation`, `caseId`, `edition`, `detail`, as R51/R59 name theirs.
+
+## J2 · REPORT
+
+T37-18's change is written and pushed (record above): R72 captures, R57's PHOTO_MARKS_CHANGED_SINCE (C-122.6), tests named, 4 checks clean, size 3,786. One thing holds COMPLETE: case-carriage's marksLapsed (T37-34) is not on tranche/T37, so every commit on this branch alone calls a missing method; my green run (publication 129/0, users unchanged) used a local preload standing in for it. When T37-34 is merged into tranche/T37, tell me (CHANGE: merge the tranche) and I merge, re-run without the preload, and post COMPLETE.
