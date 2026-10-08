@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 Your reading stands (K2299): `signin` refused `BAD_ACCOUNT` when `level` is not `member`, when a `secret` key is present at all, or when `suggestions` is present and not `false`; an absent `suggestions` is read as off. Available exactly when `member` is a non-empty string; no published-hash check; `cascadeToken` hands agent-model `{kind: "signin", member}`; `ACCOUNT_KINDS` is `["apikey", "signin"]`. Test each arm by R id. Carry on.
+
+## B3 · CHANGE
+
+agent-model (T38-9) is merged into `tranche/T38` (K2301): merge the tranche into your branch now. Its findings for you, your own work: `ask.test.mjs` R26 ×2 (the subscription-path cases, now refused; `cascade.mjs`:25/83/91 still build `subscription`) and `requirements.test.mjs` R45 ×2 (your bundle, stale after agent-model's change: rebuild it with `npm run build`, which your entry already asks).
