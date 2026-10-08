@@ -39,3 +39,54 @@ R62's suite passes now. The byte relay is proven at the Worker; the store side w
 **Checks:** format 0, architecture 0, coverage 36/36, ownership 0. P6: 3,102 lines (+77).
 
 I wait for op-declarations', admission's and store-door's merges, then merge the tranche branch when you say so.
+
+## Completion (T36-37)
+
+**Reading (mechanics §17).** The set measured over 300 KB (the module's 230 KB of code plus 419 KB of tests alone), so read under (3):
+- Read whole myself: `build/requirements/control-plane.md`; the plan's T36-37 entry and rules at the opening; K2111, K2126, K2129, K2130, K2135, K2146 and K2152, and the drafts' control-plane sections with BOB's reviews; `src/control-plane/index.mjs`; admission R20, R22 and `presentedCredential`/`queryGate`; `file-safety`'s Purpose, R8–R11, R33, R34 and `fileSafetyOps`; `capture/ops.mjs`; `plane/door.mjs`; `store-door/dispatch.mjs`:180–310; op-declarations R17 and R30–R33 with its `OP_STAMPS` and families; the standards, calculations and credentials map arms the new ops reach.
+- Tests read whole myself: `harness.mjs`, `r53-routes`, `members-pin`, `affordances-pack`, `converts` and `t35-door`.
+- Two workers read the other 29 test files in full and wrote summaries (about 2,500 words each, every statement citing file:line). Their findings:
+  - No other test puts a credential in an address.
+  - The sweeps that pick up new ops are `declarations.test.mjs`:23–40, `totality.test.mjs`:20 and `envelope.test.mjs`:17–34.
+  - `envelope.test.mjs`:363 calls `caseReader` over a URL `token=`.
+  - `t34-routes.test.mjs`:209, :239 call `assistantSet`.
+
+  Nothing they left out mattered: the gaps the full run surfaced were all ones they had named.
+- `archive.mjs` and `draft.mjs` are unchanged and were not reread.
+- R41 (K2087): `draft.test.mjs` reads the pack only through `heldPack`. I found no other reader of the untargeted answer's `pack` or `fences`.
+
+**Entries applied (T36-37):**
+- R59, R28: admission's `credentialAddressGate(url)` (B2, K2157) runs directly after `namespaceGate`, at the op door and before the `/` page's read. No `deprecated` remains: `outOfAddress` became `tallyOnTheWayOut`, and `reviewAnswer` no longer takes the extra.
+- R41: `op=agentpack` alone serves `{fences, pack}` (`packOf`). The untargeted `op=affordances` answer is relayed as given. `heldPack` (R57) reads through `packOf`. The grant's own ops are now exactly `ASK_PLANE_OPS`, so `affordances` is no longer a grant call (K2135).
+- R53, R63: `assistantset` and `securitycount` are in `NOT_ROUTED` and are answered `UNKNOWN_OP`.
+- R60: routed generically. The in-force-through acts carry `author` in the body through `BODY_ACTOR`, derived from `OP_FAMILIES`.
+- R61: the 23 file-safety ops reach the store's route of their own name.
+  - `BYTE_OPS` go through `byteAnswer`: a non-JSON 200/206 answer is relayed as given with `cache-control: no-store` (and CORS); JSON is enveloped.
+  - `openwithwarning` carries a GET's query `warned` into the body (B2 (3)).
+  - `securitytooladd`'s `credentials` and `config` are dropped from the address.
+- R62: a session's or an `ai` credential's `op=capture` GET goes to `openoriginal` (or `openwithwarning`) with only `capture` and `viewer`. The binding classes keep capture's hook. No change to `plane/door.mjs`.
+- K2146: the forward strips `secretSha` and `bySecret` from caller bodies.
+- Reds 22, 23, 24 and 26 re-pinned (`r53-routes`, `members-pin`, `converts`). `t35-door` re-pinned to the refusal form. Red 32's `t34-routes` tests re-pointed to `credentials.aiKeepAwaySet` (B3, K2162).
+- New suite: `t36-door.test.mjs`.
+
+**A flaw in my own module, fixed (P8):** standards' T35 acts and proposals reached standards with their `author` or `proposer` only in the query, where standards' map does not read it (family `actor: BODY("author")`), so every member's act would have been refused `MACHINE_CANNOT_DECLARE_STANDARD`. They are now stamped in the body through `BODY_ACTOR`; the new suite drives every act of the family.
+
+**Deferred:**
+- The guard around `admission.credentialAddressGate` (`typeof … === "function"`) stays until ADMISSION #6 is merged into this branch, then is dropped.
+- These tests stay red until op-declarations' merge (T36-35: the R31–R33 specs, `assistantset` removed): `declarations.test.mjs`:40, `totality.test.mjs`:20, `r53-routes.test.mjs`:70 (red 22) and :83, and `t36-door`'s R60/R63, the two R61 routing tests, and the R61 byte test.
+- These stay red until admission's merge (T36-36): `t35-door`'s two R59 tests, `t36-door`'s R59/R28 test, and `converts.test.mjs`'s address arm (red 26).
+- After admission's merge I expect to re-pin my suites' `env.MEMBER_TOKEN` callers (admission R5) and `envelope.test.mjs`:363.
+
+**Found in other modules (reported in J1, J2):**
+- `store-door`'s `dispatch` wrapped a map's `Response` as JSON (`dispatch.mjs`:305), so no byte answer reached the Worker. Routed as store-door R13 (K2157).
+- `totality.test.mjs`:20 is red in the tranche state: affordances (merged) ranks T36's ops before op-declarations declares them.
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/control-plane/`: 178 tests, 166 pass, 12 fail, every failure on a prerequisite named above.
+- `checks/format.mjs`: 0 failures.
+- `checks/architecture.mjs` control-plane: 0 failures.
+- `checks/coverage.mjs` control-plane: 36 of 36 ids, 0 failures.
+- `checks/ownership.mjs` control-plane `tranche/T36`: 0 failures.
+- P6: 3,102 lines (+77).
+
+Size (session_014Cxwr3sUfHWE5sRvShuypv): test runs 16, module lines 3102
