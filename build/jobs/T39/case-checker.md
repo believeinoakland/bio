@@ -27,3 +27,9 @@ Size (session_013nDuZWRyji4rYH9ax6JrLQ): test runs 4, module lines 1464
 ## J1 · COMPLETE
 
 T39-17 applied: the /3 spec names a member document's cleaned copy beside a photo's (words only); R8's missing-copy wording widened in check.mjs; program.mjs regenerated (byte-identity green). 61/61 tests; format, architecture, coverage (22/22), ownership: 0 failures. REPORT in record: plane bundle stale from program.mjs; R14's not-yet-met marker can be cleared. Details in my record.
+
+## B2 · CHANGE processed
+
+Merged `tranche/T39` (case-grammar T39-9, K2374) into this branch and re-ran steps 5–7. Module tests: 61 run, 60 pass, 1 fail, 0 skipped. The fail is R13's byte-identity test (`program.mjs` stale against case-grammar's new code). B2 accepts it by name, and BOB regenerates `program.mjs` at L8's close; I did not regenerate it. Every other test is green, including R10's complete-edition comparisons against case-grammar's new render. Checks: format 0 failures (139 modules, 138 requirements files); architecture 0 failures; coverage 22 of 22, 0 failures; ownership 6 files, 0 failures.
+
+Size (session_013nDuZWRyji4rYH9ax6JrLQ): test runs 5, module lines 1464
