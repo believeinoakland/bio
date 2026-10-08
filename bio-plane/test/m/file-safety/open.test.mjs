@@ -19,7 +19,7 @@ const refused = (r, code) => {
   assert.deepEqual({ ok: r.ok, code: r.code, check: r.check, translation: r.translation }, { ok: false, code, ...row(code) });
 };
 
-test("R8: a low file opens as capture.getCapture serves it when a ClamAV clean note is newer than a week; else the scan before first opening runs on demand: clean opens, found places the hold and answers SCAN_HOLD, not_scanned or unknown answer NOT_SCANNED with the reason, a scan not finished within the call SCAN_PENDING; with no scanner bound the bytes open, stated not_scanned SCANNER_ABSENT; NO_SUCH_CAPTURE and the sight refusal first", async () => {
+test("R8: a low file opens as capture.getCapture serves it when a ClamAV clean note is newer than a week; else the scan before first opening runs on demand: clean opens, found places the hold and answers SCAN_HOLD, not_scanned or unknown answer NOT_SCANNED with the reason, a scan not finished within the call SCAN_PENDING; with no scanner bound the bytes open, stated not_scanned SCANNER_ABSENT; NO_SUCH_CAPTURE and the sight refusal (NO_SUCH_CAPTURE, K2098) first", async () => {
   let next = { result: "clean" };
   const w = world({ scan: { clamav: () => next } });
   const bytes = pdf(false, "low");
@@ -27,7 +27,7 @@ test("R8: a low file opens as capture.getCapture serves it when a ClamAV clean n
   /* the first two refusals */
   refused(await w.fs.openOriginal({ captureSha: sha("not held"), viewer: "member:m1" }), "NO_SUCH_CAPTURE");
   w.project("PROJ-1", "m1"); w.home(s, "INFO-P", { project: "PROJ-1" });
-  assert.equal((await w.fs.openOriginal({ captureSha: s, viewer: "member:m2" })).code, "NO_SUCH_PROJECT");
+  assert.equal((await w.fs.openOriginal({ captureSha: s, viewer: "member:m2" })).code, "NO_SUCH_CAPTURE");
   /* no note yet: the scan runs on demand, clean, and it opens; the note is written */
   await opened(await w.fs.openOriginal({ captureSha: s, viewer: "member:m1" }), s, bytes);
   assert.equal(w.calls("/scan").length, 1);

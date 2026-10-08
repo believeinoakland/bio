@@ -22,7 +22,7 @@
  * declares its tables (R25). `fileSafetyOps` is its route map. No service throws; every refusal names its row (R24). */
 import { canonicalJson, sha256HexSync, isMachineIdentity, MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate, notAnAdmin, noSuchProject } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, notAnAdmin } from "../membership/index.mjs";
 import { credentialsOf } from "../credentials/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { acquisitionOf } from "../acquisition/index.mjs";
@@ -181,25 +181,25 @@ export class FileSafety {
     } catch { return []; }
   }
 
-  /* R2 and every service naming a capture: `NO_SUCH_CAPTURE` for a digest the record holds nothing under, membership's
-     sight refusal (its R78, naming no project) for a capture whose home the viewer may not see (membership R43), else
-     null. A viewer left out is an in-plane caller, which sees every capture. */
+  /* R2 and every service naming a capture (K2098): `NO_SUCH_CAPTURE` for a digest the record holds nothing under, and the
+     same answer, byte for byte, for a capture whose home the viewer may not see (membership R43), so no answer tells a
+     hidden capture from one never held (DEC-36); else null. A viewer left out is an in-plane caller, which sees every
+     capture. */
   #held(captureSha, viewer) {
     const sha = shaOf(captureSha);
     /* DEC-49 REGION is-capture-held */
     if (!HEX64.test(sha)) return { sha, refused: refusal("NO_SUCH_CAPTURE", "captureSha names a capture by its SHA-256, 64 hex.", { captureSha: captureSha ?? null }) };
+    const absent = () => ({ sha, refused: refusal("NO_SUCH_CAPTURE", "No capture this viewer may see is held under this digest. Nothing was read.", { captureSha: sha }) });
     const home = this.#home(sha);
     const known = !!home || !!this.#one(`SELECT 1 AS x FROM fs_files WHERE capture_sha = ?`, sha) || this.#receiptsOf(sha).length > 0;
-    if (!known) return { sha, refused: refusal("NO_SUCH_CAPTURE", "No receipt, register row or queued file names this digest. Nothing was read.", { captureSha: sha }) };
-    /* END DEC-49 REGION is-capture-held */
+    if (!known) return absent();
     if (viewer !== undefined) {
       const gate = viewerPredicate(viewer);
-      if (gate.scope === "DENY") return { sha, refused: noSuchProject(null) };
-      if (home && gate.scope !== "member") {
-        const seen = this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id = ? AND (${gate.sql})`, home, ...gate.args);
-        if (!seen) return { sha, refused: noSuchProject(null) };
-      }
+      if (gate.scope === "DENY") return absent();
+      if (home && gate.scope !== "member" && !this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id = ? AND (${gate.sql})`, home, ...gate.args))
+        return absent();
     }
+    /* END DEC-49 REGION is-capture-held */
     return { sha, refused: null };
   }
 

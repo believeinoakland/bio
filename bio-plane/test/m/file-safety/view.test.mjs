@@ -57,7 +57,7 @@ test("R11: `safeView` by route: PDFs and office documents answer the image-only 
   /* R8's first two */
   refused(await w.fs.safeView({ captureSha: sha("nothing"), viewer: "member:m1" }), "NO_SUCH_CAPTURE");
   w.project("PROJ-1", "m1"); w.home(p, "INFO-P", { project: "PROJ-1" });
-  assert.equal((await w.fs.safeView({ captureSha: p, viewer: "member:m2" })).code, "NO_SUCH_PROJECT");
+  assert.equal((await w.fs.safeView({ captureSha: p, viewer: "member:m2" })).code, "NO_SUCH_CAPTURE");
   /* no renderer bound */
   const n = world({ bound: false });
   refused(await n.fs.safeView({ captureSha: await n.capture(pdf(false, "n")), viewer: "member:m1" }), "RENDERER_ABSENT");
@@ -140,7 +140,7 @@ test("R33 (K1929 (4)): `requestSafeCopy` asks the first on CDR tool for a rebuil
   refused(await w.fs.safeCopy({ captureSha: sha("x"), viewer: "member:m1" }), "NO_SUCH_CAPTURE");
   refused(await w.fs.requestSafeCopy({ captureSha: sha("x"), viewer: "member:m1" }), "NO_SUCH_CAPTURE");
   w.project("PROJ-1", "m1"); w.home(s, "INFO-P", { project: "PROJ-1" });
-  assert.equal((await w.fs.safeCopy({ captureSha: s, viewer: "member:m2" })).code, "NO_SUCH_PROJECT");
+  assert.equal((await w.fs.safeCopy({ captureSha: s, viewer: "member:m2" })).code, "NO_SUCH_CAPTURE");
   assert.ok(tool);
   /* a routine CDR tool queues every captured file, made at the render wake (R32). No catalogued CDR descriptor states
      the organization's own servers as its recipient today (reported to BOB), so the tool's use is set as R28 would

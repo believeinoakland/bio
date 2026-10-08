@@ -11,7 +11,7 @@ const CT = `<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org
 const docx = (extra) => makeZip([{ name: "[Content_Types].xml", data: CT }, { name: "word/document.xml", data: `<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>hi</w:t></w:r></w:p></w:body></w:document>` }, ...extra]);
 const deeperNote = (w, s) => w.fs.verdictNotes({ captureSha: s }).notes.filter((n) => n.kind === "deeper").at(-1);
 
-test("R13: `requestDeeperCheck` (any member who may see the file) answers {ok, state, check_id}: queued, running, or done with its note; the sight refusal; NO_OUTSIDE_TOOL when no scan or sandbox tool is on; DEEPER_CHECK_BUDGET_SPENT when every such tool has spent its monthly limit this calendar month (UTC); a check already queued or running answers it; who asked is not kept", async () => {
+test("R13: `requestDeeperCheck` (any member who may see the file) answers {ok, state, check_id}: queued, running, or done with its note; the sight refusal (NO_SUCH_CAPTURE, K2098); NO_OUTSIDE_TOOL when no scan or sandbox tool is on; DEEPER_CHECK_BUDGET_SPENT when every such tool has spent its monthly limit this calendar month (UTC); a check already queued or running answers it; who asked is not kept", async () => {
   const w = world({ scan: { polls: 3 } });
   const s = await w.capture(pdf(true, "d"));
   const ask = (v = "member:m1") => w.fs.requestDeeperCheck({ captureSha: s, viewer: v });
@@ -40,7 +40,7 @@ test("R13: `requestDeeperCheck` (any member who may see the file) answers {ok, s
   assert.equal(w.fs.requestDeeperCheck({ captureSha: t, viewer: "member:m1" }).state, "queued", "a new calendar month");
   /* sight */
   w.project("PROJ-1", "m1"); w.home(s, "INFO-P", { project: "PROJ-1" });
-  assert.equal(ask("member:m2").code, "NO_SUCH_PROJECT");
+  assert.equal(ask("member:m2").code, "NO_SUCH_CAPTURE");
   assert.equal(w.fs.requestDeeperCheck({ captureSha: sha("none"), viewer: "member:m1" }).code, "NO_SUCH_CAPTURE");
   /* who asked is not kept */
   assert.doesNotMatch(JSON.stringify(w.rows("SELECT * FROM fs_deeper")), /m1|m2/);
