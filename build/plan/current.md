@@ -1,10 +1,12 @@
 # Plan T38
 
-**Status** · DRAFT (P18), prepared by a helper for BOB #140, 2026-10-08; not binding until BOB opens T38.
+**Status** · OPEN · BOB #141 · session_01MG1srQ83USpRDFURbfVuBa · depth 1
+
+**Jobs** · (none started)
 
 **Sources** · `next.md` N748, N751, N779–N788 (every open entry); `current.md` (T37): its "Left out of T37" table, its rules at the opening (rule 6's accepted reds still open: 2, 3, 20, 22; the host-governor nine of red 17), "P6 notes"; `modules.json` (order, layers); `rulings-active.md` (K617, K624, K657, K1821); rulings K2171, K2179, K2186, K2189, K2200, K2203, K2218, K2220, K2226–K2232; PR #15 (UX-DESIGN's MERGE U132: DEC-183, `words.json`'s `photo.*`), on `main` at T37's close. PROCESS-MECHANICS §5.2, §12.2; PROCESS-DESIGN P4, P6, P8, P10, P17, P18, P19.
 
-**At T38's opening (assumed):** every T37 entry is merged and T37 closed; T38 opens from `tranche/T37`'s tip; PR #15 (DEC-183) is on `main` at T37's close, so "a DEC folds only once on `main`" is no hard reason in T38 and N788 enters. T37-16 and T37-17 (N708's sign-in, L6) are built, so N708's remainder (credentials R22's `subscription` retirement) enters with N785. Still hard reasons: the new screens' shell (N672); every deployment or measurement no T38 entry takes; Bob's open questions (N748, N779).
+**At T38's opening (K2262):** every T37 entry is merged and T37 closed (`main` @ `0a2aa79231`, K2261); T38 opens from `tranche/T37`'s tip; PR #15 (DEC-183) is on `main` (K2258), so "a DEC folds only once on `main`" is no hard reason in T38 and N788 enters. T37-16 and T37-17 (N708's sign-in, L6) are built, so N708's remainder (credentials R22's `subscription` retirement) enters with N785. N779 enters (Bob, K2248), and N789–N793 (found in T37's last layers). Still hard reasons: the new screens' shell (N672); every deployment or measurement no T38 entry takes; Bob's open questions (N748).
 
 ## Legacy census (§5.2 (2))
 
@@ -12,7 +14,7 @@
 
 | legacy module (`modules.json`) | in T38 | entry or hard reason |
 |---|---|---|
-| **legacy-ui** (`civicos-ui/`; `app.html` 26,551 lines, its `.mjs`/`.js` 13,444 lines incl. tests, as T37 measured) | stays | No T38 entry retires or touches it. Hard reasons: Bob's (UX), K633 (it stays until the new interface replaces it); and a dependency not yet built: the new member screens and their shell (N672, N559). Its two rule-4 reds (T37's 21, 22) close with T37-33, or red 22's earlier cause (M0-107) goes to `next.md` at T37's L11 close. |
+| **legacy-ui** (`civicos-ui/`; `app.html` 26,551 lines, its `.mjs`/`.js` 13,444 lines incl. tests, as T37 measured) | stays | No T38 entry retires or touches it. Hard reasons: Bob's (UX), K633 (it stays until the new interface replaces it); and a dependency not yet built: the new member screens and their shell (N672, N559). T37's red 21 cleared with T37-33; red 22's earlier cause (M0-107) stood and is N794, left out (K633). |
 
 ## Rules at the opening
 
@@ -30,7 +32,9 @@
    6. host-governor `ops.test.mjs`'s nine tests (T37's red 17 share, C-38.10, C-38.11), until T38-7 (N784).
    7. legacy-ui `statement-ack.test.mjs` (T37's red 22; its earlier M0-107 cause stood at T37's L11 close, K2257): N794, held by K633's hard reason; accepted red by name.
    8. `case-checker/program.mjs` and the plane bundle, staled by any T38 L8 merge, regenerated at L8's close (§5.6 (1)).
-7. **BOB's acts (no module job):** at the opening, rule 2's boundary (at L2's START), rule 3's choice, rule 4's packaging, every L1 requirement change, the questions to Bob ("For BOB" below). (N781; K1763, K2171) the terms register gains, as AT entries quoted verbatim, the paragraphs "Using the Claude Code name and logo" and "Claude Code remains governed by Anthropic's standard terms … regardless of the platform" (found under "Can customers offer Claude Code in their products?"), at the opening's register edit. T38's release is BOB's (K1501), decided at its close.
+7. **BOB's acts (no module job):** at the opening, rule 2's boundary (at L2's START), rule 3's choice, rule 4's packaging, every L1 requirement change, the questions to Bob ("For BOB" below). (N781; K1763, K2171) the terms register gains, as AT entries quoted verbatim, the paragraphs "Using the Claude Code name and logo" and "Claude Code remains governed by Anthropic's standard terms … regardless of the platform" (found under "Can customers offer Claude Code in their products?"), at the opening's register edit. T38's release is BOB's (K1501), decided at its close. (N795; K2259) BOB diagnoses the close's refused acts and brings Bob the mechanics change, rendered (K1258), certified by a dry run (P3) before a close relies on it.
+8. **N779 (Bob, K2248; BOB's details, P17):** every photo a published case carries travels as a copy without its metadata, made by `image-cover.coverAreas` with the photo's marks, or with no areas for an unmarked photo (its R1's empty `areas`, R2: nothing of the original but its pixels), so no L1 change; a photo `image-cover` cannot take (R3, e.g. HEIC) refuses the publication as DEC-183's B103 (b) does a marked one, naming it. The group keeps the original with its metadata and fingerprint.
+9. **N793 (K231; BOB's):** `NO_SUCH_MEMBER` (C-64) has one site: membership (T38-4, with its split) provides the helper and the row; instance-setup drops its row; credentials, tasks, setup-page and control-plane call membership's helper in place of minting the code.
 
 ## Entries
 
@@ -41,13 +45,15 @@ Each line is one job (P8): every T38 entry for that module. Fields: module · (N
 - **T38-1 · bundler** (test only) · (N787) `bio-plane/test/system/fleetbundles.test.mjs`:232–235 re-pins agent-worker's bundle inputs from the committed manifest (23 since T37-17's `src/signin.mjs`), as BUNDLER #10 did, clearing red 5 (AGENT-WORKER #13 J2) · K2218 · req: none · depends —. **P6:** 3,298.
 - **T38-2 · image-codecs** · (N782; rule 3) R1 states the header shape `readJpegHeader` answers (its Huffman tables `hts.dc[i]`, `hts.ac[i]`: `maxcode`, `valptr`, `mincode`, `symbols`, `fast`, `FAST`), with a test pinning it, so a change to it is a requirement change image-cover sees (IMAGE-COVER #1 J2) · K2179 · req: R1 amended, BOB's wording · depends —. **P6:** 2,981.
 
-**L1 merge order:** `modules.json` order: bundler → image-codecs. (image-cover takes no job: it reads R1 as written; its START check, if any, is BOB's.)
+- **T38-17 · file-scanner** · (N791, its share; SETUP-PAGE #4 J1, J2) the template list: a generic template (`icap`) names `host`; `engine_family` and `handling` are stated as structured values; entries that need an address (`splunk-hec` among them) list `host` (and `region` where it applies) in their `config`, labelled · K2239 · req: its template list's R, BOB's wording · depends —.
+
+**L1 merge order:** `modules.json` order: bundler → image-codecs → file-scanner. (image-cover takes no job: it reads R1 as written, and N779 needs none of it, rule 8.)
 
 ### L2
 
 - **T38-3 · <new module> (split from membership; name BOB's)** · (N783) builds by copy the functions BOB's boundary moves (BOB fixes the boundary at the START), its own requirements taking the moved ids (each retired in membership as "moved to <module> R<n>"), with the moved tests; no change to any requirement's meaning · K617, K624, K2186 · req: the new module's file, BOB's (the moved text) · depends —.
-- **T38-4 · membership** · (N783) deletes its copy of what T38-3 moved and re-points its callers (and any module's `uses` the split touches); (K657, K1185) R83's `MODULE_ORDER` re-pinned to `modules.json` as the opening left it (the new module in L2), clearing red 4 · K617, K624, K657 · req: the moved ids retired, BOB's · depends T38-3. **P6:** 3,970 before the split; reported after it.
-- **T38-5 · credentials** · (N785, its share; K2200) R35 answers a connected member (R43) with a `signin` account (agent-runner R2's `{kind: "signin", member}`, T37-16). (N708's remainder) R22's `subscription` kind retired, its replacement built in T37's L6 · K1819, K2134, K2200 · req: R35, R22, BOB's wording · depends —. **P6:** 2,793.
+- **T38-4 · membership** · (N783) deletes its copy of what T38-3 moved and re-points its callers (and any module's `uses` the split touches); (K657, K1185) R83's `MODULE_ORDER` re-pinned to `modules.json` as the opening left it (the new module in L2), clearing red 4; (N793) the `NO_SUCH_MEMBER` helper and its row (rule 9), in whichever of the two modules the boundary puts member lookup · K617, K624, K657 · req: the moved ids retired, BOB's · depends T38-3. **P6:** 3,970 before the split; reported after it.
+- **T38-5 · credentials** · (N785, its share; K2200) R35 answers a connected member (R43) with a `signin` account (agent-runner R2's `{kind: "signin", member}`, T37-16). (N708's remainder) R22's `subscription` kind retired, its replacement built in T37's L6. (N793) calls membership's `NO_SUCH_MEMBER` helper (rule 9) · K1819, K2134, K2200, K231 · req: R35, R22, BOB's wording · depends T38-4 (N793's helper). **P6:** 2,793.
 - **T38-6 · promotion** · (T37's rule 6 item 2) stamps every row awaiting stamp at T37's close (rows T37's L3–L11 jobs added or re-worded, conformance's seven C-113 rows among them) and the rows T38's L1–L2 jobs add or re-code (T38-5's, the split's moved rows if any `where` moves), so `row-census.test.mjs` is green; the catalogue version moves, any pinned digest moves in its owner's job · K1542, K2231, K2232 · req: none (a stamp) · depends T38-4, T38-5. **P6:** 3,473 (its table grows by rows, not logic).
 
 **L2 merge order:** <new module> (copy) → membership (delete, R83) → credentials → promotion last (it stamps the layer's rows). Then the regeneration order (`case-checker/program.mjs`, the plane bundle).
@@ -55,6 +61,10 @@ Each line is one job (P8): every T38 entry for that module. Fields: module · (N
 ### L3
 
 - **T38-7 · host-governor** (test only) · (N784) `test/m/host-governor/ops.test.mjs`'s helper sends `Authorization` (C-38.10) and its three `T.member` uses become a member's session (C-38.11; as K2182), clearing red 6's nine · K2189 · req: none · depends —. **P6:** 434.
+
+- **T38-18 · file-safety** · (N789) R39's render wake (and its safe-copy part) is null while no renderer (`FILE_SCANNER`) is bound, as its scan wake is with no scanner, with a test of both arms, clearing scheduler `plane.test.mjs`:177; (N791, its share) R28 takes the template's `host`, and `handlingDigest` is computed from the stated handling · K2235, K2239 · req: R39, R28, BOB's wording · depends T38-17 (L1).
+
+**L3 merge order:** `modules.json` order: host-governor → file-safety.
 
 ### L4
 
@@ -69,19 +79,25 @@ Each line is one job (P8): every T38 entry for that module. Fields: module · (N
 
 ### L8
 
-- **T38-11 · case-carriage** · (N788 (2); DEC-183) `obscuremarkwithdraw` (`op=obscuremarkwithdraw`): a mark withdrawn by a later reasoned act of its maker or any member who may act on the case, recorded beside the mark, never erased; the copy re-derived from the marks that stand; R12's append-only rule amended; its refusals' words `words.json`'s `photo.*` · K2220; DEC-183 · req: R12 amended, a new R, BOB's wording · depends —. **P6:** 815.
-- **T38-12 · case-disclosures** · (N788 (1); DEC-183, superseding K2206's "never blocks") `photosOf`'s unchecked state is a gate: R6/R22 re-worded so a photo the case relies on that is unchecked blocks signing, named (`photo.refused.unchecked`); a withdrawn mark read as withdrawn (T38-11) · K2206, K2220; DEC-183 · req: R6, R22 amended, BOB's · depends T38-11. **P6:** 1,918.
+- **T38-19 · case-grammar** · (N779) R12 states that a published photo is carried as its metadata-free copy (rule 8), the original's fingerprint kept · K2248 · req: R12, BOB's wording · depends —.
+- **T38-11 · case-carriage** · (N779) R1, R8, R11: every photo a published case carries is its copy without metadata (rule 8; R11's derivation with no areas for an unmarked photo); a photo `image-cover` cannot take refuses the publication, named; (N790) `MACHINE_CANNOT_MARK` re-coded `MACHINE_CANNOT_MARK_PHOTO`, with a test that the catalogue holds each code once; (N788 (2); DEC-183) `obscuremarkwithdraw` (`op=obscuremarkwithdraw`): a mark withdrawn by a later reasoned act of its maker or any member who may act on the case, recorded beside the mark, never erased; the copy re-derived from the marks that stand; R12's append-only rule amended; its refusals' words `words.json`'s `photo.*` · K2220; DEC-183 · req: R12 amended, a new R, BOB's wording · depends —. **P6:** 815.
+- **T38-20 · public-read** · (N779) R23 serves a published photo only as its metadata-free copy · K2248 · req: R23, BOB's wording · depends T38-11.
+- **T38-12 · case-disclosures** · (N779) states the copy as it states an obscured one; (N788 (1); DEC-183, superseding K2206's "never blocks") `photosOf`'s unchecked state is a gate: R6/R22 re-worded so a photo the case relies on that is unchecked blocks signing, named (`photo.refused.unchecked`); a withdrawn mark read as withdrawn (T38-11) · K2206, K2220; DEC-183 · req: R6, R22 amended, BOB's · depends T38-11. **P6:** 1,918.
 - **T38-13 · case-authoring** · (N788 (1)) signing refused while any photo the case relies on is unchecked, naming it (R34's `blockers`; words `photo.refused.unchecked`) · K2220; DEC-183 · req: R34 amended, BOB's · depends T38-12. **P6:** 3,460; small.
 
-**L8 merge order:** `modules.json` order: case-carriage → case-disclosures → case-authoring.
+**L8 merge order:** `modules.json` order: case-grammar → case-carriage → public-read → case-disclosures → case-authoring.
 
 ### L11
 
 - **T38-14 · op-grades** · (N788) grades `obscuremarkwithdraw` (a member's act, as `obscuremark`) · DEC-183 · req: BOB's wording · depends —. **P6:** 2,233.
 - **T38-15 · op-declarations** · (N788) declares `obscuremarkwithdraw` (`by` stamped, `machineClasses: []`); the `setpassword` text as the screens already have it (DEC-183); R34 re-read, any op without a text named in one QUESTION to UX-DESIGN · DEC-183 · req: R27, a new R, BOB's wording · depends T38-11 (L8). **P6:** 3,245.
-- **T38-16 · control-plane** · (N788) routes `obscuremarkwithdraw` to case-carriage, `by` from the session · DEC-183 · req: a route R, BOB's wording · depends T38-15. **P6:** 3,103.
+- **T38-21 · tasks** · (N793) calls membership's `NO_SUCH_MEMBER` helper (rule 9) · K231 · req: BOB's wording · depends T38-4 (L2).
+- **T38-22 · setup-page** · (N793) as T38-21 · K231 · req: BOB's wording · depends T38-4.
+- **T38-23 · instance-setup** · (N793) drops its `NO_SUCH_MEMBER` row and calls membership's helper · K231, K2249 · req: BOB's wording · depends T38-4.
+- **T38-24 · admission** · (N792) `sourceOf` answers the store window's fallback (the instance's key) when `KNOCK_FINGERPRINT_KEY` is unbound, so `setpassword` and `login` count as one source · K2247 · req: its `sourceOf` R, BOB's wording · depends —.
+- **T38-16 · control-plane** · (N788) routes `obscuremarkwithdraw` to case-carriage, `by` from the session, unless the opening's check finds case-carriage's ops map (R18, K2226) already carries it; (N793) calls membership's helper · DEC-183, K231 · req: a route R, BOB's wording · depends T38-15. **P6:** 3,263 (K2255).
 
-**L11 merge order:** `modules.json` order: op-grades → op-declarations → control-plane.
+**L11 merge order:** `modules.json` order: op-grades → tasks → setup-page → instance-setup → op-declarations → admission → control-plane.
 
 ## Left out of T38 (one hard reason each)
 
@@ -89,7 +105,7 @@ Each line is one job (P8): every T38 entry for that module. Fields: module · (N
 |---|---|---|
 | N748 (N592) | the investigation engine's requirements (stages 1–2; K2075's plan construct) | Bob's (P17): D1–D4, D6–D8, D12–D14, D16–D24 open with him (K2064) |
 | N751 | doctypes R35's out-of-sample measure (coordinator, review_due, revision_cycle) | a measurement: no fresh policies beyond the 74 read (K2079) |
-| N779 | photo metadata on a photo a published case carries unmarked | Bob's (a private person's exposure; For BOB 1) |
+| N794 | legacy-ui `statement-ack.test.mjs` (T37's red 22) | Bob's (K633, K1849): `legacy-ui` is touched only where he names it |
 | N780 | agent-runner's and file-scanner's images published where Containers pull | a deployment: the next release cut (BOB's, K1501); `agent-runner-image.yml` lives on `dist/cut-0.81.0`, not on the tranche, so no job prepares it |
 | N788 (part), N757 (part), N776 (part), N708 (sign-in surface, M-Q2), N669 (screens) | the Photos step's and the reminder's screens; "Change your password"; "Sign in with Claude"; the translation workspace's screens | a dependency not yet built: the new screens' shell (N672); Bob (K2147): no interim control |
 | N757 (later) | an assistant proposing areas to obscure | Bob's (cost and keep-away, DEC-180) |
@@ -104,9 +120,9 @@ Each line is one job (P8): every T38 entry for that module. Fields: module · (N
 
 **Carried from T37 and earlier:** the measurement, real-group, Bob's UX, dependency, trigger and deployment rows keep their reasons unchanged; BOB re-reads them at the opening.
 
-## Entries carried from `next.md` (N748, N751, N779–N788) and T37's table
+## Entries carried from `next.md` (N748, N751, N779–N795) and T37's table
 
-Wholly in T38: N781 (BOB's act), N782, N783, N784, N785 (with N708's remainder), N786, N787. In part: N788 (its screens out). Left out: N748, N751, N779, N780, and T37's carried rows.
+Wholly in T38: N779, N781 (BOB's act), N782, N783, N784, N785 (with N708's remainder), N786, N787, N789, N790, N791, N792, N793, N795 (BOB's act). In part: N788 (its screens out). Left out: N748, N751, N780, N794, and T37's carried rows.
 
 ## P6 notes
 
@@ -114,19 +130,10 @@ Measured on `tranche/T37` @ `5fd61bfb68` (K1821). **membership** 3,970: split fi
 
 ## Summary
 
-**Jobs per layer:** L1 2, L2 4, L3 1, L4 1, L5 0, L6 2, L7 0, L8 3, L9 0, L10 0, L11 3. **Total 16.**
+**Jobs per layer:** L1 3, L2 4, L3 2, L4 1, L5 0, L6 2, L7 0, L8 5, L9 0, L10 0, L11 7. **Total 24.**
 
-## For BOB (Bob's questions; brought rendered at the opening)
+## For BOB
 
-1. **Photo metadata in published photos** (N779), unchanged from T37's For BOB 2 unless Bob has answered: (A) as today; (B) every published photo travels as a metadata-free copy, the group holding the original; (C) the Photos step shows what the metadata reveals and the member chooses. Recommendation: B. If answered before L8's START, its entry joins case-carriage's T38-11.
-2. **N748:** unchanged: D1–D4, D6–D8, D12–D14, D16–D24 and K2075's plan construct open with Bob.
+None at the opening: N779 is answered (K2248, rule 8); N748's D-questions stay with Bob in the investigation design lane (K2076). N795 (the close's refusals) is brought to him rendered as soon as it is drafted.
 
-Settled, not Bob's: N782's shape owner (rule 3); N783's boundary (rule 2, at L2's START); N788's packaging (rule 4); N781's register edit.
-
-**BOB #140's review notes (to settle at the opening):** T38-16's route: since K2226 `obscuremark`/`photomarks` reach case-carriage through its own ops map routed by the plane (R18), so `obscuremarkwithdraw` joins `caseCarriageOps` (T38-11) and control-plane may need no entry; check at the opening. N788's possible shares in affordances (`ACT_HELP`), wizard-scripts (the ceremony script) and answer-envelope (none: C-141 is read whole since T37-50) are checked against PR #15's text on `main`. N670's reason re-read at the opening.
-- (added by BOB #140, K2235) N789 · file-safety (L3): R39's render wake null while no renderer is bound; clears scheduler `plane.test.mjs`:177 (red 23). Number it at the opening.
-- (added by BOB #140, K2238) N790 · case-carriage (L8): re-code `MACHINE_CANNOT_MARK` (C-141.1, shared with sources' C-121.7); joins T38-11.
-- (added by BOB #140, K2239) N791 · file-scanner (L1), file-safety (L3): a generic template's list names host; structured values; the digest from the stated handling.
-- (BOB #140, K2246) N779 is closed (Bob: A, as today): drop it from the left-out table at the opening.
-- (added by BOB #140, K2247) N792 · admission (L11), credentials (L2): one sign-in source for setpassword and login when KNOCK_FINGERPRINT_KEY is unbound.
-- (BOB #140, K2248, replacing the K2246 line above) N779 enters T38 (Bob: the group keeps the metadata, published photos do not): a metadata-free copy for every published photo; shares in image-cover/image-codecs (L1), case-grammar, case-carriage, case-disclosures, public-read (L8), with T38-11–13.
+Settled, not Bob's: N782's shape owner (rule 3); N783's boundary (rule 2, at L2's START); N788's packaging (rule 4); N779's details (rule 8); N793's site (rule 9); N781's register edit; T38-16's route (checked at L11's START).
