@@ -1,6 +1,6 @@
 # control-plane (T37)
 
-**Status** · session_01Ksv4KwMx4iRLKN2msBFfav · depth 2 · WAITING ON BOB (J2) · handled B2
+**Status** · session_01Ksv4KwMx4iRLKN2msBFfav · depth 2 · WAITING ON BOB (J2) · handled B3
 
 ## Reading set (mechanics §17, N739)
 
