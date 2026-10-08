@@ -17,3 +17,21 @@ Prepared R34 (T38-13) on my reading; no logic change is needed here: op=publish 
 ## J2 · REPORT
 
 B2 done: merged tranche/T38 (case-carriage). Module tests against the real case-carriage: 164 tests, 162 pass, 2 fail — exactly my two drafted photo tests (R14 nothing-to-obscure carried by its copy; R34 PHOTO_UNCHECKED first), which wait on case-disclosures R6/R29 (T38-12), not on case-carriage. Nothing else moved. Still waiting on your CHANGE that case-disclosures is merged, then COMPLETE.
+
+## Completion
+
+**Entries applied.** T38-13 (N788 (1); DEC-183 (1); K2220, K2303): R34, signing refused while any photo the case relies on is unchecked. No logic change was needed: `#publishCase` answers `case-disclosures.materialsJudged`'s first refusal (`index.mjs` R55 block) and `publishPreflight` pushes every one of its refusals into `found`, so R6's `PHOTO_UNCHECKED` (C-120.19) is `first` exactly when op=publish refuses with it and among `blockers` otherwise, beside `PHOTO_NOT_COVERABLE` and `PHOTO_MARKS_UNDETERMINED`. The comments at `publishPreflight` and the Photos step that said an unchecked photo blocks nothing now state the gate.
+
+**Tests.** `photos.test.mjs`: R14 (a "nothing to obscure" photo carried by its copy, label null, N779); R34 steps (every photo checked: ready); new R34 (T38; DEC-183 (1)): an unchecked photo is `PHOTO_UNCHECKED`, naming each with the members reaching it (a supporting member's included, K2291's reading), op=publish's refusal and the pre-flight's `first` exactly, step words `photo.refused.unchecked` read by key from `words.json`; among `blockers` when the bar refuses earlier; "nothing to obscure" clears it; nothing written. `invariants.test.mjs` R29 and `preflight.test.mjs` R29: C-120.19 added; `PHOTO_NOT_COVERABLE`'s and `PHOTO_UNCHECKED`'s translations read by key (`photo.refused.format`, `photo.refused.unchecked`).
+
+**Deferred.** None. **Other modules.** None found.
+
+**Runs** (on `job/T38/case-authoring` with `tranche/T38` merged after B3, case-disclosures in): `node --test bio-plane/test/m/case-authoring/` — tests 164, pass 164, fail 0. No layer tests (`manifest.md`). No provided service changed.
+- `format`: 137 modules, 136 requirements files; 0 failures
+- `architecture case-authoring`: 28 product files, 152 relative imports; 0 failures
+- `coverage case-authoring`: 46 of 46 live requirement ids named by a test; 0 failures
+- `ownership case-authoring tranche/T38`: 0 failures
+
+**P6.** 3,465 lines (`src/case-authoring/`), under about 4,000.
+
+Size (session_01Sp2boRLmm5PQPFmpQBHNT7): test runs 5, module lines 3465

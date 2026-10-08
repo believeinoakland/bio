@@ -105,14 +105,13 @@ test("R34 (T38; DEC-183 (1)): signing is refused while any photo the case relies
   const pub = w.ca.publishCase(args(P, [Q, Q2], roles));
   refused(pub, "PHOTO_UNCHECKED");
   assert.equal(CASE_DISCLOSURE_CHECKS.PHOTO_UNCHECKED.translation, word("photo.refused.unchecked"), "read by key");
-  const said = JSON.stringify(pub);
-  for (const d of [DOC2, DOC3]) assert.ok(said.includes(d) && said.includes(shas[d]), `names ${d}`);
-  assert.ok(!said.includes(shas[DOC]), "a marked photo is not named");
+  assert.deepEqual(pub.unchecked, [{ ref: DOC2, sha: shas[DOC2], members: [Q] }, { ref: DOC3, sha: shas[DOC3], members: [Q2] }],
+    "each unchecked photo named with the members reaching it, a supporting one's included; the marked one not named");
   const pre = w.ca.publishPreflight(args(P, [Q, Q2], roles));
   assert.deepEqual([pre.first, pre.ready, pre.blockers], [pub, false, []]);
   const step = pre.steps[3];
   assert.deepEqual(step.photos.map((p) => [p.ref, p.state]), [[DOC, "marked"], [DOC2, "unchecked"], [DOC3, "unchecked"]]);
-  for (const p of step.photos.slice(1)) assert.ok(typeof p.words === "string" && p.words.startsWith(word("photo.refused.unchecked").split("{photo}")[0]), p.ref);
+  assert.deepEqual(step.photos.map((p) => p.words), [OBSCURED_LABEL, word("photo.refused.unchecked"), word("photo.refused.unchecked")]);
   assert.equal(step.unchecked, 2);
   assert.deepEqual(w.snapshot(), before, "nothing written");
   /* op=publish refuses earlier (the bar): the unchecked photo's refusal is among blockers, once */
