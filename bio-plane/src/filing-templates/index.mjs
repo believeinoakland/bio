@@ -1306,17 +1306,21 @@ export function filingTemplatesOwns(t) {
   return FILING_TEMPLATES_TABLES.includes(name);
 }
 
-/** The module's ops (K3, the `actionClocksOps` pattern): `author`, `viewer` and `secretSha` are the control plane's
- *  stamps (`author` stands for R3's author, R6's proposer and R8, R10, R11's `by`), read from the query and never from
- *  the body, so a caller's own copy never wins. `op-declarations` declares them (its R8), `control-plane` routes them
- *  (its R44) and `plane` composes them (its R11). A `{filing, sha}` source is refused here (R3). */
+/** The module's ops (K3, the `actionClocksOps` pattern): `author` and `viewer` are the control plane's stamps (`author`
+ *  stands for R3's author, R6's proposer and R8, R10, R11's `by`), read from the query and never from the body, so a
+ *  caller's own copy never wins. `secretSha` (R8's new grant's fingerprint and the grant doors' of R9, R13 and R14) is
+ *  read from the body only, whatever the request's method, where the control plane sets it after removing any a caller
+ *  sent; a `secretSha` in the query is never read, so a digest there alone mints no grant and opens no door (R27;
+ *  N761). `op-declarations` declares them (its R8), `control-plane` routes them (its R44, R64) and `plane` composes
+ *  them (its R11). A `{filing, sha}` source is refused here (R3). */
 export function filingTemplatesOps(m, url, body) {
   const q = (k) => url.searchParams.get(k);
   const has = (k) => url.searchParams.has(k);
   const b = body && typeof body === "object" ? body : {};
   const pick = (k) => (b[k] !== undefined && b[k] !== null ? b[k] : has(k) ? q(k) : null);
   const stamps = { viewer: q("viewer") };
-  const door = { secretSha: q("secretSha") };
+  /* R27: the fingerprint's one channel, so no digest travels in an internal address. */
+  const door = { secretSha: b.secretSha ?? null };
   return {
     templatedraft: () => m.templateDraft({ template: pick("template"), project: pick("project"), kind: pick("kind"), use: pick("use"),
       profiles: pick("profiles"), name: pick("name"), text: b.text, from: pick("from"), notes: b.notes ?? null,
@@ -1327,7 +1331,7 @@ export function filingTemplatesOps(m, url, body) {
       run: pick("run"), model: pick("model"), skill_pack: pick("skill_pack"), proposer: q("author"), ...stamps }),
     templatesubmit: () => m.templateSubmit({ version: pick("version"), reviewers: pick("reviewers"), author: q("author"), ...stamps }),
     templatereviewgrant: () => m.templateReviewGrant({ version: pick("version"), recipient: pick("recipient"),
-      organisation: pick("organisation"), secretSha: q("secretSha"), by: q("author"), ...stamps }),
+      organisation: pick("organisation"), by: q("author"), ...door, ...stamps }),
     templategrantrevoke: () => m.templateGrantRevoke({ grant: pick("grant"), by: q("author"), ...stamps }),
     templatereview: () => m.templateReview({ version: pick("version"), outcome: pick("outcome"), scope: pick("scope"),
       comment: b.comment ?? null, credential: pick("credential"), sha: pick("sha"), author: q("author"), ...door, ...stamps }),
@@ -1337,9 +1341,10 @@ export function filingTemplatesOps(m, url, body) {
       by: q("author"), ...stamps }),
     templatecomment: () => m.templateComment({ template: pick("template"), version: pick("version"), text: b.text ?? null,
       note: pick("note") ?? false, author: q("author"), ...door, ...stamps }),
-    templatecomments: () => m.templateComments({ template: q("template"), version: q("version"), limit: q("limit"),
+    /* control-plane R59: the template doors take a POST, so the two reads take their arguments from the body too */
+    templatecomments: () => m.templateComments({ template: pick("template"), version: pick("version"), limit: pick("limit"),
       author: q("author"), ...door, ...stamps }),
     templates: () => m.templatesFor({ kind: q("kind"), profile: q("profile"), use: q("use"), state: q("state"), ...stamps }),
-    templateread: () => m.templateRead({ template: q("template"), version: q("version"), author: q("author"), ...door, ...stamps }),
+    templateread: () => m.templateRead({ template: pick("template"), version: pick("version"), author: q("author"), ...door, ...stamps }),
   };
 }
