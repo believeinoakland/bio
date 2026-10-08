@@ -50,3 +50,7 @@ About 260 KB in all, at most 300 KB, so I read it whole myself: the requirements
 - ownership: 3 files changed by tasks between tranche/T38 and HEAD; 0 failures.
 
 Size (session_01Q76EduEf1fMRaD5uxMeUng): test runs 16, module lines 1444
+
+## J1 · COMPLETE
+
+T38-21 applied: taskForward's NO_SUCH_MEMBER answers membership.noSuchMember (R121, C-96.47), member the 'to' asked; its own sentence gone. New R3 test (code, row, R121's sentence, order, set form, no write). tasks 102/0; checks format, architecture, coverage, ownership 0 failures. Users' tests: 11 failures in op-declarations (4), answer-envelope (4), plane (3), identical with my change stashed: not tasks'. Details in my record's Completion.
