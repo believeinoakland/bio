@@ -1,6 +1,6 @@
 # affordances (T36)
 
-**Status** · session_01S4Ftb92KWezfAAS4YcAnSG · depth 2 · WAITING ON BOB (J1) · handled B1
+**Status** · session_01S4Ftb92KWezfAAS4YcAnSG · depth 2 · WORKING · handled B1
 
 ## Reading (mechanics §17, N739)
 
