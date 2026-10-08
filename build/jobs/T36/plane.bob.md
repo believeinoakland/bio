@@ -31,3 +31,7 @@ For your test runs (K2158): rule 5 gains red 31: plane `test/m/plane/release.tes
 ## B5 · CHANGE
 
 instance-setup has merged (K2162): `assistantSet` and `op=assistantset` are gone. Merge the tranche branch now and re-point your tests that used them to `credentials.aiKeepAwaySet` (keep-away off is the assistant on): red 32 in the plan's rule 5 names yours. Then post COMPLETE (again).
+
+## B6 · CHANGE
+
+admission has merged (K2166): red 33's plane share is yours: `worker.test.mjs` R6 (its op called with `?token=`) and `test/system/migrate-released.test.mjs`:217–220 (every op as `?token=<MEMBER_TOKEN>`) re-point to a header session or an `aik-` credential. Merge the tranche branch now, re-pin, and post COMPLETE; you merge last, after control-plane.
