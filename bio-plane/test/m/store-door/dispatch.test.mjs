@@ -1,4 +1,4 @@
-/* store-door: the record store's door (R1, R2, R3, R6, R9, R11). Driven through `dispatch(req, store)` with a route map
+/* store-door: the record store's door (R1, R2, R3, R6, R9, R11, R13). Driven through `dispatch(req, store)` with a route map
    and a membership that record what reached them, and over a real record (`record.mjs`) where an owner's answer is read.
    Moved from control-plane's `dispatch.test.mjs`, `envelope.test.mjs` (the store's half of R25), `r48-routes.test.mjs`
    (R47's classification), `r53-routes.test.mjs` and `t34-routes.test.mjs` (R53's store half) at the split (K1974). The
@@ -289,6 +289,39 @@ test("R9 (K2038, K2041): the headers `x-bio-session`, `x-bio-grant` and `x-bio-c
                                  ["answercheck?viewer=member:ann&grant=G-QUERY", { [GRANT_HEADER]: "G-HEADER" }]])
     assert.equal((await go(owners, path, { method: "POST", headers, body: JSON.stringify({ answer: { sentences: [] } }) })).status, 200, path);
   assert.deepEqual(asked, [["session", "T-HEADER"], ["look", "D-HEADER"], ["check", "G-HEADER"]]);
+});
+
+test("R9 (T37; N761, K2129, K2175; credentials R53): a grant's `secretSha` reaches the owners' maps only in the internal request's body, handed on as it arrived; the door sets none on the in-process URL, adds none from any header, and removes one found in the query before any map receives the URL or the read log its arguments; over a real record, credentials' `aicredentialmint` reads the body's digest and never the query's (negative control: the query's other parameters reach the map unchanged)", async () => {
+  assert.equal(D.SECRET_SHA_PARAM, "secretSha");
+  const Q = "a".repeat(64), B = "b".repeat(64), H = "c".repeat(64);
+  const seen = [], logged = [];
+  const store = { routes: (url, body) => { seen.push({ at: "map", q: Object.fromEntries(url.searchParams), body });
+                                           return { search: () => { seen.push({ at: "route", q: Object.fromEntries(url.searchParams) }); return { rows: [] }; } }; },
+                  membership: () => ({ visibilityOf: () => "hidden", existenceAct: () => null }),
+                  logRead: (e) => { logged.push(e); return e.answer; } };
+  const body = { secretSha: B, limit: 5 };
+  /* the query's digest removed, the body's handed as it arrived, no header turned into one */
+  await go(store, `search?viewer=member:ann&q=x&secretSha=${Q}&secretSha=${Q}`, { method: "POST", body: JSON.stringify(body),
+    headers: { [GRANT_HEADER]: "G-H", "x-bio-secret-sha": H, [CREDENTIAL_SHA_HEADER]: H } });
+  assert.deepEqual(seen, [{ at: "map", q: { viewer: "member:ann", q: "x", grant: "G-H", sha: H }, body },
+                          { at: "route", q: { viewer: "member:ann", q: "x", grant: "G-H", sha: H } }]);
+  assert.deepEqual(logged.map((e) => e.args), [{ q: "x", secretSha: B, limit: 5 }], "the body's arguments as they arrived, the query's digest not among them");
+  assert.equal(JSON.stringify([seen, logged]).includes(Q), false);
+  /* negative control: no digest anywhere, the URL as the Worker sent it */
+  seen.length = 0;
+  await go(store, "search?viewer=member:ann&q=y");
+  assert.deepEqual(seen[0].q, { viewer: "member:ann", q: "y" });
+  /* over a real record: aicredentialmint mints under the body's digest; a query digest alone mints nothing it could find */
+  const r = await record({ sealSecret: "store-door-test-seal-secret-00004" });
+  const { credentialsOf, credentialsOps } = await import("../../../src/credentials/index.mjs");
+  const C = credentialsOf(r.ctx);
+  const minted = [];
+  const orig = C.aiCredentialMint.bind(C);
+  C.aiCredentialMint = (a) => { minted.push(a.secretSha); return orig(a); };
+  const owners = { routes: (url, b) => credentialsOps(C, url, b, {}), membership: () => null };
+  await go(owners, `aicredentialmint?who=member:ann&secretSha=${Q}`, { method: "POST", body: JSON.stringify({ secretSha: B }) });
+  await go(owners, `aicredentialmint?who=member:ann&secretSha=${Q}`, { method: "POST", body: JSON.stringify({}) });
+  assert.deepEqual(minted, [B, null]);
 });
 
 test("R11 (K1674; answers R1, R2, R7): a read the store serves under a grant is handed to `store.logRead` with its grant, op, arguments (query and body, the stamped viewer and any query grant aside), answer and viewer, and answered as logged; no grant, `rule` (which records its own) and an op off the asking scope are answered as served; a store that cannot log is R6's internal error, never an unlogged answer", async () => {

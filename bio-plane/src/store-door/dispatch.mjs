@@ -229,7 +229,11 @@ function purgeHoldRefusal(store, url) {
    R9 (F1; K1874, K1943, K2038, K2041): a credential reaches this door in a header of the request, never in its address:
    `x-bio-session` (a stamped session, and the token admission asks `session` to resolve), `x-bio-grant` (an ask's grant)
    and `x-bio-credential-sha` (the digest admission asks `aicredentiallook` to resolve). A `grant` in the query is not the
-   one read here, and it is not logged among the read's arguments either. */
+   one read here, and it is not logged among the read's arguments either.
+   R9 (T37; N761, K2129, K2175): a grant's `secretSha` (a review, template, case-edition or acknowledgement grant's digest,
+   and `aicredentialmint`'s) reaches the owners' maps only in the internal request's body, handed on as it arrived: the
+   door sets none on the URL, reads no header for it, and removes one found in the query before any map receives the URL
+   (or the read log its arguments), so no owner can read one there. */
 export const SESSION_HEADER = "x-bio-session";
 export const GRANT_HEADER = "x-bio-grant";
 export const CREDENTIAL_SHA_HEADER = "x-bio-credential-sha";
@@ -242,6 +246,7 @@ export function grantOf(req) { return headerOf(req, GRANT_HEADER); }
    request's address): the session as `session` (credentials' sign-out routes) and `t` (credentials' `session`), the
    grant as `grant` (answers' `rule` and `answercheck`), the digest as `sha` (credentials' `aicredentiallook`). A header
    absent leaves the parameter as the Worker sent it, so the owners' maps are unchanged. */
+export const SECRET_SHA_PARAM = "secretSha";
 const HANDED = Object.freeze([[SESSION_HEADER, ["session", "t"]], [GRANT_HEADER, ["grant"]], [CREDENTIAL_SHA_HEADER, ["sha"]]]);
 function handOn(req, url) {
   for (const [name, keys] of HANDED) {
@@ -255,23 +260,29 @@ function underGrant(store, grant, asked, op, body, answer) {
   return store.logRead({ grant, op, args: { ...args, ...(body && typeof body === "object" ? body : {}) }, answer, viewer });
 }
 
-/* R10 (DEC-152, DEC-153; K1755, K1837): THE ASSISTANT, RESOLVED PER ACT BEFORE A DRAFT'S HANDLER. For the stamped member
-   `by`, in this order: an administrator's own act (`groupdescriptiondraft`) refuses anyone else membership's
-   `NOT_AN_ADMIN` (its R84); instance-setup's switch, `ASSISTANT_OFF` (its R55); ai-runs' check before any model call,
-   `AI_NO_ACCOUNT` and the two ceilings (its R50, R52); then the account credentials answers for the member's act (its
-   R35), any other refusal of it relayed as given. Admitted, the handler receives `{on, account: {kind, level}}`: which
-   account serves, never the key, which stays in credentials. */
-async function assistantFor(ctx, by, adminOnly) {
+/* R10 (DEC-152, DEC-153, DEC-172; K1755, K1837, K231, K2200, K2201): THE ASSISTANT, RESOLVED PER ACT BEFORE A DRAFT'S
+   HANDLER. Each draft's handler refuses first by its own words (`groupdescriptiondraft`'s NOT_AN_ADMIN, membership's R84,
+   asked here; `translationdraft`'s, asked of instance-setup's own check). Then, for the stamped member `by`, in this order:
+   the group's keep-away, `AI_KEPT_AWAY` as `credentials.aiKeptAway()` answers it (its R35, the one site; N765: in place of
+   instance-setup's retired `ASSISTANT_OFF`), so under keep-away no account is read and no draft routed; ai-runs' check
+   before any model call, `AI_NO_ACCOUNT` and the two ceilings (its R50, R52); then the account credentials answers for the
+   member's act (its R35), any other refusal of it relayed as given. Admitted, the handler receives
+   `{on, account: {kind, level}}`: `on` as instance-setup's `assistantState()` answers it (its R53, R55), and which account
+   serves, never the key, which stays in credentials. */
+async function assistantFor(ctx, by) {
   const member = typeof by === "string" && by ? by : null;
-  if (adminOnly && !membershipOf(ctx).isAdministrator(member && member.startsWith("member:") ? member.slice(7) : member))
-    return { refusal: notAnAdmin(member, "asking the assistant to draft the group's description") };
-  const off = instanceSetupOf(ctx).assistantGate();
-  if (off) return { refusal: off };
+  const away = credentialsOf(ctx).aiKeptAway();
+  if (away) return { refusal: away };
   const use = aiRunsOf(ctx).aiUseCheck({ member });
   if (use) return { refusal: use };
   const account = await credentialsOf(ctx).accountFor({ member, act: { kind: "ask", member } });
   if (!account || account.ok !== true) return { refusal: account || { ok: false, reason: "NO_ACCOUNT" } };
-  return { assistant: { on: true, account: { kind: account.kind, level: account.level } } };
+  return { assistant: { on: instanceSetupOf(ctx).assistantState().on, account: { kind: account.kind, level: account.level } } };
+}
+function adminRefusal(ctx, by) {
+  const member = typeof by === "string" && by ? by : null;
+  if (membershipOf(ctx).isAdministrator(member && member.startsWith("member:") ? member.slice(7) : member)) return null;
+  return notAnAdmin(member, "asking the assistant to draft the group's description");
 }
 
 /* R1: the frame. `store.routes(url, body)` answers the route map, `store.membership()` membership for R2;
@@ -299,7 +310,9 @@ export async function dispatch(req, store) {
      hazard for the byte comparisons the D-15 posture rests on. */
   try {
     const grant = grantOf(req);
-    /* the read's own parameters, taken before the headers' credentials are handed on, so none is logged (R11) */
+    /* R9: a query's `secretSha` removed first; then the read's own parameters, taken before the headers' credentials are
+       handed on, so none is logged (R11) */
+    url.searchParams.delete(SECRET_SHA_PARAM);
     const asked = Object.fromEntries(url.searchParams);
     handOn(req, url);
     const map = store.routes(url, body, grant);
@@ -329,7 +342,7 @@ export async function dispatch(req, store) {
    Worker's tally of a refusal it answered to a member's session, handed to `wizard-scripts.tallyRefusal` with the op and
    the code alone; store-internal, op-declarations R6, so no caller reaches it, as capture's `doorbellrefused`); R7's
    pull, a route of its own beside capture's `inboxpull`, which the Worker's `op=inboxpull` (and `op=inboxresolve` at
-   `pulled`) addresses; R11's ask routes; and R10's two drafts. The map keeps control-plane's name for it, so plane's
+   `pulled`) addresses; R11's ask routes; and R10's three drafts. The map keeps control-plane's name for it, so plane's
    composition is unchanged. */
 export function controlPlaneRoutes(ctx, url, body, grant = null) {
   const q = (k) => url.searchParams.get(k);
@@ -362,16 +375,28 @@ export function controlPlaneRoutes(ctx, url, body, grant = null) {
        refuses any other (its R48). */
     askusage: () => aiRunsOf(ctx).countAskUsage({ member: q("viewer"), mode: b.mode ?? "ask", usage: b.usage ?? null, calls: b.calls }),
     askcheck: () => answersOf(ctx).check({ answer: b.answer ?? null, grant, viewer: q("viewer"), mode: "ask" }),
-    /* R10: the two drafts, routed here over their owners' map entries (plane spreads this map last), the assistant
-       resolved first (`assistantFor`); the handler's own arguments from the body, the stamps from the query, and a
-       caller's `assistant` never read. */
+    /* R10: the three drafts, routed here over their owners' map entries (plane spreads this map last), the handler's own
+       first refusal and then the assistant resolved (`assistantFor`); the handler's own arguments from the body, the
+       stamps from the query, and a caller's `assistant` never read. */
     groupdescriptiondraft: async () => {
-      const a = await assistantFor(ctx, q("by"), true);
+      const first = adminRefusal(ctx, q("by"));
+      if (first) return first;
+      const a = await assistantFor(ctx, q("by"));
       return a.refusal ?? instanceSetupOf(ctx).groupDescriptionDraft({ answers: b.answers, assistant: a.assistant,
                                                                        viewer: q("viewer"), by: q("by") });
     },
+    /* R10 (N669; K2200, K2201): both directions; instance-setup's own first refusal (the direction, the language, a
+       machine, `TRANSLATION_NOT_GRANTED` or, for `to_english`, `NOT_AN_ADMIN`, the word) before keep-away. */
+    translationdraft: async () => {
+      const setup = instanceSetupOf(ctx);
+      const args = { language: b.language, direction: b.direction, keys: b.keys, key: b.key, by: q("by") };
+      const first = setup.translationDraftRefusal(args);
+      if (first) return first;
+      const a = await assistantFor(ctx, q("by"));
+      return a.refusal ?? setup.translationDraft({ ...args, assistant: a.assistant });
+    },
     writinghelp: async () => {
-      const a = await assistantFor(ctx, q("by"), false);
+      const a = await assistantFor(ctx, q("by"));
       return a.refusal ?? wizardScriptsOf(ctx).writingHelp({ op: b.op, field: b.field, told: b.told, draftHeld: b.draftHeld,
                                                              assistant: a.assistant, by: q("by"), viewer: q("viewer") });
     },
