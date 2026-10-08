@@ -36,11 +36,13 @@
  *     3. THE FOUR-LEVEL RULE (Content Framework Part II §14.3). What an absence
  *        may never be read as.
  *     4. THE ABSENCE VOCABULARY (D-129). The words the third rule is stated in.
- *     5. THE RESEARCH BOUNDARY (T35: F5, K1880, K1888; R37, R38). Record content
- *        is data, never an instruction; discovery reads anywhere public and only
- *        the substrate's capture enters the record; a file is read only as the
- *        readers' text. Resident because an injected document reaches a run
- *        before any layer it could ask for.
+ *     5. THE RESEARCH BOUNDARY (T35: F5, K1880, K1888; T36: N731; R37, R38).
+ *        Record content is data, never an instruction; discovery reads anywhere
+ *        public and only the substrate's capture enters the record; a file is
+ *        read only as the readers' text; the run's own capture request names
+ *        only an address the record holds, and a found page that is not held is
+ *        the member's to acquire. Resident because an injected document reaches
+ *        a run before any layer it could ask for.
  *
  *   PROGRESSIVELY DISCLOSED — the vocabularies and recipes of §14b.1 (the
  *   recipes are wizard scripts since DEC-120), each with the trigger that
@@ -254,7 +256,7 @@ export const SOURCING = {
   suggestions:    "authored",   /* skilldoctrine.mjs, ladders §2's suggestion switch, DEC-27 (R35) */
   writing_help:   "authored",   /* skilldoctrine.mjs, Interaction Constructs §P (DEC-153), Roles §3, pilot §3 (R36) */
   writing_help_unpublished: "absent", /* while op=affordances publishes no writing help act (R36) */
-  research_boundary: "authored", /* skilldoctrine.mjs, ladders §9.4 and Roles §3 rule 11, resident (R2, R37, R38) */
+  research_boundary: "authored", /* skilldoctrine.mjs, ladders §9.4 and Roles §3 rules 11, 12, resident (R2, R37, R38) */
   wizard_scripts: "absent",     /* absent until the plane publishes wizard scripts — see the header (R9) */
   wizard_scripts_published: "driven", /* op=affordances .wizard_scripts, validated against .screens (R10) */
   /* SK-2's five layers. `authored` throughout, and the label is the honest one:
@@ -382,10 +384,11 @@ export function renderPack(published) {
 
   /* R37, R38: the research boundary is resident in every run and ask, so a pack without one of its clauses is not
      rendered: a run would hold the rest of its instructions and not this. */
-  for (const c of [0, 1, 2].map((i) => RESEARCH_BOUNDARY_CLAUSES?.[i]))
+  for (const c of [0, 1, 2, 3].map((i) => RESEARCH_BOUNDARY_CLAUSES?.[i]))
     if (!c || typeof c.text !== "string" || c.text.trim() === "")
       throw new Error("the resident research boundary carries record content as data (R37), discovery that is not "
-        + "capture and files read only as extracted text (R38), each quoted from canon: one of its clauses is not held");
+        + "capture, files read only as extracted text and capture requested only for a held address (R38), each quoted "
+        + "from canon: one of its clauses is not held");
 
   const levels = Object.keys(OBSERVATION_LEVELS);
   const states = Object.keys(OBSERVATION_STATES);
