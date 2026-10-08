@@ -361,8 +361,7 @@ export class Finder {
   /* A grid's typed cells (a sheet's, or a document table's, each cell's `source.cell` in A1): the first row read is its
      header; a column every one of whose other cells is a date (or an amount: a number, or a value written as a plain
      number, under a header naming a currency, or a value the money matcher reads whole) is one result. Answers the
-     cells placed (`held`), the columns (`{col, words, rows, first, last, lines}`, `lines` each body cell's non-blank
-     lines in cell order) and the cells they take (`done`). */
+     cells placed (`held`), the columns (`{col, words, rows, first, last}`) and the cells they take (`done`). */
   #columns(kind, cells, set) {
     const at = (cell) => { const m = cell && cell.source && typeof cell.source.cell === "string" ? A1.exec(cell.source.cell) : null;
                            return m ? { col: m[1].toUpperCase(), row: Number(m[2]) } : null; };
@@ -390,8 +389,7 @@ export class Finder {
       if (!fits) continue;
       const rows = filled.map((x) => x.at.row);
       columns.push({ col, rows: filled.length, first: Math.min(...rows), last: Math.max(...rows),
-                     words: cutWords(header && header.value != null && String(header.value).trim() ? header.value : `column ${col}`),
-                     lines: body.flatMap((x) => linesOf(x.cell.value)) });
+                     words: cutWords(header && header.value != null && String(header.value).trim() ? header.value : `column ${col}`) });
       for (const x of body) done.add(x);
     }
     return { held, columns, done };
@@ -536,33 +534,15 @@ function heldCells(cells) {
   return { sheets, tables: tables.sort((a, b) => a.table - b.table) };
 }
 
-const linesOf = (v) => (v == null ? [] : String(v).split("\n").map((s) => s.trim()).filter(Boolean));
-
-/* N724: the paragraph units (`doc-para`) of the cells a document table's date or amount columns took, which are not
-   matched again. A cell's value is its paragraphs' text newline-joined (office-readers R11), and its paragraphs are
-   text units of their own (reading-pipeline's units), but a cell does not name its paragraphs. So each table's
-   paragraphs are found as the run of units, in reading order and after the previous table's, whose texts are the
-   table's cell lines in cell order; a table whose run is not found (its cells read out of document order, as a
-   vertically merged cell is) has every paragraph unit whose whole text is one of its columns' lines left out. */
+/* N758 (K2118, K2197): the paragraph units (`doc-para`) of the cells a document table's date or amount columns took,
+   which are not matched again. Each cell names the ordinals of the paragraphs its text was read from (`paras`,
+   office-readers R11, carried by reading-pipeline R28), so its paragraphs are found exactly, a vertically merged cell's
+   included, never by matching its lines. An ordinal naming no unit (a whitespace-only paragraph, or one the wire bound
+   dropped) is passed over; a cell naming no `paras` (a reading made before N758) names no paragraph. */
 function paragraphsOf(docTables, units) {
-  const out = new Set();
-  const paras = units.filter((u) => u.extentObj && u.extentObj.kind === "doc-para");
-  const text = paras.map((u) => String(u.text).trim());
-  let from = 0;
-  for (const t of docTables) {
-    if (!t.columns.length) continue;
-    const taken = new Set(t.columns.map((c) => c.col));
-    const seq = t.held.flatMap((x) => linesOf(x.cell.value).map((line) => ({ line, take: taken.has(x.at.col) && t.done.has(x) })));
-    let at = -1;
-    for (let i = from; seq.length && i + seq.length <= text.length && at < 0; i++)
-      if (seq.every((s, j) => text[i + j] === s.line)) at = i;
-    if (at >= 0) {
-      seq.forEach((s, j) => { if (s.take) out.add(paras[at + j]); });
-      from = at + seq.length;
-    } else {
-      const lines = new Set(t.columns.flatMap((c) => c.lines));
-      paras.forEach((u, i) => { if (lines.has(text[i])) out.add(u); });
-    }
-  }
-  return out;
+  const taken = new Set();
+  for (const t of docTables)
+    for (const x of t.done)
+      for (const p of Array.isArray(x.cell.paras) ? x.cell.paras : []) if (Number.isInteger(p)) taken.add(p);
+  return new Set(units.filter((u) => u.extentObj && u.extentObj.kind === "doc-para" && taken.has(u.extentObj.para)));
 }
