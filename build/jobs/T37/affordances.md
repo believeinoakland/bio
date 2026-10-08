@@ -56,3 +56,7 @@ Note for BOB (R48, as the START asks): the design's owed_setpassword text says '
 - ownership: 0 failures.
 
 Size (session_0187SVNmLrMtUDuMD6BfqRLx): test runs 19, module lines 2280
+
+## J2 · COMPLETE
+
+T37-27 applied; the record's Completion section has the detail. ACT_HELP is re-generated from mock-acts.js @ e08cd35ecb (203 held; nine owed_ acts until declared). plane.test.mjs: credentials go in the Authorization header; R18 uses nell's session; R20's machine is ADM (no ai credential can be minted before T37-33); the retired MEM is pinned to admission R5. 28/0. t36 counts are re-stated. t36-backing aikeepaway is re-pinned to AI_KEEP_AWAY_NO_REASON: red until op-grades T37-26 merges, proven green with it locally. Module: 218 tests, 217 pass, 1 fail (that one). Checks: 0 failures each. Reds named: op-declarations t36.test.mjs:291 (clockpropose) until T37-31; the eight owed acts' re-keying after T37-31; dist bundle stale.
