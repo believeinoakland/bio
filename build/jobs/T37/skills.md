@@ -34,3 +34,7 @@ R39's clauses that no canon sentence states (K921's pattern: reported, never aut
 3. (e) the reading back into English "translates the kept word alone, is labelled machine work, and adopts nothing": canon states only that an administrator confirms "after reading the assistant's translation of them back into English" (DEC-157 (4)) and §L's "an administrator reading the assistant's back-translation". Reading: carry those two; "alone", the label and "adopts nothing" are not authored as clauses, and the note names their holders (agent-worker R69: `to_english` exactly one kept word; instance-setup: `to_english` writes nothing; record-grammar R50's label).
 
 Also, mine (recorded, not asked): the layer carries `mode` as run-rules' `DRAFT_MODE.mode`, as `writing_help` does; DECISIONS.md is canon by requirements/README.md's DEC row ("each ruling"), so each DEC clause is found in that DEC's `response:` ruling, not its `owed:` line.
+
+## J2 · COMPLETE
+
+T37-14 applied: the interface_translation layer (R39), R5's order. 94/94 skills tests; format, architecture, coverage (39 of 39), ownership: 0 failures. J1's readings as B2 ruled (K2211). Completion in my record; nothing deferred.
