@@ -90,3 +90,18 @@ A worker of mine read `rereads.test.mjs` whole (220 lines, R4 and R5). It wrote 
 - **P6:** 815 lines at the opening; now 984 (`index.mjs` 798, `schema.mjs` 130, `checks.mjs` 56).
 
 Size (session_01FXB67DiZhzve12wNqAWQcY): test runs 22, module lines 984
+
+## J2 · REPORT
+
+Findings in other modules from T38-11. The detail is in my record under "Found in other modules".
+- **op-declarations** (T38-15):
+  - `t37.test.mjs`:125 pins `obscuremark`'s machine refusal as `MACHINE_CANNOT_MARK`; it is now `MACHINE_CANNOT_MARK_PHOTO` (N790).
+  - `t33.test.mjs`:210 is red: `obscuremarkwithdraw has no spec`. The declaration is owed by T38-15.
+  - The codes merged here: `MACHINE_CANNOT_WITHDRAW_MARK` C-141.7, `NO_SUCH_MARK` C-141.8, `MARK_ALREADY_WITHDRAWN` C-141.9, `WITHDRAW_NO_REASON` C-141.10.
+  - Comments in `op-declarations/index.mjs`:413 and `op-grades/t37.mjs`:8 still name `MACHINE_CANNOT_MARK`.
+- **plane** `disclosures.test.mjs`:74 pins case-carriage's ops as `[obscuremark, photomarks]`; `obscuremarkwithdraw` is now added.
+- **answer-envelope** `families.test.mjs`:360 names `MACHINE_CANNOT_MARK` as sources'. That test is already red on the tranche before my change.
+- **promotion:** C-141.1 is re-coded, and C-141.7 to C-141.10 are new and awaiting stamp. The four translations are BOB's drafts, for UX-DESIGN to re-word.
+- **The plane bundle** is staled by this merge (accepted red 8).
+- **For BOB/Bob (N779's scope):** photos embedded in a PDF or office document cited whole leave with their metadata. K2248 speaks of photo captures only.
+- **My requirements' Uses** does not yet name `acquisition` (`archive_entries`, its R45; R8).
