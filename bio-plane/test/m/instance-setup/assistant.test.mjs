@@ -165,6 +165,17 @@ test("R55 (T36) while assistantState answers on: false every ask and run is refu
   assert.match(unread.detail, /could not be read, so it is read as kept away.*No reason is known\./);
 });
 
+test("R55 (K2157) assistantGate stays exported under its name, its shape unchanged for store-door R10: null while on; otherwise the refusal envelope with ok, reason, code, check, translation, detail, set_by and set_at as before, the keep-away carried beside them", async () => {
+  const w = await over();
+  assert.equal(typeof w.m.assistantGate, "function");
+  assert.equal(typeof S.InstanceSetup.prototype.assistantGate, "function");
+  assert.equal(w.m.assistantGate(), null);
+  w.c.c.aiKeepAwaySet({ on: true, reason: REASON, by: "admin" });
+  const off = w.m.assistantGate();
+  for (const k of ["ok", "reason", "code", "check", "translation", "detail", "set_by", "set_at"]) assert.ok(k in off, k);
+  assert.deepEqual(Object.keys(off).filter((k) => !["ok", "reason", "code", "check", "translation", "detail", "set_by", "set_at"].includes(k)), ["keep_away"]);
+});
+
 test("R55 (T36) the draft (R65) is refused ASSISTANT_OFF with the reason while the group keeps its material away, whatever account the door resolved, and is reached past it once keep-away is off", async () => {
   const w = await over();
   const ASSISTANT = { on: true, account: { kind: "apikey", level: "group" } };

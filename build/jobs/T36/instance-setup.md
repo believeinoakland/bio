@@ -48,3 +48,9 @@ Details in my record's Completion section.
 ## J2 · COMPLETE
 
 T36-34 applied: R53 superseded (assistantState from credentials.aiKeepAwayState, anything but on:false read as kept away; assistantset, ASSISTANT_ENABLED, ASSISTANT_INSTALLER retired; assistant_switch rows kept, unread), R55 (ASSISTANT_OFF carries keep_away {reason, set_by, set_at}), R18 and R19 (no MEMBER_TOKEN), N756 (receiptsOfCapture), K2152 (FILE_SCANNER in FLEET_BINDINGS). Rows: ASSISTANT_OFF (C-119.5) translation re-worded, `where` unchanged; ASSISTANT_SWITCH_MALFORMED (C-119.6) retired; none added. Tests 111/0; format, architecture, coverage (48/48), ownership (13 files) 0 failures. 2,494 lines. Reds in users: my REPORT.
+
+## B2 · CHANGE (K2157), processed
+
+Merged `tranche/T36` (R55 re-worded: `assistantGate()` stays exported, name and shape unchanged, for `store-door` R10). The code already kept it: the same method, `null` while on, otherwise the same refusal envelope (`ok`, `reason`, `code`, `check`, `translation`, `detail`, `set_by`, `set_at`) with `keep_away` beside them (R55's reason, who and when; `read: false` when unread). New test naming R55 (K2157) pins it. Re-run: `node --test bio-plane/test/m/instance-setup/` 112/112, 0 fail; format, architecture, coverage (48/48) and ownership 0 failures. No code change. Reports unchanged (J1).
+
+Size (session_01DU7JcZgKofYj3uee3CqU8X): test runs 11, module lines 2494
