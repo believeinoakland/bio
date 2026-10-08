@@ -42,8 +42,10 @@
    15. capture-requests `plane.test.mjs` (its five tests; :79 `CREDENTIAL_IN_ADDRESS` from its own `call` helper, then :93 `AI_CREDENTIAL_NO_SECRET`, rule 4): until T37-47 (its helper) and T37-33 (CREDENTIALS #8 J2; K2189).
    8. Rule 4's interim reds (N761, N765), each named at its owner's START.
    18. case-checker `program.test.mjs` (R13): `program.mjs` stale from T37-40's merge until L8's close regenerates it (K2206).
-   19. Rule 4's N761 interim red in L8: control-plane `statementack.test.mjs`:31 from T37-21's merge until T37-33 (K2206).
+   19. ~~Rule 4's N761 interim red in L8: control-plane `statementack.test.mjs`:31~~ not red: green (3/3) on `tranche/T37` after T37-21's merge, its stand-in never reads `secretSha` (CASE-AUTHORING #21 J2; K2228).
    20. bundler `fleetbundles.test.mjs`:232 (agent-worker's 22 inputs pinned; 23 since T37-17), from T37-17's merge until N787 (T38) (K2218).
+   21. legacy-ui `civicos-ui/test/review-copy.test.mjs` (its fixture's `reviewgrant` refused `REVIEW_NO_SECRET`, rule 4), from T37-22's merge until T37-33 (REVIEW #10 J2; K2228).
+   22. legacy-ui `civicos-ui/test/statement-ack.test.mjs`: red before T37-22 (the recipient's acknowledgement wait times out, M0-107), and from T37-22's merge it fails earlier at `reviewgrant` (rule 4) until T37-33; its earlier cause is checked at L11's close and, if it stands, goes to `next.md` (REVIEW #10 J1; K2228).
 7. **BOB's acts (no module job):** at the opening, rule 2's N669 packaging, N757's packaging (K2171: the pixel work in a new pure L1 helper `image-cover` run in the plane, the marks and the copy in `case-carriage`), every L1 requirement change, and the questions to Bob ("For BOB" below) brought rendered with options and a recommendation. T37's release is BOB's (K1501), decided at its close on what its deployment then lets into T38; no longer for M-Q2 (K2147).
 
 ## Entries
