@@ -29,3 +29,7 @@
 **Uses** (final): `bundler`, unchanged.
 
 Size (session_01NpUoSSKhpotLhikWUwzPRL): test runs 9, module lines 2170
+
+## J1 · COMPLETE
+
+T39-8 (N801) applied: R2 takes {kind: "signin", member} alone; subscription, apikey and any credential carrying a secret refused NO_CREDENTIAL with nothing started (no query, no binary run, no temporary directory); the token path removed from runner.mjs. New test 'R2 R8' with a sentinel token in subscription and apikey credentials, found in no output or file; negative control against T38's runner fails. agent-runner 34/0, agent-worker 12/0; bundle fresh (worker.mjs unchanged, nothing regenerated); format, architecture, coverage (23/23), ownership 0 failures. Nothing deferred; nothing found in other modules. Uses unchanged (bundler). Record: build/jobs/T39/agent-runner.md.
