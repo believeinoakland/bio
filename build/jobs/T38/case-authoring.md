@@ -13,3 +13,7 @@
 ## J1 · REPORT
 
 Prepared R34 (T38-13) on my reading; no logic change is needed here: op=publish answers case-disclosures materialsJudged's first refusal and the pre-flight pushes all its refusals into blockers, so PHOTO_UNCHECKED reaches first/blockers once case-disclosures R6 raises it. Comments re-worded; photos.test.mjs drafted (unchecked is first; nothing-to-obscure clears it), red until case-disclosures merges. Waiting on your CHANGE that case-disclosures is merged; then I finish tests (also the C-120 row lists in invariants and preflight tests, which pin case-disclosures' table) and checks.
+
+## J2 · REPORT
+
+B2 done: merged tranche/T38 (case-carriage). Module tests against the real case-carriage: 164 tests, 162 pass, 2 fail — exactly my two drafted photo tests (R14 nothing-to-obscure carried by its copy; R34 PHOTO_UNCHECKED first), which wait on case-disclosures R6/R29 (T38-12), not on case-carriage. Nothing else moved. Still waiting on your CHANGE that case-disclosures is merged, then COMPLETE.
