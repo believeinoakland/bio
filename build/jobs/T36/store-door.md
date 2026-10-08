@@ -26,3 +26,15 @@ Two items from T36-48, neither needing an act before my merge:
 **Checks:** format: 135 modules, 134 requirements files, 0 failures. Architecture: 10 product files, 95 relative imports, 0 failures. Coverage: 12 of 12 live ids named by a test, 0 failures. Ownership: 4 files changed by store-door between tranche/T36 and HEAD, 0 failures.
 
 Size (session_01N3AkfYxFdhX5KgSFFrX66K): test runs 6, module lines 541
+
+## J3 · COMPLETE
+
+**CHANGE B2 applied (K2157): R13.** I merged `tranche/T36` first. In `dispatch.mjs`, after R2's existence answer, a route-map answer that is a `Response` is returned as given: the owner's object itself, its status, headers and bytes unchanged, never wrapped in R1's envelope. Every other answer is enveloped and passes through R11's `underGrant` as before. No ask grant admits the four byte ops (`askAdmits` answers false for each), so none is a read that R11 logs. R2's existence answer still comes first.
+- New test `R13` (`dispatch.test.mjs`). For each of `openoriginal`, `openwithwarning`, `safeview` and `safecopy` (checked to be file-safety routes), at status 200 and 206 with a grant header, it checks that the door returns the same Response, with content-type, `x-capture-sha256`, `cache-control` and the bytes unchanged, and logs nothing. Negative control: an object refusal from the same route is enveloped. With the change reverted, the test fails (1 fail).
+- J1 (2) is settled by K2157 (`assistantGate()` stays).
+
+**Tests:** store-door: 38 pass, 0 fail. control-plane with plane: 290 pass, 7 fail. These are reds 22, 23, 24, 26 and 27, plus control-plane `totality.test.mjs` (R2, R41: affordances' unaccounted over the door's op table), which came in with the tranche merge and also fails with my change reverted. It is not mine; I expect it is the T36 grades and acts waiting on control-plane T36-37.
+**Checks:** format 0 failures; architecture 0 failures (96 imports); coverage 13 of 13 live ids named by a test, 0 failures; ownership 0 failures.
+**Deferred:** nothing. The plane bundle is still stale (J1 (1)).
+
+Size (session_01N3AkfYxFdhX5KgSFFrX66K): test runs 10, module lines 547
