@@ -39,3 +39,11 @@ My reading, which I am building now: `caseFileManifestCheck(manifest, {materials
 Path (BOB's detail, recorded in my record): the copy travels at `materials/<ref>/obscured` (`caseFilePath("obscured", ref)`), one per ref, as a material's `document` does; its SHA-256 is the manifest row's `sha256`, compared with the row's `obscured.copy`.
 
 No answer needed unless you read R13 otherwise.
+
+## J2 · REPORT
+
+Reds my merge opens in other modules, each from R12/R13's new text (all green before my change on this branch); each owner's T37 entry clears it:
+1. case-checker (T37-20): `program.test.mjs`:19 R13 (`program.mjs` stale; red 18, accepted; not rebuilt). `spec.test.mjs`:13 and :25 (two arms) pin `/2` as current with no later kind (its R14 `/3`). `standards-offline.test.mjs`:57 expects public-read's case file to state `CASE_FILE_FORMAT` (`/3`); public-read still writes `/2` until T37-42. Its R8 should pass `{materials}` (the case document's rows) to `caseFileManifestCheck`, which then judges the three `obscured` departures (K2222).
+2. case-disclosures (T37-41) `carries.test.mjs`:56 and case-authoring `carries.test.mjs`:40: deep-equal `materialsOf` rows without R12's `obscured: null`.
+3. public-read (T37-42) writes `bio-case-file/2`; the case file it writes should take `CASE_FILE_FORMAT` (`/3`), the copy at `caseFilePath("obscured", ref)`.
+Interface for my users: `MATERIAL_OBSCURED_FIELDS`, `CASE_FILE_FORMAT_V2`, `CASE_FILE_V3_KINDS`, `CASE_FILE_ORIGINAL_KINDS`, `OBSCURED_WORDS`; `materialsLines` takes `obscured: {copy, label}` on a document row; `caseFileManifestCheck(manifest, {materials})`.
