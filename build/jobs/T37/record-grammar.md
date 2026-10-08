@@ -30,3 +30,7 @@ Size (session_01DAQTevxD8WUdaHnDusXB4x): test runs 18, module lines 2409
 ## J1 · REPORT
 
 Found in other modules (details in my record's Completion): (1) my change stales case-checker's generated bio-plane/src/case-checker/program.mjs (it bundles labels.mjs): case-checker program.test.mjs R13 red with it, green without; the plane bundle carries labels.mjs too. Not written by me; BOB regenerates at L1 close. (2) op-declarations has 3 reds on tranche/T37 with and without my change (R21 R5 screen-registry 'function' acts; R21 R27 'owed' acts; R27 DEC-148's seven owed acts), reading the screen registry main's PR #14 changed; not in rule 6's list.
+
+## J2 · COMPLETE
+
+T37-1 done: R50, PROPOSAL_STATES gains translation after law_relation (frozen, three sentences; RangeError names thirteen subjects; other twelve tables pinned unchanged by digest). record-grammar 73/73; proposalLabel users 0 fail but base/stale reds in J1; format, architecture, coverage (48/48), ownership: 0 failures. Branch job/T37/record-grammar pushed.
