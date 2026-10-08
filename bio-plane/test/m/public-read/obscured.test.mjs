@@ -254,3 +254,31 @@ test("R23 R32 an archive that holds a photo this edition carries as its copy is 
   assert.deepEqual(under(two.m, MEM).map((f) => f.kind).sort(), ["container", "document"], "the member and its record still travel");
   assert.deepEqual(under(two.m, PIC).map((f) => f.kind), ["obscured"]);
 });
+
+test("R32 R23 the archive pool keeps only what this edition's commit held (K2223): a photo never carried whole, in an archive an earlier edition registered under another material's ref, lends this edition neither the archive nor the original", async () => {
+  const w = world(), env = { PUBLISHED: bucket() };
+  w.doc(DOC);
+  const zip = Buffer.from(serialiseContainer([{ name: "minutes.txt", bytes: new TextEncoder().encode(MEMBER_TEXT) },
+                                              { name: "photo.jpg", bytes: new TextEncoder().encode(PHOTO_TEXT) }]).bytes);
+  const archiveSha = hex(zip);
+  promote(w, ARCH, [{ file: "snapshots/archive.zip", capture: { method: "acquire", grade: "B", sha256: archiveSha, bytes: zip.length } }]);
+  w.st.sql.exec(`INSERT INTO register (capture_sha, bundle_id, path, encoding, bytes, registered) VALUES (?, ?, ?, 'binary', ?, ?)`,
+                archiveSha, ARCH, "snapshots/archive.zip", zip.length, NOW);
+  w.st.sql.exec(`INSERT INTO files (bundle_id, path, content, blob_sha, bytes, sha256) VALUES (?, ?, NULL, ?, ?, ?)`,
+                ARCH, "snapshots/archive.zip", archiveSha, zip.length, archiveSha);
+  env.PUBLISHED.m.set(`bio/published/${archiveSha}`, new Uint8Array(zip));
+  const memberSha = holdMember(w, MEM, MEMBER_TEXT, containerOf(zip, 0, "minutes.txt", MEMBER_TEXT));
+  const picSha = holdMember(w, PIC, PHOTO_TEXT, containerOf(zip, 1, "photo.jpg", PHOTO_TEXT));
+  /* edition 1 carries the member whole and lists the photo not included: the archive is registered under MEM only, and
+     nothing of the photo (its own record included) is registered anywhere */
+  const one = await publish(w, env, [docRow(MEM, memberSha), docRow(PIC, picSha, { included: false })]);
+  assert.ok(under(one.m, MEM).some((f) => f.kind === "archive" && f.sha256 === archiveSha), "negative control: edition 1 carries the archive");
+  /* edition 2 carries the photo as its copy: its commit holds no archive holding the original (`case-carriage` R8) */
+  const two = await publish(w, env, [docRow(MEM, memberSha), copyRow(PIC, picSha)],
+                            { edition: 2, before: () => registerCopy(w, env, PIC) });
+  assert.equal(w.p.heldMaterialsOf(CASE, 2).some((x) => x.sha === archiveSha), false, "edition 2's commit held no such archive");
+  assert.equal(two.m.files.some((f) => f.sha256 === archiveSha || f.sha256 === picSha), false,
+               "neither the archive nor the original, though edition 1 registered the archive under MEM's ref");
+  assert.deepEqual(two.out.unheld.filter((u) => u.what === "archive").map((u) => [u.ref, u.sha]), [[MEM, archiveSha]]);
+  assert.deepEqual(under(two.m, PIC).map((f) => f.kind), ["obscured"]);
+});

@@ -1162,9 +1162,15 @@ export class PublicRead {
        whatever its `included` says: it is no included material here, and its original is carried for no row. */
     const copied = rows.filter((m) => m && m.obscured != null);
     const included = rows.filter((m) => m && m.obscured == null && (m.included === true || m.included === "true"));
-    const pool = this.#archivePool([...included, ...copied].map((m) => m.ref), text);
+    /* R32 with R23 (K2223): the pool keeps only what this edition's commit held (`publication.heldMaterialsOf`, its R57),
+       so no other edition's registration under a shared ref lends this one an archive or a record. */
+    const heldList = this.publication.heldMaterialsOf(c, ed);
+    const heldHere = new Set((Array.isArray(heldList) ? heldList : [])
+      .map((x) => String(x && x.sha != null ? x.sha : "").toLowerCase()).filter((s) => HEX64.test(s)));
+    const pool = this.#archivePool([...included, ...copied].map((m) => m.ref), text, heldHere);
     const originals = new Set(copied.map((m) => String(m.sha ?? "").toLowerCase()).filter((s) => HEX64.test(s)));
-    const holdsOriginal = this.#archivesHolding(originals, pool);
+    /* The narrower walk (kept, K2223): what any edition registered shows which archives hold a copy-carried original. */
+    const holdsOriginal = this.#archivesHolding(originals, this.#archivePool([...included, ...copied].map((m) => m.ref), text));
     const materials = included.map((m) => originals.has(String(m.sha ?? "").toLowerCase())
       ? { ref: m.ref, kind: m.kind, sha: m.sha ?? null, text_sha: m.text_sha ?? null, original_of_copy: true, archives: [] }
       : { ref: m.ref, kind: m.kind, sha: m.sha ?? null, text_sha: m.text_sha ?? null,
@@ -1219,12 +1225,14 @@ export class PublicRead {
      from the published projection only. The commit registered, under an included material's ref, each `container` record
      (its text held inline, canonical JSON naming the member and its archive by SHA-256) and each archive (kind
      `archive`), outward to the outermost; a record or archive two of the edition's materials share is registered once,
-     under the first, so the pool is read over every included ref of the edition. */
-  #archivePool(refs, text) {
+     under the first, so the pool is read over every included ref of the edition. `heldHere` (K2223), when given, keeps
+     only the records and archives this edition's commit held. */
+  #archivePool(refs, text, heldHere = null) {
     const archives = new Set(), records = new Map();
     for (const ref of [...new Set(refs.filter((r) => typeof r === "string" && r))]) {
       for (const r of this.#rows(`SELECT sha256, kind FROM published_shas WHERE bundle_id=? AND kind IN ('container','archive')
                                    AND path=('materials/' || sha256) ORDER BY sha256`, ref)) {
+        if (heldHere && !heldHere.has(r.sha256)) continue;
         if (r.kind === "archive") { archives.add(r.sha256); continue; }
         const t = text(r.sha256);
         const c = safeJson(t);
@@ -1250,11 +1258,11 @@ export class PublicRead {
       chain.push({ kind: "container", sha: rec.sha, text: rec.text, member: cur });
       if (walked.has(rec.archive)) break;
       walked.add(rec.archive);
-      if (!archives.has(rec.archive)) { chain.push({ kind: "archive", sha: rec.archive, text: null, member: cur, registered: false }); break; }
       /* R23 (T37): an archive that holds a photo this edition carries as its copy holds the original's bytes: it is carried
          for no material, named unheld, and the walk stops there (as `case-carriage` R8 holds it at the commit). */
       if (holdsOriginal.has(rec.archive)) { chain.push({ kind: "archive", sha: rec.archive, text: null, member: cur, registered: false,
                                                           holds_original: true }); break; }
+      if (!archives.has(rec.archive)) { chain.push({ kind: "archive", sha: rec.archive, text: null, member: cur, registered: false }); break; }
       chain.push({ kind: "archive", sha: rec.archive, text: text(rec.archive), member: cur });
       cur = rec.archive;
     }
