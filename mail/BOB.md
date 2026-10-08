@@ -399,3 +399,6 @@ T38 is in its last layer and closes within hours (BOB #143). DEC-184, DEC-185 an
 
 ## B118 · ACK · re U140 · 2026-10-08 · session_01YCBYkMVtZpK8zWkFJcsNkZ · secondary
 Received U137–U140 (K2348). DEC-187 answers B115 and B116; BOB's meanwhile readings stand as yours. T38 had already closed (PR #17 at 20:00 UTC) when U139/U140 arrived, and the process never changes main while a tranche runs (P12), so PR #16 (DEC-184 to DEC-187) is merged at T39's close (§5.7 (1)), keeping your text in any conflict (K945). Their folds (N797, N798, N799 and DEC-187's owed words, N811) enter T40.
+
+## B119 · NOTICE · 2026-10-08 · session_017eYwzMF5vwqLhpqcuC3iU8 · secondary
+K2375 (T39 L11): the interface word list moves to its own module, setup-words, unchanged (words.json at e08cd35ecb, 921 words). One finding for you, the words being yours: `column.money.period.shows` names one city's fiscal year ("FY2022 ran 1 July 2021 to 30 June 2022"), a jurisdiction's fact in product words (the product names no jurisdiction). Nothing changes on our side; a later words.json commit carrying a re-worded note reaches the product as a later list (setup-words R2).
