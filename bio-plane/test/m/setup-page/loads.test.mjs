@@ -7,7 +7,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { pageOf, groupLine, PAGE_HTML } from "../../../src/setup-page/index.mjs";
-import { pageOver } from "./fixture.mjs";
+import { pageOver, hostileSecurity } from "./fixture.mjs";
 
 const ORIGIN = "https://copy.example";
 const tick = () => new Promise((r) => setTimeout(r, 0));
@@ -163,7 +163,7 @@ test("R12 driven through every section the page draws, signed out and signed in:
   for (const page of [p, out, inv]) for (const s of DRAWN) assert.deepEqual(outsideLoads(page.el(s).innerHTML), [], s);
 });
 
-test("R12 T34's sections, driven: the join link, the claim's choices, the offices the group adds and the assistant's draft draw nothing that loads from another origin, whatever the plane answers", async () => {
+test("R12 T34's and T36's sections, driven: the join link, the claim's choices (keep-away and the security tools step among them), the offices the group adds and the assistant's draft draw nothing that loads from another origin, whatever the plane answers", async () => {
   const evil = '<img src="https://evil.example/z.png">';
   const urls = [];
   const answers = {
@@ -171,7 +171,7 @@ test("R12 T34's sections, driven: the join link, the claim's choices, the office
     whoami: { result: { capabilities: ["contribute"], administer: true } },
     profiles: { result: { ok: true, profiles: [], conflicts: [], choices: [] } },
     hostingaccess: { result: { ok: true, current: { holders: evil, note: evil, recorded_by: evil, at: "2026-10-06T00:00:00Z" } } },
-    courtnotice: { result: { choice: null } }, assistantstate: { result: { ok: true, on: true, set_by: evil, set_at: "2026-10-06T00:00:00Z" } },
+    courtnotice: { result: { choice: null } }, ...hostileSecurity(evil),
     groupkeystate: { result: { held: true, on: true } }, placewantedstate: { result: { name: evil } },
     entitycreate: { result: { ok: true, entity_id: "ENT-2026-0001", label: evil } },
     entitieskind: { result: { ok: true, kind: "office", entities: [{ entity_id: "ENT-2026-0001", kind: "office", label: evil, declared_by: evil }],
@@ -193,6 +193,12 @@ test("R12 T34's sections, driven: the join link, the claim's choices, the office
   p.el("#pw1").value = "twelve-chars-a"; p.el("#pw2").value = "twelve-chars-a";
   await p.el("#do-claim").fire(); await settle();
   p.el("#cl-sa-name").value = "Bea"; p.el("#cl-sa-id").value = "bea"; await p.el("#cl-sa-add").fire(); await settle();
+  await p.drawn("#cl-st-cat .st-pick", { i: "0" }).fire(); await settle();
+  const fields = p.el("#cl-st-fields").innerHTML;
+  p.el("#cl-st-cred-0").value = "k"; await p.el("#cl-st-add").fire(); await settle();
+  for (const s of ["#cl-st-cat", "#cl-st-tools"]) assert.deepEqual(outsideLoads(p.el(s).innerHTML), [], s);
+  assert.deepEqual(outsideLoads(fields), [], "#cl-st-fields");
+  assert.ok(p.el("#cl-st-cat").innerHTML.includes("&lt;img"), "not vacuous: the catalogue drew the hostile answer, escaped");
   await p.el("#claim-on").fire(); await settle();
   p.el("#of-label").value = "Clerk"; p.el("#of-note").value = "n"; await p.el("#of-set").fire(); await settle();
   await p.el("#go-members").fire(); await settle();
@@ -203,12 +209,14 @@ test("R12 T34's sections, driven: the join link, the claim's choices, the office
   j.el("#jn-cover").value = "Sam"; await j.el("#jn-go").fire(); await settle();
   const ops = new Set(urls.map((u) => new URL(u, ORIGIN).searchParams.get("op")));
   for (const op of ["hostingaccess", "courtnotice", "groupkeystate", "entitycreate", "entitieskind", "groupdescriptiondraft", "joinlinkinvite",
-                    "memberlanguage", "recoverycodesissue", "recoverycodesstate", "adminrecoverystep"]) assert.ok(ops.has(op), op);
+                    "memberlanguage", "recoverycodesissue", "recoverycodesstate", "adminrecoverystep", "aikeepawaystate", "securitytoolcatalogue",
+                    "securitytools", "securitytooladd", "securitytooltest"]) assert.ok(ops.has(op), op);
   for (const u of urls) assert.ok(ownOrigin(u), u);
   assert.match(p.el("#of-list").innerHTML, /&lt;img/);
-  for (const s of ["#of-list", "#as-state", "#en-who", "#pf-active", "#cl-sa-invite", "#mk-sa-invite"]) assert.deepEqual(outsideLoads(p.el(s).innerHTML), [], s);
+  for (const s of ["#of-list", "#mk-st-cat", "#mk-st-tools", "#en-who", "#pf-active", "#cl-sa-invite", "#mk-sa-invite"]) assert.deepEqual(outsideLoads(p.el(s).innerHTML), [], s);
   assert.deepEqual(outsideLoads(j.el("#en-who").innerHTML), []);
   /* what the script writes as text stays text: the rest of T34's lines are set through textContent */
-  for (const s of ["#cl-ha-now", "#mk-ha-now", "#pw-now", "#of-why", "#gd-label", "#ln-now", "#cl-rc-codes", "#mk-rc-codes", "#rs-now", "#mk-rc-now"])
+  for (const s of ["#cl-ha-now", "#mk-ha-now", "#pw-now", "#of-why", "#gd-label", "#ln-now", "#cl-rc-codes", "#mk-rc-codes", "#rs-now", "#mk-rc-now",
+                   "#pn-ka-now", "#cl-ka-now", "#mk-ka-now", "#cl-gk-now", "#cl-st-said", "#cl-st-err"])
     assert.equal(p.el(s).innerHTML, "", s);
 });

@@ -1,6 +1,6 @@
 # BOB to admission (T36)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -17,3 +17,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`), vendor
 ## B2 · CHANGE
 
 CHANGE (K2157): R20's gate is named: export `credentialAddressGate(url)`, answering `null`, or `{status: 400, body}` as your other gates do; control-plane calls it directly after R1 (its R28, R59). Merge the tranche branch (R20 re-worded) and carry on.
+
+## B3 · ANSWER · re J1
+
+Re J1 (BOB's, P17): (1)–(4) stand as you read them; none changes a requirement's meaning. Also read B2 (K2157): the R20 gate is named `credentialAddressGate(url)`; merge the tranche branch for R20's re-wording.

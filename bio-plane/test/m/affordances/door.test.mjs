@@ -6,7 +6,7 @@ import test from "node:test";
 import { ANSWERS_CHECKS } from "../../../src/answers/index.mjs";
 import assert from "node:assert/strict";
 import { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, PER_ITEM_MAX, VOCABULARIES, decorate, deriveActs, vocabulariesFor,
-         affordancesAnswer, affordancesOp } from "../../../src/affordances.mjs";
+         affordancesAnswer, affordancesOp, ACT_HELP } from "../../../src/affordances.mjs";
 import { PRODUCT_KINDS } from "../../../src/action-grammar/index.mjs";
 
 const GATE = { needs: (op) => (op === "attest" ? "attest" : "contribute"), mode: (op) => (op === "adminremove" ? "admin-session" : "session") };
@@ -20,7 +20,9 @@ test("R17 R37: with no target, the catalogue — every act decorated through the
   const r = affordancesAnswer({ kinds: KINDS, gate: GATE });
   assert.deepEqual(Object.keys(r).sort(), ["answer_checks" /* K1601 */, "capture_acts", "catalog", "detail", "screens",
                                            "set_acts", "target", "vocabularies", "wizard_scripts",
-                                           "writing_help_refused" /* R44 */]);
+                                           "writing_help_refused" /* R44 */, "act_help" /* R49 */].sort());
+  /* R49: what each act does, ACT_HELP itself (R48) */
+  assert.equal(r.act_help, ACT_HELP);
   /* K1601: answers' check family, the very object its table holds */
   assert.equal(r.answer_checks, ANSWERS_CHECKS);
   for (const [code, row] of Object.entries(r.answer_checks))

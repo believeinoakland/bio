@@ -90,6 +90,10 @@ export function providers({ admins = ["admin", "member:ada"] } = {}) {
       governorAdmit({ host }) { governed.push(["admit", host]); return p.governorHold ? { admitted: false, reason: p.governorHold } : { admitted: true, wait_ms: 0 }; },
       governorReport({ host, status }) { governed.push(["report", host, status]); return { recorded: true }; },
     },
+    /* credentials R52's keep-away state, as a stand-in coded to its requirement: off before any set; a test sets
+       `keepAway` to what the setting answers (`on` true, false, or null when it could not be read). */
+    keepAway: { on: false, reason: null, set_by: null, set_at: null },
+    credentials: { aiKeepAwayState: () => ({ ...p.keepAway }) },
     /* The domain's answer: a function of the URL, or a thrown error. */
     answer: () => new Response("", { status: 404 }),
     fetch: async (url, init) => { fetched.push({ url: String(url), init }); return p.answer(String(url), init); },
@@ -108,7 +112,7 @@ export async function boot({ st = null, env = {}, prov = null, now = null, more 
   const record = recordOf(ctx);                 // the first-boot witness, before any table is made
   applyRecordSchema(store);                     // the record's schema pass (CREATE IF NOT EXISTS)
   const p = prov || providers();
-  const deps = { record, membership: p.membership, promotion: p.promotion, scheduler: p.scheduler, capture: p.capture,
+  const deps = { record, membership: p.membership, credentials: p.credentials, promotion: p.promotion, scheduler: p.scheduler, capture: p.capture,
                  governor: p.governor, fetch: p.fetch, sleep: async () => {}, ...(now ? { now } : {}), ...more };
   const m = new InstanceSetup(ctx, env, deps);
   const started = await m.start();

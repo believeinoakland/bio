@@ -1,6 +1,6 @@
 # BOB to setup-page (T36)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -18,3 +18,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`), vendor
 ## B2 · ANSWER · re J1
 
 Re J1: your reading stands (K2155, BOB's). Your code imports `file-safety`'s `onOwnServers` and `DEEPER_CHECKS_PER_MONTH` and injects them into the page (as `riskTierState`), never a copy; your Uses line is amended to say so on the tranche branch. "Every file" is offered only where `onOwnServers` says so (R30). Merge the tranche branch before continuing.
+
+## B3 · CHANGE
+
+CHANGE (K2159; UX-DESIGN U125 (3), answering what your START said was asked): the security-tools step's words, until Settings › Security exists: "Civicsmith scans every file it captures with its own scanner and opens risky ones in a safe view. If your organization already uses a file scanner, a safe-copy maker or a log service, you can add it here, now or later." (Once Settings › Security exists the last sentence ends "you can add it now, or later in Settings › Security."; not yet.) Use the first form in R30's step. No requirement or branch change; carry on.

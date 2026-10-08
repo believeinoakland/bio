@@ -160,6 +160,53 @@ test("R12, R28: the new kinds' dispositions: the wait's door is waitlook; the ma
   assert.equal(c.reason, "NO_PROJECT_SCOPE");
 });
 
+test("R1, R51, R11, R12: T36's four kinds (notice-producers R12–R15) reach the feed without NO_SUCH_KIND, with R12's default FINDING disposition", () => {
+  const ids = {
+    "security-level-high": "FINDING::security-level-high::2026-08-31T22:00:00.000Z",
+    "policy-changed-noticed": "FINDING::policy-changed-noticed::W-1::CAP-2",
+    "scan-found": "FINDING::scan-found::abc123::NOTE-1",
+    "security-tool-off": "FINDING::security-tool-off::TOOL-1::2026-08-31T23:00:00.000Z",
+  };
+  // the Civicsmith's two carry no bundle; the scan finding is homed by its capture's bundle, the policy by none here
+  const subjects = { "security-level-high": [], "policy-changed-noticed": ["DOC-2"], "scan-found": ["DOC-1"], "security-tool-off": [] };
+  /* each subject in the shape the merged producer publishes (notice-producers R12–R15: the Civicsmith, no bundle; a scan
+     finding's capture home; the policy) */
+  const shapes = { "security-level-high": { kind: "civicsmith", id: null }, "policy-changed-noticed": { kind: "standard", id: "DOC-2" },
+    "scan-found": { kind: "capture_home", id: "DOC-1", capture: "abc123", note: "NOTE-1" },
+    "security-tool-off": { kind: "civicsmith", id: null, tool: "TOOL-1", provider: null } };
+  const w = noticedWorld({ make: (a) => Object.entries(ids).map(([k, id]) =>
+    item(id, k, "FINDING", subjects[k], a, { subject: shapes[k], recipients: ["alice"] })) });
+  const f = w.q.queueFeed({ member: "alice", viewer: "member:alice" });
+  assert.equal(f.ok, true, JSON.stringify(f).slice(0, 300));
+  const it = byId(f);
+  assert.deepEqual(Object.keys(it).sort(), Object.values(ids).sort());
+  assert.equal(f.counts.finding, 4);
+  for (const [k, id] of Object.entries(ids)) {
+    assert.equal(it[id].class, "FINDING", k); assert.equal(it[id].kind, k);
+    const d = it[id].disposition;
+    if (k === "scan-found") {
+      // a project home: R12's project-scoped disposition, with no per-kind acts
+      assert.deepEqual([d.available, d.scope, d.key, d.finding, d.acts], [true, "project", null, id, undefined], k);
+      assert.deepEqual(d.projects, ["PRJ-A"]); assert.deepEqual(d.requires, ["project", "finding"]);
+    } else {
+      assert.deepEqual([d.available, d.reason, d.acts], [false, "no_project_scope", undefined], k);
+    }
+  }
+  // each is quieted by its recipient alone, by the item mute (R19, R20); bob's feed is whole
+  for (const id of Object.values(ids))
+    assert.equal(w.q.queueMute({ member: "alice", viewer: "member:alice", item: id }).ok, true, id);
+  const g = w.q.queueFeed({ member: "alice", viewer: "member:alice" });
+  assert.equal(g.items.length, 0); assert.equal(g.mute.suppressed.length, 4);
+  assert.equal(w.q.queueFeed({ member: "bob", viewer: "member:bob" }).mute.suppressed.length, 0);
+  // negative control: a fifth, uncatalogued security kind still refuses the feed by name
+  const w2 = noticedWorld({ make: (a) => [item("FINDING::security-level-raised::x", "security-level-raised", "FINDING", [], a)] });
+  const r = w2.q.queueFeed({ member: "alice", viewer: "member:alice" });
+  assert.deepEqual([r.ok, r.code], [false, "NO_SUCH_KIND"]);
+  // misclassed as a status item, each is refused
+  const w3 = noticedWorld({ make: (a) => [item(ids["security-tool-off"], "security-tool-off", "CONDITION", [], a)] });
+  assert.equal(w3.q.queueFeed({ member: "alice", viewer: "member:alice" }).code, "KIND_MISCLASSED");
+});
+
 test("R49, R22: the due sort reads each item's due as a calendar date, never a UTC midnight; a date that is no day sorts as none", () => {
   const w = noticedWorld({ make: (a) => [
     item("FINDING::temporal-expectation-due::DUT-1::o1", "temporal-expectation-due", "FINDING", [], a, { due: "2026-09-03" }),

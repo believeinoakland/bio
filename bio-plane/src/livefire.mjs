@@ -129,7 +129,9 @@ export async function livefire(env, storeName, { capacity = false, viewer = null
        same two hardenings applied to it, which is the point: the credential that
        sits unattended longest is the one a published or stub value would hurt
        most. */
-    const names = ["ADMIN_TOKEN", "MEMBER_TOKEN", "PROBE_TOKEN", "DAEMON_TOKEN"];
+    /* R19 (T36; N711): the shared member key is retired. This battery never acts as a member; a run that did would
+       act under a member's session or an `aik-` agent credential, never a shared member bearer. */
+    const names = ["ADMIN_TOKEN", "PROBE_TOKEN", "DAEMON_TOKEN"];
     const configured = names.filter((n) => typeof env[n] === "string" && env[n].length > 0);
     const published = [];
     for (const n of configured) {
