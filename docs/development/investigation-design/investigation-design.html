@@ -1,7 +1,7 @@
 <title>Investigation Design</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400&display=swap">
 <style>
-/* One living case file: what is open now first, then Bob's direction, the model, the open questions, the research, and the register; one column, contents at the top */
+/* One living case file: what is open, then the design as one whole, then open questions, then what comes later, research and the record */
 :root{
   --bg:#f5f6f2; --fg:#1c2220; --muted:#5a6560; --rule:#d3d9d4; --panel:#e9ede8; --card:#fbfcfa;
   --accent:#2f5d7c; --member:#2e6b46; --memberbg:#d9ecdf; --sys:#5a4f8a; --sysbg:#e3e0f1; --new:#8a5a12; --newbg:#f3e6cf; --off:#7a7f7c;
@@ -14,7 +14,7 @@ main{max-width:52rem;margin:0 auto;padding-inline:16px;padding-block:36px 72px}
 h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.2;font-weight:600}
 h1{font-size:2.2rem;margin:0 0 .3rem}
 h2{font-size:1.45rem;margin:2.8rem 0 .6rem;padding-top:1.2rem;border-top:1px solid var(--rule)}
-h3{font-size:1.1rem;margin:1.6rem 0 .4rem}
+h3{font-size:1.12rem;margin:1.8rem 0 .4rem}
 p,li{max-width:70ch}
 a{color:var(--accent)}
 .meta{font:400 .85rem var(--mono);color:var(--muted);margin:0 0 1rem}
@@ -25,9 +25,7 @@ nav.toc ol{margin:.2rem 0;padding-left:1.3rem;columns:2;column-gap:2rem}
 .now{border:2px solid var(--accent);border-radius:8px;padding:1rem 1.2rem;display:grid;gap:.5rem}
 .now p{margin:0}
 .now ul{margin:0;padding-left:1.2rem;display:grid;gap:.3rem}
-blockquote{margin:.6rem 0;padding:.5rem 1rem;border-left:3px solid var(--accent);background:var(--card)}
-blockquote p{margin:.2rem 0}
-blockquote cite{display:block;font:400 .82rem var(--mono);color:var(--muted);font-style:normal;margin-top:.3rem}
+ul.plain{padding-left:1.2rem;display:grid;gap:.35rem}
 .lanes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;margin:1rem 0}
 @media (max-width:560px){.lanes{grid-template-columns:minmax(0,1fr)}}
 .lane{border-radius:6px;padding:.8rem 1rem;display:grid;gap:.4rem;align-content:start}
@@ -48,6 +46,9 @@ blockquote cite{display:block;font:400 .82rem var(--mono);color:var(--muted);fon
 .side{font-size:.85rem;color:var(--muted);align-self:center}
 .link{font:600 .76rem var(--mono);color:var(--accent);padding:.25rem 0 .25rem 1.4rem;position:relative}
 .link::before{content:"";position:absolute;left:.6rem;top:0;bottom:0;border-left:2px solid var(--accent)}
+.walk{counter-reset:w;display:grid;gap:.6rem;padding:0;list-style:none}
+.walk li{counter-increment:w;display:grid;grid-template-columns:2rem minmax(0,1fr);gap:.4rem}
+.walk li::before{content:counter(w);font:600 .9rem var(--mono);color:var(--accent);padding-top:.1rem}
 .wrap{overflow-x:auto}
 table{border-collapse:collapse;width:100%;font-size:.92rem;min-width:36rem}
 th,td{text-align:left;vertical-align:top;padding:.45rem .6rem;border-bottom:1px solid var(--rule)}
@@ -56,9 +57,8 @@ td.id{font:600 .82rem var(--mono);color:var(--accent);white-space:nowrap}
 .tag{display:inline-block;font:600 .7rem var(--body);letter-spacing:.04em;padding:.08rem .4rem;border-radius:3px;white-space:nowrap}
 .t-open{color:var(--accent);background:var(--panel);border:1px solid var(--accent)}
 .t-ruled{color:var(--member);background:var(--memberbg)}
-.t-dir{color:var(--member);background:var(--memberbg)}
 .t-set{color:var(--sys);background:var(--sysbg)}
-.t-pause{color:var(--new);background:var(--newbg)}
+.t-later{color:var(--new);background:var(--newbg)}
 .t-off{color:var(--off);background:var(--panel)}
 .slip{border:1px solid var(--rule);border-radius:6px;padding:.8rem 1rem;margin:.7rem 0;display:grid;gap:.4rem}
 .slip .id{font:600 .8rem var(--mono);color:var(--accent)}
@@ -66,358 +66,293 @@ td.id{font:600 .82rem var(--mono);color:var(--accent);white-space:nowrap}
 .slip ol{margin:0;padding-left:1.3rem;display:grid;gap:.25rem;color:var(--muted);font-size:.95rem}
 .slip ol li b{color:var(--fg)}
 .rec{font-weight:600}
+.note{font-size:.88rem;color:var(--muted)}
+.mine{font-size:.85rem;color:var(--sys)}
 .senses{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.8rem}
 @media (max-width:560px){.senses{grid-template-columns:minmax(0,1fr)}}
 .sense{border:1px solid var(--rule);border-radius:6px;padding:.6rem .9rem}
 .sense h3{margin:0 0 .2rem;font-size:1rem}
 .sense ol{margin:0;padding-left:1.2rem;font-size:.92rem}
-ul.plain{padding-left:1.2rem;display:grid;gap:.35rem}
+blockquote{margin:.5rem 0;padding:.45rem 1rem;border-left:3px solid var(--accent);background:var(--card);font-size:.95rem}
+blockquote p{margin:.15rem 0}
+blockquote cite{display:block;font:400 .8rem var(--mono);color:var(--muted);font-style:normal;margin-top:.25rem}
 </style>
 <main>
 <h1>Investigation Design</h1>
-<p class="meta">The one working document for the investigation engine and the project around it · last updated 8 October 2026, after your answer on AI use</p>
-<p class="lede">It carries your direction, the model as it stands, the questions open with you, the research behind them, and every decision's state. It replaces the four earlier pages; each now points here.</p>
+<p class="meta">The one working document for investigations in Civicsmith · updated 8 October 2026</p>
+<p class="lede">The design as it stands, with every ruling so far folded in, followed by the questions still open. Your rulings, in your words, and the full register are at the end.</p>
 
 <nav class="toc"><ol>
 <li><a href="#now">Open with you now</a></li>
-<li><a href="#direction">Your direction so far</a></li>
-<li><a href="#model">The model as it stands</a></li>
-<li><a href="#questions">Questions</a></li>
+<li><a href="#design">The design</a></li>
+<li><a href="#walk">Grandview, start to finish</a></li>
+<li><a href="#questions">Open questions</a></li>
+<li><a href="#later">Coming later</a></li>
 <li><a href="#research">Research</a></li>
+<li><a href="#words">Your rulings, in your words</a></li>
 <li><a href="#register">Decision register</a></li>
-<li><a href="#sources">Sources and history</a></li>
 </ol></nav>
 
 <h2 id="now">1 · Open with you now</h2>
 <div class="now">
-<p>Four questions, restated from your plan of 7 October around what you have since decided about steps. Each is set out in full in <a href="#questions">section 4</a>.</p>
+<p>Four questions remain from your plan of 7 October, restated around what you have since decided. Each is set out in full in <a href="#questions">section 4</a>.</p>
 <ul>
-<li><b>D27 · Deadlines and milestones:</b> whose dates they are, now that one question can serve several projects.</li>
-<li><b>D28 · Removing steps:</b> which steps may simply disappear.</li>
-<li><b>D29 · Resources:</b> what a step may record about what it needs and uses: people, money, materials, connections, expertise.</li>
-<li><b>D30 · Reports:</b> whether, and how, members report on where an investigation stands, now that there are no team leaders.</li>
+<li><b>D27 · Milestones:</b> whose dates they are, when one question serves several projects.</li>
+<li><b>D28 · Removing steps:</b> whether a step that was planned and never started can simply be deleted.</li>
+<li><b>D29 · Resources:</b> what a step may record about the money, materials and connections it needs and uses.</li>
+<li><b>D30 · Reports:</b> whether members may write dated reports on where things stand.</li>
 </ul>
 </div>
 
-<h2 id="direction">2 · Your direction so far</h2>
-<p>In your words, newest first. Where a later word changes an earlier one, the later governs.</p>
+<h2 id="design">2 · The design</h2>
+<p class="note">Everything here follows from your rulings or from canon already in force. Where I have settled a detail myself to keep the design consistent, it is marked <span class="mine">detail</span> and can be changed.</p>
 
-<blockquote><p>"AI-based features are seen by some groups as so expensive that their use needs to be justified by the (potential) value they provide. They need to be judicious about that use. And yet, the AI-based capabilities of the system offer significant benefits related to: a more friendly, efficient, and effective UX using the natural-language capabilities; the level of member support the system can provide; interviewing members when they identify a new or evolving challenge they want investigated; a smart, proactive role they can take on formulating member input into questions and other structures on which investigations are based.</p>
-<p>Up to this point, we've added support for groups and individual members to specify which AI account they use, put limits on the cost of usage, specify which AI-based civicsmith features are enabled, and track usage over time. But as we explore the investigation design, I think we need to recognize that some projects may have additional resources available or have different priorities (whether higher and lower) after affects which account is used, what limits to put on usage, and which AI-based capabilities are enabled.</p>
-<p>The assistant is based on Claude, a frontier AI service. Depending on feedback from groups related to the quality and cost, future releases may be able to support a range of AIs, that includes frontier and open models. So I think we need to recognize the continuum of interest across groups in using AI-based capabilities. Some groups won't use it at all, while other groups may want to maximize the benefits AI offers in Civicsmith. There will almost certain also be situations where the interests of the group and some of its members are different.</p>
-<p>I think that the system should recognize and support this diversity of AI usage, and give groups and members who are using their own accounts to select which types of uses to enable, put limits on the maximum cost, specify which AI-based civicsmith features are enabled, and track usage over time."</p>
-<cite>D34 · 8 October · answers the earlier question on when the system explores</cite></blockquote>
+<h3>2.1 · An investigation</h3>
+<ul class="plain">
+<li>An investigation is a <b>project</b>. A project has an <b>objective</b>, what it is trying to establish. It pursues the objective by posing <b>questions</b>, which may or may not be answered.</li>
+<li>A question can serve <b>several projects and objectives</b>. Each project has its own relationship with a question: it draws on it, it may hold its own conclusion on it, and it may defer or dismiss it. A project's deferral or dismissal never affects another project.</li>
+<li>A question never shows <b>which projects draw on it</b>. A member sees the question, the work on it and whether it has been answered, never who else is asking.</li>
+<li>A project's <b>contents</b> are seen only by its participants, whether or not it is hidden. A non-hidden project's name is seen across the group so others can ask to join. A hidden project is invisible to everyone outside it.</li>
+</ul>
 
-<blockquote><p>"It's important to clarify that actions that affect the answering of a question rests with members - with the support and guidance of the system. Members can have hunches, hypotheses, and follow leads - as can the system. The system (including AIs) can proactively explore a question (that is, look for answers). They have the capabilities to gauge to what extent the results that they find might contribute to the question - both in support and as contradicting other gathered information. The system can present potentially useful information to members working on a question. But it's the act of members that decide whether information is dismissed or added to the body of evidence (based on its grade and the rules of evidence that apply."</p>
-<p>On steps: "Yes, work is done (steps are taken) that don't relate to a specific question. This work may be done to provide context for members, in the development of a question, to understand how to respond to findings, and so on." What a step keeps when it ends: "agreed". Tying a chance find to a step afterwards: "Yes".</p>
-<cite>D33 and D32's answers · 8 October</cite></blockquote>
+<h3>2.2 · Steps</h3>
+<ul class="plain">
+<li>A <b>step</b> is work done in pursuit of an answer to a question. It is also work done to give members context, to develop a question, or to understand how to respond to findings.</li>
+<li><b>Who does it:</b> a member, or the system, including the AI.</li>
+<li><b>Where it is, and who sees it.</b> A step is seen wherever it is taken; nobody chooses.
+  <ul class="plain">
+  <li><b>On a question:</b> seen by everyone who can see the question, with the member's handle, naming no project.</li>
+  <li><b>In a project:</b> project-specific work, such as the intake interview, seen by that project's participants.</li>
+  <li><b>For the group:</b> general context outside any one project, seen across the group.</li>
+  </ul></li>
+<li><b>When it ends,</b> a step records its outcome (it helped answer the question, it was a dead end, or it was set aside), what it produced, and, optionally, what was learned in the member's words. Dead ends are kept, because they can still add to understanding.</li>
+<li><b>What it produces</b> stays in the record whatever the outcome: documents, content, connections and other records, and looks, including "looked, absent".</li>
+<li><b>A chance find</b> needs no step. A member may later tie it to the step it helped.</li>
+<li><b>Dependencies:</b> a step may wait on another step, on a document arriving, or on a date. It shows what it is waiting on and opens when that is done. A loop is refused. <span class="mine">detail</span></li>
+<li><b>By when:</b> a step may carry a date with its basis: a law's clock, a meeting, or the member's own choice. A nearing date changes only how it looks; an overdue one is told once. <span class="mine">detail, from your notification rules</span></li>
+</ul>
 
-<blockquote><p>"A project has an objective it's trying to establish. It does so by posing questions that could be answered (or not) What's you're proposing is that a step is the work done in pursuit of an answer to a question. Some steps might contribute to answering the question, others may be dead-ends - though we should recognize that even some dead-ends may still contribute to our overall understanding of the world. This understanding is recorded in the form of documents, content, connections, and constructs created while pursuing that step. It's also important to recognize that the same question may be of interest to more than one objective. So a step taken in pursuit of an answer isn't always just for a single objective or project. So we should recognize the value of tracking the work being done to answer a question. A step may be defined to indicate that a member or AI are doing specific work (a step), but sometimes the information that contributes to an answer may be found through happenstance."</p>
-<cite>D32 · 8 October</cite></blockquote>
-
-<blockquote><p>"It was inaccurate of me to talk about members being assigned roles and for there to be subgoals within a project. As we look at filling in the capabilities of projects I think we should study the relationships between steps, basis, claims, findings, and any other elements."</p>
-<cite>8 October · withdraws assignments, teams and subgoals (D25, D26)</cite></blockquote>
-
-<blockquote><p>"There needing to be an engine [with] the capabilities we're exporting now. But there also needs to be a member-visible construct that is an investigation. This construct is the project, right? A project has a plan for the investigation. This plan includes: A series steps … The engine will manage dependencies between steps. The engine will estimate and track resources … A number of things about an investigation that the engine tracks will have deadlines and milestones." (The parts on assignments, teams and subgoal leaders are withdrawn by the 8 October words above.)</p>
-<cite>K2075 · 7 October</cite></blockquote>
-
-<blockquote><p>The engine approved as a product goal: the interview, a planner that stays on the investigation's objectives and knows why each document is held, research runs, competing explanations, and the answer, with the member in the loop (the machine proposes, a member accepts). Unfamiliar documents read with purpose. The project becomes the investigation's home, with one view and a timeline. Study first, then architecture, requirements and screens.</p>
-<cite>K1627 · 6 October (summarised)</cite></blockquote>
-
-<h2 id="model">3 · The model as it stands</h2>
-
-<h3>Who does what</h3>
+<h3>2.3 · Evidence: members decide</h3>
 <div class="lanes">
 <div class="lane m"><h3>Members</h3><ul>
-<li>pose questions under the project's objective</li>
-<li>take steps on a question, or for the project</li>
+<li>pose questions and take steps</li>
 <li>hold hunches and hypotheses; follow leads</li>
-<li>close a step: its outcome, what it produced, what was learned</li>
-<li>tie a chance find to the step it helped</li>
+<li>close steps with their outcome</li>
+<li>decide what becomes evidence</li>
+<li>conclude, publish, act</li>
 </ul></div>
 <div class="lane s"><h3>The system, including the AI</h3><ul>
-<li>takes steps on a question: searching, capturing, reading</li>
+<li>takes steps: searching, capturing, reading</li>
+<li>explores questions where an account owner has turned exploring on</li>
 <li>has its own hunches, hypotheses and leads, labelled as its own</li>
-<li>judges how a find bears on the question: supporting it, or contradicting what is gathered</li>
-<li>offers what it found to the members working on the question</li>
+<li>judges how a find bears on a question, supporting it or contradicting what is gathered</li>
+<li>offers finds to the members working on the question</li>
 </ul></div>
 </div>
 <div class="gate">A member's act decides<small>dismiss the information, or add it to the evidence on the question, by its grade and the rules of evidence</small></div>
+<ul class="plain">
+<li>The system's <b>judgement of a find</b> is a labelled signal, shown with how it was worked out and its measured rate of false alarms. It is never a grade, never a stored score, and never used to hide or rank what members see.</li>
+<li>The system's <b>hypotheses</b> are never facts. A member may take one up as her own.</li>
+<li><b>Who receives a find:</b> the joined members of every project that draws on the question. Each receives it once, in her queue, never by email. Each may stop following a question, or start following one. Nobody receives anything she may not already see.</li>
+<li>The system's finds are labelled as the system's work. Which account paid for them is shown only to that account's owners. <span class="mine">detail: so that a find never reveals which project asked</span></li>
+</ul>
 
-<h3>The chain</h3>
-<p>Everything except the step is built. The step is placed where your words put it.</p>
+<h3>2.4 · The chain from question to action</h3>
+<p>All of this is built except steps.</p>
 <div class="chain">
-<div class="row"><div class="node"><b>Project</b><span>The investigation. Holds its objective and its bar (the strength of evidence it requires).</span></div><div class="side">Some steps serve the project itself (D35).</div></div>
-<div class="link">pursues its objective by posing</div>
-<div class="row"><div class="node"><b>Questions</b><span>Open, set aside, concluded or divided. One question can serve several projects.</span></div><div class="side">Hunches and hypotheses, the members' and the system's, hang here, never as evidence.</div></div>
+<div class="row"><div class="node"><b>Project</b><span>Its objective and its bar, the strength of evidence it requires.</span></div><div class="side">Project steps live here.</div></div>
+<div class="link">poses</div>
+<div class="row"><div class="node"><b>Questions</b><span>Shared across projects without showing which.</span></div><div class="side">Hunches and hypotheses, members' and the system's, never evidence.</div></div>
 <div class="link">worked on by</div>
-<div class="row"><div class="node step"><b>Steps</b><span>Work by a member or the system in pursuit of an answer. Each ends with an outcome (helped answer, dead end, set aside), what it produced, and what was learned.</span></div><div class="side">Chance finds arrive without a step and may be tied to one later.</div></div>
+<div class="row"><div class="node step"><b>Steps</b><span>By members or the system. Each ends with an outcome, what it produced, and what was learned.</span></div><div class="side">Chance finds may be tied to a step later.</div></div>
 <div class="link">producing</div>
-<div class="row"><div class="node"><b>Documents, content, connections, other records</b><span>Kept whatever the step's outcome. A look records "looked, absent" too.</span></div><div class="side">The system judges how each bears on the question and offers it.</div></div>
-<div class="link">which a member adds to the evidence as</div>
-<div class="row"><div class="node"><b>Legs</b><span>This document (or another question) supports or cuts against the question.</span></div><div class="side">Only a member draws a leg.</div></div>
-<div class="link">grouped into</div>
-<div class="row"><div class="node"><b>Basis</b><span>The question's legs, kept as one or more named versions, each with its claim.</span></div><div class="side">Strength is computed beside the bar, never as one score.</div></div>
-<div class="link">a project adopts a version's claim as its</div>
-<div class="row"><div class="node"><b>Conclusion</b><span>With what would show it wrong. The concluded question is a finding.</span></div><div class="side">Another project may conclude differently.</div></div>
+<div class="row"><div class="node"><b>Documents, content, connections, looks</b><span>Kept whatever the outcome.</span></div><div class="side">The system judges and offers what it finds.</div></div>
+<div class="link">a member adds to the evidence as</div>
+<div class="row"><div class="node"><b>Legs</b><span>Each supports or cuts against the question.</span></div><div class="side">Only a member draws a leg.</div></div>
+<div class="link">grouped into a</div>
+<div class="row"><div class="node"><b>Basis</b><span>One or more named versions, each carrying its claim.</span></div><div class="side">Strength is shown beside the bar, never as one score.</div></div>
+<div class="link">a project adopts a claim as its</div>
+<div class="row"><div class="node"><b>Conclusion</b><span>With what would show it wrong. A concluded question is a finding.</span></div><div class="side">Two projects may conclude differently.</div></div>
 <div class="link">published in a</div>
-<div class="row"><div class="node"><b>Case</b><span>Findings pinned by version, signed by an owner, against the bar.</span></div><div class="side"></div></div>
+<div class="row"><div class="node"><b>Case</b><span>Findings pinned by version, signed by an owner.</span></div><div class="side"></div></div>
 <div class="link">leading to</div>
-<div class="row"><div class="node"><b>Action plan and actions</b><span>What to do about it; actions go outside the group. Replies come back as documents.</span></div><div class="side"></div></div>
+<div class="row"><div class="node"><b>Action plan and actions</b><span>What to do; actions go outside the group, and replies come back as documents.</span></div><div class="side"></div></div>
 </div>
 
-<h3>Settled by rules already in force</h3>
-<div class="wrap"><table>
-<tr><th>point</th><th>how it works</th><th>from</th></tr>
-<tr><td>Steps live with the question</td><td>A step on a shared question is seen from every project drawing on it.</td><td>built; D32</td></tr>
-<tr><td>The system's judgement of a find</td><td>A labelled signal, with how it was worked out and its measured rate of false alarms. Never a grade, never a stored score, never used to hide or rank.</td><td>K1473</td></tr>
-<tr><td>Offering finds</td><td>Once, in the queue. No email, no repeats.</td><td>DEC-69, DEC-94</td></tr>
-<tr><td>The system's hypotheses</td><td>Labelled as its own, never facts; a member may take one up as hers.</td><td>K1467; D33</td></tr>
-<tr><td>Who did what</td><td>Recorded by handle, or as the assistant's work with the member who started it. Nothing measures or ranks members; no record of who opened which file.</td><td>DEC-68; K1892</td></tr>
-<tr><td>Where a step is seen</td><td>Wherever it was taken: on a question, wherever the question is seen; for the group, across the group; in a project, by its participants. Nobody chooses. A shared question never shows which projects draw on it, so a step on it reveals no project.</td><td>D35, D41</td></tr>
-<tr><td>Who gets the system's finds</td><td>The joined members of every project drawing on the question, once, in their queue; each may stop or start following a question.</td><td>D36</td></tr>
-<tr><td>AI use</td><td>The group, a project and a member can each choose an account, set an overall limit and per-use limits (each inclusive or exclusive of the overall), switch uses on or off, and track use. Exploring is No, Ask every day, or Yes. A group's or project's "no AI" on its material binds everyone; money settings bind only their own account.</td><td>D34, D37–D39</td></tr>
-<tr><td>Working material</td><td>Steps, the plan and notes are never published.</td><td>D15</td></tr>
-<tr><td>Our own dates</td><td>The group's deadlines and milestones are never findings about government.</td><td>Capability Ladders §10</td></tr>
-</table></div>
-
-<h2 id="questions">4 · Questions</h2>
-<h3>Open now</h3>
-
-<div class="slip"><span class="id">Background for D38 and D39 · AI use as it stands after your answer</span>
-<p><b>What is built today.</b> A group chooses at setup how its members use the assistant: the group's key (an API key held by an administrator), each member's own subscription (used only by that member), each member's own API key, or no AI (K1755). Each member sets her own daily limit, counted in tokens and calls. An administrator may set a lower limit for the whole copy. Use is tracked per member, per day and per kind of AI work. Administrators see each month's totals by kind of work, naming no member; each member sees only her own (K1450).</p>
-<p><b>What your answer adds.</b></p>
+<h3>2.5 · AI use</h3>
+<p>Groups vary from no AI at all to wanting all it can offer, and a group and its members may differ. The design supports that range.</p>
 <ul class="plain">
-<li>A <b>project</b> may have its own AI settings: which account its AI work uses, its limit, and which uses are on. One project may have a grant-funded key and want everything on; another may want AI kept to a minimum. Its owners set these, since authority over a project is theirs. This replaces the earlier idea of a separate AI budget per investigation (D31).</li>
-<li>Settings are by <b>type of use</b>: conversation, member support, the intake interview, turning members' words into questions, reading documents, exploring questions, and so on. The exact list is a detail of the design.</li>
-<li>Limits are on <b>maximum cost</b>. Today they are counted in tokens and calls. A money limit can be exact for API keys, but a subscription's provider does not report cost per use, so for a subscription the limit stays in tokens and calls.</li>
-<li>Later releases may offer <b>other AI models</b>, frontier and open. Settings should not assume Claude alone.</li>
+<li><b>Account owners:</b> the group, each project and each member can have an AI account. Today that means the group's key held by an administrator, a member's own subscription (used only by her), or a member's own API key. A project may have its own key, set up by its owners, for example one funded by a grant. Later releases may offer other models, frontier and open.</li>
+<li><b>Types of use</b> are switched on or off: conversation, member support, the intake interview, turning members' words into questions, reading documents, exploring questions, and others as they are built.</li>
+<li><b>Limits:</b> each account owner sets an overall limit and may set a limit per type of use. A per-use limit is either inclusive, counted within the overall limit, or exclusive, a separate allowance on top of it. A limit is in money where the account reports cost. A subscription does not report it, so there the limit is counted in tokens and calls.</li>
+<li><b>Exploring</b> has its own setting per account owner:
+  <ul class="plain">
+  <li><b>No:</b> not paid from this account. It does not pass to anyone else's setting.</li>
+  <li><b>Ask every day:</b> the owner gets one queue item a day, only when something is worth exploring, listing the questions and a rough cost. No answer means no.</li>
+  <li><b>Yes:</b> the system explores when it judges it useful, within the limits.</li>
+  </ul>
+  It is set once per account, with an override where a project or question is open.</li>
+<li><b>Two kinds of "no".</b> A limit about the <b>material</b>, "no AI at all", binds everyone whoever pays: a group's, or a project's for its own material, for example a whistleblower's papers. A <b>money</b> limit, "not on my dime", binds only the account it belongs to. A member spending her own account is never held back by anyone else's budget, only by a "no AI" on the material.</li>
+<li>A project's "no AI" covers what is its own: its project steps, notes and interview, and any question or document only it draws on. Material it shares with other projects follows the group's setting, since a project cannot tell what others are doing with it. <span class="mine">detail: keeps one project from blocking, and so revealing itself to, another</span></li>
+<li><b>Tracking:</b> use is tracked per account, per type of use, over time. A member sees her own; a project's owners see the project account's; administrators see the group key's totals by type of use, naming no member.</li>
 </ul>
-<p>Two questions follow from that.</p></div>
 
-<div class="slip"><span class="id">D38 · When group, project and member AI settings disagree, which governs · <span class="tag t-ruled">ruled C, 8 Oct</span></span>
-<p><b>Why it arises.</b> You expect "situations where the interests of the group and some of its members are different". With settings at three levels, each able to turn uses on or off and set limits, they will conflict. The system needs one rule for which one applies.</p>
-<p><b>A distinction that matters.</b> A setting can exist for one of two reasons.</p>
+<h3>2.6 · What holds throughout</h3>
 <ul class="plain">
-<li><b>Money:</b> "don't spend our group key on exploring". This is about whose account pays.</li>
-<li><b>The material:</b> "don't send this project's documents to an AI service at all". Such a setting protects, for example, a hidden project holding a whistleblower's papers. It is about what the AI may see, whoever pays.</li>
+<li>Who did what is recorded by handle. Nothing measures, scores or ranks a member, and there is no record of who opened which file.</li>
+<li>No nagging: a reminder is one the member asked for; a nearing date changes only how it looks; an overdue one is told once; nothing goes by email or push.</li>
+<li>Working material (steps, notes, the interview, the project's thinking) is never published.</li>
+<li>The group's own dates are never findings about government.</li>
+<li>The machine proposes; a member accepts.</li>
 </ul>
-<p><b>Examples.</b></p>
-<ul class="plain">
-<li>(1) The group turns off exploring to save its key. Ana, on her own subscription, wants it on for her question in "Grandview rebuild".</li>
-<li>(2) Grandview's owners turn off AI reading of documents because the project holds a whistleblower's papers. Ana, on her own subscription, wants the AI to read one of them.</li>
-<li>(3) Grandview has a grant-funded key with a $200 limit. Ben's own daily limit is lower. Ben starts a run on the project's key.</li>
-</ul>
-<ol>
-<li><b>A · The narrowest setting wins.</b> Each level can only narrow the one above. In (1) Ana cannot explore. In (2) she cannot have the document read. In (3) the lower of the two limits applies. Simple and safe, but a member with her own means is held to the group's budget choices.</li>
-<li><b>B · Whoever pays decides.</b> Settings bind only work paid from that level's account. In (1) Ana explores. In (2) Ana's AI reads the whistleblower's document, because the project's setting does not bind her account. In (3) the project's limit applies to the project key. This respects members' own means, but leaves the project unable to protect its material.</li>
-<li><b>C · Split by reason.</b> The group and each project may set limits on the material, which bind everyone. Money limits bind only the account they belong to, and each payer decides what her own money is spent on. In (1) Ana explores. In (2) the document stays unread. In (3) the project key's $200 limit applies, and Ben's own limit applies only to his own account.</li>
+
+<h2 id="walk">3 · Grandview, start to finish</h2>
+<p>How the design works for a parent whose child's school rebuild is a year late.</p>
+<ol class="walk">
+<li><span>Maria opens a project, "Grandview rebuild". Its objective: establish why the rebuild is late and who knew when. The intake interview is a step in the project, done with the assistant or by a script.</span></li>
+<li><span>From her answers come questions. "When did the district first know the rebuild would run late?" is new. "Did change orders exceed the legal limit?" already exists, because a district-oversight project asked it. Maria's project draws on it too, without either project seeing the other.</span></li>
+<li><span>Maria takes steps. One is a records request for the construction manager's reports, on the first question, with the law's ten-day clock as its "by when". Another is reading the bond measure for background, a project step.</span></li>
+<li><span>Grandview has a small grant-funded key, with exploring set to "Ask every day" and a $30 exploring limit inclusive in $100 a month. One morning Maria's queue asks whether to explore two questions, roughly $3. She says yes. The system finds three board agendas, judges one as cutting against the district's account, and offers it.</span></li>
+<li><span>Maria adds that agenda to the evidence as a leg. She dismisses another find with a reason. The oversight project's members are offered the same finds on the shared question, labelled as the system's work, not as Grandview's.</span></li>
+<li><span>A step ends as a dead end: the state architect's tracker had nothing. Its outcome, what was looked at, and "the tracker only covers projects over $10m" are kept.</span></li>
+<li><span>The district's documents arrive. Maria ties a document a neighbour forwarded by chance to the records-request step.</span></li>
+<li><span>The members conclude on the first question at the project's bar. The other project may conclude differently. If the two conclusions cannot both hold, each side is told only that something it rests on conflicts with a record it cannot see.</span></li>
+<li><span>The project publishes a case and plans what to do about it.</span></li>
 </ol>
-<p class="rec">You ruled C on 8 October ("D38: C"). The recommendation was C. It supports the range of AI use you described, so a member with her own account is not held back by the group's budget. It still lets a group or a project protect what its material is exposed to.</p></div>
 
-<div class="slip"><span class="id">D39 · Exploring without being asked each time, where that use is enabled · <span class="tag t-ruled">ruled, 8 Oct</span></span>
-<p><b>Why it arises.</b> You said the system may "proactively explore a question" (D33). Your answer on AI use makes exploring one of the uses a group, a project or a member can turn on, within a cost limit. Your ruling of 5 October (K1481) says every AI run starts with a member's act, except a standing question a member writes, which re-runs on a schedule and only reads. Exploring is more than reading: it searches, captures documents and judges them. If exploring is turned on, can the system start it by itself?</p>
-<p><b>Example.</b> Grandview's owners turn on exploring for the project, on the project's key, with a $50 monthly limit. The question "When did the district first know the rebuild would run late?" is open. Under A, the system notices a new board agenda, explores it overnight, and offers two finds the next morning, labelled as its work and naming who turned exploring on. It stops when the $50 is used and says so once.</p>
+<h2 id="questions">4 · Open questions</h2>
+
+<div class="slip"><span class="id">D27 · Milestones</span>
+<p><b>What exists.</b> Many dates already exist, each with its basis: a records request's legal clock, a promise or contract date in the record, a wait on a question, a step's own "by when". The project's computed stage (forming, investigating, matured) is the only milestone today.</p>
+<p><b>What you asked for</b> on 7 October: milestones, named points such as "contract and change orders in hand before the 14 November board meeting".</p>
+<p><b>Why it is a question now.</b> One question can serve several projects, each on its own timeline. Grandview needs the change-order answer before the November board meeting. The oversight project needs it only for its March report.</p>
 <ol>
-<li><b>A · Yes, where enabled.</b> Whoever pays turns exploring on for a project or a question. A cost limit must be set first; exploring cannot be turned on without one. Within that, the system explores when it judges it useful. Every run is labelled with who enabled it. It stops at the limit and says so once.</li>
-<li><b>B · Only on a schedule a member sets.</b> A member sets a question to be explored, say weekly until a set date, as a standing question does today but exploring instead of only reading. The system does not choose when to explore.</li>
-<li><b>C · No.</b> Every exploring run still starts with a member pressing a button.</li>
+<li><b>A · A project's milestones.</b> A project's members set named, dated milestones. Each lists the questions or steps it waits on and is met when they are done. Another project sharing a question sets its own.</li>
+<li><b>B · Milestones may also sit on a question,</b> seen by everyone who can see the question.</li>
+<li><b>C · No milestones:</b> only step dates and the computed stage.</li>
 </ol>
-<p><b>Trade-offs.</b> A is the proactive role you described and the most useful while members wait on records. It revises K1481, but keeps a person's choice and a cost limit in front of every run. B keeps more control but makes members do the scheduling. C changes nothing.</p>
-<p class="rec">You ruled on 8 October: "D39: Implied in the options you've offered is that each type of account owner (group, project, member) can set an overall usage limit, as well as limits on each type of usage. So an account owner can set a limit on proactively exploring a question - and indicate whether that limit is inclusive or exclusive of the overall limit."</p>
-<p><b>As recorded:</b> the system may explore a question unasked where an account owner has turned exploring on, within its limit. This revises K1481 for exploring. Each account owner (the group, a project, a member) sets an overall limit and may set a limit per type of use. A per-use limit is marked either inclusive or exclusive:</p>
-<ul class="plain">
-<li><b>Inclusive:</b> a monthly overall limit of $100, with exploring limited to $30 within it. At most $100 is spent in all, and no more than $30 of it on exploring.</li>
-<li><b>Exclusive:</b> the same figures, but exploring's $30 sits on top. Up to $100 for other uses plus up to $30 for exploring, $130 in all.</li>
-</ul>
-<p><b>The exploring setting, as you shaped it on 8 October.</b> Each account owner (the group, a project, a member) sets one of:</p>
-<ul class="plain">
-<li><b>No:</b> exploring is not paid from this account. It does not pass to anyone else's setting; another account may still pay.</li>
-<li><b>Ask every day:</b> the account's owner gets one queue item a day, only when something is worth exploring, with the questions and a rough cost: "Explore" or "Not today". No answer means no.</li>
-<li><b>Yes:</b> the system explores when useful, within the overall limit and the exploring limit.</li>
-</ul>
-<p>It is set once per account. An override appears only where a project or question is open ("Exploring here: on / ask me / off"), to keep the screens clean. The screens themselves are owed to the design stream.</p>
-<p>You added: "if the group admin says no AI at all, then no AI at the project or member levels either. But if the admin's just saying "not on my dime", then that's something different." So a group's "no AI at all" binds everyone, while "not on my dime" binds only the group's key.</p>
-<p>And on a project's own bar: "agreed, a project can also say no AI for the kinds of reasons you mention." A project holding sensitive material (a whistleblower's papers, a source's name, a hidden project's subject) may say no AI on its material. That binds every account, members' own included.</p>
-</div>
-
-<div class="slip"><span class="id">D35 · Where steps are kept, and who sees them · <span class="tag t-ruled">ruled 8 Oct</span></span>
-<p>You said: "A step is work done in pursuit of an answer to a question - and to provide context for members, in the development of a question, to understand how to respond to findings, and so on. Of course, steps that are project-specific - like the interview - aren't shared." And then: "a member recording a step doesn't choose which of these it serves. A step taken anywhere is seen wherever it is."</p>
-<p><b>As recorded:</b> a step is seen by whoever can see the place it was taken. Nobody chooses.</p>
-<ul class="plain">
-<li>A step on a question is seen wherever that question is seen.</li>
-<li>A step for the group's general understanding is seen across the group.</li>
-<li>A step in a project, such as the interview, is seen by that project's participants.</li>
-</ul></div>
-
-<div class="slip"><span class="id">D41 · A step on a shared question, taken from inside a hidden project · <span class="tag t-ruled">ruled A, 8 Oct</span></span>
-<p>You ruled A ("D41: A"), and explained why my worry was misplaced: "The question that 2 projects both have an interest in can only see the question - they can't see that some other project is also asking the same question. What it can see is when a question gets answered. But what does that tell them - that somebody answered the question. But it still doesn't say anything beyond that. It could be a question in a hidden project - or it may not." So a shared question never shows which projects draw on it, and a step on it reveals no project. The step is seen wherever the question is seen, with the member's handle and no project named. Nothing extra is needed at the act.</p></div>
-
-<div class="slip"><span class="id">D40 · What members outside a project can see of it · <span class="tag t-off">withdrawn</span></span>
-<p>You clarified: "a non-hidden project can be seen by members who have been added to the project, but only by added members if the project is hidden." That is what you ruled on 18 September. A project's contents are seen only by its participants. A non-hidden project's name is seen across the group, so others can ask to join. Nothing changes, and the question is withdrawn.</p></div>
-
-<div class="slip"><span class="id">D36 · Who receives what the system finds · <span class="tag t-ruled">ruled C, 8 Oct</span></span>
-<p><b>Background.</b> Under your D33, the system offers potentially useful finds to "members working on a question". An offer is one item in a member's queue, the list of things waiting for her in the product. It is told once, with no email and no repeats (DEC-69, DEC-94). A question can be drawn on by several projects, each with its own members. Someone has to decide which members' queues an offer reaches. Too many recipients becomes noise; too few means finds go unseen.</p>
-<p><b>Example.</b> The question "Did change orders exceed the limit the law sets?" is drawn on by "Grandview rebuild" (five members) and "District bond oversight" (three members). Two of the eight have taken steps on it. The system finds the district's change-order log.</p>
-<ol>
-<li><b>A · Everyone in every project drawing on the question.</b> All eight get the offer.</li>
-<li><b>B · Only those actively on it.</b> Only the two who took steps, plus anyone who chose to follow the question.</li>
-<li><b>C · Everyone, with a choice.</b> All eight by default, and each member may stop following a question she does not care about, or start following one she does.</li>
-</ol>
-<p><b>Trade-offs.</b> A reaches everyone who might care, but a member in a large project could be offered finds on questions she never touches. B is quiet, but a member who has not yet taken a step misses finds she would want. C starts from A and lets each member trim it. In every option, a member receives only what she is already allowed to see.</p>
-<p class="rec">You ruled C on 8 October ("D36: C"). The recommendation was C. Nobody misses a find by default, and nobody is held to a question she has left.</p></div>
-
-<h3>Restated from your plan of 7 October</h3>
-<p>On 7 October you said the engine would manage steps and their dependencies, track resources, and keep deadlines and milestones, and that leaders would write status reports. Since then you have decided that steps belong to questions, a question can serve several projects, and there are no teams or leaders. These four questions restate what is left of that plan in those terms.</p>
-
-<div class="slip"><span class="id">D27 · Deadlines and milestones</span>
-<p><b>What exists today.</b> Many dates already exist, each with its basis: why it is due.</p>
-<ul class="plain">
-<li>A records request's legal clock, for example ten days under the state's records law.</li>
-<li>A promise or a contract date the record holds about government.</li>
-<li>A wait on a question: "district's reply due 14 October".</li>
-<li>The group's own chosen dates, which are never treated as findings about government.</li>
-</ul>
-<p>The project's stage (forming, investigating, matured) is computed and is the only milestone today.</p>
-<p><b>What your plan adds.</b> A step can carry its own "by when": the date it should be done by, with its basis, such as a law's clock, a meeting date or the member's own choice. That needs no ruling. The open part is milestones: named points such as "contract and change orders in hand before the 14 November board meeting".</p>
-<p><b>Why it is a question now.</b> One question can serve several projects, and each may care about it on its own timeline. Grandview needs the change-order answer before the November board meeting. A district-oversight project needs the same answer only for its annual report in March.</p>
-<ol>
-<li><b>A · Milestones belong to a project.</b> A project's members set named, dated milestones. Each lists the questions or steps it is waiting on and is met when they are done. Another project sharing the question sets its own.</li>
-<li><b>B · Milestones can also sit on a question,</b> seen by every project drawing on it.</li>
-<li><b>C · No milestones.</b> Only steps' own dates and the computed stage.</li>
-</ol>
-<p><b>Trade-offs.</b> A lets each project keep its own timetable without imposing it on others. B puts one project's date in front of projects that do not share it. C is simplest, but loses what you asked for. Under any option, a milestone nearing changes only how it looks, an overdue one is told once, and a reminder comes only if a member asked for it (DEC-94).</p>
+<p><b>Trade-offs.</b> A lets each project keep its own timetable without imposing it. B shows one project's dates to others who do not share them, and hints that another project exists, against your principle for shared questions. C loses what you asked for.</p>
 <p class="rec">Recommended: A.</p></div>
 
 <div class="slip"><span class="id">D28 · Removing steps</span>
-<p><b>Background.</b> You said steps are "deleted because no longer necessary", and later agreed that a step keeps its outcome (it helped, a dead end, or set aside), what it produced, and what was learned. You also said dead ends can still add to understanding. Steps on a shared question are seen by other projects too.</p>
-<p><b>What is left to decide</b> is a step that was planned and never started: "check the state architect's tracker", made pointless when the documents arrived another way.</p>
+<p><b>Background.</b> On 7 October you said steps are "deleted because no longer necessary". Since then you agreed that a step keeps its outcome, what it produced and what was learned, because even dead ends add to understanding. So a step that was worked on stays. What is left is a step that was planned and never started. Example: "check the state architect's tracker", made pointless when the documents arrived another way.</p>
 <ol>
-<li><b>A · An untouched step can be deleted outright.</b> One that was started keeps its record and ends with an outcome.</li>
-<li><b>B · No step is ever deleted.</b> An untouched one is "withdrawn" with a reason and stays readable.</li>
+<li><b>A · An untouched step can be deleted outright.</b> Nothing was done, so nothing is lost.</li>
+<li><b>B · It is withdrawn with a reason</b> and stays readable.</li>
 </ol>
-<p><b>Trade-offs.</b> A keeps the list realistic, as you wanted, and loses nothing, because nothing was done. B keeps a record of what was once planned, which rarely matters and adds clutter, especially on a question many projects share.</p>
+<p><b>Trade-offs.</b> A keeps the list of work realistic, as you wanted. B keeps a record of intentions that rarely matters, and clutters questions many projects share.</p>
 <p class="rec">Recommended: A.</p></div>
 
 <div class="slip"><span class="id">D29 · Resources a step needs and uses</span>
-<p><b>Background.</b> You named people, money and other material resources, information, connections, expertise and an AI budget. Some are already covered:</p>
+<p><b>Background.</b> On 7 October you named people, money and other material resources, information, connections, expertise and AI budget. Most are now covered:</p>
 <ul class="plain">
-<li><b>AI:</b> settled in D34 and D37–D39.</li>
-<li><b>Information:</b> the documents a step seeks or produces.</li>
-<li><b>Expertise:</b> members' declared expertise, and the existing "ask for a check" by expertise.</li>
-<li><b>People:</b> who is doing a step, a member or the system.</li>
+<li><b>AI:</b> section 2.5.</li>
+<li><b>Information:</b> what a step seeks and produces.</li>
+<li><b>Expertise:</b> members' declared expertise and the existing "ask for a check".</li>
+<li><b>People:</b> who is doing the step.</li>
 </ul>
-<p>What is left is money, materials and connections. On 29 September you ruled that action plans hold no costs or budgets. Steps are a different thing.</p>
-<p><b>Why it is a question now.</b> Steps sit on questions shared across projects, so a project total of a step's costs is not straightforward. A $40 records-request fee on a shared question serves both projects drawing on it.</p>
-<p><b>Examples:</b> a records-request copying fee of about $40; a public-meeting video to be bought; "someone who reads Spanish"; "a contact at the state architect's office".</p>
+<p>What is left is money, materials and connections. On 29 September you kept costs and budgets out of action plans. Steps are different work.</p>
+<p><b>Why it is a question now.</b> A step on a shared question serves every project drawing on it. A $40 copying fee for the change-order log serves both Grandview and the oversight project, so totalling costs per project is not straightforward.</p>
+<p><b>Examples:</b> a records-request copying fee of about $40; a board-meeting video to buy; "someone who reads Spanish"; "a contact at the state architect's office".</p>
 <ol>
-<li><b>A · A step may note what it needs and used, in words.</b> A short list with amounts where known, and no totals. A connection is named only as its role and organisation, unless a member chooses to name a person in her own note.</li>
+<li><b>A · A step notes what it needs and used, in words,</b> with amounts where known and no totals. A connection is named by role and organisation, unless a member names a person in her own note.</li>
 <li><b>B · As A, with amounts totalled</b> per question and per project.</li>
-<li><b>C · Nothing beyond AI.</b> Steps record no resources.</li>
+<li><b>C · Steps record no resources</b> beyond AI.</li>
 </ol>
-<p><b>Trade-offs.</b> A gives members a place to say what a step takes, without bookkeeping, and fits your earlier wish for "a means of collecting and presenting associated resources". B adds totals, which become uncertain when one step serves several projects, and edges toward the budgets you kept out of action plans. C leaves members to track this elsewhere.</p>
-<p class="rec">Recommended: A, with totals considered later if groups ask for them.</p></div>
+<p><b>Trade-offs.</b> A gives members a place to say what a step takes, with no bookkeeping. It fits your earlier wish for "a means of collecting and presenting associated resources". B's totals blur when a step serves several projects, and edge toward the budgets you kept out of action plans. C leaves members to track it elsewhere.</p>
+<p class="rec">Recommended: A, with totals considered if groups ask for them.</p></div>
 
-<div class="slip"><span class="id">D30 · Reports on where an investigation stands</span>
-<p><b>Background.</b> You asked that leaders write status reports, then withdrew leaders. The design already gives every member, at any time, a view of where things stand: the questions and their strength, steps taken and their outcomes, what is waiting on whom, and "what we did" since a date she picks. Nothing measures any member, and nothing is sent by email.</p>
-<p><b>The question</b> is whether members also need a written report: something dated that can be read later or taken to a meeting.</p>
+<div class="slip"><span class="id">D30 · Reports on where things stand</span>
+<p><b>Background.</b> You asked for status reports by leaders, then withdrew leaders. Every member can already see, at any time, the questions and their strength, the steps and their outcomes, what is waiting on whom, and what was done since a date she picks. The question is whether members also need a written, dated report to read later or take to a meeting.</p>
 <ol>
 <li><b>A · No written reports.</b> The always-current view is enough.</li>
-<li><b>B · Any member may write a report</b> on a project or a question. The system drafts it from the record since the last report: steps taken and ended, what was found, what is waiting. She edits it, adds her own words and keeps it with the project, dated. It is never published and carries no figures about individual members.</li>
+<li><b>B · Any member may write one</b> on a project or a question. The system drafts it from the record since the last report: steps taken and ended, what was found, what is waiting. She edits it, adds her own words, and it is kept with the project, dated. It is never published and carries no figures about individual members.</li>
 <li><b>C · As B, on a fixed schedule</b> the project sets.</li>
 </ol>
-<p><b>Trade-offs.</b> A adds nothing to build, but members who meet monthly have nothing to bring. B gives them that, written by whoever chooses to. C makes it a duty, which your no-nagging rule warns against unless a member sets the reminder for herself.</p>
+<p><b>Trade-offs.</b> A adds nothing to build, but leaves members who meet monthly with nothing to bring. B gives them that, written by whoever chooses to. C turns it into a duty, which your no-nagging rule warns against unless a member sets the reminder for herself.</p>
 <p class="rec">Recommended: B.</p></div>
 
-<p>Dependencies between steps need no ruling from you. A step may wait on another step, a document arriving, or a date, and the system refuses a loop.</p>
-
-<h3>Engine decisions, not being asked yet</h3>
-<p>These are the study's decisions for the AI stages. They are listed so you can see what is coming, not so you can answer them now. Each will be brought to you with full background when its stage is near. Those marked † will change in light of your 8 October direction.</p>
+<h2 id="later">5 · Coming later</h2>
+<p>These are the study's decisions for the AI stages, adjusted to your rulings. They are listed so you can see what is ahead. None is being asked now; each will come with full background when its stage is near.</p>
 <div class="wrap"><table>
-<tr><th>id</th><th>what it is about</th></tr>
-<tr><td class="id">D1 †</td><td>The new parts the engine needs: a library of reading guides, a record of why each document is held, the plan of steps, and the investigation view. Also one AI planner and one AI flow for reading a document. Your direction moves the plan from the project to the question.</td></tr>
-<tr><td class="id">D2</td><td>The canon says an AI sub-session never hands back documents. Reading with purpose needs the AI to read a held document's text, in bounded slices, returning only proposals tied to quotes. This would loosen the canon's wording while keeping its intent.</td></tr>
-<tr><td class="id">D3</td><td>One way for a member to accept anything the machine proposes (a fact, a step, an explanation). The record keeps whether she accepted it as proposed, edited it, or wrote it herself.</td></tr>
-<tr><td class="id">D4</td><td>How strong a fact is when the AI found it in a document. The quote keeps the document's own grade, because code checks it is on the page. What the quote means is the member's judgment, made by accepting it.</td></tr>
-<tr><td class="id">D7 †</td><td>What gives the AI permission to do targeted work: a document held for a stated purpose, a step a member accepted, or one press starting several steps. This now joins D34.</td></tr>
-<tr><td class="id">D8</td><td>Reading guides for recurring documents (contracts, change orders, board items): who may approve them, Civicsmith's library and each group's, and the rule that a guide is approved only after measured use.</td></tr>
-<tr><td class="id">D12</td><td>Whether members see what AI work costs, before and after, and who sees it.</td></tr>
-<tr><td class="id">D13</td><td>The fence against investigating private individuals: officials only in their official acts, and a cap on how much is gathered about any one person.</td></tr>
-<tr><td class="id">D14</td><td>Test investigations whose answers are written by people, used to check each AI part before members get it. This asks for some of your time or a group's.</td></tr>
-<tr><td class="id">D16</td><td>When nothing left could change the picture, the system offers to keep watching sources or to close, and the member decides.</td></tr>
-<tr><td class="id">D17</td><td>Waits ("waiting on the district's reply, due 14 October") set for the whole project, so every member sees them, not only the one who set them.</td></tr>
-<tr><td class="id">D18</td><td>Whether a member may share a private note with her project, still never as evidence.</td></tr>
-<tr><td class="id">D19</td><td>The opening interview for a new investigation: about six questions on one page, each with why it is asked, all skippable.</td></tr>
-<tr><td class="id">D20</td><td>How the answer is worded: the promise, the contract and the forecasts side by side, never one "late" verdict, and "cause not established" unless a member has authored a cause.</td></tr>
-<tr><td class="id">D21</td><td>Whether the AI may transcribe scanned pages that have no text, labelled as undetermined until measured.</td></tr>
-<tr><td class="id">D22</td><td>A short note beside a source saying what it does and does not say about the question, every sentence tied to a quote.</td></tr>
-<tr><td class="id">D23 †</td><td>The words members see, including a name for the investigation's steps that is not confused with the action plan.</td></tr>
-<tr><td class="id">D24</td><td>The instruction text the AI follows when reading, planning and interviewing. BOB drafts it and you rule on it before any of that ships.</td></tr>
+<tr><th>id</th><th>what it is about</th><th>where it stands</th></tr>
+<tr><td class="id">D1</td><td>The new parts the engine needs (a library of reading guides, why each document is held, steps, the investigation view, an AI planner, an AI reading flow), placed against the design above.</td><td>to be restated once D27–D30 are settled</td></tr>
+<tr><td class="id">D2</td><td>Letting the AI read a held document's text in bounded slices, returning only proposals tied to quotes; the canon says a sub-session never hands back documents.</td><td>later</td></tr>
+<tr><td class="id">D3</td><td>One way to accept anything the system proposes, recording whether it was accepted as proposed, edited, or written by the member herself.</td><td>later</td></tr>
+<tr><td class="id">D4</td><td>How strong a fact is when the AI found it: the quote keeps the document's grade; what it means is the member's judgment.</td><td>later</td></tr>
+<tr><td class="id">D7</td><td>What permits targeted AI work. Your AI-use rules now answer most of this; what remains is whether holding a document for a purpose is itself enough to read it.</td><td>mostly answered</td></tr>
+<tr><td class="id">D8</td><td>Reading guides for recurring documents: Civicsmith's and each group's, approved only after measured use.</td><td>later</td></tr>
+<tr><td class="id">D12</td><td>Showing a rough cost before AI work. Tracking after the fact is answered by your AI-use rules.</td><td>partly answered</td></tr>
+<tr><td class="id">D13</td><td>The fence against investigating private individuals: officials only in their official acts.</td><td>later</td></tr>
+<tr><td class="id">D14</td><td>Test investigations with answers written by people, to check each AI part before members get it.</td><td>later</td></tr>
+<tr><td class="id">D16</td><td>When nothing left could change the picture: watch or close. It now relates to the exploring setting.</td><td>later</td></tr>
+<tr><td class="id">D17</td><td>Waits seen by every member working on a question, not only the one who set them.</td><td>later</td></tr>
+<tr><td class="id">D18</td><td>Sharing a private note with a project, never as evidence.</td><td>later</td></tr>
+<tr><td class="id">D19</td><td>The intake interview, a project step: about six questions on one page, each with why it is asked, all skippable.</td><td>later</td></tr>
+<tr><td class="id">D20</td><td>How answers are worded: baselines side by side, no single "late" verdict, "cause not established" unless a member authored a cause.</td><td>later</td></tr>
+<tr><td class="id">D21</td><td>AI transcription of scanned pages without text, labelled undetermined until measured.</td><td>later</td></tr>
+<tr><td class="id">D22</td><td>A short note beside a source, every sentence tied to a quote.</td><td>later</td></tr>
+<tr><td class="id">D23</td><td>The words members see, including a name for steps not confused with the action plan.</td><td>with the design stream</td></tr>
+<tr><td class="id">D24</td><td>The instruction text the AI follows when reading, planning and interviewing, which you rule on first.</td><td>later</td></tr>
 </table></div>
 
-<h2 id="research">5 · Research</h2>
-
-<h3>What the study set out (6 October)</h3>
-<p>Fourteen realistic investigations, from a school rebuild (your Grandview example) to a sewer-fee diversion, five best-practice papers, six capability studies and three reviews. The proposal: four new parts (a library of reading guides, a record of why each document is held, the plan, the investigation view), one AI planner that fetches nothing, and one AI flow that reads one held document for one purpose. Everything else adds to existing parts. Eight stages, the first three with no AI. Cost per investigation, as an order of magnitude only: about $15–40 small, $100–300 for a Grandview-sized case, $300–1,000 or more over years.</p>
-
+<h2 id="research">6 · Research</h2>
+<h3>The study (6 October)</h3>
+<p>Fourteen realistic investigations, from your Grandview example to a sewer-fee diversion, five best-practice papers, six capability studies and three reviews. It proposed a few new parts and one AI planner and one AI reading flow, with everything else built on what exists, in eight stages, the first three without AI. Order-of-magnitude cost per investigation: about $15–40 small, $100–300 for a Grandview-sized case, $300–1,000 or more over years. Nothing has been measured yet.</p>
 <h3>What the product has today</h3>
 <ul class="plain">
-<li><b>Questions</b> with evidence links (legs), alternative accounts (basis versions), claims, conclusions with a falsifier, strength against the project's bar, contradictions, hypotheses, dated waits.</li>
-<li><b>Documents</b> captured with provenance and grade, read by a tiered reader with OCR; ZIP records productions unpacked; search inside a document.</li>
-<li><b>Objectives</b> with computed progress and gaps; promises and deadlines with their basis; a timeline of what happened and what we did; watching of sources.</li>
-<li><b>Cases</b> published by a project's owner; determinations against standards; action plans and actions with legal clocks.</li>
-<li><b>No step</b> of investigative work anywhere. The nearest: actions (outward only), the action plan's steps (after a finding), to-dos (routed by the system), recheck triggers on a question, objective gaps, and your deferred "backward question" ("what else would have to be true?").</li>
+<li>Questions with evidence links, alternative bases, claims, conclusions with a falsifier, strength against the bar, contradictions, hypotheses and dated waits.</li>
+<li>Documents captured with provenance and grade, OCR, unpacked ZIP productions, and search inside a document.</li>
+<li>Objectives with computed progress and gaps; promises and deadlines with their basis; timelines; watching sources.</li>
+<li>Cases, determinations, action plans and actions with legal clocks; AI accounts, daily limits and use tracking.</li>
+<li>No step of investigative work. That is the main thing this design adds.</li>
 </ul>
-
 <h3>Words that mean more than one thing</h3>
 <div class="senses">
-<div class="sense"><h3>basis</h3><ol><li>a question's legs</li><li>one named version of them</li><li>why a date is due</li><li>what an action rests on</li><li>what a proposal rests on</li><li>a member's grounds for her testimony</li></ol></div>
+<div class="sense"><h3>basis</h3><ol><li>a question's evidence links</li><li>one named version of them</li><li>why a date is due</li><li>what an action rests on</li><li>what a proposal rests on</li><li>a member's grounds for her testimony</li></ol></div>
 <div class="sense"><h3>finding</h3><ol><li>a concluded question</li><li>something the machine noticed</li><li>a check's result</li><li>a recorded absence</li><li>a missing document in a sequence</li></ol></div>
-<div class="sense"><h3>claim</h3><ol><li>the statement on a basis version</li><li>what a published case asserts</li><li>a case's completeness statement</li><li>a legal claim</li></ol></div>
-<div class="sense"><h3>plan and step</h3><ol><li>the action plan and its steps</li><li>the "Plan" inside one action</li><li>"an action: a step someone takes"</li><li>wizard and progress steps</li></ol></div>
 </div>
-<p>The design should give members one meaning each for "finding" and "basis", with other words for the rest (owed to the design stream).</p>
+<p>Members should meet one meaning each for "finding" (a concluded question) and "basis" (what a question rests on). The design stream will draw the other words.</p>
 
-<h3>Rules your plan of 7 October touched</h3>
-<ul class="plain">
-<li>Your "no budgets" of 29 September (for action plans: no costs, assignees or hours).</li>
-<li>The Capability Ladders' "no drift into BI, case management or dashboards". My reading: a plan serving the investigation is within it; timesheets, workload dashboards and scores on members are not.</li>
-<li>No measuring members (DEC-68), no nagging (DEC-69, DEC-94), no record of who opened which file (K1892).</li>
-</ul>
+<h2 id="words">7 · Your rulings, in your words</h2>
+<blockquote><p>"When a question is deferred, it's deferred for that project. But that won't result in it being deferred in another project. Same with dismissed."</p><cite>8 Oct</cite></blockquote>
+<blockquote><p>"D41: A." Then: "The question that 2 projects both have an interest in can only see the question - they can't see that some other project is also asking the same question. What it can see is when a question gets answered. But what does that tell them - that somebody answered the question. But it still doesn't say anything beyond that. It could be a question in a hidden project - or it may not."</p><cite>D41 · 8 Oct</cite></blockquote>
+<blockquote><p>"No, a member recording a step doesn't choose which of these it serves. A step taken anywhere is seen wherever it is." Earlier: "A step is work done in pursuit of an answer to a question - and to provide context for members, in the development of a question, to understand how to respond to findings, and so on. Of course, steps that are project-specific - like the interview - aren't shared." And: "a non-hidden project can be seen by members who have been added to the project, but only by added members if the project is hidden."</p><cite>D35, D40 · 8 Oct</cite></blockquote>
+<blockquote><p>"D36: C." (Finds go to the joined members of every project drawing on the question, each free to follow or stop following.)</p><cite>D36 · 8 Oct</cite></blockquote>
+<blockquote><p>"Implied in the options you've offered is that each type of account owner (group, project, member) can set an overall usage limit, as well as limits on each type of usage. So an account owner can set a limit on proactively exploring a question - and indicate whether that limit is inclusive or exclusive of the overall limit." The exploring setting: "unanswered … no exploring … ask every day (queue) … yes", then "should be called 'No'". "if the group admin says no AI at all, then no AI at the project or member levels either. But if the admin's just saying 'not on my dime', then that's something different."</p><cite>D39 · 8 Oct</cite></blockquote>
+<blockquote><p>"D38: C." Then: "agreed, a project can also say no AI for the kinds of reasons you mention."</p><cite>D38 · 8 Oct</cite></blockquote>
+<blockquote><p>"I think that the system should recognize and support this diversity of AI usage, and give groups and members who are using their own accounts to select which types of uses to enable, put limits on the maximum cost, specify which AI-based civicsmith features are enabled, and track usage over time." Also: "some projects may have additional resources available or have different priorities … [that] affects which account is used, what limits to put on usage, and which AI-based capabilities are enabled." And: "future releases may be able to support a range of AIs, that includes frontier and open models."</p><cite>D34 · 8 Oct</cite></blockquote>
+<blockquote><p>"It's important to clarify that actions that affect the answering of a question rests with members - with the support and guidance of the system. Members can have hunches, hypotheses, and follow leads - as can the system. The system (including AIs) can proactively explore a question (that is, look for answers). They have the capabilities to gauge to what extent the results that they find might contribute to the question - both in support and as contradicting other gathered information. The system can present potentially useful information to members working on a question. But it's the act of members that decide whether information is dismissed or added to the body of evidence (based on its grade and the rules of evidence that apply."</p><cite>D33 · 8 Oct</cite></blockquote>
+<blockquote><p>"A project has an objective it's trying to establish. It does so by posing questions that could be answered (or not) … a step is the work done in pursuit of an answer to a question. Some steps might contribute to answering the question, others may be dead-ends - though we should recognize that even some dead-ends may still contribute to our overall understanding of the world. This understanding is recorded in the form of documents, content, connections, and constructs created while pursuing that step. … the same question may be of interest to more than one objective … A step may be defined to indicate that a member or AI are doing specific work (a step), but sometimes the information that contributes to an answer may be found through happenstance." On what a step keeps when it ends: "agreed". On tying a chance find to a step: "Yes".</p><cite>D32 · 8 Oct</cite></blockquote>
+<blockquote><p>"It was inaccurate of me to talk about members being assigned roles and for there to be subgoals within a project."</p><cite>withdraws assignments, teams and subgoals · 8 Oct</cite></blockquote>
+<blockquote><p>"There needing to be an engine [with] the capabilities we're exporting now. But there also needs to be a member-visible construct that is an investigation. This construct is the project, right? A project has a plan for the investigation …" (steps, dependencies, resources, deadlines and milestones; the parts on teams and leaders later withdrawn).</p><cite>K2075 · 7 Oct</cite></blockquote>
+<blockquote><p>The engine approved as a product goal: the interview, a planner that stays on the objectives and knows why each document is held, research runs, competing explanations and the answer, with the machine proposing and a member accepting. The project becomes the investigation's home. Study first.</p><cite>K1627 · 6 Oct (summarised)</cite></blockquote>
 
-<h2 id="register">6 · Decision register</h2>
-<p><span class="tag t-dir">your direction</span> <span class="tag t-ruled">ruled</span> <span class="tag t-set">settled</span> from canon <span class="tag t-open">open</span> <span class="tag t-pause">paused</span> <span class="tag t-off">withdrawn</span></p>
+<h2 id="register">8 · Decision register</h2>
+<p><span class="tag t-ruled">ruled</span> by you · <span class="tag t-set">settled</span> from canon · <span class="tag t-open">open</span> · <span class="tag t-later">later</span> · <span class="tag t-off">withdrawn</span></p>
 <div class="wrap"><table>
 <tr><th>id</th><th>subject</th><th>state</th></tr>
-<tr><td class="id">D1–D4</td><td>parts; AI reading text; one way to accept; grade of an AI-found fact</td><td><span class="tag t-open">open</span> AI stages</td></tr>
-<tr><td class="id">D5</td><td>why a document is held, stated at capture, is provenance</td><td><span class="tag t-set">settled</span> K2064</td></tr>
-<tr><td class="id">D6</td><td>AI-proposed explanations</td><td><span class="tag t-set">settled</span> by your D33</td></tr>
-<tr><td class="id">D7–D8</td><td>what authorises AI work; reading-guide libraries</td><td><span class="tag t-open">open</span> AI stages</td></tr>
-<tr><td class="id">D9–D11</td><td>a contract is a standard; school districts covered; every AI mode tested before members get it</td><td><span class="tag t-set">settled</span> K2064</td></tr>
-<tr><td class="id">D12–D14</td><td>showing cost; no private people; test investigations</td><td><span class="tag t-open">open</span> AI stages</td></tr>
+<tr><td class="id">D1–D4</td><td>the engine's parts; AI reading text; one way to accept; grade of an AI-found fact</td><td><span class="tag t-later">later</span></td></tr>
+<tr><td class="id">D5</td><td>why a document is held, stated when captured, is part of its provenance</td><td><span class="tag t-set">settled</span> K2064</td></tr>
+<tr><td class="id">D6</td><td>the system's own explanations and hypotheses</td><td><span class="tag t-ruled">ruled</span> by D33</td></tr>
+<tr><td class="id">D7–D8</td><td>what permits targeted AI work; reading guides</td><td><span class="tag t-later">later</span></td></tr>
+<tr><td class="id">D9–D11</td><td>a contract is a standard; school districts covered; every AI part tested first</td><td><span class="tag t-set">settled</span> K2064</td></tr>
+<tr><td class="id">D12–D14</td><td>cost shown before AI work; no private people; test investigations</td><td><span class="tag t-later">later</span></td></tr>
 <tr><td class="id">D15</td><td>working material never published</td><td><span class="tag t-set">settled</span> K2064</td></tr>
-<tr><td class="id">D16–D24</td><td>watch or close; project waits; shared notes; interview; answer's words; image pages; bearing note; member words; instruction text</td><td><span class="tag t-open">open</span></td></tr>
-<tr><td class="id">D25–D26</td><td>teams, subgoals, leaders; assignments</td><td><span class="tag t-off">withdrawn</span> 8 Oct</td></tr>
-<tr><td class="id">D27–D30</td><td>milestones; removing steps; resources; reports (restated around steps on questions)</td><td><span class="tag t-open">open</span> now</td></tr>
-<tr><td class="id">D31</td><td>AI budget for an investigation</td><td><span class="tag t-set">settled</span> by D34</td></tr>
-<tr><td class="id">D32</td><td>what a step is; steps without a question; what a step keeps; chance finds</td><td><span class="tag t-dir">your direction</span> 8 Oct</td></tr>
-<tr><td class="id">D33</td><td>members decide evidence; the system may explore, judge and offer</td><td><span class="tag t-dir">your direction</span> 8 Oct</td></tr>
-<tr><td class="id">D34</td><td>AI use across groups, projects and members: types of use, accounts, cost limits, tracking</td><td><span class="tag t-dir">your direction</span> 8 Oct</td></tr>
-<tr><td class="id">D35</td><td>a step is seen wherever it is taken: a question, the group, or one project; nobody chooses</td><td><span class="tag t-ruled">ruled</span> 8 Oct</td></tr>
-<tr><td class="id">D41</td><td>a step on a shared question taken inside a hidden project is on the question</td><td><span class="tag t-ruled">ruled</span> A, 8 Oct</td></tr>
-<tr><td class="id">D36</td><td>who receives the system's finds: every project's joined members, each free to follow or not</td><td><span class="tag t-ruled">ruled</span> C, 8 Oct</td></tr>
-<tr><td class="id">D40</td><td>what members outside a non-hidden project see of it</td><td><span class="tag t-off">withdrawn</span> as already ruled</td></tr>
+<tr><td class="id">D16–D24</td><td>watch or close; waits; notes; interview; answer's words; scanned pages; note beside a source; member words; instruction text</td><td><span class="tag t-later">later</span></td></tr>
+<tr><td class="id">D25–D26</td><td>teams, subgoals, leaders; assignments</td><td><span class="tag t-off">withdrawn</span></td></tr>
+<tr><td class="id">D27–D30</td><td>milestones; removing steps; resources; reports</td><td><span class="tag t-open">open</span></td></tr>
+<tr><td class="id">D31</td><td>an AI budget per investigation</td><td><span class="tag t-ruled">ruled</span> by D34, D39</td></tr>
+<tr><td class="id">D32</td><td>what a step is; dead ends kept; steps without a question; chance finds</td><td><span class="tag t-ruled">ruled</span></td></tr>
+<tr><td class="id">D33</td><td>members decide evidence; the system explores, judges and offers</td><td><span class="tag t-ruled">ruled</span></td></tr>
+<tr><td class="id">D34</td><td>the range of AI use; accounts, limits, uses and tracking at group, project and member level</td><td><span class="tag t-ruled">ruled</span></td></tr>
+<tr><td class="id">D35</td><td>a step is seen wherever it is taken</td><td><span class="tag t-ruled">ruled</span></td></tr>
+<tr><td class="id">D36</td><td>who receives the system's finds</td><td><span class="tag t-ruled">ruled</span> C</td></tr>
 <tr><td class="id">D37</td><td>a project's own AI settings, set by its owners</td><td><span class="tag t-set">settled</span> from D34</td></tr>
-<tr><td class="id">D38</td><td>when AI settings disagree: limits on material bind everyone; money limits bind their own account</td><td><span class="tag t-ruled">ruled</span> C, 8 Oct</td></tr>
-<tr><td class="id">D39</td><td>exploring unasked where enabled; overall and per-use limits, inclusive or exclusive; the setting No / Ask every day / Yes; a group's "no AI at all" binds everyone</td><td><span class="tag t-ruled">ruled</span> 8 Oct</td></tr>
+<tr><td class="id">D38</td><td>limits on material bind everyone; money limits bind their own account</td><td><span class="tag t-ruled">ruled</span> C</td></tr>
+<tr><td class="id">D39</td><td>exploring: No, Ask every day, Yes; overall and per-use limits, inclusive or exclusive</td><td><span class="tag t-ruled">ruled</span></td></tr>
+<tr><td class="id">D40</td><td>what members outside a project see</td><td><span class="tag t-off">withdrawn</span>, as already ruled</td></tr>
+<tr><td class="id">D41</td><td>a step on a shared question taken inside a hidden project is on the question</td><td><span class="tag t-ruled">ruled</span> A</td></tr>
 </table></div>
-
-<h2 id="sources">7 · Sources and history</h2>
-<ul class="plain">
-<li>6 Oct: you approve the engine and ask for a study (K1627). The study runs the same day.</li>
-<li>7 Oct: BOB re-presents its 24 decisions, settling five (K2064). You give your plan for an investigation (K2075) and ask for this design lane (K2076).</li>
-<li>7 Oct: "The Investigation Plan" sets your plan against canon (D25–D31).</li>
-<li>8 Oct: you withdraw roles and subgoals and ask for the relationship study ("Steps, Basis, Claims, Findings"). You define a step (D32) and who decides evidence (D33). "The Work on a Question" follows. All four pages are folded in here.</li>
-</ul>
-<p>Source in the repository: <code>docs/development/investigation-design/</code> on branch <code>design/investigation</code>, which also holds the decision register and the handoff to BOB.</p>
+<p class="note">Source: <code>docs/development/investigation-design/</code> on branch <code>design/investigation</code>, which also holds the handoff to BOB, who turns rulings into requirements.</p>
 </main>
