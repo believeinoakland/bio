@@ -41,3 +41,7 @@ Numbered entries; BOB answers each in rulings (K) on `tranche/T<n>`. Decision st
 ## H7 · 2026-10-08 · D39 settled: the exploring setting
 
 **Carries:** Bob's words in `DECISIONS.md` (D39 entries of 2026-10-08). **Requirements must say:** per account owner (group, project, member), an exploring setting No / Ask every day / Yes; "No" means not paid from this account and does not inherit; "Ask every day" raises at most one queue item a day to the account's owner(s), only when something is worth exploring, silence meaning no; "Yes" runs within the overall limit and the exploring limit (inclusive or exclusive of the overall); a group administrator's "no AI at all" binds project and member levels, a group money setting binds only the group key (D38). **Owed to the UX stream:** one setting per account; an override only on an open project or question.
+
+## H8 · 2026-10-08 · D36 ruled; D40 withdrawn
+
+**Carries:** Bob, "D36: C": the system's finds on a question reach, once in the queue, the joined members of every project drawing on it; each member may unfollow or follow a question; nobody receives what she may not already see. D40 withdrawn: Bob confirmed project contents are seen only by participants, hidden or not (his ruling of 2026-09-18 stands). Still open: D35's reading (steps live with a question, the group's general understanding, or one project; a hidden project's steps stay inside it unless shared).

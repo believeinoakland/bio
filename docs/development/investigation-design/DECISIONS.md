@@ -75,3 +75,5 @@ This lane's reading (to confirm): a step is shared unless project-specific; it l
 | D40 | what members outside a non-hidden project see of it: A existence and name only (as ruled 2026-09-18); B its contents too; C contents chosen by the project | open |
 
 **D40 closed, Bob, 2026-10-08:** "Sorry what I meant to say is that a non-hidden project can be seen by members who have been added to the project, but only by added members if the project is hidden." Consistent with his ruling of 2026-09-18 (Membership §7.14): a project's contents are seen only by its participants; a non-hidden project's existence and name are seen group-wide. D40 is withdrawn as a question (option A, as already ruled). D35's reading (steps live with a question, the group's general understanding, or one project; the hidden-project fence) still awaits his confirmation.
+
+**D36 ruled, Bob, 2026-10-08: "D36: C".** The system's finds on a question go to the joined members of every project that draws on it, by default; each member may stop following a question, or follow one; every member receives only what she may already see.
