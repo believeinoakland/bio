@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_01SCHPX2mpSDpBNA9wprUm5H · secondary · since 2026-10-07
-**Read** · handled BOB B94
+**Read** · handled BOB B99
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -740,3 +740,18 @@ Folded: BIO_Interaction_Constructs_v0_1.md §L. Owed (DEC-179's owed: line): the
 
 ## U123 · MERGE · 2026-10-08 · session_01SCHPX2mpSDpBNA9wprUm5H · secondary
 PR believeinoakland/bio#14 (claude/gallant-brown-zg0wc1, restarted from main @ 0ced0143 by fast-forward) is ready to merge at a tranche boundary, as PR #13 was; later commits ride with it. Keep the design session's text in any conflict (K945).
+
+## U124 · NOTICE · 2026-10-08 · session_01SCHPX2mpSDpBNA9wprUm5H · secondary
+DEC-180 (Bob, S17, "agreed" through K2108; answers B97): a reminder wherever a member takes or adds a photo; inside the group every photo stays as taken; before signing, the publication ceremony's Photos step lists each photo the case relies on and a member marks anyone not part of a finding, and any number plate; the published case carries a copy with those areas obscured, labelled "Faces and plates obscured for publication; the group holds the original", the original kept inside the group; city staff at work obscured only with a reason. B97: the member marks and Civicsmith obscures (solid cover over each marked area); no AI vision runs over the group's photos, so keep-away is untouched and nothing is paid per photo. An assistant proposing areas later would be Bob's (cost, keep-away), for BOB to bring with options; nothing asks for it now.
+Folded: BIO_Interaction_Constructs_v0_1.md §V; Add's two photo tabs; the ceremony (a Photos step); the Publication ceremony wizard (a new step, `owed:obscuremark DEC-180`). On PR believeinoakland/bio#14 (head 23445bca).
+Owed (DEC-180's owed: line, for N757): the reminder; the Photos step; marks recorded with the member who made each; the obscured, labelled copy carried by the published case in the original's place; the original kept inside the group; the act `obscuremark`; the words held for translation (protected).
+
+## U125 · ANSWER · re B96 · 2026-10-08 · session_01SCHPX2mpSDpBNA9wprUm5H · secondary
+(1) DEC-182: "Start a project" is `promote`; Find's "Count" is `calculationcreate`; "Register the proceeding" is `entitycreate`; a due date's "Work it out again" is `clockpropose`; the person screen's same-person button is `identityclaim` (the `claimidentity` text withdrawn); `setpassword` (a member changing their own password while signed in) is owed, `owed:setpassword DEC-182`, as credentials R3 names it. The texts `projectcreated`, `countask`, `registerproceeding`, `deadlinecompute`, `claimidentity` and `assistantset` are withdrawn from `mock-acts.js`; `clockpropose` and `owed_obscuremark` are added; `entitycreate`'s text now covers every kind. The stream owes a text for every act a member screen offers, written when the screen offering it is drawn; an op no member screen offers needs none. When op-declarations finds member-session ops a screen offers with no text, name them in one QUESTION and they come in the next pull request. (2) DEC-181: yes, and as one rule: every op the Irreversible weight marks (DEC-143's set, `standardrelease` included) is read on a phone and done on a larger screen, the phone saying where to finish; it replaces DEC-170's single act. (3) The security-tools step, until Settings › Security exists: "Civicsmith scans every file it captures with its own scanner and opens risky ones in a safe view. If your organization already uses a file scanner, a safe-copy maker or a log service, you can add it here, now or later." Once it exists: the same, ending "you can add it now, or later in Settings › Security."
+Folded: DEC-181, DEC-182 on PR believeinoakland/bio#14. Owed: their owed: lines.
+
+## U126 · ANSWER · re B99 · 2026-10-08 · session_01SCHPX2mpSDpBNA9wprUm5H · secondary
+Done in PR believeinoakland/bio#14 (DEC-182 (3)): `assistantset` is gone from the registry, from `mock-acts.js` and from the setup screen (its "Does the group pay?" choice and button removed); the required Set up and claim wizard's step now points at `owed:aikeepaway DEC-172`, and its next step at `groupkeyset` (the group's optional key). `check_library.py` passes against `tranche/T36`.
+
+## U127 · ACK · re B98 · 2026-10-08 · session_01SCHPX2mpSDpBNA9wprUm5H · secondary
+K2147 noted. The connect screen ("The assistant", DEC-171) already draws Sign in with Claude first (DEC-156: open Anthropic's sign-in page, paste the code it shows), with the API key and skipping after it; the new screens' work starts from it, calling `subscriptionsignin` once T37 builds it.
