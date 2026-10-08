@@ -16,7 +16,17 @@
  * C-120.9 was withdrawn unstamped (K1275), and its number is never reused. T33 adds a person named without a recorded
  * basis, a basis that stands on nothing, and a signer who has not attested to their ties (R25, R27). T37 adds a marked
  * photo a load-bearing finding relies on whose format cannot be covered, and a photo whose marks could not be read (R6;
- * N757, K2206). A change to any row moves `CATALOG_VERSION` (rule 17). */
+ * N757, K2206). T38 adds a photo a case relies on that no standing mark has checked (R6; DEC-183 (1), K2303). A change
+ * to any row moves `CATALOG_VERSION` (rule 17). */
+
+/** R22 (T38; DEC-183; K2220): the protected words of `words.json` (`docs/development/ux-substrate/screens/words.json`)
+ *  this module answers, by their keys, each `en` verbatim; `{photo}` is the photo named. The rows' translations and
+ *  R29's `words` are read from here by key, so each is held once. */
+export const PHOTO_WORDS = Object.freeze({
+  'photo.refused.format': 'This photo\'s format can\'t be obscured: {photo}. Capture it again as an ordinary photo, or '
+    + 'stop relying on it.',
+  'photo.refused.unchecked': 'Signing waits until every photo the case relies on is checked: {photo}.',
+});
 
 const at = (fn, region) => `src/case-disclosures/index.mjs ${fn} > ${region}`;
 
@@ -125,22 +135,29 @@ export const CASE_DISCLOSURE_CHECKS = Object.freeze({
     translation: 'Each member who signs a case first attests that they hold no undeclared tie to anyone or anything the '
       + 'case names, including those paid or paying in its money. Attest, or declare the tie first. Nothing was written.',
   },
-  /* R6 (T37; N757; DEC-180 (3), (4); K2206): a marked photo whose cover `image-cover` refused is neither carried whole
-     nor left out, so a load-bearing chain reaching it is refused; a photo whose marks cannot be read fails closed. New
-     in T37, numbered provisionally C-120.17 and C-120.18 until promotion's stamp (T38); the translations are BOB's
-     drafts the UX stream may re-word. */
+  /* R6 (T37; N757; DEC-180 (3), (4); K2206; T38: DEC-183 (1), K2220, K2303): a photo whose cover `image-cover` refused,
+     marked or not, is neither carried whole nor left out, so a load-bearing chain reaching it is refused; a photo whose
+     marks cannot be read fails closed. New in T37, stamped C-120.17 and C-120.18 in 1.65.0 (T38-6). T38 re-words
+     C-120.17 to `words.json`'s `photo.refused.format` (read by key, protected, `{photo}` the photo named): a changed
+     row, awaiting its stamp. */
   PHOTO_NOT_COVERABLE: {
     check: 'C-120.17',
     where: at('materialsJudged', 'is-photo-coverable'),
-    translation: 'A photo a finding in this case relies on has people or number plates marked to be obscured, and its '
-      + 'format cannot be covered, so the case can neither carry it whole nor leave it out. It is named. Capture the '
-      + 'photo again in a format that can be covered, such as a standard JPEG or PNG, or stop relying on it. Nothing '
-      + 'was written.',
+    translation: PHOTO_WORDS['photo.refused.format'],
   },
   PHOTO_MARKS_UNDETERMINED: {
     check: 'C-120.18',
     where: at('materialsJudged', 'is-photo-marks-determined'),
     translation: 'A photo this case relies on could not be checked for the people and number plates marked in it, so '
       + 'what the published case would show of it is not known. Try again. Nothing was written.',
+  },
+  /* R6 (T38; N788 (1); DEC-183 (1), superseding K2206's "never blocks"; K2220, K2291, K2303): the Photos step is a gate.
+     A photo with no standing mark that any member's chain reaches blocks signing. New in T38, numbered provisionally
+     C-120.19 until promotion's stamp (T39); its translation is `words.json`'s `photo.refused.unchecked`, read by key,
+     protected, `{photo}` the photo named. */
+  PHOTO_UNCHECKED: {
+    check: 'C-120.19',
+    where: at('materialsJudged', 'is-photo-checked'),
+    translation: PHOTO_WORDS['photo.refused.unchecked'],
   },
 });
