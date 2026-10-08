@@ -183,7 +183,9 @@ const sameEnv = (a, b) => {
  *  `record` (`recordOf(ctx)`), `provenance` (`provenanceOf(ctx)`), `attestation` (`attestationOf(ctx)`, K1224),
  *  `acquisition` (`acquisitionOf(ctx)`, its archive records, T35) and
  *  `ownHosts` (the group's own hosts, T35, R73; none by default, adopted from the first caller that names them, as
- *  `governor`). A later call's option is never silently
+ *  `governor`), and `reputation` (a reader of the reputation tool, acquisition R44) and `fileScanner` (the
+ *  `FILE_SCANNER` binding) (T37, R73; each adopted from the first caller that supplies it, a later one ignored, never
+ *  compared: a function has no value to compare). A later call's option is never silently
  *  dropped (N122: a first caller without `env` stripped the plane's renderer from every later one): an `env` or
  *  `governor` the instance took by default is adopted from the first later caller that supplies it, and one that
  *  differs from what an earlier caller supplied throws, naming the option. A test may pass its own. */
@@ -219,6 +221,7 @@ export function captureOf(ctx, opts = {}) {
   if (opts.env != null && !given.has("env")) { c.env = opts.env; given.add("env"); }
   if (opts.governor != null && !given.has("governor")) { c.governor = opts.governor; given.add("governor"); }
   if (opts.ownHosts != null && !given.has("ownHosts")) { c.ownHosts = Capture.hostsOf(opts.ownHosts); given.add("ownHosts"); }
+  c.adoptReputation(opts);
   return c;
 }
 
@@ -248,9 +251,10 @@ function registerFigures(c) {
 
 export class Capture {
   #sql; #storage; #listeners = new Map(); #readers = new Map(); #declared = false; #acquisition = null; #acquisitionHost = null;
+  #reputationReader = null; #fileScanner = null;
 
   constructor(storage, { record, env = {}, governor = null, provenance = null, attestation = null, credentials = null,
-                         acquisition = null, acquisitionHost = null, ownHosts = [] } = {}) {
+                         acquisition = null, acquisitionHost = null, ownHosts = [], reputation = null, fileScanner = null } = {}) {
     this.#storage = storage;
     this.#sql = storage.sql;
     this.core = record;
@@ -268,7 +272,29 @@ export class Capture {
     /* R73 (T35; F16): the group's own hosts (the copy's own and every fleet member's), built by the composition root
        (`plane`), read off this store by `acquisition` R42 and `capture-sources` R55, R65. */
     this.ownHosts = Capture.hostsOf(ownHosts);
+    /* R73 (T37): the reputation reader as acquisition (its R44) reads it off the store handed in: a function that calls
+       the reader at each call and answers what it answers (a promise, a throw, any value: acquisition judges it), so
+       the plane's per-call reader (`plane` R29) reaches every acquisition, never a value read once; null with none
+       handed in. A reader handed in as a value (a tool spec, as acquisition R44 also takes it) is answered as it is.
+       An own arrow, so it answers the same when read off the store and called detached. */
+    this.reputation = () => {
+      const reader = this.#reputationReader;
+      return typeof reader === "function" ? reader() : reader ?? null;
+    };
+    this.adoptReputation({ reputation, fileScanner });
   }
+
+  /** R73 (T37; N774, K2155): the reputation reader and the `FILE_SCANNER` binding, each adopted from the first caller
+   *  that supplies it; a later one is ignored, never compared (a function has no value to compare) and never refused,
+   *  so R58 stays as it is for `env`. */
+  adoptReputation({ reputation = null, fileScanner = null } = {}) {
+    if (reputation != null && this.#reputationReader == null) this.#reputationReader = reputation;
+    if (fileScanner != null && this.#fileScanner == null) this.#fileScanner = fileScanner;
+  }
+
+  /** R73: the `FILE_SCANNER` binding handed in, which acquisition (its R44) reaches the scanner through; null with none. */
+  get fileScanner() { return this.#fileScanner; }
+
 
   /** R73 (T35): acquisition's instance, the one given, else `acquisitionOf` over this host's storage made when first
    *  reached (a record without record-core's table seam, a test's stand-in, reads as none: the archive acts then answer
