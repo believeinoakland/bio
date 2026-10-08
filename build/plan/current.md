@@ -53,6 +53,7 @@
 - **T39-14 · case-disclosures** · (N806) R6's member-document arm, R7's copy row, C-120 rows with BOB's translations · K2333.
 
 - **T39-17 · case-checker** · (N806) its readable `/3` specification (`spec.mjs`:179–220, its R14) names a member document's cleaned copy beside a photo's for the `obscured` kind; words only, no format change · K2333, K2343 · req: R14's wording.
+- **T39-18 · case-authoring** · (N806; a provided service changed in this tranche, P10's exception, mechanics §7) its tests compose the real case-disclosures over the real case-carriage: give the fixture (`test/m/case-authoring/fixture.mjs`:278–280) and `photos.test.mjs`:35's stand-in a `documentCopy` answer (case-carriage R16), so a load-bearing document reads as its real state, and test that a chain refused `DOCUMENT_COPY_PENDING`, `DOCUMENT_COPY_UNDETERMINED` or `DOCUMENT_NOT_CLEANABLE` (case-disclosures R6, R22) is answered by `publishCase` as case-disclosures answers it, writing nothing (R18) · K2374 · req: none changed; if its requirements do not state that relay, the job asks BOB (QUESTION) · merges after case-disclosures.
 
 ### L10
 - **T39-15 · scheduler** · (N806) calls `case-carriage.copyBatch` on `copyWake`, the edge · K2333.
