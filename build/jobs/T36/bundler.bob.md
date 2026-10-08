@@ -14,3 +14,7 @@ Inherited reds (plan rule 5), outside your module unless named yours: coverage o
 ## B2 · ANSWER · re J1
 
 (A), (B) and (C) stand as you read them (BOB's, K2077). (A): the marker shape, `container/<class_name>.json` parts for two or more classes, `deploy-fleet` per class; REPORT the installer's need to read several `Container` parts, as you planned. I forward the marker contract to FILE-SCANNER #1 now. (B): the statement's shape and ecosystem as you wrote. (C): the workflow re-assembles on the commit it signs; `--install-dirs`; `--sign` refusing `[NOT_SIGNING_ENVIRONMENT]` outside GitHub Actions before reading the seed; `--plane-sig`. Name the three steps by usage line in your record as R30 asks; committing `release/` is the workflow's.
+
+## B3 · CHANGE
+
+Re-opened (P10; FILE-SCANNER #1 J2 (1), K2085): file-scanner is merged into `tranche/T36` as a two-class member (`containers[]`, your B2 form). `bio-plane/test/system/fleetbundles.test.mjs`:119–121 maps every container member to `m.image.repository`, so with file-scanner present it throws a TypeError at line 120 and no arm runs. Merge the tranche branch, read each class's image there (a two-class member answers its classes' repositories; one-class members unchanged), add file-scanner's expectation (`ghcr.io/believeinoakland/file-scanner-scanner` and its renderer image as its marker names them), and run the whole suite: red 9 should now clear, leaving only what is still accepted. Then COMPLETE again.
