@@ -2,6 +2,32 @@
 
 **Status** · session_01GXLVBfXBcg51dL2ddA46vX · depth 2 · WORKING · handled B1
 
+### Work (EXTRACTION #17)
+
+**Reading set (mechanics §17).** BOB's measure was 611 KB. On §3's reading (own requirements 37 KB, the module's code about 183 KB, plus each used module's Purpose and named services) it is still over 300 KB, so I followed START (3), trimming nothing.
+- **Read whole myself:** `build/requirements/extraction.md`; layer 4's row of `build/layers.md`; office-readers R11; `bio-plane/src/extraction/index.mjs` (all 1,560 lines: the migration, the writer, the history); `n26.test.mjs`; `fixture.mjs`; `r70.test.mjs`; `schema.mjs`'s `reading_history` and `reading_migrations`; and record-core's `declarePurge` and `purge` (the services my change relies on).
+- **Read by my worker, whole:** `extractrun.mjs`, `drift.mjs`, `checks.mjs`, `ops.mjs`, `filemembership.mjs`, `schema.mjs`, and the other 17 test files. Its summary is about 11 KB; every statement cites file and line.
+  - It cites the schema of the history, migrations and readings tables. It confirms that no path in those files writes a reading, so `writeReading` is the only writer.
+  - It maps the existing R23, R66, R68 and R70 tests and their helpers.
+  - It flagged three points: a reading with no history row counts as old (:1232); a cutoff on a rowid can be reused after a purge; and r70.test.mjs:143–158 contradicts the amended R66. All three mattered and are dealt with below and in J1.
+
+**Entries.**
+- **T38-8 (N786), R66 as K2290.**
+  - **BOB's finding is confirmed.** The cutoff is taken at boot, before any write (`index.mjs`:1147–1166). `writeReading` (:653) always leaves the capture's last history row holding the reading it wrote (`#keepReading`, :760–790), and :1232 skips anything after the cutoff. A reading carrying `paras` therefore reaches neither `moveCells` nor `n26MigratedReading`.
+  - **One path broke it: a whole-store purge.** The purge deleted the migrations' row, so it was re-created with a cutoff taken over readings written after the purge. I measured an N26 reading carrying `paras` being migrated on that path (J1).
+  - **Fixed on my reading in J1, with no renumbering arm.** `reading_migrations` is now declared exempt from the purge (`EXTRACTION_EXEMPT`, `declareTables`). The schema comment is corrected.
+- **Tests** (n26.test.mjs, R66 in each title):
+  - BOB's case, for a box branch and for a run-only branch: a reading carrying `paras` with its last row after the cutoff is skipped with the exact message "read after N26", and every row of it is unchanged.
+  - A store whose migration is done, then a whole-store purge, then a restart: the reading is never migrated, and the migrations' row stands. Its negative control fails without the fix.
+  - Every write keeps a last history row holding the reading, through the promotion projection, the writer, and a second bundle writing the same reading.
+  - r70.test.mjs:143's synthetic pre-N26 cells drop `paras`.
+
+**Found, not changed: a history row can be lost after it is written.** A later bundle purge, or the `readinghistoryclear` seam, can remove the history row of a reading carrying `paras`. Example: a second bundle writes the same reading, so no row of its own is kept, and the first bundle is then purged. Such a reading counts as old (:1232) only if a migration runs again. With the migrations' row now exempt, that happens only on a store whose migration never finished. Every store's migration finished at T19/T20 boot, so I built nothing for it.
+
+**Stale generated artifacts:** `release/bio-plane.bundled.mjs` and `newgroup/src/release.mjs`, which carry `extraction/index.mjs`. They are reported to BOB, not edited.
+
+**Runs:** extraction 135/0; record-core and corpus-export 188/0, since the purge declaration changed. The manifest names no layer tests.
+
 ## J1 · QUESTION
 
 BOB's finding holds in the code, with one exception: a whole-store purge.
