@@ -89,28 +89,27 @@ test("R61 at start this module registers its provider with case-tensions, whose 
     assert.equal([...PUBLICATION_TABLES.map((x) => x.name), ...PUBLICATION_EXEMPT].includes(t.name), false, `${t.name} is not this module's`);
 });
 
-/* N597 (T35): the names case-tensions serves, which this module delegated until each importer re-pointed. */
+/* N597 (T35, T36): the names case-tensions serves, which this module delegated until each importer re-pointed;
+   `caseRelation` the last (T36, K1643). */
 const MOVED_METHODS = ["caseTensions", "observationsNamingAuthor", "attributionInForce", "attributionFacts", "attributionStatedFor",
-                       "dischargeCaseFlags", "flagCasesOnRevision", "caseFlags", "attributionStatements", "attributeObservation"];
+                       "dischargeCaseFlags", "flagCasesOnRevision", "caseFlags", "attributionStatements", "attributeObservation",
+                       "caseRelation"];
 const MOVED_EXPORTS = ["ATTRIBUTION_ACT_CHECKS", "CASE_FLAGS_LIMIT", "ATTRIBUTION_REASON_MAX", "CASE_TENSIONS_MAX"];
 
-test("R61 (T35, N597) this module serves none of case-tensions' services and re-exports none of its names: no delegate and no re-exported constant is left; caseRelation alone answers here, exactly as case-tensions' does at every state of the relation; the case-grammar re-exports are unchanged", () => {
+test("R61 (T35, T36; N597, K1643) this module serves none of case-tensions' services and re-exports none of its names: no delegate, caseRelation included, and no re-exported constant is left, while case-tensions answers each; the case-grammar re-exports are unchanged", () => {
   const { w, proj, roles } = signed();
   const ct = caseTensionsOf(w.host);
   for (const name of MOVED_METHODS) {
     assert.equal(typeof ct[name], "function", `the control: case-tensions serves ${name}`);
     assert.equal(name in w.p, false, `${name}: no delegate here`);
   }
-  for (const name of MOVED_EXPORTS) {
-    assert.ok(name in CT, `the control: case-tensions exports ${name}`);
-    assert.equal(name in PUB, false, `${name}: not re-exported here`);
-  }
-  /* caseRelation: pinned by a signed edition, prepared into an unsigned one, in none, and an id nobody holds */
+  for (const name of [...MOVED_METHODS, ...MOVED_EXPORTS])
+    assert.equal(name in PUB, false, `${name}: not exported here`);
+  for (const name of MOVED_EXPORTS) assert.ok(name in CT, `the control: case-tensions exports ${name}`);
+  /* the case relation is case-tensions' alone, at every state: pinned, prepared, in none */
   w.inquiry(G);
   w.prepare(CASE, 2, { project: proj, roles: [...roles, { target: G, version_sha: w.head(G) }] });
-  for (const id of [F, G, DOC, "INQ-2026-0099", "", null])
-    assert.deepEqual(w.p.caseRelation(id), ct.caseRelation(id), `caseRelation(${id})`);
-  assert.equal(w.p.caseRelation(F).member, true, "the control: a pinned member answers as one");
+  assert.deepEqual([F, G, DOC].map((id) => !!ct.caseRelation(id).member), [true, true, false], "the control: case-tensions answers it");
   /* the case-grammar re-exports, unchanged: each the same binding as case-grammar's */
   for (const name of ["CASE_DOCUMENT_FORMAT", "caseDocumentStatesMemberBlocks", "caseDocumentBlocks", "captureBlockLines",
                       "sourceBlockLines", "publishedGraphEdges", "ATTRIBUTION_LEVELS", "REAUTHORABLE_SECTIONS", "caseTensionsOf"])

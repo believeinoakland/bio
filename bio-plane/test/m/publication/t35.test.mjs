@@ -231,3 +231,68 @@ test("R33 R67 (N687) a waiting edition no publisher could check is stopped with 
     assert.deepEqual(w.p.scheduledEditions({}).editions[0].reasons, out.taken[0].reasons, "R69 answers the row");
   }
 });
+
+/* ---------------------------------------------------------------- R75 (T36; N717, K2129) */
+
+/* The roster of R72's first test: every kind of row (a binding standard with two passages, a benchmark by its requires
+   passages, the same portion for another body, a standard no longer held, and a member stating no body). */
+function everyKind(w) {
+  return [
+    member(w, "INFO-2026-0101-first", { subject: CLERK, legs: [{ target: A, portion: "s.3", content: C1 },
+      { target: "INFO-2026-0001-minutes" }, { target: A, portion: "s.3", content: CX }, { target: A, portion: "s.3", content: C2 },
+      { target: B }] }),
+    member(w, "INFO-2026-0102-second", { subject: BOARD, legs: [{ target: A, portion: "s.3", content: C1 }, { target: GONE, portion: "s.1" }] }),
+    member(w, "INFO-2026-0103-third", { legs: [{ target: B, content: C4 }] }),
+  ];
+}
+const asMembers = (roles) => roles.map((r) => ({ bundle_id: r.target, version_sha: r.version_sha }));
+
+test("R75 criteriaFor answers {rows}, exactly the criteria R72's commit records for the same members, signer and UTC day: one row per distinct (standard, portion, body), binds, access, passages, label and access words, a standard no longer held stated not held; read as the signer on the day of `at`; it writes nothing", () => {
+  const { w, proj, standards } = base();
+  const roles = everyKind(w);
+  const at = "2026-09-28T23:59:00Z";
+  const before = w.snapshot();
+  const pre = w.p.criteriaFor({ members: asMembers(roles), signer: "olive", at });
+  assert.deepEqual(w.snapshot(), before, "it writes nothing");
+  assert.equal(pre.rows.length, 5);
+  assert.deepEqual(standards.calls.filter((x) => x[0] === "bindsAt").map((x) => x[3]), [DAY, DAY, DAY], "the UTC day of `at`");
+  assert.ok(standards.calls.every((x) => (x[0] === "standardRead" ? x[2] : x[4]) === V("olive")), "read as the signer");
+  /* the commit by the same signer on the same day records exactly these rows */
+  assert.equal(sign(w, proj, roles).ok, true);
+  assert.deepEqual(w.p.caseEditionState(CASE, 1).criteria, pre.rows, "a preparation and its commit cannot disagree");
+  assert.deepEqual(Object.keys(pre), ["rows"]);
+  /* a change in the record between them is the one way they differ: the read follows the record, the edition stays frozen */
+  standards.binding[`${A}|${BOARD}`] = "binds";
+  const later = w.p.criteriaFor({ members: asMembers(roles), signer: "olive", at });
+  assert.deepEqual(later.rows.find((r) => r.body === BOARD && r.standard === A).binds, true);
+  assert.deepEqual(w.p.caseEditionState(CASE, 1).criteria, pre.rows);
+  /* another day is read on that day */
+  standards.calls.length = 0;
+  w.p.criteriaFor({ members: asMembers(roles), signer: "olive", at: "2027-01-02T00:00:00Z" });
+  assert.ok(standards.calls.filter((x) => x[0] === "bindsAt").every((x) => x[3] === "2027-01-02"));
+});
+
+test("R75 the founder's reads are `admin`; members targeting no standard answer rows []; a member whose bytes cannot be read contributes no row; a standards read that throws is a row stated not held; malformed arguments never throw", () => {
+  const { w, standards } = base({ standards: standardsOf({ [A]: "throw" }) });
+  const roles = [member(w, "INFO-2026-0101-first", { subject: CLERK, legs: [{ target: A, content: C1 }] })];
+  const r = w.p.criteriaFor({ members: asMembers(roles), signer: null, at: NOW });
+  assert.deepEqual(r.rows, [{ standard: A, portion: null, designation: null, edition: null, issuer: null, citation: null, access: null,
+    body: null, binds: null, passages: null, label: null, access_words: null, stated: "not held" }]);
+  assert.deepEqual(standards.calls, [["standardRead", A, "admin"]], "the founder reads as admin");
+  const plain = [member(w, "INFO-2026-0104-plain", { subject: CLERK, legs: [{ target: "INFO-2026-0001-minutes" }] })];
+  assert.deepEqual(w.p.criteriaFor({ members: asMembers(plain), signer: "olive", at: NOW }), { rows: [] });
+  /* unreadable bytes: a sha nobody holds, a bundle nobody holds, a member with no id; the readable member still answers */
+  const { w: w2 } = base();
+  const ok = everyKind(w2).slice(2);
+  const unreadable = [{ bundle_id: ok[0].target, version_sha: "0".repeat(64) }, { bundle_id: "INFO-2026-0999-none", version_sha: null },
+                      { version_sha: ok[0].version_sha }, null, "x"];
+  const mixed = w2.p.criteriaFor({ members: [...unreadable, ...asMembers(ok)], signer: "olive", at: NOW });
+  assert.deepEqual(mixed, w2.p.criteriaFor({ members: asMembers(ok), signer: "olive", at: NOW }));
+  assert.equal(mixed.rows.length, 1);
+  assert.deepEqual(w2.p.criteriaFor({ members: unreadable, signer: "olive", at: NOW }), { rows: [] });
+  for (const bad of [undefined, null, {}, { members: "x" }, { members: [{}] }, 7])
+    assert.deepEqual(w2.p.criteriaFor(bad), { rows: [] }, JSON.stringify(bad));
+  /* a record that throws is no row and no throw */
+  w2.record.textAtSha = () => { throw new Error("down"); };
+  assert.deepEqual(w2.p.criteriaFor({ members: asMembers(ok), signer: "olive", at: NOW }), { rows: [] });
+});
