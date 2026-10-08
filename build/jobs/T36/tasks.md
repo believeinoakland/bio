@@ -28,3 +28,7 @@ Size (session_01V667ubum8HnBqPmhryNfLm): test runs 6, module lines 1443
 ## J1 · REPORT
 
 Generated artifact made stale: the plane bundle (bio-plane/dist/bio-plane.bundled.mjs) embeds tasks, changed by T36-45; for L11's close regeneration (§14). R1 and R18 are met at my head: their *(not yet met: T36)* marks in build/requirements/tasks.md can be struck at merge. Nothing else outside tasks.
+
+## J2 · COMPLETE
+
+T36-45 applied: taskDrain and #backoffWake read capture's queue in pages past each page's last cursor (one reader, #eachQueued); a waiting event no longer uses up limit; no event read twice, by construction; stand-ins honour after (queueRead in world.mjs; ledger.test.mjs :53, :76). Three new tests, negative control shown. tasks 101/0; users' 15 failures identical to my change stashed (rule 5 reds); format, architecture, coverage (18/18), ownership (5 files): 0 failures. P6 1,443 lines. Nothing deferred. Record: Completion (T36-45; R1, R18).
