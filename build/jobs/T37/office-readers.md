@@ -22,3 +22,10 @@
 **P6** · the module's four files total 3,816 lines (3,809 at T36), well under 4,000.
 
 Size (session_01LP5svq8XNYaHCh7k7jeXoZ): test runs 14, module lines 3816
+
+## J1 · REPORT
+
+Two tests in other modules hand-write the `.docx` cell shape, so they go red once office-readers emits `paras` (R11 as amended). Both pass on `tranche/T37` without this change.
+1. extraction: `bio-plane/test/m/extraction/r70.test.mjs`:47 pins the six R30 keys (1 of 132 fails). T37 has no extraction entry. The fix is `paras` in that key list (and line 110's `cell` helper if its readings should carry it). Either it becomes an entry or a named red until one exists.
+2. reading-pipeline: `bio-plane/test/m/reading-pipeline/emitted.test.mjs`:129 (`dc`, the R28 test "exactly as the real docx entry emits them") (1 of 92 fails). T37-9 is the entry that carries `paras` and changes it.
+Every other user's tests are green (odf-reader, format-registry, budget-doctypes, file-safety, workbooks, retrieval, content). No generated artifact is stale beyond the plane bundle BOB regenerates at the layer close.
