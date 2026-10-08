@@ -44273,6 +44273,7 @@ async function readingProvenance({
   out.text_from = flat2.source;
   out.text_chars = flat2.text.length;
   out.text_sha256 = flat2.text.length ? await sha256Hex9(flat2.text) : null;
+  if (!flat2.text.length) out.why = "the text this document yielded is empty, so there is nothing to digest";
   const byKey = /* @__PURE__ */ new Map();
   const credit = (t2, engine, page2, fallback = null) => {
     const member2 = t2 == null ? fallback : TIER_MEMBERS[t2] ?? null;
@@ -45176,6 +45177,14 @@ function emittedFieldsOf(i2text) {
     for (const sh of i2text.sheets)
       if (isObj47(sh) && typeof sh.name === "string") cells[sh.name] = Array.isArray(sh.cells) ? sh.cells : null;
     out.cells = cells;
+  } else if (isObj47(i2text) && i2text.container === "docx") {
+    if (!Array.isArray(i2text.tables)) out.cells = null;
+    else {
+      const cells = {};
+      for (const t2 of i2text.tables)
+        if (isObj47(t2) && typeof t2.ref === "string" && t2.ref) cells[t2.ref] = Array.isArray(t2.cells) ? t2.cells : null;
+      out.cells = cells;
+    }
   }
   return out;
 }
@@ -45588,9 +45597,26 @@ function n26MigratedReading(reading2, map, text7, { at: at35 = null } = {}) {
         if (typeof x === "string") o[k] = x.replace(new RegExp(`${from}(?![0-9])`, "g"), to);
     return o;
   };
-  const OWN = /* @__PURE__ */ new Set(["text_source", "provenance", "container_extent", "basis", "migrated"]);
+  const moveCells = (cells) => {
+    if (!cells || typeof cells !== "object" || Array.isArray(cells)) return cells;
+    const counted = { ...moved };
+    const keyed2 = [];
+    for (const [key, list6] of Object.entries(cells)) {
+      const m = /^table ([1-9][0-9]*)$/.exec(key);
+      const old = m ? Number(m[1]) - 1 : null;
+      const t2 = old == null ? null : map.tables[old];
+      const to = old == null || !t2 ? old : t2.new;
+      if (old != null && to == null) continue;
+      keyed2.push([to, old == null ? key : `table ${to + 1}`, walk3(list6)]);
+    }
+    Object.assign(moved, counted);
+    keyed2.sort((a, b) => a[0] == null ? b[0] == null ? 0 : 1 : b[0] == null ? -1 : a[0] - b[0]);
+    return Object.fromEntries(keyed2.map(([, k, v]) => [k, v]));
+  };
+  const OWN = /* @__PURE__ */ new Set(["text_source", "provenance", "container_extent", "basis", "migrated", "cells"]);
   const next = {};
   for (const [k, v] of Object.entries(reading2)) next[k] = OWN.has(k) ? v : walk3(v);
+  if (Object.prototype.hasOwnProperty.call(reading2, "cells")) next.cells = moveCells(reading2.cells);
   next.text_source = reading2.text_source.map((s) => isDocxLayer(s) ? { ...s, reader: N26_READER_MARK } : s);
   const ce = reading2.container_extent;
   if (ce && typeof ce === "object") {
