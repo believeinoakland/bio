@@ -13,3 +13,7 @@ Name R3's and R23's new clauses in explicit tests (K874), with a case file that 
 Merge order in L8 (`modules.json` order): case-grammar → case-carriage → publication → public-read → ratification → case-checker → case-disclosures → case-authoring → review.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there, item 17 with `plan/t37-red-census.md`); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Take the full fix in this job (K2223): the pool keeps only what this edition's commit held, through publication.heldMaterialsOf(case, edition); your Uses line now names it on tranche/T37 (merge it). Keep your narrower walk too. Your second reading stands.
