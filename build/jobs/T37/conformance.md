@@ -29,3 +29,7 @@ The entry's R28 test (every row's `where` function holds its region) finds five 
 My best reading, applied and green (conformance 81/81): the test checks the region lies inside the named function (what a `where` means to an auditor), so all seven rows are re-pointed (`#actEvent`, `#determine`, `#propose`, `#comparedAct`), codes, numbers and translations unchanged. Consequence: from my merge `bio-plane/test/system/row-census.test.mjs` is red for seven rows (fixture 1.64.0 lines 206, 212, 222, 225, 226, 228, 229), not the accepted two, until T38's stamp.
 The alternative: the test checks only that the named function exists and the region exists in the file; then only C-113.34/.35 change (red 2 as planned) and the other five stay mis-pointed, deferred to a later job.
 Question: accept red 7 at the census (my reading), or narrow to red 2?
+
+## J2 · COMPLETE
+
+T37-36 done on B2: seven rows re-pointed (C-113.12, .19, .29, .31, .32, .34, .35 to #determine, #propose, #actEvent, #comparedAct), codes, numbers, translations unchanged; t37.test.mjs names R28 R23, reads every row against the source with negative controls. Conformance 81/81; format, architecture, coverage (29/29), ownership (3 files) 0 failures. Accepted red: bio-plane/test/system/row-census.test.mjs, for exactly the seven C-113 rows (fixture 1.64.0 lines 206, 212, 222, 225, 226, 228, 229) until T38's stamp (B2, K2231); its C-140.40–.42 inherited. Stale generated artifact for BOB: dist/bio-plane.bundled.mjs holds the old wheres. Size 2,085 lines. Record: completion section on job/T37/conformance.
