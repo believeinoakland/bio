@@ -1,6 +1,6 @@
 # explore (T36)
 
-**Status** · session_013jCD29K2Ak5HWZGMPQjE64 · depth 2 · WAITING ON BOB (J1) · handled B1
+**Status** · session_013jCD29K2Ak5HWZGMPQjE64 · depth 2 · WORKING · handled B1
 
 ## Reading set (mechanics §17, N739)
 
