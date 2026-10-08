@@ -40,7 +40,7 @@ const SCREEN_REFS = {
   "join": [
     ["13 October 2026",null,"<b>Expires 13 October 2026</b> · an invitation lasts seven days · this one created by Rosa on 6 October · works once","After that the link stops working and Rosa must create a new one."],
     ["contribute",null,"<b>Contribute</b> · what this invitation lets you do · add to the record, open questions, take part in projects","It sets what you can do once you join; an administrator can change it later."],
-    ["handle",null,"<b>Handle</b> · the name the record shows on your work · not your legal name unless you choose · you can change it later","It appears on any public case your work is in, so choose it with that in mind."],
+    ["handle",null,"<b>Handle</b> · the name the record shows on your work · not your legal name unless you choose · changeable until your work first appears in a published case","Once your work is in a published case it is fixed, so choose it with that in mind."],
     ["pen name",null,"<b>Pen name</b> · a handle that is not the name people know you by · the administrators still know who you are","Shields you from pressure if a published case names your work."],
     ["administrators",null,"<b>Administrators</b> · members who invite and manage members · Lakeshore Tenants has one, Rosa","They know who you are even under a pen name, and see the ties you declare."],
     ["public cases","published","<b>Public cases</b> · a group's signed, published findings · permanent, corrected only by a new edition","A handle on your work there is public too; that is the choice the guidance weighs."]
@@ -54,14 +54,14 @@ const SCREEN_REFS = {
   "members": [
     ["hosting account",null,"<b>Hosting account</b> · the Cloudflare account the group's Civicsmith runs in · holder recorded at setup: Rosa Medina","Whoever signs in to it controls everything; with one administrator, the group depends on Rosa and on whoever holds it."],
     ["cover",null,"<b>Cover</b> · how the group knows a member, beside their handle · not a legal name · recorded when they are invited","Lets administrators know who each handle is without the record holding legal names."],
-    ["Mai K.",null,"<b>Mai K.</b> · invited to contribute as mai.k · cover: from the Seminary Ave block · link works once, for seven days","Withdraw it if it went to the wrong person; until it is used, anyone holding the link can join."],
+    ["Mai K.",null,"<b>Mai K.</b> · invited to contribute as mai-k · cover: from the Seminary Ave block · link works once, for seven days","Withdraw it if it went to the wrong person; until it is used, anyone holding the link can join."],
     ["declared: CPA",null,"<b>Declared: CPA</b> · Ana's own statement · certified public accountant · not yet confirmed here","Confirming it records that an administrator checked it; members ask her to check calculations either way."],
     ["contribute",null,"<b>Contribute</b> · a capability · add to the record, open questions, take part in projects","Every member here holds it; it is what an invitation grants by default."],
     ["administer",null,"<b>Administer</b> · a capability · invite and remove members, hold the group's key, change the group's settings","Only Rosa holds it, so the group depends on her alone."],
     ["$31.40 this month",null,"<b>$31.40 this month</b> · Anthropic's charges to the group's key, October so far · split by member","The group pays it; administrators see who spent what, never what was asked."]
   ],
   "account": [
-    ["mai.k",null,"<b>mai.k</b> · your handle · shown on your work in the record and on any public case it is in","Change it here before your work reaches a published case if you would rather use a pen name."],
+    ["mai-k",null,"<b>mai-k</b> · your handle · shown on your work in the record and on any public case it is in","You can still change it here: none of your work is in a published case yet. After that it is fixed."],
     ["check work in your field",null,"<b>Checks by expertise</b> · a member asks another with declared expertise to check their work · e.g. Ana, a CPA, checked a calculation","Declaring yours, such as Spanish–English interpreting, lets members send you checks in that field."],
     ["signing key",null,"<b>Signing key</b> · a key held in this browser · signs what you approve under your handle, such as a case you own","Without one registered here you cannot sign; revoking it ends this browser's key for good."]
   ],

@@ -545,8 +545,8 @@
       {
        "screen": "members",
        "act": "memberadd",
-       "what": "Who: their handle, and the cover the group knows them by. Not a legal name.",
-       "why": "The record never needs a legal name. Administrators keep the cover so they know who is who."
+       "what": "Who: a short id for the invitation, and the cover the group knows them by. Not a legal name.",
+       "why": "They choose their own handle when they join. The record never needs a legal name; administrators keep the cover so they know who is who."
       },
       {
        "screen": "members",

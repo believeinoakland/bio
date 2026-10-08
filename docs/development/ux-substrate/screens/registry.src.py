@@ -17,7 +17,7 @@ screen('setup', 'Become your group\'s first administrator', 'setup', 'The founde
 screen('group-identity', 'Who your group is', 'working', 'Kinds, focus and purpose, and who sees them (DEC-132).',
   [('groupdescriptionset','Save who your group is, and who sees it'),('owed:groupdescriptiondraft DEC-152','Ask the assistant to help write it')], [2])
 screen('join', 'Your invitation', 'setup', 'The invitation link opens here: language, handle, password.',
-  [('invitelook','Read the invitation'),('owed:memberlanguageset DEC-127','Choose your language'),('enroll','Join with a handle and password')], [3])
+  [('invitelook','Read the invitation'),('owed:memberlanguageset DEC-127','Choose your language'),('owed:handlecheck DEC-184','See whether a handle is free'),('enroll','Join with a handle and password')], [3])
 screen('home', 'Your group\'s home', 'working', 'What the group is working on, what waits on you, and "What brought you here?".',
   [('promote','Start a project'),('owed:startfrom DEC-129','Start from…')], [3,6])
 screen('members', 'Members', 'working', 'The roster: invitations, capabilities, expertise, administrators, joining through the website.',
@@ -27,7 +27,7 @@ screen('members', 'Members', 'working', 'The roster: invitations, capabilities, 
 screen('security', 'Security', 'working', 'Administrators only: how hard the group\'s Civicsmith is being tried over a period they choose, by kind and hour against its usual; counts only; told only when risk is high (K1875, K1874, DEC-165).',
   [('owed:securitymap K1875','Show the level for a period'),('owed:securitytooladd K1929','Add a security tool'),('owed:securitytooltest K1929','Test a security tool'),('owed:securitytoolremove K1929','Remove a security tool')], [27])
 screen('account', 'Your account', 'working', 'Handle, password, language, expertise, signing key, theme.',
-  [('expertisedeclare','Declare your expertise'),('owed:setpassword DEC-182','Change your password'),('signerregisterown','Register your signing key'),('signerrevokeown','Revoke your signing key'),('owed:memberlanguageset DEC-127','Choose your language'),('owed:infolevelset DEC-162','Choose how much is explained')], [3,16])
+  [('expertisedeclare','Declare your expertise'),('owed:handlechange DEC-186','Change your handle'),('owed:setpassword DEC-182','Change your password'),('signerregisterown','Register your signing key'),('signerrevokeown','Revoke your signing key'),('owed:memberlanguageset DEC-127','Choose your language'),('owed:infolevelset DEC-162','Choose how much is explained')], [3,16])
 screen('connect', 'The assistant', 'working', 'The member\'s own API key or subscription token, or the group\'s key where it offers one, or none; their daily limit; suggestions on or off (K1547, K1755).',
   [('groupkeynoticeseen','Read what the group\'s key means'),('disclosureshown','Read what connecting means'),('owed:subscriptionsignin DEC-156','Open Anthropic\'s sign-in page'),('accountreferenceset','Connect with your own subscription or key'),('aiceilingset','Set your daily limit'),('accountswitchset','Let the assistant suggest unprompted'),('accountreferenceremove','Disconnect')], [4,17])
 screen('ties', 'Your ties', 'working', 'The member\'s own ties, seen only by them and administrators (K1490).',
