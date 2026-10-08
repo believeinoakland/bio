@@ -36,3 +36,7 @@ R6's `signin` "carried with `level` `member`, `suggestions` `false` and no `secr
 ## J2 · REPORT
 
 bundler: `bio-plane/test/system/fleetbundles.test.mjs`:237, the pin on agent-worker's 23 inputs, is red after my rebuild. agent-model's T38-9 renamed `agent-model/src/subscription.mjs` to `signin.mjs`, so the committed manifest (`agent-worker/dist/agent-worker.bundle.json`) now records `../agent-model/src/signin.mjs` in its place. It is still 23 inputs and nothing else differs; the staleness arm for agent-worker passes. The pin needs re-pinning from the committed manifest (bundler's). My change adds no `src/` file.
+
+## J3 · COMPLETE
+
+T38-10 (N785, its share) complete, as K2299 reads it. `signin` is carried as `{kind: "signin", level: "member", member, suggestions: false}`: refused `BAD_ACCOUNT` with a `secret` key, with `suggestions` present and not `false`, at group level, or with no or an empty member. It is judged available by its member, and handed to agent-model as `{kind: "signin", member}`. `subscription` is retired (`ACCOUNT_KINDS` = apikey, signin). I merged the tranche after T38-9 and rebuilt the bundle (23 inputs, no new src/ file). All 12 agent-worker suites pass, 0 fail (ask 62, cascade 71, requirements 305, …). format, architecture, coverage (62/62) and ownership each report 0 failures. One finding for bundler: the fleetbundles pin is red on agent-model's rename (J2). Record: `build/jobs/T38/agent-worker.md` on `job/T38/agent-worker`.
