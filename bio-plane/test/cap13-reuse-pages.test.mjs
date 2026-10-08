@@ -93,9 +93,27 @@ const mf = new Miniflare({
     return new Response("nope", { status: 404 });
   },
 });
+/* A member's own session (the shared member key is retired, MEMBER_TOKEN_RETIRED): enrolled by the administrator and
+   signed in with the member's password; every credential travels in the Authorization header, never the address
+   (CREDENTIAL_IN_ADDRESS). */
+const signIn = async () => {
+  const post = async (q, body, token) => {
+    const j = await (await mf.dispatchFetch(`http://x/api/?${q}`, { method: "POST", body: JSON.stringify(body),
+      headers: token ? { authorization: `Bearer ${token}` } : {} })).json();
+    return j && typeof j === "object" && "result" in j ? j.result : j;
+  };
+  const add = await post("op=memberadd", { memberId: "m1", cover: "cover for m1", role: "member", capabilities: ["contribute"] }, "adm-c13");
+  if (!add || !add.invite) throw new Error(`memberadd: ${JSON.stringify(add)}`);
+  const en = await post("op=enroll", { invite: add.invite, handle: "m1", password: "m1-passphrase-c13" });
+  if (!en || !en.ok) throw new Error(`enroll: ${JSON.stringify(en)}`);
+  const lg = await post("op=login", { role: "member:m1", password: "m1-passphrase-c13" });
+  if (!lg || !lg.token) throw new Error(`login: ${JSON.stringify(lg)}`);
+  return { authorization: `Bearer ${lg.token}` };
+};
+const MEMBER = await signIn();
 const acquire = async (path) =>
-  (await mf.dispatchFetch("http://x/api/?op=acquire&token=mem-c13",
-    { method: "POST", body: JSON.stringify({ locator: ORIGIN + path, authority: "City of Oakland", subresources: true }) })).json();
+  (await mf.dispatchFetch("http://x/api/?op=acquire",
+    { method: "POST", headers: MEMBER, body: JSON.stringify({ locator: ORIGIN + path, authority: "City of Oakland", subresources: true }) })).json();
 const cssCount = (p) => FETCHED.filter((x) => x === p).length;
 const partFor = (res, p) => (res.subresources || []).find((r) => new URL(r.url).pathname === p) || null;
 const whyNot = (res, p) => ((res.snapshot && res.snapshot.reuse && res.snapshot.reuse.not_reused) || [])

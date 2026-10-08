@@ -38,6 +38,30 @@ const send = async (q, init) => {
   let body = null; try { body = JSON.parse(text); } catch { body = null; }
   return { status: res.status, body, text };
 };
+/* A member's own session (the shared member key is retired, MEMBER_TOKEN_RETIRED): enrolled by the administrator and
+   signed in with the member's password. Every credential travels in the Authorization header, never the address
+   (CREDENTIAL_IN_ADDRESS). */
+let session = null;
+const bearer = (token, init = {}) => ({ ...init, headers: { ...(init.headers || {}), authorization: `Bearer ${token}` } });
+const signedIn = async () => {
+  if (session) return session;
+  const post = async (q, token, body) => (await send(q, bearer(token, { method: "POST", body: JSON.stringify(body) }))).body;
+  const add = await post("op=memberadd", T.admin, { memberId: "m1", cover: "cover for m1", role: "member", capabilities: ["contribute"] });
+  const unwrap = (j) => (j && typeof j === "object" && "result" in j ? j.result : j);
+  const invite = unwrap(add) && unwrap(add).invite;
+  if (!invite) throw new Error(`memberadd: ${JSON.stringify(add)}`);
+  const en = unwrap((await send("op=enroll", { method: "POST", body: JSON.stringify({ invite, handle: "m1", password: "m1-passphrase-capture" }) })).body);
+  if (!en || !en.ok) throw new Error(`enroll: ${JSON.stringify(en)}`);
+  const lg = unwrap((await send("op=login", { method: "POST", body: JSON.stringify({ role: "member:m1", password: "m1-passphrase-capture" }) })).body);
+  if (!lg || !lg.token) throw new Error(`login: ${JSON.stringify(lg)}`);
+  return (session = lg.token);
+};
+const member = async (q, init = {}) => {
+  const res = await mf.dispatchFetch(`http://x/api/?${q}`, bearer(await signedIn(), init));
+  const text = await res.text();
+  let body = null; try { body = JSON.parse(text); } catch { body = null; }
+  return { status: res.status, body, text };
+};
 
 test("R30 R54 (K649 (7)): op=knock is reached at the door with no token, through capturePublicOp, and answers as the doorbell does", async () => {
   const k = await send("op=knock", { method: "POST", headers: { "cf-connecting-ip": "203.0.113.8" }, body: JSON.stringify({ contentText: "a tip for the group" }) });
@@ -51,17 +75,19 @@ test("R30 R54 (K649 (7)): op=knock is reached at the door with no token, through
 
 test("R21 R27 R73 (K649 (7)): op=capture, op=links, op=archivelookup and op=acquire are reached behind the token through captureOp; acquire is read by extraction and carries the grade note", async () => {
   const bytes = "evidence held by digest", d = sha(bytes);
-  const put = await send(`op=capture&token=${T.member}&sha256=${d}`, { method: "PUT", body: bytes });
+  const put = await member(`op=capture&sha256=${d}`, { method: "PUT", body: bytes });
   assert.deepEqual([put.status, put.body.ok, put.body.existed], [200, true, false], put.text);
-  const got = await send(`op=capture&token=${T.member}&sha256=${d}`);
+  /* capture's own read (R21) answers the binding classes; a member session's GET of bytes is file-safety's opening
+     (control-plane R62, file-safety R8), so the read here is the administrator's */
+  const got = await send(`op=capture&sha256=${d}`, bearer(T.admin));
   assert.deepEqual([got.status, got.text], [200, bytes]);
-  const none = await send(`op=capture&token=${T.member}&sha256=${sha("never")}`);
+  const none = await send(`op=capture&sha256=${sha("never")}`, bearer(T.admin));
   assert.deepEqual([none.status, none.body.reason], [404, "EVIDENCE_NOT_HELD"]);
-  const links = await send(`op=links&token=${T.member}&address=${encodeURIComponent("https://t.example/u")}`);
+  const links = await member(`op=links&address=${encodeURIComponent("https://t.example/u")}`);
   assert.deepEqual([links.status, links.body.ok, links.body.count], [200, true, 0], links.text);
-  const al = await send(`op=archivelookup&token=${T.member}`, { method: "POST", body: JSON.stringify({ address: "https://t.example/d" }) });
+  const al = await member(`op=archivelookup`, { method: "POST", body: JSON.stringify({ address: "https://t.example/d" }) });
   assert.ok(al.body && al.status !== 404 && al.body.reason !== "STORE_DID_NOT_ANSWER", al.text);
-  const acq = await send(`op=acquire&token=${T.member}`, { method: "POST", body: JSON.stringify({ locator: "https://docs.example.org/minutes.txt" }) });
+  const acq = await member(`op=acquire`, { method: "POST", body: JSON.stringify({ locator: "https://docs.example.org/minutes.txt" }) });
   assert.equal(acq.status, 200, acq.text);
   assert.equal(acq.body.note, ACQUIRE_GRADE_NOTE);
   assert.equal(acq.body.document.capture.sha256, sha("the minutes of the meeting"));
