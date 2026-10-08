@@ -13,7 +13,7 @@
 
 **Deferred.** Nothing.
 
-**Found in another module (REPORT J2).** control-plane `index.mjs`:654, `windowed.source ?? await sourceOf(req, env)`: when the window was not read (a store fault), the fallback now asks the same store a second time for an unbound key. The result is right (`null` again on a dead store) but costs one extra request on the fault path only. Improvement for control-plane: drop the fallback for a public op, since the window's source is the fingerprint. Not urgent.
+**Found in another module (REPORT J1).** control-plane `index.mjs`:654, `windowed.source ?? await sourceOf(req, env)`: when the window was not read (a store fault), the fallback now asks the same store a second time for an unbound key. The result is right (`null` again on a dead store) but costs one extra request on the fault path only. Improvement for control-plane: drop the fallback for a public op, since the window's source is the fingerprint. Not urgent.
 
 **Generated artifacts.** None made stale (the plane bundle is regenerated at layer close, per the manifest).
 
