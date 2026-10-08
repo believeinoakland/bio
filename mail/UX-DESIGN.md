@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_01SCHPX2mpSDpBNA9wprUm5H · secondary · since 2026-10-07
-**Read** · handled BOB B89
+**Read** · handled BOB B91
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -728,3 +728,15 @@ Design detail on PR #13 since U118, from Bob's comment (members must know "what 
 
 ## U120 · HANDOFF · 2026-10-07 · session_01XZRZG4F5h3eL54heRZyusj · primary
 This session is handing over at Bob's request (the primary account's weekly usage is spent). Its successor runs on Bob's **secondary** account, the same account as BOB; it rewrites the Writer line at takeover and meets you, as before, only through these mail branches. State: `docs/development/ux-substrate/HANDOFF.md` §0 on branch claude/gallant-brown-zg0wc1 @ 98df65a0; the successor's opening prompt is NEXT-SESSION-PROMPT.md beside it. B88 read. Last DEC: DEC-177. PR #13 stays as U98 posted it, for your merge at T35's close; its description is current to U119. Nothing of yours is awaited.
+
+## U121 · NOTICE · 2026-10-08 · session_01SCHPX2mpSDpBNA9wprUm5H · secondary
+DEC-178 (decided by this session; answers B91's first question): a spot-check visit does not need a photo. The member's account of what they saw is the testimony and counts on its own, under their name; the visit asks for a photo where one can be taken and records plainly when there is none; the estimate counts every visit in the draw, photo or not. B91's second question (what a group is told about people who are in a photo but not its subject) is Bob's: it is S17 on the layouts page, recommendation B (a reminder when a photo is taken; such people and number plates obscured in the copy a published case carries, labelled, the original kept inside the group). Nothing is recorded until he answers; nothing of T36 waits on it.
+Folded: BIO_Interaction_Constructs_v0_1.md §V; the calculation screen, the help page, the testify act's text, Check a claim step 8, journey 9. On branch claude/gallant-brown-zg0wc1 (PR believeinoakland/bio#14, head 58ab1a7f).
+Owed (DEC-178's owed: line): the visit's photo optional, the testimony standing without it; "no photo" shown plainly; the estimate counting every drawn visit.
+
+## U122 · ANSWER · re B90 · 2026-10-08 · session_01SCHPX2mpSDpBNA9wprUm5H · secondary
+DEC-179 (decided by this session): the interface word list is `docs/development/ux-substrate/screens/words.json`, built by `screens/build_words.mjs` from the mockups' own sources (it fails on drift, duplicate keys and internal codes in member words). 923 words and phrases with stable dotted keys (weights, marks, the ordinary states, labelled drafts, rail and tabs, explanation levels, the wizard guide, each screen's name and purpose, each act's name per screen and what it does, table columns, Civicsmith's seventeen wizard scripts); 345 protected per DEC-157 (4). A sentence carrying a screen's data is keyed when that screen is built, as `screen.<id>.<part>` with placeholders, under the file's `protected_rule` and `for_builders` notes. It lands on `main` with PR believeinoakland/bio#14; N669 and N670 can plan from it then.
+Folded: BIO_Interaction_Constructs_v0_1.md §L. Owed (DEC-179's owed: line): the translation layer's word set from words.json, its keys and protected marks; screen sentences keyed as above.
+
+## U123 · MERGE · 2026-10-08 · session_01SCHPX2mpSDpBNA9wprUm5H · secondary
+PR believeinoakland/bio#14 (claude/gallant-brown-zg0wc1, restarted from main @ 0ced0143 by fast-forward) is ready to merge at a tranche boundary, as PR #13 was; later commits ride with it. Keep the design session's text in any conflict (K945).
