@@ -85,3 +85,7 @@ T37-27 applied; the record's Completion section has the detail. ACT_HELP is re-g
 - architecture: 0 failures. coverage: 34 of 34; 0 failures. ownership: 0 failures.
 
 Size (session_0187SVNmLrMtUDuMD6BfqRLx): test runs 25, module lines 2280
+
+## J3 · COMPLETE
+
+B2 and B3 applied on the merged tranche (record: 'Completion after B2 and B3'). aikeepaway R19 is green (red 14 cleared). Re-pinned with controls: the t31 R36 phone oracle (IRREVERSIBLE_WEIGHT arm) and LARGER_SCREEN_ACTS = [filingsent]; the catalogue reversible band (T37's three translation acts) and undetermined set (obscuremark, translationdraft, translationmark); t34 R45 27 aliases, claimidentity none. The t36 owed_ and claimidentity pins were already met. Wizard library v2: nothing of mine reads it. Module 218/218. Checks: architecture, coverage and ownership 0 failures each; format 1 failure, not mine (modules.json instance-setup path bio-plane/src/setup-words.mjs names no file, present on the tranche without my change).
