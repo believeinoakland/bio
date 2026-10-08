@@ -1,6 +1,6 @@
 # queue (T36)
 
-**Status** · session_019AZwL2DAm7ic4sUi9n3hkC · depth 2 · WORKING · handled B2
+**Status** · session_019AZwL2DAm7ic4sUi9n3hkC · depth 2 · COMPLETE · handled B2
 
 ## Reading (mechanics §17, N739)
 
