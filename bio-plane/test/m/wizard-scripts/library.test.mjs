@@ -12,7 +12,7 @@ import * as wz from "../../../src/wizard-scripts/index.mjs";
 const A = V("alice"), F = V("frank"), E = V("erin"), D = V("dave");
 const src = (f) => readFileSync(new URL(`./source/${f}`, import.meta.url), "utf8");
 const REG_FILE = JSON.parse(src("registry.json")), LIB_FILE = JSON.parse(src("library.json"));
-const OWED = /^owed:([a-z][a-z0-9]*)(?:\s+(DEC-\d+))?$/;
+const OWED = /^owed:([a-z][a-z0-9]*)(?:\s+(DEC-\d+|K\d+))?$/;   /* a ruling owes it: a DEC or a K (PR #13) */
 /* Every op the registry names, owed ones as their op: the member op table once each owed op is declared. */
 const ALL_OPS = [...new Set(REG_FILE.screens.flatMap((s) => s.acts.map((a) => (a.status === "owed" ? OWED.exec(a.op)[1] : a.op))))];
 const OWED_OPS = [...new Set(REG_FILE.screens.flatMap((s) => s.acts.filter((a) => a.status === "owed").map((a) => OWED.exec(a.op)[1])))];
@@ -27,9 +27,9 @@ const refused = (r, c, why = "") => {
 
 test("R13 SCREEN_REGISTRY is DEC-139's registry as the file holds it, screen by screen and act by act: [{id, name, purpose, acts}], acts the declared and function ops in the file's order, owed acts apart; frozen; its source the vendored file", () => {
   const sha = createHash("sha256").update(src("registry.json"), "utf8").digest("hex");
-  assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: "d129238bf3", path: "docs/development/ux-substrate/screens/registry.json", sha256: sha });
+  assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: "36da334628", path: "docs/development/ux-substrate/screens/registry.json", sha256: sha });
   assert.equal(wz.SCREEN_REGISTRY.length, REG_FILE.screens.length);
-  assert.equal(wz.SCREEN_REGISTRY.length, 42);
+  assert.equal(wz.SCREEN_REGISTRY.length, 47);
   REG_FILE.screens.forEach((f, i) => {
     const s = wz.SCREEN_REGISTRY[i];
     assert.deepEqual([s.id, s.name, s.purpose], [f.id, f.name, f.purpose], f.id);
@@ -45,15 +45,28 @@ test("R13 SCREEN_REGISTRY is DEC-139's registry as the file holds it, screen by 
   assert.ok(Object.isFrozen(wz.SCREEN_REGISTRY) && Object.isFrozen(wz.SCREEN_REGISTRY[0]) && Object.isFrozen(wz.SCREEN_REGISTRY[0].acts));
 });
 
+test("R13 (T36; K2130) the registry is re-taken from PR #13's merge to main, its commit named as the source, so connect is \"The assistant\"; the library keeps its own commit (R22): each file names its own", () => {
+  assert.equal(wz.SCREEN_REGISTRY_SOURCE.commit, "36da334628");
+  assert.deepEqual(REG_FILE.screens.find((f) => f.id === "connect").name, "The assistant", "the vendored file is PR #13's");
+  const connect = wz.SCREEN_REGISTRY.find((s) => s.id === "connect");
+  assert.equal(connect.name, "The assistant");
+  const w = seeded({ register: false });
+  w.wz.wizardRegister({ library: [] });
+  assert.deepEqual(w.wz.registeredScreens().find((s) => s.id === "connect").acts, [...connect.acts], "registered by default");
+  assert.ok(!JSON.stringify(wz.SCREEN_REGISTRY).includes("The assistant and your account"), "the old name is gone");
+  assert.equal(wz.CIVICSMITH_LIBRARY_SOURCE.commit, "d129238bf3", "the library is not re-taken (R22)");
+});
+
 test("R13 a registration without screens registers SCREEN_REGISTRY; an owed act is registered as its op, in the file's order, only once the member op table declares it; with no op table none is", () => {
   const w = seeded({ register: false });
   const r = w.wz.wizardRegister({ ops: ALL_OPS.filter((o) => o !== "memberlanguageset"), library: [] });
-  assert.deepEqual([r.ok, r.screens], [true, 42]);
+  assert.deepEqual([r.ok, r.screens], [true, 47]);
   const by = Object.fromEntries(w.wz.registeredScreens().map((s) => [s.id, s.acts]));
   assert.deepEqual(by.join, ["invitelook", "enroll"], "memberlanguageset undeclared: not registered");
   assert.deepEqual(by.home, ["projectcreated", "startfrom"], "startfrom declared: registered at its place");
   assert.deepEqual(by.ceremony, ["publishpreflight", "publishtensions", "caseratify", "publish", "publishat"]);
-  assert.deepEqual(by.setup.slice(5, 8), ["entitycreate", "placewanted", "assistantset"], "an owed act between two declared ones keeps its place");
+  assert.deepEqual(by.setup.slice(6, 10), ["placewanted", "assistantset", "aikeepaway", "groupkeyset"], "an owed act between two declared ones keeps its place");
+  assert.deepEqual(by.security, ["securitymap", "securitytooladd", "securitytooltest", "securitytoolremove"], "an act a K ruling owes, as one a DEC owes");
   assert.deepEqual(by.notes, ["notewrite", "noteturn", "noterevise", "notedelete", "writinghelp"]);
   assert.deepEqual(by.account, ["expertisedeclare", "setpassword", "signerregisterown", "signerrevokeown", "infolevelset"]);
   /* every registered act is the file's, in the file's order */

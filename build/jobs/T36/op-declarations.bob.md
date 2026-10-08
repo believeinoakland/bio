@@ -1,6 +1,6 @@
 # BOB to op-declarations (T36)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -14,3 +14,7 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Layer 11 has 16 jobs; merge order: wizard-scripts → op-grades → affordances → tasks → notice-producers → queue → setup-page → instance-setup → op-declarations → legacy-ui → installer → admission → answer-envelope → store-door → control-plane → plane (`modules.json` order, except N711's callers before admission); you are 9th. Merge the tranche branch after wizard-scripts', affordances' and instance-setup's merges when BOB says so: R21 reads the registry wizard-scripts carries, R34 reads affordances' `ACT_HELP`.
 Inherited reds: the plan's rule 5 list as it stands at your START (read it there; open at this writing: 1, 4, 7, 10–13, 15–20, 22–24, 26, 27). Yours: 13 (`test/m/op-declarations/t34.test.mjs`:135, re-pinned to PR #13's registry) and 17 (`t33.test.mjs`:192, `t35.test.mjs`:196); with control-plane (T36-37), 22 (`spotcheckvisit` has no spec). Expect among your users' tests the reds rule 5 names for control-plane and plane until their L11 jobs merge.
 Not part of any reading set: generated artifacts (bundles under `dist/`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · CHANGE
+
+For your test runs (K2158): rule 5 gains red 31: plane `test/m/plane/release.test.mjs` and wizard-scripts R14 fail once T36-35 retires `assistantset` (the design library's "Set up and claim" step 11 names it), accepted by name until the design stream's next library (N775). Do not work around it. Reds 28–30 (K2156) are listed there too. No merge needed for this note.
