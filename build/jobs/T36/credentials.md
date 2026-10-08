@@ -37,3 +37,9 @@ Other modules. op-declarations (T36-35): t33.test.mjs:192 ('credentials: aikeepa
 ## J3 · COMPLETE
 
 T36-7 done: R29 (security:<tool_id>, sets of fields, a set with no key removes), R35 (AI_KEPT_AWAY before any account; R27, R32, R24 the same; own reference always served otherwise), R45 (level: null on failure), R49 securityTotals, R50 securitycount route, R51 aiKeepAwaySet, R52 aiKeepAwayState. Rows for T36-8: new C-29.31 AI_KEPT_AWAY, C-29.32 NO_REASON, C-96.44 SECURITY_COUNTS_UNREADABLE; changed where of C-96.43 SECURITY_PERIOD_INVALID (#periodRefusal). New table ai_keep_away; additive column keyed_services.form. Tests 119/0; format, architecture, coverage (51/51), ownership 0 failures; users' suites green but op-declarations (J2). 2,690 lines. Record: build/jobs/T36/credentials.md on job/T36/credentials.
+
+## Completion of B2 (CHANGE; K2089, red 14)
+
+R4's `SIGN_IN_REFUSED` detail (`LOGIN_REFUSAL_DETAIL`) re-worded to need no name and address no one, meaning unchanged: "Either no active credential is held under that role …" and "… which roles hold a credential." (DEC-149 allows either; D-57). R48's test re-pinned to the new words, with a D-57 arm (no "you", "your", "yours"). No row changed (the detail is not a row's translation). Tests: `test/m/credentials/` 119 pass, 0 fail; `node test/members.test.mjs` 96 pass, 0 fail (BOB expected 95; the suite now holds 96). Checks: format, architecture, coverage (51/51), ownership: 0 failures.
+
+Size (session_01DuWUHZfSSRpYU5V4qt2iss): test runs 10, module lines 2689

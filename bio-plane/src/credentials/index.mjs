@@ -325,13 +325,12 @@ export class Credentials {
      a rate limit plus an authenticated diagnostic, not a louder anonymous refusal. */
   static LOGIN_REFUSAL_DETAIL = {
     SIGN_IN_REFUSED:
-      "no session was issued and nothing was written. Either your group's Civicsmith holds no active credential "
+      "no session was issued and nothing was written. Either no active credential is held "
       + "under that role — a role that was never registered and one whose membership is no longer active "
       + "are the same answer here — or a credential is stored and the password supplied does not derive "
       + "its stored hash. The password itself is never kept, only a salted derivation of it, so that is "
       + "the only comparison there is to make. Which of those happened, the record does not say: it is one "
-      + "answer deliberately, so that a refusal cannot be used to find out which roles hold a credential "
-      + "in your group's Civicsmith.",
+      + "answer deliberately, so that a refusal cannot be used to find out which roles hold a credential.",
   };
 
   static #refused() {

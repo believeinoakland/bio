@@ -274,10 +274,11 @@ test("R48 the 17 sweep rows (DEC-149): each member-facing string says \"your gro
   /* index :822 */
   has((await w.c.accountReferenceSet({ member: "ann", kind: "oauth", secret: "sk", by: "ann" })).detail,
     "the kinds your group's Civicsmith holds are apikey and subscription.");
-  /* index :231, :237 (R4's SIGN_IN_REFUSED detail) */
+  /* index :231, :237 (R4's SIGN_IN_REFUSED detail), re-worded to need no name and address no one (K2089; D-57) */
   const refused = await w.c.login({ role: "member:nobody", password: "wrong-passphrase", source: "s" });
-  has(refused.detail, "Either your group's Civicsmith holds no active credential under that role");
-  has(refused.detail, "which roles hold a credential in your group's Civicsmith.");
+  has(refused.detail, "Either no active credential is held under that role");
+  has(refused.detail, "which roles hold a credential.");
+  assert.doesNotMatch(refused.detail, /\b(?:you|your|yours)\b/i, "D-57: it addresses no one");
   /* index :880, :1060, :1243: a sealed key that no longer opens */
   await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann", by: "ann" });
   await w.c.groupKeySet({ key: "sk-group", by: "admin" });
