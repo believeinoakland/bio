@@ -203,10 +203,12 @@ test("R57 (instance-setup R55, R65; run-rules R20; ai-runs R50, R52; credentials
   assert.equal(code(await gdd("member:bea")), "NOT_AN_ADMIN");
   assert.equal(code(await gdd("class:admin")), "NOT_AN_ADMIN");
   assert.equal(code(await gdd("")), "NOT_AN_ADMIN");
-  /* the assistant off */
+  /* the assistant off: the group keeps its material away from every assistant (credentials R51; instance-setup R53 since
+     T36, K2162), then lets it back */
+  assert.equal(C.aiKeepAwaySet({ on: true, reason: "kept away while we decide", by: "admin" }).ok, true);
   assert.equal(code(await gdd("member:ann")), "ASSISTANT_OFF");
   assert.equal(code(await help("member:bea")), "ASSISTANT_OFF");
-  assert.equal(instanceSetupOf(r.ctx).assistantSet({ on: true, by: "admin" }).ok, true);
+  assert.equal(C.aiKeepAwaySet({ on: false, by: "admin" }).ok, true);
   /* no account serves */
   assert.equal(code(await gdd("member:ann")), "AI_NO_ACCOUNT");
   assert.equal(code(await help("member:bea")), "AI_NO_ACCOUNT");
@@ -236,7 +238,7 @@ test("R57 (instance-setup R55, R65; run-rules R20; ai-runs R50, R52; credentials
 
 test("R57, R29, R30 (K1755): a draft's handler receives `assistant` as the door resolved it — `{on: true, account: {kind, level}}`, the member's own account or the group's key, never the key — its own arguments from the body and `by` and `viewer` as stamped; a caller's `assistant` is never read (negative control: no secret appears in anything handed over or answered)", async () => {
   const { r, C, seen } = await drafts();
-  assert.equal(instanceSetupOf(r.ctx).assistantSet({ on: true, by: "admin" }).ok, true);
+  assert.equal(C.aiKeepAwaySet({ on: false, by: "admin" }).ok, true);   /* the assistant on: nothing kept away (K2162) */
   assert.equal((await C.accountReferenceSet({ member: "member:bea", kind: "apikey", secret: "sk-bea-own-secret", by: "member:bea" })).ok, true);
   assert.equal((await C.groupKeySet({ key: "sk-group-key-secret", by: "admin" })).ok, true);
   assert.equal(C.groupKeySwitch({ on: true, by: "admin" }).ok, true);
