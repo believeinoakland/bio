@@ -41,8 +41,9 @@
  * ─────────────────────────────────────────────────────────────────────────────
  * PROGRESSIVE (SOF2/SOF6/SOF10/SOF14), ARITHMETIC-CODED (SOF9..SOF15), LOSSLESS
  * (SOF3/SOF7/SOF11), HIERARCHICAL (DHP/SOF5-7), 12- or 16-bit precision, four
- * components (CMYK/YCCK), a sampling ratio other than 1x1/2x1/1x2/2x2, and a
- * stream that ends short of its declared height. A progressive JPEG parsed as
+ * components (CMYK/YCCK), a sampling ratio other than 1x1/2x1/1x2/2x2, a
+ * Huffman table libjpeg calls bogus (`bogusHuffman`, below), and a stream that
+ * ends short of its declared height. A progressive JPEG parsed as
  * baseline decodes to a plausible smear, which an OCR engine turns into fluent
  * invented text — the hazard `textchain.mjs` exists for — so it is refused on
  * its SOF marker before a single coefficient is read.
@@ -88,6 +89,9 @@ export function readJpegHeader(d) {
     throw new DctRefusal("NOT_A_JPEG", { note: "no SOI" });
   const qt = [];
   const hts = { dc: [], ac: [] };
+  /* Tables libjpeg would call bogus, by "dc i"/"ac i": refused only if the scan
+   * uses one, as libjpeg derives (and checks) only the tables a scan uses. */
+  const bogus = new Map();
   let frame = null, jfif = false, adobe = null, restart = 0;
   let p = 2;
   for (;;) {
@@ -127,14 +131,23 @@ export function readJpegHeader(d) {
         q += 1 + (pq ? 128 : 64);
       }
     } else if (m === 0xc4) {                               // DHT
+      /* `jdmarker.c`'s get_dht refuses a class or id past the four tables, and a
+       * table whose counts pass 256 or run past the segment, at once. */
       let q = 0;
       while (q < seg.length) {
-        const tc = seg[q] >> 4, th = seg[q] & 15;
+        const tc = seg[q] >> 4, th = seg[q] & 15, table = `${tc === 0 ? "dc" : "ac"} ${th}`;
+        if (tc > 1 || th > 3) throw new DctRefusal("CORRUPT_DATA", { note: "Huffman table class or id past the four tables", class: tc, id: th });
+        if (q + 17 > seg.length) throw new DctRefusal("CORRUPT_DATA", { note: "Huffman table counts run past their DHT", table });
         const counts = seg.subarray(q + 1, q + 17);
         let total = 0;
         for (let i = 0; i < 16; i++) total += counts[i];
+        if (total > 256 || q + 17 + total > seg.length)
+          throw new DctRefusal("CORRUPT_DATA", { note: `Huffman table of ${total} symbols ${total > 256 ? "past 256" : "runs past its DHT"}`, table });
         const symbols = seg.subarray(q + 17, q + 17 + total);
-        (tc === 0 ? hts.dc : hts.ac)[th] = buildHuffman(counts, symbols);
+        const why = bogusHuffman(counts, symbols, tc === 0);
+        const list = tc === 0 ? hts.dc : hts.ac;
+        if (why) { delete list[th]; bogus.set(table, why); }
+        else { list[th] = buildHuffman(counts, symbols); bogus.delete(table); }
         q += 17 + total;
       }
     } else if (m === 0xcc) {
@@ -152,14 +165,34 @@ export function readJpegHeader(d) {
       const ns = seg[0];
       const scomps = [];
       for (let i = 0; i < ns; i++) scomps.push({ id: seg[1 + 2 * i], td: seg[2 + 2 * i] >> 4, ta: seg[2 + 2 * i] & 15 });
+      for (const sc of scomps) for (const table of [`dc ${sc.td}`, `ac ${sc.ta}`]) {
+        if (bogus.has(table))
+          throw new DctRefusal("CORRUPT_DATA", { note: `bogus Huffman table definition: ${bogus.get(table)}`, table, component: sc.id });
+      }
       return { frame, qt, hts, jfif, adobe, restart, scan: { comps: scomps, dataAt: p + len } };
     }
     p += len;
   }
 }
 
+/* What `jdhuff.c`'s jpeg_make_d_derived_tbl refuses as "Bogus Huffman table
+ * definition", or null: codes that do not fit their length (its last code would
+ * be all ones, or past it), and a DC symbol past 15 (a DC difference has at most
+ * 15 bits). */
+function bogusHuffman(counts, symbols, isDC) {
+  let code = 0;
+  for (let l = 1; l <= 16; l++) {
+    code += counts[l - 1];
+    if (code >= 1 << l) return `${counts[l - 1]} codes of ${l} bits overflow the code space, or use the all-ones code`;
+    code <<= 1;
+  }
+  if (isDC) for (const s of symbols) if (s > 15) return `DC symbol ${s} past 15`;
+  return null;
+}
+
 /* A canonical Huffman table as a (length, code) -> symbol lookup, plus a 9-bit
- * fast table. */
+ * fast table. Only a table `bogusHuffman` passes is built, so every code of a
+ * length fits it and no fast index passes the table's end. */
 function buildHuffman(counts, symbols) {
   const maxcode = new Int32Array(18).fill(-1);
   const valptr = new Int32Array(17);
