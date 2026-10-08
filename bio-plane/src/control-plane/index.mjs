@@ -19,7 +19,7 @@ import { SCRATCH, classify, scopeFor, namespaceGate, confinedNamespaceGate, pinn
    window and the caller's source and country, and the security tally of every refusal the door gives or relays. (T36;
    K2111) A credential in the address is refused by admission's gate (its R20, C-38.10), the code's one site. */
 import { presentedCredential, doorWindowGate, sourceOf, countryOf, securityTally } from "../admission/index.mjs";
-import * as admission from "../admission/index.mjs";
+import { credentialAddressGate } from "../admission/index.mjs";
 /* answer-envelope (its R1–R8; the split, K1907, K1974): the envelope, its decoration, the store's answer read once, the
    internal-error answer, the row readers, the page policy and the composed catalogue the published fences read (R41). */
 import { json, doAnswer, storeRefusal, storeSilent, relayAnswer, planeInternalError, replayRow, requiredArgument,
@@ -110,14 +110,16 @@ async function tallySessionRefusal(res, session) {
 /* R59 (admission R20, R22; F1, N703; K2044): ON THE WAY OUT. A refusal the door gives or relays, at either of the two
    levels R22 decorates, is handed once to admission's `securityTally`, after the answer is composed; a tally that fails
    never changes the answer. (T36; K2111) No answer carries `deprecated`: a credential in the address is refused. */
-async function tallyOnTheWayOut(res, seen, req) {
+async function tallyOnTheWayOut(res, seen, req, env) {
   if (!res || !/application\/json/i.test(res.headers.get("content-type") || "")) return res;
   let body;
   try { body = await res.clone().json(); } catch { return res; }
   if (!body || typeof body !== "object" || Array.isArray(body)) return res;
   const refusal = body.ok === false ? body : body.result && typeof body.result === "object" && body.result.ok === false ? body.result : null;
   if (refusal) {
-    try { await securityTally({ op: seen.op, answer: refusal, presented: { token: seen.credential?.token ?? null, cred: seen.cred }, req }); }
+    /* admission R22 (ADMISSION #6, K2166): handed the store and the reader, so the count reaches `securitycount` */
+    try { await securityTally({ op: seen.op, answer: refusal, presented: { token: seen.credential?.token ?? null, cred: seen.cred }, req,
+                                env, doAnswer }); }
     catch { /* the tally is status, never a gate */ }
   }
   return res;
@@ -126,9 +128,7 @@ async function tallyOnTheWayOut(res, seen, req) {
 /* R59, R28 (admission R20; F1, K2111): A CREDENTIAL IN THE ADDRESS IS REFUSED, by admission's gate (C-38.10, the code's
    one site), which this door runs directly after admission R1 and before any other gate, public op, owner's door or
    store request; its refusal is relayed as given. */
-/* (B2, K2157: `credentialAddressGate(url)` answers `null` or `{status: 400, body}`; the guard is dropped once ADMISSION #6 is
-   merged into this branch.) */
-const addressGate = (url) => (typeof admission.credentialAddressGate === "function" ? admission.credentialAddressGate(url) : null);
+const addressGate = (url) => credentialAddressGate(url);
 
 /* REC-22: the ONE namespace the public read path answers from. An instance has
    one published record, so op=publishedcase and op=publishedbytes are pinned
@@ -497,7 +497,7 @@ export function makeFetch(hooks = {}) {
     let res;
     try { res = await fetch(req, env, seen); } catch (e) { res = planeInternalError(e, req); }
     await tallySessionRefusal(res, seen.session);
-    res = await tallyOnTheWayOut(res, seen, req);
+    res = await tallyOnTheWayOut(res, seen, req, env);
     return await withPagePolicy(res);
   };
   planeDoor.limits = PLANE_LIMITS;

@@ -322,3 +322,49 @@ test("R62 (rev. 2 conflict (c); K1888 (3); BOB's review (8)): a member's session
     assert.deepEqual([r.json.own, log, opCalls(env).length], ["capture", ["capture"], 0]);
   }
 });
+
+/* ---------------------------------------------------------------- ADMISSION #6's findings (K2166) */
+
+test("R59 (admission R22; K2166): each refusal the door answers is counted once, after it is composed, through the store's internal `securitycount` in `bio` — `{kind, country}` and nothing else: a retired member key and an unknown `aik-` credential as `credential`; a refusal admission does not count (UNKNOWN_OP, NOT_AUTHENTICATED for no credential) is not counted; a count that cannot be written changes no answer", async () => {
+  const { env } = world();
+  for (const token of [env.MEMBER_TOKEN, aik()]) {
+    env.countCalls.length = 0;
+    /* `whoami` is on no ask grant's list, so an unknown key is not asked of credentials as a grant */
+    const r = await call(env, { op: "whoami", token, cf: { country: "NL" } });
+    assert.equal(r.status, 401, r.text.slice(0, 200));
+    assert.deepEqual(env.countCalls.map((c) => [c.ns, c.method, c.body, c.url.search]), [["bio", "POST", { kind: "credential", country: "NL" }, ""]]);
+    assert.equal(JSON.stringify(env.countCalls[0]).includes(token), false, "no credential reaches the count");
+  }
+  for (const [op, token] of [["nosuchop", undefined], ["search", undefined]]) {
+    env.countCalls.length = 0;
+    await call(env, { op, token });
+    assert.deepEqual(env.countCalls, [], op);
+  }
+  /* a store that cannot take the count: the same answer */
+  const counted = await call(env, { op: "search", token: env.MEMBER_TOKEN });
+  const get = env.STORE.get.bind(env.STORE);
+  env.STORE.get = (id) => { const s = get(id); return { ...s, fetch: (input, init) => {
+    const u = new URL(input instanceof Request ? input.url : String(input));
+    return u.pathname === "/securitycount" ? Promise.reject(new Error("down")) : s.fetch(input, init); } }; };
+  const dropped = await call(env, { op: "search", token: env.MEMBER_TOKEN });
+  assert.deepEqual([dropped.status, dropped.text], [counted.status, counted.text]);
+});
+
+test("R59, R17 (admission R5; K2166): `groupRead` reads the retired member key as a stranger — `op=instancegroup` and `op=groupidentity` presented it answer the public projection, as no credential does, from `bio`, with no `tokenClass` (negative control: the admin binding reads the whole row)", async () => {
+  const { env } = world({ group: { slug: "oak" } });
+  for (const op of ["instancegroup", "groupidentity"]) {
+    const routes = async (token) => {
+      env.calls.length = 0;
+      const r = await call(env, { op, token });
+      return { r, routes: opCalls(env).map((c) => `${c.ns}/${c.route}`) };
+    };
+    const retired = await routes(env.MEMBER_TOKEN);
+    const none = await routes(undefined);
+    assert.equal(retired.r.status, 200, retired.r.text.slice(0, 200));
+    assert.deepEqual([retired.routes, retired.r.text], [none.routes, none.r.text], op);
+    assert.deepEqual(retired.routes, [`bio/${op}public`], op);
+    assert.equal("tokenClass" in retired.r.json, false);
+    const admin = await routes(env.ADMIN_TOKEN);
+    assert.deepEqual(admin.routes, [`bio/${op}`], `${op}: the admin binding reads the whole row`);
+  }
+});
