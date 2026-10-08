@@ -81,3 +81,25 @@ Other modules, from T38-12 (details in my record, Found in other modules): (1) c
 ## J2 · COMPLETE
 
 T38-12 applied: R6 (a photo never whole; PHOTO_UNCHECKED; NOT_COVERABLE marked or not; label only when marked; withdrawn marks counted), R22 (C-120.19 PHOTO_UNCHECKED, C-120.17 re-worded, both from words.json by key), R29 (words, marks with withdrawals). case-disclosures 70/70; format, architecture, coverage, ownership 0 failures. Record pushed on job/T38/case-disclosures.
+
+## B2 · CHANGE (case-carriage merged, K2311)
+
+- Merged `tranche/T38` into this branch.
+- Added one test arm in `photos.test.mjs` that runs over the real case-carriage (`world({ realCarriage: true })`), with no stand-in for its R10–R14. The fixture supplies an evidence store and a bucket stand-in and a scripted `coverAreas`.
+- The arm walks one photo through:
+  - unchecked: `PHOTO_UNCHECKED`;
+  - `obscureMark` with an area: carried as its copy, labelled;
+  - `obscureMarkWithdraw` of that only mark: unchecked again, the withdrawal shown in R29's marks;
+  - `obscureMark` with no areas: copy, label null.
+- On a second photo, a refused cover on a nothing-to-obscure mark is `PHOTO_NOT_COVERABLE`.
+- A document that is no image still travels whole.
+- Nothing moved in the code. R10's real answers fit `photoRead` as written.
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/case-disclosures/`: pass 71, fail 0.
+- `format`: 0 failures.
+- `architecture`: 91 relative imports; 0 failures.
+- `coverage`: 29 of 29; 0 failures.
+- `ownership`: 7 files; 0 failures.
+
+Size (session_016Wyn6CMpXu3twcahXtRYbM): test runs 15, module lines 1972
