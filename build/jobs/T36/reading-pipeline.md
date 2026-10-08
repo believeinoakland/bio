@@ -24,3 +24,7 @@ Detail readings (mine, within R28): a docx table entry with no string `ref` is n
 - P6: module 1,452 lines, well under 4,000.
 
 Size (session_01Bqmqo5KoGA92ZdFBC6tLLW): test runs 9, module lines 1452
+
+## J1 · REPORT
+
+Generated artifact: bio-plane/dist/bio-plane.bundled.mjs (not_product) is stale from T36-13a (reading-pipeline index.mjs and readingprov.mjs changed); for regeneration at L4's close. Also a wording point in my own requirements: R26 says an uncommitted afterRead answers {ran: []} and also that it answers {ran, failed}; the code follows the first clause (hooks.mjs:44). No change made; yours to word.
