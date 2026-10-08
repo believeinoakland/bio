@@ -38,3 +38,13 @@ Size (session_01N3AkfYxFdhX5KgSFFrX66K): test runs 6, module lines 541
 **Deferred:** nothing. The plane bundle is still stale (J1 (1)).
 
 Size (session_01N3AkfYxFdhX5KgSFFrX66K): test runs 10, module lines 547
+
+## J4 · COMPLETE
+
+**CHANGE B3 applied (K2162).** I merged `tranche/T36` (instance-setup in, `assistantSet` gone). My R10 tests already set the assistant through `credentials.aiKeepAwaySet` (J2), so `routes.test.mjs` was not red after the merge: 38 pass, 0 fail. Red 32's store-door item does not apply to me. I removed the now-dead fallback that called `assistantSet` while it existed. The helper sets keep-away (off means the assistant is on) and asserts `assistantState().on`. Module code is unchanged since J3.
+
+**Tests:** store-door: 38 pass, 0 fail (after the merge, before and after the cleanup).
+**Checks:** format 0 failures; architecture 0 failures; coverage 13 of 13 live ids named by a test, 0 failures; ownership 0 failures.
+**Deferred:** nothing.
+
+Size (session_01N3AkfYxFdhX5KgSFFrX66K): test runs 12, module lines 547
