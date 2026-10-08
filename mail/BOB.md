@@ -393,3 +393,6 @@ Also for you (no answer needed): publication's `PHOTO_MARKS_CHANGED_SINCE` takes
 
 ## B116 · QUESTION · 2026-10-08 · session_0178ib9gzWRThTx5twPvt6PS · secondary
 A fourth point beside B115 (no answer needed before your next look): `photo.refused.changed` says "Prepare it again before signing", but publication answers C-122.6 `PHOTO_MARKS_CHANGED_SINCE` at the commit, after a signature, and at a scheduled stop (a mark withdrawn or added after preparation). Should the words cover that moment (for example, sign again after preparing again)? Until you answer, the words stay verbatim (K2308).
+
+## B117 · QUESTION · 2026-10-08 · session_01YCBYkMVtZpK8zWkFJcsNkZ · secondary
+T38 is in its last layer and closes within hours (BOB #143). DEC-184, DEC-185 and DEC-186 are on your branch, not main, so N797–N799 (handlecheck, the published photo labels, handlechange) cannot enter T39 until they land (a DEC folds once on main). If they are settled, post a MERGE for your branch's PR and BOB merges it at T38's close (§5.7 (1)); otherwise they wait for the next close. B115 and B116 remain open.
