@@ -40,6 +40,24 @@
 
 Size (session_01RzWTiZh7mVWEYFtHXN4VP5): test runs 30, module lines 877 (code) + 983 (tests) = 1,860, 3% over P6's 1,200–1,800 estimate.
 
+## Completion of B5 (K2351)
+
+**Applied** · R3 `EMBEDDED_MEDIA` and R6's K2351 removals, each tested:
+- `EMBEDDED_MEDIA`, judged from the bytes: ISO media (MP4, QuickTime, 3GP, M4A; any `ftyp` that is not HEIF/AVIF), WAV/AVI, AIFF, Matroska/WebM, ASF/WMV, MP3 (ID3 or a frame header, never a UTF-16 byte-order mark), Ogg, FLAC, MIDI, MPEG video, AMR, also inside a gzip part; in a PDF a RichMedia, 3D, Movie, Sound or Screen annotation, a media clip, a sound object, a U3D/PRC stream. Each named by part or object.
+- OOXML `customXml/` and any `printerSettings/` parts removed; every internal relationship whose target resolves to a removed part dropped from its `.rels`, and the source part's `r:id` attributes naming it removed (Excel's `<pageSetup r:id>`), the content-type overrides too (`docProps/custom.xml` now goes the same way).
+- An EMF's header description (the producing application, the picture's name) zeroed, with its count and offset set to 0; inside an EMZ the EMF is re-gzipped with no name or time.
+- An SVG's Inkscape, Sodipodi and Adobe (Illustrator, SVG viewer, Extensibility, Graphs, Variables, SaveForWeb, ImageReplacement, Flows, GenericCustomNamespace, XPath) elements, with their content, and attributes removed (`xml.mjs` gains whole-namespace removal and value-conditional attributes).
+- JBIG2 comment extension segments (ASCII and Unicode, types 0x20000000 and 0x20000002) dropped from a `JBIG2Decode` image and from its `JBIG2Globals` (a Flate-compressed globals stream is decoded first and written unfiltered when changed); a segment stream that cannot be walked, or a segment of unstated length, is refused `IMAGE_NOT_CLEANABLE`.
+- A legacy Excel comment's first run removed when it is bold and its text is one of the part's authors followed by a colon (read before the authors are emptied); a bold run naming no author stays, as the comment's own text.
+
+**Tests and checks**
+- `clean.test.mjs` gains 4 tests (one R3, three R6); the xlsx fixture's comment now carries Excel's real author run. `node --test "test/m/doc-clean/**/*.test.mjs"` with `PDFJS_DIST`: tests 37, pass 37, fail 0, skipped 0.
+- Negative control: without the media refusal, the R3 media test fails (29 pass, 1 fail); restored.
+- R4 re-measured after the change: 16 MiB PDF 910 ms / 79.5 MB; small-object PDF 1,201 ms / 84.1 MB; 16 MiB .docx 1,116 ms / 65.7 MB.
+- `checks/format.mjs bio`: 139 modules, 137 requirements files; 0 failures. `checks/architecture.mjs bio doc-clean`: 9 product files, 29 relative imports; 0 failures. `checks/coverage.mjs bio doc-clean`: 9 of 9; 0 failures. `checks/ownership.mjs bio doc-clean tranche/T39`: 10 files; 0 failures (with `modules.json`'s committed paths).
+
+Size (session_01RzWTiZh7mVWEYFtHXN4VP5): test runs 36, module lines 1,055 (code) + 1,059 (tests) = 2,114, under P6's 4,000 report line.
+
 ## J1 · QUESTION
 
 Building on these readings; none blocks me. Answer only where you disagree.
