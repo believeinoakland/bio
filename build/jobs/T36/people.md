@@ -29,3 +29,11 @@ T36-17 complete. Branch `job/T36/people`, tranche/T36 @ bf82a4490b merged (B2).
 **P6.** Module 2,020 lines (src), far under 4,000.
 
 Size (session_019jdYasEZ5G5btsBgnEcz4B): test runs 5, module lines 2020
+
+## J3 · COMPLETE
+
+B3 (K2116) applied; tranche/T36 @ a263514dc1 merged. `VIEWER_MISSING` and `EXTENT_MALFORMED` now answer `{ok: false, refused, code, reason, why}` (each the code; `why` the sentence), no catalogue row (people had added none). A non-hex sha answers `items: []` (tested). `NO_SHA` stays people's own `{ok: false, reason, detail}`: K2116 (2) routes it "through `extraction.noSha`", but `extraction` is not in people's Uses (`modules.json`), so I did not import it; if the ruling binds people too, that is an edge for BOB to add, and I will apply it on a CHANGE.
+
+Tests: `node --test test/m/people/`: tests 46, pass 46, fail 0. Checks: format 0 failures; architecture 0 failures; coverage 36 of 36, 0 failures; ownership 0 failures.
+
+Size (session_019jdYasEZ5G5btsBgnEcz4B): test runs 6, module lines 2023
