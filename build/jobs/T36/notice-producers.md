@@ -39,3 +39,7 @@ Recommendation (a). My best reading, on which I build now: (a). Everything else 
 **P6:** 854 lines (code, own `paths`; was 715).
 
 Size (session_014RE9GRKMXoXK4GGwKBuTgt): test runs 12, module lines 854
+
+## J2 · COMPLETE
+
+T36-32 applied (R1, R13 since, R14 scan-found, R15 security-tool-off; R14's hold half a test.todo per K2155). Module 73 pass, 0 fail, 1 todo; queue 127/0; plane's only reds body.test.mjs:25, :34 (inherited red 27, same on the tranche tip). format, architecture, coverage (15/15), ownership (6 files): 0 failures. 854 lines. Three findings for BOB in the record's Completion section (file-safety's lists never answer a null cursor; R31's event carries no reason; queue must catalogue the two kinds, T36-46). Branch job/T36/notice-producers @ bbe0588fec.
