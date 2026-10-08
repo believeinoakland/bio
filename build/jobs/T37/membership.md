@@ -39,7 +39,7 @@
 - `format: 136 modules, 135 requirements files; 0 failures`
 - `architecture: 26 product files, 68 relative imports (0 naming no tracked file, not judged); 0 failures`
 - `coverage: 1 modules, 95 of 95 live requirement ids named by a test; 0 failures`
-- `ownership: OWNERSHIP_LINE`
+- `ownership: 4 files changed by membership between tranche/T37 and HEAD; 0 failures`
 
 Size (session_01Cp2NRbxdmMxPhCZerTfGF4): test runs 12, module lines 3,970 (`src/membership/`).
 
