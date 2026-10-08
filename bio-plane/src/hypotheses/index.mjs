@@ -24,10 +24,10 @@ import { promotionOf } from "../promotion/index.mjs";
 import { BOUNDS, HUNCH_LABEL, defaultRegistry, isRecordId } from "../connection-grammar/index.mjs";
 import { exploreOf } from "../explore/index.mjs";
 import { calculationsOf } from "../calculations/index.mjs";
-import { HYPOTHESES_SCHEMA, HYPOTHESES_TABLES, NOTES_SCHEMA, NOTES_TABLES, NOTES_ADDED_COLUMNS } from "./schema.mjs";
+import { HYPOTHESES_SCHEMA, HYPOTHESES_TABLES, NOTES_SCHEMA, NOTES_TABLES, NOTES_ADDED_COLUMNS, NOTE_NUMBERS_TABLE } from "./schema.mjs";
 import { HYPOTHESES_CHECKS } from "./checks.mjs";
 
-export { HYPOTHESES_SCHEMA, HYPOTHESES_TABLES, NOTES_SCHEMA, NOTES_TABLES, HYPOTHESES_CHECKS };
+export { HYPOTHESES_SCHEMA, HYPOTHESES_TABLES, NOTES_SCHEMA, NOTES_TABLES, NOTE_NUMBERS_TABLE, HYPOTHESES_CHECKS };
 
 /** The module's name: its tables' declarer, its promotion step and the connection owner of `hunch` (R4, R10). */
 export const OWNER = "hypotheses";
@@ -142,13 +142,15 @@ export class Hypotheses {
       const have = this.#rows(`PRAGMA table_info(${table})`).map((c) => c.name);
       if (have.length && !have.includes(column)) this.#sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
     }
+    this.#renumberNotes();
     if (this.#declared) return { ok: true, already: true };
     const base = { purge: "clear", expunge: "none", export: "yes", sight: "bundle", derive: "stored", version_chain: false,
                    keys: ["bundle_id"] };
     /* R15: a member's notes, their author's alone and never exported, held in the group's copy like every table. */
     const notes = { purge: "clear", expunge: "none", export: "never", sight: "owner", derive: "stored", version_chain: false, keys: [] };
     const d = this.#record.declareTable(OWNER, [...HYPOTHESES_TABLES.map((name) => ({ ...base, name })),
-                                                ...NOTES_TABLES.map((name) => ({ ...notes, name }))]);
+                                                ...NOTES_TABLES.map((name) => ({ ...notes, name })),
+                                                { ...notes, name: NOTE_NUMBERS_TABLE, purge: "exempt" }]);
     if (d && d.ok === false) throw new Error(`hypotheses: declareTable refused: ${d.reason}`);
     if (this.#registry !== defaultRegistry && !this.#registry.owners().some((o) => o.owner === OWNER)) {
       const r = this.#registry.registerOwner({ owner: OWNER, kinds: [...HUNCH_KINDS], neighbours: (a) => this.neighbours(a) });
@@ -158,6 +160,37 @@ export class Hypotheses {
     return { ok: true };
   }
   #declared = false;
+
+  /* R14 (T36; N727): a copy whose notes were numbered from one sequence shared across members (`note_id` the table's
+     own AUTOINCREMENT key, T34–T35) is renumbered here, once, in one act: each member's notes from 1 in their present
+     order, their turns following them, each member's mark set to their last number. The old numbers, and the shared
+     sequence's own high-water mark, are kept nowhere. Idempotent: a copy already keyed by `(member, note_id)` is left. */
+  #renumberNotes() {
+    const keyed = this.#rows(`PRAGMA table_info(member_notes)`).filter((c) => Number(c.pk) > 0).map((c) => c.name);
+    if (keyed.length !== 1 || keyed[0] !== "note_id") return;
+    this.#record.transact(() => {
+      this.#sql.exec(`CREATE TABLE member_notes_renumbered (member TEXT NOT NULL, note_id INTEGER NOT NULL, text TEXT NOT NULL,
+                      at TEXT NOT NULL, revised TEXT, PRIMARY KEY (member, note_id))`);
+      this.#sql.exec(`CREATE TEMP TABLE member_notes_map AS SELECT member, note_id AS old,
+                      ROW_NUMBER() OVER (PARTITION BY member ORDER BY note_id) AS new FROM member_notes`);
+      this.#sql.exec(`INSERT INTO member_notes_renumbered (member, note_id, text, at, revised)
+                      SELECT n.member, m.new, n.text, n.at, n.revised FROM member_notes n JOIN member_notes_map m ON m.old = n.note_id`);
+      this.#sql.exec(`UPDATE member_note_turns SET note_id = (SELECT m.new FROM member_notes_map m WHERE m.old = member_note_turns.note_id
+                      AND m.member = member_note_turns.member) WHERE EXISTS (SELECT 1 FROM member_notes_map m
+                      WHERE m.old = member_note_turns.note_id AND m.member = member_note_turns.member)`);
+      /* a turn left on no note of its member (none is made so; R13) went with its note */
+      this.#sql.exec(`DELETE FROM member_note_turns WHERE NOT EXISTS (SELECT 1 FROM member_notes_map m
+                      WHERE m.new = member_note_turns.note_id AND m.member = member_note_turns.member)`);
+      this.#sql.exec(`INSERT INTO member_note_numbers (member, last) SELECT member, MAX(new) FROM member_notes_map GROUP BY member
+                      ON CONFLICT (member) DO UPDATE SET last = MAX(last, excluded.last)`);
+      this.#sql.exec(`DROP TABLE member_notes_map`);
+      this.#sql.exec(`DROP TABLE member_notes`);
+      this.#sql.exec(`ALTER TABLE member_notes_renumbered RENAME TO member_notes`);
+      this.#sql.exec(`DROP INDEX IF EXISTS member_note_turns_of`);
+      this.#sql.exec(`DELETE FROM sqlite_sequence WHERE name IN ('member_notes', 'member_notes_renumbered')`);
+      return { ok: true };
+    });
+  }
 
   /* ---- sight (R3; K1489) ---- */
 
@@ -373,8 +406,11 @@ export class Hypotheses {
     try { tell = this.#membership.courtNotice().choice === "tell"; } catch { tell = false; }
     const at = this.#now();
     return this.#record.transact(() => {
-      this.#sql.exec(`INSERT INTO member_notes (member, text, at) VALUES (?,?,?)`, member, text, at);
-      const note = Number(this.#one(`SELECT last_insert_rowid() AS id`).id);
+      /* R14 (T36): the member's own next number, from their own mark; nothing shared across members is drawn. */
+      const mark = this.#one(`SELECT last FROM member_note_numbers WHERE member = ?`, member);
+      const note = (mark ? Number(mark.last) : 0) + 1;
+      this.#sql.exec(`INSERT INTO member_note_numbers (member, last) VALUES (?, ?) ON CONFLICT (member) DO UPDATE SET last = excluded.last`, member, note);
+      this.#sql.exec(`INSERT INTO member_notes (member, note_id, text, at) VALUES (?,?,?,?)`, member, note, text, at);
       let told = false;
       if (tell && !this.#one(`SELECT member FROM member_note_told WHERE member = ?`, member)) {
         this.#sql.exec(`INSERT INTO member_note_told (member, at) VALUES (?,?)`, member, at);

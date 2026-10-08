@@ -121,18 +121,18 @@ export async function handleDraft(req, env, deps) {
     return refusal("BAD_GRANT", "grant, when a draft may read, is the member's read-only grant: a non-empty string.", 400);
   const grant = grantSent ? body.grant : null;
 
-  /* THE PACK (R48). With a grant, the plane's untargeted `op=affordances` read under it. Without one this member has
+  /* THE PACK (R48). With a grant, the plane's `op=agentpack` read under it (N695). Without one this member has
      no credential to read with, so the pack is the one the door sends beside the draft (`pack`, the rendered pack it
      holds, control-plane R41), held to the same whole-pack test (J1's reading, pending BOB's answer). */
   let pub;
   if (grant) {
-    const asked = await askPlane(env, "affordances", grant, null);
+    const asked = await askPlane(env, "agentpack", grant, null);
     if (!asked.reached)
       return refusal("PLANE_SILENT", "the record could not be reached, so nothing was read and no model was called.",
         502, { detail_from_binding: asked.detail ?? null });
-    const a = planeAnswer(asked, "affordances");
+    const a = planeAnswer(asked, "agentpack");
     if (a.refused)
-      return json({ ok: false, reason: "PLANE_REFUSED", code: "PLANE_REFUSED", worker: "agent-worker", at: "affordances",
+      return json({ ok: false, reason: "PLANE_REFUSED", code: "PLANE_REFUSED", worker: "agent-worker", at: "agentpack",
         detail: "the record refused this draft under the member's grant. Its refusal is passed through exactly as it "
               + "was worded.", plane_status: asked.status ?? null, plane: asked.body ?? null }, 403);
     pub = publishedPack(a.result);

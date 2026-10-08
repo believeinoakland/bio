@@ -729,7 +729,7 @@ var ASK_OPS = Object.freeze([
 ]);
 var ASK_PLANE_OPS = Object.freeze({
   askceiling: { mutating: false, why: "R54 \u2014 the member's use ceiling, before any model call (ai-runs R50)" },
-  affordances: { mutating: false, why: "R54, R48 \u2014 the rendered pack whose `ask` layer instructs the ask" },
+  agentpack: { mutating: false, why: "R54, R48 \u2014 the rendered pack whose `ask` layer instructs the ask" },
   askcheck: { mutating: false, why: "R54 \u2014 answers' checks over the read log the plane holds for the grant (answers R4)" },
   askusage: { mutating: true, why: "R54 \u2014 each model call's usage, counted for the member (ai-runs R48's countAskUsage)" }
 });
@@ -1960,10 +1960,10 @@ async function handleAsk(req, env, deps) {
   const ceiling = await call("askceiling");
   if (!ceiling.reached) return silentNow(ceiling);
   if (planeAnswer2(ceiling, "askceiling").refused) return relayed(ceiling, "askceiling");
-  const pub = await call("affordances");
+  const pub = await call("agentpack");
   if (!pub.reached) return silentNow(pub);
-  const pubAnswer = planeAnswer2(pub, "affordances");
-  if (pubAnswer.refused) return relayed(pub, "affordances");
+  const pubAnswer = planeAnswer2(pub, "agentpack");
+  if (pubAnswer.refused) return relayed(pub, "agentpack");
   const pack = publishedPack2(pubAnswer.result);
   if (!pack.ok)
     return refusal3(
@@ -2224,7 +2224,7 @@ async function handleDraft(req, env, deps) {
   const grant = grantSent ? body.grant : null;
   let pub;
   if (grant) {
-    const asked2 = await askPlane2(env, "affordances", grant, null);
+    const asked2 = await askPlane2(env, "agentpack", grant, null);
     if (!asked2.reached)
       return refusal3(
         "PLANE_SILENT",
@@ -2232,14 +2232,14 @@ async function handleDraft(req, env, deps) {
         502,
         { detail_from_binding: asked2.detail ?? null }
       );
-    const a = planeAnswer2(asked2, "affordances");
+    const a = planeAnswer2(asked2, "agentpack");
     if (a.refused)
       return json2({
         ok: false,
         reason: "PLANE_REFUSED",
         code: "PLANE_REFUSED",
         worker: "agent-worker",
-        at: "affordances",
+        at: "agentpack",
         detail: "the record refused this draft under the member's grant. Its refusal is passed through exactly as it was worded.",
         plane_status: asked2.status ?? null,
         plane: asked2.body ?? null
@@ -3495,7 +3495,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
       { run_id: runId, recorded: recordedPayer, supplied: account.member }
     ) };
   if (model) {
-    const pub = planeAnswer(await call("affordances"), "affordances");
+    const pub = planeAnswer(await call("agentpack"), "agentpack");
     if (pub.silent) return { refusal: planeSilent(pub.silent) };
     if (pub.refused)
       return { refusal: planeRefused(runId, store, { status: 403, body: pub.refused.plane ?? null }) };

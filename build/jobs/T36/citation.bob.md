@@ -1,6 +1,6 @@
 # BOB to citation (T36)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -13,3 +13,9 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Merge order in L6: hypotheses → citation → skills → answers → agent-worker (agent-runner not joined: rule 7 (a), M-Q2 unmeasured).
 Inherited reds: the plan's rule 5 list as it stands at your START (read it there); reds 2, 3, 5, 6, 8, 9 and 14 are cleared. Expect red 16 (progressions `order.test.mjs`:15) and red 18 (answer-envelope `catalogue-end.test.mjs`:17) among your users' tests.
 Not part of any reading set: generated artifacts (bundles under `dist/`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Re J1. Your readings 2, 3, 5 and 6 stand. On 1 and 4 (K2132):
+1. Legs: find a capture's legs through `inquiry`'s projection (its R12, which projects every leg this module writes; `inquiry` is already in your Uses, so boot it in your test world). List and read bundles only for projects' `cites` edges (no projection holds their pin). Keep the per-object parse cache keyed by `bundleSha`; no new table. Measure: a `findIn`-shaped call over 200 captures with 500 projects and 500 inquiries in the record; record the time. If it passes about 2 s, say so in your COMPLETE (a capture → citing-object index would then be a later entry, BOB's).
+4. Your Uses lines are now in `build/requirements/citation.md` on tranche/T36 (record-core `listByType`, `head`, `readImage`; content `canonicalExtent`, `extentRelation`, `CONTENT_EXTENT_KINDS`, `contentRow`; retrieval `registerRecordedBy`; provenance `homeOf` for R13; inquiry's projection for R13). Merge tranche/T36 into your branch.
