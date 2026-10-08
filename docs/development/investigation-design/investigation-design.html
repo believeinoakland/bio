@@ -76,6 +76,12 @@ td.id{font:600 .82rem var(--mono);color:var(--accent);white-space:nowrap}
 blockquote{margin:.5rem 0;padding:.45rem 1rem;border-left:3px solid var(--accent);background:var(--card);font-size:.95rem}
 blockquote p{margin:.15rem 0}
 blockquote cite{display:block;font:400 .8rem var(--mono);color:var(--muted);font-style:normal;margin-top:.25rem}
+.craft td:nth-child(1){font-family:var(--display);font-weight:600;white-space:nowrap}
+.sc{border:1px solid var(--rule);border-radius:6px;padding:.7rem 1rem;margin:.6rem 0;display:grid;gap:.3rem}
+.sc h3{margin:0;font-size:1.02rem}
+.sc p{margin:0;font-size:.93rem}
+.sc .q{font-style:italic}
+.b{color:var(--member);font-weight:600} .n{color:var(--new);font-weight:600} .pp{color:var(--sys);font-weight:600}
 </style>
 <main>
 <h1>Investigation Design</h1>
@@ -86,16 +92,17 @@ blockquote cite{display:block;font:400 .8rem var(--mono);color:var(--muted);font
 <li><a href="#now">Open with you now</a></li>
 <li><a href="#design">The design</a></li>
 <li><a href="#walk">Grandview, start to finish</a></li>
+<li><a href="#craft">The craft and its tools</a></li>
 <li><a href="#questions">Open questions</a></li>
 <li><a href="#later">Coming later</a></li>
-<li><a href="#research">Research</a></li>
+<li><a href="#research">Research and the fourteen scenarios</a></li>
 <li><a href="#words">Your rulings, in your words</a></li>
 <li><a href="#register">Decision register</a></li>
 </ol></nav>
 
 <h2 id="now">1 · Open with you now</h2>
 <div class="now">
-<p>Four questions remain from your plan of 7 October, restated around what you have since decided. Each is set out in full in <a href="#questions">section 4</a>.</p>
+<p>Four questions remain from your plan of 7 October, restated around what you have since decided. Each is set out in full in <a href="#questions">section 5</a>.</p>
 <ul>
 <li><b>D27 · Milestones:</b> whose dates they are, when one question serves several projects.</li>
 <li><b>D28 · Removing steps:</b> whether a step that was planned and never started can simply be deleted.</li>
@@ -220,7 +227,22 @@ blockquote cite{display:block;font:400 .8rem var(--mono);color:var(--muted);font
 <li><span>The project publishes a case and plans what to do about it.</span></li>
 </ol>
 
-<h2 id="questions">4 · Open questions</h2>
+<h2 id="craft">4 · The investigator's craft, and the tools for it</h2>
+<p>Your description of how an investigator works, set against what Civicsmith provides for each part. The left column is the work done by hand; the right is the same work with the assistant. <span class="b">built</span> exists in the product; <span class="pp">part</span> partly exists; <span class="n">new</span> is in this design and not yet built.</p>
+<div class="wrap"><table class="craft">
+<tr><th>the craft</th><th>by hand</th><th>with the assistant</th></tr>
+<tr><td>Something comes in</td><td>A member's own grievance; a tip kept as a lead <span class="b">built</span>; a document captured <span class="b">built</span>; an arrival from a watched source <span class="b">built</span>; a standing question's new result <span class="b">built</span>. A project opened from a guided start ("A public project is late") <span class="pp">part</span>: the script engine exists, its library of starts is empty.</td><td>The member says it in her own words, however messy; the assistant recognises what kind of investigation it is and whether the group already has questions that fit <span class="n">new</span>.</td></tr>
+<tr><td>Interviews, of oneself and others</td><td>The intake interview as a project step, by script <span class="n">new</span>. Another person's account recorded as testimony, with sources protected <span class="b">built</span>. Private notes <span class="b">built</span>. An interview with someone else as a step, with its outcome <span class="n">new</span>.</td><td>The assistant interviews: a few questions, each with why it is asked, all skippable <span class="n">new</span>. It helps word an account the member heard <span class="pp">part</span>.</td></tr>
+<tr><td>Inventory of what is known and what needs to be known</td><td>Known: the evidence on each question, its strength against the bar, documents held, the timeline <span class="b">built</span>. To know: open questions, objective gaps where computable, waits, hunches to clear <span class="b">built</span>; documents sought and why <span class="n">new</span>. All of it on one page <span class="n">new</span>.</td><td>The same page, plus the assistant's own observations on what is missing, offered for the member to accept <span class="n">new</span>.</td></tr>
+<tr><td>Identify the questions</td><td>Questions, divided into smaller ones; hypotheses kept beside them <span class="b">built</span>. Question checklists from a guided start <span class="n">new</span>.</td><td>The assistant turns the member's words into proposed questions and possible explanations <span class="n">new</span>.</td></tr>
+<tr><td>Find evidence</td><td>Steps <span class="n">new</span>; capturing documents <span class="b">built</span>; records requests with legal clocks <span class="pp">part</span>; search inside documents <span class="b">built</span>; watching sources <span class="b">built</span>; reading a document with a checklist from a reading guide <span class="n">new</span>.</td><td>The system explores where it is turned on, reads documents for a purpose, judges how finds bear on a question, and offers them <span class="n">new</span>.</td></tr>
+<tr><td>The case evolves; objectives change</td><td>Questions added, deferred or dismissed per project <span class="b">built</span>; alternative bases kept side by side <span class="b">built</span>; conclusions flagged when the evidence under them changes <span class="b">built</span>; contradictions found <span class="b">built</span>; the objective revised with a reason <span class="b">built</span>.</td><td>The assistant notices an arrival that changes the picture and proposes the change <span class="n">new</span>.</td></tr>
+<tr><td>Write up the case</td><td>Conclusions with what would show them wrong <span class="b">built</span>; the case written, reviewed in a review copy, signed and published, stating what was left out and why <span class="b">built</span>.</td><td>The system drafts an account of where things stand from the record, every sentence sourced, for the member to take as a draft <span class="n">new</span>.</td></tr>
+<tr><td>Plan the response</td><td>Action plan with options, chosen with reasons; actions sent by the member with their clocks <span class="pp">part</span>.</td><td>The assistant proposes options and drafts; the member chooses and sends <span class="pp">part</span>.</td></tr>
+</table></div>
+<p><b>Where Civicsmith differs from a lone craftsman.</b> The work is shared: several members, and questions shared across projects. The evidence carries grades and a strength judged against the project's bar. "The case" in Civicsmith means the published product, a signed set of findings. In your description it means the investigation as a whole, so member-facing words need care here (D23).</p>
+
+<h2 id="questions">5 · Open questions</h2>
 
 <div class="slip"><span class="id">D27 · Milestones</span>
 <p><b>What exists.</b> Many dates already exist, each with its basis: a records request's legal clock, a promise or contract date in the record, a wait on a question, a step's own "by when". The project's computed stage (forming, investigating, matured) is the only milestone today.</p>
@@ -272,7 +294,7 @@ blockquote cite{display:block;font:400 .8rem var(--mono);color:var(--muted);font
 <p><b>Trade-offs.</b> A adds nothing to build, but leaves members who meet monthly with nothing to bring. B gives them that, written by whoever chooses to. C turns it into a duty, which your no-nagging rule warns against unless a member sets the reminder for herself.</p>
 <p class="rec">Recommended: B.</p></div>
 
-<h2 id="later">5 · Coming later</h2>
+<h2 id="later">6 · Coming later</h2>
 <p>These are the study's decisions for the AI stages, adjusted to your rulings. They are listed so you can see what is ahead. None is being asked now; each will come with full background when its stage is near.</p>
 <div class="wrap"><table>
 <tr><th>id</th><th>what it is about</th><th>where it stands</th></tr>
@@ -296,9 +318,106 @@ blockquote cite{display:block;font:400 .8rem var(--mono);color:var(--muted);font
 <tr><td class="id">D24</td><td>The instruction text the AI follows when reading, planning and interviewing, which you rule on first.</td><td>later</td></tr>
 </table></div>
 
-<h2 id="research">6 · Research</h2>
+<h2 id="research">7 · Research</h2>
 <h3>The study (6 October)</h3>
 <p>Fourteen realistic investigations, from your Grandview example to a sewer-fee diversion, five best-practice papers, six capability studies and three reviews. It proposed a few new parts and one AI planner and one AI reading flow, with everything else built on what exists, in eight stages, the first three without AI. Order-of-magnitude cost per investigation: about $15–40 small, $100–300 for a Grandview-sized case, $300–1,000 or more over years. Nothing has been measured yet.</p>
+<h3>The fourteen scenarios</h3>
+<p>The study's problem set: fourteen realistic investigations a member might bring, chosen to span the kinds of public matters groups pursue. California is the default jurisdiction. Each is shown with the member's opening words, what she needs, the documents that answer it, the competing explanations, and what an answer and action look like.</p>
+<div class="sc"><h3>S1 · Grandview Elementary: the rebuild that will not end</h3><p class="note">schools, public works, procurement</p>
+<p class="q">"My kids' school, Grandview Elementary, is finally being rebuilt. The process of designing the new campus, putting the construction out for bid, choosing the winning bid, and construction starting took 3 years. We were promised that reconstruction would take no longer than 1 school year. But now it's been 2 years, and the project still isn't close to being done. What's going on?"</p>
+<p><b>Needs:</b> Find the binding schedule against the promise; actual progress and forecast; why the gap, and who caused it; whether law or policy was broken; what the member can do.</p>
+<p><b>Documents:</b> bond measure; board approval items; state architect approval and tracker; bid documents and award; the contract and notice to proceed; schedules; change orders; construction-manager reports; oversight committee reports; contractor licence and payroll records.</p>
+<p><b>Competing explanations:</b> unforeseen site conditions; design errors; state re-review; contractor distress; owner-caused delay; funding gap; supply chain. Usually several at once.</p>
+<p><b>Answer and action:</b> a chronology of promised, contracted and forecast completion; each slip attributed with its evidence; money table; what is unknown and which record would settle it. Records requests, comment, oversight committee, monitoring until the school opens.</p></div>
+<div class="sc"><h3>S2 · The sewer fees that went to the general fund</h3><p class="note">budgets, utilities: BIO's origin case</p>
+<p class="q">"The auditor said the city moved $52 million of our sewer fees into the general fund. They promised to fix it by 2023. Did they? Are they still doing it?"</p>
+<p><b>Needs:</b> Did the transfers stop or change label; were the audit's recommendations done; is any current transfer lawful under Prop 218; what came of the records request.</p>
+<p><b>Documents:</b> audit and follow-ups; annual financial reports; budgets and transfer data; cost-allocation plan; council resolutions; records-request production.</p>
+<p><b>Competing explanations:</b> legitimate cost allocation; a relabelled fee; an accounting reclassification.</p>
+<p><b>Answer and action:</b> a fund-flow series with relabelling dated; the legal comparison; grand jury and State Controller; a records-act petition; a Prop 218 challenge through counsel.</p></div>
+<div class="sc"><h3>S3 · The emergency contract nobody bid</h3><p class="note">procurement, homelessness services</p>
+<p class="q">"The county gave a nonprofit $14 million to run a shelter without any bidding because of an 'emergency'. The shelter opened late and has half the beds they said. Who decided this and where did the money go?"</p>
+<p><b>Needs:</b> Was the emergency exemption properly used and renewed; what the contract required; what was delivered and paid.</p>
+<p><b>Documents:</b> emergency declaration and renewals; contract, scope and amendments; invoices; performance reports; the nonprofit's tax filings.</p>
+<p><b>Competing explanations:</b> a real emergency with one capable provider; site delays; favouritism; weak contract management.</p>
+<p><b>Answer and action:</b> deliverables against payments; the exemption's chronology; comment, county auditor, grand jury if warranted.</p></div>
+<div class="sc"><h3>S4 · The officer still on patrol</h3><p class="note">policing</p>
+<p class="q">"An officer who has had complaint after complaint, and was in a shooting, is still working my neighbourhood. Has anything been done?"</p>
+<p><b>Needs:</b> Which records of force and sustained findings exist; how they were handled; whether discipline policy was followed.</p>
+<p><b>Documents:</b> records disclosable under state police-transparency law; oversight reports; lawsuits and settlements; force and discipline policies.</p>
+<p><b>Competing explanations:</b> not sustained; sustained but overturned; deadline missed; record not disclosable.</p>
+<p><b>Answer and action:</b> per-incident table of what is public and what is legally unknowable; pattern questions to the oversight body. A named person: heightened care.</p></div>
+<div class="sc"><h3>S5 · The landlord who never fixes anything</h3><p class="note">housing, code enforcement</p>
+<p class="q">"Our building has had no heat, mold, and broken locks for two years. We've called the city again and again. Inspectors came, but nothing changes. Why isn't the city making the owner fix it?"</p>
+<p><b>Needs:</b> What the enforcement record shows; whether the city used its powers; who really owns the building.</p>
+<p><b>Documents:</b> inspection files; notices to repair; liens; ownership and LLC filings; rent-board petitions.</p>
+<p><b>Competing explanations:</b> partial compliance before each re-inspection; understaffing; a policy of voluntary compliance; owner insolvency.</p>
+<p><b>Answer and action:</b> enforcement chronology against the city's legal tools; requests to escalate; the owner's other buildings.</p></div>
+<div class="sc"><h3>S6 · The promised affordable units that never came</h3><p class="note">land use</p>
+<p class="q">"When they approved the tower on our corner, the developer promised affordable units and a park. The tower's open. Where's the park? Are the units really affordable?"</p>
+<p><b>Needs:</b> Find the binding conditions; test each; who enforces each.</p>
+<p><b>Documents:</b> conditions of approval; development agreement; environmental mitigation programme; recorded affordability agreement; compliance reports.</p>
+<p><b>Competing explanations:</b> conditions amended later; fee paid instead; pending a later phase; never enforced.</p>
+<p><b>Answer and action:</b> a conditions register, each with status and evidence; requests to enforcement; comment.</p></div>
+<div class="sc"><h3>S7 · The water bill that doubled</h3><p class="note">utilities</p>
+<p class="q">"Our water rates went up 40% over three years for 'pipe replacement'. I don't see any pipes being replaced. Is the money being spent on what they said?"</p>
+<p><b>Needs:</b> What justified the increase; whether the capital programme is delivered; whether the rate process was lawful.</p>
+<p><b>Documents:</b> rate notice and hearing record; rate study; capital programme; enterprise fund reports; for a private utility, the state commission's rate case.</p>
+<p><b>Competing explanations:</b> contracting delays; costs rose; revenue diverted.</p>
+<p><b>Answer and action:</b> promised against delivered capital by year; reserves; comment at the next rate hearing.</p></div>
+<div class="sc"><h3>S8 · The council vote and the donor</h3><p class="note">elections, campaign finance</p>
+<p class="q">"Our council member voted to give a towing contract to a company whose owners gave to her campaign. Is that legal?"</p>
+<p><b>Needs:</b> Map contributions to the decision; test against conflict and contribution rules; check disclosure.</p>
+<p><b>Documents:</b> campaign statements; economic-interest statement; the agenda item and vote; the procurement file; corporate filings.</p>
+<p><b>Competing explanations:</b> lawful contributions; a merit award; no financial interest.</p>
+<p><b>Answer and action:</b> a sourced contribution-and-decision timeline; a complaint to the ethics body. Named people: precise claims, no insinuation.</p></div>
+<div class="sc"><h3>S9 · The smoke from the recycling yard</h3><p class="note">environmental permits</p>
+<p class="q">"There's a metal recycler next to our school. Fires, smoke, dust on our cars. Does it even have a permit? Has anyone ever fined them?"</p>
+<p><b>Needs:</b> Which permits apply; violation history; whether enforcement escalated.</p>
+<p><b>Documents:</b> air-district permits and deviation reports; notices of violation; federal compliance history; water, waste and fire records.</p>
+<p><b>Competing explanations:</b> within limits but unregulated dust; violations penalised but recurring; agencies each assuming another has jurisdiction.</p>
+<p><b>Answer and action:</b> a per-agency compliance table; complaints to the right agency; comment at permit renewal.</p></div>
+<div class="sc"><h3>S10 · The lead in the school water</h3><p class="note">public health</p>
+<p class="q">"I just learned the water fountains at my daughter's school tested high for lead years ago. Did they ever fix it? What about other schools?"</p>
+<p><b>Needs:</b> Results by fixture and date; remediation and retesting; required notice to parents.</p>
+<p><b>Documents:</b> the state's school lead-sampling dataset; notices; work orders; retests.</p>
+<p><b>Competing explanations:</b> fixed without a posted record; retest below threshold; never acted on.</p>
+<p><b>Answer and action:</b> fixture-level status; a pattern across schools; a watch on the dataset. Small: days and a dozen documents.</p></div>
+<div class="sc"><h3>S11 · The bus line that was supposed to open in 2022</h3><p class="note">transit</p>
+<p class="q">"The rapid bus line on our avenue was supposed to open years ago. The road has been torn up forever and businesses are closing. Why is it so late and how much over budget?"</p>
+<p><b>Needs:</b> Baseline against current schedule and cost; causes; whether oversight flagged it.</p>
+<p><b>Documents:</b> federal funding agreement; federal oversight reports; agency board reports; change orders and claims; utility agreements.</p>
+<p><b>Competing explanations:</b> utility relocation; design changes; contractor disputes; agency capacity.</p>
+<p><b>Answer and action:</b> S1's pattern at larger scale: chronology and attribution over years.</p></div>
+<div class="sc"><h3>S12 · The eviction court that defaults everyone</h3><p class="note">courts</p>
+<p class="q">"In our county, tenants who go to eviction court seem to lose by default because hearings are rescheduled without notice and there are no interpreters. Is the court following its own rules?"</p>
+<p><b>Needs:</b> Measure defaults and continuances; test against court rules and its language-access plan.</p>
+<p><b>Documents:</b> dockets; court statistics; language-access plan; interpreter budget. Courts follow a different access regime from agencies.</p>
+<p><b>Competing explanations:</b> tenants not appearing for outside reasons; staffing; a practice change at one courthouse.</p>
+<p><b>Answer and action:</b> a measured pattern with its method shown; a letter to the presiding judge. Members' court-watching is evidence.</p></div>
+<div class="sc"><h3>S13 · Library hours cut while the budget grew</h3><p class="note">budgets</p>
+<p class="q">"They cut our branch library to three days a week 'for budget reasons', but the city budget went up. Where did the money go?"</p>
+<p><b>Needs:</b> Test the 'budget reasons' claim; test any library measure's minimum-service terms.</p>
+<p><b>Documents:</b> budgets and actuals; vacancy reports; the measure and its oversight reports.</p>
+<p><b>Competing explanations:</b> growth elsewhere; vacancies swept; measure money substituted for general support.</p>
+<p><b>Answer and action:</b> budget against actual against vacancies; the measure's terms compared; comment at budget hearings.</p></div>
+<div class="sc"><h3>S14 · Schools closed by a decision nobody saw</h3><p class="note">open meetings, schools</p>
+<p class="q">"The school board voted to close four schools. Parents only found out the next morning. It feels like it was decided behind closed doors."</p>
+<p><b>Needs:</b> Test the process against the open-meetings law and the closure policy.</p>
+<p><b>Documents:</b> agendas and their posting times; late materials; closed-session reports; meeting video; the closure policy.</p>
+<p><b>Competing explanations:</b> lawful but poorly communicated; vague but adequate agenda; a real serial meeting.</p>
+<p><b>Answer and action:</b> a posting-time chronology; a cure-and-correct demand within its few days. Deadlines that bind the member.</p></div>
+<p><b>What they have in common.</b></p>
+<ul class="plain">
+<li>Two shapes recur: schedule-and-cost (S1, S11, partly S3 and S7) and compliance against a standard (most of the rest).</li>
+<li>Document kinds are few and repeat.</li>
+<li>A records request with a clock appears in ten of the fourteen.</li>
+<li>Every answer is built on a chronology.</li>
+<li>Most of an investigation's life is waiting.</li>
+<li>Scale varies a hundredfold.</li>
+<li>Members produce evidence themselves: site visits, logs, court-watching.</li>
+</ul>
+<p><b>What they do not cover.</b> Every opening is already a fairly clear grievance about a public body. None is a muddled first message, a complaint with several issues tangled together, a rumour, or a request for help with a document. Those are what the assistant must also handle (D42).</p>
 <h3>What the product has today</h3>
 <ul class="plain">
 <li>Questions with evidence links, alternative bases, claims, conclusions with a falsifier, strength against the bar, contradictions, hypotheses and dated waits.</li>
@@ -314,7 +433,7 @@ blockquote cite{display:block;font:400 .8rem var(--mono);color:var(--muted);font
 </div>
 <p>Members should meet one meaning each for "finding" (a concluded question) and "basis" (what a question rests on). The design stream will draw the other words.</p>
 
-<h2 id="words">7 · Your rulings, in your words</h2>
+<h2 id="words">8 · Your rulings, in your words</h2>
 <blockquote><p>"When a question is deferred, it's deferred for that project. But that won't result in it being deferred in another project. Same with dismissed."</p><cite>8 Oct</cite></blockquote>
 <blockquote><p>"D41: A." Then: "The question that 2 projects both have an interest in can only see the question - they can't see that some other project is also asking the same question. What it can see is when a question gets answered. But what does that tell them - that somebody answered the question. But it still doesn't say anything beyond that. It could be a question in a hidden project - or it may not."</p><cite>D41 · 8 Oct</cite></blockquote>
 <blockquote><p>"No, a member recording a step doesn't choose which of these it serves. A step taken anywhere is seen wherever it is." Earlier: "A step is work done in pursuit of an answer to a question - and to provide context for members, in the development of a question, to understand how to respond to findings, and so on. Of course, steps that are project-specific - like the interview - aren't shared." And: "a non-hidden project can be seen by members who have been added to the project, but only by added members if the project is hidden."</p><cite>D35, D40 · 8 Oct</cite></blockquote>
@@ -328,7 +447,7 @@ blockquote cite{display:block;font:400 .8rem var(--mono);color:var(--muted);font
 <blockquote><p>"There needing to be an engine [with] the capabilities we're exporting now. But there also needs to be a member-visible construct that is an investigation. This construct is the project, right? A project has a plan for the investigation …" (steps, dependencies, resources, deadlines and milestones; the parts on teams and leaders later withdrawn).</p><cite>K2075 · 7 Oct</cite></blockquote>
 <blockquote><p>The engine approved as a product goal: the interview, a planner that stays on the objectives and knows why each document is held, research runs, competing explanations and the answer, with the machine proposing and a member accepting. The project becomes the investigation's home. Study first.</p><cite>K1627 · 6 Oct (summarised)</cite></blockquote>
 
-<h2 id="register">8 · Decision register</h2>
+<h2 id="register">9 · Decision register</h2>
 <p><span class="tag t-ruled">ruled</span> by you · <span class="tag t-set">settled</span> from canon · <span class="tag t-open">open</span> · <span class="tag t-later">later</span> · <span class="tag t-off">withdrawn</span></p>
 <div class="wrap"><table>
 <tr><th>id</th><th>subject</th><th>state</th></tr>
