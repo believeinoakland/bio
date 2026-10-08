@@ -247,7 +247,7 @@ test("R2, R7 (N520, N522, N526, N533; K1310, K1331): the list reads accepted-wor
     assert.deepEqual(M.dec49Row(code), { check, translation: DK[code].translation }, code);
 });
 
-test("R2, R7 (N529; K1331, K1333): the list reads case-disclosures' C-120 (`CASE_DISCLOSURE_CHECKS`) in its module's place (after case-import, directly before case-authoring), every one of its rows (C-120.1–C-120.8, C-120.10–C-120.18; .14–.16 since T33, K1638; .17, .18 since T37, K2227) decorates with its own check and words, case-authoring's file no longer holds them, and C-120.9 is held by no code (negative control: the list without case-disclosures' file misses its family)", async () => {
+test("R2, R7 (N529; K1331, K1333; T38: N788, K2310): the list reads case-disclosures' C-120 (`CASE_DISCLOSURE_CHECKS`) in its module's place (after case-import, directly before case-authoring), every one of its rows (C-120.1–C-120.8, C-120.10–C-120.19; .14–.16 since T33, K1638; .17, .18 since T37, K2227; C-120.19 `PHOTO_UNCHECKED` since T38) decorates with its own check and words, C-120.17 `PHOTO_NOT_COVERABLE` and C-120.19 `PHOTO_UNCHECKED` with `words.json`'s `photo.refused.format` and `photo.refused.unchecked` verbatim, case-authoring's file no longer holds them, and C-120.9 is held by no code (negative control: the list without case-disclosures' file misses its family)", async () => {
   const paths = M.CHECK_FAMILY_FILES.map(([p]) => p);
   const path = "src/case-disclosures/checks.mjs";
   assert.ok(paths.indexOf("src/case-import/checks.mjs") < paths.indexOf(path), paths.join(", "));
@@ -255,8 +255,15 @@ test("R2, R7 (N529; K1331, K1333): the list reads case-disclosures' C-120 (`CASE
   const table = (await import(`../../../${path}`)).CASE_DISCLOSURE_CHECKS;
   assert.deepEqual(Object.values(table).map((r) => r.check).sort((a, b) => Number(a.split(".")[1]) - Number(b.split(".")[1])),
     ["C-120.1", "C-120.2", "C-120.3", "C-120.4", "C-120.5", "C-120.6", "C-120.7", "C-120.8", "C-120.10", "C-120.11", "C-120.12", "C-120.13",
-     "C-120.14", "C-120.15", "C-120.16", "C-120.17", "C-120.18"]);
+     "C-120.14", "C-120.15", "C-120.16", "C-120.17", "C-120.18", "C-120.19"]);
   for (const [code, row] of Object.entries(table)) assert.deepEqual(M.dec49Row(code), { check: row.check, translation: row.translation }, code);
+  /* T38 (N788, DEC-183): C-120.17 re-worded and C-120.19 new, each decorating with the protected words `words.json` holds */
+  const WORDS = JSON.parse(readFileSync(join(REPO, "docs/development/ux-substrate/screens/words.json"), "utf8")).words;
+  const en = (key) => WORDS.find((w) => w.key === key)?.en;
+  for (const [code, check, key] of [["PHOTO_NOT_COVERABLE", "C-120.17", "photo.refused.format"], ["PHOTO_UNCHECKED", "C-120.19", "photo.refused.unchecked"]]) {
+    assert.ok(typeof en(key) === "string" && en(key), key);
+    assert.deepEqual(M.dec49Row(code), { check, translation: en(key) }, code);
+  }
   const CA = await import("../../../src/case-authoring/checks.mjs");
   for (const code of Object.keys(table))
     assert.equal(Object.entries(CA).some(([k, v]) => isFamily(k, v) && Object.hasOwn(v, code)), false, `${code} left case-authoring's file`);
@@ -357,7 +364,7 @@ test("R7, R2 (T36; K2130, K2103; red 11): the list reads file-safety's rows (`FI
   assert.ok(missing.includes(`bio-plane/${path} FILE_SAFETY_CHECKS`), missing.join(", "));
 });
 
-test("R7, R2 (T37; K2226): the list reads case-carriage's rows (`CASE_CARRIAGE_CHECKS`, C-141, the refusals of `obscuremark`) from its own file, directly after reevaluation's and before case-tensions' (its place in `build/modules.json`), so the catalogue is total again; every one of its codes no earlier family holds decorates with its own check and words, and no row of an earlier family moves: `MACHINE_CANNOT_MARK`, also sources' C-121.7, keeps sources' row, and no later family holds a C-141 code (negative control: the list without case-carriage's file misses its family)", async () => {
+test("R7, R2 (T37; K2226): the list reads case-carriage's rows (`CASE_CARRIAGE_CHECKS`, C-141, the refusals of `obscuremark` and, since T38, `obscuremarkwithdraw`) from its own file, directly after reevaluation's and before case-tensions' (its place in `build/modules.json`), so the catalogue is total again; every one of its codes decorates with its own check and words, no earlier or later family holding any (T38, K2311: its machine refusal is its own `MACHINE_CANNOT_MARK_PHOTO`, C-141.1), and no row of an earlier family moves: sources' `MACHINE_CANNOT_MARK` keeps C-121.7 (negative control: the list without case-carriage's file misses its family)", async () => {
   const paths = M.CHECK_FAMILY_FILES.map(([p]) => p);
   const path = "src/case-carriage/checks.mjs";
   assert.equal(paths.indexOf("src/reevaluation/checks.mjs") + 1, paths.indexOf(path), paths.join(", "));
@@ -372,17 +379,16 @@ test("R7, R2 (T37; K2226): the list reads case-carriage's rows (`CASE_CARRIAGE_C
   const after = M.CHECK_FAMILY_FILES.slice(paths.indexOf(path) + 1);
   const holders = (files, code) => files.flatMap(([, ns]) => Object.entries(ns).filter(([k, v]) => isFamily(k, v) && v[code]?.translation)
     .map(([, v]) => v[code]));
-  let own = 0;
   for (const [code, row] of Object.entries(table)) {
     assert.match(row.check, /^C-141\.\d+$/, code);
     assert.ok(typeof row.translation === "string" && row.translation, code);
     /* no later family holds it, so adding this family takes no row from one */
     assert.deepEqual(holders(after, code), [], `${code} is also held after case-carriage`);
-    const earlier = holders(before, code)[0];
-    if (earlier) assert.deepEqual(M.dec49Row(code), { check: earlier.check ?? null, translation: earlier.translation }, `${code} keeps its earlier row`);
-    else { assert.deepEqual(M.dec49Row(code), { check: row.check, translation: row.translation }, code); own++; }
+    assert.deepEqual(holders(before, code), [], `${code} is also held before case-carriage`);
+    assert.deepEqual(M.dec49Row(code), { check: row.check, translation: row.translation }, code);
   }
-  assert.ok(own >= Object.keys(table).length - 1, `${own} of case-carriage's rows decorate with its own words`);
+  assert.deepEqual(M.dec49Row("MACHINE_CANNOT_MARK_PHOTO"), { check: "C-141.1", translation: table.MACHINE_CANNOT_MARK_PHOTO.translation });
+  assert.equal(Object.hasOwn(table, "MACHINE_CANNOT_MARK"), false, "case-carriage no longer holds sources' code (K2311)");
   assert.equal(M.dec49Row("NO_SUCH_PHOTO").check, "C-141.2");
   assert.equal(M.dec49Row("MACHINE_CANNOT_MARK").check, "C-121.7");
   const missing = await unreached(M.CHECK_FAMILY_FILES.filter(([p]) => p !== path));
