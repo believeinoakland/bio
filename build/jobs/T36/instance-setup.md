@@ -44,3 +44,7 @@ Still naming the retired op: op-declarations declares `assistantset` (T36-35), o
 Generated artifacts made stale: `newgroup/dist/newgroup.bundled.mjs` (FLEET_BINDINGS gains file-scanner; `newgroup-bundle-fresh.test.mjs` red) and `bio-plane/dist/bio-plane.bundled.mjs`; both for L11's close.
 Unchanged against tranche/T36: op-declarations 90/3, answer-envelope 24/2, wizard-scripts 64/0, setup-page 71/0, newgroup/test 42/1, migrate-released 1/0.
 Details in my record's Completion section.
+
+## J2 · COMPLETE
+
+T36-34 applied: R53 superseded (assistantState from credentials.aiKeepAwayState, anything but on:false read as kept away; assistantset, ASSISTANT_ENABLED, ASSISTANT_INSTALLER retired; assistant_switch rows kept, unread), R55 (ASSISTANT_OFF carries keep_away {reason, set_by, set_at}), R18 and R19 (no MEMBER_TOKEN), N756 (receiptsOfCapture), K2152 (FILE_SCANNER in FLEET_BINDINGS). Rows: ASSISTANT_OFF (C-119.5) translation re-worded, `where` unchanged; ASSISTANT_SWITCH_MALFORMED (C-119.6) retired; none added. Tests 111/0; format, architecture, coverage (48/48), ownership (13 files) 0 failures. 2,494 lines. Reds in users: my REPORT.
