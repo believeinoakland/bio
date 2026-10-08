@@ -2,9 +2,30 @@
 
 **Status** · session_013UybDevdS9DJfUx9eqiUuX · depth 2 · RUNNING until 2026-10-08T11:56:50Z (users' tests (control-plane, plane)) · handled B2
 
-## Progress (to be completed at COMPLETE)
+## Reading set (mechanics §17, N739)
 
-Built and pushed (commit fe45992c9a): R1/R8 per-ref `files` (N768) and the copy-carried row (N757); R8's sealed archive; R9 `obscureMark`, R10 `photoMarks`, R11 the copy (`<store>/obscured/<sha>`), R12 the marks' declaration and append-only tables, R13 `marksLapsed`; `checks.mjs` (C-141); `caseCarriageOps`. Tests: `marks.test.mjs` (R9–R12, 12 green), `obscured.test.mjs` (R1, R8, R13: 6 red until case-grammar T37-40 merges its R12 `obscured`). Next step: merge `tranche/T37` after case-grammar's merge, run every test and the four checks, then COMPLETE.
+Read whole: `build/requirements/case-carriage.md`; the plan's "Rules at the opening" and entries T37-18, -19, -34, -41, -42; DEC-180 in `docs/development/DECISIONS.md`; K2108, K2145, K2171, K2206 in `build/rulings.md`; my module's code (`index.mjs`, `schema.mjs`) and tests (`fixture.mjs`, `hold`, `archive`, `invariants`, `rereads`), 114 KB; `image-cover`'s Purpose and public R1–R5 and its `index.mjs` interface; `case-grammar` R12 (T37 text) and its `materials.mjs` writer and reader of `obscured`; `record-core` R21, R37, R38, R46, R47, R77, R80 and `evidenceStore` (`index.mjs`:1790–1805); `membership` R43, R44, R80 (`inSight`); `record-grammar` R15 (`isMachineIdentity`). The services read are the Uses' named ones only, under 300 KB in all.
+
+## Entries applied (T37-34)
+
+- **R1, R8 (N768; K2145):** `files` names an item once per ref that carries it; each text is written, and each SHA-256 listed in the edition's `[{sha, held}]`, once. Two tests that pinned the old once-per-call `files` were changed to the new requirement (`archive.test.mjs` R8's two members, `hold.test.mjs` R1's held-once arm), each with a negative control.
+- **R1 (N757):** a row `included: false` stating `obscured` holds its copy alone (`held: "derived"`, kind `obscured`, the copy's byte count), only when this module derived that copy from that original; else `unheld` (kind `obscured`, "the obscured copy is not held"). Nothing else of the row: no bytes, extracted text (extraction is not asked), tokens, archive or container record. `published_case_materials.held` admits `derived`: a store made before T37 is widened once in its own transaction, every row kept (SQLite cannot widen a CHECK in place).
+- **R8 (N757):** every archive that holds a copy-carried photo, at any depth, is carried for no material; each walk reaching it answers it unheld ("the archive holds a photo this case carries obscured") and stops.
+- **R9 `obscureMark` (async; image-cover is):** refusals in order MACHINE_CANNOT_MARK, NO_SUCH_PHOTO (not held, or no home bundle `membership.inSight` admits `by` to), NOT_A_PHOTO, MARK_MALFORMED (with `area`), STAFF_MARK_NO_REASON (with `area`), AREA_OUTSIDE (image-cover's detail relayed, `area` renumbered to this mark's own index); each writes nothing. `MARK_AREAS_MAX` 100. Then the copy is derived over every recorded area plus this mark's, and the mark and the derivation are written in one `record.transact`. Answers R10's view plus `mark`.
+- **R10 `photoMarks`:** synchronous; a photo is told by its home provenance's `capture.content_type`, else the register path's extension; reads no bucket.
+- **R11:** derivations are serialised per capture (a promise chain), so each copy covers every area recorded up to its mark (tested with two members marking at once). The original is read from `record-core.evidenceStore()` by digest (size by `head` first; over `COVER_MAX_BYTES` answers `refused` PHOTO_TOO_LARGE with nothing fetched) and verified against its digest. **The copy's key: `<store>/obscured/<sha256>` in the CAPTURES bucket** (`obscuredKey`, exported), with `sha256` and custom metadata `{derived: "obscured", original, label: OBSCURED_LABEL}`; never registered or written to the record. image-cover's named refusals record the mark with no copy and `refused` set; no bytes or no bucket records the mark with no copy and `refused` null (fail closed, B2). `OBSCURED_LABEL` is in `checks.mjs`.
+- **R12:** `photo_marks` and `photo_copies` declared with `declareTable` (purge `clear`, expunge `none`, export `admin-only`, sight `source`, derive `stored`, `version_chain: true`; `marksDeclaration`); the module only inserts into them.
+- **R13 `marksLapsed(fm)`:** an `obscured` row whose copy is not the current one (including a later refused derivation), a whole row whose photo is now `marked`; unreadable marks lapse every such row; at most 200.
+- **C-141** (`checks.mjs`, `CASE_CARRIAGE_CHECKS`, six rows awaiting stamp); `caseCarriageOps` (`obscuremark`, `photomarks`; `by` and `viewer` from the query only).
+
+Deferred: nothing.
+
+## Found in other modules (REPORT with COMPLETE)
+
+- **The composition root** (store-door's `plane/store.mjs`, or publication's factory, which creates this module first): pass `bucket: env.CAPTURES` and `store: () => <the own namespace>` to `caseCarriageOf`; until then no copy is held in the running plane, and every marked photo's case is refused (fail closed). B2.
+- **answer-envelope** `families.mjs`: import `case-carriage/checks.mjs` (C-141) in the module order. B2.
+- **plane** `disclosures.test.mjs`:67 (R18, R5) pins "case-carriage exports no ops map"; this job's `caseCarriageOps` (R9, R10, the ops map the START names) makes it red until the plane's L11 job re-pins it when it routes `obscuremark` and `photomarks`.
+- **case-disclosures** `R6, R7: materialsJudged …` (its test 14) is red on `tranche/T37` @ `19e619535d` without my change too (case-grammar's merge, I take it), so not this job's.
 
 ## J1 · QUESTION
 
