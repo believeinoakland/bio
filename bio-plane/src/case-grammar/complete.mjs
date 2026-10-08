@@ -37,7 +37,14 @@
  * copy, marked or not: a marked photo's copy carries `case-carriage`'s label and is listed as before T38, byte for byte;
  * an unmarked photo's copy (nothing covered, no metadata) carries no label, so none is listed and its copy line says
  * nothing is covered. Every other row renders exactly as before T37, so an edition whose document states no `obscured`
- * renders the bytes it rendered before. */
+ * renders the bytes it rendered before.
+ *
+ * A MEMBER DOCUMENT CARRIED AS ITS CLEANED COPY (T39; N806, K2333). Its row states `obscured` as a photo's does, with
+ * `case-carriage`'s `COPY_CLEANED_LABEL`, and nothing in the row tells it from a photo, so the edition reads which it
+ * is from the copy's own bytes, which the case file carries at `materials/<ref>/obscured`: a copy that is a PDF or a
+ * zip package (doc-clean's output: PDF, OOXML, ODF) is a cleaned document and its copy line says so, then its label
+ * word for word; every other copy (an image) is a photo's, listed as before T39, so every photo's edition keeps its
+ * bytes. */
 
 import { parseFrontmatter, canonicalJson, createSha256 } from "../record-grammar/index.mjs";
 import { gradingMethodText } from "../strength/method.mjs";
@@ -96,13 +103,15 @@ export function editionProductOf(fm) {
 }
 /** R14: the foot line (DEC-118: the group leads; the product is credited quietly). */
 export const madeWithLine = (product) => `Made with ${product}`;
-/** R14 (T37; N757; T38: N779): the words of a photo carried as its copy (the UX stream's, until it gives them): `copy`
- *  for a copy that carries a label (a marked photo's), `unmarked` for one that carries none (nothing covered); the label
- *  itself is the row's, printed word for word, and only when the copy has one. */
+/** R14 (T37; N757; T38: N779; T39: N806): the words of a material carried as its copy (the UX stream's, until it gives
+ *  them): `copy` for a photo's copy that carries a label (a marked photo's), `unmarked` for one that carries none
+ *  (nothing covered), `cleaned` for a member document's cleaned copy; the label itself is the row's, printed word for
+ *  word, and only when the copy has one. */
 export const OBSCURED_WORDS = Object.freeze({
   original: "Fingerprint of the original (SHA-256), which the group holds and this case file does not carry: ",
   copy: "Carried as a copy with marked areas covered; the copy's fingerprint (SHA-256): ",
   unmarked: "Carried as a copy with nothing covered and none of the original's metadata; the copy's fingerprint (SHA-256): ",
+  cleaned: "Carried as a cleaned copy, with none of the details of who made it or of its pictures; the copy's fingerprint (SHA-256): ",
 });
 /** R14: what the checker's public reads are called (`case-checker` R15). */
 export const CHECKER_READS = Object.freeze({ program: "casechecker", specification: "casefilespec" });
@@ -148,6 +157,13 @@ const textOf = (v) => (typeof v === "string" ? v : v instanceof Uint8Array ? dec
 const shaOf = (v) => (typeof v === "string" ? createSha256().update(new TextEncoder().encode(v)).hex()
   : v instanceof Uint8Array ? createSha256().update(v).hex() : null);
 const jsonOf = (v) => { try { const t = textOf(v); return t === null ? null : JSON.parse(t); } catch { return null; } };
+/* T39 (N806): whether a carried copy is a cleaned member document: its bytes begin as a PDF (`%PDF-`) or a zip package
+   (`PK\x03\x04`: OOXML, ODF), the formats `doc-clean` writes; an image, or a copy not handed, is not. */
+const DOCUMENT_MAGIC = ["%PDF-", "PK\x03\x04"].map((m) => [...m].map((c) => c.charCodeAt(0)));
+const isDocumentCopy = (v) => {
+  const b = typeof v === "string" ? [...v.slice(0, 5)].map((c) => c.charCodeAt(0)) : v instanceof Uint8Array ? [...v.subarray(0, 5)] : [];
+  return DOCUMENT_MAGIC.some((m) => m.every((c, i) => b[i] === c));
+};
 
 /* A leg's words. */
 const ROLE_WORDS = { supports: "Supports", cuts_against: "Cuts against" };
@@ -239,7 +255,9 @@ export function completeEditionOf(caseFile) {
             ...(x.text_sha ? [li(`Extracted text fingerprint: ${x.text_sha}`)] : []),
             li(`Origin: ${said(x.origin)}`),
             li(`Archived copy: ${said(x.archived_copy, "none recorded")}`),
-            ...(ob ? (ob.label === null ? [li(`${OBSCURED_WORDS.unmarked}${said(ob.copy)}`)]
+            ...(ob ? (isDocumentCopy(files.get(caseFilePath("obscured", x.ref)))
+                ? [li(`${OBSCURED_WORDS.cleaned}${said(ob.copy)}`), ...(ob.label === null ? [] : [li(ob.label)])]
+              : ob.label === null ? [li(`${OBSCURED_WORDS.unmarked}${said(ob.copy)}`)]
               : [li(`${OBSCURED_WORDS.copy}${said(ob.copy)}`), li(ob.label)])
               : [li(x.included ? "Included whole in this case file." : "Not included: only its fingerprint, origin and archived copy travel.")]),
             li(x.rests_under === "load_bearing" ? "A finding this case relies on rests on it." : "Only supporting findings rest on it."),
