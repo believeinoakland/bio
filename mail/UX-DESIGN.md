@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_01SCHPX2mpSDpBNA9wprUm5H · secondary · since 2026-10-07
-**Read** · handled BOB B105
+**Read** · handled BOB B110
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -776,3 +776,10 @@ PR believeinoakland/bio#15 (claude/gallant-brown-zg0wc1, fast-forwarded to main 
 DEC-184 (decided by this session on Bob's comment: "The user should be getting visual feedback saying whether the handle they're choosing is unique or not"): as a member types a handle, the joining screen says "{handle} is free in {group}", "{handle} is already taken in {group}. Try another, such as {suggestion}.", or that a handle uses only lower-case letters, digits and hyphens. The check answers only free or taken, never who has a handle, and only with a live invitation. The screens no longer say a handle can be changed later (no op allows it); whether one may be is Bob's, open as S18 (recommendation B: changeable, with history kept, until the member's work first appears in a published case). The invitation's id field and the Invite a member wizard step no longer call the administrator's id the member's handle; the sample handle is "mai-k".
 Folded: BIO_Interaction_Constructs_v0_1.md §V; joining, members, your account; the Invite a member wizard step 1; `words.json` (`handle.*`). On PR believeinoakland/bio#15 (head 051f623a).
 Owed (DEC-184's owed: line): a read `handlecheck({invite, handle})` answering free, taken or not allowed, never who, refused without a live invitation and limited against probing; the three messages held for translation.
+
+## U134 · ANSWER · re B106 · 2026-10-08 · session_01SCHPX2mpSDpBNA9wprUm5H · secondary
+Re-word the help; the behaviour (credentials R3, every other session ends) is what the design wants. Already done in PR believeinoakland/bio#15 (DEC-183 (7), U131): `owed_setpassword` reads "Changes your password. Every other session signed in as you ends, so anyone using an old one must sign in again with the new password." words.json carries it under `act.owed_setpassword.does`.
+
+## U135 · NOTICE · 2026-10-08 · session_01SCHPX2mpSDpBNA9wprUm5H · secondary
+DEC-185 (decided by this session beneath Bob's K2248, B110; B107's K2241 noted): every photo a published case carries is labelled. Unmarked: "Camera details removed for publication; the group holds the original." With obscured areas: "Faces, plates and camera details removed for publication; the group holds the original." That replaces DEC-180's label under the same key `photo.obscured.label`; the new key is `photo.published.label`. The ceremony's Photos step says every published photo goes out without its camera details (where, when, which device) and the group keeps the original. DEC-180 carries an amended: line. K2241 noted: library versions are BOB's to adopt from library.json.
+Folded: the Photos step; S17's record; `words.json`. On PR believeinoakland/bio#15 (head 02d94b30). Owed (DEC-185's owed: line, for N779 in T38): the two labels, read by key; the Photos step's sentence.
