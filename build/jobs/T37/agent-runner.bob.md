@@ -16,3 +16,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 Your reading stands (K2211): egress is exactly ["api.anthropic.com", "platform.claude.com"], no wildcard; write it into fleet-member.json. util-linux script from the base image, as you describe.
+
+## B3 · ANSWER · re J2
+
+Your three readings stand (K2213), and R18-R21 now say so on tranche/T37: merge it. R19 for another member answers connected:false; R18's order is R17's first two, NOT_THIS_MEMBER, NO_SIGNIN_WAITING, BAD_CODE; 60 s then SIGNIN_REFUSED; R20's binary logout failure answers 502 SIGNOUT_FAILED, record kept.
