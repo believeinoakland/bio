@@ -792,6 +792,9 @@ the assistant drafts and a speaker finds its errors; a protected word (fixed ter
 irreversible acts, the court notice, "who can see this" notices) changed from the assistant's draft waits for a second speaker or an
 administrator reading the assistant's back-translation, members seeing the English meanwhile; every change is recorded and undoable;
 official local names stay as they are with an explanation beside them, and what goes to an office goes in the office's language.
+**The word list (the design session, 2026-10-08, DEC-179).** Every fixed word and phrase the screens use is held with a stable key and its
+protected mark in `docs/development/ux-substrate/screens/words.json`, built from the mockups' own sources; a sentence carrying a
+screen's data is keyed when that screen is built, under the same protected rule.
 **Ruled 2026-10-06 by Bob (DEC-149, "S4: B"):** what the code calls an instance is, for members and founders, "your group's
 Civicsmith"; "installation" only where the hosting is the subject; never "copy" (which keeps only its meanings of a review copy
 and a copy of a document). Where this document says "the group's copy", members read "your group's Civicsmith".
@@ -945,6 +948,9 @@ undetermined; sorting keeps panels with their rows; on a phone each row is a lab
 **One element, one explanation (the design session, 2026-10-07, DEC-177, on Bob's direction).** No element that explains itself
 sits inside another: a control or an unlabelled mark absorbs what it holds, said after its own; a labelled mark gives its
 explanation to its label, so names in its reason keep their own cards. A title naming a particular thing explains that thing first.
+
+**A spot-check visit's photo (the design session, 2026-10-08, DEC-178).** Optional: the member's account counts on its own as
+testimony; the visit asks for a photo where one can be taken and says plainly when there is none.
 ## What this changes about how M8 is built
 
 **Build the constructs, then the capabilities arrive cheaply.** The order that follows:

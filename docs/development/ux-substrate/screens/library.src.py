@@ -78,7 +78,7 @@ wiz('Check a claim', 'capture', False, [
  ('finder', 'search', 'Get the city\'s own records behind the claim: online, or by request.', 'The claim should be checked against the city\'s own data, not anyone\'s impression.', {'via': 'Get a record'}),
  ('calculation', 'calculationcreate', 'Work it out with the built-in calculation, or bind your own spreadsheet to the captured records.', 'The method is shown with the result, so anyone can check it.'),
  ('calculation', 'calculationdraw', 'Plan a spot-check: a recorded random draw picks which records members visit.', 'A draw anyone can repeat means no one can say you picked the worst cases.'),
- ('capture', 'testify', 'Members visit and record what they find, with place, date and photo.', 'Firsthand checks test whether the records match the street.'),
+ ('capture', 'testify', 'Members visit and record what they find, with place and date, and a photo where they can take one.', 'Firsthand checks test whether the records match the street.'),
  ('question', 'conclude', 'Conclude with what the evidence supports, and say what would change it.', 'A conclusion that names what would change it is one others can trust.'),
 ], [9])
 

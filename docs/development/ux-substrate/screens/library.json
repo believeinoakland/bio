@@ -405,7 +405,7 @@
       {
        "screen": "capture",
        "act": "testify",
-       "what": "Members visit and record what they find, with place, date and photo.",
+       "what": "Members visit and record what they find, with place and date, and a photo where they can take one.",
        "why": "Firsthand checks test whether the records match the street."
       },
       {

@@ -2776,3 +2776,31 @@ response: **Decided by the design session, 2026-10-07, on Bob's direction.** (1)
 decided: 2026-10-07 · the design session (P17)
 reasoning recorded in: this entry; `screens/page.src.html` (`untangle`); `screens/mock-refs.js` (`TITLE_HELP`, 26 titles); `screens/mock-shell.js`; `screens/check_walk.mjs`; `layouts.html` (the element table); `BIO_Interaction_Constructs_v0_1.md` §V.
 owed: (BOB) no explaining element inside another in the member screens, with (2)'s rule where one holds others; a title that names a particular thing explains it (its card) before the screen's purpose; a test that fails on any nesting; the words held for translation.
+
+### DEC-178 · answered
+raised: 2026-10-08 · the UX design session with Bob on his secondary account (session_01SCHPX2mpSDpBNA9wprUm5H; the development process runs on the same account since K1891) (BOB's B91, on U119: the data share holds a visit's photo as an optional exhibit citation, so the screen can require it or not)
+for: bob-session
+question: Whether a spot-check visit must carry a photo.
+why it is Bob's: it is not: screen detail beneath testimony's rule (a member's own account is grade D and never discounted) and U119; decided by the design session (P17) and reported. Who may appear in such a photo is Bob's, brought as S17.
+provisional: U119's wording, "each visit `testify`, with a photo", read as required.
+alternative: require a photo for every visit.
+recommendation: as decided below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-08.** (1) A visit does not need a photo: the member's account of what they saw is the testimony and counts on its own, under their name. (2) The visit asks for a photo where one can be taken and records plainly when there is none; the estimate counts every visit in the draw, photo or not. (3) Requiring one would turn away members without a camera, visits where photographing is unwise, and accounts of what could not be photographed, and would press members to photograph people, which is S17's question.
+decided: 2026-10-08 · the design session (P17)
+reasoning recorded in: this entry; `screens/mock-screens.js` (the calculation's spot-check, the help page, the testify act's text); `screens/library.src.py` (Check a claim, step 8); `journeys.html` (journey 9, the dumping row); `layouts.html` (section 6).
+owed: (BOB) the visit's photo optional, the testimony standing without it; "no photo" shown plainly; the estimate counting every drawn visit.
+
+### DEC-179 · answered
+raised: 2026-10-08 · the UX design session with Bob on his secondary account (session_01SCHPX2mpSDpBNA9wprUm5H; the development process runs on the same account since K1891) (BOB's B90: the interface's word list for translation, with the stable key each word is known by, needed by N669 and N670)
+for: bob-session
+question: What the interface's word list holds, how its words are keyed, and which are protected.
+why it is Bob's: it is not: member words beneath DEC-127 and DEC-157 (4); decided by the design session (P17) and reported.
+provisional: none; the words lived only in the mockups.
+alternative: wait until every screen is built and key every string then.
+recommendation: as decided below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-08.** (1) `docs/development/ux-substrate/screens/words.json`, built by `build_words.mjs` from the mockups' own sources (the act texts, the marks' explanations, the kit, the shell, the screens' purposes and columns, the registry, the wizard library), so it cannot drift from them; it fails on a duplicate key, on a hand-named phrase no longer in its source, and on an internal code in member words. (2) 923 words and phrases: weights (11), marks (55), the ordinary states (4), labelled drafts (4), the rail and tabs (16), explanation levels (2), the wizard guide (6), each screen's name and purpose (94), each act's name on each screen and what it does (461), table columns (33), and Civicsmith's seventeen wizard scripts (237). (3) Keys are dotted and stable (`weight.reasoned.name`, `mark.gap.undetermined.means`, `act.publish.label.ceremony`, `act.publish.does`, `screen.money.purpose`, `wizard.<id>.step3.why`); a word keeps its key when its English changes; `{name}` marks a placeholder. (4) Protected, as DEC-157 (4) sets: the weights, every mark, "Undetermined, because…", every act's name, and what an act does where it is signed, terminal, irreversible or outward (its explanation is the warning before it): 345. (5) A sentence that carries a screen's data (a name, a count, a date) is keyed when that screen is built, as `screen.<id>.<part>` with placeholders, and is protected when it is a warning or dialog before an outward, signed or irreversible act, the court notice, or says who can see something.
+decided: 2026-10-08 · the design session (P17)
+reasoning recorded in: this entry; `screens/build_words.mjs`; `screens/words.json`; `layouts.html` (section 6).
+owed: (BOB, N669, N670) the translation layer's word set from `words.json`, its keys and protected marks; screen sentences keyed as (5) when each screen is built; the one tip that carried an internal code ("(DEC-157)" on the Protected tag) no longer does.
