@@ -8,15 +8,15 @@
 
 **Entries applied** (T37-28; N762, N771; K2175): R14 reads `file-safety.scanFindings({since, after, limit, viewer})` with `since` the instant 90 days before the call (`SCAN_FINDINGS_DAYS`, as R13's window), from the first page, following `cursor` while `truncated`, to at most 1,000 findings in pages of 200; each read starts again from `since`, never from a kept cursor; a `since_invalid` answer is a failure named in `facts.failed`. An item leaves when `scanFindings` answers its note `held: false` (an absent `held` is read as held). `facts.scan_found` now also names `days` (90), as R13's does. The header comments (R14's block; the constant at :77) follow. The T36 `test.todo` is replaced by tests; the T36 test "leaves only on disposal, whatever becomes of the hold" now states the T37 rule.
 
-**Open:** J1 (R14's "an item whose finding has left the window stays until disposed of" cannot be met by a producer that writes nothing while `queue` keeps no items; built on reading (a): past the window the item is no longer answered). R14's two T37 marks are BOB's to strike once J1 is answered.
+**J1 answered** (B2, K2238): (a), the window is the item's life; tranche/T37 merged (R14 re-worded @ c3d980ccad); the tests state it (files.test.mjs, R14 (T37, N771, K2155) test: held false leaves, past the window not answered); the code comment cites K2238. R14's T37 marks are BOB's to strike.
 
 **Deferred:** none in this module.
 
-**Found in another module:** none beyond J1 (R13 has the same window gap, unstated; `queue` keeps no item).
+**Found in another module:** `checks/format.mjs` reports 1 failure on tranche/T37 itself, not this job's: `build/modules.json`: instance-setup's `paths` entry `bio-plane/src/setup-words.mjs` names no file (BOB's or INSTANCE-SETUP's).
 
-**Tests and checks:** `node --test bio-plane/test/m/notice-producers/`: tests 74, pass 74, fail 0, todo 0. The manifest names no layer tests. `checks/format.mjs`: 136 modules, 135 requirements files; 0 failures. `checks/architecture.mjs`: 11 product files, 52 relative imports; 0 failures. `checks/coverage.mjs`: 15 of 15 live requirement ids named by a test; 0 failures. `checks/ownership.mjs` (tranche/T37): 4 files; 0 failures.
+**Tests and checks:** `node --test bio-plane/test/m/notice-producers/`: tests 74, pass 74, fail 0, todo 0. The manifest names no layer tests. `checks/format.mjs` (after merging tranche/T37): 136 modules, 135 requirements files; 1 failure, the tranche's (above). `checks/architecture.mjs`: 11 product files, 52 relative imports; 0 failures. `checks/coverage.mjs`: 15 of 15 live requirement ids named by a test; 0 failures. `checks/ownership.mjs` (tranche/T37): 4 files; 0 failures.
 
-Size (session_01NtKgWhTs8dgUsdu2kZ9cnc): test runs 4, module lines 862
+Size (session_01NtKgWhTs8dgUsdu2kZ9cnc): test runs 5, module lines 862
 
 ## J1 · QUESTION
 

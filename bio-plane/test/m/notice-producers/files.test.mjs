@@ -275,7 +275,7 @@ test("R15 R1: a read that refuses or throws contributes no item and is named in 
   assert.deepEqual(w.tables(), before);
 });
 
-test("R14 (T37, N771, K2155): it leaves when its recipient disposes of it (the same key on every read while its hold is open) or when scanFindings answers held false, read in the same synchronous call; an item past the window is no longer answered (J1's reading)", async () => {
+test("R14 (T37, N771, K2155): it leaves when its recipient disposes of it (the same key on every read while its hold is open) or when scanFindings answers held false, read in the same synchronous call; an item past the window is no longer answered: the window is the item's life (K2238)", async () => {
   const { w, bad, items } = await files();
   const before = items("m1").map((i) => i.id);
   assert.equal(before.length, 1);

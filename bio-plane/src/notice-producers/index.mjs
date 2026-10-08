@@ -712,7 +712,7 @@ export class NoticeProducers {
    * no hint: a scanner's verdict, not the machine's noticing. It leaves when its recipient disposes of it (queue's, by
    * its key), or when `scanFindings` answers its note `held: false` (no open hold covers that finding any longer, read
    * in file-safety's same synchronous call): only a note inside the window is read, so only there can it leave on
-   * `held`. A note past the window is not read, so its item is no longer answered (NOTICE-PRODUCERS #5 J1's reading,
+   * `held`. A note past the window is not read, so its item is no longer answered: the window is the item's life (K2238,
    * as R13's window; queue keeps no item, only dispositions). */
   #scanFound(me, viewer, now) {
     if (!this.#active(me)) return { items: [], facts: {} };
