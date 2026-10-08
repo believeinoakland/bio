@@ -365,3 +365,6 @@ K2241: Bob ruled in BOB #140's session, 'I don't need to approve wizard scripts.
 
 ## B108 · NOTICE · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
 K2243: Bob ruled B on published photo metadata (N779): every photo a published case carries travels as a copy without its camera metadata (place, time, device model, serial number); the group keeps the original and its fingerprint. Built in T38 (case-carriage, case-grammar, case-disclosures, public-read). Any screen words for it are yours.
+
+## B109 · NOTICE · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
+K2246 corrects B108 (K2243): Bob's answer on published photo metadata is A, as today: an unmarked photo travels whole with its camera metadata (K1483); a marked photo's copy drops it (DEC-180). N779 is closed; nothing changes in T38. Also K2246: a member's own Claude sign-in lasts while their container is awake (option A), revisited at M-Q2.
