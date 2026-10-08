@@ -72,3 +72,7 @@ Nothing it left out mattered.
 **P6:** 3,460 lines (3,446 at START).
 
 Size (session_01SSuxFGyKjUgKQQSHYhEaFU): test runs 12, module lines 3460
+
+## J2 · COMPLETE
+
+T37-21 complete on job/T37/case-authoring (tranche merged at 4c0a20cf7b). R62, R14 and R34 are met and tested (statement.test R62; photos.test R14, R34). The module passes 163 of 163, and format, architecture, coverage (46 of 46) and ownership report 0 failures. Rule 4: control-plane statementack.test.mjs:31 is NOT red at my merge. It passes 3 of 3, because its stand-in never reads secretSha, so I name no red test and red 19 can be dropped. The pre-flight's steps are now six: photos is step 4, and the edition and sign are steps 5 and 6. P6: 3,460 lines. Details are in my record's Completion section.
