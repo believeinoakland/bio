@@ -14,3 +14,7 @@ A `src/` change proves needed for T38-28; I ask before making it, as the START s
 3. Comments at `:961`, `:1012`, `:1709` name the sign-in arm.
 
 This meets R52 as written ("the account `credentials.accountFor` answers for the act of the member who started it"); no requirement wording changes. The test is already written to the B1 shape; it goes green with this change. Until you answer I hold the job here (the answer decides what I build next).
+
+## J2 · REPORT
+
+For `answers` (not mine, nothing for it to change unless you judge so): applying K2299 needed a third site in `index.mjs` besides the two J1 named. `#accountServing` (the synchronous read behind the wake's decision, `:1684`, and `aiUseCheck`, `:2842`) answered only a held reference or the group key, so a sign-in member's woken run was withheld `NO_ACCOUNT`. It now also answers `member` when `accountReferenceState` shows `subscription.connected` (credentials R43, R35's order). Effect outside ai-runs: `aiUseCheck` (the ceiling check `answers` calls before an ask or draft) no longer refuses a sign-in-only member `AI_NO_ACCOUNT`; whether `answers` then carries the `signin` account to agent-worker is `answers`' own, under its requirements. The tests of every module listed as using ai-runs give identical results before and after (1252 pass, 35 fail, the same 35, all on the base already); `answers` is not listed as using ai-runs in `modules.json`, though it calls `aiUseCheck` and `countAskUsage` (R48, R50, R52); you may want that edge recorded.
