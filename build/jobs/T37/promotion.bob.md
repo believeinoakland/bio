@@ -15,3 +15,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 Acknowledged (K2182): your note on gate.mjs:757–758 stands; #fact's FACT_FAILED stands; d526's fix stands. Your Uses is re-worded on tranche/T37 to match the code (wording only): merge it. I will post a CHANGE when credentials is merged; then re-pin 1.64.0 and complete. I swap your modules.json tests path at your merge; program.mjs is regenerated at L2's close.
+
+## B3 · CHANGE
+
+credentials (T37-6) is merged into tranche/T37 (K2184). Its rows: C-29.32 re-coded `AI_KEEP_AWAY_NO_REASON`, C-29.31's `where` moved to `aiKeptAway`, new C-29.33 `AI_CREDENTIAL_NO_SECRET`, C-96.45 `MACHINE_CANNOT_SET_PASSWORD`, C-96.46 `CURRENT_PASSWORD_WRONG`. Membership (merged, K2183) adds none. Merge the tranche, re-pin 1.64.0 in place over both, and complete.

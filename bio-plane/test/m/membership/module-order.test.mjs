@@ -51,12 +51,14 @@ const T33_NEW = ["civil-time", "calc-grammar", "connection-grammar", "court-cita
    after]`, so the place is pinned by both neighbours. */
 const SINCE_T33 = [["sheet-worker", "file-scanner", "record-core"], ["capture", "file-safety", "sources"],
                    ["observation-log", "law-relations", "standards"], ["wizard-scripts", "op-grades", "affordances"],
-                   ["admission", "answer-envelope", "store-door"], ["answer-envelope", "store-door", "control-plane"]];
+                   ["admission", "answer-envelope", "store-door"], ["answer-envelope", "store-door", "control-plane"],
+                   /* T37-44 (K1185, K2171): `image-cover` after `pdf-pixels` in layer 1. */
+                   ["pdf-pixels", "image-cover", "pdf-worker"]];
 /* Listed in the file before its job builds it (K1043's form: empty `paths`), tolerated by name until that merge:
    `file-safety`, until T36-11 (plan T36, Rules 5 item 2). */
 const T36_NEW = ["file-safety"];
 
-test("R83 T36-6 MODULE_ORDER holds the modules added since T33 in the file's places: file-scanner, file-safety, law-relations, op-grades, answer-envelope, store-door", async () => {
+test("R83 T36-6 T37-44 MODULE_ORDER holds the modules added since T33 in the file's places: file-scanner, file-safety, law-relations, op-grades, answer-envelope, store-door, image-cover", async () => {
   const modules = await modulesJson();
   const layerOf = new Map(modules.map((m) => [m.id, m.layer]));
   for (const [before, id, after] of SINCE_T33) {
@@ -64,7 +66,7 @@ test("R83 T36-6 MODULE_ORDER holds the modules added since T33 in the file's pla
     assert.ok(at > 0, `${id} is held`);
     assert.deepEqual(MODULE_ORDER.slice(at - 1, at + 2), [before, id, after], `${before} → ${id} → ${after}`);
   }
-  assert.deepEqual(SINCE_T33.map(([, id]) => layerOf.get(id)), [1, 3, 5, 11, 11, 11], "each in its layer");
+  assert.deepEqual(SINCE_T33.map(([, id]) => layerOf.get(id)), [1, 3, 5, 11, 11, 11, 1], "each in its layer");
 });
 
 test("R83 T33-19a MODULE_ORDER holds plan T33's order: the new modules in their places, local-facts and standards in layer 5, observation-log after connections", async () => {
