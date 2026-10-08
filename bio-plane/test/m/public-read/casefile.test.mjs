@@ -278,6 +278,7 @@ test("R23 a co-attestation row carries each timestamp token publication held for
             { path: "attestations/stamp.tsr", text: token }, { path: "data/provenance.json", text: JSON.stringify(prov) }],
     meta: { object_type: "information" },
     register: [{ sha256: sha(body), path: `snapshots/${id}.txt`, encoding: "utf8", bytes: Buffer.byteLength(body) }] }).ok, true);
+  w.receipt(sha(body));   // (T39; `case-carriage` R13) fetched by this copy, so carried whole
   w.inquiry(F, { legs: [{ target: id }] });
   const pin = w.head(F);
   const row = (ref) => ({ ref, by_kind: "co_attestation", by: "tsa.example", level: null, at: NOW, signature: null, recorded_in: null });

@@ -2,7 +2,8 @@
  * R17; DEC-112 (2), (3); Publication §5C; K1315, K1316). What a published case edition carries so that anybody can check
  * it, and recreate its findings, without this instance: the signed case document and its signature, the complete
  * edition, each finding's published bytes, signature, grading facts and passages, every included material whole with its
- * extracted text, each photo carried as its obscured copy (never its original), the attestations, each calculation with every input it names, and the signing keys. Built once, by the Worker's assembly (`assembleCaseContainer`,
+ * extracted text, each material carried only as its copy (a photo's, or a member document's cleaned copy) as that
+ * copy (never its original), the attestations, each calculation with every input it names, and the signing keys. Built once, by the Worker's assembly (`assembleCaseContainer`,
  * `../publication/worker.mjs`), from what the published projection holds (`PublicRead.caseFileFacts`) and the published
  * bucket; served part by part (`op=publishedbytes&sha256=<manifest>&format=zip&part=<n>`).
  *
@@ -42,9 +43,10 @@ export async function keyFingerprint(keyB64) {
   return `SHA256:${b64(d).replace(/=+$/, "")}`;
 }
 
-/* R23 (T37): why a material is named unheld because a photo of this edition travels as its copy. */
-export const ORIGINAL_NOT_CARRIED = "these are the bytes of a photo this case carries as its obscured copy; the original is not carried";
-export const ARCHIVE_HOLDS_ORIGINAL = "the archive holds a photo this case carries obscured";
+/* R23 (T37; T39, N806): why a material is named unheld: its bytes are those of a material this edition carries as its
+   copy (a photo, or a member document). */
+export const ORIGINAL_NOT_CARRIED = "these are the bytes of a material this case carries as its obscured copy; the original is not carried";
+export const ARCHIVE_HOLDS_ORIGINAL = "the archive holds a material this case carries obscured";
 
 /* R6: the assembly's one statement that it built nothing, naming what it could not read. */
 const notAssembled = (cause, what) => ({ ok: false, reason: "CASE_FILE_NOT_ASSEMBLED", cause, ...what,
@@ -110,7 +112,7 @@ export async function buildCaseFile({ facts, group = null, read, maxBytes = CONT
   };
   for (const m of facts.materials) {
     const kind = m.kind === "observation" ? "observation" : "document";
-    /* R23 (T37): bytes a photo carried as its copy shares are its original's, which never travel. */
+    /* R23 (T37): bytes a material carried as its copy shares are its original's, which never travel. */
     if (m.original_of_copy) { unheld.push({ ref: m.ref, sha: m.sha ?? null, what: kind === "observation" ? "text" : "bytes",
                                             why: ORIGINAL_NOT_CARRIED }); continue; }
     const bytes = await held(m.sha, m.bytes_text);
@@ -132,7 +134,8 @@ export async function buildCaseFile({ facts, group = null, read, maxBytes = CONT
       else await add(caseFilePath(a.kind, [m.ref, a.kind === "container" ? a.member : a.sha]), a.kind, ab);
     }
   }
-  /* R23 (T37; N757; DEC-180 (4)): each photo carried as its copy, one file of kind `obscured` under its row's ref, at the
+  /* R23 (T37; N757; DEC-180 (4); T39, N806): each material carried as its copy (a photo's, or a member document's
+     cleaned copy), one file of kind `obscured` under its row's ref, at the
      SHA-256 `obscured.copy` names, read by that hash from the published bucket and only where the commit registered it
      under that ref; never the original's bytes, its extracted text, or an archive or container record of it. A copy
      not registered, or whose bytes do not hash to that digest, is not carried and is named in `unheld`. */

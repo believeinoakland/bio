@@ -133,8 +133,26 @@ export function publicationT34(w) {
       .filter((e) => e.stamps.length) });
 }
 
+/* (T39; `case-carriage` R13, K2377) A document carried whole is one this copy fetched (`provenance` R62): `receipt(sha,
+   via, locator)` records a receipt through provenance (its R13), `via` default `direct`; `doc(id)` gives its capture a
+   `direct` receipt unless one already answers it fetched, so a document the tests carry whole is carried as captured. A
+   member's file (no receipt) is made by a test with `promote` alone. */
+function withReceipts(w) {
+  let r = 0;
+  w.receipt = (captureSha, via = "direct", locator = null) =>
+    w.prov.recordReceipt({ addressNorm: `e.org/pr${++r}`, captureSha, retrieved: NOW, via, retrievalLocator: locator });
+  const doc = w.doc.bind(w);
+  w.doc = (id, ...rest) => {
+    const res = doc(id, ...rest);
+    const cap = w.row(`SELECT capture_sha FROM register WHERE bundle_id=?`, id);
+    if (cap && !w.prov.fetchedByThisCopy(cap.capture_sha).fetched) w.receipt(cap.capture_sha);
+    return res;
+  };
+}
+
 function withRead(w, opts = {}) {
   publicationT34(w);
+  withReceipts(w);
   signAsOfItsFormat(w);
   w.docket = opts.docket || docketOn();
   w.pr = publicReadOf(w.host, { publication: w.p, docket: w.docket });
