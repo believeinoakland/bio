@@ -21,3 +21,7 @@
 - `checks/ownership.mjs answers tranche/T39`: 5 files changed by answers between tranche/T39 and HEAD; 0 failures (after the commit).
 
 Size (session_01V8KJuWEPKX3WrBN7Ff1rdT): test runs 3, module lines 1584
+
+## J1 · COMPLETE
+
+T39-7 complete (job/T39/answers @ HEAD). R19's sign-in arm: no behaviour change needed — heldBack already reads the ceiling for any account, then maps R32's STANDING_SWITCH_OFF to {switch_off, member}, carrying no account. New test 'R19 the sign-in arm' (standing.test.mjs) drives a real credentials sign-in author (subscriptionConnected) through new finds: held {switch_off, member}, ceiling asked before the grant and its refusal holding first, no grant minted, no model stub called, finds told once with answer null. Comments naming ai-runs 'not merged' now name aiUseCheck handed in as ceilingRefusal. answers 47/0; format, architecture, coverage (29/29), ownership (5 files) 0 failures. Reading set ~240 KB read whole. Nothing deferred; nothing found in other modules. R19's '(not yet met: T39)' mark is yours to strike.
