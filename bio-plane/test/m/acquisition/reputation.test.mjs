@@ -171,3 +171,100 @@ test("R44: an acquire refused before any fetch asks nothing (a bad locator, one 
   assert.deepEqual(r.body, plain.body, "the source's refusal is the same answer");
   assert.equal(sc.calls.length, 1);
 });
+
+test("R44 (T37): a reader of the tool (a function answering a spec, null, or a promise of either), from the caller or the store handed in, is called once for each acquisition, before the lookup, and its answer is the tool asked about; a reader that throws, rejects, outlasts the bound or answers anything but a spec or null is unanswered TOOL_UNREADABLE (tool null), never listed: false, and the capture files each time", async () => {
+  /* a reader answering a spec, synchronously or as a promise, from opts or from the store; called once per acquisition */
+  for (const [what, mk, from] of [["sync", () => TOOL, "opts"], ["promise", async () => TOOL, "opts"], ["store", async () => TOOL, "store"]]) {
+    const w = world();
+    const order = [];
+    const sc = scanner(LISTED, order);
+    let calls = 0;
+    const reader = () => { calls++; order.push(["reader"]); return mk(); };
+    if (from === "store") { w.store.reputation = reader; w.store.fileScanner = sc; }
+    const o = from === "opts" ? { reputation: reader, fileScanner: sc } : {};
+    for (const [i, u] of ["https://a.example/1", "https://a.example/2"].entries()) {
+      const r = await run(w, logged(order, { [u]: text(u) }), { locator: u }, o);
+      assert.equal(r.status, 200, what);
+      assert.deepEqual({ ...r.body.reputation, checked_at: undefined }, { tool: "cf-intel-1", listed: true, categories: ["phishing", "malware"], checked_at: undefined }, what);
+      assert.deepEqual(w.prov.receipts[i].reputation, r.body.reputation, `${what}: the receipt records it`);
+      assert.equal(calls, i + 1, `${what}: the reader is called once for each acquisition, never once at start`);
+      assert.equal(sc.calls.length, i + 1, what);
+      assert.deepEqual(sc.calls[i].body, { address: u, tool: { ...TOOL, config: { ...TOOL.config }, credentials: { ...TOOL.credentials } } }, `${what}: the reader's spec is the one asked about`);
+    }
+    /* each acquisition's network fetches (the document, then its attestation) follow its reader and its lookup */
+    const kinds = order.map((x) => x[0]).filter((k, i, a) => k !== "fetch" || a[i - 1] !== "fetch");
+    assert.deepEqual(kinds, ["reader", "scanner", "fetch", "reader", "scanner", "fetch"], `${what}: the reader, then the lookup, then the fetch`);
+  }
+  /* the reader answers what the tool is now: a tool removed between acquisitions is NO_TOOL at the next one */
+  {
+    let current = TOOL;
+    const sc = scanner(CLEAN);
+    const w = world();
+    const a = await run(w, { "https://a.example/x": text("x") }, { locator: "https://a.example/x" }, { reputation: () => current, fileScanner: sc });
+    current = null;
+    const b = await run(w, { "https://a.example/y": text("y") }, { locator: "https://a.example/y" }, { reputation: () => current, fileScanner: sc });
+    assert.deepEqual([a.body.reputation.listed, b.body.reputation.unanswered, b.body.reputation.tool, sc.calls.length], [false, "NO_TOOL", null, 1]);
+    /* a reader answering null (or a promise of null) is NO_TOOL, as a null tool is */
+    const c = await run(w, { "https://a.example/z": text("z") }, { locator: "https://a.example/z" }, { reputation: async () => null, fileScanner: sc });
+    assert.deepEqual([c.body.reputation.unanswered, c.body.reputation.tool, sc.calls.length], ["NO_TOOL", null, 1]);
+  }
+  /* a reader whose spec reaches no binding: the scanner could not be reached, the tool named */
+  {
+    const r = await run(world(), { "https://a.example/x": text("x") }, { locator: "https://a.example/x" }, { reputation: () => TOOL });
+    assert.deepEqual([r.body.reputation.unanswered, r.body.reputation.tool], ["SCANNER_UNREACHABLE", "cf-intel-1"]);
+  }
+  /* every unreadable reader: no answer, TOOL_UNREADABLE, the scanner never asked, the capture filed */
+  const none = { tool: null, listed: null, categories: [], unanswered: "TOOL_UNREADABLE" };
+  const unreadable = [
+    ["throws", () => { throw new Error("tool store unreadable"); }],
+    ["rejects", async () => { throw new Error("tool store unreadable"); }],
+    ["a string", () => "cf-intel-1"],
+    ["a number", async () => 7],
+    ["an array", () => [TOOL]],
+    ["true", () => true],
+    ["a function", () => () => TOOL],
+    ["nothing (undefined)", () => undefined],
+    ["a promise of undefined", async () => {}],
+  ];
+  for (const [what, reader] of unreadable) {
+    const w = world();
+    const sc = scanner(LISTED);
+    const r = await run(w, { "https://a.example/x": text("x") }, { locator: "https://a.example/x" }, { reputation: reader, fileScanner: sc });
+    assert.equal(r.status, 200, what);
+    assert.deepEqual({ ...r.body.reputation, checked_at: undefined }, { ...none, checked_at: undefined }, what);
+    assert.match(r.body.reputation.checked_at, SECOND, what);
+    assert.notEqual(r.body.reputation.listed, false, `${what}: never listed: false`);
+    assert.deepEqual(w.prov.receipts[0].reputation, r.body.reputation, `${what}: the receipt records it`);
+    assert.equal(sc.calls.length, 0, `${what}: the scanner is not asked`);
+    assert.equal(r.body.document.capture.grade, EARNED_CAPTURE_CEILING, `${what}: the grade unchanged`);
+  }
+  /* a reader that does not answer within the bound: TOOL_UNREADABLE, and the fetch goes on after it, no later */
+  {
+    const sc = scanner(LISTED);
+    const t0 = Date.now();
+    const r = await run(world(), { "https://a.example/x": text("x") }, { locator: "https://a.example/x" }, { reputation: () => new Promise(() => {}), fileScanner: sc });
+    const took = Date.now() - t0;
+    assert.deepEqual([r.status, r.body.reputation.unanswered, r.body.reputation.tool, sc.calls.length], [200, "TOOL_UNREADABLE", null, 0]);
+    assert.ok(took >= REPUTATION_TIMEOUT_MS - 50 && took < REPUTATION_TIMEOUT_MS + 3000, `bounded: ${took} ms`);
+  }
+  /* one bound over the reader and the lookup together: a slow reader leaves the lookup only what remains of it */
+  {
+    const slow = () => new Promise((r) => setTimeout(() => r(TOOL), REPUTATION_TIMEOUT_MS - 1000));
+    const hang = { fetch: () => new Promise(() => {}) };
+    const t0 = Date.now();
+    const r = await run(world(), { "https://a.example/x": text("x") }, { locator: "https://a.example/x" }, { reputation: slow, fileScanner: hang });
+    const took = Date.now() - t0;
+    assert.deepEqual([r.status, r.body.reputation.unanswered, r.body.reputation.tool], [200, "SCANNER_UNREACHABLE", "cf-intel-1"]);
+    assert.ok(took >= REPUTATION_TIMEOUT_MS - 50 && took < REPUTATION_TIMEOUT_MS + 3000, `one bound, not two: ${took} ms`);
+  }
+  /* a continuation fetches no document, so the reader is not called */
+  {
+    const w = world();
+    const first = await run(w, { "https://p.example/page": page(HTML('<img src="https://p.example/a.png">')) }, { locator: "https://p.example/page", subresources: true });
+    w.store.state.sessions.set("cs_x", { session: "cs_x", locator: "https://p.example/page", primarySha: first.body.document.capture.sha256,
+                                         primaryFile: "snapshots/page", base: "https://p.example/page", state: null, ticks: 1 });
+    let calls = 0;
+    const cont = await run(w, {}, { continue: "cs_x" }, { reputation: () => { calls++; return TOOL; }, fileScanner: scanner(CLEAN) });
+    assert.deepEqual([cont.status, calls], [200, 0]);
+  }
+});

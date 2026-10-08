@@ -1,0 +1,17 @@
+# BOB to file-safety (T37)
+
+**Read** · handled J1
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T37), layer 3, file-safety: T37-8. Read also the plan's "Rules at the opening" and K2099, K2129, K2130, K2153, K2155, K2160, K2161, K2175 (their lines in `build/rulings.md`), and `build/plan/draft-T37-L2-L3-reqs.md`'s file-safety section and "BOB's review" (reasons only; the requirement file binds).
+Your requirements: `build/requirements/file-safety.md` (read whole); not yet met: T37: R12 (`copies.queued`, `remaining`), R15 (`since`, a synchronous `held`, a null cursor at the end), R21 (constants), R27, R28 (`config` lists; `CONFIG_MISSING`, `CONFIG_UNKNOWN`, `host` and `region` excepted), R31 (cursor, `reason`), R33 (the safe copy scanned in the derived area: `file-scanner` R2's `area: "derived"`, merged in L1), R35 (the forward period your own), R36 (`DEEPER_CHECKS_UNREADABLE`), R39 (your own wakes for five batches; a newly queued file scanned at the next wake), R40 (`onFileWork`), R41 (`refreshReputationLists`). New refusals take the next free C-140 rows and wait for T38's stamp (rule 6's red 2): name them in your COMPLETE. Users after you: scheduler (T37-24, L10) reads R39–R41; notice-producers (T37-28, L11) reads R15; setup-page (T37-43, L11) the `config` lists. Your merge may turn scheduler's tests that pin today's intervals red until T37-24: name each test and line in your COMPLETE; BOB accepts them by name. **P6:** report your size.
+Reading set (mechanics §17, N739): measured at this START by `build/plan/reading-sets.py`: 539 KB (own requirements 32 KB, the used modules' public parts 381 KB, code and tests 126 KB), an over-estimate (it counts each used module's whole public part and every file under your paths, tests included): read as mechanics §3 asks (each used module's Purpose and the services your Uses names). Measure that set first. At most 300 KB: read it whole and state so in your record. Over: (1) trim nothing; (2) no split in T37; (3) read whole yourself your requirements, layer 3's row of `build/layers.md`, the code and tests your entry changes and the used services your Uses names, and have your own workers read the rest of your code and tests in full and write the summary this task needs (each statement citing file and line), told the task, the requirements it serves and what follows; state in your record what you read whole, the summary's size and what it cites, and whether anything it left out mattered.
+
+Merge order in L3 (`modules.json` order): acquisition → capture → file-safety.
+Inherited reds: the plan's rule 6 list as it stands at your START (read it there); none is yours unless named here.
+Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+All four readings stand (K2188): (1) the retry floor (a file already due at the last scanBatch, and a failed reputation refresh, wait at least FILE_SAFETY_POLL_MS; a newly queued file is due at once; R4 unchanged); (2) epoch milliseconds in and out (ISO accepted in), R40's at the same; (3) held = an open hold of that capture naming any of the note's finding names; (4) the forward end recorded on ok: true even with a failed tool. onFileWork through afterCommit (record-core R66) is right; I tell scheduler (T37-24) at its START. State the four in your record; no requirement text changes.
