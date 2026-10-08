@@ -21,3 +21,7 @@
 - `ownership bias tranche/T38`: 1 file changed by bias; 0 failures.
 
 Size (session_01H5SGMsATdVSiwtbHK79v41): test runs 3, module lines 2
+
+## J1 · COMPLETE
+
+T38-27 (N783) complete. debt.test.mjs:103 (R34's setup) now makes cora an owner through membership R118, participationWrite("ownerOn", …), asserting it wrote; no project-roster import, so no uses edge is needed; no src/ change. Red reproduced before (debt 15/1, projectOwnerAdd is not a function); bias 67/0, todo 1 (R26, K102). All four checks: 0 failures. Reading set about 295 KB, read whole. Nothing found in other modules; no generated artifact made stale. Clears rule 6 item 11's bias share. Record: build/jobs/T38/bias.md on job/T38/bias.
