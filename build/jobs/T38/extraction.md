@@ -39,9 +39,9 @@
 - `format`: 137 modules, 136 requirements files; 0 failures.
 - `architecture`: 28 product files, 105 relative imports; 0 failures.
 - `coverage`: 46 of 46 live requirement ids named by a test; 0 failures.
-- `ownership`: 0 failures (line below, after the commit).
+- `ownership`: 6 files changed by extraction between tranche/T38 and HEAD; 0 failures.
 
-Size (session_01GXLVBfXBcg51dL2ddA46vX): test runs 12, module lines 2955
+Size (session_01GXLVBfXBcg51dL2ddA46vX): test runs 12, module lines 2748
 
 ## J1 · QUESTION
 
