@@ -17,9 +17,9 @@ No code change. Requirements: no wording (K2129).
 **Note on the START's Suggestion "basis naming the record":** neither R27's held basis nor `bindsAt`'s `why` on the issuer path names the record. R27 asks only for "the adoption or the law that imposes it", and conformance keeps R3's state with `in_force_why: null` when the standard is in force. So the tests check what R27 states. That `standards.inForceAt`'s `why` names the record is checked as standards' answer only.
 
 **Deferred:**
-- `checks.mjs`:176 and :181 give C-113.34 and C-113.35 the `where` `#comparedActor`, but the function is `#comparedAct` (index.mjs:456). The name is pinned in `test/fixtures/row-census-1.63.0.jsonl`:224–225, which is not this module's, and correcting it changes two catalogue rows' `where`. Left for promotion's next stamp; reported (J2).
+- `checks.mjs`:176 and :181 give C-113.34 and C-113.35 the `where` `#comparedActor`, but the function is `#comparedAct` (index.mjs:456). The name is pinned in `test/fixtures/row-census-1.63.0.jsonl`:224–225, which is not this module's, and correcting it changes two catalogue rows' `where`. Left for promotion's next stamp; reported (J1).
 
-**Found in another module (reported, J2):**
+**Found in another module (reported, J1):**
 - `standards` R43 says an adoption binds where it "puts it in force (R20, R40)". `#bindingOf`'s adoption branch (`standards/index.mjs`:1926–1930) instead answers `binds` from the adoption's start day with no in-force check.
   - Verified in a scratch run (not kept): a policy adopted by the Parks Department, its period ending 2021-12-31, reads `inForceAt` `not_in_force` but `bindsAt` `binds` on 2026-03-02.
   - For conformance: R3 still refuses `not_in_force`. But for an adopted standard with no stated end, after `through` or with no record, R3 reads `undetermined` while R27 reads `binds`. So `noncompliant` is accepted where R51 says "conformance R27 then refuses only where nothing is recorded".
