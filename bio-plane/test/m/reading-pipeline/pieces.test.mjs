@@ -223,10 +223,12 @@ test("R2 R15 (over-strictness): a real PDF and an office capture are read throug
     const out = await rp.read(document, { evidence: evidenceStore(b), env: {}, storeName: "bio", view: combine(["oakland-alameda"]).view,
                                           planeVersion: "v-test", liveCalibration: null });
     assert.ok(out.reading.read_from_text && Array.isArray(out.text_units) && out.text_units.length > 0, `${name}: read, with units`);
-    /* R28 (K1556) adds `metadata` (and a workbook's `cells`) to the reading on purpose; every other byte stays pinned. */
+    /* R28 (K1556; K2092) adds `metadata` (and a workbook's or a `.docx` document's `cells`) to the reading on purpose;
+       every other byte stays pinned. */
     const { metadata, cells, ...before } = out.reading;
     assert.ok(metadata === null || (metadata && typeof metadata === "object"), `${name}: R28's metadata is present`);
-    assert.equal(cells, undefined, `${name}: no cells for a document that is no workbook`);
+    if (name === "docx") assert.deepEqual(cells, {}, "docx: a body with no tables reads cells {}");
+    else assert.equal(cells, undefined, `${name}: no cells for a document that is neither a workbook nor a .docx`);
     assert.equal(hex(JSON.stringify({ ...out, reading: before })), PINNED[name], name);
   }
 });

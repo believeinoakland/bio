@@ -123,6 +123,8 @@ export async function readingProvenance({ text = null, chain = null, tier = null
   /* AN EMPTY TEXT IS NOT DIGESTED. Two empty strings agree on nothing (`CLAUDE.md` §5), so a digest of
      one would let two readings that read NOTHING compare as agreeing. */
   out.text_sha256 = flat.text.length ? await sha256Hex(flat.text) : null;
+  /* R18: null for empty text says why, as it does for absent text. */
+  if (!flat.text.length) out.why = "the text this document yielded is empty, so there is nothing to digest";
   const byKey = new Map();
   const credit = (t, engine, page, fallback = null) => {
     const member = t == null ? fallback : (TIER_MEMBERS[t] ?? null);
