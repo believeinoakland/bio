@@ -59,3 +59,7 @@ T38-20 is done on `job/T38/public-read`, with `tranche/T38` merged in (case-carr
 - `format`: 137 modules, 0 failures. `architecture`: 46 product files, 0 failures. The new test reaches case-carriage only through publication's world, not by import. `coverage`: 33 of 33 live ids, 0 failures. `ownership`: 5 files, 0 failures.
 
 Size (session_017MDGGaJitGyMMpHwkiKVY2): test runs 14, module lines 3538
+
+## J2 · COMPLETE
+
+T38-20 complete on job/T38/public-read (tranche/T38 with case-carriage merged in); details in the record's completion section. public-read 155/155; format, architecture, coverage, ownership 0 failures. Tests run on the real case-carriage marks, copies and commit; archive fixtures record acquisition's listing.
