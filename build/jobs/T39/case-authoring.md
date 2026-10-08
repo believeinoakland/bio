@@ -40,3 +40,7 @@ Merged `tranche/T39` (case-carriage T39-10). Before any change, the whole suite 
 - `format: 139 modules, 138 requirements files; 0 failures`; `architecture: 29 product files, 157 relative imports (0 naming no tracked file, not judged); 0 failures`; `coverage: 1 modules, 46 of 46 live requirement ids named by a test; 0 failures`; `ownership: 7 files changed by case-authoring between tranche/T39 and HEAD; 0 failures`.
 
 Size (session_01KsXLvmNX6T1sjWsVXjcN7x): test runs 8, module lines 3473
+
+## J3 · COMPLETE
+
+B2 processed (record, B2 section). Merged the tranche. Against the real case-carriage: 138/31 before any change. Your receipt fix gives 34/135: a direct receipt makes every fixture document a Grade B capture, and a load-bearing one is then refused CO_ATTESTATION_UNACKNOWLEDGED (C-120.4). I reverted it. Instead, the fixture records each document clean in case-carriage's own document_copies, as copyBatch would record doc-clean's outcome, so the real documentCopy and R13's commit check both carry it whole. The stand-in now passes through to the real documentCopy. documents.test.mjs now uses the real states, and proves R16's real queueing is taken back by a refused act and by the pre-flight. On this branch: 169/162/7, all 7 waiting on case-disclosures (its R6 arm and C-120.20–.22). Scratch merge with job/T39/case-disclosures: 169/169/0. Checks: 0 failures; coverage 46 of 46. Waiting for your CHANGE when case-disclosures merges.
