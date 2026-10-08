@@ -65,3 +65,7 @@ Four readings I am building on (T37-8); I carry on with each unless you answer o
 4. **R35 "records that end when it answers ok".** Recorded whenever the answer is `ok: true`, even if a log tool is in `failed` (re-sending would send the period twice to the tools that took it).
 
 Also, for T37-24: `onFileWork` listeners are called through record-core's `afterCommit` (R66), so after the outermost transaction commits.
+
+## J2 · COMPLETE
+
+T37-8 done; all 13 T37 marks met (R12, R15, R21, R27, R28, R31, R33, R35, R36, R39–R41), on K2188's four readings. Flaw fixed: R33's copy scan sent area on the body, not the target, so every copy was withheld; it is now on the target. file-safety 49/0; checks 0 failures. New rows awaiting T38's stamp (red 2): C-140.40 CONFIG_MISSING, C-140.41 CONFIG_UNKNOWN, C-140.42 DEEPER_CHECKS_UNREADABLE. row-census.test.mjs is red for exactly those three. No scheduler test turned red (109/5, the same as the base; the 5 are census item 17). Users' other reds are all named (items 11, 7, 14, 17). The plane bundle is stale for the layer close. P6: 2,250 code lines. Record: Completion.
