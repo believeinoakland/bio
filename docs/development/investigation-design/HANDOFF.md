@@ -23,3 +23,9 @@ Numbered entries; BOB answers each in rulings (K) on `tranche/T<n>`. Decision st
 **Carries:** Bob asked for one document "that we can use to carry the research, questions, and design forward". It is `investigation-design.html`, rendered at https://claude.ai/artifact/QjSSFHE78G9PtwKhpW5ZEo; pages 1–3 now point to it. It holds Bob's direction in his words (K1627, K2075 as narrowed, D32, D33), the model, the open questions, the research and the register. From now on the lane updates that one page.
 
 **Bob's direction, for BOB to note (no ruling asked yet):** D32 (a step is the work done in pursuit of an answer to a question; dead ends kept; steps also exist without a question; chance finds may be tied to a step afterwards) and D33 (members decide what becomes evidence; the system, including AI, may proactively explore a question, gauge its finds and offer them). This moves the plan from the project (synthesis `enquiry`) to the question, and D33's "proactively explore" meets K1481; open with Bob as D34–D36.
+
+## H4 · 2026-10-08 · AI use across groups, projects and members (D34)
+
+**Carries:** Bob's D34, in his words in `DECISIONS.md`: support the range of AI use across groups and members; projects may have their own account, limits and enabled AI capabilities; groups and members on their own accounts choose types of use, cost limits and enabled features, and track use; future releases may support other models. Read by this lane: a project's AI settings set by its owners (D37); D31 subsumed.
+
+**For BOB to note:** this is a requirements change across `ai-runs` (R48–R52: a project level, money limits where the account reports cost, per-use enablement), `credentials`/`agent-model` (a project account; provider-neutral wording), `instance-setup`. Not ruled in full yet: D38 (precedence of group, project and member settings) and D39 (unasked exploration where enabled, revising K1481) are open with Bob.

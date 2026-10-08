@@ -75,7 +75,7 @@ ul.plain{padding-left:1.2rem;display:grid;gap:.35rem}
 </style>
 <main>
 <h1>Investigation Design</h1>
-<p class="meta">The one working document for the investigation engine and the project around it · last updated 8 October 2026</p>
+<p class="meta">The one working document for the investigation engine and the project around it · last updated 8 October 2026, after your answer on AI use</p>
 <p class="lede">It carries your direction, the model as it stands, the questions open with you, the research behind them, and every decision's state. It replaces the four earlier pages; each now points here.</p>
 
 <nav class="toc"><ol>
@@ -90,17 +90,24 @@ ul.plain{padding-left:1.2rem;display:grid;gap:.35rem}
 
 <h2 id="now">1 · Open with you now</h2>
 <div class="now">
-<p>Three questions arise from your direction of 8 October (D32 and D33). Each is set out in full, with its background, examples and the reasons for my recommendation, in <a href="#questions">section 4</a>.</p>
+<p>Four questions. Each is set out in full, with background, examples and the reasons for my recommendation, in <a href="#questions">section 4</a>.</p>
 <ul>
-<li><b>D34 · When the system explores a question on its own.</b> You said the system may explore a question proactively. Your current rule says an AI run starts only when a member acts. This decides how far "proactively" goes, and who pays.</li>
-<li><b>D35 · Where steps that serve no question are kept.</b> You said some steps give context or help form a question. Where they are kept decides who sees them.</li>
-<li><b>D36 · Who receives what the system finds.</b> You said the system offers finds to "members working on a question". A question can serve several projects, so this decides whose queue a find reaches.</li>
+<li><b>D38 · When AI settings at group, project and member level disagree, which governs.</b> Your answer on AI use means three levels can now hold settings. They will sometimes conflict.</li>
+<li><b>D39 · Whether the system may explore a question without being asked each time, where that use is enabled.</b> This would revise your rule that every AI run starts with a member's act.</li>
+<li><b>D35 · Where steps that serve no question are kept.</b> This decides who sees them.</li>
+<li><b>D36 · Who receives what the system finds.</b> A question can serve several projects, so this decides whose queue a find reaches.</li>
 </ul>
 <p>Everything else is either settled or not yet being asked; section 4 says which and why.</p>
 </div>
 
 <h2 id="direction">2 · Your direction so far</h2>
 <p>In your words, newest first. Where a later word changes an earlier one, the later governs.</p>
+
+<blockquote><p>"AI-based features are seen by some groups as so expensive that their use needs to be justified by the (potential) value they provide. They need to be judicious about that use. And yet, the AI-based capabilities of the system offer significant benefits related to: a more friendly, efficient, and effective UX using the natural-language capabilities; the level of member support the system can provide; interviewing members when they identify a new or evolving challenge they want investigated; a smart, proactive role they can take on formulating member input into questions and other structures on which investigations are based.</p>
+<p>Up to this point, we've added support for groups and individual members to specify which AI account they use, put limits on the cost of usage, specify which AI-based civicsmith features are enabled, and track usage over time. But as we explore the investigation design, I think we need to recognize that some projects may have additional resources available or have different priorities (whether higher and lower) after affects which account is used, what limits to put on usage, and which AI-based capabilities are enabled.</p>
+<p>The assistant is based on Claude, a frontier AI service. Depending on feedback from groups related to the quality and cost, future releases may be able to support a range of AIs, that includes frontier and open models. So I think we need to recognize the continuum of interest across groups in using AI-based capabilities. Some groups won't use it at all, while other groups may want to maximize the benefits AI offers in Civicsmith. There will almost certain also be situations where the interests of the group and some of its members are different.</p>
+<p>I think that the system should recognize and support this diversity of AI usage, and give groups and members who are using their own accounts to select which types of uses to enable, put limits on the maximum cost, specify which AI-based civicsmith features are enabled, and track usage over time."</p>
+<cite>D34 · 8 October · answers the earlier question on when the system explores</cite></blockquote>
 
 <blockquote><p>"It's important to clarify that actions that affect the answering of a question rests with members - with the support and guidance of the system. Members can have hunches, hypotheses, and follow leads - as can the system. The system (including AIs) can proactively explore a question (that is, look for answers). They have the capabilities to gauge to what extent the results that they find might contribute to the question - both in support and as contradicting other gathered information. The system can present potentially useful information to members working on a question. But it's the act of members that decide whether information is dismissed or added to the body of evidence (based on its grade and the rules of evidence that apply."</p>
 <p>On steps: "Yes, work is done (steps are taken) that don't relate to a specific question. This work may be done to provide context for members, in the development of a question, to understand how to respond to findings, and so on." What a step keeps when it ends: "agreed". Tying a chance find to a step afterwards: "Yes".</p>
@@ -175,18 +182,47 @@ ul.plain{padding-left:1.2rem;display:grid;gap:.35rem}
 <h2 id="questions">4 · Questions</h2>
 <h3>Open now</h3>
 
-<div class="slip"><span class="id">D34 · When the system explores a question on its own</span>
-<p><b>What "exploring" means here.</b> The system searches public sources, captures documents it finds into the record, reads them, and judges how each bears on the question: supporting it, or contradicting what has been gathered. It then offers the finds to members, who decide what becomes evidence (your D33). Searching and reading by the AI uses an AI account, so every exploration has a cost and a payer: a member's own subscription or key, or the group's key held by an administrator (K1755).</p>
-<p><b>The rule today.</b> On 5 October you ruled that every AI run starts with a member's act, with one exception (K1481). That exception is the standing question. A member writes a question with a cadence (say, weekly) and an end date. A saved search re-runs on that schedule. The AI runs only when the search turns up something new; it only reads, and it stays within the daily limit of the paying account. Its answer reaches the member's queue, labelled as the assistant's. The reasons behind the rule: members stay in charge of what the system does in the group's name, and cost stays bounded by a choice someone made. Work that uses no AI already runs without anyone pressing a button each time: watching sources members chose, spotting contradictions, noting that a wait has fallen due.</p>
-<p><b>Why it comes up.</b> Your words of 8 October, "The system (including AIs) can proactively explore a question (that is, look for answers)", go further than the standing question, which reads but does not explore. How much further is yours to say.</p>
-<p><b>The options, using Grandview.</b> The question is "When did the district first know the rebuild would run late?"</p>
+<div class="slip"><span class="id">Background for D38 and D39 · AI use as it stands after your answer</span>
+<p><b>What is built today.</b> A group chooses at setup how its members use the assistant: the group's key (an API key held by an administrator), each member's own subscription (used only by that member), each member's own API key, or no AI (K1755). Each member sets her own daily limit, counted in tokens and calls. An administrator may set a lower limit for the whole copy. Use is tracked per member, per day and per kind of AI work. Administrators see each month's totals by kind of work, naming no member; each member sees only her own (K1450).</p>
+<p><b>What your answer adds.</b></p>
+<ul class="plain">
+<li>A <b>project</b> may have its own AI settings: which account its AI work uses, its limit, and which uses are on. One project may have a grant-funded key and want everything on; another may want AI kept to a minimum. Its owners set these, since authority over a project is theirs. This replaces the earlier idea of a separate AI budget per investigation (D31).</li>
+<li>Settings are by <b>type of use</b>: conversation, member support, the intake interview, turning members' words into questions, reading documents, exploring questions, and so on. The exact list is a detail of the design.</li>
+<li>Limits are on <b>maximum cost</b>. Today they are counted in tokens and calls. A money limit can be exact for API keys, but a subscription's provider does not report cost per use, so for a subscription the limit stays in tokens and calls.</li>
+<li>Later releases may offer <b>other AI models</b>, frontier and open. Settings should not assume Claude alone.</li>
+</ul>
+<p>Two questions follow from that.</p></div>
+
+<div class="slip"><span class="id">D38 · When group, project and member AI settings disagree, which governs</span>
+<p><b>Why it arises.</b> You expect "situations where the interests of the group and some of its members are different". With settings at three levels, each able to turn uses on or off and set limits, they will conflict. The system needs one rule for which one applies.</p>
+<p><b>A distinction that matters.</b> A setting can exist for one of two reasons.</p>
+<ul class="plain">
+<li><b>Money:</b> "don't spend our group key on exploring". This is about whose account pays.</li>
+<li><b>The material:</b> "don't send this project's documents to an AI service at all". Such a setting protects, for example, a hidden project holding a whistleblower's papers. It is about what the AI may see, whoever pays.</li>
+</ul>
+<p><b>Examples.</b></p>
+<ul class="plain">
+<li>(1) The group turns off exploring to save its key. Ana, on her own subscription, wants it on for her question in "Grandview rebuild".</li>
+<li>(2) Grandview's owners turn off AI reading of documents because the project holds a whistleblower's papers. Ana, on her own subscription, wants the AI to read one of them.</li>
+<li>(3) Grandview has a grant-funded key with a $200 limit. Ben's own daily limit is lower. Ben starts a run on the project's key.</li>
+</ul>
 <ol>
-<li><b>A · Explore when asked.</b> A parent presses "Explore this question". One bounded run searches the board's agendas and the construction manager's reports, captures four documents, reads them, and offers three finds. It then stops. Within that run, the system decides for itself where and how to look. Nothing more happens until a member asks again.</li>
-<li><b>B · Explore when asked, or keep exploring.</b> As A, and the parent may also set the question to keep being explored: "weekly, until 30 June". Each week a run looks for new board items and reports, follows any new lead, and offers what it finds. It stops at the end date, when the parent stops it, or when the paying account reaches its limit. This widens the standing question from reading to exploring.</li>
-<li><b>C · Explore unasked.</b> The system sees open questions and starts runs on them when it judges it worthwhile, without any member choosing to. It would need an account to charge, such as the group's key or a new group allowance, and no member's choice would bound the cost.</li>
+<li><b>A · The narrowest setting wins.</b> Each level can only narrow the one above. In (1) Ana cannot explore. In (2) she cannot have the document read. In (3) the lower of the two limits applies. Simple and safe, but a member with her own means is held to the group's budget choices.</li>
+<li><b>B · Whoever pays decides.</b> Settings bind only work paid from that level's account. In (1) Ana explores. In (2) Ana's AI reads the whistleblower's document, because the project's setting does not bind her account. In (3) the project's limit applies to the project key. This respects members' own means, but leaves the project unable to protect its material.</li>
+<li><b>C · Split by reason.</b> The group and each project may set limits on the material, which bind everyone. Money limits bind only the account they belong to, and each payer decides what her own money is spent on. In (1) Ana explores. In (2) the document stays unread. In (3) the project key's $200 limit applies, and Ben's own limit applies only to his own account.</li>
 </ol>
-<p><b>Trade-offs.</b> A keeps today's rule and adds only freedom inside a run. B gives real proactive work, the kind that keeps watching while members wait on a records request, while a member still decides that it happens, until when, and on whose account. C is the most proactive, but it reverses K1481, needs a payer nobody chose, and could spend without limit. The study's order-of-magnitude cost was $100–300 for a Grandview-sized investigation over months. Nothing has been measured yet.</p>
-<p class="rec">Recommended: B. It gives you the proactive exploration you described, and keeps the decision to spend with a member.</p></div>
+<p class="rec">Recommended: C. It supports the range of AI use you described, so a member with her own account is not held back by the group's budget. It still lets a group or a project protect what its material is exposed to.</p></div>
+
+<div class="slip"><span class="id">D39 · Exploring without being asked each time, where that use is enabled</span>
+<p><b>Why it arises.</b> You said the system may "proactively explore a question" (D33). Your answer on AI use makes exploring one of the uses a group, a project or a member can turn on, within a cost limit. Your ruling of 5 October (K1481) says every AI run starts with a member's act, except a standing question a member writes, which re-runs on a schedule and only reads. Exploring is more than reading: it searches, captures documents and judges them. If exploring is turned on, can the system start it by itself?</p>
+<p><b>Example.</b> Grandview's owners turn on exploring for the project, on the project's key, with a $50 monthly limit. The question "When did the district first know the rebuild would run late?" is open. Under A, the system notices a new board agenda, explores it overnight, and offers two finds the next morning, labelled as its work and naming who turned exploring on. It stops when the $50 is used and says so once.</p>
+<ol>
+<li><b>A · Yes, where enabled.</b> Whoever pays turns exploring on for a project or a question. A cost limit must be set first; exploring cannot be turned on without one. Within that, the system explores when it judges it useful. Every run is labelled with who enabled it. It stops at the limit and says so once.</li>
+<li><b>B · Only on a schedule a member sets.</b> A member sets a question to be explored, say weekly until a set date, as a standing question does today but exploring instead of only reading. The system does not choose when to explore.</li>
+<li><b>C · No.</b> Every exploring run still starts with a member pressing a button.</li>
+</ol>
+<p><b>Trade-offs.</b> A is the proactive role you described and the most useful while members wait on records. It revises K1481, but keeps a person's choice and a cost limit in front of every run. B keeps more control but makes members do the scheduling. C changes nothing.</p>
+<p class="rec">Recommended: A, with the fences stated: enabled only by whoever pays, never without a cost limit, labelled, and stopping at the limit.</p></div>
 
 <div class="slip"><span class="id">D35 · Where steps that serve no question are kept</span>
 <p><b>Background.</b> You said a step is work done in pursuit of an answer to a question (D32). Steps on a question are kept with the question. A question can be shared by several projects, so those steps are seen from every project that draws on it. You also said some steps serve no particular question: "to provide context for members, in the development of a question, to understand how to respond to findings, and so on". Those steps need a home, and the home decides who sees them.</p>
@@ -222,7 +258,7 @@ ul.plain{padding-left:1.2rem;display:grid;gap:.35rem}
 <li><b>D28 · Removing steps.</b> You said steps are deleted when no longer needed. The record's habit is to keep a decision with its reason. The question will be which steps may simply disappear and which leave a trace.</li>
 <li><b>D29 · Resources.</b> You named people, money, information, connections, expertise and AI budget. Money runs against your 29 September "no budgets" rule for action plans. This needs restating for steps on questions.</li>
 <li><b>D30 · Status reports.</b> First drafted around team leaders, who are now withdrawn. It needs restating: who reports on what, if anyone.</li>
-<li><b>D31 · An AI budget for an investigation.</b> An optional limit on AI spending per investigation. It depends on D34 and on D12 (showing cost).</li>
+<li><b>D31 · An AI budget for an investigation.</b> Now part of your answer on AI use: a project may set its own limit (see the background to D38).</li>
 </ul>
 <p>Dependencies between steps need no ruling from you: a step may wait on another step, a document or a date, and the system refuses a loop.</p>
 
@@ -293,10 +329,14 @@ ul.plain{padding-left:1.2rem;display:grid;gap:.35rem}
 <tr><td class="id">D15</td><td>working material never published</td><td><span class="tag t-set">settled</span> K2064</td></tr>
 <tr><td class="id">D16–D24</td><td>watch or close; project waits; shared notes; interview; answer's words; image pages; bearing note; member words; instruction text</td><td><span class="tag t-open">open</span></td></tr>
 <tr><td class="id">D25–D26</td><td>teams, subgoals, leaders; assignments</td><td><span class="tag t-off">withdrawn</span> 8 Oct</td></tr>
-<tr><td class="id">D27–D31</td><td>milestones; removing steps; resources; reports; AI budget</td><td><span class="tag t-pause">paused</span></td></tr>
+<tr><td class="id">D27–D30</td><td>milestones; removing steps; resources; reports</td><td><span class="tag t-pause">paused</span></td></tr>
+<tr><td class="id">D31</td><td>AI budget for an investigation</td><td><span class="tag t-set">settled</span> by D34</td></tr>
 <tr><td class="id">D32</td><td>what a step is; steps without a question; what a step keeps; chance finds</td><td><span class="tag t-dir">your direction</span> 8 Oct</td></tr>
 <tr><td class="id">D33</td><td>members decide evidence; the system may explore, judge and offer</td><td><span class="tag t-dir">your direction</span> 8 Oct</td></tr>
-<tr><td class="id">D34–D36</td><td>system exploring on its own; steps with no question; who works on a question</td><td><span class="tag t-open">open</span> now</td></tr>
+<tr><td class="id">D34</td><td>AI use across groups, projects and members: types of use, accounts, cost limits, tracking</td><td><span class="tag t-dir">your direction</span> 8 Oct</td></tr>
+<tr><td class="id">D35–D36</td><td>steps with no question; who receives the system's finds</td><td><span class="tag t-open">open</span> now</td></tr>
+<tr><td class="id">D37</td><td>a project's own AI settings, set by its owners</td><td><span class="tag t-set">settled</span> from D34</td></tr>
+<tr><td class="id">D38–D39</td><td>when AI settings disagree; exploring unasked where enabled</td><td><span class="tag t-open">open</span> now</td></tr>
 </table></div>
 
 <h2 id="sources">7 · Sources and history</h2>
