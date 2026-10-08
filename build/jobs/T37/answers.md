@@ -1,3 +1,25 @@
 # answers (T37)
 
 **Status** · session_01XE1mkDC7sPSFEGTbGNanhw · depth 2 · WORKING · handled B1
+
+## Completion
+
+**Reading set** (mechanics §3, N739; START B1). Measured as §3 asks: my requirements 24 KB; my code 107 KB and tests 90 KB (`bio-plane/src/answers/`, `bio-plane/test/m/answers/`, all read whole); the used modules' public parts as §3 asks them: each Purpose (18 modules, 11 KB), credentials' R25, R28, R32, R35, R37 (6 KB), `run-rules` R22 (cited in R1), layer 6's row of `build/layers.md`, and the plan's entry T37-15 with rules 4 and 6 and rulings K231, K2130, K2175, K2184, K2200, K2201. About 245 KB, under 300 KB: read whole, by me, no workers. The other used services my Uses names (retrieval's `runSaved`/`findIn`/`selectionRead`, query-language's `savedForm`, duties' `occurrencesOf`, the rule services' owners) are unchanged by this job and were read where my code calls them.
+
+**Entries applied.**
+- T37-15 (N765, its share; rule 4; K231, K2130, K2200). R19: `standing.mjs` `keptAway()` reads `credentials.aiKeptAway()` (credentials R35, the one site of `AI_KEPT_AWAY`) in `heldBack`, after the copy's switch and the answerer's deployment and before `accountFor`. While it answers its refusal, or cannot be read (credentials then answers the refusal itself, fail closed), the run is held back `{condition: "kept_away", code: "AI_KEPT_AWAY", translation}`, the refusal's code and translation only (not `keep_away`'s reason, who or when); no account is read, no ceiling asked, no grant minted, no model called; the run's new finds reach the author once as R26's do, `answer` null. Keep-away was previously misreported as `no_account` (arriving through `accountFor`); an `AI_KEPT_AWAY` from `accountFor` or from R32 (keep-away turned on between the read and those calls) is now `kept_away` too, never `no_account`; `accountFor`'s and R32's own refusals stay as they were. Nothing of mine read `ASSISTANT_OFF` or `instance-setup`'s gate, before or after; the `assistantGate` the plane hands me is not read (T37-48's to drop). `index.mjs` header names `aiKeptAway` among the credentials services used.
+- R1 (K2200, K2201; run-rules R22): `scope.mjs` `draftAdmits(op, kind = "own_words")`: `own_words` (or absent) admits exactly what `askAdmits` admits (it calls it, so the two cannot drift); `translation`, and any other kind, admits nothing (fail closed), so a translation draft reads nothing of the record, `ASK_SCOPE` included. No caller outside answers used `draftAdmits` (checked: agent-worker and store-door import only `ASK_SCOPE`/`askAdmits`).
+
+**My reading, recorded (not a question: the requirement's fail-closed clause covers it).** A credentials provider that cannot be reached, lacks `aiKeptAway`, throws, or answers neither null nor a refusal is not a reading of null: the run is held back `kept_away`, fail closed, with `code` and `translation` null (no row to carry; this module mints no `AI_KEPT_AWAY`, K231). In the plane credentials is always reachable, so this arm guards only a broken composition.
+
+**Deferred.** None.
+
+**Found in other modules.** None new. The requirements' two "*(not yet met: T37)*" marks (R1, R19) are now met; clearing them is BOB's (the requirements file is not in my paths).
+
+**Tests** (`bio-plane/test/m/answers/`). New: `standing.test.mjs` "R19 keep-away …" (keep-away on gives `kept_away` with the row's code and translation only; only `aiKeptAway` touched on credentials; no grant, no ceiling ask, no model call; finds told once, `answer` null; the copy's switch read first; keep-away off answers as before with `aiKeptAway` read before `accountFor`; an unreadable setting the same condition) and "R19 keep-away is never reported as no_account …" (`accountFor`'s or R32's `AI_KEPT_AWAY` is `kept_away`; `NO_ACCOUNT` stays `no_account`; an unreachable or broken credentials is `kept_away`, fail closed). Changed: `standingfind.test.mjs` R1's draft-reach test names the translation exception (every op refused for `translation` and unknown kinds; `own_words` equals `askAdmits`); `words.test.mjs` R29 sweeps the `kept_away` condition and its translation as a run answers them. Every existing arm of R19 (`standing.test.mjs`) unchanged and passing.
+- `node --test bio-plane/test/m/answers/`: tests 46, pass 46, fail 0.
+- Users of `scope.mjs`: `bio-plane/test/m/store-door/dispatch.test.mjs` pass 10 fail 0; `agent-worker/test/ask.test.mjs` pass 1 fail 0 (same before the change).
+- Users of `answers`: notice-producers 73/0, answer-envelope 27/0, store-door 38/0; scheduler 109 pass 5 fail and op-declarations 103 pass 3 fail, the same failing tests by name with and without my change (inherited, none an answers test; the red census lists none of mine).
+- Checks (civicos-process): `format: 136 modules, 135 requirements files; 0 failures`; `architecture: 17 product files, 55 relative imports (0 naming no tracked file, not judged); 0 failures`; `coverage: 1 modules, 29 of 29 live requirement ids named by a test; 0 failures`; ownership: see below.
+
+Size (session_01XE1mkDC7sPSFEGTbGNanhw): test runs 13, module lines 1581

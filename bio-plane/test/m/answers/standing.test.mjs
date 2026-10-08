@@ -184,6 +184,91 @@ test("R19 the AI half answers new finds only when the copy's switch, the author'
   assert.equal(calls.at(-1).author, CAROL); assert.equal(calls.at(-1).held.member, "carol");
 });
 
+test("R19 keep-away (credentials R35's aiKeptAway, read after the copy's switch and before any account): kept_away with the refusal's code and translation only; no account read, no grant minted, no ceiling asked, no model called; the finds still told once; an unreadable setting the same; keep-away off answers as before", async () => {
+  const w = answersWorld();
+  const calls = [], touched = [];
+  const real = w.credentials;
+  w.a.deps.credentials = new Proxy(real, { get: (t, k) => { const v = t[k]; return typeof v === "function" ? (...a) => { touched.push(String(k)); return v.apply(t, a); } : v; } });
+  w.a.resolved.delete("credentials");
+  const q = set(w);
+  await w.a.standingTick(w.clock.now);
+  let n = 0;
+  const step = async () => {
+    w.document(`budget ${++n}`, { title: `Budget ${n}` });
+    w.at(new Date(Date.parse("2026-10-07T15:00:00.000Z") + (n - 1) * 86400000).toISOString());
+    touched.length = 0;
+    const mine = (await w.a.standingTick(w.clock.now)).ran.find((x) => x.id === q.id);
+    assert.equal(mine.new_found, true);
+    return mine.held_back;
+  };
+  const grants = () => w.rows(`SELECT * FROM ai_grants`).length;
+  /* every other condition would let it run: the copy's switch, the answerer, bob's own reference and its standing switch */
+  assert.equal(w.a.standingAiSwitch({ on: true, by: ALICE }).ok, true);
+  w.a.registerStandingAnswerer("agent-worker", async (x) => { calls.push(x); return answer(); });
+  await real.accountReferenceSet({ member: "bob", kind: "apikey", secret: "sk-test", by: BOB });
+  assert.equal((await real.accountSwitchSet({ member: "bob", switch: "standing", on: true, by: BOB })).ok, true);
+  /* the copy's switch is read first: off, keep-away is not read at all */
+  assert.equal((await real.aiKeepAwaySet({ on: true, reason: "We are reviewing what the assistant may read.", by: ALICE })).ok, true);
+  w.record.setSetting("answers_standing_ai", false, "admin");
+  assert.deepEqual(await step(), { condition: "switch_off", switch: "copy" });
+  assert.deepEqual(touched, [], "nothing of credentials is read while the copy's switch is off");
+  w.record.setSetting("answers_standing_ai", true, "admin");
+  const refusal = real.aiKeptAway();
+  assert.equal(refusal.code, "AI_KEPT_AWAY");
+  const kept = { condition: "kept_away", code: "AI_KEPT_AWAY", translation: refusal.translation };
+  const held = await step();
+  assert.deepEqual(held, kept, "the refusal's code and translation only: not its reason, who or when");
+  assert.deepEqual(touched, ["aiKeptAway"], "no account is read and no grant asked for");
+  assert.equal(grants(), 0); assert.equal(calls.length, 0); assert.equal(w.ceiling.asked.length, 0);
+  /* the run's new finds reach the author once, as R26's do: answer null */
+  const entries = w.a.standingAnswersFor({ member: BOB }).entries;
+  const e = entries.at(-1);
+  assert.equal(e.answer, null); assert.deepEqual(e.held_back, kept); assert.equal(e.finds.ids.length, 1);
+  assert.equal(e.label, STANDING_LABEL);
+  assert.deepEqual(w.a.standingAnswersFor({ member: BOB, after: e.run }).entries, [], "told once");
+  /* keep-away off: the run is answered as before */
+  assert.equal((await real.aiKeepAwaySet({ on: false, by: ALICE })).ok, true);
+  assert.equal(await step(), null);
+  assert.equal(calls.length, 1); assert.equal(grants(), 1);
+  assert.deepEqual(touched.slice(0, 2), ["aiKeptAway", "accountFor"], "keep-away read before any account");
+  /* a setting that cannot be read is credentials' refusal itself (fail closed, K2093): the same condition */
+  w.host.storage.sql.exec(`ALTER TABLE ai_keep_away RENAME TO ai_keep_away_gone`);
+  const unread = real.aiKeptAway();
+  assert.equal(unread.code, "AI_KEPT_AWAY");
+  assert.deepEqual(await step(), { condition: "kept_away", code: "AI_KEPT_AWAY", translation: unread.translation });
+  assert.deepEqual(touched, ["aiKeptAway"]);
+  assert.equal(calls.length, 1, "no model called"); assert.equal(grants(), 1, "no grant minted");
+  w.host.storage.sql.exec(`ALTER TABLE ai_keep_away_gone RENAME TO ai_keep_away`);
+  assert.equal(await step(), null);
+});
+
+test("R19 keep-away is never reported as no_account, nor an account's refusal as kept_away: keep-away turned on between the read and accountFor or R32 is kept_away; accountFor's own refusals stay no_account; a credentials that cannot answer keep-away is kept away, fail closed", async () => {
+  const w = answersWorld();
+  const q = set(w);
+  await w.a.standingTick(w.clock.now);
+  assert.equal(w.a.standingAiSwitch({ on: true, by: ALICE }).ok, true);
+  const calls = [];
+  w.a.registerStandingAnswerer("agent-worker", async (x) => { calls.push(x); return answer(); });
+  const ROW = { ok: false, reason: "AI_KEPT_AWAY", code: "AI_KEPT_AWAY", translation: "Your group keeps its material away." };
+  let n = 0;
+  const step = async (creds) => {
+    w.a.deps.credentials = creds; w.a.resolved.delete("credentials");
+    w.document(`budget ${++n}`, { title: `Budget ${n}` });
+    w.at(new Date(Date.parse("2026-10-07T15:00:00.000Z") + (n - 1) * 86400000).toISOString());
+    return (await w.a.standingTick(w.clock.now)).ran.find((x) => x.id === q.id).held_back;
+  };
+  const kept = { condition: "kept_away", code: "AI_KEPT_AWAY", translation: ROW.translation };
+  assert.deepEqual(await step({ aiKeptAway: () => null, accountFor: async () => ROW }), kept, "accountFor's AI_KEPT_AWAY");
+  assert.deepEqual(await step({ aiKeptAway: () => null, accountFor: async () => ({ ok: true, level: "member", key: "k" }),
+                                aiGrantMintStanding: async () => ROW }), kept, "R32's AI_KEPT_AWAY");
+  assert.deepEqual(await step({ aiKeptAway: () => null, accountFor: async () => ({ ok: false, code: "NO_ACCOUNT" }) }),
+                   { condition: "no_account" }, "keep-away off: no account is no_account");
+  for (const creds of [null, { accountFor: async () => ({ ok: true }) }, { aiKeptAway: () => { throw new Error("down"); } },
+                       { aiKeptAway: () => undefined }])
+    assert.deepEqual(await step(creds), { condition: "kept_away", code: null, translation: null }, "fail closed, no row to carry");
+  assert.equal(calls.length, 0);
+});
+
 test("R20 standingAnswersFor answers a member's own new-find runs, once each, in run order after `after`, at most 200, with a cursor, labelled machine work from the standing question; nothing of another member's", async () => {
   const w = answersWorld();
   const q = set(w);

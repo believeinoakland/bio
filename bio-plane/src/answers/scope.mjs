@@ -50,8 +50,13 @@ export function askAdmits(op) {
 /** R1 (T35; N686, K1837): the whole reach of mode `draft` (`run-rules`' R21) is the asking scope: a draft reads only
  *  what `askAdmits` admits, through `logRead` under the grant its member's act mints, so R2's removals hold for every
  *  read it makes. It is not narrowed for a draft (a firsthand field or a member's switch off reads nothing at all, and
- *  that is the caller's to keep, `wizard-scripts` R25). The same function, so the two cannot drift. */
-export const draftAdmits = askAdmits;
+ *  that is the caller's to keep, `wizard-scripts` R25); `askAdmits` itself answers, so the two cannot drift. (T37;
+ *  N669, K2200, K2201) A translation draft is the exception: it reads nothing of the record, the asking scope included
+ *  (`run-rules` R22). `kind` is the draft's kind as `run-rules`' `DRAFT_KINDS` names it, `own_words` when absent; any
+ *  kind but `own_words` reads nothing (fail closed). Pure; never throws. */
+export function draftAdmits(op, kind = "own_words") {
+  return kind === "own_words" && askAdmits(op);
+}
 
 const ID = /^[A-Z]{2,6}-\d{4}-[A-Za-z0-9-]+$/;
 const isTie = (s) => /^MTI-\d{4}-/.test(s);
