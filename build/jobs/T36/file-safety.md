@@ -58,7 +58,46 @@ Readings J1 (2) and (3) stand (B2): byte answers are Responses from the ops map 
 4. **The users' wiring** (later layers): the route map `fileSafetyOps` with byte answers for four ops; `reputationTool()` for control plane to hand acquisition; the scheduler's wakes; nothing in the plane imports the module yet, so no generated artifact is stale.
 5. **answer-envelope** `R7, R2` ("every code decorated before the catalogue's end …") and **row-census** fail on the tranche tip without my change too (not mine).
 
-Rows added, each **awaiting stamp** (T37's promotion job): C-140.1–C-140.39 — `NO_SUCH_CAPTURE`, `SCANNER_ABSENT`, `SCANNER_UNREACHABLE`, `NOT_SCANNED`, `SCAN_PENDING`, `SCAN_HOLD`, `SCAN_STALE`, `WARNING_NOT_CONFIRMED`, `SAFE_VIEW_ONLY`, `NO_SAFE_VIEW`, `SAFE_VIEW_PENDING`, `SAFE_VIEW_FAILED`, `RENDERER_ABSENT`, `NO_OUTSIDE_TOOL`, `DEEPER_CHECK_BUDGET_SPENT`, `MACHINE_CANNOT_RELEASE`, `NO_REASON`, `NOT_HELD`, `SAME_MEMBER`, `PROVIDER_REFUSED`, `PROVIDER_HELD`, `PROVIDER_UNKNOWN`, `DESCRIPTOR_MALFORMED`, `PROVIDER_SHARES_SAMPLES`, `HANDLING_NOT_STATED`, `NEVER_SENDS_INCOMPLETE`, `ADDRESS_WOULD_LEAVE`, `PRIVATE_MODE_UNVERIFIABLE`, `HANDLING_NOT_SHOWN`, `RETENTION_NOT_CONFIRMED`, `CREDENTIALS_MISSING`, `USE_NOT_ALLOWED`, `LIMIT_INVALID`, `NO_SUCH_TOOL`, `NO_SAFE_COPY`, `SAFE_COPY_PENDING`, `SAFE_COPY_FAILED`, `SAFE_COPY_WITHHELD`, `FORWARD_PERIOD_INVALID` (C-140.1 … C-140.39 in that order).
+Rows added, each awaiting stamp (T37's promotion job), all in `src/file-safety/checks.mjs` `FILE_SAFETY_CHECKS`:
+- C-140.1 NO_SUCH_CAPTURE awaiting stamp
+- C-140.2 SCANNER_ABSENT awaiting stamp
+- C-140.3 SCANNER_UNREACHABLE awaiting stamp
+- C-140.4 NOT_SCANNED awaiting stamp
+- C-140.5 SCAN_PENDING awaiting stamp
+- C-140.6 SCAN_HOLD awaiting stamp
+- C-140.7 SCAN_STALE awaiting stamp
+- C-140.8 WARNING_NOT_CONFIRMED awaiting stamp
+- C-140.9 SAFE_VIEW_ONLY awaiting stamp
+- C-140.10 NO_SAFE_VIEW awaiting stamp
+- C-140.11 SAFE_VIEW_PENDING awaiting stamp
+- C-140.12 SAFE_VIEW_FAILED awaiting stamp
+- C-140.13 RENDERER_ABSENT awaiting stamp
+- C-140.14 NO_OUTSIDE_TOOL awaiting stamp
+- C-140.15 DEEPER_CHECK_BUDGET_SPENT awaiting stamp
+- C-140.16 MACHINE_CANNOT_RELEASE awaiting stamp
+- C-140.17 NO_REASON awaiting stamp
+- C-140.18 NOT_HELD awaiting stamp
+- C-140.19 SAME_MEMBER awaiting stamp
+- C-140.20 PROVIDER_REFUSED awaiting stamp
+- C-140.21 PROVIDER_HELD awaiting stamp
+- C-140.22 PROVIDER_UNKNOWN awaiting stamp
+- C-140.23 DESCRIPTOR_MALFORMED awaiting stamp
+- C-140.24 PROVIDER_SHARES_SAMPLES awaiting stamp
+- C-140.25 HANDLING_NOT_STATED awaiting stamp
+- C-140.26 NEVER_SENDS_INCOMPLETE awaiting stamp
+- C-140.27 ADDRESS_WOULD_LEAVE awaiting stamp
+- C-140.28 PRIVATE_MODE_UNVERIFIABLE awaiting stamp
+- C-140.29 HANDLING_NOT_SHOWN awaiting stamp
+- C-140.30 RETENTION_NOT_CONFIRMED awaiting stamp
+- C-140.31 CREDENTIALS_MISSING awaiting stamp
+- C-140.32 USE_NOT_ALLOWED awaiting stamp
+- C-140.33 LIMIT_INVALID awaiting stamp
+- C-140.34 NO_SUCH_TOOL awaiting stamp
+- C-140.35 NO_SAFE_COPY awaiting stamp
+- C-140.36 SAFE_COPY_PENDING awaiting stamp
+- C-140.37 SAFE_COPY_FAILED awaiting stamp
+- C-140.38 SAFE_COPY_WITHHELD awaiting stamp
+- C-140.39 FORWARD_PERIOD_INVALID awaiting stamp
 
 For BOB to fill in `modules.json`: file-safety `paths` `["bio-plane/src/file-safety/"]`, `tests` `["bio-plane/test/m/file-safety/"]`.
 
