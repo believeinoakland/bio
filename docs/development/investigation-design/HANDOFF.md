@@ -33,3 +33,7 @@ Numbered entries; BOB answers each in rulings (K) on `tranche/T<n>`. Decision st
 ## H5 · 2026-10-08 · D38 ruled
 
 **Carries:** Bob, 2026-10-08: "D38: C". When group, project and member AI settings differ: the group and each project may set limits on what the AI may see of their material, and those bind everyone whoever pays; money limits bind only the account they belong to; each payer decides what its own spend is used for (examples on the working document). **Requirements must say:** two kinds of AI setting (material limits at group and project level, binding all accounts; money limits per account); a member's own account is never bound by the group's or project's money limits, always by their material limits.
+
+## H6 · 2026-10-08 · D39 ruled
+
+**Carries:** Bob, 2026-10-08 (words in `DECISIONS.md`): each account owner (group, project, member) can set an overall usage limit and limits on each type of usage; a limit on proactively exploring a question may be marked inclusive or exclusive of the overall limit. Read as option A: the system may explore unasked where an account owner enabled it, within its limit (revises K1481 for exploring; the standing question stays as it is). **Requirements must say:** per account owner, an overall limit and per-use limits, each per-use limit inclusive or exclusive; exploring enabled only with a limit; runs labelled with who enabled them; told once at a limit. Period and units are BOB's detail (money where the account reports cost, tokens and calls for a subscription, per D34's reading).
