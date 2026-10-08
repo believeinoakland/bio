@@ -24,3 +24,7 @@
 - `checks/format.mjs`: 0 failures. `checks/architecture.mjs admission`: 0 failures. `checks/coverage.mjs admission`: 22 of 22 ids named, 0 failures. `checks/ownership.mjs admission tranche/T38`: 6 files, 0 failures.
 
 Size (session_01CTyGZe6hkFn6SZXskpYRyL): test runs 5, module lines 1379
+
+## J1 · REPORT
+
+control-plane index.mjs:654, `windowed.source ?? await sourceOf(req, env)`: since T38-24, sourceOf with an unbound key asks the store's doorwindow (count: false), so when the window was not read (a store fault) the fallback asks the same store a second time. The result is right (null again on a dead store), but the fault path costs one extra request. Improvement for control-plane: drop the fallback for a public op, since the window's source is already the fingerprint. Not urgent; for next.md.
