@@ -63,9 +63,20 @@ test("R6: in the runtime, the door answers through the hooks: the version, the s
   const stats = await get("op=stats", "adm-plane");   /* the generic forward to the store's frame (R1, R5) */
   assert.equal(stats.status, 200);
   assert.equal(typeof stats.body.result.bundles, "number");
-  /* negative control (admission R20): the same credential in the address admits nothing */
+  /* negative control (admission R20, C-38.10; K2166): the same credential in the address admits nothing; the door refuses
+     it by name, 400 `CREDENTIAL_IN_ADDRESS`, before any store is asked, and its answer never carries the credential. */
   const inAddress = await get("op=stats&token=adm-plane");
-  assert.equal(inAddress.status, 401, JSON.stringify(inAddress.body));
+  assert.equal(inAddress.status, 400, JSON.stringify(inAddress.body));
+  assert.equal(inAddress.body.ok, false);
+  assert.equal(inAddress.body.code, "CREDENTIAL_IN_ADDRESS");
+  assert.equal(inAddress.body.reason, "CREDENTIAL_IN_ADDRESS");
+  assert.equal(inAddress.body.check, "C-38.10");
+  assert.equal(inAddress.body.result, undefined, "no stats answered");
+  assert.equal(JSON.stringify(inAddress.body).includes("adm-plane"), false, "the credential is in no answer");
+  /* and beside a valid header it is still refused: the address is never read as a credential */
+  const both = await mf.dispatchFetch("http://x/api/?op=stats&token=adm-plane", { headers: { authorization: "Bearer adm-plane" } });
+  const bothBody = await both.json();
+  assert.deepEqual([both.status, bothBody.code, bothBody.check], [400, "CREDENTIAL_IN_ADDRESS", "C-38.10"]);
 });
 
 test("R7, R21, R27 (N625, K1683; rev. 2 §4): `wrangler.jsonc`'s `main` names the Worker's entry, its bindings as the deployment has them, `SHEET_WORKER` and `FILE_SCANNER` (the fleet member `file-scanner`) among its services", () => {

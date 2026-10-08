@@ -48,8 +48,9 @@ export async function askOnObject(ctx, env, { member, session = null, grant = nu
   const w = env && env.AGENT_WORKER;
   if (!w || typeof w.fetch !== "function")
     return json({ ok: false, reason: "AGENT_WORKER_UNBOUND", detail: "your group's Civicsmith has no assistant bound to it. Nothing was asked." }, 503);
-  /* K1690 (instance-setup R55): while the copy's assistant is off, every ask is refused ASSISTANT_OFF, before any grant
-     is minted or any account read. */
+  /* K1690, N765 (instance-setup R55; credentials R35; K231, K2200 (3)): while the group keeps its material away from
+     every assistant, or that setting cannot be read, every ask is refused as instance-setup's `assistantGate()` answers
+     it, `credentials`' `AI_KEPT_AWAY` row as given, before any grant is minted or any account read. */
   const off = instanceSetupOf(ctx, env).assistantGate();
   if (off) return json(off, 403);
   const c = credentialsOf(ctx);
@@ -85,7 +86,8 @@ export async function askOnObject(ctx, env, { member, session = null, grant = nu
 /** plane R19 (N686; K1837, K1841, K2038, K2041, K2062; control-plane R57, agent-worker R59, credentials R27, R35, R37):
  *  on the `bio` object, the draft's account and grant, the `/draft` twin of `askOnObject`. control-plane's door, past
  *  every refusal its own and the owner's, asks it with `draftAsk`'s shape, `{op, member, session, told, act, field,
- *  firsthand, pack}`. While the copy's assistant is off it is refused `ASSISTANT_OFF` (instance-setup R55); it resolves
+ *  firsthand, pack}`. While the group keeps its material away it is refused `AI_KEPT_AWAY` as instance-setup's
+ *  `assistantGate()` answers it (its R55; credentials R35; N765); it resolves
  *  the account that serves the member's own act (`accountFor`, an `ask`-kind act: a draft is the member's own read-only
  *  ask), reads that account's `suggestions` switch (the member's own reference's, credentials R25; the group key's, its
  *  R37), mints the member's ask grant only when `suggestions` is on and the field is not firsthand (DEC-153 (2), K1841
@@ -108,7 +110,7 @@ export async function draftOnObject(ctx, env, { op = null, member = null, sessio
   const w = env && env.AGENT_WORKER;
   if (!w || typeof w.fetch !== "function")
     return out(503, { ok: false, reason: "AGENT_WORKER_UNBOUND", detail: "your group's Civicsmith has no assistant bound to it. Nothing was drafted." });
-  const off = instanceSetupOf(ctx, env).assistantGate();
+  const off = instanceSetupOf(ctx, env).assistantGate();   /* N765: `AI_KEPT_AWAY`, as for an ask, before any account */
   if (off) return out(403, off);
   const c = credentialsOf(ctx);
   let ref = await c.accountFor({ member: who, act: { kind: "ask", member: who } });

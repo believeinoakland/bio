@@ -41,6 +41,7 @@ import { caseAuthoringOf, caseAuthoringOps } from "../../../src/case-authoring/i
 import { ratificationOf, ratificationOps } from "../../../src/ratification/index.mjs";
 import { publicationOf, publicationOps } from "../../../src/publication/index.mjs";
 import { docketOf, docketOps } from "../../../src/docket/index.mjs";
+import { caseCarriageOps } from "../../../src/case-carriage/index.mjs";
 import { caseImportOf, caseImportOps } from "../../../src/case-import/index.mjs";
 import { publicReadOf, publicReadOps } from "../../../src/public-read/index.mjs";
 import { projectStageOf, projectStageOps } from "../../../src/project-stage/index.mjs";
@@ -112,6 +113,8 @@ export const MODULE_MAPS = [
   ["corpus-export", (c, u) => corpusExportOps(corpusExportOf(c), (k) => u.searchParams.get(k))],
   ["case-tensions", (c, u, b) => caseTensionsOps(caseTensionsOf(c), u, b)],
   ["publication", (c, u, b) => publicationOps(publicationOf(c), u, b)],
+  /* plane R18 (T37; K2226): case-carriage's map, over the one instance publication's factory made */
+  ["case-carriage", (c, u, b) => caseCarriageOps(publicationOf(c).caseCarriage, u, b)],
   ["docket", (c, u, b) => docketOps(docketOf(c), u, b)],
   ["public-read", (c, u) => publicReadOps(publicReadOf(c), u)],
   ["project-stage", (c, u) => projectStageOps(projectStageOf(c), u)],

@@ -173,18 +173,30 @@ test("R26, R2: file-safety is handed the evidence bucket (the object's CAPTURES,
   assert.equal(recordOf(x.ctx).evidenceStore() !== null, true, "the evidence store record-core holds, which file-safety reads the originals through");
 });
 
-test("R26 (K2153; scheduler R24): file-safety is handed to the scheduler before its start: its four batch consumers are registered, a fresh instance wants its alarm at once, and the alarm runs file-scan against the bound scanner", async () => {
+test("R26 (K2153, K2236; scheduler R24, file-safety R39): file-safety is handed to the scheduler before its start: its five batch consumers are registered, and each firing runs exactly the batches file-safety's own wakes say are due, scan against the bound scanner", async () => {
   const fs = scanner();
   const x = await store({ env: { FILE_SCANNER: fs } });
   const names = schedulerOf(x.ctx).consumers();
-  for (const c of ["file-scan", "file-render", "file-deeper", "file-forward"]) assert.ok(names.includes(c), `${c} in ${names.join()}`);
+  const FIVE = ["file-scan", "file-render", "file-deeper", "file-forward", "file-reputation"];
+  assert.deepEqual(names.filter((c) => c.startsWith("file-")), FIVE, names.join());
   x.ctx.storage.sql.exec(`INSERT INTO fs_files (capture_sha, queued_at, render_state) VALUES (?, '2026-10-08T00:00:00Z', 'queued')`, SHA);
   const now = Date.parse("2026-10-08T01:00:00Z");
+  const fsafe = fileSafetyOf(x.ctx);
+  const wakes = { filescan: fsafe.scanWake(now), filerender: fsafe.renderWake(now), filedeeper: fsafe.deeperWake(now),
+                  fileforward: fsafe.forwardWake(now), filereputation: fsafe.reputationWake(now) };
+  /* a file held and queued to render, no deeper check queued, no log sink and no reputation tool on */
+  assert.deepEqual(wakes, { filescan: now, filerender: now, filedeeper: null, fileforward: null, filereputation: null });
   const r = await x.s.onAlarm(now);
   assert.equal(r.filescan && r.filescan.ok, true, JSON.stringify(r.filescan));
   assert.equal(r.filescan.scanned, 1);
   assert.ok(fs.seen.some((s) => s.path === "/scan"), "the scan reached the member");
-  assert.ok("filerender" in r && "filedeeper" in r, Object.keys(r).join());
+  for (const [key, at] of Object.entries(wakes))
+    assert.equal(key in r, at !== null && at <= now, `${key}: run exactly when file-safety's wake is due (${Object.keys(r).join()})`);
+  /* negative control: with no scanner bound, file-safety's scan wants no wake, so no firing runs the scan */
+  const bare = await store();
+  bare.ctx.storage.sql.exec(`INSERT INTO fs_files (capture_sha, queued_at, render_state) VALUES (?, '2026-10-08T00:00:00Z', 'queued')`, SHA);
+  assert.equal(fileSafetyOf(bare.ctx).scanWake(now), null);
+  assert.equal("filescan" in (await bare.s.onAlarm(now)), false);
 });
 
 test("R26, R5: every op of fileSafetyOps is in the route map, directly after capture's, and answers through the door what its own map answers called directly", async () => {
@@ -263,7 +275,39 @@ test("R29 (K2087, K2155; acquisition R44): capture is handed the object's FILE_S
   assert.equal(fileSafetyOf(x.ctx).env.FILE_SCANNER, fs, "the same binding as file-safety's");
 });
 
-test.todo("R29 (K2155; N774, T37-37, T37-38): the reputation reader the plane hands capture, `file-safety.reputationTool()`, is asked at each acquisition and reaches acquisition — waits on capture R73 keeping and exposing it and acquisition R44 awaiting it (not yet met: T37)");
+test("R29 (K2087, K2155; N774; capture R73, acquisition R44): the reputation reader the plane hands capture, file-safety's `reputationTool()`, is asked afresh at each acquisition, and the tool it answers then is the one acquisition asks the bound scanner with", async () => {
+  const fs = scanner();
+  const x = await store({ env: { FILE_SCANNER: fs, CAPTURES: bucket() } });
+  const safety = fileSafetyOf(x.ctx);
+  let asked = 0;
+  const own = safety.reputationTool;
+  safety.reputationTool = async () => { asked += 1; return { tool_id: `rep-${asked}`, kind: "url_reputation" }; };
+  const real = globalThis.fetch;
+  const pages = [];
+  globalThis.fetch = async (u) => { const page = `<!doctype html><title>Agenda</title><p>${u}</p>`; pages.push(page);
+    return new Response(page, { headers: { "content-type": "text/html" } }); };
+  const answers = [];
+  try {
+    for (const n of [1, 2]) {
+      const r = await captureOf(x.ctx).acquire({ locator: `https://agendas.example.org/a${n}` }, { cls: "admin", storeName: "bio", member: false });
+      assert.equal(r.body.ok, true, JSON.stringify(r.body).slice(0, 300));
+      answers.push(r.body.reputation);
+    }
+  } finally { globalThis.fetch = real; safety.reputationTool = own; }
+  assert.equal(asked, 2, "the reader is asked at each acquisition, never once at start");
+  const lookups = fs.seen.filter((q) => q.path === "/provider/reputation");
+  assert.deepEqual(lookups.map((q) => [q.body.address, q.body.tool.tool_id]),
+    [["https://agendas.example.org/a1", "rep-1"], ["https://agendas.example.org/a2", "rep-2"]]);
+  assert.deepEqual(answers.map((a) => [a.tool, a.listed]), [["rep-1", false], ["rep-2", false]], "stated in each answer");
+  /* negative control: with no reputation tool on (file-safety's own reader, unstubbed), nothing is asked of the scanner */
+  const bare = await store({ env: { FILE_SCANNER: scanner(), CAPTURES: bucket() } });
+  globalThis.fetch = async () => new Response("<!doctype html><p>x</p>", { headers: { "content-type": "text/html" } });
+  let none;
+  try { none = await captureOf(bare.ctx).acquire({ locator: "https://agendas.example.org/b" }, { cls: "admin", storeName: "bio", member: false }); }
+  finally { globalThis.fetch = real; }
+  assert.equal(none.body.reputation.unanswered, "NO_TOOL");
+  assert.equal(bare.env.FILE_SCANNER.seen.some((q) => q.path === "/provider/reputation"), false);
+});
 
 /* ===== K2141 ===== */
 
