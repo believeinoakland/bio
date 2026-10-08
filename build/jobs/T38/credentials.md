@@ -1,6 +1,6 @@
 # credentials (T38)
 
-**Status** · session_011Sz476u5szTBqKpR6HExC4 · depth 2 · RUNNING until 2026-10-08T16:22:13Z (the user modules' tests, head and base, after B3) · handled B3
+**Status** · session_011Sz476u5szTBqKpR6HExC4 · depth 2 · COMPLETE · handled B3
 
 ## J1 · QUESTION
 
