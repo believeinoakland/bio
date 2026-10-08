@@ -24,10 +24,10 @@ const wanting = (wakes) => Object.fromEntries(FIVE.map((n, i) => [n, { wake: wak
 
 /* ---- the registry (R5, R2) ---- */
 
-test("R24, R5, R2: the five stand after dated-waits, in R24's order, each answering under its own key (filescan, filerender, filedeeper, fileforward, filereputation); without file-safety they are absent", () => {
+test("R24, R5, R2: the five stand after dated-waits, in R24's order, before R25's document-copy, each answering under its own key (filescan, filerender, filedeeper, fileforward, filereputation); without file-safety they are absent", () => {
   assert.deepEqual([...FILE_SAFETY_CONSUMERS], FIVE);
   assert.deepEqual([...FILE_CONSUMERS], FIVE, "the fixture's list is the module's");
-  assert.deepEqual(SCHEDULER_ORDER.slice(SCHEDULER_ORDER.indexOf("dated-waits")), ["dated-waits", ...FIVE], "last in R5's order");
+  assert.deepEqual(SCHEDULER_ORDER.slice(SCHEDULER_ORDER.indexOf("dated-waits")), ["dated-waits", ...FIVE, "document-copy"], "then document-copy, last in R5's order");
   assert.deepEqual(FIVE.map((n) => SCHEDULER_KEYS[n]), KEYS);
   for (const n of FIVE) {
     assert.equal(RANKED.includes(n), false, `${n}: given its now alone`);
@@ -36,7 +36,7 @@ test("R24, R5, R2: the five stand after dated-waits, in R24's order, each answer
   }
   const { s } = world({}, null, { daily: true, files: true });
   const names = s.consumers();
-  assert.deepEqual(names.slice(names.indexOf("dated-waits")), ["dated-waits", ...FIVE]);
+  assert.deepEqual(names.slice(names.indexOf("dated-waits")), ["dated-waits", ...FIVE], "no case-carriage owner: the five last");
   assert.deepEqual(world().s.consumers().filter((n) => FIVE.includes(n)), [], "no file-safety owner: none of the five");
 });
 

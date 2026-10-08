@@ -36,6 +36,10 @@
  *  what `file-safety` R39 answers, asked afresh each time from its own durable state, so this module keeps no instant,
  *  period or interval for any of them (R7, R18); a value `sched_files` T36 left in storage is ignored, never read.
  *  When handed, it registers once with `file-safety.onFileWork` (its R40), whose call arms the alarm (R9).
+ *
+ *  T39-15 (R25; N806, K2333): `document-copy` closes the registry, calling `case-carriage.copyBatch` (its R15), its due
+ *  and wake `copyWake(now)` asked afresh each time from case-carriage's own tables, so nothing is kept here (R7, R18).
+ *  At start it registers once with `case-carriage.onCopyWork` (its R17), whose call arms the alarm (R9).
  * ========================================================================= */
 import { retrievalOf } from "../retrieval/index.mjs";
 import { connectionsOf } from "../connections/index.mjs";
@@ -59,6 +63,7 @@ import { answersOf } from "../answers/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { followingOf } from "../following/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
+import { caseCarriageOf } from "../case-carriage/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { localDay, dayRange } from "../civil-time/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
@@ -76,7 +81,7 @@ export const SCHEDULER_ORDER = Object.freeze([
   "monitor-cadence", "gathering-sweep", "ai-run-reap", "capture-request-drain", "ai-run-wake", "calibration-reprobe",
   "group-domain-recheck", "bias-debt", "intent-age", "notice-sweep", "deadline-recheck", "scheduled-publish", "working-on-seal",
   "working-on-attest", "follow", "duty-transitions", "interest-checks", "money-detectors", "standing-questions",
-  "dated-waits", "file-scan", "file-render", "file-deeper", "file-forward", "file-reputation",
+  "dated-waits", "file-scan", "file-render", "file-deeper", "file-forward", "file-reputation", "document-copy",
 ]);
 
 /** R2: each consumer's key in `onAlarm`'s answer. The task drain's counts are spread into the answer's own fields. */
@@ -90,7 +95,7 @@ export const SCHEDULER_KEYS = Object.freeze({
   "duty-transitions": "dutytransitions", "interest-checks": "interestchecks", "money-detectors": "moneydetectors",
   "standing-questions": "standingquestions", "dated-waits": "datedwaits",
   "file-scan": "filescan", "file-render": "filerender", "file-deeper": "filedeeper", "file-forward": "fileforward",
-  "file-reputation": "filereputation",
+  "file-reputation": "filereputation", "document-copy": "doccopy",
 });
 
 /** R6: due at every firing. Every other consumer is due only when its owner says so. */
@@ -206,7 +211,7 @@ export class Scheduler {
   /** `storage` is the Durable Object's storage (its alarm, and the probe seam's and the daily consumers' values);
    *  `owners` answers each consumer's owner (`retrieval`, `monitoring`, `connections`, `progressions`, `aiRuns`,
    *  `captureRequests`, `calibration`, `bias`, `intent`, `reevaluation`, `networkNotices`, `linkSweep`, `following`,
-   *  `duties`, `people`, `moneyChecks`, `answers`, `inquiry`, `publication`, `fileSafety`), each a function returning the owner, so an
+   *  `duties`, `people`, `moneyChecks`, `answers`, `inquiry`, `publication`, `fileSafety`, `caseCarriage`), each a function returning the owner, so an
    *  owner is reached only when the registry is built; `zone()` answers the group's time zone or null (R21's local day). */
   constructor({ storage, env = null, owners = {}, zone = null } = {}) {
     this.#storage = storage;
@@ -404,6 +409,14 @@ export class Scheduler {
       wake: (now) => (o("inquiry").datedWaitsDue(instantText(now)) === true ? now : msOf(o("inquiry").datedWaitsWake(instantText(now)))),
       tick: async (now) => ({ datedwaits: await o("inquiry").datedWaitsTick(instantText(now)) }) };
     if (this.#owners.fileSafety) Object.assign(c, this.#fileSafety());   /* R24 */
+    /* R25: case-carriage R15's member documents' copies; its due and wake `copyWake(now)`, asked afresh every time (an
+       instant in ms, or null), so a restarted instance re-derives them from its tables; a refusal is the tick's answer. */
+    if (this.#owners.caseCarriage) {
+      const ms = (v) => (typeof v === "number" && Number.isFinite(v) ? v : null);
+      c["document-copy"] = {
+        due: (now) => ms(o("caseCarriage").copyWake(now)), wake: (now) => ms(o("caseCarriage").copyWake(now)),
+        tick: async () => ({ doccopy: await o("caseCarriage").copyBatch({}) }) };
+    }
     return c;
   }
 
@@ -613,7 +626,7 @@ export class Scheduler {
    *  Whether monitoring is configured is asked of the `monitoring` owner when a notice arrives. Answers each
    *  registration's answer by notice; a refused one is also kept as a start-up fault (`faults()`) and logged. */
   listenTo({ retrieval, bias, promotion, capture, progressions, calibration, aiRuns, captureRequests, entities, inquiry, following,
-             publication, answers, duties, people, moneyChecks } = {}) {
+             publication, answers, duties, people, moneyChecks, caseCarriage } = {}) {
     const arm = () => this.arm();
     /* A notice its owner tells without awaiting: the arm runs, and a storage that fails it is never an unhandled
        rejection (the act stands, its owner's R27, R71). */
@@ -680,11 +693,14 @@ export class Scheduler {
     if (duties) out.duties = duties.onDutyTracked("scheduler", poke("duty-transitions"));
     if (people) out.people = people.onChecksChanged("scheduler", poke("interest-checks"));
     if (moneyChecks) out.moneyChecks = moneyChecks.onDetectorSwitchedOn("scheduler", poke("money-detectors"));
+    /* R25 (case-carriage R17): a member document queued, told after the act commits; arms at once, except inside a
+       firing, whose own reconcile stands (R1). */
+    if (caseCarriage) out.caseCarriage = caseCarriage.onCopyWork("scheduler", () => (this.#firing ? null : told()));
     for (const [notice, r] of Object.entries(out)) this.#fault(notice, r);
     return out;
   }
 
-  /** R23, R24: the registrations listenTo and hand were refused, each `{notice, reason, detail}`: start-up faults, reported, never
+  /** R23–R25: the registrations listenTo and hand were refused, each `{notice, reason, detail}`: start-up faults, reported, never
    *  ignored. Empty when every notice took its listener. */
   faults() { return this.#faults.map((f) => ({ ...f })); }
 }
@@ -707,7 +723,7 @@ export function schedulerOf(ctx, env = null, deps = {}) {
       networkNotices: () => networkNoticesOf(ctx, { env: e }), linkSweep: () => linkSweepOf(ctx),
       duties: () => dutiesOf(ctx), people: () => peopleOf(ctx), moneyChecks: () => moneyChecksOf(ctx),
       answers: () => answersOf(ctx), inquiry: () => inquiryOf(ctx), following: () => followingOf(ctx),
-      publication: () => publicationOf(ctx),
+      publication: () => publicationOf(ctx), caseCarriage: () => caseCarriageOf(ctx),
     };
     const zone = deps.zone || (() => viewZone(recordOf(ctx)));
     s = new Scheduler({ storage: deps.storage || ctx.storage, env: e, owners, zone });
@@ -717,7 +733,8 @@ export function schedulerOf(ctx, env = null, deps = {}) {
                    progressions: progressionsOf(ctx, { env: e }), calibration: calibrationOf(ctx), aiRuns: aiRunsOf(ctx, e),
                    captureRequests: captureRequestsOf(ctx), entities: entitiesOf(ctx), inquiry: inquiryOf(ctx),
                    following: followingOf(ctx), publication: publicationOf(ctx), answers: answersOf(ctx),
-                   duties: dutiesOf(ctx), people: peopleOf(ctx), moneyChecks: moneyChecksOf(ctx) });
+                   duties: dutiesOf(ctx), people: peopleOf(ctx), moneyChecks: moneyChecksOf(ctx),
+                   caseCarriage: caseCarriageOf(ctx) });
   }
   if (deps.fileSafety) s.hand({ fileSafety: deps.fileSafety });
   return s;
