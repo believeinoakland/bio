@@ -97,7 +97,7 @@ test("R74 (N758; K2118): a vertically merged .docx table — its amount and date
     ["table", "Fee", "A", 2, { kind: "doc-table", table: 0 }]]);
 });
 
-test("R74 (N758; K2197): a cell's paras ordinal naming no doc-para unit — a whitespace-only paragraph, or one the wire bound dropped — is passed over: never an error, never matched to another paragraph", async () => {
+test("R74 (N758; K2197): a cell's paras ordinal naming no doc-para unit — a whitespace-only paragraph, or one the wire bound dropped — is passed over: never an error, never matched to another paragraph; a cell naming no paras (a pre-N758 reading, K2202) names no paragraph, the column result unchanged", async () => {
   const w = corpus();
   const { cap, cells, units } = await heldDocx(w, "INFO-WS", tbl([
     [tc("Amount (USD)"), tc("Payee")],
