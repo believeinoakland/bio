@@ -48,3 +48,7 @@ Size (session_01DvLwj9sgfMgyKyqYnjboLo): test runs 8, module lines 4228
 ## J1 · REPORT
 
 Other modules, none needing a change from me: (1) promotion row-census.test.mjs now also lists 'departed with no record: C-64.18 NO_SUCH_MEMBER' — expected, rule 6 item 2, stamped in T39 (K2275 (4)); the test was red before for its other rows. (2) plane's generated dist/bio-plane.bundled.mjs carries the dropped row until regenerated at L11's close (§14). (3) answer-envelope families.test.mjs: the same three reds before and after my change (rule 6 items 13, 17); none added.
+
+## J2 · COMPLETE
+
+T38-23 applied (R69, R73 through membership.noSuchMember, R121, C-96.47; R75 C-64.18 dropped). instance-setup tests 130/130; format, architecture, coverage (57/57), ownership: 0 failures. Record: Completion (INSTANCE-SETUP #17). R69/R73/R75's '(not yet met: T38)' marks are BOB's to clear.
