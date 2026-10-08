@@ -23,3 +23,7 @@
 **Checks:** format: 136 modules, 135 requirements files; 0 failures. architecture: 11 product files, 16 relative imports; 0 failures. coverage: 27 of 27 live requirement ids named by a test; 0 failures. ownership: 9 files changed by op-grades between tranche/T37 and HEAD; 0 failures.
 
 Size (session_01MLFSULGPPdKyw9vxcdawPM): test runs 9, module lines 2307
+
+## J1 · COMPLETE
+
+T37-26 complete: R18, R25, R26, R27 met; op-grades 35/35, the four checks clean. New reds in users, each an expected re-pin, named in my Completion: control-plane totality.test.mjs:17 (stale R27 ops, until T37-31); affordances t31.test.mjs:27 and :49 (R36 phone oracle and the pinned LARGER_SCREEN_ACTS), catalogue.test.mjs:110 (reversible list) and :479 (undetermined set), t36.test.mjs:49 (R48 owed_<op> keys now graded); all for T37-27. Red 14 as you said. Nothing deferred.
