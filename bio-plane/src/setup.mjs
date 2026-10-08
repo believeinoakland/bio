@@ -15,7 +15,7 @@ import { civicsmithUserAgent } from "./acquisition/index.mjs";
 /* R64 (N700): a language tag is read by jurisdictions' `isLocale` (its R37), never by a reading of this module's own. */
 import { list as heldProfiles, get as heldProfile, combine as combineProfiles, isLocale } from "../../jurisdictions/index.mjs";
 import { recordOf, stampInstant } from "./record-core/index.mjs";
-import { membershipOf, notAnAdmin } from "./membership/index.mjs";
+import { membershipOf, notAnAdmin, noSuchMember } from "./membership/index.mjs";
 import { credentialsOf } from "./credentials/index.mjs";
 import { promotionOf } from "./promotion/index.mjs";
 import { governorOf } from "./host-governor/index.mjs";
@@ -273,12 +273,8 @@ export const INSTANCE_SETUP_CHECKS = Object.freeze({
     translation: 'There is nothing for the assistant to draft: every word asked for is either translated already or an '
       + 'official name, which is shown as it is with its official translation where one is published. Nothing was sent.',
   },
-  NO_SUCH_MEMBER: {
-    check: 'C-64.18',
-    where: 'src/setup.mjs #translationMember > is-translation-member',
-    translation: 'Only an active member of your group can be asked to translate the screens, and the member named is not '
-      + 'one. Nothing was changed.',
-  },
+  /* C-64.18 (`NO_SUCH_MEMBER`) is dropped and never reused (R75; N793, K231, K2275): the code is `membership`'s alone,
+     answered through its `noSuchMember` (its R121, C-96.47). */
   NO_SUCH_DRAFT: {
     check: 'C-64.19',
     where: 'src/setup.mjs translationAdopt > is-translation-adopt',
@@ -2078,13 +2074,10 @@ export class InstanceSetup {
     const r = this.#one(`SELECT act FROM translation_grants WHERE member = ? AND language = ? ORDER BY seq DESC LIMIT 1`, member, tag);
     return !!r && r.act === "grant";
   }
-  /* R69's NO_SUCH_MEMBER (and R73's "any active member"): `who` is an active member of the group. */
-  #translationMember(who, nothing) {
-    /* DEC-49 REGION is-translation-member */
-    if (!who || isMachineIdentity(who) || !this.#isActiveMember(who))
-      return refusal("NO_SUCH_MEMBER", `${who ? `'${String(who).slice(0, 80)}' is not` : "the request names no member, and "
-        + "one is named as"} an active member of your group. ${nothing}`, { member: who || null });
-    /* END DEC-49 REGION is-translation-member */
+  /* R69's NO_SUCH_MEMBER (and R73's "any active member"): `who` is an active member of the group, else membership's one
+     refusal for that condition (its R121, C-96.47; N793), `member` the id asked. This module mints no copy of the code. */
+  #translationMember(who) {
+    if (!who || isMachineIdentity(who) || !this.#isActiveMember(who)) return noSuchMember(who || null);
     return null;
   }
   #translationSpeaker(by, tag) {
@@ -2106,7 +2099,7 @@ export class InstanceSetup {
     const lang = this.#translationLanguage(language);
     if (lang.refused) return lang.refused;
     const who = typeof member === "string" ? member.trim() : "";
-    const notMember = this.#translationMember(who, "Nothing was changed.");
+    const notMember = this.#translationMember(who);
     if (notMember) return notMember;
     const act = revoke === true ? "revoke" : "grant";
     const rows = this.#rows(`SELECT seq, act, by_member, by_name, at FROM translation_grants WHERE member = ? AND language = ?
@@ -2489,7 +2482,7 @@ export class InstanceSetup {
       return refusal("TRANSLATION_NOTE_REFUSED", `a note is text of at most ${TRANSLATION_NOTE_MAX} characters. Nothing was recorded.`,
         { key: w.word.key, language: tag });
     /* END DEC-49 REGION is-translation-mark */
-    const notMember = this.#translationMember(by, "Nothing was recorded.");
+    const notMember = this.#translationMember(by);
     if (notMember) return notMember;
     const open = this.#one(`SELECT seq, note, at FROM translation_marks WHERE language = ? AND key = ? AND by_member = ? AND act_n = ?
                             ORDER BY seq LIMIT 1`, tag, w.word.key, by, h.actN);

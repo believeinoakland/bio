@@ -14,6 +14,7 @@ import { boot, frame } from "./fixture.mjs";
 import { world as credentialsWorld } from "../credentials/fixture.mjs";
 import { list as jList, get as jGet, combine as jCombine } from "../../../../jurisdictions/index.mjs";
 import { proposalLabel } from "../../../src/record-grammar/index.mjs";
+import { noSuchMember } from "../../../src/membership/index.mjs";
 import { INSTANCE_SETUP_CHECKS, INSTANCE_SETUP_TABLES, INSTANCE_SETUP_TABLE_DECLARATIONS, INTERFACE_WORDS,
          TRANSLATION_DRAFT_MAX } from "../../../src/setup.mjs";
 
@@ -56,7 +57,7 @@ async function draft(w, { by, language = "es", keys, answer = (x) => es(x), drop
   return { asked, rec };
 }
 
-test("R69 translationGrant: refusals in order, each writing nothing (MACHINE_CANNOT_TRANSLATE, NOT_AN_ADMIN, LANGUAGE_MALFORMED, NO_SUCH_MEMBER); a grant recorded with the administrator and instant, names by value; a second grant or revocation answers existed: true with the first; a revocation appended, never a deletion; translationGranted live only while not revoked and the member active", async () => {
+test("R69 translationGrant: refusals in order, each writing nothing (MACHINE_CANNOT_TRANSLATE, NOT_AN_ADMIN, LANGUAGE_MALFORMED, NO_SUCH_MEMBER, the last answered through membership's noSuchMember, R121, C-96.47, with member the id asked, for an absent member, a machine identity or one not active); a grant recorded with the administrator and instant, names by value; a second grant or revocation answers existed: true with the first; a revocation appended, never a deletion; translationGranted live only while not revoked and the member active", async () => {
   const w = await world();
   const before = counts(w);
   for (const [args, code] of [
@@ -70,8 +71,14 @@ test("R69 translationGrant: refusals in order, each writing nothing (MACHINE_CAN
   ]) {
     const r = w.m.translationGrant(args);
     assert.deepEqual([r.ok, r.reason], [false, code], JSON.stringify(args));
-    assert.equal(r.check, code === "NOT_AN_ADMIN" ? "C-96.1" : INSTANCE_SETUP_CHECKS[code].check, code);
+    if (code === "NO_SUCH_MEMBER") assert.deepEqual(r, noSuchMember(args.member ?? null), JSON.stringify(args));
+    else assert.equal(r.check, code === "NOT_AN_ADMIN" ? "C-96.1" : INSTANCE_SETUP_CHECKS[code].check, code);
   }
+  /* T38 (N793): a member not active is refused the same way, through membership's one site */
+  assert.equal(w.c.m.memberSet({ memberId: "tom", status: "revoked", by: "admin" }).ok, true);
+  const revoked = w.m.translationGrant({ member: "tom", language: "es", by: "admin" });
+  assert.deepEqual(revoked, noSuchMember("tom"));
+  assert.equal(revoked.check, "C-96.47");
   assert.equal(counts(w), before);
   assert.equal(w.m.translationGranted({ member: "ruth", language: "es" }), false);
   const g = w.m.translationGrant({ member: "ruth", language: "es", by: "admin" });
@@ -98,9 +105,9 @@ test("R69 translationGrant: refusals in order, each writing nothing (MACHINE_CAN
   assert.equal(w.c.m.memberSet({ memberId: "ruth", status: "revoked", by: "admin" }).ok, true);
   assert.equal(w.m.translationGranted({ member: "ruth", language: "es" }), false);
   /* through the route, `by` is the stamp: a body naming an administrator grants nothing */
-  const forged = await call(w.m, "translationgrant?by=sam", { member: "tom", language: "es", by: "admin" });
+  const forged = await call(w.m, "translationgrant?by=sam", { member: "sam", language: "es", by: "admin" });
   assert.equal(forged.result.reason, "NOT_AN_ADMIN");
-  const own = await call(w.m, "translationgrant?by=admin", { member: "tom", language: "es" });
+  const own = await call(w.m, "translationgrant?by=admin", { member: "sam", language: "es" });
   assert.equal(own.result.granted, true);
 });
 
@@ -403,7 +410,7 @@ test("R72 translationRevert: refusals in order (MACHINE_CANNOT_TRANSLATE, NOT_AN
   assert.ok(snapshot().startsWith(kept.slice(0, kept.indexOf("Dos"))));
 });
 
-test("R73 translationMark: refusals in order (MACHINE_CANNOT_TRANSLATE, LANGUAGE_MALFORMED, NO_SUCH_WORD, TRANSLATION_NOT_SHOWN), and a note over 500 characters TRANSLATION_NOTE_REFUSED; any active member marks a shown word, with who and when; a member's second open mark answers existed: true; open until the word's next adoption or undo; listed to granted speakers and administrators only", async () => {
+test("R73 translationMark: refusals in order (MACHINE_CANNOT_TRANSLATE, LANGUAGE_MALFORMED, NO_SUCH_WORD, TRANSLATION_NOT_SHOWN, then NO_SUCH_MEMBER for a by who is not an active member, answered through membership's noSuchMember, R121, C-96.47), and a note over 500 characters TRANSLATION_NOTE_REFUSED; any active member marks a shown word, with who and when; a member's second open mark answers existed: true; open until the word's next adoption or undo; listed to granted speakers and administrators only", async () => {
   const w = await world();
   w.m.translationGrant({ member: "ruth", language: "es", by: "admin" });
   w.m.translationAdopt({ language: "es", key: PROTECTED.key, text: "Espera", by: "ruth" });   // awaiting
@@ -413,8 +420,11 @@ test("R73 translationMark: refusals in order (MACHINE_CANNOT_TRANSLATE, LANGUAGE
     [{ language: "es", key: "no.such", by: "tom" }, "NO_SUCH_WORD"],
     [{ language: "es", key: ORDINARY.key, by: "tom" }, "TRANSLATION_NOT_SHOWN"],
     [{ language: "es", key: PROTECTED.key, by: "tom" }, "TRANSLATION_NOT_SHOWN"],
+    [{ language: "es", key: ORDINARY.key, by: "nobody" }, "TRANSLATION_NOT_SHOWN"],
   ]) assert.equal(w.m.translationMark(args).reason, code, code);
   w.m.translationAdopt({ language: "es", key: ORDINARY.key, text: "Algo", by: "ruth" });
+  /* past TRANSLATION_NOT_SHOWN, a by who is no member: membership's one refusal, nothing recorded */
+  assert.deepEqual(w.m.translationMark({ language: "es", key: ORDINARY.key, by: "nobody" }), noSuchMember("nobody"));
   assert.equal(w.m.translationMark({ language: "es", key: ORDINARY.key, note: "x".repeat(501), by: "tom" }).reason, "TRANSLATION_NOTE_REFUSED");
   assert.equal(count(w, "translation_marks"), 0);
   const m1 = w.m.translationMark({ language: "es", key: ORDINARY.key, note: "  Should be 'Alguno'.  ", by: "tom" });
@@ -435,7 +445,11 @@ test("R73 translationMark: refusals in order (MACHINE_CANNOT_TRANSLATE, LANGUAGE
   assert.deepEqual(marksOf("ruth"), []);
   /* a revoked member is no active member */
   w.c.m.memberSet({ memberId: "tom", status: "revoked", by: "admin" });
-  assert.equal(w.m.translationMark({ language: "es", key: ORDINARY.key, by: "tom" }).reason, "NO_SUCH_MEMBER");
+  const before = count(w, "translation_marks");
+  const revoked = w.m.translationMark({ language: "es", key: ORDINARY.key, by: "tom" });
+  assert.deepEqual(revoked, noSuchMember("tom"));
+  assert.equal(revoked.check, "C-96.47");
+  assert.equal(count(w, "translation_marks"), before, "nothing recorded");
 });
 
 test("R74 translations: to a granted speaker of the language (MACHINE_CANNOT_TRANSLATE, LANGUAGE_MALFORMED, TRANSLATION_NOT_GRANTED otherwise): every word in the list's order with en, note, means, protected, state, its shown or awaiting text with who adopted it and when, english_changed, its drafts, its acts newest first and its open marks; and the active profiles' local names with their explanation and official translation in the language and source, offered first; it writes nothing", async () => {
@@ -533,7 +547,17 @@ test("R75 the translation tables are this module's own, declared to record-core 
   assert.equal(counts(w), n, "a purge leaves them");
 });
 
-test("R30 every row of this module's table names, in its where, the function that holds its region, and the region inside it (the new C-64.11–C-64.26 rows among them); no number is held twice and C-119.5 is held by none", () => {
+test("R75 (T38; N793) this module holds no NO_SUCH_MEMBER row: C-64.18 is dropped and held by no row, and every refusal of a member it cannot find is membership's C-96.47 (R121), never a copy of the code", async () => {
+  assert.equal(Object.hasOwn(INSTANCE_SETUP_CHECKS, "NO_SUCH_MEMBER"), false);
+  assert.equal(Object.values(INSTANCE_SETUP_CHECKS).some((r) => r.check === "C-64.18"), false);
+  const w = await world();
+  w.m.translationAdopt({ language: "es", key: ORDINARY.key, text: "Algo", by: "admin" });
+  for (const r of [w.m.translationGrant({ member: "nobody", language: "es", by: "admin" }),
+                   w.m.translationMark({ language: "es", key: ORDINARY.key, by: "nobody" })])
+    assert.deepEqual([r.reason, r.code, r.check, r.translation], ["NO_SUCH_MEMBER", "NO_SUCH_MEMBER", "C-96.47", noSuchMember("x").translation]);
+});
+
+test("R30 every row of this module's table names, in its where, the function that holds its region, and the region inside it (the new C-64.11–C-64.26 rows among them, C-64.18 dropped, R75); no number is held twice and C-119.5 is held by none", () => {
   const src = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../../src/setup.mjs"), "utf8").split("\n");
   const body = (fn) => {
     const name = fn.replace(/[$#]/g, "\\$&");
@@ -558,5 +582,6 @@ test("R30 every row of this module's table names, in its where, the function tha
   const numbers = Object.values(INSTANCE_SETUP_CHECKS).map((r) => r.check);
   assert.equal(new Set(numbers).size, numbers.length);
   assert.equal(numbers.includes("C-119.5"), false);
-  assert.deepEqual(numbers.filter((n) => /^C-64\.(1[1-9]|2\d)$/.test(n)).length, 16);
+  assert.deepEqual(numbers.filter((n) => /^C-64\.(1[1-9]|2\d)$/.test(n)).length, 15);
+  assert.equal(numbers.includes("C-64.18"), false);
 });
