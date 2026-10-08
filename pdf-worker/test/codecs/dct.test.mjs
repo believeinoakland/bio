@@ -249,3 +249,61 @@ test("R1 readJpegHeader's Huffman tables: hts.dc[i] and hts.ac[i], each {maxcode
   assert.equal(hts.ac[2].fast.filter((f) => f >= 0).length, (1 << 7) + (1 << 6) + (1 << 5) + (1 << 4) + (1 << 3) + (1 << 2) + (1 << 1) + 1,
     "codes of 2..9 bits fill the fast table; longer ones are left to maxcode, valptr and mincode");
 });
+
+/* R1 (T38, K2265): a Huffman table libjpeg refuses is refused. Each case below
+ * splices one DHT into a fixture before its SOS, and each verdict is libjpeg-
+ * turbo 3.1.4's (through Pillow 12.3.0) on the same bytes, checked 2026-10-08:
+ * it refuses a table the scan uses whose codes do not fit their lengths (the
+ * all-ones code included) or whose DC symbol passes 15 ("Bogus Huffman table
+ * definition"), and at once a class or id past the four tables, more than 256
+ * symbols, or counts that run past the DHT; it decodes past a bogus table the
+ * scan does not use. */
+test("R1 a Huffman table libjpeg refuses is a CORRUPT_DATA refusal naming the table; one the scan does not use is no refusal", () => {
+  const counts = (byLength) => Array.from({ length: 16 }, (_, i) => byLength[i + 1] ?? 0);
+  const dht = (body) => [0xff, 0xc4, (body.length + 2) >> 8, (body.length + 2) & 0xff, ...body];
+  const table = (tc, th, byLength, symbols) => dht([(tc << 4) | th, ...counts(byLength), ...symbols]);
+  const spliced = (name, ...segs) => {
+    const d = jpeg(name);
+    let sos = 2;
+    while (!(d[sos] === 0xff && d[sos + 1] === 0xda)) sos++;
+    return Uint8Array.from([...d.subarray(0, sos), ...segs.flat(), ...d.subarray(sos)]);
+  };
+  const refused = [
+    ["three codes of 1 bit (dc 0, used)", spliced("grey-baseline", table(0, 0, { 1: 3 }, [0, 1, 2])), "dc 0"],
+    ["the all-ones code of 1 bit (dc 0, used)", spliced("grey-baseline", table(0, 0, { 1: 2 }, [0, 1])), "dc 0"],
+    ["the all-ones code of 2 bits (dc 0, used)", spliced("grey-baseline", table(0, 0, { 1: 1, 2: 2 }, [0, 1, 2])), "dc 0"],
+    ["the all-ones code of 16 bits (ac 0, used)", spliced("grey-baseline", table(1, 0, { ...Object.fromEntries(Array.from({ length: 15 }, (_, i) => [i + 1, 1])), 16: 2 },
+      Array.from({ length: 17 }, (_, i) => i))), "ac 0"],
+    ["a DC symbol of 16 (dc 0, used)", spliced("grey-baseline", table(0, 0, { 2: 3 }, [0, 16, 2])), "dc 0"],
+    ["the colour file's chroma AC table (ac 1, used)", spliced("rgb-444", table(1, 1, { 1: 2 }, [0, 1])), "ac 1"],
+    ["a used table redefined bogus after a good one", spliced("grey-baseline", table(0, 0, { 1: 1 }, [0]), table(0, 0, { 1: 3 }, [0, 1, 2])), "dc 0"],
+    ["an id past 3, unused", spliced("grey-baseline", dht([0x04, ...counts({ 1: 1 }), 0])), null],
+    ["a class past AC, unused", spliced("grey-baseline", dht([0x20, ...counts({ 1: 1 }), 0])), null],
+    ["257 symbols, unused", spliced("grey-baseline", dht([0x13, ...counts({ 8: 255, 9: 2 }), ...Array(257).fill(0)])), "ac 3"],
+    ["counts that run past the DHT, unused", spliced("grey-baseline", dht([0x13, ...counts({ 2: 5 }), 0, 0])), "ac 3"],
+    ["a DHT cut inside its counts, unused", spliced("grey-baseline", dht([0x13, 0, 0, 0])), "ac 3"],
+  ];
+  for (const [label, d, named] of refused) {
+    for (const fn of [() => readJpegHeader(d), () => decodeBaselineJpeg(d)]) {
+      const e = refusal(fn);
+      assert.equal(e.code, "CORRUPT_DATA", label);
+      if (named) assert.equal(e.detail.table, named, `${label}: the detail names the table`);
+      else assert.ok(Number.isInteger(e.detail.id) && Number.isInteger(e.detail.class), `${label}: the detail names the class and id`);
+      assert.match(e.detail.note, /Huffman table/, label);
+    }
+  }
+  /* A bogus table the scan does not use: libjpeg decodes the picture, and so does R1. */
+  const g = V.find((x) => x.name === "grey-baseline"), c = V.find((x) => x.name === "rgb-444");
+  const [, , dc0Counts, dc0Symbols] = dhtTables(jpeg("grey-baseline")).find(([tc, th]) => tc === 0 && th === 0);
+  const dc0 = [Object.fromEntries(dc0Counts.map((n, i) => [i + 1, n])), dc0Symbols];
+  for (const [label, d, v] of [
+    ["dc 3, unused", spliced("grey-baseline", table(0, 3, { 1: 3 }, [0, 1, 2])), g],
+    ["ac 1, unused by a grey scan", spliced("grey-baseline", table(1, 1, { 1: 2 }, [0, 1])), g],
+    ["dc 2 with a symbol of 16, unused", spliced("rgb-444", table(0, 2, { 2: 1 }, [16])), c],
+    ["a used table bogus, then redefined good", spliced("grey-baseline", table(0, 0, { 1: 3 }, [0, 1, 2]), table(0, 0, ...dc0)), g],
+  ]) {
+    assert.equal(sha(decodeBaselineJpeg(d).samples), v.pillow_sha256, `${label}: libjpeg-turbo's picture`);
+    const { hts } = readJpegHeader(d);
+    for (const list of [hts.dc, hts.ac]) for (const t of Object.values(list)) assert.ok(t.fast.length === 512 && t.maxcode[17] === 0x7fffffff, label);
+  }
+});
