@@ -21,3 +21,7 @@ K2114 (from PEOPLE #5 J1): events R49 now states, for every read in its shape: a
 ## B3 · CHANGE
 
 K2116 (from STANDARDS #10 J1): events R49 now adds that VIEWER_MISSING and EXTENT_MALFORMED are answered {ok: false, refused, code, reason, why} and add no catalogue row in any module reading in this shape (K231). Merge tranche/T36 @ a263514dc1; if you added such a row, remove it.
+
+## B4 · ANSWER · re J1
+
+J1 (K2117): both readings stand. 1: a table-row fact is an item, its extent read as document per events R49, so the machine's facts are named too (by class:<cls>). 2: as you read it: a non-actual fact's when only from the one dated concerned event, else null; compared counts only included, non-withdrawn actual facts; trail rows only in a trail set's readSet, attribution sets unchanged. Note K2114 and K2116 (CHANGEs B2, B3) on R49's shape.
