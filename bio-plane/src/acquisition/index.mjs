@@ -1,4 +1,4 @@
-/* acquisition — THE ACQUISITION ACT (R1–R43; `build/requirements/acquisition.md`), split from `capture` (K617, K649 (1))
+/* acquisition — THE ACQUISITION ACT (R1–R44, its archives R38–R41 and R45 in `unpack.mjs`; `build/requirements/acquisition.md`), split from `capture` (K617, K649 (1))
  * by copy of `capture/acquire.mjs` (K624 (1)), whose Rs it implements with their meaning unchanged: capture R1–R7, R9–R14,
  * R16–R20, R33–R36, R41, R42 and R60–R62 are this module's R1–R23 and R25–R28. It is reached in process (K72 (11)):
  * `capture`'s `acquire` and `archiveLookup` hand their own store in as `cap`, and the capture-request drain calls it
@@ -554,7 +554,7 @@ function ownHostRefused(locator, extra = {}) {
            detail: `${hostnameOf(locator)} is one of your group's own hosts; nothing was fetched or filed` };
 }
 
-/** R1–R23, R40, R42–R44. The one act that fetches and files. `opts`: `cls` (the control plane's caller class), `member`
+/** R1–R23, R31, R32, R35, R40, R42–R44. The one act that fetches and files. `opts`: `cls` (the control plane's caller class), `member`
  *  (whether the caller is a member session), `sessMember` (that member), `storeName`, `ownHosts` (R42), `reputation` (a spec, null or a reader) and
  *  `fileScanner` (R44), and — only from the in-process drain, never from a request — `captureRequest` (the draining
  *  row's address, purpose, agent, render flag and the member's co-archive choice, K58). Answers `{status, body}`. */
