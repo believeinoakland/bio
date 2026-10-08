@@ -126,8 +126,9 @@ async function tallyOnTheWayOut(res, seen, req) {
 /* R59, R28 (admission R20; F1, K2111): A CREDENTIAL IN THE ADDRESS IS REFUSED, by admission's gate (C-38.10, the code's
    one site), which this door runs directly after admission R1 and before any other gate, public op, owner's door or
    store request; its refusal is relayed as given. */
-const addressGate = (url, credential) => (typeof admission.credentialAddressGate === "function"   /* PENDING-NAME (J1 (2)) */
-  ? admission.credentialAddressGate({ url, credential }) : null);
+/* (B2, K2157: `credentialAddressGate(url)` answers `null` or `{status: 400, body}`; the guard is dropped once ADMISSION #6 is
+   merged into this branch.) */
+const addressGate = (url) => (typeof admission.credentialAddressGate === "function" ? admission.credentialAddressGate(url) : null);
 
 /* REC-22: the ONE namespace the public read path answers from. An instance has
    one published record, so op=publishedcase and op=publishedbytes are pinned
@@ -561,7 +562,7 @@ export function makeFetch(hooks = {}) {
         && (url.pathname === "/" || url.pathname === "") && !url.searchParams.get("op")) {
       const pageNamespace = namespaceGate(url);   /* admission R1 */
       if (pageNamespace) return json(pageNamespace.body, pageNamespace.status);
-      const pageAddress = addressGate(url, credential);   /* R59: admission R20, before the page's read */
+      const pageAddress = addressGate(url);   /* R59: admission R20, before the page's read */
       if (pageAddress) return json(pageAddress.body, pageAddress.status);
       const pageStore = url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio";
       return new Response(setupPage(await hooks.publicInstanceGroup(env, pageStore, "groupidentitypublic")),
@@ -608,7 +609,7 @@ export function makeFetch(hooks = {}) {
     if (unknownNamespace) return refused(unknownNamespace);
     /* R59, R28 (admission R20; K2111): a credential or secret in the address, refused C-38.10 directly after R1, before
        any credential is judged, any public op runs or any store is asked */
-    const inAddress = addressGate(url, credential);
+    const inAddress = addressGate(url);
     if (inAddress) return refused(inAddress);
     /* R28 (K1861 (6)): admission's query gate, which never refuses: what an op may take only from the body (a door's key,
        link and cover; the group key) and a public door's `token` leave the URL before anything reads it (R54, R56). */
