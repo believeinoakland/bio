@@ -11,3 +11,7 @@ Reading set (mechanics §17): your requirements, layer 8's row of `build/layers.
 Merge order in L8: case-grammar (merged) → case-carriage → publication → public-read → ratification → case-checker → case-disclosures → case-authoring.
 Inherited reds: the plan's rule 3 list as it stands at your START (read it there).
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · CHANGE
+
+case-carriage has merged into tranche/T39 (T39-10, K2377: R13 now lapses a member document carried whole that no receipt fetched; R16 documentCopy; C-141.11). Merge the tranche into your branch and re-run your whole suite against the real case-carriage. For you: CASE-CARRIAGE J1 measured case-authoring 140/24 because your fixture's ratify is refused C-122.6 for documents carried whole with no fetch receipt; give those documents a direct provenance recordReceipt (fixture only). case-disclosures has not merged yet: I tell you when it has.
