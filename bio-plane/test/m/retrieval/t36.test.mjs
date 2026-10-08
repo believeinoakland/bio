@@ -11,9 +11,7 @@ import { RECORDED_BY_MODULES, RECORDED_BY_LIMIT, RECORDED_NONE_REGISTERED, SELEC
   from "../../../src/retrieval/index.mjs";
 import { listenerRefusal, MODULE_ORDER } from "../../../src/membership/index.mjs";
 import { canonicalExtent } from "../../../src/content/index.mjs";
-import { getFormat } from "../../../src/formats.mjs";
-import { textUnitsFor } from "../../../src/reading-pipeline/index.mjs";
-import { docx, wp, wr } from "../extraction/fixture.mjs";
+import { fresh, hold, doc, docx, wp, wr } from "../extraction/fixture.mjs";
 
 const page = (n) => ({ kind: "pdf-page", page: n });
 
@@ -27,7 +25,7 @@ function recorder(module, rows = [], { truncated = false } = {}) {
     recordedBy(a) {
       calls.push(a);
       const items = rows.filter((r) => r.capture === a.captureSha && (!r.sight || r.sight.includes(a.viewer)))
-        .map((r) => ({ module, record: r.record, kind: r.kind, field: r.field, extent: canonicalExtent(r.extent),
+        .map((r) => ({ module, record: r.record, kind: r.kind, field: r.field, extent: JSON.parse(canonicalExtent(r.extent)),
                        relation: null, by: r.by, at: r.at, withdrawn: !!r.withdrawn }));
       return { ok: true, module, capture_sha: a.captureSha, items, truncated };
     },
@@ -176,7 +174,7 @@ test("R76 (N715): registerRecordedBy — a malformed registration and a second b
   assert.equal(r.registerRecordedBy("events", () => {}).reason, "LISTENER_DECLARED", "one of the four");
   const calls = [];
   const cite = (x) => { calls.push(["citation", x]); return { ok: true, module: "citation", capture_sha: x.captureSha, truncated: false,
-    items: [{ module: "citation", record: "CIT-1", kind: "citation", field: "extent", extent: canonicalExtent(page(0)), relation: null,
+    items: [{ module: "citation", record: "CIT-1", kind: "citation", field: "extent", extent: JSON.parse(canonicalExtent(page(0))), relation: null,
               by: V("ann"), at: "t", withdrawn: false }] }; };
   /* Registered latest-module first. */
   assert.equal(r.registerRecordedBy("queue", () => { calls.push(["queue"]); throw new Error("late"); }).ok, true);
@@ -193,17 +191,19 @@ test("R76 (N715): registerRecordedBy — a malformed registration and a second b
   assert.deepEqual(kindOf(ans, "money").items[0].recorded.map((x) => [x.module, x.record, x.relation]), [["citation", "CIT-1", "same"]]);
 });
 
-/* N724: a `.docx` read as the docx entry reads its bytes (office-readers R11, its cells R16), its text units as
-   reading-pipeline composes them (R15, R28), held as extraction holds them. */
+/* N724: a `.docx` read from its bytes by `extraction`'s own read (its R1, R70: the cells as office-readers emits them,
+   the text units as the reading's), held in this store as extraction holds a reading and its units. */
+const DOCX_CT = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 async function heldDocx(w, bundleId, body) {
-  const entry = getFormat("docx");
-  const text = await entry.text(await entry.parts(docx(body)));
+  const x = fresh();
+  const bytes = docx(body);
+  const digest = await hold(x.evidence, bytes);
+  const r = await x.x.read(doc({ digest, bytes: bytes.length, ct: DOCX_CT, format: "docx", headers: [["content-type", DOCX_CT]] }));
   const real = w.cap(`${bundleId}.docx`, `docx bytes of ${bundleId}`);
   w.doc(bundleId, {}, { captures: [real] });
-  const cells = Object.fromEntries(text.tables.map((t) => [t.ref, t.cells]));
-  w.read(real, bundleId, { cells });
-  for (const u of textUnitsFor(text).textUnits) w.unit(real.sha, bundleId, u.seq, u.text, u.extent);
-  return { cap: real, text };
+  w.read(real, bundleId, { cells: r.reading.cells });
+  for (const u of r.text_units) w.unit(real.sha, bundleId, u.seq, u.text, u.extent);
+  return { cap: real, cells: r.reading.cells, units: r.text_units };
 }
 const table = (rows) => `<w:tbl><w:tblGrid>${rows[0].map(() => "<w:gridCol/>").join("")}</w:tblGrid>`
   + rows.map((r) => `<w:tr>${r.map((t) => `<w:tc>${t ? wp(wr(t)) : "<w:p/>"}</w:tc>`).join("")}</w:tr>`).join("") + "</w:tbl>";
@@ -214,19 +214,30 @@ test("R74 (N724): a .docx table held as cells is a held table — its date colum
     + table([["Paid on", "Amount ($)", "Payee"], ["2026-03-01", "$1,250.00", "Hall rental, $20 deposit"],
              ["2026-04-15", "312.50", "Chairs"], ["March 9, 2026", "40", "Refund"]])
     + wp(wr("Signed by the Treasurer."));
-  const { cap, text } = await heldDocx(w, "INFO-DOCX", body);
-  assert.equal(text.tables.length, 1);
-  assert.ok(textUnitsFor(text).textUnits.every((u) => u.extent.kind === "doc-para"), "a .docx's units are its paragraphs");
+  const { cap, cells, units } = await heldDocx(w, "INFO-DOCX", body);
+  assert.deepEqual(Object.keys(cells), ["table 1"]);
+  assert.ok(units.length > 3 && units.every((u) => u.extent.kind === "doc-para"), "a .docx's units are its paragraphs, a table's cells' included");
   const ans = find(w, { scope: { capture: cap.sha }, kinds: ["money", "dates"] });
-  const show = (i) => (i.table ? ["table", i.words, i.table.column, i.table.rows, i.table.extent, i.table.capture_sha === cap.sha]
+  const show = (i) => (i.table ? ["table", i.words, i.table.column, i.table.rows, i.table.extent, i.table.capture_sha === i.capture_sha]
                                 : ["para", i.as_read, i.extent.kind]);
   assert.deepEqual(kindOf(ans, "money").items.map(show), [
     ["para", "$5", "doc-para"], ["para", "$20", "doc-para"],
     ["table", "Amount ($)", "B", 3, { kind: "doc-table", table: 0 }, true]]);
   assert.deepEqual(kindOf(ans, "dates").items.map(show), [
     ["para", "March 2, 2026", "doc-para"], ["table", "Paid on", "A", 3, { kind: "doc-table", table: 0 }, true]]);
+  assert.ok([...kindOf(ans, "money").items, ...kindOf(ans, "dates").items].every((i) => i.capture_sha === cap.sha));
   for (const i of [...kindOf(ans, "money").items, ...kindOf(ans, "dates").items].filter((x) => x.table))
     assert.deepEqual([i.origin, i.capture_sha, i.extent], ["search", cap.sha, i.table.extent]);
+  /* A table whose paragraphs are not one run in reading order (a nested table's paragraphs fall between its cells'):
+     its amount column is still one result, and a paragraph whose whole text is one of that column's lines is left out. */
+  const nested = `<w:tbl><w:tblGrid><w:gridCol/><w:gridCol/></w:tblGrid>`
+    + `<w:tr><w:tc>${wp(wr("Fee"))}</w:tc><w:tc>${wp(wr("Note"))}</w:tc></w:tr>`
+    + `<w:tr><w:tc>${wp(wr("$7"))}</w:tc><w:tc>${table([["Inner", "words"]])}</w:tc></w:tr>`
+    + `<w:tr><w:tc>${wp(wr("$9"))}</w:tc><w:tc>${wp(wr("plain"))}</w:tc></w:tr></w:tbl>`;
+  const { cap: c3, cells: k3 } = await heldDocx(w, "INFO-DOCX3", nested);
+  assert.deepEqual(Object.keys(k3), ["table 1", "table 2"]);
+  assert.deepEqual(kindOf(find(w, { scope: { capture: c3.sha }, kinds: ["money"] }), "money").items.map(show),
+    [["table", "Fee", "A", 2, { kind: "doc-table", table: 0 }, true]]);
   /* The same table with a column of words only: nothing is a column, and its amounts are found where they are written. */
   const { cap: c2 } = await heldDocx(w, "INFO-DOCX2", table([["Item", "Note"], ["Paving", "about $30"], ["Lights", "none"]]));
   assert.deepEqual(kindOf(find(w, { scope: { capture: c2.sha }, kinds: ["money"] }), "money").items.map(show), [["para", "$30", "doc-para"]]);

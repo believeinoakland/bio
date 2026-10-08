@@ -1667,8 +1667,9 @@ const instances = new WeakMap();
  *  `observation` (`observationOf` over observation-log's factory by default), `now` (milliseconds; the clock the
  *  projection's action facts are judged at), `selectionNow` (the selections' clock, the wall clock by default),
  *  and `order` (the modules' total order listeners and decorations run in; membership's `MODULE_ORDER` by default). At creation it declares its
- *  tables to purge (R33), joins every promotion (R1), registers its figures (R67) and reaches the four recording
- *  modules R73 reads (`recorders`, each the host's own unless handed). */
+ *  tables to purge (R33), joins every promotion (R1) and registers its figures (R67). `recorders` are the four recording
+ *  modules R73 reads, each the host's own unless handed, reached on the first find (in the plane every module is made
+ *  at boot, before any request, so no find makes one; R69's precedent). */
 export function retrievalOf(host, deps) {
   let r = instances.get(host);
   if (!r) {
@@ -1688,9 +1689,6 @@ export function retrievalOf(host, deps) {
       throw new Error(`retrieval: record-core refused its table declaration: ${answer.reason} (${answer.table})`);
     r.joinPromotion();
     registerFigures(r);
-    /* R73: the four recording modules are reached now, as the plane makes every module before any request, so no
-       find is the first touch that makes one (and its tables). */
-    r.recordedReads();
   }
   return r;
 }
