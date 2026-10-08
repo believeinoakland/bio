@@ -22,7 +22,7 @@ const published = (name) => {
   return l.slice(name.length + 1).trim();
 };
 const DEAD_A = published("ADMIN_TOKEN"), DEAD_B = published("MEMBER_TOKEN");
-const ADM = "adm-instance-setup-reports", MEM = "mem-instance-setup-reports", PRB = "prb-instance-setup-reports";
+const ADM = "adm-instance-setup-reports", PRB = "prb-instance-setup-reports";
 const DMN = "dmn-instance-setup-reports";
 const HYGIENE = "no configured token is a published repository value";
 
@@ -76,11 +76,11 @@ const doRoute = async (mf, store, path, body) => {
 };
 
 let healthy = null;
-const plane = async () => (healthy ??= planeWith({ ADMIN_TOKEN: ADM, MEMBER_TOKEN: MEM, PROBE_TOKEN: PRB }));
+const plane = async () => (healthy ??= planeWith({ ADMIN_TOKEN: ADM, PROBE_TOKEN: PRB }));
 
 test("the fixtures are not vacuous: the published values are genuinely denylisted and distinct, the live ones live", async () => {
   assert.deepEqual([await liveToken(DEAD_A), await liveToken(DEAD_B), DEAD_A === DEAD_B], [false, false, false]);
-  assert.deepEqual(await Promise.all([ADM, MEM, PRB, DMN].map(liveToken)), [true, true, true, true]);
+  assert.deepEqual(await Promise.all([ADM, PRB, DMN].map(liveToken)), [true, true, true]);
 });
 
 test("R19 op=livefire through the Worker for the probe token: confined to scratch, it answers 200, ok true and verdict pass, failing nothing, every assertion by name passing", { timeout: 300000 }, async () => {
@@ -96,11 +96,11 @@ test("R18 op=selftest through the Worker: every binding reported, the store's st
   const mf = await plane();
   const s = await call(mf, `op=selftest&token=${PRB}`);
   assert.equal(s.status, 200);
-  assert.deepEqual(s.j.bindings, { STORE: true, CAPTURES: true, PUBLISHED: true, ADMIN_TOKEN: true, MEMBER_TOKEN: true,
+  assert.deepEqual(s.j.bindings, { STORE: true, CAPTURES: true, PUBLISHED: true, ADMIN_TOKEN: true,
                                    PROBE_TOKEN: true, DAEMON_TOKEN: "not configured" });
   assert.deepEqual([s.j.ok, s.j.r2Configured, s.j.captures, s.j.bindingsAllPresent, s.j.tokenClass], [true, true, "read-write ok", true, "probe"]);
   assert.equal(typeof s.j.store, "object");
-  for (const v of [ADM, MEM, PRB]) assert.equal(s.text.includes(v), false, "never returns a secret");
+  for (const v of [ADM, PRB]) assert.equal(s.text.includes(v), false, "never returns a secret");
   const b = await call(mf, "op=bootstrap");
   assert.deepEqual([b.status, b.j.ok, b.j.service, b.j.version, b.j.bootstrapConfigured, "memberVersions" in b.j],
                    [200, true, "bio-plane", "test", true, false]);
@@ -109,7 +109,7 @@ test("R18 op=selftest through the Worker: every binding reported, the store's st
 });
 
 test("R19 R18 R17 an instance with no R2 is healthy and declared: selftest ok with both buckets not configured, and livefire's verdict pass with the named 'declared, not silent' assertion, failing nothing", { timeout: 300000 }, async () => {
-  const mf = await planeWith({ ADMIN_TOKEN: ADM, MEMBER_TOKEN: MEM, PROBE_TOKEN: PRB }, { r2: false });
+  const mf = await planeWith({ ADMIN_TOKEN: ADM, PROBE_TOKEN: PRB }, { r2: false });
   const s = await call(mf, `op=selftest&token=${PRB}`);
   assert.deepEqual([s.j.ok, s.j.r2Configured, s.j.captures, s.j.bindings.CAPTURES, s.j.bindings.PUBLISHED, s.j.bindingsAllPresent],
                    [true, false, "not configured", "not configured", "not configured", true]);
@@ -120,7 +120,7 @@ test("R19 R18 R17 an instance with no R2 is healthy and declared: selftest ok wi
 });
 
 test("R19 R18 R17 an ADMIN_TOKEN bound to a published value: livefire answers 500 with ok true, verdict fail and failing exactly the token-hygiene assertion, which names the binding and never the value; selftest reports the binding not live; bootstrap reports no usable credential", { timeout: 300000 }, async () => {
-  const mf = await planeWith({ ADMIN_TOKEN: DEAD_A, MEMBER_TOKEN: MEM, PROBE_TOKEN: PRB });
+  const mf = await planeWith({ ADMIN_TOKEN: DEAD_A, PROBE_TOKEN: PRB });
   const lf = await call(mf, `op=livefire&token=${PRB}`);
   assert.deepEqual([lf.status, lf.j.ok, lf.j.verdict, lf.j.failing], [500, true, "fail", [HYGIENE]]);
   const a = lf.j.assertions.find((x) => x.name === HYGIENE);
@@ -133,7 +133,7 @@ test("R19 R18 R17 an ADMIN_TOKEN bound to a published value: livefire answers 50
 });
 
 test("R18 R19 a DAEMON_TOKEN bound to a published value beside a live ADMIN_TOKEN: selftest reports it false, bound and dead and not absent, while the instance is otherwise healthy; livefire fails naming that binding alone; neither answer carries the value; a live one reads true", { timeout: 300000 }, async () => {
-  const mf = await planeWith({ ADMIN_TOKEN: ADM, MEMBER_TOKEN: MEM, PROBE_TOKEN: PRB, DAEMON_TOKEN: DEAD_A });
+  const mf = await planeWith({ ADMIN_TOKEN: ADM, PROBE_TOKEN: PRB, DAEMON_TOKEN: DEAD_A });
   const s = await call(mf, `op=selftest&token=${PRB}`);
   assert.deepEqual([s.j.bindings.DAEMON_TOKEN, s.j.ok, s.j.bindingsAllPresent], [false, true, true]);
   assert.equal(s.text.includes(DEAD_A), false);
@@ -141,13 +141,15 @@ test("R18 R19 a DAEMON_TOKEN bound to a published value beside a live ADMIN_TOKE
   assert.deepEqual([lf.j.ok, lf.j.verdict, lf.j.failing], [true, "fail", [HYGIENE]]);
   assert.deepEqual(lf.j.assertions.find((x) => x.name === HYGIENE).got, ["DAEMON_TOKEN"]);
   assert.equal(lf.text.includes(DEAD_A), false);
-  const ok = await planeWith({ ADMIN_TOKEN: ADM, MEMBER_TOKEN: MEM, PROBE_TOKEN: PRB, DAEMON_TOKEN: DMN });
+  const ok = await planeWith({ ADMIN_TOKEN: ADM, PROBE_TOKEN: PRB, DAEMON_TOKEN: DMN });
   assert.equal((await call(ok, `op=selftest&token=${PRB}`)).j.bindings.DAEMON_TOKEN, true);
 });
 
+/* (T36; N711) the acquire is the administrator's binding credential's, never a shared member bearer: R42 measures
+   the walk, whoever asked for it. */
 test("R42 R34 R33 on the real plane: an acquire's compute measurement reaches this module's observations through capture's listener, as capture_work_bytes in bytes with no key naming it a time, its peak at least that capture's work and the mean beside it the total over the samples", { timeout: 120000 }, async () => {
   const mf = await plane();
-  const acq = await call(mf, `op=acquire&token=${MEM}`, { method: "POST",
+  const acq = await call(mf, `op=acquire&token=${ADM}`, { method: "POST",
     body: JSON.stringify({ locator: "https://records.example.org/page.html", authority: "A records office", subresources: true }) });
   assert.equal(acq.j.ok, true, acq.text.slice(0, 400));
   const work = acq.j.snapshot.compute.work_bytes;
@@ -158,7 +160,7 @@ test("R42 R34 R33 on the real plane: an acquire's compute measurement reaches th
   assert.deepEqual([cw.unit, cw.peak >= work, Object.keys(cw).filter((k) => /_ms$/.test(k))], ["bytes", true, []]);
   assert.ok(cw.samples > 0 && Math.abs(cw.mean - cw.total / cw.samples) < 1e-9);
   /* op=runtime serves the same measurements, the probe state and the subrequest ceiling through one surface */
-  const rt = await call(mf, `op=runtime&token=${MEM}`);
+  const rt = await call(mf, `op=runtime&token=${ADM}`);
   assert.deepEqual([rt.status, rt.j.ok, Object.keys(rt.j).sort()], [200, true, ["asymmetry", "cpu_probe", "measured", "ok", "subrequests"]]);
   assert.deepEqual(rt.j.measured.metrics.find((x) => x.metric === "capture_work_bytes"), cw);
   assert.equal(rt.j.asymmetry, RUNTIME_ASYMMETRY);
@@ -182,4 +184,14 @@ test("R38 R40 R37 op=cpuprobe through the Worker for the probe token runs under 
   const rt = await call(mf, `op=runtime&token=${PRB}`);
   assert.ok(rt.j.cpu_probe.runs.some((x) => x.run === r.j.run.id));
   assert.equal((await doRoute(mf, "bio", "cpuprobestate")).runs.some((x) => x.run === r.j.run.id), false);
+});
+
+test("R18 R19 (T36; N711) a shared member key left bound, even a published value, is no binding: selftest neither reports nor requires it and stays healthy, and livefire's token assertions pass over the three configured tokens", { timeout: 300000 }, async () => {
+  const mf = await planeWith({ ADMIN_TOKEN: ADM, PROBE_TOKEN: PRB, MEMBER_TOKEN: DEAD_B });
+  const s = await call(mf, `op=selftest&token=${PRB}`);
+  assert.deepEqual([s.status, s.j.ok, s.j.bindingsAllPresent, "MEMBER_TOKEN" in s.j.bindings], [200, true, true, false]);
+  assert.equal(s.text.includes(DEAD_B), false);
+  const lf = await call(mf, `op=livefire&token=${PRB}`);
+  assert.deepEqual([lf.status, lf.j.verdict, lf.j.failing], [200, "pass", []]);
+  assert.equal(lf.text.includes("MEMBER_TOKEN"), false);
 });

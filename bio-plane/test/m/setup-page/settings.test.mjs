@@ -1,7 +1,7 @@
 /* The group's settings on the page (R19 Places, R20 offices, R22 a member's language, R23 who your group is, R24 the
-   assistant's state and switch), at the page's interface: the bytes `pageOf` answers and its script run in the
-   fixture's sandbox over a fake plane answering the ops' documented shapes (instance-setup R53, R60, R64, R65;
-   membership R109, R110; entities R1). End-to-end arms over the real ops may follow in instance-setup's job (K1851). */
+   keep-away line), at the page's interface: the bytes `pageOf` answers and its script run in the fixture's sandbox over
+   a fake plane answering the ops' documented shapes (instance-setup R60, R64, R65; credentials R51, R52; membership
+   R109, R110; entities R1). End-to-end arms over the real ops may follow in instance-setup's job (K1851). */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { pageOf, PAGE_HTML } from "../../../src/setup-page/index.mjs";
@@ -10,11 +10,14 @@ import { pageOver, bearerOf } from "./fixture.mjs";
 const tick = () => new Promise((r) => setTimeout(r, 0));
 const settle = async () => { for (let i = 0; i < 30; i++) await tick(); };
 
-/* A fake plane: `profiles` the op's answer, the assistant on or off, the stored place, language and description, each
-   op answering its documented shape; `refuse[op]` makes one refuse in the plane's words. */
-function plane({ administer = true, profiles = { ok: true, profiles: [], conflicts: [], choices: [] }, on = false, refuse = {}, draft = null,
+/* A fake plane: `profiles` the op's answer, whether the group keeps its material away from AI (`kept`, credentials R52;
+   `ka` answers the state read whole instead, for the reads that do not answer), the stored place, language and
+   description, each op answering its documented shape; `refuse[op]` makes one refuse in the plane's words. */
+const KEPT = { on: true, reason: "We hold sources' medical records; no outside model reads them.", set_by: "ada", set_at: "2026-10-05T09:00:00Z" };
+function plane({ administer = true, profiles = { ok: true, profiles: [], conflicts: [], choices: [] }, kept = false, ka, refuse = {}, draft = null,
                  entities = [], pageSize = 100, offices = "answers" } = {}) {
-  const st = { place: null, language: null, description: null, entities: entities.slice(), assistant: { ok: true, on, set_by: on ? "admin" : null, set_at: on ? "2026-10-05T09:00:00Z" : null } };
+  const st = { place: null, language: null, description: null, entities: entities.slice(),
+               ka: kept ? { ...KEPT } : { on: false, reason: null, set_by: null, set_at: null } };
   const sent = [];
   let query = {};
   const answer = (op, body) => {
@@ -24,8 +27,12 @@ function plane({ administer = true, profiles = { ok: true, profiles: [], conflic
       case "bootstrap": return { claimed: true, version: "v1" };
       case "whoami": return { result: { capabilities: ["contribute"], administer } };
       case "profiles": return { result: profiles };
-      case "assistantstate": return { result: st.assistant };
-      case "assistantset": st.assistant = { ok: true, on: body.on, set_by: "admin", set_at: "2026-10-06T08:00:00Z" }; return { result: { ...st.assistant } };
+      case "aikeepawaystate": return ka !== undefined ? ka : { result: st.ka };
+      case "aikeepaway":
+        if (body.on === true && !(typeof body.reason === "string" && body.reason.length >= 1 && body.reason.length <= 2000))
+          return { result: { ok: false, reason: "NO_REASON", translation: "Keeping the group's material away from AI needs a reason. Nothing was written." } };
+        st.ka = { on: body.on === true, reason: body.on === true ? body.reason : null, set_by: "admin", set_at: "2026-10-06T08:00:00Z" };
+        return { result: { ok: true, ...st.ka } };
       case "placewantedstate":
         return administer ? { result: { name: st.place, set_by: st.place ? "admin" : null, set_at: null, matches: [] } }
                           : { result: { ok: false, reason: "NOT_AN_ADMIN" } };
@@ -221,10 +228,10 @@ test("R22 the account screen (the panel) and members and keys offer the language
   assert.equal(m.el("#ln-now").textContent, "Your screens follow your device's setting.");
 });
 
-test("R23 on 'Who your group is', while the assistant is on, an administrator may ask it to help write the focus and purpose: the answers go as op=groupdescriptiondraft, a draft fills the fields with its label, and nothing is kept until op=groupdescriptionset", async () => {
+test("R23 on 'Who your group is', while the assistant is on (the group does not keep its material away from AI, instance-setup R53), an administrator may ask it to help write the focus and purpose: the answers go as op=groupdescriptiondraft, a draft fills the fields with its label, and nothing is kept until op=groupdescriptionset", async () => {
   const DRAFT = { focus: { text: "Housing code enforcement on the east side.", label: { kind: "machine", asked_by: "ada" } },
                   purpose: { text: "So tenants can see which complaints were answered.", label: { kind: "machine", asked_by: "ada" } } };
-  const p = await signedIn({ on: true, draft: DRAFT });
+  const p = await signedIn({ draft: DRAFT });
   assert.equal(p.el("#gd-help").hidden, false);
   await p.el("#go-members").fire(); await settle();
   p.el("#gd-q1").value = "Housing complaints"; p.el("#gd-q2").value = "Tenants"; p.el("#gd-q3").value = "Answers";
@@ -248,41 +255,77 @@ test("R23 on 'Who your group is', while the assistant is on, an administrator ma
 });
 
 test("R23 a refusal, ASSISTANT_DRAFT_UNAVAILABLE included, is stated in its own words and leaves the fields as they were; without the assistant the act is not offered", async () => {
-  const p = await signedIn({ on: true });
+  const p = await signedIn();
   await p.el("#go-members").fire(); await settle();
   p.el("#gd-focus").value = "What we wrote"; p.el("#gd-purpose").value = "Why we wrote it";
   await p.el("#gd-ask").fire(); await settle();
   assert.equal(p.el("#gd-ask-err").textContent, "The assistant cannot draft this yet. Nothing was changed.");
   assert.deepEqual([p.el("#gd-focus").value, p.el("#gd-purpose").value, p.el("#gd-label").textContent], ["What we wrote", "Why we wrote it", ""]);
-  const q = await signedIn({ on: true, refuse: { groupdescriptiondraft: { reason: "GROUP_DRAFT_NO_ANSWERS", detail: "answer at least one question." } } });
+  const q = await signedIn({ refuse: { groupdescriptiondraft: { reason: "GROUP_DRAFT_NO_ANSWERS", detail: "answer at least one question." } } });
   await q.el("#go-members").fire(); await settle();
   q.el("#gd-focus").value = "kept"; await q.el("#gd-ask").fire(); await settle();
   assert.deepEqual([q.el("#gd-ask-err").textContent, q.el("#gd-focus").value], ["answer at least one question.", "kept"]);
-  const off = await signedIn({ on: false });
-  assert.equal(off.el("#gd-help").hidden, true);
-  assert.deepEqual(ops(off.sent, ["groupdescriptiondraft"]), []);
+  /* kept away, or a state not read: the assistant is not on, and the act is not offered */
+  for (const opts of [{ kept: true }, { ka: { error: "x" } }, { ka: { result: { on: null } } }]) {
+    const off = await signedIn(opts);
+    assert.equal(off.el("#gd-help").hidden, true, JSON.stringify(opts));
+    assert.deepEqual(ops(off.sent, ["groupdescriptiondraft"]), []);
+  }
+  /* turned on from the page, the help is withdrawn at once; turned off, it is offered again */
+  const t = await signedIn();
+  t.el("#pn-ka-reason").value = "a reason"; await t.el("#pn-ka-set").fire(); await settle();
+  assert.equal(t.el("#gd-help").hidden, true);
+  await t.el("#pn-ka-set").fire(); await settle();
+  assert.equal(t.el("#gd-help").hidden, false);
 });
 
-test("R24 every signed-in member is shown whether the assistant is on for your group's Civicsmith, and when and by whom it was last set; only an administrator is offered the switch, which says what it will do before it is pressed; an unanswered read offers nothing", async () => {
-  const member = await signedIn({ on: true, administer: false }, { w: "ruth" });
-  assert.match(member.el("#as-state").innerHTML, /The assistant is on for your group's Civicsmith\. Last set by admin on /);
-  assert.equal(member.el("#as-choose").hidden, true);
-  const admin = await signedIn({ on: false });
-  assert.match(admin.el("#as-state").innerHTML, /^<p class="small" style="margin:0">The assistant is off for your group's Civicsmith\.<\/p>$/);
-  assert.equal(admin.el("#as-choose").hidden, false);
-  assert.equal(admin.el("#as-toggle").textContent, "Switch the assistant on");
-  assert.match(admin.el("#as-what").textContent, /^Switching it on lets every member reached by an account ask the assistant/);
-  await admin.el("#as-toggle").fire(); await settle();
-  assert.deepEqual(ops(admin.sent, ["assistantset"]), [["assistantset", { on: true }]]);
-  assert.match(admin.el("#as-state").innerHTML, /The assistant is on for your group's Civicsmith\. Last set by admin/);
-  assert.equal(admin.el("#as-toggle").textContent, "Switch the assistant off");
-  assert.match(admin.el("#as-what").textContent, /^Switching it off means no question is put to the assistant and nothing runs/);
-  const silent = pageOver({ html: PAGE_HTML, session: { t: "s", e: 0, w: "admin" }, fetch: async (url) => {
-    const op = new URL(url, "https://copy.example").searchParams.get("op");
-    const out = op === "whoami" ? { result: { capabilities: [], administer: true } } : op === "assistantstate" ? { error: "x" } : { result: { ok: true } };
-    return { ok: true, status: 200, json: async () => out };
-  } });
-  await settle();
-  assert.match(silent.el("#as-state").innerHTML, /^<p class="small" style="margin:0">Your group&#39;s Civicsmith could not read whether the assistant is on just now\.<\/p>$/);
-  assert.equal(silent.el("#as-choose").hidden, true);
+test("R24 every signed-in member is shown, from op=aikeepawaystate, whether the group keeps its material away from AI; while it is on, who turned it on and when, the reason in the administrator's own words, and 'If you think this should change, ask an administrator'; a member who does not administer is offered no act", async () => {
+  const member = await signedIn({ kept: true, administer: false }, { w: "ruth" });
+  const read = member.sent.filter((c) => c.op === "aikeepawaystate");
+  assert.deepEqual(read.map((c) => [c.method, c.token, c.query]), [["GET", "sess-1", null]]);
+  const line = member.el("#pn-ka-now").textContent;
+  assert.match(line, /^On: your group keeps its material away from AI, so no assistant may be used in it\. Turned on by ada on /);
+  assert.ok(line.includes(new Date(KEPT.set_at).toLocaleDateString()), "when");
+  assert.ok(line.includes(`Their reason: “${KEPT.reason}”`), "the reason in the administrator's own words");
+  assert.match(line, /If you think this should change, ask an administrator\.$/);
+  assert.equal(member.el("#pn-ka-act").hidden, true, "no act for a member who does not administer");
+  assert.equal(member.el("#pn-ka-now").innerHTML, "", "drawn as text: the reason is never markup");
+  const off = await signedIn({ administer: false }, { w: "ruth" });
+  assert.equal(off.el("#pn-ka-now").textContent, "Off: your group does not keep its material away from AI.");
+  assert.equal(off.el("#pn-ka-act").hidden, true);
+  assert.match(PAGE_HTML, /<h2>Keeping your group's material away from AI<\/h2>\s*<div class="card" id="pn-ka">/);
+});
+
+test("R24 only a session that administers is offered op=aikeepaway: on only with a reason and off without one, saying what it will do before it is pressed", async () => {
+  const admin = await signedIn();
+  assert.deepEqual([admin.el("#pn-ka-act").hidden, admin.el("#pn-ka-why").hidden, admin.el("#pn-ka-set").textContent], [false, false, "Keep our material away from AI"]);
+  assert.match(admin.el("#pn-ka-what").textContent, /^Turning it on means no assistant may be used in your group while it is on: not the group's API key, and not a member's own account\./);
+  await admin.el("#pn-ka-set").fire(); await settle();
+  assert.deepEqual(ops(admin.sent, ["aikeepaway"]), [], "not on without a reason");
+  admin.el("#pn-ka-reason").value = "Our sources asked us to."; await admin.el("#pn-ka-set").fire(); await settle();
+  assert.match(admin.el("#pn-ka-now").textContent, /^On: [^]*Their reason: “Our sources asked us to\.” If you think/);
+  assert.deepEqual([admin.el("#pn-ka-why").hidden, admin.el("#pn-ka-set").textContent], [true, "Turn it off"]);
+  assert.match(admin.el("#pn-ka-what").textContent, /^Turning it off lets the assistant be used again in your group/);
+  await admin.el("#pn-ka-set").fire(); await settle();
+  assert.deepEqual(ops(admin.sent, ["aikeepaway"]), [["aikeepaway", { on: true, reason: "Our sources asked us to." }], ["aikeepaway", { on: false }]]);
+  for (const c of admin.sent.filter((x) => x.op === "aikeepaway")) assert.deepEqual([c.method, c.token, c.query], ["POST", "sess-1", null]);
+  assert.equal(admin.el("#pn-ka-now").textContent, "Off: your group does not keep its material away from AI.");
+  /* a refusal is stated in credentials' words */
+  const r = await signedIn({ refuse: { aikeepaway: { reason: "NOT_AN_ADMIN", translation: "Only an administrator can do this." } } });
+  r.el("#pn-ka-reason").value = "x"; await r.el("#pn-ka-set").fire(); await settle();
+  assert.equal(r.el("#pn-ka-err").textContent, "Only an administrator can do this.");
+});
+
+test("R24 a read that did not answer, or answered on neither true nor false, is stated as not read, never as off, and offers nothing; R53's switch is neither shown nor offered", async () => {
+  for (const ka of [{ error: "the store did not answer" }, { result: { on: null, reason: null } }, { result: { on: "false" } }, { result: { ok: false, reason: "NOT_A_MEMBER" } }, { result: {} }]) {
+    const p = await signedIn({ ka });
+    for (const P of ["pn", "mk"]) {
+      if (P === "mk") { await p.el("#go-members").fire(); await settle(); }
+      assert.equal(p.el(`#${P}-ka-now`).textContent, "Whether your group keeps its material away from AI could not be read just now.", JSON.stringify(ka));
+      assert.equal(p.el(`#${P}-ka-act`).hidden, true, JSON.stringify(ka));
+    }
+    await p.el("#pn-ka-set").fire(); await settle();
+    assert.deepEqual(ops(p.sent, ["aikeepaway"]), [], "nothing offered, nothing sent");
+  }
+  assert.equal(/"assistant(?:set|state)"|\bas-(?:state|choose|toggle)\b/.test(PAGE_HTML), false, "R53's switch is gone");
 });

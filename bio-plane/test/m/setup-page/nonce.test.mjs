@@ -8,7 +8,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { pageOf, PAGE_HTML, NONCE_SLOT, HOSTING_SLOT } from "../../../src/setup-page/index.mjs";
-import { pageOver } from "./fixture.mjs";
+import { pageOver, hostileSecurity } from "./fixture.mjs";
 
 const tick = () => new Promise((r) => setTimeout(r, 0));
 const settle = async () => { for (let i = 0; i < 30; i++) await tick(); };
@@ -87,8 +87,8 @@ test("R28 driven, the page makes no script from a string (no eval, no Function, 
     inbox: { result: { inbox: [{ knock_id: evil, status: evil, received: evil, sha256: evil, bytes: evil, note: evil, contact: evil }] } },
     memberlist: { result: { members: [{ member_id: evil, cover: evil, status: evil }] } },
     signerlist: { result: { signers: [{ member_id: evil, key_b64: evil, status: evil, attests: false, attests_why: evil }] } },
-    assistantstate: { result: { ok: true, on: true, set_by: evil, set_at: "2026-10-06T00:00:00Z" } },
     hostingaccess: { result: { ok: true, current: { holders: evil, note: evil, recorded_by: evil } } },
+    ...hostileSecurity(evil),
     recoverycodesissue: { result: { ok: true, codes: [evil], issuedAt: evil } }, memberadd: { result: { ok: true, invite: evil } },
   };
   const fetch = async (url) => ({ ok: true, status: 200, json: async () => answers[new URL(url, "https://copy.example").searchParams.get("op")] ?? { result: { ok: true } },
@@ -101,9 +101,16 @@ test("R28 driven, the page makes no script from a string (no eval, no Function, 
   await p.el("#go-members").fire(); await settle();
   await p.el("#mk-rc-issue").fire(); await settle();
   p.el("#mk-sa-name").value = "n"; p.el("#mk-sa-id").value = "n"; await p.el("#mk-sa-add").fire(); await settle();
+  /* R30's step: the catalogue, a tool picked, added and tested, and the group's tools, all from a hostile answer */
+  await p.drawn("#mk-st-cat .st-pick", { i: "0" }).fire(); await settle();
+  const fields = p.el("#mk-st-fields").innerHTML;
+  p.el("#mk-st-cred-0").value = "k"; await p.el("#mk-st-add").fire(); await settle();
   assert.deepEqual(made, []);
+  assert.deepEqual(handlers(fields), [], "#mk-st-fields");
   const drawn = ["#browse-body", "#b-facts", "#b-md", "#b-files", "#b-history", "#b-ratify", "#inbox-body", "#m-list", "#k-list", "#pf-active",
-    "#pf-choices", "#of-list", "#as-state", "#mk-sa-invite", "#mk-rc-codes"];
+    "#pf-choices", "#of-list", "#mk-sa-invite", "#mk-rc-codes", "#mk-st-cat", "#mk-st-tools"];
+  assert.ok(p.el("#mk-st-cat").innerHTML.includes("&lt;img") && fields.includes("&lt;img"), "not vacuous: R30's step drew the hostile answer, escaped");
+  assert.equal(p.el("#pn-ka-now").innerHTML, "", "the keep-away line is text");
   assert.ok(drawn.map((s) => p.el(s).innerHTML).join("").length > 500, "not vacuous: the sections drew");
   for (const s of drawn) assert.deepEqual(handlers(p.el(s).innerHTML), [], s);
 });

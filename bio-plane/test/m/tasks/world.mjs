@@ -107,20 +107,39 @@ export function defaultFakes() {
 /** A capture queue the drain reads (capture R45), with the provenance homes it resolves (provenance R4). */
 export function inbox(events = [], homes = {}, { fakes = {}, start = false } = {}) {
   const queue = [...events];
-  const log = [];
-  /* capture R45: with `kind`, only that kind's events and count; each call is logged with what it asked */
+  const log = [], reads = [];
+  /* capture R45: with `kind`, only that kind's events and count; each call is logged with what it asked, and each read of
+     the events with its `limit`, its `after` and the digests it answered */
   const ofKind = (kind) => queue.filter((e) => !(typeof kind === "string" && kind) || e.kind === kind);
+  const read = queueRead(queue);
   const w = world({
     capture: {
-      taskEvents: ({ limit, kind } = {}) => { log.push(["events", kind ?? null]); return ofKind(kind).slice(0, limit).map((e) => ({ ...e })); },
+      taskEvents: (q = {}) => { log.push(["events", q.kind ?? null]); const page = read(q);
+        reads.push({ limit: q.limit, after: q.after ?? null, got: page.map((e) => e.captureSha) }); return page; },
       taskEventCount: ({ kind } = {}) => { log.push(["count", kind ?? null]); return ofKind(kind).length; },
       taskEventAttempt: ({ kind, captureSha, at }) => { const e = queue.find((x) => x.kind === kind && x.captureSha === captureSha);
         if (e) { e.attempts += 1; e.lastTry = at; } log.push(["attempt", captureSha]); return !!e; },
       taskEventRemove: ({ kind, captureSha }) => { const i = queue.findIndex((x) => x.kind === kind && x.captureSha === captureSha);
         if (i >= 0) queue.splice(i, 1); log.push(["remove", captureSha]); return i >= 0; } },
     provenance: { homeOf: (sha) => (homes[sha] ? { bundleId: homes[sha] } : null) }, ...fakes }, { start });
-  w.queue = queue; w.log = log;
+  w.queue = queue; w.log = log; w.reads = reads;
   return w;
+}
+/** capture R45's read over `queue` (an array in the queue's order, which a test may push to and splice): the events oldest
+ *  first, at most `limit`, with `kind` only that kind's, each with its `cursor`, its place in that order; with `after` a
+ *  cursor this read answered, only the events past that place, whether or not its event is still queued; an `after` that
+ *  is not such a cursor is read as absent (from the head). */
+export function queueRead(queue) {
+  const place = new WeakMap();
+  let n = 0;
+  const placeOf = (e) => { if (!place.has(e)) place.set(e, ++n); return place.get(e); };
+  return ({ limit, kind, after } = {}) => {
+    queue.forEach(placeOf);
+    const m = typeof after === "string" ? /^place-(\d+)$/.exec(after) : null;
+    const from = m && Number(m[1]) >= 1 && Number(m[1]) <= n ? Number(m[1]) : 0;
+    return queue.filter((e) => (!(typeof kind === "string" && kind) || e.kind === kind) && placeOf(e) > from)
+      .slice(0, limit).map((e) => ({ ...e, cursor: `place-${placeOf(e)}` }));
+  };
 }
 export const ev = (sha, subject = "subject", locator = "https://x.example/d") =>
   ({ kind: "authority-undetermined", captureSha: sha, subject, locator, enqueued: iso(NOW), attempts: 0, lastTry: null });

@@ -79,7 +79,8 @@ test("R66 DEC-134 (6) the step gates nothing: while it is open every other act o
   await w.claim();
   const m = await over(w);
   assert.equal(m.adminRecoveryStep({ viewer: "admin" }).met, false);
-  assert.equal(m.assistantSet({ on: true, by: "admin" }).ok, true);
+  assert.equal(w.c.aiKeepAwaySet({ on: true, reason: "Kept here.", by: "admin" }).ok, true);
+  assert.equal(m.assistantState().on, false);
   assert.equal(m.placeWantedSet({ name: "River Town", by: "admin" }).ok, true);
   assert.equal(m.profilesSet({ profiles: [], by: "admin" }).ok, true);
   assert.equal(m.memberLanguageSet({ language: "es", by: "admin" }).ok, true);

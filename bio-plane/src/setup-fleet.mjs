@@ -9,9 +9,10 @@ export const GROUP_SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])$/;
 
 /* The fleet's members and the binding names the plane reads each by (R17), as `[member, binding]` pairs. T33 adds the
    recompute member (`sheet-worker`, K1531) and the assistant's container member (`agent-runner`, K1601), each read for
-   its own build through the binding named here like every other member. */
+   its own build through the binding named here like every other member. T36 adds the virus scanner (`file-scanner`,
+   K2152), which the installer installs with this binding (installer R44). */
 export const FLEET_BINDINGS = [["agent-worker", "AGENT_WORKER"], ["pdf-worker", "PDF_WORKER"], ["ocr-worker", "OCR_WORKER"],
-  ["sheet-worker", "SHEET_WORKER"], ["agent-runner", "AGENT_RUNNER"]];
+  ["sheet-worker", "SHEET_WORKER"], ["agent-runner", "AGENT_RUNNER"], ["file-scanner", "FILE_SCANNER"]];
 
 /* R47 (DEC-109; H17; K1038): WHO REALLY CONTROLS YOUR GROUP'S CIVICSMITH, told to the founder before they choose a
    password, in DEC-149's words (R63). Held once here, for the claim page (`setup-page`'s slot, which `setup.mjs` fills)

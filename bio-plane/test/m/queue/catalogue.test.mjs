@@ -34,7 +34,9 @@ const FINDING = ["missing_predecessor", "overdue_successor", "temporal-expectati
   "wizard-withdrawn", "wizard-restored", "cited-newer-edition", "cited-edition-withdrawn", "followed-case-entry",
   "cited-docket-entry-refused",
   /* T33-83 (notice-producers R2, R3, R4; K1491, K1481) */
-  "interest-check-noticed", "money-detector-noticed", "standing-answer"];
+  "interest-check-noticed", "money-detector-noticed", "standing-answer",
+  /* T36-46 (notice-producers R12–R15; DEC-165 (7), DEC-145 (5), DEC-169 (4), K1929) */
+  "security-level-high", "policy-changed-noticed", "scan-found", "security-tool-off"];
 /* observation-log's twenty (R5): its twelve, the five sweep kinds (link-sweep R11, queue-producers R26) and the three
    notice kinds (network-notices R12, R13, queue-producers R27) its R33 added in T23 (K1099); and the overdue action
    clock (K611). */
@@ -113,6 +115,22 @@ test("R1: every catalogued kind answers its class, anything else null, and every
   for (const v of ["sweep-", "sweep-held", "sweep-backlog", "sweep-unknown", "notice-", "notice-posted",
                    "notice-lapsed", " sweep-silent", "sweep-silent ", "SWEEP-SILENT", "notice_lapse_near",
                    "CONDITION::sweep-silent"])
+    assert.equal(classOfKind(v), null, v);
+  // T36 (notice-producers R12–R15): the four security and policy kinds are FINDINGs, each with R1's sentence, naming no one
+  const T36_SAYS = {
+    "security-level-high": /the group's security level became High: an unusual run of refused attempts, or something got through; counts only, naming no one/,
+    "policy-changed-noticed": /a policy the group follows changed at its address without an announced amendment; review it/,
+    "scan-found": /a file you can see was held after a scanner found something in it; its safe view stays open/,
+    "security-tool-off": /one of the group's security tools was switched off because it did not confirm its private mode/,
+  };
+  for (const [k, says] of Object.entries(T36_SAYS)) {
+    assert.equal(classOfKind(k), "FINDING", k);
+    assert.match(QUEUE_FINDING_KINDS[k], says, k);
+    assert.equal(catalogueIdOf(k), null, k);
+  }
+  // negative control: near-misses of the T36 kinds are outside the vocabulary
+  for (const v of ["security-level", "security-level-raised", "policy-changed", "scan-finding", "scan-found ",
+                   "SCAN-FOUND", "security_tool_off", "security-tool-on", "FINDING::scan-found"])
     assert.equal(classOfKind(v), null, v);
   // the cardinality finding is worded as what it is: never "required and absent"
   assert.doesNotMatch(QUEUE_FINDING_KINDS.cardinality_exceeded, /absent/);

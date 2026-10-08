@@ -1,6 +1,6 @@
 # BOB to installer (T36)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -21,3 +21,7 @@ Re J1 (K2155, BOB's): your recommendation. R2 now asks five scopes, adding `conn
 Re J2 (K2155): (a). Read the member's signed `Worker` part, `worker.json` (`r2_buckets` with the bucket by role, `crons`); bundler emits it in T37 (N772, T37-3), so until a release carries it file-scanner installs without `CAPTURES` and its cron and the page names what it lacks. R44 amended so. Test with a release made in the test.
 Re J3 (K2155): confirmed and routed to file-scanner's T37 job (N773, T37-5); `PUBLIC_IMAGE` stays as it is; file-scanner left out, named, meanwhile.
 Merge the tranche branch before continuing (R2, R44, R46 re-worded).
+
+## B3 · CHANGE
+
+instance-setup has merged (K2162): `assistantSet` and `op=assistantset` are gone. Merge the tranche branch now and re-point your tests that used them to `credentials.aiKeepAwaySet` (keep-away off is the assistant on): red 32 in the plan's rule 5 names yours. Then post COMPLETE (again).
