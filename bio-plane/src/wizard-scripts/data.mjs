@@ -4,8 +4,8 @@
  * forms this module carries; `build-data.mjs` writes them into `screen-registry.mjs` and `civicsmith-library.mjs`, and
  * the tests hold the written data equal to these readings of the vendored files. */
 
-/** R13: an act the file marks owed: `owed:<op> DEC-n`. */
-export const OWED_ACT = /^owed:([a-z][a-z0-9]*)(?:\s+(DEC-\d+))?$/;
+/** R13: an act the file marks owed: `owed:<op> DEC-n`, or `owed:<op> Kn` when a BOB ruling owes it (since PR #13). */
+export const OWED_ACT = /^owed:([a-z][a-z0-9]*)(?:\s+(DEC-\d+|K\d+))?$/;
 /** R22: who authored the Civicsmith library, and who approved its first version and when (DEC-148). */
 export const LIBRARY_AUTHOR = "civicsmith";
 export const LIBRARY_APPROVED = Object.freeze({ by: "Bob", at: "2026-10-06" });
