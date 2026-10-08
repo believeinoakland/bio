@@ -1,3 +1,16 @@
 # membership (T39)
 
 **Status** · session_01BHB26L3trKhKn9LPYbpK5d · depth 2 · WORKING · handled B1
+
+## J1 · COMPLETE
+
+T39-M done: `job/T39/membership` (this commit), from `tranche/T39` @ 0e8efdc3f5; no merge of the tranche needed (BOB changed nothing I read after START).
+
+**Entries applied:** R83: `MODULE_ORDER` gains `doc-clean` (layer 1, after `image-cover`, before `pdf-worker`) and `setup-words` (layer 11, after `setup-page`, before `instance-setup`); the list now equals `build/modules.json` (139 ids). `module-order.test.mjs` pins both places by their two neighbours (T37-44's `image-cover` pin now reads `pdf-pixels → image-cover → doc-clean`), and the tolerated "not yet built" names are `setup-words` alone: `file-safety` (T36) and `project-roster` (T38) have merged with paths, so tolerating them by name was stale, and no T33 module has empty paths. Plan rule 3 item 6 clears. R83's `*(not yet met: T39)*` mark can go (yours to remove).
+**Fixed in passing (own module):** `index.mjs` comments citing retired membership R59 re-pointed to R115; header lists T39's R83 order; `t9-notice-sight-bounds.test.mjs`:45's message said "in the order they registered", against R79's total order: now says MODULE_ORDER.
+**Deferred (own module), why:** `t9-notice-sight-bounds.test.mjs`:158–161 is a second R83 equality test (sort by layer, then index) beside `module-order.test.mjs`; harmless while `modules.json` is in layer order (module-order asserts that too). Left as is: removing a passing R83 test is a test change beyond this entry. `t35-words.test.mjs` titles cite R112's `checks.mjs`/`index.mjs` line numbers, which have moved; the titles mirror R112's own text, so the line numbers go with a requirement re-wording (yours), not here.
+**Found elsewhere:** membership's own requirements, Uses line: "`declarePurge` (R59)" should read record-core R21 (R59 there is audit-check registration); membership also calls record-core's `registerAuditFinding` (its R68), not named in Uses. Requirement text, so yours. No generated artifact staled: `fleetbundles.test.mjs` reports no member stale.
+**Reading set:** over 300 KB (requirements 51 KB, code 217 KB, tests ~313 KB). Read whole myself: `requirements/membership.md`, layer 2's row of `layers.md`, the plan's rules and T39-M entry, K657, K1185, K2333, K2343, `src/membership/index.mjs` (all 2,664 lines), `module-order.test.mjs`, record-core's Purpose and R21/R34/R35/R37/R59, record-grammar's Purpose and R13/R15/R21. A worker read the other 25 files whole (`schema.mjs`, `checks.mjs`, every other `test/m/membership/` file, `test/members.test.mjs`; 344 KB); its summary (~4 KB, each statement citing file:line) covered every use of module order and listener ordering (R79, R81, R94, R95, R116, R117), what the two additions could break (nothing), and flaws (above). Nothing it left out mattered to this entry.
+**Tests:** `module-order.test.mjs` 6/6; membership (`test/m/membership/`, `test/members.test.mjs`) 169 pass, 0 fail; the whole `test/m` suite (every module that imports `MODULE_ORDER`) 9,067 tests, 9,054 pass, 0 fail; `test/system/fleetbundles.test.mjs` no member stale.
+**Checks:** format 0 failures; architecture 0 failures; coverage 88 of 88; ownership 0 failures.
+Size (session_01BHB26L3trKhKn9LPYbpK5d): test runs 7, module lines 3306
