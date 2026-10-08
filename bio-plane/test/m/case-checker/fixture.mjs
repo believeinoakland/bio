@@ -101,7 +101,7 @@ const rows = (key, list) => (list.length ? [`${key}:`, ...list.flatMap((r) => Ob
 /** The case document's text, `/6` unless `format` names another (`/7`, T31). */
 export function caseDocument({ format = "bio-case-document/6", pairs, bar = { declared: true, capture: "B", connection: "C" }, findings = { [A]: "load_bearing", [C]: "supporting" },
                               pins, materials, attestations, accounts, accepted = [], edition = 2, recorded = null,
-                              facts = {}, passages = {}, calculations = [] } = {}) {
+                              facts = {}, passages = {}, calculations = [], extra = [] } = {}) {
   const roster = Object.keys(findings);
   const rec = recorded || pairs;
   const fm = [
@@ -134,6 +134,7 @@ export function caseDocument({ format = "bio-case-document/6", pairs, bar = { de
     "case_strength_grounds: []",
     "required_strength:", `  declared: ${bar.declared}`, "  source: project", `  capture: ${bar.capture ?? "null"}`,
     `  connection: ${bar.connection ?? "null"}`, '  detail: ""',
+    ...extra,
     "---"];
   const body = ["", `# Case ${CASE} — edition ${edition}`, "", ...CG.whatChangedSectionLines("Added the 2019 minutes."),
                 "## Scope", "", "Who approved the lease.", "", "## What This Excludes", "", "the 2019 permits", ""];
@@ -195,8 +196,10 @@ export function caseFiles(opts = {}) {
     { ref: OBS, by_kind: "member", by: null, level: "group", at: NOW }];
   const doc = caseDocument({ format: opts.format, pairs, findings, pins, materials, attestations, accounts, accepted, bar: opts.bar,
     recorded: opts.recorded ? opts.recorded(pairs) : null, facts: opts.signedFacts || facts, passages: opts.signedPassages || passages,
-    calculations });
+    calculations, extra: opts.docLines || [] });
   put("case_document", null, doc);
+  /* R22: the edition's criteria rows, as `public-read` R33 carries them (a list in canonical JSON; text as given) */
+  if (opts.criteria !== undefined) put("criteria", null, typeof opts.criteria === "string" ? opts.criteria : canonicalJson(opts.criteria));
   put("case_signature", null, sign(opts.caseSigner || "group", caseRatifyStatement(CASE, 2, sha(doc))));
   if (opts.mutate) opts.mutate(texts);
   return { texts, pairs, facts };
@@ -210,7 +213,9 @@ export function manifestFor(listed, { keys = ["group", "alice", "bob"], over = {
     return { index, ...CG.casePartDigest(files, index) };
   });
   const doc = files.find((f) => f.kind === "case_document");
-  return { format: "bio-case-file/1", group: GROUP, case: CASE, edition: 2, case_document_sha: doc ? doc.sha256 : null,
+  /* a case file carrying a kind `/2` adds is `/2` (`case-grammar` R13); else `/1`, as every case file before T36 */
+  const v2 = files.some((f) => ["archive", "container", "criteria"].includes(f.kind));
+  return { format: v2 ? "bio-case-file/2" : "bio-case-file/1", group: GROUP, case: CASE, edition: 2, case_document_sha: doc ? doc.sha256 : null,
            keys: keys.map((k) => ({ key: keyFor(k).line, fingerprint: fingerprintOf(keyFor(k).b64) })), parts, files, ...over };
 }
 

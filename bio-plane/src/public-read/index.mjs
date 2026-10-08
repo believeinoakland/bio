@@ -94,6 +94,22 @@ export function standingsOf(fm) {
 /* R23: a text held by `publication`'s `publishedMaterialText` (its R57), whichever shape it answers in. */
 const heldText = (v) => (typeof v === "string" ? v : v && typeof v.text === "string" ? v.text : null);
 const HEX64 = /^[0-9a-f]{64}$/;
+/* R28 with R32 (K2145): a carried archive member's archives hold its bytes, so when an order withholds a material's
+   `document` file, every `archive` and `container` file the case file carries under that material's ref (its record and
+   each enclosing archive, outward) is withheld too, by the same orders. Mutates `withheld` (`withholdingOf`'s map). */
+function withholdChains(withheld, manifest) {
+  const files = manifest && Array.isArray(manifest.files) ? manifest.files : [];
+  for (const d of files) {
+    if (!d || d.kind !== "document" || typeof d.path !== "string" || !withheld.has(d.sha256)) continue;
+    const under = d.path.slice(0, d.path.lastIndexOf("/") + 1);
+    const orders = withheld.get(d.sha256);
+    for (const f of files) {
+      if (!f || (f.kind !== "archive" && f.kind !== "container") || typeof f.path !== "string" || !f.path.startsWith(under)) continue;
+      const prev = withheld.get(f.sha256) || [];
+      withheld.set(f.sha256, [...prev, ...orders.filter((o) => !prev.includes(o))]);
+    }
+  }
+}
 /* R21: the fixed address a case's docket is served at (its feed's is `op=docketfeed&case=`). */
 export const docketAddress = (caseId) => `op=docketpublic&case=${encodeURIComponent(caseId)}`;
 export const LENS_NO_DOCUMENT_SENTENCE = "no signed case document is held for this edition, so it states no lens here";
@@ -1097,6 +1113,8 @@ export class PublicRead {
    *  - `grading`, `passages`: each finding's rows of the two signed blocks, in `ord` order;
    *  - `materials`: each `materials:` row (`case-grammar` R12) listed `included: true`, with what `publication` holds of
    *    it (its R57): a text held inline (`publishedMaterialText`), or the hash the published bucket holds it under;
+   *    a document's `archives`, the `container` records and archives its commit registered for it, outward (R32);
+   *  - `criteria`: the edition's frozen criteria rows, or null when not recorded (R33);
    *  - `attestations`: each `material_attestations:` row of included material, a `member` row with its signed account
    *    from the document (when the row may name one), a `co_attestation` row with each token `publication` held for
    *    that material (its R57: by hash, with its text where held inline).
@@ -1136,8 +1154,10 @@ export class PublicRead {
     const rows = Array.isArray(mats.materials) ? mats.materials : [];
     const text = (sha) => (HEX64.test(String(sha ?? "")) ? heldText(this.publication.publishedMaterialText(sha)) : null);
     const included = rows.filter((m) => m && (m.included === true || m.included === "true"));
+    const pool = this.#archivePool(included.map((m) => m.ref), text);
     const materials = included.map((m) => ({ ref: m.ref, kind: m.kind, sha: m.sha ?? null, text_sha: m.text_sha ?? null,
-      bytes_text: text(m.sha), extracted_text: m.kind === "document" ? text(m.text_sha) : null }));
+      bytes_text: text(m.sha), extracted_text: m.kind === "document" ? text(m.text_sha) : null,
+      archives: m.kind === "document" ? this.#archiveChain(m.sha, pool) : [] }));
     const refs = new Set(included.map((m) => m.ref));
     const accounts = (caseDocumentBlocks(state.document.text).captures || [])
       .flatMap((cap) => (cap.accounts || []).map((a) => ({ capture: cap.capture, ...a })));
@@ -1168,7 +1188,52 @@ export class PublicRead {
              findings,
              grading: Object.fromEntries(findings.map((f) => [f.bundle_id, grading.get(f.bundle_id) || []])),
              passages: Object.fromEntries(findings.map((f) => [f.bundle_id, passages.get(f.bundle_id) || []])),
-             materials, attestations, calculations };
+             materials, attestations, calculations,
+             /* R33 (K2129): the criteria exactly as R31 answers them, as `publication`'s R53 state froze them (its R72);
+                null for an edition committed before T35, which carries no criteria file. */
+             criteria: Array.isArray(state.criteria) ? state.criteria : null };
+  }
+
+  /* R32 (N717; K2004; `case-carriage` R8 through `publication` R57): what a carried archive member brings with it, read
+     from the published projection only. The commit registered, under an included material's ref, each `container` record
+     (its text held inline, canonical JSON naming the member and its archive by SHA-256) and each archive (kind
+     `archive`), outward to the outermost; a record or archive two of the edition's materials share is registered once,
+     under the first, so the pool is read over every included ref of the edition. */
+  #archivePool(refs, text) {
+    const archives = new Set(), records = new Map();
+    for (const ref of [...new Set(refs.filter((r) => typeof r === "string" && r))]) {
+      for (const r of this.#rows(`SELECT sha256, kind FROM published_shas WHERE bundle_id=? AND kind IN ('container','archive')
+                                   AND path=('materials/' || sha256) ORDER BY sha256`, ref)) {
+        if (r.kind === "archive") { archives.add(r.sha256); continue; }
+        const t = text(r.sha256);
+        const c = safeJson(t);
+        const member = c && typeof c.member_sha256 === "string" ? c.member_sha256.toLowerCase() : null;
+        const archive = c && typeof c.archive_sha256 === "string" ? c.archive_sha256.toLowerCase() : null;
+        if (member && HEX64.test(archive ?? "") && !records.has(member)) records.set(member, { sha: r.sha256, text: t, archive });
+      }
+    }
+    return { archives, records, text };
+  }
+
+  /* R32: one material's chain, walked from its own digest: the record naming it as its member, then the archive that
+     record names, then the record naming that archive as a member, and so on, so a ref another edition also used never
+     lends this one a link. Answers `[{kind, sha, text, member}]` in walk order (`member` the digest the link is about);
+     an archive a record names that the commit did not register is answered `registered: false`, so the case file names
+     it unheld. A material that is no member answers `[]`. An archive already walked ends the walk (a cycle). */
+  #archiveChain(sha, { archives, records, text }) {
+    const s = String(sha ?? "").toLowerCase();
+    if (!HEX64.test(s)) return [];
+    const chain = [], walked = new Set([s]);
+    for (let cur = s; records.has(cur);) {
+      const rec = records.get(cur);
+      chain.push({ kind: "container", sha: rec.sha, text: rec.text, member: cur });
+      if (walked.has(rec.archive)) break;
+      walked.add(rec.archive);
+      if (!archives.has(rec.archive)) { chain.push({ kind: "archive", sha: rec.archive, text: null, member: cur, registered: false }); break; }
+      chain.push({ kind: "archive", sha: rec.archive, text: text(rec.archive), member: cur });
+      cur = rec.archive;
+    }
+    return chain;
   }
 
   /* R3 (DEC-101, DEC-103; K1019): THE EDITION'S OWN STATEMENTS, from its signed document through `case-grammar`'s
@@ -1265,8 +1330,9 @@ export class PublicRead {
       const stamps = stamped.get(`${e.case_id}\u0000${Number(e.edition)}`);
       if (!stamps) continue;
       const state = this.publication.caseEditionState(e.case_id, Number(e.edition));
-      const w = withholdingOf(e.case_id, stamps,
-                              this.#editionItems(e.case_id, state, e.manifest_sha, safeJson(e.manifest)), docketAddress);
+      const manifest = safeJson(e.manifest);
+      const w = withholdingOf(e.case_id, stamps, this.#editionItems(e.case_id, state, e.manifest_sha, manifest), docketAddress);
+      withholdChains(w.withheld, manifest);
       editions.set(`${e.case_id}\u0000${Number(e.edition)}`, w);
       for (const [sha, orders] of w.withheld) {
         const prev = bySha.get(sha) || [];

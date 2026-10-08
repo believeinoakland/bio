@@ -1,14 +1,15 @@
-/* case-checker — the one checker of a case file (requirements: `build/requirements/case-checker.md` R1–R12, R16–R18;
+/* case-checker — the one checker of a case file (requirements: `build/requirements/case-checker.md` R1–R12, R16–R18, R20, R22;
  * DEC-112 (3)(5)(6); `BIO_Publication_v0_1.md` §5C).
  *
  * `checkCaseFile({parts, documents?, keys?})` reads a case file's parts and recreates each finding from what they carry:
  * the integrity of every part and file (R2), the signatures and attestations (R3), the passages (R4), each grade
  * recomputed at the stated method version (R5), the bar (R6), the publication checks (R7), presentability (R8),
  * completion by documents supplied later (R9), the complete edition (R10) and each calculation recomputed by
- * `calc-grammar`'s evaluator (R20), composed into one result per finding (R11). It is built only from pure code: `case-grammar`'s format, `case-catalogue`'s case-document checks
- * (`checks.mjs`), `strength`'s method (`method.mjs`), `content`'s extent grammar, `signatures`' verifier and
- * `calc-grammar`'s evaluator, so the
- * standalone program (R13) is this file and those, bundled. It reads nothing but its arguments, writes nothing, makes
+ * `calc-grammar`'s evaluator (R20), composed into one result per finding (R11); beside them, how the case uses the
+ * standards it measures against, judged offline over a carried `criteria` file (R22, through R21). It is built only from
+ * pure code: `case-grammar`'s format, `case-catalogue`'s case-document checks (`checks.mjs`), `strength`'s method
+ * (`method.mjs`), `content`'s extent grammar, `signatures`' verifier, `calc-grammar`'s evaluator and this module's R21,
+ * so the standalone program (R13) is this file and those, bundled. It reads nothing but its arguments, writes nothing, makes
  * no request and never throws (R1, R16); it answers a promise because a signature is verified by WebCrypto.
  *
  * Recreating shows a case intact and consistent, never true (R12): no answer composes a case-level strength, a single
@@ -29,6 +30,7 @@ import { caseFileManifestCheck, caseFileEntryOf, casePartDigest, CASE_FILE_MANIF
 import { evaluate, resultKey, METHOD as CALC_METHOD } from "../calc-grammar/index.mjs";
 import { CATALOG_VERSION } from "../gate.mjs";
 import { readStoredZip, asBytes } from "./zip.mjs";
+import { checkStandardsUse } from "./standards.mjs";
 
 /* ============================================================ the words (R1, R11, R18; the UX stream's, until it gives them) */
 
@@ -244,10 +246,10 @@ function malformed(departures, manifest) {
   return {
     format: str(m.format), case: str(m.case), edition: Number.isInteger(m.edition) ? m.edition : null, group: str(m.group),
     checker: versionsOut(),
-    integrity: { intact: false, departures, parts: [], files: [], documents: { used: [], unmatched: [] } },
+    integrity: { intact: false, departures, parts: [], files: [], documents: { used: [], unmatched: [], wanted: [] } },
     signatures: { case: null, findings: [], attestations: [], keys_checked: false, keys_statement: KEYS_NOT_CHECKED_STATEMENT },
     publication_checks: { ran: false, findings: [], unasked: [], stated_version: null, checker_version: CATALOG_VERSION, statement: null },
-    calculations: [],
+    calculations: [], standards_use: null,
     findings: members.map((f) => ({ finding: f, role: null, result: "did_not_recreate", missing: [],
       differs: departures.map((d) => entry("integrity", "case file", d)), pair: null, bar_met: null })),
     complete_edition: { equal: null, detail: "the case file could not be read, so its complete edition was not compared" },
@@ -475,9 +477,10 @@ async function check({ parts, documents = [], keys = null }) {
   else if (!ceFile.content) {
     complete_edition.detail = ceFile.state === "missing" ? `the complete edition is not carried; fetch the file whose SHA-256 is ${ceFile.sha256}` : ceFile.detail;
     (ceFile.state === "missing" ? caseLevel.missing : caseLevel.differs).push(entry("complete_edition", ceFile.path, complete_edition.detail, { sha256: ceFile.sha256 }));
-  } else if (files.some((f) => f.kind !== "complete_edition" && f.state !== "intact" && f.state !== "supplied")) {
+  } else if (files.some((f) => f.kind !== "complete_edition" && f.kind !== "criteria" && f.state !== "intact" && f.state !== "supplied")) {
     /* Rendered from files that are missing or differ, it could not be the carried edition; what they lack is already
-       entered for each finding that needs them, so the edition is not compared rather than counted against every one. */
+       entered for each finding that needs them, so the edition is not compared rather than counted against every one.
+       The criteria file is not rendered from (`case-grammar` R14), so it does not hold the comparison back (R22). */
     complete_edition.detail = "the complete edition was not compared, because files it is rendered from are missing or "
       + "differ from the manifest";
   } else {
@@ -505,10 +508,19 @@ async function check({ parts, documents = [], keys = null }) {
     else if (!doc.used) unmatched.push({ sha256: doc.sha, bytes: doc.bytes.length, detail: `a supplied document (SHA-256 ${doc.sha}) matches no fingerprint this case file records as missing, and no calculation input it lacks, so it was not used` });
     else if (!used.includes(doc.sha)) used.push(doc.sha);
   }
+  /* R9 (K2143): every file the manifest lists that the case file lacks (absent, or carried with other bytes) and no
+     document supplied filled, in the manifest's order, so a reader knows each file to fetch; the criteria file (R22)
+     among them, though no finding's result rests on it. */
+  const wanted = files.filter((f) => (f.state === "missing" || f.state === "differs") && !used.includes(f.sha256))
+    .map((f) => ({ path: f.path, kind: f.kind, sha256: f.sha256,
+                   detail: `${f.state === "differs" ? `${f.path} is carried with other bytes` : `${f.path} is not carried`}; fetch the file whose SHA-256 is ${f.sha256}` }));
   /* R2, R20: the calculations' PROV-O rendering, when carried, is what `case-grammar` R19 renders from the signed rows. */
   const provFile = files.find((f) => f.path === CASE_FILE_PROV_PATH) || null;
   if (fm && provFile && provFile.content && textOf(provFile.content) !== provOf(calculationsOf(fm)))
     caseLevel.differs.push(entry("calculation", provFile.path, "the calculations' provenance file the case file carries is not the rendering of the calculations the signed case document states"));
+
+  /* ---------------------------------------------------------- R22: how the case uses its standards, offline */
+  const standards_use = standardsUseOf({ files, docText, materials, signedPassages, fileOf });
 
   /* ---------------------------------------------------------- per finding */
   const bar = fm && isObj(fm.required_strength) ? fm.required_strength : null;
@@ -675,7 +687,7 @@ async function check({ parts, documents = [], keys = null }) {
     integrity: { intact: !read.departures.length && files.every((f) => f.state === "intact" || f.state === "supplied"),
       departures: read.departures, parts: read.parts,
       files: files.map((f) => ({ path: f.path, kind: f.kind, sha256: f.sha256, state: f.state })),
-      documents: { used, unmatched } },
+      documents: { used, unmatched, wanted } },
     signatures: { case: caseSig ? { file: caseSig.path, verified: sigCase.verified === true, reason: sigCase.reason ?? null,
         key_fingerprint: sigCase.key_fingerprint ?? null, listed_in_case_file: sigCase.listed_in_case_file ?? null,
         ...(published ? { among_published_keys: sigCase.among_published_keys ?? null } : {}) } : null,
@@ -683,6 +695,7 @@ async function check({ parts, documents = [], keys = null }) {
       keys_statement: published ? null : KEYS_NOT_CHECKED_STATEMENT },
     publication_checks,
     calculations,
+    standards_use,
     findings: findingsOut.map((f) => ({ finding: f.finding, role: f.role, result: f.result, missing: f.missing, differs: f.differs, pair: f.pair, bar_met: f.bar_met })),
     complete_edition,
     rests_on_another_group: restsOn, rests_on_another_group_statement: REST_ON_ANOTHER_GROUP_STATEMENT,
@@ -690,6 +703,42 @@ async function check({ parts, documents = [], keys = null }) {
   };
 }
 const dedupe = (list) => { const seen = new Set(); return list.filter((e) => { const k = canonicalJson(e); if (seen.has(k)) return false; seen.add(k); return true; }); };
+
+/* ============================================================ standards' use, offline (R22) */
+
+/** R22: the sentence beside a standard whose captures the case file does not carry, so whether its whole text travels
+ *  is not judged here. The UX stream's words, later. */
+export const CAPTURES_NOT_CARRIED_STATEMENT = "Whether this standard's whole text travels with the case is not judged "
+  + "here, because the case file does not carry which captures hold its text.";
+
+/** R22: R21 (`checkStandardsUse`) over the case document, the carried `criteria` file's rows, the document's
+ *  `materials:` rows and its passages (each with the finding relying on it); null when the case file lists no
+ *  `criteria` file. A row carries no `captures` offline (`publication` R72 does not freeze them), so for each judged row
+ *  of a standard whose `access` is not `free` and that carries none, `COPYRIGHTED_TEXT_CARRIED` is not judged and the
+ *  row is named in `unjudged` with that check. A file listed but not carried, or carried with other bytes, is answered
+ *  `{ok: null, detail}` naming the file to fetch. It changes no finding's result. Pure; never throws. */
+function standardsUseOf({ files, docText, materials, signedPassages, fileOf }) {
+  const f = fileOf("criteria", null);
+  if (!f) return null;
+  if (!f.content) return { ok: null, file: f.path, sha256: f.sha256,
+    detail: f.state === "missing" ? `the criteria the case measures against are not carried; fetch the file whose SHA-256 is ${f.sha256}`
+      : `the criteria the case measures against are not judged, because ${f.detail}` };
+  if (docText === null) return { ok: null, file: f.path, sha256: f.sha256,
+    detail: "the criteria the case measures against are not judged, because the case document is not carried" };
+  const criteria = jsonOf(f.content);
+  const passages = [];
+  /* the passages the signed document states; a document that predates the block, the carried files (as R4 reads them) */
+  const byFinding = isObj(signedPassages) ? Object.entries(signedPassages)
+    : files.filter((x) => x.kind === "passages" && x.content && x.finding).map((x) => { const v = jsonOf(x.content); return [x.finding, Array.isArray(v) ? v : isObj(v) ? v.passages : null]; });
+  for (const [finding, rows] of byFinding)
+    for (const r of Array.isArray(rows) ? rows : []) if (isObj(r)) passages.push({ ...factFields(r), finding });
+  const r = checkStandardsUse({ text: docText, criteria: criteria === undefined ? null : criteria, materials, passages });
+  if (!Array.isArray(criteria) || r.refusals?.some((x) => x.code === "MALFORMED")) return r;
+  const blind = criteria.filter((c) => c.stated !== "not held" && c.access !== "free" && !(Array.isArray(c.captures) && c.captures.length))
+    .map((c) => ({ standard: c.standard, portion: c.portion ?? null, body: c.body ?? null, check: "COPYRIGHTED_TEXT_CARRIED",
+                   detail: CAPTURES_NOT_CARRIED_STATEMENT }));
+  return blind.length ? { ...r, unjudged: [...(r.unjudged || []), ...blind] } : r;
+}
 
 /* ============================================================ the calculations (R20) */
 

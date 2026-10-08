@@ -34,7 +34,7 @@ Terms. The **case file**, its **manifest**, **parts** and **files** are `case-gr
 **The standalone program and the readable specification**
 
 - **R13** The module builds one self-contained program file from the code of R1–R11 and R20, `calc-grammar`'s evaluator bundled into it (K1448), with nothing to install and no network access, that runs `checkCaseFile` on case-file parts a person gives it and prints R1's answer, each finding's result first. The same build produces the same bytes. The program file carries its own SHA-256. (DEC-112 (3): "a standalone open checker let[s] anyone recreate a case without CivicOS")
-- **R14** The readable specification of each case-file format version (`bio-case-file/1` first) is a document held with this module. It is written from `case-grammar` R11–R13 and states every field, kind and rule a checker needs. Its version names the format it specifies. (K1134 (1); DEC-112 (3) "an open specification") (T36; N717, K2129) `bio-case-file/2` (`case-grammar` R13 as amended: the `archive`, `container` and `criteria` kinds) is specified beside `/1`, and `casefilespec` (R15) answers both. *(not yet met: T36)*
+- **R14** The readable specification of each case-file format version (`bio-case-file/1` first) is a document held with this module. It is written from `case-grammar` R11–R13 and states every field, kind and rule a checker needs. Its version names the format it specifies. (K1134 (1); DEC-112 (3) "an open specification") (T36; N717, K2129) `bio-case-file/2` (`case-grammar` R13 as amended: the `archive`, `container` and `criteria` kinds) is specified beside `/1`, and `casefilespec` (R15) answers both.
 - **R15** At start, the module registers with `public-read` (its R18) two credential-free public reads: `casechecker`, which answers R13's program file, and `casefilespec`, which answers R14's specification for a named version (`version`). An unknown version is answered with the versions held. (DEC-112 (3); K1134 (1))
 
 **Another group's work a finding rests on** (DEC-96 item 4; N522)
@@ -57,7 +57,7 @@ Terms. The **case file**, its **manifest**, **parts** and **files** are `case-gr
 
   A criteria row with `stated: "not held"` is not judged and is named in `unjudged`. Pure, as R1: it reads only its arguments, the same arguments give the same answer, and it never throws (malformed arguments answer `{ok: false, refusals: [{code: "MALFORMED", field}]}`). The ceremony's refusal is its caller's (Suggestions).
 
-- **R22** (T36; N717; K2129) When a case file carries a `criteria` file (`case-grammar` R13), R1 also answers `standards_use`: R21 over the case document, that file's rows, the document's `materials:` rows and its `passages`; a row carries no `captures` offline, so a check that needs them (`COPYRIGHTED_TEXT_CARRIED`) is not judged and its standard is named in `unjudged`. With no `criteria` file, `standards_use` is null. It changes no finding's result and is pure, as R1. *(not yet met: T36)*
+- **R22** (T36; N717; K2129) When a case file carries a `criteria` file (`case-grammar` R13), R1 also answers `standards_use`: R21 over the case document, that file's rows, the document's `materials:` rows and its `passages`; a row carries no `captures` offline, so a check that needs them (`COPYRIGHTED_TEXT_CARRIED`) is not judged and its standard is named in `unjudged`. With no `criteria` file, `standards_use` is null. It changes no finding's result and is pure, as R1.
 
 **Calculations a case carries** (C:A-13; K1448)
 

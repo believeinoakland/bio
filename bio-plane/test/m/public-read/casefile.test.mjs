@@ -117,13 +117,14 @@ test("R23 the case file carries, from the published projection only, the signed 
     [`attestations/${DOC}/1-group.json`, "attestation"], [`attestations/${DOC}/2-project.json`, "attestation"],
     [`attestations/${DOC}/3-co_attestation.json`, "attestation"],
     ["case.md", "case_document"], ["case.md.sig", "case_signature"], ["complete-edition.html", "complete_edition"],
-    [`findings/${F}/finding.md`, "finding"], [`findings/${F}/finding.md.sig`, "finding_signature"],
+    ["criteria.json", "criteria"], [`findings/${F}/finding.md`, "finding"], [`findings/${F}/finding.md.sig`, "finding_signature"],
     [`findings/${F}/grading-facts.json`, "grading_facts"], [`findings/${F}/passages.json`, "passages"],
     [`findings/${G}/finding.md`, "finding"], [`findings/${G}/finding.md.sig`, "finding_signature"],
     [`findings/${G}/grading-facts.json`, "grading_facts"], [`findings/${G}/passages.json`, "passages"],
     [`materials/${DOC}/document`, "document"], [`materials/${DOC}/extracted.txt`, "extracted_text"],
     [`materials/${obs}/observation.md`, "observation"]],
-    "G, reached through F's chain, is carried; ANNEX (not included) is not; GONE (never held) is not, and is named");
+    "G, reached through F's chain, is carried; ANNEX (not included) is not; GONE (never held) is not, and is named; the "
+    + "edition's criteria (none of its members targets a standard: []) travel once (R33)");
   assert.deepEqual(out.unheld.map((u) => [u.ref, u.what]), [[GONE, "bytes"], [GONE, "extracted_text"]]);
   assert.deepEqual(m.keys, [{ key: keyLine(KEY), fingerprint: await keyFingerprint(KEY) }],
                    "one signing key (the document's and both findings' signer), on one line, with its fingerprint");
