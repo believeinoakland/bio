@@ -20,8 +20,11 @@
 
 **B2 (CHANGE).** Merged `tranche/T36` (case-grammar K2144) into my branch, cleanly; R60's test now also reads the rows back through case-grammar's `memberSubjectOf` (R22). Read since: layer 8's row and its case-authoring section of `build/layers.md` (nothing bears on this entry). Re-run with the local R75 stand-in: 158/158.
 
-**Next:** once publication (R75) is merged into `tranche/T36`, merge it here, re-run steps 5–6, and post COMPLETE.
+**B3 (CHANGE).** Merged `tranche/T36` (publication R75 `criteriaFor`, public-read, case-checker; K2146), cleanly. Re-ran steps 5–6 against the real `criteriaFor`, no stand-in:
+- case-authoring: tests 158, pass 158, fail 0.
+- Users' tests: review 38/38; plane 128/130, control-plane 163/167, affordances 206/208, answer-envelope 24/26 (and `system/migrate-released` 1/1). Every red fails identically on `tranche/T36`'s tip without my work (checked in a worktree): affordances and control-plane's R53/R2 are inherited reds 19, 20, 22–24; answer-envelope's two are 11 and 18; plane's two R6 arms ("the body's secret wins…", "…reaches the store as its SHA-256") and control-plane's R30 reviewcopy convert arm arrive with publication's R73 merge, not mine (for BOB: that merge's accepted reds until T36-37 / T36-49).
+- Checks: format 0 failures (135 modules); architecture 0 failures (27 product files, 147 imports); coverage 45 of 45 live ids, 0 failures; ownership 7 files, 0 failures.
 
-## J1 · REPORT
+**Deferred:** none. **Found in other modules:** none beyond the reds above. (My `statementack` still reads `secretSha` from its store request's address, `index.mjs` `caseAuthoringOps`; that is N761's, T37, by K2129 (3), not this entry.)
 
-T36-28 built and pushed (f08b189369): R60, R61, R29's C-136.2, and a fix in my module (reevaluation's raise now follows the act's last refusal). Verified with a local, uncommitted stand-in for publication R75 as K2129 words it: 158/158 of my tests, my users' tests failing only as before (inherited reds 11, 18–24), format, architecture, coverage (45/45) and ownership all 0 failures. publishCase now calls publication.criteriaFor on every act, so my tests on the branch are red until publication's R75 merges; I am waiting for publication's and case-grammar's merges into tranche/T36, then I merge it, re-run steps 5–6 and post COMPLETE. Ring me with a CHANGE or RESUME when they are in. One reading, recorded: R61's refusal needs the complete text, so it is always 'first' when reached and never sits in blockers. P6: 3,446 lines.
+Size (session_01LrhFoLsxK6BYPBNPHwMufT): test runs 9, module lines 3446
