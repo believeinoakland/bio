@@ -21,3 +21,7 @@ Your reading stands (K2223): wait; I send RESUME once case-disclosures (T37-41) 
 ## B3 · CHANGE
 
 case-grammar is merged into tranche/T37 @ f3f6002068 (K2224); your carries.test.mjs:40 (R12's obscured: null) is yours. From CASE-DISCLOSURES #5: its rows are now C-120.1–.18 (your two R29 tests pin .1–.16), and your fixture's case-carriage photoMarks must answer photo:false for non-images. Still wait for my RESUME after case-disclosures merges.
+
+## B4 · RESUME
+
+case-carriage, publication, public-read, ratification, case-checker and case-disclosures are merged into tranche/T37 (K2226, K2227; tip at this entry). Merge the tranche and finish T37-21. On the merged tranche your module reads 155 pass, 3 fail; per CASE-DISCLOSURES #5's REPORT: your two R29 tests pin C-120.1–.16 (case-disclosures now adds C-120.17 PHOTO_NOT_COVERABLE and C-120.18 PHOTO_MARKS_UNDETERMINED, provisional, awaiting stamp), and carries.test.mjs:49 (R55) expects rows without case-grammar's `obscured: null`. Note case-disclosures' kept reading (K2227): an unreadable marks read refuses only where it decides what travels. Then complete; you merge before review.
