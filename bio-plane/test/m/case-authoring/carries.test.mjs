@@ -48,9 +48,9 @@ test("R55 (case-disclosures R7, R6): materials: lists every document a member's 
   const m = materialsOf(w.fm(docOf(w, r)));
   assert.deepEqual(m.materials, [
     { ref: DOC, kind: "document", sha: a, text_sha: textSha(DOC), origin: `https://example.org/${DOC}`,
-      archived_copy: "https://archive.example/web/x", included: true, rests_under: "load_bearing" },
+      archived_copy: "https://archive.example/web/x", included: true, rests_under: "load_bearing", obscured: null },
     { ref: DOC2, kind: "document", sha: b, text_sha: null, origin: null, archived_copy: null, included: false,
-      rests_under: "supporting" }]);
+      rests_under: "supporting", obscured: null }]);
   const body = bodyOf(docOf(w, r));
   assert.ok(body.includes("## What This Case Carries"));
   assert.ok(body.includes(`- ${DOC2}, a document, fingerprint ${b}: NOT INCLUDED`));
