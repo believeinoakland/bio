@@ -23,3 +23,7 @@ Deferred: none.
 P6: 3,776 lines (3,719 at the opening), under 4,000.
 
 Size (session_01NPBftQhCWzUZX1ASP6uBqi): test runs 9, module lines 3776
+
+## J1 · REPORT
+
+case-checker's generated src/case-checker/program.mjs bundles content/extent.mjs and is stale after T37-10 (extentRelation's cell relations): case-checker R13 fails 'program.mjs is stale' (51/1; 52/0 without my change). Regenerate with node bio-plane/src/case-checker/build-program.mjs at the merge; I did not write it (mechanics §14). Also fixed in my own module: notice.mjs extentBoundUnheld now bounds a cell, shape or table cell by its grid/shape count, not the list alone (R30); tested.
