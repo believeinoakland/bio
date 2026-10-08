@@ -1,6 +1,6 @@
 # case-carriage (T37)
 
-**Status** · session_013UybDevdS9DJfUx9eqiUuX · depth 2 · WORKING · handled B2
+**Status** · session_013UybDevdS9DJfUx9eqiUuX · depth 2 · RUNNING until 2026-10-08T11:56:50Z (users' tests (control-plane, plane)) · handled B2
 
 ## Progress (to be completed at COMPLETE)
 
