@@ -1,3 +1,26 @@
 # extraction (T38)
 
 **Status** · session_01GXLVBfXBcg51dL2ddA46vX · depth 2 · WORKING · handled B1
+
+## J1 · QUESTION
+
+BOB's finding holds in the code, with one exception: a whole-store purge.
+
+**What holds.** `#migrationState` (`index.mjs`:1147–1156) takes the cutoff once, when no `reading_migrations` row exists: on every Durable Object at boot (`startMigrations`, :1162–1166), before any request. `writeReading` is the only writer of `readings` (:673). It keeps a history row first (`#keepReading`, :760–790): it inserts one, or the latest kept row already equals this reading. So on every store whose migration row has stood since T19, a reading carrying `paras` (T37-4) has its last row after the cutoff and is skipped at :1232. My worker confirmed that no other path in the module writes a reading.
+
+**What does not hold.** `declareTables` declares `reading_migrations` whole-store-only (`EXTRACTION_WHOLE_ONLY`, :56), so `record-core.purge()` with no bundle deletes it. Its sibling tables go too, and `reading_history`'s rowids then restart at 1. The object keeps running. Readings written after that purge get history rows 1..k. At the next boot (or the next `migrateDocxReadings`), the row is re-created with cutoff k, so those N26 readings count as "made before N26". I measured this with a probe, using the module's own fixture:
+1. `migrateDocxReadings` on an empty store: done, cutoff 0.
+2. `core.purge()`.
+3. `read` and `writeReading` of a `.docx` whose table cell holds a run-level `mc:AlternateContent`. Its cell carries `paras: [1]`.
+4. `migrateDocxReadings` again: cutoff 1, and the reading is **migrated** (re-written with the N26 mark and `migrated.n26`, moved 0).
+
+The `oldWalk` paragraph-count guard (:327–331) stops this only when the branch not read holds paragraphs. A run-only branch passes it. Here the `paras` stay unchanged, but the reading is migrated, and its run references, already N26's, would be moved again whenever the run map moves something. That breaks R66's new sentence. R68's `.pptx` migration has the same hole.
+
+**My best reading, and what I am doing now:** no renumbering arm (as you said). I declare `reading_migrations` exempt from the purge: `declarePurge(..., {exempt: ["reading_migrations"]})` instead of whole-only. A migration's row then survives a whole-store purge, so its cutoff is never re-taken over readings written after it. Every live store's migration has been done since T19/T20, and after a purge every reading is the fixed reader's, so keeping `done` is the truth.
+- R49 does not list `reading_migrations`, so no requirement text changes.
+- The schema comment at `schema.mjs`:406–408 ("only the whole-store purge clears it…") is corrected with it.
+- The R66 test (R66 in its title) also covers this purge path.
+
+The alternative is to skip any reading whose cells carry `paras`. It is narrower: it misses the run references of a reading with no table, and the `.pptx` arm. Say if you want that instead, or no change.
+
+**Also:** r70.test.mjs:143–158 stores a pre-N26 reading whose cells carry `paras` and asserts it is migrated. That is a reading the amended R66 says cannot exist. On my reading, that test's synthetic pre-N26 cells drop `paras` (the cell shape as N724/T36 wrote it, before T37's `paras`). The pure test at :122–141 keeps `paras` as stored.
