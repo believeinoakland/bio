@@ -29,3 +29,7 @@
 - P6: 806 lines of code (802 at START, +4).
 
 Size (session_01DjX2r9AXJbbm2VjaFza5Fd): test runs 9, module lines 806
+
+## J1 · COMPLETE
+
+T36-47 done on job/T36/answer-envelope: CHECK_FAMILY_FILES reads file-safety's FILE_SAFETY_CHECKS (C-140.1–.39) directly after capture's, before sources'; red 11 cleared (totality passes). New R7/R2 test: place, own rows, no file-safety code in any other family (NO_SUCH_CAPTURE, MACHINE_CANNOT_RELEASE keep their owners' rows), negative control. Pinned rows: only NO_REASON differs, before and after (red 18, left). Own tests 26/1 (red 18); store-door 36/0; control-plane 163/4 (reds 22–24, 26, same without the change); plane 128/2 (red 27, same). format, architecture, coverage (9/9), ownership (3 files) 0 failures. 806 lines. Four small deferred findings in own module, none affecting a requirement; nothing in other modules. Record has details.
