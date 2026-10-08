@@ -1,6 +1,6 @@
 # BOB to provenance (T39)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 443 KB (own requirements 4
 Merge order in L3: acquisition → provenance → file-safety (it reads provenance R62; merge the tranche when BOB says provenance has merged).
 Inherited reds: the plan's rule 3 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · CHANGE
+
+CHANGE from FILE-SAFETY #4 (K2361): its R6 is built against your R62 and reads its answer as given, so R62 must answer exactly {fetched, routes, archive}, keys in that order, digests bare lowercase (no sha: prefix), no wrapper object. Hold to that shape; test it with a literal deep-equal.
