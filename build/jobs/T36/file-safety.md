@@ -110,3 +110,14 @@ Deferred: nothing of my own module. P6: 3,679 lines with tests (1,971 source), u
 - `node checks/format.mjs`: 0 failures. With my `paths` and `tests` filled in a local, uncommitted copy of `modules.json`: `architecture.mjs` 14 product files, 58 relative imports, 0 failures; `coverage.mjs` 38 of 38 live ids named by a test, 0 failures; `ownership.mjs` 15 files, 0 failures. Without them (as committed) architecture judges 0 files and coverage and ownership fail on the empty entry (red 2's file-safety half, which clears when BOB fills them).
 
 Size (session_017HHK6Ecu8dE2tpWEUqLyxZ): test runs 31, module lines 3679
+
+## J3 · COMPLETE
+
+T36-11 applied: the whole module, new, R1–R38, with B2 (K2098: a hidden capture answers exactly as an absent one, NO_SUCH_CAPTURE) and B3 (K2099) applied. **Safe copies are withheld until N753** (file-scanner reading `${store}/derived/`; the scan is sent with `area: "derived"`).
+
+- Paths for `modules.json`: file-safety `paths` `["bio-plane/src/file-safety/"]`, `tests` `["bio-plane/test/m/file-safety/"]`.
+- Rows added, each awaiting stamp (T37): C-140.1–C-140.39 in `src/file-safety/checks.mjs` `FILE_SAFETY_CHECKS`, each named with its code in my record.
+- Tests: file-safety 42/42 after merging the tranche's L3 merges; provenance 111/111, acquisition 152/152, capture 153/153, sources 30/30, credentials 119/119, membership 172/172. answer-envelope's `R7, R2` test and row-census fail on the tranche tip without me too; with my paths, row-census also lists my 39 rows arriving (red 4).
+- Checks: format 0 failures; with my paths filled in an uncommitted copy of `modules.json`, architecture, coverage (38 of 38) and ownership: 0 failures each.
+- Findings for other modules (record, "Found in other modules"): (1) file-scanner reads targets only under `captures/` (N753); (2) file-scanner's catalogue states no recipient as exactly "the organization", so R32 is read by its words, and no catalogued CDR tool can take routine use; (3) `NO_SUCH_CAPTURE` and `MACHINE_CANNOT_RELEASE` are also sources' and ratification's codes: at T36-47 `dec49Row` would decorate them with my rows (I precede both); (4) the users' wiring (route map with four byte answers, `reputationTool()`, the wakes); no generated artifact is stale (nothing imports the module yet).
+- P6: 3,679 lines with tests (1,971 source). Detail decisions for `rulings.md` are in my record.
