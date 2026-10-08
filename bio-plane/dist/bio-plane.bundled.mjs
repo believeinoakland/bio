@@ -27847,6 +27847,7 @@ var UNPACKED_VIA = "unpacked";
 var UNPACKED_FROM_ARCHIVE = "CAPTURE_UNPACKED_FROM_ARCHIVE";
 var UNPACKED_UNRESOLVED = "CAPTURE_UNPACKED_UNRESOLVED";
 var UNPACKED_LOCATOR = /^zip:([0-9a-fA-F]{64})!(\d+)$/;
+var FETCHED_VIAS = Object.freeze(["direct", ARCHIVE_VIA, "capture-request"]);
 var ROUTE_RANK = { direct: 0, archive: 1, unpacked: 2, doorbell: 3 };
 var VERSION_CHAIN_LIMIT_DEFAULT = 200;
 var VERSION_CHAIN_LIMIT_MAX = 1e3;
@@ -28730,6 +28731,40 @@ var Provenance = class {
       archive,
       why: `these bytes are entry ${index2} of an archive the record holds (${archiveSha.slice(0, 16)}\u2026), cut out of it, so on the capture axis they earn exactly what that archive earns, never more and never less. Of the archive: ${why}`
     };
+  }
+  /** R62 · N806 (K2333): whether this copy fetched the capture itself, the one definition of the source condition
+   *  (lifted from `file-safety` R6). `fetched` when a receipt naming the capture (R60) has a `via` in `FETCHED_VIAS`
+   *  (no `via` reads `direct`, R13), or when an `unpacked` receipt's locator names an archive for which this rule
+   *  answers `fetched`, walking outward through at most `ARCHIVE_DEPTH_MAX` archives (one such receipt suffices,
+   *  K1949). A knock, a capture with no receipt, and a file cut from an archive not itself fetched answer `false`. A
+   *  walk that meets a digest twice, runs past the bound or reads a malformed locator ends that path not fetched. A
+   *  read that fails answers `false` with no routes: fail closed. Writes nothing. */
+  fetchedByThisCopy(captureSha) {
+    try {
+      return this.#fetched(bareSha(captureSha), []);
+    } catch {
+      return { fetched: false, routes: [], archive: null };
+    }
+  }
+  /* R62: one capture's answer; `walked` is the digests already read on this path, innermost first. */
+  #fetched(s, walked) {
+    if (typeof s !== "string" || !/^[0-9a-f]{64}$/.test(s)) return { fetched: false, routes: [], archive: null };
+    const rows3 = this.#rows(`SELECT via, retrieval_locator FROM captured_locators WHERE capture_sha = ?
+                              ORDER BY address_norm, via`, s);
+    const routes = [...new Set(rows3.map((r) => r.via || "direct"))].sort();
+    if (rows3.some((r) => FETCHED_VIAS.includes(r.via || "direct"))) return { fetched: true, routes, archive: null };
+    const path = [...walked, s];
+    let first = null;
+    for (const r of rows3) {
+      if (r.via !== UNPACKED_VIA) continue;
+      const m = UNPACKED_LOCATOR.exec(typeof r.retrieval_locator === "string" ? r.retrieval_locator : "");
+      if (!m || !Number.isSafeInteger(Number(m[2]))) continue;
+      const archive = m[1].toLowerCase();
+      first ??= archive;
+      if (path.includes(archive) || walked.length + 1 > ARCHIVE_DEPTH_MAX) continue;
+      if (this.#fetched(archive, path).fetched) return { fetched: true, routes, archive };
+    }
+    return { fetched: false, routes, archive: first };
   }
   /* =====================================================================
    * R29, R30 · REC-225: A MEMBER'S DECLARED ORIGIN FOR A DOCUMENT. A host serves many offices, so a host is not an
@@ -178806,8 +178841,6 @@ var FILE_SAFETY_COUNT_KINDS = Object.freeze([
   "reputation_listed"
 ]);
 var CREDENTIAL_COUNT_KINDS = Object.freeze(["signin", "credential", "rate", "handover", "through"]);
-var FETCHED_VIAS = Object.freeze(["direct", "archive.org", "capture-request"]);
-var UNPACKED = "unpacked";
 var TOOL_USES = Object.freeze(["on_request", "routine"]);
 var onOwnServers = (recipient) => typeof recipient === "string" && (/^the organization\b/i.test(recipient.trim()) || /^[^,(]+\(the organization's own [^)]+\)$/i.test(recipient.trim()));
 var derivedKey = (store, sha2) => `${store}/derived/${sha2}`;
@@ -179347,21 +179380,16 @@ var FileSafety = class _FileSafety {
     return out;
   }
   /* ===== the threat grade (R6, R7, R20) ===== */
-  /* R6's source condition: some receipt is a fetch by this copy, or the file was cut from an archive whose own source
-     condition holds (K1949: one such receipt suffices). `path` is the archives already walked, so a chain that meets
-     a digest twice, or runs past `ARCHIVE_DEPTH_MAX` levels, ends not fetched. */
-  #sourceOf(sha2, path = []) {
-    const rows3 = this.#receiptsOf(sha2);
-    const routes = [...new Set(rows3.map((r) => r.via || "direct"))].sort();
-    if (rows3.some((r) => FETCHED_VIAS.includes(r.via || "direct"))) return { fetched: true, routes, archive: null };
-    for (const r of rows3.filter((x) => x.via === UNPACKED)) {
-      const m2 = /^zip:([0-9a-f]{64})!(\d+)$/.exec(r.retrieval_locator || "");
-      if (!m2 || path.includes(m2[1]) || path.length >= 3) continue;
-      if (this.#sourceOf(m2[1], [...path, sha2]).fetched) return { fetched: true, routes, archive: m2[1] };
+  /* R6's source condition is provenance's one definition, its R62 (N806, K2333): a fetch by this copy, or a file cut
+     from an archive whose own answer is fetched. Its answer is `source` as given; one that cannot be read is not
+     fetched (R62 fails closed the same way). */
+  async #fetched(sha2) {
+    try {
+      const a = await this.provenance.fetchedByThisCopy(sha2);
+      if (a && typeof a === "object" && typeof a.fetched === "boolean") return a;
+    } catch {
     }
-    const first = rows3.find((x) => x.via === UNPACKED);
-    const m = first ? /^zip:([0-9a-f]{64})!/.exec(first.retrieval_locator || "") : null;
-    return { fetched: false, routes, archive: m ? m[1] : null };
+    return { fetched: false, routes: [], archive: null };
   }
   /* An archive's whole listing, every page, read as an in-plane caller (the viewer's sight was asked first). */
   async #listing(sha2) {
@@ -179386,8 +179414,8 @@ var FileSafety = class _FileSafety {
     const add2 = (code, extra) => {
       if (!reasons.some((r) => r.code === code)) reasons.push(reasonOf(code, extra));
     };
-    const source2 = this.#sourceOf(sha2);
-    if (!source2.fetched) add2("source_not_fetched");
+    const source2 = await this.#fetched(sha2);
+    if (source2.fetched !== true) add2("source_not_fetched");
     const bytes2 = await this.#bytes(sha2);
     const format = bytes2 ? formatOf2(bytes2) : "unknown";
     let active = null, archive = null;
