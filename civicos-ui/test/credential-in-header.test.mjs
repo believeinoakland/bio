@@ -75,12 +75,12 @@ ok("T35-74: the POST seam keeps its JSON body and content type beside the header
    tokened[2].method === "POST" && tokened[2].body === JSON.stringify({ ids:["b1"] }));
 ok("T35-74: the captures still arrive and verify", cap.ok === true && cap.sha === SHA && parts.ok === true, { cap: cap.ok, parts: parts.ok });
 
-console.log("\n--- 2. a pasted machine token travels the same way ---");
+console.log("\n--- 2. any credential the surface holds travels the same way (the page takes no pasted one since T36-38) ---");
 U.PLANE.token = "machine-" + TOKEN; U.PLANE.session = false;
 n = SEEN.length;
 await U.recR("list");
 await U.fetchCapture(SHA);
-ok("T35-74: a pasted token is sent as `Bearer <token>` and never in the address",
+ok("T35-74: a non-session credential is sent as `Bearer <token>` and never in the address",
    since(n).length === 2 && since(n).every(r => r.auth === "Bearer machine-" + TOKEN && !r.address.includes(TOKEN)), since(n));
 
 console.log("\n--- 3. a surface holding nothing sends no header ---");
