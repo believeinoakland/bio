@@ -129,7 +129,7 @@ function reviewProvider(w) {
 }
 
 export function world({ group = "test-group", provider = true, now = null, record: recordWrap = null, ratification: ratWrap = null,
-                        inquiry: inqWrap = null, deps = {}, realImports = false } = {}) {
+                        inquiry: inqWrap = null, deps = {}, realImports = false, standards = null } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -185,7 +185,11 @@ export function world({ group = "test-group", provider = true, now = null, recor
   const people = peopleOf(host, { record, membership, entities, provenance: prov, content, sources, events, lines, money,
                                   duties: { dutiesOf: () => ({ ok: true, duties: [] }) }, now: () => clock.now });
   people.migrate();
-  const inquiry = inquiryOf(host, { record, membership, content, retrieval, provenance: prov, entities, now: () => clock.now });
+  /* `standards`, when a test gives one, answers `standardRead` and `bindsAt` (standards R5, R43) for inquiry's legs and
+     publication's criteria (R61, publication R75); else each reaches the real module on this host. */
+  const held = standards ? { standards } : {};
+  const inquiry = inquiryOf(host, { record, membership, content, retrieval, provenance: prov, entities, ...held,
+                                    now: () => clock.now });
   inquiry.migrate();
   const promotion = inquiry.promotion;
   promotion.registerFact("producingGroup", "instance-setup", () => group);
@@ -208,7 +212,7 @@ export function world({ group = "test-group", provider = true, now = null, recor
   observations.migrate();
   const reevaluation = reevaluationOf(host, { record, membership, promotion, inquiry, content, provenance: prov,
                                               strength, basisVersions, now: () => clock.now });
-  const publication = publicationOf(host, { record, membership, promotion, inquiry, basisVersions,
+  const publication = publicationOf(host, { record, membership, promotion, inquiry, basisVersions, entities, ...held,
                                             now: () => clock.now });
   const ratification = ratificationOf(host, { record, membership, promotion, provenance: prov, inquiry, basisVersions,
                                               publication });
