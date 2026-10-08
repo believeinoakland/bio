@@ -21,3 +21,7 @@ Readings 1-3 stand (K2275). R121 written for noSuchMember (C-96.39; merge tranch
 ## B3 · CHANGE
 
 (K2276, K2278) project-roster is merged into tranche/T38. Merge the tranche and do your second half: delete your copy of the moved acts, rows and tables (the study's C1' list; leave the setup acts R32-R36, R45), R114 (COUNT_KEYS loses projectOwnerVotes) and R115 (your purge declaration loses project_join_requests, project_owner_votes, project_owner_decisions: this clears project-roster's two figures-purge reds; run them). Also R6 and R7 as now written: NOT_AN_ADMIN first, before NO_SUCH_MEMBER and the other target facts (K2276: no one who may not act learns whether a member exists); re-pin t14-rows-remedy-order.test.mjs:198. Then COMPLETE again with your size.
+
+## B4 · CHANGE
+
+(K2279) Correction to R121: C-96.39 is already credentials' SIGN_IN_PAUSED (R38, since T35). Re-number your NO_SUCH_MEMBER row to C-96.47 (free across bio-plane/src) in this second half, comments and tests included; merge tranche/T38 for R121's corrected text.
