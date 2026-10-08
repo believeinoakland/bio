@@ -7,7 +7,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { pageOf, PAGE_HTML } from "../../../src/setup-page/index.mjs";
-import { pageOver, bearerOf } from "./fixture.mjs";
+import { pageOver, bearerOf, CATALOGUE } from "./fixture.mjs";
 
 const ORIGIN = "https://copy.example";
 const tick = () => new Promise((r) => setTimeout(r, 0));
@@ -25,7 +25,12 @@ function plane({ unauthorized = new Set(), login = SENTINEL } = {}) {
     whoami: { result: { capabilities: ["read", "contribute", "create_projects", "publish"], administer: true } },
     profiles: { result: { ok: true, profiles: [], conflicts: [], choices: [{ id: "p-one", name: "Profile One", covers: ["Somewhere"] }] } },
     entitieskind: { result: { ok: true, kind: "office", entities: [], count: 0, limit: 100, truncated: false, next: null } },
-    assistantstate: { result: { ok: true, on: true, set_by: "admin", set_at: "2026-10-06T00:00:00Z" } },
+    aikeepawaystate: { result: { on: false, reason: null, set_by: null, set_at: null } },
+    securitytoolcatalogue: { result: CATALOGUE },
+    securitytools: { result: { ok: true, tools: [{ tool_id: "metadefender-core-1", provider_id: "metadefender-core", kinds: ["scan"], use: "on_request",
+                                                  state: "on", monthly_limit: 900, added_by: "admin" }] } },
+    securitytooladd: { result: { ok: true, tool_id: "metadefender-core-2", state: "added" } },
+    securitytooltest: { result: { ok: true, tool_id: "metadefender-core-2", state: "on", passed: true, detail: null } },
     memberlanguage: { result: { language: null } }, placewantedstate: { result: { name: null } },
     list: { result: [{ bundle_id: "INFO-2026-0001-a", object_type: "information", current_state: "collected", title: "A", last_updated: "2026-10-01T00:00:00Z" }] },
     image: { result: { "bundle.md": '---\nid: INFO-2026-0001-a\ntitle: "A"\ncurrent_state: collected\n---\n\n## Summary\n\nA.\n',
@@ -58,7 +63,8 @@ function plane({ unauthorized = new Set(), login = SENTINEL } = {}) {
 
 /* Everything the page shows a member it could hand on: each drawn element's markup and text. */
 const DRAWN = ["#browse-body", "#b-facts", "#b-md", "#b-files", "#b-history", "#b-ratify", "#inbox-body", "#m-list", "#k-list", "#m-invite",
-  "#mk-sa-invite", "#cl-sa-invite", "#pf-active", "#pf-choices", "#of-list", "#of-why", "#as-state", "#mk-rc-codes", "#rs-now"];
+  "#mk-sa-invite", "#cl-sa-invite", "#pf-active", "#pf-choices", "#of-list", "#of-why", "#pn-ka-now", "#mk-ka-now", "#mk-gk-now", "#mk-rc-codes", "#rs-now",
+  "#mk-st-cat", "#mk-st-tools", "#mk-st-fields", "#mk-st-said"];
 
 test("R26 every request the page sends under a session carries the token only in its Authorization: Bearer header: never in its address, its query or its body, and never in a link the page draws", async () => {
   const pl = plane();
@@ -85,7 +91,11 @@ test("R26 every request the page sends under a session carries the token only in
   p.el("#k-key").value = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKGAY bio-ratify"; p.el("#k-who").value = "ada"; await p.el("#k-add").fire(); await settle();
   p.el("#mk-ha-holders").value = "Ada"; await p.el("#mk-ha-set").fire(); await settle();
   p.el("#mk-cn-tell").checked = true; await p.el("#mk-cn-set").fire(); await settle();
-  p.el("#mk-ai-group").checked = true; p.el("#mk-ai-key").value = "sk-ant-key"; await p.el("#mk-ai-set").fire(); await settle();
+  p.el("#mk-gk-pays").checked = true; p.el("#mk-gk-key").value = "sk-ant-key"; await p.el("#mk-gk-set").fire(); await settle();
+  p.el("#mk-ka-reason").value = "a reason"; await p.el("#mk-ka-set").fire(); await settle();
+  await p.drawn("#mk-st-cat .st-pick", { i: "0" }).fire(); await settle();
+  p.el("#mk-st-cred-0").value = "the-tools-key"; await p.el("#mk-st-add").fire(); await settle();
+  await p.drawn("#mk-st-tools .st-rm", { id: "metadefender-core-1" }).fire(); await settle();
   await p.el("#mk-rc-issue").fire(); await settle();
   p.el("#mk-sa-name").value = "Cy"; p.el("#mk-sa-id").value = "cy"; await p.el("#mk-sa-add").fire(); await settle();
   p.el("#gd-focus").value = "f"; await p.el("#gd-keep").fire(); await settle();
@@ -93,12 +103,13 @@ test("R26 every request the page sends under a session carries the token only in
   /* the panel's acts */
   p.el("#pw-name").value = "Somewhere New"; await p.el("#pw-set").fire(); await settle();
   p.el("#of-label").value = "Clerk"; p.el("#of-note").value = "n"; await p.el("#of-set").fire(); await settle();
-  await p.el("#as-toggle").fire(); await settle();
+  await p.el("#pn-ka-set").fire(); await settle();
   await p.el("#pf-confirm").fire(); await settle();
   const ops = new Set(pl.log.map((c) => c.op));
-  for (const op of ["stats", "whoami", "profiles", "entitieskind", "assistantstate", "list", "image", "capture", "allocid", "acquire", "attest",
+  for (const op of ["stats", "whoami", "profiles", "entitieskind", "aikeepawaystate", "list", "image", "capture", "allocid", "acquire", "attest",
                     "promote", "lease", "inbox", "inboxresolve", "memberlist", "signerlist", "memberadd", "signeradd", "hostingaccessset",
-                    "courtnoticeset", "assistantset", "groupkeyset", "groupkeyswitch", "recoverycodesissue", "recoverycodesstate",
+                    "courtnoticeset", "groupkeystate", "groupkeyset", "groupkeyswitch", "aikeepaway", "securitytoolcatalogue", "securitytools",
+                    "securitytooladd", "securitytooltest", "securitytoolremove", "recoverycodesissue", "recoverycodesstate",
                     "adminrecoverystep", "groupdescriptionset", "memberlanguageset", "placewanted", "entitycreate", "profilesset"])
     assert.ok(ops.has(op), `not vacuous: the page sent ${op}`);
   const encoded = [SENTINEL, encodeURIComponent(SENTINEL)];

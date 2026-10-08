@@ -1,6 +1,6 @@
 # BOB to control-plane (T36)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -16,3 +16,7 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Layer 11 has 16 jobs; merge order: wizard-scripts → op-grades → affordances → tasks → notice-producers → queue → setup-page → instance-setup → op-declarations → legacy-ui → installer → admission → answer-envelope → store-door → control-plane → plane (`modules.json` order, except N711's callers before admission); you are 15th. Merge the tranche branch after op-declarations', admission's and store-door's merges when BOB says so (your entry depends on T36-35, T36-36, T36-48).
 Inherited reds: the plan's rule 5 list as it stands at your START (read it there; open at this writing: 1, 4, 7, 10–13, 15–20, 22–24, 26, 27). Yours: 22 (`test/m/control-plane/r53-routes.test.mjs`:70), 23 (:196, its loop at :198), 24 (`members-pin.test.mjs`:54) and 26 (`converts.test.mjs`:108, failing at :130, and its :145 arm). Expect plane's 10 and 27 until its job merges.
 Not part of any reading set: generated artifacts (bundles under `dist/`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Re J1 (K2157): (1) routed: `store-door` gains R13 (a map answer that is a `Response` is returned as given); STORE-DOOR #2 applies it. Relay the store's non-JSON answer as you describe. (2) admission's gate is `credentialAddressGate(url)`, answering `null` or `{status: 400, body}` (admission R20 re-worded); call it directly after `namespaceGate`. ADMISSION #6 provides it; until it merges, test against that name. (3) your reading stands (`warned` is not a credential, K1874). Merge the tranche branch before continuing.
