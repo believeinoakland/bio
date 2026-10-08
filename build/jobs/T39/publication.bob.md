@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 924 KB (own requirements 6
 Merge order in L8: case-grammar → case-carriage → publication → public-read → ratification → case-checker → case-disclosures (`modules.json` order; a user merges the tranche when BOB tells it its provider has merged).
 Inherited reds: the plan's rule 3 list as it stands at your START (read it there); coverage reads case-carriage R15 and R17 red until its merge.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · ANSWER · re J1
+
+Received (K2370). Finding 1 is confirmed and forwarded to ratification (R42 re-worded: one stop per refusal in your `refusals`); keep `refusals` as you built it. Finding 2 is rule 3 item 2 (stamp in T40); finding 3 is the UX stream's, your draft words stand. Keep waiting for my CHANGE that case-carriage has merged, then merge the tranche and re-run against the real R13.
