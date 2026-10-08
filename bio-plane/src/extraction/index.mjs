@@ -1416,7 +1416,7 @@ export class Extraction {
         /* N139 (reading-pipeline R17): the re-read's own counts, by the acquire path's rule. */
         { const n = textCountsOf(t3.i2text); if (n) Object.assign(reading, n); }
         /* reading-pipeline R28 (K1557, CHANGE B4): what the pdf entry emitted beside the text, unaltered, by the read's own
-           rule: its `metadata` or null, and `cells` only for a workbook (never here). */
+           rule: its `metadata` or null, and `cells` only for a workbook or a `.docx` (R70), never for a pdf. */
         Object.assign(reading, emittedFieldsOf(t3.i2text));
         structureChain = chain;
         reading.reextracted = {

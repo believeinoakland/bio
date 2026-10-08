@@ -2,6 +2,20 @@
 
 **Status** · session_01Afy7CyYbu7EgvpPingjWAQ · depth 2 · WAITING ON BOB (J1) · handled B1
 
+## Completion (T37-45)
+
+**Applied.** T37-45 (clears red 12): `test/m/extraction/r70.test.mjs` re-pinned to the seven cell keys office-readers R11 emits (`paras` included), with each cell's `paras` pinned against the fixture's paragraphs (the empty C3's paragraph ¶10 is no cell's) and checked to be the paragraphs whose text the cell carries; the N26 `cell` helper (now `:120`) carries `paras`, and the R66 test asserts a migrated cell keeps its `paras` as stored. No code relies on `paras` (J1, my reading; not blocking). Also fixed in my module: a stale comment in `src/extraction/index.mjs`:1419 that said `cells` come only from a workbook.
+
+**Deferred.** None. J1 (a) and (b) are wording points for BOB; if R66 should move a cell's `paras` by `paragraphs[old].new`, that is a code change in `moveCells` I would make on a CHANGE (no stored reading can hold both today).
+
+**Reading set (B1's rule 3; over 300 KB).** Read whole myself: `build/requirements/extraction.md`; layer 4's row of `build/layers.md`; `r70.test.mjs`; office-readers R11's docx cell paragraph (the one used service the entry touches); K2118, K2173, the plan's T37-45 entry and red 12; `n26MigratedReading`'s walk and `moveCells` (`index.mjs`:150–230). A worker read the rest of the module's code and tests in full and wrote a summary of about 1,300 words, each statement citing file and line: no code validates, strips or reshapes a cell's keys (`writeReading` stores the JSON verbatim, `index.mjs`:680; `readingOf` answers it whole, :1017–1033; `n439MigratedReading` copies cells, :297–299); no other extraction test pins cell keys. Nothing it left out mattered; it found the stale comment fixed above.
+
+**Elsewhere.** None found in another module. A reading re-read under T37-4's office-readers gains `paras`, so its digest differs and R23 keeps it as a new history entry (expected, R23).
+
+**Tests and checks.** `node --test test/m/extraction/`: tests 132, pass 132, fail 0 (red 12 cleared; it was 131/1 before). No layer tests (manifest). No service changed. `format`: 136 modules, 135 requirements files; 0 failures. `architecture`: 28 product files, 105 relative imports; 0 failures. `coverage`: 46 of 46 live requirement ids named by a test; 0 failures. `ownership` (vs tranche/T37): 0 failures.
+
+Size (session_01Afy7CyYbu7EgvpPingjWAQ): test runs 4, module lines 2741
+
 ## J1 · QUESTION
 
 T37-45. R70's text lists each cell as `{source, value, type, declared, cached, formula}` and also says the cells are carried "unaltered" as reading-pipeline R28 composes them. Since T37-4, office-readers R11 emits a seventh key, `paras`, and extraction's code already passes each cell through untouched (no code change needed: `read`, R19's writer and `readingOf` keep it; `n26MigratedReading`'s `moveCells` walks the list and leaves an integer array as stored).
