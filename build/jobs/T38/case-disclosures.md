@@ -73,3 +73,7 @@ Nothing it left out mattered. `document.mjs` never reads `obscured`.
   - `ownership`: 6 files changed; 0 failures.
 
 Size (session_016Wyn6CMpXu3twcahXtRYbM): test runs 12, module lines 1972
+
+## J1 · REPORT
+
+Other modules, from T38-12 (details in my record, Found in other modules): (1) case-authoring: 4 tests red against this change, green on tranche/T38. They pin K2206's behaviour, which R6, R22 and R29 now reverse: R29 (x2) pins the C-120 row lists to .18; R14 has an unchecked or nothing-to-obscure photo travel whole; R34 has an unchecked photo never blocking. Its T38 R34 amendment covers them. (2) answer-envelope families.test.mjs C-120 test (N529): new red; it pins C-120.1–.18 words and needs C-120.17's new words (photo.refused.format) and C-120.19 PHOTO_UNCHECKED. (3) Row census: C-120.17 changed, C-120.19 arrived; red 6.2; my record names both 'awaiting stamp'. (4) dist bundles and case-checker stale (red 8). Reading: refusals carry `photo` (the refs filling {photo}); translations stay the verbatim template.
