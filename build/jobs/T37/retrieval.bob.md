@@ -11,3 +11,7 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Merge order in L5 (`modules.json` order): events → standards → progressions → retrieval.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there, item 17 with `plan/t37-red-census.md`); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Your reading stands (K2202): remove line matching entirely; a cell with no `paras` names no paragraph, its paragraphs matched as ordinary paragraphs until re-read; no legacy arm. Add a test naming that case (a pre-N758 reading: the column result unchanged).
