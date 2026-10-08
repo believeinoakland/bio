@@ -21,7 +21,7 @@ R22 details, my best reading (I proceed on it; answer only if you want otherwise
 
 **Deferred.** None.
 
-**Generated artifacts.** I regenerated `program.mjs` (my module's own artifact) with `node bio-plane/src/case-checker/build-program.mjs`, so the R13 tests pass on this branch: 618,440 bytes, sha256 `3516af48…c4dc`, 71 inputs. BOB regenerates it again at the close. The plane bundle (`dist/bio-plane.bundled.mjs`, `not_product`) is stale from this job's sources (`check.mjs`, `index.mjs`, `spec.mjs`, `program.mjs`, `standards.mjs`): `fleetbundles.test.mjs` names it STALE. That is for BOB's regeneration at the layer's close (J-REPORT below).
+**Generated artifacts.** I regenerated `program.mjs` (my module's own artifact) with `node bio-plane/src/case-checker/build-program.mjs`, so the R13 tests pass on this branch: 618,440 bytes, sha256 `3516af48…c4dc`, 71 inputs. BOB regenerates it again at the close. The plane bundle (`dist/bio-plane.bundled.mjs`, `not_product`) is stale from this job's sources (`check.mjs`, `index.mjs`, `spec.mjs`, `program.mjs`, `standards.mjs`): `fleetbundles.test.mjs` names it STALE. That is for BOB to regenerate at the layer's close (J2 REPORT).
 
 **Found in another module.** Only the stale plane bundle above. `answer-envelope` `families.test.mjs` fails on `file-safety`'s `FILE_SAFETY_CHECKS`: accepted red 11, not this job's.
 
