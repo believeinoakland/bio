@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 428 KB (own requirements 3
 Merge order in L2: project-roster (copy) → membership (delete, R83) → credentials → promotion last.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Stamp 1.65.0 stands (K2275). The modules.json fixture swap is mine at your merge. C-64.18's removal stamps in T39. Wait for my CHANGE when membership (twice), project-roster and credentials are merged; you merge last.
