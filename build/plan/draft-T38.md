@@ -129,3 +129,4 @@ Settled, not Bob's: N782's shape owner (rule 3); N783's boundary (rule 2, at L2'
 - (added by BOB #140, K2239) N791 · file-scanner (L1), file-safety (L3): a generic template's list names host; structured values; the digest from the stated handling.
 - (BOB #140, K2246) N779 is closed (Bob: A, as today): drop it from the left-out table at the opening.
 - (added by BOB #140, K2247) N792 · admission (L11), credentials (L2): one sign-in source for setpassword and login when KNOCK_FINGERPRINT_KEY is unbound.
+- (BOB #140, K2248, replacing the K2246 line above) N779 enters T38 (Bob: the group keeps the metadata, published photos do not): a metadata-free copy for every published photo; shares in image-cover/image-codecs (L1), case-grammar, case-carriage, case-disclosures, public-read (L8), with T38-11–13.
