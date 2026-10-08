@@ -374,14 +374,15 @@ function parseDict(buf, s, pos) {
 /* The ONE PDF object/stream reader in the codebase (CPDF-12): `pdf-worker`
  * drives it too rather than growing a second one (the D-164 lesson). Its
  * interface is `openPdf` below and the members the requirements name (R18-R23,
- * R31): `pageCount`, `pageDict`, `resolve`, `dictOf`, `streamRawBytes`,
+ * R31, R37): `pageCount`, `pageDict`, `resolve`, `dictOf`, `streamRawBytes`,
  * `streamDecoded`, `isEncrypted`, and the three load steps. Every other field
- * (`objects`, `_pageOrder`, `pageIndexByObj`, …) is private (N9, K28). */
+ * (`_objs`, `_pageOrder`, `pageIndexByObj`, …) is private (N9, K28). */
 export class PdfDoc {
   constructor(bytes) {
     this.bytes = bytes;
     this.s = LATIN1.decode(bytes);
-    this.objects = new Map();      // num -> value
+    this._objs = new Map();          // num -> value
+    this._gens = new Map();          // num -> the generation its winning definition states
     this.pageIndexByObj = new Map(); // page object num -> 0-based index
     this._pageOrder = [];            // page object nums in page order
     this.pageCount = 0;
@@ -409,13 +410,13 @@ export class PdfDoc {
       const num = parseInt(m[1], 10);
       const bodyStart = m.index + m[0].length;
       const r = parseValueSafe(s, bodyStart);
-      if (r) this.objects.set(num, r.value);
+      if (r) { this._objs.set(num, r.value); this._gens.set(num, parseInt(m[2], 10)); }
     }
   }
 
   resolve(v, seen = 0) {
     while (v && v.t === "ref" && seen < 64) {
-      v = this.objects.get(v.n);
+      v = this._objs.get(v.n);
       seen++;
     }
     /* A chain still a reference after 64 hops is a cycle: unresolvable (R20),
@@ -506,7 +507,7 @@ export class PdfDoc {
    *  uncompressed one is the safer read). */
   async loadObjectStreams() {
     const streams = [];
-    for (const v of this.objects.values()) {
+    for (const v of this._objs.values()) {
       if (v && v.t === "stream") {
         const type = v.dict.Type;
         if (type && type.t === "name" && type.v === "ObjStm") streams.push(v);
@@ -525,9 +526,9 @@ export class PdfDoc {
         const objNum = header[i * 2];
         const off = header[i * 2 + 1];
         if (!Number.isFinite(objNum) || !Number.isFinite(off)) continue;
-        if (this.objects.has(objNum)) continue;
+        if (this._objs.has(objNum)) continue;
         const r = parseValueSafe(inner, first + off);
-        if (r) this.objects.set(objNum, r.value);
+        if (r) this._objs.set(objNum, r.value);
       }
     }
   }
@@ -536,7 +537,7 @@ export class PdfDoc {
    *  object-number order if the tree cannot be walked (leniency). */
   buildPageIndex() {
     let root = null;
-    for (const v of this.objects.values()) {
+    for (const v of this._objs.values()) {
       const map = v && v.t === "dict" ? v.map : null;
       if (map && map.Type && map.Type.t === "name" && map.Type.v === "Catalog") { root = map; break; }
     }
@@ -560,7 +561,7 @@ export class PdfDoc {
     if (this.pageIndexByObj.size === 0) {
       // Fallback: every /Type /Page, by object number.
       const pages = [];
-      for (const [num, v] of this.objects) {
+      for (const [num, v] of this._objs) {
         const map = v && (v.t === "dict" ? v.map : v.t === "stream" ? v.dict : null);
         if (map && map.Type && map.Type.t === "name" && map.Type.v === "Page") pages.push(num);
       }
@@ -594,7 +595,7 @@ export class PdfDoc {
   isEncrypted() {
     if (this._encrypted !== undefined) return this._encrypted;
     let enc = false;
-    for (const v of this.objects.values()) {
+    for (const v of this._objs.values()) {
       const map = v && (v.t === "dict" ? v.map : v.t === "stream" ? v.dict : null);
       if (!map) continue;
       const filter = map.Filter;
@@ -624,28 +625,71 @@ export class PdfDoc {
    *  `loadObjectStreams` so an /Info living inside an object stream resolves. */
   infoDict() {
     if (this._info !== undefined) return this._info;
-    const cands = [];
-    const re = /\btrailer\b/g;
-    let m;
-    while ((m = re.exec(this.s))) {
-      const r = parseValueSafe(this.s, m.index + 7);
-      const map = r && r.value && r.value.t === "dict" ? r.value.map : null;
-      if (map && map.Info && map.Info.t === "ref") cands.push([m.index, map.Info]);
-    }
-    for (const v of this.objects.values()) {
-      if (!v || v.t !== "stream") continue;
-      const type = v.dict.Type;
-      if (!(type && type.t === "name" && type.v === "XRef")) continue;
-      if (v.dict.Info && v.dict.Info.t === "ref") cands.push([v.start, v.dict.Info]);
-    }
-    cands.sort((a, b) => a[0] - b[0]);
+    const cands = this._trailers().filter((map) => map.Info && map.Info.t === "ref").map((map) => map.Info);
     for (let i = cands.length - 1; i >= 0; i--) {
-      const map = this.dictOf(cands[i][1]);
+      const map = this.dictOf(cands[i]);
       /* A dangling /Info reference is an ABSENCE, so fall back to the previous
          candidate rather than reporting "no metadata" for a file that has some. */
       if (map) return (this._info = map);
     }
     return (this._info = null);
+  }
+
+  /** Every trailer dict in file order: each classic `trailer << … >>` and each
+   *  `/Type /XRef` stream's own dict, by where it sits. R10 and R37 both choose
+   *  from this one list, so the two cannot disagree about which is the last. */
+  _trailers() {
+    const cands = [];
+    const re = /\btrailer\b/g;
+    let m;
+    while ((m = re.exec(this.s))) {
+      const r = parseValueSafe(this.s, m.index + 7);
+      if (r && r.value && r.value.t === "dict") cands.push([m.index, r.value.map]);
+    }
+    for (const v of this._objs.values()) {
+      const type = v && v.t === "stream" ? v.dict.Type : null;
+      if (type && type.t === "name" && type.v === "XRef") cands.push([v.start, v.dict]);
+    }
+    return cands.sort((a, b) => a[0] - b[0]).map((c) => c[1]);
+  }
+
+  /** R37: the latest revision as a rewrite reads it — the last trailer, every
+   *  indirect object reachable from it by any chain of references (each once,
+   *  ascending, its value as `resolve` answers it, its generation the one its
+   *  winning definition states), and every reference on those chains that
+   *  resolves to nothing. An object no chain reaches (an earlier revision's, an
+   *  object stream's container) is not in it. Null without a readable trailer;
+   *  never throws. The walk is iterative, so a deep or cyclic file cannot
+   *  exhaust the stack. */
+  objects() {
+    try {
+      const trailers = this._trailers();
+      if (!trailers.length) return null;
+      const trailer = trailers[trailers.length - 1];
+      const found = new Map(), missing = new Map(), queue = [];
+      const refsIn = (v) => {
+        for (const stack = [v]; stack.length;) {
+          const x = stack.pop();
+          if (!x || typeof x !== "object") continue;
+          if (x.t === "ref") queue.push(x);
+          else if (x.t === "arr") for (const it of x.items) stack.push(it);
+          else if (x.t === "dict" || x.t === "stream") for (const it of Object.values(x.t === "dict" ? x.map : x.dict)) stack.push(it);
+        }
+      };
+      refsIn({ t: "dict", map: trailer });
+      for (let i = 0; i < queue.length; i++) {
+        const { n, g } = queue[i];
+        if (found.has(n) || missing.has(n)) continue;
+        const value = this.resolve({ t: "ref", n, g });
+        if (value === null) missing.set(n, { num: n, gen: g });
+        else found.set(n, { num: n, gen: this._gens.get(n) ?? 0, value });
+        refsIn(this._objs.get(n)); // a cycle of bare references still names its members
+      }
+      const asc = (m) => [...m.values()].sort((a, b) => a.num - b.num);
+      return { trailer, objects: asc(found), unresolved: asc(missing) };
+    } catch {
+      return null;
+    }
   }
 }
 
@@ -2809,9 +2853,9 @@ function extractActive(doc) {
   }
   const efNodes = embeddedTreeNodes(doc);
   const items = [];
-  for (const num of [...doc.objects.keys()].sort((a, b) => a - b)) {
+  for (const num of [...doc._objs.keys()].sort((a, b) => a - b)) {
     const page = pageOf.has(num) ? pageOf.get(num) : null;
-    walkActive(doc, doc.objects.get(num), efNodes, 0,
+    walkActive(doc, doc._objs.get(num), efNodes, 0,
       (kind, key, detail) => items.push({ kind, where: { object: num, page, key }, detail }));
   }
   if (doc.notes.includes("objstm_undecodable"))
