@@ -70,8 +70,12 @@ test("R1 a copy not held at the digest the row names is answered unheld (kind ob
     assert.deepEqual([r.materials, r.files], [[], []], label);
     assert.deepEqual(r.unheld, [{ ref: PHOTO, kind: "obscured", sha256: named, why: "the obscured copy is not held" }], label);
   }
-  /* negative control */
-  assert.deepEqual(w.cc.holdMaterials(caseFm({ materials: [obscuredRow(PHOTO, p, copy.toUpperCase())] }), { caseId: CASE, edition: 1, at: NOW }).unheld, []);
+  /* negative controls: the copy as written, and its digest read case-insensitively from the front matter */
+  assert.deepEqual(w.cc.holdMaterials(caseFm({ materials: [obscuredRow(PHOTO, p, copy)] }), { caseId: CASE, edition: 1, at: NOW }).unheld, []);
+  const fm = caseFm({ materials: [obscuredRow(PHOTO, p, copy)] });
+  assert.equal(fm.materials[0].obscured_copy, copy);
+  fm.materials[0].obscured_copy = copy.toUpperCase();
+  assert.deepEqual(w.cc.holdMaterials(fm, { caseId: CASE, edition: 2, at: NOW }).materials, [{ sha: copy, held: "derived" }]);
 });
 
 test("R1 a store whose published_case_materials predates derived is widened once with every row kept", () => {
