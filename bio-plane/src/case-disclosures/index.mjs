@@ -3,7 +3,8 @@
  * DEC-81, DEC-96 item 4, DEC-112, DEC-119). The unresolved conflicts on a case's findings (R1); each document's grade and
  * co-attestation, and the owner's acknowledgement of a self-attested one (R2, R3); what may be said of a source (R4); the
  * method the case is signed under (R5); every document and observation a finding's chain reaches, with what this copy
- * holds whole and who attests it, every photo carried only as its copy and an unchecked one refused (R6–R12), and the
+ * holds whole and who attests it, every photo and member document carried only as its copy and an unchecked photo
+ * refused (R6–R12; T39, N806: a member document's copy, `case-carriage` R16), and the
  * photos it relies on for the ceremony's Photos step (R29; T37, N757; T38, DEC-183); another group's work it rests on, with its acceptance and open flags (R13,
  * R14); each reached finding's grading facts and passages (R15); hunch debt (R16); and the people it names, each with a
  * recorded basis, and each signer's attestation of no undeclared tie (R24–R28). Each judgment answers its
@@ -16,9 +17,10 @@
  * comment's requirement id is this module's; an id of `case-authoring`'s is named as its.
  *
  * THE SEAM (R23). Every service is synchronous and never throws on a failed read of another module: that read states
- * less, never more. It writes nothing of its own; the one write it reaches is `sources.sourceOf`'s minting of a source
- * id (R4), inside the caller's transaction, so the caller can roll it back. It holds no table and no op, so it declares
- * nothing to purge and registers nothing.
+ * less, never more. It writes nothing of its own; it reaches two writes, each inside the caller's transaction, so the
+ * caller can roll it back: `sources.sourceOf`'s minting of a source id (R4), and (T39) `case-carriage.documentCopy`'s
+ * queueing of a member document neither queued nor derived (R6; its R16; K2374). It holds no table and no op, so it
+ * declares nothing to purge and registers nothing.
  *
  * REACHED as `caseDisclosuresOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the
  * first call with `deps`, returned to every later caller. `deps` (each reached through its factory on the same host
@@ -40,7 +42,10 @@
  *   money                `readFact` (a cited money fact's parties; R24).
  *   people               `identityOf`, `interestsOf`, `personAt`, `tiesConcerning` (its R5, R15, R14, R20; R24–R27).
  *   membership           `memberFacts` (a signer's cover or handle, at the level they chose; R27).
- *   caseCarriage         `photoMarks` (its R10; R6, R29); `OBSCURED_LABEL` (its R11) is imported (T37; N757).
+ *   caseCarriage         `photoMarks` (its R10; R6, R29); `OBSCURED_LABEL` (its R11) is imported (T37; N757);
+ *                        `documentCopy` (its R16; R6), `COPY_CLEANED_LABEL` (its R15) imported (T39; N806). A member
+ *                        document neither queued nor derived is queued by that read, case-carriage's one write, inside
+ *                        the caller's transaction (its R16).
  *   now                  the judgment's instant, for the day `personAt` is read at (R26).
  *
  * READ CONTRACTS it joins in its own SQL, each named at its statement: record-core's `bundles` (R37); inquiry's
@@ -69,18 +74,19 @@ import { eventsOf } from "../events/index.mjs";
 import { linesOf } from "../lines/index.mjs";
 import { moneyOf } from "../money/index.mjs";
 import { peopleOf as peopleModuleOf } from "../people/index.mjs";
-import { caseCarriageOf, OBSCURED_LABEL } from "../case-carriage/index.mjs";
+import { caseCarriageOf, OBSCURED_LABEL, COPY_CLEANED_LABEL } from "../case-carriage/index.mjs";
 import { CASE_DISCLOSURE_CHECKS } from "./checks.mjs";
 import { basesListed, basisCitation, placesStated, PERSON_PLACES, TIE_LINE_KINDS, TIE_ANONYMOUS_LEVELS } from "./people.mjs";
-import { chainsOf, materialHeld, materialRows, photoRead, PHOTO_NOT_COVERABLE_WORDS, PHOTO_UNCHECKED_WORDS } from "./materials.mjs";
+import { chainsOf, materialHeld, materialRows, photoRead, documentRead, PHOTO_NOT_COVERABLE_WORDS,
+         PHOTO_UNCHECKED_WORDS } from "./materials.mjs";
 import { flagsListed, flagsJudged, acceptedWorkRow } from "./accepted.mjs";
 import { NOT_SHOWN_WORDS, tensionSide, SELF_ATTESTED_SENTENCE } from "./document.mjs";
 
-export { CASE_DISCLOSURE_CHECKS, PHOTO_WORDS } from "./checks.mjs";
+export { CASE_DISCLOSURE_CHECKS, PHOTO_WORDS, DOCUMENT_WORDS } from "./checks.mjs";
 export { PERSON_BASES, PERSON_PLACES, TIE_LINE_KINDS, TIE_ANONYMOUS_LEVELS, basesListed, basisCitation, placesStated,
          peopleLines, memberTieLines, peopleOf, memberTiesOf } from "./people.mjs";
-export { chainsOf, materialHeld, materialRows, photoRead, PHOTO_STATES, PHOTO_NOT_COVERABLE_WORDS,
-         PHOTO_UNCHECKED_WORDS } from "./materials.mjs";
+export { chainsOf, materialHeld, materialRows, photoRead, documentRead, PHOTO_STATES, DOCUMENT_STATES,
+         PHOTO_NOT_COVERABLE_WORDS, PHOTO_UNCHECKED_WORDS } from "./materials.mjs";
 export { flagsListed, acceptedWorkRow, FLAG_SENTENCE, FLAGS_SAY } from "./accepted.mjs";
 export { SELF_ATTESTED_SENTENCE, TENSION_TEMPLATES, HIGHLIGHT_SENTENCE, NOT_SHOWN_WORDS, TENSIONS_DEPTH_STATED,
          tensionSide, tensionTemplate, tensionSentence, tensionsUnreadStated, tensionFrontmatterLines,
@@ -139,7 +145,8 @@ export class CaseDisclosures {
   get money() { return this.#deps.money ||= moneyOf(this.#deps.host); }
   get people() { return this.#deps.people ||= peopleModuleOf(this.#deps.host); }
   get membership() { return this.#deps.membership ||= membershipOf(this.#deps.host); }
-  /* R6, R29 (T37; N757): the marks on a photo and its copy (`case-carriage` R10). */
+  /* R6, R29 (T37; N757): the marks on a photo and its copy (`case-carriage` R10); R6 (T39; N806): a member document's
+     publication copy (its R16). */
   get caseCarriage() { return this.#deps.caseCarriage ||= caseCarriageOf(this.#deps.host); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -393,9 +400,22 @@ export class CaseDisclosures {
    *    is listed `included: false` with no `obscured`;
    *  - otherwise (`marked` or `nothing_to_obscure`, with a copy) it is presentable through its copy, `obscured: {copy,
    *    label}`, `label` `OBSCURED_LABEL` when `marked`, else null (no label for an unmarked copy, K2291).
+   *  A MEMBER DOCUMENT (T39; N806; K2315, K2333): a document `photoRead` finds no photo is asked of its publication copy
+   *  (`case-carriage.documentCopy`, its R16; `documentRead`), answered on the material as `document`. In R6's order:
+   *  - a state that cannot be read (`undetermined`) is `DOCUMENT_COPY_UNDETERMINED`, naming it, whichever chain reaches
+   *    it: fail closed;
+   *  - `pending` is `DOCUMENT_COPY_PENDING` when a load-bearing chain reaches it, naming each document and member;
+   *  - `refused` is `DOCUMENT_NOT_CLEANABLE` when a load-bearing chain reaches it, naming each document, member and
+   *    `doc-clean`'s code; pending or refused material only supporting members reach is listed `included: false` with
+   *    no `obscured`;
+   *  - `copy` is presentable through its copy, `included: false`, `obscured: {copy, label: COPY_CLEANED_LABEL}`;
+   *  - `clean` and `public` are judged as any document, by what is held.
+   *  None of the first four is C-120.8. A member-supplied archive is never carried (`case-carriage` R8): this module
+   *  answers materials, never an archive.
    *  Supporting-only material not held whole travels in no case, so it is listed `included: false`. Each photo
-   *  refusal but the unread carries `photo`, the photos named, which fills its translation's `{photo}`. Refusals:
-   *  C-120.8, then the photos' in that order; each writes nothing. Answers `{refusals, materials, refs, findings}`;
+   *  refusal but the unread carries `photo`, the photos named, which fills its translation's `{photo}`; each document
+   *  refusal carries `document`, the documents named, which fills `{document}`. Refusals: C-120.8, then the photos' in
+   *  that order, then the documents' in that order; each writes nothing. Answers `{refusals, materials, refs, findings}`;
    *  `op=publish` answers the first refusal, `case-authoring` R34's pre-flight lists them all. */
   materialsJudged(prepared, memberRoles, viewer) {
     const gate = viewerPredicate(viewer);
@@ -415,10 +435,13 @@ export class CaseDisclosures {
       const photo = m.kind === "document"
         ? photoRead(() => this.caseCarriage.photoMarks({ captureSha: m.sha, viewer })) : null;
       const isPhoto = !!(photo && photo.photo === true);
+      const document = photo && photo.photo === false
+        ? documentRead(() => this.caseCarriage.documentCopy(m.sha)) : null;
       const obscured = isPhoto && photo.state !== "unchecked" && !photo.refused && photo.copy
-        ? { copy: photo.copy, label: photo.state === "marked" ? OBSCURED_LABEL : null } : null;
-      const plain = !(photo && photo.unread) && !isPhoto;
-      return { ...m, held, included: plain && held.whole, obscured, photo };
+        ? { copy: photo.copy, label: photo.state === "marked" ? OBSCURED_LABEL : null }
+        : document && document.state === "copy" ? { copy: document.copy, label: COPY_CLEANED_LABEL } : null;
+      const plain = !(photo && photo.unread) && !isPhoto && !(document && !AS_HELD.includes(document.state));
+      return { ...m, held, included: plain && held.whole, obscured, photo, document };
     });
     const loadBearing = memberRoles.filter((r) => r.role === "load_bearing");
     const byMember = (list, row) => loadBearing
@@ -427,12 +450,16 @@ export class CaseDisclosures {
     /* a photo is presentable only through its copy and refused below on its own terms, and the load-bearing unread are
        PHOTO_MARKS_UNDETERMINED (a copy may yet make them presentable): none is C-120.8 */
     const short = materials.filter((m) => !m.included && m.rests_under === "load_bearing"
-                                          && !(m.photo && (m.photo.unread || m.photo.photo === true)));
+                                          && !(m.photo && (m.photo.unread || m.photo.photo === true))
+                                          && !(m.document && !AS_HELD.includes(m.document.state)));
     const unread = materials.filter((m) => m.photo && m.photo.unread && marksDecide(m));
     const unchecked = materials.filter((m) => m.photo && m.photo.photo === true && m.photo.state === "unchecked");
     const uncoverable = materials.filter((m) => m.rests_under === "load_bearing" && m.photo && m.photo.photo === true
                                                 && m.photo.state !== "unchecked" && m.photo.refused);
-    const photoNamed = (list) => [...new Set(list.map((m) => m.ref))].join(", ");
+    const docIn = (state, lb) => materials.filter((m) => m.document && m.document.state === state
+                                                       && (!lb || m.rests_under === "load_bearing"));
+    const docUnread = docIn("undetermined", false), docPending = docIn("pending", true), docRefused = docIn("refused", true);
+    const refsNamed = (list) => [...new Set(list.map((m) => m.ref))].join(", ");
     const refusals = [];
     /* DEC-49 REGION is-relied-on-presentable */
     if (short.length) {
@@ -457,7 +484,7 @@ export class CaseDisclosures {
     /* DEC-49 REGION is-photo-checked */
     if (unchecked.length) {
       const named = unchecked.map((m) => ({ ref: m.ref, sha: m.sha, members: m.members }));
-      refusals.push(disclosureRefusal("PHOTO_UNCHECKED", { unchecked: named, photo: photoNamed(unchecked),
+      refusals.push(disclosureRefusal("PHOTO_UNCHECKED", { unchecked: named, photo: refsNamed(unchecked),
         detail: `${unchecked.length} photo(s) this case relies on have not been checked for people and number plates to `
               + `obscure (` + named.map((m) => `${m.ref} ${m.sha}, relied on by ${m.members.join(", ")}`).join("; ")
               + `). Mark each, or mark it as having nothing to obscure, before signing. Nothing was written.` }));
@@ -466,7 +493,7 @@ export class CaseDisclosures {
     /* DEC-49 REGION is-photo-coverable */
     if (uncoverable.length) {
       const named = byMember(uncoverable, (m) => ({ ref: m.ref, sha: m.sha, refused: m.photo.refused.code }));
-      refusals.push(disclosureRefusal("PHOTO_NOT_COVERABLE", { not_coverable: named, photo: photoNamed(uncoverable),
+      refusals.push(disclosureRefusal("PHOTO_NOT_COVERABLE", { not_coverable: named, photo: refsNamed(uncoverable),
         detail: `${uncoverable.length} photo(s) a load-bearing finding of this case relies on cannot be covered in their `
               + `format (` + named.map((x) => `${x.target}: ` + x.materials.map((m) =>
                 `${m.ref} ${m.sha}, ${m.refused}`).join(", ")).join("; ")
@@ -474,6 +501,37 @@ export class CaseDisclosures {
               + `out. Capture each again as an ordinary photo, or stop relying on it. Nothing was written.` }));
     }
     /* END DEC-49 REGION is-photo-coverable */
+    /* DEC-49 REGION is-document-copy-determined */
+    if (docUnread.length) {
+      const named = docUnread.map((m) => ({ ref: m.ref, sha: m.sha, members: m.members, why: m.document.why }));
+      refusals.push(disclosureRefusal("DOCUMENT_COPY_UNDETERMINED", { undetermined: named, document: refsNamed(docUnread),
+        detail: `${docUnread.length} document(s) this case relies on could not be checked for the details a member's file `
+              + `can carry (` + named.map((m) => `${m.ref} ${m.sha}: ${m.why}`).join("; ")
+              + `), so what the published case would show of them is not known. Try again. Nothing was written.` }));
+    }
+    /* END DEC-49 REGION is-document-copy-determined */
+    /* DEC-49 REGION is-document-copy-made */
+    if (docPending.length) {
+      const named = byMember(docPending, (m) => ({ ref: m.ref, sha: m.sha }));
+      refusals.push(disclosureRefusal("DOCUMENT_COPY_PENDING", { pending: named, document: refsNamed(docPending),
+        detail: `the publication copy of ${docPending.length} document(s) a member supplied, which a load-bearing finding `
+              + `of this case relies on, is still being made (` + named.map((x) => `${x.target}: `
+                + x.materials.map((m) => `${m.ref} ${m.sha}`).join(", ")).join("; ")
+              + `). A member's document travels only as its cleaned copy. Try again in a few minutes. Nothing was `
+              + `written.` }));
+    }
+    /* END DEC-49 REGION is-document-copy-made */
+    /* DEC-49 REGION is-document-cleanable */
+    if (docRefused.length) {
+      const named = byMember(docRefused, (m) => ({ ref: m.ref, sha: m.sha, refused: m.document.refused.code }));
+      refusals.push(disclosureRefusal("DOCUMENT_NOT_CLEANABLE", { not_cleanable: named, document: refsNamed(docRefused),
+        detail: `${docRefused.length} document(s) a member supplied, which a load-bearing finding of this case relies on, `
+              + `cannot be cleaned of the details that could show who made them (` + named.map((x) => `${x.target}: `
+                + x.materials.map((m) => `${m.ref} ${m.sha}, ${m.refused}`).join(", ")).join("; ")
+              + `), and a member's document travels only as its cleaned copy. Capture each from where it was published, `
+              + `supply a plainer copy, or stop relying on it. Nothing was written.` }));
+    }
+    /* END DEC-49 REGION is-document-cleanable */
     return { refusals, materials, refs: chains.refs, findings: chains.findings };
   }
 
@@ -1144,6 +1202,10 @@ export class CaseDisclosures {
     return { captures, materials, flags: flagRows, group };
   }
 }
+
+/* R6 (T39; N806): the publication-copy states (`case-carriage` R16) a document is judged in by what is held, as any
+   document; every other state travels only as its copy or not at all. */
+const AS_HELD = Object.freeze(["public", "clean"]);
 
 /* R6, R29 (T37; N757): whether a document's marks decide what of it travels — held whole (it would travel whole), or
    reached by a load-bearing member (a copy may make it presentable). Supporting-only material not held whole travels in no

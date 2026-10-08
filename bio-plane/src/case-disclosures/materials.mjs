@@ -47,8 +47,9 @@ export function materialHeld(m, io) {
 }
 
 /** R7 (K1134 Q6, BOB's decision 15): the `materials:` and `material_attestations:` rows (`case-grammar` R12) for the
- *  materials `chainsOf` reached, each with what `materialHeld` found, and `obscured: {copy, label}` for a photo R6
- *  carries as its copy, else null (T37; N757): its fingerprints, origin and archived copy stay the original's. `facts(sha)` is R2's read of a capture (grade,
+ *  materials `chainsOf` reached, each with what `materialHeld` found, and `obscured: {copy, label}` for a photo or a
+ *  member document R6 carries as its copy, else null (T37, N757; T39, N806): its fingerprints, origin and archived copy
+ *  stay the original's. `facts(sha)` is R2's read of a capture (grade,
  *  co-attestation, signed accounts), `origin(sha)` its earliest captured address, `registered(sha)` its register row,
  *  `member(m)` the attesting member's row or rows as R10 states them, `group` the producing group's slug. Rows, in the
  *  materials' order:
@@ -168,4 +169,34 @@ export function photoRead(read) {
   if (state !== "unchecked" && !copy && !refused)
     return unread(`the photo is checked (${state}) but holds neither a copy nor a refused cover`);
   return { photo: true, state, marks: a.marks, copy: refused || state === "unchecked" ? null : copy, refused };
+}
+
+/** R6 (T39; N806; K2315, K2333): the states `case-carriage.documentCopy` (its R16) answers a document capture. */
+export const DOCUMENT_STATES = Object.freeze(["public", "clean", "copy", "refused", "pending", "undetermined", "photo"]);
+
+/** R6 (T39; N806): one document's publication copy, as `read()` (`case-carriage.documentCopy(captureSha)`, its R16)
+ *  answers it, for a document `photoRead` found no photo. Answers `{state, copy, refused}`: `copy` the cleaned copy's
+ *  SHA-256 (lower case) for `copy`, `refused` `{code, detail}` for `refused`, each else null; and `{state:
+ *  "undetermined", copy: null, refused: null, why}` when the state cannot be read: a read that throws or refuses, an
+ *  answer R16 does not state (an unknown state, `copy` with no SHA-256, `refused` with no code), R16's own
+ *  `undetermined`, and `photo` for a document whose marks say it is none (the two reads disagree). Undetermined fails
+ *  closed: R6 refuses it, and never carries it whole. Never throws. */
+export function documentRead(read) {
+  const unread = (why) => ({ state: "undetermined", copy: null, refused: null, why });
+  let a = null;
+  try { a = read(); } catch { return unread("the copy's state could not be read"); }
+  if (!a || typeof a !== "object" || a.ok === false)
+    return unread(a && typeof a.reason === "string" ? `the copy's state read answered ${a.reason}` : "the copy's state could not be read");
+  if (!DOCUMENT_STATES.includes(a.state)) return unread("the copy's state read answered a shape it does not state");
+  if (a.state === "undetermined") return unread("case-carriage could not read the copy's state");
+  if (a.state === "photo") return unread("the copy's state read answered photo for a document that is no photo");
+  if (a.state === "copy") {
+    return typeof a.copy === "string" && HEX64.test(a.copy) ? { state: "copy", copy: a.copy.toLowerCase(), refused: null }
+      : unread("the copy's state read answered copy with no SHA-256");
+  }
+  if (a.state === "refused")
+    return a.refused && typeof a.refused === "object" && typeof a.refused.code === "string" && a.refused.code
+      ? { state: "refused", copy: null, refused: { code: a.refused.code, detail: a.refused.detail ?? null } }
+      : unread("the copy's state read answered refused with no code");
+  return { state: a.state, copy: null, refused: null };
 }

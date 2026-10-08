@@ -40,9 +40,13 @@ const ROWS = [
   ["PHOTO_MARKS_UNDETERMINED", "C-120.18", "materialsJudged", "A photo this case relies on could not be checked for the people and number plates marked in it, so what the published case would show of it is not known. Try again. Nothing was written."],
   /* T38 (DEC-183 (1); K2220, K2303): R6's PHOTO_UNCHECKED, numbered provisionally until its stamp, `photo.refused.unchecked` verbatim */
   ["PHOTO_UNCHECKED", "C-120.19", "materialsJudged", "Signing waits until every photo the case relies on is checked: {photo}."],
+  /* T39 (N806; K2333): R6's member-document rows, numbered provisionally until their stamp, BOB's drafts */
+  ["DOCUMENT_COPY_UNDETERMINED", "C-120.20", "materialsJudged", "A document this case relies on could not be checked for the details a member's file can carry, so what the published case would show of it is not known. Try again. Nothing was written."],
+  ["DOCUMENT_COPY_PENDING", "C-120.21", "materialsJudged", "The publication copy of a document a member supplied is still being made: {document}. Try again in a few minutes."],
+  ["DOCUMENT_NOT_CLEANABLE", "C-120.22", "materialsJudged", "A document a member supplied can't be cleaned of the details that could show who made it: {document}. Capture it from where it was published, supply a plainer copy, or stop relying on it."],
 ];
 
-test("R22: C-120.1–C-120.8, C-120.10–C-120.13 and the new rows C-120.14–C-120.16 (R25's PERSON_BASIS_UNRECORDED and PERSON_BASIS_NOT_STANDING, R27's TIE_ATTESTATION_MISSING) C-120.17–C-120.18 (R6's PHOTO_NOT_COVERABLE and PHOTO_MARKS_UNDETERMINED) and C-120.19 (R6's PHOTO_UNCHECKED, T38) are this module's own table (CASE_DISCLOSURE_CHECKS), ids, codes and translations as the requirements state them word for word, each `where` naming this module's raising method; C-120.9 is never used", () => {
+test("R22: C-120.1–C-120.8, C-120.10–C-120.13 and the new rows C-120.14–C-120.16 (R25's PERSON_BASIS_UNRECORDED and PERSON_BASIS_NOT_STANDING, R27's TIE_ATTESTATION_MISSING) C-120.17–C-120.18 (R6's PHOTO_NOT_COVERABLE and PHOTO_MARKS_UNDETERMINED), C-120.19 (R6's PHOTO_UNCHECKED, T38) and C-120.20–C-120.22 (R6's DOCUMENT_COPY_UNDETERMINED, DOCUMENT_COPY_PENDING and DOCUMENT_NOT_CLEANABLE, T39) are this module's own table (CASE_DISCLOSURE_CHECKS), ids, codes and translations as the requirements state them word for word, each `where` naming this module's raising method; C-120.9 is never used", () => {
   assert.deepEqual(Object.keys(CASE_DISCLOSURE_CHECKS), ROWS.map(([code]) => code));
   assert.ok(Object.isFrozen(CASE_DISCLOSURE_CHECKS));
   const w = world();
@@ -97,6 +101,19 @@ test("R22: each row's method raises its code, with the row's check and translati
   assert.deepEqual(raised(judgedPh()), [row("PHOTO_UNCHECKED")]);
   ph.marks.photo(pc, { state: "nothing_to_obscure", copy: "c".repeat(64) });
   assert.deepEqual(judgedPh(), []);
+  /* C-120.20, C-120.21, C-120.22 */
+  const dc = world(); dc.member("alice"); const dd = dc.doc(DOC); dc.finding(Q, [{ target: DOC }]);
+  const judgedDc = (supporting = []) => dc.cd.materialsJudged(dc.prepared([Q]), dc.roles([Q], supporting), V("alice")).refusals;
+  dc.marks.document(dd, "undetermined");
+  assert.deepEqual(raised(judgedDc()), [row("DOCUMENT_COPY_UNDETERMINED")]);
+  dc.marks.document(dd, "pending");
+  assert.deepEqual(raised(judgedDc()), [row("DOCUMENT_COPY_PENDING")]);
+  assert.deepEqual(judgedDc([Q]), []);
+  dc.marks.document(dd, { state: "refused", copy: null, refused: { code: "ENCRYPTED", detail: "d" } });
+  assert.deepEqual(raised(judgedDc()), [row("DOCUMENT_NOT_CLEANABLE")]);
+  assert.deepEqual(judgedDc([Q]), []);
+  dc.marks.document(dd, { state: "copy", copy: "c".repeat(64), refused: null });
+  assert.deepEqual(judgedDc(), []);
   /* C-120.10 */
   const a = world({ deps: { caseImport: { acceptanceOf: () => null, importedCase: () => null } } });
   assert.deepEqual(raised(a.cd.acceptedWorkJudged([{ member: Q, leg_of: Q, ord: 0, ref: `imported:${"a".repeat(64)}/INQ-2026-0042-x` }], V("alice")).refusals),
@@ -159,7 +176,7 @@ test("R23: every service is synchronous, and none throws when every module it re
                  caseImport: { acceptanceOf: boom, openFlagsOn: boom, importedCase: boom },
                  entities: { readEntity: boom }, events: { readEvent: boom }, lines: { readLine: boom, structureAt: boom },
                  money: { readFact: boom }, people: { identityOf: boom, interestsOf: boom, personAt: boom, tiesConcerning: boom },
-                 membership: { memberFacts: boom }, caseCarriage: { photoMarks: boom } };
+                 membership: { memberFacts: boom }, caseCarriage: { photoMarks: boom, documentCopy: boom } };
   const w = world({ deps: { ...deps, record: { readFile: boom } } });
   w.member("alice"); w.doc(DOC); w.finding(Q, [{ target: DOC }]);
   const prep = w.prepared([Q]), roles = w.roles([Q]);

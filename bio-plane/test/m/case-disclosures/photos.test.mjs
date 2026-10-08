@@ -332,7 +332,8 @@ test("R29: a photo whose marks cannot be read is listed state: null, unread: tru
 test("R6, R29 over the real case-carriage (its R10–R14): an unchecked photo is refused PHOTO_UNCHECKED; once marked it travels as its labelled copy; a withdrawn mark counts as withdrawn, so withdrawing the only mark makes it unchecked again; marked as having nothing to obscure it travels as its copy with no label; a refused cover, marked or not, is PHOTO_NOT_COVERABLE; a document that is no image travels whole", async () => {
   const w = world({ realCarriage: true });
   for (const m of ["alice", "bo"]) w.member(m);
-  const p = w.doc(DOC, {}, { name: "c0.png" }), d = w.doc(DOC2);
+  /* DOC2 fetched by this copy (provenance R62), so case-carriage R16 answers it public, carried as captured */
+  const p = w.doc(DOC, {}, { name: "c0.png" }), d = w.doc(DOC2, {}, { receipt: true });
   w.finding(Q, [{ target: DOC }, { target: DOC2 }]);
   const view = () => {
     const r = judged(w, [Q]);
