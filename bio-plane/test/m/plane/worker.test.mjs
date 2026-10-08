@@ -103,6 +103,18 @@ test("R7: `package.json`'s `test` runs the module tests and `test:system` the ol
   for (const k of ["build", "deploy", "dev", "embed:sign"]) assert.equal(typeof pkg.scripts[k], "string", `${k} kept`);
 });
 
+test("R7 (T39; N810, K2346): `devDependencies` hold `pdfjs-dist` at an exact version, with its lock, so doc-clean's R5 pdf.js oracle runs wherever the module tests run", () => {
+  const exact = (v) => /^\d+\.\d+\.\d+$/.test(v);
+  const pkg = JSON.parse(readFileSync(join(PLANE, "package.json"), "utf8"));
+  const v = pkg.devDependencies["pdfjs-dist"];
+  assert.ok(exact(v), `pdfjs-dist is pinned exactly, not ${v}`);
+  const lock = JSON.parse(readFileSync(join(PLANE, "package-lock.json"), "utf8"));
+  assert.equal(lock.packages[""].devDependencies["pdfjs-dist"], v, "the lock's root holds the same pin");
+  assert.equal(lock.packages["node_modules/pdfjs-dist"].version, v, "the lock resolves that version");
+  /* negative control: a range is not an exact version */
+  for (const r of ["^4.10.38", "~4.10.38", "4.x", ">=4.10.38", "latest"]) assert.equal(exact(r), false, r);
+});
+
 test("R8: `store.mjs`, `schema.mjs` and `src/index.mjs` do not exist (bundler's `planeMember` re-pointed, K846; N463), and no file imports the three", async () => {
   for (const f of ["store.mjs", "schema.mjs", "index.mjs"]) assert.equal(existsSync(join(SRC, f)), false, `src/${f}`);
   /* No module, no test (the module tests and the old suites kept for the release, K619) and no script imports them. */
