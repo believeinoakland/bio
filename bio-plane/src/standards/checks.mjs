@@ -168,7 +168,7 @@ export const STANDARDS_CHECKS = Object.freeze({
       + 'standard\'s text. None was named. Nothing was written.',
   },
   FORCE_TEXT_NOT_HELD: {
-    check: 'C-112.41', where: at("#forceRefusal", "is-force-text-held"),
+    check: 'C-112.41', where: at("refuseTextNotHeld", "is-force-text-held"),
     translation: 'The force of a provision is read from its own words, and this standard\'s text is not held. Hold its '
       + 'text first. Nothing was written.',
   },
@@ -252,6 +252,26 @@ export const STANDARDS_CHECKS = Object.freeze({
   NO_SUCH_FORCE: {
     check: 'C-112.58', where: at("forceWithdraw", "is-force-held"),
     translation: 'No confirmed force of a provision answers to that id here. Nothing was written.',
+  },
+  /* T36-15 (R50; N736, K2021, K2092): rows minted in T36, awaiting promotion's stamp (T37). */
+  THROUGH_INVALID: {
+    check: 'C-112.59', where: at("inForceThroughRecord", "is-through-date"),
+    translation: 'The date a version is known in force through is a day written YYYY-MM-DD, and not before the day the '
+      + 'version came into force. This one is not. Nothing was written.',
+  },
+  THROUGH_NO_SOURCE: {
+    check: 'C-112.60', where: at("inForceThroughRecord", "is-through-sourced"),
+    translation: 'A version known in force through a date is recorded with the passage of the source checked that day, '
+      + 'a captured document you may see. None was named, or it is not held. Nothing was written.',
+  },
+  THROUGH_AFTER_CHECK: {
+    check: 'C-112.61', where: at("inForceThroughRecord", "is-through-checked"),
+    translation: 'A source shows a version in force only up to the day it was last retrieved, and the date given is '
+      + 'later than that. Give that day or an earlier one, or capture the source again. Nothing was written.',
+  },
+  NO_SUCH_RECORD: {
+    check: 'C-112.62', where: at("inForceThroughWithdraw", "is-through-record-held"),
+    translation: 'No record of a version known in force through a date answers to that id here. Nothing was written.',
   },
 });
 
