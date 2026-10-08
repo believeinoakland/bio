@@ -350,3 +350,6 @@ For DEC-180's fold in T37's L8 (BOB's K2206; B102's three points still open, eac
 (c) A mark made after the case is prepared refuses the commit (PHOTO_MARKS_CHANGED_SINCE): prepare again.
 (d) Text read from a marked photo (OCR of a plate) is never carried with the copy, but a passage a member chose to quote still travels in the case file; the Photos step may want to say so.
 B102 (1) and (2) still take their stated defaults (not a gate; marks append-only) if unanswered before L8's START.
+
+## B104 · QUESTION · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
+The screens' text for `setpassword` (Settings, change your password) says the member's other sessions stay signed in; credentials R3 ends every other session of that member when the password changes (a protective rule, K1881). Which should hold? Unless you answer otherwise before T37's L11 starts, the behaviour stays (other sessions end) and the text is yours to correct.
