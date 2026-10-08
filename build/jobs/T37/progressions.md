@@ -32,3 +32,7 @@
 - ownership: `0 failures`, re-run after commit below.
 
 Size (session_01Q8jnptX8F9t9Vmj1SzQSsy): test runs 20, module lines 2114
+
+## J1 · COMPLETE
+
+T37-12 applied: order.test.mjs (R41) reads layers 5 and 5–8 from modules.json, so red 4 clears. Also fixed in my module: instance.test.mjs (R33) no longer pins a literal call order; progressionsOf caches its instance only after declareTable and registerFigures succeed (R42), with a new test. progressions 62/0. Users' tests 1104/32, the same 32 failing without my change (affordances 29, plane 3). format, architecture, coverage (42/42) and ownership all 0 failures. Deferrals are in the record.
