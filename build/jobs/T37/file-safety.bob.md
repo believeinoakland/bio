@@ -11,3 +11,7 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Merge order in L3 (`modules.json` order): acquisition → capture → file-safety.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+All four readings stand (K2188): (1) the retry floor (a file already due at the last scanBatch, and a failed reputation refresh, wait at least FILE_SAFETY_POLL_MS; a newly queued file is due at once; R4 unchanged); (2) epoch milliseconds in and out (ISO accepted in), R40's at the same; (3) held = an open hold of that capture naming any of the note's finding names; (4) the forward end recorded on ok: true even with a failed tool. onFileWork through afterCommit (record-core R66) is right; I tell scheduler (T37-24) at its START. State the four in your record; no requirement text changes.
