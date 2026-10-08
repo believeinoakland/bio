@@ -1,6 +1,6 @@
 # plane (T36)
 
-**Status** · session_01CpnMPx9Wsow6FqTJSxJGhK · depth 2 · WORKING · handled B3
+**Status** · session_01CpnMPx9Wsow6FqTJSxJGhK · depth 2 · RUNNING until 2026-10-08T06:35:02Z (plane tests + migrate-released) · handled B3
 
 ## J1 · QUESTION
 
