@@ -43057,9 +43057,10 @@ CREATE TABLE IF NOT EXISTS composed_readings (
 -- whose last kept row is at or before it was read by the old walk, one after it by
 -- the new. after is the last capture digest examined (candidates are taken in
 -- digest order), so a restart resumes rather than re-reading a capture; done is 1
--- once no candidate remains, and the migration then reads nothing at start. Not
--- bundle-keyed, so only the whole-store purge clears it, and the next start then
--- finds no reading made before its new cutoff.
+-- once no candidate remains, and the migration then reads nothing at start. Exempt
+-- from both purges (T38, N786): cleared by the whole-store purge, the cutoff would be
+-- taken again at the next start over the readings written since the purge, the
+-- fixed reader's, and they would read as made before the fix.
 CREATE TABLE IF NOT EXISTS reading_migrations (
   migration  TEXT    PRIMARY KEY,
   cutoff     INTEGER NOT NULL,
@@ -44851,7 +44852,8 @@ var EXTRACTION_TABLES = Object.freeze([
   "capture_text_skipped",
   "capture_text_state"
 ]);
-var EXTRACTION_WHOLE_ONLY = Object.freeze(["capture_text_fts", "composed_readings", "reading_migrations"]);
+var EXTRACTION_WHOLE_ONLY = Object.freeze(["capture_text_fts", "composed_readings"]);
+var EXTRACTION_EXEMPT = Object.freeze(["reading_migrations"]);
 var ADDITIVE_COLUMNS = [
   ["reading_text_source", "calibrations", "TEXT"],
   ["reading_refs", "pos_kind", "TEXT"],
@@ -45271,12 +45273,14 @@ var Extraction = class _Extraction {
     this.#backfillRefTerms(500);
     this.startMigrations();
   }
-  /** R49: the reading tables declared to record-core's purge, keyed to their bundle; the two whole-store only. */
+  /** R49: the reading tables declared to record-core's purge, keyed to their bundle; two whole-store only; the
+   *  migrations' row exempt (R66, R68). */
   declareTables() {
     if (this.#declared || !this.core || typeof this.core.declarePurge !== "function") return false;
     const answer = this.core.declarePurge(
       "extraction",
-      [...EXTRACTION_TABLES, ...EXTRACTION_WHOLE_ONLY.map((name2) => ({ name: name2, keys: [] }))]
+      [...EXTRACTION_TABLES, ...EXTRACTION_WHOLE_ONLY.map((name2) => ({ name: name2, keys: [] }))],
+      { exempt: [...EXTRACTION_EXEMPT] }
     );
     if (answer && answer.ok === false)
       throw new Error(`extraction: record-core refused its purge declaration: ${answer.reason} (${answer.table})`);
