@@ -1,6 +1,6 @@
 # capture (T37)
 
-**Status** · session_016W2PkTbyjCcRGjNxZ7W1bN · depth 2 · RUNNING until 2026-10-08T09:31:13Z (the 30 using modules' tests) · handled B2
+**Status** · session_016W2PkTbyjCcRGjNxZ7W1bN · depth 2 · COMPLETE · handled B2
 
 ## Work
 
