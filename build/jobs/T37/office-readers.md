@@ -1,6 +1,6 @@
 # office-readers (T37)
 
-**Status** · session_01LP5svq8XNYaHCh7k7jeXoZ · depth 2 · WORKING · handled B0
+**Status** · session_01LP5svq8XNYaHCh7k7jeXoZ · depth 2 · WORKING · handled B1
 
 **Reading set** · read whole, as B1 asked (mechanics §17): `build/requirements/office-readers.md`; the public parts of `subresources` and `ooxml`; layer 1's contract in `build/layers.md`; the plan's "Rules at the opening", T37-4 and K2118; all four files of the module (`docx.mjs`, `pptx.mjs`, `formats-xlsx.mjs`, `csv.mjs`) and every file under `bio-plane/test/m/office-readers/`.
 
