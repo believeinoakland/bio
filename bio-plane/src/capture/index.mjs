@@ -127,6 +127,14 @@ const keyOf = (cursor, n) => {
   } catch { return null; }
 };
 const badCursor = () => ({ ok: false, reason: "BAD_CURSOR", detail: "`after` is not a cursor this read answered as `next`" });
+/* R45 (T36-41, N740): an event's place in the queue's order, `enqueued`, digest, `kind`, tagged so no other read's cursor
+   reads as one; `taskCursorPlace` answers null for anything else, and the read then starts at the head. */
+const TASK_CURSOR_TAG = "task-event";
+const taskCursorOf = (enqueued, captureSha, kind) => cursorOf([TASK_CURSOR_TAG, enqueued, captureSha, kind]);
+const taskCursorPlace = (after) => {
+  const k = typeof after === "string" && after ? keyOf(after, 4) : null;
+  return k && k[0] === TASK_CURSOR_TAG ? { enqueued: k[1], captureSha: k[2], kind: k[3] } : null;
+};
 
 /* The events a later module may listen to (R44, R55), and the observation a reuse verdict maps to (the
    observation log's, its Suggestion). */
@@ -2385,15 +2393,23 @@ export class Capture {
   }
 
   /** R45: the queued events, oldest first (by `enqueued`, then digest), at most `limit`; with `kind`, only that kind's,
-   *  so each drainer reads its own (T35: `tasks` drains `authority-undetermined`, the daemon `archive-unpack`). */
-  taskEvents({ limit = 50, kind = null } = {}) {
+   *  so each drainer reads its own (T35: `tasks` drains `authority-undetermined`, the daemon `archive-unpack`).
+   *  (T36-41, N740) Each event carries `cursor`, its place in that order (`kind` breaks a tie of the same instant and
+   *  digest); with `after`, only the events past that place, whether or not its event is still queued, so a drainer that
+   *  leaves `limit` events at the head reaches the ones behind them. An `after` that is not such a cursor reads from the head. */
+  taskEvents({ limit = 50, kind = null, after = null } = {}) {
     try {
       const n = Math.max(0, Math.min(1000, Math.trunc(Number(limit)) || 0));
       const one = typeof kind === "string" && kind;
+      const at = taskCursorPlace(after);
+      const where = [one ? "kind = ?" : "1=1",
+                     at ? "(enqueued > ? OR (enqueued = ? AND (capture_sha > ? OR (capture_sha = ? AND kind > ?))))" : "1=1"];
+      const args = [...(one ? [kind] : []), ...(at ? [at.enqueued, at.enqueued, at.captureSha, at.captureSha, at.kind] : [])];
       return this.#rows(`SELECT kind, capture_sha, subject, locator, enqueued, attempts, last_try FROM task_queue
-                          WHERE ${one ? "kind = ?" : "1=1"} ORDER BY enqueued, capture_sha LIMIT ?`, ...(one ? [kind] : []), n)
+                          WHERE ${where.join(" AND ")} ORDER BY enqueued, capture_sha, kind LIMIT ?`, ...args, n)
         .map((r) => ({ kind: r.kind, captureSha: r.capture_sha, subject: r.subject, locator: r.locator,
-                       enqueued: r.enqueued, attempts: r.attempts, lastTry: r.last_try }));
+                       enqueued: r.enqueued, attempts: r.attempts, lastTry: r.last_try,
+                       cursor: taskCursorOf(r.enqueued, r.capture_sha, r.kind) }));
     } catch { return []; }
   }
 
