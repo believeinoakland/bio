@@ -39,3 +39,20 @@ First merge (B2's order) ready: `job/T38/membership` @ 3b1426f49e, `tranche/T38`
 **Checks:** format 0 failures; architecture 0 failures; coverage 86 of 88 (R114, R115: the CHANGE's); ownership 8 files, 0 failures.
 **P6:** 4,085 lines now (copy still in place); about 3,300 expected after the delete.
 Size (session_01P83PRD8HPZGBJ9ET2KJie5): test runs 9, module lines 4085
+
+## J4 · COMPLETE
+
+Second half done (B3, B4): `job/T38/membership` @ b83ae12973, `tranche/T38` merged in (project-roster, R6/R7/R121 texts).
+
+**Entries applied:** deleted my copy of what project-roster holds (C1′): `projectVisibility`, `projectDirectory`, the request acts and helpers, `projectOwnerAdd/Rescue/Remove`, `projectParticipants`, `#ownerVotes`, `#recordOwnerDecision`, their ten ops; rows C-56.5, C-33.28, C-70.4 and the C-95 family; the tables `project_join_requests`, `project_owner_votes`, `project_owner_decisions` (DDL and purge declaration). Setup acts R31–R36, R45, `rescueRefusal`, `ownerMath`, `projectOwnerArithmetic`, `#committedOwners`, C-56.4, C-33.48 stay. R114 (`COUNT_KEYS` = `projectParticipants`), R115 (declares participation, removals, visibility, sight). R6 and R7: NOT_AN_ADMIN first, ahead of every target fact (t14-rows-remedy-order re-pinned; administrators.test holds every non-admin × target pair). R121's row re-numbered C-96.47 (B4), comments and tests. Comments naming moved acts re-pointed to project-roster.
+**My tests:** moved ids' tests deleted (project-roster holds them: R37, R39–R42, R46, R48–R53, R82's deciders); ids that stay re-pointed off the moved acts (owners made through R118 `ownerOn`; R36's removals read from `project_removals`; R71 reads `project_visibility`); R96 → R114, R59 → R115; t35-words' row/refusal floors lowered to what this module now holds (43 rows; 62 refusals, 114 texts), with why.
+**Tests:** membership 169 pass, 0 fail; project-roster 29 pass, 0 fail (its figures-purge reds cleared). Full plane suite: 8,977 tests, 85 fail; 52 of those fail identically on `tranche/T38` (file-safety, host-governor, notice-producers, op-declarations, scheduler, conclude-project, mk6, stats-disclosure, affordances t36, answer-envelope families). **33 are new, from the delete, in other modules' files I may not edit:**
+1. `test/m/affordances/plane.test.mjs` (28): `op=projectowneradd` unknown through the plane → T38-26 (plane spreads project-roster's ops).
+2. `test/d526-refusal-order.test.mjs` (1, section 4): reads `op=projectparticipants` → T38-26.
+3. `test/m/plane/stats.test.mjs` (2): `projectOwnerVotes` no longer from membership's source → T38-26 (plane registers project-roster's R17 figure).
+4. `test/m/answer-envelope/catalogue-end.test.mjs` (1): "LAST_OWNER lost its row" → T38-25 (families list project-roster's checks).
+5. `test/m/bias/debt.test.mjs`:103 (1): calls `w.membership.projectOwnerAdd` as setup — **no T38 entry covers it**; needs a bias edit (e.g. `participationWrite("ownerOn", …)` or project-roster's act). It is the one setup use of a moved act outside my tests (START's rule); I deleted it with the rest, as R39 is project-roster's R3. Your call: a bias entry, or an accepted red.
+**Checks:** format 0 failures; architecture 0; coverage 88 of 88; ownership 17 files, 0 failures.
+**Reading set (this half):** read whole myself every test file and code region I changed; nothing new delegated.
+**P6:** 3,304 lines (index 2,663, checks 409, schema 232), from 3,970.
+Size (session_01P83PRD8HPZGBJ9ET2KJie5): test runs 31, module lines 3304
