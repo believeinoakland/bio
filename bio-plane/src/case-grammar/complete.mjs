@@ -29,7 +29,12 @@
  * gains "The timeline" right after the findings (C11: the timeline of its findings), its two lanes as two lists, never
  * one; a document carrying R18's `calculations:` block gains "The calculations" right after the materials, each
  * calculation's recipe, inputs, results, recompute status and disclosure. Each is added only when its block is carried,
- * and the sections are numbered as rendered, so a case file published before T33 re-renders byte for byte. */
+ * and the sections are numbered as rendered, so a case file published before T33 re-renders byte for byte.
+ *
+ * A PHOTO CARRIED AS ITS COPY (T37; N757; DEC-180 (4)). A material whose row states R12's `obscured` is listed with the
+ * original's fingerprint, the copy's fingerprint and its label, word for word, in place of the line saying whether it
+ * is included; every other row renders exactly as before T37, so an edition whose document states no `obscured`
+ * renders the bytes it rendered before. */
 
 import { parseFrontmatter, canonicalJson, createSha256 } from "../record-grammar/index.mjs";
 import { gradingMethodText } from "../strength/method.mjs";
@@ -88,6 +93,13 @@ export function editionProductOf(fm) {
 }
 /** R14: the foot line (DEC-118: the group leads; the product is credited quietly). */
 export const madeWithLine = (product) => `Made with ${product}`;
+/** R14 (T37; N757): the words of a photo carried as its copy (the UX stream's, until it gives them); the label itself
+ *  is the row's, printed word for word. */
+export const OBSCURED_WORDS = Object.freeze({
+  original: "Fingerprint of the original (SHA-256), which the group holds and this case file does not carry: ",
+  copy: "Carried as a copy with marked areas covered; the copy's fingerprint (SHA-256): ",
+  noLabel: "The label this copy carries is not stated.",
+});
 /** R14: what the checker's public reads are called (`case-checker` R15). */
 export const CHECKER_READS = Object.freeze({ program: "casechecker", specification: "casefilespec" });
 
@@ -217,12 +229,14 @@ export function completeEditionOf(caseFile) {
       : mats.materials.length === 0 ? [p("No document or observation is reached by this case's findings.")]
       : mats.materials.map((x) => {
           const src = sources.filter((r) => r.capture && r.capture === x.sha);
+          const ob = x.obscured;
           return `<h3>${esc(said(x.ref))} (${esc(said(x.kind))})</h3>${ul([
-            li(`Fingerprint (SHA-256): ${said(x.sha)}`),
+            li(ob ? `${OBSCURED_WORDS.original}${said(x.sha)}` : `Fingerprint (SHA-256): ${said(x.sha)}`),
             ...(x.text_sha ? [li(`Extracted text fingerprint: ${x.text_sha}`)] : []),
             li(`Origin: ${said(x.origin)}`),
             li(`Archived copy: ${said(x.archived_copy, "none recorded")}`),
-            li(x.included ? "Included whole in this case file." : "Not included: only its fingerprint, origin and archived copy travel."),
+            ...(ob ? [li(`${OBSCURED_WORDS.copy}${said(ob.copy)}`), li(ob.label ?? OBSCURED_WORDS.noLabel)]
+              : [li(x.included ? "Included whole in this case file." : "Not included: only its fingerprint, origin and archived copy travel.")]),
             li(x.rests_under === "load_bearing" ? "A finding this case relies on rests on it." : "Only supporting findings rest on it."),
             ...src.map((r) => li(sourceRowWithheld(r) ? `Source: ${WITHHELD_SOURCE_LABEL}: ${WITHHELD_SOURCE_REASON}.`
                                                       : `Source: ${said(r.stated)}`)),

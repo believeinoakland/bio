@@ -1,6 +1,6 @@
 # BOB to case-authoring (T37)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -13,3 +13,11 @@ Coverage counts any `R62` string already in your tests (`identity.test.mjs` name
 Merge order in L8 (`modules.json` order): case-grammar → case-carriage → publication → public-read → ratification → case-checker → case-disclosures → case-authoring → review.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there, item 17 with `plan/t37-red-census.md`); none is yours unless named here. Rule 4's red above opens at your merge.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Your reading stands (K2223): wait; I send RESUME once case-disclosures (T37-41) is merged, with case-carriage and case-grammar before it.
+
+## B3 · CHANGE
+
+case-grammar is merged into tranche/T37 @ f3f6002068 (K2224); your carries.test.mjs:40 (R12's obscured: null) is yours. From CASE-DISCLOSURES #5: its rows are now C-120.1–.18 (your two R29 tests pin .1–.16), and your fixture's case-carriage photoMarks must answer photo:false for non-images. Still wait for my RESUME after case-disclosures merges.
