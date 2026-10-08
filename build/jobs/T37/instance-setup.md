@@ -82,3 +82,9 @@ ${lines.join("\n")}
 ```
 
 Size (session_01BJWkvPGgpsKkM8XcBPtB1a): test runs 14, module lines 3306
+
+## J3 · COMPLETE
+
+T37-30 applied (K2238 included). R55: assistantGate() answers credentials.aiKeptAway() as given (a throw is STORE_DID_NOT_ANSWER); ASSISTANT_OFF / C-119.5 retired, R65 reads AI_KEPT_AWAY. R67: translationDraft (past refusals and gate, ASSISTANT_DRAFT_UNAVAILABLE carrying direction, language, words), translationDraftRefusal (in-process, no gate), translationdraftrecord (your reading 2; drafts labelled proposalLabel("class:ai","translation"); to_english records key, language, SHA-256, administrator, instant, no text). R68 INTERFACE_WORDS from setup-words.mjs (921/345). R69–R75: grant, adopt, confirm (TRANSLATION_NOT_READ_BACK), revert, mark, translations, interfacewords; seven append-only tables, exempt, export never. Rows C-64.11–C-64.26 (two beyond the named: TRANSLATION_KEYS_MALFORMED, TRANSLATION_NOTHING_TO_DRAFT, yours to confirm); C-119.9/.10's `where` region fixed.
+Tests 129/0; format, architecture, coverage 57/57, ownership 11 files: 0 failures. 3,306 code lines (was 2,494) + 929 generated, counted apart.
+Reds my merge opens: your four (store-door routes.test:121; control-plane t34-routes.test:211; plane ask.test:100 and :257, your ":264") and one more: plane door.test.mjs:111 (pins 24 instance-setup routes, now 33) for T37-48. Also: the gate's envelope is credentials' (set_by/set_at only inside keep_away); NO_SUCH_MEMBER now has a row here while four modules mint it rowless (K231, yours); bio-plane bundle stale. Details in my record's Completion.
