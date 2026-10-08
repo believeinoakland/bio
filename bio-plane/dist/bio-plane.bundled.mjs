@@ -71930,72 +71930,149 @@ function validOf(w, zone) {
   return { from: w.value, to: w.value, precision: w.precision, zone: w.zone };
 }
 var marks = (xs) => xs.map(() => "?").join(",");
+var isEvt = (n) => /^EVT-/.test(n);
+function inSlices(ids, q10) {
+  const out = [];
+  for (let i = 0; i < ids.length; i += 400) out.push(...q10(ids.slice(i, i + 400)));
+  return out;
+}
 function neighboursOf(k, args) {
   const a = isObj15(args) ? args : {};
   if (a.viewer === void 0 || a.viewer === null || a.viewer === "")
     return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
   const node = typeof a.node === "string" ? a.node : "";
   const kinds3 = Array.isArray(a.kinds) ? a.kinds.filter((x) => ALL2.includes(x)) : ALL2;
-  const isEvent = /^EVT-/.test(node);
+  const start = Number.isInteger(a.page) && a.page > 0 ? a.page : 0;
+  const ctx = { kinds: kinds3, at: a.at, viewer: a.viewer, view: k.view(), zone: k.zone() };
+  const kept = typeof k.kept === "function" ? k.kept() : null;
+  if (!kept) return answersFor(k, [node], ctx, start, null).get(node);
+  const asked = JSON.stringify([kinds3, a.at ?? null, a.viewer, ctx.zone]);
+  const key = (n, p3) => `${asked}\0${n}\0${p3}`;
+  if (!kept.answers.has(key(node, start))) {
+    const batch = start === 0 && kept.pending.get(node);
+    const nodes = batch && batch.asked === asked ? batch.nodes.filter((n) => !kept.answers.has(key(n, 0))) : [node];
+    for (const n of nodes) kept.pending.delete(n);
+    if (!nodes.includes(node)) nodes.push(node);
+    const got = answersFor(k, nodes, ctx, start, { sets: kept.sets, asked });
+    for (const [n, ans] of got) {
+      kept.answers.set(key(n, start), ans);
+      const ends = [...new Set((ans.items || []).flatMap((i) => [i.from, i.to]).filter((e2) => e2 !== n && isEvt(e2) && !kept.answers.has(key(e2, 0))))];
+      if (ends.length > 1) {
+        const b = { asked, nodes: ends };
+        for (const e2 of ends) if (!kept.pending.has(e2)) kept.pending.set(e2, b);
+      }
+    }
+  }
+  return structuredClone(kept.answers.get(key(node, start)));
+}
+function answersFor(k, nodes, ctx, start, keep2) {
+  const sets = /* @__PURE__ */ new Map(), fresh = [];
+  for (const n of nodes) {
+    const s = keep2 && keep2.sets.get(`${keep2.asked}\0${n}`);
+    if (s) sets.set(n, s);
+    else fresh.push(n);
+  }
+  for (const [n, s] of liveSets(k, fresh, ctx)) {
+    sets.set(n, s);
+    if (keep2 && s.length > BOUNDS.fanout) keep2.sets.set(`${keep2.asked}\0${n}`, s);
+  }
+  const out = /* @__PURE__ */ new Map(), pages = [];
+  for (const n of nodes) {
+    const live7 = sets.get(n);
+    const perKind = /* @__PURE__ */ new Map();
+    for (const c of live7) perKind.set(c.kind, (perKind.get(c.kind) || 0) + 1);
+    const over = [...perKind].filter(([kind2, x]) => x > hubBoundOf(kind2)).sort((p3, q10) => p3[0] < q10[0] ? -1 : 1)[0];
+    if (over) {
+      out.set(n, { items: [], hub: { set_size: over[1], why: `this node has ${over[1]} connections of the kind ${over[0]}, more than that kind's bound of ${hubBoundOf(over[0])}; it is named, never expanded` } });
+      continue;
+    }
+    pages.push([n, live7.slice(start, start + BOUNDS.fanout), live7.length]);
+  }
+  const build = builder(k, pages.flatMap((p3) => p3[1]), ctx);
+  for (const [n, page2, size] of pages)
+    out.set(n, { items: page2.map(build), ...start + BOUNDS.fanout < size ? { next: start + BOUNDS.fanout } : {} });
+  return out;
+}
+function liveSets(k, nodes, ctx) {
+  const out = new Map(nodes.map((n) => [n, []]));
+  if (!nodes.length) return out;
+  const { kinds: kinds3, viewer, view, zone } = ctx;
   const seen = /* @__PURE__ */ new Map();
   const sees = (bundleId) => {
     const key = bundleId ?? "\0";
-    if (!seen.has(key)) seen.set(key, k.sees(bundleId, a.viewer));
+    if (!seen.has(key)) seen.set(key, k.sees(bundleId, viewer));
     return seen.get(key);
   };
-  const view = k.view(), zone = k.zone();
-  const cands = [];
+  const evs = nodes.filter(isEvt), ents = nodes.filter((n) => !isEvt(n));
+  const parts = new Map(nodes.map((n) => [n, []])), concerns = new Map(nodes.map((n) => [n, /* @__PURE__ */ new Map()])), links = new Map(nodes.map((n) => [n, /* @__PURE__ */ new Map()]));
   const roles2 = kinds3.filter((x) => x.startsWith("event_") && ROLE_WORDS[x.slice(6)]).map((x) => x.slice(6));
   if (roles2.length) {
-    for (const p3 of k.rows(`SELECT p.participant_id, p.event_id, p.entity_id, p.role, p.attestation_id, x.bundle_id
-                            FROM event_participants p JOIN events e ON e.event_id = p.event_id AND e.alias_of IS NULL
-                            JOIN event_attestations x ON x.attestation_id = p.attestation_id
-                            WHERE p.${isEvent ? "event_id" : "entity_id"} = ? AND p.superseded_by IS NULL AND p.role IN (${marks(roles2)})
-                            ORDER BY p.participant_id`, node, ...roles2))
-      if (sees(p3.bundle_id)) cands.push({ type: "part", kind: `event_${p3.role}`, eventId: p3.event_id, row: p3 });
+    for (const [col, list6] of [["event_id", evs], ["entity_id", ents]])
+      for (const p3 of inSlices(list6, (part) => k.rows(`SELECT p.participant_id, p.event_id, p.entity_id, p.role, p.attestation_id, x.bundle_id
+                                  FROM event_participants p JOIN events e ON e.event_id = p.event_id AND e.alias_of IS NULL
+                                  JOIN event_attestations x ON x.attestation_id = p.attestation_id
+                                  WHERE p.${col} IN (${marks(part)}) AND p.superseded_by IS NULL AND p.role IN (${marks(roles2)})
+                                  ORDER BY p.participant_id`, ...part, ...roles2)))
+        if (sees(p3.bundle_id)) parts.get(p3[col]).push({ type: "part", kind: `event_${p3.role}`, eventId: p3.event_id, row: p3 });
   }
   if (kinds3.includes("event_concerns")) {
-    const cs = k.rows(`SELECT c.event_id, c.end_id FROM event_concerns c JOIN events e ON e.event_id = c.event_id AND e.alias_of IS NULL
-                       WHERE ${isEvent ? "c.event_id = ? OR c.end_id = ?" : "c.end_id = ?"} ORDER BY c.event_id, c.end_id`, ...isEvent ? [node, node] : [node]);
-    const first = /* @__PURE__ */ new Map(), evs = [...new Set(cs.map((c) => c.event_id))];
-    for (let i = 0; i < evs.length; i += 400) {
-      const part = evs.slice(i, i + 400);
-      for (const x of k.rows(`SELECT * FROM event_attestations WHERE event_id IN (${marks(part)}) AND serves='event' ORDER BY attestation_id`, ...part))
-        if (!first.has(x.event_id) && sees(x.bundle_id)) first.set(x.event_id, x);
+    const q10 = (col, list6) => inSlices(list6, (part) => k.rows(`SELECT c.event_id, c.end_id FROM event_concerns c JOIN events e ON e.event_id = c.event_id
+                                         AND e.alias_of IS NULL WHERE c.${col} IN (${marks(part)})`, ...part));
+    const cs = [];
+    for (const c of q10("event_id", evs)) {
+      cs.push(c);
+      concerns.get(c.event_id).set(`${c.event_id}\0${c.end_id}`, c);
     }
-    for (const c of cs) if (first.has(c.event_id)) cands.push({ type: "concerns", kind: "event_concerns", eventId: c.event_id, row: c, att: first.get(c.event_id) });
-  }
-  const links = kinds3.filter((x) => LINK_WORDS[x.slice(6)]).map((x) => x.slice(6));
-  if (isEvent && links.length) {
-    for (const r of k.rows(`SELECT r.*, x.bundle_id FROM event_relations r JOIN event_attestations x ON x.attestation_id = r.attestation_id
-                            WHERE (r.from_event = ? OR r.to_event = ?) AND r.withdrawn_at IS NULL AND r.kind IN (${marks(links)})
-                            ORDER BY r.relation_id`, node, node, ...links))
-      if (sees(r.bundle_id)) cands.push({ type: "link", kind: `event_${r.kind}`, eventId: r.from_event, row: r });
-  }
-  const whens = k.whensRead(cands.map((c) => c.eventId));
-  const live7 = [];
-  for (const c of cands) {
-    const valid = validOf(whens.get(c.eventId).when, zone);
-    let v;
-    try {
-      v = validAt({ valid, basis: null }, a.at, { view });
-    } catch (e2) {
-      v = { undetermined: true, why: String(e2 && e2.message || e2) };
+    for (const c of q10("end_id", nodes)) {
+      cs.push(c);
+      concerns.get(c.end_id).set(`${c.event_id}\0${c.end_id}`, c);
     }
-    if (v !== "out") live7.push({ ...c, valid, v });
+    const first = /* @__PURE__ */ new Map(), ids = [...new Set(cs.map((c) => c.event_id))];
+    for (const x of inSlices(ids, (part) => k.rows(`SELECT * FROM event_attestations WHERE event_id IN (${marks(part)}) AND serves='event' ORDER BY attestation_id`, ...part)))
+      if (!first.has(x.event_id) && sees(x.bundle_id)) first.set(x.event_id, x);
+    for (const [n, m] of concerns)
+      concerns.set(n, [...m.values()].sort((p3, q11) => p3.event_id < q11.event_id ? -1 : p3.event_id > q11.event_id ? 1 : p3.end_id < q11.end_id ? -1 : p3.end_id > q11.end_id ? 1 : 0).filter((c) => first.has(c.event_id)).map((c) => ({ type: "concerns", kind: "event_concerns", eventId: c.event_id, row: c, att: first.get(c.event_id) })));
   }
-  const perKind = /* @__PURE__ */ new Map();
-  for (const c of live7) perKind.set(c.kind, (perKind.get(c.kind) || 0) + 1);
-  const over = [...perKind].filter(([kind2, n]) => n > hubBoundOf(kind2)).sort((p3, q10) => p3[0] < q10[0] ? -1 : 1)[0];
-  if (over)
-    return { items: [], hub: { set_size: over[1], why: `this node has ${over[1]} connections of the kind ${over[0]}, more than that kind's bound of ${hubBoundOf(over[0])}; it is named, never expanded` } };
-  const start = Number.isInteger(a.page) && a.page > 0 ? a.page : 0;
-  const page2 = live7.slice(start, start + BOUNDS.fanout);
-  const att = (id) => k.one(`SELECT * FROM event_attestations WHERE attestation_id=?`, id);
+  const ls2 = kinds3.filter((x) => LINK_WORDS[x.slice(6)]).map((x) => x.slice(6));
+  if (ls2.length) {
+    for (const col of ["from_event", "to_event"])
+      for (const r of inSlices(evs, (part) => k.rows(`SELECT r.*, x.bundle_id FROM event_relations r JOIN event_attestations x ON x.attestation_id = r.attestation_id
+                                  WHERE r.${col} IN (${marks(part)}) AND r.withdrawn_at IS NULL AND r.kind IN (${marks(ls2)})`, ...part, ...ls2)))
+        if (sees(r.bundle_id)) links.get(r[col]).set(Number(r.relation_id), { type: "link", kind: `event_${r.kind}`, eventId: r.from_event, row: r });
+  }
+  const cands = new Map(nodes.map((n) => [n, [
+    ...parts.get(n),
+    ...Array.isArray(concerns.get(n)) ? concerns.get(n) : [],
+    ...[...links.get(n)].sort((p3, q10) => p3[0] - q10[0]).map((x) => x[1])
+  ]]));
+  const whens = k.whensRead([...cands.values()].flatMap((cs) => cs.map((c) => c.eventId)));
+  const at36 = /* @__PURE__ */ new Map();
+  for (const [n, cs] of cands)
+    for (const c of cs) {
+      const valid = validOf(whens.get(c.eventId).when, zone);
+      const vk = JSON.stringify(valid);
+      if (!at36.has(vk)) {
+        let v2;
+        try {
+          v2 = validAt({ valid, basis: null }, ctx.at, { view });
+        } catch (e2) {
+          v2 = { undetermined: true, why: String(e2 && e2.message || e2) };
+        }
+        at36.set(vk, v2);
+      }
+      const v = at36.get(vk);
+      if (v !== "out") out.get(n).push({ ...c, valid, v });
+    }
+  return out;
+}
+function builder(k, rows3, ctx) {
+  const { viewer } = ctx;
+  const attIds = [...new Set(rows3.filter((c) => c.type !== "concerns").map((c) => Number(c.row.attestation_id)))];
+  const atts = new Map(inSlices(attIds, (part) => k.rows(`SELECT * FROM event_attestations WHERE attestation_id IN (${marks(part)})`, ...part)).map((x) => [Number(x.attestation_id), x]));
   const ends = /* @__PURE__ */ new Set();
-  for (const c of page2) {
+  for (const c of rows3) {
     ends.add(c.eventId);
-    if (c.type === "concerns" && /^EVT-/.test(c.row.end_id)) ends.add(c.row.end_id);
+    if (c.type === "concerns" && isEvt(c.row.end_id)) ends.add(c.row.end_id);
     if (c.type === "link") ends.add(c.row.to_event);
   }
   const gov = k.governingMany([...ends]);
@@ -72003,7 +72080,7 @@ function neighboursOf(k, args) {
   const evGrade = (eventId3) => {
     if (!evMemo.has(eventId3)) {
       const g = gov.has(eventId3) ? gov.get(eventId3) : k.governing(eventId3);
-      const v = g ? null : k.visibleAttestations(eventId3, a.viewer)[0];
+      const v = g ? null : k.visibleAttestations(eventId3, viewer)[0];
       evMemo.set(eventId3, g ? g.grade : v ? v.grade : null);
     }
     return evMemo.get(eventId3);
@@ -72014,19 +72091,20 @@ function neighboursOf(k, args) {
     if (!resMemo.has(key)) resMemo.set(key, k.resolutionGrade(entityId, x));
     return resMemo.get(key);
   };
-  const kindMemo = /* @__PURE__ */ new Map();
+  const evIds = [...new Set(rows3.map((c) => c.eventId))];
+  const kindOf4 = new Map(inSlices(evIds, (part) => k.rows(`SELECT event_id, kind FROM events WHERE event_id IN (${marks(part)})`, ...part)).map((e2) => [e2.event_id, e2.kind]));
+  const facets = /* @__PURE__ */ new Map();
   const useOf = (eventId3) => {
-    if (!kindMemo.has(eventId3)) {
-      const e2 = k.one(`SELECT kind FROM events WHERE event_id=?`, eventId3);
-      kindMemo.set(eventId3, e2 ? e2.kind : null);
-    }
-    return ["discretion", "waiver", "assessment"].includes(kindMemo.get(eventId3)) ? k.facet(eventId3, a.viewer) : null;
+    if (!["discretion", "waiver", "assessment"].includes(kindOf4.get(eventId3))) return null;
+    if (!facets.has(eventId3)) facets.set(eventId3, k.facet(eventId3, viewer));
+    return facets.get(eventId3);
   };
+  const att = (id) => atts.get(Number(id)) ?? k.one(`SELECT * FROM event_attestations WHERE attestation_id=?`, id);
   const evidence = (x) => [{
     source: x.capture_sha ? `capture:${x.capture_sha}` : `testimony:${x.attestation_id}`,
     ...x.extent ? { extent: JSON.parse(x.extent) } : {}
   }];
-  const items = page2.map((c) => {
+  return (c) => {
     let conn;
     if (c.type === "part") {
       const p3 = c.row, x = att(p3.attestation_id);
@@ -72046,7 +72124,7 @@ function neighboursOf(k, args) {
         to: e2.end_id,
         kind: "event_concerns",
         evidence: evidence(x),
-        grade: { assertion: grade(x.grade), ends: [grade(evGrade(e2.event_id)), grade(/^EVT-/.test(e2.end_id) ? evGrade(e2.end_id) : x.grade)] }
+        grade: { assertion: grade(x.grade), ends: [grade(evGrade(e2.event_id)), grade(isEvt(e2.end_id) ? evGrade(e2.end_id) : x.grade)] }
       };
     } else {
       const r = c.row, x = att(r.attestation_id);
@@ -72065,11 +72143,10 @@ function neighboursOf(k, args) {
       owner: "events",
       valid: c.valid,
       derived: null,
-      ...use ? { use } : {},
+      ...use ? { use: structuredClone(use) } : {},
       ...c.v === "in" ? {} : { undetermined: { why: c.v && c.v.why ? c.v.why : "undetermined at the date asked" } }
     };
-  });
-  return { items, ...start + BOUNDS.fanout < live7.length ? { next: start + BOUNDS.fanout } : {} };
+  };
 }
 
 // src/events/uses.mjs
@@ -72597,6 +72674,7 @@ var RELATION_KINDS2 = Object.freeze(["authorises", "answers", "amends", "reverse
 var LIMIT_DEFAULT2 = 100;
 var LIMIT_MAX2 = 500;
 var REASON_MAX2 = 2e3;
+var KEPT_MAX = 2e4;
 var clamp3 = (limit) => Math.max(1, Math.min(Math.trunc(Number(limit)) || LIMIT_DEFAULT2, LIMIT_MAX2));
 var ACT_RE = idPattern("ACT");
 var EVT_RE = idPattern("EVT");
@@ -72675,6 +72753,7 @@ var Events = class _Events {
   #started = false;
   #migrated = false;
   #actAt = null;
+  #kept = { stamp: null, answers: /* @__PURE__ */ new Map(), sets: /* @__PURE__ */ new Map(), pending: /* @__PURE__ */ new Map() };
   constructor(storage, {
     record,
     membership = null,
@@ -74122,6 +74201,36 @@ var Events = class _Events {
   neighbours(args) {
     return neighboursOf(this.#kernel(), args);
   }
+  /* R35 (T37-11): what the owner's read may keep between calls, or null when nothing may be kept: inside a transaction
+     (record-core R66: `afterCommit` runs at once only outside one), since what it read may yet be rolled back, or when
+     the store cannot say whether it changed. It is emptied whenever the connection has changed a row since it was
+     filled (SQLite's `total_changes()`, any module's write), and when it grows past its bound. */
+  #keptNow() {
+    let outside = false;
+    try {
+      this.#record.afterCommit(() => {
+        outside = true;
+      });
+    } catch {
+      return null;
+    }
+    if (!outside) return null;
+    let n;
+    try {
+      n = Number(this.#one(`SELECT total_changes() AS n`).n);
+    } catch {
+      return null;
+    }
+    if (!Number.isFinite(n)) return null;
+    const c = this.#kept;
+    if (c.stamp !== n || c.answers.size + c.pending.size > KEPT_MAX) {
+      c.stamp = n;
+      c.answers.clear();
+      c.sets.clear();
+      c.pending.clear();
+    }
+    return c;
+  }
   /** R22–R25: the machine's writes from a followed body's Legistar capture (`follow.mjs`). */
   followedImport(args = {}) {
     return followedImport(this.#kernel(), args);
@@ -74153,6 +74262,7 @@ var Events = class _Events {
       governing: (e2) => this.#governing(e2),
       governingMany: (ids) => this.#governingMany(ids),
       whensRead: (ids) => this.#whensRead(ids),
+      kept: () => this.#keptNow(),
       whenRead: (e2) => this.#whenRead(e2),
       visibleAttestations: (e2, v) => this.#visibleAttestations(e2, v),
       resolutionGrade: (en, a) => this.#resolutionGrade(en, a),
@@ -83016,7 +83126,7 @@ var Standards = class {
     if (!amendments) return refuseFieldInvalid("amendments", "is a list of portion paths of the adopting act");
     const fault = reasonFault2(a.reason);
     if (fault) return refuseReason(fault);
-    const body = actRow ? actRow.issuer_entity ?? actRow.issuer : null;
+    const body = actRow ? actRow.issuer_entity ?? actRow.issuer : this.#eventBody(act2, viewer);
     return this.record.transact(() => {
       const at36 = this.#when();
       const id = `adopt-${rand4(12)}`;
@@ -83038,6 +83148,24 @@ var Standards = class {
       );
       return { ok: true, adoption: this.#adoptionAnswer(this.#one(`SELECT * FROM standard_body_adoptions WHERE adoption_id=?`, id)) };
     });
+  }
+  /* R40: the body that adopted through an event (an act of the body held as an event, `events` R26): the one entity the
+     event concerns or has as its decider, the body of a meeting being what the meeting concerns (`events` R22); none,
+     or two, answers null and the adoption names no body, never one guessed. */
+  #eventBody(eventId3, viewer) {
+    let r = null;
+    try {
+      r = this.events && typeof this.events.readEvent === "function" ? this.events.readEvent({ eventId: eventId3, viewer: viewer ?? INTERNAL_READER }) : null;
+    } catch {
+      r = null;
+    }
+    const ev = r && r.ok !== false && r.found !== false ? r.event : null;
+    if (!ev) return null;
+    const ids = /* @__PURE__ */ new Set([
+      ...(ev.concerns || []).filter((x) => typeof x === "string" && !/^EVT-/.test(x)),
+      ...(ev.participants || []).filter((x) => x.role === "decider" && !x.superseded).map((x) => x.entity_id)
+    ]);
+    return ids.size === 1 ? [...ids][0] : null;
   }
   #adoptionAnswer(r) {
     return {
@@ -83238,6 +83366,7 @@ var Standards = class {
       if (inForce.state === "in_force") return { state: "binds", why: `${body} issued it, and it is in force on ${date}`, rests_on: rests };
       if (inForce.state === "undetermined") unsure.push(`it is ${body}'s own, and ${inForce.why}`);
     }
+    let started = null;
     for (const ad of this.#rows(`SELECT * FROM standard_body_adoptions WHERE standard_id=? AND body=? ORDER BY adoption_id`, sid, body)) {
       const f17 = this.#adoptionFrom(ad, viewer);
       rests.push({ adoption: ad.adoption_id });
@@ -83245,15 +83374,26 @@ var Standards = class {
         unsure.push(`${ad.adoption_id}'s start is not read: ${f17.why}`);
         continue;
       }
-      if (f17.day <= date) return { state: "binds", why: `${body} adopted it (${ad.adoption_id}), effective ${f17.day}`, rests_on: rests };
+      if (f17.day <= date && (!started || f17.day < started.day)) started = { ad, day: f17.day };
+    }
+    if (started) {
+      const by = `${body} adopted it (${started.ad.adoption_id}), effective ${started.day}`;
+      if (inForce.state === "in_force") return { state: "binds", why: `${by}, and it is in force on ${date} (${inForce.why})`, rests_on: rests };
+      if (inForce.state === "undetermined") unsure.push(`${by}, and ${inForce.why}`);
     }
     for (const im of this.#rows(`SELECT * FROM standard_impositions WHERE standard_id=? AND body=? ORDER BY imposition_id`, sid, body)) {
       const law = this.#row(im.law);
       if (!law) continue;
       rests.push({ imposition: im.imposition_id, law: im.law });
       const lf = this.#versionAt(law, date, viewer);
-      if (lf.state === "in_force") return { state: "binds", why: `${im.law} imposes it on ${body} and is in force on ${date}`, rests_on: rests };
+      if (lf.state === "in_force" && inForce.state === "in_force")
+        return {
+          state: "binds",
+          why: `${im.law} imposes it on ${body} and is in force on ${date}, and it is in force on ${date} (${inForce.why})`,
+          rests_on: rests
+        };
       if (lf.state === "undetermined") unsure.push(`${im.law} imposes it, and ${lf.why}`);
+      else if (lf.state === "in_force" && inForce.state === "undetermined") unsure.push(`${im.law} imposes it, and ${inForce.why}`);
     }
     for (const inc of this.#incorporatedBy(sid, viewer)) {
       if (seen.has(inc.from)) continue;
@@ -83261,8 +83401,14 @@ var Standards = class {
       if (!from) continue;
       const r = this.#bindingOf(from, body, date, viewer, seen);
       rests.push({ incorporated_by: inc.from, relation: inc.id });
-      if (r.state === "binds") return { state: "binds", why: `${inc.from} incorporates it and binds ${body} (${r.why})`, rests_on: rests };
+      if (r.state === "binds" && inForce.state === "in_force")
+        return {
+          state: "binds",
+          why: `${inc.from} incorporates it and binds ${body} (${r.why}), and it is in force on ${date} (${inForce.why})`,
+          rests_on: rests
+        };
       if (r.state === "undetermined") unsure.push(`${inc.from} incorporates it, and ${r.why}`);
+      else if (r.state === "binds" && inForce.state === "undetermined") unsure.push(`${inc.from} incorporates it and binds ${body}, and ${inForce.why}`);
     }
     return unsure.length ? { state: "undetermined", why: unsure.join("; "), rests_on: rests } : { state: "none", why: null, rests_on: rests };
   }
@@ -91436,13 +91582,15 @@ var Finder = class {
           continue;
         }
         const lang = d.language || language;
-        const set = lang ? FIND_MATCHERS[lang] : null;
+        const set = lang && Object.hasOwn(FIND_MATCHERS, lang) ? FIND_MATCHERS[lang] : null;
         if (!set) {
           skip(c, lang ? `no matcher for ${lang} yet` : "no matcher for this capture's language yet: neither its reading nor the active profiles state a language");
           continue;
         }
-        if (kind2 === "requirements") this.#requirements(c, d, set, add2);
-        else this.#figures(kind2, c, d, set, add2);
+        if (kind2 === "requirements") {
+          if (!d.units.length) skip(c, "no text: this capture's reading holds typed cells but no text unit to read sentences from");
+          else this.#requirements(c, d, set, add2);
+        } else this.#figures(kind2, c, d, set, add2);
       }
       const truncated3 = acc.truncated || acc.items.length > limit;
       const items = acc.items.slice(0, limit);
@@ -91606,8 +91754,7 @@ var Finder = class {
   /* A grid's typed cells (a sheet's, or a document table's, each cell's `source.cell` in A1): the first row read is its
      header; a column every one of whose other cells is a date (or an amount: a number, or a value written as a plain
      number, under a header naming a currency, or a value the money matcher reads whole) is one result. Answers the
-     cells placed (`held`), the columns (`{col, words, rows, first, last, lines}`, `lines` each body cell's non-blank
-     lines in cell order) and the cells they take (`done`). */
+     cells placed (`held`), the columns (`{col, words, rows, first, last}`) and the cells they take (`done`). */
   #columns(kind2, cells, set) {
     const at36 = (cell) => {
       const m = cell && cell.source && typeof cell.source.cell === "string" ? A1.exec(cell.source.cell) : null;
@@ -91639,8 +91786,7 @@ var Finder = class {
         rows: filled15.length,
         first: Math.min(...rows3),
         last: Math.max(...rows3),
-        words: cutWords(header2 && header2.value != null && String(header2.value).trim() ? header2.value : `column ${col}`),
-        lines: body.flatMap((x) => linesOf2(x.cell.value))
+        words: cutWords(header2 && header2.value != null && String(header2.value).trim() ? header2.value : `column ${col}`)
       });
       for (const x of body) done.add(x);
     }
@@ -91698,10 +91844,20 @@ var Finder = class {
       if (data.get(c.capture_sha).reading) read3.push(c.capture_sha);
       else skip(c, "not extracted: no reading of this capture is held");
     }
+    if (!read3.length) return;
+    const unread = (why) => {
+      for (const c of captures) if (read3.includes(c.capture_sha)) skip(c, why);
+    };
     const entities2 = this.r.entitiesFor();
-    if (!read3.length || !entities2) return;
+    if (!entities2) {
+      unread("not read: the followed people and offices could not be read");
+      return;
+    }
     const ans = entities2.namingIn({ captureShas: read3, kinds: [...FIND_PEOPLE_KINDS], limit, viewer });
-    if (!ans || ans.ok !== true) return;
+    if (!ans || ans.ok !== true) {
+      unread(`not read: the followed people and offices could not be read${ans && ans.reason ? ` (${String(ans.reason).slice(0, 80)})` : ""}`);
+      return;
+    }
     if (ans.truncated) acc.truncated = true;
     const byId = new Map((ans.entities || []).map((e2) => [e2.entity_id, { entity_id: e2.entity_id, kind: e2.entity_kind, label: e2.entity_label }]));
     const found3 = (ans.candidates || []).filter((cand) => byId.has(cand.entity_id)).map((cand) => ({ ent: byId.get(cand.entity_id), cand }));
@@ -91813,32 +91969,12 @@ function heldCells(cells) {
   }
   return { sheets, tables: tables.sort((a, b) => a.table - b.table) };
 }
-var linesOf2 = (v) => v == null ? [] : String(v).split("\n").map((s) => s.trim()).filter(Boolean);
 function paragraphsOf(docTables, units) {
-  const out = /* @__PURE__ */ new Set();
-  const paras = units.filter((u) => u.extentObj && u.extentObj.kind === "doc-para");
-  const text7 = paras.map((u) => String(u.text).trim());
-  let from = 0;
-  for (const t2 of docTables) {
-    if (!t2.columns.length) continue;
-    const taken = new Set(t2.columns.map((c) => c.col));
-    const seq = t2.held.flatMap((x) => linesOf2(x.cell.value).map((line) => ({ line, take: taken.has(x.at.col) && t2.done.has(x) })));
-    let at36 = -1;
-    for (let i = from; seq.length && i + seq.length <= text7.length && at36 < 0; i++)
-      if (seq.every((s, j) => text7[i + j] === s.line)) at36 = i;
-    if (at36 >= 0) {
-      seq.forEach((s, j) => {
-        if (s.take) out.add(paras[at36 + j]);
-      });
-      from = at36 + seq.length;
-    } else {
-      const lines2 = new Set(t2.columns.flatMap((c) => c.lines));
-      paras.forEach((u, i) => {
-        if (lines2.has(text7[i])) out.add(u);
-      });
-    }
-  }
-  return out;
+  const taken = /* @__PURE__ */ new Set();
+  for (const t2 of docTables)
+    for (const x of t2.done)
+      for (const p3 of Array.isArray(x.cell.paras) ? x.cell.paras : []) if (Number.isInteger(p3)) taken.add(p3);
+  return new Set(units.filter((u) => u.extentObj && u.extentObj.kind === "doc-para" && taken.has(u.extentObj.para)));
 }
 
 // src/retrieval/index.mjs
@@ -100671,15 +100807,23 @@ var Progressions = class _Progressions {
     });
     const answer = { ...this.#answer(key, eid, viewer), threaded: norm3.length, threaded_by: by, at: at36 };
     if (this.threadListeners.length) {
-      let nextDeadline = null;
-      try {
-        nextDeadline = this.overdueScan(Date.parse(at36)).next_deadline;
-      } catch {
-        nextDeadline = null;
-      }
+      let scanned = false, nextDeadline = null;
+      const deadline = () => {
+        if (!scanned) {
+          scanned = true;
+          try {
+            nextDeadline = this.overdueScan(Date.parse(at36)).next_deadline;
+          } catch {
+            nextDeadline = null;
+          }
+        }
+        return nextDeadline;
+      };
       for (const l2 of this.threadListeners) {
+        const e2 = { progressionKey: key, entityId: eid };
+        Object.defineProperty(e2, "nextDeadline", { get: deadline, enumerable: true });
         try {
-          await l2.fn({ progressionKey: key, entityId: eid, nextDeadline });
+          await l2.fn(e2);
         } catch {
         }
       }
@@ -101486,11 +101630,11 @@ function progressionsOf(host, deps) {
       standards: d.standards || (() => standardsOf(host, { record })),
       zoneOf: d.zoneOf || (() => governingZone(localFactsOf(host, { record })))
     });
-    instances24.set(host, p3);
     const declared2 = record.declareTable("progressions", PROGRESSIONS_TABLES);
     if (declared2 && declared2.ok === false)
       throw new Error(`progressions: record-core refused its tables: ${declared2.reason} ${declared2.table || ""}`.trim());
     registerFigures5(p3);
+    instances24.set(host, p3);
   }
   made2.add(p3);
   return p3;
@@ -228247,7 +228391,7 @@ function rosterWordPatterns(ctx) {
   return out;
 }
 var TITLE_WORDS = 8;
-function linesOf3(text7) {
+function linesOf2(text7) {
   const raw = String(text7 || "");
   const out = [];
   let at36 = 0;
@@ -228381,7 +228525,7 @@ function readLine(lineText, titles) {
 }
 function readRows(raw, ctx) {
   const titles = titlePatterns(ctx);
-  const lines2 = linesOf3(raw);
+  const lines2 = linesOf2(raw);
   const rows3 = [];
   let paired = 0, named = 0, contactLines = 0, boxes2 = 0;
   for (const x of lines2) {
@@ -228549,7 +228693,7 @@ var CHART_SHORT = 5;
 var REPORTS = /^(.+?)\s+(?:reports|report|reporting)\s+(?:directly\s+)?to\s+(?:the\s+)?(.+?)[.;]?$/i;
 function readBoxes(raw, ctx) {
   const titles = titlePatterns(ctx);
-  const lines2 = linesOf3(raw);
+  const lines2 = linesOf2(raw);
   const units = [], posts = [], pairs = [];
   let named = 0;
   for (const x of lines2) {
@@ -230051,7 +230195,7 @@ function codeForms(ctx) {
   }
   return out;
 }
-function linesOf4(raw) {
+function linesOf3(raw) {
   const out = [];
   let at36 = 0;
   for (const line of raw.split("\n")) {
@@ -230162,7 +230306,7 @@ function subsections(lines2, sec, end2, form, locate) {
   return out;
 }
 function codeHeadingsIn(raw, ctx) {
-  const lines2 = linesOf4(String(raw || ""));
+  const lines2 = linesOf3(String(raw || ""));
   const heads = codeHeadings(lines2, codeForms(ctx));
   const first = lines2.find((l2) => l2.text.trim().length);
   return {
@@ -230172,7 +230316,7 @@ function codeHeadingsIn(raw, ctx) {
   };
 }
 function readSections(raw, form, ctx, locate) {
-  const lines2 = linesOf4(raw);
+  const lines2 = linesOf3(raw);
   const forms = codeForms(ctx);
   const heads = form === "code" ? codeHeadings(lines2, forms) : form === "instrument" ? instrumentHeadings(lines2) : [];
   if (!heads.length) {
@@ -230203,7 +230347,7 @@ var AS_USED = new RegExp(`\\bas[ \\t]+used[ \\t]+in[ \\t]+this[ \\t]+(?:chapter|
 var TERMS = new RegExp(`${Q_OPEN}([^"\u201C\u201D\u2018\u2019'\\n]{1,120}?)${Q_CLOSE}`, "g");
 var MARKER_LINE = /^\s*\(?[A-Za-z0-9]{1,4}[.)]\s*$/;
 function passageEnd(raw, from) {
-  const lines2 = linesOf4(raw);
+  const lines2 = linesOf3(raw);
   let i = lines2.findIndex((l2) => from >= l2.start && from <= l2.end);
   if (i < 0) return raw.length;
   let end2 = lines2[i].end;
@@ -230804,7 +230948,7 @@ function headerLabels(ctx) {
   }
   return out;
 }
-function linesOf5(raw) {
+function linesOf4(raw) {
   const out = [];
   let at36 = 0;
   for (const text7 of raw.split("\n")) {
@@ -230908,7 +231052,7 @@ function readHeader2(ctx, raw, locate = () => null) {
   return best;
 }
 function readAt2(raw, labels, a, locate) {
-  const lines2 = linesOf5(raw);
+  const lines2 = linesOf4(raw);
   const from = a ? blockStart(lines2, a.start) : 0;
   const firstLabel = (() => {
     let best = null;
@@ -231070,7 +231214,7 @@ function readAt2(raw, labels, a, locate) {
 }
 
 // ../doctypes/policy.mjs
-function linesOf6(raw) {
+function linesOf5(raw) {
   const out = [];
   let at36 = 0;
   for (const text7 of raw.split("\n")) {
@@ -231127,7 +231271,7 @@ function order3(k, a, b) {
   return false;
 }
 function readOutline(raw, from, skip, locate) {
-  const lines2 = linesOf6(raw);
+  const lines2 = linesOf5(raw);
   const out = [];
   const open = [];
   const close = (depth, at36) => {
@@ -231250,7 +231394,7 @@ function readApplicability(raw, sections, from, locate) {
 var TABLE_HEAD = /^\s*Responsible\s+Part(?:y|ies)\s*(?:\/|\s)\s*Actions?\s*$/i;
 var STEP = /^(.*?)(?:^|\s)(\d{1,2})\.[ \t]+(\S.*)$/;
 function readResponsibilities(raw, sections, from, locate) {
-  const lines2 = linesOf6(raw);
+  const lines2 = linesOf5(raw);
   const rows3 = [], unread = [], extents = [];
   const recurs = /* @__PURE__ */ new Map();
   for (const l2 of lines2) {
@@ -232790,7 +232934,7 @@ var USABLE_SHARE = 0.85;
 var TABLE_GAP = 4;
 var MIN_ROWS = 2;
 var HEADER_LINES = 10;
-function linesOf7(ctx) {
+function linesOf6(ctx) {
   const text7 = typeof ctx.text === "string" ? ctx.text : "";
   const locate = typeof ctx.locate === "function" ? ctx.locate : () => null;
   const out = [];
@@ -233084,7 +233228,7 @@ function readTables(ctx, { budget }) {
   const { noText, images } = markers2(supplied2);
   const tables = [], unread = [], skipped = [], pages_unread = [];
   const read3 = /* @__PURE__ */ new Set();
-  for (const pg of byPage(linesOf7(ctx))) {
+  for (const pg of byPage(linesOf6(ctx))) {
     if (pg.page !== null) read3.add(pg.page);
     const r = readPage(ctx, pg.page, pg.lines, { chartSkip: budget });
     tables.push(...r.tables);
