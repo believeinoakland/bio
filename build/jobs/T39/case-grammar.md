@@ -1,6 +1,6 @@
 # case-grammar (T39)
 
-**Status** · session_015c5pkGR6f8FDqbTSrFjvzi · depth 2 · WORKING · handled B1
+**Status** · session_015c5pkGR6f8FDqbTSrFjvzi · depth 2 · COMPLETE · handled B1
 
 ## Completion
 
