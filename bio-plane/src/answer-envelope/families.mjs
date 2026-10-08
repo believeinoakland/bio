@@ -16,6 +16,10 @@ import * as RECORD_GRAMMAR_ACTS from "../record-grammar/acts.mjs";
 import * as TEXT_CHAIN from "../textchain.mjs";
 import * as RECORD_CORE from "../record-core/checks.mjs";
 import * as MEMBERSHIP from "../membership/checks.mjs";
+/* N783 (T38-25; K2270, K2278): project-roster's rows, split from membership's file with the project acts (C-56.5, C-33.28,
+   C-70.4 and the whole C-95 family), in its place in the module order (directly after membership, before credentials).
+   No code is in both files, so no row moves. */
+import * as PROJECT_ROSTER from "../project-roster/checks.mjs";
 import * as CREDENTIALS from "../credentials/checks.mjs";
 import * as PROMOTION from "../promotion/checks.mjs";
 import * as PROVENANCE from "../provenance/checks.mjs";
@@ -124,6 +128,7 @@ export const CHECK_FAMILY_FILES = Object.freeze([
   ["src/textchain.mjs", TEXT_CHAIN],
   ["src/record-core/checks.mjs", RECORD_CORE],
   ["src/membership/checks.mjs", MEMBERSHIP],
+  ["src/project-roster/checks.mjs", PROJECT_ROSTER],
   ["src/credentials/checks.mjs", CREDENTIALS],
   ["src/promotion/checks.mjs", PROMOTION],
   ["src/provenance/checks.mjs", PROVENANCE],
