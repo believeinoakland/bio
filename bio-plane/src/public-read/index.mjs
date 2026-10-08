@@ -94,6 +94,22 @@ export function standingsOf(fm) {
 /* R23: a text held by `publication`'s `publishedMaterialText` (its R57), whichever shape it answers in. */
 const heldText = (v) => (typeof v === "string" ? v : v && typeof v.text === "string" ? v.text : null);
 const HEX64 = /^[0-9a-f]{64}$/;
+/* R28 with R32 (K2145): a carried archive member's archives hold its bytes, so when an order withholds a material's
+   `document` file, every `archive` and `container` file the case file carries under that material's ref (its record and
+   each enclosing archive, outward) is withheld too, by the same orders. Mutates `withheld` (`withholdingOf`'s map). */
+function withholdChains(withheld, manifest) {
+  const files = manifest && Array.isArray(manifest.files) ? manifest.files : [];
+  for (const d of files) {
+    if (!d || d.kind !== "document" || typeof d.path !== "string" || !withheld.has(d.sha256)) continue;
+    const under = d.path.slice(0, d.path.lastIndexOf("/") + 1);
+    const orders = withheld.get(d.sha256);
+    for (const f of files) {
+      if (!f || (f.kind !== "archive" && f.kind !== "container") || typeof f.path !== "string" || !f.path.startsWith(under)) continue;
+      const prev = withheld.get(f.sha256) || [];
+      withheld.set(f.sha256, [...prev, ...orders.filter((o) => !prev.includes(o))]);
+    }
+  }
+}
 /* R21: the fixed address a case's docket is served at (its feed's is `op=docketfeed&case=`). */
 export const docketAddress = (caseId) => `op=docketpublic&case=${encodeURIComponent(caseId)}`;
 export const LENS_NO_DOCUMENT_SENTENCE = "no signed case document is held for this edition, so it states no lens here";
@@ -1314,8 +1330,9 @@ export class PublicRead {
       const stamps = stamped.get(`${e.case_id}\u0000${Number(e.edition)}`);
       if (!stamps) continue;
       const state = this.publication.caseEditionState(e.case_id, Number(e.edition));
-      const w = withholdingOf(e.case_id, stamps,
-                              this.#editionItems(e.case_id, state, e.manifest_sha, safeJson(e.manifest)), docketAddress);
+      const manifest = safeJson(e.manifest);
+      const w = withholdingOf(e.case_id, stamps, this.#editionItems(e.case_id, state, e.manifest_sha, manifest), docketAddress);
+      withholdChains(w.withheld, manifest);
       editions.set(`${e.case_id}\u0000${Number(e.edition)}`, w);
       for (const [sha, orders] of w.withheld) {
         const prev = bySha.get(sha) || [];

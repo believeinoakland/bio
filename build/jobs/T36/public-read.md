@@ -25,9 +25,11 @@
 - `format`: 135 modules, 134 requirements files; 0 failures. `architecture public-read`: 44 product files, 146 relative imports; 0 failures (the test archives are written with this module's own `container.mjs` and `ooxml`'s `crc32`, so no `test-support` edge is needed). `coverage public-read`: 33 of 33 live ids named; 0 failures. `ownership public-read tranche/T36`: 4 files changed; 0 failures.
 - P6: 3,406 lines (paths), well under 4,000.
 
+**B3 (ANSWER re J1, K2145) applied.** R28 with R32: when an order withholds a carried material's `document` file, every `archive` and `container` file the case file carries under that material's ref is withheld by the same orders (`withholdChains` in `public-read/index.mjs`, applied in `#withheldIndex`), so `publishedbytes`, the case file's parts and `publishedCase`'s file listing all withhold them; an unseal serves them again. Test `archives.test.mjs` "R28 R32 …" (fails with the propagation disabled, passes with it). After B3: public-read 146/146; format, architecture, coverage (33/33), ownership (5 files): 0 failures; case-import 88/0, ratification 213/0, filings 70/0, network-notices 72/0, case-checker 41/3 (unchanged, not this job's). 3,423 lines.
+
 *Repair:* this record's J1 REPORT was cut by a hand edit of the notes and the COMPLETE then posted as J1; J1 restored byte for byte from 7a9c2437d0 and COMPLETE re-posted as J2.
 
-Size (session_01BL4TP2ShNVLY5f5dC9jEtM): test runs 14, module lines 3406
+Size (session_01BL4TP2ShNVLY5f5dC9jEtM): test runs 18, module lines 3423
 
 ## J1 · REPORT
 

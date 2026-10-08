@@ -349,3 +349,35 @@ test("R5 R6 a case file stored before T36 (bio-case-file/1) is still recognised 
   assert.equal(isCaseFileManifest({ ...manifest, format: "bio-case-file/9" }), false);
   assert.equal(isCaseFileManifest({ ...manifest, format: "bio-case-container/6" }), false);
 });
+
+test("R28 R32 an order over a carried archive member withholds its archive and container record too, from publishedbytes and from the case file's part and listing; an unseal serves them again; a material that is no member is unaffected", async () => {
+  const { w, env, zip, archiveSha, memberSha } = scene();
+  promote(w, PLAIN, [{ file: "snapshots/plain.txt", capture: { method: "acquire", grade: "B", sha256: sha("plain words"), bytes: 11 } }],
+          [{ path: "snapshots/plain.txt", text: "plain words", register: true }]);
+  const { out, m } = await publish(w, env, [docRow(MEM, memberSha), docRow(PLAIN, sha("plain words"))]);
+  const rec = m.files.find((f) => f.kind === "container"), arc = m.files.find((f) => f.kind === "archive");
+  assert.ok(rec && arc && arc.sha256 === archiveSha && zip.length === arc.bytes);
+  const status = async (sha256, extra = {}) => (await call(w, env, "publishedbytes", { sha256, ...extra })).status;
+  for (const s of [memberSha, rec.sha256, archiveSha]) assert.equal(await status(s), 200, "served before the order");
+  /* the order seals the member document only, by its path in the case file */
+  w.stamps.stamp({ case: CASE, editions: [1], entry: { seq: 7 }, effect: "seal", parts: [caseFilePath("document", MEM)] });
+  for (const s of [memberSha, rec.sha256, archiveSha]) {
+    const r = await call(w, env, "publishedbytes", { sha256: s });
+    assert.equal(r.status, 451, s);
+    const b = await r.json();
+    assert.equal(b.reason, "WITHHELD_BY_COURT_ORDER");
+    assert.deepEqual(b.withheld[s].map((o) => [o.case, o.edition, o.effect]), [[CASE, 1, "seal"]]);
+  }
+  const part = await call(w, env, "publishedbytes", { sha256: out.manifest_sha, format: "zip", part: rec.part });
+  assert.equal(part.status, 451);
+  const named = Object.keys((await part.json()).withheld);
+  for (const s of [rec.sha256, archiveSha]) if (m.files.find((f) => f.sha256 === s).part === rec.part) assert.ok(named.includes(s));
+  const c = w.read("publishedcase", { id: CASE });
+  const marked = c.files.filter((f) => f.withheld === true).map((f) => f.path).sort();
+  assert.deepEqual(marked, [caseFilePath("document", MEM), rec.path, arc.path].sort(), "the case file's listing states each withheld");
+  /* negative control: the plain material is still served */
+  assert.equal(await status(sha("plain words")), 200);
+  /* unsealed: the member and its chain are served again */
+  w.stamps.stamp({ case: CASE, editions: [1], entry: { seq: 8 }, effect: "unseal", parts: [caseFilePath("document", MEM)] });
+  for (const s of [memberSha, rec.sha256, archiveSha]) assert.equal(await status(s), 200, "served after the unseal");
+});
