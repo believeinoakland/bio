@@ -1533,12 +1533,13 @@ export function progressionsOf(host, deps) {
                            events: d.events || (() => EVENTS.eventsOf(host)),
                            standards: d.standards || (() => STANDARDS.standardsOf(host, { record })),
                            zoneOf: d.zoneOf || (() => governingZone(localFactsOf(host, { record }))) });
-    instances.set(host, p);
-    /* R42: every table declared explicitly, with its classes; a refusal is a defect of the wiring and throws */
+    /* R42: every table declared explicitly, with its classes; a refusal is a defect of the wiring and throws. The
+       instance is held only once declared, so a later call never answers one whose tables were refused. */
     const declared = record.declareTable("progressions", PROGRESSIONS_TABLES);
     if (declared && declared.ok === false)
       throw new Error(`progressions: record-core refused its tables: ${declared.reason} ${declared.table || ""}`.trim());
     registerFigures(p);
+    instances.set(host, p);
   }
   made.add(p);
   return p;

@@ -1,3 +1,34 @@
 # progressions (T37)
 
 **Status** · session_01Q8jnptX8F9t9Vmj1SzQSsy · depth 2 · WORKING · handled B1
+
+## Completion
+
+**Entries applied.** T37-12 (test only; K2090, N752): `order.test.mjs` (R41) no longer pins a literal layer 5. It reads layers 5 and 5–8 from `build/modules.json`, as membership's R83 test does, and checks each is one run of `MODULE_ORDER` in the file's order, so red 4 clears (law-relations is now in the run) and a module added to a layer never stales it.
+
+**Fixes in my own module, found during the job.**
+- `instance.test.mjs` (R33) pinned the literal call order `bias, intent, scheduler`, the same staleness as red 4. It now reads that order from `MODULE_ORDER`, checks the three are in it and the two stand-ins are not, and still requires the out-of-order modules last, in registration order.
+- `progressionsOf` (`src/progressions/index.mjs`) cached the instance before `declareTable` and `registerFigures`. When record-core refused the tables, the first call threw, but a later call on the same host got an instance whose tables were never declared (R42). It now caches the instance only after both succeed. New test `dispose.test.mjs` "R42: a host whose record refuses the tables gets no instance…" fails without the fix (8/1) and passes with it. The success path is unchanged and no service changed.
+
+**Reading (mechanics §17).** I measured the set at about 316 KB: own requirements 26 KB, the Purposes of the 14 used modules 8 KB, code and tests 282 KB, plus the used services. That is over 300 KB, so I followed START's (3).
+- Read whole myself: `build/requirements/progressions.md`; layer 5's row of `build/layers.md`; `order.test.mjs`; `fixture.mjs`; membership's R83 and its `module-order.test.mjs`; `progressionsOf` (index.mjs 1520–1545); R33's test (instance.test.mjs 225–260); R42's test (dispose.test.mjs 1–20, 210–233).
+- Two workers read the rest in full, `src/progressions/*` (2,113 lines) and the other 12 test files (2,033 lines). Their summaries are about 1,400 and 1,500 words, and every statement cites file and line.
+- What the summaries left out did not matter: the code orders listeners only through `MODULE_ORDER.indexOf` (index.mjs:945), reads `modules.json` nowhere, and has no listener order but R33's slot.
+
+**Deferred.** These are flaws the src summary reported in my module, outside a test-only entry, left as they are:
+- `threadInstance` runs a whole-store `overdueScan` on each thread when a listener is registered (index.mjs:891). It also uses the write clock rather than the configured `nowMs` for `nextDeadline`, which R33 states at the thread's instant, so that part is as specified.
+- Listeners are awaited one after another, so one that never settles delays the answer (893). R33 covers only throws and rejections. This one is a design question for BOB.
+- The `zoneOf` doc comment (38–39) names the wrong default.
+
+**Other modules.** Nothing found.
+
+**Tests and checks.**
+- progressions: `tests 62, pass 62, fail 0`.
+- Tests of the modules that import progressions (affordances, calculations, control-plane, inquiry, intent, money-checks, plane, queue, queue-producers, store-door): 1,104 pass, 32 fail. The same 32 fail with my change stashed (65 identical `✖` lines before and after), so none is mine: affordances fails 29, plane 3, every other module 0.
+- Layer tests: none named in `build/manifest.md`.
+- format: `136 modules, 135 requirements files; 0 failures`.
+- architecture: `16 product files, 66 relative imports …; 0 failures`.
+- coverage: `42 of 42 live requirement ids named by a test; 0 failures`.
+- ownership: `0 failures`, re-run after commit below.
+
+Size (session_01Q8jnptX8F9t9Vmj1SzQSsy): test runs 20, module lines 2114

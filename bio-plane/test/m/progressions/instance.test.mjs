@@ -4,7 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, MEMBER, BOB } from "./fixture.mjs";
 import { noSuchEntity } from "../../../src/entities/index.mjs";
-import { listenerRefusal } from "../../../src/membership/index.mjs";
+import { listenerRefusal, MODULE_ORDER } from "../../../src/membership/index.mjs";
 
 const T = (w, placements, extra = {}) =>
   w.p.threadInstance({ progressionKey: "proc", entityId: "ENT-1", placements, threadedBy: "member:alice", viewer: MEMBER, ...extra });
@@ -229,7 +229,8 @@ test("R33: listeners registered once through membership's refusal, told after ea
   w.define();
   const told = [];
   const fn = (name) => (e) => { told.push([name, e]); };
-  // registered out of order: told in MODULE_ORDER (scheduler is layer 10, intent layer 7, bias layer 5)
+  // registered out of order: told in MODULE_ORDER (scheduler is layer 10, intent layer 7, bias layer 5), read from the list
+  // itself so a module added to it never stales this test (T37-12's pattern)
   assert.deepEqual(w.p.onThreaded("scheduler", fn("scheduler")), { ok: true, module: "scheduler" });
   // a second registration by the same module, or a malformed one, is membership's one answer (its R81), never a throw
   const g = () => {};
@@ -249,7 +250,11 @@ test("R33: listeners registered once through membership's refusal, told after ea
   const r = await T(w, [{ stage: "need", captureSha: "sa" }]);
   assert.equal(r.ok, true);
   assert.equal(r.thread_version, 1);
-  assert.deepEqual(told.map((t) => t[0]), ["bias", "intent", "scheduler", "zz-later", "aa-last"]);
+  const known = ["scheduler", "intent", "bias"];
+  for (const m of known) assert.ok(MODULE_ORDER.includes(m), `${m} is in the total order`);
+  for (const m of ["zz-later", "aa-last"]) assert.ok(!MODULE_ORDER.includes(m), `${m} is outside it`);
+  const inOrder = [...known].sort((a, b) => MODULE_ORDER.indexOf(a) - MODULE_ORDER.indexOf(b));
+  assert.deepEqual(told.map((t) => t[0]), [...inOrder, "zz-later", "aa-last"]);
   for (const [, e] of told)
     assert.deepEqual(e, { progressionKey: "proc", entityId: "ENT-1", nextDeadline: Date.parse("2026-10-02T04:00:00.000Z") });   // 2026-10-01 ends in the zone
   // written despite the throwing and rejecting listeners, and the answer is the thread's own

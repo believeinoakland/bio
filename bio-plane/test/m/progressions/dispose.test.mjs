@@ -1,9 +1,10 @@
 /* Decisions: disposeProposal (R20–R22), and purge (R29). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { seeded, MEMBER } from "./fixture.mjs";
-import { PROGRESSION_CHECKS, GENERIC_CODES, DISPOSITIONS, PROGRESSIONS_TABLES, notADisposition } from "../../../src/progressions/index.mjs";
+import { seeded, storage, MEMBER } from "./fixture.mjs";
+import { PROGRESSION_CHECKS, GENERIC_CODES, DISPOSITIONS, PROGRESSIONS_TABLES, notADisposition, progressionsOf } from "../../../src/progressions/index.mjs";
 import * as PROGRESSIONS_CHECKS_MODULE from "../../../src/progressions/checks.mjs";
+import { recordOf } from "../../../src/record-core/index.mjs";
 import { DISPOSITIONS as PROMOTION_DISPOSITIONS, REOPENABLE_FROM } from "../../../src/promotion/index.mjs";
 
 const X = (w, b = {}) => w.p.disposeProposal({ key: "proc::award", to: "deferred", reason: "later", definitionVersion: 1,
@@ -230,4 +231,13 @@ test("R42 R29: every table declared explicitly through record-core's declareTabl
   // the definitions and decisions are keyed to no bundle (a bundle's purge leaves them, R29's test above)
   for (const t of PROGRESSIONS_TABLES) assert.equal(t.keys === undefined, ["progression_instances", "progression_exceptions",
     "progression_thread_placements", "progression_exception_versions"].includes(t.name), t.name);
+});
+
+test("R42: a host whose record refuses the tables gets no instance, on the first call or any later one", () => {
+  const host = { storage: storage() };
+  const record = recordOf(host, { evidence: null, evidencePrefix: "bio/captures/" });
+  // another module holds one of progressions' tables, so record-core refuses this module's declaration
+  assert.equal(record.declareTable("intruder", [PROGRESSIONS_TABLES[0]]).ok, true);
+  const deps = { record, extraction: {}, provenance: {}, entities: {}, events: {}, standards: {}, zoneOf: () => "UTC" };
+  for (let i = 0; i < 2; i++) assert.throws(() => progressionsOf(host, deps), /record-core refused its tables/, `call ${i + 1}`);
 });
