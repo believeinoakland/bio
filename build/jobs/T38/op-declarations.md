@@ -49,3 +49,17 @@ Rule 6 items 15 and 18, my shares:
 - `checks/ownership.mjs . op-declarations tranche/T38`: 5 files; 0 failures.
 
 Size (session_0155C7iEVSHTFRejHaePSxwy): test runs 9, module lines 3283
+
+## J1 · COMPLETE
+
+T38-15 done. `obscuremarkwithdraw` is declared in case-carriage's family (R40): a session's only, mutating, `contribute`, `by` from the query, body fields `captureSha`, `mark` and `reason`. R21 reads PR #15's registry. The comment at `index.mjs`:413 now names `MACHINE_CANNOT_MARK_PHOTO`.
+
+Rule 6 items 15 and 18 (my shares) are green: t37:175, t34, t33:210 and t37:125. One correction to CASE-CARRIAGE #5's J2: t37:125 never pinned a code; only the comment did.
+
+Tests: 116 pass, 1 fail. The fail is t36's R34 partition: `obscuremarkwithdraw` has no text in `ACT_HELP` until affordances' T38-31 merges (it merges before me, K2300). R34 needs no QUESTION to UX-DESIGN: PR #15 explains the op, and it is the only gap.
+
+Found:
+- control-plane's `totality.test.mjs` R2/R41 is red without op-grades' grade. I merged it with op-grades' branch in a scratch worktree: 192 pass, 0 fail.
+- Affordances' 29 reds are unchanged by my change.
+
+Checks: format, architecture, coverage (40/40) and ownership, each 0 failures. Detail is in my record.
