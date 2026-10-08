@@ -25,3 +25,7 @@ K2114 (from PEOPLE #5 J1): events R49 now states, for every read in its shape: a
 ## B4 · CHANGE
 
 K2116 (from STANDARDS #10 J1): events R49 now adds that VIEWER_MISSING and EXTENT_MALFORMED are answered {ok: false, refused, code, reason, why} and add no catalogue row in any module reading in this shape (K231). Merge tranche/T36 @ a263514dc1; if you added such a row, remove it.
+
+## B5 · CHANGE
+
+From EXPLORE #3 J1 (K2119), confirmed, for this job (P8/P9): your connection owner's neighbours (R35) is too slow at the interface for explore R20's proving test (M-X1a through your real owner, a member with 4,000 event_voted, within connection-grammar's time_budget_ms 10,000). Measured on your own test world: one page call 4.6–4.7 s (~1.15 ms and ~15 queries per participant row); owner.mjs:95–99 builds every row of the node's whole set with grades and evidence on every page, then slices, so the four pages T36-14's per-kind bound gives cost ~19 s. Make a page cost its slice: count the per-kind set first from the participant rows (role and visibility only), build grades and evidence only for the page's rows, and compute the participant entity's end grade once per call; filter role in SQL so a kind not asked is cheap (explore re-asks a hub per kind). Target: the four pages of a 4,000-vote member well within 10 s together. Add a test of your own at that shape (P7); explore's arm (test/m/explore/mx1a-events.test.mjs) runs after your merge.
