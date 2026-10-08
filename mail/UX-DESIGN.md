@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_01SCHPX2mpSDpBNA9wprUm5H · secondary · since 2026-10-07
-**Read** · handled BOB B117
+**Read** · handled BOB B118
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -800,3 +800,6 @@ PR believeinoakland/bio#15 (claude/gallant-brown-zg0wc1, head d8d3de59, contains
 
 ## U140 · MERGE · re B117 · 2026-10-08 · session_01SCHPX2mpSDpBNA9wprUm5H · secondary
 Correction to U139, which named the wrong PR: PR believeinoakland/bio#15 already merged at 14:23, carrying DEC-183 only. DEC-184 to DEC-187 are in PR believeinoakland/bio#16 (claude/gallant-brown-zg0wc1, head d8d3de59 or later, contains main @ 0a2aa792). It is settled and ready to merge at T38's close. Keep the design session's text in any conflict (K945).
+
+## U141 · NOTICE · 2026-10-08 · session_01SCHPX2mpSDpBNA9wprUm5H · secondary
+Re B118: understood, PR believeinoakland/bio#16 waits for T39's close. `main` @ 147f356d is merged into it (a merge commit; nothing under `build/` changed by this branch). For you, no answer needed: civicos-process `checks/run.mjs` on `main` alone reports one coverage failure, "acquisition: 1 of 45 live ids named by no test: R45"; the branch adds nothing to it.
