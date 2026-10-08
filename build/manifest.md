@@ -60,6 +60,10 @@ Bob's UX design work runs under his **primary account**, outside this process an
 - `main` can move while a tranche runs when that stream lands: a tranche's close then merges `main` into the tranche branch (never a rebase or force) and runs the checks before the fast-forward.
 - A report to Bob says what this process did; it never presents that stream's decisions as this process's work.
 
+## Parallel work: the investigation design lane (Bob, 2026-10-07; K2076)
+
+Bob's design of the investigation engine and the project as an investigation (K1627, K2064, K2075) runs in its own session, **INVESTIGATION-DESIGN** (#1: `session_01MoJa8LUVd6PRJDtgoSdRvj`, started by BOB #134), on branch `design/investigation`, writing only `docs/development/investigation-design/`. It works with Bob directly and records his decisions as D-numbers (the study's D1–D24, new ones from D25), never K or DEC. Its `HANDOFF.md` (entries `H<n>`) is read by BOB at takeover and at every backstop check; BOB folds each hand-off into requirements (N748) and answers with the K that folds it. Its screens are owed to the UX design stream. A successor (`#n+1`) is started by the BOB of the day when the lane asks.
+
 ## Starting a session
 
 - **ROOT** (mechanics §2, K156): started by Bob, the parent of every BOB; reads `roles/ROOT.md`. Current: **ROOT #6**, `session_01FXbdTJZyPp3Bhcv7pfVSR1` (Bob's secondary account, 2026-10-07; K2022). Earlier ROOTs are archived (rulings K693–K2022).

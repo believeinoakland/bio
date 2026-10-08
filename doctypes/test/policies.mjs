@@ -6,6 +6,10 @@ import fs from "node:fs";
 
 export const POLICIES = JSON.parse(fs.readFileSync(new URL("./fixtures/policies.json", import.meta.url), "utf8"));
 export const ANSWERS = JSON.parse(fs.readFileSync(new URL("./fixtures/policies-answers.json", import.meta.url), "utf8")).answers;
+/* R35's out-of-sample set (T36-4): 24 more policies of the same issuers and series, none among the 50, captured by
+   `capture-policies.mjs` as the 50 were, and the member's answers, written before the reader was run on them. */
+export const FRESH = JSON.parse(fs.readFileSync(new URL("./fixtures/policies-fresh.json", import.meta.url), "utf8"));
+export const FRESH_ANSWERS = JSON.parse(fs.readFileSync(new URL("./fixtures/policies-fresh-answers.json", import.meta.url), "utf8")).answers;
 
 const p = (re, flags) => (flags ? { re, flags } : { re });
 const label = (field, re, flags) => ({ field, pattern: p(re, flags), basis: "MEASURED: doctypes R35, the 50 captured policies, 2026-10-07" });

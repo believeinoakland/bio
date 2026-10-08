@@ -26,7 +26,9 @@ test("R16 pure: every service runs with no clock, no network and no store, and h
 
 test("R17 nothing offers a measure of how connected a node is, a centrality, or a score across kinds", () => {
   for (const name of Object.keys(cg)) assert.doesNotMatch(name, /degree|central|score|rank|count|popular|connected/i, name);
-  assert.deepEqual(Object.keys(cg.BOUNDS).sort(), ["depth_default", "depth_max", "fanout", "hub", "nodes", "time_budget_ms"]);
+  assert.deepEqual(Object.keys(cg.BOUNDS).sort(), ["depth_default", "depth_max", "fanout", "hub", "hub_by_kind", "nodes", "time_budget_ms"]);
+  // The per-kind hub bound limits work on one kind's set; no bound mixes kinds or ranks nodes.
+  assert.ok(Object.values(cg.BOUNDS.hub_by_kind).every((n) => Number.isInteger(n) && n > 0));
   assert.deepEqual(cg.CLASSES, ["evidentiary", "derived", "declared", "hunch"]);
   const r = cg.createRegistry();
   for (const w of ["most connected", "centrality", "influence score", "network hub", "knows"]) {

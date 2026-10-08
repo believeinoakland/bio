@@ -31,6 +31,7 @@
 ## 3. Standing doctrine and policy (not yet in requirements)
 
 - Bob's construct rulings live in canon: the Capability Ladders (§2 cross-cutting rulings, §6B–§6C, §10 doctrine), Intake Doctrine §3 (ZIP), Assistant and AI Roles §3 rule 11. Apply them from there; do not re-ask. (K1432, K1472, K1500, K1742, K1852, K1944)
+- The investigation engine's design runs in the INVESTIGATION-DESIGN lane (manifest; K2076): read its `HANDOFF.md` on `design/investigation` at takeover and each backstop check, fold each hand-off into requirements (N748) and answer with a K.
 - Substrate first: each stage publishes its services (ops, reads, refusals, vocabularies) for the design stream; a member screen is never a precondition of a substrate stage. (K1430)
 - The assistant may search and read any public site to plan research, but nothing it reads enters the record: the substrate's capture fetches whatever does. (K1880)
 - No credential (session token, secret, grant) ever travels in a URL; DEC-2, the root of trust, is not reopened. (K1874)

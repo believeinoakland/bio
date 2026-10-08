@@ -3,7 +3,7 @@
    `neighbours` and the conformance battery (R9) judge every answer by the same rules. Sight (R7) depends on the
    owner's own visibility, so only the battery, over the owner's fixture, can check it. */
 import { validAt } from '../civil-time/index.mjs';
-import { BOUNDS } from './bounds.mjs';
+import { BOUNDS, hubBoundOf } from './bounds.mjs';
 import { connectionErrors } from './shape.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -33,13 +33,18 @@ export function answerFailures(answer, ctx) {
     }
   }
   if (items.length > BOUNDS.fanout) fail('fanout', `a page holds at most ${BOUNDS.fanout} items; this one holds ${items.length}`);
+  const asked = Array.isArray(ctx.kinds) ? ctx.kinds : null;
   if (answer.hub !== undefined) {
+    // R6, R10: a hub is a node whose set of one kind exceeds that kind's bound. The answer names no kind, so its set
+    // must exceed the least bound of the owner's kinds that were asked.
     const h = answer.hub;
+    const mine = ctx.ownKinds.filter((k) => !asked || asked.includes(k));
+    const pool = mine.length ? mine : ctx.ownKinds;
+    const bound = pool.length ? Math.min(...pool.map(hubBoundOf)) : BOUNDS.hub;
     if (!isObj(h) || !Number.isInteger(h.set_size) || !filled(h.why)) fail('hub', 'a hub is answered {set_size, why}');
-    else if (h.set_size <= BOUNDS.hub) fail('hub', `a hub's set exceeds ${BOUNDS.hub}; ${h.set_size} does not`);
+    else if (h.set_size <= bound) fail('hub', `a hub's set of one kind exceeds that kind's bound, here at least ${bound}; ${h.set_size} does not`);
     if (items.length) fail('hub', 'a hub is answered with no items, never a partial set shown as whole');
   }
-  const asked = Array.isArray(ctx.kinds) ? ctx.kinds : null;
   const seen = new Set();
   for (const item of items) {
     const name = isObj(item) && filled(item.id) ? item.id : '(an item without an id)';

@@ -1,0 +1,65 @@
+{
+  "$schema": "../bio-plane/node_modules/wrangler/config-schema.json",
+  "name": "file-scanner",
+
+  // PINNED: the repository decides the account, never the machine's wrangler session (CLAUDE.md).
+  "account_id": "20b533579290b9b93168345edd3b7f72",
+
+  // R10: the committed bundle of src/worker.mjs deploys (built by `npm run build`, guarded by bundler R24).
+  "main": "dist/file-scanner.bundled.mjs",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // The release's version site (bundler R12), as every member's.
+  "vars": { "VERSION": "0.79.0" },
+
+  // Reachable only through the plane's FILE_SCANNER service binding: no public address of its own.
+  "workers_dev": false,
+  "preview_urls": false,
+
+  // The Worker's own limits, stated in its bundle too (src/limits.mjs; installer R39): the paid plan's CPU ceiling,
+  // which the mirror's streaming and a batch's reads stay within.
+  "limits": { "cpu_ms": 300000 },
+
+  // R6: the daily mirror run.
+  "triggers": { "crons": ["17 4 * * *"] },
+
+  // The group's bucket: captures are read (never written, R11); the mirror and reputation lists are written under
+  // clamav/ and reputation/. The installer names the group's bucket here.
+  "r2_buckets": [
+    { "binding": "CAPTURES", "bucket_name": "bio-captures" }
+  ],
+
+  // R10: the two containers. Each image is named only as <repository>@sha256:<64 hex>; the release writes each digest
+  // here and into fleet-member.json's classes when it publishes the images. Until then they read UNPUBLISHED, and
+  // bundler's deploy refuses the member. Neither container has internet (src/worker.mjs, enableInternet false; R12).
+  "containers": [
+    {
+      "class_name": "FileScanner",
+      "image": "ghcr.io/believeinoakland/file-scanner-scanner@sha256:UNPUBLISHED",
+      "instance_type": "standard-1",
+      "max_instances": 3
+    },
+    {
+      "class_name": "SafeViewRenderer",
+      "image": "ghcr.io/believeinoakland/file-scanner-renderer@sha256:UNPUBLISHED",
+      "instance_type": "standard-1",
+      "max_instances": 3
+    }
+  ],
+
+  "durable_objects": {
+    "bindings": [
+      { "name": "SCANNER", "class_name": "FileScanner" },
+      { "name": "RENDERER", "class_name": "SafeViewRenderer" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["FileScanner", "SafeViewRenderer"] }
+  ],
+
+  // SECURITY_VPC (a Workers VPC binding) is absent by default; the installer adds it for a tool whose descriptor
+  // states reach "tunnel" (R10, R21).
+
+  "observability": { "enabled": true }
+}
