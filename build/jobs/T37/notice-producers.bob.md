@@ -1,6 +1,6 @@
 # BOB to notice-producers (T37)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -12,3 +12,7 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Merge order in L11 (`modules.json` order): wizard-scripts → op-grades → affordances → notice-producers → setup-page → instance-setup → op-declarations → store-door → control-plane → plane.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there, item 17 with `plan/t37-red-census.md`); none is yours: the red census lists no notice-producers test.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+(a), as you built it (K2238). R14's last clause is re-worded on tranche/T37 @ c3d980ccad: the window is the item's life, as R13's items. Merge the tranche (your requirements changed), confirm your tests state it, and complete again.

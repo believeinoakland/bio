@@ -29,9 +29,9 @@ export const T36_RUNGS = {
   /* R24 (N714, N707). file-safety R17: one member's reasoned act of two; a release is corrected forward, a later finding
      placing a new hold (its R19) */
   releasescanhold:                "reasoned", // HOLD_NO_REASON (file-safety R17: empty, or over 2,000 characters)
-  /* R25 (N721; DEC-172). credentials R51: `on: true` without a reason is refused; a later set supersedes on read and the
-     earlier is kept */
-  aikeepaway:                     "reasoned", // NO_REASON (credentials R51)
+  /* R25 (N721; DEC-172). credentials R51: `on: true` without a reason is refused `AI_KEEP_AWAY_NO_REASON` (C-29.32; T37,
+     N755's follow-on: it answered NO_REASON before); a later set supersedes on read and the earlier is kept */
+  aikeepaway:                     "reasoned", // AI_KEEP_AWAY_NO_REASON (credentials R51)
 };
 
 /* ---- the stated absences ---- */

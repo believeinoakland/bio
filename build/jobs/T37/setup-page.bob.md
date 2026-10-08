@@ -1,6 +1,6 @@
 # BOB to setup-page (T37)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -13,3 +13,7 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Merge order in L11 (`modules.json` order): wizard-scripts → op-grades → affordances → notice-producers → setup-page → instance-setup → op-declarations → store-door → control-plane → plane.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there, item 17 with `plan/t37-red-census.md`). Yours, cleared by your merge: red 17's setup-page rows 59–63 (`worker-page.test.mjs`). No other is yours.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+The letter, as you build it (K2239): templates are offered 'Add this tool' with their fields asked by label and file-safety's refusal stated in its words. REPORT the gap (a template's list naming host, structured engine_family/handling values, a digest for a stated handling); it goes to next.md for file-scanner/file-safety.
