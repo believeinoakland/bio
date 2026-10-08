@@ -14,6 +14,7 @@ export default {
       const target="https://biosmoke7.believeinoakland.workers.dev"+p+url.search;
       const init={method:req.method,headers:{}};
       const ct=req.headers.get("content-type"); if(ct) init.headers["content-type"]=ct;
+      const au=req.headers.get("authorization"); if(au) init.headers["authorization"]=au;  // T36-38: the session rides this header (F1)
       if(req.method!=="GET"&&req.method!=="HEAD") init.body=await req.arrayBuffer();
       const r=await env.PLANE.fetch(new Request(target, init)); const buf=await r.arrayBuffer();
       const h=new Headers(); h.set("content-type", r.headers.get("content-type")||"application/json");
