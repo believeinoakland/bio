@@ -435,8 +435,11 @@ test("R43 bindsAt: binds when the body issued it, adopted it, an incorporating s
   assert.equal(w.s.adoptionRecord({ standard: std, act, edition: "2020", from: "2024-01-01", mode: "by_reference", citation: at, reason: REASON,
                                    author: V("bob") }).ok, true);
   assert.equal(w.s.bindsAt({ standard: std, body: body, date: "2023-06-01" }).state, "benchmark");
-  /* the adopting body is the act's issuer (an entity id here) */
-  assert.equal(w.s.bindsAt({ standard: std, body, date: "2024-06-01" }).state, "binds");
+  /* the adopting body is the act's issuer (an entity id here); the adopted version states no end and nothing records it
+     in force through the date, so whether it binds is undetermined, never binding by default (R20, R51; T37-35) */
+  const adopted = w.s.bindsAt({ standard: std, body, date: "2024-06-01" });
+  assert.equal(adopted.state, "undetermined");
+  assert.ok(adopted.rests_on.some((x) => x.adoption), "names the adoption it rests on");
   /* an imposition by a held law binds from the law's own in-force date */
   for (const [args, code] of [[{ author: MACHINE }, "MACHINE_CANNOT_RELATE"], [{ standard: "STD-2026-9999-x" }, "NO_SUCH_STANDARD"],
                               [{ law: "STD-2026-9999-x" }, "NO_SUCH_STANDARD"], [{ body: "ENT-2026-9999" }, "NO_SUCH_ENTITY"],

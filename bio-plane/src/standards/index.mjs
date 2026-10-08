@@ -1763,7 +1763,7 @@ export class Standards {
     if (!amendments) return refuseFieldInvalid("amendments", "is a list of portion paths of the adopting act");
     const fault = reasonFault(a.reason);
     if (fault) return refuseReason(fault);
-    const body = actRow ? actRow.issuer_entity ?? actRow.issuer : null;
+    const body = actRow ? actRow.issuer_entity ?? actRow.issuer : this.#eventBody(act, viewer);
     return this.record.transact(() => {
       const at = this.#when();
       const id = `adopt-${rand(12)}`;
@@ -1773,6 +1773,20 @@ export class Standards {
                     a.reason, str(a.author), at);
       return { ok: true, adoption: this.#adoptionAnswer(this.#one(`SELECT * FROM standard_body_adoptions WHERE adoption_id=?`, id)) };
     });
+  }
+
+  /* R40: the body that adopted through an event (an act of the body held as an event, `events` R26): the one entity the
+     event concerns or has as its decider, the body of a meeting being what the meeting concerns (`events` R22); none,
+     or two, answers null and the adoption names no body, never one guessed. */
+  #eventBody(eventId, viewer) {
+    let r = null;
+    try { r = this.events && typeof this.events.readEvent === "function" ? this.events.readEvent({ eventId, viewer: viewer ?? INTERNAL_READER }) : null; }
+    catch { r = null; }
+    const ev = r && r.ok !== false && r.found !== false ? r.event : null;
+    if (!ev) return null;
+    const ids = new Set([...(ev.concerns || []).filter((x) => typeof x === "string" && !/^EVT-/.test(x)),
+                         ...(ev.participants || []).filter((x) => x.role === "decider" && !x.superseded).map((x) => x.entity_id)]);
+    return ids.size === 1 ? [...ids][0] : null;
   }
 
   #adoptionAnswer(r) {
@@ -1923,19 +1937,32 @@ export class Standards {
       if (inForce.state === "in_force") return { state: "binds", why: `${body} issued it, and it is in force on ${date}`, rests_on: rests };
       if (inForce.state === "undetermined") unsure.push(`it is ${body}'s own, and ${inForce.why}`);
     }
+    /* an adoption by the body puts it in force (R40) only while this version is itself in force on the date (R20, R51):
+       adopted, then ended, binds no longer; adopted with no end stated and no record of it in force through the date
+       is undetermined, never binding by default */
+    let started = null;
     for (const ad of this.#rows(`SELECT * FROM standard_body_adoptions WHERE standard_id=? AND body=? ORDER BY adoption_id`, sid, body)) {
       const f = this.#adoptionFrom(ad, viewer);
       rests.push({ adoption: ad.adoption_id });
       if (!f.day) { unsure.push(`${ad.adoption_id}'s start is not read: ${f.why}`); continue; }
-      if (f.day <= date) return { state: "binds", why: `${body} adopted it (${ad.adoption_id}), effective ${f.day}`, rests_on: rests };
+      if (f.day <= date && (!started || f.day < started.day)) started = { ad, day: f.day };
+    }
+    if (started) {
+      const by = `${body} adopted it (${started.ad.adoption_id}), effective ${started.day}`;
+      if (inForce.state === "in_force") return { state: "binds", why: `${by}, and it is in force on ${date} (${inForce.why})`, rests_on: rests };
+      if (inForce.state === "undetermined") unsure.push(`${by}, and ${inForce.why}`);
     }
     for (const im of this.#rows(`SELECT * FROM standard_impositions WHERE standard_id=? AND body=? ORDER BY imposition_id`, sid, body)) {
       const law = this.#row(im.law);
       if (!law) continue;
       rests.push({ imposition: im.imposition_id, law: im.law });
       const lf = this.#versionAt(law, date, viewer);
-      if (lf.state === "in_force") return { state: "binds", why: `${im.law} imposes it on ${body} and is in force on ${date}`, rests_on: rests };
+      /* the imposing law binds from its own in-force date (R20), and puts in force only a version itself in force (R43) */
+      if (lf.state === "in_force" && inForce.state === "in_force")
+        return { state: "binds", why: `${im.law} imposes it on ${body} and is in force on ${date}, and it is in force on ${date} (${inForce.why})`,
+                 rests_on: rests };
       if (lf.state === "undetermined") unsure.push(`${im.law} imposes it, and ${lf.why}`);
+      else if (lf.state === "in_force" && inForce.state === "undetermined") unsure.push(`${im.law} imposes it, and ${inForce.why}`);
     }
     for (const inc of this.#incorporatedBy(sid, viewer)) {
       if (seen.has(inc.from)) continue;
@@ -1943,8 +1970,12 @@ export class Standards {
       if (!from) continue;
       const r = this.#bindingOf(from, body, date, viewer, seen);
       rests.push({ incorporated_by: inc.from, relation: inc.id });
-      if (r.state === "binds") return { state: "binds", why: `${inc.from} incorporates it and binds ${body} (${r.why})`, rests_on: rests };
+      /* an incorporating standard that binds the body puts in force only a version itself in force (R43, R20) */
+      if (r.state === "binds" && inForce.state === "in_force")
+        return { state: "binds", why: `${inc.from} incorporates it and binds ${body} (${r.why}), and it is in force on ${date} (${inForce.why})`,
+                 rests_on: rests };
       if (r.state === "undetermined") unsure.push(`${inc.from} incorporates it, and ${r.why}`);
+      else if (r.state === "binds" && inForce.state === "undetermined") unsure.push(`${inc.from} incorporates it and binds ${body}, and ${inForce.why}`);
     }
     return unsure.length ? { state: "undetermined", why: unsure.join("; "), rests_on: rests } : { state: "none", why: null, rests_on: rests };
   }
