@@ -32,7 +32,7 @@
     {"id": "pdf-worker", "layer": 1, "paths": ["pdf-worker/"], "tests": ["pdf-worker/test/"], "uses": ["pdf-reader", "bundler", "test-support"]},
     {"id": "ocr-worker", "layer": 1, "paths": ["ocr-worker/"], "tests": ["ocr-worker/test/", "bio-plane/test/ocr-measure-probe.mjs"], "uses": ["record-grammar", "pdf-pixels", "bundler", "text-chain", "test-support", "runtime-limits"]},
     {"id": "sheet-worker", "layer": 1, "paths": ["sheet-worker/"], "tests": ["sheet-worker/test/"], "uses": ["runtime-limits", "bundler", "test-support"]},
-    {"id": "file-scanner", "layer": 1, "paths": [], "tests": [], "uses": ["runtime-limits", "bundler", "test-support"]},
+    {"id": "file-scanner", "layer": 1, "paths": ["file-scanner/"], "tests": ["file-scanner/test/"], "uses": ["runtime-limits", "bundler", "test-support"]},
     {"id": "record-core", "layer": 2, "paths": ["bio-plane/src/record-core/"], "tests": ["bio-plane/test/m/record-core/", "bio-plane/test/stats-disclosure.test.mjs"], "uses": ["record-grammar", "id-spaces", "test-support"]},
     {"id": "membership", "layer": 2, "paths": ["bio-plane/src/membership/"], "tests": ["bio-plane/test/m/membership/", "bio-plane/test/members.test.mjs"], "uses": ["record-grammar", "signatures", "record-core", "test-support"]},
     {"id": "credentials", "layer": 2, "paths": ["bio-plane/src/credentials/"], "tests": ["bio-plane/test/m/credentials/"], "uses": ["record-grammar", "record-core", "membership"]},
