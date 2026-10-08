@@ -58,3 +58,7 @@ R44's `*(not yet met: T37)*` marker is BOB's to lift (a requirements file).
 - P6: 2,954 lines (`src/acquisition/*.mjs`).
 
 Size (session_01G5k1CQoyCMyhGevtvZwFkg): test runs 14, module lines 2,954
+
+## J1 · COMPLETE
+
+T37-37 applied: R44's reputation reader, called once per acquisition and awaited under one REPUTATION_TIMEOUT_MS bound with the lookup; unreadable readers (throw, reject, timeout, undefined or non-spec) are TOOL_UNREADABLE with tool null. New test in reputation.test.mjs names R44. acquisition 153/153; all four checks 0 failures. Users' reds are inherited (identical before my change). Capture's R21 R27 R73 captureOp test, cap13-reuse-pages, d57selflink and plane R6 fail on CREDENTIAL_IN_ADDRESS (red 15's cause) but are not named in rule 6. R44's not-yet-met marker is yours to lift. Record: build/jobs/T37/acquisition.md, 'Completion (T37-37)'.
