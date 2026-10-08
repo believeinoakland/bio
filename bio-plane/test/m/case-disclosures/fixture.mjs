@@ -7,7 +7,8 @@
    is a stand-in the test controls: the run gate `ai-runs` registers with contradiction (its R13; `runs`), and, unless
    a test asks for the real one, `case-import`'s reads (`importsStandIn`); the real one's checker is scripted at
    case-checker's R1 and its re-evaluation listener answered. `case-carriage`'s `photoMarks` (its R10; T37, N757) is a
-   stand-in the test controls (`marksStandIn`): every capture is no photo unless a test marks it one; with `realCarriage`
+   stand-in the test controls (`marksStandIn`): every capture is no photo unless a test marks it one, and (T39, N806) its
+   `documentCopy` (its R16) answers every capture `public` (carried as captured) unless a test states another; with `realCarriage`
    (T38) the real `case-carriage` is composed on this host instead (`w.carriage`), its photo's original read from an
    evidence store stand-in keyed by digest (`w.evidence`), its copy held in a bucket stand-in, and `image-cover`'s
    `coverAreas` a stand-in the test scripts (`w.cover`), so its R10–R14 answer as they do. `people` is handed a stand-in for `duties` (a person's
@@ -256,11 +257,25 @@ export function world({ group = "test-group", deps = {}, realImports = false, re
  *  {state, marks, copy, refused})` makes a capture a photo (unchecked unless stated; `copy` a SHA-256 or null), `answer(sha,
  *  a)` answers `a` for that capture (a refused or malformed read), `read`,
  *  when set, answers in place of the held marks (a failed or a refused read). Every other capture is no photo. `asked`
- *  lists each `{captureSha, viewer}` asked. */
+ *  lists each `{captureSha, viewer}` asked.
+ *  `documentCopy(captureSha)` at its ruled interface (its R16; T39, N806): `document(sha, a)` answers `a` (a state, or
+ *  any answer) for that capture, `copyRead`, when set, answers in place of the held ones; every other capture answers
+ *  `public` and a photo `photo`. `copyAsked` lists each digest asked. */
 export function marksStandIn() {
-  const held = new Map(), answers = new Map();
+  const held = new Map(), answers = new Map(), copies = new Map();
   const s = {
     read: null,
+    copyRead: null,
+    copyAsked: [],
+    document(captureSha, a) {
+      copies.set(captureSha, typeof a === "string" ? { state: a, copy: null, refused: null } : a);
+    },
+    documentCopy(captureSha) {
+      s.copyAsked.push(captureSha);
+      if (s.copyRead) return s.copyRead(captureSha);
+      if (copies.has(captureSha)) return copies.get(captureSha);
+      return { state: held.has(captureSha) ? "photo" : "public", copy: null, refused: null };
+    },
     answer(captureSha, a) { answers.set(captureSha, a); },
     asked: [],
     photo(captureSha, { state = "unchecked", marks = null, copy = null, refused = null } = {}) {

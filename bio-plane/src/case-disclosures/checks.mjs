@@ -16,8 +16,9 @@
  * C-120.9 was withdrawn unstamped (K1275), and its number is never reused. T33 adds a person named without a recorded
  * basis, a basis that stands on nothing, and a signer who has not attested to their ties (R25, R27). T37 adds a marked
  * photo a load-bearing finding relies on whose format cannot be covered, and a photo whose marks could not be read (R6;
- * N757, K2206). T38 adds a photo a case relies on that no standing mark has checked (R6; DEC-183 (1), K2303). A change
- * to any row moves `CATALOG_VERSION` (rule 17). */
+ * N757, K2206). T38 adds a photo a case relies on that no standing mark has checked (R6; DEC-183 (1), K2303). T39 adds
+ * a member document whose publication copy cannot be made, is still being made, or whose state cannot be read (R6;
+ * N806; K2315, K2333). A change to any row moves `CATALOG_VERSION` (rule 17). */
 
 /** R22 (T38; DEC-183; K2220): the protected words of `words.json` (`docs/development/ux-substrate/screens/words.json`)
  *  this module answers, by their keys, each `en` verbatim; `{photo}` is the photo named. The rows' translations and
@@ -26,6 +27,17 @@ export const PHOTO_WORDS = Object.freeze({
   'photo.refused.format': 'This photo\'s format can\'t be obscured: {photo}. Capture it again as an ordinary photo, or '
     + 'stop relying on it.',
   'photo.refused.unchecked': 'Signing waits until every photo the case relies on is checked: {photo}.',
+});
+
+/** R22 (T39; N806; K2333): BOB's drafts of the words `DOCUMENT_NOT_CLEANABLE` and `DOCUMENT_COPY_PENDING` answer, under
+ *  the keys the UX stream is to hold (`document.refused.clean`, `document.refused.pending`), protected, `{document}` the
+ *  document named. Until `words.json` holds the keys, this table holds the drafts; then each is read by key, as
+ *  `PHOTO_WORDS` is. */
+export const DOCUMENT_WORDS = Object.freeze({
+  'document.refused.clean': 'A document a member supplied can\'t be cleaned of the details that could show who made it: '
+    + '{document}. Capture it from where it was published, supply a plainer copy, or stop relying on it.',
+  'document.refused.pending': 'The publication copy of a document a member supplied is still being made: {document}. '
+    + 'Try again in a few minutes.',
 });
 
 const at = (fn, region) => `src/case-disclosures/index.mjs ${fn} > ${region}`;
@@ -152,12 +164,33 @@ export const CASE_DISCLOSURE_CHECKS = Object.freeze({
       + 'what the published case would show of it is not known. Try again. Nothing was written.',
   },
   /* R6 (T38; N788 (1); DEC-183 (1), superseding K2206's "never blocks"; K2220, K2291, K2303): the Photos step is a gate.
-     A photo with no standing mark that any member's chain reaches blocks signing. New in T38, numbered provisionally
-     C-120.19 until promotion's stamp (T39); its translation is `words.json`'s `photo.refused.unchecked`, read by key,
+     A photo with no standing mark that any member's chain reaches blocks signing. New in T38, stamped C-120.19 in
+     1.66.0 (T39-3); its translation is `words.json`'s `photo.refused.unchecked`, read by key,
      protected, `{photo}` the photo named. */
   PHOTO_UNCHECKED: {
     check: 'C-120.19',
     where: at('materialsJudged', 'is-photo-checked'),
     translation: PHOTO_WORDS['photo.refused.unchecked'],
+  },
+  /* R6 (T39; N806; K2315, K2333): a member document (provenance R62 `fetched: false`) travels only as its cleaned copy
+     (`case-carriage` R15, R16). A state that cannot be read fails closed whichever chain reaches it; a copy still being
+     made, or one `doc-clean` refused, is refused when a load-bearing chain reaches it. New in T39, numbered
+     provisionally C-120.20–C-120.22 in R6's order until promotion's stamp; the translations are BOB's drafts, re-wordable
+     by the UX stream (`DOCUMENT_WORDS`, `{document}` the document named). */
+  DOCUMENT_COPY_UNDETERMINED: {
+    check: 'C-120.20',
+    where: at('materialsJudged', 'is-document-copy-determined'),
+    translation: 'A document this case relies on could not be checked for the details a member\'s file can carry, so what '
+      + 'the published case would show of it is not known. Try again. Nothing was written.',
+  },
+  DOCUMENT_COPY_PENDING: {
+    check: 'C-120.21',
+    where: at('materialsJudged', 'is-document-copy-made'),
+    translation: DOCUMENT_WORDS['document.refused.pending'],
+  },
+  DOCUMENT_NOT_CLEANABLE: {
+    check: 'C-120.22',
+    where: at('materialsJudged', 'is-document-cleanable'),
+    translation: DOCUMENT_WORDS['document.refused.clean'],
   },
 });
