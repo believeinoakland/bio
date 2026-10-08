@@ -10,7 +10,7 @@ const KEY = "cl-SENTINEL-key-41";
 const shape = (r) => ({ ok: r.ok, reason: r.reason, code: r.code, check: r.check, translation: r.translation });
 const row = (table, code) => ({ ok: false, reason: code, code, check: table[code].check, translation: table[code].translation });
 
-test("R29 keyedServiceSet and keyedServiceSwitch: active administrators only (NOT_AN_ADMIN); an unknown service; an empty key; each writing nothing", async () => {
+test("R29 keyedServiceSet and keyedServiceSwitch: active administrators only (NOT_AN_ADMIN); an unknown service; an empty key or set; each writing nothing", async () => {
   const w = await world().group("ann", "dee");
   w.m.memberSet({ memberId: "dee", status: "revoked", by: "admin" });
   assert.deepEqual(KEYED_SERVICES, ["courtlistener"]);
@@ -21,12 +21,17 @@ test("R29 keyedServiceSet and keyedServiceSwitch: active administrators only (NO
   for (const by of ["ann", "class:admin", null])
     assert.deepEqual(w.c.keyedServiceSwitch({ service: "courtlistener", on: true, by }),
       notAnAdmin(by, "switching the group's key for an outside service"), String(by));
-  for (const service of [null, "", "lexis", "CourtListener"]) {
+  for (const service of [null, "", "lexis", "CourtListener", "security:", "security:a b", "security:x/y", "Security:t1",
+                         `security:${"t".repeat(121)}`, "securitytool"]) {
     assert.deepEqual(shape(await w.c.keyedServiceSet({ service, key: KEY, by: "second" })), row(KEYED_SERVICE_CHECKS, "UNKNOWN_KEYED_SERVICE"));
     assert.deepEqual(shape(w.c.keyedServiceSwitch({ service, on: true, by: "second" })), row(KEYED_SERVICE_CHECKS, "UNKNOWN_KEYED_SERVICE"));
   }
-  for (const key of [null, "", "  "])
-    assert.deepEqual(shape(await w.c.keyedServiceSet({ service: "courtlistener", key, by: "admin" })), row(KEYED_SERVICE_CHECKS, "KEYED_SERVICE_NO_KEY"));
+  /* a key given but empty: a blank string, an empty set, a set with a blank or non-string value or a bad name, any
+     other value (no key at all, null or left out, removes it: t36.test.mjs) */
+  for (const service of ["courtlistener", "security:t1"])
+    for (const key of ["", "  ", {}, { api_key: "" }, { api_key: " " }, { api_key: 7 }, { "bad name": "x" }, 7, true, [], ["k"]])
+      assert.deepEqual(shape(await w.c.keyedServiceSet({ service, key, by: "admin" })), row(KEYED_SERVICE_CHECKS, "KEYED_SERVICE_NO_KEY"),
+        `${service} ${JSON.stringify(key)}`);
   assert.equal(w.snapshot(), before, "no refusal writes");
   const nosecret = await world({ sealSecret: null }).group();
   assert.deepEqual(shape(await nosecret.c.keyedServiceSet({ service: "courtlistener", key: KEY, by: "admin" })),

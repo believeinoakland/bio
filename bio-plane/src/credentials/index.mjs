@@ -4,9 +4,11 @@
  * or a standing question reads under, the group's own keys for keyed outside services (T33-20); and, from T35 (the
  * security package N680, N703, K1888; K1881, K1934), the sign-in window, sign-out, sessions held as digests, agent
  * credential expiry, a connected subscription as a fact, the count-only security tally with its map and level, and
- * administrators' recovery codes.
+ * administrators' recovery codes; and, from T36 (T36-7; DEC-172, K1946, K2038), each outside security tool's
+ * credentials under R29, the tally's totals for a period, its store-internal route, and the group's setting that keeps
+ * its material away from every assistant.
  *
- * Requirements: build/requirements/credentials.md (R1–R48; R26 retired). Split from `membership` (K617, K636 BOB-1, K637; T19 layer
+ * Requirements: build/requirements/credentials.md (R1–R52; R26 retired). Split from `membership` (K617, K636 BOB-1, K637; T19 layer
  * 2, CREDENTIALS #1): the code is copied from `membership/index.mjs` and `schema.mjs`, without change of meaning, and
  * reads `members` only through membership's services (`memberFacts`, `sessionRights`, `isAdministrator`,
  * `activeAdmins`, `notAnAdmin`), never by SQL. Who the members are, and what each may do, is membership's; this module
@@ -47,8 +49,14 @@ export const AI_GRANT_OPS = Object.freeze([
   "resolutions", "rule", "search", "searchfields", "standard", "standardinforce", "standards", "strengthbarof",
   "structureat", "timeline",
 ]);
-/* R29 (K1449): the keyed outside services the group may hold a key for; CourtListener's lookup first. */
+/* R29 (K1449): the keyed outside services the group may hold a key for, by name: CourtListener's lookup. (T36; K1946
+   T1) Beside them, each outside security tool `file-safety` adds holds its credentials under its own service,
+   `security:<tool_id>` (the tool id 1 to 120 letters, digits, `.`, `_` or `-`). */
 export const KEYED_SERVICES = Object.freeze(["courtlistener"]);
+export const SECURITY_SERVICE_PREFIX = "security:";
+const SECURITY_SERVICE_RE = /^security:[A-Za-z0-9._-]{1,120}$/;
+/* R51 (DEC-172): the keep-away reason's bounds, in characters. */
+export const KEEP_AWAY_REASON = Object.freeze({ min: 1, max: 2000 });
 
 /* R38 (F3; K1881, K1934 (2)): the sign-in window's bounds, BOB's under K1881. Refused attempts are estimated per source
    and per role over any 10 minutes by a two-bucket sliding window (capture R31's form); at `perSource` for the source,
@@ -1180,6 +1188,8 @@ export class Credentials {
   /* R24: unseals the member's reference only for that member's own ask, run or standing question, for the one call it
      serves; the caller keeps nothing (agent-model R8). Kept for its callers until they move to `accountFor` (R35). */
   async accountReferenceFor({ member = null, act = null } = {}) {
+    const away = this.#keptAway();   /* R35 (DEC-172): no assistant while the group keeps its material away */
+    if (away) return away;
     const id = Credentials.#ownAct(member, act);
     if (id === null)
       return Credentials.#notYours("a member's Claude account serves only that member's "
@@ -1200,13 +1210,15 @@ export class Credentials {
     return { ok: true, switch: name, on: on === true };
   }
 
-  /* ===== THE GROUP'S API KEY (R33–R37; K1755, K1757) =====
+  /* ===== THE GROUP'S API KEY (R33–R37; K1755; DEC-172, K1957) =====
    *
-   * Bob's three options: an API key at the group level, a subscription token at the member level (R22–R25), or no AI.
-   * An active administrator sets, switches and removes the group's one Anthropic API key; it is sealed under the copy
-   * (R34), off when first set and off by default, and serves only acts of active members who hold no reference of
-   * their own, once each has read its notice (R35, R36). It carries its own two switches, set by an administrator
-   * (R37). Every act is recorded with its administrator and instant, never the key (R33). */
+   * DEC-172's two separate choices: whether the group pays (its API key, here), and whether it keeps its material
+   * away from every assistant (R51, below); a member may always connect their own account (R22–R25), and K1757's "the
+   * group's key only" no longer exists. An active administrator sets, switches and removes the group's one Anthropic
+   * API key; it is sealed under the copy (R34), off when first set and off by default, and serves only acts of active
+   * members who hold no reference of their own, once each has read its notice (R35, R36). It carries its own two
+   * switches, set by an administrator (R37). Every act is recorded with its administrator and instant, never the key
+   * (R33). */
   static #GROUP_KEY_OWNER = "group-key:anthropic";
 
   #groupKeyRow() {
@@ -1340,10 +1352,14 @@ export class Credentials {
     return g.on ? { level: "group", suggestions: g.suggestions, standing: g.standing } : null;
   }
 
-  /* R35: the account that serves a member's act: their own reference when held, `{kind, level: "member", key}`; else
-     the group key when held and on, `{kind: "apikey", level: "group", key}`, for an active member who has read its
-     notice (R36); else NO_ACCOUNT. `act` as R24's. Writes nothing; called only by the modules that run the assistant. */
+  /* R35: the account that serves a member's act: their own reference when held, `{kind, level: "member", key}`,
+     whatever the group key's state (DEC-172 (1), (5)); else the group key when held and on, `{kind: "apikey", level:
+     "group", key}`, for an active member who has read its notice (R36); else NO_ACCOUNT. While the group keeps its
+     material away (R51), every account is refused AI_KEPT_AWAY first, before any is read. `act` as R24's. Writes
+     nothing; called only by the modules that run the assistant. */
   async accountFor({ member = null, act = null } = {}) {
+    const away = this.#keptAway();
+    if (away) return away;
     const id = Credentials.#ownAct(member, act);
     if (id === null)
       return Credentials.#notYours("a Claude account serves only a member's own asks, runs and standing questions. "
@@ -1364,6 +1380,58 @@ export class Credentials {
       return Credentials.#sealRefusal("the group's key does not open under the seal secret of your group's Civicsmith, "
         + "which has changed; an administrator sets it again. Nothing was used.");
     return { ok: true, kind: "apikey", level: "group", key };
+  }
+
+  /* ===== KEEPING THE GROUP'S MATERIAL AWAY FROM AI (R51, R52; DEC-172, K1957) =====
+   *
+   * DEC-172's second choice, separate from whether the group pays: an active administrator may keep the group's
+   * material away from every assistant, the group's key and members' own accounts alike, and turns it on only with a
+   * reason every member reads, in the administrator's own words. Off by default. Each set is appended with who and
+   * when, never replacing an earlier one; the latest is the setting. While it is on, `accountFor` (R35) refuses every
+   * account before any is read, so no ask, run or standing question reaches a model, and the grants that serve them
+   * (R27, R32) are not minted. */
+
+  /* R52: the latest set, or off before any. Never throws: a setting that cannot be read is answered `on: null`, not
+     known, which R35 reads as kept away (a failure never sends material out). */
+  aiKeepAwayState() {
+    try {
+      const r = this.#one(`SELECT is_on, reason, set_by, set_at FROM ai_keep_away ORDER BY seq DESC LIMIT 1`);
+      return r ? { on: !!r.is_on, reason: r.reason ?? null, set_by: r.set_by, set_at: r.set_at }
+               : { on: false, reason: null, set_by: null, set_at: null };
+    } catch { return { on: null, reason: null, set_by: null, set_at: null }; }
+  }
+
+  /* R51 (`op=aikeepaway`): an active administrator's act. `on: true` needs a reason of 1 to 2,000 characters, not
+     blank; a reason given with `on: false` is kept under the same bounds. Each refusal writes nothing. */
+  aiKeepAwaySet({ on = false, reason = null, by = null } = {}) {
+    const bar = this.#adminBar(by, "keeping the group's material away from every assistant");
+    if (bar) return bar;
+    const turnOn = on === true;
+    const given = typeof reason === "string" && reason.trim() !== "";
+    const length = typeof reason === "string" ? [...reason].length : 0;
+    /* DEC-49 REGION is-keep-away-reason */
+    if ((turnOn && !given) || (given && length > KEEP_AWAY_REASON.max) || (reason !== null && reason !== undefined
+        && typeof reason !== "string"))
+      return Credentials.#row(ACCOUNT_CHECKS, "NO_REASON", `keeping the group's material away from every assistant is `
+        + `turned on only with a reason of ${KEEP_AWAY_REASON.min} to ${KEEP_AWAY_REASON.max} characters, which every `
+        + `member reads${given ? `; this one has ${length}` : ""}. Nothing was changed.`);
+    /* END DEC-49 REGION is-keep-away-reason */
+    this.sql.exec(`INSERT INTO ai_keep_away (is_on, reason, set_by, set_at) VALUES (?,?,?,?)`, turnOn ? 1 : 0,
+      given ? reason : null, Credentials.#memberOf(by), stampSecond());
+    return { ok: true, ...this.aiKeepAwayState() };
+  }
+
+  /* R35, R27, R32: AI_KEPT_AWAY, minted here alone, carrying R52's reason, who and when as `keep_away` (the answer's
+     own `reason` is its code); null while the setting is off. */
+  #keptAway() {
+    const st = this.aiKeepAwayState();
+    if (st.on === false) return null;
+    /* DEC-49 REGION is-kept-away */
+    return Credentials.#row(ACCOUNT_CHECKS, "AI_KEPT_AWAY", st.on === true
+      ? "the group keeps its material away from every assistant, so no account was read or used. Nothing was sent."
+      : "whether the group keeps its material away from every assistant could not be read, so no account was read or "
+        + "used. Nothing was sent.", { keep_away: { reason: st.reason, set_by: st.set_by, set_at: st.set_at } });
+    /* END DEC-49 REGION is-kept-away */
   }
 
   /* ===== THE ASK GRANT (R27, R28, R31, R32; Q1-3, K1450, K1505 (14), K1609, K1685) =====
@@ -1391,6 +1459,8 @@ export class Credentials {
   async aiGrantMint({ member = null, by = null, session = null } = {}) {
     const bar = this.#accountBar(member, by);
     if (bar) return bar;
+    const away = this.#keptAway();   /* R27 mints only for a member R35 serves: none while kept away (DEC-172) */
+    if (away) return away;
     const id = Credentials.#memberOf(member);
     const sessionSha = typeof session === "string" && session !== "" ? Credentials.#tokenSha(session) : null;
     const s = sessionSha ? this.#one(`SELECT role, expires FROM sessions WHERE token_sha=?`, sessionSha) : null;
@@ -1413,6 +1483,8 @@ export class Credentials {
     if (id === null || isMachineIdentity(member) || this.#memberFacts(id)?.status !== "active")
       return refuse("ACCOUNT_MEMBER_NOT_ACTIVE", "a standing question runs only for an active member. Nothing was "
         + "minted.");
+    const away = this.#keptAway();   /* R32 mints only for a member R35 serves: none while kept away (DEC-172) */
+    if (away) return away;
     const serving = this.#servingAccount(id);
     if (!serving) return this.#noAccount(id);
     /* DEC-49 REGION is-standing-grant */
@@ -1574,6 +1646,15 @@ export class Credentials {
     return null;
   }
 
+  /* R45, R49: SECURITY_PERIOD_INVALID, minted here alone, naming what is wrong (`what`) and the rule (`rule`). */
+  static #periodRefusal(what, rule) {
+    /* DEC-49 REGION is-security-period */
+    const row = SIGN_IN_CHECKS.SECURITY_PERIOD_INVALID;
+    return { ok: false, reason: "SECURITY_PERIOD_INVALID", code: "SECURITY_PERIOD_INVALID", check: row.check,
+             translation: row.translation, what, detail: `${what}. ${rule} Nothing was read.` };
+    /* END DEC-49 REGION is-security-period */
+  }
+
   static #median(values) {
     const v = [...values].sort((a, b) => a - b);
     const m = v.length >> 1;
@@ -1621,15 +1702,8 @@ export class Credentials {
     const now = Date.now();
     const fromMs = Credentials.#instantOf(from), toMs = Credentials.#instantOf(to);
     const fault = Credentials.#periodFault(fromMs, toMs, now);
-    /* DEC-49 REGION is-security-period */
-    if (fault) {
-      const row = SIGN_IN_CHECKS.SECURITY_PERIOD_INVALID;
-      return { ok: false, reason: "SECURITY_PERIOD_INVALID", code: "SECURITY_PERIOD_INVALID", check: row.check,
-               translation: row.translation, what: fault,
-               detail: `${fault}. The period is from an earlier instant to a later one, at most ${SECURITY_DAYS} days `
-                     + `long and inside the last ${SECURITY_DAYS} days. Nothing was read.` };
-    }
-    /* END DEC-49 REGION is-security-period */
+    if (fault) return Credentials.#periodRefusal(fault, `The period is from an earlier instant to a later one, at most `
+      + `${SECURITY_DAYS} days long and inside the last ${SECURITY_DAYS} days.`);
     const f = this.#figures(fromMs, toMs, now);
     const span = toMs - fromMs;
     const [step, stepH] = span <= 48 * HOUR_MS ? ["hour", 1] : span <= 14 * DAY_MS ? ["six-hours", 6] : ["day", 24];
@@ -1666,13 +1740,41 @@ export class Credentials {
   }
 
   /* R45: the level over the 24 hours ending now, for `notice-producers`' one "Noticed" when it becomes High; an
-     in-plane read reached by no route and answered to no viewer. Writes nothing; never throws. */
+     in-plane read reached by no route and answered to no viewer. Writes nothing; never throws. (N743; K2038) When the
+     counts cannot be read the failure is answered as one, `{level: null, levelAt: null}`, never `Ordinary`. */
   securityLevel() {
     try {
       const now = Date.now();
       const { level, levelAt } = this.#figures(now - DAY_MS, now, now);
       return { level, levelAt };
-    } catch { return { level: "Ordinary", levelAt: null }; }
+    } catch { return { level: null, levelAt: null }; }
+  }
+
+  /* R49 (K1946 T3): R44's counts for a period, for `file-safety`'s log forwarding (its R35): each kind's sum over every
+     country and over counts not placed, for the hours that start at or after `from` and before `to`. An in-plane read
+     reached by no route and answered to no viewer; it names no country, writes nothing and never throws. Counts that
+     cannot be read are a refusal naming the failure, never zeros, so the forwarding sends them as absent. */
+  securityTotals({ from = null, to = null } = {}) {
+    const fromMs = Credentials.#instantOf(from), toMs = Credentials.#instantOf(to);
+    const fault = !Number.isFinite(fromMs) ? "from is not an instant" : !Number.isFinite(toMs) ? "to is not an instant"
+      : fromMs >= toMs ? "from is not before to" : null;
+    if (fault) return Credentials.#periodRefusal(fault, "The period is from an earlier instant to a later one.");
+    try {
+      const counts = Object.fromEntries(SECURITY_KINDS.map((k) => [k, 0]));
+      /* the hours h with h·H in [from, to) */
+      for (const r of this.#rows(`SELECT kind, SUM(count) AS n FROM security_counts WHERE hour >= ? AND hour < ?
+                                  GROUP BY kind`, Math.ceil(fromMs / HOUR_MS), Math.ceil(toMs / HOUR_MS)))
+        if (SECURITY_KINDS.includes(r.kind)) counts[r.kind] = Number(r.n);
+      return { ok: true, from: Credentials.#iso(fromMs), to: Credentials.#iso(toMs), counts };
+    } catch (e) {
+      /* DEC-49 REGION is-security-counts-read */
+      const row = SIGN_IN_CHECKS.SECURITY_COUNTS_UNREADABLE;
+      return { ok: false, reason: "SECURITY_COUNTS_UNREADABLE", code: "SECURITY_COUNTS_UNREADABLE", check: row.check,
+               translation: row.translation, failure: String(e?.message ?? e).slice(0, 200),
+               detail: "the security counts could not be read, so no figure is given: they are absent, never zero. "
+                     + "Nothing was read." };
+      /* END DEC-49 REGION is-security-counts-read */
+    }
   }
 
   /* ===== RECOVERY CODES (R46, R47; K1888) =====
@@ -1784,16 +1886,20 @@ export class Credentials {
     return done;
   }
 
-  /* ===== THE GROUP'S KEYED SERVICES (R29; K1449) =====
+  /* ===== THE GROUP'S KEYED SERVICES (R29; K1449; K1946 T1) =====
    *
    * The group's own key for a keyed outside service, set by an administrator, sealed as a member's reference is, off
    * by default and off while it holds no key. No key is ever required for the copy to work (D201): an in-plane caller
-   * that is refused answers without the service. A paid account is not a keyed service (K1449; `sources`). */
+   * that is refused answers without the service. A paid account is not a keyed service (K1449; `sources`). (T36)
+   * Each outside security tool's credentials are held here too, under `security:<tool_id>`, set when an administrator
+   * adds the tool and read for each call to it (`file-safety` R28, R29); such a key may be a set of named fields held
+   * as one value, and a set with no key removes the service's key, which turns it off (`file-safety` R30). */
   #keyedService(service) {
     /* DEC-49 REGION is-keyed-service */
-    if (!KEYED_SERVICES.includes(service))
+    if (!KEYED_SERVICES.includes(service) && !(typeof service === "string" && SECURITY_SERVICE_RE.test(service)))
       return Credentials.#row(KEYED_SERVICE_CHECKS, "UNKNOWN_KEYED_SERVICE", `the keyed services are `
-        + `${KEYED_SERVICES.join(", ")}. Nothing was changed.`, { service: typeof service === "string" ? service.slice(0, 40) : null });
+        + `${KEYED_SERVICES.join(", ")}, and ${SECURITY_SERVICE_PREFIX}<tool id> for each security tool. Nothing was `
+        + `changed.`, { service: typeof service === "string" ? service.slice(0, 40) : null });
     return null;
     /* END DEC-49 REGION is-keyed-service */
   }
@@ -1803,23 +1909,46 @@ export class Credentials {
     return who !== null && !isMachineIdentity(by) && this.membership.isAdministrator(who) ? null : notAnAdmin(by ?? null, act);
   }
 
+  /* R29: one key, a string; or a set of named fields (`{name: value}`, at least one, each name 1 to 64 letters, digits,
+     `.`, `_` or `-` and each value a non-blank string), held and answered as one value. No key at all (null or left
+     out) removes the service's key. Answers the form to seal, or the refusal. */
+  static #keyForm(key) {
+    if (typeof key === "string") return key.trim() === "" ? { empty: "no key was given" } : { form: "key", text: key };
+    if (key && typeof key === "object" && !Array.isArray(key) && Object.getPrototypeOf(key) === Object.prototype) {
+      const names = Object.keys(key);
+      if (!names.length) return { empty: "the set of fields was empty" };
+      for (const n of names) {
+        if (!/^[A-Za-z0-9._-]{1,64}$/.test(n)) return { empty: `a field's name, '${n.slice(0, 64)}', is not one a set holds` };
+        if (typeof key[n] !== "string" || key[n].trim() === "") return { empty: `the field '${n}' holds no value` };
+      }
+      return { form: "fields", text: JSON.stringify(Object.fromEntries(names.sort().map((n) => [n, key[n]]))) };
+    }
+    return { empty: "no key was given" };
+  }
+
   async keyedServiceSet({ service = null, key = null, by = null } = {}) {
     const bar = this.#adminBar(by, "setting the group's key for an outside service");
     if (bar) return bar;
     const unknown = this.#keyedService(service);
     if (unknown) return unknown;
+    if (key === null || key === undefined) {   /* a set with no key removes it, and the service is off */
+      const held = this.#keyedState(service).held;
+      this.sql.exec(`DELETE FROM keyed_services WHERE service=?`, service);
+      return { ok: true, service, held: false, removed: held };
+    }
+    const k = Credentials.#keyForm(key);
     /* DEC-49 REGION is-keyed-service-key */
-    if (typeof key !== "string" || key.trim() === "")
-      return Credentials.#row(KEYED_SERVICE_CHECKS, "KEYED_SERVICE_NO_KEY", "no key was given. Nothing was changed.");
+    if (k.empty)
+      return Credentials.#row(KEYED_SERVICE_CHECKS, "KEYED_SERVICE_NO_KEY", `${k.empty}. Nothing was changed.`);
     /* END DEC-49 REGION is-keyed-service-key */
     const unsealable = this.#seal();
     if (unsealable) return unsealable;
-    const { sealed, iv } = await this.#encrypt(`group:${service}`, "key", key);
+    const { sealed, iv } = await this.#encrypt(`group:${service}`, k.form, k.text);
     const setAt = stampSecond();
     this.sql.exec(
-      `INSERT INTO keyed_services (service, sealed, iv, is_on, set_by, set_at) VALUES (?,?,?,0,?,?)
+      `INSERT INTO keyed_services (service, sealed, iv, is_on, set_by, set_at, form) VALUES (?,?,?,0,?,?,?)
        ON CONFLICT(service) DO UPDATE SET sealed=excluded.sealed, iv=excluded.iv, set_by=excluded.set_by,
-         set_at=excluded.set_at`, service, sealed, iv, Credentials.#memberOf(by), setAt);
+         set_at=excluded.set_at, form=excluded.form`, service, sealed, iv, Credentials.#memberOf(by), setAt, k.form);
     return { ok: true, service, held: true, set_at: setAt };
   }
 
@@ -1840,11 +1969,15 @@ export class Credentials {
     return { service, held, on: held && !!r.is_on, set_by: r?.set_by ?? null, set_at: r?.set_at ?? null };
   }
 
+  /* Every named service, then each security tool's that holds a row, in order; never a key. */
   keyedServices() {
-    return { services: KEYED_SERVICES.map((s) => this.#keyedState(s)) };
+    const tools = this.#rows(`SELECT service FROM keyed_services WHERE service LIKE 'security:%' ORDER BY service`)
+      .map((r) => r.service).filter((x) => SECURITY_SERVICE_RE.test(x));
+    return { services: [...KEYED_SERVICES, ...tools].map((s) => this.#keyedState(s)) };
   }
 
-  /* The key, to its in-plane caller only while the service is on; never routed. */
+  /* The key, to its in-plane caller only while the service is on; never routed. A set of fields is answered as the
+     object it was set as. */
   async keyedServiceFor({ service = null } = {}) {
     const unknown = this.#keyedService(service);
     if (unknown) return unknown;
@@ -1855,8 +1988,11 @@ export class Credentials {
     /* END DEC-49 REGION is-keyed-service-on */
     const unsealable = this.#seal();
     if (unsealable) return unsealable;
-    const r = this.#one(`SELECT sealed, iv FROM keyed_services WHERE service=?`, service);
-    const key = await this.#decrypt(`group:${service}`, "key", r.sealed, r.iv);
+    const r = this.#one(`SELECT sealed, iv, form FROM keyed_services WHERE service=?`, service);
+    const form = r.form === "fields" ? "fields" : "key";
+    const text = await this.#decrypt(`group:${service}`, form, r.sealed, r.iv);
+    let key = text;
+    if (text !== null && form === "fields") { try { key = JSON.parse(text); } catch { key = null; } }
     if (key === null)
       return Credentials.#sealRefusal("the key does not open under the seal secret of your group's Civicsmith, which "
         + "has changed; an administrator sets it again. Nothing was used.");
@@ -1930,7 +2066,8 @@ export function credentialsOps(c, url, body, env) {
        the control plane's stamps and the session the one it authenticated (`session`, its stamp); a secret only ever
        in the body, never the query. The in-plane reads (`accountReferenceFor`, `accountFor`, `aiGrantAdmit`,
        `aiGrantHeld`, `aiGrantMintStanding`, `keyedServiceFor`; T35's `groupKeySwitches`, `subscriptionConnected`,
-       `securityCount`, `securityLevel`) are not routed. Which credential reaches each op is
+       `securityLevel`; T36's `securityTotals`) are not routed; `securityCount` only as the store-internal
+       `securitycount` (R50). Which credential reaches each op is
        op-declarations' and control-plane's (Q0-10; control-plane R53, R56). */
     accountreferenceset: () => c.accountReferenceSet({ ...(body || {}), by: url.searchParams.get("by") }),
     accountreferenceremove: () => c.accountReferenceRemove({ ...(body || {}), by: url.searchParams.get("by") }),
@@ -1949,5 +2086,15 @@ export function credentialsOps(c, url, body, env) {
     keyedserviceset: () => c.keyedServiceSet({ ...(body || {}), by: url.searchParams.get("by") }),
     keyedserviceswitch: () => c.keyedServiceSwitch({ ...(body || {}), by: url.searchParams.get("by") }),
     keyedservices: () => c.keyedServices(),
+    /* R51, R52 (DEC-172): the keep-away act, `by` the stamp after the body; its state, which reaches every active
+       member through the op's spec (op-declarations, control-plane). */
+    aikeepaway: () => c.aiKeepAwaySet({ ...(body || {}), by: url.searchParams.get("by") }),
+    aikeepawaystate: () => c.aiKeepAwayState(),
+    /* R50 (N744; K2038): STORE-INTERNAL, no spec (op-declarations R6): R44's write for admission R22, reached from the
+       Worker through the store as `doorbellrefused` is. It takes `{kind, country}` from the body and nothing else. */
+    securitycount: () => {
+      const b = body && typeof body === "object" && !Array.isArray(body) ? body : {};
+      return c.securityCount({ kind: b.kind ?? null, country: b.country ?? null });
+    },
   };
 }
