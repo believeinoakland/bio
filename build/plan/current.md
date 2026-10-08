@@ -59,7 +59,7 @@
 
 ### L11
 - **T39-16a/b · setup-words (new) and instance-setup (N807)** · 4,228 lines (K2337): `setup-words` (in `modules.json` since K2343, layer 11 before instance-setup) takes `bio-plane/src/setup-words.mjs` (929 lines; it imports nothing, only `setup.mjs` imports it) by copy, with its requirements moved from instance-setup's (ids retired "moved to setup-words R<n>"); then instance-setup deletes its copy and re-points (K624). The boundary's detail BOB's at L11's START.
-- Whatever L1–L10's new codes owe: op-declarations, op-grades, affordances, answer-envelope shares of the C-120/C-122/C-141 rows; plane's composition (case-carriage's listener). Fixed at L11's START from the merged codes.
+- Whatever L1–L10's new codes owe: op-declarations, op-grades, affordances, answer-envelope shares of the C-120/C-122/C-141 rows; plane's composition (case-carriage's listener); (N810, K2346) `pdfjs-dist` as a dev dependency of `bio-plane/package.json`, so doc-clean's R5 oracle runs in CI. Fixed at L11's START from the merged codes.
 
 **Requirement text for L2–L10:** `plan/draft-T39-reqs.md` (reviewed, K2343), applied to each module's file before its layer's START.
 
