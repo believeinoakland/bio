@@ -25,3 +25,7 @@ Size (session_01Dj7ZF9hyAftgEfQR75g64h): test runs 6, module lines 2051
 ## J1 · REPORT
 
 agent-worker (T37-17, its R70: a to_language draft of 1–100 words): run-rules now exports TRANSLATION_DRAFT_MAX_WORDS = 100 (R22's 'at most 100 a draft', K2201) beside DRAFT_KINDS and draftMayRead; agent-worker can read the figure here rather than hold its own 100. An improvement, not a defect. No generated artifact made stale (skilldoctrine.mjs reads only DRAFT_MODE.mode).
+
+## J2 · COMPLETE
+
+T37-49 applied: R21 amended, R22 met (DRAFT_KINDS, DRAFT_MODE.kinds / translation_reach / translation_keeps, TRANSLATION_DRAFT_MAX_WORDS, draftMayRead). No new mode or flag. run-rules tests 32/32; format, architecture, coverage (22/22), ownership: 0 failures. Users' reds identical without the change (census rows 30-34; agent-worker 4 files). Nothing deferred; R21/R22 'not yet met' marks are BOB's to clear. Details in the record's Completion section.
