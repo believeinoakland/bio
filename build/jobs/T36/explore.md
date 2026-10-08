@@ -12,9 +12,28 @@ Measured at the start with `build/plan/reading-sets.py`: 153 KB (own requirement
 - **R20.** A hub entry is `{node, owner, kind, bound, set_size, why, words}`. A hub answer to a call naming several of an owner's kinds is asked again for each kind alone (same `at`, `viewer`, `scope`); a kind answered in items is walked, a kind answered as a hub alone is named; a kind refused alone is named in `owner_refusals` and the others still walked. Every call goes through the reader, so it counts toward `owner_calls` and the budget, and the presets' and overlaps' period walks (`sharedSet` too, whose hub now names its kind and bound; `at_least` now means the owner held more than the kind's bound) judge hubs the same way. `unread` entries met twice on re-asks are listed once.
 - Tests: `walk.test.mjs` R5 (each bound; the 3,400-vote set paged whole across four pages; a vote set cut at 4,000; a hub named with kind, bound, set size) and two R20 tests (the mixed call of votes over their bound beside meetings under theirs, re-asked per kind and for no kind not asked; at 4,000 no hub; the re-asks counted and stopping on the budget; hidden votes neither making a hub nor showing; overlaps at a date and over a period beside a hub of another kind). `fixtures/owners.mjs` judges a hub per kind as connection-grammar R6 now says. `mx1a.test.mjs` gains R20's arms over fixture owners (4,000 votes walked whole within the budget; 4,001 a hub for votes alone with the member's other kind walked). `mx1a-events.test.mjs`: the same arms through `events`' real registered owner, waiting on T36-14 (see J1).
 
-## Next (if restarted)
+## The proving test (R20; K1726's measure)
 
-Wait for BOB's CHANGE (T36-14 merged): merge `tranche/T36`, run `mx1a-events.test.mjs`, record the measured `elapsed_ms` beside K1726's 266–283 ms, re-run steps 5–7.
+`mx1a-events.test.mjs`, after B2 (events merged with the J1 fix; tranche/T36 merged at `28fab5ac9c`): Bob's seven-hop chain with the member, votes, award and contract held by the real `events` and `entities` over node:sqlite and read through the default registry's `events` owner. **4,000 votes: `elapsed_ms` 8,089, 8,107, 8,507** of `budget_ms` 10,000 (three runs; visited 4,007, owner calls 12,021, no truncation, the member not a hub, no fan-out cut for votes, the seven-hop path found), beside K1726's 266–283 ms (chain, fixture owners at 600 votes). **4,001 votes:** 766–832 ms; the member named in `hubs` with kind `event_voted`, bound 4,000, set size 4,001, and its decision (`event_decider`, another events kind) walked to the six-hop path. Over fixture owners (`mx1a.test.mjs`): 4,000 votes 4,262–4,758 ms; 600 votes 354–519 ms; dense walk 321–494 ms (nodes exhaustion).
+
+**The margin is thin (~15–20%).** What remains is events' cost per node, not explore's: of the 12,021 calls, about 4,000 are events reads of single vote events (about 1.7 ms each in events' test world, which prepares every statement anew), and the member's four pages about 1.2 s (K2119). On a slower machine the arm could cross the budget; reported in COMPLETE for events' next job (a cheaper read of an event node), and `time_budget_ms` stays connection-grammar's.
+
+## Deferred
+
+None in explore.
+
+## Found in other modules
+
+- events (J1, routed and fixed in T36-14, K2119, K2122): the per-page rebuild of a node's whole set. Remaining: the per-node read cost above (efficiency, not a requirement breach; M-X1a passes).
+
+## Tests and checks
+
+- explore: `node --test bio-plane/test/m/explore/` 32 pass, 0 fail.
+- Users of explore (hypotheses, affordances, op-declarations, plane, `system/migrate-released`): see COMPLETE (op-declarations' 3 failures are inherited reds 13 and 17).
+- `format`: 135 modules, 134 requirements files; 0 failures. `architecture`: 17 product files, 56 relative imports; 0 failures. `coverage`: 20 of 20 live requirement ids named by a test; 0 failures. `ownership`: 8 files changed between tranche/T36 and HEAD; 0 failures.
+- Module size 795 lines of code (P6: far under 4,000).
+
+Size (session_013jCD29K2Ak5HWZGMPQjE64): test runs 14, module lines 795
 
 ## J1 · REPORT
 

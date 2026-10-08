@@ -33,7 +33,7 @@ function build({ votes, alsoDecides = false }) {
     return r.event_id;
   };
   const MEMBER = w.entity("A council member"), CONTRACT = w.entity("A contract", "institution");
-  const DONOR = ent(1), COMMITTEE = ent(2), VENDOR = ent(4), FUND = ent(6);
+  const DONOR = ent(9001), COMMITTEE = ent(9002), VENDOR = ent(9004), FUND = ent(9006); // apart from the ids the real entities take
   const VOTE = event("vote", "2025-05-06", [[MEMBER, "voted"]]);
   const AWARD = event("award", "2025-05-20", [], [CONTRACT]);
   const rel = w.ev.relate({ from: VOTE, to: AWARD, kind: "authorises", attestation: { captureSha: s, extent: doc }, by: ALICE });
