@@ -1,6 +1,6 @@
 # promotion (T37)
 
-**Status** · session_01WiFA4XkxDJf5nB8LQz8tAt · depth 2 · WAITING ON BOB (J1) · handled B2
+**Status** · session_01WiFA4XkxDJf5nB8LQz8tAt · depth 2 · WORKING · handled B2
 
 ## J1 · REPORT
 
