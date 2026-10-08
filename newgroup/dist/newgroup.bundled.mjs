@@ -2851,19 +2851,27 @@ order they should be read. None is chosen for you.</p>
 ${PROFILE_CHOICES.map((p) => `<label class="choice"><input type="checkbox" name="profile" value="${escText(p.id)}"><span class="pname">${escText(p.name)}</span> <span class="small pcovers">covers ${p.covers.map(escText).join(", ")}</span></label>`).join("\n")}
 </fieldset>
 <p class="hint">${PROFILES_NONE}</p>`;
-var ASSISTANT_OFFER = `The assistant is off unless your group chooses it. Once it is on, it is reached through
-your group's own Anthropic API key, which an administrator sets inside your group's Civicsmith, or through each
-member's own Claude subscription or API key, which the member connects there, or both. Which of these, or no AI at all,
-is chosen when your group's Civicsmith is set up. Each member is told what goes to Anthropic before their first use:
-when they connect their own account, or before their first question under your group's key. This installer takes no
-Claude credential of any kind. An administrator can change this choice later inside your group's Civicsmith.`;
+var ASSISTANT_OFFER = `The assistant is optional. Its two settings are made in your group's Civicsmith when it
+is set up, separately, and neither is chosen for you: whether your group pays for it, with its own Anthropic API key,
+which an administrator sets there; and whether your group keeps its material away from AI, which is off unless an
+administrator turns it on, giving a reason. A member may always connect their own Claude subscription or API key,
+which serves only them, unless your group keeps its material away from AI. Each member is told what goes to Anthropic
+before their first use. This installer takes and binds no Claude account or key, and makes no choice about the
+assistant.`;
 var assistantBlock = () => `<h2>The assistant</h2>
-<fieldset class="profiles" id="assistant">
-<legend class="small">Offer the assistant in your group's Civicsmith?</legend>
-<label class="choice"><input type="radio" name="assistant" value="on">Yes, offer the assistant</label>
-<label class="choice"><input type="radio" name="assistant" value="off">Not now</label>
-</fieldset>
-<p class="hint">${ASSISTANT_OFFER}</p>`;
+<p>${ASSISTANT_OFFER}</p>`;
+var SECURITY_TOOLS = `Your organization's own security tools (file scanners, safe-copy makers, sandboxes, web
+reputation, security log forwarding) are added in your group's Civicsmith by an administrator, at its setup or later.
+This installer takes no tool and no tool's key.`;
+var vpcField = () => `<label for="vpc">Workers VPC service for a security tool reached through a tunnel (optional)</label>
+<input id="vpc" type="text" autocomplete="off" spellcheck="false" placeholder="leave empty if you have none">
+<p class="hint">Only if your organization will add a security tool that your group's Civicsmith reaches through a
+Cloudflare Tunnel: the ID of the Workers VPC service for it, as Cloudflare shows it. The file scanner is connected to
+it. Left empty, none is connected, and such a tool answers REACH_NOT_BOUND in your group's Civicsmith until the updater
+is run with one.</p>`;
+var securityBlock = () => `<h2>Your organization's security tools</h2>
+<p>${SECURITY_TOOLS}</p>
+${vpcField()}`;
 var PAGE_CSS = `
 :root{
   --ink:#16232E; --paper:#EDEFE8; --paper-2:#E3E7DD;
@@ -2988,7 +2996,6 @@ ${publisherFooter()}
 <script>
 const $=s=>document.querySelector(s);
 const slugify=v=>v.toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"").slice(0,40);
-const asOf=()=>{const c=document.querySelector('input[name="assistant"]:checked');return c?{assistant:c.value}:{};};
 const chosen=[];document.querySelectorAll('input[name="profile"]').forEach(b=>b.addEventListener("change",()=>{
   const i=chosen.indexOf(b.value);if(b.checked&&i<0)chosen.push(b.value);if(!b.checked&&i>=0)chosen.splice(i,1);}));
 $("#slug").addEventListener("input",e=>{const p=e.target.selectionStart;e.target.value=slugify(e.target.value);
@@ -2998,7 +3005,7 @@ async function begin(slug){
   $("#go").disabled=true;
   try{
     const r=await fetch("/begin",{method:"POST",headers:{"content-type":"application/json"},
-      body:JSON.stringify({slug,mode:"${mode}",...($("#profiles")?{profiles:chosen}:{}),...asOf(),...($("#ai")&&$("#ai").value.trim()?{instanceAi:$("#ai").value.trim()}:{})})});
+      body:JSON.stringify({slug,mode:"${mode}",...($("#profiles")?{profiles:chosen}:{}),...($("#vpc")&&$("#vpc").value.trim()?{securityVpc:$("#vpc").value.trim()}:{}),...($("#ai")&&$("#ai").value.trim()?{instanceAi:$("#ai").value.trim()}:{})})});
     const j=await r.json();
     if(!j.ok){err.textContent=j.error||"That name was not accepted.";return;}
     location.href=j.authorize;
@@ -3041,17 +3048,19 @@ group's Civicsmith keeps its evidence in. The installer checks both before it cr
 anything, and stops, saying which is missing, if either is.
 <a href="https://dash.cloudflare.com/sign-up" rel="noopener">Create a
 Cloudflare account</a> first if you do not have one, then come back.</p>
-<p style="margin:12px 0 0">For the assistant through a member's own Claude
-subscription, the installer also asks the <b>Workers Containers
-permission</b>: that path runs in a container, which Workers Paid includes.
-Without the permission, everything else installs, and the assistant is
-used only with an API key: a member's own, or your group's.</p>
+<p style="margin:12px 0 0">The installer also asks the <b>Workers Containers
+permission</b>, for two things that run in containers, which Workers Paid
+includes. It installs the built-in file scanner and safe view: without it,
+files are kept and shown but not scanned, and a high-risk file opens only in
+its safe view once one can be made. And it serves the assistant through a
+member's own Claude subscription: without it, the assistant is used only with
+an API key: a member's own, or your group's. Everything else installs either way.</p>
 </div>
 
 <h2>What happens when you press the button</h2>
 <p>Cloudflare will show you a permission screen naming exactly what this
 installer may do in your account: install the software, set up its
-storage, and set up the assistant's container. You approve it there, on Cloudflare's own page, and you can revoke
+storage, and set up its containers (the file scanner and the assistant's). You approve it there, on Cloudflare's own page, and you can revoke
 it any time from your Cloudflare dashboard. The permission passes through
 this installer for the seconds the setup takes. This installer has no
 database and nowhere to keep it, and it is never stored.</p>
@@ -3064,6 +3073,8 @@ disappears.</p>
 ${profilesBlock()}
 
 ${assistantBlock()}
+
+${securityBlock()}
 
 <h2>Name your group's Civicsmith</h2>`,
   slugLabel: "A short name for your group",
@@ -3090,10 +3101,12 @@ update is applied, not by promise. The one exception is yours to choose: an
 organisation AI credential you paste in the optional box below.`,
   blocks: `<h2>What happens when you press the button</h2>
 <p>Cloudflare shows you the permission screen. If your group's Civicsmith was
-installed before the assistant's container existed, it asks one permission more than
-before, <b>Workers Containers</b>, for the assistant through a member's own
-Claude subscription; without it, everything else updates and the assistant is
-used only with an API key: a member's own, or your group's. You approve it on Cloudflare's own page, the new release is placed into your account, and
+installed before the containers existed, it asks one permission more than
+before, <b>Workers Containers</b>, for the built-in file scanner and safe view and for
+the assistant through a member's own Claude subscription. Without it, everything else
+updates: files are kept and shown but not scanned, and a high-risk file opens only in
+its safe view once one can be made; and the assistant is used only with an API key: a
+member's own, or your group's. You approve it on Cloudflare's own page, the new release is placed into your account, and
 the permission is gone the moment it finishes. Nothing is stored here.</p>
 
 <h2>Which installation</h2>`,
@@ -3105,7 +3118,8 @@ the permission is gone the moment it finishes. Nothing is stored here.</p>
 <input id="ai" type="password" autocomplete="off" spellcheck="false" placeholder="leave empty to keep what it holds">
 <p class="hint">Only if a member of your group minted an organisation AI credential inside your group's Civicsmith and
 you want it to resume paused assistant runs on its own. It is stored there as a secret and never shown. Left empty,
-the update sends none and keeps any it already holds. This installer never creates one.</p>`,
+the update sends none and keeps any it already holds. This installer never creates one.</p>
+${securityBlock()}`,
   placeholder: EXAMPLE_SLUG,
   buttonText: "Continue to Cloudflare",
   goNote: `Pressing the button takes you to dash.cloudflare.com to
@@ -3320,7 +3334,8 @@ var FLEET_BINDINGS = [
   ["pdf-worker", "PDF_WORKER"],
   ["ocr-worker", "OCR_WORKER"],
   ["sheet-worker", "SHEET_WORKER"],
-  ["agent-runner", "AGENT_RUNNER"]
+  ["agent-runner", "AGENT_RUNNER"],
+  ["file-scanner", "FILE_SCANNER"]
 ];
 var HOSTING_CONTROL = Object.freeze({
   heading: "Before you choose a password: who controls your group's Civicsmith",
@@ -3353,8 +3368,13 @@ var CFG = {
   /* Exactly the scopes registered on the OAuth client, nothing more. R2 (M-Q8): the fourth is the Containers write
      scope, by the id Cloudflare's scope list gives it (`GET /client/v4/oauth/scopes`, read 2026-10-06: "Workers
      Containers Write", `containers.write`); it is asked so a container member can be installed (R38), and a group
-     re-consents to it at its first update after T33 (R17). */
-  SCOPES: ["workers-scripts.write", "workers-r2.write", "account-settings.read", "containers.write"],
+     re-consents to it at its first update after T33 (R17). The fifth (T36, K2155) is "Connectivity Directory Bind",
+     `connectivity-directory.bind` (the same list, read 2026-10-08), which binding a Workers VPC service needs (R45). */
+  SCOPES: ["workers-scripts.write", "workers-r2.write", "account-settings.read", "containers.write", "connectivity-directory.bind"],
+  /* R46 (K2155): every Logpush API call, the job list included, needs "Logs Write" (`account-logs.write`), a write power
+     over the group's logging that R2 does not ask: the check reads the list and, refused, states itself undetermined
+     with the one check the operator can make. Named here so the reason is in one place; never asked. */
+  LOGPUSH_SCOPE: "account-logs.write",
   COOKIE: "bio_wiz",
   COOKIE_MAX_AGE_S: 900,
   /* Public releases: two committed files in the repo's release/ folder on
@@ -3615,24 +3635,31 @@ var instanceAiBinding = (v) => instanceAiOk(v) ? [{ type: "secret_text", name: I
 var SEAL_BINDING = "ACCOUNT_SEAL_SECRET";
 var sealBinding = (v) => typeof v === "string" && v ? [{ type: "secret_text", name: SEAL_BINDING, text: v }] : [];
 var RETIRED_CLAUDE_BINDING = "INSTANCE_CLAUDE_TOKEN";
-async function heldSecrets(token, acct, slug) {
+async function heldBindings(token, acct, slug) {
   try {
     const s = await cf(token, `/accounts/${acct}/workers/scripts/${slug}/settings`);
     if (!s || !Array.isArray(s.bindings)) return null;
-    return new Set(s.bindings.filter((b) => b && b.type === "secret_text").map((b) => b.name));
+    return new Map(s.bindings.filter((b) => b && typeof b.name === "string").map((b) => [b.name, b.type]));
   } catch {
     return null;
   }
 }
 var ASSISTANT_BINDING = "ASSISTANT_ENABLED";
-var ASSISTANT_CHOICES = ["on", "off"];
-var assistantBinding = (v) => ASSISTANT_CHOICES.includes(v) ? [{ type: "plain_text", name: ASSISTANT_BINDING, text: v }] : [];
-function assistantRefusal(v, mode) {
-  if (v === void 0 || v === null) return null;
-  if (mode === "update") return "An update never changes whether your group's Civicsmith offers the assistant; an administrator changes it inside your group's Civicsmith.";
-  if (!ASSISTANT_CHOICES.includes(v)) return "The assistant is offered or not: choose one of the two, or neither.";
-  return null;
-}
+var MEMBER_BINDING = "MEMBER_TOKEN";
+var RETIRED_BINDINGS = Object.freeze([
+  [RETIRED_CLAUDE_BINDING, "the Claude credential an earlier installer bound into your group's Civicsmith"],
+  [MEMBER_BINDING, "the shared member key an earlier installer bound into your group's Civicsmith (members now sign in with their own sessions)"],
+  [ASSISTANT_BINDING, "the assistant choice an earlier installer bound into your group's Civicsmith (the assistant's settings are made inside it, at its setup)"]
+]);
+var OWN_HOSTS_BINDING = "OWN_HOSTS";
+var ownHostsBinding = (hosts) => Array.isArray(hosts) && hosts.length ? [{ type: "plain_text", name: OWN_HOSTS_BINDING, text: hosts.join(",") }] : [];
+var hostOf = (base) => {
+  try {
+    return base ? new URL(base).host : null;
+  } catch {
+    return null;
+  }
+};
 function statedLimits(source, tag) {
   if (typeof source !== "string") return { ok: false, why: "none" };
   const bodies = /* @__PURE__ */ new Set();
@@ -3695,7 +3722,8 @@ async function uploadInstall(token, acct, slug, secrets, release, opts = {}) {
          into a URL. One source of truth, no second name to drift out of sync. */
       { type: "plain_text", name: "INSTANCE_NAME", text: slug },
       { type: "secret_text", name: "ADMIN_TOKEN", text: secrets.boot },
-      { type: "secret_text", name: "MEMBER_TOKEN", text: secrets.member },
+      /* R9 (T36; N711, K1936 Q3): no MEMBER_TOKEN. The shared member key is retired; members sign in with their own
+         sessions, and admission refuses a member bearer by name. */
       { type: "secret_text", name: "PROBE_TOKEN", text: secrets.probe },
       /* DIST-2 (REC-33's follow-on): the scoped monitoring credential. The
          plane's #monitorToken() is DAEMON_TOKEN || ADMIN_TOKEN and classify()
@@ -3713,8 +3741,6 @@ async function uploadInstall(token, acct, slug, secrets, release, opts = {}) {
       ...sealBinding(secrets.seal),
       /* R21: the chosen jurisdiction profiles, only when some were chosen. */
       ...profilesBinding(opts.profiles),
-      /* R37: the assistant choice, only when one was made. */
-      ...assistantBinding(opts.assistant),
       { type: "r2_bucket", name: "CAPTURES", bucket_name: "bio-captures" },
       { type: "r2_bucket", name: "PUBLISHED", bucket_name: "bio-published" },
       ...opts.noSelf ? [] : [selfBinding(slug)],
@@ -3790,8 +3816,9 @@ async function uploadUpdate(token, acct, slug, withR2, release, opts = {}) {
       ...sealBinding(opts.seal),
       /* R21: restated only by the install's step-3 re-PUT (see PROFILES_BINDING); an update never passes it. */
       ...profilesBinding(opts.profiles),
-      /* R37: likewise the assistant choice. */
-      ...assistantBinding(opts.assistant)
+      /* R47: the copy's own hosts, restated on every upload of this shape that knows them (an install's last upload,
+         after its address is enabled; an update, from the address it found). */
+      ...ownHostsBinding(opts.ownHosts)
     ],
     /* `service` is deliberately NOT in keep_bindings: the line above binds it
        explicitly, and an explicit binding is what heals the older copies that
@@ -3850,16 +3877,24 @@ async function uploadMember(token, acct, slug, m, version, bundle, partBytes, ex
   const fd = new FormData();
   fd.append("metadata", new Blob([JSON.stringify(meta)], { type: "application/json" }));
   fd.append("index.mjs", new Blob([bundle], { type: "application/javascript+module" }), "index.mjs");
-  for (const p of (m.parts || []).filter((pp) => pp.type !== CONTAINER_PART)) {
+  for (const p of (m.parts || []).filter((pp) => !DESCRIPTOR_PARTS.has(pp.type))) {
     fd.append(p.path, new Blob([partBytes[p.path]], { type: PART_MIME[p.type] }), p.path);
   }
   return cf(token, `/accounts/${acct}/workers/scripts/${m.member}`, { method: "PUT", body: fd });
 }
 var CONTAINER_PART = "Container";
-var containerPartOf = (m) => (m.parts || []).filter((pp) => pp.type === CONTAINER_PART);
+var WORKER_PART = "Worker";
+var DESCRIPTOR_PARTS = /* @__PURE__ */ new Set([CONTAINER_PART, WORKER_PART]);
+var containerPartsOf = (m) => (m.parts || []).filter((pp) => pp.type === CONTAINER_PART);
 var PUBLIC_IMAGE = /^(?:docker\.io|registry-1\.docker\.io|[0-9]{12}\.dkr\.ecr\.[a-z0-9-]+\.amazonaws\.com|[a-z0-9-]+-docker\.pkg\.dev)\/[a-z0-9._/-]+@sha256:[0-9a-f]{64}$/;
 var CLASS_NAME = /^[A-Za-z_$][A-Za-z0-9_$]{0,63}$/;
 var BINDING_NAME = /^[A-Z][A-Z0-9_]{0,63}$/;
+var CLASS_PATH = /^container\/([A-Za-z_$][A-Za-z0-9_$]{0,63})\.json$/;
+var CONTAINER_LACKS = Object.freeze({
+  "agent-runner": "your group's Civicsmith offers the assistant only through an API key (a member's own, or your group's) until it is installed",
+  "file-scanner": "your group's Civicsmith has no file scanner and no safe view until it is installed: files are kept and shown but not scanned, and a high-risk file opens only in its safe view once one can be made"
+});
+var lacksOf = (member) => CONTAINER_LACKS[member] || "what it provides is missing from your group's Civicsmith until it is installed";
 function containerDescriptor(bytes) {
   let d;
   try {
@@ -3879,6 +3914,45 @@ function containerDescriptor(bytes) {
     return { ok: false, why: "its container description names its bindings unreadably" };
   return { ok: true, d: { class_name: d.class_name, image: d.image, max_instances: d.max_instances, bind } };
 }
+function containerClasses(parts, bytesOf) {
+  if (parts.length === 1) return ((r) => r.ok ? { ok: true, classes: [r.d] } : r)(containerDescriptor(bytesOf(parts[0].path)));
+  const classes = [];
+  for (const p of parts) {
+    const at = CLASS_PATH.exec(p.path);
+    if (!at) return { ok: false, why: `its container part ${p.path} is not named for its class (container/<class_name>.json)` };
+    const r = containerDescriptor(bytesOf(p.path));
+    if (!r.ok) return { ok: false, why: `${r.why} (class ${at[1]})` };
+    if (r.d.class_name !== at[1]) return { ok: false, why: `its container part ${p.path} describes the class ${r.d.class_name}` };
+    if (classes.some((c) => c.class_name === r.d.class_name)) return { ok: false, why: `it describes the class ${r.d.class_name} twice` };
+    classes.push(r.d);
+  }
+  return { ok: true, classes };
+}
+var BUCKET_ROLES = Object.freeze({ captures: "bio-captures", published: "bio-published" });
+var CRON = /^(?:[0-9*,/?LW#A-Za-z-]+\s){4}[0-9*,/?LW#A-Za-z-]+$/;
+function workerDescriptor(bytes) {
+  let d;
+  try {
+    d = JSON.parse(new TextDecoder().decode(bytes));
+  } catch {
+    return { ok: false, why: "its Worker description does not parse" };
+  }
+  if (!d || typeof d !== "object" || Array.isArray(d)) return { ok: false, why: "its Worker description is not an object" };
+  const list2 = (k) => d[k] === void 0 ? [] : d[k];
+  const r2 = list2("r2_buckets"), crons = list2("crons");
+  if (!Array.isArray(r2) || !r2.every((b) => b && typeof b.binding === "string" && BINDING_NAME.test(b.binding) && Object.hasOwn(BUCKET_ROLES, b.bucket)))
+    return { ok: false, why: "its Worker description names its buckets unreadably" };
+  if (!Array.isArray(crons) || crons.length > 3 || !crons.every((c) => typeof c === "string" && CRON.test(c)))
+    return { ok: false, why: "its Worker description states its schedule unreadably" };
+  return { ok: true, d: { r2_buckets: r2.map(({ binding, bucket }) => ({ binding, bucket })), crons: [...crons] } };
+}
+var WORKER_PART_LACKS = Object.freeze({
+  "file-scanner": "its release does not yet state its bucket and its daily schedule, so it was installed without them: it cannot read captured files or refresh its virus signatures, and files are not scanned until a release that states them is installed"
+});
+var VPC_MEMBER = "file-scanner";
+var VPC_BINDING = "SECURITY_VPC";
+var VPC_ID = /^(?:[0-9a-f]{32}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/;
+var vpcServiceOk = (v) => typeof v === "string" && VPC_ID.test(v);
 async function containerConditions(token, acct, { scope, plan }) {
   if (scope !== null && scope !== void 0) {
     if (!scope.split(/[\s,]+/).includes("containers.write"))
@@ -3902,15 +3976,15 @@ async function containerConditions(token, acct, { scope, plan }) {
   if (p.plan !== "paid") return { ok: false, why: "your account's Workers plan could not be verified (" + (p.detail || "no answer") + ")" };
   return { ok: true, leftover: !!p.leftover };
 }
-async function placeContainer(token, acct, m, d) {
+async function placeContainer(token, acct, m, d, appName) {
   const spaces = await cf(token, `/accounts/${acct}/workers/durable_objects/namespaces?per_page=1000`);
   const ns = (Array.isArray(spaces) ? spaces : []).find((n) => n && n.script === m.member && n.class === d.class_name);
   if (!ns || !ns.id) throw new Error("its Durable Object class " + d.class_name + " was not found after the upload");
   const apps = await cf(token, `/accounts/${acct}/containers/applications`);
-  const app = (Array.isArray(apps) ? apps : []).find((a) => a && a.name === m.member);
+  const app = (Array.isArray(apps) ? apps : []).find((a) => a && a.name === appName);
   if (!app) {
     await cf(token, `/accounts/${acct}/containers/applications`, { method: "POST", body: JSON.stringify({
-      name: m.member,
+      name: appName,
       scheduling_policy: "default",
       instances: 0,
       max_instances: d.max_instances,
@@ -3920,13 +3994,20 @@ async function placeContainer(token, acct, m, d) {
     return "created";
   }
   await cf(token, `/accounts/${acct}/containers/applications/${app.id}/rollouts`, { method: "POST", body: JSON.stringify({
-    description: "Civicsmith installer: " + m.member,
+    description: "Civicsmith installer: " + appName,
     strategy: "rolling",
     kind: "full_auto",
     step_percentage: 100,
     target_configuration: { image: d.image }
   }) });
   return "rolled out";
+}
+async function setSchedules(token, acct, member, crons) {
+  return cf(
+    token,
+    `/accounts/${acct}/workers/scripts/${member}/schedules`,
+    { method: "PUT", body: JSON.stringify(crons.map((cron) => ({ cron }))) }
+  );
 }
 async function installFleet(emit, token, acct, slug, release, ctx = {}) {
   emit.step("fleet", "Installing the capability workers beside your group's Civicsmith");
@@ -3964,16 +4045,17 @@ async function installFleet(emit, token, acct, slug, release, ctx = {}) {
     emit.ok("fleet", "The capability workers are signed against a different release of Civicsmith than the one just installed (the installer used its built-in copy), so no capability workers were installed. The next update, fetching both halves together, adds them.");
     return;
   }
-  const done = [], left = [];
-  const fleet = [...man.fleet].sort((a, b) => (containerPartOf(b).length ? 1 : 0) - (containerPartOf(a).length ? 1 : 0));
+  const done = [], left = [], notes = [];
+  const fleet = [...man.fleet].sort((a, b) => (containerPartsOf(b).length ? 1 : 0) - (containerPartsOf(a).length ? 1 : 0));
   const classOf = /* @__PURE__ */ new Map();
-  let conditions = null, leftover = false;
+  let conditions = null, leftover = false, vpcTaken = false;
   for (const m of fleet) {
     try {
-      const badType = (m.parts || []).find((pp) => !PART_MIME[pp.type] && pp.type !== CONTAINER_PART);
+      const badType = (m.parts || []).find((pp) => !PART_MIME[pp.type] && !DESCRIPTOR_PARTS.has(pp.type));
       if (badType) throw new Error("part " + badType.path + " has module type '" + badType.type + "' this installer does not know \u2014 refusing to guess a loader");
-      const box = containerPartOf(m);
-      if (box.length > 1) throw new Error("it carries more than one container description");
+      const box = containerPartsOf(m);
+      const workerParts = (m.parts || []).filter((pp) => pp.type === WORKER_PART);
+      if (workerParts.length > 1) throw new Error("it carries more than one Worker description");
       const bundle = await fetchVerified(CFG.RELEASE_LATEST + "/" + m.asset, m.sha256, m.member);
       const stated = memberLimits(bundle);
       if (!stated.ok) throw new Error(stated.why);
@@ -3986,20 +4068,55 @@ async function installFleet(emit, token, acct, slug, release, ctx = {}) {
           m.member + " " + pp.path
         );
       }
+      let own = { r2_buckets: [], crons: [] };
+      if (workerParts.length) {
+        const w = workerDescriptor(partBytes[workerParts[0].path]);
+        if (!w.ok) throw new Error(w.why);
+        own = w.d;
+      }
+      const lacking = !workerParts.length && WORKER_PART_LACKS[m.member] ? `${m.member}: ${WORKER_PART_LACKS[m.member]}` : null;
+      const ownBindings = own.r2_buckets.map((b) => ({ type: "r2_bucket", name: b.binding, bucket_name: BUCKET_ROLES[b.bucket] }));
+      const vpcBindings = vpcServiceOk(ctx.vpc) && m.member === VPC_MEMBER ? [{ type: "vpc_service", name: VPC_BINDING, service_id: ctx.vpc }] : [];
+      const upload = async (extra) => {
+        const bindings = [...extra.bindings || [], ...ownBindings];
+        if (!vpcBindings.length) return uploadMember(token, acct, slug, m, String(man.version), bundle, partBytes, { ...extra, bindings });
+        try {
+          await uploadMember(token, acct, slug, m, String(man.version), bundle, partBytes, { ...extra, bindings: [...bindings, ...vpcBindings] });
+          vpcTaken = true;
+          notes.push(`${m.member} is connected to the Workers VPC service you named (${VPC_BINDING})`);
+        } catch (e) {
+          await uploadMember(token, acct, slug, m, String(man.version), bundle, partBytes, { ...extra, bindings });
+          vpcTaken = true;
+          notes.push(`${m.member} could not be connected to the Workers VPC service you named (Cloudflare said: ${e.message}), so it was installed without it, and a security tool reached through a tunnel answers REACH_NOT_BOUND until the updater connects it`);
+        }
+      };
+      const schedule = async () => {
+        if (!own.crons.length) return;
+        try {
+          await setSchedules(token, acct, m.member, own.crons);
+        } catch (e) {
+          notes.push(`${m.member} was installed, but its schedule (${own.crons.join("; ")}) could not be set (Cloudflare said: ${e.message}); the next update sets it`);
+        }
+      };
       if (!box.length) {
-        await uploadMember(token, acct, slug, m, String(man.version), bundle, partBytes, { bindings: classOf.get(m.member), limits });
+        await upload({ bindings: classOf.get(m.member), limits });
+        await schedule();
         done.push(m.member);
+        if (lacking) notes.push(lacking);
         continue;
       }
-      const read = containerDescriptor(partBytes[box[0].path]);
+      const read = containerClasses(box, (path) => partBytes[path]);
       if (!read.ok) throw new Error(read.why);
-      const d = read.d;
+      const classes = read.classes;
+      const multi = box.length > 1;
       const binds = () => {
-        for (const b of d.bind) classOf.set(b.member, [
-          ...classOf.get(b.member) || [],
-          { type: "durable_object_namespace", name: b.binding, class_name: d.class_name, script_name: m.member }
-        ]);
+        for (const d of classes) for (const b of d.bind) if (b.member !== m.member)
+          classOf.set(b.member, [
+            ...classOf.get(b.member) || [],
+            { type: "durable_object_namespace", name: b.binding, class_name: d.class_name, script_name: m.member }
+          ]);
       };
+      const selfBinds = classes.flatMap((d) => d.bind.filter((b) => b.member === m.member).map((b) => ({ type: "durable_object_namespace", name: b.binding, class_name: d.class_name })));
       const fresh = !await scriptExists(token, acct, m.member);
       conditions ??= await containerConditions(token, acct, ctx);
       leftover = !!conditions.leftover;
@@ -4007,36 +4124,37 @@ async function installFleet(emit, token, acct, slug, release, ctx = {}) {
         if (!fresh) binds();
         throw new Error(conditions.why);
       }
-      await uploadMember(
-        token,
-        acct,
-        slug,
-        m,
-        String(man.version),
-        bundle,
-        partBytes,
-        { limits, ...fresh ? { migrations: { new_tag: "v1", new_sqlite_classes: [d.class_name] } } : {} }
-      );
-      await placeContainer(token, acct, m, d);
+      await upload({
+        limits,
+        bindings: [...classOf.get(m.member) || [], ...selfBinds],
+        ...fresh ? { migrations: { new_tag: "v1", new_sqlite_classes: classes.map((d) => d.class_name) } } : {}
+      });
+      for (const d of classes) await placeContainer(token, acct, m, d, multi ? `${m.member}-${d.class_name.toLowerCase()}` : m.member);
+      await schedule();
       binds();
       done.push(m.member);
+      if (lacking) notes.push(lacking);
     } catch (e) {
-      left.push({ member: m.member, why: String(e && e.message || e) + (containerPartOf(m).length ? "; your group's Civicsmith offers the assistant only through an API key (a member's own, or your group's) until it is installed" : "") });
+      left.push({ member: m.member, why: String(e && e.message || e) + (containerPartsOf(m).length ? "; " + lacksOf(m.member) : "") });
     }
   }
+  if (vpcServiceOk(ctx.vpc) && !vpcTaken)
+    notes.push(`the Workers VPC service you named was not connected: ${VPC_MEMBER} was not installed this time, so a tool reached through a tunnel answers REACH_NOT_BOUND in your group's Civicsmith until the updater connects it`);
   const probeNote = leftover ? ' One cleanup note: the tiny probe script "' + PLAN_PROBE + '" could not be deleted automatically \u2014 it is harmless, and you can remove it from Workers & Pages any time.' : "";
+  const noteText = notes.length ? " " + notes.map((n) => (/^[a-z]+-[a-z]/.test(n) ? n : n[0].toUpperCase() + n.slice(1)) + ".").join(" ") : "";
   if (left.length === 0) {
-    emit.ok("fleet", "All " + done.length + " capability workers installed and verified: " + done.join(", ") + "." + probeNote);
+    emit.ok("fleet", "All " + done.length + " capability workers installed and verified: " + done.join(", ") + "." + noteText + probeNote);
   } else {
-    emit.ok("fleet", (done.length ? done.length + " capability worker(s) installed (" + done.join(", ") + "); " : "") + left.length + " left out: " + left.map((l) => l.member + " (" + l.why + ")").join("; ") + ". Your group's Civicsmith works without them; the next update retries exactly this step." + probeNote);
+    emit.ok("fleet", (done.length ? done.length + " capability worker(s) installed (" + done.join(", ") + "); " : "") + left.length + " left out: " + left.map((l) => l.member + " (" + l.why + ")").join("; ") + ". Your group's Civicsmith works without them; the next update retries exactly this step." + noteText + probeNote);
   }
   return { done, left };
 }
 async function bindMembers(emit, token, acct, slug, release, already, fleet, opts) {
   const want = [...BINDING_OF.keys()].filter((m) => already.includes(m) || (fleet?.done || []).includes(m));
   const added = want.filter((m) => !already.includes(m));
-  if (added.length === 0) return { bound: already, unbound: [] };
-  emit.step("bind", "Connecting your group's Civicsmith to its capability workers");
+  const hosts = opts.writeHosts && Array.isArray(opts.ownHosts) && opts.ownHosts.length ? opts.ownHosts : null;
+  if (added.length === 0 && !hosts) return { bound: already, unbound: [] };
+  emit.step("bind", added.length ? "Connecting your group's Civicsmith to its capability workers" : "Telling your group's Civicsmith its own address");
   try {
     await uploadUpdate(
       token,
@@ -4044,13 +4162,20 @@ async function bindMembers(emit, token, acct, slug, release, already, fleet, opt
       slug,
       opts.withR2,
       release,
-      { members: want, daemon: opts.daemon, noSelf: opts.noSelf, profiles: opts.profiles, assistant: opts.assistant }
+      { members: want, daemon: opts.daemon, noSelf: opts.noSelf, profiles: opts.profiles, ownHosts: opts.ownHosts }
     );
-    emit.ok("bind", "Your group's Civicsmith is connected to " + added.join(", ") + ".");
-    return { bound: want, unbound: [], put: true };
+    emit.ok("bind", [
+      added.length ? "Your group's Civicsmith is connected to " + added.join(", ") + "." : "",
+      hosts ? "Your group's Civicsmith now knows its own address (" + hosts.join(", ") + "), which it reads as its own." : ""
+    ].filter(Boolean).join(" "));
+    return { bound: want, unbound: [], put: true, hosts: !!hosts };
   } catch (e) {
-    emit.no("bind", "The capability workers were installed, but connecting your group's Civicsmith to them was refused (" + added.join(", ") + "). Your group's Civicsmith works without them; running the updater connects them. (Cloudflare said: " + e.message + ")");
-    return { bound: already, unbound: added };
+    emit.no("bind", [
+      added.length ? "The capability workers were installed, but connecting your group's Civicsmith to them was refused (" + added.join(", ") + "). Your group's Civicsmith works without them; running the updater connects them." : "",
+      hosts ? "Telling your group's Civicsmith its own address was refused, so it does not know it yet; running the updater tells it." : "",
+      "(Cloudflare said: " + e.message + ")"
+    ].filter(Boolean).join(" "));
+    return { bound: already, unbound: added, hosts: false };
   }
 }
 async function ensureSubdomain(token, acct, slug) {
@@ -4151,6 +4276,54 @@ function withByteLags(verdict, byteLags, capable) {
   if (!verdict) return { confirmed: false, lags: [...byteLags], capable };
   return { ...verdict, confirmed: false, lags: [...byteLags, ...verdict.lags] };
 }
+var PER_REQUEST_DATASET = "workers_trace_events";
+function filterExcludes(filter, names) {
+  if (filter === null || filter === void 0 || filter === "") return false;
+  let f;
+  try {
+    f = typeof filter === "string" ? JSON.parse(filter) : filter;
+  } catch {
+    return false;
+  }
+  const w = f && typeof f === "object" ? f.where : null;
+  if (!w || typeof w !== "object") return false;
+  const conds = typeof w.key === "string" ? [w] : Array.isArray(w.and) ? w.and : [];
+  return conds.some((c) => {
+    if (!c || c.key !== "ScriptName") return false;
+    const vals = (Array.isArray(c.value) ? c.value : [c.value]).map(String);
+    const op = String(c.operator);
+    if (op === "!in" || op === "!eq") return names.every((n) => vals.includes(n));
+    if (op === "in" || op === "eq") return names.every((n) => !vals.includes(n));
+    return false;
+  });
+}
+async function logpushCheck(token, acct, names) {
+  let jobs;
+  try {
+    jobs = await cf(token, `/accounts/${acct}/logpush/jobs`);
+  } catch (e) {
+    return { state: "undetermined", why: e.message };
+  }
+  if (!Array.isArray(jobs)) return { state: "undetermined", why: "the list came back unreadable" };
+  const named = jobs.filter((j) => j && j.dataset === PER_REQUEST_DATASET && !filterExcludes(j.filter, names));
+  return named.length ? { state: "named", jobs: named } : { state: "clear" };
+}
+var logLag = (j, names) => `the Logpush job ${JSON.stringify(String(j.name || "(unnamed)"))} (id ${j.id ?? "unknown"}${j.enabled === false ? ", paused" : ""}) keeps a record of each request to your group's Civicsmith (its dataset is ${PER_REQUEST_DATASET}, and its filter does not leave out ${names.join(", ")}), which would be a log of who opened which file: delete it, or give it a filter that leaves those Workers out`;
+async function logsStep(emit, token, acct, names) {
+  emit.step("logs", "Checking that no log on your account records who opened which file");
+  const r = await logpushCheck(token, acct, names);
+  if (r.state === "clear") {
+    emit.ok("logs", "No Logpush job on your Cloudflare account keeps a record of each request to your group's Civicsmith.");
+    return [];
+  }
+  if (r.state === "undetermined") {
+    emit.no("logs", "Undetermined: the installer could not read your account's Logpush jobs (Cloudflare said: " + r.why + "), so it cannot say whether one keeps a record of each request to your group's Civicsmith, which would be a log of who opened which file. To check it yourself: in the Cloudflare dashboard, open Analytics & Logs, then Logpush, and look for a job over Workers Trace Events; none should cover " + names.join(", ") + ".");
+    return [];
+  }
+  const lags = r.jobs.map((j) => logLag(j, names));
+  emit.no("logs", (lags.length === 1 ? "A Logpush job on your Cloudflare account" : lags.length + " Logpush jobs on your Cloudflare account") + " would keep a log of who opened which file: " + lags.join("; ") + ".");
+  return lags;
+}
 var lagList = (v) => `<ul>${v.lags.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>`;
 var UNDETERMINED_BUILDS = "This release cannot report which version the record store of your group's Civicsmith or its capability workers are running, so only its address was checked; those parts are not confirmed either way.";
 function progressShell(title, slug) {
@@ -4220,27 +4393,34 @@ function instanceAiNotice(emit, mode, carried) {
   if (carried) return emit.ok("ai", "The organisation AI credential you gave was stored in your group's Civicsmith as a secret (it is not shown here). It uses it to resume assistant runs that credential opened.");
   emit.ok("ai", mode === "update" ? "No organisation AI credential was given, so none was sent. One your group's Civicsmith already holds is kept unchanged; this installer never creates one." : "No organisation AI credential was given, so your group's Civicsmith has none: it will not resume paused assistant runs on its own. A member mints one inside your group's Civicsmith; running the updater with it adds it. This installer never creates one.");
 }
+var cap = (x) => x[0].toUpperCase() + x.slice(1);
 async function accountSecretsNotice(emit, token, acct, slug, held, seal) {
-  emit.step("keys", "Your members' own accounts");
-  if (!held) return emit.no("keys", "The settings of your group's Civicsmith could not be read, so the installer could not tell whether it holds the secret that seals each member's own Claude account or API key, or a group-wide Claude credential from before. Nothing was sent or removed. Running this update again checks once more.");
+  emit.step("keys", "Your members' own accounts, and what earlier installers left behind");
+  if (!held) return emit.no("keys", "The settings of your group's Civicsmith could not be read, so the installer could not tell whether it holds the secret that seals each member's own Claude account or API key, or anything an earlier installer bound that is now retired (a group-wide Claude credential, the shared member key, the assistant choice). Nothing was sent or removed. Running this update again checks once more.");
   const said = [seal ? "Your group's Civicsmith now holds the secret that seals each member's own Claude account or API key (it is not shown here)." : "Your group's Civicsmith already held the secret that seals each member's own Claude account or API key; it is kept unchanged."];
   let ok = true;
-  if (held.has(RETIRED_CLAUDE_BINDING)) {
+  for (const [name, what] of RETIRED_BINDINGS) {
+    const type = held.get(name);
+    if (!type) continue;
+    if (type !== "secret_text") {
+      said.push(cap(what) + " was removed by this update: the installer binds none now.");
+      continue;
+    }
     try {
-      await cf(token, `/accounts/${acct}/workers/scripts/${slug}/secrets/${RETIRED_CLAUDE_BINDING}`, { method: "DELETE" });
-      said.push("The Claude credential an earlier installer bound into your group's Civicsmith was removed: the installer binds none now.");
+      await cf(token, `/accounts/${acct}/workers/scripts/${slug}/secrets/${name}`, { method: "DELETE" });
+      said.push(cap(what) + " was removed: the installer binds none now.");
     } catch (e) {
       ok = false;
-      said.push("Your group's Civicsmith holds a Claude credential an earlier installer bound into it, and removing it was refused (Cloudflare said: " + e.message + "). Remove the secret " + RETIRED_CLAUDE_BINDING + " from your worker's settings on Cloudflare.");
+      said.push(cap(what) + " is still held, and removing it was refused (Cloudflare said: " + e.message + "). Remove the secret " + name + " from your worker's settings on Cloudflare.");
     }
   }
   said.push(ASSISTANT_OWN_ACCOUNTS);
   return ok ? emit.ok("keys", said.join(" ")) : emit.no("keys", said.join(" "));
 }
-var ASSISTANT_OWN_ACCOUNTS = "This installer takes and binds no Claude account or key. Once the assistant is on, it is reached through your group's own Anthropic API key, which an administrator sets inside your group's Civicsmith, or through each member's own Claude subscription or API key, which the member connects there, or both; which of these is chosen when your group's Civicsmith is set up. Each member is told what goes to Anthropic before their first use.";
-function assistantNotice(emit, choice) {
+var ASSISTANT_OWN_ACCOUNTS = ASSISTANT_OFFER.replace(/\s+/g, " ").trim();
+function assistantNotice(emit) {
   emit.step("assist", "The assistant");
-  emit.ok("assist", (choice === "on" ? "You chose to offer the assistant in your group's Civicsmith. " : choice === "off" ? "You chose not to offer the assistant for now, so it is off. " : "No choice was made about the assistant, so it is off. ") + ASSISTANT_OWN_ACCOUNTS + (choice === "on" ? "" : " An administrator can turn it on later inside your group's Civicsmith."));
+  emit.ok("assist", ASSISTANT_OWN_ACCOUNTS);
 }
 function oneCopyRefusal(emit, held) {
   return emit.fail(
@@ -4368,7 +4548,6 @@ async function runInstall(emit, code, saved) {
   emit.step("gen", "Generating your credentials");
   const secrets = {
     boot: rand(32),
-    member: rand(32),
     probe: rand(32),
     daemon: rand(32),
     seal: rand(32),
@@ -4377,16 +4556,15 @@ async function runInstall(emit, code, saved) {
   emit.ok("gen");
   const present = await membersPresent(token, acct.id);
   const profiles = Array.isArray(saved.p) && !profilesRefusal(saved.p, "install") ? saved.p : [];
-  const assistant = ASSISTANT_CHOICES.includes(saved.as) ? saved.as : void 0;
   let selfRefused = false;
   emit.step("install", "Installing the software into your account");
   try {
-    await uploadInstall(token, acct.id, slug, secrets, release, { members: present, profiles, assistant });
+    await uploadInstall(token, acct.id, slug, secrets, release, { members: present, profiles });
     emit.ok("install");
   } catch (e) {
     let degraded = false;
     try {
-      await uploadInstall(token, acct.id, slug, secrets, release, { noSelf: true, members: present, profiles, assistant });
+      await uploadInstall(token, acct.id, slug, secrets, release, { noSelf: true, members: present, profiles });
       degraded = true;
     } catch {
     }
@@ -4407,7 +4585,18 @@ async function runInstall(emit, code, saved) {
     if (lag && !byteLags.includes(lag)) byteLags.push(lag);
   };
   await readBackInto();
-  const fleet = await installFleet(emit, token, acct.id, slug, release, { scope, plan: { plan: "paid" } });
+  const fleet = await installFleet(emit, token, acct.id, slug, release, { scope, plan: { plan: "paid" }, vpc: saved.vpc });
+  emit.step("addr", "Turning on your web address");
+  let base = null, addrError = null;
+  try {
+    const { sub, registered } = await ensureSubdomain(token, acct.id, slug);
+    base = `https://${slug}.${sub}.workers.dev`;
+    emit.ok("addr", registered ? `Your account had no web address prefix yet, so it is now "${registered}". Every future worker on this account shares that prefix.` : void 0);
+  } catch (e) {
+    addrError = e;
+    emit.no("addr");
+  }
+  const ownHosts = base ? [hostOf(base)] : null;
   const bound = await bindMembers(
     emit,
     token,
@@ -4416,41 +4605,43 @@ async function runInstall(emit, code, saved) {
     release,
     present,
     fleet,
-    { withR2: true, daemon: secrets.daemon, noSelf: selfRefused, profiles, assistant }
+    { withR2: true, daemon: secrets.daemon, noSelf: selfRefused, profiles, ownHosts, writeHosts: true }
   );
   if (bound.put) await readBackInto();
   instanceAiNotice(emit, "install", !!secrets.instanceAi);
-  assistantNotice(emit, assistant);
-  emit.step("addr", "Turning on your web address");
-  let base;
-  try {
-    const { sub, registered } = await ensureSubdomain(token, acct.id, slug);
-    base = `https://${slug}.${sub}.workers.dev`;
-    emit.ok("addr", registered ? `Your account had no web address prefix yet, so it is now "${registered}". Every future worker on this account shares that prefix.` : void 0);
-  } catch (e) {
-    emit.no("addr");
+  assistantNotice(emit);
+  if (addrError) {
     return emit.fail(
       "Your group's Civicsmith installed but has no address yet",
-      "The software is on your account. Only the public web address failed, which is fixable from the Cloudflare dashboard under Workers, without starting over.",
-      "Detail: " + e.message
+      "The software is on your account. Only the public web address failed, which is fixable from the Cloudflare dashboard under Workers, without starting over. Until it has one, your group's Civicsmith is not told an address of its own; running the updater once the address works tells it.",
+      "Detail: " + addrError.message
     );
   }
+  const logLags = await logsStep(emit, token, acct.id, copyWorkers(slug, release));
   emit.step("verify", "Checking that it answers");
   const st = await verifyInstall(base, secrets.probe);
   const capable = reportsBuilds(release.source);
   const failed = fleet?.left || [];
   const served = !st ? null : capable ? await verifyServing(base, release.version, fleet?.done || [], capable, failed) : ((lags) => ({ confirmed: lags.length === 0, lags, capable: false }))(failedLags(failed));
-  const verdict = withByteLags(served, byteLags, capable);
+  const verdict = withByteLags(served, [...byteLags, ...logLags], capable);
   if (st && verdict.confirmed) emit.ok("verify", capable ? void 0 : "Your group's Civicsmith answers. " + UNDETERMINED_BUILDS);
-  else if (st) emit.no("verify", "Your group's Civicsmith answers, but not every part is confirmed running " + release.version + " yet");
+  else if (st) emit.no("verify", "Your group's Civicsmith answers, but not everything is confirmed yet: the list below names what is not");
   else emit.no("verify");
-  emit.done(successPanel(base, secrets, !!st, verdict));
+  emit.done(successPanel(base, secrets, !!st, verdict, saved.vpc));
+}
+function copyWorkers(slug, release) {
+  const names = [slug, ...BINDING_OF.keys()];
+  for (const m of Array.isArray(release.man?.fleet) ? release.man.fleet : []) if (m && typeof m.member === "string") names.push(m.member);
+  return [...new Set(names)];
 }
 var NO_KEY = `No one else holds a key to it, the publisher of ${PRODUCT} releases included.`;
-function successPanel(base, secrets, verified, verdict = null) {
+function securityToolsNote(vpc) {
+  return `<div class="card" id="security-tools"><p style="margin:0">${esc(SECURITY_TOOLS.replace(/\s+/g, " ").trim())} ${vpcServiceOk(vpc) ? "You named a Workers VPC service, so the installer connected the file scanner to it where it could (the capability workers step says whether it did)." : "You named no Workers VPC service, so none is connected: a tool reached through a tunnel answers REACH_NOT_BOUND in your group&#39;s Civicsmith until the updater is run with one."}</p></div>`;
+}
+function successPanel(base, secrets, verified, verdict = null, vpc = null) {
   const lagging = !!(verdict && !verdict.confirmed);
   const head = verified && !lagging ? `<b>Your group's Civicsmith is running.</b> It lives in your
-Cloudflare account, under your control. ${NO_KEY}` + (verdict && !verdict.capable ? ` ${esc(UNDETERMINED_BUILDS)}` : "") : lagging ? `<b>Your group's Civicsmith is installed${verified ? " and answering" : ""}, but not every part of it is confirmed running this release.</b>
+Cloudflare account, under your control. ${NO_KEY}` + (verdict && !verdict.capable ? ` ${esc(UNDETERMINED_BUILDS)}` : "") : lagging ? `<b>Your group's Civicsmith is installed${verified ? " and answering" : ""}, but not everything about it is confirmed yet.</b>
 ${verified ? "When it was last asked:" : "Its new address has not woken up yet, and:"}${lagList(verdict)}Save the credentials below now either way. It lives in your Cloudflare
 account, under your control. ${NO_KEY}` : `<b>Your group's Civicsmith is installed. Its new address has not woken up yet.</b> Brand-new
 addresses can take a few minutes to start answering; everything else finished. Save the
@@ -4460,12 +4651,12 @@ your control. ${NO_KEY}`;
 <div class="card">
  <div class="kv"><span class="k">Your address</span><span class="v" id="out-url">${esc(base)}</span><button class="copy" data-copy="out-url">Copy</button></div>
  <div class="kv"><span class="k">One-time password</span><span class="v" id="out-boot">${secrets.boot}</span><button class="copy" data-copy="out-boot">Copy</button></div>
- <div class="kv"><span class="k">Member credential</span><span class="v" id="out-member">${secrets.member}</span><button class="copy" data-copy="out-member">Copy</button></div>
  <div class="kv"><span class="k">Probe credential</span><span class="v" id="out-probe">${secrets.probe}</span><button class="copy" data-copy="out-probe">Copy</button></div>
 </div>
-<p><b>Save the member and probe credentials in a password manager now.</b> This page is the
-only time they are shown. The one-time password is spent in the next step, where you choose
-a real password.</p>
+<p><b>Save the probe credential in a password manager now.</b> This page is the only time it is
+shown. The one-time password is spent in the next step, where you choose a real password. There is
+no shared member credential: each member signs in with their own account.</p>
+${securityToolsNote(vpc)}
 ${/* R34 (DEC-109, K1038): before the hand-over to where the founder chooses a password, who really controls the copy, in
    instance-setup's words; nothing asks for or records an acknowledgement of it. */
   hostingControlBlock("notice")}
@@ -4565,9 +4756,9 @@ async function runUpdate(emit, code, saved) {
       `This is for the publisher of ${PRODUCT} releases to fix with a release that states them; try again after the next release.`
     );
   }
-  let before = null;
+  let before = null, sub0 = null;
   try {
-    const sub0 = (await cf(token, `/accounts/${acct.id}/workers/subdomain`))?.subdomain;
+    sub0 = (await cf(token, `/accounts/${acct.id}/workers/subdomain`))?.subdomain || null;
     if (sub0) {
       const r = await fetch(`https://${slug}.${sub0}.workers.dev/api/?op=bootstrap`);
       if (r.ok) before = (await r.json())?.version || null;
@@ -4575,13 +4766,14 @@ async function runUpdate(emit, code, saved) {
   } catch {
   }
   const noop = before !== null && before === release.version;
+  const ownHosts = sub0 ? [`${slug}.${sub0}.workers.dev`] : null;
   emit.step("up", noop ? `Your group's Civicsmith already runs ${release.version}. Re-uploading the same version` : before ? `Updating the software from ${before} to ${release.version}` : `Updating the software to ${release.version}`);
   const present = await membersPresent(token, acct.id);
   const instanceAi = instanceAiOk(saved.ai) ? saved.ai : void 0;
-  const held = await heldSecrets(token, acct.id, slug);
-  const seal = held && !held.has(SEAL_BINDING) ? rand(32) : void 0;
+  const held = await heldBindings(token, acct.id, slug);
+  const seal = held && held.get(SEAL_BINDING) !== "secret_text" ? rand(32) : void 0;
   try {
-    await uploadUpdate(token, acct.id, slug, withR2, release, { members: present, instanceAi, seal });
+    await uploadUpdate(token, acct.id, slug, withR2, release, { members: present, instanceAi, seal, ownHosts });
     emit.ok("up");
   } catch (e) {
     emit.no("up");
@@ -4597,8 +4789,8 @@ async function runUpdate(emit, code, saved) {
     if (lag && !byteLags.includes(lag)) byteLags.push(lag);
   };
   await readBackInto();
-  const fleet = await installFleet(emit, token, acct.id, slug, release, { scope });
-  const bound = await bindMembers(emit, token, acct.id, slug, release, present, fleet, { withR2 });
+  const fleet = await installFleet(emit, token, acct.id, slug, release, { scope, vpc: saved.vpc });
+  const bound = await bindMembers(emit, token, acct.id, slug, release, present, fleet, { withR2, ownHosts });
   if (bound.put) await readBackInto();
   instanceAiNotice(emit, "update", !!instanceAi);
   await accountSecretsNotice(emit, token, acct.id, slug, held, seal);
@@ -4607,23 +4799,23 @@ async function runUpdate(emit, code, saved) {
   try {
     const sub = (await cf(token, `/accounts/${acct.id}/workers/subdomain`))?.subdomain;
     if (sub) base = `https://${slug}.${sub}.workers.dev`;
-    emit.ok("addr");
   } catch {
-    emit.ok("addr");
   }
+  emit.ok("addr", ownHosts ? `Your group's Civicsmith is at ${ownHosts.join(", ")}, and this update told it that address is its own.` : "No web address was found for your group's Civicsmith, so it was not told one of its own. Once its address works, running this update again tells it.");
+  const logLags = await logsStep(emit, token, acct.id, copyWorkers(slug, release));
   const capable = reportsBuilds(release.source);
   let verdict = null;
   if (base) {
     emit.step("verify", "Checking the new version answers");
     verdict = withByteLags(
       await verifyServing(base, release.version, fleet?.done || [], capable, fleet?.left || []),
-      byteLags,
+      [...byteLags, ...logLags],
       capable
     );
     if (verdict.confirmed) emit.ok("verify", capable ? void 0 : "The address of your group's Civicsmith answers " + release.version + ". " + UNDETERMINED_BUILDS);
-    else emit.no("verify", "Not every part of your group's Civicsmith is running " + release.version + " yet. That is normal for a few minutes after an update; the list below names each part.");
+    else emit.no("verify", "Not everything about your group's Civicsmith is confirmed yet: the list below names what is not. A part still running the old version is normal for a few minutes after an update.");
   }
-  if (!verdict) verdict = withByteLags(null, byteLags, capable);
+  if (!verdict) verdict = withByteLags(null, [...byteLags, ...logLags], capable);
   const confirmed = !!(verdict && verdict.confirmed);
   const lagging = !!(verdict && !verdict.confirmed);
   const told = groupNotice(groupUnrecorded(before, release.version, noop), slug, before, base);
@@ -4631,14 +4823,14 @@ async function runUpdate(emit, code, saved) {
 The upload succeeded, but it replaced that version with the same version, so this update moved nothing.
 If you expected something newer, the installer had nothing newer to give: it uses the newest release it can
 verify, and that is ${esc(release.version)}. Check that a newer release has actually been published before
-running this again.</p></div>` + (lagging ? `<div class="notice"><p style="margin:0">Not every part of your group&#39;s Civicsmith is confirmed running ${esc(release.version)}:</p>${lagList(verdict)}</div>` : "") : (lagging ? `<div class="notice"><p style="margin:0"><b>Uploaded ${esc(release.version)}${before ? " over " + esc(before) : ""}; not yet confirmed running everywhere.</b>
-The upload finished, but not every part of your group&#39;s Civicsmith is confirmed running the new version:</p>
+running this again.</p></div>` + (lagging ? `<div class="notice"><p style="margin:0">Not everything about your group&#39;s Civicsmith running ${esc(release.version)} is confirmed:</p>${lagList(verdict)}</div>` : "") : (lagging ? `<div class="notice"><p style="margin:0"><b>Uploaded ${esc(release.version)}${before ? " over " + esc(before) : ""}; not yet confirmed.</b>
+The upload finished, but not everything about your group&#39;s Civicsmith running the new version is confirmed:</p>
 ${lagList(verdict)}<p>A part can take a few minutes to start running a new version after an update, so
 open your group&#39;s Civicsmith a little later and check again; if the same part is still named, run this update again. Your
 passwords, your credentials, and everything in the record are exactly as they were. Updates never touch them.</p></div>` : `<div class="okbox"><p style="margin:0"><b>Updated ${before ? "from " + esc(before) + " " : ""}to ${esc(release.version)}.</b>
 ${confirmed ? capable ? "Every part of your group's Civicsmith answers " + esc(release.version) + ": its address, its record store, and each capability worker it is connected to." : "The new version is answering. " + esc(UNDETERMINED_BUILDS) : "The upload finished successfully. The address can take a few minutes to start serving the new version, so open your group's Civicsmith a little later and its page will show " + esc(release.version) + "."}
 Your passwords, your credentials, and everything in the record are exactly as they were.
-Updates never touch them.</p></div>`) + told + (base ? `<div class="actions"><a class="btnlink" href="${esc(base)}/">Open your group&#39;s Civicsmith</a></div>` : ""));
+Updates never touch them.</p></div>`) + told + securityToolsNote(saved.vpc) + (base ? `<div class="actions"><a class="btnlink" href="${esc(base)}/">Open your group&#39;s Civicsmith</a></div>` : ""));
 }
 var index_default = {
   async fetch(req) {
@@ -4669,9 +4861,9 @@ var index_default = {
       const profilesWhy = profilesRefusal(body.profiles, mode);
       if (profilesWhy) return json({ ok: false, error: profilesWhy }, 400);
       const p = Array.isArray(body.profiles) && body.profiles.length ? body.profiles : null;
-      const assistantWhy = assistantRefusal(body.assistant, mode);
-      if (assistantWhy) return json({ ok: false, error: assistantWhy }, 400);
-      const as = ASSISTANT_CHOICES.includes(body.assistant) ? body.assistant : null;
+      const vpc = typeof body.securityVpc === "string" ? body.securityVpc.trim().toLowerCase() : "";
+      if (vpc && !vpcServiceOk(vpc))
+        return json({ ok: false, error: "The Workers VPC service does not look like one: paste its ID as Cloudflare shows it (32 hexadecimal digits, with or without dashes), or leave the box empty." }, 400);
       const cookie = b64url(enc.encode(JSON.stringify({
         v,
         s,
@@ -4680,7 +4872,7 @@ var index_default = {
         t: Date.now(),
         ...ai ? { ai } : {},
         ...p ? { p } : {},
-        ...as ? { as } : {}
+        ...vpc ? { vpc } : {}
       })));
       return json(
         { ok: true, authorize: `${CFG.AUTHORIZE}?${q}` },
@@ -4752,13 +4944,24 @@ export {
   CFG,
   CONTAINER_PART,
   INSTANCE_AI_BINDING,
+  MEMBER_BINDING,
+  OWN_HOSTS_BINDING,
+  PER_REQUEST_DATASET,
   PROFILES_BINDING,
+  RETIRED_BINDINGS,
   RETIRED_CLAUDE_BINDING,
   SEAL_BINDING,
+  VPC_BINDING,
+  VPC_MEMBER,
+  WORKER_PART,
+  containerClasses,
   containerDescriptor,
   index_default as default,
+  filterExcludes,
   instanceAiOk,
   memberLimits,
   planeLimits,
-  reportsBuilds
+  reportsBuilds,
+  vpcServiceOk,
+  workerDescriptor
 };
