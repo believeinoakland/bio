@@ -130,6 +130,19 @@ export const IMAGE = "docker.io/civicos/agent-runner@sha256:" + "a".repeat(64);
 export const DESCRIPTOR = Object.freeze({ class_name: "AgentRunner", image: IMAGE, scheduling_policy: "default", max_instances: 5,
   bind: [{ member: "agent-worker", binding: "RUNNER" }] });
 export const RUNNER = "agent-runner";
+/* R38, R44 (T36): the two-class container member file-scanner: one `Container` part per class
+   (`container/<class_name>.json`), each class bound into the member itself, and its `Worker` part naming its bucket by
+   role, its schedule and its optional private-network binding. */
+export const SCANNER = "file-scanner";
+export const SCAN_IMAGE = "docker.io/civicos/file-scanner-scanner@sha256:" + "d".repeat(64);
+export const RENDER_IMAGE = "docker.io/civicos/file-scanner-renderer@sha256:" + "e".repeat(64);
+export const SCANNER_CLASSES = Object.freeze([
+  Object.freeze({ class_name: "FileScanner", image: SCAN_IMAGE, scheduling_policy: "default", max_instances: 3, bind: [{ member: SCANNER, binding: "SCANNER" }] }),
+  Object.freeze({ class_name: "SafeViewRenderer", image: RENDER_IMAGE, scheduling_policy: "default", max_instances: 3, bind: [{ member: SCANNER, binding: "RENDERER" }] }),
+]);
+export const SCANNER_WORKER = Object.freeze({ r2_buckets: [{ binding: "CAPTURES", bucket: "captures" }], crons: ["17 4 * * *"],
+  vpc_services: [{ binding: "SECURITY_VPC" }] });
+export const VPC_ID = "0123456789abcdef0123456789abcdef";
 
 /* `members`: the fleet's member names (default: the three the plane binds). Options drop the fleet signature, sign it
    over another set, tamper with a member's bytes, name an unknown part type, or leave the fleet out. `container` adds
@@ -137,17 +150,31 @@ export const RUNNER = "agent-runner";
    gives a member its own bundle text (R39: one stating its limits), hashed into the signed statement like any. */
 export async function release({ version, src = CAPABLE_SRC, members = FLEET_BINDINGS.map(([m]) => m), sig = "good",
   fleet = true, fleetSig = "good", tamper = null, badType = null, missing = null, signedMembers = null,
-  container = false, descriptor = DESCRIPTOR, memberSrc = {} } = {}) {
+  container = false, descriptor = DESCRIPTOR, memberSrc = {},
+  /* `scanner`: adds file-scanner; `scannerParts` replaces its parts' texts by path (a value null drops that part);
+     `scannerWorker` its `Worker` part (an object, raw text, or null for none). */
+  scanner = false, scannerParts = {}, scannerWorker = SCANNER_WORKER } = {}) {
   const planeSha = await sha(src);
   const boxText = typeof descriptor === "string" ? descriptor : JSON.stringify(descriptor);
+  const text = (x) => typeof x === "string" ? x : JSON.stringify(x);
+  const scannerTexts = {};
+  for (const c of SCANNER_CLASSES) scannerTexts[`container/${c.class_name}.json`] = text(c);
+  if (scannerWorker !== null) scannerTexts["worker.json"] = text(scannerWorker);
+  for (const [path, t] of Object.entries(scannerParts)) { if (t === null) delete scannerTexts[path]; else scannerTexts[path] = text(t); }
+  const partTexts = {};
   const srcOf = (member) => memberSrc[member] ?? MEMBER_SRC;
   const entry = async (member) => ({ member, asset: `${member}.bundled.mjs`, sha256: await sha(srcOf(member)),
     bytes: srcOf(member).length, compat: { date: "2026-07-01", flags: [] },
     services: member === "agent-worker" ? [{ binding: "PLANE", service: "bio-plane" }] : [],
     parts: member === "ocr-worker" ? [{ path: "assets/x.wasm", type: badType === member ? "Mystery" : "CompiledWasm",
       sha256: await sha(WASM), bytes: WASM.length }]
-      : member === RUNNER && container ? [{ path: "container.json", type: "Container", sha256: await sha(boxText), bytes: boxText.length }] : [] });
+      : member === RUNNER && container ? [{ path: "container.json", type: "Container", sha256: await sha(boxText), bytes: boxText.length }]
+      : member === SCANNER && scanner ? await Promise.all(Object.entries(scannerTexts).map(async ([path, t]) => {
+        partTexts[`${member}/${path}`] = t;
+        return { path, type: path === "worker.json" ? "Worker" : "Container", sha256: await sha(t), bytes: t.length }; }))
+      : [] });
   if (container && !members.includes(RUNNER)) members = [...members, RUNNER];
+  if (scanner && !members.includes(SCANNER)) members = [...members, SCANNER];
   const list = await Promise.all(members.map(entry));
   const plane = { sha256: planeSha, bytes: src.length, asset: "bio-plane.bundled.mjs" };
   const signedList = signedMembers ? await Promise.all(signedMembers.map(entry)) : list;
@@ -160,7 +187,7 @@ export async function release({ version, src = CAPABLE_SRC, members = FLEET_BIND
   for (const m of list) {
     assets[m.asset] = m.member === tamper ? "tampered" : srcOf(m.member);
     if (m.member === missing) delete assets[m.asset];
-    for (const p of m.parts) assets[`${m.member}/${p.path}`] = p.type === "Container" ? boxText : WASM;
+    for (const p of m.parts) assets[`${m.member}/${p.path}`] = partTexts[`${m.member}/${p.path}`] ?? (p.type === "Container" ? boxText : WASM);
   }
   return { manifest, assets, version, src };
 }
@@ -176,7 +203,10 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
      `preClasses` the Durable Object classes each pre-existing script holds. `settingsBlind`: settings answer no bindings.
      `refuseSecretDelete`: a secret's removal refused. */
   grantedScope = CFG.SCOPES.join(" "), containers = "ok", preApps = [], preClasses = {}, settingsBlind = false,
-  refuseSecretDelete = false } = {}) {
+  refuseSecretDelete = false,
+  /* T36: `vpc` the Workers VPC service the operator names (R45), `refuseVpc` an upload naming one refused; `logpush` the
+     account's Logpush jobs, or "refused" (R46); `refuseSchedules` a schedule refused (R44). */
+  vpc, refuseVpc = false, logpush = [], refuseSchedules = false } = {}) {
   const signersBefore = [...ARMED_SIGNERS];
   if (rel === undefined) { rel = await release({ version: DEFAULT_VERSION, fleet: false }); armWith(SIGNER.line); }
   const realTimeout = globalThis.setTimeout;
@@ -192,7 +222,7 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
   const reads = [];
   const classes = new Map(Object.entries(preClasses));
   const apps = preApps.map((a) => ({ ...a }));
-  const rollouts = [], deleted = [];
+  const rollouts = [], deleted = [], schedules = new Map();
   const refused = [], planePuts = [], enabled = new Set();
   let prefix = subdomain;
   const verOf = (b) => (b || []).find((x) => x.name === "VERSION")?.text || null;
@@ -217,6 +247,10 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
         refused.push(`${name}:refused`);
         return cferr("the upload was refused <b>by the fake</b>", 400, 10021);
       }
+    }
+    if (refuseVpc && explicit.some((b) => b.type === "vpc_service")) {
+      refused.push(`${name}:vpc`);
+      return cferr("VPC service not found or not permitted <b>by the fake</b>", 403, 10000);
     }
     for (const b of explicit) if (b.type === "service" && b.service !== name && !acct.has(b.service)) {
       refused.push(`${name}:${b.name}->${b.service}`);
@@ -256,6 +290,12 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
       acct.set(name, (acct.get(name) || []).filter((b) => b.name !== secret));
       deleted.push(`${name}/${secret}`);
       return cfok({});
+    } },
+    { m: (u) => u.endsWith("/logpush/jobs"), f: () => logpush === "refused" ? cferr("Authentication error", 403, 10000) : cfok(logpush) },
+    { m: (u, mth) => /\/workers\/scripts\/[^/]+\/schedules$/.test(u) && mth === "PUT", f: (u, init) => {
+      if (refuseSchedules) return cferr("schedules refused <i>by the fake</i>", 500);
+      schedules.set(u.split("/workers/scripts/")[1].split("/")[0], JSON.parse(init.body).map((x) => x.cron));
+      return cfok({ schedules: JSON.parse(init.body) });
     } },
     { m: (u, mth) => u.includes("/workers/durable_objects/namespaces") && mth === "GET", f: () =>
       cfok([...classes].flatMap(([script, cs]) => cs.map((c) => ({ id: `ns-${script}-${c}`, script, class: c })))) },
@@ -349,12 +389,13 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
   ];
   const calls = script(rules);
   let ck = givenCookie, st = givenState;
-  if (!ck) ({ cookie: ck, state: st } = await begin(slug, mode, ai === undefined ? {} : { instanceAi: ai }));
+  if (!ck) ({ cookie: ck, state: st } = await begin(slug, mode, { ...(ai === undefined ? {} : { instanceAi: ai }),
+    ...(vpc === undefined ? {} : { securityVpc: vpc }) }));
   let out;
   try { out = await callback(`code=GOODCODE&state=${st}`, ck); }
   finally { globalThis.setTimeout = realTimeout; globalThis.fetch = realFetch; armWith(...signersBefore); }
   return { ...out, calls, acct, buckets, refused, planePuts, enabled, prefix: () => prefix, membersOf, reads, apps, rollouts,
-    classes, deleted };
+    classes, deleted, schedules };
 }
 
 /* The binding a plane PUT carried, by name. */

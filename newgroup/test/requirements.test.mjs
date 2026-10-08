@@ -259,20 +259,29 @@ test("R8 `rel`: the repository's release installs only when newer, hashing to it
   restoreSigners();
 });
 
-test("R9 `gen`: fresh 32-byte random credentials (the four, and the seal secret, K1541); INSTANCE_AI_TOKEN bound only when the operator supplied a valid one, never generated", async () => {
+test("R9 `gen`: four fresh 32-byte random credentials (ADMIN_TOKEN, PROBE_TOKEN, DAEMON_TOKEN, ACCOUNT_SEAL_SECRET) and no MEMBER_TOKEN, on any upload; INSTANCE_AI_TOKEN bound only when the operator supplied a valid one, never generated", async () => {
   const a = seen(await run({ slug: "gen-a" })), b = seen(await run({ slug: "gen-b" }));
   const names = (w) => secretsOf(w.planePuts[0]).map((s) => s.name).sort();
-  assert.deepEqual(names(a), ["ACCOUNT_SEAL_SECRET", "ADMIN_TOKEN", "DAEMON_TOKEN", "MEMBER_TOKEN", "PROBE_TOKEN"]);
+  assert.deepEqual(names(a), ["ACCOUNT_SEAL_SECRET", "ADMIN_TOKEN", "DAEMON_TOKEN", "PROBE_TOKEN"]);
   const values = [...secretsOf(a.planePuts[0]), ...secretsOf(b.planePuts[0])].map((s) => s.text);
   for (const v of values) assert.equal(Buffer.from(v, "base64url").length, 32, "32 random bytes, base64url");
-  assert.equal(new Set(values).size, 10, "distinct within an install and across installs");
+  assert.equal(new Set(values).size, 8, "distinct within an install and across installs");
+  /* T36 (N711): the shared member key is retired: no upload of any act binds one, and the copy holds none afterwards. */
+  armWith(SIGNER.line);
+  const full = seen(await run({ slug: "gen-full", rel: await release({ version: NEXT }) }));
+  restoreSigners();
+  for (const w of [a, b, full]) {
+    assert.ok(w.planePuts.length >= 2, "the install's uploads, its last included");
+    for (const put of w.planePuts) assert.equal(bindingOf(put, "MEMBER_TOKEN"), null);
+    assert.equal((w.acct.get(w.planePuts[0].meta.bindings.find((x) => x.name === "INSTANCE_NAME").text) || []).some((x) => x.name === "MEMBER_TOKEN"), false);
+  }
   const AI = "aik-" + "5".repeat(30);
   const ai = seen(await run({ slug: "gen-ai", ai: AI }));
   assert.deepEqual(secretsOf(ai.planePuts[0]).filter((s) => s.name === "INSTANCE_AI_TOKEN").map((s) => s.text), [AI]);
   for (const w of [a, b]) for (const p of w.planePuts) assert.equal(bindingOf(p, "INSTANCE_AI_TOKEN"), null);
 });
 
-test("R10 `install`: the plane uploaded with STORE (SQLite v1), VERSION, INSTANCE_NAME, the credentials, both buckets, SELF, BROWSER, the members present, the limits and the plane's compatibility; a refusal retries once without SELF, else nothing is left", async () => {
+test("R10 `install`: the plane uploaded with STORE (SQLite v1), VERSION, INSTANCE_NAME, the four credentials, both buckets, SELF, BROWSER, the members present, the limits and the plane's compatibility; a refusal retries once without SELF, else nothing is left", async () => {
   const cfg = readFileSync(new URL("../../bio-plane/wrangler.jsonc", import.meta.url), "utf8");
   const compatDate = cfg.match(/"compatibility_date":\s*"([^"]+)"/)[1];
   const compatFlags = JSON.parse(cfg.match(/"compatibility_flags":\s*(\[[^\]]*\])/)[1]);
@@ -292,12 +301,13 @@ test("R10 `install`: the plane uploaded with STORE (SQLite v1), VERSION, INSTANC
   for (const name of BINDINGS) assert.equal(by[name], undefined, `${name}: no member present, none bound`);
   assert.equal(by.INSTANCE_AI_TOKEN.type, "secret_text");
   assert.equal(by.ACCOUNT_SEAL_SECRET.type, "secret_text");
-  assert.equal(Object.keys(by).length, 13, "nothing else: " + Object.keys(by).join(","));
+  assert.equal(Object.keys(by).length, 12, "nothing else: " + Object.keys(by).join(","));
   const held = seen(await run({ slug: "inst-held", pre: { "pdf-worker": [{ type: "plain_text", name: "VERSION", text: "0.1.0" }] } }));
   assert.equal(held.planePuts.length, 0, "an account already holding a member is refused (R32), never bound into an install");
   const shy = seen(await run({ slug: "inst-shy", refuseSelf: true }));
-  assert.equal(shy.planePuts.length, 1, "the retry landed");
-  assert.equal(bindingOf(shy.planePuts[0], "SELF"), null);
+  assert.equal(shy.planePuts.filter((p) => "migrations" in p.meta).length, 1, "the retry landed");
+  /* Its last upload (R47's, after the address) restates what the install achieved: still no SELF. */
+  for (const put of shy.planePuts) assert.equal(bindingOf(put, "SELF"), null);
   assert.equal(shy.refused.filter((r) => r.startsWith("inst-shy")).length, 1, "retried exactly once");
   assert.match(shy.page.label("install"), /re-check documents on its own schedule — was refused by Cloudflare and was left out.*Running the updater later turns it on/s);
   const no = seen(await run({ slug: "inst-refused", refuseAllPlane: true }));
@@ -464,14 +474,17 @@ test("R15 `verify`: op=selftest with the probe credential up to ten tries, the c
   restoreSigners();
 });
 
-test("R16 the final panel shows the address, the one-time password and the member and probe credentials once; never DAEMON_TOKEN, ACCOUNT_SEAL_SECRET, INSTANCE_AI_TOKEN or the Cloudflare token; it hands over with the one-time password in the fragment", async () => {
+test("R16 the final panel shows the address, the one-time password and the probe credential once, and no member credential (none exists); never DAEMON_TOKEN, ACCOUNT_SEAL_SECRET, INSTANCE_AI_TOKEN or the Cloudflare token; it hands over with the one-time password in the fragment", async () => {
   const AI = "aik-" + "c".repeat(24);
   const w = seen(await run({ slug: "panel", ai: AI }));
   const s = Object.fromEntries(secretsOf(w.planePuts[0]).map((b) => [b.name, b.text]));
   const count = (hay, needle) => hay.split(needle).length - 1;
   assert.equal(count(w.raw, s.ADMIN_TOKEN), 1);
-  assert.equal(count(w.raw, s.MEMBER_TOKEN), 1);
   assert.equal(count(w.raw, s.PROBE_TOKEN), 1);
+  assert.equal(s.MEMBER_TOKEN, undefined, "no member credential exists");
+  /* The panel's credentials, by their labels: exactly the address, the one-time password and the probe credential. */
+  assert.deepEqual([...w.page.done.matchAll(/<span class="k">([^<]*)<\/span>/g)].map((m) => m[1]), ["Your address", "One-time password", "Probe credential"]);
+  assert.ok(!/out-member|[Mm]ember credential<\/span>/.test(w.page.done), "no member credential row");
   for (const hidden of [s.DAEMON_TOKEN, s.ACCOUNT_SEAL_SECRET, s.INSTANCE_AI_TOKEN, TOK]) assert.equal(w.raw.includes(hidden), false);
   assert.equal(typeof s.ACCOUNT_SEAL_SECRET, "string", "the seal secret was bound (K1541)");
   assert.match(w.page.done, /id="out-url">https:\/\/panel\.grp\.workers\.dev</);
@@ -512,9 +525,15 @@ test("R34 the wizard's last screen shows, before the hand-over to your group's C
       [`<button id="handover" data-url="${done.match(/data-url="([^"]*)"/)[1]}">`], "the hand-over is the only other control, never disabled");
   }
   assert.ok(!w0(ends).raw.includes("acknowledg"), "nothing on the page asks for an acknowledgement");
-  /* The very words instance-setup's claim page shows (R47): the same block from the same export. */
+  /* The very words instance-setup's claim page shows (R47), from the same export, with R47's one difference (T35; F10,
+     K1874; K2084): the claim page links the guide by its name, and the installer's screen states the same sentence as
+     text, with no link. */
   const claim = setupPage({ answered: true, result: { ok: true, group: null } });
-  assert.ok(claim.includes(block), "the claim page shows the same block");
+  const href = claim.match(/<a href="([^"]+)">Replace the one-time password<\/a>/)?.[1];
+  assert.ok(href, "the claim page links the guide by its name");
+  assert.ok(claim.includes(hostingControlBlock("notice", { guideHref: href })), "the claim page shows the same block, the guide linked");
+  assert.ok(!/<a\b/.test(block) && block.includes(escd(HOSTING_CONTROL.guide.sentence)), "the installer's screen states the guide as text");
+  for (const w of ends) assert.ok(w.page.done.includes(block), "the installer's screen shows that block");
 });
 const w0 = (ends) => ({ raw: ends.map((w) => w.raw).join("\n") });
 
@@ -522,8 +541,10 @@ const w0 = (ends) => ({ raw: ends.map((w) => w.raw).join("\n") });
 
 const planeBase = (slug, v = "0.1.0") => [{ type: "durable_object_namespace", name: "STORE", class_name: "Store" },
   { type: "plain_text", name: "VERSION", text: v }, { type: "secret_text", name: "ADMIN_TOKEN", text: "admin-kept" },
-  { type: "secret_text", name: "MEMBER_TOKEN", text: "member-kept" }, { type: "secret_text", name: "PROBE_TOKEN", text: "probe-kept" },
-  { type: "service", name: "SELF", service: slug }];
+  { type: "secret_text", name: "PROBE_TOKEN", text: "probe-kept" }, { type: "service", name: "SELF", service: slug }];
+/* A copy installed before T36: it holds the shared member key and the assistant choice an earlier installer bound. */
+const planeBefore36 = (slug, v = "0.1.0") => [...planeBase(slug, v), { type: "secret_text", name: "MEMBER_TOKEN", text: "member-kept" },
+  { type: "plain_text", name: "ASSISTANT_ENABLED", text: "on" }];
 
 test("R17 the update: no script refused unchanged; buckets where possible; the release chosen as R8; the version before read; the credentials, store and buckets kept and the rest restated; a refused upload leaves the copy; fleet, bind, verify as install; a no-op says so", async () => {
   const none = seen(await run({ slug: "upd-none", mode: "update" }));
@@ -538,12 +559,12 @@ test("R17 the update: no script refused unchanged; buckets where possible; the r
   assert.deepEqual(m.keep_bindings.slice().sort(), ["durable_object_namespace", "secret_text"]);
   const by = Object.fromEntries(m.bindings.map((b) => [b.name, b]));
   /* K1541: the copy held no seal secret (its settings say so), so the update gives it one. */
-  assert.deepEqual(Object.keys(by).sort(), ["ACCOUNT_SEAL_SECRET", "BROWSER", "CAPTURES", "DAEMON_TOKEN", "INSTANCE_AI_TOKEN", "INSTANCE_NAME", "PUBLISHED", "SELF", "VERSION"]);
+  assert.deepEqual(Object.keys(by).sort(), ["ACCOUNT_SEAL_SECRET", "BROWSER", "CAPTURES", "DAEMON_TOKEN", "INSTANCE_AI_TOKEN", "INSTANCE_NAME", "OWN_HOSTS", "PUBLISHED", "SELF", "VERSION"]);
   assert.deepEqual([by.VERSION.text, by.INSTANCE_NAME.text, by.SELF.service, by.INSTANCE_AI_TOKEN.text], [DEFAULT_VERSION, "upd", "upd", AI]);
   assert.deepEqual(m.limits, { ...LIMITS }, "the release's limits restated (R20)");
   assert.equal(Buffer.from(by.DAEMON_TOKEN.text, "base64url").length, 32);
   const kept = Object.fromEntries(w.acct.get("upd").filter((b) => b.type === "secret_text").map((b) => [b.name, b.text]));
-  assert.deepEqual([kept.ADMIN_TOKEN, kept.MEMBER_TOKEN, kept.PROBE_TOKEN], ["admin-kept", "member-kept", "probe-kept"]);
+  assert.deepEqual([kept.ADMIN_TOKEN, kept.PROBE_TOKEN], ["admin-kept", "probe-kept"]);
   assert.match(w.page.done, new RegExp(`Updated from 0\\.1\\.0 to ${DEFAULT_VERSION.replace(/\./g, "\\.")}`));
   const noR2 = seen(await run({ slug: "upd-nor2", mode: "update", pre: { "upd-nor2": planeBase("upd-nor2") }, r2: "refused" }));
   const mm = noR2.planePuts[0].meta;
@@ -598,7 +619,7 @@ test("R19 the Cloudflare token and every credential appear in no page, log or er
   try { w = seen(await run({ slug: "custody", accounts: hostile, ai: "aik-" + "h".repeat(20) })); }
   finally { Object.assign(console, orig); }
   const s = secretsOf(w.planePuts[0]);
-  const shown = new Set(["ADMIN_TOKEN", "MEMBER_TOKEN", "PROBE_TOKEN"]);
+  const shown = new Set(["ADMIN_TOKEN", "PROBE_TOKEN"]);
   const outsidePanel = w.raw.replace(/<script>done\([\s\S]*?\)<\/script>/, "");
   for (const b of s) {
     assert.equal(outsidePanel.includes(b.text), false, `${b.name} outside the panel`);
@@ -825,13 +846,14 @@ test("R36 neither the install nor the update takes, generates, binds or shows a 
   assert.equal(i.raw.includes(CLAUDE) || i.raw.includes(KEY), false);
   /* The page says where each way to the assistant is set: the group's key by an administrator, a member's own by the member, both inside it. */
   assert.match(i.page.label("assist"), /This installer takes and binds no Claude account or key/);
-  assert.match(i.page.label("assist"), /your group's own Anthropic API key, which an administrator sets inside your group's Civicsmith/);
-  assert.match(i.page.label("assist"), /each member's own Claude subscription or API key, which the member connects there, or both/);
+  assert.match(i.page.label("assist"), /its own Anthropic API key, which an administrator sets there/);
+  assert.match(i.page.label("assist"), /A member may always connect their own Claude subscription or API key/);
   /* An update of a copy holding the retired credential removes it, and says so; one holding none deletes nothing. */
   const pre = [...planeBase("r36-upd"), { type: "secret_text", name: "INSTANCE_CLAUDE_TOKEN", text: CLAUDE }];
   const u = seen(await run({ slug: "r36-upd", mode: "update", pre: { "r36-upd": pre } }));
   for (const put of u.planePuts) assert.equal((put.meta.bindings || []).some((x) => x.name === "INSTANCE_CLAUDE_TOKEN"), false, "never restated");
   assert.deepEqual(u.deleted, ["r36-upd/INSTANCE_CLAUDE_TOKEN"]);
+  assert.ok(!u.raw.includes("member-kept"));
   assert.equal(u.acct.get("r36-upd").some((x) => x.name === "INSTANCE_CLAUDE_TOKEN"), false, "none left behind");
   assert.match(u.page.label("keys"), /Claude credential an earlier installer bound into your group's Civicsmith was removed/);
   assert.equal(u.raw.includes(CLAUDE), false);
@@ -847,43 +869,37 @@ test("R36 neither the install nor the update takes, generates, binds or shows a 
   assert.deepEqual(secretsOf(ai.planePuts[0]).filter((x) => x.name === "INSTANCE_AI_TOKEN").map((x) => x.text), [AI]);
 });
 
-test("R37 the install page offers the assistant as optional, nothing preselected, saying it is off unless chosen; that once on it is reached through the group's API key (set by an administrator) or each member's own account (connected by the member), or both, chosen at setup; and that each member is told what goes to Anthropic before their first use; the choice is bound as ASSISTANT_ENABLED for the first boot, none bound when none is made; an update never changes it", async () => {
+test("R37 the install page states the assistant is optional and that its two settings are made in your group's Civicsmith at its setup, separately, nothing preselected (whether the group pays for it with its own API key, set by an administrator; whether it keeps its material away from AI, off unless an administrator turns it on with a reason); that a member may always connect their own account, serving only them, unless the group keeps its material away; that each member is told what goes to Anthropic first; the install takes no choice and writes no ASSISTANT_ENABLED, and an update never writes one", async () => {
   const home = await text("/"), upd = await text("/update");
-  const radios = [...home.matchAll(/<input type="radio" name="assistant" value="([^"]*)"([^>]*)>/g)];
-  assert.deepEqual(radios.map((m) => m[1]), ["on", "off"]);
-  assert.ok(radios.every((m) => !/checked/.test(m[2])), "nothing preselected");
-  assert.ok(home.includes(ASSISTANT_OFFER));
+  assert.ok(home.includes(ASSISTANT_OFFER), "the install page states it");
   const words = ASSISTANT_OFFER.replace(/\s+/g, " ");
-  assert.match(words, /off unless your group chooses it/);
-  /* K1755, K1851: the two ways in, both set inside the group's Civicsmith, and the choice among them (or none) at its setup. */
-  assert.match(words, /Once it is on, it is reached through your group's own Anthropic API key, which an administrator sets inside your group's Civicsmith/);
-  assert.match(words, /or through each member's own Claude subscription or API key, which the member connects there, or both/);
-  assert.match(words, /Which of these, or no AI at all, is chosen when your group's Civicsmith is set up/);
-  /* credentials R36: each member told before their first use, under either way. */
-  assert.match(words, /Each member is told what goes to Anthropic before their first use: when they connect their own account, or before their first question under your group's key/);
-  assert.match(words, /This installer takes no Claude credential of any kind/);
-  assert.ok(!upd.includes('type="radio" name="assistant"'), "the update page offers no choice");
-  for (const [v, mode, says] of [["maybe", "install", /choose one of the two, or neither/], [true, "install", /choose one/],
-      ["on", "update", /An update never changes whether your group's Civicsmith offers the assistant/]]) {
-    const r = await req("/begin", { method: "POST", body: JSON.stringify({ slug: "as-refused", mode, assistant: v }) });
-    assert.deepEqual([r.status, (await r.json()).ok], [400, false], String(v));
-    assert.equal(r.headers.get("set-cookie"), null);
+  assert.match(words, /^The assistant is optional\./);
+  assert.match(words, /Its two settings are made in your group's Civicsmith when it is set up, separately, and neither is chosen for you/);
+  assert.match(words, /whether your group pays for it, with its own Anthropic API key, which an administrator sets there/);
+  assert.match(words, /whether your group keeps its material away from AI, which is off unless an administrator turns it on, giving a reason/);
+  assert.match(words, /A member may always connect their own Claude subscription or API key, which serves only them, unless your group keeps its material away from AI/);
+  assert.match(words, /Each member is told what goes to Anthropic before their first use/);
+  assert.match(words, /makes no choice about the assistant/);
+  /* No choice offered: no control of any kind about the assistant on either page. */
+  for (const page of [home, upd]) assert.ok(!/name="assistant"/.test(page) && !/assistant:/.test(page), "no choice is offered or sent");
+  /* /begin takes none: an `assistant` field is kept nowhere and refuses nothing. */
+  for (const [mode, v] of [["install", "on"], ["install", "off"], ["update", "on"], ["install", "maybe"]]) {
+    const b = await begin("as-" + mode, mode, { assistant: v });
+    assert.equal(b.j.ok, true, `${mode} ${v}`);
+    assert.ok(!("as" in cookieValue(b.cookie)) && !JSON.stringify(cookieValue(b.cookie)).includes(`"${v}"`), "kept nowhere");
   }
+  /* No upload of the install writes ASSISTANT_ENABLED, whatever /begin was sent; the page says where the settings are made. */
   armWith(SIGNER.line);
   const rel = await release({ version: NEXT });
-  for (const choice of ["on", "off"]) {
-    const b = await begin("as-" + choice, "install", { assistant: choice });
-    const w = seen(await run({ slug: "as-" + choice, rel, cookie: b.cookie, state: b.state }));
-    assert.equal(w.planePuts.length, 2);
-    for (const put of w.planePuts) assert.deepEqual(bindingOf(put, "ASSISTANT_ENABLED"), { type: "plain_text", name: "ASSISTANT_ENABLED", text: choice });
-    assert.match(w.page.label("assist"), choice === "on" ? /You chose to offer the assistant/ : /You chose not to offer the assistant for now, so it is off/);
-  }
-  const n = seen(await run({ slug: "as-none", rel }));
-  for (const put of n.planePuts) assert.equal(bindingOf(put, "ASSISTANT_ENABLED"), null);
-  assert.match(n.page.label("assist"), /No choice was made about the assistant, so it is off/);
-  const u = seen(await run({ slug: "as-upd", mode: "update", rel,
-    pre: { "as-upd": [...planeBase("as-upd"), { type: "plain_text", name: "ASSISTANT_ENABLED", text: "on" }] } }));
+  const b = await begin("as-on", "install", { assistant: "on" });
+  const w = seen(await run({ slug: "as-on", rel, cookie: b.cookie, state: b.state }));
+  assert.ok(w.planePuts.length >= 2);
+  for (const put of w.planePuts) assert.equal(bindingOf(put, "ASSISTANT_ENABLED"), null);
+  assert.equal(w.page.label("assist"), ASSISTANT_OFFER.replace(/\s+/g, " ").trim());
+  /* An update writes none, and leaves none behind (R17's T36 sentence). */
+  const u = seen(await run({ slug: "as-upd", mode: "update", rel, pre: { "as-upd": planeBefore36("as-upd") } }));
   for (const put of u.planePuts) assert.equal(bindingOf(put, "ASSISTANT_ENABLED"), null, "an update never sends it");
+  assert.equal(u.acct.get("as-upd").some((x) => x.name === "ASSISTANT_ENABLED"), false, "none left behind");
   restoreSigners();
 });
 
@@ -1358,7 +1374,7 @@ test("R40 every member- or founder-facing string the installer serves (the insta
       [INVITATION, "<title>Start your group's own Civicsmith</title>"], [INVITATION, ">Set up my group's Civicsmith</a>"],
       [await text("/elsewhere"), "Setting up your group&#39;s Civicsmith."]])
     assert.ok(page.includes(want), want);
-  assert.match(ASSISTANT_OFFER.replace(/\s+/g, " "), /inside your group's Civicsmith/);
+  assert.match(ASSISTANT_OFFER.replace(/\s+/g, " "), /made in your group's Civicsmith when it is set up/);
   const done = seen(await run({ slug: "r40-words" }));
   assert.ok(done.page.done.includes(">Go to your group&#39;s Civicsmith and finish setup</button>"));
   assert.match(done.page.done, /<b>Your group's Civicsmith is running\.<\/b>/);

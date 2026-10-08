@@ -82,11 +82,14 @@ too small for that work.</li>
 turns on the file storage your group's Civicsmith keeps its evidence in. The installer
 checks for the plan and the storage before it creates anything, and stops,
 saying which is missing, if either is.</li>
-<li><b>The Workers Containers permission,</b> for the assistant through a
-member's own Claude subscription, which runs in a container. The setup asks
-for it; without it everything else installs, and the assistant is used only
-with an API key: a member's own, or your group's. The assistant is optional, and
-the installer takes no Claude credential of any kind.</li>
+<li><b>The Workers Containers permission,</b> which the setup asks for, for
+two things that run in containers. It installs the built-in file scanner and
+safe view: without it, files are kept and shown but not scanned, and a
+high-risk file opens only in its safe view once one can be made. And it serves
+the assistant through a member's own Claude subscription: without it, the
+assistant is used only with an API key: a member's own, or your group's.
+Everything else installs either way. The assistant is optional, and the
+installer takes no Claude credential of any kind.</li>
 <li><b>About five minutes,</b> in a browser. No terminal, no code, nothing
 to download.</li>
 </ul>
@@ -94,7 +97,7 @@ to download.</li>
 <h2>What happens, and what we can and cannot see</h2>
 <p>The setup assistant asks Cloudflare to show you a permission screen
 naming exactly what it may do in your account: install the software, set
-up its storage, and set up the assistant's container. You approve it on Cloudflare's own page, and you can revoke
+up its storage, and set up its containers (the file scanner and the assistant's). You approve it on Cloudflare's own page, and you can revoke
 it any time from your dashboard. That permission passes through our
 assistant for the seconds the installation takes, is stored nowhere, and is
 never seen by a person. After setup, nothing your group does routes through
