@@ -184,7 +184,7 @@ Each line is one job (P8): every T36 entry for that module. Fields: module · (N
 | N703 (part) | the Settings › Security screen (DEC-165) | a dependency not yet built: the new screens |
 | N703 (part) | Cloudflare's blocked-request counts | a deployment or measurement: a zone and a read token per group's plan (`study-cloudflare-security.md` §3) |
 | F1 (tail) | the query form of a credential refused by name | a deployment: one release carries both forms so installed callers move first (F1); joins T36-26, T36-36, T36-37 under rule 7 (b) |
-| N708 | the subscription sign-in shares (N678): agent-runner's own sign-in, agent-worker's relay, the `subscriptionsignin` spec and route | a measurement: M-Q2 on biosmoke7 after T35's release; joins under rule 7 (a) |
+| N708 | the subscription sign-in shares (N678): agent-runner's own sign-in, agent-worker's relay, the `subscriptionsignin` spec and route | the order: L6 started before M-Q2 could be measured (K2131, K2133); at T37 it enters without waiting on M-Q2, which is measured at its own first live run (K2134) |
 | N708 (part) | credentials R22's `subscription` kind retired | the order (P4): its replacement is built in L6, after credentials' L2 |
 | N710, N714 (screens), DEC-169 | "Opening a file" (the warning before opening, the safe view's and safe copy's labels, one click to the original), Settings › Security › Security tools | a dependency not yet built: the new screens (as N703's Settings › Security); the setup step is T36-33's |
 | N719 (part) | `personexpunge`'s dialog readable on a phone, "finish on a larger screen" | a dependency not yet built: its surface is the new screens' (N672) |
