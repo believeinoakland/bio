@@ -105,13 +105,12 @@ Each line is one job (P8): every T37 entry for that module. Fields: module · (N
 - **T37-26 · op-grades** · (N669) grades `translationgrant` (administrators), `translationdraft`, `translationadopt`, `translationconfirm`, `translationrevert` (a granted member; the protected set's confirm a second granted speaker or an administrator, DEC-157) · K1957; DEC-157 · req: BOB's wording · depends —. Reads T36-30's result. (`subscriptionsignin` is graded since T35-66.)
 - **T37-27 · affordances** · (N669, N708) `ACT_HELP` (R48) gains the explanation of each new op where the design stream's `mock-acts.js` has it; one it lacks is named in op-declarations' test with why (T36-35's rule) · DEC-174 (3) · req: R48, BOB's wording · depends —. Reads T36-31's result.
 - **T37-28 · notice-producers** · (N762, its share) R14 reads `scanFindings` with `since` (T37-8) · K2130 · req: R14, BOB's wording · depends T37-8 (L3). Reads T36-32's result.
-- **T37-29 · setup-page** · (N708, its share; N766, K2135) the members section offers a member "Sign in with Claude", starting the own sign-in (T37-16, T37-17) through `subscriptionsignin`, until the new screens do (as R30 placed DEC-169's step) · K2134, K2135; DEC-156 · req: a new R, BOB's wording · depends T37-16, T37-17 (L6); For BOB 1 answered first. Reads T36-33's result.
 - **T37-30 · instance-setup** · (N765) R55's gate answers `credentials`' `AI_KEPT_AWAY` row (T37-6); `ASSISTANT_OFF` and its row retire (K231). (N669, its share; DEC-127 (2), (5), DEC-157) the group's translation workspace over DEC-179's word list: per-language grants to named members (`translationgrant`, administrators); a draft (`translationdraft`, T37-14) or a typed word adopted (`translationadopt`); the protected set (DEC-179's 345) changed only with a second granted speaker or an administrator's back-translation check (`translationconfirm`); an adoption record with one-act undo (`translationrevert`); members' "looks wrong" marks; official names and translations from jurisdictions (T37-2) offered first; screens falling back word by word to English (R64). (N756, if T36-34 left it) `setup.mjs`:1272 reads `provenance.receiptsOfCapture` (R60) · K1793, K1804, K2101, K2130; DEC-127, DEC-157, DEC-179 · req: R55 and new Rs, BOB's wording · depends T37-1, T37-2 (L1), T37-6 (L2), T37-14 (L6). Reads T36-34's result. **P6:** 2,519 before T36-34; the workspace adds perhaps 500–800: the job reports if it would pass about 4,000.
 - **T37-31 · op-declarations** · (N708; N701, its share) declares `subscriptionsignin` (the op behind `owed:subscriptionsignin`) and R27 lists it; (N669; N701, its share) declares the five translation ops and their reads, and R27 lists `translationconfirm` (R27's T36 sentence retired) · K1869, K2130; DEC-156, DEC-157 · req: R27, new Rs, BOB's wording · depends —. Reads T36-35's result. **P6:** 3,092 before T36-35 (which adds 26 declarations): the START measures it; past about 4,000 a split is BOB's first (K617).
 - **T37-32 · store-door** · (N761, its share; R9) the door's grant reads take `secretSha` from the body or a header (rule 4). (N765, its share) R10 reads `AI_KEPT_AWAY` where it reads `ASSISTANT_OFF` · K2129, K2130 · req: R9, R10, BOB's wording · depends T37-30. Reads T36-48's result.
 - **T37-33 · control-plane** · (N761) a review or template grant's `secretSha` reaches the store's internal request in its body or a header, never its query (`index.mjs`:209, :645), as a new R (F1's rule for digests; R60 is taken, K2130), clearing rule 4's N761 reds. (N762, its share) may `arm` file-safety after `deepercheck` and `safecopy`. (N708) routes `subscriptionsignin` to the member's own runner (agent-worker's relay). (N669) routes the translation ops to instance-setup · K1874, K2129, K2130, K2134 · req: a new R for N761, routes, BOB's wording · depends T37-30, T37-31, T37-32. Reads T36-37's result. **P6:** 3,025 before T36-37 (which adds the 23 file-safety routes and R60–R63): the START measures it; past about 4,000 a split is BOB's first (K617).
 
-**L11 merge order:** `modules.json` order: wizard-scripts → op-grades → affordances → notice-producers → setup-page → instance-setup → op-declarations → store-door → control-plane (last: rule 4's callers move after their providers).
+**L11 merge order:** `modules.json` order: wizard-scripts → op-grades → affordances → notice-producers → instance-setup → op-declarations → store-door → control-plane (last: rule 4's callers move after their providers).
 
 ## Left out of T37 (one hard reason each)
 
@@ -121,7 +120,7 @@ Each line is one job (P8): every T37 entry for that module. Fields: module · (N
 | N751 | doctypes R35's out-of-sample measure for coordinator, review_due, revision_cycle | a measurement: no fresh policies exist beyond the 74 read (K2079) |
 | N757 | S17: the obscured, labelled copy of a visit's photo in a published case; the reminder when a photo is taken | a dependency not yet built: S17's DEC is not on `main` (PR #14 does not carry it); the reminder's surface is the new screens' (N672). See For BOB 3 |
 | N708 (part) | credentials R22's `subscription` kind retired | the order (P4): its replacement is built in T37's L6 (T37-16, T37-17), after credentials' L2 |
-| N708 (M-Q2) | M-Q2 on biosmoke7 (cold and warm container starts, egress) | a deployment and measurement: at N708's first live run after T37's release, Bob signing in himself (K2134, K2135) |
+| N708 (M-Q2; the sign-in's surface) | "Sign in with Claude" for a member, and M-Q2 at Bob's first own sign-in | Bob's (UX, K2147): it waits for the new member screens (N672); no interim setup-page control |
 | N669 (screens) | the translation workspace's screens; the "looks wrong" mark's surface | a dependency not yet built: the new screens' shell (N672) |
 | N670 | DEC-127 (3), (6): "read in my language" on notes, questions, findings and notices; offering a translation to Civicsmith's library | the order (P4): it reads translations held, which N669 builds in T37's L11 (T37-30), after the note, question and finding owners' layers |
 | N551 (part) | the welcome and first-question wizards ordering what they offer by the self-description | a dependency not yet built: the wizard runner |
@@ -157,7 +156,7 @@ Each line is one job (P8): every T37 entry for that module. Fields: module · (N
 
 **Carried from T36 and earlier** (`current.md`'s T36 table and the archived left-out tables): the measurement, real-group, Bob's UX, dependency, trigger and deployment rows keep their reasons unchanged; BOB re-reads them at the opening.
 
-**Closed without a T37 entry:** N766 (superseded by K2134; its setup-page share is T37-29, M-Q2 the row above). N756 if T36-34 applied it (else in T37-30). F1's tail (in T36 under rule 7 (b), K2111).
+**Closed without a T37 entry:** N766 (superseded by K2134; its setup-page share dropped by Bob, K2147; M-Q2 the row above). N756 if T36-34 applied it (else in T37-30). F1's tail (in T36 under rule 7 (b), K2111).
 
 ## Entries carried from `next.md` (N748–N767) and T36's table
 
@@ -169,7 +168,7 @@ Measured on `tranche/T36` @ `9c8cc5693c` (L6 running; K1821's rule: own code in 
 
 ## Summary
 
-**Jobs per layer:** L1 5, L2 2, L3 1, L4 2, L5 3, L6 4, L7 0, L8 5, L9 1, L10 1, L11 9. **Total 33** (a plane share possible at L11 from T37-24, not counted).
+**Jobs per layer:** L1 5, L2 2, L3 1, L4 2, L5 3, L6 4, L7 0, L8 5, L9 1, L10 1, L11 8. **Total 32** (a plane share possible at L11 from T37-24, not counted).
 
 ## For BOB (meaning that might be Bob's; not decided here)
 
