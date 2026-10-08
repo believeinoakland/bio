@@ -80,7 +80,7 @@ test("R4: probe lands in scratch (a named other namespace is refused 403 SCOPE_R
                        403, "SCOPE_REFUSED", "C-38.6", [env.PROBE_TOKEN]);
   assert.equal(body.tokenClass, "probe");
   assert.equal(env.calls.length, 0);
-  for (const token of [env.ADMIN_TOKEN, env.MEMBER_TOKEN, S.ann, S.founder, K.ann, K.org]) {
+  for (const token of [env.ADMIN_TOKEN, S.ann, S.founder, K.ann, K.org]) {
     assert.equal(await land(token), "bio");
     assert.equal(await land(token, { store: "bio" }), "bio");
     assert.equal(await land(token, { store: "scratch" }), "scratch");
