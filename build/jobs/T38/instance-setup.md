@@ -44,3 +44,7 @@
 - `ownership` (tranche/T38): 4 files changed; 0 failures.
 
 Size (session_01DvLwj9sgfMgyKyqYnjboLo): test runs 8, module lines 4228
+
+## J1 · REPORT
+
+Other modules, none needing a change from me: (1) promotion row-census.test.mjs now also lists 'departed with no record: C-64.18 NO_SUCH_MEMBER' — expected, rule 6 item 2, stamped in T39 (K2275 (4)); the test was red before for its other rows. (2) plane's generated dist/bio-plane.bundled.mjs carries the dropped row until regenerated at L11's close (§14). (3) answer-envelope families.test.mjs: the same three reds before and after my change (rule 6 items 13, 17); none added.
