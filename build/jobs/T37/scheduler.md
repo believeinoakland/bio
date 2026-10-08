@@ -33,3 +33,7 @@ The scheduler here does exactly R24 (due and wake are R39's answer; no interval 
 **Checks:** format: 136 modules, 135 requirements files; 0 failures. architecture: 12 product files, 59 relative imports; 0 failures. coverage: 24 of 24 live requirement ids named by a test; 0 failures. ownership: 6 files changed by scheduler; 0 failures.
 
 Size (session_01LYDPVU33jWW5KRDoigq6gZ): test runs 46, module lines 724
+
+## J2 · COMPLETE
+
+T37-24 complete (record: Completion). R2, R7, R24 applied: five file-safety consumers on R39's wakes, file-reputation added, onFileWork registered at hand (fault on refusal), the two intervals and sched_files gone (a T36 value ignored). Census rows 54–58 cleared (Authorization header; an enrolled member's session). Scheduler 109/1: the one red is plane.test.mjs:177, rule 6 item 23 until N789. Users: all green but plane t36.test.mjs:176 (:187 pins T36's every-firing filedeeper; plane's re-pin T37-48). Checks: format, architecture, coverage 24/24, ownership: 0 failures each. Nothing new from the plane's composition. 724 lines.
