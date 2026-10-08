@@ -127,3 +127,5 @@ Settled, not Bob's: N782's shape owner (rule 3); N783's boundary (rule 2, at L2'
 - (added by BOB #140, K2235) N789 · file-safety (L3): R39's render wake null while no renderer is bound; clears scheduler `plane.test.mjs`:177 (red 23). Number it at the opening.
 - (added by BOB #140, K2238) N790 · case-carriage (L8): re-code `MACHINE_CANNOT_MARK` (C-141.1, shared with sources' C-121.7); joins T38-11.
 - (added by BOB #140, K2239) N791 · file-scanner (L1), file-safety (L3): a generic template's list names host; structured values; the digest from the stated handling.
+- (BOB #140, K2246) N779 is closed (Bob: A, as today): drop it from the left-out table at the opening.
+- (added by BOB #140, K2247) N792 · admission (L11), credentials (L2): one sign-in source for setpassword and login when KNOCK_FINGERPRINT_KEY is unbound.
