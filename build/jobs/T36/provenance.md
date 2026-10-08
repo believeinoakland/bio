@@ -1,6 +1,6 @@
 # provenance (T36)
 
-**Status** · session_01B5spSoDUidbVfxwqT7NYMm · depth 2 · RUNNING until 2026-10-08T01:11:20Z (users' tests) · handled B2
+**Status** · session_01B5spSoDUidbVfxwqT7NYMm · depth 2 · COMPLETE · handled B2
 
 ## Completion (PROVENANCE #18)
 
