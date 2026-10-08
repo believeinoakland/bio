@@ -12,3 +12,7 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Merge order in L11 (`modules.json` order): wizard-scripts → op-grades → affordances → notice-producers → setup-page → instance-setup → op-declarations → store-door → control-plane → plane.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there, item 17 with `plan/t37-red-census.md`); none is yours unless named here. Red 14 (affordances `t36-backing.test.mjs`:76, census row 28) is shared: your R25 lists `AI_KEEP_AWAY_NO_REASON`, and affordances (T37-27, after you) re-pins the test; it stays red from your merge until T37-27. The red census lists no op-grades test.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · CHANGE
+
+(K2239; OP-DECLARATIONS #14 J1) DEC-182 (2) withdraws the alias claimidentity (the same-person claim is identityclaim): op-declarations drops it from OP_ALIASES. Drop it from your copy of the alias table (t34.mjs:83) and any test pinning it, so your merge and op-declarations' agree.

@@ -125,3 +125,5 @@ Settled, not Bob's: N782's shape owner (rule 3); N783's boundary (rule 2, at L2'
 
 **BOB #140's review notes (to settle at the opening):** T38-16's route: since K2226 `obscuremark`/`photomarks` reach case-carriage through its own ops map routed by the plane (R18), so `obscuremarkwithdraw` joins `caseCarriageOps` (T38-11) and control-plane may need no entry; check at the opening. N788's possible shares in affordances (`ACT_HELP`), wizard-scripts (the ceremony script) and answer-envelope (none: C-141 is read whole since T37-50) are checked against PR #15's text on `main`. N670's reason re-read at the opening.
 - (added by BOB #140, K2235) N789 · file-safety (L3): R39's render wake null while no renderer is bound; clears scheduler `plane.test.mjs`:177 (red 23). Number it at the opening.
+- (added by BOB #140, K2238) N790 · case-carriage (L8): re-code `MACHINE_CANNOT_MARK` (C-141.1, shared with sources' C-121.7); joins T38-11.
+- (added by BOB #140, K2239) N791 · file-scanner (L1), file-safety (L3): a generic template's list names host; structured values; the digest from the stated handling.
