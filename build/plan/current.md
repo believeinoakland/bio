@@ -119,7 +119,7 @@ Each line is one job (P8): every T38 entry for that module. Fields: module · (N
 
 - **T38-31 · affordances** · (DEC-183; PR #15) `ACT_HELP` regenerated from PR #15's `mock-acts.js` (204 texts, the `setpassword` text among them), clearing `t36.test.mjs`:40 (R48) · K2300 · req: none · depends —. Joined at L6 (K1741).
 
-**L11 merge order:** `modules.json` order: `modules.json` order (affordances among them, before op-declarations; T38-22 dropped), plane last (K2300).
+**L11 merge order:** `modules.json` order (affordances among them, before op-declarations; T38-22 dropped), plane last (K2300).
 
 ## Left out of T38 (one hard reason each)
 
