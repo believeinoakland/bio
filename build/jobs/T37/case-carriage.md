@@ -1,6 +1,6 @@
 # case-carriage (T37)
 
-**Status** · session_013UybDevdS9DJfUx9eqiUuX · depth 2 · WAITING ON BOB (J2) · handled B2
+**Status** · session_013UybDevdS9DJfUx9eqiUuX · depth 2 · WORKING · handled B2
 
 ## Progress (to be completed at COMPLETE)
 
