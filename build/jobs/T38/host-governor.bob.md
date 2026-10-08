@@ -1,0 +1,12 @@
+# BOB to host-governor (T38)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T38), layer 3, host-governor: T38-7 (N784), test only. Read also K2182 and K2189 (their lines in `build/rulings.md`).
+Your requirements: `build/requirements/host-governor.md` (read whole); unchanged. Your work: `bio-plane/test/m/host-governor/ops.test.mjs`'s helper sends `Authorization` (C-38.10) and its three `T.member` uses become a member's session (C-38.11), as K2182 did elsewhere, so its nine tests (plan rule 6 item 6) pass. No `src/` change is expected; if one proves needed, ask in a QUESTION first.
+Reading set (mechanics §17): measured at this START by `build/plan/reading-sets.py`: 86 KB, under 300 KB: read it whole and state so in your record.
+Merge order in L3 (`modules.json` order): host-governor → file-safety.
+Inherited reds: the plan's rule 6 list as it stands at your START (read it there); item 6 is yours to clear, none else.
+Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
