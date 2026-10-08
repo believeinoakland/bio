@@ -57,7 +57,23 @@ Measured at the start: own requirements 49 KB; code 191 KB; tests 330 KB (`readi
 - `node checks/ownership.mjs … acquisition tranche/T36`: 7 files; 0 failures.
 - **P6:** the module is 2,927 lines of source (tests 4,400), under the mark.
 
-Size (session_01UBPYqfwtexSRDSTDJARv1u): test runs 9, module lines 2927
+## CHANGE B2 (K2100): R38 refuses NOT_AN_ARCHIVE
+
+- I merged `tranche/T36` (R38 amended @ b0c2defa30).
+- **What changed:** `unpack` now refuses a held capture that R17's rule does not profile as `zip` with `NOT_AN_ARCHIVE` (C-139.20, its row), exactly as R41 refuses it.
+  - **Where it sits:** after `ARCHIVE_NOT_HELD` and before any listing, in a new DEC-49 region `is-not-an-archive` in `unpack`; nothing is filed or recorded.
+  - **One rule for both:** `unpack` and `archiveList` share the check (`archiveProfile`), and the row's `where` names both sites.
+  - **Not asked twice:** acquire's own R40 call is made only for a capture it has just profiled `zip`, so `unpack` does not profile it again.
+- **Test changes:**
+  - New test in `unpack.test.mjs`, naming R38: plain text, a PDF, an office file, an OpenDocument file, and an end record claiming entries it does not hold. Each is refused after `ARCHIVE_NOT_HELD` and answers as R41 does; a plain ZIP still opens (negative control).
+  - `unpack.test.mjs`'s refusal test: the plain-text `ARCHIVE_UNREADABLE (eocd_not_found)` arm moved to the new test, because such a capture is now `NOT_AN_ARCHIVE`. `ARCHIVE_ENTRIES_MAX` is now driven by a real archive of 10,001 entries, which R17 profiles `zip`. The fixture whose end record only claims 10,001 entries is no longer profiled `zip`.
+  - The R41 test of an opened office file now opens it through acquire's internal call, standing for one opened before T36.
+- **Tests and checks:**
+  - acquisition: tests 152, pass 152, fail 0.
+  - Users of acquisition: the same results as above (answer-envelope 1 and op-declarations 3, the inherited reds only).
+  - format, architecture, coverage (44 of 44 live ids) and ownership (8 files): 0 failures each.
+
+Size (session_01UBPYqfwtexSRDSTDJARv1u): test runs 14, module lines 2940
 
 ## J1 · REPORT
 
