@@ -819,7 +819,13 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    CHANGED IN WHAT THE GATES RUN, no row line moving: none a T37 or T38 job record names. T38's layer 1 (bundler,
    image-codecs, file-scanner) added and changed no row. T38's layer 2 (project-roster, membership, credentials) is
    re-pinned in place as each merges, so T38 names one catalogue.
-   ROW_CENSUS (R50) re-pinned to this tree: 1546 rows. Rows a T38 job in layers 3–11 adds or changes are T39's stamp
+   T38 LAYER 2, re-pinned in place after all three merged (K2283): project-roster (the membership split, N783) CHANGED
+   C-56.5 TARGET_NOT_JOINED, C-33.28 LAST_OWNER, C-70.4 PROJECT_DIRECTORY_NEEDS_A_MEMBER and C-95.1–.9, `where` only, each
+   now naming `src/project-roster/index.mjs`, numbers, codes and translations unmoved, membership's copies gone;
+   membership ARRIVED C-96.47 NO_SUCH_MEMBER (`noSuchMember`, N793's one site; instance-setup's C-64.18 leaves in T39);
+   credentials CHANGED C-29.17 UNKNOWN_ACCOUNT_KIND and C-29.20 NO_ACCOUNT (translation: the subscription is connected by
+   signing in, N785).
+   ROW_CENSUS (R50) re-pinned to this tree: 1547 rows (1546 over the tranche at its layer 2's opening). Rows a T38 job in layers 3–11 adds or changes are T39's stamp
    (plan T38, rule 6 item 2). */
 export const CATALOG_VERSION = "1.65.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
@@ -913,8 +919,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    this module's own census suite, `bio-plane/test/system/row-census.test.mjs` (legacy-tests' until T22's opening, K1006):
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1546,
-  digest: "d235871f06d5e065388a8cf13ef26ebc3403194d5c3bf379e2556e125eaebb6d" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1547,
+  digest: "6f8d4d64c1cef0a1a028135eab93c6ece2e4e13d28026e32b4288f63d35fae0c" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();

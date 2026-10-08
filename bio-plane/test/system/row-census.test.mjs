@@ -137,7 +137,8 @@
    control re-run on the stamp commit: its arms in the suite pass.
    RE-PINNED 2026-10-08 (PROMOTION #36, T38-6, T37's red 2): over 1.65.0, the stamp's own lines
    (`fixtures/row-census-1.65.0.jsonl`, written by `row-census.mjs`'s own `censusOf`) on the stamp commit (named in
-   `build/jobs/T38/promotion.md`; 1546 rows, d235871f…, over `tranche/T38` at its layer 2); the 1.64.0 snapshot (no
+   `build/jobs/T38/promotion.md`; 1546 rows, d235871f…, over `tranche/T38` at its layer 2; 1547 rows, 6f8d4d64…, after
+   project-roster's, membership's and credentials' merges, K2283); the 1.64.0 snapshot (no
    stamp reads it) renamed to it; T37's layers 3–11 rows (28 new, 1 retired, 7 changed, each named by its job record;
    none declared here, accepted red 2 at T37's close) stamped in 1.65.0. Re-pinned in place as each T38 layer-2 job
    merges, so T38 names one catalogue. A row a T38 job in layers 3–11 adds or changes turns this suite red, accepted by
