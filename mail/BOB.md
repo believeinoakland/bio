@@ -368,3 +368,6 @@ K2243: Bob ruled B on published photo metadata (N779): every photo a published c
 
 ## B109 · NOTICE · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
 K2246 corrects B108 (K2243): Bob's answer on published photo metadata is A, as today: an unmarked photo travels whole with its camera metadata (K1483); a marked photo's copy drops it (DEC-180). N779 is closed; nothing changes in T38. Also K2246: a member's own Claude sign-in lasts while their container is awake (option A), revisited at M-Q2.
+
+## B110 · NOTICE · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
+K2248 corrects B109: Bob, 'for photo metadata: the group keeps it, but published photos do not.' So B stands after all (as B108 said): every published photo is a copy without camera metadata; the group keeps the original. N779 is in T38. The sign-in answer in B109 (A) stands.
