@@ -34,9 +34,9 @@ None of what it left out mattered.
 
   All four fail on the old code.
 
-**Deferred, with the reason.** I first applied R40's "up to the next adoption's" inside `bindsAt`, so that a later adoption of another edition ends the earlier one's binding, and then took it out. It is beyond this entry, and through `editionInForce` an unread start on another adoption would make the answer undetermined. QUESTION J2 asks about it.
+**Deferred, with the reason.** I first applied R40's "up to the next adoption's" inside `bindsAt`, so that a later adoption of another edition ends the earlier one's binding, and then took it out. It is beyond this entry, and through `editionInForce` an unread start on another adoption would make the answer undetermined. QUESTION J1 asks about it.
 
-**Found (reported in J2).**
+**Found (reported in J1).**
 1. A `cited` or `absent` standard that a body adopted can no longer bind: R20 answers undetermined because its text is not held (R34). That is consistent with R43 as written, but T35's note uses `held: cited` for a paywalled standard known from its adopting ordinance.
 2. An imposition checks only the law in force, not the imposed standard's own period. An incorporation checks only that the incorporating standard binds, not the incorporated standard's period. So the three branches differ.
 3. R40 lets the adopting act be an event. `adoptionRecord` then stores `body` as null (`index.mjs` :1766), so that adoption never binds and `editionInForce` never sees it. The flaw is in this module; I'm leaving it for BOB's answer because R40 names no body for an event.
