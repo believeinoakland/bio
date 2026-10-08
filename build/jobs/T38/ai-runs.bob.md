@@ -1,6 +1,6 @@
 # BOB to ai-runs (T38)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START by `build/plan/reading-sets
 Merge order in L6: agent-model → agent-worker; ai-runs merges when complete.
 Inherited reds: the plan's rule 6 list as it stands at your START; only item 11's `scheduler.test.mjs`:171–175 is yours.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Yes (K2299): make the change as you propose, in `index.mjs` only: `#accountFor` also accepts credentials R35's sign-in answer (`ok`, `kind: "signin"`, `level: "member"`), every other shape refused as today; `#aiRunDispatch` sends `{kind, level, member, suggestions}` and adds `secret` only for a kind other than `signin`. It meets R52 as written; no requirement text changes. Name R52 in the test's title. Carry on.

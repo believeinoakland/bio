@@ -1,11 +1,16 @@
-/* R2, R3, R5, R6, R7 — THE SUBSCRIPTION PROVIDER: a member's Claude subscription runs Claude Code, unmodified, in
- * the `agent-runner` container, reached through the Container Durable Object binding the caller passes as
- * `runner` (K1429, K1502). This file never imports the runner; it speaks the runner's wire (agent-runner R1–R4):
+/* R2, R3, R5, R6, R7 — THE SIGN-IN PROVIDER: a member's own Claude sign-in runs Claude Code, unmodified, in that
+ * member's own `agent-runner` container instance, reached through the Container Durable Object binding the caller
+ * passes as `runner` (K1429, K1502, K1819, K2200). This file never imports the runner; it speaks the runner's wire
+ * (agent-runner R1–R4):
  *
- *   one WebSocket per conversation, opened at `RUNNER_URL` through the binding;
- *   → the conversation request `{credential: {kind, secret}, model, system, prompt, tools, max_turns}`;
+ *   one WebSocket per conversation, opened at `RUNNER_URL` on the instance the binding names by the member
+ *   (`runner.idFromName(member)`): the instance holding that member's stored sign-in, never a new or unnamed one;
+ *   → the conversation request `{credential: {kind: "signin", member}, model, system, prompt, tools, max_turns}`,
+ *     which carries no secret: the query runs on the instance's stored sign-in (agent-runner R2, R21);
  *   ← a relay `{tool_use: {id, name, input}}`, answered → `{tool_result: {id, content, is_error?}}` on the same socket;
- *   ← the end `{ok: true, result, stop_reason, num_turns, usage}` or `{ok: false, code, detail}`.
+ *   ← the end `{ok: true, result, stop_reason, num_turns, usage}` or `{ok: false, code, detail}`. The runner's own
+ *     refusals (`NOT_SIGNED_IN`: the instance holds no stored sign-in; `NOT_THIS_MEMBER`: it holds another member's)
+ *     are `refused` with that code as their type, never reworded (R2).
  *
  * THE RELAY KEEPS THE TABLE'S DECISIONS (R7; M-Q4 GO, relay). The model sees only the tools the conversation
  * names; each call it makes is relayed here and performed by the caller's `onTool`, exactly as on the API-key path,
@@ -79,9 +84,9 @@ const plainTools = (tools) => (Array.isArray(tools) ? tools : [])
 /** The tools a conversation offers: the caller's, and `read_result` while the transcript holds a result (R12). */
 const offeredTools = (tools, held) => [...plainTools(tools), ...(held.size ? [plainTools([READ_RESULT])[0]] : [])];
 
-/** The conversation request; the token is its credential field and appears nowhere else (R2, R8). */
-function conversationRequest(token, { model, system, messages, tools, maxTurns }) {
-  return { credential: { kind: "subscription", secret: token }, model, system: systemText(system),
+/** The conversation request; its credential names the member and carries no secret (R2; agent-runner R2). */
+function conversationRequest(member, { model, system, messages, tools, maxTurns }) {
+  return { credential: { kind: "signin", member }, model, system: systemText(system),
            prompt: renderTranscript(messages), tools: offeredTools(tools, heldResults(messages)), max_turns: maxTurns };
 }
 
@@ -99,18 +104,18 @@ function answeredHere(u, messages) {
   return null;
 }
 
-/** One connection to the runner, read as a queue. Answers `{send, next, close}` or an outcome; never throws. */
-async function openRunner(runner, token) {
+/** One connection to the member's own runner instance, read as a queue. Answers `{send, next, close}` or an
+ *  outcome; never throws. */
+async function openRunner(runner, member) {
   let res;
   try {
-    const stub = typeof runner.fetch === "function" ? runner : runner.get(runner.newUniqueId());
-    res = await stub.fetch(RUNNER_URL, { headers: { Upgrade: "websocket" } });
+    res = await runner.get(runner.idFromName(member)).fetch(RUNNER_URL, { headers: { Upgrade: "websocket" } });
   } catch (e) {
-    return silent((e && e.message) || e, token);
+    return silent((e && e.message) || e);
   }
   const ws = res && res.webSocket;
   if (!ws) return refused(res ? res.status : null, "RUNNER_REFUSED",
-    `the runner answered ${res ? res.status : "nothing"} without a connection`, token);
+    `the runner answered ${res ? res.status : "nothing"} without a connection`);
   const queue = [], waiting = [];
   let ended = null;
   const push = (m) => { if (ended) return; if (m.closed) ended = m; const w = waiting.shift(); if (w) w(m); else queue.push(m); };
@@ -124,7 +129,7 @@ async function openRunner(runner, token) {
     ws.addEventListener("close", (ev) => push({ closed: true, detail: `the runner closed the connection (${ev && ev.code})` }));
     ws.addEventListener("error", () => push({ closed: true, detail: "the runner's connection failed" }));
   } catch (e) {
-    return silent((e && e.message) || e, token);
+    return silent((e && e.message) || e);
   }
   return {
     send(text) { try { ws.send(text); return true; } catch { push({ closed: true, detail: "the runner's connection failed on send" }); return false; } },
@@ -134,22 +139,22 @@ async function openRunner(runner, token) {
 }
 
 /** The end of a conversation that gave no answer, as an outcome (R3) or `exhausted` (R6). */
-function ending(m, usage, token) {
+function ending(m, usage) {
   if (m.ok === false)
-    return m.code === "MAX_TURNS" ? { exhausted: true, usage } : { ...refused(null, m.code ?? null, m.detail ?? "", token), usage };
-  if (m.stop_reason === "refusal") return { ...refused(200, "refusal", m.result ?? "", token), usage };
+    return m.code === "MAX_TURNS" ? { exhausted: true, usage } : { ...refused(null, m.code ?? null, m.detail ?? ""), usage };
+  if (m.stop_reason === "refusal") return { ...refused(200, "refusal", m.result ?? ""), usage };
   return null;
 }
 
-/** modelCall's subscription arm: ONE TURN. The conversation is offered one turn; the first relayed call is that
+/** modelCall's sign-in arm: ONE TURN. The conversation is offered one turn; the first relayed call is that
  *  turn's answer, returned as a Messages-shaped `tool_use` block, and the connection is closed (which aborts the
  *  query, agent-runner R4), so no tool is performed here and no usage was stated for it. */
-export async function subscriptionTurn(token, runner, body) {
+export async function signinTurn(member, runner, body) {
   /* A held result read over the relay is a turn of the runner's own, so the turn may take one per held result. */
   const reads = heldResults(body.messages).size;
-  const serialized = JSON.stringify(conversationRequest(token, {
+  const serialized = JSON.stringify(conversationRequest(member, {
     model: body.model, system: body.system, messages: body.messages, tools: body.tools, maxTurns: 1 + reads }));
-  const conn = await openRunner(runner, token);
+  const conn = await openRunner(runner, member);
   if (!conn.send) return conn;
   conn.send(serialized);
   let m = await conn.next();
@@ -160,21 +165,21 @@ export async function subscriptionTurn(token, runner, body) {
     m = await conn.next();
   }
   conn.close();
-  if (m.closed) return { ...silent(m.detail, token), usage: usageOf(null) };
+  if (m.closed) return { ...silent(m.detail), usage: usageOf(null) };
   if (m.tool_use) {
     const u = m.tool_use;
     return { result: { content: [{ type: "tool_use", id: u.id, name: u.name, input: u.input ?? {} }], stop_reason: "tool_use" },
              usage: usageOf(null) };
   }
   const usage = usageOf(m.usage);
-  const end = ending(m, usage, token);
-  if (end) return end.exhausted ? { ...refused(null, "MAX_TURNS", "the turn ended on the runner's turn limit", token), usage } : end;
+  const end = ending(m, usage);
+  if (end) return end.exhausted ? { ...refused(null, "MAX_TURNS", "the turn ended on the runner's turn limit"), usage } : end;
   return { result: { content: [{ type: "text", text: String(m.result ?? "") }], stop_reason: m.stop_reason ?? null }, usage };
 }
 
-/** converse's subscription arm (R6, R7). `charge(serialized)` is the meter: it answers `{stopped}` when the
+/** converse's sign-in arm (R6, R7). `charge(serialized)` is the meter: it answers `{stopped}` when the
  *  message may not be sent, else counts it and answers null. */
-export async function subscriptionConverse({ token, runner, model, system, messages, tools, finalTool, onTool,
+export async function signinConverse({ member, runner, model, system, messages, tools, finalTool, onTool,
                                              maxTurns, charge }) {
   const offered = new Set(plainTools(tools).map((t) => t.name));
   let usage = null;
@@ -182,11 +187,11 @@ export async function subscriptionConverse({ token, runner, model, system, messa
   let k = 0;
   const unstated = () => sumUsage(usage, usageOf(null));
   while (k < maxTurns) {
-    const serialized = JSON.stringify(conversationRequest(token, { model, system, messages, tools, maxTurns: maxTurns - k }));
+    const serialized = JSON.stringify(conversationRequest(member, { model, system, messages, tools, maxTurns: maxTurns - k }));
     const stop = charge(serialized);
     if (stop) return { ...stop, usage, calls };
     k += 1;
-    const conn = await openRunner(runner, token);
+    const conn = await openRunner(runner, member);
     if (!conn.send) return conn.silent ? { ...conn, usage, calls } : { ...conn, usage: unstated(), calls: null };
     conn.send(serialized);
     let answer = null;
@@ -195,7 +200,7 @@ export async function subscriptionConverse({ token, runner, model, system, messa
       if (m.closed) {
         /* The end never came, so this conversation's usage is unknown: its figures are null, never 0. */
         if (answer) return { answer, usage: unstated(), calls: null };
-        return { ...silent(m.detail, token), usage: unstated(), calls: null };
+        return { ...silent(m.detail), usage: unstated(), calls: null };
       }
       if (m.tool_use) {
         const u = m.tool_use;
@@ -233,7 +238,7 @@ export async function subscriptionConverse({ token, runner, model, system, messa
       usage = sumUsage(usage, usageOf(m.usage));
       calls = sumCalls(calls, callsOf(m.num_turns));
       if (answer) return { answer, usage, calls };
-      const end = ending(m, usage, token);
+      const end = ending(m, usage);
       if (end) return { ...end, calls };
       /* The model ended without answering: say what it said, ask again, in a fresh conversation. */
       messages.push({ role: "assistant", content: [{ type: "text", text: String(m.result || "(no answer)") }] });
