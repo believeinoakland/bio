@@ -104,7 +104,7 @@ test("R28 driven, the page makes no script from a string (no eval, no Function, 
   /* R30's step: the catalogue, a tool picked, added and tested, and the group's tools, all from a hostile answer */
   await p.drawn("#mk-st-cat .st-pick", { i: "0" }).fire(); await settle();
   const fields = p.el("#mk-st-fields").innerHTML;
-  p.el("#mk-st-cred-0").value = "k"; await p.el("#mk-st-add").fire(); await settle();
+  p.el("#mk-st-cred-0").value = "k"; p.el("#mk-st-cfg-0").value = "v"; await p.el("#mk-st-add").fire(); await settle();
   assert.deepEqual(made, []);
   assert.deepEqual(handlers(fields), [], "#mk-st-fields");
   const drawn = ["#browse-body", "#b-facts", "#b-md", "#b-files", "#b-history", "#b-ratify", "#inbox-body", "#m-list", "#k-list", "#pf-active",

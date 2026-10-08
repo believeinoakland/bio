@@ -163,26 +163,39 @@ export function pageOver({ html, hash = "", session = null, fetch, globals = {} 
 }
 
 /* R30: a security tools catalogue in file-safety R27's documented shape: an offered tool on the organization's own servers
-   with no vendor retention, one whose vendor keeps files for its research, a template, and a refused and a held service,
-   each with its reason in member words. The digests stand for SHA-256 of each handling's canonical JSON. */
+   with no vendor retention, one whose vendor keeps files for its research, a template, one whose `config` list names a
+   required and an optional setting (T37, N777: each entry's list `[{name, label, required}]`, empty when the tool reads
+   none; the template's as file-scanner's catalogue states it), and a refused and a held service, each with its reason in
+   member words. The digests stand for SHA-256 of each handling's canonical JSON. */
 const NEVER = ["file_name", "member_identity", "ip_address"];
 export const CATALOGUE = Object.freeze({ ok: true,
   offered: [
     { provider_id: "metadefender-core", vendor: "OPSWAT, Inc.", product: "MetaDefender Core", kinds: ["scan"], transport: "https", reach: "tunnel",
-      template: false, credentials: ["api_key"], licence_note: "the organization's own licence",
+      template: false, credentials: ["api_key"], config: [], licence_note: "the organization's own licence",
       handling: { sends: ["file_bytes"], never_sends: NEVER, recipient: "the organization's own MetaDefender Core server", sub_processors: [],
                   region: "where it runs", file_retention: "as the organization configures it", result_retention: "as configured", sample_sharing: "none" },
       handling_digest: "a".repeat(64), source_urls: [], read_on: "2026-10-07" },
     { provider_id: "sophos-intelix", vendor: "Sophos Ltd", product: "SophosLabs Intelix", kinds: ["scan", "sandbox"], transport: "https", reach: "public",
-      template: false, credentials: ["client_id", "client_secret"], licence_note: null,
+      template: false, credentials: ["client_id", "client_secret"], config: [], licence_note: null,
       handling: { sends: ["file_bytes"], never_sends: NEVER, recipient: "Sophos Ltd", sub_processors: [], region: "the region chosen",
                   file_retention: "clean files up to 30 days", result_retention: "metadata up to 6 months", sample_sharing: "vendor_internal_research" },
       handling_digest: "b".repeat(64), source_urls: [], read_on: "2026-10-07" },
     { provider_id: "icap-generic", vendor: "", product: "An ICAP scanner you run", kinds: ["scan"], transport: "icap", reach: "tunnel",
       template: true, credentials: [], licence_note: null,
+      config: [{ name: "engine_family", label: "The engines the tool runs, as its maker names them", required: true },
+               { name: "handling", label: "The tool's statement of what it receives, keeps and shares", required: true },
+               { name: "source_urls", label: "Where that statement is published", required: false },
+               { name: "service", label: "ICAP service name (default avscan)", required: false }],
       handling: { sends: ["file_bytes"], never_sends: NEVER, recipient: "stated by the administrator", sub_processors: [], region: "stated by the administrator",
                   file_retention: "stated by the administrator", result_retention: "stated by the administrator", sample_sharing: "none" },
       handling_digest: "c".repeat(64), source_urls: [], read_on: "2026-10-07" },
+    { provider_id: "cloudflare-intel", vendor: "Cloudflare, Inc.", product: "Cloudflare Intel", kinds: ["url_reputation"], transport: "https", reach: "public",
+      template: false, credentials: ["api_token"], licence_note: null,
+      config: [{ name: "account_id", label: "Cloudflare account ID", required: true },
+               { name: "zone_hint", label: "A zone to look up first (optional)", required: false }],
+      handling: { sends: ["hash_prefix"], never_sends: NEVER, recipient: "Cloudflare, Inc.", sub_processors: [], region: "global",
+                  file_retention: "no file is sent", result_retention: "not kept", sample_sharing: "none" },
+      handling_digest: "d".repeat(64), source_urls: [], read_on: "2026-10-07" },
   ],
   refused: [{ provider_id: "anyrun", reason: "SHARES_BY_DEFAULT", words: "It shares files it is sent unless a paid private mode is checked on every call." }],
   held: [{ provider_id: "some-vendor", reason: "HANDLING_NOT_STATED", words: "Its vendor does not state how long it keeps files." }],
@@ -193,6 +206,7 @@ export const CATALOGUE = Object.freeze({ ok: true,
 export const hostileSecurity = (evil) => ({
   securitytoolcatalogue: { result: { ok: true,
     offered: [{ provider_id: evil, vendor: evil, product: evil, kinds: [evil], template: false, credentials: [evil], licence_note: evil,
+                config: [{ name: evil, label: evil, required: true }],
                 handling: { sends: [evil], never_sends: [evil], recipient: evil, sub_processors: [evil], region: evil, file_retention: evil,
                             result_retention: evil, sample_sharing: evil }, handling_digest: evil }],
     refused: [{ provider_id: evil, reason: evil, words: evil }], held: [{ provider_id: evil, reason: evil, words: evil }] } },
