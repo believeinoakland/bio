@@ -63,3 +63,7 @@ T37-7's stamp is done and pushed on `job/T37/promotion` @ `19fcb78829`, over `tr
 - `checks/ownership.mjs bio promotion tranche/T37`: 1 failure (the renamed fixture, until the swap).
 
 Size (session_01WiFA4XkxDJf5nB8LQz8tAt): test runs 24, module lines 3473
+
+## J2 · COMPLETE
+
+T37-7 complete on job/T37/promotion (record: ## Completion). CATALOG_VERSION 1.64.0; ROW_CENSUS re-pinned in place after B3: 1519 rows 60d892ca…, the moved rows exactly credentials' five (C-29.33, C-96.45, C-96.46 arrived; C-29.32 re-keyed AI_KEEP_AWAY_NO_REASON; C-29.31 where changed), membership none. Renamed fixture: bio-plane/test/fixtures/row-census-1.64.0.jsonl (please swap promotion's modules.json tests entry). row-census 8/0; promotion and d526 119/1: the 1 is d526 (its setup mints an agent credential through control-plane, refused AI_CREDENTIAL_NO_SECRET C-29.33), rule 4's interim red (N761) until T37-33, not named by credentials' record (it names only capture-requests plane.test.mjs:93); it was 31/0 before credentials' merge. MODULE_ORDER red cleared. architecture 0; coverage 56/56; format and ownership 1 each (the swap). program.mjs regeneration at L2's close. Digests pinned elsewhere: none but generated program.mjs.
