@@ -1,6 +1,6 @@
 # acquisition (T36)
 
-**Status** · session_01UBPYqfwtexSRDSTDJARv1u · depth 2 · WORKING · handled B1
+**Status** · session_01UBPYqfwtexSRDSTDJARv1u · depth 2 · WORKING · handled B2
 
 ## Reading set (mechanics §17, N739)
 
