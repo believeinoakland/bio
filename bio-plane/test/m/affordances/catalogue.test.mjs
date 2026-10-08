@@ -38,6 +38,9 @@ import { T34_RUNGS, T34_RUNG_ABSENT, OP_ALIASES } from "../../../src/op-grades/t
 /* K1974 (A-1): the grading tables are `op-grades'`, which holds T35's grades (its R21, R22) to their owners in its own
    `t35.test.mjs`; set aside here as T33's and T34's are. */
 import { T35_RUNGS, T35_RUNG_ABSENT, T35_NON_ACTS, T35_CONSEQUENCE_STATEMENTS } from "../../../src/op-grades/t35.mjs";
+/* T36 (K2121, K2156): op-grades R23–R25 grade K2092's five ops, file-safety's 23 and credentials' keep-away in its
+   `t36.mjs`; each grade is pinned below by name, as its owner's requirements give it, never read back from the table. */
+import { T36_RUNGS, T36_RUNG_ABSENT, T36_NON_ACTS, T36_CONSEQUENCE_STATEMENTS } from "../../../src/op-grades/t36.mjs";
 
 test("R1: ACTS holds exactly the object-directed acts, each at its weight", () => {
   const W = {
@@ -150,6 +153,12 @@ test("R2 R35 R37 R38: the rung ladder, low to high, and RUNGS' assignment — DE
   for (const [op, r] of Object.entries(T34_RUNGS)) want[r].push(op);
   /* op-grades R22 (T35): T35's rungs (t35.mjs) */
   for (const [op, r] of Object.entries(T35_RUNGS)) want[r].push(op);
+  /* op-grades R23–R25 (T36): each `reasoned`, backed by its owner's reason refusal (standards R50, calculations R38,
+     file-safety R17, credentials R51); pinned by name */
+  const T36_REASONED = ["standardinforcethrough", "standardinforcethroughwithdraw", "spotcheckvisit", "releasescanhold",
+    "aikeepaway"];
+  assert.deepEqual(Object.keys(T36_RUNGS).sort(), [...T36_REASONED].sort());
+  want.reasoned.push(...T36_REASONED);
   for (const [a, op] of Object.entries(OP_ALIASES)) if (Object.hasOwn(RUNGS, op)) want[RUNGS[op]].push(a);
   for (const k of Object.keys(want)) want[k].sort();
   assert.deepEqual(bandsOf(RUNGS), want);
@@ -483,13 +492,16 @@ test("R27 R32 R34 R35 R37: no op is graded `undetermined` that the rulings moved
     ...undeterminedOf(T34_RUNG_ABSENT),
     /* op-grades R22 (T35): `unpack` (t35.mjs) */
     ...undeterminedOf(T35_RUNG_ABSENT),
+    /* op-grades R24 (T36): a member's request on a file, asking no reason, that no act takes back (file-safety R13, R33) */
+    "deepercheck", "safecopyrequest",
     ...Object.keys(OP_ALIASES).filter((a) => RUNG_ABSENT[OP_ALIASES[a]]?.ground === "undetermined")];
   const undetermined = undeterminedOf(RUNG_ABSENT).filter((op) => !LATER.includes(op));
   for (const op of LATER) assert.equal(RUNG_ABSENT[op]?.ground, "undetermined", op);
   assert.deepEqual(undetermined, [...R27_LEFT].sort());
   assert.equal(undetermined.length, 21, "R27's count: DEC-88 moved 57 of the 78 into RUNGS");
   assert.equal(undeterminedOf(RUNG_ABSENT).length, LATER.length + 21,
-    "R27's count reads 30 with R32's, R34's, R35's and R37's five, and R40's and R45's beside them");
+    "R27's count reads 30 with R32's, R34's, R35's and R37's five, and R40's, R45's and T36's beside them");
+  assert.deepEqual(undeterminedOf(T36_RUNG_ABSENT), ["deepercheck", "safecopyrequest"]);
   /* the 78 held before DEC-88: the 21 and the 57 together, each of the 57 now ranked in RUNGS */
   const before78 = ["inboxresolve", "taskforward", "taskresolve", "actioncorrespond", "actionlawspropose",
     "projectfork", "biasadopt", "strengthbar", "entitycreate", "entityalias", "resolve", "attesttext", "thread",
@@ -580,6 +592,9 @@ const ACTIONS_NEW = ["actioncreate", "actionpressure", "actionhold" /* K902 */, 
    from layer 9's closed set as T33's are, pinned here to standards' map. */
 const STANDARDS_T35 = ["standardforce", "standardforcepropose", "standardforcewithdraw", "standardrelease",
   "standardadoption", "standardimpose", "standardbenchmark", "forcesof", "overridesof", "editioninforce", "bindsat"];
+/* K2121 (T36): standards' in-force-through record, its withdrawal and its read (its R50; K2092), graded by op-grades R23 in
+   its `t36.mjs` and pinned apart as T35's are: the two writes `reasoned`, the read a `read:` reason and no rung. */
+const STANDARDS_T36 = { standardinforcethrough: "reasoned", standardinforcethroughwithdraw: "reasoned", inforcethroughof: null };
 test("R3 R7 R12: (K2049: standards' T35 ops pinned apart) layer 9's 41 mutating ops each carry a NON_ACTS reason and their ruled rung or stated absence, its "
    + "19 ungated reads none, its two gated reads (optionstartpreview, N490; standardinforce, K1689) a `read:` reason and no rung, and the op maps "
    + "hold exactly those 62 ops (K264; conformance's comparisonfacts, N345; K705, K709, K727, K902; K992: `templates` is "
@@ -593,7 +608,8 @@ test("R3 R7 R12: (K2049: standards' T35 ops pinned apart) layer 9's 41 mutating 
   /* R40 (K1571, K1658): standards' and action-clocks' T33 ops are graded in t33.mjs and held there (t33.test.mjs) */
   const ops = [...keys(standardsOps), ...keys(conformanceOps), ...keys(consequencesOps), ...keys(filingsOps), ...ESCALATION,
                ...ACTIONS_NEW, ...keys(actionPlansOps), ...keys(actionClocksOps)]
-               .filter((op) => (!T33_OPS.has(op) || LAYER9_GATED_READS.includes(op)) && !STANDARDS_T35.includes(op));
+               .filter((op) => (!T33_OPS.has(op) || LAYER9_GATED_READS.includes(op)) && !STANDARDS_T35.includes(op)
+                 && !Object.hasOwn(STANDARDS_T36, op));
   /* K2049: standards' T35 ops are in its map, each named in op-grades' T35 table — a write with a T35 rung or absence, a
      read (`read:`) with neither */
   const standards = keys(standardsOps);
@@ -601,6 +617,14 @@ test("R3 R7 R12: (K2049: standards' T35 ops pinned apart) layer 9's 41 mutating 
   for (const op of STANDARDS_T35) {
     assert.ok(Object.hasOwn(T35_NON_ACTS, op) && NON_ACTS[op] === T35_NON_ACTS[op], op);
     assert.equal(Object.hasOwn(T35_RUNGS, op) || Object.hasOwn(T35_RUNG_ABSENT, op), !T35_NON_ACTS[op].startsWith("read:"), op);
+  }
+  /* K2121: standards' T36 ops are in its map, each named in op-grades' T36 table at the grade pinned above */
+  for (const [op, rung] of Object.entries(STANDARDS_T36)) {
+    assert.ok(standards.includes(op), op);
+    assert.ok(Object.hasOwn(T36_NON_ACTS, op) && NON_ACTS[op] === T36_NON_ACTS[op], op);
+    assert.equal(RUNGS[op], rung ?? undefined, op);
+    assert.ok(!Object.hasOwn(RUNG_ABSENT, op), op);
+    assert.equal(NON_ACTS[op].startsWith("read: "), rung === null, op);
   }
   const mutating = [...Object.keys(LAYER9_RUNGS), ...Object.keys(LAYER9_ABSENT)];
   assert.equal(mutating.length, 41);
@@ -915,7 +939,10 @@ test("R31 R33 R4 R11: CONSEQUENCE_STATEMENTS holds exactly the six with their fr
     attribute: "dialog", leadshare: "dialog", entitycreate: "dialog", strengthbar: "dialog", filingapprove: "dialog",
     workobjective: "in-place", actionholdrelease: "dialog",
     /* op-grades R21 (DEC-142): T35's, beside actionholdrelease */
-    ...Object.fromEntries(Object.entries(T35_CONSEQUENCE_STATEMENTS).map(([op, c]) => [op, c.friction])) });
+    ...Object.fromEntries(Object.entries(T35_CONSEQUENCE_STATEMENTS).map(([op, c]) => [op, c.friction])),
+    /* op-grades R24 (DEC-173 (2)): openwithwarning's, the full dialog */
+    openwithwarning: "dialog" });
+  assert.equal(C.openwithwarning, T36_CONSEQUENCE_STATEMENTS.openwithwarning);
   for (const [op, c] of Object.entries(C)) {
     assert.deepEqual(Object.keys(c).sort(), ["friction", "statement"], op);
     assert.ok(typeof c.statement === "string" && c.statement.length > 80, op);
@@ -927,7 +954,10 @@ test("R31 R33 R4 R11: CONSEQUENCE_STATEMENTS holds exactly the six with their fr
   assert.deepEqual(Object.keys(C).map((op) => [op, RUNGS[op]]), [["attribute", "reasoned"], ["leadshare", "reasoned"],
     ["entitycreate", "reasoned"], ["strengthbar", "reasoned"], ["filingapprove", "terminal"], ["workobjective", "reasoned"],
     ["actionholdrelease", "terminal"], ["personexpunge", "reasoned"] /* op-grades R21: the dialog is its weight */,
-    ["standardrelease", "reasoned"] /* op-grades R4, R21 (K2049, K2052) */]);
+    ["standardrelease", "reasoned"] /* op-grades R4, R21 (K2049, K2052) */,
+    ["openwithwarning", undefined] /* op-grades R24: beside its ground, no rung */]);
+  assert.equal(RUNG_ABSENT.openwithwarning.ground, "observational");
+  assert.match(C.openwithwarning.statement, /never recorded/);
   assert.match(C.workobjective.statement, /budget and scope/);
   assert.match(C.filingapprove.statement, /approved once/);
   assert.match(C.leadshare.statement, /cannot be un-read/);

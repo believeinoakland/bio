@@ -46,10 +46,13 @@ test("R36: every op the catalogue grades or names, decorated, carries `phone` ex
   assert.equal(decorate({ id: "filingrecordsent", label: "x" }, null).phone, false);
 });
 
-test("R36: filingsent is in LARGER_SCREEN_ACTS though its rung is `reasoned`; the set is frozen and holds exactly it, "
-   + "published as VOCABULARIES.larger_screen_acts by reference", () => {
-  assert.deepEqual([...LARGER_SCREEN_ACTS], ["filingsent"]);
+test("R36: filingsent and (op-grades R26, DEC-170) personexpunge are in LARGER_SCREEN_ACTS though their rung is `reasoned`; "
+   + "the set is frozen and holds exactly them, published as VOCABULARIES.larger_screen_acts by reference", () => {
+  assert.deepEqual([...LARGER_SCREEN_ACTS], ["filingsent", "personexpunge"]);
   assert.equal(RUNGS.filingsent, "reasoned");
+  assert.equal(RUNGS.personexpunge, "reasoned");
+  assert.equal(phoneWant("personexpunge"), false);
+  assert.equal(decorate({ id: "personexpunge", label: "x" }, null).phone, false);
   assert.ok(Object.isFrozen(LARGER_SCREEN_ACTS));
   assert.equal(VOCABULARIES.larger_screen_acts, LARGER_SCREEN_ACTS);
   assert.equal(A.vocabulariesFor(["x"]).larger_screen_acts, LARGER_SCREEN_ACTS);

@@ -19,6 +19,7 @@
 import { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, PER_ITEM_MAX, deriveActs, decorate, vocabulariesFor } from "../affordances.mjs";
 /* K1601 (SKILLS #12 J1 (1)): `answers`' check family, which skills' `ask` layer carries in the pack. */
 import { ANSWERS_CHECKS } from "../answers/index.mjs";
+import { ACT_HELP } from "./act-help.mjs";
 
 const CATALOGUE_DETAIL = "pass target=<record id> for the acts available on that object right now; "
   + "rung is the weight ladder (vocabularies.rung_ladder, low to high, IRREVERSIBLE "
@@ -64,6 +65,9 @@ export function affordancesAnswer({ target = null, facts = null, kinds, gate, sc
        and registers them (`writingHelpRefused()`: `{named, machine_refused, irreversible}`), passed through unchanged so
        no surface keeps a copy (R21); null only where no answer was handed in. */
     writing_help_refused: writing_help_refused ?? null,
+    /* R49 (N726; DEC-174 (3), DEC-99): what each act does, one explanation per op, as `ACT_HELP` (R48), the very object,
+       so every surface reads it from one place and holds no copy (R21); a targeted answer does not carry it. */
+    act_help: ACT_HELP,
   };
   if (!facts || facts.ok !== true) return { ok: false, ...facts };
   return { target: facts.target, object_type: facts.object_type, current_state: facts.current_state,
