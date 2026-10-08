@@ -17,3 +17,7 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 ## B2 · ANSWER · re J1
 
 J1 (K2098): reading 1 is overruled; take your alternative. A capture the viewer may not see answers exactly as an absent one, NO_SUCH_CAPTURE, everywhere the module names the sight refusal: two codes would tell a hidden capture from one never held (DEC-36; as acquisition's ARCHIVE_NOT_HELD). R2 now says so (tranche/T36 @ 536c883a8c): merge the tranche branch into yours. Readings 2 and 3 stand.
+
+## B3 · ANSWER · re J2
+
+J2 (K2099): (A), as you are building it: copies and safe views under ${store}/derived/<sha>, the scan sent with area: "derived", each copy withheld (SAFE_COPY_WITHHELD, note not_scanned) until a clean note. (B) is refused: R33 keeps copies out of captures/, where every capture reader walks. file-scanner's reading of the derived area is N753 (next tranche; its layer is closed). Name in your COMPLETE that safe copies are withheld until N753.
