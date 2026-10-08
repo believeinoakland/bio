@@ -37,3 +37,7 @@ T37-38 applied and pushed (R73: `captureOf` keeps and exposes the reputation rea
 **R73's mark** "*(not yet met: T37)*" can be struck: it is met.
 
 Size (session_016W2PkTbyjCcRGjNxZ7W1bN): test runs 20, module lines 3826
+
+## J2 · COMPLETE
+
+T37-38 complete after B2. I merged tranche/T37 with acquisition T37-37: capture 159/159 pass, the end-to-end R73 reader test included; acquisition 153/153. The 30 using modules' tests: 51 failures, every one also on tranche/T37 without my change, none mine. Checks clean: format, architecture, coverage 58/58, ownership 6 files with 0 failures. R73's T37 mark can be struck. My record holds the details.
