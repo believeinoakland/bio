@@ -350,3 +350,33 @@ test("R11 (K1674, K1685, K1798, K1986; credentials R28, ai-runs R48, R50, answer
   assert.equal(c.json.ok, true);
   assert.ok(c.json.result && typeof c.json.result === "object", JSON.stringify(c.json).slice(0, 300));
 });
+
+test("R13 (K2157; control-plane R61): a route-map answer that is a `Response` — file-safety's byte answers `openoriginal`, `openwithwarning`, `safeview`, `safecopy` — is returned as given, its status, headers and bytes unchanged, never wrapped in R1's envelope, under an ask's grant header too (nothing logged); a refusal those routes answer as an object is enveloped as any answer (negative control: a plain object answer is wrapped)", async () => {
+  const { fileSafetyOps } = await import("../../../src/file-safety/index.mjs");
+  const served = new Set(Object.keys(fileSafetyOps(null, new URL("http://do/"), null, null)));
+  const BYTES = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x00, 0xff, 0x10]);
+  for (const op of ["openoriginal", "openwithwarning", "safeview", "safecopy"]) {
+    assert.ok(served.has(op), `${op} is file-safety's route`);
+    for (const status of [200, 206]) {
+      const made = [];
+      const logged = [];
+      const store = {
+        routes: () => ({ [op]: async () => { const r = new Response(BYTES, { status, headers: { "content-type": "application/pdf",
+          "x-capture-sha256": "a".repeat(64), "cache-control": "no-store" } }); made.push(r); return r; } }),
+        membership: () => ({ visibilityOf: () => "discoverable", existenceAct: () => null }),
+        logRead: (e) => { logged.push(e); return e.answer; },
+      };
+      const res = await D.dispatch(new Request(`http://do/${op}?viewer=member:ann&capture=${"a".repeat(64)}`,
+        { method: "POST", headers: { [GRANT_HEADER]: "G1" }, body: JSON.stringify({ warned: { own_device: true, no_macros: true } }) }), store);
+      assert.equal(res, made[0], `${op}: the owner's Response itself`);
+      assert.equal(res.status, status);
+      assert.deepEqual([res.headers.get("content-type"), res.headers.get("x-capture-sha256"), res.headers.get("cache-control")],
+                       ["application/pdf", "a".repeat(64), "no-store"]);
+      assert.deepEqual(new Uint8Array(await res.arrayBuffer()), BYTES, `${op}: the bytes unchanged`);
+      assert.deepEqual(logged, [], `${op}: nothing logged`);
+    }
+    /* a refusal answered as an object is enveloped; negative control */
+    const refused = await go({ routes: () => ({ [op]: () => ({ ok: false, reason: "SCAN_HOLD" }) }), membership: () => null }, `${op}?viewer=member:ann`);
+    assert.deepEqual([refused.status, refused.json], [200, { ok: true, result: { ok: false, reason: "SCAN_HOLD" } }]);
+  }
+});

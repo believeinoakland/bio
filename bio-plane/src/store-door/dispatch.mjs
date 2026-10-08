@@ -1,4 +1,4 @@
-/* store-door: THE RECORD STORE'S DOOR (R1–R4, R6, R8–R11). `dispatch(req, store)` is the one frame every Durable Object
+/* store-door: THE RECORD STORE'S DOOR (R1–R4, R6, R8–R11, R13). `dispatch(req, store)` is the one frame every Durable Object
    request passes: the body read, the route looked up in the modules' own maps (the `membershipOps` pattern;
    `store.routes(url, body)`, the union `plane` composes, its R5), the existence answer of a read naming a discoverable
    project (R2), a purge's hold check (R4), the `{ok: true, result}` envelope, and the one catch (R6). Moved from
@@ -310,7 +310,13 @@ export async function dispatch(req, store) {
       if (held) return Response.json(held, { status: 409 });
     }
     const existence = existenceRead(() => store.membership(), op, url, body);
-    return Response.json({ ok: true, result: existence ?? underGrant(store, grant, asked, op, body, await map[op]()) });
+    if (existence) return Response.json({ ok: true, result: existence });
+    const answer = await map[op]();
+    /* R13 (K2157; control-plane R61): a byte answer (file-safety's `openoriginal`, `openwithwarning`, `safeview`,
+       `safecopy`) is a Response, returned as its owner made it: never wrapped, so its status, headers and bytes reach the
+       Worker unchanged. No ask's grant admits these ops (answers' scope), so none is a read R11 logs. */
+    if (answer instanceof Response) return answer;
+    return Response.json({ ok: true, result: underGrant(store, grant, asked, op, body, answer) });
   } catch (e) {
     return Response.json(storeInternalError(e, op), { status: 500 });
   }
