@@ -24,3 +24,7 @@
 **P6.** 1,336 module lines (source), under 4,000.
 
 Size (session_01RzHpXRzbChU2C1fk3rBD1t): test runs 5, module lines 1336
+
+## J1 · COMPLETE
+
+T36-44 applied: R21 policyChanges gains since (an instant, read as bias R44's; at or after it, order/after/limit/cursor unchanged; an invalid since answers none with since_invalid: true). following 50/50; users' tests identical on base and branch (13 inherited reds, rule 5); format, architecture, coverage (21/21), ownership: 0 failures. Nothing deferred, nothing found in other modules. Record: build/jobs/T36/following.md.
