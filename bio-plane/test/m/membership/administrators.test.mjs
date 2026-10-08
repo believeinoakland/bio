@@ -16,6 +16,10 @@ async function threeAdmins() {
 
 test("R6 adminEndorse: refusals in order; consensus; the last endorsement invites once", async () => {
   const w = await world().group("ann");
+  /* R6 (T38, K2276): NOT_AN_ADMIN first: a caller who may not act learns nothing of the target. */
+  for (const by of ["ann", null, "nobody"])
+    for (const target of ["nobody", "ann", "third"])
+      assert.equal((await w.m.adminEndorse({ memberId: target, by })).reason, "NOT_AN_ADMIN", `${by} → ${target}`);
   assert.equal((await w.m.adminEndorse({ memberId: "nobody", by: "admin" })).reason, "NO_SUCH_MEMBER");
   assert.equal((await w.m.adminEndorse({ memberId: "ann", by: "admin" })).reason, "NOT_PROPOSED");
   const p = await w.m.memberAdd({ memberId: "third", cover: "c3", role: "admin", by: "admin" });
@@ -44,6 +48,10 @@ test("R7 adminRemove: every refusal, in order, and VOTES_SHORT until a majority 
   assert.equal(w0.m.adminRemove({ memberId: "ann", by: "second", reason: "r" }).reason, "TARGET_NOT_AN_ADMIN");
   assert.equal(w0.m.adminRemove({ memberId: "second", by: "second", reason: "r" }).reason, "TARGET_CANNOT_VOTE");
   assert.equal(w0.m.adminRemove({ memberId: "second", by: "ann", reason: "r" }).reason, "NOT_AN_ADMIN");
+  /* R7 (T38, K2276): NOT_AN_ADMIN first: a caller who may not act learns nothing of the target, whoever it names. */
+  for (const by of ["ann", null, "nobody"])
+    for (const target of ["admin", "nobody", "ann", "second", by])
+      assert.equal(w0.m.adminRemove({ memberId: target, by, reason: "r" }).reason, "NOT_AN_ADMIN", `${by} → ${target}`);
   assert.equal(w0.m.adminRemove({ memberId: "second", by: "admin", reason: " " }).reason, "NO_REASON");
   const two = w0.m.adminRemove({ memberId: "second", by: "admin", reason: "r" });
   assert.equal(two.reason, "IMPOSSIBLE_AT_TWO");

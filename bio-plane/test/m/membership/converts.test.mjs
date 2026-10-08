@@ -178,33 +178,25 @@ test("R56 R54 (ratify-authority) delivery needs a joined position, the signature
 
 /* ---- project-discoverable ---- */
 
-test("R45 R48 (project-discoverable) the machine credentials and an administrator are refused the setting; the directory needs a member", async () => {
+test("R45 (project-discoverable) the machine credentials and an administrator are refused the setting", async () => {
   const w = await projectWorld();
   for (const by of [BEARER, `${MACHINE_CLASS_PREFIX}member`, "second", "admin"]) {
     const r = w.m.projectVisibilitySet({ projectId: "P", setting: "discoverable", by, viewer: by.startsWith("class:") ? by : V(by) });
     assert.deepEqual([r.code, r.check, r.translation],
       ["PROJECT_VISIBILITY_NOT_THE_OWNER", "C-70.2", PROJECT_VISIBILITY_CHECKS.PROJECT_VISIBILITY_NOT_THE_OWNER.translation], by);
   }
-  for (const viewer of [BEARER, `${MACHINE_CLASS_PREFIX}member`, `${MACHINE_CLASS_PREFIX}ai`, "admin", null]) {
-    const r = w.m.projectDirectory({ viewer });
-    assert.deepEqual([r.code, r.check], ["PROJECT_DIRECTORY_NEEDS_A_MEMBER", "C-70.4"], String(viewer));
-  }
   assert.equal(w.m.projectVisibilitySet({ projectId: "P", setting: "discoverable", by: "iris", viewer: V("iris") }).ok, true);
-  assert.deepEqual(w.m.projectDirectory({ viewer: V("second") }).projects, [], "an administrator sees it fully: not offered it");
-  assert.deepEqual(w.m.projectDirectory({ viewer: V("iris") }).projects, [], "nor its owner");
 });
 
 /* ---- project-sight ---- */
 
 /* Every membership op that names a project, asked by an outsider (cal) about a HIDDEN project, answers byte for byte
    what it answers about an id never minted: §7.9, "not its existence". */
+/* T38 (N783): the owner votes, the setting's read, the roster read and the requests are project-roster's ops, held to
+   the same rule by its own test (its R19). */
 const PROJECT_OPS = [
   ["projectinvite", { handle: "cal" }], ["projectjoin", {}], ["projectleave", { comment: "x" }],
-  ["projectremove", { handle: "iris" }], ["projectowneradd", { handle: "cal" }],
-  ["projectownerremove", { handle: "iris", reason: "r" }], ["projectownerrescue", { handle: "cal", reason: "r" }],
-  ["projectownerarith", {}], ["projectvisibilityset", { setting: "discoverable" }], ["projectvisibility", {}],
-  ["projectparticipants", {}], ["projectrequest", { comment: "please" }], ["projectrequestwithdraw", {}],
-  ["projectrequestanswer", { handle: "cal", answer: "grant" }], ["projectrequests", {}],
+  ["projectremove", { handle: "iris" }], ["projectownerarith", {}], ["projectvisibilityset", { setting: "discoverable" }],
 ];
 async function sightPair(minted) {
   const w = await world().group("iris", "cal");

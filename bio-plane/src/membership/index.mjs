@@ -25,9 +25,9 @@ import { MEMBERSHIP_SCHEMA, MEMBERSHIP_ADDITIVE_COLUMNS, MEMBERSHIP_EXEMPT_TABLE
          MEMBERSHIP_PROJECT_TABLES } from "./schema.mjs";
 export { MEMBERSHIP_PROJECT_TABLES, MEMBERSHIP_EXEMPT_TABLES } from "./schema.mjs";
 import { MEMBERSHIP_CHECKS, MEMBER_ID_CHECKS, CUSTODIAL_CHECKS, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS,
-         PROJECT_JOIN_REQUEST_CHECKS, CASE_AUTHORITY_CHECKS } from "./checks.mjs";
+         CASE_AUTHORITY_CHECKS } from "./checks.mjs";
 export { MEMBERSHIP_CHECKS, MEMBER_ID_CHECKS, CUSTODIAL_CHECKS, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS,
-         PROJECT_JOIN_REQUEST_CHECKS, CASE_AUTHORITY_CHECKS } from "./checks.mjs";
+         CASE_AUTHORITY_CHECKS } from "./checks.mjs";
 import { recordOf } from "../record-core/index.mjs";
 
 /* The marker every generated statement carries (moved from query.mjs with `viewerPredicate`, K57). It is a SQL
@@ -167,7 +167,7 @@ export function notAParticipant(projectId, by, extra = null) {
 }
 
 /* N793 (K231; T38-4). THE ONE ANSWER TO ONE CONDITION: no member answers to the id (or name) a caller was given. This
-   module owns `members`, so `NO_SUCH_MEMBER` is minted here alone and its one row is this module's (C-96.39); every act
+   module owns `members`, so `NO_SUCH_MEMBER` is minted here alone and its one row is this module's (C-96.47; K2279); every act
    of any module refusing that condition answers through here (this module's eight; credentials, tasks, setup-page,
    instance-setup and control-plane in their own jobs). `member` is the id as asked (null when none); the detail is one
    fixed sentence, the same for every caller. `extra` adds a caller's own fields beside these and never replaces one of
@@ -340,13 +340,13 @@ export class Membership {
    * whole. Each table drops the rows whose `project_id` is in `hid` (D-464: a count over
    * rows the caller could not all read is a disclosure of existence). `COALESCE(project_id, '')`: a NULL key names no
    * bundle, and `NULL NOT IN (…)` is NULL, so without it the row would be dropped. Synchronous; writes nothing. */
-  static COUNT_KEYS = Object.freeze(["projectParticipants", "projectOwnerVotes"]);
+  static COUNT_KEYS = Object.freeze(["projectParticipants"]);
 
   counts(hid = null) {
     const n = (table) => (hid
       ? this.#one(`SELECT count(*) c FROM ${table} WHERE COALESCE(project_id, '') NOT IN ${hid.sql}`, ...hid.args)
       : this.#one(`SELECT count(*) c FROM ${table}`)).c;
-    return { projectParticipants: n("project_participants"), projectOwnerVotes: n("project_owner_votes") };
+    return { projectParticipants: n("project_participants") };
   }
 
   /* REC-132 / D-422 / C-55: A MEMBER HOLDING THE RESERVED ID IS REPORTED BY THE AUDIT, NEVER RENAMED (moved from the
@@ -557,7 +557,7 @@ export class Membership {
              limit: cap, truncated };
   }
 
-  /* N70: the history's page size, a chosen ceiling (`PROJECT_DIRECTORY_LIMIT`'s reasoning): generous enough that a
+  /* N70: the history's page size, a chosen ceiling (the directory's reasoning, now `project-roster`'s): generous enough that a
      group reading who holds its hosting access rarely meets it, published whenever it cuts. */
   static HOSTING_ACCESS_LIMIT = 200;
 
@@ -566,7 +566,7 @@ export class Membership {
      pairings are read with `memberPairings`. */
   memberPairingSet({ memberId, published, by = null } = {}) {
     const m = this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId);
-    if (!m) return noSuchMember(memberId);   /* N793: C-96.39 minted at its one site */
+    if (!m) return noSuchMember(memberId);   /* R121 (N793): C-96.47 minted at its one site */
     const refusal = (code, detail, extra) => Membership.#custodialRefusal(code, detail, extra);   /* C-96.12 */
     /* DEC-49 REGION is-pairing-yours */
     if (by !== memberId && !this.isAdministrator(by))
@@ -787,7 +787,7 @@ export class Membership {
 /* Membership Architecture v2 section 7: authority over a project belongs to its
    OWNERS, and to nobody else. An administrator sees every project (7.3, 7.8) and
    directs none of them (v2 4.9), the single exception being 7.13, the rescue of a
-   project whose owners are all inactive (`projectOwnerRescue`, R41).
+   project whose owners are all inactive (`project-roster`'s `projectOwnerRescue`, its R5).
 
    This REVERSES v1.4 7.7, which gave removal to administrators and denied it to
    owners, in those words, reasoning from Design Requirement 1 that authority
@@ -839,7 +839,7 @@ export class Membership {
    * and the control plane stamps it on every enumerated act, deleted first so a caller can
    * never name one.
    *
-   * WHAT IT DOES NOT TOUCH, and each is deliberate: §7.13's add-an-owner (`projectOwnerRescue`)
+   * WHAT IT DOES NOT TOUCH, and each is deliberate: §7.13's add-an-owner (`project-roster`'s `projectOwnerRescue`)
    * is the ONE administrator path and keeps its condition, its vote and its record — it never
    * calls this. The roster acts, publication, the review copy, the run verbs and the lead share
    * already asked a position and still ask their own. Sight is unchanged: nothing here is a
@@ -1151,400 +1151,6 @@ export class Membership {
     return null;
   }
 
-  /** REC-149 — THE SETTING AND ITS HISTORY, for a caller with FULL sight (a participant, an administrator, the
-   *  founder: §7.14, "administrators and the founder see the setting and its history"). A READ, so it does not
-   *  widen: a caller without full sight is answered as for a project that does not exist. */
-  projectVisibility({ projectId, viewer = null } = {}) {
-    const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
-    if (!b || !this.inSight(projectId, viewer)) return noSuchProject(projectId);
-    if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT", project: projectId };
-    const history = this.#rows(
-      `SELECT setting, set_by, reason, at FROM project_visibility WHERE project_id=? ORDER BY seq`, projectId);
-    return { ok: true, projectId, setting: this.visibilityOf(projectId), recorded: history.length > 0, history,
-             note: history.length ? undefined
-               : "no owner has set this project's visibility, so it is HIDDEN: a project with no record reads "
-                 + "hidden (Membership Architecture v2 §7.14)." };
-  }
-
-  /** REC-149 — THE DIRECTORY (§7.14 "The directory"): for a member session, the DISCOVERABLE projects it does
-   *  not participate in, each with its id and name and the state of the caller's OWN request to it. Nothing
-   *  else. A hidden project is never in it, so its absence here is one answer for "hidden" and "does not
-   *  exist". Every row is asked through `sight` — the one predicate — and listed only at EXISTENCE, so a
-   *  project this caller can see fully (it is in it, or it is an administrator) is not listed as one to join.
-   *  REC-150 BUILT THE REQUEST (item 7.14's decomposition, step 2): `request` is the state of the caller's own
-   *  latest request to that project, and null only where it has never asked — so null is now a fact about the
-   *  caller, and the `requests: "NOT_BUILT…"` field that said otherwise is gone. A viewer that names no member has
-   *  no directory: it is refused by name, never answered empty. */
-  projectDirectory({ viewer = null, limit = null } = {}) {
-    const gate = viewerPredicate(viewer);
-    const member = gate.member;
-    const refusal = (code, detail) => {
-      const row = PROJECT_VISIBILITY_CHECKS[code];
-      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail };
-    };
-    /* DEC-49 REGION is-project-directory-member */
-    if (!member)
-      return refusal("PROJECT_DIRECTORY_NEEDS_A_MEMBER",
-        "the project directory lists the discoverable projects a MEMBER is not in, so it is asked by a signed-in "
-        + "member. A credential with no member behind it is outside no project, and an empty list would say "
-        + "something untrue about the record.");
-    /* END DEC-49 REGION is-project-directory-member */
-    /* D-479 — BOUNDED, AND THE BOUND IS PUBLISHED, in `op=caseflags`'s spelling: `limit` is the cap APPLIED
-       after clamping (never the number the caller asked for) and `truncated` says whether more exists. The cap
-       is `Membership.PROJECT_DIRECTORY_LIMIT`, declared below this method, and it is THE CALLER'S TO LOWER AND NOT
-       TO RAISE — `op=readingname`'s shape, the model every capped op was brought into line with, and the reason this read takes a `limit` at all: a ceiling no caller can address
-       is a bound nothing can drive.
-
-       `truncated` IS MEASURED, NEVER DERIVED. One more row than may be published is asked for, because a
-       `truncated` computed from the rows returned can only ever be false: a full page and a complete answer
-       read alike. The extra row is the only thing that tells them apart without a second count.
-
-       D-497 — ONE STATEMENT, AND THE BOUND IS NOW ON THE THING THAT GROWS. D-479 left this read a keyset WALK:
-       sight was a JS predicate with no row source, so establishing "this caller sees none of them" meant asking
-       `sight` about every project in the group, one bounded statement at a time, and the NUMBER of statements
-       grew with the record. D-479 reported the remedy rather than taking it — *"a row source the sight
-       predicate itself READS, not a second copy of its rule"* — and `project_sight` is it. The two halves of
-       EXISTENCE are now both rows:
-         the DISCOVERABLE half joins `project_sight`, THE SAME TABLE `visibilityOf` reads, so the rule about
-         what an owner's acts mean is stated once, in `reindexProjectSight`, and read here rather than
-         recomputed. This is what REC-149's first build got wrong in the opposite direction: it read the ACT
-         LOG here and so put "no act = hidden" in a second place, which its own `default-discoverable` control
-         arm caught by flipping the default and watching the directory stand still;
-         the NOT-FULL half is `viewerPredicate`'s own compiled predicate, NEGATED — not a hand copy of it.
-         `inSight` is that predicate asked about one row (`… WHERE b.bundle_id=? AND (gate)`), so over rows
-         this statement has already fixed to existing PROJECT bundles, `NOT (gate)` is exactly `sight` below
-         FULL. It is total over those rows and never NULL: `b.object_type <> 'project'` is FALSE for every one
-         of them and the two remaining disjuncts are EXISTS, which has no third answer. The member refusal
-         above is what guarantees the gate is never `0=1`; it is `1=1` only for the founder's `member:admin`
-         (N357), who sees every project at FULL, so `NOT (1=1)` lists none, which is the answer.
-       So the page is over the VISIBLE set and the candidate read IS the visible set — D-479 had to walk
-       because those were two different things. `ORDER BY b.bundle_id` keeps the order D-479's callers page by. */
-    const cap = Math.max(1, Math.min(Number(limit) || Membership.PROJECT_DIRECTORY_LIMIT, Membership.PROJECT_DIRECTORY_LIMIT));
-    /* REC-150: `request` IS THE STATE OF THE CALLER'S OWN LATEST REQUEST to each listed project, or null where it
-       has never asked — joined in the SAME statement (the latest row of `project_join_requests` for this member and
-       this project, through its member index), so the page and its requests are one read and cannot disagree. Only
-       the caller's own row is joined: whose else has asked is not a fact the directory holds (§7.14: the requester,
-       the owners and administrators see a request, and nobody else). A GRANTED request never appears here — a
-       grant makes the caller a participant, and a participant has FULL sight, so the project leaves this list. */
-    const projects = this.#rows(
-      `SELECT b.bundle_id AS id, r.state AS rstate, r.asked_at AS rasked, r.closed_at AS rclosed
-         FROM bundles b JOIN project_sight s ON s.project_id = b.bundle_id
-         LEFT JOIN project_join_requests r
-           ON r.seq = (SELECT MAX(r2.seq) FROM project_join_requests r2
-                        WHERE r2.member_id = ? AND r2.project_id = b.bundle_id)
-        WHERE b.object_type = 'project' AND s.setting = 'discoverable' AND NOT (${gate.sql})
-        ORDER BY b.bundle_id
-        LIMIT ?`, member, ...gate.args, cap + 1)
-      .map((r) => ({ id: r.id, name: this.#titleOf(r.id),
-                     request: r.rstate ? { state: r.rstate, asked: r.rasked, closed: r.rclosed ?? null } : null }));
-    const truncated = projects.length > cap;
-    /* CUT BY A SLICE AT THE PUBLISHED CAP rather than by shortening what was measured, which is
-       `#contentAxisTally`'s spelling and D-369's readable one: the collection `truncated` was measured over
-       stays intact beside the page cut from it, so the cut and the claim can be read against each other
-       instead of one having erased the evidence for the other. */
-    const page = truncated ? projects.slice(0, cap) : projects;
-    return { ok: true, projects: page, count: page.length,
-             /* THE BOUND, BESIDE THE ANSWER: `count` is what was returned, `limit` what could be, `truncated`
-                whether more exists. A truncated answer is the FIRST `limit` discoverable projects this caller
-                is outside, in `bundle_id` order, and a caller who needs the rest lowers `limit` and asks
-                again from what it already holds — the order is stable, so a page means the same thing twice. */
-             limit: cap, truncated };
-  }
-
-  /* D-479 — THE DIRECTORY'S PAGE SIZE (§7.14 "The directory"; SCHEDULER #17's finding on REC-149, 2026-09-24).
-     A CHOSEN CONSTANT and never a finding: the directory's answer grows with the group's own record — every
-     project an owner sets DISCOVERABLE that this caller is outside — and has no natural ceiling, so the read
-     publishes `limit` and `truncated` beside its answer rather than listing whatever is there. 200 is
-     deliberately generous, `CASE_FLAGS_LIMIT`'s reasoning at this read's scale: the directory is a surface a
-     member browses to find one project to ask to join, and a bound a legitimate caller trips is a bound that
-     teaches people to ignore it. It is a CEILING, not a target — a caller may ask for less and an over-ask is
-     answered here, with the ceiling published, so nobody is told they got more than they did. */
-  static PROJECT_DIRECTORY_LIMIT = 200;
-
-  /* ===== REC-150 — THE REQUEST TO JOIN (Membership v2 §7, item 7.14, "The request to join"; step 2 of its
-   * decomposition, on REC-149's EXISTENCE level) =====
-   *
-   * Bob, 2026-09-18: *"somebody who sees the project can ask to be added as a member"*. The lifecycle, and where
-   * each clause of the design lands:
-   *   ASK       `projectRequest` — a member SESSION at EXISTENCE sight (uninvited, active, not a participant), at
-   *             most ONE OPEN request per member per project, an optional short comment (§7.6's precedent). A
-   *             hidden project, or one the caller cannot see, is answered `noSuchProject` (R78) byte for byte.
-   *   WITHDRAW  `projectRequestWithdraw` — the requester's own open request. After it they may ask again.
-   *   ANSWER    `projectRequestAnswer` — an OWNER's (§7.2: only owners invite). GRANT IS AN INVITATION: it writes
-   *             the participation `invited` with `invited_by` = the granting owner, exactly the row `projectInvite`
-   *             writes, and NEVER `joined` — joining is the member's own act by the checkbox (§7.4), and a grant
-   *             that wrote `joined` would make the owner's act the member's. DECLINE is recorded with an optional
-   *             comment. Administrators and the founder see requests (§7.3) and answer none.
-   *   LAPSE     R117's notice, from `projectVisibilitySet` — setting a project HIDDEN lapses every open request to
-   *             it, recorded (`project-roster` R16).
-   *   READ      `projectRequests` — a project's requests to its owners and administrators; with no project, the
-   *             caller's OWN requests, which it keeps sight of after a lapse, naming only what it already saw.
-   * The record is `project_join_requests` (schema.mjs, REC-150's block): append-only at the field. */
-  static JOIN_REQUEST_ANSWERS = ["grant", "decline"];
-
-  /* The member a request is ABOUT is the server-stamped `by` (PROJECT_ACTIONS), never a name the caller supplies;
-     a machine credential stamps `class:<cls>` and names nobody, so it resolves to no member and is refused. */
-  #activeMemberRow(memberId) {
-    if (memberId === null || memberId === undefined || String(memberId).startsWith(MACHINE_CLASS_PREFIX)) return null;
-    /* The FOUNDER is a person with no roster row (`isAdministrator`'s first line), so C-95.1's "no member behind this
-       credential" would be FALSE about them — found by this suite's §1f on its first run. They are answered as the
-       person they are: at FULL sight, so the ask is C-95.2 like any administrator's. */
-    if (memberId === Membership.ROOT_ADMIN) return { member_id: Membership.ROOT_ADMIN, handle: null, status: "active" };
-    const m = this.#one(`SELECT member_id, handle, status FROM members WHERE member_id=?`, memberId);
-    return m && m.status === "active" ? m : null;
-  }
-
-  /* THE PERSON ASKING: the stamped `by` names an active member AND the stamped viewer names the SAME person — the
-     control plane stamps both from one session, so a disagreement is a caller that is not a member session (an
-     `ai` credential stamps its principal as viewer and `class:ai` as `by`) and asks nothing. The founder's viewer
-     is spelled bare `admin` or `member:admin` (R43, N357), and both are the founder; every other member is matched
-     by `viewerPredicate`'s own parse, never a second one. */
-  #requester(by, viewer) {
-    const me = this.#activeMemberRow(by);
-    if (!me) return null;
-    if (me.member_id === Membership.ROOT_ADMIN)
-      return viewer === Membership.ROOT_ADMIN || viewerPredicate(viewer).member === Membership.ROOT_ADMIN ? me : null;
-    return viewerPredicate(viewer).member === me.member_id ? me : null;
-  }
-
-  /* C-95.1 and C-95.4 are each said at more than one act, so each is minted in ONE governed region and every act
-     RELAYS it (`#existenceOnly`'s shape): one row, one `where`, one place a translation can go missing. The DETAIL is
-     the act's own sentence, handed in; the code is the literal here. */
-  #joinRequestRefusal(code, projectId, detail, extra = {}) {
-    const row = PROJECT_JOIN_REQUEST_CHECKS[code];
-    return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail,
-             project: projectId ?? null, ...extra };
-  }
-
-  #noRequester(projectId, detail) {
-    const refusal = (code, d) => this.#joinRequestRefusal(code, projectId, d);
-    /* DEC-49 REGION is-join-request-member */
-    return refusal("PROJECT_REQUEST_NEEDS_A_MEMBER",
-      `${detail} A request to join is a PERSON's act: it is made, withdrawn and read back by the member who `
-      + `asked, signed in as themselves (Membership Architecture v2 §7.14), and a machine credential, the operator's `
-      + `bearer and the member bearer have nobody behind them to ask.`);
-    /* END DEC-49 REGION is-join-request-member */
-  }
-
-  #noOpenRequest(projectId, detail, extra = {}) {
-    const refusal = (code, d) => this.#joinRequestRefusal(code, projectId, d, extra);
-    /* DEC-49 REGION is-join-request-none-open */
-    return refusal("PROJECT_REQUEST_NONE_OPEN",
-      `${detail} A request is open until it is granted, declined, withdrawn, or lapsed by its project going `
-      + `hidden (Membership Architecture v2 §7.14), and each of those closes it for good; the member may ask `
-      + `again.`);
-    /* END DEC-49 REGION is-join-request-none-open */
-  }
-
-  #openJoinRequest(projectId, memberId) {
-    return this.#one(`SELECT seq, comment, asked_at FROM project_join_requests
-                       WHERE project_id=? AND member_id=? AND state='open'`, projectId, memberId);
-  }
-
-  /* THE ONE STATEMENT THAT CLOSES A REQUEST. Every terminal state is written here, and only an OPEN row moves:
-     the `WHERE state='open'` is what makes the closing fields write-once, so an answered request cannot be
-     answered twice and a withdrawn one cannot then be granted. Returns the number of rows closed. */
-  #closeJoinRequests(projectId, memberId, state, by, comment, at) {
-    const before = this.#one(`SELECT COUNT(*) AS n FROM project_join_requests
-                               WHERE project_id=? AND (? IS NULL OR member_id=?) AND state='open'`,
-      projectId, memberId, memberId).n;
-    this.sql.exec(`UPDATE project_join_requests SET state=?, closed_by=?, closed_comment=?, closed_at=?
-                    WHERE project_id=? AND (? IS NULL OR member_id=?) AND state='open'`,
-      state, by, comment, at, projectId, memberId, memberId);
-    return before;
-  }
-
-  static #requestComment(comment) {
-    return comment === null || comment === undefined || String(comment).trim() === ""
-      ? null : String(comment).slice(0, 280);
-  }
-
-  /** REC-150 — ASK TO JOIN (§7.14 "Who may ask"). The one act a member at EXISTENCE may take. Sight decides
-   *  first and says nothing a caller did not already know: NONE (absent, hidden, or not a project the caller can
-   *  see) is `noSuchProject` (R78) byte for byte; FULL (a participant, an administrator, the founder) is refused
-   *  positionally, since that caller can already see the project. Only at EXISTENCE is a request written. */
-  projectRequest({ projectId, comment = null, by, viewer = null } = {}) {
-    const refusal = (code, detail, extra = {}) => {
-      const row = PROJECT_JOIN_REQUEST_CHECKS[code];
-      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail,
-               project: projectId ?? null, ...extra };
-    };
-    /* DEC-49 REGION is-join-request-ask */
-    /* A caller with no person behind it — a machine credential, or a viewer naming no member — asks nothing:
-       asked BEFORE sight, because it is a fact about the caller and says nothing about any project. */
-    const me = this.#requester(by, viewer);
-    if (!me)
-      return this.#noRequester(projectId,
-        "asking to join a project is a signed-in member's own act (Membership Architecture v2 §7.14). A "
-        + "credential with no active member behind it asks nothing. Nothing was written.");
-    /* Only a PROJECT is asked to join: any other bundle is visible to every member (§7.9: the evidence corpus
-       stays shared), so its sight would read FULL and misname it a project the caller is in. It is answered as
-       what it is — no project by that id — which is the absent answer, and true. */
-    const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
-    const shown = b ? this.#titleOf(projectId) : null;
-    const sight = b && b.object_type === "project" ? this.sight(projectId, viewer) : Membership.SIGHT_NONE;
-    if (sight === Membership.SIGHT_NONE) return noSuchProject(projectId);
-    if (sight === Membership.SIGHT_FULL)
-      return refusal("PROJECT_REQUEST_NOT_OUTSIDE",
-        "you can already see this project, so there is nothing to ask: a participant is already in it (an "
-        + "invited one joins by the checkbox, §7.4), and an administrator's sight of every project is not a "
-        + "position in any of them (§7.3). Nothing was written.");
-    const open = this.#openJoinRequest(projectId, me.member_id);
-    if (open)
-      return refusal("PROJECT_REQUEST_ALREADY_OPEN",
-        "you already have an open request to join this project. One is open at a time: withdraw it to ask "
-        + "again. Nothing was written.", { asked: open.asked_at });
-    /* END DEC-49 REGION is-join-request-ask */
-    const c = Membership.#requestComment(comment);
-    const at = new Date().toISOString();
-    this.sql.exec(
-      `INSERT INTO project_join_requests (project_id, member_id, project_name, comment, asked_at, state)
-       VALUES (?,?,?,?,?,'open')`, projectId, me.member_id, shown, c, at);
-    return { ok: true, projectId, name: shown, state: "open", comment: c, asked: at,
-             detail: "your request is open. The project's owners answer it; until they do it stays open." };
-  }
-
-  /** REC-150 — WITHDRAW (§7.14: "The requester may withdraw an open request"). The requester's own act on their
-   *  own record, so it asks no sight of the project: the request is what the caller names, and a caller with no
-   *  open request to that id is answered ONE way whether the project is discoverable, hidden or absent. */
-  projectRequestWithdraw({ projectId, by, viewer = null } = {}) {
-    const me = this.#requester(by, viewer);
-    if (!me)
-      return this.#noRequester(projectId,
-        "withdrawing a request to join is the requester's own act, and a credential with no active member "
-        + "behind it made none. Nothing was written.");
-    if (!this.#openJoinRequest(projectId, me.member_id))
-      return this.#noOpenRequest(projectId,
-        "you have no open request to join a project by that id, so there is nothing to withdraw. This answer is "
-        + "the same whatever that id names. Nothing was written.");
-    const at = new Date().toISOString();
-    this.#closeJoinRequests(projectId, me.member_id, "withdrawn", me.member_id, null, at);
-    return { ok: true, projectId, state: "withdrawn", closed: at };
-  }
-
-  /** REC-150 — AN OWNER ANSWERS (§7.14 "Who answers"). Sight before position, as every roster act: a member at
-   *  EXISTENCE gets C-70.1, a caller who cannot see the project the absent answer, and only then is ownership
-   *  asked — through `isProjectOwner`, §7's one owner predicate, so an administrator, the founder and every
-   *  machine credential are refused by name. GRANT writes `invited`, with `invited_by` the granting owner — never
-   *  `joined` (§7.4: joining is the member's own act). DECLINE is recorded with the owner's optional comment. */
-  projectRequestAnswer({ projectId, handle, answer, comment = null, by, viewer = null } = {}) {
-    const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
-    { const existence = b ? this.existenceAct(projectId, viewer) : null; if (existence) return existence; }
-    if (!b || !this.rosterInSight(projectId, viewer)) return noSuchProject(projectId);
-    if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT", project: projectId };
-    const want = String(answer ?? "");
-    const refusal = (code, detail, extra = {}) => {
-      const row = PROJECT_JOIN_REQUEST_CHECKS[code];
-      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail,
-               project: projectId, ...extra };
-    };
-    /* DEC-49 REGION is-join-request-answer */
-    if (!this.isProjectOwner(projectId, by))
-      return refusal("PROJECT_REQUEST_ANSWER_NOT_THE_OWNER",
-        `a request to join ${String(projectId).slice(0, 80)} is answered by its OWNERS (Membership Architecture `
-        + `v2 §7.14; only owners invite, §7.2), and ${String(by ?? "an unnamed caller").slice(0, 80)} is not one `
-        + `of them. Administrators see requests and answer none. Nothing was written.`);
-    if (!Membership.JOIN_REQUEST_ANSWERS.includes(want))
-      return refusal("PROJECT_REQUEST_UNKNOWN_ANSWER",
-        `${JSON.stringify(want.slice(0, 40))} is not an answer: a request is granted or declined, and nothing `
-        + `else. Nothing was written.`);
-    const target = this.memberByHandle(handle);
-    const open = target ? this.#openJoinRequest(projectId, target.member_id) : null;
-    if (!open)
-      return this.#noOpenRequest(projectId,
-        `${JSON.stringify(String(handle ?? "").slice(0, 80))} has no open request to join this project, so there `
-        + `is nothing to answer. Nothing was written.`, { handle: handle ?? null });
-    if (want === "grant" && target.status !== "active")
-      return refusal("PROJECT_REQUEST_REQUESTER_INACTIVE",
-        `${JSON.stringify(target.handle)} is not an active member, and a grant is an invitation (§7.2), which `
-        + `goes to an active member. The request stays open. Nothing was written.`, { handle: target.handle });
-    if (want === "grant" && this.participation(projectId, target.member_id))
-      return refusal("PROJECT_REQUEST_REQUESTER_ALREADY_A_PARTICIPANT",
-        `${JSON.stringify(target.handle)} is already a participant of this project, so a grant would invite `
-        + `nobody new. The request stays open: decline it, or the requester withdraws it. Nothing was written.`,
-        { handle: target.handle });
-    /* END DEC-49 REGION is-join-request-answer */
-    const c = Membership.#requestComment(comment);
-    const at = new Date().toISOString();
-    if (want === "grant") {
-      /* THE SAME ROW §7.2's invitation writes (`projectInvite`): `invited`, not an owner, invited_by the owner
-         who granted. Joining stays the member's own act (§7.4), so this never writes `joined`. */
-      this.sql.exec(
-        `INSERT INTO project_participants (project_id,member_id,state,owner,invited_by,created,updated)
-         VALUES (?,?,'invited',0,?,?,?)`, projectId, target.member_id, by, at, at);
-    }
-    this.#closeJoinRequests(projectId, target.member_id, want === "grant" ? "granted" : "declined", by, c, at);
-    return { ok: true, projectId, handle: target.handle, state: want === "grant" ? "granted" : "declined",
-             comment: c, closed: at,
-             ...(want === "grant"
-               ? { participation: "invited",
-                   detail: "granted as an invitation: the member is INVITED, and joins by the checkbox (§7.4)." }
-               : {}) };
-  }
-
-  /** REC-150 — WHO SEES A REQUEST (§7.14): the requester (their own, always), the project's owners, and
-   *  administrators; not other participants, because a pending requester is not a participant (§7.8).
-   *  WITH `projectId`: that project's requests, to an owner or an administrator (the founder included), after
-   *  sight — at EXISTENCE C-70.1 (a read naming the project's own id, BOB #32's ruling (a)), without sight the
-   *  absent answer. WITHOUT it: the caller's OWN requests, every project and every state, each naming the project
-   *  by the id and the name the caller was shown when asking — so a request LAPSED by a project going hidden is
-   *  still the requester's to read, and names nothing they had not already seen. Its answering owner is NOT in
-   *  the requester's view: who owns a project is contents (§7.14 "DISCOVERABLE adds ONE thing"). */
-  projectRequests({ projectId = null, by, viewer = null, limit = null } = {}) {
-    /* BOUNDED, AND THE BOUND IS PUBLISHED — op=projectdirectory's shape (D-479), for the same reason: both lists
-       grow with the record and have no natural ceiling. §7.14 rules that a requester may ask again after every
-       decline or withdrawal ("ownership is the remedy for a nuisance, not a cooldown"), so a project's list grows
-       with every ask anyone ever made of it. `limit` is the cap APPLIED (the caller may LOWER it, not raise it);
-       `truncated` is MEASURED by reading one row past the cap, never derived from the page. The page is the FIRST
-       `limit` requests in the order they were made, so a page means the same thing twice. */
-    const cap = Math.max(1, Math.min(Number(limit) || Membership.PROJECT_REQUESTS_LIMIT, Membership.PROJECT_REQUESTS_LIMIT));
-    const refusal = (code, detail) => {
-      const row = PROJECT_JOIN_REQUEST_CHECKS[code];
-      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail,
-               project: projectId ?? null };
-    };
-    if (projectId === null || projectId === undefined || projectId === "") {
-      const me = this.#requester(by, viewer);
-      if (!me)
-        return this.#noRequester(null,
-          "a member's own requests to join are read by that member, signed in. A credential with no active "
-          + "member behind it has made none.");
-      const mine = this.#rows(
-        `SELECT project_id AS project, project_name AS name, comment, state, asked_at AS asked,
-                closed_comment, closed_at AS closed
-           FROM project_join_requests WHERE member_id=? ORDER BY seq LIMIT ?`, me.member_id, cap + 1);
-      const mineCut = mine.length > cap;
-      const minePage = mineCut ? mine.slice(0, cap) : mine;
-      return { ok: true, own: true, requests: minePage, count: minePage.length, limit: cap, truncated: mineCut };
-    }
-    const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
-    { const existence = b ? this.existenceAct(projectId, viewer) : null; if (existence) return existence; }
-    if (!b || !this.inSight(projectId, viewer)) return noSuchProject(projectId);
-    if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT", project: projectId };
-    /* DEC-49 REGION is-join-requests-project */
-    if (!this.isProjectOwner(projectId, by) && !this.isAdministrator(by))
-      return refusal("PROJECT_REQUESTS_NOT_VISIBLE",
-        "a project's requests to join are seen by the requester, the project's owners and administrators "
-        + "(Membership Architecture v2 §7.14), and not by other participants: a pending requester is not a "
-        + "participant (§7.8). Your own requests are read without naming a project.");
-    /* END DEC-49 REGION is-join-requests-project */
-    const theirs = this.#rows(
-      `SELECT m.handle, r.comment, r.state, r.asked_at AS asked, cb.handle AS closed_by,
-              r.closed_comment, r.closed_at AS closed
-         FROM project_join_requests r JOIN members m ON m.member_id = r.member_id
-         LEFT JOIN members cb ON cb.member_id = r.closed_by
-        WHERE r.project_id=? ORDER BY r.seq LIMIT ?`, projectId, cap + 1);
-    const theirsCut = theirs.length > cap;
-    const theirsPage = theirsCut ? theirs.slice(0, cap) : theirs;
-    return { ok: true, own: false, projectId, requests: theirsPage, count: theirsPage.length, limit: cap,
-             truncated: theirsCut };
-  }
-
-  /* REC-150 — THE REQUESTS READ'S PAGE SIZE, a CHOSEN CONSTANT and never a finding, declared BELOW the method
-     (REC-116's finding) and `PROJECT_DIRECTORY_LIMIT`'s reasoning: a list a person reads to answer or to recall
-     their own asks, generous enough that a legitimate caller rarely meets it, published whenever it cuts. */
-  static PROJECT_REQUESTS_LIMIT = 200;
-
   /* THE ROSTER ACTS' form of the same question, and the one difference is stated rather than hidden.
      Their positional half is `by`, and they have always been driven straight at the store by callers
      that are not requests (setup, fixtures, the store's own suites) — the same population
@@ -1679,8 +1285,8 @@ export class Membership {
        OWNER DOES NOT ASK TO LEAVE. An owner's request can be honoured only by the 7.10 removal (7.7 refuses
        an owner, `OWNER`), and 7.10's floor refuses that removal at one owner, so a request from the last owner
        would record a departure the record can never carry out — an overclaim. The floor is asked through the
-       SAME arithmetic `projectOwnerRemove`'s LAST_OWNER ran; R35 (below) has since replaced that count with the
-       committed owners, which `projectOwnerRemove`'s LAST_COMMITTED_OWNER also reads. Nothing is written. */
+       SAME arithmetic `project-roster`'s `projectOwnerRemove`'s LAST_OWNER ran; R35 (below) has since replaced that count with the
+       committed owners, which that act's LAST_COMMITTED_OWNER also reads. Nothing is written. */
     /* DEC-49 REGION is-leave-owner-floor — REC-186/C-33.48. */
     /* R35 (REC-224): an owner may ask to leave only while ANOTHER owner stays committed — an owner who has not
        asked to leave. Counting every owner (the old LAST_OWNER_CANNOT_LEAVE) let two owners both ask to leave and
@@ -1737,72 +1343,13 @@ export class Membership {
     const at = new Date().toISOString();
     this.sql.exec(`DELETE FROM project_participants WHERE project_id=? AND member_id=?`, projectId, target.member_id);
     /* R63 (Bob, 2026-09-26): the removal stays in the record — who removed whom, when, and the owner's reason —
-       and every participant reads it (projectParticipants' `removals`). */
+       and every participant reads it (`project-roster`'s roster read, its `removals`). */
     this.sql.exec(`INSERT INTO project_removals (project_id, member_id, removed_by, comment, at) VALUES (?,?,?,?,?)`,
       projectId, target.member_id, by, why, at);
     return { ok: true, projectId, handle, removed: true, comment: why, by, at };
   }
 
-  /** 7.10 addition. The sole owner may add a second unilaterally; every addition
-   *  past that needs the consensus of ALL existing owners.
-   *
-   *  Consensus on addition is the load-bearing half, exactly as in 4.7. Without
-   *  it one owner recruits confederates and manufactures the majority that then
-   *  removes the others, and closing that door is what makes removal safe. */
-  projectOwnerAdd({ projectId, handle, by, viewer = null } = {}) {
-    const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
-    /* REC-138 / D-426: sight BEFORE position (see `inSight`). */
-    { const existence = b ? this.existenceAct(projectId, viewer) : null; if (existence) return existence; }   /* REC-149 */
-    if (!b || !this.rosterInSight(projectId, viewer)) return noSuchProject(projectId);
-    if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
-    if (!this.isProjectOwner(projectId, by))
-      return { ok: false, reason: "NOT_THE_OWNER",
-               detail: "only an owner of this project may propose another owner of it" };
-    const target = this.memberByHandle(handle);
-    if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
-    if (target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };
-    const p = this.participation(projectId, target.member_id);
-    /* R39: an owner is a JOINED participant with the owner flag. An invited member has not accepted a place in
-       the project at all, so making them an owner would also make them joined without their act (the old code did
-       exactly that); one who has asked to leave is on the way out. Both, and a member with no participation, are
-       refused as not joined: C-56.5, this module's row (N335). */
-    /* DEC-49 REGION is-owner-target-joined */
-    if (!p || p.state !== "joined") {
-      const row = MEMBERSHIP_CHECKS.TARGET_NOT_JOINED;
-      return { ok: false, reason: "TARGET_NOT_JOINED", code: "TARGET_NOT_JOINED", check: row.check,
-               translation: row.translation, handle, ...(p ? { state: p.state } : {}),
-               detail: "an owner is a joined participant with the owner flag, so the member joins the project first" };
-    }
-    /* END DEC-49 REGION is-owner-target-joined */
-    if (p.owner) return { ok: false, reason: "ALREADY_AN_OWNER", handle };
-
-    const owners = this.projectOwners(projectId);
-    const now = new Date().toISOString();
-    this.sql.exec(
-      `INSERT OR REPLACE INTO project_owner_votes (project_id,kind,target,voter,reason,created)
-       VALUES (?,'add',?,?,NULL,?)`, projectId, target.member_id, by, now);
-
-    /* The sole owner acts alone. Past that, every existing owner must have
-       voted, and votes from members who are no longer owners do not count. */
-    if (owners.length > 1) {
-      const have = this.#ownerVotes(projectId, "add", target.member_id, owners).map((v) => v.voter);
-      const awaiting = owners.filter((o) => !have.includes(o));
-      if (awaiting.length)
-        return { ok: false, reason: "CONSENSUS_REQUIRED", projectId, handle,
-                 have: have.sort(), awaiting: awaiting.sort(),
-                 detail: "every existing owner must agree to an addition beyond the second" };
-    }
-    const deciders = this.#ownerVotes(projectId, "add", target.member_id, owners).map((v) => v.voter).sort();
-    this.sql.exec(
-      `UPDATE project_participants SET owner=1, owner_order=(SELECT COALESCE(MAX(owner_order), 0) + 1 FROM project_participants WHERE project_id=?), updated=? WHERE project_id=? AND member_id=?`,
-      projectId, now, projectId, target.member_id);
-    this.#recordOwnerDecision(projectId, "add", target.member_id, deciders, [], now);
-    this.sql.exec(`DELETE FROM project_owner_votes WHERE project_id=? AND kind='add' AND target=?`,
-      projectId, target.member_id);
-    return { ok: true, projectId, handle, owner: true, owners: this.projectOwners(projectId).sort(), deciders };
-  }
-
-  /** D-311: THE RESCUE'S CALLER-AND-PROJECT CONDITIONS, extracted from `projectOwnerRescue` so
+  /** D-311: THE RESCUE'S CALLER-AND-PROJECT CONDITIONS, extracted from `projectOwnerRescue` (now `project-roster`'s, its R5) so
    *  `op=affordances` asks the SAME predicate the act refuses on (the `#citesInto` discipline):
    *  the caller is an administrator, the project has owner rows, and EVERY owner is inactive.
    *  Returns the refusal the act answers, byte for byte as it answered before the extraction, or
@@ -1829,132 +1376,6 @@ export class Membership {
                detail: "an administrator may add an owner only when EVERY owner of the project is inactive. "
                      + "While one is active the project is theirs to run, and 7.10 is the route." };
     return null;
-  }
-
-  /** 7.13: the ONE participation power an administrator has, and its condition.
-   *
-   *  Only owners manage participation and lifecycle, and administrators may
-   *  deactivate members. Those two rules together strand a project: an
-   *  administrator can end the access of a project's only owner and then be
-   *  unable to touch the project, which accepts no new participants, cannot be
-   *  reactivated, and cannot change hands.
-   *
-   *  THE CONDITION IS EVERY OWNER, NOT ANY OWNER, and it cannot be manufactured
-   *  piecemeal: an administrator cannot reach a live project by deactivating one
-   *  inconvenient person. Reaching a project with an administrator among its
-   *  owners additionally requires the 4.7 vote, per 4.9.
-   *
-   *  IT ADDS RATHER THAN REPLACES. The inactive owners keep their rows, so if
-   *  one is later reactivated they are an owner again ALONGSIDE the added one,
-   *  and removing them is then the ordinary 7.10 process. Nothing about this
-   *  exception strips anyone, which is what keeps it from becoming a route
-   *  around 7.10. The narrower alternative, that deactivation vacates ownership
-   *  outright, was considered and rejected in v2: it makes a member's
-   *  deactivation silently destroy project state, and hands administrators a way
-   *  to empty a project's ownership one member at a time. */
-  projectOwnerRescue({ projectId, handle, by, reason, viewer = null } = {}) {
-    const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
-    /* REC-138 / D-426: sight BEFORE position — so NOT_AN_ADMIN is said only to a member who can
-       already see the project (an invited one); an administrator sees every project (§7.3). */
-    { const existence = b ? this.existenceAct(projectId, viewer) : null; if (existence) return existence; }   /* REC-149 */
-    if (!b || !this.rosterInSight(projectId, viewer)) return noSuchProject(projectId);
-    if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
-    const blocked = this.rescueRefusal(projectId, by);
-    if (blocked) return blocked;
-    const why = String(reason ?? "").trim();
-    if (!why) return { ok: false, reason: "NO_REASON", detail: "authority changes are recorded with a reason" };
-    const target = this.memberByHandle(handle);
-    if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
-    if (target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };
-
-    const now = new Date().toISOString();
-    /* Recorded, and visible to every participant, like every other authority
-       change. Reuses the 7.10 vote log with its own kind so the project's
-       ownership history reads in one place. */
-    this.sql.exec(
-      `INSERT OR REPLACE INTO project_owner_votes (project_id,kind,target,voter,reason,created)
-       VALUES (?,'rescue',?,?,?,?)`, projectId, target.member_id, by, why, now);
-    this.sql.exec(
-      `INSERT INTO project_participants (project_id,member_id,state,owner,owner_order,invited_by,comment,created,updated)
-       VALUES (?,?,'joined',1,(SELECT COALESCE(MAX(owner_order), 0) + 1 FROM project_participants WHERE project_id=?),?,?,?,?)
-       ON CONFLICT(project_id,member_id) DO UPDATE SET owner=1, owner_order=excluded.owner_order, state='joined',
-         updated=excluded.updated`,
-      projectId, target.member_id, projectId, by, why, now, now);
-    this.#recordOwnerDecision(projectId, "rescue", target.member_id, [by], [why], now);
-    return { ok: true, projectId, handle, by, reason: why, owner: true,
-             owners: this.projectOwners(projectId).sort(), addedNotReplaced: true,
-             detail: "the inactive owners keep their rows. If one is reactivated they are an owner again "
-                   + "alongside this one, and removing them is then the ordinary 7.10 process." };
-  }
-
-  /** 7.10 removal. A majority of all owners, the target in the denominator and
-   *  not voting, EXCEPT at exactly two owners where both must agree and the
-   *  target is one of them. The floor is one owner. */
-  projectOwnerRemove({ projectId, handle, by, reason, viewer = null } = {}) {
-    const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
-    /* REC-138 / D-426: sight BEFORE position (see `inSight`). */
-    { const existence = b ? this.existenceAct(projectId, viewer) : null; if (existence) return existence; }   /* REC-149 */
-    if (!b || !this.rosterInSight(projectId, viewer)) return noSuchProject(projectId);
-    if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
-    if (!this.isProjectOwner(projectId, by))
-      return { ok: false, reason: "NOT_THE_OWNER",
-               detail: "only an owner of this project votes on its ownership" };
-    const target = this.memberByHandle(handle);
-    if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
-    if (!this.isProjectOwner(projectId, target.member_id))
-      return { ok: false, reason: "NOT_AN_OWNER", handle };
-    const why = String(reason ?? "").trim();
-    if (!why) return { ok: false, reason: "NO_REASON", detail: "ownership changes are recorded with a reason" };
-
-    /* DEC-49 REGION is-owner-floor — REC-64/C-33.28. */
-    const owners = this.projectOwners(projectId);
-    const math = Membership.ownerMath(owners.length);
-    if (!math.possible)
-      return { ok: false, reason: "LAST_OWNER", ...math,
-               detail: "one owner is the floor, so the last owner of a project is not removable. Add "
-                     + "another owner first, or deactivate the project (7.11)." };
-    /* END DEC-49 REGION is-owner-floor */
-    /* At three and above the target does not vote. At two they must, which is
-       the whole divergence from 4.7 and the reason ownerMath exists separately. */
-    /* R40 (REC-224): a removal that would leave the project with owners who have ALL asked to leave is refused,
-       naming them: the project would be left with nobody committed to running it. */
-    const remaining = owners.filter((o) => o !== target.member_id);
-    const committed = this.#committedOwners(projectId).filter((o) => o !== target.member_id);
-    if (!committed.length)
-      return { ok: false, reason: "LAST_COMMITTED_OWNER", ...math, leaving: remaining.sort(),
-               detail: `removing this owner would leave only owners who have asked to leave (${remaining.join(", ")}), `
-                     + "so nobody would be committed to the project. Add another owner first (7.10), or deactivate "
-                     + "the project (7.11). Nothing was written." };
-    if (!math.targetMayVote && by === target.member_id)
-      return { ok: false, reason: "TARGET_CANNOT_VOTE", ...math,
-               detail: "the target is counted in the denominator but does not vote" };
-
-    if (this.#one(
-      `SELECT voter FROM project_owner_votes WHERE project_id=? AND kind='remove' AND target=? AND voter=?`,
-      projectId, target.member_id, by))
-      return { ok: false, reason: "ALREADY_VOTED", by };
-    const now = new Date().toISOString();
-    this.sql.exec(
-      `INSERT INTO project_owner_votes (project_id,kind,target,voter,reason,created) VALUES (?,'remove',?,?,?,?)`,
-      projectId, target.member_id, by, why, now);
-
-    const counted = this.#ownerVotes(projectId, "remove", target.member_id, owners)
-      .filter((v) => math.targetMayVote || v.voter !== target.member_id);
-    const votes = counted.map((v) => v.voter);
-    if (votes.length < math.votesNeeded)
-      return { ok: false, reason: "VOTES_SHORT", projectId, handle,
-               have: votes.length, need: math.votesNeeded, ...math, deciders: votes.sort() };
-
-    /* Carried. They stay a PARTICIPANT: 7.10 says removing ownership leaves
-       them on the project, and removing them from it entirely is then 7.7. */
-    const reasons = counted.map((v) => v.reason).filter(Boolean);
-    this.sql.exec(`UPDATE project_participants SET owner=0, owner_order=NULL, updated=? WHERE project_id=? AND member_id=?`,
-      now, projectId, target.member_id);
-    this.#recordOwnerDecision(projectId, "remove", target.member_id, [...votes].sort(), reasons, now);
-    this.sql.exec(`DELETE FROM project_owner_votes WHERE project_id=? AND kind='remove' AND target=?`,
-      projectId, target.member_id);
-    return { ok: true, projectId, handle, owner: false, stillAParticipant: true,
-             owners: this.projectOwners(projectId).sort(), deciders: votes.sort(), reasons };
   }
 
   /* ---- section 1.3: declared expertise, confirmed licenses ----
@@ -1987,7 +1408,7 @@ export class Membership {
   /** The member's own statement about themselves. */
   expertiseDeclare({ memberId, label } = {}) {
     const m = this.#one(`SELECT member_id, status FROM members WHERE member_id=?`, memberId);
-    if (!m) return noSuchMember(memberId);   /* N793: C-96.39 minted at its one site */
+    if (!m) return noSuchMember(memberId);   /* R121 (N793): C-96.47 minted at its one site */
     if (m.status !== "active") return { ok: false, reason: "NOT_ACTIVE" };
     const lab = Membership.#normLabel(label);
     /* N285 (K275, K343): R21's refusal is its own condition, an expertise declared without a readable name, so it has
@@ -2018,7 +1439,7 @@ export class Membership {
         { remedy: "An active administrator of this group can confirm it, for any member, another administrator "
                 + "included." });
     const m = this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId);
-    if (!m) return noSuchMember(memberId);   /* N793: C-96.39 minted at its one site */
+    if (!m) return noSuchMember(memberId);   /* R121 (N793): C-96.47 minted at its one site */
     const lab = Membership.#normLabel(label);
     const cur = this.#expertiseState(memberId, lab);
     /* An administrator cannot introduce a label. Confirming something never
@@ -2056,29 +1477,6 @@ export class Membership {
           .map((h) => ({ event: h.event, actor: h.actor, at: h.created })),
       })).sort((a, b) => a.label.localeCompare(b.label)),
       gates: "nothing" };
-  }
-
-  /** 7.8: every participant sees the handles of all other participants, and an
-   *  administrator sees all of them. A non-participant sees nothing, and is told
-   *  the same thing whether the project exists or not, because 7.9 says an
-   *  uninvited member cannot see that a project EXISTS. */
-  projectParticipants({ projectId, by } = {}) {
-    const mine = this.participation(projectId, by);
-    if (!mine && !this.isAdministrator(by)) return noSuchProject(projectId);   /* R78 */
-    const handleOf = (id) => this.#one(`SELECT handle FROM members WHERE member_id=?`, id)?.handle ?? id;
-    return { ok: true, projectId, participants: this.#rows(
-      `SELECT m.handle, p.state, p.owner, p.comment, p.created
-       FROM project_participants p JOIN members m ON m.member_id = p.member_id
-       WHERE p.project_id=? ORDER BY p.owner DESC, m.handle`, projectId),
-      /* R42: every ownership decision, with its deciders and reasons, in the order it was carried. */
-      ownership: this.#rows(`SELECT kind, target, deciders, reasons, at FROM project_owner_decisions
-                              WHERE project_id=? ORDER BY seq`, projectId).map((d) => ({
-        kind: d.kind, handle: handleOf(d.target), deciders: JSON.parse(d.deciders).map(handleOf),
-        reasons: JSON.parse(d.reasons), at: d.at })),
-      /* R63: every removal an owner made: who removed whom, when, and the owner's reason. */
-      removals: this.#rows(`SELECT member_id, removed_by, comment, at FROM project_removals
-                             WHERE project_id=? ORDER BY seq`, projectId).map((x) => ({
-        handle: handleOf(x.member_id), removedBy: handleOf(x.removed_by), reason: x.comment, at: x.at })) };
   }
 
   /* ---- the membership model's member half, Architecture sections 3 to 6 ----
@@ -2165,23 +1563,6 @@ export class Membership {
   #committedOwners(projectId) {
     return this.#rows(`SELECT member_id FROM project_participants WHERE project_id=? AND owner=1 AND state<>'leaving'`,
       projectId).map((r) => r.member_id);
-  }
-
-  /* N70: THE VOTES THAT COUNT on one proposal, `{voter, reason}` in voter order: those of the current `owners` (a
-     former owner's vote does not count), joined in SQL and bounded by the owner count, which cuts nothing, since the
-     table holds one row per voter per proposal (its key). */
-  #ownerVotes(projectId, kind, target, owners) {
-    return this.#rows(
-      `SELECT v.voter, v.reason FROM project_owner_votes v
-         JOIN project_participants p ON p.project_id = v.project_id AND p.member_id = v.voter AND p.owner = 1
-        WHERE v.project_id=? AND v.kind=? AND v.target=? ORDER BY v.voter LIMIT ?`,
-      projectId, kind, target, owners.length);
-  }
-
-  /* R42: a carried ownership decision, kept with its deciders and reasons. */
-  #recordOwnerDecision(projectId, kind, target, deciders, reasons, at) {
-    this.sql.exec(`INSERT INTO project_owner_decisions (project_id, kind, target, deciders, reasons, at)
-                   VALUES (?,?,?,?,?,?)`, projectId, kind, target, JSON.stringify(deciders), JSON.stringify(reasons), at);
   }
 
   /** The table, computed rather than transcribed, so the code and the document
@@ -2279,7 +1660,7 @@ export class Membership {
     const admins = this.activeAdmins();
     if (!by || !admins.includes(by)) return notAnAdmin(by, "setting a member's capabilities");   /* R84 */
     const m = this.#one(`SELECT member_id, role FROM members WHERE member_id=?`, memberId);
-    if (!m) return noSuchMember(memberId);   /* N793: C-96.39 minted at its one site */
+    if (!m) return noSuchMember(memberId);   /* R121 (N793): C-96.47 minted at its one site */
     const want = Array.isArray(capabilities) ? capabilities : null;
     if (!want) return { ok: false, reason: "BAD_CAPABILITY", detail: "capabilities is an array" };
     if (want.includes("administer") || m.role === "admin")
@@ -2302,8 +1683,11 @@ export class Membership {
    *  half of 4.7: without it a captured administrator recruits confederates and
    *  manufactures the majority that ejects the honest ones. */
   async adminEndorse({ memberId, by } = {}) {
+    /* R6 (T38, K2276): the caller's standing first, so no one who may not act learns whether a member exists. */
+    const admins = this.activeAdmins();
+    if (!by || !admins.includes(by)) return notAnAdmin(by, "endorsing a proposed administrator");   /* R84 */
     const m = this.#one(`SELECT member_id, status, role, invite_days FROM members WHERE member_id=?`, memberId);
-    if (!m) return noSuchMember(memberId);   /* N793: C-96.39 minted at its one site */
+    if (!m) return noSuchMember(memberId);   /* R121 (N793): C-96.47 minted at its one site */
     /* N335: C-96.14, this module's row (K275). */
     /* DEC-49 REGION is-endorse-proposed */
     if (m.status !== "proposed") {
@@ -2314,8 +1698,6 @@ export class Membership {
                      + "member's is not. Nothing was written." };
     }
     /* END DEC-49 REGION is-endorse-proposed */
-    const admins = this.activeAdmins();
-    if (!by || !admins.includes(by)) return notAnAdmin(by, "endorsing a proposed administrator");   /* R84 */
     const now = new Date().toISOString();
     this.sql.exec(`INSERT OR REPLACE INTO admin_votes (kind,target,voter,reason,created) VALUES ('add',?,?,?,?)`,
       memberId, by, null, now);
@@ -2341,6 +1723,10 @@ export class Membership {
 
   /** Vote to remove an administrator. Section 4.7. */
   adminRemove({ memberId, by, reason } = {}) {
+    /* R7 (T38, K2276): the caller's standing first, before any fact about the target, so no one who may not act
+       learns whether a member exists, is an administrator, or is the founder. */
+    const admins = this.activeAdmins();
+    if (!by || !admins.includes(by)) return notAnAdmin(by, "voting to remove an administrator");   /* R84 */
     /* The founding administrator is the root of trust (4.6) and is not
        removable by the membership model, because the membership model runs on
        an instance they control. Saying so plainly is an obligation of 4.6: no
@@ -2355,7 +1741,7 @@ export class Membership {
                      + "arrangement in which nobody holds that power, because your group's Civicsmith runs in "
                      + "somebody's hosting account. The remedy is at the hosting account, not here (section 4.6)." };
     const m = this.#one(`SELECT member_id, role, status FROM members WHERE member_id=?`, memberId);
-    if (!m) return noSuchMember(memberId);   /* N793: C-96.39 minted at its one site */
+    if (!m) return noSuchMember(memberId);   /* R121 (N793): C-96.47 minted at its one site */
     /* D-134: the TARGET is not an administrator — a different fact from the CALLER not being one, which is
        what NOT_AN_ADMIN says at every other site, so it carries its own code and its own canned sentence. */
     const refusal = (code, detail, extra) => Membership.#custodialRefusal(code, detail, extra);
@@ -2365,10 +1751,8 @@ export class Membership {
         "this member is not an administrator, so there is no administrator to remove; an ordinary member "
       + "is deactivated with op=memberset", { memberId });
     /* END DEC-49 REGION is-remove-target-admin */
-    const admins = this.activeAdmins();
     if (memberId === by) return { ok: false, reason: "TARGET_CANNOT_VOTE",
       detail: "the target is counted in the denominator but does not vote" };
-    if (!by || !admins.includes(by)) return notAnAdmin(by, "voting to remove an administrator");   /* R84 */
     const why = String(reason ?? "").trim();
     if (!why) return { ok: false, reason: "NO_REASON", detail: "removals are recorded with a reason" };
 
@@ -2670,7 +2054,7 @@ export class Membership {
     if (barSet) return barSet;
     if (!["active", "revoked"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
     const m = this.#one(`SELECT status, role FROM members WHERE member_id=?`, memberId);
-    if (!m) return noSuchMember(memberId);   /* N793: C-96.39 minted at its one site */
+    if (!m) return noSuchMember(memberId);   /* R121 (N793): C-96.47 minted at its one site */
     /* 4.4: administrator status cannot be taken away by another administrator.
        Revoking an administrator IS taking it away, so it goes through the
        section 4.7 vote or it does not happen. This is what stops an instance
@@ -2792,7 +2176,7 @@ export class Membership {
   inviteWithdraw({ memberId, by = null } = {}) {
     if (!this.isAdministrator(by)) return notAnAdmin(by, "withdrawing an invitation");   /* R84 */
     const m = this.#one(`SELECT status, invite_hash FROM members WHERE member_id=?`, memberId);
-    if (!m) return noSuchMember(memberId);   /* N793: C-96.39 minted at its one site */
+    if (!m) return noSuchMember(memberId);   /* R121 (N793): C-96.47 minted at its one site */
     /* DEC-49 REGION is-invitation-unused */
     if (m.status !== "invited" || !m.invite_hash)
       return Membership.#rowRefusal("NO_UNUSED_INVITATION",
@@ -3225,15 +2609,6 @@ export function membershipOps(m, url, body, env) {
         adminarith: () => m.adminArithmetic(),
         projectclaimowner: () => m.projectClaimOwner(body || {}),
         /* REC-138: `viewer` is the control plane's stamp (sight before position, `inSight`). */
-        projectowneradd: () => m.projectOwnerAdd({ projectId: url.searchParams.get("projectId"),
-          handle: url.searchParams.get("handle"), by: url.searchParams.get("by"),
-          viewer: url.searchParams.get("viewer") }),
-        projectownerremove: () => m.projectOwnerRemove({ projectId: url.searchParams.get("projectId"),
-          handle: url.searchParams.get("handle"), by: url.searchParams.get("by"),
-          reason: url.searchParams.get("reason"), viewer: url.searchParams.get("viewer") }),
-        projectownerrescue: () => m.projectOwnerRescue({ projectId: url.searchParams.get("projectId"),
-          handle: url.searchParams.get("handle"), by: url.searchParams.get("by"),
-          reason: url.searchParams.get("reason"), viewer: url.searchParams.get("viewer") }),
         projectownerarith: () => m.projectOwnerArithmetic({ projectId: url.searchParams.get("projectId"),
                                                                viewer: url.searchParams.get("viewer") }),
         expertisedeclare: () => m.expertiseDeclare(body || {}),
@@ -3251,32 +2626,12 @@ export function membershipOps(m, url, body, env) {
         projectremove: () => m.projectRemove({ projectId: url.searchParams.get("projectId"),
           handle: url.searchParams.get("handle"), by: url.searchParams.get("by"),
           comment: url.searchParams.get("comment"), viewer: url.searchParams.get("viewer") }),
-        /* REC-149 (Membership v2 §7.14): the owner's setting, its read, and the directory. `by` and `viewer` are
-           the control plane's stamps (PROJECT_ACTIONS for the setting, the viewer stamp for all three). */
+        /* REC-149 (Membership v2 §7.14): the owner's setting. `by` and `viewer` are the control plane's stamps
+           (PROJECT_ACTIONS). T38 (N783, K2270): the setting's read, the directory, the requests to join, the owner
+           votes and the roster read are `project-roster`'s ops (its own map). */
         projectvisibilityset: () => m.projectVisibilitySet({ projectId: url.searchParams.get("projectId"),
           setting: url.searchParams.get("setting"), reason: url.searchParams.get("reason"),
           by: url.searchParams.get("by"), viewer: url.searchParams.get("viewer") }),
-        projectvisibility: () => m.projectVisibility({ projectId: url.searchParams.get("projectId"),
-          viewer: url.searchParams.get("viewer") }),
-        /* D-479: `limit` reaches the directory's page (the cap is the caller's to LOWER, not to raise). */
-        projectdirectory: () => m.projectDirectory({ viewer: url.searchParams.get("viewer"),
-          limit: url.searchParams.get("limit") }),
-        projectparticipants: () => m.projectParticipants({ projectId: url.searchParams.get("projectId"),
-          by: url.searchParams.get("by") }),
-        /* REC-150 (Membership v2 §7.14, the request to join): `by` and `viewer` are the control plane's stamps
-           (PROJECT_ACTIONS for the three acts; the viewer stamp and the `by` stamp for the read). */
-        projectrequest: () => m.projectRequest({ projectId: url.searchParams.get("projectId"),
-          comment: url.searchParams.get("comment"), by: url.searchParams.get("by"),
-          viewer: url.searchParams.get("viewer") }),
-        projectrequestwithdraw: () => m.projectRequestWithdraw({ projectId: url.searchParams.get("projectId"),
-          by: url.searchParams.get("by"), viewer: url.searchParams.get("viewer") }),
-        projectrequestanswer: () => m.projectRequestAnswer({ projectId: url.searchParams.get("projectId"),
-          handle: url.searchParams.get("handle"), answer: url.searchParams.get("answer"),
-          comment: url.searchParams.get("comment"), by: url.searchParams.get("by"),
-          viewer: url.searchParams.get("viewer") }),
-        projectrequests: () => m.projectRequests({ projectId: url.searchParams.get("projectId"),
-          by: url.searchParams.get("by"), viewer: url.searchParams.get("viewer"),
-          limit: url.searchParams.get("limit") }),
         /* N18: the canon rules built in T3 (R10, R11, R19). `by` is the control plane's stamp, read after the body. */
         adminresign: () => m.adminResign({ by: url.searchParams.get("by") }),
         hostingaccessset: () => m.hostingAccessSet({ ...(body || {}), by: url.searchParams.get("by") }),

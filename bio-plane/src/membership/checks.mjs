@@ -2,8 +2,9 @@
  * answers carries its code, its row and the member's translation, so a surface shows the same sentence wherever the act
  * is reached.
  *
- * Its families C-55, C-56.1–.2, C-57, C-70.1–.4, C-95 and C-96.2–.12 (but C-96.8), and C-33.28 and C-33.48, are held here
- * since T19 layer 2 (below); C-29, C-63 and C-96.8 are `credentials`'. The row below is new with R78 (N208, N146, K275: `NO_SUCH_PROJECT` is one
+ * Its families C-55, C-56.1–.2, C-57, C-70.1–.3 and C-96.2–.12 (but C-96.8), and C-33.48, are held here since T19
+ * layer 2 (below); T38 (N783, K2270): C-56.5, C-33.28, C-70.4 and the C-95 family went to `project-roster` with the acts
+ * that mint them; C-29, C-63 and C-96.8 are `credentials`'. The row below is new with R78 (N208, N146, K275: `NO_SUCH_PROJECT` is one
  * condition, a project absent or unseen, answered as absent, so it is minted at one site, `noSuchProject`, and every
  * module answering that condition calls it). It takes the next free number of C-70, the sight family it belongs to
  * (K107 (3)'s rule: the job names a new code's row; K174: a module holds its new rows). Intent's C-111.2 and
@@ -61,12 +62,6 @@ export const MEMBERSHIP_CHECKS = Object.freeze({
     translation: 'The member you named holds no place in this project, so there is nobody to remove from it. '
       + 'Nothing was changed.',
   }),
-  TARGET_NOT_JOINED: Object.freeze({
-    check: 'C-56.5', where: at("projectOwnerAdd", "is-owner-target-joined"),
-    translation: 'An owner of a project is one of its participants who has joined it, and the member you named has '
-      + 'not joined this project: they are invited and have not joined, have asked to leave, or hold no place in it. '
-      + 'Nothing was changed. Once they have joined, they can be made an owner.',
-  }),
   LISTENER_MALFORMED: Object.freeze({
     check: 'C-102.11', where: at("listenerRefusal", "is-listener-registration"),
     translation: 'A part of your group\'s Civicsmith tried to register a listener without naming itself or without a '
@@ -91,16 +86,8 @@ export const MEMBERSHIP_CHECKS = Object.freeze({
     translation: "An expertise is declared by a name a person can read, such as 'CPA', and this one has none. "
       + 'Nothing was written.',
   }),
-  /* T19 layer 2 (the families' move): C-33.28 and C-33.48 COPIED from the catalogue's `ACT_SHAPE_CHECKS`, rows and
-     translations unchanged (entities' C-33.25 precedent). That table is split between modules; its copies leave the
-     catalogue when the last owner holds its rows (rule 1). */
-  LAST_OWNER: {
-    check: 'C-33.28',
-    where: 'src/membership/index.mjs projectOwnerRemove > is-owner-floor',
-    translation: 'A project always has at least one owner, so the last one cannot be removed — the '
-      + 'result would be work nobody is answerable for. Add another owner first, or stand the '
-      + 'project down.',
-  },
+  /* T19 layer 2 (the families' move): C-33.48 COPIED from the catalogue's `ACT_SHAPE_CHECKS`, row and translation
+     unchanged (entities' C-33.25 precedent); C-33.28 LAST_OWNER went with `projectOwnerRemove` to `project-roster` (T38). */
   LAST_COMMITTED_OWNER: {
     check: 'C-33.48',
     where: 'src/membership/index.mjs projectLeave > is-leave-owner-floor',
@@ -211,9 +198,9 @@ export const MEMBERSHIP_CHECKS = Object.freeze({
       + 'nothing else. Nothing was written.',
   }),
   /* N793 (K231; T38-4): one code, one site. `NO_SUCH_MEMBER` is minted only by `noSuchMember`, which every module
-     refusing that condition calls; the next free number of C-96 (instance-setup's C-64.18 gives way to it). */
+     refusing that condition calls; a free number of C-96 (C-96.39 is credentials'; K2279), and instance-setup's C-64.18 gives way to it. */
   NO_SUCH_MEMBER: Object.freeze({
-    check: 'C-96.39', where: at("noSuchMember", "is-no-such-member"),
+    check: 'C-96.47', where: at("noSuchMember", "is-no-such-member"),
     translation: 'No member of your group answers to the name or id given. Nothing was changed. Check the name, or '
       + 'add the person as a member first.',
   }),
@@ -272,7 +259,7 @@ export const MEMBER_ID_CHECKS = {
  * is ever deleted) and only the two statuses the ops take, so it cannot receive them; EXPERTISE_IS_NOT_ASSIGNED
  * likewise, because the surface never sends `expertise`. NO_SUCH_MEMBER has its row since T38 (N793, K231): it is
  * minted by several modules for one condition, so it is minted at one site, `noSuchMember`, and its row is
- * MEMBERSHIP_CHECKS' C-96.39. */
+ * MEMBERSHIP_CHECKS' C-96.47. */
 export const CUSTODIAL_CHECKS = {
   BAD_MEMBER_ID: {
     check: 'C-96.2',
@@ -393,77 +380,6 @@ export const PROJECT_VISIBILITY_CHECKS = {
     where: 'src/membership/index.mjs visibilitySettingRefusal > is-project-visibility-setting',
     translation: 'A project is either discoverable or hidden, and nothing else. Nothing was changed. '
       + 'Choose one of the two.',
-  },
-  PROJECT_DIRECTORY_NEEDS_A_MEMBER: {
-    check: 'C-70.4',
-    where: 'src/membership/index.mjs projectDirectory > is-project-directory-member',
-    translation: 'The list of projects you can ask to join is for a signed-in member. Sign in as yourself to '
-      + 'see it.',
-  },
-};
-
-/* REC-150 / C-95 — THE REQUEST TO JOIN (Membership Architecture v2 §7, item 7.14, "The request to join"; step 2
- * of its decomposition, BOB #16 from Bob's ruling of 2026-09-18: *"somebody who sees the project can ask to be
- * added as a member"*). A member outside a DISCOVERABLE project asks (at most one open request per member per
- * project, an optional comment) and may withdraw; an OWNER grants — which writes the requester `invited`, never
- * `joined`, because joining is the member's own act (§7.4) — or declines; administrators and the founder see
- * requests and answer none; setting the project HIDDEN lapses every open request. Every refusal here is said
- * only where it discloses nothing: a request to a project the caller cannot see is `noSuchProject` byte for
- * byte and never a C-95 code, and a withdrawal with no open request is ONE answer whatever the id names. */
-export const PROJECT_JOIN_REQUEST_CHECKS = {
-  PROJECT_REQUEST_NEEDS_A_MEMBER: {
-    check: 'C-95.1',
-    where: 'src/membership/index.mjs #noRequester > is-join-request-member',
-    translation: 'Asking to join a project, withdrawing that request and reading your own requests are things '
-      + 'a signed-in member does for themselves. Sign in as yourself to do it. Nothing was changed.',
-  },
-  PROJECT_REQUEST_NOT_OUTSIDE: {
-    check: 'C-95.2',
-    where: 'src/membership/index.mjs projectRequest > is-join-request-ask',
-    translation: 'You can already see this project, so there is nothing to ask. If you were invited, join it '
-      + 'with its checkbox. Nothing was changed.',
-  },
-  PROJECT_REQUEST_ALREADY_OPEN: {
-    check: 'C-95.3',
-    where: 'src/membership/index.mjs projectRequest > is-join-request-ask',
-    translation: 'You already have a request open to join this project. Its owners answer it; you can withdraw '
-      + 'it and ask again. Nothing was changed.',
-  },
-  PROJECT_REQUEST_NONE_OPEN: {
-    check: 'C-95.4',
-    where: 'src/membership/index.mjs #noOpenRequest > is-join-request-none-open',
-    translation: 'There is no open request to join here to act on. It may already have been answered, '
-      + 'withdrawn or lapsed. Nothing was changed.',
-  },
-  PROJECT_REQUEST_ANSWER_NOT_THE_OWNER: {
-    check: 'C-95.5',
-    where: 'src/membership/index.mjs projectRequestAnswer > is-join-request-answer',
-    translation: 'Only an owner of this project can grant or decline a request to join it. Administrators see '
-      + 'requests and answer none. Nothing was changed.',
-  },
-  PROJECT_REQUEST_UNKNOWN_ANSWER: {
-    check: 'C-95.6',
-    where: 'src/membership/index.mjs projectRequestAnswer > is-join-request-answer',
-    translation: 'A request to join is either granted or declined, and nothing else. Choose one of the two. '
-      + 'Nothing was changed.',
-  },
-  PROJECT_REQUEST_REQUESTER_INACTIVE: {
-    check: 'C-95.7',
-    where: 'src/membership/index.mjs projectRequestAnswer > is-join-request-answer',
-    translation: 'The member who asked is no longer active, so they cannot be invited. The request stays open; '
-      + 'you can decline it. Nothing was changed.',
-  },
-  PROJECT_REQUEST_REQUESTER_ALREADY_A_PARTICIPANT: {
-    check: 'C-95.8',
-    where: 'src/membership/index.mjs projectRequestAnswer > is-join-request-answer',
-    translation: 'The member who asked is already a participant of this project, so granting would invite '
-      + 'nobody new. You can decline the request, or they can withdraw it. Nothing was changed.',
-  },
-  PROJECT_REQUESTS_NOT_VISIBLE: {
-    check: 'C-95.9',
-    where: 'src/membership/index.mjs projectRequests > is-join-requests-project',
-    translation: 'A project\'s requests to join are seen by the people who asked, its owners and administrators. '
-      + 'You can read your own requests without naming a project.',
   },
 };
 
