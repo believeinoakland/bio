@@ -12,3 +12,7 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Merge order in L9 (`modules.json` order): conformance → filing-templates. You merge first.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there, item 17 with `plan/t37-red-census.md`); none is yours unless named here. None is named: the red census lists no conformance test (80/0 on `tranche/T37` @ `adfd693d33`). Red 2's share above opens at your merge.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Your reading stands (P8: a flaw found in your own module is fixed in the job). Re-point all seven rows; R28's test checks that each region lies inside the named function. At your merge, row-census.test.mjs is accepted red for exactly those seven rows (fixture 1.64.0 lines 206, 212, 222, 225, 226, 228, 229) until T38's promotion stamp, as rule 6 item 2 (K2231). Name all seven in your COMPLETE.
