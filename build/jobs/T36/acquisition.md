@@ -62,3 +62,7 @@ Size (session_01UBPYqfwtexSRDSTDJARv1u): test runs 9, module lines 2927
 ## J1 · REPORT
 
 Four findings (record, 'Found in other modules and in my own'). (1) acquisition R38: unpack checks no profile, so a member's op=unpack opens an office or OpenDocument file as an archive; R41 now answers it NOT_AN_ARCHIVE. I recommend amending R38 to refuse NOT_AN_ARCHIVE too (a requirement change, yours). (2) promotion gate.mjs:757-758 stamps acquisition's C-137.1-.19: in T37 they are C-139.1-.19, plus the new C-139.20. (3) bio-plane/dist/bio-plane.bundled.mjs is stale (not_product, regenerated at layer close). (4) The DEC-149 line citations in dec149.test titles and in my Suggestions were already stale at the tranche tip (historical T35 lines); nothing fails. Detail decisions for rulings.md are in the record: REPUTATION_TIMEOUT_MS 5000; reputation carried only on a filed capture; categories kept as strings only; the scanner reached at binding.fetch on /provider/reputation.
+
+## J2 · COMPLETE
+
+T36-10 applied: R41 NOT_AN_ARCHIVE (C-139.20); R29 archive family renumbered C-139 (red 8 cleared: following 49/49); R44 reputation before the fetch, on the receipt and in the answer. acquisition 151/151 pass; the users' tests show no new red; format, architecture, coverage (44/44) and ownership: 0 failures. Record on job/T36/acquisition.
