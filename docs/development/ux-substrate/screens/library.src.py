@@ -100,7 +100,7 @@ wiz('Say who your group is', 'group-identity', False, [
 ], [2])
 
 wiz('Invite a member', 'members', False, [
- ('members', 'memberadd', 'Who: their handle, and the cover the group knows them by. Not a legal name.', 'The record never needs a legal name. Administrators keep the cover so they know who is who.'),
+ ('members', 'memberadd', 'Who: a short id for the invitation, and the cover the group knows them by. Not a legal name.', 'They choose their own handle when they join. The record never needs a legal name; administrators keep the cover so they know who is who.'),
  ('members', 'membercaps', 'What they may do. Contributing is the default.', 'Give only what the person needs; you can change it later.'),
  ('members', None, 'Send the link yourself. It works once and expires after seven days.', 'Civicsmith sends no email, so the link reaches them only through you.'),
  ('members', 'websitekeycreate', 'Or let people join through your website: create a website key, or turn on the reusable join link.', 'Anyone let through can see the group\'s shared work, so each comes with limits and a daily cap.'),

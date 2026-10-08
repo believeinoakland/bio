@@ -17,7 +17,7 @@ screen('setup', 'Become your group\'s first administrator', 'setup', 'The founde
 screen('group-identity', 'Who your group is', 'working', 'Kinds, focus and purpose, and who sees them (DEC-132).',
   [('groupdescriptionset','Save who your group is, and who sees it'),('owed:groupdescriptiondraft DEC-152','Ask the assistant to help write it')], [2])
 screen('join', 'Your invitation', 'setup', 'The invitation link opens here: language, handle, password.',
-  [('invitelook','Read the invitation'),('owed:memberlanguageset DEC-127','Choose your language'),('enroll','Join with a handle and password')], [3])
+  [('invitelook','Read the invitation'),('owed:memberlanguageset DEC-127','Choose your language'),('owed:handlecheck DEC-184','See whether a handle is free'),('enroll','Join with a handle and password')], [3])
 screen('home', 'Your group\'s home', 'working', 'What the group is working on, what waits on you, and "What brought you here?".',
   [('promote','Start a project'),('owed:startfrom DEC-129','Start from…')], [3,6])
 screen('members', 'Members', 'working', 'The roster: invitations, capabilities, expertise, administrators, joining through the website.',

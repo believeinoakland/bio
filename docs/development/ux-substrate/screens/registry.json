@@ -204,6 +204,11 @@
      "status": "owed"
     },
     {
+     "op": "owed:handlecheck DEC-184",
+     "label": "See whether a handle is free",
+     "status": "owed"
+    },
+    {
      "op": "enroll",
      "label": "Join with a handle and password",
      "status": "declared",

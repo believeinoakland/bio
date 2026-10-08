@@ -8,16 +8,17 @@
   "state": 4,
   "draft": 4,
   "photo": 7,
+  "handle": 3,
   "rail": 14,
   "tab": 2,
   "level": 2,
   "guide": 6,
   "screen": 94,
-  "act": 459,
+  "act": 461,
   "column": 33,
   "wizard": 239,
-  "total": 930,
-  "protected": 353
+  "total": 935,
+  "protected": 354
  },
  "words": [
   {
@@ -511,6 +512,24 @@
    "protected": true,
    "source": "DEC-183",
    "note": "the Photos step as a gate"
+  },
+  {
+   "key": "handle.free",
+   "en": "{handle} is free in {group}",
+   "protected": false,
+   "source": "mock-screens.js join"
+  },
+  {
+   "key": "handle.taken",
+   "en": "{handle} is already taken in {group}. Try another, such as {suggestion}.",
+   "protected": false,
+   "source": "mock-screens.js join"
+  },
+  {
+   "key": "handle.characters",
+   "en": "A handle uses only lower-case letters, digits and hyphens.",
+   "protected": false,
+   "source": "mock-screens.js join"
   },
   {
    "key": "rail.home.name",
@@ -1344,6 +1363,12 @@
   {
    "key": "act.owed_memberlanguageset.label.join",
    "en": "Choose your language",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_handlecheck.label.join",
+   "en": "See whether a handle is free",
    "protected": true,
    "source": "registry.json"
   },
@@ -3376,6 +3401,12 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
+   "key": "act.owed_handlecheck.does",
+   "en": "Checks, as you type, whether this handle can be used in the group: free, already taken, or using characters a handle can't have. It never says who has a handle.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
    "key": "act.owed_obscuremarkwithdraw.does",
    "en": "Withdraws a mark on a photo, with your reason, for example when it covers what the finding shows. The withdrawal is recorded beside the mark; the public copy follows the marks that stand.",
    "protected": false,
@@ -4967,13 +4998,13 @@
   },
   {
    "key": "wizard.WIZ-8e7e2fac33d069f8.step1.what",
-   "en": "Who: their handle, and the cover the group knows them by. Not a legal name.",
+   "en": "Who: a short id for the invitation, and the cover the group knows them by. Not a legal name.",
    "protected": false,
    "source": "library.json"
   },
   {
    "key": "wizard.WIZ-8e7e2fac33d069f8.step1.why",
-   "en": "The record never needs a legal name. Administrators keep the cover so they know who is who.",
+   "en": "They choose their own handle when they join. The record never needs a legal name; administrators keep the cover so they know who is who.",
    "protected": false,
    "source": "library.json"
   },

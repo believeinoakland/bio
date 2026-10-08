@@ -958,6 +958,9 @@ part of a finding, and any number plate, and the published case carries a copy w
 kept inside the group. Civicsmith obscures what a member marks; no AI looks at the group's photos. The Photos step is a gate: signing
 waits until every relied-on photo is checked; a mark is withdrawn only by a later reasoned act, never erased (DEC-183).
 
+**Choosing a handle (the design session, 2026-10-08, DEC-184, on Bob's comment).** As a member types a handle, the field says whether it
+is free in the group, taken, or uses characters a handle can't have; it never says who has a handle.
+
 **Acts that can never be undone, on a phone (the design session, 2026-10-08, DEC-181).** Every act the Irreversible weight marks is
 read on a phone and done on a larger screen, replacing DEC-170's single act.
 ## What this changes about how M8 is built

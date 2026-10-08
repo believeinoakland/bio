@@ -107,6 +107,14 @@ add('photo.refused.format', 'This photo\'s format can\'t be obscured: {photo}. C
 add('photo.refused.changed', 'A mark changed after this case was prepared. Prepare it again before signing.', true, 'DEC-183', 'PHOTO_MARKS_CHANGED_SINCE');
 add('photo.refused.unchecked', 'Signing waits until every photo the case relies on is checked: {photo}.', true, 'DEC-183', 'the Photos step as a gate');
 
+// 4b. Choosing a handle (DEC-184): what the field says as a member types
+add('handle.free', '{handle} is free in {group}', false, 'mock-screens.js join');
+must(scr, 'mock-screens.js', 'mai-k is free in Lakeshore Tenants');
+add('handle.taken', '{handle} is already taken in {group}. Try another, such as {suggestion}.', false, 'mock-screens.js join');
+must(scr, 'mock-screens.js', 'is already taken in Lakeshore Tenants. Try another, such as');
+add('handle.characters', 'A handle uses only lower-case letters, digits and hyphens.', false, 'mock-screens.js join');
+must(scr, 'mock-screens.js', 'A handle uses only lower-case letters, digits and hyphens');
+
 // 5. The frame: rail, phone tabs, explanation levels
 for (const [k, name] of W.RAIL) { add(`rail.${k}.name`, name, false, 'mock-shell.js RAIL'); if (W.RAIL_HELP[k]) add(`rail.${k}.holds`, W.RAIL_HELP[k], false, 'mock-refs.js RAIL_HELP'); }
 for (const [k, name] of W.TABS) if (!W.RAIL.some(r => r[0] === k)) add(`tab.${k}.name`, name, false, 'mock-shell.js TABS');

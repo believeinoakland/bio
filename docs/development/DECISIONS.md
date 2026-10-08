@@ -2861,3 +2861,17 @@ response: **Decided by the design session, 2026-10-08.** (1) The Photos step is 
 decided: 2026-10-08 · the design session (P17)
 reasoning recorded in: this entry; `screens/mock-screens.js` (the ceremony's Photos step); `screens/mock-acts.js`; `screens/registry.src.py` (`owed:obscuremarkwithdraw DEC-183`); `screens/build_words.mjs`, `screens/words.json` (`photo.*`); `layouts.html` (section 6).
 owed: (BOB, T37 L8 and L11) signing refused while a relied-on photo is unchecked (a code naming the photo); `obscuremarkwithdraw` with its reason, recorded beside the mark, the copy following standing marks; the refusals' words as (3) and (4); the `photo.*` words from `words.json`; the password text as (7).
+
+### DEC-184 · answered
+raised: 2026-10-08 · the UX design session with Bob on his secondary account (session_01SCHPX2mpSDpBNA9wprUm5H; the development process runs on the same account since K1891) (Bob's comment on the layouts page's joining screen, field "Your handle": "I assume that the system is enforcing the restriction that every handle be unique within a group. The user should be getting visual feedback saying whether the handle they're choosing is unique or not.")
+for: bob-session
+question: What a member sees while choosing a handle.
+why it is Bob's: it is not: screen detail beneath membership R12 and R16 (a handle's characters; `HANDLE_TAKEN` at enrolment); decided by the design session (P17) on his direction. Whether a handle may be changed after joining is his, brought as S18.
+provisional: the field showed nothing until enrolment refused a taken handle; the screens said a handle could be changed later, which no op allows.
+alternative: report a taken handle only when the member presses Join.
+recommendation: as decided below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-08, on Bob's comment.** (1) Yes, a handle is unique in the group: enrolment refuses a taken one (membership R16, exact comparison over R12's characters: lower-case letters, digits and hyphens, 2 to 41, starting with a letter or digit). (2) As a member types, the field says one of three things: "{handle} is free in {group}"; "{handle} is already taken in {group}. Try another, such as {suggestion}."; or that a handle uses only lower-case letters, digits and hyphens, naming what doesn't fit. (3) The check answers only free or taken, never who has a handle, and only while the invitation is live (`owed:handlecheck DEC-184`, a read). (4) The help under the field states the characters and that a handle can't be changed after joining; the invitation's id field and the Invite a member wizard step no longer call the administrator's id the member's handle; the sample handle is "mai-k" (a full stop is not allowed).
+decided: 2026-10-08 · the design session (P17)
+reasoning recorded in: this entry; `screens/mock-screens.js` (joining, members, your account); `screens/mock-refs.js`; `screens/library.src.py` (Invite a member, step 1); `screens/registry.src.py`; `journeys.html` (journeys 3 and the Invite a member card); `screens/words.json` (`handle.*`); `layouts.html`.
+owed: (BOB) a read `handlecheck({invite, handle})` answering free, taken or not allowed (never who), refused without a live invitation and counted against R38-style abuse limits; the field's three messages, held for translation.
