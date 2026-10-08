@@ -257,7 +257,7 @@ console.log("\n--- front page and begin ---");
   t("PKCE method is S256", a.searchParams.get("code_challenge_method"), "S256");
   t("challenge present", (a.searchParams.get("code_challenge") || "").length >= 40, true);
   t("redirect is the registered string, character-exact", a.searchParams.get("redirect_uri"), CFG.REDIRECT);
-  t("scopes are exactly the registered four", a.searchParams.get("scope"), CFG.SCOPES.join(" "));
+  t("scopes are exactly the registered five (T36: connectivity-directory.bind, R45)", a.searchParams.get("scope"), CFG.SCOPES.join(" "));
   t("state travels", (state || "").length >= 20, true);
   t("cookie is HttpOnly", /HttpOnly/i.test(r.headers.get("set-cookie")), true);
   t("cookie is Secure and Lax", /Secure/.test(r.headers.get("set-cookie")) && /SameSite=Lax/.test(r.headers.get("set-cookie")), true);
@@ -332,11 +332,12 @@ console.log("\n--- install: the whole conversation ---");
   /* Was "three secrets set" until DIST-2: REC-33 gave the plane a daemon
      class, and the installer now binds its credential so monitoring runs
      scoped instead of on the root-of-trust ADMIN_TOKEN fallback. */
-  /* Five since T33-91: ACCOUNT_SEAL_SECRET (K1541), the key members' own account references are sealed under. */
-  t("five secrets set (DAEMON_TOKEN joined at DIST-2, ACCOUNT_SEAL_SECRET at T33-91)", secrets.map((s) => s.name).sort(),
-    ["ACCOUNT_SEAL_SECRET", "ADMIN_TOKEN", "DAEMON_TOKEN", "MEMBER_TOKEN", "PROBE_TOKEN"]);
+  /* Five since T33-91: ACCOUNT_SEAL_SECRET (K1541), the key members' own account references are sealed under. Four
+     since T36 (installer R9, N711): the shared member key is retired. */
+  t("four secrets set (DAEMON_TOKEN joined at DIST-2, ACCOUNT_SEAL_SECRET at T33-91, MEMBER_TOKEN retired at T36)", secrets.map((s) => s.name).sort(),
+    ["ACCOUNT_SEAL_SECRET", "ADMIN_TOKEN", "DAEMON_TOKEN", "PROBE_TOKEN"]);
   t("secrets are long", secrets.every((s) => s.text.length >= 40), true);
-  t("secrets are distinct", new Set(secrets.map((s) => s.text)).size, 5);
+  t("secrets are distinct", new Set(secrets.map((s) => s.text)).size, 4);
   t("the seal secret is not on the success page (K1541: no person ever spends it)",
     (() => { const v = secrets.find((s) => s.name === "ACCOUNT_SEAL_SECRET")?.text;
       return v ? body.includes(v) : "ACCOUNT_SEAL_SECRET missing"; })(), false);
@@ -373,7 +374,7 @@ console.log("\n--- install: the whole conversation ---");
 
   t("verification hit the new address", calls.some((c) => c.u.includes("oak-watch.oakwatch.workers.dev/api/?op=selftest")), true);
   t("the page shows the address", body.includes("https://oak-watch.oakwatch.workers.dev"), true);
-  t("the page hands over the credentials", body.includes("out-boot") && body.includes("out-member"), true);
+  t("the page hands over the credentials (no member credential since T36)", body.includes("out-boot") && body.includes("out-probe") && !body.includes("out-member"), true);
   t("THE ACCESS TOKEN APPEARS NOWHERE IN THE OUTPUT", body.includes(TOK), false);
   t("the callback clears the cookie", true, true);
   globalThis.fetch = realFetch;
@@ -405,7 +406,7 @@ console.log("\n--- install: address asleep, credentials still handed over ---");
 
   t("the check was actually retried", calls.filter((c) => c.u.includes("slow-town.slowtown.workers.dev")).length >= 10, true);
   t("the page still shows the address", body.includes("https://slow-town.slowtown.workers.dev"), true);
-  t("THE CREDENTIALS ARE STILL HANDED OVER", body.includes("out-boot") && body.includes("out-member") && body.includes("out-probe"), true);
+  t("THE CREDENTIALS ARE STILL HANDED OVER", body.includes("out-boot") && body.includes("out-probe"), true);
   t("the headline says asleep, not failed", body.includes("has not woken up yet"), true);
   t("no token in output", body.includes(TOK), false);
   globalThis.fetch = realFetch;
@@ -470,14 +471,16 @@ console.log("\n--- install: a refused SELF binding costs the monitoring, never t
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   const puts = calls.filter((c) => c.method === "PUT" && c.u.endsWith("/scripts/shy-town"));
-  t("the refused upload is retried exactly once", puts.length, 2);
+  /* T36 (R47): a third plane upload follows, the install's last, which tells the copy its own address. */
+  t("the refused upload is retried exactly once", [puts.length, ...await Promise.all(puts.map(async (p) => "migrations" in await metadataOf(p)))],
+    [3, true, true, false]);
   const retry = puts[1] ? await metadataOf(puts[1]) : { bindings: [] };
   t("the retry drops ONLY the service binding", retry.bindings.some((b) => b.type === "service"), false);
   t("the retry still carries the store, the secrets and the storage",
     [retry.bindings.some((b) => b.type === "durable_object_namespace"),
      retry.bindings.filter((b) => b.type === "secret_text").length,
      retry.bindings.filter((b) => b.type === "r2_bucket").length,
-     "migrations" in retry], [true, 5, 2, true]);
+     "migrations" in retry], [true, 4, 2, true]);
   t("the group still gets a working copy", body.includes("out-boot"), true);
   t("the page says what was left out and how to get it", body.includes("was refused by Cloudflare"), true);
   t("no token in output", body.includes(TOK), false);
@@ -1320,7 +1323,7 @@ async function d116Install(slug, reply) {
     [lag.includes("Your group's Civicsmith is running."), lag.includes("agent-worker was installed, but your group&#39;s Civicsmith holds no connection to it")],
     [false, true]);
   t("and the credentials are still handed over — a lag never costs a group its only sight of them",
-    [lag.includes('id=\\"out-member\\"'), lag.includes('id=\\"out-probe\\"')], [true, true]);
+    [lag.includes('id=\\"out-boot\\"'), lag.includes('id=\\"out-probe\\"')], [true, true]);
 }
 
 /* ---- DIST-6: THE INSTALLED PLANE IS BOUND TO THE MEMBERS INSTALLED BESIDE IT ---------------------------------------
@@ -1431,7 +1434,7 @@ const oldMember = [{ type: "plain_text", name: "VERSION", text: "0.1.0" }];
     [r.planePuts.length, r.planePuts[0]?.some((b) => Object.values(RIGHT).includes(b.service)) ?? null],
     [2, false]);
   t("INSTALL: the plane's other bindings survive the re-PUT (STORE, the secrets, SELF, R2)",
-    ["STORE", "ADMIN_TOKEN", "MEMBER_TOKEN", "PROBE_TOKEN", "DAEMON_TOKEN", "SELF", "CAPTURES", "PUBLISHED"]
+    ["STORE", "ADMIN_TOKEN", "PROBE_TOKEN", "DAEMON_TOKEN", "SELF", "CAPTURES", "PUBLISHED", "OWN_HOSTS"]
       .map((n) => (r.planePuts.at(-1) || []).some((b) => b.name === n)), Array(8).fill(true));
   t("INSTALL: the DAEMON_TOKEN restated by the re-PUT is the one the install generated, not a second value",
     r.planePuts[0]?.find((b) => b.name === "DAEMON_TOKEN")?.text === r.planePuts.at(-1)?.find((b) => b.name === "DAEMON_TOKEN")?.text,
