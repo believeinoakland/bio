@@ -1,7 +1,8 @@
 /* membership — who the members are and what each may do; projects as working groups, sight, and the fence.
  *
  * Requirements: build/requirements/membership.md (R4–R121; T38's R116–R121, project-roster's seams and N793's
- * `noSuchMember` (T38-4; N783, N793, K2270, K2271, K2275), and R83's order with `project-roster`; T34's R10–R13, R84 and R97–R111 (T34-10; DEC-132 to
+ * `noSuchMember` (T38-4; N783, N793, K2270, K2271, K2275), and R83's order with `project-roster`; T39's R83 order
+ * (`doc-clean`, `setup-words`; T39-M, K2343); T34's R10–R13, R84 and R97–R111 (T34-10; DEC-132 to
  * DEC-136, K1745); T33's R83 order (T33-19a: plan T33's Rules (2), K1438, K1504);
  * T32's R83 order (wizard-scripts, N544, K1396); T28's R83
  * order (accepted-work, case-checker, case-import; K1292, K1299); T27's R83 order (docket, N520, K1256); T25's R83 order (attestation, provenance-routes,
@@ -198,13 +199,14 @@ export function noSuchMember(memberId, extra = null) {
    listeners order correctly from the day it registers; R83's test names it as not yet built until its merge. T35-14,
    T36-6 (N697, N723; K1864, K1961, K2008): every module the file names is held, whether or not it registers one.
    T37-44 (K1185, K2171): `image-cover` after `pdf-pixels` in layer 1, as T37's opening placed it. T38-4 (N783; K657,
-   K1185, K2270): `project-roster` in layer 2, directly after `membership` and before `credentials`. */
+   K1185, K2270): `project-roster` in layer 2, directly after `membership` and before `credentials`. T39-M (N806, N807;
+   K657, K2333, K2343): `doc-clean` after `image-cover` in layer 1, `setup-words` before `instance-setup` in layer 11. */
 export const MODULE_ORDER = Object.freeze([
   /* 1 */ "record-grammar", "jurisdictions", "civil-time", "calc-grammar", "connection-grammar", "test-support",
           "runtime-limits", "signatures", "bundler", "court-citations", "id-spaces", "subresources", "ooxml",
           "office-readers", "odf-reader", "pdf-reader", "format-registry", "text-chain", "site-profiles", "docprofile",
           "doctypes", "legistar-reader", "roster-reader", "court-doctypes", "budget-doctypes", "image-codecs",
-          "pdf-pixels", "image-cover", "pdf-worker", "ocr-worker", "sheet-worker", "file-scanner",
+          "pdf-pixels", "image-cover", "doc-clean", "pdf-worker", "ocr-worker", "sheet-worker", "file-scanner",
   /* 2 */ "record-core", "membership", "project-roster", "credentials", "promotion",
   /* 3 */ "host-governor", "provenance", "attestation", "provenance-routes", "capture-sources", "acquisition",
           "capture", "file-safety", "sources",
@@ -223,7 +225,7 @@ export const MODULE_ORDER = Object.freeze([
           "escalation", "action-plans",
   /* 10 */ "monitoring", "following", "link-sweep", "scheduler",
   /* 11 */ "wizard-scripts", "op-grades", "affordances", "tasks", "machinery-producers", "queue-producers",
-           "notice-producers", "queue", "setup-page", "instance-setup", "op-declarations", "admission",
+           "notice-producers", "queue", "setup-page", "setup-words", "instance-setup", "op-declarations", "admission",
            "answer-envelope", "store-door", "control-plane", "plane", "legacy-ui", "installer",
 ]);
 
@@ -286,10 +288,10 @@ export class Membership {
     return info && typeof info.title === "string" ? info.title : null;
   }
 
-  /* This module's tables, at every boot (R57–R59), idempotent: `members.name` renamed to `cover` (2026-07-24);
+  /* This module's tables, at every boot (R57, R58, R115), idempotent: `members.name` renamed to `cover` (2026-07-24);
      every table and index created if absent; the additive columns an older store lacks added; the vestigial
      `members.expertise` column dropped (K57: `member_expertise` is the record, R21–R24); the tables declared to
-     record-core's purge (R59) when its `declarePurge` is present; and the sight index recomputed whole from the owners'
+     record-core's purge (R115) when its `declarePurge` is present; and the sight index recomputed whole from the owners'
      acts (D-497: a derivation, so an index that disagreed with `project_visibility` cannot survive a restart; moved
      here from the legacy store's boot, T19). Run by the host inside its boot, after record-core's schema. */
   migrate() {
@@ -313,7 +315,7 @@ export class Membership {
     if (cols("bundles").length) this.reindexProjectSight();
   }
 
-  /* R59, through record-core's `declarePurge` (its R21) once record-core provides it. */
+  /* R115 (was R59), through record-core's `declarePurge` (its R21) once record-core provides it. */
   declareTables() {
     if (this.#declared) return false;
     /* record-core R21/R46: the project-keyed tables, keyed to a bundle (the project) by `project_id`, and the
