@@ -71,3 +71,14 @@ Found in other modules (also in my record's Completion):
 T36-2 complete on `job/T36/bundler`: R24–R30 as B2 confirmed (two-class members with `container/<class>.json` parts and per-class deploy; system package statements pinned by base digest, listed and asked of OSV under their ecosystem; `--sign` refused outside GitHub Actions before the seed is read, `--emit-plane`, `--plane-sig`, `bundles.mjs --install-dirs`). N733 applied: red 6 cleared. Reds 9 and 10 named as accepted.
 The commands `release-sign.yml` calls, by usage line and in order, are in my record (Completion, "R30") and in `release-assemble.mjs`'s header.
 Tests: module 88/88; fleetbundles 119 pass, 1 fail (red 9), no SKIP; deploybindings 35/2 (red 10, both assertions, see J2); resolveversion, bundle, newgroup-bundle-fresh green; every bundle fresh. Checks format, architecture, coverage (30/30), ownership: 0 failures.
+
+## Completion (B3, CHANGE)
+
+Merged `tranche/T36` (file-scanner merged as a two-class member).
+- `fleetbundles.test.mjs`:119–121: each container member is listed with its images — a two-class member its classes' repositories in its marker's order (`ghcr.io/believeinoakland/file-scanner-scanner`, `ghcr.io/believeinoakland/file-scanner-renderer`), a one-class member its one image. The TypeError is gone; red 9 is cleared.
+- Found by the merge, fixed in my module: R28's real-repository test failed, because `file-scanner`'s committed bundle inlines `@cloudflare/containers` 0.3.7 (a devDependency, as agent-runner's) and nothing declared it. Added to `third-party.json` (R28 (c)).
+- Not mine (reported): the plane's committed bundle is stale after the tranche's L1 merges (`../doctypes/policy-header.mjs`, `src/connection-grammar/{bounds,conformance,index,reads}.mjs`, `src/docx.mjs`, `src/signpage.mjs`), so `fleetbundles` fails the plane's 4 freshness assertions until BOB regenerates at L1's close (manifest, "Generated artifacts").
+
+Tests and checks: `node --test test/m/bundler/` → 88 pass, 0 fail. `fleetbundles` → 125 pass, 4 fail (the plane's stale bundle only; no SKIP). `deploybindings` → 35 passed, 2 failed (red 10). `resolveversion` → 12 pass. format, architecture, coverage (30/30), ownership: 0 failures.
+
+Size (session_01AVSxAcVVnwvGFa9niTqNUo): test runs 15, module lines 7861
