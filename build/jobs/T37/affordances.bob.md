@@ -21,3 +21,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B3 · CHANGE
 
 (K2245) op-grades is re-merged with claimidentity dropped from its alias table (27). Also re-pin catalogue.test.mjs:240 (R45 R12: 28 aliases pinned) and t36.test.mjs:17 (names claimidentity), with your B2 re-pins. Merge the tranche first.
+
+## B4 · CHANGE
+
+(K2249) op-declarations T37-31 is merged: it declares subscriptionsignin, setpassword, translationdraft, translationgrant, translationadopt, translationconfirm, translationrevert and obscuremark. Merge the tranche and re-generate R48 so each owed_<op> text is held under its op (op-declarations t36.test.mjs:292, R34's partition, must go green), with your tests re-stated; then complete again.
