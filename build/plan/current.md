@@ -1,6 +1,10 @@
-# Plan T40 (draft)
+# Plan T40
 
-**Status** · DRAFT, written during T39 (P18) by a worker for BOB #144, 2026-10-08; reviewed by BOB #144 (K2376: doubts 1–5 settled as their best readings, folded into `draft-T40-N812.md`; 6 written as N815); re-checked and moved to `current.md` the moment T39 closes (§5.2).
+**Status** · OPEN · BOB #144 · session_017eYwzMF5vwqLhpqcuC3iU8 · depth 1
+
+**Jobs** · 
+
+**At T40's opening (K2389):** T39 closed by PR #18 (`main` @ `fc8d9c9f36`, K2388), after PR #16 (DEC-184–DEC-187) merged into `main` (K2388), so rule 3's condition holds and N797–N799 and N811 enter. `tranche/T40` from `main` @ `fc8d9c9f36`. Drafted during T39 (P18) by a worker for BOB #144, reviewed (K2376) and re-checked at the opening (K2389).
 
 **Sources** · `next.md` N748, N751, N780, N794, N796–N799, N809, N811–N814; T39's `current.md` rule 3 (reds) and "Left out"; `plan/draft-T40-N812.md` (adopted, K2373; parts C–E); rulings K2348, K2350, K2352, K2353, K2343, K2351, K2370, K2371, K2373, K657; sizes measured on `tranche/T39` today over `modules.json` paths (K1821).
 
@@ -78,8 +82,8 @@ No merge order (independent).
 | N780 | a deployment: the next release cut (K1501) |
 | N794 | Bob's (K633, K1849) |
 | N796 | Bob's (P17): held with the investigation design lane's question (K2334) |
+| N817 | Bob's (P17): "Not today" (D43, K2382); started after the investigation lane hands off its design |
 | N815 (N812's explorer) | Bob's (P17): D35, D36's member scope and the step model (D32) open with the lane |
-| N797–N799, N811 (only if PR #16 is not merged at T39's close) | DEC-184–DEC-187 not on `main` (P12) |
 | stamp of T40's L3+ rows | the order: promotion (L2) runs before they exist; T41's stamp |
 | T38's carried rows (`archive/T38.md` "Left out") | their reasons unchanged; re-read at the opening |
 
