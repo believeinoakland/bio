@@ -182,14 +182,16 @@ test("R1 (K1315, K1322) each timestamp token the capture's home provenance.json 
                    [{ sha: other, held: "inline" }]);
 });
 
-test("R1 a SHA-256 is held once per call; a text is written once; the list is written once for a case edition and a second call writes nothing new", () => {
+test("R1 a SHA-256 is held once per call and named in files once for each ref that carries it; a text is written once; the list is written once for a case edition and a second call writes nothing new", () => {
   const w = world();
   const docSha = w.doc(DOC);
   const annex = w.doc("INFO-2026-0002-annex");
   const fm = caseFm({ materials: [docRow(DOC, docSha), docRow("INFO-2026-0003-copy", docSha), docRow(DOC, docSha.toUpperCase())] });
   const r = w.cc.holdMaterials(fm, { caseId: CASE, edition: 1, at: NOW });
   assert.deepEqual(r.materials, [{ sha: docSha, held: "inline" }]);
-  assert.equal(r.files.length, 1);
+  assert.deepEqual(r.files.map((f) => [f.sha256, f.ref, f.kind]), [[docSha, DOC, "document"], [docSha, "INFO-2026-0003-copy", "document"]],
+                   "once per ref: the same ref twice is named once");
+  assert.equal(w.row(`SELECT COUNT(*) AS n FROM published_material_texts WHERE sha256=?`, docSha).n, 1);
   const kept = w.snapshot(KEPT);
   /* again, for the same edition, with more materials and a later instant: nothing new is written */
   const again = w.cc.holdMaterials(caseFm({ materials: [docRow(DOC, docSha), docRow("INFO-2026-0002-annex", annex)] }),
