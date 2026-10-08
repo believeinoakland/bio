@@ -17,3 +17,7 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 ## B2 · CHANGE
 
 K2114 (from PEOPLE #5 J1): events R49 now states, for every read in its shape: an item's extent is content.canonicalExtent's string parsed back to an object; items ordered by that string (code-unit order), then record, then field; one item per cited extent; EXTENT_MALFORMED for an extent given that is not an object of a CONTENT_EXTENT_KINDS kind; VIEWER_MISSING for an absent or empty viewer only, a viewer membership refuses answering items: []. Merge tranche/T36 @ bf82a4490b into your branch and apply it.
+
+## B3 · CHANGE
+
+K2116 (from STANDARDS #10 J1): events R49 now adds that VIEWER_MISSING and EXTENT_MALFORMED are answered {ok: false, refused, code, reason, why} and add no catalogue row in any module reading in this shape (K231). Merge tranche/T36 @ a263514dc1; if you added such a row, remove it.
