@@ -124,6 +124,7 @@ function archiveScene(entries) {
                 archiveSha, zip.length, NOW);
   w.st.sql.exec(`INSERT INTO files (bundle_id, path, content, blob_sha, bytes, sha256) VALUES ('INFO-2026-0010-archive', 'snapshots/a.zip', NULL, ?, ?, ?)`,
                 archiveSha, zip.length, archiveSha);
+  w.receipt(archiveSha);   // (T39) fetched by this copy (provenance R62)
   const member = (id, name, data, contentType) => {
     const s = contentType && contentType.startsWith("image/") ? w.photo(id, data, { contentType }) : w.doc(id, { text: data });
     const path = contentType && contentType.startsWith("image/") ? "snapshots/photo.png" : `snapshots/${id}.txt`;
@@ -194,7 +195,7 @@ test("R13 marksLapsed answers a row whose copy is no longer the photo's current 
   assert.deepEqual(w.snapshot(), before, "writes nothing");
   /* a photo carried whole lapses always: unchecked, "nothing to obscure" or marked */
   const whole = () => w.cc.marksLapsed(caseFm({ materials: [docRow("INFO-2026-0021-plain", plain)] }));
-  const lapsed = [{ ref: "INFO-2026-0021-plain", sha: plain, why: "a photo travels only as its copy" }];
+  const lapsed = [{ ref: "INFO-2026-0021-plain", sha: plain, kind: "photo", why: "a photo travels only as its copy" }];
   assert.deepEqual(whole(), lapsed, "unchecked");
   await w.cc.obscureMark({ captureSha: plain, areas: [], by: OLIVE });
   assert.deepEqual(whole(), lapsed, "nothing to obscure");
@@ -202,7 +203,7 @@ test("R13 marksLapsed answers a row whose copy is no longer the photo's current 
   assert.deepEqual(whole(), lapsed, "marked");
   /* a mark since: the obscured row lapses */
   await w.cc.obscureMark({ captureSha: p, areas: [area([10, 10, 14, 14], "plate")], by: OLIVE });
-  assert.deepEqual(w.cc.marksLapsed(fm()), [{ ref: PHOTO, sha: p, why: "a mark on the photo was added or withdrawn since the case was prepared, so its copy is no longer the one the case names" }]);
+  assert.deepEqual(w.cc.marksLapsed(fm()), [{ ref: PHOTO, sha: p, kind: "photo", why: "a mark on the photo was added or withdrawn since the case was prepared, so its copy is no longer the one the case names" }]);
   /* prepared again on the current copy, it stands */
   const current = w.cc.photoMarks({ captureSha: p, viewer: OLIVE }).copy.sha256;
   assert.deepEqual(w.cc.marksLapsed(caseFm({ materials: [obscuredRow(PHOTO, p, current)] })), []);
@@ -231,8 +232,8 @@ test("R13 marks that cannot be read answer each row lapsed (fail closed); at mos
   const plain = w.photo("INFO-2026-0021-plain", makePng(8, 8));
   w.st.sql.exec(`DROP TABLE photo_marks`);
   assert.deepEqual(w.cc.marksLapsed(caseFm({ materials: [obscuredRow(PHOTO, p, copy), docRow("INFO-2026-0021-plain", plain)] })), [
-    { ref: PHOTO, sha: p, why: "the photo's marks could not be read, so its copy cannot be confirmed" },
-    { ref: "INFO-2026-0021-plain", sha: plain, why: "a photo travels only as its copy" }]);
+    { ref: PHOTO, sha: p, kind: "photo", why: "the photo's marks could not be read, so its copy cannot be confirmed" },
+    { ref: "INFO-2026-0021-plain", sha: plain, kind: "photo", why: "a photo travels only as its copy" }]);
   assert.equal(MARKS_LAPSED_MAX, 200);
   const many = Array.from({ length: 205 }, (_, i) => obscuredRow(`INFO-2026-${String(1000 + i)}-x`, sha(`p${i}`), copy));
   assert.equal(w.cc.marksLapsed(caseFm({ materials: many })).length, 200);
