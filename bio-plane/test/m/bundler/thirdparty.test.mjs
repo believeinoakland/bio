@@ -191,26 +191,6 @@ test("R28: a container member's system packages are listed under the ecosystem i
   } finally { rm(root); }
 });
 
-/* ------------------------------------------------------------------------ R28 */
-
-test("R28: a container member's system packages are listed under the ecosystem its package statement names, for the member that ships them; an unread statement is named in unread", async () => {
-  const root = await makeRepo({ build: false, members: { "alpha-worker": {} } });
-  try {
-    addScannerMember(root, "scanner");
-    putJson(root, DECLARATION, { sources: [] });
-    const inv = thirdPartyInventory(root);
-    assert.deepEqual(inv.unread, []);
-    assert.deepEqual(inv.packages, [...SCANNER_PACKAGES.FileScanner, ...SCANNER_PACKAGES.SafeViewRenderer]
-      .map((p) => ({ ecosystem: "Debian:12", name: p.name, version: p.version, shippedIn: ["scanner"] }))
-      .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0)));
-    rmSync(join(root, "scanner/images/render.packages.json"));
-    const partial = thirdPartyInventory(root);
-    assert.deepEqual(partial.unread, ["scanner/images/render.packages.json is missing"]);
-    assert.ok(partial.packages.some((p) => p.name === "clamav"), "the other image's list is still read");
-    assert.ok(!partial.packages.some((p) => p.name === "poppler-utils"));
-  } finally { rm(root); }
-});
-
 test("R29: a system package is asked of OSV under its statement's ecosystem", async () => {
   const root = await makeRepo({ build: false, members: { "alpha-worker": {} } });
   try {

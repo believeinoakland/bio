@@ -133,6 +133,7 @@ import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import {
   REPO_ROOT, discoverMembers, planeMember, verifyFresh, freshBuildRunnable, sha256, isContainer, containerParts,
+  workerPart, WORKER_PART_PATH,
 } from "./fleet-bundle.mjs";
 /* The statement and its namespace come from the module the INSTALLER also
    imports. Neither side builds the bytes it signs or verifies — see the comment
@@ -231,6 +232,27 @@ for (const m of discovered.filter((x) => isContainer(x) && x.bundle)) {
 
 const members = discovered.filter((m) => !leftOut.includes(m));
 const all = [plane, ...members];
+
+/* ---- A MEMBER'S BUCKETS AND SCHEDULE (R25; N772, K2155) ---------------------
+   A member whose own config binds an R2 bucket or states a cron carries one `Worker` part, `worker.json`, so the
+   fleet signature covers what an installer must bind and schedule for it. Checked HERE, before any build runs or
+   anything is written, like a container's descriptor: a bucket with no role the installer can bind is a release that
+   cannot install that member whole. */
+const workerPartOf = new Map();
+for (const m of members) {
+  const wpath = join(m.abs, "wrangler.jsonc");
+  if (!existsSync(wpath)) continue;              /* no config: MEMBER_COMPAT_UNSTATED names it below */
+  const w = workerPart(parseJsonc(readFileSync(wpath, "utf8"), `${m.name}/wrangler.jsonc`));
+  if (w.missing)
+    die("WORKER_UNDESCRIBED",
+      `${m.name}'s wrangler.jsonc does not state, as the release's Worker part needs, ${w.missing.join(", ")}.`,
+      "The release copies a member's buckets and schedule from its own config and never defaults them:\n"
+      + "  r2_buckets     [{ binding, bucket_name }] — each bucket one of the plane's own, named by its role in the part:\n"
+      + "                 bio-captures (captures) or bio-published (published); any other has no role an installer can bind\n"
+      + "  triggers.crons a list of cron expressions, where the member states a schedule");
+  if (w.part) workerPartOf.set(m.name, { path: WORKER_PART_PATH, type: "Worker", sha256: sha256(w.part.bytes),
+    bytes: w.part.bytes.length, data: w.part.bytes });
+}
 
 function committedArtifact(m) {
   const p = join(m.abs, m.bundle.outfile);
@@ -362,6 +384,13 @@ for (const m of all) {
       die("CONTAINER_UNDESCRIBED", `${m.name} declares an upload part named ${c.path}, which is the container descriptor's own path.`,
         "Rename the member's part: a container descriptor is written by the release from the marker.");
     parts.push(c);
+  }
+  const wp = workerPartOf.get(m.name);
+  if (wp) {
+    if (parts.some((p) => p.path === wp.path))
+      die("WORKER_UNDESCRIBED", `${m.name} declares an upload part named ${wp.path}, which is the Worker part's own path.`,
+        "Rename the member's part: the Worker part is written by the release from the member's config.");
+    parts.push(wp);
   }
   if (parts.length) {
     console.log(`       + ${parts.length} upload part(s): `
@@ -548,7 +577,8 @@ for (const e of entries) {
   for (const part of e.parts || []) {
     const dest = join(RELEASE_DIR, e.member, part.path);
     mkdirSync(dirname(dest), { recursive: true });
-    /* A container descriptor is made here from the marker (R25), never a file in the member's tree. */
+    /* A container descriptor (from the marker) or a Worker part (from the config) is made here (R25), never a file in
+       the member's tree. */
     if (part.data) writeFileSync(dest, part.data);
     else copyFileSync(part.from, dest);
   }

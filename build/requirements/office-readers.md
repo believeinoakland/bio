@@ -146,7 +146,7 @@ xlsx and csv), or `{ok:false, container, reason}` when `parts` failed.
     its own table's. (N758; K2118) Each cell also carries `paras`: the `para` ordinals
     (of `paragraphs`) of the paragraphs its text was read from, in reading order, so a reader
     finds a cell's paragraphs exactly, a vertically merged cell's included, without matching
-    lines. *(not yet met: T37)*
+    lines.
   - `pptx`: `document` is slide text only, newline-joined, in deck order — speaker notes
     are NEVER in it. `slides` is `[{slide, ref, part, hidden, shapes, text}]`, one per deck
     entry; a hidden slide's `text` IS populated and its `hidden` is `true` (DEC-5: the
