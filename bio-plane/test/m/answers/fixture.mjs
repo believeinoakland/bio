@@ -1,8 +1,9 @@
 /* answers over the modules it uses: calculations' test world (the real record-core, membership, promotion, content,
    retrieval, entities, events, standards, money, duties, lines, people and calculations on a real SQLite database at the
    plane's storage shape), with the real credentials beside them, and answers built over them as the composition root
-   would. ai-runs (the ceiling) and the standing answerer are not merged: each is a provider the test controls, at the
-   interface its approved requirements state (ai-runs R50, J1 (5)). Every test drives `answers` at its interface. */
+   would. The ceiling (ai-runs' `aiUseCheck`, handed in by the composition root as `ceilingRefusal`) and the standing
+   answerer are each a provider the test controls, at the interface its requirements state (ai-runs R50, R52; J1 (5)).
+   Every test drives `answers` at its interface. */
 import { seeded, V, NOW, PROFILE, saved, R } from "../calculations/fixture.mjs";
 import { linesOf } from "../../../src/lines/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";

@@ -277,10 +277,12 @@ function keptAway(creds) {
 /* R19, R26: what holds the AI half back, or null with the grant it reads under when every condition holds. In order:
  * the copy's switch (K1481; Rule 7), the answerer's deployment, keep-away (credentials R35's `aiKeptAway()`, read
  * before any account: while it holds no account is read and no grant minted, DEC-172), an account serving the
- * author's act (credentials R35: their own reference, else the group's key while held and on, K1755; none is R26's
- * `no_account`), the author's use ceiling (ai-runs), and last the grant credentials mints for the author (its R32),
- * whose refusal names the standing switch of the account that would serve (R25, R37). The grant is minted only when it
- * would be used. */
+ * author's act (credentials R35: their own reference, else their own Claude sign-in, else the group's key while held
+ * and on, K1755; none is R26's `no_account`), the author's use ceiling (ai-runs' `aiUseCheck`, read for every account),
+ * and last the grant credentials mints for the author (its R32), whose refusal names the standing switch of the account
+ * that would serve (R25, R37). A sign-in is the author's own act, level `member`, and has no `standing` switch, so R32
+ * refuses it `STANDING_SWITCH_OFF` and it is held back `{switch_off, member}` (T39; N803, K2275, K2343; N796 held).
+ * The grant is minted only when it would be used. */
 async function heldBack(self, r, at) {
   const author = r.author;
   if (self.record.getSetting(STANDING_AI_SETTING) !== true) return { held: { condition: "switch_off", switch: "copy" } };

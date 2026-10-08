@@ -17,7 +17,8 @@
  *   credentials          whether the group keeps its material away from AI (its R35, `aiKeptAway`, the one site of
  *                        `AI_KEPT_AWAY`, K231), the account that serves the author (its R35, `accountFor`) and the
  *                        standing question's grant (its R32, `aiGrantMintStanding`), for R19.
- *   ceilingRefusal       `(member, at)` → null or ai-runs' ceiling refusal (its R50), until ai-runs merges.
+ *   ceilingRefusal       `(member, at)` → null or ai-runs' ceiling refusal (`aiUseCheck`, its R50, R52), handed in by
+ *                        the composition root (T39; N803, K2304): read for every account, a sign-in's included.
  *   combine              `jurisdictions.combine` (default), over the active profiles (`record-core` R26).
  *   now                  the module's clock, an ISO instant (default: the wall clock).
  *
