@@ -1,6 +1,6 @@
 # events (T36)
 
-**Status** · session_01Lpr5zoWzhMTrc3S8CRoaGd · depth 2 · RUNNING until 2026-10-08T03:04:37Z (users' tests after B4/B5) · handled B5
+**Status** · session_01Lpr5zoWzhMTrc3S8CRoaGd · depth 2 · COMPLETE · handled B5
 
 ## J1 · QUESTION
 
