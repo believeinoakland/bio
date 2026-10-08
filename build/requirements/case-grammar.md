@@ -50,7 +50,7 @@ The case document's grammar, one spelling for every module: the formats and thei
   - `group`: the group vouches for the material by signing the case. `by` is the group's slug, and `signature` is the literal `case`: the case document's own signature covers the row.
 
   The rows are flat, as R1's blocks are (K549). `materialsLines(rows)` and `materialAttestationLines(rows)` write them, the one spelling (K1317); `materialsOf(fm)` reads both blocks back. A document without them answers null. Pure; never throws. Material whose source's identity is withheld is listed like any other material. (DEC-112 (3)(4)(5); DEC-119 (1); K1134 Q6, BOB's decision 15; K1275, K1277)
-- **R13** `CASE_FILE_FORMAT` is `bio-case-file/1`.
+- **R13** `CASE_FILE_FORMAT` is `bio-case-file/2` (T36; N717, K2004); a `bio-case-file/1` case file is read as written: its manifest names none of the kinds `/2` adds, and a `/1` manifest naming one is a departure. *(not yet met: T36)*
   - **The manifest** names: the format; the source group's slug; the case, edition and case document's SHA-256; the signing keys with their fingerprints; each part (one file of a case file that is split), with its index, SHA-256 and bytes, where a part's SHA-256 is over the lines `<path> <sha256> <bytes>\n` of its files in path order and its bytes are the sum of its files' bytes (a part holding the manifest cannot list its own digest; `casePartDigest(files, index)` is the one spelling, K1315, K1318); the manifest is `manifest.json` (`CASE_FILE_MANIFEST_PATH`) at each part's root, and each file sits at its `caseFilePath` path directly under the root, files listed in path order (K1318); and every file, with its path, SHA-256, bytes, part and kind.
   - **The kinds** are:
     - `case_document`, `case_signature`, `complete_edition`;
@@ -60,6 +60,8 @@ The case document's grammar, one spelling for every module: the formats and thei
     - `document` (captured bytes, whole), `extracted_text` and `observation` (its text, whole);
     - `attestation` (a signed account, a timestamp token, a co-archive record);
     - `calculation` (one calculation a member's chain reaches, as R18's row, with each input it names travelling as the file its input hash names).
+        - `archive` (the captured bytes, whole, of the archive a carried member document was unpacked from, `case-carriage` R8) and `container` (that member's `container` record as `case-carriage` R8 holds it, `record-grammar`'s canonical JSON naming the member and its archive by SHA-256); each under the ref of the material whose chain it belongs to, the same pair again for that archive's own archive, outward to the outermost; an `archive` or `container` file under a ref that carries no `document` is a departure. The archive's timestamp tokens stay `attestation`. (CASE-CARRIAGE #3; K2004)
+        - `criteria` (the edition's criteria rows, as `publication` R72 froze them and its R53 answers them, in canonical JSON), at most once in a case file; absent for an edition whose criteria were not recorded (committed before T35). It lets the rows a case measures against be read offline. (N717; K1941)
   - **The check.** `caseFileManifestCheck(manifest)` answers every way a manifest departs from this rule, each named, or none. Pure; never throws.
 
   This is the one spelling of the format for `public-read` R23, `case-checker` and `case-import`. Its readable specification is `case-checker` R14 (K1134 (1)). (DEC-112 (3); Publication §5C)
@@ -112,6 +114,9 @@ The case document's grammar, one spelling for every module: the formats and thei
 #### The people and member-ties blocks (K1816; was `case-disclosures` R28's spelling)
 
 - **R21** `peopleLines(rows)` and `memberTieLines(rows)` spell the case document's `people:` block (one row per person: `{person, places, basis, citation, words}`) and `member_ties:` block (one row per tie a signer attests: `{row, signer, at, entity, kind, level, shown}`), flat as R1's blocks; `peopleOf(fm)` and `memberTiesOf(fm)` read them back from parsed front matter, each field a string or null, answering empty lists for a document without them. Pure; never throws.
+
+*A member's subject* (T36; N717; K2002, K2004)
+- **R22** Each `case_roles:` row (one per member finding, `case-authoring` R14) may state `subject_entity`: the entity id the member's pinned bytes state as their own `subject_entity`, or null when they state none. `memberSubjectOf(fm, finding)` answers it from that member's `case_roles:` row, else from its `case_conclusions:` row, else null. It is an optional field of the current case document format, with no new format version, as R10's `working_on` is: a document that states no member's subject answers null for each, and `case-checker` R21 then reads every body's rows of that member's standards (K2002). Pure; never throws. (N717; K2002, K2004) *(not yet met: T36)*
 
 ## Private
 

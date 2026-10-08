@@ -172,3 +172,166 @@ New heading after R30:
 - The batch ops' class choice (binding credentials only, not an administrator's session) is BOB's; `file-safety` R4's "an administrator or daemon" is read as the admin bearer or the daemon, since a scan batch is no member's act.
 - Key tests: R6's totality over `fileSafetyOps` (23), standards' and calculations' new ops and credentials' two; no `machineClasses` names `member`; `securitytooladd`'s credentials refused from the query (admission's body-only rule); R34's partition both ways.
 - **P6:** 3,092 lines at T36's opening (one file, `index.mjs`); R31–R34 add about 200–300 (specs, the absent list grouped), about 3,400. If the absent list is held one name per line it passes about 3,700; the job reports if it would pass about 4,000.
+
+## legacy-ui (T36-38) — no requirements file
+
+**req: none**, because `legacy-ui` is the one `legacy: true` module and holds no `build/requirements/` file (K633: it stays as it is until the new screens replace it), and N711's share changes only the credential its requests carry: `civicos-ui/app.html`'s token panel stops taking a pasted shared member token and the page reaches the plane under a member's session (`op=login`, already its sign-in path, `app.html`:1484), the token in the `Authorization` header as today (`app.html`:946).
+
+**Suggestions.** Its accepted reds (the DEC-88 tests, red 7) stay. A test that no request the page builds carries a value read from a `MEMBER_TOKEN`-named field, and that the panel's paste path is gone. It merges before `admission` (L11's merge-order line), so no caller is left presenting a member bearer when admission refuses one. **P6:** not applicable (legacy; 27,240 lines incl. its scripts).
+
+## installer (T36-39) — highest today R42
+
+**R9, amended** (N711, its share; K1936 Q3): (T36) `gen`: four fresh 32-byte random credentials (the one-time password `ADMIN_TOKEN`, `PROBE_TOKEN`, `DAEMON_TOKEN`, and `ACCOUNT_SEAL_SECRET`); no `MEMBER_TOKEN` is generated (the shared member key is retired; members sign in with their own sessions). R10's "the five credentials" reads "the four credentials". *(not yet met: T36)*
+
+**R16, amended** (N711): (T36) The final panel shows the address, the one-time password and the probe credential, once; it shows no member credential (none exists). *(not yet met: T36)*
+
+**R17, appended** (N711; DEC-172 (5)): (T36) The update writes no `MEMBER_TOKEN` and no `ASSISTANT_ENABLED`, and leaves neither behind: one held before the update is deleted, and a refused delete is named, as R36 deletes `INSTANCE_CLAUDE_TOKEN`. *(not yet met: T36)*
+
+**R23, amended** (N710, its share): (T36) The pages also state that the Containers permission (R38) installs the built-in file scanner and safe view (`file-scanner`), without which files are kept and shown but not scanned, and a high-risk file opens only in its safe view once one can be made, as the copy states (`file-safety` R4, R8). *(not yet met: T36)*
+
+**R37, restated** (N721, its share; DEC-172; K1957, K2063 (5)): (T36) The install page states that the assistant is optional and that its two settings are made in your group's Civicsmith at its setup, separately, nothing preselected (`setup-page` R18): whether the group pays for it (its own Anthropic API key, set by an administrator there), and whether the group keeps its material away from AI (off unless an administrator turns it on, with a reason); that a member may always connect their own Claude subscription or API key, which serves only them, unless the group keeps its material away from AI; and that each member is told what goes to Anthropic before their first use (`instance-setup` R54, `credentials` R36). The install takes no choice and writes no `ASSISTANT_ENABLED` binding; an update never writes one (R17). *(not yet met: T36)*
+
+**R38, amended** (BUNDLER #10 J2, K2080; N710, N714, its share): (T36) R38's conditions hold for every container member the signed fleet statement names (`agent-runner`, `file-scanner`). A member with one container class is described as before; a member with two or more (`file-scanner`: `FileScanner`, `SafeViewRenderer`) is described by every `Container` part it carries (`container/<class_name>.json`, `bundler` R25), each class installed with its own image, pinned by digest and verified as R11 verifies a part, and a member missing a part its statement names is left out and named. A container member left out is named with what the copy then lacks (`agent-runner`: the assistant only by an API key; `file-scanner`: no scan and no safe view, R23). *(not yet met: T36)*
+
+New headings after R42:
+
+**The signing keys** (N712, its share; K1936 Q4 step 1; Distribution §10)
+- **R43** `ARMED_SIGNERS` holds exactly two public lines: the fresh release key and the offline recovery key, each generated on the signer page with a passphrase (`signatures` R43; Distribution §10's table). The development key the signer page minted without a passphrase is not among them, and its file is deleted from the repository. R8, R11 and R26 verify against these two, so a release or fleet statement signed by any other key is not installed and is named so. *(not yet met: T36)*
+
+**The file scanner** (N706, N710, N714, its share; DEC-169 (7); K1892, K1946 T4, T8; K2085)
+- **R44** The install and the update install `file-scanner` as a container member (R38), with exactly the bindings its fleet statement names: the copy's `CAPTURES` bucket (so R13 holds for this member: it reads captured bytes), its two container classes (`SCANNER`, `RENDERER`), and `SECURITY_VPC` only as R45 says; its scheduled trigger as the statement gives it (`17 4 * * *`); and the bucket prefixes it writes, `clamav/` (the signature mirror) and `reputation/` (the address lists), in the copy's evidence bucket and nowhere else. The plane is bound to it as `FILE_SCANNER` (R12's three acts; `plane` R27). A member left out is named (R38) and the install never fails over it. *(not yet met: T36)*
+- **R45** The final panel and the update's last screen state that the organization's own security tools are added in your group's Civicsmith, at setup or later (`setup-page` R30), and that the installer takes no tool and no tool's key. A tool reached through a tunnel (`reach: "tunnel"`) needs a Workers VPC service: when the operator names one on the install or update page (optional, nothing preselected), `file-scanner` is bound to it as `SECURITY_VPC`; when none is named, no such binding is written, and a tunnelled tool answers `REACH_NOT_BOUND` in the copy (K1946 T4), as the page says. *(not yet met: T36)*
+- **R46** (K1892; K1946 T8) Before `verify` (R15) succeeds, the install and the update list the account's Logpush jobs and name, as a failure on the page, any job whose dataset records each request of a Worker (`workers_trace_events`) and whose filter does not exclude the copy's Workers (the plane and its members), since such a job would keep a log of who opened which file. No success is claimed while one is named. When the permission granted cannot read the jobs, the check is stated undetermined, never passed. *(not yet met: T36)*
+
+**The copy's own hosts** (N745, its share; K2038)
+- **R47** The install binds `OWN_HOSTS`, plain text: the copy's own host names, comma-separated (its `workers.dev` address, R14, and any other address the installer gave it), so the copy knows its own hosts before a group domain is claimed (`plane` R28; `capture` R73, `capture-sources` R65). The update restates it from the address it finds. When R14 left the copy without an address, `OWN_HOSTS` is not written and the page says so. *(not yet met: T36)*
+
+**Uses changes.** `instance-setup`: `FLEET_BINDINGS` gains `FILE_SCANNER` (an existing edge; instance-setup's own list, R17's `memberVersions`). `signatures` (an existing edge): the two armed lines (R43).
+
+**Suggestions.**
+- Re-pin (K2084, red 12): `newgroup/test/requirements.test.mjs`:483–517 (R34, "the claim page shows the same block") to `instance-setup` R47's difference: the page links the guide by name, the installer's screen states where it is found as text. No requirement changes.
+- `newgroup/src/index.mjs`:339's `classify()` and :541's `MEMBER_TOKEN` secret re-point (N711). R43's two public lines are entered after Bob's signer-page sitting (T36-1, then T36-39); until then the job tests with a pair made in the test and leaves the real lines to the sitting (walked through).
+- R46's Logpush read may need a scope beyond R2's four (`account-settings.read` may not cover Logpush jobs); the START confirms it with one `GET /oauth/scopes` read, as M-Q8 did, and if a fifth scope is needed that is BOB's to add to R2 (For BOB, 7).
+- R45's operator-named VPC service is this draft's reading of "adds the `SECURITY_VPC` binding for a tunnel tool": the installer cannot know at install time which tools a group will add (For BOB, 7).
+- K2085's tool-spec config fields are the copy's (`file-safety`, `setup-page` R30), never the installer's.
+- Key tests: no `MEMBER_TOKEN` generated, bound or shown; an update deletes a held one; a two-class member installs both classes from their parts and a missing part leaves it out named; `file-scanner` bound to `CAPTURES` and its cron; a Logpush job over `workers_trace_events` fails the verify; an unreadable job list is undetermined; `OWN_HOSTS` written from the address; `ARMED_SIGNERS` length 2 with no development key.
+- **P6:** 2,401 lines at T36's opening (`newgroup/` and the invitation page, code only); R43–R47 and the amendments add about 250–350. Under 4,000.
+
+## admission (T36-36) — highest today R22
+
+(F1's tail in R20, `CREDENTIAL_IN_ADDRESS` refused by name, is drafted by another worker and left out here.)
+
+**R5, amended** (N711, its share; K1936 Q3; K2063 (6)): (T36) No binding class `member` exists: a presented credential equal to a live `MEMBER_TOKEN` binding gives no class and is refused 401 `MEMBER_TOKEN_RETIRED` (a new row of this module's C-38 family, C-38.10), whose sentence says that the shared member key is retired and that a member signs in with their own password; nothing is read or written. The digests are still compared with all four bindings for every presented credential (R5's constant time), so the time taken does not tell whether a `MEMBER_TOKEN` is bound. With no `MEMBER_TOKEN` bound (the installer writes none, `installer` R9), a value once held is answered as any unknown credential (R7). The refusal is counted as R22 counts kind `credential`. *(not yet met: T36)*
+
+**R22, re-marked** (N744, its share; K2038): (T36) R22 stands as worded: its count reaches `credentials` through the store's internal route `securitycount` (`credentials` R50, merged in T36-7); the deferral note is struck and the mark reads *(not yet met: T36)*. It also counts R5's `MEMBER_TOKEN_RETIRED` as kind `credential` (a refused key).
+
+**R14, appended**: (T36) It also holds `MEMBER_TOKEN_RETIRED` (R5; C-38.10), with its test, awaiting promotion's stamp (T37). *(not yet met: T36)*
+
+**Uses changes.** `credentials` (an existing edge): `securitycount` (its R50) for R22.
+
+**Suggestions.**
+- `MEMBER_TOKEN_RETIRED` is checked against every code in `bio-plane/src` (none holds it; K231: one code, one condition, one site, raised in `classify` alone).
+- `BINDINGS` (`admission/index.mjs`:222) keeps `MEMBER_TOKEN` only as the name R5 refuses; `op-declarations`' Terms name three binding classes (T36-35).
+- Merge order: after `instance-setup`, `op-declarations`, `legacy-ui` and `installer` (N711's callers re-point first). Then Bob removes `BIO_MEMBER_TOKEN` from the environment (walked through, K1936).
+- Key tests: a live `MEMBER_TOKEN` presented by header and by body refused `MEMBER_TOKEN_RETIRED` and counted; the timing arm still compares four; an unbound value answers `NOT_AUTHENTICATED`; R22's count reaches `credentials`' tally through `securitycount` (a store fake that records the route), a failed count changing no answer.
+- **P6:** 1,260 lines at T36's opening; about +30.
+
+## answer-envelope (T36-47) — highest today R9
+
+**R7, appended** (rev. 2 §3; K1974, K2063 (10), K2087, K2103; red 11): (T36) `CHECK_FAMILY_FILES` also reads `file-safety`'s family (`FILE_SAFETY_CHECKS`, `src/file-safety/checks.mjs`, its C-140 rows) at its place in `build/modules.json`, directly after `capture`'s and before `sources`', so the catalogue is total again with the module T36 adds; no row of an earlier family moves (K2103 re-coded the three file-safety codes that other families held, so R2's decoration of `sources`' and `ratification`'s codes is unchanged). *(not yet met: T36)*
+
+**Uses changes.** **New edge (rule 4):** `file-safety`: `FILE_SAFETY_CHECKS` (its R24), read by `families.mjs` (R2, R7).
+
+**Suggestions.**
+- Clears accepted red 11 (the totality test). Accepted red 18 (`credentials`' `NO_REASON` sharing progressions' code) stays until N755 (T37), as K2101 says; this job does not touch it.
+- Key test: `CHECK_FAMILIES` names `file-safety` between `capture` and `sources`; every pinned row before T36 reads the same `code`, `check` and `translation`; `FILE_NOT_HELD` decorates with C-140.1 and `NO_SUCH_CAPTURE` still with `sources`' row.
+- **P6:** 802 lines at T36's opening; +1.
+
+## store-door (T36-48) — highest today R12
+
+**req: none**, because R2 already requires the reads declared to name no project to be listed with the reason; the five `file-safety` reads join that list as data: `PROJECT_NAMING_READS_NOT` gains `verdictnotes`, `threatof`, `originalstate`, `safeview` and `safecopy`, each with the reason "`captureSha` is a CAPTURE's digest" (K2063). R10's reading of `instance-setup`'s `assistantState` is unchanged in shape (T36-34 changes what it answers, not how it is read).
+
+**Suggestions.** The START checks the other `file-safety` reads that take a parameter (`scanfindings`'s `after`, `findingkind`'s `name`, `securitytoolevents`) against R2's table; none names a project, and each that R2's test reaches joins the list with its reason. **New edge (rule 4):** `file-safety`, for that test's route list only. **P6:** 533 lines; +5.
+
+## control-plane (T36-37) — highest today R59
+
+(F1's tail in R59, `CREDENTIAL_IN_ADDRESS` refused by name, is drafted by another worker and left out here.)
+
+**R41, amended** (N695, its share; K1864, K2063 (9)): (T36) Once `agent-worker` reads the pack and fences apart (its R48, T36-24), the untargeted `op=affordances` answer is `affordances`' R17 answer as it stands (its R49's `act_help` included) with no `fences` and no `pack`; `op=agentpack` alone serves them, on R41's terms (`pack: null` with `pack_absent` when rendering throws). The last sentence of R41 ("In T35 the untargeted answer still carries both keys …") is struck. *(not yet met: T36)*
+
+**R53, amended** (DEC-172 (5)): (T36) `assistantset` is not routed (retired, `instance-setup` R53): a request naming it is answered as an op with no spec (R2). *(not yet met: T36)*
+
+New heading after R59:
+
+**T36's ops, the original's door and the reputation tool** (T36; K2092; N714, N707, N710, N721; DEC-169, DEC-172, DEC-173; K1946 T2, K2087)
+- **R60** (K2092) The door routes `standardinforcethrough`, `standardinforcethroughwithdraw` and `inforcethroughof` through `standards`' own map, and `spotcheckvisit` and `spotcheck` through `calculationsOps` (R53), with the stamps `op-declarations` R31 declares and none taken from the caller (R29), holding no arm's behaviour. *(not yet met: T36)*
+- **R61** (N714, N707, N710; DEC-169, DEC-173) The door routes the 23 ops `op-declarations` R32 declares through `file-safety`'s own map (`fileSafetyOps`, R26's pattern), with the stamps R32 declares and none taken from the caller (R29), holding no arm's behaviour (a refusal is `file-safety`'s, answered as given):
+  - the byte answers of `openoriginal`, `openwithwarning`, `safeview` and `safecopy` are served as `op=capture`'s GET serves a capture's bytes: on the same path and method, the owner's bytes, content type, length and digest header as the owner answers them (`capture` R21's form, `x-capture-sha256` for an original; the derived file's own digest for a view or copy), never wrapped in the JSON envelope, with `cache-control: no-store`; a refusal is enveloped as any refusal (`answer-envelope` R2);
+  - for these four and for `verdictnotes`, `threatof`, `originalstate`, `deepercheck` and `safecopyrequest`, this module keeps, logs, counts and forwards nothing that puts a caller beside a capture (`file-safety` R10; K1892): no log line, tally or answer of its own names who asked which file;
+  - `securitytooladd`'s `credentials` and `config` pass from the request's body alone, never from its address, and are never logged, stored, echoed or put in an answer or refusal by this module (R30's rule, as `groupkeyset`'s key, R56). *(not yet met: T36)*
+- **R62** (rev. 2 conflict (c); K1888 (3), K1892; DEC-173) A member's opening of an original goes through `file-safety`: a request under a member's session for a capture's bytes (`op=capture`'s GET; the original's download) is answered as `file-safety.openOriginal({captureSha, viewer})` answers it (its R8: the same bytes when it opens; its refusal, `SAFE_VIEW_ONLY`, `SCAN_HOLD` and the others, when not), never by `capture.getCapture` directly, so no route lets a member open a file `file-safety` would keep to its safe view. A request with `warned` is answered as `op=openwithwarning`. Binding classes (`admin`, `probe`, `daemon`) keep `capture`'s own answer for the plane's machine work. *(not yet met: T36)*
+- **R63** (N721; DEC-172) The door routes `aikeepaway` and `aikeepawaystate` through `credentials`' own map with the stamps `op-declarations` R33 declares and none taken from the caller (R29): `aikeepaway` with `by` from the session (R17), `on` and `reason` from the body, a refusal answered as `credentials` gives it; `aikeepawaystate` as given. `securitycount` stays store-internal (R2: a request naming it answers as an op with no spec). *(not yet met: T36)*
+- **R64** (K1946 T2; K2087; `acquisition` R44) Every acquisition the door causes (`op=acquire`, and each arm this module routes that reaches `acquisition.acquire` through `capture`) is made with `reputation`, `file-safety.reputationTool()` read at that call (its R34; never cached across calls, so a tool switched on or off counts at once), and the `FILE_SCANNER` binding, handed in beside the store as `ownHosts` is (`acquisition` R42, R44); nothing in a body supplies either. With no tool on, `reputation` is `null` and `acquisition` records the lookup unanswered (`NO_TOOL`). *(not yet met: T36)*
+
+**Uses changes.** **New edge (rule 4):** `file-safety`: `fileSafetyOps`, `openOriginal`, `reputationTool` (its R8, R34; R61, R62, R64). `standards`, `calculations`, `credentials`, `acquisition`, `capture` (existing edges).
+
+**Suggestions.**
+- Where the byte answers are served (the START names it, the entry says): this draft reads "as `op=capture`'s GET" (the Worker's GET arm that relays the store's `Response` today); if the START finds the store answers bytes by another path, R61's first bullet names that path instead. `file-safety`'s map already answers these four as `Response`s (FILE-SAFETY #1 J1 (2), K2098).
+- R62 changes who may open what for members (rev. 2 conflict (c), approved with the package, K1913, K1929): an `ai` credential reaching `op=capture` is not named in R62; the assistant reads text only (`skills`, `agent-worker`), and whether its byte reads go through `file-safety` is For BOB, 8.
+- R64's composition is in the store, where `capture` builds `acquisition` (`plane/store.mjs`:357 hands `ownHosts`), so the handing may be `plane`'s (R29 there) with this module's routes carrying nothing (For BOB, 9). The START checks no other reader of R41's two keys (K2087).
+- Key tests: each of the 23 ops routed with its stamps and none from the caller; `openoriginal` answering bytes with the digest header and no envelope; a member's `op=capture` GET of a high-risk file refused `SAFE_VIEW_ONLY` and of a low one served; a sentinel credential for `securitytooladd` in no log or answer; no log line naming the member beside the capture; `acquire` handed the tool after `securitytooltest` switches one on, `null` after it is removed; the untargeted `op=affordances` without `pack` and `fences`, `op=agentpack` with them; `assistantset` answered `UNKNOWN_OP`.
+- **P6:** 3,025 lines at T36's opening; R60–R64 add about 150–250 (routes). About 3,250.
+
+## plane (T36-49) — highest today R24
+
+New heading after R24:
+
+**T36's composition** (CAPTURE #23 J1, K2097; rev. 2 §4; K2063 (10), K2085, K2087; N745)
+- **R25** (K2097; `capture` R45 as T36-41 amended it) The archive unpack's drain (`plane/unpack.mjs`) reads `archive-unpack` events in pages, passing `after`, the `cursor` of the page's last event, while a page comes back full, so events at the retry limit, which stay queued, never hide newer events behind them; no event is read twice in one drain. *(not yet met: T36)*
+- **R26** (rev. 2 §4; K2063 (10)) The composition root builds `file-safety` on the object's storage at its place in R2's order (directly after `capture`), runs its migration as R3 says, declares its tables and their purge through `record-core` (K23; `file-safety` R25), and starts it so that its `provenance.onReceipt` listener (its R1) is registered before the first request; it hands it `env.FILE_SCANNER` and the evidence bucket with its prefix (R2's), hands `scheduler` its batch owner for the wakes of `scanBatch`, `renderBatch`, `deeperBatch` and `forwardSecurityCounts` (`scheduler`'s consumers, R21's pattern), and spreads `fileSafetyOps` into R5's route map, so each of its ops (`op-declarations` R32) reaches its handler through `control-plane`'s door. *(not yet met: T36)*
+- **R27** (amends R7; rev. 2 §4; accepted red 10) `wrangler.jsonc` also binds `{binding: "FILE_SCANNER", service: "file-scanner"}`, the fleet member `file-scanner` R10 names, so `bundler`'s deploy bindings list it. *(not yet met: T36)*
+- **R28** (N745; K2038; `capture` R73, `capture-sources` R65) The composition root reads `ownHosts` from `env.OWN_HOSTS` (the copy's own hosts the installer binds, `installer` R47) when it is set, joined with the hosts `instance-setup`'s `instance_address` and a verified group domain name; with neither set it hands none (fail-open, as T35). A malformed entry is skipped and named in the log by correlation id only. *(not yet met: T36)*
+- **R29** (K2087; `acquisition` R44; `control-plane` R64) The composition root hands `capture` (which passes it to `acquisition`) the `FILE_SCANNER` binding and a reader of the reputation tool, `file-safety.reputationTool()` called at each acquisition, never a value read once at start, so `env.FILE_SCANNER` reaches `acquisition` beside `file-safety`. *(not yet met: T36)*
+
+**Uses changes.** **New edges (rule 4):** `file-safety` (R26, R29) and `file-scanner` (R27: the binding's service name; `FILE_SCANNER`'s target). `capture`, `scheduler`, `instance-setup` (existing edges).
+
+**Suggestions.**
+- The tool-spec fields and the member's own bindings (`CAPTURES`, `SCANNER`, `RENDERER`, optional `SECURITY_VPC`) and cron (`17 4 * * *`) are `file-scanner`'s `wrangler.jsonc` and the installer's (R44), not the plane's; the plane binds only `FILE_SCANNER` (K2085).
+- Red 10 (`deploybindings.test.mjs`:165, the binding list and the pre-flight target list) clears with R27; bundler's pinned list already names `FILE_SCANNER` (K2080).
+- The plane bundle is regenerated at L11's close (§14).
+- Key tests: construction registers `file-safety`'s receipt listener before the first request (a receipt in the first request queues a scan); every `fileSafetyOps` op reaches its handler; `scheduler` holds the four batch wakes; `ownHosts` from `OWN_HOSTS` before any domain is claimed; `unpack` over 1,200 queued events with 1,000 at the retry limit reaches the newer ones; the reputation reader called per acquisition.
+- **P6:** 1,436 lines at T36's opening (code only, `wrangler.jsonc` included, `package-lock.json` excluded); about +60.
+
+## Choices made (BOB's details, P17; each can be changed without Bob)
+
+1. All 23 ops of `fileSafetyOps` are declared, graded and routed, not the entry's 21 (`safecopyrequest`, `findingkind` added), since the totalities need them.
+2. Grades: `releasescanhold`, `aikeepaway`, the two in-force-through acts and `spotcheckvisit` `reasoned` (each backed by its owner's reason refusal; `NOT_TESTIMONY` and `HOLD_NO_REASON` join `JUSTIFICATION_REFUSALS`); `deepercheck`, `safecopyrequest` `undetermined`; the openings and the scan and deeper batches `observational`; `renderbatch`, `securityforward`, `securitytooltest` `substrate`; tool add and remove `credential` (so `phone: false`). `openwithwarning` carries DEC-173's statement as a `CONSEQUENCE_STATEMENTS` entry beside its ground.
+3. DEC-170 by `LARGER_SCREEN_ACTS` (the entry's second option): `personexpunge`'s rung stays `reasoned` (DEC-142's honest name), and `affordances` R19 keeps `irreversible` for publishing alone.
+4. The batch ops are binding-credential only (`admin`, `probe`, `daemon`), cited in `UNATTENDED_BY_DECISION`, as `taskdrain`.
+5. The two openings are declared mutating (the scan before first opening writes a note); everything that serves a file's bytes stamps and logs no caller beside the file.
+6. `assistantState` is derived from keep-away, read fail-closed (K2093), and keeps its shape plus `reason`, so `store-door` R10 and `wizard-scripts` R24 are unchanged.
+7. The tasks drain's waiting events no longer use up `limit`; without that, paging could not reach a filed event behind a full head.
+8. `MEMBER_TOKEN_RETIRED` (C-38.10) is a new code of `admission`'s own, unused anywhere in `bio-plane/src` (K231).
+9. The installer deletes a held `MEMBER_TOKEN` and `ASSISTANT_ENABLED` on update, as it deletes `INSTANCE_CLAUDE_TOKEN` (R36), so no retired secret is left bound.
+10. New FINDING kinds `scan-found` and `security-tool-off`, each told once, quieted by the item mute (queue's default disposition).
+
+## For BOB
+
+None of the points below is Bob's, in my judgement: each is a detail, a packaging choice or a gap between entries (P17). Three are questions for the design stream (marked **design stream**), to be put as a NOTICE, not to Bob.
+
+1. **The ops the entries name are 21; `file-safety` serves 23.** `safecopyrequest` (R33's `requestSafeCopy`, which T36-30 does name) and `findingkind` (R38) are in `fileSafetyOps` (`file-safety/index.mjs`:1393, :1402) but not in T36-35's list or T36-37's. Drafted with all 23 (op-declarations R32, op-grades R24, control-plane R61).
+2. **Rule 4's edges.** `op-grades` imports nothing (its Uses); its rule-4 edge to `file-safety` is not needed. `affordances` does need one (R12's totality and R19's backing over the new grades), and rule 4 omits it. `notice-producers` R14 reads `provenance.homeOf`, which its `modules.json` row lacks. `store-door` needs `file-safety` for its route-list test only.
+3. **Gap between T36-32 and T36-46.** `queue` R1 must catalogue T36-32's new kinds too, or `queue`'s mint refuses the whole feed (`NO_SUCH_KIND`, the very fault N742 fixes for the other two). Drafted: T36-46 catalogues four kinds.
+4. **DEC-171's word has no carrier.** The screen registry the plane registers is `wizard-scripts`' frozen snapshot (`screen-registry.mjs`, commit `d129238bf3`), which still names `connect` "The assistant and your account"; no T36 entry re-snapshots PR #13's registry. Drafted as an interim name in `affordances` R50 (a second place, against DEC-99's one table). **Recommended instead:** a small `wizard-scripts` share in L11 (it is first in layer 11, not closed) re-generating its registry from PR #13's file; then `affordances` R50 is dropped, and `op-declarations` R21 reads the same file.
+5. **K231: one condition, two codes.** With `instance-setup` R53 derived from keep-away, `ASSISTANT_OFF` (R55, at the plane's and `answers`' gate) and `credentials`' `AI_KEPT_AWAY` (R35, at account resolution) now answer the same condition at two sites. The entry keeps `ASSISTANT_OFF` "unchanged". Options: (a) keep both, as drafted; (b) R55's gate answers `credentials`' row and `ASSISTANT_OFF` retires (an N-entry with its readers, `store-door` R10, `wizard-scripts` R24, `answers`). Recommendation: (b), as a later entry, since T36's readers are mid-layer.
+6. **`ACT_HELP` (design stream).** PR #13's `mock-acts.js` explains 207 keys: 28 are aliases, 5 name no op (`projectcreated`, `setpassword`, `countask`, `registerproceeding`, `deadlinecompute`), one gives an op two texts (`claimidentity` and `identityclaim`), and one is the op T36-34 retires (`assistantset`). 519 of the 696 ops a member session reaches have no text, so T36-35's "every declared member op has a text, or is named with why not" names about 500 ops. Drafted with grounds (op-declarations R34). The design stream should say which texts it owes and which op the five names mean.
+7. **Installer readings.** (a) R46's Logpush check may need a fifth OAuth scope (R2 grants exactly four); the START confirms. (b) "Adds the `SECURITY_VPC` binding for a tunnel tool": the installer cannot know a group's later tools, so the draft has the operator name a VPC service, optionally.
+8. **R62 and the assistant.** A member's byte reads go through `file-safety.openOriginal`; an `ai` credential's are not named. K1888 (5) lets the assistant read inside any file, and it reads text through `extraction`. BOB decides whether `ai` byte reads are gated too. Also: the setup page's record browser download (`setup-page` R26) will now answer `SAFE_VIEW_ONLY` for a high-risk file with no safe-view link on that page. That follows from the approved package, so it needs no ruling; it is named so nobody reads it as a regression.
+9. **Who hands acquisition the reputation tool.** The entry gives it to `control-plane` "as it hands `ownHosts`", but `ownHosts` is handed by `plane`'s store composition (`plane/store.mjs`:357, to `capture`), where `acquire` runs. Both are drafted (control-plane R64, plane R29). The START should keep one: plane's composition, with control-plane's routes carrying nothing.
+10. **`standardrelease` on a phone (design stream).** DEC-170's reason ("graded Irreversible", DEC-143) also fits `standardrelease`, which carries the Irreversible weight and stays `phone: true`. Ask whether it joins `LARGER_SCREEN_ACTS`.
+11. **"Or later in Settings › Security" (design stream).** That screen is left out (N672), so `setup-page` R30 offers the step in the members and keys section until it exists (this draft's addition, for the placeholder page, K102). The design stream should give the words.
+12. **Upstream gaps found while drafting, not L11's.** (a) T36-29 (scheduler, L10) wakes "the reputation list refresh (`file-scanner` R26, through `file-safety`)", but `file-safety` has no refresh service or op. (b) `file-safety` R15's oldest-first cursor has N741's shape: `notice-producers` R14 states a bound of 1,000 where a `since` would cure it. Each is a later `file-safety` entry (layer 3 is closed). (c) T36-44's wording (`following` R21 `since`) is not yet written; `notice-producers` R13 assumes "`since`, an instant: only changes whose later capture is at or after it".
+13. **Counts and wording.** T36-35 says "the eight DEC-168–DEC-173 owed acts". PR #13's registry has nine (`aikeepaway` and eight security acts), and op-declarations R21 names all nine. The entry's "req: R2, R27" is read as R2 (Terms) and R21 (the registry the owed acts are read from), with R27 amended only to say T36 still serves no `subscriptionsignin`.
+14. **P6.** `op-declarations` is 3,092 lines in one file. Its T36 share (about 30 specs and R34's list) brings it to about 3,400, or about 3,700 if R34's list holds one name per line. No other L11 module nears 4,000.
+
+**Reading not finished, or read in part.** Read whole: every L11 module's requirements (`legacy-ui` has none), `file-safety`, and `credentials` R27–R52 with its keep-away section. Read in part, as the brief allowed: `capture` (R15, R21, R45, R73), `acquisition` (R42, R44), `standards` R50, `calculations` R38–R40, `following` R21, `file-scanner` (R10, R12, R26, R30), `retrieval` R76 (no L11 entry relies on it), `wizard-scripts` R13 and R22, `scheduler` R21, and Distribution §10. Not read: the T36-29 and T36-44 wordings, which are not yet written.
