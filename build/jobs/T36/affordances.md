@@ -59,3 +59,7 @@ The design also explains none of K2092's five ops: `standardinforcethrough`, `st
 - P6: 2,278 code lines.
 
 Size (session_01S4Ftb92KWezfAAS4YcAnSG): test runs 16, module lines 2278
+
+## J2 · COMPLETE · re B2
+
+T36-31 complete on job/T36/affordances, after merging the tranche following op-grades (K2156). R48: ACT_HELP holds 200 entries, generated from 36da334628's mock-acts.js. R49: act_help is in the untargeted answer, the same object. Re-pinned: red 20 (catalogue:583), red 19 (t33:144) and red 28 (catalogue:107, :470, :909; t31:49; plane:616; t33:161, :197). R19 backing for T36's five reasoned ops is in the new t36-backing.test.mjs. Red 29 (t33:214) also cleared here: with assistantset read as retired (op-grades R25), the synthetic rows have nothing unaccounted. Named back for the design stream: the design's projectcreated, setpassword, countask, registerproceeding and deadlinecompute (no op), assistantset (retired) and claimidentity (alias whose op identityclaim has its own text); and no text for K2092's five ops. affordances 217/0. Users: tasks, queue and store-door are green; op-declarations, control-plane and plane fail exactly the tests they fail on the tranche tip without this job (accepted reds 13, 17, 22–24, 26, 27, plus control-plane totality:17). format, architecture, coverage (34/34) and ownership are clean. P6: 2,278 lines. Details are in my record.
