@@ -65,8 +65,19 @@ test("R59 (store-door R9; credentials R39): `signout` and `signouteverywhere` ca
     assert.deepEqual([inner.headers["x-bio-session"], inner.params.session], [S.ann, undefined], op);
     for (const href of addresses(env)) assert.equal(href.includes(S.ann), false, op);
   }
-  /* a machine credential reaches neither (op-declarations R30) */
-  assert.equal((await call(env, { op: "signout", token: env.MEMBER_TOKEN, method: "POST", body: {} })).status, 403);
+  /* a machine credential reaches neither (op-declarations R30): every binding class refused CLASS_FORBIDDEN before the store */
+  for (const op of ["signout", "signouteverywhere"])
+    for (const [k, params] of [["ADMIN_TOKEN", {}], ["PROBE_TOKEN", { store: "scratch" }], ["DAEMON_TOKEN", {}]]) {
+      env.calls.length = 0;
+      const r = await call(env, { op, token: env[k], params, method: "POST", body: {} });
+      assert.deepEqual([r.status, r.json.reason, r.json.check], [403, "CLASS_FORBIDDEN", "C-38.2"], `${op} ${k}`);
+      assert.deepEqual(opCalls(env), [], `${op} ${k}`);
+    }
+  /* admission R5 (K2166): the retired shared member binding is refused 401 MEMBER_TOKEN_RETIRED, nothing asked of the store */
+  env.calls.length = 0;
+  const m = await call(env, { op: "signout", token: env.MEMBER_TOKEN, method: "POST", body: {} });
+  assert.deepEqual([m.status, m.json.reason, m.json.check], [401, "MEMBER_TOKEN_RETIRED", "C-38.11"]);
+  assert.deepEqual(opCalls(env), []);
 });
 
 test("R58 (admission R21; F4): every public op meets the door's window first — refused there, it answers DOOR_RATE_LIMITED 429 with the bound stated and nothing of the op runs; an op that is not public never asks the window", async () => {
@@ -117,9 +128,15 @@ test("R58 (acquisition R38, R40; capture R73): `op=unpack` reaches capture's pas
     assert.deepEqual([inner.params.cls, inner.params.member], [cls, member], cls);
     assert.notEqual(inner.params.by, FORGED);
   }
-  /* a member's caller-only class is refused before the store (op-declarations R30's classes) */
+  /* a class the op does not name is refused before the store (op-declarations R30's classes): the admin binding */
   env.calls.length = 0;
-  assert.equal((await call(env, { op: "unpack", token: env.MEMBER_TOKEN, method: "POST", body: {} })).status, 403);
+  const a = await call(env, { op: "unpack", token: env.ADMIN_TOKEN, method: "POST", body: {} });
+  assert.deepEqual([a.status, a.json.reason, a.json.check], [403, "CLASS_FORBIDDEN", "C-38.2"]);
+  assert.deepEqual(opCalls(env), []);
+  /* admission R5 (K2166): the retired shared member binding is refused 401 MEMBER_TOKEN_RETIRED before the store */
+  env.calls.length = 0;
+  const m = await call(env, { op: "unpack", token: env.MEMBER_TOKEN, method: "POST", body: {} });
+  assert.deepEqual([m.status, m.json.reason, m.json.check], [401, "MEMBER_TOKEN_RETIRED", "C-38.11"]);
   assert.deepEqual(opCalls(env), []);
   void hex64;
 });

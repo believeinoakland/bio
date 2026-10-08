@@ -7,8 +7,8 @@
 
    Carried: B2 "a caller sending capacity=1/operator=1/proof=1/whole=1 … the server's stamp overwrites it" (here: the
    `capacity` that reaches the store is the server's for every caller, and `operator` is no stamp); B3 "the admin sending
-   capacity=0 still receives dbBytes" (the stamp is the server's in both directions); the member shape for the member
-   binding, the probe and every member session, the admin shape for the admin binding and the founder's session (as the
+   capacity=0 still receives dbBytes" (the stamp is the server's in both directions); the member shape for the probe and
+   every member session (the member binding is retired, admission R5, K2166), the admin shape for the admin binding and the founder's session (as the
    `capacity` each is stamped with). Not carried: A, C, E and F (what the counts are, and that no class's answer moves across
    a colleague's lead) and B1's shape of the answer are the store's (record-core's counts, N342);
    D (op=selftest and op=livefire relay the same rule) is instance-setup's handlers behind plane's hooks, not this door. */
@@ -21,7 +21,8 @@ test("R40, R17 (N399): op=stats is stamped `capacity=1` exactly for the admin cl
   const { env, S } = world({ sessions: { [dee]: member("dee", ["contribute"], { administer: true }) } });
   const list = [
     ["the admin binding", env.ADMIN_TOKEN, {}, "1", "class:admin"], ["the founder's session", S.founder, {}, "1", "admin"],
-    ["the member binding", env.MEMBER_TOKEN, {}, "0", "class:member"], ["the probe binding", env.PROBE_TOKEN, { store: "scratch" }, "0", "class:probe"],
+    /* admission R5 (K2166): the shared member binding is retired, so it is no longer one of the callers */
+    ["the probe binding", env.PROBE_TOKEN, { store: "scratch" }, "0", "class:probe"],
     ["ann's member session", S.ann, {}, "0", "member:ann"], ["dee's administering member session", dee, {}, "0", "member:dee"],
   ];
   for (const [name, token, params, capacity, viewer] of list) {

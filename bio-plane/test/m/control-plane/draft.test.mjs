@@ -4,7 +4,7 @@
    harness's store, the object's `draft` a recorder answering as plane's does. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { M, world, call, opCalls, FORGED } from "./harness.mjs";
+import { M, world, call, opCalls, refused, FORGED } from "./harness.mjs";
 import { draftDue } from "../../../src/control-plane/draft.mjs";
 
 const USE = { input_tokens: 10, output_tokens: 5, cache_read_input_tokens: 0, cache_creation_input_tokens: 0, total_cost_usd: null };
@@ -63,10 +63,20 @@ test("R57: an owner's refusal, and every answer that is not the owner's ASSISTAN
     const r = await call(env, { op: "writinghelp", token: S.ann, method: "POST", hooks: packHooks(), body: { told: "x" } });
     assert.deepEqual([r.status, r.json.result.reason ?? null, asked.length], [200, refusal.reason ?? null, 0], JSON.stringify(refusal));
   }
-  const { env, asked } = draftWorld();
-  const m = await call(env, { op: "writinghelp", token: env.MEMBER_TOKEN, method: "POST", hooks: packHooks(), body: { told: "x" } });
-  assert.equal(m.status, 403);
-  assert.deepEqual([asked.length, opCalls(env).length], [0, 0]);
+  /* every binding class (admin, probe, daemon) is a machine credential the op refuses 403 before the store */
+  for (const k of ["ADMIN_TOKEN", "PROBE_TOKEN", "DAEMON_TOKEN"]) {
+    const { env, asked } = draftWorld();
+    const m = await call(env, { op: "writinghelp", token: env[k], method: "POST", hooks: packHooks(), body: { told: "x" } });
+    assert.deepEqual([m.status, m.json.reason], [403, "CLASS_FORBIDDEN"], k);
+    assert.deepEqual([asked.length, opCalls(env).length], [0, 0], k);
+  }
+  /* admission R5 (K2166): the retired shared member binding is refused 401 MEMBER_TOKEN_RETIRED, no draft asked, no op call */
+  {
+    const { env, asked } = draftWorld();
+    const m = await call(env, { op: "writinghelp", token: env.MEMBER_TOKEN, method: "POST", hooks: packHooks(), body: { told: "x" } });
+    refused(m, 401, "MEMBER_TOKEN_RETIRED", "C-38.11");
+    assert.deepEqual([asked.length, opCalls(env).length], [0, 0]);
+  }
   assert.equal(draftDue("writinghelp", { result: { ok: false, reason: "ASSISTANT_DRAFT_UNAVAILABLE" } }), true);
   assert.equal(draftDue("writinghelp", { ok: false, reason: "ASSISTANT_DRAFT_UNAVAILABLE" }), false);
   assert.equal(draftDue("index", { result: { ok: false, reason: "ASSISTANT_DRAFT_UNAVAILABLE" } }), false);

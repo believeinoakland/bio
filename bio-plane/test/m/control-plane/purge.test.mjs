@@ -12,11 +12,11 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { O, world, call, opCalls, aik, cred, refused } from "./harness.mjs";
 
-test("R28 (N398; admission R4, R7–R10): op=purge is the root of trust's and the probe's alone — a member binding CLASS_FORBIDDEN, an unknown token NOT_AUTHENTICATED, a session MACHINE_CREDENTIAL_REQUIRED naming its decision, an agent AI_BEYOND_TASK_SCOPE, the probe naming bio SCOPE_REFUSED — and nothing reaches the store on any refusal", async () => {
+test("R28 (N398; admission R4, R7–R10): op=purge is the root of trust's and the probe's alone — the daemon binding CLASS_FORBIDDEN, the retired member binding MEMBER_TOKEN_RETIRED (admission R5, K2166), an unknown token NOT_AUTHENTICATED, a session MACHINE_CREDENTIAL_REQUIRED naming its decision, an agent AI_BEYOND_TASK_SCOPE, the probe naming bio SCOPE_REFUSED — and nothing reaches the store on any refusal", async () => {
   const agent = aik();
   const { env, S } = world({ creds: { [agent]: cred({ tokenId: "agent-wide", writes: Object.keys(O.OPS) }) } });
   const cases = [
-    [{ token: env.MEMBER_TOKEN, params: { confirm: "bio" } }, 403, "CLASS_FORBIDDEN", "C-38.2"],
+    [{ token: env.MEMBER_TOKEN, params: { confirm: "bio" } }, 401, "MEMBER_TOKEN_RETIRED", "C-38.11"],
     [{ token: env.DAEMON_TOKEN, params: { confirm: "bio" } }, 403, "CLASS_FORBIDDEN", "C-38.2"],
     [{ token: "nope", params: { confirm: "bio" } }, 401, "NOT_AUTHENTICATED", "C-38.1"],
     [{ params: { confirm: "bio" } }, 401, "NOT_AUTHENTICATED", "C-38.1"],
