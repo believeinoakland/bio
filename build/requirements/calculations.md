@@ -108,6 +108,7 @@ Terms. A **recipe** is `calc-grammar`'s (`bio-calc/1`), evaluated only by it. A 
 - DEC-36, DEC-85 (withheld whole), DEC-112 (recomputable without Civicsmith), D275.
 - `docs/architecture/BIO_Capability_Ladders_v0_1.md` §6B.5 and §6C.5 (the patterns of application: held acts, R32; rates by decider, subject and class, time, stated reason, relationship and outcome, missing or repeated reasons, waiver share, R33; consistency and before and after, R34), §6B.6 POLICIES L4 (PO11 policy against practice, R36), §6C STANDARDS L3 (ST6 targets, R35; ST7 benchmarks, R35, R37) and L4 (ST9 conformance across acts, R33, R36) (T35-38).
 - Bob's rulings K1713 (2) (patterns measured for both constructs), K1723 (a benchmark says "below", never "nonconforming"), K1740; DEC-145 (2) (R35, R37). N676 and K1799 (R9's engine marks).
+- DEC-178 (the design session, 2026-10-08; K2171): a spot-check visit's photo is optional and the testimony stands without it (R38's `exhibits?`); the estimate counts every drawn visit (R39, R40).
 
 ### Suggestions
 
