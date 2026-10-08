@@ -13,7 +13,7 @@
 
 **Deferred:** nothing in this module.
 
-**Found in other modules** (each made red by this merge, by the grade R27/R28 now require; none is this module's to change; REPORT J2):
+**Found in other modules** (each made red by this merge, by the grade R27/R28 now require; none is this module's to change; REPORT J1):
 1. `affordances` `test/m/affordances/catalogue.test.mjs`:111 (its R2/R35/R37/R38 pin of `RUNGS` by rung): `obscuremarkwithdraw` now in `reasoned` and `obscuremark` in `reversible`, which the pin does not list.
 2. `affordances` `catalogue.test.mjs`:485 (its R27 count), lines 505–508 and 514: `obscuremark` is pinned `undetermined` in `LATER` and in `undeterminedOf(T37_RUNG_ABSENT)`; T37's undetermined set is now `translationdraft`, `translationmark`.
 3. `control-plane` `test/m/control-plane/totality.test.mjs`:20 (`affordances` R12 over the door's table): `obscuremarkwithdraw` reads `stale` until `op-declarations` T38-15 declares it (mutating); it should clear with T38-15's merge, no change needed.
