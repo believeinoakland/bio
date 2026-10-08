@@ -1,70 +1,99 @@
-/* The assistant, optional for the copy, and each member's disclosure (R53–R55; K1502, K1478 (i), D311), at the
-   module's interface: the module over the real record-core and its routes through the frame control-plane joins them
-   to. The page's half (whether it is on, and the switch) is setup-page's (its R24). */
+/* The assistant and each member's disclosure (R53–R55; DEC-172, K1957, K2093; D311), at the module's interface: the
+   module over the real record-core, over the REAL credentials and membership for whether the group keeps its material
+   away from AI (credentials R51, R52; in credentials' own test world), and its routes through the frame control-plane
+   joins them to. Since T36 the assistant has no switch of its own: `assistantset` and `ASSISTANT_ENABLED` are retired.
+   The page's words are setup-page's (its R18, R24). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { boot, frame } from "./fixture.mjs";
-import { ASSISTANT_DISCLOSURE, ASSISTANT_INSTALLER, INSTANCE_SETUP_CHECKS, INSTANCE_SETUP_TABLES, INSTANCE_SETUP_TABLE_DECLARATIONS }
+import { boot, frame, providers } from "./fixture.mjs";
+import { world as credentialsWorld } from "../credentials/fixture.mjs";
+import { ASSISTANT_DISCLOSURE, INSTANCE_SETUP_CHECKS, INSTANCE_SETUP_TABLES, INSTANCE_SETUP_TABLE_DECLARATIONS }
   from "../../../src/setup.mjs";
+import * as S from "../../../src/setup.mjs";
 
 const call = async (m, path, body) => (await frame(m, new Request(`http://do/${path}`,
   body === undefined ? undefined : { method: "POST", body: JSON.stringify(body) }))).json();
 
-test("R53 the assistant is off unless chosen: assistantState answers {on, set_by, set_at}, off with nobody and no instant when nothing is recorded, on every boot of a fresh copy", async () => {
-  const w = await boot({ env: { INSTANCE_NAME: "river-town" } });
+/* This module over credentials' and membership's own world, the group claimed by its founder `admin`. */
+async function over({ env = {}, st = null } = {}) {
+  const c = credentialsWorld();
+  await c.claim();
+  const w = await boot({ env, st, more: { membership: c.m, credentials: c.c } });
+  return { ...w, c };
+}
+const REASON = "We hold tenants' medical letters; none of it may leave our own Civicsmith.";
+
+test("R53 assistantState answers {on, set_by, set_at, reason} from credentials' keep-away (its R52): on, with the three null, while the group does not keep its material away; on: false with the setting's who, when and reason in the administrator's words while it does; on again, the three null, once it is turned off; it writes nothing", async () => {
+  const w = await over();
+  assert.deepEqual(w.m.assistantState(), { ok: true, on: true, set_by: null, set_at: null, reason: null });
+  const before = w.c.snapshot();
+  assert.equal(w.c.c.aiKeepAwaySet({ on: true, reason: REASON, by: "admin" }).ok, true);
+  const k = w.c.c.aiKeepAwayState();
   const st = w.m.assistantState();
-  assert.deepEqual([st.ok, st.on, st.set_by, st.set_at], [true, false, null, null]);
-  assert.match(st.detail, /never been switched on/);
-  /* a later boot of the same store changes nothing */
-  const again = await boot({ st: w.st, env: { INSTANCE_NAME: "river-town" } });
-  assert.equal(again.m.assistantState().on, false);
+  assert.deepEqual(st, { ok: true, on: false, set_by: k.set_by, set_at: k.set_at, reason: REASON });
+  assert.ok(typeof st.set_by === "string" && st.set_by && typeof st.set_at === "string" && st.set_at);
+  assert.equal(w.c.c.aiKeepAwaySet({ on: false, by: "admin" }).ok, true);
+  assert.deepEqual(w.m.assistantState(), { ok: true, on: true, set_by: null, set_at: null, reason: null });
+  /* reads write nothing */
+  const mark = w.c.snapshot();
+  for (let i = 0; i < 3; i += 1) w.m.assistantState();
+  assert.equal(w.c.snapshot(), mark);
+  assert.notEqual(before, mark, "the sets themselves were credentials' writes");
 });
 
-test("R53 assistantSet is an administrator's act only (NOT_AN_ADMIN through membership R84), refuses an on that is not true or false, and appends each set with who and when; the latest set is the switch", async () => {
-  let t = Date.parse("2026-10-06T08:00:00Z");
-  const w = await boot({ now: () => t });
-  w.prov.admins = new Set(["admin", "member:ada"]);
-  for (const by of [null, "", "member:bob", "class:admin", 42]) {
-    const r = w.m.assistantSet({ on: true, by });
-    assert.deepEqual([r.ok, r.reason, r.code, r.check], [false, "NOT_AN_ADMIN", "NOT_AN_ADMIN", "C-96.1"], String(by));
+test("R53 (K2093) any keep-away `on` other than false is read as kept away: a state credentials could not read (on: null), any other value, an answer that is no object, or a provider that throws all answer on: false with set_by, set_at and reason null; assistantState never throws", async () => {
+  const st = (keepAway) => ({ ...providers(), credentials: { aiKeepAwayState: keepAway } });
+  for (const [why, keepAway] of [
+    ["on: null (not read)", () => ({ on: null, reason: null, set_by: null, set_at: null })],
+    ["on: undefined", () => ({ reason: "x", set_by: "admin", set_at: "2026-10-08T00:00:00Z" })],
+    ["on: a string", () => ({ on: "false", reason: null, set_by: null, set_at: null })],
+    ["on: 0", () => ({ on: 0 })],
+    ["no object", () => null],
+    ["throws", () => { throw new Error("the store did not answer"); }],
+  ]) {
+    const w = await boot({ prov: st(keepAway) });
+    const r = w.m.assistantState();
+    assert.deepEqual([r.ok, r.on, r.set_by, r.set_at, r.reason], [true, false, null, null, null], why);
+    assert.match(r.detail, /could not be read, so it is read as kept away/, why);
   }
-  for (const on of [undefined, null, "true", 1, 0, {}]) {
-    const r = w.m.assistantSet({ on, by: "admin" });
-    assert.deepEqual([r.ok, r.reason, r.check], [false, "ASSISTANT_SWITCH_MALFORMED", "C-119.6"], JSON.stringify(on));
-    assert.equal(r.translation, INSTANCE_SETUP_CHECKS.ASSISTANT_SWITCH_MALFORMED.translation);
-  }
-  assert.equal(w.st.db.prepare(`SELECT count(*) n FROM assistant_switch`).get().n, 0, "no refusal writes");
-  const on = w.m.assistantSet({ on: true, by: "member:ada" });
-  assert.deepEqual([on.ok, on.on, on.set_by, on.set_at], [true, true, "member:ada", "2026-10-06T08:00:00.000Z"]);
-  assert.match(on.note, /^the assistant is on for your group's Civicsmith\. Switching it on binds no account/);
-  assert.match(on.note, /their own Claude account or API key, connected by their own act, or by the group's Anthropic API key/);
-  t += 60_000;
-  const off = w.m.assistantSet({ on: false, by: "admin" });
-  t += 60_000;
-  const again = w.m.assistantSet({ on: false, by: "admin" });
-  assert.deepEqual(again.history, [
-    { on: true, set_by: "member:ada", set_at: "2026-10-06T08:00:00.000Z" },
-    { on: false, set_by: "admin", set_at: "2026-10-06T08:01:00.000Z" },
-    { on: false, set_by: "admin", set_at: "2026-10-06T08:02:00.000Z" }]);
-  assert.equal(off.on, false);
-  assert.deepEqual(w.m.assistantState(), { ok: true, on: false, set_by: "admin", set_at: "2026-10-06T08:02:00.000Z" });
-  /* enabling binds no Claude credential: the switch holds who and when and nothing else, and the answer names no secret */
-  const cols = w.st.db.prepare(`PRAGMA table_info(assistant_switch)`).all().map((c) => c.name);
-  assert.deepEqual(cols, ["seq", "on_", "set_by", "set_at"]);
-  w.m.assistantSet({ on: true, by: "admin" });
-  assert.deepEqual(Object.keys(w.m.assistantState()).sort(), ["ok", "on", "set_at", "set_by"]);
+  /* the real setting, unreadable: credentials answers on: null, and this module reads it as kept away */
+  const w = await over();
+  w.c.db.exec(`DROP TABLE ai_keep_away`);
+  assert.equal(w.c.c.aiKeepAwayState().on, null);
+  assert.deepEqual([w.m.assistantState().on, w.m.assistantState().reason], [false, null]);
+  /* a credentials without the read at all is the same */
+  const bare = await boot({ prov: { ...providers(), credentials: {} } });
+  assert.equal(bare.m.assistantState().on, false);
 });
 
-test("R53 R29 over the routes: op=assistantset takes `by` from the control plane's stamp, never the body, and op=assistantstate answers the switch", async () => {
-  const w = await boot();
-  w.prov.admins = new Set(["admin"]);
-  const forged = await call(w.m, "assistantset?by=member:mallory", { on: true, by: "admin" });
-  assert.equal(forged.result.reason, "NOT_AN_ADMIN");
-  assert.equal(forged.result.by, "member:mallory");
-  const set = await call(w.m, "assistantset?by=admin", { on: true });
-  assert.deepEqual([set.result.on, set.result.set_by], [true, "admin"]);
-  const st = await call(w.m, "assistantstate");
-  assert.deepEqual([st.ok, st.result.on, st.result.set_by], [true, true, "admin"]);
+test("R53 (T36) the switch is retired: no assistantSet and no op=assistantset; op=assistantstate answers the derived state; the first boot reads no ASSISTANT_ENABLED, so a binding left set, on or off, changes nothing at any boot; rows the switch wrote are kept and no longer read", async () => {
+  const w = await over({ env: { ASSISTANT_ENABLED: "off" } });
+  assert.equal("assistantSet" in w.m, false);
+  assert.equal("ASSISTANT_INSTALLER" in S, false);
+  assert.equal("ASSISTANT_SWITCH_MALFORMED" in INSTANCE_SETUP_CHECKS, false);
+  assert.equal("assistant" in w.started, false, "the first boot records nothing about the assistant");
+  assert.equal(w.st.db.prepare(`SELECT count(*) n FROM assistant_switch`).get().n, 0);
+  assert.equal(w.m.assistantState().on, true, "ASSISTANT_ENABLED=off bound at the first boot is not read");
+  const routes = Object.keys(S.instanceSetupOps(w.m, new URL("http://do/"), null));
+  assert.equal(routes.includes("assistantset"), false);
+  assert.ok(routes.includes("assistantstate"));
+  const set = await frame(w.m, new Request("http://do/assistantset?by=admin", { method: "POST", body: JSON.stringify({ on: false }) }));
+  assert.equal(set, null, "assistantset is no route of this module's");
+  const state = await call(w.m, "assistantstate");
+  assert.deepEqual([state.ok, state.result.on, state.result.reason], [true, true, null]);
+  /* a row the retired switch wrote (an older store's) is kept, and no longer read: keep-away alone decides */
+  w.st.db.prepare(`INSERT INTO assistant_switch (on_, set_by, set_at) VALUES (0, 'installer', '2026-10-01T00:00:00Z')`).run();
+  assert.equal(w.m.assistantState().on, true);
+  w.c.c.aiKeepAwaySet({ on: true, reason: REASON, by: "admin" });
+  w.st.db.prepare(`INSERT INTO assistant_switch (on_, set_by, set_at) VALUES (1, 'admin', '2026-10-02T00:00:00Z')`).run();
+  assert.equal(w.m.assistantState().on, false);
+  assert.equal(w.st.db.prepare(`SELECT count(*) n FROM assistant_switch`).get().n, 2, "kept");
+  /* a later boot with the binding changed to on reads it no more than the first did */
+  const later = await boot({ st: w.st, env: { ASSISTANT_ENABLED: "on" }, more: { membership: w.c.m, credentials: w.c.c } });
+  assert.equal("assistant" in later.started, false);
+  assert.equal(later.m.assistantState().on, false);
+  /* enabling binds nothing: the state names no account and no secret */
+  assert.deepEqual(Object.keys(later.m.assistantState()).sort(), ["ok", "on", "reason", "set_at", "set_by"]);
 });
 
 test("R54 disclosureShown records who, when and the version, only by the member's own act: DISCLOSURE_MALFORMED without a member or a version, DISCLOSURE_NOT_THE_MEMBERS for another member, an administrator or a machine; nothing written on a refusal", async () => {
@@ -107,30 +136,48 @@ test("R54 disclosureOf answers shown: false for a member with none recorded at t
   assert.equal(route.result.shown, true);
 });
 
-test("R55 while the switch is off every ask and run is refused by name through assistantGate (ASSISTANT_OFF, C-119.5), whoever asks: never switched on, and switched off; on, the gate answers null; turning it off ends nothing recorded", async () => {
-  const w = await boot({ now: () => Date.parse("2026-10-06T10:00:00Z") });
-  w.prov.admins = new Set(["admin"]);
-  const never = w.m.assistantGate();
-  assert.deepEqual([never.ok, never.reason, never.code, never.check], [false, "ASSISTANT_OFF", "ASSISTANT_OFF", "C-119.5"]);
-  assert.equal(never.translation, INSTANCE_SETUP_CHECKS.ASSISTANT_OFF.translation);
-  assert.match(never.detail, /never been switched on/);
-  w.m.assistantSet({ on: true, by: "admin" });
+test("R55 (T36) while assistantState answers on: false every ask and run is refused by name through assistantGate (ASSISTANT_OFF, C-119.5), carrying the keep-away reason in the administrator's words, who set it and when; null, and said so, when the state could not be read; on, the gate answers null; turning keep-away off ends nothing recorded and starts nothing", async () => {
+  const w = await over();
   assert.equal(w.m.assistantGate(), null);
-  w.m.disclosureShown({ member: "ruth", version: ASSISTANT_DISCLOSURE.version, by: "ruth" });
-  w.m.assistantSet({ on: false, by: "admin" });
+  w.m.disclosureShown({ member: "admin", version: ASSISTANT_DISCLOSURE.version, by: "admin" });
+  w.c.c.aiKeepAwaySet({ on: true, reason: REASON, by: "admin" });
+  const k = w.c.c.aiKeepAwayState();
   const off = w.m.assistantGate();
-  assert.deepEqual([off.reason, off.set_by, off.set_at], ["ASSISTANT_OFF", "admin", "2026-10-06T10:00:00.000Z"]);
-  assert.match(off.detail, /switched the assistant off/);
-  /* nothing recorded is ended: the disclosure and every set stay */
-  assert.equal(w.m.disclosureOf({ member: "ruth" }).shown, true);
-  assert.equal(w.st.db.prepare(`SELECT count(*) n FROM assistant_switch`).get().n, 2);
-  /* a store that cannot be read answers off, never on */
-  w.st.db.exec(`DROP TABLE assistant_switch`);
-  assert.equal(w.m.assistantState().on, false);
-  assert.equal(w.m.assistantGate().reason, "ASSISTANT_OFF");
+  assert.deepEqual([off.ok, off.reason, off.code, off.check], [false, "ASSISTANT_OFF", "ASSISTANT_OFF", "C-119.5"]);
+  assert.equal(off.translation, INSTANCE_SETUP_CHECKS.ASSISTANT_OFF.translation);
+  assert.deepEqual(off.keep_away, { reason: REASON, set_by: k.set_by, set_at: k.set_at });
+  assert.deepEqual([off.set_by, off.set_at], [k.set_by, k.set_at]);
+  assert.ok(off.detail.includes(k.set_at) && off.detail.includes(k.set_by), off.detail);
+  assert.match(off.detail, /keep your group's material away from every assistant, for the reason given with this answer/);
+  /* whoever asks: the gate takes no caller, so no account or class changes it */
+  assert.deepEqual(w.m.assistantGate({ member: "admin", account: { kind: "apikey" } }), off);
+  /* turning it off ends nothing recorded (the disclosure stays) and starts nothing (the gate writes nothing) */
+  const mark = w.c.snapshot();
+  w.m.assistantGate();
+  assert.equal(w.c.snapshot(), mark);
+  w.c.c.aiKeepAwaySet({ on: false, by: "admin" });
+  assert.equal(w.m.assistantGate(), null);
+  assert.equal(w.m.disclosureOf({ member: "admin" }).shown, true);
+  /* a state that could not be read: refused, the reason, who and when null, stated so */
+  w.c.db.exec(`DROP TABLE ai_keep_away`);
+  const unread = w.m.assistantGate();
+  assert.deepEqual([unread.reason, unread.keep_away, unread.read], ["ASSISTANT_OFF", { reason: null, set_by: null, set_at: null }, false]);
+  assert.match(unread.detail, /could not be read, so it is read as kept away.*No reason is known\./);
 });
 
-test("R28 R41 R53 R54 every table is declared explicitly to record-core (declareTable, its R21) exempt from purge, the switch and the disclosures among them, the disclosures never exported", async () => {
+test("R55 (T36) the draft (R65) is refused ASSISTANT_OFF with the reason while the group keeps its material away, whatever account the door resolved, and is reached past it once keep-away is off", async () => {
+  const w = await over();
+  const ASSISTANT = { on: true, account: { kind: "apikey", level: "group" } };
+  const ANSWERS = [{ question: "What does your group work on?", text: "We read the port's contracts." }];
+  w.c.c.aiKeepAwaySet({ on: true, reason: REASON, by: "admin" });
+  const r = await w.m.groupDescriptionDraft({ answers: ANSWERS, assistant: ASSISTANT, viewer: "admin", by: "admin" });
+  assert.deepEqual([r.ok, r.reason, r.keep_away.reason], [false, "ASSISTANT_OFF", REASON]);
+  w.c.c.aiKeepAwaySet({ on: false, by: "admin" });
+  const past = await w.m.groupDescriptionDraft({ answers: ANSWERS, assistant: ASSISTANT, viewer: "admin", by: "admin" });
+  assert.equal(past.reason, "ASSISTANT_DRAFT_UNAVAILABLE", "no turn handed in: past every refusal");
+});
+
+test("R28 R41 R53 R54 every table is declared explicitly to record-core (declareTable, its R21) exempt from purge, the retired switch's kept rows and the disclosures among them, the disclosures never exported", async () => {
   const w = await boot();
   assert.equal(w.started.purge.ok, true);
   const mine = w.record.declaredTables().filter((d) => d.module === "instance-setup");
@@ -139,32 +186,9 @@ test("R28 R41 R53 R54 every table is declared explicitly to record-core (declare
   assert.deepEqual(mine.filter((d) => d.purge === "clear").map((d) => d.name), ["seed_entities", "seed_lines", "seed_offices", "seed_bodies"]);
   const disc = mine.find((d) => d.name === "assistant_disclosures");
   assert.equal(disc.export, "never");
-  w.prov.admins = new Set(["admin"]);
-  w.m.assistantSet({ on: true, by: "admin" });
+  w.st.db.prepare(`INSERT INTO assistant_switch (on_, set_by, set_at) VALUES (1, 'admin', '2026-10-01T00:00:00Z')`).run();
   w.m.disclosureShown({ member: "ruth", version: ASSISTANT_DISCLOSURE.version, by: "ruth" });
   w.record.purge({});
-  assert.equal(w.m.assistantState().on, true);
+  assert.equal(w.st.db.prepare(`SELECT count(*) n FROM assistant_switch`).get().n, 1, "the kept rows survive a purge");
   assert.equal(w.m.disclosureOf({ member: "ruth" }).shown, true);
-});
-
-test("R53 (K1678) at the first boot the installer's binding ASSISTANT_ENABLED is recorded, on or off, with by the installer; no binding, or any other value, records nothing and the assistant stays off; no later boot reads it", async () => {
-  const at = Date.parse("2026-10-06T07:00:00Z");
-  for (const [bound, on] of [["on", true], [" ON ", true], ["off", false]]) {
-    const w = await boot({ env: { ASSISTANT_ENABLED: bound }, now: () => at });
-    assert.deepEqual(w.started.assistant, { recorded: true, on });
-    assert.deepEqual(w.m.assistantState(), { ok: true, on, set_by: ASSISTANT_INSTALLER, set_at: "2026-10-06T07:00:00.000Z" });
-    assert.equal(ASSISTANT_INSTALLER, "installer");
-  }
-  for (const bound of [undefined, "", "yes", "true", "1"]) {
-    const w = await boot({ env: bound === undefined ? {} : { ASSISTANT_ENABLED: bound } });
-    assert.equal(w.started.assistant.recorded, false, String(bound));
-    assert.deepEqual([w.m.assistantState().on, w.m.assistantState().set_by], [false, null]);
-    if (bound) assert.match(w.started.assistant.why, /neither on nor off/);
-    assert.equal(w.st.db.prepare(`SELECT count(*) n FROM assistant_switch`).get().n, 0);
-  }
-  /* a later boot of a store the installer set off does not read a binding changed to on */
-  const first = await boot({ env: { ASSISTANT_ENABLED: "off" } });
-  const later = await boot({ st: first.st, env: { ASSISTANT_ENABLED: "on" } });
-  assert.equal("assistant" in later.started, false);
-  assert.equal(later.m.assistantState().on, false);
 });
