@@ -36,7 +36,9 @@
  *                (its R5, R20): a basis naming a held standard (R39); its exports `noSuchStandard` (R17) and
  *                `portionUnknown` (K1563 (10)) answer for a standard or portion not held (`deps.portionUnknown` in tests).
  *   zoneOf       the time zone that governs, as `local-facts` governs it (its R2: the `time_zone` fact's governing value
- *                over the active profiles), or null; default `localFactsOf(host).factStatus`. Read lazily, each read.
+ *                over the active profiles); default `governingZone(localFactsOf(host, {record}))`: the one governing
+ *                `time_zone` that `factStatus` answers, else `{zone: null, why}` when none or several govern. Read
+ *                lazily, each read.
  *   now          the module's clock for the instants it writes, an ISO string (default: the wall clock).
  *   nowMs        the instance's configured clock for the overdue reads, milliseconds (R16), else `env.BIO_NOW_MS`,
  *                else the wall clock. */
@@ -887,10 +889,21 @@ export class Progressions {
     /* R33: told after the write, in the modules' total order (`onThreaded` keeps them so); a listener that throws or
        rejects changes neither the thread nor its answer. */
     if (this.threadListeners.length) {
-      let nextDeadline = null;
-      try { nextDeadline = this.overdueScan(Date.parse(at)).next_deadline; } catch { nextDeadline = null; }
+      /* `nextDeadline` is R17's whole-store answer at the thread's instant, scanned only when a listener reads it and
+         then once for the thread (K2204): a listener that ignores it, as scheduler's does, costs no scan. Each listener
+         gets its own event, so none can change another's. */
+      let scanned = false, nextDeadline = null;
+      const deadline = () => {
+        if (!scanned) {
+          scanned = true;
+          try { nextDeadline = this.overdueScan(Date.parse(at)).next_deadline; } catch { nextDeadline = null; }
+        }
+        return nextDeadline;
+      };
       for (const l of this.threadListeners) {
-        try { await l.fn({ progressionKey: key, entityId: eid, nextDeadline }); } catch { /* R33: isolated */ }
+        const e = { progressionKey: key, entityId: eid };
+        Object.defineProperty(e, "nextDeadline", { get: deadline, enumerable: true });
+        try { await l.fn(e); } catch { /* R33: isolated */ }
       }
     }
     return answer;
@@ -1533,12 +1546,13 @@ export function progressionsOf(host, deps) {
                            events: d.events || (() => EVENTS.eventsOf(host)),
                            standards: d.standards || (() => STANDARDS.standardsOf(host, { record })),
                            zoneOf: d.zoneOf || (() => governingZone(localFactsOf(host, { record }))) });
-    instances.set(host, p);
-    /* R42: every table declared explicitly, with its classes; a refusal is a defect of the wiring and throws */
+    /* R42: every table declared explicitly, with its classes; a refusal is a defect of the wiring and throws. The
+       instance is held only once declared, so a later call never answers one whose tables were refused. */
     const declared = record.declareTable("progressions", PROGRESSIONS_TABLES);
     if (declared && declared.ok === false)
       throw new Error(`progressions: record-core refused its tables: ${declared.reason} ${declared.table || ""}`.trim());
     registerFigures(p);
+    instances.set(host, p);
   }
   made.add(p);
   return p;
