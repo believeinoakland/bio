@@ -20,6 +20,9 @@ const WORDS = {
   CREDENTIALS_MISSING: "A credential the tool names was not given. Nothing was added.",
   USE_NOT_ALLOWED: "Every file is checked only by a tool on the organization's own servers. Nothing was added.",
   LIMIT_INVALID: "A monthly limit is a whole number from 1 to 100,000. Nothing was added.",
+  CONFIG_MISSING: "A setting the tool's entry names as required was not given. Nothing was added.",
+  CONFIG_UNKNOWN: "A setting was given that the tool's entry does not name. Nothing was added.",
+  PROVIDER_UNKNOWN: "Your group's Civicsmith knows no security service by that name, or the service needs an address that was not given. Nothing was added.",
 };
 function plane({ administer = true, refuse = {}, passes = true, catalogue = { result: CATALOGUE } } = {}) {
   const st = { tools: [] };
@@ -37,7 +40,12 @@ function plane({ administer = true, refuse = {}, passes = true, catalogue = { re
       case "securitytooladd": {
         const e = CATALOGUE.offered.find((x) => x.provider_id === body.providerId);
         const no = (code) => ({ result: { ok: false, reason: code, translation: WORDS[code] } });
-        if (!e) return { result: { ok: false, reason: "PROVIDER_UNKNOWN" } };
+        if (!e || e.template) return no("PROVIDER_UNKNOWN");   // a template here names no host (file-safety R28)
+        const cfg = body.config && typeof body.config === "object" ? body.config : {};
+        const absent = e.config.find((f) => f.required && !(typeof cfg[f.name] === "string" && cfg[f.name].trim()));
+        if (absent) return { result: { ...no("CONFIG_MISSING").result, field: absent.name } };
+        const stray = Object.keys(cfg).find((k) => !e.config.some((f) => f.name === k));
+        if (stray !== undefined) return { result: { ...no("CONFIG_UNKNOWN").result, field: stray } };
         if (body.handlingDigest !== e.handling_digest) return no("HANDLING_NOT_SHOWN");
         if (e.handling.sample_sharing === "vendor_internal_research" && body.confirmRetention !== true) return no("RETENTION_NOT_CONFIRMED");
         if (e.credentials.some((n) => !(typeof body.credentials?.[n] === "string" && body.credentials[n].trim()))) return no("CREDENTIALS_MISSING");
@@ -84,16 +92,18 @@ async function claimed(opts = {}) {
 }
 const pick = async (p, P, i) => { await p.drawn(`#${P}-st-cat .st-pick`, { i: String(i) }).fire(); await settle(); };
 
-test("R30 in the claim's section, after R29 and R15–R18, the page offers the founder the optional step: what is built in first, that it can be skipped or done later, in the design stream's words for the time before Settings › Security exists (K2159); skipped, it records nothing and asks no key", async () => {
+test("R30 in the claim's section, after R29 and R15–R18, the page offers the founder the optional step: what is built in first, that it can be skipped or done later, opening with DEC-182 (6)'s interim words exactly while Settings › Security does not exist (T37; K2159, K2161); skipped, it records nothing and asks no key", async () => {
   const claim = claimSection(PAGE_HTML);
   const after = (claim.match(/<div id="claim-after" hidden>[^]*$/) || [""])[0];
   const at = (id) => after.indexOf(`id="${id}"`);
-  for (const id of ["cl-rc", "cl-ha", "cl-cn", "cl-gk", "cl-ka"]) assert.ok(at(id) >= 0 && at(id) < at("cl-st"), `${id} before the step`);
+  for (const id of ["cl-rc", "cl-ha", "cl-cn", "cl-ka", "cl-gk"]) assert.ok(at(id) >= 0 && at(id) < at("cl-st"), `${id} before the step`);
   const step = after.slice(at("cl-st"));
-  /* UX-DESIGN U125 (3): the first form, until Settings › Security exists */
+  /* DEC-182 (6) (UX-DESIGN U125 (3)): the first form, exactly, until Settings › Security exists, opening the step */
   const WORDS_U125 = "Civicsmith scans every file it captures with its own scanner and opens risky ones in a safe view. If your organization "
     + "already uses a file scanner, a safe-copy maker or a log service, you can add it here, now or later.";
   assert.ok(step.replace(/\s+/g, " ").includes(WORDS_U125));
+  assert.ok(step.slice(step.indexOf(">") + 1).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim()
+    .startsWith("Your organization's own security tools (optional). " + WORDS_U125), "the step opens with them, after its heading");
   assert.doesNotMatch(step, /Settings\s+(?:&rsaquo;|›) Security/, "not the second form while that screen does not exist");
   assert.match(step, /You can skip this step: adding nothing records nothing, and nothing needs adding\./);
   assert.ok(step.indexOf("Civicsmith scans") < step.indexOf('id="cl-st-cat"'), "what is built in comes first");
@@ -120,9 +130,10 @@ test("R30 it reads op=securitytoolcatalogue and shows each offered tool with its
   assert.ok(cat.includes("It does not share the files it is sent.") && cat.includes("The vendor keeps files it is sent for its own research."));
   assert.match(cat, /<h3>Services not offered<\/h3>/);
   for (const r of [...CATALOGUE.refused, ...CATALOGUE.held]) assert.ok(cat.includes(r.words) && cat.includes(r.provider_id), r.provider_id);
-  /* an offered template is shown with a plain note, and no add */
-  assert.equal(p.drawn("#cl-st-cat .st-pick", { i: "2" }), null);
-  assert.match(cat, /This is a template for a tool your organization runs and describes itself\./);
+  /* every offered entry may be added, a template too (T37, N777: its config list asks what its maker states) */
+  for (const i of CATALOGUE.offered.keys()) assert.ok(p.drawn("#cl-st-cat .st-pick", { i: String(i) }), `entry ${i}`);
+  assert.match(cat, /This is a template for a tool your organization runs and describes itself: adding it asks what the tool&#39;s maker states it runs and how it handles files\./);
+  assert.doesNotMatch(cat, /cannot yet ask/);
   /* a catalogue that does not answer, or is refused, is said, and nothing is offered */
   for (const catalogue of [{ error: "x" }, { result: { ok: false, reason: "NOT_AN_ADMIN", translation: "Only an administrator reads the security tools offered." } }]) {
     const q = await claimed({ catalogue });
@@ -131,21 +142,25 @@ test("R30 it reads op=securitytoolcatalogue and shows each offered tool with its
   }
 });
 
-test("R30 adding a tool asks only what its entry needs: its credentials (no key otherwise), settings its vendor names, the retention confirmation only where the vendor keeps files, 'every file' only for a tool on the organization's own servers, and a monthly limit defaulting to DEEPER_CHECKS_PER_MONTH", async () => {
+test("R30 adding a tool asks only what its entry needs: its credentials (no key otherwise), each field of its config list by its label (none for an empty list; T37, N777), no free settings box, the retention confirmation only where the vendor keeps files, 'every file' only for a tool on the organization's own servers, and a monthly limit defaulting to DEEPER_CHECKS_PER_MONTH", async () => {
   const p = await claimed();
   for (const [i, t] of CATALOGUE.offered.entries()) {
-    if (t.template) continue;
     await pick(p, "cl", i);
     const fields = p.el("#cl-st-fields").innerHTML;
     assert.equal(p.el("#cl-st-form").hidden, false);
     const asked = [...fields.matchAll(/<label for="cl-st-cred-(\d+)">([^<]*)<\/label><input id="cl-st-cred-\1" type="password"/g)].map((m) => m[2]);
     assert.deepEqual(asked, t.credentials, `${t.provider_id}: its credentials, and nothing else secret`);
     assert.equal((fields.match(/type="password"/g) || []).length, t.credentials.length);
+    const settings = [...fields.matchAll(/<label for="cl-st-cfg-(\d+)">([^<]*)<\/label><input id="cl-st-cfg-\1" spellcheck="false">/g)].map((m) => m[2]);
+    assert.deepEqual(settings, t.config.map((f) => f.label), `${t.provider_id}: each setting by its label, in its list's order`);
+    assert.equal((fields.match(/<input /g) || []).length, t.credentials.length + t.config.length, `${t.provider_id}: nothing else asked`);
+    assert.doesNotMatch(fields, /<textarea|vendor names|name = value/, `${t.provider_id}: no free settings box`);
     assert.equal(p.el("#cl-st-keepbox").hidden, t.handling.sample_sharing !== "vendor_internal_research", `${t.provider_id}: retention`);
     assert.equal(p.el("#cl-st-everybox").hidden, !onOwnServers(t.handling.recipient), `${t.provider_id}: every file`);
     assert.equal(p.el("#cl-st-limit").value, String(DEEPER_CHECKS_PER_MONTH));
   }
   assert.match(PAGE_HTML, new RegExp(`<input id="cl-st-limit" inputmode="numeric" value="${DEEPER_CHECKS_PER_MONTH}">`));
+  assert.doesNotMatch(PAGE_HTML, /st-cfg"|Settings its vendor names/, "the free box is gone from the page");
   assert.deepEqual(ops(p.sent, ["securitytooladd"]), [], "choosing sends nothing");
 });
 
@@ -154,12 +169,11 @@ test("R30 it sends op=securitytooladd with the shown handling's handlingDigest a
   const p = await claimed();
   await pick(p, "cl", 0);
   p.el("#cl-st-cred-0").value = ` ${KEY} `;
-  p.el("#cl-st-cfg").value = "region = eu\n\nengine_family = metadefender";
   p.el("#cl-st-every").checked = true; p.el("#cl-st-limit").value = "250";
   await p.el("#cl-st-add").fire(); await settle();
   const e = CATALOGUE.offered[0];
   const add = p.sent.filter((c) => c.op === "securitytooladd");
-  assert.deepEqual(add.map((c) => [c.method, c.token, c.body]), [["POST", "sess-founder", { providerId: e.provider_id, config: { region: "eu", engine_family: "metadefender" },
+  assert.deepEqual(add.map((c) => [c.method, c.token, c.body]), [["POST", "sess-founder", { providerId: e.provider_id, config: {},
     credentials: { api_key: KEY }, handlingDigest: e.handling_digest, confirmRetention: false, use: "routine", monthlyLimit: 250 }]]);
   assert.deepEqual(ops(p.sent, ["securitytooltest"]), [["securitytooltest", { toolId: "metadefender-core-1" }]]);
   assert.equal(p.el("#cl-st-said").textContent, "The test passed: OPSWAT, Inc. MetaDefender Core is on.");
@@ -187,16 +201,52 @@ test("R30 it sends op=securitytooladd with the shown handling's handlingDigest a
   assert.equal(ops(r.sent, ["securitytooladd"])[0][1].use, "on_request");
 });
 
-test("R30 every refusal is stated in file-safety's words and the step goes on; a missing credential or a malformed setting sends nothing", async () => {
+test("R30 (T37; N777) each config field is sent under its name as typed, trimmed: a required one filled, an optional one empty left out, an optional one filled sent; no field the entry does not list is ever sent", async () => {
+  const CF = CATALOGUE.offered[3];
+  const p = await claimed();
+  await pick(p, "cl", 3);
+  p.el("#cl-st-cred-0").value = "tok"; p.el("#cl-st-cfg-0").value = "  acct-123 "; p.el("#cl-st-cfg-1").value = "";
+  await p.el("#cl-st-add").fire(); await settle();
+  await pick(p, "cl", 3);
+  p.el("#cl-st-cred-0").value = "tok"; p.el("#cl-st-cfg-0").value = "acct-123"; p.el("#cl-st-cfg-1").value = "example.org";
+  await p.el("#cl-st-add").fire(); await settle();
+  const sent = ops(p.sent, ["securitytooladd"]).map(([, b]) => b.config);
+  assert.deepEqual(sent, [{ account_id: "acct-123" }, { account_id: "acct-123", zone_hint: "example.org" }]);
+  assert.equal(p.el("#cl-st-err").textContent, "", "file-safety accepted both");
+  /* across every entry and every pick, only listed names are sent */
+  for (const c of p.sent.filter((x) => x.op === "securitytooladd"))
+    for (const k of Object.keys(c.body.config)) assert.ok(CF.config.some((f) => f.name === k), k);
+  /* a field from an earlier pick is never carried into another tool's settings */
+  await pick(p, "cl", 0); p.el("#cl-st-cred-0").value = "k"; await p.el("#cl-st-add").fire(); await settle();
+  assert.deepEqual(ops(p.sent, ["securitytooladd"]).at(-1)[1].config, {});
+});
+
+test("R30 (T37; N777) a generic template's fields (engine_family and handling among them) are asked by their labels and sent under their names; file-safety's refusal is stated in its words and the step goes on", async () => {
+  const T = CATALOGUE.offered[2];
+  const p = await claimed();
+  await pick(p, "cl", 2);
+  assert.deepEqual(T.config.slice(0, 2).map((f) => f.name), ["engine_family", "handling"]);
+  p.el("#cl-st-cfg-0").value = "clamav"; p.el("#cl-st-cfg-1").value = "files kept 0 days, shared with nobody";
+  p.el("#cl-st-cfg-2").value = ""; p.el("#cl-st-cfg-3").value = "avscan";
+  await p.el("#cl-st-add").fire(); await settle();
+  assert.deepEqual(ops(p.sent, ["securitytooladd"]).map(([, b]) => [b.providerId, b.config]),
+    [["icap-generic", { engine_family: "clamav", handling: "files kept 0 days, shared with nobody", service: "avscan" }]]);
+  assert.equal(p.el("#cl-st-err").textContent, WORDS.PROVIDER_UNKNOWN);
+  assert.equal(p.el("#cl-st-form").hidden, false, "the step goes on");
+});
+
+test("R30 every refusal is stated in file-safety's words and the step goes on; a missing credential or an empty required setting (T37, named by its label) sends nothing, and leaves the secrets typed in their fields", async () => {
   const p = await claimed();
   await pick(p, "cl", 1);
   p.el("#cl-st-cred-0").value = "id"; p.el("#cl-st-cred-1").value = "";
   await p.el("#cl-st-add").fire(); await settle();
   assert.equal(p.el("#cl-st-err").textContent, "Fill in client_secret: the tool needs it. Nothing was sent.");
-  await pick(p, "cl", 1);
-  p.el("#cl-st-cred-0").value = "id"; p.el("#cl-st-cred-1").value = "s"; p.el("#cl-st-cfg").value = "not a setting";
+  assert.equal(p.el("#cl-st-cred-0").value, "id", "a refusal before sending wipes nothing typed");
+  await pick(p, "cl", 3);
+  p.el("#cl-st-cred-0").value = "tok"; p.el("#cl-st-cfg-0").value = "  "; p.el("#cl-st-cfg-1").value = "example.org";
   await p.el("#cl-st-add").fire(); await settle();
-  assert.match(p.el("#cl-st-err").textContent, /^Write each setting as name = value/);
+  assert.equal(p.el("#cl-st-err").textContent, "Fill in Cloudflare account ID: the tool needs it. Nothing was sent.");
+  assert.equal(p.el("#cl-st-cred-0").value, "tok", "the secret stays in its field, never sent");
   assert.deepEqual(ops(p.sent, ["securitytooladd"]), []);
   /* the retention not confirmed: file-safety's refusal, and the form stays for another try */
   await pick(p, "cl", 1);

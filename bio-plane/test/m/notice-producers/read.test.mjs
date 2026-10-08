@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { world } from "../money-checks/fixture.mjs";
 import { fresh, reader, byId, texts, sentences, snapshot } from "./fixture.mjs";
 import { list as profiles } from "../../../../jurisdictions/index.mjs";
-import { NOTICE_KINDS, NOTICE_PROJECTS_MAX, DUTIES_MAX, POLICY_CHANGES_MAX, POLICY_CHANGE_DAYS, SCAN_FINDINGS_MAX, TOOL_EVENTS_MAX } from "../../../src/notice-producers/index.mjs";
+import { NOTICE_KINDS, NOTICE_PROJECTS_MAX, DUTIES_MAX, POLICY_CHANGES_MAX, POLICY_CHANGE_DAYS, SCAN_FINDINGS_MAX, SCAN_FINDINGS_DAYS, TOOL_EVENTS_MAX } from "../../../src/notice-producers/index.mjs";
 import { SECURITY_DAYS } from "../../../src/credentials/index.mjs";
 
 const NOW = "2026-10-06T12:00:00Z";
@@ -83,7 +83,7 @@ test("R1: every item R2–R6 and R12–R15 derive for this member and viewer, ea
     money_detector: { truncated: false }, standing_answer: { bound: 1000, truncated: false },
     temporal_expectation: { bound: DUTIES_MAX, truncated: false }, inquiry_recheck: { truncated: false },
     security_level: { days: SECURITY_DAYS, truncated: false }, policy_change: { bound: POLICY_CHANGES_MAX, days: POLICY_CHANGE_DAYS, truncated: false },
-    scan_found: { bound: SCAN_FINDINGS_MAX, truncated: false }, security_tool_off: { bound: TOOL_EVENTS_MAX, truncated: false },
+    scan_found: { bound: SCAN_FINDINGS_MAX, days: SCAN_FINDINGS_DAYS, truncated: false }, security_tool_off: { bound: TOOL_EVENTS_MAX, truncated: false },
     failed: [] });
 });
 
