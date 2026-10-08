@@ -65,3 +65,7 @@
 - Tests: 1,777 lines, from 1,595.
 
 Size (session_01PZFJ33yTU9MSNkxXuSiLhJ): test runs 14, module lines 2475
+
+## J1 · REPORT
+
+bundler (its test): bio-plane/test/system/fleetbundles.test.mjs:124 still expects file-scanner's images as ghcr.io/believeinoakland/file-scanner-{scanner,renderer}. With R10 met (N773) the suite answers 0 pass, 1 fail, on that line alone; every file-scanner arm (no staleness, byte-identical fresh build, manifest hash) passes. Fix, bundler's: expect docker.io/civicos/file-scanner-scanner and docker.io/civicos/file-scanner-renderer. newgroup/test/requirements.test.mjs:1063's ghcr case is installer's deliberate refusal test and stays right.
