@@ -1,6 +1,6 @@
 # case-authoring (T36)
 
-**Status** · session_01LrhFoLsxK6BYPBNPHwMufT · depth 2 · WORKING · handled B1
+**Status** · session_01LrhFoLsxK6BYPBNPHwMufT · depth 2 · WAITING ON BOB (J1) · handled B1
 
 ## Job record (CASE-AUTHORING #20)
 
