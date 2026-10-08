@@ -80,12 +80,13 @@
 /* The levels, states and definitive subset are observation-log's (K78 (3),
    K81); C-30 and the inert sources are strength's (K181 (3)); the suggestion
    levels and C-27 are run-productions' (K182 (2)); the leg roles and the earned
-   grade sources are record-grammar's; C-25 and C-32.2 are basis-versions' and
+   grade sources are record-grammar's, and so is the label a translation draft
+   carries (its R50; R39); C-25 and C-32.2 are basis-versions' and
    C-32.8 inquiry-grammar's (T19). Nothing is read from the check catalogue. */
 import { OBSERVATION_LEVELS, OBSERVATION_STATES, DEFINITIVE_STATES } from "./observation-log/index.mjs";
 import { VERSION_STRENGTH_CHECKS, VERSION_STRENGTH_INERT_SOURCES } from "./strength/index.mjs";
 import { SUGGEST_LEVELS, SUGGEST_CHECKS } from "./run-productions/index.mjs";
-import { BASIS_ROLES, EARNED_GRADE_SOURCES } from "./record-grammar/index.mjs";
+import { BASIS_ROLES, EARNED_GRADE_SOURCES, PROPOSAL_STATES } from "./record-grammar/index.mjs";
 import { BASIS_VERSION_CHECKS, CONCLUDE_ACT_CHECKS } from "./basis-versions/index.mjs";
 import { INQUIRY_GRAMMAR_CHECKS } from "./inquiry-grammar/index.mjs";
 /* The run's rows and the one deployment order are run-rules' (its R8, R9, R11;
@@ -1508,6 +1509,144 @@ export function writingHelpLayer(catalog) {
         + "words, is firsthand or states a reason is the screen registry's, and whether the member's suggestions switch "
         + "is on is read for each call by the assistant's runner. A draft is stored apart and labelled as machine work, "
         + "and becomes the member's words only by the member's act. A run ignoring every word here gets past nothing.",
+    },
+  };
+}
+
+/* =========================================================================
+ * THE INTERFACE TRANSLATION LAYER (R39; T37-14; N669; DEC-127 (2), (5),
+ * DEC-157 (2), (4), (6), DEC-179 (3), (4); K1755, K1793, K1804, K2200)
+ *
+ * The doctrine a run works under when a member granted a language asks for
+ * drafts of the interface words the group's translation lacks, or an
+ * administrator asks for a kept word read back into English. Each clause is
+ * `{text, source, section}`, a span found by R21's normaliser in the
+ * Interaction Constructs' §L or in a DEC's ruling (DECs are canon, each ruling:
+ * `requirements/README.md`; K2200); nothing here rewords one. R39's three
+ * sub-clauses no canon sentence states (a placeholder kept as it stands; the
+ * draft or reading keeping nothing itself; a reading back of the kept word
+ * alone, labelled and adopting nothing) are reported, never authored (K921's
+ * pattern, SKILLS #16 J1): the layer's note names the code that holds each.
+ * None holds a gate: which member is granted a language, which account serves
+ * the member (`credentials.accountFor`, its R35; K1755) and whether the group
+ * keeps the assistant away (`credentials` R51) are read elsewhere, never here,
+ * and the words, keys, notes and protected marks reach the run from
+ * `instance-setup`'s workspace through `agent-worker`'s `POST /draft` (its
+ * R68–R70), so the pack is the same for every member and every language.
+ * ========================================================================= */
+
+/** Where the DEC rulings the layer quotes are held: canon, each ruling's `response:`. */
+export const DECISIONS_SOURCE = "docs/development/DECISIONS.md";
+/** The section of the Interaction Constructs headed "L · ACCESS AND LANGUAGE". */
+export const LANGUAGE_SECTION = "§L";
+
+/** The clauses a run drafting interface words, or reading one back into English, works under (R39 (a)–(e)). */
+export const INTERFACE_TRANSLATION_CLAUSES = Object.freeze([
+  /* (a): only the missing words, each a labelled draft, kept or corrected by a granted member. */
+  Object.freeze({ text: "Administrators, or members given the grant, have a translation workspace listing every interface "
+      + "word beside the group's language, gaps marked; the assistant drafts the missing ones as labelled drafts, a member "
+      + "who knows the language checks and adopts each, and without the assistant members type them.",
+    source: INTERACTION_SOURCE, section: LANGUAGE_SECTION }),
+  Object.freeze({ text: "where the translator can reach the assistant, it drafts every missing word (\"Draft · the "
+      + "assistant's\"); a granted speaker reads each against the English and keeps or corrects it; without the assistant, "
+      + "the granted member types them",
+    source: DECISIONS_SOURCE, section: "DEC-157" }),
+  Object.freeze({ text: "ordinary words show once kept", source: DECISIONS_SOURCE, section: "DEC-157" }),
+  /* (b): the word list's English under its key, the fixed term's note, no renaming within a language. */
+  Object.freeze({ text: "Every fixed word and phrase the screens use is held with a stable key and its protected mark in "
+      + "`docs/development/ux-substrate/screens/words.json`, built from the mockups' own sources",
+    source: INTERACTION_SOURCE, section: LANGUAGE_SECTION }),
+  Object.freeze({ text: "a word keeps its key when its English changes; `{name}` marks a placeholder.",
+    source: DECISIONS_SOURCE, section: "DEC-179" }),
+  Object.freeze({ text: "the fixed terms (the grades, \"Undetermined\", the queue's kinds, the acts' names) each carry a note "
+      + "on what they mean, so every language says the same thing; renaming words within a language stays out (option A), "
+      + "so cases read the same from group to group.",
+    source: DECISIONS_SOURCE, section: "DEC-127" }),
+  /* (c): official local names stay as they are; a published official translation is used with its source. */
+  Object.freeze({ text: "local words: official names of offices, laws, programs and places stay as they are, with an "
+      + "explanation in the member's language beside them on first use and on hover; where the place publishes an official "
+      + "translation of a name, it is used with its source, held with the place's researched rules and arriving with "
+      + "releases",
+    source: DECISIONS_SOURCE, section: "DEC-157" }),
+  Object.freeze({ text: "the group's own local words are its to translate as ordinary words.",
+    source: DECISIONS_SOURCE, section: "DEC-157" }),
+  /* (d), (e): a protected word kept unchanged shows once one speaker keeps it; changed or typed, it waits for the
+     second check, an administrator's reading of the assistant's translation back into English among them. */
+  Object.freeze({ text: "protected words (the fixed terms, the weights, every warning and dialog before an outward, signed "
+      + "or irreversible act, the court notice, every \"who can see this\" notice): kept as the assistant drafted them, they "
+      + "show once one speaker keeps them; changed from the draft, or typed without one, they show only after a second "
+      + "granted speaker confirms them, or an administrator confirms them after reading the assistant's translation of them "
+      + "back into English; until then members see the English",
+    source: DECISIONS_SOURCE, section: "DEC-157" }),
+  Object.freeze({ text: "Protected, as DEC-157 (4) sets: the weights, every mark, \"Undetermined, because…\", every act's "
+      + "name, and what an act does where it is signed, terminal, irreversible or outward (its explanation is the warning "
+      + "before it): 345.",
+    source: DECISIONS_SOURCE, section: "DEC-179" }),
+  Object.freeze({ text: "a protected word (fixed terms, weights, warnings before outward, signed or irreversible acts, the "
+      + "court notice, \"who can see this\" notices) changed from the assistant's draft waits for a second speaker or an "
+      + "administrator reading the assistant's back-translation, members seeing the English meanwhile",
+    source: INTERACTION_SOURCE, section: LANGUAGE_SECTION }),
+]);
+
+/** The label a translation draft carries: record-grammar's `PROPOSAL_STATES` table for it (its R50), unchanged and
+ *  named once here as a selector (R23); the sentences say the draft is shown as "Draft" and is not the group's wording
+ *  until a granted member adopts it, and that a machine can draft one and never adopt or confirm one. */
+export const INTERFACE_TRANSLATION_LABELS = PROPOSAL_STATES.translation;
+
+/* THE ACTS THE LAYER NAMES (R39), each by the requirement that defines it and named once as a SELECTOR over the
+   published catalogue, as R28's are: `instance-setup` is later in the order (P4), and its ops are declared only in L11
+   (T37-31), so in T37 a published pack renders this layer as its stated absence. `proposes` is the draft act, with
+   its two directions as `instance-setup` R67 names them; `leaves_to_a_member` the acts that make a word the group's. */
+export const INTERFACE_TRANSLATION_ACTS = Object.freeze({
+  proposes: Object.freeze([
+    Object.freeze({ id: "translationdraft", defined_by: "instance-setup R67",
+                    directions: Object.freeze(["to_language", "to_english"]) }),
+  ]),
+  leaves_to_a_member: Object.freeze([
+    Object.freeze({ id: "translationadopt",   defined_by: "instance-setup (T37-30)" }),
+    Object.freeze({ id: "translationconfirm", defined_by: "instance-setup (T37-30)" }),
+    Object.freeze({ id: "translationrevert",  defined_by: "instance-setup (T37-30)" }),
+  ]),
+});
+
+/** The act a run drafts an interface word through: while the plane publishes it not, the layer is a stated absence. */
+export const INTERFACE_TRANSLATION_ACT = INTERFACE_TRANSLATION_ACTS.proposes[0].id;
+
+/** THE `interface_translation` LAYER over the published catalogue (R39). Absent in R9's form while the catalogue holds
+ *  no `INTERFACE_TRANSLATION_ACT`; with it, every other act named above must be published too, or the render throws
+ *  naming it, as R28's does (R1). */
+export function interfaceTranslationLayer(catalog) {
+  const byId = catalogueById(catalog);
+  if (!byId.has(INTERFACE_TRANSLATION_ACT)) return {
+    load_when: "never, in this edition",
+    sourcing: "absent",
+    body: {},
+    /* THE ABSENCE, STATED IN THE PACK ITSELF, as the wizard scripts layer states its own. */
+    absent_because: `the plane's published catalogue holds no ${INTERFACE_TRANSLATION_ACT} act, the one act a run drafts `
+      + "the interface words a group's language lacks through, so this layer carries no doctrine for work no run can do.",
+  };
+  const read = actReader(byId, "interface translation", "the translation draft act");
+  return {
+    load_when: "a member granted a language asks for drafts of the interface words the group's translation of it lacks, "
+      + "or an administrator asks for a kept word read back into English",
+    sourcing: "authored",
+    body: {
+      clauses: INTERFACE_TRANSLATION_CLAUSES,
+      /* The mode a draft is answered in, run-rules' (its R21, R22), read and never typed, as writing help's. */
+      mode: DRAFT_MODE.mode,
+      labels: INTERFACE_TRANSLATION_LABELS,
+      acts: {
+        proposes: INTERFACE_TRANSLATION_ACTS.proposes.map((a) => ({ ...read(a), directions: a.directions })),
+        leaves_to_a_member: INTERFACE_TRANSLATION_ACTS.leaves_to_a_member.map(read),
+      },
+      held_by_code: "what no canon sentence above states is held by code, not by this text: a draft whose placeholders "
+        + "changed is dropped when it is recorded, a reading back into English is of exactly one kept word and records "
+        + "nothing, and every draft is recorded under the label above, by the modules that serve and record it.",
+      note: "this layer is INSTRUCTION, and this pack reads no account, grant, keep-away setting or word list: which "
+        + "account serves the member, whether the group keeps the assistant away, which member is granted a language "
+        + "and which words a draft is given are read for each call by the modules that serve it. A draft is recorded "
+        + "apart, labelled as machine work, and becomes the group's wording only by a granted member's act. A run "
+        + "ignoring every word here gets past nothing.",
     },
   };
 }
