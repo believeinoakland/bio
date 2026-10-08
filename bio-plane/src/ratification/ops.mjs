@@ -233,8 +233,8 @@ async function caseCeremony(req, stub, ctx, later) {
 /* R39 (K1316, K1317): each material the case commit held only in the evidence store (publication R57) is copied into
    the published bucket by its SHA-256, as `op=ratify` copies captures; a key already there is `present`. One the
    evidence store no longer holds, or whose copy fails, is `missing`: a re-sent op=caseratify retries it, and it never
-   changes `ok`, because the edition is committed. (T37; N757; K2206) A material held `derived`, an obscured copy
-   (case-carriage R1, R11), is copied the same way and counted alike, read from where case-carriage holds it
+   changes `ok`, because the edition is committed. (T37; N757; K2206) A material held `derived`, a copy carried in place of
+   its original (a photo's, case-carriage R1, R11, or, T39, a member document's, its R15, held beside it), is copied the same way and counted alike, read from where case-carriage holds it
    (`obscuredCopyKey`), never from `captures/`. `items` are `{sha, held}`; a bare SHA-256 is an `evidence` one. */
 export const obscuredCopyKey = (store, sha) => `${store}/obscured/${sha}`;
 const sourceKey = (store, sha, held) => (held === "derived" ? obscuredCopyKey(store, sha) : `${store}/captures/${sha}`);

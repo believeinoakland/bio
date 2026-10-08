@@ -60,7 +60,7 @@ export const RATIFY_MACHINE_FENCE_CHECKS = {
      ROW FOR EVERY BEARER CLASS rather than one per class: the refusal is keyed
      on how the caller ARRIVED (not through a session), so the class is named in
      the answer's `tokenClass` and the rule does not need a row per token. */
-  /* R47 (DEC-149, N664): "for this copy" is "for your group's Civicsmith"; awaiting T35's stamp (accepted red 4). */
+  /* R47 (DEC-149, N664): "for this copy" is "for your group's Civicsmith". */
   OPERATOR_TOKEN_CANNOT_RATIFY: {
     check: 'C-32.14',
     where: 'src/ratification/ops.mjs ratifyOp > is-operator-ratify-bundle',
@@ -232,8 +232,8 @@ export const RATIFY_SCOPE_CHECKS = {
       + 'the author or the attesting member to choose cover or name, or drop the finding that rests on it. Nothing '
       + 'was signed.',
   },
-  /* R46 (DEC-147 (3); T34-85): publishing at a set time. BOB's drafts, which the UX stream may re-word; awaiting T35's
-     stamp (accepted red 4). C-58.6 is `op=publishat`'s (R40); C-58.7–C-58.10 are the scheduled publisher's stops (R42). */
+  /* R46 (DEC-147 (3); T34-85): publishing at a set time. BOB's drafts, which the UX stream may re-word.
+     C-58.6 is `op=publishat`'s (R40); C-58.7–C-58.10 are the scheduled publisher's stops (R42). */
   SCHEDULE_UNCHECKABLE: {
     check: 'C-58.6',
     where: 'src/ratification/schedule.mjs scheduleUncheckableRefusal > is-schedule-uncheckable',
