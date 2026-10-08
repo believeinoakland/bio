@@ -33,3 +33,7 @@ Also: the refusal names the lapsed rows as `photos: [{ref, sha, why}]` (at most 
 ## J2 · REPORT
 
 T37-18's change is written and pushed (record above): R72 captures, R57's PHOTO_MARKS_CHANGED_SINCE (C-122.6), tests named, 4 checks clean, size 3,786. One thing holds COMPLETE: case-carriage's marksLapsed (T37-34) is not on tranche/T37, so every commit on this branch alone calls a missing method; my green run (publication 129/0, users unchanged) used a local preload standing in for it. When T37-34 is merged into tranche/T37, tell me (CHANGE: merge the tranche) and I merge, re-run without the preload, and post COMPLETE.
+
+## J3 · COMPLETE
+
+T37-18 complete on job/T37/publication (record above). Tranche merged @ 50f65ce6ac, preload dropped: publication 130/0 fail (1 todo, R30). R72 captures, R57 PHOTO_MARKS_CHANGED_SINCE (C-122.6, awaiting stamp), B3's bucket/store forwarding with its test. Users: case-carriage, public-read, ratification, review green; case-authoring 1, case-checker 5, case-disclosures 1 red, each the identical set on the tranche tip without my change (inherited, not mine). Four checks clean. Size 3,791.
