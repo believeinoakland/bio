@@ -144,32 +144,40 @@ test('R29 GET /providers answers the offered descriptors whole, the refused, the
   for (const d of b.offered) assert.ok(d.credentials.every((c) => typeof c === 'string' && /^[a-z_]+$/.test(c)), 'credential names only');
 });
 
-test('R19 each descriptor and generic template states config [{name, label, required}], each name once; a malformed list is DESCRIPTOR_MALFORMED config', () => {
+test('R19 each descriptor and generic template states config [{name, label, required, structured?}], each name once; a malformed list is DESCRIPTOR_MALFORMED config', () => {
   for (const d of PROVIDERS) {
     assert.ok(Array.isArray(d.config) && Object.isFrozen(d.config), d.provider_id);
     assert.deepEqual(new Set(d.config.map((f) => f.name)).size, d.config.length, `${d.provider_id}: each name once`);
     for (const f of d.config) {
-      assert.deepEqual(Object.keys(f), ['name', 'label', 'required'], d.provider_id);
+      assert.deepEqual(Object.keys(f).filter((k) => k !== 'structured'), ['name', 'label', 'required'], d.provider_id);
       assert.match(f.name, /^[a-z][a-z0-9_]*$/); assert.ok(typeof f.label === 'string' && f.label.length > 0);
       assert.equal(typeof f.required, 'boolean'); assert.ok(Object.isFrozen(f));
     }
   }
   const named = (id) => providerById(id).config.map((f) => `${f.name}${f.required ? '*' : ''}`);
   assert.deepEqual(Object.fromEntries(PROVIDERS.map((d) => [d.provider_id, named(d.provider_id)]).filter(([, l]) => l.length)), {
-    icap: ['engine_family*', 'handling*', 'source_urls', 'service', 'tls'],
-    'defender-storage': ['tenant_id*', 'storage_account*', 'container*'],
-    'falcon-sandbox': ['environment_id'], 'cloudflare-intel': ['account_id*'],
-    sentinel: ['tenant_id*', 'endpoint*', 'dcr_id*', 'stream*'], 'google-secops': ['project*', 'location*', 'instance*', 'log_type*'],
-    elastic: ['index'], 'syslog-tls': ['engine_family*', 'handling*', 'source_urls'],
-    'https-webhook': ['engine_family*', 'handling*', 'source_urls', 'path'],
+    scanii: ['region*'], 'metadefender-core': ['host*'],
+    icap: ['host*', 'engine_family*', 'handling*', 'source_urls', 'service', 'tls'],
+    'defender-storage': ['tenant_id*', 'storage_account*', 'container*'], 'sophos-intelix': ['region*'],
+    'opswat-deep-cdr': ['region*', 'host'], 'glasswall-halo': ['host*'], vmray: ['region*'],
+    'falcon-sandbox': ['region*', 'environment_id'], wildfire: ['region*'], 'cloudflare-intel': ['account_id*'],
+    'splunk-hec': ['host*'], sentinel: ['tenant_id*', 'endpoint*', 'dcr_id*', 'stream*'],
+    'google-secops': ['region*', 'project*', 'location*', 'instance*', 'log_type*'],
+    elastic: ['host*', 'index'], 'syslog-tls': ['host*', 'engine_family*', 'handling*', 'source_urls'],
+    'https-webhook': ['host*', 'engine_family*', 'handling*', 'source_urls', 'path'],
   }, 'the settings each adapter reads, by name');
   const cases = [(d) => { delete d.config; }, (d) => { d.config = {}; }, (d) => { d.config = [{ name: 'x', label: 'X' }]; },
     (d) => { d.config = [{ name: 'x', label: '', required: true }]; }, (d) => { d.config = [{ name: 'X y', label: 'X', required: true }]; },
     (d) => { d.config = [{ name: 'x', label: 'X', required: 'yes' }]; }, (d) => { d.config = [{ name: 'x', label: 'X', required: true, value: 1 }]; },
-    (d) => { d.config = [{ name: 'x', label: 'X', required: true }, { name: 'x', label: 'Y', required: false }]; }, (d) => { d.config = [null]; }];
+    (d) => { d.config = [{ name: 'x', label: 'X', required: true }, { name: 'x', label: 'Y', required: false }]; }, (d) => { d.config = [null]; },
+    (d) => { d.config = [{ name: 'x', label: 'X', required: true, structured: 'object' }]; }, (d) => { d.config = [{ name: 'x', label: 'X', required: true, structured: null }]; },
+    (d) => { d.config = [{ name: 'x', label: 'X', structured: 'list' }]; }];
   for (const change of cases) { const d = good(); change(d); assert.deepEqual(validateDescriptor(d), { ok: false, code: 'DESCRIPTOR_MALFORMED', field: 'config' }); }
-  const d = good(); d.config = [{ name: 'x', label: 'X', required: true }];
-  assert.deepEqual(validateDescriptor(d), { ok: true });
+  for (const config of [[{ name: 'x', label: 'X', required: true }], [{ name: 'x', label: 'X', required: false, structured: 'list' }],
+    [{ name: 'x', label: 'X', required: true, structured: 'handling' }]]) {
+    const d = good(); d.config = config;
+    assert.deepEqual(validateDescriptor(d), { ok: true }, JSON.stringify(config));
+  }
 });
 
 test('R21 the spec\'s config: each required field present, else CONFIG_MISSING naming it and nothing sent; a field the list does not name is never sent', async () => {
@@ -185,7 +193,8 @@ test('R21 the spec\'s config: each required field present, else CONFIG_MISSING n
   const cases = [['defender-storage', 'scan'], ['cloudflare-intel', 'reputation'], ['sentinel', 'forward'], ['google-secops', 'forward'], ['icap', 'scan'],
     ['syslog-tls', 'forward'], ['https-webhook', 'forward']];
   for (const [id, how] of cases) {
-    for (const f of providerById(id).config.filter((x) => x.required)) {
+    // `host` and `region` are the spec's own fields (R19, T38): their absence is R21's PROVIDER_UNKNOWN or REGION_UNKNOWN.
+    for (const f of providerById(id).config.filter((x) => x.required && x.name !== 'host' && x.name !== 'region')) {
       for (const absent of [undefined, null, '']) {
         const tool = { ...s[id], config: { ...s[id].config, [f.name]: absent } };
         assert.deepEqual(await call[how](tool), [400, { ok: false, code: 'CONFIG_MISSING', field: f.name, provider_id: id }], `${id} ${f.name}`);
@@ -212,7 +221,7 @@ test('R29 GET /providers answers each descriptor\'s and each generic template\'s
   for (const d of b.offered) assert.deepEqual(d.config, JSON.parse(JSON.stringify(providerById(d.provider_id).config)), d.provider_id);
   for (const d of b.transports) {
     for (const name of ['engine_family', 'handling']) assert.ok(d.config.some((f) => f.name === name && f.required), `${d.provider_id}: the administrator states its ${name} (K2175)`);
-    assert.ok(!d.config.some((f) => f.name === 'host' || f.name === 'region'), 'host and region are the spec\'s own fields');
+    assert.ok(d.config.some((f) => f.name === 'host' && f.required), `${d.provider_id}: the template's address is asked (T38)`);
   }
 });
 
@@ -231,4 +240,71 @@ test('R31 engine families: clamav\'s is ["clamav"]; differentEngine is true exac
   assert.equal(differentEngine(clam, v('icap', 'kaspersky scan engine')), true);
   assert.equal(differentEngine(v('vmray', 'vmray'), v('joe-sandbox', 'joe-sandbox')), true, 'not reported versions still have families');
   for (const x of [null, undefined, {}, 'clamav', { tool: 'x' }]) assert.equal(differentEngine(x, clam), false);
+});
+
+// R19 (T38; N791, K2239): what a settings page that asks only the `config` list needs to add each tool.
+const needsAddress = (d) => d.template === true || d.host_from_spec === true
+  || (!Array.isArray(d.hosts) && Object.values(d.hosts).some((l) => l.length === 0));
+const regional = (d) => !Array.isArray(d.hosts);
+
+test('R19 every generic template and every descriptor needing an address hosts does not give lists host, labelled and required (region where it applies)', () => {
+  const addressed = PROVIDERS.filter(needsAddress);
+  assert.deepEqual(ids(addressed), ['metadefender-core', 'icap', 'opswat-deep-cdr', 'glasswall-halo', 'splunk-hec', 'elastic', 'syslog-tls', 'https-webhook']);
+  for (const d of addressed) {
+    const host = d.config.find((f) => f.name === 'host');
+    assert.ok(host, `${d.provider_id} lists host`);
+    assert.ok(typeof host.label === 'string' && /address/i.test(host.label), `${d.provider_id}: host labelled`);
+    // Required wherever the address is always needed; opswat-deep-cdr needs one only in its `core` region.
+    const always = d.template === true || d.host_from_spec === true;
+    assert.equal(host.required, always, `${d.provider_id}: host required ${always}`);
+    if (!always) assert.match(host.label, /Core only/);
+  }
+  assert.ok(providerById('splunk-hec').config.some((f) => f.name === 'host' && f.required), 'splunk-hec (host_from_spec) asks its collector');
+  for (const d of PROVIDERS.filter((x) => !needsAddress(x))) assert.ok(!d.config.some((f) => f.name === 'host'), `${d.provider_id}: hosts give its address`);
+  // `region` where it applies: every descriptor whose hosts are keyed by region, required, its label naming each region.
+  for (const d of PROVIDERS) {
+    const region = d.config.find((f) => f.name === 'region');
+    if (!regional(d)) { assert.equal(region, undefined, `${d.provider_id}: no regions`); continue; }
+    assert.ok(region && region.required === true, `${d.provider_id} lists region, required`);
+    for (const r of Object.keys(d.hosts)) assert.ok(region.label.split(/[ ,:]+/).includes(r), `${d.provider_id}: label names ${r}`);
+  }
+});
+
+test('R19 a config entry whose value is not one text says so: a template\'s engine_family and source_urls structured "list", its handling structured "handling"; every other entry one text', () => {
+  for (const d of PROVIDERS) {
+    for (const f of d.config) {
+      const want = d.template && (f.name === 'engine_family' || f.name === 'source_urls') ? 'list' : d.template && f.name === 'handling' ? 'handling' : undefined;
+      assert.equal(f.structured, want, `${d.provider_id} ${f.name}`);
+    }
+  }
+  for (const id of ['icap', 'syslog-tls', 'https-webhook']) {
+    const by = Object.fromEntries(providerById(id).config.map((f) => [f.name, f]));
+    assert.deepEqual([by.engine_family.structured, by.handling.structured, by.source_urls.structured], ['list', 'handling', 'list'], id);
+  }
+});
+
+test('R19 R21 host and region in a config list are the spec\'s own fields: read from the spec, checked as R21 says, never sent inside config', async () => {
+  const net = vendorNet();
+  const bucket = memoryBucket();
+  const deps = depsWith({ bucket, fetch: net.fetch });
+  const s = specs();
+  const RECORD = { period: { from: '2026-10-07T10:00:00Z', to: '2026-10-07T11:00:00Z' }, counts: { files_scanned: 1 } };
+  const forward = async (tool) => { const r = await handle(post('/provider/forward', { tool, record: RECORD }), deps); return [r.status, await r.json()]; };
+  // The spec's top-level host completes the call; nothing under config.host is needed.
+  assert.equal((await forward(s['splunk-hec']))[1].ok, true);
+  // No spec host: R21's PROVIDER_UNKNOWN, also when config carries one; no spec region: REGION_UNKNOWN.
+  for (const id of ['splunk-hec', 'elastic', 'syslog-tls', 'https-webhook']) {
+    assert.deepEqual(await forward({ ...s[id], host: undefined, config: { ...s[id].config, host: s[id].host } }), [400, { ok: false, code: 'PROVIDER_UNKNOWN', provider_id: id }], id);
+  }
+  assert.deepEqual(await forward({ ...s['google-secops'], region: undefined, config: { ...s['google-secops'].config, region: s['google-secops'].region } }),
+    [400, { ok: false, code: 'REGION_UNKNOWN', provider_id: 'google-secops' }]);
+  // A region the descriptor does not state, a prototype key among them, is REGION_UNKNOWN, never a way to name a host (R12).
+  for (const region of ['toString', 'constructor', '__proto__', 'hasOwnProperty']) {
+    assert.deepEqual(await forward({ ...s['google-secops'], region, host: 'elsewhere.example' }), [400, { ok: false, code: 'REGION_UNKNOWN', provider_id: 'google-secops' }], region);
+  }
+  assert.ok(!net.seen.some((r) => r.url.includes('elsewhere.example')));
+  // The webhook's call carries no `host` or `region` setting from config.
+  const seen = net.seen.length;
+  assert.equal((await forward({ ...s['https-webhook'], config: { ...s['https-webhook'].config, host: 'HOST-IN-CONFIG', region: 'REGION-IN-CONFIG' } }))[1].ok, true);
+  for (const r of net.seen.slice(seen)) assert.ok(!`${r.url}${r.text}`.includes('-IN-CONFIG'), 'config host and region never leave');
 });

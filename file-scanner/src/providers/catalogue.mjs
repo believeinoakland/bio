@@ -4,6 +4,7 @@
  * template: the administrator's statement (`spec.config.engine_family`, `spec.config.handling`) and the spec's `host`
  * complete it, and R19 validates the result (`resolveDescriptor`). */
 import { validateDescriptor, normaliseFamily } from './descriptor.mjs';
+import { hostPart } from './net.mjs';
 
 const READ_ON = '2026-10-07';
 const NEVER = Object.freeze(['file_name', 'member_identity', 'ip_address']);
@@ -11,17 +12,25 @@ const ADMIN = 'stated by the administrator';
 
 const descriptor = (d) => Object.freeze({
   mode_required: null, mode_check: null, credentials: [], read_on: READ_ON, ...d,
-  config: Object.freeze((d.config || []).map((f) => Object.freeze({ ...f }))),
+  config: Object.freeze((d.config || []).map((f) => Object.freeze(f === REGION
+    ? { ...f, label: `Region: one of ${Object.keys(d.hosts).join(', ')}` } : { ...f }))),
   handling: Object.freeze({ never_sends: NEVER, sub_processors: [], ...d.handling }),
 });
 
-// R19 (N777): the settings each adapter reads from the spec's `config`, by name, so a settings page asks each one.
-const field = (name, label, required) => ({ name, label, required });
+// R19 (N777): the settings each adapter reads from the spec's `config`, by name, so a settings page asks each one; a
+// value that is not one text says its shape (`structured`, T38), so the page asks it field by field.
+const field = (name, label, required, structured) => ({ name, label, required, ...(structured ? { structured } : {}) });
+// R19 (T38; N791, K2239): the address an adapter needs that `hosts` does not give, and the region `hosts` is keyed by.
+// Both stand for the spec's own `host` and `region` (R21), which a settings page sends under these names.
+const HOST = (label) => field('host', label, true);
+// Its label names the regions, filled from the descriptor's own `hosts` (descriptor(), below).
+const REGION = Object.freeze({ name: 'region', label: null, required: true });
 // A template's own statement (K2175): its engine family and its handling, both required, as the tool's maker states them.
-const TEMPLATE_CONFIG = () => [
-  field('engine_family', 'The engines the tool runs, as its maker names them', true),
-  field('handling', 'The tool\'s statement of what it receives, keeps and shares', true),
-  field('source_urls', 'Where that statement is published', false),
+const TEMPLATE_CONFIG = (host) => [
+  HOST(host),
+  field('engine_family', 'The engines the tool runs, as its maker names them', true, 'list'),
+  field('handling', 'The tool\'s statement of what it receives, keeps and shares', true, 'handling'),
+  field('source_urls', 'Where that statement is published', false, 'list'),
 ];
 const AZURE_TENANT = field('tenant_id', 'Microsoft Entra tenant ID', true);
 
@@ -42,7 +51,7 @@ const INTELIX = {
   vendor: 'Sophos Ltd', product: 'SophosLabs Intelix', transport: 'https', reach: 'public',
   hosts: { us: ['us.api.labs.sophos.com', 'api.labs.sophos.com'], de: ['de.api.labs.sophos.com', 'api.labs.sophos.com'],
     au: ['au.api.labs.sophos.com', 'api.labs.sophos.com'] },
-  engine_family: ['sophos'], credentials: ['client_id', 'client_secret'],
+  engine_family: ['sophos'], credentials: ['client_id', 'client_secret'], config: [REGION],
   handling: { sends: ['file_bytes'], recipient: 'Sophos Ltd', sub_processors: [],
     region: 'the region chosen; dynamic analysis traffic may be routed to another region; malicious files to the SophosLabs Hub (UK)',
     file_retention: 'clean files up to 30 days; malicious files retained indefinitely in the SophosLabs Hub (UK)',
@@ -60,6 +69,7 @@ export const PROVIDERS = Object.freeze([
       ap1: ['api-ap1.scanii.com'], ap2: ['api-ap2.scanii.com'], ca1: ['api-ca1.scanii.com'] },
     // Its own engine with Sophos as the second (N705 §2.1); one family with Sophos Intelix (K1946 T7).
     engine_family: ['scanii', 'sophos'], credentials: ['api_key', 'api_secret'], test_probe: { kind: 'eicar' },
+    config: [REGION],
     handling: { sends: ['file_bytes'], recipient: 'Uva Software, LLC', sub_processors: ['Amazon Web Services'],
       region: 'chosen by the group: US1, EU1, EU2, AP1, AP2 or CA1; content never leaves it',
       file_retention: 'deleted on completion of analysis', result_retention: 'up to 400 days in the processing region',
@@ -80,14 +90,16 @@ export const PROVIDERS = Object.freeze([
   descriptor({ provider_id: 'metadefender-core', vendor: 'OPSWAT, Inc.', product: 'MetaDefender Core', kinds: ['scan'],
     transport: 'https', reach: 'tunnel', hosts: [], host_from_spec: true, per_engine: true,
     engine_family: METADEFENDER_ENGINES, credentials: ['api_key'], test_probe: { kind: 'eicar' },
+    config: [HOST('MetaDefender Core server address (host, or host:port)')],
     handling: { sends: ['file_bytes'], recipient: 'the organization\'s own MetaDefender Core server',
       region: 'the organization\'s own servers', file_retention: 'as the organization configures its server',
       result_retention: 'as the organization configures its server', sample_sharing: 'none' },
     licence_note: 'the organization\'s own licence', source_urls: ['https://www.opswat.com/docs/mdcore/metadefender-core'] }),
   descriptor({ provider_id: 'icap', vendor: ADMIN, product: 'any ICAP server (RFC 3507)', kinds: ['scan'],
     transport: 'icap', reach: 'public', hosts: [], template: true, engine_family: [ADMIN], test_probe: { kind: 'eicar' },
-    config: [...TEMPLATE_CONFIG(), field('service', 'ICAP service name (default avscan)', false),
-      field('tls', 'Connect over TLS (port 11344 unless the address names one)', false)],
+    config: [...TEMPLATE_CONFIG('ICAP server address (host, or host:port; port 1344, or 11344 over TLS, unless named)'),
+      field('service', 'ICAP service name (default avscan)', false),
+      field('tls', 'Connect over TLS: yes or no (default no)', false)],
     handling: { sends: ['file_bytes'], recipient: ADMIN, region: ADMIN, file_retention: ADMIN, result_retention: ADMIN,
       sample_sharing: 'none' },
     licence_note: 'the organization\'s own server and licence', source_urls: [] }),
@@ -110,6 +122,8 @@ export const PROVIDERS = Object.freeze([
   descriptor({ provider_id: 'opswat-deep-cdr', vendor: 'OPSWAT, Inc.', product: 'Deep CDR (MetaDefender Cloud or Core)',
     kinds: ['cdr'], transport: 'https', reach: 'public', hosts: { cloud: ['api.metadefender.com'], core: [] },
     max_bytes: 146_800_640, engine_family: ['opswat-deep-cdr'], credentials: ['api_key'],
+    // Cloud's address is catalogued; Core's is the organization's own server, so its host is asked only for Core.
+    config: [REGION, field('host', 'MetaDefender Core server address (host, or host:port; Core only)', false)],
     test_probe: { kind: 'macro_document' }, mode_required: MD_PRIVATE, mode_check: MD_CHECK,
     handling: { sends: ['file_bytes'], recipient: 'OPSWAT, Inc. (Cloud), or the organization\'s own Core server',
       sub_processors: 'not stated', region: 'not stated (Cloud); the organization\'s own servers (Core)',
@@ -120,6 +134,7 @@ export const PROVIDERS = Object.freeze([
   descriptor({ provider_id: 'glasswall-halo', vendor: 'Glasswall Solutions Ltd', product: 'Glasswall Halo', kinds: ['cdr'],
     transport: 'https', reach: 'public', hosts: [], host_from_spec: true, max_bytes: 1_073_741_824,
     engine_family: ['glasswall'], credentials: ['api_token'], test_probe: { kind: 'macro_document' },
+    config: [HOST('Glasswall Halo API address (host, or host:port)')],
     handling: { sends: ['file_bytes'], recipient: 'the Glasswall Halo deployment the organization runs or subscribes to',
       region: 'where that deployment runs', file_retention: 'removed according to the deployment\'s file retention policy',
       result_retention: 'the analysis report, as the deployment keeps it', sample_sharing: 'none' },
@@ -140,6 +155,7 @@ export const PROVIDERS = Object.freeze([
   descriptor({ provider_id: 'vmray', vendor: 'VMRay GmbH', product: 'VMRay Analyzer (cloud)', kinds: ['sandbox'],
     transport: 'https', reach: 'public', hosts: { us: ['cloud.vmray.com'], de: ['eu.cloud.vmray.com'] },
     max_bytes: 104_857_600, engine_family: ['vmray'], credentials: ['api_key'], test_probe: { kind: 'eicar' },
+    config: [REGION],
     handling: { sends: ['file_bytes'], recipient: 'VMRay GmbH', region: 'US or Germany, as the account is hosted',
       file_retention: 'not stated beyond the account', result_retention: 'kept in the account', sample_sharing: 'none' },
     licence_note: 'the organization\'s own subscription', source_urls: ['https://www.vmray.com/?p=3550'] }),
@@ -147,7 +163,8 @@ export const PROVIDERS = Object.freeze([
     kinds: ['sandbox'], transport: 'https', reach: 'public', max_bytes: 104_857_600,
     hosts: { 'us-1': ['api.crowdstrike.com'], 'us-2': ['api.us-2.crowdstrike.com'], 'eu-1': ['api.eu-1.crowdstrike.com'] },
     engine_family: ['crowdstrike'], credentials: ['client_id', 'client_secret'], test_probe: { kind: 'eicar' },
-    config: [field('environment_id', 'Sandbox environment ID (default 160, Windows 10 64-bit)', false)],
+    config: [REGION,
+      field('environment_id', 'Sandbox environment ID (default 160, Windows 10 64-bit)', false)],
     mode_required: Object.freeze({ params: Object.freeze({ is_confidential: 'true' }),
       description: 'community access off: every upload confidential' }),
     mode_check: 'GET /falconx/entities/settings/v1 before each send: community access is off for the API client',
@@ -163,6 +180,7 @@ export const PROVIDERS = Object.freeze([
       uk: ['uk.wildfire.paloaltonetworks.com'], ca: ['ca.wildfire.paloaltonetworks.com'],
       au: ['au.wildfire.paloaltonetworks.com'] },
     engine_family: ['wildfire'], credentials: ['api_key'], test_probe: { kind: 'eicar' },
+    config: [REGION],
     handling: { sends: ['file_bytes'], recipient: 'Palo Alto Networks, Inc.',
       region: 'the regional cloud chosen; some metadata shared across regional clouds',
       file_retention: 'benign 14 days; malicious 10 years', result_retention: 'signatures and reports kept indefinitely',
@@ -193,6 +211,7 @@ export const PROVIDERS = Object.freeze([
   descriptor({ provider_id: 'splunk-hec', vendor: 'Splunk LLC', product: 'Splunk HTTP Event Collector', kinds: ['log_sink'],
     transport: 'https', reach: 'public', hosts: [], host_from_spec: true, engine_family: ['splunk-hec'],
     credentials: ['hec_token'], test_probe: { kind: 'zero_counts' },
+    config: [HOST('Splunk HTTP Event Collector address (host:port; the collector listens on 8088 unless changed)')],
     handling: { sends: ['counts'], recipient: 'the organization\'s own Splunk', region: 'where it runs',
       file_retention: 'no file is sent', result_retention: 'as the organization keeps its logs', sample_sharing: 'none' },
     licence_note: 'the organization\'s own Splunk', source_urls: ['https://help.splunk.com/en/splunk-enterprise/get-data-in/collect-http-event-data/use-curl-to-manage-http-event-collector-tokens-events-and-services'] }),
@@ -210,7 +229,8 @@ export const PROVIDERS = Object.freeze([
     hosts: { us: ['us-chronicle.googleapis.com', 'oauth2.googleapis.com'], europe: ['europe-chronicle.googleapis.com', 'oauth2.googleapis.com'],
       'asia-southeast1': ['asia-southeast1-chronicle.googleapis.com', 'oauth2.googleapis.com'] },
     engine_family: ['google-secops'], credentials: ['service_account_key'], test_probe: { kind: 'zero_counts' },
-    config: [field('project', 'Google Cloud project ID', true), field('location', 'Instance location', true),
+    config: [REGION,
+      field('project', 'Google Cloud project ID', true), field('location', 'Instance location', true),
       field('instance', 'Instance (customer) ID', true), field('log_type', 'Log type the counts are imported as', true)],
     handling: { sends: ['counts'], recipient: 'Google LLC (the organization\'s own instance)', region: 'the instance\'s region',
       file_retention: 'no file is sent', result_retention: 'as the instance keeps its logs', sample_sharing: 'none' },
@@ -218,20 +238,21 @@ export const PROVIDERS = Object.freeze([
   descriptor({ provider_id: 'elastic', vendor: 'Elasticsearch B.V.', product: 'Elastic (_bulk API)', kinds: ['log_sink'],
     transport: 'https', reach: 'public', hosts: [], host_from_spec: true, engine_family: ['elastic'],
     credentials: ['api_key'], test_probe: { kind: 'zero_counts' },
-    config: [field('index', 'Index the counts are written to (default civicsmith-security-counts)', false)],
+    config: [HOST('Elasticsearch address (host, or host:port)'),
+      field('index', 'Index the counts are written to (default civicsmith-security-counts)', false)],
     handling: { sends: ['counts'], recipient: 'the organization\'s own Elastic deployment', region: 'where it runs',
       file_retention: 'no file is sent', result_retention: 'as the organization keeps its logs', sample_sharing: 'none' },
     licence_note: 'the organization\'s own deployment', source_urls: ['https://www.elastic.co/docs/api/doc/elasticsearch/operation/operation-bulk'] }),
   descriptor({ provider_id: 'syslog-tls', vendor: ADMIN, product: 'any syslog collector (RFC 5424 over TLS)', kinds: ['log_sink'],
     transport: 'syslog_tls', reach: 'public', hosts: [], template: true, engine_family: ['syslog'],
-    test_probe: { kind: 'zero_counts' }, config: TEMPLATE_CONFIG(),
+    test_probe: { kind: 'zero_counts' }, config: TEMPLATE_CONFIG('Syslog collector address (host, or host:port; port 6514 unless named)'),
     handling: { sends: ['counts'], recipient: ADMIN, region: ADMIN, file_retention: 'no file is sent',
       result_retention: ADMIN, sample_sharing: 'none' },
     licence_note: 'the organization\'s own collector', source_urls: [] }),
   descriptor({ provider_id: 'https-webhook', vendor: ADMIN, product: 'any HTTPS endpoint taking a JSON POST', kinds: ['log_sink'],
     transport: 'https', reach: 'public', hosts: [], template: true, engine_family: ['webhook'], credentials: ['token'],
     test_probe: { kind: 'zero_counts' },
-    config: [...TEMPLATE_CONFIG(), field('path', 'Path on the endpoint (default /)', false)],
+    config: [...TEMPLATE_CONFIG('Endpoint address (host, or host:port)'), field('path', 'Path on the endpoint (default /)', false)],
     handling: { sends: ['counts'], recipient: ADMIN, region: ADMIN, file_retention: 'no file is sent',
       result_retention: ADMIN, sample_sharing: 'none' },
     licence_note: 'the organization\'s own endpoint', source_urls: [] }),
@@ -265,7 +286,7 @@ export function resolveDescriptor(d, spec) {
   const host = spec && spec.host;
   // A statement that is not a list is left as given, so R19 refuses it by name rather than this throwing.
   const family = (v) => (Array.isArray(v) ? normaliseFamily(v) : v);
-  const resolved = { ...d, template: undefined, hosts: host ? [String(host).split(':')[0]] : [],
+  const resolved = { ...d, template: undefined, hosts: host ? [hostPart(host)] : [],
     engine_family: d.kinds.includes('scan') ? family(config.engine_family) : family(config.engine_family || d.engine_family),
     handling: { ...d.handling, ...(config.handling || {}) }, source_urls: config.source_urls || [] };
   delete resolved.template;
