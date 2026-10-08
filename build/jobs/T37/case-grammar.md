@@ -14,7 +14,7 @@ Measured with my tests: about 31 KB requirements + 153 KB code + 187 KB tests (+
 - **Tests** (`obscured.test.mjs`, K874): R12 round-trip and its negative controls; R13 a `/3` case file passing, one negative control per departure (`obscured_unnamed`, `obscured_copy_missing`, `original_carried` for each of the four kinds), `obscured` in `/2` and `/1` manifests, a `/2` file read as written; R14 the copy and label, and the byte-identical negative control. `casefile.test.mjs` updated to R12's `obscured: null` and R13's `/3`; the `/2` tests now run on `/2` explicitly (and `/3`). Fixture: `photo` and `fileFormat` options.
 - Nothing deferred.
 
-## Found in other modules (REPORT J3)
+## Found in other modules (REPORT J2; COMPLETE J3 calls it "J3" in error)
 
 My merge turns these red, each from R12/R13's new text, none a flaw of mine; each owner's T37 job has the entry that clears it (all were green before my change, measured on this branch):
 - `case-checker` (T37-20): `program.test.mjs`:19 R13 (`program.mjs` stale, red 18, accepted; never rebuilt by hand); `spec.test.mjs`:13 and :25 (two arms) pin `/2` as the current format and no kind beyond it (its R14 `/3`); `standards-offline.test.mjs`:57 expects the case file `public-read` writes to state `CASE_FILE_FORMAT`, now `/3`, while public-read still writes `/2` (clears at T37-42, then the checker's spec). The checker should pass `{materials}` to `caseFileManifestCheck` (its R8).
