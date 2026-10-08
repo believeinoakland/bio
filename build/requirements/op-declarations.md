@@ -172,6 +172,7 @@ Terms. An **op** is a name the instance answers. An **op spec** is `{classes, ma
 - `membership` and `tasks` (T34): the ops R22 and R23 declare. DEC-139's screen registry file, for R21's aliases (read by the tests; the alias table is this module's own data, R5).
 - (T35) The owners of R30's ops, each earlier in `build/modules.json`: `acquisition` and `capture` (the archive ops), `hypotheses`, `retrieval`, `entities`, `public-read`, `credentials`, `instance-setup`, and `affordances` (`agentpack`'s spec equals `affordances`'). `retrieval`, `acquisition`, `capture`, `public-read` and `instance-setup` are new edges for R6's totality tests, BOB's to add at L11's START (P17).
 - T33's new modules and the existing ones R17–R20 name: their ops maps, read for R6's totality (T33-88). The op names R17–R20 give are each owner's as its job builds them; a name that changes there changes here with it.
+- (T36; K2130, K2152) `file-safety`: its ops, read for R6's totality (R32). `standards`, `calculations` (R31); `credentials`, `affordances` (R33, R34).
 
 ### Invariants
 

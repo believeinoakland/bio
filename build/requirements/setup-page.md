@@ -69,6 +69,7 @@ The page a group first meets at the root of its Civicsmith: claim, sign-in, enro
 - `action-grammar`: `RISK_TIERS`, `riskTierState` (its R1; R5, R7).
 - `jurisdictions`: `COUNTERPARTY_LEVELS` (R5).
 - For its tests only: `capture` (`INFORMATION_GRAMMAR`; R9), `membership` and `credentials` (R8), `record-core` (the storage shim).
+- (T36; K2130, K2152) For its tests only: `file-safety` (R30's ops in their documented shapes). `credentials`: `aikeepaway`, `aikeepawaystate` (R18, R24).
 
 ### Invariants
 

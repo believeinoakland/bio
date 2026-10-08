@@ -123,6 +123,7 @@ Terms. An **act** is `{id, label, weight, types, applies(facts, type), prompt?}`
 - `case-import` (N520, N522): its op map, the ops R35 and R38 (N534) grade, and the backing of each rung (R19).
 - `ratification` and `publication` (T34-75): their op maps, the ops R42 grades (`publishat`; `publishatmove`, `publishatcancel`, `publishschedule`), and the backing of each rung (R19). `hypotheses` (T34-75): its op map, the ops R43 grades, and `HYPOTHESIS_NO_REASON` (its R2) for R19.
 - `wizard-scripts` (N528): its op map, the ops R37 grades, the backing of each rung (R19), and `wizardsAt` (its R11) with the registered screens (its R13) for R17's `screens` and `wizard_scripts`.
+- (T36; K2130, K2152) `file-safety`: its ops' backing and totality for R12, R19 (`op-grades` R24; `HOLD_NO_REASON`, its R17). `credentials`: `aikeepaway`'s backing (`op-grades` R25).
 
 ### Invariants
 

@@ -156,6 +156,7 @@ Terms. An **op spec** is `{classes, machineClasses?, mutating}`, with the op's s
 - `wizard-scripts` (N528): its ops map (R50), `tallyRefusal` (its R16; R50) and its check family (R22, R43).
 - `case-import` (N520): its ops map (R49; the watch ops, R52, N534) and its check family (R22, R43). `accepted-work` (N522): its check family, C-21.4 and C-21.5 (R22, R43; K1310). `case-checker`'s public reads reach the door through `public-read`'s registration (its R18), with no use of this module's.
 - `case-disclosures` (N529, K1333): its check family, C-120.1–C-120.8 and C-120.10–C-120.13 (`CASE_DISCLOSURE_CHECKS`, its R22), moved whole from `case-authoring` (R22, R43): `CHECK_FAMILY_FILES` reads `src/case-disclosures/checks.mjs` directly before `case-authoring`'s, at its place in `build/modules.json` (R43's totality, already not yet met: T29; its wording is unchanged).
+- (T36; K2130, K2152) `file-safety`: `fileSafetyOps`, `openOriginal`, `reputationTool` (its R8, R34; R61, R62, R64).
 
 ### Invariants
 

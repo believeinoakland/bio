@@ -40,6 +40,7 @@ Terms. **The door** is `dispatch(req)`, reached only from the Worker through `pl
 - Measured in C-2: `record-grammar`, `record-core`, `membership` (`existenceAct`, R2), `credentials` (`accountFor`, `aiGrantAdmit`; R10, R11), `promotion` (`promote`, R7), `provenance` (`testimonySlot`, R5), `capture` (`pullKnock`, R7), `sources`, `ai-runs` (`aiUseCheck`, `countAskUsage`; R11), `answers` (`check`, R11), `wizard-scripts` (`tallyRefusal`, R8), `affordances`, `tasks`, `queue`, `instance-setup` (`assistantGate`, R10), `answer-envelope` (`DISPATCH_CHECKS` and the rows of C-69.4, C-69.5, R4, R6; its R8).
 - `actions`' `purgeHeld` (R4) and the routes' own maps are reached as `plane` composes them (the `membershipOps` pattern, R1); `plane` uses this module and is not a use of it (P4).
 - Used by `plane` (`plane/store.mjs`:69–70).
+- (T36; K2152) `file-safety`: its reads' names, for R2's route list in its tests only.
 
 ### Invariants
 

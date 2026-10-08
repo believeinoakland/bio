@@ -48,6 +48,7 @@ The instance's composition root. It builds every module on one Durable Object's 
 - `wizard-scripts` (N528): its factory, `migrate()`, `wizardRegister`, `requiredFailures` and ops map (R19); `op-grades`: `MACHINE_REFUSALS` (R19; K2043).
 - `case-disclosures` (N529): `caseDisclosuresOf` (R18). `case-carriage` (N532): none directly; `publication`'s factory creates it (R18).
 - T33-90: every module R21–R23 name, through its factory, `migrate()`, start and ops map; `docprofile`'s registry seam and the five readers' register functions (R22); `people.registerRosterSource` (R23).
+- (T36; K2130, K2152) `file-safety` (R26, R29): built at its place, migrated, started, its ops spread. `file-scanner` (R27): the `FILE_SCANNER` binding's service.
 
 ### Invariants
 

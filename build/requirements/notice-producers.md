@@ -39,6 +39,7 @@ Terms. An **item**, a **home set**, the item's `class` (FINDING, OBLIGATION, CON
 Rule 3's list: `queue-producers` (the item shape and homes, as its R8), `people` (`CHK-` results, their gates and per-project switches), `money-checks` (detector results, gates, switches), `duties` (adopted duties' occurrences and their states), `answers` (`standingAnswersFor`, its R20), `inquiry` (dated waits).
 **Not in Rule 3, needed by this draft (open):** `membership` (sight, `projectOwners`, `activeAdmins`), `civil-time` (the local day for R5's and R6's `due`).
 (T35) `credentials`: `securityLevel` and `securityMap` (its R45; R12). `following`: `policyChanges` (its R21; R13). Both edges are in `modules.json` (plan T35 rule 8). `standards`: the author of a policy's declaration (its R1; R13's recipient), a `modules.json` edge BOB adds at L11's START (P17).
+- (T36; K2130, K2152) `file-safety`: `scanFindings` (its R15), `findingKind` (its R38), `threatOf` (its R6), `securityToolEvents`, `securityTools` (its R27, R31); R14, R15. `provenance`: `homeOf` (R14's home). `following`: `policyChanges`' `since` (R13).
 
 ### Invariants
 
