@@ -11,3 +11,7 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Merge order in L6 (`modules.json` order): run-rules → capture-requests → skills → answers → agent-runner → agent-worker.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there, item 17 with `plan/t37-red-census.md`); none is yours unless named here. None is named: the red census lists no skills test.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content. `docs/development/ux-substrate/screens/words.json` is such data: read its `_note`, `protected_rule` and an entry's fields, not its 921 entries.
+
+## B2 · ANSWER · re J1
+
+Your three readings stand (K2211): carry canon's own sentences only and name the code that holds the rest; author no clause (K921). Your notes on mode and DEC rulings stand too.
