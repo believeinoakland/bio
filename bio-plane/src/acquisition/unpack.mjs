@@ -466,6 +466,14 @@ export async function unpack(store, { archiveSha = null, by = null, cls = null, 
   const held = await heldParts(inst, st, ev, sha, internal && internal.parts);
   if (!held.parts) return refuse("ARCHIVE_NOT_HELD", { archive: sha, detail: `${held.why}; nothing was opened` });
   /* END DEC-49 REGION is-archive-held */
+  /* DEC-49 REGION is-not-an-archive
+     R38 (K2100): a held capture R17's rule does not profile as `zip` is refused as R41 refuses it, before any listing.
+     `acquire`'s own call (R40) is made only for a capture it has just profiled `zip`, so it is not asked again. */
+  if (!(internal && internal.automatic && internal.parts)) {
+    const notArchive = await archiveProfile(inst, ev, sha, held.parts);
+    if (notArchive) return notArchive;
+  }
+  /* END DEC-49 REGION is-not-an-archive */
   const source = partsSource(ev, held.parts);
   const listing = await listArchive(source);
   /* DEC-49 REGION is-archive-listed */
@@ -693,6 +701,28 @@ function entryOf(r, { limit, refused, sees }) {
   return { ...base, state: "waiting", ...(waitsOn ? { waiting_on: waitsOn, limit: FIGURES[waitsOn] ?? null } : { waiting_on: null }) };
 }
 
+/** R38, R41 (N720, K1955, K2100): whether a held capture is an archive by R17's rule, answered as the refusal
+ *  `NOT_AN_ARCHIVE` when it is not, else null. An archive never opened is profiled by R17's one function over its held
+ *  parts; an opened one by the same rule's reading of its listing, which R38 recorded whole: a directory naming an OPC
+ *  content-type map or an ODF `mimetype` is an office or OpenDocument file (format-registry R28, R17's past-bound arm). */
+async function archiveProfile(inst, ev, sha, parts) {
+  if (inst.header(sha)) {
+    const officePart = inst.entryRows(sha).find((r) => {
+      const n = normalizePartName(r.name || "");
+      return n === CONTENT_TYPES_PART || n === ODF_MIMETYPE_PART;
+    });
+    return officePart ? notAnArchive(sha, { format: null, part: officePart.name }) : null;
+  }
+  const total = parts.reduce((n, x) => n + x.bytes, 0);
+  let fmt = null;
+  try {
+    const prof = await profileOf({ ev, sha, ct: null, total, multipart: parts.length > 1, headers: {}, locator: null,
+      view: undefined, retrieved: stampSecond(), origin: null, parts });
+    fmt = prof && prof.format ? prof.format.format : null;
+  } catch { fmt = null; }
+  return fmt === "zip" ? null : notAnArchive(sha, { format: fmt });
+}
+
 /* R41, C-139.20: a capture held and visible that is not an archive; `format` what R17's rule profiled it as, or `part` the
    office or OpenDocument part its recorded listing names. */
 const notAnArchive = (sha, { format = null, part = null } = {}) => refuse("NOT_AN_ARCHIVE", { archive: sha, format,
@@ -723,32 +753,15 @@ export async function archiveList(instOrStore, { archiveSha = null, viewer = nul
     return hh && inst.sees(viewer, hh.bundleId) ? hh.bundleId : null;
   };
   const h = inst.header(sha);
-  /* DEC-49 REGION is-not-an-archive
-     R41 (N720, K1955): a capture R17's rule does not profile as `zip` (an office or OpenDocument file included) is not an
-     archive, and is refused by name rather than answered as one whose listing is refused whole. An archive never opened
-     is profiled by R17's one function over its held bytes; an opened one by the same rule's reading of its listing, which
-     R38 recorded whole: a directory naming an OPC content-type map or an ODF `mimetype` is an office or OpenDocument file
-     (format-registry R28, R17's past-bound arm), so a member's `op=unpack` of one never makes it an archive here. */
+  /* DEC-49 REGION is-not-an-archive */
   let ev = null, held = null;
-  if (h) {
-    const officePart = inst.entryRows(sha).find((r) => {
-      const n = normalizePartName(r.name || "");
-      return n === CONTENT_TYPES_PART || n === ODF_MIMETYPE_PART;
-    });
-    if (officePart) return notAnArchive(sha, { format: null, part: officePart.name });
-  } else {
+  if (!h) {
     ev = inst.record && typeof inst.record.evidenceStore === "function" ? inst.record.evidenceStore() : null;
     held = ev ? await heldParts(inst, {}, ev, sha, null) : { why: "no evidence storage" };
     if (!held.parts) return notHeld();
-    const total = held.parts.reduce((n, x) => n + x.bytes, 0);
-    let fmt = null;
-    try {
-      const prof = await profileOf({ ev, sha, ct: null, total, multipart: held.parts.length > 1, headers: {}, locator: null,
-        view: undefined, retrieved: stampSecond(), origin: null, parts: held.parts });
-      fmt = prof && prof.format ? prof.format.format : null;
-    } catch { fmt = null; }
-    if (fmt !== "zip") return notAnArchive(sha, { format: fmt });
   }
+  const notArchive = await archiveProfile(inst, ev, sha, held && held.parts);
+  if (notArchive) return notArchive;
   /* END DEC-49 REGION is-not-an-archive */
   let g = null;
   try { g = p && typeof p.captureGrade === "function" ? await p.captureGrade(sha) : null; } catch { g = null; }

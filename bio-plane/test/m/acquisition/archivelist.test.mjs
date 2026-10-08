@@ -232,14 +232,16 @@ test("R41: NOT_AN_ARCHIVE, with its row, for a capture held and visible that R17
   assert.deepEqual([lb.ok, lb.archive.refused], [true, null]);
 });
 
-test("R41: an office file a member opened by hand (op=unpack) is still NOT_AN_ARCHIVE, read from its recorded listing; an archive not visible answers ARCHIVE_NOT_HELD first, so the refusal says nothing of what a hidden capture is", async () => {
+test("R41: an office file opened before T36 (R38 now refuses one, K2100) is still NOT_AN_ARCHIVE, read from its recorded listing; an archive not visible answers ARCHIVE_NOT_HELD first, so the refusal says nothing of what a hidden capture is", async () => {
   const w = world();
   const s = sight(w);
   for (const bytes of [docxOf("opened"), odtOf("opened")]) {
     await w.b.put(`bio/captures/${sha(bytes)}`, bytes);
     w.prov.recordReceipt({ address: URL1, addressNorm: URL1, captureSha: sha(bytes), retrieved: "2026-01-01T00:00:00Z", via: "direct" });
-    const u = await unpack(w.store, { archiveSha: sha(bytes), by: "member:m1", cls: "member", member: true });
-    assert.equal(u.ok, true, "R38 opens what the record holds");
+    /* opened as R38 opened any held ZIP container before T36: acquire's internal call, which asks no profile again */
+    const u = await unpack(w.store, { archiveSha: sha(bytes), by: "member:m1", cls: "member", member: true },
+                           { automatic: true, parts: [{ sha256: sha(bytes), bytes: bytes.length }] });
+    assert.equal(u.ok, true, "opened, with its listing recorded");
     const r = await w.acq.archiveList({ archiveSha: sha(bytes), viewer: ADMIN });
     assert.deepEqual([r.reason, r.check, r.translation], ["NOT_AN_ARCHIVE", NOT_AN_ARCHIVE.check, NOT_AN_ARCHIVE.translation]);
     assert.match(r.part, /^(\[Content_Types\]\.xml|mimetype)$/);

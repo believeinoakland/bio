@@ -399,12 +399,12 @@ export const ARCHIVE_CHECKS = Object.freeze({
     translation: 'Whether captures also ask a public archive to keep a copy is on or off, and this request said '
       + 'neither, so the setting was not changed.',
   }),
-  /* R41 (N720, K1955): the capture asked about is held and visible, but R17's rule does not profile it as an archive (an
+  /* R41, R38 (N720, K1955, K2100): the capture asked about is held (and, for R41, visible), but R17's rule does not profile it as an archive (an
      office or OpenDocument file included, though both are ZIP containers): it has no list of files to show, and is never
      answered as an archive whose listing was refused whole. */
   NOT_AN_ARCHIVE: Object.freeze({
     check: 'C-139.20',
-    where: ls('is-not-an-archive'),
+    where: `${un('is-not-an-archive')}; ${ls('is-not-an-archive')}`,
     translation: 'This file is not an archive, so there is no list of files inside it to show. Your group\'s Civicsmith '
       + 'keeps it as a file of its own: open it as you would any other document.',
   }),
