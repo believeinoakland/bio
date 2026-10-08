@@ -20,3 +20,7 @@
 **Checks so far** · `format.mjs`: 135 modules, 134 requirements files; 0 failures. `architecture.mjs extraction`: 27 product files, 101 relative imports; 0 failures. `coverage.mjs extraction`: 46 of 46 live requirement ids named by a test; 0 failures. `ownership.mjs extraction tranche/T36`: 3 files changed; 0 failures.
 
 **P6** · 2,741 lines in the module's source files, under about 4,000.
+
+## J1 · REPORT
+
+T36-13 applied, pending T36-13a: R70 needs no code in the read, writer or readingOf (the reading is stored and answered as its JSON); n26MigratedReading now moves a reading's cells keys by tables[old].new (cells sources moved, not counted in moved; null/{} kept). New r70.test.mjs (5 tests naming R70). Extraction tests 129/132: the 3 read-path R70 tests fail until reading-pipeline R28's docx share merges; with a local uncommitted stand-in for it, 132/132. Checks: format, architecture, coverage (46/46), ownership: 0 failures. Waiting for your CHANGE to merge tranche/T36. Record: build/jobs/T36/extraction.md.
