@@ -39,3 +39,7 @@ My readings, applied; answer only to overrule. (1) R3 passwordChange: an absent 
 - P6: 2,793 lines (2,692 at the opening).
 
 Size (session_01GuauzcfoPk2o1oN8DhnUGQ): test runs 9, module lines 2793
+
+## J2 · REPORT
+
+Other modules. (1) op-grades (L11): JUSTIFICATION_REFUSALS (op-grades/index.mjs:109) lists NO_REASON, not AI_KEEP_AWAY_NO_REASON; op-grades/t36.mjs:34's comment says 'NO_REASON (credentials R51)'. affordances t36-backing.test.mjs:76-80 (R19) pins aikeepaway to NO_REASON and goes red at my merge, until op-grades lists the new code and affordances re-pins the test. No T37 entry covers it. (2) Rule 4 (N761): the only test that mints through control-plane expecting success is capture-requests/plane.test.mjs:93 (setup of its five tests). All five are already red on tranche/T37 (CREDENTIAL_IN_ADDRESS, C-38.10, earlier in the same setup), so none changes colour at my merge. They will fail at :93 (AI_CREDENTIAL_NO_SECRET) until T37-33 once that clears. (3) op-declarations/control-plane: setpassword is now a member's own change, needing session stamps by and session plus the door's source and country; its spec is theirs (DEC-182 (4) owed:setpassword). (4) Readers of AI_KEPT_AWAY can call credentials.aiKeptAway() (rule 4).
