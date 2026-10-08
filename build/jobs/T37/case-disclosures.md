@@ -77,3 +77,19 @@ Size (session_016xh7RqppffzGDLer6pVudY): test runs 15, module lines 1907
 ## J3 · COMPLETE
 
 B2 done: tranche/T37 @ f3f6002068 merged; the two case-grammar round-trip reds pass with no change. case-disclosures tests 68 pass, 0 fail (with a local uncommitted OBSCURED_LABEL line, case-carriage still unmerged); format/architecture/coverage 29 of 29/ownership 0 failures. Awaiting your CHANGE when case-carriage merges.
+
+## B3 · CHANGE (case-carriage merged, K2226)
+
+- Merged `tranche/T37` @ `50f65ce6ac`. No local `OBSCURED_LABEL` line remains: it was never committed and was removed after B2. The module now runs on the real `case-carriage`, whose `photoMarks` answers the shape R6 reads: `copy {sha256, …}` and `refused {code, detail}`. A marked photo whose latest derivation holds neither a copy nor a refused cover is read as unread, which fails closed.
+- **One refinement to my fail-closed reading, found by case-authoring's R17 test (document.test.mjs:244).** That test's supporting-only finding reaches captures nobody holds. `photoMarks` answers `NO_SUCH_PHOTO` for them, and I refused the case. Such material travels in no case (before T37 it was listed `included: false`), so refusing it protects nothing.
+  - An unreadable marks read now refuses (`PHOTO_MARKS_UNDETERMINED`) only where the answer decides what travels (`marksDecide`): the material is held whole, or a load-bearing member reaches it.
+  - Supporting-only material not held whole stays `included: false`, unrefused. `photosOf` does not list it.
+  - Load-bearing material whose read fails is `PHOTO_MARKS_UNDETERMINED`, never C-120.8, because its copy may yet make it presentable.
+  - Nothing unread travels whole. A new arm in photos.test.mjs covers all three cases.
+- **Tests:** `node --test bio-plane/test/m/case-disclosures/` gives 68 pass, 0 fail.
+- **Checks:** format, architecture, coverage (29 of 29) and ownership (8 files) each report 0 failures.
+- **case-authoring** (REPORT, T37-21's): 155 pass, 3 fail.
+  - The two R29 tests pin C-120.1–C-120.16, so they now need C-120.17 and C-120.18.
+  - carries.test.mjs:49 (R55) is already red on `tranche/T37` alone (1 fail there): case-grammar's `materialsOf` now answers `obscured: null`. Its expected rows need `obscured: null`.
+
+Size (session_016xh7RqppffzGDLer6pVudY): test runs 21, module lines 1918

@@ -96,7 +96,7 @@ test("R6: a photo answered nothing_to_obscure or unchecked travels whole as take
   }
 });
 
-test("R6 (PHOTO_MARKS_UNDETERMINED): a document whose marks cannot be read — a read that throws, refuses, or answers a shape R10 does not state (a marked photo with neither copy nor refused cover, a copy that is no SHA-256, an unknown state) — is refused, naming it, whoever reaches it; the read fails closed: it is never included, even held whole; it writes nothing", () => {
+test("R6 (PHOTO_MARKS_UNDETERMINED): a document whose marks cannot be read — a read that throws, refuses, or answers a shape R10 does not state (a marked photo with neither copy nor refused cover, a copy that is no SHA-256, an unknown state) — is refused, naming it, wherever the answer decides what travels (held whole, or relied on by a load-bearing member); the read fails closed: it is never included, even held whole; it writes nothing", () => {
   const reads = {
     throws: () => { throw new Error("down"); },
     refuses: () => ({ ok: false, reason: "NO_SUCH_PHOTO" }),
@@ -123,6 +123,18 @@ test("R6 (PHOTO_MARKS_UNDETERMINED): a document whose marks cannot be read — a
     }
     assert.deepEqual(w.snapshot(), before, `${why}: nothing written`);
   }
+  /* where the marks decide nothing — supporting-only material not held whole travels in no case — it is listed
+     included: false and never refused, and the Photos step shows no photo; load-bearing and not held whole, the read
+     still decides (a copy may make it presentable): PHOTO_MARKS_UNDETERMINED, never C-120.8 */
+  const u = setup(); const up = u.doc(DOC, {}, { indexed: false }); u.finding(Q, [{ target: DOC }]);
+  u.marks.read = reads.refuses;
+  const sup = judged(u, [Q], [Q]);
+  assert.deepEqual([sup.refusals, sup.materials.map((m) => m.included)], [[], [false]]);
+  assert.deepEqual(u.cd.photosOf(sup.materials, u.roles([Q], [Q]), V("alice")), { photos: [], unchecked: 0 });
+  const lb = judged(u, [Q]);
+  assert.deepEqual(lb.refusals.map((r) => r.reason), ["PHOTO_MARKS_UNDETERMINED"]);
+  assert.deepEqual(lb.refusals[0].undetermined.map((x) => x.sha), [up]);
+  assert.deepEqual(u.cd.photosOf(lb.materials, u.roles([Q]), V("alice")).photos.map((x) => [x.sha, x.unread]), [[up, true]]);
   /* negative control: a read answering no photo */
   const n = setup(); n.doc(DOC); n.finding(Q, [{ target: DOC }]);
   assert.deepEqual(judged(n, [Q]).refusals, []);

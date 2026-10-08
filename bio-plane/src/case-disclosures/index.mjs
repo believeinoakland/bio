@@ -384,8 +384,9 @@ export class CaseDisclosures {
    *  with `obscured: {copy, label}`, presentable through its copy, so never C-120.8 for being held so. A marked photo
    *  whose cover was refused is neither carried whole nor left out: a load-bearing chain reaching it is
    *  `PHOTO_NOT_COVERABLE`, naming each such photo and member; one only supporting members reach is `included: false`.
-   *  A photo whose marks cannot be read is `included: false` and `PHOTO_MARKS_UNDETERMINED`, naming it, whoever reaches
-   *  it (fail closed: never sent out whole). An unmarked photo (`nothing_to_obscure`, `unchecked`) is judged as any
+   *  A photo whose marks cannot be read is `included: false` and `PHOTO_MARKS_UNDETERMINED`, naming it, wherever the
+   *  answer decides what travels (`marksDecide`: held whole, or reached by a load-bearing member): fail closed, never
+   *  sent out whole. Supporting-only material not held whole travels in no case, so it is listed `included: false`. An unmarked photo (`nothing_to_obscure`, `unchecked`) is judged as any
    *  document. Refusals in that order; each writes nothing. Answers `{refusals, materials, refs, findings}`;
    *  `op=publish` answers the first refusal, `case-authoring` R34's pre-flight lists them all. */
   materialsJudged(prepared, memberRoles, viewer) {
@@ -416,9 +417,10 @@ export class CaseDisclosures {
       .filter((x) => x.materials.length);
     const short = materials.filter((m) => !m.included && m.rests_under === "load_bearing"
                                           && !(m.photo && (m.photo.unread || m.photo.state === "marked")));
+    /* the load-bearing unread are PHOTO_MARKS_UNDETERMINED below, never C-120.8: a copy may yet make them presentable */
     const uncoverable = materials.filter((m) => m.rests_under === "load_bearing" && m.photo && m.photo.photo === true
                                                 && m.photo.state === "marked" && m.photo.refused);
-    const unread = materials.filter((m) => m.photo && m.photo.unread);
+    const unread = materials.filter((m) => m.photo && m.photo.unread && marksDecide(m));
     const refusals = [];
     /* DEC-49 REGION is-relied-on-presentable */
     if (short.length) {
@@ -460,7 +462,8 @@ export class CaseDisclosures {
    *  `capture.captureAccountsOf` lets `viewer` see them), `relied_on_by` `[{target, role}]` of the members whose chains
    *  reach it; `state`, `marks`, `copy` (its SHA-256) and `refused` as `photoMarks` answers them (R6's read, `photo`,
    *  else read here); `words` `OBSCURED_LABEL` for a marked photo with a copy, `PHOTO_NOT_COVERABLE_WORDS` for a refused
-   *  cover, else null. A photo whose marks cannot be read is listed `state: null, unread: true`, as R6 refuses it.
+   *  cover, else null. A photo whose marks cannot be read is listed `state: null, unread: true` where R6 refuses it
+   *  (`marksDecide`); unread material R6 does not refuse is no photo it can show.
    *  `unchecked` counts the photos with no mark: shown, never a refusal, travelling whole as taken. Writes nothing;
    *  never throws. */
   photosOf(materials, memberRoles, viewer) {
@@ -471,7 +474,7 @@ export class CaseDisclosures {
       if (!m || typeof m !== "object" || m.kind !== "document" || typeof m.sha !== "string") continue;
       const p = m.photo && typeof m.photo === "object" && (m.photo.photo === false || m.photo.photo === true || m.photo.unread)
         ? m.photo : photoRead(() => this.caseCarriage.photoMarks({ captureSha: m.sha, viewer }));
-      if (p.photo === false) continue;
+      if (p.photo === false || (p.unread && !marksDecide(m))) continue;
       const members = Array.isArray(m.members) ? m.members : [];
       const entry = { ref: m.ref ?? null, sha: m.sha, taken_by: this.#takenBy(m.sha, viewer),
                       relied_on_by: members.map((t) => ({ target: t, role: roleOf.get(t) ?? null })) };
@@ -1117,6 +1120,14 @@ export class CaseDisclosures {
       acknowledged_by: who, acknowledged_at: when }));
     return { captures, materials, flags: flagRows, group };
   }
+}
+
+/* R6, R29 (T37; N757): whether a document's marks decide what of it travels — held whole (it would travel whole), or
+   reached by a load-bearing member (a copy may make it presentable). Supporting-only material not held whole travels in no
+   case. A material that does not say (no `held`, no `rests_under`) decides: fail closed. */
+function marksDecide(m) {
+  const whole = m.held && typeof m.held === "object" ? m.held.whole !== false : true;
+  return whole || m.rests_under !== "supporting";
 }
 
 const instances = new WeakMap();
