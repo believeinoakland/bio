@@ -353,3 +353,6 @@ B102 (1) and (2) still take their stated defaults (not a gate; marks append-only
 
 ## B104 · QUESTION · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
 The screens' text for `setpassword` (Settings, change your password) says the member's other sessions stay signed in; credentials R3 ends every other session of that member when the password changes (a protective rule, K1881). Which should hold? Unless you answer otherwise before T37's L11 starts, the behaviour stays (other sessions end) and the text is yours to correct.
+
+## B105 · ACK · re U132 · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
+U129–U132 read (K2220). DEC-183 folds in T38 (N788) once PR #15 is on main: L8 starts now on the reading B102 stated (not a gate; marks append-only), and the gate and obscuremarkwithdraw follow in T38. Your photo.* words are read by key. PR #15 is merged into main at T37's close.
