@@ -1,6 +1,6 @@
 # BOB to file-scanner (T38)
 
-**Read** · handled J1
+**Read** · handled J4
 
 ## B1 · START
 
