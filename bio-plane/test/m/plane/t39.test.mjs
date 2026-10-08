@@ -12,9 +12,22 @@ import { caseCarriageOf, obscuredKey } from "../../../src/case-carriage/index.mj
 import { schedulerOf } from "../../../src/scheduler/index.mjs";
 import { bucketStandIn } from "../case-carriage/fixture.mjs";
 import { sha } from "../provenance/fixture.mjs";
-import { pdf } from "../doc-clean/fixtures.mjs";
 
 const NOW = Date.parse("2026-10-08T12:00:00Z");
+/* A one-page PDF showing "Hello" whose document information names who made it, so doc-clean rewrites it (its R6). */
+function memberPdf() {
+  const objs = ["<< /Type /Catalog /Pages 2 0 R >>", "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>",
+    null, "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>", "<< /Author (A Member) /Creator (An App) >>"];
+  const ops = "BT /F1 12 Tf 20 150 Td (Hello) Tj ET";
+  objs[3] = `<< /Length ${ops.length} >>\nstream\n${ops}\nendstream`;
+  let out = "%PDF-1.7\n";
+  const at = objs.map((o, i) => { const off = out.length; out += `${i + 1} 0 obj\n${o}\nendobj\n`; return off; });
+  const xref = out.length;
+  out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n` + at.map((o) => `${String(o).padStart(10, "0")} 00000 n \n`).join("");
+  out += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R /Info 6 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+  return Buffer.from(out, "latin1");
+}
 const queued = (x) => [...x.ctx.storage.sql.exec(`SELECT capture FROM document_copy_queue ORDER BY capture`)].map((r) => r.capture);
 let n = 0;
 /* A receipt through the plane's one provenance (its R13), as an acquisition, a knock or an unpack records it. */
@@ -67,7 +80,7 @@ test("R18 (T39): with `CAPTURES` bound and a member PDF queued, one onAlarm answ
     const ns = namespace || "bio";
     const CAPTURES = bucketStandIn();
     const x = await built({ namespace, env: { CAPTURES } });
-    const bytes = Buffer.from(pdf()), original = sha(bytes);
+    const bytes = memberPdf(), original = sha(bytes);
     await CAPTURES.put(`${ns}/captures/${original}`, bytes);
     receipt(x, original, "doorbell");
     assert.deepEqual(queued(x), [original], ns);
