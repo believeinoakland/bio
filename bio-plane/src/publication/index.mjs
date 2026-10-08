@@ -52,6 +52,10 @@
  * case was prepared (case-carriage R14) and a photo carried whole are such changes, as case-carriage R13 answers them
  * (R33, R57; N788, DEC-183 (4), K2291).
  *
+ * T39 (T39-11): the commit refuses a member document whose publication copy is not the one the case was prepared with,
+ * `DOCUMENT_COPY_CHANGED_SINCE` (R57, C-122.7; N806, K2333), from case-carriage R13's `document` rows; its photo rows
+ * stay C-122.6, and both are answered when both hold.
+ *
  * REACHED as `publicationOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first
  * call with `deps`, returned to every later caller. At creation it creates its tables and declares them to
  * record-core (R31; plan T33 Rules (6): each with its classes), registers with record-core the published registry as
@@ -968,18 +972,38 @@ export class Publication {
        COMMIT, R51's pattern, after it and before R59: every `materials:` row case-carriage answers lapsed (its R13: an
        obscured row whose copy is no longer the photo's current copy, a mark withdrawn since preparation (its R14) among
        them; a photo carried whole, always (T38; N779, DEC-183 (4)); marks that cannot be read) stops the commit, nothing
-       written; the remedy is a new preparation. */
+       written; the remedy is a new preparation.
+       (T39; N806; K2333) In the same step, a row case-carriage answers with `kind` `document` (a member document's copy
+       no longer its current copy, one carried whole that needs a copy, or one whose state cannot be read) is C-122.7
+       `DOCUMENT_COPY_CHANGED_SINCE`; every other row is a photo's, C-122.6. Both are answered when both hold: the answer
+       is the first of them, and `refusals` lists each (one or both), C-122.6 then C-122.7. An answer that is not a list is the photos'
+       marks unread (fail closed, as before T39). */
     const answered = this.caseCarriage.marksLapsed(docFm);
-    const marks = Array.isArray(answered) ? answered : [{ ref: null, sha: null, why: "the photos' marks could not be read" }];
+    const lapses = Array.isArray(answered) ? answered : [{ ref: null, sha: null, why: "the photos' marks could not be read" }];
+    const named = (m) => ({ ref: m?.ref ?? null, sha: m?.sha ?? null, why: m?.why ?? null });
+    const docs = lapses.filter((m) => m?.kind === "document"), marks = lapses.filter((m) => m?.kind !== "document");
+    const refusals = [];
     if (marks.length) {
       /* DEC-49 REGION is-photo-marks-current */
-      return { ok: false, reason: "PHOTO_MARKS_CHANGED_SINCE", ...rowOf("PHOTO_MARKS_CHANGED_SINCE"), caseId: id,
-               edition: ed, photos: marks.slice(0, 200).map((m) => ({ ref: m?.ref ?? null, sha: m?.sha ?? null, why: m?.why ?? null })),
-               detail: `${marks.length} photo(s) this case document carries cannot be published as prepared (a mark `
-                     + "made or withdrawn after the case was prepared, a photo carried whole rather than as the copy the "
-                     + "group marked, or marks that cannot be read), so nothing was committed. Prepare the case again." };
+      refusals.push({ reason: "PHOTO_MARKS_CHANGED_SINCE", ...rowOf("PHOTO_MARKS_CHANGED_SINCE"),
+                      photos: marks.slice(0, 200).map(named),
+                      detail: `${marks.length} photo(s) this case document carries cannot be published as prepared (a mark `
+                            + "made or withdrawn after the case was prepared, a photo carried whole rather than as the copy the "
+                            + "group marked, or marks that cannot be read), so nothing was committed. Prepare the case again." });
       /* END DEC-49 REGION is-photo-marks-current */
     }
+    if (docs.length) {
+      /* DEC-49 REGION is-document-copy-current */
+      refusals.push({ reason: "DOCUMENT_COPY_CHANGED_SINCE", ...rowOf("DOCUMENT_COPY_CHANGED_SINCE"),
+                      documents: docs.slice(0, 200).map(named),
+                      detail: `${docs.length} document(s) a member supplied that this case document carries cannot be `
+                            + "published as prepared (a copy that is no longer the document's current copy, a document carried "
+                            + "whole that needs a copy, or one whose state cannot be read), so nothing was committed. Prepare "
+                            + "the case again." });
+      /* END DEC-49 REGION is-document-copy-current */
+    }
+    if (refusals.length)
+      return { ok: false, ...refusals[0], caseId: id, edition: ed, refusals };
     /* R59 (DEC-96 items 1, 4; N522): ANOTHER GROUP'S WORK THE DOCUMENT RESTS ON IS RE-READ AT THE COMMIT, R51's pattern.
        Each `accepted_work:` row's acceptance must still be in force at its edition, and every open flag on that edition
        must be one `accepted_work_flags:` discloses, read through case-carriage (its R4); otherwise nothing is committed
