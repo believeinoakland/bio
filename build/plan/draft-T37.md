@@ -1,6 +1,6 @@
 # Plan T37
 
-**Status** · DRAFT (prepared during T36 by BOB #136, P18). Becomes `current.md` the moment T36 closes (PROCESS-MECHANICS §5.2); BOB re-reads it then against what T36's L6–L11 left.
+**Status** · DRAFT, reviewed by BOB #136 (K2140; For BOB 1 open with Bob, K2139) (prepared during T36, P18). Becomes `current.md` the moment T36 closes (PROCESS-MECHANICS §5.2); BOB re-reads it then against what T36's L6–L11 left.
 
 **Sources** · `next.md` N748–N767 (every open entry); `current.md` (T36): its "Left out of T36" table (rows whose reason ends with T36: N708, K2134), its accepted reds (rule 5: 1, 4, 7, 15, 16, 18 still open at L6, K2138), "P6 notes"; `modules.json` (order, layers); `rulings-active.md`; rulings K2064, K2074, K2075, K2079, K2084, K2090, K2099, K2100, K2101, K2108, K2118, K2122, K2124–K2138; for N708 K1804, K1819, K2110, K2131, K2133–K2135; for N669 K1793, K1804, K1869, K1883; PR #14 (DEC-178, DEC-179 `screens/words.json`, read on GitHub at `58ab1a7f34`). PROCESS-MECHANICS §5.2, §12.2; PROCESS-DESIGN P10, P18, P19.
 
@@ -83,13 +83,13 @@ Each line is one job (P8): every T37 entry for that module. Fields: module · (N
 
 ### L8
 
-- **T37-18 · publication** · (N763, its share; only if For BOB 2 finds it BOB's) R72 freezes each criteria row's `captures`, so case-checker R22 judges `COPYRIGHTED_TEXT_CARRIED` offline · K2129 · req: R72, BOB's wording · depends —. Reads T36-26's result. **P6:** 3,717 before T36-26 (which lowers it); the job reports its size.
+- **T37-18 · publication** · (N763, its share; K2140) R72 freezes, per criteria row, only the `captures` the edition itself carries (a digest already published beside its material; a withheld capture's digest is never stated), so case-checker R22 judges `COPYRIGHTED_TEXT_CARRIED` offline · K2129 · req: R72, BOB's wording · depends —. Reads T36-26's result. **P6:** 3,717 before T36-26 (which lowers it); the job reports its size.
 - **T37-19 · ratification** · (N761, its share) its store map reads a grant's `secretSha` (`index.mjs`:1475) from the body or a header, never the query (rule 4) · K2129 · req: the store-map read, BOB's wording · depends T37-6 (L2, the pattern). **P6:** 3,530; net about zero.
 - **T37-20 · case-checker** · (N763, its share; as T37-18) R22 judges `COPYRIGHTED_TEXT_CARRIED` offline over the frozen `captures`; `program.mjs` regenerated at the close · K2129 · req: R22, BOB's wording · depends T37-18. Reads T36-51's result.
 - **T37-21 · case-authoring** · (N761, its share) its store map reads `secretSha` (`index.mjs`:2355) from the body or a header, never the query · K2129 · req: the store-map read, BOB's wording · depends —. Reads T36-28's result. **P6:** 3,365.
 - **T37-22 · review** · (N761, its share) its store map reads `secretSha` (`index.mjs`:778–782) from the body or a header, never the query (its comment at :769 re-worded) · K2129 · req: the store-map read, BOB's wording · depends —.
 
-**L8 merge order:** `modules.json` order: publication → ratification → case-checker → case-authoring → review. T37-18 and T37-20 drop together if For BOB 2 goes to Bob and he has not ruled by L8's START (then left out: a question that is Bob's).
+**L8 merge order:** `modules.json` order: publication → ratification → case-checker → case-authoring → review. (K2140: N763 is BOB's as restricted to carried captures.)
 
 ### L9
 
@@ -169,12 +169,12 @@ Measured on `tranche/T36` @ `9c8cc5693c` (L6 running; K1821's rule: own code in 
 
 ## Summary
 
-**Jobs per layer:** L1 5, L2 2, L3 1, L4 2, L5 3, L6 4, L7 0, L8 5, L9 1, L10 1, L11 9. **Total 33** (T37-18 and T37-20 conditional on For BOB 2; a plane share possible at L11 from T37-24, not counted).
+**Jobs per layer:** L1 5, L2 2, L3 1, L4 2, L5 3, L6 4, L7 0, L8 5, L9 1, L10 1, L11 9. **Total 33** (a plane share possible at L11 from T37-24, not counted).
 
 ## For BOB (meaning that might be Bob's; not decided here)
 
 1. **N708 / N766: does a "Sign in with Claude" on the setup page meet Bob's bar?** Bob (K2135): "we'll wait until we have full, non-technical support for that before I sign into my account". N766 reads that as a clickable sign-in in the setup page's members section until the new screens. But DEC-156's flow (AT-26) has the member paste the code Anthropic's page shows into "The code from Anthropic's page", and K2134 says Bob does not paste a token. Whether that paste is "non-technical" enough, and whether an interim setup-page control is acceptable to him, is UX: Bob's. Building T37-16, T37-17 and T37-29 is safe either way; only M-Q2's timing turns on his answer. Recommendation: show him the step rendered (the page, the button, the code box) before L11's START.
-2. **N763: the edition stating digests of captures it does not carry.** Freezing a criteria row's `captures` puts in a published edition the SHA-256 of each source a criterion relied on, including copyrighted captures the edition withholds. Anyone holding a document can then confirm the group held it. If that discloses only what the edition already cites, it is BOB's (wording); if it reveals material the group did not choose to publish, it is legal exposure or values: Bob's. BOB weighs first; if Bob's, T37-18 and T37-20 leave with that reason.
+2. **Settled by BOB (K2140): R72 freezes only the captures the edition carries, so nothing withheld is disclosed, and `COPYRIGHTED_TEXT_CARRIED` (a carried material that is a non-free standard's capture) is still judged offline.** Was: N763: the edition stating digests of captures it does not carry. Freezing a criteria row's `captures` puts in a published edition the SHA-256 of each source a criterion relied on, including copyrighted captures the edition withholds. Anyone holding a document can then confirm the group held it. If that discloses only what the edition already cites, it is BOB's (wording); if it reveals material the group did not choose to publish, it is legal exposure or values: Bob's. BOB weighs first; if Bob's, T37-18 and T37-20 leave with that reason.
 3. **N757 / S17: how faces and number plates are obscured.** Bob ruled the outcome (K2108); the DEC is not yet written. Whether obscuring is automatic (a vision model on the group's photos: an AI use on group material, with keep-away and cost) or members mark what to obscure is the design stream's to write and may carry money or keep-away questions that are Bob's. Nothing for BOB to decide; ask the design stream on the channel to record S17's DEC with that point stated.
 4. **N748:** unchanged: D1–D4, D6–D8, D12–D14, D16–D24 and K2075's plan construct are open with Bob.
 
