@@ -100,7 +100,8 @@ test("R34: recipients are the member principal and the owners of a project conte
   const w = await debtWorld();
   w.membership.projectInvite({ projectId: P, handle: "cora", by: "ruth" });
   w.membership.projectJoin({ projectId: P, by: "cora" });
-  w.membership.projectOwnerAdd({ projectId: P, handle: "cora", by: "ruth" });
+  /* cora made an owner beside ruth; the owner act is project-roster's (its R3), so the setup writes the flag itself (membership R118) */
+  assert.equal(w.membership.participationWrite("ownerOn", { projectId: P, memberId: "cora", by: "ruth" }), true);
   w.membership.memberSet({ memberId: "gone", status: "revoked", by: "admin" });
   const then = w.lens();
   w.bias.registerWorkProducts("ai-run", source({
