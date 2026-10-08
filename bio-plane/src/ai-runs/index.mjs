@@ -1010,7 +1010,8 @@ export class AiRuns {
     }
 
     /* R52 (K1502, K1503, K1755): THE ACCOUNT THE RUN CARRIES, the one `credentials.accountFor` answered above for the act
-       of the member who started it (their own reference, else the group's API key while held and on); with none,
+       of the member who started it (their own reference, else their own sign-in (T38; K2299), else the group's API key
+       while held and on); with none,
        refused by name. Then R50: that member's use today against the ceiling in force, the copy's included, whichever
        account serves them. Both before anything is written, and before R47's check, which stays last. Each refusal keeps
        the open's shape. */
@@ -1678,7 +1679,7 @@ export class AiRuns {
   #aiRunResumeDecision(run, resumer) {
     const principal = String((run && run.principal_plane) || "");
     /* R52 (K1503, K1755): the run continues only on the account that serves the act of the member who started it (their
-       own, or the group's key); with none, it is withheld by name and waits, and the binding is not called. */
+       own, their own sign-in (T38; K2299), or the group's key); with none, it is withheld by name and waits, and the binding is not called. */
     const payer = AiRuns.#payerOf(run && run.principal_claude);
     if (resumer && resumer.ready && principal === resumer.stamp && !(payer && this.#accountServing(payer)))
       return { dispatch: false, withheld: "NO_ACCOUNT",
@@ -1708,8 +1709,9 @@ export class AiRuns {
   async #aiRunDispatch(d, resumer, iso) {
     /* R52, K1514, K1601, K1755 (agent-worker R6, R10): the body carries `account`, the account `credentials.accountFor`
        answers for the act of the run's member (its R35), `{kind, level, secret, member, suggestions}`: `level` `member`
-       for their own reference (a subscription token stays `subscription`, never an API key, K1553), `group` for the
-       group's API key, whose use is still that member's act; `secret` is R35's `key`, named as agent-worker R6 reads it;
+       for their own reference or (T38; K2299) their own sign-in, `signin`, never re-labelled an API key (K1553), `group`
+       for the group's API key, whose use is still that member's act; `secret` is R35's `key`, named as agent-worker R6
+       reads it, and absent for a sign-in, which carries none;
        `member` is the run's account member, `member:<id>`, so agent-worker can check it against the run (its R10). Used
        for this one call and kept nowhere here. The instance Claude account it carried before is retired (K1502). */
     let outcome, timer;
@@ -1729,8 +1731,9 @@ export class AiRuns {
       } catch { suggestions = false; }
     }
     const body = outcome ? null : { run_id: d.run, store: resumer.store, credential: resumer.token,
-                                    account: { kind: ref.kind, level: ref.level, secret: ref.key, member: `member:${d.payer}`,
-                                               suggestions } };
+                                    account: { kind: ref.kind, level: ref.level,
+                                               ...(ref.kind === "signin" ? {} : { secret: ref.key }),
+                                               member: `member:${d.payer}`, suggestions } };
     ref = null;
     if (body) try {
       const res = await Promise.race([
@@ -2738,7 +2741,7 @@ export class AiRuns {
 
   /** R52 (K1755): which account serves `member`'s act now, read without unsealing, for the synchronous checks (an ask's
    *  ceiling check, the wake's decision): `member` when they hold a reference of their own (credentials R23's state, asked
-   *  as that member), else `group` when the group's API key is on and they are an active member (credentials R34's
+   *  as that member) or are connected through their subscription (its R43; T38, K2299), else `group` when the group's API key is on and they are an active member (credentials R34's
    *  state, asked as that member: it answers `{on}` to an active member alone), else null. R35's choice, as its own
    *  order makes it. */
   #accountServing(member) {
@@ -2746,6 +2749,8 @@ export class AiRuns {
     try {
       const s = c.accountReferenceState({ member: as, viewer: as });
       if (s && s.ok === true && s.held === true) return "member";
+      /* (T38; K2299) else their own sign-in, when connected through their subscription (credentials R43, R35) */
+      if (s && s.ok === true && s.subscription && s.subscription.connected === true) return "member";
     } catch { /* read as none of their own */ }
     try {
       const g = c.groupKeyState({ viewer: as });
@@ -2754,7 +2759,7 @@ export class AiRuns {
   }
 
   /** R52 (K1503, K1755): the account `credentials.accountFor` (its R35) answers for `member`'s act of `kind` (`run`):
-   *  `{level, kind, key}` when one serves it; else `{refusal}`: `NO_ACCOUNT` read as this module's `AI_NO_ACCOUNT`, any
+   *  `{level, kind, key}` when one serves it (`key` null for the member's own sign-in, T38; K2299); else `{refusal}`: `NO_ACCOUNT` read as this module's `AI_NO_ACCOUNT`, any
    *  other refusal of that service (the group key's notice not yet read, a member not active, the seal) relayed as it
    *  came. The caller keeps the key for the one call it serves, or not at all. */
   async #accountFor(member, kind) {
@@ -2764,6 +2769,10 @@ export class AiRuns {
     } catch { a = null; }
     if (a && a.ok === true && typeof a.key === "string" && (a.level === "member" || a.level === "group"))
       return { level: a.level, kind: a.kind, key: a.key };
+    /* (T38; K2299) the member's own sign-in (credentials R35, R43): level member, no key; agent-worker R6 carries it
+       with no `secret` key at all. */
+    if (a && a.ok === true && a.kind === "signin" && a.level === "member")
+      return { level: "member", kind: "signin", key: null };
     if (!a || a.code === "NO_ACCOUNT" || typeof a.code !== "string") return { refusal: this.#noAccount(member, "A run") };
     const { ok: _ok, ...rest } = a;
     return { refusal: { ok: false, ...rest } };
