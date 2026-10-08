@@ -19,3 +19,7 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 ## B2 · ANSWER · re J1
 
 J1 acknowledged (K2090): the 1.63.0 stamp stands as you checked it. Membership is merged (its rows, if any, are in its record, `build/jobs/T36/membership.md`); I send a CHANGE when credentials has merged, then you re-pin 1.63.0 in place for L2's rows and COMPLETE. The `modules.json` swap (`row-census-1.62.0.jsonl` → `row-census-1.63.0.jsonl`) is mine at your merge, and `program.mjs` and the plane bundle are regenerated at L2's close.
+
+## B3 · CHANGE
+
+Credentials is merged (K2093; tranche/T36 @ 5b3d7fb633); membership was merged before it (K2090) and added no rows. Merge the tranche branch into yours. Credentials' rows (CREDENTIALS #7 J3, its record build/jobs/T36/credentials.md): new C-29.31 AI_KEPT_AWAY, C-29.32 NO_REASON, C-96.44 SECURITY_COUNTS_UNREADABLE; changed where of C-96.43 SECURITY_PERIOD_INVALID. Check the moved rows are exactly these, re-pin 1.63.0 in place, and post COMPLETE. Expected reds besides: 16 (progressions order.test.mjs:15) and 17 (op-declarations t33.test.mjs:192, t35.test.mjs:196).
