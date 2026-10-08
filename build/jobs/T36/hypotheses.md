@@ -50,3 +50,7 @@ Size (session_011Q6j1JLW7wPn81YSfaL2Qx): test runs 10, module lines 810
 ## J1 · REPORT
 
 (1) Generated artifact made stale (§14): the plane bundle bio-plane/dist/bio-plane.bundled.mjs (not_product), from bio-plane/src/hypotheses/; BOB's to regenerate at L6's close. (2) control-plane test/m/control-plane/r53-routes.test.mjs:66 fails identically on the untouched tranche/T36 tip; it is not in rule 5's red list by name (it reads as red 17's family, routes without specs): BOB's to confirm and name. (3) hypotheses' own requirements: Uses names membership viewerPredicate, inSight, courtNotice, but the code also calls positionalMember (membership R76) to name a note's member (since T34): a wording gap in Uses, behaviour unchanged.
+
+## J2 · COMPLETE
+
+T36-20 applied: R14's T36 sentence met (per-member note numbers from each member's own mark; boot renumbers a shared-sequence store per member, turns following). Two detail decisions for BOB to confirm, in the record's Completion: (1) the mark table member_note_numbers is declared sight owner, export never, purge exempt (as record-core's id counter, R23); (2) with per-member numbers, 'another's note' is a number the asker does not hold. Tests 34/0; users' 5 failures identical on the tranche tip (reds 19, 17, 13; r53-routes:66, REPORT J1). format, architecture, coverage, ownership: 0 failures. Size line in the record.
