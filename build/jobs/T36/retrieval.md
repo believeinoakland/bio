@@ -48,3 +48,15 @@ Found in other modules (detail in my record, 'Found elsewhere').
 (a) content: extentRelation evaluates neither sheet-range nor doc-table against their cells. A cell inside a range answers disjoint, two ranges unreadable, and a doc-table cell inside its table unreadable, which falls short of content R6. Effect: a fact recorded at one cell of a found column is not named on the column's result (R73).
 (b) N758 as B3 placed it: office-readers' cells do not name their paragraphs. Where a table's paragraphs are not one run in reading order (a nested table; a vertically merged cell whose continuation holds text, docx.mjs:582), retrieval leaves out a paragraph whose whole text is a line of a found column.
 (c) answers: standingfind.test.mjs:46 ('a refusal writes nothing') turns red from my merge. Its findWorld stands in for the plane's boot with w.retrieval.zone() only, so the first find makes events, standards, money and people and their tables. The plane makes them at boot (plane/store.mjs:167-195). Adding w.retrieval.recordedReads(); beside zone() makes it 7/7 (checked on a scratch copy). That fixture is answers' (T36-23). I tried reaching the four when retrievalOf is made instead, but that broke calculations R13/R14: its fixture makes retrieval before money, so money took no deps. So I reverted it.
+
+## J3 · COMPLETE
+
+T36-18 complete on job/T36/retrieval (B2 merged at 983ac4c04e; B3 applied).
+- R73: recorded, recorded_read, recorded_not_read; the selection scope reads through R77.
+- R74: .docx tables as held tables, one item per date or amount column.
+- R76: registerRecordedBy.
+- R77: selectionRead, which writes nothing.
+Tests: retrieval 161/161 (new t36.test.mjs, eight tests). Over every test directory that names retrieval, mine against the base: no new red but answers standingfind:46 (J2 (c)). Reds 16 and 17 are as inherited.
+Checks: format, architecture, coverage (77/77), ownership: 0 failures. 3,484 lines.
+The four real recordedBy reads are not in the tranche yet: send a CHANGE as each merges and I will test through it.
+Record: build/jobs/T36/retrieval.md.
