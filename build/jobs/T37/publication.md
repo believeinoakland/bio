@@ -1,6 +1,6 @@
 # publication (T37)
 
-**Status** · session_01KcUELzqiEGNBwSvB87rKcf · depth 2 · WORKING · handled B3
+**Status** · session_01KcUELzqiEGNBwSvB87rKcf · depth 2 · COMPLETE · handled B3
 
 ## Record
 
