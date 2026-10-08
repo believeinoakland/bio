@@ -17,8 +17,9 @@ const descriptor = (d) => Object.freeze({
 
 // R19 (N777): the settings each adapter reads from the spec's `config`, by name, so a settings page asks each one.
 const field = (name, label, required) => ({ name, label, required });
-const TEMPLATE_CONFIG = (familyRequired) => [
-  field('engine_family', 'The engines the tool runs, as its maker names them', familyRequired),
+// A template's own statement (K2175): its engine family and its handling, both required, as the tool's maker states them.
+const TEMPLATE_CONFIG = () => [
+  field('engine_family', 'The engines the tool runs, as its maker names them', true),
   field('handling', 'The tool\'s statement of what it receives, keeps and shares', true),
   field('source_urls', 'Where that statement is published', false),
 ];
@@ -85,7 +86,7 @@ export const PROVIDERS = Object.freeze([
     licence_note: 'the organization\'s own licence', source_urls: ['https://www.opswat.com/docs/mdcore/metadefender-core'] }),
   descriptor({ provider_id: 'icap', vendor: ADMIN, product: 'any ICAP server (RFC 3507)', kinds: ['scan'],
     transport: 'icap', reach: 'public', hosts: [], template: true, engine_family: [ADMIN], test_probe: { kind: 'eicar' },
-    config: [...TEMPLATE_CONFIG(true), field('service', 'ICAP service name (default avscan)', false),
+    config: [...TEMPLATE_CONFIG(), field('service', 'ICAP service name (default avscan)', false),
       field('tls', 'Connect over TLS (port 11344 unless the address names one)', false)],
     handling: { sends: ['file_bytes'], recipient: ADMIN, region: ADMIN, file_retention: ADMIN, result_retention: ADMIN,
       sample_sharing: 'none' },
@@ -223,14 +224,14 @@ export const PROVIDERS = Object.freeze([
     licence_note: 'the organization\'s own deployment', source_urls: ['https://www.elastic.co/docs/api/doc/elasticsearch/operation/operation-bulk'] }),
   descriptor({ provider_id: 'syslog-tls', vendor: ADMIN, product: 'any syslog collector (RFC 5424 over TLS)', kinds: ['log_sink'],
     transport: 'syslog_tls', reach: 'public', hosts: [], template: true, engine_family: ['syslog'],
-    test_probe: { kind: 'zero_counts' }, config: TEMPLATE_CONFIG(false),
+    test_probe: { kind: 'zero_counts' }, config: TEMPLATE_CONFIG(),
     handling: { sends: ['counts'], recipient: ADMIN, region: ADMIN, file_retention: 'no file is sent',
       result_retention: ADMIN, sample_sharing: 'none' },
     licence_note: 'the organization\'s own collector', source_urls: [] }),
   descriptor({ provider_id: 'https-webhook', vendor: ADMIN, product: 'any HTTPS endpoint taking a JSON POST', kinds: ['log_sink'],
     transport: 'https', reach: 'public', hosts: [], template: true, engine_family: ['webhook'], credentials: ['token'],
     test_probe: { kind: 'zero_counts' },
-    config: [...TEMPLATE_CONFIG(false), field('path', 'Path on the endpoint (default /)', false)],
+    config: [...TEMPLATE_CONFIG(), field('path', 'Path on the endpoint (default /)', false)],
     handling: { sends: ['counts'], recipient: ADMIN, region: ADMIN, file_retention: 'no file is sent',
       result_retention: ADMIN, sample_sharing: 'none' },
     licence_note: 'the organization\'s own endpoint', source_urls: [] }),

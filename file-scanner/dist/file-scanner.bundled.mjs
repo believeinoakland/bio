@@ -2159,8 +2159,8 @@ var descriptor = (d) => Object.freeze({
   handling: Object.freeze({ never_sends: NEVER, sub_processors: [], ...d.handling })
 });
 var field = (name, label, required) => ({ name, label, required });
-var TEMPLATE_CONFIG = (familyRequired) => [
-  field("engine_family", "The engines the tool runs, as its maker names them", familyRequired),
+var TEMPLATE_CONFIG = () => [
+  field("engine_family", "The engines the tool runs, as its maker names them", true),
   field("handling", "The tool's statement of what it receives, keeps and shares", true),
   field("source_urls", "Where that statement is published", false)
 ];
@@ -2331,7 +2331,7 @@ var PROVIDERS = Object.freeze([
     engine_family: [ADMIN],
     test_probe: { kind: "eicar" },
     config: [
-      ...TEMPLATE_CONFIG(true),
+      ...TEMPLATE_CONFIG(),
       field("service", "ICAP service name (default avscan)", false),
       field("tls", "Connect over TLS (port 11344 unless the address names one)", false)
     ],
@@ -2715,7 +2715,7 @@ var PROVIDERS = Object.freeze([
     template: true,
     engine_family: ["syslog"],
     test_probe: { kind: "zero_counts" },
-    config: TEMPLATE_CONFIG(false),
+    config: TEMPLATE_CONFIG(),
     handling: {
       sends: ["counts"],
       recipient: ADMIN,
@@ -2739,7 +2739,7 @@ var PROVIDERS = Object.freeze([
     engine_family: ["webhook"],
     credentials: ["token"],
     test_probe: { kind: "zero_counts" },
-    config: [...TEMPLATE_CONFIG(false), field("path", "Path on the endpoint (default /)", false)],
+    config: [...TEMPLATE_CONFIG(), field("path", "Path on the endpoint (default /)", false)],
     handling: {
       sends: ["counts"],
       recipient: ADMIN,

@@ -160,8 +160,8 @@ test('R19 each descriptor and generic template states config [{name, label, requ
     'defender-storage': ['tenant_id*', 'storage_account*', 'container*'],
     'falcon-sandbox': ['environment_id'], 'cloudflare-intel': ['account_id*'],
     sentinel: ['tenant_id*', 'endpoint*', 'dcr_id*', 'stream*'], 'google-secops': ['project*', 'location*', 'instance*', 'log_type*'],
-    elastic: ['index'], 'syslog-tls': ['engine_family', 'handling*', 'source_urls'],
-    'https-webhook': ['engine_family', 'handling*', 'source_urls', 'path'],
+    elastic: ['index'], 'syslog-tls': ['engine_family*', 'handling*', 'source_urls'],
+    'https-webhook': ['engine_family*', 'handling*', 'source_urls', 'path'],
   }, 'the settings each adapter reads, by name');
   const cases = [(d) => { delete d.config; }, (d) => { d.config = {}; }, (d) => { d.config = [{ name: 'x', label: 'X' }]; },
     (d) => { d.config = [{ name: 'x', label: '', required: true }]; }, (d) => { d.config = [{ name: 'X y', label: 'X', required: true }]; },
@@ -210,8 +210,10 @@ test('R21 the spec\'s config: each required field present, else CONFIG_MISSING n
 test('R29 GET /providers answers each descriptor\'s and each generic template\'s config list', async () => {
   const b = await (await handle(new Request('https://file-scanner/providers'), depsWith())).json();
   for (const d of b.offered) assert.deepEqual(d.config, JSON.parse(JSON.stringify(providerById(d.provider_id).config)), d.provider_id);
-  for (const d of b.transports) assert.ok(Array.isArray(d.config) && d.config.some((f) => f.name === 'handling' && f.required), `${d.provider_id}: the administrator states its handling`);
-  assert.deepEqual(b.transports.find((d) => d.provider_id === 'icap').config.find((f) => f.name === 'engine_family').required, true);
+  for (const d of b.transports) {
+    for (const name of ['engine_family', 'handling']) assert.ok(d.config.some((f) => f.name === name && f.required), `${d.provider_id}: the administrator states its ${name} (K2175)`);
+    assert.ok(!d.config.some((f) => f.name === 'host' || f.name === 'region'), 'host and region are the spec\'s own fields');
+  }
 });
 
 test('R31 engine families: clamav\'s is ["clamav"]; differentEngine is true exactly when two families share no name', () => {
