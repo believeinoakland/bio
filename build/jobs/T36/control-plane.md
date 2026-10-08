@@ -125,3 +125,16 @@ The re-run surfaced two fixes:
 - My R60, R61 and R63 tests now take admission's answer for each caller instead of predicting it.
 
 Checks: format, architecture and ownership 0 failures; coverage 36/36. Size: 3,103 lines. After admission's merge I will merge again, drop the guard and re-pin the MEMBER_TOKEN callers.
+
+## J5 · COMPLETE
+
+B5 applied. I merged the tranche branch (908332655c).
+- The guard is dropped; the door imports credentialAddressGate directly.
+- (a) securityTally is now handed env and doAnswer, and a test pins one count per refusal: {kind, country} only, and a failed count changes no answer.
+- (b) groupRead reads the retired key as a stranger, pinned in t36-door and door-share.
+- Red 33 (my share) is re-pinned across 25 test files. The retired member binding is asserted 401 MEMBER_TOKEN_RETIRED (C-38.11) wherever an arm refused it. Other binding classes keep their CLASS_FORBIDDEN controls. Four reached-count floors were lowered to the real figures, with comments.
+- envelope.test.mjs:363 passes the credential to caseReader.
+
+Result: 180/180 pass, 0 skipped. Checks: format, architecture and ownership 0 failures; coverage 36/36. Size: 3,103 lines.
+
+Left to you (admission's): on a public op (e.g. groupdescription) the retired key is read as no one rather than refused 401, because MEMBER_TOKEN_RETIRED is raised only on admit's gated path. B5 (b) treats that as R5's intent for the group read; whether other public ops should refuse it is admission's call. The record is updated.
