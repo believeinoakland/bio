@@ -30,6 +30,7 @@ import { registerInquiryGrammar } from "../inquiry-grammar/index.mjs";
 import { governorOf, governorRoutes } from "../host-governor/index.mjs";
 import { acquisitionOf } from "../acquisition/index.mjs";
 import { captureOf, captureOps } from "../capture/index.mjs";
+import { fileSafetyOf, fileSafetyOps } from "../file-safety/index.mjs";
 import { monitoringOf, monitoringOps } from "../monitoring/index.mjs";
 import { linkSweepOf, linkSweepOps } from "../link-sweep/index.mjs";
 import { connectionsOf, connectionsOps } from "../connections/index.mjs";
@@ -269,6 +270,10 @@ export class Store extends DurableObject {
        with its environment above (its factory reads its deps on the first call only), so a lens change raises a debt on
        a finding concluded under it. */
     biasOf(ctx).registerWorkProducts("finding", inquiryFindings(ctx, biasOf(ctx)));
+    /* K2141 (citation R13, retrieval R76): citation made here, explicitly, before run-productions and before the first
+       request, so its `recordedBy` read is registered with retrieval at boot and does not wait on run-productions'
+       factory reaching it. */
+    citationOf(ctx);
     /* run-productions: created after content, connections, strength and citation, so it declares its tables to purge
        (R17) and registers its candidates with basis-versions (R14). ai-runs is handed over as its own module (its
        R28–R29). */
@@ -292,6 +297,12 @@ export class Store extends DurableObject {
        first `airunopen` arrives; built lazily, that open is refused AI_RUN_MODE_UNCHECKED. */
     actionPlansOf(ctx);
     const capture = captureOf(ctx, { env, attestation });   /* the acquisition act signs its receipt through `cap.attestation` */
+    /* R26 (rev. 2 §4; K2063 (10)): file-safety, directly after capture in the modules' order, built here with this
+       environment (the `FILE_SCANNER` binding and the `CAPTURES` bucket; the evidence store and its prefix are
+       record-core's, R2) and the object's own namespace, since its factory reads its deps on the first call only. Its
+       first construction is its start: its `provenance.onReceipt` listener (its R1) is registered before the first
+       request. Its tables are made and declared to purge in R3's pass. */
+    const fileSafety = fileSafetyOf(ctx, { env, store: this.#ownNamespace() || "bio" });
     /* capture-requests: its table, its `sweep` resolver and its drain; the run sight it reads is ai-runs' (its R28),
        and it registers its wait source with ai-runs (ai-runs R41). Built before link-sweep and handed to it, so
        link-sweep's sweep scope check (its R12) is registered at construction and a sweep-named request drained before
@@ -320,7 +331,10 @@ export class Store extends DurableObject {
     admissionOf(ctx);
     promotion.registerStep(STEP, promotionStep(ctx));   /* R10 (K861, K2037): store-door's step (its R5), the testimony slot and the sight index */
     observationLogOf(ctx).listenToCapture(capture);
-    schedulerOf(ctx, env);
+    /* R26 (K2153; scheduler R24): file-safety handed to the scheduler as the owner of its four batch consumers
+       (`file-scan`, `file-render`, `file-deeper`, `file-forward`) before its start, since its default owners do not
+       build it. */
+    schedulerOf(ctx, env, { fileSafety });
     /* R3: the migration pass, then scheduler's start. */
     ctx.blockConcurrencyWhile(async () => this.#migrate());
     ctx.blockConcurrencyWhile(async () => schedulerOf(ctx, env).start());
@@ -354,8 +368,11 @@ export class Store extends DurableObject {
          construction. */
       let identity = null;
       try { identity = instanceSetup.groupIdentity(); } catch { identity = null; }
-      const ownHosts = ownHostsOf(identity);
-      captureOf(ctx, { ownHosts });
+      /* R28 (N745; installer R47): the copy's own hosts the installer binds, `OWN_HOSTS`, joined with the claim's. */
+      const ownHosts = ownHostsOf(identity, env.OWN_HOSTS);
+      /* R29 (K2087, K2130; acquisition R44): capture (for acquisition) is handed the `FILE_SCANNER` binding and a reader
+         of file-safety's reputation tool, asked at each acquisition, never a value read once here. */
+      captureOf(ctx, { ownHosts, fileScanner: env.FILE_SCANNER ?? null, reputation: () => fileSafety.reputationTool() });
       captureCredentialsOf(ctx, { key: env.CAPTURE_CREDENTIALS_KEY ?? null, ownHosts });
       return started;   /* R1: the blocked work answers instance-setup's start */
     });
@@ -396,6 +413,7 @@ export class Store extends DurableObject {
     inquiryOf(this.ctx).migrate();
     governorOf(this.ctx, { env: this.env }).migrate();
     captureOf(this.ctx).migrate();
+    fileSafetyOf(this.ctx).migrate();   /* R26: its tables, declared to purge (its R25), directly after capture's */
     extractionOf(this.ctx).migrate();
     observationLogOf(this.ctx).migrate();   /* before the run log folds into its tables below */
     runProductionsOf(this.ctx).migrate();
@@ -492,6 +510,8 @@ export class Store extends DurableObject {
       coarchiveset: () => acquisitionOf(ctx).coArchiveSet({ on: body ? body.on : undefined, by: url.searchParams.get("by") }),
       coarchivestate: () => acquisitionOf(ctx).coArchiveState(),
       ...captureOps(captureOf(ctx), url, body, env),
+      /* R26: file-safety's ops (op-declarations R32), at its place directly after capture's map. */
+      ...fileSafetyOps(fileSafetyOf(ctx), url, body, env),
       ...calibrationOps(calibrationOf(ctx), url, body),
       ...biasOps(biasOf(ctx), url, body),
       ...extractionOps(extractionOf(ctx), url, body, env),

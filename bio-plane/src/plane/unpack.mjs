@@ -5,7 +5,8 @@
    event leaves capture's queue only through capture's own calls (`taskEventRemove`, `taskEventAttempt`, its R45).
 
    The daemon's credential travels in the `Authorization` header, never in the address (admission R20, F1). Without
-   `SELF` or `DAEMON_TOKEN` bound the drain is not configured: it calls nothing and wants no wake.
+   `SELF` or `DAEMON_TOKEN` bound the drain is not configured: it calls nothing and wants no wake. The queue is read in
+   pages past capture's opaque `cursor` (R25), so a full head of events at the retry limit hides none behind it.
 
    What ends an event (K2046): an answer `ok` (the call done; a continuation is a new event capture enqueues), or a
    refusal that a retry will not change (a 4xx other than 408 and 429). Anything else (a 5xx, 408, 429, a member that
@@ -17,6 +18,8 @@ export const ARCHIVE_UNPACK = "archive-unpack";
 export const UNPACK_BACKSTOP_MS = 60000;
 export const UNPACK_RETRY_LIMIT = 8;
 export const UNPACK_BATCH = 10;
+/* R25: the page the drain reads capture's queue in, capture R45's largest `limit`. */
+export const UNPACK_PAGE = 1000;
 
 const stamp = (ms) => new Date(ms).toISOString().replace(/\.\d+Z$/, "Z");
 
@@ -40,7 +43,23 @@ export function unpackOutcome(status, body) {
 export function archiveUnpackConsumer({ capture, env }) {
   const configured = () => !!(env && env.SELF && typeof env.SELF.fetch === "function"
                               && typeof env.DAEMON_TOKEN === "string" && env.DAEMON_TOKEN !== "");
-  const events = () => { try { return capture().taskEvents({ kind: ARCHIVE_UNPACK, limit: 1000 }) || []; } catch { return []; } };
+  /* R25 (K2097; capture R45): every queued event, read in pages of `UNPACK_PAGE`, each page after the `cursor` of the last
+     page's last event while a page comes back full, so the events at the retry limit, which stay queued at the head,
+     never hide the newer ones behind them; a cursor that does not move on ends the read, so none is read twice. */
+  const events = () => {
+    const all = [];
+    try {
+      let after = null;
+      for (;;) {
+        const page = capture().taskEvents({ kind: ARCHIVE_UNPACK, limit: UNPACK_PAGE, ...(after !== null ? { after } : {}) }) || [];
+        all.push(...page);
+        const last = page.length ? page[page.length - 1].cursor : null;
+        if (page.length < UNPACK_PAGE || typeof last !== "string" || last === "" || last === after) break;
+        after = last;
+      }
+    } catch { /* what was read stands */ }
+    return all;
+  };
   const next = (now) => {
     let at = null;
     for (const ev of events()) { const d = unpackDueAt(ev, now); if (d !== null && (at === null || d < at)) at = d; }
