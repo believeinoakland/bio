@@ -163,7 +163,7 @@ Terms. A **case** is a production of one project over one or more findings (inqu
 
 - `record-grammar`: `parseFrontmatter`, `normalizeType`, `OBJECT_TYPES`, `sectionText`, `canonicalJson` (T19 layer 8: no longer through the catalogue).
 - `case-grammar`: the formats and predicates, the `/5` blocks and tension section, the attribution run and section locators, `signedCitations` and `publishedGraphEdges` (its R1–R5), re-exported unchanged (K651).
-- `case-carriage` (N532): `holdMaterials`, `heldMaterialsOf`, `publishedMaterialText`, `acceptedWorkLapsed`, `sourcesLapsed` (its R1–R5), for R51, R57 and R59; created by this module's factory so its tables exist at every boot (its R6).
+- `case-carriage` (N532): `holdMaterials`, `heldMaterialsOf`, `publishedMaterialText`, `acceptedWorkLapsed`, `sourcesLapsed` (its R1–R5), for R51, R57 and R59; created by this module's factory so its tables exist at every boot (its R6); the factory forwards `bucket` and `store` from this module's deps when given (as it forwards `sources`), so case-carriage holds an obscured copy (its R11; T37, K2226).
 - `signatures`, `ooxml`: only through `publication/worker.mjs` and `container.mjs` until those files join `public-read`'s paths at this module's T18 job (K651); then neither is a use.
 - `record-core`: `recordOf(ctx)`, `transact`, `stampInstant`, `declarePurge`, the `bundles` read contract, `textAtSha` (its R60; R2);
 - `membership`: `viewerPredicate`, `isProjectOwner`, `isJoinedParticipant`, `existenceAct`, `attestingKeys`, members' handles, covers and status (R17); `groupDescription` (its R110; R65, T34).

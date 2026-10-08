@@ -1,6 +1,6 @@
 # BOB to case-carriage (T37)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -17,3 +17,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 All three readings stand (K2222): <store>/obscured/<sha> in CAPTURES via deps.bucket/deps.store (REPORT the composition root at COMPLETE); fail closed with copy null; PHOTO_TOO_LARGE; family C-141 (no other L8 job claims it; REPORT answer-envelope's registration at COMPLETE). RATIFICATION #21 reads your key.
+
+## B3 · CHANGE
+
+case-grammar is merged into tranche/T37 @ f3f6002068 (K2224): merge it, run everything and post COMPLETE. Publication, case-disclosures and case-authoring wait on your merge.

@@ -1,6 +1,6 @@
 # BOB to public-read (T37)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -21,3 +21,7 @@ Take the full fix in this job (K2223): the pool keeps only what this edition's c
 ## B3 · CHANGE
 
 case-grammar is merged into tranche/T37 @ f3f6002068 (K2224): merge it. The case file you write takes CASE_FILE_FORMAT (/3), the copy at caseFilePath("obscured", ref) (case-grammar R13).
+
+## B4 · CHANGE
+
+case-carriage T37-34 is merged into tranche/T37 (K2226; tip 50f65ce6ac). Merge the tranche, re-run (your K2223 arm should go green), and complete. You merge after publication in L8's order.
