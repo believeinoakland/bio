@@ -53,12 +53,12 @@ Each line is one job (P8): every T38 entry for that module. Fields: module · (N
 
 ### L2
 
-- **T38-3 · <new module> (split from membership; name BOB's)** · (N783) builds by copy the functions BOB's boundary moves (BOB fixes the boundary at the START), its own requirements taking the moved ids (each retired in membership as "moved to <module> R<n>"), with the moved tests; no change to any requirement's meaning · K617, K624, K2186 · req: the new module's file, BOB's (the moved text) · depends —.
+- **T38-3 · project-roster** (new, split from membership; K2270) · (N783) builds by copy what the boundary moves: membership's project working-group acts but the setup acts (C1′ of `plan/membership-split.md`: R37, R39–R42, R46, R48–R53, R63 and the roster halves of R59, R82, R96; `index.mjs` 977–1852 in part, their rows and the requests, votes, decisions and removals tables), reaching membership's tables only through its services and a stated read contract, its own requirements taking the moved ids (each retired in membership as "moved to <module> R<n>"), with the moved tests; no change to any requirement's meaning · K617, K624, K2186 · req: the new module's file, BOB's (the moved text) · depends —.
 - **T38-4 · membership** · (N783) deletes its copy of what T38-3 moved and re-points its callers (and any module's `uses` the split touches); (K657, K1185) R83's `MODULE_ORDER` re-pinned to `modules.json` as the opening left it (the new module in L2), clearing red 4; (N793) the `NO_SUCH_MEMBER` helper and its row (rule 9), in whichever of the two modules the boundary puts member lookup · K617, K624, K657 · req: the moved ids retired, BOB's · depends T38-3. **P6:** 3,970 before the split; reported after it.
 - **T38-5 · credentials** · (N785, its share; K2200) R35 answers a connected member (R43) with a `signin` account (agent-runner R2's `{kind: "signin", member}`, T37-16). (N708's remainder) R22's `subscription` kind retired, its replacement built in T37's L6. (N793) calls membership's `NO_SUCH_MEMBER` helper (rule 9) · K1819, K2134, K2200, K231 · req: R35, R22, BOB's wording · depends T38-4 (N793's helper). **P6:** 2,793.
 - **T38-6 · promotion** · (T37's rule 6 item 2) stamps every row awaiting stamp at T37's close (rows T37's L3–L11 jobs added or re-worded, conformance's seven C-113 rows among them) and the rows T38's L1–L2 jobs add or re-code (T38-5's, the split's moved rows if any `where` moves), so `row-census.test.mjs` is green; the catalogue version moves, any pinned digest moves in its owner's job · K1542, K2231, K2232 · req: none (a stamp) · depends T38-4, T38-5. **P6:** 3,473 (its table grows by rows, not logic).
 
-**L2 merge order:** <new module> (copy) → membership (delete, R83) → credentials → promotion last (it stamps the layer's rows). Then the regeneration order (`case-checker/program.mjs`, the plane bundle).
+**L2 merge order:** project-roster (copy) → membership (delete, R83) → credentials → promotion last (it stamps the layer's rows). Then the regeneration order (`case-checker/program.mjs`, the plane bundle).
 
 ### L3
 
@@ -97,9 +97,11 @@ Each line is one job (P8): every T38 entry for that module. Fields: module · (N
 - **T38-22 · setup-page** · (N793) as T38-21 · K231 · req: BOB's wording · depends T38-4.
 - **T38-23 · instance-setup** · (N793) drops its `NO_SUCH_MEMBER` row and calls membership's helper · K231, K2249 · req: BOB's wording · depends T38-4.
 - **T38-24 · admission** · (N792) `sourceOf` answers the store window's fallback (the instance's key) when `KNOCK_FINGERPRINT_KEY` is unbound, so `setpassword` and `login` count as one source · K2247 · req: its `sourceOf` R, BOB's wording · depends —.
+- **T38-25 · answer-envelope** · (N783) `families.mjs`:126 lists project-roster's checks file after membership's, as the split leaves the rows · K2270 · req: none · depends T38-3 (L2).
+- **T38-26 · plane** · (N783) `store.mjs`:509 and `stats.mjs`:25 reach the moved acts through project-roster · K2270 · req: none · depends T38-3 (L2). Merges last in L11.
 - **T38-16 · control-plane** · (N788) routes `obscuremarkwithdraw` to case-carriage, `by` from the session, unless the opening's check finds case-carriage's ops map (R18, K2226) already carries it; (N793) calls membership's helper · DEC-183, K231 · req: a route R, BOB's wording · depends T38-15. **P6:** 3,263 (K2255).
 
-**L11 merge order:** `modules.json` order: op-grades → tasks → setup-page → instance-setup → op-declarations → admission → control-plane.
+**L11 merge order:** `modules.json` order: op-grades → tasks → setup-page → instance-setup → answer-envelope → op-declarations → admission → control-plane → plane.
 
 ## Left out of T38 (one hard reason each)
 
@@ -132,7 +134,7 @@ Measured on `tranche/T37` @ `5fd61bfb68` (K1821). **membership** 3,970: split fi
 
 ## Summary
 
-**Jobs per layer:** L1 3, L2 4, L3 2, L4 1, L5 0, L6 2, L7 0, L8 5, L9 0, L10 0, L11 7. **Total 24.**
+**Jobs per layer:** L1 3, L2 4, L3 2, L4 1, L5 0, L6 2, L7 0, L8 5, L9 0, L10 0, L11 9. **Total 26.**
 
 ## For BOB
 
