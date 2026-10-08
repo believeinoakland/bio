@@ -215,3 +215,14 @@ test("R57 (T37) a marks answer that is not a list is read as marks that cannot b
   assert.equal(r.photos.length, 1);
   assert.deepEqual(w.snapshot(), before);
 });
+
+test("R57 (T37; K2226) a publication built with the evidence bucket and the store's namespace hands both to the case-carriage it creates, so case-carriage can hold an obscured copy (its R11); built without them, none is handed", () => {
+  const bucket = { put: async () => ({}), get: async () => null, head: async () => null };
+  const w = world({ carriage: { bucket, store: "bio-test" } });
+  const cc = caseCarriageOf(w.host);
+  assert.equal(cc.bucket, bucket);
+  assert.equal(cc.store, "bio-test");
+  assert.equal(w.p.caseCarriage, cc, "the one case-carriage of the host");
+  const bare = world();
+  assert.equal(caseCarriageOf(bare.host).bucket, null);
+});

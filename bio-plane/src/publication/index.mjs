@@ -69,7 +69,8 @@
  *   caseCarriage   `holdMaterials`, `heldMaterialsOf`, `publishedMaterialText`, `acceptedWorkLapsed`, `sourcesLapsed`
  *                  (its R1–R5) and `marksLapsed` (its R13), for R51, R57 and R59 (N532, N757); created at creation with this module's storage, record,
  *                  membership, promotion and clock, so its two tables exist and are declared at every boot (its R6). A
- *                  given `sources`, `acceptedWork` or `extraction` is forwarded to it (test injection).
+ *                  given `sources`, `acceptedWork` or `extraction` is forwarded to it (test injection), and a given
+ *                  `bucket` and `store` (T37, K2226: the evidence bucket and namespace its R11's obscured copy needs).
  *   reevaluation   `registerCaseParts` (its R26), at creation only (R41, R43).
  *   standards      `standardRead` (its R5) and `bindsAt` (its R43), at a case edition's commit only (R72).
  *   entities       `readEntity` (its R5): a criteria row's body by name (R72).
@@ -197,13 +198,14 @@ export class Publication {
 
   constructor({ storage, record, membership, promotion, host = null, inquiry = null, basisVersions = null,
                 contradiction = null, sources = null, credentials = null, corpusExport = null, acceptedWork = null,
-                capture = null, extraction = null, standards = null, entities = null, now = null } = {}) {
+                capture = null, extraction = null, standards = null, entities = null, bucket = null, store = null,
+                now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
     this.#deps = { host, storage, inquiry, basisVersions, contradiction, sources, credentials, corpusExport, acceptedWork,
-                   capture, extraction, standards, entities };
+                   capture, extraction, standards, entities, bucket, store };
     this.now = typeof now === "function" ? now : () => new Date().toISOString();
   }
 
@@ -229,10 +231,13 @@ export class Publication {
   }
   /* N532: case-carriage, one per host, forwarded the uses a test gave this module (its Suggestions' factory). */
   get caseCarriage() {
-    const { host, storage, sources, acceptedWork, extraction } = this.#deps;
+    const { host, storage, sources, acceptedWork, extraction, bucket, store } = this.#deps;
+    /* (T37; K2226) the evidence bucket and the store's namespace, when given, so case-carriage holds an obscured copy
+       (its R11); the plane passes them. */
     return caseCarriageOf(host, { storage, record: this.record, membership: this.membership, promotion: this.promotion,
                                   now: this.now, ...(sources ? { sources } : {}), ...(acceptedWork ? { acceptedWork } : {}),
-                                  ...(extraction ? { extraction } : {}) });
+                                  ...(extraction ? { extraction } : {}), ...(bucket ? { bucket } : {}),
+                                  ...(store != null ? { store } : {}) });
   }
   get corpusExport() {
     return this.#deps.corpusExport ||= corpusExportOf(this.#deps.host, { storage: this.#deps.storage, record: this.record,
