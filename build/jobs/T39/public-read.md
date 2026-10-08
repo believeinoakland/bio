@@ -26,3 +26,7 @@
 - `checks/ownership.mjs public-read tranche/T39`: 0 failures, re-run after commit (below).
 
 Size (session_01Djbnfgfma73t1Qd5xWboXx): test runs 6, module lines 3,543
+
+## J1 · COMPLETE
+
+T39-12 applied, committed and pushed. R23 holds for a member document's copy: the logic was already keyed on obscured. The changes are wording (comments; the unheld reasons ORIGINAL_NOT_CARRIED and ARCHIVE_HOLDS_ORIGINAL say 'a material') and one test in obscured.test.mjs: a member's PDF; its copy is doc-clean.cleanDocument's answer, held as bytes because importing doc-clean fails the architecture check; copy served, original never. 156/156 tests pass; the format, architecture, coverage and ownership checks all report 0 failures. Not yet merged: tranche/T39 after case-carriage. The test does not depend on it; I re-run on your CHANGE. Three observations for other modules (case-carriage R8 checks only images; a calculation input at an original's hash; the docket routes) are in my record.
