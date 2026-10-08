@@ -1,6 +1,6 @@
 # case-disclosures (T39)
 
-**Status** · session_017U4puvgg5SbVfxAghkjSpV · depth 2 · WAITING ON BOB (J1) · handled B2
+**Status** · session_017U4puvgg5SbVfxAghkjSpV · depth 2 · WORKING · handled B2
 
 ## J1 · REPORT
 
