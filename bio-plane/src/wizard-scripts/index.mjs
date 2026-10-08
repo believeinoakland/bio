@@ -21,6 +21,8 @@
  *                    `isAdministrator` (R64), `projectOwners` (R65), `activeAdmins` (R86), `inSight` (R80); and
  *                    `viewerPredicate` (R43), `notAnAdmin` (R84).
  *   filingTemplates  `offeredVersion` (its R25), for a `{template}` draft (R2, R12).
+ *   credentials      `aiKeptAway` (its R35; T37, N765, K231): whether the group keeps its material away from AI, read
+ *                    at each writing-help call (R24, R27), the one reading of keep-away; reached on first need.
  *   now              the instance clock, milliseconds (default `env.BIO_NOW_MS`, else the wall clock).
  *
  * No place, law, venue or wording of a script is named here (R20). */
@@ -28,6 +30,7 @@
 import { recordOf, stampInstant, mintExhausted } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, notAnAdmin } from "../membership/index.mjs";
 import { filingTemplatesOf } from "../filing-templates/index.mjs";
+import { credentialsOf } from "../credentials/index.mjs";
 import { isMachineIdentity } from "../record-grammar/actors.mjs";
 import { proposalLabel } from "../record-grammar/labels.mjs";
 import { sha256HexSync } from "../record-grammar/sha256.mjs";
@@ -36,7 +39,7 @@ import { WIZARD_SCRIPTS_TABLES, WIZARD_SCRIPTS_TABLE_CLASSES, WIZARD_SCRIPTS_MIN
 import { CIVICSMITH_LIBRARY } from "./civicsmith-library.mjs";
 import { SCREEN_REGISTRY } from "./screen-registry.mjs";
 import { FRONT_DOORS } from "./front-doors.mjs";
-import { helpRefusedActs, writingHelpAt, FIRSTHAND_ACTS, TOLD_MAX, WRITING_HELP_NAMED } from "./writing-help.mjs";
+import { helpRefusedActs, writingHelpAt, FIRSTHAND_ACTS, TOLD_MAX, WRITING_HELP_NAMED, KEPT_AWAY } from "./writing-help.mjs";
 
 export { WIZARD_SCRIPTS_CHECKS } from "./checks.mjs";
 export { WIZARD_SCRIPTS_SCHEMA, WIZARD_SCRIPTS_TABLES, WIZARD_SCRIPTS_TABLE_CLASSES } from "./schema.mjs";
@@ -44,7 +47,7 @@ export { CIVICSMITH_LIBRARY, CIVICSMITH_LIBRARY_SOURCE } from "./civicsmith-libr
 export { SCREEN_REGISTRY, SCREEN_REGISTRY_SOURCE } from "./screen-registry.mjs";
 export { FRONT_DOORS } from "./front-doors.mjs";
 export { checkDraft, writingHelpAt, helpRefusedActs, isReasonField, factsOf, sentencesOf, FIRSTHAND_ACTS, HELP_NAMED_REFUSED, HELP_SET_TIME_REFUSED,
-         WRITING_HELP_NAMED, TOLD_MAX } from "./writing-help.mjs";
+         WRITING_HELP_NAMED, TOLD_MAX, KEPT_AWAY } from "./writing-help.mjs";
 
 /* ---------------------------------------------------------------- the vocabularies */
 
@@ -182,14 +185,16 @@ function libraryEntry(e) {
                          approved: isObj(e.approved) ? { by: e.approved.by ?? null, at: e.approved.at ?? null } : { by: null, at: null } });
 }
 /* R13: a screen's registered acts: its `acts`, and each `owed` act whose op the member op table declares, at its place
-   in the file's order (DEC-148; K1785); with no op table, no owed act is registered. */
+   in the file's order (DEC-148; K1785); with no op table, no owed act is registered. With an op table (T37; N776,
+   K2171), an act whose op the table does not hold is not registered either, owed or not, so the screens registered,
+   `wizardsAt` and R12 answer one registry: no screen lists an act R12 refuses as unknown. */
 function screenActs(s, ops) {
   const acts = Array.isArray(s.acts) ? [...s.acts] : [...nameSet(s.acts)];
   const owed = (Array.isArray(s.owed) ? s.owed : []).filter((o) => isObj(o) && typeof o.op === "string" && ops && ops.has(o.op));
   owed.slice().sort((a, b) => (Number(a.at) || 0) - (Number(b.at) || 0)).forEach((o, i) => {
     acts.splice(Math.min(Math.max(Number(o.at) || 0, 0), acts.length - i) + i, 0, o.op);
   });
-  return nameSet(acts);
+  return nameSet(ops ? acts.filter((a) => ops.has(a)) : acts);
 }
 /** R13: a registration's parts, normalised: the screens by id, the ops (null when none was given), the acts a machine is
  *  refused, the labelled machine drafts and the library. */
@@ -328,11 +333,12 @@ export function requiredFailures({ screens = [], ops = null, machineRefused = []
 /* ================================================================ the module */
 
 export class WizardScripts {
-  constructor({ storage, record, membership, filingTemplates = null, now = null, env = null } = {}) {
+  constructor({ storage, record, membership, filingTemplates = null, credentials = null, now = null, env = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.templates = filingTemplates;
+    this.credentials = credentials;   /* the module, or a function reaching it on first need */
     this.now = typeof now === "function" ? now : null;
     this.env = env && typeof env === "object" ? env : {};
     this.reg = null;
@@ -352,6 +358,16 @@ export class WizardScripts {
   /* R15, R16: the day, and nothing finer. */
   #day() { return this.#when().slice(0, 10); }
   #registration() { return this.reg || normaliseRegistration({}); }
+  /* R24 item 1 (T37; N765, K231): `credentials.aiKeptAway()` (its R35) as it answers now: null, or its AI_KEPT_AWAY
+     refusal. A credentials that cannot be reached or answers by throwing is no reading of null: undefined, which R24
+     reads as kept away (fail closed, K2093). */
+  #keptAway() {
+    try {
+      if (typeof this.credentials === "function") this.credentials = this.credentials();
+      const c = this.credentials;
+      return c && typeof c.aiKeptAway === "function" ? c.aiKeptAway() : undefined;
+    } catch { return undefined; }
+  }
 
   /* ================================================================ who acts (R18, R19) */
 
@@ -1341,10 +1357,15 @@ export class WizardScripts {
   /* ================================================================ R24, R27: writing help */
 
   /** R24 (in-process): whether the assistant may help word `field` of `op` for this viewer, `{offered: true}` or
-   *  `{offered: false, code}`, against the registration's refused and irreversible acts. Writes nothing; never throws. */
+   *  `{offered: false, code}`: first `AI_KEPT_AWAY` while `credentials.aiKeptAway()` answers its refusal (read here, at
+   *  the call; T37, N765), then `AI_NO_ACCOUNT` where `assistant.account` names none, then the registration's refused
+   *  and irreversible acts. Writes nothing; never throws. */
   writingHelpAt(args = {}) {
+    return this.#helpAt(args, this.#keptAway());
+  }
+  #helpAt(args, away) {
     const { op = null, field = null, draftHeld = false, assistant = null } = isObj(args) ? args : {};
-    return writingHelpAt({ op, field, draftHeld, assistant }, this.#registration().helpRefused);
+    return writingHelpAt({ op, field, draftHeld, assistant }, this.#registration().helpRefused, away);
   }
 
   /** R24 (in-process; B3, K1861 (1): `affordances` R44 reads it through `op=affordancescreens`): the acts the assistant
@@ -1359,12 +1380,16 @@ export class WizardScripts {
    *  `WRITING_HELP_NOTHING_TOLD`; past them, while the assistant's model turn does not exist (N686, T35; K1837),
    *  `ASSISTANT_DRAFT_UNAVAILABLE`, the field unchanged. The door routes the op itself and calls this with the POST body's
    *  `{op, field, told, draftHeld}`, its own `assistant` (`{on, account: {kind, level}}`, never the key) and the stamps
-   *  (B4, K1863 (7)); its refusals (`ASSISTANT_OFF`, the account's, the ceilings) come first (`control-plane` R57).
+   *  (B4, K1863 (7)); its refusals (keep-away, the account's, the ceilings) come first (`control-plane` R57). A
+   *  keep-away is answered as `credentials` answers it (its R35's row and `keep_away`, K231), never re-minted here.
    *  Writes nothing. */
   writingHelp(args = {}) {
     const { op = null, field = null, told = null, draftHeld = false, assistant = null } = isObj(args) ? args : {};
-    const at = this.writingHelpAt({ op, field, draftHeld, assistant });
-    if (!at.offered) return refuse(at.code, "the assistant does not help word this field", { op: typeof op === "string" ? op.slice(0, 80) : null });
+    const away = this.#keptAway();
+    const at = this.#helpAt({ op, field, draftHeld, assistant }, away);
+    const asked = { op: typeof op === "string" ? op.slice(0, 80) : null };
+    if (!at.offered && at.code === KEPT_AWAY && isObj(away) && away.ok === false) return { ...away, ...asked };
+    if (!at.offered) return refuse(at.code, "the assistant does not help word this field", asked);
     const text = typeof told === "string" ? told : Array.isArray(told) ? told.filter((x) => typeof x === "string").join("\n") : "";
     /* DEC-49 REGION is-writing-help-request */
     if (!text.trim() || text.length > TOLD_MAX)
@@ -1523,7 +1548,8 @@ export function wizardScriptsOf(host, deps) {
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     const filingTemplates = d.filingTemplates || filingTemplatesOf(host, { record, membership });
-    w = new WizardScripts({ ...d, storage, record, membership, filingTemplates, env: d.env ?? host.env ?? null });
+    const credentials = d.credentials || (() => credentialsOf(host, { record, membership }));   /* R24: on first need */
+    w = new WizardScripts({ ...d, storage, record, membership, filingTemplates, credentials, env: d.env ?? host.env ?? null });
     instances.set(host, w);
     w.migrate();
     record.declareTable("wizard-scripts", WIZARD_SCRIPTS_TABLE_CLASSES.map((t) => ({ ...t })));

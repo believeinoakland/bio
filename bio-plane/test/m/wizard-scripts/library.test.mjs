@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { seeded, approved, draft, world, V, MACHINE, STEPS, step, SCREENS, OPS, MACHINE_REFUSED, MACHINE_DRAFTS, LIBRARY } from "./fixture.mjs";
+import { seeded, approved, draft, world, registration, V, MACHINE, STEPS, step, SCREENS, OPS, MACHINE_REFUSED, MACHINE_DRAFTS, LIBRARY } from "./fixture.mjs";
 import * as wz from "../../../src/wizard-scripts/index.mjs";
 
 const A = V("alice"), F = V("frank"), E = V("erin"), D = V("dave");
@@ -27,7 +27,7 @@ const refused = (r, c, why = "") => {
 
 test("R13 SCREEN_REGISTRY is DEC-139's registry as the file holds it, screen by screen and act by act: [{id, name, purpose, acts}], acts the declared and function ops in the file's order, owed acts apart; frozen; its source the vendored file", () => {
   const sha = createHash("sha256").update(src("registry.json"), "utf8").digest("hex");
-  assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: "36da334628", path: "docs/development/ux-substrate/screens/registry.json", sha256: sha });
+  assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: "e08cd35ecb", path: "docs/development/ux-substrate/screens/registry.json", sha256: sha });
   assert.equal(wz.SCREEN_REGISTRY.length, REG_FILE.screens.length);
   assert.equal(wz.SCREEN_REGISTRY.length, 47);
   REG_FILE.screens.forEach((f, i) => {
@@ -45,9 +45,13 @@ test("R13 SCREEN_REGISTRY is DEC-139's registry as the file holds it, screen by 
   assert.ok(Object.isFrozen(wz.SCREEN_REGISTRY) && Object.isFrozen(wz.SCREEN_REGISTRY[0]) && Object.isFrozen(wz.SCREEN_REGISTRY[0].acts));
 });
 
-test("R13 (T36; K2130) the registry is re-taken from PR #13's merge to main, its commit named as the source, so connect is \"The assistant\"; the library keeps its own commit (R22): each file names its own", () => {
-  assert.equal(wz.SCREEN_REGISTRY_SOURCE.commit, "36da334628");
-  assert.deepEqual(REG_FILE.screens.find((f) => f.id === "connect").name, "The assistant", "the vendored file is PR #13's");
+test("R13 (T37; K2171) the registry is re-taken from PR #14's merge to main (e08cd35ecb), its commit named as the source: connect is still \"The assistant\", setup no longer offers assistantset, and the library keeps its own commit (R22): each file names its own", () => {
+  assert.equal(wz.SCREEN_REGISTRY_SOURCE.commit, "e08cd35ecb");
+  assert.deepEqual(REG_FILE.screens.find((f) => f.id === "connect").name, "The assistant", "the vendored file is PR #14's");
+  const setup = wz.SCREEN_REGISTRY.find((s) => s.id === "setup");
+  assert.ok(!setup.acts.includes("assistantset") && !REG_FILE.screens.find((f) => f.id === "setup").acts.some((a) => a.op === "assistantset"),
+            "PR #14 drops assistantset (DEC-182 (3))");
+  assert.deepEqual(wz.SCREEN_REGISTRY.find((s) => s.id === "proceeding").acts[0], "entitycreate", "DEC-182 (1): registerproceeding re-pointed");
   const connect = wz.SCREEN_REGISTRY.find((s) => s.id === "connect");
   assert.equal(connect.name, "The assistant");
   const w = seeded({ register: false });
@@ -63,9 +67,9 @@ test("R13 a registration without screens registers SCREEN_REGISTRY; an owed act 
   assert.deepEqual([r.ok, r.screens], [true, 47]);
   const by = Object.fromEntries(w.wz.registeredScreens().map((s) => [s.id, s.acts]));
   assert.deepEqual(by.join, ["invitelook", "enroll"], "memberlanguageset undeclared: not registered");
-  assert.deepEqual(by.home, ["projectcreated", "startfrom"], "startfrom declared: registered at its place");
-  assert.deepEqual(by.ceremony, ["publishpreflight", "publishtensions", "caseratify", "publish", "publishat"]);
-  assert.deepEqual(by.setup.slice(6, 10), ["placewanted", "assistantset", "aikeepaway", "groupkeyset"], "an owed act between two declared ones keeps its place");
+  assert.deepEqual(by.home, ["promote", "startfrom"], "startfrom declared: registered at its place");
+  assert.deepEqual(by.ceremony, ["publishpreflight", "publishtensions", "caseratify", "publish", "publishat", "obscuremark"]);
+  assert.deepEqual(by.setup.slice(5, 9), ["entitycreate", "placewanted", "aikeepaway", "groupkeyset"], "an owed act between two declared ones keeps its place");
   assert.deepEqual(by.security, ["securitymap", "securitytooladd", "securitytooltest", "securitytoolremove"], "an act a K ruling owes, as one a DEC owes");
   assert.deepEqual(by.notes, ["notewrite", "noteturn", "noterevise", "notedelete", "writinghelp"]);
   assert.deepEqual(by.account, ["expertisedeclare", "setpassword", "signerregisterown", "signerrevokeown", "infolevelset"]);
@@ -78,12 +82,47 @@ test("R13 a registration without screens registers SCREEN_REGISTRY; an owed act 
   const w2 = seeded({ register: false });
   w2.wz.wizardRegister({ library: [] });
   const by2 = Object.fromEntries(w2.wz.registeredScreens().map((s) => [s.id, s.acts]));
-  assert.deepEqual([by2.home, by2.translations], [["projectcreated"], []]);
+  assert.deepEqual([by2.home, by2.translations], [["promote"], []]);
   assert.deepEqual(w2.wz.registeredScreens().map((s) => s.acts), wz.SCREEN_REGISTRY.map((s) => [...s.acts]));
   /* and a registered owed act is checked as any act is */
   assert.deepEqual(wz.checkScript([step("home", "startfrom")], real()).refusals, []);
   assert.deepEqual(wz.checkScript([step("home", "startfrom")], real({ ops: ALL_OPS.filter((o) => o !== "startfrom") })).refusals.map((x) => x.code),
                    ["WIZARD_ACT_UNKNOWN"]);
+});
+
+test("R13 (T37; N776) with an op table registered, a declared or function act whose op the table lacks is not registered, as an owed act whose op is undeclared is not: registeredScreens, the registry form, wizardsAt and op=wizardcheck answer one registry, every listed act passing R12 and every unlisted one refused; with no op table every declared and function act stays registered", () => {
+  const lacking = ["groupkeyswitch", "knock", "calculationcreate"];   /* declared on setup, function on doorbell, declared on finder */
+  const ops = ALL_OPS.filter((o) => !lacking.includes(o));
+  const w = world({ register: false });
+  w.member("frank");
+  w.wz.wizardRegister({ ops, library: [] });
+  const by = Object.fromEntries(w.wz.registeredScreens().map((s) => [s.id, s.acts]));
+  assert.ok(!by.setup.includes("groupkeyswitch") && by.setup.includes("groupkeyset"), "the declared act the table lacks, gone; its neighbour kept");
+  assert.deepEqual(by.doorbell, [], "a function act the table lacks");
+  assert.ok(!by.finder.includes("calculationcreate"));
+  for (const f of REG_FILE.screens) {
+    const want = f.acts.map((a) => (a.status === "owed" ? OWED.exec(a.op)[1] : a.op)).filter((op) => ops.includes(op));
+    assert.deepEqual(by[f.id], want, `${f.id}: the file's acts the table holds, in the file's order`);
+  }
+  assert.deepEqual(w.wz.wizardRegistry({ viewer: F }).screens.map((s) => [s.id, s.acts]), w.wz.registeredScreens().map((s) => [s.id, s.acts]));
+  /* one registry: every registered act passes R12 through op=wizardcheck, every act the file lists and the table lacks is refused */
+  const check = (screen, act) => wz.wizardScriptsOps(w.wz, new URL(`https://x/?viewer=${encodeURIComponent(F)}`), { steps: [step(screen, act), step(screen, null)] })
+    .wizardcheck().refusals.map((x) => x.code);
+  for (const sc of w.wz.registeredScreens()) for (const act of sc.acts) assert.deepEqual(check(sc.id, act), [], `${sc.id}/${act}`);
+  for (const [screen, act] of [["setup", "groupkeyswitch"], ["doorbell", "knock"], ["finder", "calculationcreate"]])
+    assert.deepEqual(check(screen, act), ["WIZARD_ACT_UNKNOWN"], `${screen}/${act}`);
+  /* wizardsAt offers no script on an act the registry does not list: a group's draft naming one is refused at submit */
+  assert.deepEqual(w.wz.wizardsAt({ screen: "doorbell", viewer: F }).scripts, []);
+  /* negative control: with no op table every declared and function act is registered */
+  const w0 = world({ register: false });
+  w0.wz.wizardRegister({ library: [] });
+  const by0 = Object.fromEntries(w0.wz.registeredScreens().map((s) => [s.id, s.acts]));
+  assert.ok(by0.setup.includes("groupkeyswitch") && by0.doorbell.includes("knock") && by0.finder.includes("calculationcreate"));
+  /* the test registry too: an op table lacking an act a screen lists */
+  const t = seeded({ register: false });
+  t.wz.wizardRegister(registration({ ops: OPS.filter((o) => o !== "casejoin") }));
+  assert.deepEqual(t.wz.registeredScreens().find((s) => s.id === "case-home").acts, ["casenote"]);
+  assert.deepEqual(t.wz.wizardCheck({ steps: [step("case-home", "casejoin"), STEPS[0]], viewer: F }).refusals.map((x) => [x.code, x.step]), [["WIZARD_ACT_UNKNOWN", 1]]);
 });
 
 test("R22 CIVICSMITH_LIBRARY is the seventeen scripts of library.json at the named commit, in its order, each with the file's id, name, start and steps (screen, act, what, why, draft), a side trip as the named script's id and an owed act as its op; the file's notes not carried", () => {
@@ -140,7 +179,7 @@ test("R22 each library script is origin civicsmith, scope group, one version 1 a
   assert.ok(w.wz.wizardsAt({ screen: "ceremony", viewer: D }).scripts.some((s) => s.name === "Publication ceremony"));
 });
 
-test("R22 every write on a library script is refused WIZARD_NOT_THE_GROUPS (R9), and R14 is run on them: with every op the registry names declared, no required flow fails and every script passes R12", () => {
+test("R22 every write on a library script is refused WIZARD_NOT_THE_GROUPS (R9), and R14 is run on them: with every op the registry names declared, the one required flow R14 names is \"Set up and claim\" (step 11, assistantset, until Bob approves its version 2), and every other script but \"Follow a proceeding\" (step 2, registerproceeding) passes R12", () => {
   const w = seeded({ register: false });
   w.wz.wizardRegister({ ops: ALL_OPS });
   const e = wz.CIVICSMITH_LIBRARY[1], v = `${e.id}@1`;
@@ -152,21 +191,47 @@ test("R22 every write on a library script is refused WIZARD_NOT_THE_GROUPS (R9),
   refused(w.wz.wizardApprove({ version: v, widen: true, by: E, viewer: E }), "WIZARD_NOT_THE_GROUPS");
   refused(w.wz.wizardRetire({ script: e.id, reason: "r", by: E, viewer: E }), "WIZARD_NOT_THE_GROUPS");
   refused(w.wz.wizardRetire({ version: v, reason: "r", by: E, viewer: E }), "WIZARD_NOT_THE_GROUPS");
-  assert.deepEqual(wz.requiredFailures(real()), []);
+  const setup = wz.CIVICSMITH_LIBRARY.find((x) => x.name === "Set up and claim");
+  assert.deepEqual(wz.requiredFailures(real()).map((f) => [f.name, f.version, f.refusal.code, f.refusal.step, f.refusal.detail]),
+                   [["Set up and claim", `${setup.id}@1`, "WIZARD_ACT_UNKNOWN", 11, "the screen 'setup' offers no act 'assistantset'"]]);
   const offered = wz.CIVICSMITH_LIBRARY.map((x) => ({ id: x.id, steps: x.steps }));
-  for (const x of wz.CIVICSMITH_LIBRARY) assert.deepEqual(wz.checkScript(x.steps, { ...real(), offered, self: x.id }).refusals, [], x.name);
+  const failing = { "Set up and claim": [["WIZARD_ACT_UNKNOWN", 11]], "Follow a proceeding": [["WIZARD_ACT_UNKNOWN", 2]] };
+  for (const x of wz.CIVICSMITH_LIBRARY)
+    assert.deepEqual(wz.checkScript(x.steps, { ...real(), offered, self: x.id }).refusals.map((f) => [f.code, f.step]), failing[x.name] ?? [], x.name);
+});
+
+test("R22 (T37; N775) with no ruling recording Bob's approval of version 2 at T37-25's START, every library script keeps version 1 as carried from d129238bf3: none updated, none of PR #14's newer steps carried (\"Set up and claim\" step 11 on assistantset, no aikeepaway; \"Publication ceremony\" with no Photos step; \"Follow a proceeding\" on registerproceeding); the plane's release suite stays red on R14 (red 7)", () => {
+  assert.equal(wz.CIVICSMITH_LIBRARY_SOURCE.commit, "d129238bf3");
+  for (const e of wz.CIVICSMITH_LIBRARY) assert.deepEqual([e.version, e.approved], [1, { by: "Bob", at: "2026-10-06" }], e.name);
+  const by = (n) => wz.CIVICSMITH_LIBRARY.find((e) => e.name === n);
+  assert.deepEqual([by("Set up and claim").steps[10].screen, by("Set up and claim").steps[10].act], ["setup", "assistantset"]);
+  assert.ok(!by("Set up and claim").steps.some((t) => t.act === "aikeepaway"), "version 2's keep-away step not carried");
+  assert.ok(!by("Publication ceremony").steps.some((t) => t.act === "obscuremark"), "version 2's Photos step not carried");
+  assert.equal(by("Follow a proceeding").steps[1].act, "registerproceeding", "version 2's entitycreate not carried");
+  /* read so: version 1 offered or withheld as R11 judges it, never updated, and no version 2 */
+  const w = world({ register: false });
+  w.member("frank");
+  w.wz.wizardRegister({ ops: ALL_OPS });
+  for (const e of wz.CIVICSMITH_LIBRARY) {
+    const r = w.wz.wizardRead({ script: e.id, viewer: F });
+    assert.deepEqual([r.version.id, r.version.state, r.version.updated_by], [`${e.id}@1`, "approved", null], e.name);
+    assert.equal(w.wz.wizardRead({ script: e.id, version: `${e.id}@2`, viewer: F }).reason, "NO_SUCH_WIZARD", `${e.name}: no version 2`);
+    assert.equal(r.offered, !["Set up and claim", "Follow a proceeding"].includes(e.name), `${e.name}: offered while it passes R12 (R11)`);
+  }
 });
 
 test("R14 over the real library: while an owed act its required flows walk is undeclared, requiredFailures names the flow with its first refusal; an optional flow is never named", () => {
+  /* "Set up and claim" fails on its own step 11 whatever is declared (assistantset is gone, R22): left out here */
   const without = (ops) => wz.requiredFailures(real({ ops: ALL_OPS.filter((o) => !ops.includes(o)) }))
-    .map((f) => [f.name, f.refusal.code, f.refusal.step, f.version]);
+    .filter((f) => f.name !== "Set up and claim").map((f) => [f.name, f.refusal.code, f.refusal.step, f.version]);
   const id = (name) => wz.CIVICSMITH_LIBRARY.find((e) => e.name === name).id;
   assert.deepEqual(without(["memberlanguageset", "publishat"]), [
     ["Welcome a new member", "WIZARD_ACT_UNKNOWN", 1, `${id("Welcome a new member")}@1`],
     ["Publication ceremony", "WIZARD_ACT_UNKNOWN", 10, `${id("Publication ceremony")}@1`]]);
   assert.deepEqual(without(["startfrom"]), [["Welcome a new member", "WIZARD_ACT_UNKNOWN", 7, `${id("Welcome a new member")}@1`]]);
   assert.deepEqual(without(["translationdraft", "translationadopt", "translationconfirm", "subscriptionsignin"]), [], "owed acts of optional flows block nothing");
-  assert.deepEqual(without(["claim"]).map((x) => x[0]), ["Set up and claim"]);
+  assert.deepEqual(wz.requiredFailures(real({ ops: ALL_OPS.filter((o) => o !== "claim") })).map((f) => [f.name, f.refusal.step]), [["Set up and claim", 5]],
+                   "its first refusal named: step 5's claim, before step 11");
   /* the registration plane makes today (no screens of the new interface): every required flow is named */
   assert.deepEqual(wz.requiredFailures(real({ screens: [] })).map((f) => f.name), ["Set up and claim", "Welcome a new member", "Publication ceremony"]);
 });
@@ -194,7 +259,9 @@ test("R23 startFrom answers the offered scripts this viewer may start, the libra
   const w2 = world({ register: false });
   w2.member("frank");
   w2.wz.wizardRegister({ ops: ALL_OPS });
-  assert.deepEqual(w2.wz.startFrom({ viewer: F }).scripts.map((s) => s.name), wz.CIVICSMITH_LIBRARY.filter((e) => !e.required).map((e) => e.name));
+  assert.deepEqual(w2.wz.startFrom({ viewer: F }).scripts.map((s) => s.name),
+                   wz.CIVICSMITH_LIBRARY.filter((e) => !e.required && e.name !== "Follow a proceeding").map((e) => e.name),
+                   "the optional scripts, but one R11 withholds (its registerproceeding is gone, R22)");
 });
 
 test("R11 (K1883) a library script that fails R12 against the registration is not offered until it passes, as R13 withholds a group's: absent from wizardsAt, the registry form, startFrom and the offered reads; a passing one offered; the library data unchanged", () => {

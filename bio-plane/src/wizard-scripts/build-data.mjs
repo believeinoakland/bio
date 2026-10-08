@@ -2,8 +2,9 @@
  *
  *   node bio-plane/src/wizard-scripts/build-data.mjs <registry.json> <registry-commit> <library.json> <library-commit>
  *
- * Reads each file as it stands at its own commit (the commits the job's START names: the registry re-taken from PR #13's
- * merge to `main`, K2130; the library fixed at DEC-148's, R22, K1790) and writes `screen-registry.mjs` and
+ * Reads each file as it stands at its own commit (the commits the job's START names: since T37 the registry re-taken
+ * from PR #14's merge to `main`, `e08cd35ecb`; the library kept at `d129238bf3`, DEC-148's, until Bob approves a
+ * version 2, R22, K1790) and writes `screen-registry.mjs` and
  * `civicsmith-library.mjs` beside this file, each naming its own source's commit, path and SHA-256. A run on the same
  * files writes the same bytes. Not part of the bundle: nothing imports it, and importing it (as a test that reads every
  * module file does) writes nothing: it runs only as a command. */
