@@ -5,8 +5,13 @@
    `unitsOf` (its R36), which the test sets (`w.units`); the knocks `sources` mints its sources from are pulled through a
    stand-in for capture's one keyed read (`w.knock`); what case-import registers with `accepted-work` is a stand-in each
    test controls (`w.importer`). The case document is written with case-grammar's own line builders, as case-authoring
-   writes it. Every test drives `case-carriage` at its interface. */
-import { world as provenanceWorld, sha, V, provDoc, infoMd } from "../provenance/fixture.mjs";
+   writes it. Every test drives `case-carriage` at its interface.
+   (T37; R9–R13) A photo is a capture whose bytes are only in the evidence store: record-core's `evidenceStore` (its R38)
+   answers a stand-in keyed by digest (`w.evidence`), and the obscured copy is held in a stand-in bucket (`w.bucket`). The
+   photos are PNGs built here (`makePng`) and read back by a decoder written here (`decodePng`), independent of
+   `image-cover`, so a test checks each covered and uncovered pixel. */
+import { deflateSync, inflateSync } from "node:zlib";
+import { world as provenanceWorld, sha, V, provDoc, infoMd, evidence } from "../provenance/fixture.mjs";
 import { sourcesOf } from "../../../src/sources/index.mjs";
 import { acceptedWorkOf } from "../../../src/accepted-work/index.mjs";
 import { materialsLines, acceptedWorkBlockLines, sourceBlockLines } from "../../../src/case-grammar/index.mjs";
@@ -27,11 +32,17 @@ export function world() {
   const units = new Map(), unitCalls = [];
   const extraction = { unitsOf: (s) => { unitCalls.push(s); return units.has(s) ? { capture_sha: s, ...units.get(s) }
                                                                                : { capture_sha: s, units: [], state: null }; } };
+  /* R11: record-core's evidence store over a stand-in keyed by digest (the instance was built without a bucket), and
+     the bucket the copy is held in */
+  const ev = evidence();
+  record.evidenceStore = () => ({ head: (d) => ev.head(String(d)), get: (d) => ev.get(String(d)),
+                                  put: (d, b) => ev.put(String(d), b) });
+  const bucket = bucketStandIn();
   const cc = caseCarriageOf(host, { record, membership, promotion, sources: src, acceptedWork, extraction,
-                                    now: () => w.clock.now });
+                                    now: () => w.clock.now, bucket, store: "bio" });
   let n = 0;
   return Object.assign(w, {
-    src, acceptedWork, units, unitCalls, cc,
+    src, acceptedWork, units, unitCalls, cc, evidence: ev, bucket,
     member(id, { role = "member", status = "active" } = {}) {
       st.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
                    VALUES (?, ?, ?, ?, ?, '["contribute"]', 't', 't')`, id, `Cover ${id}`, `h_${id}`, role, status);
@@ -75,7 +86,90 @@ export function world() {
       return calls;
     },
     tables: () => w.rows(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`).map((r) => r.name),
+    /** A photo: an information bundle whose capture `bytes` is held only in the evidence store, registered at
+     *  `snapshots/<name>`, its home's provenance recording `contentType` (none when null). Answers its digest. */
+    photo(id, bytes, { name = "photo.png", contentType = "image/png", inEvidence = true } = {}) {
+      const b = Buffer.from(bytes), s = sha(b);
+      w.doc(id, { text: `the page about ${id}` });
+      const path = `snapshots/${name}`;
+      st.sql.exec(`INSERT INTO register (capture_sha, bundle_id, path, encoding, bytes, registered) VALUES (?, ?, ?, 'binary', ?, ?)`,
+                  s, id, path, b.length, NOW);
+      st.sql.exec(`INSERT INTO files (bundle_id, path, content, blob_sha, bytes, sha256) VALUES (?, ?, NULL, ?, ?, ?)`, id, path, s, b.length, s);
+      const capture = { method: "acquire", grade: "B", sha256: s, encoding: "binary", bytes: b.length,
+                        ...(contentType ? { content_type: contentType } : {}) };
+      st.sql.exec(`UPDATE files SET content=? WHERE bundle_id=? AND path='data/provenance.json'`,
+                  JSON.stringify({ documents: [{ file: path, capture }] }), id);
+      if (inEvidence) ev.held.set(s, b);
+      return s;
+    },
   });
+}
+
+/** A bucket stand-in: `put(key, bytes, opts)` keeps the bytes and the options; `get(key)` answers them. */
+export function bucketStandIn() {
+  const held = new Map(), calls = [];
+  return {
+    held, calls,
+    async put(k, bytes, opts = {}) { calls.push(["put", k]); held.set(k, { bytes: Buffer.from(bytes), opts }); return { key: k }; },
+    async get(k) { calls.push(["get", k]); const o = held.get(k); return o ? { arrayBuffer: async () => o.bytes, ...o.opts } : null; },
+    async head(k) { calls.push(["head", k]); const o = held.get(k); return o ? { size: o.bytes.length } : null; },
+  };
+}
+
+/* PNG, written and read here (8-bit RGB, not interlaced). */
+const crcTable = Array.from({ length: 256 }, (_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
+const crc = (b) => { let c = 0xffffffff; for (const x of b) c = crcTable[(c ^ x) & 0xff] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
+const chunk = (type, data) => {
+  const t = Buffer.from(type, "latin1"), len = Buffer.alloc(4), c = Buffer.alloc(4);
+  len.writeUInt32BE(data.length); c.writeUInt32BE(crc(Buffer.concat([t, data])));
+  return Buffer.concat([len, t, data, c]);
+};
+/** An RGB PNG of `width` x `height` whose pixel (x, y) is `px(x, y)` → [r, g, b] (default a gradient, never black). */
+export function makePng(width, height, px = (x, y) => [40 + (x * 7) % 200, 40 + (y * 11) % 200, 120]) {
+  const raw = Buffer.alloc((width * 3 + 1) * height);
+  for (let y = 0; y < height; y++) {
+    raw[y * (width * 3 + 1)] = 0;
+    for (let x = 0; x < width; x++) { const [r, g, b] = px(x, y); raw.set([r, g, b], y * (width * 3 + 1) + 1 + x * 3); }
+  }
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(width, 0); ihdr.writeUInt32BE(height, 4); ihdr[8] = 8; ihdr[9] = 2;
+  return Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk("IHDR", ihdr),
+                        chunk("tEXt", Buffer.from("Comment\u0000taken by a member", "latin1")),
+                        chunk("IDAT", deflateSync(raw)), chunk("IEND", Buffer.alloc(0))]);
+}
+/** Decode an 8-bit, non-interlaced PNG of colour type 0, 2, 4 or 6 (or 3 with its palette): `{width, height, at(x, y)
+ *  → [r, g, b], chunks}`. */
+export function decodePng(buf) {
+  const b = Buffer.from(buf);
+  let o = 8, width = 0, height = 0, type = 0, palette = null;
+  const idat = [], chunks = [];
+  while (o < b.length) {
+    const len = b.readUInt32BE(o), t = b.toString("latin1", o + 4, o + 8), data = b.subarray(o + 8, o + 8 + len);
+    chunks.push(t);
+    if (t === "IHDR") { width = data.readUInt32BE(0); height = data.readUInt32BE(4); type = data[9];
+                        if (data[8] !== 8 || data[12] !== 0) throw new Error("decodePng: 8-bit, non-interlaced only"); }
+    else if (t === "PLTE") palette = data;
+    else if (t === "IDAT") idat.push(data);
+    o += 12 + len;
+  }
+  const ch = { 0: 1, 2: 3, 3: 1, 4: 2, 6: 4 }[type];
+  const stride = width * ch, raw = inflateSync(Buffer.concat(idat)), out = Buffer.alloc(stride * height);
+  for (let y = 0; y < height; y++) {
+    const f = raw[y * (stride + 1)], line = raw.subarray(y * (stride + 1) + 1, (y + 1) * (stride + 1));
+    for (let i = 0; i < stride; i++) {
+      const a = i >= ch ? out[y * stride + i - ch] : 0, up = y ? out[(y - 1) * stride + i] : 0;
+      const c = i >= ch && y ? out[(y - 1) * stride + i - ch] : 0;
+      const p = a + up - c, pa = Math.abs(p - a), pb = Math.abs(p - up), pc = Math.abs(p - c);
+      const pred = [0, a, up, (a + up) >> 1, pa <= pb && pa <= pc ? a : pb <= pc ? up : c][f];
+      out[y * stride + i] = (line[i] + pred) & 0xff;
+    }
+  }
+  const at = (x, y) => {
+    const i = y * stride + x * ch;
+    if (type === 3) return [...palette.subarray(out[i] * 3, out[i] * 3 + 3)];
+    return ch >= 3 ? [out[i], out[i + 1], out[i + 2]] : [out[i], out[i], out[i]];
+  };
+  return { width, height, at, chunks };
 }
 
 /** A `/6` case document's text, its blocks written with case-grammar's line builders: `materials` (R12 rows),
