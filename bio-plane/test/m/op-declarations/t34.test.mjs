@@ -132,13 +132,17 @@ test("R21: each alias names the function its op's arm calls — driven through t
   assert.ok(!calls.some(([k]) => String(k).toLowerCase() === "createevent"));
 });
 
-test("R21, R27 (K1901): an act the registry marks `owed` is no op until its ruling's op is declared under its own name, and then it is that op, read as served with no alias made (placewanted among them, though the registry still marks it); no spec names `owed:`; the owed acts no owner serves have no spec", () => {
+test("R21, R27 (K1901; T36, K2084): an act the registry marks `owed` is no op until its ruling's op is declared under its own name, and then it is that op, read as served with no alias made — on PR #13's registry the ten T34's and T35's ops declare and the nine R32 and R33 declare, `owed:placewanted` gone; no spec names `owed:`; the seven owed acts no owner serves have no spec", () => {
   for (const op of Object.keys(OPS)) assert.ok(!op.includes(":") && !op.includes(" "), op);
   const owed = actsOf("owed").map((a) => a.replace(/^owed:/, "").split(" ")[0]);
-  /* the registry as PR #12 left it: the owed acts whose ops this module declares under those names (T34's and T35's) */
+  /* the registry as PR #13 left it (T36): the owed acts whose ops this module declares under those names — T34's and
+     T35's ten, and the nine R32 and R33 declare (DEC-168–DEC-173); the registry no longer marks `placewanted` */
   const DECLARED = ["archivelist", "findin", "groupdescriptiondraft", "memberlanguageset", "notedelete", "noterevise",
-                    "placewanted", "publishat", "securitymap", "startfrom", "writinghelp"];
-  /* and the owed acts no owner serves in T35 (R27: subscriptionsignin, N708; the translation acts, N669) */
+                    "publishat", "securitymap", "startfrom", "writinghelp",
+                    "aikeepaway", "deepercheck", "openoriginal", "openwithwarning", "releasescanhold", "safeview",
+                    "securitytooladd", "securitytooltest", "securitytoolremove"];
+  assert.ok(!owed.includes("placewanted") && Object.hasOwn(OPS, "placewanted"));
+  /* and the owed acts no owner serves in T36 (R27: subscriptionsignin, N708; the translation acts, N669; infolevelset) */
   const UNDECLARED = ["infolevelset", "subscriptionsignin", "translationadopt", "translationconfirm", "translationdraft",
                       "translationgrant", "translationrevert"];
   assert.deepEqual([...new Set(owed)].sort(), [...DECLARED, ...UNDECLARED].sort());

@@ -1,6 +1,6 @@
 # BOB to control-plane (T36)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -24,3 +24,7 @@ Re J1 (K2157): (1) routed: `store-door` gains R13 (a map answer that is a `Respo
 ## B3 · CHANGE
 
 instance-setup has merged (K2162): `assistantSet` and `op=assistantset` are gone. Merge the tranche branch now and re-point your tests that used them to `credentials.aiKeepAwaySet` (keep-away off is the assistant on): red 32 in the plan's rule 5 names yours. Then post COMPLETE (again).
+
+## B4 · CHANGE
+
+op-declarations has merged (K2165). Merge the tranche branch now and re-run; admission merges next, then answer-envelope, store-door, control-plane and plane.

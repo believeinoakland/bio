@@ -46,9 +46,10 @@ test("R2: OPS maps every op to a well-formed spec {classes, machineClasses?, mut
   for (const k of ["toString", "constructor", "__proto__", "hasOwnProperty"]) assert.ok(!Object.hasOwn(OPS, k), k);
 });
 
-test("R2, R30 (daemon-token convert): exactly five ops admit daemon — acquire, capturerequestdrain, monitor, reevaluationraise and, since T35, unpack, whose bearers are bounded to daemon and probe — over the exported OPS", () => {
+test("R2, R30, R32 (daemon-token convert): exactly nine ops admit daemon — acquire, capturerequestdrain, monitor, reevaluationraise, since T35 unpack, whose bearers are bounded to daemon and probe, and since T36 file-safety's four scheduler wakes, scanbatch, renderbatch, deeperbatch and securityforward — over the exported OPS", () => {
   const daemon = Object.keys(OPS).filter((op) => Array.isArray(OPS[op].classes) && OPS[op].classes.includes("daemon"));
-  assert.deepEqual(daemon.sort(), ["acquire", "capturerequestdrain", "monitor", "reevaluationraise", "unpack"]);
+  assert.deepEqual(daemon.sort(), ["acquire", "capturerequestdrain", "deeperbatch", "monitor", "reevaluationraise", "renderbatch",
+                                   "scanbatch", "securityforward", "unpack"]);
   for (const op of daemon) {
     assert.equal(OPS[op].mutating, true, op);
     if (op === "unpack") assert.deepEqual([...OPS[op].machineClasses], ["daemon", "probe"], op);
@@ -90,9 +91,11 @@ test("R3: SESSION_OPS is {member, admin}, two sets of op names each with a spec;
 
 test("R3: UNATTENDED_BY_DECISION maps only ops no session reaches, each to the citation of the recorded decision, and holds no op without one", () => {
   const ops = Object.keys(UNATTENDED_BY_DECISION);
-  /* T33 (R19, R20): the detectors' run (money-checks R6) and the ask's usage count (K1601) join them. */
-  assert.deepEqual(ops.sort(), ["askusage", "capturerequestdrain", "cpuprobe", "instancegroupseed", "livefire",
-                                "moneydetectorsrun", "purge", "reevaluationraise", "reproject", "taskdrain"]);
+  /* T33 (R19, R20): the detectors' run (money-checks R6) and the ask's usage count (K1601) join them; T36 (R32):
+     file-safety's four scheduler wakes, each citing its owner's requirement (K1913). */
+  assert.deepEqual(ops.sort(), ["askusage", "capturerequestdrain", "cpuprobe", "deeperbatch", "instancegroupseed", "livefire",
+                                "moneydetectorsrun", "purge", "reevaluationraise", "renderbatch", "reproject", "scanbatch",
+                                "securityforward", "taskdrain"]);
   for (const op of ops) {
     assert.ok(Object.hasOwn(OPS, op), op);
     assert.equal(OPS[op].mutating, true, op);
