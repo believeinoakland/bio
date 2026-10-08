@@ -2,13 +2,14 @@
  * (iii); K617, K1439) and extended with the two providers of K1429 and K1502.
  *
  * WHOSE ACCOUNT (R1, R2, R8, R9, R11). Every call carries the account reference that serves one member's act, as
- * `credentials.accountFor` answers it: the member's own, `{kind: "apikey", key}` or `{kind: "subscription", token}`,
- * or the group's API key, `{kind: "apikey", level: "group", key}` (K1755), sent exactly as a member's key is. The
- * group's copy binds no Claude credential in its environment (K1502): the group's key too arrives per call. Its
- * `kind` picks the provider: an API key goes to the Messages API (`apikey.mjs`), a subscription to Claude Code in the
- * `agent-runner` container through the Container Durable Object binding the caller passes (`subscription.mjs`). The
- * secret is used for the call it came with and kept nowhere; this module reads no environment variable and no binding
- * for one.
+ * `credentials.accountFor` answers it: the member's own, `{kind: "apikey", key}` or `{kind: "signin", member}`
+ * (K2200), or the group's API key, `{kind: "apikey", level: "group", key}` (K1755), sent exactly as a member's key
+ * is. The group's copy binds no Claude credential in its environment (K1502): the group's key too arrives per call.
+ * Its `kind` picks the provider: an API key goes to the Messages API (`apikey.mjs`), a sign-in to Claude Code in
+ * that member's own `agent-runner` container instance, named by the member through the Container Durable Object
+ * binding the caller passes (`signin.mjs`; K1819). A sign-in reference carries no secret: the member's stored sign-in
+ * stays in their instance. A key is used for the call it came with and kept nowhere; this module reads no
+ * environment variable and no binding for one.
  *
  * WHICH MODEL (R1). The model a turn asks for is `MODEL_FOR_MODE[mode]`, set by measurement: no request body and no
  * judgement chooses it, and changing an entry is a reviewed edit.
@@ -24,15 +25,15 @@
  * conversation as the result of a `read_facts` call (`openRow`, `subsessionOpening`), and the prompts this file
  * builds carry only the pack, the table's own fields and this repository's words. `converse` sends `system` and
  * `messages` as given and returns each tool's answer as `text` blocks, or `search_result` blocks where the caller
- * marks it (`{search_results}`): citations as data (ladders §9.4). The subscription path holds the same line in
- * `subscription.mjs`.
+ * marks it (`{search_results}`): citations as data (ladders §9.4). The sign-in path holds the same line in
+ * `signin.mjs`.
  *
  * D-611 — THE SEGMENT IS BOUNDED ON BYTES. M-168 measured that what binds a segment is CPU spent re-serialising the
  * transcript, ~7–10 ms per MB, ~3 GB under the 30 s default. So every request is counted as sent, and one that
  * would carry the segment past `bytesBound` is not sent: the SEGMENT stops (never the run), and resuming is what
  * segments are for. The turn bound is checked the same way. */
 import { MODEL_ENDPOINT, MODEL_API_VERSION, withCache, apikeyTurn } from "./apikey.mjs";
-import { RUNNER_URL, READ_RESULT, subscriptionTurn, subscriptionConverse, renderTranscript } from "./subscription.mjs";
+import { RUNNER_URL, READ_RESULT, signinTurn, signinConverse, renderTranscript } from "./signin.mjs";
 import { USAGE_FIGURES, usageOf, sumUsage, refused, READ_FACTS, toolResultContent, factsOf } from "./outcome.mjs";
 
 export { MODEL_ENDPOINT, MODEL_API_VERSION, RUNNER_URL, USAGE_FIGURES, usageOf, sumUsage, withCache, renderTranscript,
@@ -63,27 +64,32 @@ export function segmentMeter({ turnsBound, bytesBound }) {
   return { turns: 0, turnsBound, bytes: 0, bytesBound, stopped: null };
 }
 
-/* R2, R11 — a reference this module can use, as `{kind, secret}`, or null. Its `level`, when present, is `member`
- * or `group`, and a `group` reference is only ever an API key; nothing else about it is read. */
+/* R2, R11 — a reference this module can use, as `{kind: "apikey", secret}` or `{kind: "signin", member}`, or null.
+ * Its `level`, when present, is `member` or `group`, and a `group` reference is only ever an API key; nothing else
+ * about it is read. `subscription` is no kind of this module's: it retired with `credentials` R22 (T38). */
 const LEVELS = Object.freeze(["member", "group"]);
 function usable(reference) {
   if (!reference || typeof reference !== "object") return null;
   if (reference.level !== undefined && !LEVELS.includes(reference.level)) return null;
   if (reference.level === "group" && reference.kind !== "apikey") return null;
   if (reference.kind === "apikey" && typeof reference.key === "string" && reference.key) return { kind: "apikey", secret: reference.key };
-  if (reference.kind === "subscription" && typeof reference.token === "string" && reference.token)
-    return { kind: "subscription", secret: reference.token };
+  if (reference.kind === "signin" && typeof reference.member === "string" && reference.member)
+    return { kind: "signin", member: reference.member };
   return null;
 }
+
+/* R2 — the runner binding is the Container Durable Object namespace, which names the member's own instance
+ * (`idFromName`); anything else (absent, or a bare instance this module cannot name) is no binding for a sign-in. */
+const runnerBinding = (runner) => !!runner && typeof runner.idFromName === "function" && typeof runner.get === "function";
 
 /* The refusals made before any call (R1, R2). */
 function precheck(reference, runner) {
   const ref = usable(reference);
   if (!ref) return { refusal: refused(null, "ACCOUNT_REFERENCE_UNUSABLE",
     "a model turn runs only under the account reference that serves a member's act: {kind: \"apikey\", key} or "
-    + "{kind: \"subscription\", token}, the member's own, or the group's API key {kind: \"apikey\", level: \"group\", key}") };
-  if (ref.kind === "subscription" && !runner) return { refusal: refused(null, "RUNNER_NOT_CONFIGURED",
-    "a subscription runs in the agent runner, and no runner binding was passed") };
+    + "{kind: \"signin\", member}, the member's own, or the group's API key {kind: \"apikey\", level: \"group\", key}") };
+  if (ref.kind === "signin" && !runnerBinding(runner)) return { refusal: refused(null, "RUNNER_NOT_CONFIGURED",
+    "a sign-in runs in the member's own agent runner instance, and no runner binding that names one was passed") };
   return { ref };
 }
 
@@ -97,7 +103,7 @@ export async function modelCall(reference, request, { runner } = {}) {
     if (!request || typeof request !== "object")
       return refused(null, "REQUEST_UNUSABLE", "a model turn's request is a Messages API body");
     if (ref.kind === "apikey") return await apikeyTurn(ref.secret, JSON.stringify(withCache(request)));
-    return await subscriptionTurn(ref.secret, runner, request);
+    return await signinTurn(ref.member, runner, request);
   } catch (e) {
     return { silent: { detail: "the model call failed before it was sent" } };
   }
@@ -123,9 +129,9 @@ export async function converse({ reference, runner, mode, meter, system, message
     meter.bytes += serialized.length;
     return null;
   };
-  if (ref.kind === "subscription")
-    return subscriptionConverse({ token: ref.secret, runner, model, system, messages, tools, finalTool, onTool,
-                                  maxTurns, charge });
+  if (ref.kind === "signin")
+    return signinConverse({ member: ref.member, runner, model, system, messages, tools, finalTool, onTool,
+                            maxTurns, charge });
 
   let usage = null;
   /* A request counts when its outcome reached the provider (it carries `usage`); one the meter stopped, or one that
