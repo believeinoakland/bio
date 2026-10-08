@@ -26,3 +26,7 @@
 - P6: 3,406 lines (paths), well under 4,000.
 
 Size (session_01BL4TP2ShNVLY5f5dC9jEtM): test runs 14, module lines 3406
+
+## J1 · COMPLETE
+
+T36-27 complete (B2 processed): R32 and R33 met, stored /1 case files served via CASE_FILE_FORMATS_ACCEPTED with a test. public-read 145/145; format, architecture, coverage (33/33), ownership: 0 failures. case-checker has 3 reds from case-grammar's /2 (program.mjs, R14 spec), the same without my changes: T36-51 and the close. J1's R28/R32 question stands for you. Record: build/jobs/T36/public-read.md.
