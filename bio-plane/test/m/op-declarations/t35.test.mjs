@@ -207,7 +207,7 @@ test("R30, R6: every op of R30 is served — by its owner's map (capture's for t
   for (const op of credsT35) assert.ok(keysOf(credentialsOps).includes(op) && Object.hasOwn(OPS, op), op);
   /* negative control */
   assert.deepEqual([...keysOf(credentialsOps), "signoutall"].filter((op) => !Object.hasOwn(OPS, op) && credsT35.length)
-    .filter((op) => !["aicredentiallook", "setpassword", "session", "securitycount"].includes(op)), ["signoutall"]);
+    .filter((op) => !["aicredentiallook", "session", "securitycount"].includes(op)), ["signoutall"]);
 });
 
 test("R6 (T35; N703, K2038): credentials' securitycount, the in-plane write of its R44 that admission reaches through the store, and admission's doorwindow, the store-side count of its R21 window, are store-internal routes with no spec and in no table, beside monitorlook, doorbellrefused, checkaddressees and projectclaimowner (negative control: a declared op is in a table)", () => {
@@ -217,8 +217,8 @@ test("R6 (T35; N703, K2038): credentials' securitycount, the in-plane write of i
   assert.ok(!inNoTable("securitymap"));
 });
 
-test("R27, R30: subscriptionsignin, owed with no route in T35 (N708), has no spec and is in no table, and no alias names it; the member's own subscription disconnect is credentials' own act (machineClasses [], by stamped)", () => {
-  assert.ok(inNoTable("subscriptionsignin"));
+test("R27, R30 (T37: R27's T35 sentence retired, R36): subscriptionsignin is declared under its own name in credentials' family, and no alias names it; the member's own subscription disconnect is credentials' own act (machineClasses [], by stamped)", () => {
+  assert.ok(!inNoTable("subscriptionsignin") && OP_FAMILIES.credentials.kinds.subscriptionsignin === "own");
   assert.ok(!Object.hasOwn(OP_ALIASES, "subscriptionsignin") && !Object.values(OP_ALIASES).includes("subscriptionsignin"));
   assert.equal(OP_FAMILIES.credentials.kinds.subscriptiondisconnect, "own");
   assert.ok(!inNoTable("subscriptiondisconnect"));

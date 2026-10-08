@@ -195,7 +195,7 @@ test("R12 T34's and T36's sections, driven: the join link, the claim's choices (
   p.el("#cl-sa-name").value = "Bea"; p.el("#cl-sa-id").value = "bea"; await p.el("#cl-sa-add").fire(); await settle();
   await p.drawn("#cl-st-cat .st-pick", { i: "0" }).fire(); await settle();
   const fields = p.el("#cl-st-fields").innerHTML;
-  p.el("#cl-st-cred-0").value = "k"; await p.el("#cl-st-add").fire(); await settle();
+  p.el("#cl-st-cred-0").value = "k"; p.el("#cl-st-cfg-0").value = "v"; await p.el("#cl-st-add").fire(); await settle();
   for (const s of ["#cl-st-cat", "#cl-st-tools"]) assert.deepEqual(outsideLoads(p.el(s).innerHTML), [], s);
   assert.deepEqual(outsideLoads(fields), [], "#cl-st-fields");
   assert.ok(p.el("#cl-st-cat").innerHTML.includes("&lt;img"), "not vacuous: the catalogue drew the hostile answer, escaped");

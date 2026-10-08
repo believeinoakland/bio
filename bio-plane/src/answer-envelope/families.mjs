@@ -70,6 +70,10 @@ import * as SKILLS from "../skilldoctrine.mjs";
 import * as ANSWERS from "../answers/checks.mjs";
 import * as INTENT from "../intent/checks.mjs";
 import * as REEVALUATION from "../reevaluation/checks.mjs";
+/* K2226 (T37-50; R7): case-carriage's C-141 (`CASE_CARRIAGE_CHECKS`, the refusals of `obscuremark`), in its place in the
+   module order (directly after reevaluation, before case-tensions). Its `MACHINE_CANNOT_MARK` is also sources' C-121.7,
+   an earlier family, which keeps it: no earlier row moves (DEC-49 arm A is the owners' to settle, not this list's). */
+import * as CASE_CARRIAGE from "../case-carriage/checks.mjs";
 import * as CASE_TENSIONS from "../case-tensions/checks.mjs";
 import * as PUBLICATION from "../publication/checks.mjs";
 /* K1280, N526, N533, K1331 (R7): docket's C-129, in its place in the module order (directly after publication). Its
@@ -162,6 +166,7 @@ export const CHECK_FAMILY_FILES = Object.freeze([
   ["src/answers/checks.mjs", ANSWERS],
   ["src/intent/checks.mjs", INTENT],
   ["src/reevaluation/checks.mjs", REEVALUATION],
+  ["src/case-carriage/checks.mjs", CASE_CARRIAGE],
   ["src/case-tensions/checks.mjs", CASE_TENSIONS],
   ["src/publication/checks.mjs", PUBLICATION],
   ["src/docket/checks.mjs", DOCKET],

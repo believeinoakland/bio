@@ -73,10 +73,10 @@ test("R19: file-safety's releasescanhold, graded `reasoned` (op-grades R24), is 
 import * as crFix from "../credentials/fixture.mjs";
 
 test("R19: credentials' aikeepaway, graded `reasoned` (op-grades R25), is refused when turned on without its reason with "
-   + "NO_REASON, in JUSTIFICATION_REFUSALS, and accepted with it", async () => {
+   + "AI_KEEP_AWAY_NO_REASON (credentials R51), in JUSTIFICATION_REFUSALS (op-grades, T37-26), and accepted with it", async () => {
   const w = await crFix.world().group("ann");
   const set = (x) => w.c.aiKeepAwaySet({ on: true, by: "admin", ...x });
-  backed("aikeepaway", "NO_REASON", set({ reason: "" }), set({ reason: "We hold a source's material under a promise." }));
+  backed("aikeepaway", "AI_KEEP_AWAY_NO_REASON", set({ reason: "" }), set({ reason: "We hold a source's material under a promise." }));
 });
 
 /* ---- the list ---- */

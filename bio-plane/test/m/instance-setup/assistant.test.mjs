@@ -136,19 +136,21 @@ test("R54 disclosureOf answers shown: false for a member with none recorded at t
   assert.equal(route.result.shown, true);
 });
 
-test("R55 (T36) while assistantState answers on: false every ask and run is refused by name through assistantGate (ASSISTANT_OFF, C-119.5), carrying the keep-away reason in the administrator's words, who set it and when; null, and said so, when the state could not be read; on, the gate answers null; turning keep-away off ends nothing recorded and starts nothing", async () => {
+test("R55 (T37; N765, K231) assistantGate answers credentials.aiKeptAway() (its R35) as given: null while the group does not keep its material away; otherwise credentials' one AI_KEPT_AWAY refusal with its row (C-29.31) and keep_away {reason, set_by, set_at} in the administrator's words; the three null, and said so, when the setting could not be read; ASSISTANT_OFF and C-119.5 retired, the number never reused; whoever asks; turning keep-away off ends nothing recorded and starts nothing", async () => {
   const w = await over();
   assert.equal(w.m.assistantGate(), null);
+  assert.equal(w.c.c.aiKeptAway(), null);
   w.m.disclosureShown({ member: "admin", version: ASSISTANT_DISCLOSURE.version, by: "admin" });
   w.c.c.aiKeepAwaySet({ on: true, reason: REASON, by: "admin" });
   const k = w.c.c.aiKeepAwayState();
   const off = w.m.assistantGate();
-  assert.deepEqual([off.ok, off.reason, off.code, off.check], [false, "ASSISTANT_OFF", "ASSISTANT_OFF", "C-119.5"]);
-  assert.equal(off.translation, INSTANCE_SETUP_CHECKS.ASSISTANT_OFF.translation);
+  /* as given: equal to what credentials answers, field for field */
+  assert.deepEqual(off, w.c.c.aiKeptAway());
+  assert.deepEqual([off.ok, off.reason, off.code, off.check], [false, "AI_KEPT_AWAY", "AI_KEPT_AWAY", "C-29.31"]);
   assert.deepEqual(off.keep_away, { reason: REASON, set_by: k.set_by, set_at: k.set_at });
-  assert.deepEqual([off.set_by, off.set_at], [k.set_by, k.set_at]);
-  assert.ok(off.detail.includes(k.set_at) && off.detail.includes(k.set_by), off.detail);
-  assert.match(off.detail, /keep your group's material away from every assistant, for the reason given with this answer/);
+  /* the retired row: no ASSISTANT_OFF, and no row of this module's numbered C-119.5 */
+  assert.equal("ASSISTANT_OFF" in INSTANCE_SETUP_CHECKS, false);
+  assert.equal(Object.values(INSTANCE_SETUP_CHECKS).some((r) => r.check === "C-119.5"), false);
   /* whoever asks: the gate takes no caller, so no account or class changes it */
   assert.deepEqual(w.m.assistantGate({ member: "admin", account: { kind: "apikey" } }), off);
   /* turning it off ends nothing recorded (the disclosure stays) and starts nothing (the gate writes nothing) */
@@ -158,31 +160,48 @@ test("R55 (T36) while assistantState answers on: false every ask and run is refu
   w.c.c.aiKeepAwaySet({ on: false, by: "admin" });
   assert.equal(w.m.assistantGate(), null);
   assert.equal(w.m.disclosureOf({ member: "admin" }).shown, true);
-  /* a state that could not be read: refused, the reason, who and when null, stated so */
+  /* a setting that could not be read: credentials' refusal, the three null, said so */
   w.c.db.exec(`DROP TABLE ai_keep_away`);
   const unread = w.m.assistantGate();
-  assert.deepEqual([unread.reason, unread.keep_away, unread.read], ["ASSISTANT_OFF", { reason: null, set_by: null, set_at: null }, false]);
-  assert.match(unread.detail, /could not be read, so it is read as kept away.*No reason is known\./);
+  assert.deepEqual([unread.reason, unread.keep_away], ["AI_KEPT_AWAY", { reason: null, set_by: null, set_at: null }]);
+  assert.match(unread.detail, /could not be read/);
 });
 
-test("R55 (K2157) assistantGate stays exported under its name, its shape unchanged for store-door R10: null while on; otherwise the refusal envelope with ok, reason, code, check, translation, detail, set_by and set_at as before, the keep-away carried beside them", async () => {
+test("R55 (T37) the one site: a credentials whose aiKeptAway throws is the store's silence (STORE_DID_NOT_ANSWER), never an open gate; this module mints no AI_KEPT_AWAY of its own (no such row is its)", async () => {
+  const w = await boot({ prov: { ...providers(), credentials: { aiKeepAwayState: () => ({ on: false }), aiKeptAway() { throw new Error("no answer"); } } } });
+  const r = w.m.assistantGate();
+  assert.deepEqual([r.ok, r.reason], [false, "STORE_DID_NOT_ANSWER"]);
+  const bare = await boot({ prov: { ...providers(), credentials: {} } });
+  assert.equal(bare.m.assistantGate().reason, "STORE_DID_NOT_ANSWER");
+  assert.equal("AI_KEPT_AWAY" in INSTANCE_SETUP_CHECKS, false);
+});
+
+test("R55 (K2157) assistantGate stays exported under its name: null while the group does not keep its material away; otherwise the refusal envelope with ok, reason, code, check, translation, detail and keep_away, as credentials R35 answers it", async () => {
   const w = await over();
   assert.equal(typeof w.m.assistantGate, "function");
   assert.equal(typeof S.InstanceSetup.prototype.assistantGate, "function");
   assert.equal(w.m.assistantGate(), null);
   w.c.c.aiKeepAwaySet({ on: true, reason: REASON, by: "admin" });
   const off = w.m.assistantGate();
-  for (const k of ["ok", "reason", "code", "check", "translation", "detail", "set_by", "set_at"]) assert.ok(k in off, k);
-  assert.deepEqual(Object.keys(off).filter((k) => !["ok", "reason", "code", "check", "translation", "detail", "set_by", "set_at"].includes(k)), ["keep_away"]);
+  for (const k of ["ok", "reason", "code", "check", "translation", "detail", "keep_away"]) assert.ok(k in off, k);
 });
 
-test("R55 (T36) the draft (R65) is refused ASSISTANT_OFF with the reason while the group keeps its material away, whatever account the door resolved, and is reached past it once keep-away is off", async () => {
+test("R55 R53 (T37; K2201) assistantState keeps its answer {on, set_by, set_at, reason} unchanged beside the gate and gates nothing itself: on: false with the setting while kept away, as the gate refuses", async () => {
+  const w = await over();
+  w.c.c.aiKeepAwaySet({ on: true, reason: REASON, by: "admin" });
+  const st = w.m.assistantState();
+  assert.deepEqual(Object.keys(st).sort(), ["ok", "on", "reason", "set_at", "set_by"]);
+  assert.deepEqual([st.on, st.reason], [false, REASON]);
+  assert.equal(w.m.assistantGate().reason, "AI_KEPT_AWAY");
+});
+
+test("R55 R65 (T37) the draft (R65) is refused AI_KEPT_AWAY with the reason while the group keeps its material away, whatever account the door resolved, and is reached past it once keep-away is off", async () => {
   const w = await over();
   const ASSISTANT = { on: true, account: { kind: "apikey", level: "group" } };
   const ANSWERS = [{ question: "What does your group work on?", text: "We read the port's contracts." }];
   w.c.c.aiKeepAwaySet({ on: true, reason: REASON, by: "admin" });
   const r = await w.m.groupDescriptionDraft({ answers: ANSWERS, assistant: ASSISTANT, viewer: "admin", by: "admin" });
-  assert.deepEqual([r.ok, r.reason, r.keep_away.reason], [false, "ASSISTANT_OFF", REASON]);
+  assert.deepEqual([r.ok, r.reason, r.keep_away.reason], [false, "AI_KEPT_AWAY", REASON]);
   w.c.c.aiKeepAwaySet({ on: false, by: "admin" });
   const past = await w.m.groupDescriptionDraft({ answers: ANSWERS, assistant: ASSISTANT, viewer: "admin", by: "admin" });
   assert.equal(past.reason, "ASSISTANT_DRAFT_UNAVAILABLE", "no turn handed in: past every refusal");

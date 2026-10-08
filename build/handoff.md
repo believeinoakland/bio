@@ -1,42 +1,37 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #139 (`session_016oKjUAn88dFdM5zvpXMqy4`), 2026-10-08 ~11:25 UTC, for BOB #140. Read `build/rulings-active.md` first; this BOB's rulings are K2196–K2224 (and K2225, this handoff).
+**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #140 (`session_01YMzxtfn4tJD7REiG3cRbrQ`), 2026-10-08 ~13:50 UTC, for BOB #141. Read `build/rulings-active.md` first; this BOB's rulings are K2226–K2250 (and K2251, this handoff).
 
-## Open with Bob (each waits on him; none blocks the work)
+## Open with Bob
 
-All on one rendered page, https://claude.ai/artifact/TuYfyFijT6SayH1mBqSM21 ("T37 Questions for Bob", version 2, republished by BOB #139); re-watch it from your session (`ArtifactComments` watch) and point Bob at it.
-1. **T36's close, step (3)** (§5.7 (3), §16). Fast-forwarding `main` to `tranche/T36`'s tip (`ceec200633`) and merging `dist/cut-0.81.0` into `main` were refused before as "Merge Without Review" (K1454, K1906), approved once (K1909), pre-approved for BOB #136's session only (K2137); not on the standing list. Asked by BOB #138 (K2171) and BOB #139 in their sessions; no answer. Ask again in **your** session: "Approved: at T36's close, fast-forward main to tranche/T36's tip, and merge dist/cut-0.81.0 into main. Standing list: not added." Then record the approval (§16 form) and act; `archive/T36.md` stays `CLOSING` until `main` is at it. At T37's close the same act recurs for `tranche/T37` (and PR #15, below).
-2. **Wizard library version 2** (wizard-scripts R22; plan "For BOB" 1): recommendation approve all four. Needed before L11's START (T37-25's START says version 2 only for the scripts approved by then; else version 1 and red 7 stays).
-3. **Photo metadata** (N779; For BOB 2): recommendation B. Not in T37 (N779 in `next.md`).
-4. **A member's own Claude sign-in persistence** (new, on the page as question 4; K2200 (8)): Cloudflare Containers' disk is fresh after each sleep, so the stored sign-in lasts only while the instance is awake. Options A accept / B keep awake (money) / C snapshot (a copy, U-7 (c)); recommendation A now, decide at M-Q2.
-5. **Key custody**, three questions on https://claude.ai/artifact/TB55RCpWXtBEWUanVnCA3A (no comments as of 11:25). Re-watch it.
-6. **Weekly meter reading**, asked; the platform shows a 7-day usage *warning* on the account since ~10:00 (K1820's 90% rule applies when Bob reports it).
+1. **Key custody**, three questions on https://claude.ai/artifact/TB55RCpWXtBEWUanVnCA3A (no comments as of 13:50). Re-watch it (`ArtifactComments` watch) and point Bob at it.
+2. **T37's close, step (3)** (§5.7 (3), §16), when L11 closes: fast-forwarding `main` to `tranche/T37`'s closing commit is refused as "Merge Without Review" (K1454, K1906), approved once per close (K1909, K2069, K2137, K2240); not on the standing list. Ask Bob in **your** session for: "Approved: at T37's close, fast-forward main to tranche/T37's closing commit. Standing list: not added." Record it (§16 form), then act.
+3. Everything else is answered: T36 closed (K2240, `main` @ `096424f11f`); wizard scripts are BOB's (K2241, version 2 adopted); photo metadata B (K2248: the group keeps it, published photos do not; N779 in T38; K2243/K2246 (1) superseded); sign-in persistence A (K2246 (2)); meter 57% at ~13:20 (K2240). The questions page https://claude.ai/artifact/TuYfyFijT6SayH1mBqSM21 is now stale (all four answered): republish it or leave it.
 
 ## Where things stand
 
-- **T37** on `tranche/T37` (`main` @ `e08cd35ecb` untouched). L1–L6 closed (L4 K2198, L5 K2209, L6 K2219), rows in `metrics/T37.csv`. L7 has no entries.
-- **L8 running** (K2221, started 11:06), nine jobs; addresses in the plan's Jobs line. State at 11:25:
-  - merged: CASE-GRAMMAR #10 (K2224);
-  - COMPLETE, waiting to merge in order: RATIFICATION #21 (J2; merges after publication and public-read), CASE-DISCLOSURES #5 (J1; needs case-carriage merged first; it read B2 = merge case-grammar);
-  - CASE-CARRIAGE #4: told B3 (11:23) to merge the tranche and complete; **merge it next**, then send CHANGE ("case-carriage merged: merge the tranche") to PUBLICATION #24 (waiting, J2), CASE-DISCLOSURES #5, and RESUME to CASE-AUTHORING #21 (waiting, J1, K2223) once case-disclosures is merged;
-  - CASE-CHECKER #8 (B2: merge case-grammar, finish), PUBLIC-READ #15 (J2 read: done but its K2223 arm needs case-carriage merged; send it the same CHANGE), REVIEW #10 (running its whole `test/m` until ~11:54).
-  - L8 merge order: case-grammar → case-carriage → publication → public-read → ratification → case-checker → case-disclosures → case-authoring → review. Reds 18 (case-checker `program.mjs`, cleared at L8's close) and 19 (control-plane `statementack.test.mjs`:31 until T37-33).
-  - Case-carriage's REPORTs due at its COMPLETE: the composition root must pass `deps.bucket`/`deps.store` (K2222); answer-envelope must register family C-141. Route each (§7): its owner's job if running (L11's store-door/control-plane/plane have entries; answer-envelope has none in T37 → `next.md`).
-- **Prepared and committed:** L9–L11 wording and STARTs (K2212, K2216): conformance, filing-templates, scheduler (L9–L10); wizard-scripts, op-grades, affordances, notice-producers, instance-setup, op-declarations, store-door, control-plane, setup-page, plane (L11). The plan's lines carry each K.
-- **Reds:** plan rule 6 items 1–20 (new: 18, 19 at K2206; 20 bundler `fleetbundles.test.mjs`:232, K2218 → N787).
-- **Channel:** UX-DESIGN's U129–U132 read (K2220): DEC-183 (Photos gate, `obscuremarkwithdraw`) folds in T38 as N788; **U132 MERGE: PR #15** is merged into `main` at T37's close (§5.7 (1); `mcp__github__merge_pull_request`, standing list, K1177). B105 ACK posted. INVESTIGATION-DESIGN `HANDOFF.md` unchanged at `f53cd6ffbe`.
-- **`next.md` (T38) new:** N785 (sign-in's use: credentials, agent-model, agent-worker), N786 (extraction `paras` on migration), N787 (bundler re-pin), N788 (DEC-183).
-- **Timers** (delete mine by id at takeover): backstop `trig_01T2CKK9TrW1Z1hNW1XHaGkH` (next 11:28; re-arm while your start is pending), WATCH #139 `trig_01MLGRZCqGtfqVHkuxiiXZSH` (12:08, into ROOT). Artifacts watched by my session: the two pages above.
+- **T37** on `tranche/T37`. L1–L10 closed (L8 K2229, L9 K2234, L10 K2237). `main` moved at T36's close (K2240): at T37's close merge `main` into the tranche first (never a rebase) and run the checks (§5.7 (1)).
+- **L11 running** (K2237), eleven jobs (addresses in the plan's Jobs line). Merged: op-grades (K2242, K2245), notice-producers (K2244), setup-page (K2245), wizard-scripts, instance-setup, op-declarations, answer-envelope (K2249), affordances (re-merged K2250). Open:
+  - STORE-DOOR #3: merged (K2252).
+  - CONTROL-PLANE #26: RESUME B3 sent (K2252); merge when COMPLETE.
+  - PLANE #26: CHANGE B3 (merge tranche, re-pin `door.test.mjs`:111 to 33 routes, ask.test reds should clear); merges last; strike its R29 mark at the merge (it made the todo a test).
+  - L11 order: … → store-door → control-plane → plane.
+- **Reds:** plan rule 6 items 1–26 (7, 19, 25 cleared). At L11's close check item 22 (legacy-ui `statement-ack.test.mjs`, its M0-107 timeout) and send it to `next.md` if it stands; items 21, 16, 15 and rule 4's (item 8) should clear with T37-33.
+- **L11 close (§5.6):** regenerate in the manifest's order (`program.mjs`, `court-data.mjs`, `node bio-plane/scripts/bundles.mjs`, newgroup); `fleetbundles` expects red 20 only; `checks/run.mjs`; archive the eleven sessions, rows from their `Size` lines.
+- **T37's close (§5.7):** (1) PR #15 (UX-DESIGN U132 MERGE) into `main` with `mcp__github__merge_pull_request` (standing list, K1177), then merge `main` into the tranche; (2) archive the plan `CLOSING` with outcomes and usage; (3) fast-forward `main` (Open with Bob 2); (4)–(6) timers, report, open T38.
+- **T38 prepared:** `build/plan/draft-T38.md` (a helper's draft, reviewed; BOB #140's notes at its end: N789–N793, N779 back in, T38-16's route question) and `next.md` (N779, N782–N793). Open T38 from it at once after the close.
+- **Channel:** UX-DESIGN has not read B106–B110 (B106 setpassword help-text question; B107 K2241 notice; B108–B110 photo metadata notices, B110 the final: B). INVESTIGATION-DESIGN `HANDOFF.md` unchanged at `f53cd6ffbe`.
+- **Timers** (delete mine by id at takeover): backstop `trig_014RCwQkDorpkEpj75EhBftE` (14:08; re-arm while your start is pending), WATCH #140 `trig_018eqJcxWoGe1QhK7NZdRumz` (14:49, into ROOT). Artifacts watched by my session: the two pages above.
 
 ## Next steps, in order
 
-1. Take over (§5.1): archive BOB #139, its `BOB-final` row under T37; arm your backstop and WATCH; re-watch both pages.
-2. Ask Bob for the T36 close line (Open with Bob 1) and point him at the questions page.
-3. Watch L8 (§5.4); merge each job in order (§5.5); close L8 (§5.6: regenerate in the manifest's order — `program.mjs` first — `fleetbundles` expects red 20 only; checks; archive; rows); start L9 (conformance; then L10 filing-templates, scheduler — check `modules.json` layers), then L11 from the committed STARTs (T37-25's START reads Bob's wizard answer at that moment).
-4. At T37's close (§5.7): merge PR #15 (U132), merge `main` into the tranche, archive, fast-forward `main` (needs Bob's approval in your session, as item 1), then open T38 from `next.md`.
+1. Take over (§5.1): archive BOB #140, its `BOB-final` row under T37; arm your backstop and WATCH; re-watch the key-custody page.
+2. Watch L11 (§5.4): merge store-door, RESUME control-plane, merge it, then plane.
+3. Close L11 (§5.6), then close T37 (§5.7), asking Bob for step (3) in your session.
+4. Open T38 from `draft-T38.md` (§5.2).
 
 ## Process notes
 
-- Layer closes regenerate in place; while a worker edits the main checkout, merge in a `git worktree` (`/home/user/bio-merge` exists; reset it to `origin/tranche/T37` before use) and run `mail.mjs` only in the main checkout (it refuses another branch).
+- `mail.mjs addjob --name` needs the name with its space ("PLANE #26").
 - After a container restart: `npm ci --ignore-scripts` in agent-runner, `npm ci` in sheet-worker and file-scanner before `fleetbundles`.
-- The red census read `test/m` only: suites under a module's own `test/` (agent-worker's, reading-pipeline's legacy paths) can hold unnamed reds; a job finding one fixes its own (K2217).
+- Merges on `main` go through a worktree (`/home/user/bio-merge`, detached; reset it to the branch you need).

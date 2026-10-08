@@ -22,15 +22,16 @@ const helped = () => {
 };
 const NAMED = ["release", "conclude", "withdrawconclusion", "reopen", "caseratify", "publish", "personexpunge", "bootstrap"];
 
-test("R24 writingHelpAt, in order: ASSISTANT_OFF and AI_NO_ACCOUNT without the assistant; WRITING_HELP_REFUSED on every act a machine is refused, every irreversible act, DEC-153 (4)'s named acts, the set-time publishing acts and groupdescriptionset; WRITING_HELP_REASON_FIELD in a field stating the member's reason; WRITING_HELP_DRAFT_HELD where a draft fills the field; offered in a note", () => {
+test("R24 writingHelpAt, in order: AI_KEPT_AWAY while the group keeps its material away and AI_NO_ACCOUNT where no account serves the viewer; WRITING_HELP_REFUSED on every act a machine is refused, every irreversible act, DEC-153 (4)'s named acts, the set-time publishing acts and groupdescriptionset; WRITING_HELP_REASON_FIELD in a field stating the member's reason; WRITING_HELP_DRAFT_HELD where a draft fills the field; offered in a note", () => {
   const w = helped();
   const at = (x) => w.wz.writingHelpAt({ op: "notewrite", field: "text", assistant: ON, ...x });
   assert.deepEqual(at({}), { offered: true }, "negative control: a note");
   assert.deepEqual(at({ op: "testify", field: "observation" }), { offered: true }, "an observation");
   assert.deepEqual(at({ op: "actioncreate", field: "request" }), { offered: true }, "a request");
-  for (const assistant of [null, {}, { on: false, account: "ACC-1" }, { on: "true", account: "ACC-1" }])
-    assert.deepEqual(at({ assistant }), { offered: false, code: "ASSISTANT_OFF" }, JSON.stringify(assistant));
+  for (const assistant of [null, {}, { on: true }]) assert.deepEqual(at({ assistant }), { offered: false, code: "AI_NO_ACCOUNT" }, JSON.stringify(assistant));
   for (const account of [null, "", undefined]) assert.deepEqual(at({ assistant: { on: true, account } }), { offered: false, code: "AI_NO_ACCOUNT" });
+  for (const assistant of [{ on: false, account: "ACC-1" }, { on: "true", account: "ACC-1" }])
+    assert.deepEqual(at({ assistant }), { offered: true }, `assistant.on is never read (a copy of the condition): ${JSON.stringify(assistant)}`);
   const refusedOps = [...MACHINE_REFUSED, "inquirydivide", "publish", "publishat", "publishatmove", "newirreversible", ...NAMED, "publishatcancel",
                       "groupdescriptionset"];
   for (const op of refusedOps) assert.deepEqual(at({ op, field: "reason", draftHeld: true }), { offered: false, code: "WRITING_HELP_REFUSED" }, op);
@@ -55,6 +56,61 @@ test("R24 writingHelpAt, in order: ASSISTANT_OFF and AI_NO_ACCOUNT without the a
   const before = w.snapshot();
   for (const odd of [undefined, null, { op: {} }, { assistant: 3 }]) assert.doesNotThrow(() => w.wz.writingHelpAt(odd));
   assert.deepEqual(w.snapshot(), before);
+});
+
+/* Keep-away set as an administrator sets it (credentials R51), read by credentials' one site (its R35's aiKeptAway). */
+const keepAway = (w, on) => assert.equal(w.credentials.aiKeepAwaySet({ on, reason: on ? "We hold residents' records" : null, by: V("erin") }).ok, true);
+
+test("R24 (T37; N765, K231) item 1 answers AI_KEPT_AWAY while credentials.aiKeptAway() answers its refusal, read at each call, before AI_NO_ACCOUNT and every other refusal; a setting that cannot be read and a credentials that cannot be reached are kept away (fail closed); assistant.on is never read", () => {
+  const w = helped();
+  const at = (x) => w.wz.writingHelpAt({ op: "notewrite", field: "text", assistant: ON, ...x });
+  assert.equal(w.credentials.aiKeptAway(), null);
+  assert.deepEqual(at({}), { offered: true }, "negative control: off");
+  keepAway(w, true);
+  assert.equal(w.credentials.aiKeptAway().code, "AI_KEPT_AWAY", "credentials' own answer");
+  for (const x of [{}, { assistant: { on: true } }, { assistant: null }, { op: "publish" }, { field: "reason" }, { draftHeld: true }, { assistant: { on: false, account: "A" } }])
+    assert.deepEqual(at(x), { offered: false, code: "AI_KEPT_AWAY" }, `first, before every other refusal: ${JSON.stringify(x)}`);
+  keepAway(w, false);
+  assert.deepEqual(at({}), { offered: true }, "read at the call: turned off, offered again with no change here");
+  assert.deepEqual(at({ assistant: { on: true } }), { offered: false, code: "AI_NO_ACCOUNT" });
+  /* the setting cannot be read: credentials answers its refusal, saying so, and help is not offered */
+  const u = helped();
+  u.st.db.exec("DROP TABLE ai_keep_away");
+  assert.equal(u.credentials.aiKeptAway().code, "AI_KEPT_AWAY");
+  assert.deepEqual(u.wz.writingHelpAt({ op: "notewrite", field: "text", assistant: ON }), { offered: false, code: "AI_KEPT_AWAY" });
+  /* credentials cannot be reached, or throws: kept away, never offered */
+  for (const credentials of [null, {}, { aiKeptAway() { throw new Error("down"); } }, () => { throw new Error("unreachable"); }]) {
+    const x = new wz.WizardScripts({ storage: w.st, record: w.record, membership: w.membership, filingTemplates: w.filingTemplates, credentials });
+    x.wizardRegister(registration());
+    assert.deepEqual(x.writingHelpAt({ op: "notewrite", field: "text", assistant: ON }), { offered: false, code: "AI_KEPT_AWAY" }, String(credentials));
+    assert.deepEqual([x.writingHelp({ op: "notewrite", field: "text", told: "t", assistant: ON }).code], ["AI_KEPT_AWAY"]);
+  }
+  /* pure: an away not given is no reading; null is off */
+  assert.deepEqual(wz.writingHelpAt({ op: "notewrite", field: "text", assistant: ON }), { offered: false, code: "AI_KEPT_AWAY" });
+  assert.deepEqual(wz.writingHelpAt({ op: "notewrite", field: "text", assistant: ON }, undefined, null), { offered: true });
+  assert.equal(wz.KEPT_AWAY, "AI_KEPT_AWAY");
+  /* the factory, given no credentials, reaches credentials' one instance on its own host's storage, on first need */
+  const y = wz.wizardScriptsOf({ storage: w.st }, { record: w.record, membership: w.membership, filingTemplates: w.filingTemplates });
+  y.wizardRegister(registration());
+  assert.deepEqual(y.writingHelpAt({ op: "notewrite", field: "text", assistant: ON }), { offered: true });
+  keepAway(w, true);
+  assert.deepEqual(y.writingHelpAt({ op: "notewrite", field: "text", assistant: ON }), { offered: false, code: "AI_KEPT_AWAY" });
+});
+
+test("R27 (T37; N765, K231) writingHelp answers a keep-away as credentials answers it, its row C-29.31 and keep_away {reason, set_by, set_at}, before AI_NO_ACCOUNT, the other refusals and WRITING_HELP_NOTHING_TOLD, writing nothing", () => {
+  const w = helped();
+  keepAway(w, true);
+  const before = w.snapshot();
+  const want = w.credentials.aiKeptAway();
+  for (const x of [{}, { told: "" }, { op: "publish" }, { assistant: { on: true } }]) {
+    const r = w.wz.writingHelp({ op: "notewrite", field: "text", told: "The gate was locked.", assistant: ON, by: F, viewer: F, ...x });
+    assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation], [false, "AI_KEPT_AWAY", "AI_KEPT_AWAY", want.check, want.translation], JSON.stringify(x));
+    assert.deepEqual(r.keep_away, want.keep_away);
+    assert.equal(r.keep_away.reason, "We hold residents' records", "the administrator's reason, as credentials holds it");
+  }
+  assert.equal(want.check, "C-29.31", "credentials' row: the one site");
+  assert.ok(!("AI_KEPT_AWAY" in wz.WIZARD_SCRIPTS_CHECKS), "never re-minted here");
+  assert.deepEqual(w.snapshot(), before, "writes nothing");
 });
 
 test("R25 checkDraft withholds whole each sentence stating a figure, a date, a name or a quotation in neither what the member told nor what the record read holds (WRITING_HELP_FACT_ADDED), never rewriting it; the text answered with its label and stored nowhere", () => {
@@ -104,8 +160,7 @@ test("R27 writingHelp answers R24's refusals in order, then WRITING_HELP_NOTHING
   refused(ask({}), "ASSISTANT_DRAFT_UNAVAILABLE", "every path past the refusals");
   refused(ask({ op: "testify", field: "observation" }), "ASSISTANT_DRAFT_UNAVAILABLE");
   refused(ask({ told: ["one", "two"] }), "ASSISTANT_DRAFT_UNAVAILABLE");
-  const off = ask({ assistant: { on: false } });
-  assert.deepEqual([off.ok, off.code], [false, "ASSISTANT_OFF"], "instance-setup's code, passed through");
+  refused(ask({ assistant: { on: false, account: ON.account } }), "ASSISTANT_DRAFT_UNAVAILABLE", "assistant.on is not read");
   assert.deepEqual(ask({ assistant: { on: true } }).code, "AI_NO_ACCOUNT");
   refused(ask({ op: "publish", told: "" }), "WRITING_HELP_REFUSED", "before nothing told");
   refused(ask({ op: "bootstrap" }), "WRITING_HELP_REFUSED");
@@ -117,7 +172,7 @@ test("R27 writingHelp answers R24's refusals in order, then WRITING_HELP_NOTHING
   assert.deepEqual(w.snapshot(), before, "writes nothing");
   /* the door routes the op itself and calls writingHelp (B4): no arm of the op table serves it */
   assert.equal("writinghelp" in wz.wizardScriptsOps(w.wz, new URL(`https://x/?viewer=${encodeURIComponent(F)}`), {}), false);
-  for (const odd of [undefined, null, 3]) assert.equal(w.wz.writingHelp(odd).code, "ASSISTANT_OFF", "never throws");
+  for (const odd of [undefined, null, 3]) assert.equal(w.wz.writingHelp(odd).code, "AI_NO_ACCOUNT", "never throws");
 });
 
 test("R12 a step carrying {machine: writinghelp} or {machine: groupdescriptiondraft} on an act R24 refuses is WIZARD_STEP_CONCLUDES, the registered-draft exception not reaching them; on an own-words act they pass; R13 registers irreversible and both drafts", () => {
