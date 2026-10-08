@@ -12,6 +12,7 @@
 import { DatabaseSync } from "node:sqlite";
 import { createHash, webcrypto } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
+import { PROVENANCE_SCHEMA } from "../../../src/provenance/schema.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { registerInquiryGrammar } from "../../../src/inquiry-grammar/index.mjs";
@@ -100,6 +101,9 @@ export function world({ steer = {}, worker = null, carriage = null } = {}) {
   const st = storage();
   const host = { storage: st };
   for (const t of bare(RECORD_SCHEMA).split(";")) if (t.trim()) st.db.exec(t);
+  /* provenance's tables (its R48 read contract: `register`), which the real case-carriage joins when promotion reaches
+     it (T39, K2377); the rows are the test's, as the store's composition root would migrate the tables */
+  for (const t of bare(PROVENANCE_SCHEMA).split(";")) if (t.trim()) st.db.exec(t);
   /* record-core R38's evidence store, over an in-memory bucket (keys `bio/captures/<digest>`); R4's gate probes it */
   const evidence = new Map();
   const record = recordOf(host, { evidence: bucketOver(evidence), evidencePrefix: "bio/captures/" });

@@ -54,8 +54,6 @@ async function signedForLater() {
      read contract) and recorded with an image's type */
   const bytes = png(20, 20), p = sha(bytes), path = "snapshots/photo.png";
   w.info(PHOTO);
-  w.st.db.exec(`CREATE TABLE IF NOT EXISTS register (capture_sha TEXT NOT NULL, bundle_id TEXT NOT NULL, path TEXT NOT NULL,
-                encoding TEXT, bytes INTEGER, registered TEXT, PRIMARY KEY (capture_sha, bundle_id, path))`);
   w.st.sql.exec(`INSERT INTO register (capture_sha, bundle_id, path, encoding, bytes, registered) VALUES (?, ?, ?, 'binary', ?, ?)`,
                 p, PHOTO, path, bytes.length, NOW);
   w.st.sql.exec(`INSERT INTO files (bundle_id, path, content, blob_sha, bytes, sha256) VALUES (?, ?, NULL, ?, ?, ?)`,
