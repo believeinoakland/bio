@@ -55,7 +55,11 @@ test('R7 the fleet manifest names one digest-pinned image, its surface and its b
   const m = readManifest();
   assert.equal(m.name, 'agent-runner');
   assert.equal(m.kind, 'container');
-  assert.deepEqual(Object.keys(m.surface), ['GET /version', 'GET /conversation (WebSocket upgrade)', 'anything else']);
+  assert.deepEqual(Object.keys(m.surface), ['GET /version', 'GET /conversation (WebSocket upgrade)', 'POST /signin',
+    'POST /signin/code', 'POST /signin/state', 'POST /signout', 'anything else']);
+  for (const [k, r] of [['POST /signin', 'R17'], ['POST /signin/code', 'R18'], ['POST /signin/state', 'R19'], ['POST /signout', 'R20']])
+    assert.ok(m.surface[k].startsWith(`${r}:`), k);
+  assert.equal(typeof m.terms, 'object', 'R23\'s terms are stated');
   assert.equal(m.build.dockerfile, 'Dockerfile');
   const dockerfile = readFileSync(new URL('../Dockerfile', import.meta.url), 'utf8');
   assert.match(dockerfile, /npm ci/);
@@ -78,8 +82,13 @@ test('R7 the fleet manifest names one digest-pinned image, its surface and its b
   else assert.throws(() => imageReference(m), (e) => e.code === 'IMAGE_NOT_PINNED');
 });
 
-test('R10 the manifest\'s egress allow-list is the model API alone', () => {
-  assert.deepEqual(readManifest().egress, ['api.anthropic.com']);
+// R10 (K2211): the model API, and the one host Claude Code's own sign-in, its renewal and its logout reach from the
+// container (the pinned binary 2.1.289's TOKEN_URL); each named exactly, no wildcard.
+export const EGRESS = ['api.anthropic.com', 'platform.claude.com'];
+test('R10 the manifest\'s egress allow-list is the model API and the sign-in\'s host, each exactly', () => {
+  const egress = readManifest().egress;
+  assert.deepEqual(egress, EGRESS);
+  for (const h of egress) assert.match(h, /^[a-z0-9-]+(\.[a-z0-9-]+)+$/, `${h}: a host named exactly, no wildcard, scheme or path`);
 });
 
 // R11's one exemption (K1905): the image's registry address is a distribution coordinate, the publisher's namespace,
@@ -101,7 +110,8 @@ function configurationTexts(manifest, wranglerText) {
 test('R11 no place is named in its behaviour, outward text or configuration; the registry address alone is exempt', async () => {
   const manifest = readManifest(), wranglerText = read('../wrangler.jsonc');
   const texts = [...configurationTexts(manifest, wranglerText), read('../Dockerfile'), JSON.stringify(pkg),
-    read('../src/worker.mjs'), read('../src/entry.mjs'), read('../src/runner.mjs'), read('../src/ws.mjs'), read('../src/manifest.mjs')];
+    read('../src/worker.mjs'), read('../src/entry.mjs'), read('../src/runner.mjs'), read('../src/ws.mjs'), read('../src/manifest.mjs'),
+    read('../src/env.mjs'), read('../src/signin.mjs')];
   const { sdk } = stubSdk(async (call, { callTool }) => { await callTool('search', {}); return success(); });
   const r = await startRunner(sdk);
   try {
@@ -114,11 +124,14 @@ test('R11 no place is named in its behaviour, outward text or configuration; the
   assert.deepEqual(placeFaults(texts), []);
 
   // The exemption is exactly those two values: the publisher's namespace there passes (the release writes
-  // `ghcr.io/believeinoakland/agent-runner`, K1905), and the same word anywhere else still fails.
+  // `ghcr.io/believeinoakland/agent-runner`, K1905), and the same word anywhere else still fails. The published form is
+  // derived from the configuration as it stands (N750, K2074): on a tranche (`@sha256:UNPUBLISHED`) a published
+  // namespace and digest are written in; on a release cut, which already holds them, it is judged as it is.
   const ns = 'ghcr.io/believeinoakland/agent-runner', digest = 'sha256:' + '9d'.repeat(32);
-  const published = { ...manifest, image: { ...manifest.image, repository: ns, digest } };
-  const publishedWrangler = wranglerText.replace(`"${manifest.image.repository}@sha256:UNPUBLISHED"`, `"${ns}@${digest}"`);
-  assert.notEqual(publishedWrangler, wranglerText);
+  const unpublished = `"${manifest.image.repository}@sha256:UNPUBLISHED"`;
+  const onTranche = wranglerText.includes(unpublished);
+  const published = onTranche ? { ...manifest, image: { ...manifest.image, repository: ns, digest } } : manifest;
+  const publishedWrangler = onTranche ? wranglerText.replace(unpublished, `"${ns}@${digest}"`) : wranglerText;
   assert.deepEqual(placeFaults(configurationTexts(published, publishedWrangler)), [], 'the registry address is exempt');
   for (const [what, m, w] of [
     ['the build command', { ...published, build: { ...published.build, command: `docker build -t ${ns}:<version> agent-runner` } }, publishedWrangler],
@@ -126,6 +139,7 @@ test('R11 no place is named in its behaviour, outward text or configuration; the
     ['another marker field', { ...published, image: { ...published.image, platform: 'oakland/amd64' } }, publishedWrangler],
     ['a wrangler comment', published, `// Oakland's member\n${publishedWrangler}`],
     ['the wrangler name', published, publishedWrangler.replace('"name": "agent-runner"', '"name": "agent-runner-oakland"')],
+    ['the terms', { ...published, terms: { ...published.terms, who_agrees: 'Alameda County groups' } }, publishedWrangler],
   ]) assert.notDeepEqual(placeFaults(configurationTexts(m, w)), [], `a place word in ${what} still fails`);
 });
 

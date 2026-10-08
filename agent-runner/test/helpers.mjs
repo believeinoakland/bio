@@ -4,10 +4,12 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ListToolsRequestSchema, CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { mkdtempSync, rmSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { mkdtempSync, rmSync, readdirSync, readFileSync, statSync, writeFileSync, chmodSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { agentRunnerOf } from '../src/entry.mjs';
+import { signinOf } from '../src/signin.mjs';
 
 export function stubSdk(script) {
   const calls = [];
@@ -52,14 +54,37 @@ export const request = (over = {}) => ({
   max_turns: 4, ...over,
 });
 
-export async function startRunner(sdk) {
+// A stubbed Claude Code binary (stubs/claude.mjs) in `mode`, as an executable wrapper in `dir`; its runs are logged
+// to `log` (arguments and environment names only).
+export function stubClaude(dir, mode = 'ok') {
+  const binary = join(dir, `claude-${mode}`), log = join(dir, `claude-${mode}.log`);
+  const stub = fileURLToPath(new URL('./stubs/claude.mjs', import.meta.url));
+  writeFileSync(binary, `#!/bin/sh\nexec '${process.execPath}' '${stub}' '${mode}' '${log}' "$@"\n`);
+  chmodSync(binary, 0o755);
+  const runs = () => (existsSync(log) ? readFileSync(log, 'utf8').trim().split('\n').filter(Boolean).map((l) => JSON.parse(l)) : []);
+  return { binary, log, runs };
+}
+
+// The runner over `sdk`, its instance's sign-in in its own directory (`signinRoot`) over a stubbed binary in `mode`.
+export async function startRunner(sdk, { mode = 'ok', waits } = {}) {
   const tmpRoot = mkdtempSync(join(tmpdir(), 'agent-runner-test-'));
-  const server = agentRunnerOf({ sdk, tmpRoot });
+  const outside = mkdtempSync(join(tmpdir(), 'agent-runner-instance-'));
+  const signinRoot = join(outside, 'signin'), claude = stubClaude(outside, mode);
+  const signin = signinOf({ root: signinRoot, binary: claude.binary, waits });
+  const server = agentRunnerOf({ sdk, tmpRoot, signin });
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   const base = `127.0.0.1:${server.address().port}`;
   return {
-    base, tmpRoot,
-    stop: async () => { server.closeAllConnections?.(); await new Promise((r) => server.close(r)); rmSync(tmpRoot, { recursive: true, force: true }); },
+    base, tmpRoot, signinRoot, signin, claude,
+    post: async (path, body) => {
+      const res = await fetch(`http://${base}${path}`, { method: 'POST', body: typeof body === 'string' ? body : JSON.stringify(body) });
+      return { status: res.status, body: await res.json() };
+    },
+    stop: async () => {
+      if (signin.waiting) await signin.signout(signin.waiting.member).catch(() => {});
+      server.closeAllConnections?.(); await new Promise((r) => server.close(r));
+      rmSync(tmpRoot, { recursive: true, force: true }); rmSync(outside, { recursive: true, force: true });
+    },
   };
 }
 
