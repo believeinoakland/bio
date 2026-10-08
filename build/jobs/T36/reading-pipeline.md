@@ -13,7 +13,7 @@ Detail readings (mine, within R28): a docx table entry with no string `ref` is n
 
 **Deferred (own module).** `hooks.mjs`:19, if `structuredClone` of a reading throws, a hook is handed the caller's reading; readings are JSON-shaped, so it cannot throw in practice; left as is. R26's text says an uncommitted call answers `{ran: []}` and also that the answer is `{ran, failed}`: the code follows the first clause (`hooks.mjs`:44); a wording point for BOB, no change made. Stale comments: `staffdirectory.test.mjs`:114 says "R2's" for tier 2 (R3); `d606-perpage-ocr.test.mjs`:153, 172, 185 cite "extraction R5" (now R4); `convert-ocr.test.mjs` duplicates d606's arms. Comment only, left.
 
-**Other modules.** The plane bundle `bio-plane/dist/bio-plane.bundled.mjs` (`not_product`) is stale from this change (reported, J2). Nothing else.
+**Other modules.** The plane bundle `bio-plane/dist/bio-plane.bundled.mjs` (`not_product`) is stale from this change (reported, J1). Nothing else.
 
 **Reading set (mechanics §17, N739).** Measured: requirements 22 KB + code 89 KB + tests ~282 KB, over 300 KB; option (3). Read whole myself: `build/requirements/reading-pipeline.md`, layer 4's row of `build/layers.md`, `index.mjs` (all), `emitted.test.mjs`, `fixture.mjs`, `pieces.test.mjs`:200–235, office-readers R11, R16, R30, R31, the docx entry's `text()` (`docx.mjs`:885–925), test-support's `makeZip` signature. One worker read the rest whole (19 files, 287,621 B: `hooks.mjs`, `readingprov.mjs`, 16 test files) and wrote a ~6 KB summary citing file:line; it found the one assertion this change broke (`pieces.test.mjs`:229, fixed) and the flaws above. Nothing it left out mattered.
 
