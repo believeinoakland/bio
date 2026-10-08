@@ -92,6 +92,7 @@ Sources: `next.md` N812; INVESTIGATION-DESIGN `HANDOFF.md` H4–H6 and `DECISION
   - Every account holds a switch for each kind except `explore`, which holds `no`, `ask` or `yes` (B6, default `no`), plus `suggestions`: a member's own reference and a member's sign-in (closing K2275's gap), the project key and the group key.
   - `accountUsesSet({owner, switch, on, by})` sets one. A member's own account is set by that member only (R22's refusals). The project key is set by an owner (R54's refusals). The group key is set by an active administrator (R33's refusals). Any other name is refused `UNKNOWN_SWITCH`.
   - Defaults: `ask`, `draft` and `run` on; `standing` and `suggestions` off.
+  - A sign-in's `standing` switch is held, but R32 keeps refusing a sign-in's standing questions `STANDING_SWITCH_OFF` while N796 is held with Bob (K2334, K2376).
   - R25's and R37's `suggestions` and `standing` switches become two of these, with their stored values kept. `groupKeySwitches()` and R32's standing check read them unchanged.
 - **R56** (D38; A3, A4 (K2352); amends R35) *(not yet met: T40)* `accountFor({member, act})` takes `act` as `{kind, member, project?}`. `kind` is a `USE_KINDS` entry other than `explore`. `project` is allowed only when the member is a joined participant (`membership` R54); otherwise it is refused as R54's absence.
   - The cascade answers the first account that is held and on (and, for a project's sign-in account, serving):
@@ -125,7 +126,7 @@ Purpose: what each AI account has spent and may spend. It counts each use agains
 - **R1** (was `ai-runs` R48, R49; B8) *(not yet met: T40)* `countUsage({owner, member, use, mode, model, usage, calls, at})` is called in the caller's transaction.
   - `owner` is `group`, `project:<id>` or `member:<id>`.
   - `usage` is `agent-model` R5's shape plus `estimated_cost_usd` (its R13).
-  - It adds to the counter `ai_usage`, kept per owner, member, local day (`civil-time.localDay`) and `use`: the token sums, `calls` (a `null` counted as one), and `estimated_cost_usd`. Where that estimate is `null` on an `apikey` account, it is counted at the highest price in `agent-model`'s table, never as zero.
+  - It adds to the counter `ai_usage`, kept per owner, member, local day (`civil-time.localDay`) and `use`: the token sums, `calls` (a `null` counted as one), and `estimated_cost_usd`. It sums the figure `usage` carries and never reads a price table (`agent-model` R13 prices a `null` figure on `apikey`; K2376).
   - A malformed entry is refused `AI_RUN_CONSUME_INVALID` (`run-rules` R3), counting nothing.
   - The counter holds no content, question or address, and is declared `export: "admin-only"`.
   - Rows from before T40 are kept with owner "not recorded" and count toward no limit.
@@ -156,7 +157,7 @@ Purpose: what each AI account has spent and may spend. It counts each use agains
   - `credentials.aiKeptAway({use: "explore"})`;
   - the question outside the owner's scope (B6; `connections.citesInto` for a project), or every project it is drawn on keeping its material from `explore` (`credentials.projectsKeptAway`).
   - With `null` it also answers `label: {kind: "machine", enabled_by: owner}`, which the explorer attaches to what it offers.
-- **R9** (A5, K2350) *(not yet met: T40)* `exploreAsk({owner, at, what})` raises, for an owner whose `explore` is `ask`, at most one "Ask" queue item a local day to that account's owners (DEC-69, DEC-94's form; its words the design stream's), stating what is worth exploring; `exploreApprove({owner, day, by})`, by one of those owners, approves exploring for that day; silence means no. A second ask that day answers the first's key and mints nothing. Refusals as R2's for who may act.
+- **R9** (A5, K2350) *(not yet met: T40)* `exploreAsk({owner, at, what})` records, for an owner whose `explore` is `ask`, at most one pending ask a local day, stating what is worth exploring; `exploreAsksPending({viewer, at})` answers them to that account's owners, and `notice-producers` R16 makes each one "Ask" queue item (DEC-69, DEC-94's form; its words the design stream's; `queue` R1 gains the kinds, K2376); `exploreApprove({owner, day, by})`, by one of those owners, approves exploring for that day; silence means no. A second ask that day answers the first's key and mints nothing. Refusals as R2's for who may act.
 - **R7** *(not yet met: T40)* The tables (`ai_usage`, `ai_limits` and their history) are declared through `record-core.declareTable`: `export: "admin-only"`, `sight: "group"`, purged only with the whole store. A project's limits are deleted with its project.
 - **R8** *(not yet met: T40)* Each code it mints is an invariant with its test (K6), its rows in its own `checks.mjs`.
 - **Uses**: `record-grammar`, `civil-time`, `record-core`, `membership`, `credentials`, `connections`, `run-rules`.
@@ -185,7 +186,7 @@ Purpose: what each AI account has spent and may spend. It counts each use agains
 - **R11, amended** *(not yet met: T40)* A reference of `level` `project` is taken exactly as `group` is: `apikey` only, sent as a member's.
 - **R13** (B4; fact 3) *(not yet met: T40)*
   - `MODEL_PRICES`, a reviewed edit beside `MODEL_FOR_MODE`, holds USD per million input, output, cache-read and cache-write tokens for each model. Every `MODEL_FOR_MODE` model must be priced, which a test checks.
-  - On the `apikey` path, every outcome's `usage` adds `estimated_cost_usd` from its figures at that model's prices. It is `null` where a figure is `null`, and always `null` on the `signin` path.
+  - On the `apikey` path, every outcome's `usage` adds `estimated_cost_usd` from its figures at that model's prices. Where a figure is `null` on the `apikey` path, that figure is priced at the model's highest rate, never as zero (K2376); it is always `null` on the `signin` path.
   - `total_cost_usd` stays as the provider states it.
 
 ### agent-worker (L6, index 89)
@@ -195,7 +196,7 @@ Purpose: what each AI account has spent and may spend. It counts each use agains
 - **R27, amended** *(not yet met: T40)* The ceiling codes become `AI_LIMIT_REACHED` (`ai-use` R3), answered at the door with `AI_USE_SWITCHED_OFF`.
 
 ### notice-producers (L11, index 126)
-- **R16** (B7; K2353) *(not yet met: T40)* One "Noticed" item per entry of `ai-use.limitsReached` and of `credentials.projectAccountsSuspended` for the viewer, keyed by its stable key so `queue` mints it once per account, limit and period. Its words are the design stream's (NOTICE). It names whose limit, which use and the period's end, and never a member.
+- **R16** (B7; K2353, K2376) *(not yet met: T40)* One "Ask" item per entry of `ai-use.exploreAsksPending`, and one "Noticed" item per entry of `ai-use.limitsReached` and of `credentials.projectAccountsSuspended` for the viewer, keyed by its stable key so `queue` mints it once per account, limit and period. Its words are the design stream's (NOTICE). It names whose limit, which use and the period's end, and never a member.
 - **Uses** add `ai-use`.
 
 ### instance-setup (L11, index 130; after T39 L11's split)
