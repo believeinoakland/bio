@@ -1,6 +1,6 @@
 # pdf-reader (T39)
 
-**Status** · session_01TmZK6qZWMuPDraW8kWN2cb · depth 2 · WORKING · handled B1
+**Status** · session_01TmZK6qZWMuPDraW8kWN2cb · depth 2 · COMPLETE · handled B1
 
 ## Completion
 
