@@ -1,6 +1,6 @@
 # BOB to progressions (T37)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -11,3 +11,7 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Merge order in L5 (`modules.json` order): events → standards → progressions → retrieval.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there, item 17 with `plan/t37-red-census.md`); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · CHANGE
+
+K2204 (P8): deal with two of your deferrals in this job: (1) the whole-store overdueScan on listener registration (index.mjs:891) scans only that thread, where R33 allows, with a test; (2) fix the zoneOf comment (:38-39). The listeners awaited in turn stay as they are (R33 as written; no timeout owed). Your 32 users' reds are named in rule 6 (items 7, 14, 17). Then COMPLETE again.

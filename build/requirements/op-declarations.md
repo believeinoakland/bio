@@ -1,6 +1,6 @@
 # op-declarations — requirements
 
-**Status** · In force: split from `control-plane` for size (K617, K624): R1 and R6 are its R34 and R31, moved with meaning unchanged; R2–R5 state, with ids, the tables its Terms defined. Last changed T35 (T35-70: R6, R21, R27 amended; R30 new; K1901, K1943; R6's `doorwindow`, K2038); every requirement met (OP-DECLARATIONS #12, K2054).
+**Status** · In force: split from `control-plane` for size (K617, K624): R1 and R6 are its R34 and R31, moved with meaning unchanged; R2–R5 state, with ids, the tables its Terms defined. Last changed T35 (T35-70: R6, R21, R27 amended; R30 new; K1901, K1943; R6's `doorwindow`, K2038); every requirement met (OP-DECLARATIONS #12, K2054). Last changed T37 (T37-31, its first share: R35 new, `translationdraft`'s declaration with its `direction`; N669; K2200, K2201); the rest of T37-31's requirements are BOB's at its START; R35 marked not yet met (T37).
 
 **Size (P6).** About 2,110 lines move (`bio-plane/src/control-plane/ops.mjs` whole: `OPS`, the act lists, `SESSION_OPS`, `NEEDS`, `ACT_GATE`, `decorateAct`, `UNATTENDED_BY_DECISION`), most of it a table and its comments; about 150 written with the Action layer's specs (N-A12's share, N-A21). Well under the mark.
 
@@ -157,6 +157,9 @@ Terms. An **op** is a name the instance answers. An **op spec** is `{classes, ma
 - **R34** (N726, its share; DEC-174 (3); K2063 (3)) Every op in `SESSION_OPS.member` has an explanation in `affordances`' `ACT_HELP` (its R48), under the op's own name, or is named in this module's frozen `ACT_HELP_ABSENT` with one ground of why not, each ground a sentence: an op no control on a screen offers (a read a screen draws from, a door reached without a control, a store-internal route), an alias (its op's text serves it, R21), an owed act not yet served, or an op the design has not yet explained (named back to the design stream). No op is both explained and in `ACT_HELP_ABSENT`, and `ACT_HELP_ABSENT` names no op `OPS` does not hold.
 
   None is declared for `subscriptionsignin` (R27). R6 holds over them.
+
+**The specs of T37's ops** (N669; DEC-127 (5), DEC-157 (2), (4); K2200, K2201)
+- **R35** `OPS` holds a spec for `translationdraft` (`instance-setup` R67), in `SESSION_OPS.member` and `SESSION_OPS.admin`, none in `GOVERNANCE_ACTIONS` or `IDENTITY_ACTIONS`, not on `credentials`' `AI_GRANT_OPS`: a member's act (classes `admin`, `member`; `machineClasses: []`), `by` and `viewer` stamped, `NEEDS` `null`; body fields `language` (a BCP 47 tag), `direction` (`to_language` or `to_english`, required), `keys` (optional, at most 100, `to_language` only) and `key` (required for `to_english` only). With `to_language` it writes (a labelled draft per word, `instance-setup` stores them); with `to_english` it writes nothing (a reading answered as machine work, adopting nothing). Its grades are `op-grades`' (T37-26): `to_language` a granted member's or an administrator's, `to_english` an administrator's (K2201). R27's and R28's "no spec until its owner serves it" is then met for `translationdraft`. R6 holds over it. *(not yet met: T37)*
 
 **Settled readings (K1396):** the readings of op-declarations's T31 question stand as K1396 states them; they bind this module's tests.
 ## Private
