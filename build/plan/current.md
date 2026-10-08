@@ -1,6 +1,6 @@
 # Plan T39
 
-**Status** · OPEN · BOB #143 · session_01YCBYkMVtZpK8zWkFJcsNkZ · depth 1
+**Status** · OPEN · BOB #144 · session_017eYwzMF5vwqLhpqcuC3iU8 · depth 1
 
 **Jobs** · bundler: BUNDLER #13 session_01Gr94vczwdnNrPgdvnxrCWd; pdf-reader: PDF-READER #5 session_01TmZK6qZWMuPDraW8kWN2cb; image-cover: IMAGE-COVER #2 session_01713tY2AEJZPTinfdxFZjHr; doc-clean: DOC-CLEAN #1 session_01RzWTiZh7mVWEYFtHXN4VP5; membership: MEMBERSHIP #30 session_01BHB26L3trKhKn9LPYbpK5d; promotion: PROMOTION #37 session_01D4tF1JLHNsN3tZR6mHerE1; acquisition: ACQUISITION #15 session_01KoNcJWSwALaZQ9B5mKBcnH; provenance: PROVENANCE #19 session_01Cwa88YYi7hCLFZzpdk7gAE; file-safety: FILE-SAFETY #4 session_01TJ4PTCM3iSyJeRYmdDY3L3; answers: ANSWERS #6 session_01V8KJuWEPKX3WrBN7Ff1rdT; agent-runner: AGENT-RUNNER #1 session_01NpUoSSKhpotLhikWUwzPRL; case-grammar: CASE-GRAMMAR #12 session_015c5pkGR6f8FDqbTSrFjvzi; case-carriage: CASE-CARRIAGE #6 session_01LmwYYcJzTZXw2vJWwsENHv; publication: PUBLICATION #26 session_01WbD8jksEcAKJZvuvR4ohT8; public-read: PUBLIC-READ #17 session_01Djbnfgfma73t1Qd5xWboXx; ratification: RATIFICATION #22 session_01Ky2nmjoLmrWwGBPjKWFCBF; case-checker: CASE-CHECKER #9 session_013nDuZWRyji4rYH9ax6JrLQ; case-disclosures: CASE-DISCLOSURES #7 session_017U4puvgg5SbVfxAghkjSpV
 
