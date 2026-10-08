@@ -47,3 +47,7 @@ Reds my merge opens in other modules, each from R12/R13's new text (all green be
 2. case-disclosures (T37-41) `carries.test.mjs`:56 and case-authoring `carries.test.mjs`:40: deep-equal `materialsOf` rows without R12's `obscured: null`.
 3. public-read (T37-42) writes `bio-case-file/2`; the case file it writes should take `CASE_FILE_FORMAT` (`/3`), the copy at `caseFilePath("obscured", ref)`.
 Interface for my users: `MATERIAL_OBSCURED_FIELDS`, `CASE_FILE_FORMAT_V2`, `CASE_FILE_V3_KINDS`, `CASE_FILE_ORIGINAL_KINDS`, `OBSCURED_WORDS`; `materialsLines` takes `obscured: {copy, label}` on a document row; `caseFileManifestCheck(manifest, {materials})`.
+
+## J3 · COMPLETE
+
+T37-40 applied: R12 obscured (flat, included false, fingerprint kept), R13 bio-case-file/3 with the obscured kind and its three departures under {materials} (K2222), R14 the copy and its label, /7 editions without obscured byte-identical (pinned golden). case-grammar 97/0; format, architecture, coverage (22/22), ownership 0 failures. Reds opened in case-checker, case-disclosures, case-authoring: J3. Record: build/jobs/T37/case-grammar.md.
