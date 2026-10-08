@@ -1,0 +1,286 @@
+<title>Investigation Design</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400&display=swap">
+<style>
+/* One living case file: what is open now first, then Bob's direction, the model, the open questions, the research, and the register; one column, contents at the top */
+:root{
+  --bg:#f5f6f2; --fg:#1c2220; --muted:#5a6560; --rule:#d3d9d4; --panel:#e9ede8; --card:#fbfcfa;
+  --accent:#2f5d7c; --member:#2e6b46; --memberbg:#d9ecdf; --sys:#5a4f8a; --sysbg:#e3e0f1; --new:#8a5a12; --newbg:#f3e6cf; --off:#7a7f7c;
+  --display:"Source Serif 4", Georgia, serif; --body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif; --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#141917;--fg:#e2e8e4;--muted:#9eaaa4;--rule:#2d3632;--panel:#1c2320;--card:#18201d;--accent:#8fbbd9;--member:#9bd8b2;--memberbg:#1d3a29;--sys:#c3bbf0;--sysbg:#2c2843;--new:#e8c07e;--newbg:#3a2d16;--off:#8d948f;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141917;--fg:#e2e8e4;--muted:#9eaaa4;--rule:#2d3632;--panel:#1c2320;--card:#18201d;--accent:#8fbbd9;--member:#9bd8b2;--memberbg:#1d3a29;--sys:#c3bbf0;--sysbg:#2c2843;--new:#e8c07e;--newbg:#3a2d16;--off:#8d948f;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:16px/1.6 var(--body)}
+main{max-width:52rem;margin:0 auto;padding-inline:16px;padding-block:36px 72px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.2;font-weight:600}
+h1{font-size:2.2rem;margin:0 0 .3rem}
+h2{font-size:1.45rem;margin:2.8rem 0 .6rem;padding-top:1.2rem;border-top:1px solid var(--rule)}
+h3{font-size:1.1rem;margin:1.6rem 0 .4rem}
+p,li{max-width:70ch}
+a{color:var(--accent)}
+.meta{font:400 .85rem var(--mono);color:var(--muted);margin:0 0 1rem}
+.lede{font-size:1.08rem;color:var(--muted);margin:0 0 1.2rem}
+nav.toc{background:var(--panel);border-radius:6px;padding:.8rem 1.2rem}
+nav.toc ol{margin:.2rem 0;padding-left:1.3rem;columns:2;column-gap:2rem}
+@media (max-width:560px){nav.toc ol{columns:1}}
+.now{border:2px solid var(--accent);border-radius:8px;padding:1rem 1.2rem;display:grid;gap:.5rem}
+.now p{margin:0}
+.now ul{margin:0;padding-left:1.2rem;display:grid;gap:.3rem}
+blockquote{margin:.6rem 0;padding:.5rem 1rem;border-left:3px solid var(--accent);background:var(--card)}
+blockquote p{margin:.2rem 0}
+blockquote cite{display:block;font:400 .82rem var(--mono);color:var(--muted);font-style:normal;margin-top:.3rem}
+.lanes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;margin:1rem 0}
+@media (max-width:560px){.lanes{grid-template-columns:minmax(0,1fr)}}
+.lane{border-radius:6px;padding:.8rem 1rem;display:grid;gap:.4rem;align-content:start}
+.lane.m{background:var(--memberbg)} .lane.s{background:var(--sysbg)}
+.lane h3{margin:0;font:600 .78rem var(--body);letter-spacing:.07em;text-transform:uppercase}
+.lane.m h3{color:var(--member)} .lane.s h3{color:var(--sys)}
+.lane ul{margin:0;padding-left:1.1rem;display:grid;gap:.25rem;font-size:.95rem}
+.gate{border:2px solid var(--member);border-radius:6px;padding:.7rem 1rem;text-align:center;font-family:var(--display);font-size:1.05rem}
+.gate small{display:block;font-family:var(--body);font-size:.85rem;color:var(--muted)}
+.chain{display:grid;margin:1rem 0}
+.row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,14rem);gap:.8rem;align-items:start}
+@media (max-width:560px){.row{grid-template-columns:minmax(0,1fr)}}
+.node{background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:.5rem .8rem}
+.node b{font-family:var(--display);font-size:1.03rem}
+.node span{display:block;font-size:.88rem;color:var(--muted)}
+.node.step{border:2px dashed var(--new);background:var(--newbg)}
+.node.step b{color:var(--new)}
+.side{font-size:.85rem;color:var(--muted);align-self:center}
+.link{font:600 .76rem var(--mono);color:var(--accent);padding:.25rem 0 .25rem 1.4rem;position:relative}
+.link::before{content:"";position:absolute;left:.6rem;top:0;bottom:0;border-left:2px solid var(--accent)}
+.wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.92rem;min-width:36rem}
+th,td{text-align:left;vertical-align:top;padding:.45rem .6rem;border-bottom:1px solid var(--rule)}
+th{font:600 .72rem var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td.id{font:600 .82rem var(--mono);color:var(--accent);white-space:nowrap}
+.tag{display:inline-block;font:600 .7rem var(--body);letter-spacing:.04em;padding:.08rem .4rem;border-radius:3px;white-space:nowrap}
+.t-open{color:var(--accent);background:var(--panel);border:1px solid var(--accent)}
+.t-ruled{color:var(--member);background:var(--memberbg)}
+.t-dir{color:var(--member);background:var(--memberbg)}
+.t-set{color:var(--sys);background:var(--sysbg)}
+.t-pause{color:var(--new);background:var(--newbg)}
+.t-off{color:var(--off);background:var(--panel)}
+.slip{border:1px solid var(--rule);border-radius:6px;padding:.8rem 1rem;margin:.7rem 0;display:grid;gap:.4rem}
+.slip .id{font:600 .8rem var(--mono);color:var(--accent)}
+.slip p{margin:0}
+.slip ol{margin:0;padding-left:1.3rem;display:grid;gap:.25rem;color:var(--muted);font-size:.95rem}
+.slip ol li b{color:var(--fg)}
+.rec{font-weight:600}
+.senses{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.8rem}
+@media (max-width:560px){.senses{grid-template-columns:minmax(0,1fr)}}
+.sense{border:1px solid var(--rule);border-radius:6px;padding:.6rem .9rem}
+.sense h3{margin:0 0 .2rem;font-size:1rem}
+.sense ol{margin:0;padding-left:1.2rem;font-size:.92rem}
+ul.plain{padding-left:1.2rem;display:grid;gap:.35rem}
+</style>
+<main>
+<h1>Investigation Design</h1>
+<p class="meta">The one working document for the investigation engine and the project around it · last updated 8 October 2026</p>
+<p class="lede">It carries your direction, the model as it stands, the questions open with you, the research behind them, and every decision's state. It replaces the four earlier pages; each now points here.</p>
+
+<nav class="toc"><ol>
+<li><a href="#now">Open with you now</a></li>
+<li><a href="#direction">Your direction so far</a></li>
+<li><a href="#model">The model as it stands</a></li>
+<li><a href="#questions">Questions</a></li>
+<li><a href="#research">Research</a></li>
+<li><a href="#register">Decision register</a></li>
+<li><a href="#sources">Sources and history</a></li>
+</ol></nav>
+
+<h2 id="now">1 · Open with you now</h2>
+<div class="now">
+<p>Three questions, each in <a href="#questions">section 4</a>:</p>
+<ul>
+<li><b>D34</b> When the system explores a question on its own. Recommended: a member may also set a question to be explored over time, with a cadence and an end date, within the paying account's limits.</li>
+<li><b>D35</b> Where steps that serve no question belong. Recommended: the project.</li>
+<li><b>D36</b> Who "the members working on a question" are. Recommended: the joined members of every project that draws on it, each free to follow or stop following.</li>
+</ul>
+<p>After those: the chain redrawn with steps in place, and the paused points (milestones, removing steps, resources, reports) restated around it. The engine decisions for the AI stages wait until then.</p>
+</div>
+
+<h2 id="direction">2 · Your direction so far</h2>
+<p>In your words, newest first. Where a later word changes an earlier one, the later governs.</p>
+
+<blockquote><p>"It's important to clarify that actions that affect the answering of a question rests with members - with the support and guidance of the system. Members can have hunches, hypotheses, and follow leads - as can the system. The system (including AIs) can proactively explore a question (that is, look for answers). They have the capabilities to gauge to what extent the results that they find might contribute to the question - both in support and as contradicting other gathered information. The system can present potentially useful information to members working on a question. But it's the act of members that decide whether information is dismissed or added to the body of evidence (based on its grade and the rules of evidence that apply."</p>
+<p>On steps: "Yes, work is done (steps are taken) that don't relate to a specific question. This work may be done to provide context for members, in the development of a question, to understand how to respond to findings, and so on." What a step keeps when it ends: "agreed". Tying a chance find to a step afterwards: "Yes".</p>
+<cite>D33 and D32's answers · 8 October</cite></blockquote>
+
+<blockquote><p>"A project has an objective it's trying to establish. It does so by posing questions that could be answered (or not) What's you're proposing is that a step is the work done in pursuit of an answer to a question. Some steps might contribute to answering the question, others may be dead-ends - though we should recognize that even some dead-ends may still contribute to our overall understanding of the world. This understanding is recorded in the form of documents, content, connections, and constructs created while pursuing that step. It's also important to recognize that the same question may be of interest to more than one objective. So a step taken in pursuit of an answer isn't always just for a single objective or project. So we should recognize the value of tracking the work being done to answer a question. A step may be defined to indicate that a member or AI are doing specific work (a step), but sometimes the information that contributes to an answer may be found through happenstance."</p>
+<cite>D32 · 8 October</cite></blockquote>
+
+<blockquote><p>"It was inaccurate of me to talk about members being assigned roles and for there to be subgoals within a project. As we look at filling in the capabilities of projects I think we should study the relationships between steps, basis, claims, findings, and any other elements."</p>
+<cite>8 October · withdraws assignments, teams and subgoals (D25, D26)</cite></blockquote>
+
+<blockquote><p>"There needing to be an engine [with] the capabilities we're exporting now. But there also needs to be a member-visible construct that is an investigation. This construct is the project, right? A project has a plan for the investigation. This plan includes: A series steps … The engine will manage dependencies between steps. The engine will estimate and track resources … A number of things about an investigation that the engine tracks will have deadlines and milestones." (The parts on assignments, teams and subgoal leaders are withdrawn by the 8 October words above.)</p>
+<cite>K2075 · 7 October</cite></blockquote>
+
+<blockquote><p>The engine approved as a product goal: the interview, a planner that stays on the investigation's objectives and knows why each document is held, research runs, competing explanations, and the answer, with the member in the loop (the machine proposes, a member accepts). Unfamiliar documents read with purpose. The project becomes the investigation's home, with one view and a timeline. Study first, then architecture, requirements and screens.</p>
+<cite>K1627 · 6 October (summarised)</cite></blockquote>
+
+<h2 id="model">3 · The model as it stands</h2>
+
+<h3>Who does what</h3>
+<div class="lanes">
+<div class="lane m"><h3>Members</h3><ul>
+<li>pose questions under the project's objective</li>
+<li>take steps on a question, or for the project</li>
+<li>hold hunches and hypotheses; follow leads</li>
+<li>close a step: its outcome, what it produced, what was learned</li>
+<li>tie a chance find to the step it helped</li>
+</ul></div>
+<div class="lane s"><h3>The system, including the AI</h3><ul>
+<li>takes steps on a question: searching, capturing, reading</li>
+<li>has its own hunches, hypotheses and leads, labelled as its own</li>
+<li>judges how a find bears on the question: supporting it, or contradicting what is gathered</li>
+<li>offers what it found to the members working on the question</li>
+</ul></div>
+</div>
+<div class="gate">A member's act decides<small>dismiss the information, or add it to the evidence on the question, by its grade and the rules of evidence</small></div>
+
+<h3>The chain</h3>
+<p>Everything except the step is built. The step is placed where your words put it.</p>
+<div class="chain">
+<div class="row"><div class="node"><b>Project</b><span>The investigation. Holds its objective and its bar (the strength of evidence it requires).</span></div><div class="side">Some steps serve the project itself (D35).</div></div>
+<div class="link">pursues its objective by posing</div>
+<div class="row"><div class="node"><b>Questions</b><span>Open, set aside, concluded or divided. One question can serve several projects.</span></div><div class="side">Hunches and hypotheses, the members' and the system's, hang here, never as evidence.</div></div>
+<div class="link">worked on by</div>
+<div class="row"><div class="node step"><b>Steps</b><span>Work by a member or the system in pursuit of an answer. Each ends with an outcome (helped answer, dead end, set aside), what it produced, and what was learned.</span></div><div class="side">Chance finds arrive without a step and may be tied to one later.</div></div>
+<div class="link">producing</div>
+<div class="row"><div class="node"><b>Documents, content, connections, other records</b><span>Kept whatever the step's outcome. A look records "looked, absent" too.</span></div><div class="side">The system judges how each bears on the question and offers it.</div></div>
+<div class="link">which a member adds to the evidence as</div>
+<div class="row"><div class="node"><b>Legs</b><span>This document (or another question) supports or cuts against the question.</span></div><div class="side">Only a member draws a leg.</div></div>
+<div class="link">grouped into</div>
+<div class="row"><div class="node"><b>Basis</b><span>The question's legs, kept as one or more named versions, each with its claim.</span></div><div class="side">Strength is computed beside the bar, never as one score.</div></div>
+<div class="link">a project adopts a version's claim as its</div>
+<div class="row"><div class="node"><b>Conclusion</b><span>With what would show it wrong. The concluded question is a finding.</span></div><div class="side">Another project may conclude differently.</div></div>
+<div class="link">published in a</div>
+<div class="row"><div class="node"><b>Case</b><span>Findings pinned by version, signed by an owner, against the bar.</span></div><div class="side"></div></div>
+<div class="link">leading to</div>
+<div class="row"><div class="node"><b>Action plan and actions</b><span>What to do about it; actions go outside the group. Replies come back as documents.</span></div><div class="side"></div></div>
+</div>
+
+<h3>Settled by rules already in force</h3>
+<div class="wrap"><table>
+<tr><th>point</th><th>how it works</th><th>from</th></tr>
+<tr><td>Steps live with the question</td><td>A step on a shared question is seen from every project drawing on it.</td><td>built; D32</td></tr>
+<tr><td>The system's judgement of a find</td><td>A labelled signal, with how it was worked out and its measured rate of false alarms. Never a grade, never a stored score, never used to hide or rank.</td><td>K1473</td></tr>
+<tr><td>Offering finds</td><td>Once, in the queue. No email, no repeats.</td><td>DEC-69, DEC-94</td></tr>
+<tr><td>The system's hypotheses</td><td>Labelled as its own, never facts; a member may take one up as hers.</td><td>K1467; D33</td></tr>
+<tr><td>Who did what</td><td>Recorded by handle, or as the assistant's work with the member who started it. Nothing measures or ranks members; no record of who opened which file.</td><td>DEC-68; K1892</td></tr>
+<tr><td>Working material</td><td>Steps, the plan and notes are never published.</td><td>D15</td></tr>
+<tr><td>Our own dates</td><td>The group's deadlines and milestones are never findings about government.</td><td>Capability Ladders §10</td></tr>
+</table></div>
+
+<h2 id="questions">4 · Questions</h2>
+<h3>Open now</h3>
+
+<div class="slip"><span class="id">D34 · when the system explores on its own</span>
+<p>Your rule today: an AI run starts only at a member's act, with one exception, a standing question a member writes, re-run on a schedule (K1481). "Proactively explore" goes further.</p>
+<ol>
+<li><b>A.</b> A member asks the system to explore a question; within that bounded run it decides for itself where and how to look.</li>
+<li><b>B.</b> As A, and a member may also set a question to be explored over time, with a cadence and an end date, within the paying account's limits.</li>
+<li><b>C.</b> The system explores any open question unasked, whenever it sees fit.</li>
+</ol>
+<p class="rec">Recommended: B. Proactive, while a member still decides that it happens and who pays. C would reverse K1481 and leave cost unbounded.</p></div>
+
+<div class="slip"><span class="id">D35 · steps that serve no question</span>
+<ol>
+<li><b>A.</b> They belong to the project. A step that helps form a question is linked to it once it exists. Deciding how to respond to findings stays with the action plan.</li>
+<li><b>B.</b> They belong to the group, visible from every project.</li>
+</ol>
+<p class="rec">Recommended: A.</p></div>
+
+<div class="slip"><span class="id">D36 · who "the members working on a question" are</span>
+<ol>
+<li><b>A.</b> The joined members of every project that draws on the question.</li>
+<li><b>B.</b> Only members who took a step on it or follow it.</li>
+<li><b>C.</b> A, with each member free to follow or stop following.</li>
+</ol>
+<p class="rec">Recommended: C.</p></div>
+
+<h3>Paused until the model settles</h3>
+<p>From your plan of 7 October, to be restated around steps on questions: <b>D27</b> deadlines and milestones; <b>D28</b> removing steps (a step that was worked on keeps its record; an untouched one can go); <b>D29</b> resources (people, money, information, connections, expertise); <b>D30</b> status reports (their "leaders" fell with D25); <b>D31</b> an AI budget for an investigation. Dependencies between steps need no ruling: a step may wait on other steps, a document or a date, and loops are refused.</p>
+
+<h3>Engine decisions waiting for the AI stages</h3>
+<p>From the study (K2064). Those marked † need restating in light of D32–D33.</p>
+<div class="wrap"><table>
+<tr><th>id</th><th>question</th><th>study's recommendation</th></tr>
+<tr><td class="id">D1 †</td><td>The new parts: a reading-guide library, why we hold each document, the plan, the investigation view; an AI planner; an AI reading flow</td><td>approve; the plan now hangs on questions</td></tr>
+<tr><td class="id">D2</td><td>May the AI read a held document's text in bounded slices, returning only proposals?</td><td>allow, with a size bound</td></tr>
+<tr><td class="id">D3</td><td>One way to accept any proposal; the record keeps as proposed, edited, or written unaided</td><td>as stated</td></tr>
+<tr><td class="id">D4</td><td>Grade of an AI-found fact: the quote keeps the document's grade; the meaning is the member's by accepting</td><td>the split rule</td></tr>
+<tr><td class="id">D7 †</td><td>What authorises AI work: holding a document for a purpose; an accepted step; one act starting several steps</td><td>first two now, third later; joins D34</td></tr>
+<tr><td class="id">D8</td><td>Reading guides in two libraries, Civicsmith's and each group's; approved only after measured use</td><td>as stated</td></tr>
+<tr><td class="id">D12</td><td>Show AI cost to whoever pays, before and after</td><td>show it</td></tr>
+<tr><td class="id">D13</td><td>No investigating private people; officials only in official acts</td><td>as stated</td></tr>
+<tr><td class="id">D14</td><td>Test investigations with answers written by people</td><td>as stated</td></tr>
+<tr><td class="id">D16</td><td>When nothing could change the picture: watch or close</td><td>as stated</td></tr>
+<tr><td class="id">D17</td><td>Waits set for the whole project, seen by every joined member</td><td>as stated</td></tr>
+<tr><td class="id">D18</td><td>A member may share a note with the project, never as evidence</td><td>allow</td></tr>
+<tr><td class="id">D19</td><td>The intake interview: about six questions on one page</td><td>as stated</td></tr>
+<tr><td class="id">D20</td><td>The answer's words: baselines side by side, no "late" verdict</td><td>as stated</td></tr>
+<tr><td class="id">D21</td><td>AI transcription of image-only pages, labelled undetermined</td><td>allow, as proposals</td></tr>
+<tr><td class="id">D22</td><td>A short note beside a source, every sentence tied to a quote</td><td>allow</td></tr>
+<tr><td class="id">D23 †</td><td>The words members see, including a name for the investigation's plan apart from the action plan</td><td>the design stream draws them</td></tr>
+<tr><td class="id">D24</td><td>Instruction text for the AI's reading, planning and interview, ruled by you first</td><td>as stated</td></tr>
+</table></div>
+
+<h2 id="research">5 · Research</h2>
+
+<h3>What the study set out (6 October)</h3>
+<p>Fourteen realistic investigations, from a school rebuild (your Grandview example) to a sewer-fee diversion, five best-practice papers, six capability studies and three reviews. The proposal: four new parts (a library of reading guides, a record of why each document is held, the plan, the investigation view), one AI planner that fetches nothing, and one AI flow that reads one held document for one purpose. Everything else adds to existing parts. Eight stages, the first three with no AI. Cost per investigation, as an order of magnitude only: about $15–40 small, $100–300 for a Grandview-sized case, $300–1,000 or more over years.</p>
+
+<h3>What the product has today</h3>
+<ul class="plain">
+<li><b>Questions</b> with evidence links (legs), alternative accounts (basis versions), claims, conclusions with a falsifier, strength against the project's bar, contradictions, hypotheses, dated waits.</li>
+<li><b>Documents</b> captured with provenance and grade, read by a tiered reader with OCR; ZIP records productions unpacked; search inside a document.</li>
+<li><b>Objectives</b> with computed progress and gaps; promises and deadlines with their basis; a timeline of what happened and what we did; watching of sources.</li>
+<li><b>Cases</b> published by a project's owner; determinations against standards; action plans and actions with legal clocks.</li>
+<li><b>No step</b> of investigative work anywhere. The nearest: actions (outward only), the action plan's steps (after a finding), to-dos (routed by the system), recheck triggers on a question, objective gaps, and your deferred "backward question" ("what else would have to be true?").</li>
+</ul>
+
+<h3>Words that mean more than one thing</h3>
+<div class="senses">
+<div class="sense"><h3>basis</h3><ol><li>a question's legs</li><li>one named version of them</li><li>why a date is due</li><li>what an action rests on</li><li>what a proposal rests on</li><li>a member's grounds for her testimony</li></ol></div>
+<div class="sense"><h3>finding</h3><ol><li>a concluded question</li><li>something the machine noticed</li><li>a check's result</li><li>a recorded absence</li><li>a missing document in a sequence</li></ol></div>
+<div class="sense"><h3>claim</h3><ol><li>the statement on a basis version</li><li>what a published case asserts</li><li>a case's completeness statement</li><li>a legal claim</li></ol></div>
+<div class="sense"><h3>plan and step</h3><ol><li>the action plan and its steps</li><li>the "Plan" inside one action</li><li>"an action: a step someone takes"</li><li>wizard and progress steps</li></ol></div>
+</div>
+<p>The design should give members one meaning each for "finding" and "basis", with other words for the rest (owed to the design stream).</p>
+
+<h3>Rules your plan of 7 October touched</h3>
+<ul class="plain">
+<li>Your "no budgets" of 29 September (for action plans: no costs, assignees or hours).</li>
+<li>The Capability Ladders' "no drift into BI, case management or dashboards". My reading: a plan serving the investigation is within it; timesheets, workload dashboards and scores on members are not.</li>
+<li>No measuring members (DEC-68), no nagging (DEC-69, DEC-94), no record of who opened which file (K1892).</li>
+</ul>
+
+<h2 id="register">6 · Decision register</h2>
+<p><span class="tag t-dir">your direction</span> <span class="tag t-ruled">ruled</span> <span class="tag t-set">settled</span> from canon <span class="tag t-open">open</span> <span class="tag t-pause">paused</span> <span class="tag t-off">withdrawn</span></p>
+<div class="wrap"><table>
+<tr><th>id</th><th>subject</th><th>state</th></tr>
+<tr><td class="id">D1–D4</td><td>parts; AI reading text; one way to accept; grade of an AI-found fact</td><td><span class="tag t-open">open</span> AI stages</td></tr>
+<tr><td class="id">D5</td><td>why a document is held, stated at capture, is provenance</td><td><span class="tag t-set">settled</span> K2064</td></tr>
+<tr><td class="id">D6</td><td>AI-proposed explanations</td><td><span class="tag t-set">settled</span> by your D33</td></tr>
+<tr><td class="id">D7–D8</td><td>what authorises AI work; reading-guide libraries</td><td><span class="tag t-open">open</span> AI stages</td></tr>
+<tr><td class="id">D9–D11</td><td>a contract is a standard; school districts covered; every AI mode tested before members get it</td><td><span class="tag t-set">settled</span> K2064</td></tr>
+<tr><td class="id">D12–D14</td><td>showing cost; no private people; test investigations</td><td><span class="tag t-open">open</span> AI stages</td></tr>
+<tr><td class="id">D15</td><td>working material never published</td><td><span class="tag t-set">settled</span> K2064</td></tr>
+<tr><td class="id">D16–D24</td><td>watch or close; project waits; shared notes; interview; answer's words; image pages; bearing note; member words; instruction text</td><td><span class="tag t-open">open</span></td></tr>
+<tr><td class="id">D25–D26</td><td>teams, subgoals, leaders; assignments</td><td><span class="tag t-off">withdrawn</span> 8 Oct</td></tr>
+<tr><td class="id">D27–D31</td><td>milestones; removing steps; resources; reports; AI budget</td><td><span class="tag t-pause">paused</span></td></tr>
+<tr><td class="id">D32</td><td>what a step is; steps without a question; what a step keeps; chance finds</td><td><span class="tag t-dir">your direction</span> 8 Oct</td></tr>
+<tr><td class="id">D33</td><td>members decide evidence; the system may explore, judge and offer</td><td><span class="tag t-dir">your direction</span> 8 Oct</td></tr>
+<tr><td class="id">D34–D36</td><td>system exploring on its own; steps with no question; who works on a question</td><td><span class="tag t-open">open</span> now</td></tr>
+</table></div>
+
+<h2 id="sources">7 · Sources and history</h2>
+<ul class="plain">
+<li>6 Oct: you approve the engine and ask for a study (K1627). The study runs the same day.</li>
+<li>7 Oct: BOB re-presents its 24 decisions, settling five (K2064). You give your plan for an investigation (K2075) and ask for this design lane (K2076).</li>
+<li>7 Oct: "The Investigation Plan" sets your plan against canon (D25–D31).</li>
+<li>8 Oct: you withdraw roles and subgoals and ask for the relationship study ("Steps, Basis, Claims, Findings"). You define a step (D32) and who decides evidence (D33). "The Work on a Question" follows. All four pages are folded in here.</li>
+</ul>
+<p>Source in the repository: <code>docs/development/investigation-design/</code> on branch <code>design/investigation</code>, which also holds the decision register and the handoff to BOB.</p>
+</main>

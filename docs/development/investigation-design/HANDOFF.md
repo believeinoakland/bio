@@ -17,3 +17,9 @@ Numbered entries; BOB answers each in rulings (K) on `tranche/T<n>`. Decision st
 **Carries:** Bob, 2026-10-08: "It was inaccurate of me to talk about members being assigned roles and for there to be subgoals within a project. As we look at filling in the capabilities of projects I think we should study the relationships between steps, basis, claims, findings, and any other elements." D25 and D26 withdrawn; D27–D31 paused until his wording of the plan settles. The study is `S1-relationships.md`, rendered at https://claude.ai/artifact/6cHHcybJpV3SPf25wVmeLN.
 
 **For BOB to note (no ruling asked):** K2075's assignment and subgoal parts no longer stand as Bob's direction. The study finds no investigative step anywhere in canon or the built modules (the action plan's steps are post-finding); "basis" and "finding" each carry five or six senses across canon.
+
+## H3 · 2026-10-08 · one working document; steps on questions
+
+**Carries:** Bob asked for one document "that we can use to carry the research, questions, and design forward". It is `investigation-design.html`, rendered at https://claude.ai/artifact/QjSSFHE78G9PtwKhpW5ZEo; pages 1–3 now point to it. It holds Bob's direction in his words (K1627, K2075 as narrowed, D32, D33), the model, the open questions, the research and the register. From now on the lane updates that one page.
+
+**Bob's direction, for BOB to note (no ruling asked yet):** D32 (a step is the work done in pursuit of an answer to a question; dead ends kept; steps also exist without a question; chance finds may be tied to a step afterwards) and D33 (members decide what becomes evidence; the system, including AI, may proactively explore a question, gauge its finds and offer them). This moves the plan from the project (synthesis `enquiry`) to the question, and D33's "proactively explore" meets K1481; open with Bob as D34–D36.

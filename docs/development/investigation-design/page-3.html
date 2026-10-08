@@ -1,127 +1,14 @@
 <title>The Work on a Question</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400&display=swap">
 <style>
-/* Same case-file column as pages 1–2: Bob's model restated, the picture as it now stands, what follows from canon, then the few questions left */
-:root{
-  --bg:#f5f6f2; --fg:#1c2220; --muted:#5a6560; --rule:#d3d9d4; --panel:#e9ede8; --card:#fbfcfa;
-  --accent:#2f5d7c; --member:#2e6b46; --memberbg:#d9ecdf; --sys:#5a4f8a; --sysbg:#e3e0f1;
-  --display:"Source Serif 4", Georgia, serif; --body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif; --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
-}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#141917;--fg:#e2e8e4;--muted:#9eaaa4;--rule:#2d3632;--panel:#1c2320;--card:#18201d;--accent:#8fbbd9;--member:#9bd8b2;--memberbg:#1d3a29;--sys:#c3bbf0;--sysbg:#2c2843;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#141917;--fg:#e2e8e4;--muted:#9eaaa4;--rule:#2d3632;--panel:#1c2320;--card:#18201d;--accent:#8fbbd9;--member:#9bd8b2;--memberbg:#1d3a29;--sys:#c3bbf0;--sysbg:#2c2843;color-scheme:dark}
-body{background:var(--bg);color:var(--fg);font:16px/1.6 var(--body)}
-main{max-width:50rem;margin:0 auto;padding-inline:16px;padding-block:36px 72px}
-h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.2;font-weight:600}
-h1{font-size:2.1rem;margin:0 0 .4rem}
-h2{font-size:1.4rem;margin:2.6rem 0 .6rem;padding-top:1.2rem;border-top:1px solid var(--rule)}
-h3{font-size:1.05rem;margin:0 0 .3rem}
-p,li{max-width:68ch}
-.lede{font-size:1.08rem;color:var(--muted);margin:0 0 1.2rem}
-.state{background:var(--panel);border-radius:6px;padding:1rem 1.2rem;display:grid;gap:.5rem}
-.state p{margin:0}
-.state ul{margin:0;padding-left:1.2rem;display:grid;gap:.3rem}
-.lanes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;margin:1rem 0}
-@media (max-width:560px){.lanes{grid-template-columns:minmax(0,1fr)}}
-.lane{border-radius:6px;padding:.8rem 1rem;display:grid;gap:.5rem;align-content:start}
-.lane.m{background:var(--memberbg)}
-.lane.s{background:var(--sysbg)}
-.lane h3{font:600 .78rem var(--body);letter-spacing:.07em;text-transform:uppercase}
-.lane.m h3{color:var(--member)}
-.lane.s h3{color:var(--sys)}
-.lane ul{margin:0;padding-left:1.1rem;display:grid;gap:.3rem;font-size:.95rem}
-.gate{border:2px solid var(--member);border-radius:6px;padding:.7rem 1rem;text-align:center;font-family:var(--display);font-size:1.05rem}
-.gate small{display:block;font-family:var(--body);font-size:.85rem;color:var(--muted)}
-.wrap{overflow-x:auto}
-table{border-collapse:collapse;width:100%;font-size:.93rem;min-width:34rem}
-th,td{text-align:left;vertical-align:top;padding:.5rem .6rem;border-bottom:1px solid var(--rule)}
-th{font:600 .74rem var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-td:first-child{font-family:var(--display);font-weight:600}
-.slip{border:1px solid var(--rule);border-radius:6px;padding:.8rem 1rem;margin:.7rem 0;display:grid;gap:.4rem}
-.slip .id{font:600 .8rem var(--mono);color:var(--accent)}
-.slip p{margin:0}
-.slip ol{margin:0;padding-left:1.3rem;display:grid;gap:.25rem;color:var(--muted);font-size:.95rem}
-.slip ol li b{color:var(--fg)}
-.rec{font-weight:600}
-.ask{border:2px solid var(--accent);border-radius:8px;padding:1rem 1.2rem;margin-top:2.6rem}
-.ask h2{border:0;margin-top:0;padding-top:0}
+:root{--bg:#f5f6f2;--fg:#1c2220;--muted:#5a6560;--accent:#2f5d7c}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#141917;--fg:#e2e8e4;--muted:#9eaaa4;--accent:#8fbbd9;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141917;--fg:#e2e8e4;--muted:#9eaaa4;--accent:#8fbbd9;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:17px/1.6 Georgia,serif}
+main{max-width:40rem;margin:0 auto;padding-inline:16px;padding-block:64px}
+a{color:var(--accent)} p{color:var(--muted)}
 </style>
 <main>
-<h1>The Work on a Question</h1>
-<p class="lede">Your answers of 8 October, put together into one picture: what a step is, what the system may do, and where the line sits that only members cross. Then three questions it leaves.</p>
-
-<div class="state">
-<p><strong>What you have said, in short</strong> (recorded in your words as D32 and D33):</p>
-<ul>
-<li>A project pursues an objective by posing questions, which may or may not be answered.</li>
-<li>A step is work done in pursuit of an answer. Some steps help; some are dead ends, which can still add to our understanding.</li>
-<li>That understanding is kept as the documents, content, connections and other records created during the step.</li>
-<li>One question can serve several objectives, so the work on a question is worth tracking for its own sake.</li>
-<li>Some steps serve no particular question: they give members context, help form a question, or help decide how to respond to findings.</li>
-<li>A step names its outcome, what it produced and, optionally, what was learned. A find by chance may later be tied to the step it helped.</li>
-<li>Members and the system can both have hunches and hypotheses and follow leads. The system may explore a question on its own, gauge how its finds bear on it, and offer them.</li>
-<li>Only a member's act dismisses information or adds it to the evidence, by its grade and the rules of evidence.</li>
-</ul>
-</div>
-
-<h2>The picture</h2>
-<div class="lanes">
-<div class="lane m"><h3>Members</h3><ul>
-<li>pose questions under the project's objective</li>
-<li>take steps on a question, or for the project itself</li>
-<li>hold hunches and hypotheses; follow leads</li>
-<li>close a step: its outcome, what it produced, what was learned</li>
-<li>tie a chance find to the step it helped</li>
-</ul></div>
-<div class="lane s"><h3>The system, including the AI</h3><ul>
-<li>takes steps on a question: searching, capturing, reading</li>
-<li>has its own hunches, hypotheses and leads, labelled as its own</li>
-<li>gauges how a find bears on the question: supporting it, or contradicting what is gathered</li>
-<li>offers what it found to the members working on the question</li>
-</ul></div>
-</div>
-<div class="gate">A member's act decides<small>dismiss the information, or add it to the evidence on the question, by its grade and the rules of evidence</small></div>
-
-<h2>What follows from rules already in force</h2>
-<p>These need no ruling; I record them as the design's details.</p>
-<div class="wrap"><table>
-<tr><th>point</th><th>how it works</th><th>from</th></tr>
-<tr><td>Steps live with the question</td><td>Questions are already shared by projects, so a step on a question is seen from every project that draws on it. Steps for the project alone stay with the project.</td><td>built; your D32</td></tr>
-<tr><td>The system's "gauge"</td><td>Shown as a labelled signal beside the find, with how it was worked out and its measured rate of false alarms. Never a grade, never a score stored on evidence, never used to hide or rank what members see.</td><td>K1473; invariant 7</td></tr>
-<tr><td>Offering finds</td><td>Each find reaches the members working on the question once, in their queue. No email, no repeats, no nagging.</td><td>DEC-69, DEC-94</td></tr>
-<tr><td>The system's hypotheses</td><td>Labelled as the system's and never facts. A member may take one up as her own. This settles the earlier D6 the way it recommended.</td><td>K1467; your D33</td></tr>
-<tr><td>Who did a step</td><td>Recorded by handle, or as the assistant's work with the member who started it. Nothing measures members.</td><td>DEC-68</td></tr>
-</table></div>
-
-<h2>Three questions</h2>
-
-<div class="slip"><span class="id">D34 · when the system explores on its own</span>
-<p>Your rule today is that an AI run starts only at a member's act, with one exception: a standing question a member writes, re-run on a schedule (K1481). "Proactively explore" goes further, so I need to know how far.</p>
-<ol>
-<li><b>A.</b> A member asks the system to explore a question. Within that bounded run, the system decides for itself where and how to look.</li>
-<li><b>B.</b> As A, and a member may also set a question to be explored on its own over time, with a cadence and an end date, inside the limits of the account that pays. This widens the standing question from reading to exploring.</li>
-<li><b>C.</b> The system explores any open question unasked, whenever it sees fit.</li>
-</ol>
-<p class="rec">Recommended: B. It gives you proactive exploration while a member still decides that it happens and who pays. C would reverse K1481 and leave cost unbounded.</p></div>
-
-<div class="slip"><span class="id">D35 · steps that serve no question</span>
-<p>You said some steps give context, help form a question, or help decide how to respond to findings. Where they sit decides who sees them.</p>
-<ol>
-<li><b>A.</b> They belong to the project. A step that helps form a question is linked to that question once it exists. Work on how to respond to findings belongs to the action plan, which already exists for that.</li>
-<li><b>B.</b> They belong to the group, visible from every project.</li>
-</ol>
-<p class="rec">Recommended: A.</p></div>
-
-<div class="slip"><span class="id">D36 · who are "the members working on a question"</span>
-<p>The system offers finds to the members working on a question. Since a question can serve several projects, someone has to be on that list.</p>
-<ol>
-<li><b>A.</b> The joined members of every project that draws on the question.</li>
-<li><b>B.</b> Only members who have taken a step on the question, or said they follow it.</li>
-<li><b>C.</b> A, but each member can choose to follow or stop following a question.</li>
-</ol>
-<p class="rec">Recommended: C. Everyone who might care sees it once, and nobody is held to a question they have left.</p></div>
-
-<div class="ask">
-<h2>What I need from you</h2>
-<p>D34, D35 and D36, "as recommended" or otherwise. Then I will redraw the chain with the step in place and bring back the paused points (milestones, removing steps, resources, reports) restated around this picture.</p>
-</div>
+<h1>Moved</h1>
+<p>This page is folded into the one working document for the investigation design, which carries everything it held and is kept current:</p>
+<p><a href="https://claude.ai/artifact/QjSSFHE78G9PtwKhpW5ZEo">Investigation Design</a></p>
 </main>
