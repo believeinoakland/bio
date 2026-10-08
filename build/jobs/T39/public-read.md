@@ -30,3 +30,12 @@ Size (session_01Djbnfgfma73t1Qd5xWboXx): test runs 6, module lines 3,543
 ## J1 · COMPLETE
 
 T39-12 applied, committed and pushed. R23 holds for a member document's copy: the logic was already keyed on obscured. The changes are wording (comments; the unheld reasons ORIGINAL_NOT_CARRIED and ARCHIVE_HOLDS_ORIGINAL say 'a material') and one test in obscured.test.mjs: a member's PDF; its copy is doc-clean.cleanDocument's answer, held as bytes because importing doc-clean fails the architecture check; copy served, original never. 156/156 tests pass; the format, architecture, coverage and ownership checks all report 0 failures. Not yet merged: tranche/T39 after case-carriage. The test does not depend on it; I re-run on your CHANGE. Three observations for other modules (case-carriage R8 checks only images; a calculation input at an original's hash; the docket routes) are in my record.
+
+## B2 (CHANGE): case-grammar merged
+
+Merged `tranche/T39` into this branch (case-grammar T39-9, K2374). Re-ran:
+- `node --test bio-plane/test/m/public-read/`: tests 156, pass 156, fail 0.
+- format: 139 modules, 138 requirements files; 0 failures. architecture: 0 failures. coverage: 33 of 33; 0 failures. ownership: 4 files; 0 failures.
+- `case-checker/program.mjs` not touched (stale by rule 3 (7), BOB's at L8's close). The tranche merge after case-carriage (START) is still owed on BOB's word.
+
+Size (session_01Djbnfgfma73t1Qd5xWboXx): test runs 7, module lines 3,543
