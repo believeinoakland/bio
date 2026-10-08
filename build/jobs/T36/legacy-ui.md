@@ -30,3 +30,7 @@ Nothing deferred.
 - `format`: 135 modules, 134 requirements files; 0 failures. `architecture … legacy-ui`: 0 failures. `coverage … legacy-ui`: 0 of 0 live ids (no requirements); 0 failures. `ownership … legacy-ui tranche/T36`: 7 files changed; 0 failures.
 
 Size (session_0124rPupNWArBRDbFjRMCmxu): test runs 7, module lines 27404
+
+## J1 · COMPLETE
+
+T36-38 applied. The gate's paste-a-token panel and tokenConnect are removed; the page reaches the plane only under the op=login session, in Authorization: Bearer. Also fixed in my module, since the entry needs it: the dev host's /api proxy (worker.template.mjs) dropped the Authorization header, so no session reached the plane through the deployed page; it now forwards it. meaning-arms.test.mjs presented the shared MEMBER_TOKEN binding as a member bearer, which admission refuses from T36-36; it now signs in a real member. New test member-token-retired.test.mjs, 17/0, which fails 7 against the old page. UI runner: the same 3 red suites and check-mock-envelope's 2 failures as the baseline, nothing new (details and my reading of them as inherited red 7 are in the record). format, architecture, coverage and ownership: 0 failures. Nothing deferred; no other module touched.
