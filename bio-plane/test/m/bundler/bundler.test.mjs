@@ -617,7 +617,7 @@ test("R24: the repository's own fleet lists agent-runner as a container member w
   assert.ok(runner, "agent-runner is listed");
   assert.equal(runner.kind, "container");
   assert.equal(isContainer(runner), true);
-  assert.equal(runner.image.repository, "docker.io/civicos/agent-runner");
+  assert.equal(runner.image.repository, "ghcr.io/believeinoakland/agent-runner");
   assert.deepEqual(got.filter((m) => !isGuarded(m)).map((m) => m.name).filter((n) => n !== "agent-runner"), [],
     "every other member is guarded");
   for (const m of got.filter((x) => !isContainer(x))) assert.equal(m.kind, "worker", m.name);

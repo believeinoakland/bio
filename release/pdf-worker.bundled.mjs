@@ -39657,18 +39657,63 @@ function isDelimiter(c2) {
 }
 async function inflate(u8) {
   try {
-    const ds2 = new DecompressionStream("deflate");
-    const out = new Response(new Blob([u8]).stream().pipeThrough(ds2));
-    return new Uint8Array(await out.arrayBuffer());
+    return { data: await inflateWhole(u8, "deflate"), trailing: 0 };
   } catch {
+    const kept = await inflateWithTrailing(u8);
+    if (kept) return kept;
     try {
-      const ds2 = new DecompressionStream("deflate-raw");
-      const out = new Response(new Blob([u8]).stream().pipeThrough(ds2));
-      return new Uint8Array(await out.arrayBuffer());
+      return { data: await inflateWhole(u8, "deflate-raw"), trailing: 0 };
     } catch {
       return null;
     }
   }
+}
+async function inflateWhole(u8, format) {
+  const out = new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream(format)));
+  return new Uint8Array(await out.arrayBuffer());
+}
+async function inflateWithTrailing(u8) {
+  if (u8.length < 6 || (u8[0] & 15) !== 8 || (u8[0] << 8 | u8[1]) % 31 !== 0) return null;
+  const chunks = [];
+  let total = 0;
+  try {
+    const reader = new Blob([u8]).stream().pipeThrough(new DecompressionStream("deflate")).getReader();
+    for (; ; ) {
+      const { done, value } = await reader.read();
+      if (done) return null;
+      chunks.push(value);
+      total += value.length;
+    }
+  } catch {
+  }
+  const data = new Uint8Array(total);
+  let off = 0;
+  for (const c2 of chunks) {
+    data.set(c2, off);
+    off += c2.length;
+  }
+  const sum = adler32(data);
+  const want = [sum >>> 24 & 255, sum >>> 16 & 255, sum >>> 8 & 255, sum & 255];
+  for (let i2 = 2; i2 + 4 < u8.length; i2++) {
+    if (u8[i2] !== want[0] || u8[i2 + 1] !== want[1] || u8[i2 + 2] !== want[2] || u8[i2 + 3] !== want[3]) continue;
+    const end = i2 + 4;
+    try {
+      const again = await inflateWhole(u8.subarray(0, end), "deflate");
+      if (again.length === data.length && again.every((b2, k2) => b2 === data[k2])) {
+        return { data, trailing: u8.length - end };
+      }
+    } catch {
+    }
+  }
+  return null;
+}
+function adler32(u8) {
+  let a2 = 1, b2 = 0;
+  for (let i2 = 0; i2 < u8.length; i2++) {
+    a2 = (a2 + u8[i2]) % 65521;
+    b2 = (b2 + a2) % 65521;
+  }
+  return (b2 << 16 | a2) >>> 0;
 }
 function unpredict(data, { predictor = 1, colors = 1, columns = 1, bpc = 8 } = {}) {
   if (predictor < 10) return data;
@@ -39906,9 +39951,17 @@ var PdfDoc = class {
     this.s = LATIN1.decode(bytes);
     this.objects = /* @__PURE__ */ new Map();
     this.pageIndexByObj = /* @__PURE__ */ new Map();
+    this._pageOrder = [];
     this.pageCount = 0;
     this.root = null;
     this.notes = [];
+    this._trailingNoted = /* @__PURE__ */ new WeakSet();
+  }
+  /** The resolved dict of the page at 0-based `pageIdx` in page order, or null
+   *  (R31). */
+  pageDict(pageIdx) {
+    if (!Number.isInteger(pageIdx) || pageIdx < 0 || pageIdx >= this.pageCount) return null;
+    return this.dictOf({ t: "ref", n: this._pageOrder[pageIdx] });
   }
   note(msg) {
     this.notes.push(msg);
@@ -39931,6 +39984,7 @@ var PdfDoc = class {
       v2 = this.objects.get(v2.n);
       seen++;
     }
+    if (v2 && v2.t === "ref") return null;
     return v2 ?? null;
   }
   dictOf(v2) {
@@ -39976,8 +40030,13 @@ var PdfDoc = class {
     const names = !filter ? [] : filter.t === "name" ? [filter.v] : filter.t === "arr" ? filter.items.map((f2) => f2 && f2.t === "name" ? f2.v : null) : [];
     if (names.length === 0) return raw;
     if (!names.every((n2) => n2 === "FlateDecode" || n2 === "Fl")) return null;
-    let data = await inflate(raw);
-    if (!data) return null;
+    const inflated = await inflate(raw);
+    if (!inflated) return null;
+    let data = inflated.data;
+    if (inflated.trailing > 0 && !this._trailingNoted.has(streamObj)) {
+      this._trailingNoted.add(streamObj);
+      this.note(`flate_trailing_bytes:${inflated.trailing}`);
+    }
     let parms = this.resolve(streamObj.dict.DecodeParms) || this.resolve(streamObj.dict.DP);
     if (parms && parms.t === "arr") parms = this.resolve(parms.items[parms.items.length - 1]);
     if (parms && parms.t === "dict") {
@@ -40023,7 +40082,7 @@ var PdfDoc = class {
         const off = header[i2 * 2 + 1];
         if (!Number.isFinite(objNum) || !Number.isFinite(off)) continue;
         if (this.objects.has(objNum)) continue;
-        const r2 = parseValue(null, inner, first + off);
+        const r2 = parseValueSafe(inner, first + off);
         if (r2) this.objects.set(objNum, r2.value);
       }
     }
@@ -40313,7 +40372,7 @@ async function embeddedFileRecord(doc, filespec, sourcePage, rect, name) {
   const ef = doc.dictOf(fs2.EF);
   const streamRef = ef && (ef.F || ef.UF || ef.DOS || ef.Mac || ef.Unix);
   const stream = doc.resolve(streamRef);
-  const label = name || strOf(doc, fs2.UF) || strOf(doc, fs2.F) || null;
+  const label = embeddedName(doc, fs2, name);
   if (!stream || stream.t !== "stream")
     return undeterminedRecord({ page: sourcePage, rect }, "embedded_stream_absent", { name: label });
   const bytes = await doc.streamDecoded(stream);
@@ -40330,6 +40389,9 @@ async function embeddedFileRecord(doc, filespec, sourcePage, rect, name) {
 function strOf(doc, v2) {
   v2 = doc.resolve(v2);
   return v2 && v2.t === "str" ? v2.v : null;
+}
+function embeddedName(doc, fs2, given) {
+  return given || fs2 && (strOf(doc, fs2.UF) || strOf(doc, fs2.F)) || null;
 }
 function deferredOrRefusedRecord(uri, source) {
   const partition = classifyUri(uri);
@@ -40429,6 +40491,19 @@ function tokenizeContent(s2, opts = {}) {
     } else i2++;
   }
   return toks;
+}
+function textShowBytes(toks) {
+  let n2 = 0;
+  const pending = [];
+  for (const tk of toks) {
+    if (tk.t !== "op") {
+      if (tk.t === "str") pending.push(tk.bytes.length);
+      continue;
+    }
+    if (tk.v === "Tj" || tk.v === "TJ" || tk.v === "'" || tk.v === '"') for (const b2 of pending) n2 += b2;
+    pending.length = 0;
+  }
+  return n2;
 }
 function readLiteralBytes(s2, pos) {
   pos++;
@@ -40631,7 +40706,78 @@ async function loadFont(doc, fontVal) {
     }
   }
   if (width == null) width = isType0 ? 2 : 1;
-  return { subtype, isType0, baseFont, toUni, width };
+  const w2 = fontWidths(doc, map, subtype, isType0);
+  return { subtype, isType0, baseFont, toUni, width, widths: w2.widths, widthsWhy: w2.why };
+}
+function numOf(doc, v2) {
+  v2 = doc.resolve(v2);
+  return typeof v2 === "number" ? v2 : null;
+}
+function glyphScale(doc, map, subtype) {
+  if (subtype !== "Type3") return 1e-3;
+  const fm = doc.resolve(map.FontMatrix);
+  if (!fm || fm.t !== "arr" || fm.items.length < 6) return null;
+  const a2 = numOf(doc, fm.items[0]);
+  return typeof a2 === "number" && a2 !== 0 ? a2 : null;
+}
+function fontWidths(doc, map, subtype, isType0) {
+  if (isType0) return cidWidths(doc, map);
+  const scale = glyphScale(doc, map, subtype);
+  if (scale == null) return { widths: null, why: "type3_no_font_matrix" };
+  const first = numOf(doc, map.FirstChar);
+  const arr = doc.resolve(map.Widths);
+  if (first == null || !arr || arr.t !== "arr" || arr.items.length === 0) {
+    return { widths: null, why: "no_widths_array" };
+  }
+  const vals = arr.items.map((x2) => numOf(doc, x2));
+  const desc = doc.dictOf(map.FontDescriptor);
+  const missing = (desc ? numOf(doc, desc.MissingWidth) : null) ?? 0;
+  const widths = (code) => {
+    const i2 = code - first;
+    const w2 = i2 >= 0 && i2 < vals.length ? vals[i2] : null;
+    return (w2 == null ? missing : w2) * scale;
+  };
+  return { widths, why: null };
+}
+function cidWidths(doc, map) {
+  const enc = nameOf(doc, map.Encoding);
+  if (enc !== "Identity-H" && enc !== "Identity-V") {
+    return { widths: null, why: "cid_encoding_not_identity" };
+  }
+  const descArr = doc.resolve(map.DescendantFonts);
+  const cid = descArr && descArr.t === "arr" && descArr.items.length ? doc.dictOf(descArr.items[0]) : null;
+  if (!cid) return { widths: null, why: "no_descendant_font" };
+  const dw = numOf(doc, cid.DW) ?? 1e3;
+  const table = /* @__PURE__ */ new Map();
+  const wArr = doc.resolve(cid.W);
+  if (wArr && wArr.t === "arr") {
+    const items = wArr.items.map((x2) => doc.resolve(x2));
+    let i2 = 0;
+    while (i2 < items.length) {
+      const c2 = items[i2];
+      if (typeof c2 !== "number") {
+        i2++;
+        continue;
+      }
+      const next = items[i2 + 1];
+      if (next && typeof next === "object" && next.t === "arr") {
+        const list = next.items.map((x2) => numOf(doc, x2));
+        for (let k2 = 0; k2 < list.length; k2++) if (list[k2] != null) table.set(c2 + k2, list[k2]);
+        i2 += 2;
+        continue;
+      }
+      const last = typeof next === "number" ? next : null;
+      const w2 = typeof items[i2 + 2] === "number" ? items[i2 + 2] : null;
+      if (last != null && w2 != null && last >= c2 && last - c2 <= 65535) {
+        for (let code = c2; code <= last; code++) table.set(code, w2);
+        i2 += 3;
+        continue;
+      }
+      i2++;
+    }
+  }
+  const widths = (code) => (table.has(code) ? table.get(code) : dw) * 1e-3;
+  return { widths, why: null };
 }
 var HEX_CAP = 64;
 function bytesToHex(bytes, cap = HEX_CAP) {
@@ -40663,18 +40809,25 @@ function pageResources(doc, pageMap) {
   return null;
 }
 async function pageContent(doc, pageMap) {
+  const unread = [];
+  if (pageMap.Contents == null) return { text: "", unread };
   const c2 = doc.resolve(pageMap.Contents);
-  if (!c2) return "";
+  if (!c2) return { text: "", unread: ["content_stream_unresolvable"] };
   const streams = c2.t === "arr" ? c2.items.map((x2) => doc.resolve(x2)) : [c2];
   const parts = [];
   for (const st2 of streams) {
     if (st2 && st2.t === "stream") {
       const data = await doc.streamDecoded(st2);
       if (data) parts.push(LATIN1.decode(data));
-      else doc.note("content_stream_undecodable");
+      else {
+        doc.note("content_stream_undecodable");
+        unread.push("content_stream_undecodable");
+      }
+    } else {
+      unread.push("content_stream_unresolvable");
     }
   }
-  return parts.join("\n");
+  return { text: parts.join("\n"), unread };
 }
 var IDENTITY_MATRIX = Object.freeze([1, 0, 0, 1, 0, 0]);
 function matMul(a2, b2) {
@@ -40689,20 +40842,28 @@ function matMul(a2, b2) {
 }
 var baselineOf = (tlm, ctm) => tlm[4] * ctm[1] + tlm[5] * ctm[3] + ctm[5];
 var BASELINE_EPS = 1e-6;
+var WORD_GAP_EM = 0.25;
+var TJ_WORD_GAP_EM = 0.1;
 async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   const resources = pageResources(doc, pageMap);
   const fontDict = resources ? doc.dictOf(resources.Font) : null;
   const content = await pageContent(doc, pageMap);
-  const toks = tokenizeContent(content);
+  const toks = tokenizeContent(content.text);
   const pieces = [];
-  const undetermined = [];
+  const boxes = [];
+  const undecodedCenters = [];
+  let unpositioned = 0;
+  const undetermined = content.unread.map((reason) => ({ page: pageIdx, reason, font: null, codes: "", count: 0 }));
   let curFont = null;
   let curFontName = null;
   const stack = [];
+  let curResources = resources;
+  let curFontDict = fontDict;
+  let scopeTag = "";
   const getFont = async (name) => {
-    if (!fontDict || !(name in fontDict)) return null;
-    const ref = fontDict[name];
-    const key = ref && ref.t === "ref" ? "r" + ref.n : "n" + name;
+    if (!curFontDict || !(name in curFontDict)) return null;
+    const ref = curFontDict[name];
+    const key = ref && ref.t === "ref" ? "r" + ref.n : "n" + scopeTag + name;
     if (fontCache.has(key)) return fontCache.get(key);
     const f2 = await loadFont(doc, ref);
     fontCache.set(key, f2);
@@ -40711,6 +40872,9 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   const show = (bytes) => {
     if (!bytes || bytes.length === 0) return;
     if (!curFont) {
+      penKnown = false;
+      inkValid = false;
+      unpositioned += bytes.length;
       undetermined.push({
         page: pageIdx,
         reason: curFontName ? "font_not_in_resources" : "no_current_font",
@@ -40721,6 +40885,13 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       return;
     }
     if (!curFont.toUni) {
+      {
+        const before = penKnown ? tmat.slice() : null;
+        advanceOver(bytes);
+        if (before && penKnown) undecodedCenters.push(glyphBox(before, tmat).c);
+        else unpositioned += Math.ceil(bytes.length / (curFont.width || 1));
+      }
+      endRun();
       undetermined.push({
         page: pageIdx,
         reason: curFont.isType0 ? "cid_font_no_tounicode" : "no_tounicode",
@@ -40732,8 +40903,13 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     }
     const { codes, leftover } = bytesToCodes(bytes, curFont.width);
     for (const code of codes) {
+      const before = penKnown ? tmat.slice() : null;
+      advanceOne(code);
+      const box = before && penKnown ? glyphBox(before, tmat) : null;
+      if (!box) unpositioned++;
       const u2 = curFont.toUni.get(code);
       if (u2 == null) {
+        if (box) undecodedCenters.push(box.c);
         undetermined.push({
           page: pageIdx,
           reason: "unmapped_code",
@@ -40741,9 +40917,20 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
           codes: code.toString(16).padStart((curFont.width || 1) * 2, "0"),
           count: 1
         });
-      } else pieces.push(u2);
+      } else {
+        if (softAt === pieces.length && /^\s/.test(u2)) {
+          pieces.pop();
+          boxes.pop();
+          softAt = -1;
+        }
+        pieces.push(u2);
+        boxes.push(box);
+      }
     }
+    endRun();
     if (leftover) {
+      penKnown = false;
+      inkValid = false;
       undetermined.push({
         page: pageIdx,
         reason: "code_width_misaligned",
@@ -40770,100 +40957,295 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   let leading = 0;
   let lineY = null;
   const breakLine = () => {
+    if (softAt === pieces.length && pieces.length) {
+      pieces.pop();
+      boxes.pop();
+      softAt = -1;
+    }
     pieces.push("\n");
+    boxes.push(null);
     lineY = baselineOf(tlm, ctm);
   };
-  for (const tk of toks) {
-    if (tk.t !== "op") {
-      stack.push(tk);
-      continue;
+  let tmat = IDENTITY_MATRIX.slice();
+  let penKnown = true;
+  let tfs = 0;
+  let tc2 = 0;
+  let tw = 0;
+  let th = 1;
+  let softAt = -1;
+  let inkX = 0;
+  let inkEm = null;
+  let inkValid = false;
+  const deviceX = (m2) => m2[4] * ctm[0] + m2[5] * ctm[2] + ctm[4];
+  const emDevice = () => {
+    const m2 = matMul(tmat, ctm);
+    return Math.abs(tfs) * th * Math.hypot(m2[0], m2[1]);
+  };
+  const glyphBox = (m0, m1) => {
+    const a2 = matMul(m0, ctm), b2 = matMul(m1, ctm);
+    const pt2 = (m2, x2, y2) => [x2 * m2[0] + y2 * m2[2] + m2[4], x2 * m2[1] + y2 * m2[3] + m2[5]];
+    const p0 = pt2(a2, 0, 0), p1 = pt2(b2, 0, 0), q0 = pt2(a2, 0, tfs);
+    return { c: [(p0[0] + p1[0]) / 2 + 0.35 * (q0[0] - p0[0]), (p0[1] + p1[1]) / 2 + 0.35 * (q0[1] - p0[1])] };
+  };
+  const softSpace = () => {
+    if (!pieces.length) return;
+    const last = pieces[pieces.length - 1];
+    if (last.endsWith(" ") || last.endsWith("\n")) return;
+    pieces.push(" ");
+    boxes.push(null);
+    softAt = pieces.length;
+  };
+  const judgeGap = (toX) => {
+    if (!inkValid) return;
+    const em = inkEm ?? emDevice();
+    if (!(em > 0) || !Number.isFinite(em)) return;
+    const gapEm = (toX - inkX) / em;
+    if (Math.abs(gapEm) > WORD_GAP_EM) softSpace();
+  };
+  const endRun = () => {
+    markInk();
+    if (penKnown) inkEm = emDevice();
+  };
+  const advanceOne = (code) => {
+    if (!penKnown) return;
+    const w0 = curFont && curFont.widths ? curFont.widths(code) : null;
+    if (w0 == null || !Number.isFinite(w0)) {
+      penKnown = false;
+      return;
     }
-    switch (tk.v) {
-      case "Tf": {
-        const nameTok = lastOfType("name");
-        curFontName = nameTok ? nameTok.v : null;
-        curFont = curFontName ? await getFont(curFontName) : null;
-        break;
+    const spacing = tc2 + (curFont.width === 1 && code === 32 ? tw : 0);
+    tmat = matMul([1, 0, 0, 1, (w0 * tfs + spacing) * th, 0], tmat);
+  };
+  const advanceOver = (bytes) => {
+    if (!penKnown) return;
+    if (!curFont || !curFont.widths) {
+      penKnown = false;
+      return;
+    }
+    const { codes, leftover } = bytesToCodes(bytes, curFont.width);
+    for (const code of codes) advanceOne(code);
+    if (leftover) penKnown = false;
+  };
+  const advanceBy = (adj) => {
+    if (!penKnown) return;
+    tmat = matMul([1, 0, 0, 1, -adj / 1e3 * tfs * th, 0], tmat);
+  };
+  const markInk = () => {
+    if (!penKnown) {
+      inkValid = false;
+      return;
+    }
+    inkX = deviceX(tmat);
+    inkValid = true;
+  };
+  const penToLine = () => {
+    tmat = tlm.slice();
+    penKnown = true;
+    markInk();
+  };
+  const run = async (toks2, depth, formChain) => {
+    for (const tk of toks2) {
+      if (tk.t !== "op") {
+        stack.push(tk);
+        continue;
       }
-      case "Tj": {
-        const st2 = lastOfType("str");
-        if (st2) show(st2.bytes);
-        break;
-      }
-      case "TJ": {
-        let inArr = false;
-        for (const it2 of stack) {
-          if (it2.t === "arr_open") {
-            inArr = true;
-            continue;
-          }
-          if (it2.t === "arr_close") {
-            inArr = false;
-            continue;
-          }
-          if (!inArr) continue;
-          if (it2.t === "str") show(it2.bytes);
-          else if (it2.t === "num" && it2.v < -100) pieces.push(" ");
+      switch (tk.v) {
+        case "Do": {
+          const nameTok = lastOfType("name");
+          stack.length = 0;
+          await paintForm(nameTok ? nameTok.v : null, depth, formChain);
+          break;
         }
-        break;
+        case "Tf": {
+          const nameTok = lastOfType("name");
+          curFontName = nameTok ? nameTok.v : null;
+          curFont = curFontName ? await getFont(curFontName) : null;
+          const sz = numArgs(1);
+          if (sz) tfs = sz[0];
+          break;
+        }
+        case "Tj": {
+          const st2 = lastOfType("str");
+          if (st2) show(st2.bytes);
+          break;
+        }
+        case "TJ": {
+          let inArr = false;
+          for (const it2 of stack) {
+            if (it2.t === "arr_open") {
+              inArr = true;
+              continue;
+            }
+            if (it2.t === "arr_close") {
+              inArr = false;
+              continue;
+            }
+            if (!inArr) continue;
+            if (it2.t === "str") show(it2.bytes);
+            else if (it2.t === "num") {
+              if (-it2.v / 1e3 > TJ_WORD_GAP_EM) softSpace();
+              advanceBy(it2.v);
+            }
+          }
+          break;
+        }
+        case "'":
+        case '"': {
+          if (tk.v === '"') {
+            const a2 = numArgs(2);
+            if (a2) {
+              tw = a2[0];
+              tc2 = a2[1];
+            }
+          }
+          tlm = matMul([1, 0, 0, 1, 0, -leading], tlm);
+          breakLine();
+          penToLine();
+          const st2 = lastOfType("str");
+          if (st2) show(st2.bytes);
+          break;
+        }
+        case "q":
+          ctmStack.push(ctm.slice());
+          break;
+        case "Q":
+          if (ctmStack.length) ctm = ctmStack.pop();
+          break;
+        case "cm": {
+          const m2 = numArgs(6);
+          if (m2) ctm = matMul(m2, ctm);
+          break;
+        }
+        case "BT":
+          tlm = IDENTITY_MATRIX.slice();
+          tmat = tlm.slice();
+          penKnown = true;
+          break;
+        case "TL": {
+          const a2 = numArgs(1);
+          if (a2) leading = a2[0];
+          break;
+        }
+        /* D-502: the three text-state parameters that enter a glyph's horizontal
+           displacement beside the width itself. They change no character. */
+        case "Tc": {
+          const a2 = numArgs(1);
+          if (a2) tc2 = a2[0];
+          break;
+        }
+        case "Tw": {
+          const a2 = numArgs(1);
+          if (a2) tw = a2[0];
+          break;
+        }
+        case "Tz": {
+          const a2 = numArgs(1);
+          if (a2) th = a2[0] / 100;
+          break;
+        }
+        case "Td":
+        case "TD": {
+          const a2 = numArgs(2);
+          if (!a2) break;
+          const [tx, ty] = a2;
+          if (tk.v === "TD") leading = -ty;
+          tlm = matMul([1, 0, 0, 1, tx, ty], tlm);
+          if (ty !== 0) breakLine();
+          else if (lineY === null) lineY = baselineOf(tlm, ctm);
+          else if (Math.abs(baselineOf(tlm, ctm) - lineY) > BASELINE_EPS) breakLine();
+          else judgeGap(deviceX(tlm));
+          penToLine();
+          break;
+        }
+        case "Tm": {
+          const m2 = numArgs(6);
+          if (!m2) break;
+          tlm = m2;
+          const y2 = baselineOf(tlm, ctm);
+          if (lineY === null || Math.abs(y2 - lineY) > BASELINE_EPS) breakLine();
+          else judgeGap(deviceX(tlm));
+          penToLine();
+          break;
+        }
+        case "T*":
+          tlm = matMul([1, 0, 0, 1, 0, -leading], tlm);
+          breakLine();
+          penToLine();
+          break;
+        default:
+          break;
       }
-      case "'":
-      case '"': {
-        tlm = matMul([1, 0, 0, 1, 0, -leading], tlm);
-        breakLine();
-        const st2 = lastOfType("str");
-        if (st2) show(st2.bytes);
-        break;
-      }
-      case "q":
-        ctmStack.push(ctm.slice());
-        break;
-      case "Q":
-        if (ctmStack.length) ctm = ctmStack.pop();
-        break;
-      case "cm": {
-        const m2 = numArgs(6);
-        if (m2) ctm = matMul(m2, ctm);
-        break;
-      }
-      case "BT":
-        tlm = IDENTITY_MATRIX.slice();
-        break;
-      case "TL": {
-        const a2 = numArgs(1);
-        if (a2) leading = a2[0];
-        break;
-      }
-      case "Td":
-      case "TD": {
-        const a2 = numArgs(2);
-        if (!a2) break;
-        const [tx, ty] = a2;
-        if (tk.v === "TD") leading = -ty;
-        tlm = matMul([1, 0, 0, 1, tx, ty], tlm);
-        if (ty !== 0) breakLine();
-        else if (lineY === null) lineY = baselineOf(tlm, ctm);
-        break;
-      }
-      case "Tm": {
-        const m2 = numArgs(6);
-        if (!m2) break;
-        tlm = m2;
-        const y2 = baselineOf(tlm, ctm);
-        if (lineY === null || Math.abs(y2 - lineY) > BASELINE_EPS) breakLine();
-        break;
-      }
-      case "T*":
-        tlm = matMul([1, 0, 0, 1, 0, -leading], tlm);
-        breakLine();
-        break;
-      default:
-        break;
+      stack.length = 0;
     }
-    stack.length = 0;
-  }
+  };
+  const paintForm = async (name, depth, formChain) => {
+    const xobjects = curResources ? doc.dictOf(curResources.XObject) : null;
+    const ref = name != null && xobjects ? xobjects[name] : null;
+    const st2 = ref ? doc.resolve(ref) : null;
+    if (!st2 || st2.t !== "stream" || nameOf(doc, st2.dict.Subtype) !== "Form") return;
+    const key = ref.t === "ref" ? ref.n : null;
+    const data = await doc.streamDecoded(st2);
+    if (!data) {
+      doc.note("form_stream_undecodable");
+      undetermined.push({ page: pageIdx, reason: "form_stream_undecodable", font: null, codes: "", count: 0 });
+      return;
+    }
+    const formToks = tokenizeContent(LATIN1.decode(data));
+    if (depth >= FORM_DEPTH_LIMIT || key != null && formChain.includes(key)) {
+      const unread = textShowBytes(formToks);
+      if (unread > 0) {
+        undetermined.push({ page: pageIdx, reason: "form_text_unread", font: null, codes: "", count: unread });
+      }
+      return;
+    }
+    const saved = {
+      ctm,
+      curResources,
+      curFontDict,
+      scopeTag,
+      curFont,
+      curFontName,
+      tfs,
+      tc: tc2,
+      tw,
+      th,
+      leading,
+      tlm,
+      tmat,
+      penKnown
+    };
+    const m2 = matrixOf(doc, st2.dict.Matrix) || IDENTITY_MATRIX;
+    ctm = matMul(m2, ctm);
+    const formRes = doc.dictOf(st2.dict.Resources);
+    if (formRes) {
+      curResources = formRes;
+      curFontDict = doc.dictOf(formRes.Font);
+      scopeTag = "f" + (key ?? "?" + depth) + ":";
+    }
+    try {
+      await run(formToks, depth + 1, key != null ? [...formChain, key] : formChain);
+    } finally {
+      ({
+        ctm,
+        curResources,
+        curFontDict,
+        scopeTag,
+        curFont,
+        curFontName,
+        tfs,
+        tc: tc2,
+        tw,
+        th,
+        leading,
+        tlm,
+        tmat,
+        penKnown
+      } = saved);
+    }
+  };
+  await run(toks, 0, []);
   let text = pieces.join("").replace(/\n{2,}/g, "\n").replace(/^\n+|\n+$/g, "");
-  if (!text.length && !undetermined.length && !fontDict && pageDrawsImage(doc, resources)) {
+  if (!text.length && !undetermined.length && pageDrawsImage(doc, resources) && (!fontDict || await pageShowsText(doc, pageMap) === false)) {
     undetermined.push({
       page: pageIdx,
       reason: "no_text_layer",
@@ -40872,7 +41254,55 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       count: 0
     });
   }
-  return { text, undetermined };
+  return { text, undetermined, placed: { pieces, boxes, undecodedCenters, unpositioned } };
+}
+var TEXT_SHOWING_OPERATORS = Object.freeze(["Tj", "TJ", "'", '"']);
+var TEXT_SHOWING = new Set(TEXT_SHOWING_OPERATORS);
+async function pageShowsText(doc, pageMap) {
+  if (!pageMap) return null;
+  const top = await decodeContentStreams(doc, pageMap.Contents);
+  if (top.text == null) return null;
+  let unread = false;
+  const walk = async (content, resources, depth, formChain) => {
+    const xobjects = resources ? doc.dictOf(resources.XObject) : null;
+    let lastName = null;
+    for (const tk of tokenizeContent(content, { inlineImages: true })) {
+      if (tk.t === "name") {
+        lastName = tk.v;
+        continue;
+      }
+      if (tk.t !== "op") continue;
+      if (TEXT_SHOWING.has(tk.v)) return true;
+      if (tk.v !== "Do") continue;
+      const ref = lastName != null && xobjects ? xobjects[lastName] : null;
+      const st2 = ref ? doc.resolve(ref) : null;
+      if (!st2 || st2.t !== "stream") {
+        unread = true;
+        continue;
+      }
+      if (nameOf(doc, st2.dict.Subtype) !== "Form") continue;
+      const key = ref && ref.t === "ref" ? ref.n : null;
+      if (depth >= FORM_DEPTH_LIMIT || key != null && formChain.includes(key)) {
+        unread = true;
+        continue;
+      }
+      const data = await doc.streamDecoded(st2);
+      if (!data) {
+        unread = true;
+        continue;
+      }
+      const formRes = doc.dictOf(st2.dict.Resources) || resources;
+      if (await walk(
+        LATIN1.decode(data),
+        formRes,
+        depth + 1,
+        key != null ? [...formChain, key] : formChain
+      )) return true;
+    }
+    return false;
+  };
+  if (await walk(top.text, pageResources(doc, pageMap), 0, [])) return true;
+  return unread ? null : false;
 }
 function pageDrawsImage(doc, resources) {
   const xo2 = resources ? doc.dictOf(resources.XObject) : null;
@@ -40883,7 +41313,33 @@ function pageDrawsImage(doc, resources) {
   }
   return false;
 }
-async function extractText2(doc, pageOrder) {
+function anchorOf(placed, source) {
+  if (!source || !Array.isArray(source.rect) || !Number.isInteger(source.page))
+    return { text: null, why: "no_rect", tier: 1 };
+  if (!placed) return { text: null, why: "text_not_read", tier: 1 };
+  const [a2, b2, c2, d2] = source.rect;
+  const x0 = Math.min(a2, c2), x1 = Math.max(a2, c2), y0 = Math.min(b2, d2), y1 = Math.max(b2, d2);
+  const inside = (pt2) => pt2[0] >= x0 && pt2[0] <= x1 && pt2[1] >= y0 && pt2[1] <= y1;
+  let out = "", gap = false;
+  for (let i2 = 0; i2 < placed.pieces.length; i2++) {
+    const p2 = placed.pieces[i2], bx = placed.boxes[i2];
+    if (bx && !/^\s*$/.test(p2) && inside(bx.c)) {
+      if (gap && out.length) out += " ";
+      out += p2;
+      gap = false;
+    } else gap = true;
+  }
+  out = out.replace(/\s+/g, " ").trim();
+  const undecodable = placed.undecodedCenters.some(inside);
+  if (!out.length)
+    return { text: null, why: placed.unpositioned ? "positions_unknown" : undecodable ? "undecodable" : "no_text_in_rect", tier: 1 };
+  return {
+    text: out,
+    why: undecodable ? "partly_undecodable" : placed.unpositioned ? "partly_unplaced" : null,
+    tier: 1
+  };
+}
+async function extractText2(doc, placedByPage = /* @__PURE__ */ new Map(), linkPages = /* @__PURE__ */ new Set()) {
   const producer = readProducer(doc);
   if (doc.isEncrypted()) {
     doc.note("encrypted");
@@ -40899,10 +41355,12 @@ async function extractText2(doc, pageOrder) {
   const fontCache = /* @__PURE__ */ new Map();
   const pages = [];
   const allUndetermined = [];
-  for (let idx = 0; idx < pageOrder.length; idx++) {
-    const pageMap = doc.dictOf({ t: "ref", n: pageOrder[idx] });
+  for (let idx = 0; idx < doc.pageCount; idx++) {
+    const pageMap = doc.pageDict(idx);
     if (!pageMap) {
-      pages.push({ page: idx, text: "", undetermined: [] });
+      const marker = { page: idx, reason: "page_unreadable", font: null, codes: "", count: 0 };
+      pages.push({ page: idx, text: "", undetermined: [marker] });
+      allUndetermined.push(marker);
       continue;
     }
     let res;
@@ -40913,6 +41371,7 @@ async function extractText2(doc, pageOrder) {
       res = { text: "", undetermined: [{ page: idx, reason: "text_extraction_error", font: null, codes: "", count: 0 }] };
     }
     pages.push({ page: idx, text: res.text, undetermined: res.undetermined });
+    if (res.placed && linkPages.has(idx)) placedByPage.set(idx, res.placed);
     for (const u2 of res.undetermined) allUndetermined.push(u2);
   }
   const document2 = pages.map((p2) => p2.text).filter((t2) => t2.length).join("\n");
@@ -40978,9 +41437,9 @@ async function decodeContentStreams(doc, contents) {
   }
   return { text: parts.join("\n") };
 }
+var PLACEMENT_SOURCE = /* @__PURE__ */ new WeakMap();
 async function pdfPageImages(doc, pageIdx) {
-  const order = doc._pageOrder || [];
-  const pageMap = pageIdx >= 0 && pageIdx < order.length ? doc.dictOf({ t: "ref", n: order[pageIdx] }) : null;
+  const pageMap = doc.pageDict(pageIdx);
   if (!pageMap) return { images: null, why: `page_unreadable:${pageIdx}` };
   const top = await decodeContentStreams(doc, pageMap.Contents);
   if (top.text == null) return { images: null, why: `content_stream_undecodable:page ${pageIdx}` };
@@ -41027,8 +41486,7 @@ async function pdfPageImages(doc, pageIdx) {
               filters,
               axis_aligned: ctm[1] === 0 && ctm[2] === 0
             });
-            Object.defineProperty(placement, "_stream", { value: st2, enumerable: false });
-            Object.defineProperty(placement, "_ctm", { value: ctm, enumerable: false });
+            PLACEMENT_SOURCE.set(placement, { stream: st2, ctm });
             images.push(placement);
           } else if (sub === "Form") {
             const key = ref && ref.t === "ref" ? ref.n : null;
@@ -41059,8 +41517,7 @@ async function pdfPageImages(doc, pageIdx) {
             filters: [],
             axis_aligned: ctm[1] === 0 && ctm[2] === 0
           });
-          Object.defineProperty(placement, "_stream", { value: null, enumerable: false });
-          Object.defineProperty(placement, "_ctm", { value: ctm, enumerable: false });
+          PLACEMENT_SOURCE.set(placement, { stream: null, ctm });
           images.push(placement);
           break;
         }
@@ -41077,15 +41534,291 @@ async function pdfPageImages(doc, pageIdx) {
   }
   return { images, why: null };
 }
-async function extractImages(doc, pageOrder) {
+async function extractImages(doc) {
   if (doc.isEncrypted()) return { images: null, why: "encrypted" };
   const all = [];
-  for (let idx = 0; idx < pageOrder.length; idx++) {
+  for (let idx = 0; idx < doc.pageCount; idx++) {
     const got = await pdfPageImages(doc, idx);
     if (!got.images) return { images: null, why: got.why };
     for (const im of got.images) all.push(im);
   }
   return { images: all, why: null };
+}
+var IMAGE_CONTENT_MAX_GLYPHS = 4;
+var IMAGE_CONTENT_MIN_SHARE = 0.18;
+var IMAGE_CONTENT_TEXT_GLYPHS = 22;
+function inheritedAttr(doc, pageMap, key) {
+  let p2 = pageMap, d2 = 0;
+  while (p2 && d2++ < 32) {
+    if (p2[key] !== void 0) return doc.resolve(p2[key]);
+    p2 = doc.dictOf(p2.Parent);
+  }
+  return void 0;
+}
+function inheritedBox(doc, pageMap, key) {
+  const a2 = inheritedAttr(doc, pageMap, key);
+  if (!a2 || a2.t !== "arr" || a2.items.length !== 4) return null;
+  const v2 = a2.items.map((x2) => doc.resolve(x2));
+  if (!v2.every((x2) => typeof x2 === "number" && Number.isFinite(x2))) return null;
+  return [Math.min(v2[0], v2[2]), Math.min(v2[1], v2[3]), Math.max(v2[0], v2[2]), Math.max(v2[1], v2[3])];
+}
+function pageBox(doc, pageMap) {
+  const mb = inheritedBox(doc, pageMap, "MediaBox");
+  if (!mb) return null;
+  const cb = inheritedBox(doc, pageMap, "CropBox");
+  return cb ? clipRect(cb, mb) : mb;
+}
+var clipRect = (a2, b2) => [Math.max(a2[0], b2[0]), Math.max(a2[1], b2[1]), Math.min(a2[2], b2[2]), Math.min(a2[3], b2[3])];
+var rectArea = (r2) => Math.max(0, r2[2] - r2[0]) * Math.max(0, r2[3] - r2[1]);
+function unionArea(rects) {
+  const rs2 = rects.filter((r2) => rectArea(r2) > 0);
+  const xs2 = [...new Set(rs2.flatMap((r2) => [r2[0], r2[2]]))].sort((a2, b2) => a2 - b2);
+  let total = 0;
+  for (let i2 = 0; i2 + 1 < xs2.length; i2++) {
+    const x0 = xs2[i2], x1 = xs2[i2 + 1];
+    const spans = rs2.filter((r2) => r2[0] <= x0 && r2[2] >= x1).map((r2) => [r2[1], r2[3]]).sort((a2, b2) => a2[0] - b2[0]);
+    let covered = 0, lo2 = null, hi2 = null;
+    for (const [a2, b2] of spans) {
+      if (lo2 === null || a2 > hi2) {
+        if (lo2 !== null) covered += hi2 - lo2;
+        lo2 = a2;
+        hi2 = b2;
+      } else hi2 = Math.max(hi2, b2);
+    }
+    if (lo2 !== null) covered += hi2 - lo2;
+    total += covered * (x1 - x0);
+  }
+  return total;
+}
+function markImageContent(doc, text, images) {
+  if (!text || !Array.isArray(text.pages) || !Array.isArray(images)) return;
+  let added = 0;
+  for (const pg of text.pages) {
+    const painted = images.filter((im) => im.page === pg.page);
+    if (!painted.length) continue;
+    const marks = pg.undetermined;
+    if (marks.some((m2) => m2.reason === "no_text_layer")) continue;
+    let decoded = 0;
+    for (const ch2 of pg.text) if (!/\s/u.test(ch2)) decoded++;
+    const glyphs = decoded + marks.reduce((n2, m2) => n2 + (Number.isFinite(m2.count) ? m2.count : 0), 0);
+    if (glyphs >= IMAGE_CONTENT_TEXT_GLYPHS) continue;
+    const pageMap = doc.pageDict(pg.page);
+    const box = pageMap ? pageBox(doc, pageMap) : null;
+    const share = box && rectArea(box) > 0 ? Math.round(unionArea(painted.map((im) => clipRect(im.rect, box))) / rectArea(box) * 1e4) / 1e4 : null;
+    const unread = share !== null && share >= IMAGE_CONTENT_MIN_SHARE && glyphs <= IMAGE_CONTENT_MAX_GLYPHS;
+    pg.undetermined = [...marks, {
+      page: pg.page,
+      reason: unread ? "image_content_unread" : "image_content_undetermined",
+      font: null,
+      codes: "",
+      count: 0,
+      image_share: share,
+      glyphs
+    }];
+    added++;
+  }
+  if (!added) return;
+  restateUndetermined(text);
+}
+function restateUndetermined(text) {
+  text.undetermined = [
+    ...text.pages.flatMap((p2) => p2.undetermined),
+    ...text.undetermined.filter((m2) => !Number.isInteger(m2.page))
+  ];
+  text.counts = { ...text.counts, undetermined: text.undetermined.length };
+}
+var IMAGE_UNREAD_MIN_SHARE = 1e-3;
+function markImagesUnread(doc, text, images) {
+  if (!text || !Array.isArray(text.pages) || !Array.isArray(images)) return;
+  let added = 0;
+  for (const pg of text.pages) {
+    const painted = images.filter((im) => im.page === pg.page);
+    if (!painted.length) continue;
+    const pageMap = doc.pageDict(pg.page);
+    const box = pageMap ? pageBox(doc, pageMap) : null;
+    const boxArea = box ? rectArea(box) : 0;
+    const marks = [];
+    for (const im of painted) {
+      const raw = boxArea > 0 ? rectArea(clipRect(im.rect, box)) / boxArea : null;
+      if (raw !== null && raw < IMAGE_UNREAD_MIN_SHARE) continue;
+      marks.push({
+        page: pg.page,
+        reason: "image_unread",
+        font: null,
+        codes: "",
+        count: 0,
+        rect: im.rect,
+        area_share: raw === null ? null : Math.round(raw * 1e4) / 1e4
+      });
+    }
+    if (!marks.length) continue;
+    pg.undetermined = [...pg.undetermined, ...marks];
+    added += marks.length;
+  }
+  if (added) restateUndetermined(text);
+}
+function pdfPageBox(doc, pageMap) {
+  if (!pageMap) return null;
+  const box = inheritedBox(doc, pageMap, "MediaBox");
+  if (!box || !(box[2] > box[0] && box[3] > box[1])) return null;
+  const r2 = inheritedAttr(doc, pageMap, "Rotate");
+  const rotate = r2 === void 0 || r2 === null ? 0 : typeof r2 === "number" && Number.isInteger(r2) && r2 % 90 === 0 ? (r2 % 360 + 360) % 360 : null;
+  return { media_box: box, w: box[2] - box[0], h: box[3] - box[1], rotate };
+}
+function extractPageBoxes(doc) {
+  if (!doc.pageCount) return null;
+  const boxes = [], key = /* @__PURE__ */ new Map(), of_page = [];
+  for (let idx = 0; idx < doc.pageCount; idx++) {
+    const b2 = pdfPageBox(doc, doc.pageDict(idx));
+    if (!b2) {
+      of_page.push(null);
+      continue;
+    }
+    const k2 = JSON.stringify(b2);
+    if (!key.has(k2)) {
+      key.set(k2, boxes.length);
+      boxes.push(b2);
+    }
+    of_page.push(key.get(k2));
+  }
+  return { boxes, of_page };
+}
+var ACTIVE_WALK_DEPTH = 64;
+function extractActive(doc) {
+  const pageOf = /* @__PURE__ */ new Map();
+  for (let idx = 0; idx < doc.pageCount; idx++) {
+    const num = doc._pageOrder[idx];
+    if (!pageOf.has(num)) pageOf.set(num, idx);
+  }
+  for (let idx = 0; idx < doc.pageCount; idx++) {
+    const pm = doc.pageDict(idx);
+    const annots = pm ? doc.resolve(pm.Annots) : null;
+    if (!annots || annots.t !== "arr") continue;
+    for (const a2 of annots.items) if (a2 && a2.t === "ref" && !pageOf.has(a2.n)) pageOf.set(a2.n, idx);
+  }
+  const efNodes = embeddedTreeNodes(doc);
+  const items = [];
+  for (const num of [...doc.objects.keys()].sort((a2, b2) => a2 - b2)) {
+    const page = pageOf.has(num) ? pageOf.get(num) : null;
+    walkActive(
+      doc,
+      doc.objects.get(num),
+      efNodes,
+      0,
+      (kind, key, detail) => items.push({ kind, where: { object: num, page, key }, detail })
+    );
+  }
+  if (doc.notes.includes("objstm_undecodable"))
+    items.push({ kind: "unread", where: null, detail: "objstm_undecodable" });
+  if (doc.isEncrypted()) items.push({ kind: "unread", where: null, detail: "encrypted" });
+  return items;
+}
+function embeddedTreeNodes(doc) {
+  const nodes = /* @__PURE__ */ new Set();
+  const names = doc.root ? doc.dictOf(doc.root.Names) : null;
+  const visit = (v2, depth) => {
+    const node = doc.resolve(v2);
+    if (!node || node.t !== "dict" || depth > 64 || nodes.has(node.map)) return;
+    nodes.add(node.map);
+    const kids = doc.resolve(node.map.Kids);
+    if (kids && kids.t === "arr") for (const kid of kids.items) visit(kid, depth + 1);
+  };
+  if (names) visit(names.EmbeddedFiles, 0);
+  return nodes;
+}
+function walkActive(doc, v2, efNodes, depth, emit) {
+  if (!v2 || typeof v2 !== "object" || depth > ACTIVE_WALK_DEPTH) return;
+  if (v2.t === "arr") {
+    for (const it2 of v2.items) walkActive(doc, it2, efNodes, depth + 1, emit);
+    return;
+  }
+  const map = v2.t === "dict" ? v2.map : v2.t === "stream" ? v2.dict : null;
+  if (!map) return;
+  const found = /* @__PURE__ */ new Set();
+  const once = (kind, key, detail) => {
+    if (!found.has(kind)) {
+      found.add(kind);
+      emit(kind, key, detail);
+    }
+  };
+  const attachment = nameOf(doc, map.Subtype) === "FileAttachment";
+  for (const key of Object.keys(map)) {
+    const val = map[key];
+    switch (key) {
+      case "OpenAction":
+        once("open-action", key, openActionDetail(doc, val));
+        break;
+      case "AA": {
+        const aa2 = doc.dictOf(val);
+        once("additional-actions", key, aa2 ? Object.keys(aa2).map((k2) => "/" + k2) : []);
+        break;
+      }
+      case "JS":
+      case "JavaScript":
+        once("javascript", key, null);
+        break;
+      case "S": {
+        const s2 = nameOf(doc, val);
+        if (s2 === "JavaScript") once("javascript", key, null);
+        else if (s2 === "Launch") once("launch", key, launchTarget(doc, map));
+        break;
+      }
+      case "XFA":
+        once("xfa", key, null);
+        break;
+      case "RichMediaContent":
+        once("rich-media", key, null);
+        break;
+      case "Subtype":
+        if (nameOf(doc, val) === "RichMedia") once("rich-media", key, null);
+        break;
+      case "FS":
+        if (attachment) emit("embedded-file", key, embeddedName(doc, doc.dictOf(val), strOf(doc, map.Contents)));
+        break;
+      case "Filter":
+        if (val && val.t === "name" && val.v === "Standard" && map.R != null && typeof doc.resolve(map.R) === "number")
+          once("encryption", key, doc.resolve(map.R));
+        break;
+      case "Names": {
+        if (!efNodes.has(map)) break;
+        const pairs = doc.resolve(val);
+        if (!pairs || pairs.t !== "arr") break;
+        for (let i2 = 0; i2 + 1 < pairs.items.length; i2 += 2) {
+          const k2 = doc.resolve(pairs.items[i2]);
+          emit("embedded-file", key, embeddedName(doc, doc.dictOf(pairs.items[i2 + 1]), k2 && k2.t === "str" ? k2.v : null));
+        }
+        break;
+      }
+      default:
+        break;
+    }
+    walkActive(doc, val, efNodes, depth + 1, emit);
+  }
+  if (attachment && !("FS" in map)) emit("embedded-file", "FS", embeddedName(doc, null, strOf(doc, map.Contents)));
+}
+function openActionDetail(doc, val) {
+  const r2 = doc.resolve(val);
+  if (!r2) return null;
+  if (r2.t === "arr" || r2.t === "name" || r2.t === "str") return "destination";
+  if (r2.t === "dict") return nameOf(doc, r2.map.S);
+  return null;
+}
+function launchTarget(doc, action) {
+  for (const holder of [action, doc.dictOf(action.Win)]) {
+    if (!holder) continue;
+    const f2 = doc.resolve(holder.F);
+    if (f2 && f2.t === "str") return f2.v;
+    const name = f2 && f2.t === "dict" ? embeddedName(doc, f2.map, null) : null;
+    if (name) return name;
+  }
+  return null;
+}
+async function loadPdf(bytes) {
+  const doc = new PdfDoc(bytes);
+  doc.scanTopLevel();
+  await doc.loadObjectStreams();
+  doc.buildPageIndex();
+  return doc;
 }
 async function extractPdfStructure(bytes) {
   if (!(bytes instanceof Uint8Array)) {
@@ -41096,18 +41829,10 @@ async function extractPdfStructure(bytes) {
   if (!sig) {
     return { ok: false, container: "pdf", reason: "NOT_A_PDF" };
   }
-  const doc = new PdfDoc(bytes);
-  doc.scanTopLevel();
-  await doc.loadObjectStreams();
-  for (const [num, v2] of doc.objects) {
-    if (v2 && v2.t === "dict") v2.map.__objnum = { t: "ref", n: num };
-  }
-  doc.buildPageIndex();
+  const doc = await loadPdf(bytes);
   const links = [];
-  const pageOrder = doc._pageOrder || [];
-  for (let pageIdx = 0; pageIdx < pageOrder.length; pageIdx++) {
-    const pageNum = pageOrder[pageIdx];
-    const page = doc.dictOf({ t: "ref", n: pageNum });
+  for (let pageIdx = 0; pageIdx < doc.pageCount; pageIdx++) {
+    const page = doc.pageDict(pageIdx);
     if (!page) continue;
     const annots = doc.resolve(page.Annots);
     if (!annots || annots.t !== "arr") continue;
@@ -41152,8 +41877,13 @@ async function extractPdfStructure(bytes) {
   for (const rec of await documentEmbeddedFiles(doc)) links.push(rec);
   const counts = { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 };
   for (const l2 of links) counts[l2.partition]++;
-  const text = await extractText2(doc, pageOrder);
-  const imgs = await extractImages(doc, pageOrder);
+  const placedByPage = /* @__PURE__ */ new Map();
+  const linkPages = new Set(links.map((l2) => l2.source && l2.source.page));
+  const text = await extractText2(doc, placedByPage, linkPages);
+  for (const l2 of links) l2.anchor = anchorOf(l2.source ? placedByPage.get(l2.source.page) : null, l2.source);
+  const imgs = await extractImages(doc);
+  if (imgs.images) markImageContent(doc, text, imgs.images);
+  if (imgs.images) markImagesUnread(doc, text, imgs.images);
   return {
     ok: true,
     container: "pdf",
@@ -41164,6 +41894,12 @@ async function extractPdfStructure(bytes) {
     text,
     images: imgs.images,
     ...imgs.images ? {} : { imagesWhy: imgs.why },
+    /* R33: each page's MediaBox, top-level for `images`' reason (tier 2
+       replaces `text`): the bound a `pdf-page` rect is checked against. */
+    pageBoxes: extractPageBoxes(doc),
+    /* R36 (K1888): every place the file can act when opened, read and never
+       run; top-level for the same reason. */
+    active: extractActive(doc),
     notes: doc.notes
   };
 }
@@ -41213,6 +41949,7 @@ var SURFACE = {
   version: { method: "GET", mutating: false }
 };
 var DEFAULT_MAX_PDF_BYTES = 16 * 1024 * 1024;
+var NAMESPACES = Object.freeze(["bio", "scratch"]);
 var json = (obj, status = 200) => new Response(JSON.stringify(obj), {
   status,
   headers: { "content-type": "application/json", "access-control-allow-origin": "*" }
@@ -41248,8 +41985,20 @@ async function handleStructure(req, env) {
   const store = typeof body?.store === "string" ? body.store : "";
   if (!/^[0-9a-f]{64}$/.test(sha))
     return json({ ok: false, reason: "BAD_SHA", detail: "capture_sha must be 64 lowercase hex" }, 400);
-  if (!store || !/^[a-z0-9_-]+$/i.test(store))
-    return json({ ok: false, reason: "BAD_STORE", detail: "store must be a namespace token" }, 400);
+  if (typeof body?.store !== "string")
+    return json({
+      ok: false,
+      reason: "BAD_STORE",
+      detail: "a capture lives inside one namespace and this member guesses none: the caller must say which. A default namespace here would read the real record for a caller who believed it was reading a scratch one."
+    }, 400);
+  if (!NAMESPACES.includes(store))
+    return json({
+      ok: false,
+      reason: "NAMESPACE_UNKNOWN",
+      detail: "a capture is read from the namespace the caller names, and no namespace by that name exists on any instance this member can be bound to, so nothing was read. There are two: the record itself and a scratch area kept apart for testing, and the name must match one of them exactly; they are listed beside this message. This is NOT the same answer as NOT_FOUND, which says the namespace exists and holds no such capture.",
+      asked: store.slice(0, 80),
+      namespaces: [...NAMESPACES]
+    }, 400);
   const obj = await env.CAPTURES.get(`${store}/captures/${sha}`);
   if (!obj) return json({ ok: false, reason: "NOT_FOUND", capture_sha: sha, store }, 404);
   const bytes = new Uint8Array(await obj.arrayBuffer());

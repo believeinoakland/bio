@@ -54,7 +54,7 @@
   "compatibility_date": "2026-07-01",
   "compatibility_flags": ["nodejs_compat"],
 
-  "vars": { "VERSION": "0.79.0" },
+  "vars": { "VERSION": "0.81.0" },
 
   // R47: REACHABLE ONLY THROUGH THE PLANE'S SERVICE BINDING. No `*.workers.dev` route and no preview URL: a
   // public address would be a second way in for a member whose only caller is the plane.
