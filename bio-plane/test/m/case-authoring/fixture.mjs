@@ -274,7 +274,8 @@ export function world({ group = "test-group", provider = true, now = null, recor
      instance on the host and hands it nothing. */
   const caseRecord = recordWrap ? recordWrap(record) : record;
   const READ_BY_DISCLOSURES = ["contradiction", "provenance", "attestation", "capture", "sources", "extraction",
-                               "caseImport", "promotion", "inquiry", "strength", "entities", "lines", "money", "people"];
+                               "caseImport", "promotion", "inquiry", "strength", "entities", "lines", "money", "people",
+                               "caseCarriage"];
   const given = (k) => Object.fromEntries(Object.entries(deps).filter(([d]) => k(d)));
   const disclosures = caseDisclosuresOf(host, { storage: st, entities, events, lines, money, people, membership,
     now: () => clock.now, record: caseRecord, contradiction, provenance: prov, attestation, capture, sources,

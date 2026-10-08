@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, AUTHORED, DEAD } from "./fixture.mjs";
-import { STATEMENT_ACK_CHECKS, statementSha, withheldWriterStated } from "../../../src/case-authoring/index.mjs";
+import { STATEMENT_ACK_CHECKS, statementSha, withheldWriterStated, caseAuthoringOps } from "../../../src/case-authoring/index.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
 const S1 = "a".repeat(64), S2 = "b".repeat(64), S3 = "c".repeat(64);
@@ -296,4 +296,27 @@ test("R19: an acknowledgement recorded before DEC-88 has a null reason — the c
   const r = w.ca.acknowledgeStatement({ viewer: V("bo"), caseId: pub.caseId, edition: 1, reason: WORDS });
   assert.equal(r.ok, true);
   assert.deepEqual(w.ca.statementAcknowledgements(P, pub.caseId, 1, AUTHORED.statement).rows.map((x) => x.reason), [null, WORDS]);
+});
+
+test("R62: op=statementack takes the grant's secretSha only from the internal request's body — a grant named in the body opens R19's grant door, and the same digest in the query opens no door: R19's dead answer, byte-identical, nothing written", () => {
+  const { w, P } = setup();
+  w.draft("DRAFT-2026-0001", P, { statement: AUTHORED.statement }, { statementBy: "alice" });
+  w.grant(S1, { grant_id: "RVG-2026-0001", draft_id: "DRAFT-2026-0001", case_id: null, edition: 1, recipient: "the auditor" });
+  const url = (s) => new URL(`http://do/statementack?bySecret=1&reason=${encodeURIComponent(WORDS)}${s}`);
+  const before = w.snapshot();
+  /* the digest in the query, with no body, a body without it, or a body whose own is not a string: no door */
+  for (const [u, body] of [[url(`&secretSha=${S1}`), null], [url(`&secretSha=${S1}`), {}], [url(`&secretSha=${S1}`), { secretSha: 7 }],
+                           [url(`&secretSha=${S1}&draft=DRAFT-2026-0001`), { reason: WORDS }], [url(""), null], [url(""), []]])
+    assert.deepEqual(caseAuthoringOps(w.ca, u, body).statementack(), DEAD, `${u.search} ${JSON.stringify(body)}`);
+  /* a query's digest never overrides or joins the body's: a body naming a dead grant stays dead whatever the query says */
+  assert.deepEqual(caseAuthoringOps(w.ca, url(`&secretSha=${S1}`), { secretSha: S3 }).statementack(), DEAD);
+  assert.deepEqual(w.snapshot(), before, "nothing written by any refused door");
+  /* the body's digest opens the grant door; bySecret, the subject and reason are read from the query as before */
+  const ok = caseAuthoringOps(w.ca, url("&draft=DRAFT-2026-0001"), { secretSha: S1, reason: "a body's words" }).statementack();
+  assert.deepEqual([ok.ok, ok.acknowledgement.kind, ok.acknowledgement.grant_id, ok.acknowledgement.reason],
+    [true, "recipient", "RVG-2026-0001", WORDS]);
+  /* bySecret still comes from the query: a body's digest without it is the member door, asked of the viewer stamp */
+  const noFlag = caseAuthoringOps(w.ca, new URL(`http://do/statementack?draft=DRAFT-2026-0001&reason=x`), { secretSha: S1, bySecret: true })
+    .statementack();
+  assert.deepEqual(noFlag, DEAD, "no viewer stamp and no bySecret in the query: no door");
 });
