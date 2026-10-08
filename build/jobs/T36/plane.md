@@ -17,3 +17,33 @@ My best reading (to carry on with): the plane hands `captureOf(ctx, {reputation:
 
 R28 (separate from J1; replaces nothing). R28 says `ownHosts` is `env.OWN_HOSTS` "joined with the hosts instance-setup's `instance_address` and a verified group domain name". The verified group domain (instance-setup R7–R10) is the group's own website, which serves `/.well-known/…` naming the copy; it is not a host the copy is served at. T35's reading, which K2038 (8) let stand ("plane's `ownHosts` reading stands"), excluded it on purpose: as an own host it would make `acquisition` R42 / `capture-sources` R65 refuse `OWN_HOST_REFUSED` for any capture of the group's own website.
 My best reading (carrying on with it): `ownHosts` = each well-formed `OWN_HOSTS` entry (a bare host name as instance-setup R7 forms one, lower-cased, trailing dot removed) with, for a `<name>.<sub>.workers.dev` entry, the suffix `.<sub>.workers.dev` (every fleet member, as T35 does), joined with T35's hosts from the domain claim's `instance_address`; the claimed domain itself is not added, verified or not. Neither set: none (fail-open). If you mean the verified domain to be an own host, say so and I add it (one line and its test).
+
+## J3 · COMPLETE
+
+T36-49 complete on `job/T36/plane` (work commit `bf8eeeff90`, `tranche/T36` merged at B2/B3).
+
+**Entries applied**
+- R25 (K2097): `plane/unpack.mjs`' drain reads `archive-unpack` events in pages of `UNPACK_PAGE` (1,000), each after the last page's last `cursor` while a page comes back full; a cursor that does not move ends the read, so no event is read twice in one drain.
+- R26 (K2063 (10), K2153): `fileSafetyOf(ctx, {env, store})` built directly after `capture` (its first construction registers its `onReceipt` listener before the first request); `fileSafetyOf(ctx).migrate()` directly after capture's in `#migrate` (tables made, declared to purge under `file-safety`); `schedulerOf(ctx, env, {fileSafety})` before `start()` (its four consumers); `fileSafetyOps` spread directly after `captureOps` (all 23 ops).
+- R27: `wrangler.jsonc` binds `{binding: "FILE_SCANNER", service: "file-scanner"}` (red 10 cleared: `system/deploybindings.test.mjs` passes).
+- R28 (K2156): `ownHostsOf(identity, env.OWN_HOSTS)` (`plane/wiring.mjs`): each well-formed entry (`bareHost`, instance-setup R7's form) with its `workers.dev` suffix, joined with the claim's `instance_address` hosts; the group domain never added; a malformed entry skipped and logged as `{event: "own_hosts_entry_skipped", correlation}` only.
+- R29 (K2155): `captureOf(ctx, {ownHosts, fileScanner: env.FILE_SCANNER, reputation: () => fileSafety.reputationTool()})`, once. The binding half is met and tested (`cap.env.FILE_SCANNER` and file-safety's binding are the object's); the reader's reach is a `test.todo` naming N774 (T37-37, T37-38), as B2 says.
+- K2141: `citationOf(ctx)` made at boot, after bias and before run-productions.
+- K2146: red 27 re-pinned (`body.test.mjs`): the body's secret reaches the store as `{secretSha}` in the store request's body, never the address; an address secret is not read, hashed or sent; no `deprecated` key.
+- `maps.mjs` gains file-safety's row (R5's statement); `worker.test.mjs`' service list gains `FILE_SCANNER` (R27).
+
+**Deferred:** R29's reader reaching acquisition (N774, T37), as ruled. Nothing else.
+
+**Other modules / notes**
+- The plane bundle (`bio-plane/dist/`) is stale (store.mjs, unpack.mjs, wiring.mjs, wrangler.jsonc): BOB's regeneration at L11's close (§14).
+- B1's "scheduler's `plane.test.mjs`:1128" names no line (that file has 302 lines); I ran scheduler's whole suite instead.
+- The K2141 test (`t36.test.mjs`) cannot tell the explicit boot from run-productions' factory, which the boot also reaches before the first request; it pins the outcome (citation's `recordedBy` held at construction).
+
+**Reading set (§17, N739):** over 300 KB (own code ~96 KB, tests ~271 KB, before the used services). Read whole myself: `plane.md` (both parts), layer 11's row of `layers.md`, `store.mjs`, `wiring.mjs`, `unpack.mjs`, `index.mjs`, `wrangler.jsonc`, tests `body`, `unpack`, `hosts`, `compose`, `fixture`, `maps`, `worker` (the services pin); file-safety's public part and Uses, scheduler R21/R24 and its `hand`/`schedulerOf`, capture R45/R73 and `captureOf`, acquisition R44 and its reputation code, installer R47, citation's factory, instance-setup's `groupIdentity`, publication R73. A worker read the rest of plane's code and tests whole and wrote a 29 KB summary citing file:line (ask, door, stats, screens, wizards, package.json, and 19 tests plus migrate-released); its pointers (worker.test's service pin, maps.mjs' module list) were the two tests I needed to change, and nothing it left out mattered.
+
+**Tests and checks**
+- `node --test test/m/plane/ test/system/migrate-released.test.mjs`: tests 145, pass 144, fail 0, todo 1 (R29's reader).
+- `node --test test/m/scheduler/ test/m/capture/plane.test.mjs test/system/deploybindings.test.mjs`: tests 117, pass 117, fail 0.
+- format: 135 modules, 134 requirements files; 0 failures. architecture: 42 product files, 402 relative imports; 0 failures. coverage: 29 of 29 live requirement ids named by a test; 0 failures. ownership: 9 files changed by plane between tranche/T36 and HEAD; 0 failures.
+
+Size (session_01CpnMPx9Wsow6FqTJSxJGhK): test runs 11, module lines 1551
