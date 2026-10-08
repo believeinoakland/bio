@@ -5,7 +5,7 @@
  * op's behaviour is decided here (P6). `./index.mjs` spreads the four tables into `RUNGS`, `RUNG_ABSENT`, `NON_ACTS` and
  * `CONSEQUENCE_STATEMENTS`, and derives R21's Irreversible weight. This file imports nothing, so the spread closes no
  * cycle. None of these ops is in `MACHINE_REFUSALS`, which holds only `affordances`' `ACTS` (R5, `affordances` R20).
- * `subscriptionsignin` has no op in T35 and no grade (`op-declarations` R27). */
+ * `subscriptionsignin` had no op in T35 and no grade (`op-declarations` R27); R27 grades it in `./t37.mjs` (T37). */
 
 const R = (s) => `read: ${s}; writes nothing`;
 const NOTE_DIRECTED = "note-directed: a member's own note, keyed by the note and answered to its author alone; never a "

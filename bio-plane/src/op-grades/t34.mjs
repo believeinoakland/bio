@@ -75,14 +75,14 @@ export const T34_NON_ACTS = {
 };
 
 /* ---- `op-declarations` R21's aliases (op-declarations R5, R21): each the op its owner serves it as. `expunge` is no
-   alias since K1901: `personexpunge` is a declared op (K2054) ---- */
+   alias since K1901: `personexpunge` is a declared op (K2054); `claimidentity` none since DEC-182 (2) (K2239): the
+   same-person claim is `identityclaim` ---- */
 export const OP_ALIASES = Object.freeze({
   signerregisterown: "signerregister", signerrevokeown: "signerrevoke", declaretie: "membertie",
   withdrawtie: "membertiewithdraw", adoptversion: "versionadopt", keepversion: "versionkeep",
   strengthbarset: "strengthbar", ruleanswer: "rule", standingquestionset: "standingset",
-  standingquestionend: "standingend", recordpersonfact: "personfact", claimidentity: "identityclaim",
-  withdrawidentityclaim: "identitywithdraw", createevent: "eventcreate",
-  addparticipant: "participantadd", relate: "eventrelate", recorddatedfact: "datedfact", recordfact: "moneyrecord",
+  standingquestionend: "standingend", recordpersonfact: "personfact", withdrawidentityclaim: "identitywithdraw",
+  createevent: "eventcreate", addparticipant: "participantadd", relate: "eventrelate", recorddatedfact: "datedfact", recordfact: "moneyrecord",
   createset: "moneysetcreate", include: "moneysetinclude", exclude: "moneysetexclude", reconcile: "moneyreconcile",
   addworkbook: "workbookadd", bind: "workbookbind", recordcheck: "workbooksecondcheck", recordline: "linerecord",
   declare: "dutydeclare", filingrecordsent: "filingsent",
