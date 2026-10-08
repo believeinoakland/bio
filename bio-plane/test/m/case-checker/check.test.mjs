@@ -288,13 +288,18 @@ test("R8: every material a load-bearing chain reaches is listed included and car
   assert.ok(byId(gone)[A].missing.some((e) => e.check === "presentability" && e.origin === "https://records.example/minutes.pdf"));
 });
 
-test("R9: a document supplied later that matches a missing file's fingerprint fills the gap and the finding is re-checked; one that matches nothing is named and never used", async () => {
+test("R9: a document supplied later that matches a missing file's fingerprint fills the gap and the finding is re-checked; one that matches nothing is named and never used; every file to supply is named (K2143)", async () => {
   const cf = caseFile({ edit: (b) => b.delete(CG.caseFilePath("document", MINUTES)) });
   const before = await CC.checkCaseFile({ parts: cf.parts });
   assert.equal(byId(before)[A].result, "recreated_in_part");
   const after = await CC.checkCaseFile({ parts: cf.parts, documents: [Buffer.from(MINUTES_BYTES)] });
   assert.deepEqual(results(after), ALL_RECREATED);
   assert.deepEqual(after.integrity.documents.used, [sha(MINUTES_BYTES)]);
+  /* the files to supply (K2143): named before, in the manifest's order; none once supplied */
+  const path = CG.caseFilePath("document", MINUTES);
+  assert.deepEqual(before.integrity.documents.wanted, [{ path, kind: "document", sha256: sha(MINUTES_BYTES), detail: `${path} is not carried; fetch the file whose SHA-256 is ${sha(MINUTES_BYTES)}` }]);
+  assert.deepEqual(after.integrity.documents.wanted, []);
+  assert.deepEqual((await check()).integrity.documents.wanted, []);
   assert.equal(after.integrity.files.find((f) => f.path === CG.caseFilePath("document", MINUTES)).state, "supplied");
   const stranger = await CC.checkCaseFile({ parts: cf.parts, documents: [Buffer.from("some other document")] });
   assert.equal(byId(stranger)[A].result, "recreated_in_part");
@@ -330,6 +335,10 @@ test("R9 R20 R11 (N599): a supplied document whose SHA-256 is a calculation inpu
   filledRight(otherAfter);
   assert.equal(otherAfter.integrity.files.find((f) => f.path.includes(CALC_INPUT_SHA)).state, "differs");
   assert.equal(otherAfter.integrity.intact, false);
+  /* carried with other bytes: wanted until a document fills it */
+  assert.deepEqual(otherBefore.integrity.documents.wanted.map((w) => [w.kind, w.sha256]), [["calculation", CALC_INPUT_SHA]]);
+  assert.match(otherBefore.integrity.documents.wanted[0].detail, /is carried with other bytes; fetch the file whose SHA-256 is/);
+  assert.deepEqual(otherAfter.integrity.documents.wanted, []);
   /* bytes that are not the input fill nothing and are named; bytes matching an input carried intact are not used */
   const stranger = await CC.checkCaseFile({ parts: absent.parts, documents: [Buffer.from(CALC_INPUT.replace('"60"', '"61"'))] });
   assert.equal(stranger.calculations[0].result, "not_recomputed");

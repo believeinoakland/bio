@@ -246,7 +246,7 @@ function malformed(departures, manifest) {
   return {
     format: str(m.format), case: str(m.case), edition: Number.isInteger(m.edition) ? m.edition : null, group: str(m.group),
     checker: versionsOut(),
-    integrity: { intact: false, departures, parts: [], files: [], documents: { used: [], unmatched: [] } },
+    integrity: { intact: false, departures, parts: [], files: [], documents: { used: [], unmatched: [], wanted: [] } },
     signatures: { case: null, findings: [], attestations: [], keys_checked: false, keys_statement: KEYS_NOT_CHECKED_STATEMENT },
     publication_checks: { ran: false, findings: [], unasked: [], stated_version: null, checker_version: CATALOG_VERSION, statement: null },
     calculations: [], standards_use: null,
@@ -508,6 +508,12 @@ async function check({ parts, documents = [], keys = null }) {
     else if (!doc.used) unmatched.push({ sha256: doc.sha, bytes: doc.bytes.length, detail: `a supplied document (SHA-256 ${doc.sha}) matches no fingerprint this case file records as missing, and no calculation input it lacks, so it was not used` });
     else if (!used.includes(doc.sha)) used.push(doc.sha);
   }
+  /* R9 (K2143): every file the manifest lists that the case file lacks (absent, or carried with other bytes) and no
+     document supplied filled, in the manifest's order, so a reader knows each file to fetch; the criteria file (R22)
+     among them, though no finding's result rests on it. */
+  const wanted = files.filter((f) => (f.state === "missing" || f.state === "differs") && !used.includes(f.sha256))
+    .map((f) => ({ path: f.path, kind: f.kind, sha256: f.sha256,
+                   detail: `${f.state === "differs" ? `${f.path} is carried with other bytes` : `${f.path} is not carried`}; fetch the file whose SHA-256 is ${f.sha256}` }));
   /* R2, R20: the calculations' PROV-O rendering, when carried, is what `case-grammar` R19 renders from the signed rows. */
   const provFile = files.find((f) => f.path === CASE_FILE_PROV_PATH) || null;
   if (fm && provFile && provFile.content && textOf(provFile.content) !== provOf(calculationsOf(fm)))
@@ -681,7 +687,7 @@ async function check({ parts, documents = [], keys = null }) {
     integrity: { intact: !read.departures.length && files.every((f) => f.state === "intact" || f.state === "supplied"),
       departures: read.departures, parts: read.parts,
       files: files.map((f) => ({ path: f.path, kind: f.kind, sha256: f.sha256, state: f.state })),
-      documents: { used, unmatched } },
+      documents: { used, unmatched, wanted } },
     signatures: { case: caseSig ? { file: caseSig.path, verified: sigCase.verified === true, reason: sigCase.reason ?? null,
         key_fingerprint: sigCase.key_fingerprint ?? null, listed_in_case_file: sigCase.listed_in_case_file ?? null,
         ...(published ? { among_published_keys: sigCase.among_published_keys ?? null } : {}) } : null,

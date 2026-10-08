@@ -105,7 +105,7 @@ test("R22 (K1739): a passage of the paywalled standard that no finding relies on
   assert.deepEqual((await check({ criteria: room })).standards_use.unjudged, [blind(BENCH), { ...blind(CODE), portion: "s. 4" }]);
 });
 
-test("R22 R9 R2: a criteria file listed but not carried answers standards_use not judged, naming the file to fetch; supplied later it is judged; carried with other bytes it is not judged; neither changes a finding's result or holds back the complete edition", async () => {
+test("R22 R9 R2: a criteria file listed but not carried answers standards_use not judged, naming the file to fetch there and among the files to supply; supplied later it is judged; carried with other bytes it is not judged; neither changes a finding's result or holds back the complete edition", async () => {
   const path = CG.caseFilePath("criteria");
   const fileSha = sha(canonicalJson(criteria()));
   const gone = caseFile(opts({ edit: (b) => b.delete(path) }));
@@ -114,14 +114,18 @@ test("R22 R9 R2: a criteria file listed but not carried answers standards_use no
     detail: `the criteria the case measures against are not carried; fetch the file whose SHA-256 is ${fileSha}` });
   assert.deepEqual(results(before), ALL_RECREATED);
   assert.equal(before.complete_edition.equal, true, before.complete_edition.detail);
+  /* K2143: it is named among the files to supply */
+  assert.deepEqual(before.integrity.documents.wanted, [{ path, kind: "criteria", sha256: fileSha, detail: `${path} is not carried; fetch the file whose SHA-256 is ${fileSha}` }]);
   const after = await CC.checkCaseFile({ parts: gone.parts, documents: [Buffer.from(canonicalJson(criteria()))] });
   assert.deepEqual(after.standards_use, { ok: true, unjudged: [blind()] });
   assert.deepEqual(after.integrity.documents.used, [fileSha]);
+  assert.deepEqual(after.integrity.documents.wanted, []);
   /* carried with other bytes */
   const changed = await CC.checkCaseFile({ parts: caseFile(opts({ edit: (b) => b.set(path, Buffer.from("[]")) })).parts });
   assert.equal(changed.standards_use.ok, null);
   assert.match(changed.standards_use.detail, /^the criteria the case measures against are not judged, because .* does not match the manifest/);
   assert.equal(changed.integrity.intact, false);
+  assert.deepEqual(changed.integrity.documents.wanted, [{ path, kind: "criteria", sha256: fileSha, detail: `${path} is carried with other bytes; fetch the file whose SHA-256 is ${fileSha}` }]);
   assert.deepEqual(results(changed), ALL_RECREATED);
   assert.equal(changed.complete_edition.equal, true, changed.complete_edition.detail);
 });

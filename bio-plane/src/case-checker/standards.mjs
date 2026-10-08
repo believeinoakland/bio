@@ -11,8 +11,8 @@
  *
  * Which rows are a finding's (K2002): those whose `standard` is the target of one of that member finding's own `standard`
  * legs in the document's signed `grading_facts:` block (`case-grammar` R17), as `publication` R72 counts a member's legs,
- * and whose `body` is the member's `subject_entity` as the document states it (on its `case_roles:` or
- * `case_conclusions:` row); when the document states none, every row of that standard.
+ * and whose `body` is the member's `subject_entity` as the document states it (`case-grammar` R22's `memberSubjectOf`:
+ * its `case_roles:` row, else its `case_conclusions:` row); when the document states none, every row of that standard.
  * What a finding states: its `case_conclusions:` row's `claim` and `claim_detail`; the case's statement: its `case_scope`
  * and its `completeness:` `statement`. The body is not read: it prints quoted passages, whose own words may say
  * "violation". A row with `stated: "not held"` is not judged and is named in `unjudged`.
@@ -23,7 +23,7 @@
 
 import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
 import { canonicalJson } from "../record-grammar/json.mjs";
-import { gradingFactsOf } from "../case-grammar/index.mjs";
+import { gradingFactsOf, memberSubjectOf } from "../case-grammar/index.mjs";
 
 /** R21: the refusal codes, in the order the arms run. */
 export const STANDARDS_USE_CODES = Object.freeze(["MALFORMED", "COPYRIGHTED_TEXT_CARRIED", "COPYRIGHTED_PASSAGE_UNRELIED",
@@ -108,12 +108,11 @@ function judge(args) {
   const legs = gradingFactsOf(fm) || {};
   const conclusions = Array.isArray(fm.case_conclusions) ? fm.case_conclusions.filter(isObj) : [];
   const completeness = isObj(fm.completeness) ? fm.completeness : {};
-  const roles = Array.isArray(fm.case_roles) ? fm.case_roles.filter(isObj) : [];
   const rowOf = (list, finding) => list.find((x) => String(x.target ?? "") === finding) || {};
   const caseWords = wordsIn([fm.case_scope, completeness.statement]);
   for (const finding of members) {
     const targets = new Set((legs[finding] || []).filter((l) => isObj(l) && l.kind === "standard" && str(l.target)).map((l) => l.target));
-    const subject = str(rowOf(roles, finding).subject_entity) || str(rowOf(conclusions, finding).subject_entity);
+    const subject = memberSubjectOf(fm, finding);
     const rows = judged.filter((r) => targets.has(r.standard) && (subject === null || r.body === subject));
     if (!rows.length || rows.some((r) => r.binds !== false)) continue;
     const c = rowOf(conclusions, finding);
