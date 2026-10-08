@@ -76,6 +76,8 @@ export const RELATION_KINDS = Object.freeze(["authorises", "answers", "amends", 
 export const LIMIT_DEFAULT = 100;
 export const LIMIT_MAX = 500;
 export const REASON_MAX = 2000;
+/* R35 (T37-11): at most this many owner answers and waiting batch entries are kept between reads (a hub's votes, their pages and the batches waiting, with room). */
+const KEPT_MAX = 20000;
 const clamp = (limit) => Math.max(1, Math.min(Math.trunc(Number(limit)) || LIMIT_DEFAULT, LIMIT_MAX));
 
 const ACT_RE = idPattern("ACT");
@@ -148,6 +150,7 @@ export function eventsOf(ctx, opts = {}) {
 export class Events {
   #sql; #record; #membership; #now; #viewOpt; #deps;
   #onWhen = []; #onChanged = []; #sources = []; #started = false; #migrated = false; #actAt = null;
+  #kept = { stamp: null, answers: new Map(), sets: new Map(), pending: new Map() };
 
   constructor(storage, { record, membership = null, provenance = null, extraction = null, content = null,
                          entities = null, now = null, view = null } = {}) {
@@ -1282,6 +1285,22 @@ export class Events {
   /** R35: this owner's connections at a node (connection-grammar's contract). */
   neighbours(args) { return neighboursOf(this.#kernel(), args); }
 
+  /* R35 (T37-11): what the owner's read may keep between calls, or null when nothing may be kept: inside a transaction
+     (record-core R66: `afterCommit` runs at once only outside one), since what it read may yet be rolled back, or when
+     the store cannot say whether it changed. It is emptied whenever the connection has changed a row since it was
+     filled (SQLite's `total_changes()`, any module's write), and when it grows past its bound. */
+  #keptNow() {
+    let outside = false;
+    try { this.#record.afterCommit(() => { outside = true; }); } catch { return null; }
+    if (!outside) return null;
+    let n;
+    try { n = Number(this.#one(`SELECT total_changes() AS n`).n); } catch { return null; }
+    if (!Number.isFinite(n)) return null;
+    const c = this.#kept;
+    if (c.stamp !== n || c.answers.size + c.pending.size > KEPT_MAX) { c.stamp = n; c.answers.clear(); c.sets.clear(); c.pending.clear(); }
+    return c;
+  }
+
   /** R22–R25: the machine's writes from a followed body's Legistar capture (`follow.mjs`). */
   followedImport(args = {}) { return followedImport(this.#kernel(), args); }
   /** R38: a followed proceeding's register rows as filing and order events (`follow.mjs`). */
@@ -1296,7 +1315,7 @@ export class Events {
       tx: (fn) => this.#tx(fn), holdFact: (x) => this.#holdFact(x), insert: (t, r) => this.#insert(t, r),
       addAttestation: (e, r, by, serves) => this.#addAttestation(e, r, by, serves), sameAttestation: (e, r) => this.#sameAttestation(e, r),
       setWhen: (e) => this.#setWhen(e), resolve: (e) => this.#resolve(e), governing: (e) => this.#governing(e),
-      governingMany: (ids) => this.#governingMany(ids), whensRead: (ids) => this.#whensRead(ids),
+      governingMany: (ids) => this.#governingMany(ids), whensRead: (ids) => this.#whensRead(ids), kept: () => this.#keptNow(),
       whenRead: (e) => this.#whenRead(e), visibleAttestations: (e, v) => this.#visibleAttestations(e, v),
       resolutionGrade: (en, a) => this.#resolutionGrade(en, a), captureGrade: (s) => this.#captureGrade(s),
       voteMatch: (v) => this.#voteMatch(v, { fromSource: true }), tell: (c) => this.#tell(c), allocEvent: () => this.#record.allocId("EVT", this.#instant().slice(0, 4)),
