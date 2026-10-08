@@ -42,3 +42,7 @@ Size (session_01111XPFU4aFxj2noCaaE3nf): test runs 23, module lines 1361
 ## J1 · COMPLETE
 
 T37-48 done, with B2 (K2238). worker.test R6 re-pinned to C-38.10; ask gate reads AI_KEPT_AWAY via assistantGate() (ask.test B7 and R19 controls re-pinned: red until T37-30 merges, verified 12/0 with R55's shape); answers' assistantGate dep dropped; publication built with bucket and store, caseCarriageOps routed after publicationOps, disclosures/docket re-pinned with behaviour tests; t36 R26 re-pinned to file-safety's wakes; translation draft shape and test (B2). Also R29's todo made a test (it passes: R29 can drop 'not yet met'), maps.mjs import fixed, stale comments. Module 142/146 (4 = 2 interim N765 + red 7); checks 0 failures. Requirements notes for you in the record. Bundle stale for L11's close.
+
+## J2 · COMPLETE · re B3
+
+B3 done: tranche merged (clean); the N765 ask reds and red 7 green; door.test R1/R5 re-pinned to 33 instance-setup routes, the nine translation routes driven through the door, a typo'd route as control. plane 146/146, migrate-released 1/0, four checks 0 failures. Ready to merge after store-door and control-plane.
