@@ -10,17 +10,16 @@
 
 **Tests.** New `test/m/provenance/fetched.test.mjs`, 9 tests titled R62. They cover direct, archive.org, capture-request, no via, doorbell, unrecorded, an unruled via, the prefix and case rule, unpacked from a fetched archive and from a member's archive, one receipt sufficing, the depth bound at `ARCHIVE_DEPTH_MAX` and one past it, a two-archive cycle and a self-cycle, nine bad locators, a failed read, and the rule writing nothing. `fetchedByThisCopy` also joins R15's no-write test (`receipts.test.mjs`) and R40's no-place test (`testify.test.mjs`).
 - `node --test test/m/provenance/`: tests 120, pass 120, fail 0.
-- `test/mk6-bundle-names-no-author.test.mjs`: 0 pass, 1 fail, failing identically on `tranche/T39` without my change. Its suite's `memberadd` sends the invitation token in the query and is refused `CREDENTIAL_IN_ADDRESS` (C-38.10). It is not provenance's (see Found).
+- `test/mk6-bundle-names-no-author.test.mjs` was red on `tranche/T39` before this job: it sent every credential as `token=` in the address, which C-38.10 refuses (`CREDENTIAL_IN_ADDRESS`). The file is one of provenance's `tests` paths, so I fixed it here: its `GET`, `POST` and capture `PUT` now lift `token` into an `Authorization: Bearer` header. No assertion changed. Result: 10 pass, 0 fail.
 - `test/publishingproject.mjs` and `test/adoptable-reading.mjs` are helpers, not suites.
 - The manifest names no layer tests.
 
-**Checks.** format: 139 modules, 137 requirements files; 0 failures. architecture (provenance): 0 failures. coverage (provenance): 47 of 47 live requirement ids named by a test; 0 failures. ownership (provenance, tranche/T39): 5 files; 0 failures.
+**Checks.** format: 139 modules, 137 requirements files; 0 failures. architecture (provenance): 0 failures. coverage (provenance): 47 of 47 live requirement ids named by a test; 0 failures. ownership (provenance, tranche/T39): 6 files; 0 failures.
 
 **Deferred.** None. R62's `*(not yet met: T39)*` mark is BOB's to strike at the merge.
 
 **Found in other modules.**
 1. `file-safety`: `#sourceOf` and its own `FETCHED_VIAS` (`index.mjs`:71, 506–521) now duplicate R62. They are T39-6's to replace with `provenance.fetchedByThisCopy`. Its bound is a literal `path.length >= 3`, not `ARCHIVE_DEPTH_MAX`.
-2. `test/mk6-bundle-names-no-author.test.mjs` (a provenance `tests` path) is red on the base. The cause is outside provenance: the suite's `memberadd` puts a credential in the request address, which credentials/control-plane C-38.10 now refuses. It is not on rule 3's accepted list. Its fix is in the test's request shape (send the token in the body or header), but the failing call is to another module's op, so I report it rather than guess that op's contract.
-3. `dec149.test.mjs` titles cite `index.mjs` line numbers from T35 (:899 …). Those numbers were already stale before this job and assert nothing.
+2. `dec149.test.mjs` titles cite `index.mjs` line numbers from T35 (:899 …). Those numbers were already stale before this job and assert nothing.
 
-Size (session_01Cwa88YYi7hCLFZzpdk7gAE): test runs 6, module lines 2770
+Size (session_01Cwa88YYi7hCLFZzpdk7gAE): test runs 8, module lines 2770
