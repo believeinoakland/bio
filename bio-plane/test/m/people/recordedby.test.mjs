@@ -163,7 +163,7 @@ test("R36 with extent, only rows whose extent stands same, narrower or wider to 
   assert.deepEqual(rel({ kind: "pdf-page" }), { [whole]: "wider" }, "a page naming no number is unreadable against a page, as content answers");
 });
 
-test("R36 limit is clamped to 1–500 (default 100), truncated by reading one past; refusals VIEWER_MISSING, NO_SHA and EXTENT_MALFORMED each write nothing; it writes nothing and never throws", () => {
+test("R36 limit is clamped to 1–500 (default 100), truncated by reading one past; refusals VIEWER_MISSING, NO_SHA and EXTENT_MALFORMED each write nothing, the first and last as {ok: false, refused, code, reason, why} with no catalogue row (K2116); it writes nothing and never throws", () => {
   const w = world();
   const p = w.person("Ivy Lane");
   const c = w.capture("many");
@@ -180,9 +180,15 @@ test("R36 limit is clamped to 1–500 (default 100), truncated by reading one pa
   const before = census(w);
   for (const viewer of [undefined, null, "", "  "]) {
     const r = w.p.recordedBy({ captureSha: c.captureSha, viewer });
-    assert.deepEqual([r.ok, r.reason], [false, "VIEWER_MISSING"], String(viewer));
-    assert.equal(typeof r.detail, "string");
+    assert.deepEqual(Object.keys(r).sort(), ["code", "ok", "reason", "refused", "why"], "events R49's refusal shape (K2116)");
+    assert.deepEqual([r.ok, r.refused, r.code, r.reason], [false, "VIEWER_MISSING", "VIEWER_MISSING", "VIEWER_MISSING"], String(viewer));
+    assert.equal(typeof r.why, "string");
   }
+  const m = w.p.recordedBy({ captureSha: c.captureSha, extent: 7, viewer: ANN });
+  assert.deepEqual(Object.keys(m).sort(), ["code", "ok", "reason", "refused", "why"]);
+  assert.deepEqual([m.refused, m.code], ["EXTENT_MALFORMED", "EXTENT_MALFORMED"]);
+  assert.ok(!("check" in m) && !("translation" in m), "no catalogue row");
+  assert.deepEqual(w.p.recordedBy({ captureSha: "not-hex", viewer: ANN }).items, [], "a sha that names no held capture answers items: []");
   for (const sha of [undefined, null, "", " "]) assert.equal(w.p.recordedBy({ captureSha: sha, viewer: ANN }).reason, "NO_SHA");
   for (const extent of ["page 1", 7, [], { kind: "paragraph" }, { page: 0 }])
     assert.equal(w.p.recordedBy({ captureSha: c.captureSha, extent, viewer: ANN }).reason, "EXTENT_MALFORMED", JSON.stringify(extent));

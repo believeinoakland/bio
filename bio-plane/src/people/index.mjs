@@ -830,13 +830,16 @@ export class People {
    *  and a claim made inside a project the viewer may not see is neither answered nor counted. An expunged row (R12) is
    *  gone; a member's tie, the protected source link and a check's result cite no capture and are never items, so a
    *  held link answers exactly as none. Writes nothing; never throws; an in-process read, not an op. */
+  /* events R49 (K2116, K231): the shape's two own refusals, carrying their code and no catalogue row. */
+  static #shapeRefusal(code, why) { return { ok: false, refused: code, code, reason: code, why }; }
+
   recordedBy({ captureSha, extent = null, limit = null, viewer = null } = {}) {
     if (viewer === undefined || viewer === null || (typeof viewer === "string" && viewer.trim() === ""))
-      return refuse("VIEWER_MISSING", "a read names the member reading, stamped by the control plane; with none, nothing is answered");
+      return People.#shapeRefusal("VIEWER_MISSING", "a read names the member reading, stamped by the control plane; with none, nothing is answered");
     if (!filled(captureSha)) return refuse("NO_SHA", "the read names the capture whose passages were cited (captureSha)");
     const want = extent === undefined || extent === null ? null : extent;
     if (want !== null && !(isObj(want) && typeof want.kind === "string" && Object.prototype.hasOwnProperty.call(CONTENT_EXTENT_KINDS, want.kind)))
-      return refuse("EXTENT_MALFORMED", `an extent is one of content's kinds (${Object.keys(CONTENT_EXTENT_KINDS).join(", ")}) with its fields`);
+      return People.#shapeRefusal("EXTENT_MALFORMED", `an extent is one of content's kinds (${Object.keys(CONTENT_EXTENT_KINDS).join(", ")}) with its fields`);
     const n = Number(limit);
     const cap = limit === null || limit === undefined || limit === "" || !Number.isFinite(n) ? RECORDED_BY_DEFAULT
       : Math.max(1, Math.min(Math.floor(n), RECORDED_BY_MAX));
