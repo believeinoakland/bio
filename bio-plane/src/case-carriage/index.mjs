@@ -638,8 +638,8 @@ export class CaseCarriage {
 const instances = new WeakMap();
 
 /** The one instance for a host (K61). The first call creates it with `deps` (a test passes its own), creates its
- *  tables, declares the two of held materials to record-core's purge as exempt (R6), its answer kept as
- *  `purgeDeclaration`, and the marks and copies with their classes (R12), its answer kept as `marksDeclaration`. */
+ *  tables, and declares them to record-core in one call: the two of held materials exempt from purge (R6), the marks
+ *  and copies with their classes (R12); the answer is kept as `purgeDeclaration` and `marksDeclaration`. */
 export function caseCarriageOf(host, deps) {
   let c = instances.get(host);
   if (!c) {
@@ -651,8 +651,13 @@ export function caseCarriageOf(host, deps) {
     c = new CaseCarriage({ ...d, host, storage, record, membership, promotion });
     instances.set(host, c);
     c.migrate();
-    c.purgeDeclaration = record.declarePurge("case-carriage", [], { exempt: [...CASE_CARRIAGE_EXEMPT] });
-    c.marksDeclaration = record.declareTable("case-carriage", CASE_CARRIAGE_MARK_TABLES.map((t) => ({ ...t })));
+    /* One declaration, so the module holds one place in record-core's order: the two published tables with the classes
+       `declarePurge`'s default form gave them (exempt, R6), and the marks and copies with theirs (R12). */
+    const declared = record.declareTable("case-carriage", [...CASE_CARRIAGE_EXEMPT.map((name) => ({ name, purge: "exempt",
+      expunge: "none", export: "admin-only", sight: "group", derive: "stored", version_chain: false })),
+      ...CASE_CARRIAGE_MARK_TABLES.map((t) => ({ ...t }))]);
+    c.purgeDeclaration = declared;
+    c.marksDeclaration = declared;
   }
   return c;
 }

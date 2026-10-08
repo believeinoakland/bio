@@ -24,8 +24,18 @@ Deferred: nothing.
 
 - **The composition root** (store-door's `plane/store.mjs`, or publication's factory, which creates this module first): pass `bucket: env.CAPTURES` and `store: () => <the own namespace>` to `caseCarriageOf`; until then no copy is held in the running plane, and every marked photo's case is refused (fail closed). B2.
 - **answer-envelope** `families.mjs`: import `case-carriage/checks.mjs` (C-141) in the module order. B2.
+- **plane** `docket.test.mjs`:41 (R15, R2, R23; K1643) asserts case-tensions declares directly after publication in the order of modules with purge-cleared tables; `photo_marks` and `photo_copies` are cleared by purge (R12's classes), so case-carriage, which publication's factory builds, now sits between them (25 ≠ 24). Green on `tranche/T37` without my change. The test's point (docket after publication and case-tensions, before network-notices and layer 9) still holds; the plane's job re-pins the adjacency.
 - **plane** `disclosures.test.mjs`:67 (R18, R5) pins "case-carriage exports no ops map"; this job's `caseCarriageOps` (R9, R10, the ops map the START names) makes it red until the plane's L11 job re-pins it when it routes `obscuremark` and `photomarks`.
 - **case-disclosures** `R6, R7: materialsJudged …` (its test 14) is red on `tranche/T37` @ `19e619535d` without my change too (case-grammar's merge, I take it), so not this job's.
+
+## Tests and checks
+
+- case-carriage (`bio-plane/test/m/case-carriage/`, 7 files): 48 tests, 48 pass, 0 fail (after merging `tranche/T37` @ f3f6002068 and later, with case-grammar).
+- Users of this module: publication 122 tests, 121 pass, 0 fail; control-plane 180 pass, 0 fail; `test/system/migrate-released.test.mjs` 1 pass; case-disclosures 58 of 59 (its test 14, red on the tranche too); op-declarations 103 of 106 (the three of rule 6 item 11); plane 139 of 144: 64, 65 (rule 6 red 7), 141 (census row 51), and two this job makes stale, `disclosures.test.mjs`:67 and `docket.test.mjs`:41 (above).
+- `node checks/format.mjs`: 136 modules, 0 failures. `architecture.mjs case-carriage`: 10 product files, 0 failures. `coverage.mjs case-carriage`: 13 of 13 live ids, 0 failures. `ownership.mjs case-carriage tranche/T37`: 0 failures.
+- **P6:** 392 lines at START; now 810 (`index.mjs` 672, `schema.mjs` 97, `checks.mjs` 41).
+
+Size (session_013UybDevdS9DJfUx9eqiUuX): test runs 16, module lines 810
 
 ## J1 · QUESTION
 
