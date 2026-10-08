@@ -56,12 +56,15 @@ No merge order (independent).
 - **T40-14 · public-read** · (N798, N811) every published photo's label by key · DEC-185, DEC-187 · req: to draft.
 - **T40-15 · ratification** · (N811) R42's scheduled stop answers `photo.refused.changed.signed` after signing (N805's stop) · DEC-187, K2370 · req: to draft · after T40-13.
 - **T40-16 · case-disclosures** · (N798, N811) the labels by key; the ceremony's sentence the screens' · DEC-185, DEC-187 · req: to draft · after T40-12; runs case-authoring's suite (P11; T39-18's pattern if red).
+- **T40-16a · case-grammar** · (N798; DEC-185) R12's row states `obscured_marked` (optional, flat; absent reads by the label, so every earlier edition renders byte for byte); R14 picks the copy or unmarked line by it and prints the label word for word when there is one · K2394 · req: `draft-T40-reqs.md` §L8 "Owed outside".
+- **T40-16b · case-checker** · (N798) its `/3` specification (`spec.mjs`:215) names an unmarked photo's copy as labelled; `program.mjs` regenerated at L8's close · K2394.
 
 **L8 merge order:** case-carriage, publication, public-read, ratification, case-disclosures.
 
 ### L11
 - **T40-17 · wizard-scripts** · (N812) R27 · draft C.
 - **T40-18 · op-grades** · (N797, N799; N812 if its ops are graded) the new ops' grades · req: fixed at L11's START.
+- **T40-18a · admission** · (N797) R3's public ops gain `handlecheck` (it reads an invitation, as `invitelook`); R22 counts its `NO_SUCH_INVITATION` as kind `credential` · K2394 · req: `draft-T40-reqs.md` §L11 "Owed shares".
 - **T40-19 · affordances** · (N797, N799, N812) shares of the new codes and ops · req: fixed at L11's START.
 - **T40-20 · notice-producers** · (N812) R16 (limit reached, project account suspended) · draft C.
 - **T40-21 · queue** · (N814) `op=proposedispose` takes the project arm always (R27); R20–R21's shared move kept only for a question no project draws on · K2371 · req: BOB's wording, to draft before L11's START. Also N812's new item kinds in R1 (see doubts).
@@ -95,3 +98,5 @@ No merge order (independent).
 4. **N797 placement** (membership or project-roster): read as membership (handles live there). **N799's packaging:** a membership guard registered by publication, composed by plane (no edge points later).
 5. op-grades and affordances are not in part E; included as L11 shares, fixed at L11's START.
 6. The explorer's `next.md` entry owed by B9/K2373 is not yet written.
+
+**Requirement text (K2394):** `plan/draft-T40-reqs.md` (reviewed, adopted) and `plan/draft-T40-N812.md` (K2373, K2376), applied to each module's file before its layer's START.
