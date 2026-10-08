@@ -1,6 +1,6 @@
 # scheduler (T37)
 
-**Status** · session_01LYDPVU33jWW5KRDoigq6gZ · depth 2 · WAITING ON BOB (J1) · handled B2
+**Status** · session_01LYDPVU33jWW5KRDoigq6gZ · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
