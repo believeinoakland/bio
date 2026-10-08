@@ -19,7 +19,7 @@ export function hostAllowed(host, allowed) {
 export function callHosts(d, spec) {
   if (d.host_from_spec || d.template) return spec.host ? [hostPart(spec.host)] : [];
   if (Array.isArray(d.hosts)) return d.hosts;
-  const list = d.hosts[spec.region];
+  const list = Object.hasOwn(d.hosts, spec.region) ? d.hosts[spec.region] : null;
   if (list && list.length === 0) return spec.host ? [hostPart(spec.host)] : [];
   return list || [];
 }

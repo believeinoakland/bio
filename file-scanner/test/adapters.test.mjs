@@ -337,6 +337,13 @@ test('R30 ICAP: RESPMOD over TCP or TLS; 204 or a bare 200 clean; X-Infection-Fo
   const t = putCapture(tls.bucket, EICAR);
   await tls.jsonCall('/provider/scan', { store: 'bio', target: t, tool: { ...tls.specs.icap, host: 'icap.example.org', config: { ...tls.specs.icap.config, tls: true } } });
   assert.deepEqual([tls.sockets.seen[0].port, tls.sockets.seen[0].options.secureTransport], [11344, 'on']);
+  // A settings page sends `tls` as one text (R19): yes/true/on/1 turn it on, anything else leaves it off.
+  for (const [text, port] of [['yes', 11344], ['TRUE', 11344], ['on', 11344], ['1', 11344], ['no', 1344], ['false', 1344], ['0', 1344], ['off', 1344]]) {
+    const n = tls.sockets.seen.length;
+    await tls.jsonCall('/provider/scan', { store: 'bio', target: t, tool: { ...tls.specs.icap, host: 'icap.example.org', config: { ...tls.specs.icap.config, tls: text } } });
+    assert.equal(tls.sockets.seen[n].port, port, `tls ${text}`);
+    assert.equal(tls.sockets.seen[n].options.secureTransport, port === 11344 ? 'on' : undefined, `tls ${text}`);
+  }
   const port25 = await tls.jsonCall('/provider/scan', { store: 'bio', target: t, tool: { ...tls.specs.icap, host: 'icap.example.org:25' } });
   assert.deepEqual(port25.body, { ok: false, code: 'PORT_REFUSED', provider_id: 'icap' });
 });

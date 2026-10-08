@@ -4,7 +4,7 @@
 import { SCAN_MAX_BYTES, SANDBOX_TIMEOUT_MS, REPUTATION_LIST_MAX_AGE_MS, LOG_COUNT_KINDS, PROVIDER_TIMEOUT_MS } from '../limits.mjs';
 import { normaliseTarget, knownStore, sizeTarget, verifyTarget, targetStream } from '../store.mjs';
 import { PROVIDERS, REFUSED_PROVIDERS, HELD_PROVIDERS, GENERIC, providerById, resolveDescriptor } from './catalogue.mjs';
-import { normaliseFamily } from './descriptor.mjs';
+import { normaliseFamily, SPEC_FIELDS } from './descriptor.mjs';
 import { ToolError, makeNet, portPart, sleep } from './net.mjs';
 import { SCANNERS } from './scanners.mjs';
 import { SANDBOXES } from './sandboxes.mjs';
@@ -34,7 +34,8 @@ export function checkSpec(deps, spec, kind) {
   const base = providerById(id);
   if (!base) return { ok: false, code: 'PROVIDER_UNKNOWN' };
   const regional = base.hosts && !Array.isArray(base.hosts);
-  if (regional && !(spec.region in base.hosts)) return { ok: false, code: 'REGION_UNKNOWN', provider_id: id };
+  // Its own regions only: a region such as `toString` names no list (R12; a prototype key is no region).
+  if (regional && !(typeof spec.region === 'string' && Object.hasOwn(base.hosts, spec.region))) return { ok: false, code: 'REGION_UNKNOWN', provider_id: id };
   const needsHost = base.template || base.host_from_spec || (regional && base.hosts[spec.region].length === 0);
   if (needsHost && !(typeof spec.host === 'string' && spec.host)) return { ok: false, code: 'PROVIDER_UNKNOWN', provider_id: id };
   const config = configOf(base, spec);
@@ -58,11 +59,13 @@ export function checkSpec(deps, spec, kind) {
 
 const present = (v) => v !== undefined && v !== null && v !== '';
 /** R21 (N777): the spec's `config` as its descriptor's `config` (R19) names it: each `required` field present, else
- *  `{missing}`; a field the list does not name is dropped, so it is never read or sent. */
+ *  `{missing}`; a field the list does not name is dropped, so it is never read or sent. `host` and `region` (R19, T38)
+ *  are the spec's own fields, checked there (`checkSpec`), never read from or added to its `config`. */
 export function configOf(d, spec) {
   const given = spec.config && typeof spec.config === 'object' && !Array.isArray(spec.config) ? spec.config : {};
   const config = {};
   for (const f of d.config) {
+    if (SPEC_FIELDS.includes(f.name)) continue;
     const v = Object.hasOwn(given, f.name) ? given[f.name] : undefined;
     if (present(v)) config[f.name] = v;
     else if (f.required) return { missing: f.name };
