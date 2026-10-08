@@ -881,15 +881,6 @@ img.avview{height:auto;max-height:72vh;object-fit:contain}
     <input class="txt" id="g-pw" type="password" autocomplete="current-password">
     <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
       <button class="btn" id="g-signin">Sign in</button>
-      <span style="font-size:12.5px;color:var(--muted)">or</span>
-      <button class="btn ghost" id="g-token-toggle">use a token</button>
-    </div>
-
-    <div id="g-token-wrap" class="hidden">
-      <label class="fld" for="g-token">Access token</label>
-      <input class="txt mono" id="g-token" placeholder="paste a token you can throw away">
-      <p class="hint">A token gives read access to the working record. It carries no member identity, so capability-shaped controls stay minimal. Sign in for the full session.</p>
-      <div style="margin-top:12px"><button class="btn" id="g-token-go">Connect</button></div>
     </div>
 
     <div id="g-err" class="teach hidden"></div>
@@ -1449,11 +1440,14 @@ function teach(el, err){
    pinned the word would have converted a decision into cement, which nobody
    made. Reopening this needs an argument against the four above, not a
    preference — and the I3 change (1) names is where it would have to start. */
-$("#g-token-toggle").onclick = () => $("#g-token-wrap").classList.toggle("hidden");
+/* T36-38 (N711, K1936 Q3): the gate takes no pasted token. Its "use a token" panel
+   took the shared deploy token, which admission now refuses as a member bearer
+   (T36-36); the page reaches the plane only under the session `op=login` returns
+   (`signIn`), carried in the header by `authHeaders()`. The reason sits here and
+   not in the gate's markup, for the measurement reason given above. */
 $("#g-base").oninput = e => PLANE.base = e.target.value.trim().replace(/\/$/,"");
 $("#g-pub").onclick = () => { PLANE.base = $("#g-base").value.trim().replace(/\/$/,""); enterPublished(); };
 $("#g-signin").onclick = signIn;
-$("#g-token-go").onclick = tokenConnect;
 $("#g-preview").onclick = previewShell;
 
 /* Preview: show the real design applied to the real shell, with honest
@@ -1502,12 +1496,6 @@ async function signIn(){
     await boot();
   }catch(e){ teach($("#g-err"), e); }
   finally{ $("#g-signin").disabled = false; }
-}
-async function tokenConnect(){
-  $("#g-err").classList.add("hidden");
-  PLANE.token = $("#g-token").value.trim(); PLANE.session = false;
-  if(!PLANE.token){ teach($("#g-err"),{error:"paste a token first"}); return; }
-  try{ await boot(); }catch(e){ teach($("#g-err"), e); }
 }
 
 async function boot(){
