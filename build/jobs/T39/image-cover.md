@@ -22,3 +22,7 @@
 **Deferred:** none. **For BOB:** R8 and R9 are met; their `*(not yet met: T39)*` marks are BOB's to strike. For `doc-clean` (no change asked of it): the refusals above, and that `PHOTO_TOO_LARGE` is `COVER_MAX_BYTES` (32 MiB, exported) as R8 states. Nothing found in another module.
 
 Size (session_01713tY2AEJZPTinfdxFZjHr): test runs 10, module lines 1282
+
+## J1 · COMPLETE
+
+T39-2a done: stripMetadata (R8) in bio-plane/src/image-cover/strip.mjs, R8 and R9 each named in new tests of their own (strip.test.mjs, Pillow-hashed fixtures from make-strip-fixtures.py). image-cover 15/15 pass; format, architecture, coverage (9 of 9), ownership 0 failures. Nothing deferred, nothing found in another module. Details in the Completion section of this record.
