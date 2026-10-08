@@ -1,6 +1,6 @@
 # publication (T39)
 
-**Status** · session_01WbD8jksEcAKJZvuvR4ohT8 · depth 2 · WORKING · handled B2
+**Status** · session_01WbD8jksEcAKJZvuvR4ohT8 · depth 2 · WORKING · handled B3
 
 ## J1 · REPORT
 
