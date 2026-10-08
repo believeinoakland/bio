@@ -61,3 +61,13 @@ Module-level choices, mine, recorded in my record: `coverAreas` answers a Promis
 ## J2 · REPORT
 
 `image-codecs`: `image-cover` reads the Huffman tables `readJpegHeader` answers (`hts.dc[i]`, `hts.ac[i]`: `maxcode`, `valptr`, `mincode`, `symbols`, `fast`, `FAST`). image-codecs R1 names `readJpegHeader` but not that shape, so a change inside image-codecs could break image-cover with no requirement changed (image-cover's tests would catch it). Suggestion: image-codecs R1 states the shape it answers, or image-cover parses DHT itself (about 40 lines). No generated artifact is stale: nothing imports `image-cover` yet (case-carriage, T37-34, will).
+
+## J3 · COMPLETE
+
+T37-39 done: `image-cover` new, R1–R7 met, B2's answers (K2173) applied (`IMAGE_DATA_CORRUPT`, `COVER_MAX_PIXELS` = 120 MP, no colour profile).
+- **Paths and tests to fill in `modules.json`:** paths `["bio-plane/src/image-cover/"]`, tests `["bio-plane/test/m/image-cover/"]`. Uses as declared (`image-codecs`, `test-support`).
+- Tests: 10 of 10 pass (`node --test test/m/image-cover/` from `bio-plane/`). Checks with the row filled locally: format, architecture, coverage (7 of 7), ownership (43 files): 0 failures each; re-run coverage and ownership after your fill.
+- R4 in workerd: 12 MP 1.0–1.2 s, peak growth 10–19 MB; 48 MP 3.7–4.6 s, 43–48 MB (the photo and the answer; nothing else grows). Table in my record.
+- R5: fixtures carry Pillow / libjpeg-turbo 3.1.4.1's hashes of each original's displayed decode, cover rectangles from the geometry; the phone JPEG's EXIF thumbnail, MPF second image and trailing bytes, and the PNG's APNG frame and trailer, are tested gone.
+- Detail decisions for `rulings.md` listed in my record; one finding in image-codecs in J2.
+Size (session_01A8wyDuP1JUCkDvsGN291AL): test runs 12, module lines 793.
