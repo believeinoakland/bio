@@ -25,7 +25,7 @@
   - A screen with no acts (`help`) registers harmlessly.
 - What it left out did not matter to this entry.
 
-**Found in other modules (REPORT J2).**
+**Found in other modules (REPORT J1; COMPLETE J2 calls it J2 in error).**
 1. PR #13's registry still marks `assistantset` `declared` on `setup`, and "Set up and claim" (required) has step 11 on it.
    - Today `OPS` holds `assistantset`, so `requiredFailures` is `[]` and `test/m/plane/release.test.mjs` passes 5/5.
    - With `assistantset` removed from the op table (T36-35), R12 answers `WIZARD_ACT_UNKNOWN` at step 11 ("the screen 'setup' offers no act 'assistantset'"). So R14 names "Set up and claim", and the plane's release test goes red once op-declarations' T36-35 merges.
