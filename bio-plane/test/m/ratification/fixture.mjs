@@ -96,7 +96,7 @@ export const bucketOver = (m) => ({
   put: async (k, v) => { m.set(k, v instanceof Uint8Array ? v : new TextEncoder().encode(String(v))); },
 });
 
-export function world({ steer = {}, worker = null } = {}) {
+export function world({ steer = {}, worker = null, carriage = null } = {}) {
   const st = storage();
   const host = { storage: st };
   for (const t of bare(RECORD_SCHEMA).split(";")) if (t.trim()) st.db.exec(t);
@@ -144,7 +144,10 @@ export function world({ steer = {}, worker = null } = {}) {
   const realPub = publicationOf(host, { storage: st, record, membership, promotion, now: () => NOW,
     inquiry: { exclusionsNaming: () => [] }, basisVersions: { testimonyReach: () => bv.reach },
     /* reevaluation R26: publication registers its R41 and R43 at creation (K359); nothing here reads them */
-    reevaluation: { registerCaseParts: () => ({ ok: true }) } });
+    reevaluation: { registerCaseParts: () => ({ ok: true }) },
+    /* (T39) case-carriage's evidence bucket and store namespace, forwarded by publication (its `caseCarriage`), so a
+       test can mark a real photo and carry its obscured copy (case-carriage R9–R14) */
+    ...(carriage || {}) });
   const calls = [];
   const pub = { facts: new Map(), pins: new Map(), resting: new Map(), claims: new Map(), committed: [] };
   /* publication R38's cursor answer (N308), over `pub.resting`'s list for a bundle: one pin per entry, in list order,
