@@ -26,7 +26,22 @@
 
 **Stale generated artifacts:** `release/bio-plane.bundled.mjs` and `newgroup/src/release.mjs`, which carry `extraction/index.mjs`. They are reported to BOB, not edited.
 
-**Runs:** extraction 135/0; record-core and corpus-export 188/0, since the purge declaration changed. The manifest names no layer tests.
+**B2 (K2296) applied.** BOB accepted my J1 reading: the exemption covers R66 and R68 alike, and there is no narrower `paras` skip.
+- The purge path is now tested by name under R68 too (n439.test.mjs, last test). A `.pptx` read by N439 after a whole-store purge is never migrated, and the row stands, done. Its negative control fails without the fix.
+- The r70 rework and the schema comment were done as J1 proposed.
+
+**Deferred:** nothing.
+
+**Tests and checks** (final run):
+- `node --test bio-plane/test/m/extraction/`: tests 136, pass 136, fail 0.
+- record-core and corpus-export (users of the purge declaration): tests 188, pass 188, fail 0.
+- Layer tests: none named by the manifest.
+- `format`: 137 modules, 136 requirements files; 0 failures.
+- `architecture`: 28 product files, 105 relative imports; 0 failures.
+- `coverage`: 46 of 46 live requirement ids named by a test; 0 failures.
+- `ownership`: 0 failures (line below, after the commit).
+
+Size (session_01GXLVBfXBcg51dL2ddA46vX): test runs 12, module lines 2955
 
 ## J1 · QUESTION
 
