@@ -1,7 +1,8 @@
 /* extraction, R70 (T36-13; N724, K1972, K2092): a document table's cells, read from `.docx` bytes as a sheet's are
    (office-readers R11, R16; reading-pipeline R28), kept by R19's writer and answered by `readingOf` (R30) unchanged;
    `cells: null` and `{}` two facts (R45); R23's history across a re-read that gains cells; and R66's N26 migration
-   moving a stored reading's `cells` keys by `tables[old].new`. Each test names the requirement ids it checks. */
+   moving a stored reading's `cells` keys by `tables[old].new`. A cell carries office-readers R11's seven keys, `paras`
+   included (T37-45, K2173). Each test names the requirement ids it checks. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bundle, hold, doc, docx, wp, wr, wtbl, box } from "./fixture.mjs";
@@ -29,7 +30,7 @@ async function readDocx(w, body) {
   return { d, bytes, r };
 }
 
-test("R70 R1 R19 R30: a .docx table of dates and amounts read from its bytes carries its cells keyed by table ref, written by R19 and answered by readingOf unchanged, field for field as office-readers emitted them", async () => {
+test("R70 R1 R19 R30: a .docx table of dates and amounts read from its bytes carries its cells keyed by table ref, written by R19 and answered by readingOf unchanged, field for field as office-readers emitted them, the seventh key `paras` included", async () => {
   const w = fresh();
   bundle(w.s, "INFO-1");
   const { d, bytes, r } = await readDocx(w, BODY);
@@ -43,8 +44,15 @@ test("R70 R1 R19 R30: a .docx table of dates and amounts read from its bytes car
     ["table 1, A2", "2026-03-01"], ["table 1, B2", "$1,250.00"], ["table 1, C2", "Hall rental"],
     ["table 1, A3", "2026-04-15"], ["table 1, B3", "312.50"],
     ["table 1, A4", "March 9, 2026"], ["table 1, B4", "-40"], ["table 1, C4", "Refund"]]);
+  /* office-readers R11 (N758; K2118): each cell names the paragraphs its text was read from; the empty C3 is no cell,
+     and its paragraph (¶10) is no cell's */
+  assert.deepEqual([...want["table 1"], ...want["table 2"]].map((c) => [c.source.ref, c.paras]), [
+    ["table 1, A1", [1]], ["table 1, B1", [2]], ["table 1, C1", [3]], ["table 1, A2", [4]], ["table 1, B2", [5]],
+    ["table 1, C2", [6]], ["table 1, A3", [7]], ["table 1, B3", [8]], ["table 1, A4", [10]], ["table 1, B4", [11]],
+    ["table 1, C4", [12]], ["table 2, A1", [14]], ["table 2, B1", [15]]]);
   for (const c of [...want["table 1"], ...want["table 2"]]) {
-    assert.deepEqual(Object.keys(c).sort(), ["cached", "declared", "formula", "source", "type", "value"]);
+    assert.deepEqual(Object.keys(c).sort(), ["cached", "declared", "formula", "paras", "source", "type", "value"]);
+    assert.deepEqual(c.paras.map((n) => text.paragraphs[n].text), [c.value], "a cell's paragraphs are the text it carries");
     assert.equal(c.source.kind, "doc-table");
     assert.deepEqual([c.type, c.declared, c.cached, c.formula], ["text", null, null, null]);
   }
@@ -107,9 +115,11 @@ test("R70 R23: a capture whose pre-cells reading is read again keeps the old rea
 const N26_BODY = wp(wr("before "), box([wp(wr("boxed"))]), wr("after")) + wp(wr("next"))
   + wp(box([wtbl("t in box")])) + wtbl("after table");
 const T = (table, cell) => ({ kind: "doc-table", ref: `table ${table + 1}${cell ? `, ${cell}` : ""}`, table, ...(cell ? { cell } : {}) });
-const cell = (table, value) => ({ source: T(table, "A1"), value, type: "text", declared: null, cached: null, formula: null });
+/* A cell as office-readers R11 emits it; `paras` are bare ordinals N26 does not move (no stored reading holds both). */
+const PARAS = { "first": [2], "t in box": [5], "after table": [6] };
+const cell = (table, value) => ({ source: T(table, "A1"), value, type: "text", declared: null, cached: null, formula: null, paras: PARAS[value] });
 
-test("R70 R66: N26's migration of a reading carrying cells moves each key to tables[old].new with its cells' sources, drops a table N26 does not read, counts no cell as a moved reference, and keeps null and {} as stored", () => {
+test("R70 R66: N26's migration of a reading carrying cells moves each key to tables[old].new with its cells' sources, keeps each cell's `paras` as stored, drops a table N26 does not read, counts no cell as a moved reference, and keeps null and {} as stored", () => {
   const map = docxRenumbering(`<w:document><w:body>${N26_BODY}</w:body></w:document>`);
   assert.deepEqual(map.tables.map((t) => t.new), [0, null, 1]);
   const text = { paragraphs: [], document: "", counts: { chars: 0, undetermined: 0 } };
