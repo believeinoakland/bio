@@ -26,3 +26,17 @@
 ## J1 · REPORT
 
 Built on job/T36/op-declarations @ 39a63e5a28; details in my record's Work section. Applied R2, R17, R21, R27, R31–R34: 23 file-safety ops (19 in a new family, 4 wakes in OPS, unattended by citation, present null rows), keep-away, K2092's five; assistantset retired; ACT_HELP_ABSENT exported. Reds 13 and 17 are cleared, and control-plane r53-routes:70 (red 22) passes here. Module tests 105/1. The one red is R34's partition test (t36), which reads affordances' ACT_HELP, not on tranche/T36 yet. Checks: format, architecture, coverage (34/34), ownership: 0 failures. R34's arithmetic on PR #13's mock-acts.js: 605 member ops, 179 explained, 426 absent = 28 aliases + 161 reads + 5 no-control steps + 232 acts the design has not explained. Users' tests: admission 32/0; control-plane 163/4 (base 163/4: red 22 gone, its affordances-unaccounted test is new and waits on T36-30/31); plane 126/4 (red 31 as B2, plus base reds 27). Waiting for your word to merge tranche/T36 after wizard-scripts', affordances' and instance-setup's merges, then I re-run and post COMPLETE.
+
+## Completion (after B3: `tranche/T36` merged, with affordances', wizard-scripts' and instance-setup's merges)
+
+**Entries applied.** T36-35 whole (see Work): Terms/R2, R17, R21, R27, R31, R32 (all 23 ops), R33, R34. Nothing deferred.
+
+**Tests.** `node --test bio-plane/test/m/op-declarations/`: 106 pass, 0 fail (R34's partition now read against affordances' `ACT_HELP`: holds both ways). Reds 13 (`t34`:135) and 17 (`t33`:192, `t35`:196) cleared. Users' tests:
+- admission: 32 pass, 0 fail.
+- control-plane: 162 pass, 5 fail; the merged tranche tip without my commits is 160 pass, 7 fail. Cleared here: red 22 (`r53-routes`:70), my share; red 30 (`totality`:17), op-declarations' share. The 5 left also fail on the tip: R2 N402, R30 casedocument (26), R53 ask's four (23), R57 ×2 (32).
+- plane: 115 pass, 15 fail; the tip is 112 pass, 14 fail. New here: red 31 only, the two release R19 tests. The rest also fail on the tip: reds 27 and 32.
+- affordances: 217 pass, 0 fail (the tip: 1 file fail), so red 29 is cleared. op-grades: 32 pass, 0 fail.
+
+**Checks** (from the process repository): format: 135 modules, 134 requirements files; 0 failures · architecture: 13 product files, 76 relative imports; 0 failures · coverage: 34 of 34 live requirement ids named by a test; 0 failures · ownership: 7 files changed by op-declarations between tranche/T36 and HEAD; 0 failures.
+
+Size (session_01R1mcyGcTaZ5XaLSgxAAfv5): test runs 13, module lines 3245
