@@ -25,3 +25,7 @@ From RUN-RULES #9 (K2213): run-rules exports TRANSLATION_DRAFT_MAX_WORDS (100) b
 ## B4 · CHANGE
 
 run-rules, capture-requests and answers are merged into tranche/T37 @ 6490d909c1 (K2214): merge the tranche into your branch before you finish.
+
+## B5 · CHANGE
+
+From AGENT-RUNNER #4 (K2217): four of your test files fail on a clean tranche/T37 (agent-worker, harness, requirements, versions tests: the real plane's refusals since T36-36 (a credential in the address, the retired shared token) and R45's bundle). The red census read test/m only, so they were never named: they are yours, fixed in this job (as capture's and reading-pipeline's suites were: enrolled member sessions in the Authorization header; your bundle rebuilt by npm run build). State each in your record.
