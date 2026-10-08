@@ -37,7 +37,7 @@ Measured at the start: own requirements 49 KB; code 191 KB; tests 330 KB (`readi
 3. `categories` keeps only strings from the scanner's answer, and `listed` is `true` only when the answer says `true`.
 4. The scanner is reached by `binding.fetch("https://file-scanner/provider/reputation", POST JSON)`. The member routes on the path only.
 
-## Found in other modules and in my own (REPORT J2)
+## Found in other modules and in my own (REPORT J1)
 
 1. **acquisition R38 (my own, needs a requirement change).** `unpack` does not check R17's profile, so a member's `op=unpack` opens an office or OpenDocument file as an archive and files its parts. R41 now answers such a file `NOT_AN_ARCHIVE`, so the two disagree. I recommend that R38 also refuse `NOT_AN_ARCHIVE`. I did not change it: that would amend R38's contract, and `unpack.test.mjs`:242 pins R38's answer for a plain file (`ARCHIVE_UNREADABLE`). Deferred to BOB.
 2. **promotion (`gate.mjs`:757–758).** Its stamp names acquisition's C-137.1–.19. In T37 the renumbered rows are C-139.1–.19, and C-139.20 is new (as START says).
