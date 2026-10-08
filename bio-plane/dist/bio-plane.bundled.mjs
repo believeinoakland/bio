@@ -210562,7 +210562,8 @@ var SCHEDULER_ORDER = Object.freeze([
   "file-render",
   "file-deeper",
   "file-forward",
-  "file-reputation"
+  "file-reputation",
+  "document-copy"
 ]);
 var SCHEDULER_KEYS = Object.freeze({
   "selection-sweep": "swept",
@@ -210595,7 +210596,8 @@ var SCHEDULER_KEYS = Object.freeze({
   "file-render": "filerender",
   "file-deeper": "filedeeper",
   "file-forward": "fileforward",
-  "file-reputation": "filereputation"
+  "file-reputation": "filereputation",
+  "document-copy": "doccopy"
 });
 var ALWAYS_DUE = Object.freeze(["selection-sweep", "task-drain", "archive-monitor", "connection-derive", "overdue-scan"]);
 var RANKED = Object.freeze([
@@ -210709,7 +210711,7 @@ var Scheduler = class {
   /** `storage` is the Durable Object's storage (its alarm, and the probe seam's and the daily consumers' values);
    *  `owners` answers each consumer's owner (`retrieval`, `monitoring`, `connections`, `progressions`, `aiRuns`,
    *  `captureRequests`, `calibration`, `bias`, `intent`, `reevaluation`, `networkNotices`, `linkSweep`, `following`,
-   *  `duties`, `people`, `moneyChecks`, `answers`, `inquiry`, `publication`, `fileSafety`), each a function returning the owner, so an
+   *  `duties`, `people`, `moneyChecks`, `answers`, `inquiry`, `publication`, `fileSafety`, `caseCarriage`), each a function returning the owner, so an
    *  owner is reached only when the registry is built; `zone()` answers the group's time zone or null (R21's local day). */
   constructor({ storage, env = null, owners: owners2 = {}, zone = null } = {}) {
     this.#storage = storage;
@@ -210996,6 +210998,14 @@ var Scheduler = class {
       tick: async (now) => ({ datedwaits: await o("inquiry").datedWaitsTick(instantText2(now)) })
     };
     if (this.#owners.fileSafety) Object.assign(c, this.#fileSafety());
+    if (this.#owners.caseCarriage) {
+      const ms5 = (v) => typeof v === "number" && Number.isFinite(v) ? v : null;
+      c["document-copy"] = {
+        due: (now) => ms5(o("caseCarriage").copyWake(now)),
+        wake: (now) => ms5(o("caseCarriage").copyWake(now)),
+        tick: async () => ({ doccopy: await o("caseCarriage").copyBatch({}) })
+      };
+    }
     return c;
   }
   /* ---- R8 ---- */
@@ -211268,7 +211278,8 @@ var Scheduler = class {
     answers,
     duties: duties2,
     people,
-    moneyChecks
+    moneyChecks,
+    caseCarriage
   } = {}) {
     const arm = () => this.arm();
     const told = () => this.arm().catch(() => null);
@@ -211335,10 +211346,11 @@ var Scheduler = class {
     if (duties2) out.duties = duties2.onDutyTracked("scheduler", poke("duty-transitions"));
     if (people) out.people = people.onChecksChanged("scheduler", poke("interest-checks"));
     if (moneyChecks) out.moneyChecks = moneyChecks.onDetectorSwitchedOn("scheduler", poke("money-detectors"));
+    if (caseCarriage) out.caseCarriage = caseCarriage.onCopyWork("scheduler", () => this.#firing ? null : told());
     for (const [notice, r] of Object.entries(out)) this.#fault(notice, r);
     return out;
   }
-  /** R23, R24: the registrations listenTo and hand were refused, each `{notice, reason, detail}`: start-up faults, reported, never
+  /** R23–R25: the registrations listenTo and hand were refused, each `{notice, reason, detail}`: start-up faults, reported, never
    *  ignored. Empty when every notice took its listener. */
   faults() {
     return this.#faults.map((f17) => ({ ...f17 }));
@@ -211369,7 +211381,8 @@ function schedulerOf(ctx, env = null, deps = {}) {
       answers: () => answersOf(ctx),
       inquiry: () => inquiryOf(ctx),
       following: () => followingOf(ctx),
-      publication: () => publicationOf(ctx)
+      publication: () => publicationOf(ctx),
+      caseCarriage: () => caseCarriageOf(ctx)
     };
     const zone = deps.zone || (() => viewZone3(recordOf(ctx)));
     s = new Scheduler({ storage: deps.storage || ctx.storage, env: e2, owners: owners2, zone });
@@ -211391,7 +211404,8 @@ function schedulerOf(ctx, env = null, deps = {}) {
         answers: answersOf(ctx),
         duties: dutiesOf(ctx),
         people: peopleOf(ctx),
-        moneyChecks: moneyChecksOf(ctx)
+        moneyChecks: moneyChecksOf(ctx),
+        caseCarriage: caseCarriageOf(ctx)
       });
   }
   if (deps.fileSafety) s.hand({ fileSafety: deps.fileSafety });
