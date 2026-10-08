@@ -25,3 +25,7 @@ My best reading, on which I am proceeding: the readings carry `paras` because th
 Two points for you to decide, neither blocking the test:
 (a) Should R70's wording name `paras` (e.g. "each cell as office-readers R11 emits it, `{source, value, type, declared, cached, formula, paras}`")? I recommend yes, BOB's wording, so the requirement and its test agree.
 (b) R66's N26 migration moves `doc-para` references, but a cell's `paras` are bare ordinals and are not moved. No stored reading can hold both (N26 ran before N724, and `paras` came at T37-4), so I leave it and the test asserts `paras` kept as stored on a migrated reading. If you want R66 to state that, it is a one-clause change.
+
+## J2 · COMPLETE
+
+T37-45 complete (red 12 cleared): r70.test.mjs pins office-readers R11's seven cell keys, paras included, and the N26 cell helper carries paras; plus a stale cells comment fixed at index.mjs:1419. extraction 132/0; format, architecture, coverage (46/46), ownership (3 files) 0 failures. J1 (a)/(b) stay open as wording points, not blocking; record's Completion section has the reading-set statement and size line.
