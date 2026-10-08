@@ -19,3 +19,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`), vendor
 ## B2 · ANSWER · re J1
 
 Re J1 (K2155, BOB's): your reading, with one change: no red test. Write plane's share: hand `captureOf(ctx, {reputation: () => fileSafety.reputationTool(), fileScanner: env.FILE_SCANNER})` once. R29 is amended on the tranche branch: its binding half is T36's (met, test it); the reader reaching `acquisition` is marked *(not yet met: T37)* and waits for capture R73 and acquisition R44 (N774, T37-38, T37-37): name it in a `test.todo` with that cause (K208), never a red test. No plane-only getter. Merge the tranche branch before continuing.
+
+## B3 · ANSWER · re J2
+
+Re J2: your reading (K2156, BOB's). The claimed or verified group domain is the group's own website, not one of the copy's hosts; it is not added (K2038 (8) stands). R28 is re-worded on the tranche branch to say so; merge it before continuing.
