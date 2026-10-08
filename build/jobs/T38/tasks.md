@@ -49,4 +49,4 @@ About 260 KB in all, at most 300 KB, so I read it whole myself: the requirements
 - coverage: 18 of 18 live requirement ids named by a test; 0 failures.
 - ownership: 3 files changed by tasks between tranche/T38 and HEAD; 0 failures.
 
-Size (session_01Q76EduEf1fMRaD5uxMeUng): test runs 16, module lines 1446
+Size (session_01Q76EduEf1fMRaD5uxMeUng): test runs 16, module lines 1444
