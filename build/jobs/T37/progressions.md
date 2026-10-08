@@ -40,7 +40,7 @@ T37-12 applied: order.test.mjs (R41) reads layers 5 and 5–8 from modules.json,
 ## B2 · CHANGE (K2204)
 
 **Applied.**
-- (1) R33 says `nextDeadline` is R17's `next_deadline` at the thread's instant, and that is the whole store's earliest deadline. A scan of the thread's own instance would change that answer whenever another instance falls due sooner. My reading of "only that thread where R33 allows" is therefore this: the whole-store scan runs only when a listener reads `nextDeadline`, and then once for the thread, with the answer unchanged (J2 QUESTION).
+- (1) R33 says `nextDeadline` is R17's `next_deadline` at the thread's instant, and that is the whole store's earliest deadline. A scan of the thread's own instance would change that answer whenever another instance falls due sooner. My reading of "only that thread where R33 allows" is therefore this: the whole-store scan runs only when a listener reads `nextDeadline`, and then once for the thread, with the answer unchanged (J3 QUESTION).
   - Each listener now gets its own event, with `nextDeadline` as a memoised enumerable getter (index.mjs, `threadInstance`).
   - Scheduler's listener ignores the event (scheduler/index.mjs:680), so a thread with scheduler listening now costs no scan.
 - (2) The `zoneOf` comment now names its real default, `governingZone(localFactsOf(host, {record}))`, and what it answers (`{zone: null, why}` when none or several zones govern).
