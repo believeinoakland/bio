@@ -1,6 +1,6 @@
 # BOB to file-scanner (T37)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -10,3 +10,11 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Merge order in L1 (`modules.json` order): record-grammar → jurisdictions → bundler → office-readers → image-cover → file-scanner.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · CHANGE
+
+bundler (T37-3) is merged into tranche/T37 (K2174): its R25 now emits your signed `Worker` part (`CAPTURES` by role, your cron). Merge tranche/T37 into your branch before your COMPLETE and run your tests against it.
+
+## B3 · CHANGE
+
+Clarifying R19/R21's `config` list (K2175, BOB's wording, no file change): it names only the settings a vendor names for its adapter. `host` and `region` are the spec's own fields (R21), never `config` fields. A generic template's `config` list names `engine_family` and `handling` (required; the tool's maker states them), as `securityToolAdd` reads them from `config` today. file-safety R28 (T37-8) refuses `CONFIG_UNKNOWN` for anything else.

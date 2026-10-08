@@ -26,15 +26,18 @@ const mf = new Miniflare({
      REFUSED by name (C-64.1), which is the plane being right about a store no install produces. */
   bindings: { VERSION: "0.2.0", PROBE_TOKEN: "probe-local-fixture-2026", INSTANCE_NAME: "bundle-fixture" },
 });
-const j = async (p) => (await (await mf.dispatchFetch("http://x" + p)).json());
-const st = await j("/?op=selftest&token=probe-local-fixture-2026");
+/* The probe token rides the Authorization header: the plane refuses a credential in the address (C-38.10,
+   CREDENTIAL_IN_ADDRESS), which this suite met as a crash on `lf.assertions` while it still sent `&token=` (T37-3). */
+const AUTH = { headers: { authorization: "Bearer probe-local-fixture-2026" } };
+const j = async (p) => (await (await mf.dispatchFetch("http://x" + p, AUTH)).json());
+const st = await j("/?op=selftest");
 console.log("selftest bindings:", JSON.stringify(st.bindings));
-const lf = await j("/?op=livefire&token=probe-local-fixture-2026");
+const lf = await j("/?op=livefire");
 /* D-506 (IC-265): `ok` is the op ANSWERING; the canary's answer is `verdict`, named by `failing`. */
 console.log("livefire:", lf.summary, "answered:", lf.ok, "verdict:", lf.verdict,
             lf.failing?.length ? "failing: " + lf.failing.join(" · ") : "");
 for (const a of lf.assertions) if (!a.ok) console.log("  FAIL", a.name);
-const d1 = await j("/?op=promote&token=probe-local-fixture-2026&store=bio");
+const d1 = await j("/?op=promote&store=bio");
 console.log("confinement:", d1.error || "ALLOWED (DEFECT)");
 /* M0-67 / D-425's sweep: `ALLOWED (DEFECT)` above was printed and not exited on. */
 /* D-506: keyed to the VERDICT. `ok` is true whenever the op answered, so an exit reading it would be

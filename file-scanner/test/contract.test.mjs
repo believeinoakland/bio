@@ -86,7 +86,10 @@ test('R20 a generic template is completed by the administrator\'s statement and 
   const t = putCapture(bucket, EICAR);
   const base = specs().icap;
   const go = async (spec) => (await handle(post('/provider/scan', { store: 'bio', target: t, tool: spec }), deps)).json();
-  assert.deepEqual(await go({ ...base, config: { ...base.config, engine_family: undefined } }), { ok: false, code: 'DESCRIPTOR_MALFORMED', field: 'engine_family', provider_id: 'icap' });
+  assert.deepEqual(await go({ ...base, config: { ...base.config, engine_family: undefined } }), { ok: false, code: 'CONFIG_MISSING', field: 'engine_family', provider_id: 'icap' });
+  for (const engine_family of ['kaspersky', [], ['  ']]) {
+    assert.deepEqual(await go({ ...base, config: { ...base.config, engine_family } }), { ok: false, code: 'DESCRIPTOR_MALFORMED', field: 'engine_family', provider_id: 'icap' }, JSON.stringify(engine_family));
+  }
   assert.deepEqual(await go({ ...base, config: { ...base.config, handling: { ...HANDLING, sample_sharing: 'public' } } }), { ok: false, code: 'PROVIDER_SHARES_SAMPLES', provider_id: 'icap' });
   assert.deepEqual(await go({ ...base, config: { ...base.config, handling: { ...HANDLING, sample_sharing: 'not stated' } } }), { ok: false, code: 'HANDLING_NOT_STATED', provider_id: 'icap' });
   assert.deepEqual(await go({ ...base, host: undefined }), { ok: false, code: 'PROVIDER_UNKNOWN', provider_id: 'icap' });
@@ -139,6 +142,78 @@ test('R29 GET /providers answers the offered descriptors whole, the refused, the
   assert.deepEqual(b.held, JSON.parse(JSON.stringify(HELD_PROVIDERS)));
   assert.deepEqual(ids(b.transports), ['icap', 'syslog-tls', 'https-webhook']);
   for (const d of b.offered) assert.ok(d.credentials.every((c) => typeof c === 'string' && /^[a-z_]+$/.test(c)), 'credential names only');
+});
+
+test('R19 each descriptor and generic template states config [{name, label, required}], each name once; a malformed list is DESCRIPTOR_MALFORMED config', () => {
+  for (const d of PROVIDERS) {
+    assert.ok(Array.isArray(d.config) && Object.isFrozen(d.config), d.provider_id);
+    assert.deepEqual(new Set(d.config.map((f) => f.name)).size, d.config.length, `${d.provider_id}: each name once`);
+    for (const f of d.config) {
+      assert.deepEqual(Object.keys(f), ['name', 'label', 'required'], d.provider_id);
+      assert.match(f.name, /^[a-z][a-z0-9_]*$/); assert.ok(typeof f.label === 'string' && f.label.length > 0);
+      assert.equal(typeof f.required, 'boolean'); assert.ok(Object.isFrozen(f));
+    }
+  }
+  const named = (id) => providerById(id).config.map((f) => `${f.name}${f.required ? '*' : ''}`);
+  assert.deepEqual(Object.fromEntries(PROVIDERS.map((d) => [d.provider_id, named(d.provider_id)]).filter(([, l]) => l.length)), {
+    icap: ['engine_family*', 'handling*', 'source_urls', 'service', 'tls'],
+    'defender-storage': ['tenant_id*', 'storage_account*', 'container*'],
+    'falcon-sandbox': ['environment_id'], 'cloudflare-intel': ['account_id*'],
+    sentinel: ['tenant_id*', 'endpoint*', 'dcr_id*', 'stream*'], 'google-secops': ['project*', 'location*', 'instance*', 'log_type*'],
+    elastic: ['index'], 'syslog-tls': ['engine_family*', 'handling*', 'source_urls'],
+    'https-webhook': ['engine_family*', 'handling*', 'source_urls', 'path'],
+  }, 'the settings each adapter reads, by name');
+  const cases = [(d) => { delete d.config; }, (d) => { d.config = {}; }, (d) => { d.config = [{ name: 'x', label: 'X' }]; },
+    (d) => { d.config = [{ name: 'x', label: '', required: true }]; }, (d) => { d.config = [{ name: 'X y', label: 'X', required: true }]; },
+    (d) => { d.config = [{ name: 'x', label: 'X', required: 'yes' }]; }, (d) => { d.config = [{ name: 'x', label: 'X', required: true, value: 1 }]; },
+    (d) => { d.config = [{ name: 'x', label: 'X', required: true }, { name: 'x', label: 'Y', required: false }]; }, (d) => { d.config = [null]; }];
+  for (const change of cases) { const d = good(); change(d); assert.deepEqual(validateDescriptor(d), { ok: false, code: 'DESCRIPTOR_MALFORMED', field: 'config' }); }
+  const d = good(); d.config = [{ name: 'x', label: 'X', required: true }];
+  assert.deepEqual(validateDescriptor(d), { ok: true });
+});
+
+test('R21 the spec\'s config: each required field present, else CONFIG_MISSING naming it and nothing sent; a field the list does not name is never sent', async () => {
+  const net = vendorNet();
+  const bucket = memoryBucket();
+  const deps = depsWith({ bucket, fetch: net.fetch });
+  const t = putCapture(bucket, EICAR);
+  const s = specs();
+  const go = async (path, body) => { const r = await handle(post(path, body), deps); return [r.status, await r.json()]; };
+  const RECORD = { period: { from: '2026-10-07T10:00:00Z', to: '2026-10-07T11:00:00Z' }, counts: { files_scanned: 1 } };
+  const call = { scan: (tool) => go('/provider/scan', { store: 'bio', target: t, tool }), forward: (tool) => go('/provider/forward', { tool, record: RECORD }),
+    reputation: (tool) => go('/provider/reputation', { address: 'https://example.org/', tool }) };
+  const cases = [['defender-storage', 'scan'], ['cloudflare-intel', 'reputation'], ['sentinel', 'forward'], ['google-secops', 'forward'], ['icap', 'scan'],
+    ['syslog-tls', 'forward'], ['https-webhook', 'forward']];
+  for (const [id, how] of cases) {
+    for (const f of providerById(id).config.filter((x) => x.required)) {
+      for (const absent of [undefined, null, '']) {
+        const tool = { ...s[id], config: { ...s[id].config, [f.name]: absent } };
+        assert.deepEqual(await call[how](tool), [400, { ok: false, code: 'CONFIG_MISSING', field: f.name, provider_id: id }], `${id} ${f.name}`);
+      }
+    }
+  }
+  for (const config of [undefined, null, 'x', []]) {
+    assert.deepEqual(await call.scan({ ...s['defender-storage'], config }), [400, { ok: false, code: 'CONFIG_MISSING', field: 'tenant_id', provider_id: 'defender-storage' }]);
+  }
+  assert.equal(net.seen.length, 0, 'nothing sent');
+  assert.ok(!bucket.calls.some(([op, k]) => op === 'get' && k.includes('captures')), 'nothing read');
+  // An unnamed field is dropped: the webhook's call carries no trace of it, and an optional one may be left out.
+  const extra = { ...s['https-webhook'], config: { ...s['https-webhook'].config, secret_extra: 'UNNAMED-FIELD', callback_url: 'https://elsewhere.example/' } };
+  assert.deepEqual((await call.forward(extra))[1].ok, true);
+  const elastic = { ...s.elastic, config: { index: undefined, member: 'UNNAMED-FIELD' } };
+  assert.deepEqual((await call.forward(elastic))[1].ok, true, 'an optional field left out');
+  assert.ok(net.seen.length >= 2);
+  for (const r of net.seen) assert.ok(!`${r.url}${JSON.stringify(r.headers)}${r.text}`.includes('UNNAMED-FIELD') && !r.text.includes('elsewhere.example'), 'an unnamed field never leaves');
+  assert.ok(net.seen.some((r) => r.text.includes('civicsmith-security-counts')), 'elastic used its default index');
+});
+
+test('R29 GET /providers answers each descriptor\'s and each generic template\'s config list', async () => {
+  const b = await (await handle(new Request('https://file-scanner/providers'), depsWith())).json();
+  for (const d of b.offered) assert.deepEqual(d.config, JSON.parse(JSON.stringify(providerById(d.provider_id).config)), d.provider_id);
+  for (const d of b.transports) {
+    for (const name of ['engine_family', 'handling']) assert.ok(d.config.some((f) => f.name === name && f.required), `${d.provider_id}: the administrator states its ${name} (K2175)`);
+    assert.ok(!d.config.some((f) => f.name === 'host' || f.name === 'region'), 'host and region are the spec\'s own fields');
+  }
 });
 
 test('R31 engine families: clamav\'s is ["clamav"]; differentEngine is true exactly when two families share no name', () => {

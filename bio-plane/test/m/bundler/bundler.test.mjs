@@ -16,8 +16,9 @@ import {
   REPO_ROOT, RECIPE, DEFAULT_EXTERNAL, discoverMembers, optionsFor, buildMember, manifestFrom,
   writeMember, verifyStatic, verifyFresh, freshBuildRunnable, unresolvableSpecifiers, sha256,
   isContainer, isGuarded, containerDescriptor, imageReference, containerClasses, containerParts, classPackages,
-  statementPackages, markerIsContainer,
+  statementPackages, markerIsContainer, workerPart, WORKER_PART_PATH, BUCKET_ROLES,
 } from "../../../scripts/fleet-bundle.mjs";
+import { parseJsonc } from "../../../scripts/jsonc.mjs";
 import {
   readGitProvenance, stateOf, contentStateOf, classifyDiscovered, reportProvenance, repoPath,
 } from "../../../scripts/provenance.mjs";
@@ -789,4 +790,44 @@ test("R27: a class naming a package statement reads its packages from it, sorted
     const away = { ...scan, image: { ...scan.image, packages: "../elsewhere.json" } };
     assert.match(classPackages(m, away).unread, /names no package statement for FileScanner as a member-relative path/);
   } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+/* ------------------------------------------------- R25 (functions): a member's Worker part (N772, K2155) */
+
+test("R25: workerPart writes {r2_buckets, crons} from a member's config, each bucket by its role and the crons as stated; none for a member with neither; every binding with no role, and every list that is not one, named", () => {
+  assert.equal(WORKER_PART_PATH, "worker.json");
+  assert.deepEqual(BUCKET_ROLES, { "bio-captures": "captures", "bio-published": "published" }, "the plane's two buckets, the only roles");
+  const cfg = { name: "m", r2_buckets: [{ binding: "PUBLISHED", bucket_name: "bio-published" }, { binding: "CAPTURES", bucket_name: "bio-captures" }],
+    triggers: { crons: ["17 4 * * *"] }, services: [{ binding: "PLANE", service: "bio-plane" }] };
+  const w = workerPart(cfg);
+  const want = { r2_buckets: [{ binding: "PUBLISHED", bucket: "published" }, { binding: "CAPTURES", bucket: "captures" }], crons: ["17 4 * * *"] };
+  assert.deepEqual(w.part.descriptor, want, "the config's order, the role for the bucket name");
+  assert.equal(w.part.bytes.toString("utf8"), JSON.stringify(want, null, 2) + "\n");
+  assert.deepEqual(workerPart({ r2_buckets: [{ binding: "CAPTURES", bucket_name: "bio-captures" }] }).part.descriptor,
+    { r2_buckets: [{ binding: "CAPTURES", bucket: "captures" }], crons: [] });
+  assert.deepEqual(workerPart({ triggers: { crons: ["0 0 * * *"] } }).part.descriptor, { r2_buckets: [], crons: ["0 0 * * *"] });
+  for (const none of [{}, { r2_buckets: [], triggers: { crons: [] } }, { triggers: {} }, null, undefined])
+    assert.deepEqual(workerPart(none), { part: null }, JSON.stringify(none));
+
+  const lacks = (c) => workerPart(c).missing;
+  assert.deepEqual(lacks({ r2_buckets: [{ binding: "ARCHIVE", bucket_name: "archive" }, { binding: "CAPTURES", bucket_name: "bio-captures" },
+    { binding: "X" }, { bucket_name: "bio-published" }, "CAPTURES"] }),
+    ["ARCHIVE", "X", "(an R2 bucket binding with no name)", "(an R2 bucket binding with no name)"], "each binding with no role, by name");
+  assert.deepEqual(lacks({ r2_buckets: [{ binding: "C", bucket_name: "constructor" }] }), ["C"], "only the two roles, never an inherited key");
+  assert.deepEqual(lacks({ r2_buckets: {} }), ["r2_buckets"]);
+  for (const triggers of [{ crons: "17 4 * * *" }, { crons: [1] }, { crons: [" "] }, ["17 4 * * *"], "x"])
+    assert.deepEqual(lacks({ triggers }), ["triggers.crons"], JSON.stringify(triggers));
+  assert.deepEqual(lacks({ r2_buckets: [{ binding: "A", bucket_name: "a" }], triggers: { crons: [null] } }), ["A", "triggers.crons"], "both named");
+});
+
+test("R25: the repository's own members with buckets or crons carry a Worker part, every bucket with a role; file-scanner's names CAPTURES and its daily schedule", () => {
+  const got = Object.fromEntries(discoverMembers().map((m) => {
+    let cfg = null;
+    try { cfg = parseJsonc(readFileSync(join(m.abs, "wrangler.jsonc"), "utf8")); } catch { /* a member with no config */ }
+    return [m.name, cfg];
+  }).filter(([, c]) => c));
+  for (const [name, cfg] of Object.entries(got)) assert.equal(workerPart(cfg).missing, undefined, `${name}: every bucket has a role`);
+  const scanner = workerPart(got["file-scanner"]).part.descriptor;
+  assert.deepEqual(scanner.r2_buckets, [{ binding: "CAPTURES", bucket: "captures" }]);
+  assert.ok(scanner.crons.length >= 1, "its schedule is stated");
 });

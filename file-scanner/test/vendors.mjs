@@ -44,8 +44,8 @@ export function specs() {
     'google-secops': s({ provider_id: 'google-secops', region: 'europe', credentials: { service_account_key: SERVICE_ACCOUNT },
       config: { project: 'p1', location: 'eu', instance: 'i1', log_type: 'CIVICSMITH_COUNTS' } }),
     elastic: s({ provider_id: 'elastic', host: 'elastic.example.org', credentials: cred('elastic', 'api_key'), config: { index: 'counts' } }),
-    'syslog-tls': s({ provider_id: 'syslog-tls', host: 'syslog.example.org:6514', config: { handling: HANDLING } }),
-    'https-webhook': s({ provider_id: 'https-webhook', host: 'hook.example.org', credentials: cred('webhook', 'token'), config: { path: '/intake', handling: HANDLING } }),
+    'syslog-tls': s({ provider_id: 'syslog-tls', host: 'syslog.example.org:6514', config: { engine_family: ['rsyslog'], handling: HANDLING } }),
+    'https-webhook': s({ provider_id: 'https-webhook', host: 'hook.example.org', credentials: cred('webhook', 'token'), config: { path: '/intake', engine_family: ['webhook'], handling: HANDLING } }),
   };
 }
 

@@ -37,7 +37,9 @@ export function checkSpec(deps, spec, kind) {
   if (regional && !(spec.region in base.hosts)) return { ok: false, code: 'REGION_UNKNOWN', provider_id: id };
   const needsHost = base.template || base.host_from_spec || (regional && base.hosts[spec.region].length === 0);
   if (needsHost && !(typeof spec.host === 'string' && spec.host)) return { ok: false, code: 'PROVIDER_UNKNOWN', provider_id: id };
-  const r = resolveDescriptor(base, spec);
+  const config = configOf(base, spec);
+  if (config.missing) return { ok: false, code: 'CONFIG_MISSING', field: config.missing, provider_id: id };
+  const r = resolveDescriptor(base, { ...spec, config: config.config });
   if (!r.ok) return { ...r, provider_id: id };
   const d = r.descriptor;
   if (!d.kinds.includes(kind)) return { ok: false, code: 'KIND_NOT_OFFERED', provider_id: id };
@@ -51,12 +53,25 @@ export function checkSpec(deps, spec, kind) {
   if (spec.host && portPart(spec.host, 0) === 25) return { ok: false, code: 'PORT_REFUSED', provider_id: id };
   if (!TOOL_ID.test(String(spec.tool_id || ''))) return { ok: false, code: 'TOOL_SPEC_MALFORMED', field: 'tool_id', provider_id: id };
   if (spec.monthly_limit_left !== undefined && !(Number(spec.monthly_limit_left) > 0)) return { ok: false, code: 'MONTHLY_LIMIT_REACHED', provider_id: id };
-  return { ok: true, d, adapter: ADAPTERS[kind][id] };
+  return { ok: true, d, adapter: ADAPTERS[kind][id], config: config.config };
+}
+
+const present = (v) => v !== undefined && v !== null && v !== '';
+/** R21 (N777): the spec's `config` as its descriptor's `config` (R19) names it: each `required` field present, else
+ *  `{missing}`; a field the list does not name is dropped, so it is never read or sent. */
+export function configOf(d, spec) {
+  const given = spec.config && typeof spec.config === 'object' && !Array.isArray(spec.config) ? spec.config : {};
+  const config = {};
+  for (const f of d.config) {
+    const v = Object.hasOwn(given, f.name) ? given[f.name] : undefined;
+    if (present(v)) config[f.name] = v;
+    else if (f.required) return { missing: f.name };
+  }
+  return { config: Object.freeze(config) };
 }
 
 function contextOf(deps, spec, c, started) {
-  const config = spec.config && typeof spec.config === 'object' ? spec.config : {};
-  return { spec, d: c.d, config, bucket: deps.bucket, now: deps.now, maxAge: REPUTATION_LIST_MAX_AGE_MS,
+  return { spec, d: c.d, config: c.config, bucket: deps.bucket, now: deps.now, maxAge: REPUTATION_LIST_MAX_AGE_MS,
     cred: (n) => String(spec.credentials[n]), modeParams: (c.d.mode_required && c.d.mode_required.params) || {},
     cloud: spec.provider_id === 'metadefender-cloud' || spec.region === 'cloud', net: makeNet(deps, c.d, spec, started) };
 }

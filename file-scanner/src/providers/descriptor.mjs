@@ -16,7 +16,7 @@ export const NOT_STATED = 'not stated';
 const HANDLING_FIELDS = ['sends', 'never_sends', 'recipient', 'sub_processors', 'region', 'file_retention',
   'result_retention', 'sample_sharing'];
 const FIELDS = ['provider_id', 'vendor', 'product', 'kinds', 'transport', 'reach', 'hosts', 'engine_family',
-  'credentials', 'test_probe', 'handling', 'mode_required', 'mode_check', 'licence_note', 'source_urls', 'read_on'];
+  'credentials', 'config', 'test_probe', 'handling', 'mode_required', 'mode_check', 'licence_note', 'source_urls', 'read_on'];
 const OWN = ['max_bytes', 'template', 'host_from_spec', 'per_engine'];
 const PROBES = ['eicar', 'macro_document', 'test_address', 'zero_counts'];
 // Who Cloudflare is, for S12: a url_reputation tool may send an address only to Cloudflare in the group's account.
@@ -26,6 +26,20 @@ const str = (v) => typeof v === 'string' && v.length > 0;
 const strList = (v, nonEmpty) => Array.isArray(v) && (!nonEmpty || v.length > 0) && v.every(str);
 const stated = (v, check) => v === NOT_STATED || check(v);
 const hostName = (h) => str(h) && /^(\*\.)?[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(h);
+
+const CONFIG_NAME = /^[a-z][a-z0-9_]*$/;
+/** R19 (N777): `config` is `[{name, label, required}]`, each name once; an empty list when the adapter reads none. */
+function configList(v) {
+  if (!Array.isArray(v)) return false;
+  const names = new Set();
+  for (const f of v) {
+    if (!f || typeof f !== 'object' || Array.isArray(f)) return false;
+    if (Object.keys(f).length !== 3 || !CONFIG_NAME.test(f.name || '') || !str(f.label) || typeof f.required !== 'boolean') return false;
+    if (names.has(f.name)) return false;
+    names.add(f.name);
+  }
+  return true;
+}
 
 /** The hosts a descriptor states, flattened over its regions. */
 export function allHosts(d) {
@@ -52,6 +66,7 @@ function malformed(d) {
   } else return 'hosts';
   if (!strList(d.engine_family, true)) return 'engine_family';
   if (!strList(d.credentials, false)) return 'credentials';
+  if (!configList(d.config)) return 'config';
   if (!d.test_probe || !PROBES.includes(d.test_probe.kind)
     || (d.test_probe.kind === 'test_address' && !str(d.test_probe.address))) return 'test_probe';
   const h = d.handling;

@@ -876,14 +876,21 @@ async function docxStructure(parts) {
  *  newline-joined: `w:ins` in, `w:delText` never), taken from the body walk's
  *  own paragraphs, never a second reading. A Word table declares no cell type,
  *  so every cell is `text`, `declared`, `cached` and `formula` null: no date or
- *  number is inferred (R30's rule, R24). */
+ *  number is inferred (R30's rule, R24).
+ *
+ *  N758 (R11, K2118): `paras` names the paragraphs `value` was read from, by
+ *  their `para` ordinals, in reading order: the cell's non-empty paragraphs,
+ *  a vertically merged cell's continuations included after its restart's, so
+ *  `value` is exactly their texts newline-joined and a reader finds a cell's
+ *  paragraphs without matching its lines. */
 function tableCells(t, paragraphs) {
   const cells = [];
   for (const c of t.cells) {
-    const value = c.paras.map((p) => paragraphs[p]?.text ?? "").filter((s) => s.length).join("\n");
-    if (!value) continue;
-    cells.push({ source: docTableRef(t.table, `${columnLetters(c.col)}${c.row}`), value, type: "text",
-      declared: null, cached: null, formula: null });
+    const paras = c.paras.filter((p) => paragraphs[p]?.text);
+    if (!paras.length) continue;
+    cells.push({ source: docTableRef(t.table, `${columnLetters(c.col)}${c.row}`),
+      value: paras.map((p) => paragraphs[p].text).join("\n"), type: "text",
+      declared: null, cached: null, formula: null, paras });
   }
   return cells;
 }

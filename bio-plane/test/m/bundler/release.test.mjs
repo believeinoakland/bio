@@ -581,6 +581,14 @@ function expectedPayload(root, version = VERSION) {
         scheduling_policy: "default", max_instances: mk.max_instances, bind: mk.bind, packages: CONTAINER_PACKAGES }, null, 2) + "\n");
       parts.push({ path: "container.json", type: "Container", sha256: hex(b), bytes: b.length, buf: b });
     }
+    /* R25 (N772): the Worker part, written here from the config by hand, each bucket by its role. */
+    const ROLE = { "bio-captures": "captures", "bio-published": "published" };
+    const r2 = (cfg.r2_buckets || []).map((x) => ({ binding: x.binding, bucket: ROLE[x.bucket_name] }));
+    const crons = (cfg.triggers && cfg.triggers.crons) || [];
+    if (r2.length || crons.length) {
+      const b = Buffer.from(JSON.stringify({ r2_buckets: r2, crons }, null, 2) + "\n");
+      parts.push({ path: "worker.json", type: "Worker", sha256: hex(b), bytes: b.length, buf: b });
+    }
     return { member: m.name, asset: `${m.name}.bundled.mjs`, sha256: hex(art(m)), bytes: art(m).length,
       compat: { date: cfg.compatibility_date, flags: cfg.compatibility_flags || [] },
       services: (cfg.services || []).map((s) => ({ binding: s.binding, service: s.service })), parts };
@@ -1054,6 +1062,115 @@ test("R26: a two-class member whose class states no digest, or whose config's co
     refused(dis, "CONTAINER_UNDESCRIBED");
     assert.match(dis.stderr, /the config names Renderer, which the marker states no image for; the marker's SafeViewRenderer has no container in the config/);
     assert.deepEqual([dis.calls, dis.docker, dis.wrangler], [[], [], []]);
+  } finally { rm(root); }
+});
+
+/* ------------------------------------------------------- R25: a member's Worker part (N772, K2155) */
+
+/** Rewrites a fixture member's wrangler.jsonc with `change` applied to its parsed config. */
+const editConfig = (root, member, change) => {
+  const p = join(root, member, "wrangler.jsonc");
+  const c = parseJsonc(readFileSync(p, "utf8"));
+  change(c);
+  writeJson(p, c);
+};
+
+test("R25: a member whose wrangler.jsonc binds R2 buckets or states crons carries one Worker part, worker.json, each bucket by its role and the crons as stated, covered by the fleet signature, written under <member>/ and listed; a member with neither carries none", async () => {
+  const root = await makeRepo({ build: false, members: { "alpha-worker": {}, "beta-worker": { assets: { "assets/model.bin": "MODEL-1" } },
+    "gamma-worker": {}, "delta-worker": {} } });
+  try {
+    editConfig(root, "alpha-worker", (c) => { c.r2_buckets = [{ binding: "CAPTURES", bucket_name: "bio-captures" },
+      { binding: "PUBLISHED", bucket_name: "bio-published" }]; c.triggers = { crons: ["17 4 * * *", "0 */6 * * *"] }; });
+    editConfig(root, "beta-worker", (c) => { c.r2_buckets = [{ binding: "CAPTURES", bucket_name: "bio-captures" }]; });
+    editConfig(root, "gamma-worker", (c) => { c.triggers = { crons: ["5 1 * * 1"] }; });
+    editConfig(root, "delta-worker", (c) => { c.r2_buckets = []; c.triggers = { crons: [] }; });
+    addScannerMember(root, "scanner");
+    editConfig(root, "scanner", (c) => { c.r2_buckets = [{ binding: "CAPTURES", bucket_name: "bio-captures" }]; c.triggers = { crons: ["17 4 * * *"] }; });
+    await buildAll(root);
+    const { payload, members, bufs } = expectedPayload(root);
+    const part = (m) => JSON.parse(bufs[`${m}/worker.json`]);
+    assert.deepEqual(part("alpha-worker"), { r2_buckets: [{ binding: "CAPTURES", bucket: "captures" }, { binding: "PUBLISHED", bucket: "published" }],
+      crons: ["17 4 * * *", "0 */6 * * *"] });
+    assert.deepEqual(part("beta-worker"), { r2_buckets: [{ binding: "CAPTURES", bucket: "captures" }], crons: [] }, "buckets alone");
+    assert.deepEqual(part("gamma-worker"), { r2_buckets: [], crons: ["5 1 * * 1"] }, "crons alone");
+    assert.deepEqual(Object.keys(part("alpha-worker")), ["r2_buckets", "crons"]);
+    assert.equal(bufs["delta-worker/worker.json"], undefined, "empty lists: no part");
+    assert.ok(!JSON.stringify(Object.keys(bufs).filter((k) => k.endsWith("worker.json")).map((k) => bufs[k].toString())).includes("bio-captures"),
+      "never the account's bucket name");
+    assert.deepEqual(members.find((m) => m.member === "scanner").parts.map((p) => [p.path, p.type]),
+      [["container/FileScanner.json", "Container"], ["container/SafeViewRenderer.json", "Container"], ["worker.json", "Worker"]],
+      "a container member carries both");
+    assert.deepEqual(members.find((m) => m.member === "beta-worker").parts.map((p) => p.path), ["assets/model.bin", "worker.json"]);
+    assert.match(payload, /^bio-release-fleet\/2\n/, "the statement's format is unchanged");
+    for (const m of ["alpha-worker", "beta-worker", "gamma-worker", "scanner"]) {
+      const p = members.find((x) => x.member === m).parts.find((x) => x.path === "worker.json");
+      assert.match(payload, new RegExp(`^member ${m} .*worker\\.json:Worker:${p.sha256}:${p.bytes}`, "m"), `${m}: in the signed payload`);
+    }
+    assert.doesNotMatch(payload, /^member delta-worker .*worker\.json/m);
+
+    const dry = assemble(root, ["--dry-run"]);
+    assert.equal(dry.status, 0, dry.stdout + dry.stderr);
+    assert.ok(dry.stdout.includes(payload), "the payload the fleet signature covers carries each Worker part's hash");
+
+    const seed = envelope(), signer = signerPublicLine(seed);
+    writeJson(join(root, "release/RELEASE.json"), { version: "1.2.2", signer });
+    const r = assemble(root, ["--sign"], { BIO_RELEASE_SEED: seed, ...SIGNING });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    const rel = readJson(join(root, "release/RELEASE.json"));
+    assert.deepEqual(rel.fleet, members);
+    assert.ok(sshVerify(signer, rel.fleetSig, Buffer.from(payload), NS_FLEET));
+    for (const m of ["alpha-worker", "beta-worker", "gamma-worker", "scanner"])
+      assert.ok(readFileSync(join(root, `release/${m}/worker.json`)).equals(bufs[`${m}/worker.json`]), `${m}: the exact bytes hashed`);
+    assert.equal(existsSync(join(root, "release/delta-worker/worker.json")), false);
+    for (const m of ["alpha-worker", "scanner"]) assert.equal(existsSync(join(root, m, "worker.json")), false, "never written into the member's tree");
+
+    /* The installer's own reading of the part (newgroup's workerDescriptor, its R44) takes it as written. */
+    const ng = await import(pathToFileURL(join(PLANE, "..", "newgroup/src/index.mjs")).href);
+    assert.deepEqual(ng.workerDescriptor(readFileSync(join(root, "release/alpha-worker/worker.json"))), { ok: true, d: part("alpha-worker") });
+    assert.deepEqual(ng.workerDescriptor(readFileSync(join(root, "release/scanner/worker.json"))), { ok: true, d: part("scanner") });
+  } finally { rm(root); }
+});
+
+test("R25: a bucket whose role is neither captures nor published is refused WORKER_UNDESCRIBED naming the binding, as is a list that is not one, before anything is built or written; a declared part at worker.json is refused", async () => {
+  const root = await makeRepo();
+  try {
+    const cfgPath = join(root, "alpha-worker/wrangler.jsonc");
+    const good = readFileSync(cfgPath);
+    const cases = [
+      ["ARCHIVE", (c) => { c.r2_buckets = [{ binding: "CAPTURES", bucket_name: "bio-captures" }, { binding: "ARCHIVE", bucket_name: "my-archive" }]; }],
+      ["CAPTURES, PUBLISHED", (c) => { c.r2_buckets = [{ binding: "CAPTURES", bucket_name: "acct-captures" }, { binding: "PUBLISHED" }]; }],
+      ["(an R2 bucket binding with no name)", (c) => { c.r2_buckets = [{ bucket_name: "bio-captures" }]; }],
+      ["r2_buckets", (c) => { c.r2_buckets = { binding: "CAPTURES", bucket_name: "bio-captures" }; }],
+      ["triggers.crons", (c) => { c.triggers = { crons: "17 4 * * *" }; }],
+      ["triggers.crons", (c) => { c.triggers = { crons: ["17 4 * * *", ""] }; }],
+      ["triggers.crons", (c) => { c.triggers = ["17 4 * * *"]; }],
+    ];
+    for (const [named, change] of cases) {
+      editConfig(root, "alpha-worker", change);
+      const before = snapshot(root);
+      const r = assemble(root, ["--dry-run"]);
+      refused(r, "WORKER_UNDESCRIBED");
+      assert.ok(r.stderr.includes(`alpha-worker's wrangler.jsonc does not state, as the release's Worker part needs, ${named}.`), `${named}:\n${r.stderr}`);
+      assert.doesNotMatch(r.stdout, /guard: /, `${named}: refused before any build ran`);
+      assert.deepEqual(snapshot(root), before, `${named}: nothing written`);
+      writeFileSync(cfgPath, good);
+    }
+    assert.equal(assemble(root, ["--dry-run"]).status, 0, "restored, it assembles");
+
+    /* A member's own upload part may not take the Worker part's path. */
+    editConfig(root, "beta-worker", (c) => { c.r2_buckets = [{ binding: "CAPTURES", bucket_name: "bio-captures" }];
+      c.rules.push({ type: "Data", globs: ["worker.json"] }); });
+    const mk = join(root, "beta-worker/fleet-member.json");
+    const marker = readJson(mk);
+    marker.bundle.assets.push("worker.json");
+    writeJson(mk, marker);
+    writeFileSync(join(root, "beta-worker/worker.json"), "{}");
+    await buildAll(root);
+    const before = snapshot(root);
+    const clash = assemble(root, ["--dry-run"]);
+    refused(clash, "WORKER_UNDESCRIBED");
+    assert.match(clash.stderr, /beta-worker declares an upload part named worker\.json, which is the Worker part's own path\./);
+    assert.deepEqual(snapshot(root), before, "nothing written");
   } finally { rm(root); }
 });
 

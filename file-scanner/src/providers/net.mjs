@@ -64,7 +64,7 @@ export function makeNet(deps, d, spec, started) {
   async function http(url, init = {}) {
     const u = new URL(url);
     if (u.protocol !== 'https:' && u.protocol !== 'http:') throw new ToolError('HOST_NOT_ALLOWED', { host: u.host });
-    if (u.username || u.password) throw new ToolError('CREDENTIAL_IN_ADDRESS');
+    if (u.username || u.password) throw new ToolError('TOOL_ADDRESS_HAS_CREDENTIAL');
     guard(u.hostname, u.port);
     if (left() <= 0) throw new ToolError('TIME_LIMIT');
     const via = d.reach === 'tunnel' ? deps.vpc && ((req) => deps.vpc.fetch(req)) : (req) => deps.fetch(req);

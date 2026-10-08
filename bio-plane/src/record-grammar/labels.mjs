@@ -68,8 +68,8 @@ export function lawProposalState(proposedBy) {
  * (action-plans R11), a prepared communication (filings R23; both N-A1, T18), wording proposed for a filing template
  * (filing-templates R6; K921, T21), a draft of a new edition's statement of what changed (case-authoring R39;
  * DEC-101) and an escalation's pre-assembled opening reason (escalation R29; DEC-89; both K1019, T23), and steps proposed
- * for a wizard script (wizard-scripts R5; N543, T32), and a law relation, court link or treatment (standards R23, R26,
- * R27, R30; N568, T34) are each machine work or a member's
+ * for a wizard script (wizard-scripts R5; N543, T32), a law relation, court link or treatment (standards R23, R26,
+ * R27, R30; N568, T34), and a draft translation of an interface word (N669, T37) are each machine work or a member's
  * suggestion, never the thing itself, and each is labelled by `lawProposalState`'s three states. ONE CLOSED
  * TABLE, keyed by what was proposed: `governing_laws` is REC-195's table above, the same object, so its words
  * cannot drift from it; each other subject says, in each state, what the proposal is not. A subject the table does
@@ -189,6 +189,19 @@ export const PROPOSAL_STATES = Object.freeze({
       + 'record holds until a member records it themselves, and the record holds who proposed it',
     unstated: 'the record does not say who proposed this law relation, court link or treatment, and it is not one the '
       + 'record holds until a member records it themselves',
+  }),
+  /* N669 (K1793, K1804; T37, R50; DEC-127 (2), (5), DEC-157 (2)–(4)): a translation of an interface word drafted for a
+     group's language (skills' draft run; instance-setup's workspace) is a draft, shown to members as "Draft", and not the
+     group's wording until a member granted that language adopts it; a machine can draft one and never adopt or confirm
+     one (DEC-157 (4)'s second check is a member's or an administrator's). */
+  translation: Object.freeze({
+    machine_proposed: 'a machine credential drafted this translation of an interface word. That is machine work, labelled '
+      + 'as machine work: it can draft a translation and it can never adopt or confirm one. It is a draft, shown to members '
+      + 'as "Draft", and not the group\'s wording until a member granted that language adopts it',
+    member_proposed: 'a member proposed this translation of an interface word. It is a draft, shown to members as "Draft", '
+      + 'and not the group\'s wording until a member granted that language adopts it, and the record holds who proposed it',
+    unstated: 'the record does not say who drafted this translation of an interface word. It is a draft, shown to members '
+      + 'as "Draft", and not the group\'s wording until a member granted that language adopts it',
   }),
 });
 
