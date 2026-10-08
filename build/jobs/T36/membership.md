@@ -2,6 +2,46 @@
 
 **Status** · session_01Kozvc5CabUVjWrHpUnjz1Z · depth 2 · WORKING · handled B0
 
+## Completion
+
+**Entry applied: T36-6 (N723).** `MODULE_ORDER` (`bio-plane/src/membership/index.mjs`) re-pinned to `build/modules.json` in the file's places: `file-scanner` after `sheet-worker` (layer 1), `file-safety` between `capture` and `sources` (layer 3), `law-relations` between `observation-log` and `standards` (layer 5), `op-grades` between `wizard-scripts` and `affordances`, and `answer-envelope`, `store-door` between `admission` and `control-plane` (layer 11). The list now equals the file: 135 ids, same order. Red 3 is cleared (module-order, promotion `registry.test.mjs`, standards `reads.test.mjs` green). R83's text is unchanged; its `*(not yet met: T36)*` mark is BOB's to strike. The comment above the list, which at the opening claimed every module was held, is now true.
+
+**Tests changed** (`test/m/membership/module-order.test.mjs`): a new test, "R83 T36-6", pins each of the six names between both its neighbours and in its layer. T33-19a's pin of layers 1 and 5 now leaves out the modules added since T33, so it still holds T33's order. `file-safety` (empty `paths` until T36-11) is tolerated as not yet built, by name (`T36_NEW`); the test names it in its diagnostic.
+
+**Red 14 (K2084): traced and reported, not re-pinned (J1).** The D-57 arm (`members.test.mjs`:124–126) reads `credentials`' `LOGIN_REFUSAL_DETAIL.SIGN_IN_REFUSED`. Its "your group's Civicsmith" (T35-15, `a767b78ddd`) matches `\byour\b`. No membership sentence is involved, so the arm is left as it is and the red stays until credentials rewords the sentence so it needs no name (proposed in J1).
+
+**Found in other modules:**
+- `progressions` `test/m/progressions/order.test.mjs`:15–17 (R41) pins a hand copy of layer 5 without `law-relations`, so the re-pin turns it red (J2). The fix is progressions'.
+- The plane bundle `bio-plane/dist/bio-plane.bundled.mjs` (~line 21753) carries the old list. This change stales it, and it is regenerated at the layer close (mechanics §14; `not_product`'s artifact).
+
+**Deferred:** nothing.
+
+**Reading set:**
+- Read whole myself: `build/requirements/membership.md`; layer 2's row of `build/layers.md`; plan T36's rules and entry T36-6; K1961, K2008, K2084; `bio-plane/src/membership/index.mjs` (3,202 lines); `module-order.test.mjs`; `t9-notice-sight-bounds.test.mjs`; `bio-plane/test/members.test.mjs`.
+- My worker read whole `checks.mjs`, `schema.mjs` and every other file under `test/m/membership/`. Its summary (about 7 KB) cites file and line for:
+  - every reader of `MODULE_ORDER` in the repository: promotion `registry.test.mjs`:43–79; standards `reads.test.mjs`:201–231; progressions `order.test.mjs`:15; plane `store.mjs`:103–112 and `store.test.mjs`:106–116; `store-door`'s and `control-plane`'s `record.mjs`:63–66; 18 product modules ranking by `indexOf`, none pinning length or position;
+  - the D-57 path (control-plane `index.mjs`:676–679 → answer-envelope `:301–306` → credentials `:1910`, `:339`, `:329–330`, `:318–327`).
+- Nothing the summary left out mattered: no membership file outside those I read reads `MODULE_ORDER` or `modules.json`, and no membership string is read by the arm.
+- Used modules' public parts (record-grammar, signatures, record-core, test-support) were not needed for a names-only change; their services are unchanged.
+
+**Tests run (with the change):**
+- `test/m/membership/`: 172 pass, 0 fail.
+- `test/members.test.mjs`: members 95 pass, 1 fail (red 14, credentials' sentence, J1).
+- promotion `registry.test.mjs` 18/0; standards `reads.test.mjs` 7/0.
+- Every other test naming `MODULE_ORDER`: 207 pass, 1 fail (progressions `order.test.mjs`, J2).
+- store-door 36/0; control-plane 167/0; plane `store.test.mjs` 11/0 (worker's run).
+- No layer tests are named in the manifest.
+
+**Checks** (process repository):
+- `format: 135 modules, 134 requirements files; 0 failures`
+- `architecture: 26 product files, 68 relative imports (0 naming no tracked file, not judged); 0 failures`
+- `coverage: 1 modules, 95 of 95 live requirement ids named by a test; 0 failures`
+- `ownership: 3 files changed by membership between tranche/T36 and HEAD; 0 failures`
+
+**P6:** 3,969 lines (3,970 at the opening): names only, net -1.
+
+Size (session_01Kozvc5CabUVjWrHpUnjz1Z): test runs 16, module lines 3,969
+
 ## J1 · REPORT
 
 Red 14 traced (K2084; T36-6): the sentence is **credentials'**, not membership's. No re-pin made.
