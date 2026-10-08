@@ -17,3 +17,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · CHANGE
 
 case-grammar is merged into tranche/T36 (K2144: bio-case-file/2, caseFilePath's new kinds, R22 memberSubjectOf; CASE_FILE_FORMATS_ACCEPTED exported): merge tranche/T36 into your branch before building on it.
+
+## B3 · CHANGE
+
+publication (R75 criteriaFor), public-read and case-checker are merged into tranche/T36 (K2146): merge it into your branch, re-run your steps 5–6 and post COMPLETE.
