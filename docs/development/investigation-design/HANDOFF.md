@@ -49,3 +49,7 @@ Numbered entries; BOB answers each in rulings (K) on `tranche/T<n>`. Decision st
 ## H9 · 2026-10-08 · D41 ruled A; D27–D30 restated
 
 **Carries:** Bob, "D41: A": a step on a shared question taken from inside a hidden project is on the question, seen wherever the question is, attributed by handle, naming no project; the member is told once at the act (this lane's detail, DEC-69; owed to the UX stream). The model of steps (D32–D36, D41) is complete; D27–D30 are now restated for Bob around it.
+
+## H10 · 2026-10-08 · D41's principle against the built product (BOB's detail)
+
+**Carries:** Bob's principle under D41: a shared question never shows which projects draw on it. Checked against the built requirements: (1) `inquiry` R39 refuses a shared set-aside when more than one project draws on the question (counted over every project, hidden ones included), so the refusal itself tells a member another project uses the question. This lane's proposal for BOB (detail, not Bob's): always take a set-aside per project (`queue` op=proposedispose project arm), so no refusal hints. (2) `contradiction` K5 (R8, R10, R50–R52): already within Bob's 2026-09-29 contradiction rulings; a notice says only that something conflicts with a record the member cannot see, and projects are named only by mutual opt-in. Explained to Bob; no question for him.
