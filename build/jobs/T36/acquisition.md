@@ -82,3 +82,7 @@ Four findings (record, 'Found in other modules and in my own'). (1) acquisition 
 ## J2 · COMPLETE
 
 T36-10 applied: R41 NOT_AN_ARCHIVE (C-139.20); R29 archive family renumbered C-139 (red 8 cleared: following 49/49); R44 reputation before the fetch, on the receipt and in the answer. acquisition 151/151 pass; the users' tests show no new red; format, architecture, coverage (44/44) and ownership: 0 failures. Record on job/T36/acquisition.
+
+## J3 · COMPLETE · re B2
+
+CHANGE B2 applied (K2100): R38 refuses NOT_AN_ARCHIVE exactly as R41 does, after ARCHIVE_NOT_HELD and before any listing, nothing filed; one shared check, its row's where naming both sites; a new test names R38's arm. acquisition 152/152; the users' tests show no new red; format, architecture, coverage (44/44) and ownership: 0 failures. Record updated on job/T36/acquisition.
