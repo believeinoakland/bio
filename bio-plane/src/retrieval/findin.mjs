@@ -228,13 +228,17 @@ export class Finder {
         if (!d.reading && !d.units.length && !d.cells) { skip(c, "not extracted: no reading of this capture is held"); continue; }
         if (!d.units.length && !d.cells) { skip(c, "no text: this capture's reading holds no text to search"); continue; }
         const lang = d.language || language;
-        const set = lang ? FIND_MATCHERS[lang] : null;
+        const set = lang && Object.hasOwn(FIND_MATCHERS, lang) ? FIND_MATCHERS[lang] : null;
         if (!set) {
           skip(c, lang ? `no matcher for ${lang} yet`
             : "no matcher for this capture's language yet: neither its reading nor the active profiles state a language");
           continue;
         }
-        if (kind === "requirements") this.#requirements(c, d, set, add);
+        if (kind === "requirements") {
+          /* Its words are read from the text units alone: a reading holding only typed cells is not read for it. */
+          if (!d.units.length) skip(c, "no text: this capture's reading holds typed cells but no text unit to read sentences from");
+          else this.#requirements(c, d, set, add);
+        }
         else this.#figures(kind, c, d, set, add);
       }
       const truncated = acc.truncated || acc.items.length > limit;
@@ -426,12 +430,18 @@ export class Finder {
       if (data.get(c.capture_sha).reading) read.push(c.capture_sha);
       else skip(c, "not extracted: no reading of this capture is held");
     }
+    if (!read.length) return;
+    /* DEC-98: a page whose names could not be read is in `not_read`, never "Nothing here". */
+    const unread = (why) => { for (const c of captures) if (read.includes(c.capture_sha)) skip(c, why); };
     const entities = this.r.entitiesFor();
-    if (!read.length || !entities) return;
+    if (!entities) { unread("not read: the followed people and offices could not be read"); return; }
     /* entities R52 (K1972): R17's candidates for every followed person and office over this page's captures, in one
        bounded read; its page is this kind's own, so its `truncated` is this kind's. */
     const ans = entities.namingIn({ captureShas: read, kinds: [...FIND_PEOPLE_KINDS], limit, viewer });
-    if (!ans || ans.ok !== true) return;
+    if (!ans || ans.ok !== true) {
+      unread(`not read: the followed people and offices could not be read${ans && ans.reason ? ` (${String(ans.reason).slice(0, 80)})` : ""}`);
+      return;
+    }
     if (ans.truncated) acc.truncated = true;
     const byId = new Map((ans.entities || []).map((e) => [e.entity_id, { entity_id: e.entity_id, kind: e.entity_kind, label: e.entity_label }]));
     const found = (ans.candidates || []).filter((cand) => byId.has(cand.entity_id))

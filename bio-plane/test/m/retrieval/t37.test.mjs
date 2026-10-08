@@ -158,3 +158,45 @@ test("R73 (N759; K2122): a fact recorded at one cell of a found column — a she
   assert.deepEqual(named(find(w, { scope: { capture: d.sha }, kinds: ["money"] })), [
     [{ kind: "doc-table", table: 0 }, [["MF-DOC-CELL", "narrower"], ["MF-DOC-TABLE", "same"]]]]);
 });
+
+/* Flaws found in this job (T37-13), fixed in this module. */
+function plain(deps = {}) {
+  const w = world({ deps: { recorders: quiet(), ...deps } });
+  w.record.setSetting("jurisdiction_profiles", ["test-port-ellery"], "member:ann");
+  const c = w.cap("a.pdf", "a bytes");
+  w.doc("INFO-A", {}, { captures: [c] });
+  w.reading(c.sha, "INFO-A");
+  w.unit(c.sha, "INFO-A", 0, "The Clerk shall pay $5 on March 5, 2026.");
+  return { w, c };
+}
+
+test("R73 (DEC-98): people — when the followed people and offices cannot be read (no entities, or its read refuses), each read capture is in not_read with why, never \"Nothing here\"", () => {
+  for (const entities of [null, { namingIn: () => ({ ok: false, reason: "BROKEN" }) }]) {
+    const { w, c } = plain({ entities });
+    const k = kindOf(find(w, { scope: { capture: c.sha }, kinds: ["people"] }), "people");
+    assert.deepEqual([k.nothing, k.items, k.not_read.map((x) => x.capture_sha)], [false, [], [c.sha]]);
+    assert.match(k.not_read[0].why, /followed people and offices could not be read/);
+  }
+});
+
+test("R75: a reading whose language names an inherited property of an object (constructor, toString) has no matcher set — not_read, never a throw", () => {
+  const { w, c } = plain();
+  for (const language of ["constructor", "toString", "__proto__"]) {
+    w.st.sql.exec(`UPDATE readings SET reading = ? WHERE capture_sha = ?`, JSON.stringify({ language }), c.sha);
+    const ans = find(w, { scope: { capture: c.sha }, kinds: ["money", "dates", "requirements"] });
+    assert.equal(ans.ok, true);
+    for (const k of ans.kinds) assert.deepEqual([k.nothing, k.not_read.map((x) => x.why)], [false, [`no matcher for ${language.toLowerCase()} yet`]], language);
+  }
+});
+
+test("R74, R73 (DEC-98): requirements — a reading holding typed cells and no text unit is in not_read, never \"Nothing here\"", () => {
+  const { w } = plain();
+  const x = w.cap("book.xlsx", "x");
+  w.doc("INFO-X", {}, { captures: [x] });
+  w.st.sql.exec(`INSERT INTO readings (capture_sha, bundle_id, content_type, reader_version, found, entity_count, reading, at)
+                 VALUES (?,?,'generic',1,0,0,?,'t')`, x.sha, "INFO-X",
+    JSON.stringify({ cells: { S: [{ source: { kind: "sheet-cell", sheet: "S", cell: "A1" }, value: "The Clerk shall pay.", type: "text" }] } }));
+  const k = kindOf(find(w, { scope: { capture: x.sha }, kinds: ["requirements"] }), "requirements");
+  assert.deepEqual([k.nothing, k.not_read.map((n) => n.capture_sha)], [false, [x.sha]]);
+  assert.match(k.not_read[0].why, /no text/);
+});
