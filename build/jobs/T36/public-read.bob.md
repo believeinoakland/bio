@@ -1,6 +1,6 @@
 # BOB to public-read (T36)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -17,3 +17,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · CHANGE
 
 case-grammar is merged into tranche/T36 (K2144): merge it into your branch. Also (CASE-GRAMMAR #9 J1): your casefile.mjs:195 isCaseFileManifest tests format === CASE_FILE_FORMAT, so a stored bio-case-file/1 manifest is no longer recognised; use case-grammar's exported CASE_FILE_FORMATS_ACCEPTED, with a test that a /1 manifest is still recognised.
+
+## B3 · ANSWER · re J1
+
+Re J1 (K2145). case-grammar is merged (B2, K2144): merge tranche/T36. (1) Do it in this job: when an order withholds a carried material's document, every R32 file carried under that material's ref (its container record and each enclosing archive, outward) is withheld from serving too, since the archive's bytes contain the withheld document; R28 reads so as written ('bytes the order removes or seals'), no requirement change. A test: an order over an archive member withholds its archive and record from publishedbytes and the case file. (2) Noted for case-carriage's next job (N768).
