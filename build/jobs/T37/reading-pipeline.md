@@ -1,6 +1,6 @@
 # reading-pipeline (T37)
 
-**Status** · session_01NrApu29PkaxgKV2pTicqhV · depth 2 · WORKING · handled B1
+**Status** · session_01NrApu29PkaxgKV2pTicqhV · depth 2 · COMPLETE · handled B1
 
 ## Work
 
