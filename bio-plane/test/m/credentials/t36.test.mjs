@@ -108,7 +108,7 @@ test("R29 a set with no key removes the service's key and the service is off: fo
 
 /* ===== R51, R52: keeping the group's material away from AI ===== */
 
-test("R51 aiKeepAwaySet: an active administrator only (NOT_AN_ADMIN through membership, a machine refused the same); on: true without a reason of 1 to 2,000 characters NO_REASON (C-29.32); each refusal writing nothing", async () => {
+test("R51 aiKeepAwaySet: an active administrator only (NOT_AN_ADMIN through membership, a machine refused the same); on: true without a reason of 1 to 2,000 characters, or a reason not a string or over 2,000, AI_KEEP_AWAY_NO_REASON (C-29.32, re-coded in T37); each refusal writing nothing", async () => {
   const w = await world().group("ann", "dee");
   w.m.memberSet({ memberId: "dee", status: "revoked", by: "admin" });
   assert.deepEqual({ ...KEEP_AWAY_REASON }, { min: 1, max: 2000 });
@@ -123,12 +123,12 @@ test("R51 aiKeepAwaySet: an active administrator only (NOT_AN_ADMIN through memb
   w.sql.exec(`UPDATE members SET status='active' WHERE member_id='second'`);
   for (const reason of [undefined, null, "", "   ", "\n", "x".repeat(2001), "é".repeat(2001), 7, ["r"], { r: 1 }]) {
     const r = w.c.aiKeepAwaySet({ on: true, reason, by: "admin" });
-    assert.deepEqual(shape(r), row(ACCOUNT_CHECKS, "NO_REASON"), JSON.stringify(reason)?.slice(0, 30));
+    assert.deepEqual(shape(r), row(ACCOUNT_CHECKS, "AI_KEEP_AWAY_NO_REASON"), JSON.stringify(reason)?.slice(0, 30));
     assert.match(r.detail, /Nothing was changed\.$/);
   }
   /* a reason given with off is held to the same bounds */
   for (const reason of ["x".repeat(2001), 7])
-    assert.deepEqual(shape(w.c.aiKeepAwaySet({ on: false, reason, by: "admin" })), row(ACCOUNT_CHECKS, "NO_REASON"));
+    assert.deepEqual(shape(w.c.aiKeepAwaySet({ on: false, reason, by: "admin" })), row(ACCOUNT_CHECKS, "AI_KEEP_AWAY_NO_REASON"));
   assert.equal(w.snapshot(), before, "no refusal writes");
   /* exactly 1 and exactly 2,000 characters (2,000 two-byte characters too) are reasons */
   for (const reason of ["x", "x".repeat(2000), "é".repeat(2000)]) assert.equal(w.c.aiKeepAwaySet({ on: true, reason, by: "admin" }).ok, true);

@@ -82,6 +82,14 @@ export const AI_CREDENTIAL_CHECKS = Object.freeze({
     translation: 'An agent credential lasts a whole number of days, from 1 to 365, and 90 if you do not say. That '
       + 'was not one of them. Nothing was created. Choose a number of days, or leave it out.',
   }),
+  /* R53 (T37-6; N761, K2129): a mint that carries no digest of its secret, the next free number of C-29. A new row,
+     awaiting promotion's stamp (T37-7). */
+  AI_CREDENTIAL_NO_SECRET: Object.freeze({
+    check: 'C-29.33', where: at("aiCredentialMint", "is-ai-credential-digest"),
+    translation: 'The agent credential could not be created, because your group\'s Civicsmith was not handed the '
+      + 'fingerprint of its secret, and a credential without one could never be used. Nothing was created. Try again; '
+      + 'if it keeps happening, tell whoever hosts your group\'s Civicsmith.',
+  }),
 });
 
 /* C-96's rows for the acts on a member's keys: R6's key shape (C-96.8) and R9's three (C-96.15–.17). */
@@ -196,19 +204,22 @@ export const ACCOUNT_CHECKS = Object.freeze({
       + 'it, then ask again. Nothing was sent.',
   }),
   /* T36 (T36-7; DEC-172, K1957): keep-away's two refusals (R35, R51), the next free numbers of C-29 (C-29.30 is
-     admission's). New rows, awaiting promotion's stamp (T36-8). */
+     admission's). (T37-6; K231, N755, N765) C-29.31's `where` is `aiKeptAway`, the one site every gate on keep-away
+     reads (R35); C-29.32 is re-coded `AI_KEEP_AWAY_NO_REASON`, a code of this module's own, its number unmoved, so
+     progressions' `NO_REASON` (C-100.18) reads its own row again. Both await promotion's stamp (T37-7). */
   AI_KEPT_AWAY: Object.freeze({
-    check: 'C-29.31', where: at("#keptAway", "is-kept-away"),
+    check: 'C-29.31', where: at("aiKeptAway", "is-kept-away"),
     translation: 'Your group keeps its material away from every assistant, so no assistant was used: not the group\'s '
       + 'account and not your own. An administrator turned this on and gave the reason shown. If you think this '
       + 'should change, ask an administrator. Nothing was sent.',
   }),
-  NO_REASON: Object.freeze({
+  AI_KEEP_AWAY_NO_REASON: Object.freeze({
     check: 'C-29.32', where: at("aiKeepAwaySet", "is-keep-away-reason"),
     translation: 'Keeping the group\'s material away from every assistant needs a reason, which every member will '
       + 'read: from 1 to 2,000 characters. Nothing was changed.',
   }),
 });
+
 
 /* R29 (K1449): the group's keys for keyed outside services. */
 export const KEYED_SERVICE_CHECKS = Object.freeze({
@@ -263,5 +274,19 @@ export const SIGN_IN_CHECKS = Object.freeze({
     check: 'C-96.44', where: at("securityTotals", "is-security-counts-read"),
     translation: 'The security counts could not be read just now, so none were given: they are missing, not zero. '
       + 'Nothing was changed.',
+  }),
+  /* T37 (T37-6; N776, DEC-182 (4)): R3's own password change, the next free numbers of C-96. New rows, awaiting
+     promotion's stamp (T37-7). */
+  MACHINE_CANNOT_SET_PASSWORD: Object.freeze({
+    check: 'C-96.45', where: at("passwordChange", "is-password-change-own"),
+    translation: 'A member changes their own password, from their own signed-in session. The credential that asked here '
+      + 'has no member behind it: it is an automated one, the operator\'s token, or a call with nobody signed in. Sign '
+      + 'in as yourself to change your password. Nothing was changed.',
+  }),
+  CURRENT_PASSWORD_WRONG: Object.freeze({
+    check: 'C-96.46', where: at("passwordChange", "is-current-password"),
+    translation: 'The current password you typed is not the one your account holds, so your password was not '
+      + 'changed. Nothing was changed. Type your current password again; if you have forgotten it, ask an administrator '
+      + 'for help.',
   }),
 });
