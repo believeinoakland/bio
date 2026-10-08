@@ -211,14 +211,25 @@ const bootCurrent = (persist) =>
    the module with no tally, which names nothing. */
 const asJson = async (res) => { const txt = await res.text();
   try { return JSON.parse(txt); } catch { return { ok: false, status: res.status, error: `non-JSON ${res.status}: ${txt.slice(0, 300)}` }; } };
-const client = (mf) => ({
-  raw: async (sql, ...args) => asJson(await mf.dispatchFetch("http://x/rawsql",
-    { method: "POST", body: JSON.stringify({ sql, args }) })),
-  get: async (op, qs = "", tok = TOK.MEMBER_TOKEN) =>
-    asJson(await mf.dispatchFetch(`http://x/api/?op=${op}&token=${tok}&${qs}`)),
-  post: async (op, body, tok = TOK.MEMBER_TOKEN) =>
-    asJson(await mf.dispatchFetch(`http://x/api/?op=${op}&token=${tok}`, { method: "POST", body: JSON.stringify(body) })),
-});
+/* HOW A CREDENTIAL TRAVELS (admission R5, R20; K2166). A RELEASED plane is driven as it shipped: its credential in the
+   address (`?token=`), the member binding its default. The CURRENT plane reads a credential only from the
+   `Authorization` header, never the address, and retires the shared member key (`MEMBER_TOKEN_RETIRED`), so a call the
+   released planes made with the member binding is made with the administrator's binding, in the header. */
+const client = (mf, { current = false } = {}) => {
+  const MEMBER = current ? TOK.ADMIN_TOKEN : TOK.MEMBER_TOKEN;
+  const call = (op, qs, tok, init = {}) => {
+    const t = tok === undefined ? MEMBER : tok;
+    if (!current) return mf.dispatchFetch(`http://x/api/?op=${op}&token=${t}&${qs}`, init);
+    return mf.dispatchFetch(`http://x/api/?op=${op}&${qs}`,
+      t ? { ...init, headers: { ...(init.headers || {}), authorization: `Bearer ${t}` } } : init);
+  };
+  return {
+    raw: async (sql, ...args) => asJson(await mf.dispatchFetch("http://x/rawsql",
+      { method: "POST", body: JSON.stringify({ sql, args }) })),
+    get: async (op, qs = "", tok = undefined) => asJson(await call(op, qs, tok)),
+    post: async (op, body, tok = undefined) => asJson(await call(op, "", tok, { method: "POST", body: JSON.stringify(body) })),
+  };
+};
 const errOf = (r) => r && (r.error || r.reason || r.code) ? String(r.error || r.reason || r.code) : null;
 /* op=instancegroup's answer, unwrapped as instance-group.test.mjs's `rP` does; null-tolerant, so a
    store that answers nothing NAMES the assertion instead of ending the module on a TypeError. */
@@ -265,11 +276,11 @@ const infoMd = (id) => ["---",
  * ================================================================== */
 console.log("\n--- 0. the reference shape: a fresh store on the current plane ---");
 const freshMf = bootCurrent(mkdtempSync(join(tmpdir(), "rec143-fresh-")));
-const FRESH = await shapeOf(client(freshMf));
+const FRESH = await shapeOf(client(freshMf, { current: true }));
 /* D-436's POSITIVE half, on the one store in this suite the current plane is BORN on: its first boot
    records the bound name. Without this, every "records NOTHING" below would pass just as well if the
    binding never reached the store — a uniformly absent answer and a correct rule look identical. */
-const FRESH_GROUP = await groupOf(client(freshMf));
+const FRESH_GROUP = await groupOf(client(freshMf, { current: true }));
 await freshMf.dispose();
 const freshTables = Object.keys(FRESH.tables || {});
 console.log(`    fresh store: ${freshTables.length} tables, ${(FRESH.others || []).length} indexes/triggers/views`);
@@ -392,7 +403,7 @@ const seed = async (label, version, persist) => {
    store's exact shape, the rows survive, and a second boot is clean. */
 const verifyCurrent = async (label, persist, { DOC, served, groupBefore, rows }) => {
   let mf = bootCurrent(persist);
-  let c = client(mf);
+  let c = client(mf, { current: true });
   const bs = await c.get("bootstrap", "", "");
   t(`${label}: op=bootstrap REACHES THE STORE — never STORE_DID_NOT_ANSWER`,
     [bs.ok !== false || errOf(bs), JSON.stringify(bs).includes("STORE_DID_NOT_ANSWER")], [true, false]);
@@ -438,7 +449,7 @@ const verifyCurrent = async (label, persist, { DOC, served, groupBefore, rows })
   await mf.dispose();
 
   mf = bootCurrent(persist);
-  c = client(mf);
+  c = client(mf, { current: true });
   const again = await c.raw("SELECT count(*) AS n FROM inquiry_basis");
   t(`${label}: a SECOND boot is clean — the store answers and holds the same rows`,
     again.ok ? again.rows[0].n : again.error, 1);
