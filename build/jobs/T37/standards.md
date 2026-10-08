@@ -94,3 +94,7 @@ All three fail on the previous code.
 - ownership: 0 failures
 
 Size (session_01ESQ5WwKNKPndxaWdvzsiH9): test runs 35, module lines 3342
+
+## J3 · COMPLETE
+
+B2 (K2203) applied. An adoption whose act is an event now stores its body: the one entity the event concerns, or its one decider participant; when it names none or two, the body is null. Impositions and incorporations now bind only while the standard's own version is in force (R43, R20); the requirement text already says this for every branch, so nothing was left as a change of meaning. Three new tests in t37.test.mjs fail on the previous code. Standards tests: 78 pass, 0 fail. conformance, duties, calculations, publication, case-authoring and events all pass. format, architecture, coverage (42 of 42) and ownership: 0 failures.
