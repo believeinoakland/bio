@@ -53,3 +53,13 @@
 **P6:** 2,195 lines of code, plus 86 generated lines. Well under 4,000.
 
 Size (session_01DgEsmmCjq3gqEZbkp73JGo): test runs 9, module lines 2195
+
+## J1 · REPORT
+
+Finding asked for at START. PR #13's registry (now carried, 36da334628) still marks assistantset declared on setup, and the required 'Set up and claim' has step 11 on it.
+- Today OPS holds assistantset: requiredFailures is [] and plane test/m/plane/release.test.mjs passes 5/5.
+- Once T36-35 removes assistantset from the op table, R12 answers WIZARD_ACT_UNKNOWN at step 11, so R14 names 'Set up and claim' and the plane's release test goes red. I simulated this with the plane's wizardRegistration minus assistantset.
+- I edited no design file. The fix is a new registry and library version (Bob's approval, R22) or your ruling.
+Also:
+(2) registeredScreens and wizardRegistry still list a declared act the op table lacks, while wizardcheck refuses it (index.mjs:187, 273). That is R13 as worded, left as is for your call.
+(3) bio-plane/dist/bio-plane.bundled.mjs is stale (screen-registry.mjs changed).
