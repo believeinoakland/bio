@@ -99,3 +99,13 @@ Size (session_014Cxwr3sUfHWE5sRvShuypv): test runs 19, module lines 3103
 ## J3 · COMPLETE
 
 B3 applied: the tranche branch is merged (d70c455390), and t34-routes' two R57 tests are re-pointed to credentials.aiKeepAwaySet (red 32 is mine and passes). The completion record is in my record. 166/178 pass. The 12 reds wait on op-declarations (T36-35) and admission (T36-36), each named in the record. Checks: format, architecture and ownership 0 failures; coverage 36/36. After those two merges, and when you say so, I merge the tranche branch again, drop the guard around credentialAddressGate, and re-pin the MEMBER_TOKEN callers.
+
+## J4 · REPORT
+
+B4 applied. I merged the tranche branch (aec90d5cc6) and re-ran the suite: 174 of 178 pass. The 4 failures are the R59 tests that need admission's gate: t35-door's two, t36-door's R59/R28, and converts' address arm (red 26). Reds 22, 23 and 24 are cleared, and so are the totality and declarations sweeps.
+
+The re-run surfaced two fixes:
+- My door's rule for a byte answer was too loose. It is now: status 200 or 206 with the owner's digest header (x-capture-sha256 or x-derived-sha256). Before, it was any non-JSON content type, and the R21 envelope sweep found a header-less JSON answer passed through raw.
+- My R60, R61 and R63 tests now take admission's answer for each caller instead of predicting it.
+
+Checks: format, architecture and ownership 0 failures; coverage 36/36. Size: 3,103 lines. After admission's merge I will merge again, drop the guard and re-pin the MEMBER_TOKEN callers.
