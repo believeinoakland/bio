@@ -72,8 +72,8 @@ export const bearerOf = (init) => {
  * Answers `ui` (the script's named functions), `el(selector)`, the `sandbox`, `replaced()` (history rewrites), `picks`
  * (the profile checkboxes the page drew), `ibtns()` (the inbox's buttons as it last drew them), `dlbtns()` (a record's
  * download buttons as it last drew them), `files` (each file the page handed the browser: `{name, blob, url, clicked}`),
- * `objectUrls` (each object address made, and whether it was released) and `hashchange()` (the browser's event when the
- * address's fragment changes).
+ * `objectUrls` (each object address made, and whether it was released), `hashchange()` (the browser's event when the
+ * address's fragment changes) and `drawn(selector, data)` (a button the page drew into a box, by its data-* attributes).
  */
 export function pageOver({ html, hash = "", session = null, fetch, globals = {} }) {
   const script = scriptOf(html);
@@ -96,6 +96,7 @@ export function pageOver({ html, hash = "", session = null, fetch, globals = {} 
   const picks = new Map();
   let ibtns = [], dlbtns = [];
   const files = [], objectUrls = [], winListeners = {};
+  const drawnEls = new Map();
   const document = {
     querySelector(s) {
       if (s === "input[name=n-risk]:checked") return [...els.values()].find((e) => /^#n-risk-/.test(e.sel) && e.checked) || null;
@@ -117,6 +118,16 @@ export function pageOver({ html, hash = "", session = null, fetch, globals = {} 
       if (s === "#inbox-body .ibtn")
         return (ibtns = [...el("#inbox-body").innerHTML.matchAll(/class="ibtn" data-i="(\d+)" data-id="([^"]*)" data-to="([^"]*)"/g)]
           .map((m) => ({ ...mk(`ibtn:${m[1]}:${m[3]}`), dataset: { i: m[1], id: m[2], to: m[3] } })));
+      /* buttons the page draws into a box (R30's catalogue and tools): "#box .cls", each with its data-* attributes,
+         fresh at each draw, kept by box, class and data so a test can press one */
+      const drawn = /^#([\w-]+) \.([\w-]+)$/.exec(s);
+      if (drawn) return [...el("#" + drawn[1]).innerHTML.matchAll(new RegExp(`<button class="${drawn[2]}"((?: data-[\\w-]+="[^"]*")*)>`, "g"))]
+        .map((m) => {
+          const dataset = Object.fromEntries([...m[1].matchAll(/data-([\w-]+)="([^"]*)"/g)].map((d) => [d[1], d[2]]));
+          const key = `${s}:${JSON.stringify(dataset)}`;
+          drawnEls.set(key, { ...mk(key), dataset });
+          return drawnEls.get(key);
+        });
       /* a list of selectors: each bare id in it is its element */
       return s.split(",").map((x) => x.trim()).filter((x) => /^#[\w-]+$/.test(x)).map((x) => el(x));
     },
@@ -143,8 +154,50 @@ export function pageOver({ html, hash = "", session = null, fetch, globals = {} 
   const ui = new Function(...Object.keys(sandbox), script + `
 ;return { mdFor, historyOrder, FIRST_STATE, HEADINGS, RISK_TIERS, riskTierState, SETTABLE_TIERS, deriveInquiryTitle,
           profilesWarning, openProfiles, panel, chosenRiskTier, openBundle, signerAddBody, describeKey, acquireWhy,
-          PREFIX, SCHEMA_OF, splitFm, mdRender, ratifyWhy, openBrowse, openInbox, openAssistant, openOffices, isMachine,
+          PREFIX, SCHEMA_OF, splitFm, mdRender, ratifyWhy, openBrowse, openInbox, openKeepAway, openOffices, isMachine,
           addedByMember };`)(...Object.values(sandbox));
   const hashchange = async () => { for (const f of winListeners.hashchange || []) await f(); };
-  return { ui, el, sandbox, replaced: () => replaced, picks, ibtns: () => ibtns, dlbtns: () => dlbtns, files, objectUrls, hashchange, shown };
+  /* the button a box last drew with this data (R30): `drawn("#mk-st-tools .st-rm", { id: "x" })` */
+  const drawn = (sel, data) => drawnEls.get(`${sel}:${JSON.stringify(data)}`) || null;
+  return { ui, el, sandbox, replaced: () => replaced, picks, ibtns: () => ibtns, dlbtns: () => dlbtns, files, objectUrls, hashchange, shown, drawn };
 }
+
+/* R30: a security tools catalogue in file-safety R27's documented shape: an offered tool on the organization's own servers
+   with no vendor retention, one whose vendor keeps files for its research, a template, and a refused and a held service,
+   each with its reason in member words. The digests stand for SHA-256 of each handling's canonical JSON. */
+const NEVER = ["file_name", "member_identity", "ip_address"];
+export const CATALOGUE = Object.freeze({ ok: true,
+  offered: [
+    { provider_id: "metadefender-core", vendor: "OPSWAT, Inc.", product: "MetaDefender Core", kinds: ["scan"], transport: "https", reach: "tunnel",
+      template: false, credentials: ["api_key"], licence_note: "the organization's own licence",
+      handling: { sends: ["file_bytes"], never_sends: NEVER, recipient: "the organization's own MetaDefender Core server", sub_processors: [],
+                  region: "where it runs", file_retention: "as the organization configures it", result_retention: "as configured", sample_sharing: "none" },
+      handling_digest: "a".repeat(64), source_urls: [], read_on: "2026-10-07" },
+    { provider_id: "sophos-intelix", vendor: "Sophos Ltd", product: "SophosLabs Intelix", kinds: ["scan", "sandbox"], transport: "https", reach: "public",
+      template: false, credentials: ["client_id", "client_secret"], licence_note: null,
+      handling: { sends: ["file_bytes"], never_sends: NEVER, recipient: "Sophos Ltd", sub_processors: [], region: "the region chosen",
+                  file_retention: "clean files up to 30 days", result_retention: "metadata up to 6 months", sample_sharing: "vendor_internal_research" },
+      handling_digest: "b".repeat(64), source_urls: [], read_on: "2026-10-07" },
+    { provider_id: "icap-generic", vendor: "", product: "An ICAP scanner you run", kinds: ["scan"], transport: "icap", reach: "tunnel",
+      template: true, credentials: [], licence_note: null,
+      handling: { sends: ["file_bytes"], never_sends: NEVER, recipient: "stated by the administrator", sub_processors: [], region: "stated by the administrator",
+                  file_retention: "stated by the administrator", result_retention: "stated by the administrator", sample_sharing: "none" },
+      handling_digest: "c".repeat(64), source_urls: [], read_on: "2026-10-07" },
+  ],
+  refused: [{ provider_id: "anyrun", reason: "SHARES_BY_DEFAULT", words: "It shares files it is sent unless a paid private mode is checked on every call." }],
+  held: [{ provider_id: "some-vendor", reason: "HANDLING_NOT_STATED", words: "Its vendor does not state how long it keeps files." }],
+});
+
+/* R12, R28 (R30's sections): the catalogue and the group's tools with every string the page draws set to `evil`, so a
+   test can find whether any of it is drawn as markup. */
+export const hostileSecurity = (evil) => ({
+  securitytoolcatalogue: { result: { ok: true,
+    offered: [{ provider_id: evil, vendor: evil, product: evil, kinds: [evil], template: false, credentials: [evil], licence_note: evil,
+                handling: { sends: [evil], never_sends: [evil], recipient: evil, sub_processors: [evil], region: evil, file_retention: evil,
+                            result_retention: evil, sample_sharing: evil }, handling_digest: evil }],
+    refused: [{ provider_id: evil, reason: evil, words: evil }], held: [{ provider_id: evil, reason: evil, words: evil }] } },
+  securitytools: { result: { ok: true, tools: [{ tool_id: evil, provider_id: evil, use: "routine", state: evil, off_reason: evil, monthly_limit: evil }] } },
+  securitytooladd: { result: { ok: true, tool_id: evil, state: "added" } },
+  securitytooltest: { result: { ok: true, tool_id: evil, state: "test_failed", passed: false, detail: evil } },
+  aikeepawaystate: { result: { on: true, reason: evil, set_by: evil, set_at: evil } },
+});
