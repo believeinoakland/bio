@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, plane, newKey, signCase, cleanCase, fmText, CASE_BODY, V, SILENT } from "./fixture.mjs";
-import { caseRatifyOp, ratificationOp } from "../../../src/ratification/ops.mjs";
+import { caseRatifyOp, ratificationOp, obscuredCopyKey } from "../../../src/ratification/ops.mjs";
 import { caseConclusionRowLines, RATIFY_MACHINE_FENCE_CHECKS as FENCE, RATIFY_TESTIMONY_CHECKS as TESTIMONY,
          RATIFY_ATTRIBUTION_CHECKS as ATTRIBUTION } from "../../../src/ratification/index.mjs";
 
@@ -204,4 +204,36 @@ test("R39: each evidence-held material is copied by its SHA-256 after the commit
   const none = await setup();
   const r = await none.run();
   assert.deepEqual([r.status, r.body.materials_copied, r.p.published.size], [200, { copied: 0, present: 0, missing: [] }, 0]);
+});
+
+/* R39 (T37; N757; DEC-180 (4); K2206): a material the commit answers `held: "derived"` (an obscured copy, case-carriage
+   R1, R11) is copied to the published bucket by its SHA-256 from where case-carriage holds it, never from `captures/`,
+   and counted in `materials_copied` like any other; a re-sent op=caseratify retries it through `heldMaterialsOf`. */
+test("R39: a derived (obscured copy) material is copied from where case-carriage holds it, never from captures/, and counted like any other; a missing one never changes ok and is retried", async () => {
+  const { w, docSha, sig } = await setup();
+  const D = "d4".repeat(32), E = "e5".repeat(32), A = "a1".repeat(32);
+  const held = [{ sha: A, held: "evidence" }, { sha: D, held: "derived" }, { sha: E, held: "derived" }];
+  const real = w.publication.commitCaseEdition;
+  w.publication.commitCaseEdition = (a) => ({ ...real(a), materials: held });
+  const body = { caseId: CASE, edition: 1, expectedSha: docSha, sig };
+  const copyD = new TextEncoder().encode("the obscured copy D"), original = new TextEncoder().encode("the original photo");
+  const p1 = plane(w);
+  p1.captures.set(`s/captures/${A}`, new TextEncoder().encode("document A"));
+  p1.captures.set(obscuredCopyKey("s", D), copyD);
+  p1.captures.set(`s/captures/${E}`, original);   /* only under captures/: a derived item is never read from there */
+  const first = await caseRatifyOp(p1.request(body), p1.stub, p1.ctx);
+  assert.deepEqual([first.status, first.body.ok], [200, true], JSON.stringify(first.body).slice(0, 300));
+  assert.deepEqual(first.body.materials_copied, { copied: 2, present: 0, missing: [E] }, "counted with the evidence-held one");
+  assert.deepEqual(p1.published.get(`s/published/${D}`), copyD, "the copy's bytes, by its SHA-256");
+  assert.equal(p1.published.has(`s/published/${E}`), false, "never read from captures/");
+  assert.ok(!obscuredCopyKey("s", D).includes("/captures/"), "the copy's key lies outside captures/");
+  /* the retry through heldMaterialsOf copies the derived one left */
+  w.publication.heldMaterialsOf = () => held;
+  const p2 = plane(w);
+  p2.published.set(`s/published/${A}`, new Uint8Array([1])); p2.published.set(`s/published/${D}`, copyD);
+  p2.captures.set(obscuredCopyKey("s", E), new TextEncoder().encode("the obscured copy E"));
+  const retry = await caseRatifyOp(p2.request(body), p2.stub, p2.ctx);
+  assert.deepEqual([retry.status, retry.body.ok, retry.body.existed, retry.body.materials_copied],
+    [200, true, true, { copied: 1, present: 2, missing: [] }]);
+  assert.equal(w.pub.committed.length, 1, "the retry commits nothing");
 });

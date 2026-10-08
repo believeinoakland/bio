@@ -103,7 +103,8 @@ const NO_READINGS = {
 /** This module's tests: the world over storage shaped as workerd's (K316). */
 export const planeWorld = (opts = {}) => world({ ...opts, workerd: true });
 
-export function world({ group = "test-group", workerd = false, contradiction = null, standards = null, entities = null } = {}) {
+export function world({ group = "test-group", workerd = false, contradiction = null, standards = null, entities = null,
+                        carriage = null } = {}) {
   const st = storage({ workerd });
   const all = (c) => (Array.isArray(c) ? c : c.toArray());
   const host = { storage: st };
@@ -158,7 +159,7 @@ export function world({ group = "test-group", workerd = false, contradiction = n
   const p = publicationOf(host, { record, membership, credentials, promotion, inquiry: k, basisVersions, reevaluation: r,
                                   ...(contradiction ? { contradiction } : {}), ...(standards ? { standards } : {}),
                                   ...(entities ? { entities } : {}), sources: src, acceptedWork, extraction,
-                                  capture, provenance: prov, now: () => clock.now });
+                                  capture, provenance: prov, now: () => clock.now, ...(carriage || {}) });
   let n = 0;
   const w = {
     st, host, record, membership, credentials, promotion, prov, content, connections, k, basisVersions, r, p, clock, groupRef, src,

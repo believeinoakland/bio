@@ -1,6 +1,6 @@
 # BOB to case-disclosures (T37)
 
-**Read** · handled J1
+**Read** · handled J4
 
 ## B1 · START
 
@@ -17,3 +17,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · CHANGE
 
 case-grammar is merged into tranche/T37 @ f3f6002068 (K2224): merge it; your carries.test.mjs:56 (R12's obscured: null) is yours. case-carriage is not merged yet: I send another CHANGE when it is. Your fail-closed reading stands.
+
+## B3 · CHANGE
+
+case-carriage T37-34 is merged into tranche/T37 (K2226; tip 50f65ce6ac). Merge the tranche, drop your local OBSCURED_LABEL line, re-run your tests and checks, and complete again.

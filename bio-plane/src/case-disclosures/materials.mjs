@@ -45,7 +45,8 @@ export function materialHeld(m, io) {
 }
 
 /** R7 (K1134 Q6, BOB's decision 15): the `materials:` and `material_attestations:` rows (`case-grammar` R12) for the
- *  materials `chainsOf` reached, each with what `materialHeld` found. `facts(sha)` is R2's read of a capture (grade,
+ *  materials `chainsOf` reached, each with what `materialHeld` found, and `obscured: {copy, label}` for a photo R6
+ *  carries as its copy, else null (T37; N757): its fingerprints, origin and archived copy stay the original's. `facts(sha)` is R2's read of a capture (grade,
  *  co-attestation, signed accounts), `origin(sha)` its earliest captured address, `registered(sha)` its register row,
  *  `member(m)` the attesting member's row or rows as R10 states them, `group` the producing group's slug. Rows, in the
  *  materials' order:
@@ -60,7 +61,8 @@ export function materialRows(materials, { project, group, at, facts, origin, reg
   for (const m of materials) {
     const f = m.kind === "document" ? facts(m.sha) : null;
     rows.push({ ref: m.ref, kind: m.kind, sha: m.sha, text_sha: m.held.text_sha, origin: origin(m.sha),
-                archived_copy: f ? f.co_archive ?? null : null, included: m.included, rests_under: m.rests_under });
+                archived_copy: f ? f.co_archive ?? null : null, included: m.included, rests_under: m.rests_under,
+                obscured: m.obscured ? { copy: m.obscured.copy, label: m.obscured.label } : null });
     attestations.push(...member(m, f).map((x) => ({ ref: m.ref, by_kind: "member", recorded_in: null, ...x })));
     if (f && f.timestamp_at)
       attestations.push({ ref: m.ref, by_kind: "co_attestation", by: "timestamp", level: null, at: f.timestamp_at,
@@ -119,4 +121,37 @@ export function chainsOf(members, io, depth) {
     }
   }
   return { materials: [...materials.values()], refs, findings };
+}
+
+/** R6, R29 (T37; N757; DEC-180 (3), (4); K2206): the states `case-carriage.photoMarks` (its R10) answers a photo. */
+export const PHOTO_STATES = Object.freeze(["marked", "nothing_to_obscure", "unchecked"]);
+/** R29: the Photos step's words for a marked photo whose cover `image-cover` refused (R6's `PHOTO_NOT_COVERABLE`). */
+export const PHOTO_NOT_COVERABLE_WORDS = "This case cannot rely on this photo until it is captured again in a format that "
+  + "can be covered.";
+const HEX64 = /^[0-9a-f]{64}$/i;
+
+/** R6, R29: one document's marks, as `read()` (`case-carriage.photoMarks({captureSha, viewer})`, its R10) answers them.
+ *  Answers `{photo: false}` for a capture that is not an image; `{photo: true, state, marks, copy, refused}` for a
+ *  photo, `copy` its current copy's SHA-256 or null and `refused` `{code, detail}` or null; and `{photo: null, unread:
+ *  true, why}` when the marks cannot be read: a read that throws or refuses (`NO_SUCH_PHOTO` included), or an answer
+ *  R10 does not state, such as a marked photo with neither a copy nor a refused cover. Unread fails closed: R6
+ *  refuses it, and never carries it whole. A refused cover governs over a copy an earlier mark left, since that copy
+ *  does not cover the later mark's areas (`case-carriage` R11). Never throws. */
+export function photoRead(read) {
+  const unread = (why) => ({ photo: null, unread: true, why });
+  let a = null;
+  try { a = read(); } catch { return unread("the marks could not be read"); }
+  if (!a || typeof a !== "object" || a.ok !== true)
+    return unread(a && typeof a.reason === "string" ? `the marks read answered ${a.reason}` : "the marks could not be read");
+  if (a.photo === false) return { photo: false };
+  if (a.photo !== true || !PHOTO_STATES.includes(a.state) || !Array.isArray(a.marks))
+    return unread("the marks read answered a shape it does not state");
+  const copy = a.copy && typeof a.copy === "object" && typeof a.copy.sha256 === "string" && HEX64.test(a.copy.sha256)
+    ? a.copy.sha256.toLowerCase() : null;
+  const refused = a.refused && typeof a.refused === "object" && typeof a.refused.code === "string"
+    ? { code: a.refused.code, detail: a.refused.detail ?? null } : null;
+  if ((a.copy != null && !copy) || (a.refused != null && !refused))
+    return unread("the marks read answered a shape it does not state");
+  if (a.state === "marked" && !copy && !refused) return unread("the photo is marked but holds neither a copy nor a refused cover");
+  return { photo: true, state: a.state, marks: a.marks, copy: refused ? null : copy, refused };
 }

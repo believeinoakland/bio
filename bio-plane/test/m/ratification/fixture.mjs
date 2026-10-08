@@ -96,7 +96,7 @@ export const bucketOver = (m) => ({
   put: async (k, v) => { m.set(k, v instanceof Uint8Array ? v : new TextEncoder().encode(String(v))); },
 });
 
-export function world({ steer = {} } = {}) {
+export function world({ steer = {}, worker = null } = {}) {
   const st = storage();
   const host = { storage: st };
   for (const t of bare(RECORD_SCHEMA).split(";")) if (t.trim()) st.db.exec(t);
@@ -216,7 +216,7 @@ export function world({ steer = {} } = {}) {
   const capture = { registerReader: (slot, module, fn) => (readers.push({ slot, module, fn }), { ok: true, slot, module }) };
   const r = ratificationOf(host, { storage: st, record, membership, credentials, promotion, provenance, inquiry,
                                    basisVersions, publication, caseTensions, capture, strength, reevaluation,
-                                   networkNotices, people, money });
+                                   networkNotices, people, money, ...(worker ? { worker } : {}) });
   let n = 0;
   const w = {
     st, host, record, membership, credentials, promotion, r, bv, key, registers, holds, evidence, pub, publication,

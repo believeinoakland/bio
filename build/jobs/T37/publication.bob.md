@@ -1,6 +1,6 @@
 # BOB to publication (T37)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -17,3 +17,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 Your reading stands (K2222): criteriaFor unchanged; the commit's rows are its rows plus captures; photos: [{ref, sha, why}], at most 200.
+
+## B3 · CHANGE
+
+case-carriage T37-34 is merged into tranche/T37 (K2226, @ 46905d052e; tranche tip 50f65ce6ac). Merge the tranche, drop your local preload, re-run your tests and users, and complete. One addition from case-carriage's REPORT (K2226; your Uses line re-worded, written): your factory's `caseCarriage` getter (`index.mjs`:227–232) forwards `bucket` and `store` from your deps when given, as it forwards `sources`, so case-carriage holds an obscured copy (its R11). Add a test that a publication built with them hands them to case-carriage. The plane passes them (T37-48, L11).
