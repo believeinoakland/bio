@@ -233,14 +233,20 @@ async function caseCeremony(req, stub, ctx, later) {
 /* R39 (K1316, K1317): each material the case commit held only in the evidence store (publication R57) is copied into
    the published bucket by its SHA-256, as `op=ratify` copies captures; a key already there is `present`. One the
    evidence store no longer holds, or whose copy fails, is `missing`: a re-sent op=caseratify retries it, and it never
-   changes `ok`, because the edition is committed. */
-export async function copyMaterials(env, storeName, shas) {
+   changes `ok`, because the edition is committed. (T37; N757; K2206) A material held `derived`, an obscured copy
+   (case-carriage R1, R11), is copied the same way and counted alike, read from where case-carriage holds it
+   (`obscuredCopyKey`), never from `captures/`. `items` are `{sha, held}`; a bare SHA-256 is an `evidence` one. */
+export const obscuredCopyKey = (store, sha) => `${store}/obscured/${sha}`;
+const sourceKey = (store, sha, held) => (held === "derived" ? obscuredCopyKey(store, sha) : `${store}/captures/${sha}`);
+
+export async function copyMaterials(env, storeName, items) {
   const out = { copied: 0, present: 0, missing: [] };
-  for (const sha of shas) {
+  for (const item of items) {
+    const { sha, held } = typeof item === "string" ? { sha: item, held: "evidence" } : item;
     const key = `${storeName}/published/${sha}`;
     try {
       if (await env.PUBLISHED.head(key)) { out.present++; continue; }
-      const obj = await env.CAPTURES.get(`${storeName}/captures/${sha}`);
+      const obj = await env.CAPTURES.get(sourceKey(storeName, sha, held));
       if (!obj) { out.missing.push(sha); continue; }
       await env.PUBLISHED.put(key, obj.body, { sha256: sha });
       out.copied++;
