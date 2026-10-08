@@ -279,6 +279,95 @@ test("R18 (K2038): after a tick that drains nothing the wake backs off by each e
   assert.equal(c.wake(t), null);
 });
 
+test("R1 (T36): the drain reads capture's queue in pages past each page's last cursor; a waiting event does not use up limit, so limit waiting events at the head never hide a filed one behind them", () => {
+  // `limit` unfiled events at the head and one filed event behind them: one drain creates its task
+  const head = Array.from({ length: 50 }, (_, i) => ev(`u${String(i).padStart(2, "0")}`));
+  const w = box([...head, ev("a3"), ev("zz")]);
+  w.bundle(DOC2);
+  const r = w.t.taskDrain({ actor: "alarm" });
+  assert.equal(r.limit, 50);
+  assert.deepEqual([r.drained, r.created.map((c) => c.refers_to), r.remaining], [1, [DOC2], 51]);
+  assert.deepEqual(r.waiting.map((x) => x.captureSha), [...head.map((e) => e.captureSha), "zz"], "waiting names every waiting event read");
+  assert.ok(w.queue.every((e) => e.attempts === 1), "each waiting event tried once");
+  // the first page asks for limit; each next page passes the cursor of the last event of the page before, and asks what is left
+  assert.deepEqual(w.reads.map((x) => [x.limit, x.after]), [[50, null], [50, "place-50"]]);
+  assert.deepEqual(w.reads[1].got, ["a3", "zz"], "the second page came back short: the read ends there, no extra call");
+  const got = w.reads.flatMap((x) => x.got);
+  assert.equal(new Set(got).size, got.length, "no event is read twice in one drain");
+  // limit counts created, folded and refused only: pages ask for what is left, and the read stops when limit is reached
+  const w2 = inbox([ev("u1"), ev("a1"), ev("u2"), ev("a3"), ev("u3"), ev("a2")], HOMES);
+  w2.member("ada", { role: "admin" }); w2.bundle(DOC); w2.bundle(DOC2); w2.bundle(PRJ, "project");
+  const r2 = w2.t.taskDrain({ limit: 2, actor: "alarm" });
+  assert.deepEqual([r2.drained, r2.created.map((c) => c.refers_to), r2.waiting.map((x) => x.captureSha), r2.remaining],
+    [2, [DOC, DOC2], ["u1", "u2"], 4]);
+  assert.deepEqual(w2.reads.map((x) => [x.limit, x.got]), [[2, ["u1", "a1"]], [1, ["u2"]], [1, ["a3"]]]);
+  assert.deepEqual(w2.queue.map((e) => [e.captureSha, e.attempts]), [["u1", 1], ["u2", 1], ["u3", 0], ["a2", 0]],
+    "the events past the limit are not read, nor tried");
+  // a fold and a refusal use up limit as a creation does
+  const w3 = inbox([ev("a1"), ev("zz"), ev("a3", "x".repeat(300)), ev("a2")], HOMES);
+  w3.bundle(DOC); w3.bundle(DOC2); w3.bundle(PRJ, "project"); w3.task("TASK-2026-0001-live", DOC);
+  const r3 = w3.t.taskDrain({ limit: 2 });
+  assert.deepEqual([r3.folded.length, r3.refused.length, r3.created.length, r3.waiting.map((x) => x.captureSha)], [1, 1, 0, ["zz"]]);
+  assert.deepEqual(w3.queue.map((e) => e.captureSha), ["zz", "a2"]);
+  // a short first page is the whole read
+  const w4 = box([ev("zz")]);
+  w4.t.taskDrain({});
+  assert.deepEqual(w4.reads.map((x) => [x.limit, x.after, x.got]), [[50, null, ["zz"]]]);
+  // an empty queue: one read, nothing done
+  const w5 = box();
+  assert.deepEqual([w5.t.taskDrain({}).drained, w5.reads.length], [0, 1]);
+});
+
+test("R1 (T36): no event is read twice in one drain, even from a queue that answers the head again whatever `after` it is given", () => {
+  const events = [ev("u1"), ev("u2")];
+  let calls = 0;
+  const w = world({ capture: {
+    taskEvents: ({ limit }) => { calls++; return events.slice(0, limit).map((e, i) => ({ ...e, cursor: `c${i}` })); },
+    taskEventCount: () => events.length } });
+  const r = w.t.taskDrain({ limit: 2 });
+  assert.deepEqual(r.waiting.map((x) => x.captureSha), ["u1", "u2"], "each waiting event once");
+  assert.equal(calls, 2, "a page bringing nothing new ends the read");
+  // a page whose last event carries no cursor ends the read rather than reading the head again
+  let bare = 0;
+  const w2 = world({ capture: { taskEvents: ({ limit }) => { bare++; return events.slice(0, limit).map((e) => ({ ...e })); },
+                                taskEventCount: () => events.length } });
+  assert.deepEqual(w2.t.taskDrain({ limit: 2 }).waiting.length, 2);
+  assert.equal(bare, 1);
+});
+
+test("R18 (T36): the wake's reading of the waiting events pages with after as R1 does, so the earliest due instant is taken over every waiting event, not the first page alone", () => {
+  const B = Tasks.TASK_DRAIN_ALARM_BATCH;
+  const events = Array.from({ length: 2 * B + 50 }, (_, i) => ev(`w${String(i).padStart(3, "0")}`));
+  const w = box(events);
+  const c = w.t.drainConsumer();
+  const at = (ms) => Date.parse(iso(ms));
+  // a tick that drains nothing: every event tried once, read over three pages
+  assert.equal(c.tick(NOW).drain.drained, 0);
+  assert.ok(w.queue.every((e) => e.attempts === 1), "the tick's drain read every waiting event");
+  assert.deepEqual(w.reads.map((x) => [x.limit, x.got.length]), [[B, B], [B, B], [B, 50]]);
+  // the earliest due is on the second page: the first page's events tried 6 times (due 32 minutes on), one on the second twice
+  for (const e of w.queue) e.attempts = 6;
+  w.queue[B + 77].attempts = 2;
+  w.reads.length = 0;
+  assert.equal(c.wake(NOW), at(NOW) + 2 * Tasks.TASK_DRAIN_BACKSTOP_MS, "the second page's event is due first");
+  assert.deepEqual(w.reads.map((x) => [x.limit, x.got.length]), [[B, B], [B, B], [B, 50]], "every page read, and no extra call");
+  assert.deepEqual(w.reads.map((x) => x.after), [null, `place-${B}`, `place-${2 * B}`], "each past the last cursor read");
+  const got = w.reads.flatMap((x) => x.got);
+  assert.equal(new Set(got).size, events.length, "each waiting event read once");
+  // on the third, short page likewise; and at the retry limit everywhere, no wake
+  w.queue[B + 77].attempts = 6; w.queue[2 * B + 10].attempts = 1;
+  assert.equal(c.wake(NOW), at(NOW) + Tasks.TASK_DRAIN_BACKSTOP_MS);
+  for (const e of w.queue) e.attempts = Tasks.TASK_DRAIN_RETRY_LIMIT;
+  assert.equal(c.wake(NOW), null);
+  // exactly one full page: the next read comes back empty and ends it
+  const w2 = box(Array.from({ length: B }, (_, i) => ev(`v${i}`)));
+  const c2 = w2.t.drainConsumer();
+  c2.tick(NOW);
+  w2.reads.length = 0;
+  assert.equal(c2.wake(NOW), at(NOW) + Tasks.TASK_DRAIN_BACKSTOP_MS);
+  assert.deepEqual(w2.reads.map((x) => x.got.length), [B, 0]);
+});
+
 test("R18 (K2038): a committed promotion re-arms the drain at its delay, through promotion's commit notice registered at start", async () => {
   const listeners = [];
   let armed = 0;

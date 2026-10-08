@@ -140,13 +140,18 @@ test("R21 R4 (DEC-149): the undetermined ground's sentence, served as vocabulari
   assert.match(u, /^THIS IS A REAL ACT ON THE RECORD AND IT HAS NO RUNG\. No document assigns one and no refusal establishes one, so the honest answer is that it is UNDETERMINED/);
   assert.doesNotMatch(u, /plane/);
   assert.match(G.RUNG_ABSENCE_GROUNDS["caller-owned"], /server-side/);
-  /* this module's own served text: `answer_checks` is `answers`' family, carried whole for the pack (K1601) */
-  const { answer_checks, ...own } = A.affordancesAnswer({ kinds: null, gate: null });
+  /* this module's own served text: `answer_checks` is `answers`' family, carried whole for the pack (K1601), and
+     `act_help` the design stream's texts, held verbatim (R48), where "this copy" is a captured document's copy */
+  const { answer_checks, act_help, ...own } = A.affordancesAnswer({ kinds: null, gate: null });
   assert.ok(answer_checks && typeof answer_checks === "object");
+  assert.equal(act_help, A.ACT_HELP);
   const served = JSON.stringify(own);
   const NAMES = /\bthe plane\b|\bthis plane\b|\bthis instance\b|\bthe instance\b|\bthis copy\b|\bserver\b(?!-side)/i;
   assert.equal(NAMES.exec(served), null);
   assert.ok(NAMES.test(served.replace("no refusal establishes", "no refusal in the plane establishes")), "negative control");
+  /* R48's texts name no plane, instance or server either; their "this copy" alone is the design's (a document's copy) */
+  const NAMES_BUT_COPY = /\bthe plane\b|\bthis plane\b|\bthis instance\b|\bthe instance\b|\bserver\b(?!-side)/i;
+  assert.equal(NAMES_BUT_COPY.exec(JSON.stringify(act_help)), null);
 });
 
 /* ---- R44: the no-target answer's writing_help_refused (K1861 (1)) ----------------------------------------------------- */

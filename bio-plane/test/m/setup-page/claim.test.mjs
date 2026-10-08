@@ -1,6 +1,7 @@
-/* The claim section (R14–R18), at the page's interface: the bytes `pageOf` answers, and its script run in the fixture's
-   sandbox over a fake plane answering the ops' documented shapes (membership R11, R107; credentials R33, R34;
-   instance-setup R53). End-to-end arms over the real ops may follow in instance-setup's job (K1851). */
+/* The claim section (R14–R18, R29), at the page's interface: the bytes `pageOf` answers, and its script run in the
+   fixture's sandbox over a fake plane answering the ops' documented shapes (membership R11, R107; credentials R33, R34,
+   R46, R51, R52; instance-setup R66). End-to-end arms over the real ops may follow in instance-setup's job (K1851). The
+   security tools step (R30) is in security.test.mjs. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { pageOf, PAGE_HTML, HOSTING_SLOT } from "../../../src/setup-page/index.mjs";
@@ -12,10 +13,11 @@ const claimSection = (html) => (html.match(/<section id="s-claim">[^]*?<\/sectio
 const noComments = (html) => html.replace(/<!--[^]*?-->/g, "");
 
 /* A fake plane holding the settings the claim section drives, answering as their modules document: hostingAccessSet
-   (`NO_HOLDERS` for empty holders), courtNoticeSet (`COURT_NOTICE_UNKNOWN_CHOICE`), assistantSet, groupKeySet
-   (`NO_SECRET`), groupKeySwitch, and their reads. `refuse[op]` makes one op refuse in the plane's words. */
+   (`NO_HOLDERS` for empty holders), courtNoticeSet (`COURT_NOTICE_UNKNOWN_CHOICE`), groupKeySet (`NO_SECRET`),
+   groupKeySwitch, aiKeepAwaySet (`NO_REASON` unless 1 to 2,000 characters), and their reads. `refuse[op]` makes one op
+   refuse in the plane's words. */
 function plane({ administer = true, refuse = {}, admins = 1, step = "answers" } = {}) {
-  const st = { hosting: null, court: null, assistant: { ok: true, on: false, set_by: null, set_at: null },
+  const st = { hosting: null, court: null, ka: { on: false, reason: null, set_by: null, set_at: null },
                key: { held: false, on: false, set_at: null, by: null }, codes: null, issued: 0, admins, invited: [] };
   const sent = [];
   const answer = (op, body) => {
@@ -34,8 +36,13 @@ function plane({ administer = true, refuse = {}, admins = 1, step = "answers" } 
         if (body.choice !== "tell" && body.choice !== "dont") return { result: { ok: false, reason: "COURT_NOTICE_UNKNOWN_CHOICE" } };
         st.court = body.choice; return { result: { ok: true, choice: body.choice, by: "admin", at: "2026-10-06T10:02:00Z" } };
       case "courtnotice": return { result: { choice: st.court, history: [] } };
-      case "assistantset": st.assistant = { ok: true, on: body.on, set_by: "admin", set_at: "2026-10-06T10:03:00Z" }; return { result: { ...st.assistant } };
-      case "assistantstate": return { result: st.assistant };
+      /* credentials R51, R52 */
+      case "aikeepaway":
+        if (body.on === true && !(typeof body.reason === "string" && body.reason.length >= 1 && body.reason.length <= 2000))
+          return { result: { ok: false, reason: "NO_REASON", translation: "Keeping the group's material away from AI needs a reason. Nothing was written." } };
+        st.ka = { on: body.on === true, reason: body.on === true ? body.reason : null, set_by: "admin", set_at: "2026-10-06T10:03:00Z" };
+        return { result: { ok: true, ...st.ka } };
+      case "aikeepawaystate": return { result: st.ka };
       case "groupkeyset":
         if (!String(body.key ?? "").trim()) return { result: { ok: false, reason: "NO_SECRET" } };
         st.key = { held: true, on: false, set_at: "2026-10-06T10:04:00Z", by: "admin" }; return { result: { ok: true, set_at: st.key.set_at } };
@@ -122,24 +129,30 @@ test("R15 once the claim succeeds the section asks who holds the hosting account
   for (const c of p.after()) assert.deepEqual([c.token, c.query], ["sess-founder", null], c.op);
 });
 
-test("R15 R17 R18 members and keys shows the current records (hosting access or that none is recorded, the court-notice choice, the assistant and the group key's state) and offers an administrator the same acts at any time", async () => {
+test("R15 R17 R18 members and keys shows the current records (hosting access or that none is recorded, the court-notice choice, the group key's state and keep-away's) and offers an administrator the same acts at any time", async () => {
   const pl = plane();
   const p = pageOver({ html: pageOf(undefined), session: { t: "sess-1", e: 0, w: "admin" }, fetch: pl.fetch });
   await settle();
   await p.el("#go-members").fire(); await settle();
   assert.equal(p.el("#mk-ha-now").textContent, "No one is recorded as holding the hosting account yet.");
   assert.equal(p.el("#mk-cn-now").textContent, "Nobody has chosen yet, which reads as not telling.");
-  assert.equal(p.el("#mk-ai-now").textContent, "The assistant is off for your group's Civicsmith. No group API key is held.");
+  assert.equal(p.el("#mk-gk-now").textContent, "Your group does not pay: no group API key is held.");
+  assert.equal(p.el("#mk-ka-now").textContent, "Off: your group does not keep its material away from AI.");
   p.el("#mk-ha-holders").value = "The treasurer"; await p.el("#mk-ha-set").fire(); await settle();
   assert.match(p.el("#mk-ha-now").textContent, /^Recorded: The treasurer, by admin/);
   p.el("#mk-cn-dont").checked = true; await p.el("#mk-cn-set").fire(); await settle();
   assert.equal(p.el("#mk-cn-now").textContent, "Your members are not told what a court can reach.");
-  p.el("#mk-ai-both").checked = true; p.el("#mk-ai-key").value = "sk-ant-group-secret";
-  await p.el("#mk-ai-set").fire(); await settle();
-  assert.equal(p.el("#mk-ai-now").textContent, "The assistant is on for your group's Civicsmith. The group's API key is held, and on.");
-  assert.deepEqual(ops(pl.sent, ["hostingaccessset", "courtnoticeset", "assistantset", "groupkeyset", "groupkeyswitch"]), [
+  p.el("#mk-gk-pays").checked = true; p.el("#mk-gk-key").value = "sk-ant-group-secret";
+  await p.el("#mk-gk-set").fire(); await settle();
+  assert.equal(p.el("#mk-gk-now").textContent, "Your group pays: its API key is held, and on.");
+  assert.equal(p.el("#mk-ka-act").hidden, false);
+  p.el("#mk-ka-reason").value = "We hold sources' medical records."; await p.el("#mk-ka-set").fire(); await settle();
+  assert.match(p.el("#mk-ka-now").textContent, /^On: your group keeps its material away from AI/);
+  assert.deepEqual(ops(pl.sent, ["hostingaccessset", "courtnoticeset", "groupkeyset", "groupkeyswitch", "aikeepaway"]), [
     ["hostingaccessset", { holders: "The treasurer", note: null }], ["courtnoticeset", { choice: "dont" }],
-    ["assistantset", { on: true }], ["groupkeyset", { key: "sk-ant-group-secret" }], ["groupkeyswitch", { on: true }]]);
+    ["groupkeyset", { key: "sk-ant-group-secret" }], ["groupkeyswitch", { on: true }],
+    ["aikeepaway", { on: true, reason: "We hold sources' medical records." }]]);
+  for (const r of ["groupkeystate", "aikeepawaystate"]) assert.ok(pl.sent.some((c) => c.op === r && c.method === "GET" && c.token === "sess-1"), r);
   /* a member who does not administer is offered none of it: the section itself is not offered */
   const m = pageOver({ html: pageOf(undefined), session: { t: "sess-2", e: 0, w: "ruth" }, fetch: plane({ administer: false }).fetch });
   await settle();
@@ -270,7 +283,7 @@ test("R16 the act is offered there: a name and an id sent as op=memberadd with r
   const q = await claimed();
   await q.el("#claim-on").fire(); await settle();
   assert.deepEqual([q.el("#claim-after").hidden, q.el("#claim-form").hidden], [true, false]);
-  assert.deepEqual(ops(q.after(), ["hostingaccessset", "courtnoticeset", "assistantset", "groupkeyset", "groupkeyswitch", "memberadd"]), []);
+  assert.deepEqual(ops(q.after(), ["hostingaccessset", "courtnoticeset", "groupkeyset", "groupkeyswitch", "aikeepaway", "securitytooladd", "memberadd"]), []);
   assert.ok(q.after().some((c) => c.op === "whoami"), "the panel opened");
 });
 
@@ -334,47 +347,101 @@ test("R17 once the claim succeeds the section offers whether members are told wh
   assert.equal(q.el("#cl-cn-err").textContent, "Only an administrator can do this.");
 });
 
-test("R18 once the claim succeeds the section offers how members reach the assistant: the group's API key, members' own accounts, both, or no AI, nothing preselected; each sets the switch as it says, and the key goes once, in the body, and is never shown again", async () => {
+const PAYS = [/<b>The group pays\.<\/b> One Anthropic API key, held by the group, serves every member who has no account of\s+their own\./,
+  /<b>The group does not pay\.<\/b>/];
+const OWN = /A member may always connect their own Claude subscription or API key, which serves only them, unless\s+your group keeps its material away from AI\./;
+
+test("R18 once the claim succeeds the section offers two separate choices, each through its owner's op, and states that a member may always connect their own account unless the group keeps its material away from AI; the four-way choice and op=assistantset are gone", async () => {
   const claim = claimSection(PAGE_HTML);
-  for (const v of ["group", "own", "both", "none"]) assert.match(claim, new RegExp(`id="cl-ai-${v}" value="${v}"`));
-  for (const re of [/The group's API key\.<\/b> One Anthropic API key, held by the group, serves every member who has no account of their own\./,
-                    /Members' own accounts\.<\/b> Each member who wants the assistant connects their own Claude subscription or API key\./,
-                    /<b>Both\.<\/b>/, /<b>No AI\.<\/b> Your group's Civicsmith without the assistant\./]) assert.match(claim, re);
-  assert.doesNotMatch(claim, /\bchecked\b/);
+  const after = (claim.match(/<div id="claim-after" hidden>[^]*$/) || [""])[0];
+  for (const re of [...PAYS, OWN, /<b>Keep our material away from AI\.<\/b> Off unless an administrator turns it on/]) assert.match(after, re);
+  /* separate: the pay choice and keep-away are two blocks, each after R15 and R17 and before R30's step */
+  const at = (id) => after.indexOf(`id="${id}"`);
+  assert.ok(at("cl-ha") < at("cl-cn") && at("cl-cn") < at("cl-gk") && at("cl-gk") < at("cl-ka") && at("cl-ka") < at("cl-st"), "R15, R17, then R18's two, then R30");
+  assert.doesNotMatch(after, /\bchecked\b/, "nothing preselected");
+  for (const gone of [/"assistant(?:set|state)"/, /\b(?:cl|mk)-ai-/, /\bas-(?:state|choose|toggle)\b/, /<b>Both\.<\/b>/, /<b>No AI\.<\/b>/])
+    assert.equal(gone.test(PAGE_HTML), false, `the four-way choice and the switch are gone: ${gone}`);
+  /* the page never sends op=assistantset, whatever is pressed */
+  const p = await claimed();
+  p.el("#cl-gk-pays").checked = true; p.el("#cl-gk-key").value = "sk-ant-x"; await p.el("#cl-gk-set").fire(); await settle();
+  p.el("#cl-ka-reason").value = "r"; await p.el("#cl-ka-set").fire(); await settle();
+  await p.el("#claim-on").fire(); await settle();
+  await p.el("#pn-ka-set").fire(); await settle();
+  await p.el("#go-members").fire(); await settle();
+  assert.ok(p.sent.length > 20, "not vacuous");
+  assert.deepEqual(p.sent.filter((c) => /^assistant/.test(c.op)), []);
+});
+
+test("R18 whether the group pays: nothing preselected; 'the group pays' asks for the key and sends it once, in the body, through op=groupkeyset then op=groupkeyswitch on, never showing it again; 'the group does not pay' sets nothing; credentials' refusal is stated", async () => {
   const SECRET = "sk-ant-api03-the-groups-own-key";
-  const cases = {
-    group: [["assistantset", { on: true }], ["groupkeyset", { key: SECRET }], ["groupkeyswitch", { on: true }]],
-    both: [["assistantset", { on: true }], ["groupkeyset", { key: SECRET }], ["groupkeyswitch", { on: true }]],
-    own: [["assistantset", { on: true }]],
-    none: [["assistantset", { on: false }]],
-  };
-  for (const [choice, want] of Object.entries(cases)) {
-    const p = await claimed();
-    await p.el("#cl-ai-set").fire(); await settle();
-    assert.deepEqual(ops(p.after(), ["assistantset", "groupkeyset", "groupkeyswitch"]), [], "unchosen sends nothing");
-    p.el(`#cl-ai-${choice}`).checked = true; await p.el(`#cl-ai-${choice}`).fire("change");
-    assert.equal(p.el("#cl-ai-keybox").hidden, !(choice === "group" || choice === "both"), choice);
-    p.el("#cl-ai-key").value = SECRET;
-    await p.el("#cl-ai-set").fire(); await settle();
-    const sent = p.after().filter((c) => ["assistantset", "groupkeyset", "groupkeyswitch"].includes(c.op));
-    assert.deepEqual(sent.map((c) => [c.op, c.body]), want, choice);
-    for (const c of sent) { assert.equal(c.method, "POST"); assert.deepEqual([c.token, c.query], ["sess-founder", null]); }
-    /* the key is never shown again: the field is emptied, and no drawn text holds it */
-    assert.equal(p.el("#cl-ai-key").value, "", choice);
-    for (const s of ["#cl-ai-now", "#cl-ai-err", "#as-state", "#mk-ai-now"])
-      assert.equal(`${p.el(s).textContent}${p.el(s).innerHTML}`.includes(SECRET), false, `${choice} ${s}`);
-    assert.equal(p.el("#cl-ai-err").textContent, "", choice);
-  }
-  /* the group key's refusal is stated in credentials' words */
+  const p = await claimed();
+  await p.el("#cl-gk-set").fire(); await settle();
+  assert.deepEqual(ops(p.after(), ["groupkeyset", "groupkeyswitch"]), [], "unchosen sends nothing");
+  assert.match(p.el("#cl-gk-err").textContent, /nothing is recorded until you do/);
+  /* the key is asked only for "the group pays" */
+  p.el("#cl-gk-not").checked = true; await p.el("#cl-gk-not").fire("change");
+  assert.equal(p.el("#cl-gk-keybox").hidden, true);
+  p.el("#cl-gk-key").value = SECRET;
+  await p.el("#cl-gk-set").fire(); await settle();
+  assert.deepEqual(ops(p.after(), ["groupkeyset", "groupkeyswitch", "groupkeyremove"]), [], "'does not pay' sets nothing");
+  assert.equal(p.el("#cl-gk-said").textContent, "Nothing was recorded: your group does not pay for the assistant.");
+  assert.equal(p.el("#cl-gk-key").value, "");
+  p.el("#cl-gk-not").checked = false; p.el("#cl-gk-pays").checked = true; await p.el("#cl-gk-pays").fire("change");
+  assert.equal(p.el("#cl-gk-keybox").hidden, false);
+  p.el("#cl-gk-key").value = "   "; await p.el("#cl-gk-set").fire(); await settle();
+  assert.deepEqual(ops(p.after(), ["groupkeyset"]), [], "no key, nothing sent");
+  assert.match(p.el("#cl-gk-err").textContent, /Paste the group's Anthropic API key/);
+  p.el("#cl-gk-key").value = SECRET; await p.el("#cl-gk-set").fire(); await settle();
+  const sent = p.after().filter((c) => ["groupkeyset", "groupkeyswitch"].includes(c.op));
+  assert.deepEqual(sent.map((c) => [c.op, c.body]), [["groupkeyset", { key: SECRET }], ["groupkeyswitch", { on: true }]]);
+  for (const c of sent) { assert.equal(c.method, "POST"); assert.deepEqual([c.token, c.query], ["sess-founder", null]); }
+  assert.equal(p.el("#cl-gk-now").textContent, "Your group pays: its API key is held, and on.");
+  /* never shown again: the field is emptied, no drawn text and no later request holds it */
+  assert.equal(p.el("#cl-gk-key").value, "");
+  for (const s of ["#cl-gk-now", "#cl-gk-err", "#cl-gk-said", "#pn-ka-now", "#mk-gk-now"]) assert.equal(`${p.el(s).textContent}${p.el(s).innerHTML}`.includes(SECRET), false, s);
+  const later = p.sent.slice(p.sent.findIndex((c) => c.op === "groupkeyset") + 1);
+  assert.equal(later.some((c) => JSON.stringify(c).includes(SECRET)), false);
+  /* credentials' refusal, in its words, and not switched on when the key was refused */
   const r = await claimed({ refuse: { groupkeyset: { reason: "NOT_AN_ADMIN", translation: "Only an active administrator holds the group's key." } } });
-  r.el("#cl-ai-group").checked = true; r.el("#cl-ai-key").value = SECRET;
-  await r.el("#cl-ai-set").fire(); await settle();
-  assert.equal(r.el("#cl-ai-err").textContent, "Only an active administrator holds the group's key.");
-  assert.deepEqual(ops(r.after(), ["groupkeyswitch"]), [], "not switched on when the key was refused");
-  /* the group's key chosen with no key pasted: nothing is sent */
-  const k = await claimed();
-  k.el("#cl-ai-both").checked = true; k.el("#cl-ai-key").value = "  ";
-  await k.el("#cl-ai-set").fire(); await settle();
-  assert.deepEqual(ops(k.after(), ["assistantset", "groupkeyset", "groupkeyswitch"]), []);
-  assert.match(k.el("#cl-ai-err").textContent, /Paste the group's Anthropic API key/);
+  r.el("#cl-gk-pays").checked = true; r.el("#cl-gk-key").value = SECRET;
+  await r.el("#cl-gk-set").fire(); await settle();
+  assert.equal(r.el("#cl-gk-err").textContent, "Only an active administrator holds the group's key.");
+  assert.deepEqual(ops(r.after(), ["groupkeyswitch"]), []);
+  const w = await claimed({ refuse: { groupkeyswitch: { reason: "NO_SECRET", translation: "No key is held to switch on." } } });
+  w.el("#cl-gk-pays").checked = true; w.el("#cl-gk-key").value = SECRET; await w.el("#cl-gk-set").fire(); await settle();
+  assert.equal(w.el("#cl-gk-err").textContent, "No key is held to switch on.");
+});
+
+test("R18 'Keep our material away from AI' is off and shown off; turning it on asks the reason and says what it does before it is sent, then sends op=aikeepaway with on true and the reason; credentials' refusal (NO_REASON among them) is stated; leaving it off sends nothing", async () => {
+  const p = await claimed();
+  assert.equal(p.el("#cl-ka-now").textContent, "Off: your group does not keep its material away from AI.");
+  assert.deepEqual([p.el("#cl-ka-act").hidden, p.el("#cl-ka-why").hidden], [false, false]);
+  assert.equal(p.el("#cl-ka-set").textContent, "Keep our material away from AI");
+  /* what it does, said before it is pressed (DEC-172 (3), (6)) */
+  assert.equal(p.el("#cl-ka-what").textContent, "Turning it on means no assistant may be used in your group while it is on: not the group's API key, and not a member's own account. Everything else works without the assistant. Every member is shown your reason.");
+  assert.deepEqual(ops(p.after(), ["aikeepaway"]), [], "left off, nothing is sent");
+  /* no reason, or one past 2,000 characters: nothing sent */
+  p.el("#cl-ka-reason").value = "   "; await p.el("#cl-ka-set").fire(); await settle();
+  assert.match(p.el("#cl-ka-err").textContent, /Write your reason first/);
+  p.el("#cl-ka-reason").value = "x".repeat(2001); await p.el("#cl-ka-set").fire(); await settle();
+  assert.match(p.el("#cl-ka-err").textContent, /longer than 2,000 characters/);
+  assert.deepEqual(ops(p.after(), ["aikeepaway"]), []);
+  /* exactly 2,000 is sent, as typed but trimmed, by the founder's session in the body */
+  const R = "y".repeat(2000);
+  p.el("#cl-ka-reason").value = `  ${R} `; await p.el("#cl-ka-set").fire(); await settle();
+  const sent = p.after().filter((c) => c.op === "aikeepaway");
+  assert.deepEqual(sent.map((c) => [c.method, c.body, c.token, c.query]), [["POST", { on: true, reason: R }, "sess-founder", null]]);
+  assert.match(p.el("#cl-ka-now").textContent, /^On: your group keeps its material away from AI, so no assistant may be used in it\. Turned on by admin on /);
+  assert.equal(p.el("#cl-ka-reason").value, "");
+  /* credentials' refusal, in its words */
+  const q = await claimed({ refuse: { aikeepaway: { reason: "NO_REASON", translation: "Keeping the group's material away from AI needs a reason. Nothing was written." } } });
+  q.el("#cl-ka-reason").value = "a reason"; await q.el("#cl-ka-set").fire(); await settle();
+  assert.equal(q.el("#cl-ka-err").textContent, "Keeping the group's material away from AI needs a reason. Nothing was written.");
+  assert.equal(q.el("#cl-ka-now").textContent, "Off: your group does not keep its material away from AI.");
+  /* the members and keys section offers the same act to an administrator, and the state of both */
+  const m = await claimed();
+  await m.el("#claim-on").fire(); await settle();
+  await m.el("#go-members").fire(); await settle();
+  assert.deepEqual([m.el("#mk-ka-act").hidden, m.el("#mk-ka-set").textContent], [false, "Keep our material away from AI"]);
+  assert.equal(m.el("#mk-gk-now").textContent, "Your group does not pay: no group API key is held.");
 });

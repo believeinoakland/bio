@@ -44,14 +44,15 @@ test("R17 op=bootstrap: service, this isolate's version (0.0.0 unset), bootstrap
   const own = await read(await bootstrapReport({ VERSION: "plane-3" }, "x", { stub: bootstrapStub({ claimed: true }), ...io }));
   assert.equal("storeVersion" in own.body, false);
   const env = { VERSION: "plane-3", AGENT_WORKER: member("agent-worker", "a-1"), PDF_WORKER: member("ocr-worker", "o-1"),
-                SHEET_WORKER: member("sheet-worker", "s-1") };
+                SHEET_WORKER: member("sheet-worker", "s-1"), FILE_SCANNER: member("file-scanner", "f-1") };
   const withMembers = await read(await bootstrapReport(env, "x", { members: true, stub, ...io }));
   assert.deepEqual(withMembers.body.memberVersions, {
     "agent-worker": { binding: "AGENT_WORKER", state: "SERVING", version: "a-1" },
     "pdf-worker": { binding: "PDF_WORKER", state: "MISNAMED", name: "ocr-worker", version: "o-1" },
     "ocr-worker": { binding: "OCR_WORKER", state: "UNBOUND" },
     "sheet-worker": { binding: "SHEET_WORKER", state: "SERVING", version: "s-1" },
-    "agent-runner": { binding: "AGENT_RUNNER", state: "UNBOUND" } });
+    "agent-runner": { binding: "AGENT_RUNNER", state: "UNBOUND" },
+    "file-scanner": { binding: "FILE_SCANNER", state: "SERVING", version: "f-1" } });
   assert.equal("memberVersions" in (await read(await bootstrapReport(env, "x", { stub, ...io }))).body, false);
   const silent = await read(await bootstrapReport(env, "x", { stub: { fetch: async () => new Response("x", { status: 500 }) }, ...io }));
   assert.deepEqual([silent.status, silent.body.reason], [502, "STORE_DID_NOT_ANSWER"]);
@@ -71,12 +72,12 @@ test("R18 op=selftest: bindings (STORE; CAPTURES and PUBLISHED true or not confi
   const stats = { bundles: 3 };
   const seen = [];
   const store = { async fetch(u) { seen.push(String(u)); return Response.json({ ok: true, result: stats }); } };
-  const tokens = { ADMIN_TOKEN: LIVE, MEMBER_TOKEN: LIVE + "m", PROBE_TOKEN: LIVE + "p" };
+  const tokens = { ADMIN_TOKEN: LIVE, PROBE_TOKEN: LIVE + "p" };
   const caps = bucket();
   const env = envOver(store, { ...tokens, CAPTURES: caps, PUBLISHED: bucket(), VERSION: "v9" });
   const r = await read(await selftest(env, "scratch", { cls: "admin", viewer: "class:admin" }, io));
   assert.equal(r.status, 200);
-  assert.deepEqual(r.body.bindings, { STORE: true, CAPTURES: true, PUBLISHED: true, ADMIN_TOKEN: true, MEMBER_TOKEN: true,
+  assert.deepEqual(r.body.bindings, { STORE: true, CAPTURES: true, PUBLISHED: true, ADMIN_TOKEN: true,
                                       PROBE_TOKEN: true, DAEMON_TOKEN: "not configured" });
   assert.deepEqual([r.body.ok, r.body.r2Configured, r.body.store, r.body.captures, r.body.version, r.body.tokenClass],
                    [true, true, stats, "read-write ok", "v9", "admin"]);
@@ -99,8 +100,28 @@ test("R18 op=selftest: bindings (STORE; CAPTURES and PUBLISHED true or not confi
   assert.deepEqual([silent.body.ok, silent.body.store], [false, "ERR the store did not answer /stats"]);
   const trip = await read(await selftest(envOver(store, { ...tokens, CAPTURES: bucket(true), PUBLISHED: bucket() }), "bio", {}, io));
   assert.deepEqual([trip.body.ok, trip.body.captures], [false, "MISMATCH"]);
-  const noProbe = await read(await selftest(envOver(store, { ADMIN_TOKEN: LIVE, MEMBER_TOKEN: LIVE }), "bio", {}, io));
+  const noProbe = await read(await selftest(envOver(store, { ADMIN_TOKEN: LIVE }), "bio", {}, io));
   assert.deepEqual([noProbe.body.ok, noProbe.body.bindingsAllPresent], [false, false]);
+  const noAdmin = await read(await selftest(envOver(store, { PROBE_TOKEN: LIVE }), "bio", {}, io));
+  assert.deepEqual([noAdmin.body.ok, noAdmin.body.bindingsAllPresent], [false, false]);
+});
+
+test("R18 (T36; N711) MEMBER_TOKEN is no binding: op=selftest neither reads, reports nor requires it; ok and bindingsAllPresent rest on STORE, ADMIN_TOKEN and PROBE_TOKEN, whether a member token is absent, live, short or a published value", async () => {
+  const store = { async fetch() { return Response.json({ ok: true, result: { bundles: 0 } }); } };
+  const base = { ADMIN_TOKEN: LIVE, PROBE_TOKEN: LIVE + "p" };
+  await published("a-published-member-value", async () => {
+    for (const member of [undefined, LIVE + "m", "short", "a-published-member-value"]) {
+      let reads = 0;
+      const env = envOver(store, base);
+      Object.defineProperty(env, "MEMBER_TOKEN", { enumerable: true, get() { reads += 1; return member; } });
+      const r = await read(await selftest(env, "bio", {}, io));
+      assert.deepEqual([r.status, r.body.ok, r.body.bindingsAllPresent], [200, true, true], String(member));
+      assert.equal("MEMBER_TOKEN" in r.body.bindings, false, "not reported");
+      assert.deepEqual(Object.keys(r.body.bindings), ["STORE", "CAPTURES", "PUBLISHED", "ADMIN_TOKEN", "PROBE_TOKEN", "DAEMON_TOKEN"]);
+      assert.equal(reads, 0, "not read");
+      assert.equal(JSON.stringify(r.body).includes("MEMBER_TOKEN"), false);
+    }
+  });
 });
 
 test("R3 R10 R11 over the wire: a credentialed reader gets the row or the identity, anybody else the public projection, a silence answers the store-silence refusal; only the two public projections may be named", async () => {
@@ -141,7 +162,7 @@ const plane = async () => {
     compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
     durableObjects: { STORE: { className: "Store", useSQLite: true } },
     r2Buckets: ["CAPTURES", "PUBLISHED"],
-    bindings: { ADMIN_TOKEN: "adm-livefire-0123456789", MEMBER_TOKEN: "mem-livefire-0123456789",
+    bindings: { ADMIN_TOKEN: "adm-livefire-0123456789",
                 PROBE_TOKEN: "prb-livefire-0123456789", VERSION: "test", INSTANCE_NAME: "canary-town" },
   });
   await mf.ready;
@@ -165,7 +186,7 @@ const envWith = async (edit = null, more = {}) => {
   } };
   return { STORE: { idFromName: (n) => n, get: () => stub }, CAPTURES: await m.getR2Bucket("CAPTURES"),
            PUBLISHED: await m.getR2Bucket("PUBLISHED"), ADMIN_TOKEN: "adm-livefire-0123456789",
-           MEMBER_TOKEN: "mem-livefire-0123456789", PROBE_TOKEN: "prb-livefire-0123456789", ...more };
+           PROBE_TOKEN: "prb-livefire-0123456789", ...more };
 };
 
 test("R19 livefire against the scratch store: every assertion by name, verdict pass exactly when all passed, ok true whenever it answers", { timeout: 300000 }, async () => {
@@ -209,6 +230,17 @@ test("R19 each broken behaviour fails its own assertion by name: verdict fail, f
   assert.ok(pub.failing.includes("no configured token is a published repository value"));
   const short = await livefire(await envWith(null, { DAEMON_TOKEN: "short" }), "scratch", { viewer: "class:probe" });
   assert.ok(short.failing.includes("no configured token is shorter than 16 characters"));
+  /* (T36; N711) the token assertions run over ADMIN_TOKEN, PROBE_TOKEN and DAEMON_TOKEN: each of the three is named
+     when short or published, and a shared member bearer left bound is never read, so it fails nothing */
+  for (const name of ["ADMIN_TOKEN", "PROBE_TOKEN", "DAEMON_TOKEN"]) {
+    const s = await livefire(await envWith(null, { [name]: "short" }), "scratch", { viewer: "class:probe" });
+    assert.deepEqual(s.assertions.find((a) => a.name === "no configured token is shorter than 16 characters").got, [name], name);
+  }
+  const member = await published("mem-livefire-published-value", async () =>
+    livefire(await envWith(null, { MEMBER_TOKEN: "mem-livefire-published-value" }), "scratch", { viewer: "class:probe" }));
+  assert.deepEqual([member.verdict, member.failing], ["pass", []]);
+  const memberShort = await livefire(await envWith(null, { MEMBER_TOKEN: "short" }), "scratch", { viewer: "class:probe" });
+  assert.deepEqual([memberShort.verdict, memberShort.failing], ["pass", []]);
   /* R2: one bucket without the other; neither is declared, and passes */
   const half = await livefire(await envWith(null, { PUBLISHED: undefined }), "scratch", { viewer: "class:probe" });
   assert.deepEqual([half.verdict, half.failing.includes("R2 absence is symmetric: both buckets or neither")], ["fail", true]);
@@ -231,7 +263,7 @@ test("R17 R18 R37 R38 the report ops' dispatch, moved out of src/index.mjs: INST
   const inner = stubOver(w.m, { stats: async () => ({ bundles: 0 }), capturelimit: async () => ({ ceiling: 50 }) });
   const store = { fetch: async (input, init) => { seen.push(String(input instanceof Request ? input.url : input)); return inner.fetch(input, init); } };
   const asked = [];
-  const env = { STORE: { idFromName: (n) => { asked.push(n); return n; }, get: () => store }, ADMIN_TOKEN: LIVE, MEMBER_TOKEN: LIVE + "m", PROBE_TOKEN: LIVE + "p" };
+  const env = { STORE: { idFromName: (n) => { asked.push(n); return n; }, get: () => store }, ADMIN_TOKEN: LIVE, PROBE_TOKEN: LIVE + "p" };
   const url = (q = "") => new URL(`http://x/api/?${q}`);
   const st = await read(await instanceSetupOp("selftest", url(), env, "scratch", { cls: "probe", viewer: "class:probe", ...io }));
   assert.deepEqual([st.status, st.body.tokenClass, st.body.ok], [200, "probe", true]);
