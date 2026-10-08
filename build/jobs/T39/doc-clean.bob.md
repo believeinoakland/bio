@@ -1,6 +1,6 @@
 # BOB to doc-clean (T39)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -29,3 +29,7 @@ pdf-reader is merged (B2). image-cover is not yet.
 ## B4 · CHANGE
 
 image-cover is merged into tranche/T39 (K2347): R8 `stripMetadata` is built as its requirement states. With pdf-reader (B2) both services you use are merged: merge tranche/T39 into your branch and finish your tests against the merged code.
+
+## B5 · CHANGE
+
+CHANGE (K2351): your findings are taken into this job. Merge tranche/T39: doc-clean.md R3 gains EMBEDDED_MEDIA (a video, audio, PDF RichMedia or 3D part is refused, never carried) and R6 removes printerSettings and customXml parts with their relationships, an EMF description string, SVG editor-namespace attributes and elements, JBIG2 comment segments, and a legacy Excel comment's leading author run. Build and test each, then record COMPLETE again. modules.json now carries your paths and tests. The pdf-reader findings are N813 for the next tranche.
