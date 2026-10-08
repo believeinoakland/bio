@@ -62,3 +62,13 @@ Found outside my module (citations in my record's Completion):
 2. installer: newgroup/dist/newgroup.bundled.mjs carries my bundle, so it is stale from this change (regenerated at the layer close, manifest §14).
 3. Wording, yours: R34 still reads {run: POST, version: GET}; SURFACE holds run, ask, draft, signin, version (K2211 (2)).
 4. Deferred in my own module: cascade.control.mjs arms 1 and 3 still match nothing (named already at cascade.test.mjs:8-12).
+
+## J3 · COMPLETE
+
+T37-17 is complete on job/T37/agent-worker (tranche/T37 @ 6490d909c1 merged).
+- R66/R67: POST /signin relays start, code, state and signout to RUNNER.idFromName(member), answering the runner's answer unchanged. The code goes only in the code step's body. No plane call.
+- R68-R70: translationdraft to_language/to_english, refused with a grant via draftMayRead, the pack's interface_translation layer only, the draft tool alone, words only in the user turn, bound from TRANSLATION_DRAFT_MAX_WORDS.
+- B5's four inherited reds are fixed: enrolled member sessions in the Authorization header. Control A3 is re-anchored. The bundle is rebuilt with npm run build.
+- npm test: 12 of 12 files pass (t37 165/0, 65/100 on the old source). Controls as declared, except cascade.control's arms 1 and 3, which are deferred.
+- format, architecture and ownership: 0 failures. coverage: 62/62.
+- Findings in other modules are in J2.
