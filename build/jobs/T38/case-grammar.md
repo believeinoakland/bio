@@ -25,3 +25,7 @@ Read whole myself, as B1 measured it (246 KB): `build/requirements/case-grammar.
 - `format`: 137 modules, 136 requirements files; 0 failures. `architecture`: 33 product files, 102 relative imports; 0 failures. `coverage`: 22 of 22 live requirement ids named by a test; 0 failures. `ownership … tranche/T38`: 6 files changed by case-grammar; 0 failures.
 
 Size (session_013zcnQ4W9BbvuNM5wQzXJFL): test runs 15, module lines 2329
+
+## J1 · REPORT
+
+Generated artifact stale (mechanics §14): bio-plane/src/case-checker/program.mjs (it bundles case-grammar; complete.mjs changed), and the plane bundle carrying it. case-checker program.test.mjs R13 is red until L8's close regenerates it: rule 6's accepted red 8. Not rebuilt by hand. Every other user's tests pass with my change (record).
