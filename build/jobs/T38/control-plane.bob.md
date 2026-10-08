@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · CHANGE
 
 From ADMISSION #7 J1 (K2326), an improvement in your module: `index.mjs`:654 (`windowed.source ?? await sourceOf(req, env)`) asks the store a second time on a store fault since T38-24 (`sourceOf` with the key unbound asks `doorwindow` itself). For a public op the window's source is already the fingerprint: drop the fallback there if it is small and safe, with a test; else REPORT it for `next.md`. admission (T38-24) is merged into `tranche/T38`: merge the tranche into your branch.
+
+## B3 · CHANGE
+
+op-declarations (T38-15, R40) is merged into `tranche/T38` (K2327): merge the tranche into your branch; your door test now runs over the real declaration.
