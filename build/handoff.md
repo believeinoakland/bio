@@ -12,8 +12,8 @@
 
 - **T37** on `tranche/T37`. L1–L10 closed (L8 K2229, L9 K2234, L10 K2237). `main` moved at T36's close (K2240): at T37's close merge `main` into the tranche first (never a rebase) and run the checks (§5.7 (1)).
 - **L11 running** (K2237), eleven jobs (addresses in the plan's Jobs line). Merged: op-grades (K2242, K2245), notice-producers (K2244), setup-page (K2245), wizard-scripts, instance-setup, op-declarations, answer-envelope (K2249), affordances (re-merged K2250). Open:
-  - STORE-DOOR #3: CHANGE B3 (re-run against the real instance-setup); merge when COMPLETE.
-  - CONTROL-PLANE #26: built, WAITING ON BOB (J2); send RESUME once store-door is re-merged (it merges the tranche and runs steps 5–7).
+  - STORE-DOOR #3: merged (K2252).
+  - CONTROL-PLANE #26: RESUME B3 sent (K2252); merge when COMPLETE.
   - PLANE #26: CHANGE B3 (merge tranche, re-pin `door.test.mjs`:111 to 33 routes, ask.test reds should clear); merges last; strike its R29 mark at the merge (it made the todo a test).
   - L11 order: … → store-door → control-plane → plane.
 - **Reds:** plan rule 6 items 1–26 (7, 19, 25 cleared). At L11's close check item 22 (legacy-ui `statement-ack.test.mjs`, its M0-107 timeout) and send it to `next.md` if it stands; items 21, 16, 15 and rule 4's (item 8) should clear with T37-33.
