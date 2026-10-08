@@ -46,3 +46,18 @@ test("R19: compareProvenance answers agrees, differs with the pages grouped by t
   assert.equal(describePages([0, 1, 2, 4]), "pages 1-3, 5");
   assert.equal(describePages([3]), "page 4");
 });
+
+test("R18: text_sha256 is null with `why` both for absent text and for empty text, and a text that holds a character is digested with no `why`", async () => {
+  const absent = await readingProvenance({ text: null });
+  assert.equal(absent.text_sha256, null);
+  assert.equal(typeof absent.why, "string");
+  for (const empty of ["", { document: "", pages: [], counts: { chars: 0, undetermined: 0 } }]) {
+    const p = await readingProvenance({ text: empty, tier: 1 });
+    assert.equal(p.text_sha256, null);
+    assert.equal(p.text_chars, 0);
+    assert.ok(typeof p.why === "string" && p.why.length > 0, "empty text says why it is not digested");
+  }
+  const held = await readingProvenance({ text: "a", tier: 1 });
+  assert.equal(held.text_sha256, hex(flattenText("a").text));
+  assert.equal("why" in held, false);
+});
