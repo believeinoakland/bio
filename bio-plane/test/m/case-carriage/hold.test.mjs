@@ -76,6 +76,7 @@ test("R1 a document whose bytes are only in the evidence store is held as eviden
   w.st.sql.exec(`INSERT INTO register (capture_sha, bundle_id, path, encoding, bytes, registered) VALUES (?, ?, 'snapshots/blob.pdf', 'binary', 4321, ?)`,
                 blob, DOC, NOW);
   blobFile(w, DOC, "snapshots/blob.pdf", blob, 4321);
+  w.receipt(big); w.receipt(blob);   // (T39) fetched by this copy, so carried as captured
   const r = w.cc.holdMaterials(caseFm({ materials: [docRow(DOC, big), docRow(DOC, blob)] }), { caseId: CASE, edition: 1, at: NOW });
   assert.deepEqual(r.materials, [{ sha: big, held: "evidence" }, { sha: blob, held: "evidence" }]);
   assert.deepEqual(r.files.map((f) => [f.sha256, f.kind, f.bytes]), [[big, "document", 999], [blob, "document", 4321]]);
@@ -273,6 +274,7 @@ test("R2 heldMaterialsOf answers the list R1 wrote for that case edition in its 
   const big = sha("evidence only");
   w.st.sql.exec(`INSERT INTO register (capture_sha, bundle_id, path, encoding, bytes, registered) VALUES (?, ?, 'snapshots/big.pdf', 'binary', 9, ?)`,
                 big, DOC, NOW);
+  w.receipt(big);
   w.cc.holdMaterials(caseFm({ materials: [docRow("INFO-2026-0002-annex", b), docRow(DOC, big), docRow(DOC, a)] }),
                      { caseId: CASE, edition: 2, at: NOW });
   w.cc.holdMaterials(caseFm({ materials: [docRow(DOC, null)] }), { caseId: CASE, edition: 3, at: NOW });

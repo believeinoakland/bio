@@ -1,8 +1,8 @@
-/* case-grammar at its interface, T37 (N757; DEC-180 (4); K2206): R12's `obscured` on a `document` row (a photo
-   carried as its copy), R13's `bio-case-file/3` with its `obscured` kind and that kind's three departures, a `/2` file
+/* case-grammar at its interface, T37 (N757; DEC-180 (4); K2206): R12's `obscured` on a `document` row (a material
+   carried as its copy: a photo's, or since T39 a member document's cleaned copy, N806, K2333), R13's `bio-case-file/3` with its `obscured` kind and that kind's three departures, a `/2` file
    read as written, and R14's complete edition listing the copy with its label, an edition stating no `obscured`
    rendering the bytes it rendered before T37 (`./complete-v7-pre-t37-golden.json`). Each clause has its own test and
-   its negative controls (K874). */
+   its negative controls (K874); the T39 tests, at the end, drive a member document's cleaned copy through all three. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -11,7 +11,8 @@ import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import * as CG from "../../../src/case-grammar/index.mjs";
 import { doc, sha } from "./helpers.mjs";
 import { manifestFor, caseFileFixture, editionInput, PHOTO, PHOTO_ROW, PHOTO_BYTES, PHOTO_COPY_BYTES, OBSCURED_LABEL,
-         MINUTES, PLAIN_PHOTO, PLAIN_PHOTO_ROW, PLAIN_PHOTO_BYTES, PLAIN_PHOTO_COPY_BYTES } from "./casefile-fixture.mjs";
+         MINUTES, PLAIN_PHOTO, PLAIN_PHOTO_ROW, PLAIN_PHOTO_BYTES, PLAIN_PHOTO_COPY_BYTES, MEMBER_DOC, MEMBER_DOC_ROW,
+         MEMBER_DOC_BYTES, MEMBER_DOC_COPY_BYTES, COPY_CLEANED_LABEL, memberDocRow, memberDocCopyBytes } from "./casefile-fixture.mjs";
 
 const fmOf = (text) => parseFrontmatter(text).data;
 const clean = (text) => assert.deepEqual(parseFrontmatter(text).findings, [], "the grammar reads every line");
@@ -51,7 +52,7 @@ test("R12 (T37) negative controls: a row without obscured is written byte for by
   for (const absent of [undefined, null, "a copy", ["x"]])
     assert.deepEqual(CG.materialsLines([{ ...WHOLE, obscured: absent }]), CG.materialsLines([WHOLE]), String(absent));
   assert.equal(CG.materialsOf(fmOf(doc(CG.CASE_DOCUMENT_FORMAT, CG.materialsLines([WHOLE])))).materials[0].obscured, null);
-  /* only a document row (a photo) is carried as its copy */
+  /* only a document row (a photo, or a member document) is carried as its copy */
   const obsLines = CG.materialsLines([{ ...PHOTO_ROW, kind: "observation", included: true }]);
   assert.equal(obsLines.some((l) => l.includes("obscured")), false);
   assert.equal(obsLines.includes("    included: true"), true);
@@ -254,7 +255,7 @@ test("R12 (T38) the label is case-carriage's OBSCURED_LABEL when the photo is ma
 });
 
 test("R14 (T38) an unmarked photo's copy is listed with the original's fingerprint and the copy's, and no label; a marked photo's lists its label word for word, its edition the bytes it rendered before T38", () => {
-  assert.deepEqual(Object.keys(CG.OBSCURED_WORDS), ["original", "copy", "unmarked"]);
+  assert.deepEqual(Object.keys(CG.OBSCURED_WORDS), ["original", "copy", "unmarked", "cleaned"]);
   const { manifest, files } = caseFileFixture({ photo: true, plainPhoto: true, fileFormat: CG.CASE_FILE_FORMAT });
   const html = CG.completeEditionOf(editionInput(manifest, files));
   assert.equal(files.get("complete-edition.html"), html);
@@ -279,4 +280,129 @@ test("R14 (T38) an unmarked photo's copy is listed with the original's fingerpri
   assert.equal(createHash("sha256").update(CG.completeEditionOf(editionInput(t37.manifest, t37.files))).digest("hex"),
                "910634ae4b5ee876b270213a84d13eafa65e717db54d8360ff5b1449e2c53a35");
   assert.equal(CG.completeEditionOf(editionInput(manifest, files)), html, "the same case file gives the same bytes");
+});
+
+/* ===== T39 (N806; K2315, K2333): a member document carried as its cleaned copy ===== */
+
+const DOC_COPY = sha(MEMBER_DOC_COPY_BYTES);
+
+test("R12 (T39) a member document's cleaned copy row: written flat as obscured_copy and obscured_label (COPY_CLEANED_LABEL, as handed), included false, the original's sha, text_sha, origin and archived_copy kept, and read back as obscured: {copy, label}", () => {
+  /* handed included: true, it is written false: the original never travels */
+  const lines = CG.materialsLines([{ ...MEMBER_DOC_ROW, included: true }]);
+  assert.deepEqual(lines, ["materials:", `  - ref: "${MEMBER_DOC}"`, '    kind: "document"', `    sha: "${sha(MEMBER_DOC_BYTES)}"`,
+    `    text_sha: "${sha("the lease draft's text")}"`, `    origin: "a member's file"`, "    archived_copy: null",
+    "    included: false", '    rests_under: "load_bearing"', `    obscured_copy: "${DOC_COPY}"`, `    obscured_label: "${COPY_CLEANED_LABEL}"`]);
+  for (const format of [CG.CASE_DOCUMENT_FORMAT, CG.CASE_DOCUMENT_FORMAT_V6]) {
+    const text = doc(format, [...lines, "material_attestations: []"]);
+    clean(text);
+    const fm = fmOf(text);
+    assert.deepEqual(Object.keys(fm.materials[0]), [...CG.MATERIAL_FIELDS, ...CG.MATERIAL_OBSCURED_FIELDS], "one flat row");
+    const [row] = CG.materialsOf(fm).materials;
+    assert.deepEqual(row, { ...MEMBER_DOC_ROW, included: false, obscured: { copy: DOC_COPY, label: COPY_CLEANED_LABEL } }, format);
+    assert.equal(row.sha, sha(MEMBER_DOC_BYTES), "the original's fingerprint is kept");
+  }
+  /* no format change: the format written is still /7, the case file /3 */
+  assert.equal(CG.CASE_DOCUMENT_FORMAT, "bio-case-document/7");
+  assert.equal(CG.CASE_FILE_FORMAT, "bio-case-file/3");
+  /* beside a marked and an unmarked photo, each read back as written, in the document's order */
+  const { files } = caseFileFixture({ photo: true, plainPhoto: true, memberDoc: true, fileFormat: CG.CASE_FILE_FORMAT });
+  clean(files.get("case.md"));
+  assert.deepEqual(CG.materialsOf(fmOf(files.get("case.md"))).materials.filter((r) => r.obscured).map((r) => [r.ref, r.included, r.obscured]), [
+    [PHOTO, false, { copy: COPY, label: OBSCURED_LABEL }], [PLAIN_PHOTO, false, { copy: sha(PLAIN_PHOTO_COPY_BYTES), label: null }],
+    [MEMBER_DOC, false, { copy: DOC_COPY, label: COPY_CLEANED_LABEL }]]);
+  /* negative control: the same row handed no obscured travels as handed, and reads obscured: null */
+  const { obscured, ...whole } = MEMBER_DOC_ROW;
+  const back = CG.materialsOf(fmOf(doc(CG.CASE_DOCUMENT_FORMAT, CG.materialsLines([{ ...whole, included: true }])))).materials[0];
+  assert.deepEqual([back.included, back.obscured], [true, null]);
+});
+
+test("R13 (T39) a bio-case-file/3 case file carrying a member document as its cleaned copy meets the rule; its copy no row names, a copy not carried, or its original carried, each departs", () => {
+  for (const as of ["pdf", "ooxml"]) {
+    const { manifest, files } = caseFileFixture({ memberDoc: as, fileFormat: CG.CASE_FILE_FORMAT });
+    const copy = sha(memberDocCopyBytes(as));
+    const f = manifest.files.find((x) => x.kind === "obscured");
+    assert.deepEqual(f && [f.path, f.sha256], [`materials/${MEMBER_DOC}/obscured`, copy], as);
+    assert.equal(manifest.files.some((x) => x.path.startsWith(`materials/${MEMBER_DOC}/`) && x.kind !== "obscured"), false, "no file of the original");
+    const rows = rowsOf(manifest, files);
+    assert.deepEqual(rows.find((r) => r.ref === MEMBER_DOC).obscured, { copy, label: COPY_CLEANED_LABEL });
+    assert.deepEqual(CG.caseFileManifestCheck(manifest, { materials: rows }), [], as);
+    /* negative controls, each named */
+    const unnamed = rows.map((r) => (r.ref === MEMBER_DOC ? { ...r, obscured: null } : r));
+    assert.deepEqual(rules(manifest, unnamed), ["obscured_unnamed"]);
+    assert.match(CG.caseFileManifestCheck(manifest, { materials: unnamed })[0].detail, /a copy carried in its original's place/);
+    const without = manifestFor(manifest.files.filter((x) => x.kind !== "obscured"), { format: CG.CASE_FILE_FORMAT });
+    assert.deepEqual(rules(without, rows), ["obscured_copy_missing"]);
+    for (const kind of CG.CASE_FILE_ORIGINAL_KINDS) {
+      const key = kind === "archive" ? [MEMBER_DOC, sha("zip")] : kind === "container" ? [MEMBER_DOC, sha(MEMBER_DOC_BYTES)] : MEMBER_DOC;
+      const orig = { path: CG.caseFilePath(kind, key), sha256: kind === "archive" ? sha("zip") : sha(MEMBER_DOC_BYTES), bytes: 9, part: 1, kind };
+      const m = manifestFor([...manifest.files, orig], { format: CG.CASE_FILE_FORMAT });
+      assert.deepEqual(rules(m, rows).filter((r) => r !== "chain_without_document"), ["original_carried"], `${as} ${kind}`);
+      assert.match(CG.caseFileManifestCheck(m, { materials: rows }).find((d) => d.rule === "original_carried").detail,
+                   /whose material the case carries as its copy: the original never travels/);
+    }
+  }
+});
+
+test("R14 (T39) a member document carried as its cleaned copy is listed with the original's fingerprint, the copy's fingerprint, the cleaned-copy line and its label word for word; a photo's copy in the same edition is listed as before", () => {
+  assert.equal(CG.OBSCURED_WORDS.cleaned, "Carried as a cleaned copy, with none of the details of who made it or of its pictures; the copy's fingerprint (SHA-256): ");
+  const lis = (part) => [...part.slice(0, part.indexOf("</ul>")).matchAll(/<li>([^<]*)<\/li>/g)].map((m) => m[1]);
+  const sectionAt = (html, ref) => { const m = materialsSection(html); return m.slice(m.indexOf(`<h3>${ref} (document)</h3>`)); };
+  for (const as of ["pdf", "ooxml"]) {
+    const { manifest, files } = caseFileFixture({ memberDoc: as, fileFormat: CG.CASE_FILE_FORMAT });
+    const html = CG.completeEditionOf(editionInput(manifest, files));
+    assert.equal(files.get("complete-edition.html"), html);
+    assert.deepEqual(lis(sectionAt(html, MEMBER_DOC)), [esc(`${CG.OBSCURED_WORDS.original}${sha(MEMBER_DOC_BYTES)}`),
+      esc(`Extracted text fingerprint: ${sha("the lease draft's text")}`), esc("Origin: a member's file"), esc("Archived copy: none recorded"),
+      esc(`${CG.OBSCURED_WORDS.cleaned}${sha(memberDocCopyBytes(as))}`), esc(COPY_CLEANED_LABEL), esc("A finding this case relies on rests on it.")], as);
+    const docPart = sectionAt(html, MEMBER_DOC);
+    for (const not of [CG.OBSCURED_WORDS.copy, CG.OBSCURED_WORDS.unmarked, "marked areas covered", "Included whole in this case file."])
+      assert.equal(docPart.includes(esc(not)), false, `never "${not.slice(0, 30)}"`);
+    /* content handed as bytes renders the same */
+    const input = editionInput(manifest, files);
+    assert.equal(CG.completeEditionOf({ ...input, files: input.files.map((f) => ({ ...f, content: new TextEncoder().encode(f.content) })) }), html);
+    assert.equal(CG.completeEditionOf(editionInput(manifest, files)), html, "the same case file gives the same bytes");
+  }
+  /* beside a marked and an unmarked photo: each photo is listed as before T39, and the photos' edition keeps its bytes */
+  const all = caseFileFixture({ photo: true, plainPhoto: true, memberDoc: true, fileFormat: CG.CASE_FILE_FORMAT });
+  const html = CG.completeEditionOf(editionInput(all.manifest, all.files));
+  const photos = caseFileFixture({ photo: true, plainPhoto: true, fileFormat: CG.CASE_FILE_FORMAT });
+  const before = CG.completeEditionOf(editionInput(photos.manifest, photos.files));
+  const listed = (h, ref, next) => { const m = materialsSection(h); const at = m.indexOf(`<h3>${ref} (document)</h3>`);
+    return m.slice(at, next ? m.indexOf(`<h3>${next} (document)</h3>`) : m.indexOf("</ul>", at) + 5); };
+  assert.equal(listed(html, PHOTO, PLAIN_PHOTO), listed(before, PHOTO, PLAIN_PHOTO), "a marked photo, as before");
+  assert.equal(listed(html, PLAIN_PHOTO), listed(before, PLAIN_PHOTO), "an unmarked photo, as before");
+  const t37 = caseFileFixture({ photo: true, fileFormat: CG.CASE_FILE_FORMAT });
+  assert.equal(createHash("sha256").update(CG.completeEditionOf(editionInput(t37.manifest, t37.files))).digest("hex"),
+               "910634ae4b5ee876b270213a84d13eafa65e717db54d8360ff5b1449e2c53a35", "a marked photo's edition, pinned before T38");
+});
+
+test("R14 (T39) negative controls: the cleaned-copy line is chosen by the copy's own bytes, a PDF or zip package, never by the row; an image copy with the same row, or a copy not handed, is listed as a photo's", () => {
+  const { manifest, files } = caseFileFixture({ memberDoc: true, fileFormat: CG.CASE_FILE_FORMAT });
+  const path = CG.caseFilePath("obscured", MEMBER_DOC);
+  const lineOf = (m) => { const h = materialsSection(CG.completeEditionOf(editionInput(manifest, m)));
+    return h.slice(h.indexOf(`<h3>${MEMBER_DOC} (document)</h3>`)); };
+  /* the same row, its copy's bytes an image: a photo's copy line, the label as handed */
+  for (const image of ["\xff\xd8\xffJPEG", "\x89PNG\r\n", "RIFF....WEBP", "%PDF", "PK\x03", "pk\x03\x04", "JPEG %PDF-"]) {
+    const m = new Map(files); m.set(path, image);
+    const part = lineOf(m);
+    assert.equal(part.includes(esc(CG.OBSCURED_WORDS.cleaned)), false, JSON.stringify(image));
+    assert.equal(part.includes(esc(`${CG.OBSCURED_WORDS.copy}${DOC_COPY}`)), true, JSON.stringify(image));
+  }
+  /* a copy not handed: listed as a photo's, never guessed a document */
+  const input = editionInput(manifest, files);
+  const html = CG.completeEditionOf({ ...input, files: input.files.filter((f) => f.path !== path) });
+  assert.equal(materialsSection(html).includes(esc(CG.OBSCURED_WORDS.cleaned)), false);
+  /* a cleaned copy with no label lists the cleaned-copy line alone; an edition stating no obscured renders as before */
+  const nolabel = new Map(files);
+  nolabel.set("case.md", files.get("case.md").replace(`    obscured_label: "${COPY_CLEANED_LABEL}"`, "    obscured_label: null"));
+  assert.notEqual(nolabel.get("case.md"), files.get("case.md"));
+  const part = lineOf(nolabel);
+  assert.equal(part.includes(esc(CG.OBSCURED_WORDS.cleaned)), true);
+  assert.equal(part.includes(esc(COPY_CLEANED_LABEL)), false);
+  const plain = caseFileFixture({ fileFormat: CG.CASE_FILE_FORMAT });
+  assert.equal(CG.completeEditionOf(editionInput(plain.manifest, plain.files)), JSON.parse(readFileSync(new URL("./complete-v7-pre-t37-golden.json", import.meta.url), "utf8")).v7.html);
+  for (const odd of [7, null, new Uint8Array(0), new Uint8Array([0x25, 0x50])]) {
+    const m = new Map(files); m.set(path, odd);
+    assert.doesNotThrow(() => CG.completeEditionOf(editionInput(manifest, m)));
+  }
 });
