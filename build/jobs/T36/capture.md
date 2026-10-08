@@ -58,3 +58,11 @@
 **P6:** `src/capture/` 3,800 lines (+16), under about 4,000.
 
 Size (session_01J8qhjNNKU3fBhYXuRdt3ne): test runs 6, module lines 3,800
+
+## J1 · REPORT
+
+T36-41 (N740): capture's R45 now pages past a cursor, but **neither drainer passes `after` yet**, so the head-of-line case N740 names is fixed at capture's interface, not yet at its users. Both changes are theirs (P7):
+- `tasks` `taskDrain` (`bio-plane/src/tasks/index.mjs`:324–368) reads `taskEvents({limit: cap, kind})` and retries unfiled or mint-exhausted events, which stay at the head (an attempt does not move an event). With `cap` or more of them at the head, filed events behind them are never drained. `#backoffWake` (:977–995) reads only the first `TASK_DRAIN_ALARM_BATCH`. Fix: page with `after` = the last event's `cursor` while a page comes back full.
+- plane `unpack.mjs`:43 reads the first 1000 `archive-unpack` events, and events at its retry limit stay queued, so past 1000 such events, newer ones are never seen. Same fix.
+- The tasks test stand-ins (`test/m/tasks/world.mjs`:115, `ledger.test.mjs`:53, 76) ignore `after` and need it once tasks passes it.
+- The plane bundle (`not_product`'s) carries the old `taskEvents`; it is stale until the layer close regenerates it (§14).
