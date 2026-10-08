@@ -1,6 +1,6 @@
 # project-roster (T38)
 
-**Status** · session_01BKBobNgxRx5HUaSctGHTUH · depth 2 · COMPLETE · handled B3
+**Status** · session_01BKBobNgxRx5HUaSctGHTUH · depth 2 · COMPLETE · handled B4
 
 ## J1 · QUESTION
 
@@ -30,3 +30,10 @@ My best reading, which I am building now: code strictly against the stated inter
 **Reading set:** read whole: my requirements; membership's requirements (public and private as they stood, then the diff at the merge); record-core's, record-grammar's and test-support's public parts; `layers.md` L2 row and the membership-split section; plan T38 whole; K617, K624, K874, K1043, K2053, K2083, K2270, K2271, K2275, K2276; `plan/membership-split.md`; membership's `index.mjs`, `checks.mjs` and `schema.mjs` whole; the nine membership test files the moved tests came from, whole.
 **P6:** 861 module lines.
 Size (session_01BKBobNgxRx5HUaSctGHTUH): test runs 18, module lines 861
+
+## J3 · COMPLETE
+
+B4 applied: `tranche/T38` merged (R20 read). R20 named by `ops.test.mjs`: the rows test re-titled R20 (every row's translation held to DEC-149's rule), and a new R20 battery (33 answers of all ten acts: 25 refusals, 38 member-facing texts, `translation`, `detail`, `message`, `remedy`) held to it. No code change was needed: every string already keeps the rule.
+**Tests:** `test/m/project-roster/` 28 pass, 2 fail: the two accepted reds (`figures-purge.test.mjs` R17 and R18 over the real record-core, until membership's second merge).
+**Checks:** format 0; architecture 0; coverage 20 of 20; ownership 2 files, 0 failures.
+Size (session_01BKBobNgxRx5HUaSctGHTUH): test runs 20, module lines 861

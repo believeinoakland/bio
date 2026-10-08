@@ -46,7 +46,7 @@ test("R1 R3 R4 R5 R8 R9 R10 R11 R12 R14 each op answers its service, its paramet
   assert.equal(op("projectrequests", {}, forged).reason, "PROJECT_REQUEST_NEEDS_A_MEMBER");
 });
 
-test("rows: each code this module mints carries its row, frozen, numbered, its `where` naming this module's region; the translations name the group's Civicsmith only so", () => {
+test("R20 rows: each code this module mints carries its row, frozen, numbered, its `where` naming this module's region; the translations name the group's Civicsmith only so", () => {
   const FORBIDDEN = /\b(cop(y|ies)|instances?|planes?|servers?)\b/i;
   const want = {
     TARGET_NOT_JOINED: "C-56.5", LAST_OWNER: "C-33.28", PROJECT_DIRECTORY_NEEDS_A_MEMBER: "C-70.4",
@@ -64,4 +64,61 @@ test("rows: each code this module mints carries its row, frozen, numbered, its `
     assert.ok(typeof row.translation === "string" && row.translation.length > 40, code);
     assert.doesNotMatch(row.translation, FORBIDDEN, code);
   }
+});
+
+test("R20 every refusal and answer a battery of this module's acts gives (translation, detail, message, remedy) names the group's Civicsmith only as \"your group's Civicsmith\", never a copy, an instance, a plane or a server", async () => {
+  const FORBIDDEN = /\b(cop(y|ies)|instances?|planes?|servers?)\b/i;
+  const w = await world().group("ann", "bob", "cal", "dee");
+  w.owned("PROJ-P", "ann", ["bob"], ["dee"]);
+  w.project("PROJ-D", "Discoverable D");
+  w.m.projectClaimOwner({ projectId: "PROJ-D", memberId: "ann" });
+  w.m.projectVisibilitySet({ projectId: "PROJ-D", setting: "discoverable", by: "ann", viewer: V("ann") });
+  w.project("PROJ-M");
+  w.bundle("INFO-1");
+  const r = w.r;
+  const answers = [
+    r.projectParticipants({ projectId: "PROJ-P", by: "cal" }),
+    r.projectParticipants({ projectId: "PROJ-P", by: "ann" }),
+    r.projectOwnerAdd({ projectId: "PROJ-P", handle: "bob", by: "cal", viewer: V("cal") }),
+    r.projectOwnerAdd({ projectId: "PROJ-D", handle: "bob", by: "cal", viewer: V("cal") }),
+    r.projectOwnerAdd({ projectId: "PROJ-P", handle: "bob", by: "bob", viewer: V("bob") }),
+    r.projectOwnerAdd({ projectId: "PROJ-P", handle: "zed", by: "ann", viewer: V("ann") }),
+    r.projectOwnerAdd({ projectId: "PROJ-P", handle: "dee", by: "ann", viewer: V("ann") }),
+    r.projectOwnerAdd({ projectId: "INFO-1", handle: "bob", by: "ann", viewer: V("ann") }),
+    r.projectOwnerAdd({ projectId: "PROJ-P", handle: "bob", by: "ann", viewer: V("ann") }),
+    r.projectOwnerAdd({ projectId: "PROJ-P", handle: "bob", by: "ann", viewer: V("ann") }),
+    r.projectOwnerRemove({ projectId: "PROJ-P", handle: "bob", by: "ann", reason: " ", viewer: V("ann") }),
+    r.projectOwnerRemove({ projectId: "PROJ-P", handle: "dee", by: "ann", reason: "r", viewer: V("ann") }),
+    r.projectOwnerRemove({ projectId: "PROJ-P", handle: "bob", by: "ann", reason: "r", viewer: V("ann") }),
+    r.projectOwnerRemove({ projectId: "PROJ-P", handle: "bob", by: "ann", reason: "r", viewer: V("ann") }),
+    r.projectOwnerRescue({ projectId: "PROJ-P", handle: "cal", by: "cal", reason: "r", viewer: "admin" }),
+    r.projectOwnerRescue({ projectId: "PROJ-M", handle: "cal", by: "second", reason: "r", viewer: V("second") }),
+    r.projectOwnerRescue({ projectId: "PROJ-P", handle: "cal", by: "second", reason: "r", viewer: V("second") }),
+    r.projectVisibility({ projectId: "PROJ-P", viewer: V("ann") }),
+    r.projectVisibility({ projectId: "PROJ-M", viewer: "admin" }),
+    r.projectDirectory({ viewer: "class:probe" }),
+    r.projectDirectory({ viewer: V("cal") }),
+    r.projectRequest({ projectId: "PROJ-D", by: "class:ai", viewer: "class:ai" }),
+    r.projectRequest({ projectId: "PROJ-P", by: "bob", viewer: V("bob") }),
+    r.projectRequest({ projectId: "PROJ-D", by: "cal", viewer: V("cal") }),
+    r.projectRequest({ projectId: "PROJ-D", by: "cal", viewer: V("cal") }),
+    r.projectRequestWithdraw({ projectId: "PROJ-P", by: "bob", viewer: V("bob") }),
+    r.projectRequestAnswer({ projectId: "PROJ-D", handle: "cal", answer: "grant", by: "admin", viewer: "admin" }),
+    r.projectRequestAnswer({ projectId: "PROJ-D", handle: "cal", answer: "maybe", by: "ann", viewer: V("ann") }),
+    r.projectRequestAnswer({ projectId: "PROJ-D", handle: "bob", answer: "grant", by: "ann", viewer: V("ann") }),
+    r.projectRequests({ projectId: "PROJ-P", by: "bob", viewer: V("bob") }),
+    r.projectRequests({ by: "class:ai", viewer: "class:ai" }),
+    r.projectRequestAnswer({ projectId: "PROJ-D", handle: "cal", answer: "grant", comment: "ok", by: "ann", viewer: V("ann") }),
+  ];
+  w.r.projectRequest({ projectId: "PROJ-D", by: "dee", viewer: V("dee") });
+  w.m.memberSet({ memberId: "dee", status: "revoked", by: "admin" });
+  answers.push(r.projectRequestAnswer({ projectId: "PROJ-D", handle: "dee", answer: "grant", by: "ann", viewer: V("ann") }));
+  let refusals = 0, texts = 0;
+  for (const [i, a] of answers.entries()) {
+    assert.ok(a && typeof a === "object", String(i));
+    if (a.ok === false) refusals++;
+    for (const k of ["translation", "detail", "message", "remedy"])
+      if (typeof a[k] === "string") { texts++; assert.doesNotMatch(a[k], FORBIDDEN, `${i} ${a.reason ?? "ok"} ${k}`); }
+  }
+  assert.ok(refusals >= 25 && texts >= 38, `the battery reached ${refusals} refusals and ${texts} texts`);
 });
