@@ -20,6 +20,6 @@
 - `node --test bio-plane/test/m/answers/`: tests 46, pass 46, fail 0.
 - Users of `scope.mjs`: `bio-plane/test/m/store-door/dispatch.test.mjs` pass 10 fail 0; `agent-worker/test/ask.test.mjs` pass 1 fail 0 (same before the change).
 - Users of `answers`: notice-producers 73/0, answer-envelope 27/0, store-door 38/0; scheduler 109 pass 5 fail and op-declarations 103 pass 3 fail, the same failing tests by name with and without my change (inherited, none an answers test; the red census lists none of mine).
-- Checks (civicos-process): `format: 136 modules, 135 requirements files; 0 failures`; `architecture: 17 product files, 55 relative imports (0 naming no tracked file, not judged); 0 failures`; `coverage: 1 modules, 29 of 29 live requirement ids named by a test; 0 failures`; ownership: see below.
+- Checks (civicos-process): `format: 136 modules, 135 requirements files; 0 failures`; `architecture: 17 product files, 55 relative imports (0 naming no tracked file, not judged); 0 failures`; `coverage: 1 modules, 29 of 29 live requirement ids named by a test; 0 failures`; `ownership: 7 files changed by answers between tranche/T37 and HEAD; 0 failures`.
 
 Size (session_01XE1mkDC7sPSFEGTbGNanhw): test runs 13, module lines 1581
