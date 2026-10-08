@@ -161,17 +161,14 @@ export const INSTANCE_SETUP_CHECKS = Object.freeze({
     translation: 'That profile is made up for testing: its facts describe no real place, so no group\'s Civicsmith '
       + 'reads local facts from it. Nothing was changed.',
   },
-  /* R53–R55 (K1502, K1478 (i), D311): the assistant, optional for the copy, and each member's disclosure. */
+  /* R53–R55 (DEC-172; K1957, K2093; D311): the assistant, read from whether the group keeps its material away from AI
+     (credentials R52), and each member's disclosure. C-119.6 (`ASSISTANT_SWITCH_MALFORMED`) retired with the switch
+     (T36-34). */
   ASSISTANT_OFF: {
     check: 'C-119.5',
     where: 'src/setup.mjs assistantGate > is-assistant-on',
-    translation: 'The assistant is switched off for your group\'s Civicsmith, so no question is put to it and nothing runs. One of '
-      + 'the group\'s administrators can switch it on. Nothing was asked.',
-  },
-  ASSISTANT_SWITCH_MALFORMED: {
-    check: 'C-119.6',
-    where: 'src/setup.mjs assistantSet > is-assistant-switch',
-    translation: 'The assistant is switched on or off, and the request said neither. Nothing was changed.',
+    translation: 'Your group keeps its material away from every assistant, so no question is put to one and nothing runs. '
+      + 'The administrator\'s reason, in their own words, and who set it and when, come with this answer. Nothing was asked.',
   },
   DISCLOSURE_NOT_THE_MEMBERS: {
     check: 'C-119.7',
@@ -274,6 +271,7 @@ const TABLE_CLASSES = Object.freeze({
   runtime_observations: { export: "admin-only", version_chain: false },
   cpu_probe_runs: { export: "admin-only", version_chain: false },
   cpu_probe_steps: { export: "admin-only", version_chain: false },
+  /* R53 (T36): the retired switch's rows, kept and no longer read. */
   assistant_switch: { export: "admin-only", version_chain: true },
   assistant_disclosures: { export: "never", version_chain: true },
   /* R60, R62 (DEC-150): the place the group named, held only in its own Civicsmith, never exported (R60). */
@@ -373,8 +371,8 @@ CREATE TABLE IF NOT EXISTS cpu_probe_steps (
   at          TEXT NOT NULL,
   PRIMARY KEY (run, step)
 );
--- R53 (K1502): whether the assistant is enabled for this copy, each set appended with who and when; the switch is the
--- latest row, and with no row it is off. No row updates or deletes another.
+-- R53 (K1502; retired in T36, DEC-172): the switch that recorded whether the assistant was enabled, each set appended
+-- with who and when. Its rows are kept and no longer read; nothing writes it. No row updates or deletes another.
 CREATE TABLE IF NOT EXISTS assistant_switch (
   seq     INTEGER PRIMARY KEY AUTOINCREMENT,
   on_     INTEGER NOT NULL CHECK (on_ IN (0, 1)),
@@ -487,8 +485,6 @@ const zoneOf = (p) => {
   const v = z && typeof z === "object" ? z.value : z;
   return typeof v === "string" && v.trim() ? v.trim() : null;
 };
-/* R53 (K1678): who set the switch when the installer's binding is recorded at the first boot. */
-export const ASSISTANT_INSTALLER = "installer";
 export const LEGISTAR_SCHEMES = Object.freeze({ body: "legistar_body_id", person: "legistar_person_id", seat: "legistar_office_record_id" });
 
 /* The probe run the trail held before runs were kept apart (R40): its rows, keyed on the step alone, become one run. */
@@ -655,7 +651,6 @@ export class InstanceSetup {
     if (first) {
       out.group = this.#recordGroupAtFirstBoot();
       out.profiles = this.#recordProfilesAtFirstBoot();
-      out.assistant = this.#recordAssistantAtFirstBoot();
       /* R50: at setup, the offices the profiles just recorded name are seeded (the machine's act, DEC-52). */
       if (out.profiles && out.profiles.recorded === true) {
         try { out.offices = this.officesSeed({ boot: true }); }
@@ -696,18 +691,6 @@ export class InstanceSetup {
     this.#sql.exec(`INSERT INTO instance_group (id, slug, recorded_at, source, recorded_by)
                     VALUES (1, ?, ?, 'bootstrap', NULL) ON CONFLICT(id) DO NOTHING`, slug, this.#iso());
     return { recorded: true, group: slug };
-  }
-
-  /* R53 (K1678): at the first boot, the installer's choice bound as ASSISTANT_ENABLED (`on` or `off`, installer R37),
-     recorded with `by` the installer; no binding, or any other value, records nothing and the assistant stays off. */
-  #recordAssistantAtFirstBoot() {
-    const raw = this.#env.ASSISTANT_ENABLED;
-    const v = typeof raw === "string" ? raw.trim().toLowerCase() : "";
-    if (v !== "on" && v !== "off")
-      return { recorded: false, bound: raw !== undefined && raw !== null && raw !== "",
-               ...(raw !== undefined && raw !== null && raw !== "" ? { why: "the installer bound neither on nor off, so the assistant stays off" } : {}) };
-    this.#sql.exec(`INSERT INTO assistant_switch (on_, set_by, set_at) VALUES (?, ?, ?)`, v === "on" ? 1 : 0, ASSISTANT_INSTALLER, this.#iso());
-    return { recorded: true, on: v === "on" };
   }
 
   /** R3, op=instancegroup: what this store records — and when it records nothing, that it records nothing. */
@@ -1269,7 +1252,8 @@ export class InstanceSetup {
     const obj = store ? await store.get(sha) : null;
     if (!obj) return null;
     const text = new TextDecoder().decode(new Uint8Array(await obj.arrayBuffer()));
-    const got = provenanceOf(this.#ctx).receipts();
+    /* N756 (K2101): the one capture's receipts (provenance R60), never every receipt. */
+    const got = (this.#deps.provenance ?? provenanceOf(this.#ctx)).receiptsOfCapture({ captureSha: sha });
     const first = (got && Array.isArray(got.rows) ? got.rows : []).filter((r) => r && r.capture_sha === sha)
       .sort((a, b) => Date.parse(a.first_retrieved) - Date.parse(b.first_retrieved))[0];
     return first ? { text, locator: first.address, at: first.first_retrieved } : null;
@@ -1462,58 +1446,46 @@ export class InstanceSetup {
   }
 
   /* =====================================================================
-   * THE ASSISTANT, OPTIONAL FOR THE COPY, AND EACH MEMBER'S DISCLOSURE (R53–R55; K1502, K1478 (i), D311).
+   * THE ASSISTANT, AND EACH MEMBER'S DISCLOSURE (R53–R55; DEC-172, K1957, K2093; D311).
    *
-   * The copy holds no Claude credential: enabling the assistant binds none, and each member who wants it connects their
-   * own account (credentials R22). The switch is the administrator's (K1522), off unless chosen, and every set is
-   * appended with who and when. While it is off, every ask and every run is refused by name (`ASSISTANT_OFF`) through
-   * `assistantGate`, which the plane and `answers` read before any model turn; turning it off ends nothing recorded.
+   * Since T36 the assistant has no switch of its own (DEC-172): it is off exactly while the group keeps its material away
+   * from every assistant, `credentials`' setting (its R51, R52), and a keep-away that cannot be read is read as kept
+   * away (K2093). Your group's Civicsmith holds no Claude credential: each member who wants the assistant connects their
+   * own account (credentials R22), and whether an account then serves an act is `credentials` R35's. While it is off,
+   * every ask and every run is refused by name (`ASSISTANT_OFF`) through `assistantGate`, which the plane and `answers`
+   * read before any model turn, carrying the administrator's reason; it ends nothing recorded.
    * ===================================================================== */
 
-  /** R53: the switch as recorded, off when nothing is. Writes nothing and never throws. */
+  /** R53: `{ok, on, set_by, set_at, reason}` from `credentials.aiKeepAwayState()` (its R52): `on: false` exactly while
+   *  the group keeps its material away from AI, with that setting's who, when and reason; a keep-away `on` other than
+   *  `false` (not read, K2093) is `on: false` with the three null; otherwise `on: true` and the three null. Writes
+   *  nothing and never throws. */
   assistantState() {
-    let r = null;
-    try { r = this.#one(`SELECT on_, set_by, set_at FROM assistant_switch ORDER BY seq DESC LIMIT 1`); } catch { r = null; }
-    return r ? { ok: true, on: r.on_ === 1, set_by: r.set_by, set_at: r.set_at }
-             : { ok: true, on: false, set_by: null, set_at: null,
-                 detail: "the assistant has never been switched on for your group's Civicsmith, so it is off" };
+    let k = null;
+    try { k = this.#credentials().aiKeepAwayState(); } catch { k = null; }
+    if (k && k.on === false) return { ok: true, on: true, set_by: null, set_at: null, reason: null };
+    if (k && k.on === true)
+      return { ok: true, on: false, set_by: k.set_by ?? null, set_at: k.set_at ?? null, reason: k.reason ?? null };
+    return { ok: true, on: false, set_by: null, set_at: null, reason: null, read: false,
+             detail: "whether your group keeps its material away from every assistant could not be read, so it is read "
+               + "as kept away and the assistant is off" };
   }
 
-  /** R53, op=assistantset: an administrator switches the assistant on or off for this copy. `by` is the control
-   *  plane's stamp (R29). Each set is appended, a repeat of the current value included, so the history says who
-   *  chose what and when. */
-  assistantSet({ on = undefined, by = null } = {}) {
-    if (typeof by !== "string" || !by || !this.#membership().isAdministrator(by))
-      return notAnAdmin(by ?? null, "switching the assistant on or off for your group's Civicsmith");
-    /* DEC-49 REGION is-assistant-switch */
-    if (typeof on !== "boolean")
-      return refusal("ASSISTANT_SWITCH_MALFORMED", "`on` is true (switch the assistant on) or false (switch it off). "
-        + "Nothing was changed.");
-    /* END DEC-49 REGION is-assistant-switch */
-    const at = this.#iso();
-    this.#sql.exec(`INSERT INTO assistant_switch (on_, set_by, set_at) VALUES (?, ?, ?)`, on ? 1 : 0, by, at);
-    return { ok: true, on, set_by: by, set_at: at,
-             history: this.#rows(`SELECT on_, set_by, set_at FROM assistant_switch ORDER BY seq`)
-               .map((r) => ({ on: r.on_ === 1, set_by: r.set_by, set_at: r.set_at })),
-             note: on
-               ? "the assistant is on for your group's Civicsmith. Switching it on binds no account: each member who "
-                 + "wants it is served by their own Claude account or API key, connected by their own act, or by the "
-                 + "group's Anthropic API key, which an administrator sets, switches and removes; each is told first "
-                 + "where their questions go."
-               : "the assistant is off for your group's Civicsmith: no ask is put to it and no run starts. Nothing already recorded "
-                 + "is changed or ended." };
-  }
-
-  /** R55: null while the assistant is on; otherwise the refusal every ask and every run answers, whoever asks and
-   *  whatever account they hold. A standing question is not run while it is off. Writes nothing. */
+  /** R55: null while the assistant is on (R53); otherwise the refusal every ask and every run answers, whoever asks and
+   *  whatever account they hold, carrying the keep-away's reason, who set it and when (`keep_away`; null, and said so,
+   *  when the state could not be read). A standing question is not run while it is off. Writes nothing. */
   assistantGate() {
     const st = this.assistantState();
     if (st.on === true) return null;
+    const keep_away = { reason: st.reason, set_by: st.set_by, set_at: st.set_at };
     /* DEC-49 REGION is-assistant-on */
-    return refusal("ASSISTANT_OFF", st.set_at
-      ? `an administrator switched the assistant off for your group's Civicsmith on ${st.set_at}; no ask is put to it and no run starts.`
-      : "the assistant has never been switched on for your group's Civicsmith; no ask is put to it and no run starts.",
-      { set_by: st.set_by, set_at: st.set_at });
+    return refusal("ASSISTANT_OFF", st.read === false
+      ? "whether your group keeps its material away from every assistant could not be read, so it is read as kept away: "
+        + "no ask is put to an assistant and no run starts. No reason is known."
+      : `an administrator${st.set_by ? ` (${st.set_by})` : ""} chose on ${st.set_at ?? "an unrecorded date"} to keep your `
+        + "group's material away from every assistant, for the reason given with this answer; no ask is put to an "
+        + "assistant and no run starts.",
+      { set_by: st.set_by, set_at: st.set_at, keep_away, ...(st.read === false ? { read: false } : {}) });
     /* END DEC-49 REGION is-assistant-on */
   }
 
@@ -1959,7 +1931,6 @@ export function instanceSetupOps(m, url, body) {
     recordcpuprobestep: () => m.recordCpuProbeStep(body || {}),
     cpuprobeend: () => m.recordCpuProbeEnd(body || {}),
     assistantstate: () => m.assistantState(),
-    assistantset: () => m.assistantSet({ ...(body || {}), by: q("by") }),
     disclosureshown: () => m.disclosureShown({ ...(body || {}), by: q("by") }),
     disclosureof: () => m.disclosureOf({ member: q("member") ?? (body || {}).member, version: q("version") ?? (body || {}).version }),
     officesseed: () => m.officesSeed({ ...(body || {}), boot: false, by: q("by") }),
@@ -2052,7 +2023,6 @@ export async function selftest(env, storeName, { cls = null, viewer = "", scratc
       CAPTURES: typeof env.CAPTURES?.get === "function" ? true : "not configured",
       PUBLISHED: typeof env.PUBLISHED?.get === "function" ? true : "not configured",
       ADMIN_TOKEN: await liveToken(env.ADMIN_TOKEN),
-      MEMBER_TOKEN: await liveToken(env.MEMBER_TOKEN),
       PROBE_TOKEN: await liveToken(env.PROBE_TOKEN),
       /* REC-33: REPORTED, and deliberately NOT required: an instance that predates this class runs monitoring on the
          ADMIN_TOKEN fallback and is healthy. */
@@ -2085,9 +2055,11 @@ export async function selftest(env, storeName, { cls = null, viewer = "", scratc
   } else {
     out.captures = "not configured";
   }
-  /* Required for health: the store and three live token bindings. R2 is reported but not required. */
+  /* Required for health: the store and two live token bindings. R2 is reported but not required. (T36; N711) The
+     shared member key is no binding: a member acts under their own session or an `aik-` credential, so it is neither
+     read, reported nor required here. */
   out.bindingsAllPresent = out.bindings.STORE === true && out.bindings.ADMIN_TOKEN === true
-    && out.bindings.MEMBER_TOKEN === true && out.bindings.PROBE_TOKEN === true;
+    && out.bindings.PROBE_TOKEN === true;
   if (!out.bindingsAllPresent) out.ok = false;
   return json(out, out.ok ? 200 : 500);
 }
