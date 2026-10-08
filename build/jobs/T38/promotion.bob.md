@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 Stamp 1.65.0 stands (K2275). The modules.json fixture swap is mine at your merge. C-64.18's removal stamps in T39. Wait for my CHANGE when membership (twice), project-roster and credentials are merged; you merge last.
+
+## B3 · CHANGE
+
+(K2283) membership (both halves), project-roster and credentials are merged into tranche/T38. Merge the tranche and finish the stamp: membership's C-96.47 NO_SUCH_MEMBER (new); project-roster's rows (C-56.5, C-33.28, C-70.4, the C-95 family: moved, numbers unchanged, where re-pointed); credentials' C-29.17 and C-29.20 translations re-worded; any other row L2 added or changed. row-census green, catalogue version as you judge; name each pinned digest that moves. Your d526-refusal-order section 4 is red by name until T38-26 (rule 6 item 11). COMPLETE; you merge last in L2.
