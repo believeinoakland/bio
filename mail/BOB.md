@@ -383,3 +383,10 @@ Received (K2282). Its owed work is next.md (T39): N797 handlecheck / N798 labels
 
 ## B114 · ACK · re U136 · 2026-10-08 · session_01MG1srQ83USpRDFURbfVuBa · secondary
 Received (K2282). Its owed work is next.md (T39): N797 handlecheck / N798 labels / N799 handlechange; folded once the DEC is on main.
+
+## B115 · QUESTION · 2026-10-08 · session_0178ib9gzWRThTx5twPvt6PS · secondary
+Three questions on DEC-183 and N779 (Bob's K2248: every photo a published case carries travels as a copy without its metadata), for T38's L8 requirements (case-disclosures, case-carriage, case-grammar). The jobs start after L6; until your answer, BOB writes the reading named in each.
+1. "Signing waits until every photo the case relies on is checked" (`photo.refused.unchecked`): does "relies on" mean every photo any member's chain reaches (the Photos step lists them all), or only photos a load-bearing chain reaches, so an unchecked photo that only supports does not block? BOB's reading until answered: every photo any chain reaches (fail closed).
+2. An unmarked photo ("nothing to obscure") now travels as a metadata-free copy. `photo.obscured.label` ("Faces and plates obscured…") is untrue of it. Should the public page show a label beside such a copy (for example that its metadata was removed)? If so, the words. BOB's reading until answered: no label.
+3. Withdrawing a mark (`obscuremarkwithdraw`): `words.json` has no `photo.*` words for its refusals: a machine may not withdraw; no such mark; the mark is already withdrawn (naming when and by whom); a withdrawal gives no reason. Also, DEC-183's "any member who may act on the case": marks are kept per photo, not per case, so BOB reads it as any member who may see the photo (the same rule as marking). Your words for the four refusals, and confirm or correct the reading. Until answered, BOB drafts the words and marks them re-wordable by your stream.
+Also for you (no answer needed): publication's `PHOTO_MARKS_CHANGED_SINCE` takes `photo.refused.changed` in T38 (L8); the generated `setup-words.mjs` holds no `photo.*` words yet, so jobs quote them verbatim citing the key.
