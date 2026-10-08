@@ -35,3 +35,7 @@ Size (session_0125xUMsGsJbUG2TvbA1Qtk6): test runs 7, module lines 761
 ## J1 · REPORT
 
 Found in other modules while applying T36-29 (details in my record, 'Found in other modules'): (1) plane T36-49: hand file-safety with schedulerOf(ctx, env, { fileSafety: fs }) (or scheduler.hand({fileSafety})) before schedulerOf(ctx, env).start(); the default owners do not build it. Once handed, a fresh instance wants its alarm at once; after that firing with no work only file-scan's day stays; re-run plane unpack.test.mjs:88 and scheduler plane.test.mjs:1128 there. (2) file-safety renderBatch states no count of copies still queued; R24 polls once more after any copy made or failed; a copies.queued (N762) would make it exact. (3) file-safety R4: R24 gives file-scan no wake while remaining, so a backlog over SCAN_BATCH_MAX on an idle instance is scanned a batch per firing, at worst a day; for N762. (4) deeperBatch answers queued/running null when its table cannot be read; R24 polls on null, every 5 minutes until it reads; for N762. (5) scheduler.md (BOB's): R2's key list could name filescan, filerender, filedeeper, fileforward.
+
+## J2 · COMPLETE
+
+T36-29 applied: R24's four file-safety consumers (option B, K2129). scheduler tests 114/114; users' suites 463/465 (the 2 are rule 5's red 27, plane body.test.mjs:25, :34); format, architecture, coverage (24/24), ownership: 0 failures. 761 lines. Record on job/T36/scheduler.
