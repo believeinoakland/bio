@@ -2847,3 +2847,17 @@ response: **Decided by the design session, 2026-10-08.** (1) Re-pointed to serve
 decided: 2026-10-08 · the design session (P17)
 reasoning recorded in: this entry; `screens/registry.src.py`; `screens/mock-acts.js`; `screens/mock-kit.js`; `screens/mock-screens.js` (home, setup, account, find, person, proceeding, due date); `screens/library.src.py` (Set up and claim, Follow a proceeding); `screens/mock-journeys.js` (journeys 8 and 10); `screens/words.json`.
 owed: (BOB) `ACT_HELP` from PR #14's `mock-acts.js` (re-pointed as above; `clockpropose` and `owed_obscuremark` added); the setup step and wizard step on `aikeepaway` and `groupkeyset`; a member's own password change (`setpassword`); the security-tools step's two wordings as (6).
+
+### DEC-183 · answered
+raised: 2026-10-08 · the UX design session with Bob on his secondary account (session_01SCHPX2mpSDpBNA9wprUm5H; the development process runs on the same account since K1891) (BOB's B102, B103 and B104, folding DEC-180 in T37 and the password text)
+for: bob-session
+question: Whether the ceremony's Photos step stops signing; whether a mark can be withdrawn; what a member sees when a photo cannot be covered or its marks change; and what changing a password does to other sessions.
+why it is Bob's: it is not: screen detail beneath DEC-180 (K2108) and credentials R3 (K1881); decided by the design session (P17) and reported.
+provisional: B102's defaults (not a gate; marks append-only); the password text of DEC-182.
+alternative: B102's defaults.
+recommendation: as decided below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-08.** (1) The Photos step is a gate: signing is refused while any photo the case relies on is unchecked, and checking costs one act ("nothing to obscure", or the marks), so no one is published by oversight. (2) A mark is withdrawn by a later act with a reason (`obscuremarkwithdraw`, reasoned), by its maker or any member who may act on the case; the withdrawal is recorded beside the mark, never erased, and the copy follows the marks that stand; "nothing to obscure" never removes a mark. (3) BOB's B103 (b) holds: a marked photo in a format the cover cannot handle refuses the publication, naming the photo; the screen says "This photo's format can't be obscured: {photo}. Capture it again as an ordinary photo, or stop relying on it." (4) A mark made or withdrawn after the case is prepared: "A mark changed after this case was prepared. Prepare it again before signing." (5) The Photos step says that text read from a photo, such as a number plate, is never published with it, while a passage a member quotes in the case still is. (6) The copy's label, the reminder and the step's words are in the word list, protected. (7) Changing a password ends every other session signed in as that member (credentials R3, K1881); the act's text now says so.
+decided: 2026-10-08 · the design session (P17)
+reasoning recorded in: this entry; `screens/mock-screens.js` (the ceremony's Photos step); `screens/mock-acts.js`; `screens/registry.src.py` (`owed:obscuremarkwithdraw DEC-183`); `screens/build_words.mjs`, `screens/words.json` (`photo.*`); `layouts.html` (section 6).
+owed: (BOB, T37 L8 and L11) signing refused while a relied-on photo is unchecked (a code naming the photo); `obscuremarkwithdraw` with its reason, recorded beside the mark, the copy following standing marks; the refusals' words as (3) and (4); the `photo.*` words from `words.json`; the password text as (7).

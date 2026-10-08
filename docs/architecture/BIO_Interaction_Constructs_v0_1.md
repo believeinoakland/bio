@@ -955,7 +955,8 @@ testimony; the visit asks for a photo where one can be taken and says plainly wh
 **RULED 2026-10-08 by Bob (DEC-180, S17, through K2108): people in a photo who are not its subject.** A reminder wherever a photo is
 taken or added; inside the group every photo stays as taken; before signing, the ceremony's Photos step has a member mark anyone not
 part of a finding, and any number plate, and the published case carries a copy with those areas obscured, labelled, the original
-kept inside the group. Civicsmith obscures what a member marks; no AI looks at the group's photos.
+kept inside the group. Civicsmith obscures what a member marks; no AI looks at the group's photos. The Photos step is a gate: signing
+waits until every relied-on photo is checked; a mark is withdrawn only by a later reasoned act, never erased (DEC-183).
 
 **Acts that can never be undone, on a phone (the design session, 2026-10-08, DEC-181).** Every act the Irreversible weight marks is
 read on a phone and done on a larger screen, replacing DEC-170's single act.
