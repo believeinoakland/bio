@@ -1,6 +1,6 @@
 # publication (T36)
 
-**Status** · session_01CPZYbhuFESBkajW7tmoEjb · depth 2 · WORKING · handled B1
+**Status** · session_01CPZYbhuFESBkajW7tmoEjb · depth 2 · COMPLETE · handled B1
 
 PUBLICATION #23 · T36-26 · B1 START handled.
 
