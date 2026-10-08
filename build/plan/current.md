@@ -144,7 +144,7 @@ Measured on `tranche/T37` @ `5fd61bfb68` (K1821). **membership** 3,970: split fi
 
 ## Summary
 
-**Jobs per layer:** L1 3, L2 4, L3 2, L4 1, L5 1, L6 3, L7 0, L8 5, L9 0, L10 0, L11 9. **Total 28.**
+**Jobs per layer:** L1 3, L2 4, L3 2, L4 1, L5 1, L6 3, L7 0, L8 6, L9 0, L10 0, L11 9. **Total 29** (T38-29 joined, K2291).
 
 ## For BOB
 
