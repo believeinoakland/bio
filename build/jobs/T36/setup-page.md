@@ -1,6 +1,6 @@
 # setup-page (T36)
 
-**Status** · session_01KpmmveDcVwoSp31P7oGuzY · depth 2 · WORKING · handled B3
+**Status** · session_01KpmmveDcVwoSp31P7oGuzY · depth 2 · COMPLETE · handled B3
 
 ## Record (SETUP-PAGE #3)
 
