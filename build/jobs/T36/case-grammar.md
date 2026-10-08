@@ -11,7 +11,7 @@
 - **R22** `memberSubjectOf(fm, finding)` in a new `subject.mjs`. Reading (a detail, mine): the first of the member's `case_roles:` then `case_conclusions:` rows that *has* the `subject_entity` field answers, so a roles row stating null is never filled from the conclusions row; a value that is not a non-empty string is null.
 - P6: the module is 2,226 lines (+78).
 
-**Found in other modules (REPORT J2).**
+**Found in other modules (REPORT J1).**
 - `public-read` `casefile.mjs`:195 `isCaseFileManifest` compares `format === CASE_FILE_FORMAT`, so from this merge a stored `/1` case file's manifest is no longer recognised as a case file's; it should test `CASE_FILE_FORMATS_ACCEPTED.includes(format)` (exported for it). Its tests stay green today (they write the current format). For T36-27.
 - `case-checker` (T36-51, and BOB's regeneration at the layer close), expected red from this merge: `spec.test.mjs`:14 (`CASE_FILE_SPEC_VERSIONS` vs `CASE_FILE_FORMAT`, now `/2`), `spec.test.mjs`:19 (the spec does not state `archive`, `container`, `criteria`), and `program.test.mjs`:19 (`program.mjs` stale: it bundles case-grammar). 41 pass, 3 fail; on `tranche/T36` without my change 44/44.
 
