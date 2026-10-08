@@ -128,6 +128,44 @@ test("R6 (K1929 (Q1)): an archive is low only when its source condition holds, i
   assert.deepEqual(codes(gy), ["archive_cycle", "archive_member_high"]);
 });
 
+test("R6 (N806, K2333): the source condition is provenance's one definition, R62 `fetchedByThisCopy`, and `source` is its answer as given: fetched by this copy (direct, a web archive, a capture request), or cut from an archive whose own answer is fetched, nested included; not fetched for a knock, a capture with no receipt, or a file cut from a knocked archive; an answer that cannot be read is not fetched", async () => {
+  const w = world();
+  const grade = async (s) => w.fs.threatOf({ captureSha: s, viewer: "member:m1" });
+  const arm = async (s, fetched) => {
+    const g = await grade(s);
+    assert.deepEqual(g.source, await w.prov.fetchedByThisCopy(s), "source is R62's answer as given");
+    assert.equal(g.source.fetched, fetched, s);
+    assert.equal(codes(g).includes("source_not_fetched"), !fetched, s);
+    return g;
+  };
+  for (const via of ["direct", "archive.org", "capture-request"])
+    assert.deepEqual((await arm(await w.capture(`fetched by ${via}`, { via }), true)).source, { fetched: true, routes: [via], archive: null });
+  assert.deepEqual((await arm(await w.capture("handed in", { via: "doorbell", address: "knock:K-9" }), false)).source, { fetched: false, routes: ["doorbell"], archive: null });
+  /* a capture with no receipt: held under a bundle only */
+  const bare = sha("no receipt at all");
+  await w.bucket.put(`bio/captures/${bare}`, enc("no receipt at all"));
+  w.home(bare, "INFO-2026-0009-bare");
+  assert.deepEqual((await arm(bare, false)).source, { fetched: false, routes: [], archive: null });
+  /* cut from an archive: fetched as its archive is, through a nested archive too */
+  const inner = makeZip([{ name: "deep.txt", data: "deep fetched words" }]);
+  const a = await unpacked(w, [{ name: "m.txt", data: "member fetched words" }, { name: "inner.zip", data: inner }]);
+  await w.acq.unpack({ core: w.record, provenance: w.prov }, { archiveSha: sha(inner), by: "m1", member: true });
+  assert.deepEqual((await arm(sha("member fetched words"), true)).source, { fetched: true, routes: ["unpacked"], archive: a.s });
+  assert.deepEqual((await arm(sha("deep fetched words"), true)).source, { fetched: true, routes: ["unpacked"], archive: sha(inner) });
+  const kn = await unpacked(w, [{ name: "k.txt", data: "member of a knock" }], { via: "doorbell" });
+  assert.deepEqual((await arm(sha("member of a knock"), false)).source, { fetched: false, routes: ["unpacked"], archive: kn.s });
+  /* fail closed: a provenance whose answer cannot be read grades the file not fetched */
+  const fetchedOne = await w.capture("a fetched file, read through a broken provenance");
+  for (const broken of [() => { throw new Error("down"); }, () => null, () => ({ ok: false })]) {
+    const prov = Object.create(w.prov);
+    prov.fetchedByThisCopy = broken;
+    const fs2 = new FileSafety({ sql: w.st.sql, record: w.record, membership: w.membership, credentials: w.credentials, provenance: prov,
+                                 acquisition: w.acq, env: w.env, now: () => w.clock.now });
+    const g = await fs2.threatOf({ captureSha: fetchedOne });
+    assert.deepEqual([g.source, codes(g)], [{ fetched: false, routes: [], archive: null }, ["source_not_fetched"]]);
+  }
+});
+
 test("R7: the same capture and notes always give the same answer; computing it writes nothing, and no note or grade changes the capture's grade letter, its state or its provenance document", async () => {
   const w = world({ scan: { clamav: () => ({ result: "found", findings: ["Win.Trojan.Q"] }) } });
   w.promoted("INFO-2026-0001-doc", "the document", { path: "snapshots/a.txt" });
