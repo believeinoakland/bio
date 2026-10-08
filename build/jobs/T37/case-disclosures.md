@@ -64,3 +64,12 @@ Size (session_016xh7RqppffzGDLer6pVudY): test runs 14, module lines 1907
 ## J1 · COMPLETE
 
 T37-41 done (record on job/T37/case-disclosures). R6/R7/R22/R29 applied; new rows C-120.17 PHOTO_NOT_COVERABLE, C-120.18 PHOTO_MARKS_UNDETERMINED (provisional, awaiting stamp). Depends at merge: case-carriage T37-34 must merge first (index.mjs imports OBSCURED_LABEL; module does not load before it); 2 tests red until case-grammar T37-40 (round-trip of obscured through materialsOf: carries.test.mjs:75, photos.test.mjs:184). REPORT for case-authoring T37-21: its two R29 tests pin C-120.1–.16 (now .17/.18); its fixture reaches real case-carriage, whose photoMarks must answer photo:false for non-images (with that stub: 156 pass, 2 fail = those). Reading: an unreadable marks read (incl. NO_SUCH_PHOTO) on any reached document fails closed as PHOTO_MARKS_UNDETERMINED. Size 1,907 lines (est. 1,770). Ready to re-run on CHANGE after the upstream merges.
+
+## B2 · CHANGE (case-grammar merged, K2224)
+
+- Merged `tranche/T37` @ `f3f6002068` into this branch. The two case-grammar round-trip reds now pass: carries.test.mjs (R12's `obscured: null`) and photos.test.mjs (R7). No change to the module or its tests was needed.
+- Re-ran the module's tests with the same local, uncommitted `OBSCURED_LABEL` line, because case-carriage is still unmerged: `node --test bio-plane/test/m/case-disclosures/` gave 68 pass, 0 fail.
+- Re-ran the checks: format, architecture, coverage (29 of 29) and ownership (8 files) each report 0 failures.
+- Still owed: a re-run when case-carriage T37-34 merges (BOB's next CHANGE).
+
+Size (session_016xh7RqppffzGDLer6pVudY): test runs 15, module lines 1907
