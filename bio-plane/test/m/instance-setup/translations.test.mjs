@@ -49,7 +49,7 @@ const call = async (m, path, body) => (await frame(m, new Request(`http://do/${p
    `answer`, default a translation keeping the placeholders), handed to the record route. */
 async function draft(w, { by, language = "es", keys, answer = (x) => es(x), drop = [] } = {}) {
   const asked = w.m.translationDraft({ language, direction: "to_language", keys, by });
-  if (!asked.ok) return { asked };
+  if (asked.reason !== "ASSISTANT_DRAFT_UNAVAILABLE") return { asked };
   const draftWords = asked.words.filter((x) => !drop.includes(x.key)).map((x) => ({ key: x.key, text: answer(x) }));
   const rec = await w.m.translationDraftRecord({ language, direction: "to_language", keys, words: asked.words,
                                                   draft: { words: draftWords }, not_drafted: drop, by });
@@ -128,7 +128,8 @@ test("R67 translationdraft to_language: refusals in order (TRANSLATION_DIRECTION
   assert.equal(counts(w), before);
   /* the first 100 missing, in the list's order, each with its meaning note */
   const r = w.m.translationDraft({ language: "es", direction: "to_language", by: "ruth" });
-  assert.equal(r.ok, true);
+  /* K2238: past every refusal, as the other two drafts do, the signal the door drafts on, carrying the words */
+  assert.deepEqual([r.ok, r.reason, r.direction, r.language], [false, "ASSISTANT_DRAFT_UNAVAILABLE", "to_language", "es"]);
   assert.deepEqual(r.words, INTERFACE_WORDS.slice(0, 100).map(({ key, en, note, means, protected: p }) => ({ key, en, note, means, protected: p })));
   assert.deepEqual(r.offered_official, []);
   assert.equal(counts(w), before, "the request writes nothing");
@@ -149,6 +150,29 @@ test("R67 translationdraft to_language: refusals in order (TRANSLATION_DIRECTION
   assert.equal(w.m.translationDraft({ language: "es", direction: "to_language", by: "sam" }).reason, "TRANSLATION_NOT_GRANTED");
   const kept = w.m.translationDraft({ language: "es", direction: "to_language", by: "ruth" });
   assert.deepEqual([kept.reason, kept.keep_away.reason], ["AI_KEPT_AWAY", "Our material stays here, every word of it."]);
+});
+
+test("R67 (K2238) translationDraftRefusal answers null or R67's first refusal, the same code translationDraft answers for the same request, writing nothing; it reads no gate (the door asks it before its own)", async () => {
+  const w = await world();
+  w.m.translationGrant({ member: "ruth", language: "es", by: "admin" });
+  w.m.translationAdopt({ language: "es", key: ORDINARY.key, text: "Algo", by: "ruth" });
+  const before = counts(w);
+  for (const args of [
+    { language: "es", direction: "up", by: "ruth" }, { language: "not a tag", direction: "to_language", by: "ruth" },
+    { language: "es", direction: "to_language", by: "class:ai" }, { language: "es", direction: "to_language", by: "sam" },
+    { language: "es", direction: "to_language", keys: ["no.such"], by: "ruth" },
+    { language: "es", direction: "to_language", keys: [ORDINARY.key], by: "ruth" },
+    { language: "es", direction: "to_english", key: PROTECTED.key, by: "ruth" },
+    { language: "es", direction: "to_english", key: PROTECTED.key, by: "admin" },
+  ]) {
+    const r = w.m.translationDraftRefusal(args);
+    assert.equal(r.ok, false, JSON.stringify(args));
+    assert.equal(r.reason, w.m.translationDraft(args).reason, JSON.stringify(args));
+  }
+  assert.equal(w.m.translationDraftRefusal({ language: "es", direction: "to_language", by: "ruth" }), null);
+  w.c.c.aiKeepAwaySet({ on: true, reason: "Our material stays here, every word of it.", by: "admin" });
+  assert.equal(w.m.translationDraftRefusal({ language: "es", direction: "to_language", by: "ruth" }), null, "no gate read here");
+  assert.equal(counts(w), before);
 });
 
 test("R67 (DEC-157 (6)) an official name or translation the active profiles hold (jurisdictions' local names) is offered in place of a draft and never sent; when nothing is left to send, TRANSLATION_NOTHING_TO_DRAFT carries what was offered", async () => {

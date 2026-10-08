@@ -2268,21 +2268,35 @@ export class InstanceSetup {
     return [...by.values()];
   }
 
+  /** R67 (K2238), in-process: null, or R67's first refusal (the direction, the tag, a machine, `TRANSLATION_NOT_GRANTED`
+   *  or `NOT_AN_ADMIN`, the word, the keys, not missing or not awaiting, nothing left to draft), each code minted here
+   *  alone (K231). store-door's route asks it before its own gate (its R10). Writes nothing; never throws. */
+  translationDraftRefusal({ language = null, direction = undefined, keys = undefined, key = null, by = null } = {}) {
+    try {
+      const req = this.#draftRequest({ language, direction, keys, key, by });
+      return req.refused || null;
+    } catch (e) {
+      return { ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_DID_NOT_ANSWER",
+               detail: `the words to draft could not be read (${String(e && e.message || e).slice(0, 160)}). Nothing was sent.` };
+    }
+  }
+
   /** R67, op=translationdraft, which the door routes and calls here (store-door R10; control-plane R57's third draft):
-   *  the first refusals (the direction, the tag, a machine, the grant or `NOT_AN_ADMIN`, the word), then R55's gate,
-   *  then the words the door sends to agent-worker's `/draft`: `{key, en, note, means, protected}` for each word to
-   *  draft (`to_language`), or the one kept word's `{key, en, text, protected}` (`to_english`). Writes nothing: the
-   *  door hands the answered draft to `translationdraftrecord`. `assistant` is the door's `{on, account}`. */
+   *  the first refusals (as `translationDraftRefusal`), then R55's gate, then, as the other two drafts do (K2238),
+   *  `ASSISTANT_DRAFT_UNAVAILABLE` carrying the words the door sends to agent-worker's `/draft`, the signal it drafts
+   *  on: `{key, en, note, means, protected}` for each word to draft (`to_language`, with `offered_official`), or the one
+   *  kept word's `{key, en, text, protected}` (`to_english`). Writes nothing: the door hands the answered draft to
+   *  `translationdraftrecord`. `assistant` is the door's `{on, account}`. */
   translationDraft({ language = null, direction = undefined, keys = undefined, key = null, assistant = null, by = null } = {}) {
     const req = this.#draftRequest({ language, direction, keys, key, by });
     if (req.refused) return req.refused;
     const off = this.assistantGate();
     if (off) return off;
-    if (assistant && typeof assistant === "object" && assistant.on === false)
-      return draftUnavailable("the assistant was not on when this request was resolved, so nothing was drafted.");
+    const out = draftUnavailable("the draft is asked of the assistant by the door with these words; nothing is drafted or "
+      + "saved here.");
     return req.direction === "to_english"
-      ? { ok: true, direction: req.direction, language: req.tag, key: req.key, words: req.words }
-      : { ok: true, direction: req.direction, language: req.tag, words: req.words, offered_official: req.offered_official };
+      ? { ...out, direction: req.direction, language: req.tag, key: req.key, words: req.words }
+      : { ...out, direction: req.direction, language: req.tag, words: req.words, offered_official: req.offered_official };
   }
 
   /** R67, the store-internal route `translationdraftrecord` (no spec): the door hands back the answered draft
