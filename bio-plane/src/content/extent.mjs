@@ -23,7 +23,7 @@
 
 import {
   CONTENT_EXTENT_KINDS as ALGEBRA_KINDS, CONTENT_EXTENT_A1_RE, canonicalExtent as algebraCanonical,
-  describeExtent as algebraDescribe, contentCitedAs as algebraCitedAs,
+  describeExtent as algebraDescribe, contentCitedAs as algebraCitedAs, rangeCorners, a1ToRowCol,
   chainKindFor, checkChain, STEP_KINDS, CHAIN_KIND_MIXED, rectSpace, RECT_USER_SPACE,
 } from "../textchain.mjs";
 import {
@@ -205,6 +205,15 @@ export function citationHasAuthoredExtent(citation) {
  * core's relation (the catalogue's, copied, R48) answers the eight kinds it knows; this
  * face adds what the grammar has gained: a rect outside user space is a place that cannot be evaluated (D-670), and
  * an envelope item is `same` only as itself, `narrower` than the whole document, and `disjoint` from everything else.
+ *
+ * AND IT RELATES CELLS (R6; N759, K2122). The core compares a sheet's cells only within one kind and a table not at
+ * all, so a fact recorded at one cell of a found column read `disjoint` from that column's range. Here a sheet's
+ * extents (`sheet-cell`, `sheet-range`) are compared as the cells they name on one sheet: a sheet with no cell is the
+ * whole sheet, a cell a one-cell range; the same cells are `same` (a cell and its one-cell range name one place), the
+ * inner's cells all inside the outer's `narrower`, the reverse `wider`, anything else `disjoint` (a partial overlap
+ * included, as two rects). A `doc-table` with no cell is the whole table and a cell is one cell of it. A different
+ * sheet or table is `disjoint`; a missing sheet or table, or a cell or range present and unreadable, is `unreadable`,
+ * never read as the whole.
  * ======================================================================= */
 export function extentRelation(outer, inner) {
   const a = isObj(outer) ? outer : null;
@@ -219,7 +228,52 @@ export function extentRelation(outer, inner) {
     if (b.kind === "document") return "wider";
     return "disjoint";
   }
+  if (SHEET_KINDS.includes(a.kind) && SHEET_KINDS.includes(b.kind)) return cellsRelation(sheetCells(a), sheetCells(b));
+  if (a.kind === "doc-table" && b.kind === "doc-table") return cellsRelation(tableCells(a), tableCells(b));
   return coreRelation(a, b);
+}
+
+const SHEET_KINDS = Object.freeze(["sheet-cell", "sheet-range"]);
+const present = (v) => v !== undefined && v !== null && v !== "";
+
+/** The cells a grid extent names: `{grid, at}`, `at` the ordered corners (`rangeCorners`' shape) or null for the whole
+ *  grid; null when the grid is not named or a cell or range is present and unreadable. */
+function gridCells(grid, cell, range) {
+  if (grid === null) return null;
+  if (present(range)) {
+    const k = typeof range === "string" ? rangeCorners(range) : null;
+    return k ? { grid, at: k } : null;
+  }
+  if (present(cell)) {
+    const p = typeof cell === "string" && CONTENT_EXTENT_A1_RE.test(cell.trim()) ? a1ToRowCol(cell) : null;
+    return p ? { grid, at: { r0: p.row, c0: p.col, r1: p.row, c1: p.col } } : null;
+  }
+  return { grid, at: null };
+}
+
+function sheetCells(e) {
+  const sheet = typeof e.sheet === "string" && e.sheet.trim() ? e.sheet.trim() : null;
+  if (e.kind === "sheet-range" && !present(e.range)) return null;
+  return gridCells(sheet, e.kind === "sheet-cell" ? e.cell : null, e.kind === "sheet-range" ? e.range : null);
+}
+
+function tableCells(e) {
+  return gridCells(Number.isInteger(e.table) && e.table >= 0 ? e.table : null, e.cell, null);
+}
+
+function cellsRelation(x, y) {
+  if (!x || !y) return "unreadable";
+  if (x.grid !== y.grid) return "disjoint";
+  const o = x.at, i = y.at;
+  if (!o && !i) return "same";
+  if (!o) return "narrower";
+  if (!i) return "wider";
+  const inside = (p, q) => q.r0 >= p.r0 && q.c0 >= p.c0 && q.r1 <= p.r1 && q.c1 <= p.c1;
+  const nIn = inside(o, i), oIn = inside(i, o);
+  if (nIn && oIn) return "same";
+  if (nIn) return "narrower";
+  if (oIn) return "wider";
+  return "disjoint";
 }
 
 /* ======================================================================= *

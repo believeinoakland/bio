@@ -125,8 +125,10 @@ test("R48: the core's leg reader, content id shape, document-only context and pa
   assert.equal(imagePartUndetermined({ kind: "image", page: 0 }, { container: { office: null } }), null, "only a part");
   /* extentRelation is the grammar's: the face answers the eight kinds by the core */
   assert.equal(extentRelation({ kind: "sheet-cell", sheet: "S" }, { kind: "sheet-cell", sheet: "S", cell: "$a$1" }), "narrower");
-  assert.equal(extentRelation({ kind: "doc-table", table: 0 }, { kind: "doc-table", table: 0, cell: "A1" }), "unreadable",
-    "an arm the relation does not read is unreadable, never narrower");
+  assert.equal(extentRelation({ kind: "doc-table", table: 0 }, { kind: "doc-table", table: 0, cell: "A1" }), "narrower",
+    "the face relates a table's cells over the core (R6, N759)");
+  assert.equal(extentRelation({ kind: "doc-table" }, { kind: "doc-table", table: 0, cell: "A1" }), "unreadable",
+    "a coarse field missing is unreadable, never narrower");
 });
 
 /* ------------------------------------------------------------------------------------------------------- R49 */
