@@ -59,7 +59,9 @@ test("R2, R17 (door share; instance-setup R3, R10, R11): op=instancegroup and op
   for (const op of ["instancegroup", "groupidentity"]) {
     for (const [token, params, ns, whole, tc] of [
       [env.ADMIN_TOKEN, {}, "bio", true, "admin"], [env.PROBE_TOKEN, {}, "scratch", true, "probe"],
-      [env.MEMBER_TOKEN, { store: "scratch" }, "scratch", true, "member"], [S.ann, {}, "bio", true, "member"],
+      [S.ann, {}, "bio", true, "member"],
+      /* admission R5 (K2166): the retired shared member binding gives no class, so the group read takes it as a stranger */
+      [env.MEMBER_TOKEN, {}, "bio", false], [env.MEMBER_TOKEN, { store: "scratch" }, "scratch", false],
       [A.ann, {}, "bio", true, "ai"], [undefined, {}, "bio", false], [undefined, { store: "scratch" }, "scratch", false],
       ["not-a-credential", {}, "bio", false], [env.DAEMON_TOKEN, {}, "bio", false]]) {
       env.calls.length = 0;

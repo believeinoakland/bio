@@ -41,10 +41,13 @@ export function makeEnv({ sessions = {}, creds = {}, answer = null, omit = [], g
   const calls = [];
   /* admission R21: the public ops' window, asked of bio's store before the op; kept apart from the op's own calls */
   const windowCalls = [];
+  /* admission R22 (K2166): the security tally's counts, written through the store's internal `securitycount` after a
+     refusal is composed; kept apart from the op's own calls, as the window's are */
+  const countCalls = [];
   const bySha = new Map(Object.entries(creds).map(([v, c]) => [sha(v), c]));
   const env = {
     ADMIN_TOKEN: hex64(), MEMBER_TOKEN: hex64(), PROBE_TOKEN: hex64(), DAEMON_TOKEN: hex64(), VERSION: "9.8.7",
-    calls, windowCalls,
+    calls, windowCalls, countCalls,
     STORE: {
       idFromName(n) { return n; },
       get(id) {
@@ -58,6 +61,7 @@ export function makeEnv({ sessions = {}, creds = {}, answer = null, omit = [], g
             const route = u.pathname.slice(1);
             const call = { ns: id, route, url: u, params: Object.fromEntries(u.searchParams), body, method: req.method,
                            headers: Object.fromEntries(req.headers) };
+            if (route === "securitycount") { countCalls.push(call); return ok({ ok: true, counted: true }); }
             if (route === "doorwindow") { windowCalls.push(call); if (answer) { const r = await answer(call); if (r) return r; } return ok({ source: "src-test" }); }
             calls.push(call);
             if (answer) { const r = await answer(call); if (r) return r; }

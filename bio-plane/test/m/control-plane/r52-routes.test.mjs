@@ -67,16 +67,20 @@ test("R52, R17, R29: each watch act's `by` (the positional identity) and `viewer
   assert.equal(checked, 2 * 2 * 2);
 });
 
-test("R52, R28: each watch act is refused to every caller not arriving by a member's session — every binding class CLASS_FORBIDDEN, an agent credential declaring every write AI_BEYOND_TASK_SCOPE, no credential NOT_AUTHENTICATED — and nothing is forwarded; negative control: a member's session reaches each", async () => {
+test("R52, R28: each watch act is refused to every caller not arriving by a member's session — every binding class CLASS_FORBIDDEN, the retired shared member binding MEMBER_TOKEN_RETIRED, an agent credential declaring every write AI_BEYOND_TASK_SCOPE, no credential NOT_AUTHENTICATED — and nothing is forwarded; negative control: a member's session reaches each", async () => {
   const wide = aik();
   const { env, S } = world({ creds: { [wide]: cred({ tokenId: "agent-wide", writes: Object.keys(OPS) }) } });
   for (const op of WATCH) {
     const at = { op, params: { import: "IMP-1" }, method: "POST", body: { publisher: "https://other.example/api" } };
-    for (const [token, store] of [[env.ADMIN_TOKEN], [env.MEMBER_TOKEN], [env.PROBE_TOKEN, "scratch"], [env.DAEMON_TOKEN]]) {
+    for (const [token, store] of [[env.ADMIN_TOKEN], [env.PROBE_TOKEN, "scratch"], [env.DAEMON_TOKEN]]) {
       env.calls.length = 0;
       refused(await call(env, { ...at, token, params: { ...at.params, ...(store ? { store } : {}) } }), 403, "CLASS_FORBIDDEN", "C-38.2");
       assert.equal(opCalls(env).length, 0, `${op}: forwarded for a binding class`);
     }
+    /* admission R5 (K2166): the retired shared member binding gives no class at all */
+    env.calls.length = 0;
+    refused(await call(env, { ...at, token: env.MEMBER_TOKEN }), 401, "MEMBER_TOKEN_RETIRED", "C-38.11");
+    assert.equal(opCalls(env).length, 0, `${op}: forwarded for the retired member binding`);
     env.calls.length = 0;
     refused(await call(env, { ...at, token: wide }), 403, "AI_BEYOND_TASK_SCOPE", "C-29.6");
     assert.equal(opCalls(env).length, 0, `${op}: forwarded for an agent`);

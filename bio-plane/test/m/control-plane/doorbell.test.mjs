@@ -26,7 +26,7 @@ function callers() {
   const bind = (c, token, params = {}) => ({ name: c, token, params, ns: params.store ?? "bio", session: false,
     viewer: `class:${c}`, identity: `class:${c}`, by: `class:${c}`, author: `token:${c}` });
   return { w, agent, list: [
-    bind("admin", w.env.ADMIN_TOKEN), bind("member", w.env.MEMBER_TOKEN), bind("probe", w.env.PROBE_TOKEN, { store: "scratch" }),
+    bind("admin", w.env.ADMIN_TOKEN), bind("probe", w.env.PROBE_TOKEN, { store: "scratch" }),
     { name: "founder", token: w.S.founder, params: {}, ns: "bio", session: true, viewer: "admin", identity: "member:admin",
       by: "admin", author: "admin" },
     { name: "ann", token: w.S.ann, params: {}, ns: "bio", session: true, viewer: "member:ann", identity: "member:ann",
@@ -127,8 +127,7 @@ test("R28 (N364; admission R8–R11): the pull, the knock reads and a member's o
                                 creds: { [narrow]: cred({ tokenId: "agent-narrow", writes: ["cite"] }) } });
   const wide = aik();
   const w2 = world({ creds: { [wide]: cred({ tokenId: "agent-wide", writes: Object.keys(OPS) }) } });
-  const bearers = [["admin", env.ADMIN_TOKEN, {}], ["member", env.MEMBER_TOKEN, {}], ["probe", env.PROBE_TOKEN, { store: "scratch" }],
-                   ["daemon", env.DAEMON_TOKEN, {}]];
+  const bearers = [["admin", env.ADMIN_TOKEN, {}], ["probe", env.PROBE_TOKEN, { store: "scratch" }], ["daemon", env.DAEMON_TOKEN, {}]];
   for (const [op, [spec, needs]] of Object.entries(ROUTES)) {
     const sessionOnly = Array.isArray(spec.machineClasses);
     for (const [c, token, params] of bearers) {
@@ -138,6 +137,10 @@ test("R28 (N364; admission R8–R11): the pull, the knock reads and a member's o
       refused(r, 403, "CLASS_FORBIDDEN", "C-38.2");
       assert.equal(opCalls(env).length, 0, `${op}/${c}: forwarded`);
     }
+    /* admission R5 (T36, K2166): the retired shared member key reaches none of them, and nothing is forwarded */
+    env.calls.length = 0;
+    refused(await call(env, { op, token: env.MEMBER_TOKEN, method: "POST", body: {} }), 401, "MEMBER_TOKEN_RETIRED", "C-38.11");
+    assert.equal(opCalls(env).length, 0, `${op}/the retired member key: forwarded`);
     if (sessionOnly) {
       /* an agent, even one declaring every write, reaches none of them */
       w2.env.calls.length = 0;
@@ -181,13 +184,18 @@ test("R36 (N364; capture R32, R65): the inbox's `inboxresolve` with status `pull
     assert.deepEqual(inner.body, { knockId: "KNOCK-1", status: "pulled", by: FORGED });
   }
   /* a bearer meets the pull's fence, and nothing is forwarded */
-  for (const token of [env.ADMIN_TOKEN, env.MEMBER_TOKEN]) {
+  for (const token of [env.ADMIN_TOKEN, env.DAEMON_TOKEN]) {
     env.calls.length = 0;
     const r = await call(env, { op: "inboxresolve", token, method: "POST", body: { knockId: "KNOCK-1", status: "pulled" } });
     refused(r, 403, "CLASS_FORBIDDEN", "C-38.2");
     assert.equal(r.json.op, "inboxpull");
     assert.equal(opCalls(env).length, 0);
   }
+  /* admission R5 (T36, K2166): the retired shared member key is refused before the pull's fence, nothing forwarded */
+  env.calls.length = 0;
+  refused(await call(env, { op: "inboxresolve", token: env.MEMBER_TOKEN, method: "POST", body: { knockId: "KNOCK-1", status: "pulled" } }),
+          401, "MEMBER_TOKEN_RETIRED", "C-38.11");
+  assert.equal(opCalls(env).length, 0);
   /* negative controls: another status, or a body that is not JSON, stays inboxresolve's (its route and its body `by`) */
   for (const [body, route] of [[{ knockId: "KNOCK-1", status: "discarded" }, "inboxresolve"], [{ knockId: "KNOCK-1", status: "new" }, "inboxresolve"],
                                ['{"status":"pulled"', "inboxresolve"]]) {

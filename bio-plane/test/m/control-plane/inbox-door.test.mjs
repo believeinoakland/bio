@@ -155,7 +155,7 @@ test("R23, R36 (capture R32, R79, R81; K1037): a refusal of the resolve, the pul
 
 test("R2, R26 (capture R32's sort, DEC-108 (2), K1023): `op=inbox`'s `sort`, `dir`, `limit` and `after` reach capture's `inboxList` as the caller sent them, for every caller the op admits; capture sorts by them, and an unknown sort or dir is capture's own required-argument refusal, naming it, with nothing read", async () => {
   const { env, S } = world();
-  for (const [token, params] of [[S.ann, {}], [S.founder, {}], [env.MEMBER_TOKEN, {}], [env.PROBE_TOKEN, { store: "scratch" }]]) {
+  for (const [token, params] of [[S.ann, {}], [S.founder, {}], [env.PROBE_TOKEN, { store: "scratch" }]]) {
     env.calls.length = 0;
     const r = await call(env, { op: "inbox", token, params: { ...params, status: "new", sort: "project", dir: "asc", limit: "5", after: "C" } });
     assert.equal(r.status, 200, r.text.slice(0, 200));

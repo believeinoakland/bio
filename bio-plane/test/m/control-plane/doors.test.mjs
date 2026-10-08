@@ -58,7 +58,14 @@ test("R1: GET / with no op answers instance-setup's page, built from its public 
   refused(await call(env, { path: "/", params: { store: "elsewhere" } }), 400, "NAMESPACE_UNKNOWN", "C-78.1");
   assert.equal(env.calls.length, 0);
   /* an op parameter is not the page */
-  assert.equal((await call(env, { path: "/", params: { op: "index", token: env.ADMIN_TOKEN } })).json.store, "bio");
+  assert.equal((await call(env, { path: "/", op: "index", token: env.ADMIN_TOKEN })).json.store, "bio");
+  /* control-plane R59 (admission R20, K2166): the same request with its credential in the address is the API's refusal,
+     CREDENTIAL_IN_ADDRESS, not the page, and nothing is read */
+  env.calls.length = 0;
+  const inAddress = await call(env, { path: "/", params: { op: "index", token: env.ADMIN_TOKEN } });
+  refused(inAddress, 400, "CREDENTIAL_IN_ADDRESS", "C-38.10");
+  assert.equal("deprecated" in inAddress.json, false);
+  assert.equal(env.calls.length, 0);
 });
 
 test("R2: the op is `op`, else the path after /api/ (or /), else selftest; an op with no spec is refused 400 UNKNOWN_OP (C-69.1) with error \"unknown op\" first after ok", async () => {
@@ -109,7 +116,7 @@ test("R2, R17 (N321): op=projectstage is declared and forwarded to the store's r
   const { env, S, A } = world();
   const cases = [
     [S.ann, {}, "member:ann", "bio"], [S.founder, {}, "admin", "bio"], [env.ADMIN_TOKEN, {}, "class:admin", "bio"],
-    [env.MEMBER_TOKEN, { store: "scratch" }, "class:member", "scratch"], [env.PROBE_TOKEN, { store: "scratch" }, "class:probe", "scratch"],
+    [env.PROBE_TOKEN, { store: "scratch" }, "class:probe", "scratch"],
     [A.ann, {}, "member:ann", "bio"],
   ];
   for (const [token, extra, viewer, ns] of cases) {

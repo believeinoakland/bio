@@ -47,7 +47,7 @@ function callers() {
                              [org]: cred({ tokenId: "agent-org", principal: "class:ai", writes: ["promote"] }) } });
   return { w, list: [
     ["ann's member session", w.S.ann, {}, "human"], ["the founder's session", w.S.founder, {}, "human"],
-    ["the admin binding", w.env.ADMIN_TOKEN, {}, "agent"], ["the member binding", w.env.MEMBER_TOKEN, {}, "agent"],
+    ["the admin binding", w.env.ADMIN_TOKEN, {}, "agent"],
     ["the probe binding", w.env.PROBE_TOKEN, { store: "scratch" }, "agent"],
     ["a member-scoped agent credential", agent, {}, "agent"], ["an organisation agent credential", org, {}, "agent"],
   ] };
@@ -78,14 +78,14 @@ test("R37 (D-78, REC-10): every spelling the catalogue folds to an inquiry is st
     env.calls.length = 0;
     const id = `X-2026-0001-${type}`;
     const text = focusMd(id, "human", type);
-    await call(env, { op: "promote", token: env.MEMBER_TOKEN, method: "POST", body: pkg(id, text, { meta: { object_type: type } }) });
+    await call(env, { op: "promote", token: env.PROBE_TOKEN, params: { store: "scratch" }, method: "POST", body: pkg(id, text, { meta: { object_type: type } }) });
     assert.equal(surfacedBy(sent(env).text), stamped ? "agent" : "human", type);
     if (!stamped) assert.equal(sent(env).text, text, `${type}: byte-identical`);
   }
   /* the envelope is read only where the document names no type */
   const bare = focusMd("X-2026-0002-x").replace(/^object_type: focus\n/m, "");
   env.calls.length = 0;
-  await call(env, { op: "promote", token: env.MEMBER_TOKEN, method: "POST", body: pkg("X-2026-0002-x", bare, { meta: { object_type: "focus" } }) });
+  await call(env, { op: "promote", token: env.PROBE_TOKEN, params: { store: "scratch" }, method: "POST", body: pkg("X-2026-0002-x", bare, { meta: { object_type: "focus" } }) });
   assert.equal(surfacedBy(sent(env).text), "agent");
   /* negative control: the same body through a session reads human */
   env.calls.length = 0;
@@ -99,26 +99,26 @@ test("R37 (D-78, REC-175): a revision is not restamped — the origin fact is no
   const text = focusMd(id, "human");
   /* a revision by a machine credential keeps the document's value, byte for byte */
   env.calls.length = 0;
-  await call(env, { op: "promote", token: env.MEMBER_TOKEN, method: "POST", body: pkg(id, text, { base: "rev0" }) });
+  await call(env, { op: "promote", token: env.PROBE_TOKEN, params: { store: "scratch" }, method: "POST", body: pkg(id, text, { base: "rev0" }) });
   assert.deepEqual([sent(env).text, sent(env).sha256], [text, sha(text)]);
   /* a false digest: text and digest reach the store as sent */
   env.calls.length = 0;
   const wrong = "0".repeat(64);
   const body = pkg(id, text);
   body.files[0].sha256 = wrong;
-  await call(env, { op: "promote", token: env.MEMBER_TOKEN, method: "POST", body });
+  await call(env, { op: "promote", token: env.PROBE_TOKEN, params: { store: "scratch" }, method: "POST", body });
   assert.deepEqual([sent(env).text, sent(env).sha256], [text, wrong]);
   /* the digest of the text sent, in capitals, is the true one and is restamped (the store's comparison rule) */
   env.calls.length = 0;
   const upper = pkg(id, text);
   upper.files[0].sha256 = sha(text).toUpperCase();
-  await call(env, { op: "promote", token: env.MEMBER_TOKEN, method: "POST", body: upper });
+  await call(env, { op: "promote", token: env.PROBE_TOKEN, params: { store: "scratch" }, method: "POST", body: upper });
   assert.deepEqual([surfacedBy(sent(env).text), sent(env).sha256], ["agent", sha(sent(env).text)]);
   /* no digest sent: stamped, and the digest is the server's */
   env.calls.length = 0;
   const none = pkg(id, text);
   delete none.files[0].sha256;
-  await call(env, { op: "promote", token: env.MEMBER_TOKEN, method: "POST", body: none });
+  await call(env, { op: "promote", token: env.PROBE_TOKEN, params: { store: "scratch" }, method: "POST", body: none });
   assert.deepEqual([surfacedBy(sent(env).text), sent(env).sha256], ["agent", sha(sent(env).text)]);
 });
 
