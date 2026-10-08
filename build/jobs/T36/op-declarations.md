@@ -1,6 +1,6 @@
 # op-declarations (T36)
 
-**Status** · session_01R1mcyGcTaZ5XaLSgxAAfv5 · depth 2 · WORKING · handled B2
+**Status** · session_01R1mcyGcTaZ5XaLSgxAAfv5 · depth 2 · WAITING ON BOB (J1) · handled B2
 
 ## Work (T36-35)
 
