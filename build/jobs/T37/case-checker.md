@@ -42,3 +42,7 @@ Readings I am building on (no answer needed unless you read otherwise):
 3. `COPYRIGHTED_PASSAGE_UNRELIED` is not named unjudged for a pre-T37 row: offline every carried passage is a finding's (`case-grammar` R17), so its only arm that could depart, the row's own `passages`, needs no `captures`.
 
 Waiting: 3 of my new R8 tests and 4 spec tests (R14) need T37-40 on `tranche/T37` (`CASE_FILE_FORMAT` `/3`, the `obscured` kind and `caseFilePath("obscured", ref)`); everything else passes (52 of 59 before that merge; `program.test.mjs` R13 stale, red 18). Once T37-40 (and T37-18) are merged, I merge `tranche/T37`, finish the tests and checks, and post COMPLETE. Generated artifact `program.mjs`: stale from my change too; I will run its own command after the merge and report it.
+
+## J2 · COMPLETE
+
+T37-20 applied on job/T37/case-checker @ c0f1c7eafc (tranche/T37 merged after case-grammar's merge, B2): R1 obscured, R8 the copy, R14 bio-case-file/3, R22 over frozen captures; program.mjs rebuilt by its own command. case-checker tests 60/0, case-import 88/0; format, architecture, coverage (22/22), ownership: 0 failures. Details in ## Completion. Nothing deferred, nothing found in another module.
