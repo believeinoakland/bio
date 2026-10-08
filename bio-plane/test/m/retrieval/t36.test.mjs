@@ -234,7 +234,7 @@ test("R74 (N724): a .docx table held as cells is a held table — its date colum
   for (const i of [...kindOf(ans, "money").items, ...kindOf(ans, "dates").items].filter((x) => x.table))
     assert.deepEqual([i.origin, i.capture_sha, i.extent], ["search", cap.sha, i.table.extent]);
   /* A table whose paragraphs are not one run in reading order (a nested table's paragraphs fall between its cells'):
-     its amount column is still one result, and a paragraph whose whole text is one of that column's lines is left out. */
+     its amount column is still one result, and the paragraphs its cells name (their `paras`, T37) are left out. */
   const nested = `<w:tbl><w:tblGrid><w:gridCol/><w:gridCol/></w:tblGrid>`
     + `<w:tr><w:tc>${wp(wr("Fee"))}</w:tc><w:tc>${wp(wr("Note"))}</w:tc></w:tr>`
     + `<w:tr><w:tc>${wp(wr("$7"))}</w:tc><w:tc>${table([["Inner", "words"]])}</w:tc></w:tr>`
