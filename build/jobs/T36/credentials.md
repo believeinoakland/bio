@@ -43,3 +43,7 @@ T36-7 done: R29 (security:<tool_id>, sets of fields, a set with no key removes),
 R4's `SIGN_IN_REFUSED` detail (`LOGIN_REFUSAL_DETAIL`) re-worded to need no name and address no one, meaning unchanged: "Either no active credential is held under that role …" and "… which roles hold a credential." (DEC-149 allows either; D-57). R48's test re-pinned to the new words, with a D-57 arm (no "you", "your", "yours"). No row changed (the detail is not a row's translation). Tests: `test/m/credentials/` 119 pass, 0 fail; `node test/members.test.mjs` 96 pass, 0 fail (BOB expected 95; the suite now holds 96). Checks: format, architecture, coverage (51/51), ownership: 0 failures.
 
 Size (session_01DuWUHZfSSRpYU5V4qt2iss): test runs 10, module lines 2689
+
+## J4 · COMPLETE
+
+B2 done: SIGN_IN_REFUSED's detail re-worded ('Either no active credential is held under that role …'; '… which roles hold a credential.'), meaning unchanged, no row changed; R48's test re-pinned with a D-57 arm. credentials 119/0; members.test.mjs 96/0 (the suite holds 96, not 95). Checks 0 failures. Red 14 clears at my merge.
