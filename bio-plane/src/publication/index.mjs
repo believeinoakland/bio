@@ -45,8 +45,8 @@
  * pre-flight (R75; N717, K2129).
  *
  * T37 (T37-18): each criteria row freezes `captures`, only the captures holding its passages that the edition carries
- * (R72; N763, K2140), so case-checker judges a copyrighted text carried offline; and the commit refuses a photo marked
- * since the case was prepared, `PHOTO_MARKS_CHANGED_SINCE` (R57, C-122.6; N757, DEC-180 (4), K2206).
+ * (R72; N763, K2140), so case-checker judges a copyrighted text carried offline; and the commit refuses a photo whose
+ * marks changed since the case was prepared, `PHOTO_MARKS_CHANGED_SINCE` (R57, C-122.6; N757, DEC-180 (4), K2206).
  *
  * T38 (T38-29): C-122.6's translation is `words.json`'s `photo.refused.changed`, verbatim; a mark withdrawn since the
  * case was prepared (case-carriage R14) and a photo carried whole are such changes, as case-carriage R13 answers them
@@ -975,9 +975,9 @@ export class Publication {
       /* DEC-49 REGION is-photo-marks-current */
       return { ok: false, reason: "PHOTO_MARKS_CHANGED_SINCE", ...rowOf("PHOTO_MARKS_CHANGED_SINCE"), caseId: id,
                edition: ed, photos: marks.slice(0, 200).map((m) => ({ ref: m?.ref ?? null, sha: m?.sha ?? null, why: m?.why ?? null })),
-               detail: `${marks.length} photo(s) this case document carries no longer match the copy the group marked (a `
-                     + "mark made or withdrawn after the case was prepared, a photo carried whole, or marks that cannot be "
-                     + "read), so nothing was committed. Prepare the case again." };
+               detail: `${marks.length} photo(s) this case document carries cannot be published as prepared (a mark `
+                     + "made or withdrawn after the case was prepared, a photo carried whole rather than as the copy the "
+                     + "group marked, or marks that cannot be read), so nothing was committed. Prepare the case again." };
       /* END DEC-49 REGION is-photo-marks-current */
     }
     /* R59 (DEC-96 items 1, 4; N522): ANOTHER GROUP'S WORK THE DOCUMENT RESTS ON IS RE-READ AT THE COMMIT, R51's pattern.
