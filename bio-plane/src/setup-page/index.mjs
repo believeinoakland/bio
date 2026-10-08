@@ -192,14 +192,14 @@ const keepAwayBlock = (p) => `<div class="card" id="${p}-ka">
   </div>`;
 /* R30 (DEC-169 (6), (7); file-safety R27–R32): the optional step for the organization's own security tools. What is
    built in comes first; the catalogue is read and drawn as file-safety answers it; adding a tool asks only what its
-   entry names, and the credentials go once, in the request's body. The words are plain until the design stream gives
-   its own (K2130). */
+   entry names, and the credentials go once, in the request's body. Its opening words are the design stream's for the
+   time before Settings › Security exists (UX-DESIGN U125 (3), K2159); once that screen exists its last sentence ends
+   "you can add it now, or later in Settings › Security". */
 const securityBlock = (p) => `<div class="card" id="${p}-st">
-    <p style="margin:0 0 10px"><b>Your organization's own security tools (optional).</b> Built in, with nothing to add:
-    the built-in scanner checks every file weekly and before it is first opened, and the safe view shows a file without
-    opening the original.</p>
-    <p class="small">You can skip this step, and adding nothing records nothing. You can also do it later, in Settings
-    &rsaquo; Security; until that screen is ready, an administrator finds it under Members and keys.</p>
+    <p style="margin:0 0 10px"><b>Your organization's own security tools (optional).</b> Civicsmith scans every file it
+    captures with its own scanner and opens risky ones in a safe view. If your organization already uses a file scanner, a
+    safe-copy maker or a log service, you can add it here, now or later.</p>
+    <p class="small">You can skip this step: adding nothing records nothing, and nothing needs adding.</p>
     <div id="${p}-st-tools"></div>
     <div id="${p}-st-cat"></div>
     <div id="${p}-st-form" hidden>
@@ -2186,7 +2186,7 @@ async function showSecurity(P){
       + escH(listOf(t.kinds, KINDS)) + "</span></p>" + handlingHtml(t.handling)
       + (t.licence_note ? '<p class="small" style="margin:6px 0 0">' + escH(t.licence_note) + "</p>" : "")
       + (t.template
-        ? '<p class="small" style="margin:6px 0 0">This is a template for a tool your organization runs and describes itself. This page cannot yet ask what it needs; it can be added later, in Settings &rsaquo; Security.</p>'
+        ? '<p class="small" style="margin:6px 0 0">This is a template for a tool your organization runs and describes itself. This page cannot yet ask what it needs; it can be added later.</p>'
         : '<div class="actions"><button class="st-pick" data-i="' + i + '">Add this tool</button></div>')
       + "</div>").join("") : '<p class="small">No tool is offered.</p>')
       + (not.length ? "<h3>Services not offered</h3>" + not.map((r)=>'<div class="kv"><span class="k">' + escH(r.provider_id)

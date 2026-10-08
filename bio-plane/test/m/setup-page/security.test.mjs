@@ -84,16 +84,19 @@ async function claimed(opts = {}) {
 }
 const pick = async (p, P, i) => { await p.drawn(`#${P}-st-cat .st-pick`, { i: String(i) }).fire(); await settle(); };
 
-test("R30 in the claim's section, after R29 and R15–R18, the page offers the founder the optional step: what is built in first, that it can be skipped or done later in Settings › Security; skipped, it records nothing and asks no key", async () => {
+test("R30 in the claim's section, after R29 and R15–R18, the page offers the founder the optional step: what is built in first, that it can be skipped or done later, in the design stream's words for the time before Settings › Security exists (K2159); skipped, it records nothing and asks no key", async () => {
   const claim = claimSection(PAGE_HTML);
   const after = (claim.match(/<div id="claim-after" hidden>[^]*$/) || [""])[0];
   const at = (id) => after.indexOf(`id="${id}"`);
   for (const id of ["cl-rc", "cl-ha", "cl-cn", "cl-gk", "cl-ka"]) assert.ok(at(id) >= 0 && at(id) < at("cl-st"), `${id} before the step`);
   const step = after.slice(at("cl-st"));
-  for (const re of [/<b>Your organization's own security tools \(optional\)\.<\/b> Built in, with nothing to add:\s+the built-in scanner checks every file weekly and before it is first opened, and the safe view shows a file without\s+opening the original\./,
-                    /You can skip this step, and adding nothing records nothing\./, /later, in Settings\s+&rsaquo; Security/])
-    assert.match(step, re);
-  assert.ok(step.indexOf("Built in") < step.indexOf('id="cl-st-cat"'), "what is built in comes first");
+  /* UX-DESIGN U125 (3): the first form, until Settings › Security exists */
+  const WORDS_U125 = "Civicsmith scans every file it captures with its own scanner and opens risky ones in a safe view. If your organization "
+    + "already uses a file scanner, a safe-copy maker or a log service, you can add it here, now or later.";
+  assert.ok(step.replace(/\s+/g, " ").includes(WORDS_U125));
+  assert.doesNotMatch(step, /Settings\s+(?:&rsaquo;|›) Security/, "not the second form while that screen does not exist");
+  assert.match(step, /You can skip this step: adding nothing records nothing, and nothing needs adding\./);
+  assert.ok(step.indexOf("Civicsmith scans") < step.indexOf('id="cl-st-cat"'), "what is built in comes first");
   assert.doesNotMatch(step.slice(0, step.indexOf('id="cl-st-form"')), /type="password"/, "no key is asked before a tool is chosen");
   const p = await claimed();
   const read = p.sent.filter((c) => c.op === "securitytoolcatalogue");

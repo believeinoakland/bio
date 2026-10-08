@@ -114,8 +114,8 @@ test("R21 no member-facing text of the page calls the group's Civicsmith a copy,
   assert.doesNotMatch(text, /\b(?:instance|plane|server)\b/i);
   const copies = [...text.matchAll(/[^.\n]*\bcopy\b[^.\n]*/gi)].map((m) => m[0].trim());
   /* the other meanings only: an archive's own copy, copying a key, copying a signature block or a key line, and (R30)
-     a safe copy, file-safety's rebuilt document */
-  for (const c of copies) assert.match(c, /its own copy|copy the <b>ratification<\/b> public key|Copy the whole (?:block|line)|Copy them as text|makes a safe copy/, c);
+     a safe copy, file-safety's rebuilt document, and the maker of one (UX-DESIGN U125 (3)) */
+  for (const c of copies) assert.match(c, /its own copy|copy the <b>ratification<\/b> public key|Copy the whole (?:block|line)|Copy them as text|makes a safe copy|safe-copy maker/, c);
   assert.ok(copies.length >= 3, "not vacuous: the other meanings are there");
 });
 
