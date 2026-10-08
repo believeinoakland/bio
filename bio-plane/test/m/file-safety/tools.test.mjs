@@ -44,7 +44,7 @@ test("R27: `securityToolCatalogue` (administrators) answers {offered, refused, h
 
 test("R28: `securityToolAdd`, an active administrator's act, refuses (writing nothing) NOT_AN_ADMIN (a machine credential too), PROVIDER_REFUSED or PROVIDER_HELD with the reason, PROVIDER_UNKNOWN, a generic template's descriptor refusal, CONFIG_MISSING and CONFIG_UNKNOWN naming the field (host and region excepted, the spec's own), HANDLING_NOT_SHOWN, RETENTION_NOT_CONFIRMED, CREDENTIALS_MISSING, USE_NOT_ALLOWED and LIMIT_INVALID; success holds the credentials through credentials (service security:<tool_id>), writes the tool added (off) with its handling and added_by, and answers {ok, tool_id, state}", async () => {
   const w = world();
-  const ok = { providerId: "scanii", credentials: { api_key: "k", api_secret: "s" }, handlingDigest: digestOf("scanii"), by: "boss" };
+  const ok = { providerId: "scanii", config: { region: "eu1" }, credentials: { api_key: "k", api_secret: "s" }, handlingDigest: digestOf("scanii"), by: "boss" };
   const add = (over) => w.fs.securityToolAdd({ ...ok, ...over });
   const snap = () => JSON.stringify([w.tables(), keyed(w)]);
   const before = snap();
@@ -69,7 +69,7 @@ test("R28: `securityToolAdd`, an active administrator's act, refuses (writing no
   for (const v of [undefined, null, "", "  ", [], {}]) await expect({ ...cf, config: v === undefined ? {} : { account_id: v } }, "CONFIG_MISSING", { field: "account_id" });
   await expect({ ...cf, config: null }, "CONFIG_MISSING", { field: "account_id" });
   await expect({ ...cf, config: { account_id: "a", zone: "z" } }, "CONFIG_UNKNOWN", { field: "zone" });
-  await expect({ config: { api_key: "in the wrong place" } }, "CONFIG_UNKNOWN", { field: "api_key" });
+  await expect({ config: { region: "eu1", api_key: "in the wrong place" } }, "CONFIG_UNKNOWN", { field: "api_key" });
   const ds = { providerId: "defender-storage", credentials: { client_id: "a", client_secret: "b" }, handlingDigest: digestOf("defender-storage") };
   await expect({ ...ds, config: { tenant_id: "t", storage_account: "s" } }, "CONFIG_MISSING", { field: "container" });
   const tpl = { providerId: "syslog-tls", template: { host: "logs.example.org:6514" }, handlingDigest: null };
@@ -107,9 +107,79 @@ test("R28: `securityToolAdd`, an active administrator's act, refuses (writing no
   assert.equal((await add({ config: { region: "eu1" } })).ok, true, "a tool that reads no setting takes its region");
 });
 
+test("R28 (T38): a generic template (icap) added with its host and its handling stated in config: host and region where the entry's config list names them are the spec's own fields and count as given, a required one absent answers CONFIG_MISSING naming it; HANDLING_NOT_SHOWN compares handlingDigest with the template entry's catalogue handling_digest, and the tool's own handling_digest is computed by this module from the handling so stated", async () => {
+  const w = world();
+  const cat = w.fs.securityToolCatalogue({ viewer: "member:boss" });
+  const entry = cat.offered.find((d) => d.provider_id === "icap");
+  assert.deepEqual(entry.config.filter((f) => f.required).map((f) => f.name), ["host", "engine_family", "handling"]);
+  const stated = { recipient: "the organization", region: "our own rack", file_retention: "none kept", result_retention: "30 days" };
+  const config = { engine_family: ["sophos"], handling: stated };
+  const ok = { providerId: "icap", template: { host: "icap.example.org:1344" }, config, handlingDigest: entry.handling_digest, use: "routine", by: "boss" };
+  const snap = () => JSON.stringify(w.tables());
+  const before = snap();
+  /* the digest of the stated handling is the tool's, not what the administrator was shown */
+  const resolvedDigest = sha256HexSync(canonicalJson({ ...PROVIDERS.find((d) => d.provider_id === "icap").handling, ...stated }));
+  assert.notEqual(resolvedDigest, entry.handling_digest);
+  const wrong = await w.fs.securityToolAdd({ ...ok, handlingDigest: resolvedDigest });
+  assert.deepEqual([wrong.code, wrong.handling_digest], ["HANDLING_NOT_SHOWN", entry.handling_digest]);
+  assert.equal(snap(), before, "HANDLING_NOT_SHOWN wrote nothing");
+  /* the template's host given in template.host, or in config: never CONFIG_MISSING */
+  for (const over of [{}, { template: null, config: { ...config, host: "icap.example.org:1344" } }, { template: {}, config: { ...config, host: "icap.example.org" } }]) {
+    const r = await w.fs.securityToolAdd({ ...ok, ...over });
+    assert.equal(r.ok, true, JSON.stringify([over, r]));
+    const t = w.fs.securityTools({ viewer: "member:boss" }).tools.find((x) => x.tool_id === r.tool_id);
+    assert.deepEqual([t.state, t.use, t.handling_digest], ["added", "routine", resolvedDigest]);
+    assert.deepEqual(t.handling, { ...PROVIDERS.find((d) => d.provider_id === "icap").handling, ...stated });
+    const row = w.row("SELECT config, host FROM fs_tools WHERE tool_id = ?", r.tool_id);
+    assert.deepEqual(JSON.parse(row.config), config, "host is held apart from config");
+    assert.match(row.host, /^icap\.example\.org/);
+  }
+  /* the tool works under its host: the spec carries it */
+  const id = await w.tool("icap", { template: { host: "icap.example.org:1344" }, config });
+  const spec = w.calls("/provider/test").at(-1).body.tool;
+  assert.deepEqual([spec.tool_id, spec.host, spec.config], [id, "icap.example.org:1344", config]);
+});
+
+test("R28 (T38): an entry that needs an address (splunk-hec) added with its host, and a region-keyed one (scanii) with its region, each read as the spec's own field and counted as given; absent, CONFIG_MISSING names host or region; an entry whose host is not required (opswat-deep-cdr) is added without one", async () => {
+  const w = world();
+  const cat = w.fs.securityToolCatalogue({ viewer: "member:boss" });
+  const digest = (id) => cat.offered.find((d) => d.provider_id === id).handling_digest;
+  const required = (id) => cat.offered.find((d) => d.provider_id === id).config.filter((f) => f.required).map((f) => f.name);
+  assert.deepEqual(required("splunk-hec"), ["host"]);
+  assert.deepEqual(required("scanii"), ["region"]);
+  assert.deepEqual(required("opswat-deep-cdr"), ["region"]);
+  const splunk = { providerId: "splunk-hec", credentials: { hec_token: "t" }, handlingDigest: digest("splunk-hec"), by: "boss" };
+  const before = JSON.stringify(w.tables());
+  for (const config of [{}, { host: "" }, { host: "  " }, null]) {
+    const r = await w.fs.securityToolAdd({ ...splunk, config });
+    assert.deepEqual([r.code, r.field], ["CONFIG_MISSING", "host"], JSON.stringify(config));
+  }
+  const scanii = { providerId: "scanii", credentials: { api_key: "k", api_secret: "s" }, handlingDigest: digest("scanii"), by: "boss" };
+  const nr = await w.fs.securityToolAdd({ ...scanii, config: {} });
+  assert.deepEqual([nr.code, nr.field], ["CONFIG_MISSING", "region"]);
+  assert.equal(JSON.stringify(w.tables()), before, "each refusal wrote nothing");
+  const s = await w.fs.securityToolAdd({ ...splunk, config: { host: "splunk.example.org:8088" } });
+  assert.deepEqual(s, { ok: true, tool_id: s.tool_id, state: "added" });
+  const sr = w.row("SELECT config, host, region FROM fs_tools WHERE tool_id = ?", s.tool_id);
+  assert.deepEqual([JSON.parse(sr.config), sr.host, sr.region], [{}, "splunk.example.org:8088", null]);
+  const c = await w.fs.securityToolAdd({ ...scanii, config: { region: "eu1" } });
+  assert.equal(c.ok, true);
+  const cr = w.row("SELECT config, host, region FROM fs_tools WHERE tool_id = ?", c.tool_id);
+  assert.deepEqual([JSON.parse(cr.config), cr.host, cr.region], [{}, null, "eu1"]);
+  /* the spec carries them as its own fields */
+  await w.fs.securityToolTest({ toolId: s.tool_id, by: "boss" });
+  await w.fs.securityToolTest({ toolId: c.tool_id, by: "boss" });
+  const specs = w.calls("/provider/test").map((x) => x.body.tool);
+  assert.deepEqual([specs[0].host, specs[0].config], ["splunk.example.org:8088", {}]);
+  assert.deepEqual([specs[1].region, specs[1].config], ["eu1", {}]);
+  const o = await w.fs.securityToolAdd({ providerId: "opswat-deep-cdr", credentials: { api_key: "k" }, handlingDigest: digest("opswat-deep-cdr"), config: { region: "cloud" }, by: "boss" });
+  assert.equal(o.ok, true, JSON.stringify(o));
+});
+
 test("R29: `securityToolTest` runs file-scanner's /provider/test with the tool's spec; passed sets on and tested_at, otherwise test_failed with the detail and the tool stays off; a tool is used only while on", async () => {
   const w = world({ scan: { test: { "joe-sandbox": { passed: false, detail: "the EICAR test file did not answer found" } } } });
-  const add = async (id, creds) => w.fs.securityToolAdd({ providerId: id, credentials: creds, handlingDigest: digestOf(id), by: "boss" });
+  const add = async (id, creds) => w.fs.securityToolAdd({ providerId: id, credentials: creds, handlingDigest: digestOf(id), by: "boss",
+                                                           config: id === "scanii" ? { region: "eu1" } : {} });
   const a = await add("scanii", { api_key: "k", api_secret: "s" });
   const b = await add("joe-sandbox", { api_key: "k" });
   assert.equal((await w.fs.securityToolTest({ toolId: a.tool_id, by: "m1" })).code, "NOT_AN_ADMIN");
@@ -133,7 +203,7 @@ test("R29: `securityToolTest` runs file-scanner's /provider/test with the tool's
   assert.equal(w.calls("/provider/scan").length, 1);
   /* no scanner bound: nothing can be tested */
   const n = world({ bound: false });
-  const na = await n.fs.securityToolAdd({ providerId: "scanii", credentials: { api_key: "k", api_secret: "s" }, handlingDigest: digestOf("scanii"), by: "boss" });
+  const na = await n.fs.securityToolAdd({ providerId: "scanii", config: { region: "eu1" }, credentials: { api_key: "k", api_secret: "s" }, handlingDigest: digestOf("scanii"), by: "boss" });
   assert.equal((await n.fs.securityToolTest({ toolId: na.tool_id, by: "boss" })).code, "SCANNER_ABSENT");
 });
 
