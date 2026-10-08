@@ -41,3 +41,7 @@ T39-20 done; record's Completion section. (1) docket purge list = MARK+DOCUMENT 
 - Whole module suite `node --test bio-plane/test/m/`: 9,137 pass, 1 fail, 1 skipped, 11 todo. The one failure is filings' `test/m/filings/outward.test.mjs`:136 (R25: an exhibit's capture grade reads `'B'` where the test expects `null`). It fails the same way, 5 pass / 1 fail, on a clean checkout of `origin/tranche/T39`. So it is not this job's change, and not on the plan's rule 3 list. Reported to BOB.
 
 Size (session_01FHJ4WgvZK4SkDMHVE5W2mn): test runs 18, module lines 0
+
+## J2 · COMPLETE · re B2
+
+B2 done. Tranche merged (no conflict). Plane 156/0; pdf.js oracle runs and passes. Checks: format, architecture, coverage (29/29) and ownership, 0 failures each. Architecture had flagged t39.test.mjs's import of doc-clean's fixtures; fixed, the test now builds its own PDF. Whole test/m: 9137 pass, 1 fail, 1 skipped, 11 todo. REPORT: the one failure is filings test/m/filings/outward.test.mjs:136 (R25, an exhibit's grade reads 'B', expected null). It fails identically on a clean origin/tranche/T39, so it is not plane's and not on rule 3's list; filings' or the tranche's to own. Plane bundle: yours at the close, as you said.
