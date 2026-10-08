@@ -19,3 +19,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 All four readings stand (K2238), with: (1) store-door adds aikeptaway and subscriptionconnected (its R10, CHANGE sent). (3a) instance-setup answers ASSISTANT_DRAFT_UNAVAILABLE with direction, language, words. (3b) plane extends draftOnObject (CHANGE sent to PLANE #26). (3c) send the pack. (3d) translationdraftrecord's body is instance-setup's: {direction, language, keys?|key, words, draft, not_drafted?} (agent-worker's not_drafted top-level beside draft), by and viewer stamped in the query; no usage field. Merge tranche/T37 (store-door's and instance-setup's requirements changed).
+
+## B3 · RESUME
+
+(K2252) instance-setup, op-declarations and store-door are all merged into tranche/T37. Merge the tranche, drop your local shim, run steps 5-7 and complete. You merge before plane.
