@@ -328,3 +328,52 @@ test("R29: a photo whose marks cannot be read is listed state: null, unread: tru
     [[null, "unchecked"]], "a failed actor read states less");
   void sha;
 });
+
+test("R6, R29 over the real case-carriage (its R10–R14): an unchecked photo is refused PHOTO_UNCHECKED; once marked it travels as its labelled copy; a withdrawn mark counts as withdrawn, so withdrawing the only mark makes it unchecked again; marked as having nothing to obscure it travels as its copy with no label; a refused cover, marked or not, is PHOTO_NOT_COVERABLE; a document that is no image travels whole", async () => {
+  const w = world({ realCarriage: true });
+  for (const m of ["alice", "bo"]) w.member(m);
+  const p = w.doc(DOC, {}, { name: "c0.png" }), d = w.doc(DOC2);
+  w.finding(Q, [{ target: DOC }, { target: DOC2 }]);
+  const view = () => {
+    const r = judged(w, [Q]);
+    const photos = w.cd.photosOf(r.materials, w.roles([Q]), V("alice"));
+    return { r, photos };
+  };
+  /* unchecked: no mark */
+  let { r, photos } = view();
+  assert.deepEqual(r.refusals.map((x) => x.reason), ["PHOTO_UNCHECKED"]);
+  assert.deepEqual(r.refusals[0].unchecked, [{ ref: DOC, sha: p, members: [Q] }]);
+  assert.deepEqual(r.materials.map((m) => [m.ref, m.included, m.obscured]), [[DOC, false, null], [DOC2, true, null]]);
+  assert.deepEqual([photos.unchecked, photos.photos.map((x) => [x.sha, x.state, x.words])], [1, [[p, "unchecked", PHOTO_UNCHECKED_WORDS]]]);
+  /* marked: carried as its labelled copy */
+  const m1 = await w.carriage.obscureMark({ captureSha: p, areas: [{ rect: [0, 0, 4, 4], kind: "person" }], by: V("alice") });
+  assert.equal(m1.ok, true, JSON.stringify(m1));
+  ({ r, photos } = view());
+  assert.deepEqual(r.refusals, []);
+  assert.deepEqual(r.materials[0].obscured, { copy: m1.copy.sha256, label: OBSCURED_LABEL });
+  assert.deepEqual(photos.photos.map((x) => [x.state, x.copy, x.words, x.marks.length]), [["marked", m1.copy.sha256, OBSCURED_LABEL, 1]]);
+  /* the only mark withdrawn: unchecked again, the withdrawal shown */
+  const wd = await w.carriage.obscureMarkWithdraw({ captureSha: p, mark: String(m1.mark), reason: "it covered the wrong thing", by: V("bo") });
+  assert.equal(wd.ok, true, JSON.stringify(wd));
+  ({ r, photos } = view());
+  assert.deepEqual(r.refusals.map((x) => x.reason), ["PHOTO_UNCHECKED"]);
+  assert.deepEqual([r.materials[0].obscured, photos.photos[0].state, photos.photos[0].marks[0].withdrawn.by], [null, "unchecked", V("bo")]);
+  /* nothing to obscure: its copy, no label */
+  const m2 = await w.carriage.obscureMark({ captureSha: p, areas: [], by: V("alice") });
+  assert.equal(m2.ok, true, JSON.stringify(m2));
+  ({ r, photos } = view());
+  assert.deepEqual(r.refusals, []);
+  assert.deepEqual(r.materials[0].obscured, { copy: m2.copy.sha256, label: null });
+  assert.deepEqual(photos.photos.map((x) => [x.state, x.words]), [["nothing_to_obscure", null]]);
+  /* a cover refused on a photo marked as having nothing to obscure */
+  const p2 = w.doc(DOC3, {}, { name: "c1.png", text: "a second photo" });
+  w.finding(Q2, [{ target: DOC3 }]);
+  w.cover.refuse = "NOT_A_COVERABLE_FORMAT";
+  const m3 = await w.carriage.obscureMark({ captureSha: p2, areas: [], by: V("alice") });
+  assert.deepEqual([m3.ok, m3.state, m3.refused && m3.refused.code], [true, "nothing_to_obscure", "NOT_A_COVERABLE_FORMAT"]);
+  const r2 = judged(w, [Q2]);
+  assert.deepEqual(r2.refusals.map((x) => x.reason), ["PHOTO_NOT_COVERABLE"]);
+  assert.deepEqual(r2.refusals[0].not_coverable, [{ target: Q2, materials: [{ ref: DOC3, sha: p2, refused: "NOT_A_COVERABLE_FORMAT" }] }]);
+  assert.deepEqual(w.cd.photosOf(r2.materials, w.roles([Q2]), V("alice")).photos.map((x) => x.words), [PHOTO_NOT_COVERABLE_WORDS]);
+  void d;
+});
