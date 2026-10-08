@@ -41,3 +41,7 @@ Size (session_01VgkuxsW3PKQd1yNMcwCU82): test runs 10, module lines 811
 ## J1 · REPORT
 
 case-carriage: MACHINE_CANNOT_MARK (C-141.1, src/case-carriage/checks.mjs) is also sources' C-121.7 (SOURCES_CHECKS), an earlier family. Under R7 (no earlier row moves) the composed catalogue keeps sources' row, so a refusal with that reason that case-carriage answers bare is decorated C-121.7 with sources' sentence, and C-141.1 never reaches the wire through R2. DEC-49 arm A: a code held twice. Suggested: case-carriage re-codes it (e.g. MACHINE_CANNOT_MARK_PHOTO), as K2103 did for file-safety's shared codes; my R7 test (families.test.mjs, T37; K2226) passes either way. Also: dist/ plane bundle stale from families.mjs (layer close).
+
+## J2 · COMPLETE
+
+T37-50 applied: R7 reads case-carriage's C-141 family directly after reevaluation's, before case-tensions'; catalogue total; no earlier row moves. answer-envelope 28/0 (fixed my own stale C-120 pin for case-disclosures' T37 rows .17/.18); users store-door 38/0, control-plane 180/0, plane 137/6 (the same 6 on the base, plane's own open entries). format, architecture, coverage, ownership: 0 failures. Record: build/jobs/T37/answer-envelope.md @ job/T37/answer-envelope. See J2 (REPORT) for the C-141.1/C-121.7 collision.
