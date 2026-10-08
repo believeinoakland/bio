@@ -25,6 +25,9 @@ Terms. The **citing object** is the bundle a citation is written into, named by 
 **retiredNotCitable(id) → boolean**
 - **R5** True exactly when the bundle's current state is `retired`, whatever its type; an id with no row is false. Never viewer-gated; never throws. It is the one predicate for "may this be cited now": R1, R4, and the later modules that offer or suggest a citation (`affordances`' reinstatable count, `run-productions`' suggestion check) ask it.
 
+**recordedBy({captureSha, extent?, limit?, viewer})**, registered with `retrieval` (T36; N715; K2063 (1))
+- **R13** At start this module registers its read once, through `retrieval.registerRecordedBy("citation", fn)` (its R76). The read answers in `events` R49's shape (with K2114's wording), `module: "citation"`, over the citations held in the citing objects' current bytes whose document is pinned to the capture (R2: the leg's or edge's `extent_capture`, else its content row's capture). Its items are each leg of an inquiry's `basis[]` (`kind: "leg"`, `field: "basis"`, `extent` the leg's part, or `document` when the leg names none) and each `cites` edge of a project's `references[]` (`kind: "cites"`, `field: "references"`, `extent` `document`). In each item, `record` is the citing object's id; `by` is the member (or `class:<cls>`) whose act first wrote that leg or edge into the citing object, and `at` is that act's instant, both as the object's history holds them; `withdrawn` is true for a `severed` edge (R4), else false. A leg no longer in a basis is not an item. Sight is the citing object's (R9 for a project, the inquiry's for a question): one the viewer may not see is neither answered nor counted. It writes nothing and never throws. (N715; DEC-164 (4); K1941, K2063) *(not yet met: T36)*
+
 ## Private
 
 ### Uses
