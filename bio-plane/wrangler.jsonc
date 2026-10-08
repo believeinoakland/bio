@@ -110,11 +110,18 @@
   // `ctx.recompute`) reaches the sheet-worker member over it. sheet-worker ships
   // inactive and answers "not enabled" until an administrator enables it; with
   // the binding absent a recompute records "not recomputed here: no engine bound".
+  //
+  // FILE_SCANNER (plane R27, R26, R29; file-scanner R10; rev. 2 §4): the file-scanner member, a container
+  // fleet member holding ClamAV and the safe-view renderer, which `file-safety` scans, renders and asks the
+  // group's outside security tools through, and `acquisition` asks an address's reputation through. Its own
+  // bindings (CAPTURES, SCANNER, RENDERER, optional SECURITY_VPC) and cron are the member's and the
+  // installer's, not the plane's. Absent, a scan answers SCANNER_ABSENT and the record is otherwise unchanged.
   "services": [
     { "binding": "PDF_WORKER",   "service": "pdf-worker" },
     { "binding": "AGENT_WORKER", "service": "agent-worker" },
     { "binding": "OCR_WORKER",   "service": "ocr-worker" },
     { "binding": "SHEET_WORKER", "service": "sheet-worker" },
+    { "binding": "FILE_SCANNER", "service": "file-scanner" },
     { "binding": "SELF",         "service": "bio-plane" }
   ],
 

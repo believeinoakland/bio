@@ -158,27 +158,58 @@ export function ratificationWorker({ env, door, namespace }) {
            get storeName() { return namespace(); } };
 }
 
-/** F16 (K1881, K2038; capture R73, acquisition R42, capture-sources R55, R65): the group's own hosts, built from what
- *  the object holds, since it cannot see the host a request reached (the door forwards every request as `http://do/`)
- *  and no binding names it (an install-time binding is N745): the host of the origin the administrator's session
- *  reached when the group's domain was claimed (`instance-setup`'s `groupIdentity().domain_claim.instance_address`,
- *  its R7), and, when that host is a `workers.dev` name (`<name>.<subdomain>.workers.dev`), the suffix
- *  `.<subdomain>.workers.dev`, which holds every fleet member on the account. The claimed domain itself is the group's
- *  own website, which a member may capture, so it is never one. With nothing recorded the list is empty and the
- *  own-host checks refuse nothing (capture-sources R65: fail-open, F16 low). Pure; never throws. */
-export function ownHostsOf(identity) {
+/* A host and, for a `workers.dev` name (`<name>.<subdomain>.workers.dev`), the suffix `.<subdomain>.workers.dev`, which
+   holds every fleet member on the account. */
+function withFleet(host) {
+  const labels = host.split(".");
+  return labels.length >= 4 && labels.slice(-2).join(".") === "workers.dev" ? [host, `.${labels.slice(-3).join(".")}`] : [host];
+}
+
+/* R28: a bare host name as instance-setup R7 forms one (lower-cased, a trailing dot removed; no scheme, path, port or IP
+   literal; the last label begins with a letter), else null. */
+const LABEL = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
+export function bareHost(entry) {
+  if (typeof entry !== "string") return null;
+  const h = entry.trim().toLowerCase().replace(/\.$/, "");
+  if (!h || h.length > 253) return null;
+  const labels = h.split(".");
+  if (labels.length < 2 || !labels.every((l) => LABEL.test(l)) || !/^[a-z]/.test(labels[labels.length - 1])) return null;
+  return h;
+}
+
+/* R28: a skipped entry is named in the log by a correlation id only, never by its text. */
+const logSkipped = (correlation) =>
+  console.warn(JSON.stringify({ event: "own_hosts_entry_skipped", module: "plane", correlation }));
+
+/** F16, R28 (K1881, K2038, N745; capture R73, acquisition R42, capture-sources R55, R65; installer R47): the group's own
+ *  hosts, the copy's own and every fleet member's. Two sources, joined, each host once:
+ *  - `ownHostsVar`, the `OWN_HOSTS` binding the installer writes (its R47), comma-separated host names, so the copy
+ *    knows its own hosts before a group domain is claimed; a malformed entry is skipped and named in the log by a
+ *    correlation id only (`log(correlation)`);
+ *  - the host of the origin the administrator's session reached when the group's domain was claimed (`instance-setup`'s
+ *    `groupIdentity().domain_claim.instance_address`, its R7), since the object cannot see the host a request reached
+ *    (the door forwards every request as `http://do/`).
+ *  Each `workers.dev` host also gives its account's suffix (`withFleet`). The claimed domain itself is the group's own
+ *  website, which a member may capture, so it is never one. With neither the list is empty and the own-host checks
+ *  refuse nothing (capture-sources R65: fail-open, F16 low). Never throws. */
+export function ownHostsOf(identity, ownHostsVar = null, { log = logSkipped, correlation = () => crypto.randomUUID() } = {}) {
+  const out = [];
+  const add = (hosts) => { for (const h of hosts) if (!out.includes(h)) out.push(h); };
+  if (typeof ownHostsVar === "string" && ownHostsVar.trim() !== "") {
+    for (const entry of ownHostsVar.split(",")) {
+      if (entry.trim() === "") continue;
+      const h = bareHost(entry);
+      if (h) add(withFleet(h));
+      else { try { log(correlation()); } catch { /* a log that fails skips the entry all the same */ } }
+    }
+  }
   try {
     const address = identity && identity.domain_claim && identity.domain_claim.instance_address;
-    if (typeof address !== "string" || address === "") return [];
+    if (typeof address !== "string" || address === "") return out;
     const u = new URL(address);
-    if (u.protocol !== "https:" && u.protocol !== "http:") return [];
+    if (u.protocol !== "https:" && u.protocol !== "http:") return out;
     const host = u.hostname.toLowerCase().replace(/\.$/, "");
-    if (!host) return [];
-    const labels = host.split(".");
-    const out = [host];
-    if (labels.length >= 4 && labels.slice(-2).join(".") === "workers.dev") out.push(`.${labels.slice(-3).join(".")}`);
-    return out;
-  } catch {
-    return [];
-  }
+    if (host) add(withFleet(host));
+  } catch { /* an unreadable address gives nothing */ }
+  return out;
 }

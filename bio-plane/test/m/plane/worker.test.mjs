@@ -61,7 +61,7 @@ test("R6: in the runtime, the door answers through the hooks: the version, the s
   assert.equal(typeof stats.body.result.bundles, "number");
 });
 
-test("R7, R21 (N625, K1683): `wrangler.jsonc`'s `main` names the Worker's entry, its bindings as the deployment has them, `SHEET_WORKER` among its services", () => {
+test("R7, R21, R27 (N625, K1683; rev. 2 §4): `wrangler.jsonc`'s `main` names the Worker's entry, its bindings as the deployment has them, `SHEET_WORKER` and `FILE_SCANNER` (the fleet member `file-scanner`) among its services", () => {
   const cfg = jsonc(readFileSync(join(PLANE, "wrangler.jsonc"), "utf8"));
   assert.equal(cfg.main, "src/plane/index.mjs");
   assert.ok(existsSync(join(PLANE, cfg.main)));
@@ -71,7 +71,7 @@ test("R7, R21 (N625, K1683): `wrangler.jsonc`'s `main` names the Worker's entry,
   assert.deepEqual(cfg.r2_buckets, [{ binding: "CAPTURES", bucket_name: "bio-captures" }, { binding: "PUBLISHED", bucket_name: "bio-published" }]);
   assert.deepEqual(cfg.services, [{ binding: "PDF_WORKER", service: "pdf-worker" }, { binding: "AGENT_WORKER", service: "agent-worker" },
                                   { binding: "OCR_WORKER", service: "ocr-worker" }, { binding: "SHEET_WORKER", service: "sheet-worker" },
-                                  { binding: "SELF", service: "bio-plane" }]);
+                                  { binding: "FILE_SCANNER", service: "file-scanner" }, { binding: "SELF", service: "bio-plane" }]);
   assert.deepEqual(cfg.browser, { binding: "BROWSER" });
   assert.equal(cfg.account_id, "20b533579290b9b93168345edd3b7f72");
   assert.deepEqual(cfg.compatibility_flags, ["nodejs_compat"]);

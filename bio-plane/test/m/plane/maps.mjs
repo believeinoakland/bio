@@ -68,6 +68,7 @@ import { hypothesesOf, hypothesesOps } from "../../../src/hypotheses/index.mjs";
 import { answersOf, answersOps } from "../../../src/answers/index.mjs";
 import { caseTensionsOf, caseTensionsOps } from "../../../src/case-tensions/index.mjs";
 import { followingOf, followingOps } from "../../../src/following/index.mjs";
+import { fileSafetyOf, fileSafetyOps } from "../../../src/file-safety/index.mjs";
 
 export const MODULE_MAPS = [
   ["membership", (c, u, b, e) => membershipOps(membershipOf(c), u, b, e)],
@@ -78,6 +79,7 @@ export const MODULE_MAPS = [
   ["acquisition", (c, u, b) => ({ coarchiveset: () => acquisitionOf(c).coArchiveSet({ on: b ? b.on : undefined, by: u.searchParams.get("by") }),
                                   coarchivestate: () => acquisitionOf(c).coArchiveState() })],
   ["capture", (c, u, b, e) => captureOps(captureOf(c), u, b, e)],
+  ["file-safety", (c, u, b, e) => fileSafetyOps(fileSafetyOf(c), u, b, e)],   /* R26: directly after capture's */
   ["calibration", (c, u, b) => calibrationOps(calibrationOf(c), u, b)],
   ["bias", (c, u, b) => biasOps(biasOf(c), u, b)],
   ["extraction", (c, u, b, e) => extractionOps(extractionOf(c), u, b, e)],
