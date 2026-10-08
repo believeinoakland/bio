@@ -13,3 +13,7 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Merge order in L8: case-grammar → publication → public-read → case-checker → case-authoring (`modules.json` order).
 Inherited reds: the plan's rule 5 list as it stands at your START (read it there); cleared: 2, 3, 5, 6, 8, 9, 14, 21. Expect among your users' tests red 16, 18, 19, 20, 22, 23, 24 (control-plane and affordances, until L11).
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · CHANGE
+
+case-grammar is merged into tranche/T36 (K2144: bio-case-file/2, caseFilePath's new kinds, R22 memberSubjectOf; CASE_FILE_FORMATS_ACCEPTED exported): merge tranche/T36 into your branch before building on it.
