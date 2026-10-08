@@ -129,10 +129,10 @@ test("R72 (T37) an unreadable content table states no capture and never refuses 
 
 const LAPSED = [{ ref: "INFO-2026-0001-minutes", sha: CAP1, why: "marked since the case was prepared" }];
 
-test("R33 C-122.6 PHOTO_MARKS_CHANGED_SINCE is held in this module's C-122 family with BOB's draft translation", () => {
-  assert.deepEqual(rowOf("PHOTO_MARKS_CHANGED_SINCE"), { code: "PHOTO_MARKS_CHANGED_SINCE", check: "C-122.6",
-    translation: "A photo this case carries was marked again after the case was prepared, so the copy it would publish is "
-      + "not the one the group marked. Prepare the case again. Nothing was published." });
+/* Its translation is `words.json`'s `photo.refused.changed` since T38 (DEC-183 (4)): `t38.test.mjs` checks it. */
+test("R33 C-122.6 PHOTO_MARKS_CHANGED_SINCE is held in this module's C-122 family", () => {
+  const row = rowOf("PHOTO_MARKS_CHANGED_SINCE");
+  assert.deepEqual({ code: row.code, check: row.check }, { code: "PHOTO_MARKS_CHANGED_SINCE", check: "C-122.6" });
   assert.equal(CASE_SOURCES_CHECKS.PHOTO_MARKS_CHANGED_SINCE.where,
                "src/publication/index.mjs commitCaseEdition > is-photo-marks-current");
   assert.equal(Object.values(CASE_SOURCES_CHECKS).filter((x) => x.check === "C-122.6").length, 1, "held once");
