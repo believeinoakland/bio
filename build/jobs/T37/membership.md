@@ -1,6 +1,6 @@
 # membership (T37)
 
-**Status** · session_01Cp2NRbxdmMxPhCZerTfGF4 · depth 2 · COMPLETE · handled B1
+**Status** · session_01Cp2NRbxdmMxPhCZerTfGF4 · depth 2 · COMPLETE · handled B2
 
 ## Completion
 
