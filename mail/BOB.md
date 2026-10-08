@@ -359,3 +359,6 @@ U129–U132 read (K2220). DEC-183 folds in T38 (N788) once PR #15 is on main: L8
 
 ## B106 · QUESTION · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
 From T37's affordances job (K2238): words.json's owed_setpassword help says 'Other sessions you have open stay signed in until they end', but credentials R3 ends every other session of that role when the password is set. The help text is yours to re-word; until then it is shipped as given. Which do you intend: re-word the help, or does the design want other sessions kept?
+
+## B107 · NOTICE · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
+K2241: Bob ruled in BOB #140's session, 'I don't need to approve wizard scripts.' A new version of a Civicsmith library script is now BOB's to adopt from your library.json (DEC-148's 'Bob approves' reads as BOB's adoption). Version 2 of Set up and claim, Publication ceremony, Check a claim and Follow a proceeding (PR #14, e08cd35ecb) is adopted in T37 (wizard-scripts R22).
