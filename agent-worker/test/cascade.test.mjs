@@ -50,6 +50,9 @@ const KEY = "sk-ant-member-key-fixture-never-echoed";
 const TOKEN = "sk-ant-oat-member-subscription-fixture-never-echoed";
 const RUTH = "member:ruth", SAM = "member:sam";
 const apikey = (member = RUTH, secret = KEY) => ({ kind: "apikey", level: "member", secret, member });
+/* T38 (N785, K2200): the member's own stored sign-in, as `credentials.accountFor` answers it (its R35) and the plane
+   carries it (R6): no secret, level member, suggestions false. `subscription` is retired (`credentials` R22). */
+const signin = (member = RUTH) => ({ kind: "signin", level: "member", member, suggestions: false });
 const sub = (member = RUTH, secret = TOKEN) => ({ kind: "subscription", level: "member", secret, member });
 /* K1755: the group's API key, as `credentials.accountFor` answers it for a member's act (its R35). */
 const GROUP_KEY = "sk-ant-group-key-fixture-never-echoed";
@@ -60,12 +63,24 @@ console.log("\n--- 1 · R32: the cascade judges the one account that arrived, at
 {
   t("R32: the levels are the member's own and the group's API key, and nothing else (K1502, K1755: no project or "
     + "instance level)", [...CASCADE_ORDER], ["member", "group"]);
-  t("R32: the kinds are agent-model's: apikey and subscription", [...ACCOUNT_KINDS], ["apikey", "subscription"]);
+  t("R32 (T38): the kinds are agent-model's: apikey and signin; subscription is retired", [...ACCOUNT_KINDS], ["apikey", "signin"]);
   const a = await resolveClaudeCascade(apikey());
   t("R32: an API key of the member's own is available, with its kind and its member",
     [a.available, a.level, a.kind, a.member, states(a)], [true, "member", "apikey", RUTH, [`member:${LEVEL_AVAILABLE}`]]);
-  const s = await resolveClaudeCascade(sub());
-  t("R32: a subscription token of the member's own is available as a subscription", [s.available, s.kind], [true, "subscription"]);
+  const s = await resolveClaudeCascade(signin());
+  t("R32 (T38): the member's own sign-in, carrying no secret, is available when its member is a non-empty string, "
+    + "named as a sign-in for that member", [s.available, s.level, s.kind, s.member, states(s)],
+    [true, "member", "signin", RUTH, [`member:${LEVEL_AVAILABLE}`]]);
+  t("R32 (T38): a sign-in is available whatever the published list holds, there being no secret to look up",
+    (await resolveClaudeCascade({ ...signin(), suggestions: undefined })).available, true);
+  for (const [why, acct] of [["naming no member", { kind: "signin", level: "member", suggestions: false }],
+                             ["naming an empty member", signin("")],
+                             ["naming a member that is not a string", { ...signin(), member: 7 }],
+                             ["a retired subscription of the member's own", sub()]]) {
+    const n = await resolveClaudeCascade(acct);
+    t(`R32 (T38): ${why} is unset: NO_ACCOUNT at the member level`, [n.available, n.reason, n.level, states(n)],
+      [false, CASCADE_NO_ACCOUNT, "member", [`member:${LEVEL_UNSET}`]]);
+  }
   for (const [why, acct] of [["absent", undefined], ["empty secret", apikey(RUTH, "")], ["another kind", { kind: "oauth", secret: KEY, member: RUTH }],
                              ["the old cascade's shape", { member: { token: KEY } }],
                              ["an account naming no level", { kind: "apikey", secret: KEY, member: RUTH }],
@@ -79,6 +94,7 @@ console.log("\n--- 1 · R32: the cascade judges the one account that arrived, at
     [g.available, g.level, g.kind, g.member, states(g)], [true, "group", "apikey", RUTH, [`group:${LEVEL_AVAILABLE}`]]);
   for (const [why, acct, st] of [["an empty key", group(RUTH, ""), LEVEL_UNSET],
                                  ["a subscription (the group's account is an API key only)", { ...group(), kind: "subscription" }, LEVEL_UNSET],
+                                 ["a sign-in (T38: a sign-in is a member's own, never the group's)", { ...signin(), level: "group" }, LEVEL_UNSET],
                                  ["a published key", group(RUTH, PUBLISHED_VALUE), LEVEL_REVOKED]]) {
     const n = await resolveClaudeCascade(acct);
     t(`R32: the group's account with ${why} is NO_ACCOUNT at the group level (${st}), and nothing falls back to another`,
@@ -97,14 +113,15 @@ console.log("\n--- 2 · R33: the reference, derived from the status, in agent-mo
 {
   t("R33: an API key becomes {kind: apikey, key}", await cascadeToken(apikey()),
     { level: "member", reference: { kind: "apikey", key: KEY } });
-  t("R33: a subscription token becomes {kind: subscription, token} — used as a subscription, never as an API key (K1553)",
-    await cascadeToken(sub()), { level: "member", reference: { kind: "subscription", token: TOKEN } });
+  t("R33 (T38): the member's own sign-in becomes {kind: signin, member}, the member whose runner instance holds it, "
+    + "with no secret", await cascadeToken(signin()), { level: "member", reference: { kind: "signin", member: RUTH } });
   t("R33 (K1755): the group's API key becomes {kind: apikey, key} at the group level", await cascadeToken(group()),
     { level: "group", reference: { kind: "apikey", key: GROUP_KEY } });
   t("R33: null exactly when R32 does not resolve",
     [await cascadeToken(undefined), await cascadeToken(apikey(RUTH, "")), await cascadeToken(apikey(RUTH, PUBLISHED_VALUE)),
-     await cascadeToken(group(RUTH, "")), await cascadeToken({ ...group(), kind: "subscription" })],
-    [null, null, null, null, null]);
+     await cascadeToken(group(RUTH, "")), await cascadeToken({ ...group(), kind: "subscription" }),
+     await cascadeToken(sub()), await cascadeToken(signin("")), await cascadeToken({ ...signin(), level: "group" })],
+    [null, null, null, null, null, null, null, null]);
 }
 
 /* ================================================================ THE ENDPOINT
@@ -198,6 +215,13 @@ console.log("\n--- 4 · R6, R57: no account, a bad one, or the retired cascade's
     ["R6: an account naming no level", { ...base, account: { kind: "apikey", secret: KEY, member: RUTH } }, 400, "BAD_ACCOUNT"],
     ["R6: an account at the project level (there is none)", { ...base, account: { ...apikey(), level: "project" } }, 400, "BAD_ACCOUNT"],
     ["R6: the group's account as a subscription (the group's is an API key only)", { ...base, account: { ...group(), kind: "subscription" } }, 400, "BAD_ACCOUNT"],
+    ["R6 (T38): a member's own subscription, retired (credentials R22)", { ...base, account: sub() }, 400, "BAD_ACCOUNT"],
+    ["R6 (T38): a sign-in carrying a secret", { ...base, account: { ...signin(), secret: TOKEN } }, 400, "BAD_ACCOUNT"],
+    ["R6 (T38): a sign-in carrying an empty secret", { ...base, account: { ...signin(), secret: "" } }, 400, "BAD_ACCOUNT"],
+    ["R6 (T38): a sign-in with suggestions true", { ...base, account: { ...signin(), suggestions: true } }, 400, "BAD_ACCOUNT"],
+    ["R6 (T38): a sign-in at the group level", { ...base, account: { ...signin(), level: "group" } }, 400, "BAD_ACCOUNT"],
+    ["R6 (T38): a sign-in naming no member", { ...base, account: { kind: "signin", level: "member", suggestions: false } }, 400, "BAD_ACCOUNT"],
+    ["R6 (T38): a sign-in naming an empty member", { ...base, account: signin("") }, 400, "BAD_ACCOUNT"],
     ["R6, R32: the group's account with an empty key is no account", { ...base, account: group(RUTH, "") }, 409, "NO_ACCOUNT"],
     ["R6, R32: the group's account with a published key is no account", { ...base, account: group(RUTH, PUBLISHED_VALUE) }, 409, "NO_ACCOUNT"],
     ["R6: a body still carrying claude_accounts", { ...base, account: apikey(), claude_accounts: { member: { token: KEY } } }, 400, "BAD_ACCOUNT"],
@@ -228,9 +252,17 @@ console.log("\n--- 5 · R10, R57: a run is continued only under the account of t
     samCalls.map((c) => c.op), ["airun"]);
   const own = await run({ ...base, run_id: "run-sam", account: apikey(SAM) });
   t("R10 (control): Sam's own reference on Sam's run drives", own.status, 200);
-  const subRun = await run({ ...base, account: sub() });
-  t("R10 (control): a subscription token of the starter's own drives too, named as one",
-    (await subRun.json()).claude_account, { available: true, kind: "subscription", level: "member", member: RUTH });
+  const siRun = await run({ ...base, account: signin() });
+  const siOut = await siRun.json();
+  t("R6, R29, R10 (T38, control): the starter's own sign-in drives too, named as one with no secret",
+    [siRun.status, siOut.claude_account], [200, { available: true, kind: "signin", level: "member", member: RUTH }]);
+  const siBare = await run({ ...base, account: { kind: "signin", level: "member", member: RUTH } });
+  t("R6 (T38): a sign-in with no suggestions field drives, the switch read as off",
+    [siBare.status, (await siBare.json()).claude_account?.kind], [200, "signin"]);
+  const siSam = await run({ ...base, run_id: "run-sam", account: signin(RUTH) });
+  const siSamOut = await siSam.json();
+  t("R10, R57 (T38): Ruth's sign-in on Sam's run is REFUSED by name, naming both members",
+    [siSam.status, siSamOut.reason, siSamOut.recorded, siSamOut.supplied], [409, "RUN_NAMES_A_DIFFERENT_PAYER", SAM, RUTH]);
   const gRes = await run({ ...base, run_id: "run-sam", account: group(RUTH) });
   const gOut = await gRes.json();
   t("R10, R57 (K1755): the group's API key serving Ruth's act, on Sam's run, is REFUSED the same way: the group key serves "
