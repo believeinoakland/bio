@@ -161,6 +161,14 @@ export const ASK_MODE = Object.freeze({
   bounds: "ASK_BOUNDS (R17), declared when the ask starts",
 });
 
+/** R22 (T37-49; N669; K2200, K2201): THE KINDS OF DRAFT, named by `DRAFT_MODE.kinds`. `own_words` is R21's draft of a
+ *  member's own words; `translation` the assistant's draft of the interface words a group's language lacks, or its
+ *  reading of one kept word back into English for an administrator's check (DEC-127 (5), DEC-157 (2), (4)). Frozen. */
+export const DRAFT_KINDS = Object.freeze(["own_words", "translation"]);
+
+/** R22 — THE MOST INTERFACE WORDS ONE TRANSLATION DRAFT IS GIVEN (K2201): the words it is asked about, and no more. */
+export const TRANSLATION_DRAFT_MAX_WORDS = 100;
+
 /** R21 (T35-43; N686; DEC-152, DEC-153; K1837, K1841): THE MODE `draft` — the assistant's labelled draft of a member's
  *  own words ("Help me write this", DEC-153; the group's description, DEC-152), answered into the member's field and
  *  kept only by the member's own act (`wizard-scripts` R24, R25; K1364). The second interactive mode, on `ask`'s rule:
@@ -170,12 +178,21 @@ export const ASK_MODE = Object.freeze({
  *  `ASK_BOUNDS` (K1941: a draft is an ask's size or less, and one set keeps one ceiling to measure, M-Q7). It deploys
  *  apart by a flag of its OWN (R16 as amended): `ask`'s flag never deploys it, nor its flag `ask`. Not in
  *  `DEPLOYMENT_SEQUENCE.order` and not in `RUN_MODES`, so a run opened in mode `draft` is refused (`ai-runs` R40,
- *  C-109.1). Frozen. */
+ *  C-109.1). Frozen.
+ *  T37 (T37-49; N669; K2200, K2201): a draft is of one of `DRAFT_KINDS` (R22). `own_words` is everything above, its reach
+ *  `reach` and `firsthand_reach`; `translation` is the same mode on the same flag and bounds, its reach
+ *  `translation_reach`: nothing of the record. */
 export const DRAFT_MODE = Object.freeze({
   mode: "draft",
   read_only: true,
   reach: "within answers' ASK_SCOPE (its R1); no write op of any module",
   firsthand_reach: "nothing: a draft for a field that records what the member saw reads nothing at all",
+  kinds: DRAFT_KINDS,
+  translation_reach: "nothing of the record: no read op of any module, answers' ASK_SCOPE included, whatever the "
+    + "member's suggestions switch; a translation draft is given only the interface words it is asked about, at most "
+    + `${TRANSLATION_DRAFT_MAX_WORDS} a draft, each with its key, note and marks as its caller hands them`,
+  translation_keeps: "nothing: the draft is answered to the plane and never kept by the run; the words recorded as a "
+    + "labelled draft, adopted or confirmed are instance-setup's, never the mode's",
   interactive: true,
   writes_run_row: false,
   keeps: "nothing: the draft is answered into the member's field, never stored, and is the member's words only by "
@@ -188,6 +205,17 @@ export const DRAFT_MODE = Object.freeze({
     + "whatever the run modes' state and whatever ask's flag",
   bounds: "ASK_BOUNDS (R17), declared when the draft starts",
 });
+
+/** R22 (R21; K1841 (2); K2200, K2201) — MAY THIS DRAFT READ THE RECORD THROUGH A GRANT? `true` only for an `own_words`
+ *  draft whose field does not record what the member saw (`firsthand` absent, null or false) and whose account's
+ *  suggestions switch is on (`suggestions` exactly true). A `translation` draft reads nothing of the record, whatever
+ *  the rest; an unknown `kind`, a `firsthand` that is anything but absent or false, and a `suggestions` that is anything
+ *  but `true` are `false`: fail closed. Own keys only, as `deployedModesFor`'s flags. Pure; never throws. */
+export function draftMayRead(asked) {
+  const at = (k) => (own(asked, k) ? asked[k] : null);
+  const firsthand = at("firsthand");
+  return at("kind") === "own_words" && (firsthand == null || firsthand === false) && at("suggestions") === true;
+}
 
 /** The modes a RUN may be in: the order's, and nothing else. `ask` and `draft` are deployed through DEPLOYED_MODES (R16,
  *  R21) but are no runs, so an open that must refuse a run in a mode that is not a run's reads this list beside
