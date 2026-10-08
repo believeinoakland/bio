@@ -13,7 +13,7 @@
 
 **Deferred.** None. The requirements' `*(not yet met: T37)*` marks on R21 and R22 are BOB's to clear (the job does not write requirements).
 
-**Found in other modules (REPORT J2).** `agent-worker` (T37-17, its R70's 1–100 words) can read `TRANSLATION_DRAFT_MAX_WORDS` from here rather than hold its own 100. No generated artifact made stale: `skilldoctrine.mjs` reads only `DRAFT_MODE.mode`.
+**Found in other modules (posted as a REPORT).** `agent-worker` (T37-17, its R70's 1–100 words) can read `TRANSLATION_DRAFT_MAX_WORDS` from here rather than hold its own 100. No generated artifact made stale: `skilldoctrine.mjs` reads only `DRAFT_MODE.mode`.
 
 **Tests and checks.**
 - `node --test test/m/run-rules/`: tests 32, pass 32, fail 0.
