@@ -29,3 +29,10 @@ Size (session_01KpmmveDcVwoSp31P7oGuzY): test runs 18, module lines 2587
 R30 offers "every file" (`use: "routine"`) only for a tool on the organization's own servers (file-safety R32), with a monthly limit defaulting to `DEEPER_CHECKS_PER_MONTH`. The catalogue entry (R27) carries `handling.recipient` but no flag saying whether it is the organization's own; that rule is file-safety's exported `onOwnServers(recipient)`. My Uses says file-safety is "for its tests only".
 
 Best reading (carrying on with it): the page injects file-safety's `onOwnServers` (by its `toString()`, as it injects action-grammar's `riskTierState`) and `DEEPER_CHECKS_PER_MONTH`, never a copy, so setup-page's code imports file-safety (the `modules.json` edge exists; layer 3 before 11). That makes the Uses line "R30's rule for `routine` and the monthly limit's default, injected; and for its tests, R30's ops" rather than "tests only". If you would rather keep the edge tests-only, the alternative is to offer "every file" for every tool and state file-safety's `USE_NOT_ALLOWED` when it refuses, which R30's "only for" forbids.
+
+## J2 · REPORT
+
+Found while applying T36-33 (details in my record):
+1. file-safety R27 / file-scanner R19, R29: a catalogue entry names its credentials but not the config fields its adapter reads (Defender's `tenant_id`, Intelix's `region`, K2085's list). The page cannot ask "only what that tool's spec needs" field by field, so it offers an optional "settings its vendor names" box (`name = value` lines, sent as `config`); a generic template cannot be completed from the page and is shown with a note. A `config` field list on the descriptor, answered in the catalogue, would let the page draw each field.
+2. R18 as worded: once the group key is on, an administrator has no act on this page to stop paying ("the group does not pay" sets nothing; `groupkeyswitch` off and `groupkeyremove` exist). A requirement/UX matter; not changed here.
+3. Generated artifact stale: `bio-plane/dist/bio-plane.bundled.mjs` (this module's source changed). Not touched (mechanics §14).
