@@ -27,3 +27,7 @@ Size (session_01BVidzT6qpVnrWbodBnLE5N): test runs 11, module lines 2226
 ## J1 · REPORT
 
 public-read casefile.mjs:195 isCaseFileManifest tests format === CASE_FILE_FORMAT, so a stored bio-case-file/1 manifest is no longer recognised after this merge; use CASE_FILE_FORMATS_ACCEPTED (now exported) in T36-27. case-checker goes red on spec.test.mjs:14, :19 and program.test.mjs:19 (spec lacks /2 and its kinds; program.mjs stale) until T36-51 and the layer-close regeneration. Details in my record.
+
+## J2 · COMPLETE
+
+T36-25 applied: bio-case-file/2 (archive, container, criteria; /1 read as written) and R22 memberSubjectOf. case-grammar 88/0; coverage 22/22; format, architecture, ownership 0 failures. Users green but case-checker's 3 expected reds (REPORT). 2,226 lines. Merge early: public-read, case-checker, case-authoring build on it.
