@@ -28,7 +28,7 @@
    4. membership R83's `MODULE_ORDER` test (and its sister tests reading the order), from the opening's addition of the split's new module until T38-4 re-pins it (K1185).
    5. bundler `fleetbundles.test.mjs`:232 (agent-worker's 23 inputs; T37's red 20), until T38-1 (N787).
    6. host-governor `ops.test.mjs`'s nine tests (T37's red 17 share, C-38.10, C-38.11), until T38-7 (N784).
-   7. legacy-ui `statement-ack.test.mjs` (T37's red 22), if its earlier cause stands at T37's L11 close: then a `next.md` entry, and its reason named here at the opening.
+   7. legacy-ui `statement-ack.test.mjs` (T37's red 22; its earlier M0-107 cause stood at T37's L11 close, K2257): N794, held by K633's hard reason; accepted red by name.
    8. `case-checker/program.mjs` and the plane bundle, staled by any T38 L8 merge, regenerated at L8's close (§5.6 (1)).
 7. **BOB's acts (no module job):** at the opening, rule 2's boundary (at L2's START), rule 3's choice, rule 4's packaging, every L1 requirement change, the questions to Bob ("For BOB" below). (N781; K1763, K2171) the terms register gains, as AT entries quoted verbatim, the paragraphs "Using the Claude Code name and logo" and "Claude Code remains governed by Anthropic's standard terms … regardless of the platform" (found under "Can customers offer Claude Code in their products?"), at the opening's register edit. T38's release is BOB's (K1501), decided at its close.
 
