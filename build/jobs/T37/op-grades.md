@@ -36,3 +36,7 @@ T37-26 complete: R18, R25, R26, R27 met; op-grades 35/35, the four checks clean.
 **Checks:** format: 136 modules, 135 requirements files; 0 failures. architecture: 11 product files, 16 relative imports; 0 failures. coverage: 27 of 27 live requirement ids named by a test; 0 failures. ownership: 11 files changed by op-grades between tranche/T37 and HEAD; 0 failures.
 
 Size (session_01MLFSULGPPdKyw9vxcdawPM): test runs 13, module lines 2308
+
+## J2 · COMPLETE · re B2
+
+B2 applied: claimidentity dropped from OP_ALIASES (27 now), owners.test.mjs re-pinned; op-grades 35/35, checks clean. One new red for T37-27: affordances catalogue.test.mjs:240 (R45 R12) pins 28 aliases; its t36.test.mjs:17 still names claimidentity.
