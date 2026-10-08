@@ -750,7 +750,30 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    refusals, R38–R47, K1934 (9)) and CHANGED C-29.1, .3, .5, .22, C-63.1, .2 (DEC-149, its R48).
    ROW_CENSUS (R50) re-pinned to this tree: 1390 rows. Rows a T35 job in layers 3–11 adds or changes are T36's stamp
    (plan T35, Rules 9 (2)). */
-export const CATALOG_VERSION = "1.62.0";
+/* 1.63.0 (PROMOTION #34, T36-8, 2026-10-08; T35's red 2, T36's red 4; K1542, K1545, K1855): MINOR. The stamp of every
+   row awaiting it at T35's close (T35's layers 3–11) and of T36's layers 1 and 2, read by diffing R50's census lines of
+   `tranche/T36` after its layer 1 merged against 1.62.0's own (`test/fixtures/row-census-1.62.0.jsonl`: 1390 rows,
+   ff8c6743…): seventy-seven new rows, none departed, forty-four changed. Each is one a T35 job record names.
+   ARRIVED (77): standards C-112.33–.52, .54–.58 (25); law-relations C-112.53 LAW_RELATION_NO_EDITION; acquisition
+   C-137.1–.19 (the archive family, its R29; following's C-137.1–.20 are held under the same numbers until T36-10, red 8,
+   each row counted as its own); capture-requests C-28.23–.33; capture-sources C-105.12 CAPTURE_CREDENTIAL_OWN_HOST;
+   conformance C-113.32–.36; filing-templates C-115.45, .46; publication C-122.5 SCHEDULED_CHECK_UNAVAILABLE; duties
+   C-133.37–.39; answers C-135.13 STANDING_NEEDS_SEARCH; admission C-29.30 AI_CREDENTIAL_EXPIRED, C-38.9
+   DOOR_RATE_LIMITED; citation C-33.52, C-33.53, C-45.14–.16; case-authoring C-44.6 CASE_EDITION_WAITING.
+   CHANGED (44), code and number unmoved: law-relations C-112.23, .24, .26–.32 (`where` moved out with law.mjs, C-112.29
+   re-worded); standards C-112.3, C-112.21; acquisition C-28.13, C-48.1, .4, .7, C-68.1, C-83.1, .3, .4, .5, .8, C-128.1
+   (DEC-149); answer-envelope C-61.1, C-69.2–.5 (`where` re-pointed by the L11 split); hypotheses C-134.13–.16 (`where`);
+   answers C-135.6, .8; capture C-85.3, .4; extraction C-51.1, .4; provenance C-103.7; attestation C-89.1; capture-sources
+   C-105.8; reevaluation C-110.1; intent C-111.24; docket C-129.16; bias C-26.2 (each DEC-149's words).
+   CHANGED IN WHAT THE GATES RUN, no row line moving: none a T35 or T36 job record names. T36's layer 1 added and
+   changed no row; T36's layer 2 (membership, credentials) is re-pinned in place as each merges (BOB's CHANGE), so T36
+   names one catalogue.
+   T36 LAYER 2, re-pinned in place: membership (K2090) added and changed no row; credentials (5b3d7fb633, K2093) ARRIVED
+   C-29.31 AI_KEPT_AWAY and C-29.32 NO_REASON (the keep-away act, DEC-172) and C-96.44 SECURITY_COUNTS_UNREADABLE (the
+   counts read), and CHANGED C-96.43 SECURITY_PERIOD_INVALID (`where` now `#periodRefusal`, words unchanged).
+   ROW_CENSUS (R50) re-pinned to this tree: 1470 rows. Rows a T36 job in layers 3–11 adds or changes are T37's stamp
+   (plan T36, Rules 5 (4)). */
+export const CATALOG_VERSION = "1.63.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -842,8 +865,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    this module's own census suite, `bio-plane/test/system/row-census.test.mjs` (legacy-tests' until T22's opening, K1006):
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1390,
-  digest: "ff8c67437e16423657f54c504f5c460af81b9b98556b83d833307b9d14981f22" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1470,
+  digest: "e9ef089b7a25c5e6fff51a1ee185b89dccf1c2364389129044b093a8a0d00af8" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
