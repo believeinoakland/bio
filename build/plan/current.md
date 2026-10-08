@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #141 · session_01MG1srQ83USpRDFURbfVuBa · depth 1
 
-**Jobs** · bundler: BUNDLER #12 session_01UyPgDNZCNdqccnSPgPyQtP; image-codecs: IMAGE-CODECS #3 session_014rRSsfp8Sqbc9QHisanAS9; file-scanner: FILE-SCANNER #3 session_01DMNhj25urK6A68HrWJ3mho; project-roster: PROJECT-ROSTER #1 session_01BKBobNgxRx5HUaSctGHTUH; membership: MEMBERSHIP #29 session_01P83PRD8HPZGBJ9ET2KJie5
+**Jobs** · bundler: BUNDLER #12 session_01UyPgDNZCNdqccnSPgPyQtP; image-codecs: IMAGE-CODECS #3 session_014rRSsfp8Sqbc9QHisanAS9; file-scanner: FILE-SCANNER #3 session_01DMNhj25urK6A68HrWJ3mho; project-roster: PROJECT-ROSTER #1 session_01BKBobNgxRx5HUaSctGHTUH; membership: MEMBERSHIP #29 session_01P83PRD8HPZGBJ9ET2KJie5; credentials: CREDENTIALS #9 session_011Sz476u5szTBqKpR6HExC4
 
 **Sources** · `next.md` N748, N751, N779–N788 (every open entry); `current.md` (T37): its "Left out of T37" table, its rules at the opening (rule 6's accepted reds still open: 2, 3, 20, 22; the host-governor nine of red 17), "P6 notes"; `modules.json` (order, layers); `rulings-active.md` (K617, K624, K657, K1821); rulings K2171, K2179, K2186, K2189, K2200, K2203, K2218, K2220, K2226–K2232; PR #15 (UX-DESIGN's MERGE U132: DEC-183, `words.json`'s `photo.*`), on `main` at T37's close. PROCESS-MECHANICS §5.2, §12.2; PROCESS-DESIGN P4, P6, P8, P10, P17, P18, P19.
 
