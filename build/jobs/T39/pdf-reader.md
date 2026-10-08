@@ -33,3 +33,7 @@
 P6: `pdfstructure.mjs` 3,108 → 3,152 lines (+44, under BOB's ~60).
 
 Size (session_01TmZK6qZWMuPDraW8kWN2cb): test runs 6, module lines 3152
+
+## J1 · COMPLETE
+
+T39-2b done: R37 PdfDoc.objects() answers {trailer, objects, unresolved} exactly as stated (gen = the definition's own generation; unresolved carries the reference's). R10 and R37 now share one trailer list. Private field objects renamed _objs (no outside user). pdf-reader 71/0 and pdfstructure 170/0; users' suites (pdf-worker, format-registry, file-safety, reading-pipeline, doctypes, budget-doctypes) green; format, architecture, coverage (37/37) and ownership checks 0 failures. 3,108 -> 3,152 lines. Stales the pdf-worker and plane bundles (rule 3 (7)). Details in my record.
