@@ -11,7 +11,9 @@
    `documentCopy` (its R16) answers every capture `public` (carried as captured) unless a test states another; with `realCarriage`
    (T38) the real `case-carriage` is composed on this host instead (`w.carriage`), its photo's original read from an
    evidence store stand-in keyed by digest (`w.evidence`), its copy held in a bucket stand-in, and `image-cover`'s
-   `coverAreas` a stand-in the test scripts (`w.cover`), so its R10–R14 answer as they do. `people` is handed a stand-in for `duties` (a person's
+   `coverAreas` a stand-in the test scripts (`w.cover`), so its R10–R14 answer as they do; (T39) its member documents'
+   copies (R15, R16) are derived by `copyBatch` over provenance R62 on this host, `doc-clean`'s `cleanDocument` a
+   stand-in answering `clean` unless a test scripts its answer (`w.clean.answer`). `people` is handed a stand-in for `duties` (a person's
    duties are no read of this module's), and `entities` is built on the host directly, not reached through inquiry's
    instance (K1619). Every test drives `case-disclosures` at its interface: its services, its renderers, its exports. */
 import { DatabaseSync } from "node:sqlite";
@@ -151,13 +153,15 @@ export function world({ group = "test-group", deps = {}, realImports = false, re
   /* T38: the real case-carriage (its R10–R14), over an evidence store and a bucket stand-in and a scripted cover */
   const evidence = new Map(), bucket = new Map();
   const cover = { refuse: null, calls: [] };
+  const clean = { answer: null };
   let carriage = null;
   if (realCarriage) {
     record.evidenceStore = () => ({
       head: async (d) => (evidence.has(String(d)) ? { size: evidence.get(String(d)).length } : null),
       get: async (d) => (evidence.has(String(d)) ? { arrayBuffer: async () => Uint8Array.from(evidence.get(String(d))).buffer } : null),
       put: async () => null });
-    carriage = caseCarriageOf(host, { record, membership, promotion, now: () => clock.now, store: "bio",
+    carriage = caseCarriageOf(host, { record, membership, promotion, provenance: prov, now: () => clock.now, store: "bio",
+      clean: async (bytes) => (clean.answer ? clean.answer(bytes) : { ok: true, clean: true, format: "text" }),
       bucket: { put: async (k, b) => { bucket.set(k, b); return {}; }, get: async (k) => bucket.get(k) ?? null },
       cover: async (bytes, { areas }) => {
         cover.calls.push(areas);
@@ -166,7 +170,7 @@ export function world({ group = "test-group", deps = {}, realImports = false, re
       } });
   }
   const w = {
-    marks, carriage, evidence, cover, imports, checks, st, host, record, membership, promotion, prov, content, inquiry, strength, contradiction, runs, clock,
+    marks, carriage, evidence, cover, clean, imports, checks, st, host, record, membership, promotion, prov, content, inquiry, strength, contradiction, runs, clock,
     capture, sources, attestation, extraction: ex, entities, events, lines, money, people,
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a),

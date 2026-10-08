@@ -6,7 +6,7 @@
    row. R22: the three rows and BOB's draft words. `documentCopy` is the fixture's stand-in at its ruled interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V } from "./fixture.mjs";
+import { world, V, sha } from "./fixture.mjs";
 import { CASE_DISCLOSURE_CHECKS, DOCUMENT_WORDS, DOCUMENT_STATES, documentRead } from "../../../src/case-disclosures/index.mjs";
 import { COPY_CLEANED_LABEL, OBSCURED_LABEL } from "../../../src/case-carriage/index.mjs";
 import { CASE_DOCUMENT_FORMAT, materialBlockLines, materialsOf } from "../../../src/case-grammar/index.mjs";
@@ -240,4 +240,47 @@ test("R7: a member document R6 answers with obscured is written as a photo's cop
   const fm = w.fm(["---", `format: ${CASE_DOCUMENT_FORMAT}`,
     ...materialBlockLines({ materials: out.materials.rows, attestations: out.materials.attestations }), "---", ""].join("\n"));
   assert.deepEqual(materialsOf(fm).materials, out.materials.rows);
+});
+
+test("R6, R7 over the real case-carriage (its R15, R16): a member document (no receipt fetched it) is pending and refused DOCUMENT_COPY_PENDING until copyBatch derives its copy, then travels as its cleaned copy labelled COPY_CLEANED_LABEL; one doc-clean refuses is DOCUMENT_NOT_CLEANABLE with doc-clean's code; one with nothing to clean travels whole; a document this copy fetched is public and travels whole, never queued", async () => {
+  const w = world({ realCarriage: true });
+  for (const m of ["alice", "bo"]) w.member(m);
+  const fetched = w.doc(DOC, {}, { receipt: true });
+  const member = w.doc(DOC2, {}, { text: "a member's file" });
+  w.finding(Q, [{ target: DOC }, { target: DOC2 }]);
+  let r = judged(w, [Q]);
+  assert.deepEqual(r.refusals.map((x) => x.reason), ["DOCUMENT_COPY_PENDING"]);
+  assert.deepEqual(r.refusals[0].pending, [{ target: Q, materials: [{ ref: DOC2, sha: member }] }]);
+  assert.deepEqual(r.materials.map((m) => [m.ref, m.document.state, m.included, m.obscured]),
+    [[DOC, "public", true, null], [DOC2, "pending", false, null]]);
+  assert.deepEqual(judged(w, [Q], [Q]).refusals, [], "supporting only: listed, never refused");
+  /* derived: a rewritten copy */
+  const copied = Uint8Array.from(Buffer.from("a member's file, cleaned"));
+  w.clean.answer = () => ({ ok: true, clean: false, bytes: copied, format: "pdf", images: { stripped: 1, unchanged: 0 } });
+  const b = await w.carriage.copyBatch({});
+  assert.equal(b.copied, 1, JSON.stringify(b));
+  r = judged(w, [Q]);
+  assert.deepEqual(r.refusals, []);
+  assert.deepEqual(r.materials[1].obscured, { copy: sha(copied), label: COPY_CLEANED_LABEL });
+  assert.equal(r.materials[1].included, false);
+  const out = w.cd.disclosureBlocks({ reached: r, project: "PROJ-x", author: "alice", at: AT });
+  assert.deepEqual([out.materials.rows[1].sha, out.materials.rows[1].obscured], [member, { copy: sha(copied), label: COPY_CLEANED_LABEL }]);
+  /* refused by doc-clean */
+  const enc = w.doc(DOC3, {}, { text: "an encrypted file" });
+  w.finding(Q2, [{ target: DOC3 }]);
+  assert.deepEqual(judged(w, [Q2]).refusals.map((x) => x.reason), ["DOCUMENT_COPY_PENDING"], "queued by the read");
+  w.clean.answer = () => ({ ok: false, code: "ENCRYPTED", detail: "the file is encrypted" });
+  await w.carriage.copyBatch({});
+  r = judged(w, [Q2]);
+  assert.deepEqual(r.refusals.map((x) => x.reason), ["DOCUMENT_NOT_CLEANABLE"]);
+  assert.deepEqual(r.refusals[0].not_cleanable, [{ target: Q2, materials: [{ ref: DOC3, sha: enc, refused: "ENCRYPTED" }] }]);
+  /* nothing to clean: carried whole */
+  const plain = w.doc(DOC4, {}, { text: "a plain text file" });
+  w.finding("INQ-2026-0003-q", [{ target: DOC4 }]);
+  judged(w, ["INQ-2026-0003-q"]);
+  w.clean.answer = null;
+  await w.carriage.copyBatch({});
+  r = judged(w, ["INQ-2026-0003-q"]);
+  assert.deepEqual([r.refusals, r.materials.map((m) => [m.sha, m.document.state, m.included, m.obscured])], [[], [[plain, "clean", true, null]]]);
+  void fetched;
 });
