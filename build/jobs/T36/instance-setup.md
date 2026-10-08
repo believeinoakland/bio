@@ -54,3 +54,7 @@ T36-34 applied: R53 superseded (assistantState from credentials.aiKeepAwayState,
 Merged `tranche/T36` (R55 re-worded: `assistantGate()` stays exported, name and shape unchanged, for `store-door` R10). The code already kept it: the same method, `null` while on, otherwise the same refusal envelope (`ok`, `reason`, `code`, `check`, `translation`, `detail`, `set_by`, `set_at`) with `keep_away` beside them (R55's reason, who and when; `read: false` when unread). New test naming R55 (K2157) pins it. Re-run: `node --test bio-plane/test/m/instance-setup/` 112/112, 0 fail; format, architecture, coverage (48/48) and ownership 0 failures. No code change. Reports unchanged (J1).
 
 Size (session_01DU7JcZgKofYj3uee3CqU8X): test runs 11, module lines 2494
+
+## J3 · COMPLETE
+
+B2 (K2157) processed: tranche merged; assistantGate() already kept, exported under its name, shape unchanged (keep_away added beside the old keys, as R55 requires); a test naming R55 (K2157) pins it. 112/112; format, architecture, coverage 48/48, ownership 0 failures. No code change; J1's reports stand.
