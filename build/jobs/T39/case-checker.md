@@ -23,3 +23,7 @@
 - No layer tests are named in the manifest.
 
 Size (session_013nDuZWRyji4rYH9ax6JrLQ): test runs 4, module lines 1464
+
+## J1 · COMPLETE
+
+T39-17 applied: the /3 spec names a member document's cleaned copy beside a photo's (words only); R8's missing-copy wording widened in check.mjs; program.mjs regenerated (byte-identity green). 61/61 tests; format, architecture, coverage (22/22), ownership: 0 failures. REPORT in record: plane bundle stale from program.mjs; R14's not-yet-met marker can be cleared. Details in my record.
