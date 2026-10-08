@@ -34,7 +34,7 @@ test("R20 (DEC-88; case-authoring R19): op=statementack carries the acknowledger
   const reason = "  I read it: the case leaves out the 2019 audit, and says so.  ";
   const doors = [
     ["secret", { op: "statementack", params: { secret: "sekret", reason, draft: "D1", by: FORGED, viewer: FORGED, extra: "x" } },
-     { draft: "D1", bySecret: "1", secretSha: sha("sekret"), reason }],
+     { draft: "D1", bySecret: "1", reason }],
     ["session", { op: "statementack", token: S.ann, params: { draft: "D1", reason, author: FORGED, viewer: FORGED, extra: "x" } },
      { draft: "D1", viewer: "member:ann", reason }],
     ["session, a case document", { op: "statementack", token: S.ann, params: { case: "CASE-1", edition: "2", reason, extra: "x" } },
@@ -50,6 +50,8 @@ test("R20 (DEC-88; case-authoring R19): op=statementack carries the acknowledger
     assert.deepEqual([r.json.ok, r.json.reason], [true, reason], name);
     const [inner] = opCalls(env);
     assert.deepEqual(inner.params, want, name);
+    /* R64 (N761; case-authoring R62): the secret door's digest in the internal request's body alone */
+    assert.deepEqual(inner.body?.secretSha, name === "secret" ? sha("sekret") : undefined, name);
     assert.equal(s.seen[0].reason, reason, `${name}: the arm reads the reason`);
   }
   /* the query's reason wins over a body's */

@@ -33,7 +33,9 @@ test("R2 (op-declarations R6): no spec is without a handler or a store route —
       const target = O.OP_ALIASES[op] ?? op;
       if (routes.includes(RENAMED[target] ?? target) || publicRead || log.some((l) => l.kind === "public" && l.op === op) || (op === "whoami" && r.json.ok)
           /* R41 (T35): `agentpack` is answered from the untargeted affordances handler (its hook) */
-          || (op === "agentpack" && log.some((l) => l.kind === "gated" && l.op === "affordances"))) {
+          || (op === "agentpack" && log.some((l) => l.kind === "gated" && l.op === "affordances"))
+          /* R65 (T37): `subscriptionsignin` is this module's own route to the member's runner (no binding here) */
+          || (op === "subscriptionsignin" && r.json?.reason === "AGENT_WORKER_UNBOUND")) {
         reached = true; break;
       }
     }

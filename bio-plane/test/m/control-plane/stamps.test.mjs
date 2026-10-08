@@ -204,8 +204,9 @@ test("R20: reviewcopy, reviewcomment and statementack admit a grant's secret, of
                                 body: op === "reviewcomment" ? { text: "hello", author: FORGED } : undefined });
     assert.equal(r.status, 200, op);
     const [inner] = env.calls;
-    assert.deepEqual(inner.params, { draft: "D1", bySecret: "1", secretSha: sha(secret) }, op);
-    if (op === "reviewcomment") assert.deepEqual(inner.body, { text: "hello" });
+    /* R64 (N761): the digest in the internal request's body alone, the door's mark `bySecret` in its query */
+    assert.deepEqual(inner.params, { draft: "D1", bySecret: "1" }, op);
+    assert.deepEqual(inner.body, op === "reviewcomment" ? { text: "hello", secretSha: sha(secret) } : { secretSha: sha(secret) }, op);
     if (secret) assert.equal(inner.url.href.includes(secret.replace(/ /g, "+")) || JSON.stringify(inner.body).includes(secret), false);
   }
   /* the fence: one answer, one status, one set of bytes */
