@@ -234,3 +234,14 @@ test("R15 R1: a read that refuses or throws contributes no item and is named in 
   assert.equal(ofKind(read("boss", { now: w.clock.now }), OFF).length, 1);
   assert.deepEqual(w.tables(), before);
 });
+
+test("R14 (T36): it leaves when its recipient disposes of it: the read answers it, keyed per note, whatever becomes of the hold, so queue's disposal (its key) is what removes it", async () => {
+  const { w, bad, items } = await files();
+  const before = items("m1").map((i) => i.id);
+  assert.equal(before.length, 1);
+  assert.equal(w.fs.releaseScanHold({ captureSha: bad, by: "m1", reason: "read it" }).state, "pending_second");
+  assert.equal(w.fs.releaseScanHold({ captureSha: bad, by: "member:m2", reason: "a false match" }).state, "released");
+  assert.deepEqual(items("m1").map((i) => i.id), before, "the same key: queue holds its recipient's disposal of it");
+});
+
+test.todo("R14 (T37, N771, K2155): it leaves when file-safety answers that no open hold covers that finding any longer (scanFindings' synchronous `held`): file-safety's threatOf is async and noticeItems, read synchronously by queue, cannot await it");

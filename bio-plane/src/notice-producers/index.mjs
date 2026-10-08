@@ -705,7 +705,9 @@ export class NoticeProducers {
    * here, R7), following its cursor to at most the bound, oldest first; one item per note, to this member while active.
    * Its subject is the capture's home (provenance.homeOf); its detail names each finding with its engine, tool and day,
    * in findingKind's words, that the safe view stays open and how the original opens again. It names no member and is
-   * no hint: a scanner's verdict, not the machine's noticing. */
+   * no hint: a scanner's verdict, not the machine's noticing. It leaves when its recipient disposes of it (queue's, by
+   * its key); its leaving once no open hold covers the finding waits for scanFindings' synchronous `held` (T37, N771,
+   * K2155): file-safety's threatOf is async, and this read is synchronous. */
   #scanFound(me, viewer, now) {
     if (!this.#active(me)) return { items: [], facts: {} };
     const found = [];
