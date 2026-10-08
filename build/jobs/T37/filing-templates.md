@@ -33,3 +33,7 @@
 - `format`: 136 modules, 0 failures. `architecture`: 11 product files, 34 imports, 0 failures. `coverage`: 27 of 27 live ids, 0 failures. `ownership` against `tranche/T37`: 4 files, 0 failures.
 
 Size (session_014hEdDSz4wUBaBVwYMSR3Fh): test runs 9, module lines 1787
+
+## J1 · COMPLETE
+
+T37-23 done: R27. filingTemplatesOps reads secretSha from the body only (templatereviewgrant, templatereview, templatecomment, templatecomments, templateread); a query digest alone mints nothing (GRANT_NO_SECRET) and opens no door (answered as the call with none); author/by/viewer stay query stamps; comment re-worded. Own improvement: templateread and templatecomments also take template/version/limit from the body (control-plane R59's POST). invariants ops-map test moved to the body form with its negative control; new grant-channel.test.mjs, five R27 tests, one per op; all six fail before the change, pass after. Rule 4 reds: none (every other test/m test naming these ops stubs the store; 237/237 before and after; nothing outside test/m names them). Module 56/0; users' tests 747/784 with the same 36 inherited reds by name before and after. format, architecture, coverage 27/27, ownership: 0 failures. 1,787 lines. For BOB: my requirements' Uses omits membership's positionalMember, inSight, expertiseList (called), and names projectOwners (not called). Record: build/jobs/T37/filing-templates.md on job/T37/filing-templates.
