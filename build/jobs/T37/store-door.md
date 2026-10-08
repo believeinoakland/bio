@@ -1,6 +1,6 @@
 # store-door (T37)
 
-**Status** · session_01JNPSatGHX7N9NegWMbM7tR · depth 2 · WORKING · handled B3
+**Status** · session_01JNPSatGHX7N9NegWMbM7tR · depth 2 · COMPLETE · handled B3
 
 ## J1 · QUESTION
 
