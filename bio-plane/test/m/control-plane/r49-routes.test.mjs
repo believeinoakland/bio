@@ -88,17 +88,21 @@ test("R49, R17, R29: each case-import op's stamps are the server's value from th
   assert.equal(checked, 2 * 2 * (ACTS.length * 2 + READS.length));
 });
 
-test("R49, R28 (case-import R1, R4, R8; admission R8–R10): each case-import op is refused to every caller not arriving by a member's session — every binding class CLASS_FORBIDDEN, an AI credential declaring every write AI_BEYOND_TASK_SCOPE — and nothing is forwarded; negative control: a member's session and the founder's reach each", async () => {
+test("R49, R28 (case-import R1, R4, R8; admission R8–R10): each case-import op is refused to every caller not arriving by a member's session — every binding class CLASS_FORBIDDEN, the retired shared member binding MEMBER_TOKEN_RETIRED, an AI credential declaring every write AI_BEYOND_TASK_SCOPE — and nothing is forwarded; negative control: a member's session and the founder's reach each", async () => {
   const wide = aik();
   const { env, S } = world({ creds: { [wide]: cred({ tokenId: "agent-wide", writes: Object.keys(OPS) }) } });
   for (const op of MEMBER_OPS) {
     const method = OPS[op].mutating ? "POST" : "GET";
     const body = method === "POST" ? { import: "IMP-1" } : undefined;
-    for (const [token, params] of [[env.ADMIN_TOKEN, {}], [env.MEMBER_TOKEN, {}], [env.PROBE_TOKEN, { store: "scratch" }], [env.DAEMON_TOKEN, {}]]) {
+    for (const [token, params] of [[env.ADMIN_TOKEN, {}], [env.PROBE_TOKEN, { store: "scratch" }], [env.DAEMON_TOKEN, {}]]) {
       env.calls.length = 0;
       refused(await call(env, { op, token, params: { ...params, import: "IMP-1" }, method, body }), 403, "CLASS_FORBIDDEN", "C-38.2");
       assert.equal(opCalls(env).length, 0, `${op}: forwarded for a binding class`);
     }
+    /* admission R5 (K2166): the retired shared member binding gives no class at all */
+    env.calls.length = 0;
+    refused(await call(env, { op, token: env.MEMBER_TOKEN, params: { import: "IMP-1" }, method, body }), 401, "MEMBER_TOKEN_RETIRED", "C-38.11");
+    assert.equal(opCalls(env).length, 0, `${op}: forwarded for the retired member binding`);
     env.calls.length = 0;
     refused(await call(env, { op, token: wide, params: { import: "IMP-1" }, method, body }), 403, "AI_BEYOND_TASK_SCOPE", "C-29.6");
     assert.equal(opCalls(env).length, 0, `${op}: forwarded for an agent`);

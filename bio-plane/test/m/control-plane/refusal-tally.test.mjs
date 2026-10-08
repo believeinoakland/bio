@@ -4,7 +4,7 @@
    session landed in. Driven through `makeFetch(hooks)` at the Worker door. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, call, opCalls } from "./harness.mjs";
+import { world, call, opCalls, refused } from "./harness.mjs";
 
 const refusing = (reason, at = "result") => (c) => {
   if (c.route === "wizardrefusaltally") return null;
@@ -50,14 +50,20 @@ test("R50: a refusal answered to a member's session — the store's inside its a
   assert.equal(tallies(plain.env).length, 0);
 });
 
-test("R50: a refusal answered to any other caller — a binding class, an agent credential, no credential, a public op — is not tallied; the op tallied is the one the member asked (`inboxresolve` at `pulled`, not its re-route); a tally the store does not take changes nothing the caller receives", async () => {
+test("R50: a refusal answered to any other caller — a binding class, the retired shared member binding, an agent credential, no credential, a public op — is not tallied; the op tallied is the one the member asked (`inboxresolve` at `pulled`, not its re-route); a tally the store does not take changes nothing the caller receives", async () => {
   const { env, S, A } = world({ answer: refusing("NO_SUCH_BUNDLE") });
-  for (const token of [env.ADMIN_TOKEN, env.MEMBER_TOKEN, env.DAEMON_TOKEN, A.ann]) {
+  for (const token of [env.ADMIN_TOKEN, env.DAEMON_TOKEN, A.ann]) {
     env.calls.length = 0;
     const r = await call(env, { op: "index", token });
     assert.ok(r.json.ok === false || r.json.result?.ok === false, r.text.slice(0, 200));
     assert.equal(tallies(env).length, 0, String(token).slice(0, 8));
   }
+  /* admission R5 (K2166): the retired shared member binding is refused by name at the door; that refusal is no member's
+     session's either, so it is not tallied */
+  env.calls.length = 0;
+  refused(await call(env, { op: "index", token: env.MEMBER_TOKEN }), 401, "MEMBER_TOKEN_RETIRED", "C-38.11");
+  assert.equal(opCalls(env).length, 0, "nothing forwarded for the retired member binding");
+  assert.equal(tallies(env).length, 0, "the retired member binding");
   env.calls.length = 0;
   assert.equal((await call(env, { op: "index" })).status, 401);
   assert.equal((await call(env, { op: "nosuchop", token: S.ann })).json.reason, "UNKNOWN_OP");

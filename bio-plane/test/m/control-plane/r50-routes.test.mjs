@@ -85,16 +85,20 @@ test("R50, R17, R29 (K1402): each wizard op's stamps are the server's — `autho
   assert.equal(checked, 2 * 2 * ALL.reduce((n, op) => n + Object.keys(stampsOf(op, sessions(w)[0])).length, 0));
 });
 
-test("R50, R28 (op-declarations R15): the session-only wizard acts are refused to every binding class and an agent credential, with nothing forwarded; a proposal and the check are reached by an agent credential, stamped with its label (`class:ai/<tokenId>`) and its principal as viewer; negative control: a member's session reaches each", async () => {
+test("R50, R28 (op-declarations R15): the session-only wizard acts are refused to every binding class, the retired shared member binding (MEMBER_TOKEN_RETIRED) and an agent credential, with nothing forwarded; a proposal and the check are reached by an agent credential, stamped with its label (`class:ai/<tokenId>`) and its principal as viewer; negative control: a member's session reaches each", async () => {
   const wide = aik();
   const { env, S } = world({ creds: { [wide]: cred({ tokenId: "agent-wide", principal: "member:ann", writes: Object.keys(OPS) }) } });
   for (const op of [...AUTHOR, ...APPROVER, ...ADMIN]) {
-    for (const [token, store] of [[env.ADMIN_TOKEN], [env.MEMBER_TOKEN], [env.PROBE_TOKEN, "scratch"], [env.DAEMON_TOKEN]]) {
+    for (const [token, store] of [[env.ADMIN_TOKEN], [env.PROBE_TOKEN, "scratch"], [env.DAEMON_TOKEN]]) {
       env.calls.length = 0;
       const r = await call(env, { op, token, params: store ? { store } : {}, method: "POST", body: {} });
       assert.ok([401, 403].includes(r.status) && r.json.ok === false, `${op}: ${r.text.slice(0, 200)}`);
       assert.equal(opCalls(env).length, 0, `${op}: forwarded for a binding class`);
     }
+    /* admission R5 (K2166): the retired shared member binding gives no class at all, and is refused by name */
+    env.calls.length = 0;
+    refused(await call(env, { op, token: env.MEMBER_TOKEN, method: "POST", body: {} }), 401, "MEMBER_TOKEN_RETIRED", "C-38.11");
+    assert.equal(opCalls(env).length, 0, `${op}: forwarded for the retired member binding`);
     env.calls.length = 0;
     const r = await call(env, { op, token: wide, method: "POST", body: {} });
     assert.equal(r.json.ok, false, op);

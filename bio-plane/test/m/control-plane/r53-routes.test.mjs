@@ -50,7 +50,8 @@ function callers() {
     want: { viewer: `class:${c}`, by: `class:${c}`, bodyBy: `class:${c}`, author: `class:${c}`, proposer: `class:${c}`, member: null, session: null,
             principal: `class:${c}`, owner: `class:${c}`, ...DOOR } });
   return { w, list: [
-    bind("admin", w.env.ADMIN_TOKEN), bind("member", w.env.MEMBER_TOKEN), bind("probe", w.env.PROBE_TOKEN, { store: "scratch" }),
+    /* admission R5 (K2166): the shared member binding is retired, so it is no caller here */
+    bind("admin", w.env.ADMIN_TOKEN), bind("probe", w.env.PROBE_TOKEN, { store: "scratch" }),
     { name: "founder", token: w.S.founder, params: {}, session: true,
       want: { viewer: "admin", by: "admin", bodyBy: "admin", author: "member:admin", proposer: "admin", member: "admin", session: w.S.founder,
               principal: "member:admin", owner: "member:admin", ...DOOR } },
@@ -223,7 +224,7 @@ test("R53 (K1674; credentials R28): the record store's door routes `aigrantadmit
 
 test("R53, R29 (K1687): standards' five T33 acts read their author from the body, so the door sets it there — `author`, or `proposer` on `lawpropose` — as the positional identity for a session and the machine's own name otherwise, whatever the caller put in the body (negative control: a caller's body field of its own reaches the route)", async () => {
   const { w, list } = callers();
-  const who = { admin: "class:admin", member: "class:member", probe: "class:probe", founder: "member:admin", ann: "member:ann", agent: "class:ai/agent-ann" };
+  const who = { admin: "class:admin", probe: "class:probe", founder: "member:admin", ann: "member:ann", agent: "class:ai/agent-ann" };
   let checked = 0;
   for (const op of ["lawrelate", "lawwithdraw", "lawpropose", "courtlink", "courttreat"]) for (const c of list) {
     w.env.calls.length = 0;
