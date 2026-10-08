@@ -59,3 +59,7 @@ A worker read the other seven suites whole: `ask`, `doctrine`, `edition`, `filin
 **P6**: module 2,369 lines (`skilldoctrine.mjs` 1,754, `skillpack.mjs` 615), +18; with tests 4,388 total. Far under 4,000 for the module itself.
 
 Size (session_011dND59updNJT3EV6X813vM): test runs 8, module lines 2369
+
+## J1 · COMPLETE
+
+T36-22 applied: R38 (c) (HELD_ADDRESS_ONLY, Roles §3 rule 12 verbatim) resident as the fourth research-boundary clause; CAPTURE_CLAUSES [(a),(c)] carried by legal_lookup (R33) and action_planning.body.capture (R28), the same objects; renderPack's R1 guard covers four. Each changed id tested on its own (boundary.test.mjs); every pack's version moves (R11). skills 82/0; agent-worker 10/0; answer-envelope+control-plane 190/3, the 3 identical on the tranche head without my change (red 18, red 11, and control-plane r53-routes.test.mjs:70 R53, which I could not match to a rule-5 number: please confirm). Checks format/architecture/coverage (38/38)/ownership 0 failures. The plane bundle (not_product) is stale, yours at L6's close. Reading set 309 KB+, rule (3) applied, worker summary of 7 suites; details in the record.
