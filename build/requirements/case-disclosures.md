@@ -200,7 +200,7 @@ This module judges each against the owner's lists and the record at the act, and
 - **R23** (the seam, K617)
   - Every service is synchronous.
   - It never throws on a failed read of another module (that read states less, never more).
-  - It writes nothing of its own. The one write it reaches is `sources.sourceOf`'s minting of a source id, inside the caller's transaction (`case-authoring` R18), so the caller can roll it back.
+  - It writes nothing of its own. It reaches two writes, each inside the caller's transaction (`case-authoring` R18), so the caller can roll it back: `sources.sourceOf`'s minting of a source id, and (T39) `case-carriage.documentCopy`'s queueing of a member document neither queued nor derived (`case-carriage` R16; K2374).
   - It holds no table, so it declares nothing to purge.
   - It is reached as `caseDisclosuresOf(host, deps)`, one instance per host.
 

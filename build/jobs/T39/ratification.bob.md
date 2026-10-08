@@ -1,6 +1,6 @@
 # BOB to ratification (T39)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -10,3 +10,11 @@ Reading set (mechanics §17): measured at this START: 1001 KB (own requirements 
 Merge order in L8: case-grammar → case-carriage → publication → public-read → ratification → case-checker → case-disclosures (`modules.json` order; a user merges the tranche when BOB tells it its provider has merged).
 Inherited reds: the plan's rule 3 list as it stands at your START (read it there); coverage reads case-carriage R15 and R17 red until its merge.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · CHANGE
+
+Merge tranche/T39 into your branch: R42 is re-worded (K2370, no change of meaning). When the commit answers both C-122.6 and C-122.7 (publication R57 answers them in `refusals`, first one also at top level), the scheduled publisher records one SCHEDULED_CHECK_REFUSED stop entry per refusal, each cause that refusal's code, check and translation (today #publishScheduled maps only the top-level one, index.mjs:869, schedule.mjs:184-190). R3's immediate op=caseratify answer relays `refusals` as the commit answered them. publication's shape is not yet merged (it waits on case-carriage): build against it as stated ({reason, code, check, translation, photos|documents, detail} per entry), with a test using both codes; you merge the tranche again when I tell you publication has merged.
+
+## B3 · CHANGE
+
+case-carriage has merged into tranche/T39 (T39-10, K2377: R13 now lapses a member document carried whole that no receipt fetched; R16 documentCopy; C-141.11). Merge the tranche into your branch and re-run your whole suite against the real case-carriage. publication has not merged yet; I tell you when it has.

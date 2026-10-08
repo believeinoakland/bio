@@ -1,11 +1,14 @@
-/* case-carriage's own words (requirements: `build/requirements/case-carriage.md` R9–R11, R14). DEC-49: every refusal this module
+/* case-carriage's own words (requirements: `build/requirements/case-carriage.md` R9–R11, R14, R15). DEC-49: every refusal this module
  * answers carries its code, its row and the member's translation; each row's `where` names its one site in this module.
  * Its family is C-141 (T37; N757, DEC-180), new at T37-34 and stamped at 1.65.0 (T38-6). (T38; N790, K2238) Its machine
  * refusal is its own code, `MACHINE_CANNOT_MARK_PHOTO`, never sources' `MACHINE_CANNOT_MARK` (C-121.7), which the composed
  * catalogue keeps for the earlier family. (T38; N788, R14) C-141.7–C-141.10 are the withdrawal's, numbered here and
  * awaiting promotion's stamp; their words are BOB's drafts, which the UX design stream may re-word.
  *
- * Beside the rows: `OBSCURED_LABEL`, the one sentence a published case shows beside a photo it carries as its obscured
+ * (T39; N806, R15) C-141.11 DOCUMENT_COPY_NO_STORE is copyBatch's, numbered here and awaiting promotion's stamp; its
+ * words are BOB's draft.
+ *
+ * Beside the rows: `COPY_CLEANED_LABEL` (R15), and `OBSCURED_LABEL`, the one sentence a published case shows beside a photo it carries as its obscured
  * copy (DEC-180 (4)), held once here for translation (DEC-179: protected, it says who can see something).
  *
  * Every sentence speaks in DEC-149's voice ("your group's Civicsmith"), names no place (R7) and carries no figure. */
@@ -15,6 +18,11 @@ const row = (check, where, translation) => Object.freeze({ check, where, transla
 
 /** R11 (DEC-180 (4); DEC-179): the label a published case shows beside an obscured copy. Protected words. */
 export const OBSCURED_LABEL = "Faces and plates obscured for publication; the group holds the original";
+
+/** R15 (T39; N806, K2333; proposed key `document.cleaned.label`): the label a published case shows beside a member
+ *  document it carries as its cleaned copy, mirroring OBSCURED_LABEL. BOB's draft; protected words, re-wordable by the
+ *  UX design stream. */
+export const COPY_CLEANED_LABEL = "Details of who made this file, and of its pictures, removed for publication; the group holds the original";
 
 /* ===========================================================================
    C-141 — MARKING A PHOTO FOR PUBLICATION (N757; DEC-180 (2)–(5), K2108, K2206). Inside the group every photo stays as
@@ -53,4 +61,7 @@ export const CASE_CARRIAGE_CHECKS = Object.freeze({
   /* R14: a withdrawal says why. */
   WITHDRAW_NO_REASON: row("C-141.10", at("obscureMarkWithdraw", "is-withdrawal-reasoned"),
     "A mark is withdrawn only with a reason. Give the reason. Nothing was recorded."),
+  /* R15 (T39; N806, K2333): copyBatch with no evidence store to read a member's document from or hold its copy in. */
+  DOCUMENT_COPY_NO_STORE: row("C-141.11", at("copyBatch", "is-store-bound"),
+    "Your group's Civicsmith has no evidence store to make a document's publication copy from. Nothing was made."),
 });

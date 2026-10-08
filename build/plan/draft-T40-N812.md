@@ -1,6 +1,6 @@
 # N812 — AI use across groups, projects and members (draft for BOB, T39, for T40)
 
-**Status** · Drafted by a worker for BOB during T39 (P18; K2348 (2)). Not ruled. Part A goes to Bob (P17); parts B–E are BOB's to adopt or change, then fold by the K that answers N812.
+**Status** · Drafted by a worker for BOB during T39 (P18; K2348 (2)); **adopted by K2373** with Bob's answers (K2350, K2352, K2353): part A records them, B6 and parts C's credentials R54, R56, R59, ai-use R2, R6, R9 and notice-producers R16 are revised to them. Each module's text is applied to its requirements file before its layer's START in T40, as T39's were (K2343).
 
 Sources: `next.md` N812; INVESTIGATION-DESIGN `HANDOFF.md` H4–H6 and `DECISIONS.md` D34, D37, D38, D39 (with Bob's D39 brainstorm, marked "not a ruling"), on `origin/design/investigation`; K1450, K1479, K1481, K1500, K1502, K1547, K1755, K2275, K2334, K2348; `terms/anthropic.md` (AT-13, U-3, U-4, "Bob's choices"); requirements of `ai-runs`, `credentials`, `agent-model`, `instance-setup` (whole), and of `membership`, `project-roster`, `answers`, `run-rules`, `agent-worker`, `store-door`, `wizard-scripts`, `notice-producers`, `op-declarations`, `control-plane` (the parts named); `modules.json`. Code checked: `ai-runs/index.mjs`:2591–2940 (the use counter and ceilings), `membership/checks.mjs`:346.
 
@@ -12,32 +12,12 @@ Sources: `next.md` N812; INVESTIGATION-DESIGN `HANDOFF.md` H4–H6 and `DECISION
 4. **No project-owner refusal is exported.** `membership` mints `PROJECT_ACT_NOT_THE_OWNER` inside its own acts (`checks.mjs`:346) and exports `isProjectOwner` (R54) and `projectOwners` (R65), but no refusal builder like `notAnAdmin` (R84). `credentials` would need one (K231: one code, one site).
 5. **Order.** `credentials` is index 36 (L2), before `run-rules` (79), `ai-runs` (80) and `agent-model` (86). A list of use kinds that `credentials` reads must therefore live in `credentials` or earlier, not in `run-rules`.
 
-## A. Bob's (P17): value and policy choices the rulings leave open
+## A. Bob's answers (P17)
 
-**A1 · What a project's own account may be.** D34 lets a project have its own account. K1547 and K1755 keep a subscription member-level only, and K1502 says there is no project-level account at all.
-- (a) **Recommended.** An Anthropic API key held for the project, never a subscription. D34 replaces K1502's project clause; the subscription rule stands. The terms permit a project-scoped key (AT-13). Open questions U-3 and U-4 apply to it as they do to the group key: are a project's participants its "authorized users"?
-- (b) Also let a member lend their own subscription to a project. This is barred by Bob's K1547 and, for Free, Pro and Max, by AT-3 and AT-16.
-- (c) No account of its own: the project only sets limits on its share of the group key. This falls short of D34's "which account is used".
-
-**A2 · Who sets a project's AI settings** (its key, enabled uses, limits and material limits). The lane reads D37 as the owners (Membership §7).
-- (a) **Recommended.** Any one owner acting alone. Each change is recorded with who and when, and every owner can read it. This is how an owner invites today (`membership` R32).
-- (b) The owners' vote, as for adding or removing an owner (`project-roster` R3, R4). It is safer for a key that spends someone's money, but slow for a limit change.
-- (c) Owners, and administrators too. This conflicts with D38: each payer decides what its own spend is used for.
-
-Under every option an administrator sets no project's key or money limits. Rescuing a project with no active owner stays `project-roster` R5.
-
-**A3 · Which account pays for a member's act inside a project.** Today the member's own account serves first, then the group key. That order is BOB's detail in K1755, made before there were project accounts.
-- (a) The member's own account first, then the project's, then the group's. The member pays even where the project offers to.
-- (b) **Recommended.** For an act in a project's context (a run over the project, or an ask or draft naming a project the member has joined): the project's account first, then the member's own, then the group's. Outside a project: the member's own, then the group's, as today. Only an account whose owner switched that use on can be chosen. A member may always name their own account for an act. When the chosen account is at a limit, the act is refused and is never moved silently to another payer's money.
-- (c) The member picks a payer at every act. This is the most control and the most friction.
-
-**A4 · The administrator's copy-wide ceiling** (K1450, K1502: "for the copy's own load"). It caps every member's day, own accounts included. D38 says money limits bind only their own account.
-- (a) **Recommended.** Re-read it as the group account's **per-member** limit: no one member can exhaust the group's key (K1450's defect). It then binds only acts the group key pays for, and a project account may set the same kind of limit. Trade-off: a member's own sign-in still runs in a container on the group's hosting, which the group pays for. Today that load is small, and it can be watched with `instance-setup`'s runtime reports.
-- (b) Keep it as a load limit binding every account. This is not a money limit, so it is arguably outside D38. A member paying their own way would still be stopped by the group.
-
-**A5 · The values of the exploring setting.** D39, as ruled: an account owner enables exploring by setting a limit on it. Bob's own brainstorm (not a ruling) offers four values: "unanswered (other account owner's setting, if any)", "no exploring", "ask every day (queue)" and "yes".
-- (a) **Recommended now.** On or off, on only with a limit (D39). With nothing set, exploring is off. Exploring on a question runs if any owner whose scope covers that question has it on, paid by that owner. A group or project can forbid exploring on its own material, which binds every payer (D38). "Ask every day" comes back with the explorer itself (B9). It needs DEC-69 and DEC-94's form: the owner's own request, told at most once a day, silence meaning no.
-- (b) All four values now. "Ask every day" then needs a queue item before the explorer exists.
+- **A1** (K2352 (1) replaced by K2353): a project's account is an Anthropic API key, or a member's own subscription (sign-in) only while that member is the project's only member; with more than one member, only an API key. BOB's details (K2353): "member" is every participant, owners included; a second member's join is not refused, the subscription stops serving the project at once and the owners are told once; it serves again if the project returns to one member.
+- **A2** (K2352 (2)): (a) any one owner of a project sets its AI settings alone, each change recorded with who and when and visible to every owner.
+- **A3, A4** (K2352 (3)–(4)): an account owner's limits are the limits of their own account only. For a member's act: the project's account if it has one, with the project's limits; else the member's own, with the member's limits; else the group's, with the group's limits. Every account owner can set usage limits. BOB's details: the administrator's copy-wide ceiling becomes the group account's own limit (per member, as the group sets it), binding no other account; the account the cascade chooses is the one used, so an account at its limit, or with that use switched off, refuses and the act never moves to the next account; there is no `payer` choice.
+- **A5** (K2350, H7, Bob's D39 settled): each account owner (group, project, member) sets exploring to No, Ask every day or Yes. "No" means not paid from this account, and a lower level does not inherit a higher one's setting. "Ask every day" raises at most one queue item a day to the account's owners, only when something is worth exploring, silence meaning no. "Yes" runs within the overall limit and the exploring limit (inclusive or exclusive). A group administrator's "no AI at all" (keep-away) binds project and member levels; a group money setting binds only the group key.
 
 ## B. BOB's readings (P17; recorded once in `rulings.md` with the folding K)
 
@@ -54,21 +34,24 @@ Under every option an administrator sets no project's key or money limits. Rescu
   - **Material limits.** The group (`credentials` R51 widened) and each project (new) may withhold their material from AI, for every kind of use or for named ones. A material limit binds every account, whoever pays. For an act in that project's context it refuses the act. In any other act, reads under a grant drop that project's rows the way hidden-project rows are dropped (`answers` R2). "No exploring on our material" is a material limit on `explore`.
   - **Money limits.** These belong to one account and bind only that account. A member's own account is never bound by the group's or a project's money limits, and always by their material limits. In the other direction, a member's own limit no longer binds the group key's use on their behalf. That changes `ai-runs` R50 as built.
 - **B4 · Limits** (D39).
-  - Per account: one **overall** limit, plus **per-use** limits for each kind of use. Under A4 (a), group and project accounts also get a **per-member** limit.
+  - Per account: one **overall** limit, plus **per-use** limits for each kind of use. Under A4 (K2352), group and project accounts also get a **per-member** limit.
   - Each limit has an `amount`, a `unit` and a `period`.
   - Units: `usd` only on an API-key account, as the copy's estimate (fact 3); `tokens` (input plus output, cache reads and writes included) and `calls` on every account. `usd` is refused on a sign-in.
   - Periods: `day` or `month`, the group's local calendar (`civil-time`). A month's limit resets on the 1st.
   - With no limit set, nothing is capped, apart from the provider's own spend limit, whose 429 answers in plain words (`ai-runs` R50 as now).
-  - Today's ceilings migrate as follows. A member's own daily ceiling becomes that member's account's `overall` day limits in tokens and calls. Under A4 (a), the copy ceiling becomes the group account's `per_member` day limits.
+  - Today's ceilings migrate as follows. A member's own daily ceiling becomes that member's account's `overall` day limits in tokens and calls. Under A4 (K2352), the copy ceiling becomes the group account's `per_member` day limits.
 - **B5 · Inclusive and exclusive** (D39).
   - Every use counts toward its own per-use limit.
   - **Inclusive** (the default): the use also counts toward the overall limit, and is refused when either is reached.
   - **Exclusive**: the use does not count toward the overall limit, and is refused only at its own. It is a separate allowance on top, so the most an account can spend in a period is the overall limit plus the sum of its exclusive limits.
   - The overall limit is judged on the sum of all uses except exclusive ones.
   - Limits in different units are each judged on their own figures.
-- **B6 · Exploring.** `explore` is on for an account exactly while that account holds an `explore` limit. Setting the limit switches exploring on and removing it switches exploring off, so exploring is never enabled without a limit (H6).
+- **B6 · Exploring** (A5; K2350). Each account holds `explore`: `no` (the default), `ask` or `yes`, set by its owner as its other switches are.
+  - `yes`: exploring this owner pays for runs within its `overall` limit and its `explore` limit when one is held (inclusive or exclusive, B5).
+  - `ask`: before exploring this owner would pay for, the owner's approval for that local day is needed: at most one queue item a day to the account's owners (DEC-69, DEC-94's form), raised only when the explorer has something worth exploring; silence means no for that day.
+  - `no`: never paid from this account; nothing is inherited from another level.
   - Scope by owner: the group explores any question of the group; a project explores the questions it draws on (`connections.citesInto`). A member's scope waits on D36 (open) and is not built.
-  - Material limits on `explore` cut the scope.
+  - Material limits on `explore` (keep-away, the group's or a project's) cut the scope and bind every level.
   - What an exploring run produces is labelled the machine's, with `enabled_by` naming the owner: "the group", the project's name, or the member's handle (H6). Members decide what becomes evidence (D33).
 - **B7 · Told once at a limit.**
   - The first time a limit of an account is reached in a period, that account's owners are told once for that period. Owners are the administrators for the group, the project's owners for a project, and the member for their own account. One item per account, limit and period goes through `notice-producers` and `queue`, which mint it once (DEC-94).
@@ -99,26 +82,26 @@ Under every option an administrator sets no project's key or money limits. Rescu
 
 ### credentials (L2, index 36)
 - **Purpose, amended** *(not yet met: T40)*. Replace "each member's own Claude account reference" with "the AI accounts the assistant's use is paid by (a member's own, a project's, the group's; Claude is today's only provider)". Replace "There is no project-level Claude account, and the subscription token is each member's own … (K1755, R33–R36)" with "The subscription token is each member's own, by Bob's choice (K1547, K1755; `build/terms/anthropic.md`, Bob's choices). A project may hold one Anthropic API key (D34, A1; R54) and the group one (K1755, R33–R36)."
-- **R54** (D34, D37; A1, A2) *(not yet met: T40)* `projectKeySet({project, key, by})`, `projectKeyRemove({project, by})` and `projectKeySwitch({project, on, by})` hold one Anthropic API key for a project, replacing any earlier one.
+- **R54** (D34, D37; A1 (K2353), A2) *(not yet met: T40)* A project holds at most one account, set by any one of its owners: `projectKeySet({project, key, by})` holds an Anthropic API key, replacing any earlier account; `projectSigninSet({project, by})` makes the acting owner's own sign-in (R43) the project's account, refused `PROJECT_NOT_SOLE_MEMBER` while the project has any other participant (owners included); `projectAccountRemove({project, by})` and `projectAccountSwitch({project, on, by})` act on whichever is held.
   - They act by a project owner only (`membership` R54, after `membership` R44's sight: a project the caller cannot see answers as absent). Anyone else is refused `PROJECT_ACT_NOT_THE_OWNER` through `membership.notTheOwner` (its R122). A machine credential is refused the same way.
   - An empty `key` is refused `NO_SECRET`.
-  - The key is off when first set, and is sealed, never shown, exported or logged, as R34 seals the group key. Each act is recorded with its owner and the instant, never the key. The key is cleared when its project is deleted.
-  - `projectKeyState({project, viewer})` answers its owners `{held, on, set_at, by, uses}` and its joined participants `{on}`, and anyone else as absent.
-  - It is never a subscription (A1).
+  - The account is off when first set. A key is sealed, never shown, exported or logged, as R34 seals the group key; a sign-in account holds no secret, only the member it is. Each act is recorded with its owner and the instant, never the key. The account is cleared when its project is deleted, and a sign-in account when its member's sign-in is removed (R43).
+  - A sign-in account serves only while its member is the project's only participant: when another joins, the join is not refused, the account stops serving at once (R56 goes on to each member's own account, then the group's), and the project's owners are told once (`notice-producers` R16); it serves again when the project returns to that one member.
+  - `projectAccountState({project, viewer})` answers its owners `{held, kind, on, set_at, by, uses, serving}` (`serving` false while a sign-in account is suspended by a second member) and its joined participants `{on, serving}`, and anyone else as absent.
 - **R55** (D34; K1479, K1500; B2) *(not yet met: T40)* `USE_KINDS`, exported and frozen, is `["ask", "draft", "run", "standing", "explore"]`.
-  - Every account holds a switch for each kind except `explore` (B6), plus `suggestions`: a member's own reference and a member's sign-in (closing K2275's gap), the project key and the group key.
+  - Every account holds a switch for each kind except `explore`, which holds `no`, `ask` or `yes` (B6, default `no`), plus `suggestions`: a member's own reference and a member's sign-in (closing K2275's gap), the project key and the group key.
   - `accountUsesSet({owner, switch, on, by})` sets one. A member's own account is set by that member only (R22's refusals). The project key is set by an owner (R54's refusals). The group key is set by an active administrator (R33's refusals). Any other name is refused `UNKNOWN_SWITCH`.
   - Defaults: `ask`, `draft` and `run` on; `standing` and `suggestions` off.
+  - A sign-in's `standing` switch is held, but R32 keeps refusing a sign-in's standing questions `STANDING_SWITCH_OFF` while N796 is held with Bob (K2334, K2376).
   - R25's and R37's `suggestions` and `standing` switches become two of these, with their stored values kept. `groupKeySwitches()` and R32's standing check read them unchanged.
-- **R56** (D38; A3 (b); amends R35) *(not yet met: T40)* `accountFor({member, act})` takes `act` as `{kind, member, project?, payer?}`. `kind` is a `USE_KINDS` entry other than `explore`. `project` is allowed only when the member is a joined participant (`membership` R54); otherwise it is refused as R54's absence.
-  - In order, the cascade answers the first account that is held, on, and has `kind` switched on:
-    1. With `project`: the project key, as `{kind: "apikey", level: "project", project, key}`.
+- **R56** (D38; A3, A4 (K2352); amends R35) *(not yet met: T40)* `accountFor({member, act})` takes `act` as `{kind, member, project?}`. `kind` is a `USE_KINDS` entry other than `explore`. `project` is allowed only when the member is a joined participant (`membership` R54); otherwise it is refused as R54's absence.
+  - The cascade answers the first account that is held and on (and, for a project's sign-in account, serving):
+    1. With `project`: the project's account, as `{kind: "apikey", level: "project", project, key}`, or for a sign-in account `{kind: "signin", level: "project", project, member}` (that member's own sign-in, R43, carrying no secret).
     2. The member's own account, as now (a reference, or `signin`).
     3. The group key.
-  - `payer: "own"` answers only the member's own account.
-  - An account held whose switch for `kind` is off is passed over. When none answers and one was passed over, the act is refused `AI_USE_SWITCHED_OFF`, naming whose. Otherwise it is refused `NO_ACCOUNT`.
+  - The account answered is the one used: when its switch for `kind` is off, the act is refused `AI_USE_SWITCHED_OFF`, naming whose, and never moves to the next account (Bob, K2352: "that's the one used"; R35's rule that a held account is answered whatever another's switches). When none is held, it is refused `NO_ACCOUNT`.
   - Keep-away (R57) is asked first, as R35 asks it now.
-  - A project key's notice (R58) is due as R36's is: `PROJECT_KEY_NOTICE_DUE`.
+  - A project key's notice (R58) is due as R36's is: `PROJECT_KEY_NOTICE_DUE`. A project's sign-in account needs none (the member's own use).
   - R35's other sentences stand. On the wire, `level` may be `project`, and `project` is carried.
 - **R57** (D38 C; B3; amends R51, R52, R35's `aiKeptAway`) *(not yet met: T40)* A material limit is `{on, uses, reason}`, `uses` being `USE_KINDS` entries (all of them when absent).
   - `aiKeepAwaySet` (R51) takes `uses`.
@@ -127,6 +110,7 @@ Under every option an administrator sets no project's key or money limits. Rescu
   - `projectsKeptAway({use})` answers the ids of projects whose limit covers `use`, for reads under a grant (`answers` R30) and exploring's scope (`ai-use` R9).
   - Material limits bind every account. They are the one site for both codes.
 - **R58** (D311, K1478 (i); as R36) *(not yet met: T40)* A member is told, once and before their first act a project's key pays for, that their questions and the material read go to Anthropic under that project's API account. This uses `projectKeyNotice({member, project})` and `projectKeyNoticeSeen({member, project, by})`.
+- **R59** (K2353) *(not yet met: T40)* `projectAccountsSuspended({viewer, at})` answers, for each project the viewer owns whose sign-in account stopped serving because a second member joined, `{project, member, since}` with a stable key per project and suspension, for `notice-producers` R16. It writes nothing and never throws.
 - **R30, amended** *(not yet met: T40)* The project keys' table is declared `export: "never"`, exempt from purge but deleted with its project, and readable only through R54's service. Material-limit rows are declared as R51's.
 - **Uses** add `membership`: `isProjectOwner`, `isJoinedParticipant` (R54), `sight` (R44) and `notTheOwner` (R122).
 
@@ -142,12 +126,12 @@ Purpose: what each AI account has spent and may spend. It counts each use agains
 - **R1** (was `ai-runs` R48, R49; B8) *(not yet met: T40)* `countUsage({owner, member, use, mode, model, usage, calls, at})` is called in the caller's transaction.
   - `owner` is `group`, `project:<id>` or `member:<id>`.
   - `usage` is `agent-model` R5's shape plus `estimated_cost_usd` (its R13).
-  - It adds to the counter `ai_usage`, kept per owner, member, local day (`civil-time.localDay`) and `use`: the token sums, `calls` (a `null` counted as one), and `estimated_cost_usd`. Where that estimate is `null` on an `apikey` account, it is counted at the highest price in `agent-model`'s table, never as zero.
+  - It adds to the counter `ai_usage`, kept per owner, member, local day (`civil-time.localDay`) and `use`: the token sums, `calls` (a `null` counted as one), and `estimated_cost_usd`. It sums the figure `usage` carries and never reads a price table (`agent-model` R13 prices a `null` figure on `apikey`; K2376).
   - A malformed entry is refused `AI_RUN_CONSUME_INVALID` (`run-rules` R3), counting nothing.
   - The counter holds no content, question or address, and is declared `export: "admin-only"`.
   - Rows from before T40 are kept with owner "not recorded" and count toward no limit.
 - **R2** (D39; B4; was `ai-runs` R50's setting half) *(not yet met: T40)* `aiLimitSet({owner, scope, unit, period, amount, inclusive?, by})`.
-  - `scope` is `overall`, a `USE_KINDS` entry, or (A4 (a)) `per_member` for a group or project account.
+  - `scope` is `overall`, a `USE_KINDS` entry, or (A4) `per_member` for a group or project account.
   - `unit` is `usd`, `tokens` or `calls`. `usd` on a member's sign-in is refused `LIMIT_UNIT_UNAVAILABLE`.
   - `period` is `day` or `month`.
   - `amount` is a positive number (`usd` to the cent; the others whole), or `null` to remove the limit.
@@ -166,12 +150,14 @@ Purpose: what each AI account has spent and may spend. It counts each use agains
   - It writes nothing and never throws. A counter that cannot be read answers the refusal (fail closed).
 - **R4** (was `ai-runs` R51; B8) *(not yet met: T40)* `aiUsage({owner, viewer, month})` answers that account's owners the month's use per `use`, summed over members and naming none. Anyone else is refused as R2 refuses. `aiUsageMine({viewer, day?, month?})` answers a member their own use per payer and per use, against each limit that bound them, never a cost per answer (K1450). Neither writes.
 - **R5** (B7) *(not yet met: T40)* `limitsReached({viewer, at})` answers, for each account the viewer owns, each limit first reached in its current period: `{owner, scope, unit, period, period_start, reached_at}`, with a stable key per owner, limit and period. It is for `notice-producers` R16, writes nothing and never throws.
-- **R6** (D39; B6) *(not yet met: T40)* `exploreAllowed({owner, question, at})` is for the explorer (B9). It answers `null` or a refusal:
-  - `EXPLORE_NOT_ENABLED`;
-  - R3's `AI_LIMIT_REACHED`;
+- **R6** (A5, K2350; B6) *(not yet met: T40)* `exploreAllowed({owner, question, at})` is for the explorer (B9). It answers `null`, `{ask: true}`, or a refusal:
+  - `EXPLORE_NOT_ENABLED` when the owner's `explore` is `no`;
+  - `{ask: true}` when it is `ask` and the owner has not approved exploring for that local day (R9);
+  - R3's `AI_LIMIT_REACHED` (its `overall` limit and its `explore` limit, B5);
   - `credentials.aiKeptAway({use: "explore"})`;
   - the question outside the owner's scope (B6; `connections.citesInto` for a project), or every project it is drawn on keeping its material from `explore` (`credentials.projectsKeptAway`).
-  - It also answers `label: {kind: "machine", enabled_by: owner}`, which the explorer attaches to what it offers.
+  - With `null` it also answers `label: {kind: "machine", enabled_by: owner}`, which the explorer attaches to what it offers.
+- **R9** (A5, K2350) *(not yet met: T40)* `exploreAsk({owner, at, what})` records, for an owner whose `explore` is `ask`, at most one pending ask a local day, stating what is worth exploring; `exploreAsksPending({viewer, at})` answers them to that account's owners, and `notice-producers` R16 makes each one "Ask" queue item (DEC-69, DEC-94's form; its words the design stream's; `queue` R1 gains the kinds, K2376); `exploreApprove({owner, day, by})`, by one of those owners, approves exploring for that day; silence means no. A second ask that day answers the first's key and mints nothing. Refusals as R2's for who may act.
 - **R7** *(not yet met: T40)* The tables (`ai_usage`, `ai_limits` and their history) are declared through `record-core.declareTable`: `export: "admin-only"`, `sight: "group"`, purged only with the whole store. A project's limits are deleted with its project.
 - **R8** *(not yet met: T40)* Each code it mints is an invariant with its test (K6), its rows in its own `checks.mjs`.
 - **Uses**: `record-grammar`, `civil-time`, `record-core`, `membership`, `credentials`, `connections`, `run-rules`.
@@ -200,17 +186,17 @@ Purpose: what each AI account has spent and may spend. It counts each use agains
 - **R11, amended** *(not yet met: T40)* A reference of `level` `project` is taken exactly as `group` is: `apikey` only, sent as a member's.
 - **R13** (B4; fact 3) *(not yet met: T40)*
   - `MODEL_PRICES`, a reviewed edit beside `MODEL_FOR_MODE`, holds USD per million input, output, cache-read and cache-write tokens for each model. Every `MODEL_FOR_MODE` model must be priced, which a test checks.
-  - On the `apikey` path, every outcome's `usage` adds `estimated_cost_usd` from its figures at that model's prices. It is `null` where a figure is `null`, and always `null` on the `signin` path.
+  - On the `apikey` path, every outcome's `usage` adds `estimated_cost_usd` from its figures at that model's prices. Where a figure is `null` on the `apikey` path, that figure is priced at the model's highest rate, never as zero (K2376); it is always `null` on the `signin` path.
   - `total_cost_usd` stays as the provider states it.
 
 ### agent-worker (L6, index 89)
-- **R71** (D34; A3) *(not yet met: T40)* R6, R10, R29, R32, R33 and R57 accept `level` `project`, with `project` carried and never a secret. A project's key serves the member's act exactly as the group's does: R10's payer is still the member.
+- **R71** (D34; A3) *(not yet met: T40)* R6, R10, R29, R32, R33 and R57 accept `level` `project`, with `project` carried and never a secret. A project's key serves the member's act exactly as the group's does: R10's payer is still the member. A project's sign-in account (`credentials` R54, K2353) is that one member's own sign-in and runs as `agent-runner` R2's `{kind: "signin", member}`, exactly as the member's own.
 
 ### wizard-scripts (L11, index 120)
 - **R27, amended** *(not yet met: T40)* The ceiling codes become `AI_LIMIT_REACHED` (`ai-use` R3), answered at the door with `AI_USE_SWITCHED_OFF`.
 
 ### notice-producers (L11, index 126)
-- **R16** (B7) *(not yet met: T40)* One "Noticed" item per entry of `ai-use.limitsReached` for the viewer, keyed by its stable key so `queue` mints it once per account, limit and period. Its words are the design stream's (NOTICE). It names whose limit, which use and the period's end, and never a member.
+- **R16** (B7; K2353, K2376) *(not yet met: T40)* One "Ask" item per entry of `ai-use.exploreAsksPending`, and one "Noticed" item per entry of `ai-use.limitsReached` and of `credentials.projectAccountsSuspended` for the viewer, keyed by its stable key so `queue` mints it once per account, limit and period. Its words are the design stream's (NOTICE). It names whose limit, which use and the period's end, and never a member.
 - **Uses** add `ai-use`.
 
 ### instance-setup (L11, index 130; after T39 L11's split)
@@ -222,8 +208,8 @@ Purpose: what each AI account has spent and may spend. It counts each use agains
 
 ### op-declarations (L11, index 131)
 - **R41** *(not yet met: T40)* `OPS` declares the following, each for a session only (`machineClasses: []`), with acts `by`-stamped and reads `viewer`-stamped, and keys read from the body only (as R24 does for `groupkeyset`):
-  - `projectkeyset`, `projectkeyremove`, `projectkeyswitch`, `projectkeystate`, `projectkeynotice`, `projectkeynoticeseen`, `projectaikeepaway`, `projectaikeepawaystate` and `accountusesset` (`credentials`);
-  - `ailimitset`, `ailimits`, and `aiusage` with `owner` (`ai-use`).
+  - `projectkeyset`, `projectsigninset`, `projectaccountremove`, `projectaccountswitch`, `projectaccountstate`, `projectkeynotice`, `projectkeynoticeseen`, `projectaikeepaway`, `projectaikeepawaystate` and `accountusesset` (`credentials`);
+  - `ailimitset`, `ailimits`, `aiusage` with `owner`, `exploreapprove` (`ai-use`).
   - `aiceilingset` and `aicopyceilingset` retire to `ailimitset`.
 - **Uses** add `ai-use`.
 
@@ -289,5 +275,5 @@ Purpose: what each AI account has spent and may spend. It counts each use agains
   - Assistant and AI Roles §6: the cascade, A3.
   - `terms/anthropic.md` "Bob's choices": its project clause replaced by A1's answer, citing AT-13, with U-3 and U-4 noted as applying to a project key.
   - `credentials`' Purpose.
-- A NOTICE to UX-DESIGN: the project's AI settings screen, limits with inclusive or exclusive, the told-once item, the `enabled_by` label, the project key's disclosure, and the member's choice of payer.
-- A new `next.md` entry for the explorer (B9: D35, D36, the step model; A5 (b)'s "ask every day").
+- A NOTICE to UX-DESIGN: the project's AI settings screen, limits with inclusive or exclusive, the told-once item, the `enabled_by` label, the project's account (key or sole member's sign-in) and its suspension notice, the project key's disclosure, and the Ask-every-day exploring item.
+- A new `next.md` entry for the explorer (B9: D35, D36, the step model); the Ask-every-day gate and item are built in T40 (ai-use R9, K2350).
