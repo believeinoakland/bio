@@ -15,3 +15,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 Your reading stands, with the order changed (K2275): membership merges first with R116-R120 (its copy of the moved acts still in place); I send you a CHANGE when it lands, you merge tranche/T38 and your tests go green against the real services; no tests accepted red for that. Code strictly to the stated interfaces meanwhile.
+
+## B3 · CHANGE
+
+(K2276) membership's first half is merged into tranche/T38: R116-R121 are real (R116/R117 one registration each, told {projectId, memberId, by, at} / {projectId, by, at}, a whole number >= 1 returned as the count; R118 participationWrite(kind, {...}) with kinds invite, ownerOn, ownerOff, rescue; R119 memberByHandle). Merge tranche/T38, run your tests against them, and COMPLETE. You merge next.
