@@ -50,3 +50,7 @@ No generated artifact staled by me beyond the plane bundle that BOB regenerates 
 ## J3 · COMPLETE
 
 T36-36 complete on job/T36/admission (record's Completion section). R20: credentialAddressGate (400 CREDENTIAL_IN_ADDRESS, C-38.10); R5: MEMBER_TOKEN_RETIRED (401, C-38.11), four bindings still compared; R22: securityTally writes {kind, country} to bio's securitycount, MEMBER_TOKEN_RETIRED counted as credential; R14: rows added C-38.10 CREDENTIAL_IN_ADDRESS and C-38.11 MEMBER_TOKEN_RETIRED (none re-worded), awaiting T37's stamp. admission 34/34; format, architecture, coverage, ownership 0 failures. Users' reds from my merge until T36-37 and T36-49: see J2. Ready to merge after N711's callers, when you say so.
+
+## J4 · COMPLETE
+
+B4 done: tranche/T36 @ 417532e6e3 merged into job/T36/admission (nothing of mine changed). admission 34/34; format, architecture, coverage, ownership 0 failures. Users, the tranche tip without my change → with it: control-plane 162/5 → 113/54 (49 new, J2's causes: member binding and address form, T36-37's to re-pin); plane 115/15 → 114/16 (the one new is J2's worker.test.mjs R6, T36-49's); answer-envelope 24/2 unchanged; migrate-released fails with my change (J2, T36-49's). Ready to merge.
