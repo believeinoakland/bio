@@ -91,9 +91,9 @@ test("R8 (was control-plane R50's store half; wizard-scripts R16): the store-int
 });
 
 /* A record with a claimed founder, the members `ann` (an administrator) and `bea` and `cal` (members), and the three drafts'
-   handlers replaced by recorders, so what the door hands each is seen whatever its owner answers; `translationdraft`'s own
-   first refusal (instance-setup's `translationDraftRefusal`) answers `first.value`, recorded as asked; and every account
-   read and use check counted, so a gate that read none is seen. */
+   first two handlers replaced by recorders, so what the door hands each is seen whatever its owner answers; `translationdraft`'s
+   own (instance-setup's `translationDraftRefusal` and `translationDraft`) recorded as asked and answering as they do; and
+   every account read and use check counted, so a gate that read none is seen. */
 async function drafts() {
   const r = await record({ sealSecret: "store-door-test-seal-secret-00002" });
   const C = credentialsOf(r.ctx), mb = membershipOf(r.ctx);
@@ -106,15 +106,18 @@ async function drafts() {
   const seen = [];
   instanceSetupOf(r.ctx).groupDescriptionDraft = (args) => { seen.push(["groupdescriptiondraft", args]); return { ok: false, reason: "ASSISTANT_DRAFT_UNAVAILABLE" }; };
   wizardScriptsOf(r.ctx).writingHelp = (args) => { seen.push(["writinghelp", args]); return { ok: false, reason: "ASSISTANT_DRAFT_UNAVAILABLE" }; };
-  const setup = instanceSetupOf(r.ctx), first = { value: null, asked: [] };
-  setup.translationDraftRefusal = (args) => { first.asked.push(args); return first.value; };
-  setup.translationDraft = (args) => { seen.push(["translationdraft", args]); return { ok: false, reason: "ASSISTANT_DRAFT_UNAVAILABLE" }; };
+  /* translationdraft's handler is instance-setup's own (T37-30): wrapped, never replaced, so what it is handed is seen and
+     what it answers is its own */
+  const setup = instanceSetupOf(r.ctx), firstAsked = [];
+  const realFirst = setup.translationDraftRefusal.bind(setup), realDraft = setup.translationDraft.bind(setup);
+  setup.translationDraftRefusal = (args) => { firstAsked.push(args); return realFirst(args); };
+  setup.translationDraft = (args) => { seen.push(["translationdraft", args]); return realDraft(args); };
   const reads = { account: 0, use: 0 };
   const accountFor = C.accountFor.bind(C), runs = aiRunsOf(r.ctx), useCheck = runs.aiUseCheck.bind(runs);
   C.accountFor = (a) => { reads.account++; return accountFor(a); };
   runs.aiUseCheck = (a) => { reads.use++; return useCheck(a); };
   const code = (a) => a.json.result.code ?? a.json.result.reason;
-  return { r, C, seen, code, first, reads };
+  return { r, C, seen, code, firstAsked, reads };
 }
 
 /* The group's keep-away, credentials' (its R51; DEC-172), which R10 reads through `credentials.aiKeptAway()` (its R35)
@@ -168,43 +171,56 @@ test("R10 (N765; credentials R35; run-rules R20; ai-runs R50, R52; membership R8
   assert.deepEqual(seen.map(([op]) => op), ["groupdescriptiondraft", "writinghelp"]);
 });
 
-test("R10 (N669, N765; K2200, K2201; instance-setup R67): `translationdraft`, in both directions, answers instance-setup's own first refusal (asked with the body's `language`, `direction`, `keys`, `key` and the stamped `by`) before anything of the door's; then AI_KEPT_AWAY as credentials answers it, no account read and no draft routed; then AI_NO_ACCOUNT and the ceilings; admitted, the handler receives those arguments and `assistant: {on, account: {kind, level}}`, a caller's `assistant` never read and no key handed (negative control: a first refusal cleared reaches the gate)", async () => {
-  const { r, C, seen, code, first, reads } = await drafts();
-  const draft = (by, body) => r.go(`translationdraft?by=${by}&viewer=${by}`, "POST", body);
-  const TO_LANG = { language: "es", direction: "to_language", keys: ["nav.home"] };
-  const TO_EN = { language: "es", direction: "to_english", key: "nav.home" };
+test("R10 (N669, N765; K2200, K2201, K2238; instance-setup R67): `translationdraft`, in both directions, answers instance-setup's own first refusal (`translationDraftRefusal`, asked with the body's `language`, `direction`, `keys`, `key` and the stamped `by`) before anything of the door's — TRANSLATION_DIRECTION_UNKNOWN, TRANSLATION_NOT_GRANTED, and NOT_AN_ADMIN for `to_english` — kept away or not; then AI_KEPT_AWAY as credentials answers it, no account read and no draft routed; then AI_NO_ACCOUNT and the ceilings; admitted, instance-setup's `translationDraft` receives those arguments and `assistant: {on, account: {kind, level}}`, a caller's `assistant` never read and no key handed, and answers its words (negative control: a granted speaker clears the first refusal)", async () => {
+  const { r, C, seen, code, firstAsked, reads } = await drafts();
+  const setup = instanceSetupOf(r.ctx);
+  /* `by` as control-plane stamps it, the folded member id; `viewer` the member */
+  const draft = (by, body) => r.go(`translationdraft?by=${by}&viewer=member:${by}`, "POST", body);
+  const word = (await import("../../../src/setup.mjs")).INTERFACE_WORDS.find((w) => w.protected && !/[{}]/.test(w.en));
+  const TO_LANG = { language: "es", direction: "to_language", keys: [word.key] };
+  const TO_EN = { language: "es", direction: "to_english", key: word.key };
   const want = (body, by) => ({ language: body.language, direction: body.direction, keys: body.keys, key: body.key, by });
-  /* the handler's own first refusal wins, kept away or not, and is answered as given */
+  /* the handler's own first refusal wins, kept away or not */
   assistant(r, false);
-  for (const [body, by, refusal] of [[TO_LANG, "member:bea", { ok: false, reason: "TRANSLATION_NOT_GRANTED", code: "TRANSLATION_NOT_GRANTED" }],
-                                     [TO_EN, "member:bea", { ok: false, reason: "NOT_AN_ADMIN", code: "NOT_AN_ADMIN" }],
-                                     [{ language: "es", direction: "sideways" }, "member:ann", { ok: false, reason: "TRANSLATION_DIRECTION_UNKNOWN" }]]) {
-    first.value = refusal; first.asked.length = 0;
-    assert.deepEqual((await draft(by, body)).json.result, refusal, JSON.stringify(body));
-    assert.deepEqual(first.asked, [want(body, by)]);
+  for (const [body, by, reason] of [[TO_LANG, "bea", "TRANSLATION_NOT_GRANTED"], [TO_EN, "bea", "NOT_AN_ADMIN"],
+                                    [{ language: "es", direction: "sideways" }, "ann", "TRANSLATION_DIRECTION_UNKNOWN"]]) {
+    firstAsked.length = 0;
+    assert.equal(code(await draft(by, body)), reason, JSON.stringify(body));
+    assert.deepEqual(firstAsked, [want(body, by)]);
   }
-  assert.deepEqual(reads, { account: 0, use: 0 });
-  /* past it, kept away: credentials' refusal as given, nothing read, nothing routed */
-  first.value = null;
-  for (const body of [TO_LANG, TO_EN]) assert.deepEqual((await draft("member:ann", body)).json.result, C.aiKeptAway(), body.direction);
   assert.deepEqual([reads, seen], [{ account: 0, use: 0 }, []]);
+  /* negative control: a granted speaker clears it, and meets keep-away; an awaiting kept word clears to_english's */
+  const g = setup.translationGrant({ member: "bea", language: "es", by: "ann" });
+  assert.equal(g.ok, true, JSON.stringify(g));
+  const kept = setup.translationAdopt({ language: "es", key: word.key, text: "palabra de prueba", by: "bea" });
+  assert.deepEqual([kept.ok, kept.state], [true, "awaiting"], JSON.stringify(kept));
+  const TO_LANG2 = { language: "es", direction: "to_language" };
+  for (const [body, by] of [[TO_LANG2, "bea"], [TO_EN, "ann"]])
+    assert.deepEqual((await draft(by, body)).json.result, C.aiKeptAway(), body.direction);
+  assert.deepEqual([reads, seen], [{ account: 0, use: 0 }, []], "under keep-away no account is read and no draft routed");
   assistant(r, true);
   /* then the account and the ceilings */
-  assert.equal(code(await draft("member:ann", TO_LANG)), "AI_NO_ACCOUNT");
-  assert.equal((await C.accountReferenceSet({ member: "member:ann", kind: "apikey", secret: "sk-ann-own-secret", by: "member:ann" })).ok, true);
+  assert.equal(code(await draft("ann", TO_EN)), "AI_NO_ACCOUNT");
+  for (const m of ["ann", "bea"])
+    assert.equal((await C.accountReferenceSet({ member: `member:${m}`, kind: "apikey", secret: `sk-${m}-own-secret`, by: `member:${m}` })).ok, true);
   const runs = aiRunsOf(r.ctx);
-  runs.countAskUsage({ member: "member:ann", mode: "draft", usage: USE, calls: 2 });
+  runs.countAskUsage({ member: "member:bea", mode: "draft", usage: USE, calls: 2 });
   assert.equal(runs.aiCopyCeilingSet({ calls: 2, by: "admin" }).ok, true);
-  assert.equal(code(await draft("member:ann", TO_EN)), "AI_USE_COPY_CEILING_REACHED");
+  assert.equal(code(await draft("bea", TO_LANG2)), "AI_USE_COPY_CEILING_REACHED");
   assert.equal(runs.aiCopyCeilingSet({ calls: null, by: "admin" }).ok, true);
   assert.deepEqual(seen, [], "no draft routed before every refusal is cleared");
-  /* admitted, both directions */
+  /* admitted, both directions: instance-setup's own answer, the words the door sends to the assistant */
   const forged = { on: true, account: { kind: "apikey", level: "member", key: "sk-forged" } };
   const A = { on: true, account: { kind: "apikey", level: "member" } };
-  for (const body of [TO_LANG, TO_EN]) assert.equal(code(await draft("member:ann", { ...body, assistant: forged })), "ASSISTANT_DRAFT_UNAVAILABLE");
-  assert.deepEqual(seen, [["translationdraft", { ...want(TO_LANG, "member:ann"), assistant: A }],
-                          ["translationdraft", { ...want(TO_EN, "member:ann"), assistant: A }]]);
-  for (const s of ["sk-ann-own-secret", "sk-forged"]) assert.equal(JSON.stringify(seen).includes(s), false, s);
+  const l = (await draft("bea", { ...TO_LANG2, assistant: forged })).json.result;
+  assert.deepEqual([l.reason, l.direction, l.language], ["ASSISTANT_DRAFT_UNAVAILABLE", "to_language", "es"], JSON.stringify(l).slice(0, 300));
+  assert.ok(Array.isArray(l.words) && l.words.length > 0 && !l.words.some((w) => w.key === word.key));
+  const e = (await draft("ann", { ...TO_EN, assistant: forged })).json.result;
+  assert.deepEqual([e.reason, e.direction, e.key, e.words], ["ASSISTANT_DRAFT_UNAVAILABLE", "to_english", word.key,
+                   [{ key: word.key, en: word.en, text: "palabra de prueba", protected: true }]]);
+  assert.deepEqual(seen, [["translationdraft", { ...want(TO_LANG2, "bea"), assistant: A }],
+                          ["translationdraft", { ...want(TO_EN, "ann"), assistant: A }]]);
+  for (const s of ["sk-ann-own-secret", "sk-bea-own-secret", "sk-forged"]) assert.equal(JSON.stringify([seen, l, e]).includes(s), false, s);
 });
 
 test("R10 (K1755; control-plane R29, R30): a draft's handler receives `assistant` as the door resolved it — `{on: true, account: {kind, level}}`, the member's own account or the group's key, never the key — its own arguments from the body and `by` and `viewer` as stamped; a caller's `assistant` is never read (negative control: no secret appears in anything handed over or answered)", async () => {
