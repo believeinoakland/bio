@@ -1,6 +1,6 @@
 # file-safety (T37)
 
-**Status** · session_012hj83mp9G2GYcwFaSkn8TU · depth 2 · WORKING · handled B2
+**Status** · session_012hj83mp9G2GYcwFaSkn8TU · depth 2 · RUNNING until 2026-10-08T09:23:43Z (users' tests after merging tranche/T37) · handled B2
 
 ## J1 · QUESTION
 
