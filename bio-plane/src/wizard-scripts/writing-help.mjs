@@ -35,14 +35,24 @@ export function isReasonField(field) {
   return typeof field === "string" && /reason$/i.test(field.trim());
 }
 
-/** R24 (pure): `{offered: true}` or `{offered: false, code}` for one field of `op`, in R24's order: the assistant off or
- *  no account serving the viewer; an act the assistant is refused or that cannot be undone; a field stating the
- *  member's reason; a labelled draft already in the field. `refused` is `helpRefusedActs` of the registration. */
-export function writingHelpAt(args = {}, refused = helpRefusedActs()) {
+/** R24 item 1 (T37; N765, K231, K2175): the code of a keep-away as `credentials.aiKeptAway()` answers it (its R35, the
+ *  one site that mints it): `away` null while the group does not keep its material away; its refusal otherwise, also
+ *  when the setting cannot be read; anything else (credentials not reached) is read as kept away, failing closed as
+ *  that service does. */
+export const KEPT_AWAY = "AI_KEPT_AWAY";
+const keptAwayCode = (away) => (away === null ? null : KEPT_AWAY);
+
+/** R24 (pure): `{offered: true}` or `{offered: false, code}` for one field of `op`, in R24's order: the group keeping its
+ *  material away from AI (`away`, `credentials.aiKeptAway()`'s answer read at the call; never `assistant.on`, a copy
+ *  of the condition) or no account serving the viewer; an act the assistant is refused or that cannot be undone; a
+ *  field stating the member's reason; a labelled draft already in the field. `refused` is `helpRefusedActs` of the
+ *  registration; an `away` not given is not a reading, and fails closed. */
+export function writingHelpAt(args = {}, refused = helpRefusedActs(), away = undefined) {
   try {
     const { op = null, field = null, draftHeld = false, assistant = null } = args && typeof args === "object" ? args : {};
     const a = assistant && typeof assistant === "object" ? assistant : {};
-    if (a.on !== true) return { offered: false, code: "ASSISTANT_OFF" };
+    const kept = keptAwayCode(away);
+    if (kept) return { offered: false, code: kept };
     if (!a.account) return { offered: false, code: "AI_NO_ACCOUNT" };
     /* DEC-49 REGION is-writing-help */
     if (typeof op !== "string" || !op.trim() || refused.has(op.trim())) return { offered: false, code: "WRITING_HELP_REFUSED" };

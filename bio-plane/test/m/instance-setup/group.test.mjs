@@ -133,9 +133,10 @@ test("R29 by, author and origin are the control plane's stamps: a body naming it
   assert.equal(seen.profilesSet.by, "q-by");
 });
 
-test("R30 C-64.2, C-64.3, C-64.5, C-64.6 and C-64.7 are this module's rows, each raised here with its check and translation, beside T34's C-64.8 (R60) and C-64.9, C-64.10 (R65)", async () => {
+test("R30 C-64.2, C-64.3, C-64.5, C-64.6 and C-64.7 are this module's rows, each raised here with its check and translation, beside T34's C-64.8 (R60) and C-64.9, C-64.10 (R65), and T37's C-64.11–C-64.26 (R67–R73)", async () => {
   const rows = Object.values(INSTANCE_SETUP_CHECKS).filter((r) => r.check.startsWith("C-64."));
-  assert.deepEqual(rows.map((r) => r.check).sort(), ["C-64.10", "C-64.2", "C-64.3", "C-64.5", "C-64.6", "C-64.7", "C-64.8", "C-64.9"]);
+  assert.deepEqual(rows.map((r) => r.check).sort(), ["C-64.10", "C-64.2", "C-64.3", "C-64.5", "C-64.6", "C-64.7", "C-64.8", "C-64.9",
+    ...Array.from({ length: 16 }, (_, i) => `C-64.${11 + i}`)].sort());
   for (const r of rows) {
     assert.match(r.where, /^src\/setup\.mjs /);
     assert.ok(r.translation.split(/\s+/).length >= 20, r.check);

@@ -24,7 +24,7 @@ test("R63 the check rows' translations (T34-87: setup.mjs :1701, :1731, :1742, :
   assert.match(T("GROUP_ALREADY_RECORDED"), /^Your group's Civicsmith has its group recorded already, and it is recorded once/);   // :1701
   assert.match(T("PROFILES_NOT_ADMIN"), /profiles your group's Civicsmith reads its local facts from\. Nothing was changed\.$/);  // :1731
   assert.match(T("UNKNOWN_PROFILE"), /^Your group's Civicsmith holds no jurisdiction profile by that name/);                       // :1742
-  assert.match(T("ASSISTANT_OFF"), /^Your group keeps its material away from every assistant, so no question is put to one/);   // T36
+  assert.equal("ASSISTANT_OFF" in INSTANCE_SETUP_CHECKS, false, "T37 (N765): C-119.5 retired; the gate answers credentials' row");
   assert.match(T("PROFILE_IS_TEST"), /so no group's Civicsmith reads local facts from it\./);
   for (const [code, row] of Object.entries(INSTANCE_SETUP_CHECKS)) assert.doesNotMatch(row.translation, RETIRED, code);
 });
@@ -41,13 +41,17 @@ test("R63 R53 R55 the assistant's sentences (T36: the keep-away state and its re
   const w = await world();
   w.prov.keepAway = { on: true, reason: "Kept here.", set_by: "admin", set_at: "2026-10-08T09:00:00Z" };
   const kept = w.m.assistantGate();
-  assert.match(kept.detail, /chose on 2026-10-08T09:00:00Z to keep your group's material away from every assistant/);
+  assert.equal(kept.reason, "AI_KEPT_AWAY", "T37: credentials' refusal, as given");
+  assert.match(kept.detail, /the group keeps its material away from every assistant/);
   w.prov.keepAway = { on: null, reason: null, set_by: null, set_at: null };
   const stateDetail = w.m.assistantState().detail;
   assert.match(stateDetail, /^whether your group keeps its material away from every assistant could not be read/);
   const unread = w.m.assistantGate();
-  assert.match(unread.detail, /^whether your group keeps its material away from every assistant could not be read/);
-  for (const s of [kept.detail, stateDetail, unread.detail, kept.translation]) assert.doesNotMatch(s, RETIRED, s);
+  assert.match(unread.detail, /^whether the group keeps its material away from every assistant could not be read/);
+  /* this module's own sentence on the gate: a provider that throws is the store's silence */
+  const thrown = (await boot({ prov: { ...w.prov, credentials: { aiKeptAway() { throw new Error("x"); } } } })).m.assistantGate();
+  assert.match(thrown.detail, /^whether your group keeps its material away from every assistant did not answer/);
+  for (const s of [kept.detail, stateDetail, unread.detail, kept.translation, thrown.detail]) assert.doesNotMatch(s, RETIRED, s);
 });
 
 test("R63 the profiles' and the group identity's sentences (T34-87: setup.mjs :2245, :2451, :2479, :2493, :2502) say your group's Civicsmith", async () => {
