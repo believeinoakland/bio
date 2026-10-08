@@ -17,7 +17,7 @@
 
 **Deferred:** none in this module.
 
-**Found in other modules (also in J2 REPORT):**
+**Found in other modules (also in J1 REPORT):**
 1. `plane` (T36-49): hand `file-safety` with `schedulerOf(ctx, env, { fileSafety: fs })` (or `.hand`) **before** `schedulerOf(ctx, env).start()`. Once handed, a fresh instance's alarm is wanted at once (each of the four is due at once with nothing kept); after that firing, with no work and no log tool, only `file-scan`'s day stays. I checked plane's `unpack.test.mjs`:88 and scheduler `plane.test.mjs`:1128 read that way; T36-49 should re-run them.
 2. `file-safety` R12's `renderBatch` answer states no count of safe copies still queued (`copies` is `{made, failed}`); R24 reads a copy made or failed as maybe-more-left, and polls once more. A `copies.queued` count (N762) would make it exact.
 3. `file-safety` R4: with a backlog over `SCAN_BATCH_MAX`, R24 gives `file-scan` no wake of its own while `remaining`, so on an idle instance the backlog is scanned one batch per firing, at worst a batch a day. N762 (option A: the owner's own due and wake) is where to fix it.
