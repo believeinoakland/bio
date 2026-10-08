@@ -22,3 +22,7 @@
 - `checks/ownership.mjs sources tranche/T36`: 1 file changed by sources; 0 failures.
 
 Size (session_017pZoLzvWRz5wh27zcPw5dD): test runs 3, module lines 1010
+
+## J1 · COMPLETE
+
+T36-12 applied: contract.test.mjs R1 re-pins mintExhausted's detail as record-core R82 words it, and also checks the answer is exactly mintExhausted("SRC"). Red 5 clears at merge. 30/30 tests pass; format, architecture, coverage (19/19) and ownership all show 0 failures. Nothing deferred, nothing found in another module. Reading set read whole (under 300 KB as §3 measures it). Record on job/T36/sources.
