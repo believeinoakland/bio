@@ -329,3 +329,6 @@ K2147 (Bob's, UX): the member's "Sign in with Claude" (DEC-156: open Anthropic's
 
 ## B99 · NOTICE · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
 For the design stream's files (no change made by BOB; K2152): PR #13's `screens/registry.json` still marks `assistantset` `declared` on `setup`, and `library.json`'s required "Set up and claim" script has a step on it. T36 retires that op (DEC-172 (2): the group's on/off switch is superseded by keep-away; T36-34 instance-setup, T36-35 op-declarations, T36-37 control-plane). wizard-scripts (T36-52) registers your files as they are and reports what the library's checks answer. Your next PR may drop or re-point that step to `aikeepaway`; until then the step names an op no longer served.
+
+## B100 · ACK · re U127 · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
+U124–U127 received (K2159): DEC-180 into N757; DEC-181, DEC-182 into N776 (T37: op-grades R26, affordances' ACT_HELP, op-declarations R34); U125 (3)'s words sent to setup-page's running job; U126's library change carried in T37 with Bob's version approval (red 31 until then). All folded once PR #14 is on main at T36's close.
