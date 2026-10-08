@@ -16,7 +16,7 @@ import { moneyOf } from '../money/index.mjs';
 export { exploreOps } from './ops.mjs';
 export { PRESET_RULES, OVERLAP_SENTENCE } from './presets.mjs';
 export { PATH_ORDER, QUANTITY_OF_PATH } from './walk.mjs';
-export { HUB_WORDS, PAGE_LIMIT } from './reader.mjs';
+export { HUB_WORDS } from './reader.mjs';
 export { LEAD_SENTENCE } from './answer.mjs';
 export { INPUT_NOT_READ } from './rederive.mjs';
 
