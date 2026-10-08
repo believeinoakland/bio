@@ -465,9 +465,11 @@ const outward = () => {
   add("NON_ACTS", NON_ACTS); add("RUNG_ABSENT", RUNG_ABSENT); add("RUNG_ABSENCE_GROUNDS", RUNG_ABSENCE_GROUNDS);
   add("IRREVERSIBLE_CORRECTION_PATH", IRREVERSIBLE_CORRECTION_PATH);
   add("VOCABULARIES", VOCABULARIES); add("MACHINE_REFUSALS", MACHINE_REFUSALS);
+  /* R48, R49: what each act does, published with the no-target answer, is outward text too */
+  add("ACT_HELP", A.ACT_HELP);
   return out;
 };
-test("R25: no place any jurisdiction profile names appears in this module's outward text, NON_ACTS.idmatch included", () => {
+test("R25 R48: no place any jurisdiction profile names appears in this module's outward text, NON_ACTS.idmatch and ACT_HELP included", () => {
   const terms = placeTerms();
   assert.ok(terms.includes("Oakland") && terms.includes("Legistar") && terms.includes("APN") && terms.includes("C.M.S."),
     `the instrument reads the profiles (${terms.join(", ")})`);
