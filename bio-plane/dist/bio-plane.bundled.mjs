@@ -1884,114 +1884,122 @@ var ARCHIVE_CHECKS = Object.freeze({
   /* R38: no receipt or register row names the archive, or its bytes are not all held and verified. R41 answers the
      same for an archive whose home the viewer may not see, so the two cannot be told apart. */
   ARCHIVE_NOT_HELD: Object.freeze({
-    check: "C-137.1",
+    check: "C-139.1",
     where: `${un("is-archive-held")}; ${ls("is-archive-held")}`,
     translation: "Your group's Civicsmith does not hold that archive, or does not hold all of its bytes intact, so nothing in it was opened. Capture the archive again, then open it."
   }),
   /* R38: the archive's own structure could not be read (a truncated directory, a multi-disk archive, too many
      entries, or storage that could not be read). Nothing in it is cut. */
   ARCHIVE_UNREADABLE: Object.freeze({
-    check: "C-137.2",
+    check: "C-139.2",
     where: un("is-archive-listed"),
     translation: "Your group's Civicsmith could not read the list of files inside this archive, so none of them was filed. The archive itself is kept as it was captured; capture a fresh copy if the source has one."
   }),
   /* R38: the archive can be read more than one way (two end records, a directory that disagrees with its end
      record, entries out of range or overlapping). Read as one, it could hide a file or show one twice. */
   ARCHIVE_AMBIGUOUS: Object.freeze({
-    check: "C-137.3",
+    check: "C-139.3",
     where: un("is-archive-listed"),
     translation: "This archive can be read in more than one way, so your group's Civicsmith did not pick one: none of its files was filed. The archive itself is kept as it was captured, and can be opened by hand with an ordinary unzip tool."
   }),
   /* R40: only a member's own act, the daemon's continuation, or the capture that brought the archive in opens it. */
   UNPACK_NOT_PERMITTED: Object.freeze({
-    check: "C-137.4",
+    check: "C-139.4",
     where: un("is-unpack-caller"),
     translation: "Opening an archive is something a member asks for, or that happens on its own when the archive is captured. This request came from neither, so nothing was opened."
   }),
   MEMBER_ENCRYPTED: Object.freeze({
-    check: "C-137.5",
+    check: "C-139.5",
     where: un("is-entry-verdict"),
     translation: "This file is locked with a password inside the archive, so your group's Civicsmith cannot read it and did not file it. If you have the password, open the archive yourself and capture the file."
   }),
   MEMBER_METHOD_UNSUPPORTED: Object.freeze({
-    check: "C-137.6",
+    check: "C-139.6",
     where: un("is-entry-verdict"),
     translation: "This file is packed in a way your group's Civicsmith does not unpack, so it was not filed. Open the archive with an unzip tool that supports it, and capture the file on its own."
   }),
   /* The entry's own header disagrees with the archive's directory about it: which is the file is not decided. */
   MEMBER_AMBIGUOUS: Object.freeze({
-    check: "C-137.7",
+    check: "C-139.7",
     where: un("is-entry-verdict"),
     translation: "The archive describes this file in two places, and they disagree, so which bytes are the file cannot be decided. It was not filed rather than filed as a guess."
   }),
   /* The cut did not come out exactly as declared (size, checksum, or the stream's end). Any bytes stored on the way
      stay content-addressed and named by nothing. */
   MEMBER_CORRUPT: Object.freeze({
-    check: "C-137.8",
+    check: "C-139.8",
     where: un("is-entry-cut"),
     translation: "This file came out of the archive damaged: it did not match the size or checksum the archive states for it. It was not filed. A fresh copy of the archive from the source may hold it intact."
   }),
   MEMBER_MAX: Object.freeze({
-    check: "C-137.9",
+    check: "C-139.9",
     where: un("is-entry-verdict"),
     translation: "This file is larger than your group's Civicsmith unpacks from an archive, so it was not filed. If the source offers the file on its own, capture it directly."
   }),
   /* A declared size far beyond what compression can produce: the mark of an archive built to exhaust its reader. */
   ARCHIVE_RATIO_MAX: Object.freeze({
-    check: "C-137.10",
+    check: "C-139.10",
     where: un("is-entry-verdict"),
     translation: "This file claims to unpack to far more than packing can make, which is how an archive built to overwhelm a reader looks. It was not filed."
   }),
   ARCHIVE_ENTRIES_MAX: Object.freeze({
-    check: "C-137.11",
+    check: "C-139.11",
     where: un("is-archive-listed"),
     translation: "This archive holds more files than your group's Civicsmith opens in one archive, so none of them was filed. The archive itself is kept as it was captured."
   }),
   ARCHIVE_TOTAL_MAX: Object.freeze({
-    check: "C-137.12",
+    check: "C-139.12",
     where: un("is-archive-listed"),
     translation: "The files in this archive add up to more than your group's Civicsmith unpacks from one archive, so it was listed and none of its files was filed. The archive itself is kept as it was captured."
   }),
   /* R40: an archive nested deeper than the published depth is filed as a file and never opened. */
   ARCHIVE_DEPTH_MAX: Object.freeze({
-    check: "C-137.13",
+    check: "C-139.13",
     where: un("is-unpack-budget"),
     translation: "This archive sits inside other archives deeper than your group's Civicsmith opens, so it is kept as a file and its contents were not filed."
   }),
   /* R40 (F7): the whole tree under the outermost archive is held to a total; the automatic run stops and the rest
      waits for a member, whose own request goes past it. */
   ARCHIVE_TREE_TOTAL_MAX: Object.freeze({
-    check: "C-137.14",
+    check: "C-139.14",
     where: un("is-unpack-budget"),
     translation: "The archives nested inside this one add up to more than your group's Civicsmith unpacks on its own, so the rest of these files are waiting. A member can ask to open the archive, and it will go on."
   }),
   ARCHIVE_TREE_ENTRIES_MAX: Object.freeze({
-    check: "C-137.15",
+    check: "C-139.15",
     where: un("is-unpack-budget"),
     translation: "The archives nested inside this one hold more files than your group's Civicsmith unpacks on its own, so the rest of these files are waiting. A member can ask to open the archive, and it will go on."
   }),
   /* R40: the group's daily allowance for opening archives on their own is used for today. */
   UNPACK_DAILY_BYTES: Object.freeze({
-    check: "C-137.16",
+    check: "C-139.16",
     where: un("is-unpack-budget"),
     translation: "Your group's Civicsmith has unpacked as much from archives on its own as it does in one day, so the rest of these files are waiting. A member can ask to open the archive now, or it goes on after midnight UTC."
   }),
   UNPACK_DAILY_ENTRIES: Object.freeze({
-    check: "C-137.17",
+    check: "C-139.17",
     where: un("is-unpack-budget"),
     translation: "Your group's Civicsmith has unpacked as many files from archives on its own as it does in one day, so the rest of these files are waiting. A member can ask to open the archive now, or it goes on after midnight UTC."
   }),
   /* R42 (F16): a fetch never goes to one of the group's own hosts: the copy itself or a member of its fleet. */
   OWN_HOST_REFUSED: Object.freeze({
-    check: "C-137.18",
+    check: "C-139.18",
     where: "src/acquisition/index.mjs acquire > is-own-host; src/acquisition/keyed.mjs keyedFetch > is-own-host",
     translation: "That address belongs to your group's own Civicsmith, and it never fetches from itself, so nothing was fetched or filed. What your group holds is already in its record."
   }),
   /* R43 (K1888): the group's co-archive setting is on or off, nothing else. */
   CO_ARCHIVE_SETTING_INVALID: Object.freeze({
-    check: "C-137.19",
+    check: "C-139.19",
     where: "src/acquisition/unpack.mjs coArchiveSet > is-co-archive-setting",
     translation: "Whether captures also ask a public archive to keep a copy is on or off, and this request said neither, so the setting was not changed."
+  }),
+  /* R41, R38 (N720, K1955, K2100): the capture asked about is held (and, for R41, visible), but R17's rule does not profile it as an archive (an
+     office or OpenDocument file included, though both are ZIP containers): it has no list of files to show, and is never
+     answered as an archive whose listing was refused whole. */
+  NOT_AN_ARCHIVE: Object.freeze({
+    check: "C-139.20",
+    where: `${un("is-not-an-archive")}; ${ls("is-not-an-archive")}`,
+    translation: "This file is not an archive, so there is no list of files inside it to show. Your group's Civicsmith keeps it as a file of its own: open it as you would any other document."
   })
 });
 var ACQUISITION_CHECKS = Object.freeze({
@@ -27720,11 +27728,17 @@ CREATE TABLE IF NOT EXISTS captured_locators (
   first_retrieved   TEXT NOT NULL,
   last_retrieved    TEXT NOT NULL,
   observations      INTEGER NOT NULL DEFAULT 1,
+  -- R61 (N714; K2087): the address's web reputation as acquisition R44 recorded it for this fetch, the object
+  -- exactly as given ({tool, listed, categories, checked_at, unanswered?}), as JSON; NULL when none was given. It
+  -- changes no other field, grade or chain. Not part of R48's read contract: R16 and R60 answer it.
+  reputation        TEXT,
   PRIMARY KEY (address_norm, capture_sha, via)
 );
 CREATE INDEX IF NOT EXISTS captured_locators_addr ON captured_locators(address_norm, first_retrieved);
 -- CAP-13: the page count in siteAssets and siteChrome joins on capture_sha.
 CREATE INDEX IF NOT EXISTS captured_locators_sha ON captured_locators(capture_sha);
+-- N730 (K1993 (4)): capture-requests R49 asks a retrieval locator after its indexed reads miss; this keeps it a seek.
+CREATE INDEX IF NOT EXISTS captured_locators_locator ON captured_locators(retrieval_locator);
 
 -- REC-225 (Content Framework v0.10 section 8.3; R29, R30): A MEMBER'S DECLARATION OF THE SYSTEM A
 -- DOCUMENT CAME FROM. A host serves many offices, so a host is not an origin: the office a document
@@ -27742,7 +27756,8 @@ CREATE TABLE IF NOT EXISTS origin_declarations (
 var REGISTER_ADDITIVE = [
   ["register", "authored", "INTEGER NOT NULL DEFAULT 0"],
   ["register", "author", "TEXT"],
-  ["register", "observed_at", "TEXT"]
+  ["register", "observed_at", "TEXT"],
+  ["captured_locators", "reputation", "TEXT"]
 ];
 function migrateProvenance(sql) {
   const cols = (t2) => [...sql.exec(`PRAGMA table_info(${t2})`)].map((r) => r.name);
@@ -28390,6 +28405,8 @@ function safeJson(text7) {
     return null;
   }
 }
+var RECEIPT_COLUMNS = "address_norm, address, capture_sha, via, retrieval_locator, first_retrieved, last_retrieved, observations, reputation";
+var receiptRow = (r) => ({ ...r, reputation: typeof r.reputation === "string" ? safeJson(r.reputation) : null });
 var bareSha = (v) => typeof v === "string" ? v.trim().replace(/^sha256:/, "").toLowerCase() : null;
 function bundleGate(col, viewer) {
   if (typeof col !== "string" || !/^[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*$/.test(col))
@@ -29077,9 +29094,24 @@ var Provenance = class {
    *  interval as instants: two spellings of one instant never sort apart. A `retrieved` in any readable ISO spelling
    *  is re-spelled to its whole second (the fraction dropped); none, or one that names no instant, takes this module's
    *  clock, the instant of the plane's own write. */
-  recordReceipt({ address, addressNorm, captureSha, retrieved, via = "direct", retrievalLocator = null, context = null } = {}) {
+  /*  R61 (N714; K2087): `reputation`, the answer acquisition R44 recorded for the fetched address, is stored with the
+   *  receipt exactly as given (a plain object, as JSON; anything else is no reputation), answered by R16 and R60, and
+   *  handed to the listeners as this write gave it, null when it gave none. A repeat that gives one replaces the
+   *  stored answer (the newest lookup speaks for the address); one that gives none keeps it, as `retrieval_locator`
+   *  is kept. It changes no other field, grade or chain. */
+  recordReceipt({
+    address,
+    addressNorm,
+    captureSha,
+    retrieved,
+    via = "direct",
+    retrievalLocator = null,
+    reputation = null,
+    context = null
+  } = {}) {
     if (!addressNorm || !captureSha) return { recorded: false };
     const v = String(via || "direct");
+    const rep = isObj4(reputation) ? reputation : null;
     const asked = typeof retrieved === "string" && retrieved ? Date.parse(retrieved) : NaN;
     const clock2 = Date.parse(this.#now());
     const when = stampInstant("second", Number.isFinite(asked) ? asked : Number.isFinite(clock2) ? clock2 : Date.now());
@@ -29093,20 +29125,22 @@ var Provenance = class {
       ) || { n: 0, same: 0 };
       const observation = Number(seen.n) === 0 ? "new" : Number(seen.same) > 0 ? "unchanged" : "changed";
       this.#sql.exec(
-        `INSERT INTO captured_locators (address_norm, address, capture_sha, via, retrieval_locator, first_retrieved, last_retrieved, observations)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+        `INSERT INTO captured_locators (address_norm, address, capture_sha, via, retrieval_locator, first_retrieved, last_retrieved, observations, reputation)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)
          ON CONFLICT(address_norm, capture_sha, via) DO UPDATE SET
            first_retrieved   = MIN(first_retrieved, excluded.first_retrieved),
            last_retrieved    = MAX(last_retrieved,  excluded.last_retrieved),
            retrieval_locator = COALESCE(excluded.retrieval_locator, retrieval_locator),
-           observations      = observations + 1`,
+           observations      = observations + 1,
+           reputation        = COALESCE(excluded.reputation, reputation)`,
         addressNorm,
         address || addressNorm,
         captureSha,
         v,
         retrievalLocator,
         when,
-        when
+        when,
+        rep ? JSON.stringify(rep) : null
       );
       const event2 = {
         address: address || addressNorm,
@@ -29116,6 +29150,7 @@ var Provenance = class {
         retrieval_locator: retrievalLocator,
         retrieved: when,
         observation,
+        reputation: rep,
         context
       };
       const listeners = this.#listeners.map(({ module, fn }) => {
@@ -29133,10 +29168,26 @@ var Provenance = class {
    *  `observations` is not bookkeeping — a run of them across an interval is the PRIMARY route by which the record
    *  establishes that a link was contemporaneous (LINK-FIDELITY.md), REC-26. */
   receipts({ addressNorm = null } = {}) {
-    const rows3 = addressNorm ? this.#rows(`SELECT * FROM captured_locators WHERE address_norm = ? ORDER BY via`, addressNorm) : this.#rows(`SELECT * FROM captured_locators ORDER BY address_norm, via`);
+    const rows3 = addressNorm ? this.#rows(`SELECT ${RECEIPT_COLUMNS} FROM captured_locators WHERE address_norm = ? ORDER BY via`, addressNorm) : this.#rows(`SELECT ${RECEIPT_COLUMNS} FROM captured_locators ORDER BY address_norm, via`);
     return {
       address_norm: addressNorm,
-      rows: rows3.map((r) => ({ ...r })),
+      rows: rows3.map(receiptRow),
+      observations: rows3.reduce((n, r) => n + r.observations, 0)
+    };
+  }
+  /** R60 · N725 (K1973): every receipt that names one capture, at any address and by any `via`, each row as R16
+   *  answers it, ordered by `address_norm` then `via`, and their summed observations: one seek on the
+   *  `captured_locators_sha` index, so a reader of one capture's receipts (`standards` R38's `version_basis`) never
+   *  reads every receipt. A `sha256:` prefix and case are ignored (R5); no digest, or one that is not 64 hex, answers
+   *  no rows, never every receipt. Writes nothing. */
+  receiptsOfCapture({ captureSha = null } = {}) {
+    const s = bareSha(captureSha);
+    const ok2 = typeof s === "string" && /^[0-9a-f]{64}$/.test(s);
+    const rows3 = ok2 ? this.#rows(`SELECT ${RECEIPT_COLUMNS} FROM captured_locators WHERE capture_sha = ?
+                                   ORDER BY address_norm, via`, s) : [];
+    return {
+      capture_sha: ok2 ? s : null,
+      rows: rows3.map(receiptRow),
       observations: rows3.reduce((n, r) => n + r.observations, 0)
     };
   }
@@ -30947,6 +30998,10 @@ async function unpack(store, { archiveSha = null, by = null, cls: cls3 = null, m
     return refuse("ARCHIVE_NOT_HELD", { archive: sha2, detail: "no acquisition receipt or register row names this archive; nothing was opened" });
   const held2 = await heldParts(inst, st, ev, sha2, internal && internal.parts);
   if (!held2.parts) return refuse("ARCHIVE_NOT_HELD", { archive: sha2, detail: `${held2.why}; nothing was opened` });
+  if (!(internal && internal.automatic && internal.parts)) {
+    const notArchive = await archiveProfile(inst, ev, sha2, held2.parts);
+    if (notArchive) return notArchive;
+  }
   const source2 = partsSource(ev, held2.parts);
   const listing = await listArchive(source2);
   const whole2 = listingRefusal(listing);
@@ -31238,6 +31293,42 @@ function entryOf(r, { limit, refused: refused3, sees }) {
   const waitsOn = r.limit_name || limit || null;
   return { ...base2, state: "waiting", ...waitsOn ? { waiting_on: waitsOn, limit: FIGURES[waitsOn] ?? null } : { waiting_on: null } };
 }
+async function archiveProfile(inst, ev, sha2, parts) {
+  if (inst.header(sha2)) {
+    const officePart = inst.entryRows(sha2).find((r) => {
+      const n = normalizePartName(r.name || "");
+      return n === CONTENT_TYPES_PART || n === ODF_MIMETYPE_PART;
+    });
+    return officePart ? notAnArchive(sha2, { format: null, part: officePart.name }) : null;
+  }
+  const total2 = parts.reduce((n, x) => n + x.bytes, 0);
+  let fmt = null;
+  try {
+    const prof = await profileOf({
+      ev,
+      sha: sha2,
+      ct: null,
+      total: total2,
+      multipart: parts.length > 1,
+      headers: {},
+      locator: null,
+      view: void 0,
+      retrieved: stampSecond(),
+      origin: null,
+      parts
+    });
+    fmt = prof && prof.format ? prof.format.format : null;
+  } catch {
+    fmt = null;
+  }
+  return fmt === "zip" ? null : notAnArchive(sha2, { format: fmt });
+}
+var notAnArchive = (sha2, { format = null, part = null } = {}) => refuse("NOT_AN_ARCHIVE", {
+  archive: sha2,
+  format,
+  ...part ? { part } : {},
+  detail: `${part ? `this capture is an office or OpenDocument file (its listing names ${part})` : `this capture's bytes are profiled \`${format ?? "undetermined"}\``}, not a ZIP archive, so it has no list of files to show`
+});
 async function archiveList(instOrStore, { archiveSha = null, viewer = null, state = null, limit = LIST_DEFAULT, after = null } = {}) {
   const inst = instOrStore instanceof Acquisition ? instOrStore : instanceOf(instOrStore);
   const sha2 = shaOf(archiveSha);
@@ -31267,13 +31358,21 @@ async function archiveList(instOrStore, { archiveSha = null, viewer = null, stat
     }
     return hh && inst.sees(viewer, hh.bundleId) ? hh.bundleId : null;
   };
+  const h = inst.header(sha2);
+  let ev = null, held2 = null;
+  if (!h) {
+    ev = inst.record && typeof inst.record.evidenceStore === "function" ? inst.record.evidenceStore() : null;
+    held2 = ev ? await heldParts(inst, {}, ev, sha2, null) : { why: "no evidence storage" };
+    if (!held2.parts) return notHeld2();
+  }
+  const notArchive = await archiveProfile(inst, ev, sha2, held2 && held2.parts);
+  if (notArchive) return notArchive;
   let g = null;
   try {
     g = p3 && typeof p3.captureGrade === "function" ? await p3.captureGrade(sha2) : null;
   } catch {
     g = null;
   }
-  const h = inst.header(sha2);
   let rows3, refused3 = null, waitLimit = null, bytes2 = null, entries = 0, declaredTotal2 = null;
   if (h) {
     rows3 = inst.entryRows(sha2);
@@ -31282,9 +31381,6 @@ async function archiveList(instOrStore, { archiveSha = null, viewer = null, stat
     declaredTotal2 = h.declared_total;
     if (h.depth > ARCHIVE_DEPTH_MAX) waitLimit = "ARCHIVE_DEPTH_MAX";
   } else {
-    const ev = inst.record && typeof inst.record.evidenceStore === "function" ? inst.record.evidenceStore() : null;
-    const held2 = ev ? await heldParts(inst, {}, ev, sha2, null) : { why: "no evidence storage" };
-    if (!held2.parts) return notHeld2();
     const source2 = partsSource(ev, held2.parts);
     const listing = await listArchive(source2);
     bytes2 = source2.size;
@@ -32097,7 +32193,9 @@ async function acquire(cap, body0, {
   sessMember = null,
   storeName = "bio",
   captureRequest = null,
-  ownHosts = null
+  ownHosts = null,
+  reputation: reputationTool = void 0,
+  fileScanner = null
 } = {}) {
   const body = body0 && typeof body0 === "object" ? { ...body0 } : {};
   const answer = (status, b) => ({ status, body: b });
@@ -32338,6 +32436,11 @@ async function acquire(cap, body0, {
         detail: adm ? `today's render allowance (${adm.allowance_ms} ms, day ${adm.day}) is committed (${adm.spent_ms} ms spent, ${adm.reserved_ms} ms reserved by renders in flight), and this render reserves ${adm.reserve_ms} ms; it is recorded as deferred (${adm.deferred} today).` : "the render allowance could not be read, so the render is deferred rather than run unmetered."
       });
   }
+  const reputation = await addressReputation(
+    archiveAsked || (driveCapture ? driveCapture.address : locator),
+    reputationToolOf(cap, reputationTool),
+    fileScannerOf(cap, fileScanner)
+  );
   let archiveMemento = null;
   if (archiveAsked) {
     const m = await mementoLookup(cap, archiveAsked, { fetchPurpose: "acquire", asked: archiveAt, take: async ({ res: res2, answer: answer2 }) => {
@@ -32723,7 +32826,8 @@ async function acquire(cap, body0, {
       captureSha: sha2,
       retrieved,
       via,
-      retrievalLocator: locator
+      retrievalLocator: locator,
+      reputation
     });
   } catch {
   }
@@ -32918,10 +33022,46 @@ async function acquire(cap, body0, {
     ...subsSkipped ? { subresources_skipped: subsSkipped } : {},
     ...receiptSignature ? { receipt_signature: receiptSignature } : {},
     ...unpacked ? { unpack: unpacked } : {},
+    /* R44: what the scanner said of the address, stated to the caller as the receipt records it */
+    reputation,
     store: storeName,
     tokenClass: cls3,
     note: ACQUIRE_GRADE_NOTE
   });
+}
+var REPUTATION_TIMEOUT_MS = 5e3;
+var REPUTATION_URL = "https://file-scanner/provider/reputation";
+var reputationToolOf = (cap, given5) => given5 !== void 0 ? given5 : cap && cap.reputation !== void 0 ? cap.reputation : null;
+var fileScannerOf = (cap, given5) => given5 || cap && cap.fileScanner || cap && cap.env && cap.env.FILE_SCANNER || null;
+async function addressReputation(address, tool, scanner) {
+  const toolId = tool && typeof tool === "object" && typeof tool.tool_id === "string" ? tool.tool_id : null;
+  const unanswered3 = (code) => ({ tool: toolId, listed: null, categories: [], checked_at: stampSecond2(), unanswered: code });
+  if (tool === null || tool === void 0) return unanswered3("NO_TOOL");
+  if (!scanner || typeof scanner.fetch !== "function") return unanswered3("SCANNER_UNREACHABLE");
+  let timer = null;
+  try {
+    const asked = (async () => {
+      const res = await scanner.fetch(REPUTATION_URL, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ address, tool })
+      });
+      return res.json();
+    })();
+    const out = await Promise.race([asked, new Promise((r) => {
+      timer = setTimeout(() => r(null), REPUTATION_TIMEOUT_MS);
+    })]);
+    asked.catch(() => {
+    });
+    if (out && out.ok === true)
+      return { tool: toolId, listed: out.listed === true, categories: Array.isArray(out.categories) ? out.categories.filter((c) => typeof c === "string") : [], checked_at: stampSecond2() };
+    if (out && out.ok === false && typeof out.code === "string" && out.code) return unanswered3(out.code);
+    return unanswered3("SCANNER_UNREACHABLE");
+  } catch {
+    return unanswered3("SCANNER_UNREACHABLE");
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }
 async function profileOf({
   ev,
@@ -53235,6 +53375,12 @@ var keyOf = (cursor, n) => {
   }
 };
 var badCursor = () => ({ ok: false, reason: "BAD_CURSOR", detail: "`after` is not a cursor this read answered as `next`" });
+var TASK_CURSOR_TAG = "task-event";
+var taskCursorOf = (enqueued, captureSha, kind) => cursorOf([TASK_CURSOR_TAG, enqueued, captureSha, kind]);
+var taskCursorPlace = (after) => {
+  const k = typeof after === "string" && after ? keyOf(after, 4) : null;
+  return k && k[0] === TASK_CURSOR_TAG ? { enqueued: k[1], captureSha: k[2], kind: k[3] } : null;
+};
 var CAPTURE_EVENTS = Object.freeze(["source-outcome", "task", "compute", "observation"]);
 var CAPTURE_READERS = Object.freeze(["litigation-hold", "batch-examination", "captured-for"]);
 var WITHHELD_QUESTION = "Captured for a question you may not see";
@@ -56106,20 +56252,30 @@ var Capture = class _Capture {
     return existing ? { ok: true, queued: false, deduped: true, kind, captureSha, armedAt } : { ok: true, queued: true, deduped: false, kind, captureSha, enqueued: now, armedAt };
   }
   /** R45: the queued events, oldest first (by `enqueued`, then digest), at most `limit`; with `kind`, only that kind's,
-   *  so each drainer reads its own (T35: `tasks` drains `authority-undetermined`, the daemon `archive-unpack`). */
-  taskEvents({ limit = 50, kind = null } = {}) {
+   *  so each drainer reads its own (T35: `tasks` drains `authority-undetermined`, the daemon `archive-unpack`).
+   *  (T36-41, N740) Each event carries `cursor`, its place in that order (`kind` breaks a tie of the same instant and
+   *  digest); with `after`, only the events past that place, whether or not its event is still queued, so a drainer that
+   *  leaves `limit` events at the head reaches the ones behind them. An `after` that is not such a cursor reads from the head. */
+  taskEvents({ limit = 50, kind = null, after = null } = {}) {
     try {
       const n = Math.max(0, Math.min(1e3, Math.trunc(Number(limit)) || 0));
       const one4 = typeof kind === "string" && kind;
+      const at35 = taskCursorPlace(after);
+      const where = [
+        one4 ? "kind = ?" : "1=1",
+        at35 ? "(enqueued > ? OR (enqueued = ? AND (capture_sha > ? OR (capture_sha = ? AND kind > ?))))" : "1=1"
+      ];
+      const args = [...one4 ? [kind] : [], ...at35 ? [at35.enqueued, at35.enqueued, at35.captureSha, at35.captureSha, at35.kind] : []];
       return this.#rows(`SELECT kind, capture_sha, subject, locator, enqueued, attempts, last_try FROM task_queue
-                          WHERE ${one4 ? "kind = ?" : "1=1"} ORDER BY enqueued, capture_sha LIMIT ?`, ...one4 ? [kind] : [], n).map((r) => ({
+                          WHERE ${where.join(" AND ")} ORDER BY enqueued, capture_sha, kind LIMIT ?`, ...args, n).map((r) => ({
         kind: r.kind,
         captureSha: r.capture_sha,
         subject: r.subject,
         locator: r.locator,
         enqueued: r.enqueued,
         attempts: r.attempts,
-        lastTry: r.last_try
+        lastTry: r.last_try,
+        cursor: taskCursorOf(r.enqueued, r.capture_sha, r.kind)
       }));
     } catch {
       return [];
