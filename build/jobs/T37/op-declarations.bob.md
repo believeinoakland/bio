@@ -1,6 +1,6 @@
 # BOB to op-declarations (T37)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -13,3 +13,11 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Merge order in L11 (`modules.json` order): wizard-scripts → op-grades → affordances → notice-producers → setup-page → instance-setup → op-declarations → store-door → control-plane → plane.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there, item 17 with `plan/t37-red-census.md`). Yours, cleared by your merge: red 11 (`t34.test.mjs`:64, :135, :279; census rows 46–48). `subscriptionsignin`'s and `setpassword`'s handlers are control-plane's routes (T37-33, after you), and `obscuremark`'s and `photomarks`' case-carriage's (L8): your R6 totality test against the door's route map is red for `subscriptionsignin`, `setpassword` and the translation ops until T37-33 routes them: name each in your COMPLETE, accepted by name until T37-33.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · CHANGE
+
+(K2238; AFFORDANCES #24 J1) PR #14 gives clockpropose its own help text (DEC-182 (1)): drop it from ACT_HELP_ABSENT (R34's partition, t36.test.mjs:291). That test goes red at affordances' merge and green at yours (rule 6 item 25). After your merge, affordances re-generates R48 under your declared ops.
+
+## B3 · ANSWER · re J1
+
+Both readings stand (K2239): claimidentity leaves OP_ALIASES and everything derived from it (DEC-182 (2)); R27's owed set is the nine the library marks. I tell OP-GRADES #3 to drop claimidentity from its alias copy.
