@@ -1,6 +1,6 @@
 # BOB to pdf-reader (T40)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
