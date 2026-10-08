@@ -35,3 +35,7 @@ instance-setup has merged (K2162): `assistantSet` and `op=assistantset` are gone
 ## B6 · CHANGE
 
 admission has merged (K2166): red 33's plane share is yours: `worker.test.mjs` R6 (its op called with `?token=`) and `test/system/migrate-released.test.mjs`:217–220 (every op as `?token=<MEMBER_TOKEN>`) re-point to a header session or an `aik-` credential. Merge the tranche branch now, re-pin, and post COMPLETE; you merge last, after control-plane.
+
+## B7 · CHANGE
+
+control-plane has merged (K2167); you are the last of L11. After your run, merge the tranche branch once more, re-run, and post COMPLETE.
