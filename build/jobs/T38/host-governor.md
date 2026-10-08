@@ -27,3 +27,12 @@ Size (session_0169cu6wYS5iQTcatDMjjXq7): test runs 3, module lines 1480
 ## J1 · REPORT
 
 In my own requirements (yours to word): host-governor R18 still says "Reached by the `admin`, `member` and `probe` classes"; since T36 (admission R5, C-38.11) no binding class `member` exists. The test now checks admin, probe and every session, a member's included. Suggested wording: "Reached by the `admin` and `probe` classes and by every session." No code change needed.
+
+## J2 · COMPLETE
+
+T38-7 done (N784), test only, no src/ change; commit 39793b19eb on `job/T38/host-governor`; the record's Completion has the detail.
+
+- `ops.test.mjs`'s plane helper sends `Authorization: Bearer` (C-38.10); the retired `MEMBER_TOKEN` binding and its two class rows replaced by a second member's session (C-38.11), as K2182. No assertion loosened.
+- host-governor tests 36/4 -> 40/0: rule 6 item 6 clears with this merge.
+
+Checks: format, architecture, coverage (27/27), ownership: 0 failures. One REPORT (J1): R18's wording still names the retired member class.
