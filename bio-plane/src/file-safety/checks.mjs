@@ -23,35 +23,35 @@ export const FILE_SAFETY_CHECKS = Object.freeze({
   NO_SUCH_CAPTURE: row('C-140.1', at("#held", "is-capture-held"),
     'Your group\'s Civicsmith holds no captured file under that digest, so there is nothing to check or open.'),
   /* R4, R8 (K1928 Q4): the scanner is not installed beside this copy. */
-  SCANNER_ABSENT: row('C-140.2', at("#scannerBound", "is-scanner-bound"),
+  SCANNER_ABSENT: row('C-140.2', at("scanBatch", "is-scanner-bound"),
     'Your group\'s Civicsmith has no virus scanner installed, so no file was scanned and no note was written. '
       + 'Whoever installed it can add the scanner; until then a file\'s checks say it was not scanned.'),
   /* R4, R8, R14: the scanner is installed but did not answer. */
-  SCANNER_UNREACHABLE: row('C-140.3', at("#scanner", "is-scanner-answering"),
+  SCANNER_UNREACHABLE: row('C-140.3', at("scanBatch", "is-scanner-answering"),
     'The virus scanner your group\'s Civicsmith uses did not answer, so nothing was scanned and no note was '
       + 'written. It is asked again on its next round.'),
   /* R8: the scan before first opening could not decide. */
-  NOT_SCANNED: row('C-140.4', at("openOriginal", "is-scan-before-opening"),
+  NOT_SCANNED: row('C-140.4', at("#decide", "is-scan-before-opening"),
     'This file could not be scanned before it opens, so the original was not opened. Its reason is stated beside '
       + 'it. Read the safe view meanwhile, or ask again once the scanner can read it.'),
   /* R8: the scan before first opening is still running. */
-  SCAN_PENDING: row('C-140.5', at("openOriginal", "is-scan-before-opening"),
+  SCAN_PENDING: row('C-140.5', at("#decide", "is-scan-before-opening"),
     'This file is being scanned before it opens. Ask again in a moment; the safe view can be read meanwhile.'),
   /* R8, R16: a scanner found something; no path opens the original until the hold is released. */
-  SCAN_HOLD: row('C-140.6', at("openOriginal", "is-under-scan-hold"),
+  SCAN_HOLD: row('C-140.6', at("#decide", "is-under-scan-hold"),
     'A scanner reported a finding in this file, so its original is held and does not open. The safe view still '
       + 'opens, and the file keeps its place in the record. Two members can release the hold, each with a reason, '
       + 'or a second, different scanner can clear it in a deeper check.'),
   /* R8 (DEC-173): the warned path needs a scan within the week, and the scanner cannot run now. */
-  SCAN_STALE: row('C-140.7', at("openOriginal", "is-warned-path"),
+  SCAN_STALE: row('C-140.7', at("#decide", "is-warned-path"),
     'This high-risk file was last found clean more than a week ago, and the scanner cannot check it again now, '
       + 'so the original was not opened. Read the safe view, or ask for a deeper check.'),
   /* R8 (DEC-173 (2)): the member did not give both confirmations. */
-  WARNING_NOT_CONFIRMED: row('C-140.8', at("openOriginal", "is-warned-path"),
+  WARNING_NOT_CONFIRMED: row('C-140.8', at("#decide", "is-warned-path"),
     'Opening a high-risk original needs both confirmations: that you will open it on your own device, not a '
       + 'shared one, and that you will not enable macros or editing. The original was not opened.'),
   /* R8: a high-risk file with neither a fresh deeper check nor the member's confirmations. */
-  SAFE_VIEW_ONLY: row('C-140.9', at("openOriginal", "is-high-risk-path"),
+  SAFE_VIEW_ONLY: row('C-140.9', at("#decide", "is-high-risk-path"),
     'This file is high risk, so it opens as its safe view. A deeper check that passes opens the original to every '
       + 'member for a day, or you can open it after the warnings.'),
   /* R11: the format has no safe view. */
@@ -62,7 +62,7 @@ export const FILE_SAFETY_CHECKS = Object.freeze({
     'The safe view of this file is not made yet. It is made soon after a file is captured; ask again shortly.'),
   SAFE_VIEW_FAILED: row('C-140.12', at("safeView", "is-safe-view-made"),
     'The safe view of this file could not be made. The reason is stated beside it. The original is unchanged.'),
-  RENDERER_ABSENT: row('C-140.13', at("#scannerBound", "is-renderer-bound"),
+  RENDERER_ABSENT: row('C-140.13', at("renderBatch", "is-renderer-bound"),
     'Your group\'s Civicsmith has no safe-view maker installed, so no safe view can be made. Whoever installed it '
       + 'can add it.'),
   /* R13: a deeper check needs an outside scanner or sandbox the group turned on. */
@@ -79,7 +79,7 @@ export const FILE_SAFETY_CHECKS = Object.freeze({
   NO_REASON: row('C-140.17', at("releaseScanHold", "is-release-reason"),
     'Releasing a scan hold needs your reason, which the record keeps beside the release: up to two thousand '
       + 'characters. Nothing was released.'),
-  NOT_HELD: row('C-140.18', at("releaseScanHold", "is-under-scan-hold"),
+  NOT_HELD: row('C-140.18', at("releaseScanHold", "is-hold-open"),
     'This file is not under a scan hold, so there is nothing to release.'),
   SAME_MEMBER: row('C-140.19', at("releaseScanHold", "is-second-member"),
     'You already asked to release this hold. A second, different member has to agree before it is released.'),

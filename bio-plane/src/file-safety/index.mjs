@@ -383,9 +383,9 @@ export class FileSafety {
       if (h.refused) return h.refused;
       const sha = h.sha, who = memberOf(by), at = iso(this.now());
       const open = this.#openHolds(sha);
-      /* DEC-49 REGION is-under-scan-hold */
+      /* DEC-49 REGION is-hold-open */
       if (!open.length) return refusal("NOT_HELD", "No open scan hold names this file. Nothing was released.", { captureSha: sha });
-      /* END DEC-49 REGION is-under-scan-hold */
+      /* END DEC-49 REGION is-hold-open */
       const pending = open.filter((x) => x.state === "pending_second");
       /* DEC-49 REGION is-second-member */
       if (pending.length && pending.every((x) => x.pending_by === who) && open.every((x) => x.state === "pending_second"))
@@ -564,8 +564,11 @@ export class FileSafety {
   /* R8 and R9 decide by one rule: `{open: path, stated?}` or `{refuse: code, …}`. With `run` false (R9) nothing is
      scanned: a scan R8 would run is stated as the path it would open by. */
   async #decide(sha, { override = false, warned = undefined, run = true } = {}) {
+    /* DEC-49 REGION is-under-scan-hold */
     if (this.#openHolds(sha).length) return { refuse: "SCAN_HOLD" };
+    /* END DEC-49 REGION is-under-scan-hold */
     const g = await this.#grade(sha, [], new Map());
+    /* DEC-49 REGION is-scan-before-opening */
     const scan = async (path, high) => {
       if (this.#cleanFresh(sha)) return { open: path };
       if (!run) {
@@ -585,6 +588,7 @@ export class FileSafety {
       const why = v.reason || v.detail || v.result;
       return high && this.#lastClean(sha) ? { refuse: "SCAN_STALE", reason: why } : { refuse: "NOT_SCANNED", reason: why };
     };
+    /* END DEC-49 REGION is-scan-before-opening */
     if (g.threat === "low") return scan("plain", false);
     if (override === true && this.#freshDeeper(sha)) return { open: "deeper" };
     if (warned !== undefined && warned !== null) {
@@ -600,7 +604,9 @@ export class FileSafety {
       const w = await scan("warned", true);
       return w.open ? { open: "warned", needs_confirmation: true } : w;
     }
+    /* DEC-49 REGION is-high-risk-path */
     return { refuse: "SAFE_VIEW_ONLY" };
+    /* END DEC-49 REGION is-high-risk-path */
   }
 
   static #refusalFor(d) {
@@ -870,11 +876,14 @@ export class FileSafety {
   /* R21's tool spec (`file-scanner`), its credentials read from `credentials` for this call only; null when they
      cannot be read. No member and no file is in it (R23). */
   async #spec(tool) {
-    let key = null;
-    try {
-      const k = await this.credentials.keyedServiceFor({ service: `security:${tool.tool_id}` });
-      key = k && k.ok === true ? k.key : null;
-    } catch { key = null; }
+    const base = providerById(tool.provider_id);
+    let key = base && Array.isArray(base.credentials) && !base.credentials.length ? {} : null;
+    if (key === null) {
+      try {
+        const k = await this.credentials.keyedServiceFor({ service: `security:${tool.tool_id}` });
+        key = k && k.ok === true ? k.key : null;
+      } catch { key = null; }
+    }
     if (key === null) return null;
     const config = parse(tool.config, {});
     return { provider_id: tool.provider_id, tool_id: tool.tool_id, ...(tool.region ? { region: tool.region } : {}),
@@ -944,7 +953,7 @@ export class FileSafety {
       const creds = credentials && typeof credentials === "object" && !Array.isArray(credentials) ? credentials : {};
       /* DEC-49 REGION is-credentials-given */
       const missing = (d.credentials || []).find((n) => !(typeof creds[n] === "string" && creds[n].trim()));
-      if (missing || !Object.keys(creds).length) return refusal("CREDENTIALS_MISSING", "A credential the tool names was not given.", { provider_id: id, field: missing || null });
+      if (missing) return refusal("CREDENTIALS_MISSING", "A credential the tool names was not given.", { provider_id: id, field: missing });
       /* END DEC-49 REGION is-credentials-given */
       /* DEC-49 REGION is-use-allowed */
       if (!TOOL_USES.includes(use) || (use === "routine" && !onOwnServers(d.handling.recipient)))
@@ -959,10 +968,14 @@ export class FileSafety {
       let toolId = `${id}-${seq}`;
       while (this.#toolRow(toolId)) toolId = `${id}-${seq}-${Math.floor(Math.random() * 1e6)}`;
       const service = `security:${toolId}`;
-      const set = await this.credentials.keyedServiceSet({ service, key: { ...creds }, by });
-      if (!set || set.ok !== true) return set;
-      const on = this.credentials.keyedServiceSwitch({ service, on: true, by });
-      if (!on || on.ok !== true) { await this.credentials.keyedServiceSet({ service, key: null, by }); return on; }
+      /* the fields the tool names, held by credentials (its R29); a tool that names none holds nothing there */
+      const key = Object.fromEntries((d.credentials || []).map((n) => [n, creds[n]]));
+      if (Object.keys(key).length) {
+        const set = await this.credentials.keyedServiceSet({ service, key, by });
+        if (!set || set.ok !== true) return set;
+        const on = this.credentials.keyedServiceSwitch({ service, on: true, by });
+        if (!on || on.ok !== true) { await this.credentials.keyedServiceSet({ service, key: null, by }); return on; }
+      }
       const at = iso(this.now());
       this.sql.exec(`INSERT INTO fs_tools (tool_id, provider_id, kinds, use, state, handling, handling_digest, monthly_limit, added_by, added_at,
                        region, host, config, confirm_retention, seq) VALUES (?,?,?,?, 'added', ?,?,?,?,?,?,?,?,?,?)`,
@@ -1010,6 +1023,7 @@ export class FileSafety {
       if (refused) return refused;
       const gone = await this.credentials.keyedServiceSet({ service: `security:${tool.tool_id}`, key: null, by });
       if (!gone || gone.ok !== true) return gone;
+      /* R30: its key is gone, and it is never called again */
       this.sql.exec(`UPDATE fs_tools SET state = 'removed' WHERE tool_id = ?`, tool.tool_id);
       this.#event(tool.tool_id, "removed");
       return { ok: true, tool_id: tool.tool_id, state: "removed" };
@@ -1056,11 +1070,6 @@ export class FileSafety {
       const h = this.#held(captureSha, viewer);
       if (h.refused) return h.refused;
       const sha = h.sha;
-      const tools = [...this.#onTools("scan"), ...this.#onTools("sandbox")].filter((t, i, a) => a.findIndex((x) => x.tool_id === t.tool_id) === i);
-      /* DEC-49 REGION is-outside-tool-on */
-      if (!tools.length) return refusal("NO_OUTSIDE_TOOL", "No tool of kind scan or sandbox is on.", { captureSha: sha });
-      if (tools.every((t) => this.#budgetLeft(t) <= 0)) return refusal("DEEPER_CHECK_BUDGET_SPENT", "Every scan and sandbox tool has spent its monthly_limit this calendar month (UTC).", { captureSha: sha });
-      /* END DEC-49 REGION is-outside-tool-on */
       const open = this.#one(`SELECT * FROM fs_deeper WHERE capture_sha = ? AND state IN ('queued', 'running') ORDER BY requested_at DESC LIMIT 1`, sha);
       if (open) return { ok: true, captureSha: sha, state: open.state, check_id: open.check_id };
       const done = this.#one(`SELECT * FROM fs_deeper WHERE capture_sha = ? AND state = 'done' ORDER BY done_at DESC LIMIT 1`, sha);
@@ -1069,6 +1078,11 @@ export class FileSafety {
         const since = note && this.#one(`SELECT 1 AS x FROM fs_notes WHERE capture_sha = ? AND seq > ? AND kind <> 'deeper'`, sha, note.seq);
         if (note && !since) return { ok: true, captureSha: sha, state: "done", check_id: done.check_id, note: FileSafety.#note(note) };
       }
+      const tools = [...this.#onTools("scan"), ...this.#onTools("sandbox")].filter((t, i, a) => a.findIndex((x) => x.tool_id === t.tool_id) === i);
+      /* DEC-49 REGION is-outside-tool-on */
+      if (!tools.length) return refusal("NO_OUTSIDE_TOOL", "No tool of kind scan or sandbox is on.", { captureSha: sha });
+      if (tools.every((t) => this.#budgetLeft(t) <= 0)) return refusal("DEEPER_CHECK_BUDGET_SPENT", "Every scan and sandbox tool has spent its monthly_limit this calendar month (UTC).", { captureSha: sha });
+      /* END DEC-49 REGION is-outside-tool-on */
       const checkId = `FSD-${[...crypto.getRandomValues(new Uint8Array(8))].map((x) => x.toString(16).padStart(2, "0")).join("")}`;
       this.sql.exec(`INSERT INTO fs_deeper (check_id, capture_sha, bundle_id, state, requested_at) VALUES (?, ?, ?, 'queued', ?)`,
                     checkId, sha, this.#home(sha), iso(this.now()));
