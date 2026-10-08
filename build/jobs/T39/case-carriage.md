@@ -1,6 +1,6 @@
 # case-carriage (T39)
 
-**Status** · session_01LmwYYcJzTZXw2vJWwsENHv · depth 2 · WORKING · handled B2
+**Status** · session_01LmwYYcJzTZXw2vJWwsENHv · depth 2 · COMPLETE · handled B2
 
 ## Completion (T39-10, N806)
 
