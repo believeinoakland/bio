@@ -25,13 +25,14 @@
  * apart below, after the task is read. */
 import { admitRead, readTool, ASK_DECLARED } from "./ask.mjs";
 import { toolContent } from "./reads.mjs";
-import { askBoundReached, draftMayRead } from "../../bio-plane/src/run-rules/index.mjs";
+import { askBoundReached, draftMayRead, TRANSLATION_DRAFT_MAX_WORDS } from "../../bio-plane/src/run-rules/index.mjs";
 
 /** The tasks a draft is asked for, and the field shapes of each (R59; R68, the translation draft). */
 export const DRAFT_OPS = Object.freeze(["writinghelp", "groupdescriptiondraft", "translationdraft"]);
-/** R68: a translation draft's two directions, and its word list's bounds (K2201). */
+/** R68: a translation draft's two directions. Its word list's bound is `run-rules`' (R22; K2201, K2213), read, never held
+ *  here. */
 export const TRANSLATION_DIRECTIONS = Object.freeze(["to_language", "to_english"]);
-export const TRANSLATION_WORDS_MAX = 100;
+const TRANSLATION_WORDS_MAX = TRANSLATION_DRAFT_MAX_WORDS;
 /** `wizard-scripts` R27's `told`: 1 to 4,000 characters. */
 export const TOLD_MAX = 4000;
 /** `instance-setup` R65's answers: each `text` at most 1,000 characters. */

@@ -6,6 +6,7 @@
  * source text. */
 import worker from "../src/index.mjs";
 import { MODEL_FOR_MODE } from "../../agent-model/src/model.mjs";
+import { TRANSLATION_DRAFT_MAX_WORDS } from "../../bio-plane/src/run-rules/index.mjs";
 import { MEMBER } from "./account.mjs";
 
 let pass = 0, fail = 0;
@@ -306,7 +307,7 @@ section("R68 · the translation task's refusals, before any model call, in R59's
     ["an empty language", { ...tl, language: "" }],
     ["words not a list", { ...tl, words: word(0) }],
     ["an empty words list", { ...tl, words: [] }],
-    ["101 words", { ...tl, words: words(101) }],
+    [`${TRANSLATION_DRAFT_MAX_WORDS + 1} words (one past run-rules' bound)`, { ...tl, words: words(TRANSLATION_DRAFT_MAX_WORDS + 1) }],
     ["an entry missing key", { ...tl, words: [(({ key, ...x }) => x)(word(0))] }],
     ["an entry missing en", { ...tl, words: [(({ en, ...x }) => x)(word(0))] }],
     ["an entry with an empty key", { ...tl, words: [word(0, { key: "" })] }],
@@ -327,8 +328,9 @@ section("R68 · the translation task's refusals, before any model call, in R59's
     const x = await draft(tdBody({ task }));
     t(`R68: a translation task with ${label}: 400 BAD_TASK, no call`, [codeOf(x), nothingCalled(x)], [[400, "BAD_TASK"], [0, 0, 0]]);
   }
-  const hundred = await draft(tdBody({ task: TO_LANGUAGE(100) }));
-  t("R68: 100 words are drafted", [hundred.status, hundred.out?.draft?.words?.length], [200, 100]);
+  const hundred = await draft(tdBody({ task: TO_LANGUAGE(TRANSLATION_DRAFT_MAX_WORDS) }));
+  t("R68, R70: run-rules' bound is 100, and 100 words are drafted", [TRANSLATION_DRAFT_MAX_WORDS, hundred.status, hundred.out?.draft?.words?.length],
+    [100, 200, 100]);
   const one = await draft(tdBody({ task: TO_LANGUAGE(1) }));
   t("R68: one word is drafted", [one.status, one.out?.draft?.words?.length], [200, 1]);
   const noTold = await draft(tdBody({ told: undefined }));
