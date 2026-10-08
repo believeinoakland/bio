@@ -29,3 +29,7 @@ Two tests in other modules hand-write the `.docx` cell shape, so they go red onc
 1. extraction: `bio-plane/test/m/extraction/r70.test.mjs`:47 pins the six R30 keys (1 of 132 fails). T37 has no extraction entry. The fix is `paras` in that key list (and line 110's `cell` helper if its readings should carry it). Either it becomes an entry or a named red until one exists.
 2. reading-pipeline: `bio-plane/test/m/reading-pipeline/emitted.test.mjs`:129 (`dc`, the R28 test "exactly as the real docx entry emits them") (1 of 92 fails). T37-9 is the entry that carries `paras` and changes it.
 Every other user's tests are green (odf-reader, format-registry, budget-doctypes, file-safety, workbooks, retrieval, content). No generated artifact is stale beyond the plane bundle BOB regenerates at the layer close.
+
+## J2 · COMPLETE
+
+T37-4 applied: each .docx table cell carries paras (R11 as amended), a vertically merged cell's included, tested on a vertically merged table. office-readers 107/0; format, architecture, coverage (33/33) and ownership checks all 0 failures; 3,816 lines. One reading stated in the record: paras are the cell's non-empty paragraphs, so value is exactly their texts newline-joined. Two downstream reds are in J1 (extraction r70.test.mjs:47 with no T37 entry; reading-pipeline emitted.test.mjs:129, which T37-9 changes). Record: build/jobs/T37/office-readers.md.
