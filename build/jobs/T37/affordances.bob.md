@@ -17,3 +17,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · CHANGE
 
 (K2242) op-grades T37-26 is merged into tranche/T37. Merge the tranche: your t36-backing aikeepaway test should go green, and re-pin the five tests op-grades names as yours (t31.test.mjs:27 and :49, the R36 phone oracle and LARGER_SCREEN_ACTS; catalogue.test.mjs:110 the reversible list and :479 the undetermined set; t36.test.mjs:49, R48's owed_<op> keys now graded), each to op-grades' answer with its negative control. Then complete again. Wizard-scripts now carries library version 2 (K2241): if your ACT_HELP or tests read the library, re-check after its merge.
+
+## B3 · CHANGE
+
+(K2245) op-grades is re-merged with claimidentity dropped from its alias table (27). Also re-pin catalogue.test.mjs:240 (R45 R12: 28 aliases pinned) and t36.test.mjs:17 (names claimidentity), with your B2 re-pins. Merge the tranche first.
