@@ -28,3 +28,7 @@ Size (session_01CTyGZe6hkFn6SZXskpYRyL): test runs 5, module lines 1379
 ## J1 · REPORT
 
 control-plane index.mjs:654, `windowed.source ?? await sourceOf(req, env)`: since T38-24, sourceOf with an unbound key asks the store's doorwindow (count: false), so when the window was not read (a store fault) the fallback asks the same store a second time. The result is right (null again on a dead store), but the fault path costs one extra request. Improvement for control-plane: drop the fallback for a public op, since the window's source is already the fingerprint. Not urgent; for next.md.
+
+## J2 · COMPLETE
+
+T38-24 applied: R21 amended is met. With KNOCK_FINGERPRINT_KEY unbound, sourceOf asks bio's doorwindow with count: false, which counts, refuses and writes nothing, so setpassword's source equals login's under both arms. sourceOf's signature is unchanged, so control-plane needs no change. New tests in t38.test.mjs (R21, three tests). admission 37/37. control-plane+plane 335/338: the same 3 plane reds before and after (T38-26's). format, architecture, coverage (22/22) and ownership: 0 failures. Record: build/jobs/T38/admission.md. REPORT J1: a control-plane improvement, not blocking.
