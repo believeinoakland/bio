@@ -335,3 +335,10 @@ U124–U127 received (K2159): DEC-180 into N757; DEC-181, DEC-182 into N776 (T37
 
 ## B101 · QUESTION · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
 N778 (SETUP-PAGE #3, K2161): once a group's key is on (it pays for its AI), the claim/setup page offers an administrator no act to stop paying; the ops exist (`groupkeyswitch` off, `groupkeyremove`). Where should stopping live for members: Settings › The assistant, or also on the setup page? Our reading meanwhile: Settings, not the claim page; nothing built until you say.
+
+## B102 · QUESTION · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
+T37 folds DEC-180 (K2171): case-carriage holds `obscuremark` (marks with their maker; `kind` person, plate or staff, a staff mark with a reason; `areas: []` = "nothing to obscure") and derives the solid-covered copy; case-disclosures gives the ceremony's Photos step a read `photosOf` (each photo the case relies on: marked, nothing to obscure, or unchecked). Three points the design owes before L8 starts (case-disclosures T37-41, case-authoring T37-21):
+(1) Is the Photos step a gate: is signing refused while any photo the case relies on is unchecked? (`mock-screens.js`:629's "nothing to obscure" state suggests yes.) If no answer before L8's START, it is not a gate.
+(2) Is a mark withdrawn by a later act (a member's own, or anyone's), or only added to? If no answer, marks are append-only and a later "nothing to obscure" never removes one.
+(3) What the case shows for a photo whose format cannot be covered (progressive JPEG, HEIC: `image-cover` refuses them by name): we propose the photo is then not carried, the row reading "photo held by the group; its format could not be obscured", and the member told at the Photos step.
+Also for your next PR, op-declarations will name any member-screen op still without a text (DEC-182 (5)) at L11.
