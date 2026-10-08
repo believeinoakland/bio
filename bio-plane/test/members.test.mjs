@@ -46,9 +46,18 @@ const mf = new Miniflare({
 });
 
 const sha = (s) => createHash("sha256").update(s).digest("hex");
-const GET = async (q) => (await mf.dispatchFetch("http://x/api/?" + q)).json();
-const POST = async (q, body) => (await mf.dispatchFetch("http://x/api/?" + q,
-  { method: "POST", body: JSON.stringify(body) })).json();
+/* admission R20 (T36-36, K2166): a credential is read only from the Authorization header or the body, never the
+   address (`CREDENTIAL_IN_ADDRESS`). The suite still names its credential as `token=…` in each call, for readability;
+   these helpers lift it out of the address into `Authorization: Bearer …` before the request is sent. */
+const send = (q, init = {}) => {
+  const params = new URLSearchParams(q);
+  const token = params.get("token");
+  params.delete("token");
+  const headers = token === null ? {} : { authorization: `Bearer ${token}` };
+  return mf.dispatchFetch("http://x/api/?" + params, { ...init, headers });
+};
+const GET = async (q) => (await send(q)).json();
+const POST = async (q, body) => (await send(q, { method: "POST", body: JSON.stringify(body) })).json();
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -67,7 +76,8 @@ t("admin creates a member", add.result.ok, true);
 t("the invite appears exactly once", typeof add.result.invite, "string");
 t("duplicate member refused", (await POST("op=memberadd&token=t-admin-1", { memberId: "ruth", cover: "the CPA from Tuesday", role: "admin" })).result.reason, "EXISTS");
 t("bad id refused", (await POST("op=memberadd&token=t-admin-1", { memberId: "Not A Slug", cover: "x" })).result.reason, "BAD_MEMBER_ID");
-t("member token cannot create members", (await POST("op=memberadd&token=t-member-1", { memberId: "x", name: "x" })).error, "forbidden for token class");
+/* admission R5 (T36-36, K2166): the shared MEMBER_TOKEN is retired; it is refused before any act, so it creates nothing. */
+t("the retired shared member token cannot create members", (await POST("op=memberadd&token=t-member-1", { memberId: "x", name: "x" })).reason, "MEMBER_TOKEN_RETIRED");
 t("public path cannot create members", (await POST("op=memberadd", { memberId: "x", name: "x" })).error, "unauthenticated");
 
 console.log("\n--- enrollment spends the invite ---");
@@ -541,8 +551,10 @@ console.log(`         measured: wrong-password ${tBadPw.toFixed(1)}ms · no-cred
 const M2 = "token=" + mlg2.result.token;
 
 console.log("\n--- the roster is visible, invites are not ---");
-const ml = await GET(`op=memberlist&token=t-member-1`);
-t("machine member token reads the roster", ml.result.members.length, 2);
+/* The shared MEMBER_TOKEN that used to read the roster here is retired (admission R5, K2166); an ordinary member's own
+   session reads it instead, and the retired token reads nothing (section 3). */
+const ml = await GET(`op=memberlist&${M2}`);
+t("an ordinary member's session reads the roster", ml.result.members.length, 2);
 t("no invite material in the roster", JSON.stringify(ml.result).includes(add2.result.invite), false);
 
 console.log("\n--- section 3: only administrators see cover and handle TOGETHER (D-157) ---");
@@ -600,13 +612,13 @@ console.log("\n--- section 3: only administrators see cover and handle TOGETHER 
   t("and the whole answer carries no cover value smuggled elsewhere",
     JSON.stringify(asMember).includes("the CPA from Tuesday"), false);
 
-  const asMemberToken = await rowsFor("token=t-member-1");
-  t("the shared MEMBER_TOKEN receives NO cover field either",
-    anyKey(asMemberToken, "cover"), false);
-  t("and still reads the handle roster",
-    [hasKey(asMemberToken, "handle"), asMemberToken.length], [true, 2]);
-  t("no cover value reaches the machine member credential",
-    JSON.stringify(asMemberToken).includes("Meilan"), false);
+  /* The shared MEMBER_TOKEN is retired (admission R5, T36-36, K2166): refused before any read, so it receives no
+     roster at all, and so no cover. */
+  const asMemberToken = await GET(`op=memberlist&token=t-member-1`);
+  t("the retired shared MEMBER_TOKEN is refused the roster",
+    [asMemberToken.reason, "result" in asMemberToken], ["MEMBER_TOKEN_RETIRED", false]);
+  t("no cover value reaches the retired machine member credential",
+    JSON.stringify(asMemberToken).includes("Meilan") || JSON.stringify(asMemberToken).includes("the CPA from Tuesday"), false);
 
   /* PROBE was measured NOT exposed before this change — scopeFor confines it to
      the `scratch` namespace, a different Durable Object with its own member
@@ -625,8 +637,8 @@ console.log("\n--- section 3: only administrators see cover and handle TOGETHER 
      follow, and the reason the projection cannot be talked out of. */
   t("a member cannot stamp itself an administrator",
     anyKey(await rowsFor(`${M2}&administer=1`), "cover"), false);
-  t("nor can the shared machine credential",
-    anyKey(await rowsFor("token=t-member-1&administer=true"), "cover"), false);
+  t("nor can the retired shared machine credential: it is refused, administer named or not",
+    (await GET("op=memberlist&token=t-member-1&administer=true")).reason, "MEMBER_TOKEN_RETIRED");
 }
 
 /* Miniflare holds a live workerd child process. Without dispose the suite

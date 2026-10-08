@@ -172,13 +172,14 @@ export function notAParticipant(projectId, by, extra = null) {
    Rules (2), its new modules in their places, `local-facts` and `standards` in layer 5 and `observation-log` after
    `connections`. A module the file lists before its job has built it is held here in its place all the same, so its
    listeners order correctly from the day it registers; R83's test names it as not yet built until its merge. T35-14,
-   T36-6 (N697, N723; K1864, K1961, K2008): every module the file names is held, whether or not it registers one. */
+   T36-6 (N697, N723; K1864, K1961, K2008): every module the file names is held, whether or not it registers one.
+   T37-44 (K1185, K2171): `image-cover` after `pdf-pixels` in layer 1, as T37's opening placed it. */
 export const MODULE_ORDER = Object.freeze([
   /* 1 */ "record-grammar", "jurisdictions", "civil-time", "calc-grammar", "connection-grammar", "test-support",
           "runtime-limits", "signatures", "bundler", "court-citations", "id-spaces", "subresources", "ooxml",
           "office-readers", "odf-reader", "pdf-reader", "format-registry", "text-chain", "site-profiles", "docprofile",
           "doctypes", "legistar-reader", "roster-reader", "court-doctypes", "budget-doctypes", "image-codecs",
-          "pdf-pixels", "pdf-worker", "ocr-worker", "sheet-worker", "file-scanner",
+          "pdf-pixels", "image-cover", "pdf-worker", "ocr-worker", "sheet-worker", "file-scanner",
   /* 2 */ "record-core", "membership", "credentials", "promotion",
   /* 3 */ "host-governor", "provenance", "attestation", "provenance-routes", "capture-sources", "acquisition",
           "capture", "file-safety", "sources",
