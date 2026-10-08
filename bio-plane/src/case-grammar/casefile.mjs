@@ -28,14 +28,16 @@
  *   materials/<ref>/archives/<sha256>                                    `/2`: an archive a carried member was unpacked from
  *   materials/<ref>/containers/<sha256>.json                             `/2`: the container record of the member so named
  *   criteria.json                                                        `/2`: the edition's criteria rows, at most once
- *   materials/<ref>/obscured                                             `/3`: a photo's copy, carried in its original's place
+ *   materials/<ref>/obscured                                             `/3`: a material's copy, carried in its original's place
  * The three calculation paths are one kind, `calculation` (R13); `caseFileEntryOf` tells them apart. An archive is
  * named by its own SHA-256 and a container record by its member's (`case-carriage` R8), so the pair for a member, then
  * for its archive (itself a member of an outer archive), outward to the outermost, sit side by side under the ref of the
  * material whose chain they belong to. A `/1` manifest names none of the `/2` kinds, and a `/2` manifest no `obscured`.
  *
- * THE COPY (T37; N757; DEC-180 (4); T38: N779, K2248). Every photo a published case carries travels as its copy, with
- * nothing of the original but its pixels and its marked areas, if any, covered, at `materials/<ref>/obscured`, under the ref of the `materials:` row (R12) that states `obscured`, at the
+ * THE COPY (T37; N757; DEC-180 (4); T38: N779, K2248; T39: N806, K2333). Every photo a published case carries travels
+ * as its copy, with nothing of the original but its pixels and its marked areas, if any, covered, and so does every
+ * member document it carries as its cleaned copy (`case-carriage` R15), at `materials/<ref>/obscured`, under the ref
+ * of the `materials:` row (R12) that states `obscured`, at the
  * SHA-256 that row names as `obscured.copy`; the original never travels: no `document`, `extracted_text`, `archive` or
  * `container` file under that ref. Those three rules are relative to the case document's rows, which the manifest does
  * not carry, so `caseFileManifestCheck` judges them when its caller hands it the rows (`{materials}`, as `materialsOf`
@@ -164,9 +166,9 @@ const shown = (v) => { try { const s = JSON.stringify(v); return s === undefined
  *  a kind a later format adds is a departure in an earlier one), each `{at, rule, detail}` (`at` the field's place,
  *  `rule` a short name, `detail` one sentence), in the manifest's order; `[]` when it departs in none. Handed the case
  *  document's `materials:` rows (`{materials}`, as `materialsOf(fm).materials` reads them; T37), it also answers the
- *  three departures of a photo carried as its copy: `obscured_unnamed` (an `obscured` file no row names at that
- *  SHA-256 under its ref), `obscured_copy_missing` (a row stating `obscured` whose copy no `obscured` file under its
- *  ref carries at that SHA-256) and `original_carried` (a `document`, `extracted_text`, `archive` or `container` file
+ *  three departures of a material carried as its copy (a photo, or a member document's cleaned copy, T39):
+ *  `obscured_unnamed` (an `obscured` file no row names at that SHA-256 under its ref), `obscured_copy_missing` (a row
+ *  stating `obscured` whose copy no `obscured` file under its ref carries at that SHA-256) and `original_carried` (a `document`, `extracted_text`, `archive` or `container` file
  *  under the ref of a row stating `obscured`: the original never travels). Without rows, those three are not judged.
  *  Pure; never throws. */
 export function caseFileManifestCheck(manifest, given = {}) {
@@ -274,7 +276,7 @@ export function caseFileManifestCheck(manifest, given = {}) {
           no(`files[${i}].path`, "chain_without_document", `${shown(f.path)} is a ${f.kind} under ${shown(entry.ref)}, and the case file carries no document under that ref`);
       });
     }
-    /* T37 (N757): a photo carried as its copy, judged against the case document's rows when they are handed */
+    /* T37 (N757), T39 (N806): a material carried as its copy, judged against the case document's rows when they are handed */
     const rows = given && typeof given === "object" && Array.isArray(given.materials) ? given.materials : null;
     if (files && rows) {
       const copies = new Map();
@@ -287,9 +289,9 @@ export function caseFileManifestCheck(manifest, given = {}) {
         if (!entry || entry.kind !== f.kind || !entry.ref) return;
         if (f.kind === "obscured") {
           if ((copies.get(entry.ref) || []).includes(f.sha256)) carried.add(`${entry.ref} ${f.sha256}`);
-          else no(`files[${i}]`, "obscured_unnamed", `${shown(f.path)} is a copy carried in a photo's place, and no row of the case document's materials names a copy at ${shown(f.sha256)} under ${shown(entry.ref)}`);
+          else no(`files[${i}]`, "obscured_unnamed", `${shown(f.path)} is a copy carried in its original's place, and no row of the case document's materials names a copy at ${shown(f.sha256)} under ${shown(entry.ref)}`);
         } else if (CASE_FILE_ORIGINAL_KINDS.includes(f.kind) && copies.has(entry.ref))
-          no(`files[${i}]`, "original_carried", `${shown(f.path)} is a ${f.kind} under ${shown(entry.ref)}, whose photo the case carries as its copy: the original never travels`);
+          no(`files[${i}]`, "original_carried", `${shown(f.path)} is a ${f.kind} under ${shown(entry.ref)}, whose material the case carries as its copy: the original never travels`);
       });
       for (const [ref, list] of copies) for (const copy of list)
         if (!carried.has(`${ref} ${copy}`))
