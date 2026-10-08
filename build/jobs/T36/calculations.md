@@ -84,3 +84,19 @@ Size (session_01JLKQ4KM6RQvEVRSy8fPJcz): test runs 6, module lines 3391
 Other modules, from T36-19:
 (a) calculations' map gains `spotcheckvisit` and `spotcheck`. This turns affordances `t33.test.mjs:144` (R40/R12: a new module's map holds exactly its graded ops) red. It also adds "calculations: spotcheckvisit has no spec" to op-declarations `t33.test.mjs:192`, which is already red 17. Both clear when T36-35 declares the two ops (with op-grades and control-plane). op-declarations' `t34:135` (red 13) and `t35:196` fail on the base too.
 (b) The generated plane bundle `bio-plane/dist/bio-plane.bundled.mjs` is stale (calculations' source changed), for layer close.
+
+## J3 · COMPLETE
+
+T36-19 complete on job/T36/calculations @ 546bea2e6b (tranche/T36 @ bf37b4ce24 merged, per B2).
+- R18: a draw's question, `BAD_QUESTION`.
+- R38: `recordVisit` (`op=spotcheckvisit`), visits held in the new table `calc_visits`.
+- R39: `spotCheck` (`op=spotcheck`).
+- R40: the estimate over visits.
+Each is named by its own test in `spotcheck.test.mjs`.
+Results: module 55/0; coverage 40/40; format, architecture and ownership checks 0 failures; users green except the reds in my REPORT (J2).
+Detail decisions for you, in the record:
+- `ESTIMATE_INPUTS` and `RECIPE_NOT_TEMPLATE` keep the visit template closed;
+- a visit estimate's `counted_apart` is an object;
+- testimony and exhibits are named by capture sha256.
+Requirements: R18 and R38–R40 can drop "not yet met: T36"; calculations' Uses line for provenance can drop its marker.
+P6: 3,391 lines.
