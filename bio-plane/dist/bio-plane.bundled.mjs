@@ -211628,7 +211628,7 @@ function hostingControlBlock(cls3 = "notice", { guideHref = null } = {}) {
   return `<div class="${escBlock(cls3)}" id="hosting-control"><p><b>${escBlock(HOSTING_CONTROL.heading)}</b></p>` + HOSTING_CONTROL.sentences.map((s) => `<p>${escBlock(s)}</p>`).join("") + `<p style="margin:0">${guide}</p></div>`;
 }
 
-// src/setup-words.mjs
+// src/setup-words/index.mjs
 var WORDS_COMMIT = "e08cd35ecb";
 var WORD_ROWS = Object.freeze([
   ["weight.reversible.name", "Reversible", null, "Reversible: you can undo this.", true],
@@ -212552,7 +212552,7 @@ var WORD_ROWS = Object.freeze([
   ["wizard.WIZ-a8c349d7d71b6bb0.step6.why", "This tells the office what your group is looking at, and starts the clock.", null, null, false],
   ["wizard.WIZ-a8c349d7d71b6bb0.step7.what", "The due date and next checkpoint go into your queue. A next step can wait on the reply.", null, null, false],
   ["wizard.WIZ-a8c349d7d71b6bb0.step7.why", "If no reply comes, the next step is ready without anyone remembering.", null, null, false]
-]);
+].map((row11) => Object.freeze(row11)));
 
 // src/setup.mjs
 var SETUP_HTML = PAGE_HTML.replace(HOSTING_SLOT, () => hostingControlBlock("notice", { guideHref: ROTATION_GUIDE_HREF }));
