@@ -11,11 +11,16 @@
  *   materials:              one row per document or observation any member's chain reaches: `ref`, `kind` (`document`
  *                           or `observation`), `sha`, `text_sha`, `origin`, `archived_copy`, `included` (whether it
  *                           travels whole), `rests_under` (`load_bearing` or `supporting`).
- *                           (T37; N757; DEC-180 (4)) A `document` row may also state `obscured_copy` and
- *                           `obscured_label`: the photo travels as its copy with marked areas obscured, never whole,
- *                           so the row states `included: false` and keeps the original's `sha`, `text_sha`, `origin`
- *                           and `archived_copy`; read back as `obscured: {copy, label}`. An optional field of `/7`,
- *                           with no new format (K2206): a row without it is written and read exactly as before.
+ *                           (T37; N757; DEC-180 (4); T38: N779, K2248) A `document` row may also state
+ *                           `obscured_copy` and `obscured_label`: the photo travels as its copy, nothing of the
+ *                           original but its pixels, its marked areas, if any, covered, never whole, so the row states
+ *                           `included: false` and keeps the original's `sha`, `text_sha`, `origin` and
+ *                           `archived_copy`; read back as `obscured: {copy, label}`. A published case states it for
+ *                           every photo it carries (its writers' duty: `case-carriage`, `case-authoring`). `label` is
+ *                           `case-carriage`'s `OBSCURED_LABEL` for a marked photo and null for an unmarked one (a copy
+ *                           with nothing covered), written as handed: this module is earlier than `case-carriage` and
+ *                           names no label of its own. An optional field of `/7`, with no new format (K2206): a row
+ *                           without it is written and read exactly as before, and an absent label reads null.
  *   material_attestations:  one row per attestation of a material: `ref`, `by_kind` (`member`, `co_attestation`,
  *                           `project`, `group`), `by`, `level`, `at`, `signature`, `recorded_in`.
  *   accepted_work:          one row per (member, leg) whose chain reaches another group's finding (`inquiry-grammar`
@@ -92,9 +97,9 @@ export const GROUP_ATTESTATION_SIGNATURE = "case";
 
 /* A material row as written: a `kind` or `rests_under` outside its words is written null (undetermined, never a
    guess), and `included` true only when handed true, so nothing is said to travel whole that was not. A `document` row
-   handed `obscured` (an object) is written with its two flat fields, a copy that is not a SHA-256 or a label that is
-   not a sentence written null (so a reader finds the copy missing, never a guess), and `included: false` whatever it
-   is handed: the original never travels (T37; N757). */
+   handed `obscured` (an object) is written with its two flat fields, a copy that is not a SHA-256 written null (so a
+   reader finds the copy missing, never a guess) and a label that is not a sentence written null (an unmarked photo's
+   copy carries none: T38), and `included: false` whatever it is handed: the original never travels (T37; N757). */
 const HEX64 = /^[0-9a-f]{64}$/;
 const obscuredOf = (o) => (o && typeof o === "object" && !Array.isArray(o)
   ? { obscured_copy: typeof o.copy === "string" && HEX64.test(o.copy) ? o.copy : null,
@@ -147,8 +152,8 @@ export function materialBlockLines(given) {
  *  kind, sha, text_sha, origin, archived_copy, included, rests_under, obscured}], attestations: [{ref, by_kind, by, level, at,
  *  signature, recorded_in}]}`; a block the document does not carry answers null, and a document carrying neither (or
  *  any other format) answers null. `included` reads true only when the bytes say true. `obscured` is `{copy, label}`
- *  for a `document` row stating either flat field (a field not stated reads null, undetermined), else null (T37). Pure;
- *  never throws. */
+ *  for a `document` row stating either flat field, else null (T37); a copy not stated reads null, undetermined, and a
+ *  label not stated reads null, a copy that carries none (an unmarked photo's, T38). Pure; never throws. */
 export function materialsOf(fm) {
   try {
     const d = frontOf(fm);
