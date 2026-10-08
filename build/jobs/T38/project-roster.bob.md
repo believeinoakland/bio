@@ -11,3 +11,7 @@ Reading set (mechanics §17): measured at this START by `build/plan/reading-sets
 Merge order in L2: project-roster (copy) → membership (delete, R83) → credentials → promotion last.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Your reading stands, with the order changed (K2275): membership merges first with R116-R120 (its copy of the moved acts still in place); I send you a CHANGE when it lands, you merge tranche/T38 and your tests go green against the real services; no tests accepted red for that. Code strictly to the stated interfaces meanwhile.
