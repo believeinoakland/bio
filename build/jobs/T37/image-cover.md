@@ -40,6 +40,14 @@ The growth is the photo and the answer (a decoded 48 MP frame alone would be 145
 
 - `image-codecs`: `image-cover` reads the Huffman tables `readJpegHeader` answers (`hts.dc[i]`/`hts.ac[i]`: `maxcode`, `valptr`, `mincode`, `symbols`, `fast`, `FAST`); image-codecs R1 names `readJpegHeader` but not that shape. Suggestion: R1 states it (or `image-cover` parses DHT itself). No generated artifact is stale: nothing imports `image-cover` yet (case-carriage, T37-34, will).
 
+## Tests and checks
+
+- `node --test bio-plane/test/m/image-cover/` (from `bio-plane/`): tests 10, pass 10, fail 0. No layer tests are named for layer 1 (`build/manifest.md`); no service another module uses changed (the module is new).
+- `python3 bio-plane/test/m/image-cover/fixtures/make-fixtures.py`: "the reference agrees with every answer" (Pillow 12.3.0, libjpeg-turbo 3.1.4.1, zlib 1.3); two runs write identical fixtures.
+- From the process repository, with my `modules.json` row filled locally as named above (uncommitted; BOB fills it): `format`: 136 modules, 135 requirements files; 0 failures. `architecture`: 42 product files, 11 relative imports; 0 failures. `coverage`: 7 of 7 live requirement ids named by a test; 0 failures. `ownership ... tranche/T37`: 43 files changed by image-cover; 0 failures. With the row empty, `coverage` fails 7 of 7 (nothing is owned yet): re-run after BOB's fill.
+
+Size (session_01A8wyDuP1JUCkDvsGN291AL): test runs 12, module lines 793
+
 ## J1 · QUESTION
 
 Three readings of R1–R3 I am building on; each needs only a yes, or the other option.
