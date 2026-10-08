@@ -12,14 +12,14 @@ screen('install', 'Install Civicsmith', 'setup', 'The installer page: what is ne
   [('bootstrap','Install with this short name'),('selftest','Let it test itself')], [1])
 screen('setup', 'Become your group\'s first administrator', 'setup', 'The founder claims it, names the group, reviews offices and seats, offers the assistant and records the hosting account.',
   [('claim','Claim with the one-time password'),('groupnameset','Name the group'),('groupdomainset','Verify the web address'),('profilesset','Choose places and languages'),
-   ('officesseed','Review offices and seats'),('entitycreate','Add an office yourself'),('placewanted','Name a place not yet listed'),('assistantset','Choose whether the group pays for the assistant'),('owed:aikeepaway DEC-172','Keep the group\'s material away from AI, with a reason'),('groupkeyset','Hold the group\'s API key'),('groupkeyswitch','Switch the group\'s key on or off'),('aicopyceilingset','Set the group\'s daily limit'),('courtnoticeset','Choose whether members are told what a court can reach'),
+   ('officesseed','Review offices and seats'),('entitycreate','Add an office yourself'),('placewanted','Name a place not yet listed'),('owed:aikeepaway DEC-172','Keep the group\'s material away from AI, with a reason'),('groupkeyset','Hold the group\'s API key'),('groupkeyswitch','Switch the group\'s key on or off'),('aicopyceilingset','Set the group\'s daily limit'),('courtnoticeset','Choose whether members are told what a court can reach'),
    ('hostingaccess','Record who holds the hosting account'),('owed:securitytooladd K1929','Add a security tool (optional)'),('memberadd','Invite a member or a second administrator')], [1])
 screen('group-identity', 'Who your group is', 'working', 'Kinds, focus and purpose, and who sees them (DEC-132).',
   [('groupdescriptionset','Save who your group is, and who sees it'),('owed:groupdescriptiondraft DEC-152','Ask the assistant to help write it')], [2])
 screen('join', 'Your invitation', 'setup', 'The invitation link opens here: language, handle, password.',
   [('invitelook','Read the invitation'),('owed:memberlanguageset DEC-127','Choose your language'),('enroll','Join with a handle and password')], [3])
 screen('home', 'Your group\'s home', 'working', 'What the group is working on, what waits on you, and "What brought you here?".',
-  [('projectcreated','Start a project'),('owed:startfrom DEC-129','Start from…')], [3,6])
+  [('promote','Start a project'),('owed:startfrom DEC-129','Start from…')], [3,6])
 screen('members', 'Members', 'working', 'The roster: invitations, capabilities, expertise, administrators, joining through the website.',
   [('memberadd','Invite a member'),('membercaps','Change what a member may do'),('memberset','Change a member\'s status'),('adminendorse','Endorse an administrator'),
    ('adminremove','Remove an administrator'),('expertiseconfirm','Confirm declared expertise'),('invitewithdraw','Withdraw an unused invitation'),('websitekeycreate','Create a website key'),('joinlinkenable','Turn on the reusable join link'),
@@ -27,7 +27,7 @@ screen('members', 'Members', 'working', 'The roster: invitations, capabilities, 
 screen('security', 'Security', 'working', 'Administrators only: how hard the group\'s Civicsmith is being tried over a period they choose, by kind and hour against its usual; counts only; told only when risk is high (K1875, K1874, DEC-165).',
   [('owed:securitymap K1875','Show the level for a period'),('owed:securitytooladd K1929','Add a security tool'),('owed:securitytooltest K1929','Test a security tool'),('owed:securitytoolremove K1929','Remove a security tool')], [27])
 screen('account', 'Your account', 'working', 'Handle, password, language, expertise, signing key, theme.',
-  [('expertisedeclare','Declare your expertise'),('setpassword','Change your password'),('signerregisterown','Register your signing key'),('signerrevokeown','Revoke your signing key'),('owed:memberlanguageset DEC-127','Choose your language'),('owed:infolevelset DEC-162','Choose how much is explained')], [3,16])
+  [('expertisedeclare','Declare your expertise'),('owed:setpassword DEC-182','Change your password'),('signerregisterown','Register your signing key'),('signerrevokeown','Revoke your signing key'),('owed:memberlanguageset DEC-127','Choose your language'),('owed:infolevelset DEC-162','Choose how much is explained')], [3,16])
 screen('connect', 'The assistant', 'working', 'The member\'s own API key or subscription token, or the group\'s key where it offers one, or none; their daily limit; suggestions on or off (K1547, K1755).',
   [('groupkeynoticeseen','Read what the group\'s key means'),('disclosureshown','Read what connecting means'),('owed:subscriptionsignin DEC-156','Open Anthropic\'s sign-in page'),('accountreferenceset','Connect with your own subscription or key'),('aiceilingset','Set your daily limit'),('accountswitchset','Let the assistant suggest unprompted'),('accountreferenceremove','Disconnect')], [4,17])
 screen('ties', 'Your ties', 'working', 'The member\'s own ties, seen only by them and administrators (K1490).',
@@ -44,7 +44,7 @@ screen('queue', 'Your queue', 'working', 'To do, Noticed and Status, grouped by 
   [('taskresolve','Act on an item'),('taskforward','Forward to a member'),('proposedispose','Dismiss with a reason'),('queuesnooze','Snooze to a date'),('queuemute','Mute a kind'),
    ('adoptversion','Adopt the newer version'),('keepversion','Keep the version you cited'),('reminderanswer','Answer a reminder'),('promote','Open a question from a hint')], [19,23])
 screen('finder', 'Find', 'working', 'Search what the group holds; hold a set together; see where nobody looked.',
-  [('search','Search'),('select','Hold these together'),('owed:findin DEC-164','Find in these'),('selectionrelease','Let the set go'),('frontier','See where nobody looked'),('countask','Count')], [6,7])
+  [('search','Search'),('select','Hold these together'),('owed:findin DEC-164','Find in these'),('selectionrelease','Let the set go'),('frontier','See where nobody looked'),('calculationcreate','Count')], [6,7])
 screen('capture', 'Add', 'working', 'Capture a document from an address or a file, photograph a handout, or record what you saw.',
   [('acquire','Capture from an address'),('capture','Capture a file or photo'),('testify','Record what you saw or heard'),('capturerequest','Ask for a capture later'),('monitor','Watch this address'),('owed:writinghelp DEC-153','Help me write this')], [6,7,9,15])
 screen('held', 'Held captures', 'working', 'Captures not yet vouched for, per member and project (DEC-97).',
@@ -73,7 +73,7 @@ screen('assistant', 'The assistant panel', 'dock', 'Docked beside the screen it 
 
 # --- the record's subjects
 screen('person', 'Person', 'working', 'Positions, career, credentials, memberships, interests, statements; same person?',
-  [('person','Open the person'),('recordpersonfact','Add a fact from a document'),('claimidentity','Say another record is this person'),('withdrawidentityclaim','Withdraw a same-person claim'),('followregister','Follow a register'),('personexpunge','Remove a fact where the law requires')], [10])
+  [('person','Open the person'),('recordpersonfact','Add a fact from a document'),('identityclaim','Say another record is this person'),('withdrawidentityclaim','Withdraw a same-person claim'),('followregister','Follow a register'),('personexpunge','Remove a fact where the law requires')], [10])
 screen('timeline', 'Timeline', 'working', 'What they did and what we did, in two lanes (K1462, K1494).',
   [('createevent','Record an event'),('addparticipant','Add who took part'),('relate','Link events'),('recorddatedfact','Record a dated fact'),('hypothesishold','Keep a suspected cause as a hunch'),('owed:findin DEC-164','Look for dates in this project')], [11])
 screen('money', 'Money trail', 'working', 'Money facts with stage and period; a trail; reconciling sources (K1457, K1468).',
@@ -86,9 +86,9 @@ screen('help', 'Help: How spot-checks work', 'working', 'A help page: one method
 screen('explore', 'Explore connections', 'working', 'Chains between a start and an end, each step cited and graded (K1469, K1487).',
   [('explore','Explore'),('explorepreset','Use a preset'),('exploreverify','Check a chain'),('connectionassert','Attach a source to a declared step'),('promote','Open a question from this chain')], [13])
 screen('proceeding', 'Proceeding', 'working', 'A court case or regulatory proceeding: parties, register, orders and their dates.',
-  [('registerproceeding','Register the proceeding'),('recordline','Add a party by role'),('followregister','Follow its register'),('declare','Hold an order as obligations'),('courtlink','Link a decision to what it interprets')], [14])
+  [('entitycreate','Register the proceeding'),('recordline','Add a party by role'),('followregister','Follow its register'),('declare','Hold an order as obligations'),('courtlink','Link a decision to what it interprets')], [14])
 screen('due-date', 'How this date was worked out', 'working', 'A due date\'s basis and counting; confirm it; download it (K1431, K1444).',
-  [('deadlinecompute','Work out the due date'),('clockadopt','Confirm the due date'),('reminderset','Remind me')], [7,8])
+  [('clockpropose','Work out the due date'),('clockadopt','Confirm the due date'),('reminderset','Remind me')], [7,8])
 screen('standard', 'Standard', 'working', 'A requirement the city set itself, held and searchable.',
   [('standarddeclare','Hold this as a standard'),('standardadopt','Adopt a proposed standard'),('lawrelate','Relate to a law')], [6,14,22])
 
@@ -111,7 +111,7 @@ screen('case-editor', 'Case', 'working', 'Prepare the case: scope, statement, wh
 screen('review-copy', 'Review copy', 'working', 'A named outsider\'s revocable view of the draft.',
   [('reviewgrant','Share for review'),('reviewrevoke','Stop sharing'),('reviewcomment','Comment')], [21])
 screen('ceremony', 'Publication ceremony', 'working', 'The required wizard: checks, disclosures, ties confirmed, preview, signing.',
-  [('publishpreflight','Check before publishing'),('publishtensions','See what must be disclosed'),('caseratify','Sign with your key'),('publish','Publish, with your confirmation of no undeclared tie'),('owed:publishat DEC-147','Publish at a set time, checked again then')], [15,24])
+  [('publishpreflight','Check before publishing'),('publishtensions','See what must be disclosed'),('caseratify','Sign with your key'),('publish','Publish, with your confirmation of no undeclared tie'),('owed:publishat DEC-147','Publish at a set time, checked again then'),('owed:obscuremark DEC-180','Mark who and what to obscure in a photo')], [15,24])
 screen('published', 'Published case', 'published', 'The public page: findings, strengths, timeline, people named, evidence; checkable without the group.',
   [('verify','Check the signature'),('publishedcase','Read the case')], [26])
 screen('imported', 'Another group\'s case', 'imported', 'An imported case in its read-only project, recreated finding by finding.',

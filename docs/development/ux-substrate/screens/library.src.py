@@ -27,8 +27,8 @@ wiz('Set up and claim', 'install', True, [
  ('setup', 'profilesset', 'Choose the places whose rules apply, and the languages your members use.', 'Deadlines, holidays and offices come from these places, never from Civicsmith itself. If yours is not listed, choose Other: everything else works, and you enter due dates yourself.'),
  ('setup', 'officesseed', 'Review the offices, seats and holders Civicsmith filled in. Each is marked with where it came from.', 'Requests go to offices by role, so correct anything before members rely on it.'),
  ('setup', None, 'Read who in the group will see facts about people.', 'Facts from public documents follow those documents; a project\'s own notes about a person stay inside the project.'),
- ('setup', 'assistantset', "Read what the assistant is (and open More about this for the detail), then choose whether the group pays for it with its own API key, and whether to keep the group's material away from AI.", "The group's key serves members with no account of their own. Any member may connect their own account unless you keep the material away from AI; then members see your reason. Everything works without it."),
- ('setup', 'groupkeyset', 'If you chose the group\'s key: paste it here. It is never shown again.', 'It serves every member with no account of their own; each is told once, before their first question, that it goes to Anthropic under the group\'s account.'),
+ ('setup', 'owed:aikeepaway DEC-172', "Read what the assistant is (and open More about this for the detail), then choose whether to keep the group's material away from AI.", "Any member may connect their own Claude account unless you keep the material away from AI; then members see who chose it and your reason. Everything works without the assistant."),
+ ('setup', 'groupkeyset', 'If the group will pay for the assistant, paste its Anthropic API key here. It is never shown again.', 'It serves every member with no account of their own; each is told once, before their first question, that it goes to Anthropic under the group\'s account. Leave it empty and members bring their own.'),
  ('setup', 'courtnoticeset', 'Choose whether members are told what a court can reach.', 'A court order your group cannot defeat can require anything not public to be shown. Some groups want every member told; the explanation is always one tap away.'),
  ('setup', 'hostingaccess', 'Record who holds the hosting account.', 'If you are ever unreachable, this is how the group gets back in.'),
  ('setup', 'memberadd', 'Invite your first members, and a second administrator now or later.', 'With one administrator the group depends on one person. A second means it is never stuck.'),
@@ -50,6 +50,7 @@ wiz('Publication ceremony', 'ceremony', True, [
  ('ceremony', 'publishpreflight', 'Check each finding\'s strength against the bar, and anything still open.', 'A reader sees each finding\'s strengths. Anything still open is disclosed, never hidden.'),
  ('case-editor', 'statementack', 'Read what the case leaves out, and who acknowledged it.', 'Saying what a case does not cover is part of its honesty.'),
  ('case-editor', 'attribute', 'Check each person the case names, with the reason they matter to a finding.', 'A case cannot be signed while any reason is missing.'),
+ ('ceremony', 'owed:obscuremark DEC-180', 'Check each photo the case relies on: mark anyone in it who is not part of a finding, and any number plate.', 'The public copy shows them obscured and says so; the original stays inside the group.'),
  ('ceremony', 'publishtensions', 'Read what will be disclosed: the timeline as it stands, and any calculation that differs or is not tied to the record.', 'Readers must see what the case could not settle.'),
  ('ceremony', None, 'Read the group\'s declared bias as it will appear.', 'Every published case carries the lens it was made through.'),
  ('ceremony', None, 'Preview the public page as a stranger will see it.', 'This is how a reader with no account meets your work.'),
@@ -78,7 +79,7 @@ wiz('Check a claim', 'capture', False, [
  ('finder', 'search', 'Get the city\'s own records behind the claim: online, or by request.', 'The claim should be checked against the city\'s own data, not anyone\'s impression.', {'via': 'Get a record'}),
  ('calculation', 'calculationcreate', 'Work it out with the built-in calculation, or bind your own spreadsheet to the captured records.', 'The method is shown with the result, so anyone can check it.'),
  ('calculation', 'calculationdraw', 'Plan a spot-check: a recorded random draw picks which records members visit.', 'A draw anyone can repeat means no one can say you picked the worst cases.'),
- ('capture', 'testify', 'Members visit and record what they find, with place, date and photo.', 'Firsthand checks test whether the records match the street.'),
+ ('capture', 'testify', 'Members visit and record what they find, with place and date, and a photo where they can take one.', 'Firsthand checks test whether the records match the street.'),
  ('question', 'conclude', 'Conclude with what the evidence supports, and say what would change it.', 'A conclusion that names what would change it is one others can trust.'),
 ], [9])
 
@@ -123,7 +124,7 @@ wiz('Your ties', 'ties', False, [
 
 wiz('Follow a proceeding', 'capture', False, [
  ('capture', 'acquire', 'Capture a filing, or the court\'s register page.', 'The proceeding is registered from what it says about itself.'),
- ('proceeding', 'registerproceeding', 'Register the proceeding from its caption: the court, the number, and a neutral label.', 'A neutral label keeps your own view out of the record\'s name for it.'),
+ ('proceeding', 'entitycreate', 'Register the proceeding from its caption: the court, the number, and a neutral label.', 'A neutral label keeps your own view out of the record\'s name for it.'),
  ('proceeding', 'recordline', 'Add the parties by role.', 'Roles say who is suing, who is sued, and who is deciding.'),
  ('proceeding', 'followregister', 'Follow its register: on a schedule, or by your own capture where the register needs a login.', 'New filings are flagged, so nothing arrives unseen.'),
  ('proceeding', 'declare', 'Hold each order\'s requirements as obligations, with their reply dates.', 'An order is a standard the office must meet. Its dates go into your queue.'),
