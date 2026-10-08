@@ -47,6 +47,7 @@
    21. legacy-ui `civicos-ui/test/review-copy.test.mjs` (its fixture's `reviewgrant` refused `REVIEW_NO_SECRET`, rule 4), from T37-22's merge until T37-33 (REVIEW #10 J2; K2228).
    22. legacy-ui `civicos-ui/test/statement-ack.test.mjs`: red before T37-22 (the recipient's acknowledgement wait times out, M0-107), and from T37-22's merge it fails earlier at `reviewgrant` (rule 4) until T37-33; its earlier cause is checked at L11's close and, if it stands, goes to `next.md` (REVIEW #10 J1; K2228).
    23. scheduler `plane.test.mjs`:177 (R12: the request does not expire within 1000 alarms, because file-safety R39's render wake never goes null with no renderer bound), from T37-24's merge until N789 (T38) (SCHEDULER #31 J1; K2235).
+   24. plane `t36.test.mjs`:176 (:187 pins T36's every-firing `filedeeper`), from T37-24's merge until T37-48 re-pins it (SCHEDULER #31 J2; K2236).
 7. **BOB's acts (no module job):** at the opening, rule 2's N669 packaging, N757's packaging (K2171: the pixel work in a new pure L1 helper `image-cover` run in the plane, the marks and the copy in `case-carriage`), every L1 requirement change, and the questions to Bob ("For BOB" below) brought rendered with options and a recommendation. T37's release is BOB's (K1501), decided at its close on what its deployment then lets into T38; no longer for M-Q2 (K2147).
 
 ## Entries
