@@ -115,7 +115,7 @@ test("R14: the check runs on the same bytes: the structure check (the reader rea
   assert.deepEqual(nnn.checks.find((c) => c.check === "clamav"), { check: "clamav", tool: "clamav", engine: "clamav", result: "not_scanned", detail: "SCANNER_ABSENT" });
 });
 
-test("R36: `deeperBatch` starts queued checks and asks each running sandbox for its result no sooner than its poll_after_ms, a sandbox note per verdict; a check is done when every check in it has a result", async () => {
+test("R36: `deeperBatch` starts queued checks and asks each running sandbox for its result no sooner than its poll_after_ms, a sandbox note per verdict; a check is done when every check in it has a result; it answers {ok, started, polled, done, running, queued}, running and queued the checks left in each state; checks that cannot be read answer DEEPER_CHECKS_UNREADABLE with its row, starting and asking nothing, never counts of null", async () => {
   const w = world({ scan: { polls: 2, sandbox: { "joe-sandbox": () => ({ result: "clean" }) }, sandboxEngine: { "joe-sandbox": "joe-sandbox" } } });
   await w.tool("joe-sandbox");
   const s = await w.capture(pdf(true, "sb"));
@@ -140,4 +140,21 @@ test("R36: `deeperBatch` starts queued checks and asks each running sandbox for 
   assert.equal(notes.at(-1).kind, "deeper");
   assert.equal(b3.done[0].check_id, w.row("SELECT check_id FROM fs_deeper").check_id);
   assert.equal(w.row("SELECT state FROM fs_deeper").state, "done");
+  assert.deepEqual(Object.keys(b3).sort(), ["done", "ok", "polled", "queued", "running", "started"]);
+  /* running and queued: the checks left in each state, beyond the batch's limit */
+  const t1 = await w.capture(pdf(true, "q1")), t2 = await w.capture(pdf(true, "q2"));
+  w.fs.requestDeeperCheck({ captureSha: t1, viewer: "member:m1" }); w.fs.requestDeeperCheck({ captureSha: t2, viewer: "member:m1" });
+  const b4 = await w.fs.deeperBatch({ limit: 1 });
+  assert.deepEqual([b4.ok, b4.started, b4.polled, b4.done, b4.running, b4.queued], [true, 1, 0, [], 1, 1]);
+  /* unreadable checks: refused with its row, nothing started or asked, no count null */
+  const calls = w.scanner.calls.length;
+  w.exec("UPDATE fs_deeper SET pending = 'not json' WHERE state = 'running'");
+  const u = await w.fs.deeperBatch({});
+  assert.deepEqual({ ok: u.ok, code: u.code, check: u.check, translation: u.translation },
+                   { ok: false, code: "DEEPER_CHECKS_UNREADABLE", ...row("DEEPER_CHECKS_UNREADABLE") });
+  assert.equal(w.scanner.calls.length, calls, "nothing was asked");
+  assert.equal(w.row("SELECT COUNT(*) AS n FROM fs_deeper WHERE state = 'queued'").n, 1, "nothing was started");
+  for (const k of ["started", "polled", "running", "queued"]) assert.equal(k in u, false, k);
+  w.exec("DROP TABLE fs_deeper");
+  assert.equal((await w.fs.deeperBatch({})).code, "DEEPER_CHECKS_UNREADABLE");
 });

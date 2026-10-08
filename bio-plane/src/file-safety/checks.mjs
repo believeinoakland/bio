@@ -143,6 +143,17 @@ export const FILE_SAFETY_CHECKS = Object.freeze({
   FORWARD_PERIOD_INVALID: row('C-140.39', at("forwardSecurityCounts", "is-forward-period"),
     'The counts are sent for a period from an earlier instant to a later one, and this request named none. Nothing '
       + 'was sent.'),
+  /* R28 (N777; T37): the settings a tool reads, by the names its catalogue entry states. New at T37 (T37-8); the rows
+     await promotion's stamp (plan T37, accepted red 2). */
+  CONFIG_MISSING: row('C-140.40', at("securityToolAdd", "is-config-named"),
+    'This tool needs a setting that was not given, named beside this. Nothing was added.'),
+  CONFIG_UNKNOWN: row('C-140.41', at("securityToolAdd", "is-config-named"),
+    'This tool does not read a setting that was given, named beside this. Remove it and add the tool again. Nothing '
+      + 'was added.'),
+  /* R36 (T37): the deeper checks could not be read, so none was started or asked about. */
+  DEEPER_CHECKS_UNREADABLE: row('C-140.42', at("deeperBatch", "is-deeper-readable"),
+    'The deeper checks your group asked for could not be read just now, so none was started or asked about. They '
+      + 'are read again on the next round.'),
 });
 
 /* R6 (DEC-169 (1)): each reason a file is high risk, in the words "Opening a file" shows beside the mark. `active` is the

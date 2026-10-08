@@ -1,6 +1,6 @@
 /* file-safety — keeps every captured file safe to open without touching its bytes, digest or grade (layer 3, directly
  * after `capture`; Bob's K1913, K1928, K1929, K1939, K1949 with DEC-168, DEC-169 and DEC-173, packaged by BOB, K2008,
- * K2063; new at T36, T36-11). Requirements: `build/requirements/file-safety.md` (R1–R38).
+ * K2063; new at T36, T36-11; its own cadences, T37-8). Requirements: `build/requirements/file-safety.md` (R1–R41).
  *
  * WHAT IT HOLDS. Verdict notes beside each capture naming tool, engine and version (R2, R3); the scan and render queue
  * (R1, R4, R12); scan holds and their release by two members or a second, different engine (R15–R19); deeper checks
@@ -9,6 +9,10 @@
  * R32); and this module's counts by hour, forwarded with `credentials`' to the group's log tools (R35). It keeps no
  * record of who opened, viewed, copied or asked about which file (R10; K1892): no row, note, counter or log line names
  * a member beside a file but the release of a hold, which is an act of record (R17).
+ *
+ * ITS CADENCES (R39–R41; T37). Each batch states when it next wants to run (`scanWake` … `reputationWake`), from the
+ * instants it keeps in `fs_wakes`, so the scheduler holds no interval for it; an act that gives a batch work sooner
+ * tells the modules registered with `onFileWork`, after the act commits (record-core R66).
  *
  * WHAT IT NEVER DOES. It writes no capture, receipt, register row, grade, promotion state or provenance document (R7,
  * R22, R37): the threat grade (R6) is computed at each call from the capture's receipts, its reader's `active` list, its
@@ -22,7 +26,7 @@
  * declares its tables (R25). `fileSafetyOps` is its route map. No service throws; every refusal names its row (R24). */
 import { canonicalJson, sha256HexSync, isMachineIdentity, MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate, notAnAdmin } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, notAnAdmin, listenerRefusal } from "../membership/index.mjs";
 import { credentialsOf } from "../credentials/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { acquisitionOf } from "../acquisition/index.mjs";
@@ -30,7 +34,7 @@ import { captureObjectOp } from "../capture/ops.mjs";
 import { SCAN_BATCH_MAX, LOG_COUNT_KINDS } from "../../../file-scanner/src/limits.mjs";
 import { PROVIDERS, REFUSED_PROVIDERS, HELD_PROVIDERS, providerById, resolveDescriptor, differentEngine }
   from "../../../file-scanner/src/providers/catalogue.mjs";
-import { FILE_SAFETY_SCHEMA, FILE_SAFETY_TABLES } from "./schema.mjs";
+import { FILE_SAFETY_SCHEMA, FILE_SAFETY_TABLES, FILE_SAFETY_ADDITIVE_COLUMNS } from "./schema.mjs";
 import { FILE_SAFETY_CHECKS, THREAT_REASONS, PROVIDER_REASON_WORDS } from "./checks.mjs";
 import { formatOf, readActive, sheetsOf, structureFlags, safeViewRoute, ACTIVE_FORMATS, PLAIN_FORMATS } from "./formats.mjs";
 export { FILE_SAFETY_CHECKS, THREAT_REASONS, PROVIDER_REASON_WORDS } from "./checks.mjs";
@@ -44,6 +48,9 @@ export const FILE_SAFETY_MODULE = "file-safety";
 export const RESCAN_INTERVAL_MS = 604_800_000;
 export const DEEPER_CHECK_FRESH_MS = 86_400_000;
 export const DEEPER_CHECKS_PER_MONTH = 900;
+/* R39 (T37): the poll while render or deeper work is left (and the floor of a retry), and a reputation list's refresh. */
+export const FILE_SAFETY_POLL_MS = 300_000;
+export const REPUTATION_REFRESH_MS = 21_600_000;
 export { SCAN_BATCH_MAX, LOG_COUNT_KINDS };
 
 /* R5: a file due for more than a day is overdue. R8: the scan before first opening waits this long within the call
@@ -83,8 +90,15 @@ const json = (body, status = 200, headers = {}) =>
 const parse = (s, fallback) => { try { return s == null ? fallback : JSON.parse(s); } catch { return fallback; } };
 const shaOf = (x) => (typeof x === "string" ? x.trim().toLowerCase().replace(/^sha:/, "") : "");
 const clamp = (n, d, max) => { const v = Math.floor(Number(n)); return Number.isFinite(v) && v >= 1 ? Math.min(v, max) : d; };
+/* R15, R31: a list's `limit`, the default when it names no number, else clamped to 1–1,000. */
+const listLimit = (n) => { const v = Math.floor(Number(n)); return n === null || n === undefined || n === "" || !Number.isFinite(v) ? LIST.default : Math.min(Math.max(v, 1), LIST.max); };
 const memberOf = (x) => (typeof x !== "string" || x === "" ? null : x.startsWith("member:") ? (x.slice(7) || null) : x);
 const monthOf = (ms) => iso(ms).slice(0, 7);
+const HOUR = 3_600_000;
+/* R15, R39: an instant (ms since the epoch, or a non-empty string `Date.parse` reads) as ms; else NaN. */
+const msOf = (v) => (typeof v === "number" ? v : typeof v === "string" && v.trim() ? Date.parse(v) : NaN);
+/* R39, R40: the batches whose cadence this module states. */
+export const FILE_WORK_BATCHES = Object.freeze(["scan", "render", "deeper", "forward", "reputation"]);
 
 /* R24: every refusal answers its row. */
 function refusal(code, detail, extra = {}) {
@@ -127,6 +141,10 @@ export class FileSafety {
   }
 
   migrate() {
+    for (const [table, column, decl] of FILE_SAFETY_ADDITIVE_COLUMNS) {
+      const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].map((r) => r.name);
+      if (have.length && !have.includes(column)) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
+    }
     for (const t of FILE_SAFETY_SCHEMA.replace(/--.*$/gm, "").split(";")) if (t.trim()) this.sql.exec(t);
     if (!this.#declared && this.record && typeof this.record.declareTable === "function") {
       const r = this.record.declareTable(FILE_SAFETY_MODULE, FILE_SAFETY_TABLES.map((d) => ({ ...d })));
@@ -136,6 +154,44 @@ export class FileSafety {
   }
   #declared = false;
 
+  /* ===== its cadences' state (R39) and the arming notice (R40) ===== */
+
+  /* R39: the instants the wakes read, kept in `fs_wakes` so they survive a restart; null when none is kept. */
+  #kept(key) { try { const r = this.#one(`SELECT value FROM fs_wakes WHERE key = ?`, key); return r ? parse(r.value, null) : null; } catch { return null; } }
+  /* A kept instant that cannot be written never fails the batch it belongs to: the wake then reads the last one kept. */
+  #keep(key, value) {
+    try {
+      this.sql.exec(`INSERT INTO fs_wakes (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value`, key, JSON.stringify(value));
+    } catch { /* as above */ }
+  }
+
+  #fileWork = [];
+  #answered = new Map();   /* R40: each batch's last R39 answer, so an act arms only a batch it gives work sooner */
+  /** R40: a later module registers once at start; a second registration by one module, or a malformed one, is refused
+   *  through membership's `listenerRefusal` (its R81). */
+  onFileWork(module, fn) {
+    const refused = listenerRefusal(this.#fileWork, module, fn);
+    if (refused) return refused;
+    this.#fileWork.push({ module, fn });
+    return { ok: true, module };
+  }
+  /* R40: after the act commits (record-core R66), when `at` is sooner than the batch's last answer, every listener is
+     called once with `{batch, at}`; one that throws or rejects changes nothing. No call names a member, a file or a
+     viewer (R10). */
+  #arm(batch, instant) {
+    const last = this.#answered.get(batch);   /* read before `instant` runs a wake, which remembers its own answer */
+    const at = instant();
+    if (at === null || !Number.isFinite(at)) return;
+    if (last !== undefined && last !== null && last <= at) return;
+    this.#answered.set(batch, at);
+    const notify = () => {
+      for (const l of this.#fileWork) {
+        try { const r = l.fn({ batch, at }); if (r && typeof r.catch === "function") r.catch(() => {}); } catch { /* R40: nothing of the act */ }
+      }
+    };
+    try { if (this.record && typeof this.record.afterCommit === "function") this.record.afterCommit(notify); else notify(); } catch { /* never the act's */ }
+  }
+
   /* R1: every receipt puts its capture in the scan queue and the render queue (R12 renders only a file with a
      safe-view route); a receipt carrying a reputation answer adds a `reputation` note (R34); a routine safe-copy tool
      queues its copy (R32). It runs inside the receipt's own transaction and never refuses, delays or fails it. */
@@ -144,9 +200,12 @@ export class FileSafety {
       const sha = shaOf(event && event.capture_sha);
       if (!HEX64.test(sha)) return { ok: true, queued: false };
       const at = second(this.now());
+      const fresh = !this.#one(`SELECT 1 AS x FROM fs_files WHERE capture_sha = ?`, sha);
       this.sql.exec(`INSERT OR IGNORE INTO fs_files (capture_sha, queued_at, render_state) VALUES (?, ?, 'queued')`, sha, at);
       if (this.#routineTools("cdr").length)
         this.sql.exec(`INSERT OR IGNORE INTO fs_copies (capture_sha, state, queued_at) VALUES (?, 'queued', ?)`, sha, at);
+      /* R40: a newly queued file is due at once (R39's scan instant is then `now`), and its render at the next poll */
+      if (fresh) { this.#arm("scan", () => (this.#scannerBinding() ? this.now() : null)); this.#arm("render", () => this.renderWake(this.now())); }
       const rep = event.reputation;
       if (rep && typeof rep === "object" && typeof rep.listed === "boolean") {
         this.#writeNote(sha, { kind: "reputation", tool: String(rep.tool ?? "reputation"), engine: String(rep.tool ?? "reputation"),
@@ -350,21 +409,34 @@ export class FileSafety {
              state: open.every((h) => h.state === "pending_second") ? "pending_second" : "held" };
   }
 
-  /** R15: every `found` note in order, for the notices of a finding; no member is named. */
-  scanFindings({ after = null, limit = LIST.default, viewer = undefined } = {}) {
+  /** R15: every `found` note in order, for the notices of a finding; no member is named. With `since`, only notes
+   *  whose `at` is at or after it; `held` read in this same synchronous call; `cursor` null once nothing follows. */
+  scanFindings({ after = null, since = null, limit = LIST.default, viewer = undefined } = {}) {
     try {
-      const lim = clamp(limit, LIST.default, LIST.max);
+      const lim = listLimit(limit);
+      const lo = since === null || since === undefined ? null : msOf(since);
+      if (lo !== null && !Number.isFinite(lo))
+        return { ok: true, findings: [], cursor: null, truncated: false, since_invalid: true,
+                 note: "since is not an instant, so no finding is listed" };
       const from = Number.isFinite(Number(after)) && after !== null && after !== "" ? Number(after) : 0;
       const findings = [];
+      const open = new Map();   /* each capture's open holds' names, read once in this call */
+      const heldNames = (sha) => {
+        if (!open.has(sha)) open.set(sha, new Set(this.#openHolds(sha).flatMap((h) => parse(h.names, []))));
+        return open.get(sha);
+      };
       let last = from, more = false;
       for (const r of this.#rows(`SELECT * FROM fs_notes WHERE result = 'found' AND kind <> 'copy' AND seq > ? ORDER BY seq`, from)) {
+        if (lo !== null && !(msOf(r.scanned_at) >= lo)) continue;
+        if (viewer !== undefined && this.#held(r.capture_sha, viewer).refused) continue;
         if (findings.length >= lim) { more = true; break; }
         last = r.seq;
-        if (viewer !== undefined && this.#held(r.capture_sha, viewer).refused) continue;
-        findings.push({ captureSha: r.capture_sha, note_id: r.note_id, tool: r.tool, engine: r.engine, findings: parse(r.findings, []), at: r.scanned_at });
+        const names = parse(r.findings, []);
+        findings.push({ captureSha: r.capture_sha, note_id: r.note_id, tool: r.tool, engine: r.engine, findings: names, at: r.scanned_at,
+                        held: names.some((n) => heldNames(r.capture_sha).has(n)) });
       }
-      return { ok: true, findings, cursor: last > from ? String(last) : (after ?? null), truncated: more };
-    } catch { return { ok: true, findings: [], cursor: after ?? null, truncated: false }; }
+      return { ok: true, findings, cursor: more ? String(last) : null, truncated: more };
+    } catch { return { ok: true, findings: [], cursor: null, truncated: false }; }
   }
 
   /** R17: an act of record. The first member's act answers `pending_second`; a second, different member's releases. */
@@ -737,9 +809,11 @@ export class FileSafety {
     return "rendered";
   }
 
-  /** R12: renders queued files (the scheduler's wake), and makes the safe copies a routine tool queued (R32, R33). */
+  /** R12: renders queued files (the scheduler's wake), and makes the safe copies a routine tool queued (R32, R33); it
+   *  states the copies and the files still queued after it. */
   async renderBatch({ limit = 20 } = {}) {
     try {
+      this.#keep("render", { last: this.now() });
       /* DEC-49 REGION is-renderer-bound */
       if (!this.#scannerBinding()) return refusal("RENDERER_ABSENT", "No safe-view maker is bound beside this copy. Nothing was rendered.");
       /* END DEC-49 REGION is-renderer-bound */
@@ -747,12 +821,13 @@ export class FileSafety {
       const out = { rendered: 0, failed: 0, none: 0, data: 0 };
       for (const row of this.#rows(`SELECT * FROM fs_files WHERE render_state = 'queued' ORDER BY queued_at, capture_sha LIMIT ?`, lim))
         out[await this.#render(row)]++;
-      const copies = { made: 0, failed: 0 };
+      const copies = { made: 0, failed: 0, queued: 0 };
       const tool = this.#routineTools("cdr")[0];
       if (tool) for (const c of this.#rows(`SELECT * FROM fs_copies WHERE state = 'queued' ORDER BY queued_at LIMIT ?`, lim)) {
         const r = await this.#makeCopy(c.capture_sha, tool);
         if (r === "done" || r === "withheld") copies.made++; else copies.failed++;
       }
+      copies.queued = Number(this.#one(`SELECT COUNT(*) AS n FROM fs_copies WHERE state = 'queued'`).n);
       const remaining = Number(this.#one(`SELECT COUNT(*) AS n FROM fs_files WHERE render_state = 'queued'`).n);
       return { ok: true, ...out, copies, remaining };
     } catch { return refusal("RENDERER_ABSENT", "The render queue could not be read. Nothing was rendered."); }
@@ -778,6 +853,8 @@ export class FileSafety {
       if (!this.#scannerBinding()) return refusal("SCANNER_ABSENT", "No scanner is bound beside this copy. No note was written.");
       /* END DEC-49 REGION is-scanner-bound */
       const now = Number.isFinite(Date.parse(at)) ? Date.parse(at) : this.now();
+      /* R39: the run is kept first, so a batch the scanner refuses still counts as run (its files retried a poll later) */
+      this.#keep("scan", { last: now, remaining: 0 });
       const due = this.#due(now);
       const batch = due.slice(0, clamp(limit, SCAN_BATCH_MAX, SCAN_BATCH_MAX));
       const out = { scanned: 0, found: 0, not_scanned: 0 };
@@ -805,7 +882,9 @@ export class FileSafety {
           }
         }
       }
-      return { ok: true, ...out, remaining: Math.max(0, due.length - batch.length) };
+      const remaining = Math.max(0, due.length - batch.length);
+      this.#keep("scan", { last: now, remaining });
+      return { ok: true, ...out, remaining };
     } catch { return refusal("SCANNER_UNREACHABLE", "The scan batch could not be run. No note was written."); }
   }
 
@@ -843,6 +922,8 @@ export class FileSafety {
     return admin ? null : notAnAdmin(by ?? null, act);
   }
   static #handlingDigest(handling) { return sha256HexSync(canonicalJson(handling)); }
+  /* R27, R28 (N777): the settings an entry's adapter reads, as `file-scanner` R19 lists them. */
+  static #configOf(d) { return d && Array.isArray(d.config) ? d.config : []; }
   static #toolOut(r) {
     return { tool_id: r.tool_id, provider_id: r.provider_id, kinds: parse(r.kinds, []), use: r.use, state: r.state,
              handling: parse(r.handling, {}), handling_digest: r.handling_digest, monthly_limit: r.monthly_limit,
@@ -865,13 +946,13 @@ export class FileSafety {
     this.sql.exec(`INSERT INTO fs_tool_usage (tool_id, month, used) VALUES (?, ?, 1)
                    ON CONFLICT(tool_id, month) DO UPDATE SET used = used + 1`, tool.tool_id, monthOf(this.now()));
   }
-  #event(toolId, event) {
-    this.sql.exec(`INSERT INTO fs_tool_events (tool_id, event, at) VALUES (?, ?, ?)`, toolId, event, iso(this.now()));
+  #event(toolId, event, reason = null) {
+    this.sql.exec(`INSERT INTO fs_tool_events (tool_id, event, at, reason) VALUES (?, ?, ?, ?)`, toolId, event, iso(this.now()), reason);
   }
   /* R31: a tool that did not honour its private mode is switched off, for the administrators' notice. */
   #switchOff(tool, reason) {
     this.sql.exec(`UPDATE fs_tools SET state = 'off', off_reason = ? WHERE tool_id = ?`, reason, tool.tool_id);
-    this.#event(tool.tool_id, "switched_off");
+    this.#event(tool.tool_id, "switched_off", reason);
   }
   /* R21's tool spec (`file-scanner`), its credentials read from `credentials` for this call only; null when they
      cannot be read. No member and no file is in it (R23). */
@@ -899,7 +980,8 @@ export class FileSafety {
     if (bar) return bar;
     return { ok: true,
       offered: PROVIDERS.map((d) => ({ provider_id: d.provider_id, vendor: d.vendor, product: d.product, kinds: d.kinds,
-        transport: d.transport, reach: d.reach, template: !!d.template, credentials: d.credentials, handling: d.handling,
+        transport: d.transport, reach: d.reach, template: !!d.template, credentials: d.credentials,
+        config: FileSafety.#configOf(d).map((f) => ({ name: f.name, label: f.label, required: f.required === true })), handling: d.handling,
         handling_digest: FileSafety.#handlingDigest(d.handling), licence_note: d.licence_note ?? null,
         source_urls: d.source_urls, read_on: d.read_on })),
       refused: REFUSED_PROVIDERS.map((r) => ({ provider_id: r.provider_id, reason: r.reason,
@@ -941,6 +1023,15 @@ export class FileSafety {
       if (!resolved.ok) return refusal(FILE_SAFETY_CHECKS[resolved.code] ? resolved.code : "DESCRIPTOR_MALFORMED",
         "file-scanner's R19 refuses the tool's description.", { provider_id: id, ...(resolved.field ? { field: resolved.field } : {}) });
       /* END DEC-49 REGION is-descriptor-valid */
+      /* DEC-49 REGION is-config-named */
+      const fields = FileSafety.#configOf(base);
+      const empty = (v) => v === undefined || v === null || (typeof v === "string" && !v.trim())
+        || (Array.isArray(v) && !v.length) || (typeof v === "object" && !Array.isArray(v) && !Object.keys(v).length);
+      const absent = fields.find((f) => f.required === true && empty(cfg[f.name]));
+      if (absent) return refusal("CONFIG_MISSING", "A setting the tool's entry names as required was not given.", { provider_id: id, field: absent.name });
+      const stray = Object.keys(cfg).find((k) => !fields.some((f) => f.name === k));
+      if (stray !== undefined) return refusal("CONFIG_UNKNOWN", "A setting was given that the tool's entry does not name.", { provider_id: id, field: stray });
+      /* END DEC-49 REGION is-config-named */
       const d = resolved.descriptor;
       const digest = FileSafety.#handlingDigest(d.handling);
       /* DEC-49 REGION is-handling-shown */
@@ -1010,6 +1101,13 @@ export class FileSafety {
       this.sql.exec(`UPDATE fs_tools SET state = ?, tested_at = ?, detail = ?, off_reason = NULL WHERE tool_id = ?`,
                     passed ? "on" : "test_failed", at, detail == null ? null : String(detail).slice(0, 300), tool.tool_id);
       this.#event(tool.tool_id, passed ? "test_passed" : "test_failed");
+      /* R41: a test asks a reputation tool's list again; R40: a tool switched on may give its batch work sooner */
+      this.sql.exec(`DELETE FROM fs_wakes WHERE key = ?`, `reputation:${tool.tool_id}`);
+      if (passed) {
+        const kinds = parse(tool.kinds, []);
+        if (kinds.includes("log_sink")) this.#arm("forward", () => this.forwardWake(this.now()));
+        if (kinds.includes("url_reputation")) this.#arm("reputation", () => this.reputationWake(this.now()));
+      }
       return { ok: true, tool_id: tool.tool_id, state: passed ? "on" : "test_failed", passed, detail: detail ?? null, tested_at: at };
     } catch { return refusal("SCANNER_UNREACHABLE", "The test could not be run. Nothing was changed."); }
   }
@@ -1030,16 +1128,18 @@ export class FileSafety {
     } catch { return refusal("NO_SUCH_TOOL", "The tool could not be removed. Nothing was changed.", { tool_id: toolId ?? null }); }
   }
 
-  /** R31: each add, test, removal and switch, for the administrators' notice; no file is named. */
+  /** R31: each add, test, removal and switch, for the administrators' notice; no file is named. `reason` is a switch
+   *  off's `off_reason`, else null; `cursor` the last event answered when more follow, else null. */
   securityToolEvents({ after = null, limit = LIST.default, viewer = undefined } = {}) {
     const bar = this.#adminBar(viewer, "reading the security tools' events");
     if (bar) return bar;
     const from = Number.isFinite(Number(after)) && after !== null && after !== "" ? Number(after) : 0;
-    const lim = clamp(limit, LIST.default, LIST.max);
+    const lim = listLimit(limit);
     const rows = this.#rows(`SELECT * FROM fs_tool_events WHERE seq > ? ORDER BY seq LIMIT ?`, from, lim + 1);
-    const page = rows.slice(0, lim);
-    return { ok: true, events: page.map((e) => ({ tool_id: e.tool_id, event: e.event, at: e.at })),
-             cursor: page.length ? String(page[page.length - 1].seq) : (after ?? null), truncated: rows.length > lim };
+    const page = rows.slice(0, lim), more = rows.length > lim;
+    return { ok: true, events: page.map((e) => ({ tool_id: e.tool_id, event: e.event, at: e.at,
+                                                   reason: e.event === "switched_off" ? (e.reason ?? null) : null })),
+             cursor: more ? String(page[page.length - 1].seq) : null, truncated: more };
   }
 
   /* R4, R14: one outside scan of one file by one tool: a note per engine's verdict; `PRIVATE_MODE_NOT_HONOURED` switches
@@ -1086,6 +1186,7 @@ export class FileSafety {
       const checkId = `FSD-${[...crypto.getRandomValues(new Uint8Array(8))].map((x) => x.toString(16).padStart(2, "0")).join("")}`;
       this.sql.exec(`INSERT INTO fs_deeper (check_id, capture_sha, bundle_id, state, requested_at) VALUES (?, ?, ?, 'queued', ?)`,
                     checkId, sha, this.#home(sha), iso(this.now()));
+      this.#arm("deeper", () => this.deeperWake(this.now()));
       return { ok: true, captureSha: sha, state: "queued", check_id: checkId };
     } catch { return refusal("NO_OUTSIDE_TOOL", "The deeper check could not be asked for.", { captureSha: captureSha ?? null }); }
   }
@@ -1206,24 +1307,41 @@ export class FileSafety {
     return { check_id: row.check_id, captureSha: sha, result, note_id: noteId, releases };
   }
 
-  /** R36: the scheduler's wake while checks are queued or running: queued checks start, running sandboxes are asked. */
+  /** R36: the scheduler's wake while checks are queued or running: queued checks start, running sandboxes are asked.
+   *  Checks that cannot be read answer DEEPER_CHECKS_UNREADABLE, starting and asking nothing. */
   async deeperBatch({ limit = 20 } = {}) {
+    const lim = clamp(limit, 20, SCAN_BATCH_MAX);
+    let queued, running;
     try {
-      const lim = clamp(limit, 20, SCAN_BATCH_MAX);
-      const out = { started: 0, polled: 0, done: [] };
-      for (const q of this.#rows(`SELECT * FROM fs_deeper WHERE state = 'queued' ORDER BY requested_at LIMIT ?`, lim)) {
+      this.#keep("deeper", { last: this.now(), unreadable: false });
+      /* DEC-49 REGION is-deeper-readable */
+      queued = this.#rows(`SELECT * FROM fs_deeper WHERE state = 'queued' ORDER BY requested_at LIMIT ?`, lim);
+      running = this.#rows(`SELECT * FROM fs_deeper WHERE state = 'running' ORDER BY requested_at LIMIT ?`, lim);
+      for (const r of [...queued, ...running]) if (!Array.isArray(JSON.parse(r.pending)) || !Array.isArray(JSON.parse(r.checks))) throw new Error("unreadable");
+      /* END DEC-49 REGION is-deeper-readable */
+    } catch {
+      this.#keep("deeper", { last: this.now(), unreadable: true });
+      return refusal("DEEPER_CHECKS_UNREADABLE", "The deeper checks could not be read. None was started or asked about.");
+    }
+    const out = { started: 0, polled: 0, done: [] };
+    try {
+      for (const q of queued) {
         const row = await this.#startDeeper(q);
         out.started++;
         if (!parse(row.pending, []).length) out.done.push(this.#finishDeeper(row));
       }
-      for (const q of this.#rows(`SELECT * FROM fs_deeper WHERE state = 'running' ORDER BY requested_at LIMIT ?`, lim)) {
+      for (const q of running) {
         const { row, polled } = await this.#pollDeeper(q);
         out.polled += polled;
         if (!parse(row.pending, []).length) out.done.push(this.#finishDeeper(row));
       }
-      const left = (s) => Number(this.#one(`SELECT COUNT(*) AS n FROM fs_deeper WHERE state = ?`, s).n);
+      const left = (st) => Number(this.#one(`SELECT COUNT(*) AS n FROM fs_deeper WHERE state = ?`, st).n);
       return { ok: true, ...out, running: left("running"), queued: left("queued") };
-    } catch { return { ok: true, started: 0, polled: 0, done: [], running: null, queued: null }; }
+    } catch {
+      this.#keep("deeper", { last: this.now(), unreadable: true });
+      return refusal("DEEPER_CHECKS_UNREADABLE", "The deeper checks could not be read after some were started; the rest wait for the next round.",
+                     { started: out.started, polled: out.polled });
+    }
   }
 
   /* ===== the safe copy (R33) ===== */
@@ -1255,7 +1373,8 @@ export class FileSafety {
       customMetadata: { derived: "true", of: sha, kind: "safe-copy", tool: tool.provider_id } });
     const type = r.headers.get("x-output-type") || r.headers.get("content-type") || "application/octet-stream";
     const removed = parse(r.headers.get("x-removed"), []);
-    const s = await this.#scanner("/scan", { store: this.store, targets: [{ capture_sha: copySha, parts: null }], area: "derived" });
+    /* R33 (N753): the copy is read where it is stored, `file-scanner` R2's derived area, named on the target */
+    const s = await this.#scanner("/scan", { store: this.store, targets: [{ capture_sha: copySha, parts: null, area: "derived" }] });
     const v = s.body && s.body.ok === true && Array.isArray(s.body.verdicts) && s.body.verdicts[0] ? s.body.verdicts[0]
       : { tool: "clamav", engine: "clamav", engine_version: "not reported", signatures: null, scanned_at: iso(this.now()), result: "not_scanned",
           findings: [], reason: s.unreachable ? "SCANNER_UNREACHABLE" : (s.body && s.body.code) || "SCANNER_UNREACHABLE" };
@@ -1321,11 +1440,24 @@ export class FileSafety {
     } catch { return null; }
   }
 
+  /* R35 (T37): the period the scheduler's wake forwards: from the end of the last period forwarded with `ok` (never more
+     than a day back; at the first, the previous whole UTC hour's start) to the current whole UTC hour's start. */
+  #ownPeriod() {
+    const to = Math.floor(this.now() / HOUR) * HOUR;
+    const kept = this.#kept("forward");
+    const end = kept && Number.isFinite(kept.end) ? kept.end : to - HOUR;
+    return { from: Math.max(end, to - 24 * HOUR), to };
+  }
+
   /** R35: one counts record for the period, keys exactly LOG_COUNT_KINDS (a figure that could not be read is absent,
-   *  never zero), sent to every `on` log tool. */
+   *  never zero), sent to every `on` log tool. With neither `from` nor `to` (the scheduler's wake) the period is this
+   *  module's own, its end kept once answered `ok`, and an empty period answers `record: null`, so none is sent twice. */
   async forwardSecurityCounts({ from = null, to = null } = {}) {
     try {
-      const f = Date.parse(from), t = Date.parse(to);
+      const own = (from === null || from === undefined) && (to === null || to === undefined);
+      const period = own ? this.#ownPeriod() : null;
+      if (period && !(period.from < period.to)) return { ok: true, sent: [], failed: [], record: null };
+      const f = period ? period.from : Date.parse(from), t = period ? period.to : Date.parse(to);
       /* DEC-49 REGION is-forward-period */
       if (!Number.isFinite(f) || !Number.isFinite(t) || !(f < t)) return refusal("FORWARD_PERIOD_INVALID", "from and to are instants, from before to. Nothing was sent.");
       /* END DEC-49 REGION is-forward-period */
@@ -1350,8 +1482,132 @@ export class FileSafety {
         if (r.body && r.body.ok === true) sent.push(tool.tool_id);
         else failed.push({ tool_id: tool.tool_id, code: r.absent ? "SCANNER_ABSENT" : r.unreachable ? "SCANNER_UNREACHABLE" : (r.body && r.body.code) || "SERVICE_UNREACHABLE" });
       }
+      if (own) this.#keep("forward", { end: t });
       return { ok: true, sent, failed, record };
     } catch { return refusal("FORWARD_PERIOD_INVALID", "The counts could not be built. Nothing was sent."); }
+  }
+
+  /** R41: each `on` reputation tool's local list refreshed through `file-scanner` R26, its spec and credentials read for
+   *  that call only; a tool with no local list is skipped until it is tested again (R29). An in-plane call reached by
+   *  no route. Writes no note and names no file, address or member (R23); never throws. */
+  async refreshReputationLists({ at = null } = {}) {
+    try {
+      if (!this.#scannerBinding()) return refusal("SCANNER_ABSENT", "No scanner is bound beside this copy, so no list was refreshed.");
+      const when = Number.isFinite(msOf(at)) ? msOf(at) : this.now();
+      const refreshed = [], failed = [], skipped = [];
+      for (const tool of this.#onTools("url_reputation")) {
+        const key = `reputation:${tool.tool_id}`, kept = this.#kept(key) || {};
+        if (kept.no_local_list) { skipped.push(tool.tool_id); continue; }
+        const spec = await this.#spec(tool);
+        if (!spec) { failed.push({ tool_id: tool.tool_id, code: "CREDENTIALS_UNAVAILABLE" }); this.#keep(key, { ...kept, tried: when }); continue; }
+        const r = await this.#scanner("/provider/refresh", { tool: spec });
+        const b = r.body || null;
+        if (b && b.ok === true) {
+          refreshed.push({ tool_id: tool.tool_id, list_version: b.list_version ?? null, fetched_at: b.fetched_at ?? null });
+          this.#keep(key, { ok_at: when, tried: when });
+        } else if (b && b.code === "NO_LOCAL_LIST") {
+          skipped.push(tool.tool_id);
+          this.#keep(key, { ...kept, no_local_list: true });
+        } else {
+          failed.push({ tool_id: tool.tool_id, code: r.unreachable ? "SCANNER_UNREACHABLE" : (b && (b.code || b.error)) || "SERVICE_UNREACHABLE" });
+          this.#keep(key, { ...kept, tried: when });
+        }
+      }
+      return { ok: true, refreshed, failed, skipped };
+    } catch { return { ok: true, refreshed: [], failed: [], skipped: [] }; }
+  }
+
+  /* ===== its cadences (R39): each batch's due and wake, from its own kept instants; each writes nothing ===== */
+
+  /* The batch's answer, remembered for R40's "sooner than its last answer". */
+  #answer(batch, at) { this.#answered.set(batch, at); return at; }
+
+  /** R39: scanBatch's instant. Null with no scanner bound or no file held; `now` while the last batch left files; else
+   *  the earliest a file falls due (R4), a file already due at the last batch (sent and not resolved, or the batch
+   *  refused) no sooner than a poll after it, so none is retried at every wake. */
+  scanWake(now) {
+    try {
+      const n = msOf(now);
+      if (!Number.isFinite(n) || !this.#scannerBinding()) return this.#answer("scan", null);
+      const kept = this.#kept("scan");
+      if (kept && Number(kept.remaining) > 0) return this.#answer("scan", n);
+      const due = this.#due(Infinity);
+      if (!due.length) return this.#answer("scan", null);
+      const lastRun = kept && Number.isFinite(kept.last) ? kept.last : null;
+      const at = Math.min(...due.map((d) => {
+        const since = Number.isFinite(d.since) ? d.since : n;
+        return lastRun !== null && since <= lastRun ? Math.max(since, lastRun + FILE_SAFETY_POLL_MS) : since;
+      }));
+      return this.#answer("scan", Math.max(n, at));
+    } catch { return null; }
+  }
+
+  /** R39: renderBatch's instant. Null while no file's view and no safe copy is queued; else the later of `now` and the
+   *  last batch plus FILE_SAFETY_POLL_MS. */
+  renderWake(now) {
+    try {
+      const n = msOf(now);
+      if (!Number.isFinite(n)) return this.#answer("render", null);
+      const views = this.#one(`SELECT 1 AS x FROM fs_files WHERE render_state = 'queued' LIMIT 1`);
+      const copies = this.#one(`SELECT 1 AS x FROM fs_copies WHERE state = 'queued' LIMIT 1`);
+      if (!views && !copies) return this.#answer("render", null);
+      const kept = this.#kept("render");
+      return this.#answer("render", kept && Number.isFinite(kept.last) ? Math.max(n, kept.last + FILE_SAFETY_POLL_MS) : n);
+    } catch { return null; }
+  }
+
+  /** R39: deeperBatch's instant. Null while no check is queued or running; else the earliest of the last batch plus
+   *  FILE_SAFETY_POLL_MS for a queued check and each running sandbox's next poll, never before `now`; while the checks
+   *  cannot be read, the last batch plus FILE_SAFETY_POLL_MS. */
+  deeperWake(now) {
+    const n = msOf(now);
+    if (!Number.isFinite(n)) return this.#answer("deeper", null);
+    const kept = this.#kept("deeper");
+    const poll = kept && Number.isFinite(kept.last) ? kept.last + FILE_SAFETY_POLL_MS : n;
+    try {
+      if (kept && kept.unreadable) return this.#answer("deeper", Math.max(n, poll));
+      const rows = this.#rows(`SELECT state, pending FROM fs_deeper WHERE state IN ('queued', 'running')`);
+      if (!rows.length) return this.#answer("deeper", null);
+      const instants = [];
+      for (const r of rows) {
+        if (r.state === "queued") { instants.push(poll); continue; }
+        const pending = JSON.parse(r.pending);
+        if (!Array.isArray(pending) || !pending.length) { instants.push(poll); continue; }
+        for (const p of pending) instants.push(Number.isFinite(Number(p.next_at)) ? Number(p.next_at) : poll);
+      }
+      return this.#answer("deeper", Math.max(n, Math.min(...instants)));
+    } catch { return this.#answer("deeper", Math.max(n, poll)); }
+  }
+
+  /** R39: forwardSecurityCounts' instant. Null while no log tool is on; else the start of the first whole UTC hour after
+   *  the end of the last period forwarded with `ok` (at the first, the current hour's start). */
+  forwardWake(now) {
+    try {
+      const n = msOf(now);
+      if (!Number.isFinite(n) || !this.#onTools("log_sink").length) return this.#answer("forward", null);
+      const kept = this.#kept("forward");
+      if (!kept || !Number.isFinite(kept.end)) return this.#answer("forward", Math.floor(n / HOUR) * HOUR);
+      return this.#answer("forward", Math.floor(kept.end / HOUR) * HOUR + HOUR);
+    } catch { return null; }
+  }
+
+  /** R39: refreshReputationLists' instant. Null while no reputation tool with a local list is on; else, for each, its
+   *  last refresh that answered ok plus REPUTATION_REFRESH_MS, or `now` when none has (a tool whose last try failed no
+   *  sooner than a poll after that try), the earliest. */
+  reputationWake(now) {
+    try {
+      const n = msOf(now);
+      if (!Number.isFinite(n)) return this.#answer("reputation", null);
+      const instants = [];
+      for (const tool of this.#onTools("url_reputation")) {
+        const kept = this.#kept(`reputation:${tool.tool_id}`) || {};
+        if (kept.no_local_list) continue;
+        let at = Number.isFinite(kept.ok_at) ? kept.ok_at + REPUTATION_REFRESH_MS : n;
+        if (Number.isFinite(kept.tried) && kept.tried !== kept.ok_at) at = Math.max(at, kept.tried + FILE_SAFETY_POLL_MS);
+        instants.push(at);
+      }
+      return this.#answer("reputation", instants.length ? Math.max(n, Math.min(...instants)) : null);
+    } catch { return null; }
   }
 }
 
@@ -1397,7 +1653,8 @@ export function fileSafetyOps(fs, url, body, env) {
     renderbatch: () => fs.renderBatch({ limit: b.limit ?? q("limit") ?? undefined }),
     deepercheck: () => fs.requestDeeperCheck({ captureSha: sha(), viewer: viewer() }),
     deeperbatch: () => fs.deeperBatch({ limit: b.limit ?? q("limit") ?? undefined }),
-    scanfindings: () => fs.scanFindings({ after: q("after") ?? b.after ?? null, limit: q("limit") ?? b.limit ?? undefined, viewer: viewer() }),
+    scanfindings: () => fs.scanFindings({ after: q("after") ?? b.after ?? null, since: q("since") ?? b.since ?? null,
+      limit: q("limit") ?? b.limit ?? undefined, viewer: viewer() }),
     releasescanhold: () => fs.releaseScanHold({ captureSha: sha(), by: q("by"), reason: b.reason ?? null }),
     findingkind: () => ({ ok: true, ...findingKind(q("name") ?? b.name ?? null) }),
     securitytoolcatalogue: () => fs.securityToolCatalogue({ viewer: viewer() }),
