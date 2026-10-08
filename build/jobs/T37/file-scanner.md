@@ -73,3 +73,19 @@ bundler (its test): bio-plane/test/system/fleetbundles.test.mjs:124 still expect
 ## J2 · COMPLETE
 
 T37-5 applied: R2 (area "derived" read from ${store}/derived/<sha>, checked and answered as a capture; any other area BAD_TARGET; /scan, /render and the outside tools' routes), R5 (TOOL_ADDRESS_HAS_CREDENTIAL), R10 (docker.io/civicos/file-scanner-{scanner,renderer}, marker and wrangler.jsonc, digests unpublished), R19/R21/R29 (config [{name,label,required}] on every descriptor and template, CONFIG_MISSING naming the field, unnamed fields dropped and never sent, /providers answers the lists). Also fixed: a template's non-list engine_family threw (now DESCRIPTOR_MALFORMED), and the renderer's fallback bounds now come from limits.mjs. Tests 60/0/0 skip (ClamAV, LibreOffice, Poppler installed locally). Checks: format, architecture, coverage (31/31), ownership (17 files): 0 failures each. One red outside my module: bundler's fleetbundles.test.mjs:124 (my REPORT J1). Promotion (T37-7): no row I found carries a code this job renamed; CREDENTIAL_IN_ADDRESS stays admission's C-38.10. One reading to confirm: R21's 'a field the list does not name is never sent' is met by dropping it; refusing it by name (CONFIG_UNKNOWN) is file-safety R28's. P6: 2,475 source lines (2,413 by the same count at the opening), tests 1,777. Record: build/jobs/T37/file-scanner.md, Completion (T37-5).
+
+## Re-opened (B2, B3)
+
+- **B2.** Merged `tranche/T37` (bundler T37-3, K2174) into this branch. None of the files I read changed except the mailboxes and `build/requirements/bundler.md`. Regenerated my bundle against it.
+- **B3 (K2175).** Each generic template's `config` now marks both `engine_family` and `handling` required: icap, syslog-tls and https-webhook. Before, `engine_family` was required only for icap, a scan template. `host` and `region` were never `config` fields, and a test now holds that.
+
+  My reading: the adapter settings a template's adapter reads stay in its list as optional fields. These are `service` and `tls` (icap), `path` (webhook), and `source_urls`, the statement's sources, which `resolveDescriptor` reads. So file-safety R28's `CONFIG_UNKNOWN` refuses only what is outside each list.
+
+  The test specs for syslog-tls and https-webhook now state an engine family.
+- **Tests:** 60 pass, 0 fail, 0 skipped.
+- **Checks:** format, architecture and coverage (31/31) each 0 failures; ownership 18 files, 0 failures.
+- **`fleetbundles`:** still 1 fail. Two things are in it:
+  - **bundler's line 124**, my J1, unchanged.
+  - **the plane's bundle, now stale.** `bio-plane/dist/bio-plane.bundled.mjs` (`not_product`, BOB's at layer close, mechanics §14) imports `file-scanner/src/providers/catalogue.mjs` and `descriptor.mjs`, so this job's change stales it. Other L1 changes on the tranche (`src/docx.mjs`, `src/record-grammar/labels.mjs`) stale it too. I do not write it.
+
+Size (session_01PZFJ33yTU9MSNkxXuSiLhJ): test runs 17, module lines 2476
