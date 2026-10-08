@@ -1437,10 +1437,12 @@ export class Credentials {
   }
 
   /* R35's choice without unsealing: which account serves an active member's act now, 'member', 'group' or null, and
-     the switches that govern it (R25, R37). */
+     the switches that govern it (R25, R37). (T38; K2275) A member's own sign-in (R43) serves at level 'member' with no
+     switch of its own: R25's belong to a reference and R37's to the group key, so both read off for it. */
   #servingAccount(id) {
     const own = this.#reference(id, "suggestions, standing");
     if (own) return { level: "member", suggestions: !!own.suggestions, standing: !!own.standing };
+    if (this.#connected(id)) return { level: "member", signin: true, suggestions: false, standing: false };
     const g = this.#groupKeyFacts();
     return g.on ? { level: "group", suggestions: g.suggestions, standing: g.standing } : null;
   }
@@ -1555,8 +1557,10 @@ export class Credentials {
     return { ok: true, token, expires };
   }
 
-  /* R27: at the member's own act under their own live session; refused NO_ACCOUNT when no account serves them (R35),
-     and GROUP_KEY_NOTICE_DUE when the group key would serve them and they have not read its notice (R36). */
+  /* R27: at the member's own act under their own live session; refused NO_ACCOUNT when no account serves them (R35:
+     no reference of their own, not connected through their subscription, and the group key not held or off; T38,
+     K2275), and GROUP_KEY_NOTICE_DUE when the group key would serve them and they have not read its notice (R36). A
+     member served by their own sign-in is granted, no notice asked. */
   async aiGrantMint({ member = null, by = null, session = null } = {}) {
     const bar = this.#accountBar(member, by);
     if (bar) return bar;
@@ -1577,7 +1581,8 @@ export class Credentials {
     return this.#mintGrant(id, sessionSha, Math.min(Date.now() + AI_GRANT_TTL_SECONDS * 1000, s.expires), "ask");
   }
 
-  /* R32: a standing question's grant, for `answers` R19 only (not routed): shaped as R27's, minted with no session. */
+  /* R32: a standing question's grant, for `answers` R19 only (not routed): shaped as R27's, minted with no session. A
+     member served by their own sign-in is refused STANDING_SWITCH_OFF: no switch governs it (T38; K2275, N796). */
   async aiGrantMintStanding({ member = null, question = null } = {}) {
     const id = Credentials.#memberOf(member);
     const refuse = (code, detail) => Credentials.#row(ACCOUNT_CHECKS, code, detail, { member: id });
@@ -1591,7 +1596,8 @@ export class Credentials {
     /* DEC-49 REGION is-standing-grant */
     if (!serving.standing)
       return refuse("STANDING_SWITCH_OFF", `standing questions are off for the ${serving.level === "group"
-        ? "group's key" : "member's own account"}, which would serve this one. Nothing was minted.`);
+        ? "group's key" : serving.signin ? "member's own sign-in, which has no standing switch" : "member's own account"}, `
+        + "which would serve this one. Nothing was minted.");
     if (typeof question !== "string" || question.trim() === "")
       return refuse("NO_QUESTION", "no standing question was named. Nothing was minted.");
     /* END DEC-49 REGION is-standing-grant */

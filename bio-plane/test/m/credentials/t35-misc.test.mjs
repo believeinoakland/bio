@@ -107,7 +107,7 @@ test("R43 subscriptionConnected records that an active member is connected, with
   assert.ok(!Object.keys(w.ops()).some((op) => op === "subscriptionconnected"), "reached by no route");
 });
 
-test("R43 R23 accountReferenceState answers it to the member alone as subscription {connected, since}; subscriptionDisconnect is the member's own act (R22's refusals); since T38 accountFor reads it (R35)", async () => {
+test("R43 R23 accountReferenceState answers it to the member alone as subscription {connected, since}; subscriptionDisconnect is the member's own act (R22's refusals); since T38 accountFor and the ask grant read it (R35, R27)", async () => {
   const w = await world().group("ann", "bob");
   const since = w.c.subscriptionConnected({ member: "ann" }).since;
   assert.deepEqual(w.c.accountReferenceState({ member: "ann", viewer: "ann" }).subscription, { connected: true, since });
@@ -118,7 +118,7 @@ test("R43 R23 accountReferenceState answers it to the member alone as subscripti
     { ok: true, kind: "signin", level: "member", member: "ann" });
   assert.equal((await w.c.accountFor({ member: "bob", act: { kind: "ask", member: "bob" } })).reason, "NO_ACCOUNT");
   const s = (await w.c.login({ role: "member:ann", password: PASSWORD("ann") })).token;
-  assert.equal((await w.c.aiGrantMint({ member: "ann", by: "ann", session: s })).reason, "NO_ACCOUNT");
+  assert.equal((await w.c.aiGrantMint({ member: "ann", by: "ann", session: s })).ok, true, "T38: the ask grant too (R27, K2275)");
   const before = w.snapshot();
   for (const [by, code] of [[null, "MACHINE_CANNOT_HOLD_ACCOUNT"], ["class:ai", "MACHINE_CANNOT_HOLD_ACCOUNT"],
                             ["bob", "NOT_YOUR_ACCOUNT"], ["second", "NOT_YOUR_ACCOUNT"], ["admin", "NOT_YOUR_ACCOUNT"]])
