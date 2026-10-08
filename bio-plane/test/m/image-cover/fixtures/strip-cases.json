@@ -1,0 +1,617 @@
+{
+ "reference": {
+  "pillow": "12.3.0",
+  "libjpeg_turbo": "3.1.4.1",
+  "zlib": "1.3",
+  "libwebp": "1.6.0",
+  "openjpeg": "2.5.4"
+ },
+ "cases": [
+  {
+   "file": "strip-baseline-o6.jpg",
+   "format": "jpeg",
+   "mode": "RGBA",
+   "width": 157,
+   "height": 203,
+   "pixels_sha256": "a71192043624217a1c99d36e4b712580b5d6b42a460dce0e81aecd70cdd8b7f9",
+   "orientation": 6,
+   "coded": [
+    [
+     1878,
+     1947
+    ],
+    [
+     1947,
+     2016
+    ],
+    [
+     2016,
+     2035
+    ],
+    [
+     2035,
+     2068
+    ],
+    [
+     2068,
+     2251
+    ],
+    [
+     2251,
+     2284
+    ],
+    [
+     2284,
+     2467
+    ],
+    [
+     2467,
+     2473
+    ],
+    [
+     2473,
+     13566
+    ],
+    [
+     13566,
+     13568
+    ]
+   ],
+   "secrets": [
+    "TestCam",
+    "Phone One",
+    "PhoneOS",
+    "2026:10:08",
+    "PersonInImage",
+    "Passerby",
+    "member 7",
+    "face-region",
+    "ICC_PROFILE",
+    "trailing"
+   ]
+  },
+  {
+   "file": "strip-progressive-o3.jpg",
+   "format": "jpeg",
+   "mode": "RGBA",
+   "width": 150,
+   "height": 101,
+   "pixels_sha256": "1fa8651e5c08eb36a986f1fd88f9217ed4aea349b0321f0541ec0e8d356a9ba0",
+   "orientation": 3,
+   "coded": [
+    [
+     1931,
+     2000
+    ],
+    [
+     2000,
+     2069
+    ],
+    [
+     2069,
+     2088
+    ],
+    [
+     2088,
+     2116
+    ],
+    [
+     2116,
+     2144
+    ],
+    [
+     2144,
+     2392
+    ],
+    [
+     2392,
+     2432
+    ],
+    [
+     2481,
+     2738
+    ],
+    [
+     2738,
+     2777
+    ],
+    [
+     2777,
+     2902
+    ],
+    [
+     2902,
+     2941
+    ],
+    [
+     2941,
+     3058
+    ],
+    [
+     3058,
+     3102
+    ],
+    [
+     3102,
+     3309
+    ],
+    [
+     3309,
+     3349
+    ],
+    [
+     3349,
+     4221
+    ],
+    [
+     4221,
+     4288
+    ],
+    [
+     4288,
+     4328
+    ],
+    [
+     4328,
+     4509
+    ],
+    [
+     4509,
+     4546
+    ],
+    [
+     4546,
+     4715
+    ],
+    [
+     4715,
+     4756
+    ],
+    [
+     4756,
+     6788
+    ],
+    [
+     6788,
+     6790
+    ]
+   ],
+   "secrets": [
+    "TestCam",
+    "Phone One",
+    "PhoneOS",
+    "2026:10:08",
+    "PersonInImage",
+    "Passerby",
+    "member 7",
+    "face-region",
+    "ICC_PROFILE",
+    "trailing",
+    "between scans"
+   ]
+  },
+  {
+   "file": "strip-cmyk-adobe.jpg",
+   "format": "jpeg",
+   "mode": "CMYK",
+   "width": 64,
+   "height": 48,
+   "pixels_sha256": "d96f7198315bfe187301d831d0bc60c393c72f873681aaa0fe6a360c706c0b26",
+   "orientation": 1,
+   "coded": [
+    [
+     30,
+     99
+    ],
+    [
+     99,
+     121
+    ],
+    [
+     121,
+     154
+    ],
+    [
+     154,
+     337
+    ],
+    [
+     337,
+     3627
+    ],
+    [
+     3627,
+     3629
+    ]
+   ],
+   "secrets": [
+    "member 7",
+    "trailing"
+   ],
+   "keeps_adobe": true
+  },
+  {
+   "file": "strip-grey-jfif-thumb.jpg",
+   "format": "jpeg",
+   "mode": "L",
+   "width": 97,
+   "height": 131,
+   "pixels_sha256": "c8d6d4b4e001b212e9ad11e4d772532fcfcefca01f0531e6584bddee45847627",
+   "orientation": 1,
+   "coded": [
+    [
+     840,
+     909
+    ],
+    [
+     909,
+     922
+    ],
+    [
+     922,
+     951
+    ],
+    [
+     951,
+     1015
+    ],
+    [
+     1015,
+     3586
+    ],
+    [
+     3586,
+     3588
+    ]
+   ],
+   "secrets": [],
+   "keeps_jfif": true,
+   "no_thumbnail": true
+  },
+  {
+   "file": "strip-interlaced-rgba-o3.png",
+   "format": "png",
+   "mode": "RGBA",
+   "width": 61,
+   "height": 43,
+   "pixels_sha256": "548c5946481012660cd7fc0ef80a5c72d6e7a0693052722c7ebd119523458fc6",
+   "orientation": 3,
+   "coded": [
+    [
+     8,
+     33
+    ],
+    [
+     763,
+     1275
+    ],
+    [
+     1275,
+     1787
+    ],
+    [
+     1787,
+     2299
+    ],
+    [
+     2299,
+     2811
+    ],
+    [
+     2811,
+     3323
+    ],
+    [
+     3323,
+     3835
+    ],
+    [
+     3835,
+     4347
+    ],
+    [
+     4347,
+     4859
+    ],
+    [
+     4859,
+     5371
+    ],
+    [
+     5371,
+     5883
+    ],
+    [
+     5883,
+     6395
+    ],
+    [
+     6395,
+     6453
+    ]
+   ],
+   "secrets": [
+    "TestCam",
+    "PhoneOS",
+    "PersonInImage",
+    "member 7",
+    "trailing"
+   ]
+  },
+  {
+   "file": "strip-interlaced-grey16.png",
+   "format": "png",
+   "mode": "I",
+   "width": 33,
+   "height": 29,
+   "pixels_sha256": "51ee9a41ed72f31bebb34fd7accf5cc1a08982b2c1f3c7ac1b0e76d9a66c049d",
+   "orientation": 1,
+   "coded": [
+    [
+     8,
+     33
+    ],
+    [
+     759,
+     1271
+    ],
+    [
+     1271,
+     1765
+    ]
+   ],
+   "secrets": [
+    "TestCam",
+    "PhoneOS",
+    "member 7",
+    "trailing"
+   ]
+  },
+  {
+   "file": "strip-palette-o8.png",
+   "format": "png",
+   "mode": "RGBA",
+   "width": 30,
+   "height": 40,
+   "pixels_sha256": "84d664ec333c553c1bbf06690972c85d2ed51a2a5ba1ccfc0c72941bbc25f894",
+   "orientation": 8,
+   "coded": [
+    [
+     8,
+     33
+    ],
+    [
+     745,
+     949
+    ],
+    [
+     949,
+     977
+    ],
+    [
+     990,
+     1502
+    ],
+    [
+     1502,
+     1549
+    ]
+   ],
+   "secrets": [
+    "TestCam",
+    "member 7",
+    "trailing"
+   ]
+  },
+  {
+   "file": "strip-clean.png",
+   "format": "png",
+   "mode": "RGBA",
+   "width": 20,
+   "height": 10,
+   "pixels_sha256": "84219c489316f64e50fd2bbc9d07290b9932169cb96aee6c65213181a3c154eb",
+   "orientation": 1,
+   "coded": [
+    [
+     8,
+     33
+    ],
+    [
+     33,
+     320
+    ]
+   ],
+   "secrets": [],
+   "unchanged": true
+  },
+  {
+   "file": "strip-one-frame.gif",
+   "format": "gif",
+   "mode": "RGBA",
+   "width": 48,
+   "height": 36,
+   "pixels_sha256": "9db16e64b3e08bb9765d28902cb0911b262ae1e727c9ce2b593dce23f668419a",
+   "orientation": 1,
+   "coded": [
+    [
+     0,
+     109
+    ],
+    [
+     301,
+     309
+    ],
+    [
+     309,
+     1197
+    ]
+   ],
+   "secrets": [
+    "member 7",
+    "NETSCAPE",
+    "XMP Data",
+    "PersonInImage",
+    "face-region",
+    "trailing"
+   ]
+  },
+  {
+   "file": "strip-lossy-alpha-o6.webp",
+   "format": "webp",
+   "mode": "RGBA",
+   "width": 40,
+   "height": 50,
+   "pixels_sha256": "02d2f3acbba467f8678c0b5f58a847dbd2bfd94a04ac2d6eb7a4dbe626a22366",
+   "orientation": 6,
+   "coded": [
+    [
+     634,
+     670
+    ],
+    [
+     678,
+     1344
+    ]
+   ],
+   "secrets": [
+    "TestCam",
+    "PhoneOS",
+    "PersonInImage",
+    "trailing"
+   ]
+  },
+  {
+   "file": "strip-lossless-o6.webp",
+   "format": "webp",
+   "mode": "RGBA",
+   "width": 40,
+   "height": 50,
+   "pixels_sha256": "42a12d7f62dc3bb08e91a9e94a673074133b018823920acbded20393f94c5a88",
+   "orientation": 6,
+   "coded": [
+    [
+     634,
+     4232
+    ]
+   ],
+   "secrets": [
+    "TestCam",
+    "PhoneOS",
+    "PersonInImage",
+    "trailing"
+   ]
+  },
+  {
+   "file": "strip-tiled-icc.jp2",
+   "format": "jp2",
+   "mode": "RGBA",
+   "width": 64,
+   "height": 48,
+   "pixels_sha256": "5d31e9569b9b7ae83dd64c221fd6f6de7806578034637bdaa086d09bde55ea3c",
+   "orientation": 1,
+   "coded": [
+    [
+     1346,
+     3331
+    ],
+    [
+     3367,
+     5866
+    ],
+    [
+     5902,
+     7126
+    ],
+    [
+     7162,
+     7937
+    ]
+   ],
+   "secrets": [
+    "member 7",
+    "PersonInImage",
+    "Exif",
+    "OpenJPEG via",
+    "TestCam"
+   ]
+  },
+  {
+   "file": "strip-grey.j2k",
+   "format": "j2k",
+   "mode": "L",
+   "width": 40,
+   "height": 40,
+   "pixels_sha256": "4006ba07161e001504d1365e32ba5d67444a5b2d8cc1334258005ff7ff8e0196",
+   "orientation": 1,
+   "coded": [
+    [
+     218,
+     490
+    ],
+    [
+     526,
+     832
+    ],
+    [
+     868,
+     1064
+    ],
+    [
+     1100,
+     1338
+    ]
+   ],
+   "secrets": [
+    "member 7",
+    "OpenJPEG via",
+    "trailing"
+   ]
+  }
+ ],
+ "refusals": [
+  {
+   "file": "strip-refuse-animated.gif",
+   "code": "ANIMATED_IMAGE"
+  },
+  {
+   "file": "strip-refuse-animated.webp",
+   "code": "ANIMATED_IMAGE"
+  },
+  {
+   "file": "strip-refuse-animated.png",
+   "code": "ANIMATED_IMAGE"
+  },
+  {
+   "file": "strip-refuse.tif",
+   "code": "NOT_A_STRIPPABLE_FORMAT"
+  },
+  {
+   "file": "strip-refuse.bmp",
+   "code": "NOT_A_STRIPPABLE_FORMAT"
+  },
+  {
+   "file": "strip-refuse-truncated.jpg",
+   "code": "TRUNCATED_IMAGE_DATA"
+  },
+  {
+   "file": "strip-refuse-truncated.webp",
+   "code": "TRUNCATED_IMAGE_DATA"
+  },
+  {
+   "file": "strip-refuse-truncated.jp2",
+   "code": "TRUNCATED_IMAGE_DATA"
+  },
+  {
+   "file": "strip-refuse-truncated.gif",
+   "code": "TRUNCATED_IMAGE_DATA"
+  },
+  {
+   "file": "strip-refuse-crc.png",
+   "code": "IMAGE_DATA_CORRUPT"
+  },
+  {
+   "file": "strip-refuse-psot.j2k",
+   "code": "IMAGE_DATA_CORRUPT"
+  }
+ ]
+}

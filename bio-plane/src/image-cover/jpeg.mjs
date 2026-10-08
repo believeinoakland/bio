@@ -38,7 +38,7 @@ function fromDct(e) {
 }
 
 /** The orientation of the first EXIF APP1 before the scan; 1 when there is none. */
-function exifOrientation(d) {
+export function exifOrientation(d) {
   let p = 2;
   while (p + 4 <= d.length) {
     while (p < d.length && d[p] !== 0xff) p++;
