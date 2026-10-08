@@ -94,6 +94,11 @@ export function walkFacts(p, fn) {
   for (const s of ["weekend", "instrument_key"]) if (p[s]) fn(p[s], s);
   for (const s of ["computation", "fiscal_year", "law_ranks", "proceeding_kinds", "proceeding_flows", "identifier_schemes",
     "classification_schemes", "lawful_demands", "recurrences"]) each(p[s], s);
+  /* T37 (R70) */
+  (p.local_names || []).forEach((n, i) => {
+    fn(n, `local_names[${i}]`);
+    each(n.explanations, `local_names[${i}].explanations`); each(n.translations, `local_names[${i}].translations`);
+  });
 }
 /** The object at a walkFacts path. */
 walkFacts.at = (p, path) => path.split(/\.|\[|\]\.?/).filter(Boolean)
