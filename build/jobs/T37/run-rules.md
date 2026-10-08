@@ -21,3 +21,7 @@
 - `format`: 136 modules, 135 requirements files; 0 failures. `architecture run-rules`: 12 product files, 21 relative imports; 0 failures. `coverage run-rules`: 22 of 22 live requirement ids named by a test; 0 failures. `ownership run-rules tranche/T37`: 4 files changed; 0 failures.
 
 Size (session_01Dj7ZF9hyAftgEfQR75g64h): test runs 6, module lines 2051
+
+## J1 · REPORT
+
+agent-worker (T37-17, its R70: a to_language draft of 1–100 words): run-rules now exports TRANSLATION_DRAFT_MAX_WORDS = 100 (R22's 'at most 100 a draft', K2201) beside DRAFT_KINDS and draftMayRead; agent-worker can read the figure here rather than hold its own 100. An improvement, not a defect. No generated artifact made stale (skilldoctrine.mjs reads only DRAFT_MODE.mode).
