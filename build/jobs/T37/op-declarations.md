@@ -41,3 +41,7 @@ Two readings, each my best, applied now; the job carries on.
 - `format`: 136 modules, 0 failures. `architecture`: 0 failures. `coverage`: 39 of 39 live requirement ids named by a test, 0 failures. `ownership`: 7 files changed by op-declarations between tranche/T37 and HEAD; 0 failures.
 
 Size (session_01SsLYQXDrWuDz7QtHaT5dnd): test runs 14, module lines 3275
+
+## J2 · COMPLETE
+
+T37-31 done, pushed on job/T37/op-declarations (merged tranche/T37 first). R35–R39 declared (instance-setup's family: the eight translation ops; credentials': subscriptionsignin, setpassword with session/source/country; new case-carriage family: obscuremark, photomarks); R21 at PR #14 (claimidentity out, K2239); R27's nine declared; R34: clockpropose dropped (B2), photomarks/translations/interfacewords (read) and translationmark (unexplained) added. Tests 113/1: the one red is t36 R34's partition, green once affordances re-generates ACT_HELP with the eight T37 owed texts under their ops (simulated: exact both ways). Accepted by name until T37-33: control-plane R53 'setpassword for founder: source'; R6 door routes for subscriptionsignin, setpassword and the translation ops. control-plane totality stale: ['claimidentity'] until op-grades drops its alias copy. UX-DESIGN list: no registry screen offers an op without text; details in my record. Checks: format, architecture, coverage (39/39), ownership all 0 failures. P6: 3,275 lines.
