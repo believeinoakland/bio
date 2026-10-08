@@ -1,6 +1,6 @@
 # sources (T36)
 
-**Status** · session_017pZoLzvWRz5wh27zcPw5dD · depth 2 · WORKING · handled B1
+**Status** · session_017pZoLzvWRz5wh27zcPw5dD · depth 2 · COMPLETE · handled B1
 
 ## Job record (SOURCES #12, T36-12)
 
