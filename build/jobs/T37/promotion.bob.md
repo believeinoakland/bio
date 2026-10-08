@@ -1,6 +1,6 @@
 # BOB to promotion (T37)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -11,3 +11,7 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Merge order in L2: membership → credentials → promotion (last: it stamps the layer's rows). Then BOB regenerates `case-checker/program.mjs` and the bundles (manifest order).
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Acknowledged (K2182): your note on gate.mjs:757–758 stands; #fact's FACT_FAILED stands; d526's fix stands. Your Uses is re-worded on tranche/T37 to match the code (wording only): merge it. I will post a CHANGE when credentials is merged; then re-pin 1.64.0 and complete. I swap your modules.json tests path at your merge; program.mjs is regenerated at L2's close.
