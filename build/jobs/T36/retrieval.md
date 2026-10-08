@@ -2,6 +2,37 @@
 
 **Status** · session_013mwNsG3YAtaUow5u9nrCBL · depth 2 · WORKING · handled B3
 
+## Work
+
+**Read** · BOB's START measured the reading set at 752 KB, over 300 KB, so per (3): I read these whole myself: `build/requirements/retrieval.md`; layer 5's row of `build/layers.md`; the plan's "Rules at the opening", entry T36-18 and the L5 entries it depends on; K2092 and the rulings it cites (K1941, K1972, K1991, K2063, with K2112, K31, K1468, K1865). The code my entry changes: `findin.mjs` whole, and `index.mjs` 1–420 and 1080–1708 (imports, registrations, selections, the content axis, `findIn`, the factory and routes). The tests it changes: `findin.test.mjs`, `selections.test.mjs`, `fixture.mjs`. The used services named: events R49 (as amended by K2114), standards R49, money R24, people R36, content R6 (with its `extentRelation` and `canonicalExtent` code), extraction R70, office-readers R11 and R16 (with `docx.mjs`'s `tableCells` and `docxText`), reading-pipeline R28 and `textUnitsFor`, and membership R81 and R83. A worker read whole the rest of the module (`index.mjs` 420–1080, `checks`, `fields`, `frontier`, `levels`, `projection`, `schema`) and every other test file. It wrote a summary of about 2,300 words, each statement citing file and line. It found:
+- no other caller of `findIn`, `Finder` or the selection reads inside the module;
+- the exact-key-set tests on the route list (`projection.test.mjs`:265) and on the table list (`projection.test.mjs`:194, 217; `t33.test.mjs`:262), which this job leaves alone (no new op, no new table);
+- `SELECTION_CHECKS`' `where` naming `selectionResolve` (`checks.mjs`:55, :85), unchanged, since `selectionRead` is not an op and mints no new code;
+- `relations()`' view creation as the one write on a read path (`index.mjs`:353–374, R68's own).
+
+Nothing it left out mattered.
+
+**Applied** · T36-18:
+- **R73 `recorded`.** Every `findIn` match carries `recorded`. The items come from `events`, `standards`, `money` and `people`'s `recordedBy`, then each R76 read, in `MODULE_ORDER`; each read is called once per capture read, with `{captureSha, limit: 500, viewer}`. Items are kept where `content.extentRelation(match's extent or its table.extent, item extent)` is `same`, `narrower` or `wider`, each with `module, record, kind, field, extent, relation, by, at, withdrawn`. A truncated read sets `recorded_truncated`. The answer gains `recorded_read` and `recorded_not_read` (J1 (2), as B3 ruled), with the line `{module: null, why: "no later module's records were read: none registered"}` while nothing is registered. The reads are reached on the first find: in the plane every module is made at boot before retrieval, `plane/store.mjs`:167–195, on the same `ctx`. `recorders` may be handed in, as `entities` is.
+- **R73's `{selection}` scope** reads through `selectionRead`.
+- **R74 (N724).** A `.docx` table held in the reading's `cells` (keys whose cells all name one `doc-table`) is a held table. Its date or amount column is one item `{kind, table: {capture_sha, extent: {kind: "doc-table", table}, column, rows}, words: header, …}`. The paragraphs of that column's cells are not matched again (J1 (4)), and the other cells' paragraphs are matched as paragraphs. The run of a table's paragraphs cannot be located when its cells' lines are not one run of units in reading order: a nested table (its paragraphs fall between the outer cells', tested) or a vertically merged cell whose continuation holds text (`docx.mjs`:582 appends it to the first cell). There, a paragraph whose whole text is one of the column's lines is left out (N758). A whole-number `text` cell under a header naming a currency counts as an amount (B3). A `doc-table` unit, the older form, is skipped when the reading holds that table's cells. A sheet is read as before, through the shared column reader.
+- **R76** `registerRecordedBy(module, fn)` goes through `listenerRefusal`, the four names held already. A read that throws, refuses, answers a promise (rejection caught, never awaited, J1 (1)) or answers another shape is in `recorded_not_read` with why.
+- **R77** `selectionRead({handle, viewer, owner})`: `selectionResolve`'s answer at `report` (one shared `#selectionAnswer`), with no sweep, no touch and `expires` the selection's own. An expired unswept handle answers `NO_SUCH_SELECTION` and is left. It never throws: arguments that are not an object, and a selection that cannot be read, answer as not held.
+- **B2** (K2114): `tranche/T36` merged at 983ac4c04e. An item's `extent` as an object or a canonical string is read alike, and refusals are named by `code`.
+
+**Deferred** · none. **Found elsewhere** (J2 REPORT):
+- (a) `content`'s `extentRelation` evaluates neither `sheet-range` nor `doc-table` against their cells. A cell inside a range answers `disjoint`, two ranges `unreadable`, and a doc-table cell inside its table `unreadable`, against content R6 (`unreadable` only for a kind not in R1 or a missing coarse field). So a money fact recorded at one cell of a found column is not named on the column's result until content evaluates them.
+- (b) N758: `office-readers`' cells do not name their paragraphs.
+- (c) `answers`' `standingfind.test.mjs`:46 ("a refusal writes nothing") is red from this merge. Its `findWorld` stands in for the plane's boot with `w.retrieval.zone()` only, so the first find makes events, standards, money and people and their tables. With `w.retrieval.recordedReads();` beside `zone()` it passes 7/7 (checked on a scratch copy). That fixture is answers' (T36-23, L6).
+
+**Tests** · `node --test bio-plane/test/m/retrieval/`: tests 161, pass 161, fail 0. That includes the new `t36.test.mjs`, eight tests, each new arm named in its own test: R73 recorded ×3, R73/R76 not read, R76, R74 `.docx`, R77, R73/R77 selection scope. Users, mine against the base at fad9bc0616 over every test directory that names retrieval (54 modules): no new failure but (c). The others red on both are inherited reds 16 (progressions `order.test.mjs`) and 17 (op-declarations `t33`/`t35`). calculations 47/47 and answers 42/43 (c) re-run after the last change. Layer tests: none (manifest). The real four reads are not in the tranche yet; once each merges, its CHANGE gets a test through the real module.
+
+**Checks** · `format.mjs`: 135 modules, 134 requirements files; 0 failures. `architecture.mjs retrieval`: 29 product files, 113 relative imports; 0 failures. `coverage.mjs retrieval`: 77 of 77 live requirement ids named by a test; 0 failures. `ownership.mjs retrieval tranche/T36`: 0 failures. The `*(not yet met: T36)*` markers on R73, R74, R76, R77 are BOB's to clear at merge.
+
+**P6** · 3,484 lines in the module's source files (3,267 at the opening, +217), under about 4,000.
+
+Size (session_013mwNsG3YAtaUow5u9nrCBL): test runs 27, module lines 3484
+
 ## J1 · QUESTION
 
 Four readings I am building on (T36-18); answer only where you would have it otherwise.
