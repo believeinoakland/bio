@@ -195,6 +195,19 @@ export const ACCOUNT_CHECKS = Object.freeze({
       + 'and the material read to answer them, go to Anthropic under the group\'s API account. Confirm you have read '
       + 'it, then ask again. Nothing was sent.',
   }),
+  /* T36 (T36-7; DEC-172, K1957): keep-away's two refusals (R35, R51), the next free numbers of C-29 (C-29.30 is
+     admission's). New rows, awaiting promotion's stamp (T36-8). */
+  AI_KEPT_AWAY: Object.freeze({
+    check: 'C-29.31', where: at("#keptAway", "is-kept-away"),
+    translation: 'Your group keeps its material away from every assistant, so no assistant was used: not the group\'s '
+      + 'account and not your own. An administrator turned this on and gave the reason shown. If you think this '
+      + 'should change, ask an administrator. Nothing was sent.',
+  }),
+  NO_REASON: Object.freeze({
+    check: 'C-29.32', where: at("aiKeepAwaySet", "is-keep-away-reason"),
+    translation: 'Keeping the group\'s material away from every assistant needs a reason, which every member will '
+      + 'read: from 1 to 2,000 characters. Nothing was changed.',
+  }),
 });
 
 /* R29 (K1449): the group's keys for keyed outside services. */
@@ -240,8 +253,15 @@ export const SIGN_IN_CHECKS = Object.freeze({
       + 'fault in how your group\'s Civicsmith was built, not in the record.',
   }),
   SECURITY_PERIOD_INVALID: Object.freeze({
-    check: 'C-96.43', where: at("securityMap", "is-security-period"),
+    check: 'C-96.43', where: at("#periodRefusal", "is-security-period"),
     translation: 'The security map shows a period of up to 90 days within the last 90, from an earlier time to a '
       + 'later one. The period asked was not one of those. Nothing was changed. Choose another period.',
+  }),
+  /* T36 (T36-7; K1946 T3): R49's read when the counts cannot be read, the next free number of C-96. A new row, awaiting
+     promotion's stamp (T36-8). */
+  SECURITY_COUNTS_UNREADABLE: Object.freeze({
+    check: 'C-96.44', where: at("securityTotals", "is-security-counts-read"),
+    translation: 'The security counts could not be read just now, so none were given: they are missing, not zero. '
+      + 'Nothing was changed.',
   }),
 });

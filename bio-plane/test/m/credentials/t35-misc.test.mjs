@@ -193,14 +193,15 @@ test("R37 groupKeySwitches answers {on, suggestions, standing} for the group key
   assert.deepEqual(w.c.groupKeySwitches.call(broken), { on: false, suggestions: false, standing: false });
 });
 
-test("R38 R39 R43 R44 R45 R46 R47 T35's rows: the new refusals take the next free numbers of C-29 and C-96, each `where` naming its one site, frozen; one id per row across the module", () => {
+test("R38 R39 R43 R44 R45 R46 R47 R49 T35's rows, and T36's R49 row: the new refusals take the next free numbers of C-29 and C-96, each `where` naming its one site, frozen; one id per row across the module", () => {
   const W = (fn, region) => `src/credentials/index.mjs ${fn} > ${region}`;
   const want = {
     SIGN_IN_PAUSED: ["C-96.39", W("#paused", "is-sign-in-window")],
     NOT_SIGNED_IN: ["C-96.40", W("#notSignedIn", "is-session-live")],
     RECOVERY_REFUSED: ["C-96.41", W("#recoveryRefused", "is-recovery-code")],
     SECURITY_KIND_UNKNOWN: ["C-96.42", W("securityCount", "is-security-kind")],
-    SECURITY_PERIOD_INVALID: ["C-96.43", W("securityMap", "is-security-period")],
+    SECURITY_PERIOD_INVALID: ["C-96.43", W("#periodRefusal", "is-security-period")],   /* T36: one site for R45 and R49 */
+    SECURITY_COUNTS_UNREADABLE: ["C-96.44", W("securityTotals", "is-security-counts-read")],   /* T36: R49 */
   };
   assert.ok(Object.isFrozen(SIGN_IN_CHECKS));
   assert.deepEqual(Object.keys(SIGN_IN_CHECKS), Object.keys(want));
@@ -273,10 +274,11 @@ test("R48 the 17 sweep rows (DEC-149): each member-facing string says \"your gro
   /* index :822 */
   has((await w.c.accountReferenceSet({ member: "ann", kind: "oauth", secret: "sk", by: "ann" })).detail,
     "the kinds your group's Civicsmith holds are apikey and subscription.");
-  /* index :231, :237 (R4's SIGN_IN_REFUSED detail) */
+  /* index :231, :237 (R4's SIGN_IN_REFUSED detail), re-worded to need no name and address no one (K2089; D-57) */
   const refused = await w.c.login({ role: "member:nobody", password: "wrong-passphrase", source: "s" });
-  has(refused.detail, "Either your group's Civicsmith holds no active credential under that role");
-  has(refused.detail, "which roles hold a credential in your group's Civicsmith.");
+  has(refused.detail, "Either no active credential is held under that role");
+  has(refused.detail, "which roles hold a credential.");
+  assert.doesNotMatch(refused.detail, /\b(?:you|your|yours)\b/i, "D-57: it addresses no one");
   /* index :880, :1060, :1243: a sealed key that no longer opens */
   await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann", by: "ann" });
   await w.c.groupKeySet({ key: "sk-group", by: "admin" });
@@ -294,7 +296,7 @@ test("R48 the 17 sweep rows (DEC-149): each member-facing string says \"your gro
     "the key does not open under the seal secret of your group's Civicsmith, which has changed");
 });
 
-test("R48 no member- or founder-facing string this module answers calls the group's Civicsmith a copy, an instance, a plane or a server, nor its seal secret bound: every row's translation and every refusal's detail and remedy", async () => {
+test("R48 (T36: R29, R35, R49, R51 included) no member- or founder-facing string this module answers calls the group's Civicsmith a copy, an instance, a plane or a server, nor its seal secret bound: every row's translation and every refusal's detail and remedy", async () => {
   const w = await world().group("ann", "dee");
   await w.m.memberAdd({ memberId: "cal", cover: "c", by: "admin" });
   w.m.memberSet({ memberId: "dee", status: "revoked", by: "admin" });
@@ -324,7 +326,16 @@ test("R48 no member- or founder-facing string this module answers calls the grou
     w.c.signOut({ token: "x" }), w.c.recoveryCodesIssue({ by: "ann" }),
     w.c.recover({ role: "member:ann", code: "x", password: "new-passphrase-1", source: "a" }),
     w.c.login({ role: "member:x", password: "wrong-passphrase", source: "b" }),
-    bare.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "s", by: "ann" })]) await keep(p);
+    bare.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "s", by: "ann" }),
+    /* T36's refusals: NO_REASON, a security tool's empty set, the totals' period and failure */
+    w.c.aiKeepAwaySet({ on: true, by: "admin" }), w.c.keyedServiceSet({ service: "security:t1", key: { a: "" }, by: "admin" }),
+    w.c.keyedServiceSet({ service: "security:", key: "k", by: "admin" }), w.c.securityTotals({ from: "x", to: "y" }),
+    w.c.securityTotals.call(Object.create(Object.getPrototypeOf(w.c)), { from: 0, to: 1 })]) await keep(p);
+  /* AI_KEPT_AWAY, read and unread */
+  w.c.aiKeepAwaySet({ on: true, reason: "r", by: "admin" });
+  await keep(w.c.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } }));
+  w.sql.exec(`DROP TABLE ai_keep_away`);
+  await keep(w.c.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } }));
   for (let i = 0; i < 10; i++) await w.c.login({ role: "member:y", password: "wrong", source: `p${i}` });
   await keep(w.c.login({ role: "member:y", password: "wrong", source: "p" }));
   let n = 0;

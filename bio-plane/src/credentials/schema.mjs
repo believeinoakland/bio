@@ -133,13 +133,18 @@ CREATE TABLE IF NOT EXISTS account_references (
 
 -- R29 (K1449): the group's own key for one keyed outside service, set by an administrator, sealed as above (salt
 -- 'group:<service>'), off by default and off while no key is held. Never exported (R30).
+-- (T36; K1946 T1) 'service' is 'courtlistener' or 'security:<tool_id>', each outside security tool's credentials
+-- (file-safety R28). 'form' is 'key' for one key, or 'fields' for a set of named fields held as one value (sealed as
+-- its JSON, under the kind 'fields'); a row written before the column has NULL, read as 'key' (the only form there
+-- was), never back-filled. A set with no key deletes the row: the key is gone and the service off (file-safety R30).
 CREATE TABLE IF NOT EXISTS keyed_services (
   service TEXT PRIMARY KEY,
   sealed  TEXT,
   iv      TEXT,
   is_on   INTEGER NOT NULL DEFAULT 0,
   set_by  TEXT,
-  set_at  TEXT
+  set_at  TEXT,
+  form    TEXT
 );
 
 -- R27 (Q1-3; K1450): the short-lived, read-only ask grant. Only the SHA-256 of the token is kept, with its member,
@@ -256,6 +261,18 @@ CREATE TABLE IF NOT EXISTS recoveries (
   at   TEXT NOT NULL
 );
 
+-- R51, R52 (DEC-172; K1957): the group's setting that keeps its material away from every assistant. Each set is
+-- appended, never replacing an earlier one: 'is_on', the administrator's 'reason' in their own words (NULL when none
+-- was given), who set it ('set_by', the administrator's id) and when. The latest row is the setting; with none it is
+-- off. Read by every active member (R52); never a secret, so exported to administrators only, as 'bootstrap' is.
+CREATE TABLE IF NOT EXISTS ai_keep_away (
+  seq    INTEGER PRIMARY KEY AUTOINCREMENT,
+  is_on  INTEGER NOT NULL,
+  reason TEXT,
+  set_by TEXT NOT NULL,
+  set_at TEXT NOT NULL
+);
+
 -- R43 (DEC-156; K1819): that a member is connected through their own Claude subscription, and since when. A FACT
 -- ONLY: no login, no code from Anthropic's page, no token and no digest of any of them; the sign-in lives in the
 -- member's own agent-runner container, where the Claude Code binary wrote it. Seen by its member alone.
@@ -274,13 +291,14 @@ export const CREDENTIALS_ADDITIVE_COLUMNS = [
   ["ai_credentials", "confined_to", "TEXT"],
   ["ai_grants", "kind", "TEXT"],
   ["ai_credentials", "expires_at", "TEXT"],
+  ["keyed_services", "form", "TEXT"],
 ];
 
 /* R18: every table this module owns, declared exempt from purge (identity and credentials outlive a reset corpus). */
 export const CREDENTIALS_EXEMPT_TABLES = ["credentials", "sessions", "bootstrap", "signers", "ai_credentials",
   "account_references", "keyed_services", "ai_grants", "group_key", "group_key_acts", "group_key_notices",
   "signin_window", "security_counts", "security_pending", "security_key", "recovery_codes", "recoveries",
-  "subscription_connections"];
+  "subscription_connections", "ai_keep_away"];
 
 /* R30 (plan T33, Rules (6)): each table's classes for record-core's `declareTable` (its R21), declared explicitly.
    Every table is purge-exempt (R18) and never expunged. Account references, keyed-service keys, password hashes,
@@ -291,7 +309,8 @@ export const CREDENTIALS_EXEMPT_TABLES = ["credentials", "sessions", "bootstrap"
    its sight; `groupKeyState` answers its state to administrators alone (R34; K1760). T35's tables (R30) are declared
    the same way, never exported: the sign-in window, the tally with its waiting places and its key, and the recovery
    codes and recoveries are the group's (the tally's reading is administrators' alone, R45's own); a member's connected
-   subscription is its owner's. */
+   subscription is its owner's. (T36) The keep-away setting (R51, R52) is the group's, read by every member, and
+   exported to administrators only. */
 const CLASSES = { purge: "exempt", expunge: "none", derive: "stored", version_chain: false };
 export const CREDENTIALS_TABLES = Object.freeze([
   ["credentials", "never", "group"], ["sessions", "never", "group"], ["bootstrap", "admin-only", "group"],
@@ -300,5 +319,5 @@ export const CREDENTIALS_TABLES = Object.freeze([
   ["group_key_acts", "never", "group"], ["group_key_notices", "never", "owner"],
   ["signin_window", "never", "group"], ["security_counts", "never", "group"], ["security_pending", "never", "group"],
   ["security_key", "never", "group"], ["recovery_codes", "never", "group"], ["recoveries", "never", "group"],
-  ["subscription_connections", "never", "owner"],
+  ["subscription_connections", "never", "owner"], ["ai_keep_away", "admin-only", "group"],
 ].map(([name, exp, sight]) => Object.freeze({ name, ...CLASSES, export: exp, sight })));

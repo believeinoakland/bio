@@ -1,6 +1,6 @@
 # money — requirements
 
-**Status** · In force: a new product module, reviewed (K1505; T33-33; banner cleared K1580); its meaning the canon ladders' and Bob's rulings (K1443, K1457, K1463, K1464, K1468, K1470, K1471, K1486, K1489). Amount checks, detectors and `progressions` R32 are `money-checks`'; restrictions, thresholds, transfer authority and `pay` duties are `duties`' (K1504). Last changed T35 (T35-32: R2; K1865, K1736); every requirement met (MONEY #2, K1974).
+**Status** · In force: a new product module, reviewed (K1505; T33-33; banner cleared K1580); its meaning the canon ladders' and Bob's rulings (K1443, K1457, K1463, K1464, K1468, K1470, K1471, K1486, K1489). Amount checks, detectors and `progressions` R32 are `money-checks`'; restrictions, thresholds, transfer authority and `pay` duties are `duties`' (K1504). Last changed T36 (T36-16: R24 new, who recorded from a passage; R25 new, the money trail, amending R13; K1941, K1988, K2063, K2092); R24, R25 marked not yet met (T36), every other requirement met (MONEY #2, K1974).
 
 **Size (P6).** About 2,600–3,100 lines with L2–L3, less the part split into `money-checks`. Under 4,000.
 
@@ -69,6 +69,12 @@ Terms.
 - **R18** The module publishes `moneyOps(money, url, body)`, one route arm per act and read above, on `entities` R40's pattern; every write goes through R1's one append site, stamped by the control plane.
 - **R19** The table `money_facts` (`fact_id`, `amount`, `currency`, `sign`, `kind`, `phase`, `stage`, `basis`, `period_from`, `period_to`, `from_entity`, `from_fund`, `to_entity`, `to_fund`, `source_capture_sha`: the capture the fact's source extent is in, or the capture a source table was read from, else null), `money_withdrawals` (`fact_id`) and `money_concerns` (`fact_id`, `concerns`: one row per id the fact concerns) are a stated read contract (K1563) on the terms of `record-core` R37 (`money-checks`, `calculations`, `query-language`); every write stays this module's.
 
+**recordedBy({captureSha, extent?, limit?, viewer})** (T36; N715)
+- **R24** Answers in `events` R49's shape over the money facts whose `source` is an extent of the capture (R2): `kind: "money_fact"`, `field: "source"`, `by` the fact's `by`, `withdrawn` per R7. A fact whose source is another fact cites no extent and is not an item. Sight is R21's. (N715; DEC-164 (4); K1941, K2063) *(not yet met: T36)*
+
+**The money trail** (T36; N728; U108, U110–U114)
+- **R25** (amends R13) `readSet` of a set of purpose `trail` answers beside each included fact (and each open proposal's fact) its trail row: `from` and `to`, each the party as the source states it with its grade (`grade.parties`), or `{stated: false, says: "not stated in this source"}` when the fact holds none, never filled from another fact, an event's participants or an entity's role; `moved`, read from the events the fact `concerns` (`events.readEvent`): for phase `actual`, `{state: "dated", when, event, attestation}`, the concerned event's `when` at its own precision and zone and the attestation that dates it (with several concerned events, the one of kind `payment` or `transfer` when exactly one is), else `{state: "undetermined", why}` (no event concerned, its `when` null or undetermined, or several that do not single one out, naming them), never placed by the fact's `period`; for any other phase `{state: "did_not_move", phase, when}`, `when` the concerned event's (such as an adoption) where one dates it, else null; `compared`, for a fact of phase `proposed`, `adopted` or `adjusted`, each included `actual` fact sharing a `concerns` id with it, with `reconcile`'s answer (R11), never summed or merged into it, and `budget_only: true` when there is none; the fact's adjustments (R7) beside it, never netted; and `gaps`, each of `from`, `to`, `moved` and `basis` answered not stated or undetermined, so a view can offer the acts that add evidence. It writes nothing. A fact or event recorded later changes what the trail answers beside a fact, never that fact's own fields or figure. (N728; U108, U110–U114; K1988, K1430) *(not yet met: T36)*
+
 ## Private
 
 ### Uses
@@ -80,9 +86,9 @@ Terms.
 - `record-core`: `transact`, the opaque and sequential allocators, `declareTable` (R1, R12, R21); the `bundles` read contract (its R37: `object_type`), for R2's question (T35-32).
 - `membership`: `viewerPredicate`, `listenerRefusal`, `MODULE_ORDER` (R21, R23).
 - `promotion`: `registerStep` (R5).
-- `provenance`, `content`, `extraction`: whether a source is held, extents and their grade, the reading (R2, R3, R5).
+- `provenance`, `content`, `extraction`: whether a source is held, extents and their grade, the reading (R2, R3, R5). Since T36, `content`'s `extentRelation`, `canonicalExtent` (R24). *(not yet met: T36)*
 - `entities`: `noSuchEntity`, kinds, scheme identifiers, resolution grades (R1, R4).
-- `events`: `has`, relations (`amends`, `authorises`) and the award and change-order events (R1, R14, R15).
+- `events`: `has`, relations (`amends`, `authorises`) and the award and change-order events (R1, R14, R15). Since T36, `readEvent` (its R26: kind, `when`, the governing attestation) for R25, and R49's shape for R24 (an existing edge). *(not yet met: T36)*
 - `lines`, `standards`, `progressions`: named by the plan's Rule 3; nothing in R1–R19 calls them. *(BOB's: keep or drop)*
 - `jurisdictions` (not in the plan's list): fiscal years, classification schemes, balance-class families (R1). *(a new edge; BOB's)*
 
@@ -104,4 +110,5 @@ Terms.
 - Op names are BOB's (T33-88): `moneyrecord`, `moneywithdraw`, `money`, `moneyof`, `moneysummable`, `moneyreconcile`, `moneyset`, `moneysetinclude`, `moneysetexclude`, `moneysetpropose`, `committedagainstpaid`, `authoritychain`.
 - Open (BOB's): (1) where a fund's type is held, so R1 can check `balance_class` (proposed: a scheme identifier on the fund entity mapped by profile data); (2) R14's "not explained at levels 1–2" (ladders §5C.3 L3) needs `observation-log`'s levels; `observation-log` precedes `money`, so a new edge is possible; (3) R10's period rule: whether two periods must be equal or one may contain the other (proposed: equal, a containing period refused); (4) which kinds take which stage family (the sources list the families only); (5) M-M1 (200 figures) runs in this job; `money-people.md` is not yet written, so the fixture is owed.
 - **T35 (T35-32).** N635 is an import change only: every name money takes from `calc-grammar` comes from its index (`calc-grammar/index.mjs`); a test may assert no module file imports `calc-grammar/decimal.mjs`. R2's tests: a found extent recorded at its capture's grade; a question withheld from a viewer outside its project; `QUESTION_NOT_HELD` for a bundle that is not an inquiry.
+- **T36 (T36-16; K2092).** R25 is data only; the money screen, its sorting (U110), column explanations (U112) and the "Where more evidence would help" words (U115) are the new screens' (N672, left out). Key tests: a fact with no `to` answered "not stated in this source"; an actual fact dated from its payment event; an adopted figure "did not move"; a fact concerning no event `undetermined`, its period unused; a budget figure beside the paid figure with no sum; an adjustment beside, not netted; a later event changing `moved` and no field of the fact. *(not yet met: T36)*
 - Tests: a float-looking input kept exact; "about $2 million" against "$2,097,431" (R11 consistent); a sum across stages refused by name; a `CALC-` source refused; a change order counted as committed (R14); a machine write with a name-only party refused.
