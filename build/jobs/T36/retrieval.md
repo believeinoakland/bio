@@ -64,3 +64,7 @@ Tests: retrieval 161/161 (new t36.test.mjs, eight tests). Over every test direct
 Checks: format, architecture, coverage (77/77), ownership: 0 failures. 3,484 lines.
 The four real recordedBy reads are not in the tranche yet: send a CHANGE as each merges and I will test through it.
 Record: build/jobs/T36/retrieval.md.
+
+## J4 · COMPLETE · re B4
+
+B4 applied: tranche/T36 @ b1c7c9279b merged. R73 is now tested through the four real recordedBy reads (t36.test.mjs, over events' world with standards, money and people made and migrated as at boot, retrieval on the same host). A dated fact recorded from a found passage is named on that match by the same find: events, the record, dated_fact, extent, same, the member. All four reads answer. Retrieval 162/162. answers, calculations, events, money, people and standards: 338/339, the one red being red 21. Checks: format, architecture, coverage (77/77), ownership: 0 failures. 3,484 lines. Record: build/jobs/T36/retrieval.md.
