@@ -12,6 +12,11 @@ import { RECORDED_BY_MODULES, RECORDED_BY_LIMIT, RECORDED_NONE_REGISTERED, SELEC
 import { listenerRefusal, MODULE_ORDER } from "../../../src/membership/index.mjs";
 import { canonicalExtent } from "../../../src/content/index.mjs";
 import { fresh, hold, doc, docx, wp, wr } from "../extraction/fixture.mjs";
+import { world as eventsWorld, MEMBER as EV_MEMBER } from "../events/fixture.mjs";
+import { retrievalOf } from "../../../src/retrieval/index.mjs";
+import { standardsOf } from "../../../src/standards/index.mjs";
+import { moneyOf } from "../../../src/money/index.mjs";
+import { peopleOf } from "../../../src/people/index.mjs";
 
 const page = (n) => ({ kind: "pdf-page", page: n });
 
@@ -293,4 +298,37 @@ test("R73, R77 (N729): findIn over a {selection} reads it through selectionRead:
   w.clock.sel += SELECTION_TTL_MS;
   assert.equal(find(w, { scope: { selection: s.handle }, kinds: ["money"] }).reason, "NO_SUCH_SELECTION");
   assert.equal(rows(), before, "the expired selection is not swept by a find");
+});
+
+/* T36 L5 (B4; K2122): R73 through the four real reads. The store is events' own test world (record-core, membership,
+   provenance, extraction, content, entities and events, real), retrieval made over the same host, as the plane makes
+   it after them; standards, money and people are reached as the plane reaches them, by their factories on the host. */
+test("R73 (N715; K2122): through the four real recordedBy reads — a dated fact recorded from a found passage, then the same find names who recorded it; every read answered; a passage nobody recorded from carries recorded: []", async () => {
+  const ew = eventsWorld();
+  /* The plane's boot: each module made and migrated before retrieval (plane/store.mjs:167–195, :407–413). */
+  for (const of of [standardsOf, moneyOf, peopleOf]) { const m = of(ew.host); if (typeof m.migrate === "function") m.migrate(); }
+  const r = retrievalOf(ew.host, { record: ew.record, membership: ew.membership, extraction: ew.x });
+  r.migrate();
+  const s = ew.capture("minutes", { pages: 2, units: [
+    { seq: 0, extent: page(0), text: "The agreement was signed on March 4, 2026 for $5,000." },
+    { seq: 1, extent: page(1), text: "The next meeting is on April 9, 2026." }] });
+  const look = (viewer) => r.findIn({ viewer, scope: { capture: s }, kinds: ["dates"] });
+  const first = look(EV_MEMBER);
+  assert.equal(first.ok, true, JSON.stringify(first).slice(0, 300));
+  const p0 = kindOf(first, "dates").items.find((i) => i.extent && i.extent.page === 0);
+  assert.deepEqual(p0.recorded, [], "nothing recorded yet");
+  /* The member records the found passage's date, citing the match's own capture and extent. */
+  const made = ew.ev.recordDatedFact({ captureSha: p0.capture_sha, extent: p0.extent, kind: "signed", value: p0.date,
+                                       method: "read by a member", by: EV_MEMBER });
+  assert.equal(made.ok, true, JSON.stringify(made).slice(0, 400));
+  const fact = made.dated_fact;
+  const again = look(EV_MEMBER);
+  assert.deepEqual(again.recorded_read, [...RECORDED_BY_MODULES]);
+  assert.deepEqual(again.recorded_not_read, [{ module: null, why: RECORDED_NONE_REGISTERED }]);
+  const items = kindOf(again, "dates").items;
+  const named = items.find((i) => i.extent && i.extent.page === 0).recorded;
+  assert.deepEqual(named.map((x) => [x.module, x.record, x.kind, x.field, x.relation, x.by, x.withdrawn]),
+    [["events", fact.dated_fact_id, "dated_fact", "extent", "same", EV_MEMBER, false]]);
+  assert.equal(typeof named[0].at, "string");
+  assert.deepEqual(items.find((i) => i.extent && i.extent.page === 1).recorded, [], "page 1: nobody recorded from it");
 });

@@ -20,18 +20,22 @@ Nothing it left out mattered.
 - **R77** `selectionRead({handle, viewer, owner})`: `selectionResolve`'s answer at `report` (one shared `#selectionAnswer`), with no sweep, no touch and `expires` the selection's own. An expired unswept handle answers `NO_SUCH_SELECTION` and is left. It never throws: arguments that are not an object, and a selection that cannot be read, answer as not held.
 - **B2** (K2114): `tranche/T36` merged at 983ac4c04e. An item's `extent` as an object or a canonical string is read alike, and refusals are named by `code`.
 
+**B4** (K2122) · `tranche/T36` merged at b1c7c9279b, which brings events', standards', money's and people's `recordedBy`. A new test (`t36.test.mjs`, "R73 … through the four real recordedBy reads") runs over events' own test world, with standards, money and people made and migrated as the plane boots them and retrieval made over the same host. A dated fact recorded from a found passage, citing the match's capture and extent, is then named on that match by the same find: module `events`, its record, `dated_fact`, `extent`, relation `same`, the member, not withdrawn. All four reads answer (`recorded_read` the four), and a passage nobody recorded from carries `recorded: []`. J2 (a) is N759, (c) red 21 (B4).
+
 **Deferred** · none. **Found elsewhere** (J2 REPORT):
 - (a) `content`'s `extentRelation` evaluates neither `sheet-range` nor `doc-table` against their cells. A cell inside a range answers `disjoint`, two ranges `unreadable`, and a doc-table cell inside its table `unreadable`, against content R6 (`unreadable` only for a kind not in R1 or a missing coarse field). So a money fact recorded at one cell of a found column is not named on the column's result until content evaluates them.
 - (b) N758: `office-readers`' cells do not name their paragraphs.
 - (c) `answers`' `standingfind.test.mjs`:46 ("a refusal writes nothing") is red from this merge. Its `findWorld` stands in for the plane's boot with `w.retrieval.zone()` only, so the first find makes events, standards, money and people and their tables. With `w.retrieval.recordedReads();` beside `zone()` it passes 7/7 (checked on a scratch copy). That fixture is answers' (T36-23, L6).
 
-**Tests** · `node --test bio-plane/test/m/retrieval/`: tests 161, pass 161, fail 0. That includes the new `t36.test.mjs`, eight tests, each new arm named in its own test: R73 recorded ×3, R73/R76 not read, R76, R74 `.docx`, R77, R73/R77 selection scope. Users, mine against the base at fad9bc0616 over every test directory that names retrieval (54 modules): no new failure but (c). The others red on both are inherited reds 16 (progressions `order.test.mjs`) and 17 (op-declarations `t33`/`t35`). calculations 47/47 and answers 42/43 (c) re-run after the last change. Layer tests: none (manifest). The real four reads are not in the tranche yet; once each merges, its CHANGE gets a test through the real module.
+**Tests** · After B4: `node --test bio-plane/test/m/retrieval/`: tests 162, pass 162, fail 0. answers, calculations, events, money, people and standards together: 338 pass, 1 fail, red 21 (answers `standingfind.test.mjs`:46). Before B4: retrieval tests 161, pass 161, fail 0. That includes the new `t36.test.mjs`, eight tests, each new arm named in its own test: R73 recorded ×3, R73/R76 not read, R76, R74 `.docx`, R77, R73/R77 selection scope. Users, mine against the base at fad9bc0616 over every test directory that names retrieval (54 modules): no new failure but (c). The others red on both are inherited reds 16 (progressions `order.test.mjs`) and 17 (op-declarations `t33`/`t35`). calculations 47/47 and answers 42/43 (c) re-run after the last change. Layer tests: none (manifest). The real four reads are not in the tranche yet; once each merges, its CHANGE gets a test through the real module.
 
 **Checks** · `format.mjs`: 135 modules, 134 requirements files; 0 failures. `architecture.mjs retrieval`: 29 product files, 113 relative imports; 0 failures. `coverage.mjs retrieval`: 77 of 77 live requirement ids named by a test; 0 failures. `ownership.mjs retrieval tranche/T36`: 0 failures. The `*(not yet met: T36)*` markers on R73, R74, R76, R77 are BOB's to clear at merge.
 
 **P6** · 3,484 lines in the module's source files (3,267 at the opening, +217), under about 4,000.
 
 Size (session_013mwNsG3YAtaUow5u9nrCBL): test runs 27, module lines 3484
+
+Size (session_013mwNsG3YAtaUow5u9nrCBL): test runs 33, module lines 3484
 
 ## J1 · QUESTION
 
