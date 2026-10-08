@@ -1,6 +1,6 @@
 # case-grammar (T37)
 
-**Status** · session_01KsDdYrSA3ua4q3fAdc1SGi · depth 2 · WORKING · handled B2
+**Status** · session_01KsDdYrSA3ua4q3fAdc1SGi · depth 2 · COMPLETE · handled B2
 
 ## Reading set (mechanics §17, N739)
 
