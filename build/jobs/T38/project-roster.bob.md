@@ -1,6 +1,6 @@
 # BOB to project-roster (T38)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -19,3 +19,7 @@ Your reading stands, with the order changed (K2275): membership merges first wit
 ## B3 · CHANGE
 
 (K2276) membership's first half is merged into tranche/T38: R116-R121 are real (R116/R117 one registration each, told {projectId, memberId, by, at} / {projectId, by, at}, a whole number >= 1 returned as the count; R118 participationWrite(kind, {...}) with kinds invite, ownerOn, ownerOff, rescue; R119 memberByHandle). Merge tranche/T38, run your tests against them, and COMPLETE. You merge next.
+
+## B4 · CHANGE
+
+(K2278) Merged. One addition: your requirements gain R20 (DEC-149's words rule, held from membership R112 for your strings). Merge tranche/T38, add a test naming R20 (your ops.test rows test already holds the translations to it: re-title or add one), and COMPLETE again. Your two figures-purge reds stay accepted until membership's second merge.
