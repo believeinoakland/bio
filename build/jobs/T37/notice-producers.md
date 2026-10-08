@@ -2,6 +2,22 @@
 
 **Status** · session_01NtKgWhTs8dgUsdu2kZ9cnc · depth 2 · WORKING · handled B1
 
+## Record
+
+**Read, whole** (the set measured under 300 KB: own requirements 17 KB, code 55 KB, tests 96 KB, the used modules' Purposes 8 KB and the services my Uses names, about 60 KB): `build/requirements/notice-producers.md`; layer 11's row of `build/layers.md`; plan entry T37-28; K2130, K2155, K2160, K2175 and the K2175 draft's item 3 (`plan/draft-T37-L2-L3-reqs.md`:159, :169); the Purpose and named services of each module in my Uses (`file-safety` R8, R15–R19, R27, R29, R31, R38 and its `scanFindings` code; `provenance` `homeOf`; `following` R16, R21; `credentials` R44, R45; `standards` R1, R5; `membership` R65, R68, R74, R86; `people` R23–R25; `money-checks` R6, R9, R10; `answers` R19, R20; `duties` R7, R9–R11, R20; `inquiry` R54–R57; `civil-time` R17, R19); `index.mjs` whole; the tests R14 changes (`files.test.mjs`, `fixture.mjs`) whole, and `read.test.mjs`'s facts assertion. No worker summary was needed.
+
+**Entries applied** (T37-28; N762, N771; K2175): R14 reads `file-safety.scanFindings({since, after, limit, viewer})` with `since` the instant 90 days before the call (`SCAN_FINDINGS_DAYS`, as R13's window), from the first page, following `cursor` while `truncated`, to at most 1,000 findings in pages of 200; each read starts again from `since`, never from a kept cursor; a `since_invalid` answer is a failure named in `facts.failed`. An item leaves when `scanFindings` answers its note `held: false` (an absent `held` is read as held). `facts.scan_found` now also names `days` (90), as R13's does. The header comments (R14's block; the constant at :77) follow. The T36 `test.todo` is replaced by tests; the T36 test "leaves only on disposal, whatever becomes of the hold" now states the T37 rule.
+
+**Open:** J1 (R14's "an item whose finding has left the window stays until disposed of" cannot be met by a producer that writes nothing while `queue` keeps no items; built on reading (a): past the window the item is no longer answered). R14's two T37 marks are BOB's to strike once J1 is answered.
+
+**Deferred:** none in this module.
+
+**Found in another module:** none beyond J1 (R13 has the same window gap, unstated; `queue` keeps no item).
+
+**Tests and checks:** `node --test bio-plane/test/m/notice-producers/`: tests 74, pass 74, fail 0, todo 0. The manifest names no layer tests. `checks/format.mjs`: 136 modules, 135 requirements files; 0 failures. `checks/architecture.mjs`: 11 product files, 52 relative imports; 0 failures. `checks/coverage.mjs`: 15 of 15 live requirement ids named by a test; 0 failures. `checks/ownership.mjs` (tranche/T37): 4 files; 0 failures.
+
+Size (session_01NtKgWhTs8dgUsdu2kZ9cnc): test runs 4, module lines 862
+
 ## J1 · QUESTION
 
 R14's last sentence can't be built as written: "an item whose finding has left the window stays until its recipient disposes of it".
