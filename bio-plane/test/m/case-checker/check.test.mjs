@@ -22,7 +22,8 @@ test("R1 R11: a clean case file recreates every finding, members and the finding
   for (const parts of [1, 2, 3]) {
     const r = await check({ parts });
     assert.deepEqual(Object.keys(r).sort(), ["calculations", "case", "checker", "complete_edition", "edition", "findings", "format", "group", "integrity",
-      "publication_checks", "rests_on_another_group", "rests_on_another_group_statement", "signatures", "statement"]);
+      "publication_checks", "rests_on_another_group", "rests_on_another_group_statement", "signatures", "standards_use", "statement"]);
+    assert.equal(r.standards_use, null);     /* R22: no criteria file */
     assert.equal(r.format, "bio-case-file/1"); assert.equal(r.case, CASE); assert.equal(r.edition, 2); assert.equal(r.group, GROUP);
     assert.deepEqual(r.checker, { grading_versions: [...GRADING_METHOD_VERSIONS], checks_version: CATALOG_VERSION, calc_versions: [CALC_METHOD] });
     assert.deepEqual(r.calculations, []);

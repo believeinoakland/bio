@@ -17,9 +17,9 @@
  * and its `completeness:` `statement`. The body is not read: it prints quoted passages, whose own words may say
  * "violation". A row with `stated: "not held"` is not judged and is named in `unjudged`.
  *
- * Pure: it reads only its arguments, the same arguments give the same answer, and it never throws. It is not part of the
- * standalone program (R13): its caller with the record refuses at the ceremony (`case-authoring`'s pre-flight, N717). No
- * place is named here (R17). */
+ * Pure: it reads only its arguments, the same arguments give the same answer, and it never throws. Its caller with the
+ * record refuses at the ceremony (`case-authoring`'s pre-flight, N717); `checkCaseFile` runs it offline over a carried
+ * `criteria` file (R22), so it is part of the standalone program (R13). No place is named here (R17). */
 
 import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
 import { canonicalJson } from "../record-grammar/json.mjs";
