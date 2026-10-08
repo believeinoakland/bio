@@ -93,9 +93,18 @@ const mf = new Miniflare({
               GOVERNOR_APPETITE_PER_MIN: "600000" },
 });
 const rP = (j) => (j && typeof j === "object" && "result" in j) ? j.result : j;
-const GET = async (q) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`)).json());
-const POST = async (q, body) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`,
-  { method: "POST", body: JSON.stringify(body) })).json());
+/* admission R20 (C-38.10, K2166): a credential is read only from the Authorization header or the body, never the
+   address. The suite names its credential as `token=…` in each call, for readability; `send` lifts it out of the
+   address into `Authorization: Bearer …` before the request is sent (as scheduler's plane.test.mjs, K2381). */
+const send = (q, init = {}) => {
+  const params = new URLSearchParams(q);
+  const token = params.get("token");
+  params.delete("token");
+  const headers = token === null ? {} : { authorization: `Bearer ${token}` };
+  return mf.dispatchFetch(`http://x/api/?${params}`, { ...init, headers });
+};
+const GET = async (q) => rP(await (await send(q)).json());
+const POST = async (q, body) => rP(await (await send(q, { method: "POST", body: JSON.stringify(body) })).json());
 
 const enrol = async (memberId, role, caps) => {
   const add = await POST(`op=memberadd&token=adm-r124`,
@@ -464,7 +473,9 @@ console.log("\n--- 2. concluding with no claim is refused NO_CLAIM, and nothing 
     [true, "open"]);
   t("E reads no conclusion, and neither does D", [await conclusionOf(E), await conclusionOf(D)], [null, null]);
   t("B's conclusion survived the refused free-text attempt unchanged", (await conclusionOf(B))?.claim, CLAIM_B);
-  const mach = await conclude({ target: INQ, project: B, falsifier: "x" }, "mem-r124");
+  /* CORRECTED 2026-10-08 (T39-21): the machine was the shared member token, retired by admission R5 (C-38.11,
+     MEMBER_TOKEN_RETIRED) before the fence is reached; the probe is the machine class conclude admits. */
+  const mach = await conclude({ target: INQ, project: B, falsifier: "x" }, "prb-r124");
   t("a machine credential is refused by the fence it always was, with a project too",
     [mach?.ok, mach?.reason], [false, "MACHINE_CANNOT_CONCLUDE"]);
 }
@@ -537,7 +548,8 @@ console.log("\n--- 5. §7.1 item 7: WITHDRAWAL APPENDS — conclude, withdraw, c
   const bSha = await shaOf(B);
   const noWhy = await withdraw({ target: INQ, project: B });
   t("a withdrawal with NO reason is refused NO_REASON", [noWhy?.ok, noWhy?.reason], [false, "NO_REASON"]);
-  const mach = await withdraw({ target: INQ, project: B, reason: WHY }, "mem-r124");
+  /* CORRECTED 2026-10-08 (T39-21): the probe, not the retired member token (C-38.11), as §2's machine arm. */
+  const mach = await withdraw({ target: INQ, project: B, reason: WHY }, "prb-r124");
   t("a MACHINE may not withdraw: the conclude fence's condition, by name",
     [mach?.ok, mach?.reason], [false, "MACHINE_CANNOT_CONCLUDE"]);
   const noProj = await withdraw({ target: INQ, reason: WHY });
