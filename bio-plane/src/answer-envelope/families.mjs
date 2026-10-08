@@ -27,6 +27,9 @@ import * as PROVENANCE_ROUTES from "../provenance-routes/checks.mjs";
 import * as CAPTURE_SOURCES from "../capture-sources/credentials.mjs";
 import * as ACQUISITION from "../acquisition/checks.mjs";
 import * as CAPTURE from "../capture/checks.mjs";
+/* K2130, K2103 (T36-47; red 11): file-safety's C-140 rows (`FILE_SAFETY_CHECKS`), in its place in the module order
+   (directly after capture, before sources). K2103 re-coded the three codes earlier families held, so no row moves. */
+import * as FILE_SAFETY from "../file-safety/checks.mjs";
 import * as SOURCES from "../sources/checks.mjs";
 import * as CALIBRATION from "../calibration/checks.mjs";
 import * as EXTRACTION from "../extraction/checks.mjs";
@@ -125,6 +128,7 @@ export const CHECK_FAMILY_FILES = Object.freeze([
   ["src/capture-sources/credentials.mjs", CAPTURE_SOURCES],
   ["src/acquisition/checks.mjs", ACQUISITION],
   ["src/capture/checks.mjs", CAPTURE],
+  ["src/file-safety/checks.mjs", FILE_SAFETY],
   ["src/sources/checks.mjs", SOURCES],
   ["src/calibration/checks.mjs", CALIBRATION],
   ["src/extraction/checks.mjs", EXTRACTION],

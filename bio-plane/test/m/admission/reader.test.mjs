@@ -2,14 +2,14 @@
    and the reader of a public op that answers working material only to some (the convert `group-public`; R16, K723). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { A, world, gate, urlOf, doAnswer, aik, hex64 } from "./harness.mjs";
+import { A, world, gate, urlOf, presenting, doAnswer, aik, hex64 } from "./harness.mjs";
 
 test("N407: an admitted caller's viewer is its session's viewer, an agent's principal carrying its credential ({stamp, aiCred}), or class:<cls> for a binding", async () => {
   const { env, S, K } = world();
   const viewer = async (token, opts) => A.callerViewer((await gate(env, { op: "index", token, method: "GET" })).caller, opts);
   assert.equal(await viewer(S.ann), "member:ann");
   assert.equal(await viewer(S.founder), "admin");
-  for (const [k, c] of [["ADMIN_TOKEN", "admin"], ["MEMBER_TOKEN", "member"]]) assert.equal(await viewer(env[k]), `class:${c}`);
+  for (const [k, c] of [["ADMIN_TOKEN", "admin"], ["PROBE_TOKEN", "probe"]]) assert.equal(await viewer(env[k]), `class:${c}`);
   const carried = await viewer(K.ann);
   assert.equal(carried.stamp, "member:ann", "a member-scoped agent's stamp is its minter's");
   assert.deepEqual([carried.aiCred.tokenId, carried.aiCred.principal], ["agent-ann", "member:ann"]);
@@ -21,11 +21,16 @@ test("N407: an admitted caller's viewer is its session's viewer, an agent's prin
 
 test("R16 (group-public): readerOf answers who is asking for a public op and never refuses — a binding class as class:<cls> only when index admits it in the store read, a session as its viewer, an agent as its principal when in scope, anyone else as no one; a store silence is a silence", async () => {
   const { env, S, K } = world();
-  const read = async (token, params = {}, store = "bio", presented) => A.readerOf(urlOf({ ...params, token }), env, store, presented, doAnswer);
+  const read = async (token, params = {}, store = "bio", presented) => A.readerOf(urlOf(params), env, store, presented, doAnswer, presenting(token));
   assert.deepEqual(await read(undefined), { viewer: "" });
   assert.deepEqual(await read("stranger"), { viewer: "" });
   assert.deepEqual(await read(env.ADMIN_TOKEN), { viewer: "class:admin", cls: "admin" });
-  assert.deepEqual(await read(env.MEMBER_TOKEN), { viewer: "class:member", cls: "member" });
+  /* R5 (T36): the retired member key is no one, and nothing is looked up for it */
+  env.calls.length = 0;
+  assert.deepEqual(await read(env.MEMBER_TOKEN), { viewer: "" });
+  assert.equal(env.calls.length, 0);
+  /* R20: a credential in the address alone is no one */
+  assert.deepEqual(await A.readerOf(urlOf({ token: env.ADMIN_TOKEN }), env, "bio", undefined, doAnswer), { viewer: "" });
   /* probe: confined to scratch, a stranger to bio and a reader of scratch; daemon: index does not admit it */
   assert.deepEqual(await read(env.PROBE_TOKEN), { viewer: "", cls: "probe" });
   assert.deepEqual(await read(env.PROBE_TOKEN, {}, "scratch"), { viewer: "class:probe", cls: "probe" });
@@ -47,7 +52,7 @@ test("R16 (group-public): readerOf answers who is asking for a public op and nev
   /* silences */
   for (const route of ["session", "aicredentiallook"]) {
     const w = world({ answer: (c) => (c.route === route ? new Response("x") : null) });
-    const r = await A.readerOf(urlOf({ token: route === "session" ? w.S.ann : w.K.ann }), w.env, "bio", undefined, doAnswer);
+    const r = await A.readerOf(urlOf({}), w.env, "bio", undefined, doAnswer, presenting(route === "session" ? w.S.ann : w.K.ann));
     assert.equal(r.silent.op, route);
   }
 });

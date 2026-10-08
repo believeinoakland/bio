@@ -13,7 +13,7 @@ const GROUP_KEY_OPS = ["groupkeyset", "groupkeyremove", "groupkeyswitch", "group
                        "groupkeynoticeseen"];
 const SECRET = "wk_" + hex64(), LINK = "jl_" + hex64(), COVER = "Rosa from the tenants' union", APIKEY = "sk-ant-api03-" + hex64();
 
-test("R17: websiteinvite and joinlinkinvite are public ops admitted with no credential; a credential or session presented (by header, body or query) is neither required nor used, nothing about the caller reaches the act, the key, link and cover are read from the body only, the one limit admission adds is R21's per-source window (the daily caps are membership's), and no key, link or invitation appears in a refusal", async () => {
+test("R17: websiteinvite and joinlinkinvite are public ops admitted with no credential; a credential or session presented (by header or body) is neither required nor used, nothing about the caller reaches the act, the key, link and cover are read from the body only, the one limit admission adds is R21's per-source window (the daily caps are membership's), and no key, link or invitation appears in a refusal", async () => {
   assert.deepEqual([...A.PUBLIC_DOORS].sort(), DOORS);
   for (const op of DOORS) assert.equal(OPS[op]?.classes, null, `${op} is public (op-declarations R22)`);
   const { env, S, K } = world();
@@ -54,13 +54,13 @@ test("R17: websiteinvite and joinlinkinvite are public ops admitted with no cred
   const u = urlOf({ op: "websiteinvite", token: S.ann, key: SECRET, store: "scratch", x: "1" });
   assert.equal(A.queryGate(u, "websiteinvite"), null);
   assert.deepEqual(Object.fromEntries(u.searchParams), { op: "websiteinvite", store: "scratch", x: "1" });
-  /* negative controls: another public op keeps its caller (a confined credential meets R2), and a gated op's URL is
-     left as it came */
+  /* negative controls: another public op keeps its caller (a confined credential meets R2), and a gated op's URL
+     keeps its key, link and cover (only R20's token and secret leave every URL) */
   refused(await gate(env, { op: "invitelook", token: K.confined, params: { store: "bio" } }), 403, "NAMESPACE_CONFINED", "C-78.3");
   for (const op of ["invitelook", "index", "enroll", "groupkeystate"]) {
-    const v = urlOf({ token: S.ann, key: SECRET, link: LINK, cover: COVER });
+    const v = urlOf({ token: S.ann, secret: "rv1_x", key: SECRET, link: LINK, cover: COVER });
     A.queryGate(v, op);
-    assert.deepEqual(Object.fromEntries(v.searchParams), { token: S.ann, key: SECRET, link: LINK, cover: COVER }, op);
+    assert.deepEqual(Object.fromEntries(v.searchParams), { key: SECRET, link: LINK, cover: COVER }, op);
   }
 });
 
@@ -85,7 +85,7 @@ test("R18: the administrator's acts op-declarations R22 declares are admitted as
     }
     /* each binding class exactly as the spec's machineClasses say: admitted to reach membership's NOT_AN_ADMIN, or
        refused CLASS_FORBIDDEN by the spec (R9), never by a fence of admission's own */
-    for (const [cls, t] of [["admin", env.ADMIN_TOKEN], ["member", env.MEMBER_TOKEN], ["probe", env.PROBE_TOKEN], ["daemon", env.DAEMON_TOKEN]]) {
+    for (const [cls, t] of [["admin", env.ADMIN_TOKEN], ["probe", env.PROBE_TOKEN], ["daemon", env.DAEMON_TOKEN]]) {
       const r = await gate(env, { op, token: t, params: cls === "probe" ? { store: "scratch" } : {} });
       if (spec.machineClasses.includes(cls)) assert.deepEqual([r.caller?.cls, r.caller?.viaSession], [cls, false], `${op}/${cls}`);
       else assert.equal(refused(r, 403, "CLASS_FORBIDDEN", "C-38.2", [t]).cls, cls, `${op}/${cls}`);
@@ -110,7 +110,7 @@ test("R19: the group key's ops are admitted only from a session — a bearer, a 
     assert.equal(AI_GRANT_OPS.includes(op), false, `${op} is on no ask's grant`);
     assert.equal(NEEDS[op] ?? null, null, op);
     assert.ok(SESSION_OPS.member.has(op) && SESSION_OPS.admin.has(op), op);
-    for (const [cls, t] of [["admin", env.ADMIN_TOKEN], ["member", env.MEMBER_TOKEN], ["probe", env.PROBE_TOKEN], ["daemon", env.DAEMON_TOKEN]]) {
+    for (const [cls, t] of [["admin", env.ADMIN_TOKEN], ["probe", env.PROBE_TOKEN], ["daemon", env.DAEMON_TOKEN]]) {
       env.calls.length = 0;
       const body = refused(await gate(env, { op, token: t, params: { key: APIKEY, ...(cls === "probe" ? { store: "scratch" } : {}) } }),
                            403, "CLASS_FORBIDDEN", "C-38.2", [t, APIKEY]);
@@ -125,7 +125,7 @@ test("R19: the group key's ops are admitted only from a session — a bearer, a 
     for (const t of [S.founder, S.ann, S.bare]) {
       const r = await gate(env, { op, token: t, params: { key: APIKEY } });
       assert.equal(r.caller?.viaSession, true, `${op}: a session is admitted`);
-      assert.equal(r.url.searchParams.get("token"), t, "the session's own token stays");
+      assert.equal(r.url.searchParams.has("token"), false, "the session's own token travels in the header, never the address");
       assert.equal(r.url.searchParams.has("key"), op !== "groupkeyset", `${op}: only groupkeyset's key is the body's`);
     }
     assert.equal(A.bearerFence(op, { cls: "admin", viaSession: false }), null);
@@ -135,5 +135,5 @@ test("R19: the group key's ops are admitted only from a session — a bearer, a 
   assert.equal(JSON.stringify([...r.url.searchParams]).includes(APIKEY), false);
   /* negative control: the same request with no key in its query keeps its URL whole */
   const n = await gate(env, { op: "groupkeyset", token: S.founder, params: { on: "true" } });
-  assert.deepEqual(Object.fromEntries(n.url.searchParams), { on: "true", token: S.founder });
+  assert.deepEqual(Object.fromEntries(n.url.searchParams), { on: "true" });
 });

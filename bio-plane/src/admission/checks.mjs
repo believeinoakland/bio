@@ -14,7 +14,11 @@
  * who they are not at all (C-38.1). Nothing else changed; the rows await promotion's T35 stamp.
  *
  * T35-71 (R14): two new rows, C-38.9 DOOR_RATE_LIMITED (R21) and C-29.30 AI_CREDENTIAL_EXPIRED (R10), each with its
- * test; both await promotion's stamp (T36; plan T35 accepted red 2). */
+ * test; both await promotion's stamp (T36; plan T35 accepted red 2).
+ *
+ * T36-36 (R14): two new rows, C-38.10 CREDENTIAL_IN_ADDRESS (R20; F1's tail, K2111, K2129: BOB's translation with its
+ * protective sentence, the UX stream's to revise) and C-38.11 MEMBER_TOKEN_RETIRED (R5; N711, K1936 Q3), each with its
+ * test; both await promotion's stamp (T37; plan T36 accepted red 4). */
 
 /* C-38 · THE ADMISSION GATE (REC-79): every refusal a caller meets before their op runs. ADDITIVE ON THE WIRE: each
    refusal keeps its `error` sentence byte-identical beside the code (IC-REC-79). `MACHINE_CREDENTIAL_REQUIRED` is named
@@ -169,6 +173,26 @@ export const ADMISSION_CHECKS = {
     translation: 'Too many requests reached your group\'s Civicsmith from the same place in a short time, so this one '
       + 'was turned away before anything was read or changed. It is about the pace, not about you: wait the time '
       + 'given beside this message and try again. The limit is stated beside it too.',
+  },
+  /* T36 (R20; F1, K1874, K2111, K2129): a credential or a secret sent in the web address. An address is kept in logs
+     and browser history, so the request is refused rather than served; the sentence says where to send it instead and,
+     because the value may already have been seen, what to do about it (K1881's protective sentence). It names neither
+     the value nor its digest (R15). The code's one site (K231). Awaiting promotion's stamp (T37). */
+  CREDENTIAL_IN_ADDRESS: {
+    check: 'C-38.10',
+    where: 'src/admission/index.mjs credentialAddressGate > is-credential-in-address',
+    translation: 'A sign-in credential or a secret was sent in the web address, where it can be kept in logs and '
+      + 'browser history. Send it in the request\'s Authorization header or in its body instead. Nothing was done. '
+      + 'If it was sent in a link, treat it as seen by others: sign out everywhere, or ask for a new link.',
+  },
+  /* T36 (R5; N711, K1936 Q3): the group's shared member key is retired; each member signs in as themselves. The
+     sentence says the key is retired, not wrong, so its holder does not go looking for a newer one, and names the one
+     way in. Awaiting promotion's stamp (T37). */
+  MEMBER_TOKEN_RETIRED: {
+    check: 'C-38.11',
+    where: 'src/admission/index.mjs admit > is-admission',
+    translation: 'The shared member key this request used is retired and no longer signs anybody in. Each member now '
+      + 'signs in with their own password. Nothing was read or changed.',
   },
 };
 
