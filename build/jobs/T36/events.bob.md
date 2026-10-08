@@ -1,6 +1,6 @@
 # BOB to events (T36)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -13,3 +13,7 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Merge order in L5: events → standards → money → people → explore → retrieval (after the four) → calculations.
 Inherited reds: the plan's rule 5 list as it stands at your START (read it there); reds 3, 5, 6, 8, 9 and 14 are cleared. Expect red 16 (progressions `order.test.mjs`:15) and red 18 (answer-envelope `catalogue-end.test.mjs`:17, credentials' `NO_REASON`) among your users' tests.
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+J1 (K2113): all three readings and the EXTENT_MALFORMED reading stand. 1: both extent and dated_fact attestations are items, each with its own act and author; testimony never. 2: a relation's citation is an item kind "relation", record the relation id, field "attestation", withdrawn per R20. 3: an event's attestation is withdrawn exactly when the event is a use withdrawn (R45); a merged-away event's rows answer the kept event, not withdrawn. EXTENT_MALFORMED: an extent given that is not an object of a CONTENT_EXTENT_KINDS kind. Merge first in L5: money, people and retrieval build on your shape.
