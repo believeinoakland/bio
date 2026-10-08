@@ -76,9 +76,16 @@ const mf = new Miniflare({
 });
 const sha = (v) => createHash("sha256").update(v).digest("hex");
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
-const POST = async (q, body) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`,
-  { method: "POST", body: JSON.stringify(body ?? {}) })).json());
-const GET = async (q) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`)).json());
+/* A credential travels in the Authorization header, never the address (C-38.10): the suite writes `token=` in its
+   queries for brevity, and this lifts it out into the header before the request is sent. */
+const send = (q, init = {}) => {
+  const p = new URLSearchParams(q), token = p.get("token");
+  p.delete("token");
+  return mf.dispatchFetch(`http://x/api/?${p}`,
+    { ...init, headers: { ...(init.headers || {}), ...(token ? { Authorization: `Bearer ${token}` } : {}) } });
+};
+const POST = async (q, body) => rP(await (await send(q, { method: "POST", body: JSON.stringify(body ?? {}) })).json());
+const GET = async (q) => rP(await (await send(q)).json());
 const codeOf = (r) => (r && typeof r.code === "string") ? r.code : (r && r.reason) || null;
 const okOf = (r) => [r && r.ok, codeOf(r)];
 /* A successful attribution answers the reason it keeps (publication R17, DEC-88), which is no refusal code. */
@@ -170,7 +177,7 @@ const ratify = async (id) => {
 };
 /* The words' bytes into the working bucket by the ordinary capture route any member has — the route
    `test/mk1-publish-probe.mjs` measured to be the one that crossed before the fence existed. */
-const put = await (await mf.dispatchFetch(`http://x/api/?op=capture&token=${IRIS}&sha256=${tx.capture_sha}`,
+const put = await (await send(`op=capture&token=${IRIS}&sha256=${tx.capture_sha}`,
   { method: "PUT", body: new TextEncoder().encode(img[tx.file]) })).json();
 
 const F1 = "INQ-2026-5601-rests-on-obs";

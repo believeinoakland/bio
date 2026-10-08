@@ -49,14 +49,14 @@ test("R14: the observation is read from the record before the write; without an 
   assert.equal(w.count("captured_locators"), n);
 });
 
-test("R15: no service but the plane's own receipt writes a receipt", async () => {
+test("R15, R62: no service but the plane's own receipt writes a receipt", async () => {
   const w = world();
   const a = w.cap("a");
   w.promoteInfo("INFO-2026-0001-a", { captures: [a] });
   const before = w.count("captured_locators");
   /* Every other service, asked with everything a caller could hand it. */
   w.prov.registerHolds({ sha: a.sha }); w.prov.homeOf(a.sha); w.prov.receipts({ addressNorm: "e.org/a" });
-  w.prov.versionChain({ addressNorm: "e.org/a", viewer: V("x") }); w.prov.captureGrade(a.sha); w.prov.capturesOf("INFO-2026-0001-a");
+  w.prov.versionChain({ addressNorm: "e.org/a", viewer: V("x") }); w.prov.captureGrade(a.sha); w.prov.capturesOf("INFO-2026-0001-a"); w.prov.fetchedByThisCopy(a.sha);
   w.prov.declareOrigin({ bundleId: "INFO-2026-0001-a", system: "s", by: V("x"), viewer: V("x") });
   w.prov.registeredFor("INFO-2026-0001-a"); w.prov.homeCensus({});
   w.prov.testify({ words: "w", observedAt: "2026-09-20", author: V("x") });
