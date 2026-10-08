@@ -8,7 +8,7 @@
  * different answer.
  *
  * Custody of the access token, and the guarantees this file keeps:
- *   - The token is scoped to exactly four permissions, granted on a consent
+ *   - The token is scoped to exactly five permissions (R2), granted on a consent
  *     screen the user reads, revocable from their dashboard, short-lived.
  *   - It exists in a local variable for the seconds provisioning takes. This
  *     Worker has NO storage bindings of any kind, so there is nowhere to
@@ -42,15 +42,13 @@ export const CFG = {
   /* Exactly the scopes registered on the OAuth client, nothing more. R2 (M-Q8): the fourth is the Containers write
      scope, by the id Cloudflare's scope list gives it (`GET /client/v4/oauth/scopes`, read 2026-10-06: "Workers
      Containers Write", `containers.write`); it is asked so a container member can be installed (R38), and a group
-     re-consents to it at its first update after T33 (R17). */
-  SCOPES:    ["workers-scripts.write", "workers-r2.write", "account-settings.read", "containers.write"],
-  /* R46 and R45 (T36): the scopes Cloudflare's documentation names for listing the account's Logpush jobs ("Logs Write";
-     every Logpush API call needs it, a read included) and for binding a Workers VPC service ("Connectivity Directory
-     Bind"), by the ids `GET /client/v4/oauth/scopes` gives them (read 2026-10-08). Neither is in R2's four, so neither
-     is asked: R46's check then reads the job list and, refused, states itself undetermined; R45's binding is tried and,
-     refused, left out by name. Adding either to SCOPES is R2's change, and BOB's. */
+     re-consents to it at its first update after T33 (R17). The fifth (T36, K2155) is "Connectivity Directory Bind",
+     `connectivity-directory.bind` (the same list, read 2026-10-08), which binding a Workers VPC service needs (R45). */
+  SCOPES:    ["workers-scripts.write", "workers-r2.write", "account-settings.read", "containers.write", "connectivity-directory.bind"],
+  /* R46 (K2155): every Logpush API call, the job list included, needs "Logs Write" (`account-logs.write`), a write power
+     over the group's logging that R2 does not ask: the check reads the list and, refused, states itself undetermined
+     with the one check the operator can make. Named here so the reason is in one place; never asked. */
   LOGPUSH_SCOPE: "account-logs.write",
-  VPC_SCOPE: "connectivity-directory.bind",
   COOKIE:    "bio_wiz",
   COOKIE_MAX_AGE_S: 900,
   /* Public releases: two committed files in the repo's release/ folder on
@@ -748,12 +746,12 @@ async function uploadMember(token, acct, slug, m, version, bundle, partBytes, ex
  * install never fails over it. The Containers API calls are wrangler's own (`/accounts/<id>/containers/applications`,
  * `…/rollouts`); like the install's SELF binding, they are confirmed only by a real install, which is deploy-gated. */
 export const CONTAINER_PART = "Container";
-/* R44 (T36): a member's own bucket bindings, scheduled triggers and Workers VPC binding, which the fleet statement's
-   `services` cannot carry, ride as one more signed part of type `Worker` (`worker.json`), read like a container's
-   descriptor (BOB's reading of R44 pending, J2):
-     {r2_buckets: [{binding, bucket: "captures" | "published"}], crons: ["<five fields>"], vpc_services: [{binding}]}
-   A bucket is named by its role and bound to the copy's own bucket of that role; a VPC service is bound only to the one
-   the operator named (R45). A member without the part gets none of the three, as before. */
+/* R44 (T36; K2155, N772): a member's own bucket bindings and scheduled triggers, which the fleet statement's `services`
+   cannot carry, ride as one more signed part of type `Worker` (`worker.json`, bundler's), read like a container's
+   descriptor:
+     {r2_buckets: [{binding, bucket: "captures" | "published"}], crons: ["<five fields>"]}
+   A bucket is named by its role and bound to the copy's own bucket of that role. A member without the part gets
+   neither, as before, and the page names what it then lacks. */
 export const WORKER_PART = "Worker";
 const DESCRIPTOR_PARTS = new Set([CONTAINER_PART, WORKER_PART]);
 const containerPartsOf = (m) => (m.parts || []).filter((pp) => pp.type === CONTAINER_PART);
@@ -816,16 +814,24 @@ export function workerDescriptor(bytes) {
   try { d = JSON.parse(new TextDecoder().decode(bytes)); } catch { return { ok: false, why: "its Worker description does not parse" }; }
   if (!d || typeof d !== "object" || Array.isArray(d)) return { ok: false, why: "its Worker description is not an object" };
   const list = (k) => d[k] === undefined ? [] : d[k];
-  const r2 = list("r2_buckets"), crons = list("crons"), vpc = list("vpc_services");
+  const r2 = list("r2_buckets"), crons = list("crons");
   if (!Array.isArray(r2) || !r2.every((b) => b && typeof b.binding === "string" && BINDING_NAME.test(b.binding) && Object.hasOwn(BUCKET_ROLES, b.bucket)))
     return { ok: false, why: "its Worker description names its buckets unreadably" };
   if (!Array.isArray(crons) || crons.length > 3 || !crons.every((c) => typeof c === "string" && CRON.test(c)))
     return { ok: false, why: "its Worker description states its schedule unreadably" };
-  if (!Array.isArray(vpc) || !vpc.every((b) => b && typeof b.binding === "string" && BINDING_NAME.test(b.binding)))
-    return { ok: false, why: "its Worker description names its private-network binding unreadably" };
-  return { ok: true, d: { r2_buckets: r2.map(({ binding, bucket }) => ({ binding, bucket })), crons: [...crons],
-    vpc_services: vpc.map(({ binding }) => ({ binding })) } };
+  return { ok: true, d: { r2_buckets: r2.map(({ binding, bucket }) => ({ binding, bucket })), crons: [...crons] } };
 }
+
+/* R44 (T36): what file-scanner then lacks, when its release carries no `Worker` part. */
+const WORKER_PART_LACKS = Object.freeze({
+  "file-scanner": "its release does not yet state its bucket and its daily schedule, so it was installed without them: it cannot read "
+    + "captured files or refresh its virus signatures, and files are not scanned until a release that states them is installed",
+});
+
+/* R45 (T36; K1946 T4): the member a tool reached through a tunnel is called through, and the binding name it reads the
+   operator's Workers VPC service by, as R45 names them. */
+export const VPC_MEMBER = "file-scanner";
+export const VPC_BINDING = "SECURITY_VPC";
 
 /* R45 (T36): a Workers VPC service is named by its id, 32 hexadecimal digits with or without the dashes of a UUID. */
 const VPC_ID = /^(?:[0-9a-f]{32}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/;
@@ -959,14 +965,16 @@ async function installFleet(emit, token, acct, slug, release, ctx = {}) {
           CFG.RELEASE_LATEST + "/" + m.member + "/" + pp.path, pp.sha256, m.member + " " + pp.path);
       }
       /* R44, R45: the member's own buckets, schedule and private-network binding, as its signed `Worker` part states them. */
-      let own = { r2_buckets: [], crons: [], vpc_services: [] };
+      let own = { r2_buckets: [], crons: [] };
       if (workerParts.length) {
         const w = workerDescriptor(partBytes[workerParts[0].path]);
         if (!w.ok) throw new Error(w.why);
         own = w.d;
       }
+      /* Said once the member is installed (a member left out is named with its own reason). */
+      const lacking = !workerParts.length && WORKER_PART_LACKS[m.member] ? `${m.member}: ${WORKER_PART_LACKS[m.member]}` : null;
       const ownBindings = own.r2_buckets.map((b) => ({ type: "r2_bucket", name: b.binding, bucket_name: BUCKET_ROLES[b.bucket] }));
-      const vpcBindings = vpcServiceOk(ctx.vpc) ? own.vpc_services.map((b) => ({ type: "vpc_service", name: b.binding, service_id: ctx.vpc })) : [];
+      const vpcBindings = vpcServiceOk(ctx.vpc) && m.member === VPC_MEMBER ? [{ type: "vpc_service", name: VPC_BINDING, service_id: ctx.vpc }] : [];
       /* R45: a VPC binding refused (the permission may not reach the service, or the id names none) leaves out that
          binding alone, named; the member is uploaded again without it. */
       const upload = async (extra) => {
@@ -975,7 +983,7 @@ async function installFleet(emit, token, acct, slug, release, ctx = {}) {
         try {
           await uploadMember(token, acct, slug, m, String(man.version), bundle, partBytes, { ...extra, bindings: [...bindings, ...vpcBindings] });
           vpcTaken = true;
-          notes.push(`${m.member} is connected to the Workers VPC service you named (${vpcBindings.map((b) => b.name).join(", ")})`);
+          notes.push(`${m.member} is connected to the Workers VPC service you named (${VPC_BINDING})`);
         } catch (e) {
           await uploadMember(token, acct, slug, m, String(man.version), bundle, partBytes, { ...extra, bindings });
           vpcTaken = true;
@@ -992,6 +1000,7 @@ async function installFleet(emit, token, acct, slug, release, ctx = {}) {
         await upload({ bindings: classOf.get(m.member), limits });
         await schedule();
         done.push(m.member);
+        if (lacking) notes.push(lacking);
         continue;
       }
       const read = containerClasses(box, (path) => partBytes[path]);
@@ -1020,6 +1029,7 @@ async function installFleet(emit, token, acct, slug, release, ctx = {}) {
       await schedule();
       binds();
       done.push(m.member);
+      if (lacking) notes.push(lacking);
     } catch (e) {
       left.push({ member: m.member, why: String(e && e.message || e)
         + (containerPartsOf(m).length ? "; " + lacksOf(m.member) : "") });
@@ -1027,10 +1037,12 @@ async function installFleet(emit, token, acct, slug, release, ctx = {}) {
   }
   /* R45: a VPC service named that no member installed here takes is said, never dropped in silence. */
   if (vpcServiceOk(ctx.vpc) && !vpcTaken)
-    notes.push("the Workers VPC service you named was not connected: no capability worker installed this time takes one");
+    notes.push(`the Workers VPC service you named was not connected: ${VPC_MEMBER} was not installed this time, so a tool reached `
+      + "through a tunnel answers REACH_NOT_BOUND in your group's Civicsmith until the updater connects it");
   const probeNote = leftover ? " One cleanup note: the tiny probe script \"" + PLAN_PROBE + "\" could not be deleted "
     + "automatically — it is harmless, and you can remove it from Workers & Pages any time." : "";
-  const noteText = notes.length ? " " + notes.map((n) => n[0].toUpperCase() + n.slice(1) + ".").join(" ") : "";
+  /* Each note begins with a member's name or a capital, as written; a name is never re-cased. */
+  const noteText = notes.length ? " " + notes.map((n) => (/^[a-z]+-[a-z]/.test(n) ? n : n[0].toUpperCase() + n.slice(1)) + ".").join(" ") : "";
   if (left.length === 0) {
     emit.ok("fleet", "All " + done.length + " capability workers installed and verified: "
       + done.join(", ") + "." + noteText + probeNote);

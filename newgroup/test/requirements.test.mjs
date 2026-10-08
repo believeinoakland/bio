@@ -13,14 +13,15 @@ import worker, * as installer from "../src/index.mjs";
 import { CFG, planeLimits } from "../src/index.mjs";
 import { GROUP_SLUG_RE, FLEET_BINDINGS, HOSTING_CONTROL, hostingControlBlock } from "../../bio-plane/src/setup-fleet.mjs";
 import { setupPage } from "../../bio-plane/src/setup.mjs";
-import { EXAMPLE_SLUG, PUBLISHER, PROFILE_CHOICES, PROFILES_NONE, PAGE_CSS, ASSISTANT_OFFER, DESCRIPTION, WHO } from "../src/ui.mjs";
+import { EXAMPLE_SLUG, PUBLISHER, PROFILE_CHOICES, PROFILES_NONE, PAGE_CSS, ASSISTANT_OFFER, DESCRIPTION, WHO, SECURITY_TOOLS } from "../src/ui.mjs";
 import { RELEASE_VERSION, RELEASE_SOURCE } from "../src/release.mjs";
 import { resolveVersion, checkSignedAsset, embedRelease } from "../scripts/embed-release.mjs";
 import { verifySshsig, NS_RELEASE } from "../../bio-plane/src/sshsig.mjs";
 import * as jurisdictions from "../../jurisdictions/index.mjs";
 import { TOK, ORIGIN, req, begin, callback, cookieOf, cookieValue, b64url, script, realFetch, jres, run, release,
   SIGNER, STRANGER, armWith, disarm, restoreSigners, sha, bump, CAPABLE_SRC, PRE116_SRC, MEMBER_SRC, bindingOf,
-  parsePage, LIMITS, LIMITS_STATEMENT, UNSTATED_SRC, BUILTIN_LIMITS, DEFAULT_VERSION, DESCRIPTOR, IMAGE, RUNNER } from "./fixture.mjs";
+  parsePage, LIMITS, LIMITS_STATEMENT, UNSTATED_SRC, BUILTIN_LIMITS, DEFAULT_VERSION, DESCRIPTOR, IMAGE, RUNNER,
+  SCANNER, SCANNER_CLASSES, SCANNER_WORKER, SCAN_IMAGE, RENDER_IMAGE, VPC_ID, signer } from "./fixture.mjs";
 
 after(restoreSigners);
 const NEXT = bump(RELEASE_VERSION);
@@ -62,7 +63,7 @@ test("R1 GET / serves the install page and GET /update the update page; any othe
   globalThis.fetch = realFetch;
 });
 
-test("R2 POST /begin: the slug grammar and the wizard's own name refused 400 in words; a malformed instanceAi refused by name; else PKCE S256, a fresh state, exactly the four scopes (the Containers write scope among them), the registered redirect, and the 15-minute cookie; no field carries a Claude credential", async () => {
+test("R2 POST /begin: the slug grammar and the wizard's own name refused 400 in words; a malformed instanceAi refused by name; else PKCE S256, a fresh state, exactly the five scopes (the Containers write scope and the VPC bind scope among them), the registered redirect, and the 15-minute cookie; no field carries a Claude credential", async () => {
   for (const bad of ["", "ab", "-abc", "abc-", "Abc", "a_b", "a".repeat(41), "abc.def", "newgroup", 12345, null]) {
     const r = await req("/begin", { method: "POST", body: JSON.stringify({ slug: bad }) });
     const j = await r.json();
@@ -84,8 +85,10 @@ test("R2 POST /begin: the slug grammar and the wizard's own name refused 400 in 
   assert.equal(u.origin + u.pathname, CFG.AUTHORIZE);
   assert.deepEqual(Object.fromEntries([...u.searchParams].filter(([k]) => !["state", "code_challenge"].includes(k))), {
     response_type: "code", client_id: CFG.CLIENT_ID, redirect_uri: "https://newgroup.believeinoakland.workers.dev/callback",
-    scope: "workers-scripts.write workers-r2.write account-settings.read containers.write", code_challenge_method: "S256" });
-  assert.deepEqual(CFG.SCOPES, ["workers-scripts.write", "workers-r2.write", "account-settings.read", "containers.write"]);
+    scope: "workers-scripts.write workers-r2.write account-settings.read containers.write connectivity-directory.bind", code_challenge_method: "S256" });
+  assert.deepEqual(CFG.SCOPES, ["workers-scripts.write", "workers-r2.write", "account-settings.read", "containers.write", "connectivity-directory.bind"]);
+  /* R46 (K2155): no Logs scope is asked. */
+  assert.ok(!CFG.SCOPES.some((x) => /logs/.test(x)));
   /* R36: a Claude credential sent to /begin is taken nowhere: the cookie holds no trace of it. */
   const CLAUDE = "sk-ant-oat01-" + "q".repeat(40);
   const c = await begin("no-claude", "install", { instanceClaude: CLAUDE, claude: CLAUDE });
@@ -978,6 +981,284 @@ test("R38 a container member installs only with the Containers scope granted, Wo
   assert.equal(free.page.status("up"), "ok", "an update never grows a refusal");
   assert.match(free.page.label("fleet"), /agent-runner \(your account is on Workers Free, and containers need Workers Paid/);
   restoreSigners();
+});
+
+/* ------------------------------------------------------------------------------------------------ T36: the retired key, the file scanner, the logs, the hosts */
+
+const metaOf = async (w, name) => {
+  const c = w.calls.filter((x) => x.method === "PUT" && x.u.endsWith("/workers/scripts/" + name)).at(-1);
+  return c ? JSON.parse(await c.init.body.get("metadata").text()) : null;
+};
+const words = (page) => page.replace(/<[^>]+>/g, " ").replace(/&#39;/g, "'").replace(/\s+/g, " ");
+
+test("R17 (T36) the update writes no MEMBER_TOKEN and no ASSISTANT_ENABLED and leaves neither behind: a held one is deleted, a refused delete named", async () => {
+  const w = seen(await run({ slug: "r17-old", mode: "update", pre: { "r17-old": planeBefore36("r17-old") } }));
+  for (const put of w.planePuts) for (const name of ["MEMBER_TOKEN", "ASSISTANT_ENABLED"]) assert.equal(bindingOf(put, name), null, name);
+  assert.deepEqual(w.deleted, ["r17-old/MEMBER_TOKEN"], "the secret deleted by its own act");
+  const held = w.acct.get("r17-old").map((b) => b.name);
+  assert.ok(!held.includes("MEMBER_TOKEN") && !held.includes("ASSISTANT_ENABLED"), "neither left behind: " + held.join(","));
+  assert.ok(held.includes("ADMIN_TOKEN") && held.includes("PROBE_TOKEN"), "the other credentials kept");
+  assert.match(w.page.label("keys"), /The shared member key an earlier installer bound into your group's Civicsmith .* was removed/);
+  assert.match(w.page.label("keys"), /The assistant choice an earlier installer bound into your group's Civicsmith .* was removed by this update/);
+  assert.equal(w.page.status("keys"), "ok");
+  assert.ok(!w.raw.includes("member-kept"), "the held value is never shown");
+  const stuck = seen(await run({ slug: "r17-stuck", mode: "update", pre: { "r17-stuck": planeBefore36("r17-stuck") }, refuseSecretDelete: true }));
+  assert.equal(stuck.page.status("keys"), "no");
+  assert.match(stuck.page.label("keys"), /shared member key .* is still held, and removing it was refused .* Remove the secret MEMBER_TOKEN/s);
+  assert.ok(!stuck.raw.includes("<i>by the fake</i>"), "the API's words are escaped");
+  /* A copy holding neither deletes nothing and says nothing of them. */
+  const clean = seen(await run({ slug: "r17-clean", mode: "update", pre: { "r17-clean": planeBase("r17-clean") } }));
+  assert.deepEqual(clean.deleted, []);
+  assert.ok(!/shared member key/.test(clean.page.label("keys")));
+});
+
+test("R23 (T36) the install and invitation pages state that the Containers permission installs the built-in file scanner and safe view, without which files are kept and shown but not scanned, and a high-risk file opens only in its safe view once one can be made", async () => {
+  for (const [where, page] of [["install page", await text("/")], ["invitation page", INVITATION], ["update page", await text("/update")]]) {
+    const w = words(page);
+    assert.match(w, /Workers Containers/, where);
+    assert.match(w, /built-in file scanner and safe view/, where);
+    assert.match(w, /files are kept and shown but not scanned, and a high-risk file opens only in its safe view once one can be made/, where);
+  }
+});
+
+test("R38 (T36) a container member with two or more classes (file-scanner) is described by each `Container` part (`container/<class_name>.json`), each class installed with its own image pinned by digest and verified as a part; its classes bound into the member itself; a part missing, misnamed or unreadable leaves the member out, named with what the copy then lacks", async () => {
+  armWith(SIGNER.line);
+  const rel = await release({ version: NEXT, scanner: true });
+  const ok = seen(await run({ slug: "two-ok", rel }));
+  const meta = await metaOf(ok, SCANNER);
+  assert.deepEqual(meta.migrations, { new_tag: "v1", new_sqlite_classes: ["FileScanner", "SafeViewRenderer"] });
+  const put = ok.calls.filter((c) => c.method === "PUT" && c.u.endsWith("/scripts/" + SCANNER)).at(-1);
+  for (const c of SCANNER_CLASSES) assert.equal(put.init.body.get(`container/${c.class_name}.json`), null, "a descriptor is read, never uploaded");
+  assert.equal(put.init.body.get("worker.json"), null);
+  /* Each class bound into the member itself, by the binding its descriptor names, with no script name (its own). */
+  assert.deepEqual(meta.bindings.filter((b) => b.type === "durable_object_namespace"),
+    [{ type: "durable_object_namespace", name: "SCANNER", class_name: "FileScanner" }, { type: "durable_object_namespace", name: "RENDERER", class_name: "SafeViewRenderer" }]);
+  /* One application per class, each with its own image, for its own class's namespace. */
+  assert.deepEqual(ok.apps.map(({ id, ...a }) => a).sort((a, b) => a.name < b.name ? -1 : 1), [
+    { name: "file-scanner-filescanner", scheduling_policy: "default", instances: 0, max_instances: 3, configuration: { image: SCAN_IMAGE }, durable_objects: { namespace_id: "ns-file-scanner-FileScanner" } },
+    { name: "file-scanner-safeviewrenderer", scheduling_policy: "default", instances: 0, max_instances: 3, configuration: { image: RENDER_IMAGE }, durable_objects: { namespace_id: "ns-file-scanner-SafeViewRenderer" } }]);
+  assert.deepEqual(ok.refused, []);
+  assert.match(ok.page.label("fleet"), /^All \d+ capability workers installed and verified: .*file-scanner/);
+  /* A one-class member is described as before (agent-runner, R38's own test), beside it. */
+  const both = seen(await run({ slug: "two-both", rel: await release({ version: NEXT, scanner: true, container: true }) }));
+  assert.equal(both.apps.length, 3);
+  assert.ok(both.apps.some((a) => a.name === RUNNER));
+  /* Left out, each with why and what the copy then lacks; every other member installs; the install finishes. */
+  const LACKS = /your group's Civicsmith has no file scanner and no safe view until it is installed: files are kept and shown but not scanned, and a high-risk file opens only in its safe view once one can be made/;
+  const out = async (why, relOpts, says, runOpts = {}, mutate = null) => {
+    const r = await release({ version: NEXT, scanner: true, ...relOpts });
+    if (mutate) mutate(r);
+    const w = seen(await run({ slug: "two-" + why, rel: r, ...runOpts }));
+    assert.equal(w.apps.length, 0, why);
+    assert.match(w.page.label("fleet"), new RegExp(`left out: ${SCANNER} \\([^;]*${says.source}`), why);
+    assert.match(w.page.label("fleet"), LACKS, why);
+    assert.ok(w.acct.has("pdf-worker") && w.page.done, `${why}: the rest installed, the install finished`);
+    return w;
+  };
+  await out("missing", {}, /file-scanner container\/SafeViewRenderer\.json http 404/, {}, (r) => { delete r.assets[`${SCANNER}/container/SafeViewRenderer.json`]; });
+  await out("tampered", {}, /file-scanner container\/FileScanner\.json failed its integrity check/, {},
+    (r) => { r.assets[`${SCANNER}/container/FileScanner.json`] = JSON.stringify({ ...SCANNER_CLASSES[0], image: "docker.io/evil/x@sha256:" + "f".repeat(64) }); });
+  await out("misnamed", { scannerParts: { "container/SafeViewRenderer.json": null, "container/Renderer.json": SCANNER_CLASSES[1] } }, /its container part container\/Renderer\.json describes the class SafeViewRenderer/);
+  await out("unpathed", { scannerParts: { "container/SafeViewRenderer.json": null, "renderer.json": SCANNER_CLASSES[1] } }, /its container part renderer\.json is not named for its class/);
+  await out("ghcr", { scannerParts: { "container/SafeViewRenderer.json": { ...SCANNER_CLASSES[1], image: "ghcr.io/believeinoakland/file-scanner-renderer@sha256:" + "e".repeat(64) } } },
+    /its image is not a public registry image pinned by its sha256 digest \(class SafeViewRenderer\)/);
+  await out("noscope", {}, /the permission you approved does not include Workers Containers/, { grantedScope: "workers-scripts.write workers-r2.write account-settings.read" });
+  /* An update rolls each class's application out to its own image. */
+  const old = [{ type: "plain_text", name: "VERSION", text: "0.1.0" }];
+  const up = seen(await run({ slug: "two-upd", mode: "update", rel, pre: { "two-upd": planeBase("two-upd"), [SCANNER]: old },
+    preClasses: { [SCANNER]: ["FileScanner", "SafeViewRenderer"] },
+    preApps: [{ id: "appS", name: "file-scanner-filescanner" }, { id: "appR", name: "file-scanner-safeviewrenderer" }] }));
+  assert.deepEqual(up.rollouts.map((r) => [r.id, r.target_configuration.image]).sort(), [["appR", RENDER_IMAGE], ["appS", SCAN_IMAGE]]);
+  assert.equal("migrations" in await metaOf(up, SCANNER), false, "the classes' migration is never restated");
+  assert.deepEqual(up.refused, []);
+  restoreSigners();
+});
+
+test("R43 the installer verifies against exactly the armed public lines, the fresh release key and the offline recovery key: a release or fleet statement signed by either installs, one signed by any other key (the development key included) is not installed and is named so; the embed step checks against the same lines", async () => {
+  /* A pair made in the test stands for the two lines Bob's signer-page sitting makes (no key is entered by this job). */
+  const RELEASE_KEY = await signer("bio-release"), RECOVERY_KEY = await signer("bio-release-recovery"), DEV = await signer("bio-release-dev");
+  armWith(RELEASE_KEY.line, RECOVERY_KEY.line);
+  for (const [who, k] of [["release key", RELEASE_KEY], ["recovery key", RECOVERY_KEY]]) {
+    const rel = await release({ version: NEXT, signWith: k });
+    const w = seen(await run({ slug: "keys-ok", rel }));
+    w.planePuts.length && null;
+    assert.equal(w.planePuts[0].source, rel.src, who);
+    assert.match(w.page.label("fleet"), /All \d+ capability workers installed and verified/, who);
+    assert.equal(await checkSignedAsset({ manifest: rel.manifest, bytes: new TextEncoder().encode(rel.src), version: NEXT, signers: [RELEASE_KEY.line, RECOVERY_KEY.line] }), null, who);
+  }
+  /* Signed by any other key, the development key included: not installed, and named. */
+  const rel = await release({ version: NEXT, signWith: DEV });
+  const w = seen(await run({ slug: "keys-dev", rel }));
+  assert.ok(w.planePuts.every((p) => p.source !== rel.src), "never installed");
+  assert.match(w.page.label("rel"), /not by a key this installer trusts \(UNKNOWN_KEY\)/);
+  assert.match(await checkSignedAsset({ manifest: rel.manifest, bytes: new TextEncoder().encode(rel.src), version: NEXT, signers: [RELEASE_KEY.line, RECOVERY_KEY.line] }), /does not verify .*UNKNOWN_KEY/);
+  /* A fleet statement signed by another key, beside a plane signed by an armed one: no member installed, named. */
+  const mixed = await release({ version: NEXT, signWith: RELEASE_KEY });
+  mixed.manifest.fleetSig = (await release({ version: NEXT, signWith: DEV })).manifest.fleetSig;
+  const m = seen(await run({ slug: "keys-fleet", rel: mixed }));
+  assert.match(m.page.label("fleet"), /The fleet signature did not verify \(UNKNOWN_KEY\)/);
+  restoreSigners();
+});
+test.todo("R43 the shipped ARMED_SIGNERS holds exactly the fresh release key and the offline recovery key, and not the development key (not yet met: the two lines come from Bob's signer-page sitting, T36-1; this job enters no key, and the built-in release is still signed by the development key)");
+
+test("R44 the install and the update install file-scanner with exactly the bindings its signed statement names: the copy's CAPTURES bucket by role (from its `Worker` part), its two classes, SECURITY_VPC only as R45 says; its schedule as the part gives it; a release without that part installs it without them and the page names what it lacks; the plane is bound to it as FILE_SCANNER; a member left out is named and the install never fails", async () => {
+  armWith(SIGNER.line);
+  const rel = await release({ version: NEXT, scanner: true });
+  for (const [mode, pre] of [["install", {}], ["update", { "r44-update": planeBase("r44-update") }]]) {
+    const slug = "r44-" + mode;
+    const w = seen(await run({ slug, mode, rel, pre }));
+    const meta = await metaOf(w, SCANNER);
+    assert.deepEqual(meta.bindings.map((b) => b.name).sort(), ["CAPTURES", "RENDERER", "SCANNER", "VERSION"], mode);
+    /* The prefixes it writes (clamav/, reputation/) are in the copy's evidence bucket and nowhere else: its one bucket. */
+    assert.deepEqual(meta.bindings.filter((b) => b.type === "r2_bucket"), [{ type: "r2_bucket", name: "CAPTURES", bucket_name: "bio-captures" }], mode);
+    assert.deepEqual(w.schedules.get(SCANNER), ["17 4 * * *"], mode);
+    assert.equal([...w.schedules.keys()].join(), SCANNER, `${mode}: only the member whose part states one`);
+    /* The plane: bound to it as FILE_SCANNER, by instance-setup's name (R30). */
+    assert.deepEqual(FLEET_BINDINGS.find(([m]) => m === SCANNER), [SCANNER, "FILE_SCANNER"], "instance-setup's name for it");
+    assert.deepEqual(bindingOf(w.planePuts.at(-1), "FILE_SCANNER"), { type: "service", name: "FILE_SCANNER", service: SCANNER }, mode);
+  }
+  /* The part's bucket by role: "published" names the other bucket; an unknown role or a malformed cron leaves it out, named. */
+  const pub = seen(await run({ slug: "r44-pub", rel: await release({ version: NEXT, scanner: true, scannerWorker: { r2_buckets: [{ binding: "OUT", bucket: "published" }], crons: [] } }) }));
+  assert.deepEqual((await metaOf(pub, SCANNER)).bindings.filter((b) => b.type === "r2_bucket"), [{ type: "r2_bucket", name: "OUT", bucket_name: "bio-published" }]);
+  assert.equal(pub.schedules.has(SCANNER), false, "no cron stated, none set");
+  for (const [why, part, says] of [["role", { r2_buckets: [{ binding: "CAPTURES", bucket: "bio-captures" }] }, /names its buckets unreadably/],
+      ["cron", { crons: ["every day"] }, /states its schedule unreadably/], ["garbled", "{nope", /its Worker description does not parse/]]) {
+    const w = seen(await run({ slug: "r44-" + why, rel: await release({ version: NEXT, scanner: true, scannerWorker: part }) }));
+    assert.ok(!w.acct.has(SCANNER), why);
+    assert.match(w.page.label("fleet"), new RegExp(`left out: ${SCANNER} \\([^;]*${says.source}`), why);
+    assert.ok(w.page.done, why);
+  }
+  /* A release without the part (bundler's N772 not yet in it): installed without bucket and cron, and the page says what it lacks. */
+  const bare = seen(await run({ slug: "r44-bare", rel: await release({ version: NEXT, scanner: true, scannerWorker: null }) }));
+  assert.deepEqual((await metaOf(bare, SCANNER)).bindings.map((b) => b.name).sort(), ["RENDERER", "SCANNER", "VERSION"]);
+  assert.equal(bare.schedules.size, 0);
+  assert.match(bare.page.label("fleet"), /file-scanner: its release does not yet state its bucket and its daily schedule, so it was installed without them/);
+  /* A schedule refused: the member stays installed and the page says so. */
+  const late = seen(await run({ slug: "r44-late", rel, refuseSchedules: true }));
+  assert.ok(late.acct.has(SCANNER));
+  assert.match(late.page.label("fleet"), /file-scanner was installed, but its schedule \(17 4 \* \* \*\) could not be set/);
+  assert.ok(!late.raw.includes("<i>by the fake</i>"));
+  restoreSigners();
+});
+
+test("R45 the final panel and the update's last screen say the organization's own security tools are added in your group's Civicsmith and the installer takes none; a Workers VPC service the operator names (optional, nothing preselected) binds file-scanner as SECURITY_VPC, none named writes none and the page says a tunnelled tool answers REACH_NOT_BOUND", async () => {
+  const home = await text("/"), upd = await text("/update");
+  for (const page of [home, upd]) {
+    const field = page.match(/<input id="vpc"[^>]*>/)?.[0];
+    assert.ok(field && !/\svalue=/.test(field), "offered, nothing filled in");
+    assert.match(words(page), /REACH_NOT_BOUND/);
+    assert.ok(page.includes("securityVpc:"), "the page sends it");
+  }
+  assert.match(SECURITY_TOOLS.replace(/\s+/g, " "), /added in your group's Civicsmith by an administrator, at its setup or later\. This installer takes no tool and no tool's key\./);
+  /* /begin: a value that is not a service id refused by name; a good one carried in the cookie; none, nothing. */
+  for (const bad of ["vpc-1", "0123", "g".repeat(32), "0123456789abcdef0123456789abcdef0"]) {
+    const r = await req("/begin", { method: "POST", body: JSON.stringify({ slug: "vpc-bad", securityVpc: bad }) });
+    assert.deepEqual([r.status, (await r.json()).ok], [400, false], bad);
+  }
+  const dashed = "01234567-89ab-cdef-0123-456789abcdef";
+  assert.equal(cookieValue((await begin("vpc-ok", "install", { securityVpc: dashed.toUpperCase() })).cookie).vpc, dashed);
+  assert.equal("vpc" in cookieValue((await begin("vpc-none")).cookie), false);
+  armWith(SIGNER.line);
+  const rel = await release({ version: NEXT, scanner: true });
+  const VPC = { type: "vpc_service", name: "SECURITY_VPC", service_id: VPC_ID };
+  /* Named: file-scanner, and no other member, is bound to it, on the install and on the update. */
+  for (const [mode, pre] of [["install", {}], ["update", { "r45-update": planeBase("r45-update") }]]) {
+    const w = seen(await run({ slug: "r45-" + mode, mode, rel, pre, vpc: VPC_ID }));
+    assert.deepEqual((await metaOf(w, SCANNER)).bindings.filter((b) => b.type === "vpc_service"), [VPC], mode);
+    for (const m of MEMBERS.filter((x) => x !== SCANNER)) assert.equal(((await metaOf(w, m))?.bindings || []).some((b) => b.type === "vpc_service"), false, m);
+    assert.match(w.page.label("fleet"), /file-scanner is connected to the Workers VPC service you named \(SECURITY_VPC\)/);
+    assert.match(words(w.page.done), /added in your group's Civicsmith by an administrator, at its setup or later\. This installer takes no tool and no tool's key\./, mode);
+    assert.match(w.page.done, /You named a Workers VPC service/, mode);
+  }
+  /* None named: no such binding, and the panel and the update's last screen say a tunnelled tool answers REACH_NOT_BOUND. */
+  for (const [mode, pre] of [["install", {}], ["update", { "r45-none": planeBase("r45-none") }]]) {
+    const w = seen(await run({ slug: "r45-none", mode, rel, pre }));
+    assert.equal((await metaOf(w, SCANNER)).bindings.some((b) => b.type === "vpc_service"), false, mode);
+    assert.match(w.page.done, /You named no Workers VPC service, so none is connected: a tool reached through a tunnel answers REACH_NOT_BOUND/, mode);
+    assert.match(words(w.page.done), /This installer takes no tool and no tool's key/, mode);
+  }
+  /* Refused: file-scanner is uploaded again without it, and the page names why. */
+  const no = seen(await run({ slug: "r45-refused", rel, vpc: VPC_ID, refuseVpc: true }));
+  assert.ok(no.acct.has(SCANNER) && !(no.acct.get(SCANNER) || []).some((b) => b.type === "vpc_service"));
+  assert.match(no.page.label("fleet"), /file-scanner could not be connected to the Workers VPC service you named .* answers REACH_NOT_BOUND until the updater connects it/);
+  assert.ok(!no.raw.includes("<b>by the fake</b>"));
+  /* Named, but file-scanner not installed this time: said, never dropped. */
+  const gone = seen(await run({ slug: "r45-gone", rel, vpc: VPC_ID, grantedScope: "workers-scripts.write workers-r2.write account-settings.read" }));
+  assert.match(gone.page.label("fleet"), /the Workers VPC service you named was not connected: file-scanner was not installed this time/i);
+  restoreSigners();
+});
+
+test("R46 before verify succeeds, the install and the update list the account's Logpush jobs and name as a failure each job over workers_trace_events whose filter does not exclude the copy's Workers; no success while one is named; a list the permission cannot read is stated undetermined with the manual check, never passed", async () => {
+  /* The filter, as Logpush's grammar reads it: only a ScriptName condition that leaves every one of the copy's Workers out excludes them. */
+  const names = ["grp", "pdf-worker"];
+  const F = (where) => JSON.stringify({ where });
+  for (const [filter, want] of [[null, false], ["", false], ["{not json", false], [F({ key: "Outcome", operator: "eq", value: "ok" }), false],
+      [F({ key: "ScriptName", operator: "!in", value: ["grp", "pdf-worker", "x"] }), true], [F({ key: "ScriptName", operator: "!in", value: ["grp"] }), false],
+      [F({ key: "ScriptName", operator: "in", value: ["other"] }), true], [F({ key: "ScriptName", operator: "eq", value: "grp" }), false],
+      [F({ and: [{ key: "Outcome", operator: "eq", value: "ok" }, { key: "ScriptName", operator: "!in", value: names }] }), true],
+      [F({ or: [{ key: "ScriptName", operator: "!in", value: names }] }), false], [F({ key: "ScriptName", operator: "!eq", value: "grp" }), false]])
+    assert.equal(installer.filterExcludes(filter, names), want, String(filter));
+  armWith(SIGNER.line);
+  const rel = await release({ version: NEXT });
+  const all = (slug) => [slug, ...MEMBERS];
+  const trace = (slug, filter, extra = {}) => ({ id: 7, name: "trace all", dataset: "workers_trace_events", enabled: true, filter, ...extra });
+  for (const [mode, pre] of [["install", (s) => ({})], ["update", (s) => ({ [s]: planeBase(s) })]]) {
+    /* None, a job over another dataset, or one whose filter leaves the copy's Workers out: clear, and verify succeeds. */
+    for (const [why, jobs] of [["none", []], ["other", [{ id: 1, name: "http", dataset: "http_requests", filter: null }]],
+        ["excluded", [trace("lp-x", F({ key: "ScriptName", operator: "!in", value: all("lp-x") }))]]]) {
+      const w = seen(await run({ slug: "lp-x", mode, rel, pre: pre("lp-x"), logpush: jobs }));
+      assert.equal(w.page.status("logs"), "ok", `${mode} ${why}`);
+      assert.equal(w.page.status("verify"), "ok", `${mode} ${why}`);
+      assert.ok(w.page.steps.indexOf("logs") < w.page.steps.indexOf("verify"), "before verify");
+    }
+    /* A job that keeps them: named on the page as a failure, and no success claimed. */
+    for (const filter of [null, F({ key: "ScriptName", operator: "!in", value: ["lp-n"] })]) {
+      const w = seen(await run({ slug: "lp-n", mode, rel, pre: pre("lp-n"), logpush: [trace("lp-n", filter)] }));
+      assert.equal(w.page.status("logs"), "no", mode);
+      assert.match(w.page.label("logs"), /A Logpush job on your Cloudflare account would keep a log of who opened which file: the Logpush job "trace all" \(id 7\)/);
+      assert.equal(w.page.status("verify"), "no", mode);
+      assert.ok(w.page.done.includes("the Logpush job &quot;trace all&quot; (id 7)"), mode);
+      assert.ok(!w.page.done.includes("Your group's Civicsmith is running.") && !/<b>Updated (from|to)/.test(w.page.done), `${mode}: no success`);
+    }
+    /* Unreadable: undetermined, with the manual check, and never stated as passed. */
+    const u = seen(await run({ slug: "lp-u", mode, rel, pre: pre("lp-u"), logpush: "refused" }));
+    assert.equal(u.page.status("logs"), "no", mode);
+    assert.match(u.page.label("logs"), /^Undetermined: the installer could not read your account's Logpush jobs .* open Analytics & Logs, then Logpush, and look for a job over Workers Trace Events/);
+    assert.ok(!/No Logpush job/.test(u.page.label("logs")), "never passed");
+  }
+  restoreSigners();
+});
+
+test("R47 the install binds OWN_HOSTS, the copy's own host names (its workers.dev address), once that address is enabled; the update restates it from the address it finds; with no address it is not written and the page says so", async () => {
+  const hostsOf = (put) => bindingOf(put, "OWN_HOSTS");
+  const w = seen(await run({ slug: "hosts" }));
+  assert.equal(hostsOf(w.planePuts[0]), null, "not before the address is enabled");
+  assert.deepEqual(hostsOf(w.planePuts.at(-1)), { type: "plain_text", name: "OWN_HOSTS", text: "hosts.grp.workers.dev" });
+  assert.deepEqual(w.acct.get("hosts").filter((b) => b.name === "OWN_HOSTS").map((b) => b.text), ["hosts.grp.workers.dev"]);
+  const at = (id) => w.calls.findIndex((c) => id === "enable" ? c.u.endsWith("/scripts/hosts/subdomain") : false);
+  assert.ok(w.calls.indexOf(w.calls.filter((c) => c.method === "PUT" && c.u.endsWith("/scripts/hosts")).at(-1)) > at("enable"), "written after the address is enabled");
+  assert.match(w.page.label("bind"), /now knows its own address \(hosts\.grp\.workers\.dev\)/);
+  /* A prefix registered by the install: the host is the one it registered. */
+  const reg = seen(await run({ slug: "hosts-new", subdomain: null }));
+  assert.equal(hostsOf(reg.planePuts.at(-1)).text, `hosts-new.${reg.prefix()}.workers.dev`);
+  /* No address: never written, and said. */
+  for (const opts of [{ enableFail: true }, { subdomain: null, subdomainPut: "fail" }]) {
+    const n = seen(await run({ slug: "hosts-none", ...opts }));
+    assert.ok(n.planePuts.every((p) => hostsOf(p) === null), JSON.stringify(opts));
+    assert.match(n.page.failed.p, /Until it has one, your group's Civicsmith is not told an address of its own/);
+  }
+  /* A refused last upload: not written, and said. */
+  const ref = seen(await run({ slug: "hosts-ref", refuseRePut: true }));
+  assert.equal(ref.acct.get("hosts-ref").some((b) => b.name === "OWN_HOSTS"), false);
+  assert.match(ref.page.label("bind"), /Telling your group's Civicsmith its own address was refused/);
+  /* The update: restated from the address it finds, on every upload; none found, none written, said. */
+  const u = seen(await run({ slug: "hosts-upd", mode: "update", pre: { "hosts-upd": planeBase("hosts-upd") } }));
+  for (const put of u.planePuts) assert.equal(hostsOf(put).text, "hosts-upd.grp.workers.dev");
+  assert.match(u.page.label("addr"), /this update told it that address is its own/);
+  const un = seen(await run({ slug: "hosts-unf", mode: "update", subdomain: null, pre: { "hosts-unf": [...planeBase("hosts-unf"), { type: "plain_text", name: "OWN_HOSTS", text: "stale.example.workers.dev" }] } }));
+  for (const put of un.planePuts) assert.equal(hostsOf(put), null);
+  assert.equal(un.acct.get("hosts-unf").some((b) => b.name === "OWN_HOSTS"), false, "a stale value is not kept");
+  assert.match(un.page.label("addr"), /No web address was found for your group's Civicsmith, so it was not told one of its own/);
 });
 
 /* ------------------------------------------------------------------------------------------------ the embed step */

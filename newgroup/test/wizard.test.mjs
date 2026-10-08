@@ -257,7 +257,7 @@ console.log("\n--- front page and begin ---");
   t("PKCE method is S256", a.searchParams.get("code_challenge_method"), "S256");
   t("challenge present", (a.searchParams.get("code_challenge") || "").length >= 40, true);
   t("redirect is the registered string, character-exact", a.searchParams.get("redirect_uri"), CFG.REDIRECT);
-  t("scopes are exactly the registered four", a.searchParams.get("scope"), CFG.SCOPES.join(" "));
+  t("scopes are exactly the registered five (T36: connectivity-directory.bind, R45)", a.searchParams.get("scope"), CFG.SCOPES.join(" "));
   t("state travels", (state || "").length >= 20, true);
   t("cookie is HttpOnly", /HttpOnly/i.test(r.headers.get("set-cookie")), true);
   t("cookie is Secure and Lax", /Secure/.test(r.headers.get("set-cookie")) && /SameSite=Lax/.test(r.headers.get("set-cookie")), true);

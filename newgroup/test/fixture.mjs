@@ -132,7 +132,7 @@ export const DESCRIPTOR = Object.freeze({ class_name: "AgentRunner", image: IMAG
 export const RUNNER = "agent-runner";
 /* R38, R44 (T36): the two-class container member file-scanner: one `Container` part per class
    (`container/<class_name>.json`), each class bound into the member itself, and its `Worker` part naming its bucket by
-   role, its schedule and its optional private-network binding. */
+   role and its schedule (N772). */
 export const SCANNER = "file-scanner";
 export const SCAN_IMAGE = "docker.io/civicos/file-scanner-scanner@sha256:" + "d".repeat(64);
 export const RENDER_IMAGE = "docker.io/civicos/file-scanner-renderer@sha256:" + "e".repeat(64);
@@ -140,8 +140,7 @@ export const SCANNER_CLASSES = Object.freeze([
   Object.freeze({ class_name: "FileScanner", image: SCAN_IMAGE, scheduling_policy: "default", max_instances: 3, bind: [{ member: SCANNER, binding: "SCANNER" }] }),
   Object.freeze({ class_name: "SafeViewRenderer", image: RENDER_IMAGE, scheduling_policy: "default", max_instances: 3, bind: [{ member: SCANNER, binding: "RENDERER" }] }),
 ]);
-export const SCANNER_WORKER = Object.freeze({ r2_buckets: [{ binding: "CAPTURES", bucket: "captures" }], crons: ["17 4 * * *"],
-  vpc_services: [{ binding: "SECURITY_VPC" }] });
+export const SCANNER_WORKER = Object.freeze({ r2_buckets: [{ binding: "CAPTURES", bucket: "captures" }], crons: ["17 4 * * *"] });
 export const VPC_ID = "0123456789abcdef0123456789abcdef";
 
 /* `members`: the fleet's member names (default: the three the plane binds). Options drop the fleet signature, sign it
@@ -153,7 +152,9 @@ export async function release({ version, src = CAPABLE_SRC, members = FLEET_BIND
   container = false, descriptor = DESCRIPTOR, memberSrc = {},
   /* `scanner`: adds file-scanner; `scannerParts` replaces its parts' texts by path (a value null drops that part);
      `scannerWorker` its `Worker` part (an object, raw text, or null for none). */
-  scanner = false, scannerParts = {}, scannerWorker = SCANNER_WORKER } = {}) {
+  scanner = false, scannerParts = {}, scannerWorker = SCANNER_WORKER,
+  /* R43: the key that signs the release and its fleet statement (default SIGNER). */
+  signWith = SIGNER } = {}) {
   const planeSha = await sha(src);
   const boxText = typeof descriptor === "string" ? descriptor : JSON.stringify(descriptor);
   const text = (x) => typeof x === "string" ? x : JSON.stringify(x);
@@ -179,10 +180,10 @@ export async function release({ version, src = CAPABLE_SRC, members = FLEET_BIND
   const plane = { sha256: planeSha, bytes: src.length, asset: "bio-plane.bundled.mjs" };
   const signedList = signedMembers ? await Promise.all(signedMembers.map(entry)) : list;
   const manifest = { version, sha256: planeSha, bytes: src.length, asset: "bio-plane.bundled.mjs",
-    ...(sig === "good" ? { sig: await SIGNER.sign(src) } : sig === "stranger" ? { sig: await STRANGER.sign(src) }
-      : sig === "wrong-ns" ? { sig: await SIGNER.sign(src, "bio-ratify") } : {}),
+    ...(sig === "good" ? { sig: await signWith.sign(src) } : sig === "stranger" ? { sig: await STRANGER.sign(src) }
+      : sig === "wrong-ns" ? { sig: await signWith.sign(src, "bio-ratify") } : {}),
     ...(fleet ? { fleet: list } : {}),
-    ...(fleet && fleetSig === "good" ? { fleetSig: await SIGNER.sign(fleetStatement({ version, plane, members: signedList }), NS_FLEET) } : {}) };
+    ...(fleet && fleetSig === "good" ? { fleetSig: await signWith.sign(fleetStatement({ version, plane, members: signedList }), NS_FLEET) } : {}) };
   const assets = { "bio-plane.bundled.mjs": src };
   for (const m of list) {
     assets[m.asset] = m.member === tamper ? "tampered" : srcOf(m.member);
