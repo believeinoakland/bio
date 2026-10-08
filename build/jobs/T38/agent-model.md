@@ -32,4 +32,4 @@ Reading set measured at START: 110 KB (own requirements 12 KB, code and tests 98
 - `checks/coverage.mjs agent-model`: 12 of 12 live requirement ids named by a test; 0 failures.
 - `checks/ownership.mjs agent-model tranche/T38`: 0 failures.
 
-Size (session_01Ad5jo3ATsxaCVanqA7zcKg): test runs 6, module lines 1623
+Size (session_01Ad5jo3ATsxaCVanqA7zcKg): test runs 6, module lines 1660
