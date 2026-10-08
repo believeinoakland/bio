@@ -104,7 +104,7 @@ test("R61 every act naming a project the caller cannot see answers byte for byte
   for (const a of as("PROJ-H")) assert.doesNotMatch(a, /NOT_THE_OWNER|NOT_AN_ADMIN|ADMIN_ONLY/);
 });
 
-test("R45 projectVisibilitySet: NOT_A_PROJECT, owners only, two settings; appended with by and reason; hidden lapses requests", async () => {
+test("R45 projectVisibilitySet: NOT_A_PROJECT, owners only, two settings; appended with by and reason; hidden tells R117", async () => {
   const w = await sightWorld();
   w.bundle("INFO-J");
   assert.equal(w.m.projectVisibilitySet({ projectId: "INFO-J", setting: "hidden", by: "ann", viewer: V("ann") }).reason, "NOT_A_PROJECT");
@@ -113,14 +113,45 @@ test("R45 projectVisibilitySet: NOT_A_PROJECT, owners only, two settings; append
       "PROJECT_VISIBILITY_NOT_THE_OWNER", by);
   assert.equal(w.m.projectVisibilitySet({ projectId: "PROJ-H", setting: "public", by: "ann", viewer: V("ann") }).reason,
     "PROJECT_VISIBILITY_UNKNOWN_SETTING");
-  w.m.projectRequest({ projectId: "PROJ-D", comment: "please", by: "cal", viewer: V("cal") });
   const h = w.m.projectVisibilitySet({ projectId: "PROJ-D", setting: "hidden", reason: "closing up", by: "ann", viewer: V("ann") });
-  assert.deepEqual([h.ok, h.setting, h.set_by, h.reason, h.requests_lapsed], [true, "hidden", "ann", "closing up", 1]);
-  assert.deepEqual(w.row(`SELECT state, closed_by FROM project_join_requests`), { state: "lapsed", closed_by: "ann" });
+  assert.deepEqual([h.ok, h.setting, h.set_by, h.reason, h.requests_lapsed], [true, "hidden", "ann", "closing up", 0],
+    "hiding lapses requests through R117's listener; with none registered, 0");
   assert.equal(w.m.visibilityOf("PROJ-D"), "hidden");
   assert.equal(w.m.sight("PROJ-D", V("cal")), Membership.SIGHT_NONE);
   assert.equal(w.m.visibilityOf("PROJ-H"), "hidden", "a project with no record is hidden");
   assert.equal(w.rows(`SELECT * FROM project_visibility WHERE project_id='PROJ-D'`).length, 2, "appended, never overwritten");
+});
+
+test("R45 R117 hiding tells the one registered listener after the record and the reindex; requests_lapsed its count; discoverable tells nobody", async () => {
+  const w = await sightWorld();
+  const heard = [];
+  let answer = 2;
+  assert.deepEqual(w.m.onProjectHidden("project-roster", (n) => {
+    heard.push({ ...n, setting: w.m.visibilityOf(n.projectId),
+                 recorded: w.row(`SELECT at FROM project_visibility WHERE project_id=? ORDER BY seq DESC LIMIT 1`, n.projectId).at });
+    if (answer === "throw") throw new Error("listener fails");
+    return answer;
+  }), { ok: true, module: "project-roster" });
+  const h = w.m.projectVisibilitySet({ projectId: "PROJ-D", setting: "hidden", by: "ann", viewer: V("ann") });
+  assert.deepEqual([h.ok, h.setting, h.requests_lapsed], [true, "hidden", 2]);
+  assert.equal(heard.length, 1);
+  assert.deepEqual([heard[0].projectId, heard[0].by, heard[0].setting, heard[0].at], ["PROJ-D", "ann", "hidden", h.at]);
+  assert.equal(heard[0].recorded, h.at, "told after the record, with the record's date");
+  const d = w.m.projectVisibilitySet({ projectId: "PROJ-D", setting: "discoverable", by: "ann", viewer: V("ann") });
+  assert.deepEqual([d.ok, "requests_lapsed" in d, heard.length], [true, false, 1], "discoverable tells nobody");
+  for (const a of [0, "throw", -1, 1.5, "3", null]) {
+    answer = a;
+    const r = w.m.projectVisibilitySet({ projectId: "PROJ-D", setting: "hidden", by: "ann", viewer: V("ann") });
+    assert.deepEqual([r.ok, r.requests_lapsed, w.m.visibilityOf("PROJ-D")], [true, 0, "hidden"], String(a));
+    w.m.projectVisibilitySet({ projectId: "PROJ-D", setting: "discoverable", by: "ann", viewer: V("ann") });
+  }
+  /* A refused setting tells nobody. */
+  const before = heard.length;
+  w.m.projectVisibilitySet({ projectId: "PROJ-D", setting: "hidden", by: "bob", viewer: V("bob") });
+  assert.equal(heard.length, before);
+  const again = w.m.onProjectHidden("other", () => 1);
+  assert.deepEqual([again.reason, again.module], ["LISTENER_DECLARED", "project-roster"]);
+  assert.equal(w.m.onProjectHidden("x", 1).reason, "LISTENER_MALFORMED");
 });
 
 test("R46 projectVisibility gives the setting and its history at FULL, else the absent answer", async () => {

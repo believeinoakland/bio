@@ -210,6 +210,13 @@ export const MEMBERSHIP_CHECKS = Object.freeze({
     translation: 'Who sees what your group says about itself is your members only, or the public as well, and '
       + 'nothing else. Nothing was written.',
   }),
+  /* N793 (K231; T38-4): one code, one site. `NO_SUCH_MEMBER` is minted only by `noSuchMember`, which every module
+     refusing that condition calls; the next free number of C-96 (instance-setup's C-64.18 gives way to it). */
+  NO_SUCH_MEMBER: Object.freeze({
+    check: 'C-96.39', where: at("noSuchMember", "is-no-such-member"),
+    translation: 'No member of your group answers to the name or id given. Nothing was changed. Check the name, or '
+      + 'add the person as a member first.',
+  }),
 });
 
 /* ===== T19 layer 2: membership's families, COPIED from the check catalogue with their names, ids, `where`s and
@@ -261,9 +268,11 @@ export const MEMBER_ID_CHECKS = {
  *                      row, because one code holds one row and this sentence is true at both sites);
  *   CONSENSUS_REQUIRED `memberAdd` and `adminEndorse` (§4.7's administrators) and `projectOwnerAdd`
  *                      (§7.10's owners).
- * NO_SUCH_MEMBER, NO_SUCH_KEY and BAD_STATUS are NOT given rows: the surface sends only ids and keys the
- * plane listed to it (no member or signer row is ever deleted) and only the two statuses the ops take, so it
- * cannot receive them; EXPERTISE_IS_NOT_ASSIGNED likewise, because the surface never sends `expertise`. */
+ * NO_SUCH_KEY and BAD_STATUS are NOT given rows: the surface sends only keys the plane listed to it (no signer row
+ * is ever deleted) and only the two statuses the ops take, so it cannot receive them; EXPERTISE_IS_NOT_ASSIGNED
+ * likewise, because the surface never sends `expertise`. NO_SUCH_MEMBER has its row since T38 (N793, K231): it is
+ * minted by several modules for one condition, so it is minted at one site, `noSuchMember`, and its row is
+ * MEMBERSHIP_CHECKS' C-96.39. */
 export const CUSTODIAL_CHECKS = {
   BAD_MEMBER_ID: {
     check: 'C-96.2',

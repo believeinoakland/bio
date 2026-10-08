@@ -119,7 +119,7 @@ test("R80 inSight: true exactly for a held bundle R43 admits the viewer to (FULL
   assert.equal(snapshot(w), before, "writes nothing");
 });
 
-test("R82 hostingAccess (R11) is bounded and says so: limit lowered never raised, truncated measured, current the latest", async () => {
+test("R113 hostingAccess (R11) is bounded and says so: limit lowered never raised, truncated measured, current the latest", async () => {
   const w = await world().group();
   const empty = w.m.hostingAccess();
   assert.deepEqual([empty.recorded, empty.current, empty.history, empty.limit, empty.truncated],
@@ -138,7 +138,7 @@ test("R82 hostingAccess (R11) is bounded and says so: limit lowered never raised
   assert.deepEqual(w.ops("limit=3").hostingaccess().history.length, 3, "the op passes limit");
 });
 
-test("R82 memberPairings (R19) is bounded and says so: the first limit by handle, truncated measured, never raised", async () => {
+test("R113 memberPairings (R19) is bounded and says so: the first limit by handle, truncated measured, never raised", async () => {
   const w = await world().group("ann", "bob", "cal");
   for (const id of ["ann", "bob", "cal"]) w.m.memberPairingSet({ memberId: id, published: true, by: id });
   const all = w.m.memberPairings();
