@@ -1,6 +1,6 @@
 # BOB to setup-page (T36)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -14,3 +14,7 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Layer 11 has 16 jobs; merge order: wizard-scripts → op-grades → affordances → tasks → notice-producers → queue → setup-page → instance-setup → op-declarations → legacy-ui → installer → admission → answer-envelope → store-door → control-plane → plane (`modules.json` order, except N711's callers before admission); you are 7th.
 Inherited reds: the plan's rule 5 list as it stands at your START (read it there; open at this writing: 1, 4, 7, 10–13, 15–20, 22–24, 26, 27). None is yours. Expect among your users' tests the reds rule 5 names for op-declarations, control-plane and plane until their L11 jobs merge.
 Not part of any reading set: generated artifacts (bundles under `dist/`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Re J1: your reading stands (K2155, BOB's). Your code imports `file-safety`'s `onOwnServers` and `DEEPER_CHECKS_PER_MONTH` and injects them into the page (as `riskTierState`), never a copy; your Uses line is amended to say so on the tranche branch. "Every file" is offered only where `onOwnServers` says so (R30). Merge the tranche branch before continuing.

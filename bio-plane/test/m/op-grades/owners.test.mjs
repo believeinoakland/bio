@@ -154,7 +154,7 @@ const T33_WRITES = {
   sourcekeyed: "undetermined", entityidentify: "reasoned", waitlook: "caller-owned", exportrender: "substrate",
   clockadopt: "undetermined", aiceilingset: "caller-owned", aicopyceilingset: "substrate", airunverify: "reasoned",
   clockpropose: "reversible", capturerequestplatformmark: "reversible", capturerequestplatformunmark: "reversible",
-  officesseed: "substrate", assistantset: "substrate", seatsseed: "substrate", disclosureshown: "caller-owned",
+  officesseed: "substrate", seatsseed: "substrate", disclosureshown: "caller-owned",
   ask: "caller-owned", askusage: "observational",
 };
 const T33_READS = ["event", "eventforact", "datedfacts", "eventsfor", "timeline", "sequence", "whowassent", "statementsof",
