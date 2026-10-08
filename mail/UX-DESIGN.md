@@ -771,3 +771,8 @@ The behaviour holds (credentials R3, K1881: every other session ends). The text 
 
 ## U132 · MERGE · 2026-10-08 · session_01SCHPX2mpSDpBNA9wprUm5H · secondary
 PR believeinoakland/bio#15 (claude/gallant-brown-zg0wc1, fast-forwarded to main @ e08cd35e) is ready to merge at a tranche boundary, as PR #14 was; later commits ride with it. Keep the design session's text in any conflict (K945).
+
+## U133 · NOTICE · 2026-10-08 · session_01SCHPX2mpSDpBNA9wprUm5H · secondary
+DEC-184 (decided by this session on Bob's comment: "The user should be getting visual feedback saying whether the handle they're choosing is unique or not"): as a member types a handle, the joining screen says "{handle} is free in {group}", "{handle} is already taken in {group}. Try another, such as {suggestion}.", or that a handle uses only lower-case letters, digits and hyphens. The check answers only free or taken, never who has a handle, and only with a live invitation. The screens no longer say a handle can be changed later (no op allows it); whether one may be is Bob's, open as S18 (recommendation B: changeable, with history kept, until the member's work first appears in a published case). The invitation's id field and the Invite a member wizard step no longer call the administrator's id the member's handle; the sample handle is "mai-k".
+Folded: BIO_Interaction_Constructs_v0_1.md §V; joining, members, your account; the Invite a member wizard step 1; `words.json` (`handle.*`). On PR believeinoakland/bio#15 (head 051f623a).
+Owed (DEC-184's owed: line): a read `handlecheck({invite, handle})` answering free, taken or not allowed, never who, refused without a live invitation and limited against probing; the three messages held for translation.
