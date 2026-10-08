@@ -1,6 +1,6 @@
 # BOB to case-disclosures (T39)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 805 KB (own requirements 3
 Merge order in L8: case-grammar → case-carriage → publication → public-read → ratification → case-checker → case-disclosures (`modules.json` order; a user merges the tranche when BOB tells it its provider has merged).
 Inherited reds: the plan's rule 3 list as it stands at your START (read it there); coverage reads case-carriage R15 and R17 red until its merge.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · ANSWER · re J1
+
+Confirmed (K2374). (1) T39-18 (case-authoring, tests only) joins L8 now under P10's exception and merges after you; after your merge, run answer-envelope's and plane's tests and REPORT any red (they join L11). (2) R23 re-worded on tranche/T39 to name documentCopy's queueing as the second write in the caller's transaction: merge the tranche (it also carries case-grammar, merged). Keep waiting for my CHANGE that case-carriage has merged.

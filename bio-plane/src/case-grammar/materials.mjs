@@ -11,16 +11,19 @@
  *   materials:              one row per document or observation any member's chain reaches: `ref`, `kind` (`document`
  *                           or `observation`), `sha`, `text_sha`, `origin`, `archived_copy`, `included` (whether it
  *                           travels whole), `rests_under` (`load_bearing` or `supporting`).
- *                           (T37; N757; DEC-180 (4); T38: N779, K2248) A `document` row may also state
- *                           `obscured_copy` and `obscured_label`: the photo travels as its copy, nothing of the
- *                           original but its pixels, its marked areas, if any, covered, never whole, so the row states
- *                           `included: false` and keeps the original's `sha`, `text_sha`, `origin` and
- *                           `archived_copy`; read back as `obscured: {copy, label}`. A published case states it for
- *                           every photo it carries (its writers' duty: `case-carriage`, `case-authoring`). `label` is
- *                           `case-carriage`'s `OBSCURED_LABEL` for a marked photo and null for an unmarked one (a copy
- *                           with nothing covered), written as handed: this module is earlier than `case-carriage` and
- *                           names no label of its own. An optional field of `/7`, with no new format (K2206): a row
- *                           without it is written and read exactly as before, and an absent label reads null.
+ *                           (T37; N757; DEC-180 (4); T38: N779, K2248; T39: N806, K2333) A `document` row may also
+ *                           state `obscured_copy` and `obscured_label`: the material travels as its copy, never whole:
+ *                           a photo's (nothing of the original but its pixels, its marked areas, if any, covered), or
+ *                           a member document's cleaned copy (`case-carriage` R15: every picture in it, and the
+ *                           document itself, carrying none of their details). The row states `included: false` and
+ *                           keeps the original's `sha`, `text_sha`, `origin` and `archived_copy`; read back as
+ *                           `obscured: {copy, label}`. A published case states it for every photo it carries and every
+ *                           member document it carries as its copy (its writers' duty: `case-carriage`,
+ *                           `case-authoring`). `label` is `case-carriage`'s `OBSCURED_LABEL` for a marked photo, null
+ *                           for an unmarked one (a copy with nothing covered), and its `COPY_CLEANED_LABEL` for a
+ *                           member document, written as handed: this module is earlier than `case-carriage` and names
+ *                           no label of its own. An optional field of `/7`, with no new format (K2206): a row without
+ *                           it is written and read exactly as before, and an absent label reads null.
  *   material_attestations:  one row per attestation of a material: `ref`, `by_kind` (`member`, `co_attestation`,
  *                           `project`, `group`), `by`, `level`, `at`, `signature`, `recorded_in`.
  *   accepted_work:          one row per (member, leg) whose chain reaches another group's finding (`inquiry-grammar`
@@ -99,7 +102,8 @@ export const GROUP_ATTESTATION_SIGNATURE = "case";
    guess), and `included` true only when handed true, so nothing is said to travel whole that was not. A `document` row
    handed `obscured` (an object) is written with its two flat fields, a copy that is not a SHA-256 written null (so a
    reader finds the copy missing, never a guess) and a label that is not a sentence written null (an unmarked photo's
-   copy carries none: T38), and `included: false` whatever it is handed: the original never travels (T37; N757). */
+   copy carries none: T38), and `included: false` whatever it is handed: the original never travels (T37; N757), a
+   photo's and a member document's alike (T39; N806). */
 const HEX64 = /^[0-9a-f]{64}$/;
 const obscuredOf = (o) => (o && typeof o === "object" && !Array.isArray(o)
   ? { obscured_copy: typeof o.copy === "string" && HEX64.test(o.copy) ? o.copy : null,
