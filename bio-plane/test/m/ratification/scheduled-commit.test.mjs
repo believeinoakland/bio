@@ -8,7 +8,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { deflateSync } from "node:zlib";
-import { world, newKey, signCase, cleanCase, fmText, CASE_BODY, V, NOW, sha } from "./fixture.mjs";
+import { world, plane, newKey, signCase, cleanCase, fmText, CASE_BODY, V, NOW, sha } from "./fixture.mjs";
+import { caseRatifyOp } from "../../../src/ratification/ops.mjs";
 import { caseConclusionRowLines, rowOf } from "../../../src/ratification/index.mjs";
 import { rowOf as publicationRowOf } from "../../../src/publication/checks.mjs";
 import { materialsLines } from "../../../src/case-grammar/index.mjs";
@@ -76,6 +77,9 @@ async function signedForLater() {
   const text = fmText(doc, { raw: ["case_conclusions:", ...caseConclusionRowLines(Q1, conc), ...materialsLines([asCopy])],
                              body: CASE_BODY });
   const docSha = w.caseDoc(CASE, 1, text);
+  w.pub.facts.set(`${CASE}#1`, { ok: true, doc: { case_id: CASE, edition: 1, doc_sha: docSha, text },
+                                 attribution: { reached: [], legacy: [], stated: [], current: [] },
+                                 signers: w.credentials.attestingKeys(), memberBasis: null, priorCase: null });
   const sig = await signCase(key, CASE, 1, docSha);
   const body = { caseId: CASE, edition: 1, docSha, sigArmored: sig, attestorKey: key.keyB64, attestorMember: "alice",
                  gateVersion: "g1", deliveredBy: "member:alice", at: AT };
@@ -83,7 +87,7 @@ async function signedForLater() {
   assert.equal(waiting.ok, true, JSON.stringify(waiting));
   assert.equal(waiting.state, "waiting");
   const pastItsTime = new Date(Date.parse(waiting.publish_at) + 3600e3).toISOString();
-  return { w, cc, p, m2, pastItsTime };
+  return { w, cc, p, m2, pastItsTime, body, docSha, sig };
 }
 
 const nothingCommitted = (w) => {
@@ -122,4 +126,50 @@ test("R42 (T39): negative control: with the marks as signed, publishDue past the
   assert.equal(due.taken.length, 1);
   assert.equal(due.taken[0].state, "published", JSON.stringify(due.taken[0]));
   assert.equal(s.w.count("published_cases"), 1);
+});
+
+/* publication R57 (T39; K2370): when C-122.6 and C-122.7 both hold, the commit answers both in `refusals`, the first
+   also at top level, each `{reason, code, check, translation, photos|documents, detail}`. Built against that stated
+   shape until publication's merge: the commit here answers it as stated, over the real case and signature. */
+const PHOTO_REFUSAL = { ok: false, ...publicationRowOf("PHOTO_MARKS_CHANGED_SINCE"), reason: "PHOTO_MARKS_CHANGED_SINCE",
+  photos: [{ ref: PHOTO, sha: "ab".repeat(32), why: "a mark was withdrawn since the case was prepared" }],
+  detail: "1 photo(s) this case document carries cannot be published as prepared" };
+const DOCUMENT_REFUSAL = { ok: false, reason: "DOCUMENT_COPY_CHANGED_SINCE", code: "DOCUMENT_COPY_CHANGED_SINCE",
+  check: "C-122.7", translation: "A document's publication copy changed after this case was prepared.",
+  documents: [{ ref: "INFO-2026-0030-letter", sha: "cd".repeat(32), why: "its copy is no longer the one the case names" }],
+  detail: "1 member document(s) this case document carries cannot be published as prepared" };
+const BOTH = { ...PHOTO_REFUSAL, caseId: CASE, edition: 1, refusals: [PHOTO_REFUSAL, DOCUMENT_REFUSAL] };
+
+test("R42 (T39; K2370): a commit refusing both C-122.6 and C-122.7 stops the waiting edition with one SCHEDULED_CHECK_REFUSED entry per refusal, each cause that refusal's own code, check and translation, in the commit's order; nothing committed", async () => {
+  const s = await signedForLater();
+  s.w.publication.commitCaseEdition = () => BOTH;
+  const due = await s.w.realPub.publishDue(s.pastItsTime);
+  const [taken] = due.taken;
+  assert.equal(taken.state, "stopped", JSON.stringify(taken));
+  assert.deepEqual(taken.reasons.map((x) => [x.code, x.check, x.translation]),
+                   [["SCHEDULED_CHECK_REFUSED", "C-58.10", rowOf("SCHEDULED_CHECK_REFUSED").translation],
+                    ["SCHEDULED_CHECK_REFUSED", "C-58.10", rowOf("SCHEDULED_CHECK_REFUSED").translation]]);
+  assert.deepEqual(taken.reasons.map((x) => [x.cause.code, x.cause.check, x.cause.translation, x.cause.detail]),
+                   [PHOTO_REFUSAL, DOCUMENT_REFUSAL].map((r) => [r.code, r.check, r.translation, r.detail]));
+  nothingCommitted(s.w);
+  /* one refusal alone, with no `refusals` list, is one entry */
+  const one = await signedForLater();
+  one.w.publication.commitCaseEdition = () => ({ ...DOCUMENT_REFUSAL, caseId: CASE, edition: 1 });
+  const [t1] = (await one.w.realPub.publishDue(one.pastItsTime)).taken;
+  assert.deepEqual(t1.reasons.map((x) => [x.code, x.cause.code, x.cause.check]),
+                   [["SCHEDULED_CHECK_REFUSED", "DOCUMENT_COPY_CHANGED_SINCE", "C-122.7"]]);
+  nothingCommitted(one.w);
+});
+
+test("R3 (T39; K2370): op=caseratify's answer relays the commit's refusals as the commit answered them, at the store half and through the Worker half; nothing committed", async () => {
+  const s = await signedForLater();
+  s.w.publication.scheduledEditions = () => ({ editions: [], cursor: null });   /* nothing waiting: the commit is asked */
+  s.w.publication.commitCaseEdition = () => BOTH;
+  const store = await s.w.r.ratifyCaseDocument({ ...s.body, at: undefined });
+  assert.deepEqual(store, BOTH);
+  const p = plane(s.w);
+  const res = await caseRatifyOp(p.request({ caseId: CASE, edition: 1, expectedSha: s.docSha, sig: s.sig }), p.stub, p.ctx);
+  assert.equal(res.status, 409, JSON.stringify(res.body));
+  assert.deepEqual([res.body.reason, res.body.check, res.body.refusals], [BOTH.reason, BOTH.check, BOTH.refusals]);
+  nothingCommitted(s.w);
 });

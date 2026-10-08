@@ -192,6 +192,15 @@ export function refusedStop(refusal) {
     ...(Array.isArray(r.findings) ? { findings: r.findings } : {}) } });
 }
 
+/** R42 (K2370): the stop entries for a refusal of the commit itself, one per refusal it answers: each of its
+ *  `refusals` (publication R57 answers C-122.6 and C-122.7 there when both hold, the first also at top level), else
+ *  the one refusal it is. */
+export function commitStops(refusal) {
+  const list = refusal && typeof refusal === "object" && Array.isArray(refusal.refusals)
+    ? refusal.refusals.filter((r) => r && typeof r === "object") : [];
+  return (list.length ? list : [refusal]).map(refusedStop);
+}
+
 /** R42: the stop entry for what could not be read at the set time: a read that fails stops, never passes. */
 export function unreadableStop(what) {
   return scheduledStop("SCHEDULED_CHECK_REFUSED", { cause: { code: "UNREADABLE", what: (Array.isArray(what) ? what : [what])
