@@ -1097,6 +1097,7 @@ function readJpegHeader(d) {
     throw new DctRefusal("NOT_A_JPEG", { note: "no SOI" });
   const qt = [];
   const hts = { dc: [], ac: [] };
+  const bogus = /* @__PURE__ */ new Map();
   let frame = null, jfif = false, adobe = null, restart = 0;
   let p = 2;
   for (; ; ) {
@@ -1138,12 +1139,24 @@ function readJpegHeader(d) {
     } else if (m === 196) {
       let q = 0;
       while (q < seg.length) {
-        const tc = seg[q] >> 4, th = seg[q] & 15;
+        const tc = seg[q] >> 4, th = seg[q] & 15, table2 = `${tc === 0 ? "dc" : "ac"} ${th}`;
+        if (tc > 1 || th > 3) throw new DctRefusal("CORRUPT_DATA", { note: "Huffman table class or id past the four tables", class: tc, id: th });
+        if (q + 17 > seg.length) throw new DctRefusal("CORRUPT_DATA", { note: "Huffman table counts run past their DHT", table: table2 });
         const counts = seg.subarray(q + 1, q + 17);
         let total = 0;
         for (let i = 0; i < 16; i++) total += counts[i];
+        if (total > 256 || q + 17 + total > seg.length)
+          throw new DctRefusal("CORRUPT_DATA", { note: `Huffman table of ${total} symbols ${total > 256 ? "past 256" : "runs past its DHT"}`, table: table2 });
         const symbols = seg.subarray(q + 17, q + 17 + total);
-        (tc === 0 ? hts.dc : hts.ac)[th] = buildHuffman(counts, symbols);
+        const why = bogusHuffman(counts, symbols, tc === 0);
+        const list = tc === 0 ? hts.dc : hts.ac;
+        if (why) {
+          delete list[th];
+          bogus.set(table2, why);
+        } else {
+          list[th] = buildHuffman(counts, symbols);
+          bogus.delete(table2);
+        }
         q += 17 + total;
       }
     } else if (m === 204) {
@@ -1161,10 +1174,26 @@ function readJpegHeader(d) {
       const ns = seg[0];
       const scomps = [];
       for (let i = 0; i < ns; i++) scomps.push({ id: seg[1 + 2 * i], td: seg[2 + 2 * i] >> 4, ta: seg[2 + 2 * i] & 15 });
+      for (const sc of scomps) for (const table2 of [`dc ${sc.td}`, `ac ${sc.ta}`]) {
+        if (bogus.has(table2))
+          throw new DctRefusal("CORRUPT_DATA", { note: `bogus Huffman table definition: ${bogus.get(table2)}`, table: table2, component: sc.id });
+      }
       return { frame, qt, hts, jfif, adobe, restart, scan: { comps: scomps, dataAt: p + len } };
     }
     p += len;
   }
+}
+function bogusHuffman(counts, symbols, isDC) {
+  let code = 0;
+  for (let l = 1; l <= 16; l++) {
+    code += counts[l - 1];
+    if (code >= 1 << l) return `${counts[l - 1]} codes of ${l} bits overflow the code space, or use the all-ones code`;
+    code <<= 1;
+  }
+  if (isDC) {
+    for (const s of symbols) if (s > 15) return `DC symbol ${s} past 15`;
+  }
+  return null;
 }
 function buildHuffman(counts, symbols) {
   const maxcode = new Int32Array(18).fill(-1);

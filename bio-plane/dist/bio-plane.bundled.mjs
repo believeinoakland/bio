@@ -38481,6 +38481,7 @@ function readJpegHeader(d) {
     throw new DctRefusal("NOT_A_JPEG", { note: "no SOI" });
   const qt = [];
   const hts = { dc: [], ac: [] };
+  const bogus = /* @__PURE__ */ new Map();
   let frame = null, jfif = false, adobe = null, restart = 0;
   let p3 = 2;
   for (; ; ) {
@@ -38522,12 +38523,24 @@ function readJpegHeader(d) {
     } else if (m === 196) {
       let q10 = 0;
       while (q10 < seg.length) {
-        const tc = seg[q10] >> 4, th = seg[q10] & 15;
+        const tc = seg[q10] >> 4, th = seg[q10] & 15, table4 = `${tc === 0 ? "dc" : "ac"} ${th}`;
+        if (tc > 1 || th > 3) throw new DctRefusal("CORRUPT_DATA", { note: "Huffman table class or id past the four tables", class: tc, id: th });
+        if (q10 + 17 > seg.length) throw new DctRefusal("CORRUPT_DATA", { note: "Huffman table counts run past their DHT", table: table4 });
         const counts = seg.subarray(q10 + 1, q10 + 17);
         let total2 = 0;
         for (let i = 0; i < 16; i++) total2 += counts[i];
+        if (total2 > 256 || q10 + 17 + total2 > seg.length)
+          throw new DctRefusal("CORRUPT_DATA", { note: `Huffman table of ${total2} symbols ${total2 > 256 ? "past 256" : "runs past its DHT"}`, table: table4 });
         const symbols = seg.subarray(q10 + 17, q10 + 17 + total2);
-        (tc === 0 ? hts.dc : hts.ac)[th] = buildHuffman(counts, symbols);
+        const why = bogusHuffman(counts, symbols, tc === 0);
+        const list6 = tc === 0 ? hts.dc : hts.ac;
+        if (why) {
+          delete list6[th];
+          bogus.set(table4, why);
+        } else {
+          list6[th] = buildHuffman(counts, symbols);
+          bogus.delete(table4);
+        }
         q10 += 17 + total2;
       }
     } else if (m === 204) {
@@ -38545,10 +38558,26 @@ function readJpegHeader(d) {
       const ns = seg[0];
       const scomps = [];
       for (let i = 0; i < ns; i++) scomps.push({ id: seg[1 + 2 * i], td: seg[2 + 2 * i] >> 4, ta: seg[2 + 2 * i] & 15 });
+      for (const sc of scomps) for (const table4 of [`dc ${sc.td}`, `ac ${sc.ta}`]) {
+        if (bogus.has(table4))
+          throw new DctRefusal("CORRUPT_DATA", { note: `bogus Huffman table definition: ${bogus.get(table4)}`, table: table4, component: sc.id });
+      }
       return { frame, qt, hts, jfif, adobe, restart, scan: { comps: scomps, dataAt: p3 + len } };
     }
     p3 += len;
   }
+}
+function bogusHuffman(counts, symbols, isDC) {
+  let code = 0;
+  for (let l2 = 1; l2 <= 16; l2++) {
+    code += counts[l2 - 1];
+    if (code >= 1 << l2) return `${counts[l2 - 1]} codes of ${l2} bits overflow the code space, or use the all-ones code`;
+    code <<= 1;
+  }
+  if (isDC) {
+    for (const s of symbols) if (s > 15) return `DC symbol ${s} past 15`;
+  }
+  return null;
 }
 function buildHuffman(counts, symbols) {
   const maxcode = new Int32Array(18).fill(-1);
@@ -177872,12 +177901,16 @@ var strList = (v, nonEmpty2) => Array.isArray(v) && (!nonEmpty2 || v.length > 0)
 var stated = (v, check2) => v === NOT_STATED2 || check2(v);
 var hostName = (h) => str34(h) && /^(\*\.)?[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(h);
 var CONFIG_NAME = /^[a-z][a-z0-9_]*$/;
+var STRUCTURED = Object.freeze(["list", "handling"]);
+var SPEC_FIELDS = Object.freeze(["host", "region"]);
 function configList(v) {
   if (!Array.isArray(v)) return false;
   const names = /* @__PURE__ */ new Set();
   for (const f17 of v) {
     if (!f17 || typeof f17 !== "object" || Array.isArray(f17)) return false;
-    if (Object.keys(f17).length !== 3 || !CONFIG_NAME.test(f17.name || "") || !str34(f17.label) || typeof f17.required !== "boolean") return false;
+    const keys = Object.keys(f17).filter((k) => k !== "structured");
+    if (keys.length !== 3 || !CONFIG_NAME.test(f17.name || "") || !str34(f17.label) || typeof f17.required !== "boolean") return false;
+    if ("structured" in f17 && !STRUCTURED.includes(f17.structured)) return false;
     if (names.has(f17.name)) return false;
     names.add(f17.name);
   }
@@ -177946,6 +177979,9 @@ function normaliseFamily(list6) {
   return out;
 }
 
+// ../file-scanner/src/providers/net.mjs
+var hostPart = (h) => String(h).replace(/^[a-z]+:\/\//i, "").split("/")[0].replace(/:\d+$/, "").toLowerCase();
+
 // ../file-scanner/src/providers/catalogue.mjs
 var READ_ON = "2026-10-07";
 var NEVER = Object.freeze(["file_name", "member_identity", "ip_address"]);
@@ -177956,14 +177992,17 @@ var descriptor = (d) => Object.freeze({
   credentials: [],
   read_on: READ_ON,
   ...d,
-  config: Object.freeze((d.config || []).map((f17) => Object.freeze({ ...f17 }))),
+  config: Object.freeze((d.config || []).map((f17) => Object.freeze(f17 === REGION2 ? { ...f17, label: `Region: one of ${Object.keys(d.hosts).join(", ")}` } : { ...f17 }))),
   handling: Object.freeze({ never_sends: NEVER, sub_processors: [], ...d.handling })
 });
-var field = (name2, label, required2) => ({ name: name2, label, required: required2 });
-var TEMPLATE_CONFIG = () => [
-  field("engine_family", "The engines the tool runs, as its maker names them", true),
-  field("handling", "The tool's statement of what it receives, keeps and shares", true),
-  field("source_urls", "Where that statement is published", false)
+var field = (name2, label, required2, structured) => ({ name: name2, label, required: required2, ...structured ? { structured } : {} });
+var HOST = (label) => field("host", label, true);
+var REGION2 = Object.freeze({ name: "region", label: null, required: true });
+var TEMPLATE_CONFIG = (host) => [
+  HOST(host),
+  field("engine_family", "The engines the tool runs, as its maker names them", true, "list"),
+  field("handling", "The tool's statement of what it receives, keeps and shares", true, "handling"),
+  field("source_urls", "Where that statement is published", false, "list")
 ];
 var AZURE_TENANT = field("tenant_id", "Microsoft Entra tenant ID", true);
 var METADEFENDER_ENGINES = [
@@ -178019,6 +178058,7 @@ var INTELIX = {
   },
   engine_family: ["sophos"],
   credentials: ["client_id", "client_secret"],
+  config: [REGION2],
   handling: {
     sends: ["file_bytes"],
     recipient: "Sophos Ltd",
@@ -178053,6 +178093,7 @@ var PROVIDERS = Object.freeze([
     engine_family: ["scanii", "sophos"],
     credentials: ["api_key", "api_secret"],
     test_probe: { kind: "eicar" },
+    config: [REGION2],
     handling: {
       sends: ["file_bytes"],
       recipient: "Uva Software, LLC",
@@ -178109,6 +178150,7 @@ var PROVIDERS = Object.freeze([
     engine_family: METADEFENDER_ENGINES,
     credentials: ["api_key"],
     test_probe: { kind: "eicar" },
+    config: [HOST("MetaDefender Core server address (host, or host:port)")],
     handling: {
       sends: ["file_bytes"],
       recipient: "the organization's own MetaDefender Core server",
@@ -178132,9 +178174,9 @@ var PROVIDERS = Object.freeze([
     engine_family: [ADMIN],
     test_probe: { kind: "eicar" },
     config: [
-      ...TEMPLATE_CONFIG(),
+      ...TEMPLATE_CONFIG("ICAP server address (host, or host:port; port 1344, or 11344 over TLS, unless named)"),
       field("service", "ICAP service name (default avscan)", false),
-      field("tls", "Connect over TLS (port 11344 unless the address names one)", false)
+      field("tls", "Connect over TLS: yes or no (default no)", false)
     ],
     handling: {
       sends: ["file_bytes"],
@@ -178194,6 +178236,8 @@ var PROVIDERS = Object.freeze([
     max_bytes: 146800640,
     engine_family: ["opswat-deep-cdr"],
     credentials: ["api_key"],
+    // Cloud's address is catalogued; Core's is the organization's own server, so its host is asked only for Core.
+    config: [REGION2, field("host", "MetaDefender Core server address (host, or host:port; Core only)", false)],
     test_probe: { kind: "macro_document" },
     mode_required: MD_PRIVATE,
     mode_check: MD_CHECK,
@@ -178225,6 +178269,7 @@ var PROVIDERS = Object.freeze([
     engine_family: ["glasswall"],
     credentials: ["api_token"],
     test_probe: { kind: "macro_document" },
+    config: [HOST("Glasswall Halo API address (host, or host:port)")],
     handling: {
       sends: ["file_bytes"],
       recipient: "the Glasswall Halo deployment the organization runs or subscribes to",
@@ -178277,6 +178322,7 @@ var PROVIDERS = Object.freeze([
     engine_family: ["vmray"],
     credentials: ["api_key"],
     test_probe: { kind: "eicar" },
+    config: [REGION2],
     handling: {
       sends: ["file_bytes"],
       recipient: "VMRay GmbH",
@@ -178300,7 +178346,10 @@ var PROVIDERS = Object.freeze([
     engine_family: ["crowdstrike"],
     credentials: ["client_id", "client_secret"],
     test_probe: { kind: "eicar" },
-    config: [field("environment_id", "Sandbox environment ID (default 160, Windows 10 64-bit)", false)],
+    config: [
+      REGION2,
+      field("environment_id", "Sandbox environment ID (default 160, Windows 10 64-bit)", false)
+    ],
     mode_required: Object.freeze({
       params: Object.freeze({ is_confidential: "true" }),
       description: "community access off: every upload confidential"
@@ -178337,6 +178386,7 @@ var PROVIDERS = Object.freeze([
     engine_family: ["wildfire"],
     credentials: ["api_key"],
     test_probe: { kind: "eicar" },
+    config: [REGION2],
     handling: {
       sends: ["file_bytes"],
       recipient: "Palo Alto Networks, Inc.",
@@ -178410,6 +178460,7 @@ var PROVIDERS = Object.freeze([
     engine_family: ["splunk-hec"],
     credentials: ["hec_token"],
     test_probe: { kind: "zero_counts" },
+    config: [HOST("Splunk HTTP Event Collector address (host:port; the collector listens on 8088 unless changed)")],
     handling: {
       sends: ["counts"],
       recipient: "the organization's own Splunk",
@@ -178465,6 +178516,7 @@ var PROVIDERS = Object.freeze([
     credentials: ["service_account_key"],
     test_probe: { kind: "zero_counts" },
     config: [
+      REGION2,
       field("project", "Google Cloud project ID", true),
       field("location", "Instance location", true),
       field("instance", "Instance (customer) ID", true),
@@ -178493,7 +178545,10 @@ var PROVIDERS = Object.freeze([
     engine_family: ["elastic"],
     credentials: ["api_key"],
     test_probe: { kind: "zero_counts" },
-    config: [field("index", "Index the counts are written to (default civicsmith-security-counts)", false)],
+    config: [
+      HOST("Elasticsearch address (host, or host:port)"),
+      field("index", "Index the counts are written to (default civicsmith-security-counts)", false)
+    ],
     handling: {
       sends: ["counts"],
       recipient: "the organization's own Elastic deployment",
@@ -178516,7 +178571,7 @@ var PROVIDERS = Object.freeze([
     template: true,
     engine_family: ["syslog"],
     test_probe: { kind: "zero_counts" },
-    config: TEMPLATE_CONFIG(),
+    config: TEMPLATE_CONFIG("Syslog collector address (host, or host:port; port 6514 unless named)"),
     handling: {
       sends: ["counts"],
       recipient: ADMIN,
@@ -178540,7 +178595,7 @@ var PROVIDERS = Object.freeze([
     engine_family: ["webhook"],
     credentials: ["token"],
     test_probe: { kind: "zero_counts" },
-    config: [...TEMPLATE_CONFIG(), field("path", "Path on the endpoint (default /)", false)],
+    config: [...TEMPLATE_CONFIG("Endpoint address (host, or host:port)"), field("path", "Path on the endpoint (default /)", false)],
     handling: {
       sends: ["counts"],
       recipient: ADMIN,
@@ -178579,7 +178634,7 @@ function resolveDescriptor(d, spec) {
   const resolved = {
     ...d,
     template: void 0,
-    hosts: host ? [String(host).split(":")[0]] : [],
+    hosts: host ? [hostPart(host)] : [],
     engine_family: d.kinds.includes("scan") ? family2(config.engine_family) : family2(config.engine_family || d.engine_family),
     handling: { ...d.handling, ...config.handling || {} },
     source_urls: config.source_urls || []
