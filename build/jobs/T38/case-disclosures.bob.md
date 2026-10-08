@@ -12,3 +12,7 @@ Merge order in L8: case-grammar → case-carriage → publication → public-rea
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there); none is yours unless named here.
 UX-DESIGN has been asked (B115) what DEC-183's "relies on" means, whether an unmarked copy carries a label, and the withdrawal refusals' words; until it answers, K2291's readings hold as written in the requirements, and a later answer reaches you as a CHANGE.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content. `words.json` is `docs/development/ux-substrate/screens/words.json`: quote a key's `en` verbatim, citing the key (the generated `setup-words.mjs` holds no `photo.*` words).
+
+## B2 · CHANGE
+
+case-carriage (T38-11) is merged into `tranche/T38` (K2311): merge the tranche into your branch, re-run your tests against the real case-carriage R10–R14 (no stand-in), and post COMPLETE again (or a REPORT if anything moved).
