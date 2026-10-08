@@ -10,6 +10,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { agentRunnerOf } from '../src/entry.mjs';
 import { signinOf } from '../src/signin.mjs';
+import { GOOD_CODE } from './stubs/claude-values.mjs';
 
 export function stubSdk(script) {
   const calls = [];
@@ -47,8 +48,12 @@ export const success = (over = {}) => ({
   ...over,
 });
 
+// The member a conversation names, and a sentinel token no request may bring in (R2, R8; T39).
+export const MEMBER = 'member-7d1e';
+export const SENTINEL = 'sk-ant-oat01-SENTINEL-7f3a9c';
+
 export const request = (over = {}) => ({
-  credential: { kind: 'subscription', secret: 'sk-ant-oat01-SENTINEL-7f3a9c' },
+  credential: { kind: 'signin', member: MEMBER },
   model: 'claude-sonnet-5-5', system: 'You answer from the record only.', prompt: 'What was filed?',
   tools: [{ name: 'search', description: 'Search the record', input_schema: { type: 'object', properties: { q: { type: 'string' } } } }],
   max_turns: 4, ...over,
@@ -65,8 +70,9 @@ export function stubClaude(dir, mode = 'ok') {
   return { binary, log, runs };
 }
 
-// The runner over `sdk`, its instance's sign-in in its own directory (`signinRoot`) over a stubbed binary in `mode`.
-export async function startRunner(sdk, { mode = 'ok', waits } = {}) {
+// The runner over `sdk`, its instance's sign-in in its own directory (`signinRoot`) over a stubbed binary in `mode`;
+// with `signedIn`, signed in for that member through R17 and R18 before it is handed over.
+export async function startRunner(sdk, { mode = 'ok', waits, signedIn = null } = {}) {
   const tmpRoot = mkdtempSync(join(tmpdir(), 'agent-runner-test-'));
   const outside = mkdtempSync(join(tmpdir(), 'agent-runner-instance-'));
   const signinRoot = join(outside, 'signin'), claude = stubClaude(outside, mode);
@@ -74,12 +80,17 @@ export async function startRunner(sdk, { mode = 'ok', waits } = {}) {
   const server = agentRunnerOf({ sdk, tmpRoot, signin });
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   const base = `127.0.0.1:${server.address().port}`;
+  const post = async (path, body) => {
+    const res = await fetch(`http://${base}${path}`, { method: 'POST', body: typeof body === 'string' ? body : JSON.stringify(body) });
+    return { status: res.status, body: await res.json() };
+  };
+  if (signedIn) {
+    const started = await post('/signin', { member: signedIn });
+    const done = await post('/signin/code', { member: signedIn, code: GOOD_CODE });
+    if (started.status !== 200 || !done.body.connected) throw new Error(`the stub sign-in failed: ${JSON.stringify([started, done])}`);
+  }
   return {
-    base, tmpRoot, signinRoot, signin, claude,
-    post: async (path, body) => {
-      const res = await fetch(`http://${base}${path}`, { method: 'POST', body: typeof body === 'string' ? body : JSON.stringify(body) });
-      return { status: res.status, body: await res.json() };
-    },
+    base, tmpRoot, signinRoot, signin, claude, post,
     stop: async () => {
       if (signin.waiting) await signin.signout(signin.waiting.member).catch(() => {});
       server.closeAllConnections?.(); await new Promise((r) => server.close(r));

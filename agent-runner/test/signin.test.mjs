@@ -287,10 +287,11 @@ test('R9 a conversation of each kind leaves the instance\'s writable paths as th
     await signedIn(r);
     const listing = () => [...filesUnder(r.signinRoot), ...filesUnder(r.tmpRoot)].map((f) => f.path).sort();
     const contents = () => Object.fromEntries(filesUnder(r.signinRoot).map((f) => [f.path, f.text]));
-    for (const req of [request(), signinReq()]) {
+    // the one kind a conversation has (T39), and a refused one (a subscription token), which starts nothing
+    for (const req of [signinReq(), request({ credential: { kind: 'subscription', secret: 'sk-ant-oat01-x' } })]) {
       const paths0 = listing(), text0 = contents();
       const { final } = await conversation(r.base, req);
-      assert.equal(final.ok, true);
+      assert.equal(final.ok, req.credential.kind === 'signin');
       await until(() => readdirSync(r.tmpRoot).length === 0);
       assert.deepEqual(listing(), paths0, `${req.credential.kind}: the same paths after`);
       const changed = Object.keys(text0).filter((p) => contents()[p] !== text0[p]);
@@ -313,8 +314,6 @@ test('R22 Claude Code runs as published: nothing written under its package after
   const { calls, sdk } = stubSdk(async () => success());
   const r = await startRunner(sdk);
   try {
-    await conversation(r.base, request());
-    await conversation(r.base, request({ credential: { kind: 'apikey', secret: 'sk-ant-api-x' } }));
     await signedIn(r);
     await conversation(r.base, signinReq());
     await r.post('/signin/state', { member: M });
