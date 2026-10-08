@@ -1,6 +1,6 @@
 # wizard-scripts (T37)
 
-**Status** · session_01QwNq9qtQJ2HZxpaw54BfmN · depth 2 · COMPLETE · handled B1
+**Status** · session_01QwNq9qtQJ2HZxpaw54BfmN · depth 2 · COMPLETE · handled B2
 
 ## Completion (WIZARD-SCRIPTS #6, T37-25)
 
@@ -34,3 +34,21 @@ Size (session_01QwNq9qtQJ2HZxpaw54BfmN): test runs 9, module lines 2318
 ## J1 · COMPLETE
 
 T37-25 complete on job/T37/wizard-scripts (record: Completion). R13: registry re-taken from e08cd35ecb (build-data.mjs <registry @e08cd35ecb> e08cd35ecb <library @d129238bf3> d129238bf3); with an op table, an act the table lacks is not registered, so registeredScreens, wizardsAt and wizardcheck answer one registry. R24/R27: AI_KEPT_AWAY from credentials.aiKeptAway() at the call, failing closed, credentials' own refusal passed through (K231); assistant.on not read; module now reaches credentials. R22: no ruling records Bob's approval of version 2, so all 17 scripts stay version 1 from d129238bf3. Red 7 stays open (plane release.test.mjs:12, :18, R19: 'Set up and claim' step 11 assistantset), and R11 now withholds 'Set up and claim' and the optional 'Follow a proceeding' (registerproceeding) until a version 2 is carried. Tests: module 69/0; users' tests 960/43, the same file for file as origin/tranche/T37 (all inherited reds, no rule-4 interim red). Checks: format, architecture, coverage 27/27, ownership 9 files: 0 failures. Stale artifact: plane bundle. Requirements notes for you in the record (R5's R42 should be R45, Uses: declareTable, filing-templates R26; membership R84's list).
+
+## B2 · CHANGE processed (K2241: version 2 of the four scripts adopted)
+
+`tranche/T37` merged (R22 re-worded; K2240, K2241). **Applied:**
+- R22: version 2 of "Set up and claim", "Publication ceremony", "Check a claim" and "Follow a proceeding" is now carried from `library.json` at `e08cd35ecb`, `approved` `{by: "BOB", at: "2026-10-08", ruling: "K2241"}`, authored by `civicsmith`. Each version 1 is kept whole (as at `d129238bf3`, approved by Bob 2026-10-06) and is now `updated`, naming version 2, still readable, not offered. The other 13 scripts keep version 1 from `d129238bf3`, and the tests check they are identical at `e08cd35ecb`. Each entry names its source commit (`source`; `earlier[].source`).
+- Command: `node bio-plane/src/wizard-scripts/build-data.mjs <registry.json @ e08cd35ecb> e08cd35ecb <library.json @ d129238bf3> d129238bf3 <library.json @ e08cd35ecb> e08cd35ecb`. It printed: "wrote 47 screens and 17 scripts (registry e08cd35ecb, library d129238bf3, adopted from e08cd35ecb: Set up and claim v2, Publication ceremony v2, Check a claim v2, Follow a proceeding v2)". `data.mjs` gains `LIBRARY_ADOPTED` (the four names, K2241) and `adoptedLibrary`. `build-data.mjs` takes the newer library as an optional fifth and sixth argument. The module exports `CIVICSMITH_LIBRARY_ADOPTED_SOURCE`.
+- The module now holds every version of a library script (`versions`; `wizardRead`, `wizards`, `wizardUse`, R26's base versions, `copy` and `from` read each version's state). The `e08cd35ecb` file is vendored for the tests as `source/library-e08cd35ecb.json`.
+
+**Red 7 does not clear at my merge; it moves.** "Set up and claim" version 2 passes, so `assistantset` is gone from the release suite. But plane `release.test.mjs` (R19, the same two tests, :12 and :18) now fails on "Publication ceremony" version 2, step 5: `obscuremark`, an owed act (`owed:obscuremark DEC-180`) that op-declarations does not declare yet. T37-31 declares it (N757), so red 7 should clear at op-declarations' merge. Until then R11 withholds the ceremony from members, as it does any library script that fails R12 (K1883).
+
+**Found (for BOB):** `node checks/format.mjs bio` reports 1 failure after the tranche merge: `build/modules.json`: instance-setup's paths entry `bio-plane/src/setup-words.mjs` names no file. That is not this module's.
+
+**Tests and checks after B2:**
+- Module: pass 69, fail 0. Re-pinned: R22's three library tests and the K2241 test; R14 now names "Publication ceremony" at version 2's step 11 when `publishat` is undeclared; R23 offers all 14 optional scripts.
+- Users' tests (as before, plus skills): pass 1054, fail 45, identical file for file to `origin/tranche/T37` at its tip.
+- `format`: 1 failure (above, not mine). `architecture`, `coverage` (27/27) and `ownership` (12 files): 0 failures each.
+
+Size (session_01QwNq9qtQJ2HZxpaw54BfmN): test runs 13, module lines 2379
