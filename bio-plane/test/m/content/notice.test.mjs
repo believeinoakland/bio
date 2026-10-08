@@ -96,6 +96,21 @@ test("R30: a candidate's extent holds only where the newer capture holds the bou
     const { cite, notice } = setup();
     const c = notice(cite({ kind: "document" })).candidates[0];
     assert.deepEqual([c.matched, c.reason], [true, "whole_document"]);
+  }  /* a cell, shape or table cell is bounded by its grid or shape count, not by the list alone: unheld, never a match */
+  const office = (container, levels, extent) => ({ captureFormat: container, containerExtent: { container, levels, ...extent } });
+  for (const [facts, e, matched] of [
+    [office("xlsx", ["sheets"], { sheets: [{ name: "S" }] }), { kind: "sheet-cell", sheet: "S", cell: "B3" }, false],
+    [office("xlsx", ["sheets"], { sheets: [{ name: "S" }] }), { kind: "sheet-range", sheet: "S", range: "A1:B3" }, false],
+    [office("xlsx", ["sheets"], { sheets: [{ name: "S", rows: 9, cols: 9 }] }), { kind: "sheet-cell", sheet: "S", cell: "B3" }, true],
+    [office("pptx", ["slides"], { slides: [{}] }), { kind: "slide-shape", slide: 1, shape: 0 }, false],
+    [office("pptx", ["slides"], { slides: [{ shapes: 2 }] }), { kind: "slide-shape", slide: 1, shape: 0 }, true],
+    [office("docx", ["tables"], { tables: [{}] }), { kind: "doc-table", table: 0, cell: "B3" }, false],
+    [office("docx", ["tables"], { tables: [{ rows: 4, cols: 4 }] }), { kind: "doc-table", table: 0, cell: "B3" }, true],
+    [office("docx", ["tables"], { tables: [{}] }), { kind: "doc-table", table: 0 }, true],
+  ]) {
+    const { cite, notice } = setup({ newFacts: facts });
+    const c = notice(cite(e)).candidates[0];
+    assert.deepEqual([c.matched, c.reason], matched ? [true, "extent_in_newer_capture"] : [false, "bound_not_held"], JSON.stringify(e));
   }
 });
 

@@ -12,7 +12,7 @@
  *      only on POSITIVE evidence; "not in the part we read" is never "not in the document".
  * Nothing moves by itself: only a member's act moves a citation (§14.4, Bob 2026-09-14). */
 
-import { canonicalExtent, describeExtent } from "./extent.mjs";
+import { canonicalExtent, describeExtent, containerBoundUndetermined } from "./extent.mjs";
 import { rangeCorners, a1ToRowCol } from "../textchain.mjs";
 
 /** R29: at most this many addresses one capture is asked about; past it the rest are not asked, and the answer says so. */
@@ -58,12 +58,17 @@ export function extentBoundUnheld(extent, ctx, pdfPageBoxUndetermined) {
         ? "the record holds no box for that page of the newer capture, so its rect was not bounded" : null;
     case "doc-para":
       return Number.isInteger(c.paragraphs) ? null : "the record holds no paragraph count for the newer capture";
+    /* A list bounds a sheet, slide or table; a cell or shape inside it is bounded only by its grid or shape count
+       (`containerBoundUndetermined`, R8's levels), so a pass with that figure unheld is no evidence (R30). */
     case "sheet-cell": case "sheet-range":
-      return has(c.sheets) ? null : "the record holds no sheet list for the newer capture";
+      return !has(c.sheets) ? "the record holds no sheet list for the newer capture"
+        : innerUnheld(extent, ctx, "sheet_grid", "the record holds no row and column grid for that sheet of the newer capture");
     case "slide-shape":
-      return has(c.slides) ? null : "the record holds no slide list for the newer capture";
+      return !has(c.slides) ? "the record holds no slide list for the newer capture"
+        : innerUnheld(extent, ctx, "shape_count", "the record holds no shape count for that slide of the newer capture");
     case "doc-table":
-      return Array.isArray(c.tables) ? null : "the record holds no table list for the newer capture";
+      return !Array.isArray(c.tables) ? "the record holds no table list for the newer capture"
+        : innerUnheld(extent, ctx, "table_grid", "the record holds no row and column grid for that table of the newer capture");
     case "image":
       return Number.isInteger(extent.page)
         ? (Number.isInteger(ctx.pageCount) ? null : "the record holds no page set for the newer capture")
@@ -71,6 +76,11 @@ export function extentBoundUnheld(extent, ctx, pdfPageBoxUndetermined) {
     default:
       return `this read cannot bound an extent of kind '${String(extent.kind).slice(0, 40)}'`;
   }
+}
+
+function innerUnheld(extent, ctx, level, sentence) {
+  const u = containerBoundUndetermined(extent, ctx);
+  return u && u.level === level ? sentence : null;
 }
 
 function bagOf(text) {
