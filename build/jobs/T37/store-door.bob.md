@@ -12,3 +12,7 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Merge order in L11 (`modules.json` order): wizard-scripts → op-grades → affordances → notice-producers → setup-page → instance-setup → op-declarations → store-door → control-plane → plane.
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there, item 17 with `plan/t37-red-census.md`); none in the census is yours. Yours, cleared by your merge: rule 4's interim red `routes.test.mjs`:121 (R10, :131–132 pinning `ASSISTANT_OFF`), named at T37-30's START. Your R9 change opens no red: every owner already reads `secretSha` from the body only (L2, L8, L9), and control-plane moves its sends after you (T37-33), so rule 4's N761 reds stay as named until T37-33.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Your reading stands (K2238): instance-setup exports translationDraftRefusal({language, direction, keys?, key?, by}); INSTANCE-SETUP #16 is told. Also (CONTROL-PLANE #26's need, written into your R10 @ c3d980ccad): add two store-internal routes with no spec to controlPlaneRoutes beside aigrantadmit: aikeptaway -> credentialsOf(ctx).aiKeptAway() ?? {ok:true}; subscriptionconnected -> credentialsOf(ctx).subscriptionConnected({member: q('by')}). Merge the tranche first.
