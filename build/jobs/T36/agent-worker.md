@@ -53,3 +53,13 @@ One worker read the rest whole: `cascade.mjs`, `reads.mjs`, the six other suites
 - P6: 2,478 source lines, under 4,000.
 
 Size (session_01Hh9JHb6PPhQvB7xFQFNXPb): test runs 16, module lines 2478
+
+## J1 · REPORT
+
+Things I found outside my module. Details and citations are in my record's Completion.
+1. control-plane, red from my merge: `bio-plane/test/m/control-plane/r53-routes.test.mjs`:196 pins `ASK_PLANE_OPS` with `affordances`; it is now `agentpack`. The loop at :198 should keep skipping it: it has no `OP_STAMPS` row.
+2. control-plane, red from my merge: `members-pin.test.mjs`:54 fails with "agentpack reached no handler". The door forwards `agentpack` to the hook as `affordances` (index.mjs:1801–1806). The test should accept that, as `affordances-pack.test.mjs`:91 does.
+   For T36-37, or name them as accepted reds.
+3. Wording, yours: my requirements' Uses line for `skills`, and the manifest's generated-artifact row for my bundle, still say the pack is read from `op=affordances`.
+4. bundler, a comment only: `fleetbundles.test.mjs`:219 says the same.
+5. Release order (K2126): deploy agent-worker with or before T36-37.
