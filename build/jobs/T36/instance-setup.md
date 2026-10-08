@@ -36,3 +36,11 @@
 **P6.** 2,494 lines (own paths, code only), was 2,519.
 
 Size (session_01DU7JcZgKofYj3uee3CqU8X): test runs 9, module lines 2494
+
+## J1 · REPORT
+
+Reds my merge causes in later L11 modules, each from removing `assistantSet` / `op=assistantset` (T36-34, R53): plane `ask.test.mjs` (ten tests, `instanceSetupOf(...).assistantSet is not a function`: :69, :77, :83 among them) and `door.test.mjs`:112 (route count 25 → 24); store-door `routes.test.mjs`:111, :150; control-plane `t34-routes.test.mjs`:198, :237. Each re-points to `credentials.aiKeepAwaySet` (keep-away off is the assistant on). For BOB to accept by name until T36-48, T36-37, T36-49.
+Still naming the retired op: op-declarations declares `assistantset` (T36-35), op-grades grades it, setup-page's page posts it (`setup-page/index.mjs`:1970, :2063: now no handler answers it).
+Generated artifacts made stale: `newgroup/dist/newgroup.bundled.mjs` (FLEET_BINDINGS gains file-scanner; `newgroup-bundle-fresh.test.mjs` red) and `bio-plane/dist/bio-plane.bundled.mjs`; both for L11's close.
+Unchanged against tranche/T36: op-declarations 90/3, answer-envelope 24/2, wizard-scripts 64/0, setup-page 71/0, newgroup/test 42/1, migrate-released 1/0.
+Details in my record's Completion section.
