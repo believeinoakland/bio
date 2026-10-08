@@ -60,3 +60,7 @@ No requirement changed (req: none).
 - `checks/ownership.mjs bio plane tranche/T38`: 0 failures
 
 Size (session_01QxKvksbKPy1qWsAzhjWL99): test runs 7, module lines 1373
+
+## J1 · COMPLETE
+
+T38-26 done on job/T38/plane. The plane now composes project-roster: its ops come directly after membership's, its migrate() runs directly after membership's (so a fresh store gets all three of its tables), and stats registers projectOwnerVotes under project-roster. disclosures.test pins case-carriage's three ops, obscuremarkwithdraw included. Also changed: maps.mjs (it needed project-roster's entry) and a new roster.test.mjs. Green: plane 151/0; affordances plane.test and d526 29/0; migrate-released 585/0. Rule 6 items 11 and 18, the plane's share, are cleared. Checks: format, architecture, coverage (29/29) and ownership all 0 failures. The plane bundle is stale (not_product, BOB's to regenerate). Nothing deferred. Reading per §17 (3): what I read and the worker's summary are in my record.
