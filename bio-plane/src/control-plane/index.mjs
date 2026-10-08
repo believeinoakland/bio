@@ -1,4 +1,4 @@
-/* control-plane: THE INSTANCE'S DOOR (R1–R63). The Worker's HTTP entry — routing and the stamps (the answer's envelope
+/* control-plane: THE INSTANCE'S DOOR (R1–R68). The Worker's HTTP entry — routing and the stamps (the answer's envelope
    and decoration are `answer-envelope`'s, the store's door `store-door`'s, since the split, K1907, K1974) — moved from legacy-index (`index.mjs`) at control-plane's extraction (T12, K3, K93). Who may call an op is
    `admission`'s and what each op is `op-declarations'` (the split, K617, K624 (2)): this door calls admission's gates in
    R28's order and reads op-declarations' tables. An op's own handler is its module's: `makeFetch(hooks)` takes the
@@ -2975,9 +2975,14 @@ export function makeFetch(hooks = {}) {
         }
         const at = new URL(`http://x/${TRANSLATION_RECORD}`);
         for (const k of ["by", "viewer"]) if (inner.searchParams.has(k)) at.searchParams.set(k, inner.searchParams.get(k));
+        /* K2238 (3d): the hand-back's body is instance-setup's — the asked `keys` (or `key`) beside what the owner answered
+           and what agent-worker drafted — and it re-runs its refusals before recording anything */
+        const handed = { direction: ask.direction, language: ask.language,
+                         ...(Array.isArray(asked.keys) ? { keys: asked.keys } : {}), ...(asked.key !== undefined ? { key: asked.key } : {}),
+                         words: ask.words, draft: drafted.draft ?? null,
+                         ...(Array.isArray(drafted.not_drafted) ? { not_drafted: drafted.not_drafted } : {}) };
         const recorded = await doAnswer(stub.fetch(new Request(at, { method: "POST", headers: { "content-type": "application/json" },
-          body: JSON.stringify({ language: ask.language, direction: ask.direction, words: ask.words,
-                                 draft: drafted.draft ?? null, not_drafted: drafted.not_drafted ?? [], label: drafted.label ?? null }) })));
+          body: JSON.stringify(handed) })));
         if (recorded.refused) return storeRefusal(recorded, { store: storeName, tokenClass: cls });
         if (!recorded.answered) return storeSilent(TRANSLATION_RECORD, recorded.correlation);
         return json({ ...recorded.reply.body, store: storeName, tokenClass: cls }, recorded.reply.status);

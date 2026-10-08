@@ -303,7 +303,8 @@ test("R57 (T37; N669, K2201; instance-setup R67; agent-worker R68–R70): `trans
     w.env.calls.length = 0; asked.length = 0;
     const r = await call(w.env, { op: "translationdraft", token: s.token, method: "POST",
                                   params: { by: FORGED, viewer: FORGED },
-                                  body: { language: "es", direction: "to_language", words: [{ key: "evil", en: "forged" }], told: "x", firsthand: true } });
+                                  body: { language: "es", direction: "to_language", keys: ["nav.home", "nav.cases"],
+                                          words: [{ key: "evil", en: "forged" }], told: "x", firsthand: true } });
     assert.equal(r.status, 200, `${s.name}: ${r.text.slice(0, 300)}`);
     assert.deepEqual(r.json.result, { ok: true, drafted: ["nav.home"], not_drafted: ["nav.cases"], offered_official: [] }, s.name);
     assert.equal(asked.length, 1);
@@ -319,7 +320,9 @@ test("R57 (T37; N669, K2201; instance-setup R67; agent-worker R68–R70): `trans
     assert.equal(rec.length, 1);
     assert.deepEqual([rec[0].params.by, rec[0].params.viewer], [s.by, s.viewer]);
     assert.deepEqual(rec[0].body.draft, { words: [{ key: "nav.home", text: "Inicio" }] });
-    assert.deepEqual([rec[0].body.language, rec[0].body.direction, rec[0].body.not_drafted], ["es", "to_language", ["nav.cases"]]);
+    /* K2238 (3d): instance-setup's hand-back body, the caller's asked `keys` beside the owner's words and the draft */
+    assert.deepEqual(rec[0].body, { direction: "to_language", language: "es", keys: ["nav.home", "nav.cases"], words: WORDS,
+                                    draft: { words: [{ key: "nav.home", text: "Inicio" }] }, not_drafted: ["nav.cases"] });
   }
   /* the owner's answer is the op's, refusal included */
   const refused = draftWorld({ recordAnswer: { ok: false, reason: "TRANSLATION_TEXT_REFUSED", detail: "placeholders" } });

@@ -208,7 +208,7 @@ async function drafts() {
   return { r, C, seen, code };
 }
 
-test("R57 (instance-setup R55, R65; run-rules R20; ai-runs R50, R52; credentials R35, R36): before either draft's handler the door answers, in order, `groupdescriptiondraft`'s NOT_AN_ADMIN, ASSISTANT_OFF, AI_NO_ACCOUNT, the member's and the copy's ceilings, and credentials' own refusal of the account (the group key's notice unread), each before any handler is asked (negative control: once every one is cleared the handler is reached)", async () => {
+test("R57 (instance-setup R55, R65; run-rules R20; ai-runs R50, R52; credentials R35, R36; T37: N765, K231): before either draft's handler the door answers, in order, `groupdescriptiondraft`'s NOT_AN_ADMIN, AI_KEPT_AWAY (credentials' one row, in place of ASSISTANT_OFF), AI_NO_ACCOUNT, the member's and the copy's ceilings, and credentials' own refusal of the account (the group key's notice unread), each before any handler is asked (negative control: once every one is cleared the handler is reached)", async () => {
   const { r, C, seen, code } = await drafts();
   const gdd = (by) => r.go(`groupdescriptiondraft?by=${by}&viewer=${by}`, "POST", { answers: [{ question: "q", text: "t" }] });
   const help = (by) => r.go(`writinghelp?by=${by}&viewer=${by}`, "POST", { op: "notewrite", field: "text", told: "what I saw" });
@@ -217,10 +217,11 @@ test("R57 (instance-setup R55, R65; run-rules R20; ai-runs R50, R52; credentials
   assert.equal(code(await gdd("class:admin")), "NOT_AN_ADMIN");
   assert.equal(code(await gdd("")), "NOT_AN_ADMIN");
   /* the assistant off: the group keeps its material away from every assistant (credentials R51; instance-setup R53 since
-     T36, K2162), then lets it back */
+     T36, K2162), answered as credentials' `aiKeptAway()` answers it (its R35, the one site; store-door R10, N765), then
+     lets it back */
   assert.equal(C.aiKeepAwaySet({ on: true, reason: "kept away while we decide", by: "admin" }).ok, true);
-  assert.equal(code(await gdd("member:ann")), "ASSISTANT_OFF");
-  assert.equal(code(await help("member:bea")), "ASSISTANT_OFF");
+  assert.equal(code(await gdd("member:ann")), "AI_KEPT_AWAY");
+  assert.equal(code(await help("member:bea")), "AI_KEPT_AWAY");
   assert.equal(C.aiKeepAwaySet({ on: false, by: "admin" }).ok, true);
   /* no account serves */
   assert.equal(code(await gdd("member:ann")), "AI_NO_ACCOUNT");

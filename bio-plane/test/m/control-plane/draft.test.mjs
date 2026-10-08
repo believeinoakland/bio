@@ -58,7 +58,7 @@ test("R57 (N686, K1983): past every refusal (the owner's ASSISTANT_DRAFT_UNAVAIL
 });
 
 test("R57: an owner's refusal, and every answer that is not the owner's ASSISTANT_DRAFT_UNAVAILABLE, is answered as given and asks no draft; a machine credential is refused before the store (negative control: `draftDue` reads only that code, under `result`)", async () => {
-  for (const refusal of [{ ok: false, reason: "WRITING_HELP_NOTHING_TOLD" }, { ok: false, reason: "ASSISTANT_OFF" }, { ok: true, text: "x" }]) {
+  for (const refusal of [{ ok: false, reason: "WRITING_HELP_NOTHING_TOLD" }, { ok: false, reason: "AI_KEPT_AWAY" }, { ok: true, text: "x" }]) {
     const { env, S, asked } = draftWorld(refusal);
     const r = await call(env, { op: "writinghelp", token: S.ann, method: "POST", hooks: packHooks(), body: { told: "x" } });
     assert.deepEqual([r.status, r.json.result.reason ?? null, asked.length], [200, refusal.reason ?? null, 0], JSON.stringify(refusal));

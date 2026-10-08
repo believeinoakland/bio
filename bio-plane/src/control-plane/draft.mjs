@@ -1,6 +1,6 @@
 /* control-plane R57 (T35; N686, K1837, K1841, K2038; agent-worker R59, ai-runs R48, wizard-scripts R25): THE DOOR'S HALF OF
    THE ASSISTANT'S DRAFT. The Worker door forwards `groupdescriptiondraft` and `writinghelp` to the store as any op (the
-   store's door resolves the assistant per act and answers `ASSISTANT_OFF` and the ceilings, store-door R10; the owner
+   store's door resolves the assistant per act and answers `AI_KEPT_AWAY` and the ceilings, store-door R10; the owner
    answers its own refusals). When the owner answers past them all (`ASSISTANT_DRAFT_UNAVAILABLE`), the door asks the
    object's `draft` (plane's `draftOnObject`: the account, its switch, the grant only when suggestions are on and the field
    is not firsthand, agent-worker's `POST /draft`), counts the conversation's use to the member's day as a draft through
