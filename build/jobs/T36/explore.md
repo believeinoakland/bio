@@ -29,11 +29,11 @@ None in explore.
 ## Tests and checks
 
 - explore: `node --test bio-plane/test/m/explore/` 32 pass, 0 fail.
-- Users of explore (hypotheses, affordances, op-declarations, plane, `system/migrate-released`): see COMPLETE (op-declarations' 3 failures are inherited reds 13 and 17).
+- Users of explore, on the merged tip: hypotheses 30/0; affordances 207/1 (inherited red 20, `catalogue.test.mjs`:583, failing identically on `tranche/T36`'s tip); op-declarations 90/3 (inherited reds 13 and 17); plane 130/0; `system/migrate-released` 1/0.
 - `format`: 135 modules, 134 requirements files; 0 failures. `architecture`: 17 product files, 56 relative imports; 0 failures. `coverage`: 20 of 20 live requirement ids named by a test; 0 failures. `ownership`: 8 files changed between tranche/T36 and HEAD; 0 failures.
 - Module size 795 lines of code (P6: far under 4,000).
 
-Size (session_013jCD29K2Ak5HWZGMPQjE64): test runs 14, module lines 795
+Size (session_013jCD29K2Ak5HWZGMPQjE64): test runs 16, module lines 795
 
 ## J1 · REPORT
 
