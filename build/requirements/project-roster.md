@@ -55,7 +55,7 @@ Terms (`membership`'s, which hold here). *Administrators* are the founder (the r
 
 - **R18** (was membership R59's project-roster half) Owner votes and requests (with the ownership decisions, R6) are keyed by project and cleared with it.
 - **R19** (membership R61, held for this module's acts) Every act naming a project the caller cannot see answers byte for byte as an id that names nothing, and sight is asked before position.
-- **R20** (DEC-149, Bob's "S4: B"; membership R112's rule, held for this module's strings; K2278) Every member- or founder-facing string this module answers (each row's `translation`, every refusal's `detail`, `message` and `remedy`) calls the group's own Civicsmith "your group's Civicsmith", or is reworded so it needs no name, and never "copy", "instance", "plane" or "server" for it. Codes, op names, field names and comments are not member-facing. *(not yet met: T38)*
+- **R20** (DEC-149, Bob's "S4: B"; membership R112's rule, held for this module's strings; K2278) Every member- or founder-facing string this module answers (each row's `translation`, every refusal's `detail`, `message` and `remedy`) calls the group's own Civicsmith "your group's Civicsmith", or is reworded so it needs no name, and never "copy", "instance", "plane" or "server" for it. Codes, op names, field names and comments are not member-facing.
 
 ### Satisfies
 
