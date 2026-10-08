@@ -32,7 +32,12 @@
 - `format`: 136 modules, 135 requirements files; 0 failures. `architecture`: 42 product files, 409 relative imports; 0 failures. `coverage`: 29 of 29 live requirement ids named by a test; 0 failures. `ownership` against `tranche/T37`: 11 files; 0 failures.
 - Generated artifact `bio-plane/dist/bio-plane.bundled.mjs` is stale from `src/plane/` changes: BOB regenerates it at L11's close.
 
-Size (session_01111XPFU4aFxj2noCaaE3nf): test runs 19, module lines 1361
+**B3 (K2249), re-opened:** merged `tranche/T37` (wizard-scripts, affordances, instance-setup, op-declarations, answer-envelope in). The two interim N765 reds are green, and red 7 (`release.test.mjs` R19) too. `door.test.mjs` R1/R5 re-pinned from 24 to instance-setup's 33 routes: the nine T37 translation routes (`translationdraft`, `translationdraftrecord`, `translationgrant`, `translationadopt`, `translationconfirm`, `translationrevert`, `translationmark`, `translations`, `interfacewords`) each driven through the door and matched to its route called directly; control: a mistyped route is in no map and is the door's `unknown op`.
+- `node --test test/m/plane/*.test.mjs`: tests 146, pass 146, fail 0. `migrate-released.test.mjs`: pass 1, fail 0.
+- `format` 0 failures; `architecture` 0 failures; `coverage` 29 of 29; `ownership` against `tranche/T37`: 12 files, 0 failures.
+- I still merge last, after store-door and control-plane.
+
+Size (session_01111XPFU4aFxj2noCaaE3nf): test runs 23, module lines 1361
 
 ## J1 · COMPLETE
 
