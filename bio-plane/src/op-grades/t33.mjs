@@ -154,7 +154,7 @@ export const T33_RUNG_ABSENT = {
   aiceilingset:         { ground: "caller-owned", is: "a member sets their own daily assistant ceiling (ai-runs R50)" },
   aicopyceilingset:     { ground: "substrate", is: "an administrator sets the copy's daily assistant ceiling below members' own; it moves no document, claim or grade (ai-runs R50)" },
   officesseed:          { ground: "substrate", is: "an administrator seeds the offices and bodies the active profiles name as entities, with their identifiers and lines (instance-setup R50)" },
-  assistantset:         { ground: "substrate", is: "an administrator records whether the assistant is enabled for this copy; it binds no credential and moves no document, claim or grade (instance-setup R53)" },
+  /* `assistantset` is retired (R25; DEC-172 (5), instance-setup R53 as T36-34 supersedes it): no row here or below. */
   /* B3 (K1689): the ops op-declarations declares that T33's first grading did not reach */
   seatsseed:            { ground: "substrate", is: "an administrator seeds the seats of matched bodies, and their holders, from held register captures as entities and lines, each as the register records it (instance-setup R52)" },
   disclosureshown:      { ground: "caller-owned", is: "records that a member was shown the assistant's disclosure, and its version, when they connect their own account (instance-setup R54)" },
@@ -369,7 +369,6 @@ export const T33_NON_ACTS = {
   capturerequestplatformhosts: R("the hosts marked platforms"),
   /* instance-setup */
   officesseed: "the instance's configuration: seeds the active profiles' offices and bodies as entities; an administrator's",
-  assistantset: "the copy's configuration: whether the assistant is enabled; an administrator's, not an act on an object",
   /* B3 (K1689). `askusage` carries no NEEDS row (op-declarations' UNATTENDED_BY_DECISION, K1601), so it has no reason
      here (`affordances` R12: a reason for an ungated op reads stale); its rank is above. */
   seatsseed: "the instance's configuration: seeds the seats of matched bodies and their holders from held captures; an administrator's",

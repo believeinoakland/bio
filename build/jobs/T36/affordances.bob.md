@@ -1,6 +1,6 @@
 # BOB to affordances (T36)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -15,3 +15,7 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Layer 11 has 16 jobs; merge order: wizard-scripts → op-grades → affordances → tasks → notice-producers → queue → setup-page → instance-setup → op-declarations → legacy-ui → installer → admission → answer-envelope → store-door → control-plane → plane (`modules.json` order, except N711's callers before admission); you are 3rd. Merge the tranche branch after op-grades' merge when BOB says so: your re-pins read its grades.
 Inherited reds: the plan's rule 5 list as it stands at your START (read it there; open at this writing: 1, 4, 7, 10–13, 15–20, 22–24, 26, 27). Yours: 19 (`t33.test.mjs`:144) and 20 (`catalogue.test.mjs`:583). Expect among your users' tests the reds rule 5 names for op-declarations, control-plane and plane until their L11 jobs merge.
 Not part of any reading set: generated artifacts (bundles under `dist/`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+op-grades has merged (K2156). Merge the tranche branch now and re-pin: reds 19 and 20, your R48 arm, and red 28 (its new reds in your tests: `catalogue.test.mjs`:107, :470, :909; `plane.test.mjs`:614; `t31.test.mjs`:49; `t33.test.mjs`:161, :197), all yours in T36-31 over its grades. Red 29 (`t33.test.mjs`:214, `assistantset` against op-declarations' rows) clears when T36-35 merges, not by you. K2092's five ops lacking texts: noted for op-declarations R34's `ACT_HELP_ABSENT`.

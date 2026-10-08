@@ -177,3 +177,31 @@ test("R13: a following or standards that throws contributes no item and is named
   assert.equal(ofKind(run({}), KIND).length, 3);
   assert.deepEqual(snapshot((q) => w.st.sql.exec(q)), before);
 });
+
+test("R13 (T36): policyChanges is read with since, the instant 90 days before the call: a history of 1,200 changes older than the window is never read and never uses up the bound", async () => {
+  const { w } = await setup();
+  const old = Array.from({ length: 1200 }, (_, i) => ({ watch: 1, standard: P1, address: ADDR,
+    before: { capture: `ob${i}`, at: "2026-01-01T00:00:00Z" }, after: { capture: `oa${i}`, at: new Date(Date.parse("2026-02-01T00:00:00Z") + i * 1000).toISOString() }, amendment_held: false }));
+  const fresh3 = [0, 1, 2].map((i) => ({ watch: 1, standard: P1, address: ADDR,
+    before: { capture: `nb${i}`, at: "2026-10-20T00:00:00Z" }, after: { capture: `na${i}`, at: `2026-10-2${1 + i}T00:00:00Z` }, amendment_held: false }));
+  const all = [...old, ...fresh3];
+  const asked = [];
+  /* following R21 with since: only changes whose later capture is at or after it, the order, after and limit unchanged */
+  const following = { policyChanges: ({ since, after, limit, viewer }) => {
+    asked.push({ since, after, limit, viewer });
+    const lo = since === undefined || since === null ? -Infinity : Date.parse(new Date(Math.ceil(Number(since) / 1000) * 1000).toISOString());
+    const rows = all.filter((c) => Date.parse(c.after.at) >= lo);
+    const from = after === null ? 0 : Number(after);
+    const page = rows.slice(from, from + limit);
+    return { ok: true, changes: page, cursor: from + page.length < rows.length ? String(from + page.length) : null };
+  } };
+  const r = reader(fresh(w.host, { membership: w.membership, following, standards: standardsOver(w) })).read("alice", { now: AFTER });
+  assert.ok(asked.length >= 1 && asked.every((a) => a.since === AFTER - POLICY_CHANGE_DAYS * DAY), "since is the instant 90 days before the call, on every page");
+  assert.deepEqual(ofKind(r, KIND).map((i) => i.subject.after.capture), ["na0", "na1", "na2"]);
+  assert.deepEqual(r.facts.policy_change, { bound: POLICY_CHANGES_MAX, days: POLICY_CHANGE_DAYS, truncated: false });
+  assert.equal(asked.length, 1, "the old history is never paged through");
+  /* a since following refuses as not an instant is a failure, never read as no change */
+  const bad = reader(fresh(w.host, { membership: w.membership, standards: standardsOver(w),
+    following: { policyChanges: () => ({ ok: true, changes: [], cursor: null, since_invalid: true }) } })).read("alice", { now: AFTER });
+  assert.ok(bad.facts.failed.includes("following"));
+});

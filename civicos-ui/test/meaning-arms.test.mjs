@@ -134,7 +134,20 @@ const mf = new Miniflare({
 });
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
 /* T35-74 (F1, K1874): the credential travels in the `Authorization: Bearer` header, never in the address. */
-const get = async (op, qs = "", tok = "mem-ui63") => rP(await (await mf.dispatchFetch(
+/* T36-38 (N711, K1936 Q3): a real member's session, never the shared deploy MEMBER_TOKEN, which
+   admission refuses as a member bearer (T36-36): added by the administrator, enrolled, signed in. */
+const post = async (op, body, tok) => rP(await (await mf.dispatchFetch(
+  `http://x/api/?op=${op}`, { method:"POST", headers: tok ? { authorization: `Bearer ${tok}` } : {}, body: JSON.stringify(body) })).json());
+const SESS = await (async () => {
+  const add = await post("memberadd", { memberId:"alice", cover:"cover for alice", role:"member", capabilities:["contribute"] }, "adm-ui63");
+  if(!add || !add.invite) throw new Error(`memberadd alice: ${JSON.stringify(add)}`);
+  const en = await post("enroll", { invite:add.invite, handle:"alice", password:"alice-passphrase-1" });
+  if(!en || !en.ok) throw new Error(`enroll alice: ${JSON.stringify(en)}`);
+  const lg = await post("login", { role:"member:alice", password:"alice-passphrase-1" });
+  if(!lg || !lg.token) throw new Error(`login alice: ${JSON.stringify(lg)}`);
+  return lg.token;
+})();
+const get = async (op, qs = "", tok = SESS) => rP(await (await mf.dispatchFetch(
   `http://x/api/?op=${op}&${qs}`, { headers: { authorization: `Bearer ${tok}` } })).json());
 
 /* ============================================================
@@ -214,7 +227,7 @@ vm.runInContext(appScript() + ";globalThis.__U = {" + [
   "finderTextPanelHtml", "finderSubjectsPanelHtml", "finderPassageRoute",
 ].join(",") + "};", ctx);
 const U = ctx.__U;
-U.PLANE.token = "mem-ui63";
+U.PLANE.token = SESS;
 U.PLANE.session = true;
 U.PLANE.me = { member:"m_alice", handle:"alice", session:true, administer:false, capabilities:["contribute"] };
 await U.loadSearchFields(true);

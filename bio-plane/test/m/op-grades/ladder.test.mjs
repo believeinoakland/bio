@@ -126,9 +126,10 @@ test("R4: CONSEQUENCE_STATEMENTS maps DEC-88's six judgement calls to {friction,
   assert.match(CONSEQUENCE_STATEMENTS.attribute.statement, /permanently/);
   assert.match(CONSEQUENCE_STATEMENTS.leadshare.statement, /cannot be un-read/);
   assert.match(CONSEQUENCE_STATEMENTS.workobjective.statement, /budget and scope/);
-  /* only the six, R8's actionholdrelease and R21's personexpunge and (K2049) standardrelease carry one */
+  /* only the six, R8's actionholdrelease, R21's personexpunge and (K2049) standardrelease, and R24's openwithwarning
+     (beside its ground) carry one */
   assert.deepEqual(Object.keys(CONSEQUENCE_STATEMENTS).sort(),
-    [...Object.keys(SIX), "actionholdrelease", "personexpunge", "standardrelease"].sort());
+    [...Object.keys(SIX), "actionholdrelease", "personexpunge", "standardrelease", "openwithwarning"].sort());
 });
 
 /* ---- R5 ------------------------------------------------------------------------------------------------------------ */
@@ -158,9 +159,9 @@ test("R5: MACHINE_REFUSALS maps each act refused a machine by name to its code; 
 
 /* ---- R18 ----------------------------------------------------------------------------------------------------------- */
 test("R18: phoneOf is false at terminal, attested and irreversible, for a credential absence and for LARGER_SCREEN_ACTS "
-   + "(frozen, filingsent alone), and true otherwise — reads, captures and everyday acts", () => {
+   + "(frozen, filingsent and (R26) personexpunge), and true otherwise — reads, captures and everyday acts", () => {
   assert.ok(Object.isFrozen(LARGER_SCREEN_ACTS));
-  assert.deepEqual([...LARGER_SCREEN_ACTS], ["filingsent"]);
+  assert.deepEqual([...LARGER_SCREEN_ACTS], ["filingsent", "personexpunge"]);
   /* an alias answers as its op (R17) */
   const expect = (id) => { const op = OP_ALIASES[id] ?? id;
     return !(["terminal", "attested", "irreversible"].includes(RUNGS[op])

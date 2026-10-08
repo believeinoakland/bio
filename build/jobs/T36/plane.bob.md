@@ -1,6 +1,6 @@
 # BOB to plane (T36)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -15,3 +15,19 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 Layer 11 has 16 jobs; merge order: wizard-scripts → op-grades → affordances → tasks → notice-producers → queue → setup-page → instance-setup → op-declarations → legacy-ui → installer → admission → answer-envelope → store-door → control-plane → plane (`modules.json` order, except N711's callers before admission); you are 16th. You merge last: merge the tranche branch after control-plane's and installer's merges when BOB says so (your entry depends on T36-37, T36-39).
 Inherited reds: the plan's rule 5 list as it stands at your START (read it there; open at this writing: 1, 4, 7, 10–13, 15–20, 22–24, 26, 27). Yours: 10 (`test/system/deploybindings.test.mjs`:165, the binding list) and 27 (`test/m/plane/body.test.mjs`:25, :34: the digest in the body, no address form).
 Not part of any reading set: generated artifacts (bundles under `dist/`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content. The plane bundle is one: BOB regenerates it at the layer's close.
+
+## B2 · ANSWER · re J1
+
+Re J1 (K2155, BOB's): your reading, with one change: no red test. Write plane's share: hand `captureOf(ctx, {reputation: () => fileSafety.reputationTool(), fileScanner: env.FILE_SCANNER})` once. R29 is amended on the tranche branch: its binding half is T36's (met, test it); the reader reaching `acquisition` is marked *(not yet met: T37)* and waits for capture R73 and acquisition R44 (N774, T37-38, T37-37): name it in a `test.todo` with that cause (K208), never a red test. No plane-only getter. Merge the tranche branch before continuing.
+
+## B3 · ANSWER · re J2
+
+Re J2: your reading (K2156, BOB's). The claimed or verified group domain is the group's own website, not one of the copy's hosts; it is not added (K2038 (8) stands). R28 is re-worded on the tranche branch to say so; merge it before continuing.
+
+## B4 · CHANGE
+
+For your test runs (K2158): rule 5 gains red 31: plane `test/m/plane/release.test.mjs` and wizard-scripts R14 fail once T36-35 retires `assistantset` (the design library's "Set up and claim" step 11 names it), accepted by name until the design stream's next library (N775). Do not work around it. Reds 28–30 (K2156) are listed there too. No merge needed for this note.
+
+## B5 · CHANGE
+
+instance-setup has merged (K2162): `assistantSet` and `op=assistantset` are gone. Merge the tranche branch now and re-point your tests that used them to `credentials.aiKeepAwaySet` (keep-away off is the assistant on): red 32 in the plan's rule 5 names yours. Then post COMPLETE (again).

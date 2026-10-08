@@ -5,7 +5,9 @@
  * speaks to the group installing it: by the name it chose once it has chosen one, as "your group" before. Each says the
  * installer is run by the publisher of Civicsmith releases (PUBLISHER, the line every page carries), and names no third
  * party. R23: the install page states the two prerequisites the install enforces, and the Containers permission the
- * assistant's subscription path needs. R37: the assistant is offered as optional, nothing preselected. R35 (DEC-122 (3)): every page loads
+ * assistant's subscription path and the file scanner need. R37 (T36): the page says where the assistant's two settings
+ * are made, and takes no choice. R45 (T36): the security tools are added inside the group's Civicsmith, and the
+ * optional Workers VPC service is named here. R35 (DEC-122 (3)): every page loads
  * nothing from another origin; its typefaces are the device's own (PAGE_CSS's stacks). R41 (DEC-143): the act that chooses
  * the short name carries the Irreversible weight and opens a full dialog saying it is permanent. R42 (DEC-146): the one
  * line saying what Civicsmith is, and its second line, held here once.
@@ -64,23 +66,38 @@ ${PROFILE_CHOICES.map((p) => `<label class="choice"><input type="checkbox" name=
 </fieldset>
 <p class="hint">${PROFILES_NONE}</p>`;
 
-/* R37 (K1478 (i), K1502, K1755, K1851): the assistant, offered as optional with nothing preselected. Once on, it is
-   reached through the group's API key (set by an administrator inside the group's Civicsmith) or each member's own
-   account (connected there), or both, chosen at its setup (setup-page R18); the installer binds no Claude credential
-   (R36). Each member is told what goes to Anthropic before their first use (instance-setup R54; credentials R36). */
-export const ASSISTANT_OFFER = `The assistant is off unless your group chooses it. Once it is on, it is reached through
-your group's own Anthropic API key, which an administrator sets inside your group's Civicsmith, or through each
-member's own Claude subscription or API key, which the member connects there, or both. Which of these, or no AI at all,
-is chosen when your group's Civicsmith is set up. Each member is told what goes to Anthropic before their first use:
-when they connect their own account, or before their first question under your group's key. This installer takes no
-Claude credential of any kind. An administrator can change this choice later inside your group's Civicsmith.`;
+/* R37 (T36; N721, DEC-172; K1957, K2063 (5)): the assistant is optional, and its two settings are made in the group's
+   Civicsmith at its setup, separately, nothing preselected (setup-page R18): whether the group pays for it (its own
+   Anthropic API key, set by an administrator there), and whether the group keeps its material away from AI (off unless
+   an administrator turns it on, with a reason). A member may always connect their own account, serving only them,
+   unless the group keeps its material away from AI; each member is told what goes to Anthropic before their first use
+   (instance-setup R54; credentials R36). The installer takes no choice and binds no Claude credential (R36). */
+export const ASSISTANT_OFFER = `The assistant is optional. Its two settings are made in your group's Civicsmith when it
+is set up, separately, and neither is chosen for you: whether your group pays for it, with its own Anthropic API key,
+which an administrator sets there; and whether your group keeps its material away from AI, which is off unless an
+administrator turns it on, giving a reason. A member may always connect their own Claude subscription or API key,
+which serves only them, unless your group keeps its material away from AI. Each member is told what goes to Anthropic
+before their first use. This installer takes and binds no Claude account or key, and makes no choice about the
+assistant.`;
 const assistantBlock = () => `<h2>The assistant</h2>
-<fieldset class="profiles" id="assistant">
-<legend class="small">Offer the assistant in your group's Civicsmith?</legend>
-<label class="choice"><input type="radio" name="assistant" value="on">Yes, offer the assistant</label>
-<label class="choice"><input type="radio" name="assistant" value="off">Not now</label>
-</fieldset>
-<p class="hint">${ASSISTANT_OFFER}</p>`;
+<p>${ASSISTANT_OFFER}</p>`;
+
+/* R45 (T36; N710, setup-page R30; K1946 T4): where the organization's own security tools are added, and that this
+   installer takes none. Said on the install page, the final panel and the update's last screen. */
+export const SECURITY_TOOLS = `Your organization's own security tools (file scanners, safe-copy makers, sandboxes, web
+reputation, security log forwarding) are added in your group's Civicsmith by an administrator, at its setup or later.
+This installer takes no tool and no tool's key.`;
+/* R45: the optional Workers VPC service a tool reached through a tunnel needs, on the install and the update pages
+   alike. Nothing is filled in for the operator. */
+const vpcField = () => `<label for="vpc">Workers VPC service for a security tool reached through a tunnel (optional)</label>
+<input id="vpc" type="text" autocomplete="off" spellcheck="false" placeholder="leave empty if you have none">
+<p class="hint">Only if your organization will add a security tool that your group's Civicsmith reaches through a
+Cloudflare Tunnel: the ID of the Workers VPC service for it, as Cloudflare shows it. The file scanner is connected to
+it. Left empty, none is connected, and such a tool answers REACH_NOT_BOUND in your group's Civicsmith until the updater
+is run with one.</p>`;
+const securityBlock = () => `<h2>Your organization's security tools</h2>
+<p>${SECURITY_TOOLS}</p>
+${vpcField()}`;
 
 export const PAGE_CSS = `
 :root{
@@ -194,7 +211,6 @@ ${publisherFooter()}
 <script>
 const $=s=>document.querySelector(s);
 const slugify=v=>v.toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"").slice(0,40);
-const asOf=()=>{const c=document.querySelector('input[name="assistant"]:checked');return c?{assistant:c.value}:{};};
 const chosen=[];document.querySelectorAll('input[name="profile"]').forEach(b=>b.addEventListener("change",()=>{
   const i=chosen.indexOf(b.value);if(b.checked&&i<0)chosen.push(b.value);if(!b.checked&&i>=0)chosen.splice(i,1);}));
 $("#slug").addEventListener("input",e=>{const p=e.target.selectionStart;e.target.value=slugify(e.target.value);
@@ -204,7 +220,7 @@ async function begin(slug){
   $("#go").disabled=true;
   try{
     const r=await fetch("/begin",{method:"POST",headers:{"content-type":"application/json"},
-      body:JSON.stringify({slug,mode:"${mode}",...($("#profiles")?{profiles:chosen}:{}),...asOf(),...($("#ai")&&$("#ai").value.trim()?{instanceAi:$("#ai").value.trim()}:{})})});
+      body:JSON.stringify({slug,mode:"${mode}",...($("#profiles")?{profiles:chosen}:{}),...($("#vpc")&&$("#vpc").value.trim()?{securityVpc:$("#vpc").value.trim()}:{}),...($("#ai")&&$("#ai").value.trim()?{instanceAi:$("#ai").value.trim()}:{})})});
     const j=await r.json();
     if(!j.ok){err.textContent=j.error||"That name was not accepted.";return;}
     location.href=j.authorize;
@@ -248,17 +264,19 @@ group's Civicsmith keeps its evidence in. The installer checks both before it cr
 anything, and stops, saying which is missing, if either is.
 <a href="https://dash.cloudflare.com/sign-up" rel="noopener">Create a
 Cloudflare account</a> first if you do not have one, then come back.</p>
-<p style="margin:12px 0 0">For the assistant through a member's own Claude
-subscription, the installer also asks the <b>Workers Containers
-permission</b>: that path runs in a container, which Workers Paid includes.
-Without the permission, everything else installs, and the assistant is
-used only with an API key: a member's own, or your group's.</p>
+<p style="margin:12px 0 0">The installer also asks the <b>Workers Containers
+permission</b>, for two things that run in containers, which Workers Paid
+includes. It installs the built-in file scanner and safe view: without it,
+files are kept and shown but not scanned, and a high-risk file opens only in
+its safe view once one can be made. And it serves the assistant through a
+member's own Claude subscription: without it, the assistant is used only with
+an API key: a member's own, or your group's. Everything else installs either way.</p>
 </div>
 
 <h2>What happens when you press the button</h2>
 <p>Cloudflare will show you a permission screen naming exactly what this
 installer may do in your account: install the software, set up its
-storage, and set up the assistant's container. You approve it there, on Cloudflare's own page, and you can revoke
+storage, and set up its containers (the file scanner and the assistant's). You approve it there, on Cloudflare's own page, and you can revoke
 it any time from your Cloudflare dashboard. The permission passes through
 this installer for the seconds the setup takes. This installer has no
 database and nowhere to keep it, and it is never stored.</p>
@@ -271,6 +289,8 @@ disappears.</p>
 ${profilesBlock()}
 
 ${assistantBlock()}
+
+${securityBlock()}
 
 <h2>Name your group's Civicsmith</h2>`,
   slugLabel: "A short name for your group",
@@ -298,10 +318,12 @@ update is applied, not by promise. The one exception is yours to choose: an
 organisation AI credential you paste in the optional box below.`,
   blocks: `<h2>What happens when you press the button</h2>
 <p>Cloudflare shows you the permission screen. If your group's Civicsmith was
-installed before the assistant's container existed, it asks one permission more than
-before, <b>Workers Containers</b>, for the assistant through a member's own
-Claude subscription; without it, everything else updates and the assistant is
-used only with an API key: a member's own, or your group's. You approve it on Cloudflare's own page, the new release is placed into your account, and
+installed before the containers existed, it asks one permission more than
+before, <b>Workers Containers</b>, for the built-in file scanner and safe view and for
+the assistant through a member's own Claude subscription. Without it, everything else
+updates: files are kept and shown but not scanned, and a high-risk file opens only in
+its safe view once one can be made; and the assistant is used only with an API key: a
+member's own, or your group's. You approve it on Cloudflare's own page, the new release is placed into your account, and
 the permission is gone the moment it finishes. Nothing is stored here.</p>
 
 <h2>Which installation</h2>`,
@@ -313,7 +335,8 @@ the permission is gone the moment it finishes. Nothing is stored here.</p>
 <input id="ai" type="password" autocomplete="off" spellcheck="false" placeholder="leave empty to keep what it holds">
 <p class="hint">Only if a member of your group minted an organisation AI credential inside your group's Civicsmith and
 you want it to resume paused assistant runs on its own. It is stored there as a secret and never shown. Left empty,
-the update sends none and keeps any it already holds. This installer never creates one.</p>`,
+the update sends none and keeps any it already holds. This installer never creates one.</p>
+${securityBlock()}`,
   placeholder: EXAMPLE_SLUG,
   buttonText: "Continue to Cloudflare",
   goNote: `Pressing the button takes you to dash.cloudflare.com to

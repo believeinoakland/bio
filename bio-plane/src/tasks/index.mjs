@@ -318,21 +318,22 @@ export class Tasks {
   taskDrain({ limit = 50, actor = "consumer", now = null } = {}) {
     const cap = clampLimit(limit, 50, 500);
     const at = now && ISO_INSTANT.test(now) ? now : stampInstant("second", this.#nowMs());
-    /* capture R45: the queued events oldest first, each `{kind, captureSha, subject, locator, enqueued, attempts}`, of this
-       module's one kind only (T35; K1951, K1974), so another kind (`archive-unpack`) is never taken, routed, folded,
-       refused or counted here; provenance R4: the bundle a capture is filed in. */
-    const queued = this.#capture.taskEvents({ limit: cap, kind: TASK_EVENT_KIND })
-      .map((e) => ({ ...e, capture_sha: e.captureSha, attempts: Number(e.attempts) || 0 }));
+    /* capture R45: the queued events oldest first, each `{kind, captureSha, subject, locator, enqueued, attempts, cursor}`,
+       of this module's one kind only (T35; K1951, K1974), so another kind (`archive-unpack`) is never taken, routed,
+       folded, refused or counted here; provenance R4: the bundle a capture is filed in. (T36) Read in pages: a waiting
+       event does not use up `limit`, so each page asks for what `limit` has left, and the next is read past the last
+       event's `cursor` while a page came back full, so waiting events at the head never hide a filed one behind them. */
     const out = { drained: 0, created: [], folded: [], waiting: [], refused: [] };
     const drop = (q) => this.#capture.taskEventRemove({ kind: q.kind, captureSha: q.capture_sha });
-    for (const q of queued) {
+    this.#eachQueued(() => cap - out.drained, (e) => {
+      const q = { ...e, capture_sha: e.captureSha, attempts: Number(e.attempts) || 0 };
       const home = this.#provenance.homeOf(q.capture_sha);
       const reg = home ? { bundle_id: home.bundleId } : null;
       if (!reg) {
         this.#capture.taskEventAttempt({ kind: q.kind, captureSha: q.capture_sha, at });
         out.waiting.push({ captureSha: q.capture_sha, attempts: q.attempts + 1,
           detail: "the capture is not yet filed in any record; the event is kept, not dropped" });
-        continue;
+        return;
       }
       const live = this.#one(
         `SELECT * FROM tasks WHERE refers_to=? AND kind=? AND status IN ('open','forwarded')`, reg.bundle_id, q.kind);
@@ -345,7 +346,7 @@ export class Tasks {
         drop(q);
         out.folded.push({ id: live.id, refers_to: reg.bundle_id });
         out.drained++;
-        continue;
+        return;
       }
       const route = this.#routeTask(reg.bundle_id);
       const year = at.slice(0, 4);
@@ -364,7 +365,7 @@ export class Tasks {
         this.#capture.taskEventAttempt({ kind: q.kind, captureSha: q.capture_sha, at });
         out.waiting.push({ captureSha: q.capture_sha, attempts: q.attempts + 1,
           code: exhausted.code, check: exhausted.check, detail: exhausted.detail });
-        continue;
+        return;
       }
       const task = {
         id: taskId,
@@ -386,7 +387,7 @@ export class Tasks {
         drop(q);
         out.refused.push({ captureSha: q.capture_sha, refers_to: reg.bundle_id, findings: bad.findings });
         out.drained++;
-        continue;
+        return;
       }
       this.sql.exec(
         `INSERT INTO tasks (id, kind, refers_to, capture_sha, subject_text, subject_desc, locators,
@@ -400,7 +401,7 @@ export class Tasks {
       out.created.push({ id: task.id, refers_to: task.refers_to, assignee: task.assignee,
         assignee_role: task.assignee_role, basis: route.basis });
       out.drained++;
-    }
+    }, () => out.drained < cap);
     out.remaining = this.#capture.taskEventCount({ kind: TASK_EVENT_KIND });
     /* REC-57: `remaining` answers "is this all of it" (a non-zero remainder says
        the queue is not drained), so no `truncated` is minted beside it. The other
@@ -970,20 +971,46 @@ export class Tasks {
   /** capture's task notice (capture R44): a queued event re-arms the drain at its short delay. */
   async armDrain() { this.#lastDrainProgress = true; return await this.#scheduler.arm(); }
 
-  /** After a tick that drained nothing: the earliest instant a waiting event of the drain's batch is next due, each
-   *  backed off by its own attempts (capture R45), an event at the retry limit wanting none; null when none wants one. */
+  /** After a tick that drained nothing: the earliest instant a waiting event is next due, each backed off by its own
+   *  attempts (capture R45), an event at the retry limit wanting none; null when none wants one. (T36) Taken over every
+   *  waiting event of R1's kind, read in pages as R1 reads them, not over the first page alone. */
   #backoffWake(now) {
     let at = null;
-    for (const e of this.#capture.taskEvents({ limit: Tasks.TASK_DRAIN_ALARM_BATCH, kind: TASK_EVENT_KIND })) {
+    this.#eachQueued(() => Tasks.TASK_DRAIN_ALARM_BATCH, (e) => {
       const a = Number(e.attempts) || 0;
-      if (a >= Tasks.TASK_DRAIN_RETRY_LIMIT) continue;
+      if (a >= Tasks.TASK_DRAIN_RETRY_LIMIT) return;
       const last = Date.parse(e.lastTry);
       /* never tried by a drain (an event a mint could not yet take, R1): the plain backstop from now */
       const due = a < 1 || !Number.isFinite(last) ? now + Tasks.TASK_DRAIN_BACKSTOP_MS
                                                   : Math.max(now, last + Tasks.TASK_DRAIN_BACKSTOP_MS * 2 ** (a - 1));
       if (at === null || due < at) at = due;
-    }
+    });
     return at;
+  }
+
+  /** R1, R18 (T36; capture R45's `after` and `cursor`): this module's kind of capture's queue, oldest first, in pages. Each
+   *  page asks for `size()` events past the last event read; the next is read only while the page came back full (as many
+   *  as it asked for) and `more()` holds. No event is visited twice in one read: an event already visited is skipped, and
+   *  a page that brings none new, or whose last event carries no cursor, ends the read rather than reading the head again. */
+  #eachQueued(size, visit, more = () => true) {
+    const read = new Set();
+    let after = null;
+    for (;;) {
+      const n = size();
+      const page = this.#capture.taskEvents({ limit: n, kind: TASK_EVENT_KIND, after });
+      const events = Array.isArray(page) ? page : [];
+      let fresh = 0;
+      for (const e of events) {
+        const key = `${e.kind}\u0000${e.captureSha}`;
+        if (read.has(key)) continue;
+        read.add(key);
+        fresh++;
+        visit(e);
+      }
+      const last = events.length ? events[events.length - 1].cursor : null;
+      if (events.length < n || !fresh || typeof last !== "string" || !last || !more()) return;
+      after = last;
+    }
   }
 
   /** R1: the `task-drain` consumer: due at every firing; its wake is the delay after a tick that drained something (or
