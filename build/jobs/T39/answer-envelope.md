@@ -15,3 +15,7 @@
 - `format`: 139 modules, 138 requirements files; 0 failures. `architecture answer-envelope`: 9 product files, 100 relative imports; 0 failures. `coverage answer-envelope`: 9 of 9 live requirement ids named by a test; 0 failures. `ownership answer-envelope tranche/T39`: 3 files changed; 0 failures.
 
 Size (session_01VJ9zkzA3SixCM3jpN9ut6b): test runs 1, module lines 18
+
+## J1 · COMPLETE
+
+T39-19 applied (tests only): C-120 pin gains .20–.22; .21/.22 decorate with DOCUMENT_WORDS verbatim. families.mjs comment updated (C-141.11; stale MACHINE_CANNOT_MARK sentence corrected per K2311). answer-envelope 28/0; format, architecture, coverage, ownership 0 failures. Details in the record's Completion section.
