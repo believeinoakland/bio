@@ -119,7 +119,8 @@
    control re-run on the stamp commit: its arms in the suite pass.
    RE-PINNED 2026-10-08 (PROMOTION #34, T36-8, T35's red 2): over 1.63.0, the stamp's own lines
    (`fixtures/row-census-1.63.0.jsonl`, written by `row-census.mjs`'s own `censusOf`) on the stamp commit (named in
-   `build/jobs/T36/promotion.md`; 1467 rows, a72e0b63…, over `tranche/T36` after its layer 1); the 1.62.0 snapshot (no
+   `build/jobs/T36/promotion.md`; 1467 rows, a72e0b63…, over `tranche/T36` after its layer 1; 1470 rows, e9ef089b…, after membership's and
+   credentials' merges, K2090, K2093); the 1.62.0 snapshot (no
    stamp reads it) deleted; T35's layers 3–11 rows (77 new, 44 changed, none departed, each named by its job record;
    none declared here, accepted red 4 at T35's close) stamped in 1.63.0. Re-pinned in place as each T36 layer-2 job
    merges (BOB's CHANGE), so T36 names one catalogue. A row a T36 job in layers 3–11 adds or changes turns this suite

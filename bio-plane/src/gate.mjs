@@ -768,7 +768,10 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    CHANGED IN WHAT THE GATES RUN, no row line moving: none a T35 or T36 job record names. T36's layer 1 added and
    changed no row; T36's layer 2 (membership, credentials) is re-pinned in place as each merges (BOB's CHANGE), so T36
    names one catalogue.
-   ROW_CENSUS (R50) re-pinned to this tree: 1467 rows. Rows a T36 job in layers 3–11 adds or changes are T37's stamp
+   T36 LAYER 2, re-pinned in place: membership (K2090) added and changed no row; credentials (5b3d7fb633, K2093) ARRIVED
+   C-29.31 AI_KEPT_AWAY and C-29.32 NO_REASON (the keep-away act, DEC-172) and C-96.44 SECURITY_COUNTS_UNREADABLE (the
+   counts read), and CHANGED C-96.43 SECURITY_PERIOD_INVALID (`where` now `#periodRefusal`, words unchanged).
+   ROW_CENSUS (R50) re-pinned to this tree: 1470 rows. Rows a T36 job in layers 3–11 adds or changes are T37's stamp
    (plan T36, Rules 5 (4)). */
 export const CATALOG_VERSION = "1.63.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
@@ -862,8 +865,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    this module's own census suite, `bio-plane/test/system/row-census.test.mjs` (legacy-tests' until T22's opening, K1006):
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1467,
-  digest: "a72e0b63cd85272feb3b737b7da8c053db3bd54ecb9ad8e47f14332f530c6094" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1470,
+  digest: "e9ef089b7a25c5e6fff51a1ee185b89dccf1c2364389129044b093a8a0d00af8" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
