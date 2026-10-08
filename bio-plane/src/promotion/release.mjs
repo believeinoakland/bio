@@ -8,7 +8,8 @@
  * windows), and the canonical release message (`releaseMessage`, below, the catalogue's until K64). */
 
 import { verifySshsig } from "../sshsig.mjs";
-import { canonicalJson, isMachineIdentity } from "../record-grammar/index.mjs";
+import { canonicalJson, isMachineIdentity, parseFrontmatter } from "../record-grammar/index.mjs";
+import { historyWriteOrder } from "./history.mjs";
 
 /** The exact message a release signature covers (design 5.1), canonical JSON so signer and verifier agree byte for byte. */
 export function releaseMessage(fields) {
@@ -26,8 +27,14 @@ export function normalizeRootKey(k) {
 }
 
 const finding = (severity, message, repairs) => ({ check: "C-18.8", severity, message, ...(repairs ? { repairs } : {}) });
-/* The release message's bytes, one byte per UTF-16 unit (the signer's encoding, the catalogue's since D2.1). */
-const latin1 = (s) => { const u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i) & 0xff; return u; };
+/* The release message's bytes, one byte per UTF-16 unit (the signer's encoding, the catalogue's since D2.1). A unit
+   above 0xFF has no such byte: it is never masked to its low byte (two texts would then share one signature, N808), and
+   a text holding one is not encoded at all (`null`), so what carries it cannot verify. */
+const latin1 = (s) => {
+  const u = new Uint8Array(s.length);
+  for (let i = 0; i < s.length; i++) { const c = s.charCodeAt(i); if (c > 0xff) return null; u[i] = c; }
+  return u;
+};
 const asText = (v) => (typeof v === "string" ? v : new TextDecoder().decode(v));
 
 const SIGNER_TS_RE = /^(\d{4})(\d{2})(\d{2})(?:(\d{2})(\d{2})(?:(\d{2}))?)?Z?$/;
@@ -86,7 +93,9 @@ export async function verifyRegistryRoot(reg) {
   const keys = Array.isArray(reg.rootKeys) ? reg.rootKeys : [];
   if (!keys.length) return enforce ? { trusted: false, reason: "no_pinned_root_keys" }
                                    : { trusted: true, reason: "root_not_enforced" };
-  const r = await verifyFor({ armored: reg.rootSignature, message: latin1(String(reg.signers ?? "")),
+  const signed = latin1(String(reg.signers ?? ""));
+  const r = signed === null ? { ok: false, reason: "not_latin1" }
+    : await verifyFor({ armored: reg.rootSignature, message: signed,
     signersText: keys.map((k) => `operator ${normalizeRootKey(k)}`).join("\n"),
     namespace: reg.rootNamespace || "bio-registry", principal: "operator", at: enforce || "9999-12-31T23:59:59Z" });
   if (r.ok) return { trusted: true, reason: "root_verified" };
@@ -94,7 +103,33 @@ export async function verifyRegistryRoot(reg) {
                  : { trusted: true, reason: "root_invalid_but_not_enforced:" + r.reason };
 }
 
-/** C-18.8 over one bundle: `{folderName, fm, files (path → text), releaseRegistry, sha256}` → findings. */
+/** R31 (T39; N800, N808): what a release signed, the `bundle.md` as it stood after the promotion that recorded the
+ *  release `e`: the first manifest entry, in write order (R30), whose `bundle.md` holds `e` in its `state_history`.
+ *  After entry j that is the copy the next promotion took into history under its snap key, or the live `bundle.md`
+ *  while j is the head. The bytes are returned as the image holds them, for the caller's `sha256` (a text entry is its
+ *  UTF-8 encoding, the stored bytes, R5), never decoded and re-encoded. `{bytes, key}`, else `{unreadable}`: a version
+ *  that cannot be read before the release is found, or no version holding it, and the release is never passed. */
+export function releasedBundleMd(files, e) {
+  const raw = files.get("_history/manifest.json");
+  if (raw == null) return { unreadable: "the image carries no history manifest, so no promotion that recorded it can be found" };
+  let man;
+  try { man = JSON.parse(asText(raw)); } catch { return { unreadable: "the history manifest is unreadable" }; }
+  const { entries } = historyWriteOrder(man && man.entries);
+  for (let j = 0; j < entries.length; j++) {
+    const path = j === entries.length - 1 ? "bundle.md"
+      : (entries[j + 1].key ? `_history/bundle_${entries[j + 1].key}.md` : null);
+    const bytes = path === null ? null : files.get(path);
+    if (typeof bytes !== "string" && !(bytes instanceof Uint8Array))
+      return { unreadable: `the bundle.md that promotion '${entries[j].key}' left is not held as bytes in the image${path ? ` (${path})` : ""}` };
+    const fm = parseFrontmatter(asText(bytes)).data;
+    const hist = fm && typeof fm === "object" && Array.isArray(fm.state_history) ? fm.state_history : [];
+    if (hist.some((x) => x && x.timestamp === e.timestamp && x.from_state === e.from_state && x.to_state === e.to_state))
+      return { bytes, key: entries[j].key };
+  }
+  return { unreadable: "no promotion in the record's history holds this release in its bundle.md" };
+}
+
+/** C-18.8 over one bundle: `{folderName, fm, files (path → text or bytes), releaseRegistry, sha256}` → findings. */
 export async function checkReleaseSignature({ folderName, fm, files, releaseRegistry, sha256 }) {
   const findings = [];
   if (!fm || fm.object_type !== "information") return findings;
@@ -132,8 +167,6 @@ export async function checkReleaseSignature({ folderName, fm, files, releaseRegi
   let records = [];
   const prov = files.get("data/provenance.json");
   if (prov) { try { const p = JSON.parse(asText(prov)); records = Array.isArray(p.releases) ? p.releases : []; } catch { /* C-14.3's */ } }
-  const md = files.get("bundle.md");
-  const bundleSha = md ? await sha256(md) : null;
   for (const e of post) {
     const rec = records.find((r) => r && r.transition === e.timestamp);
     if (!rec || !rec.signature_file) {
@@ -166,9 +199,20 @@ export async function checkReleaseSignature({ folderName, fm, files, releaseRegi
     if (rec.registry_sha256 && reg.sha256 && rec.registry_sha256 !== reg.sha256)
       findings.push(finding("warn", `release at ${e.timestamp} records registry ${String(rec.registry_sha256).slice(0, 12)}… but the registry in force is ${String(reg.sha256).slice(0, 12)}…; the usual cause is signing against a stale mirror`,
         ["re-verify against the recorded registry version out of the registry record's history"]));
+    const released = releasedBundleMd(files, e);
+    if (!released.bytes) {
+      findings.push(finding("error", `release at ${e.timestamp}: what was signed cannot be read: ${released.unreadable}; the release is not passed`,
+        ["export the record with its history (the manifest and each bundle.md copy held as text)"]));
+      continue;
+    }
     const message = latin1(releaseMessage({ bundle: folderName, transition: e.timestamp, from_state: e.from_state,
-      to_state: e.to_state, signer: rec.signer, bundle_md_sha256: bundleSha,
+      to_state: e.to_state, signer: rec.signer, bundle_md_sha256: await sha256(released.bytes),
       registry_sha256: rec.registry_sha256 || reg.sha256 }));
+    if (message === null) {
+      findings.push(finding("error", `release at ${e.timestamp}: its release message holds a character the signer's one-byte encoding cannot carry, so no signature over it can be checked`,
+        ["record the signer and the transition in Latin-1 characters"]));
+      continue;
+    }
     const v = await verifyFor({ armored: asText(armored), message, signersText: reg.signers, namespace,
                                 principal: rec.signer, at: e.timestamp });
     if (!v.ok)
