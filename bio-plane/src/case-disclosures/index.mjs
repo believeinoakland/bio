@@ -3,7 +3,8 @@
  * DEC-81, DEC-96 item 4, DEC-112, DEC-119). The unresolved conflicts on a case's findings (R1); each document's grade and
  * co-attestation, and the owner's acknowledgement of a self-attested one (R2, R3); what may be said of a source (R4); the
  * method the case is signed under (R5); every document and observation a finding's chain reaches, with what this copy
- * holds whole and who attests it (R6–R12); another group's work it rests on, with its acceptance and open flags (R13,
+ * holds whole and who attests it, a marked photo carried as its copy (R6–R12), and the photos it relies on for the
+ * ceremony's Photos step (R29; T37, N757); another group's work it rests on, with its acceptance and open flags (R13,
  * R14); each reached finding's grading facts and passages (R15); hunch debt (R16); and the people it names, each with a
  * recorded basis, and each signer's attestation of no undeclared tie (R24–R28). Each judgment answers its
  * refusals in order and the rows the case document writes; `case-authoring`'s `publishCase` asks them in its order (its
@@ -39,6 +40,7 @@
  *   money                `readFact` (a cited money fact's parties; R24).
  *   people               `identityOf`, `interestsOf`, `personAt`, `tiesConcerning` (its R5, R15, R14, R20; R24–R27).
  *   membership           `memberFacts` (a signer's cover or handle, at the level they chose; R27).
+ *   caseCarriage         `photoMarks` (its R10; R6, R29); `OBSCURED_LABEL` (its R11) is imported (T37; N757).
  *   now                  the judgment's instant, for the day `personAt` is read at (R26).
  *
  * READ CONTRACTS it joins in its own SQL, each named at its statement: record-core's `bundles` (R37); inquiry's
@@ -67,16 +69,17 @@ import { eventsOf } from "../events/index.mjs";
 import { linesOf } from "../lines/index.mjs";
 import { moneyOf } from "../money/index.mjs";
 import { peopleOf as peopleModuleOf } from "../people/index.mjs";
+import { caseCarriageOf, OBSCURED_LABEL } from "../case-carriage/index.mjs";
 import { CASE_DISCLOSURE_CHECKS } from "./checks.mjs";
 import { basesListed, basisCitation, placesStated, PERSON_PLACES, TIE_LINE_KINDS, TIE_ANONYMOUS_LEVELS } from "./people.mjs";
-import { chainsOf, materialHeld, materialRows } from "./materials.mjs";
+import { chainsOf, materialHeld, materialRows, photoRead, PHOTO_NOT_COVERABLE_WORDS } from "./materials.mjs";
 import { flagsListed, flagsJudged, acceptedWorkRow } from "./accepted.mjs";
 import { NOT_SHOWN_WORDS, tensionSide, SELF_ATTESTED_SENTENCE } from "./document.mjs";
 
 export { CASE_DISCLOSURE_CHECKS } from "./checks.mjs";
 export { PERSON_BASES, PERSON_PLACES, TIE_LINE_KINDS, TIE_ANONYMOUS_LEVELS, basesListed, basisCitation, placesStated,
          peopleLines, memberTieLines, peopleOf, memberTiesOf } from "./people.mjs";
-export { chainsOf, materialHeld, materialRows } from "./materials.mjs";
+export { chainsOf, materialHeld, materialRows, photoRead, PHOTO_STATES, PHOTO_NOT_COVERABLE_WORDS } from "./materials.mjs";
 export { flagsListed, acceptedWorkRow, FLAG_SENTENCE, FLAGS_SAY } from "./accepted.mjs";
 export { SELF_ATTESTED_SENTENCE, TENSION_TEMPLATES, HIGHLIGHT_SENTENCE, NOT_SHOWN_WORDS, TENSIONS_DEPTH_STATED,
          tensionSide, tensionTemplate, tensionSentence, tensionsUnreadStated, tensionFrontmatterLines,
@@ -106,12 +109,12 @@ export class CaseDisclosures {
   constructor({ storage, record, host = null, inquiry = null, strength = null, contradiction = null, provenance = null,
                 attestation = null, capture = null, sources = null, extraction = null, caseImport = null,
                 promotion = null, entities = null, events = null, lines = null, money = null, people = null,
-                membership = null, now = null } = {}) {
+                membership = null, caseCarriage = null, now = null } = {}) {
     this.sql = storage.sql;
     this.storage = storage;
     this.record = record;
     this.#deps = { host, inquiry, strength, contradiction, provenance, attestation, capture, sources, extraction,
-                   caseImport, promotion, entities, events, lines, money, people, membership };
+                   caseImport, promotion, entities, events, lines, money, people, membership, caseCarriage };
     this.#now = typeof now === "function" ? now : () => new Date().toISOString();
   }
 
@@ -135,6 +138,8 @@ export class CaseDisclosures {
   get money() { return this.#deps.money ||= moneyOf(this.#deps.host); }
   get people() { return this.#deps.people ||= peopleModuleOf(this.#deps.host); }
   get membership() { return this.#deps.membership ||= membershipOf(this.#deps.host); }
+  /* R6, R29 (T37; N757): the marks on a photo and its copy (`case-carriage` R10). */
+  get caseCarriage() { return this.#deps.caseCarriage ||= caseCarriageOf(this.#deps.host); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { for (const r of this.sql.exec(q, ...a)) return r; return null; }
@@ -373,8 +378,16 @@ export class CaseDisclosures {
   /** R6, R8, R12 (DEC-112 (4); K1134 reading 1): each member's chain (`chainsOf`, as `viewer` sees the record), each
    *  material it reaches with what this copy holds of it (`materialHeld`), and C-120.8 for every load-bearing member
    *  whose chain reaches material not held whole, naming each member and each material. Material only supporting
-   *  members reach is listed `included: false` and never refused. Answers `{refusals, materials, refs, findings}`;
-   *  `op=publish` answers the first refusal, `case-authoring` R34's pre-flight lists it. */
+   *  members reach is listed `included: false` and never refused.
+   *  A PHOTO (T37; N757; DEC-180 (3), (4); K2206): each document's marks are read (`case-carriage.photoMarks`, its R10,
+   *  as `viewer`; `photoRead`) and answered on the material as `photo`. A marked photo with a copy is `included: false`
+   *  with `obscured: {copy, label}`, presentable through its copy, so never C-120.8 for being held so. A marked photo
+   *  whose cover was refused is neither carried whole nor left out: a load-bearing chain reaching it is
+   *  `PHOTO_NOT_COVERABLE`, naming each such photo and member; one only supporting members reach is `included: false`.
+   *  A photo whose marks cannot be read is `included: false` and `PHOTO_MARKS_UNDETERMINED`, naming it, whoever reaches
+   *  it (fail closed: never sent out whole). An unmarked photo (`nothing_to_obscure`, `unchecked`) is judged as any
+   *  document. Refusals in that order; each writes nothing. Answers `{refusals, materials, refs, findings}`;
+   *  `op=publish` answers the first refusal, `case-authoring` R34's pre-flight lists them all. */
   materialsJudged(prepared, memberRoles, viewer) {
     const gate = viewerPredicate(viewer);
     const io = {
@@ -390,25 +403,95 @@ export class CaseDisclosures {
     const chains = chainsOf(prepared.map((p) => ({ id: p.id, role: roleOf.get(p.id) })), io, DEPTH_BOUND);
     const materials = chains.materials.map((m) => {
       const held = materialHeld(m, io);
-      return { ...m, held, included: held.whole };
+      const photo = m.kind === "document"
+        ? photoRead(() => this.caseCarriage.photoMarks({ captureSha: m.sha, viewer })) : null;
+      const marked = !!(photo && photo.photo === true && photo.state === "marked");
+      const obscured = marked && photo.copy ? { copy: photo.copy, label: OBSCURED_LABEL } : null;
+      const plain = !(photo && photo.unread) && !marked;
+      return { ...m, held, included: plain && held.whole, obscured, photo };
     });
-    const short = materials.filter((m) => !m.included && m.rests_under === "load_bearing");
+    const loadBearing = memberRoles.filter((r) => r.role === "load_bearing");
+    const byMember = (list, row) => loadBearing
+      .map((r) => ({ target: r.target, materials: list.filter((m) => m.members.includes(r.target)).map(row) }))
+      .filter((x) => x.materials.length);
+    const short = materials.filter((m) => !m.included && m.rests_under === "load_bearing"
+                                          && !(m.photo && (m.photo.unread || m.photo.state === "marked")));
+    const uncoverable = materials.filter((m) => m.rests_under === "load_bearing" && m.photo && m.photo.photo === true
+                                                && m.photo.state === "marked" && m.photo.refused);
+    const unread = materials.filter((m) => m.photo && m.photo.unread);
     const refusals = [];
     /* DEC-49 REGION is-relied-on-presentable */
     if (short.length) {
-      const byMember = memberRoles.filter((r) => r.role === "load_bearing")
-        .map((r) => ({ target: r.target, materials: short.filter((m) => m.members.includes(r.target))
-          .map((m) => ({ ref: m.ref, kind: m.kind, sha: m.sha, missing: m.held.missing })) }))
-        .filter((x) => x.materials.length);
-      refusals.push(disclosureRefusal("RELIED_ON_NOT_PRESENTABLE", { not_presentable: byMember,
+      const named = byMember(short, (m) => ({ ref: m.ref, kind: m.kind, sha: m.sha, missing: m.held.missing }));
+      refusals.push(disclosureRefusal("RELIED_ON_NOT_PRESENTABLE", { not_presentable: named,
         detail: `${short.length} document(s) or observation(s) a load-bearing finding of this case rests on are not held `
-              + `whole by your group's Civicsmith (` + byMember.map((x) => `${x.target}: ` + x.materials.map((m) => `${m.ref} `
+              + `whole by your group's Civicsmith (` + named.map((x) => `${x.target}: ` + x.materials.map((m) => `${m.ref} `
                 + `${m.sha} lacks ${m.missing.join(" and ")}`).join(", ")).join("; ")
               + `). Everything a case relies on travels with it in full (DEC-112 (4)): find a presentable copy, stop `
               + `relying on the material, or make the finding supporting. Nothing was written.` }));
     }
     /* END DEC-49 REGION is-relied-on-presentable */
+    /* DEC-49 REGION is-photo-coverable */
+    if (uncoverable.length) {
+      const named = byMember(uncoverable, (m) => ({ ref: m.ref, sha: m.sha, refused: m.photo.refused.code }));
+      refusals.push(disclosureRefusal("PHOTO_NOT_COVERABLE", { not_coverable: named,
+        detail: `${uncoverable.length} photo(s) a load-bearing finding of this case relies on are marked to be obscured, `
+              + `and their format cannot be covered (` + named.map((x) => `${x.target}: ` + x.materials.map((m) =>
+                `${m.ref} ${m.sha}, ${m.refused}`).join(", ")).join("; ")
+              + `), so the case can neither carry them whole nor leave them out. Capture each again in a format that `
+              + `can be covered, such as a standard JPEG or PNG, or stop relying on it. Nothing was written.` }));
+    }
+    /* END DEC-49 REGION is-photo-coverable */
+    /* DEC-49 REGION is-photo-marks-determined */
+    if (unread.length) {
+      const named = unread.map((m) => ({ ref: m.ref, sha: m.sha, members: m.members, why: m.photo.why }));
+      refusals.push(disclosureRefusal("PHOTO_MARKS_UNDETERMINED", { undetermined: named,
+        detail: `${unread.length} document(s) this case relies on could not be checked for the people and number plates `
+              + `marked in them (` + named.map((m) => `${m.ref} ${m.sha}: ${m.why}`).join("; ")
+              + `), so what the published case would show of them is not known. Try again. Nothing was written.` }));
+    }
+    /* END DEC-49 REGION is-photo-marks-determined */
     return { refusals, materials, refs: chains.refs, findings: chains.findings };
+  }
+
+  /** R29 (T37; N757; DEC-180 (3); K2206): the ceremony's Photos step, over the `materials` R6 answered. One entry per
+   *  document material whose capture is a photo, in materials order, `{ref, sha, taken_by, relied_on_by, state, marks,
+   *  copy, refused, words, unread}`: `taken_by` its attesting member (R8: the capture's first actor, as
+   *  `capture.captureAccountsOf` lets `viewer` see them), `relied_on_by` `[{target, role}]` of the members whose chains
+   *  reach it; `state`, `marks`, `copy` (its SHA-256) and `refused` as `photoMarks` answers them (R6's read, `photo`,
+   *  else read here); `words` `OBSCURED_LABEL` for a marked photo with a copy, `PHOTO_NOT_COVERABLE_WORDS` for a refused
+   *  cover, else null. A photo whose marks cannot be read is listed `state: null, unread: true`, as R6 refuses it.
+   *  `unchecked` counts the photos with no mark: shown, never a refusal, travelling whole as taken. Writes nothing;
+   *  never throws. */
+  photosOf(materials, memberRoles, viewer) {
+    const roleOf = new Map((Array.isArray(memberRoles) ? memberRoles : [])
+      .filter((r) => r && typeof r === "object").map((r) => [r.target, r.role ?? null]));
+    const photos = [];
+    for (const m of Array.isArray(materials) ? materials : []) {
+      if (!m || typeof m !== "object" || m.kind !== "document" || typeof m.sha !== "string") continue;
+      const p = m.photo && typeof m.photo === "object" && (m.photo.photo === false || m.photo.photo === true || m.photo.unread)
+        ? m.photo : photoRead(() => this.caseCarriage.photoMarks({ captureSha: m.sha, viewer }));
+      if (p.photo === false) continue;
+      const members = Array.isArray(m.members) ? m.members : [];
+      const entry = { ref: m.ref ?? null, sha: m.sha, taken_by: this.#takenBy(m.sha, viewer),
+                      relied_on_by: members.map((t) => ({ target: t, role: roleOf.get(t) ?? null })) };
+      if (p.unread) {
+        photos.push({ ...entry, state: null, marks: null, copy: null, refused: null, words: null, unread: true });
+        continue;
+      }
+      const words = p.state !== "marked" ? null : p.refused ? PHOTO_NOT_COVERABLE_WORDS : OBSCURED_LABEL;
+      photos.push({ ...entry, state: p.state, marks: p.marks, copy: p.copy, refused: p.refused, words, unread: false });
+    }
+    return { photos, unchecked: photos.filter((p) => p.state === "unchecked").length };
+  }
+
+  /* R8, R29: a capture's attesting member, its first actor (`acquisition` R16; a pulled knock's puller, `capture` R65), as
+     the viewer may see them; null when none is held or seen, or the read fails. */
+  #takenBy(sha, viewer) {
+    let a = null;
+    try { a = this.capture.captureAccountsOf(sha, { viewer }); } catch { a = null; }
+    const first = a && Array.isArray(a.actors) ? a.actors.find((x) => x && typeof x.actor === "string") : null;
+    return first ? first.actor : null;
   }
 
   /** R15 (DEC-112 (3); K1305, K1315): for each finding a member's chain reaches (R8), its legs exactly as

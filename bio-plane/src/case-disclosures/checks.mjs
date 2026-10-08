@@ -14,8 +14,9 @@
  * nothing, or a flags read not made whole. Promotion stamps these rows (N318); C-120.4–C-120.7 were stamped in `CATALOG_VERSION`
  * 1.47.0 (T17); C-120.8 and C-120.10–C-120.13, and C-120.1–C-120.7's new `where`s, await T29's stamp.
  * C-120.9 was withdrawn unstamped (K1275), and its number is never reused. T33 adds a person named without a recorded
- * basis, a basis that stands on nothing, and a signer who has not attested to their ties (R25, R27). A change to any
- * row moves `CATALOG_VERSION` (rule 17). */
+ * basis, a basis that stands on nothing, and a signer who has not attested to their ties (R25, R27). T37 adds a marked
+ * photo a load-bearing finding relies on whose format cannot be covered, and a photo whose marks could not be read (R6;
+ * N757, K2206). A change to any row moves `CATALOG_VERSION` (rule 17). */
 
 const at = (fn, region) => `src/case-disclosures/index.mjs ${fn} > ${region}`;
 
@@ -123,5 +124,23 @@ export const CASE_DISCLOSURE_CHECKS = Object.freeze({
     where: at('tieAttestationJudged', 'is-tie-attested'),
     translation: 'Each member who signs a case first attests that they hold no undeclared tie to anyone or anything the '
       + 'case names, including those paid or paying in its money. Attest, or declare the tie first. Nothing was written.',
+  },
+  /* R6 (T37; N757; DEC-180 (3), (4); K2206): a marked photo whose cover `image-cover` refused is neither carried whole
+     nor left out, so a load-bearing chain reaching it is refused; a photo whose marks cannot be read fails closed. New
+     in T37, numbered provisionally C-120.17 and C-120.18 until promotion's stamp (T38); the translations are BOB's
+     drafts the UX stream may re-word. */
+  PHOTO_NOT_COVERABLE: {
+    check: 'C-120.17',
+    where: at('materialsJudged', 'is-photo-coverable'),
+    translation: 'A photo a finding in this case relies on has people or number plates marked to be obscured, and its '
+      + 'format cannot be covered, so the case can neither carry it whole nor leave it out. It is named. Capture the '
+      + 'photo again in a format that can be covered, such as a standard JPEG or PNG, or stop relying on it. Nothing '
+      + 'was written.',
+  },
+  PHOTO_MARKS_UNDETERMINED: {
+    check: 'C-120.18',
+    where: at('materialsJudged', 'is-photo-marks-determined'),
+    translation: 'A photo this case relies on could not be checked for the people and number plates marked in it, so '
+      + 'what the published case would show of it is not known. Try again. Nothing was written.',
   },
 });
