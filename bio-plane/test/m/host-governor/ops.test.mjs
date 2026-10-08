@@ -191,9 +191,11 @@ test("R18, R19: the Worker's arm answers exactly the two ops, and null for any o
 /* ---- through the whole plane ---- */
 const SRC = fileURLToPath(new URL("../../../src/plane/index.mjs", import.meta.url));   // plane R6's entry (K846)
 let mf;
-const T = { admin: "hg-adm", member: "hg-mem", probe: "hg-prb" };
-const call = async (q, body) => {
-  const res = await mf.dispatchFetch(`http://x/api/?${q}`, { method: "POST", body: JSON.stringify(body ?? {}) });
+const T = { admin: "hg-adm", probe: "hg-prb" };
+/* The credential travels in the Authorization header, never the address (admission R20, C-38.10). */
+const call = async (q, tok, body) => {
+  const headers = tok === undefined ? {} : { authorization: `Bearer ${tok}` };
+  const res = await mf.dispatchFetch(`http://x/api/?${q}`, { method: "POST", body: JSON.stringify(body ?? {}), headers });
   const j = await res.json();
   return (j && typeof j === "object" && "result" in j) ? j.result : j;
 };
@@ -206,43 +208,44 @@ before(async () => {
     compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
     durableObjects: { STORE: { className: "Store", useSQLite: true } },
     r2Buckets: ["CAPTURES", "PUBLISHED"],
-    bindings: { ADMIN_TOKEN: T.admin, MEMBER_TOKEN: T.member, PROBE_TOKEN: T.probe, VERSION: "test" },
+    bindings: { ADMIN_TOKEN: T.admin, PROBE_TOKEN: T.probe, VERSION: "test" },
     outboundService() { return new Response("unscripted", { status: 500 }); },
   });
-  /* Two enrolled administrators and an ordinary member, then the founder's claim and session (Membership
+  /* Two enrolled administrators and two ordinary members, then the founder's claim and session (Membership
      Architecture 4.2/4.3: the first two administrators are enrolled before anyone else). */
   const enrol = async (id, role, capabilities) => {
-    const add = await call(`op=memberadd&token=${T.admin}`, { memberId: id, cover: `cover for ${id}`, role, capabilities });
+    const add = await call(`op=memberadd`, T.admin, { memberId: id, cover: `cover for ${id}`, role, capabilities });
     if (!add?.invite) throw new Error(`memberadd ${id}: ${JSON.stringify(add)}`);
-    const en = await call("op=enroll", { invite: add.invite, handle: id, password: `${id}-passphrase-hg` });
+    const en = await call("op=enroll", undefined, { invite: add.invite, handle: id, password: `${id}-passphrase-hg` });
     if (!en?.ok) throw new Error(`enroll ${id}: ${JSON.stringify(en)}`);
-    const lg = await call("op=login", { role: `member:${id}`, password: `${id}-passphrase-hg` });
+    const lg = await call("op=login", undefined, { role: `member:${id}`, password: `${id}-passphrase-hg` });
     if (!lg?.token) throw new Error(`login ${id}: ${JSON.stringify(lg)}`);
     return lg.token;
   };
   S.ruth = await enrol("ruth", "admin", ["contribute"]);
   S.gus = await enrol("gus", "admin", ["contribute"]);
   S.cai = await enrol("cai", "member", []);
-  const claimed = await call("op=claim", { bootstrapToken: T.admin, password: "founder-passphrase-hg" });
+  S.dee = await enrol("dee", "member", []);   // the member class retired (C-38.11): a member reaches an op by session
+  const claimed = await call("op=claim", undefined, { bootstrapToken: T.admin, password: "founder-passphrase-hg" });
   if (!claimed?.ok) throw new Error(`claim: ${JSON.stringify(claimed)}`);
-  const fl = await call("op=login", { password: "founder-passphrase-hg" });
+  const fl = await call("op=login", undefined, { password: "founder-passphrase-hg" });
   if (!fl?.token) throw new Error(`founder login: ${JSON.stringify(fl)}`);
   S.founder = fl.token;
 });
 after(async () => { if (mf) await mf.dispose(); });
 
-test("R18: op=governorstate is reached by the admin, member and probe classes and by every session", async () => {
-  const setup = await call(`op=governorconfig&token=${T.admin}&host=state.example&appetite_per_min=7`);
+test("R18: op=governorstate is reached by the admin and probe classes and by every session, a member's among them", async () => {
+  const setup = await call(`op=governorconfig&host=state.example&appetite_per_min=7`, T.admin);
   assert.equal(setup.ok, true);
-  const probeSetup = await call(`op=governorconfig&token=${T.probe}&host=state.example&appetite_per_min=5`);
+  const probeSetup = await call(`op=governorconfig&host=state.example&appetite_per_min=5`, T.probe);
   assert.equal(probeSetup.ok, true);
-  for (const [who, tok, want] of [["admin", T.admin, 7], ["member", T.member, 7], ["probe (its own namespace)", T.probe, 5],
+  for (const [who, tok, want] of [["admin", T.admin, 7], ["another member's session", S.dee, 7], ["probe (its own namespace)", T.probe, 5],
                                   ["the founder's session", S.founder, 7], ["an enrolled administrator's session", S.ruth, 7],
                                   ["a member's session", S.cai, 7]]) {
-    const r = await call(`op=governorstate&token=${tok}&host=state.example`);
+    const r = await call(`op=governorstate&host=state.example`, tok);
     assert.equal(r.ok, true, `${who}: ${JSON.stringify(r)}`);
     assert.deepEqual(r.hosts.map((h) => [h.host, h.appetite_per_min]), [["state.example", want]], who);
-    const all = await call(`op=governorstate&token=${tok}`);
+    const all = await call(`op=governorstate`, tok);
     assert.equal(all.ok, true, who);
     assert.ok(all.hosts.some((h) => h.host === "state.example"), who);
   }
@@ -251,32 +254,32 @@ test("R18: op=governorstate is reached by the admin, member and probe classes an
 });
 
 test("R19: op=governorconfig is reached by the admin and probe classes and the founder's session alone", async () => {
-  const appetiteOf = async (h) => ((await call(`op=governorstate&token=${T.admin}&host=${h}`)).hosts[0] || {}).appetite_per_min ?? null;
+  const appetiteOf = async (h) => ((await call(`op=governorstate&host=${h}`, T.admin)).hosts[0] || {}).appetite_per_min ?? null;
   const allowed = [["admin", T.admin], ["the founder's session", S.founder]];
   let n = 11;
   for (const [who, tok] of allowed) {
-    const r = await call(`op=governorconfig&token=${tok}&host=cfg.example&appetite_per_min=${n}`);
+    const r = await call(`op=governorconfig&host=cfg.example&appetite_per_min=${n}`, tok);
     assert.deepEqual([r.ok, r.appetite_per_min], [true, n], `${who}: ${JSON.stringify(r)}`);
     assert.equal(await appetiteOf("cfg.example"), n, who);
     n++;
   }
-  const p = await call(`op=governorconfig&token=${T.probe}&host=cfg-probe.example&appetite_per_min=3`);
+  const p = await call(`op=governorconfig&host=cfg-probe.example&appetite_per_min=3`, T.probe);
   assert.deepEqual([p.ok, p.appetite_per_min], [true, 3]);
-  assert.equal((await call(`op=governorstate&token=${T.probe}&host=cfg-probe.example`)).hosts[0].appetite_per_min, 3);
-  for (const [who, tok] of [["member", T.member], ["an enrolled administrator's session", S.ruth],
+  assert.equal((await call(`op=governorstate&host=cfg-probe.example`, T.probe)).hosts[0].appetite_per_min, 3);
+  for (const [who, tok] of [["another member's session", S.dee], ["an enrolled administrator's session", S.ruth],
                             ["another enrolled administrator's session", S.gus], ["a member's session", S.cai]]) {
-    const r = await call(`op=governorconfig&token=${tok}&host=cfg-refused.example&appetite_per_min=2`);
+    const r = await call(`op=governorconfig&host=cfg-refused.example&appetite_per_min=2`, tok);
     assert.equal(r.ok, false, `${who}: ${JSON.stringify(r)}`);
   }
   assert.equal(await appetiteOf("cfg-refused.example"), null);   // nothing a refused caller asked for landed
-  const need = await call(`op=governorconfig&token=${T.admin}&appetite_per_min=2`);
+  const need = await call(`op=governorconfig&appetite_per_min=2`, T.admin);
   assert.deepEqual([need.ok, need.reason], [false, "NEED_HOST"]);
   for (const bad of ["0", "-4", "abc"]) {
-    const r = await call(`op=governorconfig&token=${T.admin}&host=cfg.example&appetite_per_min=${bad}`);
+    const r = await call(`op=governorconfig&host=cfg.example&appetite_per_min=${bad}`, T.admin);
     assert.deepEqual([r.ok, r.reason, r.check], [false, "BAD_APPETITE", "host-governor.R12"], bad);
   }
   assert.equal(await appetiteOf("cfg.example"), 12);
-  const cleared = await call(`op=governorconfig&token=${T.admin}&host=cfg.example`);
+  const cleared = await call(`op=governorconfig&host=cfg.example`, T.admin);
   assert.deepEqual([cleared.ok, cleared.appetite_per_min], [true, null]);
   assert.equal(await appetiteOf("cfg.example"), null);
 });
@@ -287,11 +290,11 @@ test("R18, R14: through the whole plane, a refusal reported to the Durable Objec
   const route = async (path, body) => (await (await obj.fetch(`http://x/${path}`, { method: "POST", body: JSON.stringify(body) })).json()).result;
   const held = await route("governorreport", { host: "held.example", status: 429 });
   assert.deepEqual([held.recorded, held.refusals, held.cooloff_ms >= 60_000], [true, 1, true]);
-  const r = await call(`op=governorstate&token=${T.admin}&host=held.example`);
+  const r = await call(`op=governorstate&host=held.example`, T.admin);
   assert.equal(r.ok, true);
   assert.deepEqual([r.hosts[0].cooloff_until, r.hosts[0].refusals, r.hosts[0].last_refusal_status],
                    [held.cooloff_until, 1, 429]);
   assert.equal((await route("governoradmit", { host: "held.example" })).reason, "cooling_off");
-  const again = await call(`op=governorstate&token=${T.admin}&host=held.example`);
+  const again = await call(`op=governorstate&host=held.example`, T.admin);
   assert.deepEqual([again.hosts[0].refused_total, again.hosts[0].granted], [1, 0]);
 });
