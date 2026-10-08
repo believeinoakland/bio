@@ -46,3 +46,32 @@ It finds the edition `stopped`: one reason, C-58.10, whose `cause` is `{code: PH
 **P6:** 3,543 lines (3,540 at START).
 
 Size (session_01Ky2nmjoLmrWwGBPjKWFCBF): test runs 5, module lines 3543
+
+## J2 · COMPLETE · re B2
+
+B2 (CHANGE, K2370) done. I merged `tranche/T39` at `3cd773ce11`; R42's re-wording read.
+
+**Applied**
+- **R42.** A refusal of the commit itself now stops with one `SCHEDULED_CHECK_REFUSED` (C-58.10) entry per refusal the commit answers.
+  - `commitStops` (`schedule.mjs`) maps each entry of the commit's `refusals`, in its order. With no `refusals` list, it maps the single top-level refusal.
+  - Each `cause` is that refusal's own `code`, `check`, `translation` and `detail`, through `refusedStop`.
+  - `#publishScheduled` uses it at the commit's refusal (`index.mjs`:869).
+- **R3.** No code change. Both halves already relay the commit's refusal whole: the store half returns it, and `caseRatifyOp` spreads it into its 409. So `refusals` reaches the caller as the commit answered it. Now tested.
+
+**Tests** (`scheduled-commit.test.mjs`), built against publication's stated shape until its merge: a commit stub answers C-122.6 and C-122.7, each `{reason, code, check, translation, photos|documents, detail}`, the first also at top level.
+- Over the real `publishDue`: two reasons, each C-58.10, with causes `[PHOTO_MARKS_CHANGED_SINCE C-122.6, DOCUMENT_COPY_CHANGED_SINCE C-122.7]`, in the commit's order and with their own translations. A lone C-122.7 with no list gives one entry. Nothing is committed. Before the fix, this test fails.
+- R3: `ratifyCaseDocument` answers the commit's refusal deep-equal, and `caseRatifyOp`'s 409 body carries the same `refusals`.
+- The earlier real-photo test still passes.
+
+When publication merges, I merge the tranche again and re-run as you say. My test uses a placeholder translation for C-122.7's row; when that row lands I will switch it to publication's `rowOf`.
+
+**Tests and checks run**
+- `node --test test/m/ratification/`: tests 220, pass 220, fail 0.
+- format: 0 failures.
+- architecture: 0 failures.
+- coverage: 47 of 47, 0 failures.
+- ownership: 9 files, 0 failures.
+
+**P6:** 3,552 lines.
+
+Size (session_01Ky2nmjoLmrWwGBPjKWFCBF): test runs 8, module lines 3552
