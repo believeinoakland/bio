@@ -202,14 +202,15 @@ export function world({ scan = {}, bound = true, now = T0, scanWaitMs = 50 } = {
       const cat = fs.securityToolCatalogue({ viewer: "member:boss" });
       const entry = cat.offered.find((d) => d.provider_id === providerId);
       const creds = credentials ?? Object.fromEntries((entry.credentials.length ? entry.credentials : ["api_key"]).map((n) => [n, `secret-${n}`]));
-      let digest = entry.handling_digest;
-      if (template) {
-        const { resolveDescriptor, providerById } = await import("../../../../file-scanner/src/providers/catalogue.mjs");
-        const { canonicalJson, sha256HexSync } = await import("../../../src/record-grammar/index.mjs");
-        const r = resolveDescriptor(providerById(providerId), { host: template.host, config });
-        digest = sha256HexSync(canonicalJson(r.descriptor.handling));
+      /* a required region or host the test does not name: the entry's first region, a host of its own (R28, T38) */
+      if (!template) {
+        const { providerById } = await import("../../../../file-scanner/src/providers/catalogue.mjs");
+        const hosts = providerById(providerId).hosts;
+        const fill = { region: hosts && !Array.isArray(hosts) ? Object.keys(hosts)[0] : undefined, host: `${providerId}.example.org` };
+        config = { ...Object.fromEntries(entry.config.filter((f) => f.required && f.name in fill).map((f) => [f.name, fill[f.name]])), ...config };
       }
-      const added = await fs.securityToolAdd({ providerId, template, config, credentials: creds, handlingDigest: digest, confirmRetention,
+      /* the digest the catalogue answers for the entry, a generic template's own included (R28, T38) */
+      const added = await fs.securityToolAdd({ providerId, template, config, credentials: creds, handlingDigest: entry.handling_digest, confirmRetention,
                                                use, monthlyLimit, by: "boss" });
       if (!added.ok) throw new Error(`tool not added: ${added.code}`);
       const t = await fs.securityToolTest({ toolId: added.tool_id, by: "boss" });
