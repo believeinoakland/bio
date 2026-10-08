@@ -20,7 +20,7 @@
   // One version across the plane and every member (bundler R12): this and package.json are the two sites.
   // SHEET_RECOMPUTE is off: the member answers every recompute request NOT_ENABLED until an administrator sets it
   // to "on" after the release deploys this member (R2, K1501).
-  "vars": { "VERSION": "0.79.0", "SHEET_RECOMPUTE": "off" },
+  "vars": { "VERSION": "0.81.0", "SHEET_RECOMPUTE": "off" },
 
   // CPU: the paid plan's 5-minute ceiling, declared rather than discovered (R14). The bounds in src/contract.mjs are
   // set so a workbook under them finishes inside it on the measured figures; one that does not is ended by the

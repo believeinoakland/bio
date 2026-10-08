@@ -7,16 +7,17 @@
   "mark": 55,
   "state": 4,
   "draft": 4,
+  "photo": 7,
   "rail": 14,
   "tab": 2,
   "level": 2,
   "guide": 6,
   "screen": 94,
-  "act": 457,
+  "act": 459,
   "column": 33,
   "wizard": 239,
-  "total": 921,
-  "protected": 345
+  "total": 930,
+  "protected": 353
  },
  "words": [
   {
@@ -464,6 +465,52 @@
    "en": "Help me write this",
    "protected": false,
    "source": "mock-kit.js writeHelp"
+  },
+  {
+   "key": "photo.reminder",
+   "en": "Frame what you are checking, and leave out people's faces and number plates where you can. If a published case relies on this photo, anyone in it who is not part of a finding, and any number plate, is obscured in the public copy; the original stays inside your group.",
+   "protected": true,
+   "source": "mock-screens.js PHOTO_REMINDER"
+  },
+  {
+   "key": "photo.obscured.label",
+   "en": "Faces and plates obscured for publication; the group holds the original",
+   "protected": true,
+   "source": "mock-screens.js ceremony",
+   "note": "the label the published copy carries"
+  },
+  {
+   "key": "photo.step.gate",
+   "en": "Every photo the case relies on must be checked before signing: marked, or “nothing to obscure”. A mark that covers the wrong thing is withdrawn with a reason, never erased. Text read from a photo, such as a number plate, is never published with it; a passage you quote in the case still is.",
+   "protected": true,
+   "source": "mock-screens.js ceremony"
+  },
+  {
+   "key": "photo.state.nothing",
+   "en": "nothing to obscure",
+   "protected": true,
+   "source": "mock-screens.js ceremony"
+  },
+  {
+   "key": "photo.refused.format",
+   "en": "This photo's format can't be obscured: {photo}. Capture it again as an ordinary photo, or stop relying on it.",
+   "protected": true,
+   "source": "DEC-183",
+   "note": "PHOTO_NOT_COVERABLE"
+  },
+  {
+   "key": "photo.refused.changed",
+   "en": "A mark changed after this case was prepared. Prepare it again before signing.",
+   "protected": true,
+   "source": "DEC-183",
+   "note": "PHOTO_MARKS_CHANGED_SINCE"
+  },
+  {
+   "key": "photo.refused.unchecked",
+   "en": "Signing waits until every photo the case relies on is checked: {photo}.",
+   "protected": true,
+   "source": "DEC-183",
+   "note": "the Photos step as a gate"
   },
   {
    "key": "rail.home.name",
@@ -2627,6 +2674,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_obscuremarkwithdraw.label.ceremony",
+   "en": "Withdraw a mark on a photo, with a reason",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.verify.label.published",
    "en": "Check the signature",
    "protected": true,
@@ -2922,7 +2975,7 @@
   },
   {
    "key": "act.owed_setpassword.does",
-   "en": "Changes your password. Other sessions you have open stay signed in until they end.",
+   "en": "Changes your password. Every other session signed in as you ends, so anyone using an old one must sign in again with the new password.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -3319,6 +3372,12 @@
   {
    "key": "act.clockpropose.does",
    "en": "Works out a due date from the law and the dates, showing each day counted and each holiday skipped. It proposes the date; a member confirms it.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_obscuremarkwithdraw.does",
+   "en": "Withdraws a mark on a photo, with your reason, for example when it covers what the finding shows. The withdrawal is recorded beside the mark; the public copy follows the marks that stand.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },

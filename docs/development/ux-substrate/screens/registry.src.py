@@ -111,7 +111,7 @@ screen('case-editor', 'Case', 'working', 'Prepare the case: scope, statement, wh
 screen('review-copy', 'Review copy', 'working', 'A named outsider\'s revocable view of the draft.',
   [('reviewgrant','Share for review'),('reviewrevoke','Stop sharing'),('reviewcomment','Comment')], [21])
 screen('ceremony', 'Publication ceremony', 'working', 'The required wizard: checks, disclosures, ties confirmed, preview, signing.',
-  [('publishpreflight','Check before publishing'),('publishtensions','See what must be disclosed'),('caseratify','Sign with your key'),('publish','Publish, with your confirmation of no undeclared tie'),('owed:publishat DEC-147','Publish at a set time, checked again then'),('owed:obscuremark DEC-180','Mark who and what to obscure in a photo')], [15,24])
+  [('publishpreflight','Check before publishing'),('publishtensions','See what must be disclosed'),('caseratify','Sign with your key'),('publish','Publish, with your confirmation of no undeclared tie'),('owed:publishat DEC-147','Publish at a set time, checked again then'),('owed:obscuremark DEC-180','Mark who and what to obscure in a photo'),('owed:obscuremarkwithdraw DEC-183','Withdraw a mark on a photo, with a reason')], [15,24])
 screen('published', 'Published case', 'published', 'The public page: findings, strengths, timeline, people named, evidence; checkable without the group.',
   [('verify','Check the signature'),('publishedcase','Read the case')], [26])
 screen('imported', 'Another group\'s case', 'imported', 'An imported case in its read-only project, recreated finding by finding.',

@@ -1497,10 +1497,6 @@ var fleet_member_default = {
   surface: {
     "GET /version": 'R5: 200 {ok: true, name: "agent-runner", version}',
     "GET /conversation (WebSocket upgrade)": "R1-R4: one conversation request, its relays and its answer",
-    "POST /signin": "R17: {member} -> 200 {ok: true, address}, the sign-in address the binary states",
-    "POST /signin/code": "R18: {member, code} -> 200 {ok: true, connected: true, member}, or 409 SIGNIN_REFUSED",
-    "POST /signin/state": "R19: {member} -> 200 {ok: true, connected, member}",
-    "POST /signout": "R20: {member} -> 200 {ok: true, connected: false, member}",
     "anything else": 'R6: 404 {ok: false, code: "UNKNOWN"}'
   },
   image: {
@@ -1534,27 +1530,16 @@ var fleet_member_default = {
     dependencies: "package-lock.json (npm ci --omit=dev --ignore-scripts; the Agent SDK pinned exactly; R16)"
   },
   egress: [
-    "api.anthropic.com",
-    "platform.claude.com"
+    "api.anthropic.com"
   ],
-  terms: {
-    condition: [
-      "Unless we've mutually agreed otherwise, preinstalling or running Claude Code in your products or services (e.g. in hosted sandboxes or other agent infrastructure) requires agreeing to our Commercial Terms of Service",
-      "The Claude Code binary must not be modified. Claude Code must be installed and run as published by Anthropic, and customers may not remove, disable, or restrict any authentication method built into it (including methods that permit signing in with a Claude account or the user's own API key)."
-    ],
-    source: "https://code.claude.com/docs/en/legal-and-compliance",
-    who_agrees: null
-  },
-  note: "The fleet-member marker of a container member (R7, R14). `entry` is the image's Node entry; `bundle` is the Worker hosting its class (`src/worker.mjs`, R12), built by `npm run build` and guarded as every member's bundle is. `class_name`, `max_instances` and `bind` (the binding through which its caller reaches it) are copied by bundler into the release's `container.json` part (bundler R25). `image.digest` is written by the release when it publishes the image (T33-D1), with the same digest in `wrangler.jsonc`'s `containers[0].image`; an install names the image only as `repository@digest` (src/manifest.mjs imageReference, R7). `egress` is the container's allow-list, applied by the Worker's class when it starts the container (R10, R13). `egress` names the model API and the host Claude Code's own sign-in, its renewal and its logout reach from the container (platform.claude.com, K2211). `terms` records AT-14's condition for whoever deploys this member, as `build/terms/anthropic.md` AT-14 quotes it (read 2026-10-06); `who_agrees` stays null while U-7 (d) is open, and nothing here reads the terms as allowing the member's sign-in (DEC-156; U-7 (a)-(d) open)."
+  note: "The fleet-member marker of a container member (R7, R14). `entry` is the image's Node entry; `bundle` is the Worker hosting its class (`src/worker.mjs`, R12), built by `npm run build` and guarded as every member's bundle is. `class_name`, `max_instances` and `bind` (the binding through which its caller reaches it) are copied by bundler into the release's `container.json` part (bundler R25). `image.digest` is written by the release when it publishes the image (T33-D1), with the same digest in `wrangler.jsonc`'s `containers[0].image`; an install names the image only as `repository@digest` (src/manifest.mjs imageReference, R7). `egress` is the container's allow-list, applied by the Worker's class when it starts the container (R10, R13)."
 };
 
 // src/worker.mjs
 var UNKNOWN = JSON.stringify({ ok: false, code: "UNKNOWN" });
 var AgentRunner = class extends Container {
   defaultPort = fleet_member_default.image.port;
-  // A conversation's instance (agent-model opens one per conversation) sleeps soon after its connection ends (R9). A
-  // member's own instance sleeps too, and its disk, the stored sign-in on it included, is fresh after: the loss shows
-  // as R19's `connected: false` and R2's `NOT_SIGNED_IN` (K2200).
+  // A conversation's instance (agent-model opens one per conversation) sleeps soon after its connection ends (R9).
   sleepAfter = "2m";
   enableInternet = false;
   allowedHosts = [...fleet_member_default.egress];

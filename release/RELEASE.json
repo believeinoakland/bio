@@ -1,16 +1,37 @@
 {
-  "version": "0.79.0",
-  "sha256": "09e4e3348902aa7b09f974eec3669d136309cb4cdb2e7529eabcb9e74e0c2b78",
-  "bytes": 4436123,
+  "version": "0.81.0",
+  "sha256": "db9043110fb53643913d19b6988565bd4637072c3750e028f16946f2bac67ec4",
+  "bytes": 13904050,
   "asset": "bio-plane.bundled.mjs",
-  "sig": "-----BEGIN SSH SIGNATURE-----\nU1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgZ/MROikF5l7mZsPu6RjBplzPIE\n+MnhLexf4vLes3dWUAAAALYmlvLXJlbGVhc2UAAAAAAAAABnNoYTUxMgAAAFMAAAALc3No\nLWVkMjU1MTkAAABATywMCuRE4vg2t5SN1dAKDTv7gcMt49oF/o4532Ud8iYXomHOD1KnkS\nNydV4n9CYTJQsuhL5xLTAttJIDxIUfCg==\n-----END SSH SIGNATURE-----\n",
+  "sig": "-----BEGIN SSH SIGNATURE-----\nU1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgZ/MROikF5l7mZsPu6RjBplzPIE\n+MnhLexf4vLes3dWUAAAALYmlvLXJlbGVhc2UAAAAAAAAABnNoYTUxMgAAAFMAAAALc3No\nLWVkMjU1MTkAAABA8faOVLZhYBwpWPzA8vVNrewbJxD20dtUq/DKrW7yI8DPZ38rcV3su4\nLBQlJ34YuWtuuYHDwkVLQt4H5qvw87BQ==\n-----END SSH SIGNATURE-----\n",
   "signer": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGfzETopBeZe5mbD7ukYwaZczyBPjJ4S3sX+Ly3rN3Vl bio-release",
   "fleet": [
     {
+      "member": "agent-runner",
+      "asset": "agent-runner.bundled.mjs",
+      "sha256": "ecf05365f16bd325fc325b49f28878ae2b13093363ee2b6c5e6d96aa5a3a9955",
+      "bytes": 59144,
+      "compat": {
+        "date": "2026-07-01",
+        "flags": [
+          "nodejs_compat"
+        ]
+      },
+      "services": [],
+      "parts": [
+        {
+          "path": "container.json",
+          "type": "Container",
+          "sha256": "0e18a701abc58424710dcedda9e442c5761b05bd0dd180a5924510d9fe1ffc73",
+          "bytes": 7982
+        }
+      ]
+    },
+    {
       "member": "agent-worker",
       "asset": "agent-worker.bundled.mjs",
-      "sha256": "e68d71fce4350fb75d6a47d0b224d0c824fb02978e71cc584228be2d93935a22",
-      "bytes": 68650,
+      "sha256": "1e4ebd02892fa4aabd7b9b27283d94a0dfd0d38fb1a4712a93fd858e1bf4bdd7",
+      "bytes": 236534,
       "compat": {
         "date": "2026-07-01",
         "flags": [
@@ -28,8 +49,8 @@
     {
       "member": "ocr-worker",
       "asset": "ocr-worker.bundled.mjs",
-      "sha256": "76edde3e626a6dc0075bfb249debb7afbdfcee2cc6742d1f2d36c9ccff885be1",
-      "bytes": 166643,
+      "sha256": "1175e596e1d3ff71cc0b061a50cc36d8230c26468eefeb82a0effd5059924859",
+      "bytes": 298371,
       "compat": {
         "date": "2026-07-01",
         "flags": []
@@ -53,8 +74,8 @@
     {
       "member": "pdf-worker",
       "asset": "pdf-worker.bundled.mjs",
-      "sha256": "0f00ff03290dab44dba8b210dcd3e459de87edbcd708ffdb035c922908356060",
-      "bytes": 2436651,
+      "sha256": "a359c4a40eb0f6890e2dad70a07f4c72e5083a7469d311adbf5cc7702bf1b2dc",
+      "bytes": 2463845,
       "compat": {
         "date": "2026-07-01",
         "flags": [
@@ -63,7 +84,26 @@
       },
       "services": [],
       "parts": []
+    },
+    {
+      "member": "sheet-worker",
+      "asset": "sheet-worker.bundled.mjs",
+      "sha256": "31b70e1d0d9bb9d8eebcdd860af9858e08837ad4365b31047c905707bd173ac6",
+      "bytes": 26160,
+      "compat": {
+        "date": "2026-07-01",
+        "flags": []
+      },
+      "services": [],
+      "parts": [
+        {
+          "path": "assets/sheet-engine.wasm",
+          "type": "CompiledWasm",
+          "sha256": "6cb03bcc9e5cf23e189b45fd88373b44576ec297b76db1675a430ee1254ced3d",
+          "bytes": 1866957
+        }
+      ]
     }
   ],
-  "fleetSig": "-----BEGIN SSH SIGNATURE-----\nU1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgZ/MROikF5l7mZsPu6RjBplzPIE\n+MnhLexf4vLes3dWUAAAARYmlvLXJlbGVhc2UtZmxlZXQAAAAAAAAABnNoYTUxMgAAAFMA\nAAALc3NoLWVkMjU1MTkAAABA8HnO3EPbFGWcEidv/h+4V3TSn5veg5X7DxI6PkVoFQfwXe\nXBeEABr2i9fAZZfYqLX3rop09wLTkWNZwHVZkSAQ==\n-----END SSH SIGNATURE-----\n"
+  "fleetSig": "-----BEGIN SSH SIGNATURE-----\nU1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgZ/MROikF5l7mZsPu6RjBplzPIE\n+MnhLexf4vLes3dWUAAAARYmlvLXJlbGVhc2UtZmxlZXQAAAAAAAAABnNoYTUxMgAAAFMA\nAAALc3NoLWVkMjU1MTkAAABA69E3HWrfZb4C8SzcTqNoeBerIcgxJ9ezkhYl/dsZyo6hnE\neHFViWvW3J4wxCiNxp2fFc9Goj1AySc3WBhi7NCQ==\n-----END SSH SIGNATURE-----\n"
 }

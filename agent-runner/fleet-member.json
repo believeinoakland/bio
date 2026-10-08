@@ -13,8 +13,8 @@
     "anything else": "R6: 404 {ok: false, code: \"UNKNOWN\"}"
   },
   "image": {
-    "repository": "docker.io/civicos/agent-runner",
-    "digest": null,
+    "repository": "ghcr.io/believeinoakland/agent-runner",
+    "digest": "sha256:a187d5548aff8ba689f375934dba9967bf43cdac19b9d69a13a2b1de73223019",
     "platform": "linux/amd64",
     "port": 8080,
     "schedulingPolicy": "default"
