@@ -9,3 +9,7 @@
 **Done so far.** `index.mjs`: the two comments that said an unchecked photo blocks nothing now state the gate (R34; DEC-183 (1)). `photos.test.mjs`: R14's test now carries a "nothing to obscure" photo by its copy (N779) instead of an unchecked one travelling whole; R34's steps test has every photo checked and ready; a new R34 test: an unchecked photo is `PHOTO_UNCHECKED`, `first` exactly, naming each such photo (a supporting member's included, K2291's reading), its translation `photo.refused.unchecked` read by key, among `blockers` when the bar refuses earlier, and "nothing to obscure" clears it.
 
 **Next.** Waiting on case-disclosures' merge (T38-12, its R6/R22/R29). Then: merge `tranche/T38`, run the tests, fix to its exact refusal shape and step words, add `PHOTO_UNCHECKED`'s row (and `PHOTO_NOT_COVERABLE`'s new translation, `photo.refused.format`) to `invariants.test.mjs` R29 and `preflight.test.mjs` R29's row lists; then steps 5–7.
+
+## J1 · REPORT
+
+Prepared R34 (T38-13) on my reading; no logic change is needed here: op=publish answers case-disclosures materialsJudged's first refusal and the pre-flight pushes all its refusals into blockers, so PHOTO_UNCHECKED reaches first/blockers once case-disclosures R6 raises it. Comments re-worded; photos.test.mjs drafted (unchecked is first; nothing-to-obscure clears it), red until case-disclosures merges. Waiting on your CHANGE that case-disclosures is merged; then I finish tests (also the C-120 row lists in invariants and preflight tests, which pin case-disclosures' table) and checks.
