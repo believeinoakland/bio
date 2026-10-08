@@ -309,7 +309,7 @@ test("R8 R9 R2 (T37; N757): a copy listed but not carried is missing naming the 
   const cf = caseFile({ obscureMemo: true, edit: (b) => b.delete(path) });
   const gone = await CC.checkCaseFile({ parts: cf.parts });
   assert.deepEqual(results(gone), { [A]: "recreated_in_part", [C]: "recreated", [B]: "recreated_in_part" });
-  const fetch = new RegExp(`the copy of the document ${MEMO} carried in its place, its marked areas obscured, is not carried; fetch the file whose SHA-256 is ${COPY_SHA}`);
+  const fetch = new RegExp(`the copy of the document ${MEMO} carried in its place \\(a photo with its marked areas obscured, or a member document cleaned\\) is not carried; fetch the file whose SHA-256 is ${COPY_SHA}`);
   assert.ok(byId(gone)[A].missing.some((e) => e.check === "presentability" && e.copy === COPY_SHA && e.sha256 === COPY_SHA && fetch.test(e.detail)));
   assert.ok(byId(gone)[B].missing.some((e) => e.check === "integrity" && e.copy === COPY_SHA && fetch.test(e.detail)));
   /* the original's bytes and extracted text are not asked, and nothing differs */

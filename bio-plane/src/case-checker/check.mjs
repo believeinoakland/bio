@@ -667,7 +667,7 @@ async function check({ parts, documents = [], keys = null }) {
         const f = files.find((x) => x.kind === "obscured" && x.ref === mat.ref && x.sha256 === ob.copy) || null;
         if (f && f.entry) differs.push(f.entry);
         else if (!f || !f.content)
-          missing.push(entry(lb ? "presentability" : "integrity", id, `the copy of ${what} carried in its place, its marked areas obscured, is not carried; fetch the file whose SHA-256 is ${ob.copy}`, { sha256: ob.copy, copy: ob.copy }));
+          missing.push(entry(lb ? "presentability" : "integrity", id, `the copy of ${what} carried in its place (a photo with its marked areas obscured, or a member document cleaned) is not carried; fetch the file whose SHA-256 is ${ob.copy}`, { sha256: ob.copy, copy: ob.copy }));
         for (const e of attestationFails.get(mat.ref) || []) differs.push({ ...e, about: id });
         for (const e of attestationGaps.get(mat.ref) || []) missing.push({ ...e, about: id });
         continue;

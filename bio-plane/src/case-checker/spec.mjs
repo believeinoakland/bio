@@ -178,7 +178,8 @@ const V2 = edit(V1, [
 /* R14 (T37; N757, N763; K2206; DEC-180 (4)): version 3 is version 2 with the `obscured` kind and the `materials:` row's
    `obscured` field (`case-grammar` R12, R13), the presentability of a photo carried as its copy (R8), and the criteria
    rows' `captures` (`publication` R72), over which R22 judges the copyrighted standards' arms offline. Built as version 2
-   is, by named changes; the specification's test reads every addition. */
+   is, by named changes; the specification's test reads every addition. (T39; N806; K2333, K2343) The `obscured` kind also
+   carries a member document's cleaned copy (`case-carriage` R15) beside a photo's: words only, the format unchanged. */
 const V3 = edit(V2, [
   ["# The case file, format bio-case-file/2\n\nThis document specifies version 2 of the case file:",
    "# The case file, format bio-case-file/3\n\nThis document specifies version 3 of the case file:"],
@@ -198,26 +199,30 @@ const V3 = edit(V2, [
    + "committed before them) has no `captures` field, and it is never filled."],
   ["`stated: \"not held\"`. A case edition committed before criteria were recorded carries no criteria file.\n",
    "`stated: \"not held\"` (its `captures` null). A case edition committed before criteria were recorded carries no criteria file.\n"
-   + "- `obscured` at `materials/<ref>/obscured`: the copy of a photo carried in place of its original, its marked areas covered "
-   + "solid, its bytes whole at the SHA-256 the photo's `materials:` row names as `obscured_copy` (section 4), under that row's "
-   + "`ref`, at most one per `ref`. An `obscured` file no row names, a row naming a copy no file carries at that SHA-256, and, for "
+   + "- `obscured` at `materials/<ref>/obscured`: the copy of a material carried in place of its original: a photo's copy, "
+   + "carrying nothing of the original but its pixels, its marked areas, if any, covered solid; or a member document's cleaned "
+   + "copy, every picture in it and the document itself carrying none of their details (who made it, with what, when). Its bytes "
+   + "are whole at the SHA-256 the material's `materials:` row names as `obscured_copy` (section 4), under that row's `ref`, at "
+   + "most one per `ref`. An `obscured` file no row names, a row naming a copy no file carries at that SHA-256, and, for "
    + "a row stating `obscured_copy`, a `document`, `extracted_text`, `archive` or `container` file under its `ref` at the "
    + "original's fingerprints (the original never travels) each depart (rule 1).\n"],
   ["Material whose source's identity is withheld is listed like any other.\n",
    "Material whose source's identity is withheld is listed like any other. A `document` row may state `obscured_copy` and "
-   + "`obscured_label`: the photo travels as a copy with the areas a member marked obscured, never whole. The row then states "
-   + "`included: false`, and its `sha`, `text_sha`, `origin` and `archived_copy` stay the original's; `obscured_copy` is the "
-   + "SHA-256 of the copy and `obscured_label` the sentence the published case shows beside the material. A row without them "
-   + "travels as before.\n"],
+   + "`obscured_label`: the material travels as its copy, never whole: a photo with the areas a member marked obscured, or a "
+   + "document a member supplied with the details of who made it, and of its pictures, removed. A published case states it for "
+   + "every photo it carries and for every member document it carries as its copy. The row then states `included: false`, and "
+   + "its `sha`, `text_sha`, `origin` and `archived_copy` stay the original's; `obscured_copy` is the SHA-256 of the copy and "
+   + "`obscured_label` the sentence the published case shows beside the material (an unmarked photo's copy has none). A row "
+   + "without them travels as before.\n"],
   ["So a case file published before `/7` still renders its own carried edition byte for byte.\n",
-   "So a case file published before `/7` still renders its own carried edition byte for byte. A photo carried as its copy is "
-   + "listed with the original's fingerprint, the copy's fingerprint and its label, word for word; an edition stating no copy "
-   + "renders as it did before version 3.\n"],
+   "So a case file published before `/7` still renders its own carried edition byte for byte. A material carried as its copy (a "
+   + "photo, or a member document's cleaned copy) is listed with the original's fingerprint, the copy's fingerprint and its label, "
+   + "word for word, when it has one; an edition stating no copy renders as it did before version 3.\n"],
   ["Not carried is missing; not listed, or listed as not included, differs.\n",
-   "Not carried is missing; not listed, or listed as not included, differs. A row stating `obscured_copy` (a photo carried as "
-   + "its copy) is presentable when the case file carries an `obscured` file at that SHA-256 under its `ref`, whose bytes rule 1 "
-   + "checks; else the copy is missing, for each finding whose chain reaches it. Its extracted text and the original's bytes are "
-   + "not asked, since the original never travels, so a passage relied on in such a photo cannot be found and is missing (rule "
+   "Not carried is missing; not listed, or listed as not included, differs. A row stating `obscured_copy` (a photo or a member "
+   + "document carried as its copy) is presentable when the case file carries an `obscured` file at that SHA-256 under its "
+   + "`ref`, whose bytes rule 1 checks; else the copy is missing, for each finding whose chain reaches it. Its extracted text and the original's bytes are "
+   + "not asked, since the original never travels, so a passage relied on in such material cannot be found and is missing (rule "
    + "3). The answer lists each such row, `{ref, sha, copy, label}`, in the document's order, so its label is stated beside it.\n"],
   ["The case file does not carry which captures hold a standard's text, so this is not judged offline: each such row is named as "
    + "not judged for this check.\n",
