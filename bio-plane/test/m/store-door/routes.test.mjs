@@ -109,13 +109,12 @@ async function drafts() {
 }
 
 /* The assistant on or off as instance-setup's `assistantState()` answers it (R10 reads it through `assistantGate`): the
-   group's keep-away, credentials' (its R51; DEC-172), and the retired switch while instance-setup still holds it (T36-34
-   removes `assistantSet`, its R53), so the door is driven by the state alone, however instance-setup derives it. */
+   group's keep-away, credentials' (its R51; DEC-172), from which instance-setup derives it (its R53; K2162): keep-away
+   off is the assistant on. */
 function assistant(r, on) {
   const k = credentialsOf(r.ctx).aiKeepAwaySet(on ? { on: false, by: "ann" } : { on: true, reason: "kept away for this test", by: "ann" });
   assert.equal(k.ok, true, JSON.stringify(k));
   const setup = instanceSetupOf(r.ctx);
-  if (typeof setup.assistantSet === "function") assert.equal(setup.assistantSet({ on, by: "admin" }).ok, true);
   assert.equal(setup.assistantState().on, on);
 }
 
