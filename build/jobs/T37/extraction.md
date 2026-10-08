@@ -31,3 +31,7 @@ Two points for you to decide, neither blocking the test:
 ## J2 · COMPLETE
 
 T37-45 complete (red 12 cleared): r70.test.mjs pins office-readers R11's seven cell keys, paras included, and the N26 cell helper carries paras; plus a stale cells comment fixed at index.mjs:1419. extraction 132/0; format, architecture, coverage (46/46), ownership (3 files) 0 failures. J1 (a)/(b) stay open as wording points, not blocking; record's Completion section has the reading-set statement and size line.
+
+## J3 · COMPLETE
+
+B2 applied: merged tranche/T37 (R70 names paras), the R70 test title names paras (already pinned field for field); 132/0; format, architecture, coverage 46/46, ownership 0 failures. Record updated.
