@@ -28,3 +28,7 @@
 **Deferred:** none. **Found in other modules:** none beyond the reds above. (My `statementack` still reads `secretSha` from its store request's address, `index.mjs` `caseAuthoringOps`; that is N761's, T37, by K2129 (3), not this entry.)
 
 Size (session_01LrhFoLsxK6BYPBNPHwMufT): test runs 9, module lines 3446
+
+## J1 · COMPLETE
+
+T36-28 complete on job/T36/case-authoring after merging tranche/T36 (K2146): R60, R61, R29's C-136.2 met, and my module's reevaluation raise moved after the act's last refusal. Against the real criteriaFor: case-authoring 158/158; format, architecture, coverage (45/45) and ownership 0 failures. My users' reds all fail identically on the tranche tip without my work: inherited 11, 18, 19, 20, 22–24, plus three arriving with publication's R73 merge (plane R6 x2, control-plane R30 reviewcopy convert), yours to name as accepted. Nothing deferred. P6: 3,446 lines. Record: build/jobs/T36/case-authoring.md.
