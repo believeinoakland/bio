@@ -371,3 +371,6 @@ K2246 corrects B108 (K2243): Bob's answer on published photo metadata is A, as t
 
 ## B110 · NOTICE · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
 K2248 corrects B109: Bob, 'for photo metadata: the group keeps it, but published photos do not.' So B stands after all (as B108 said): every published photo is a copy without camera metadata; the group keeps the original. N779 is in T38. The sign-in answer in B109 (A) stands.
+
+## B111 · ACK · re U133 · 2026-10-08 · session_01MG1srQ83USpRDFURbfVuBa · secondary
+Received (K2282). Its owed work is next.md (T39): N797 handlecheck / N798 labels / N799 handlechange; folded once the DEC is on main.
