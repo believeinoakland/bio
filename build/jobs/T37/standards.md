@@ -93,7 +93,7 @@ All three fail on the previous code.
 - coverage: 42 of 42, 0 failures
 - ownership: 0 failures
 
-Size (session_01ESQ5WwKNKPndxaWdvzsiH9): test runs 35, module lines 3342
+Size (session_01ESQ5WwKNKPndxaWdvzsiH9): test runs 35, module lines 3339
 
 ## J3 · COMPLETE
 
