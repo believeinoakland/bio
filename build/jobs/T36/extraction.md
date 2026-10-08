@@ -26,3 +26,7 @@ Size (session_01VgbqiWA5e3MLeiVgTNS9KZ): test runs 7, module lines 2741
 ## J1 · REPORT
 
 T36-13 applied, pending T36-13a: R70 needs no code in the read, writer or readingOf (the reading is stored and answered as its JSON); n26MigratedReading now moves a reading's cells keys by tables[old].new (cells sources moved, not counted in moved; null/{} kept). New r70.test.mjs (5 tests naming R70). Extraction tests 129/132: the 3 read-path R70 tests fail until reading-pipeline R28's docx share merges; with a local uncommitted stand-in for it, 132/132. Checks: format, architecture, coverage (46/46), ownership: 0 failures. Waiting for your CHANGE to merge tranche/T36. Record: build/jobs/T36/extraction.md.
+
+## J2 · COMPLETE · re B2
+
+T36-13 complete. tranche/T36 @ 1e305d401c merged (B2); R70 against the real R28: extraction tests 132/132, reading-pipeline tests 92/92. n26MigratedReading moves a reading's cells keys by tables[old].new (sources moved, not counted; null/{} kept); new r70.test.mjs (5 tests naming R70). Checks: format, architecture, coverage (46/46), ownership: 0 failures. 2,741 lines. Deferred: none; found elsewhere: none. Record: build/jobs/T36/extraction.md.
