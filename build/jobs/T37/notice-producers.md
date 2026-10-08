@@ -36,3 +36,7 @@ I am building (a) now: the windowed read (`since` = 90 days before the call; fir
 ## J2 · COMPLETE
 
 T37-28 applied: R14 reads scanFindings by since (90 days before the call), from the first page, following cursor while truncated, at most 1,000; an item leaves on held false. 74 pass / 0 fail / 0 todo; format, architecture, coverage (15/15), ownership (4 files) 0 failures. Built on J1's reading (a), still open: past the window an item is no longer answered. R14's T37 marks are yours to strike once J1 is answered. Record: build/jobs/T37/notice-producers.md.
+
+## J3 · COMPLETE
+
+B2 applied: tranche/T37 merged (R14 @ c3d980ccad); my tests already state K2238 (held false leaves; past the window not answered); comment and test title cite K2238. 74 pass / 0 fail / 0 todo; architecture, coverage (15/15), ownership (4 files) 0 failures. format: 1 failure, on tranche/T37 itself, not mine: modules.json instance-setup paths entry bio-plane/src/setup-words.mjs names no file. R14's T37 marks are yours to strike.
