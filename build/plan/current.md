@@ -1,6 +1,10 @@
-# Plan: T39 (draft)
+# Plan T39
 
-**Status** · DRAFT, written by BOB #143 while T38's L11 runs (P18), 2026-10-08. Becomes `next.md` → `current.md` at T39's opening (§5.2), after T38's close re-checks it against what L11's merges leave open. Its STARTs are written per layer from `plan/draft-T39-N806.md` and the requirement texts at each START.
+**Status** · OPEN · BOB #143 · session_01YCBYkMVtZpK8zWkFJcsNkZ · depth 1
+
+**Jobs** · 
+
+**At T39's opening (K2339):** T38 closed by PR #17 (`main` @ `147f356dfe`, K2339); `tranche/T39` from it. Drafted during T38 (P18) by BOB #143 and re-checked at the opening: no design-stream `MERGE` came, so rule 4 leaves N797–N799 out; N806 Q1 answered A (K2334); N807 joins L11.
 
 **Sources** · `next.md` N748, N751, N780, N794, N796–N806; T38's `current.md` rule 6 (reds still open at its close); `plan/draft-T39-N806.md` (K2333); rulings K2302, K2304, K2307, K2308, K2309, K2315, K2329–K2333; the terms register re-read (K2332).
 
@@ -14,7 +18,7 @@
 
 1. T38's rules hold. Merge order within a layer is `modules.json` order unless a layer says otherwise.
 2. **N806's packaging is K2333** (`plan/draft-T39-N806.md` §2–§3): at the opening `doc-clean` enters `modules.json` in layer 1 directly after `image-cover` (uses `image-cover`, `pdf-reader`, `ooxml`), empty `paths` and `tests` (K1043), with a membership `MODULE_ORDER` (R83) entry in the same act (K657) — so membership takes a T39 job (L2). Its requirements file is written at the opening from §3. Q1 answered A (K2334): doc-clean R6 removes a member-supplied file's own metadata as well.
-3. **Accepted reds expected at the opening (confirmed at T38's close):** (1) coverage: every id marked `*(not yet met: T39)*` until its module's merge; acquisition R45 until T39-4 (N804). (2) row census: rows T38's L3–L11 jobs added or re-worded stay `awaiting stamp` until T39-3 (promotion); rows T39's L3+ jobs add, until T40's stamp. (3) the UI's DEC-88 tests (Bob's), carried. (4) legacy-ui `statement-ack.test.mjs` (N794, K633). (5) bundler `fleetbundles.test.mjs`:237 until T39-1 (N802). (6) membership R83's `MODULE_ORDER` tests from the opening's addition of `doc-clean` until T39-M.
+3. **Accepted reds at the opening (confirmed at T38's close, K2337, K2338):** (1) coverage: every id marked `*(not yet met: T39)*` until its module's merge; acquisition R45 until T39-4 (N804). (2) row census: rows T38's L3–L11 jobs added or re-worded stay `awaiting stamp` until T39-3 (promotion); rows T39's L3+ jobs add, until T40's stamp. (3) the UI's DEC-88 tests (Bob's), carried. (4) legacy-ui `statement-ack.test.mjs` (N794, K633). (5) bundler `fleetbundles.test.mjs`:237 until T39-1 (N802). (6) membership R83's `MODULE_ORDER` tests from the opening's addition of `doc-clean` until T39-M. (7) the plane bundle and `program.mjs`, staled by any merge, regenerated at each layer's close.
 4. **N797–N799 enter only if DEC-184–DEC-186 are on `main` at the opening** (B117 asked UX-DESIGN for a MERGE at T38's close). If they land, BOB writes their entries at the opening (membership or project-roster `handlecheck`, `handlechange`; publication's fact; case-carriage, case-disclosures, public-read labels; op-declarations, op-grades, control-plane, affordances shares) into the layers below.
 
 ## Entries
