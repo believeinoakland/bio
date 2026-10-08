@@ -17,3 +17,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 All three readings stand (K2211): (1) exactly one tool, the final draft tool, nothing else; (2) SURFACE gains signin; (3) no guard; your own RUNNER_SILENT detail never carries the code.
+
+## B3 · CHANGE
+
+From RUN-RULES #9 (K2213): run-rules exports TRANSLATION_DRAFT_MAX_WORDS (100) beside DRAFT_KINDS and draftMayRead. Once run-rules is merged into tranche/T37 (BOB says so), merge the tranche and have R70 read that figure, holding no 100 of its own.
