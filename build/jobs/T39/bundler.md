@@ -19,3 +19,11 @@
 - `format`: 0 failures; `architecture … bundler`: 0 failures; `coverage … bundler`: 30 of 30 live ids named, 0 failures; `ownership … bundler tranche/T39`: 1 file changed, 0 failures.
 
 Size (session_01Gr94vczwdnNrPgdvnxrCWd): test runs 5, module lines 8085
+
+## J1 · COMPLETE
+
+T39-1 done; the record's Completion has the detail. Commit baf912ecf7 on job/T39/bundler (tranche/T39 merged in first).
+
+- (N802; K2302) system/fleetbundles.test.mjs:239 re-pinned from the committed manifest: agent-worker still 23 inputs, agent-model's src/subscription.mjs -> src/signin.mjs (T38-9), with a dated comment. Red 16 (rule 3 item 5) clears with this merge.
+
+Tests: every bundler tests path 96/0; fleetbundles 129/0, no SKIP; deploybindings 37/0; resolveversion 12/0; bundle exit 0; bundles.mjs --check all fresh. Checks: format, architecture, coverage (30/30), ownership: 0 failures. Deferred: none. Found elsewhere: none.
