@@ -143,7 +143,10 @@ xlsx and csv), or `{ok:false, container, reason}` when `parts` failed.
     walk reads it into `document` (its paragraphs newline-joined, `w:delText` never, `w:ins`
     in); `type` is always `text` and `declared`, `cached` and `formula` are `null` (a Word
     table declares no cell type, so no date or number is inferred). A nested table's cells are
-    its own table's.
+    its own table's. (N758; K2118) Each cell also carries `paras`: the `para` ordinals
+    (of `paragraphs`) of the paragraphs its text was read from, in reading order, so a reader
+    finds a cell's paragraphs exactly, a vertically merged cell's included, without matching
+    lines. *(not yet met: T37)*
   - `pptx`: `document` is slide text only, newline-joined, in deck order — speaker notes
     are NEVER in it. `slides` is `[{slide, ref, part, hidden, shapes, text}]`, one per deck
     entry; a hidden slide's `text` IS populated and its `hidden` is `true` (DEC-5: the
