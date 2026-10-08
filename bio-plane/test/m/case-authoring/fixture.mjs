@@ -3,7 +3,8 @@
    reevaluation, publication, ratification, contradiction, network-notices), on a real SQLite database (node:sqlite) standing in for a Durable Object's
    storage. What a later module fills is a stand-in the test controls: the run gate `ai-runs` registers with
    contradiction (its R13; `runs` below), the review provider (publication R23, which
-   `review` registers once extracted) and its `case_drafts` table (review R26's read contract). Every test drives
+   `review` registers once extracted) and its `case_drafts` table (review R26's read contract); and what case-carriage's
+   `documentCopy` (its R16) answers of a member document's publication copy, when a test sets it (`copies` below). Every test drives
    `case-authoring` at its interface: `publishCase`, `acknowledgeStatement`, `statementAcknowledgements`, its ops, its
    exports. */
 import { DatabaseSync } from "node:sqlite";
@@ -29,6 +30,7 @@ import { sourcesOf } from "../../../src/sources/index.mjs";
 import { networkNoticesOf } from "../../../src/network-notices/index.mjs";
 import { caseAuthoringOf } from "../../../src/case-authoring/index.mjs";
 import { caseDisclosuresOf } from "../../../src/case-disclosures/index.mjs";
+import { caseCarriageOf } from "../../../src/case-carriage/index.mjs";
 import { parseImportedFindingRef, importedFindingRef } from "../../../src/inquiry-grammar/index.mjs";
 import { caseImportOf } from "../../../src/case-import/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
@@ -77,6 +79,9 @@ export const AUTHORED = Object.freeze({
   /* R55 (case-disclosures R27): the publishing owner attests holding no undeclared tie to anything the case names */
   tieAttested: true,
 });
+
+/* case-carriage R16 (T39; N806): what `documentCopy` answers a document this copy fetched, carried as captured. */
+export const FETCHED_COPY = Object.freeze({ state: "public", copy: null, refused: null });
 
 /* R38: what changed in an edition above 1, as a member writes it (the fixture's `publish` sends it on every act). */
 export const WHAT_CHANGED = Object.freeze({ text: "The amendments were requested and are now excluded by name." });
@@ -277,10 +282,21 @@ export function world({ group = "test-group", provider = true, now = null, recor
                                "caseImport", "promotion", "inquiry", "strength", "entities", "lines", "money", "people",
                                "caseCarriage"];
   const given = (k) => Object.fromEntries(Object.entries(deps).filter(([d]) => k(d)));
+  /* case-carriage (layer 8), the real one on this host, which case-disclosures reads for a photo's marks (its R10) and
+     a member document's publication copy (its R16, T39; N806), and publication's commit for what lapsed (its R13). The
+     fixture's documents are member documents recorded `clean` (`documentCopy` below). `copies` maps a capture's digest
+     to an answer R16's read gives case-disclosures in place of the real one, or to a function of the digest answering
+     it (one that throws: a read that fails). A test's own `deps.caseCarriage` replaces it whole. */
+  w.copies = new Map();
+  const carriage = caseCarriageOf(host);
+  const caseCarriage = new Proxy(carriage, { get: (t, p) => (p === "documentCopy"
+    ? (captureSha) => { const a = w.copies.get(captureSha); return typeof a === "function" ? a(captureSha) : a ?? t.documentCopy(captureSha); }
+    : typeof t[p] === "function" ? t[p].bind(t) : t[p]) });
   const disclosures = caseDisclosuresOf(host, { storage: st, entities, events, lines, money, people, membership,
     now: () => clock.now, record: caseRecord, contradiction, provenance: prov, attestation, capture, sources,
-    extraction: ex, caseImport: imports, promotion, inquiry, strength,
+    extraction: ex, caseImport: imports, promotion, inquiry, strength, caseCarriage,
     ...given((d) => READ_BY_DISCLOSURES.includes(d)) });
+  w.disclosures = disclosures;
   /* `inquiry` (a wrap) changes only what case-authoring reads of inquiry: R56's and R57's tests give a finding legs on a
      calculation or an event, which inquiry's own gate does not yet admit at promotion (C-2.8). */
   w.ca = caseAuthoringOf(host, { record: caseRecord, membership, basisVersions,
@@ -312,8 +328,9 @@ export function world({ group = "test-group", provider = true, now = null, recor
                   u.truncated ? 1 : 0));
     },
     /** An information bundle registering one capture, its text indexed whole unless `text: false`; answers the
-     *  capture's sha. */
-    doc(id, text = `bytes of ${id}`, { text: indexed = true } = {}) {
+     *  capture's sha. No receipt fetched it, so it is a member document (provenance R62): its publication copy is
+     *  recorded `copy` (default `clean`, carried whole; null records none, so it reads `pending`). */
+    doc(id, text = `bytes of ${id}`, { text: indexed = true, copy = "clean" } = {}) {
       const c = { path: "snapshots/c0.txt", text, sha: sha(text) };
       const r = promotion.promote({ bundleId: id, base: null, snapKey: `k${++n}`, author: V("alice"),
         files: [{ path: "bundle.md", text: infoMd(id) }, { path: c.path, text: c.text },
@@ -322,6 +339,7 @@ export function world({ group = "test-group", provider = true, now = null, recor
         register: [{ sha256: c.sha, path: c.path, encoding: "utf8", bytes: Buffer.byteLength(c.text) }] });
       if (!r.ok) throw new Error(`fixture doc refused: ${JSON.stringify(r).slice(0, 400)}`);
       if (indexed) w.indexText(c.sha, id);
+      if (copy) w.documentCopy(c.sha, copy);
       return c.sha;
     },
     /** An inquiry whose basis is `legs` (each `{target, …leg fields}`), in `state`; `concluded` carries its own
@@ -384,7 +402,7 @@ export function world({ group = "test-group", provider = true, now = null, recor
     grant(secretSha, g) { w.grants.set(secretSha, { revoked: false, ...g }); },
     /** An information bundle registering one capture whose provenance document carries `extra` (attestations, a
      *  co-archive, attempts), fetched `direct` by this instance unless `receipt: false` (provenance R13: a Grade B
-     *  capture, R24); answers the capture's sha. */
+     *  capture, R24), else recorded `clean` as `doc` records it; answers the capture's sha. */
     graded(id, extra = {}, { receipt = true, text = `bytes of ${id}`, indexed = true } = {}) {
       const c = { path: "snapshots/c0.txt", text, sha: sha(text) };
       const r = promotion.promote({ bundleId: id, base: null, snapKey: `k${++n}`, author: V("alice"),
@@ -396,6 +414,7 @@ export function world({ group = "test-group", provider = true, now = null, recor
       if (indexed) w.indexText(c.sha, id);
       if (receipt) prov.recordReceipt({ address: `https://example.org/${id}`, addressNorm: `example.org/${id}`,
                                         captureSha: c.sha, retrieved: T0, via: "direct" });
+      else w.documentCopy(c.sha, "clean");
       return c.sha;
     },
     /** A knock the doorbell received, already pulled into `captureSha` (capture R65, R72: the inbox row its read
@@ -405,6 +424,13 @@ export function world({ group = "test-group", provider = true, now = null, recor
                    pseudonym) VALUES (?, ?, 1, ?, 'pulled', ?, 'alice', ?, ?)`,
                   knockId, captureSha, received, captureSha, received, pseudonym);
       return knockId;
+    },
+    /** case-carriage R15's record of a member document's publication copy, as its `copyBatch` writes an outcome
+     *  (`document_copies`, read by its R13 and R16): `state` `clean` (no details, carried whole), `copy` (`sha256` the
+     *  cleaned copy's) or `refused` (`{code, detail}`), standing in for doc-clean's work on the bytes. */
+    documentCopy(captureSha, state, { sha256 = null, refused = null } = {}) {
+      st.sql.exec(`INSERT INTO document_copies (capture, state, sha256, refused_code, refused_detail, at)
+                   VALUES (?,?,?,?,?,?)`, captureSha, state, sha256, refused?.code ?? null, refused?.detail ?? null, T0);
     },
   });
   return w;
