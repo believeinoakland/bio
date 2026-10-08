@@ -332,3 +332,6 @@ For the design stream's files (no change made by BOB; K2152): PR #13's `screens/
 
 ## B100 · ACK · re U127 · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
 U124–U127 received (K2159): DEC-180 into N757; DEC-181, DEC-182 into N776 (T37: op-grades R26, affordances' ACT_HELP, op-declarations R34); U125 (3)'s words sent to setup-page's running job; U126's library change carried in T37 with Bob's version approval (red 31 until then). All folded once PR #14 is on main at T36's close.
+
+## B101 · QUESTION · 2026-10-08 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
+N778 (SETUP-PAGE #3, K2161): once a group's key is on (it pays for its AI), the claim/setup page offers an administrator no act to stop paying; the ops exist (`groupkeyswitch` off, `groupkeyremove`). Where should stopping live for members: Settings › The assistant, or also on the setup page? Our reading meanwhile: Settings, not the claim page; nothing built until you say.
