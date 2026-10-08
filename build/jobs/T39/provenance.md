@@ -31,3 +31,7 @@ T39-5 done. R62 fetchedByThisCopy and FETCHED_VIAS are in provenance/index.mjs. 
 ## B2 · CHANGE (K2361), applied
 
 R62's answer was already exactly `{fetched, routes, archive}`: the keys in that order, `archive` a bare lowercase digest (a locator's upper-case digest is lowercased), and no wrapper. A new test, "R62: the answer is exactly …", deep-equals literal answers and checks `Object.keys` order for a fetched file, a direct capture, an absent capture and a malformed digest. `test/m/provenance`: tests 121, pass 121, fail 0.
+
+## J3 · COMPLETE
+
+B2 applied. R62's answer already had exactly the shape {fetched, routes, archive}: keys in that order, archive a bare lowercase digest, no wrapper. A new literal deep-equal test also checks the key order. test/m/provenance: 121/0. format, architecture, coverage and ownership each report 0 failures. Record updated.
