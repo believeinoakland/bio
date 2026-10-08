@@ -1468,11 +1468,12 @@ export class CaseAuthoring {
    *  would store, with `author` as signer. It answers `{ok: true, wrote: false, ready, first, blockers, steps}`:
    *  - `first` is exactly the refusal `op=publish` would give (DEC-8), or null when it would publish;
    *  - `blockers` is every other refusal reachable independently: each load-bearing member's shortfall on each axis of
-   *    the bar (R6), and `case-disclosures`' R16 (hunch debt), R2, R6, R13, R14, and R1 as R32 reads it (R53), and
+   *    the bar (R6), and `case-disclosures`' R16 (hunch debt), R2, R6 (its photo refusals included), R13, R14, and R1
+   *    as R32 reads it (R53), and
    *    ratification R18's list (reached only when the
    *    act would publish, since it reads the document's bytes);
    *  - `ready` is true only when there is neither and ratification's list was read;
-   *  - `steps` is the five steps' content (DEC-80 item 2), read from the same run.
+   *  - `steps` is the six steps' content (DEC-80 item 2; the Photos step, DEC-180 (3)), read from the same run.
    *  The rolled-back run does not raise re-evaluation (R15): its listeners are told synchronously and must not hear of
    *  an edition that was never made. It writes nothing.
    *
@@ -1528,7 +1529,10 @@ export class CaseAuthoring {
           found.push(...accepted.refusals);
           const flags = D.flagsJudged(accepted.editions, a.flagsDisclosed ?? null);
           found.push(...flags.refusals);
-          rests = { accepted: accepted.rows, flags };
+          /* R34 (N757; DEC-180 (3); K2206): the ceremony's Photos step, `case-disclosures` R29 over the materials R6
+             answered, as op=publish judges them. An unchecked photo is never a blocker; R6's photo refusals already are. */
+          rests = { accepted: accepted.rows, flags,
+                    photos: D.photosOf(reached.materials, partition.memberRoles, a.viewer ?? null) };
           /* R56's undisclosed calculations, and its R25's and R27's people and signers (R34), as op=publish asks them. */
           const calc = this.#calculationsJudged(judged.prepared, partition.memberRoles, a.calculationsDisclosed ?? null,
                                                 calculationFacts);
@@ -1572,8 +1576,9 @@ export class CaseAuthoring {
     return { reached: false, refusals: [undetermined], why: undetermined.detail ?? "ratification's pre-flight is undetermined" };
   }
 
-  /* R34: the five steps (DEC-80 item 2), each read from the rolled-back run when it published, and each part it could
-     not reach stated as not reached, never filled. Step three carries R32's read as the ceremony shows it. */
+  /* R34: the six steps (DEC-80 item 2; the Photos step, DEC-180 (3)), each read from the rolled-back run when it
+     published, and each part it could not reach stated as not reached, never filled. Step three carries R32's read as
+     the ceremony shows it. */
   #preflightSteps(a, answer, seen, ratify, notice = null, rests = null) {
     const ok = !!(answer && answer.ok === true);
     const notReached = ok ? null : `not reached: op=publish refuses first (${answer ? answer.reason : "no answer"})`;
@@ -1615,10 +1620,15 @@ export class CaseAuthoring {
                    /* R34 (DEC-112 (5)): each source the case shows as "Withheld" (`case-disclosures` R4). */
                    withheld: seen.sources.filter((x) => x.basis === null) }
                : { stated: notReached }) },
-      { step: 4, name: "the edition this creates",
+      /* R34 (N757; DEC-180 (3); K2206): each photo the case relies on, its marks and state, and how many are unchecked
+         (`case-disclosures` R29). An unchecked photo travels whole as taken and blocks nothing. */
+      { step: 4, name: "photos",
+        ...(rests ? { photos: rests.photos.photos, unchecked: rests.photos.unchecked }
+                  : { stated: "not reached: the members or their roles are refused first" }) },
+      { step: 5, name: "the edition this creates",
         ...(ok ? { case: answer.caseId, edition: answer.edition, minted: answer.minted, members: seen.memberEditions }
                : { stated: notReached }) },
-      { step: 5, name: "sign", signer: str(a.author) || null,
+      { step: 6, name: "sign", signer: str(a.author) || null,
         ratification: ratify.reached ? { reached: true, refusals: ratify.refusals }
                                      : { reached: false, why: ratify.why },
         next: ok ? `op=caseratify over op=publish's document (case ${answer.caseId}, edition ${answer.edition})`
@@ -2414,9 +2424,13 @@ export function caseAuthoringOps(c, url, body) {
       viewer: q("viewer"), proposedBy: q("author") }),
     /* R39: the case's drafts, oldest first. */
     whatchangeddrafts: () => c.whatChangedDrafts({ case: q("case") || b.case || null, viewer: q("viewer") }),
-    /* R19–R21: the review copy's two doors, and a member's third subject (an unsigned case document). */
+    /* R19–R21: the review copy's two doors, and a member's third subject (an unsigned case document). R62 (N761;
+       K2175): the grant's digest is read from the BODY only, where the control plane sets it after removing any a
+       caller sent; a `secretSha` in the query is never read, so it opens no door (the dead answer), and no digest
+       travels in an internal address. */
     statementack: () => c.acknowledgeStatement({ draft: q("draft"), caseId: q("case"), edition: q("edition"),
-      secretSha: q("secretSha"), viewer: q("viewer"), bySecret: q("bySecret") === "1",
+      secretSha: typeof b.secretSha === "string" ? b.secretSha : null, viewer: q("viewer"),
+      bySecret: q("bySecret") === "1",
       /* R19 (DEC-88): the acknowledger's words, from the query as the subject is; absent stays absent. */
       reason: q("reason") ?? undefined }),
   };

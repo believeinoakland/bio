@@ -370,7 +370,7 @@ test("R34: first is exactly the refusal op=publish would give, and blockers ever
     ["UNCLEARED_HUNCH", null, null], ["CO_ATTESTATION_UNACKNOWLEDGED", null, null], ["TENSION_NOT_DISCLOSED", null, null]]);
   assert.ok(!pre.blockers.some((x) => JSON.stringify(x) === JSON.stringify(pub)), "first is not repeated");
   assert.equal(pre.ready, false);
-  assert.equal(pre.steps[4].ratification.reached, false, "ratification's list needs the document, and op=publish refuses first");
+  assert.equal(pre.steps[5].ratification.reached, false, "ratification's list needs the document, and op=publish refuses first");
   /* negative control: each cause removed, ready */
   const tension = { tensionsDisclosed: [{ candidate: cand }], selfAttested: [{ capture: b, reason: REASON }] };
   w.finding(Q2, [{ target: DOC }]);
@@ -384,7 +384,7 @@ test("R34: ratification R18's list is folded into blockers; its undetermined ans
   const one = setup({ ratification: ratifyWith({ ok: true, ready: false, refusals: [refusal] }) });
   const a = (s) => args(s.P, [Q], { selfAttested: [{ capture: s.b, reason: REASON }] });
   const r1 = one.w.ca.publishPreflight(a(one));
-  assert.deepEqual([r1.ready, r1.first, r1.blockers, r1.steps[4].ratification], [false, null, [refusal],
+  assert.deepEqual([r1.ready, r1.first, r1.blockers, r1.steps[5].ratification], [false, null, [refusal],
     { reached: true, refusals: [refusal] }]);
   const und = { ok: false, reason: "PREFLIGHT_UNDETERMINED", detail: "the gate could not be read" };
   const two = setup({ ratification: ratifyWith(und) });
@@ -393,17 +393,18 @@ test("R34: ratification R18's list is folded into blockers; its undetermined ans
   const three = setup({ ratification: (real) => new Proxy(real, { get: (t, p) => (p === "caseRatifyPreflight" ? undefined
     : typeof t[p] === "function" ? t[p].bind(t) : t[p]) }) });
   const r3 = three.w.ca.publishPreflight(a(three));
-  assert.deepEqual([r3.ready, r3.first, r3.blockers, r3.steps[4].ratification.reached], [false, null, [], false]);
+  assert.deepEqual([r3.ready, r3.first, r3.blockers, r3.steps[5].ratification.reached], [false, null, [], false]);
 });
 
-test("R34: steps gives the five steps' content — what becomes permanent; what this rests on (roles, pairs, bar); what you are leaving out (exclusions, searched section, bias, R32's tensions, R55 (case-disclosures R2)'s self-attested documents, R55 (case-disclosures R4)'s source statements); the edition this creates; and sign", () => {
+test("R34: steps gives the six steps' content — what becomes permanent; what this rests on (roles, pairs, bar); what you are leaving out (exclusions, searched section, bias, R32's tensions, R55 (case-disclosures R2)'s self-attested documents, R55 (case-disclosures R4)'s source statements); photos; the edition this creates; and sign", () => {
   const { w, P, b } = setup({ ratification: ratifyWith({ ok: true, ready: true, refusals: [] }) });
   w.knocked(b);
   const excluded = [{ description: "the side letter", reason: "not in hand" }];
   const pre = w.ca.publishPreflight(args(P, [Q], { excluded, selfAttested: [{ capture: b, reason: REASON }] }));
   assert.deepEqual(pre.steps.map((s) => [s.step, s.name]), [[1, "what becomes permanent"], [2, "what this rests on"],
-    [3, "what you are leaving out"], [4, "the edition this creates"], [5, "sign"]]);
-  const [one, two, three, four, five] = pre.steps;
+    [3, "what you are leaving out"], [4, "photos"], [5, "the edition this creates"], [6, "sign"]]);
+  const [one, two, three, photos, four, five] = pre.steps;
+  assert.deepEqual([photos.photos, photos.unchecked], [[], 0], "no photo reached: the step is stated, empty");
   assert.match(one.says, /never withdrawn or edited/);
   assert.deepEqual([one.edition, one.pinned], [1, [{ target: Q, bundleSha: w.head(Q) }]]);
   assert.deepEqual([two.roles, two.required.declared, two.pairs[0].target], [[{ target: Q, role: "load_bearing" }], false, Q]);
@@ -436,14 +437,14 @@ test("R34: it raises no re-evaluation for a member's new edition (R15's listener
   const before = w.snapshot();
   const pre = w.ca.publishPreflight(args(P, [Q], { caseId: a1.caseId, ...fresh, ...sa }));
   assert.equal(pre.ready, true, JSON.stringify(pre.blockers).slice(0, 300));
-  assert.deepEqual(pre.steps[3].members, [{ target: Q, edition: 2, crossed: false }]);
+  assert.deepEqual(pre.steps[4].members, [{ target: Q, edition: 2, crossed: false }]);
   assert.deepEqual(told, [], "no listener told");
   assert.deepEqual(w.snapshot(), before);
   /* the op: author and viewer stamped from the query; a body's own are overwritten */
   const url = new URL(`http://do/publishpreflight?author=alice&viewer=${encodeURIComponent(V("alice"))}&project=${P}&caseId=${a1.caseId}`);
   const viaOp = await caseAuthoringOps(w.ca, url, { ...AUTH, ...fresh, ...sa, targets: [Q], roles: { [Q]: "load_bearing" },
                                              author: "bo", viewer: V("bo") }).publishpreflight();
-  assert.deepEqual([viaOp.ready, viaOp.steps[4].signer], [true, "alice"]);
+  assert.deepEqual([viaOp.ready, viaOp.steps[5].signer], [true, "alice"]);
   const pub = w.publish(P, "alice", [Q], { caseId: a1.caseId, ...fresh, ...sa });
   assert.equal(pub.ok, true);
   assert.deepEqual(told.map((e) => [e.subject, e.source]), [[Q, "edition"]], "op=publish itself still raises");
@@ -456,14 +457,14 @@ test("R34: against the real ratification R18, its list is read over the text op=
   const pre = w.ca.publishPreflight(a);
   assert.deepEqual(w.snapshot(), before, "nothing written");
   assert.equal(pre.first, null);
-  assert.equal(pre.steps[4].ratification.reached, true);
+  assert.equal(pre.steps[5].ratification.reached, true);
   /* the same answer ratification gives over the document op=publish then stores, but for the minted case id */
   const r = w.ca.publishCase(a);
   const direct = w.ratification.caseRatifyPreflight({ text: docOf(w, r).text, signer: "alice", viewer: V("alice") });
   assert.equal(direct.ok, true, JSON.stringify(direct).slice(0, 300));
   const strip = (x) => JSON.parse(JSON.stringify(x).split(r.caseId).join("CASE"));
   const idOf = (x) => /CASE-\d{4}-\d{4}/.exec(JSON.stringify(x))?.[0];
-  const pr = pre.steps[4].ratification.refusals;
+  const pr = pre.steps[5].ratification.refusals;
   const id = idOf(pr);
   assert.deepEqual(id ? JSON.parse(JSON.stringify(pr).split(id).join("CASE")) : pr, strip(direct.refusals));
   assert.deepEqual(pre.blockers, pr, "ratification's refusals are the blockers here");
@@ -483,13 +484,13 @@ test("R34 (N435): an agent credential's stamp — {stamp, aiCred}, as the door s
   const member = w.ca.publishPreflight(a);
   assert.deepEqual(w.snapshot(), before, "nothing written by either");
   /* the act is asked as the stamp: it would publish for both, and their steps read the same document */
-  assert.deepEqual([agent.first, member.first, agent.steps[4].ratification.reached, member.steps[4].ratification.reached],
+  assert.deepEqual([agent.first, member.first, agent.steps[5].ratification.reached, member.steps[5].ratification.reached],
     [null, null, true, true]);
   assert.deepEqual(agent.steps[0].pinned, member.steps[0].pinned);
   assert.deepEqual(agent.steps[2].tensions, member.steps[2].tensions, "R32's read is asked as the stamp");
   /* ratification's fences hold the agent, and only the agent */
   const fenced = ["MACHINE_CANNOT_RATIFY_CASE", "OPERATOR_TOKEN_CANNOT_RATIFY_CASE"];
-  const reasons = (r) => r.steps[4].ratification.refusals.map((x) => x.reason);
+  const reasons = (r) => r.steps[5].ratification.refusals.map((x) => x.reason);
   assert.deepEqual(reasons(agent).filter((x) => fenced.includes(x)), fenced);
   assert.deepEqual(reasons(member).filter((x) => fenced.includes(x)), [], "negative control: the member's own stamp");
   assert.deepEqual(reasons(agent).filter((x) => !fenced.includes(x)), reasons(member), "everything else alike");
@@ -508,6 +509,6 @@ test("R34 (N435): an agent credential's stamp — {stamp, aiCred}, as the door s
                                                       viewer: { stamp: V("alice"), aiCred } });
   const idOf = (x) => /CASE-\d{4}-\d{4}/.exec(JSON.stringify(x))?.[0];
   const norm = (x, id) => (id ? JSON.parse(JSON.stringify(x).split(id).join("CASE")) : x);
-  const pr = agent.steps[4].ratification.refusals;
+  const pr = agent.steps[5].ratification.refusals;
   assert.deepEqual(norm(pr, idOf(pr)), norm(direct.refusals, r.caseId));
 });
