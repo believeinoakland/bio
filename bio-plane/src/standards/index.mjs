@@ -1923,11 +1923,20 @@ export class Standards {
       if (inForce.state === "in_force") return { state: "binds", why: `${body} issued it, and it is in force on ${date}`, rests_on: rests };
       if (inForce.state === "undetermined") unsure.push(`it is ${body}'s own, and ${inForce.why}`);
     }
+    /* an adoption by the body puts it in force (R40) only while this version is itself in force on the date (R20, R51):
+       adopted, then ended, binds no longer; adopted with no end stated and no record of it in force through the date
+       is undetermined, never binding by default */
+    let started = null;
     for (const ad of this.#rows(`SELECT * FROM standard_body_adoptions WHERE standard_id=? AND body=? ORDER BY adoption_id`, sid, body)) {
       const f = this.#adoptionFrom(ad, viewer);
       rests.push({ adoption: ad.adoption_id });
       if (!f.day) { unsure.push(`${ad.adoption_id}'s start is not read: ${f.why}`); continue; }
-      if (f.day <= date) return { state: "binds", why: `${body} adopted it (${ad.adoption_id}), effective ${f.day}`, rests_on: rests };
+      if (f.day <= date && (!started || f.day < started.day)) started = { ad, day: f.day };
+    }
+    if (started) {
+      const by = `${body} adopted it (${started.ad.adoption_id}), effective ${started.day}`;
+      if (inForce.state === "in_force") return { state: "binds", why: `${by}, and it is in force on ${date} (${inForce.why})`, rests_on: rests };
+      if (inForce.state === "undetermined") unsure.push(`${by}, and ${inForce.why}`);
     }
     for (const im of this.#rows(`SELECT * FROM standard_impositions WHERE standard_id=? AND body=? ORDER BY imposition_id`, sid, body)) {
       const law = this.#row(im.law);
