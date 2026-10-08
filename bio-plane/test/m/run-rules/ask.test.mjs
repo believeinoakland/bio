@@ -1,10 +1,11 @@
 /* run-rules R16 (the modes `ask` and `draft` deployed apart), R17 (per-ask bounds), R18 (an AI run or ask starts only at a
-   member's act, with the standing question's one exception, never a draft's) and R21 (the mode `draft`); T33-49, T35-43.
-   Each refusal has its negative control beside it. */
+   member's act, with the standing question's one exception, never a draft's), R21 (the mode `draft`) and R22 (the
+   translation draft, and whether a draft may read); T33-49, T35-43, T37-49. Each refusal has its negative control beside it. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { ASK_MODE, DRAFT_MODE, RUN_MODES, DEPLOYMENT_SEQUENCE, DEPLOYED_MODES, deployedModesFor, deployable, ASK_BOUNDS,
-         checkAskBounds, askBoundReached, startAllowed } from "../../../src/run-rules/index.mjs";
+         checkAskBounds, askBoundReached, startAllowed, DRAFT_KINDS, TRANSLATION_DRAFT_MAX_WORDS,
+         draftMayRead } from "../../../src/run-rules/index.mjs";
 import { refusal } from "./helpers.mjs";
 
 const NAMES = ["turns", "bytes", "wall_ms", "reads"];
@@ -224,4 +225,99 @@ test("R21: DRAFT_MODE describes the mode draft, frozen — interactive and no ru
   for (const vs of [[], [v("check"), v("investigate"), v("extract")]]) assert.equal(deployable("draft", vs), true);
   /* control: a word that is no mode is still decided false */
   assert.equal(deployable("drafts", []), false);
+});
+
+test("R21 (T37): a draft is of one of two kinds — own_words, everything R21 says (reach within answers' ASK_SCOPE, a firsthand field reading nothing), and translation, whose reach is R22's and not ASK_SCOPE; DRAFT_MODE names the kinds", () => {
+  assert.equal(DRAFT_MODE.kinds, DRAFT_KINDS);
+  assert.deepEqual([...DRAFT_MODE.kinds], ["own_words", "translation"]);
+  /* own_words: R21's reach — within ASK_SCOPE, and through a grant only off a firsthand field with suggestions on */
+  assert.equal(DRAFT_MODE.reach, "within answers' ASK_SCOPE (its R1); no write op of any module");
+  assert.equal(draftMayRead({ kind: "own_words", firsthand: false, suggestions: true }), true);
+  assert.equal(draftMayRead({ kind: "own_words", firsthand: true, suggestions: true }), false, "a firsthand field reads nothing at all");
+  assert.equal(draftMayRead({ kind: "own_words", firsthand: false, suggestions: false }), false, "K1841 (2): only with the suggestions switch on");
+  /* translation: its own reach, which is not ASK_SCOPE */
+  assert.match(DRAFT_MODE.translation_reach, /^nothing of the record: /);
+  assert.notEqual(DRAFT_MODE.translation_reach, DRAFT_MODE.reach);
+  assert.equal(draftMayRead({ kind: "translation", firsthand: false, suggestions: true }), false);
+  /* still one mode: no kind is a mode of its own */
+  for (const k of DRAFT_KINDS) {
+    assert.equal(RUN_MODES.includes(k), false, k);
+    assert.equal(DEPLOYMENT_SEQUENCE.order.includes(k), false, k);
+    assert.equal(deployable(k, []), false, `${k} is a kind of draft, not a mode`);
+  }
+});
+
+test("R22: DRAFT_KINDS is [own_words, translation], frozen and named by DRAFT_MODE; a translation draft is R21's mode in every other respect — interactive, no run, read-only, ASK_BOUNDS, deployed by draft's own flag — with no new mode and no new flag: RUN_MODES, DEPLOYED_MODES and the flags unchanged", () => {
+  assert.ok(Object.isFrozen(DRAFT_KINDS));
+  assert.deepEqual([...DRAFT_KINDS], ["own_words", "translation"]);
+  assert.equal(DRAFT_MODE.kinds, DRAFT_KINDS);
+  assert.ok(Object.isFrozen(DRAFT_MODE));
+  /* R21's mode in every other respect */
+  assert.equal(DRAFT_MODE.mode, "draft");
+  assert.deepEqual([DRAFT_MODE.interactive, DRAFT_MODE.writes_run_row, DRAFT_MODE.read_only, DRAFT_MODE.deploys_apart],
+                   [true, false, true, true]);
+  assert.match(DRAFT_MODE.bounds, /^ASK_BOUNDS \(R17\)/);
+  /* no new mode, no new flag */
+  assert.deepEqual([...RUN_MODES], ["check", "investigate", "extract", "plan"]);
+  assert.deepEqual([...DEPLOYED_MODES], ["check"]);
+  assert.deepEqual(Object.keys(DEPLOYMENT_SEQUENCE.deploys_apart), ["plan"]);
+  assert.deepEqual([ASK_MODE.deployed, DRAFT_MODE.deployed], [false, false]);
+  for (const flag of ["translation", "own_words", "translation_draft"])
+    assert.deepEqual([...deployedModesFor({ [flag]: true })], [...DEPLOYED_MODES], `${flag} is no flag`);
+  /* the translation draft runs on draft's flag: flipping it deploys the mode draft, and nothing named for a kind */
+  assert.deepEqual([...deployedModesFor({ draft: true })], ["check", "draft"]);
+  /* control: ask's flag alone still leaves draft out */
+  assert.equal(deployedModesFor({ ask: true }).includes("draft"), false);
+});
+
+test("R22: a translation draft's reach is nothing of the record — no read op of any module, ASK_SCOPE included, whatever the suggestions switch — so it is given only the words asked about, at most 100 a draft (K2201); the draft is answered to the plane and never kept by the mode, the words stored being instance-setup's", () => {
+  assert.equal(TRANSLATION_DRAFT_MAX_WORDS, 100);
+  assert.match(DRAFT_MODE.translation_reach, /^nothing of the record: no read op of any module, answers' ASK_SCOPE included, whatever the member's suggestions switch;/);
+  assert.match(DRAFT_MODE.translation_reach, /given only the interface words it is asked about, at most 100 a draft/);
+  assert.match(DRAFT_MODE.translation_keeps, /^nothing: the draft is answered to the plane and never kept by the run;/);
+  assert.match(DRAFT_MODE.translation_keeps, /labelled draft, adopted or confirmed are instance-setup's, never the mode's$/);
+  /* whatever the suggestions switch and the firsthand mark, a translation draft may not read through a grant */
+  for (const suggestions of [true, false, undefined, null, "true", 1])
+    for (const firsthand of [false, true, undefined, null])
+      assert.equal(draftMayRead({ kind: "translation", firsthand, suggestions }), false, JSON.stringify({ suggestions, firsthand }));
+  /* control: own_words with the same arguments that let it read */
+  assert.equal(draftMayRead({ kind: "own_words", firsthand: false, suggestions: true }), true);
+});
+
+test("R22: draftMayRead({kind, firsthand, suggestions}) is true only for own_words, not firsthand, with suggestions true; false for translation whatever the rest, for an unknown kind, for firsthand and for suggestions not true; never throws", () => {
+  const KINDS = ["own_words", "translation", "", " own_words", "own_words ", "OWN_WORDS", "ownwords", "draft", "ask",
+                 "__proto__", "toString", null, undefined, 3, true, ["own_words"], { kind: "own_words" }];
+  const FIRSTHAND = [undefined, null, false, true, "true", "false", 1, 0, "", {}, []];
+  const SUGGESTIONS = [true, false, undefined, null, "true", 1, {}, [true]];
+  /* the whole table: true exactly when the kind is own_words, firsthand is absent, null or false, and suggestions is true */
+  for (const kind of KINDS) for (const firsthand of FIRSTHAND) for (const suggestions of SUGGESTIONS) {
+    const want = kind === "own_words" && (firsthand === undefined || firsthand === null || firsthand === false) && suggestions === true;
+    const got = draftMayRead({ kind, firsthand, suggestions });
+    assert.equal(typeof got, "boolean");
+    assert.equal(got, want, JSON.stringify({ kind, firsthand, suggestions }));
+  }
+  /* firsthand left out is not firsthand */
+  assert.equal(draftMayRead({ kind: "own_words", suggestions: true }), true);
+  /* suggestions left out is not on */
+  assert.equal(draftMayRead({ kind: "own_words", firsthand: false }), false);
+  /* every kind of DRAFT_KINDS but own_words is false with the arguments that let own_words read */
+  for (const k of DRAFT_KINDS) assert.equal(draftMayRead({ kind: k, suggestions: true }), k === "own_words", k);
+  /* inherited keys are no arguments */
+  assert.equal(draftMayRead(Object.create({ kind: "own_words", suggestions: true })), false);
+  /* never throws: anything that is not a request is false */
+  for (const x of [undefined, null, 3, "own_words", true, [], () => 1]) assert.equal(draftMayRead(x), false, String(x));
+  assert.equal(draftMayRead(), false);
+});
+
+test("R22, R18: startAllowed answers for a translation draft as for any draft — only at a member's own act, whatever standing holds", () => {
+  for (const startedBy of ["member:ann", "member:ann/tok1"])
+    assert.deepEqual(startAllowed({ startedBy, mode: "draft", kind: "translation" }), { ok: true }, startedBy);
+  for (const startedBy of [null, "class:daemon", "class:ai/tok1", "scheduler"])
+    for (const standing of [undefined, { author: "member:ann" }]) {
+      const r = refusal(startAllowed({ startedBy, mode: "draft", kind: "translation", standing }), "AI_RUN_NOT_A_MEMBER_ACT");
+      assert.match(r.detail, /^a draft of a member's own words starts only at the act of the member who asked for the help/);
+    }
+  /* the kind changes nothing: the same answers as a draft that names none */
+  for (const startedBy of ["member:ann", "class:daemon"])
+    assert.deepEqual(startAllowed({ startedBy, mode: "draft", kind: "translation" }), startAllowed({ startedBy, mode: "draft" }));
 });
