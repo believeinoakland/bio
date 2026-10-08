@@ -88,6 +88,9 @@ test("R53, R17, R29: for every op `OP_STAMPS` declares and every kind of caller 
   for (const [op, keys] of Object.entries(OP_STAMPS)) for (const c of list) {
     /* R41 (T35): `agentpack` is answered from the untargeted affordances handler (a hook), which stamps its own reads */
     if (op === "agentpack") continue;
+    /* R65 (T37): `subscriptionsignin` reaches the member's runner, not a store route; its `by` (sent as `member`) is
+       driven in `t37-door.test.mjs` */
+    if (op === "subscriptionsignin") continue;
     for (const [params, body] of [[c.params, {}], [{ ...c.params, ...forgedQ }, { by: FORGED, note: "kept" }]]) {
       w.env.calls.length = 0;
       const r = await call(w.env, { op, token: c.token, params, method: OPS[op]?.mutating ? "POST" : "GET",
@@ -106,7 +109,10 @@ test("R53, R17, R29: for every op `OP_STAMPS` declares and every kind of caller 
         if (k === "session") assert.equal(inner.params.session, undefined, `${where}: ?session`);
         /* R54 (K1863 (7)): membership's administrator acts take `by` as a member id, the custodial acts' expression */
         const want = k === "by" && MEMBER_ID_BY.includes(op)
-          ? (c.session ? c.want.proposer : `class:${c.name === "agent" ? "ai" : c.name}`) : c.want[k];
+          ? (c.session ? c.want.proposer : `class:${c.name === "agent" ? "ai" : c.name}`)
+          /* R68 (T37; admission R21): an admitted op's `source` is admission's `sourceOf` over the request, which states
+             no connecting address here; a public op's is the window's fingerprint (`DOOR`) */
+          : k === "source" && OPS[op].classes !== null ? "unstated" : c.want[k];
         assert.equal(got, want, `${where}: ${k}`);
         checked++;
       }

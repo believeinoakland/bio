@@ -25,9 +25,11 @@ import { credentialAddressGate } from "../admission/index.mjs";
 import { json, doAnswer, storeRefusal, storeSilent, relayAnswer, planeInternalError, replayRow, requiredArgument,
          installationRow, dispatchRow, withPagePolicy, CHECK_FAMILIES } from "../answer-envelope/index.mjs";
 /* R57 (T35): the draft asked of agent-worker once every refusal is answered. */
-import { draftDue, draftAsk, checkedDraft } from "./draft.mjs";
+import { draftDue, draftAsk, checkedDraft, TRANSLATION_DRAFT, TRANSLATION_RECORD } from "./draft.mjs";
 /* R58 (T35): the promotions of what an unpack files. */
 import { archiveDocuments, promoteArchive } from "./archive.mjs";
+/* R65 (T37): a member's own Claude sign-in, relayed to their own runner, and its sign-out when they leave. */
+import { subscriptionSignin, leaverOf, signoutLeaver } from "./signin.mjs";
 import { machineFences, renderPack } from "../skillpack.mjs";
 import { liveToken } from "../tokens.mjs";
 import { SIGN_HTML } from "../signpage.mjs";
@@ -206,10 +208,12 @@ async function templateGrantDoor({ req, url, env, op, spec, presentedAi, stub, c
   const inner = new URL(`http://do/${op}`);
   for (const [k, v] of url.searchParams) inner.searchParams.set(k, v);
   for (const k of ["token", "op", "store", "secret", "secretSha", "bySecret", ...QUERY_STAMPS]) inner.searchParams.delete(k);
-  /* R59 (admission R20): the secret is the body's `secret`, never the address's */
+  /* R59 (admission R20): the secret is the body's `secret`, never the address's; R64 (N761): its digest crosses in the
+     internal request's body alone (`secretSha`), beside the door's mark `bySecret` in the query */
+  let digest = null;
   if (credential.secret !== null) {
     inner.searchParams.set("bySecret", "1");
-    inner.searchParams.set("secretSha", await sha256Hex(credential.secret || ""));
+    digest = await sha256Hex(credential.secret || "");
   } else {
     const admitted = await admit({ url, env, op, spec: { ...spec, classes: ["admin", "member"], machineClasses: [] },
                                    method: req.method, presented: presentedAi, doAnswer, credential });
@@ -219,11 +223,12 @@ async function templateGrantDoor({ req, url, env, op, spec, presentedAi, stub, c
     inner.searchParams.set("author", admitted.caller.identity);
   }
   let body;
-  if (req.method === "POST") {
+  if (req.method === "POST" || digest !== null) {
     let b = {};
-    try { b = JSON.parse((await req.text()) || "{}"); } catch { b = {}; }
+    if (req.method === "POST") try { b = JSON.parse((await req.text()) || "{}"); } catch { b = {}; }
     if (!b || typeof b !== "object" || Array.isArray(b)) b = {};
     for (const k of [...BODY_STAMPS, ...QUERY_STAMPS, "secretSha", "bySecret", "secret", "token"]) delete b[k];
+    if (digest !== null) b.secretSha = digest;
     body = JSON.stringify(b);
   }
   const out = await doAnswer(stub.fetch(new Request(inner, body === undefined ? { method: "GET" } : { method: "POST", body })));
@@ -446,13 +451,20 @@ const BODY_STAMPS = Object.freeze(["actorIdentity", "actorViewer", "actorMemberI
 const STATED_STATUS_OPS = Object.freeze(["inbox", "inboxpull", "inboxresolve", "heldsetaside", "heldrestore"]);
 /* R53 (T36; DEC-172, instance-setup R53) and R63: `assistantset` is retired and `securitycount` store-internal, so a
    request naming either is answered as an op with no spec (R2), whatever any table holds. */
-const NOT_ROUTED = Object.freeze(["assistantset", "securitycount"]);
+/* R66 (op-declarations R37; instance-setup R67): `translationdraftrecord` is the door's own store-internal call after a
+   translation draft, never a caller's. */
+const NOT_ROUTED = Object.freeze(["assistantset", "securitycount", "translationdraftrecord"]);
 /* R61 (N714, N707, N710; DEC-169, DEC-173; file-safety R8, R11, R33): file-safety's four byte answers, relayed as the owner
    answers them, never enveloped; `openwithwarning` takes `warned` from the body (a GET's query `warned`, its JSON, is
    carried there). R62: a member's or an `ai` credential's `op=capture` GET is answered by the first two. */
 const BYTE_OPS = Object.freeze(["openoriginal", "openwithwarning", "safeview", "safecopy"]);
 /* R61 (file-safety R28; op-declarations R32): `securitytooladd`'s secrets are the body's alone, never the address's. */
-const BODY_ONLY = Object.freeze({ securitytooladd: Object.freeze(["credentials", "config"]) });
+/* R68 (op-declarations R39; credentials R3): `setpassword`'s two passwords are the body's alone, and it names no role in
+   either place (the role is the session's): a `role` in the address leaves with them, and one in the body is deleted
+   (`BODY_DROPPED`). */
+const BODY_ONLY = Object.freeze({ securitytooladd: Object.freeze(["credentials", "config"]),
+                                  setpassword: Object.freeze(["current", "password", "role"]) });
+const BODY_DROPPED = Object.freeze({ setpassword: Object.freeze(["role"]) });
 /* R60, R29 (K1687; op-declarations' families): the acts whose owner reads its actor from the BODY under a key that is not
    `by` (`bodyBy`, R53, sets that one) — standards' `author`, its proposals' `proposer` — op → key, derived once from the
    families, so a family's new act is stamped as its others are. */
@@ -481,6 +493,15 @@ async function byteAnswer(res, op, extra) {
   if (!out.answered) return storeSilent(op, out.correlation);
   const { body, status } = out.reply;
   return json({ ...body, ...extra }, status);
+}
+/* R64 (N761; F1's rule for digests): a body carrying the digest a door minted or hashed as `secretSha`, beside the request's
+   own fields (already stripped of any `secretSha` or `bySecret` a caller sent, R17). A body that is not JSON is passed as
+   sent, so the store refuses it in its own words and no grant is made; the digest is then in no request at all. */
+function withDigest(text, secretSha) {
+  let b;
+  try { b = text ? JSON.parse(text) : {}; } catch { return text; }
+  if (!b || typeof b !== "object" || Array.isArray(b)) b = {};
+  return JSON.stringify({ ...b, secretSha });
 }
 /* R61: a GET's query `warned` (`{"own_device":true,"no_macros":true}`), read as JSON, else as the text sent, for the body. */
 function warnedOf(url) {
@@ -694,9 +715,11 @@ export function makeFetch(hooks = {}) {
           for (const k of ["case", "edition"])
             if (url.searchParams.get(k)) q.set(k, (url.searchParams.get(k) || "").trim());
         if (op === "reviewcopy" && url.searchParams.get("limit")) q.set("limit", url.searchParams.get("limit"));
+        /* R64 (N761): the grant's digest crosses in the internal request's body alone, never its query; the door's mark
+           `bySecret` stays in the query, where the owners read it */
+        const digest = bySecret ? await sha256Hex(credential.secret || "") : null;
         if (bySecret) {
           q.set("bySecret", "1");
-          q.set("secretSha", await sha256Hex(credential.secret || ""));
         } else {
           const reader = await caseReader(url, env, "bio", presentedAi.cred, credential);   /* admission's `readerOf` */
           if (reader.silent) return storeSilent(reader.silent, reader.correlation);
@@ -714,14 +737,15 @@ export function makeFetch(hooks = {}) {
           }
           if (reason !== null) q.set("reason", reason);
         }
-        let commentBody = null;
+        let innerBody = digest === null ? null : { secretSha: digest };
         if (op === "reviewcomment") {
           let b = {};
           try { b = req.method === "POST" ? JSON.parse((await req.text()) || "{}") : {}; } catch { b = {}; }
-          commentBody = JSON.stringify({ text: typeof b?.text === "string" ? b.text : "" });
+          innerBody = { text: typeof b?.text === "string" ? b.text : "", ...(innerBody || {}) };
         }
         const out = await doAnswer(stub.fetch(`http://do/${op}?${q}`,
-          commentBody === null ? undefined : { method: "POST", body: commentBody }));
+          innerBody === null ? undefined : { method: "POST", headers: { "content-type": "application/json" },
+                                             body: JSON.stringify(innerBody) }));
         return reviewAnswer(out, op);
       }
       /* The sign-in and the invitation's two steps, relayed to the store's routes (credentials' `login`, membership's
@@ -885,7 +909,11 @@ export function makeFetch(hooks = {}) {
       /* T35 (op-declarations R30; K1972): `principal`, the run verbs' expression; `owner`, a selection's owner (the
          stamp a selection scope is read under) */
       principal: viaSession ? sessIdentity : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`,
-      owner: viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}` };
+      owner: viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`,
+      /* R68 (admission R21; T37): who is calling, as on `login` (R58): the window's keyed fingerprint of the connecting
+         address and Cloudflare's country, the door's alone, read only for an op that declares them */
+      ...(declared.includes("source") ? { source: await sourceOf(req, env) } : {}),
+      ...(declared.includes("country") ? { country: countryOf(req) } : {}) };
     /* R59, store-door R9 (K2038 (1)): a stamped `session` is a credential, so it reaches the store in the internal header
        `x-bio-session`, never the address; store-door hands it to the owner's map in process. A caller's `session`
        parameter is deleted for every op. */
@@ -1901,6 +1929,15 @@ export function makeFetch(hooks = {}) {
         : { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ warned }) })), op,
         { store: storeName, tokenClass: cls });
     }
+    /* R65 (T37; N708, DEC-156; agent-worker R66): a member's own Claude sign-in goes to their own runner, `member` the
+       door's `by` stamp and `step` and `code` the body's (`signin.mjs`); only a member's session reaches the op (its
+       spec). Nothing of it reaches the record but the fact `credentials` R43 keeps. */
+    if (op === "subscriptionsignin") {
+      const stored = (path, init) => doAnswer(stub.fetch(new Request(`http://do/${path}`, init)));
+      const signed = await subscriptionSignin({ env, member: stampOf.by, asked: reqBody, store: stored });
+      if (signed.unread) return signed.unread.refused ? storeRefusal(signed.unread) : storeSilent(op, signed.unread.correlation);
+      return json(signed.body, signed.status);
+    }
     const armed = hooks.gatedOp ? await hooks.gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer,
       sessIdentity, sessRights, sessCaps, aiCred, storeName, stub,
       grantMember: aiCred?.grant ? aiCred.principal : undefined }) : undefined;   /* R53 (K1684): an ask's grant's member */
@@ -2153,7 +2190,7 @@ export function makeFetch(hooks = {}) {
         const b0 = JSON.parse(passBody);
         /* R59 (admission R20): a body's `token` is the caller's credential, the door's alone, never passed on; (K2146;
            R44) a grant's digest and the secret door's mark are the door's alone too, so no caller supplies either */
-        const strip = [...BODY_STAMPS, "token", "secretSha", "bySecret"];
+        const strip = [...BODY_STAMPS, "token", "secretSha", "bySecret", ...(BODY_DROPPED[op] ?? [])];
         if (b0 && typeof b0 === "object" && !Array.isArray(b0) && strip.some((k) => k in b0)) {
           for (const k of strip) delete b0[k];
           passBody = JSON.stringify(b0);
@@ -2804,9 +2841,10 @@ export function makeFetch(hooks = {}) {
       if (mint.refusal) return refused(mint.refusal);
       const secret = mint.secret;
       inner.searchParams.set("who", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
-      inner.searchParams.set("secretSha", mint.secretSha);
+      /* R64 (N761; credentials R53): the digest in the internal request's body alone, never its query */
       const minted = await doAnswer(stub.fetch(new Request(inner,
-        { method: req.method, body: JSON.stringify({ ...asked, writes: mint.writes, confinedTo: mint.confinedTo }) })));
+        { method: "POST", body: JSON.stringify({ ...asked, writes: mint.writes, confinedTo: mint.confinedTo,
+                                                  secretSha: mint.secretSha }) })));
       if (minted.refused) return storeRefusal(minted, { op, store: storeName, tokenClass: cls });
       if (!minted.answered) return storeSilent("aicredentialmint", minted.correlation);
       if (!minted.result || minted.result.ok !== true)
@@ -2834,8 +2872,8 @@ export function makeFetch(hooks = {}) {
      * prefix — not an id, and not derivable from one. */
     if (op === "reviewgrant") {
       const { secret, secretSha } = await reviewGrantSecret();   /* admission R13 */
-      inner.searchParams.set("secretSha", secretSha);
-      const issued = await doAnswer(stub.fetch(new Request(inner, { method: req.method, body: passBody })));
+      /* R64 (N761): the digest in the internal request's body alone, never its query */
+      const issued = await doAnswer(stub.fetch(new Request(inner, { method: "POST", body: withDigest(passBody, secretSha) })));
       if (issued.refused) return storeRefusal(issued, { op, store: storeName, tokenClass: cls });
       if (!issued.answered) return storeSilent("reviewgrant", issued.correlation);
       if (!issued.result || issued.result.ok !== true)
@@ -2856,8 +2894,8 @@ export function makeFetch(hooks = {}) {
        while the grant is live, and nothing else. */
     if (op === "templatereviewgrant") {
       const { secret, secretSha } = await reviewGrantSecret();   /* admission R13 */
-      inner.searchParams.set("secretSha", secretSha);
-      const issued = await doAnswer(stub.fetch(new Request(inner, { method: req.method, body: passBody })));
+      /* R64 (N761): the digest in the internal request's body alone, never its query */
+      const issued = await doAnswer(stub.fetch(new Request(inner, { method: "POST", body: withDigest(passBody, secretSha) })));
       if (issued.refused) return storeRefusal(issued, { op, store: storeName, tokenClass: cls });
       if (!issued.answered) return storeSilent("templatereviewgrant", issued.correlation);
       if (!issued.result || issued.result.ok !== true)
@@ -2895,6 +2933,10 @@ export function makeFetch(hooks = {}) {
     if (out.refused) return storeRefusal(out, { store: storeName, tokenClass: cls });
     if (!out.answered) return storeSilent(op, out.correlation);
     const { body, status } = out.reply;
+    /* R65 (credentials R16, R43): a member who disconnects their subscription, or is revoked, is signed out of their own
+       runner, after the act and whatever the runner answers; the act's answer is unchanged. */
+    const leaver = leaverOf(op, reqBody, body.result, stampOf.by);
+    if (leaver) await signoutLeaver(env, leaver);
     /* R58 (K2042 (2)): what an `op=unpack` filed is promoted, one act each, and named in the answer */
     if (op === "unpack" && body.result && body.result.ok === true) {
       const docs = archiveDocuments("unpack", body.result);
@@ -2913,7 +2955,7 @@ export function makeFetch(hooks = {}) {
       const pack = await heldPack({ req, url, env, cls, viaSession, sessMember, sessViewer, sessIdentity, sessRights, sessCaps,
                                     aiCred, storeName, stub });
       const ask = draftAsk(op, asked, { member: sessMember, session: credential.token,
-                                       firsthand: body.result.firsthand === true, pack });
+                                       firsthand: body.result.firsthand === true, pack, owner: body.result });
       const res = await stub.draft(ask);
       let drafted = null;
       try { drafted = await res.json(); } catch { drafted = null; }
@@ -2923,6 +2965,23 @@ export function makeFetch(hooks = {}) {
         await doAnswer(stub.fetch(new Request(`http://do/askusage?viewer=${encodeURIComponent(sessViewer)}`, { method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ mode: "draft", usage: drafted.usage ?? null, calls: drafted.calls }) })));
+      /* (T37; N669, K2201; instance-setup R67) a translation is checked by its owner (its placeholders), never here: its
+         answered draft is handed to the owner's store-internal `translationdraftrecord`, with the door's stamps, and that
+         route's answer is the op's. An ending or a silence is answered as for the other two, and nothing is recorded. */
+      if (op === TRANSLATION_DRAFT) {
+        if (drafted.ok !== true) {
+          const { grant: _g, ...given } = drafted;
+          return json({ ...given, ok: false, store: storeName, tokenClass: cls }, res.status >= 400 ? res.status : 502);
+        }
+        const at = new URL(`http://x/${TRANSLATION_RECORD}`);
+        for (const k of ["by", "viewer"]) if (inner.searchParams.has(k)) at.searchParams.set(k, inner.searchParams.get(k));
+        const recorded = await doAnswer(stub.fetch(new Request(at, { method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ language: ask.language, direction: ask.direction, words: ask.words,
+                                 draft: drafted.draft ?? null, not_drafted: drafted.not_drafted ?? [], label: drafted.label ?? null }) })));
+        if (recorded.refused) return storeRefusal(recorded, { store: storeName, tokenClass: cls });
+        if (!recorded.answered) return storeSilent(TRANSLATION_RECORD, recorded.correlation);
+        return json({ ...recorded.reply.body, store: storeName, tokenClass: cls }, recorded.reply.status);
+      }
       const shaped = checkedDraft(ask, drafted, res.status, sessViewer);
       return shaped.body.ok === true ? json({ ok: true, result: shaped.body, store: storeName, tokenClass: cls }, 200)
         : json({ ...shaped.body, store: storeName, tokenClass: cls }, shaped.status);
