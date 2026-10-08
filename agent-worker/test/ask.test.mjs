@@ -139,6 +139,10 @@ section("R54 · refusals before any model call, each by its code, as plain JSON"
     ["an account naming no member", () => ask({ account: { kind: "apikey", level: "member", secret: SECRET } }), 400, "BAD_ACCOUNT"],
     ["an account naming no level", () => ask({ account: { kind: "apikey", secret: SECRET, member: MEMBER } }), 400, "BAD_ACCOUNT"],
     ["the group's account as a subscription", () => ask({ account: { ...GROUP, kind: "subscription" } }), 400, "BAD_ACCOUNT"],
+    ["(T38) a member's own subscription, retired", () => ask({ account: { ...ACCOUNT, kind: "subscription" } }), 400, "BAD_ACCOUNT"],
+    ["(T38) a sign-in carrying a secret", () => ask({ account: { kind: "signin", level: "member", member: MEMBER, secret: SECRET } }), 400, "BAD_ACCOUNT"],
+    ["(T38) a sign-in at the group level", () => ask({ account: { kind: "signin", level: "group", member: MEMBER } }), 400, "BAD_ACCOUNT"],
+    ["(T38) a sign-in with suggestions true", () => ask({ account: { kind: "signin", level: "member", member: MEMBER, suggestions: true } }), 400, "BAD_ACCOUNT"],
     ["the group's account with an empty key", () => ask({ account: { ...GROUP, secret: "" } }), 409, "NO_ACCOUNT"],
     ["a namespace no instance holds", () => ask({ store: "biosmoke" }), 400, "NAMESPACE_UNKNOWN"],
     ["a conversation that is not this ask's turns", () => ask({ conversation: [{ role: "system", content: "x" }] }), 400, "BAD_CONVERSATION"],
@@ -290,13 +294,14 @@ section("R58, R36 · a run's model half: turns through agent-model, usage report
   t("R26 (N588): `calls` is agent-model R6's, so the calls summed over every entry are the model calls that reached the "
     + "provider (each API-key request one), never a conversation counted as one",
     entries.reduce((n, e) => n + (Number.isInteger(e.calls) ? e.calls : NaN), 0), r.model.length);
-  /* R26's other half, on the subscription path: `agent-model` R6's `calls` there is the turns the runner states
-     (`agent-runner` R4's `num_turns`), and `null` where it states none, passed through as `null`, never invented. The
-     runner is driven in this process over its own wire (a fake socket on the Container binding `RUNNER`): each
-     conversation answers its final tool, then ends, stating `num_turns` or not. */
+  /* R26's other half, on the sign-in path (T38; R6, R32, R33): `agent-model` R6's `calls` there is the turns the runner
+     states (`agent-runner` R4's `num_turns`), and `null` where it states none, passed through as `null`, never invented.
+     The runner is driven in this process over its own wire (a fake socket on the Container binding `RUNNER`, a
+     namespace recording each instance it is asked to name): each conversation answers its final tool, then ends,
+     stating `num_turns` or not. */
   const fakeRunner = (numTurns) => {
-    const conversations = [];
-    return { conversations, fetch: async () => {
+    const conversations = [], named = [];
+    const connect = async () => {
       const on = {};
       const emit = (m) => setTimeout(() => (on.message || []).forEach((f) => f({ data: JSON.stringify(m) })), 0);
       const ws = {
@@ -314,17 +319,28 @@ section("R58, R36 · a run's model half: turns through agent-model, usage report
                              input: name === "report" ? { state: "LOOKED_ABSENT", summary: "nothing" } : {} } });
         } };
       return { status: 101, webSocket: ws };
-    } };
+    };
+    return { conversations, named, idFromName: (name) => { named.push(name); return { name }; },
+             newUniqueId: () => { named.push("<unique>"); return { name: "<unique>" }; },
+             get: () => ({ fetch: connect }) };
   };
+  /* The member's own stored sign-in, as `credentials.accountFor` answers it and the plane carries it (R6): no secret. */
+  const SIGNIN = { kind: "signin", level: "member", member: MEMBER, suggestions: false };
   const subRun = async (numTurns) => {
     const runner = fakeRunner(numTurns);
-    const d = await drive("run", { run_id: "RUN-A", store: "scratch", credential: AIK,
-                                   account: { ...ACCOUNT, kind: "subscription" } }, { env: { RUNNER: runner } });
+    const d = await drive("run", { run_id: "RUN-A", store: "scratch", credential: AIK, account: SIGNIN },
+                          { env: { RUNNER: runner } });
     TRANSCRIPTS.push(d);
     return { d, runner, entries: d.plane.filter((x) => x.op === "airuntick").flatMap((x) => x.body?.usage || []) };
   };
   const stated = await subRun(3);
-  t("R26 (N588): on the subscription path each entry's `calls` is the turns the runner stated for that conversation",
+  t("R6, R33 (T38): a run on the member's own sign-in is named as one and its turns go to that member's own runner "
+    + "instance only, each conversation carrying {kind: signin, member} and no secret",
+    [stated.d.status, JSON.parse(stated.d.text).claude_account, [...new Set(stated.runner.named)],
+     [...new Set(stated.runner.conversations.map((c) => JSON.stringify(c.credential)))], stated.d.model.length],
+    [200, { available: true, kind: "signin", level: "member", member: MEMBER }, [MEMBER],
+     [JSON.stringify({ kind: "signin", member: MEMBER })], 0]);
+  t("R26 (N588): on the sign-in path each entry's `calls` is the turns the runner stated for that conversation",
     [stated.d.status, stated.runner.conversations.length > 0, stated.entries.length, [...new Set(stated.entries.map((e) => e.calls))]],
     [200, true, stated.runner.conversations.length, [3]]);
   const unstatedRun = await subRun(null);

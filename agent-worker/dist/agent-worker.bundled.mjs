@@ -2896,7 +2896,7 @@ var sha256hex = async (v) => {
 
 // src/cascade.mjs
 var CASCADE_ORDER = Object.freeze(["member", "group"]);
-var ACCOUNT_KINDS = Object.freeze(["apikey", "subscription"]);
+var ACCOUNT_KINDS = Object.freeze(["apikey", "signin"]);
 var LEVEL_KINDS = Object.freeze({ member: ACCOUNT_KINDS, group: Object.freeze(["apikey"]) });
 var CASCADE_NO_ACCOUNT = "NO_ACCOUNT";
 var LEVEL_UNSET = "unset";
@@ -2904,10 +2904,12 @@ var LEVEL_REVOKED = "revoked_by_publication";
 var LEVEL_AVAILABLE = "available";
 var isObject3 = (a) => a !== null && typeof a === "object" && !Array.isArray(a);
 var secretOf = (account) => isObject3(account) && typeof account.secret === "string" ? account.secret : "";
+var memberOf = (account) => isObject3(account) && typeof account.member === "string" ? account.member : "";
 var levelOf = (account) => isObject3(account) && CASCADE_ORDER.includes(account.level) ? account.level : "member";
 async function levelState(account) {
   if (!isObject3(account) || !CASCADE_ORDER.includes(account.level)) return LEVEL_UNSET;
   if (!LEVEL_KINDS[account.level].includes(account.kind)) return LEVEL_UNSET;
+  if (account.kind === "signin") return memberOf(account) ? LEVEL_AVAILABLE : LEVEL_UNSET;
   const v = secretOf(account);
   if (v.length === 0) return LEVEL_UNSET;
   if (PUBLISHED_TOKEN_HASHES.has(await sha256hex(v))) return LEVEL_REVOKED;
@@ -2931,16 +2933,15 @@ async function resolveClaudeCascade(account) {
     reason: CASCADE_NO_ACCOUNT,
     level,
     levels,
-    detail: state === LEVEL_REVOKED ? `${whose} has been published in this repository, which revokes it, so no model turn can run under it. ` + (level === "group" ? "An administrator sets a new key for the group, or members connect their own." : "The member connects a new one; until then the group's API key serves them only while your group's Civicsmith holds it and it is on.") : `no usable Claude account arrived for this act (${whose} was absent, empty, or of a kind its level does not hold). Which account serves a member's act is your group's Civicsmith's to answer (the member's own, else the group's API key while it is held and on); a member whom neither serves has no assistant.`
+    detail: state === LEVEL_REVOKED ? `${whose} has been published in this repository, which revokes it, so no model turn can run under it. ` + (level === "group" ? "An administrator sets a new key for the group, or members connect their own." : "The member connects a new one; until then the group's API key serves them only while your group's Civicsmith holds it and it is on.") : `no usable Claude account arrived for this act (${whose} was absent, empty, named no member, or of a kind its level does not hold). Which account serves a member's act is your group's Civicsmith's to answer (the member's own, else the group's API key while it is held and on); a member whom neither serves has no assistant.`
   };
 }
 async function cascadeToken(account) {
   const st = await resolveClaudeCascade(account);
   if (!st.available) return null;
-  const secret = secretOf(account);
   return {
     level: st.level,
-    reference: account.kind === "apikey" ? { kind: "apikey", key: secret } : { kind: "subscription", token: secret }
+    reference: account.kind === "signin" ? { kind: "signin", member: memberOf(account) } : { kind: "apikey", key: secretOf(account) }
   };
 }
 
@@ -4494,10 +4495,10 @@ async function accountOf(body) {
       409,
       { capability: "unavailable" }
     ) };
-  if (typeof a !== "object" || Array.isArray(a) || !ACCOUNT_KINDS.includes(a.kind) || !CASCADE_ORDER.includes(a.level) || !LEVEL_KINDS[a.level].includes(a.kind) || typeof a.member !== "string" || !a.member)
+  if (typeof a !== "object" || Array.isArray(a) || !ACCOUNT_KINDS.includes(a.kind) || !CASCADE_ORDER.includes(a.level) || !LEVEL_KINDS[a.level].includes(a.kind) || typeof a.member !== "string" || !a.member || a.kind === "signin" && (a.secret !== void 0 || a.suggestions !== void 0 && a.suggestions !== false))
     return { refusal: refusal2(
       "BAD_ACCOUNT",
-      `account is the account that serves the member's act: {kind, level, secret, member}, kind one of ${ACCOUNT_KINDS.join(", ")}, level one of ${CASCADE_ORDER.join(", ")} (the group's account an API key only), and member the member whose act it serves. What arrived is not one, and this member judges only what it is handed.`,
+      `account is the account that serves the member's act: {kind, level, secret, member}, kind one of ${ACCOUNT_KINDS.join(", ")}, level one of ${CASCADE_ORDER.join(", ")} (the group's account an API key only), and member the member whose act it serves; a signin account is the member's own and carries no secret and no suggestions but false. What arrived is not one, and this member judges only what it is handed.`,
       400,
       { field: "account" }
     ) };
