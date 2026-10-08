@@ -192,3 +192,8 @@ The development key the signer page minted without a passphrase leaves `ARMED_SI
 Groups hold nothing to change. Releases signed earlier stay verifiable against the old public line. There is no revocation list: its attacker writes `RELEASE.json`, so removing a key from `ARMED_SIGNERS` and redeploying is the revocation.
 
 **The recovery key's one use.** It signs only the release that replaces a lost or stolen release key, and nothing else, ever. It is needed once a verifier holds its own `ARMED_SIGNERS` (an installer run by a group, or a copy that updates itself). Such a verifier accepts a replacement only if a key it already holds signed it. While the installer is ours, the four acts above are enough, and the recovery key stays unused. It is used offline: Bob opens the signer page, loads the key with its passphrase, signs the payload a session gives him and returns the signature. After that one use it is treated as spent, and a new recovery key is armed in the same edit.
+
+**Bob's choices on custody (K2277, 2026-10-08).**
+- *Who can act when Bob is unavailable:* Bob alone, for now. He keeps a second copy of the recovery key in another place he controls; this is revisited when a second maintainer joins.
+- *When keys are replaced:* only when a key is lost, stolen or changes hands, plus one planned replacement of the release key when it moves into the locked GitHub environment (step 2), since until then it has lived in the work environment.
+- *Where keys and passphrases are kept:* everything in Bob's password manager (the passphrases and the recovery key alike).
