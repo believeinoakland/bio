@@ -6,7 +6,8 @@
    hand a service (`prepared`, `memberRoles`) the test builds as case-authoring R4 and R5 do. What a later module fills
    is a stand-in the test controls: the run gate `ai-runs` registers with contradiction (its R13; `runs`), and, unless
    a test asks for the real one, `case-import`'s reads (`importsStandIn`); the real one's checker is scripted at
-   case-checker's R1 and its re-evaluation listener answered. `people` is handed a stand-in for `duties` (a person's
+   case-checker's R1 and its re-evaluation listener answered. `case-carriage`'s `photoMarks` (its R10; T37, N757) is a
+   stand-in the test controls (`marksStandIn`): every capture is no photo unless a test marks it one. `people` is handed a stand-in for `duties` (a person's
    duties are no read of this module's), and `entities` is built on the host directly, not reached through inquiry's
    instance (K1619). Every test drives `case-disclosures` at its interface: its services, its renderers, its exports. */
 import { DatabaseSync } from "node:sqlite";
@@ -141,8 +142,9 @@ export function world({ group = "test-group", deps = {}, realImports = false } =
                            now: () => Date.parse(clock.now) })
     : importsStandIn();
   if (!realImports) strength.acceptedWork.registerAcceptedWork("case-import", imports.registration);
+  const marks = marksStandIn();
   const w = {
-    imports, checks, st, host, record, membership, promotion, prov, content, inquiry, strength, contradiction, runs, clock,
+    marks, imports, checks, st, host, record, membership, promotion, prov, content, inquiry, strength, contradiction, runs, clock,
     capture, sources, attestation, extraction: ex, entities, events, lines, money, people,
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a),
@@ -155,7 +157,7 @@ export function world({ group = "test-group", deps = {}, realImports = false } =
   };
   w.cd = caseDisclosuresOf(host, { record, inquiry, strength, contradiction, provenance: prov, attestation, capture,
     sources, extraction: ex, promotion, caseImport: imports, entities, events, lines, money, people, membership,
-    now: () => clock.now, ...deps });
+    caseCarriage: marks, now: () => clock.now, ...deps });
   let n = 0;
   Object.assign(w, {
     head: (id) => record.head(id)?.bundleSha ?? null,
@@ -225,6 +227,35 @@ export function world({ group = "test-group", deps = {}, realImports = false } =
     },
   });
   return w;
+}
+
+/** `case-carriage.photoMarks` at its ruled interface (its R10; T37, N757), a stand-in the test controls: `photo(sha,
+ *  {state, marks, copy, refused})` makes a capture a photo (unchecked unless stated; `copy` a SHA-256 or null), `answer(sha,
+ *  a)` answers `a` for that capture (a refused or malformed read), `read`,
+ *  when set, answers in place of the held marks (a failed or a refused read). Every other capture is no photo. `asked`
+ *  lists each `{captureSha, viewer}` asked. */
+export function marksStandIn() {
+  const held = new Map(), answers = new Map();
+  const s = {
+    read: null,
+    answer(captureSha, a) { answers.set(captureSha, a); },
+    asked: [],
+    photo(captureSha, { state = "unchecked", marks = null, copy = null, refused = null } = {}) {
+      const m = marks ?? (state === "marked" ? [{ mark: "MARK-1", areas: [{ rect: [0, 0, 8, 8], kind: "person" }], by: "alice", at: T0 }]
+        : state === "nothing_to_obscure" ? [{ mark: "MARK-1", areas: [], by: "alice", at: T0 }] : []);
+      held.set(captureSha, { state, marks: m,
+        copy: copy ? { sha256: copy, covered: 1, width: 8, height: 8 } : null,
+        refused: refused ? { code: refused, detail: `image-cover refused: ${refused}` } : null });
+    },
+    photoMarks({ captureSha, viewer }) {
+      s.asked.push({ captureSha, viewer });
+      if (s.read) return s.read({ captureSha, viewer });
+      if (answers.has(captureSha)) return answers.get(captureSha);
+      const p = held.get(captureSha);
+      return p ? { ok: true, capture: captureSha, photo: true, ...p } : { ok: true, capture: captureSha, photo: false };
+    },
+  };
+  return s;
 }
 
 /** `case-import` at its ruled interface (its R4, R9, R16), a stand-in the test controls: another group's imported

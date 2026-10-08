@@ -67,8 +67,9 @@ test("R6, R7: materialsJudged lists every document a member's chain reaches with
   const { out } = blocks(w, [Q, Q2], { supporting: [Q2] });
   assert.deepEqual(out.materials.rows, [
     { ref: DOC, kind: "document", sha: a, text_sha: textSha(DOC), origin: `https://example.org/${DOC}`,
-      archived_copy: "https://archive.example/web/x", included: true, rests_under: "load_bearing" },
-    { ref: DOC2, kind: "document", sha: b, text_sha: null, origin: null, archived_copy: null, included: false, rests_under: "supporting" }]);
+      archived_copy: "https://archive.example/web/x", included: true, rests_under: "load_bearing", obscured: null },
+    { ref: DOC2, kind: "document", sha: b, text_sha: null, origin: null, archived_copy: null, included: false, rests_under: "supporting",
+      obscured: null }]);
   /* read back through case-grammar's one reader */
   const fm = fmOf(w, materialBlockLines({ materials: out.materials.rows, attestations: out.materials.attestations }));
   assert.deepEqual(materialsOf(fm).materials, out.materials.rows);
@@ -322,5 +323,5 @@ test("R20: everything a row asserts arrived as an argument or was read from the 
     { project: "p", group: "g", at: "t", facts: () => { throw new Error("not asked for an observation"); }, origin: () => "o",
       registered: () => null, member: () => [] });
   assert.deepEqual(rows, { rows: [{ ref: "x", kind: "observation", sha: "s", text_sha: null, origin: "o", archived_copy: null,
-    included: true, rests_under: "supporting" }], attestations: [{ ref: "x", by_kind: "group", by: "g", level: null, at: "t", signature: "case", recorded_in: null }] });
+    included: true, rests_under: "supporting", obscured: null }], attestations: [{ ref: "x", by_kind: "group", by: "g", level: null, at: "t", signature: "case", recorded_in: null }] });
 });
