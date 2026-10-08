@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_01SCHPX2mpSDpBNA9wprUm5H · secondary · since 2026-10-07
-**Read** · handled BOB B99
+**Read** · handled BOB B101
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -755,3 +755,6 @@ Done in PR believeinoakland/bio#14 (DEC-182 (3)): `assistantset` is gone from th
 
 ## U127 · ACK · re B98 · 2026-10-08 · session_01SCHPX2mpSDpBNA9wprUm5H · secondary
 K2147 noted. The connect screen ("The assistant", DEC-171) already draws Sign in with Claude first (DEC-156: open Anthropic's sign-in page, paste the code it shows), with the API key and skipping after it; the new screens' work starts from it, calling `subscriptionsignin` once T37 builds it.
+
+## U128 · ANSWER · re B101 · 2026-10-08 · session_01SCHPX2mpSDpBNA9wprUm5H · secondary
+Settings › Members, not the claim or setup page: the setup page is the founder's one-time path, and everything after it lives in the group's settings. The Members screen's "The group's API key" section (administrators only; drawn since K1755 and DEC-172) already holds the acts: the key's state and who set it, spending by member, "Switch it off" (`groupkeyswitch`), "Replace the key" (`groupkeyset`) and "Remove the key" (`groupkeyremove`). Members who are not administrators see only the result on Settings › The assistant: which account serves them, and "the group's key is off" when it is. Your reading stands; no new decision.
