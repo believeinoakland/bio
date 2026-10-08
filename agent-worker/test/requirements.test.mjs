@@ -81,10 +81,18 @@ const real = new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: PLANE_ENTRY, script: readFileSync(PLANE_ENTRY, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } }, r2Buckets: ["CAPTURES", "PUBLISHED"],
-  bindings: { ADMIN_TOKEN: "adm-req", MEMBER_TOKEN: "mem-req", PROBE_TOKEN: "prb-req", VERSION: "test" },
+  bindings: { ADMIN_TOKEN: "adm-req", PROBE_TOKEN: "prb-req", VERSION: "test" },
 });
+/* The real plane is asked as an enrolled member signed in with their own password: the shared member token is retired
+   (C-38.11), and a credential travels in the Authorization header only (C-38.10). */
+const realPost = async (op, token, body) => { const j = await (await real.dispatchFetch(`http://x/api/?op=${op}`, { method: "POST",
+  headers: token ? { authorization: `Bearer ${token}` } : {}, body: JSON.stringify(body) })).json();
+  return j && typeof j === "object" && "result" in j ? j.result : j; };
+const invited = await realPost("memberadd", "adm-req", { memberId: "rosa", cover: "c-rosa", role: "member", capabilities: ["contribute"] });
+await realPost("enroll", null, { invite: invited.invite, handle: "rosa", password: "rosa-passphrase-1" });
+const MEM_SESSION = (await realPost("login", null, { role: "member:rosa", password: "rosa-passphrase-1" })).token;
 const PUBLISHED = (await (await real.dispatchFetch("http://x/api/?op=agentpack",
-  { headers: { authorization: "Bearer mem-req" } })).json());
+  { headers: { authorization: `Bearer ${MEM_SESSION}` } })).json());
 const PUBLISHED_ANSWER = PUBLISHED && typeof PUBLISHED === "object" && "result" in PUBLISHED ? PUBLISHED.result : PUBLISHED;
 /* R48 (N157, §1a; T36, N695): the member reads the pack the plane renders and serves apart on `op=agentpack` (`pack`,
    control-plane R41) and renders nothing itself. The answer here is the real plane's with a STUB pack in place of the one
@@ -100,7 +108,7 @@ const PUBLISHED_WITH_PACK = { ...PUBLISHED_ANSWER, pack: PACK };
 /* The real answer with no pack at all: the real plane serves one, so R48's no-pack arm takes the key away rather than
    relying on the plane to omit it. */
 const { pack: _realPack, pack_absent: _realAbsent, ...PUBLISHED_NO_PACK } = PUBLISHED_ANSWER || {};
-const planeNamespaces = (await (await real.dispatchFetch("http://x/api/?op=whoami&token=mem-req&store=biosmoke")).json()).namespaces;
+const planeNamespaces = (await (await real.dispatchFetch("http://x/api/?op=whoami&store=biosmoke", { headers: { authorization: `Bearer ${MEM_SESSION}` } })).json()).namespaces;
 await real.dispose();
 
 /* ============================================================ THE PLANE MOCK, reconfigurable per arm */

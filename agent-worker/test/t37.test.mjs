@@ -245,7 +245,7 @@ function modelApi(script = {}) {
     if (script.refuse) return Response.json({ type: "error", error: { type: "overloaded_error", message: "busy" } }, { status: 529 });
     if (script.silent) return new Response("<html>", { status: 502 });
     if (script.never) return reply([{ type: "text", text: "I would rather not." }]);
-    const user = String(body.messages?.[0]?.content ?? "");
+    const user = userText(body);
     const answered = (body.messages || []).length > 1;
     /* R62: the stub obeys an instruction it finds in the words. */
     const inj = (/INJECT:([a-z]+)/.exec(user) || [])[1] || null;
@@ -266,8 +266,10 @@ function modelApi(script = {}) {
 }
 /** Drafts every asked word: `<es>` + its English. */
 function defaultAnswer(body) {
-  if (body.tools[0].input_schema.properties.english) return { english: "To claim" };
-  const asked = JSON.parse(String(body.messages[0].content).split("THE WORDS:\n")[1]);
+  const props = body.tools.find((x) => x.name === "draft").input_schema.properties;
+  if (props.english) return { english: "To claim" };
+  if (props.text) return { text: "A labelled draft in the member's own words." };
+  const asked = JSON.parse(userText(body).split("THE WORDS:\n")[1]);
   return { words: asked.map((w) => ({ key: w.key, text: `ES ${w.en}` })) };
 }
 
@@ -283,6 +285,9 @@ async function draft(body, { model = {}, noPlane = false, env = {} } = {}) {
   }, m.fn);
   return { ...w.result, plane: p.calls, model: m.calls, runner: r.calls, lines: w.lines };
 }
+/** The text of a model request's first (user) turn, whether a string or content blocks. */
+const userText = (req) => { const c = req?.messages?.[0]?.content;
+  return typeof c === "string" ? c : Array.isArray(c) ? c.filter((b) => b.type === "text").map((b) => b.text).join("") : ""; };
 const nothingCalled = (r) => [r.plane.length, r.model.length, r.runner.length];
 
 section("R68 · the translation task's refusals, before any model call, in R59's order");
@@ -359,13 +364,13 @@ section("R69 · the model's instructions, its tools and where the words reach it
     [sys.includes("WRITING-HELP-LAYER-WORDS"), sys.includes("SUGGESTIONS-LAYER-WORDS")], [false, false]);
   t("R69, R61: the words are in no system prompt", sys.includes(WORD_SENT), false);
   t("R69, R61: the words reach the model in the user turn only",
-    [req.messages?.length, req.messages?.[0]?.role, String(req.messages?.[0]?.content).includes(WORD_SENT)], [1, "user", true]);
+    [req.messages?.length, req.messages?.[0]?.role, userText(req).includes(WORD_SENT)], [1, "user", true]);
   t("R69: the model is offered no read tool, only the answer itself (the draft tool, agent-model R6's final tool)",
     (req.tools || []).map((x) => x.name), ["draft"]);
   const eng = await draft(tdBody({ task: TO_ENGLISH }));
   const ereq = eng.model[0]?.body ?? {};
   t("R69: to_english: the kept word in the user turn only, the draft tool alone",
-    [JSON.stringify(ereq.system).includes(WORD_SENT), String(ereq.messages?.[0]?.content).includes(WORD_SENT), (ereq.tools || []).map((x) => x.name)],
+    [JSON.stringify(ereq.system).includes(WORD_SENT), userText(ereq).includes(WORD_SENT), (ereq.tools || []).map((x) => x.name)],
     [false, true, ["draft"]]);
   for (const [label, pack] of [["no pack", undefined], ["a pack with no version", { ...PACK, version: "" }],
                                ["a pack without the layer", { ...PACK, disclosed: { writing_help: PACK.disclosed.writing_help } }],
@@ -424,7 +429,7 @@ section("R70, R61, R62 · words that carry instructions are drafted as words");
     for (const task of [{ ...TO_LANGUAGE(1), words: [word(0, { en })] }, { ...TO_ENGLISH, words: [{ ...KEPT, text: en }] }]) {
       const r = await draft(tdBody({ task }));
       t(`R62 (${kind}), ${task.direction}: the word reached the model in the user turn and the draft still answers`,
-        [r.status, String(r.model[0]?.body?.messages?.[0]?.content).includes("INJECT:" + kind)], [200, true]);
+        [r.status, userText(r.model[0]?.body).includes("INJECT:" + kind)], [200, true]);
       t(`R70, R62 (${kind}), ${task.direction}: no call to the plane follows, nor to a runner`, [r.plane.length, r.runner.length], [0, 0]);
       t(`R62 (${kind}), ${task.direction}: no secret appears in the answer or a log line`,
         [r.text.includes(SECRET), r.lines.some((l) => l.includes(SECRET))], [false, false]);

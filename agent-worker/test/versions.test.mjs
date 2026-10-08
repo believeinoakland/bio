@@ -130,21 +130,24 @@ console.log("\n--- B0 · the two reads are ones an `ai` credential can reach, by
 }
 
 const AIK = "aik-" + "d".repeat(64);
-const MEM = "mem-d220-aw";
+const ADM = "adm-d220-aw";
+const MEMBER_ID = "ruth";
 
-/* THE FRONT: `search` and `versionchain` go to the REAL plane under its member
-   token, and are counted; everything else goes to the mock. */
+/* THE FRONT: `search` and `versionchain` go to the REAL plane under an enrolled member's session (the shared member
+   token is retired, C-38.11, and a credential travels in the Authorization header only, C-38.10), and are counted;
+   everything else goes to the mock. The session is handed to the front once the member has signed in below. */
 const FRONT = `
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
     const op = url.searchParams.get("op") || "";
     if (url.pathname === "/__front/state") return Response.json({ real: globalThis.__real || [] });
+    if (url.pathname === "/__front/session") { globalThis.__session = await req.text(); return Response.json({ ok: true }); }
     if (op !== "search" && op !== "versionchain") return env.MOCK.fetch(req);
     (globalThis.__real = globalThis.__real || []).push({ op, q: url.searchParams.get("q"),
       address: url.searchParams.get("address") });
-    url.searchParams.set("token", env.MEMBER);
-    return env.REAL.fetch("http://real/api/?" + url.searchParams.toString());
+    return env.REAL.fetch("http://real/api/?" + url.searchParams.toString(),
+      { headers: { authorization: "Bearer " + globalThis.__session } });
   },
 };`;
 
@@ -195,14 +198,14 @@ const mf = new Miniflare({
       bindings: { VERSION: "test" }, serviceBindings: { PLANE: "plane-front" } },
     { name: "plane-front", modules: true, script: FRONT,
       compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
-      bindings: { MEMBER: MEM }, serviceBindings: { MOCK: "plane-mock", REAL: "real-plane" } },
+      serviceBindings: { MOCK: "plane-mock", REAL: "real-plane" } },
     { name: "plane-mock", modules: true, script: PLANE_MOCK,
       compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"] },
     { name: "real-plane", modules: true, modulesRoot: "/", scriptPath: PLANE_IDX_PATH, script: PLANE_INDEX,
       compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
       durableObjects: { STORE: { className: "Store", useSQLite: true } },
       r2Buckets: ["CAPTURES", "PUBLISHED"],
-      bindings: { ADMIN_TOKEN: "adm-d220-aw", MEMBER_TOKEN: MEM, PROBE_TOKEN: "prb-d220-aw",
+      bindings: { ADMIN_TOKEN: ADM, PROBE_TOKEN: "prb-d220-aw",
                   VERSION: "test", TASK_DRAIN_DELAY_MS: "600000" } },
   ],
 });
@@ -212,10 +215,20 @@ const mf = new Miniflare({
 const STORE = "scratch";
 const real = await mf.getWorker("real-plane");
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
+/* An enrolled member, signed in with their own password: the session the fixture is written and read under. */
+const signIn = async (op, token, body) => rP(await (await real.fetch(`http://real/api/?op=${op}`, { method: "POST",
+  headers: token ? { authorization: `Bearer ${token}` } : {}, body: JSON.stringify(body) })).json());
+const added = await signIn("memberadd", ADM, { memberId: MEMBER_ID, cover: "c-" + MEMBER_ID, role: "admin",
+                                              capabilities: ["contribute", "publish"] });
+await signIn("enroll", null, { invite: added.invite, handle: MEMBER_ID, password: MEMBER_ID + "-passphrase-1" });
+const MEM = (await signIn("login", null, { role: "member:" + MEMBER_ID, password: MEMBER_ID + "-passphrase-1" })).token;
+if (typeof MEM !== "string" || !MEM) throw new Error("the fixture's member could not sign in");
+await (await mf.getWorker("plane-front")).fetch("http://front/__front/session", { method: "POST", body: MEM });
 const post = async (op, body) => rP(await (await real.fetch(
-  `http://real/api/?op=${op}&store=${STORE}&token=${MEM}`, { method: "POST", body: JSON.stringify(body) })).json());
+  `http://real/api/?op=${op}&store=${STORE}`,
+  { method: "POST", headers: { authorization: `Bearer ${MEM}` }, body: JSON.stringify(body) })).json());
 const get = async (op, qs) => rP(await (await real.fetch(
-  `http://real/api/?op=${op}&store=${STORE}&token=${MEM}&${qs}`)).json());
+  `http://real/api/?op=${op}&store=${STORE}&${qs}`, { headers: { authorization: `Bearer ${MEM}` } })).json());
 const doStub = (await mf.getDurableObjectNamespace("STORE", "real-plane")).get(
   (await mf.getDurableObjectNamespace("STORE", "real-plane")).idFromName(STORE));
 const recordLocator = async (b) => rP(await (await doStub.fetch("http://x/recordcapturedlocator",
