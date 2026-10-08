@@ -5,8 +5,9 @@
  * makes this module, so "Find in this" (retrieval R73) can say a found passage is already cited and by whom.
  *
  * NO TABLE OF ITS OWN (R6): a citation exists only in the citing document's bytes, so this read finds them there. The
- * citing objects are listed through `record-core` (`listByType`, `head`: R36, R41) and each one's citations are parsed
- * once per version of its bytes, held in memory keyed by its `bundleSha`; a version is never re-read. `by` and `at` come
+ * inquiries are found through `inquiry`'s leg projection (`restingOn`, its R12; K2132) and the projects listed through
+ * `record-core` (`listByType`, `head`: R36, R41), no projection holding a case edge's pin; each one's citations are
+ * parsed once per version of its bytes, held in memory keyed by its `bundleSha`; a version is never re-read. `by` and `at` come
  * from the citing object's own history (`record-core` `readImage`, R15): the first promotion, in write order, whose
  * `bundle.md` carries the leg or edge (K2126; BOB #136's draft: "the first version whose bytes carry the leg or edge").
  *
@@ -43,16 +44,19 @@ const clamp = (limit) => {
 const cmp = (x, y) => (x < y ? -1 : x > y ? 1 : 0);
 
 /** The citations one version of a citing object's bytes holds, each `{ident, target, pin, kind, field, key, extent,
- *  withdrawn}`; `ident` names the leg or edge across versions (a leg by its target, part and pin; an edge by its target),
- *  `key` its extent in content's canonical form. `c` reaches `content` (`captureFor`, `contentRow`). */
+ *  withdrawn}`; `ident` names the leg or edge across versions (a leg by its target, part and stated pin; an edge by its
+ *  target), `key` its extent in content's canonical form, `pin` null when the citation states none. `c` reaches
+ *  `content` (`contentRow`). */
 export function citationsIn(c, data, type) {
   const out = [];
   if (!isObj(data)) return out;
-  const pinOf = (target, authored, contentRow) => {
+  /* The pin the bytes (or the content row they name) state; null for an unpinned citation, whose capture is the one its
+     document's citation addresses NOW (`content.captureFor`), resolved at each read, since it can move without these
+     bytes moving (the document's first capture held after the citation was written). */
+  const pinOf = (authored, contentRow) => {
     if (said(authored)) return authored.trim().toLowerCase();
     if (contentRow && said(contentRow.capture_sha)) return contentRow.capture_sha.toLowerCase();
-    const p = c.content.captureFor(target);
-    return said(p) ? p.toLowerCase() : null;
+    return null;
   };
   if (type === "inquiry") {
     for (const l of Array.isArray(data.basis) ? data.basis : []) {
@@ -61,7 +65,7 @@ export function citationsIn(c, data, type) {
       const row = cid && typeof c.content.contentRow === "function" ? c.content.contentRow(cid) : null;
       const ext = row && said(row.extent_kind) ? { kind: row.extent_kind, ...(isObj(row.extent) ? row.extent : {}) } : citationExtent(l);
       const key = canonicalExtent(known(ext) ? ext : { kind: "document" });
-      const pin = pinOf(l.target, l.extent_capture, row);
+      const pin = pinOf(l.extent_capture, row);
       out.push({ ident: `leg\u0000${l.target}\u0000${key}\u0000${pin}`, target: l.target, pin, kind: "leg", field: "basis",
                  key, extent: JSON.parse(key), withdrawn: false });
     }
@@ -69,7 +73,7 @@ export function citationsIn(c, data, type) {
     const key = canonicalExtent({ kind: "document" });
     for (const r of Array.isArray(data.references) ? data.references : []) {
       if (!isObj(r) || r.rel !== "cites" || !said(r.target)) continue;
-      out.push({ ident: `cites\u0000${r.target}`, target: r.target, pin: pinOf(r.target, r.extent_capture, null),
+      out.push({ ident: `cites\u0000${r.target}`, target: r.target, pin: pinOf(r.extent_capture, null),
                  kind: "cites", field: "references", key, extent: JSON.parse(key), withdrawn: r.status === "severed" });
     }
   }
@@ -106,7 +110,24 @@ export function firstWriters(c, bundleId, type, idents) {
   return out;
 }
 
-/** R13. `c` is the Citation (its `record`, `membership`, `content`, `provenance`) and `memo` its per-version cache. */
+/* Every project's id, type and current `bundleSha`: one statement over record-core's `bundles` read contract (its R37:
+   `bundle_id`, `object_type`, `bundle_sha`) where the store is reachable, else `listByType` and `head` (R36, R41), which
+   cost one statement per project; MEASURED 2.5 s of a 200-capture call over 500 projects (K2132). */
+function projectHeads(c) {
+  if (c.sql) return [...c.sql.exec(`SELECT bundle_id, object_type, bundle_sha FROM bundles WHERE object_type = 'project' ORDER BY bundle_id`)]
+    .map((r) => ({ id: r.bundle_id, type: r.object_type, bundleSha: r.bundle_sha }));
+  const out = [];
+  for (let after = ""; ;) {
+    const page = c.record.listByType({ type: "project", after, limit: LIST_PAGE });
+    for (const id of page.ids) { const h = c.record.head(id); if (h) out.push({ ...h, id }); }
+    if (page.ids.length < LIST_PAGE || !page.cursor) break;
+    after = page.cursor;
+  }
+  return out;
+}
+
+/** R13. `c` is the Citation (its `record`, `membership`, `content`, `provenance`, `inquiry` and, when given, `sql`);
+ *  `memo` its per-version cache. */
 export function recordedBy(c, memo, args) {
   try {
     const a = isObj(args) ? args : {};
@@ -127,40 +148,44 @@ export function recordedBy(c, memo, args) {
     const home = c.provenance && typeof c.provenance.homeOf === "function" ? c.provenance.homeOf(sha) : null;
     const doc = home && said(home.bundleId) ? home.bundleId : null;
     if (!doc || !c.membership.inSight(doc, a.viewer)) return answer([], false);
+    if (!c.inquiry || typeof c.inquiry.restingOn !== "function")
+      return { ok: false, reason: "INQUIRY_UNAVAILABLE", detail: "the legs that cite a passage are found through the inquiry "
+               + "module's leg projection, and your group's Civicsmith was created without it, so this read could not be made." };
 
+    /* The citing objects: a capture's legs through `inquiry`'s leg projection (its R12, which projects every leg this
+       module writes; K2132), the inquiries holding a leg on the document; a project's `cites` edges, whose pin no
+       projection holds, by listing the projects. Each one's citations are then read from its current bytes. */
+    const inquiries = [...new Set(((c.inquiry.restingOn(doc) || {}).dependents || []).map((d) => d.bundle_id))].sort();
+    const projects = projectHeads(c);
+    const addressed = c.content.captureFor(doc);
+    const unpinned = said(addressed) ? addressed.toLowerCase() : null;
     const kept = [], once = new Set();
-    for (const type of ["inquiry", "project"]) {
-      for (let after = ""; ;) {
-        const page = c.record.listByType({ type, after, limit: LIST_PAGE });
-        for (const id of page.ids) {
-          const h = c.record.head(id);
-          if (!h) continue;
-          let v = memo.get(id);
-          if (!v || v.bundleSha !== h.bundleSha) {
-            const f = c.record.readFile(id, "bundle.md");
-            const data = f && typeof f.text === "string" ? parseFrontmatter(f.text).data : null;
-            v = { bundleSha: h.bundleSha, cites: citationsIn(c, data, normalizeType(h.type)), writers: null };
-            memo.set(id, v);
-          }
-          const hits = v.cites.filter((x) => x.target === doc && x.pin === sha);
-          /* Sight is the citing object's (R9; the inquiry's for a question): one the viewer may not see is neither
-             answered nor counted. */
-          if (!hits.length || !c.membership.inSight(id, a.viewer)) continue;
-          if (!v.writers) v.writers = firstWriters(c, id, normalizeType(h.type), new Set(v.cites.map((x) => x.ident)));
-          for (const x of hits) {
-            const relation = asked ? extentRelation(asked, x.extent) : null;
-            if (asked && !RELATIONS.includes(relation)) continue;
-            const w = v.writers.get(x.ident) || { by: null, at: null };
-            const item = { module: "citation", record: id, kind: x.kind, field: x.field, extent: x.extent, relation,
-                           by: w.by, at: w.at, withdrawn: x.withdrawn };
-            const dup = JSON.stringify(item);
-            if (once.has(dup)) continue;
-            once.add(dup);
-            kept.push({ key: x.key, item });
-          }
-        }
-        if (page.ids.length < LIST_PAGE || !page.cursor) break;
-        after = page.cursor;
+    const heads = [...inquiries.map((id) => { const h = c.record.head(id); return h ? { ...h, id } : null; }).filter(Boolean), ...projects];
+    for (const h of heads) {
+      const id = h.id;
+      const type = normalizeType(h.type);
+      let v = memo.get(id);
+      if (!v || v.bundleSha !== h.bundleSha) {
+        const f = c.record.readFile(id, "bundle.md");
+        const data = f && typeof f.text === "string" ? parseFrontmatter(f.text).data : null;
+        v = { bundleSha: h.bundleSha, cites: citationsIn(c, data, type), writers: null };
+        memo.set(id, v);
+      }
+      const hits = v.cites.filter((x) => x.target === doc && (x.pin ?? unpinned) === sha);
+      /* Sight is the citing object's (R9; the inquiry's for a question): one the viewer may not see is neither
+         answered nor counted. */
+      if (!hits.length || !c.membership.inSight(id, a.viewer)) continue;
+      if (!v.writers) v.writers = firstWriters(c, id, type, new Set(v.cites.map((x) => x.ident)));
+      for (const x of hits) {
+        const relation = asked ? extentRelation(asked, x.extent) : null;
+        if (asked && !RELATIONS.includes(relation)) continue;
+        const w = v.writers.get(x.ident) || { by: null, at: null };
+        const item = { module: "citation", record: id, kind: x.kind, field: x.field, extent: x.extent, relation,
+                       by: w.by, at: w.at, withdrawn: x.withdrawn };
+        const dup = JSON.stringify(item);
+        if (once.has(dup)) continue;
+        once.add(dup);
+        kept.push({ key: x.key, item });
       }
     }
     kept.sort((p, q) => cmp(p.key, q.key) || cmp(p.item.record, q.item.record) || cmp(p.item.field, q.item.field));

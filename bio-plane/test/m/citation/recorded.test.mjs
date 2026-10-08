@@ -24,24 +24,24 @@ const item = (record, kind, extent, e, extra = {}) => ({
 
 /* A document with one capture whose second page says "budget", the real match for it, two questions and a case. */
 function setup() {
-  const w = world();
-  const cap = w.info("INFO-2026-0001");
-  const cap2 = w.info("INFO-2026-0002");
+  const w = world({ inquiry: true });
+  const cap = w.info("INFO-2026-0001-doc");
+  const cap2 = w.info("INFO-2026-0002-doc");
   const pages = { [cap]: ["Nothing here.", "The budget line is set."] };
-  const [match] = w.find("INFO-2026-0001", "budget", { pages });
-  w.inquiry("INQ-2026-0001");
-  w.inquiry("INQ-2026-0002");
-  return { w, cap, cap2, match, p: w.project(), q: "INQ-2026-0001", read: (a) => w.cit.recordedBy(a) };
+  const [match] = w.find("INFO-2026-0001-doc", "budget", { pages });
+  w.inquiry("INQ-2026-0001-q");
+  w.inquiry("INQ-2026-0002-q");
+  return { w, cap, cap2, match, p: w.project(), q: "INQ-2026-0001-q", read: (a) => w.cit.recordedBy(a) };
 }
 
 test("R13: a found match cited onto a question, then the same findIn names its member under `recorded`, relation same, by and at as the question's history holds them; registration ends 'none registered'", () => {
   const { w, match, q } = setup();
-  const before = w.retrieval.findIn({ scope: { ids: ["INFO-2026-0001"] }, kinds: ["term"], term: "budget", viewer: V("ann") });
+  const before = w.retrieval.findIn({ scope: { ids: ["INFO-2026-0001-doc"] }, kinds: ["term"], term: "budget", viewer: V("ann") });
   assert.deepEqual(before.kinds[0].items[0].recorded, []);
   assert.equal(w.cit.cite({ project: q, found: match, ...ANN, role: "supports" }).ok, true);
   const e = lastEntry(w, q);
   assert.equal(e.author, "member:ann");
-  const r = w.retrieval.findIn({ scope: { ids: ["INFO-2026-0001"] }, kinds: ["term"], term: "budget", viewer: V("ann") });
+  const r = w.retrieval.findIn({ scope: { ids: ["INFO-2026-0001-doc"] }, kinds: ["term"], term: "budget", viewer: V("ann") });
   assert.deepEqual(r.kinds[0].items[0].recorded, [{ module: "citation", record: q, kind: "leg", field: "basis",
     extent: C({ kind: "pdf-page", page: 1 }), relation: "same", by: "member:ann", at: e.created, withdrawn: false }]);
   assert.ok(r.recorded_read.includes("citation"), JSON.stringify(r.recorded_read));
@@ -53,11 +53,11 @@ test("R13: a found match cited onto a question, then the same findIn names its m
 test("R13: the read answers events R49's shape — a leg's part, `narrower` and `wider` against an asked extent, `document` for a leg naming none, and `disjoint` parts left out", async () => {
   const { w, cap, match, q, read } = setup();
   w.cit.cite({ project: q, found: match, ...ANN, role: "supports" });
-  const q2 = w.inquiry("INQ-2026-0003");
-  const h = await w.select(["INFO-2026-0001"]);
+  const q2 = w.inquiry("INQ-2026-0003-q");
+  const h = await w.select(["INFO-2026-0001-doc"]);
   w.cit.cite({ project: q2, handle: h, ...ANN, role: "cuts_against",
                extent: { extent_kind: "pdf-page", extent_page: "1", extent_rect: "[0, 0, 10, 10]" } });
-  const q3 = w.inquiry("INQ-2026-0004");
+  const q3 = w.inquiry("INQ-2026-0004-q");
   w.cit.cite({ project: q3, handle: h, ...ANN, role: "supports" });
   const all = read({ captureSha: cap, viewer: V("ann") });
   assert.deepEqual(Object.keys(all).sort(), ["capture_sha", "items", "module", "ok", "truncated"]);
@@ -78,7 +78,7 @@ test("R13: the read answers events R49's shape — a leg's part, `narrower` and 
 
 test("R13: a project's cites edge is answered with extent document, and withdrawn after sever; its by and at stay the act that first wrote it", async () => {
   const { w, cap, p, read } = setup();
-  const h = await w.select(["INFO-2026-0001"]);
+  const h = await w.select(["INFO-2026-0001-doc"]);
   w.cit.cite({ project: p, handle: h, ...ANN });
   const e = lastEntry(w, p);
   assert.deepEqual(read({ captureSha: cap, viewer: V("ann") }).items, [item(p, "cites", DOC, e)]);
@@ -91,23 +91,23 @@ test("R13: a project's cites edge is answered with extent document, and withdraw
 
 test("R13: `by` is whoever first wrote the leg into the citing object, by cite or by another act on its bytes; a later act on the same object changes no earlier leg's by", async () => {
   const { w, cap, cap2, q, read } = setup();
-  const h = await w.select(["INFO-2026-0001"], { viewer: V("vera"), owner: "v" });
+  const h = await w.select(["INFO-2026-0001-doc"], { viewer: V("vera"), owner: "v" });
   assert.equal(w.cit.cite({ project: q, handle: h, ...VERA, role: "supports" }).ok, true);
   const first = lastEntry(w, q);
   assert.equal(first.author, "member:vera");
-  w.cit.cite({ project: q, handle: await w.select(["INFO-2026-0002"]), ...ANN, role: "supports" });
+  w.cit.cite({ project: q, handle: await w.select(["INFO-2026-0002-doc"]), ...ANN, role: "supports" });
   assert.deepEqual(read({ captureSha: cap, viewer: V("ann") }).items, [item(q, "leg", DOC, first)]);
   assert.deepEqual(read({ captureSha: cap2, viewer: V("ann") }).items, [item(q, "leg", DOC, lastEntry(w, q))]);
   /* A leg written by hand (fixture's revise, author member:ann) counts its writer. */
-  const q5 = w.inquiry("INQ-2026-0005");
-  w.revise(q5, w.md(q5).replace("references: []", `references:\n  - rel: cites\n    target: INFO-2026-0001\n    status: confirmed\n    note: ""\nbasis:\n  - target: INFO-2026-0001\n    role: supports\n    extent_capture: "${cap}"`));
+  const q5 = w.inquiry("INQ-2026-0005-q");
+  w.revise(q5, w.md(q5).replace("references: []", `references:\n  - rel: cites\n    target: INFO-2026-0001-doc\n    status: confirmed\n    note: ""\nbasis:\n  - target: INFO-2026-0001-doc\n    role: supports\n    extent_capture: "${cap}"`));
   const hand = lastEntry(w, q5);
   assert.deepEqual(read({ captureSha: cap, viewer: V("ann") }).items.find((i) => i.record === q5), item(q5, "leg", DOC, hand));
 });
 
 test("R13: a leg no longer in a basis is not an item", async () => {
   const { w, cap, q, read } = setup();
-  w.cit.cite({ project: q, handle: await w.select(["INFO-2026-0001"]), ...ANN, role: "supports" });
+  w.cit.cite({ project: q, handle: await w.select(["INFO-2026-0001-doc"]), ...ANN, role: "supports" });
   assert.equal(read({ captureSha: cap, viewer: V("ann") }).items.length, 1);
   w.revise(q, w.md(q).replace(/\nbasis:\n(?:  .*\n)+/, "\nbasis: []\n"));
   assert.deepEqual(w.fm(q).basis, []);
@@ -116,46 +116,40 @@ test("R13: a leg no longer in a basis is not an item", async () => {
 
 test("R13: the pin — an earlier capture's leg is absent from a later capture's read; an extent_capture names its capture; a content_id leg is its row's capture; an unpinned edge is the document's first-held capture", async () => {
   const { w, cap, q, p, read } = setup();
-  const h = await w.select(["INFO-2026-0001"]);
+  const h = await w.select(["INFO-2026-0001-doc"]);
   w.cit.cite({ project: q, handle: h, ...ANN, role: "supports" });
-  const newer = { path: "snapshots/b.txt", text: "newer bytes of INFO-2026-0001", sha: sha("newer bytes of INFO-2026-0001") };
-  w.put("INFO-2026-0001", w.md("INFO-2026-0001"), { captures: [{ path: "snapshots/a.txt", text: "the bytes of INFO-2026-0001", sha: cap }, newer] });
+  const newer = { path: "snapshots/b.txt", text: "newer bytes of INFO-2026-0001-doc", sha: sha("newer bytes of INFO-2026-0001-doc") };
+  w.put("INFO-2026-0001-doc", w.md("INFO-2026-0001-doc"), { captures: [{ path: "snapshots/a.txt", text: "the bytes of INFO-2026-0001-doc", sha: cap }, newer] });
   /* The leg was pinned at the act (extent_capture), so a second capture of its document changes nothing. */
-  const firstHeld = w.content.captureFor("INFO-2026-0001");
+  const firstHeld = w.content.captureFor("INFO-2026-0001-doc");
   assert.equal(read({ captureSha: cap, viewer: V("ann") }).items.length, 1);
   assert.deepEqual(read({ captureSha: newer.sha, viewer: V("ann") }).items, []);
   /* A leg pinned by hand to the newer capture is that capture's, not the first one's. */
-  const q2 = w.inquiry("INQ-2026-0006");
-  w.revise(q2, w.md(q2).replace("references: []", `references:\n  - rel: cites\n    target: INFO-2026-0001\n    status: confirmed\n    note: ""\nbasis:\n  - target: INFO-2026-0001\n    role: supports\n    extent_capture: "${newer.sha}"`));
+  const q2 = w.inquiry("INQ-2026-0006-q");
+  w.revise(q2, w.md(q2).replace("references: []", `references:\n  - rel: cites\n    target: INFO-2026-0001-doc\n    status: confirmed\n    note: ""\nbasis:\n  - target: INFO-2026-0001-doc\n    role: supports\n    extent_capture: "${newer.sha}"`));
   assert.deepEqual(read({ captureSha: newer.sha, viewer: V("ann") }).items.map((i) => i.record), [q2]);
   assert.deepEqual(read({ captureSha: cap, viewer: V("ann") }).items.map((i) => i.record), [q]);
   /* A legacy case edge written with no extent_capture: the capture its document's citation addresses. */
-  w.revise(p, w.md(p).replace("references: []", "references:\n  - rel: cites\n    target: INFO-2026-0001\n    status: confirmed\n    note: \"\""));
+  w.revise(p, w.md(p).replace("references: []", "references:\n  - rel: cites\n    target: INFO-2026-0001-doc\n    status: confirmed\n    note: \"\""));
   const other = firstHeld === cap ? newer.sha : cap;
   assert.equal(read({ captureSha: firstHeld, viewer: V("ann") }).items.some((i) => i.record === p && i.kind === "cites"), true);
   assert.equal(read({ captureSha: other, viewer: V("ann") }).items.some((i) => i.record === p), false);
-  /* A content_id leg: the capture and the part are its content row's (`content.contentRow`). The row is the test's
-     (minting one needs a reading this world does not hold); every other content service is the real one. */
-  const cid = "c".repeat(64);
-  const q3 = w.inquiry("INQ-2026-0007");
-  const r = w.cit.cite({ project: q3, handle: h, ...ANN, role: "supports", extent: { content_id: cid } });
+  /* A content_id leg: the capture and the part are its content row's (`content.contentRow`), here a row of the newer
+     capture's third page. */
+  const m = w.content.mint({ bundleId: "INFO-2026-0001-doc", captureSha: newer.sha, extent: { kind: "pdf-page", page: 2 },
+                             mintedBy: "member:ann", at: "2026-09-28T00:00:00Z" });
+  assert.equal(m.ok, true, JSON.stringify(m).slice(0, 300));
+  const q3 = w.inquiry("INQ-2026-0007-q");
+  const r = w.cit.cite({ project: q3, handle: h, ...ANN, role: "supports", extent: { content_id: m.content_id } });
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
-  const content = new Proxy(w.content, { get(t, k) {
-    if (k === "contentRow") return (id) => (id === cid ? { content_id: cid, capture_sha: newer.sha, extent_kind: "pdf-page", extent: { page: 2 } } : null);
-    const v = t[k]; return typeof v === "function" ? v.bind(t) : v;
-  } });
-  const withRow = new Citation({ record: w.record, membership: w.membership, promotion: w.promotion, content,
-                                 retrieval: w.retrieval, provenance: w.prov });
-  const got = withRow.recordedBy({ captureSha: newer.sha, viewer: V("ann") }).items.find((i) => i.record === q3);
+  const got = read({ captureSha: newer.sha, viewer: V("ann") }).items.find((i) => i.record === q3);
   assert.deepEqual([got.kind, got.extent], ["leg", C({ kind: "pdf-page", page: 2 })]);
-  assert.equal(withRow.recordedBy({ captureSha: cap, viewer: V("ann") }).items.some((i) => i.record === q3), false);
-  /* Without the row, the leg is the document's unpinned citation: its first-held capture. */
-  assert.equal(read({ captureSha: firstHeld, viewer: V("ann") }).items.some((i) => i.record === q3), true);
+  assert.equal(read({ captureSha: cap, viewer: V("ann") }).items.some((i) => i.record === q3), false);
 });
 
 test("R13: sight is the citing object's — a citation inside a project the viewer may not see is neither answered nor counted, its truncated unchanged; a capture not held or not visible answers items: []", async () => {
   const { w, cap, p, q, read } = setup();
-  const h = await w.select(["INFO-2026-0001"]);
+  const h = await w.select(["INFO-2026-0001-doc"]);
   w.cit.cite({ project: p, handle: h, ...ANN });               // ann's project, hidden from vera
   w.cit.cite({ project: q, handle: h, ...ANN, role: "supports" });
   assert.deepEqual(read({ captureSha: cap, viewer: V("ann") }).items.map((i) => i.record).sort(), [p, q].sort());
@@ -174,7 +168,7 @@ test("R13: sight is the citing object's — a citation inside a project the view
 
 test("R13: refusals in events R49's form, writing nothing and adding no catalogue row — VIEWER_MISSING (absent or empty only), NO_SHA, EXTENT_MALFORMED", async () => {
   const { w, cap, q, read } = setup();
-  w.cit.cite({ project: q, handle: await w.select(["INFO-2026-0001"]), ...ANN, role: "supports" });
+  w.cit.cite({ project: q, handle: await w.select(["INFO-2026-0001-doc"]), ...ANN, role: "supports" });
   const snap = w.snapshot();
   for (const viewer of [undefined, null, "", "  "])
     assert.deepEqual(read({ captureSha: cap, viewer }), { ok: false, refused: "VIEWER_MISSING", code: "VIEWER_MISSING", reason: "VIEWER_MISSING",
@@ -198,9 +192,9 @@ test("R13: refusals in events R49's form, writing nothing and adding no catalogu
 
 test("R13: limit is clamped to 1–500 (100 by default), truncated by reading one past; the read writes nothing", async () => {
   const { w, cap, read } = setup();
-  const h = await w.select(["INFO-2026-0001"]);
+  const h = await w.select(["INFO-2026-0001-doc"]);
   const qs = [];
-  for (let i = 10; i < 13; i++) { const q = w.inquiry(`INQ-2026-00${i}`); qs.push(q); w.cit.cite({ project: q, handle: h, ...ANN, role: "supports" }); }
+  for (let i = 10; i < 13; i++) { const q = w.inquiry(`INQ-2026-00${i}-q`); qs.push(q); w.cit.cite({ project: q, handle: h, ...ANN, role: "supports" }); }
   assert.deepEqual([RECORDED_LIMIT_DEFAULT, RECORDED_LIMIT_MAX], [100, 500]);
   const snap = w.snapshot();
   for (const [limit, n, t] of [[1, 1, true], [2, 2, true], [3, 3, false], [0, 1, true], [-4, 1, true], [null, 3, false], ["x", 3, false], [10_000, 3, false]]) {
@@ -210,7 +204,7 @@ test("R13: limit is clamped to 1–500 (100 by default), truncated by reading on
   assert.deepEqual(w.snapshot(), snap, "nothing written");
 });
 
-test("R13: registered once at start, through retrieval R76 — a second registration is refused LISTENER_DECLARED; a Citation made directly registers nothing; never throws", () => {
+test("R13: registered once at start, through retrieval R76 — a second registration is refused LISTENER_DECLARED; a Citation made directly registers nothing (and without inquiry's projection refuses); never throws", () => {
   const { w, cap } = setup();
   const again = w.retrieval.registerRecordedBy("citation", () => ({ ok: true }));
   assert.equal(again.ok, false);
@@ -218,13 +212,43 @@ test("R13: registered once at start, through retrieval R76 — a second registra
   const bare = new Citation({ record: w.record, membership: w.membership, promotion: w.promotion, content: w.content,
                               retrieval: w.retrieval, provenance: w.prov });
   assert.deepEqual(w.retrieval.recordedReads().filter((x) => x.registered).map((x) => x.module), ["citation"]);
-  assert.equal(bare.recordedBy({ captureSha: cap, viewer: V("ann") }).ok, true);
+  /* Without inquiry's leg projection the read cannot be made, and says so rather than answering no items. */
+  assert.deepEqual([bare.recordedBy({ captureSha: cap, viewer: V("ann") }).ok, bare.recordedBy({ captureSha: cap, viewer: V("ann") }).reason],
+                   [false, "INQUIRY_UNAVAILABLE"]);
   /* A broken store: a refusal naming the failure, never a throw. */
-  const broken = world();
-  const c = broken.info("INFO-2026-0001");
+  const broken = world({ inquiry: true });
+  const c = broken.info("INFO-2026-0001-doc");
   broken.st.db.exec("DROP TABLE bundles");
   let r;
   assert.doesNotThrow(() => { r = broken.cit.recordedBy({ captureSha: c, viewer: V("ann") }); });
   assert.equal(r.ok === false || (r.ok === true && r.items.length === 0), true);
   assert.doesNotThrow(() => broken.cit.recordedBy(null));
+});
+
+test("R13: the same answer whether the projects are read in one statement over record-core's bundles contract or bundle by bundle", async () => {
+  const { w, cap, p, q, read } = setup();
+  const h = await w.select(["INFO-2026-0001-doc"]);
+  w.cit.cite({ project: p, handle: h, ...ANN });
+  w.cit.cite({ project: q, handle: h, ...ANN, role: "supports" });
+  w.cit.sever({ project: w.project("Second"), handle: h, ...ANN, reason: "x" });   // NOT_CITED: writes nothing (a control)
+  const viaRows = new Citation({ record: w.record, membership: w.membership, promotion: w.promotion, content: w.content,
+                                 retrieval: w.retrieval, provenance: w.prov, inquiry: w.inq });
+  assert.equal(viaRows.sql, null);
+  assert.notEqual(w.cit.sql, null);
+  const a = read({ captureSha: cap, viewer: V("ann") });
+  assert.deepEqual(a.items.map((i) => i.record).sort(), [p, q].sort());
+  assert.deepEqual(viaRows.recordedBy({ captureSha: cap, viewer: V("ann") }), a);
+  assert.deepEqual(viaRows.recordedBy({ captureSha: cap, viewer: V("vera") }), read({ captureSha: cap, viewer: V("vera") }));
+});
+
+test("R13: an unpinned citation is answered for the capture its document's citation addresses at the read, so a document captured after it was cited is read for its new capture", async () => {
+  const { w, cap, p, read } = setup();
+  w.info("INFO-2026-0009-doc", { captured: false });
+  w.revise(p, w.md(p).replace("references: []", "references:\n  - rel: cites\n    target: INFO-2026-0009-doc\n    status: confirmed\n    note: \"\""));
+  /* A read of another capture parses the case's bytes as they stand (its edge, then pinned to nothing). */
+  assert.deepEqual(read({ captureSha: cap, viewer: V("ann") }).items, []);
+  const c = { path: "snapshots/late.txt", text: "captured late", sha: sha("captured late") };
+  w.put("INFO-2026-0009-doc", w.md("INFO-2026-0009-doc"), { captures: [c] });
+  assert.equal(w.content.captureFor("INFO-2026-0009-doc"), c.sha);
+  assert.deepEqual(read({ captureSha: c.sha, viewer: V("ann") }).items.map((i) => [i.record, i.kind]), [[p, "cites"]]);
 });

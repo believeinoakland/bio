@@ -28,10 +28,13 @@
  *                unless a test passes its own.
  *   provenance   `{homeOf}` (provenance R4): the document a found match's capture is held in (R1, T35); by default
  *                `provenanceOf(host)`.
- *   inquiry      `{earned, checkLegExtentGrammar, BASIS_ROLES}` (inquiry R13, R5, R4): the earned registry that fills a
+ *   inquiry      `{earned, checkLegExtentGrammar, BASIS_ROLES, restingOn}` (inquiry R13, R5, R4, R12): the earned registry that fills a
  *                leg's grade, the one leg-part grammar, and the role vocabulary; by default `inquiryOf(host)`'s
  *                registry with the grammar and roles inquiry exports. One lacking any of the three refuses citing onto
- *                a question `INQUIRY_UNAVAILABLE` (never written ungraded by default).
+ *                a question `INQUIRY_UNAVAILABLE` (never written ungraded by default); `restingOn`, the leg projection
+ *                read back, is how R13 finds a capture's legs.
+ *   storage      the Durable Object's storage (default `host.storage`): R13 reads record-core's `bundles` contract (its R37)
+ *                through its `sql` in one statement.
  *   now          the module's clock, milliseconds since the epoch (default: the wall clock). */
 
 import { normalizeType, OBJECT_TYPES } from "../record-grammar/types.mjs";
@@ -113,8 +116,10 @@ export class Citation {
      row (R6). */
   #recorded = new Map();
 
-  constructor({ record, membership, promotion, content, retrieval, provenance = null, inquiry = null, now } = {}) {
+  constructor({ record, membership, promotion, content, retrieval, provenance = null, inquiry = null, storage = null, now } = {}) {
     this.record = record;
+    /* R13: the store, for one read of record-core's `bundles` contract (its R37); absent, R13 reads it bundle by bundle. */
+    this.sql = storage && storage.sql ? storage.sql : null;
     this.provenance = provenance;
     this.membership = membership;
     this.promotion = promotion;
@@ -819,9 +824,11 @@ export class Citation {
 
 const instances = new WeakMap();
 
-/* inquiry's three services this module builds against (inquiry R13, R5, R4), from its instance and its exports. */
+/* inquiry's services this module builds against (inquiry R13, R5, R4, and R12's leg projection read back for R13,
+   `restingOn`; K2132), from its instance and its exports. */
 export function inquiryServices(k) {
-  return { earned: (subject, targets, contentIds) => k.earned(subject, targets, contentIds), checkLegExtentGrammar, BASIS_ROLES };
+  return { earned: (subject, targets, contentIds) => k.earned(subject, targets, contentIds), checkLegExtentGrammar, BASIS_ROLES,
+           restingOn: (targetId) => k.restingOn(targetId) };
 }
 
 export function citationOf(host, deps) {
@@ -835,7 +842,7 @@ export function citationOf(host, deps) {
     const retrieval = d.retrieval || retrievalOf(host, { record, membership, promotion });
     const inquiry = d.inquiry || inquiryServices(inquiryOf(host, { record, membership, promotion, content }));
     const provenance = d.provenance || provenanceOf(host, { record, membership, promotion });
-    c = new Citation({ ...d, record, membership, promotion, content, retrieval, provenance, inquiry });
+    c = new Citation({ ...d, storage: d.storage || host.storage, record, membership, promotion, content, retrieval, provenance, inquiry });
     instances.set(host, c);
     /* R13 (retrieval R76): the read registered once, at start, against the one retrieval instance `findIn` runs on (the
        plane's boot reaches this factory before the first request). A stand-in that offers no registration is left alone. */
