@@ -115,3 +115,35 @@ test("R35 a hub is judged per kind with connection-grammar's hubBoundOf (T36-14,
   const only = w.ev.neighbours({ node: attendee, kinds: ["event_voted"], at: AT, viewer: MEMBER, scope: null });
   assert.deepEqual([only.hub, only.items.length], [undefined, 1]);
 });
+
+test("R35 a page costs its slice (T36-14, K2119): a member with 4,000 event_voted connections, the vote kind's own bound, is answered in four pages of the fan-out, together well within connection-grammar's time budget; one more vote makes the member a hub", () => {
+  const w = world();
+  const voter = w.entity("Vic Voter");
+  const s = w.capture("term");
+  const f = w.ev.recordDatedFact({ captureSha: s, extent: doc, kind: "meeting", value: "2026-03-10", method: "m", by: MEMBER }).dated_fact.dated_fact_id;
+  const value = w.ev.view().vocabulary.vote_values[0].value;
+  const N = hubBoundOf("event_voted");
+  assert.equal(N, 4000);
+  const vote = () => w.ev.createEvent({ kind: "vote", attestations: [{ datedFactId: f }], participants: [{ entityId: voter, role: "voted", voteValue: value, attestation: 0 }], by: MEMBER });
+  for (let i = 0; i < N; i++) vote();
+  const t0 = Date.now(), ids = [];
+  let page = 0, pages = 0;
+  do {
+    const r = w.ev.neighbours({ node: voter, kinds: ["event_voted"], at: AT, viewer: MEMBER, scope: null, page });
+    assert.equal(r.hub, undefined);
+    assert.ok(r.items.length <= BOUNDS.fanout);
+    ids.push(...r.items.map((i) => i.id));
+    pages++;
+    page = r.next;
+  } while (page !== undefined);
+  const spent = Date.now() - t0;
+  assert.equal(pages, N / BOUNDS.fanout);
+  assert.equal(new Set(ids).size, N, "the pages joined are the whole set");
+  assert.ok(spent < BOUNDS.time_budget_ms / 2, `four pages took ${spent} ms; the walk's whole budget is ${BOUNDS.time_budget_ms} ms`);
+  /* a kind not asked costs nothing of the vote set */
+  const t1 = Date.now();
+  assert.deepEqual(w.ev.neighbours({ node: voter, kinds: ["event_present"], at: AT, viewer: MEMBER, scope: null }).items, []);
+  assert.ok(Date.now() - t1 < 200, "a kind not asked is filtered in the store");
+  vote();
+  assert.equal(w.ev.neighbours({ node: voter, at: AT, viewer: MEMBER, scope: null }).hub.set_size, N + 1);
+});

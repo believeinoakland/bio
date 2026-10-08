@@ -171,6 +171,14 @@ test("R49 refuses in order VIEWER_MISSING (an absent or empty viewer only), NO_S
   const r = (x) => w.ev.recordedBy({ captureSha: s, viewer: MEMBER, ...x });
   assert.equal(r({ viewer: undefined, captureSha: "", extent: "x" }).reason, "VIEWER_MISSING");
   assert.equal(r({ viewer: null }).reason, "VIEWER_MISSING");
+  /* K2116: the shape's two refusals are {ok: false, refused, code, reason, why}, with no catalogue row */
+  for (const x of [r({ viewer: undefined }), r({ extent: { kind: "nonsense" } })]) {
+    assert.deepEqual(Object.keys(x).sort(), ["code", "ok", "reason", "refused", "why"]);
+    assert.equal(x.ok, false);
+    assert.equal(x.refused, x.code);
+    assert.equal(x.reason, x.code);
+    assert.match(x.why, /\S/);
+  }
   assert.equal(r({ viewer: "" }).reason, "VIEWER_MISSING");
   assert.equal(r({ captureSha: "", extent: "x" }).reason, "NO_SHA");
   assert.equal(r({ captureSha: 7 }).reason, "NO_SHA");

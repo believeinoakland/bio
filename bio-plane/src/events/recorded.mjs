@@ -14,6 +14,8 @@ const RELATIONS = ["same", "narrower", "wider"];
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 const said = (v) => typeof v === "string" && v.trim() !== "";
 const refuse = (reason, detail, extra = {}) => ({ ok: false, reason, detail, ...extra });
+/* K2116 (K231): the shape's own two refusals carry no catalogue row in any module reading in this shape. */
+const refused = (code, why) => ({ ok: false, refused: code, code, reason: code, why });
 const json = (s) => { try { return typeof s === "string" ? JSON.parse(s) : s; } catch { return null; } };
 const clamp = (limit) => Math.max(1, Math.min(Math.trunc(Number(limit)) || RECORDED_LIMIT_DEFAULT, RECORDED_LIMIT_MAX));
 const known = (e) => isObj(e) && typeof e.kind === "string" && Object.prototype.hasOwnProperty.call(CONTENT_EXTENT_KINDS, e.kind);
@@ -30,12 +32,12 @@ export function recordedBy(k, args) {
   try {
     const a = isObj(args) ? args : {};
     if (a.viewer === undefined || a.viewer === null || a.viewer === "")
-      return refuse("VIEWER_MISSING", "a read names the member reading; an absent viewer is neither an administrator nor the public");
+      return refused("VIEWER_MISSING", "a read names the member reading; an absent viewer is neither an administrator nor the public");
     if (!said(a.captureSha)) return noSha("who recorded something is read for one captured document, named by its capture sha256");
     let asked = null;
     if (a.extent !== undefined && a.extent !== null) {
       if (!known(a.extent))
-        return refuse("EXTENT_MALFORMED", `an extent is an object of one of the kinds ${Object.keys(CONTENT_EXTENT_KINDS).join(", ")}`);
+        return refused("EXTENT_MALFORMED", `an extent is an object of one of the kinds ${Object.keys(CONTENT_EXTENT_KINDS).join(", ")}`);
       asked = JSON.parse(canonicalExtent(a.extent));
     }
     const sha = a.captureSha.trim().toLowerCase();
