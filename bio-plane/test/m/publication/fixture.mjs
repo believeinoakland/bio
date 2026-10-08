@@ -197,8 +197,10 @@ export function world({ group = "test-group", workerd = false, contradiction = n
       if (!res.ok) throw new Error(`fixture project refused: ${JSON.stringify(res).slice(0, 400)}`);
       return res.bundleId;
     },
-    /** A document (information bundle) with one capture of its own. */
-    doc(id) {
+    /** A document (information bundle) with one capture of its own, fetched by this copy: a `direct` receipt names it
+     *  (provenance R62), so case-carriage carries it whole as captured (its R13, R16; T39). `fetched: false` leaves it
+     *  with no receipt, a member document. */
+    doc(id, { fetched = true } = {}) {
       const text = `the text of ${id}`, path = `snapshots/${id}.txt`;
       const res = promotion.promote({ bundleId: id, base: null, snapKey: `k${++n}`, author: V("alice"),
         files: [{ path: "bundle.md", text: infoMd(id) }, { path, text },
@@ -206,6 +208,10 @@ export function world({ group = "test-group", workerd = false, contradiction = n
         meta: { object_type: "information" },
         register: [{ sha256: sha(text), path, encoding: "utf8", bytes: Buffer.byteLength(text) }] });
       if (!res.ok) throw new Error(`fixture doc refused: ${JSON.stringify(res).slice(0, 400)}`);
+      if (fetched) {
+        const rc = prov.recordReceipt({ addressNorm: `example.org/${id}`, captureSha: sha(text), retrieved: NOW, via: "direct" });
+        if (!rc.recorded) throw new Error(`fixture doc receipt refused: ${JSON.stringify(rc).slice(0, 400)}`);
+      }
       return res;
     },
     /** An inquiry through promotion (so inquiry's check and projection run); `legs` as inquiry's grammar (a leg's `date`
