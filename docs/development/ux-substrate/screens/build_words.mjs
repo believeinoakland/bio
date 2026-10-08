@@ -100,7 +100,8 @@ add('draft.writing-help.act', 'Help me write this', false, 'mock-kit.js writeHel
 //     who can see something)
 const scr = R('mock-screens.js');
 add('photo.reminder', must(scr, 'mock-screens.js', 'Frame what you are checking, and leave out people\\\'s faces and number plates where you can. If a published case relies on this photo, anyone in it who is not part of a finding, and any number plate, is obscured in the public copy; the original stays inside your group.').replace(/\\'/g, "'"), true, 'mock-screens.js PHOTO_REMINDER');
-add('photo.obscured.label', must(scr, 'mock-screens.js', 'Faces and plates obscured for publication; the group holds the original'), true, 'mock-screens.js ceremony', 'the label the published copy carries');
+add('photo.obscured.label', must(scr, 'mock-screens.js', 'Faces, plates and camera details removed for publication; the group holds the original'), true, 'mock-screens.js ceremony', 'the label a published copy with marked areas carries');
+add('photo.published.label', must(scr, 'mock-screens.js', 'Camera details removed for publication; the group holds the original'), true, 'mock-screens.js ceremony', 'the label every other published photo carries (K2248)');
 add('photo.step.gate', must(scr, 'mock-screens.js', 'Every photo the case relies on must be checked before signing: marked, or “nothing to obscure”. A mark that covers the wrong thing is withdrawn with a reason, never erased. Text read from a photo, such as a number plate, is never published with it; a passage you quote in the case still is.'), true, 'mock-screens.js ceremony');
 add('photo.state.nothing', must(scr, 'mock-screens.js', 'nothing to obscure'), true, 'mock-screens.js ceremony');
 add('photo.refused.format', 'This photo\'s format can\'t be obscured: {photo}. Capture it again as an ordinary photo, or stop relying on it.', true, 'DEC-183', 'PHOTO_NOT_COVERABLE');

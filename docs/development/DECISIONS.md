@@ -2807,6 +2807,7 @@ reasoning recorded in: this entry; `screens/build_words.mjs`; `screens/words.jso
 owed: (BOB, N669, N670) the translation layer's word set from `words.json`, its keys and protected marks; screen sentences keyed as (5) when each screen is built; the one tip that carried an internal code ("(DEC-157)" on the Protected tag) no longer does.
 
 ### DEC-180 · answered
+amended: 2026-10-08 · DEC-185 (beneath Bob's K2248, camera details never published): the obscured copy's label reads "Faces, plates and camera details removed for publication; the group holds the original"; every other published photo is labelled "Camera details removed for publication; the group holds the original".
 raised: 2026-10-08 · the UX design session with Bob on his secondary account (session_01SCHPX2mpSDpBNA9wprUm5H; the development process runs on the same account since K1891) (BOB's B91, second question: what a group is told about photographing people at a site who are not its subject; question S17)
 for: bob
 question: What happens to people, and number plates, that appear in a photo but are not what it is about, inside the group and in a published case.
@@ -2875,3 +2876,17 @@ response: **Decided by the design session, 2026-10-08, on Bob's comment.** (1) Y
 decided: 2026-10-08 · the design session (P17)
 reasoning recorded in: this entry; `screens/mock-screens.js` (joining, members, your account); `screens/mock-refs.js`; `screens/library.src.py` (Invite a member, step 1); `screens/registry.src.py`; `journeys.html` (journeys 3 and the Invite a member card); `screens/words.json` (`handle.*`); `layouts.html`.
 owed: (BOB) a read `handlecheck({invite, handle})` answering free, taken or not allowed (never who), refused without a live invitation and counted against R38-style abuse limits; the field's three messages, held for translation.
+
+### DEC-185 · answered
+raised: 2026-10-08 · the UX design session with Bob on his secondary account (session_01SCHPX2mpSDpBNA9wprUm5H; the development process runs on the same account since K1891) (BOB's B108–B110: Bob ruled, K2248, "for photo metadata: the group keeps it, but published photos do not"; "any screen words for it are yours")
+for: bob-session
+question: What a published photo's label says, and what the Photos step tells the member, now that every published photo goes out without its camera details.
+why it is Bob's: it is not: the words beneath his ruling K2248 and DEC-180; decided by the design session (P17) and reported.
+provisional: DEC-180's label for an obscured copy only; nothing for an unmarked photo.
+alternative: one note for all photos on the published case instead of a label on each.
+recommendation: as decided below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-08.** (1) Every photo a published case carries is labelled. An unmarked photo: "Camera details removed for publication; the group holds the original." A photo with obscured areas: "Faces, plates and camera details removed for publication; the group holds the original." That replaces DEC-180's "Faces and plates obscured for publication; the group holds the original", under the same key `photo.obscured.label`. (2) The ceremony's Photos step says that every photo a published case carries goes out without its camera details (where and when it was taken, and on which device), and the group keeps the original.
+decided: 2026-10-08 · the design session (P17), beneath Bob's K2248
+reasoning recorded in: this entry; `screens/mock-screens.js` (the Photos step); `screens/question.html` (S17's record); `screens/words.json` (`photo.obscured.label`, `photo.published.label`).
+owed: (BOB, N779 in T38) the two labels on published photos, read by key; the Photos step's sentence.

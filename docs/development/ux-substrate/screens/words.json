@@ -7,7 +7,7 @@
   "mark": 55,
   "state": 4,
   "draft": 4,
-  "photo": 7,
+  "photo": 8,
   "handle": 3,
   "rail": 14,
   "tab": 2,
@@ -17,8 +17,8 @@
   "act": 461,
   "column": 33,
   "wizard": 239,
-  "total": 935,
-  "protected": 354
+  "total": 936,
+  "protected": 355
  },
  "words": [
   {
@@ -475,10 +475,17 @@
   },
   {
    "key": "photo.obscured.label",
-   "en": "Faces and plates obscured for publication; the group holds the original",
+   "en": "Faces, plates and camera details removed for publication; the group holds the original",
    "protected": true,
    "source": "mock-screens.js ceremony",
-   "note": "the label the published copy carries"
+   "note": "the label a published copy with marked areas carries"
+  },
+  {
+   "key": "photo.published.label",
+   "en": "Camera details removed for publication; the group holds the original",
+   "protected": true,
+   "source": "mock-screens.js ceremony",
+   "note": "the label every other published photo carries (K2248)"
   },
   {
    "key": "photo.step.gate",
