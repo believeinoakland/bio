@@ -1,6 +1,6 @@
 # review — requirements
 
-**Status** · In force: approved by Bob 2026-09-26 (K102), its place in layer 8 after `case-authoring` by K102; C-87.12 retired (K408). Last changed T35 (T35-60: Uses only, no requirement; K1643); every requirement met.
+**Status** · In force: approved by Bob 2026-09-26 (K102), its place in layer 8 after `case-authoring` by K102; C-87.12 retired (K408). Last changed T35 (T35-60: Uses only, no requirement; K1643) and T37 (T37-22: R29 new, Terms; N761; K2129, K2175); R29 not yet met (T37), every other requirement met.
 
 **Size (P6).** About 1,040 lines move (about 580 without comment-only lines): `store.mjs` 845, `bio-checks.mjs` 126, `schema.mjs` 70. With the statement acknowledgements (store.mjs 11048–11805, C-82; about 830 more), which this draft places with `publication` (map §5.2), it would be about 1,870. Under 4,000 either way.
 
@@ -12,7 +12,7 @@ The review copy (Publication §6A): a draft of a case a project's editors prepar
 
 ### Provides
 
-Terms. A **draft** is `{draft_id, project_id, case_id, params, created_by, created_at, updated_by, updated_at, statement_by}`, where `params` holds only the fields `op=publish` takes (`targets`, `target`, `caseId`, `newCase`, `scope`, `statement`, `excluded`, `subjectPosition`, `subjectJustification`, `biasAcknowledgement`, `roles`). A **grant** is `{grant_id, draft_id, case_id, edition, recipient, secret_sha, issued_by, issued_at, revoked_by, revoked_at}`; the recipient is a label, never a member. A **secret fingerprint** is the SHA-256 the control plane took of a secret it generated; nothing here receives a secret's value. **The dead answer** is `NO_REVIEW_COPY` (C-87.1), built from no argument. Every refusal names `reason` and `code` and carries its `check` and `translation`. `author`, `viewer`, `secretSha` and `bySecret` are the control plane's stamps.
+Terms. A **draft** is `{draft_id, project_id, case_id, params, created_by, created_at, updated_by, updated_at, statement_by}`, where `params` holds only the fields `op=publish` takes (`targets`, `target`, `caseId`, `newCase`, `scope`, `statement`, `excluded`, `subjectPosition`, `subjectJustification`, `biasAcknowledgement`, `roles`). A **grant** is `{grant_id, draft_id, case_id, edition, recipient, secret_sha, issued_by, issued_at, revoked_by, revoked_at}`; the recipient is a label, never a member. A **secret fingerprint** is the SHA-256 the control plane took of a secret it generated; nothing here receives a secret's value. **The dead answer** is `NO_REVIEW_COPY` (C-87.1), built from no argument. Every refusal names `reason` and `code` and carries its `check` and `translation`. `author`, `viewer`, `secretSha` and `bySecret` are the control plane's stamps; from T37 `secretSha` arrives in the internal request's body, the rest in its query (R29).
 
 **act({act, author, …}) → answer or refusal** (`op=casedraft`, `op=reviewgrant`, `op=reviewrevoke`)
 - **R1** An empty or machine `author` is `MACHINE_CANNOT_REVIEW` (C-32.16) before any act is chosen; an act other than `draft`, `grant`, `revoke` is `REVIEW_UNKNOWN_ACT` (C-87.2).
@@ -50,6 +50,8 @@ Terms. A **draft** is `{draft_id, project_id, case_id, params, created_by, creat
 **list({project, viewer, limit})** (`op=casedrafts`) Writes nothing.
 - **R19** Fenced exactly as R9: a project that does not exist or a viewer without standing receives the dead answer. `limit` as R14; the answer carries `drafts` (each with its case identity per R5, creators, editors, `statement_by` and its read), `count`, `total`, `limit`, `truncated`.
 
+- **R29** (T37; N761; K2129, K2175) This module's ops map takes `secretSha` (`reviewgrant`'s new grant fingerprint; the grant doors of `reviewcopy` and `reviewcomment`) only from the internal request's body, where the control plane sets it after removing any a caller sent (`control-plane`'s N761 requirement), never from its query: a `secretSha` in the query is never read, so R6 refuses a grant with none (`REVIEW_NO_SECRET`) and R10 answers a copy or comment without one with the dead answer, byte-identical. `bySecret`, `author` and `viewer` stay query stamps. *(not yet met: T37)*
+
 - **R26** `REVIEW_LIST_MAX`, `statedEdition(ident, newCase)` and `caseIdentitySentence(caseId, edition, newCase)` are exported (pure; `case-authoring`, earlier in the order, keeps its own copy of the bound, `DRAFTS_READ_MAX`, which this module's test asserts equal, K57, K242), and the table `case_drafts` (`draft_id`, `case_id`, `project_id`, `params`, `statement_by`, `created_at`) is a stated read contract on record-core R37's terms, read by `case-authoring`'s acknowledgements under `REVIEW_LIST_MAX`; every write stays this module's (K240).
 - **R27** When no free opaque id can be minted (`record-core`'s `mintOpaqueId` answers none), `draft`'s new draft and `grant` answer `MINT_EXHAUSTED` through `record-core.mintExhausted` (its R62, prefix `DRAFT` or `RVG`, its detail naming a draft id or a grant id), and write nothing. C-87.12 is retired, its number not reused; the one row is record-core's C-59.6 (N322, K275).
 
@@ -82,6 +84,7 @@ Terms. A **draft** is `{draft_id, project_id, case_id, params, created_by, creat
 - Bob's DEC-31 (the review copy) and DEC-72 (publishing is the owner's).
 - `docs/architecture/BIO_Membership_Architecture_v2.md` §4 (administrators direct nothing), §7 (sight).
 - `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §3 rules 4 and 10.
+- F1's rule for digests (K1874; N761, K2129, K2175): R29.
 
 ### Suggestions
 
