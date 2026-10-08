@@ -260,8 +260,10 @@ arm({
      which is exactly what that rule is for. A control arm keyed to a source line
      is a control arm that goes stale when the line moves, and the only defence
      is a harness that refuses to score an arm it never armed. */
-  find: `    res = await env.PLANE.fetch(url, body == null ? undefined : {
-      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body),
+  /* RE-ANCHORED T37 (AGENT-WORKER #13): R60 (T35) put the credential in the header, so the call became
+     `env.PLANE.fetch(url, body == null ? { headers } : {…})` and this arm had matched zero times since. */
+  find: `    res = await env.PLANE.fetch(url, body == null ? { headers } : {
+      method: "POST", headers: { ...headers, "content-type": "application/json" }, body: JSON.stringify(body),
     });`,
   replace: `    res = await fetch("https://bio-plane.20b533579290b9b93168345edd3b7f72.workers.dev/?op=whoami");`,
   run: () => {

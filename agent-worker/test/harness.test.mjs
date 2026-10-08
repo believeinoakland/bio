@@ -1647,7 +1647,6 @@ console.log("\n--- FT4 · FL-12: an internet-level target files a request naming
 console.log("\n--- R · REC-100: the step log meets the REAL plane's refusal (IC-130) ---");
 {
   const PLANE_IDX_PATH = fileURLToPath(new URL("../../bio-plane/src/plane/index.mjs", import.meta.url));
-  const MEM = "mem-rec100-aw";
   const RB = "INQ-2026-0918-rec100-aw";
   const PROMOTE = {
     bundleId: RB, base: null, snapKey: "20260918T090000Z_inbox", author: "ruth",
@@ -1691,8 +1690,9 @@ export default {
     if (url.searchParams.get("op") !== "airuntick") return env.MOCK.fetch(req);
     const body = await req.json();
     const real = async (op, tok, b) => {
-      const r = await env.REAL.fetch("http://real/api/?op=" + op + (tok ? "&token=" + tok : ""),
-        b === undefined ? undefined : { method: "POST", body: JSON.stringify(b) });
+      const headers = tok ? { authorization: "Bearer " + tok } : {};
+      const r = await env.REAL.fetch("http://real/api/?op=" + op,
+        b === undefined ? { headers } : { method: "POST", headers, body: JSON.stringify(b) });
       const j = await r.json();
       return j && typeof j === "object" && "result" in j ? j.result : j;
     };
@@ -1705,8 +1705,8 @@ export default {
       globalThis.__connected = await real("accountreferenceset", globalThis.__session, ${JSON.stringify(CONNECT)});
     }
     const T = globalThis.__session;
-    const post = (op, b) => env.REAL.fetch("http://real/api/?op=" + op + "&token=" + T,
-      { method: "POST", body: JSON.stringify(b) });
+    const post = (op, b) => env.REAL.fetch("http://real/api/?op=" + op,
+      { method: "POST", headers: { authorization: "Bearer " + T }, body: JSON.stringify(b) });
     if (!globalThis.__opened) {
       /* CORRECTED 2026-09-23 by REC-171 (INVESTIGATIVE-SESSION.md §11 item 5, "Rule 2's reach", BOB #30): the MEMBER
          deploy token's creation of the context question is stamped surfaced_by: agent, so it names a running run the
@@ -1737,7 +1737,7 @@ export default {
         compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
         durableObjects: { STORE: { className: "Store", useSQLite: true } },
         r2Buckets: ["CAPTURES", "PUBLISHED"],
-        bindings: { ADMIN_TOKEN: "adm-rec100-aw", MEMBER_TOKEN: MEM, PROBE_TOKEN: "prb-rec100-aw",
+        bindings: { ADMIN_TOKEN: "adm-rec100-aw", PROBE_TOKEN: "prb-rec100-aw",
                     VERSION: "test", TASK_DRAIN_DELAY_MS: "600000",
                     /* N585 (credentials R23): the seal secret Ruth's account reference is kept under */
                     ACCOUNT_SEAL_SECRET: "rec100-aw-seal-secret" } },
@@ -1745,7 +1745,13 @@ export default {
   });
   const realLog = async (mf) => {
     const w = await mf.getWorker("real-plane");
-    const j = await (await w.fetch(`http://real/api/?op=airunlog&token=${MEM}&run=${base.run_id}&limit=500`)).json();
+    /* Read as Ruth, signed in with her own password (the front enrolled her): the shared member token is retired
+       (C-38.11), and a credential travels in the Authorization header only (C-38.10). */
+    const login = await (await w.fetch("http://real/api/?op=login", { method: "POST",
+      body: JSON.stringify({ role: "member:" + RUTH_ID, password: RUTH_ID + "-passphrase-1" }) })).json();
+    const session = (login && typeof login === "object" && "result" in login ? login.result : login)?.token;
+    const j = await (await w.fetch(`http://real/api/?op=airunlog&run=${base.run_id}&limit=500`,
+      { headers: { authorization: `Bearer ${session}` } })).json();
     return (j && typeof j === "object" && "result" in j ? j.result : j) || {};
   };
 
