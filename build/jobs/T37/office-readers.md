@@ -12,7 +12,7 @@
 
 **Deferred** · none.
 
-**Found in other modules** (in REPORT J2):
+**Found in other modules** (in REPORT J1):
 - extraction: `bio-plane/test/m/extraction/r70.test.mjs`:47 pins a `.docx` cell's keys to the six R30 keys, so it fails (1 of 132) once office-readers emits `paras`. It passes on `tranche/T37`. T37 has no extraction entry. The test asserts "field for field as office-readers emitted them", so the fix is to add `paras` to that key list (and line 110's `cell` helper, if its readings should carry it).
 - reading-pipeline: `bio-plane/test/m/reading-pipeline/emitted.test.mjs`:129, the `dc` helper of the R28 test "a .docx reading carries cells … exactly as the real docx entry emits them", hand-writes the cell without `paras`, so it fails (1 of 92). It passes on `tranche/T37`. T37-9 (reading-pipeline R28, carrying `paras`) is the entry that changes it.
 - No generated artifact is made stale by this change: `docx.mjs` goes into the plane bundle, which BOB regenerates at the layer close (manifest §14).
