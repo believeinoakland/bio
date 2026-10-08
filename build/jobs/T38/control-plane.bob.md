@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START by `build/plan/reading-sets
 Merge order in L11: `modules.json` order, plane last (K2300); a job that uses a same-layer module merges the tranche into its branch when BOB tells it that module is merged (CHANGE).
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there); only the items named here are yours.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · CHANGE
+
+From ADMISSION #7 J1 (K2326), an improvement in your module: `index.mjs`:654 (`windowed.source ?? await sourceOf(req, env)`) asks the store a second time on a store fault since T38-24 (`sourceOf` with the key unbound asks `doorwindow` itself). For a public op the window's source is already the fingerprint: drop the fallback there if it is small and safe, with a test; else REPORT it for `next.md`. admission (T38-24) is merged into `tranche/T38`: merge the tranche into your branch.
