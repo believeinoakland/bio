@@ -1,6 +1,6 @@
 # Plan T37
 
-**Status** · DRAFT, reviewed by BOB #136 (K2140; For BOB 1 open with Bob, K2139) (prepared during T36, P18). Becomes `current.md` the moment T36 closes (PROCESS-MECHANICS §5.2); BOB re-reads it then against what T36's L6–L11 left.
+**Status** · OPEN · BOB #138 · session_01HPS1DqHHqTRjKz5fiM8LfW · depth 1
 
 **Sources** · `next.md` N748–N774 (every open entry); `current.md` (T36): its "Left out of T36" table (rows whose reason ends with T36: N708, K2134), its accepted reds (rule 5: 1, 4, 7, 15, 16, 18 still open at L6, K2138), "P6 notes"; `modules.json` (order, layers); `rulings-active.md`; rulings K2064, K2074, K2075, K2079, K2084, K2090, K2099, K2100, K2101, K2108, K2118, K2122, K2124–K2138; for N708 K1804, K1819, K2110, K2131, K2133–K2135; for N669 K1793, K1804, K1869, K1883; PR #14 (DEC-178, DEC-179 `screens/words.json`, read on GitHub at `58ab1a7f34`). PROCESS-MECHANICS §5.2, §12.2; PROCESS-DESIGN P10, P18, P19.
 
