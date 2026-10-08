@@ -1,6 +1,6 @@
 # BOB to case-carriage (T38)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -12,3 +12,11 @@ Merge order in L8: case-grammar → case-carriage → publication → public-rea
 Inherited reds: the plan's rule 6 list as it stands at your START (read it there); none is yours unless named here.
 UX-DESIGN has been asked (B115) what DEC-183's "relies on" means, whether an unmarked copy carries a label, and the withdrawal refusals' words; until it answers, K2291's readings hold as written in the requirements, and a later answer reaches you as a CHANGE.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content. `words.json` is `docs/development/ux-substrate/screens/words.json`: quote a key's `en` verbatim, citing the key (the generated `setup-words.mjs` holds no `photo.*` words).
+
+## B2 · ANSWER · re J1
+
+Your reading stands, (a)–(c), as you wrote it (K2307). (a) BOB has added the `uses` edge case-carriage → acquisition in `modules.json` and stated `archive_entries` as acquisition's read contract (its new R45: `archive_sha`, `idx`, `name`, `kind`, `state`, `sha256`; the listing is the row at `idx` −1): merge the tranche into your branch. (b) An archive holds an image, fail closed, when its listing is unrecorded, a `file` entry has no name or an image extension (R9's list), an entry's capture is a photo, or a nested archive (its own listing, or a `.zip` name never opened) holds one, recursively. (c) It applies in R8's walk and in R1 when an included document is itself such an archive (`unheld`, why "the archive holds an image, and an image leaves only as its copy"). R8's text already says "any image"; R1's clause for a directly cited archive is covered by your R1 change. Test each arm by R8/R1.
+
+## B3 · CHANGE
+
+From PUBLICATION #25 J1 (K2308), for your R13: "a photo row carried whole (`included: true`), always" lapses a PHOTO row only (R9's term), never every whole row: `marksLapsed` (`index.mjs`:619–621) must keep a non-photo document carried whole as not lapsed, or publication's t28 and t33 turn red. Re-word its `why` (:632, "marked since the case was prepared") so it names each of the three causes (a mark withdrawn or added since preparation, a photo carried whole, marks unreadable). case-grammar is merged into `tranche/T38` (K2308): merge the tranche into your branch.

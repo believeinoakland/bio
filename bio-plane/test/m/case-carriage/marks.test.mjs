@@ -15,7 +15,7 @@ const W = 40, H = 30;
 const PROGRESSIVE = Buffer.from([0xff, 0xd8, 0xff, 0xc2, 0, 11, 8, 0, 16, 0, 16, 1, 1, 0x11, 0, 0xff, 0xd9]);
 const HEIC = Buffer.concat([Buffer.from([0, 0, 0, 24]), Buffer.from("ftypheic"), Buffer.alloc(12)]);
 const area = (rect, kind = "person", reason) => ({ rect, kind, ...(reason !== undefined ? { reason } : {}) });
-const MARK_TABLES = ["photo_marks", "photo_copies"];
+const MARK_TABLES = ["photo_marks", "photo_mark_withdrawals", "photo_copies"];
 
 function scene({ bytes = makePng(W, H), opts = {} } = {}) {
   const w = world();
@@ -48,7 +48,7 @@ test("R9 obscureMark records one mark {mark, capture, areas, by, at} and answers
   assert.equal(r.mark, 1);
   assert.equal(r.state, "marked");
   assert.equal(r.refused, null);
-  assert.deepEqual(r.marks, [{ mark: 1, by: OLIVE, at: "2026-09-28T01:00:00.000Z",
+  assert.deepEqual(r.marks, [{ mark: 1, by: OLIVE, at: "2026-09-28T01:00:00.000Z", withdrawn: null,
     areas: [area([2, 2, 10, 10]), area([20, 5, 30, 12], "plate"), area([0, 20, 6, 30], "staff", "a guard, not the subject")] }]);
   assert.deepEqual(marksRows(w), [{ mark: 1, capture: p, by: OLIVE, at: "2026-09-28T01:00:00.000Z",
     areas: JSON.stringify(r.marks[0].areas) }]);
@@ -62,21 +62,21 @@ test("R9 obscureMark records one mark {mark, capture, areas, by, at} and answers
   const r2 = await w.cc.obscureMark({ captureSha: `sha256:${p.toUpperCase()}`, by: ` ${BEN} `,
                                       areas: [{ rect: [30, 20, 35, 25], kind: "person", reason: "dropped" }] });
   assert.equal(r2.ok, true);
-  assert.deepEqual(r2.marks[1], { mark: 2, by: BEN, at: "2026-09-28T01:00:00.000Z", areas: [area([30, 20, 35, 25])] });
+  assert.deepEqual(r2.marks[1], { mark: 2, by: BEN, at: "2026-09-28T01:00:00.000Z", areas: [area([30, 20, 35, 25])], withdrawn: null });
 });
 
-test("R9 each refusal, in order, writes nothing and carries its C-141 row; a negative control for each records the mark", async () => {
+test("R9 each refusal, in order, writes nothing and carries its C-141 row (MACHINE_CANNOT_MARK_PHOTO its own code, N790); a negative control for each records the mark", async () => {
   const { w, p } = scene();
   const text = w.doc("INFO-2026-0021-text");
   const hidden = w.photo("INFO-2026-0022-hidden", makePng(8, 8));
   w.st.sql.exec(`UPDATE bundles SET project='PROJ-2026-0099' WHERE bundle_id='INFO-2026-0022-hidden'`);
   const ok = [area([1, 1, 4, 4])];
   const cases = [
-    ["MACHINE_CANNOT_MARK", { captureSha: p, areas: ok, by: undefined }, null],
-    ["MACHINE_CANNOT_MARK", { captureSha: p, areas: ok, by: "  " }, null],
-    ["MACHINE_CANNOT_MARK", { captureSha: p, areas: ok, by: "daemon" }, null],
-    ["MACHINE_CANNOT_MARK", { captureSha: p, areas: ok, by: "claude" }, null],
-    ["MACHINE_CANNOT_MARK", { captureSha: "nonsense", areas: "x", by: "agent" }, null],
+    ["MACHINE_CANNOT_MARK_PHOTO", { captureSha: p, areas: ok, by: undefined }, null],
+    ["MACHINE_CANNOT_MARK_PHOTO", { captureSha: p, areas: ok, by: "  " }, null],
+    ["MACHINE_CANNOT_MARK_PHOTO", { captureSha: p, areas: ok, by: "daemon" }, null],
+    ["MACHINE_CANNOT_MARK_PHOTO", { captureSha: p, areas: ok, by: "claude" }, null],
+    ["MACHINE_CANNOT_MARK_PHOTO", { captureSha: "nonsense", areas: "x", by: "agent" }, null],
     ["NO_SUCH_PHOTO", { captureSha: sha("never captured"), areas: ok, by: OLIVE }, null],
     ["NO_SUCH_PHOTO", { captureSha: "not-a-digest", areas: ok, by: OLIVE }, null],
     ["NO_SUCH_PHOTO", { captureSha: null, areas: ok, by: OLIVE }, null],
@@ -115,10 +115,11 @@ test("R9 each refusal, in order, writes nothing and carries its C-141 row; a neg
   }
   assert.deepEqual(w.snapshot(), before, "no refusal wrote anything");
   assert.equal(w.bucket.calls.filter((c) => c[0] === "put").length, puts, "nor held a copy");
-  /* the rows: C-141.1–C-141.6, each with its where and its words */
-  assert.deepEqual(Object.entries(CASE_CARRIAGE_CHECKS).map(([k, v]) => [k, v.check]), [["MACHINE_CANNOT_MARK", "C-141.1"],
+  /* the rows: C-141.1–C-141.10 (R14's from .7), each with its where and its words */
+  assert.deepEqual(Object.entries(CASE_CARRIAGE_CHECKS).map(([k, v]) => [k, v.check]), [["MACHINE_CANNOT_MARK_PHOTO", "C-141.1"],
     ["NO_SUCH_PHOTO", "C-141.2"], ["NOT_A_PHOTO", "C-141.3"], ["MARK_MALFORMED", "C-141.4"], ["STAFF_MARK_NO_REASON", "C-141.5"],
-    ["AREA_OUTSIDE", "C-141.6"]]);
+    ["AREA_OUTSIDE", "C-141.6"], ["MACHINE_CANNOT_WITHDRAW_MARK", "C-141.7"], ["NO_SUCH_MARK", "C-141.8"],
+    ["MARK_ALREADY_WITHDRAWN", "C-141.9"], ["WITHDRAW_NO_REASON", "C-141.10"]]);
   for (const v of Object.values(CASE_CARRIAGE_CHECKS)) assert.match(v.where, /^src\/case-carriage\/index\.mjs \S+ > is-[a-z-]+$/);
   /* negative controls: the same acts, made right, are recorded */
   for (const [label, args] of [["a member", { captureSha: p, areas: ok, by: OLIVE }],
@@ -132,17 +133,21 @@ test("R9 each refusal, in order, writes nothing and carries its C-141 row; a neg
   assert.equal(w.count("photo_marks"), 5);
 });
 
-test("R9 areas: [] records \"nothing to obscure\"; a later \"nothing to obscure\" never removes an area; no act changes or removes a mark", async () => {
+test("R9 R11 areas: [] records \"nothing to obscure\" and derives the photo's copy with nothing covered and no metadata (N779); a later \"nothing to obscure\" never removes an area; no act changes or erases a mark", async () => {
   const { w, p, original } = scene();
   const none = await w.cc.obscureMark({ captureSha: p, areas: [], by: OLIVE });
-  assert.deepEqual([none.ok, none.state, none.copy, none.refused, none.marks.length], [true, "nothing_to_obscure", null, null, 1]);
-  assert.equal(w.count("photo_copies"), 0, "nothing marked, nothing derived");
-  assert.equal(w.bucket.held.size, 0);
+  assert.deepEqual([none.ok, none.state, none.refused, none.marks.length], [true, "nothing_to_obscure", null, 1]);
+  assert.deepEqual(none.copy, { sha256: none.copy.sha256, covered: 0, width: W, height: H }, "a copy, nothing covered");
+  assertCovers(copyOf(w, none.copy.sha256), original, [], "every pixel the original's");
+  assert.equal(copyOf(w, none.copy.sha256).chunks.includes("tEXt"), false, "nothing of the original but its pixels");
+  assert.deepEqual(w.bucket.held.get(obscuredKey("bio", none.copy.sha256)).opts.customMetadata, { derived: "obscured", original: p },
+                   "labelled derived, naming its original; no OBSCURED_LABEL, since nothing is covered");
+  assert.equal(w.count("photo_copies"), 1);
   const marked = await w.cc.obscureMark({ captureSha: p, areas: [area([3, 3, 9, 9])], by: BEN });
   assert.equal(marked.state, "marked");
   const after = await w.cc.obscureMark({ captureSha: p, areas: [], by: OLIVE });
   assert.equal(after.state, "marked", "the area stands");
-  assert.deepEqual(after.marks.map((m) => [m.mark, m.by, m.areas.length]), [[1, OLIVE, 0], [2, BEN, 1], [3, OLIVE, 0]]);
+  assert.deepEqual(after.marks.map((m) => [m.mark, m.by, m.areas.length, m.withdrawn]), [[1, OLIVE, 0, null], [2, BEN, 1, null], [3, OLIVE, 0, null]]);
   assert.equal(after.copy.sha256, marked.copy.sha256, "the copy still covers it");
   assertCovers(copyOf(w, after.copy.sha256), original, [[3, 3, 9, 9]]);
 });
@@ -159,8 +164,8 @@ test("R10 photoMarks answers unchecked, nothing_to_obscure and marked, its marks
   const calls = [w.bucket.calls.length, w.evidence.calls.length], before = w.snapshot();
   const r = look();
   assert.equal(typeof r.then, "undefined", "synchronous");
-  assert.deepEqual(r.marks, [{ mark: 1, areas: [], by: OLIVE, at: "2026-09-28T01:00:00.000Z" },
-                             { mark: 2, areas: [area([1, 1, 5, 5])], by: BEN, at: "2026-09-28T02:00:00.000Z" }]);
+  assert.deepEqual(r.marks, [{ mark: 1, areas: [], by: OLIVE, at: "2026-09-28T01:00:00.000Z", withdrawn: null },
+                             { mark: 2, areas: [area([1, 1, 5, 5])], by: BEN, at: "2026-09-28T02:00:00.000Z", withdrawn: null }]);
   assert.equal(r.state, "marked");
   assert.deepEqual(Object.keys(r.copy), ["sha256", "covered", "width", "height"]);
   assert.deepEqual([w.bucket.calls.length, w.evidence.calls.length], calls, "reads no bucket");
@@ -238,7 +243,7 @@ test("R11 OBSCURED_LABEL is exactly the sentence DEC-180 (4) names, held once he
   assert.equal(OBSCURED_LABEL, "Faces and plates obscured for publication; the group holds the original");
 });
 
-test("R11 a cover image-cover refuses by name records the mark with no copy and names the code: a progressive JPEG, a HEIC, a photo over COVER_MAX_BYTES (nothing over the bound fetched)", async () => {
+test("R11 a cover image-cover refuses by name records the mark with no copy and names the code, whether the photo is marked or not: a progressive JPEG, a HEIC, a photo over COVER_MAX_BYTES (nothing over the bound fetched)", async () => {
   for (const [label, bytes, opts, code] of [["progressive JPEG", PROGRESSIVE, { name: "IMG.jpg", contentType: "image/jpeg" }, "UNSUPPORTED_JPEG_PROCESS"],
                                             ["HEIC", HEIC, { name: "IMG.heic", contentType: "image/heic" }, "NOT_A_COVERABLE_FORMAT"]]) {
     const { w, p } = scene({ bytes, opts });
@@ -248,6 +253,10 @@ test("R11 a cover image-cover refuses by name records the mark with no copy and 
     assert.equal(w.count("photo_marks"), 1, `${label}: the mark stays recorded`);
     assert.equal(w.bucket.held.size, 0, `${label}: no copy`);
     assert.deepEqual(w.cc.photoMarks({ captureSha: p, viewer: OLIVE }).refused, r.refused);
+    /* unmarked, "nothing to obscure": refused all the same (N779: every photo leaves only as its copy) */
+    const u = scene({ bytes, opts });
+    const n = await u.w.cc.obscureMark({ captureSha: u.p, areas: [], by: OLIVE });
+    assert.deepEqual([n.ok, n.state, n.copy, n.refused && n.refused.code], [true, "nothing_to_obscure", null, code], `${label}, unmarked`);
   }
   const { w, p } = scene();
   w.evidence.held.set(p, Buffer.alloc(COVER_MAX_BYTES + 1));
@@ -278,7 +287,7 @@ test("R11 with no bytes to cover (no evidence store, the original absent or at a
 
 /* ---------------------------------------------------------------- R12 */
 
-test("R12 the marks and copies are declared to record-core with their classes, append-only (version_chain); no act of this module rewrites or removes a mark row", async () => {
+test("R12 the marks, their withdrawals and the copies are declared to record-core with their classes, append-only (version_chain); no act of this module rewrites or removes a mark or withdrawal row", async () => {
   const { w, p } = scene();
   assert.deepEqual(w.cc.marksDeclaration && w.cc.marksDeclaration.ok, true, JSON.stringify(w.cc.marksDeclaration));
   const declared = w.record.declaredTables().filter((d) => MARK_TABLES.includes(d.name));
@@ -295,33 +304,47 @@ test("R12 the marks and copies are declared to record-core with their classes, a
     () => w.cc.marksLapsed({ format: "bio-case-document/7", materials: [] }),
     () => w.cc.holdMaterials({ format: "bio-case-document/7", materials: [] }, { caseId: "CASE-2026-0001", edition: 1, at: NOW }),
     () => w.cc.obscureMark({ captureSha: p, areas: [area([5, 5, 9, 9], "staff", "at work")], by: BEN }),
+    () => w.cc.obscureMarkWithdraw({ captureSha: p, mark: 1, reason: "drawn on the wrong face", by: BEN }),
+    () => w.cc.obscureMarkWithdraw({ captureSha: p, mark: 1, reason: "again", by: OLIVE }),
+    () => w.cc.obscureMarkWithdraw({ captureSha: p, mark: 99, reason: "no such", by: OLIVE }),
+    () => w.cc.obscureMarkWithdraw({ captureSha: p, mark: 2, reason: "the nothing-to-obscure was early", by: OLIVE }),
+    () => w.cc.obscureMarkWithdraw({ captureSha: p, mark: 3, reason: "", by: OLIVE }),
+    () => w.cc.obscureMarkWithdraw({ captureSha: p, mark: 3, reason: "the guard has left the frame", by: OLIVE }),
+    () => w.cc.obscureMark({ captureSha: p, areas: [], by: OLIVE }),
   ];
   for (const act of acts) {
     await act();
-    const rows = { marks: marksRows(w), copies: w.rows(`SELECT * FROM photo_copies ORDER BY through`) };
-    for (const k of ["marks", "copies"]) {
+    const rows = { marks: marksRows(w), withdrawals: w.rows(`SELECT * FROM photo_mark_withdrawals ORDER BY withdrawal`),
+                   copies: w.rows(`SELECT * FROM photo_copies ORDER BY seq`) };
+    for (const k of ["marks", "withdrawals", "copies"]) {
       const prev = seen.length ? seen.at(-1)[k] : [];
       assert.deepEqual(rows[k].slice(0, prev.length), prev, `${k}: earlier rows unchanged, none removed`);
     }
     seen.push(rows);
   }
-  assert.deepEqual(seen.at(-1).marks.map((m) => m.mark), [1, 2, 3]);
+  assert.deepEqual(seen.at(-1).marks.map((m) => m.mark), [1, 2, 3, 4]);
+  assert.deepEqual(seen.at(-1).withdrawals.map((x) => x.mark), [1, 2, 3], "each withdrawal its own row, beside its mark");
 });
 
-test("R12 nothing of a mark leaves the group in a case's bytes: the copy carries only covered pixels, never a rectangle, kind, reason or maker", async () => {
+test("R12 nothing of a mark or a withdrawal leaves the group in a case's bytes: each copy carries only covered pixels, never a rectangle, kind, reason or maker", async () => {
   const { w, p } = scene();
-  const reason = "the inspector at work, named in the minutes";
+  const reason = "the inspector at work, named in the minutes", why = "the plate belongs to the group's own van";
   const r = await w.cc.obscureMark({ captureSha: p, areas: [area([2, 2, 9, 9], "staff", reason)], by: OLIVE });
-  const bytes = w.bucket.held.get(`bio/obscured/${r.copy.sha256}`).bytes;
-  for (const s of [reason, "staff", "olive", OLIVE, "2,2,9,9", "rect"])
-    assert.equal(bytes.includes(Buffer.from(s)), false, `the copy carries no ${s}`);
-  const copy = decodePng(bytes);
-  assert.deepEqual(copy.chunks.filter((c) => !["IHDR", "PLTE", "IDAT", "IEND", "tRNS"].includes(c)), [], "no other chunk");
+  await w.cc.obscureMark({ captureSha: p, areas: [area([20, 20, 30, 28], "plate")], by: BEN });
+  const back = await w.cc.obscureMarkWithdraw({ captureSha: p, mark: 2, reason: why, by: OLIVE });
+  assert.equal(back.ok, true, JSON.stringify(back));
+  for (const c of [r.copy.sha256, back.copy.sha256]) {
+    const bytes = w.bucket.held.get(`bio/obscured/${c}`).bytes;
+    for (const s of [reason, why, "staff", "plate", "olive", "ben", OLIVE, BEN, "2,2,9,9", "20,20,30,28", "rect", "withdraw"])
+      assert.equal(bytes.includes(Buffer.from(s)), false, `the copy carries no ${s}`);
+    const copy = decodePng(bytes);
+    assert.deepEqual(copy.chunks.filter((x) => !["IHDR", "PLTE", "IDAT", "IEND", "tRNS"].includes(x)), [], "no other chunk");
+  }
 });
 
 /* ---------------------------------------------------------------- the route arms (R9, R10) */
 
-test("R9 R10 the route arms obscuremark and photomarks read the capture from the query or the body, the areas from the body, and by and viewer from the query only", async () => {
+test("R9 R10 R14 the route arms obscuremark, photomarks and obscuremarkwithdraw read the capture from the query or the body, the areas, mark and reason from the body, and by and viewer from the query only", async () => {
   const { w, p } = scene();
   const url = (q) => new URL(`https://plane.example/op?${new URLSearchParams(q)}`);
   const marked = await caseCarriageOps(w.cc, url({ op: "obscuremark", by: OLIVE }),
@@ -329,9 +352,15 @@ test("R9 R10 the route arms obscuremark and photomarks read the capture from the
   assert.equal(marked.ok, true);
   assert.equal(marked.marks[0].by, OLIVE, "by from the query, never the body");
   const machine = await caseCarriageOps(w.cc, url({ capture: p }), { areas: [], by: OLIVE }).obscuremark();
-  assert.equal(machine.code, "MACHINE_CANNOT_MARK", "a by only in the body is no by");
+  assert.equal(machine.code, "MACHINE_CANNOT_MARK_PHOTO", "a by only in the body is no by");
   const seen = caseCarriageOps(w.cc, url({ capture: p, viewer: BEN }), { viewer: "admin" }).photomarks();
   assert.deepEqual([seen.ok, seen.state, seen.marks.length], [true, "marked", 1]);
   assert.equal(caseCarriageOps(w.cc, url({ capture: p }), { viewer: OLIVE }).photomarks().code, "NO_SUCH_PHOTO",
                "a viewer only in the body is no viewer");
+  /* R14's arm: the mark and reason from the body, by from the query only */
+  const forged = await caseCarriageOps(w.cc, url({ capture: p }), { mark: 1, reason: "r", by: OLIVE }).obscuremarkwithdraw();
+  assert.equal(forged.code, "MACHINE_CANNOT_WITHDRAW_MARK", "a by only in the body is no by");
+  const back = await caseCarriageOps(w.cc, url({ op: "obscuremarkwithdraw", by: BEN }),
+                                     { captureSha: p, mark: "1", reason: "covered the wrong person", by: "member:forged" }).obscuremarkwithdraw();
+  assert.deepEqual([back.ok, back.mark, back.state, back.marks[0].withdrawn.by], [true, 1, "unchecked", BEN]);
 });
