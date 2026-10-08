@@ -9,7 +9,10 @@
    (T37; R9–R13) A photo is a capture whose bytes are only in the evidence store: record-core's `evidenceStore` (its R38)
    answers a stand-in keyed by digest (`w.evidence`), and the obscured copy is held in a stand-in bucket (`w.bucket`). The
    photos are PNGs built here (`makePng`) and read back by a decoder written here (`decodePng`), independent of
-   `image-cover`, so a test checks each covered and uncovered pixel. */
+   `image-cover`, so a test checks each covered and uncovered pixel.
+   (T38; R8, K2291 (2)) What an archive holds is read from acquisition's record of its listing (`archive_entries`, its
+   R38); `w.listing` writes that record as a stand-in with the read contract's columns, as acquisition writes it when it
+   first opens an archive (its own row at index -1, one row per entry). */
 import { deflateSync, inflateSync } from "node:zlib";
 import { world as provenanceWorld, sha, V, provDoc, infoMd, evidence } from "../provenance/fixture.mjs";
 import { sourcesOf } from "../../../src/sources/index.mjs";
@@ -86,6 +89,17 @@ export function world() {
       return calls;
     },
     tables: () => w.rows(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`).map((r) => r.name),
+    /** acquisition's record of an archive's listing (its R38), as a stand-in: `entries` `[{name, kind?, state?, sha256?}]`
+     *  in index order (`kind` default `file`, `state` `filed` when a digest is given, else `waiting`), or the names of
+     *  `zip`'s entries when `entries` is a ZIP's bytes. */
+    listing(archiveSha, entries) {
+      const list = Buffer.isBuffer(entries) || entries instanceof Uint8Array ? zipNames(entries).map((name) => ({ name })) : entries;
+      st.sql.exec(`CREATE TABLE IF NOT EXISTS archive_entries (archive_sha TEXT NOT NULL, idx INTEGER NOT NULL, name TEXT, kind TEXT,
+                   state TEXT NOT NULL, sha256 TEXT, PRIMARY KEY (archive_sha, idx))`);
+      st.sql.exec(`INSERT OR IGNORE INTO archive_entries (archive_sha, idx, state) VALUES (?, -1, 'opened')`, archiveSha);
+      list.forEach((e, i) => st.sql.exec(`INSERT OR REPLACE INTO archive_entries (archive_sha, idx, name, kind, state, sha256) VALUES (?,?,?,?,?,?)`,
+        archiveSha, i, e.name ?? null, e.kind ?? "file", e.state ?? (e.sha256 ? "filed" : "waiting"), e.sha256 ?? null));
+    },
     /** A photo: an information bundle whose capture `bytes` is held only in the evidence store, registered at
      *  `snapshots/<name>`, its home's provenance recording `contentType` (none when null). Answers its digest. */
     photo(id, bytes, { name = "photo.png", contentType = "image/png", inEvidence = true } = {}) {
@@ -103,6 +117,20 @@ export function world() {
       return s;
     },
   });
+}
+
+/** The names of a ZIP's entries, read from its central directory as its end record locates it (so an archive stored
+ *  inside it, uncompressed, is not mistaken for its own entries). */
+export function zipNames(zip) {
+  const z = Buffer.from(zip), out = [];
+  const end = z.lastIndexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06]));
+  let o = z.readUInt32LE(end + 16);
+  for (let n = z.readUInt16LE(end + 10); n > 0; n--) {
+    const len = z.readUInt16LE(o + 28);
+    out.push(z.toString("utf8", o + 46, o + 46 + len));
+    o += 46 + len + z.readUInt16LE(o + 30) + z.readUInt16LE(o + 32);
+  }
+  return out;
 }
 
 /** A bucket stand-in: `put(key, bytes, opts)` keeps the bytes and the options; `get(key)` answers them. */

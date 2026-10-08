@@ -1,8 +1,8 @@
-/* T20 layer 2 (K861, plane R10): R96, this module's share of the instance's figures, a source shaped as record-core
+/* T20 layer 2 (K861, plane R10); T38 (N783): R114 (was R96's participation half), this module's share of the instance's figures, a source shaped as record-core
    R63's `counts(hid)` with its key list, which `plane` registers under this module's name. Proved at the interface: the
    source alone, then registered through the REAL record-core's R63 under this module's name, as `plane` registers it
    (plane R10), and read as `op=stats` and purge's proof read it, each answer held against R96's statement of the
-   figure, pinned here: `count(*)` less the rows whose key, read as `COALESCE(key, '')`, is in `hid`. */
+   figure, pinned here (the owner-votes figure is project-roster's, its R17): `count(*)` less the rows whose key, read as `COALESCE(key, '')`, is in `hid`. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
@@ -11,10 +11,10 @@ import { Membership, hiddenBundles } from "../../../src/membership/index.mjs";
 import { recordCoreOps } from "../../../src/record-core/index.mjs";
 import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
 
-const KEYS = ["projectParticipants", "projectOwnerVotes"];
-const TABLES = { projectParticipants: "project_participants", projectOwnerVotes: "project_owner_votes" };
+const KEYS = ["projectParticipants"];
+const TABLES = { projectParticipants: "project_participants" };
 
-/* R96's figure, stated on its own as the pinned value: what the source must answer exactly. */
+/* R114's figure, stated on its own as the pinned value: what the source must answer exactly. */
 function pinned(sql, hid) {
   const n = (t) => {
     const conds = [], args = [];
@@ -26,8 +26,8 @@ function pinned(sql, hid) {
 /* `hid` as R63 takes it: a viewer never sent is the direct internal call, counted whole. */
 const hidOf = (viewer) => (viewer === undefined ? null : hiddenBundles(viewer));
 
-/* A held ann and bob as owners, cal joined, one pending owner vote (ann proposing cal); B held by dee and eve, one
-   pending removal vote (dee's, short of both). zed is outside both; second an administrator. */
+/* A held by ann and bob as owners, cal joined; B held by dee and eve as owners. zed is outside both; second an
+   administrator. The second owners are made by R118's write (project-roster's votes are its own). */
 async function build(m, project, enrol) {
   for (const id of ["ann", "bob", "cal", "dee", "eve", "zed"]) await enrol(id);
   project("PROJ-A");
@@ -37,31 +37,27 @@ async function build(m, project, enrol) {
     m.projectInvite({ projectId: "PROJ-A", handle: h, by: "ann", viewer: V("ann") });
     m.projectJoin({ projectId: "PROJ-A", by: h, viewer: V(h) });
   }
-  assert.equal(m.projectOwnerAdd({ projectId: "PROJ-A", handle: "bob", by: "ann", viewer: V("ann") }).ok, true);
-  assert.equal(m.projectOwnerAdd({ projectId: "PROJ-A", handle: "cal", by: "ann", viewer: V("ann") }).reason,
-    "CONSENSUS_REQUIRED");
+  assert.equal(m.participationWrite("ownerOn", { projectId: "PROJ-A", memberId: "bob" }), true);
   m.projectClaimOwner({ projectId: "PROJ-B", memberId: "dee" });
   m.projectInvite({ projectId: "PROJ-B", handle: "eve", by: "dee", viewer: V("dee") });
   m.projectJoin({ projectId: "PROJ-B", by: "eve", viewer: V("eve") });
-  assert.equal(m.projectOwnerAdd({ projectId: "PROJ-B", handle: "eve", by: "dee", viewer: V("dee") }).ok, true);
-  assert.equal(m.projectOwnerRemove({ projectId: "PROJ-B", handle: "eve", by: "dee", reason: "r", viewer: V("dee") }).reason,
-    "VOTES_SHORT");
+  assert.equal(m.participationWrite("ownerOn", { projectId: "PROJ-B", memberId: "eve" }), true);
 }
 
-const WHOLE = { projectParticipants: 5, projectOwnerVotes: 2 };
+const WHOLE = { projectParticipants: 5 };
 /* Each viewer, what it is told: whole, less a project it is outside, or nothing (a viewer R43 refuses hides all). */
 const VIEWERS = [
   [undefined, WHOLE, "a viewer never sent: the direct internal call, counted whole"],
   ["admin", WHOLE, "the founder sees every bundle"],
   [`${MACHINE_CLASS_PREFIX}admin`, WHOLE, "a machine credential sees every bundle"],
   [V("second"), WHOLE, "an active administrator sees every project"],
-  [V("ann"), { projectParticipants: 3, projectOwnerVotes: 1 }, "a member outside B: less B"],
-  [V("dee"), { projectParticipants: 2, projectOwnerVotes: 1 }, "a member outside A: less A"],
-  [V("zed"), { projectParticipants: 0, projectOwnerVotes: 0 }, "a member outside both"],
-  ["junk", { projectParticipants: 0, projectOwnerVotes: 0 }, "a viewer R43 refuses: every bundle hidden"],
+  [V("ann"), { projectParticipants: 3 }, "a member outside B: less B"],
+  [V("dee"), { projectParticipants: 2 }, "a member outside A: less A"],
+  [V("zed"), { projectParticipants: 0 }, "a member outside both"],
+  ["junk", { projectParticipants: 0 }, "a viewer R43 refuses: every bundle hidden"],
 ];
 
-test("R96 the figure source: its key list, and counts(hid) each table less the rows whose project is in hid, whole for a null hid", async () => {
+test("R114 the figure source: its key list, and counts(hid) each table less the rows whose project is in hid, whole for a null hid", async () => {
   assert.deepEqual([...Membership.COUNT_KEYS], KEYS);
   assert.ok(Object.isFrozen(Membership.COUNT_KEYS));
   const w = await world().group();
@@ -77,19 +73,17 @@ test("R96 the figure source: its key list, and counts(hid) each table less the r
   }
   /* sight follows the record: inviting zed to A moves zed's count at once */
   w.m.projectInvite({ projectId: "PROJ-A", handle: "zed", by: "ann", viewer: V("ann") });
-  assert.deepEqual(w.m.counts(hiddenBundles(V("zed"))), { projectParticipants: 4, projectOwnerVotes: 1 });
+  assert.deepEqual(w.m.counts(hiddenBundles(V("zed"))), { projectParticipants: 4 });
   assert.deepEqual(w.m.counts(hiddenBundles(V("zed"))), pinned(w.sql, hiddenBundles(V("zed"))));
 });
 
-test("R96 a NULL key names no bundle, so hid never drops its row; it writes nothing", async () => {
+test("R114 a NULL key names no bundle, so hid never drops its row; it writes nothing", async () => {
   /* A store whose tables were made before `project_id` was NOT NULL: membership's CREATE IF NOT EXISTS keeps them. */
   const db = new DatabaseSync(":memory:");
   db.exec(`CREATE TABLE bundles (bundle_id TEXT PRIMARY KEY, object_type TEXT NOT NULL, title TEXT, project TEXT)`);
   db.exec(`CREATE TABLE project_participants (project_id TEXT, member_id TEXT NOT NULL, state TEXT NOT NULL,
              owner INTEGER NOT NULL DEFAULT 0, owner_order INTEGER, invited_by TEXT, comment TEXT, created TEXT NOT NULL,
              updated TEXT NOT NULL)`);
-  db.exec(`CREATE TABLE project_owner_votes (project_id TEXT, kind TEXT NOT NULL, target TEXT NOT NULL,
-             voter TEXT NOT NULL, reason TEXT, created TEXT NOT NULL)`);
   const sql = sqlOver(db);
   const m = new Membership({ sql, core: { declarePurge() { return { ok: true }; } } });
   m.migrate();
@@ -97,20 +91,18 @@ test("R96 a NULL key names no bundle, so hid never drops its row; it writes noth
   for (const p of ["PROJ-A", null]) {
     db.prepare(`INSERT INTO project_participants (project_id, member_id, state, created, updated) VALUES (?,?,?,?,?)`)
       .run(p, "ann", "joined", "t", "t");
-    db.prepare(`INSERT INTO project_owner_votes (project_id, kind, target, voter, created) VALUES (?,?,?,?,?)`)
-      .run(p, "add", "bob", "ann", "t");
   }
   const snapshot = () => JSON.stringify(sql.exec(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`)
     .map(({ name }) => [name, sql.exec(`SELECT * FROM "${name}"`)]));
   const before = snapshot();
   const all = hiddenBundles("junk");   // every bundle hidden
-  assert.deepEqual(m.counts(all), { projectParticipants: 1, projectOwnerVotes: 1 }, "the NULL-keyed row stays");
+  assert.deepEqual(m.counts(all), { projectParticipants: 1 }, "the NULL-keyed row stays");
   assert.deepEqual(m.counts(all), pinned(sql, all));
-  assert.deepEqual(m.counts(null), { projectParticipants: 2, projectOwnerVotes: 2 });
+  assert.deepEqual(m.counts(null), { projectParticipants: 2 });
   assert.equal(snapshot(), before, "writes nothing");
 });
 
-test("R96 registered through record-core R63 under membership's name, it answers op=stats through each viewer's sight and purge's proof whole; membership registers nothing itself", async () => {
+test("R114 registered through record-core R63 under membership's name, it answers op=stats through each viewer's sight and purge's proof whole; membership registers nothing itself", async () => {
   const w = await realWorld();
   const { m, rc } = w;
   await w.claim();
@@ -140,11 +132,11 @@ test("R96 registered through record-core R63 under membership's name, it answers
   }
   const proof = rc.proofCounts();
   assert.deepEqual(Object.fromEntries(KEYS.map((k) => [k, proof[k]])), WHOLE, "purge's proof is whole");
-  /* purge proves what it took: the project's participation and its pending votes */
+  /* purge proves what it took: the project's participation */
   const ops = recordCoreOps(rc, new URL("http://x/?op=purge&bundleId=PROJ-A"), null);
   const p = ops.purge();
   assert.equal(p.ok, true);
-  assert.deepEqual(KEYS.map((k) => [p.before[k], p.after[k], p.removed[k]]), [[5, 2, 3], [2, 1, 1]]);
+  assert.deepEqual(KEYS.map((k) => [p.before[k], p.after[k], p.removed[k]]), [[5, 2, 3]]);
   assert.deepEqual(Object.fromEntries(KEYS.map((k) => [k, p.after[k]])), pinned(w.sql, null), "after: the pinned figure, whole");
   /* a second registration under its name is refused, naming the holder (R63) */
   const again = rc.registerCounts("membership", [...Membership.COUNT_KEYS], (hid) => m.counts(hid));

@@ -1,7 +1,7 @@
 /* R32, R33 (K1502, K1755) — WHICH CLAUDE ACCOUNT SERVES THE ACT: THE ONE THAT ARRIVED, JUDGED AT ITS OWN LEVEL.
  *
  * Bob's three options (K1755): an Anthropic API key held by an administrator for the group's copy, serving members with
- * no account of their own; a member's own subscription token (or API key), used only by that member; or no AI. WHICH
+ * no account of their own; a member's own API key or own Claude sign-in, used only by that member; or no AI. WHICH
  * account serves a member's act is `credentials`' choice (its R35, `accountFor`: the member's own reference when held,
  * else the group's key while it is held and on), never this module's: this module judges the ONE account that arrived,
  * at the `level` it arrived with, `member` or `group`. There is no project level, and no account is read from this
@@ -21,8 +21,9 @@ import { PUBLISHED_TOKEN_HASHES, sha256hex } from "../../bio-plane/src/tokens.mj
 /** The levels an account arrives at (R32; `credentials` R35): the member's own, or the group's API key. Nothing else
  *  may restate them, and there is no project level. */
 export const CASCADE_ORDER = Object.freeze(["member", "group"]);
-/** The kinds `agent-model` takes (its R2), as `credentials` R22 holds them. */
-export const ACCOUNT_KINDS = Object.freeze(["apikey", "subscription"]);
+/** The kinds `agent-model` takes (its R2): an API key, or (T38; N785, K2200) the member's own stored sign-in, which
+ *  carries no secret (`credentials` R35's sign-in answer). `subscription` is retired (`credentials` R22). */
+export const ACCOUNT_KINDS = Object.freeze(["apikey", "signin"]);
 /** The kinds each level holds: the group's account is an API key only (`credentials` R33; `agent-model` R11). */
 export const LEVEL_KINDS = Object.freeze({ member: ACCOUNT_KINDS, group: Object.freeze(["apikey"]) });
 
@@ -34,16 +35,20 @@ export const LEVEL_AVAILABLE = "available";
 
 const isObject = (a) => a !== null && typeof a === "object" && !Array.isArray(a);
 const secretOf = (account) => (isObject(account) && typeof account.secret === "string" ? account.secret : "");
+const memberOf = (account) => (isObject(account) && typeof account.member === "string" ? account.member : "");
 /** The level an account arrived at: its own `level` when it is one of R32's, else `member` (the level judged when
  *  none, or none usable, arrived; R6 refuses an unknown level before this is asked). */
 const levelOf = (account) => (isObject(account) && CASCADE_ORDER.includes(account.level) ? account.level : "member");
 
 /** R32 — the arrived account's state at its level: `unset` (no account at a level R32 judges, no non-empty secret, or a
  *  kind its level does not hold), `revoked_by_publication` (its SHA-256 is published in this repository) or
- *  `available`. An account naming no level, or another (a project's, an instance's), is judged at no level. */
+ *  `available`. An account naming no level, or another (a project's, an instance's), is judged at no level. A `signin`
+ *  account has no secret: it is `available` exactly when its `member` is a non-empty string, the member whose own
+ *  stored sign-in serves the act, and `unset` otherwise (T38). */
 async function levelState(account) {
   if (!isObject(account) || !CASCADE_ORDER.includes(account.level)) return LEVEL_UNSET;
   if (!LEVEL_KINDS[account.level].includes(account.kind)) return LEVEL_UNSET;
+  if (account.kind === "signin") return memberOf(account) ? LEVEL_AVAILABLE : LEVEL_UNSET;
   const v = secretOf(account);
   if (v.length === 0) return LEVEL_UNSET;
   if (PUBLISHED_TOKEN_HASHES.has(await sha256hex(v))) return LEVEL_REVOKED;
@@ -72,21 +77,23 @@ export async function resolveClaudeCascade(account) {
           ? "An administrator sets a new key for the group, or members connect their own."
           : "The member connects a new one; until then the group's API key serves them only while your group's "
             + "Civicsmith holds it and it is on.")
-      : `no usable Claude account arrived for this act (${whose} was absent, empty, or of a kind its level does not `
-        + "hold). Which account serves a member's act is your group's Civicsmith's to answer (the member's own, else "
-        + "the group's API key while it is held and on); a member whom neither serves has no assistant.",
+      : `no usable Claude account arrived for this act (${whose} was absent, empty, named no member, or of a kind `
+        + "its level does not hold). Which account serves a member's act is your group's Civicsmith's to answer (the "
+        + "member's own, else the group's API key while it is held and on); a member whom neither serves has no "
+        + "assistant.",
   };
 }
 
 /**
  * R33 — `{level, reference}` exactly when R32 resolves, else null; `level` the account's own (`member` or `group`).
- * `reference` is in `agent-model`'s terms (`{kind: "apikey", key}` or `{kind: "subscription", token}`), for the one
- * call it serves; never logged, echoed or kept by any state of this module (R36).
+ * `reference` is in `agent-model`'s terms (`{kind: "apikey", key}` or `{kind: "signin", member}`, the member whose own
+ * runner instance holds the sign-in; T38), for the one call it serves; never logged, echoed or kept by any state of
+ * this module (R36).
  */
 export async function cascadeToken(account) {
   const st = await resolveClaudeCascade(account);
   if (!st.available) return null;
-  const secret = secretOf(account);
   return { level: st.level,
-           reference: account.kind === "apikey" ? { kind: "apikey", key: secret } : { kind: "subscription", token: secret } };
+           reference: account.kind === "signin" ? { kind: "signin", member: memberOf(account) }
+                                                : { kind: "apikey", key: secretOf(account) } };
 }

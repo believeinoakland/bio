@@ -34,8 +34,8 @@
  * for its archive (itself a member of an outer archive), outward to the outermost, sit side by side under the ref of the
  * material whose chain they belong to. A `/1` manifest names none of the `/2` kinds, and a `/2` manifest no `obscured`.
  *
- * THE COPY (T37; N757; DEC-180 (4)). A photo with people or number plates marked travels as its copy, the marked areas
- * covered, at `materials/<ref>/obscured`, under the ref of the `materials:` row (R12) that states `obscured`, at the
+ * THE COPY (T37; N757; DEC-180 (4); T38: N779, K2248). Every photo a published case carries travels as its copy, with
+ * nothing of the original but its pixels and its marked areas, if any, covered, at `materials/<ref>/obscured`, under the ref of the `materials:` row (R12) that states `obscured`, at the
  * SHA-256 that row names as `obscured.copy`; the original never travels: no `document`, `extracted_text`, `archive` or
  * `container` file under that ref. Those three rules are relative to the case document's rows, which the manifest does
  * not carry, so `caseFileManifestCheck` judges them when its caller hands it the rows (`{materials}`, as `materialsOf`

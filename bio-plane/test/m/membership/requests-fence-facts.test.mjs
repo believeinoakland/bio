@@ -15,104 +15,6 @@ async function reqWorld() {
   w.m.projectVisibilitySet({ projectId: "PROJ-D", setting: "discoverable", by: "ann", viewer: V("ann") });
   return w;
 }
-const ask = (w, by, projectId = "PROJ-D", comment = null, viewer = V(by)) => w.m.projectRequest({ projectId, comment, by, viewer });
-
-test("R49 projectRequest: a member asks first; NONE absent; FULL not outside; one open at a time; the name shown kept", async () => {
-  const w = await reqWorld();
-  assert.equal(ask(w, "cal", "PROJ-D", null, V("dee")).reason, "PROJECT_REQUEST_NEEDS_A_MEMBER");
-  assert.equal(ask(w, `${MACHINE_CLASS_PREFIX}member`, "PROJ-D", null, `${MACHINE_CLASS_PREFIX}member`).reason, "PROJECT_REQUEST_NEEDS_A_MEMBER");
-  w.m.memberSet({ memberId: "dee", status: "revoked", by: "admin" });
-  assert.equal(ask(w, "dee").reason, "PROJECT_REQUEST_NEEDS_A_MEMBER");
-  assert.equal(ask(w, "admin", "NOPE", null, V("cal")).reason, "PROJECT_REQUEST_NEEDS_A_MEMBER", "asked first, before sight");
-  /* N357: the founder's viewer in either spelling (R43) is the founder, at FULL sight of every project. */
-  for (const v of ["admin", V("admin")]) {
-    assert.equal(ask(w, "admin", "PROJ-H", null, v).reason, "PROJECT_REQUEST_NOT_OUTSIDE", v);
-    assert.equal(ask(w, "admin", "NOPE", null, v).reason, "NO_SUCH_PROJECT", v);
-  }
-  assert.equal(ask(w, "cal", "PROJ-H").reason, "NO_SUCH_PROJECT");
-  const absent = (p) => JSON.stringify(ask(w, "cal", p)).replaceAll(p, "<id>");
-  assert.equal(absent("PROJ-H"), absent("PROJ-NEVER"), "a hidden project answers as an id that names nothing");
-  assert.equal(ask(w, "bob").reason, "PROJECT_REQUEST_NOT_OUTSIDE");
-  assert.equal(ask(w, "second").reason, "PROJECT_REQUEST_NOT_OUTSIDE", "an administrator sees every project");
-  const r = ask(w, "cal", "PROJ-D", "I ride the 72");
-  assert.deepEqual([r.ok, r.state, r.name, r.comment], [true, "open", "Discoverable D", "I ride the 72"]);
-  assert.equal(ask(w, "cal").reason, "PROJECT_REQUEST_ALREADY_OPEN");
-  assert.equal(w.row(`SELECT project_name FROM project_join_requests`).project_name, "Discoverable D");
-});
-
-test("R50 projectRequestWithdraw: needs a member; NONE_OPEN is the same whatever the id names", async () => {
-  const w = await reqWorld();
-  assert.equal(w.m.projectRequestWithdraw({ projectId: "PROJ-D", by: "cal", viewer: V("dee") }).reason, "PROJECT_REQUEST_NEEDS_A_MEMBER");
-  const none = (p) => JSON.stringify(w.m.projectRequestWithdraw({ projectId: p, by: "cal", viewer: V("cal") })).replaceAll(p, "<id>");
-  assert.equal(JSON.parse(none("PROJ-D")).reason, "PROJECT_REQUEST_NONE_OPEN");
-  assert.equal(none("PROJ-D"), none("PROJ-H"));
-  assert.equal(none("PROJ-D"), none("PROJ-NEVER"));
-  ask(w, "cal");
-  const wd = w.m.projectRequestWithdraw({ projectId: "PROJ-D", by: "cal", viewer: V("cal") });
-  assert.deepEqual([wd.ok, wd.state], [true, "withdrawn"]);
-  assert.deepEqual(w.row(`SELECT state, closed_by FROM project_join_requests`), { state: "withdrawn", closed_by: "cal" });
-});
-
-test("R51 projectRequestAnswer: owners only, grant or decline, an open request; a grant invites, never joins", async () => {
-  const w = await reqWorld();
-  ask(w, "cal", "PROJ-D", "hi"); ask(w, "dee");
-  const ans = (by, handle, answer, viewer = V(by)) => w.m.projectRequestAnswer({ projectId: "PROJ-D", handle, answer, comment: "ok", by, viewer });
-  assert.equal(ans("bob", "cal", "grant").reason, "PROJECT_REQUEST_ANSWER_NOT_THE_OWNER");
-  assert.equal(ans("second", "cal", "grant").reason, "PROJECT_REQUEST_ANSWER_NOT_THE_OWNER");
-  assert.equal(ans("admin", "cal", "grant", "admin").reason, "PROJECT_REQUEST_ANSWER_NOT_THE_OWNER");
-  assert.equal(ans("ann", "cal", "maybe").reason, "PROJECT_REQUEST_UNKNOWN_ANSWER");
-  assert.equal(ans("ann", "bob", "grant").reason, "PROJECT_REQUEST_NONE_OPEN");
-  w.m.memberSet({ memberId: "dee", status: "revoked", by: "admin" });
-  assert.equal(ans("ann", "dee", "grant").reason, "PROJECT_REQUEST_REQUESTER_INACTIVE");
-  assert.equal(w.row(`SELECT state FROM project_join_requests WHERE member_id='dee'`).state, "open", "left open");
-  w.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, owner, created, updated) VALUES ('PROJ-D','cal','invited',0,'t','t')`);
-  assert.equal(ans("ann", "cal", "grant").reason, "PROJECT_REQUEST_REQUESTER_ALREADY_A_PARTICIPANT");
-  w.sql.exec(`DELETE FROM project_participants WHERE member_id='cal'`);
-  const g = ans("ann", "cal", "grant");
-  assert.deepEqual([g.ok, g.state, g.participation], [true, "granted", "invited"]);
-  assert.deepEqual(w.row(`SELECT state, owner, invited_by FROM project_participants WHERE member_id='cal'`),
-    { state: "invited", owner: 0, invited_by: "ann" });
-  const d = ans("ann", "dee", "decline");
-  assert.deepEqual([d.ok, d.state], [true, "declined"]);
-  assert.equal(w.m.participation("PROJ-D", "dee"), null);
-});
-
-test("R52 a request's asking fields are written once, its closing fields once; closed never reopens; ask again", async () => {
-  const w = await reqWorld();
-  ask(w, "cal", "PROJ-D", "first");
-  const before = w.row(`SELECT * FROM project_join_requests`);
-  w.m.projectRequestAnswer({ projectId: "PROJ-D", handle: "cal", answer: "decline", comment: "not now", by: "ann", viewer: V("ann") });
-  const closed = w.row(`SELECT * FROM project_join_requests`);
-  for (const f of ["project_id", "member_id", "project_name", "comment", "asked_at"]) assert.equal(closed[f], before[f], f);
-  assert.deepEqual([closed.state, closed.closed_by, closed.closed_comment], ["declined", "ann", "not now"]);
-  w.m.projectVisibilitySet({ projectId: "PROJ-D", setting: "hidden", by: "ann", viewer: V("ann") });   // lapses only open ones
-  assert.deepEqual(w.row(`SELECT * FROM project_join_requests`), closed, "a closed request is never rewritten");
-  w.m.projectVisibilitySet({ projectId: "PROJ-D", setting: "discoverable", by: "ann", viewer: V("ann") });
-  assert.equal(ask(w, "cal", "PROJ-D", "second").ok, true, "the member may ask again");
-  assert.equal(w.rows(`SELECT * FROM project_join_requests`).length, 2);
-});
-
-test("R53 projectRequests: the caller's own (never the answering owner), or a project's for owners and administrators; capped", async () => {
-  const w = await reqWorld();
-  ask(w, "cal", "PROJ-D", "hi");
-  w.m.projectRequestAnswer({ projectId: "PROJ-D", handle: "cal", answer: "decline", comment: "no", by: "ann", viewer: V("ann") });
-  ask(w, "dee", "PROJ-D", "me too");
-  const own = w.m.projectRequests({ by: "cal", viewer: V("cal") });
-  assert.deepEqual([own.own, own.requests.map((r) => [r.project, r.name, r.state, r.closed_comment])],
-    [true, [["PROJ-D", "Discoverable D", "declined", "no"]]]);
-  assert.doesNotMatch(JSON.stringify(own), /"ann"/, "never the answering owner");
-  assert.equal(w.m.projectRequests({ by: "cal", viewer: V("dee") }).reason, "PROJECT_REQUEST_NEEDS_A_MEMBER");
-  for (const [by, viewer] of [["ann", V("ann")], ["second", V("second")]]) {
-    const all = w.m.projectRequests({ projectId: "PROJ-D", by, viewer });
-    assert.deepEqual(all.requests.map((r) => [r.handle, r.state, r.closed_by]), [["cal", "declined", "ann"], ["dee", "open", null]]);
-  }
-  assert.equal(w.m.projectRequests({ projectId: "PROJ-D", by: "bob", viewer: V("bob") }).reason, "PROJECT_REQUESTS_NOT_VISIBLE");
-  const cut = w.m.projectRequests({ projectId: "PROJ-D", by: "ann", viewer: V("ann"), limit: 1 });
-  assert.deepEqual([cut.count, cut.truncated, cut.limit], [1, true, 1]);
-  assert.equal(w.m.projectRequests({ projectId: "PROJ-D", by: "ann", viewer: V("ann"), limit: 2 }).truncated, false);
-  assert.equal(w.m.projectRequests({ by: "cal", viewer: V("cal"), limit: 9999 }).limit, Membership.PROJECT_REQUESTS_LIMIT);
-  assert.equal(Membership.PROJECT_REQUESTS_LIMIT, 200);
-});
 
 test("R54 isProjectOwner and isJoinedParticipant", async () => {
   const w = await reqWorld();
@@ -207,8 +109,8 @@ test("R71 projectCreated: the sole initial owner, the creation visibility record
   assert.deepEqual([r.ok, r.owner, r.setting], [true, "ann", "discoverable"]);
   assert.deepEqual(w.m.projectOwners("PROJ-N"), ["ann"]);
   assert.equal(w.m.participation("PROJ-N", "ann").state, "joined");
-  assert.deepEqual(w.m.projectVisibility({ projectId: "PROJ-N", viewer: V("ann") }).history.map((h) => [h.setting, h.set_by]),
-    [["discoverable", "ann"]]);
+  assert.deepEqual(w.rows(`SELECT setting, set_by, reason FROM project_visibility WHERE project_id='PROJ-N'`).map((h) => [h.setting, h.set_by, h.reason]),
+    [["discoverable", "ann", "chosen at creation"]]);
   assert.equal(w.m.sight("PROJ-N", V("cal")), Membership.SIGHT_EXISTENCE, "reindexed");
   w.bundle("PROJ-M", "project", "Machine-made");
   const m = w.m.projectCreated({ projectId: "PROJ-M", ownerId: null, visibility: null, by: "class:admin" });
@@ -220,13 +122,15 @@ test("R71 projectCreated: the sole initial owner, the creation visibility record
   assert.equal(w.m.participation("PROJ-B", "ann"), null, "nothing written on a refusal");
 });
 
-test("R59 R111 members' tables are declared exempt from purge; project-keyed tables are cleared with the project", async () => {
+test("R115 R111 members' tables are declared exempt from purge; participation, visibility, the sight index and removals are cleared with the project", async () => {
   const w = world();
   assert.equal(w.declared.length, 1);
   const [d] = w.declared;
   assert.equal(d.module, "membership");
   assert.deepEqual(new Set(d.opts.exempt), new Set(["members", "member_expertise", "admin_votes", "hosting_access",
-    "join_doors", "group_description", "court_notice"]), "R111's tables beside R59's");
+    "join_doors", "group_description", "court_notice"]), "R111's tables beside R115's");
+  assert.deepEqual(new Set(MEMBERSHIP_PROJECT_TABLES), new Set(["project_participants", "project_removals", "project_visibility",
+    "project_sight"]), "R115: the owner votes, decisions and requests are project-roster's (its R18), not declared here");
   assert.deepEqual(d.tables, MEMBERSHIP_PROJECT_TABLES.map((name) => ({ name, keys: ["project_id"] })),
     "each project-keyed table once, keyed by project (record-core R46)");
   for (const t of MEMBERSHIP_PROJECT_TABLES)
@@ -237,7 +141,7 @@ test("R59 R111 members' tables are declared exempt from purge; project-keyed tab
   assert.equal(w.declared.length, 1, "declared once");
 });
 
-test("R59 through the real record-core: a purge clears the project's rows and never a member's", async () => {
+test("R115 through the real record-core: a purge clears the project's rows and never a member's", async () => {
   const w = await realWorld();
   const { m, rc } = w;
   await w.claim();

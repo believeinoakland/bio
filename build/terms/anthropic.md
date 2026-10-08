@@ -92,14 +92,7 @@ Sources, with the date each page states:
 - **Bears on:** the cost of a member's own Enterprise (usage-based) seat: metered at API rates, not a flat price.
 
 ### AT-8
-- **Governs:** Team/Enterprise (Commercial Terms)
-- **Source:** https://support.claude.com/en/articles/15036540-use-the-claude-agent-sdk-with-your-claude-plan ("For Team and Enterprise admins"; text the page keeps "for reference" under a paused change, AT-19)
-- **Read:** 2026-10-06
-- **Text:**
-  > Credits are per-user. Each eligible user on your team claims their own credit. Credits can't be pooled, transferred, or shared across the organization.
-  >
-  > Production automation at scale. The Agent SDK monthly credit is sized for individual experimentation and automation. Teams running shared production automation should use Claude Platform with an API key for predictable pay-as-you-go billing.
-- **Bears on:** shared automation for a Team or Enterprise organization: Anthropic advises an API key; the sentence is advice in a paused section, not a prohibition (U-1).
+- **Retired 2026-10-08 (K2332):** its text is no longer on page S (the "For Team and Enterprise admins" section is gone). Kept as a record of what the page said on 2026-10-06; no statement may rest on it. Team plans' monthly API credits are now pooled (AT-28).
 
 ## API and Console organizations (Commercial Terms)
 
@@ -235,11 +228,13 @@ Sources, with the date each page states:
 
 ### AT-23
 - **Governs:** all plans
-- **Source:** https://support.claude.com/en/articles/15036540-use-the-claude-agent-sdk-with-your-claude-plan ("Update June 15")
-- **Read:** 2026-10-06
+- **Source:** https://support.claude.com/en/articles/15036540-use-the-claude-agent-sdk-with-your-claude-plan ("Update October 7, 2026", "Update June 15, 2026")
+- **Read:** 2026-10-08 (replaces the 2026-10-06 text, K2332)
 - **Text:**
-  > Update June 15: We're pausing the changes to Claude Agent SDK usage described below. For now, nothing has changed: Claude Agent SDK, claude -p, and third-party app usage still draw from your subscription's usage limits. The previously announced monthly credit, which would have been available to eligible claimants in connection with these changes, isn't available. We're working to update the plan to better support how users build with Claude subscriptions. When we have an update, we'll share it before anything takes effect.
-- **Bears on:** the subscription path's billing: it draws on the member's plan's usage limits; no separate Agent SDK credit exists now (U-6).
+  > Update October 7, 2026: Claude Max and Team plans now include monthly API credits, which cover the Claude Agent SDK, claude -p, the Claude API, and Claude Managed Agents. You can still use the Claude Agent SDK, claude -p, and third-party apps with your subscription limits.
+
+  > Update June 15, 2026: We’ve paused the previously-announced changes to Claude Agent SDK usage. For now, nothing has changed: Claude Agent SDK, claude -p, and third-party app usage still draw from your subscription limits.
+- **Bears on:** the subscription path's billing: it draws on the member's plan's usage limits; the change remains paused, and the page no longer promises notice before one takes effect (U-6). Separate monthly API credits exist for Max and Team (AT-28).
 
 ### AT-24
 - **Governs:** all plans
@@ -282,16 +277,42 @@ Sources, with the date each page states:
   > Claude Code manages `.credentials.json` through `/login` and `/logout`.
 - **Bears on:** a member's sign-in through hosted Claude Code's own login is written by the binary into the container it runs in (the group's), not by Civicsmith's code.
 
+### AT-28
+- **Governs:** Max and Team plans (not Free, Pro or Enterprise)
+- **Source:** https://support.claude.com/en/articles/17154008-monthly-api-credits-for-max-and-team-plans
+- **Read:** 2026-10-08 (K2332). Its "Supplemental Credit Terms" not yet read.
+- **Text:**
+  > Available on Max and Team plans, including discounted Team plans. Free, Pro, and Enterprise plans aren't eligible.
+
+  > On Team plans, credits for all seats are pooled into one monthly balance, capped at $500.
+
+  > To claim your credit, you link a Claude Console organization to your plan. Credits go to that organization each month.
+
+  > Shared across the organization. Everyone with an API key in the linked organization draws from the same balance.
+
+  > The credits are for building your own apps and agents on the Claude Platform. They don't cover interactive Claude Code sessions or extra usage after you hit your plan's limits.
+
+  > Does this cover claude -p ? API credits cover claude -p and the Claude Agent SDK when you run them yourself with an API key from your linked Claude Console organization, because that usage is billed as Agent SDK usage. When you're signed in with your Claude plan instead, claude -p and Agent SDK usage still draw from your plan's usage limits and don't use your API credits.
+- **Bears on:** a Max or Team holder's API key in a linked Console organization draws on monthly credits, under the Commercial Terms' API rules (AT-9, AT-10), subject to U-3 and U-4; a sign-in still draws on the plan's limits (AT-23).
+
+### AT-29
+- **Governs:** all plans
+- **Source:** https://code.claude.com/docs/en/authentication
+- **Read:** 2026-10-08 (K2332; whether it is new since 2026-10-06 is not known)
+- **Text:**
+  > Renewing early matters most for sessions that run unattended. A background session in agent view or a Remote Control session that outlives the login stops making progress once the credential expires and can't recover until you sign in again.
+- **Bears on:** unattended sessions on a sign-in are described as a use case, with their expiry; it does not say whether such use on a subscription is "ordinary" (U-5).
+
 ## Unresolved: ask Anthropic
 
 Questions the pages read on 2026-10-06 do not answer, which matter to this product. Each states what the pages say and what they do not; no statement elsewhere assumes either answer.
 
-- **U-1 · A Team or Enterprise plan's credentials serving a group's copy.** Say: the Consumer Terms' bar on making an Account available to anyone else governs Free, Pro and Max (AT-1, AT-3); developers may not route requests through "Free, Pro, or Max plan credentials" on their users' behalf (AT-16); Team and Enterprise members sign in with the account their admin invited them to (AT-5); the plan is the organization's administered offering to its Users (AT-6); shared production automation is advised onto an API key (AT-8, advice in a paused section). Do not say: whether one Team or Enterprise seat's token, or an organization-level credential of such a plan, may serve other members of the group through the group's copy, or whether each member's own seat token is the only permitted use.
+- **U-1 · A Team or Enterprise plan's credentials serving a group's copy.** Say: the Consumer Terms' bar on making an Account available to anyone else governs Free, Pro and Max (AT-1, AT-3); developers may not route requests through "Free, Pro, or Max plan credentials" on their users' behalf (AT-16); Team and Enterprise members sign in with the account their admin invited them to (AT-5); the plan is the organization's administered offering to its Users (AT-6); AT-8's advice on shared automation is withdrawn from its page (K2332); Team plans' API credits are pooled across the linked organization (AT-28). Do not say: whether one Team or Enterprise seat's token, or an organization-level credential of such a plan, may serve other members of the group through the group's copy, or whether each member's own seat token is the only permitted use.
 - **U-2 · Holding a member's subscription token in the group's copy.** Say: developers may not "collect, store, or intermediate Claude.ai credentials or session tokens" (AT-17); an end user may sign in to the unmodified binary with their own subscription where a platform hosts it (AT-18); the token is made by the holder in Anthropic's own flow and set "wherever you want to authenticate" (AT-22). Do not say: whether a group's self-hosted copy that seals the member's own `setup-token` output and passes it to hosted Claude Code is "a developer storing" it, or the member's own configuration of their own token; nor who "the developer" is when the group, not the project, runs the copy.
 - **U-3 · The group's API key and hosted Claude Code.** Say: a customer's own API key may serve "the customer's own authorized users" (AT-9); but where Claude Code runs inside a product, "each end user must authenticate with their own" credential and the customer may not "pay for … or intermediate Claude usage on their end users' behalf" (AT-15). Do not say: whether a group's key serving its members through the Messages API (no Claude Code) is outside AT-15, or whether the group key may drive the `agent-runner` path; nor whether the group, or the project that publishes BIO, is "the customer".
 - **U-4 · Who a group's "authorized users" are.** Say: the key owner's "own authorized users" (AT-9); the Customer's "own customers and end users ('Users')" (AT-10). Do not say: whether a civic group's members, who are not its employees and may be an unincorporated association's volunteers, are its authorized users or Users.
 - **U-5 · Unattended runs on a member's subscription.** Say: Pro and Max limits "assume ordinary, individual usage of Claude Code and the Agent SDK" (AT-4); OAuth supports "ordinary use" (AT-21); `setup-token` is for "CI pipelines, scripts, or other environments" (AT-22). Do not say: whether a member's standing question, re-run by the scheduler and calling the model on that member's token without their act each time, is ordinary individual use.
-- **U-6 · The paused Agent SDK change.** Say: the June 15 change is paused and an update will be shared "before anything takes effect" (AT-23). Do not say: whether or when Agent SDK and third-party-app use will stop drawing on subscription limits, or what will replace the withdrawn credit.
+- **U-6 · The paused Agent SDK change.** Say: the change is paused and, "for now", Agent SDK, `claude -p` and third-party app usage still draw from subscription limits; separate monthly API credits exist for Max and Team (AT-23, AT-28). Do not say: whether or when the paused change will take effect, or that notice will precede it (the page no longer says so, K2332).
 - **U-7 · A member signing in through hosted Claude Code's own login, from a Civicsmith screen.** Say: the binary is unmodified (AT-14); the member uses their own subscription, billed to them (AT-15); the sign-in completes on Anthropic's own page (AT-17); an end user signing in to "the unmodified Claude Code binary with their own Claude subscription, including where a platform hosts Claude Code" is not prevented (AT-18); the member's browser shows a login code that must reach the hosted binary's `Paste code here if prompted` prompt (AT-26), and the binary stores the result in the container (AT-27); Anthropic directs such questions to sales (AT-25). Do not say: (a) whether a Civicsmith screen that takes the login code and passes it to the binary, or carries the member's keystrokes to the binary's own prompt, "collect[s] … or intermediate[s] Claude.ai credentials or session tokens" (AT-17); (b) whether a Civicsmith button that starts that sign-in offers "Claude.ai login into their own applications" (AT-16) or is the member "signing in to the unmodified Claude Code binary" (AT-18); (c) whether the credential the binary writes in the group's container is the developer "stor[ing]" it (AT-17; as U-2); (d) who agrees to the Commercial Terms as the one "running Claude Code in your products" (AT-14): each group, or Civicsmith's makers (as U-2). Answerable only by Anthropic (AT-25); whether to ask is Bob's (the layouts page's S6).
 
 ## Bob's choices (not Anthropic's rules)

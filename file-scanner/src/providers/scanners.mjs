@@ -91,10 +91,13 @@ export function icapVerdict(text) {
   }
   return { result: 'unknown', findings: [], detail: `ICAP:${Number.isFinite(status) ? status : 'unreadable'}` };
 }
+// `tls` is asked as one text (R19): yes, true, on or 1 (any case) or `true` itself turns it on; anything else is off.
+const tlsOn = (v) => v === true || /^(yes|true|on|1)$/i.test(String(v ?? '').trim());
 const icap = {
   async scan(ctx, file) {
-    const host = hostPart(ctx.spec.host), port = portPart(ctx.spec.host, ctx.config.tls ? 11344 : 1344);
-    const socket = await ctx.net.tcp(host, port, ctx.config.tls ? { secureTransport: 'on' } : {});
+    const tls = tlsOn(ctx.config.tls);
+    const host = hostPart(ctx.spec.host), port = portPart(ctx.spec.host, tls ? 11344 : 1344);
+    const socket = await ctx.net.tcp(host, port, tls ? { secureTransport: 'on' } : {});
     const enc = new TextEncoder();
     const w = socket.writable.getWriter();
     try {

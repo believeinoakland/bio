@@ -5,8 +5,8 @@
    migration re-reads those bytes through the pptx entry and moves the references by `pptxRenumbering`. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, hold, psp, palt, pptx, docx, wp, wr, box, bucket } from "./fixture.mjs";
-import { n439MigratedReading, n439Marked, pptxRenumberingMoves, n26Marked, N439_READER_MARK, N439_MIGRATION }
+import { fresh, bundle, hold, psp, palt, pptx, docx, doc, wp, wr, box, bucket } from "./fixture.mjs";
+import { n439MigratedReading, n439Marked, pptxRenumberingMoves, n26Marked, N439_READER_MARK, N439_MIGRATION, Extraction }
   from "../../../src/extraction/index.mjs";
 import { textUnitsFor, layerChainFor, readingProvenance } from "../../../src/reading-pipeline/index.mjs";
 import { pptxRenumbering, pptxEntry } from "../../../src/pptx.mjs";
@@ -271,4 +271,37 @@ test("R68 R66: on a Durable Object both migrations are started by migrate(), the
   assert.equal(waited.length, 1);
   const x3 = new Extraction(f.s, { record, membership: f.membership, env: {} });
   assert.equal(x3.startMigrations(), null);
+});
+
+test("R68 (T38, N786; K2296): after a whole-store purge a .pptx reading written since, the fixed reader's, over a deck with a branch not read, is never migrated: the migrations' row survives the purge, done, its cutoff not taken again", async () => {
+  const w = fresh({ host: { waitUntil: () => null } });
+  /* the boot took the cutoff over the empty store; its run finds nothing and is done */
+  assert.equal((await w.x.migratePptxReadings()).done, true);
+  const kept = w.one(`SELECT * FROM reading_migrations WHERE migration=?`, N439_MIGRATION);
+  assert.deepEqual([kept.cutoff, kept.done], [0, 1]);
+  const purged = w.core.purge();
+  assert.equal(purged.removed.reading_migrations, undefined, "the migrations' row is exempt from the purge");
+  assert.equal(w.one(`SELECT count(*) c FROM reading_history`).c, 0);
+  /* N439's own reading of the deck (R1), written after the purge */
+  bundle(w.s, "INFO-1");
+  const bytes = pptx(SLIDES);
+  const d = await hold(w.evidence, bytes);
+  const CT = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+  const r = await w.x.read(doc({ digest: d, bytes: bytes.length, ct: CT, format: "pptx", headers: [["content-type", CT]] }));
+  assert.equal(r.reading.text_container, "pptx");
+  assert.equal(pptxRenumberingMoves(pptxRenumbering(await pptxEntry.parts(bytes))), true, "the deck holds a branch N439 does not read");
+  w.x.writeReading({ bundleId: "INFO-1", captureSha: d, reading: r.reading, textUnits: r.text_units, profileFormat: "pptx" });
+  /* the object restarts over the same storage: the row stands, done, its cutoff the boot's */
+  const record = { evidenceStore: () => w.core.evidenceStore(), transact: (fn) => w.core.transact(fn), readFile: () => null };
+  const waited = [];
+  const x2 = new Extraction(w.s, { record, membership: w.membership, env: {}, host: { waitUntil: (p) => waited.push(p) } });
+  x2.migrate();
+  await Promise.all(waited);
+  assert.deepEqual(w.one(`SELECT * FROM reading_migrations WHERE migration=?`, N439_MIGRATION), kept);
+  const again = await x2.migratePptxReadings();
+  assert.deepEqual([again.done, again.examined, again.migrated], [true, 0, []]);
+  const got = w.x.readingOf(d).reading;
+  assert.deepEqual(got, r.reading);
+  assert.equal(n439Marked(got), false);
+  assert.equal(w.one(`SELECT count(*) c FROM reading_history WHERE capture_sha=?`, d).c, 1);
 });

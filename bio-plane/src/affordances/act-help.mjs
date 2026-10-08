@@ -2,19 +2,21 @@
  * English explanation per op, keyed by op, held for translation (N669 keys the translations by this table's keys).
  *
  * GENERATED, never edited by hand, from the design stream's `docs/development/ux-substrate/screens/mock-acts.js` as
- * PR #14 merged it to `main` (`e08cd35ecb`), 203 entries (T37-27; N776, DEC-182); a later design text is a
- * re-generation. Each text is the design's, verbatim, in the design's order. Its keys are read as R48 reads them:
+ * PR #15 merged it (`c848b56671`, DEC-183), 204 entries (T38-31, K2300; before it PR #14's `e08cd35ecb`, 203, T37-27);
+ * a later design text is a re-generation. Each text is the design's, verbatim, in the design's order. Its keys are read
+ * as R48 reads them:
  *   - a declared op is that op;
  *   - an alias (`op-grades`' OP_ALIASES, `op-declarations` R21's table) is held under its op, never as a second entry;
  *   - `owed_<op>` is held under `<op>` for the nineteen owed acts declared in T36 (`aikeepaway`, `openoriginal`,
  *     `openwithwarning`, `safeview`, `deepercheck`, `releasescanhold`, `securitytooladd`, `securitytooltest`,
  *     `securitytoolremove`, `archivelist`, `findin`, `groupdescriptiondraft`, `memberlanguageset`, `notedelete`,
- *     `noterevise`, `publishat`, `securitymap`, `startfrom`, `writinghelp`) and the eight op-declarations declares in T37
+ *     `noterevise`, `publishat`, `securitymap`, `startfrom`, `writinghelp`), the eight op-declarations declares in T37
  *     (T37-31, K2249: `subscriptionsignin`, `setpassword`, `obscuremark`, `translationgrant`, `translationdraft`,
- *     `translationadopt`, `translationconfirm`, `translationrevert`), and under `owed_<op>` for the one still undeclared
- *     (`infolevelset`);
+ *     `translationadopt`, `translationconfirm`, `translationrevert`) and the one it declares in T38 (T38-15, its R40:
+ *     `obscuremarkwithdraw`, PR #15's new text), and under `owed_<op>` for the one still undeclared (`infolevelset`);
  * PR #14 withdrew `projectcreated`, `countask`, `registerproceeding`, `deadlinecompute` and `claimidentity` and dropped
- * `assistantset` (DEC-182 (1)–(3)), so every one of its 203 entries is held. */
+ * `assistantset` (DEC-182 (1)–(3)); PR #15 re-worded `setpassword` (credentials R3: every other session ends) and added
+ * `obscuremarkwithdraw` (DEC-183 (2)), so every one of its 204 entries is held. */
 export const ACT_HELP = Object.freeze({
   bootstrap: 'Installs Civicsmith in your group\'s own Cloudflare account under this short name. The short name is permanent: it appears in every address and beside every signature.',
   selftest: 'Runs Civicsmith\'s own checks on what was just installed, so you know it works before anyone joins.',
@@ -53,7 +55,7 @@ export const ACT_HELP = Object.freeze({
   securitytooltest: 'Sends a harmless test file or address to the tool and shows its answer, so you know it works before relying on it.',
   securitytoolremove: 'Stops using this tool. Notes it already wrote stay on the files they concern.',
   expertisedeclare: 'Says what you know professionally, such as accounting or law. An administrator confirms it; members can then ask you for checks.',
-  setpassword: 'Changes your password. Other sessions you have open stay signed in until they end.',
+  setpassword: 'Changes your password. Every other session signed in as you ends, so anyone using an old one must sign in again with the new password.',
   signerregister: 'Registers the key you sign published cases with. Readers check a signature against it.',
   signerrevoke: 'Withdraws your signing key, for example if it was lost. Cases already signed keep a record that it was withdrawn.',
   owed_infolevelset: 'Chooses how quickly explanations open: promptly, or guidance on a longer pause so less opens while you move. Nothing is ever hidden.',
@@ -120,6 +122,7 @@ export const ACT_HELP = Object.freeze({
   personfact: 'Records a fact about this person from the passage: a position, a credential, an interest. It cites the passage.',
   datedfact: 'Records a dated fact from the passage, citing it, for the timeline.',
   clockpropose: 'Works out a due date from the law and the dates, showing each day counted and each holiday skipped. It proposes the date; a member confirms it.',
+  obscuremarkwithdraw: 'Withdraws a mark on a photo, with your reason, for example when it covers what the finding shows. The withdrawal is recorded beside the mark; the public copy follows the marks that stand.',
   obscuremark: 'Marks anyone in a photo who is not part of a finding, and any number plate, so the copy a published case carries shows them obscured, labelled. The original stays inside the group.',
   standarddeclare: 'Holds this requirement as a standard the city set itself, so questions can test the city against it.',
   moneyrecord: 'Reads this figure into a money fact, with its stage and period, citing where it came from.',

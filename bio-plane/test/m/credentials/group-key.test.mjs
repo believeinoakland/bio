@@ -150,7 +150,7 @@ test("R34 R37 groupKeyState: an active administrator (the founder included) read
 
 test("R35 accountFor: the member's own reference when held ({kind, level: member, key}); else the group key when held and on ({kind: apikey, level: group, key}) for an active member who has read its notice; else NO_ACCOUNT; any act but the member's own NOT_YOUR_ACCOUNT; it writes nothing", async () => {
   const w = await groupWorld();
-  await w.c.accountReferenceSet({ member: "ann", kind: "subscription", secret: "sk-ant-oat01-ann", by: "ann" });
+  await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ant-api03-ann", by: "ann" });
   const before = w.snapshot();
   /* any act but the member's own ask, run or standing question */
   for (const act of [null, undefined, {}, "ask", { kind: "ask" }, { kind: "ask", member: "bob" }, { kind: "export", member: "ann" },
@@ -162,7 +162,7 @@ test("R35 accountFor: the member's own reference when held ({kind, level: member
   for (const kind of ["ask", "run", "standing"])
     for (const m of ["ann", "member:ann"])
       assert.deepEqual(await w.c.accountFor({ member: "ann", act: { kind, member: m } }),
-        { ok: true, kind: "subscription", level: "member", key: "sk-ant-oat01-ann" }, `${kind} ${m}`);
+        { ok: true, kind: "apikey", level: "member", key: "sk-ant-api03-ann" }, `${kind} ${m}`);
   /* no account: no reference and no group key, or the group key held but off */
   const none = await w.c.accountFor({ member: "bob", act: ask("bob") });
   assert.deepEqual([shape(none), none.member], [refusal("NO_ACCOUNT"), "bob"]);

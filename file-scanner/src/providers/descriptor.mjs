@@ -28,13 +28,20 @@ const stated = (v, check) => v === NOT_STATED || check(v);
 const hostName = (h) => str(h) && /^(\*\.)?[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(h);
 
 const CONFIG_NAME = /^[a-z][a-z0-9_]*$/;
-/** R19 (N777): `config` is `[{name, label, required}]`, each name once; an empty list when the adapter reads none. */
+/** R19 (T38): a `config` entry whose value is not one text says which shape it is. */
+export const STRUCTURED = Object.freeze(['list', 'handling']);
+/** R19 (T38): the `config` names that stand for the spec's own `host` and `region` (R21), not for `spec.config`. */
+export const SPEC_FIELDS = Object.freeze(['host', 'region']);
+/** R19 (N777, T38): `config` is `[{name, label, required, structured?}]`, each name once; an empty list when the
+ *  adapter reads none. */
 function configList(v) {
   if (!Array.isArray(v)) return false;
   const names = new Set();
   for (const f of v) {
     if (!f || typeof f !== 'object' || Array.isArray(f)) return false;
-    if (Object.keys(f).length !== 3 || !CONFIG_NAME.test(f.name || '') || !str(f.label) || typeof f.required !== 'boolean') return false;
+    const keys = Object.keys(f).filter((k) => k !== 'structured');
+    if (keys.length !== 3 || !CONFIG_NAME.test(f.name || '') || !str(f.label) || typeof f.required !== 'boolean') return false;
+    if ('structured' in f && !STRUCTURED.includes(f.structured)) return false;
     if (names.has(f.name)) return false;
     names.add(f.name);
   }

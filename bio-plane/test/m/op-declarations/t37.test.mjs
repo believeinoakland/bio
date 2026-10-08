@@ -136,9 +136,11 @@ test("R38 (N757; DEC-180; case-carriage R9, R10): obscuremark — a member's act
     for (const f of ["captureSha", "areas"]) assert.ok(!stamps(op).includes(f), `${op}: ${f}`);
     shared(op);
   }
-  assert.deepEqual(OP_FAMILIES["case-carriage"].kinds, { obscuremark: "member", photomarks: "ownread" });
-  /* R6: case-carriage's map serves exactly the two */
-  assert.deepEqual(Object.keys(caseCarriageOps({}, new URL("http://plane/"), {})).sort(), ["obscuremark", "photomarks"]);
+  /* T38 (R40, K2311): the family and case-carriage's map hold the withdrawal beside the two (R40's test is t38's) */
+  assert.deepEqual(OP_FAMILIES["case-carriage"].kinds, { obscuremark: "member", photomarks: "ownread", obscuremarkwithdraw: "member" });
+  /* R6: case-carriage's map serves exactly the three, each declared */
+  assert.deepEqual(Object.keys(caseCarriageOps({}, new URL("http://plane/"), {})).sort(),
+                   ["obscuremark", "obscuremarkwithdraw", "photomarks"]);
   /* the stamps reach the owner where it reads them; the areas are the body's */
   assert.ok(await reaches(caseCarriageOps, "obscuremark", { query: { by: SENT } }));
   assert.ok(await reaches(caseCarriageOps, "obscuremark", { body: { areas: [SENT] } }));

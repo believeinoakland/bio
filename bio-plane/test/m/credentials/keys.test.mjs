@@ -4,7 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world } from "./fixture.mjs";
 import { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS } from "../../../src/credentials/index.mjs";
-import { notAnAdmin } from "../../../src/membership/index.mjs";
+import { notAnAdmin, noSuchMember, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 
 const listed = (w, k) => w.c.signerList().signers.find((s) => s.key_b64 === k);
 
@@ -30,8 +30,9 @@ test("R6 signerAdd: refusals in order, each writing nothing; a known key rebinds
       translation: CREDENTIALS_CHECKS.BAD_KEY.translation, detail: "expected the base64 field of an ssh-ed25519 public key" },
       String(keyB64));
   }
-  assert.deepEqual(w.c.signerAdd({ keyB64: "AAAAkey1", memberId: "nobody", by: "admin" }), { ok: false, reason: "NO_SUCH_MEMBER" });
-  assert.deepEqual(w.c.signerAdd({ keyB64: "AAAAkey1", memberId: "admin", by: "admin" }), { ok: false, reason: "NO_SUCH_MEMBER" },
+  assert.deepEqual(w.c.signerAdd({ keyB64: "AAAAkey1", memberId: "nobody", by: "admin" }), noSuchMember("nobody"),
+    "membership R121's one answer (N793)");
+  assert.deepEqual(w.c.signerAdd({ keyB64: "AAAAkey1", memberId: "admin", by: "admin" }), noSuchMember("admin"),
     "the founder holds no roster row, so no key is registered to them");
   const cal = w.c.signerAdd({ keyB64: "AAAAkey1", memberId: "cal", by: "admin" });
   assert.deepEqual([cal.reason, cal.code, cal.check, cal.translation, cal.memberId, cal.member_status, cal.enrolled],
@@ -76,7 +77,8 @@ test("R7 signerSet: NOT_AN_ADMIN, BAD_STATUS, NO_SUCH_KEY in order; activation r
   assert.equal(listed(w, "AAAAbob1").status, "revoked", "nothing landed");
   /* a key whose member row is gone cannot be activated; revoking is never refused, whatever the member's state */
   w.sql.exec(`INSERT INTO signers (key_b64, member_id, status, added) VALUES ('AAAAghost', 'ghost', 'revoked', 't')`);
-  assert.deepEqual(w.c.signerSet({ keyB64: "AAAAghost", status: "active", by: "admin" }), { ok: false, reason: "NO_SUCH_MEMBER" });
+  assert.deepEqual(w.c.signerSet({ keyB64: "AAAAghost", status: "active", by: "admin" }), noSuchMember("ghost"));
+  assert.equal(noSuchMember("ghost").check, MEMBERSHIP_CHECKS.NO_SUCH_MEMBER.check, "its row is membership's (C-96.47)");
   for (const k of ["AAAAbob1", "AAAAghost", "AAAAkey1"])
     assert.equal(w.c.signerSet({ keyB64: k, status: "revoked", by: "class:admin" }).ok, true, k);
 });

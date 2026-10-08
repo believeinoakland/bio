@@ -1,4 +1,4 @@
-/* op-declarations: WHAT EACH OP IS (R1–R39). Every op's spec, the act lists that drive the stamps and the fences, the
+/* op-declarations: WHAT EACH OP IS (R1–R40). Every op's spec, the act lists that drive the stamps and the fences, the
    session sets, the capability table, the recorded decisions that a verb is not a person's, and the act gate read
    from those tables. It declares; it judges no caller and routes nothing (`admission` and `control-plane` read it).
    Copied from `control-plane/ops.mjs` at the control-plane split (T18, K617, K624 (1), (2)), which control-plane's own
@@ -54,7 +54,10 @@ const frozenList = (a) => Object.freeze(a);
    `setpassword` is an owed act, declared under its own name in credentials' family (R39) beside `obscuremark` (R38),
    `subscriptionsignin` (R36) and the translation acts (R35, R37); `infolevelset` alone stays owed with no spec. The
    same-person claim is one op there, `identityclaim` (DEC-182 (2)): `claimidentity` is no registry function and no
-   alias. */
+   alias.
+   T38 (R21, R40; N788, DEC-183): the registry is read as PR #15 left it (`c848b56671`): its owed act
+   `obscuremarkwithdraw` (the ceremony's Photos step) is declared under its own name in case-carriage's family (R40),
+   with no alias; `infolevelset` alone stays owed with no spec. */
 const OP_ALIASES = Object.freeze({
   signerregisterown: "signerregister", signerrevokeown: "signerrevoke",             // credentials (membership R89, R90)
   declaretie: "membertie", withdrawtie: "membertiewithdraw", recordpersonfact: "personfact",   // people
@@ -410,10 +413,13 @@ const OP_FAMILIES = Object.freeze({
     scanstatus: "ownread", securitytools: "ownread", securitytoolcatalogue: "ownread", securitytoolevents: "ownread",
     securitytooladd: "admin", securitytooltest: "admin", securitytoolremove: "admin" } }),
   /* T37 (R38; case-carriage R9, R10; N757, DEC-180; K2171, K2206): a photo's marks of who and what to obscure. Marking
-     one an act of record, a member's (MACHINE_CANNOT_MARK), `contribute`, `by` from the query, `captureSha` and `areas`
-     the body's; the marks and the derived copy a session's read, the viewer stamped. None is on `AI_GRANT_OPS`. */
-  "case-carriage": family({ owner: "case-carriage", cite: "case-carriage R9, R10; R38", actor: QUERY("by"), ops: {
-    obscuremark: "member", photomarks: "ownread" } }),
+     one an act of record, a member's (MACHINE_CANNOT_MARK_PHOTO, N790), `contribute`, `by` from the query, `captureSha`
+     and `areas` the body's; the marks and the derived copy a session's read, the viewer stamped. T38 (R40; case-carriage
+     R14; N788, DEC-183 (2); K2300): withdrawing a mark, by its maker or any member, with a reason, an act of record, a
+     member's (MACHINE_CANNOT_WITHDRAW_MARK), `contribute`, `by` from the query, `captureSha`, `mark` and `reason` the
+     body's. None is on `AI_GRANT_OPS`. */
+  "case-carriage": family({ owner: "case-carriage", cite: "case-carriage R9, R10, R14; R38, R40", actor: QUERY("by"), ops: {
+    obscuremark: "member", photomarks: "ownread", obscuremarkwithdraw: "member" } }),
 });
 const FAMILY_OPS = frozenList(Object.values(OP_FAMILIES).flatMap((f) => Object.keys(f.kinds)));
 /* T34: a public kind's op is in no session set (every caller reaches it); every other family op is in both. */
@@ -3188,7 +3194,9 @@ const UNATTENDED_BY_DECISION = Object.freeze({
    `setpassword`, `subscriptionsignin`, `translationdraft`, `translationadopt`, `translationgrant`,
    `translationconfirm`, `translationrevert`) are explained under their own names; the reads `photomarks`,
    `translations` and `interfacewords` are reads a screen draws from, and `translationmark` an act the design has not
-   yet explained. */
+   yet explained.
+   T38 (R34, R40; K2300): `obscuremarkwithdraw` is named here under no ground: PR #15's `mock-acts.js` explains it
+   (`owed_obscuremarkwithdraw`), and affordances R48 re-generates `ACT_HELP` with that text (T38-31). */
 const ACT_HELP_ABSENT = Object.freeze({
   alias: Object.freeze({ ground: "An alias of a declared op (R21): its op's explanation serves it.",
     ops: frozenList([

@@ -29,7 +29,7 @@
 
 import { isMachineStamp, isPublicHttpsLocator, ISO_TS_RE as ISO_INSTANT } from "../record-grammar/index.mjs";
 import { recordOf, stampInstant, perItem, mintExhausted } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate, GATE_MARK } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, GATE_MARK, noSuchMember } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { captureOf } from "../capture/index.mjs";
@@ -606,10 +606,11 @@ export class Tasks {
     if (row.status === "resolved") return { ok: false, reason: "ALREADY_RESOLVED", detail: "a resolved task is not forwarded; a new determination opens a new task" };
     const fenced = this.#refuseNotYours(row, actor, "forward");
     if (fenced) return fenced;
-    /* membership R68: an active member by that id. */
+    /* membership R68: an active member by that id. None (absent, unknown, or not active) is membership's one answer to
+       that condition, `noSuchMember` (its R121, C-96.47; N793, K231: one code, one site), `member` the `to` asked. */
     const facts = typeof to === "string" && to ? this.#membership.memberFacts(to) : null;
     const target = facts && facts.status === "active" ? { member_id: to } : null;
-    if (!target) return { ok: false, reason: "NO_SUCH_MEMBER", detail: "a task is forwarded to an active member of this group" };
+    if (!target) return noSuchMember(typeof to === "string" ? to : null);
     if (target.member_id === row.assignee) return { ok: false, reason: "ALREADY_THEIRS" };
     const at = now && ISO_INSTANT.test(now) ? now : stampInstant("second", this.#nowMs());
     const task = this.#taskOf(row);

@@ -3,47 +3,14 @@
    (node:sqlite) and capture's own fingerprint (its R56). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { DatabaseSync } from "node:sqlite";
-import { A, O, makeEnv, doAnswer, refused } from "./harness.mjs";
+import { A, O, doAnswer, refused, storeWorld, bridged } from "./harness.mjs";
 
 const W = await import("../../../src/admission/window.mjs");
-const { captureOf } = await import("../../../src/capture/index.mjs");
-const { CAPTURE_DERIVED_SCHEMA } = await import("../../../src/capture/schema.mjs");
 const { OPS } = O;
 const PUBLIC = Object.keys(OPS).filter((k) => OPS[k].classes === null);
 const GATED = Object.keys(OPS).filter((k) => OPS[k].classes !== null);
 const T0 = Date.UTC(2026, 9, 7, 12, 0, 0);   /* a bucket's start: 10-minute buckets divide the hour */
 
-/* A storage over SQLite, a record-core stub that registers declarations as record-core R21 does, and capture over
-   the same storage (its knock key's table made, so the unbound key is capture's own). */
-function storeWorld({ env = {} } = {}) {
-  const db = new DatabaseSync(":memory:");
-  const sql = { exec(q, ...a) { const st = db.prepare(q); return st.columns().length ? st.all(...a).map((r) => ({ ...r })) : (st.run(...a), []); } };
-  const storage = { sql, transactionSync(fn) {
-    db.exec("SAVEPOINT t");
-    try { const r = fn(); db.exec("RELEASE t"); return r; } catch (e) { db.exec("ROLLBACK TO t"); db.exec("RELEASE t"); throw e; }
-  } };
-  const knockKey = CAPTURE_DERIVED_SCHEMA.split(";").find((st) => /CREATE TABLE IF NOT EXISTS knock_key\b/.test(st));
-  db.exec(knockKey);
-  const ctx = { storage };
-  const capture = captureOf(ctx, { env });
-  const declared = [];
-  const record = { declareTable(module, entries) { declared.push({ module, entries }); return { ok: true }; } };
-  const a = W.admissionOf(ctx, { record });
-  const ops = (body) => W.admissionOps(a, new URL("http://do/doorwindow"), body);
-  const rows = () => sql.exec(`SELECT * FROM ${W.DOOR_WINDOW_TABLE} ORDER BY source, bucket`);
-  return { db, sql, ctx, capture, declared, record, a, ops, rows };
-}
-
-/* The Worker's env, whose store answers `doorwindow` through the store side's own map (as `store-door` would). */
-function bridged(w, { answer = null } = {}) {
-  return makeEnv({ answer: async (call) => {
-    if (answer) { const r = await answer(call); if (r) return r; }
-    if (call.route !== "doorwindow") return null;
-    const route = W.admissionOps(w.a, new URL(call.href), call.body).doorwindow;
-    return new Response(JSON.stringify({ ok: true, result: await route() }));
-  } });
-}
 const reqFrom = (address, extra = {}) => new Request("https://plane.example/api", {
   method: "POST", headers: address === undefined ? {} : { "cf-connecting-ip": address }, ...extra });
 
@@ -96,7 +63,7 @@ test("R21 (store side): one window per source over the requests to public ops â€
   }
 });
 
-test("R21 (Worker side): sourceOf answers capture R56's fingerprint of CF-Connecting-IP when the key is bound (else null: the store's), one shared source when no address is stated, never the address; countryOf is Cloudflare's label", async () => {
+test("R21 (Worker side): sourceOf answers capture R56's fingerprint of CF-Connecting-IP when the key is bound (unbound, the store's: t38.test.mjs), one shared source when no address is stated, never the address; countryOf is Cloudflare's label", async () => {
   const key = "bound-key-0123";
   const w = storeWorld({ env: { KNOCK_FINGERPRINT_KEY: key } });
   for (const addr of ["203.0.113.9", "2001:db8::1"]) {
@@ -104,7 +71,7 @@ test("R21 (Worker side): sourceOf answers capture R56's fingerprint of CF-Connec
     assert.equal(fp, await w.capture.sourceFingerprint(addr), "the same digest as capture's");
     assert.match(fp, /^[0-9a-f]{32}$/);
     assert.equal(fp.includes(addr), false);
-    assert.equal(await A.sourceOf(reqFrom(addr), {}), null, "unbound: the store's key, so the store answers it");
+    assert.equal(await A.sourceOf(reqFrom(addr), {}), null, "unbound, and no store to ask (t38.test.mjs asks one)");
     assert.equal(await A.sourceOf(reqFrom(addr), { KNOCK_FINGERPRINT_KEY: "" }), null);
   }
   assert.notEqual(await A.sourceOf(reqFrom("203.0.113.9"), { KNOCK_FINGERPRINT_KEY: key }),

@@ -73,7 +73,7 @@ test("R28: statement_acknowledgements is declared whole to record-core's purge, 
   assert.equal(w.count("statement_acknowledgements"), 0);
 });
 
-test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3–C-44.5 (and R58's C-44.6, new, N681), C-82.2–C-82.8 (C-82.8 new, DEC-88), C-32.6 (and R3's C-33.14), R56's CALCULATION_NOT_DISCLOSED (new, T33-69) and R61's STANDARDS_USE_REFUSED (C-136.2, new, T36) — every refusal carrying its check, code and translation; the family C-120.1–C-120.8 and C-120.10–C-120.18 (C-120.9 withdrawn unstamped; .14–.16 the people a case names, T33-68; .17–.18 a marked photo, T37) is case-disclosures' (its R22, N529), re-exported here and held nowhere in this module's own families (K529)", () => {
+test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3–C-44.5 (and R58's C-44.6, new, N681), C-82.2–C-82.8 (C-82.8 new, DEC-88), C-32.6 (and R3's C-33.14), R56's CALCULATION_NOT_DISCLOSED (new, T33-69) and R61's STANDARDS_USE_REFUSED (C-136.2, new, T36) — every refusal carrying its check, code and translation; the family C-120.1–C-120.8 and C-120.10–C-120.19 (C-120.9 withdrawn unstamped; .14–.16 the people a case names, T33-68; .17–.18 a marked photo, T37; .19 an unchecked photo, T38) is case-disclosures' (its R22, N529), re-exported here and held nowhere in this module's own families (K529)", () => {
   assert.deepEqual(Object.entries(CASE_DERIVATION_CHECKS).map(([k, v]) => [k, v.check]),
     [["CASE_IDENTITY_AMBIGUOUS", "C-44.1"], ["PUBLISH_DRAFT_NOT_FOUND", "C-44.3"], ["PUBLISH_DRAFT_NOT_THIS_CASE", "C-44.4"],
      ["PUBLISH_DRAFT_ALREADY_BOUND", "C-44.5"], ["CASE_EDITION_WAITING", "C-44.6"]]);
@@ -96,7 +96,7 @@ test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3
     "src/case-authoring/index.mjs acknowledgeStatement > is-statement-ack-reasoned");
   assert.deepEqual(Object.values(CASE_DISCLOSURE_CHECKS).map((v) => v.check),
     ["C-120.1", "C-120.2", "C-120.3", "C-120.4", "C-120.5", "C-120.6", "C-120.7", "C-120.8", "C-120.10", "C-120.11",
-     "C-120.12", "C-120.13", "C-120.14", "C-120.15", "C-120.16", "C-120.17", "C-120.18"]);
+     "C-120.12", "C-120.13", "C-120.14", "C-120.15", "C-120.16", "C-120.17", "C-120.18", "C-120.19"]);
   assert.equal(Object.values(CASE_DISCLOSURE_CHECKS).some((v) => v.check === "C-120.9"), false, "withdrawn, never used");
   assert.deepEqual(Object.entries(PUBLISH_ACT_CHECKS).map(([k, v]) => [k, v.check]),
     [["MACHINE_CANNOT_PUBLISH", "C-32.6"], ["NO_STATEMENT", "C-33.14"], ["CALCULATION_NOT_DISCLOSED", "C-136.1"],

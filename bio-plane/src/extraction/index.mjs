@@ -53,12 +53,17 @@ export const OCCURRENCES_PER_REF = 256;
    declared before its index so the triggers keep the index true on the per-bundle arm. */
 export const EXTRACTION_TABLES = Object.freeze(["readings", "reading_refs", "reading_ref_terms", "reading_text_source",
   "reading_history", "capture_text", "capture_text_skipped", "capture_text_state"]);
-export const EXTRACTION_WHOLE_ONLY = Object.freeze(["capture_text_fts", "composed_readings", "reading_migrations"]);
+export const EXTRACTION_WHOLE_ONLY = Object.freeze(["capture_text_fts", "composed_readings"]);
+/* R66, R68 (T38; N786): exempt from both purges. A migration's row holds its cutoff; cleared by a whole-store purge, it
+   would be taken again at the next start over the readings written since the purge (the history's rowids restart),
+   and those, the fixed reader's, would read as made before the fix. After a purge every reading is the fixed reader's,
+   so the row's `done` stays true. */
+export const EXTRACTION_EXEMPT = Object.freeze(["reading_migrations"]);
 
 /** Whether a purge declaration names one of this module's tables (record-core R21: each owner declares its own). */
 export function extractionOwns(t) {
   const name = typeof t === "string" ? t : t && t.name;
-  return EXTRACTION_TABLES.includes(name) || EXTRACTION_WHOLE_ONLY.includes(name);
+  return EXTRACTION_TABLES.includes(name) || EXTRACTION_WHOLE_ONLY.includes(name) || EXTRACTION_EXEMPT.includes(name);
 }
 
 /* Columns added after a store was first written (additive, nullable; run before and after the schema, REC-143). */
@@ -488,11 +493,12 @@ export class Extraction {
     this.startMigrations();
   }
 
-  /** R49: the reading tables declared to record-core's purge, keyed to their bundle; the two whole-store only. */
+  /** R49: the reading tables declared to record-core's purge, keyed to their bundle; two whole-store only; the
+   *  migrations' row exempt (R66, R68). */
   declareTables() {
     if (this.#declared || !this.core || typeof this.core.declarePurge !== "function") return false;
     const answer = this.core.declarePurge("extraction",
-      [...EXTRACTION_TABLES, ...EXTRACTION_WHOLE_ONLY.map((name) => ({ name, keys: [] }))]);
+      [...EXTRACTION_TABLES, ...EXTRACTION_WHOLE_ONLY.map((name) => ({ name, keys: [] }))], { exempt: [...EXTRACTION_EXEMPT] });
     if (answer && answer.ok === false)
       throw new Error(`extraction: record-core refused its purge declaration: ${answer.reason} (${answer.table})`);
     this.#declared = true;

@@ -6,13 +6,13 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
 import { Membership, listenerRefusal, notAnAdmin, noSuchProject, notAParticipant, MEMBERSHIP_CHECKS, MEMBER_ID_CHECKS,
-         CUSTODIAL_CHECKS, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS, PROJECT_JOIN_REQUEST_CHECKS,
+         CUSTODIAL_CHECKS, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS,
          CASE_AUTHORITY_CHECKS } from "../../../src/membership/index.mjs";
 
 const CIVICSMITH = "your group's Civicsmith";
 const FORBIDDEN = /\b(cop(y|ies)|instances?|planes?|servers?)\b/i;
 const TABLES = { MEMBERSHIP_CHECKS, MEMBER_ID_CHECKS, CUSTODIAL_CHECKS, PROJECT_AUTHORITY_CHECKS,
-                 PROJECT_VISIBILITY_CHECKS, PROJECT_JOIN_REQUEST_CHECKS, CASE_AUTHORITY_CHECKS };
+                 PROJECT_VISIBILITY_CHECKS, CASE_AUTHORITY_CHECKS };
 
 /* The member-facing strings of one answer (R112's list): its row's translation, its detail, message and remedy, and
    R108's statement. Codes, field names and ids are not member-facing. */
@@ -113,7 +113,9 @@ test("R112 every row this module holds translates without calling the group's Ci
       assert.equal(typeof row.translation, "string", `${table}.${code}`);
       assert.doesNotMatch(row.translation, FORBIDDEN, `${table}.${code} (${row.check})`);
     }
-  assert.ok(n >= 50, `every row read (${n})`);
+  /* T38 (N783): 43 rows since C-56.5, C-33.28, C-70.4 and the nine C-95 rows went to project-roster (whose own words
+     test holds them) and C-96.47 came. */
+  assert.ok(n >= 43, `every row read (${n})`);
   /* the rows the sweep moved now name it */
   for (const row of [MEMBERSHIP_CHECKS.LISTENER_MALFORMED, MEMBERSHIP_CHECKS.LISTENER_DECLARED,
                      MEMBER_ID_CHECKS.MEMBER_ID_RESERVED, CUSTODIAL_CHECKS.NO_HOLDERS])
@@ -170,20 +172,6 @@ test("R112 every refusal and answer a battery of this module's acts gives (detai
     ["visibility not owner", w.m.projectVisibilitySet({ projectId: "PROJ-1", setting: "hidden", by: "bob",
                                                         viewer: V("bob") })],
     ["visibility setting", w.m.projectVisibilitySet({ projectId: "PROJ-1", setting: "open", by: "ann", viewer: V("ann") })],
-    ["visibility read", w.m.projectVisibility({ projectId: "PROJ-1", viewer: V("ann") })],
-    ["directory", w.m.projectDirectory({ viewer: "class:probe" })],
-    ["request no member", w.m.projectRequest({ projectId: "PROJ-D", by: "class:ai", viewer: "class:ai" })],
-    ["request inside", w.m.projectRequest({ projectId: "PROJ-1", by: "bob", viewer: V("bob") })],
-    ["request ok", w.m.projectRequest({ projectId: "PROJ-D", by: "cal", viewer: V("cal") })],
-    ["request open", w.m.projectRequest({ projectId: "PROJ-D", by: "cal", viewer: V("cal") })],
-    ["withdraw none", w.m.projectRequestWithdraw({ projectId: "PROJ-1", by: "bob", viewer: V("bob") })],
-    ["answer not owner", w.m.projectRequestAnswer({ projectId: "PROJ-D", handle: "cal", answer: "grant", by: "admin",
-                                                    viewer: "admin" })],
-    ["answer unknown", w.m.projectRequestAnswer({ projectId: "PROJ-D", handle: "cal", answer: "maybe", by: "ann",
-                                                  viewer: V("ann") })],
-    ["answer none open", w.m.projectRequestAnswer({ projectId: "PROJ-D", handle: "bob", answer: "grant", by: "ann",
-                                                    viewer: V("ann") })],
-    ["requests not visible", w.m.projectRequests({ projectId: "PROJ-1", by: "bob", viewer: V("bob") })],
     ["join not invited", w.m.projectJoin({ projectId: "PROJ-1", by: "cal" })],
     ["leave last owner", w.m.projectLeave({ projectId: "PROJ-1", by: "ann" })],
     ["leave not a participant", w.m.projectLeave({ projectId: "PROJ-1", by: "cal" })],
@@ -191,13 +179,6 @@ test("R112 every refusal and answer a battery of this module's acts gives (detai
     ["remove not owner", w.m.projectRemove({ projectId: "PROJ-1", handle: "cal", by: "bob" })],
     ["remove target", w.m.projectRemove({ projectId: "PROJ-1", handle: "cal", by: "ann" })],
     ["remove owner", w.m.projectRemove({ projectId: "PROJ-1", handle: "ann", by: "ann" })],
-    ["owner add not owner", w.m.projectOwnerAdd({ projectId: "PROJ-1", handle: "cal", by: "bob" })],
-    ["owner add not joined", w.m.projectOwnerAdd({ projectId: "PROJ-1", handle: "bob", by: "ann" })],
-    ["owner remove floor", w.m.projectOwnerRemove({ projectId: "PROJ-1", handle: "ann", by: "ann", reason: "r" })],
-    ["owner remove no reason", w.m.projectOwnerRemove({ projectId: "PROJ-1", handle: "ann", by: "ann" })],
-    ["rescue not admin", w.m.projectOwnerRescue({ projectId: "PROJ-1", handle: "cal", by: "bob", reason: "r" })],
-    ["rescue owners active", w.m.projectOwnerRescue({ projectId: "PROJ-1", handle: "cal", by: "admin", reason: "r" })],
-    ["participants", w.m.projectParticipants({ projectId: "PROJ-1", by: "cal" })],
     ["inviteWithdraw unused", w.m.inviteWithdraw({ memberId: "ann", by: "admin" })],
     ["websiteKeyCreate cap", w.m.websiteKeyCreate({ by: "admin" })],
     ["websiteKeySet none", w.m.websiteKeySet({ dailyCap: 3, by: "admin" })],
@@ -235,5 +216,6 @@ test("R112 every refusal and answer a battery of this module's acts gives (detai
     texts += facing(r).length;
     clean(r, label);
   }
-  assert.ok(refusals >= 70 && texts >= 140, `the battery reached ${refusals} refusals and ${texts} texts`);
+  /* T38 (N783): the moved acts' refusals are project-roster's battery now. */
+  assert.ok(refusals >= 62 && texts >= 114, `the battery reached ${refusals} refusals and ${texts} texts`);
 });

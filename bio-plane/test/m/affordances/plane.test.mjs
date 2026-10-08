@@ -20,6 +20,7 @@ import { list as listProfiles, combine as combineProfiles } from "../../../../ju
 import { T33_RUNGS } from "../../../src/op-grades/t33.mjs";
 import { T35_RUNGS } from "../../../src/op-grades/t35.mjs";
 import { T36_RUNGS } from "../../../src/op-grades/t36.mjs";
+import { T38_RUNGS } from "../../../src/op-grades/t38.mjs";
 import { OP_ALIASES } from "../../../src/op-grades/t34.mjs";
 /* R39's vocabularies, by name. */
 const R39_KEYS = ["event_kinds", "dated_fact_kinds", "event_statuses", "participant_roles", "event_relation_kinds",
@@ -661,7 +662,9 @@ test("R19 R35 R37: together the two drives reach every op RUNGS grades `reasoned
     /* K2049 (B4): op-grades' T35 ops (its R22), each at its owner's interface over its fixture, t35-backing.test.mjs */
     ...Object.keys(T35_RUNGS).filter((op) => T35_RUNGS[op] === "reasoned"),
     /* K2121, K2156: op-grades' T36 ops (its R23–R25), each at its owner's interface over its fixture, t36-backing.test.mjs */
-    ...Object.keys(T36_RUNGS).filter((op) => T36_RUNGS[op] === "reasoned")];
+    ...Object.keys(T36_RUNGS).filter((op) => T36_RUNGS[op] === "reasoned"),
+    /* K2322: op-grades' T38 op (its R28), at case-carriage's interface over its fixture, t38-backing.test.mjs */
+    ...Object.keys(T38_RUNGS).filter((op) => T38_RUNGS[op] === "reasoned")];
   /* R45: an alias is its op's handler (op-declarations R21, control-plane R55), so its op's drive is its backing */
   driven.push(...Object.keys(OP_ALIASES).filter((a) => driven.includes(OP_ALIASES[a])));
   /* R45: tasks' checkrecord (CHECK_NO_REASON, tasks R15): tasks is later in the order (P4), so this module's tests cannot

@@ -5,6 +5,7 @@
    its own, registered under its name by the composition root (`src/plane/store.mjs`, `registerOwnersCounts`). It writes nothing. */
 import { recordOf, RecordCore } from "../record-core/index.mjs";
 import { hiddenBundles, membershipOf, Membership } from "../membership/index.mjs";
+import { projectRosterOf, ProjectRoster } from "../project-roster/index.mjs";
 import { hiddenRuns } from "../ai-runs/index.mjs";
 import { extractionOf } from "../extraction/index.mjs";
 import { connectionsOf } from "../connections/index.mjs";
@@ -23,6 +24,8 @@ export const PLANE = "plane";
 const OWNERS = Object.freeze([
   ["record-core", RecordCore.COUNT_KEYS, (ctx, hid) => recordOf(ctx).ownCounts(hid)],
   ["membership", Membership.COUNT_KEYS, (ctx, hid) => membershipOf(ctx).counts(hid)],
+  /* N783 (K2270): `projectOwnerVotes`, membership's until the split, project-roster's (its R17). */
+  ["project-roster", ProjectRoster.COUNT_KEYS, (ctx, hid) => projectRosterOf(ctx).counts(hid)],
   ["run-productions", RunProductions.COUNT_KEYS, (ctx, hid) => runProductionsOf(ctx).counts(hid)],
   ["inquiry", Inquiry.COUNT_KEYS, (ctx, hid) => inquiryOf(ctx).counts(hid)],
   ["observation-log", ObservationLog.COUNT_KEYS, (ctx, hid) => observationLogOf(ctx).counts(hid)],

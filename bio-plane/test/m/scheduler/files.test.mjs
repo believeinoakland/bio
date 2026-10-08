@@ -285,15 +285,23 @@ test("R24, R9: against the real file-safety, a capture received tells onFileWork
   assert.ok("filescan" in again || "filerender" in again, JSON.stringify(again));
 });
 
-test("R24: against the real file-safety with no scanner bound, scan wants no wake (R39) and render's refusal RENDERER_ABSENT is its tick's answer, retried at R39's next wake, never at once", async () => {
+test("R24: against the real file-safety with no scanner bound, scan and render each want no wake (R39: no renderer bound, no render wake), so neither ticks, filerender is absent, and the alarm is R39's earliest wake, never at once nor crawling", async () => {
   const w = fsWorld({ bound: false });
   await w.capture(pdf(false, "sched-unbound"));
-  const s = new Scheduler({ storage: storage(), owners: { fileSafety: () => w.fs } });
+  const st = storage();
+  const s = new Scheduler({ storage: st, owners: { fileSafety: () => w.fs } });
   const now = w.clock.now;
-  assert.equal(w.fs.scanWake(now), null);
+  assert.deepEqual([w.fs.scanWake(now), w.fs.renderWake(now)], [null, null], "R39: neither wants a wake with no scanner bound");
   const r = await s.onAlarm(now);
-  assert.equal("filescan" in r, false, "no scanner bound: not due");
-  assert.equal(r.filerender.code, "RENDERER_ABSENT");
-  assert.equal(r.nextAt, earliest(w.fs, now));
+  assert.equal("filescan" in r, false, "no scanner bound: scan not due");
+  assert.equal("filerender" in r, false, "no renderer bound: render not due, so no RENDERER_ABSENT tick");
+  assert.equal(r.nextAt, earliest(w.fs, now), "R39's earliest wake");
+  assert.equal(st.alarm, r.nextAt, "the alarm as the reconcile set it");
   assert.ok(r.nextAt === null || r.nextAt > now, `never at once: ${r.nextAt}`);
+  /* five minutes on (file-safety's poll), render still wants no wake: no tick, no crawl */
+  const later = now + 300_000;
+  w.clock.now = later;
+  const again = await s.onAlarm(later);
+  assert.equal("filerender" in again, false, "still no render tick");
+  assert.equal(again.nextAt, earliest(w.fs, later));
 });

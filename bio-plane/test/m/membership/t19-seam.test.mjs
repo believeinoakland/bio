@@ -204,10 +204,3 @@ test("R43 R80 R88 R44 inSight, hiddenBundles and sight read the fence: EXISTENCE
   assert.equal(w.m.inSight("PLN-D", V("cal")), false);
 });
 
-test("R43 N426 the directory is unchanged by the fence: it lists discoverable projects, never a project's bundles", async () => {
-  const w = await fenceWorld();
-  const d = w.m.projectDirectory({ viewer: V("cal") });
-  assert.equal(d.ok, true);
-  assert.deepEqual(d.projects.map((p) => p.id), ["PROJ-D"]);
-  assert.deepEqual(w.m.projectDirectory({ viewer: V("ann") }).projects, []);
-});

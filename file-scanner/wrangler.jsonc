@@ -11,7 +11,7 @@
   "compatibility_flags": ["nodejs_compat"],
 
   // The release's version site (bundler R12), as every member's.
-  "vars": { "VERSION": "0.79.0" },
+  "vars": { "VERSION": "0.81.0" },
 
   // Reachable only through the plane's FILE_SCANNER service binding: no public address of its own.
   "workers_dev": false,

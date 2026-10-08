@@ -134,7 +134,7 @@ test("R23 a copy whose bytes do not hash to obscured.copy, or that the commit di
   assert.deepEqual(under(right.m, PHOTO).map((f) => f.kind), ["obscured"]);
 });
 
-test("R23 an included row at the original's digest carries nothing of those bytes: the original never travels under another ref", async () => {
+test("R23 an included row at the original's digest carries nothing of those bytes: the original never travels under another ref, and no route serves it (T38)", async () => {
   const { w, env, original } = scene();
   const TWIN = "INFO-2026-0021-twin";
   const { m, out } = await publish(w, env, [copyRow(PHOTO, original), docRow(TWIN, original)],
@@ -143,6 +143,13 @@ test("R23 an included row at the original's digest carries nothing of those byte
   assert.deepEqual(under(m, TWIN), []);
   assert.deepEqual(out.unheld.filter((u) => u.ref === TWIN), [{ ref: TWIN, sha: original, what: "bytes", why: ORIGINAL_NOT_CARRIED }]);
   assert.deepEqual(under(m, PHOTO).map((f) => f.kind), ["obscured"], "the copy still travels");
+  /* T38: whatever registered the original's bytes under the twin's ref, no route serves them */
+  const never = await (await call(w, env, "publishedbytes", { sha256: sha("never existed anywhere") })).json();
+  const r = await call(w, env, "publishedbytes", { sha256: original });
+  assert.equal(r.status, 404);
+  assert.deepEqual({ ...(await r.json()), sha256: null }, { ...never, sha256: null });
+  assert.deepEqual(w.pr.verifySha(original), { published: false, sha256: original, matches: [] });
+  assert.equal(w.pr.publishedManifest().shas.some((x) => x.sha256 === original), false);
 });
 
 test("R3 a row carried as its copy answers obscured: {copy, label} exactly as signed, the copy reached by its hash (R5); publishedbytes at the original's SHA-256 answers NO_PUBLISHED_PART, the same bytes as for material never published", async () => {
@@ -217,6 +224,21 @@ function promote(w, id, documents, inline = []) {
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 2000));
   w.st.sql.exec(`UPDATE files SET content=? WHERE bundle_id=? AND path='data/provenance.json'`, JSON.stringify({ documents }), id);
 }
+/* `acquisition`'s record of an archive's listing (its R38), as its unpack writes it: `case-carriage` R8 (T38; K2291 (2))
+   reads it, and an archive whose listing names an image (here `photo.jpg`) is carried by no commit from T38 on. */
+function recordListing(w, archiveSha, entries) {
+  w.st.sql.exec(`CREATE TABLE IF NOT EXISTS archive_entries (archive_sha TEXT NOT NULL, idx INTEGER NOT NULL, name TEXT, kind TEXT,
+                 state TEXT NOT NULL, sha256 TEXT, PRIMARY KEY (archive_sha, idx))`);
+  w.st.sql.exec(`INSERT OR IGNORE INTO archive_entries (archive_sha, idx, state) VALUES (?, -1, 'opened')`, archiveSha);
+  entries.forEach(([name, text], i) => w.st.sql.exec(`INSERT OR REPLACE INTO archive_entries
+    (archive_sha, idx, name, kind, state, sha256) VALUES (?, ?, ?, 'file', 'filed', ?)`, archiveSha, i, name, sha(text)));
+}
+/* The archive's registration under `ref` as an edition committed before T38 made it (`publication` R57 through
+   `case-carriage` R8 as it then stood), its bytes already in the published bucket: the projection an older edition left. */
+function registeredBeforeT38(w, ref, archiveSha, bytes) {
+  w.st.sql.exec(`INSERT INTO published_shas (sha256,bundle_id,path,kind,bytes,published) VALUES (?,?,?,?,?,?)
+                 ON CONFLICT(sha256,bundle_id,path) DO NOTHING`, archiveSha, ref, `materials/${archiveSha}`, "archive", bytes, NOW);
+}
 const unpacked = (container, s, file) => ({ file, locator: `https://example.org/a.zip#zip:${container.index}`, retrieved: NOW,
   authority_state: "undetermined", authority_basis: "a file cut out of an archive",
   capture: { method: "unpacked", grade: "B", actor_class: "daemon", sha256: s, encoding: "binary", bytes: container.uncompressed },
@@ -227,7 +249,7 @@ function holdMember(w, id, text, container) {
   return sha(text);
 }
 
-test("R23 R32 an archive that holds a photo this edition carries as its copy is carried for no material and named in unheld, though an earlier edition carried it; the record naming the carried member still travels", async () => {
+test("R23 R32 an archive that holds a photo this edition carries as its copy is carried for no material and named in unheld, though an earlier edition carried it; the record naming the carried member still travels; no route serves the original or that archive (T38)", async () => {
   const w = world(), env = { PUBLISHED: bucket() };
   w.doc(DOC);
   const zip = Buffer.from(serialiseContainer([{ name: "minutes.txt", bytes: new TextEncoder().encode(MEMBER_TEXT) },
@@ -241,9 +263,13 @@ test("R23 R32 an archive that holds a photo this edition carries as its copy is 
   env.PUBLISHED.m.set(`bio/published/${archiveSha}`, new Uint8Array(zip));
   const memberSha = holdMember(w, MEM, MEMBER_TEXT, containerOf(zip, 0, "minutes.txt", MEMBER_TEXT));
   const picSha = holdMember(w, PIC, PHOTO_TEXT, containerOf(zip, 1, "photo.jpg", PHOTO_TEXT));
-  /* edition 1 carries both whole: the archive and both records are registered under their refs */
+  recordListing(w, archiveSha, [["minutes.txt", MEMBER_TEXT], ["photo.jpg", PHOTO_TEXT]]);
+  /* edition 1 carries both whole, the records registered under their refs; the archive as a commit before T38 registered
+     it under MEM's ref (from T38 no commit carries an archive holding an image, `case-carriage` R8) */
   const one = await publish(w, env, [docRow(MEM, memberSha), docRow(PIC, picSha)]);
-  assert.ok(under(one.m, MEM).some((f) => f.kind === "archive" && f.sha256 === archiveSha), "negative control: edition 1 carries the archive");
+  assert.equal(one.m.files.some((f) => f.sha256 === archiveSha), false, "T38: the archive holding an image travels in no new edition");
+  registeredBeforeT38(w, MEM, archiveSha, zip.length);
+  assert.equal((await call(w, env, "publishedbytes", { sha256: archiveSha })).status, 200, "negative control: served while no edition obscures the photo");
   /* edition 2 carries the photo as its copy */
   const two = await publish(w, env, [docRow(MEM, memberSha), copyRow(PIC, picSha)],
                             { edition: 2, before: () => registerCopy(w, env, PIC) });
@@ -253,6 +279,19 @@ test("R23 R32 an archive that holds a photo this edition carries as its copy is 
                    [{ ref: MEM, sha: archiveSha, what: "archive", why: ARCHIVE_HOLDS_ORIGINAL }]);
   assert.deepEqual(under(two.m, MEM).map((f) => f.kind).sort(), ["container", "document"], "the member and its record still travel");
   assert.deepEqual(under(two.m, PIC).map((f) => f.kind), ["obscured"]);
+  /* T38 (N779, K2248): once a published edition states the photo as its copy, no route serves its original or an archive
+     holding it, though edition 1 registered both: each answers as a hash never published */
+  const never = await (await call(w, env, "publishedbytes", { sha256: sha("never existed anywhere") })).json();
+  for (const s of [picSha, archiveSha]) {
+    const r = await call(w, env, "publishedbytes", { sha256: s });
+    assert.equal(r.status, 404);
+    assert.deepEqual({ ...(await r.json()), sha256: null }, { ...never, sha256: null });
+    assert.deepEqual(w.pr.verifySha(s), { published: false, sha256: s, matches: [] });
+    assert.equal(w.pr.publishedManifest().shas.some((x) => x.sha256 === s), false);
+  }
+  /* negative control: the member edition 1 also carried is still served */
+  assert.equal((await call(w, env, "publishedbytes", { sha256: memberSha })).status, 200);
+  assert.equal(w.pr.publishedManifest().shas.some((x) => x.sha256 === memberSha), true);
 });
 
 test("R32 R23 the archive pool keeps only what this edition's commit held (K2223): a photo never carried whole, in an archive an earlier edition registered under another material's ref, lends this edition neither the archive nor the original", async () => {
@@ -269,10 +308,13 @@ test("R32 R23 the archive pool keeps only what this edition's commit held (K2223
   env.PUBLISHED.m.set(`bio/published/${archiveSha}`, new Uint8Array(zip));
   const memberSha = holdMember(w, MEM, MEMBER_TEXT, containerOf(zip, 0, "minutes.txt", MEMBER_TEXT));
   const picSha = holdMember(w, PIC, PHOTO_TEXT, containerOf(zip, 1, "photo.jpg", PHOTO_TEXT));
-  /* edition 1 carries the member whole and lists the photo not included: the archive is registered under MEM only, and
-     nothing of the photo (its own record included) is registered anywhere */
+  recordListing(w, archiveSha, [["minutes.txt", MEMBER_TEXT], ["photo.jpg", PHOTO_TEXT]]);
+  /* edition 1 carries the member whole and lists the photo not included: the archive is registered under MEM only (as a
+     commit before T38 registered it), and nothing of the photo (its own record included) is registered anywhere */
   const one = await publish(w, env, [docRow(MEM, memberSha), docRow(PIC, picSha, { included: false })]);
-  assert.ok(under(one.m, MEM).some((f) => f.kind === "archive" && f.sha256 === archiveSha), "negative control: edition 1 carries the archive");
+  assert.equal(one.m.files.some((f) => f.sha256 === archiveSha), false, "T38: the archive holding an image travels in no new edition");
+  registeredBeforeT38(w, MEM, archiveSha, zip.length);
+  assert.ok(w.pr.verifySha(archiveSha).published, "negative control: the projection holds the archive under MEM's ref");
   /* edition 2 carries the photo as its copy: its commit holds no archive holding the original (`case-carriage` R8) */
   const two = await publish(w, env, [docRow(MEM, memberSha), copyRow(PIC, picSha)],
                             { edition: 2, before: () => registerCopy(w, env, PIC) });

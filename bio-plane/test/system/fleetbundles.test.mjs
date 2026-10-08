@@ -232,7 +232,11 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
   /* RE-PINNED 2026-10-07 (BUNDLER #10, T36-2; N733, T35's red 32): 20 -> 22 inputs, from the committed manifest this
      suite reads (`agent-worker/dist/agent-worker.bundle.json`; its staleness arm green). Two arrive and none leave, the
      member's own `src/draft.mjs` and `src/reads.mjs`, which its `index.mjs` now imports (agent-worker's T35 job). */
-  t("agent-worker's 22 inputs are all recorded — its six own modules, agent-harness and agent-model across trees, the plane's denylist, run-rules with what it imports, and record-grammar through observation-log",
+  /* RE-PINNED 2026-10-08 (BUNDLER #12, T38-1; N787, K2218, T37's red 20): 22 -> 23 inputs, from the committed manifest
+     this suite reads (`agent-worker/dist/agent-worker.bundle.json`, rebuilt by T37-17; its staleness arm green). One
+     arrives and none leaves, the member's own `src/signin.mjs` (R66/R67's sign-in relay), which its `index.mjs` now
+     imports (AGENT-WORKER #13, T37-17). */
+  t("agent-worker's 23 inputs are all recorded — its seven own modules, agent-harness and agent-model across trees, the plane's denylist, run-rules with what it imports, and record-grammar through observation-log",
     (agent?.inputs || []).map((i) => i.path).sort(),
     [
      "../agent-harness/src/harness.mjs", "../agent-harness/src/subsession.mjs",
@@ -243,7 +247,7 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
      "../bio-plane/src/run-rules/checks.mjs", "../bio-plane/src/run-rules/deployment.mjs", "../bio-plane/src/run-rules/index.mjs",
      "../bio-plane/src/run-rules/rules.mjs", "../bio-plane/src/run-rules/skill-version.mjs",
      "../bio-plane/src/tokens.mjs", "src/ask.mjs", "src/cascade.mjs", "src/draft.mjs", "src/index.mjs", "src/ops.mjs",
-     "src/reads.mjs",
+     "src/reads.mjs", "src/signin.mjs",
     ]);
   t("and it vendors nothing: the member still imports NOTHING from npm",
     (agent?.vendoredInputs || []).length, 0);
