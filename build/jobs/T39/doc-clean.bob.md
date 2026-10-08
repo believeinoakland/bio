@@ -13,3 +13,7 @@ Reading set (mechanics §17): 64 KB (its own requirements and the used modules' 
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
 Merge order in L1: bundler → pdf-reader → image-cover → doc-clean (doc-clean uses the other two and merges last).
 Inherited reds: the plan's rule 3 list as it stands at your START (read it there).
+
+## B2 · CHANGE
+
+pdf-reader is merged into tranche/T39 (K2345): R37 `PdfDoc.objects()` is built as its requirement states. Merge tranche/T39 into your branch and build and test against the merged code.
