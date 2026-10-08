@@ -12,6 +12,11 @@
       "why": "a devDependency inlined into agent-runner's committed Worker bundle (K1799)"
     },
     {
+      "shippedIn": "file-scanner",
+      "package": { "ecosystem": "npm", "name": "@cloudflare/containers", "version": "0.3.7" },
+      "why": "a devDependency inlined into file-scanner's committed Worker bundle, which hosts its two classes (T36-5)"
+    },
+    {
       "shippedIn": "sheet-worker",
       "lock": "sheet-worker/engine/Cargo.lock",
       "format": "cargo-lock",

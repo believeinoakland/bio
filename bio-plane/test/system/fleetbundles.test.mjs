@@ -113,12 +113,15 @@ console.log("\n--- 1 · every fleet member is DISCOVERED, and every one of them 
 /* T34-6 (BUNDLER #8; N578, bundler R24): `agent-runner` is the fleet's first CONTAINER member — its deliverable is an
    image named by digest, not a Worker bundle — so it is discovered and listed here, and not bundle-guarded below. */
 /* T36-2 (BUNDLER #10; rev. 2 §2 R10): `file-scanner`, the fleet's second container member and its first with two
-   classes, is named here ahead of its own job's merge (T36-5): red 9 of T36's opening, accepted by name, until it lands. */
+   classes (T36-5), is listed with each class's image: a two-class member answers its classes' repositories, in its
+   marker's order; a one-class member its one image, as before. */
 t("members discovered by their own marker file, never a list kept here",
   members.map((m) => m.name), ["agent-runner", "agent-worker", "file-scanner", "ocr-worker", "pdf-worker", "sheet-worker"]);
-t("agent-runner is listed as a container member, with its image (R24)",
-  members.filter(isContainer).map((m) => [m.name, m.kind, m.image.repository]),
-  [["agent-runner", "container", "docker.io/civicos/agent-runner"]]);
+t("agent-runner and file-scanner are listed as container members, each with its images (R24)",
+  members.filter(isContainer).map((m) => [m.name, m.kind,
+    ...(m.containers ? m.containers.map((c) => c.image.repository) : [m.image.repository])]),
+  [["agent-runner", "container", "docker.io/civicos/agent-runner"],
+   ["file-scanner", "container", "ghcr.io/believeinoakland/file-scanner-scanner", "ghcr.io/believeinoakland/file-scanner-renderer"]]);
 
 /* D-238. `git stash` is REPOSITORY-WIDE across every worktree and `push -u`
    carries untracked files, so a `pop` can deposit a whole fleet directory —
