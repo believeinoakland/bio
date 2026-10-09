@@ -40,3 +40,7 @@ R55's seam with `steps` (not yet built; its requirements name no signatures for 
 5. **Arrival source.** At creation, `steps.registerArrivalSource("capture_request", read)`; `read(id | {id, viewer})` answers null for an unknown id, or one the given viewer cannot see by target (→ steps' `undetermined`), else `{kind: "capture_request", id, state, met: state === "captured", ended: state is terminal, at: captured_at ?? updated, capture_sha}`. Synchronous, writes nothing, never throws.
 
 `uses` edge to add at my merge: `steps`.
+
+## J2 · COMPLETE
+
+T41-25 applied: R55 (step on a request, refused as absent C-28.34; the capture tied by steps.recordProduct; capture_request registered as an arrival source), on the real steps after B3. Tests 108/0; users' suites' 25 reds identical on tranche/T41; checks format 0, coverage 55/55, ownership 0, architecture 0 once the uses edge capture-requests → steps is applied (2 failures until then, both that edge). Record: Completion (CAPTURE-REQUESTS #15).
