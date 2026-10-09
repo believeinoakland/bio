@@ -159,7 +159,15 @@
    its job record; none declared here, accepted red 2 at T39's close) and T40's layer 2 rows (10 new, 3 changed)
    stamped in 1.67.0. A row a T40 job in layers 3–11 adds or changes turns this suite red, accepted by name until T41's
    layer-2 stamp (plan T40, rule 4 item 2), so none is declared. Negative control re-run on the stamp commit: its arms
-   in the suite pass. */
+   in the suite pass.
+   RE-PINNED 2026-10-09 (PROMOTION #39, T41-6, T40's rule 4 item 2): over 1.68.0, the stamp's own lines
+   (`fixtures/row-census-1.68.0.jsonl`, written by `row-census.mjs`'s own `censusOf`) on the stamp commit (named in
+   `build/jobs/T41/promotion.md`; 1567 rows, 8c92f849…, over `tranche/T41` after record-core's, membership's,
+   project-roster's and credentials' merges, K2441, K2442, K2444, K2445); the 1.67.0 snapshot (no stamp reads it) renamed
+   to it; T41's layer 1 rows (C-33.54 new, C-35.13 changed) and layer 2 rows (12 changed) stamped in 1.68.0; T40's layers
+   3–11 moved no row. A row a T41 job in layers 3–11 adds or changes turns this suite red, accepted by name until T42's
+   layer-2 stamp (plan T41, rule 4 item 2), so none is declared. Negative control re-run on the stamp commit: its arms in
+   the suite pass. */
 import "../stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
@@ -177,8 +185,8 @@ const FIXTURE = (v) => fileURLToPath(new URL(`./fixtures/row-census-${v}.jsonl`,
    carries the line as the stamp read it (so the stamp's census can be rebuilt); `arrived` names the row by check and
    code (its line is the tree's). */
 const AWAITING_STAMP = [
-  /* RE-ANCHORED 2026-10-09 (PROMOTION #38, T40-4): over 1.67.0, the stamp's own lines (`fixtures/row-census-1.67.0.jsonl`).
-     T39's layers 3–11 rows were never declared (accepted red 2) and are stamped in 1.67.0. None is open (see the
+  /* RE-ANCHORED 2026-10-09 (PROMOTION #39, T41-6): over 1.68.0, the stamp's own lines (`fixtures/row-census-1.68.0.jsonl`).
+     T41's layer 1 and layer 2 rows were never declared (accepted red 2) and are stamped in 1.68.0. None is open (see the
      header). */
 ];
 /* COMPOSITIONS AWAITING STAMP: a change to which checks a gate runs moves no row, so the census cannot see it; each is
@@ -189,8 +197,8 @@ const AWAITING_STAMP = [
    retired; no T17 job names a composition change. LEGACY-TESTS #19 (T21, 2026-10-01): intent's registration changed its
    ids after the 1.51.0 stamp (INTENT #9, no row), declared for T22. */
 const COMPOSITIONS_AWAITING = [
-  /* PROMOTION #38 (T40, 2026-10-09): re-anchored at 1.67.0; record-grammar's T40-1 (`checkBundle` never throws on an
-     inherited-key type) is stamped in 1.67.0's note, and none is open. */
+  /* PROMOTION #39 (T41, 2026-10-09): re-anchored at 1.68.0; no T41 L1–L2 job names a composition change (`MODULE_ORDER`
+     gaining five modules that register no gate step moves no gate's order, 1.68.0's note), and none is open. */
 ];
 /* The plane's suite shape: every arm printed PASS or FAIL with its reason, the tally last, the exit its verdict. */
 let pass = 0, fail = 0;
