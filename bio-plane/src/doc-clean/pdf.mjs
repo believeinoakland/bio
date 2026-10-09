@@ -246,15 +246,12 @@ function name(v) {
   }
   return s;
 }
-function str(v) {
-  let wide = false;
-  for (let i = 0; i < v.length; i++) if (v.charCodeAt(i) > 0xff) { wide = true; break; }
-  let s = wide ? "<FEFF" : "<";
-  for (let i = 0; i < v.length; i++) {
-    const c = v.charCodeAt(i);
-    if (wide) s += HEX[c >> 12] + HEX[(c >> 8) & 15];
-    s += HEX[(c >> 4) & 15] + HEX[c & 15];
-  }
+/** A string written as a hex string of its exact bytes, `pdf-reader` R38's `raw`, never rebuilt from its text `v`
+ *  (R10): a binary string, or a `FE FF` string of odd length, is read back byte for byte. */
+function str(raw) {
+  if (!(raw instanceof Uint8Array)) throw refusal("DOCUMENT_UNREADABLE", "a string the PDF reader answered without its bytes");
+  let s = "<";
+  for (const b of raw) s += HEX[b >> 4] + HEX[b & 15];
   return s + ">";
 }
 function ser(v, renum) {
@@ -263,7 +260,7 @@ function ser(v, renum) {
   if (typeof v === "number") return num(v);
   switch (v.t) {
     case "name": return name(v.v);
-    case "str": return str(v.v);
+    case "str": return str(v.raw);
     case "ref": return `${renum.get(v.n)} 0 R`;
     case "arr": return "[" + v.items.map((x) => ser(x, renum)).join(" ") + "]";
     case "dict": return "<<" + Object.entries(v.map).map(([k, x]) => `${name(k)} ${ser(x, renum)}`).join(" ") + ">>";
