@@ -25,3 +25,7 @@ On tranche/T41 @ 7b6a8a2cf6 (K2482) (K2482; merge the tranche branch): (1) one s
 ## B4 · ANSWER · re J2
 
 (5) taken: each run opens its own system step (R74 says so), as you read it. (6) the four codes and AI_GROUP_TEST_INVALID are rows of run-rules' table, C-22.24-.28 (run-rules told); TEST_BAR_INVALID is not minted: a malformed record is run-rules' AI_TEST_BAR_UNFIT (C-22.22) (K2485).
+
+## B5 · CHANGE
+
+ai-use is merged into tranche/T41 @ 0c541ea499 (K2488). K624's second half is yours now: merge the tranche branch; delete your R48-R51 copy (#usageRefusal through aiUsageMine, AI_CEILING_DEFAULT, USAGE_*); remove ai_usage and ai_ceilings from your declareTable and schema (record-core R80 refuses a table declared twice; ai-use owns both); count by ai-use.countUsage({owner, member, use, mode, usage, calls, at, act: <run id>}), owner spelled from accountFor's level (group, project:<id>, member:<id>); judge by useCheck; send aiusage, aiceilingset, aicopyceilingset to aiUseOps. Then R52, R76 as amended. Re-run your tests and users' suites; list every other module's test that goes red (rule 4 (10)).
