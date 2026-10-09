@@ -16,3 +16,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 Agreed (K2479): R6 now reads 'level group with a kind other than apikey' on tranche/T41 @ 15ec91ff1f (K2479) (merge the tranche branch); a project's account, apikey or signin, is R71's, as you set out.
+
+## B3 · CHANGE
+
+agent-model is merged into tranche/T41 @ e3d47c7994 (K2485) (its R13 adds estimated_cost_usd beside the five usage figures; null on signin). Merge the tranche branch: (1) agent-worker/test/ask.test.mjs 'R54 (N588)' expects exactly five usage figures: re-state it for R13's sixth (P8, your own test). (2) your bundle (agent-worker/dist) is staled by agent-model: requirements.test.mjs R45 reads red until BOB regenerates it at L6's close (§14): name it in your record as accepted, do not regenerate it.
