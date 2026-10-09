@@ -562,10 +562,11 @@ export const TEXT_CHAIN_CHECKS = {
   TEXT_CHAIN_LETTER_UNCALIBRATED: {
     check: 'C-35.13',
     where: 'src/textchain.mjs checkChain > is-text-chain-shape',
-    translation: 'This step says how faithful a conversion of the document was, but nobody has '
-      + 'measured that. When a site hands us its own converted copy of a file, the record cannot '
-      + 'tell what the conversion changed until it has compared the copies — so until then it says '
-      + '"not yet determined" rather than giving a grade it has not earned.',
+    translation: 'This step says how faithful a conversion of the document, or an AI\'s reading of a '
+      + 'page, was, but nobody has measured that. When a site hands us its own converted copy of a '
+      + 'file, or an AI reads a scan, the record cannot tell what was changed or misread until it has '
+      + 'compared the result against the original — so until then it says "not yet determined" '
+      + 'rather than giving a grade it has not earned.',
   },
   /* REC-87 / IC-127. A step kind whose letter is NEVER written on the step
      (`STEP_KINDS[k].letter === "never"`) — today only `typed`, a member typing

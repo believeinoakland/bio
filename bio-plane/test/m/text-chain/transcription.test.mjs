@@ -90,6 +90,13 @@ test("R104: a letter comes only from a measurement, its calibration named; once 
     assert.equal(derivationCap(measured), cap);
     for (const g of BASIS_GRADES) assert.equal(captureBound(measured, g), weakest(g, cap), `${cap} ${g}`);
   }
+  /* The member-facing words (C-35.13, K2428) name both cases the refusal is for: a conversion, and an AI's reading. */
+  const words = checkChain([AIT({ cap: "C" })]).translation;
+  assert.equal(words, checkChain([{ step: "convert", engine: "host-export", format: "odt", cap: "C" }]).translation);
+  assert.match(words, /a conversion of the document, or an AI's reading of a page/);
+  assert.match(words, /an AI reads a scan/);
+  assert.match(words, /"not yet determined"/);
+  assert.match(checkChain([AIT({ cap: "C" })]).detail, /ai_transcription step claims fidelity "C"/);
   /* Rule 2 holds: a measured reading stronger than the chain it extends is refused. */
   assert.equal(appendStep([PIX, O("D")], AIT({ cap: "B", calibration: "CAL-AIT-1" })).code, "TEXT_CHAIN_STRENGTHENS");
 });
