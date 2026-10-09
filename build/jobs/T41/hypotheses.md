@@ -41,3 +41,7 @@ Built and pushed everything but R19's production warning wiring (J1 (1), still o
 (a) J1 (2)'s op names are replaced by op-declarations R43's: `hypothesistakeup`, `noteshare`, `noteunshare`, `shares`; no op for propose (in-process), set-aside or the proposals read (they ride the `hypotheses` read under their own heading). R43 declares no set-aside op: R18's act has no route until one is named (op-declarations' or the plane's).
 (b) New red in another module from my four arms: control-plane `r53-routes.test.mjs`:67 (R53: every served op has a spec and `OP_STAMPS` entry) until T41-58 declares them. Please name it an accepted red or tell me to hold the arms back.
 (c) The share table is `narrative_shares`, not J1's `note_shares` (R14's test reads no table named for notes in record-core's counts).
+
+## J3 · COMPLETE
+
+T41-16 applied (R14 amended, R16–R21; B2 taken: R19 calls inquiry.personWarning, reached optionally). hypotheses tests 46: 45 pass, 1 named red until inquiry's merge (t41 'R19 with no test injected…'). Checks: format, architecture, coverage 21/21, ownership 0. Other modules: control-plane r53-routes:67 red until T41-58 (J2 (b)); no set-aside op in op-declarations R43 (J2 (a)). Record: Completion.
