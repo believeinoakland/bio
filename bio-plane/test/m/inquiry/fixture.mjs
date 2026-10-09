@@ -121,7 +121,6 @@ export function world({ caseMembers = new Set(), published = null, group = "test
                               ...(calculations !== undefined ? { calculations } : {}), ...(held ? { capture: held } : {}),
                               ...(standards ? { standards } : {}), ...(duties !== undefined ? { duties } : {}) });
   k.migrate();
-  shownOnUntilR14(k.legEarning, membership, st);
   if (bias) bias.registerWorkProducts("finding", inquiryFindings(host, bias));
   const raisedCalls = [];
   let n = 0;
@@ -261,19 +260,5 @@ export function provDoc(c) {
     capture: { method: "acquire", grade: "B", actor_class: "session", sha256: c.sha, encoding: "utf8",
                bytes: Buffer.byteLength(c.text) },
     origin: { kind: "named_request" },
-  };
-}
-
-/** leg-earning R14 (`projectsShownOn`), not yet built when inquiry's T41 job started (leg-earning's own T41 job runs
- *  beside it): a stand-in stated from R14's text, installed only while the real module has none, and removed when BOB's
- *  CHANGE brings R14. A viewer who may see the question is answered the projects drawing on it (R7) that are not hidden
- *  (membership R85), each `{id, name}`; a hidden project is never answered. */
-function shownOnUntilR14(legEarning, membership, st) {
-  if (!legEarning || typeof legEarning.projectsShownOn === "function") return;
-  legEarning.projectsShownOn = ({ id, viewer } = {}) => {
-    if (!id || membership.inSight(id, viewer) !== true) return { projects: [], truncated: false };
-    const projects = [...legEarning.projectsDrawingOn(id)].filter((p) => membership.visibilityOf(p) === "discoverable")
-      .map((p) => ({ id: p, name: st.sql.exec(`SELECT title FROM bundles WHERE bundle_id=?`, p)[0]?.title ?? null }));
-    return { projects, truncated: false };
   };
 }

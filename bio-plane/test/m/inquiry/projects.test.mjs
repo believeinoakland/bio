@@ -2,7 +2,7 @@
    for that viewer: the question's document (this module's decoration of retrieval's single-bundle answer, its R56),
    and this module's own reads of a question with a viewer (`stateHistory`, `documentWaits`, `questionWaits`). A hidden
    project is never answered; a read of R14 that fails answers `projects: null` with why, never an empty list. Driven
-   through the real retrieval and membership; R14 is the fixture's stand-in until leg-earning's T41 job merges. */
+   through the real retrieval, membership and leg-earning. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
