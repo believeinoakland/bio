@@ -1,6 +1,6 @@
 # basis-versions — requirements
 
-**Status** · In force: approved by Bob 2026-09-26 (K102), with later folds reviewed. Last changed T28 (N522: R3, K1273); every requirement met.
+**Status** · In force: approved by Bob 2026-09-26 (K102), with later folds reviewed. Last changed T41 (T41-19: R48 new, `bias_applied` on a conclusion, as `draft-T41-investigation.md` §3.6; K2405, K2418), not yet met; every other requirement met.
 
 **Size (P6).** About 4,280 lines move (about 2,160 without comment-only and blank lines): `store.mjs` 3,004, `bio-checks.mjs` 1,018, `schema.mjs` 257. Just past the 4,000 mark; one session reads it with its uses' public parts (K74's test). The conclusion acts are 816 of them; left with `inquiry` they would need a registration from this module (map §5.3). `op=suggest` (912 lines and C-27) is placed with `ai-runs`, not here (map §5.2).
 
@@ -65,6 +65,9 @@ Terms. A **version** is a `basis_versions[]` row `{name, description, claim?, re
 - **R41** `projectQuestions({project, after, limit})` → `{items: [{inquiry, legs, stance}], cursor}`: the inquiries the project draws on, by R13's own test (its document holds a `cites` reference to the inquiry not marked `severed`), in id order after `after`. `legs` is true when the inquiry's basis holds at least one leg (`inquiry` R16's `basisFor` with `limit: 1`); `stance` is the project's stance by R22: `concluded`, `withdrawn`, `none` or `undetermined`. `limit` defaults to 500, clamped to 1–500; `cursor` is the last inquiry answered when more follow, else null. Viewer-free (its caller fences the project), read by `project-stage` R2 (was `publication` R45, K651); it writes nothing and never throws, and an empty or non-project id answers `items: []`.
 - **R42** (N392, K593, K595) `basisVersionsOf` registers with the `retrieval` its host hands it (its R56, module name `basis-versions`; a host that hands none registers nothing) the single-bundle projection's `no_project_conclusion`: for an inquiry, exactly R11's `no_project_conclusion` for the same viewer (R23's answer when the inquiry is visible to them, else `null`); `null` for every other type; it never throws (a failure reads `null`) and never reaches the list form (retrieval R5).
 - **R47** (K861, plane R10) The module exports a figure source shaped as `record-core` R63's `counts(hid)`, with its key list, for `plane` to register under this module's name: `basisVersions`, the rows of `inquiry_basis_versions` less the rows whose `bundle_id` is in `hid`, and `basisVersionLegs`, the rows of `inquiry_basis_version_legs` less the rows whose `bundle_id` or `target_id` is in `hid`, a NULL key naming no bundle (so never dropped by `hid`); a null `hid` counts whole. The module registers nothing itself.
+
+**A conclusion's bias applications** (T41-19; D59)
+- **R48** *(not yet met: T41)* (D59) A conclusion may carry `bias_applied` in `inquiry-grammar` R18's shape for the conclusion's claim (`inference_refused`, `scrutiny_raised`), recorded with the conclusion and read back by `conclusionRecordOf`.
 
 ## Private
 
