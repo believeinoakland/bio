@@ -142,6 +142,24 @@ export const STEP_KINDS = {
   /* A model that rewrote the text — cleaning, joining, correcting. THE STEP
      THIS WHOLE MODULE IS MOST AFRAID OF, and rule 2 is pointed at it. */
   ai:       { role: "derivation", label: "a model rewrote the text", tier: null, machine: true },
+  /* N820 / D21 (R104) — AN AI READ A PAGE THAT IS ONLY A PICTURE. Not `ai`: that kind REWROTE text
+     another step produced; this one PRODUCED it, from pixels the plane's own text recognition could
+     not read (reading-pipeline R29, at a member's act on the paying account). So it is a rung on the
+     extraction ladder — "a transcription tier above tier 3" — and `tiersEvidenced` reports it as 4.
+
+     Its letter is the canon's sentence, declared rather than coded (`BIO_Investigation_v0_1.md` §6):
+     "labelled as the AI's reading and graded 'undetermined' until its accuracy is measured."
+
+       `names`      the model that read the page (C-35.5), as for `ocr` and `ai`.
+       `unmeasured` "undetermined": with no cap it makes `derivationCap`, and so `captureBound`,
+                    UNDETERMINED over what it covers, whatever another step measured — no OCR letter
+                    measured on other text bounds what a model read off a picture.
+       `letter`     "calibrated": a cap only beside the calibration it rests on (C-35.13), so the
+                    one route to a letter is a measurement. This module holds none (no import).
+
+     A member who checks a passage against the page raises it through `gradeCeiling`, unchanged. */
+  ai_transcription: { role: "derivation", label: "the AI's reading of the page", tier: 4, machine: true,
+                      names: ["engine"], unmeasured: "undetermined", letter: "calibrated" },
   /* A member checked the text against the image and said so, over a stated
      extent. Not a derivation: see the header. */
   attested: { role: "verification", label: "a member checked it against the image", tier: null },
@@ -535,8 +553,9 @@ export const TEXT_CHAIN_CHECKS = {
       + 'stand behind — and a broken pointer is worse than none, because it looks like one that works.',
   },
   /* CAP-10 / DEC-75 / IC-122. A step kind that declares its letter must be
-     CALIBRATED (`STEP_KINDS[k].letter`) — today only `convert`, a conversion
-     the serving host made before any text was read — may carry a letter only
+     CALIBRATED (`STEP_KINDS[k].letter`) — `convert`, a conversion the serving
+     host made before any text was read, and `ai_transcription`, an AI's reading
+     of a page that is only a picture (R104) — may carry a letter only
      beside the calibration it rests on. The permitted move is UNDETERMINED
      now, raised later by a calibration row (CAP-11 measures, a row raises);
      a letter written now and lowered later is the move Bob's 5.8 forbids. */
