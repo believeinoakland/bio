@@ -67,6 +67,7 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 - **T41-10 · extraction** · (N820; D4) R42 amended: a verified quote earns the capture's own ceiling; numbers and dates named for the member to check · req: §3.6.
 
 ### L5
+- **T41-10a · query-language** (tests only) · (TEXT-CHAIN #7 J1, K2427) `grammar.test.mjs`:210 pins `MACHINE_READ_KINDS` as `["ocr", "ai"]`; text-chain R91 now adds `ai_transcription`: re-pin from the export · red accepted by name until this merge.
 - **T41-11 · observation-log** · (N820; H39) R1, R13 gain authority kind `step`; R37 `onLookAnswered` · req: §3.6 · 3,235 → ~3,280.
 - **T41-12 · bias** · (N820; D59) R49 `statementInForce` · req: §3.6.
 
