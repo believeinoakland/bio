@@ -30,3 +30,13 @@ Users' suites (§6 step 5, since R91's `MACHINE_READ_KINDS` changed): doctypes 4
 **Found in other modules / generated artifacts:** `textchain.mjs` changed, so the plane bundle and `case-checker/program.mjs` (case-checker bundles content, which imports this module) are stale. Both are already covered by the plan's accepted red 12 and regenerated at the layer's close. query-language's `content:chain` vocabulary takes the new kind from `STEP_KINDS` without an edit (its vocabulary tests pass), and `content:ai_transcription` also selects `mixed` units through `MACHINE_READ_KINDS`. observation-log will write tier-4 rows; none of its tests assume tiers 1–3 only.
 
 Size (session_01JDz9kGpTxawc3vKv6rH4vU): test runs 12, module lines 2051
+
+## J3 · COMPLETE
+
+**B3 (K2428) applied.** Merged `tranche/T41` (R3's `letter` parenthetical now names `ai_transcription`). C-35.13's translation (`TEXT_CHAIN_LETTER_UNCALIBRATED`) now reads, as proposed in J2: "This step says how faithful a conversion of the document, or an AI's reading of a page, was, but nobody has measured that. When a site hands us its own converted copy of a file, or an AI reads a scan, the record cannot tell what was changed or misread until it has compared the result against the original — so until then it says "not yet determined" rather than giving a grade it has not earned." `transcription.test.mjs` (R104, the calibration arm) now checks that an `ai_transcription` refusal and a `convert` refusal carry these same words, naming both cases, and that the detail names the AI step. Nothing is deferred any more.
+
+**Tests:** text-chain 119 pass, 0 fail. answer-envelope 26 pass, 2 fail: (1) the `R7, R2` catalogue pin of `TEXT_CHAIN_LETTER_UNCALIBRATED` (hash `66ed560a51de774f` → `b00fc0344f4da678`), mine, accepted by K2428 until T41-60, and answer-envelope not edited; (2) the C-120 case-disclosures `.20–.22` test, the same as without my change, reported in J2. Nothing else changed since J2: query-language `grammar.test.mjs`:210 is still red as K2427 accepted, and reading-pipeline's accepted red 8 is still red.
+
+**Checks:** format: 145 modules, 144 requirements files; 0 failures · architecture: 11 product files, 17 relative imports; 0 failures · coverage: 104 of 104 live requirement ids named by a test; 0 failures · ownership: 0 failures.
+
+Size (session_01JDz9kGpTxawc3vKv6rH4vU): test runs 14, module lines 2052
