@@ -70,10 +70,31 @@ test("R1: NOT_A_PROJECT for a citing object that is neither a project nor an inq
 
 test("R1: a project needs the actor joined (membership.projectAuthority): an administrator who sees it is refused, a joined owner is not; the question arm asks no position", async () => {
   const { w, p, q } = await setup();
+  const ADM = { viewer: V("adm"), owner: "a", author: "member:adm", identity: V("adm") };
   const h = await w.select(["INFO-2026-0001"], { viewer: V("adm"), owner: "a" });
-  const r = w.cit.cite({ project: p, handle: h, viewer: V("adm"), owner: "a", author: "member:adm", identity: V("adm") });
-  assert.deepEqual([r.ok, r.reason, r.act], [false, "PROJECT_ACT_NOT_A_PARTICIPANT", "cite"]);
-  const onQ = w.cit.cite({ project: q, handle: h, viewer: V("adm"), owner: "a", author: "member:adm", identity: V("adm"), role: "supports" });
+  /* D54: an administrator, the founder included, neither invited nor joined to a hidden project sees it at EXISTENCE
+     only, so citing into it answers membership's existence answer (its R77, with the owners' handles), asked before
+     position, and writes nothing. */
+  const hf = await w.select(["INFO-2026-0001"], { viewer: "admin", owner: "f" });
+  const snap = w.snapshot();
+  const hidden = w.cit.cite({ project: p, handle: h, ...ADM });
+  assert.deepEqual(hidden, w.membership.existenceAct(p, V("adm")), "membership's one answer, byte for byte");
+  assert.deepEqual([hidden.ok, hidden.reason, hidden.project, hidden.owners], [false, "PROJECT_SEEN_NOT_A_PARTICIPANT", p, ["ann"]]);
+  for (const viewer of ["admin", V("admin")]) {
+    const f = w.cit.cite({ project: p, handle: hf, viewer, owner: "f", author: "member:admin", identity: V("admin") });
+    assert.deepEqual([f.reason, f.owners], ["PROJECT_SEEN_NOT_A_PARTICIPANT", ["ann"]], `the founder as ${viewer}`);
+  }
+  assert.deepEqual(w.snapshot(), snap, "nothing written");
+  /* Negative controls: an administrator who sees a project whole (one set discoverable, or a hidden one it is invited
+     to) is refused by position, not sight: invited is not joined. */
+  const disc = w.project("Open door", "ann", { visibility: "discoverable" });
+  const invited = w.project("Invited", "ann");
+  assert.equal(w.membership.projectInvite({ projectId: invited, handle: "adm", by: "ann" }).ok, true);
+  for (const at of [disc, invited]) {
+    const r = w.cit.cite({ project: at, handle: h, ...ADM });
+    assert.deepEqual([r.ok, r.reason, r.act], [false, "PROJECT_ACT_NOT_A_PARTICIPANT", "cite"], at);
+  }
+  const onQ = w.cit.cite({ project: q, handle: h, ...ADM, role: "supports" });
   assert.equal(onQ.ok, true);
   const h2 = await w.select(["INFO-2026-0001"]);
   assert.equal(w.cit.cite({ project: p, handle: h2, ...ANN }).ok, true);
@@ -277,6 +298,11 @@ test("R1: the refusals come in the stated order", async () => {
   /* sight and position before the note */
   const hv = await w.select(["INFO-2026-0001"], { viewer: V("vera"), owner: "v" });
   assert.equal(w.cit.cite({ project: p, handle: hv, viewer: V("vera"), owner: "v", identity: V("vera"), note: '"' }).reason, "NO_SUCH_PROJECT");
+  /* D54: an administrator not invited to the hidden project is answered at EXISTENCE before the note; invited, it sees
+     the project whole and is answered by position before the note. */
   const ha = await w.select(["INFO-2026-0001"], { viewer: V("adm"), owner: "a" });
-  assert.equal(w.cit.cite({ project: p, handle: ha, viewer: V("adm"), owner: "a", identity: V("adm"), note: '"' }).reason, "PROJECT_ACT_NOT_A_PARTICIPANT");
+  const asAdm = () => w.cit.cite({ project: p, handle: ha, viewer: V("adm"), owner: "a", identity: V("adm"), note: '"' }).reason;
+  assert.equal(asAdm(), "PROJECT_SEEN_NOT_A_PARTICIPANT");
+  assert.equal(w.membership.projectInvite({ projectId: p, handle: "adm", by: "ann" }).ok, true);
+  assert.equal(asAdm(), "PROJECT_ACT_NOT_A_PARTICIPANT");
 });
