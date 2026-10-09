@@ -1,6 +1,6 @@
 # capture-sources (T41)
 
-**Status** · session_01AQ3yjggSC6tiKpht4z578o · depth 2 · WORKING · handled B0
+**Status** · session_01AQ3yjggSC6tiKpht4z578o · depth 2 · COMPLETE · handled B0
 
 ## Completion (CAPTURE-SOURCES #12)
 
