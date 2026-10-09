@@ -14,7 +14,7 @@
   - R27/R28 flaws (below).
 - **Whether anything it left out mattered:** none. Nothing else counts the shared keys.
 
-**Found in another module (REPORT J2):** record-grammar's `NO_BASIS` row (C-33.40, `src/record-grammar/acts.mjs`:45) has a `where` that names only `src/inquiry/index.mjs actNoBasis`. But progressions raises `NO_BASIS` too (`index.mjs`:458, :471, through `refusal`, `checks.mjs`:168), as R29's text says ("entities, progressions and inquiry read them"). By contrast, C-33.41's `where` names the progressions sites. This is a row-text question for record-grammar, not a failure.
+**Found in another module (REPORT J1):** record-grammar's `NO_BASIS` row (C-33.40, `src/record-grammar/acts.mjs`:45) has a `where` that names only `src/inquiry/index.mjs actNoBasis`. But progressions raises `NO_BASIS` too (`index.mjs`:458, :471, through `refusal`, `checks.mjs`:168), as R29's text says ("entities, progressions and inquiry read them"). By contrast, C-33.41's `where` names the progressions sites. This is a row-text question for record-grammar, not a failure.
 
 **Deferred, own module:** `refusal(code, detail, extra)` (`checks.mjs`:172) spreads `extra` after `code`/`check`/`translation`, so a caller's extra fields could overwrite them. No caller passes such a key, so it is unreachable at the interface, and no interface test could show it. It is left as is because this entry is tests only and a code change would stale the plane bundle at L5. It is worth folding into the next job that changes `checks.mjs`.
 
