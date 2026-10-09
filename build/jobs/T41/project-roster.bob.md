@@ -1,0 +1,13 @@
+# BOB to project-roster (T41)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T41), layer 2, project-roster: T41-4 (N822, D54). Read also K2408, K2409, K2435 (their lines in `build/rulings.md`) and `build/plan/draft-T41-investigation.md` §3.5 only.
+Your requirements: `build/requirements/project-roster.md` (read whole). Marked `*(not yet met: T41)*`: R5 (the rescue reachable at an administrator's `EXISTENCE` of a hidden project, answering nothing of its contents), R1 and R14 (an administrator reads a hidden project's participants and requests only at `FULL`). Re-state the tests `visibility-directory`, `requests`, `figures-purge` for an administrator neither invited nor joined. Test every changed id explicitly, with a negative control (K874).
+A provided service of the same layer (§4): membership's R43/R44 (MEMBERSHIP, this layer). Code against their text; when BOB tells you membership is merged, merge `tranche/T41` into your branch and run your tests against it before you record COMPLETE.
+Reading set (mechanics §17): measured at this START: 207 KB, under 300 KB: read it whole and state so in your record.
+Merge order in L2: record-core, membership, project-roster, credentials, promotion last (it stamps the rows).
+Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); none is yours unless named here.
+Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
