@@ -1,6 +1,6 @@
 # doc-clean — requirements
 
-**Status** · In force: a new helper module (layer 1, directly after `image-cover`), its requirements BOB's (K20, K70), written at T39's opening from `build/plan/draft-T39-N806.md` §3 (N806; Bob's K2315 and K2334, packaged by BOB's K2333). Every requirement met (DOC-CLEAN #1, K2354).
+**Status** · In force: a new helper module (layer 1, directly after `image-cover`), its requirements BOB's (K20, K70), written at T39's opening from `build/plan/draft-T39-N806.md` §3 (N806; Bob's K2315 and K2334, packaged by BOB's K2333). Every requirement met (DOC-CLEAN #1, K2354). Last changed T40 (T40-2a: R10, strings written from `raw`; K2399); R10 not yet met (T40).
 
 **Size (P6).** About 1,200–1,800 lines with tests.
 
@@ -35,6 +35,7 @@ Given a member-supplied document, answers a copy whose embedded images carry not
 - **R7** (T39; N806; K2333) Pure and deterministic: the same bytes always give the same answer, byte for byte; no clock, no randomness, no I/O, no state between calls.
 - **R8** (T39; N806; K2315) Never a partial copy: the answer is a whole copy meeting R2 and R6, `clean:true`, or a refusal.
 - **R9** (T39; N806) No place is named in this module's code or in any refusal text.
+- **R10** (T40; N813, K2390, K2399) *(not yet met: T40)* A PDF copy writes every string value from `pdf-reader` R38's `raw`, escaped as a literal or hex string, never rebuilt from its text `v`: each string a conforming reader reads in the copy is, byte for byte, the value it read in the original (a binary string, and a `FE FF` string of odd length, included).
 
 ### Satisfies
 

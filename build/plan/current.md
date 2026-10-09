@@ -27,6 +27,8 @@
 - **T40-1 · record-grammar** · (N809) `checkBundle` answers an inherited-key `object_type` (`toString`, `constructor`, `__proto__`) as an unknown type, never throws, with a test · K2285, K2343 · req: its R, BOB's wording, to draft before L1's START.
 - **T40-2 · pdf-reader** · (N813) a `FE FF` or odd-length string answers its raw bytes beside its text, with a test; R22's `streamDecoded` states it answers a Promise · K2351 · req: R20/R22, BOB's wording, to draft before L1's START · **P6:** 3,152 + ~40.
 
+- **T40-2a · doc-clean** · (PDF-READER #6 J2 item 2) R10: a copy writes each string from R38's `raw`, never from `v` (`doc-clean/pdf.mjs`:266 `str(v.v)`), with a test of a binary and an odd-length `FE FF` string · K2399 · joined L1 under P10 (L1 not closed; P19).
+
 No merge order (independent).
 
 ### L2
@@ -35,6 +37,9 @@ No merge order (independent).
 - **T40-4 · promotion** · stamps every row awaiting stamp at T39's close (rule 4 (2)) and T40's L1–L2 rows (credentials', membership's handle codes) · T39 rule 3 (2), K2370 · req: the rows' behaviour, BOB's wording.
 
 **L2 merge order:** membership, credentials, promotion last.
+
+### L4
+- **T40-4a · reading-pipeline** (tests only) · (PDF-READER #6 J2 item 1) re-measure the two pins of the Legistar agenda that held the windows-1252 misreading: `convert-chain.test.mjs`:297 ("45 undetermined", now none: R12's rule) and `pieces.test.mjs`:218 (the answer's digest) · K2399 · red accepted by name until this merge.
 
 ### L9
 - **T40-9a · filings** (tests only) · (N819) `outward.test.mjs`:136's ungraded exhibit recorded without a receipt in its fixture · K2387.

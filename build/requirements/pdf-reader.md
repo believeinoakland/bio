@@ -190,7 +190,7 @@ interface is the members below and nothing else; every other field is private.
 - **R31** `pageDict(pageIdx)` returns the resolved dict (`map`) of the page at 0-based `pageIdx` in page
   order; `null` when `pageIdx` is not an integer in `[0, pageCount)` or the page object is unresolvable.
   Its result is a valid `pageMap` for `pageShowsText` (R15).
-- **R38** (T40; N813, K2351, K2390) A string value the reader answers is `{t:"str", v, raw}`: `raw` is the string's bytes exactly as the file states them (a literal's escapes and a hex string's digits decoded, an odd final hex digit read as followed by 0, per the PDF syntax), as a `Uint8Array`; `v` is its text, UTF-16BE decoded after the `FE FF` mark when `raw` begins with it, otherwise each byte as one code unit. A caller that writes a string back writes `raw`, so no string, binary or odd-length, loses or changes a byte. *(not yet met: T40)*
+- **R38** (T40; N813, K2351, K2390) A string value the reader answers is `{t:"str", v, raw}`: `raw` is the string's bytes exactly as the file states them (a literal's escapes and a hex string's digits decoded, an odd final hex digit read as followed by 0, per the PDF syntax), as a `Uint8Array`; `v` is its text, UTF-16BE decoded after the `FE FF` mark when `raw` begins with it, otherwise each byte as one code unit. A caller that writes a string back writes `raw`, so no string, binary or odd-length, loses or changes a byte.
 - **R20** `resolve(v)` follows an indirect-reference chain (`{t:"ref", n, g}`) up to 64 hops and
   returns the resolved value, or `null` for an unresolvable reference, a reference cycle beyond the cap,
   or a non-reference value passed through unchanged.
