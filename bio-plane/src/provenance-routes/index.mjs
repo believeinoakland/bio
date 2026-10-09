@@ -29,7 +29,7 @@ import { parseFrontmatter, isMachineIdentity, createSha256 } from "../record-gra
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
-import { DOORBELL_ORIGIN, PROVENANCE_ACT_CHECKS } from "../provenance/index.mjs";
+import { DOORBELL_ORIGIN, UPLOAD_ORIGIN, PROVENANCE_ACT_CHECKS } from "../provenance/index.mjs";
 import { migrateProvenanceRoutes } from "./schema.mjs";
 import { ROUTE_MARK_CHECKS } from "./checks.mjs";
 
@@ -155,6 +155,30 @@ export function chainFromEvidence(doc, { instanceName = "unnamed", at = null } =
       bound: false,
       via: DOORBELL_ORIGIN,
       reconstructed: stamp(["origin.kind", "source.receipt.knock_id", "source.receipt.received", "source.receipt.sha256"]),
+    }] };
+  }
+
+  /* ARM U — BROUGHT IN BY AN UPLOAD (R1; provenance R63; capture R86; K2457). A member held the file and brought it
+     in; nobody fetched it, so, as at the doorbell, the document is never a fetched route, whatever its `locator`
+     (`upload:<sha256>`) looks like. Its one hop is read from the upload's receipt the document states: the digest
+     taken as the bytes arrived, and the instant. The member who brought it in (`capture.actor`) is named as who
+     brought it, never as its source, and her `origin_statement` is her words, never evidence: no hop reads it. With
+     no receipt, the route is undetermined, and the answer says the receipt is what is missing. */
+  if (doc.origin && typeof doc.origin === "object" && doc.origin.kind === UPLOAD_ORIGIN) {
+    const receipt = doc.source && typeof doc.source === "object" && doc.source.receipt && typeof doc.source.receipt === "object"
+      ? doc.source.receipt : null;
+    const rsha = receipt ? str(receipt.sha256) : null;
+    const received = receipt ? str(receipt.received) : null;
+    if (!rsha || !received)
+      return { ok: false, missing: ["the upload's receipt it was received under (`source.receipt`, with `sha256` and `received`)"] };
+    const actor = str(cap.actor);
+    return { ok: true, hops: [{
+      who: `instance ${instanceName} (upload${actor ? ` by ${actor}` : ""})`,
+      asserts: `these bytes were received for upload:${rsha} at ${received}`,
+      evidence: `the upload's receipt, sha256 ${rsha} taken as the bytes arrived${tsrNote}`,
+      bound: false,
+      via: UPLOAD_ORIGIN,
+      reconstructed: stamp(["origin.kind", "source.receipt.sha256", "source.receipt.received", "capture.actor"]),
     }] };
   }
 
