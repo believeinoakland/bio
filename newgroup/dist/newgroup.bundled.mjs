@@ -2063,7 +2063,12 @@ var ID_TABLE = Object.freeze([
      calculations minted sequentially, and every reader keeps reading them through `idPattern`. Minting follows `form`
      alone (record-core). */
   row("CALC", "calculations", "opaque", "sequential"),
-  row("STQ", "answers")
+  row("STQ", "answers"),
+  /* T41-1 (N820; D32, D8; K2405, K2418): a step (`steps`) and a reading guide (`reading-guides`), opaque, as T33's new
+     objects are: a counter would tell a reader how many steps a group took, hidden projects' included. Their owners are
+     named here before they hold code (P8). */
+  row("STP", "steps", "opaque"),
+  row("GUD", "reading-guides", "opaque")
 ]);
 var YEAR = "\\d{4}";
 var CORE = { sequential: "\\d{4,}", opaque: "[a-z0-9]{16}" };
@@ -2076,6 +2081,8 @@ function idPattern(prefix) {
   return typeof prefix === "string" && ROW.has(prefix) ? new RegExp(`^${coreOf(prefix)}$`) : null;
 }
 var HYP_RE = idPattern("HYP");
+var STP_RE = idPattern("STP");
+var GUD_RE = idPattern("GUD");
 var ID_PREFIXES = Object.freeze([
   "INFO",
   "PROB",
@@ -2666,8 +2673,22 @@ var SHARED_ACT_CHECKS = Object.freeze({
     check: "C-33.41",
     where: "src/entities/index.mjs actShapeRefusal (entities' declared relation, `declareRelation`), and src/progressions/checks.mjs refusal (progressions' revision of a declared flow and exception document, src/progressions/index.mjs)",
     translation: "A citation is the address of something somebody who was not here can go and read. Without one, what you have written can only be checked by you, and the record would be claiming more than it can show. Name where the source is published or held \u2014 if it is not public, say who holds it and how it was seen, which is still an address and is still checkable."
+  },
+  /* R52 (T41-1, N820; D3; K231, K2426): ONE CODE, ONE CONDITION, ONE ROW. Accepting a proposal as proposed, where that
+     would make a member vouch for a legal or authored statement (an action's reason, a case statement, a testimony), is
+     refused by the act's owner with this row, and only `edited` or `own_instead` lands (Investigation §5). The owners
+     (`steps` R24, `hypotheses` R17, `run-productions` R22, `question-explorer` R6, `investigation` R12, R20,
+     `case-authoring` R64) read it from here and add no row of their own; the code is `ACCEPT_MUST_REAUTHOR`
+     (acceptance.mjs). The translation states the meaning; the design stream words it later by key. */
+  ACCEPT_MUST_REAUTHOR: {
+    check: "C-33.54",
+    where: "raised by the owner of each accepting act that would make a member vouch for a legal or authored statement (steps R24, hypotheses R17, run-productions R22, question-explorer R6, investigation R12 and R20, case-authoring R64), from this shared row (record-grammar R52)",
+    translation: "Accepting this as it was proposed would make you vouch for words the machine wrote. Write it in your own words instead, by editing it or writing your own, and the record keeps that the words are yours."
   }
 });
+
+// ../bio-plane/src/record-grammar/acceptance.mjs
+var ACCEPTANCE_FORMS = Object.freeze(["as_proposed", "edited", "own_instead"]);
 
 // ../bio-plane/src/record-grammar/bundle.mjs
 var BUNDLE_TYPES = Object.fromEntries(ID_PREFIXES.map((p) => [p, OBJECT_TYPES[p]]));

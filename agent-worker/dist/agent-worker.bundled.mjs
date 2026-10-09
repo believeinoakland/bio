@@ -860,7 +860,12 @@ var ID_TABLE = Object.freeze([
      calculations minted sequentially, and every reader keeps reading them through `idPattern`. Minting follows `form`
      alone (record-core). */
   row("CALC", "calculations", "opaque", "sequential"),
-  row("STQ", "answers")
+  row("STQ", "answers"),
+  /* T41-1 (N820; D32, D8; K2405, K2418): a step (`steps`) and a reading guide (`reading-guides`), opaque, as T33's new
+     objects are: a counter would tell a reader how many steps a group took, hidden projects' included. Their owners are
+     named here before they hold code (P8). */
+  row("STP", "steps", "opaque"),
+  row("GUD", "reading-guides", "opaque")
 ]);
 var YEAR = "\\d{4}";
 var CORE = { sequential: "\\d{4,}", opaque: "[a-z0-9]{16}" };
@@ -873,6 +878,8 @@ function idPattern(prefix) {
   return typeof prefix === "string" && ROW.has(prefix) ? new RegExp(`^${coreOf(prefix)}$`) : null;
 }
 var HYP_RE = idPattern("HYP");
+var STP_RE = idPattern("STP");
+var GUD_RE = idPattern("GUD");
 var ID_PREFIXES = Object.freeze([
   "INFO",
   "PROB",
