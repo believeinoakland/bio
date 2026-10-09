@@ -1,8 +1,9 @@
-/* record-grammar at its interface: the id grammar and the type vocabulary (R1–R5), and T33's one id table (R46–R48). */
+/* record-grammar at its interface: the id grammar and the type vocabulary (R1–R5), T33's one id table (R46–R48), and
+   T41's step and guide ids (R51, R53). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { BUNDLE_ID_RE, ANN_ID_RE, FILENAME_RE, ISO_TS_RE, OBJECT_TYPES, LEGACY_TYPE_ALIASES, normalizeType, ID_TABLE,
-  idPattern, isHypothesisId } from "../../../src/record-grammar/index.mjs";
+  idPattern, isHypothesisId, isStepId, isGuideId } from "../../../src/record-grammar/index.mjs";
 
 const PREFIXES = ["INFO", "PROB", "FOCUS", "INQ", "PROJ", "ACTN", "BIAS", "STD", "CONF", "CONS", "ESC", "ASP", "GOAL", "PLN"];
 const SLUGS_OK = ["a", "a1", "abc-def", "a-b-c", "0-9", "x2-y3-z4"];
@@ -133,12 +134,13 @@ const TABLE = [
   ["IDC", "people", "opaque"],
   ["MTI", "people"], ["CHK", "people"], ["MSR", "money"], ["HYP", "hypotheses"], ["DUT", "duties"],
   ["CALC", "calculations", "opaque", "sequential"], ["STQ", "answers"],
+  ["STP", "steps", "opaque"], ["GUD", "reading-guides", "opaque"],
 ].map(([prefix, owner, form = "sequential", legacy]) => (legacy ? { prefix, owner, form, legacy } : { prefix, owner, form }));
 const SEQUENTIAL = TABLE.filter((e) => e.form === "sequential").map((e) => e.prefix);
 const OPAQUE = TABLE.filter((e) => e.form === "opaque").map((e) => e.prefix);
 const TAIL = "a1b2c3d4e5f6g7h8";
 
-test("R46 ID_TABLE: frozen, one {prefix, owner, form} per prefix, no prefix twice, holding exactly T33's census with T34's CALC opaque and its legacy sequential form", () => {
+test("R46 ID_TABLE: frozen, one {prefix, owner, form} per prefix, no prefix twice, holding exactly T33's census with T34's CALC opaque and its legacy sequential form, and T41's STP and GUD", () => {
   assert.ok(Object.isFrozen(ID_TABLE));
   for (const e of ID_TABLE) {
     assert.ok(Object.isFrozen(e), e.prefix);
@@ -154,7 +156,7 @@ test("R46 ID_TABLE: frozen, one {prefix, owner, form} per prefix, no prefix twic
   /* R1's prefixes sequential; ENT widened; the five new objects opaque, and since T34 CALC (N570); the other reserved six
      sequential, with STQ answers'. */
   for (const p of PREFIXES) assert.equal(ID_TABLE.find((e) => e.prefix === p).form, "sequential", p);
-  assert.deepEqual(OPAQUE, ["EVT", "LIN", "MNY", "PFA", "IDC", "CALC"]);
+  assert.deepEqual(OPAQUE, ["EVT", "LIN", "MNY", "PFA", "IDC", "CALC", "STP", "GUD"]);
   for (const p of ["MTI", "CHK", "MSR", "HYP", "DUT", "STQ", "ENT"]) assert.ok(SEQUENTIAL.includes(p), p);
   assert.deepEqual({ ...ID_TABLE.find((e) => e.prefix === "CALC") },
     { prefix: "CALC", owner: "calculations", form: "opaque", legacy: "sequential" });
@@ -245,4 +247,37 @@ test("R48 isHypothesisId: true exactly for a string matching idPattern('HYP'); n
   for (const v of [undefined, null, 0, 20260001, NaN, true, {}, [], ["HYP-2026-0001"], Symbol("HYP-2026-0001"), 10n,
     () => "HYP-2026-0001", { toString() { throw new Error("x"); } }, new String("HYP-2026-0001"), Object.create(null)])
     assert.equal(isHypothesisId(v), false, String(typeof v));
+});
+
+/* T41 (R51, R53): each new id explicitly, with its negative controls (K874): the other prefix's id, a sequential core, a
+   tail one short or long or upper-cased, a slug after the core, and every non-string. */
+const opaqueIdTest = (name, fn, prefix, owner) => {
+  const row = ID_TABLE.find((e) => e.prefix === prefix);
+  assert.deepEqual({ ...row }, { prefix, owner, form: "opaque" }, name);
+  const re = idPattern(prefix);
+  const cands = [`${prefix}-2026-${TAIL}`, `${prefix}-2026-0000000000000000`, `${prefix}-1999-zzzzzzzzzzzzzzzz`,
+    `${prefix}-2026-0001`, `${prefix}-2026-10000`, `${prefix}-2026-${TAIL.slice(1)}`, `${prefix}-2026-${TAIL}0`,
+    `${prefix}-2026-${TAIL.toUpperCase()}`, `${prefix}-2026-${TAIL}-a`, `${prefix.toLowerCase()}-2026-${TAIL}`,
+    ` ${prefix}-2026-${TAIL}`, `${prefix}-2026-${TAIL}\n`, `${prefix}-26-${TAIL}`, ""];
+  for (const { prefix: p } of ID_TABLE) cands.push(`${p}-2026-0001`, `${p}-2026-${TAIL}`);
+  for (const c of cands) assert.equal(fn(c), re.test(c), `${name} on '${c}'`);
+  for (const ok of [`${prefix}-2026-${TAIL}`, `${prefix}-2026-0000000000000000`, `${prefix}-1999-zzzzzzzzzzzzzzzz`])
+    assert.equal(fn(ok), true, ok);
+  for (const bad of [`${prefix}-2026-0001`, `${prefix}-2026-10000`, `${prefix}-2026-${TAIL.slice(1)}`, `${prefix}-2026-${TAIL}0`,
+    `${prefix}-2026-${TAIL.toUpperCase()}`, `${prefix}-2026-${TAIL}-a`, `${prefix.toLowerCase()}-2026-${TAIL}`, `HYP-2026-${TAIL}`,
+    `${prefix === "STP" ? "GUD" : "STP"}-2026-${TAIL}`, `EVT-2026-${TAIL}`])
+    assert.equal(fn(bad), false, bad);
+  for (const v of [undefined, null, 0, NaN, true, {}, [], [`${prefix}-2026-${TAIL}`], Symbol(prefix), 10n,
+    () => `${prefix}-2026-${TAIL}`, { toString() { throw new Error("x"); } }, new String(`${prefix}-2026-${TAIL}`), Object.create(null)])
+    assert.equal(fn(v), false, `${name} ${String(typeof v)}`);
+  /* Neither is a bundle id (R1, R3: rows of their owners' tables, not documents). */
+  assert.ok(!BUNDLE_ID_RE.test(`${prefix}-2026-${TAIL}-a`) && !Object.hasOwn(OBJECT_TYPES, prefix), prefix);
+};
+
+test("R51 ID_TABLE gains STP (owner steps, opaque); isStepId is true exactly for a string matching idPattern('STP'); never throws", () => {
+  opaqueIdTest("isStepId", isStepId, "STP", "steps");
+});
+
+test("R53 ID_TABLE gains GUD (owner reading-guides, opaque); isGuideId is true exactly for a string matching idPattern('GUD'); never throws", () => {
+  opaqueIdTest("isGuideId", isGuideId, "GUD", "reading-guides");
 });
