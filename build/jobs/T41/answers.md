@@ -1,6 +1,6 @@
 # answers (T41)
 
-**Status** · session_01AYLXqGDu2yvQaZ7USf6Dv7 · depth 2 · WORKING · handled B4
+**Status** · session_01AYLXqGDu2yvQaZ7USf6Dv7 · depth 2 · RUNNING until 2026-10-09T23:56:28Z (users' suites, mine vs tranche/T41) · handled B4
 
 ## J1 · QUESTION
 
