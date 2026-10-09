@@ -10,7 +10,7 @@ import { EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../../../src/
 import { ARCHIVE_CAPTURE_GRADE } from "../../../src/provenance/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 import { DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, CAPTURE_REQUEST_ARM_CHECKS, acquireGradeNote, ACQUIRE_GRADE_NOTE,
-         civicsmithUserAgent } from "../../../src/acquisition/index.mjs";
+         civicsmithUserAgent, CAPTURE_MAX } from "../../../src/acquisition/index.mjs";
 
 const ROW = (table, code) => [table[code].check, table[code].translation];
 
@@ -294,6 +294,27 @@ test("R9 R28: every outbound fetch goes through the governor under a legible age
   const bare = world({ env: { INSTANCE_NAME: "", VERSION: "" } });
   const b = await run(bare, { "https://a.example/x": text("x") }, { locator: "https://a.example/x" });
   assert.equal(b.net.seen[0].init.headers["user-agent"], civicsmithUserAgent("0.0.0", "unnamed", "acquire"));
+});
+
+test("R10: CAPTURE_MAX, the one exported limit, is 256 MiB and is the limit R10 enforces: a body of exactly CAPTURE_MAX bytes is filed, one byte more is TOO_LARGE naming it as maxBytes, the stream cancelled", async () => {
+  assert.equal(CAPTURE_MAX, 256 * 1024 * 1024);
+  const CHUNK = 4 * 1024 * 1024;
+  const body = (total, onCancel = () => {}) => {
+    let sent = 0;
+    return new ReadableStream({
+      pull(c) { if (sent >= total) { c.close(); return; } const n = Math.min(CHUNK, total - sent); sent += n; c.enqueue(new Uint8Array(n)); },
+      cancel() { onCancel(); },
+    }, { highWaterMark: 0 });
+  };
+  const w = world();
+  const at = await run(w, { "https://a.example/at": () => new Response(body(CAPTURE_MAX), { headers: { "content-type": "application/octet-stream" } }) },
+                       { locator: "https://a.example/at" });
+  assert.equal(at.status, 200, "exactly the limit is taken");
+  assert.equal(at.body.document.capture.bytes, CAPTURE_MAX);
+  let cancelled = false;
+  const over = await run(w, { "https://a.example/over": () => new Response(body(CAPTURE_MAX + 1, () => { cancelled = true; })) },
+                         { locator: "https://a.example/over" });
+  assert.deepEqual([over.status, over.body.reason, over.body.maxBytes, cancelled], [413, "TOO_LARGE", CAPTURE_MAX, true], "one byte past it is refused");
 });
 
 test("R10: hashed as it arrives, stored in parts of 8 MiB; each refusal named; every attempt recorded against the document address", async () => {
