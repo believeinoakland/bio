@@ -1,6 +1,6 @@
 # answer-envelope — requirements
 
-**Status** · In force: split from `control-plane` by copy for size (K617, K1907, K1974), meaning unchanged: R1–R8 marked "was" and retired there (R5 the Worker's half of its R25, R8 its R32's rows); R9 a copy of `control-plane` R33, stated in both. Written T35 (K2031); every requirement met (ANSWER-ENVELOPE #1, K2054).
+**Status** · In force: split from `control-plane` by copy for size (K617, K1907, K1974), meaning unchanged: R1–R8 marked "was" and retired there (R5 the Worker's half of its R25, R8 its R32's rows); R9 a copy of `control-plane` R33, stated in both. Written T35 (K2031); every requirement met (ANSWER-ENVELOPE #1, K2054). T41 (T41-60's text, §3.6: "`answer-envelope` families gain their check rows"): Uses gain the new modules' check families under R2 and R7, no requirement changed; N820; K2405, K2417, K2418.
 
 **Size (P6).** About 709 lines copied (`index.mjs` 14 + 306, `checks.mjs` 176, `families.mjs` 213); about 780 after F17 (R6's nonce). Well under 4,000.
 
@@ -36,6 +36,7 @@ Terms. **The doors** are `control-plane`'s Worker entry and `store-door`'s `disp
 - (T38; N783; K2321) `project-roster`: `PROJECT_ROSTER_CHECKS`, `PROJECT_JOIN_REQUEST_CHECKS` (`src/project-roster/checks.mjs`), in `CHECK_FAMILY_FILES` after membership's.
 - (T35; K1974; red 26) `law-relations`: `LAW_RELATIONS_CHECKS` (`src/law-relations/checks.mjs`, its nine C-112 rows), in `CHECK_FAMILY_FILES` before `src/standards/checks.mjs` (`law-relations`' Suggestions).
 - Used by `control-plane` (R1–R8), `store-door` (`DISPATCH_CHECKS`, R3, R6; R8's rows) and `plane` (`door.mjs`:24–25 and `index.mjs`:5–6: `json`, `doAnswer`, `storeSilent`, `storeRefusal`, `STORE_SILENT_*`, `requiredArgument`).
+- (T41; N820; K2418; `steps` a new `modules.json` edge, §3.6's list) `steps`, `reading-guides`, `question-explorer`, `investigation`: their check families, in `CHECK_FAMILY_FILES` at their places (R2, R7); the amended modules' new rows in their own families.
 - (T36; K2130, K2152; red 11) `file-safety`: `FILE_SAFETY_CHECKS` (`src/file-safety/checks.mjs`, its R24), in `CHECK_FAMILY_FILES` at its place (R2, R7).
 
 ### Invariants

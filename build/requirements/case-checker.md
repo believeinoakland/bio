@@ -1,6 +1,6 @@
 # case-checker — requirements
 
-**Status** · In force: a new product module, placed by BOB (K1256, K1257); folded at T28's opening (N519, N520; K1268, K1277), R18 N522's (K1273). It runs `case-catalogue`'s pure case-document checks (K1824). Last changed T35 (T35-58: R21), T36 (T36-51: R14, R22; K2129) and T37 (T37-20: R1, R8, R14, R22 amended; N757, N763; K2140, K2206; DEC-180) and T39 (T39-17: R14's `/3` specification worded for a member document's copy; N806; K2333, K2343). Last changed T40 (T40-16b: R14's `/3` specification worded for an unmarked photo's label; N798; DEC-185; K2394); those marked not yet met (T37, T39, T40), every other requirement met (CASE-CHECKER #6, K2013).
+**Status** · In force: a new product module, placed by BOB (K1256, K1257); folded at T28's opening (N519, N520; K1268, K1277), R18 N522's (K1273). It runs `case-catalogue`'s pure case-document checks (K1824). Last changed T35 (T35-58: R21), T36 (T36-51: R14, R22; K2129) and T37 (T37-20: R1, R8, R14, R22 amended; N757, N763; K2140, K2206; DEC-180) and T39 (T39-17: R14's `/3` specification worded for a member document's copy; N806; K2333, K2343). Last changed T40 (T40-16b: R14's `/3` specification worded for an unmarked photo's label; N798; DEC-185; K2394); those marked not yet met (T37, T39, T40), every other requirement met (CASE-CHECKER #6, K2013). Last changed T41 (T41-40's text: R23, R24 new; N820; D56, D59; K2405, K2417, K2418); marked not yet met (T41).
 
 **Size (P6).** About 900–1,300 lines, well under 4,000: the checks, the result composer, the readable specification and the build of the standalone program.
 
@@ -63,6 +63,11 @@ Terms. The **case file**, its **manifest**, **parts** and **files** are `case-gr
 
 - **R20** Each row of the case document's `calculations:` block (`case-grammar` R18) is recomputed by `calc-grammar.evaluate` over the inputs the case file carries (`case-grammar` R13's `calculation` kind), each input first checked against its stated SHA-256, at the method version the row states. `calculations` answers, per calculation, `{calc, result: agrees | differs | not_recomputed, differs[], missing[]}`: a result or `result_key` that recomputes differently is a `differs` entry naming the result, the stated and the recomputed value; an input absent or whose bytes differ from its hash, or a method version this checker does not hold, is a `missing` entry naming it; a row the document discloses as unbound or differing is answered with that disclosure and is not a `differs` entry for being so. A finding whose chain rests on a calculation takes its entries (R11). A workbook, or a value from a third party's engine, is answered `not_recomputed` with the sentence that it was recomputed by the publishing copy's engine, never as agreeing (K1448). Pure, as R1.
 
+**The lens and the account, re-checked offline** (T41; N820; `draft-T41-investigation.md` §3.6; K2405, K2417, K2418; D56, D59)
+
+- **R23** *(not yet met: T41)* (D59) `checkCaseFile` takes `lens`: `as_published` (default), `removed`, or a reader's own `{statements, applications}`. Under `removed` each `case-grammar` R24 application is reversed (a lowered grade restored to `from`, an excluded leg or refused inference restored); under a reader's lens its applications are applied; each finding's pair is recomputed (`strength.recomputePair`) and answered with `bar_met` under that lens and the statements that changed it. Every report states the limit: "A re-check re-weighs the analysis that exists; it cannot write what another lens would have written."
+- **R24** *(not yet met: T41)* (D56) The account's code arms (`case-disclosures` R30's, but the machine flags) re-run offline over the carried document and passages; a departure is a `differs` entry for the case.
+
 ## Private
 
 ### Uses
@@ -77,6 +82,7 @@ Terms. The **case file**, its **manifest**, **parts** and **files** are `case-gr
 - `case-catalogue` (K1824): `checkCaseDocument`, `CASE_MEMBER_ROLES` (its R1, R2; R7), imported from its pure `checks.mjs` (was `ratification`'s R8, R9).
 - `calc-grammar` (T33-66): `evaluate`, `resultKey`, its method version (R20), bundled into R13's program.
 - `case-grammar` (T33-66): `calculationsOf` (its R18).
+- (T41; D56, D59) `case-grammar`: `accountOf`, `biasApplicationsOf` (its R23, R24; R23, R24 here). `strength` (held): `recomputePair` under a lens (R23).
 
 ### Invariants
 
