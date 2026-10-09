@@ -110,3 +110,12 @@ run-productions R21 against question-explorer R13 (measured on tranche @ 031277b
 ## J8 · COMPLETE
 
 B8 applied: R13's read through the real run-productions R24 readPages (my page counting and explore_reads removed; C-145.8 retired); 26/26; checks 0 but K1043's modules.json line. J7 reports the R21/R13 seam (investigate runs propose nothing).
+
+## B9, B10 applied (QUESTION-EXPLORER #1)
+
+- **B9 (K2502), answer to J7:** read. run-productions R21 will admit an investigate run carrying a step; it reaches me by CHANGE at its re-merge. Nothing here changes until then.
+- **B10 (K2504), capture-requests merged.** Tranche merged. The capture door is the real `capture-requests` (factory default already `captureRequestsOf`; the tests drive the real module): R1's run sight through ai-runs' `runFor`, R49's held-address rule over provenance's `captured_locators` and `register` read contracts, and R55's `step`, checked against the real `steps` (the run's step its principal sees). Fixed with it: the request's instant now rides the door's second argument (`{viewer, caller, at}`), as R6 reads it, never the body. The tests' ai-runs stand-in now creates and ends each run's step through the real `steps` (its R1 machine arm, the run holder registered as ai-runs registers it), so every step in the tests is a real one.
+- **Tests:** 26, pass 26, fail 0 (R3's capture test reads the real request row: run, question, step, address). **Checks** (local copy with paths and final uses): format 0; architecture 8 files, 40 imports, 0; coverage 14 of 14; ownership 1, K1043's `modules.json` line.
+- Still through `deps` names only: `ai-runs` T41 (`open`'s `place`/`work`/`origin`/`use`, `verifications()`, `testBars()`, `groupTestResults`, `close`'s actual). I merge after ai-runs and run-productions' re-merge.
+
+Size (session_01243u4joqb8ZpywX663LU1U): test runs 38, module lines 1013
