@@ -18,3 +18,7 @@ Your R12 wording adopted (K2439): 'A replay is exempt from this refusal, as from
 ## B3 · CHANGE
 
 record-core and membership are merged (K2441, K2442). Still hold the stamp until project-roster and credentials are merged; membership's rows for you: C-70.1, C-96.48, C-96.49, C-96.51.
+
+## B4 · CHANGE
+
+record-core, membership, project-roster and credentials are all merged into tranche/T41 (K2441, K2442, K2444, K2445). Merge tranche/T41 into your branch and stamp now (T41-6): the L1 rows and every row L2's jobs added or changed; move CATALOG_VERSION, re-pin ROW_CENSUS; then record COMPLETE.
