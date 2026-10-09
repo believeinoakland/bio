@@ -27554,6 +27554,11 @@ CREATE TABLE IF NOT EXISTS captured_locators (
   -- exactly as given ({tool, listed, categories, checked_at, unanswered?}), as JSON; NULL when none was given. It
   -- changes no other field, grade or chain. Not part of R48's read contract: R16 and R60 answer it.
   reputation        TEXT,
+  -- R63 (K2449): on a receipt of route 'upload' only, each sighting's uploading member and her statement of where the
+  -- file came from, as a JSON array [{by, statement, at}], one entry per upload in the order written, so a second
+  -- sighting by another member keeps her own statement; NULL on every other receipt. Not part of R48's read contract:
+  -- R16 and R60 answer it.
+  uploads           TEXT,
   PRIMARY KEY (address_norm, capture_sha, via)
 );
 CREATE INDEX IF NOT EXISTS captured_locators_addr ON captured_locators(address_norm, first_retrieved);
@@ -27579,7 +27584,8 @@ var REGISTER_ADDITIVE = [
   ["register", "authored", "INTEGER NOT NULL DEFAULT 0"],
   ["register", "author", "TEXT"],
   ["register", "observed_at", "TEXT"],
-  ["captured_locators", "reputation", "TEXT"]
+  ["captured_locators", "reputation", "TEXT"],
+  ["captured_locators", "uploads", "TEXT"]
 ];
 function migrateProvenance(sql) {
   const cols = (t2) => [...sql.exec(`PRAGMA table_info(${t2})`)].map((r) => r.name);
@@ -27624,7 +27630,9 @@ function hasFile_2(ctx, path) {
 var CAPTURE_GRADES = BASIS_GRADES.filter((g) => g !== TESTIMONY_GRADE);
 var RECEIVED_NOT_FETCHED = "CAPTURE_RECEIVED_NOT_FETCHED";
 var DOORBELL_ORIGIN = "doorbell";
-var ORIGIN_KINDS = ["named_request", "sweep", "member", DOORBELL_ORIGIN];
+var UPLOAD_ORIGIN = "upload";
+var UPLOADED_METHOD = "uploaded";
+var ORIGIN_KINDS = ["named_request", "sweep", "member", DOORBELL_ORIGIN, UPLOAD_ORIGIN];
 var CAPTURE_ENCODINGS2 = ["utf8", "base64", "binary"];
 var HIST_TS_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
 var RAW_SHA_RE2 = /^[0-9a-f]{64}$/;
@@ -27679,6 +27687,28 @@ function checkContainer(ctx, findings, d, i) {
   const found3 = r.archiveOrigin(a) || { found: false };
   if (!found3.found) findings.push(f5("C-18.1", "error", `provenance documents[${i}] was cut out of archive ${a.slice(0, 16)}\u2026, and no register document of that archive can be read, so its origin cannot be shown to be the archive's`));
   else if (canon2(d.origin ?? null) !== canon2(found3.origin ?? null)) findings.push(f5("C-18.1", "error", `provenance documents[${i}] was cut out of archive ${a.slice(0, 16)}\u2026 and its origin is ${canon2(d.origin ?? null).slice(0, 120)}, not its archive's, ${canon2(found3.origin ?? null).slice(0, 120)}`));
+}
+function checkUpload(findings, d, i) {
+  const upload = !!d.origin && typeof d.origin === "object" && d.origin.kind === UPLOAD_ORIGIN;
+  const cap = d.capture && typeof d.capture === "object" ? d.capture : null;
+  const st = d.origin_statement;
+  if (upload && cap && cap.method === UNPACKED_METHOD) return;
+  if (!upload) {
+    if (cap && cap.method === UPLOADED_METHOD) findings.push(f5("C-18.1", "error", `provenance documents[${i}] states capture.method '${UPLOADED_METHOD}' but its origin.kind is not '${UPLOAD_ORIGIN}': only a file a member brought in by an upload was uploaded`));
+    if (st !== void 0) findings.push(f5("C-18.1", "error", `provenance documents[${i}] carries an origin_statement but its origin.kind is not '${UPLOAD_ORIGIN}': only an upload records its member's statement of where the file came from`));
+    return;
+  }
+  if (cap && cap.method !== UPLOADED_METHOD) findings.push(f5("C-18.1", "error", `provenance documents[${i}] was brought in by a member's upload and its capture.method is '${cap.method}', not '${UPLOADED_METHOD}'`));
+  const text7 = (v) => typeof v === "string" && v.trim() !== "";
+  if (!st || typeof st !== "object" || Array.isArray(st)) {
+    findings.push(f5("C-18.1", "error", `provenance documents[${i}] was brought in by a member's upload and carries no origin_statement: a file brought in records where it came from, in the member's own words`));
+    return;
+  }
+  const bad2 = [];
+  if (!text7(st.text)) bad2.push("text (the member's words, not blank)");
+  if (!text7(st.words_of)) bad2.push("words_of (who said them)");
+  if (st.evidence_of_truth !== false) bad2.push("evidence_of_truth (false: the member's words are never evidence of the file's truth)");
+  if (bad2.length) findings.push(f5("C-18.1", "error", `provenance documents[${i}].origin_statement is malformed: ${bad2.join("; ")}`));
 }
 function checkAuthorityPublishable(ctx, findings) {
   const hist = Array.isArray(ctx.fm?.state_history) ? ctx.fm.state_history : [];
@@ -27812,6 +27842,9 @@ function checkReleaseAuthority(ctx, findings) {
         if (cap.grade !== void 0 && cap.grade !== null) findings.push(f5("C-18.1", "error", `provenance documents[${i}] is a member's authored observation and carries capture.grade '${cap.grade}': the capture axis does not apply to an authored document, and a letter on it would read as strength the observation does not have (MEMBER-KNOWLEDGE-DESIGN.md \xA73)`));
         if (cap.actor_class !== "member") findings.push(f5("C-18.1", "error", `provenance documents[${i}] is a member's authored observation and its capture.actor_class is '${cap.actor_class}', not 'member'`));
       } else if (cap.method === UNPACKED_METHOD) {
+      } else if (d.origin && typeof d.origin === "object" && d.origin.kind === UPLOAD_ORIGIN) {
+        if (cap.grade !== void 0 && cap.grade !== null) findings.push(f5("C-18.1", "error", `provenance documents[${i}] was brought in by a member's upload and carries capture.grade '${cap.grade}': a file a member holds was fetched from no address, so it earns no fetched letter (Intake Doctrine \xA72a)`));
+        if (cap.grade_basis !== RECEIVED_NOT_FETCHED) findings.push(f5("C-18.1", "error", `provenance documents[${i}] was brought in by a member's upload and its capture.grade_basis is '${cap.grade_basis}', not '${RECEIVED_NOT_FETCHED}': why it carries no letter is stated, never left to be inferred`));
       } else if (d.origin && typeof d.origin === "object" && d.origin.kind === DOORBELL_ORIGIN) {
         if (cap.grade !== void 0 && cap.grade !== null) findings.push(f5("C-18.1", "error", `provenance documents[${i}] was received through the doorbell and carries capture.grade '${cap.grade}': received material was fetched from no address, so it earns no fetched letter (Intake Doctrine \xA72a)`));
         if (cap.grade_basis !== RECEIVED_NOT_FETCHED) findings.push(f5("C-18.1", "error", `provenance documents[${i}] was received through the doorbell and its capture.grade_basis is '${cap.grade_basis}', not '${RECEIVED_NOT_FETCHED}': why it carries no letter is stated, never left to be inferred`));
@@ -27819,6 +27852,7 @@ function checkReleaseAuthority(ctx, findings) {
       if (!ACTOR_CLASSES.includes(cap.actor_class)) findings.push(f5("C-18.1", "error", `provenance documents[${i}].capture.actor_class '${cap.actor_class}' is not one of: ${ACTOR_CLASSES.join(", ")}`));
     }
     checkContainer(ctx, findings, d, i);
+    checkUpload(findings, d, i);
     const or = d.origin;
     if (d.authored === true && (!or || typeof or !== "object" || or.kind !== "member")) {
       findings.push(f5("C-18.1", "error", `provenance documents[${i}] is a member's authored observation and its origin.kind is '${or && typeof or === "object" ? or.kind : or}', not 'member'`));
@@ -28227,8 +28261,16 @@ function safeJson(text7) {
     return null;
   }
 }
-var RECEIPT_COLUMNS = "address_norm, address, capture_sha, via, retrieval_locator, first_retrieved, last_retrieved, observations, reputation";
-var receiptRow = (r) => ({ ...r, reputation: typeof r.reputation === "string" ? safeJson(r.reputation) : null });
+var RECEIPT_COLUMNS = "address_norm, address, capture_sha, via, retrieval_locator, first_retrieved, last_retrieved, observations, reputation, uploads";
+var uploadsOf = (text7) => {
+  const a = typeof text7 === "string" ? safeJson(text7) : null;
+  return Array.isArray(a) ? a : null;
+};
+var receiptRow = (r) => ({
+  ...r,
+  reputation: typeof r.reputation === "string" ? safeJson(r.reputation) : null,
+  uploads: uploadsOf(r.uploads)
+});
 var bareSha = (v) => typeof v === "string" ? v.trim().replace(/^sha256:/, "").toLowerCase() : null;
 function bundleGate(col, viewer) {
   if (typeof col !== "string" || !/^[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*$/.test(col))
@@ -28245,12 +28287,13 @@ function bundleGate(col, viewer) {
 var ARCHIVE_VIA = "archive.org";
 var ARCHIVE_CAPTURE_GRADE = BASIS_GRADES[BASIS_GRADES.indexOf(EARNED_CAPTURE_CEILING) + 1] ?? null;
 var DOORBELL_VIA = "doorbell";
+var UPLOAD_VIA = "upload";
 var UNPACKED_VIA = "unpacked";
 var UNPACKED_FROM_ARCHIVE = "CAPTURE_UNPACKED_FROM_ARCHIVE";
 var UNPACKED_UNRESOLVED = "CAPTURE_UNPACKED_UNRESOLVED";
 var UNPACKED_LOCATOR = /^zip:([0-9a-fA-F]{64})!(\d+)$/;
 var FETCHED_VIAS = Object.freeze(["direct", ARCHIVE_VIA, "capture-request"]);
-var ROUTE_RANK = { direct: 0, archive: 1, unpacked: 2, doorbell: 3 };
+var ROUTE_RANK = { direct: 0, archive: 1, unpacked: 2, doorbell: 3, upload: 3 };
 var VERSION_CHAIN_LIMIT_DEFAULT = 200;
 var VERSION_CHAIN_LIMIT_MAX = 1e3;
 var TESTIMONY_MAX_BYTES = 128 * 1024;
@@ -28922,6 +28965,11 @@ var Provenance = class {
    *  handed to the listeners as this write gave it, null when it gave none. A repeat that gives one replaces the
    *  stored answer (the newest lookup speaks for the address); one that gives none keeps it, as `retrieval_locator`
    *  is kept. It changes no other field, grade or chain. */
+  /*  R63 (K2449): a receipt of route `upload` holds, for each sighting, the uploading member `by` and her `statement` of
+   *  where the file came from, appended to its `uploads` as `{by, statement, at}` (`at` the sighting's instant), so a
+   *  second sighting by another member keeps her own statement beside the first: two members bringing the same bytes
+   *  are two attributed sightings. Each is kept as given (a string, else null). A receipt of any other route takes
+   *  neither and holds none. The listeners are handed this sighting's `by` and `statement`, null on any other route. */
   recordReceipt({
     address,
     addressNorm,
@@ -28930,11 +28978,15 @@ var Provenance = class {
     via = "direct",
     retrievalLocator = null,
     reputation = null,
+    by = null,
+    statement = null,
     context: context2 = null
   } = {}) {
     if (!addressNorm || !captureSha) return { recorded: false };
     const v = String(via || "direct");
     const rep = isObj4(reputation) ? reputation : null;
+    const upload = v === UPLOAD_VIA;
+    const sighting = upload ? { by: typeof by === "string" ? by : null, statement: typeof statement === "string" ? statement : null } : { by: null, statement: null };
     const asked = typeof retrieved === "string" && retrieved ? Date.parse(retrieved) : NaN;
     const clock2 = Date.parse(this.#now());
     const when = stampInstant("second", Number.isFinite(asked) ? asked : Number.isFinite(clock2) ? clock2 : Date.now());
@@ -28947,15 +28999,19 @@ var Provenance = class {
         v
       ) || { n: 0, same: 0 };
       const observation = Number(seen.n) === 0 ? "new" : Number(seen.same) > 0 ? "unchanged" : "changed";
+      const held2 = upload ? this.#one(`SELECT uploads FROM captured_locators WHERE address_norm = ? AND capture_sha = ?
+                                         AND via = ?`, addressNorm, captureSha, v) : null;
+      const uploads = upload ? JSON.stringify([...uploadsOf(held2 && held2.uploads) || [], { ...sighting, at: when }]) : null;
       this.#sql.exec(
-        `INSERT INTO captured_locators (address_norm, address, capture_sha, via, retrieval_locator, first_retrieved, last_retrieved, observations, reputation)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)
+        `INSERT INTO captured_locators (address_norm, address, capture_sha, via, retrieval_locator, first_retrieved, last_retrieved, observations, reputation, uploads)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
          ON CONFLICT(address_norm, capture_sha, via) DO UPDATE SET
            first_retrieved   = MIN(first_retrieved, excluded.first_retrieved),
            last_retrieved    = MAX(last_retrieved,  excluded.last_retrieved),
            retrieval_locator = COALESCE(excluded.retrieval_locator, retrieval_locator),
            observations      = observations + 1,
-           reputation        = COALESCE(excluded.reputation, reputation)`,
+           reputation        = COALESCE(excluded.reputation, reputation),
+           uploads           = COALESCE(excluded.uploads, uploads)`,
         addressNorm,
         address || addressNorm,
         captureSha,
@@ -28963,7 +29019,8 @@ var Provenance = class {
         retrievalLocator,
         when,
         when,
-        rep ? JSON.stringify(rep) : null
+        rep ? JSON.stringify(rep) : null,
+        uploads
       );
       const event2 = {
         address: address || addressNorm,
@@ -28974,6 +29031,7 @@ var Provenance = class {
         retrieved: when,
         observation,
         reputation: rep,
+        ...sighting,
         context: context2
       };
       const listeners = this.#listeners.map(({ module, fn }) => {
@@ -29015,7 +29073,7 @@ var Provenance = class {
     };
   }
   /* ===================================================================== *
-   * R24–R27, R51, R59: THE CAPTURE AXIS FOR ONE CAPTURE, FROM ITS ROUTE.
+   * R24–R27, R51, R59, R63: THE CAPTURE AXIS FOR ONE CAPTURE, FROM ITS ROUTE.
    * ===================================================================== */
   /** `captureGrade(captureSha) → {grade, route, determined, basis, why}`. The route is the record's own fact about
    *  WHO SERVED the bytes, written by the fetch that received them (the receipts' `via`), never by a member; the
@@ -29045,7 +29103,7 @@ var Provenance = class {
         determined: false,
         basis: "CAPTURE_ROUTE_UNRECORDED",
         ceiling: EARNED_CAPTURE_CEILING,
-        why: `no fetch route is recorded for these bytes (bytes a provenance document carried, or a member's upload), so no capture grade is measured from how they were fetched. A leg on them keeps the letter its author gave, under the ceiling (${EARNED_CAPTURE_CEILING}), stated as authored`
+        why: `no fetch route is recorded for these bytes (bytes a provenance document carried), so no capture grade is measured from how they were fetched. A leg on them keeps the letter its author gave, under the ceiling (${EARNED_CAPTURE_CEILING}), stated as authored`
       };
     const answers = [];
     if (vias.includes("direct"))
@@ -29068,23 +29126,10 @@ var Provenance = class {
       for (const r of this.#rows(`SELECT DISTINCT retrieval_locator FROM captured_locators
                                    WHERE capture_sha = ? AND via = ? ORDER BY retrieval_locator`, s, UNPACKED_VIA))
         answers.push(this.#unpacked(r.retrieval_locator, depth));
-    if (vias.includes(DOORBELL_VIA)) {
-      const r = this.#one(
-        `SELECT address, address_norm, first_retrieved FROM captured_locators
-                            WHERE capture_sha = ? AND via = ? ORDER BY first_retrieved, address_norm LIMIT 1`,
-        s,
-        DOORBELL_VIA
-      );
-      answers.push({
-        grade: null,
-        route: "doorbell",
-        determined: false,
-        basis: RECEIVED_NOT_FETCHED,
-        ceiling: EARNED_CAPTURE_CEILING,
-        received: { address: r.address, address_norm: r.address_norm, at: r.first_retrieved },
-        why: `these bytes were handed to the group through the doorbell and brought in by a member, never fetched from an address, so no capture grade is measured from how they were fetched. A leg on them keeps the letter its author gave, under the ceiling (${EARNED_CAPTURE_CEILING}), stated as authored. That the record held them at ${r.first_retrieved} is proven by the receipt your group's Civicsmith itself made at ${r.address}`
-      });
-    }
+    if (vias.includes(DOORBELL_VIA))
+      answers.push(this.#received(s, DOORBELL_VIA, "handed to the group through the doorbell and brought in by a member"));
+    if (vias.includes(UPLOAD_VIA))
+      answers.push(this.#received(s, UPLOAD_VIA, "brought in by a member who holds the file"));
     if (answers.length) return this.#strongest(answers);
     return {
       grade: null,
@@ -29095,8 +29140,24 @@ var Provenance = class {
       why: `these bytes were served by a route no ruling grades (${vias.join(", ")}), so what they earn on the capture axis is UNDETERMINED`
     };
   }
+  /* R51, R63: the answer of material RECEIVED by route `via` (`doorbell` or `upload`), never fetched: no letter, the
+     member's authored letter under the ceiling, and the earliest such receipt named as the proof of existence. */
+  #received(s, via, how) {
+    const r = this.#one(`SELECT address, address_norm, first_retrieved FROM captured_locators
+                          WHERE capture_sha = ? AND via = ? ORDER BY first_retrieved, address_norm LIMIT 1`, s, via);
+    return {
+      grade: null,
+      route: via,
+      determined: false,
+      basis: RECEIVED_NOT_FETCHED,
+      ceiling: EARNED_CAPTURE_CEILING,
+      received: { address: r.address, address_norm: r.address_norm, at: r.first_retrieved },
+      why: `these bytes were ${how}, never fetched from an address, so no capture grade is measured from how they were fetched. A leg on them keeps the letter its author gave, under the ceiling (${EARNED_CAPTURE_CEILING}), stated as authored. That the record held them at ${r.first_retrieved} is proven by the receipt your group's Civicsmith itself made at ${r.address}`
+    };
+  }
   /* R59: the strongest of several routes' answers: a determined grade before an undetermined one, a higher letter
-     before a lower one, and between equal answers the order direct, archive.org, unpacked, doorbell. The sort is
+     before a lower one, and between equal answers the order direct, archive.org, unpacked, then doorbell and upload
+     (R63) in one place. The sort is
      stable, so between two equal `unpacked` answers the first receipt's stands. With one answer this is that answer,
      so R24, R25, R26 and R51 answer as before for a capture with no `unpacked` receipt. */
   #strongest(answers) {
@@ -43757,6 +43818,13 @@ var CAPTURE_CHECKS = Object.freeze({
     check: "C-118.9",
     where: inIndex("#heldActRefusal", "is-held-act-reasoned"),
     translation: "Setting held material aside, or bringing it back, records why, in your own words, and no reason was given, or it is longer than 2,000 characters. Write one. Nothing was written."
+  }),
+  /* R86 (T41-8a; K2425 (4), K2434): the next free row of C-118, awaiting T42's stamp (plan rule 4 (2)). Its words are
+     R86's Suggestion's meaning until the UX stream gives its own. */
+  UPLOAD_NO_STATEMENT: Object.freeze({
+    check: "C-118.10",
+    where: inIndex("uploadCapture", "is-upload-stated"),
+    translation: "A file brought into the record records where it came from, in your own words, and none was given, or it is longer than 2,000 characters. Write it. Nothing was written."
   })
 });
 var KNOCK_CHECKS = {
@@ -54596,8 +54664,53 @@ var rawReplayOf = (archived) => {
   return m ? `${m[1]}${m[2]}id_/${m[3]}` : null;
 };
 var REPLAY_MAX = 256 * 1024 * 1024;
-var WITHIN_FAULT = Symbol("pullKnock: within's fault");
+var WITHIN_FAULT = Symbol("within's fault");
 var PULL_WITHIN_FAILED_DETAIL = "the act run with the pull did not complete, so the pull was rolled back and nothing was written";
+var RECEIVED_VIAS = Object.freeze([DOORBELL_VIA, UPLOAD_VIA]);
+var UPLOAD_PART = 8 * 1024 * 1024;
+var UPLOAD_STATEMENT_MAX = 2e3;
+var UPLOAD_NAME_MAX = 300;
+var UPLOAD_WITHIN_FAILED_DETAIL = "the act run with the upload did not complete, so the upload was rolled back and nothing was written";
+var uploadReader = (bytes2) => {
+  const asBytes3 = (b) => b instanceof Uint8Array ? b : b instanceof ArrayBuffer ? new Uint8Array(b) : ArrayBuffer.isView(b) ? new Uint8Array(b.buffer, b.byteOffset, b.byteLength) : null;
+  const whole2 = asBytes3(bytes2);
+  if (whole2) {
+    let done = false;
+    return { read: async () => done ? { done: true } : (done = true, { done: false, value: whole2 }), cancel: async () => {
+    } };
+  }
+  if (bytes2 && typeof bytes2.getReader === "function") {
+    const r = bytes2.getReader();
+    return {
+      read: async () => {
+        const c = await r.read();
+        return c.done ? c : { done: false, value: asBytes3(c.value) };
+      },
+      cancel: async () => {
+        try {
+          await r.cancel();
+        } catch {
+        }
+      }
+    };
+  }
+  if (bytes2 && typeof bytes2[Symbol.asyncIterator] === "function") {
+    const it = bytes2[Symbol.asyncIterator]();
+    return {
+      read: async () => {
+        const c = await it.next();
+        return c.done ? { done: true } : { done: false, value: asBytes3(c.value) };
+      },
+      cancel: async () => {
+        try {
+          await it.return?.();
+        } catch {
+        }
+      }
+    };
+  }
+  return null;
+};
 var TASK_KINDS = Object.freeze(["authority-undetermined", "archive-unpack"]);
 var boundedSubject = (v) => String(v == null ? "" : v).replace(/[\r\n\t]+/g, " ").replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 200);
 var SOURCE_OUTCOMES = Object.freeze(["success", "source_refused", "fetch_failed", "governed"]);
@@ -55308,6 +55421,19 @@ var Capture = class _Capture {
       detail: `op=${op} needs '${argument}' in the shape ${shape}, and this request carried none the operation could use. Nothing was read.`
     };
   }
+  /* R86: the required-argument refusal for an argument given in a shape the act cannot use. */
+  static #missingArgument(op, argument, shape, given5) {
+    return {
+      ok: false,
+      reason: "REQUIRED_ARGUMENT_MISSING",
+      op,
+      argument,
+      shape,
+      status: 400,
+      error: `${argument} must be ${shape}; ${JSON.stringify(String(given5)).slice(0, 80)} is not`,
+      detail: `op=${op} needs '${argument}' in the shape ${shape}, and this request carried none the operation could use. Nothing was written.`
+    };
+  }
   /* R32 (K383, K275): a knock id no knock answers to, read or resolved, is one condition with its own code and row
      (C-118.2), not R63's `EVIDENCE_NOT_HELD`; minted here alone, so the read and the resolve answer it identically. */
   #noSuchKnock(knockId) {
@@ -55527,17 +55653,7 @@ var Capture = class _Capture {
         );
         this.recordCaptureActor({ captureSha: sha2, actor: by, at: when });
         if (typeof within3 !== "function") return { ok: true, receipt };
-        let w;
-        try {
-          w = within3(structuredClone(document));
-        } catch {
-          throw { [WITHIN_FAULT]: true };
-        }
-        if (w && typeof w.then === "function") {
-          Promise.resolve(w).catch(() => {
-          });
-          throw { [WITHIN_FAULT]: true };
-        }
+        const w = _Capture.#callWithin(within3, document);
         if (w && typeof w === "object" && w.ok === false) return { ...w, knockId: w.knockId ?? knockId };
         return { ok: true, receipt, within: w ?? null };
       });
@@ -55557,6 +55673,23 @@ var Capture = class _Capture {
       document,
       ...typeof within3 === "function" ? { within: done.within } : {}
     };
+  }
+  /* N380 (R65, R86): the caller's act, called inside the act's own transaction with its own copy of the document. Its
+     throw is tagged so a fault of the act's own still throws; an answer that is not synchronous (a promise would outlive
+     the transaction, its outcome dropped with it) is tagged likewise. Answers what `within` answered. */
+  static #callWithin(within3, document) {
+    let w;
+    try {
+      w = within3(structuredClone(document));
+    } catch {
+      throw { [WITHIN_FAULT]: true };
+    }
+    if (w && typeof w.then === "function") {
+      Promise.resolve(w).catch(() => {
+      });
+      throw { [WITHIN_FAULT]: true };
+    }
+    return w;
   }
   /* R65, R16: the provenance document of a pulled knock. Received, not fetched (provenance R51): no fetched letter, no
      transport; the knocker is its source, unnamed, and the note travels as the knocker's words, never as evidence of
@@ -55598,6 +55731,237 @@ var Capture = class _Capture {
       },
       knocker_note: { text: String(row11.note ?? ""), words_of: "the knocker", evidence_of_truth: false },
       origin: { kind: "doorbell", knock_id: row11.knock_id },
+      attestation_attempts: []
+    };
+  }
+  /* ==================================================================== *
+   * A file a member holds (R86; N821, K2425 (4))
+   * ==================================================================== */
+  /** R86: a signed-in member brings into the record a file she holds, which no one fetched. Refused in order, each
+   *  writing nothing: the member-session fence (`by` absent, blank or a machine identity: `MEMBER_SESSION_REQUIRED`, as
+   *  R80's read answers it); `UPLOAD_NO_STATEMENT` (C-118.10); a `name` that is not a string or is over 300 characters
+   *  (the required-argument refusal naming it); no evidence store (R65's answer); then `NO_BODY`, `EMPTY` and
+   *  `TOO_LARGE` (the stream cancelled) as `acquisition` R10 names them. The parts a refused stream already stored stay
+   *  content-addressed and named by no row, receipt or document, as R10's do.
+   *
+   *  Otherwise, in one act: the bytes are hashed as they arrive and held under their own digest in parts of 8 MiB; one
+   *  acquisition receipt is written (`via: "upload"`, address `upload:<sha256>`, with `by` and her statement, which
+   *  provenance holds with it, K2449, so a second sighting keeps its own uploader's words); `by` is recorded as the capture's
+   *  actor (R69); and the answer carries the provenance document (`#uploadedDocument`), graded received, never fetched
+   *  (`provenance` R63). Bytes the record already holds (`provenance.registerHolds` answers them registered or acquired)
+   *  answer `existed: true` with no document, the receipt written as a second
+   *  sighting, and `within` not called. `within` is R65's seam: called inside the act's transaction after the receipt
+   *  and the actor; its `{ok: false}` rolls the upload back and is the answer; a throw or a promise rolls it back as
+   *  `UPLOAD_WITHIN_FAILED`. It writes no bundle. */
+  async uploadCapture({ bytes: bytes2, statement, name: name3 = null, by, at: at39 = null, within: within3 = null } = {}) {
+    if (typeof by !== "string" || !by.trim() || isMachineIdentity(by))
+      return {
+        ok: false,
+        reason: "MEMBER_SESSION_REQUIRED",
+        status: 403,
+        detail: "a file is brought into the record by a signed-in member, whose stamp names them; nothing was written"
+      };
+    if (typeof statement !== "string" || !statement.trim() || [...statement].length > UPLOAD_STATEMENT_MAX) {
+      const row11 = CAPTURE_CHECKS.UPLOAD_NO_STATEMENT;
+      return {
+        ok: false,
+        reason: "UPLOAD_NO_STATEMENT",
+        code: "UPLOAD_NO_STATEMENT",
+        check: row11.check,
+        translation: row11.translation,
+        status: 400,
+        maxChars: UPLOAD_STATEMENT_MAX
+      };
+    }
+    if (name3 != null && (typeof name3 !== "string" || [...name3].length > UPLOAD_NAME_MAX))
+      return _Capture.#missingArgument("captureupload", "name", `a string of at most ${UPLOAD_NAME_MAX} characters`, name3);
+    const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
+    if (!ev) {
+      const row11 = INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED;
+      return {
+        ok: false,
+        reason: "EVIDENCE_STORAGE_NOT_CONFIGURED",
+        code: "EVIDENCE_STORAGE_NOT_CONFIGURED",
+        check: row11.check,
+        translation: row11.translation,
+        status: 503,
+        detail: "this group's Civicsmith has no evidence storage configured, so the file cannot be held under its own digest; nothing was written"
+      };
+    }
+    const reader = uploadReader(bytes2);
+    if (!reader) return { ok: false, reason: "NO_BODY", status: 400, detail: "the upload carried no bytes; nothing was written" };
+    const whole2 = createSha256();
+    const parts = [];
+    let held2 = [], heldBytes = 0, total2 = 0;
+    const flush = async (all) => {
+      while (heldBytes >= UPLOAD_PART || all && heldBytes > 0) {
+        const n = Math.min(UPLOAD_PART, heldBytes);
+        const buf = new Uint8Array(n);
+        let k = 0;
+        while (k < n) {
+          const c = held2[0], take = Math.min(c.length, n - k);
+          buf.set(c.subarray(0, take), k);
+          k += take;
+          if (take === c.length) held2.shift();
+          else held2[0] = c.subarray(take);
+        }
+        heldBytes -= n;
+        const psha = hexOf2(await crypto.subtle.digest("SHA-256", buf));
+        if (!await ev.head(psha)) await ev.put(psha, buf);
+        parts.push({ sha256: psha, bytes: n });
+      }
+    };
+    try {
+      for (; ; ) {
+        const { done: done2, value } = await reader.read();
+        if (done2) break;
+        if (!value) throw new Error("not bytes");
+        total2 += value.length;
+        if (total2 > CAPTURE_MAX) {
+          await reader.cancel();
+          return {
+            ok: false,
+            reason: "TOO_LARGE",
+            status: 413,
+            bytes: total2,
+            maxBytes: CAPTURE_MAX,
+            detail: "the file exceeds what this surface will capture even in parts; nothing was written"
+          };
+        }
+        whole2.update(value);
+        held2.push(value);
+        heldBytes += value.length;
+        if (heldBytes >= UPLOAD_PART) await flush(false);
+      }
+      await flush(true);
+    } catch {
+      await reader.cancel();
+      return {
+        ok: false,
+        reason: "UPLOAD_NOT_STORED",
+        status: 502,
+        detail: "the file's bytes could not be read whole or held under their own digest, so nothing was written"
+      };
+    }
+    if (total2 === 0) return { ok: false, reason: "EMPTY", status: 400, detail: "the file has no bytes; nothing was written" };
+    const sha2 = whole2.hex();
+    const multipart = parts.length > 1;
+    if (!multipart && parts[0].sha256 !== sha2)
+      return { ok: false, reason: "HASH_DISAGREEMENT", status: 500, detail: "the incremental hash and the block hash of the same bytes differ" };
+    let holds2 = null;
+    try {
+      holds2 = await this.provenance?.registerHolds?.({ sha: sha2 });
+    } catch {
+      holds2 = null;
+    }
+    const existed = !!(holds2 && (holds2.registered === true || holds2.acquired === true));
+    const when = typeof at39 === "string" && ISO_INSTANT.test(at39) ? at39 : stampSecond4();
+    const address = `upload:${sha2}`;
+    const writeReceipt = () => {
+      let r;
+      try {
+        r = this.provenance?.recordReceipt?.({
+          address,
+          addressNorm: address,
+          captureSha: sha2,
+          retrieved: when,
+          via: UPLOAD_VIA,
+          retrievalLocator: null,
+          by,
+          statement
+        });
+      } catch {
+        r = null;
+      }
+      return r && r.recorded === true ? r : null;
+    };
+    const notWritten = {
+      ok: false,
+      reason: "RECEIPT_NOT_WRITTEN",
+      status: 502,
+      detail: "the acquisition receipt could not be written, so nothing was filed"
+    };
+    const receiptOf = (r) => ({ address, via: UPLOAD_VIA, retrieved: when, observation: r.observation ?? null });
+    if (existed) {
+      const r = this.#tx(writeReceipt);
+      return r ? { ok: true, existed: true, capture: { sha256: sha2, bytes: total2 }, receipt: receiptOf(r) } : notWritten;
+    }
+    const profile = await profileOf({
+      ev,
+      sha: sha2,
+      ct: null,
+      total: total2,
+      multipart,
+      headers: {},
+      locator: address,
+      view: profileView(this.core),
+      retrieved: when,
+      origin: "member",
+      parts: multipart ? parts : null
+    });
+    const document = this.#uploadedDocument({ sha: sha2, total: total2, parts, by, at: when, statement, name: name3, profile });
+    let done;
+    try {
+      done = this.#tx(() => {
+        const r = writeReceipt();
+        if (!r) return notWritten;
+        this.recordCaptureActor({ captureSha: sha2, actor: by, at: when });
+        if (typeof within3 !== "function") return { ok: true, receipt: r };
+        const w = _Capture.#callWithin(within3, document);
+        if (w && typeof w === "object" && w.ok === false) return w;
+        return { ok: true, receipt: r, within: w ?? null };
+      });
+    } catch (e2) {
+      if (e2 && typeof e2 === "object" && WITHIN_FAULT in e2)
+        return { ok: false, reason: "UPLOAD_WITHIN_FAILED", status: 500, detail: UPLOAD_WITHIN_FAILED_DETAIL };
+      throw e2;
+    }
+    if (!done.ok) return done;
+    return {
+      ok: true,
+      existed: false,
+      capture: { sha256: sha2, bytes: total2 },
+      receipt: receiptOf(done.receipt),
+      document,
+      ...typeof within3 === "function" ? { within: done.within } : {}
+    };
+  }
+  /* R86: the provenance document of an upload, built as R65's for a pulled knock: received from the member, never
+     fetched (provenance R63): no fetched letter, no header, no transport. She is its actor, never its source (`sources`
+     R12): the source is the uploader's receipt, naming no member; her words on where it came from, and the name she gave
+     it, travel as her statements, never as evidence of their truth. The file is named from the digest. */
+  #uploadedDocument({ sha: sha2, total: total2, parts, by, at: at39, statement, name: name3, profile }) {
+    const file = `snapshots/upload-${sha2}`;
+    const said10 = (text7) => ({ text: text7, words_of: by, evidence_of_truth: false });
+    return {
+      file,
+      locator: `upload:${sha2}`,
+      retrieved: at39,
+      profile,
+      authority_state: "undetermined",
+      authority_basis: `a file a member brought into the record, which no one fetched; no authority is asserted; recorded ${at39} for resolution through the task list`,
+      provenance_chain: [{
+        who: firstHopWho(this.env.INSTANCE_NAME, this.env.VERSION),
+        asserts: `these bytes were uploaded to your group's Civicsmith by ${by} and hashed as they arrived, at ${at39}; they were received from the member, not fetched from any address`,
+        evidence: "the upload's receipt: its digest, taken as the bytes arrived, and its instant",
+        bound: false,
+        via: UPLOAD_VIA
+      }],
+      capture: {
+        method: "uploaded",
+        grade: null,
+        grade_basis: "CAPTURE_RECEIVED_NOT_FETCHED",
+        actor_class: "member",
+        actor: by,
+        sha256: sha2,
+        encoding: "binary",
+        bytes: total2
+      },
+      ...parts.length > 1 ? { parts: parts.map((p3, i) => ({ file: `${file}.part${String(i).padStart(3, "0")}`, sha256: p3.sha256, bytes: p3.bytes })) } : {},
+      source: { kind: "uploader", receipt: { sha256: sha2, bytes: total2, received: at39 } },
+      origin_statement: said10(statement),
+      ...name3 != null ? { name_stated: said10(name3) } : {},
+      origin: { kind: "upload" },
       attestation_attempts: []
     };
   }
@@ -55906,7 +56270,15 @@ var Capture = class _Capture {
           held2 = false;
         }
       }
-      return held2 ? { captureSha: sha2, note: ACQUIRE_GRADE_NOTE } : none;
+      if (!held2) return none;
+      let rows3 = [];
+      try {
+        rows3 = this.provenance?.receiptsOfCapture?.({ captureSha: sha2 })?.rows ?? [];
+      } catch {
+        rows3 = [];
+      }
+      if (Array.isArray(rows3) && rows3.length && rows3.every((r) => RECEIVED_VIAS.includes(r && r.via))) return none;
+      return { captureSha: sha2, note: ACQUIRE_GRADE_NOTE };
     } catch {
       return none;
     }
@@ -77383,6 +77755,22 @@ function chainFromEvidence(doc, { instanceName = "unnamed", at: at39 = null } = 
       reconstructed: stamp4(["origin.kind", "source.receipt.knock_id", "source.receipt.received", "source.receipt.sha256"])
     }] };
   }
+  if (doc.origin && typeof doc.origin === "object" && doc.origin.kind === UPLOAD_ORIGIN) {
+    const receipt = doc.source && typeof doc.source === "object" && doc.source.receipt && typeof doc.source.receipt === "object" ? doc.source.receipt : null;
+    const rsha = receipt ? str44(receipt.sha256) : null;
+    const received = receipt ? str44(receipt.received) : null;
+    if (!rsha || !received)
+      return { ok: false, missing: ["the upload's receipt it was received under (`source.receipt`, with `sha256` and `received`)"] };
+    const actor = str44(cap.actor);
+    return { ok: true, hops: [{
+      who: `instance ${instanceName} (upload${actor ? ` by ${actor}` : ""})`,
+      asserts: `these bytes were received for upload:${rsha} at ${received}`,
+      evidence: `the upload's receipt, sha256 ${rsha} taken as the bytes arrived${tsrNote}`,
+      bound: false,
+      via: UPLOAD_ORIGIN,
+      reconstructed: stamp4(["origin.kind", "source.receipt.sha256", "source.receipt.received", "capture.actor"])
+    }] };
+  }
   if (method && retrieved && locator && locator !== "in hand") {
     const actor = str44(cap.actor_class);
     return { ok: true, hops: [{
@@ -77899,16 +78287,15 @@ var ProvenanceRoutes = class {
    * existed. Nothing here publishes how many rows were withheld, because that
    * count is itself the disclosure.
    *
-   * MEASURED RATHER THAN ASSUMED, because it changes what this fence is DOING:
-   * `viewerPredicate` filters PROJECT bundles and nothing else (`query.mjs`,
-   * and its own comment says the evidence corpus stays shared), and a route mark
-   * can only ever name an `information` bundle — the write refuses every other
-   * type with ROUTE_MARK_NOT_A_DOCUMENT. So for any RECOGNISED viewer this gate
-   * withholds nothing, and the case it is load-bearing for is the UNRECOGNISED
-   * one, where `viewerPredicate` returns `0=1` and the read fails closed. It is
-   * applied anyway rather than reasoned away: the gate is the only place that
-   * rule lives, and an op that skipped it would be correct today and wrong the
-   * day the predicate widens. */
+   * WHAT THIS FENCE WITHHOLDS. A route mark can only ever name an `information`
+   * bundle (the write refuses every other type with ROUTE_MARK_NOT_A_DOCUMENT),
+   * and `viewerPredicate` (membership R43) withholds such a bundle when it
+   * belongs to a project the viewer may not see whole (record-core R34's
+   * `project`; N426): from a member outside it, and since D54 (K2408) from the
+   * founder and every administrator neither invited nor joined to a HIDDEN
+   * project. An unrecognised viewer gets `0=1` and the read fails closed. The
+   * gate is the only place that rule lives, so this read asks it and never
+   * restates it. */
   provenanceRoutesMarked({ after = "", limit = null, viewer = null } = {}) {
     const gate = viewerPredicate(viewer);
     const asked = ROUTE_MARKED_FINDING;
@@ -171227,12 +171614,14 @@ var CaptureCredentials = class _CaptureCredentials {
     const f17 = typeof memberId === "string" && memberId !== "" ? this.#members.memberFacts(memberId) : null;
     return !!f17 && f17.status === "active";
   }
-  /* R58: may this member (by id) see this row? The listing asks the same rule in its SQL (`#visibleClause`). */
+  /* R58: may this member (by id) see this row? The listing asks the same rule in its SQL (`#visibleClause`). An
+     administrator (the founder included) sees every `member` and `group` row, and a `project` row, as anyone does, only
+     at FULL sight of its project: a hidden project's credentials and their suppliers are its contents (D54, K2408). */
   #sees(memberId, row11) {
     if (typeof memberId !== "string" || memberId === "") return false;
-    if (this.#members.isAdministrator(memberId)) return true;
-    if (!this.#active(memberId)) return false;
-    if (row11.scope === "member") return row11.supplied_by === memberId;
+    const admin = this.#members.isAdministrator(memberId);
+    if (!admin && !this.#active(memberId)) return false;
+    if (row11.scope === "member") return admin || row11.supplied_by === memberId;
     if (row11.scope === "project") return this.#members.sight(row11.project, viewerOf(memberId)) === "full";
     return row11.scope === "group";
   }
@@ -171437,19 +171826,22 @@ var CaptureCredentials = class _CaptureCredentials {
   }
   /* ================= R58: the listing ================= */
   /* R58's visibility as SQL over the alias `c`, so the listing's cut falls on what the viewer sees: an administrator
-     every row; an active member their own `member` rows, the `group` rows, and a `project` row whose project
-     membership's one rule of sight (its R43, `viewerPredicate`, R44's FULL for a project) admits them to, joined on
-     record-core's `bundles` by its read contract (R37: `bundle_id`, `object_type`). Null: the viewer sees nothing. */
+     (the founder included) every `member` row, an active member their own; every such viewer the `group` rows; and a
+     `project` row whose project membership's one rule of sight (its R43, `viewerPredicate`, R44's FULL for a project)
+     admits them to, joined on record-core's `bundles` by its read contract (R37: `bundle_id`, `object_type`). That rule
+     admits an administrator to a hidden project only as a participant (D54, K2408), so the same arm serves both. Null:
+     the viewer sees nothing. */
   #visibleClause(who2) {
-    if (this.#members.isAdministrator(who2)) return { sql: "1=1", args: [] };
-    if (who2 === "admin" || !this.#active(who2)) return null;
+    const admin = this.#members.isAdministrator(who2);
+    if (!admin && (who2 === "admin" || !this.#active(who2))) return null;
     const g = viewerPredicate(viewerOf(who2));
     if (g.scope === "DENY") return null;
+    const own8 = admin ? { sql: "c.scope='member'", args: [] } : { sql: "(c.scope='member' AND c.supplied_by=?)", args: [who2] };
     return {
-      sql: `((c.scope='member' AND c.supplied_by=?) OR c.scope='group'
+      sql: `(${own8.sql} OR c.scope='group'
                     OR (c.scope='project' AND EXISTS (SELECT 1 FROM bundles b
                          WHERE b.bundle_id = c.project AND b.object_type = 'project' AND ${g.sql})))`,
-      args: [who2, ...g.args]
+      args: [...own8.args, ...g.args]
     };
   }
   /** The credentials `viewer` may see, filtered by `scope` and `project` when given: the first `limit` in the order
