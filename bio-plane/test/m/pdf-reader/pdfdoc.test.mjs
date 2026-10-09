@@ -329,3 +329,146 @@ test("R37: null when no trailer can be read; a long chain is walked whole; never
   }
   assert.doesNotThrow(() => new PdfDoc(good).objects());   // before any read step: answers, never throws
 });
+
+/* R38: a string value is {t:"str", v, raw}. `strOf` reads object 5's string; `again` writes `raw` back as a hex
+   string into a fresh file and reads it, the trip a rewrite makes. */
+const strOf = async (body, objs = {}) => (await openPdf(build({ 5: body, ...objs }))).resolve(ref(5));
+const hexOf = (u8) => "<" + Buffer.from(u8).toString("hex") + ">";
+const again = async (s) => strOf(hexOf(s.raw));
+const ALL = Uint8Array.from({ length: 256 }, (_, i) => i);
+const unitPerByte = (u8) => String.fromCharCode(...u8);
+
+test("R38: a binary string's raw is its exact bytes, all 256 values, and survives a write-back of raw byte for byte", async () => {
+  // every byte, octal-escaped in a literal and as hex digits
+  const octal = "(" + [...ALL].map((b) => "\\" + b.toString(8).padStart(3, "0")).join("") + ")";
+  for (const body of [octal, hexOf(ALL)]) {
+    const s = await strOf(body);
+    assert.deepEqual(Object.keys(s).sort(), ["raw", "t", "v"]);
+    assert.equal(s.t, "str");
+    assert.ok(s.raw instanceof Uint8Array);
+    assert.deepEqual(s.raw, ALL);
+    assert.equal(s.v, unitPerByte(ALL));               // no FE FF mark: each byte one code unit, 0x80-0x9F included
+    const back = await again(s);
+    assert.deepEqual(back.raw, ALL);
+    assert.equal(back.v, s.v);
+  }
+  // every byte written as itself between the parentheses, but the four the syntax reserves (\ ( ) CR), escaped
+  const bytes = [...ALL].flatMap((b) => (b === 0x5c || b === 0x28 || b === 0x29 ? [0x5c, b] : b === 0x0d ? [0x5c, 0x72] : [b]));
+  const d = await openPdf(build({ 5: Buffer.from([0x28, ...bytes, 0x29]).toString("latin1") }));
+  const lit = d.resolve(ref(5));
+  assert.deepEqual(lit.raw, ALL);
+  assert.deepEqual((await again(lit)).raw, ALL);
+  // a binary /ID in the trailer and an encryption dict's /O, /U read as bytes too
+  const id = Uint8Array.from([0x80, 0x9f, 0x00, 0xfe, 0xff, 0x0d, 0x0a, 0x8d]);
+  const t = (await openPdf(build({ 1: "<< /Type /Catalog >>", 7: `<< /Filter /Standard /R 3 /O ${hexOf(id)} /U (\\200\\237\\000) >>` },
+    { trailer: `trailer\n<< /Root 1 0 R /ID [${hexOf(id)} (\\200\\237)] >>\n` }))).objects();
+  assert.deepEqual(t.trailer.ID.items[0].raw, id);
+  assert.deepEqual(t.trailer.ID.items[1].raw, Uint8Array.from([0x80, 0x9f]));
+  const enc = (await openPdf(build({ 7: `<< /Filter /Standard /R 3 /O ${hexOf(id)} /U (\\200\\237\\000) >>` }))).dictOf(ref(7));
+  assert.deepEqual([enc.O.raw, enc.U.raw], [id, Uint8Array.from([0x80, 0x9f, 0x00])]);
+});
+
+test("R38: a literal's escapes are decoded per the PDF syntax, and an unescaped end-of-line is one 0x0A", async () => {
+  const cases = [
+    ["(\\n\\r\\t\\b\\f\\(\\)\\\\)", [0x0a, 0x0d, 0x09, 0x08, 0x0c, 0x28, 0x29, 0x5c]],
+    ["(\\0\\12\\101\\1012\\777\\8)", [0x00, 0x0a, 0x41, 0x41, 0x32, 0xff, 0x38]],     // 1-3 octal digits; high bit dropped; \8 unknown
+    ["(a\\q\\ b)", [0x61, 0x71, 0x20, 0x62]],                                            // unknown escape: the character, no backslash
+    ["(a\\\nb\\\r\nc\\\rd)", [0x61, 0x62, 0x63, 0x64]],                                   // continuation: LF, CR LF, CR
+    ["(a\nb\r\nc\rd\n\re)", [0x61, 0x0a, 0x62, 0x0a, 0x63, 0x0a, 0x64, 0x0a, 0x0a, 0x65]], // EOL: LF, CR LF, CR each one 0x0A; LF CR two
+    ["(x(y(z))w)", [...Buffer.from("x(y(z))w")]],                                          // balanced parentheses kept
+    ["()", []],
+  ];
+  for (const [body, want] of cases) {
+    const s = await strOf(body);
+    assert.deepEqual(s.raw, Uint8Array.from(want), body);
+    assert.equal(s.v, unitPerByte(want), body);
+    assert.deepEqual((await again(s)).raw, s.raw, body);
+  }
+  // an unterminated literal reads to the end of what is there and never throws
+  const d = await openPdf(bytesOf("%PDF-1.7\n5 0 obj\n(abc\\"));
+  assert.deepEqual(d.resolve(ref(5)).raw, Uint8Array.from([0x61, 0x62, 0x63]));
+});
+
+test("R38: an odd-length hex string's final digit is read as followed by 0; whitespace between digits is skipped", async () => {
+  for (const [body, want] of [["<901fa>", [0x90, 0x1f, 0xa0]], ["<7>", [0x70]], ["<>", []], ["< 41 4 2\n43\t>", [0x41, 0x42, 0x43]],
+                              ["<FEFF00>", [0xfe, 0xff, 0x00]], ["<fEfF004>", [0xfe, 0xff, 0x00, 0x40]]]) {
+    const s = await strOf(body);
+    assert.deepEqual(s.raw, Uint8Array.from(want), body);
+    const back = await again(s);
+    assert.deepEqual(back.raw, s.raw, body);
+    assert.equal(back.v, s.v, body);
+  }
+  assert.equal((await strOf("<901fa>")).v, "\x90\x1f\xa0");
+  // an odd-length UTF-16 string: its text has the whole units, its raw every byte
+  const odd = await strOf("<FEFF00410042C3>");
+  assert.equal(odd.v, "AB");
+  assert.deepEqual(odd.raw, Uint8Array.from([0xfe, 0xff, 0x00, 0x41, 0x00, 0x42, 0xc3]));
+  assert.deepEqual((await again(odd)).raw, odd.raw);
+});
+
+test("R38: after FE FF the text is UTF-16BE, surrogate pairs included; the mark alone is the whole of the rule", async () => {
+  const text = "Ünïcødé ✓ \u{1F600} \u0080\u009f";
+  const be = Buffer.from(text, "utf16le").swap16();
+  const raw = Uint8Array.from([0xfe, 0xff, ...be]);
+  for (const body of [hexOf(raw), "(" + [...raw].map((b) => "\\" + b.toString(8).padStart(3, "0")).join("") + ")"]) {
+    const s = await strOf(body);
+    assert.equal(s.v, text);
+    assert.deepEqual(s.raw, raw);
+    const back = await again(s);
+    assert.deepEqual(back.raw, raw);
+    assert.equal(back.v, text);
+  }
+  // FF FE (little-endian mark) and FE alone are not the mark: one unit per byte
+  assert.equal((await strOf("<FFFE4100>")).v, "\xff\xfe\x41\x00");
+  assert.equal((await strOf("<FE41>")).v, "\xfeA");
+  assert.equal((await strOf("<FEFF>")).v, "");
+});
+
+test("R38: every string the reader answers carries raw: in arrays, dicts, object streams, and those the services read", async () => {
+  const inner = "<< /S (\\200in) /A [<9f> (x)] >>";
+  const header = "61 0 ";
+  const d = await openPdf(build({
+    1: "<< /Type /Catalog /Pages 2 0 R /Names << /Dests 40 0 R >> >>",
+    2: "<< /Type /Pages /Kids [] >>",
+    5: "<< /K (\\224) /L [(\\225) << /M <96> >>] >>",
+    40: "<< /Names [(\\223dest\\224) [0 /Fit]] >>",
+    70: { dict: `/Type /ObjStm /N 1 /First ${header.length} /Filter /FlateDecode`, data: flate(header + inner) },
+  }));
+  const m = d.dictOf(ref(5));
+  assert.deepEqual([m.K.raw, m.L.items[0].raw, m.L.items[1].map.M.raw].map((r) => [...r]), [[0x94], [0x95], [0x96]]);
+  assert.deepEqual([m.K.v, m.L.items[0].v, m.L.items[1].map.M.v], ["\x94", "\x95", "\x96"]);
+  const p = d.dictOf(ref(61));
+  assert.deepEqual([[...p.S.raw], [...p.A.items[0].raw]], [[0x80, 0x69, 0x6e], [0x9f]]);
+  assert.equal(p.S.v, "\x80in");
+  // the reader's own services read v as R38 states it: a named destination with 0x93/0x94 bytes resolves by it
+  const r = await extractPdfStructure(doc([{ content: "", extra: "/Annots [30 0 R]" }],
+    { catalog: "/Names << /Dests 40 0 R >>", objs: { 30: "<< /Subtype /Link /Rect [0 0 1 1] /Dest (\\223dest\\224) >>", 40: "<< /Names [(\\223dest\\224) [0 /Fit]] >>" } }));
+  assert.deepEqual([r.links[0].partition, r.links[0].target.dest], ["anchor", "\x93dest\x94"]);
+});
+
+test("R22: streamDecoded answers a Promise and never rejects; streamRawBytes never throws", async () => {
+  const d = await openPdf(build({ 5: { dict: "/Filter /FlateDecode /DecodeParms << /Predictor 12 /Columns 99999999999 /Colors -3 >>", data: flate("abcdef") } }));
+  const bad = [undefined, null, 0, "x", {}, { t: "stream" }, { t: "stream", dict: null }, { t: "stream", dict: {}, start: -1 },
+    { t: "stream", dict: {}, start: 1.5 }, { t: "stream", dict: {}, start: 1e12 }, { t: "stream", dict: { Filter: 5 }, start: 0 },
+    { t: "stream", dict: { Length: { t: "ref", n: 1, g: 0 } }, start: "9" }];
+  for (const v of bad) {
+    const p = d.streamDecoded(v);
+    assert.ok(p instanceof Promise, JSON.stringify(v));
+    assert.equal(await p, null, JSON.stringify(v) ?? String(v));
+    assert.doesNotThrow(() => d.streamRawBytes(v));
+  }
+  // parameters no row can satisfy still answer, never reject
+  const extreme = d.streamDecoded(d.resolve(ref(5)));
+  assert.ok(extreme instanceof Promise);
+  const got = await extreme;
+  assert.ok(got === null || got instanceof Uint8Array);
+  // a PdfDoc over something that is not bytes reads nothing, and still answers
+  const empty = new PdfDoc(undefined);
+  assert.equal(await empty.streamDecoded({ t: "stream", dict: {}, start: 0 }), null);
+  assert.equal(empty.streamRawBytes({ t: "stream", dict: {}, start: 0 }), null);
+  // a well-formed stream still decodes to a Promise of its bytes
+  const ok = await openPdf(build({ 5: { dict: "/Filter /FlateDecode", data: flate("fine") } }));
+  const p = ok.streamDecoded(ok.resolve(ref(5)));
+  assert.ok(p instanceof Promise);
+  assert.equal(Buffer.from(await p).toString("latin1"), "fine");
+});
