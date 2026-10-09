@@ -31,3 +31,7 @@
 **Generated artifacts:** none staled (tests only).
 
 Size (session_01JR9CznEFmEJazBayQvKWQs): test runs 6, module lines 0
+
+## J1 · COMPLETE
+
+T41-10a complete (77bbfd7b61), tests only, no code or requirement change. MACHINE_READ_KINDS re-pinned from text-chain's export: checked against STEP_KINDS' machine kinds, and every kind selects the mixed units (R6). The fixture gains project_sight (R120), which was the cause of all 7 reds. converts:270, statements:111/:209, fields:76, projection:62 and t33:157 are re-stated for D54: the founder and an uninvited administrator are withheld a hidden project; controls: an invited administrator, or the project discoverable, at FULL. query-language 45/45; checks: format, architecture, coverage (30/30), ownership all 0 failures. Reading set over 300 KB: read per (3), one worker summary of ~7 KB; nothing left out mattered. For BOB: the requirements' Size line still calls N37 future work (done). Record: build/jobs/T41/query-language.md, Completion section.
