@@ -12,3 +12,7 @@ Reading set (mechanics §17): measured at this START: 356 KB by `build/plan/read
 Merge order in L2: membership, credentials, promotion last (it stamps the rows).
 Inherited reds: the plan's rule 4 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+K2404 (read its line in build/rulings.md). (1) Your reading stands with one shape: membership gains R127 joinedParticipants(projectId) -> [{member, owner, since}] (participants joined or leaving; since the instant the row last became joined, recorded from T40, null before), built by MEMBERSHIP #31 now; your Uses names it (credentials.md, merged on tranche/T40: merge it into your branch). R59's since = earliest since among participants other than the account's member; a null cannot arise for a suspension, and if met reads as the account's set instant. Code against R127's text; fail closed without it. When membership is merged I will tell you; merge tranche/T40 then and run against the real read before COMPLETE. (2), (3), (4): your readings stand as written.
