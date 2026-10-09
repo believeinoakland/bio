@@ -31,7 +31,7 @@
   - a responsibility map by R-id, and six flaws.
 - **Whether anything it left out mattered:** nothing did. Its findings changed what I report (below) and led to the `pdfStructure` fix. Its flaw 4 (digest case) is already guarded by `pdfStructureOp` (ops.mjs:57). Its flaw 6 (a redundant `COALESCE`) is harmless and left alone.
 
-**Reported to BOB** (REPORT J3):
+**Reported to BOB** (REPORT J2):
 1. A capture's own ceiling is never stronger than B (`EARNED_CAPTURE_CEILING = 'B'`, grades.mjs:98; `gradeCeiling` and `captureBound`). So D4 as worded never lifts a quote above B. In practice it raises a name-only verified quote from C to the capture's B, and lowers a key's B on a weaker or undetermined chain.
 2. For T41-24, the caller's `text` must be the stored text containing the entry's place. `capture_text` units are coarser than proposal positions: a page, paragraph, slide or sheet range, while a proposal can name a rect, a run, a shape or a cell. Units are also capped (`truncated`), and `unitsOf` is not viewer-gated. A quote beyond the cap simply reads unverified.
 3. My change stales the generated artifact `bio-plane/dist/bio-plane.bundled.mjs` (and its `.bundle.json`), which is regenerated at layer close.
