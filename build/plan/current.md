@@ -1,6 +1,6 @@
 # Plan T40
 
-**Status** · OPEN · BOB #145 · session_01Lzjn9d16Mo4a4RE2Xr16gN · depth 1
+**Status** · OPEN, HELD after L2 (K2411, K2415: Bob's hold; resume when Bob says) · BOB #145 · session_01Lzjn9d16Mo4a4RE2Xr16gN · depth 1
 
 **Jobs** · record-grammar: RECORD-GRAMMAR #11 session_01DoeyeHeM15vrBLPc7ti25M; pdf-reader: PDF-READER #6 session_01KA1AV3RDoRZjWqoUbFgBdC; doc-clean: DOC-CLEAN #2 session_01L4tPgyiHxU1i8CNTLh5Z5D; membership: MEMBERSHIP #31 session_01McN1vbMjCkAoS6fsP6jmCx; credentials: CREDENTIALS #10 session_01WnUBG32qScjJuitEhktbaJ; promotion: PROMOTION #38 session_01XChv8V6DE72utCnY78u8bo
 
