@@ -140,8 +140,12 @@ const VALUES = {
 function t33World() {
   const w = world();
   w.member("ann");
+  /* Two administrators (D54): erin neither invited nor joined to PR, fay invited to it. */
+  w.member("erin", "admin"); w.member("fay", "admin");
+  w.participate("PR", "fay", "invited");
   for (const f of T33) w.db.exec(`CREATE TABLE own_${f} (bid TEXT, v TEXT)`);
-  /* B1 holds both values of every field, B2 the first only, B3 none, PR (a project ann cannot see) the second. */
+  /* B1 holds both values of every field, B2 the first only, B3 none, PR (a hidden project ann and erin cannot see) the
+     second. */
   for (const id of ["B1", "B2", "B3"]) w.bundle(id, { body: "water" });
   w.bundle("PR", { type: "project", body: "water" });
   for (const f of T33) {
@@ -170,7 +174,19 @@ test("R28 R3 the T33 fields: each an equality on the value typed, lower-cased wh
     assert.deepEqual(runIds(w, { q: `has:${f}` }, second), ["B1", "B2", "PR"]);
     assert.deepEqual(runIds(w, { q: `${f}:*` }, second), ["B1", "B2", "PR"]);
     assert.deepEqual(runIds(w, { q: `${f}:"${a}"`, viewer: "member:ann" }, second), ["B1", "B2"], "the gate holds (R8)");
+    /* D54 (membership R43): PR is hidden, so the founder and an administrator neither invited nor joined are withheld
+       it through the owner's relation as ann is; an administrator invited to it has it. */
+    for (const v of ["member:ann", "admin", "member:admin", "member:erin"])
+      assert.deepEqual(runIds(w, { q: `${f}:"${b}"`, viewer: v }, second), ["B1"], `${f}:${b} ${v}`);
+    assert.deepEqual(runIds(w, { q: `${f}:"${b}"`, viewer: "member:fay" }, second), ["B1", "PR"], `${f}: invited`);
     assert.deepEqual(compile({ q: `${f}:"${a}"`, viewer: V }, second).warnings, [], f);
+  }
+  /* The control: PR set discoverable is seen whole by every administrator, and still not by a member who is none. */
+  w.sight("PR", "discoverable");
+  for (const f of T33) {
+    for (const v of ["admin", "member:admin", "member:erin", "member:fay"])
+      assert.deepEqual(runIds(w, { q: `${f}:"${VALUES[f][1]}"`, viewer: v, zone: "UTC" }, second), ["B1", "PR"], `${f} ${v}`);
+    assert.deepEqual(runIds(w, { q: `${f}:"${VALUES[f][1]}"`, viewer: "member:ann", zone: "UTC" }, second), ["B1"], f);
   }
   /* The money words are lower-case, so a member's capitals still match; an id is matched as typed. */
   for (const f of ["kind", "phase", "stage", "basis"]) {
