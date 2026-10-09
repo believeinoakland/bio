@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 597 KB by `build/plan/read
 Merge order in L5: `modules.json` order; none of L5's jobs uses another's change.
 Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+All three readings confirmed (K2467) and folded into R37's text on tranche/T41 @ 5349f5e4bf: merge the tranche branch into yours, and test the clarified text. (1) only the absences standing since the latest earlier PRESENT at that subject and level; (2) subject = (subject_kind, subject) at a level, a row with no subject calls nothing; (3) one record-core.transact, a throw rolls back and reaches the writer, return ignored, listeners in membership R83 MODULE_ORDER then by name.
