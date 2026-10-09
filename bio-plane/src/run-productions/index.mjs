@@ -24,17 +24,27 @@ import { strengthOf, ORIGIN_LIMIT, STRENGTH_AXES } from "../strength/index.mjs";
 import { citationOf } from "../citation/index.mjs";
 import { basisVersionsOf, versionsIn, versionAsWritten, isBoilerplate } from "../basis-versions/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
-import { runPrincipalGate } from "../run-rules/index.mjs";
+import { runPrincipalGate, checkPagesRead, RUN_BOUNDS } from "../run-rules/index.mjs";
+import { stepsOf } from "../steps/index.mjs";
+import { legEarningOf } from "../leg-earning/index.mjs";
+import { extractionOf } from "../extraction/index.mjs";
+import { credentialsOf } from "../credentials/index.mjs";
 import { EXTRACT_RUN_MODE, proposalChain, checkProposedRef, proposedReadingGrade, mintRatio } from "../extractrun.mjs";
 import { readingSource, readingSourceJson, readingSourceFromColumns, describeChain } from "../textchain.mjs";
-import { parseFrontmatter, normalizeType, OBJECT_TYPES, canonicalJson, isMachineIdentity, MACHINE_CLASS_PREFIX }
-  from "../record-grammar/index.mjs";
+import { parseFrontmatter, normalizeType, OBJECT_TYPES, canonicalJson, isMachineIdentity, MACHINE_CLASS_PREFIX,
+         idPattern, isStepId, sha256HexSync, ACCEPTANCE_FORMS, acceptanceRecord } from "../record-grammar/index.mjs";
 import { SUGGEST_CHECKS, EXTRACT_PROPOSE_CHECKS, SUGGEST_KINDS, SUGGEST_LEVELS } from "./checks.mjs";
-import { RUN_PRODUCTIONS_TABLES, migrateRunProductions } from "./schema.mjs";
+import { RUN_PRODUCTIONS_TABLES, migrateRunProductions, passageProposalId } from "./schema.mjs";
+import { CONNECTION_TARGET_KINDS, CONNECTION_HOW, READ_PAGES_AT_A_TIME, READING_RUN_MODES, BEARING_SENTENCES_MAX,
+         BEARING_SENTENCE_MAX_CHARS, ACCEPT_WORDS_MAX, unitContaining, pagesOf, connectionLink } from "./reading.mjs";
 
 export { SUGGEST_CHECKS, EXTRACT_PROPOSE_CHECKS, SUGGEST_KINDS, SUGGEST_LEVELS, SUGGEST_CHECK_KEYS,
          EXTRACT_PROPOSE_CHECK_KEYS, ROWLESS_CODES } from "./checks.mjs";
-export { RUN_PRODUCTIONS_SCHEMA, RUN_PRODUCTIONS_TABLES, runProductionsOwns, migrateRunProductions } from "./schema.mjs";
+export { RUN_PRODUCTIONS_SCHEMA, RUN_PRODUCTIONS_TABLES, runProductionsOwns, migrateRunProductions, passageProposalId }
+  from "./schema.mjs";
+export { CONNECTION_TARGET_KINDS, CONNECTION_HOW, READ_PAGES_AT_A_TIME, DOC_PARAS_PER_PAGE, READING_RUN_MODES,
+         BEARING_SENTENCES_MAX, BEARING_SENTENCE_MAX_CHARS, ACCEPT_WORDS_MAX, unitContaining, pagesOf, cellInRange,
+         connectionLink } from "./reading.mjs";
 
 export const RUN_PRODUCTIONS_MODULE = "run-productions";
 
@@ -65,9 +75,27 @@ export const EXTRACT_PROPOSALS_SAYS = "these readings are PROPOSALS. A machine r
   + "coverage";
 export const EXTRACT_PROPOSAL_ROW_SAYS = "a machine proposed this reading. It is not extraction coverage and it is not "
   + "part of any finding — it becomes part of one when a MEMBER cites it, and not before";
+/** R21: on every proposed connection. */
+export const PROPOSED_CONNECTION_SAYS = "the system proposed this connection. It is not a connection of the record and "
+  + "not part of any finding until a member takes it up; its grade is worked out from how the link is established, "
+  + "never from the machine's say-so";
+/** R23: on every bearing note. */
+export const BEARING_NOTE_SAYS = "the system's note on what this document says about the question, and what it does "
+  + "not. Each sentence is tied to the document's own words. It is shown beside the document, never in its place; it "
+  + "is not the document's content and is never cited as evidence";
+/** R24: on every slice a run reads. */
+export const READ_PAGES_SAYS = "the text the record holds for these pages, read by a run a few pages at a time within "
+  + "its pages bound";
 
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 const HEX64 = /^[0-9a-f]{64}$/;
+const ENTITY_ID = idPattern("ENT");
+/** R24: the run's reading bound, run-rules' (its R26), read by key. */
+const PAGES_BOUND = Object.prototype.hasOwnProperty.call(RUN_BOUNDS, "pages") ? "pages" : null;
+const nonBlank = (v) => (typeof v === "string" && v.trim() !== "" ? v.trim() : null);
+/** R21: a proposed connection's name, 'prc:' and the SHA-256 of what makes it one connection under a run. */
+const connectionProposalId = (run, captureSha, kind, to, quote, pos) =>
+  `prc:${sha256HexSync(canonicalJson(["connection", run, captureSha, kind, to, quote, pos]))}`;
 
 /** The per-arm fields of a reading position without kind and ref, which is exactly the shape a content extent takes:
  *  one function, because the two are one vocabulary (IC-1) seen from two tables. */
@@ -111,7 +139,7 @@ export function substanceOf(composition) {
 
 export class RunProductions {
   constructor({ storage, record, membership, content, connections, aiRuns, strength, citation, basisVersions,
-                now = null }) {
+                extraction = null, steps = null, credentials = null, legEarning = null, now = null }) {
     this.storage = storage;
     this.sql = storage.sql;
     this.record = record;
@@ -122,6 +150,13 @@ export class RunProductions {
     this.strength = strength;
     this.citation = citation;
     this.basisVersions = basisVersions;
+    /* T41-24: extraction's store half for a capture's text units (its R36) and the references its readers found (its
+       R58); credentials' material limits (its R57); steps' `recordProduct` (its R9); leg-earning's earned capture
+       ceiling (its R1; K2496). */
+    this.extraction = extraction;
+    this.steps = steps;
+    this.credentials = credentials;
+    this.legEarning = legEarning;
     this.now = typeof now === "function" ? now : () => Date.now();
   }
 
@@ -571,49 +606,123 @@ export class RunProductions {
    * thing is the proposed reading itself. It does not start a run: a run begins on a member's act (DEC-24 rule 2).
    * ==================================================================== */
 
-  /** op=extractpropose — AN EXTRACT RUN PROPOSES READINGS (R10, R11, R15). Every proposal is CHECKED before anything
-   *  is written, the batch is written in one transaction, and the bound is consumed by what was ACTUALLY minted. A
-   *  proposal that says WHERE it read the reference mints that passage through `content` (on the capture's own chain,
-   *  so a member's later citation of the same passage finds this row); one with no position mints nothing. */
-  extractPropose({ run, bundleId, fn, version, cap = null, refs, proposedBy, viewer = null, at = null, caller = null }) {
-    const refuse = (code, detail, extra) => {
-      const row = EXTRACT_PROPOSE_CHECKS[code];
-      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
+  /** C-104's refusal with its row (R13). */
+  #refuse(code, detail, extra) {
+    const row = EXTRACT_PROPOSE_CHECKS[code];
+    return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
+  }
+
+  /** THE RUN EVERY PRODUCTION NAMES (R10, R15, R23, R24): sight, then position, then status (REC-165), asked here once
+   *  for every op that produces under a run, so each code has one site. An invisible run answers the SAME NO_SUCH_RUN a
+   *  never-minted id gets, but for the id (§7.9). Answers `{run, runId}` or `{refusal}`. */
+  #productionRun({ run, viewer = null, caller = null, act, note, memberMay = false }) {
+    /* R23 (K2482): a note drafted interactively (run-rules R25's draft kind) names no run, and is then a member's own
+       act: `{run: null}` for a member caller, never for a machine or an unstamped one. */
+    const who = nonBlank(caller);
+    if (memberMay && (run === null || run === undefined || run === "") && who && !isMachineIdentity(who))
+      return { run: null, runId: null };
+    /* DEC-49 REGION is-production-run */
+    if (typeof run !== "string" || !run.trim())
+      return { refusal: this.#refuse("NO_RUN",
+        `the EXTRACT role works in DEC-62's RUN and nowhere else: the run is the object that bounds this work, logs it, `
+        + `resumes it and checks it plane-side. A production outside one would be a second place a machine writes`) };
+    const runId = run.trim();
+    const r = this.aiRuns.runFor(runId, viewer);
+    if (!r)
+      return { refusal: this.#refuse("NO_SUCH_RUN",
+        `no run is open under ${runId}. A run begins on a MEMBER's act (op=airunopen), naming the subject and the `
+        + `objective — both of which stay the member's (DEC-24 rule 2). The assistant may propose that a run would `
+        + `help; it may not start one`, { run: runId }) };
+    /* END DEC-49 REGION is-production-run */
+    const notPrincipal = runPrincipalGate({ caller, principal: r.principal_plane, act });
+    if (notPrincipal)
+      return { refusal: { ok: false, reason: notPrincipal.code, code: notPrincipal.code, check: notPrincipal.check,
+                          translation: notPrincipal.translation, detail: notPrincipal.detail, run: runId, note } };
+    /* DEC-49 REGION is-production-live */
+    if (r.status !== "running")
+      return { refusal: this.#refuse("RUN_NOT_RUNNING",
+        `this run has ended. Its log is closed and a later production does not reopen it — the conditions a run was `
+        + `formed under are what its work is interpretable against, and they stopped being current when it stopped`,
+        { run: runId, status: r.status }) };
+    /* END DEC-49 REGION is-production-live */
+    return { run: r, runId };
+  }
+
+  /** THE HELD DOCUMENT A PRODUCTION READS (R10, R24), asked once in content's mint door's words (its R15): NO_TARGET and
+   *  NO_SUCH_BUNDLE carry no row (R13, K163) and an absent and an invisible document answer alike. Answers
+   *  `{bundle, sha}` (`bundle` its `bundles` row) or `{refusal}`. */
+  #heldDocument(bundleId, viewer) {
+    if (typeof bundleId !== "string" || !bundleId.trim())
+      return { refusal: { ok: false, reason: "NO_TARGET", code: "NO_TARGET",
+                          detail: `a production names the document it was read from` } };
+    const b = this.#one(`SELECT bundle_id, object_type, project FROM bundles WHERE bundle_id=?`, bundleId);
+    if (!b || !this.membership.inSight(bundleId, viewer))
+      return { refusal: { ok: false, reason: "NO_SUCH_BUNDLE", code: "NO_SUCH_BUNDLE", target: bundleId,
+                          detail: `no document is addressed by ${bundleId} in this record` } };
+    /* DEC-49 REGION is-held-document */
+    if (normalizeType(b.object_type) !== "information")
+      return { refusal: this.#refuse("NOT_A_DOCUMENT",
+        `${bundleId} is not a document, so there is no text to have read. The content axis ranges over documents `
+        + `(DEC-21)`, { target: bundleId, target_type: normalizeType(b.object_type) ?? null }) };
+    const sha = this.content.captureFor(bundleId);
+    if (!sha)
+      return { refusal: this.#refuse("NO_BYTES_HELD",
+        `this record holds no capture of ${bundleId}, so there is no text a machine could have read. Absence here is `
+        + `a fact about what was captured and never evidence about what the document says`, { target: bundleId }) };
+    /* END DEC-49 REGION is-held-document */
+    return { bundle: b, sha };
+  }
+
+  /** R21 (K2463, K2496): the `{text, ceiling}` extraction R42 checks a quote against, READ FROM THE RECORD and never
+   *  from the proposal: the text of the capture's unit containing the place (extraction R36, asked after the caller's
+   *  viewer gate, which `unitsOf` does not ask) and the record's own capture ceiling for the document, ROUTE INCLUDED
+   *  (`leg-earning`'s earned capture ceiling: the bytes' route, provenance R25/R26, and the transcription's measured
+   *  fidelity, at most B). A ceiling that cannot be read is undetermined (null), never B. No unit holds the place: null,
+   *  and the quote reads unverified. */
+  #quoteTextFor(sha, bundleId) {
+    let units = null, ceiling;
+    return (source) => {
+      if (ceiling === undefined) {
+        try {
+          const e = this.legEarning.earned(null, [bundleId]);
+          const g = e?.earned?.capture?.[bundleId]?.grade;
+          ceiling = typeof g === "string" ? g : null;
+        } catch { ceiling = null; }
+      }
+      if (units === null) {
+        let held = null;
+        try { held = this.extraction ? this.extraction.unitsOf(sha) : null; } catch { held = null; }
+        units = Array.isArray(held?.units) ? held.units : [];
+      }
+      const u = unitContaining(units, source);
+      return u ? { text: u.text, ceiling } : null;
     };
+  }
+
+  /** op=extractpropose — AN EXTRACT RUN PROPOSES READINGS (R10, R11, R15) AND CONNECTIONS (R21). Every proposal is
+   *  CHECKED before anything is written, the batch is written in one transaction, and the bound is consumed by what was
+   *  ACTUALLY minted. A proposal that says WHERE it read the reference mints that passage through `content` (on the
+   *  capture's own chain, so a member's later citation of the same passage finds this row); one with no position mints
+   *  nothing. A proposal carrying its `quote` is checked byte-exact against the record's text at its place (extraction
+   *  R42, D4); a connection is graded by how its link is established. `step`, when named, is the step the run's work
+   *  serves: the capture read and each passage minted are tied to it (steps R9's `recordProduct`). */
+  extractPropose({ run, bundleId, fn, version, cap = null, refs, connections = null, step = null, proposedBy,
+                   viewer = null, at = null, caller = null }) {
     /* DEC-49 REGION is-extract-run */
     /* FAIL CLOSED ON AN ABSENT STAMP: the control plane stamps the proposer, so a blank means the stamp did not run. */
     if (typeof proposedBy !== "string" || !proposedBy.trim())
-      return refuse("NO_PROPOSER",
+      return this.#refuse("NO_PROPOSER",
         `a proposed reading records WHO proposed it. The plane stamps that from the credential that asked, so an `
         + `empty one means the act arrived by a route that does not attribute it — which is refused rather than `
         + `filled in`);
-    if (typeof run !== "string" || !run.trim())
-      return refuse("NO_RUN",
-        `EXTRACT runs in DEC-62's RUN and nowhere else: the run is the object that bounds this work, logs it, `
-        + `resumes it and checks it plane-side. A production outside one would be a second place a machine writes`);
-    const runId = run.trim();
-    /* SIGHT, THEN POSITION, THEN STATUS (REC-165): an invisible run answers the SAME NO_SUCH_RUN a never-minted id
-       gets, but for the id (§7.9). */
-    const r = this.aiRuns.runFor(runId, viewer);
-    if (!r)
-      return refuse("NO_SUCH_RUN",
-        `no run is open under ${runId}. A run begins on a MEMBER's act (op=airunopen), naming the subject and the `
-        + `objective — both of which stay the member's (DEC-24 rule 2). The assistant may propose that a run would `
-        + `help; it may not start one`, { run: runId });
     /* END DEC-49 REGION is-extract-run */
-    const notPrincipal = runPrincipalGate({ caller, principal: r.principal_plane, act: "proposing a reading under a run" });
-    if (notPrincipal)
-      return { ok: false, reason: notPrincipal.code, code: notPrincipal.code, check: notPrincipal.check,
-               translation: notPrincipal.translation, detail: notPrincipal.detail, run: runId,
-               note: "a proposed reading names a run its caller holds. Nothing was proposed or minted" };
+    const held = this.#productionRun({ run, viewer, caller, act: "proposing a reading under a run",
+                                      note: "a proposed reading names a run its caller holds. Nothing was proposed or minted" });
+    if (held.refusal) return held.refusal;
+    const { run: r, runId } = held;
     /* DEC-49 REGION is-extract-door */
-    if (r.status !== "running")
-      return refuse("RUN_NOT_RUNNING",
-        `this run has ended. Its log is closed and a later production does not reopen it — the conditions a run was `
-        + `formed under are what its work is interpretable against, and they stopped being current when it stopped`,
-        { run: runId, status: r.status });
     if (String(r.mode || "") !== EXTRACT_RUN_MODE)
-      return refuse("NOT_AN_EXTRACT_RUN",
+      return this.#refuse("NOT_AN_EXTRACT_RUN",
         `this run was opened in mode '${r.mode == null ? "(none)" : String(r.mode)}' and a proposed reading is the `
         + `EXTRACT role's production. A run's mode is one of the conditions it was formed under: it is read back, never `
         + `widened by the work`, { run: runId, mode: r.mode ?? null });
@@ -621,66 +730,93 @@ export class RunProductions {
        refusal here rather than a default allowance invented in code. */
     const bound = this.aiRuns.boundOf(runId, "mints");
     if (!bound || !(Number(bound.allowed) > 0))
-      return refuse("NO_MINTS_BOUND",
+      return this.#refuse("NO_MINTS_BOUND",
         `this run declares no 'mints' bound, so its productions would be unbounded — and a machine that may mark `
         + `passages citable without a bound produces a store of proposals nobody cited, each correctly labelled and `
         + `the whole unexamined. The bound is declared at op=airunopen, by the member who opens the run`, { run: runId });
     if (Number(bound.consumed) >= Number(bound.allowed))
-      return refuse("MINTS_BOUND_REACHED",
+      return this.#refuse("MINTS_BOUND_REACHED",
         `this run has reached its 'mints' bound (${Number(bound.consumed)} of ${Number(bound.allowed)}). The next `
         + `tick ends the run, and the log says which bound stopped it and where`,
         { run: runId, allowed: Number(bound.allowed), consumed: Number(bound.consumed) });
     const list = Array.isArray(refs) ? refs : [];
-    if (list.length === 0)
-      return refuse("NO_PROPOSALS",
+    const links = Array.isArray(connections) ? connections : [];
+    if (list.length === 0 && links.length === 0)
+      return this.#refuse("NO_PROPOSALS",
         `a proposed reading carries what the machine found. An EMPTY one is not a reading that found nothing — that `
         + `is an observation about a LOOK, and it belongs in the run's log, where absence is first-class and says `
         + `which of the four levels it was`);
     /* END DEC-49 REGION is-extract-door */
-    /* The target, D-15 and the bytes, asked ONCE for the batch in content's mint door's words (its R15). NO_TARGET and
-       NO_SUCH_BUNDLE carry no row (R13, K163); an absent and an invisible document answer alike. */
-    if (typeof bundleId !== "string" || !bundleId.trim())
-      return { ok: false, reason: "NO_TARGET", code: "NO_TARGET", detail: `a proposed reading names the document it was read from` };
-    const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, bundleId);
-    if (!b || !this.membership.inSight(bundleId, viewer))
-      return { ok: false, reason: "NO_SUCH_BUNDLE", code: "NO_SUCH_BUNDLE", target: bundleId,
-               detail: `no document is addressed by ${bundleId} in this record` };
-    /* DEC-49 REGION is-extract-document */
-    if (normalizeType(b.object_type) !== "information")
-      return refuse("NOT_A_DOCUMENT",
-        `${bundleId} is not a document, so there is no text to have read. The content axis ranges over documents `
-        + `(DEC-21)`, { target: bundleId, target_type: normalizeType(b.object_type) ?? null });
-    const sha = this.content.captureFor(bundleId);
-    if (!sha)
-      return refuse("NO_BYTES_HELD",
-        `this record holds no capture of ${bundleId}, so there is no text a machine could have read. Absence here is `
-        + `a fact about what was captured and never evidence about what the document says`, { target: bundleId });
-    /* END DEC-49 REGION is-extract-document */
+    const doc = this.#heldDocument(bundleId, viewer);
+    if (doc.refusal) return doc.refusal;
+    const { sha } = doc;
     const ctx = this.content.contentContextFor(sha);
     /* THE CHAIN, BUILT ONCE FOR THE BATCH through `appendStep`: its refusal (TEXT_CHAIN_STRENGTHENS, …) comes back
        untouched (extraction R43). */
     const built = proposalChain(ctx.chain, { fn, version, cap });
     if (!built.ok) return built;
+    /* DEC-49 REGION is-extract-step */
+    /* R21: THE STEP IS TIED OR THE CALL IS REFUSED: a production said to serve a step and tied to none would be a
+       claim the record does not hold. Its existence and sight are steps' to answer, inside the write. */
+    const stepId = step == null || step === "" ? null : step;
+    if (stepId !== null && !isStepId(stepId))
+      return this.#refuse("STEP_UNREADABLE",
+        `this production names ${typeof stepId === "string" ? `'${stepId.slice(0, 60)}'` : "a step"} as the step it `
+        + `serves, and that is not a step's name, so nothing `
+        + `was tied to it`, { step: typeof stepId === "string" ? stepId.slice(0, 80) : null });
+    /* END DEC-49 REGION is-extract-step */
+    const textAt = this.#quoteTextFor(sha, bundleId);
     /* EVERY PROPOSAL CHECKED BEFORE ANYTHING IS WRITTEN, the batch refused WHOLE on the first bad entry, naming its
        ordinal (extraction R42's own refusal): a partly-written batch would spend the bound on work the caller does not
-       know it did. */
+       know it did. A quote is checked against the record's own text at its place (R21's caller duty, K2463). */
     const rows = [];
     for (const [i, e] of list.entries()) {
-      const bad = checkProposedRef(e);
+      const capture = e && typeof e === "object" && typeof e.quote === "string" ? textAt(e.source) : null;
+      const bad = checkProposedRef(e, capture);
       if (bad) return { ...bad, at_index: i };
-      const { grade, why } = proposedReadingGrade(e);
+      const graded = proposedReadingGrade(e, capture);
       rows.push({ ref: String(e.ref).trim().slice(0, 400),
                   refKind: e.refKind == null ? null : String(e.refKind).slice(0, 100),
                   refKey: e.refKey == null ? null : String(e.refKey).slice(0, 200),
                   label: e.label == null ? null : String(e.label).slice(0, 400),
-                  grade, why, pos: e.source == null ? null : readingSource(e.source) });
+                  grade: graded.grade, why: graded.why, pos: e.source == null ? null : readingSource(e.source),
+                  quote: typeof e.quote === "string" && e.quote !== "" ? e.quote : null,
+                  verified: graded.verified_quote === true, figures: graded.check || [] });
+    }
+    const linkRows = [];
+    if (links.length) {
+      const readerRefs = new Set(this.#rows(`SELECT DISTINCT ref FROM reading_refs WHERE capture_sha=?`, sha)
+        .map((x) => x.ref));
+      const gate = viewerPredicate(viewer);
+      for (const [i, c] of links.entries()) {
+        const bad = this.#checkConnection(c, i, gate, readerRefs);
+        if (bad) return bad;
+        const pos = readingSource(c.source);
+        const link = connectionLink(c, readerRefs);
+        /* THE QUOTE IS CHECKED BY EXTRACTION R42'S ONE BYTE-EXACT RULE, the connection's grounds standing in for what
+           the entry names; a quote that is not the capture's text at its place leaves the link UNDETERMINED, stated,
+           and never a letter on the machine's say-so. */
+        const q = proposedReadingGrade({ ref: "connection", label: link.grounds, quote: c.quote, source: c.source },
+                                       textAt(c.source));
+        const verified = q.verified_quote === true;
+        const why = verified
+          ? `earned ${link.letter}: the link rests on ${{ A: "the source's own link", B: "an identifier the two share",
+              C: `a ${c.how === "date" ? "date" : "name"} alone` }[link.letter]} (${String(link.grounds).slice(0, 80)}), `
+            + `standing in words that are the capture's own text at this place`
+          : `earned undetermined: the quote is not the capture's own text at the place given, so how the link is `
+            + `established cannot be read from the record. A letter would be the machine's say-so`;
+        linkRows.push({ id: connectionProposalId(runId, sha, c.to_kind, c.to.trim(), c.quote, pos), kind: c.to_kind,
+                        to: c.to.trim(), role: c.to_kind === "person" ? String(c.role).trim().slice(0, 200) : null,
+                        how: c.how, grounds: String(link.grounds).slice(0, 400), quote: c.quote, pos,
+                        verified, figures: verified ? q.check : [], earned: verified ? link.letter : null, why });
+      }
     }
     /* DEC-49 REGION is-extract-whole-batch */
     /* AND THE BOUND IS ASKED AGAINST THE SIZE OF THE BATCH: one that would pass the allowance is refused WHOLE and
        never trimmed, since trimming would silently drop proposals the caller believes it filed (D-129). */
     const willMint = rows.filter((x) => x.pos != null).length;
     if (Number(bound.consumed) + willMint > Number(bound.allowed))
-      return refuse("MINTS_BOUND_WOULD_EXCEED",
+      return this.#refuse("MINTS_BOUND_WOULD_EXCEED",
         `this batch would mark ${willMint} passage(s) citable and this run has `
         + `${Number(bound.allowed) - Number(bound.consumed)} left of its 'mints' bound. It is refused whole rather `
         + `than truncated: a batch trimmed to fit would drop proposals the caller believes it filed`,
@@ -690,9 +826,10 @@ export class RunProductions {
     const when = at || new Date(this.now()).toISOString();
     const by = proposedBy.trim();
     const fnVersion = String(version).trim();
-    const out = [];
+    const out = [], outLinks = [];
     let minted = 0;
-    this.record.transact(() => {
+    const done = this.record.transact(() => {
+      const newlyMinted = [];
       for (const x of rows) {
         let contentId = null;
         if (x.pos != null) {
@@ -701,36 +838,104 @@ export class RunProductions {
              detail) and never dropped. */
           const m = this.content.mint({ bundleId, captureSha: sha, extent: { kind: x.pos.kind, ...posFields(x.pos) },
                                         mintedBy: by, at: when, context: ctx });
-          if (m.ok) { contentId = m.content_id; if (m.minted) minted += 1; }
+          if (m.ok) { contentId = m.content_id; if (m.minted) { minted += 1; newlyMinted.push(contentId); } }
           else x.mint_refused = { code: m.code || m.reason || null, check: m.check || null, detail: m.detail || null };
         }
+        const id = passageProposalId(runId, sha, x.ref);
         this.sql.exec(
           `INSERT INTO proposed_readings
              (run, capture_sha, bundle_id, ref, ref_kind, ref_key, label, fn, fn_version,
-              chain, cap, earned, pos_kind, pos, pos_ref, content_id, proposed_by, at)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+              chain, cap, earned, pos_kind, pos, pos_ref, content_id, proposed_by, at,
+              id, quote, verified, figures, why, step)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
            ON CONFLICT(run, capture_sha, ref) DO NOTHING`,
           runId, sha, bundleId, x.ref, x.refKind, x.refKey, x.label,
           fn, fnVersion, JSON.stringify(built.chain), built.cap, x.grade,
           x.pos ? x.pos.kind : null, x.pos ? readingSourceJson(x.pos) : null, x.pos ? x.pos.ref : null,
-          contentId, by, when);
-        out.push({ ref: x.ref, earned: x.grade, earned_because: x.why, content_id: contentId, position: x.pos,
+          contentId, by, when, id, x.quote, x.verified ? 1 : 0, JSON.stringify(x.figures), x.why, stepId);
+        out.push({ id, ref: x.ref, earned: x.grade, earned_because: x.why, content_id: contentId, position: x.pos,
+                   quote: x.quote, verified_quote: x.verified, check: x.figures,
                    ...(x.mint_refused ? { mint_refused: x.mint_refused } : {}) });
       }
+      /* R21: a connection already proposed under the run for that capture, target, quote and place is left as it was. */
+      for (const c of linkRows) {
+        this.sql.exec(
+          `INSERT INTO proposed_connections (id, run, capture_sha, bundle_id, to_kind, to_id, role, how, grounds, quote,
+             pos_kind, pos, pos_ref, verified, figures, earned, why, step, proposed_by, at)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO NOTHING`,
+          c.id, runId, sha, bundleId, c.kind, c.to, c.role, c.how, c.grounds, c.quote, c.pos.kind,
+          readingSourceJson(c.pos), c.pos.ref, c.verified ? 1 : 0, JSON.stringify(c.figures), c.earned, c.why, stepId,
+          by, when);
+        outLinks.push({ id: c.id, to_kind: c.kind, to: c.to, role: c.role, how: c.how, grounds: c.grounds,
+                        quote: c.quote, position: c.pos, verified_quote: c.verified, check: c.figures,
+                        earned: c.earned, earned_because: c.why, says: PROPOSED_CONNECTION_SAYS });
+      }
+      /* R21: THE STEP THE WORK SERVED (steps R9): the capture read, and each passage this batch made citable. A refusal
+         rolls the whole batch back and is relayed as steps answered it. */
+      if (stepId !== null)
+        for (const record of [{ kind: "capture", id: sha }, ...newlyMinted.map((id) => ({ kind: "content", id }))]) {
+          const tied = this.steps.recordProduct({ step: stepId, record, by });
+          if (tied && tied.ok === false)
+            return { ...tied, ok: false, reason: tied.reason ?? tied.code, code: tied.code ?? tied.reason, step: stepId };
+        }
       /* CONSUMED BY WHAT WAS ACTUALLY MINTED, inside the same transaction and only through ai-runs (R18): a batch
          that minted nothing spends nothing. */
       const spent = this.aiRuns.consumeBound(runId, "mints", minted);
       if (spent && spent.ok === false) throw new Error(`run-productions: the mints bound refused ${minted}: ${spent.code}`);
       return { ok: true };
     });
+    if (done && done.ok === false) return done;
     const after = this.aiRuns.boundOf(runId, "mints");
     return { ok: true, run: runId, bundle_id: bundleId, capture_sha: sha,
              fn, fn_version: fnVersion, chain: built.chain, cap: built.cap,
              /* THE LABEL IS CONTENT'S OWN SENTENCE (its R16), never composed here. */
              mint: mintLabel(by),
-             proposed: out, minted,
+             proposed: out, connections: outLinks, step: stepId, minted,
              bound: after ? { bound: "mints", allowed: Number(after.allowed), consumed: Number(after.consumed) } : null,
              says: EXTRACT_PROPOSALS_SAYS };
+  }
+
+  /** R21: one proposed connection, checked; a refusal naming its ordinal, or null. `gate` is the viewer's predicate. */
+  #checkConnection(c, i, gate, readerRefs) {
+    const at_index = i;
+    /* DEC-49 REGION is-extract-connection */
+    if (!c || typeof c !== "object" || Array.isArray(c))
+      return this.#refuse("CONNECTION_NO_TARGET", `a proposed connection is an object naming what it connects to`, { at_index });
+    if (c.grade !== undefined || c.earned !== undefined)
+      return this.#refuse("CONNECTION_GRADE_OFFERED",
+        `this connection offers its own grade. A connection's grade is COMPOSED from how its link is established and `
+        + `never minted by the thing that proposed it (DEC-24 rule 3; AI Roles §3 rule 3)`, { at_index });
+    const kind = typeof c.to_kind === "string" ? c.to_kind : "";
+    const to = nonBlank(c.to);
+    if (!CONNECTION_TARGET_KINDS.includes(kind) || !to)
+      return this.#refuse("CONNECTION_NO_TARGET",
+        `a proposed connection names what it connects to: to_kind one of ${CONNECTION_TARGET_KINDS.join(", ")}, and to`,
+        { at_index, to_kinds: [...CONNECTION_TARGET_KINDS] });
+    if (kind === "document" || kind === "question") {
+      /* An absent, an invisible and a wrongly typed target answer alike: the viewer's gate is in the statement. */
+      const row = this.#one(`SELECT b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, to, ...gate.args);
+      if (!row || normalizeType(row.object_type) !== (kind === "document" ? "information" : "inquiry"))
+        return this.#refuse("CONNECTION_NO_TARGET", `${to.slice(0, 80)} is not a ${kind} that can be read here`,
+                            { at_index, to: to.slice(0, 80) });
+    } else if (!ENTITY_ID.test(to))
+      return this.#refuse("CONNECTION_NO_TARGET",
+        `a ${kind} is named by the record's entity id (ENT-…), and ${to.slice(0, 80)} is not one`, { at_index, to: to.slice(0, 80) });
+    if (kind === "person" && !nonBlank(c.role))
+      return this.#refuse("CONNECTION_PERSON_NO_ROLE",
+        `a connection to a person is to their part in a public matter (D13), so it names the public role its quote `
+        + `shows`, { at_index });
+    if (typeof c.quote !== "string" || c.quote === "" || readingSource(c.source) == null)
+      return this.#refuse("CONNECTION_NO_QUOTE",
+        `a proposed connection carries its exact quote and the readable place it stands (IC-1's element-reference `
+        + `vocabulary)`, { at_index });
+    if (!connectionLink(c, readerRefs))
+      return this.#refuse("CONNECTION_NOT_ESTABLISHED",
+        `how: '${String(c.how ?? "").slice(0, 40)}' does not establish this link: source_link names a reference the `
+        + `registered readers found in this capture (ref); shared_identifier names an identifier standing in the quote `
+        + `(key); name and date name a name or a date standing in the quote. Nothing else grades a connection, and the `
+        + `machine never mints D`, { at_index, hows: Object.keys(CONNECTION_HOW) });
+    /* END DEC-49 REGION is-extract-connection */
+    return null;
   }
 
   /** op=extractproposals — WHAT AN EXTRACT RUN PROPOSED, AND THE RATIO (R12; §7.3 (6)). The proposals are listed
@@ -763,7 +968,8 @@ export class RunProductions {
     const scoped = where.map((w) => `pr.${w}`).join(" AND ");
     const rows = this.#rows(
       `SELECT pr.run, pr.capture_sha, pr.bundle_id, pr.ref, pr.ref_kind, pr.ref_key, pr.label, pr.fn, pr.fn_version,
-              pr.chain, pr.cap, pr.earned, pr.pos_kind, pr.pos, pr.pos_ref, pr.content_id, pr.proposed_by, pr.at
+              pr.chain, pr.cap, pr.earned, pr.pos_kind, pr.pos, pr.pos_ref, pr.content_id, pr.proposed_by, pr.at,
+              pr.id, pr.quote, pr.verified, pr.figures, pr.why, pr.step
          FROM proposed_readings pr JOIN bundles b ON b.bundle_id = pr.bundle_id
         WHERE ${scoped} AND (${gate.sql})
         ORDER BY pr.at DESC, pr.ref ASC
@@ -773,14 +979,28 @@ export class RunProductions {
         WHERE ${scoped} AND (${gate.sql}) ORDER BY pr.bundle_id LIMIT ?`,
       ...args, ...gate.args, EXTRACT_RATIO_DOCUMENTS_MAX + 1).map((x) => x.bundle_id);
     const listed = rows.slice(0, n).map((x) => ({
-      run: x.run, bundle_id: x.bundle_id, capture_sha: x.capture_sha,
+      id: x.id, run: x.run, bundle_id: x.bundle_id, capture_sha: x.capture_sha,
       ref: x.ref, ref_kind: x.ref_kind, ref_key: x.ref_key, label: x.label,
       basis: { fn: x.fn, version: x.fn_version, chain: safeJson(x.chain), says: describeChain(safeJson(x.chain)) },
-      cap: x.cap, earned: x.earned,
+      cap: x.cap, earned: x.earned, earned_because: x.why ?? null,
       position: readingSourceFromColumns(x.pos_kind, x.pos, x.pos_ref),
+      quote: x.quote ?? null, verified_quote: !!x.verified, check: safeJson(x.figures) ?? [], step: x.step ?? null,
       content_id: x.content_id, mint: mintLabel(x.proposed_by), at: x.at,
       /* On every row, not only the machine ones: a key present in one case makes absence carry the meaning. */
       says: EXTRACT_PROPOSAL_ROW_SAYS,
+    }));
+    /* R21: the connections proposed in the same scope, through the same gate and the same bound, listed apart: a
+       proposed connection is not a reading and not a connection of the record. */
+    const linkRows = this.#rows(
+      `SELECT pc.* FROM proposed_connections pc JOIN bundles b ON b.bundle_id = pc.bundle_id
+        WHERE ${where.map((w) => `pc.${w}`).join(" AND ")} AND (${gate.sql})
+        ORDER BY pc.at DESC, pc.id ASC LIMIT ?`, ...args, ...gate.args, n + 1);
+    const links = linkRows.slice(0, n).map((x) => ({
+      id: x.id, run: x.run, bundle_id: x.bundle_id, capture_sha: x.capture_sha, to_kind: x.to_kind, to: x.to_id,
+      role: x.role, how: x.how, grounds: x.grounds, quote: x.quote,
+      position: readingSourceFromColumns(x.pos_kind, x.pos, x.pos_ref), verified_quote: !!x.verified,
+      check: safeJson(x.figures) ?? [], earned: x.earned, earned_because: x.why, step: x.step,
+      mint: mintLabel(x.proposed_by), at: x.at, says: PROPOSED_CONNECTION_SAYS,
     }));
     const scopeDocs = docs.slice(0, EXTRACT_RATIO_DOCUMENTS_MAX);
     const marks = scopeDocs.map(() => "?").join(",");
@@ -800,7 +1020,274 @@ export class RunProductions {
                                    is a fraction they cannot judge. */
                                 documents: scopeDocs.length, documents_capped: docs.length > EXTRACT_RATIO_DOCUMENTS_MAX },
              count: listed.length, limit: n, truncated: rows.length > n, proposals: listed,
+             connections: links, connections_truncated: linkRows.length > n,
              instrument: mintRatio({ minted, cited }) };
+  }
+
+  /* ==================================================================== *
+   * T41-24 — READING INSIDE A HELD DOCUMENT (R21–R24; Investigation §5; AI Roles §3 rules 3, 9; D2, D3, D4, D22).
+   * ==================================================================== */
+
+  /** op=readpages — R24: A RUN READS A HELD DOCUMENT A FEW PAGES AT A TIME, WITHIN ITS `pages` BOUND (run-rules R26),
+   *  read and spent through ai-runs as `mints` is (R18). A page is charged once per run: one read again costs nothing.
+   *  A slice the bound cuts says so and says how far the run read; a run whose bound is spent is refused, saying how
+   *  far it read in this document. The text is the record's own (extraction R36's units), asked after the viewer's
+   *  gate. A document under a "no AI" material limit is refused whatever the bound (credentials R57). */
+  readPages({ run, bundleId, from = 0, viewer = null, caller = null, at = null } = {}) {
+    const held = this.#productionRun({ run, viewer, caller, act: "reading a document under a run",
+                                      note: "a reading names a run its caller holds. Nothing was read" });
+    if (held.refusal) return held.refusal;
+    const { run: r, runId } = held;
+    /* DEC-49 REGION is-read-run */
+    if (!READING_RUN_MODES.includes(String(r.mode || "")))
+      return this.#refuse("NOT_A_READING_RUN",
+        `this run was opened in mode '${r.mode == null ? "(none)" : String(r.mode)}', and only a run in mode `
+        + `${READING_RUN_MODES.join(" or ")} reads inside documents (run-rules R26)`, { run: runId, mode: r.mode ?? null });
+    /* END DEC-49 REGION is-read-run */
+    const doc = this.#heldDocument(bundleId, viewer);
+    if (doc.refusal) return doc.refusal;
+    const { bundle, sha } = doc;
+    /* "NO AI" IS ASKED BEFORE THE BOUND, so a document kept from the AI is refused however much the run may read. The
+       refusal is credentials', relayed whole. */
+    /* THE JUDGEMENT IS run-rules' (`checkPagesRead`, R26; B3): the material limits held for this document, the group's
+       and its project's (credentials R57), each read here; one that cannot be read is held as on, so the read fails
+       closed. */
+    const limits = [];
+    try { const g = this.credentials.aiKeepAwayState(); limits.push({ on: g.on, uses: g.uses }); }
+    catch { limits.push({ on: null, uses: null }); }
+    if (bundle.project) {
+      const kept = this.credentials.projectsKeptAway({ use: "read" });
+      if (kept === null) limits.push({ on: null, uses: null });
+      else if (kept.includes(bundle.project)) limits.push({ on: true, uses: ["read"] });
+    }
+    const noAi = checkPagesRead({ limits });
+    if (noAi) return { ...noAi, run: runId, bundle_id: bundleId };
+    let units = [], state = null;
+    try {
+      const u = this.extraction ? this.extraction.unitsOf(sha) : null;
+      units = Array.isArray(u?.units) ? u.units : [];
+      state = u?.state ?? null;
+    } catch { units = []; state = null; }
+    const pages = pagesOf(units);
+    const already = new Set(this.#rows(`SELECT page FROM run_pages_read WHERE run=? AND capture_sha=?`, runId, sha)
+      .map((x) => Number(x.page)));
+    const howFar = () => (already.size ? Math.max(...already) + 1 : 0);
+    /* DEC-49 REGION is-read-door */
+    const bound = this.aiRuns.boundOf(runId, PAGES_BOUND);
+    if (!bound || !(Number(bound.allowed) > 0))
+      return this.#refuse("NO_PAGES_BOUND",
+        `this run declares no 'pages' bound, so its reading would be unbounded. The bound is declared at op=airunopen, `
+        + `by the member who opens the run (run-rules R26)`, { run: runId });
+    if (Number(bound.consumed) >= Number(bound.allowed))
+      return this.#refuse("PAGES_BOUND_REACHED",
+        `this run has read ${Number(bound.consumed)} of its ${Number(bound.allowed)} pages. In ${bundleId} it read `
+        + `${already.size} page(s), as far as page ${howFar()} of ${pages.length}`,
+        { run: runId, bundle_id: bundleId, allowed: Number(bound.allowed), consumed: Number(bound.consumed),
+          read_to: howFar(), pages_read: already.size, page_count: pages.length });
+    /* END DEC-49 REGION is-read-door */
+    const start = Math.max(0, Math.floor(Number(from)) || 0);
+    let left = Number(bound.allowed) - Number(bound.consumed);
+    const slice = [], fresh = [];
+    let stopped = null;
+    for (const p of pages.slice(start, start + READ_PAGES_AT_A_TIME)) {
+      const charged = !already.has(p.page);
+      if (charged && left <= 0) { stopped = "pages"; break; }
+      if (charged) { left -= 1; fresh.push(p.page); }
+      slice.push({ ...p, charged });
+    }
+    const when = at || stampInstant("second", this.now());
+    const done = this.record.transact(() => {
+      for (const page of fresh)
+        this.sql.exec(`INSERT OR IGNORE INTO run_pages_read (run, capture_sha, bundle_id, page, at) VALUES (?,?,?,?,?)`,
+                      runId, sha, bundleId, page, when);
+      const spent = this.aiRuns.consumeBound(runId, PAGES_BOUND, fresh.length);
+      if (spent && spent.ok === false) return { ...spent, ok: false, run: runId };
+      return { ok: true };
+    });
+    if (done && done.ok === false) return done;
+    for (const page of fresh) already.add(page);
+    const after = this.aiRuns.boundOf(runId, PAGES_BOUND);
+    const readTo = start + slice.length;
+    return { ok: true, run: runId, bundle_id: bundleId, capture_sha: sha, from: start,
+             pages: slice, read_to: Math.min(readTo, pages.length), page_count: pages.length, index_state: state,
+             next_from: readTo < pages.length ? readTo : null, stopped, charged: fresh.length,
+             read_in_run: { pages: already.size, as_far_as: howFar() },
+             bound: after ? { bound: "pages", allowed: Number(after.allowed), consumed: Number(after.consumed) } : null,
+             says: stopped
+               ? `${READ_PAGES_SAYS}. This run stopped at its pages bound after page ${Math.min(readTo, pages.length)} `
+                 + `of ${pages.length}`
+               : READ_PAGES_SAYS };
+  }
+
+  /** A proposal by its name, through the viewer's gate on the document it was read from: `{kind, row}` or null. */
+  #proposalSeen(id, viewer) {
+    const gate = viewerPredicate(viewer);
+    const kind = id.startsWith("prp:") ? "passage" : id.startsWith("prc:") ? "connection" : null;
+    if (!kind) return null;
+    const row = this.#one(
+      `SELECT p.* FROM ${kind === "passage" ? "proposed_readings" : "proposed_connections"} p
+         JOIN bundles b ON b.bundle_id = p.bundle_id WHERE p.id=? AND (${gate.sql})`, id, ...gate.args);
+    return row ? { kind, row } : null;
+  }
+
+  /** op=proposalaccept — R22: THE MEMBER'S ONE ACT ON A PROPOSED PASSAGE OR CONNECTION (record-grammar R52, D3): as
+   *  proposed (its meaning recorded as proposed), edited (her meaning, in her words), or her own instead (her own
+   *  reading, the machine's set aside). One per member per proposal; only then may a leg cite it as hers
+   *  (`acceptedFor`). `by` and `viewer` are the control plane's stamps. Who may: a member who may see the document
+   *  and the run's context, and, for a run over a project, a joined participant of it (membership R55). */
+  proposalAccept({ proposal, form, edit = null, by, viewer = null, at = null } = {}) {
+    const who = nonBlank(by);
+    const id = nonBlank(proposal) ?? "";
+    /* DEC-49 REGION is-accept */
+    if (!who || isMachineIdentity(who))
+      return this.#refuse("ACCEPT_NOT_A_MEMBER",
+        `accepting a proposal is a member's act (record-grammar R52); ${who ? "a machine" : "no one"} asked`);
+    const seen = this.#proposalSeen(id, viewer ?? who);
+    const runRow = seen ? this.aiRuns.runFor(seen.row.run, viewer ?? who) : null;
+    if (!seen || !runRow)
+      return this.#refuse("READING_PROPOSAL_ABSENT", `no proposal you can see is named ${id.slice(0, 80) || "(none)"}`,
+                          { proposal: id.slice(0, 80) || null });
+    if (!ACCEPTANCE_FORMS.includes(form))
+      return this.#refuse("ACCEPT_FORM_UNKNOWN",
+        `form is one of ${ACCEPTANCE_FORMS.join(", ")}`, { forms: [...ACCEPTANCE_FORMS] });
+    const words = typeof edit === "string" ? edit.trim() : "";
+    if (form === "as_proposed" && edit !== null && edit !== undefined && words !== "")
+      return this.#refuse("ACCEPT_AS_PROPOSED_TAKES_NO_WORDS",
+        `as_proposed records the proposal's meaning as proposed; words of her own are edited or own_instead`);
+    if (form !== "as_proposed" && (words === "" || words.length > ACCEPT_WORDS_MAX))
+      return this.#refuse("ACCEPT_NEEDS_HER_WORDS",
+        `${form} records her own words of what it means: 1 to ${ACCEPT_WORDS_MAX} characters`, { limit: ACCEPT_WORDS_MAX });
+    if (this.#one(`SELECT 1 AS x FROM proposal_acceptances WHERE proposal=? AND accepted_by=?`, id, who))
+      return this.#refuse("PROPOSAL_ALREADY_ACCEPTED", `${who} has already taken up ${id.slice(0, 80)}`, { proposal: id });
+    /* END DEC-49 REGION is-accept */
+    /* R55's fence, relayed whole: work on a project's proposal is a joined participant's. */
+    if (String(runRow.context_type) === "project") {
+      const fence = this.membership.projectAuthority(String(runRow.context_id), who, "joined", "accepting a proposal");
+      if (fence) return fence;
+    }
+    const when = at || stampInstant("second", this.now());
+    const record = acceptanceRecord({ proposal: id, form, by: who, at: when, kind: seen.kind });
+    const r = seen.row;
+    const meaning = form === "as_proposed"
+      ? (seen.kind === "passage"
+          ? `${r.label || r.ref}${r.quote ? `: "${r.quote}"` : ""}`
+          : `${r.to_kind} ${r.to_id}${r.role ? ` (${r.role})` : ""}, by ${r.how} (${r.grounds}): "${r.quote}"`)
+      : words;
+    const meaningOf = form === "as_proposed" ? "proposal" : "member";
+    this.sql.exec(
+      `INSERT INTO proposal_acceptances (proposal, kind, bundle_id, form, accepted_by, at, meaning, meaning_of)
+       VALUES (?,?,?,?,?,?,?,?)`, id, seen.kind, r.bundle_id, form, who, when, meaning, meaningOf);
+    return { ok: true, acceptance: record, meaning, meaning_of: meaningOf,
+             ...(seen.kind === "passage" ? { content_id: r.content_id ?? null } : { to_kind: r.to_kind, to: r.to_id }),
+             set_aside: form === "own_instead",
+             says: form === "own_instead"
+               ? "the machine's reading is set aside and hers is recorded in its place; she may cite the passage as hers"
+               : "taken up; she may cite it as hers" };
+  }
+
+  /** R22: whether a member has taken up a proposal (by its name) or the machine-proposed passage a content row is
+   *  (by its id), so a leg may cite it as hers: `{accepted, form, at}`, `accepted` false and the rest null otherwise. */
+  acceptedFor({ proposal = null, content_id = null, by } = {}) {
+    const who = nonBlank(by);
+    const row = !who ? null
+      : nonBlank(proposal) ? this.#one(`SELECT form, at FROM proposal_acceptances WHERE proposal=? AND accepted_by=?`,
+                                       proposal.trim(), who)
+      : nonBlank(content_id) ? this.#one(
+          `SELECT pa.form, pa.at FROM proposal_acceptances pa JOIN proposed_readings pr ON pr.id = pa.proposal
+            WHERE pr.content_id=? AND pa.accepted_by=? ORDER BY pa.at LIMIT 1`, content_id.trim(), who)
+      : null;
+    return row ? { accepted: true, form: row.form, at: row.at } : { accepted: false, form: null, at: null };
+  }
+
+  /** R22 (D3): how often each kind of proposal was taken up in each form, group-wide only, naming no member, project
+   *  or proposal. */
+  acceptanceCounts() {
+    const out = {};
+    for (const kind of ["passage", "connection"]) out[kind] = Object.fromEntries(ACCEPTANCE_FORMS.map((f) => [f, 0]));
+    for (const r of this.#rows(`SELECT kind, form, COUNT(*) AS n FROM proposal_acceptances GROUP BY kind, form`))
+      if (out[r.kind] && r.form in out[r.kind]) out[r.kind][r.form] = Number(r.n);
+    return { ok: true, scope: "group", counts: out };
+  }
+
+  /** op=bearingnote — R23 (D22): A NOTE ON WHAT A DOCUMENT SAYS ABOUT A QUESTION, AND WHAT IT DOES NOT, written by a run
+   *  its caller holds (R15), or, drafted interactively with no run (run-rules R25; K2482), by the member who asked, who
+   *  may see both the document and the question. Each sentence `{text, quote, source}` is kept only when its quote passes extraction R42's
+   *  byte-exact check against the record's text at its place, as R21 hands it; a sentence that cannot be tied is left
+   *  out and said so. It is stored apart (never a content row, never a proposal, with no id a leg accepts) and read
+   *  only beside its source (`bearingNotes`). */
+  bearingNote({ capture, question, run = null, sentences, viewer = null, caller = null, at = null } = {}) {
+    const held = this.#productionRun({ run, viewer, caller, act: "writing a note on a document under a run",
+                                      note: "a note names a run its caller holds. Nothing was kept", memberMay: true });
+    if (held.refusal) return held.refusal;
+    const { runId } = held;
+    const gate = viewerPredicate(viewer);
+    const qid = nonBlank(question) ?? "";
+    const sha = typeof capture === "string" ? capture.trim() : "";
+    const list = Array.isArray(sentences) ? sentences : [];
+    /* DEC-49 REGION is-bearing */
+    const q = qid ? this.#one(`SELECT b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, qid, ...gate.args)
+                  : null;
+    if (!q || normalizeType(q.object_type) !== "inquiry")
+      return this.#refuse("BEARING_NO_QUESTION", `no question you can see is named ${qid.slice(0, 80) || "(none)"}`,
+                          { question: qid.slice(0, 80) || null });
+    const read = HEX64.test(sha) ? this.#one(`SELECT bundle_id FROM readings WHERE capture_sha=?`, sha) : null;
+    const doc = read ? this.#one(`SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
+                                 read.bundle_id, ...gate.args) : null;
+    if (!doc || normalizeType(doc.object_type) !== "information" || this.content.captureFor(doc.bundle_id, sha) !== sha)
+      return this.#refuse("BEARING_NO_CAPTURE",
+        `no capture you can see of a document this record holds is ${sha ? sha.slice(0, 64) : "(none)"}`,
+        { capture: sha.slice(0, 64) || null });
+    if (list.length === 0 || list.length > BEARING_SENTENCES_MAX)
+      return this.#refuse("BEARING_NO_SENTENCES",
+        `a note holds 1 to ${BEARING_SENTENCES_MAX} sentences, each {text, quote, source}; this held ${list.length}`,
+        { limit: BEARING_SENTENCES_MAX });
+    const textAt = this.#quoteTextFor(sha, doc.bundle_id);
+    const kept = [], leftOut = [];
+    for (const [i, s] of list.entries()) {
+      const text = s && typeof s.text === "string" ? s.text.trim() : "";
+      if (!text || text.length > BEARING_SENTENCE_MAX_CHARS) {
+        leftOut.push({ index: i, why: `no sentence of 1 to ${BEARING_SENTENCE_MAX_CHARS} characters` }); continue;
+      }
+      const v = proposedReadingGrade({ ref: "bearing", label: text, quote: s.quote, source: s.source },
+                                     typeof s.quote === "string" ? textAt(s.source) : null);
+      if (v.verified_quote !== true) {
+        leftOut.push({ index: i, why: "its quote is not the document's own words at the place given" }); continue;
+      }
+      kept.push({ text, quote: s.quote, position: readingSource(s.source), check: v.check });
+    }
+    if (kept.length === 0)
+      return this.#refuse("BEARING_NOTHING_TIED",
+        `none of the ${list.length} sentence(s) could be tied to the document's own words`, { left_out: leftOut });
+    /* END DEC-49 REGION is-bearing */
+    const when = at || stampInstant("second", this.now());
+    const id = `brn:${sha256HexSync(canonicalJson(["bearing", runId, sha, qid, kept]))}`;
+    this.sql.exec(
+      `INSERT INTO bearing_notes (id, capture_sha, bundle_id, question, run, sentences, left_out, written_by, at)
+       VALUES (?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO NOTHING`,
+      id, sha, doc.bundle_id, qid, runId, JSON.stringify(kept), leftOut.length, String(caller ?? "").trim(), when);
+    return { ok: true, note: { id, capture_sha: sha, bundle_id: doc.bundle_id, question: qid, run: runId,
+                               sentences: kept, at: when },
+             kept: kept.length, left_out: leftOut, says: BEARING_NOTE_SAYS };
+  }
+
+  /** op=bearingnotes — R23: the notes on a document, read beside it: newest first, at most 100, each about a question
+   *  the viewer may see (the rest left out, uncounted), the document itself through the viewer's gate. */
+  bearingNotes({ bundleId, question = null, viewer = null } = {}) {
+    const gate = viewerPredicate(viewer);
+    const id = nonBlank(bundleId) ?? "";
+    const doc = id ? this.#one(`SELECT b.bundle_id FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args)
+                   : null;
+    if (!doc) return { ok: false, reason: "NO_SUCH_BUNDLE", code: "NO_SUCH_BUNDLE", target: id || null,
+                       detail: `no document is addressed by ${id || "(none)"} in this record` };
+    const q = nonBlank(question);
+    const rows = this.#rows(
+      `SELECT n.* FROM bearing_notes n JOIN bundles b ON b.bundle_id = n.question
+        WHERE n.bundle_id=? ${q ? "AND n.question=?" : ""} AND (${gate.sql})
+        ORDER BY n.at DESC, n.id ASC LIMIT 101`, id, ...(q ? [q] : []), ...gate.args);
+    return { ok: true, bundle_id: id, truncated: rows.length > 100,
+             notes: rows.slice(0, 100).map((n) => ({ id: n.id, capture_sha: n.capture_sha, question: n.question, run: n.run,
+                                                     sentences: safeJson(n.sentences) ?? [], left_out: n.left_out,
+                                                     mint: mintLabel(n.written_by), at: n.at, says: BEARING_NOTE_SAYS })) };
   }
 
   /** R14 — THE NARROW CANDIDATE SOURCE, registered with basis-versions (its R25, R40 `onCandidates`): for a capture,
@@ -862,6 +1349,11 @@ export function runProductionsOf(host, deps) {
                              aiRuns: d.aiRuns || aiRunsOf(host), strength: d.strength || strengthOf(host, { record, membership }),
                              citation: d.citation || citationOf(host, { record, membership, content }),
                              basisVersions: d.basisVersions || basisVersionsOf(host, { record, membership, content }),
+                             extraction: d.extraction || extractionOf(host, { record, membership }),
+                             /* T41-24: R24's "no AI" read is this module's (K2482); R21's step is steps' (B4). */
+                             credentials: d.credentials || credentialsOf(host, { record, membership }),
+                             steps: d.steps || stepsOf(host, { record, membership }),
+                             legEarning: d.legEarning || legEarningOf(host, { record, membership, content }),
                              now: d.now || null });
     instances.set(host, p);
     record.declarePurge(RUN_PRODUCTIONS_MODULE, RUN_PRODUCTIONS_TABLES);
@@ -871,8 +1363,9 @@ export function runProductionsOf(host, deps) {
   return p;
 }
 
-/** The op handlers the control plane routes to (K3): `suggest`, `extractpropose`, `extractproposals`. The author,
- *  viewer, proposer and caller come from the QUERY STRING, where the control plane stamped them, and never from the body
+/** The op handlers the control plane routes to (K3): `suggest`, `extractpropose`, `extractproposals`, and since T41-24
+ *  `readpages`, `proposalaccept`, `acceptancecounts`, `bearingnote`, `bearingnotes`. The author, viewer, proposer, `by`
+ *  and caller come from the QUERY STRING, where the control plane stamped them, and never from the body
  *  (R8): `suggest`'s stamps are set AFTER the body's spread, so a body's are overwritten rather than believed. */
 export function runProductionsOps(p, url, body) {
   const q = (k) => url.searchParams.get(k);
@@ -885,7 +1378,17 @@ export function runProductionsOps(p, url, body) {
     }),
     extractpropose: () => p.extractPropose({
       run: bd.run, bundleId: bd.bundleId, fn: bd.fn, version: bd.version, cap: bd.cap ?? null, refs: bd.refs,
+      connections: bd.connections ?? null, step: bd.step ?? null,
       at: bd.at || null, proposedBy: q("proposedBy"), viewer: q("viewer"), caller: q("principal") }),
     extractproposals: () => p.extractProposals({ run: q("run"), bundleId: q("bundle"), limit: q("limit"), viewer: q("viewer") }),
+    /* T41-24 (R21–R24). */
+    readpages: () => p.readPages({ run: bd.run ?? q("run"), bundleId: bd.bundleId ?? q("bundle"), from: bd.from ?? q("from"),
+                                   viewer: q("viewer"), caller: q("principal") }),
+    proposalaccept: () => p.proposalAccept({ proposal: bd.proposal, form: bd.form, edit: bd.edit ?? null,
+                                             by: q("by"), viewer: q("viewer") }),
+    acceptancecounts: () => p.acceptanceCounts(),
+    bearingnote: () => p.bearingNote({ capture: bd.capture, question: bd.question, run: bd.run, sentences: bd.sentences,
+                                       viewer: q("viewer"), caller: q("principal") }),
+    bearingnotes: () => p.bearingNotes({ bundleId: q("bundle"), question: q("question"), viewer: q("viewer") }),
   };
 }

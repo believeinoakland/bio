@@ -19,8 +19,9 @@ function stringsOf(v, out = []) {
 export const textOf = (v) => stringsOf(v).join(SEP);
 
 export class ReadLog {
-  constructor({ grant = null, viewer = null, at = null } = {}) {
+  constructor({ grant = null, viewer = null, at = null, use = "ask" } = {}) {
     this.grant = grant;
+    this.use = use;   /* R30: the grant's use (`ask`, `draft`, `standing`), whose kept-away projects its reads drop */
     this.viewer = viewer;
     this.opened = at;
     this.entries = [];

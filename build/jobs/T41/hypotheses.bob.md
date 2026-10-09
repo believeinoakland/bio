@@ -22,3 +22,7 @@ Taken (K2486). (a) R43's names govern; a route for R18's set-aside joins L11's o
 ## B4 · ANSWER · re J3
 
 Received; you merge after inquiry (merge order). When inquiry merges a CHANGE asks you to re-run against it and clear your named red.
+
+## B5 · CHANGE
+
+inquiry is merged into tranche/T41 @ dc41a13858 (K2498): merge the tranche branch, wire R19 to the real inquiry.personWarning, clear your named red ('R19 with no test injected'), and record completion again.
