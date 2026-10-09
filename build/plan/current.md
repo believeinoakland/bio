@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #145 · session_01Lzjn9d16Mo4a4RE2Xr16gN · depth 1
 
-**Jobs** · record-grammar: RECORD-GRAMMAR #11 session_01DoeyeHeM15vrBLPc7ti25M; pdf-reader: PDF-READER #6 session_01KA1AV3RDoRZjWqoUbFgBdC; doc-clean: DOC-CLEAN #2 session_01L4tPgyiHxU1i8CNTLh5Z5D; membership: MEMBERSHIP #31 session_01McN1vbMjCkAoS6fsP6jmCx
+**Jobs** · record-grammar: RECORD-GRAMMAR #11 session_01DoeyeHeM15vrBLPc7ti25M; pdf-reader: PDF-READER #6 session_01KA1AV3RDoRZjWqoUbFgBdC; doc-clean: DOC-CLEAN #2 session_01L4tPgyiHxU1i8CNTLh5Z5D; membership: MEMBERSHIP #31 session_01McN1vbMjCkAoS6fsP6jmCx; credentials: CREDENTIALS #10 session_01WnUBG32qScjJuitEhktbaJ
 
 **At T40's opening (K2389):** T39 closed by PR #18 (`main` @ `fc8d9c9f36`, K2388), after PR #16 (DEC-184–DEC-187) merged into `main` (K2388), so rule 3's condition holds and N797–N799 and N811 enter. `tranche/T40` from `main` @ `fc8d9c9f36`. Drafted during T39 (P18) by a worker for BOB #144, reviewed (K2376) and re-checked at the opening (K2389).
 
