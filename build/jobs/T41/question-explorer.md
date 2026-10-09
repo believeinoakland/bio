@@ -102,3 +102,7 @@ B7 applied: real ai-use (exploreAllowed's {ok, ask, label}, exploreAsk's what as
 - Still through `deps` names only: `ai-runs` T41 and `capture-requests` R55's `step`.
 
 Size (session_01243u4joqb8ZpywX663LU1U): test runs 34, module lines 1014
+
+## J7 · REPORT
+
+run-productions R21 against question-explorer R13 (measured on tranche @ 031277bc41): extractPropose refuses NOT_AN_EXTRACT_RUN for any run not in mode extract, and R21 is worded 'an extract-mode run reading inside a held document proposes...'; readPages (R24) admits extract and investigate (READING_RUN_MODES). An exploring run is investigate (question-explorer R3, ai-runs R73), so it can read but proposes no passage or connection while reading, and question-explorer R13's 'what it proposes while reading is run-productions R21's' names nothing. Either R21 admits an investigate run that reads (with its step), or R13's clause is worded to say an exploring run reads and finds (R4) but proposes nothing. Nothing to change in question-explorer either way: its read goes through readPages and its finds through R4.
