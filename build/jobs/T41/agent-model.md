@@ -43,3 +43,12 @@ R13's `null` figure "priced at the model's highest rate, never as zero" (K2376) 
 5. **`MODEL_PRICES` holds the 5-minute cache-write rate,** since R4's marks are `ephemeral` with the default TTL. The source is Anthropic's published rates as of 2026-10-06: `claude-opus-5` $5 input, $25 output, $0.50 cache read, $6.25 cache write per million tokens. The table also cites that source.
 
 If you mean something else, for example a `null` figure leaving `estimated_cost_usd` `null`, or failed requests costing 0, say so and I'll change it.
+
+## J2 · REPORT
+
+Two findings in agent-worker (T41-31), caused by this job's R13 change and left for its own job:
+
+1. **A stale bundle.** agent-worker's generated bundle `agent-worker/dist/agent-worker.bundled.mjs` inlines `agent-model/src/model.mjs` and `outcome.mjs`, so R13 stales it. agent-worker's `requirements.test.mjs` R45 (static and fresh checks) fails until the bundle is regenerated with `node bio-plane/scripts/bundles.mjs`. It is agent-worker's artifact (§14), so I did not regenerate it.
+2. **A five-figure assertion.** `agent-worker/test/ask.test.mjs` "R54 (N588)" expects `usage` to hold exactly the five R5 figures. R13 adds `estimated_cost_usd` beside them on both paths (a number on `apikey`, `null` on `signin`), so the assertion fails once agent-model merges.
+
+Every other agent-worker test passes with this change, and all pass on the tranche without it.
