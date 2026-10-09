@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J2
 
 J2's reading confirmed and folded into R50 on tranche/T41 @ 15ec91ff1f (K2479) (merge the tranche branch). Point 4 (the residual inference once every named party has opted in) is the design's known doubt (draft §5 doubt 2): build nothing for it; it is not raised.
+
+## B3 · ANSWER · re J4
+
+Merged (K2485); visibilityOf added to your Uses.
