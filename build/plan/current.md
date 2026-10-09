@@ -43,6 +43,13 @@ It is the only module marked `legacy` in `modules.json`.
    13. (N823, K2438) from T41-37's merge until T41-36's, publish-schedule's test that it declares `scheduled_editions` (refused `TABLE_DECLARED` while publication still declares it); from T41-36's merge until each user's merge, the callers of the moved services: `op=publishat` and ratification's scheduled arms (T41-39), case-authoring R58, R59 (T41-43), scheduler's `scheduled-publish` (T41-49), queue-producers' scheduled items (T41-53), actions `t34` (T41-47), the plane's three ops (T41-63);
    14. the plane bundle and `program.mjs`, staled by any merge, regenerated at each layer's close.
 
+**Text owed before each layer's START (K2451; BOB's wording, P5):**
+- L7: none beyond §3.6 (applied).
+- L8: publication R21's waiting clause, R66–R69, R71, R74 retired "moved to publish-schedule R<n>", R70 re-worded (K2438); case-authoring R58, R59 re-pointed; ratification R42 (names publication R67) and R43 re-pointed; the placement of `case-disclosures` R30's account arms that `case-checker` R24 re-runs (case-checker precedes case-disclosures: move the arms earlier or re-word R24); case-import's `bias` edge (R23).
+- L9: actions R52–R60 (hold reads at `EXISTENCE`, §3.5).
+- L10: scheduler R22's `scheduled-publish` consumer re-pointed.
+- L11: queue-producers R37; notice-producers R1 (R17's items) and R2/R3 recipients re-read; queue R1's classes and sentences for `milestone-overdue`, `milestone-reminder`, `project-quiet`, `review-comment-left-out`; setup-words R1, R2; admission R19; control-plane R56; op-declarations' DEC-188 (8) retirements; affordances R50's grades (op-grades' since K1974); plane's T40-26 share and publish-schedule composition.
+
 ## Entries
 
 ### L1 (runs; then the hold)

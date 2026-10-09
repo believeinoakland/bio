@@ -1,6 +1,6 @@
 # plane — requirements
 
-**Status** · In force: a new module (K617; K653 BOB-2), the composition root and the plane's deployment config; R1 is `control-plane` R35, marked "was". Last fold T34 (T34-90–T34-92: R19; K1818, K1837), R19 and R24 re-worded to the code (K1871); Uses and R14 re-worded T35 for the split (K2035, K2043); every requirement met (PLANE #24, K2065).
+**Status** · In force: a new module (K617; K653 BOB-2), the composition root and the plane's deployment config; R1 is `control-plane` R35, marked "was". Last fold T34 (T34-90–T34-92: R19; K1818, K1837), R19 and R24 re-worded to the code (K1871); Uses and R14 re-worded T35 for the split (K2035, K2043); every requirement met (PLANE #24, K2065). Last changed T41 (T41-63's text: R30 new; N820; K2405, K2417, K2418); marked not yet met (T41).
 
 **Size (P6).** About 250 lines written and moved (`draft-T19.md`: ~170 of `store.mjs`' composition root, the Worker's entry, the class from `dispatch.mjs`), and the config re-assigned.
 
@@ -49,6 +49,7 @@ The instance's composition root. It builds every module on one Durable Object's 
 - `case-disclosures` (N529): `caseDisclosuresOf` (R18). `case-carriage` (N532): none directly; `publication`'s factory creates it (R18).
 - T33-90: every module R21–R23 name, through its factory, `migrate()`, start and ops map; `docprofile`'s registry seam and the five readers' register functions (R22); `people.registerRosterSource` (R23).
 - (T36; K2130, K2152) `file-safety` (R26, R29): built at its place, migrated, started, its ops spread. `file-scanner` (R27): the `FILE_SCANNER` binding's service.
+- (T41; N820; K2418; new `modules.json` edges, §3.6's list) `steps`, `reading-guides`, `question-explorer`, `investigation`: their factories, migrations and counts (R30).
 
 ### Invariants
 
@@ -90,6 +91,9 @@ The instance's composition root. It builds every module on one Durable Object's 
 - **R27** (amends R7; rev. 2 §4; accepted red 10) `wrangler.jsonc` also binds `{binding: "FILE_SCANNER", service: "file-scanner"}`, the fleet member `file-scanner` R10 names, so `bundler`'s deploy bindings list it.
 - **R28** (N745; K2038; `capture` R73, `capture-sources` R65) The composition root reads `ownHosts` from `env.OWN_HOSTS` (the copy's own hosts the installer binds, `installer` R47) when it is set, joined with the hosts of the domain claim's `instance_address` (`instance-setup`); a claimed or verified group domain is the group's own website, never one of the copy's hosts, so it is not added (K2038 (8), K2156); with neither set it hands none (fail-open, as T35). A malformed entry is skipped and named in the log by correlation id only.
 - **R29** (K2087; `acquisition` R44; K2130: the plane, not `control-plane`, hands it) The composition root hands `capture` (which passes it to `acquisition`) the `FILE_SCANNER` binding and a reader of the reputation tool, `file-safety.reputationTool()` called at each acquisition, never a value read once at start, so `env.FILE_SCANNER` reaches `acquisition` beside `file-safety`. The reader reaches `acquisition` only once `capture` keeps and exposes it and `acquisition` awaits it (N774, K2155).
+
+**T41's composition** (T41; N820; `draft-T41-investigation.md` §3.6; K2405, K2417, K2418)
+- **R30** *(not yet met: T41)* registers the four new factories, their migrations and counts.
 
 ### Satisfies
 

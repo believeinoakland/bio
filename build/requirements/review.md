@@ -1,6 +1,6 @@
 # review — requirements
 
-**Status** · In force: approved by Bob 2026-09-26 (K102), its place in layer 8 after `case-authoring` by K102; C-87.12 retired (K408). Last changed T35 (T35-60: Uses only, no requirement; K1643) and T37 (T37-22: R29 new, Terms; N761; K2129, K2175); R29 not yet met (T37), every other requirement met.
+**Status** · In force: approved by Bob 2026-09-26 (K102), its place in layer 8 after `case-authoring` by K102; C-87.12 retired (K408). Last changed T35 (T35-60: Uses only, no requirement; K1643) and T37 (T37-22: R29 new, Terms; N761; K2129, K2175); R29 not yet met (T37), every other requirement met. Last changed T41 (T41-44's text: R9 amended (D54 B: §3.5); R30–R33 new (D60, D61); N820, N822; K2405, K2417, K2418); marked not yet met (T41).
 
 **Size (P6).** About 1,040 lines move (about 580 without comment-only lines): `store.mjs` 845, `bio-checks.mjs` 126, `schema.mjs` 70. With the statement acknowledgements (store.mjs 11048–11805, C-82; about 830 more), which this draft places with `publication` (map §5.2), it would be about 1,870. Under 4,000 either way.
 
@@ -31,7 +31,7 @@ Terms. A **draft** is `{draft_id, project_id, case_id, params, created_by, creat
 
 **The grant and the sight: liveGrant(secretSha), grantAdmitsCaseEdition(secretSha, caseId, edition), draftForMember(draftId, viewer), seesProjectDrafts(projectId, viewer), draftIdentity(draft)** The one place each is judged; `publication`'s case document and acknowledgements call them.
 - **R8** A grant is live only while it exists with that fingerprint, is not revoked, its draft exists, and the draft still stands at the case identity the grant was bound to; a grant whose edition was published and signed is dead exactly as a revoked one. A malformed fingerprint is never live.
-- **R9** A member has standing in a project's drafts only where the sight predicate over the producing project admits the viewer (a participant, invited or joined, or an active administrator); an absent or unrecognised viewer has none.
+- **R9** *(not yet met: T41)* A member has standing in a project's drafts only where the sight predicate over the producing project admits the viewer (a participant, invited or joined, or an active administrator); an absent or unrecognised viewer has none. (T41; N822; D54 B; `draft-T41-investigation.md` §3.5; K2408) For a hidden project's drafts, "or an active administrator" is dropped: there, only a participant, invited or joined, has standing.
 
 **copy({draft, secretSha, viewer, bySecret, limit}) → answer or the dead answer** (`op=reviewcopy`)
 - **R10** Two doors: a recipient through a live grant (a named draft must be the grant's own), or a member with standing (R9). Every other caller, including a revoked, moved, malformed or never-issued secret and a draft that does not exist, receives the dead answer, byte-identical.
@@ -55,6 +55,12 @@ Terms. A **draft** is `{draft_id, project_id, case_id, params, created_by, creat
 - **R26** `REVIEW_LIST_MAX`, `statedEdition(ident, newCase)` and `caseIdentitySentence(caseId, edition, newCase)` are exported (pure; `case-authoring`, earlier in the order, keeps its own copy of the bound, `DRAFTS_READ_MAX`, which this module's test asserts equal, K57, K242), and the table `case_drafts` (`draft_id`, `case_id`, `project_id`, `params`, `statement_by`, `created_at`) is a stated read contract on record-core R37's terms, read by `case-authoring`'s acknowledgements under `REVIEW_LIST_MAX`; every write stays this module's (K240).
 - **R27** When no free opaque id can be minted (`record-core`'s `mintOpaqueId` answers none), `draft`'s new draft and `grant` answer `MINT_EXHAUSTED` through `record-core.mintExhausted` (its R62, prefix `DRAFT` or `RVG`, its detail naming a draft id or a grant id), and write nothing. C-87.12 is retired, its number not reused; the one row is record-core's C-59.6 (N322, K275).
 
+**Approvals before signing, and the review comments a case carries** (T41; N820; `draft-T41-investigation.md` §3.6; K2405, K2417, K2418; D60, D61)
+- **R30** *(not yet met: T41)* (D60) `approvalRuleSet({approvers, by})` by an active administrator: one or more named members whose approval is required before any of the group's cases is signed; `null` turns it off (the default), so a group of one is never blocked. Each set is appended with who and when.
+- **R31** *(not yet met: T41)* (D60) `caseApprove({case, edition, docSha, reason?, by})` by a named approver who may see the case's project; refused `NOT_AN_APPROVER` otherwise; a later document (another `doc_sha`) needs a new approval.
+- **R32** *(not yet met: T41)* At start it registers R30–R31 with `ratification` R50.
+- **R33** *(not yet met: T41)* (D61) `reviewCommentsFor({case, edition, viewer})` lists the comments on the case's review copies for the publisher's choice; after publication, each reviewer whose comments were left out and who is a member is told once (`notice-producers`) that they were not included and that a response may be filed in the case's docket (`docket` R1, as anyone outside may).
+
 ## Private
 
 ### Uses
@@ -67,6 +73,7 @@ Terms. A **draft** is `{draft_id, project_id, case_id, params, created_by, creat
 - `publication`: the published edition and a case's owner (R3, R5; read under its R40, the list `public-read`'s `publishedEditions` answers, K651), and the one review provider (its R23), which this module fills once at start with R8–R10's draft door, grant door, live grant and dead answer, because `publication` and `case-authoring` come earlier and call them. *(not declared)*
 - `case-tensions` (T35-60, N597; K1643): `attributionInForce` (its R6), the attribution in force (R16), read directly, never through `publication`, which no longer answers it (its R61).
 - `case-authoring`: `publishCase` run inside a transaction always rolled back (R13; its R18), and `statementAcknowledgements`, the one acknowledgement list (R15; its R20). *(not declared)*
+- (T41; D60, D61) `ratification`: `registerApprovalReader` (its R50; R32). `notice-producers` (later) reads R33's left-out comments (its R17).
 - **Direct use, no longer registration (K102).** In layer 6 this module could not call layer 8, so `publication` would have had to register four things here: the publish act run dry, the published edition, the acknowledgement list and the attribution in force. In layer 8 after `case-authoring` all four are direct calls into `publication` and `case-authoring` (the act and the list are `case-authoring`'s since K97). The one registration left is the review provider this module fills in `publication`.
 
 ### Invariants

@@ -1,6 +1,6 @@
 # case-authoring — requirements
 
-**Status** · In force: approved by Bob 2026-09-26 (K102), split from `publication`'s draft (K94); DEC folds approved by Bob (K1019). Split for size (N529, K617, K1333): ids moved to `case-disclosures` are retired here; the disclosure renderers are `case-disclosures`' and imported, never copied (K1333). Last changed T35 (T35-59: R58, R59, C-44.6) and T37 (T37-21: R14, R34 amended; R62 new; N757, N761; K2129, K2175, K2206; DEC-180); those marked not yet met (T37), every other requirement met (K2014).
+**Status** · In force: approved by Bob 2026-09-26 (K102), split from `publication`'s draft (K94); DEC folds approved by Bob (K1019). Split for size (N529, K617, K1333): ids moved to `case-disclosures` are retired here; the disclosure renderers are `case-disclosures`' and imported, never copied (K1333). Last changed T35 (T35-59: R58, R59, C-44.6) and T37 (T37-21: R14, R34 amended; R62 new; N757, N761; K2129, K2175, K2206; DEC-180); those marked not yet met (T37), every other requirement met (K2014). Last changed T41 (T41-43's text: R63–R68 new; N820; D56, D57, D60, D61, D63; K2405, K2417, K2418); marked not yet met (T41).
 
 **Size (P6).** About 3,340 lines move (about 1,610 without comment-only and blank lines): `store.mjs` 2,818 (1,370 code) plus about 42 of dispatch, `airun.mjs` 234 (101), `bio-checks.mjs` 218 (85), `schema.mjs` 23 (13). Under 4,000 of code. Measured 4,010 at T28's merge (K1328). After N529's split, about 2,940 (`case-disclosures` about 1,210).
 
@@ -177,6 +177,15 @@ Row C-44.6 (R58; N681), in the case-identity family; its translation is BOB's dr
 | row | code | translation |
 |---|---|---|
 | C-44.6 | `CASE_EDITION_WAITING` | "An edition of this case is signed and waiting to be published at the time set. Prepare the next edition after it is published, or cancel it first. Nothing was prepared." |
+
+#### The account, the authored fields, review comments and approvals (T41; N820; `draft-T41-investigation.md` §3.6; K2405, K2417, K2418; D56, D57, D60, D61, D63)
+
+- **R63** *(not yet met: T41)* (D56) `publishCase` takes `account: [{text, cites, bias_statement?}]` and `accountDraft?`; it asks `case-disclosures` R30 after R55's judgments and before R11, answers its first refusal, and writes `case-grammar` R23's block into R14's document; R34's pre-flight lists every R30 refusal and every unanswered flag among `blockers`.
+- **R64** *(not yet met: T41)* (D56) `accountPropose({case, framing, text, run, proposedBy, viewer})` stores the system's draft of the account, labelled machine work, in one or more framings; `accountDrafts({case, viewer})` lists them; a member writes the account from a draft (recording `began_as` and the form, `record-grammar` R52) or from nothing; the published account is hers.
+- **R65** *(not yet met: T41)* (D57, D63) R3's authored fields are exactly the four statements (`statement`, `subjectJustification`, `excluded` with its reasons, `whatChanged`), `scope`, `biasAcknowledgement` and the account; a field carrying a story, context or human-interest account is refused `CASE_FIELD_NOT_ALLOWED`, naming it.
+- **R66** *(not yet met: T41)* (D61) `publishCase` takes `reviewComments: {included: [comment ids]}` from the case's review copies (`review` R33); the chosen comments go into `case-grammar` R25's block; the count left out is stated. An objection does not travel unless chosen.
+- **R67** *(not yet met: T41)* (D56) R34's `steps` gain "the account": each sentence with its citations, its check result and, for a system draft, its framing.
+- **R68** *(not yet met: T41)* (D60) R34's pre-flight lists the approvals the group's rule requires and those given (`review` R32), and `APPROVAL_MISSING` among `blockers` when any is missing.
 
 ### Satisfies
 
