@@ -50,3 +50,7 @@ Tests and checks:
 - `checks/format.mjs`: 0 failures; `checks/architecture.mjs provenance-routes`: 0 failures; `checks/coverage.mjs provenance-routes`: 13 of 13; 0 failures; `checks/ownership.mjs provenance-routes tranche/T41`: 0 failures (run after commit).
 
 Size (session_01Mu9HJJYkkMVmYJQmr99iuS): test runs 10, module lines 1240
+
+## J2 · REPORT
+
+R1's text names only the doorbell arm; B2's upload arm is built (index.mjs, ARM U). Please amend R1 and the Uses line (provenance: UPLOAD_ORIGIN, its R58/R63). Proposed sentence in my record, B2 Completion.
