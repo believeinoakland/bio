@@ -15,3 +15,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · CHANGE
 
 On tranche/T41 @ 15ec91ff1f (K2479) (K2479), merge the tranche branch: R59 now names its test as one pure export, personWarning({text, entities, viewer}) -> null | {code, translation, persons}, which hypotheses R19 also calls; state in your record what you read as a public role (an office the entity holds, is responsible for or speaks for, from the record's own relations). Test it explicitly with a negative control.
+
+## B3 · ANSWER · re J1
+
+Answered on tranche/T41 @ 46211ff1dd (K2480); merge the tranche branch. (1) your public-role reading is taken; export it as personWarning({text, entities, viewer}) (the name hypotheses calls; R59 says so) over personsInNoPublicRole; lines joins your uses; the warning table and words as you propose. (2) the search row is retrieval's share: N830 (retrieval's layer closed); R60 now names your own reads only. (3), (4) confirmed.
