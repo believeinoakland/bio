@@ -46,3 +46,7 @@ Noted, not a question: R4's frozen list makes "may" conduct, so "Look for the Ma
 - With my paths in a local, uncommitted `modules.json` (as BOB will write them): `format`: 145 modules, 144 requirements files; 0 failures. `architecture … reading-guides`: 12 product files, 37 relative imports; 0 failures. `coverage … reading-guides`: 12 of 12 live requirement ids named by a test; 0 failures. `ownership … reading-guides tranche/T41`: 13 files changed; 0 failures. Without the paths, coverage fails 12 of 12 (no test path), as K1043 expects.
 
 Size (session_01RMvYVRFkcmUHsvFuW1MH5Z): test runs 16, module lines 949
+
+## J2 · REPORT
+
+answer-envelope (R2, R7): once BOB writes reading-guides' paths into modules.json, its CHECK_FAMILY_FILES does not reach src/reading-guides/checks.mjs (family C-144), so 'CHECK_FAMILIES is total' and the case-carriage test that re-asserts totality turn red (24/4 against 26/2 today). Fix is answer-envelope's: add ["src/reading-guides/checks.mjs", READING_GUIDES] after capture-requests, before skilldoctrine.mjs. Also row-census lists my 18 rows C-144.1–.18 as arrived (rule 4 item 2; named awaiting stamp in my record).
