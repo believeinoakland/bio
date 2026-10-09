@@ -1,13 +1,14 @@
 # BIO Investigation v0.1: steps, the question explorer, milestones and reports
 
-**Status** · Draft for Bob's approval; ruled by D27–D30, D32–D51 (lane) and K2405. Drafted by a worker for BOB on `tranche/T40` as `build/plan/draft-canon-investigation.md`; on Bob's approval BOB places it at `docs/architecture/BIO_Investigation_v0_1.md`, lists it in `requirements/README.md` as canon (whole) and in `docs/architecture/README.md`. It states doctrine and design, in Bob's words where they exist (quoted from the investigation lane's register, `docs/development/investigation-design/DECISIONS.md` on `design/investigation`, by D-number); it is not requirement text. The requirements that cite it are T41's `steps`, `question-explorer` and `investigation` (`build/plan/draft-T41-investigation.md`, adopted by K2405). Where a sentence is BOB's detail rather than Bob's ruling it says so. Complete for the ruled model; §8 lists what is open. as of 2026-10-09.
+**Status** · Draft for Bob's approval; ruled by D13, D14, D27–D30, D32–D54 (lane) and K2405; it amends Membership Architecture §4, §7.3, §7.9 and §7.14 and Capability Ladders §9.4 and §9.5 (L4), as §9 gives, approved with this text. Drafted by a worker for BOB on `tranche/T40` as `build/plan/draft-canon-investigation.md`; on Bob's approval BOB places it at `docs/architecture/BIO_Investigation_v0_1.md`, lists it in `requirements/README.md` as canon (whole) and in `docs/architecture/README.md`. It states doctrine and design, in Bob's words where they exist (quoted from the investigation lane's register, `docs/development/investigation-design/DECISIONS.md` on `design/investigation`, by D-number); it is not requirement text. The requirements that cite it are T41's `steps`, `question-explorer` and `investigation` (`build/plan/draft-T41-investigation.md`, adopted by K2405). Where a sentence is BOB's detail rather than Bob's ruling it says so. Complete for the ruled model; §8 lists what is open. as of 2026-10-09.
 
 **Place in the system** · Level 1, under construct 8 of `BIO_System_Design.md` §3 (intent and inquiry): the investigation's own working layer between a project's questions and the evidence members add to them. It depends on `BIO_Case_Making_v0_1.md` (the inquiry, the leg, the conclusion, the case as a production), `BIO_Membership_Architecture_v2.md` §7 (projects, owners, participants, discoverable or hidden), `BIO_Capability_Ladders_v0_1.md` §2 and §10 (AI accounts, exploring, machine signals, hypotheses) and `BIO_Declared_Bias_v0_1.md` (hunches). `BIO_Action_v0_1.md` begins where this ends: what a group does about what it found.
 
 **Incomplete sections** ·
-- §4 — the question explorer is designed and not offered to any member until D13 and D14 are ruled (K2401, K2405).
-- §7 — the study of both audiences (D42) is done (the lane's working document §5); its questions D52 and D53 are with Bob, and the intake interview (D19) is not yet here.
+- §4 — the question explorer is designed and ruled (D13, D14); it is not offered to any member until it passes its test bar (D11).
+- §7 — the study of both audiences (D42) is done (the lane's working document §5) and its questions D52 and D53 are ruled; the intake interview (D19) is not yet here.
 - §8 — the open decisions, and the points where this draft meets existing canon without resolving it.
+- §9 — amendments to existing canon, approved with this text.
 
 **Contents**
 - [1. Purpose and scope](#1-purpose-and-scope)
@@ -18,6 +19,7 @@
 - [6. Why a document is held: provenance](#6-why-a-document-is-held-provenance)
 - [7. Two audiences](#7-two-audiences)
 - [8. What stays open](#8-what-stays-open)
+- [9. Amendments to existing canon (approved with this text)](#9-amendments-to-existing-canon-approved-with-this-text)
 
 ---
 
@@ -52,7 +54,21 @@ Bob's model of the record, which places steps (2026-10-08): "Documents, content,
 
 **A question never reveals which projects draw on it.** Bob, D41 (2026-10-08): "The question that 2 projects both have an interest in can only see the question - they can't see that some other project is also asking the same question. What it can see is when a question gets answered. But what does that tell them - that somebody answered the question. But it still doesn't say anything beyond that. It could be a question in a hidden project - or it may not." So a member sees a question, the work on it and whether it has been answered, never who else is asking; no answer about a question names, counts or implies a project she cannot see.
 
-**Who sees a project.** As Membership §7.9 and §7.14 say, unchanged here: a project's contents are seen by its participants; a discoverable project's existence and name are seen group-wide, so others can ask to join; a hidden project's are not (D40, withdrawn by Bob as already ruled).
+**Who sees a project.** As Membership §7.9 and §7.14 say: a project's contents are seen by its participants; a discoverable project's existence and name are seen group-wide, so others can ask to join; a hidden project's are not (D40, withdrawn by Bob as already ruled).
+
+**What administrators see of a hidden project** (Bob, "D54: B", 2026-10-09). Administrators see that a hidden project exists, its name and its owners, so the custodial role can place a legal hold or act on a complaint; they see its contents only if its owners add them. This amends Membership §7.3 and §7.9 (§9 below). Of a hidden project's work, an administrator not added sees what any member outside it sees: its steps on shared questions (§3), naming no project.
+
+**Where a first message leads** (Bob, "D52: B", 2026-10-09). What a member brings, by hand or to the assistant, leads to one of six places:
+- a new project;
+- an existing question or project;
+- a lead, optionally watched;
+- a step for understanding (§3);
+- an action (`BIO_Action_v0_1.md`);
+- "not Civicsmith's", with a pointer to where it belongs.
+
+The member decides which; the assistant only proposes (§4). A lead may become a project later. Not every message becomes a project. The front door's screens and words are the UX stream's.
+
+**A member's own matter with a public body** (Bob, "D53: A", 2026-10-09). A member's own matter, such as her dispute with an agency, is helped, in a hidden project of hers (Membership §7.9). Nothing about the private person concerned is published. A public pattern the matter shows may become a group question, carrying none of her private material unless she chooses to add it. No new construct serves this: it is a hidden project.
 
 ## 3. Steps
 
@@ -103,7 +119,14 @@ So the system takes steps (searching, capturing, reading), explores questions, g
 
 **Finds reach the people working on the question** (Bob, "D36: C"). The joined members of every project that draws on the question receive each find once, in their queue; each may stop following a question, or follow one; nobody receives anything she may not already see.
 
-**Exploring is not offered yet.** No member is offered the system's exploring until D13 (no investigation of a private person) and D14 (test investigations with gold answers written by people) are ruled (K2401, K2405); and like every AI mode it needs a live check and a test-investigation bar before members get it (D11, settled K2064). Steps, milestones and reports work fully without it (§7).
+**People, through their part in a public matter** (Bob, "D13: B", 2026-10-09, restating D13 after his B8, that tracking people is essential). An investigation looks at people through their part in a public matter; no investigation has a private person's private life as its subject. So:
+- when an objective or a question names a person in no public role, the member is warned at that act, and she decides whether to go on;
+- the system never explores a person on its own: it gathers about a person only when a member has tied that person to the question, and then only up to a cap of persons per exploring run (the cap is BOB's detail);
+- the rules on what is published are unchanged.
+
+**Test investigations gate the AI** (Bob, "D14: C", 2026-10-09). Civicsmith keeps a set of test investigations: frozen real matters, with answers written by people. Every AI part, the question explorer among them, is released only once it passes its bar on that set (D11). A group may add test investigations of its own; the AI is measured on them and the result is shown to that group. The transcripts of test runs are for grading only and are never published.
+
+**When exploring is offered.** With D13 and D14 ruled, the system's exploring is offered once the explorer passes its test bar: like every AI mode, a live check and a test-investigation bar (D11, settled K2064). Until then no member is offered it. Steps, milestones and reports work fully without it (§7).
 
 ## 5. Milestones and reports
 
@@ -131,6 +154,7 @@ A question this project deferred or dismissed, or a step set aside, is not done:
 Bob, D42 (2026-10-08): "I think that it's important that the design of the investigation be both fully capable to supporting the diversity of complaints and questions a member might throw at the assistant, and also be fully capable to supporting a highly efficient non-assistant-enabled workflow. Both audiences must be optimally served."
 
 So:
+- **One front door for both paths**: a first message, typed into a form or told to the assistant, leads to the same six places (§2, D52), the member choosing; a member's own matter goes to a hidden project of hers (D53). The front door's screens are the UX stream's.
 - **Every act here has a by-hand path that needs no AI**: creating, finding and referring to steps, ending them with their outcomes, waits and dates, costs and messages, following a question, milestones, and report drafts. No service requires AI.
 - **The assistant's path adds, never replaces**: the assistant may interview a member about a new or messy concern, turn her words into proposed questions, steps and possible explanations, and explore where enabled, each proposal labelled and taken up only by her act (D33, D34).
 - **AI use follows each account owner's settings** (D34: "the system should recognize and support this diversity of AI usage"); a member with no account and no group key uses all of the above without AI.
@@ -140,9 +164,6 @@ Bob's model of the craft (2026-10-08, offered by him for confirmation and mapped
 ## 8. What stays open
 
 **Open with Bob, each to come with its background and options:**
-- **D13** — the private-person fence, restated after Bob's B8 (tracking people essential): put to Bob 2026-10-09, the lane recommending people through their part in a public matter, never a private life as subject, warned at the act, the system never exploring a person on its own. The explorer's fence; exploring waits on it.
-- **D14** — test investigations with member-authored gold answers. The explorer's gate (§4); exploring waits on it. Put to Bob 2026-10-09: Civicsmith's set gates release, a group may add its own (recommended).
-- **D52** — where a first message leads (six places, recommended). **D53** — a member's own matter with a public body (helped in her hidden project, recommended). **D54** — administrators' sight of hidden projects.
 - **D1** — what remains of the module list after D50 and D51: a library of reading guides, an AI planner (mode `enquire`), an AI reading flow (`READ_FLOW`).
 - **D2** — whether a run may read bounded text spans of one held document, returning only proposals (loosens IS §14b.1).
 - **D3** — one accepting act for every proposal, recording as proposed, edited or unaided.
@@ -161,10 +182,32 @@ Bob's model of the craft (2026-10-08, offered by him for confirmation and mapped
 - **D24** — the canon text of the instructions the AI follows when reading, planning and interviewing; Bob rules it first.
 - **D43** — supporting members throughout the action plan; a future design effort, BOB's to schedule.
 
+**Ruled 2026-10-09 and folded:** D13 and D14 (§4), D52 and D53 (§2, §7): Bob, "D52: B, D53: A, D13: B, D14: C". D54 (§2, §9): Bob, "D54: B".
+
 **Existing canon this draft meets but does not resolve (for BOB):**
-- Capability Ladders §QUESTIONS L4 "Ruled" still says "there is no project account"; K2352/K2353 (and Ladders §2's cross-cutting rulings) allow one. §4 here follows K2353.
-- Administrators' sight of hidden projects: Membership §7.3/§7.9 and the built FULL sight give administrators contents; Bob's words of 2026-10-08 read otherwise; put to him as D54. §2 follows the answer.
 - Capability Ladders §10 forbids "drift into ... case management"; the lane read that as excluding timesheets, Gantt charts and member scores, not a plan serving the investigation, and offered the reading to Bob, and whose rulings D27 and D30, made on the page that offered it, settle it for this construct.
 - Action §4 rule 8 ("the plan holds no costs, assignees or hours") and Case Making §6b (a free resources list on an action-plan step) govern the action plan; D29 gives investigation steps a money cost. Not a contradiction of the text, but the "no budgets" line of 2026-09-29 is reversed for this plan only, per the lane's D29 framing.
 - K1463 makes the group's payments ordinary money facts with no "ours" mark; a step's stated cost is the group's working figure, not a money fact. Whether an actual payment is then recorded per K1463 and tied to the step is not ruled.
 - Case Making's and the queue's uses of "step" and "finding" (an action-plan step; a machine "finding" as a queue item) collide with this document's; D23 owes one member-facing meaning each.
+
+## 9. Amendments to existing canon (approved with this text)
+
+Approving this document approves these replacements. BOB applies each when the document is placed, recording it once in `rulings.md`.
+
+**A. `BIO_Membership_Architecture_v2.md` §7.3** (D54). Replace the whole paragraph with:
+
+> **7.3 Visibility.** A member sees only the projects they have been invited to, whether or not they have accepted, and the existence and name of a discoverable project (7.14). Administrators see every discoverable project and its participant lists. Of a hidden project, an administrator who has not been invited sees only that it exists, its name and its owners, so the custodial role can place a legal hold or act on a complaint; its contents and its other participants are seen only if its owners add that administrator (Bob, 2026-10-09, "D54: B"). Administrator sight survives the reversal in 7.7 deliberately: the custodial role can audit without being able to act in any project.
+
+**B. `BIO_Membership_Architecture_v2.md` §7.9** (D54). Under "Three positions, not two", replace the line "Administrators see all projects and all participant lists." with:
+
+> Administrators see projects as 7.3 says: every discoverable project and its participant lists; of a hidden project they were not invited to, its existence, name and owners only, and its contents only if its owners add them (D54). An act an administrator holds that must reach a hidden project without its contents (a legal hold, DEC-113; 7.13's rescue) reaches it at that level.
+
+In the same section's bullet "ONE resolution of a session to what it may SEE", replace "(the founder's is the administrator viewer, so every project and every participant list, as this section says)" with "(the founder's is the administrator viewer, so what 7.3 gives administrators)".
+
+**C. `BIO_Membership_Architecture_v2.md` §7.14** (D54), under "Sight, now three levels, still ONE predicate". Replace "administrators and the founder are unchanged (they already see everything)." with "administrators and the founder see every discoverable project in full and every hidden project they were not invited to at EXISTENCE, with its owners (7.3, D54)."
+
+**D. `BIO_Membership_Architecture_v2.md` §4**, the paragraph "And administrators do not touch project participation" (D54). Replace "Administrators do continue to SEE every project and every participant list, per 7.3 and 7.8." with "Administrators do continue to SEE every project as 7.3 says: a hidden project's existence, name and owners, and its contents only if its owners add them (D54)." The sentence after it, the doctrine that sight and authority are separated, stands.
+
+**E. `BIO_Capability_Ladders_v0_1.md` §9.5, L4, "Ruled"** (K2352, K2353). Replace "a run is carried only by the account that serves the starting member's act, their own or, while it is on, the group's API key (K1755), within that member's use ceiling (K1450); there is no project account and the subscription token is each member's own by Bob's choice (K1547, K1755) on every plan;" with "a run is carried only by the account that serves the starting member's act: the project's account if it has one, else the member's own, else, while it is on, the group's API key, each within the limits its owner sets (K1755, K2352); a project's account is an API key, or its sole member's own subscription while it has one member (K2353), and otherwise the subscription token is each member's own by Bob's choice (K1547, K1755);".
+
+**F. `BIO_Capability_Ladders_v0_1.md` §9.4, Stage 0, "Design"** (the same stale words, K2353). Replace "it serves only that member's asks, runs and standing questions, and there is no project account and the subscription token is each member's own by Bob's choice (K1547, K1755);" with "it serves only that member's asks, runs and standing questions; a project may hold an API key, or its sole member's own subscription while it has one member (K2353), and otherwise the subscription token is each member's own by Bob's choice (K1547, K1755);".
