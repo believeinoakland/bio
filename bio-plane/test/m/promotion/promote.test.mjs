@@ -503,7 +503,7 @@ test("R20: a revision of a bundle the stamped actor may not see answers exactly 
   void record;
 });
 
-test("R20: every refusal names a reason, carrying its catalogue row where one exists; NO_BODY; never throws for any JSON package", () => {
+test("promote, Errors: every refusal names a reason, carrying its catalogue row where one exists; NO_BODY; never throws for any JSON package", () => {
   const { p } = makePromotion();
   for (const pkg of [undefined, null, 7, "x", [], {}, { files: "x" }, { bundleId: 5, base: null, snapKey: "k", files: [], meta: {} },
                      { bundleId: ID, base: null, snapKey: {}, files: [1], meta: 3 }, { bundleId: ID, base: null, snapKey: "k", files: [{ path: "bundle.md", text: 5 }], meta: {} }]) {
@@ -550,7 +550,7 @@ test("R20: every refusal names a reason, carrying its catalogue row where one ex
   assert.ok(seen.size >= 8, `answers carrying a row: ${[...seen]}`);
 });
 
-test("R20: every row of this module's own refusals carries its check, translation and the `where` naming the region of promote that mints it (N118)", () => {
+test("promote, Errors (N118): every row of this module's own refusals carries its check, translation and the `where` naming the region of promote that mints it (N118)", () => {
   const rows = Object.entries(PROMOTION_CHECKS);
   assert.equal(rows.length, 13);
   const checks = new Set();

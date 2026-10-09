@@ -78,12 +78,14 @@ const rand = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.
    by one row in the whole catalogue (DEC-49's one code, one row), so the first family naming it is its row. */
 const ROW_FAMILIES = [PROMOTION_ROW_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_MINT_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS,
                       CUSTODIAL_CHECKS, PROMOTION_CHECKS];
-const rowOf = (code) => ROW_FAMILIES.find((t) => Object.prototype.hasOwnProperty.call(t, code))[code];
-/* A refusal carrying its row: its reason, code, check id and translation ("Errors"). Called with the code as a literal
-   at each site, so the DEC-49 guard reads which code a marked region mints. */
+const rowOf = (code) => ROW_FAMILIES.find((t) => Object.prototype.hasOwnProperty.call(t, code))?.[code] ?? null;
+/* A refusal carrying its row: its reason, code, check id and translation ("Errors": its check and translation where the
+   catalogue has a row for it, so a code no family holds is still refused by its reason, never thrown on; PROMOTION #39).
+   Called with the code as a literal at each site, so the DEC-49 guard reads which code a marked region mints. */
 const refusal = (code, detail, extra) => {
   const row = rowOf(code);
-  return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
+  return { ok: false, reason: code, code, ...(row ? { check: row.check, translation: row.translation } : {}), detail,
+           ...(extra || {}) };
 };
 
 /* R5: every stored digest is of the stored bytes; a supplied digest that differs is named. A file's digest and size
@@ -341,7 +343,7 @@ class Promotion {
   promote(pkg) {
     try { return this.#promote(pkg); }
     catch (e) {
-      /* R20: never throws for any JSON package. The transaction has already rolled back when this is reached. */
+      /* "Errors": never throws for any JSON package. The transaction has already rolled back when this is reached. */
       return { ok: false, reason: "PROMOTE_FAILED",
                detail: `the promotion could not complete and nothing was written: ${cut(e && e.message ? e.message : e, 200)}` };
     }

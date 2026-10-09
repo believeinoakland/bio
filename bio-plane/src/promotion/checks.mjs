@@ -1,7 +1,7 @@
 /* promotion's own refusal rows: the write door's refusals, held here rather than in the catalogue (`legacy-checks`).
  *
  * Each row is `{check, translation}`, the shape of the catalogue's DEC-49 rows, so a refusal carries its check id and
- * a member-facing translation (requirement R20's "Errors"). C-86.5 to C-86.14 were written for `op=promote` by the
+ * a member-facing translation (the requirements' "Errors" for `promote`). C-86.5 to C-86.14 were written for `op=promote` by the
  * Batch30 rows D-546, D-578, D-615, D-628, D-692, D-707 and D-726 (never landed; reachable on
  * `snapshot/pre-refactor-2026-09-25`'s branches), and are carried here with their wording. `BUNDLE_ID_DISAGREES`
  * (R14, D-738) is the catalogue's C-1.1 asked at the door; `BUNDLE_MD_UNREADABLE` (R17, D-741) is C-2.1's.
