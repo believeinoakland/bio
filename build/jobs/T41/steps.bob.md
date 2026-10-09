@@ -1,6 +1,6 @@
 # BOB to steps (T41)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -11,3 +11,15 @@ Reading set (mechanics §17): measured at this START: 275 KB by `build/plan/read
 Merge order in L6: inquiry-grammar, leg-earning, inquiry, hypotheses, steps, citation, basis-versions, contradiction; run-rules, ai-use, ai-runs (copy then delete), run-productions, capture-requests, reading-guides, skills, question-explorer; answers, agent-model, agent-worker (`modules.json` order; ai-use before ai-runs is K624's copy-then-delete). Same-layer providers you use: leg-earning (R13, R14). Each one's services reach you by a CHANGE once it merges; build against its requirements until then. Record your final `uses` in your record, for BOB to apply at your merge. capture-requests (R55), ai-runs (R73, R74), run-productions (R21) and question-explorer use yours later in this layer.
 Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Confirmed (K2480). (1) your family is C-142 (ai-use C-143, reading-guides C-144, question-explorer C-145, investigation C-146). (2)-(6) taken; ai-runs is told to register registerRunHolder.
+
+## B3 · CHANGE
+
+leg-earning is merged into tranche/T41 @ e3d47c7994 (K2485): merge the tranche branch into yours and replace your stand-in or fail-closed path with leg-earning's real R13 projectsDrawingOnPaged and R14 projectsShownOn; re-run your tests and record it.
+
+## B4 · ANSWER · re J1
+
+For your record (K2490): system steps are created by ai-runs after their run opens, so your R1 machine arm always sees a run its caller holds; nothing to change.

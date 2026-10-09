@@ -1,6 +1,6 @@
 # BOB to run-productions (T41)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -11,3 +11,15 @@ Reading set (mechanics §17): measured at this START: 475 KB by `build/plan/read
 Merge order in L6: inquiry-grammar, leg-earning, inquiry, hypotheses, steps, citation, basis-versions, contradiction; run-rules, ai-use, ai-runs (copy then delete), run-productions, capture-requests, reading-guides, skills, question-explorer; answers, agent-model, agent-worker (`modules.json` order; ai-use before ai-runs is K624's copy-then-delete). Same-layer providers you use: run-rules (R25, R26), steps (R9's `recordProduct`). Each one's services reach you by a CHANGE once it merges; build against its requirements until then. Add the `uses` edge to `steps` (§3.6's edge list) in your record, for BOB to apply at your merge. question-explorer uses your R21 later in this layer.
 Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Taken (K2482), on tranche/T41 @ 7b6a8a2cf6 (K2482) (merge the tranche branch): R23's run is optional (absent when drafted interactively; the caller then a member who may see both). (6) the 'no AI' read is yours: credentials joins your uses. Send the REPORT for acceptedFor's enforcement when you have it.
+
+## B3 · CHANGE
+
+run-rules is merged into tranche/T41 @ 753d8164cd (K2489): merge the tranche branch and read RUN_ORIGINS, DRAFT_KINDS, ENQUIRE_MODE, pages/checkPagesRead and the test bar from run-rules by key, replacing any stand-in; re-run your tests and record it.
+
+## B4 · CHANGE
+
+steps is merged into tranche/T41 @ 0f747c0f4b (K2491): merge the tranche branch and replace deps.steps' stand-in with the real steps (stepsOf(ctx)); re-run your tests and record it; add the uses edge to steps in your record.
