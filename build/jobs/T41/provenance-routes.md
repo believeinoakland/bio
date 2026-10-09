@@ -24,6 +24,6 @@ Tests and checks:
 - `checks/format.mjs`: 145 modules, 144 requirements files; 0 failures.
 - `checks/architecture.mjs provenance-routes`: 14 product files, 39 relative imports; 0 failures.
 - `checks/coverage.mjs provenance-routes`: 13 of 13 live requirement ids named by a test; 0 failures.
-- `checks/ownership.mjs provenance-routes tranche/T41`: see below, run after the commit.
+- `checks/ownership.mjs provenance-routes tranche/T41`: 6 files changed; 0 failures.
 
 Size (session_01Mu9HJJYkkMVmYJQmr99iuS): test runs 5, module lines 1215
