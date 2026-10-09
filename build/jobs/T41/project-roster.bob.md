@@ -11,3 +11,7 @@ Reading set (mechanics §17): measured at this START: 207 KB, under 300 KB: read
 Merge order in L2: record-core, membership, project-roster, credentials, promotion last (it stamps the rows).
 Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Your reading stands (K2437): at an administrator's EXISTENCE of a hidden project, projectRequest answers membership's PROJECT_SEEN_NOT_A_PARTICIPANT (C-70.1 with owners, through existenceAct) and writes nothing; the request to join stays open only at a discoverable project's EXISTENCE (R16, Membership §7.14). Owners add an administrator by inviting them. Word R10 so in your record as the met reading; I fold the sentence into R10 at your merge (marked T41).
