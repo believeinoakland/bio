@@ -60,3 +60,7 @@ T41-31 complete (record's Completion, commits 9b4203a311 and ea0aa083df): R71 th
 ## J3 · COMPLETE
 
 B2 applied: tranche/T41 merged (R6 as K2479; no code change needed). The merge's agent-model R13 (estimated_cost_usd) staled my bundle (regenerated) and ask.test.mjs' R54 usage check (now expects USAGE_FIGURES plus ESTIMATE, agent-model's answer exactly). npm test 13 files 0 fail; t41 41/0; checks 0 failures; fleetbundles: only the plane bundle stale (inherited red 14). Record's Completion has the addendum.
+
+## J4 · COMPLETE
+
+B3 applied: tranche/T41 merged (8e954b4bfa). (1) Done already after B2: ask.test.mjs R54 expects R13's sixth figure. (2) I had regenerated my own bundle after B2, before B3 arrived; it is byte-identical to a fresh build at this head, so R45 is green and no red needs naming. Your L6-close regeneration will give the same bytes. npm test 13 files 0 fail; ownership and coverage 0 failures.
