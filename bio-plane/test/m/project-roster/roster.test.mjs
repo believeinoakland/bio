@@ -12,9 +12,15 @@ async function projectWorld() {
   return w;
 }
 
-test("R1 projectParticipants: a participant (any state) or an administrator reads every participant's handle, state, owner flag and comment; anyone else NO_SUCH_PROJECT", async () => {
+test("R1 projectParticipants: a participant (any state), or an administrator at FULL sight of the project, reads every participant's handle, state, owner flag and comment; anyone else NO_SUCH_PROJECT", async () => {
   const w = await projectWorld();
   w.m.projectLeave({ projectId: "PROJ-P", by: "bob", comment: "busy this month", viewer: V("bob") });
+  /* D54: P is hidden, and an administrator (the founder included) neither invited nor joined to it reads none of its
+     participants: answered as anyone else, byte for byte */
+  for (const by of ["second", "admin"])
+    assert.deepEqual(w.r.projectParticipants({ projectId: "PROJ-P", by }), noSuchProject("PROJ-P"), `${by} at hidden P`);
+  /* the negative control: P discoverable, the same administrators are at FULL and read it */
+  w.m.projectVisibilitySet({ projectId: "PROJ-P", setting: "discoverable", by: "ann", viewer: V("ann") });
   for (const reader of ["ann", "bob", "cal", "second", "admin"]) {
     const p = w.r.projectParticipants({ projectId: "PROJ-P", by: reader });
     assert.equal(p.ok, true, reader);
@@ -32,6 +38,15 @@ test("R1 projectParticipants: a participant (any state) or an administrator read
   for (const by of ["dee", "zed", null, undefined, "class:admin"])
     assert.deepEqual(w.r.projectParticipants({ projectId: "PROJ-P", by }), noSuchProject("PROJ-P"), String(by));
   assert.deepEqual(w.r.projectParticipants({ projectId: "NOPE", by: "dee" }), noSuchProject("NOPE"));
+  for (const by of ["second", "admin"])
+    assert.deepEqual(w.r.projectParticipants({ projectId: "NOPE", by }), noSuchProject("NOPE"), `${by}: an id naming nothing`);
+  /* an administrator invited to a hidden project reads it as a participant */
+  w.m.projectVisibilitySet({ projectId: "PROJ-P", setting: "hidden", by: "ann", viewer: V("ann") });
+  assert.equal(w.r.projectParticipants({ projectId: "PROJ-P", by: "second" }).reason, "NO_SUCH_PROJECT");
+  w.m.projectInvite({ projectId: "PROJ-P", handle: "second", by: "ann", viewer: V("ann") });
+  assert.equal(w.r.projectParticipants({ projectId: "PROJ-P", by: "second" }).ok, true, "invited: a participant");
+  w.m.projectRemove({ projectId: "PROJ-P", handle: "second", by: "ann", viewer: V("ann") });
+  w.m.projectVisibilitySet({ projectId: "PROJ-P", setting: "discoverable", by: "ann", viewer: V("ann") });
   /* the founder before the claim is no administrator */
   w.creds.claimed = false;
   assert.equal(w.r.projectParticipants({ projectId: "PROJ-P", by: "admin" }).reason, "NO_SUCH_PROJECT");
@@ -51,6 +66,9 @@ test("R2 every removal an owner makes stays recorded with who removed whom, when
   assert.equal(r.ok, true);
   assert.equal(w.m.projectRemove({ projectId: "PROJ-P", handle: "cal", by: "ann", viewer: V("ann") }).ok, true,
     "an invited one too, with no reason");
+  for (const by of ["second", "admin"])   // D54: P hidden, the administrators not in it read no removal
+    assert.deepEqual(w.r.projectParticipants({ projectId: "PROJ-P", by }), noSuchProject("PROJ-P"), by);
+  w.m.projectVisibilitySet({ projectId: "PROJ-P", setting: "discoverable", by: "ann", viewer: V("ann") });
   for (const reader of ["ann", "dee", "second", "admin"]) {   // an owner, a participant, an administrator, the founder
     const rm = w.r.projectParticipants({ projectId: "PROJ-P", by: reader }).removals;
     assert.deepEqual(rm.map((x) => [x.handle, x.removedBy, x.reason]),

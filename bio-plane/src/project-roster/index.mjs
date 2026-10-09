@@ -1,7 +1,7 @@
 /* project-roster — the acts on a project's working group that follow its setup: the roster and its removals record,
  * the owners' votes and an administrator's rescue, the visibility history and the directory, and requests to join.
  *
- * Requirements: build/requirements/project-roster.md (R1–R19). Split from membership for size at T38 (N783; K617,
+ * Requirements: build/requirements/project-roster.md (R1–R20). Split from membership for size at T38 (N783; K617,
  * K624, K2270: variant C1′ of `build/plan/membership-split.md`), by copy: each act's behaviour is membership's as T37
  * left it, its answers byte for byte. Inviting, joining, leaving and removing, the visibility setting, what a caller may
  * see of a project, the fence and the participation record stay `membership`'s.
@@ -131,15 +131,35 @@ export class ProjectRoster {
     return null;
   }
 
+  /* D54 (K2408, K2409): an ADMINISTRATOR's sight of a project, asked of membership's one rule (its R43) for the member
+     `by` names, never of a second copy of it: FULL of a discoverable project, and of a hidden one only when invited or
+     joined. The founder is spelled `member:admin`, which R43 reads as the founder's viewer. For the reads that carry
+     no viewer (R1) or must not trust a viewer for another person (R14). */
+  #adminAtFull(projectId, by) {
+    return this.m.isAdministrator(by) && this.m.inSight(projectId, `member:${by}`);
+  }
+
+  /* R5 (T41; D54): the rescue is the one act an administrator holds that is reachable at an administrator's EXISTENCE of
+     a hidden project (membership R44, R60). That EXISTENCE is the only one a HIDDEN project has (membership R44: a
+     member outside a hidden project is at NONE), so it is asked as EXISTENCE of a hidden project, a sight membership
+     answers, and never as a second reading of who is an administrator. A viewer never sent is not asked. */
+  #rescueAtExistence(projectId, viewer) {
+    if (viewer === null || viewer === undefined) return false;
+    const b = this.#bundle(projectId);
+    return !!b && b.type === "project" && this.m.sight(projectId, viewer) === Membership.SIGHT_EXISTENCE
+      && this.m.visibilityOf(projectId) === "hidden";
+  }
+
   /* ===== R1, R2, R6 — THE ROSTER AND ITS RECORD (§7.7, §7.8, §7.10, §7.13; Bob's ruling of 2026-09-26) =====
    *
-   * §7.8: every participant sees the handles of all other participants, and an administrator sees all of them. A
-   * non-participant sees nothing, and is told the same thing whether the project exists or not, because §7.9 says an
+   * §7.8: every participant sees the handles of all other participants, and an administrator sees them of every project
+   * it sees at FULL (D54: of a hidden project, only when invited or joined, so never a hidden project's participants
+   * otherwise; membership R43). Anyone else sees nothing, and is told the same thing whether the project exists or not, because §7.9 says an
    * uninvited member cannot see that a project EXISTS. The ownership decisions (R6) and the removals an owner made (R2,
    * membership R36 writes them) are read here beside the participants, by the same readers. */
   projectParticipants({ projectId, by } = {}) {
     const mine = this.m.participation(projectId, by);
-    if (!mine && !this.m.isAdministrator(by)) return noSuchProject(projectId);   /* membership R78 */
+    if (!mine && !this.#adminAtFull(projectId, by)) return noSuchProject(projectId);   /* membership R78 */
     const handleOf = (id) => this.m.memberFacts(id)?.handle ?? id;
     return { ok: true, projectId, participants: this.#rows(
       `SELECT m.handle, p.state, p.owner, p.comment, p.created
@@ -158,8 +178,8 @@ export class ProjectRoster {
 
   /* ===== R3–R7 — OWNERSHIP (§7.10, §7.13) =====
    *
-   * Authority over a project belongs to its OWNERS, and to nobody else. An administrator sees every project (§7.3,
-   * §7.8) and directs none of them (§4.9), the single exception being §7.13, the rescue of a project whose owners are
+   * Authority over a project belongs to its OWNERS, and to nobody else. An administrator sees every discoverable
+   * project, and of a hidden one its id, name and owners unless added (§7.3, §7.8; D54), and directs none of them (§4.9), the single exception being §7.13, the rescue of a project whose owners are
    * all inactive (R5). The arithmetic is membership's `ownerMath` (its R38), read and never restated. */
 
   /* R3 (§7.10 addition). The sole owner may add a second unilaterally; every addition past that needs the consensus of
@@ -219,8 +239,13 @@ export class ProjectRoster {
      asked here so the offer (affordances) and the act cannot disagree. */
   projectOwnerRescue({ projectId, handle, by, reason, viewer = null } = {}) {
     /* Sight before position — so NOT_AN_ADMIN is said only to a member who can already see the project (an invited
-       one); an administrator sees every project (§7.3). */
-    { const refused = this.#ownedProject(projectId, viewer, { ok: false, reason: "NOT_A_PROJECT" }); if (refused) return refused; }
+       one). An administrator sees a discoverable project at FULL, and a hidden one it is not in at EXISTENCE, where
+       the rescue alone stays reachable (D54; membership R60): there every answer below names only what that EXISTENCE
+       shows (the id, the owners in `active` and `owners`) and the member named, never contents or other participants. */
+    if (!this.#rescueAtExistence(projectId, viewer)) {
+      const refused = this.#ownedProject(projectId, viewer, { ok: false, reason: "NOT_A_PROJECT" });
+      if (refused) return refused;
+    }
     const blocked = this.m.rescueRefusal(projectId, by);
     if (blocked) return blocked;
     const why = String(reason ?? "").trim();
@@ -359,7 +384,9 @@ export class ProjectRoster {
    *  `viewerPredicate` (its R43), NEGATED — never a hand copy: over rows already fixed to existing projects, `NOT (gate)`
    *  is exactly sight below FULL, and never NULL (each disjunct is a comparison FALSE for a project, or an EXISTS). The
    *  member refusal guarantees the gate is never `0=1`; it is `1=1` only for the founder's `member:admin`, who sees
-   *  every project at FULL, so `NOT (1=1)` lists none, which is the answer.
+   *  every project at FULL, so `NOT (1=1)` lists none, which is the answer. Under D54 (membership R43) the founder's and an
+   *  administrator's gate withholds only hidden projects they are not in, and a hidden project is never listed here, so
+   *  they too are listed none.
    *
    *  `limit` is the cap APPLIED, the caller's to lower and never to raise; `truncated` is MEASURED by reading one row
    *  past it, never derived from the page (a full page and a complete answer read alike). The page is the first `limit`
@@ -516,11 +543,17 @@ export class ProjectRoster {
     const shown = b ? b.title : null;
     const sight = b && b.type === "project" ? this.m.sight(projectId, viewer) : Membership.SIGHT_NONE;
     if (sight === Membership.SIGHT_NONE) return noSuchProject(projectId);
+    /* The ask is open only at a DISCOVERABLE project's EXISTENCE (§7.14: a member outside a discoverable project asks).
+       The other EXISTENCE, an administrator's of a hidden project it is not in (D54; membership R44), is answered as
+       every caller at EXISTENCE is, membership's C-70.1 with its owners: hiding lapses every request (R16), so a
+       hidden project holds none open, and its owners add an administrator by inviting them. */
+    if (sight === Membership.SIGHT_EXISTENCE && this.m.visibilityOf(projectId) !== "discoverable")
+      return this.m.existenceAct(projectId, viewer);
     if (sight === Membership.SIGHT_FULL)
       return refusal("PROJECT_REQUEST_NOT_OUTSIDE",
         "you can already see this project, so there is nothing to ask: a participant is already in it (an "
-        + "invited one joins by the checkbox, §7.4), and an administrator's sight of every project is not a "
-        + "position in any of them (§7.3). Nothing was written.");
+        + "invited one joins by the checkbox, §7.4), and an administrator's sight of a project is not a "
+        + "position in it (§7.3). Nothing was written.");
     const open = this.#openJoinRequest(projectId, me.member_id);
     if (open)
       return refusal("PROJECT_REQUEST_ALREADY_OPEN",
@@ -608,7 +641,8 @@ export class ProjectRoster {
 
   /** R14: WHO SEES A REQUEST (§7.14): the requester (their own, always), the project's owners, and administrators; not
    *  other participants, because a pending requester is not a participant (§7.8). WITH `projectId`: that project's
-   *  requests, to an owner or an administrator (the founder included), after sight. WITHOUT it: the caller's OWN
+   *  requests, to an owner or an administrator (the founder included) at FULL sight of it (D54), after sight: an
+   *  administrator at a hidden project's EXISTENCE is answered C-70.1 first, as every caller at EXISTENCE. WITHOUT it: the caller's OWN
    *  requests, every project and every state, each naming the project by the id and the name the caller was shown when
    *  asking — so a request LAPSED by a project going hidden is still the requester's to read, and names nothing they had
    *  not already seen. Its answering owner is NOT in the requester's view: who owns a project is contents. Both lists
@@ -640,7 +674,7 @@ export class ProjectRoster {
     if (!b || !this.m.inSight(projectId, viewer)) return noSuchProject(projectId);
     if (b.type !== "project") return { ok: false, reason: "NOT_A_PROJECT", project: projectId };
     /* DEC-49 REGION is-join-requests-project */
-    if (!this.m.isProjectOwner(projectId, by) && !this.m.isAdministrator(by))
+    if (!this.m.isProjectOwner(projectId, by) && !this.#adminAtFull(projectId, by))
       return refusal("PROJECT_REQUESTS_NOT_VISIBLE",
         "a project's requests to join are seen by the requester, the project's owners and administrators "
         + "(Membership Architecture v2 §7.14), and not by other participants: a pending requester is not a "
