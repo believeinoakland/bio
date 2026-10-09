@@ -137,7 +137,7 @@ Terms as `membership` states them (administrators, `by` the control plane's stam
 
 ### Uses
 
-- `membership`: `memberFacts` (R68: a member's handle and status, for R4, R6, R7, R8, R9 and R11), `sessionRights` (R92, for R5), `isAdministrator` (R64, for R13), `activeAdmins` (R86, for R9), `notAnAdmin` (R84), `onRevoked` (R79, for R16), `registerClaimed` (R94, for R17), `listenerRefusal` (R81), `noSuchMember` (R121, T38: every `NO_SUCH_MEMBER` this module answers), `MODULE_ORDER` (R83), and (T40; R54–R57) `isProjectOwner`, `isJoinedParticipant` (R54), `sight` (R44) and `notTheOwner` (R122).
+- `membership`: `joinedParticipants` (R127, for R54 and R59; T40, K2404), `memberFacts` (R68: a member's handle and status, for R4, R6, R7, R8, R9 and R11), `sessionRights` (R92, for R5), `isAdministrator` (R64, for R13), `activeAdmins` (R86, for R9), `notAnAdmin` (R84), `onRevoked` (R79, for R16), `registerClaimed` (R94, for R17), `listenerRefusal` (R81), `noSuchMember` (R121, T38: every `NO_SUCH_MEMBER` this module answers), `MODULE_ORDER` (R83), and (T40; R54–R57) `isProjectOwner`, `isJoinedParticipant` (R54), `sight` (R44) and `notTheOwner` (R122).
 - `record-core`: `transact`, `declarePurge` (R21, for R18), and `declareTable` (its R21, for R30; T33-20).
 - `record-grammar`: `isMachineIdentity` and `MACHINE_CLASS_PREFIX`.
 - `legacy-checks`: `SIGNER_ENROLMENT_CHECKS` (C-63) and `AI_CREDENTIAL_CHECKS` (C-29), until they move into this module's `checks.mjs` (✱, family names kept), after which the catalogue's copies are deleted.
