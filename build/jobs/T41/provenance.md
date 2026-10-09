@@ -76,3 +76,7 @@ Found in other modules, for capture R86's users:
 (b) provenance-routes `src/provenance-routes/index.mjs`:143 builds a doorbell document's one-hop chain from `source.receipt.knock_id`; R86's upload document (`origin.kind` `upload`, `source.receipt` without `knock_id`) falls to the generic path; whether it needs its own hop from the upload receipt is provenance-routes' (R1).
 (c) This module's own `op=recordcapturedlocator` (R53) passes the body to `recordReceipt`, so a caller holding that op can write `via: "upload"` with any `by` (pre-existing for every via; who reaches the op is op-declarations'). Worth a look when the upload op is declared at L11.
 For capture R86: the receipt's sightings are answered as `uploads: [{by, statement, at}]` on R16/R60 rows (null on other routes); `recordReceipt({..., via: "upload", by, statement})`; R47's payload carries `by` and `statement`.
+
+## J3 · COMPLETE
+
+T41-7a done: R63 with K2449 applied (UPLOAD_VIA, grade as R51, not fetched, tie order, C-18.1 upload document, upload receipts' sightings {by, statement, at}). provenance tests 130/130; mk6 10/10; users' suites no new red (95, all inherited); format, architecture, coverage (48/48), ownership: 0 failures. Record's Completion has the detail; REPORT J2 names three findings in other modules.
