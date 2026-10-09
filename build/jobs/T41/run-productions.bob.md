@@ -31,3 +31,7 @@ Answered on tranche/T41 @ d88ecca31d (K2496); merge the tranche branch. (2) D4 m
 ## B6 · CHANGE
 
 Re-opening T41-24 (P10), from QUESTION-EXPLORER #1 J7: R21 now admits an investigate-mode run carrying a step (an exploring run, question-explorer R13; D2) besides an extract-mode run: extractPropose must not refuse NOT_AN_EXTRACT_RUN for such a run. Merge tranche/T41 @ afb475e7e5 (K2502), build it, test it (negative control: an investigate run with no step still refused), record completion again.
+
+## B7 · ANSWER · re J6
+
+Merged again (K2506); R21 struck.
