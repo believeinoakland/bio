@@ -27,11 +27,13 @@
 - Users' suites (39 modules whose `uses` names credentials): all green except (a) mine: `answers` standing.test.mjs:122 and :273 (R19: `accountFor` now refuses a standing act `AI_USE_SWITCHED_OFF` when the chosen account's `standing` switch is off, before R32; answers maps that code to `no_account`, and its sign-in arm expects `accountFor` to answer the sign-in for a standing act); `op-declarations` t35.test.mjs:196 (R30/R6: my ten new ops have no spec yet, op-declarations' and control-plane's L11 shares); (b) red on `tranche/T40` without my change too, not mine: case-authoring R29, R34; affordances R48; op-declarations R19/R6, R21 ×3; answer-envelope R2/R7.
 - Checks: `format` 0 failures; `architecture` credentials 0 failures; `coverage` 58 of 58; `ownership` 14 files, 0 failures.
 
-**Deferred.** None in this module. After membership merges: merge `tranche/T40`, switch `#notTheOwner` to membership's named export (its fallback goes), rerun module and users' tests, then COMPLETE.
+**After membership's merge (B4, K2413):** merged `tranche/T40`; `#notTheOwner` now calls membership's named `notTheOwner` (the stand-in removed). Reran against the real R122 and R127: `test/m/credentials/` 156 pass, 0 fail; `test/m/membership/`, `test/m/answers/`, `test/m/op-declarations/` together 343 pass, 7 fail: answers standing.test.mjs:122, :273 and op-declarations t35.test.mjs:196 (mine, accepted by K2412 into T40-9 and T40-23) and op-declarations R19/R6 and R21 ×3 (red on `tranche/T40` without me). The full users' run above used the same membership code. Checks after the merge: format 0, architecture 0, coverage 58 of 58, ownership 0 failures.
+
+**Deferred.** None.
 
 **Found in other modules.** `answers` R19 (two tests above): the fix is answers' (map `AI_USE_SWITCHED_OFF` for a standing act to `switch_off`, and its sign-in arm to the earlier refusal), or BOB's ruling if a standing act should not be gated by R55 in `accountFor`. `op-declarations`/`control-plane`: specs for the ten new ops. Generated artifacts staled by my change: the plane bundle (`bio-plane/dist/bio-plane.bundled.mjs`), regenerated at layer close.
 
-Size (session_01WnUBG32qScjJuitEhktbaJ): test runs 12, module lines 3551
+Size (session_01WnUBG32qScjJuitEhktbaJ): test runs 14, module lines 3545
 
 ## J1 · QUESTION
 

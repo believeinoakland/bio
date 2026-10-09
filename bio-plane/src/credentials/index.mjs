@@ -30,8 +30,7 @@
  */
 import { MACHINE_CLASS_PREFIX, isMachineIdentity, sha256HexSync } from "../record-grammar/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
-import { Membership, membershipOf, notAnAdmin, noSuchMember, noSuchProject } from "../membership/index.mjs";
-import * as MEMBERSHIP from "../membership/index.mjs";
+import { Membership, membershipOf, notAnAdmin, noSuchMember, noSuchProject, notTheOwner } from "../membership/index.mjs";
 import { CREDENTIALS_SCHEMA, CREDENTIALS_ADDITIVE_COLUMNS, CREDENTIALS_TABLES, CREDENTIALS_PROJECT_TABLES } from "./schema.mjs";
 export { CREDENTIALS_EXEMPT_TABLES, CREDENTIALS_TABLES, CREDENTIALS_PROJECT_TABLES } from "./schema.mjs";
 import { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, ACCOUNT_CHECKS,
@@ -1811,12 +1810,7 @@ export class Credentials {
     + "Anthropic under the project's API account.";
 
   /* membership R122: PROJECT_ACT_NOT_THE_OWNER, minted there alone. */
-  #notTheOwner(by, project) {
-    if (typeof MEMBERSHIP.notTheOwner === "function") return MEMBERSHIP.notTheOwner(by ?? null, project);
-    /* until membership's T40-M merges: its one site today, `projectAuthority`'s owner arm */
-    return this.membership.projectAuthority(project, `member:${Credentials.#memberOf(by) || "not-a-member"}`, "owner",
-      "acting on a project's AI account");
-  }
+  #notTheOwner(by, project) { return notTheOwner(by ?? null, project); }
 
   /* membership R44: the caller's sight of `project`, NONE for anything that names no project; never throws. */
   #sightOf(project, viewer) {
