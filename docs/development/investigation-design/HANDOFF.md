@@ -62,3 +62,7 @@ Numbered entries; BOB answers each in rulings (K) on `tranche/T<n>`. Decision st
 ## H12 · 2026-10-08 · D42 and D43: two audiences; actions later
 
 **Carries:** D42 (Bob: the investigation design must serve both the assistant-enabled member with any complaint and a highly efficient non-assistant workflow, "Both audiences must be optimally served"); D43 (Bob: Civicsmith should support members throughout the action plan; "Not today, but ... we need to research explore, and design the requirements, capabilities, use cases, and UX of actions"). For BOB: D43 is a future design effort like this lane, BOB's to schedule; it builds on `BIO_Action_v0_1.md` and the earlier Actions session's rulings.
+
+## H13 · 2026-10-09 · the step model complete: D27–D30, D44, D45
+
+**Carries (Bob's words in `DECISIONS.md`):** D27 A (milestones belong to a project); D28 A (an untouched step can be deleted; a worked step keeps its record); D29 (a step may carry a money cost; a costed step shared by projects none of which is hidden: owners told the total and the count, messages relayed, they settle payment themselves, Civicsmith splits nothing); D30 B (member-written reports, system-drafted, kept with the project, never published); D44 no (no nested steps); D45 (steps searchable so work is shared, not duplicated; a step is a record associated with the questions that refer to it, keeping no purpose or method of its own). With D32–D41 the model of steps, questions and AI use is complete for requirements; the working document §2 states it whole.
