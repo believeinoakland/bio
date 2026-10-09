@@ -35,10 +35,8 @@ import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal } from "../membership/index.mjs";
 import { promotionOf, EDGE_REASON_MAX } from "../promotion/index.mjs";
 import { appendStateHistory, setScalar, setOrAddScalar, appendSessionLog } from "../promotion/text.mjs";
-import { inquiryOf, legCapped, actNoBasis } from "../inquiry/index.mjs";
-/* R48: inquiry's one spelling of a bias application not in force (its R61), read through the namespace so this module
-   links before inquiry exports it (T41's same-layer order); see `biasNotInForceOf` below. */
-import * as inquiryFace from "../inquiry/index.mjs";
+/* R48: `biasNotInForce`, inquiry's one spelling of a bias application not in force (its R61) */
+import { inquiryOf, legCapped, actNoBasis, biasNotInForce } from "../inquiry/index.mjs";
 import { biasOf } from "../bias/index.mjs";
 /* The extent grammar is content's face (N99): its `extentRelation` holds D-670's space rule and the `envelope` kind,
    which the retired check catalogue's copy (legacy-checks) did not. */
@@ -111,15 +109,6 @@ const INQUIRY_TYPES = JSON.stringify(["inquiry", ...Object.keys(LEGACY_TYPE_ALIA
 /* R13's own test, over a project's parsed document: it holds a `cites` reference to the inquiry not marked `severed`. */
 const drawsOn = (fm, inquiryId) => (Array.isArray(fm?.references) ? fm.references : []).some((x) =>
   x && typeof x === "object" && x.rel === "cites" && x.status !== "severed" && String(x.target ?? "").trim() === inquiryId);
-
-/* R48: inquiry R61's `biasNotInForce({statement, where})`, the refusal's one spelling (K231). Until inquiry exports it
-   (T41: inquiry merges before this module and reaches it by CHANGE), a bridge answers the same code; it is removed
-   at that CHANGE. */
-const biasNotInForceOf = () => (typeof inquiryFace.biasNotInForce === "function" ? inquiryFace.biasNotInForce
-  : ({ statement, where }) => ({ ok: false, reason: "BIAS_APPLICATION_NOT_IN_FORCE", code: "BIAS_APPLICATION_NOT_IN_FORCE",
-                                 statement, where,
-                                 detail: `bias statement '${String(statement ?? "").slice(0, 80)}' is not in the lens in `
-                                       + `force for ${where}, so it cannot be recorded as applied there` }));
 
 /* R48: a conclusion's `bias_applied`, as a caller sends it (a list, or its JSON from a query string), judged by
    inquiry-grammar R18's one shape check (`biasAppliedFindings`) with a conclusion's own effects and this module's
@@ -1176,11 +1165,12 @@ export class BasisVersions {
       for (const e of bias.entries) {
         const ans = this.#statementInForce({ statement: e.statement, scope: { type: "project", id: pid }, viewer });
         if (!ans || ans.in_force !== true) {
-          const where = `the conclusion of ${pid} on ${target}`;
-          const r = biasNotInForceOf()({ statement: e.statement, where });
-          const refusal = r && r.ok === false ? r
-            : { ok: false, reason: "BIAS_APPLICATION_NOT_IN_FORCE", code: "BIAS_APPLICATION_NOT_IN_FORCE", findings: [r] };
-          return { ...refusal, target, project: pid, statement: e.statement, in_force: ans ? ans.in_force ?? null : null };
+          const inForce = ans && ans.in_force === false ? false : null;
+          const row = biasNotInForce({ statement: e.statement, where: `the conclusion of ${pid} on ${target}`, inForce,
+                                       scope: { type: "project", id: pid } });
+          return { ok: false, reason: "BIAS_APPLICATION_NOT_IN_FORCE", code: row.code, check: row.check,
+                   translation: row.translation, detail: row.detail, findings: [row], target, project: pid,
+                   statement: e.statement, in_force: inForce };
         }
         lensSha ??= typeof ans.statements_sha === "string" ? ans.statements_sha : null;
       }

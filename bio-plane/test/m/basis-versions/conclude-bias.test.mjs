@@ -11,6 +11,7 @@ import { world, block, version, merge, V } from "./fixture.mjs";
 import { basisVersionsOps, CONCLUSION_BIAS_EFFECTS } from "../../../src/basis-versions/index.mjs";
 import { CONCLUDE_ACT_CHECKS } from "../../../src/basis-versions/checks.mjs";
 import { readBiasApplied } from "../../../src/inquiry-grammar/index.mjs";
+import { biasNotInForce } from "../../../src/inquiry/index.mjs";
 import { biasOf } from "../../../src/bias/index.mjs";
 
 const DOC = "INFO-2026-0001-ledger", Q = "INQ-2026-0001-transfers", T = "2026-09-27T00:00:00Z";
@@ -94,6 +95,10 @@ test("R48: a statement not in force (false) or undetermined (null) is refused BI
     assert.deepEqual([r.ok, r.reason, r.code, r.statement, r.project, r.target], [false, "BIAS_APPLICATION_NOT_IN_FORCE",
       "BIAS_APPLICATION_NOT_IN_FORCE", bad, P, Q], label);
     assert.equal(r.in_force, Object.hasOwn(lens, bad) ? lens[bad] : false, label);
+    /* inquiry R61's one spelling, carried whole as the refusal's finding */
+    assert.deepEqual(r.findings, [biasNotInForce({ statement: bad, where: `the conclusion of ${P} on ${Q}`, inForce: r.in_force,
+                                                   scope: { type: "project", id: P } })], label);
+    assert.deepEqual([r.check, r.translation, r.detail], [r.findings[0].check, r.findings[0].translation, r.findings[0].detail], label);
     assert.deepEqual([w.sha(P), w.sha(Q)], before, `${label}: nothing written`);
     assert.deepEqual(w.bv.conclusionRecordOf(P, Q, V("ruth")).history, [], `${label}: no conclusion recorded`);
   }
