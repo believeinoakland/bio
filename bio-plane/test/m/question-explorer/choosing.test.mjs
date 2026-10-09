@@ -79,28 +79,30 @@ test("R2: R9 holds before it: a question about a person no member tied is never 
   assert.ok(ids.includes(Q3), "negative control: a member raised it about that person");
 });
 
-test("R3: the run opens through ai-runs in the investigate run path, origin explore, use explore, the paying owner its principal and ai-use R6's label, as a system step on the question", () => {
+test("R3: the run opens through ai-runs in the investigate run path, origin explore, use explore, the paying owner its principal and ai-use R6's label, as a system step on the question that ai-runs creates once the run is open (K2490)", () => {
   const w = world().standard();
   const o = w.openRun("group");
-  const [made] = w.calledAs("stepCreate");
-  assert.deepEqual(made.place, { questions: [Q] });
-  assert.equal(made.by, "class:ai", "a system step, a machine doer");
-  assert.equal(made.run, o.run, "for the run it is about to open");
-  assert.equal(made.enabled_by, "group");
   const [open] = w.calledAs("open");
-  assert.deepEqual([open.mode, open.origin, open.use, open.step, open.principalClaude, open.contextType, open.contextId],
-                   ["investigate", "explore", "explore", o.step, "group", "inquiry", Q]);
+  assert.deepEqual([open.mode, open.origin, open.use, open.principalClaude, open.contextType, open.contextId],
+                   ["investigate", "explore", "explore", "group", "inquiry", Q]);
+  assert.equal("step" in open, false, "this module passes no step of its own");
+  assert.deepEqual([open.place, typeof open.work], [{ questions: [Q] }, "string"], "it passes the step's place and work");
   assert.deepEqual(open.enabledBy, { kind: "machine", enabled_by: "group" });
   assert.deepEqual(open.bounds.map((b) => b.bound), EXPLORE_BOUNDS.map((b) => b.bound));
   assert.ok(open.bounds.some((b) => b.bound === "pages"), "R13's pages bound declared");
-  /* Negative control: a refused open leaves no run and deletes its untouched step. */
+  assert.equal(o.step, "STP-2026-00001", "the step ai-runs created, kept with the run");
+  assert.equal(w.calledAs("stepCreate")[0].run, o.run, "created for the open run");
+  /* Negative controls: a refused open, and an open that answers no step, leave no run. */
   const w2 = world().standard();
   w2.openRefuse = { ok: false, code: "AI_RUN_MODE_NOT_DEPLOYED" };
   w2.explore.group = "yes";
-  const t = w2.p.exploreTick(w2.clock.now);
-  assert.equal(t.opened.length, 0);
+  assert.equal(w2.p.exploreTick(w2.clock.now).opened.length, 0);
   assert.equal(w2.count("explore_runs"), 0);
-  assert.deepEqual(w2.calledAs("stepDelete").map((a) => a.step), ["STP-2026-00001"]);
+  const w3 = world().standard();
+  w3.openRefuse = { ok: true, run: "x" };
+  w3.explore.group = "yes";
+  assert.equal(w3.p.exploreTick(w3.clock.now).opened.length, 0);
+  assert.equal(w3.count("explore_runs"), 0);
 });
 
 test("R3: a principal served by a sign-in explores only while that sign-in account's explore use is on; off (its default) it is refused as any account whose explore use is off (credentials R55, the real module)", () => {

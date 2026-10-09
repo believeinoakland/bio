@@ -136,14 +136,13 @@ test("R13: a run reads inside a held document a few pages at a time within its p
   assert.deepEqual([past.code, past.read_through, past.allowed], ["EXPLORE_PAGES_BOUND", 40, 40]);
   assert.equal(w.bounds.get(`${o.run}|pages`).consumed, 40, "counted as the plane counts mints");
   /* Negative control: the group keeps its material from `read`: refused, nothing counted. */
-  assert.equal(w.credentials.aiKeepAwaySet({ on: true, uses: ["read"], reason: "a privileged file", by: "member:dana" }).ok, true);
   const w2 = world().standard();
   const o2 = w2.openRun("group");
   assert.equal(w2.credentials.aiKeepAwaySet({ on: true, uses: ["read"], reason: "a privileged file", by: "member:dana" }).ok, true);
   const kept = w2.p.read({ run: o2.run, bundleId: DOC, pages: 1, caller: CALLER });
-  assert.equal(kept.code, "EXPLORE_READ_KEPT_AWAY");
+  assert.equal(kept.code, "AI_RUN_READ_NO_AI", "run-rules R26's one refusal (checkPagesRead)");
   assert.equal(w2.bounds.get(`${o2.run}|pages`).consumed, 0);
-  /* A project's own limit on `explore` keeps its documents away too. */
+  /* A project's own limit on `explore` keeps its documents away too; on `read`, run-rules R26's refusal. */
   const w3 = world().standard();
   w3.project(PROJ, ["alice"], { owners: ["alice"] });
   w3.doc(HDOC, HCAP, { project: PROJ });
@@ -153,4 +152,7 @@ test("R13: a run reads inside a held document a few pages at a time within its p
   assert.equal(w3.p.read({ run: o3.run, bundleId: HDOC, pages: 1, caller: CALLER }).ok, true);
   assert.equal(w3.credentials.projectAiKeepAwaySet({ project: PROJ, on: true, uses: ["explore"], reason: "kept", by: "member:alice" }).ok, true);
   assert.equal(w3.p.read({ run: o3.run, bundleId: HDOC, pages: 1, caller: CALLER }).code, "EXPLORE_READ_KEPT_AWAY");
+  assert.equal(w3.p.read({ run: o3.run, bundleId: DOC, pages: 1, caller: CALLER }).ok, true, "a document outside that project is not kept");
+  assert.equal(w3.credentials.projectAiKeepAwaySet({ project: PROJ, on: true, uses: ["read"], reason: "kept", by: "member:alice" }).ok, true);
+  assert.equal(w3.p.read({ run: o3.run, bundleId: HDOC, pages: 1, caller: CALLER }).code, "AI_RUN_READ_NO_AI");
 });

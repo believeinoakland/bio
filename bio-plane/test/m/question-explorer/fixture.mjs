@@ -18,6 +18,11 @@ import { legEarningOf } from "../../../src/leg-earning/index.mjs";
 import { questionExplorerOf } from "../../../src/question-explorer/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
+/* A test set with one matter (Civicsmith's own holds none yet, so it opens nothing), and the records that hold its bar. */
+export const TEST_SET = Object.freeze({ id: "civicsmith", version: 1, matters: [{ id: "m1", title: "a matter" }] });
+export const bar = (part, over = {}) => ({ part, set: "civicsmith", set_version: 1, false_alarm_rate: 0.1, passed: true,
+                                            graded_by: "harness", at: "2026-10-01T00:00:00Z", ...over });
+export const VERIFIED_CHECK = { mode: "check", run: "RUN-0", verified_by: "member:dana", at: "2026-10-01T00:00:00Z", evidence: "seen" };
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
 export const NOW = "2026-10-10T09:00:00Z";
@@ -75,7 +80,7 @@ export function questionMd(id, { subject = null, surfacedBy = "human", state = "
           "state_history: []", "---", "", "## Question", "", "What happened?", ""].join("\n");
 }
 
-export function world({ gateOpen = true, steps: withSteps = true, aiUse: withAiUse = true } = {}) {
+export function world({ gateOpen = true, steps: withSteps = true, aiUse: withAiUse = true, testSet = TEST_SET } = {}) {
   const st = storage();
   const host = { storage: st };
   for (const t of RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").split(";"))
@@ -95,8 +100,9 @@ export function world({ gateOpen = true, steps: withSteps = true, aiUse: withAiU
     st, host, record, membership, credentials, clock, calls,
     recipients: {}, subjects: {}, asserted: {}, conns: [], captures: {}, held: new Set(),
     explore: {}, approved: new Set(), steps: [], runs: new Map(), bounds: new Map(),
-    testBar: { part: "explore", set: "civicsmith", set_version: "1", false_alarm_rate: 0.1, passed: true, graded_by: "harness" },
-    deployed: new Set(["investigate", "explore"]), groupResults: [], openRefuse: null, stepRefuse: null,
+    /* What the record holds for the deploy gate (run-rules R19, R75's records) over a test set with one matter. */
+    testBars: [bar("investigate"), bar("explore")], verifications: [VERIFIED_CHECK],
+    groupResults: [], openRefuse: null, stepRefuse: null,
     row: (q, ...a) => [...st.sql.exec(q, ...a)][0] ?? null,
     rows: (q, ...a) => [...st.sql.exec(q, ...a)],
     count: (t) => [...st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)][0].n,
@@ -108,7 +114,7 @@ export function world({ gateOpen = true, steps: withSteps = true, aiUse: withAiU
       return out;
     },
   };
-  if (!gateOpen) w.testBar = null;
+  if (!gateOpen) w.testBars = [];
 
   const steps = {
     stepCreate(a) {
@@ -135,17 +141,27 @@ export function world({ gateOpen = true, steps: withSteps = true, aiUse: withAiU
     exploreAsk(a) { note("exploreAsk", a); return { ok: true, key: `ask:${a.owner}` }; },
   };
   const aiRuns = {
+    /* R73 (K2490): the run opens first, then its system step is created through steps.stepCreate with `run` the open
+       run; the answer names the step. */
     open(a) {
       note("open", a);
       if (w.openRefuse) return w.openRefuse;
       w.runs.set(a.run, { ...a, status: "running" });
       for (const b of a.bounds || []) w.bounds.set(`${a.run}|${b.bound}`, { allowed: b.allowed, consumed: 0 });
-      return { ok: true, run: a.run, status: "running" };
+      const made = steps.stepCreate({ place: a.place, work: a.work, by: a.principalPlane, run: a.run,
+                                      enabled_by: a.enabledBy && a.enabledBy.enabled_by });
+      if (!made.ok) return made;
+      w.runs.get(a.run).step = made.step;
+      return { ok: true, run: a.run, status: "running", step: made.step };
     },
+    /* R73: at close it ends the run's step as steps R5 allows a machine. */
     close(a) {
       note("close", a);
       const r = w.runs.get(a.run);
-      if (r) r.status = "stopped";
+      if (r) {
+        r.status = "stopped";
+        steps.stepEnd({ step: r.step, end: a.stepEnd, ...(a.stepEnd === "set_aside" ? { reason: a.reason } : {}), by: r.principalPlane });
+      }
       return { ok: true, run: a.run, actual: { usd: 0.42 } };
     },
     boundOf(run, bound) { const b = w.bounds.get(`${run}|${bound}`); return b ? { ...b } : null; },
@@ -193,8 +209,8 @@ export function world({ gateOpen = true, steps: withSteps = true, aiUse: withAiU
   const p = questionExplorerOf(host, {
     record, membership, credentials, connections, retrieval, inquiry, legEarning, basisVersions, aiRuns, captureRequests,
     steps: withSteps ? steps : null, aiUse: withAiUse ? aiUse : null,
-    testBar: (part) => { note("testBar", { part }); return w.testBar && w.testBar.part === part ? { ...w.testBar } : null; },
-    deployable: (part) => w.deployed.has(part),
+    held: () => { note("held", {}); return { verifications: w.verifications, testBars: w.testBars }; },
+    testSet,
     now: () => Date.parse(clock.now),
   });
   p.migrate();

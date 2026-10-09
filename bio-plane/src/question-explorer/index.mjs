@@ -4,7 +4,8 @@
  * `questionExplorerOf(host, deps)` answers the one instance per Durable Object storage (K61). What it does:
  *   - chooses (R1, R2, R9): each tick reads at most 200 open or surfaced questions, keeps those worth exploring, and
  *     asks `ai-use.exploreAllowed` for each account owner whose scope may hold the question;
- *   - opens (R3, R12): a system step on the question (`steps` R1), then an `investigate` run with `origin: "explore"`
+ *   - opens (R3, R12): an `investigate` run with `origin: "explore"`, whose system step on the question `ai-runs` creates
+ *     once the run is open (its R73, K2490),
  *     and use `explore` through `ai-runs`, the paying owner its principal and `ai-use` R6's label, its estimate kept;
  *   - holds the acts the run's work goes through (the model work itself is `agent-worker`'s, later in the order): a
  *     look aimed at a person (R9, R10), a find with its gauge (R4), a capture asked through `capture-requests` (R3), a
@@ -17,7 +18,7 @@
  * captures nothing itself (R3); it names no place in behaviour or outward text (R8); and it never decides the gate
  * from a group's own test investigations (R11).
  *
- * Providers built in T41 alongside it (`steps`, `ai-use`, and the T41 services of `ai-runs`, `run-rules`,
+ * Providers built in T41 alongside it (`steps`, `ai-use`, and the T41 services of `ai-runs`,
  * `capture-requests`, `run-productions`) are taken through `deps` and read by their requirements' names; where one is
  * absent the module fails closed: the gate stays shut and nothing is explored. */
 
@@ -54,7 +55,7 @@ export const EXPLORE_BEARINGS = Object.freeze(["supports", "cuts_against", "uncl
 /** R4: what a find is; `page` is an address the record does not hold, named to the members (R3). */
 export const EXPLORE_FIND_KINDS = Object.freeze(["capture", "content", "connection"]);
 /** R3: the run's path. */
-export const EXPLORE_ORIGIN = "explore";
+export const EXPLORE_ORIGIN = runRules.RUN_ORIGINS.find((o) => o === "explore");
 export const EXPLORE_USE = "explore";
 export const EXPLORE_MODE = "investigate";
 /** R7, R11: the AI part the test bar is recorded for (`ai-runs` R75). */
@@ -65,7 +66,7 @@ export const EXPLORE_PAGES_AT_ONCE = 5;
 export const EXPLORE_BOUNDS = Object.freeze([
   Object.freeze({ bound: "fetches", allowed: 20 }),
   Object.freeze({ bound: "wallclock", allowed: 3600000 }),
-  Object.freeze({ bound: "pages", allowed: 40 }),
+  Object.freeze({ bound: Object.keys(runRules.RUN_BOUNDS).find((k) => k === "pages"), allowed: 40 }),
 ]);
 /** The step's words (`steps` R1's `work`, the doer's words on what the work is). */
 export const EXPLORE_WORK = "The system explored this question for material the record does not yet bring to it.";
@@ -88,7 +89,7 @@ const bareMember = (v) => { const m = /^member:([A-Za-z0-9._:-]{1,128})$/.exec(S
 export class QuestionExplorer {
   constructor({ storage, record, membership, credentials, connections, retrieval, inquiry, legEarning, basisVersions,
                 steps = null, aiUse = null, aiRuns, captureRequests = null,
-                testBar = null, deployable = null, principal = EXPLORE_PRINCIPAL, now = null }) {
+                held = null, testSet = runRules.CIVICSMITH_TEST_SET, principal = EXPLORE_PRINCIPAL, now = null }) {
     this.storage = storage;
     this.sql = storage.sql;
     this.record = record;
@@ -105,13 +106,13 @@ export class QuestionExplorer {
     this.captureRequests = captureRequests;
     this.principal = principal;
     this.now = typeof now === "function" ? now : () => Date.now();
-    /* R7's two reads, by their requirements' names until their providers merge (`ai-runs` R75's record for the part,
-       `run-rules` R19's deploy gate); absent, the gate is shut (fail closed). */
-    this.testBar = typeof testBar === "function" ? testBar
-      : (part) => (aiRuns && typeof aiRuns.testBarOf === "function" ? aiRuns.testBarOf({ part }) : null);
-    this.deployable = typeof deployable === "function" ? deployable
-      : (part) => (typeof runRules.deployable === "function" && aiRuns && typeof aiRuns.verifications === "function"
-        ? runRules.deployable(part, aiRuns.verifications()) === true : false);
+    /* R7: what the record holds for the deploy gate, `{verifications, testBars}` (the shape `run-rules`' `partDeployable`
+       takes), read from `ai-runs` (its R19 verification acts and R75 records) by those names until it merges; absent,
+       nothing is held and the gate is shut (fail closed). The set is Civicsmith's (`run-rules` R19, K2489). */
+    this.held = typeof held === "function" ? held : () => ({
+      verifications: aiRuns && typeof aiRuns.verifications === "function" ? aiRuns.verifications() : [],
+      testBars: aiRuns && typeof aiRuns.testBars === "function" ? aiRuns.testBars() : [] });
+    this.testSet = testSet;
   }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -272,15 +273,18 @@ export class QuestionExplorer {
     const shut = (why) => ({ open: false, why, false_alarm_rate: null, gold_set: null });
     try {
       if (!this.steps || !this.aiUse) return shut("a provider the explorer needs is not in place");
-      const tb = this.testBar(EXPLORE_TEST_PART);
-      if (!tb || tb.passed !== true) return shut("the explorer has not passed its bar on the test investigations");
-      const far = Number(tb.false_alarm_rate);
-      if (tb.false_alarm_rate == null || !Number.isFinite(far) || far < 0 || far > EXPLORE_FALSE_ALARM_MAX)
+      const held = this.held() || {};
+      if (runRules.partDeployableOn(this.testSet, EXPLORE_MODE, held) !== true
+          || runRules.partDeployableOn(this.testSet, EXPLORE_TEST_PART, held) !== true)
+        return shut("the investigate mode and the explorer's use are not both deployable on the test investigations");
+      /* The record that holds the explorer's bar on the set's current version (`run-rules`' `checkTestBarRecord`). */
+      const tb = (Array.isArray(held.testBars) ? held.testBars : []).find((r) => runRules.checkTestBarRecord(r) === null
+        && r.part === EXPLORE_TEST_PART && r.passed === true && r.set === this.testSet.id
+        && r.set_version === this.testSet.version);
+      const far = tb ? tb.false_alarm_rate : NaN;
+      if (!(far >= 0 && far <= EXPLORE_FALSE_ALARM_MAX))
         return shut("the explorer's false-alarm rate on the test investigations is not recorded at or under 20%");
-      if (this.deployable(EXPLORE_MODE) !== true || this.deployable(EXPLORE_TEST_PART) !== true)
-        return shut("the investigate mode and the explorer's use are not both deployable");
-      return { open: true, why: null, false_alarm_rate: far,
-               gold_set: `${tb.set ?? "civicsmith"}@${tb.set_version ?? "unversioned"}` };
+      return { open: true, why: null, false_alarm_rate: far, gold_set: `${tb.set}@${tb.set_version}` };
     } catch { return shut("the gate could not be read"); }
   }
 
@@ -428,24 +432,21 @@ export class QuestionExplorer {
     return out;
   }
 
-  /** R3, R12: open one exploring run on a question for an owner: its estimate, a system step, then the run. */
+  /** R3, R12: open one exploring run on a question for an owner: its estimate, then the run, passing the step's place
+   *  and work; `ai-runs` opens the run and then creates its system step (its R73, K2490), answering it. */
   #open(w, owner, label, at, day) {
     let estimate = null;
     try { estimate = this.aiUse.estimate({ owner, use: EXPLORE_USE, mode: EXPLORE_MODE, at }); } catch { estimate = "not known yet"; }
     const run = `XPL-${day}-${sha256HexSync(`${w.question}|${owner}|${at}`).slice(0, 12)}`;
-    const made = this.steps.stepCreate({ place: { questions: [w.question] }, work: EXPLORE_WORK, by: this.principal,
-                                         run, enabled_by: label.enabled_by ?? owner });
-    if (!made || made.ok === false) return { ok: false, question: w.question, owner, refused: made };
-    const step = made.step;
     const opened = this.aiRuns.open({ run, contextType: "inquiry", contextId: w.question, label: "exploring this question",
-                                      mode: EXPLORE_MODE, origin: EXPLORE_ORIGIN, step, use: EXPLORE_USE,
+                                      mode: EXPLORE_MODE, origin: EXPLORE_ORIGIN, use: EXPLORE_USE,
+                                      place: { questions: [w.question] }, work: EXPLORE_WORK,
                                       principalPlane: this.principal, principalClaude: owner, principalClaudeRef: null,
                                       enabledBy: label, skillVersion: EXPLORE_SKILL, bounds: EXPLORE_BOUNDS.map((b) => ({ ...b })),
                                       at, actor: null, viewer: this.principal });
-    if (!opened || opened.ok === false) {
-      try { this.steps.stepDelete({ step, by: this.principal }); } catch { /* the step stays, untouched */ }
+    if (!opened || opened.ok === false || typeof opened.step !== "string" || !opened.step)
       return { ok: false, question: w.question, owner, refused: opened };
-    }
+    const step = opened.step;
     this.sql.exec(`INSERT INTO explore_runs (run, question, owner, step, day, seen, estimate, opened_at)
                    VALUES (?,?,?,?,?,?,?,?)`, run, w.question, owner, step, day, w.seen, json({ estimate }), at);
     return { ok: true, run, question: w.question, owner, step, estimate, label };
@@ -544,7 +545,7 @@ export class QuestionExplorer {
 
   /** R4: a find the run located, with the run's gauge of how it bears on the question's live basis: `supports`,
    *  `cuts_against` or `unclear`, with its account of how. Recorded with the gate's false-alarm rate and gold set, the
-   *  label `machine` and the account that enabled it; tied to the run's step (`steps.recordProduct`). The same find
+   *  label `machine` and the account that enabled it, under the run's step. The same find
    *  under the same run answers the first record, writing nothing. Never a grade, never a score. */
   find({ run, kind, ref, bearing, how, caller = null, at = null } = {}) {
     const live = this.#liveRun(run, caller);
@@ -566,12 +567,7 @@ export class QuestionExplorer {
                      false_alarm_rate, gold_set, against, owner, at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
                   find, r.run, r.question, kind, loc.ref, loc.bundle_id, loc.bundle_b, bearing, String(how).trim(),
                   g.false_alarm_rate, g.gold_set, json(this.#liveBasis(r.question)), r.owner, iso);
-    let tied = false;
-    try {
-      const t = this.steps.recordProduct({ step: r.step, record: loc.ref, kind, by: this.principal });
-      tied = !(t && t.ok === false);
-    } catch { tied = false; }
-    return { ...this.#findAnswer(find, r), tied, already: false };
+    return { ...this.#findAnswer(find, r), step: r.step, already: false };
   }
 
   #findAnswer(find, r) {
@@ -624,13 +620,24 @@ export class QuestionExplorer {
     if (!b || b.object_type !== "information" || !this.#ownerSees(r.owner, id))
       return { ok: false, reason: "NO_SUCH_BUNDLE", code: "NO_SUCH_BUNDLE", target: id, detail: "no held document by that id is in the paying account's sight" };
     const project = str(b.project);
-    for (const use of ["read", EXPLORE_USE]) {
-      let k = null;
-      try { k = this.credentials.aiKeptAway({ project, use }); }
-      catch { k = { ok: false, code: "AI_KEPT_AWAY", detail: "the setting could not be read" }; }
-      if (k) return this.#refuse("EXPLORE_READ_KEPT_AWAY", "a material limit keeps this document from the assistant",
-                                 { run: r.run, target: id, kept_away: { code: k.code ?? null, use } });
+    /* `run-rules` R26's one refusal for a read under a "no AI" limit (`checkPagesRead`, AI_RUN_READ_NO_AI), over the
+       limits that bind this document: the group's, and its project's when it keeps from `read` (`credentials` R57); a
+       limit that cannot be read keeps (fail closed). */
+    const limits = [];
+    try { limits.push(this.credentials.aiKeepAwayState()); } catch { limits.push({ on: null }); }
+    if (project) {
+      let kept = null;
+      try { kept = this.credentials.projectsKeptAway({ use: "read" }); } catch { kept = null; }
+      if (!Array.isArray(kept) || kept.includes(project)) limits.push({ on: true, uses: ["read"] });
     }
+    const noAi = runRules.checkPagesRead({ limits });
+    if (noAi) return { ...noAi, run: r.run, target: id };
+    /* And exploring's own use: a document kept from `explore` by the group or its project. */
+    let k = null;
+    try { k = this.credentials.aiKeptAway({ project, use: EXPLORE_USE }); }
+    catch { k = { code: "AI_KEPT_AWAY" }; }
+    if (k) return this.#refuse("EXPLORE_READ_KEPT_AWAY", "a material limit keeps this document from exploring",
+                               { run: r.run, target: id, kept_away: { code: k.code ?? null, use: EXPLORE_USE } });
     const n = Number(pages);
     const prior = this.#one(`SELECT through FROM explore_reads WHERE run=? AND bundle_id=?`, r.run, id);
     const from = prior ? Number(prior.through) : 0;
@@ -657,19 +664,19 @@ export class QuestionExplorer {
   /* ---------------------------------------------------------------- R8, R12: the end */
 
   #end(r, end, reason, bound, iso, caller) {
-    let stepped = null;
-    try { stepped = this.steps.stepEnd({ step: r.step, end, ...(end === "set_aside" ? { reason } : {}), by: this.principal }); }
-    catch { stepped = { ok: false }; }
+    /* `ai-runs` ends the run's step at its close (its R73, `steps` R5's machine arm): `ended`, or `set_aside` with the
+       reason. */
     let closed = null;
     try {
       closed = this.aiRuns.close({ run: r.run, bound: bound || (end === "ended" ? "completed" : "cancelled"),
-                                   condition: reason ?? null, at: iso, actor: null, viewer: this.principal,
+                                   condition: reason ?? null, stepEnd: end, reason: reason ?? null,
+                                   at: iso, actor: null, viewer: this.principal,
                                    caller: caller ?? this.principal });
     } catch { closed = null; }
     const actual = closed && (closed.actual ?? closed.cost) != null ? (closed.actual ?? closed.cost) : null;
     this.sql.exec(`UPDATE explore_runs SET ended=?, reason=?, closed_at=?, actual=? WHERE run=?`,
                   end, reason ?? null, iso, json(actual === null ? null : { actual }), r.run);
-    return { run: r.run, end, reason: reason ?? null, step_ended: !(stepped && stepped.ok === false), actual };
+    return { run: r.run, end, reason: reason ?? null, closed: !!(closed && closed.ok !== false), actual };
   }
 
   /** R8, R12: the run's end. `ended` ends its step with every outcome undetermined; `set_aside` (a limit reached, a
@@ -851,7 +858,7 @@ export function questionExplorerOf(host, deps) {
       aiRuns: d.aiRuns || aiRunsOf(host),
       captureRequests: d.captureRequests || captureRequestsOf(host),
       steps: d.steps || null, aiUse: d.aiUse || null,
-      testBar: d.testBar || null, deployable: d.deployable || null,
+      held: d.held || null, ...(d.testSet ? { testSet: d.testSet } : {}),
       principal: d.principal || EXPLORE_PRINCIPAL, now: d.now || null,
     });
     instances.set(host, p);

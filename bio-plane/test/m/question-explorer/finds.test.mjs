@@ -2,7 +2,8 @@
    with a negative control (K874). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, Q, Q2, DOC, DOC2, HDOC, PROJ, HPROJ, ENT, CAP, CAP2, HCAP, CALLER } from "./fixture.mjs";
+import { CIVICSMITH_TEST_SET } from "../../../src/run-rules/index.mjs";
+import { world, bar, VERIFIED_CHECK, Q, Q2, DOC, DOC2, HDOC, PROJ, HPROJ, ENT, CAP, CAP2, HCAP, CALLER } from "./fixture.mjs";
 import { EXPLORE_BEARINGS, EXPLORE_FALSE_ALARM_MAX } from "../../../src/question-explorer/index.mjs";
 import { ACCEPTANCE_FORMS } from "../../../src/record-grammar/index.mjs";
 
@@ -19,7 +20,7 @@ test("R4: each find (a capture, content row or connection the run located) is ga
   assert.deepEqual(a.gauge, { bearing: "supports", how: "the minutes record the vote", false_alarm_rate: 0.1,
                               gold_set: "civicsmith@1", label: "machine", enabled_by: "group" });
   assert.deepEqual(a.against, { currents: [{ project: PROJ, current: `reading of ${PROJ}` }], legs: 1 }, "the live basis it was gauged against");
-  assert.deepEqual(w.calledAs("recordProduct").map((x) => [x.step, x.record]), [[o.step, CAP]], "tied to the step");
+  assert.equal(a.step, o.step, "found under the run's step");
   w.content("CNT-1", DOC2, CAP2);
   assert.equal(w.p.find({ run: o.run, kind: "content", ref: "CNT-1", bearing: "cuts_against", how: "the passage says otherwise", caller: CALLER }).gauge.bearing, "cuts_against");
   w.conns.push({ a_capture_sha: CAP, b_capture_sha: CAP2, entity_id: ENT, a_bundle_id: DOC, b_bundle_id: DOC2 });
@@ -147,12 +148,13 @@ test("R7: finds are offered only while the gate is open: the explorer passed its
   const open = w.p.findsFor({ viewer: "member:alice" });
   assert.equal(open.finds.length, 1);
   for (const [name, shut] of [
-    ["no record", () => { w.testBar = null; }],
-    ["not passed", () => { w.testBar = { ...BAR, passed: false }; }],
-    ["false alarms above 20%", () => { w.testBar = { ...BAR, false_alarm_rate: 0.21 }; }],
-    ["false-alarm rate not recorded", () => { w.testBar = { ...BAR, false_alarm_rate: null }; }],
-    ["investigate not deployable", () => { w.deployed.delete("investigate"); }],
-    ["the explorer's use not deployable", () => { w.deployed.delete("explore"); }],
+    ["no record", () => { w.testBars = [bar("investigate")]; }],
+    ["not passed", () => { w.testBars = [bar("investigate"), bar("explore", { passed: false })]; }],
+    ["false alarms above 20%", () => { w.testBars = [bar("investigate"), bar("explore", { false_alarm_rate: 0.21 })]; }],
+    ["false-alarm rate not recorded", () => { w.testBars = [bar("investigate"), bar("explore", { false_alarm_rate: null })]; }],
+    ["an earlier version of the set", () => { w.testBars = [bar("investigate"), bar("explore", { set_version: 0 })]; }],
+    ["investigate's bar not held", () => { w.testBars = [bar("explore")]; }],
+    ["investigate's chain not verified", () => { w.verifications = []; }],
   ]) {
     shut();
     assert.equal(w.p.gate().open, false, name);
@@ -160,17 +162,17 @@ test("R7: finds are offered only while the gate is open: the explorer passed its
     assert.equal(w.p.exploreDue(w.clock.now), 0, name);
     assert.equal(w.p.exploreWake(w.clock.now), null, name);
     assert.equal(w.p.exploreTick(w.clock.now).gate, "closed", name);
-    w.testBar = { ...BAR }; w.deployed = new Set(["investigate", "explore"]);
+    w.testBars = [bar("investigate"), bar("explore")]; w.verifications = [VERIFIED_CHECK];
   }
   /* Negative control: at exactly 20% the gate is open. */
-  w.testBar = { ...BAR, false_alarm_rate: 0.2 };
+  w.testBars = [bar("investigate"), bar("explore", { false_alarm_rate: 0.2 })];
   assert.equal(w.p.gate().open, true);
+  /* Civicsmith's own set holds no matter yet (run-rules R19): over it nothing opens. */
+  assert.equal(world({ testSet: CIVICSMITH_TEST_SET }).standard().p.gate().open, false);
   /* Without the providers it needs, it is shut (fail closed). */
   assert.equal(world({ steps: false }).p.gate().open, false);
   assert.equal(world({ aiUse: false }).p.gate().open, false);
 });
-
-const BAR = { part: "explore", set: "civicsmith", set_version: "1", false_alarm_rate: 0.1, passed: true, graded_by: "harness" };
 
 test("R11: a group's own test investigations measure the explorer too; the result, with its false-alarm rate, is answered to that group's members only, and never opens or closes R7's gate", () => {
   const w = world().standard();
@@ -181,10 +183,10 @@ test("R11: a group's own test investigations measure the explorer too; the resul
   assert.equal(w.p.groupTestResults({ viewer: "member:stranger" }), null, "negative control: not a member of the group");
   assert.equal(w.p.groupTestResults({ viewer: CALLER }), null);
   assert.equal(w.p.gate().open, true, "a failing group result does not shut the gate");
-  w.testBar = null;
+  w.testBars = [bar("investigate")];
   w.groupResults = [{ matter: "a test matter", false_alarm_rate: 0, passed: true }];
   assert.equal(w.p.gate().open, false, "a passing group result does not open it");
-  assert.ok(w.calledAs("testBar").every((a) => a.part === "explore"));
+  assert.equal(w.calledAs("groupTestResults").length, 1, "the gate never asks for the group's results");
 });
 
 test("R14: a find that cuts against what the question's members hold is offered exactly as prominently as one that supports it: the same item, kind, place and order rule; nothing orders, groups or filters by bearing", () => {

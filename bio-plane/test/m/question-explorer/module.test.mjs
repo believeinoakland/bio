@@ -2,6 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as QE from "../../../src/question-explorer/index.mjs";
+import * as RR from "../../../src/run-rules/index.mjs";
 import { world, Q, Q2, DOC, CAP, CALLER } from "./fixture.mjs";
 
 test("R9, R10, R13: each refusal this module mints is its own row, frozen, with a translation in plain words and the site that mints it; a relayed provider's code is never copied here", () => {
@@ -46,6 +47,9 @@ test("questionExplorerOf answers one instance per storage; the constants are as 
   assert.equal(QE.questionExplorerOf(w.host), w.p);
   assert.equal(QE.EXPLORE_PERSON_CAP, 20);
   assert.equal(QE.EXPLORE_ORIGIN, "explore");
+  assert.ok(RR.RUN_ORIGINS.includes(QE.EXPLORE_ORIGIN), "run-rules R23's origin, read by key");
+  assert.ok(Object.keys(RR.RUN_BOUNDS).includes("pages") && QE.EXPLORE_BOUNDS.some((b) => b.bound === "pages"), "run-rules R26's bound");
+  assert.ok(RR.TEST_BAR_PARTS.includes(QE.EXPLORE_TEST_PART), "a part run-rules holds the bar for");
   assert.equal(QE.EXPLORE_MODE, "investigate");
   assert.equal(QE.EXPLORE_USE, "explore");
 });
