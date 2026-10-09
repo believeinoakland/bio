@@ -15,7 +15,7 @@
 
 **D54 tests re-stated** (with negative controls): `exports.test.mjs` R52 (1) (the founder blind to the hidden project's replay; the project set discoverable, the founder sees it whole and bob still not); `findings.test.mjs` both R53 tests (the lens read as the internal viewer) and a new R53 D54 test (a hidden project's manifest recorded; the founder and an outsider fenced; the participant reads it).
 
-**Deferred:** R61 reads a leg's applications itself (a parsed `bias_applied` list or the `bias_<n>_statement` keys, K2479) until inquiry-grammar merges; then through its `readBiasApplied` (awaiting that CHANGE).
+**Deferred:** none. (B5, K2491: inquiry-grammar merged; R61 now reads each leg's applications through its `readBiasApplied`, my own reader removed; `grammar.test.mjs` R38's pin of the rows gains `BIAS_APPLICATION_MALFORMED` (C-2.8). Re-run after B5: inquiry 193/193, 1 todo; checks as below.)
 
 **Found in other modules:** none new beyond J1 (2) (retrieval's search row, N830). Stale artifacts: the plane bundle (`bio-plane/dist/`) now stale for inquiry's source; not written here (mechanics §14).
 

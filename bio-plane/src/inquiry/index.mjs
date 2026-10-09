@@ -35,7 +35,8 @@ import { parseFrontmatter, normalizeType, OBJECT_TYPES, STATES, vocabFor, derive
          SHARED_ACT_CHECKS } from "../record-grammar/index.mjs";
 import { checkInquiryBasis, checkInquiryExtension, supersedesEdgeFindings, divisionDisclosureFindings, INQUIRY_ROWS }
   from "./grammar.mjs";
-import { INQUIRY_GRAMMARS, parseImportedFindingRef, parseOccurrenceRef, CALCULATION_REF_RE } from "../inquiry-grammar/index.mjs";
+import { INQUIRY_GRAMMARS, parseImportedFindingRef, parseOccurrenceRef, CALCULATION_REF_RE, readBiasApplied }
+  from "../inquiry-grammar/index.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, listenerRefusal, Membership } from "../membership/index.mjs";
 import { promotionOf, stepContext, PROMOTION_ROW_CHECKS } from "../promotion/index.mjs";
@@ -177,18 +178,6 @@ export function biasNotInForce(args = {}) {
                    ? `and whether it is in ${lens} could not be read, so the application is refused rather than trusted`
                    : `which is not in ${lens}`) };
   /* END DEC-49 REGION is-bias-application-in-force */
-}
-
-/* R61 (inquiry-grammar R18; K2479): a leg's bias applications, as a parsed list (`bias_applied`, an act's own input) or
-   in front matter's one encoding, the numbered scalar keys `bias_<n>_statement` (`n` from 1 and contiguous). The shape is
-   inquiry-grammar's to judge; this reads only what each entry names as its statement. To be read through
-   inquiry-grammar's `readBiasApplied` once its T41 job merges (BOB's CHANGE). */
-function appliedOf(leg) {
-  if (!leg || typeof leg !== "object") return [];
-  if (Array.isArray(leg.bias_applied)) return leg.bias_applied;
-  const out = [];
-  for (let n = 1; Object.hasOwn(leg, `bias_${n}_statement`); n++) out.push({ statement: leg[`bias_${n}_statement`] });
-  return out;
 }
 
 /* ------------------------------------------------------------------ R59: a person in no public role (D13) */
@@ -650,22 +639,21 @@ export class Inquiry {
     return out;
   }
 
-  /* R61 (D59; K2448, K2472): every `bias_applied` entry of every leg, its `statement` asked of `bias.statementInForce`
-     (its R49) at the inquiry's project scope (its document's `project`; else the instance), `viewer` the promotion's
-     author. An answer of `in_force` false or null, a read that throws or answers another shape, and no bias module to
-     ask are each refused through `biasNotInForce`, naming the leg and the statement (fail closed). A leg with no
-     `bias_applied` asks nothing; a malformed one is `inquiry-grammar` R18's to refuse, so only a statement that is a
-     non-empty string is asked here and any other entry is left to the grammar. Public, so the act that records a leg
-     from parsed input (a leg's `bias_applied` is a list of objects, which a bundle's front matter cannot hold inside a
-     `basis[]` item, record-grammar R7; inquiry-grammar's T41 J1) asks the same check before it writes; the promotion
-     asks it over the document's legs too. Answers the findings (empty: every statement in force); never throws. */
+  /* R61 (D59; K2448, K2472, K2491): every bias application of every leg, read through inquiry-grammar's one encoding
+     (`readBiasApplied`, its R18: the numbered scalar keys `bias_<n>_*`), its `statement` asked of
+     `bias.statementInForce` (its R49) at the inquiry's project scope (its document's `project`; else the instance),
+     `viewer` the promotion's author. An answer of `in_force` false or null, a read that throws or answers another shape,
+     and no bias module to ask are each refused through `biasNotInForce`, naming the leg and the statement (fail closed).
+     A leg with no application asks nothing; a malformed one is inquiry-grammar R18's to refuse, so only a statement that
+     is a non-empty string is asked here. Public, so an act that records a leg asks the same check before it writes; the
+     promotion asks it over the document's legs. Answers the findings (empty: every statement in force); never throws. */
   biasAppliedFindings({ legs = [], project = null, viewer = null } = {}) {
     const out = [];
     if (!Array.isArray(legs)) return out;
     project = typeof project === "string" ? project.trim() : "";
     const scope = project ? { type: "project", id: project } : "instance";
     legs.forEach((leg, i) => {
-      const applied = appliedOf(leg);
+      const applied = readBiasApplied(leg);
       applied.forEach((a, j) => {
         const statement = a && typeof a === "object" && typeof a.statement === "string" ? a.statement.trim() : "";
         if (!statement) return;

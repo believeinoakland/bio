@@ -2,12 +2,13 @@
    bias module's `statementInForce` (its R49) at the inquiry's project scope (or the instance), the acting member as
    viewer; one not in force, or undetermined, is refused `BIAS_APPLICATION_NOT_IN_FORCE` (C-2.19) through
    `biasNotInForce`, its one spelling, naming the leg and the statement. Driven at the interface: `biasAppliedFindings`
-   (the act's check; a leg's `bias_applied` arrives as parsed input, since front matter cannot hold it, record-grammar R7)
+   (the act's check, over legs in inquiry-grammar R18's encoding, read through its `readBiasApplied`), the promotion,
    and the exported pure `biasNotInForce`. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, inquiryMd } from "./fixture.mjs";
-import { biasNotInForce, INQUIRY_BIAS_CHECKS, inquiryOf } from "../../../src/inquiry/index.mjs";
+import { biasNotInForce, INQUIRY_BIAS_CHECKS } from "../../../src/inquiry/index.mjs";
+import { flattenBiasApplied } from "../../../src/inquiry-grammar/index.mjs";
 
 const LENS = "BIAS-2026-6101-lens";
 const lensMd = (state, prior) => ["---", `id: ${LENS}`, "object_type: bias", `title: "Project lens"`,
@@ -30,8 +31,9 @@ function lensWorld() {
   w.P = P;
   return w;
 }
+/* a leg in front matter's one encoding (inquiry-grammar R18's `flattenBiasApplied`) */
 const leg = (statements, extra = {}) => ({ target: "INFO-2026-6101-doc", role: "supports",
-  bias_applied: statements.map((statement) => ({ statement, effect: "leg_excluded" })), ...extra });
+  ...flattenBiasApplied(statements.map((statement) => ({ statement, effect: "leg_excluded" }))), ...extra });
 const ROW = INQUIRY_BIAS_CHECKS.BIAS_APPLICATION_NOT_IN_FORCE;
 
 test("R61 a statement in force for the inquiry's project passes; one not in force is refused BIAS_APPLICATION_NOT_IN_FORCE naming the leg and the statement", () => {
@@ -73,10 +75,10 @@ test("R61 fail closed: an undetermined answer, a read that throws or answers ano
     assert.deepEqual(f.map((x) => [x.code, x.in_force]), [["BIAS_APPLICATION_NOT_IN_FORCE", null]], name);
     assert.match(f[0].detail, /could not be read/, name);
     assert.deepEqual(asked, [{ statement: "s1", scope: { type: "project", id: "PROJ-x" }, viewer: "member:ruth" }], name);
-    /* negative control: legs with no application, an empty list, or an entry with no statement (the grammar's to refuse) ask nothing */
+    /* negative control: legs with no application, an entry with no statement, or a key outside the encoding (each the grammar's to refuse) ask nothing */
     asked.length = 0;
-    assert.deepEqual(w.k.biasAppliedFindings({ legs: [{ target: "INFO-x" }, { target: "INFO-y", bias_applied: [] },
-      { target: "INFO-z", bias_applied: [{ effect: "leg_excluded" }, "s1", null] }], project: null, viewer: "member:ruth" }), []);
+    assert.deepEqual(w.k.biasAppliedFindings({ legs: [{ target: "INFO-x" }, { target: "INFO-y", bias_1_effect: "leg_excluded" },
+      { target: "INFO-z", bias_1_statement: "", bias_applied: [{ statement: "s1" }] }], project: null, viewer: "member:ruth" }), []);
     assert.deepEqual(asked, [], name);
   }
   /* no bias module bound to the host: refused, never passed */
