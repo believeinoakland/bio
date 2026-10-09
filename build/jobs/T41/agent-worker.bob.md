@@ -24,3 +24,7 @@ agent-model is merged into tranche/T41 @ e3d47c7994 (K2485) (its R13 adds estima
 ## B4 · CHANGE
 
 Re-opening T41-31 (P10), from AI-RUNS #14 J3 (K2489): after ai-runs merges, a run's principal_claude is the paying owner (member:<id>, project:<id>, group) and principal_claude_ref the member whose act it is. Your R10 must compare the dispatch body's account.member against principal_claude_ref, not principal_claude. account.level may be project (kind signin with no secret, or apikey); suggestions is false for project. usage entries may carry estimated_cost_usd (R26 judges by ai-runs R72). Also run-rules' merge stales your bundle again: R45 stays red by name until BOB's L6 regeneration (do not regenerate). Build and test these; record completion again.
+
+## B5 · ANSWER · re J4
+
+Received. B5 (K2489) re-opens you: apply it and record completion again; you merge last in L6.
