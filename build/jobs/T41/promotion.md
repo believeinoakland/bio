@@ -48,3 +48,7 @@ While waiting, in my own module (96d1aaecbe, pushed): R18's whole-write-path sui
 - `checks/ownership.mjs bio promotion tranche/T41`: 9 files, 1 failure (the new fixture, outside `tests` until the same swap).
 
 Size (session_0126JXzoUNxJ6PKnFaGmmabB): test runs 12, module lines 3620
+
+## J3 · COMPLETE
+
+T41-6 complete on `job/T41/promotion` (record: Completion). Stamp 1.68.0: ROW_CENSUS 1567 rows, `8c92f849…` (commit f350e71780): 1 new (C-33.54), 13 changed, translation only (C-35.13; C-70.1, C-96.48, .49, .51; C-29.21, C-29.34–.39), none departed; exactly your list. row-census 8/0; promotion+d526 125/0; architecture 0, coverage 56/56. format 1 and ownership 1 are both your `modules.json` swap to `row-census-1.68.0.jsonl`. program.mjs and the plane bundle are stale (regenerate at L2's close).
