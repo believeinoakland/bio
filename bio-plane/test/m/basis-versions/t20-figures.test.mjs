@@ -49,15 +49,20 @@ function build() {
 }
 
 const WHOLE = { basisVersions: 3, basisVersionLegs: 4 };
-/* Each viewer, what it is told: whole, less what lies in the project it is outside, or nothing. */
+/* Outside the (hidden) project: less INQ_B's version and its leg (its bundle hidden), less wide's leg on HID (its
+   target hidden). */
+const OUTSIDE = { basisVersions: 2, basisVersionLegs: 2 };
+/* Each viewer, what it is told: whole, less what lies in the project it is outside, or nothing. D54 (K2408, K2442;
+   membership R43, R44, R88): an administrator, the founder included, neither invited nor joined, sees a HIDDEN project
+   only at EXISTENCE, so its contents are outside its count like any non-participant's; a discoverable project, and an
+   invited administrator, are the negative controls in the first test. */
 const VIEWERS = [
   [undefined, WHOLE, "a viewer never sent: the direct internal call, counted whole"],
-  ["admin", WHOLE, "the founder sees every bundle"],
+  ["admin", OUTSIDE, "the founder, neither invited nor joined, is outside a hidden project's contents (D54)"],
   [`${MACHINE_CLASS_PREFIX}admin`, WHOLE, "a machine credential sees every bundle"],
-  [V("root"), WHOLE, "an active administrator sees every project"],
+  [V("root"), OUTSIDE, "an active administrator, neither invited nor joined, is outside a hidden project's contents (D54)"],
   [V("ann"), WHOLE, "a participant of the project sees all of it"],
-  [V("zed"), { basisVersions: 2, basisVersionLegs: 2 },
-    "outside the project: less INQ_B's version and its leg (its bundle hidden), less wide's leg on HID (its target hidden)"],
+  [V("zed"), OUTSIDE, "outside the project"],
   ["junk", { basisVersions: 0, basisVersionLegs: 0 }, "a viewer the gate refuses: every bundle hidden"],
 ];
 
@@ -84,6 +89,23 @@ test("R47 the figure source: its key list, and counts(hid) — versions less tho
   /* sight follows the record: inviting zed into the project moves zed's count at once */
   w.st.sql.exec(`UPDATE bundles SET project=? WHERE bundle_id=?`, proj, HID);
   assert.deepEqual(w.bv.counts(hiddenBundles(V("zed"))), VIEWERS.find(([v]) => v === V("zed"))[1]);
+  /* D54's negative controls: the same project set DISCOVERABLE is counted whole for an administrator and the founder
+     (unchanged by D54), still not for zed; set hidden again, they are outside it again */
+  const vis = (setting) => assert.equal(w.membership.projectVisibilitySet({ projectId: proj, setting, by: "ann",
+                                                                             viewer: V("ann") }).ok, true, setting);
+  vis("discoverable");
+  for (const v of ["admin", V("root")]) {
+    assert.deepEqual(w.bv.counts(hiddenBundles(v)), WHOLE, `${v}: a discoverable project is counted whole`);
+    assert.deepEqual(w.bv.counts(hiddenBundles(v)), stated(w.st.sql, hiddenBundles(v)));
+  }
+  assert.deepEqual(w.bv.counts(hiddenBundles(V("zed"))), OUTSIDE, "a member outside a discoverable project is still outside");
+  vis("hidden");
+  for (const v of ["admin", V("root")]) assert.deepEqual(w.bv.counts(hiddenBundles(v)), OUTSIDE, `${v}: hidden again`);
+  /* an INVITED administrator is a participant: counted whole, while the founder, not invited, is still outside */
+  assert.equal(w.membership.projectInvite({ projectId: proj, handle: "h_root", by: "ann", viewer: V("ann") }).ok, true);
+  assert.deepEqual(w.bv.counts(hiddenBundles(V("root"))), WHOLE, "the invited administrator");
+  assert.deepEqual(w.bv.counts(hiddenBundles(V("root"))), stated(w.st.sql, hiddenBundles(V("root"))));
+  assert.deepEqual(w.bv.counts(hiddenBundles("admin")), OUTSIDE, "the founder, not invited");
   assert.equal(w.membership.projectInvite({ projectId: proj, handle: "h_zed", by: "ann", viewer: V("ann") }).ok, true);
   assert.deepEqual(w.bv.counts(hiddenBundles(V("zed"))), WHOLE);
   assert.deepEqual(w.bv.counts(hiddenBundles(V("zed"))), stated(w.st.sql, hiddenBundles(V("zed"))));
