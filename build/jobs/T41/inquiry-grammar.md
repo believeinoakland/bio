@@ -1,6 +1,6 @@
 # inquiry-grammar (T41)
 
-**Status** · session_019r4sMshUDytbLD9gL3qFXk · depth 2 · WORKING · handled B2
+**Status** · session_019r4sMshUDytbLD9gL3qFXk · depth 2 · RUNNING until 2026-10-09T23:35:40Z (users' suites, before and after) · handled B2
 
 ## J1 · QUESTION
 
