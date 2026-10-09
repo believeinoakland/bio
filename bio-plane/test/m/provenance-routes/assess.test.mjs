@@ -156,3 +156,23 @@ test("R4: every C-34 refusal carries its row's check and translation, and every 
   assert.match(cases[2][1].detail, /is a machine credential/);
   assert.equal(w.count("provenance_route_marks"), 0, "no refusal appended a mark");
 });
+
+test("R4: a bundle in a hidden project the founder is not in is refused to the founder as absent (D54), and assessable once the project is discoverable", () => {
+  const w = world();
+  twoDocs(w, "INFO-2026-0001-h");
+  const P = w.project("PROJ-2026-0009-p");   /* hidden: no setting recorded; olive its owner */
+  w.fence("INFO-2026-0001-h", P);
+  const ask = (viewer) => w.routes.provenanceRouteAssess({ bundleId: "INFO-2026-0001-h", author: V("ruth"), viewer });
+  const absent = w.routes.provenanceRouteAssess({ bundleId: "INFO-2026-0404-x", author: V("ruth"), viewer: "admin" });
+  for (const founder of ["admin", V("admin")]) {
+    const r = ask(founder);
+    assert.deepEqual([r.reason, r.check], ["ROUTE_MARK_NO_SUCH_BUNDLE", "C-34.3"], founder);
+    assert.deepEqual({ ...r, bundleId: null }, { ...absent, bundleId: null }, `${founder}: absent and unseen alike`);
+  }
+  assert.equal(w.count("provenance_route_marks"), 0, "no refusal appended a mark");
+  assert.equal(ask(V("olive")).ok, true, "its owner sees it");
+  /* Negative control: discoverable, the founder sees it whole (K2409) and the assessment runs. */
+  assert.equal(w.membership.projectVisibilitySet({ projectId: P, setting: "discoverable", by: "olive", viewer: V("olive") }).ok, true);
+  const seen = ask("admin");
+  assert.deepEqual([seen.ok, seen.route.finding], [true, "LOOKED_INDETERMINATE"]);
+});

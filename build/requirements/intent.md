@@ -1,6 +1,6 @@
 # intent — requirements
 
-**Status** · In force: approved by Bob 2026-09-26 (K102), with later folds reviewed; C-111.16 is retired, its number not reused (K446). Last changed T33 (T33-58: R4 amended; R31 new; K1471); every requirement met (K1629).
+**Status** · In force: approved by Bob 2026-09-26 (K102), with later folds reviewed; C-111.16 is retired, its number not reused (K446). Last changed T33 (T33-58: R4 amended; R31 new; K1471); every requirement met (K1629). Last changed T41 (T41-32's text: R32, R33 new; N820; D13, H30 (1); K2405, K2417, K2418); marked not yet met (T41).
 
 **Size (P6).** About 3 lines move today (C-2.9's objective arm). The module is written new from this file; its first job reports its size. Nothing here suggests it approaches 4,000.
 
@@ -63,6 +63,10 @@ Terms. An **aspiration** is `{id, scope, owner, statement, entities, progression
 
 **workObjective({project, reason, author}) → the run opened, or refusal**
 - **R18** A member's act only (`MACHINE_CANNOT_CHOOSE_THE_QUESTION`, DEC-24 rule 2), then `INTENT_NO_REASON` (R30: the `reason`, the member's words on why the run is opened, absent, not a string or blank, as R8's; DEC-88 (4), K1025), with nothing opened: opens a run through `ai-runs` with the project as its context and the objective and its current gaps as its instructions. The run's looks name the project under authority kind `objective`. The reason is recorded on the run's opening and shown with its budget and scope (the run's `label`, K1068).
+
+**The warning about a person in no public role, and a request answered that no record exists** (T41; N820; `draft-T41-investigation.md` §3.6; K2405, K2417, K2418; R32's warning and test are `inquiry` R59's)
+- **R32** *(not yet met: T41)* (D13) The same warning, by the same test, at a promotion that states or revises a project's `objective` or condition (R1, R2) and at R16's `adopt`; never refused, her choice recorded.
+- **R33** *(not yet met: T41)* (H30 (1)) An instance short of a required stage meets it when the record holds, for that stage, a records request answered that no such record exists (`actions`' outcome, as registered with `intent` by `registerSource`'s pattern), stated beside it as "answered: none exists"; met is still computed from the record (R4), never declared (H28).
 
 ## Private
 

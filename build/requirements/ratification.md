@@ -1,6 +1,6 @@
 # ratification — requirements
 
-**Status** · In force: approved by Bob 2026-09-26 (K102), split from `publication`'s draft (K94); DEC folds as Bob approved them (K1019). Split for size (K617, K1824): the case-document catalogue moved to `case-catalogue` (R38 retired, R8, R9, R14 re-worded; R15 copied there), this module keeping both registrations with `promotion`. Last changed T35 (T35-57: Uses only, no requirement), cross-references re-pointed T35 (K2035); every requirement met (RATIFICATION #20, K2003). Last changed T37 (T37-19: R32, R39 amended; N761, N757; K2129, K2175, K2206); those marked not yet met (T37). Last changed T39 (T39-13: R42 amended, R39 worded; N805; K2308); R42 not yet met (T39). Last changed T40 (T40-15: R42 worded; N811; DEC-187); R42 not yet met (T40).
+**Status** · In force: approved by Bob 2026-09-26 (K102), split from `publication`'s draft (K94); DEC folds as Bob approved them (K1019). Split for size (K617, K1824): the case-document catalogue moved to `case-catalogue` (R38 retired, R8, R9, R14 re-worded; R15 copied there), this module keeping both registrations with `promotion`. Last changed T35 (T35-57: Uses only, no requirement), cross-references re-pointed T35 (K2035); every requirement met (RATIFICATION #20, K2003). Last changed T37 (T37-19: R32, R39 amended; N761, N757; K2129, K2175, K2206); those marked not yet met (T37). Last changed T39 (T39-13: R42 amended, R39 worded; N805; K2308); R42 not yet met (T39). Last changed T40 (T40-15: R42 worded; N811; DEC-187); R42 not yet met (T40). Last changed T41 (T41-39's text: R49, R50 new; N820; D60; K2405, K2417, K2418); marked not yet met (T41).
 
 **Size (P6).** About 3,230 lines move (about 1,440 without comment-only and blank lines): `store.mjs` 1,118 (455 code) plus the three dispatch entries, `index.mjs` 965 (449), `bio-checks.mjs` 1,136 (530). Under 4,000 of code. (`gateFacts` and `publish` measure 175 lines of code, not the parent map's 274.) T19 layer 8 adds `retire` (about 130 lines, K653 BOB-3). T34-85 (R40–R47) adds one op, one registered publisher and five catalogue rows; BOB measures the module before the job and splits first if it would pass about 4,000 lines (P6).
 
@@ -60,6 +60,11 @@ The ceremony's last step offers two acts over the same signature: "Publish now" 
 - **R43** At start this module registers R42 once with `publication.registerScheduledPublisher` (its R67; K31's pattern, as R34), so the one publisher of a waiting edition is this module's and runs the same checks as the act.
 - **R44** `caseRatifyPreflight` (R18) also answers `publish_at: {offered, zone}`: `offered` true and `zone` the group's time zone as `publication` R66 reads it (the active profiles' `time_zone`, `jurisdictions.combine`), so the ceremony's last step can offer "Publish at…" beside "Publish now" and show the time in the group's zone; with no zone held, `{offered: false, zone: null, reason: "PUBLISH_AT_NO_ZONE"}`, and only "Publish now" is offered. Its other answers are unchanged, and it still writes nothing and never throws.
 - **R45** `registerHoldReader({holdsOn({project})})` takes, once at start, the reader of litigation holds in place over a project (`actions`, its R58's `in_place` holds; K31's pattern); a second registration is refused `HOLD_READER_DECLARED`. With none registered, R41's `holds` cannot be read, so `op=publishat` answers `SCHEDULE_UNCHECKABLE` (R40) and R42 stops (R42); `op=caseratify` is unchanged.
+
+#### The group's approvals before signing (T41; N820; `draft-T41-investigation.md` §3.6; K2405, K2417, K2418; D60)
+
+- **R49** *(not yet met: T41)* (D60) `op=caseratify`, `op=publishat`, the pre-flight (R18) and the scheduled publisher (R42), after `CASE_RATIFY_STALE`, refuse `APPROVAL_MISSING` (a new C-58 row) when the group's approval rule in force, read through R50's reader, names approvers who have not approved this case edition's document at its `doc_sha`; with no rule (the default) nothing is asked. The rule and approvals in force are written into `case-grammar` R26's block by `case-authoring`.
+- **R50** *(not yet met: T41)* `registerApprovalReader({rule(), approvals({case, edition, docSha})})`, once at start (K31's pattern); with none registered, no rule is in force. R42's `checked` gains `approvals`, so a changed approval stops a waiting edition (`SCHEDULED_CHECK_REFUSED`).
 
 #### The case-document catalogue
 
@@ -123,6 +128,7 @@ The verified-to-retired transition of many Information documents at once, over a
 - `money` (K1816): `readFact` (a cited money fact's payer and payee; R41's `ties`), as `case-disclosures` R27 reads them. A new `modules.json` edge; `money` is earlier.
 - `jurisdictions` (T34-85): `combine`, for the group's `time_zone` (R44). A new `modules.json` edge.
 - `actions` registers R45's reader; this module does not use it.
+- (T41; D60) `review` registers R50's approval reader (its R32); this module does not use it (no `modules.json` edge, §3.6's list).
 
 ### Invariants
 

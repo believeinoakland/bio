@@ -1,6 +1,6 @@
 # case-import — requirements
 
-**Status** · In force: a new product module, placed by BOB (K1256, K1257); folded at T28's opening (N520, DEC-96; K1268, K1277), R16 and R6–R9's changes N522's (K1273); N534 reviewed (K1369). Last changed T34 (T34-94: R5, K1828); every requirement met (K1833).
+**Status** · In force: a new product module, placed by BOB (K1256, K1257); folded at T28's opening (N520, DEC-96; K1268, K1277), R16 and R6–R9's changes N522's (K1273); N534 reviewed (K1369). Last changed T34 (T34-94: R5, K1828); every requirement met (K1833). Last changed T41 (T41-41's text: R22, R23 new; N820; D59, D62; K2405, K2417, K2418); marked not yet met (T41).
 
 **Size (P6).** About 1,600–2,300 lines: the import and its tables, recreation, completion, the reads, the four acts and its catalogue rows. Acceptance is split out if it grows (K1256).
 
@@ -75,6 +75,11 @@ Terms.
 
 - **R9** `acceptanceOf` answers the acceptance in force for a finding of an edition (by, when, why, what was checked, the gaps) or null. `openFlagsOn` answers the open flags with their issues. They are read as the plane. They are the one answer to "is this accepted or flagged" for every later module, including a case of this group that rests on accepted work. `case-disclosures` R13–R14 now read it, for `case-authoring` (its R55). (DEC-96 items 1, 2, 4; N522)
 
+**Whole-case acceptance and the importer's lens** (T41; N820; `draft-T41-investigation.md` §3.6; K2405, K2417, K2418; D59, D62)
+
+- **R22** *(not yet met: T41)* (D62) `acceptImported` takes `findings: "all"`: one act, one reason, accepts every finding of the edition that `recreated` (and `recreated_in_part` ones with gaps stated, R6) and answers the findings not accepted, listed with why; each accepted finding as R6 records it.
+- **R23** *(not yet met: T41)* (D59, D62) R4's assessment also answers each finding under the importing group's own lens (`case-checker` R23 with the group's statements in force and their recorded applications), beside the source's lens and the importer's bar. An accepted finding stays read-only evidence marked as another group's, never stronger than its edition.
+
 **The registration it fills** (K31's pattern; `accepted-work` R1; N522)
 
 - **R16** At start, the module registers with `accepted-work` (its R1) the following, each read as the plane:
@@ -138,7 +143,7 @@ Terms.
 - `membership`: the session stamp and whether a viewer is an active member.
 - `strength`: `strengthBarOf` (its R16; R4).
 - `case-grammar`: `caseFileManifestCheck`, `methodOf`, `materialsOf` (its R11–R13).
-- `case-checker`: `checkCaseFile` (its R1), whose `calculations` (its R20) R21 compares with its own recreation.
+- `case-checker`: `checkCaseFile` (its R1), whose `calculations` (its R20) R21 compares with its own recreation. (T41) Its `lens` (its R23; R23 here).
 - `calculations` (T33-67): `evaluate` (R21).
 - `inquiry-grammar`: `importedFindingRef` (its R11; R6).
 - `accepted-work`: `registerAcceptedWork` (its R1, with its R8's `moves`; R16).
