@@ -42,11 +42,18 @@ const MACHINES = ["admin", "member", "probe", "daemon", "ai"].map((c) => `${MACH
 const REFUSED = [null, undefined, "", "anna", "junk", `${MACHINE_CLASS_PREFIX}robot`, "member:", "member:a b", "Admin",
                  " admin", 42, 0, true, {}, [], ["admin"]];
 
-test("R88 hiddenBundles is null exactly for R43's see-all arms: every machine credential and the founder's viewer, in both spellings", async () => {
+test("R88 hiddenBundles is null exactly for R43's see-all arm: every machine credential, and no longer the founder's viewer (D54)", async () => {
   const w = await hidWorld();
-  for (const v of [...MACHINES, "admin", V("admin")]) {
+  for (const v of MACHINES) {
     assert.equal(hiddenBundles(v), null, v);
     assert.deepEqual(seen(w, v), ALL(w), `${v}: R43 lets it see every bundle, so nothing is subtracted`);
+  }
+  /* D54 (T41-3): the founder's viewer, in both spellings, is withheld the hidden projects it is not in */
+  for (const v of ["admin", V("admin")]) {
+    const hid = hiddenBundles(v);
+    assert.notEqual(hid, null, v);
+    assert.deepEqual(named(w, hid), ["PROJ-H", "PROJ-M"], v);
+    assert.deepEqual(left(w, hid), seen(w, v), `${v}: subtracting it leaves exactly what R43 lets it see`);
   }
   for (const v of [V("ann"), V("dee"), V("second"), V("nobody"), ...REFUSED])
     assert.notEqual(hiddenBundles(v), null, `${JSON.stringify(v)}: R43 does not pass every bundle to it`);
@@ -69,7 +76,16 @@ test("R88 for every other viewer it names exactly the bundles R43 does not pass:
   assert.deepEqual(check(V("bob"), "invited"), ["PROJ-D", "PROJ-M"]);
   assert.deepEqual(check(V("cal"), "leaving"), ["PROJ-D", "PROJ-M"]);
   assert.deepEqual(check(V("dee"), "outside"), ["PROJ-D", "PROJ-H", "PROJ-M"], "a discoverable project too: EXISTENCE is not FULL");
-  assert.deepEqual(check(V("second"), "an active administrator"), []);
+  /* D54: an active administrator, and the founder, are withheld the hidden projects they are not in, and the bundles
+     belonging to them; invited to one, it is no longer withheld */
+  assert.deepEqual(check(V("second"), "an active administrator"), ["PROJ-H", "PROJ-M"]);
+  assert.deepEqual(check("admin", "the founder"), ["PROJ-H", "PROJ-M"]);
+  w.bundle("NOTE-H", "information", "in H", "PROJ-H");
+  assert.deepEqual(check(V("second"), "a bundle in a hidden project"), ["NOTE-H", "PROJ-H", "PROJ-M"]);
+  w.m.projectInvite({ projectId: "PROJ-H", handle: "second", by: "ann", viewer: V("ann") });
+  assert.deepEqual(check(V("second"), "an administrator invited to H"), ["PROJ-M"]);
+  w.sql.exec(`DELETE FROM project_participants WHERE member_id='second'`);
+  w.sql.exec(`DELETE FROM bundles WHERE bundle_id='NOTE-H'`);
   assert.deepEqual(check(V("nobody"), "an id no member holds"), ["PROJ-D", "PROJ-H", "PROJ-M"]);
   w.m.memberSet({ memberId: "dee", status: "revoked", by: "admin" });
   assert.deepEqual(check(V("dee"), "a revoked member"), ["PROJ-D", "PROJ-H", "PROJ-M"]);
@@ -117,9 +133,11 @@ test("R88 over the real record-core's bundles table", async () => {
     .all(...hid.args).map((r) => r.bundle_id);
   assert.deepEqual(ids(hiddenBundles(V("ann"))), ["PROJ-B"]);
   assert.deepEqual(ids(hiddenBundles(V("bob"))), ["PROJ-A", "PROJ-B"]);
-  assert.deepEqual(ids(hiddenBundles(V("second"))), []);
+  /* D54: both projects are hidden (no setting recorded) and the administrators are in neither */
+  assert.deepEqual(ids(hiddenBundles(V("second"))), ["PROJ-A", "PROJ-B"]);
   assert.deepEqual(ids(hiddenBundles("junk")), ["INFO-1", "PROJ-A", "PROJ-B"]);
-  assert.equal(hiddenBundles("admin"), null);
+  assert.deepEqual(ids(hiddenBundles("admin")), ["PROJ-A", "PROJ-B"]);
+  assert.equal(hiddenBundles(`${MACHINE_CLASS_PREFIX}admin`), null);
 });
 
 test("R88 writes nothing and never throws, whatever it is handed; each answer is the caller's own", async () => {

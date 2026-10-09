@@ -29,18 +29,19 @@ test("R43 viewerPredicate is the one rule of sight, and returns the viewer's mem
     assert.deepEqual(sees(w, `${MACHINE_CLASS_PREFIX}${cls}`), all, cls);
     assert.equal(viewerPredicate(`${MACHINE_CLASS_PREFIX}${cls}`).member, null);
   }
-  assert.deepEqual(sees(w, "admin"), all, "the founder's viewer");
-  /* N357: the founder's viewer spelled `member:admin` sees every bundle too, and names the member `admin`; the
-     founder has no roster row, and neither spelling asks one, claimed or not. */
-  assert.deepEqual(sees(w, V("admin")), all, "the founder's viewer, as member:admin");
+  /* D54 (T41-3): the founder's viewer sees the discoverable project and not the hidden one it is not in. */
+  assert.deepEqual(sees(w, "admin"), ["INFO-I", "PROJ-D"], "the founder's viewer");
+  /* N357: the founder's viewer spelled `member:admin` sees what the bare spelling sees, and names the member `admin`;
+     the founder has no roster row, and neither spelling asks one, claimed or not. */
+  assert.deepEqual(sees(w, V("admin")), ["INFO-I", "PROJ-D"], "the founder's viewer, as member:admin");
   assert.equal(viewerPredicate(V("admin")).member, "admin");
   const unclaimed = world();
   unclaimed.project("PROJ-U");
-  for (const v of ["admin", V("admin")]) assert.deepEqual(sees(unclaimed, v), ["PROJ-U"], `${v}: the same rule before the claim`);
+  for (const v of ["admin", V("admin")]) assert.deepEqual(sees(unclaimed, v), [], `${v}: the same rule before the claim`);
   assert.deepEqual(sees(w, V("ann")), all, "owner");
   assert.deepEqual(sees(w, V("bob")), ["INFO-I", "PROJ-H"], "an invited participant sees the project");
   assert.deepEqual(sees(w, V("cal")), ["INFO-I"], "a non-participant sees every non-project bundle");
-  assert.deepEqual(sees(w, V("second")), all, "an active administrator");
+  assert.deepEqual(sees(w, V("second")), ["INFO-I", "PROJ-D"], "an active administrator: the discoverable project (D54)");
   w.m.memberSet({ memberId: "bob", status: "revoked", by: "admin" });
   w.sql.exec(`UPDATE members SET status='revoked' WHERE member_id='second'`);
   assert.deepEqual(sees(w, V("second")), ["INFO-I"], "an inactive administrator is no administrator");
@@ -95,9 +96,17 @@ test("R45 projectVisibilitySet: NOT_A_PROJECT, owners only, two settings; append
   const w = await sightWorld();
   w.bundle("INFO-J");
   assert.equal(w.m.projectVisibilitySet({ projectId: "INFO-J", setting: "hidden", by: "ann", viewer: V("ann") }).reason, "NOT_A_PROJECT");
-  for (const by of ["bob", "second", "admin"])
-    assert.equal(w.m.projectVisibilitySet({ projectId: "PROJ-H", setting: "discoverable", by, viewer: by === "admin" ? "admin" : V(by) }).reason,
+  const viewerOf = (by) => (by === "admin" ? "admin" : V(by));
+  assert.equal(w.m.projectVisibilitySet({ projectId: "PROJ-H", setting: "discoverable", by: "bob", viewer: V("bob") }).reason,
+    "PROJECT_VISIBILITY_NOT_THE_OWNER", "bob");
+  /* D54: an administrator neither invited nor joined is at the hidden project's EXISTENCE, so the act is refused there
+     (C-70.1); at the discoverable project it sees whole, the setting is still the owners' alone. */
+  for (const by of ["second", "admin"]) {
+    assert.equal(w.m.projectVisibilitySet({ projectId: "PROJ-H", setting: "discoverable", by, viewer: viewerOf(by) }).reason,
+      "PROJECT_SEEN_NOT_A_PARTICIPANT", by);
+    assert.equal(w.m.projectVisibilitySet({ projectId: "PROJ-D", setting: "hidden", by, viewer: viewerOf(by) }).reason,
       "PROJECT_VISIBILITY_NOT_THE_OWNER", by);
+  }
   assert.equal(w.m.projectVisibilitySet({ projectId: "PROJ-H", setting: "public", by: "ann", viewer: V("ann") }).reason,
     "PROJECT_VISIBILITY_UNKNOWN_SETTING");
   const h = w.m.projectVisibilitySet({ projectId: "PROJ-D", setting: "hidden", reason: "closing up", by: "ann", viewer: V("ann") });
@@ -194,26 +203,35 @@ test("R77 existenceAct: C-70.1 (id and name only) at EXISTENCE; null at FULL, at
   assert.deepEqual(w.m.projectVisibilitySet({ projectId: "PROJ-H", setting: "hidden", by: "cal", viewer: V("cal") }), ex);
 });
 
-test("R43 R44 R80 R76 N357: the founder's member:admin is at FULL sight of every project, as the bare admin is, and names the member admin", async () => {
+test("R43 R44 R80 R76 N357: the founder's member:admin sees as the bare admin does (FULL of a discoverable project, EXISTENCE of a hidden one it is not in), and names the member admin", async () => {
   const w = await world().group("ann", "cal");
   w.project("PROJ-H", "Hidden H");
   w.project("PROJ-D", "Discoverable D");
   w.project("PROJ-M", "Machine M");
   for (const p of ["PROJ-H", "PROJ-D"]) w.m.projectClaimOwner({ projectId: p, memberId: "ann" });
   w.m.projectVisibilitySet({ projectId: "PROJ-D", setting: "discoverable", by: "ann", viewer: V("ann") });
-  for (const v of ["admin", V("admin")])
-    for (const p of ["PROJ-H", "PROJ-D", "PROJ-M"]) {
-      assert.equal(w.m.sight(p, v), Membership.SIGHT_FULL, `${v} ${p}`);
-      assert.equal(w.m.inSight(p, v), true, `${v} ${p}`);
-      assert.equal(w.m.existenceAct(p, v), null, `${v} ${p}`);
+  for (const v of ["admin", V("admin")]) {
+    assert.equal(w.m.sight("PROJ-D", v), Membership.SIGHT_FULL, `${v} PROJ-D`);
+    assert.equal(w.m.inSight("PROJ-D", v), true, `${v} PROJ-D`);
+    assert.equal(w.m.existenceAct("PROJ-D", v), null, `${v} PROJ-D`);
+    /* D54: a hidden project, owned or machine-made, the founder neither invited nor joined */
+    for (const p of ["PROJ-H", "PROJ-M"]) {
+      assert.equal(w.m.sight(p, v), Membership.SIGHT_EXISTENCE, `${v} ${p}`);
+      assert.equal(w.m.inSight(p, v), false, `${v} ${p}`);
+      assert.equal(w.m.existenceAct(p, v).code, "PROJECT_SEEN_NOT_A_PARTICIPANT", `${v} ${p}`);
     }
+  }
+  /* the founder as a participant sees the hidden project whole, in both spellings */
+  w.m.projectInvite({ projectId: "PROJ-H", handle: "cal", by: "ann", viewer: V("ann") });
+  w.m.participationWrite("invite", { projectId: "PROJ-H", memberId: "admin", by: "ann" });
+  for (const v of ["admin", V("admin")]) assert.equal(w.m.sight("PROJ-H", v), Membership.SIGHT_FULL, v);
   assert.deepEqual([viewerPredicate("admin").member, viewerPredicate(V("admin")).member], [null, "admin"]);
-  assert.deepEqual([viewerPredicate("admin").scope, viewerPredicate(V("admin")).scope], ["member", "member"]);
+  assert.deepEqual([viewerPredicate("admin").scope, viewerPredicate(V("admin")).scope], ["participant", "participant"]);
   assert.equal(w.m.positionalMember(V("admin")), "admin");
   assert.equal(w.m.positionalMember("admin"), null);
   /* sight is not authority: the founder's spellings hold no position in a project (R55, R60) */
-  assert.equal(w.m.projectAuthority("PROJ-H", V("admin"), "joined", "an act").code, "PROJECT_ACT_NOT_A_PARTICIPANT");
+  assert.equal(w.m.projectAuthority("PROJ-D", V("admin"), "joined", "an act").code, "PROJECT_ACT_NOT_A_PARTICIPANT");
   /* no other member id is widened: a member named like no roster row still sees no project */
-  assert.equal(w.m.inSight("PROJ-H", V("admin2")), false);
-  assert.equal(w.m.inSight("PROJ-H", V("Admin")), false);
+  assert.equal(w.m.inSight("PROJ-D", V("admin2")), false);
+  assert.equal(w.m.inSight("PROJ-D", V("Admin")), false);
 });

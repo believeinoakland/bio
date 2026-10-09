@@ -15,3 +15,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 Your reading stands (K2437): at an administrator's EXISTENCE of a hidden project, projectRequest answers membership's PROJECT_SEEN_NOT_A_PARTICIPANT (C-70.1 with owners, through existenceAct) and writes nothing; the request to join stays open only at a discoverable project's EXISTENCE (R16, Membership §7.14). Owners add an administrator by inviting them. Word R10 so in your record as the met reading; I fold the sentence into R10 at your merge (marked T41).
+
+## B3 · CHANGE
+
+membership is merged into tranche/T41 (K2442). Merge tranche/T41 into your branch, run your tests against it (its record lists your figures-purge :63, :107, ownership :24, :113, :145, :178, :230, requests :24 as D54 reds: confirm each is re-stated), and record COMPLETE.

@@ -15,3 +15,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 All three readings stand (K2437). (1) bundleInfo(project).title (record-core R34), id as fallback; Private Uses gains it. (2) R60's shape as you state it, with accounts.reference/signin. (3) Remove accountSwitchSet and groupSwitchSet as methods; the users' reds you name (answers standing.test.mjs :154, :183, :210; plane ask.test.mjs :71, :196, :236, :266, :293, :316) are accepted by name until T41-29 (answers) and T41-63 (plane); list every one in COMPLETE.
+
+## B3 · CHANGE
+
+membership is merged into tranche/T41 (K2442; D54: an administrator neither invited nor joined to a hidden project is at EXISTENCE). Merge tranche/T41 into your branch: your t40.test.mjs :160, :290, :332, :529 go red under D54 (membership's record); re-state them in this job, then record COMPLETE as planned.

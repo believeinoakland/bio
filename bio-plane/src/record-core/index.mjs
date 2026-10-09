@@ -16,7 +16,8 @@
    the store gate (R78); expunge with a tombstone (R79). T34 (T34-9; N554, N593, K1728): `CALC` minted opaque (R62, R76);
    a derived-rebuildable table's `from` (R77); the declaration's two older refusals answered with their rows (R80). T35
    (T35-13; N655, N664, DEC-49, DEC-149): the lease's and the settings' refusals answered with their rows (R81); every
-   member-facing sentence says "your group's Civicsmith" (R82). */
+   member-facing sentence says "your group's Civicsmith" (R82). T41 (T41-2a; K2431, K2435): `STP` and `GUD`, opaque in
+   `ID_TABLE` since record-grammar's T41 job, each named by its own sentence in `mintExhausted` (R62, R76). */
 import { checkBundle, createSha256, EXTENSION_ARMS, LEGACY_TYPE_ALIASES, ID_TABLE } from "../record-grammar/index.mjs";
 import { RECORD_SCHEMA } from "./schema.mjs";
 import { RECORD_CORE_CHECKS, PER_ITEM_CHECKS } from "./checks.mjs";
@@ -103,8 +104,10 @@ function manifestFiles(filesJson) {
 /* What each opaque-minted prefix's id is called in R62's detail: R3's set (`RecordCore.GATED_ID_PREFIXES`), and `SRC`, a
    source, which `sources` mints opaque through `mintOpaqueId` and never through the counter (N376, K540). */
 const MINTED_OBJECT = Object.freeze({ PROJ: "project", CASE: "case", DRAFT: "draft", RVG: "grant", TASK: "task", SRC: "source",
-  /* T33 (R76): the opaque prefixes of `ID_TABLE`, which `allocId` draws a 16-character tail for; `CALC` since T34 (K1728) */
-  EVT: "event", LIN: "line", MNY: "money fact", PFA: "person fact", IDC: "identity claim", CALC: "calculation" });
+  /* T33 (R76): the opaque prefixes of `ID_TABLE`, which `allocId` draws a 16-character tail for; `CALC` since T34 (K1728),
+     `STP` and `GUD` since T41 (record-grammar R51, R53; K2431) */
+  EVT: "event", LIN: "line", MNY: "money fact", PFA: "person fact", IDC: "identity claim", CALC: "calculation",
+  STP: "step", GUD: "reading guide" });
 
 /* R76 (S0-2): the prefixes `ID_TABLE` gives the opaque form, read from record-grammar's one table, never restated. Minting
    follows `form` alone: a row that also carries `legacy: "sequential"` (`CALC`, K1728) is minted opaque, its counter never

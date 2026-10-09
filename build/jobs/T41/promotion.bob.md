@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · CHANGE
 
 Your R12 wording adopted (K2439): 'A replay is exempt from this refusal, as from R9's.' on tranche/T41; merge it into your branch when you next merge (no code change). Improvements noted. Still hold the stamp: I tell you when record-core, membership, project-roster and credentials are merged.
+
+## B3 · CHANGE
+
+record-core and membership are merged (K2441, K2442). Still hold the stamp until project-roster and credentials are merged; membership's rows for you: C-70.1, C-96.48, C-96.49, C-96.51.
