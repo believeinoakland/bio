@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 472 KB by `build/plan/read
 Merge order in L3: provenance, provenance-routes, capture-sources, acquisition, capture, file-safety (`modules.json` order; provenance provides R63 to capture).
 Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+K2449: (1) and (2) stand as you read them; no length cap in R42. (3) Build it in this job: recordReceipt (R13) takes `by` and `statement` for via "upload" receipts only, held with the receipt and answered wherever receipts are read, so a second sighting keeps its own uploader's statement. R63 on tranche/T41 now says so: merge tranche/T41 into your branch. capture (R86) codes against it.
