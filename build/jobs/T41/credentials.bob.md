@@ -11,3 +11,7 @@ Reading set (mechanics §17): measured at this START: 412 KB by `build/plan/read
 Merge order in L2: record-core, membership, project-roster, credentials, promotion last (it stamps the rows).
 Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+All three readings stand (K2437). (1) bundleInfo(project).title (record-core R34), id as fallback; Private Uses gains it. (2) R60's shape as you state it, with accounts.reference/signin. (3) Remove accountSwitchSet and groupSwitchSet as methods; the users' reds you name (answers standing.test.mjs :154, :183, :210; plane ask.test.mjs :71, :196, :236, :266, :293, :316) are accepted by name until T41-29 (answers) and T41-63 (plane); list every one in COMPLETE.
