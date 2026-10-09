@@ -63,7 +63,7 @@ Terms. An **ask** is one member's question, answered under a **grant**: `credent
 
 #### Accounts and limits (T40; N812; K2373)
 
-- **R30** (D38; B3) *(not yet met: T40)*
+- **R30** (D38; B3) *(not yet met: T41)*
   - An ask carries an optional `project` (one the member has joined) and calls `accountFor` with kind `ask`.
   - A standing question's AI half calls it with kind `standing`, without `project` (K2348: standing questions unchanged otherwise).
   - Each is judged by `ai-use.useCheck` in place of the ceiling.
