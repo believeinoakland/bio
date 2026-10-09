@@ -115,3 +115,5 @@ Recorded as the principle under D41: a shared question never shows which project
 | D50 | why a document is held (Q5): **recommended** provenance only (the producing step and its questions), `holdings` leaves D1; alternative a stated reason per document | open |
 | D51 | three new modules (§2.1): **A** approve `steps` (L6 after hypotheses), `question-explorer` (L6 after skills), `investigation` (L7 after intent); B another arrangement | open |
 Told to Bob as fact, not asked: exploring is not offered until D13 (private-person fence) and D14 (test investigations) are ruled; this lane brings both with the D42 study (Bob approved the study 2026-10-09: "A").
+
+**D46–D51 ruled, Bob, 2026-10-09:** "D46: A / D47: B / D48: as recommended / D49: A / D50: as recommended / D51: A". Folded into the working document §2 (2.2 outcomes per question, milestones met, cost message handle; 2.3 why a document is held; 2.4 the system's hunches apart; 2.8 the three parts).
