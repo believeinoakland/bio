@@ -45,6 +45,7 @@ It is the only module marked `legacy` in `modules.json`.
    13. (N823, K2438) from T41-37's merge until T41-36's, publish-schedule's test that it declares `scheduled_editions` (refused `TABLE_DECLARED` while publication still declares it); from T41-36's merge until each user's merge, the callers of the moved services: `op=publishat` and ratification's scheduled arms (T41-39), case-authoring R58, R59 (T41-43), scheduler's `scheduled-publish` (T41-49), queue-producers' scheduled items (T41-53), actions `t34` (T41-47), the plane's three ops (T41-63);
    14. the plane bundle and `program.mjs`, staled by any merge, regenerated at each layer's close.
    15. (K2486) control-plane `r53-routes.test.mjs`:67 (R53) from T41-16's merge until T41-58 declares hypotheses' ops.
+   16. (K2487) answer-envelope's `CHECK_FAMILIES is total` test and case-carriage's re-assertion of it, from each new family's merge (steps C-142, ai-use C-143, reading-guides C-144, question-explorer C-145, investigation C-146) until T41-60 adds each family's `checks.mjs` to `CHECK_FAMILY_FILES`.
 
 **Text owed before each layer's START (K2451; BOB's wording, P5):**
 - L7: none beyond §3.6 (applied).
@@ -158,7 +159,7 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 - **T41-57 · instance-setup** · (was T40-22) R65, R67.
 - **T41-58 · op-declarations** · (was T40-23) R41, R42; the reds of rule 4 (7); (N820) R43; (DEC-188 (8)) `accountswitchset` and `groupswitchset` retire to `accountusesset` · **P6:** 3,283 → ~3,680: measured at START, reported before building if it would pass ~4,000. (K2457) `op=recordcapturedlocator` (provenance R53) lets its holder write `via: "upload"` with any `by`: declare it so only capture R86 writes upload receipts.
 - **T41-59 · admission** · (was T40-18a; N797) `handlecheck` public, R22's count; (DEC-188 (8)) R19's list drops `groupswitchset`.
-- **T41-60 · answer-envelope** · (K2428) its C-120 case-disclosures test (`R2, R7 … .20–.22`) red on `tranche/T41` since T40's stamp: re-pin; and re-pin C-35.13's translation re-worded by TEXT-CHAIN #7 (K2428) · (N820) families gain the new modules' and amended modules' check rows · fixed at L11's START from the merged codes.
+- **T41-60 · answer-envelope** · (K2428) its C-120 case-disclosures test (`R2, R7 … .20–.22`) red on `tranche/T41` since T40's stamp: re-pin; and re-pin C-35.13's translation re-worded by TEXT-CHAIN #7 (K2428) · (N820) families gain the new modules' and amended modules' check rows · fixed at L11's START from the merged codes. (K2487) `CHECK_FAMILY_FILES` gains each new family's file (reading-guides: `src/reading-guides/checks.mjs` after capture-requests, before `skilldoctrine.mjs`; READING-GUIDES #1 J2), clearing rule 4 (16).
 - **T41-61 · store-door** · (was T40-24) R10.
 - **T41-61a · tasks** (tests only) · (N822, K2442) `check`:38 re-stated for D54.
 - **T41-62 · control-plane** · (was T40-25) R69, R70, the handle routes; (N820) R71 routes R43's ops, a capture's `step`; (DEC-188 (8)) R56 drops `groupswitchset` · **P6:** 3,270 → ~3,460. (K2442) `op=memberlist` stamped with `viewer` (membership R18 reads the asking administrator's sight; unstamped it fails closed).
