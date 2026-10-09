@@ -25,8 +25,8 @@ test("R63 (N347): its one row is in capture's own table under EVIDENCE_NOT_HELD,
   assert.equal(CAPTURE_CHECKS.NOT_FOUND, undefined, "the generic key is gone");
   assert.deepEqual(Object.keys(CAPTURE_CHECKS).sort(), ["ACCOUNT_NO_TEXT", "EVIDENCE_NOT_HELD", "KNOCKER_SECRET_WEAK", "KNOCK_DISCARDED",
                                                       "MACHINE_CANNOT_SET_ASIDE", "NOT_THE_CAPTURING_ACTOR", "NO_SUCH_KNOCK",
-                                                      "RESOLVE_NO_REASON", "SET_ASIDE_NO_REASON"],
-                   "C-118.1–C-118.9 (N364 added .3–.6, K1019 .7–.9)");
+                                                      "RESOLVE_NO_REASON", "SET_ASIDE_NO_REASON", "UPLOAD_NO_STATEMENT"],
+                   "C-118.1–C-118.10 (N364 added .3–.6, K1019 .7–.9, R86 .10)");
   assert.equal(row.check, "C-118.1");
   assert.equal(row.translation, TRANSLATION);
   assert.match(row.where, /^src\/capture\/ops\.mjs evidenceAbsent > /);
