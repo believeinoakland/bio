@@ -183,3 +183,7 @@ Numbered entries; BOB answers each in rulings (K) on `tranche/T<n>`. Decision st
 ## H37 · 2026-10-09 · Bob's review comments on the design of record
 
 **Carries:** 1.1 now reads "a rule was followed or broken"; the change is wording only. 1.1 also now reads "Finds that cut against what members expect are shown as prominently as those that support it". Bob changed "at least as" to "as". That differs from Content Framework invariant 7 ("surfaced at least as prominently"), so the canon fold should bring invariant 7 into line, or ask Bob to confirm whether he means it there too.
+
+## H38 · 2026-10-09 · Bob: a question shows its non-hidden projects (revises D41's principle)
+
+**Carries:** Bob's comment on §1.1: "A question shows which non-hidden projects draw on it". Hidden projects are still never shown, named or counted. This reverses H10/D41's "a question never shows which projects draw on it" for non-hidden projects. It affects `inquiry`, `leg-earning` R13 (in-process only today) and `steps` R3 (handle only, no project). It also affects canon text in the draft (§2's principle, quoted from Bob's D41 reasoning), which needs Bob's new words. Knock-ons put to Bob as D64. Also from Bob's comments: §1.1 "where the evidence stands: for it, against it, and the gaps", wording only.
