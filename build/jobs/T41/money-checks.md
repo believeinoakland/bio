@@ -1,6 +1,6 @@
 # money-checks (T41)
 
-**Status** · session_01QVjSp42ywbNdzv9ts1aHcs · depth 2 · WORKING · handled B2
+**Status** · session_01QVjSp42ywbNdzv9ts1aHcs · depth 2 · COMPLETE · handled B2
 
 ## Completion (T41-12a, tests only)
 
