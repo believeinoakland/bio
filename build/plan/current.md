@@ -38,7 +38,7 @@ It is the only module marked `legacy` in `modules.json`.
    8. reading-pipeline `convert-chain.test.mjs`:297 and `pieces.test.mjs`:218 (K2399) until T41-9;
    9. filings `outward.test.mjs`:136 (R25; K2387) until T41-48;
    10. the L11 users of the retired ceiling codes (`AI_USE_CEILING_REACHED`, `AI_USE_COPY_CEILING_REACHED`: wizard-scripts, instance-setup, store-door, op-declarations' `aiceilingset`, control-plane, plane) from T41-21/T41-23's merges until their L11 jobs, named exactly at L6's close;
-   11. (N822) the users' tests that assume an administrator's `FULL` sight of a hidden project, from T41-3's merge until each user's job (named exactly at L2's close from the suites membership runs, P11; the likely files are `draft-T41-investigation.md` §3.5's list);
+   11. (N822, K2442) the users' tests that assumed an administrator's or the founder's `FULL` sight of a hidden project, from T41-3's merge until each user's job: exactly the 147 listed by file and line in `build/jobs/T41/membership.md` (Completion, "Users' suites"); each user's job re-states its own;
    12. (K2437) the callers of credentials' removed `accountSwitchSet`/`groupSwitchSet`: answers `standing.test.mjs` :154, :183, :210 until T41-29; plane `ask.test.mjs` :71, :196, :236, :266, :293, :316 until T41-63 (and any further one CREDENTIALS #11 names at COMPLETE);
    13. (N823, K2438) from T41-37's merge until T41-36's, publish-schedule's test that it declares `scheduled_editions` (refused `TABLE_DECLARED` while publication still declares it); from T41-36's merge until each user's merge, the callers of the moved services: `op=publishat` and ratification's scheduled arms (T41-39), case-authoring R58, R59 (T41-43), scheduler's `scheduled-publish` (T41-49), queue-producers' scheduled items (T41-53), actions `t34` (T41-47), the plane's three ops (T41-63);
    14. the plane bundle and `program.mjs`, staled by any merge, regenerated at each layer's close.
@@ -63,10 +63,13 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 ### L3
 - **T41-7a · provenance** · (T41-8a's provider; K2434) R63 new: route `upload` (`UPLOAD_VIA`) graded as the doorbell's received material, not fetched, R42's `origin.kind` `upload` with `origin_statement` · req: R63 · merges before T41-8.
 - **T41-7 · capture-sources** · (N822) R58 amended (BOB's wording, K2434): an administrator sees a `project` credential only at `FULL` sight of its project; tests assuming an administrator's `FULL` sight re-stated · req: R58.
-- **T41-8 · capture** · (N822) `held` tests re-stated (an administrator not added sees a hidden project at `EXISTENCE`) · tests only unless R-text names administrators' sight.
+- **T41-7b · provenance-routes** (tests only) · (N822, K2442) `marked`:126, `table`:40 re-stated for D54 (rule 4 (11)).
+- **T41-8b · acquisition** (tests only) · (N822, K2442) `archivelist`:156, :259 re-stated for D54.
+- **T41-8 · capture** · (N822) `held` tests re-stated (an administrator not added sees a hidden project at `EXISTENCE`) · tests only unless R-text names administrators' sight. (K2442) also `knocker`:685.
 - **T41-8a · capture** · (N821 upload; Bob D42 "upload: A", K2425) a member uploads a file she holds: graded received from the member (as the doorbell's material, never fetched, K509 (3)), attributed to her, with her statement of where it came from; stored and profiled as any capture; a later public fetch of the same bytes strengthens it · req: capture R86 (K2434; names `uploadCapture`, `via: "upload"`, address `upload:<sha256>`, method `uploaded`, `UPLOAD_NO_STATEMENT`) · uses provenance R63 (T41-7a) · L11 shares: op-declarations (the op), control-plane (route), affordances (help), store-door if the size path needs it.
+- **T41-8c · file-safety** (tests only) · (N822, K2442) `intake`:105 re-stated for D54.
 
-**L3 merge order:** provenance, capture-sources, capture (`modules.json` order; provenance provides R63 to capture).
+**L3 merge order:** provenance, provenance-routes, capture-sources, acquisition, capture, file-safety (`modules.json` order; provenance provides R63 to capture).
 
 ### L4
 - **T41-9 · reading-pipeline** · (was T40-4a; K2399) re-measure `convert-chain.test.mjs`:297 and `pieces.test.mjs`:218; (N820; D21) R29: a transcription tier above tier 3 at a member's act on the paying account (`use: "transcribe"`), appended as `ai_transcription` (text-chain R104), never under a "no AI" limit · req: §3.6 · 1,452 → ~1,550.
@@ -74,14 +77,15 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 
 ### L5
 - **T41-10b · progressions** (tests only) · (K2431) `define.test.mjs`:199 pins `SHARED_ACT_CHECKS`' keys as two; record-grammar R52 adds C-33.54 (`ACCEPT_MUST_REAUTHOR`): re-pin · red accepted by name until this merge.
-- **T41-10a · query-language** (tests only) · (TEXT-CHAIN #7 J1, K2427) `grammar.test.mjs`:210 pins `MACHINE_READ_KINDS` as `["ocr", "ai"]`; text-chain R91 now adds `ai_transcription`: re-pin from the export · red accepted by name until this merge.
+- **T41-10a · query-language** (tests only) · (TEXT-CHAIN #7 J1, K2427) `grammar.test.mjs`:210 pins `MACHINE_READ_KINDS` as `["ocr", "ai"]`; text-chain R91 now adds `ai_transcription`: re-pin from the export · red accepted by name until this merge. (K2442) its fixture gains `project_sight` (membership R85/R120): `converts`:270, `fields`:76, `projection`:62, `statements`:111, :209, `t33`:157.
 - **T41-11 · observation-log** · (N820; H39) R1, R13 gain authority kind `step`; R37 `onLookAnswered` · req: §3.6 · 3,235 → ~3,280.
 - **T41-12 · bias** · (N820; D59) R49 `statementInForce` · req: §3.6.
+- **T41-12a · money-checks, retrieval, workbooks** (tests only, three jobs) · (N822, K2442) re-state for D54 the tests rule 4 (11) lists for each.
 
 ### L6
 - **T41-13 · inquiry-grammar** · (D59) R18 `bias_applied` on a leg · req: §3.6.
 - **T41-14 · leg-earning** · (D36, D29, H38, D64, D21) R13 `projectsDrawingOnPaged`, R14 `projectsShownOn`, R15 the AI transcription's ceiling · req: §3.6.
-- **T41-15 · inquiry** · (was T40-5; N814) R39 re-written (each project's own deferral and dismissal; K2371) and (N820; H38) R39 amended (names only non-hidden drawing projects; a question drawn on only by hidden projects moved on its own state); R55 amended (D17), R59 (D13 warning), R60 (`projects` on every read); (DEC-188 (7)) `question.refused.drawnon` by key · K2371, K2418 · req: R39 folded (K2436), R54 `set_in`, R55, R59, R60 as §3.6 · 3,294 → ~3,420.
+- **T41-15 · inquiry** · (was T40-5; N814) R39 re-written (each project's own deferral and dismissal; K2371) and (N820; H38) R39 amended (names only non-hidden drawing projects; a question drawn on only by hidden projects moved on its own state); R55 amended (D17), R59 (D13 warning), R60 (`projects` on every read); (DEC-188 (7)) `question.refused.drawnon` by key · K2371, K2418 · req: R39 folded (K2436), R54 `set_in`, R55, R59, R60 as §3.6 · 3,294 → ~3,420. (K2442) `inquiry/index.mjs`:750 reads `biasManifest` as the founder (`"admin"`), now blind to hidden projects: an internal read takes no viewer or a machine one.
 - **T41-16 · hypotheses** · (D33, D46 A, D18) R16–R21, R14 amended · req: §3.6 · 810 → ~1,080.
 - **T41-17 · steps (new)** · (N820; D27–D50, H38, H39, D64) R1–R27 · req: §3.1 · ~2,150; if it grows past ~2,500, the cost relay, follows and later-found move to a module directly after it (BOB's, at the job's report).
 - **T41-18 · citation** · (N822) `cite-refusals` tests re-stated · tests only.
@@ -89,7 +93,7 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 - **T41-20 · contradiction** · (D64) R50, R55 amended · req: §3.6 · 3,681 → ~3,730.
 - **T41-21 · run-rules** · (was T40-6; N812) R20: the ceiling codes retired, `AI_NO_ACCOUNT`'s translation; (N820) R19 (the test bar), R20 (D12), R23 `RUN_ORIGINS`, R24 mode `enquire`, R25 draft kinds, R26 `pages` · K2373, K2418 · req: T40's applied text and §3.6 · 2,051 → ~2,180.
 - **T41-22 · ai-use** · (was T40-7; N812) R1–R9 by copy of `ai-runs/index.mjs`:2591–2940 (K624); (N820; D12) R10 `estimate`, R11 `actualOf`, R4 and R9 amended; (DEC-188 owed: the panel's reads, change history) a read of each account's limits table (`op=ailimits`, declared by op-declarations R41 with no requirement behind it) with each limit's history (who and when), to the account's owners only; (DEC-188 (7)) its refusals and the Ask item read by key: `ai.refused.limit`, `.limit.overall`, `.limit.member` (`{whose}` from `ai.whose.group|project|own`), `ai.refused.limitinvalid`, `.unitunavailable`, `.explorenotenabled` · K2373, K2350, U145 · req: T40's applied text, §3.6; DEC-188's share BOB's wording before L6's START · ~900 → ~1,100.
-- **T41-23 · ai-runs** · (was T40-8) R48–R51 retired, its copy deleted and re-pointed, R52 amended; (N820) R73–R76; (N822) `hidden-notices` re-stated · after T41-22 · 3,295 → ~3,000 → ~3,300.
+- **T41-23 · ai-runs** · (was T40-8) R48–R51 retired, its copy deleted and re-pointed, R52 amended; (N820) R73–R76; (N822) `hidden-notices` re-stated · after T41-22 · 3,295 → ~3,000 → ~3,300. (K2442) `ai-runs/index.mjs`:201 reads as the founder (`"admin"`): an internal read takes no viewer or a machine one.
 - **T41-24 · run-productions** · (D2, D3, D4, D22) R21–R24 · req: §3.6 · 1,358 → ~1,600.
 - **T41-25 · capture-requests** · (N820) R55 (`step` on a request; arrival source) · req: §3.6.
 - **T41-26 · reading-guides (new)** · (D8, D24, D65) R1–R12 · req: §3.4 · ~900.
@@ -115,8 +119,9 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 - **T41-40 · case-checker** · (was T40-16b; N798) `/3` specification; (D56, D59) R23 lens, R24 the account's code arms; the edge to `strength` · req: §3.6 · 1,468 → ~1,650.
 - **T41-41 · case-import** · (D59, D62) R22 whole-case acceptance, R23 the importer's lens · after T41-40.
 - **T41-42 · case-disclosures** · (was T40-16; N798, N811) as T40-16; (D56–D59, D63) R30 `accountJudged`, R31, R22 amended; (DEC-188 (7)) `document.cleaned.label`, `document.refused.clean`, `.pending` (C-120.20–.22) by key; edges to `answers`, `bias` · req: applied, §3.6 · after T41-35, T41-41 · 2,098 → ~2,400.
-- **T41-43 · case-authoring** · (D56, D57, D60, D61) R63–R68; (N823) R58 and R59's `#waits` re-pointed to publish-schedule's waiting read; (N822) `fences`, `statement` re-stated · req: §3.6 · after T41-42 · **P6:** 3,473 → ~3,700: the job measures at its START and reports before building if it would pass ~4,000 (the account's R63–R68 then move to a module after it, BOB's).
+- **T41-43 · case-authoring** · (D56, D57, D60, D61) R63–R68; (N823) R58 and R59's `#waits` re-pointed to publish-schedule's waiting read; (N822) `fences`, `statement` re-stated · req: §3.6 · after T41-42 · **P6:** 3,473 → ~3,700: the job measures at its START and reports before building if it would pass ~4,000 (the account's R63–R68 then move to a module after it, BOB's). (K2442) `case-authoring/index.mjs`:974 and :1735 read as the founder (`"admin"`): an internal read takes no viewer or a machine one.
 - **T41-44 · review** · (N822) R9 drops "or an active administrator" for a hidden project's drafts; (D60, D61) R30–R33 · req: §3.5, §3.6 · 1,028 → ~1,250.
+- **T41-44a · network-notices** · (N822, K2442) `index.mjs`:187 (`#closed`, `projectStage` read as the founder) takes no viewer or a machine one; its tests rule 4 (11) lists re-stated.
 
 **L8 merge order:** case-grammar, case-carriage, publish-schedule, publication, public-read, ratification, case-checker, case-import, case-disclosures, case-authoring, review.
 
@@ -125,6 +130,7 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 - **T41-46 · consequences** · (N822) `record` tests re-stated · tests only.
 - **T41-47 · actions** · (N822) R52–R60: the hold reads and notices answered at `EXISTENCE` of a hidden project with what each already names, never contents; `t34` re-stated · req: §3.5, BOB's wording. (N823, K2438) `t34.test.mjs`'s stub of `publication.scheduleEdition` re-pointed to publish-schedule.
 - **T41-48 · filings** (tests only) · (was T40-9a; N819) `outward.test.mjs`:136's fixture · K2387.
+- **T41-48a · filing-templates** (tests only) · (N822, K2442) re-state for D54 the tests rule 4 (11) lists.
 
 ### L10
 - **T41-49 · scheduler** · (N820) R26 registers `question-explorer`'s consumer and `investigation`'s quiet check; (N823) publish-schedule's wake (R71) re-pointed · req: §3.6.
@@ -142,7 +148,8 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 - **T41-59 · admission** · (was T40-18a; N797) `handlecheck` public, R22's count; (DEC-188 (8)) R19's list drops `groupswitchset`.
 - **T41-60 · answer-envelope** · (K2428) its C-120 case-disclosures test (`R2, R7 … .20–.22`) red on `tranche/T41` since T40's stamp: re-pin; and re-pin C-35.13's translation re-worded by TEXT-CHAIN #7 (K2428) · (N820) families gain the new modules' and amended modules' check rows · fixed at L11's START from the merged codes.
 - **T41-61 · store-door** · (was T40-24) R10.
-- **T41-62 · control-plane** · (was T40-25) R69, R70, the handle routes; (N820) R71 routes R43's ops, a capture's `step`; (DEC-188 (8)) R56 drops `groupswitchset` · **P6:** 3,270 → ~3,460.
+- **T41-61a · tasks** (tests only) · (N822, K2442) `check`:38 re-stated for D54.
+- **T41-62 · control-plane** · (was T40-25) R69, R70, the handle routes; (N820) R71 routes R43's ops, a capture's `step`; (DEC-188 (8)) R56 drops `groupswitchset` · **P6:** 3,270 → ~3,460. (K2442) `op=memberlist` stamped with `viewer` (membership R18 reads the asking administrator's sight; unstamped it fails closed).
 - **T41-63 · plane** · (was T40-26) composes `ai-use`, registers publication's handle guard; (N820) R30 composes the four new modules, their migrations and counts; (N823) composes and migrates `publish-schedule` and spreads its ops (`store.mjs` 564; ratification's factory registers the publisher, its R43); (N822) `t33` re-stated; whatever L1–L8's codes owe · fixed at L11's START.
 
 **L11 STARTs (K874, K2400):** control-plane R69, R70 and notice-producers R16 each need an explicit test. **L11 merge order:** `modules.json` order; plane last.
