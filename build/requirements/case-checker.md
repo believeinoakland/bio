@@ -66,7 +66,7 @@ Terms. The **case file**, its **manifest**, **parts** and **files** are `case-gr
 **The lens and the account, re-checked offline** (T41; N820; `draft-T41-investigation.md` §3.6; K2405, K2417, K2418; D56, D59)
 
 - **R23** *(not yet met: T41)* (D59) `checkCaseFile` takes `lens`: `as_published` (default), `removed`, or a reader's own `{statements, applications}`. Under `removed` each `case-grammar` R24 application is reversed (a lowered grade restored to `from`, an excluded leg or refused inference restored); under a reader's lens its applications are applied; each finding's pair is recomputed (`strength.recomputePair`) and answered with `bar_met` under that lens and the statements that changed it. Every report states the limit: "A re-check re-weighs the analysis that exists; it cannot write what another lens would have written."
-- **R24** *(not yet met: T41)* (D56) The account's code arms (`case-disclosures` R30's, but the machine flags) re-run offline over the carried document and passages; a departure is a `differs` entry for the case.
+- **R24** *(not yet met: T41)* (D56; K2451, K2471) `checkAccount({account, cited, printed, conclusions})`, pure and never throwing, judges each sentence of `case-grammar` R23's `account:` block through `answers.checkSentences` (its R33), with `case-disclosures` R30's arms in its order: `ACCOUNT_SENTENCE_UNSUPPORTED`, `ACCOUNT_FACT_NOT_IN_CITED`, `ACCOUNT_CONTRADICTED_BY_RECORD` (against `conclusions`), `ACCOUNT_BIAS_NOT_PRINTED` (its statement not in `printed`) and `ACCOUNT_CLAIM_NOT_BIAS`. The machine flags are not judged here. It is exported for `case-disclosures` R30, which runs it at the act. R1 runs it offline over the carried document, its passages, its printed bias manifest and its findings' signed conclusions, and each departure is a `differs` entry for the case naming the code; this module adds no catalogue row (the codes' C-120 rows are `case-disclosures`' R22). `answers.checkSentences` is imported from `answers`' pure code (answers R33 keeps it bundleable, T41-29).
 
 ## Private
 
@@ -82,7 +82,7 @@ Terms. The **case file**, its **manifest**, **parts** and **files** are `case-gr
 - `case-catalogue` (K1824): `checkCaseDocument`, `CASE_MEMBER_ROLES` (its R1, R2; R7), imported from its pure `checks.mjs` (was `ratification`'s R8, R9).
 - `calc-grammar` (T33-66): `evaluate`, `resultKey`, its method version (R20), bundled into R13's program.
 - `case-grammar` (T33-66): `calculationsOf` (its R18).
-- (T41; D56, D59) `case-grammar`: `accountOf`, `biasApplicationsOf` (its R23, R24; R23, R24 here). `strength` (held): `recomputePair` under a lens (R23).
+- (T41; D56, D59) `case-grammar`: `accountOf`, `biasApplicationsOf` (its R23, R24; R23, R24 here). `strength` (held): `recomputePair` under a lens (R23). `answers` (K2471): `checkSentences` (its R33; R24), from its pure code, bundled into R13's program. A new `modules.json` edge; `answers` is earlier (layer 6).
 
 ### Invariants
 

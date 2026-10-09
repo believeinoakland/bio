@@ -78,7 +78,7 @@ Terms.
 **Whole-case acceptance and the importer's lens** (T41; N820; `draft-T41-investigation.md` §3.6; K2405, K2417, K2418; D59, D62)
 
 - **R22** *(not yet met: T41)* (D62) `acceptImported` takes `findings: "all"`: one act, one reason, accepts every finding of the edition that `recreated` (and `recreated_in_part` ones with gaps stated, R6) and answers the findings not accepted, listed with why; each accepted finding as R6 records it.
-- **R23** *(not yet met: T41)* (D59, D62) R4's assessment also answers each finding under the importing group's own lens (`case-checker` R23 with the group's statements in force and their recorded applications), beside the source's lens and the importer's bar. An accepted finding stays read-only evidence marked as another group's, never stronger than its edition.
+- **R23** *(not yet met: T41)* (D59, D62; K2471) R4's assessment also answers each finding under the importing group's own lens, beside the source's lens and the importer's bar. That lens is `case-checker` R23's reader lens: its `statements` are the group statements in force (`bias.statementInForce`, its R49, at scope `instance`, with the importing member as viewer), and its `applications` are the carried `case-grammar` R24 rows whose statement is in force there; a carried application whose statement is not in force there reads as removed. An answer of `null` (undetermined) is stated, not read as false. An accepted finding stays read-only evidence marked as another group's, never stronger than its edition.
 
 **The registration it fills** (K31's pattern; `accepted-work` R1; N522)
 
@@ -144,6 +144,7 @@ Terms.
 - `strength`: `strengthBarOf` (its R16; R4).
 - `case-grammar`: `caseFileManifestCheck`, `methodOf`, `materialsOf` (its R11–R13).
 - `case-checker`: `checkCaseFile` (its R1), whose `calculations` (its R20) R21 compares with its own recreation. (T41) Its `lens` (its R23; R23 here).
+- `bias` (T41; D59; K2471): `statementInForce` (its R49; R23). A new `modules.json` edge; `bias` is earlier (layer 5).
 - `calculations` (T33-67): `evaluate` (R21).
 - `inquiry-grammar`: `importedFindingRef` (its R11; R6).
 - `accepted-work`: `registerAcceptedWork` (its R1, with its R8's `moves`; R16).

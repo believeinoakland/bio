@@ -88,7 +88,7 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 - **T41-10b · progressions** (tests only) · (K2431) `define.test.mjs`:199 pins `SHARED_ACT_CHECKS`' keys as two; record-grammar R52 adds C-33.54 (`ACCEPT_MUST_REAUTHOR`): re-pin · red accepted by name until this merge.
 - **T41-10a · query-language** (tests only) · (TEXT-CHAIN #7 J1, K2427) `grammar.test.mjs`:210 pins `MACHINE_READ_KINDS` as `["ocr", "ai"]`; text-chain R91 now adds `ai_transcription`: re-pin from the export · red accepted by name until this merge. (K2442) its fixture gains `project_sight` (membership R85/R120): `converts`:270, `fields`:76, `projection`:62, `statements`:111, :209, `t33`:157.
 - **T41-11 · observation-log** · (N820; H39) R1, R13 gain authority kind `step`; R37 `onLookAnswered` · req: §3.6 · 3,235 → ~3,280.
-- **T41-12 · bias** · (N820; D59) R49 `statementInForce` · req: §3.6.
+- **T41-12 · bias** · (N820; D59) R49 `statementInForce` · req: §3.6. (K2471) at its merge BOB adds `case-import` R23 to R49's "for the checks of" list (wording only).
 - **T41-12a · money-checks, retrieval, workbooks** (tests only, three jobs) · (N822, K2442) re-state for D54 the tests rule 4 (11) lists for each.
 
 ### L6
@@ -108,7 +108,7 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 - **T41-26 · reading-guides (new)** · (D8, D24, D65) R1–R12 · req: §3.4 · ~900.
 - **T41-27 · skills** · (D1, D2, D8, D13, D19, D20, D24, D56, D65) R40–R44 · req: §3.6 · after T41-26 · 2,514 → ~2,750. R43 finds its clauses in `BIO_Investigation_v0_1.md` (placed, K2420).
 - **T41-28 · question-explorer (new)** · (N815, N820; D33, D36, D39, D11–D14, D66) R1–R14 · req: §3.2 · after T41-17, T41-22, T41-23 · ~1,450. Built and tested; offered to no member until R7's gate (D11's bar) opens.
-- **T41-29 · answers** · (was T40-9; N812; K2412) R30, `accountFor`, `useCheck`, R2's kept-away rows, R19; the reds of rule 4 (6); (N820; D20, D56) R31 `baseline`, R32 verdict and cause words, R33 `checkSentences` · req: T40's applied text and §3.6 · 1,584 → ~1,750.
+- **T41-29 · answers** · (was T40-9; N812; K2412) R30, `accountFor`, `useCheck`, R2's kept-away rows, R19; the reds of rule 4 (6); (N820; D20, D56) R31 `baseline`, R32 verdict and cause words, R33 `checkSentences` · req: T40's applied text and §3.6 · 1,584 → ~1,750. (K2471) `checkSentences` (R33) lives in pure code that case-checker's standalone program can bundle (case-checker R24 imports it).
 - **T41-30 · agent-model** · (was T40-10) Purpose, R11, R13 `MODEL_PRICES`, `estimated_cost_usd` · K2373.
 - **T41-31 · agent-worker** · (was T40-11) R71 `level` `project` · K2373 · **P6:** 7,510 (over ~4,000; untouched apart from this small change, as T40 planned; its split is not this tranche's, see "Left out").
 
