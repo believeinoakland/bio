@@ -30,3 +30,10 @@ Two points; I carry on with R16–R18, R20, R21 and R19's share on my best readi
 **Other modules.** control-plane `r53-routes.test.mjs`:67 (R53) is red from this change: the four new arms have no spec or `OP_STAMPS` entry until op-declarations' T41-58 (its R43). affordances, op-declarations, plane: the same failing tests with and without this change (33, 8, 8, all pre-existing).
 
 **Checks.** format 0; architecture 0; coverage 21 of 21; ownership 0 (7 files).
+
+## J2 · REPORT
+
+Built and pushed everything but R19's production warning wiring (J1 (1), still open); details in my record's "Work so far". 45/45; format, architecture, coverage (21/21), ownership 0.
+(a) J1 (2)'s op names are replaced by op-declarations R43's: `hypothesistakeup`, `noteshare`, `noteunshare`, `shares`; no op for propose (in-process), set-aside or the proposals read (they ride the `hypotheses` read under their own heading). R43 declares no set-aside op: R18's act has no route until one is named (op-declarations' or the plane's).
+(b) New red in another module from my four arms: control-plane `r53-routes.test.mjs`:67 (R53: every served op has a spec and `OP_STAMPS` entry) until T41-58 declares them. Please name it an accepted red or tell me to hold the arms back.
+(c) The share table is `narrative_shares`, not J1's `note_shares` (R14's test reads no table named for notes in record-core's counts).
