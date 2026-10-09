@@ -56,3 +56,7 @@ R42 (D4) interface, my best reading; I am building it now and will bring it in l
 ## J2 · REPORT
 
 Found while applying T41-10 (record, 'Reported to BOB'). (1) A capture's own ceiling is never stronger than B (record-grammar grades.mjs:98 EARNED_CAPTURE_CEILING = 'B'; textchain gradeCeiling :1281, captureBound :1317): D4's verified quote never lifts above B; in practice it lifts a name-only quote C to B and lowers a key's B on a weaker or undetermined chain. Built as R42 and K2461 say; if Bob meant a lift above B, that is a doctrine question for him. (2) For T41-24 (run-productions): capture_text units are coarser than proposal positions (page, paragraph, slide, sheet range against rect, run, shape, cell), capped per unit (truncated) and unitsOf is not viewer-gated; the caller hands {text, ceiling} for the unit containing the place, gated, and a quote beyond the cap reads unverified. (3) Stale generated artifact: bio-plane/dist/bio-plane.bundled.mjs (+ .bundle.json) from extractrun.mjs and extraction/index.mjs; for layer close.
+
+## J3 · COMPLETE
+
+T41-10 applied (R42, D4; K2461), plus a pdfStructure fix in my own module (a rolled-back re-read write now says so). Signature for T41-24 in the record. extraction 139/139; run-productions 39/39 before and after; format, architecture, coverage (46/46), ownership: 0 failures. Branch job/T41/extraction pushed.
