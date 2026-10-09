@@ -1,6 +1,6 @@
 # skills (T41)
 
-**Status** · session_01KFVUg5QN5wuokvbEDMZgah · depth 2 · WORKING · handled B3
+**Status** · session_01KFVUg5QN5wuokvbEDMZgah · depth 2 · COMPLETE · handled B3
 
 ## J1 · QUESTION
 
@@ -29,3 +29,36 @@ Thank you for B2. Two things: one departure from J1 as you confirmed it, and one
 2. R38 (b) was red at START, before any change of mine. K2420's amendment to Roles §3 rule 11 split the quoted sentence. (b) is now carried as rule 11's two spans (`FILES_AS_EXTRACTED_TEXT`, and a new `ACTIVE_LIST_IS_A_FACT`), and the resident boundary holds five clauses. It is fixed in this module, and nothing outside skills reads these constants.
 
 Everything else is built and pushed: R40–R44 (R40 short of reading-guides' wiring), 102 tests pass, 0 fail, and all four checks pass. I now wait on the reading-guides and run-rules CHANGEs.
+
+## Completion
+
+**Entries applied** (T41-27; B1, B2 = K2479, B3 = K2485, B4 = K2487):
+- **R40** `reading_guide`: `renderPack(published, {reading_guides})` takes `reading-guides.guideFor` answers (`{ok, kind, guide, origin, withheld}`). For each guide, reading-guides' `checkGuide` (R4) runs first and its refusal throws, naming the guide and the item. Then R16 runs again on every item's text, whatever is registered. The items render as the check normalised them, with `sourcing` `guide`, the kind, the guide id and the origin. With no guide passed, the layer is a stated absence in R9's form. `skilldoctrine.mjs` registers R16 once, at load: `CONDUCT_CHECK_REGISTRATION = registerConductCheck(controlFlowAuthority, "skills")` (K2472).
+- **R41** `INTAKE_QUESTIONS` (frozen, the six questions of §6's sentence, in its order) and the `enquire` layer. Its `mode` is `ENQUIRE_MODE.mode` (run-rules R24). Its clauses come from §6, §8, §10 (planning: "find the record" steps), §7, §9 and §5.
+- **R42** `explore`: `origin` is read from `RUN_ORIGINS` (R23), `mode` is the investigate mode read from the order, and `reuses` names `judgementLayers()` by key. `reading`: `bound` is `RUN_BOUNDS.pages` (R26).
+- **R44** `case_account` and `account_check`: each in `DRAFT_MODE.mode`, with `reach` set to `DRAFT_REACH.case_account` and `DRAFT_REACH.account_check` (R25), and §11's clauses.
+- **R43**: every clause of R40–R44 is a span of `BIO_Investigation_v0_1.md` found by R21's normaliser in the section it names. No clause was missing from canon, so none is reported.
+- The six layers follow `wizard_scripts` (K2485).
+
+**Fixed in this module:** R38 (b) was red at START. K2420 amended Roles rule 11, so (b) is now carried as the rule's two spans (`FILES_AS_EXTRACTED_TEXT`, `ACTIVE_LIST_IS_A_FACT`), and the resident boundary holds five clauses. Every pack's version moves (R11).
+
+**`uses` edge for BOB to apply at merge:** `skills` → `reading-guides` (§3.6). `checks/architecture.mjs skills` fails only on this edge (2 imports: `skilldoctrine.mjs` and `investigation.test.mjs`). With the edge added locally and not committed, it gives 0 failures.
+
+**Deferred:** none.
+
+**Found in other modules (for BOB):**
+- `answer-envelope` `families.test.mjs` and `catalogue-end.test.mjs`: 4 tests are red. The same 4 are red on `origin/tranche/T41` without my changes: the catalogue's totality tests (C-120, C-141, CHECK_FAMILIES).
+- `agent-worker/test/requirements.test.mjs` fails at file level both here and on the base. `node_modules` is absent in this container.
+- Neither is this module's. The agent-worker bundle (`agent-worker/dist`) reads no skills input since T18 (manifest), so no generated artifact is staled. `release/bio-plane.bundled.mjs` and `newgroup/src/release.mjs` mention the research boundary but are generated (not part of the reading set); BOB regenerates them at the layer's close.
+
+**Reading set (mechanics §17):** I measured it as over 300 KB: my code 153 KB, my tests 159 KB, requirements 41 KB.
+- **Read whole myself:** `build/requirements/skills.md`; `skillpack.mjs` and `skilldoctrine.mjs`; `BIO_Investigation_v0_1.md` (the canon R43 quotes); reading-guides' requirements, `check.mjs` and `guideFor`; run-rules R14–R26 and `deployment.mjs` (`DRAFT_KINDS`, `DRAFT_REACH`, `DRAFT_MODE`, `ENQUIRE_MODE`, `deployedModesFor`); `fixture.mjs`; the tests I changed (`boundary.test.mjs` R37/R38 parts, `pack.test.mjs` R4/R5); the draft §3.6 lines for skills; the K2420, K2448 and K2472 rulings.
+- **Read by a worker in full and summarised (about 12 KB, every statement citing file:line):** the other 12 test files under `test/m/skills/`. The summary named the R5 key list, R39's adjacency pin, the sourcing set, the `decides` clause count and the R23/R24 sweeps. Those are the pins that mattered. Nothing it left out mattered.
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/skills/`: 105 pass, 0 fail. This includes `investigation.test.mjs`, 11 tests on R40–R44, R16, R22, R24 and R26, each with a negative control (one is a child process with `checkGuide` stubbed, which shows R40's own R16 pass fires).
+- `test/m/reading-guides/` and `test/m/run-rules/`: 83 pass, 0 fail.
+- `test/m/control-plane/affordances-pack.test.mjs`: 4 pass, 0 fail.
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs skills`: 2 failures, the `uses` edge above. `checks/coverage.mjs skills`: 44 of 44, 0 failures. `checks/ownership.mjs skills tranche/T41`: 0 failures.
+
+Size (session_01KFVUg5QN5wuokvbEDMZgah): test runs 20, module lines 2,816
