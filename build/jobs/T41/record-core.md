@@ -29,3 +29,7 @@
 - Generated artifacts staled: the plane bundle (it inlines record-core); regenerated at the layer's close (accepted 12).
 
 Size (session_013ReqojuRgnmvwKseFV6CE9): test runs 14, module lines 2294
+
+## J1 · COMPLETE
+
+T41-2a complete (08ca17ab12): R62 mintExhausted names STP 'step' and GUD 'reading guide'; R76 STP/GUD minted opaque, tested by name with a negative control (STPX/GUDE: counter, no object). t33:68 and :161 re-pinned; t35 R82 list gains both. Own fix: stats-disclosure.test.mjs (red since T36, not accepted) sends the credential in the Authorization header and drops the retired member-token arms; 31/0. record-core 164/164; checks format, architecture, coverage 82/82, ownership 0 failures. Users' suites (91 modules) 7092/7122: every red is red on the tranche without me, or load (events pages:35, passes alone); none mine. Found: promotion's tests list a .jsonl fixture (modules.json); plane bundle staled. Record: build/jobs/T41/record-core.md, Completion.
