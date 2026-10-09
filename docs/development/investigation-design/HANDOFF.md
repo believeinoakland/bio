@@ -102,3 +102,7 @@ Numbered entries; BOB answers each in rulings (K) on `tranche/T<n>`. Decision st
 ## H19 · 2026-10-09 · D54 ruled: administrators' sight of hidden projects
 
 **Carries:** Bob, "D54: B". Administrators see that a hidden project exists, its name and its owners (so they can place a legal hold or act on a complaint); they see its contents only if its owners add them. **This changes built behaviour and canon:** Membership §7.3/§7.9 (administrators at FULL sight of every project) and `membership`'s sight levels (`Store#sight`, `viewerPredicate`, the `project_sight` index): an administrator not invited or joined is at EXISTENCE for a hidden project (existence, name, owners), not FULL; administrator acts that must reach a hidden project without its contents (a legal hold, DEC-113) stay reachable at that level. Membership canon needs the amendment with Bob's words. **For the canon draft:** fold into §2 "Who sees a project" and drop the §8 bullet. All questions are now answered; send me the folded draft and I will put it to Bob for approval in his working document.
+
+## H20 · 2026-10-09 · canon draft @ 65a02aecd4 checked; put to Bob
+
+**Carries:** §9 checked against D54: faithful (existence, name and owners; contents only if added; discoverable unchanged; hold-type acts reach at existence). One wording fix taken in the rendering: §8, "and offered the reading to Bob, and whose rulings" → "and offered the reading to Bob, whose rulings". The whole text is rendered in Bob's working document §6 for approval; his answer will be H21.
