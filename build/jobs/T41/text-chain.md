@@ -1,3 +1,13 @@
 # text-chain (T41)
 
 **Status** · session_01JDz9kGpTxawc3vKv6rH4vU · depth 2 · WORKING · handled B1
+
+## J1 · QUESTION
+
+R104 adds `ai_transcription` to `STEP_KINDS`. Three existing requirement lines enumerate today's kinds, and one of them pins a service another module's test reads. My best reading, which I am building now (each is one line to change if you rule otherwise):
+
+1. **Declaration.** `ai_transcription: { role: "derivation", label: "the AI's reading of the page", tier: 4, machine: true, names: ["engine"], unmeasured: "undetermined", letter: "calibrated" }`. So: the model that read the page must be named (R8's rule); with no cap it makes `derivationCap` (and so `captureBound`) undetermined over what it covers whatever else the chain measured (R29's mechanism, as for `convert`); a cap is legal only beside a `calibration` (R10's mechanism), so "undetermined until its accuracy is measured" is the declared constant and a calibration row is the one route to a letter. No import of `calibration`. A member's attestation still raises a passage through `gradeCeiling` (R56), as the canon's §6 says.
+2. **Wording only, no change of meaning (yours to clarify, §7):** R3 says "`convert` and `typed` additionally declare `names`, `unmeasured` … and `letter`"; R35's parenthetical lists the `tier: null` kinds; R91 says `machine: true` "(`ocr`, `ai`), and no other does" and `MACHINE_READ_KINDS` is `["ocr", "ai"]`. Under (1) R3 should read "`convert`, `typed` and `ai_transcription`" (with `ai_transcription`'s `letter` `"calibrated"`), and R91 "(`ocr`, `ai`, `ai_transcription`)" with `MACHINE_READ_KINDS` `["ocr", "ai", "ai_transcription"]`. I read R91's general clause ("each entry that is a machine reading declares `machine: true`") as binding over its example list: an AI's reading of a page labelled not machine-read would be the record claiming more than it holds (DEC-4, content R14).
+3. **Tier 4.** reading-pipeline R29 calls it "a transcription tier above tier 3", and unlike `ai` (a rewrite, tier `null`) it takes text out of the document; so `tiersEvidenced` reports it as tier 4 and observation-log writes its row. No module validates tier numbers (checked: observation-log, extraction, query). If you prefer `tier: null`, say so.
+
+**Consequence for another module (a provided service, R91):** under (2) query-language's `bio-plane/test/m/query-language/grammar.test.mjs`:210 (`assert.deepEqual(MACHINE_READ_KINDS, ["ocr", "ai"])`) goes red until query-language's job updates it; its other assertions derive the list and stay green. I will run every user's suite and report exactly what is red. If you would rather not carry that red through the hold, rule `machine` off for now (R91's list unchanged) and I drop that one property.
