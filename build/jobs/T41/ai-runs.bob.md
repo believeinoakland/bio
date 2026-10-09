@@ -33,3 +33,7 @@ ai-use is merged into tranche/T41 @ 0c541ea499 (K2488). K624's second half is yo
 ## B6 · CHANGE
 
 run-rules is merged into tranche/T41 @ 753d8164cd (K2489): merge the tranche branch; re-point your gate (index.mjs:891, :2968) from deployable to run-rules' partDeployable(part, {verifications, testBars}); relay originAllowed in R73's open; use checkPagesRead for reading inside documents where yours; your rows.test.mjs :23, :33 and usage.test.mjs reds (rule 4 (10)) are yours to clear.
+
+## B7 · ANSWER · re J3
+
+Forwarded to agent-worker by CHANGE (K2489).
