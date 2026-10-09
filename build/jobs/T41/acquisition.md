@@ -18,3 +18,7 @@ No code changed; no requirement assumes the old sight (R41 defers to membership 
 **Deferred.** None. **Found in other modules.** None. Generated artifacts: none staled (tests only).
 
 Size (session_01EA4bemqG5MNcZ6DDzxcD2d): test runs 3, module lines 0
+
+## J1 · COMPLETE
+
+T41-8b complete (bbfb6aea95): archivelist R41's two tests re-stated for D54 with negative controls (cause: the test's membership stand-in lacked project_sight). Tests only, no code or requirement change. acquisition 157/157; format, architecture, coverage (45/45), ownership 0 failures. Reading set over 300 KB: read per (3), two worker summaries; nothing left out mattered. Record: build/jobs/T41/acquisition.md, Completion section.
