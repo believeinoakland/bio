@@ -63,7 +63,7 @@ T41-28 done: R1–R14 built and tested (26/26, each R named with a negative cont
 - **Tests:** 26, pass 26, fail 0 (R3, R4, R7, R11, R13 re-stated; new negative controls: an open answering no step, an earlier set version, investigate's chain unverified, Civicsmith's empty set, a project's `read` limit).
 - **Checks** (local copy with paths, `entities` and `content` filled, `contradiction` dropped): format 0; architecture 8 files, 33 imports, 0; coverage 14 of 14; ownership 1, K1043's `modules.json` line.
 
-Size (session_01243u4joqb8ZpywX663LU1U): test runs 19, module lines 1037
+Size (session_01243u4joqb8ZpywX663LU1U): test runs 19, module lines 1029
 
 ## J4 · COMPLETE
 
