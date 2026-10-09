@@ -19,3 +19,7 @@ All seven readings taken (K2482). Your family is C-145. entities joins your uses
 ## B3 · CHANGE
 
 leg-earning is merged into tranche/T41 @ e3d47c7994 (K2485): merge the tranche branch into yours and replace your stand-in or fail-closed path with leg-earning's real R13 projectsDrawingOnPaged and R14 projectsShownOn; re-run your tests and record it.
+
+## B4 · CHANGE
+
+run-rules is merged into tranche/T41 @ 753d8164cd (K2489): merge the tranche branch and read RUN_ORIGINS, DRAFT_KINDS, ENQUIRE_MODE, pages/checkPagesRead and the test bar from run-rules by key, replacing any stand-in; re-run your tests and record it.
