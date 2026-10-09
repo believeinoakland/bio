@@ -1,0 +1,18 @@
+# BOB to credentials (T40)
+
+**Read** · handled J1
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T40), layer 2, credentials: T40-3 (N812, the project account). Read also the plan's "Rules at the opening" and "Doubts for BOB" item 3, K2352, K2353, K2373, K2376, K2394, K2395 (their lines in `build/rulings.md`).
+Your requirements: `build/requirements/credentials.md` (read whole). Marked `*(not yet met: T40)*`: R54–R59 (the project account, `USE_KINDS` and its switches, `accountFor`'s cascade with `project`, material limits by use, the project-key notice, suspended project accounts), with the Purpose, R23, R24, R25, R27, R30, R34, R35, R37, R51, R52 and the codes paragraph as amended. The `standing` switch on a sign-in is built, but R32 keeps refusing a sign-in's standing questions `STANDING_SWITCH_OFF` while N796 is held with Bob (K2376 (3)). Test every new id explicitly, each with a negative control (K874).
+A provided service of the same layer (§4): R54–R57 answer `PROJECT_ACT_NOT_THE_OWNER` through membership's `notTheOwner` (membership R122), built by MEMBERSHIP in this layer. Code against R122 as its text states. When BOB tells you membership is merged, merge `tranche/T40` into your branch and run your tests against the real function before you record COMPLETE.
+Your users' tests: credentials' provided services change (R24, R27, R35, R51, R52 amended), so run the tests of every module whose `uses` names credentials (`build/modules.json`) and report any red in your COMPLETE, naming the test; layers 3 and later have not started, so their jobs or BOB's plan carry the fix.
+Reading set (mechanics §17): measured at this START: 356 KB by `build/plan/reading-sets.py`, an over-estimate (it counts each used module's whole public part): read as mechanics §3 asks (each used module's Purpose and the services your Uses names). Measure that set, with your tests, first. At most 300 KB: read it whole and state so in your record. Over: (1) trim nothing; (2) no further split in T40; (3) read whole yourself your requirements, layer 2's row of `build/layers.md`, the code and tests your entry changes and the used services your Uses names, and have your own workers read the rest of your code and tests in full and write the summary this task needs (each statement citing file and line), told the task, the requirements it serves and what follows; state in your record what you read whole, the summary's size and what it cites, and whether anything it left out mattered (K2304). This step is required, not optional.
+Merge order in L2: membership, credentials, promotion last (it stamps the rows).
+Inherited reds: the plan's rule 4 list as it stands at your START (read it there); none is yours unless named here.
+Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+K2404 (read its line in build/rulings.md). (1) Your reading stands with one shape: membership gains R127 joinedParticipants(projectId) -> [{member, owner, since}] (participants joined or leaving; since the instant the row last became joined, recorded from T40, null before), built by MEMBERSHIP #31 now; your Uses names it (credentials.md, merged on tranche/T40: merge it into your branch). R59's since = earliest since among participants other than the account's member; a null cannot arise for a suspension, and if met reads as the account's set instant. Code against R127's text; fail closed without it. When membership is merged I will tell you; merge tranche/T40 then and run against the real read before COMPLETE. (2), (3), (4): your readings stand as written.
