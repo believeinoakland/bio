@@ -213,8 +213,9 @@ function scopedFetch(target, { headers, credential, env, purpose, follow = true 
   };
 }
 
-/* R10: the most this surface will take from one source, in parts or not. */
-const CAPTURE_MAX = 256 * 1024 * 1024;
+/* R10: the most this surface will take from one source, in parts or not; exported once, so every other reader of the
+   limit imports it (K231; N825, K2453). */
+export const CAPTURE_MAX = 256 * 1024 * 1024;
 
 /** R31: whether `address` is in a sweep's scope, as link-sweep R1 defines it: its normalised form equals a prefix, or
  *  continues one at a `/`. */

@@ -1,6 +1,6 @@
 # acquisition (T41)
 
-**Status** · session_01EA4bemqG5MNcZ6DDzxcD2d · depth 2 · COMPLETE · handled B1
+**Status** · session_01EA4bemqG5MNcZ6DDzxcD2d · depth 2 · COMPLETE · handled B2
 
 ## Completion (ACQUISITION #16)
 
@@ -17,8 +17,15 @@ No code changed; no requirement assumes the old sight (R41 defers to membership 
 
 **Deferred.** None. **Found in other modules.** None. Generated artifacts: none staled (tests only).
 
-Size (session_01EA4bemqG5MNcZ6DDzxcD2d): test runs 3, module lines 0
+
+**CHANGE B2 (N825, K2453), applied.** Merged `tranche/T41` (R10 amended). `CAPTURE_MAX` (256 MiB) is now exported from `index.mjs`:217, the one constant `acquire` and `archiveLookup` already enforce (`hashBody` :283, :461, :910). New test in `acquire.test.mjs`, titled R10: the export equals 256 MiB, and is the limit R10 enforces at its boundary: a body of exactly `CAPTURE_MAX` bytes is filed (`capture.bytes` = it), one byte more is `TOO_LARGE` 413 with `maxBytes` = `CAPTURE_MAX` and the stream cancelled (about 9 s). Ran: `test/m/acquisition/` tests 158, pass 158, fail 0; `capture`'s tests (its user) 156 pass, 1 fail, `R69` captureAccountsOf, red on `tranche/T41` alone too (capture's D54 re-statement, not mine). Checks: format 0, architecture 0, coverage 45 of 45, ownership 3 files, 0 failures. Generated artifact staled: the plane bundle (layer close).
+
+Size (session_01EA4bemqG5MNcZ6DDzxcD2d): test runs 7, module lines 2
 
 ## J1 · COMPLETE
 
 T41-8b complete (bbfb6aea95): archivelist R41's two tests re-stated for D54 with negative controls (cause: the test's membership stand-in lacked project_sight). Tests only, no code or requirement change. acquisition 157/157; format, architecture, coverage (45/45), ownership 0 failures. Reading set over 300 KB: read per (3), two worker summaries; nothing left out mattered. Record: build/jobs/T41/acquisition.md, Completion section.
+
+## J2 · COMPLETE
+
+B2 applied (1b06fbbd6b): CAPTURE_MAX (256 MiB) exported from acquisition index.mjs, the one constant R10 enforces; new R10 test: export = 256 MiB, a body of exactly CAPTURE_MAX filed, one byte more TOO_LARGE with maxBytes = CAPTURE_MAX, stream cancelled. acquisition 158/158; checks 0 failures (coverage 45/45). capture's suite: 156/157, the one red R69 captureAccountsOf is red on tranche/T41 alone too (capture's D54). Plane bundle stale (layer close).

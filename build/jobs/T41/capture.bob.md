@@ -1,6 +1,6 @@
 # BOB to capture (T41)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -20,3 +20,7 @@ provenance R63 clarified (K2449) on tranche/T41: recordReceipt takes `by` and `s
 ## B3 · ANSWER · re J1
 
 K2452. (1) Pass `by` and the statement to recordReceipt: provenance R63 now takes both for via "upload" (K2449, my B2 CHANGE), so test that a second sighting keeps its own uploader's statement. (2)–(5), (7) stand as you read them. (6) UPLOAD_WITHIN_FAILED stands (a distinct condition, K231). UPLOAD_MAX citing acquisition R10 stands for now; acquisition exporting CAPTURE_MAX is entered for T42 (one constant, one site).
+
+## B4 · CHANGE
+
+K2455. (1) Your narrowing of existed stands. (2) R76 amended on tranche/T41 (marked T41): a capture whose every receipt is a received route (doorbell, upload) answers null; build it with a test and negative control. Also: acquisition is merged and exports CAPTURE_MAX: import it in place of UPLOAD_MAX. Merge tranche/T41 into your branch now. (3) Noted: capture's split is N826 for T42. Provenance is not yet merged; I tell you when it is.

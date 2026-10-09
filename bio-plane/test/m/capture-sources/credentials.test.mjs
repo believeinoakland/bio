@@ -27,7 +27,8 @@ const HOST = "records.example.gov";
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
 /* A group: the founder, a second administrator, members `ann` (owner of P1), `bob` (joined P1), `cy` (invited to
-   P1, not joined), `dee` (no project); project P1 and P2 (owned by dee); inquiries Q1 in P1 and Q0 in none. */
+   P1, not joined), `dee` (no project); projects P1 and P2 (owned by dee), both hidden (none set, R45's default), P3
+   (owned by dee) set discoverable, and P4 (hidden, owned by the founder); inquiries Q1 in P1 and Q0 in none. */
 async function world({ key = KEY, clock = null, ownHosts = undefined } = {}) {
   const db = new DatabaseSync(":memory:");
   const sql = { exec(q, ...args) { const st = db.prepare(q);
@@ -57,6 +58,9 @@ async function world({ key = KEY, clock = null, ownHosts = undefined } = {}) {
     files: [{ path: "bundle.md", text: `# ${id}`, sha256: createHash("sha256").update(`# ${id}`).digest("hex") }], state: "forming", group: "g" });
   bundle("P1", "project"); m.projectCreated({ projectId: "P1", ownerId: "ann", by: "ann" });
   bundle("P2", "project"); m.projectCreated({ projectId: "P2", ownerId: "dee", by: "dee" });
+  bundle("P3", "project"); m.projectCreated({ projectId: "P3", ownerId: "dee", by: "dee" });
+  assert.equal(m.projectVisibilitySet({ projectId: "P3", setting: "discoverable", reason: "open to the group", by: "dee", viewer: "member:dee" }).ok, true);
+  bundle("P4", "project"); m.projectCreated({ projectId: "P4", ownerId: "admin", by: "admin" });
   m.projectInvite({ projectId: "P1", handle: "bob", by: "ann", viewer: "member:ann" });
   m.projectJoin({ projectId: "P1", by: "bob", viewer: "member:bob" });
   m.projectInvite({ projectId: "P1", handle: "cy", by: "ann", viewer: "member:ann" });
@@ -273,31 +277,60 @@ test("R58: the listing shows each viewer what they may see, filtered, and never 
   const deeOwn = (await w.supply({ scope: "member", by: "dee", secret: "dee-secret" })).credential;
   const p1 = (await w.supply({ scope: "project", project: "P1", by: "bob", secret: "p1-secret" })).credential;
   const p2 = (await w.supply({ scope: "project", project: "P2", by: "dee", secret: "p2-secret" })).credential;
+  const p3 = (await w.supply({ scope: "project", project: "P3", by: "dee", secret: "p3-secret" })).credential;
   const grp = (await w.supply({ scope: "group", by: "bob", secret: "grp-secret" })).credential;
   const ids = (viewer, o = {}) => w.c.credentialList({ viewer, ...o }).entries.map((e) => e.credential).sort();
   const s = (...xs) => xs.map((x) => x.credential).sort();
-  assert.deepEqual(ids("member:ann"), s(annOwn, p1, grp));
+  assert.deepEqual(ids("member:ann"), s(annOwn, p1, grp));          /* P3 discoverable: EXISTENCE only, not its credentials */
   assert.deepEqual(ids("member:bob"), s(p1, grp));
   assert.deepEqual(ids("member:cy"), s(p1, grp));                   /* invited: a participant, at FULL sight */
-  assert.deepEqual(ids("member:dee"), s(deeOwn, p2, grp));
-  assert.deepEqual(ids("member:second"), s(annOwn, deeOwn, p1, p2, grp));   /* an administrator sees all */
-  assert.deepEqual(ids("admin"), s(annOwn, deeOwn, p1, p2, grp));
+  assert.deepEqual(ids("member:dee"), s(deeOwn, p2, p3, grp));
+  /* An administrator, the founder included: every member and group entry, a discoverable project's (FULL), and no
+     entry of a hidden project they are neither invited to nor joined (D54: EXISTENCE, its contents withheld). */
+  for (const v of ["member:second", "admin", "member:admin"]) assert.deepEqual(ids(v), s(annOwn, deeOwn, p3, grp), v);
+  for (const v of ["admin", "member:second"]) {
+    assert.equal(w.m.sight("P1", v), "existence", v);
+    assert.equal(w.m.sight("P3", v), "full", v);
+  }
   for (const v of [undefined, null, "", "member:nobody", "class:daemon", "class:admin", "ann", 5]) assert.deepEqual(ids(v), [], String(v));
-  assert.deepEqual(ids("admin", { scope: "project" }), s(p1, p2));
-  assert.deepEqual(ids("admin", { project: "P2" }), s(p2));
-  assert.deepEqual(ids("admin", { scope: "group", project: "P2" }), []);
+  assert.deepEqual(ids("admin", { scope: "project" }), s(p3));
+  assert.deepEqual(ids("admin", { project: "P2" }), []);            /* hidden, even asked by its id */
+  assert.deepEqual(ids("admin", { project: "P3" }), s(p3));
+  assert.deepEqual(ids("admin", { scope: "member" }), s(annOwn, deeOwn));
+  assert.deepEqual(ids("admin", { scope: "group", project: "P3" }), []);
   assert.deepEqual(ids("admin", { scope: "nonsense" }), []);
-  const listing = w.c.credentialList({ viewer: "admin" });
+  /* The control: once invited, the administrator is a participant and sees that hidden project's entries (FULL); the
+     other hidden project stays withheld. The founder, owner of the hidden P4, sees its entries; `second` does not. */
+  w.m.projectInvite({ projectId: "P1", handle: "second", by: "ann", viewer: "member:ann" });
+  assert.equal(w.m.sight("P1", "member:second"), "full");
+  assert.deepEqual(ids("member:second"), s(annOwn, deeOwn, p1, p3, grp));
+  assert.deepEqual(ids("admin"), s(annOwn, deeOwn, p3, grp));
+  const p4 = (await w.c.credentialSupply({ kind: "login", host: HOST, secret: "p4-secret", scope: "project", project: "P4", by: "ann" }));
+  assert.equal(p4.code, "CAPTURE_CREDENTIAL_NOT_PERMITTED");     /* ann is not an editor of P4 */
+  const p4row = { credential_id: "CRED-p4", kind: "login", host: HOST, scope: "project", project: "P4", supplied_by: "admin", supplied_at: "2026-09-28T00:00:00Z" };
+  w.db.prepare(`INSERT INTO ${CREDENTIALS_TABLE} (credential_id, kind, host, scope, project, supplied_by, supplied_at) VALUES (?,?,?,?,?,?,?)`)
+    .run(...Object.values(p4row));
+  assert.deepEqual(ids("admin", { project: "P4" }), ["CRED-p4"]);
+  assert.deepEqual(ids("member:admin", { project: "P4" }), ["CRED-p4"]);
+  assert.deepEqual(ids("member:second", { project: "P4" }), []);
+  /* Setting a hidden project discoverable gives every administrator FULL sight of it, and so its entries. */
+  assert.equal(w.m.projectVisibilitySet({ projectId: "P2", setting: "discoverable", reason: "open", by: "dee", viewer: "member:dee" }).ok, true);
+  assert.deepEqual(ids("admin", { project: "P2" }), s(p2));
+  const listing = w.c.credentialList({ viewer: "member:dee" });
   assert.deepEqual([listing.limit, listing.truncated], [CREDENTIAL_LIST_LIMIT, false]);
-  const all = listing.entries;
+  const all = [...listing.entries, ...w.c.credentialList({ viewer: "member:second" }).entries];
   for (const e of all) assert.deepEqual(Object.keys(e).sort(), ENTRY_KEYS);
-  for (const secret of ["ann-secret", "dee-secret", "p1-secret", "p2-secret", "grp-secret"]) noLeak(all, secret, "the listing");
+  for (const secret of ["ann-secret", "dee-secret", "p1-secret", "p2-secret", "p3-secret", "grp-secret"]) noLeak(all, secret, "the listing");
   /* No length of the secret, in any field. */
   assert.ok(all.every((e) => Object.values(e).every((v) => typeof v !== "number")));
   for (const v of [undefined, null]) assert.deepEqual(w.c.credentialList(v), { entries: [], limit: CREDENTIAL_LIST_LIMIT, truncated: false });
-  /* A revoked member sees nothing, even what they supplied. */
+  /* A revoked member sees nothing, even what they supplied; a revoked administrator sees nothing either. */
   w.m.memberSet({ memberId: "dee", status: "revoked", by: "admin" });
   assert.deepEqual(ids("member:dee"), []);
+  /* (An administrator's revocation is carried by a vote, membership R20; its outcome, the status, is written here.) */
+  w.db.prepare(`UPDATE members SET status='revoked' WHERE member_id='second'`).run();
+  assert.equal(w.m.isAdministrator("second"), false);
+  assert.deepEqual(ids("member:second"), []);
 });
 
 test("R58: bounded: the first `limit` entries the viewer sees, in supply order, `truncated` measured; the cap is lowered, never raised", async () => {
@@ -317,10 +350,11 @@ test("R58: bounded: the first `limit` entries the viewer sees, in supply order, 
   for (const limit of [CREDENTIAL_LIST_LIMIT + 1, 1e9, Infinity]) assert.equal(L({ limit }).limit, CREDENTIAL_LIST_LIMIT);
   for (const limit of [0, null, "x", undefined]) assert.equal(L({ limit }).limit, CREDENTIAL_LIST_LIMIT);
   assert.equal(L({ limit: -3 }).limit, 1);
-  /* The administrator's page is cut the same way, over every row. */
-  const a = w.c.credentialList({ viewer: "admin", limit: 12 });
-  assert.deepEqual([a.entries.length, a.truncated], [12, true]);
-  assert.equal(w.c.credentialList({ viewer: "admin", limit: 13 }).truncated, false);
+  /* The administrator's page is cut the same way, over the rows it sees: the hidden P1's five never fill it (D54). */
+  const a = w.c.credentialList({ viewer: "admin", limit: 7 });
+  assert.deepEqual([a.entries.length, a.truncated], [7, true]);
+  assert.ok(a.entries.every((e) => e.project === null));
+  assert.deepEqual([w.c.credentialList({ viewer: "admin", limit: 8 }).entries.length, w.c.credentialList({ viewer: "admin", limit: 8 }).truncated], [8, false]);
   /* Past the ceiling: one more row than it, cut at it and said so. */
   const big = await world();
   for (let i = 0; i < CREDENTIAL_LIST_LIMIT + 1; i++) await big.supply({ scope: "group", by: "ann", secret: `s${i}` });
@@ -434,11 +468,16 @@ test("R63: who may supply and withdraw at each scope", async () => {
   assert.equal(await W(await fresh({ scope: "member", by: "bob" }), "second"), "ok");
   assert.equal(await W(await fresh({ scope: "member", by: "bob" }), "admin"), "ok");
   assert.equal(await W(await fresh({ scope: "member", by: "bob" }), "ann"), "CAPTURE_CREDENTIAL_NO_SUCH");
-  /* project: its supplier or any owner of the project; not another editor, not an administrator. */
+  /* project: its supplier or any owner of the project; not another editor, not an administrator. An administrator
+     who sees the project (discoverable P3: FULL) is refused; one at a hidden project's EXISTENCE (P1) does not see the
+     credential, so it is answered as absent (R57, R58; D54). */
   assert.equal(await W(await fresh({ scope: "project", project: "P1", by: "bob" }), "bob"), "ok");
   assert.equal(await W(await fresh({ scope: "project", project: "P1", by: "bob" }), "ann"), "ok");
   assert.equal(await W(await fresh({ scope: "project", project: "P1", by: "ann" }), "bob"), "CAPTURE_CREDENTIAL_NOT_PERMITTED");
-  assert.equal(await W(await fresh({ scope: "project", project: "P1", by: "bob" }), "second"), "CAPTURE_CREDENTIAL_NOT_PERMITTED");
+  assert.equal(await W(await fresh({ scope: "project", project: "P3", by: "dee" }), "second"), "CAPTURE_CREDENTIAL_NOT_PERMITTED");
+  assert.equal(await W(await fresh({ scope: "project", project: "P3", by: "dee" }), "admin"), "CAPTURE_CREDENTIAL_NOT_PERMITTED");
+  assert.equal(await W(await fresh({ scope: "project", project: "P1", by: "bob" }), "second"), "CAPTURE_CREDENTIAL_NO_SUCH");
+  assert.equal(await W(await fresh({ scope: "project", project: "P1", by: "bob" }), "admin"), "CAPTURE_CREDENTIAL_NO_SUCH");
   assert.equal(await W(await fresh({ scope: "project", project: "P1", by: "bob" }), "dee"), "CAPTURE_CREDENTIAL_NO_SUCH");
   /* group: its supplier or any administrator. */
   assert.equal(await W(await fresh({ scope: "group", by: "bob" }), "bob"), "ok");
