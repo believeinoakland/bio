@@ -25,7 +25,7 @@ Bob, meter 77%: "hold development after the current layer is finished", so the c
 
 ## Next steps, in order
 
-1. While held: on each INVESTIGATION-DESIGN message or hand-off, fold it into the two drafts (a worker applies, BOB reviews), commit, answer with the K. Spend nothing else.
+1. While held: when INVESTIGATION-DESIGN reports its canon audit done, fold H20 onward into the two drafts in one pass (a worker applies, BOB reviews; K2416), commit, answer with the K. Spend nothing else.
 2. When Bob says to resume: take over or wake (§5.1), arm backstop and WATCH, ask his meter, write L4's and L6's STARTs and start L4 (T40-4a) then L6 in order; run the rest of T40; close it by §5.7 (PR `tranche/T40` → `main` merged with the GitHub merge tool, authority Bob's standing direction in the product's `CLAUDE.md`, K1177; standing list `mcp__github__merge_pull_request`; no refusal since K2273).
 3. Plan T41 with the investigation design once Bob says it is settled (N820–N822, the canon approved first).
 
