@@ -1,6 +1,6 @@
 # observation-log (T41)
 
-**Status** · session_01P7RDCwo1zaafZ1wjYhW3J1 · depth 2 · RUNNING until 2026-10-09T22:43:42Z (users' suites of observation-log (21 modules), with and without the change) · handled B2
+**Status** · session_01P7RDCwo1zaafZ1wjYhW3J1 · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
