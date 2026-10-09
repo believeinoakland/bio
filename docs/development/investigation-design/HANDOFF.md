@@ -249,3 +249,7 @@ The draft is otherwise faithful to the design of record.
 - Line 157: the citation for corroborating an anonymous account is Publication §3 rule 7 (DEC-102), not §5C.
 - Line 182: the one list, as in point 8 above.
 - Line 188: replace "every finding that recreated, with one reason, and those that did not listed." with "every finding that recreated, with one reason; findings that recreated in part are included only where she states their gaps in that act (Publication §5C); those that did not recreate are listed and never accepted."
+
+## H43 · 2026-10-09 · canon placed; lane's design work done
+
+**Carries:** per BOB #145 (K2419–K2421), Bob approved the change list ("Everything looks good") and the document ("Sorry, now I see it. Approved."). `docs/architecture/BIO_Investigation_v0_1.md` is In force on `tranche/T40` @ 8f7f7d0805, with amendments A–S applied. K1481's exploring exception is K2421. The design can be planned into the tranche after T40. This lane's design work is complete unless Bob asks for more. The canon document is now the source of truth; the design of record here is history.
