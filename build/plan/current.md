@@ -59,9 +59,12 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 **L2 merge order:** membership, project-roster, credentials, promotion last.
 
 ### L3
-- **T41-7 · capture-sources** · (N822) R58 re-read against D54; tests assuming an administrator's `FULL` sight re-stated · req: R58, BOB's wording if it changes.
+- **T41-7a · provenance** · (T41-8a's provider; K2434) R63 new: route `upload` (`UPLOAD_VIA`) graded as the doorbell's received material, not fetched, R42's `origin.kind` `upload` with `origin_statement` · req: R63 · merges before T41-8.
+- **T41-7 · capture-sources** · (N822) R58 amended (BOB's wording, K2434): an administrator sees a `project` credential only at `FULL` sight of its project; tests assuming an administrator's `FULL` sight re-stated · req: R58.
 - **T41-8 · capture** · (N822) `held` tests re-stated (an administrator not added sees a hidden project at `EXISTENCE`) · tests only unless R-text names administrators' sight.
-- **T41-8a · capture** · (N821 upload; Bob D42 "upload: A", K2425) a member uploads a file she holds: graded received from the member (as the doorbell's material, never fetched, K509 (3)), attributed to her, with her statement of where it came from; stored and profiled as any capture; a later public fetch of the same bytes strengthens it · req: BOB's wording before L3's START (capture R, new) · L11 shares: op-declarations (the op), control-plane (route), affordances (help), store-door if the size path needs it.
+- **T41-8a · capture** · (N821 upload; Bob D42 "upload: A", K2425) a member uploads a file she holds: graded received from the member (as the doorbell's material, never fetched, K509 (3)), attributed to her, with her statement of where it came from; stored and profiled as any capture; a later public fetch of the same bytes strengthens it · req: capture R86 (K2434; names `uploadCapture`, `via: "upload"`, address `upload:<sha256>`, method `uploaded`, `UPLOAD_NO_STATEMENT`) · uses provenance R63 (T41-7a) · L11 shares: op-declarations (the op), control-plane (route), affordances (help), store-door if the size path needs it.
+
+**L3 merge order:** provenance, capture-sources, capture (`modules.json` order; provenance provides R63 to capture).
 
 ### L4
 - **T41-9 · reading-pipeline** · (was T40-4a; K2399) re-measure `convert-chain.test.mjs`:297 and `pieces.test.mjs`:218; (N820; D21) R29: a transcription tier above tier 3 at a member's act on the paying account (`use: "transcribe"`), appended as `ai_transcription` (text-chain R104), never under a "no AI" limit · req: §3.6 · 1,452 → ~1,550.
