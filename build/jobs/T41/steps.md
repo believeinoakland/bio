@@ -1,3 +1,14 @@
 # steps (T41)
 
 **Status** · session_01NPmkd53gFvebrzpxWbVA2n · depth 2 · WORKING · handled B0
+
+## J1 · QUESTION
+
+Readings I am building on; each is a detail, but (1) can collide with another new module's job, so I ask before COMPLETE:
+
+1. **Row family.** No C-family is named for `steps`. The highest in the tree is C-141 (case-carriage). I take **C-142** for steps' refusal rows unless you name another (reading-guides, question-explorer and investigation also mint new rows in T41, so two jobs could pick the same number). Rows awaiting T42's stamp, listed in my record.
+2. **Uses, final.** Beyond modules.json's list I add, each earlier in the order: `calc-grammar` (R13's exact decimal: `dec`/`decStr`/`addD`), `jurisdictions` (the profile's `time_zone` for R12's local days, as `inquiry` R55 reads it; a `view` dep may replace it), `provenance` (its R48 `register` read contract, to judge whether a member sees a capture product, R9), `content` (its R45 read contract, a content-id product's bundle, R9), `connection-grammar` (`derivedId`, to verify a derived-connection product against its derivation and judge it by its two ends, R9). `connections` and `inquiry` I may end up not importing (an inquiry is read as a bundle of type `inquiry` through `record-core` and `membership`); I will state the final list in my record.
+3. **R9 sight of products** a member ties or reads: a bundle id by `membership.inSight`; a capture by its filed bundles (provenance R48, as capture-requests reads it); a content id by its bundle (content R45); a lead by `observation-log` R15 (`leadRead`); a derived connection by its id recomputed from its derivation and both ends seen; any other record id (a row of a later owner's table, `HYP-`, `CALC-`, …) only through a sight resolver its owner registers (`registerProductSight(prefix, module, fn)`), fail closed until then. `recordProduct` (the in-process door) checks form only.
+4. **Machine credentials (R1, R5, R6, R8, R24):** "a run it holds" is answered by a resolver `ai-runs` registers (`registerRunHolder(module, fn(by, run) → {enabled_by, principal} | null)`); with none registered every machine act is refused. "Its own step" = created under the same `by` stamp.
+5. **Same-layer providers not yet merged:** `leg-earning` R13/R14 are absent on the tranche; my code calls them and fails closed when absent (R14/R17 answer nothing, R4's header `projects` reads undetermined). My tests use a stand-in built to leg-earning R13/R14's text over the real `refs` table, to be replaced by the real module at your CHANGE.
+6. **R22 purge:** question-placed steps go with their last referring question, and every step's child rows with the step, by SQLite triggers on steps' own tables (extraction already holds triggers), since `record-core.purge` keys rows to one bundle; a bundle purge's per-table `removed` count then shows 0 for rows the triggers removed.
