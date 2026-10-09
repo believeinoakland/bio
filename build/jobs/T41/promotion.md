@@ -1,6 +1,6 @@
 # promotion (T41)
 
-**Status** · session_0126JXzoUNxJ6PKnFaGmmabB · depth 2 · WAITING ON BOB (J2) · handled B2
+**Status** · session_0126JXzoUNxJ6PKnFaGmmabB · depth 2 · WAITING ON BOB (J2) · handled B3
 
 ## J1 · REPORT
 
