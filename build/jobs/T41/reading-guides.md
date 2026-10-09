@@ -1,6 +1,6 @@
 # reading-guides (T41)
 
-**Status** · session_01RMvYVRFkcmUHsvFuW1MH5Z · depth 2 · WORKING · handled B2
+**Status** · session_01RMvYVRFkcmUHsvFuW1MH5Z · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
