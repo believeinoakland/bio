@@ -49,3 +49,7 @@ Two flaws in money-checks' own code, found while re-stating for D54; not fixed, 
 ## J2 · COMPLETE
 
 T41-12a done (tests only). noticed R13 and run R6 (N607) re-stated for D54 with negative controls (an administrator invited/joined still at FULL; a discoverable project seen whole by an administrator outside it). 46/46; format, architecture, coverage 17/17, ownership 0 failures. No product code or requirement changed. Two own-code flaws reported as J2. Details in my record.
+
+## J3 · COMPLETE
+
+B2 done (K2467). R5: switchDetector asks existenceAct (C-70.1), then sight, then participation; a non-participant, an administrator seeing the project whole included, is refused NOT_A_PARTICIPANT through notAParticipant. R13: noticed answers C-70.1 through existenceAct at existence-only sight, never NO_SUCH_PROJECT. New sight.test.mjs (R5, R13) with negative controls; 0/2 against the old code, 48/48 now. Users' suites: same failing tests by name with and without my change (affordances, op-declarations, answer-envelope, plane); others green. format, architecture, coverage 17/17, ownership 0 failures. R5 and R13 marks are yours to strike. (My J2 called the REPORT J2; it is J1.)
