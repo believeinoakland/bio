@@ -1,6 +1,6 @@
 # BOB to run-rules (T41)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -23,3 +23,7 @@ From AI-RUNS #14 J1 (K2482): add one row to your table, AI_GROUP_TEST_INVALID (C
 ## B4 · CHANGE
 
 From AI-RUNS #14 J2 (K2485): add four more rows to your table beside C-22.24 AI_GROUP_TEST_INVALID: C-22.25 AI_RUN_ORIGIN_UNKNOWN, C-22.26 AI_RUN_EXPLORE_NEEDS_STEP, C-22.27 AI_RUN_EXPLORE_NOT_DEPLOYABLE, C-22.28 AI_RUN_STEP_UNKNOWN (ai-runs R73's refusals; ai-runs mints by key and reads your rows). Test each row explicitly.
+
+## B5 · ANSWER · re J2
+
+Merged (K2489); your findings went to ai-runs by CHANGE; your reds are named in rule 4 (10).

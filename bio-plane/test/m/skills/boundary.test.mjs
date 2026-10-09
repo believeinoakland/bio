@@ -4,7 +4,7 @@ import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 import { renderPack, packVersion, SOURCING } from "../../../src/skillpack.mjs";
 import { RESEARCH_BOUNDARY_CLAUSES, RESEARCH_BOUNDARY_NOTE, RECORD_CONTENT_IS_DATA, DISCOVERY_IS_NOT_CAPTURE,
-         FILES_AS_EXTRACTED_TEXT, HELD_ADDRESS_ONLY, CAPTURE_CLAUSES, ASK_CLAUSES, LEGAL_LOOKUP_CLAUSES, LADDERS_SOURCE, ROLES_SOURCE, askLayer,
+         FILES_AS_EXTRACTED_TEXT, ACTIVE_LIST_IS_A_FACT, HELD_ADDRESS_ONLY, CAPTURE_CLAUSES, ASK_CLAUSES, LEGAL_LOOKUP_CLAUSES, LADDERS_SOURCE, ROLES_SOURCE, askLayer,
          actionPlanningLayer, controlFlowAuthority } from "../../../src/skilldoctrine.mjs";
 import { ROOT, read, foundIn, section, canonDocuments, published } from "./fixture.mjs";
 
@@ -38,22 +38,24 @@ test("R37 R2 the resident research_boundary carries §9.4's record-content-as-da
   assert.equal(renderPack(published()).resident.research_boundary.note, RESEARCH_BOUNDARY_NOTE);
 });
 
-test("R38 (a) (b) the research_boundary carries Roles §3 rule 11's two clauses: (a) discovery is not capture (K1880), (b) files only as the readers' text, the active list a fact (K1888), each found by R21's normaliser", () => {
+test("R38 (a) (b) the research_boundary carries Roles §3 rule 11's two clauses: (a) discovery is not capture (K1880), (b) files only as the readers' text, the active list a fact (K1888), (b) in the two spans rule 11 holds since K2420, each found by R21's normaliser", () => {
   assert.ok(canonDocuments().has(ROLES_SOURCE));
   const r11 = rule11();
   assert.ok(r11.length > 0 && /K1880/.test(r11) && /K1888/.test(r11), "rule 11 is where it was");
   assert.deepEqual(RESEARCH_BOUNDARY_CLAUSES, [RECORD_CONTENT_IS_DATA, DISCOVERY_IS_NOT_CAPTURE, FILES_AS_EXTRACTED_TEXT,
-                                             HELD_ADDRESS_ONLY]);
-  for (const c of [DISCOVERY_IS_NOT_CAPTURE, FILES_AS_EXTRACTED_TEXT]) {
+                                             ACTIVE_LIST_IS_A_FACT, HELD_ADDRESS_ONLY]);
+  for (const c of [DISCOVERY_IS_NOT_CAPTURE, FILES_AS_EXTRACTED_TEXT, ACTIVE_LIST_IS_A_FACT]) {
     assert.deepEqual([c.source, c.section], [ROLES_SOURCE, "§3"]);
     assert.ok(foundIn(r11, c.text), `in rule 11: ${c.text}`);
   }
   for (const re of [/may search and read any public site/, /nothing it reads that way enters the record/,
                     /fetched by the substrate's capture at a member's or the record's request, never by the assistant/])
     assert.match(DISCOVERY_IS_NOT_CAPTURE.text, re);
-  for (const re of [/only as the text the plane's readers extracted from it/, /told the file's active list/,
-                    /as a fact about the file/, /never opens an embedded file, runs a macro or asks for a file's bytes/])
-    assert.match(FILES_AS_EXTRACTED_TEXT.text, re);
+  assert.match(FILES_AS_EXTRACTED_TEXT.text, /only as the text the plane's readers extracted from it/);
+  for (const re of [/told the file's active list/, /as a fact about the file/,
+                    /never opens an embedded file, runs a macro or asks for a file's bytes/])
+    assert.match(ACTIVE_LIST_IS_A_FACT.text, re);
+  assert.ok(!foundIn(r11, ACTIVE_LIST_IS_A_FACT.text.replace("it never opens", "it opens")), "the lookup can miss (b)");
   /* The lookup can miss. */
   assert.ok(!foundIn(r11, DISCOVERY_IS_NOT_CAPTURE.text.replace("never by the assistant", "or by the assistant")));
   const { resident } = renderPack(published());
@@ -87,7 +89,7 @@ test("R38 (c) the research_boundary carries Roles §3 rule 12's clause (N731, K1
   assert.ok(!foundIn(r12, HELD_ADDRESS_ONLY.text.replace("never asks for its capture", "asks for its capture")));
   for (const pub of [published(), published({ answer_checks: CHECKS }), published({ catalog: planningCatalog() })]) {
     const { resident } = renderPack(pub);
-    assert.equal(resident.research_boundary.clauses[3], HELD_ADDRESS_ONLY, "resident, in every pack");
+    assert.equal(resident.research_boundary.clauses[4], HELD_ADDRESS_ONLY, "resident, in every pack");
     assert.ok(!resident.disclosable.some((d) => d.layer === "research_boundary"), "listed by no disclosable entry");
   }
   assert.deepEqual(controlFlowAuthority(HELD_ADDRESS_ONLY.text), []);
@@ -141,9 +143,11 @@ test("R37 R38 R1 a research boundary clause not held, (c)'s included: renderPack
     const { published } = await import(${JSON.stringify("file://" + join(ROOT, "bio-plane/test/m/skills/fixture.mjs"))});
     try { renderPack(published()); console.log("RENDERED"); } catch (e) { console.log("THREW " + e.message); }`],
     { encoding: "utf8" });
-  for (const expr of ["(c) => c.slice(0, 2)", "(c) => c.slice(0, 3)", "(c) => []", "(c) => undefined",
-                      "(c) => [c[0], { ...c[1], text: '' }, c[2], c[3]]", "(c) => [{ ...c[0], text: '  ' }, c[1], c[2], c[3]]",
-                      "(c) => [c[0], c[1], null, c[3]]", "(c) => [c[0], c[1], c[2], { ...c[3], text: '' }]"]) {
+  for (const expr of ["(c) => c.slice(0, 2)", "(c) => c.slice(0, 3)", "(c) => c.slice(0, 4)", "(c) => []", "(c) => undefined",
+                      "(c) => [c[0], { ...c[1], text: '' }, c[2], c[3], c[4]]",
+                      "(c) => [{ ...c[0], text: '  ' }, c[1], c[2], c[3], c[4]]",
+                      "(c) => [c[0], c[1], null, c[3], c[4]]", "(c) => [c[0], c[1], c[2], { ...c[3], text: '' }, c[4]]",
+                      "(c) => [c[0], c[1], c[2], c[3], { ...c[4], text: '' }]"]) {
     const out = run(expr);
     assert.match(out, /^THREW .*research boundary.*not held/m, `${expr}: ${out}`);
   }
@@ -156,7 +160,7 @@ test("R11 R38 every pack's version moves with (c): the same pack rendered over T
     import { mock } from "node:test";
     const real = { ...(await import(${JSON.stringify(file + "?real")})) };
     mock.module(${JSON.stringify("file://" + file)}, { namedExports: { ...real,
-      RESEARCH_BOUNDARY_CLAUSES: [...real.RESEARCH_BOUNDARY_CLAUSES.slice(0, 3), { ...real.HELD_ADDRESS_ONLY }] } });
+      RESEARCH_BOUNDARY_CLAUSES: [...real.RESEARCH_BOUNDARY_CLAUSES.slice(0, 4), { ...real.HELD_ADDRESS_ONLY }] } });
     const { renderPack } = await import(${JSON.stringify("file://" + join(ROOT, "bio-plane/src/skillpack.mjs"))});
     const { published } = await import(${JSON.stringify("file://" + join(ROOT, "bio-plane/test/m/skills/fixture.mjs"))});
     console.log("SAME " + renderPack(published()).version);`], { encoding: "utf8" });
@@ -166,12 +170,12 @@ test("R11 R38 every pack's version moves with (c): the same pack rendered over T
   const pack = renderPack(published());
   const { version, ...rest } = pack;
   const t35 = { ...rest, resident: { ...rest.resident, research_boundary: { ...rest.resident.research_boundary,
-    clauses: RESEARCH_BOUNDARY_CLAUSES.slice(0, 3) } } };
+    clauses: RESEARCH_BOUNDARY_CLAUSES.slice(0, 4) } } };
   assert.notEqual(packVersion(t35), version);
   for (const pub of [published({ catalog: planningCatalog() }), published({ answer_checks: CHECKS })]) {
     const p = renderPack(pub);
     const { version: v, ...r } = p;
     assert.notEqual(packVersion({ ...r, resident: { ...r.resident, research_boundary: { ...r.resident.research_boundary,
-      clauses: RESEARCH_BOUNDARY_CLAUSES.slice(0, 3) } } }), v);
+      clauses: RESEARCH_BOUNDARY_CLAUSES.slice(0, 4) } } }), v);
   }
 });

@@ -93,7 +93,7 @@ Terms. A **version** is a `basis_versions[]` row `{name, description, claim?, re
 - **R32** A project's conclusion record is append-only; the latest row is its stance (DEC-19).
 - **R33** Every act and read naming a question, version or project the viewer may not see answers as an absent one.
 - **R34** `inquiry_basis_versions` and `inquiry_basis_version_legs` carry `bundle_id` and are declared to record-core's purge (K23).
-- **R35** Each check moves here as an invariant with its test (K6): C-25.1–C-25.34, C-27.15, C-50.1–C-50.11, C-33.1, C-33.2, C-33.33–C-33.37, C-32.2.
+- **R35** Each check moves here as an invariant with its test (K6): C-25.1–C-25.35 (C-25.35 `BAD_BIAS_APPLIED`, R48; K2495), C-27.15, C-50.1–C-50.11, C-33.1, C-33.2, C-33.33–C-33.37, C-32.2.
 - **R36** No place is named in this module's behaviour or outward text.
 
 ### Satisfies

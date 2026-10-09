@@ -18,3 +18,7 @@ All seven readings taken (K2482).
 ## B3 · ANSWER · re J2
 
 5' and 6' taken (K2486); ai-runs leaves your final uses.
+
+## B4 · CHANGE
+
+ai-use is merged into tranche/T41 @ 0c541ea499 (K2488): merge the tranche branch and replace deps.useCheck's stand-in and ai-runs' countAskUsage/aiUseCheck with ai-use's countAskUsage({..., owner, act}) and useCheck; re-run and record completion again.
