@@ -2,7 +2,8 @@
    for the ids minted from record-grammar's `ID_TABLE` (R1, R40, R62, R76), `declareTable` with its classes (R21, R46),
    the derived-cache convention (R77), the store gate (R78) and expunge with a tombstone (R79, R29). T34 (T34-9; N554,
    N593, K1728): `CALC` minted opaque (R62, R76), a derived-rebuildable table's `from` (R77), and the declaration's two
-   older refusals with their rows (R80). Over `storage.mjs`, a fresh storage per test. No network. */
+   older refusals with their rows (R80). T41 (T41-2a; K2431): `STP` and `GUD` minted opaque, each named by R62. Over
+   `storage.mjs`, a fresh storage per test. No network. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -66,7 +67,7 @@ test("R1 R2: the sequential step is the same inside a caller's transaction, and 
 });
 
 test("R76: allocId for every opaque prefix of ID_TABLE answers <prefix>-<year>-<16 of [a-z0-9]>, and allocIdOp the same; the counter is not stepped", () => {
-  assert.deepEqual([...OPAQUE].sort(), ["CALC", "EVT", "IDC", "LIN", "MNY", "PFA"]);
+  assert.deepEqual([...OPAQUE].sort(), ["CALC", "EVT", "GUD", "IDC", "LIN", "MNY", "PFA", "STP"]);
   const { s, rc } = fresh();
   for (const p of OPAQUE) {
     const seen = new Set();
@@ -158,8 +159,9 @@ test("R76 R62: after 64 hits in a row allocId answers MINT_EXHAUSTED for the pre
   assert.equal(rc.allocIdOp("PFA", "2026").ok, undefined, "a fresh draw succeeds again");
 });
 
-test("R62 (K1728): mintExhausted names each opaque prefix's object, a calculation's among them, one fixed sentence per prefix", () => {
-  const names = { EVT: "event", LIN: "line", MNY: "money fact", PFA: "person fact", IDC: "identity claim", CALC: "calculation" };
+test("R62 (K1728, K2431): mintExhausted names each opaque prefix's object, a calculation's, a step's and a reading guide's among them, one fixed sentence per prefix", () => {
+  const names = { EVT: "event", LIN: "line", MNY: "money fact", PFA: "person fact", IDC: "identity claim", CALC: "calculation",
+                  STP: "step", GUD: "reading guide" };
   assert.deepEqual(Object.keys(names).sort(), [...OPAQUE].sort());
   for (const [p, what] of Object.entries(names)) {
     const r = mintExhausted(p);
@@ -168,6 +170,33 @@ test("R62 (K1728): mintExhausted names each opaque prefix's object, a calculatio
   }
   const all = [...Object.keys(names), ...RecordCore.GATED_ID_PREFIXES, "SRC"].map((p) => mintExhausted(p).detail);
   assert.equal(new Set(all).size, all.length, "one sentence per prefix, none shared");
+});
+
+test("R76 R62 (T41, K2431): STP and GUD are minted opaque, recorded in the ledger with no counter stepped, and after 64 hits answer MINT_EXHAUSTED naming a step or a reading guide; a prefix that only begins with their letters is named by no object", () => {
+  for (const [p, what] of [["STP", "step"], ["GUD", "reading guide"]]) {
+    assert.equal(ID_TABLE.find((e) => e.prefix === p)?.form, "opaque", `${p} is opaque in ID_TABLE (record-grammar R51, R53)`);
+    const { s, rc } = fresh();
+    const { id } = rc.allocId(p, "2026");
+    assert.match(id, new RegExp(`^${p}-2026-[a-z0-9]{16}$`));
+    assert.ok(idPattern(p).test(id));
+    assert.deepEqual(ledger(s), [[id, "opaque"]], "recorded in the opaque-id ledger");
+    assert.deepEqual(rows(s, `SELECT scope FROM seq`), [], "no counter was read or stepped");
+    const tail = "eeeeeeeeeeeeeeee";
+    draws(bytesFor(tail), () => rc.allocId(p, "2026"));
+    const before = dump(s);
+    const r = draws(Array.from({ length: 64 }, () => bytesFor(tail)).flat(), () => rc.allocId(p, "2026"));
+    assert.deepEqual(r, mintExhausted(p));
+    assert.deepEqual([r.ok, r.reason, r.code, r.check, r.prefix], [false, "MINT_EXHAUSTED", "MINT_EXHAUSTED", "C-59.6", p]);
+    assert.equal(r.translation, RECORD_CORE_CHECKS.MINT_EXHAUSTED.translation);
+    assert.equal(r.detail, `your group's Civicsmith could not find a free ${what} id: every one it drew was already taken. Nothing was written.`);
+    assert.deepEqual(dump(s), before, "nothing was written");
+  }
+  /* the negative control: a prefix that only begins with their letters is neither minted opaque nor named */
+  for (const p of ["STPX", "GUDE"]) {
+    const { rc } = fresh();
+    assert.equal(rc.allocId(p, "2026").id, `${p}-2026-0001`, `${p} is not opaque: the counter mints it`);
+    assert.equal(mintExhausted(p).detail, "your group's Civicsmith could not find a free id: every one it drew was already taken. Nothing was written.");
+  }
 });
 
 test("R40 R28: seedMintLedger seeds both ID_TABLE forms: counters of any width, the counter's range past 9,999, and opaque tails", () => {
