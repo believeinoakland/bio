@@ -122,13 +122,14 @@ test("R71 projectCreated: the sole initial owner, the creation visibility record
   assert.equal(w.m.participation("PROJ-B", "ann"), null, "nothing written on a refusal");
 });
 
-test("R115 R111 members' tables are declared exempt from purge; participation, visibility, the sight index and removals are cleared with the project", async () => {
+test("R115 R111 R124 members' tables are declared exempt from purge; participation, visibility, the sight index and removals are cleared with the project", async () => {
   const w = world();
   assert.equal(w.declared.length, 1);
   const [d] = w.declared;
   assert.equal(d.module, "membership");
   assert.deepEqual(new Set(d.opts.exempt), new Set(["members", "member_expertise", "admin_votes", "hosting_access",
-    "join_doors", "group_description", "court_notice"]), "R111's tables beside R115's");
+    "join_doors", "group_description", "court_notice", "handle_history", "handle_check_window"]),
+    "R111's tables and R124's handle history (with R123's check window) beside R115's");
   assert.deepEqual(new Set(MEMBERSHIP_PROJECT_TABLES), new Set(["project_participants", "project_removals", "project_visibility",
     "project_sight"]), "R115: the owner votes, decisions and requests are project-roster's (its R18), not declared here");
   assert.deepEqual(d.tables, MEMBERSHIP_PROJECT_TABLES.map((name) => ({ name, keys: ["project_id"] })),
