@@ -207,12 +207,14 @@ export class CaptureCredentials {
     return !!f && f.status === "active";
   }
 
-  /* R58: may this member (by id) see this row? The listing asks the same rule in its SQL (`#visibleClause`). */
+  /* R58: may this member (by id) see this row? The listing asks the same rule in its SQL (`#visibleClause`). An
+     administrator (the founder included) sees every `member` and `group` row, and a `project` row, as anyone does, only
+     at FULL sight of its project: a hidden project's credentials and their suppliers are its contents (D54, K2408). */
   #sees(memberId, row) {
     if (typeof memberId !== "string" || memberId === "") return false;
-    if (this.#members.isAdministrator(memberId)) return true;
-    if (!this.#active(memberId)) return false;
-    if (row.scope === "member") return row.supplied_by === memberId;
+    const admin = this.#members.isAdministrator(memberId);
+    if (!admin && !this.#active(memberId)) return false;
+    if (row.scope === "member") return admin || row.supplied_by === memberId;
     if (row.scope === "project") return this.#members.sight(row.project, viewerOf(memberId)) === "full";
     return row.scope === "group";
   }
@@ -434,18 +436,21 @@ export class CaptureCredentials {
   /* ================= R58: the listing ================= */
 
   /* R58's visibility as SQL over the alias `c`, so the listing's cut falls on what the viewer sees: an administrator
-     every row; an active member their own `member` rows, the `group` rows, and a `project` row whose project
-     membership's one rule of sight (its R43, `viewerPredicate`, R44's FULL for a project) admits them to, joined on
-     record-core's `bundles` by its read contract (R37: `bundle_id`, `object_type`). Null: the viewer sees nothing. */
+     (the founder included) every `member` row, an active member their own; every such viewer the `group` rows; and a
+     `project` row whose project membership's one rule of sight (its R43, `viewerPredicate`, R44's FULL for a project)
+     admits them to, joined on record-core's `bundles` by its read contract (R37: `bundle_id`, `object_type`). That rule
+     admits an administrator to a hidden project only as a participant (D54, K2408), so the same arm serves both. Null:
+     the viewer sees nothing. */
   #visibleClause(who) {
-    if (this.#members.isAdministrator(who)) return { sql: "1=1", args: [] };
-    if (who === "admin" || !this.#active(who)) return null;
+    const admin = this.#members.isAdministrator(who);
+    if (!admin && (who === "admin" || !this.#active(who))) return null;
     const g = viewerPredicate(viewerOf(who));
     if (g.scope === "DENY") return null;
-    return { sql: `((c.scope='member' AND c.supplied_by=?) OR c.scope='group'
+    const own = admin ? { sql: "c.scope='member'", args: [] } : { sql: "(c.scope='member' AND c.supplied_by=?)", args: [who] };
+    return { sql: `(${own.sql} OR c.scope='group'
                     OR (c.scope='project' AND EXISTS (SELECT 1 FROM bundles b
                          WHERE b.bundle_id = c.project AND b.object_type = 'project' AND ${g.sql})))`,
-             args: [who, ...g.args] };
+             args: [...own.args, ...g.args] };
   }
 
   /** The credentials `viewer` may see, filtered by `scope` and `project` when given: the first `limit` in the order
