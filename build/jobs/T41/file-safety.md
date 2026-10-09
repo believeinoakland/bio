@@ -19,3 +19,7 @@
 - `format`: 0 failures · `architecture file-safety`: 0 failures · `coverage file-safety`: 41 of 41 live ids, 0 failures · `ownership file-safety tranche/T41`: 2 files, 0 failures.
 
 Size (session_01VmeqiX8nkarTaN1DJ1ZZBU): test runs 3, module lines 2248
+
+## J1 · COMPLETE
+
+T41-8c done (tests only). intake R2 re-stated for D54 with negative controls; scan R15 gains the same case. 53/53; format, architecture, coverage 41/41, ownership 0 failures. No product code or requirement changed. provenance R63: R6 reads fetchedByThisCopy as given; upload is not in FETCHED_VIAS today, so it grades high (source_not_fetched); my tests hold unless R63 lists upload as fetched; not run, provenance not yet merged. Details in my record.
