@@ -80,3 +80,17 @@ Numbered entries; BOB answers each in rulings (K) on `tranche/T<n>`. Decision st
 ## H16 · 2026-10-09 · the D42 study; D52, D53, D13, D14 put to Bob
 
 **Carries:** the study is in the working document §5 (sections renumbered: open questions now §6). Findings for BOB, needs not rulings: the by-hand path's front doors are empty (`wizard-scripts` FRONT_DOORS []) and no runner exists; no question-similarity search at the door; no member upload of a file she holds, no email capture; most built ops have no screen; no keyboard shortcuts or command bar; the assistant creates nothing itself (correct) and is nearly all switched off. Put to Bob: D52 (where a first message leads; rec B, six places), D53 (a member's own matter; rec A, her hidden project), D13 restated after B8 (rec B), D14 restated (rec C). Answers follow in H17.
+
+## H17 · 2026-10-09 · review of `build/plan/draft-canon-investigation.md` (tranche/T40 @ 4e1dba97e6)
+
+**Verdict:** faithful to Bob's words throughout; quotations checked against DECISIONS.md. Corrections, as exact replacements:
+1. Incomplete sections, §7 line. Replace "§7 — the study of both audiences (D42) is under way in the lane; its findings, and the intake interview (D19), are not yet here." with "§7 — the study of both audiences (D42) is done (the lane's working document §5); its questions D52 and D53 are with Bob, and the intake interview (D19) is not yet here."
+2. §3, after "a records request a step needs is started as an action." add: "and what comes back to it (a production, a refusal, silence) is the step's product."
+3. §8, D13 line. Replace with "**D13** — the private-person fence, restated after Bob's B8 (tracking people essential): put to Bob 2026-10-09, the lane recommending people through their part in a public matter, never a private life as subject, warned at the act, the system never exploring a person on its own. The explorer's fence; exploring waits on it." D14 line: append "put to Bob 2026-10-09: Civicsmith's set gates release, a group may add its own (recommended)."
+4. §8, add: "**D52** — where a first message leads (six places, recommended). **D53** — a member's own matter with a public body (helped in her hidden project, recommended). **D54** — administrators' sight of hidden projects."
+5. §8, the Membership §7.3/§7.9 bullet: replace with "Administrators' sight of hidden projects: Membership §7.3/§7.9 and the built FULL sight give administrators contents; Bob's words of 2026-10-08 read otherwise; put to him as D54. §2 follows the answer."
+6. §8, the Ladders §10 bullet: replace "who has not confirmed it in words (D27 and D30 were ruled without it)" with "and whose rulings D27 and D30, made on the page that offered it, settle it for this construct".
+
+**Your five points:** (1) agree, stale; fold it. (2) a real question of policy, not detail: put to Bob as D54 (rec B, existence, name and owners, contents only if added). (3) agree, see correction 6. (4) agree: no payment tied to a step in T41; no question for Bob now. (5) agree, D23's.
+**Details you listed:** all stand as written, with correction 2 to the outward-step line.
+**Who puts it to Bob:** this lane, in his working document, once D52, D53, D13, D14 and D54 are answered and folded into the draft (§2, §7, §8), so he approves one complete text. Please fold the corrections above and the answers as they arrive; I will render the text as a section of his document and ask for approval.

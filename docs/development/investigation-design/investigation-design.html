@@ -109,8 +109,9 @@ blockquote cite{display:block;font:400 .8rem var(--mono);color:var(--muted);font
 <li><b>D53</b> · a member's own matter with a public body</li>
 <li><b>D13</b> · the fence against investigating private people (holds back exploring)</li>
 <li><b>D14</b> · the test investigations an AI part must pass (holds back exploring)</li>
+<li><b>D54</b> · whether administrators see inside hidden projects (from BOB's canon draft)</li>
 </ul>
-<p>A short answer is enough, for example "D52: B, D53: A, D13: B, D14: C".</p>
+<p>A short answer is enough, for example "D52: B, D53: A, D13: B, D14: C, D54: B". Once these are answered, BOB's canon text for the design comes to you for approval, here.</p>
 </div>
 
 <h2 id="design">2 · The design</h2>
@@ -121,7 +122,7 @@ blockquote cite{display:block;font:400 .8rem var(--mono);color:var(--muted);font
 <li>An investigation is a <b>project</b>. A project has an <b>objective</b>, what it is trying to establish. It pursues the objective by posing <b>questions</b>, which may or may not be answered.</li>
 <li>A question can serve <b>several projects and objectives</b>. Each project has its own relationship with a question: it draws on it, it may hold its own conclusion on it, and it may defer or dismiss it. A project's deferral or dismissal never affects another project.</li>
 <li>A question never shows <b>which projects draw on it</b>. A member sees the question, the work on it and whether it has been answered, never who else is asking.</li>
-<li>A project's <b>contents</b> are seen only by its participants, whether or not it is hidden. A non-hidden project's name is seen across the group so others can ask to join. A hidden project is invisible to everyone outside it.</li>
+<li>A project's <b>contents</b> are seen only by its participants, whether or not it is hidden. A non-hidden project's name is seen across the group so others can ask to join. A hidden project is invisible to members outside it; what administrators see of it is open (D54).</li>
 </ul>
 
 <h3>2.2 · Steps</h3>
@@ -364,7 +365,18 @@ blockquote cite{display:block;font:400 .8rem var(--mono);color:var(--muted);font
 
 <h2 id="questions">6 · Open questions</h2>
 
-<p>Four questions from the study in <a href="#study">section 5</a>. Two, D13 and D14, hold back the system's exploring.</p>
+<p>Five questions: four from the study in <a href="#study">section 5</a>, two of which (D13 and D14) hold back the system's exploring, and one, D54, from BOB's draft of the design as canon.</p>
+
+<div class="slip"><span class="id">D54 · Do administrators see inside hidden projects?</span>
+<p><b>Background.</b> BOB has written the design as canon for your approval, and found that two texts disagree. Membership (your rulings of July and September) gives a group's administrators sight of every project, hidden ones included: sight without authority, so they can look but not act inside. The product is built that way. On 8 October you wrote: "a non-hidden project can be seen by members who have been added to the project, but only by added members if the project is hidden." Read literally, that leaves administrators out unless they are added.</p>
+<p><b>Example.</b> A member opens a hidden project holding a whistleblower's papers about the parks department. One of the group's administrators is married to a parks manager.</p>
+<ol>
+<li><b>A · As built.</b> Administrators see every project's contents, hidden or not, but cannot act in one they have not joined.</li>
+<li><b>B · Existence, not contents.</b> Administrators see that a hidden project exists, its name and its owners, so they can do their part for the group (for example, placing a legal hold on it, or acting on a complaint about it). They see its contents only if its owners add them.</li>
+<li><b>C · Nothing.</b> A hidden project is invisible to administrators too, unless they are added.</li>
+</ol>
+<p><b>Trade-offs.</b> A protects the group as a body, but every administrator can read the most sensitive work, and in the example that is exactly the person who should not. C protects the work, but leaves the group unable to answer for something it cannot see, even to place a hold. B gives administrators what they need to govern and members the protection a hidden project promises.</p>
+<p class="rec">Recommended: B.</p></div>
 
 <div class="slip"><span class="id">D52 · Where a first message can lead</span>
 <p><b>Background.</b> Today the only start is opening a project. The eight messages show that many first messages are not investigations: a rumour to keep an eye on, a page to understand, a meeting to speak at, a dispute between neighbours. If every message must open a project, the group fills with projects that are not investigations, and members learn to stay away from the door.</p>
@@ -604,6 +616,7 @@ blockquote cite{display:block;font:400 .8rem var(--mono);color:var(--muted);font
 <tr><td class="id">D51</td><td>three new parts: steps, question explorer, investigation</td><td><span class="tag t-ruled</span> A</td></tr>
 <tr><td class="id">D52</td><td>where a first message can lead</td><td><span class="tag t-open">open</span></td></tr>
 <tr><td class="id">D53</td><td>a member's own matter with a public body</td><td><span class="tag t-open">open</span></td></tr>
+<tr><td class="id">D54</td><td>whether administrators see inside hidden projects</td><td><span class="tag t-open">open</span></td></tr>
 </table></div>
 <p class="note">Source: <code>docs/development/investigation-design/</code> on branch <code>design/investigation</code>, which also holds the handoff to BOB, who turns rulings into requirements.</p>
 </main>
