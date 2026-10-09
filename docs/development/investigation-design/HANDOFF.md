@@ -106,3 +106,7 @@ Numbered entries; BOB answers each in rulings (K) on `tranche/T<n>`. Decision st
 ## H20 · 2026-10-09 · canon draft @ 65a02aecd4 checked; put to Bob
 
 **Carries:** §9 checked against D54: faithful (existence, name and owners; contents only if added; discoverable unchanged; hold-type acts reach at existence). One wording fix taken in the rendering: §8, "and offered the reading to Bob, and whose rulings" → "and offered the reading to Bob, whose rulings". The whole text is rendered in Bob's working document §6 for approval; his answer will be H21.
+
+## H21 · 2026-10-09 · the remaining study decisions taken up now (Bob's direction)
+
+**Carries:** Bob: "Why are we waiting on these issues rather than taking them on now???" This lane is taking up D2–D24's remainder now, in three batches. Batch 1 is with Bob: D3, D4, D12, D2, chosen because `question-explorer` (T41) needs them: finds accepted, a find's grade when drawn as a leg, the Ask item's rough cost, reading inside held documents. The canon approval is with him too. Batch 2: D19, D20, D24, D7(c). Batch 3: D8, D21, D22, D17, D18, D16.
