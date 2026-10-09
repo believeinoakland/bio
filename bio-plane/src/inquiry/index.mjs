@@ -44,7 +44,7 @@ import { contentOf, CONTENT_EXTENT_CHECKS, CONTENT_MINTED_BY_PLANE, canonicalExt
 import { connectionsOf, refsReplacedOf } from "../connections/index.mjs";
 import { entitiesOf } from "../entities/index.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
-import { legEarningOf, legCapped, PROJECTS_DRAWING_MAX } from "../leg-earning/index.mjs";
+import { legEarningOf, legCapped } from "../leg-earning/index.mjs";
 import { standardsOf } from "../standards/index.mjs";
 import { calculationsOf } from "../calculations/index.mjs";
 import { captureOf } from "../capture/index.mjs";
@@ -52,7 +52,7 @@ import { notADisposition, DISPOSITIONS } from "../progressions/index.mjs";
 import { INQUIRY_TABLES, INQUIRY_DECLARATIONS, migrateInquiry, BUNDLE_FACTS, LEGS_RELATION } from "./schema.mjs";
 import { localDay, dayRange, isCalendarDate } from "../civil-time/index.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
-import { INQUIRY_CONTRADICTION_CHECKS, INQUIRY_SURFACE_CHECKS } from "./checks.mjs";
+import { INQUIRY_CONTRADICTION_CHECKS, INQUIRY_SURFACE_CHECKS, INQUIRY_BIAS_CHECKS, QUESTION_WORDS } from "./checks.mjs";
 import { checkInquiryEntry } from "./grammar.mjs";
 import { contradictionFindings, candidateOf, readResolution, exploresOf, CANDIDATE_RE } from "./contradiction.mjs";
 import { setScalar, setOrAddScalar, appendStateHistory, removeBlock, setOrAddBlock, setSection, appendSessionLog,
@@ -61,7 +61,7 @@ import { setScalar, setOrAddScalar, appendStateHistory, removeBlock, setOrAddBlo
 export { INQUIRY_SCHEMA, INQUIRY_TABLES, INQUIRY_DECLARATIONS, BUNDLE_FACTS, LEGS_RELATION, SUBJECT_COLUMN, moveBundleFacts, moveSubjectEntity }
   from "./schema.mjs";
 export * from "./grammar.mjs";
-export { INQUIRY_CONTRADICTION_CHECKS, INQUIRY_SURFACE_CHECKS } from "./checks.mjs";
+export { INQUIRY_CONTRADICTION_CHECKS, INQUIRY_SURFACE_CHECKS, INQUIRY_BIAS_CHECKS, QUESTION_WORDS } from "./checks.mjs";
 export { CONTRADICTION_COORDINATES, PLURALITY_DIFFERENCES, DISSOLVED_BY, NORM_CANONS, RESOLUTION_KINDS, resolutionFamily,
          resolutionLines, CANDIDATE_RE, QUALIFIER_MAX, HYPOTHESIS_MAX } from "./contradiction.mjs";
 
@@ -104,15 +104,17 @@ const setterOf = (author) => { const t = typeof author === "string" ? author.tri
  *  module holds no copy of its own. */
 export { DISPOSITIONS };
 
-/** R39 (K102, K107 (3)): the refusal of a disposition a second team's stance would feel, its row held here (K174's
- *  pattern, the catalogue untouched). */
+/** R39 (K2371, K2436; H10, H38; DEC-188 (7)): the refusal of a shared disposition of a question a project shown to the
+ *  caller draws on, its row held here (K174's pattern, the catalogue untouched). `DRAWN_ON_BY_SEVERAL_PROJECTS` (C-106.1)
+ *  is retired, its number never reused (a different condition, T40-5). The translation is `words.json`'s
+ *  `question.refused.drawnon`, read by key (`QUESTION_WORDS`); it names no project, which travel in the refusal as data.
+ *  It awaits T41's stamp. */
 export const INQUIRY_DISPOSE_CHECKS = {
-  DRAWN_ON_BY_SEVERAL_PROJECTS: {
-    check: 'C-106.1',
-    where: 'src/inquiry/index.mjs #dispose > is-dispose-shared',
-    translation: 'More than one project draws on this question, and setting it down here would set it down for '
-      + 'every one of them. One team\'s disposition never moves another team\'s stance: set it aside for your own '
-      + 'project instead, which leaves the question where the other projects have it.',
+  DRAWN_ON_BY_A_PROJECT: {
+    check: 'C-106.2',
+    where: 'src/inquiry/index.mjs #dispose > is-dispose-drawn-on',
+    translation: QUESTION_WORDS['question.refused.drawnon'],
+    key: 'question.refused.drawnon',
   },
 };
 
@@ -130,11 +132,11 @@ const unreferenced = (t) => isImportedRef(t) || (typeof t === "string"
 
 /** The catalogue row a refusal code has, if any: its check id and canned translation travel with it (DEC-49). */
 const ROW_FAMILIES = [INQUIRY_ROWS, SHARED_ACT_CHECKS, INQUIRY_DISPOSE_CHECKS, INQUIRY_CONTRADICTION_CHECKS,
-                      INQUIRY_SURFACE_CHECKS];
+                      INQUIRY_SURFACE_CHECKS, INQUIRY_BIAS_CHECKS];
 function withRow(answer) {
   if (!answer || answer.ok !== false || typeof answer.reason !== "string" || answer.check) return answer;
   const row = ROW_FAMILIES.map((f) => f && f[answer.reason]).find((r) => r && r.check);
-  return row ? { ...answer, check: row.check, translation: row.translation } : answer;
+  return row ? { ...answer, check: row.check, translation: row.translation, ...(row.key ? { key: row.key } : {}) } : answer;
 }
 
 /** R16: the superseded-by column read back as a list; ONE parser, so no caller splits the string itself. */
@@ -151,6 +153,28 @@ export function actNoBasis(detail, extra = {}) {
   return { ...(extra && typeof extra === "object" ? extra : {}),
            ok: false, reason: "NO_BASIS", code: "NO_BASIS", check: row.check, translation: row.translation, detail };
   /* END DEC-49 REGION is-act-no-basis */
+}
+
+/** R61 (D59; K231, K2472): the one spelling of `BIAS_APPLICATION_NOT_IN_FORCE` (C-2.19), a finding inside
+ *  `BASIS_REFUSED`: `statement` the bias statement id the application names, `where` the place that names it (a leg's
+ *  `basis[i]`, or a caller's own label: `basis-versions` R48 and `case-disclosures` R31 answer through it). `inForce` is
+ *  what `bias.statementInForce` answered (`false`, or `null` for undetermined); `scope` the lens asked. Pure; never
+ *  throws. */
+export function biasNotInForce(args = {}) {
+  const { statement = null, where = null, inForce = false, scope = null } = args && typeof args === "object" ? args : {};
+  /* DEC-49 REGION is-bias-application-in-force */
+  const row = INQUIRY_BIAS_CHECKS.BIAS_APPLICATION_NOT_IN_FORCE;
+  const id = typeof statement === "string" ? statement : null;
+  const at = typeof where === "string" && where ? where : null;
+  const lens = scope && typeof scope === "object" && scope.type === "project" && typeof scope.id === "string" && scope.id
+    ? `the lens in force for ${scope.id}` : "the group's lens in force";
+  return { check: row.check, code: "BIAS_APPLICATION_NOT_IN_FORCE", translation: row.translation,
+           statement: id, where: at, in_force: inForce === null ? null : false,
+           detail: `${at ?? "a bias application"} names the bias statement ${id === null ? "(none)" : `'${fmSafe(id)}'`}, `
+                 + (inForce === null
+                   ? `and whether it is in ${lens} could not be read, so the application is refused rather than trusted`
+                   : `which is not in ${lens}`) };
+  /* END DEC-49 REGION is-bias-application-in-force */
 }
 
 /* The files of a bundle other than bundle.md, carried unchanged into its next promotion. */
@@ -207,6 +231,9 @@ const MEMBER_AUTHOR = /^member:([A-Za-z0-9._:-]{1,128}?)(?:\/.*)?$/;
 /** R53: the key a finding is offered to bias under, its question's id behind a prefix no run id shares (bias keys every
  *  debt by its work product's key alone). */
 const FINDING_KEY = "finding:";
+/** R53 (K2442, D54): the viewer an internal read takes, a machine credential's (membership R43: it sees every bundle),
+ *  never the founder's `admin`, which is blind to a hidden project the founder neither was invited to nor joined. */
+export const INTERNAL_VIEWER = "class:daemon";
 
 /* ------------------------------------------------------------------ the module */
 
@@ -392,6 +419,10 @@ export class Inquiry {
         /* R11 (T33-45; K1447 (ii), (iii)): what the record holds behind a held standard's or a calculation's leg. */
         const hf = this.#heldLegFindings(basisLegs, c.author);
         if (hf.length) return { ok: false, reason: "BASIS_REFUSED", findings: hf };
+        /* R61 (D59; inquiry-grammar R18's store-side share): each `bias_applied` statement in force for the inquiry's
+           project (or the instance), the acting member as viewer; one not in force, or undetermined, refused */
+        const bf2 = this.biasAppliedFindings({ legs: basisLegs, project: basisFm.project, viewer: c.author });
+        if (bf2.length) return { ok: false, reason: "BASIS_REFUSED", findings: bf2 };
       }
     }
     /* REC-18: a subject entity the registry does not hold. */
@@ -544,6 +575,39 @@ export class Inquiry {
                      detail: `basis[${i}] rests on the calculation ${t}, whose acceptance is not recorded: a `
                            + `calculation is a leg once a member has accepted it` });
       }
+    });
+    return out;
+  }
+
+  /* R61 (D59; K2448, K2472): every `bias_applied` entry of every leg, its `statement` asked of `bias.statementInForce`
+     (its R49) at the inquiry's project scope (its document's `project`; else the instance), `viewer` the promotion's
+     author. An answer of `in_force` false or null, a read that throws or answers another shape, and no bias module to
+     ask are each refused through `biasNotInForce`, naming the leg and the statement (fail closed). A leg with no
+     `bias_applied` asks nothing; a malformed one is `inquiry-grammar` R18's to refuse, so only a statement that is a
+     non-empty string is asked here and any other entry is left to the grammar. Public, so the act that records a leg
+     from parsed input (a leg's `bias_applied` is a list of objects, which a bundle's front matter cannot hold inside a
+     `basis[]` item, record-grammar R7; inquiry-grammar's T41 J1) asks the same check before it writes; the promotion
+     asks it over the document's legs too. Answers the findings (empty: every statement in force); never throws. */
+  biasAppliedFindings({ legs = [], project = null, viewer = null } = {}) {
+    const out = [];
+    if (!Array.isArray(legs)) return out;
+    project = typeof project === "string" ? project.trim() : "";
+    const scope = project ? { type: "project", id: project } : "instance";
+    legs.forEach((leg, i) => {
+      const applied = leg && typeof leg === "object" && Array.isArray(leg.bias_applied) ? leg.bias_applied : [];
+      applied.forEach((a, j) => {
+        const statement = a && typeof a === "object" && typeof a.statement === "string" ? a.statement.trim() : "";
+        if (!statement) return;
+        let r = null;
+        try {
+          r = this.#bias && typeof this.#bias.statementInForce === "function"
+            ? this.#bias.statementInForce({ statement, scope, viewer }) : null;
+        } catch { r = null; }
+        const inForce = r && typeof r === "object" && (r.in_force === true || r.in_force === false) ? r.in_force : null;
+        if (inForce !== true)
+          out.push(biasNotInForce({ statement, where: `basis[${i}].bias_applied[${j}]`, inForce,
+                                    scope: project ? scope : { type: "instance" } }));
+      });
     });
     return out;
   }
@@ -738,8 +802,9 @@ export class Inquiry {
              ...(contentProjected.length ? { content: contentProjected } : {}) };
   }
 
-  /* R53: the question's finding and the project lens in force as it was made, read as bias reads every lens (the
-     administrator viewer, bias R33). A lens that cannot be read (no bias bound, or its read fails) and a replayed
+  /* R53: the question's finding and the project lens in force as it was made, read as an internal read (a machine
+     viewer, `INTERNAL_VIEWER`), never as the founder's: the founder is blind to a hidden project it is neither invited
+     nor joined to (membership R43, D54; K2442), and the lens of a finding is the project's whatever any member sees. A lens that cannot be read (no bias bound, or its read fails) and a replayed
      conclusion (not made now) record no lens; none in force records that none was. Never throws into the promotion. */
   #recordFinding(bundleId, fm, author, replay) {
     const project = typeof fm.project === "string" ? fm.project.trim() : "";
@@ -747,7 +812,7 @@ export class Inquiry {
     let state = "unreadable", sha = null;
     if (!replay && this.#bias)
       try {
-        const m = this.#bias.biasManifest({ scope: "project", scopeId: project, viewer: "admin", limit: 1 });
+        const m = this.#bias.biasManifest({ scope: "project", scopeId: project, viewer: INTERNAL_VIEWER, limit: 1 });
         if (m && m.in_force === true && typeof m.statements_sha === "string") { state = "recorded"; sha = m.statements_sha; }
         else if (m && m.in_force === false) state = "none";
       } catch { /* unreadable: no lens recorded */ }
@@ -1397,28 +1462,33 @@ export class Inquiry {
                        + "dependent rather than stranding it." };
     }
 
-    /* R39 (K102): ONE TEAM'S DISPOSITION NEVER MOVES ANOTHER TEAM'S STANCE. A member more than one project draws on
-       (a project document citing it, the citation not severed, counted over every project whatever the viewer
-       sees) is not moved here: the set is refused naming each such member, and no project the viewer may not see;
-       a disposition is then taken per project through the project-scoped set-aside (`queue`'s `op=proposedispose`).
-       `divide` and `ground` stay shared acts, because they change what the question is. */
-    /* DEC-49 REGION is-dispose-shared */
-    const shared = [];
+    /* R39 (K2371, K2436; H10, H38): DEFERRAL AND DISMISSAL ARE EACH PROJECT'S OWN ACT on its own relationship to a
+       question, taken through `queue`'s `op=proposedispose` project arm (its R27); this shared act moves the question's
+       own state only. A member a project SHOWN to the caller draws on (`leg-earning.projectsShownOn`, its R14: a
+       drawing project that is not hidden) is not moved: the set is refused naming each such member and, as data, the
+       projects R14 shows her, never a hidden one. A member drawn on only by hidden projects, or by none, is moved on its
+       own state, the answer the same either way (each hidden project's own relationship stands, H10). Nothing here
+       counts the drawing projects, and no outcome depends on how many there are. A read of R14 that fails refuses the
+       set as undetermined, naming no project and saying nothing about whether any draws (fail closed). `divide` and
+       `ground` stay shared acts, because they change what the question is. */
+    /* DEC-49 REGION is-dispose-drawn-on */
+    const drawn = [], unread = [];
     for (const id of sel.members) {
-      const drawing = this.legEarning.projectsDrawingOn(id);
-      if (drawing.length > 1) {
-        const seen = drawing.filter((p) => this.membership.inSight(p, viewer));
-        shared.push({ id, projects: seen, ...(seen.length < drawing.length ? { others_out_of_view: true } : {}),
-                      ...(drawing.truncated ? { truncated: true, bound: PROJECTS_DRAWING_MAX } : {}) });
-      }
+      const shown = this.#projectsShown(id, viewer);
+      if (shown === null) { unread.push(id); continue; }
+      if (shown.projects.length)
+        drawn.push({ id, projects: shown.projects, ...(shown.truncated ? { truncated: true } : {}) });
     }
-    if (shared.length)
-      return withRow({ ok: false, reason: "DRAWN_ON_BY_SEVERAL_PROJECTS", to,
-                       offenders: shared.sort((x, y) => (x.id < y.id ? -1 : 1)),
-                       detail: "more than one project draws on these questions, and a disposition here would move "
-                             + "every project's stance at once. Set each aside for your own project instead "
-                             + "(op=proposedispose), which leaves the others where they are. Nothing was moved." });
-    /* END DEC-49 REGION is-dispose-shared */
+    if (unread.length)
+      return { ok: false, reason: "PROJECTS_UNDETERMINED", to, offenders: unread.sort(),
+               detail: "which projects draw on these questions could not be read, so whether this shared act would "
+                     + "move a question a project works on is not known, and nothing was moved. Try again." };
+    if (drawn.length)
+      return withRow({ ok: false, reason: "DRAWN_ON_BY_A_PROJECT", code: "DRAWN_ON_BY_A_PROJECT", to,
+                       offenders: drawn.sort((x, y) => (x.id < y.id ? -1 : 1)),
+                       detail: "a project draws on these questions, and each project sets a question aside for itself "
+                             + "(op=proposedispose), which leaves it as it is everywhere else. Nothing was moved." });
+    /* END DEC-49 REGION is-dispose-drawn-on */
 
     const when = this.#when();
     const disposed = [];
@@ -1479,6 +1549,24 @@ export class Inquiry {
     }
     return { ok: true, to, reason: why, handle, disposed: disposed.sort(), weight: "refuse", drift: sel.drift,
              ...reevaluation };
+  }
+
+  /* R39, R60 (H38; leg-earning R14): the projects drawing on question `id` that `viewer` is shown, `{projects: [{id,
+     name}], truncated}`, never a hidden one, or null when the read cannot be had (no such read, a throw, or no list).
+     R14's answer is taken as a list, or as an object carrying `projects`; each entry as `{id, name}` (an entry that is a
+     bare id is taken as its id with no name). */
+  #projectsShown(id, viewer) {
+    try {
+      const le = this.legEarning;
+      if (!le || typeof le.projectsShownOn !== "function") return null;
+      const r = le.projectsShownOn({ id, viewer });
+      const list = Array.isArray(r) ? r : r && typeof r === "object" && Array.isArray(r.projects) ? r.projects : null;
+      if (!list) return null;
+      const projects = list.map((p) => (typeof p === "string" ? { id: p, name: null }
+        : p && typeof p === "object" && typeof p.id === "string" ? { id: p.id, name: typeof p.name === "string" ? p.name : null }
+        : null)).filter(Boolean);
+      return { projects, truncated: !!(r && r.truncated) };
+    } catch { return null; }
   }
 
   /** R39, R11, R23 (T33-45; K617, K1505): the earned registry and the resting-on reads moved by copy to `leg-earning`

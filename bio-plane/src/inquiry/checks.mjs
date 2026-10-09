@@ -87,3 +87,26 @@ export const INQUIRY_SURFACE_CHECKS = {
       + 'value the current version carries and save the revision again.',
   },
 };
+
+/* R61 (T41; D59; inquiry-grammar R18's store-side share; K2448, K2472): a leg's `bias_applied` statement that is not in
+ * the lens in force for the inquiry's project (or the instance), asked of `bias.statementInForce` (its R49) at the act
+ * that records it. The next free number of this module's C-2 family (C-2.18 the last held at the job's START); the
+ * translation is BOB's draft until `words.json` holds a key for it, and the row awaits T41's stamp. Minted at one site,
+ * `biasNotInForce`, which `basis-versions` R48 and `case-disclosures` R31 answer through (K231). */
+export const INQUIRY_BIAS_CHECKS = {
+  BIAS_APPLICATION_NOT_IN_FORCE: {
+    check: 'C-2.19',
+    where: 'src/inquiry/index.mjs biasNotInForce > is-bias-application-in-force, reached from check > is-bias-applied',
+    translation: 'A leg says a statement of the lens shaped how it was weighed, and that statement is not in the lens '
+      + 'in force for this question\'s project now, or whether it is could not be read. Name a statement of the lens '
+      + 'in force, or take the application off the leg. Nothing was written.',
+  },
+};
+
+/* R39 (T41; DEC-188 (7)): the words of `words.json` (`docs/development/ux-substrate/screens/words.json`) this module's
+ * refusals read by key, each `en` verbatim; the UX stream re-words them there (its `question.refused.drawnon` replaced
+ * BOB's drafted words). */
+export const QUESTION_WORDS = Object.freeze({
+  'question.refused.drawnon': 'This question can\'t be set aside for the whole group, because a project draws on it. '
+    + 'Set it aside in your project instead; that leaves it as it is everywhere else.',
+});
