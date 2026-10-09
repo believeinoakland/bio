@@ -1,6 +1,6 @@
 # credentials (T40)
 
-**Status** · session_01WnUBG32qScjJuitEhktbaJ · depth 2 · WAITING ON BOB (J2) · handled B2
+**Status** · session_01WnUBG32qScjJuitEhktbaJ · depth 2 · WAITING ON BOB (J2) · handled B4
 
 ## Completion (CREDENTIALS #10)
 
