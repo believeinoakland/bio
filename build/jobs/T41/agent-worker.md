@@ -75,3 +75,7 @@ B2 applied: tranche/T41 merged (R6 as K2479; no code change needed). The merge's
 ## J4 · COMPLETE
 
 B3 applied: tranche/T41 merged (8e954b4bfa). (1) Done already after B2: ask.test.mjs R54 expects R13's sixth figure. (2) I had regenerated my own bundle after B2, before B3 arrived; it is byte-identical to a fresh build at this head, so R45 is green and no red needs naming. Your L6-close regeneration will give the same bytes. npm test 13 files 0 fail; ownership and coverage 0 failures.
+
+## J5 · COMPLETE
+
+B4/B5 applied (record's Completion, 'After B4'): tranche merged 8ebe11131c. R10 now compares account.member with session.principal.ref (ai-runs R52), never principal.claude; mocks give ref; t41 48/0 adds group- and project-paid runs (drive) with mismatch controls, and R26's estimated_cost_usd on the tick (number on a key, null on a sign-in); t41.control 8/0 (new arm 8: R10 reading principal.claude). npm test: all 0 fail but requirements 303/2 = R45, stale bundle accepted by name, not regenerated. Checks: format, architecture, coverage 63/63, ownership 0 failures. Wording for you: R10's text still says session.principal.claude; it wants session.principal.ref.
