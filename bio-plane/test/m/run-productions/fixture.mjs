@@ -5,7 +5,7 @@
    (R26 `candidatePair`, R27 `candidateIndependence`), citation (R5 `retiredNotCitable`), basis-versions (R5
    `basisVersionsOf`, R9 `basisVersions`, R28 `appendVersion`, R40 `onCandidates`), connections (R22 `citesInto`),
    and content's own two providers (extraction's readings, provenance's `capturesOf`), extraction's units (its R36),
-   steps (its R9 `recordProduct`, over the observation log it registers with) and credentials (its R57 material limits) are the real modules, reached through
+   steps (its R9 `recordProduct`, with a stand-in of the observation log it registers with) and credentials (its R57 material limits) are the real modules, reached through
    their factories. Every stand-in records the calls
    made to it. Bundles and their files are written as record-core's read contract holds them (its R37), and the tables
    later modules own that this module reads under their read contracts (inquiry R40, basis-versions R38) are created
@@ -19,7 +19,6 @@ import { membershipOf } from "../../../src/membership/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { stepsOf } from "../../../src/steps/index.mjs";
-import { observationLogOf } from "../../../src/observation-log/index.mjs";
 import { strengthOf } from "../../../src/strength/index.mjs";
 import { citationOf } from "../../../src/citation/index.mjs";
 import { versionsIn } from "../../../src/basis-versions/index.mjs";
@@ -259,9 +258,10 @@ export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven }
     citationOf(host, { record, membership, content });
   }
   /* steps, the real module over its own tables (its R9 `recordProduct`, reached through its factory, B4). */
-  const observationLog = observationLogOf(host, { record, membership, provenance: null, extraction: null,
-                                                  now: () => Date.parse(clock.now) });
-  observationLog.migrate();
+  /* observation-log is not this module's use: steps is handed a stand-in of the registrations it makes there (its
+     R37 `onLookAnswered`, R13's authority) and the two reads `productsOf` asks, holding no look. */
+  const observationLog = { registerAuthority: () => ({ ok: true }), onLookAnswered: () => ({ ok: true }),
+                           byAuthority: () => [], rowVisible: () => false };
   const steps = stepsOf(host, { record, membership, observationLog });
   const p = runProductionsOf(host, { record, membership, content, connections, extraction,
                                      ...(aiRunsGiven === null ? {} : { aiRuns }),

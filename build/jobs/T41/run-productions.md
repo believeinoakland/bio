@@ -38,6 +38,22 @@
 
 Size (session_012FXyapfXzBKoA3m8DhRQoh): test runs 26, module lines 2199
 
+## CHANGE B3, B4 (RUN-PRODUCTIONS #8)
+
+**B3** (run-rules merged, K2489). R24's "no AI" judgement is now run-rules' `checkPagesRead({limits})`. Its `AI_RUN_READ_NO_AI` (C-22.23) is relayed whole. The limits are read from credentials R57: the group's (`aiKeepAwayState`) and the document's project's (`projectsKeptAway({use: "read"})`). A limit that cannot be read is held as on, so the read fails closed. The `pages` bound is read by key from `RUN_BOUNDS`. Of RUN_ORIGINS, DRAFT_KINDS and ENQUIRE_MODE I hold none and had no stand-in to replace. The test now expects run-rules' row in place of credentials' `PROJECT_AI_KEPT_AWAY`.
+
+**B4** (steps merged, K2491).
+- The factory reaches `stepsOf(host)`, and the tests drive the real steps: a step is made by `stepCreate`, and its ties are read back through `productsOf`.
+- Found by driving it: steps' `recordProduct` takes a capture or content row as `{kind, id}` (a bare string names a record id). The stand-in had accepted bare digests, so I now pass `{kind: "capture"}` and `{kind: "content"}`.
+- With a provider always present, `STEP_UNREADABLE` now means a malformed step name only.
+- Observation-log is not my use, so the fixture hands steps a stand-in of the registrations it makes there.
+
+**Edges to apply at my merge:** `steps` and `credentials`. `architecture` reports exactly these imports (4 failures: `index.mjs` and `fixture.mjs`, each importing the two), and nothing else.
+
+**Re-run:** `node --test test/m/run-productions/` gives 52 tests, 52 pass, 0 fail. Users' suites: skills 105/0, store-door 41/0, control-plane 195/0, plane 147/8 (unchanged), answer-envelope 24/4. The answer-envelope reds are the totality list missing the newly merged steps', ai-use's and reading-guides' families, not mine. `format` 0, `coverage` 24/24, `ownership` 0.
+
+Size (session_012FXyapfXzBKoA3m8DhRQoh): test runs 34, module lines 2211
+
 ## J1 · QUESTION
 
 R21–R24, my best readings; I am building on them now and will bring the work in line with your answer.
