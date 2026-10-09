@@ -6,6 +6,7 @@
    exports (`DOORBELL_ORIGIN`, `PROVENANCE_ACT_CHECKS`), never its instance, and the composition test builds both in
    the composition root's order. The share of `provenance`'s fixture these tests need, taken as N512 moved them. */
 import { DatabaseSync } from "node:sqlite";
+import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
@@ -123,8 +124,21 @@ export function world({ group = "test-group", now = "2026-09-27T03:00:00.000Z", 
         files: [{ path: "bundle.md", text: md, sha256: sha(md), bytes: Buffer.byteLength(md) }],
         state: "open", priorState: null, group: "test-group", created: T, lastUpdated: T, criticality: null, at: T }));
     },
-    /** Fence a bundle inside a project no member participates in (record-core R34's `project`, which membership R43
-     *  fences by): a `member:` viewer no longer sees it, the founder's viewer still does. */
+    /** A project bundle, held through record-core's one write path, created as promotion creates one (membership
+     *  R71): `owner` its sole owner, `visibility` its first setting (none recorded is `hidden`, membership R45). */
+    project(id, { owner = "olive", visibility = null } = {}) {
+      const md = `---\nid: ${id}\nobject_type: project\n---\n`;
+      record.transact(() => record.commit({ bundleId: id, type: "project", title: `Project ${id}`, project: null,
+        snapKey: id, kind: "promotion", base: "", author: V(owner), writer: null, operation: null,
+        files: [{ path: "bundle.md", text: md, sha256: sha(md), bytes: Buffer.byteLength(md) }],
+        state: "active", priorState: null, group: "test-group", created: T, lastUpdated: T, criticality: null, at: T }));
+      const made = membership.projectCreated({ projectId: id, ownerId: owner, visibility, by: owner });
+      assert.equal(made.ok, true, JSON.stringify(made));
+      return id;
+    },
+    /** Fence a bundle inside a project (record-core R34's `project`, which membership R43 fences by). A project no
+     *  bundle holds has no participant and no setting, so it is hidden: since D54 (K2408) no viewer but a machine sees
+     *  the bundle, the founder's included. Name a `project` made above to fence it where its owner sees it. */
     fence: (id, projectId = "PROJ-2026-0001-fenced") => st.sql.exec(`UPDATE bundles SET project = ? WHERE bundle_id = ?`, projectId, id),
     head: (id) => record.head(id),
     /** A capture, held as a file of an information bundle. */
