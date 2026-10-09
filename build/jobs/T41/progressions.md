@@ -30,3 +30,7 @@ Size (session_01LZyVTWVwnV72eYeLbeyQAm): test runs 2, module lines 2
 ## J1 · REPORT
 
 Found applying T41-10b (record, 'Found in another module'): record-grammar's NO_BASIS row C-33.40 (src/record-grammar/acts.mjs:45) names only inquiry's actNoBasis as its where; progressions raises NO_BASIS too (progressions index.mjs:458, :471 through refusal, checks.mjs:168), as record-grammar R29 states. C-33.41's where already names the progressions sites. A row-text question for record-grammar.
+
+## J2 · COMPLETE
+
+T41-10b applied (tests only): define.test.mjs R27 R28 reads SHARED_ACT_CHECKS' keys from record-grammar's export; 63/63; format, architecture, coverage (42/42), ownership 0 failures. No code or requirement changed. Record: build/jobs/T41/progressions.md.
