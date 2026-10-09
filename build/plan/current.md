@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #145 · session_01Lzjn9d16Mo4a4RE2Xr16gN · depth 1
 
-**Jobs** · 
+**Jobs** · record-grammar: RECORD-GRAMMAR #12 session_0196Hjq7pbtNLCRCp3UtdPBW
 
 **At T41's opening (K2422, K2423):** opened from `main` @ 8af83ac942 after T40's early close; Bob's meter 79%. Runs layer 1, then holds until Bob resumes.
 
