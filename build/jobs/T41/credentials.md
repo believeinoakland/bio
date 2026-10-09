@@ -1,6 +1,6 @@
 # credentials (T41)
 
-**Status** · session_01NyoLivN8Gk5Yd1QkwvULcW · depth 2 · RUNNING until 2026-10-09T19:58:17Z (users' test suites (40 paths), mine and tranche baseline) · handled B2
+**Status** · session_01NyoLivN8Gk5Yd1QkwvULcW · depth 2 · RUNNING until 2026-10-09T20:18:13Z (users' test suites after merging tranche/T41 (B3)) · handled B2
 
 ## J1 · QUESTION
 
