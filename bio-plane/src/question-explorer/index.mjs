@@ -18,7 +18,7 @@
  * captures nothing itself (R3); it names no place in behaviour or outward text (R8); and it never decides the gate
  * from a group's own test investigations (R11).
  *
- * Providers built in T41 alongside it (`ai-use`, and the T41 services of `ai-runs`,
+ * Providers built in T41 alongside it (the T41 services of `ai-runs`,
  * `capture-requests`, `run-productions`) are taken through `deps` and read by their requirements' names; where one is
  * absent the module fails closed: the gate stays shut and nothing is explored. */
 
@@ -33,6 +33,7 @@ import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
 import { captureRequestsOf } from "../capture-requests/index.mjs";
 import { stepsOf } from "../steps/index.mjs";
+import { aiUseOf } from "../ai-use/index.mjs";
 import * as runRules from "../run-rules/index.mjs";
 import { localDay } from "../civil-time/index.mjs";
 import { parseFrontmatter, isMachineIdentity, ACCEPTANCE_FORMS, acceptanceRecord, canonicalJson, sha256HexSync }
@@ -424,21 +425,38 @@ export class QuestionExplorer {
       }
     }
     for (const [owner, questions] of asks) {
-      let estimate = null;
-      try { estimate = this.aiUse.estimate({ owner, use: EXPLORE_USE, mode: EXPLORE_MODE, count: questions.length, at }); }
-      catch { estimate = "not known yet"; }
+      /* The Ask states the questions (`ai-use` R9's `what`, a list); ai-use attaches R10's rough cost to the item it
+         answers its owners (`exploreAsksPending`). The estimate for the lot is kept here too. */
+      const estimate = this.#estimate(owner, questions.length, at);
       let r = null;
-      try { r = this.aiUse.exploreAsk({ owner, at, what: { questions, estimate } }); } catch { r = null; }
+      try { r = this.aiUse.exploreAsk({ owner, at, what: questions }); } catch { r = null; }
       out.asked.push({ owner, questions, estimate, ask: r });
     }
     return out;
   }
 
+  /** R12: `ai-use` R10's estimate for `count` exploring runs on `owner`'s account, read as its owner (the member; a
+   *  project's first owner; the group's first active administrator, as ai-use reads an account itself), answered here
+   *  only to that account's owners (`runCost`). `"not known yet"` when it cannot say. */
+  #estimate(owner, count, at) {
+    let as = null;
+    try {
+      as = owner.startsWith("member:") ? owner
+        : owner.startsWith("project:") ? this.membership.projectOwners(owner.slice(8))[0] ?? null
+          : this.membership.activeAdmins()[0] ?? null;
+    } catch { as = null; }
+    if (!as) return "not known yet";
+    const viewer = as.startsWith("member:") || as === "admin" ? as : `member:${as}`;
+    try {
+      const e = this.aiUse.estimate({ owner, use: EXPLORE_USE, mode: EXPLORE_MODE, count, viewer, at });
+      return e && e.ok !== false && e.estimate !== undefined ? e.estimate : "not known yet";
+    } catch { return "not known yet"; }
+  }
+
   /** R3, R12: open one exploring run on a question for an owner: its estimate, then the run, passing the step's place
    *  and work; `ai-runs` opens the run and then creates its system step (its R73, K2490), answering it. */
   #open(w, owner, label, at, day) {
-    let estimate = null;
-    try { estimate = this.aiUse.estimate({ owner, use: EXPLORE_USE, mode: EXPLORE_MODE, at }); } catch { estimate = "not known yet"; }
+    const estimate = this.#estimate(owner, 1, at);
     const run = `XPL-${day}-${sha256HexSync(`${w.question}|${owner}|${at}`).slice(0, 12)}`;
     const opened = this.aiRuns.open({ run, contextType: "inquiry", contextId: w.question, label: "exploring this question",
                                       mode: EXPLORE_MODE, origin: EXPLORE_ORIGIN, use: EXPLORE_USE,
@@ -841,8 +859,8 @@ export class QuestionExplorer {
 const instances = new WeakMap();
 
 /** The one question-explorer instance for `host` (the Durable Object's `ctx`, with its `storage`); `deps` are read on
- *  the first call only; a provider not given is reached through its factory (`steps` since its merge, K2491), except
- *  `ai-use`, built in T41 beside it, which comes only through `deps` until it merges. At creation it declares its tables to purge. */
+ *  the first call only; a provider not given is reached through its factory (`steps` since K2491, `ai-use` since
+ *  K2488). At creation it declares its tables to purge. */
 export function questionExplorerOf(host, deps) {
   let p = instances.get(host);
   if (!p) {
@@ -859,7 +877,7 @@ export function questionExplorerOf(host, deps) {
       basisVersions: d.basisVersions || basisVersionsOf(host),
       aiRuns: d.aiRuns || aiRunsOf(host),
       captureRequests: d.captureRequests || captureRequestsOf(host),
-      steps: d.steps || stepsOf(host, { record, membership }), aiUse: d.aiUse || null,
+      steps: d.steps || stepsOf(host, { record, membership }), aiUse: d.aiUse || aiUseOf(host, { record, membership }),
       held: d.held || null, ...(d.testSet ? { testSet: d.testSet } : {}),
       principal: d.principal || EXPLORE_PRINCIPAL, now: d.now || null,
     });

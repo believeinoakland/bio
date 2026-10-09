@@ -10,12 +10,12 @@ import { ACCEPTANCE_FORMS } from "../../../src/record-grammar/index.mjs";
 const gauge = (w, run, over = {}) =>
   w.p.find({ run, kind: "capture", ref: CAP, bearing: "supports", how: "the minutes record the vote", caller: CALLER, ...over });
 
-test("R4: each find (a capture, content row or connection the run located) is gauged supports, cuts_against or unclear against the question's live basis, answered {bearing, how, false_alarm_rate, gold_set, label: machine, enabled_by}", () => {
-  const w = world().standard();
+test("R4: each find (a capture, content row or connection the run located) is gauged supports, cuts_against or unclear against the question's live basis, answered {bearing, how, false_alarm_rate, gold_set, label: machine, enabled_by}", async () => {
+  const w = await world().standard();
   w.project(PROJ, ["alice"], { owners: ["alice"], setting: "discoverable" });
   w.draw(Q, PROJ);
   w.legEarning.writeBasis(Q, [{ target: DOC, role: "supports" }]);
-  const o = w.openRun("group");
+  const o = await w.openRun("group");
   const a = gauge(w, o.run);
   assert.deepEqual(a.gauge, { bearing: "supports", how: "the minutes record the vote", false_alarm_rate: 0.1,
                               gold_set: "civicsmith@1", label: "machine", enabled_by: "group" });
@@ -35,30 +35,30 @@ test("R4: each find (a capture, content row or connection the run located) is ga
   assert.equal(gauge(w, o.run).already, true, "the same find under the run answers its first record");
 });
 
-test("R4: the gauge is never a grade, never stored as a score, and never hides, ranks or orders what members see", () => {
-  const w = world().standard();
-  const o = w.openRun("group");
+test("R4: the gauge is never a grade, never stored as a score, and never hides, ranks or orders what members see", async () => {
+  const w = await world().standard();
+  const o = await w.openRun("group");
   gauge(w, o.run);
   const cols = w.rows(`PRAGMA table_info(explore_finds)`).map((c) => c.name);
   assert.ok(!cols.some((c) => /score|grade|rank|weight|confidence/.test(c)), `no score column: ${cols}`);
   const f = w.p.findsFor({ viewer: "member:alice" }).finds[0];
   assert.ok(!Object.keys(f).some((k) => /score|grade|rank|weight|confidence/.test(k)));
   /* Negative control: an unclear find is offered exactly as a supporting one is. */
-  const w2 = world().standard();
-  const o2 = w2.openRun("group");
+  const w2 = await world().standard();
+  const o2 = await w2.openRun("group");
   gauge(w2, o2.run, { bearing: "unclear" });
   assert.equal(w2.p.findsFor({ viewer: "member:alice" }).finds.length, 1);
 });
 
-test("R5: findsFor answers each find, once (keyed per find and question), to each of steps.findRecipients who may see both the find and the question; labelled the system's, never a project's; which account paid only to its owners", () => {
-  const w = world().standard();
+test("R5: findsFor answers each find, once (keyed per find and question), to each of steps.findRecipients who may see both the find and the question; labelled the system's, never a project's; which account paid only to its owners", async () => {
+  const w = await world().standard();
   w.project(HPROJ, ["bob"]);
   w.doc(HDOC, HCAP, { project: HPROJ });
   w.follow(Q, "alice", "bob", "dana");
   w.project(PROJ, ["alice"], { owners: ["alice"] });
   w.draw(Q, PROJ);
-  w.explore.group = "no";
-  const o = w.openRun(`project:${PROJ}`);
+  await w.setExplore("group", "no");
+  const o = await w.openRun(`project:${PROJ}`);
   gauge(w, o.run);
   const alice = w.p.findsFor({ viewer: "member:alice" }).finds;
   assert.equal(alice.length, 1);
@@ -74,25 +74,25 @@ test("R5: findsFor answers each find, once (keyed per find and question), to eac
   assert.equal(w.p.findsFor({ viewer: "member:alice" }).finds.length, 1, "HDOC is outside the paying account's sight, never a find");
 });
 
-test("R5: a recipient who may not see the question, or the document a find rests on, is not offered it", () => {
-  const w = world().standard();
+test("R5: a recipient who may not see the question, or the document a find rests on, is not offered it", async () => {
+  const w = await world().standard();
   w.project(HPROJ, ["bob"]);
   w.doc(HDOC, HCAP, { project: HPROJ });
   w.follow(Q, "alice", "bob");
   w.draw(Q, HPROJ);
-  w.explore.group = "no";
-  const o = w.openRun(`project:${HPROJ}`);
+  await w.setExplore("group", "no");
+  const o = await w.openRun(`project:${HPROJ}`);
   w.p.find({ run: o.run, kind: "capture", ref: HCAP, bearing: "unclear", how: "a mention", caller: CALLER });
   assert.equal(w.p.findsFor({ viewer: "member:bob" }).finds.length, 1);
   assert.equal(w.p.findsFor({ viewer: "member:alice" }).finds.length, 0, "alice may not see the hidden project's document");
 });
 
-test("R6: a find's only doors are a member's: dismiss (the queue's in a drawing project; a follower outside every one mutes it), accept by one act in record-grammar R52's forms, hold a hypothesis, or start a step; nothing here writes a leg, a grade, a conclusion or a hypothesis", () => {
-  const w = world().standard();
+test("R6: a find's only doors are a member's: dismiss (the queue's in a drawing project; a follower outside every one mutes it), accept by one act in record-grammar R52's forms, hold a hypothesis, or start a step; nothing here writes a leg, a grade, a conclusion or a hypothesis", async () => {
+  const w = await world().standard();
   w.follow(Q, "alice", "bob");
   w.project(PROJ, ["alice"], { owners: ["alice"], setting: "discoverable" });
   w.draw(Q, PROJ);
-  const o = w.openRun("group");
+  const o = await w.openRun("group");
   const { find } = gauge(w, o.run);
   const doors = w.p.findDoors({ find, question: Q, viewer: "member:alice" });
   assert.deepEqual(doors.doors.map((d) => d.door), ["dismiss", "accept", "hypothesis", "step"]);
@@ -127,12 +127,12 @@ test("R6: a find's only doors are a member's: dismiss (the queue's in a drawing 
   assert.equal(w.p.findAccept({ find, question: Q, form: "own_instead", by: "member:carol" }).code, "EXPLORE_NO_SUCH_FIND");
 });
 
-test("R6: a follower outside every drawing project mutes a find; a participant of a drawing project dismisses it through the queue, not here", () => {
-  const w = world().standard();
+test("R6: a follower outside every drawing project mutes a find; a participant of a drawing project dismisses it through the queue, not here", async () => {
+  const w = await world().standard();
   w.follow(Q, "alice", "bob");
   w.project(PROJ, ["alice"], { owners: ["alice"], setting: "discoverable" });
   w.draw(Q, PROJ);
-  const o = w.openRun("group");
+  const o = await w.openRun("group");
   const { find } = gauge(w, o.run);
   assert.equal(w.p.findMute({ find, question: Q, by: "member:bob" }).muted, true);
   assert.equal(w.p.findsFor({ viewer: "member:bob" }).finds.length, 0, "muted, no longer offered to him");
@@ -140,10 +140,10 @@ test("R6: a follower outside every drawing project mutes a find; a participant o
   assert.equal(w.p.findMute({ find, question: Q, by: "member:alice" }).code, "EXPLORE_MUTE_IN_PROJECT");
 });
 
-test("R7: finds are offered only while the gate is open: the explorer passed its bar on Civicsmith's test investigations, its false-alarm rate at most 20% and recorded, and run-rules R19 lets investigate and the explorer's use deploy; closed, findsFor answers nothing and counts nothing, and no member is offered exploring", () => {
+test("R7: finds are offered only while the gate is open: the explorer passed its bar on Civicsmith's test investigations, its false-alarm rate at most 20% and recorded, and run-rules R19 lets investigate and the explorer's use deploy; closed, findsFor answers nothing and counts nothing, and no member is offered exploring", async () => {
   assert.equal(EXPLORE_FALSE_ALARM_MAX, 0.2);
-  const w = world().standard();
-  const o = w.openRun("group");
+  const w = await world().standard();
+  const o = await w.openRun("group");
   gauge(w, o.run);
   const open = w.p.findsFor({ viewer: "member:alice" });
   assert.equal(open.finds.length, 1);
@@ -168,13 +168,11 @@ test("R7: finds are offered only while the gate is open: the explorer passed its
   w.testBars = [bar("investigate"), bar("explore", { false_alarm_rate: 0.2 })];
   assert.equal(w.p.gate().open, true);
   /* Civicsmith's own set holds no matter yet (run-rules R19): over it nothing opens. */
-  assert.equal(world({ testSet: CIVICSMITH_TEST_SET }).standard().p.gate().open, false);
-  /* Without the providers it needs, it is shut (fail closed). */
-  assert.equal(world({ aiUse: false }).p.gate().open, false);
+  assert.equal((await world({ testSet: CIVICSMITH_TEST_SET }).standard()).p.gate().open, false);
 });
 
-test("R11: a group's own test investigations measure the explorer too; the result, with its false-alarm rate, is answered to that group's members only, and never opens or closes R7's gate", () => {
-  const w = world().standard();
+test("R11: a group's own test investigations measure the explorer too; the result, with its false-alarm rate, is answered to that group's members only, and never opens or closes R7's gate", async () => {
+  const w = await world().standard();
   w.groupResults = [{ matter: "a test matter", false_alarm_rate: 0.5, passed: false }];
   const r = w.p.groupTestResults({ viewer: "member:alice" });
   assert.deepEqual(r.results, w.groupResults);
@@ -188,9 +186,9 @@ test("R11: a group's own test investigations measure the explorer too; the resul
   assert.equal(w.calledAs("groupTestResults").length, 1, "the gate never asks for the group's results");
 });
 
-test("R14: a find that cuts against what the question's members hold is offered exactly as prominently as one that supports it: the same item, kind, place and order rule; nothing orders, groups or filters by bearing", () => {
-  const w = world().standard();
-  const o = w.openRun("group");
+test("R14: a find that cuts against what the question's members hold is offered exactly as prominently as one that supports it: the same item, kind, place and order rule; nothing orders, groups or filters by bearing", async () => {
+  const w = await world().standard();
+  const o = await w.openRun("group");
   w.clock.now = "2026-10-10T09:01:00Z";
   gauge(w, o.run, { bearing: "cuts_against", how: "the minutes record the vote failed", at: "2026-10-10T09:01:00Z" });
   w.content("CNT-1", DOC2, CAP2);
@@ -202,8 +200,8 @@ test("R14: a find that cuts against what the question's members hold is offered 
   assert.equal(items[0].says, items[1].says);
   assert.equal(items[0].label, items[1].label);
   /* Negative control: swap the bearings; the order is unchanged (time decides, never bearing). */
-  const w2 = world().standard();
-  const o2 = w2.openRun("group");
+  const w2 = await world().standard();
+  const o2 = await w2.openRun("group");
   gauge(w2, o2.run, { bearing: "supports", at: "2026-10-10T09:01:00Z" });
   w2.content("CNT-1", DOC2, CAP2);
   w2.p.find({ run: o2.run, kind: "content", ref: "CNT-1", bearing: "cuts_against", how: "x", caller: CALLER, at: "2026-10-10T09:02:00Z" });

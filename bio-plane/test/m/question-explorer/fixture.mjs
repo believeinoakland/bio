@@ -16,6 +16,7 @@ import { membershipOf } from "../../../src/membership/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { legEarningOf } from "../../../src/leg-earning/index.mjs";
 import { stepsOf } from "../../../src/steps/index.mjs";
+import { aiUseOf } from "../../../src/ai-use/index.mjs";
 import { questionExplorerOf } from "../../../src/question-explorer/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
@@ -81,7 +82,7 @@ export function questionMd(id, { subject = null, surfacedBy = "human", state = "
           "state_history: []", "---", "", "## Question", "", "What happened?", ""].join("\n");
 }
 
-export function world({ gateOpen = true, aiUse: withAiUse = true, testSet = TEST_SET } = {}) {
+export function world({ gateOpen = true, testSet = TEST_SET } = {}) {
   const st = storage();
   const host = { storage: st };
   for (const t of RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").split(";"))
@@ -100,7 +101,7 @@ export function world({ gateOpen = true, aiUse: withAiUse = true, testSet = TEST
   const w = {
     st, host, record, membership, credentials, clock, calls,
     subjects: {}, asserted: {}, conns: [], captures: {}, held: new Set(),
-    explore: {}, approved: new Set(), steps: [], runs: new Map(), bounds: new Map(),
+    steps: [], runs: new Map(), bounds: new Map(),
     /* What the record holds for the deploy gate (run-rules R19, R75's records) over a test set with one matter. */
     testBars: [bar("investigate"), bar("explore")], verifications: [VERIFIED_CHECK],
     groupResults: [], openRefuse: null, stepRefuse: null,
@@ -128,17 +129,6 @@ export function world({ gateOpen = true, aiUse: withAiUse = true, testSet = TEST
       return { ok: true, step, place: a.place, at: clock.now };
     },
     stepEnd(a) { note("stepEnd", a); const s = w.steps.find((x) => x.step === a.step); if (s) s.state = a.end; return { ok: true }; },
-  };
-  const aiUse = {
-    exploreAllowed(a) {
-      note("exploreAllowed", a);
-      const v = w.explore[a.owner] || "no";
-      if (v === "no") return { ok: false, code: "EXPLORE_NOT_ENABLED" };
-      if (v === "ask" && !w.approved.has(a.owner)) return { ask: true };
-      return null;
-    },
-    estimate(a) { note("estimate", a); return { low: 0.1, high: 0.3, unit: "usd" }; },
-    exploreAsk(a) { note("exploreAsk", a); return { ok: true, key: `ask:${a.owner}` }; },
   };
   const aiRuns = {
     /* R73 (K2490): the run opens first, then its system step is created through steps.stepCreate with `run` the open
@@ -184,6 +174,9 @@ export function world({ gateOpen = true, aiUse: withAiUse = true, testSet = TEST
   };
   const connections = {
     edgeSevered: () => false,
+    /* R22 `citesInto`: the projects whose document cites the question, from the `refs` the test writes (`w.draw`). */
+    citesInto: (id) => ({ confirmed: [...st.sql.exec(`SELECT bundle_id FROM refs WHERE target_id=? AND kind='cites' ORDER BY bundle_id`, id)]
+      .map((r) => r.bundle_id), severed: [] }),
     asserted(a) { note("asserted", a); return { ok: true, member: w.asserted[a.bundleId] || [], source: [], containment: [] }; },
     read(a) {
       note("connRead", a);
@@ -211,15 +204,20 @@ export function world({ gateOpen = true, aiUse: withAiUse = true, testSet = TEST
     promotion: { registerStep: () => ({ ok: true }) },
     observationLog: { registerAuthority: () => ({ ok: true }), onLookAnswered: () => ({ ok: true }) } });
 
+  /* ai-use is the real module (merged, K2488): R6 `exploreAllowed` over the real credentials' switches and limits, R9
+     `exploreAsk`, `exploreApprove`, `exploreAsksPending`, R10 `estimate`. Each call is recorded on its way through. */
+  const realAiUse = aiUseOf(host, { record, membership, credentials, connections, zone: "UTC" });
+  const aiUse = Object.fromEntries(["exploreAllowed", "exploreAsk", "estimate", "exploreApprove", "exploreAsksPending"]
+    .map((k) => [k, (a) => { note(k, a); return realAiUse[k](a); }]));
   const p = questionExplorerOf(host, {
     record, membership, credentials, connections, retrieval, inquiry, legEarning, basisVersions, aiRuns, captureRequests,
-    steps: realSteps, aiUse: withAiUse ? aiUse : null,
+    steps: realSteps, aiUse,
     held: () => { note("held", {}); return { verifications: w.verifications, testBars: w.testBars }; },
     testSet,
     now: () => Date.parse(clock.now),
   });
   p.migrate();
-  Object.assign(w, { p, legEarning, steps: w.steps, realSteps, stepsApi: steps, aiUse, aiRuns, captureRequests, connections, retrieval });
+  Object.assign(w, { p, legEarning, steps: w.steps, realSteps, stepsApi: steps, aiUse, realAiUse, aiRuns, captureRequests, connections, retrieval });
 
   let rev = 0;
   w.bundle = (id, type, text, { project = null, state = null } = {}) => {
@@ -270,18 +268,47 @@ export function world({ gateOpen = true, aiUse: withAiUse = true, testSet = TEST
   w.content = (id, bundleId, cap) =>
     st.sql.exec(`INSERT INTO content (content_id, capture_sha, bundle_id, extent_kind, extent, ref, stale, minted_by)
                  VALUES (?, ?, ?, 'pdf-page', '{}', 'page 1', 0, 'member:alice')`, id, cap, bundleId);
-  /* The standard world: alice, bob and carol members; dana an administrator; Q open with alice following it. */
-  w.standard = () => {
+  /* The standard world: alice, bob and carol members; dana an administrator, who holds the group's key (credentials
+     R33; its explore switch at its default, no); Q open with alice following it. */
+  w.standard = async () => {
     for (const m of ["alice", "bob", "carol"]) w.member(m);
     w.member("dana", "admin");
+    const k = await credentials.groupKeySet({ key: "sk-ant-group-test", by: "member:dana" });
+    if (!k || k.ok === false) throw new Error(`group key: ${JSON.stringify(k)}`);
     w.doc(DOC, CAP);
     w.doc(DOC2, CAP2);
     w.question(Q, { recipients: ["alice"] });
     return w;
   };
+  /* An account's `explore` switch set by its owner's own act (credentials R55); a project gets an account first (its
+     key, R54, by its first owner, the first participant made one when it has none). */
+  w.setExplore = async (owner, value) => {
+    let by = "member:dana";
+    if (owner.startsWith("project:")) {
+      const id = owner.slice(8);
+      let owners = membership.projectOwners(id);
+      if (!owners.length) {
+        st.sql.exec(`UPDATE project_participants SET owner=1 WHERE project_id=? AND member_id=(SELECT MIN(member_id) FROM project_participants WHERE project_id=?)`, id, id);
+        owners = membership.projectOwners(id);
+      }
+      by = `member:${owners[0]}`;
+      if (!credentials.projectAccountState({ project: id, viewer: by }).held) {
+        const k = await credentials.projectKeySet({ project: id, key: `sk-ant-${id}`, by });
+        if (!k || k.ok === false) throw new Error(`project key: ${JSON.stringify(k)}`);
+      }
+    } else if (owner.startsWith("member:")) by = owner;
+    const r = credentials.accountUsesSet({ owner, switch: "explore", on: value, by });
+    if (!r || r.ok === false) throw new Error(`explore ${owner}: ${JSON.stringify(r)}`);
+  };
+  /* One of the account's owners approves exploring for today (ai-use R9). */
+  w.approve = (owner) => {
+    const by = owner === "group" ? "member:dana" : owner.startsWith("project:") ? `member:${membership.projectOwners(owner.slice(8))[0]}` : owner;
+    const r = realAiUse.exploreApprove({ owner, day: clock.now.slice(0, 10), by, at: clock.now });
+    if (!r || r.ok === false) throw new Error(`approve ${owner}: ${JSON.stringify(r)}`);
+  };
   /* One tick with `owner`'s exploring set to yes, answering the run it opened. */
-  w.openRun = (owner = "group", question = Q) => {
-    w.explore[owner] = "yes";
+  w.openRun = async (owner = "group", question = Q) => {
+    await w.setExplore(owner, "yes");
     const t = p.exploreTick(clock.now);
     const o = t.opened.find((x) => x.question === question);
     if (!o) throw new Error(`no run opened: ${JSON.stringify(t)}`);

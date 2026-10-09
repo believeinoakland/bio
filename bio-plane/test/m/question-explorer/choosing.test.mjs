@@ -5,9 +5,9 @@ import assert from "node:assert/strict";
 import { world, Q, Q2, Q3, PROJ, ENT, PERSON, CAP, DOC } from "./fixture.mjs";
 import { EXPLORE_QUESTIONS_PER_TICK, EXPLORE_BOUNDS } from "../../../src/question-explorer/index.mjs";
 
-test("R1: exploreDue, exploreWake and exploreTick for the scheduler; exploreAllowed decides each owner and question; null opens one run, at most one a question a day", () => {
-  const w = world().standard();
-  w.explore.group = "yes";
+test("R1: exploreDue, exploreWake and exploreTick for the scheduler; exploreAllowed decides each owner and question; null opens one run, at most one a question a day", async () => {
+  const w = await world().standard();
+  await w.setExplore("group", "yes");
   assert.equal(w.p.exploreDue(w.clock.now), 1);
   assert.equal(w.p.exploreWake(w.clock.now), w.clock.now, "due now, answered in now's own form");
   assert.equal(w.p.exploreWake(Date.parse(w.clock.now)), Date.parse(w.clock.now));
@@ -21,33 +21,36 @@ test("R1: exploreDue, exploreWake and exploreTick for the scheduler; exploreAllo
   assert.equal(w.calledAs("open").length, 1);
 });
 
-test("R1: a refusal from exploreAllowed opens nothing and the next owner is asked; {ask: true} records exploreAsk with the questions and their estimate, and nothing runs that day without approval", () => {
-  const w = world().standard();
+test("R1: a refusal from exploreAllowed opens nothing and the next owner is asked; {ask: true} records exploreAsk with the questions and their estimate, and nothing runs that day without approval", async () => {
+  const w = await world().standard();
   w.question(Q2, { recipients: ["alice"] });
   w.draw(Q, PROJ);
   w.project(PROJ, ["alice"], { owners: ["alice"] });
-  w.explore.group = "no";
-  w.explore[`project:${PROJ}`] = "ask";
+  await w.setExplore("group", "no");
+  await w.setExplore(`project:${PROJ}`, "ask");
   const t = w.p.exploreTick(w.clock.now);
   assert.equal(t.opened.length, 0, "nothing runs without approval");
   assert.equal(w.calledAs("open").length, 0);
   const asks = w.calledAs("exploreAsk");
   assert.equal(asks.length, 1, "one Ask per owner per tick");
   assert.equal(asks[0].owner, `project:${PROJ}`);
-  assert.deepEqual(asks[0].what.questions, [Q]);
-  assert.deepEqual(asks[0].what.estimate, { low: 0.1, high: 0.3, unit: "usd" });
+  assert.deepEqual(asks[0].what, [Q], "the questions worth exploring");
+  /* R12: the Ask item its owners read carries ai-use R10's estimate (here, no run measured yet). */
+  const [item] = w.realAiUse.exploreAsksPending({ viewer: "member:alice", at: w.clock.now }).asks;
+  assert.deepEqual([item.owner, item.what, item.estimate], [`project:${PROJ}`, [Q], "not known yet"]);
+  assert.equal(t.asked[0].estimate, "not known yet");
   /* The Ask waits an hour before it is looked at again (Q2, refused by every owner, not again that day); then,
      approved, the run opens that day. */
   assert.equal(w.p.exploreDue(w.clock.now), 0);
   assert.equal(w.p.exploreWake(w.clock.now), "2026-10-10T10:00:00Z");
-  w.approved.add(`project:${PROJ}`);
+  w.approve(`project:${PROJ}`);
   w.clock.now = "2026-10-10T10:00:00Z";
   const t2 = w.p.exploreTick(w.clock.now);
   assert.deepEqual(t2.opened.map((o) => [o.question, o.owner]), [[Q, `project:${PROJ}`]]);
 });
 
-test("R2: worth exploring: open or surfaced, at least one member receives its finds, and never explored or a capture resolving to its subject entity gained since its last run; bounded at 200 a tick", () => {
-  const w = world().standard();
+test("R2: worth exploring: open or surfaced, at least one member receives its finds, and never explored or a capture resolving to its subject entity gained since its last run; bounded at 200 a tick", async () => {
+  const w = await world().standard();
   w.entity(ENT, "body");
   w.question(Q2, { subject: ENT, recipients: ["bob"] });
   w.question(Q3, { recipients: [] });
@@ -57,7 +60,7 @@ test("R2: worth exploring: open or surfaced, at least one member receives its fi
   w.bundle(Q3, "inquiry", null, { state: "surfaced" });
   w.follow(Q3, "carol");
   assert.ok(ids().includes(Q3), "surfaced counts");
-  w.explore.group = "yes";
+  await w.setExplore("group", "yes");
   w.p.exploreTick(w.clock.now);
   w.clock.now = "2026-10-11T09:00:00Z";
   /* Negative control: explored, with no new capture of its subject, Q2 is not worth exploring again. */
@@ -69,8 +72,8 @@ test("R2: worth exploring: open or surfaced, at least one member receives its fi
   assert.ok(w.p.questionsWorthExploring({ at: w.clock.now }).length <= 200, "at most 200 read a tick");
 });
 
-test("R2: R9 holds before it: a question about a person no member tied is never chosen; one a member raised about that person is", () => {
-  const w = world().standard();
+test("R2: R9 holds before it: a question about a person no member tied is never chosen; one a member raised about that person is", async () => {
+  const w = await world().standard();
   w.entity(PERSON, "person");
   w.question(Q2, { subject: PERSON, surfacedBy: "agent", recipients: ["alice"] });
   w.question(Q3, { subject: PERSON, surfacedBy: "human", recipients: ["alice"] });
@@ -79,9 +82,9 @@ test("R2: R9 holds before it: a question about a person no member tied is never 
   assert.ok(ids.includes(Q3), "negative control: a member raised it about that person");
 });
 
-test("R3: the run opens through ai-runs in the investigate run path, origin explore, use explore, the paying owner its principal and ai-use R6's label, as a system step on the question that ai-runs creates once the run is open (K2490)", () => {
-  const w = world().standard();
-  const o = w.openRun("group");
+test("R3: the run opens through ai-runs in the investigate run path, origin explore, use explore, the paying owner its principal and ai-use R6's label, as a system step on the question that ai-runs creates once the run is open (K2490)", async () => {
+  const w = await world().standard();
+  const o = await w.openRun("group");
   const [open] = w.calledAs("open");
   assert.deepEqual([open.mode, open.origin, open.use, open.principalClaude, open.contextType, open.contextId],
                    ["investigate", "explore", "explore", "group", "inquiry", Q]);
@@ -93,40 +96,47 @@ test("R3: the run opens through ai-runs in the investigate run path, origin expl
   assert.equal(o.step, "STP-2026-00001", "the step ai-runs created, kept with the run");
   assert.equal(w.calledAs("stepCreate")[0].run, o.run, "created for the open run");
   /* Negative controls: a refused open, and an open that answers no step, leave no run. */
-  const w2 = world().standard();
+  const w2 = await world().standard();
   w2.openRefuse = { ok: false, code: "AI_RUN_MODE_NOT_DEPLOYED" };
-  w2.explore.group = "yes";
+  await w2.setExplore("group", "yes");
   assert.equal(w2.p.exploreTick(w2.clock.now).opened.length, 0);
   assert.equal(w2.count("explore_runs"), 0);
-  const w3 = world().standard();
+  const w3 = await world().standard();
   w3.openRefuse = { ok: true, run: "x" };
-  w3.explore.group = "yes";
+  await w3.setExplore("group", "yes");
   assert.equal(w3.p.exploreTick(w3.clock.now).opened.length, 0);
   assert.equal(w3.count("explore_runs"), 0);
 });
 
-test("R3: a principal served by a sign-in explores only while that sign-in account's explore use is on; off (its default) it is refused as any account whose explore use is off (credentials R55, the real module)", () => {
-  const w = world().standard();
-  w.follow(Q, "alice");
-  w.explore["member:alice"] = "yes";
+test("R3: a principal served by a sign-in explores only while that sign-in account's explore use is on; off (its default) it is refused as any account whose explore use is off (credentials R55 and ai-use R6, the real modules)", async () => {
+  const w = await world().standard();
+  /* A project whose account is its sole member's own sign-in (credentials R43, R54). */
+  w.project(PROJ, ["alice"], { owners: ["alice"] });
+  w.draw(Q, PROJ);
   assert.equal(w.credentials.subscriptionConnected({ member: "alice" }).ok, true);
-  /* Off: the sign-in's switch at its default, no. */
+  assert.equal(w.credentials.projectSigninSet({ project: PROJ, by: "alice" }).ok, true);
+  /* Off: the sign-in account's switch at its default, no. */
   const off = w.p.exploreTick(w.clock.now);
   assert.equal(off.opened.length, 0);
   assert.equal(w.calledAs("open").length, 0);
-  assert.equal(w.calledAs("exploreAllowed").filter((a) => a.owner === "member:alice").length, 0, "refused before ai-use is asked");
-  /* On: set by the member's own act. */
+  assert.ok(w.calledAs("exploreAllowed").some((a) => a.owner === `project:${PROJ}`), "ai-use asked, and refused");
+  /* On: set by the account's owner's own act. */
   w.clock.now = "2026-10-11T09:00:00Z";
-  assert.equal(w.credentials.accountUsesSet({ owner: "member:alice", switch: "explore", on: "yes", by: "member:alice" }).ok, true);
+  assert.equal(w.credentials.accountUsesSet({ owner: `project:${PROJ}`, switch: "explore", on: "yes", by: "member:alice" }).ok, true);
   const on = w.p.exploreTick(w.clock.now);
-  assert.deepEqual(on.opened.map((o) => o.owner), ["member:alice"]);
-  assert.equal(w.calledAs("open")[0].principalClaude, "member:alice");
+  assert.deepEqual(on.opened.map((o) => o.owner), [`project:${PROJ}`]);
+  assert.equal(w.calledAs("open")[0].principalClaude, `project:${PROJ}`);
+  /* Her own account is that same sign-in, explore at no when the off tick ran: refused here before ai-use is asked. */
+  assert.equal(off.refused, 3, "the group, the project and her own account");
+  assert.equal(w.calledAs("exploreAllowed").some((a) => a.owner === "member:alice"), false);
 });
 
-test("R12: each Ask item and each run carries ai-use R10's estimate before", () => {
-  const w = world().standard();
-  const o = w.openRun("group");
-  assert.deepEqual(o.estimate, { low: 0.1, high: 0.3, unit: "usd" });
-  assert.deepEqual(w.calledAs("estimate")[0], { owner: "group", use: "explore", mode: "investigate", at: w.clock.now });
-  assert.deepEqual(w.p.runCost({ run: o.run, viewer: "member:dana" }).estimate, { low: 0.1, high: 0.3, unit: "usd" });
+test("R12: each Ask item and each run carries ai-use R10's estimate before", async () => {
+  const w = await world().standard();
+  const o = await w.openRun("group");
+  assert.equal(o.estimate, "not known yet", "ai-use R10: no exploring run of this account measured yet");
+  assert.deepEqual(w.calledAs("estimate")[0], { owner: "group", use: "explore", mode: "investigate", count: 1,
+                                                 viewer: "member:dana", at: w.clock.now }, "read as the account's owner");
+  assert.equal(w.p.runCost({ run: o.run, viewer: "member:dana" }).estimate, "not known yet");
+  assert.equal(w.p.runCost({ run: o.run, viewer: "member:alice" }), null, "negative control: not the account's owner");
 });
