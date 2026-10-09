@@ -21,5 +21,6 @@ Bob's decisions in this lane are D-numbers ("Actions D<n>" where confusable with
 | D15 | formal party status before a venue | (b) now, (c) when asked | open |
 | D16 | coalitions: partners now, joint approval designed; another group's accepted findings | (b); (b) | open |
 | D17 | how many suggested options the planning run shows | — | **ruled** 2026-10-09, Bob (comment on the working page): "My understanding of audience use cases has evolved to the point that I think that all action options should listed, not just the top 5." Replaces K660 (2)'s best-first five and next-tranche paging. Kept: summary-collapsed options, no score shown, member's own options, unticked = undecided. Order, sorting and filtering are the lane's/BOB's detail. |
+| D18 | when a member may claim a breach without a determination (Bob's question on the page, 2026-10-09: "Are there circumstances where it's legit that a member claim a breach without a determination that a breach has occured?") | (b) narrow the override to a cited legal deadline or an imminent act, plus the reason | open |
 
 **Settled readings (H2, for BOB to confirm):** K1466 "activate" = the phase opens and offers its options; escalation R29's pre-assembled reason is a sourced record summary, not writing help (K1841); addressee ≠ obligor; Action governs over Case Making's action sections.
