@@ -239,7 +239,7 @@ test("R42, R51 (N381): C-18.1 admits capture R65's pulled-knock document: no let
   /* A kind the register does not know is no doorbell document either, so it also owes a letter. */
   assert.deepEqual(runPulled([{ ...doc, origin: { kind: "knocked" } }]).map((x) => x.message),
     ["provenance documents[0].capture.grade 'null' is not one of: A, B, C",
-     "provenance documents[0].origin.kind must be one of: named_request, sweep, member, doorbell"]);
+     "provenance documents[0].origin.kind must be one of: named_request, sweep, member, doorbell, upload"]);
   /* The doorbell basis excuses only a doorbell document: a fetched one stating it still owes a letter. */
   assert.match(one({ ...doc, origin: { kind: "named_request" } }), /capture.grade 'null' is not one of: A, B, C/);
   /* Received material is not a member's authored observation: an authored claim keeps the authored arm's rules. */
