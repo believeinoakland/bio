@@ -474,6 +474,7 @@ test("R74 (N418): every statement that changes the store, from every writer this
   await as("recordValidators", () => c.recordValidators({ addressNorm: "https://h.example/p", captureSha: A, etag: "e" }));
   await as("recordSourceOutcome", () => c.recordSourceOutcome({ addressNorm: "https://h.example/p", outcome: "fetch_failed" }));
   await as("doorbellRefused", () => c.doorbellRefused({}));
+  await as("uploadCapture", async () => assert.equal((await c.uploadCapture({ bytes: new Uint8Array([9, 9]), statement: "mine", by: "m1" })).ok, true));
   s.db.exec(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha, row_version)
              VALUES ('INFO-9', 'information', 'g', 't', 'collected', '2026-01-01', '2026-01-01', 'x', 1)`);
   /* a waiting question, so the set-aside and the restore also write the questions recorded with them (R79, R81) */
@@ -485,7 +486,7 @@ test("R74 (N418): every statement that changes the store, from every writer this
   for (const w of ["knock", "knockAttempt", "inboxResolve", "pullKnock", "recordCaptureActor", "recordCaptureAccount", "reattest", "renderAdmit",
                    "renderSpend", "recordLinks", "recordLinkVerdict", "deriveSiteChrome", "saveCaptureSession", "loadCaptureSession",
                    "dropCaptureSession", "recordSiteAssets", "recordReuseVerdicts", "recordCaptureLimit", "taskEnqueue", "taskEventAttempt",
-                   "taskEventRemove", "recordValidators", "recordSourceOutcome", "doorbellRefused", "setAside", "restoreHeld"])
+                   "taskEventRemove", "recordValidators", "recordSourceOutcome", "doorbellRefused", "uploadCapture", "setAside", "restoreHeld"])
     assert.ok(inside.has(w), `${w} wrote, through transact`);
 });
 

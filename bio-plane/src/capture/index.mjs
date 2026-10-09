@@ -3,7 +3,7 @@
  * allowance), the event queue an undetermined capture raises, the doorbell (`doorbell.mjs`) and the information
  * grammar (`grammar.mjs`, C-2.7). The acquisition act is `acquisition`'s since T18 (K617): `acquire` and
  * `archiveLookup` hand it this module's store (R73). It writes no bundle: no intake path writes live state.
- * Requirements: build/requirements/capture.md (R8, R15, R21–R32, R37–R40, R43–R59, R63–R84). Extracted from `legacy-store` and
+ * Requirements: build/requirements/capture.md (R8, R15, R21–R32, R37–R40, R43–R59, R63–R86). Extracted from `legacy-store` and
  * `legacy-index` in T4 (T4-4); the reasoning the legacy comments carried is kept beside the code it explains.
  *
  * SHAPE (K61). `captureOf(ctx, opts)` answers the one instance for a Durable Object's storage. It reaches
@@ -76,10 +76,44 @@ const rawReplayOf = (archived) => {
 const REPLAY_MAX = 256 * 1024 * 1024;
 
 /* N380: the tag a throw of `pullKnock`'s `within` is carried out of the transaction under. */
-const WITHIN_FAULT = Symbol("pullKnock: within's fault");
+const WITHIN_FAULT = Symbol("within's fault");
 /** R65 (N409, K609): the one sentence `PULL_WITHIN_FAILED` answers, whatever `within` threw or answered. */
 export const PULL_WITHIN_FAILED_DETAIL =
   "the act run with the pull did not complete, so the pull was rolled back and nothing was written";
+
+/* R86 (T41-8a): the route an upload's receipt names, provenance's one spelling (its R63). */
+const UPLOAD_VIA = "upload";
+/** R86: the capture size limit, `acquisition` R10's 256 MiB (acquisition exports no such figure; stated once here). */
+export const UPLOAD_MAX = 256 * 1024 * 1024;
+/* R86: the parts an upload is held in, `acquisition` R10's form. */
+const UPLOAD_PART = 8 * 1024 * 1024;
+/** R86: the longest statement of origin, and the longest stated file name, in characters. */
+export const UPLOAD_STATEMENT_MAX = 2000;
+export const UPLOAD_NAME_MAX = 300;
+/** R86: the one sentence `UPLOAD_WITHIN_FAILED` answers, whatever `within` threw or answered (R65's, N409). */
+export const UPLOAD_WITHIN_FAILED_DETAIL =
+  "the act run with the upload did not complete, so the upload was rolled back and nothing was written";
+
+/* R86: an upload's bytes as a reader of chunks, whatever form the caller holds them in: a `ReadableStream` (the request's
+   raw body), bytes (`Uint8Array`, any typed array or `ArrayBuffer`), or an async iterable of byte chunks. `cancel` stops a
+   stream R86 refuses part-way (TOO_LARGE). Null for anything else. */
+const uploadReader = (bytes) => {
+  const asBytes = (b) => (b instanceof Uint8Array ? b : b instanceof ArrayBuffer ? new Uint8Array(b)
+    : ArrayBuffer.isView(b) ? new Uint8Array(b.buffer, b.byteOffset, b.byteLength) : null);
+  const whole = asBytes(bytes);
+  if (whole) { let done = false; return { read: async () => (done ? { done: true } : (done = true, { done: false, value: whole })), cancel: async () => {} }; }
+  if (bytes && typeof bytes.getReader === "function") {
+    const r = bytes.getReader();
+    return { read: async () => { const c = await r.read(); return c.done ? c : { done: false, value: asBytes(c.value) }; },
+             cancel: async () => { try { await r.cancel(); } catch { /* already closed */ } } };
+  }
+  if (bytes && typeof bytes[Symbol.asyncIterator] === "function") {
+    const it = bytes[Symbol.asyncIterator]();
+    return { read: async () => { const c = await it.next(); return c.done ? { done: true } : { done: false, value: asBytes(c.value) }; },
+             cancel: async () => { try { await it.return?.(); } catch { /* already closed */ } } };
+  }
+  return null;
+};
 
 /* ---- D-98 event queue: module scope because they are pure ----
    The F5 bound lives HERE, at the producer boundary, so a subject is inert before it is stored rather than after
@@ -786,6 +820,14 @@ export class Capture {
                    + "could use. Nothing was read." };
   }
 
+  /* R86: the required-argument refusal for an argument given in a shape the act cannot use. */
+  static #missingArgument(op, argument, shape, given) {
+    return { ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, status: 400,
+             error: `${argument} must be ${shape}; ${JSON.stringify(String(given)).slice(0, 80)} is not`,
+             detail: `op=${op} needs '${argument}' in the shape ${shape}, and this request carried none the operation `
+                   + "could use. Nothing was written." };
+  }
+
   /* R32 (K383, K275): a knock id no knock answers to, read or resolved, is one condition with its own code and row
      (C-118.2), not R63's `EVIDENCE_NOT_HELD`; minted here alone, so the read and the resolve answer it identically. */
   #noSuchKnock(knockId) {
@@ -923,14 +965,7 @@ export class Capture {
                        when, by, sha, by, when, JSON.stringify(document), reason, knockId);
         this.recordCaptureActor({ captureSha: sha, actor: by, at: when });
         if (typeof within !== "function") return { ok: true, receipt };
-        /* N380: the caller's act, in this transaction. Its throw is tagged so a fault of the pull's own still throws. */
-        let w;
-        try { w = within(structuredClone(document)); } catch { throw { [WITHIN_FAULT]: true }; }
-        if (w && typeof w.then === "function") {
-          /* A promise would outlive the transaction; its outcome is dropped with it. */
-          Promise.resolve(w).catch(() => {});
-          throw { [WITHIN_FAULT]: true };
-        }
+        const w = Capture.#callWithin(within, document);
         if (w && typeof w === "object" && w.ok === false) return { ...w, knockId: w.knockId ?? knockId };
         return { ok: true, receipt, within: w ?? null };
       });
@@ -942,6 +977,19 @@ export class Capture {
     return { ok: true, existed: false, knockId, capture: { sha256: sha, bytes: bytes.length }, pulled_by: by, pulled_at: when,
              receipt: { address, via: DOORBELL_VIA, retrieved: when, observation: done.receipt.observation ?? null }, document,
              ...(typeof within === "function" ? { within: done.within } : {}) };
+  }
+
+  /* N380 (R65, R86): the caller's act, called inside the act's own transaction with its own copy of the document. Its
+     throw is tagged so a fault of the act's own still throws; an answer that is not synchronous (a promise would outlive
+     the transaction, its outcome dropped with it) is tagged likewise. Answers what `within` answered. */
+  static #callWithin(within, document) {
+    let w;
+    try { w = within(structuredClone(document)); } catch { throw { [WITHIN_FAULT]: true }; }
+    if (w && typeof w.then === "function") {
+      Promise.resolve(w).catch(() => {});
+      throw { [WITHIN_FAULT]: true };
+    }
+    return w;
   }
 
   /* R65, R16: the provenance document of a pulled knock. Received, not fetched (provenance R51): no fetched letter, no
@@ -974,6 +1022,176 @@ export class Capture {
                 receipt: { knock_id: row.knock_id, sha256: row.sha256, bytes: row.bytes, received: row.received } },
       knocker_note: { text: String(row.note ?? ""), words_of: "the knocker", evidence_of_truth: false },
       origin: { kind: "doorbell", knock_id: row.knock_id },
+      attestation_attempts: [],
+    };
+  }
+
+  /* ==================================================================== *
+   * A file a member holds (R86; N821, K2425 (4))
+   * ==================================================================== */
+
+  /** R86: a signed-in member brings into the record a file she holds, which no one fetched. Refused in order, each
+   *  writing nothing: the member-session fence (`by` absent, blank or a machine identity: `MEMBER_SESSION_REQUIRED`, as
+   *  R80's read answers it); `UPLOAD_NO_STATEMENT` (C-118.10); a `name` that is not a string or is over 300 characters
+   *  (the required-argument refusal naming it); no evidence store (R65's answer); then `NO_BODY`, `EMPTY` and
+   *  `TOO_LARGE` (the stream cancelled) as `acquisition` R10 names them. The parts a refused stream already stored stay
+   *  content-addressed and named by no row, receipt or document, as R10's do.
+   *
+   *  Otherwise, in one act: the bytes are hashed as they arrive and held under their own digest in parts of 8 MiB; one
+   *  acquisition receipt is written (`via: "upload"`, address `upload:<sha256>`, with `by` and her statement, which
+   *  provenance holds with it, K2449, so a second sighting keeps its own uploader's words); `by` is recorded as the capture's
+   *  actor (R69); and the answer carries the provenance document (`#uploadedDocument`), graded received, never fetched
+   *  (`provenance` R63). Bytes the record already holds (`provenance.registerHolds` answers them registered or acquired)
+   *  answer `existed: true` with no document, the receipt written as a second
+   *  sighting, and `within` not called. `within` is R65's seam: called inside the act's transaction after the receipt
+   *  and the actor; its `{ok: false}` rolls the upload back and is the answer; a throw or a promise rolls it back as
+   *  `UPLOAD_WITHIN_FAILED`. It writes no bundle. */
+  async uploadCapture({ bytes, statement, name = null, by, at = null, within = null } = {}) {
+    if (typeof by !== "string" || !by.trim() || isMachineIdentity(by))
+      return { ok: false, reason: "MEMBER_SESSION_REQUIRED", status: 403,
+               detail: "a file is brought into the record by a signed-in member, whose stamp names them; nothing was written" };
+    /* DEC-49 REGION is-upload-stated */
+    if (typeof statement !== "string" || !statement.trim() || [...statement].length > UPLOAD_STATEMENT_MAX) {
+      const row = CAPTURE_CHECKS.UPLOAD_NO_STATEMENT;
+      return { ok: false, reason: "UPLOAD_NO_STATEMENT", code: "UPLOAD_NO_STATEMENT", check: row.check, translation: row.translation,
+               status: 400, maxChars: UPLOAD_STATEMENT_MAX };
+    }
+    /* END DEC-49 REGION is-upload-stated */
+    if (name != null && (typeof name !== "string" || [...name].length > UPLOAD_NAME_MAX))
+      return Capture.#missingArgument("captureupload", "name", `a string of at most ${UPLOAD_NAME_MAX} characters`, name);
+    const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
+    if (!ev) {
+      const row = INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED;
+      return { ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", code: "EVIDENCE_STORAGE_NOT_CONFIGURED", check: row.check,
+               translation: row.translation, status: 503,
+               detail: "this group's Civicsmith has no evidence storage configured, so the file cannot be held under its own digest; nothing was written" };
+    }
+    const reader = uploadReader(bytes);
+    if (!reader) return { ok: false, reason: "NO_BODY", status: 400, detail: "the upload carried no bytes; nothing was written" };
+    /* `acquisition` R10's form: the whole hashed as it arrives by record-grammar's incremental hasher, the bytes held in
+       parts of exactly 8 MiB (the last the remainder), each under its own digest; whether each was held before. */
+    const whole = createSha256();
+    const parts = [];
+    let held = [], heldBytes = 0, total = 0;
+    const flush = async (all) => {
+      while (heldBytes >= UPLOAD_PART || (all && heldBytes > 0)) {
+        const n = Math.min(UPLOAD_PART, heldBytes);
+        const buf = new Uint8Array(n);
+        let k = 0;
+        while (k < n) {
+          const c = held[0], take = Math.min(c.length, n - k);
+          buf.set(c.subarray(0, take), k); k += take;
+          if (take === c.length) held.shift(); else held[0] = c.subarray(take);
+        }
+        heldBytes -= n;
+        const psha = hexOf(await crypto.subtle.digest("SHA-256", buf));
+        if (!(await ev.head(psha))) await ev.put(psha, buf);
+        parts.push({ sha256: psha, bytes: n });
+      }
+    };
+    try {
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (!value) throw new Error("not bytes");
+        total += value.length;
+        if (total > UPLOAD_MAX) {
+          await reader.cancel();
+          return { ok: false, reason: "TOO_LARGE", status: 413, bytes: total, maxBytes: UPLOAD_MAX,
+                   detail: "the file exceeds what this surface will capture even in parts; nothing was written" };
+        }
+        whole.update(value);
+        held.push(value); heldBytes += value.length;
+        if (heldBytes >= UPLOAD_PART) await flush(false);
+      }
+      await flush(true);
+    } catch {
+      await reader.cancel();
+      return { ok: false, reason: "UPLOAD_NOT_STORED", status: 502,
+               detail: "the file's bytes could not be read whole or held under their own digest, so nothing was written" };
+    }
+    if (total === 0) return { ok: false, reason: "EMPTY", status: 400, detail: "the file has no bytes; nothing was written" };
+    const sha = whole.hex();
+    const multipart = parts.length > 1;
+    if (!multipart && parts[0].sha256 !== sha)
+      return { ok: false, reason: "HASH_DISAGREEMENT", status: 500, detail: "the incremental hash and the block hash of the same bytes differ" };
+    let holds = null;
+    try { holds = await this.provenance?.registerHolds?.({ sha }); } catch { holds = null; }
+    /* The record holds the bytes when its register files them or a receipt names them (provenance R5). Bytes merely in
+       the store are not enough: an upload rolled back (by `within`, or a receipt not written) leaves its bytes there,
+       content-addressed and named by nothing, and its retry must file them. */
+    const existed = !!(holds && (holds.registered === true || holds.acquired === true));
+    const when = typeof at === "string" && ISO_INSTANT.test(at) ? at : stampSecond();
+    const address = `upload:${sha}`;
+    const writeReceipt = () => {
+      let r;
+      try { r = this.provenance?.recordReceipt?.({ address, addressNorm: address, captureSha: sha, retrieved: when,
+                                                    via: UPLOAD_VIA, retrievalLocator: null, by, statement }); }
+      catch { r = null; }
+      return r && r.recorded === true ? r : null;
+    };
+    const notWritten = { ok: false, reason: "RECEIPT_NOT_WRITTEN", status: 502,
+                         detail: "the acquisition receipt could not be written, so nothing was filed" };
+    const receiptOf = (r) => ({ address, via: UPLOAD_VIA, retrieved: when, observation: r.observation ?? null });
+    if (existed) {
+      /* a second sighting of bytes the record holds: the receipt only, no document, no actor, `within` not called */
+      const r = this.#tx(writeReceipt);
+      return r ? { ok: true, existed: true, capture: { sha256: sha, bytes: total }, receipt: receiptOf(r) } : notWritten;
+    }
+    const profile = await profileOf({ ev, sha, ct: null, total, multipart, headers: {}, locator: address, view: profileView(this.core),
+                                      retrieved: when, origin: "member", parts: multipart ? parts : null });
+    const document = this.#uploadedDocument({ sha, total, parts, by, at: when, statement, name, profile });
+    let done;
+    try {
+      done = this.#tx(() => {
+        const r = writeReceipt();
+        if (!r) return notWritten;
+        this.recordCaptureActor({ captureSha: sha, actor: by, at: when });
+        if (typeof within !== "function") return { ok: true, receipt: r };
+        const w = Capture.#callWithin(within, document);
+        if (w && typeof w === "object" && w.ok === false) return w;
+        return { ok: true, receipt: r, within: w ?? null };
+      });
+    } catch (e) {
+      if (e && typeof e === "object" && WITHIN_FAULT in e)
+        return { ok: false, reason: "UPLOAD_WITHIN_FAILED", status: 500, detail: UPLOAD_WITHIN_FAILED_DETAIL };
+      throw e;
+    }
+    if (!done.ok) return done;
+    return { ok: true, existed: false, capture: { sha256: sha, bytes: total }, receipt: receiptOf(done.receipt), document,
+             ...(typeof within === "function" ? { within: done.within } : {}) };
+  }
+
+  /* R86: the provenance document of an upload, built as R65's for a pulled knock: received from the member, never
+     fetched (provenance R63): no fetched letter, no header, no transport. She is its actor, never its source (`sources`
+     R12): the source is the uploader's receipt, naming no member; her words on where it came from, and the name she gave
+     it, travel as her statements, never as evidence of their truth. The file is named from the digest. */
+  #uploadedDocument({ sha, total, parts, by, at, statement, name, profile }) {
+    const file = `snapshots/upload-${sha}`;
+    const said = (text) => ({ text, words_of: by, evidence_of_truth: false });
+    return {
+      file, locator: `upload:${sha}`, retrieved: at,
+      profile,
+      authority_state: "undetermined",
+      authority_basis: `a file a member brought into the record, which no one fetched; no authority is asserted; recorded ${at} for resolution through the task list`,
+      provenance_chain: [{
+        who: firstHopWho(this.env.INSTANCE_NAME, this.env.VERSION),
+        asserts: `these bytes were uploaded to your group's Civicsmith by ${by} and hashed as they arrived, at ${at}; `
+               + "they were received from the member, not fetched from any address",
+        evidence: "the upload's receipt: its digest, taken as the bytes arrived, and its instant",
+        bound: false, via: UPLOAD_VIA,
+      }],
+      capture: {
+        method: "uploaded",
+        grade: null, grade_basis: "CAPTURE_RECEIVED_NOT_FETCHED",
+        actor_class: "member", actor: by,
+        sha256: sha, encoding: "binary", bytes: total,
+      },
+      ...(parts.length > 1 ? { parts: parts.map((p, i) => ({ file: `${file}.part${String(i).padStart(3, "0")}`, sha256: p.sha256, bytes: p.bytes })) } : {}),
+      source: { kind: "uploader", receipt: { sha256: sha, bytes: total, received: at } },
+      origin_statement: said(statement),
+      ...(name != null ? { name_stated: said(name) } : {}),
+      origin: { kind: "upload" },
       attestation_attempts: [],
     };
   }

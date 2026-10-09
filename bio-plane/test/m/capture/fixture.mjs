@@ -80,7 +80,11 @@ export function provenance(s, { registered = [], acquired = [] } = {}) {
     },
     signed: [],
     async signReceipt(r) { this.signed.push(r); return { ok: true, signed: true }; },
-    registerHolds({ sha }) { return { ok: true, sha, asked: true, registered: registered.includes(sha), acquired: acquired.includes(sha) }; },
+    /* R5: `acquired` also when a receipt this stand-in wrote names the digest, as provenance's own answers */
+    registerHolds({ sha }) {
+      const named = [...s.sql.exec(`SELECT 1 AS x FROM captured_locators WHERE capture_sha = ? LIMIT 1`, sha)].length > 0;
+      return { ok: true, sha, asked: true, registered: registered.includes(sha), acquired: acquired.includes(sha) || named };
+    },
   };
 }
 
