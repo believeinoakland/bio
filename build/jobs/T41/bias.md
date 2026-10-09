@@ -38,3 +38,7 @@ Two readings I am building on; tell me if either is wrong.
 ## J2 · REPORT
 
 For inquiry-grammar (T41-13, L6): its R18 says a leg's `bias_applied[].statement` is "a bias statement id (`BIA-`, its form checked here)". bias defines no `BIA-` form. A bias statement id is the author's own string (`{id, kind, subject, ...}` in a set's `statements[]`), unique within its bundle (C-26.1, `checks.mjs`:139–145), and a lens keys its effective set by that id (R16: a project statement of the same id replaces the group's), as every bias fixture writes it (`s1`, `p1`). R49 answers by the id the lens holds. If inquiry-grammar checks `BIA-`, every real statement id is refused `BIAS_APPLICATION_MALFORMED` and R49 is never reached. Suggested R18 wording: "`statement` a bias statement id as the lens in force holds it (a non-empty string; `bias` R16, R49)". The other reading, giving bias statements a minted id form, would change the statement anatomy of the Declared Bias canon (Bob's), so I do not recommend it. basis-versions R48 and case-disclosures R30–R31 read the same shape: worth the same check in their STARTs.
+
+## J3 · COMPLETE
+
+T41-12 applied: R49 statementInForce (K2467's text), R33/R38 sweep read as a machine viewer (class:daemon), the 13 rule 4 (11) reds re-stated with D54 negative controls. bias 73/0 (todo R26); users' suites: no new red (each failing path identical against tranche's bias source); migrate-released 1/0; format, architecture, coverage (49/49), ownership 0 failures. Record: Completion (BIAS #13) on job/T41/bias.
