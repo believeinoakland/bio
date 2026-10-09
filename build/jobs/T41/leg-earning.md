@@ -43,3 +43,7 @@ Size (session_018Dq5y3nwTnhZrikpr65p7D): test runs 16, module lines 1470
 ## J2 · REPORT
 
 leg-earning requirements, Uses: names no `provenance`, though the code has used `provenance.captureGrade` since the split (R1, R8) and now also `DOORBELL_VIA` and `UPLOAD_VIA` (R16). `modules.json` already carries the edge. Wording only, BOB's to add.
+
+## J3 · COMPLETE
+
+T41-14 done on the readings of J1, which B2 confirmed. R13, R14, R15 and R16 are met; `t41.test.mjs` adds 10 tests, each with a negative control, and six mutations each turn tests red. leg-earning 57/57. Users: strength 143/143; the inquiry and basis-versions reds are identical with this change stashed. Checks: format, architecture and ownership 0; coverage 16 of 16. Nothing deferred. One REPORT (J2). Record: Completion section on `job/T41/leg-earning`.
