@@ -1,3 +1,13 @@
 # reading-pipeline (T41)
 
 **Status** · session_01Y9T6YzfXkrxpdPqzRdWUH4 · depth 2 · WORKING · handled B0
+
+## J1 · QUESTION
+
+R29's seam. The module is layer 4 and pure; the account (credentials R56, layer 2), the limits (`ai-use` R3 `useCheck`, layer 6) and the model call (layer 6) are not all reachable by an edge. My best reading, which I am building now:
+
+1. A new piece beside `read`, `tier4Extend` (R23's list gains it), and an optional `transcription` argument to `read`: `{member, project?, credentials, useCheck, transcribe, at?}`, all handed in by the caller that acts at a member's request (as `evidence` and `liveCalibration` are), so no import edge. Without `transcription`, `read` is byte for byte as now (R2/R15's pins hold).
+2. Order: pages the plane could not read (still carrying `no_text_layer`/`image_content_unread` after tier 3, or OCR'd to no glyph) → none: nothing asked, no account read. Else `credentials.accountFor({member, act: {kind: "transcribe", project}})` (it refuses kept-away first, group's or project's, then no account, use switched off, not a participant); any refusal → not transcribed, the note names its code. Then `useCheck({owner, member, use: "transcribe", at})` with `owner` from the account's level (`member:<id>`, `project:<id>`, `group`); a refusal, or no `useCheck` handed in, → not transcribed (fail closed). Then `transcribe({account, capture_sha, store, pages, use: "transcribe"})`, which must name its `engine` (the model); its pages are merged by R6's rule (asked-for pages with no glyph; a folio page appended), under a part `[{step: "ai_transcription", engine, version, cap: null, measured_by}]` (text-chain R104), wired tier 4. The key never reaches the reading or a note.
+3. "Labelled as the AI's reading": the chain step (its label), a basis sentence, and `reading.ai_transcription: {pages, engine, version}`.
+4. R18 (`readingprov.mjs`): a page a covering `ai_transcription` step produced is tier 4 naming its engine, member null (R18's map is 1–3). Proposed wording for R18: "...(a covering `pixels` step is 3, naming the next `ocr` step's engine; a covering `ai_transcription` step is 4, naming its engine; else ...)". Say if you want a member name for tier 4 instead.
+5. Tests drive the real `credentials` over a real SQLite world (record-core, membership, credentials, as `capture-sources/credentials.test.mjs` does) for the negative controls (no account, use off, kept away group and project): that needs `credentials` and `record-core` in my `uses` (both earlier; tests only). Please add them, or tell me to test against a stub of `accountFor`'s answers instead.
