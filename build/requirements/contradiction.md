@@ -219,7 +219,7 @@ Terms. A **key** is one of `K1` (one inquiry, opposite roles: a `supports` and a
   It is derived at every read, never stored.
 
 **conflictNotices({project, after?, limit?, viewer})** (`op=contradictionnotices`)
-- **R50** *(not yet met: T41)* The notice to a project's members, on their own side.
+- **R50** The notice to a project's members, on their own side.
   - **Refusals, in order:** `membership`'s existence answer (its R77); `NO_SUCH_PROJECT` through its R78; a viewer who is not a joined participant (joined or leaving, its R54), through its `notAParticipant` (R87, C-56.3).
   - **Which conflicts.** Each conflict between projects of which `project` is a party, that the viewer sees half, where the side they may see is one through which `project` is a party.
   - **Each notice** carries:
@@ -232,7 +232,7 @@ Terms. A **key** is one of `K1` (one inquiry, opposite roles: a `supports` and a
     - `responses`, the relay (R54).
   - **Withheld, always:** the other side, its kind, bundle, source, project and members; the key and its pairing sentence; the label's reason (the machine's words describe both sides); and the number of parties. Before R52, no other party is named.
   - **Page.** At most 50 in candidate id order after `after` (a non-number is 50), with `truncated` observed by reading one past, and `cursor` the last id. A conflict the viewer sees whole is not a notice: R25 answers it.
-  - **A non-hidden party named** (T41, D64; amended). When another party of a conflict between projects is a non-hidden project the viewer may see by name (`membership` R44), the notice names it (`{id, name}`) from the start, with the fixed sentence "Your project's conclusion conflicts with that project's"; its side, members and contents stay withheld (sight is unchanged). A hidden party is never named or counted, and with one the notice says only that something the project rests on conflicts, as today.
+  - **A non-hidden party named** (T41, D64; amended). When another party of a conflict between projects is a non-hidden project the viewer may see by name (`membership` R44), the notice names it (`{id, name}`) from the start, with the fixed sentence "Your project's conclusion conflicts with that project's"; its side, members and contents stay withheld (sight is unchanged). A hidden party is never named or counted, and with one the notice says only that something the project rests on conflicts, as today. Read (CONTRADICTION #9 J2, K2479): "another party" is a party reached through the side the viewer does not see (R49), other than `project`; it is named when `membership.visibilityOf` answers `discoverable` (R85) and the viewer's `sight` of it is not `NONE` (R44); the notice carries `named: [{id, name}]` (id order) and, when non-empty, `NOTICE_NAMED_SENTENCE` ("Your project's conclusion conflicts with that project's.") in place of the fixed sentence; with none named it is today's notice, byte for byte, with `named: []`, whether or not a hidden party also exists.
 
   It writes nothing and never throws.
 
@@ -291,7 +291,7 @@ Terms. A **key** is one of `K1` (one inquiry, opposite roles: a `supports` and a
 - `promotion` (N345): `promote` (R35, R36) and `registerStep` (R38).
 - `record-grammar`: the shared grammar names this module once read from the check catalogue (frontmatter, types, ids, actors, labels, grades, `SHARED_ACT_CHECKS`), re-pointed in T19 (rule 1); the catalogue rows it owned are in its own code (K808, K820).
 - `record-core`: `recordOf(ctx)`, `transact`, `declarePurge`; `bundles` by its read contract (R37 there), including the inquiry's subject entity column, and its `title`, for a revealed party's name (R52).
-- `membership`: `membershipOf(ctx)`, `viewerPredicate` and the bundle gate (R10); `sight` (K5), `isJoinedParticipant` and `projectOwners` (R24's reach); the existence answer (R77), `noSuchProject` (R78), `notAParticipant` (R87) and `memberFacts` (R68, the responder's own cover) for R50–R54. *(not declared)*
+- `membership`: `membershipOf(ctx)`, `viewerPredicate` and the bundle gate (R10); `sight` (K5), `visibilityOf` (R85; R50, K2485), `isJoinedParticipant` and `projectOwners` (R24's reach); the existence answer (R77), `noSuchProject` (R78), `notAParticipant` (R87) and `memberFacts` (R68, the responder's own cover) for R50–R54. *(not declared)*
 - `content`: `contentRow` and the rows of a capture (R8, R14), by service or a stated read contract on `content`.
 - `events`: a capture's own dates (R9). `civil-time`: `compare` (R9). `money`: the facts and `reconcile` (K6; R8). `connection-grammar`: `registerOwner`, the `neighbours` contract, `ownerConformance` (R58). (T33-48)
 - `extraction`: `readingOf` for a capture's doctype and date (R9). *(not declared)*
@@ -320,7 +320,7 @@ Terms. A **key** is one of `K1` (one inquiry, opposite roles: a `supports` and a
 - **R59** (plan T33, Rules (6)) This module declares its tables explicitly through `record-core.declareTable` (its R21), keeping R22's and R47's purges and R17's append-only rule (`version_chain: true`), each with the sight of the sides' bundles (R10), the opt-ins and responses with their project's; the other classes as `declarePurge`'s default form gives them.
 - **R47** `contradiction_acts`, `contradiction_recommendations`, `contradiction_optins` and `contradiction_responses` are declared to record-core's purge by both sides' bundles, as R22 (K23); `contradiction_optins` and `contradiction_responses` also by `project_id`.
 - **R48** (DEC-77 item 1). No key pairs an aspiration: aspirations are in contact, never in contradiction.
-- **R55** *(not yet met: T41)* (DEC-85). Nothing answered to a viewer who sees a conflict half names or counts its other side, that side's kind, bundle, source, project or members, or the number of parties. The two exceptions are the opted-in projects after R52 and what a responder chose to disclose (R53). (T41, D64; amended) R50's named non-hidden parties are a third exception. The machine's reason and a member's explanation are never answered to such a viewer.
+- **R55** (DEC-85). Nothing answered to a viewer who sees a conflict half names or counts its other side, that side's kind, bundle, source, project or members, or the number of parties. The two exceptions are the opted-in projects after R52 and what a responder chose to disclose (R53). (T41, D64; amended) R50's named non-hidden parties are a third exception. The machine's reason and a member's explanation are never answered to such a viewer.
 
 Rows C-60.2, C-60.3 (`CONTRADICTION_PAIR_CHECKS`) and C-93.8–C-93.39 (`CONTRADICTION_CANDIDATE_CHECKS`) (R20; N345), with their translations; promotion stamps them:
 

@@ -112,6 +112,9 @@ export const ACCEPTANCE_REVIEW = Object.freeze({ rate: 0.95, min_offered: 30, st
 export const NOTICE_SENTENCE = "Something this project rests on is in conflict with a record you cannot see. Neither "
   + "that record nor who holds it is shown. Your project can ask to resolve it. If every project holding a side asks, "
   + "the projects are named to each other's members, and you can respond.";
+/** R50 (T41, D64): the one sentence a notice carries instead when it names another party, a non-hidden project the
+ *  viewer may see by name. */
+export const NOTICE_NAMED_SENTENCE = "Your project's conclusion conflicts with that project's.";
 
 /* The viewer the module's own internal reads are made as (a machine credential sees every bundle, membership R43): the
    reach of a duty and a candidate's parties are about the record, never about who asks. What a viewer is then shown
@@ -2765,6 +2768,19 @@ export class Contradiction {
     return null;
   }
 
+  /** R50 (T41, D64), R55: the other parties a notice names: each project reached through the side the viewer does not
+   *  see, other than `project`, that is not hidden (membership R85) and whose name the viewer may see (its R44 `sight`
+   *  is not `NONE`), as `{id, name}` in id order. A hidden party is never named or counted, whatever the viewer's
+   *  sight; a project reached only through the viewer's own side is on their side and is not named. */
+  #namedParties(row, which, project, viewer) {
+    const m = this.#m();
+    if (!m || typeof m.visibilityOf !== "function" || typeof m.sight !== "function") return [];
+    const other = which === "a" ? "b" : "a";
+    return this.#reachOf(row[other]).projects
+      .filter((p) => p !== project && m.visibilityOf(p) === "discoverable" && m.sight(p, viewer) !== "none")
+      .map((p) => ({ id: p, name: this.#projectName(p) }));
+  }
+
   /** op=contradictionnotices — R50: the notices to a project's members, on their own side. */
   conflictNotices({ project = null, after = null, limit = null, viewer = null } = {}) {
     try {
@@ -2786,8 +2802,9 @@ export class Contradiction {
         if (!isProjectConflict(view.weight, view.state)) continue;
         if (notices.length === cap) { truncated = true; break; }
         const parties = this.#parties(row);
+        const named = this.#namedParties(row, which, g.project, viewer);
         notices.push({ candidate: row.candidate, project: g.project, weight: view.weight, state: view.state,
-                       side: this.#shown(row[which]), says: NOTICE_SENTENCE,
+                       side: this.#shown(row[which]), named, says: named.length ? NOTICE_NAMED_SENTENCE : NOTICE_SENTENCE,
                        ...this.#partyView(row, g.project),
                        ...(parties.truncated ? { reveal_undetermined: true,
                          reveal_why: "the projects holding a side could not all be read, so whether every one has asked is undetermined and no reveal is recorded" } : {}) });

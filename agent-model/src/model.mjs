@@ -1,15 +1,18 @@
-/* agent-model — HOW A MODEL TURN REACHES CLAUDE (R1–R12). Copied from `agent-worker/src/model.mjs` (Q0-1 seam
+/* agent-model — HOW A MODEL TURN REACHES CLAUDE (R1–R13). Copied from `agent-worker/src/model.mjs` (Q0-1 seam
  * (iii); K617, K1439) and extended with the two providers of K1429 and K1502.
  *
  * WHOSE ACCOUNT (R1, R2, R8, R9, R11). Every call carries the account reference that serves one member's act, as
  * `credentials.accountFor` answers it: the member's own, `{kind: "apikey", key}` or `{kind: "signin", member}`
- * (K2200), or the group's API key, `{kind: "apikey", level: "group", key}` (K1755), sent exactly as a member's key
- * is. The group's copy binds no Claude credential in its environment (K1502): the group's key too arrives per call.
+ * (K2200), or a project's or the group's API key, `{kind: "apikey", level: "project" | "group", key}` (K1755;
+ * T40, D34), sent exactly as a member's key is. The group's copy binds no Claude credential in its environment (K1502): the group's key too arrives per call.
  * Its `kind` picks the provider: an API key goes to the Messages API (`apikey.mjs`), a sign-in to Claude Code in
  * that member's own `agent-runner` container instance, named by the member through the Container Durable Object
  * binding the caller passes (`signin.mjs`; K1819). A sign-in reference carries no secret: the member's stored sign-in
  * stays in their instance. A key is used for the call it came with and kept nowhere; this module reads no
  * environment variable and no binding for one.
+ *
+ * WHAT IT COST (R13). On the `apikey` path every outcome's `usage` adds `estimated_cost_usd`, the copy's estimate
+ * at `MODEL_PRICES`; on the `signin` path it is `null`. `total_cost_usd` stays as the provider states it.
  *
  * WHICH MODEL (R1). The model a turn asks for is `MODEL_FOR_MODE[mode]`, set by measurement: no request body and no
  * judgement chooses it, and changing an entry is a reviewed edit.
@@ -34,10 +37,10 @@
  * segments are for. The turn bound is checked the same way. */
 import { MODEL_ENDPOINT, MODEL_API_VERSION, withCache, apikeyTurn } from "./apikey.mjs";
 import { RUNNER_URL, READ_RESULT, signinTurn, signinConverse, renderTranscript } from "./signin.mjs";
-import { USAGE_FIGURES, usageOf, sumUsage, refused, READ_FACTS, toolResultContent, factsOf } from "./outcome.mjs";
+import { USAGE_FIGURES, ESTIMATE, usageOf, sumUsage, refused, READ_FACTS, toolResultContent, factsOf } from "./outcome.mjs";
 
-export { MODEL_ENDPOINT, MODEL_API_VERSION, RUNNER_URL, USAGE_FIGURES, usageOf, sumUsage, withCache, renderTranscript,
-         READ_FACTS, READ_RESULT };
+export { MODEL_ENDPOINT, MODEL_API_VERSION, RUNNER_URL, USAGE_FIGURES, ESTIMATE, usageOf, sumUsage, withCache,
+         renderTranscript, READ_FACTS, READ_RESULT };
 
 /* R1 — the model per mode. Every mode the harness's tables hold has an entry. */
 export const MODEL_FOR_MODE = Object.freeze({
@@ -52,6 +55,45 @@ export const MODEL_FOR_MODE = Object.freeze({
 export const MODEL_FOR_MODE_SOURCE = "provisional: today's default for every mode, until M-Q9 measures the cheapest "
   + "model passing K1504's bar (assistant-substrate §7) per mode";
 export const MODEL_MAX_TOKENS = 16000;
+
+/* R13 — USD per million tokens for each model, a reviewed edit beside `MODEL_FOR_MODE`: every model that table names
+ * is priced here. `cache_write` is the five-minute rate, the only cache this module writes (R4's marks are
+ * `ephemeral`, the default lifetime). The copy's estimate of an API key's spend, never what the payer is billed. */
+const rates = (input, output, cache_read, cache_write) => Object.freeze({ input, output, cache_read, cache_write });
+export const MODEL_PRICES = Object.freeze({
+  "claude-opus-5": rates(5, 25, 0.5, 6.25),
+});
+export const MODEL_PRICES_SOURCE = "Anthropic's first-party API rates per million tokens as published on 2026-10-06 "
+  + "(about-claude/pricing): input and output as listed, a cache read 0.1x the input rate, a five-minute cache write "
+  + "1.25x";
+/* Which rate each usage figure is priced at. */
+const RATE_OF = Object.freeze({ input_tokens: "input", output_tokens: "output", cache_read_input_tokens: "cache_read",
+                                cache_creation_input_tokens: "cache_write" });
+const INPUT_SIDE = Object.freeze(["input_tokens", "cache_read_input_tokens", "cache_creation_input_tokens"]);
+const highest = (r) => Math.max(r.input, r.output, r.cache_read, r.cache_write);
+const TABLE_HIGHEST = Math.max(...Object.values(MODEL_PRICES).map(highest));
+const utf8 = new TextEncoder();
+
+/** R13 — the `apikey` path's estimate, added to a turn's `usage`. Each stated figure is priced at its own rate. A
+ *  figure the provider left `null` is never priced as zero: its count is bounded by the request this module sent (the
+ *  input side together by the request's UTF-8 bytes, a token covering at least one byte; the output by its
+ *  `max_tokens`) and the bound is priced at the model's highest rate. A model the table does not price is priced at
+ *  the table's highest rate throughout. */
+export function estimateCost(usage, { model, serialized, maxTokens }) {
+  const own = Object.prototype.hasOwnProperty.call(MODEL_PRICES, model) ? MODEL_PRICES[model] : null;
+  const top = own ? highest(own) : TABLE_HIGHEST;
+  const rate = (figure) => (own ? own[RATE_OF[figure]] : top);
+  let usd = 0;
+  for (const k of Object.keys(RATE_OF)) if (usage[k] != null) usd += usage[k] * rate(k);
+  if (INPUT_SIDE.some((k) => usage[k] == null)) {
+    const stated = INPUT_SIDE.reduce((n, k) => n + (usage[k] ?? 0), 0);
+    usd += Math.max(0, utf8.encode(String(serialized ?? "")).length - stated) * top;
+  }
+  if (usage.output_tokens == null)
+    usd += (Number.isInteger(maxTokens) && maxTokens > 0 ? maxTokens : MODEL_MAX_TOKENS) * top;
+  return usd / 1e6;
+}
+const priced = (got, turn) => (got && got.usage ? { ...got, usage: { ...got.usage, [ESTIMATE]: estimateCost(got.usage, turn) } } : got);
 /* A third of the ~3 GB M-168 locates under the 30 s CPU default: ~10 s of re-serialising at its measured rate. */
 export const DEFAULT_MAX_SEGMENT_BYTES = 1_000_000_000;
 export const SEGMENT_BYTES_SOURCE = "D-611 on M-168: CPU binds at ~7-10 ms per MB re-serialised, ~3 GB under the "
@@ -65,13 +107,15 @@ export function segmentMeter({ turnsBound, bytesBound }) {
 }
 
 /* R2, R11 — a reference this module can use, as `{kind: "apikey", secret}` or `{kind: "signin", member}`, or null.
- * Its `level`, when present, is `member` or `group`, and a `group` reference is only ever an API key; nothing else
- * about it is read. `subscription` is no kind of this module's: it retired with `credentials` R22 (T38). */
-const LEVELS = Object.freeze(["member", "group"]);
+ * Its `level`, when present, is `member`, `project` or `group`, and a `project` or `group` reference is only ever an
+ * API key; nothing else about it is read. `subscription` is no kind of this module's: it retired with `credentials`
+ * R22 (T38). */
+const LEVELS = Object.freeze(["member", "project", "group"]);
+const KEY_ONLY = Object.freeze(["project", "group"]);
 function usable(reference) {
   if (!reference || typeof reference !== "object") return null;
   if (reference.level !== undefined && !LEVELS.includes(reference.level)) return null;
-  if (reference.level === "group" && reference.kind !== "apikey") return null;
+  if (KEY_ONLY.includes(reference.level) && reference.kind !== "apikey") return null;
   if (reference.kind === "apikey" && typeof reference.key === "string" && reference.key) return { kind: "apikey", secret: reference.key };
   if (reference.kind === "signin" && typeof reference.member === "string" && reference.member)
     return { kind: "signin", member: reference.member };
@@ -87,7 +131,8 @@ function precheck(reference, runner) {
   const ref = usable(reference);
   if (!ref) return { refusal: refused(null, "ACCOUNT_REFERENCE_UNUSABLE",
     "a model turn runs only under the account reference that serves a member's act: {kind: \"apikey\", key} or "
-    + "{kind: \"signin\", member}, the member's own, or the group's API key {kind: \"apikey\", level: \"group\", key}") };
+    + "{kind: \"signin\", member}, the member's own, or a project's or the group's API key {kind: \"apikey\", level: "
+    + "\"project\" or \"group\", key}") };
   if (ref.kind === "signin" && !runnerBinding(runner)) return { refusal: refused(null, "RUNNER_NOT_CONFIGURED",
     "a sign-in runs in the member's own agent runner instance, and no runner binding that names one was passed") };
   return { ref };
@@ -102,7 +147,10 @@ export async function modelCall(reference, request, { runner } = {}) {
     if (refusal) return refusal;
     if (!request || typeof request !== "object")
       return refused(null, "REQUEST_UNUSABLE", "a model turn's request is a Messages API body");
-    if (ref.kind === "apikey") return await apikeyTurn(ref.secret, JSON.stringify(withCache(request)));
+    if (ref.kind === "apikey") {
+      const serialized = JSON.stringify(withCache(request));
+      return priced(await apikeyTurn(ref.secret, serialized), { model: request.model, serialized, maxTokens: request.max_tokens });
+    }
     return await signinTurn(ref.member, runner, request);
   } catch (e) {
     return { silent: { detail: "the model call failed before it was sent" } };
@@ -142,7 +190,7 @@ export async function converse({ reference, runner, mode, meter, system, message
                                                   tool_choice: { type: "auto" } }));
     const stop = charge(serialized);
     if (stop) return { ...stop, usage, calls };
-    const got = await apikeyTurn(ref.secret, serialized);
+    const got = priced(await apikeyTurn(ref.secret, serialized), { model, serialized, maxTokens: MODEL_MAX_TOKENS });
     if (got.usage) { usage = sumUsage(usage, got.usage); calls += 1; }
     if (got.silent || got.refused) return { ...got, usage, calls };
     const content = Array.isArray(got.result.content) ? got.result.content : [];

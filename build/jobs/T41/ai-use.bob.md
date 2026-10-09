@@ -1,0 +1,25 @@
+# BOB to ai-use (T41)
+
+**Read** · handled J4
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T41), layer 6, ai-use: T41-22. Read also K624, K1043, K2350, K2373, K2448 and K2472 (their lines in `build/rulings.md`).
+Your requirements: `build/requirements/ai-use.md` (read whole). Marked `*(not yet met: T41)*`: R1 `countUsage`, R2 `aiLimitSet`, R3 `useCheck` (`AI_LIMIT_REACHED`), R4 `aiUsage`, R5 `limitsReached`, R6 `exploreAllowed`, R7 the tables (`ai_usage`, `ai_limits`, their history), R8 its codes and `checks.mjs`, R9 `exploreAsk`, R10 `estimate` (D12), R11 `actualOf` (D12), R12 `aiLimits` (`op=ailimits`, each limit with its history, to the account's owners; K2448), R13 refusals and the Ask item read by key (DEC-188 (7)): every id of the module. Test each explicitly, with a negative control (K874).
+K624 copy-then-delete: build R1–R9 by copy of `ai-runs/index.mjs`:2588–2932 (the R48–R52 block; verify the bounds by reading it), then R10–R13; run-rules R19's verification act (:2933 on) is not copied and stays in ai-runs. You merge before ai-runs, whose job then deletes its copy and re-points. Your `modules.json` entry has empty `paths` and `tests` (K1043; the format check refuses a path naming nothing). Write under a new directory named for the module, as the other plane modules: `bio-plane/src/ai-use/` and `bio-plane/test/m/ai-use/`. Name your paths and tests in your record, every file you create; BOB writes them into `modules.json` before the ownership check (`build/rulings-active.md` §5). Your `uses`, as `modules.json` shows: record-grammar, civil-time, record-core, membership, credentials, connections, run-rules.
+Reading set (mechanics §17): measured at this START: 250 KB by `build/plan/reading-sets.py` (your code is 0 today: the module is not yet built), an over-estimate (it counts each used module's whole public part): read as mechanics §3 asks (each used module's Purpose and the services your Uses names). Measure that set, with your tests, first. At most 300 KB: read it whole and state so in your record. Over: (1) trim nothing; (2) no further split in T41; (3) read whole yourself your requirements, layer 6's row of `build/layers.md`, the code and tests your entry changes and the used services your Uses names, and have your own workers read the rest of your code and tests in full and write the summary this task needs (each statement citing file and line), told the task, the requirements it serves and what follows; state in your record what you read whole, the summary's size and what it cites, and whether anything it left out mattered (K2304). This step is required, not optional.
+Merge order in L6: inquiry-grammar, leg-earning, inquiry, hypotheses, steps, citation, basis-versions, contradiction; run-rules, ai-use, ai-runs (copy then delete), run-productions, capture-requests, reading-guides, skills, question-explorer; answers, agent-model, agent-worker (`modules.json` order; ai-use before ai-runs is K624's copy-then-delete). Same-layer providers you use: run-rules (R20's successors to the retired codes). Each one's services reach you by a CHANGE once it merges; build against its requirements until then. Record your final `uses` in your record, for BOB to apply at your merge.
+Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); none is yours unless named here.
+Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Answered on tranche/T41 @ 46211ff1dd (K2480); merge the tranche branch. (1) add retrieval, read as ai-runs does. (2) your family is C-143 (steps has C-142): AI_LIMIT_REACHED C-143.1, AI_LIMIT_INVALID .2, LIMIT_UNIT_UNAVAILABLE .3, EXPLORE_NOT_ENABLED .4, EXPLORE_OUT_OF_SCOPE .5. (3) the helper asking accountUses as the account's own owner is taken, failing closed; the in-plane read is N831 (credentials' layer closed). (4) as you propose, now in R10's text. (5) as you propose, now in R6's text. (6), (7) confirmed.
+
+## B3 · ANSWER · re J2
+
+Taken (K2486), with one correction: your family is C-143 (C-142 is steps'), so (1) is EXPLORE_ASK_INVALID C-143.6. (2)-(5) as you read them. (6) noted for the design stream: BOB sends UX-DESIGN a NOTICE; you change nothing.
+
+## B4 · ANSWER · re J4
+
+Merged (K2488); your J3 routed (ai-runs and answers by CHANGE, the rest to L11's text).
