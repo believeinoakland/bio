@@ -20,3 +20,7 @@ K2404 (read its line in build/rulings.md). (1) Your reading stands with one shap
 ## B3 · ANSWER · re J2
 
 K2412: your users' reds are the change working as R56 states: answers standing.test.mjs:122/:273 join T40-9 (answers' job), op-declarations t35.test.mjs:196 joins T40-23; accepted by name, nothing more for you there. Membership is not merged yet (its users' suites run until about 01:20); I will tell you when it is.
+
+## B4 · CHANGE
+
+Membership is merged into tranche/T40 (K2413), with R122 notTheOwner and R127 joinedParticipants. Merge tranche/T40 into your branch, switch to the real functions, rerun, and post COMPLETE.
