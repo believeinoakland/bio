@@ -842,9 +842,6 @@ export const CONCLUDE_ACT_CHECKS = {
       + 'add beyond the claim can be sent as commentary: it is recorded in your name and is never '
       + 'treated as evidence.',
   },
-  /* REC-124. The project's own frontmatter could not take the conclusion row
-     in place, so nothing was written — the make-current writer's condition, on
-     the conclusion row. */
   /* REC-136 / §7.1 item 7. A project withdraws only a conclusion it currently
      stands on; a second withdrawal, or one with nothing concluded, would add
      an entry that records nothing. */
@@ -855,6 +852,9 @@ export const CONCLUDE_ACT_CHECKS = {
       + 'has already withdrawn its latest conclusion. Everything it concluded and withdrew before stays in '
       + 'the record.',
   },
+  /* REC-124. The project's own frontmatter could not take the conclusion row
+     in place, so nothing was written — the make-current writer's condition, on
+     the conclusion row. */
   UNSPLICEABLE_CONCLUSIONS: {
     check: 'C-33.36',
     where: 'src/basis-versions/index.mjs #setProjectConclusion > is-conclusion-row',
