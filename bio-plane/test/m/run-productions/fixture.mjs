@@ -5,7 +5,7 @@
    (R26 `candidatePair`, R27 `candidateIndependence`), citation (R5 `retiredNotCitable`), basis-versions (R5
    `basisVersionsOf`, R9 `basisVersions`, R28 `appendVersion`, R40 `onCandidates`), connections (R22 `citesInto`),
    and content's own two providers (extraction's readings, provenance's `capturesOf`), extraction's units (its R36),
-   steps (its R9 `recordProduct`, with a stand-in of the observation log it registers with) and credentials (its R57 material limits) are the real modules, reached through
+   leg-earning's `earned` (its R1, the capture ceiling R21 reads), steps (its R9 `recordProduct`, with a stand-in of the observation log it registers with) and credentials (its R57 material limits) are the real modules, reached through
    their factories. Every stand-in records the calls
    made to it. Bundles and their files are written as record-core's read contract holds them (its R37), and the tables
    later modules own that this module reads under their read contracts (inquiry R40, basis-versions R38) are created
@@ -19,6 +19,7 @@ import { membershipOf } from "../../../src/membership/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { stepsOf } from "../../../src/steps/index.mjs";
+import { captureBound } from "../../../src/textchain.mjs";
 import { strengthOf } from "../../../src/strength/index.mjs";
 import { citationOf } from "../../../src/citation/index.mjs";
 import { versionsIn } from "../../../src/basis-versions/index.mjs";
@@ -263,7 +264,25 @@ export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven }
   const observationLog = { registerAuthority: () => ({ ok: true }), onLookAnswered: () => ({ ok: true }),
                            byAuthority: () => [], rowVisible: () => false };
   const steps = stepsOf(host, { record, membership, observationLog });
-  const p = runProductionsOf(host, { record, membership, content, connections, extraction,
+  /* leg-earning's `earned` (its R1), as R21 reads it (K2496): per document, the capture ceiling the record can earn,
+     the weaker of its route's grade (provenance R25/R26; `routes[id]`, B a direct fetch by default) and its
+     transcription's measured fidelity (`text-chain.captureBound`), null when undetermined; absent with no bytes. */
+  const routes = {};
+  const legEarning = {
+    earned(subject, targets) {
+      note("earned", { subject, targets });
+      const capture = {};
+      for (const id of targets) {
+        const sha0 = content.captureFor(id);
+        if (!sha0) continue;
+        const bound = captureBound(ex.readings[sha0]?.chain ?? null, routes[id] ?? "B");
+        capture[id] = { mode: "ceiling", grade: bound,
+                        ...(routes[id] && routes[id] !== "B" ? { bounded_by: "CAPTURE_BOUNDED_BY_ROUTE" } : {}) };
+      }
+      return { subject_entity: subject, earned: { capture, connection: {} } };
+    },
+  };
+  const p = runProductionsOf(host, { record, membership, content, connections, extraction, legEarning,
                                      ...(aiRunsGiven === null ? {} : { aiRuns }),
                                      basisVersions, steps,
                                      ...(real ? {} : { strength, citation }), now: () => Date.parse(clock.now) });
@@ -288,7 +307,7 @@ export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven }
 
   const w = {
     st, host, record, membership, prov, registered, content, p, clock, ex, calls, runs, bounds, aiRuns, strength,
-    citation, retired, connections, cites, basisVersions, candidateSources, ceilings, steps, credentials,
+    citation, retired, connections, cites, basisVersions, candidateSources, ceilings, steps, credentials, routes, legEarning,
     versions: {}, authors: {}, ats: {}, legsOf: {}, groundsOf: {},
     row: (qq, ...a) => [...st.sql.exec(qq, ...a)][0] ?? null,
     rows: (qq, ...a) => [...st.sql.exec(qq, ...a)],

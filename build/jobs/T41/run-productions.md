@@ -54,6 +54,20 @@ Size (session_012FXyapfXzBKoA3m8DhRQoh): test runs 26, module lines 2199
 
 Size (session_012FXyapfXzBKoA3m8DhRQoh): test runs 34, module lines 2211
 
+## ANSWER B5 (RUN-PRODUCTIONS #8)
+
+**K2496 (2) applied.** R21's `{text, ceiling}` now takes the ceiling as the record's own for the capture, route included. It is `leg-earning.earned(null, [document]).earned.capture[document].grade`, asked once a batch. R23's quotes are checked against the same text and ceiling. A ceiling that cannot be read is null (undetermined), never the bytes' B. `text-chain.captureBound` is no longer called here.
+
+The factory reaches `legEarningOf(host)`. The tests use a stand-in of leg-earning R1's answer: the weaker of a route's grade and `captureBound` over the chain. A new test checks three cases: a capture whose route earns C keeps C; the control, a direct fetch, keeps B; an unreadable ceiling earns null.
+
+(1) N834, (3), (4) and (5) are BOB's, as answered. B3 and B4 were already applied (J4).
+
+**Edges to apply at my merge:** `steps`, `credentials` and `leg-earning`. `architecture` reports exactly these imports (5 failures) and nothing else.
+
+**Re-run:** `node --test test/m/run-productions/` gives 53 tests, 53 pass, 0 fail. Users' suites are unchanged from J4: skills 105/0, store-door 41/0, control-plane 195/0, plane 147/8, answer-envelope 24/4 (none mine). `format` 0, `coverage` 24/24, `ownership` 0.
+
+Size (session_012FXyapfXzBKoA3m8DhRQoh): test runs 38, module lines 2222
+
 ## J1 · QUESTION
 
 R21–R24, my best readings; I am building on them now and will bring the work in line with your answer.

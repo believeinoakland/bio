@@ -93,6 +93,28 @@ test("R21 (D4): a verified quote keeps the capture's own ceiling, which may be w
   assert.equal(u.w.row(`SELECT earned FROM proposed_readings WHERE ref='ordinance:12'`).earned, null);
 });
 
+test("R21 (D4; K2496): the ceiling a verified quote keeps is the record's own for that capture, route included — leg-earning's earned capture ceiling, asked for the document — so a capture whose route earns C keeps C; an unbound route (a direct fetch) earns B", () => {
+  const name = { ref: "the board", label: "The Board", quote: "The Board approved", source: P1 };
+  const direct = base();
+  const b = direct.propose({ refs: [name] }).proposed[0];
+  assert.deepEqual([b.earned, b.verified_quote], ["B", true], "the control: an unbound route keeps the bytes' B");
+  assert.deepEqual(direct.w.calls.filter((c) => c.name === "earned").map((c) => c.a.targets), [[DOC]], "asked of leg-earning, once a batch");
+  const replay = base();
+  replay.w.routes[DOC] = "C";
+  const c = replay.propose({ refs: [name] }).proposed[0];
+  assert.deepEqual([c.earned, c.verified_quote], ["C", true], "an archive replay's route binds the ceiling below B");
+  assert.match(c.earned_because, /^earned C: /);
+  /* A ceiling leg-earning cannot answer is undetermined, never the bytes' B. */
+  const broken = base();
+  broken.w.legEarning.earned = () => { throw new Error("unreadable"); };
+  const n = broken.propose({ refs: [name] }).proposed[0];
+  assert.deepEqual([n.earned, n.verified_quote], [null, true]);
+  /* The bearing note checks its quotes as R21 hands them, against the same text. */
+  const note = replay.w.p.bearingNote({ capture: replay.cap, question: Q, run: "RUN-E", viewer: ALICE, caller: AK,
+                                        sentences: [{ text: "It records the approval.", quote: "The Board approved", source: P1 }] });
+  assert.equal(note.kept, 1);
+});
+
 test("R21 (AI Roles §3 rule 3): a connection — to a body, a person in a public role, another document, a question — is tied to its exact quote and graded by how its link is established: A the source's own link, B a shared identifier, C a name or a date; never offered and never D; a quote that is not the record's text leaves it undetermined", () => {
   const { w, cap, propose, connect } = base();
   w.doc(DOC2, "other");

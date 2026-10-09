@@ -26,10 +26,11 @@ import { basisVersionsOf, versionsIn, versionAsWritten, isBoilerplate } from "..
 import { aiRunsOf } from "../ai-runs/index.mjs";
 import { runPrincipalGate, checkPagesRead, RUN_BOUNDS } from "../run-rules/index.mjs";
 import { stepsOf } from "../steps/index.mjs";
+import { legEarningOf } from "../leg-earning/index.mjs";
 import { extractionOf } from "../extraction/index.mjs";
 import { credentialsOf } from "../credentials/index.mjs";
 import { EXTRACT_RUN_MODE, proposalChain, checkProposedRef, proposedReadingGrade, mintRatio } from "../extractrun.mjs";
-import { readingSource, readingSourceJson, readingSourceFromColumns, describeChain, captureBound } from "../textchain.mjs";
+import { readingSource, readingSourceJson, readingSourceFromColumns, describeChain } from "../textchain.mjs";
 import { parseFrontmatter, normalizeType, OBJECT_TYPES, canonicalJson, isMachineIdentity, MACHINE_CLASS_PREFIX,
          idPattern, isStepId, sha256HexSync, ACCEPTANCE_FORMS, acceptanceRecord } from "../record-grammar/index.mjs";
 import { SUGGEST_CHECKS, EXTRACT_PROPOSE_CHECKS, SUGGEST_KINDS, SUGGEST_LEVELS } from "./checks.mjs";
@@ -138,7 +139,7 @@ export function substanceOf(composition) {
 
 export class RunProductions {
   constructor({ storage, record, membership, content, connections, aiRuns, strength, citation, basisVersions,
-                extraction = null, steps = null, credentials = null, now = null }) {
+                extraction = null, steps = null, credentials = null, legEarning = null, now = null }) {
     this.storage = storage;
     this.sql = storage.sql;
     this.record = record;
@@ -150,10 +151,12 @@ export class RunProductions {
     this.citation = citation;
     this.basisVersions = basisVersions;
     /* T41-24: extraction's store half for a capture's text units (its R36) and the references its readers found (its
-       R58); credentials' material limits (its R57); steps' `recordProduct` (its R9). */
+       R58); credentials' material limits (its R57); steps' `recordProduct` (its R9); leg-earning's earned capture
+       ceiling (its R1; K2496). */
     this.extraction = extraction;
     this.steps = steps;
     this.credentials = credentials;
+    this.legEarning = legEarning;
     this.now = typeof now === "function" ? now : () => Date.now();
   }
 
@@ -670,14 +673,22 @@ export class RunProductions {
     return { bundle: b, sha };
   }
 
-  /** R21 (K2463): the `{text, ceiling}` extraction R42 checks a quote against, READ FROM THE RECORD and never from the
-   *  proposal: the text of the capture's unit containing the place (extraction R36, asked after the caller's viewer
-   *  gate, which `unitsOf` does not ask) and the capture's own ceiling (`text-chain.captureBound` over its chain, at
-   *  most B). No unit holds the place: null, and the quote reads unverified. */
-  #quoteTextFor(sha, chain) {
-    let units = null;
-    const ceiling = captureBound(chain);
+  /** R21 (K2463, K2496): the `{text, ceiling}` extraction R42 checks a quote against, READ FROM THE RECORD and never
+   *  from the proposal: the text of the capture's unit containing the place (extraction R36, asked after the caller's
+   *  viewer gate, which `unitsOf` does not ask) and the record's own capture ceiling for the document, ROUTE INCLUDED
+   *  (`leg-earning`'s earned capture ceiling: the bytes' route, provenance R25/R26, and the transcription's measured
+   *  fidelity, at most B). A ceiling that cannot be read is undetermined (null), never B. No unit holds the place: null,
+   *  and the quote reads unverified. */
+  #quoteTextFor(sha, bundleId) {
+    let units = null, ceiling;
     return (source) => {
+      if (ceiling === undefined) {
+        try {
+          const e = this.legEarning.earned(null, [bundleId]);
+          const g = e?.earned?.capture?.[bundleId]?.grade;
+          ceiling = typeof g === "string" ? g : null;
+        } catch { ceiling = null; }
+      }
       if (units === null) {
         let held = null;
         try { held = this.extraction ? this.extraction.unitsOf(sha) : null; } catch { held = null; }
@@ -754,7 +765,7 @@ export class RunProductions {
         + `serves, and that is not a step's name, so nothing `
         + `was tied to it`, { step: typeof stepId === "string" ? stepId.slice(0, 80) : null });
     /* END DEC-49 REGION is-extract-step */
-    const textAt = this.#quoteTextFor(sha, ctx.chain);
+    const textAt = this.#quoteTextFor(sha, bundleId);
     /* EVERY PROPOSAL CHECKED BEFORE ANYTHING IS WRITTEN, the batch refused WHOLE on the first bad entry, naming its
        ordinal (extraction R42's own refusal): a partly-written batch would spend the bound on work the caller does not
        know it did. A quote is checked against the record's own text at its place (R21's caller duty, K2463). */
@@ -1230,8 +1241,7 @@ export class RunProductions {
       return this.#refuse("BEARING_NO_SENTENCES",
         `a note holds 1 to ${BEARING_SENTENCES_MAX} sentences, each {text, quote, source}; this held ${list.length}`,
         { limit: BEARING_SENTENCES_MAX });
-    const ctx = this.content.contentContextFor(sha);
-    const textAt = this.#quoteTextFor(sha, ctx.chain);
+    const textAt = this.#quoteTextFor(sha, doc.bundle_id);
     const kept = [], leftOut = [];
     for (const [i, s] of list.entries()) {
       const text = s && typeof s.text === "string" ? s.text.trim() : "";
@@ -1343,6 +1353,7 @@ export function runProductionsOf(host, deps) {
                              /* T41-24: R24's "no AI" read is this module's (K2482); R21's step is steps' (B4). */
                              credentials: d.credentials || credentialsOf(host, { record, membership }),
                              steps: d.steps || stepsOf(host, { record, membership }),
+                             legEarning: d.legEarning || legEarningOf(host, { record, membership, content }),
                              now: d.now || null });
     instances.set(host, p);
     record.declarePurge(RUN_PRODUCTIONS_MODULE, RUN_PRODUCTIONS_TABLES);
