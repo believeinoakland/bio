@@ -52,3 +52,7 @@ Two findings in agent-worker (T41-31), caused by this job's R13 change and left 
 2. **A five-figure assertion.** `agent-worker/test/ask.test.mjs` "R54 (N588)" expects `usage` to hold exactly the five R5 figures. R13 adds `estimated_cost_usd` beside them on both paths (a number on `apikey`, `null` on `signin`), so the assertion fails once agent-model merges.
 
 Every other agent-worker test passes with this change, and all pass on the tranche without it.
+
+## J3 · COMPLETE
+
+T41-30 applied: Purpose, R11 (the `project` level), and R13 (`MODEL_PRICES` and `estimated_cost_usd`, built on B2's readings, K2479). agent-model's own tests: 18 of 18 pass, including the new Purpose, R11 and R13 tests with their negative controls, and mutation checks confirm the tests catch a broken build. format, architecture, coverage (13 of 13 ids) and ownership: 0 failures. Nothing deferred. Two agent-worker findings are in J2. The record is `build/jobs/T41/agent-model.md` on `job/T41/agent-model`.
