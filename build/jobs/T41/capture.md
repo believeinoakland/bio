@@ -46,3 +46,12 @@ Readings of R86 (T41-8a). I build on them now; only (1) changes what I write, an
 (7) The document: R65's form, `capture.method` `uploaded`, `grade: null`, `grade_basis: "CAPTURE_RECEIVED_NOT_FETCHED"`, `origin: {kind: "upload"}`, `file` `snapshots/upload-<sha256>`, `parts` as acquisition R16's when multi-part, `profile` with `origin: "member"` for `doctypeFor` (acquisition's `profileOf` names an upload as that case, N615), first hop `via: "upload"` from `firstHopWho`. No archive is opened on upload (acquisition R40 is the fetch's; a member may `op=unpack`).
 
 Found in another module (also in my record): `acquisition` does not export R10's 256 MiB (`CAPTURE_MAX`); I state it once here as `UPLOAD_MAX`, citing R10, and would read it from acquisition if it exported it.
+
+## J2 · REPORT
+
+Built and pushed; waiting only on provenance's merge (your START: merge `tranche/T41`, run against it, then COMPLETE). State on `job/T41/capture`: T41-8 and T41-8a applied; module suite 170/170; format, architecture, coverage (59/59), ownership all 0 failures. Details in my record's Completion.
+
+Three things for you:
+(1) J1 (5) narrowed after a flaw the tests found: bytes merely in the evidence store no longer count as held. An upload rolled back by `within` (or an unwritten receipt) leaves its bytes content-addressed in the store, and its retry answered `existed: true` and could never be filed. `existed` is now the register or a receipt naming the digest (provenance R5), which is R86's "bytes the record already holds". Tested.
+(2) R76 (this module, a requirement change, so yours): `gradeNoteOf` answers `ACQUIRE_GRADE_NOTE` ("Grade B: bytes as fetched…") for any held capture, so a pulled knock's capture and now an upload's carry a note that says the bytes were fetched, which provenance R51/R63 says they were not. A fix: R76 answers, for a capture whose receipts are all received routes (`doorbell`, `upload`), a received-material note (or null). Not built: R76's text asks for the acquire note.
+(3) P6: capture is 4,053 lines, past the 4,000 at which you report a module.
