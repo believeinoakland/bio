@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, snapshot } from "./fixture.mjs";
-import { Membership, notAnAdmin, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
+import { Membership, notAnAdmin, noSuchProject, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 import { PROJECT_ROSTER_CHECKS } from "../../../src/project-roster/index.mjs";
 
 /* P owned by ann; bob, cal, dee joined; eve invited */
@@ -21,7 +21,8 @@ test("R3 projectOwnerAdd: refusals in order; an invited, leaving or absent membe
   await w.enrol("fay");
   w.m.memberSet({ memberId: "fay", status: "revoked", by: "admin" });
   assert.equal(add(w, "bob", "cal").reason, "NOT_THE_OWNER");
-  assert.equal(add(w, "bob", "second").reason, "NOT_THE_OWNER", "an administrator is not an owner");
+  assert.deepEqual(add(w, "bob", "second"), w.m.existenceAct("PROJ-P", V("second")),
+    "an administrator not in hidden P is at its EXISTENCE (D54): C-70.1 first; at FULL, NOT_THE_OWNER (below)");
   assert.equal(add(w, "zed", "ann").reason, "NO_SUCH_HANDLE");
   assert.equal(add(w, "fay", "ann").reason, "NOT_ACTIVE");
   const inv = add(w, "eve", "ann");
@@ -173,6 +174,9 @@ test("R6 every ownership decision (addition, removal, rescue) is kept with its d
     ["remove", "cal", ["ann", "bob"], ["no time", "agreed"]],
     ["rescue", "dee", ["second"], ["both owners gone"]],
   ];
+  /* D54: P is hidden; the administrators neither invited nor joined read it once at FULL (P discoverable) */
+  for (const by of ["second", "admin"]) assert.equal(w.r.projectParticipants({ projectId: "PROJ-P", by }).reason, "NO_SUCH_PROJECT", by);
+  w.m.projectVisibilitySet({ projectId: "PROJ-P", setting: "discoverable", by: "dee", viewer: V("dee") });
   for (const reader of ["dee", "cal", "eve", "second", "admin"]) {
     const d = w.r.projectParticipants({ projectId: "PROJ-P", by: reader }).ownership;
     assert.deepEqual(d.map((x) => [x.kind, x.handle, x.deciders, x.reasons]), want, reader);
@@ -225,9 +229,21 @@ test("R7 the deciders of R3 and R4 are the counted votes of the current owners o
 
 test("R3 R4 R5 an administrator's sight is never a position: the owners' acts refuse an administrator and the founder", async () => {
   const w = await owned();
+  /* hidden P (D54): an administrator neither invited nor joined is at its EXISTENCE; the owners' acts answer C-70.1
+     there, with the owners, and the rescue alone is reachable (its condition refuses) */
   for (const admin of ["admin", "second"]) {
     const v = admin === "admin" ? "admin" : V(admin);
-    assert.equal(w.m.inSight("PROJ-P", v), true, "sees the project");
+    assert.equal(w.m.sight("PROJ-P", v), Membership.SIGHT_EXISTENCE, `${admin} at hidden P`);
+    for (const a of [w.r.projectOwnerAdd({ projectId: "PROJ-P", handle: "bob", by: admin, viewer: v }),
+                     w.r.projectOwnerRemove({ projectId: "PROJ-P", handle: "ann", by: admin, reason: "r", viewer: v })])
+      assert.deepEqual(a, w.m.existenceAct("PROJ-P", v), admin);
+    assert.equal(w.r.projectOwnerRescue({ projectId: "PROJ-P", handle: "bob", by: admin, reason: "r", viewer: v }).reason,
+      "OWNERS_ARE_ACTIVE", "reachable at EXISTENCE: the rescue's condition, not its caller, refuses");
+  }
+  w.m.projectVisibilitySet({ projectId: "PROJ-P", setting: "discoverable", by: "ann", viewer: V("ann") });
+  for (const admin of ["admin", "second"]) {
+    const v = admin === "admin" ? "admin" : V(admin);
+    assert.equal(w.m.inSight("PROJ-P", v), true, "sees the discoverable project");
     for (const a of [w.r.projectOwnerAdd({ projectId: "PROJ-P", handle: "bob", by: admin, viewer: v }),
                      w.r.projectOwnerRemove({ projectId: "PROJ-P", handle: "ann", by: admin, reason: "r", viewer: v })])
       assert.equal(a.reason, "NOT_THE_OWNER");
@@ -237,4 +253,51 @@ test("R3 R4 R5 an administrator's sight is never a position: the owners' acts re
   assert.equal(w.m.participation("PROJ-P", "second"), null);
   /* ownerMath is membership's, read here: R4's floor and vote count follow it at every size */
   for (const n of [1, 2, 3, 5]) assert.equal(typeof Membership.ownerMath(n).votesNeeded, "number");
+});
+
+test("R5 (D54) the rescue is reachable at an administrator's EXISTENCE of a hidden project, never refused C-70.1 there; its refusals and its answer name only the id, the owners and the member named", async () => {
+  const w = await owned();   // P hidden: ann owns it; bob, cal, dee joined; eve invited; second and the founder not in it
+  const resc = (by, viewer, handle = "bob", reason = "stranded", projectId = "PROJ-P") =>
+    w.r.projectOwnerRescue({ projectId, handle, by, reason, viewer });
+  const ADMINS = [["second", V("second")], ["admin", "admin"], ["admin", V("admin")]];
+  const OTHERS = /"(cal|dee|eve)"|title of|Project PROJ-P/;   // participants not named, nor anything of its contents
+  for (const [by, v] of ADMINS) {
+    assert.equal(w.m.sight("PROJ-P", v), Membership.SIGHT_EXISTENCE, v);
+    assert.equal(w.m.existenceAct("PROJ-P", v).reason, "PROJECT_SEEN_NOT_A_PARTICIPANT", `${v}: at EXISTENCE`);
+    const busy = resc(by, v);
+    assert.deepEqual([busy.reason, busy.active], ["OWNERS_ARE_ACTIVE", ["ann"]], v);
+    assert.doesNotMatch(JSON.stringify(busy), OTHERS, v);
+  }
+  w.m.memberSet({ memberId: "ann", status: "revoked", by: "admin" });
+  await w.enrol("gus");
+  for (const [by, v] of ADMINS) {
+    const before = snapshot(w);
+    for (const [r, code] of [[resc(by, v, "bob", " "), "NO_REASON"], [resc(by, v, "zed"), "NO_SUCH_HANDLE"],
+                             [resc("bob", v), "NOT_AN_ADMIN"]]) {
+      assert.equal(r.reason, code, `${v} ${code}`);
+      assert.doesNotMatch(JSON.stringify(r), OTHERS, `${v} ${code}`);
+    }
+    assert.equal(snapshot(w), before, `${v}: the refusals wrote nothing`);
+  }
+  const ok = resc("second", V("second"), "gus", "every owner gone");
+  assert.deepEqual([ok.ok, ok.projectId, ok.handle, ok.by, ok.owner, ok.owners, ok.addedNotReplaced],
+    [true, "PROJ-P", "gus", "second", true, ["ann", "gus"], true]);
+  assert.deepEqual(Object.keys(ok).sort(), ["addedNotReplaced", "by", "detail", "handle", "ok", "owner", "owners", "projectId",
+    "reason"], "nothing else of the project");
+  assert.doesNotMatch(JSON.stringify(ok), OTHERS);
+  assert.deepEqual(w.m.participation("PROJ-P", "gus"), { state: "joined", owner: true });
+  assert.equal(w.m.participation("PROJ-P", "second"), null, "the administrator is not added: its sight stays EXISTENCE");
+  assert.equal(w.m.sight("PROJ-P", V("second")), Membership.SIGHT_EXISTENCE);
+  /* negative controls: a member outside the hidden project is at NONE (the absent answer, before NOT_AN_ADMIN); a member
+     outside a DISCOVERABLE project is at its EXISTENCE and answered C-70.1 (the rescue is reachable only at an
+     administrator's EXISTENCE of a hidden project) */
+  await w.enrol("hal");
+  assert.deepEqual(resc("hal", V("hal")), noSuchProject("PROJ-P"));
+  w.project("PROJ-Q");
+  w.m.projectClaimOwner({ projectId: "PROJ-Q", memberId: "dee" });
+  w.m.projectVisibilitySet({ projectId: "PROJ-Q", setting: "discoverable", by: "dee", viewer: V("dee") });
+  assert.deepEqual(resc("hal", V("hal"), "gus", "r", "PROJ-Q"), w.m.existenceAct("PROJ-Q", V("hal")));
+  assert.equal(resc("hal", V("hal"), "gus", "r", "PROJ-Q").reason, "PROJECT_SEEN_NOT_A_PARTICIPANT");
+  /* and an administrator is at FULL of the discoverable one: the act's own answers (dee active) */
+  assert.equal(resc("second", V("second"), "gus", "r", "PROJ-Q").reason, "OWNERS_ARE_ACTIVE");
 });

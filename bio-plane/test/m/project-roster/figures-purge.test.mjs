@@ -41,9 +41,10 @@ async function build(m, r, project, enrol) {
 }
 const VIEWERS = [
   [undefined, 2, "a viewer never sent: the direct internal call, counted whole"],
-  ["admin", 2, "the founder sees every bundle"],
+  ["admin", 0, "the founder, neither invited nor joined to either hidden project, sees neither (D54)"],
+  [V("admin"), 0, "the founder's other spelling, the same (D54)"],
   [`${MACHINE_CLASS_PREFIX}admin`, 2, "a machine credential sees every bundle"],
-  [V("second"), 2, "an active administrator sees every project"],
+  [V("second"), 0, "an active administrator neither invited nor joined to either hidden project sees neither (D54)"],
   [V("ann"), 1, "a member outside B: less B"],
   [V("dee"), 1, "a member outside A: less A"],
   [V("zed"), 0, "a member outside both"],
@@ -66,6 +67,15 @@ test("R17 the figure source: its key list, and counts(hid) the owner votes less 
   /* sight follows the record: inviting zed to A moves zed's count at once */
   w.m.projectInvite({ projectId: "PROJ-A", handle: "zed", by: "ann", viewer: V("ann") });
   assert.deepEqual(w.r.counts(hiddenBundles(V("zed"))), { projectOwnerVotes: 1 });
+  /* D54's negative control: the same administrators count A once A is discoverable (FULL), or once added to B */
+  w.m.projectVisibilitySet({ projectId: "PROJ-A", setting: "discoverable", by: "ann", viewer: V("ann") });
+  for (const viewer of ["admin", V("admin"), V("second")])
+    assert.deepEqual(w.r.counts(hiddenBundles(viewer)), pinned(w.sql, hiddenBundles(viewer)), viewer);
+  for (const viewer of ["admin", V("second")]) assert.deepEqual(w.r.counts(hiddenBundles(viewer)), { projectOwnerVotes: 1 }, viewer);
+  w.m.projectInvite({ projectId: "PROJ-B", handle: "second", by: "dee", viewer: V("dee") });
+  assert.deepEqual(w.r.counts(hiddenBundles(V("second"))), { projectOwnerVotes: 2 }, "an administrator invited to B");
+  assert.deepEqual(w.r.counts(hiddenBundles("admin")), { projectOwnerVotes: 1 }, "the founder, still not in B");
+  assert.notEqual(hiddenBundles("admin"), null, "the founder's viewer no longer sees every bundle (membership R88)");
 });
 
 test("R17 a NULL key names no bundle, so hid never drops its row; it writes nothing; the module registers nothing itself", async () => {

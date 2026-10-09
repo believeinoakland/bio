@@ -133,7 +133,12 @@ CREATE TABLE IF NOT EXISTS account_references (
   use_ask     INTEGER NOT NULL DEFAULT 1,
   use_draft   INTEGER NOT NULL DEFAULT 1,
   use_run     INTEGER NOT NULL DEFAULT 1,
-  explore     TEXT NOT NULL DEFAULT 'no'
+  explore     TEXT NOT NULL DEFAULT 'no',
+  -- R55 (T41; D2, D19, D21, D56): the four kinds T41 adds, on by default as ask, draft and run
+  use_enquire    INTEGER NOT NULL DEFAULT 1,
+  use_read       INTEGER NOT NULL DEFAULT 1,
+  use_transcribe INTEGER NOT NULL DEFAULT 1,
+  use_account    INTEGER NOT NULL DEFAULT 1
 );
 
 -- R29 (K1449): the group's own key for one keyed outside service, set by an administrator, sealed as above (salt
@@ -188,7 +193,12 @@ CREATE TABLE IF NOT EXISTS group_key (
   use_ask     INTEGER NOT NULL DEFAULT 1,
   use_draft   INTEGER NOT NULL DEFAULT 1,
   use_run     INTEGER NOT NULL DEFAULT 1,
-  explore     TEXT NOT NULL DEFAULT 'no'
+  explore     TEXT NOT NULL DEFAULT 'no',
+  -- R55 (T41; D2, D19, D21, D56): the four kinds T41 adds, on by default as ask, draft and run
+  use_enquire    INTEGER NOT NULL DEFAULT 1,
+  use_read       INTEGER NOT NULL DEFAULT 1,
+  use_transcribe INTEGER NOT NULL DEFAULT 1,
+  use_account    INTEGER NOT NULL DEFAULT 1
 );
 
 -- R33: each act on the group key, recorded with its administrator and instant, never the key: 'act' is 'set',
@@ -299,7 +309,12 @@ CREATE TABLE IF NOT EXISTS subscription_connections (
   use_run     INTEGER NOT NULL DEFAULT 1,
   standing    INTEGER NOT NULL DEFAULT 0,
   suggestions INTEGER NOT NULL DEFAULT 0,
-  explore     TEXT NOT NULL DEFAULT 'no'
+  explore     TEXT NOT NULL DEFAULT 'no',
+  -- R55 (T41; D2, D19, D21, D56): the four kinds T41 adds, on by default as ask, draft and run
+  use_enquire    INTEGER NOT NULL DEFAULT 1,
+  use_read       INTEGER NOT NULL DEFAULT 1,
+  use_transcribe INTEGER NOT NULL DEFAULT 1,
+  use_account    INTEGER NOT NULL DEFAULT 1
 );
 
 -- R54 (T40; N812, D34, K2353): a project's one AI account, set by one of its owners: an Anthropic API key ('apikey',
@@ -322,7 +337,12 @@ CREATE TABLE IF NOT EXISTS project_accounts (
   use_run     INTEGER NOT NULL DEFAULT 1,
   standing    INTEGER NOT NULL DEFAULT 0,
   suggestions INTEGER NOT NULL DEFAULT 0,
-  explore     TEXT NOT NULL DEFAULT 'no'
+  explore     TEXT NOT NULL DEFAULT 'no',
+  -- R55 (T41; D2, D19, D21, D56): the four kinds T41 adds, on by default as ask, draft and run
+  use_enquire    INTEGER NOT NULL DEFAULT 1,
+  use_read       INTEGER NOT NULL DEFAULT 1,
+  use_transcribe INTEGER NOT NULL DEFAULT 1,
+  use_account    INTEGER NOT NULL DEFAULT 1
 );
 CREATE INDEX IF NOT EXISTS project_accounts_member ON project_accounts(member_id);
 
@@ -359,6 +379,28 @@ CREATE TABLE IF NOT EXISTS project_keep_away (
   set_at     TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS project_keep_away_project ON project_keep_away(project_id, seq);
+
+-- R61 (T41; DEC-188 (1)): every change to an account's settings, in the order made, with who made it and when, never
+-- the key or a digest of it. 'owner' is spelled as R55's ('group', 'project:<id>', 'member:<id>'); 'project_id' the
+-- project's id for a project's account, else NULL, so a project's rows are deleted with it and no other's are (R30).
+-- 'change' is 'key_set' (a key or a reference set or replaced), 'signin_set' (a sign-in made the account, or connected,
+-- R43), 'switched' (the account on or off), 'removed' (a key, reference or sign-in removed or disconnected), 'use_set'
+-- (one R55 switch) or 'limit_set' (a material limit, R51, R57); 'detail' is a JSON object of what it set. 'origin'
+-- names the earlier record a row was carried from (R33's 'group_key_acts', R54's 'project_account_acts', R51's
+-- 'ai_keep_away' and R57's 'project_keep_away', each '<table>:<seq>'), or the record written beside it in the same act,
+-- so a record is never carried twice; NULL for a change recorded here alone. Never exported.
+CREATE TABLE IF NOT EXISTS account_changes (
+  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
+  owner      TEXT NOT NULL,
+  project_id TEXT,
+  at         TEXT NOT NULL,
+  by         TEXT,
+  change     TEXT NOT NULL,
+  detail     TEXT,
+  origin     TEXT UNIQUE
+);
+CREATE INDEX IF NOT EXISTS account_changes_owner ON account_changes(owner, seq);
+CREATE INDEX IF NOT EXISTS account_changes_project ON account_changes(project_id);
 `;
 
 /* Columns a store written before they existed gains at boot: additive and nullable, never back-filled (D-85). */
@@ -389,6 +431,24 @@ export const CREDENTIALS_ADDITIVE_COLUMNS = [
   ["subscription_connections", "explore", "TEXT NOT NULL DEFAULT 'no'"],
   /* R57: the uses a group's material limit covers (JSON), NULL for every use, as a limit set before T40 */
   ["ai_keep_away", "uses", "TEXT"],
+  /* R55 (T41; D2, D19, D21, D56): the four kinds T41 adds, on by default, so an account held before T41 reads them at
+     their defaults (R55) */
+  ["account_references", "use_enquire", "INTEGER NOT NULL DEFAULT 1"],
+  ["account_references", "use_read", "INTEGER NOT NULL DEFAULT 1"],
+  ["account_references", "use_transcribe", "INTEGER NOT NULL DEFAULT 1"],
+  ["account_references", "use_account", "INTEGER NOT NULL DEFAULT 1"],
+  ["group_key", "use_enquire", "INTEGER NOT NULL DEFAULT 1"],
+  ["group_key", "use_read", "INTEGER NOT NULL DEFAULT 1"],
+  ["group_key", "use_transcribe", "INTEGER NOT NULL DEFAULT 1"],
+  ["group_key", "use_account", "INTEGER NOT NULL DEFAULT 1"],
+  ["subscription_connections", "use_enquire", "INTEGER NOT NULL DEFAULT 1"],
+  ["subscription_connections", "use_read", "INTEGER NOT NULL DEFAULT 1"],
+  ["subscription_connections", "use_transcribe", "INTEGER NOT NULL DEFAULT 1"],
+  ["subscription_connections", "use_account", "INTEGER NOT NULL DEFAULT 1"],
+  ["project_accounts", "use_enquire", "INTEGER NOT NULL DEFAULT 1"],
+  ["project_accounts", "use_read", "INTEGER NOT NULL DEFAULT 1"],
+  ["project_accounts", "use_transcribe", "INTEGER NOT NULL DEFAULT 1"],
+  ["project_accounts", "use_account", "INTEGER NOT NULL DEFAULT 1"],
 ];
 
 /* R18: every table this module owns, declared exempt from purge (identity and credentials outlive a reset corpus). */
@@ -418,6 +478,14 @@ export const CREDENTIALS_TABLES = Object.freeze([
   ["security_key", "never", "group"], ["recovery_codes", "never", "group"], ["recoveries", "never", "group"],
   ["subscription_connections", "never", "owner"], ["ai_keep_away", "admin-only", "group"],
 ].map(([name, exp, sight]) => Object.freeze({ name, ...CLASSES, export: exp, sight })));
+
+/* R30, R61 (T41): the change history of every account, one table keyed by `owner` (the requirements' T41
+   suggestion): exempt from purge for the group's and members' accounts, a project's rows deleted with their project
+   (`purge: "clear"` keyed by `project_id`, and the whole-store purge clearing only rows that name a project, `whole`).
+   Never exported; read only through R61's service, to the account's owners. */
+export const CREDENTIALS_HISTORY_TABLE = Object.freeze({ name: "account_changes", keys: Object.freeze(["project_id"]),
+  whole: "project_id IS NOT NULL", purge: "clear", expunge: "none", derive: "stored", version_chain: false,
+  export: "never", sight: "group" });
 
 /* R30 (T40; N812): the tables of a project's account, its notices and its material limits, declared the same way
    except that each is deleted with its project: `purge: "clear"` keyed to the project's bundle by `project_id` (record-

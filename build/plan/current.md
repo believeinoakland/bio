@@ -39,7 +39,7 @@ It is the only module marked `legacy` in `modules.json`.
    9. filings `outward.test.mjs`:136 (R25; K2387) until T41-48;
    10. the L11 users of the retired ceiling codes (`AI_USE_CEILING_REACHED`, `AI_USE_COPY_CEILING_REACHED`: wizard-scripts, instance-setup, store-door, op-declarations' `aiceilingset`, control-plane, plane) from T41-21/T41-23's merges until their L11 jobs, named exactly at L6's close;
    11. (N822, K2442) the users' tests that assumed an administrator's or the founder's `FULL` sight of a hidden project, from T41-3's merge until each user's job: exactly the 147 listed by file and line in `build/jobs/T41/membership.md` (Completion, "Users' suites"); each user's job re-states its own;
-   12. (K2437) the callers of credentials' removed `accountSwitchSet`/`groupSwitchSet`: answers `standing.test.mjs` :154, :183, :210 until T41-29; plane `ask.test.mjs` :71, :196, :236, :266, :293, :316 until T41-63 (and any further one CREDENTIALS #11 names at COMPLETE);
+   12. (K2437) the callers of credentials' removed `accountSwitchSet`/`groupSwitchSet`: answers `standing.test.mjs` :154, :183, :210 until T41-29; plane `ask.test.mjs` :69, :182, :234, :264, :287, :301 until T41-63; ai-runs `scheduler`:123 until T41-23; affordances `t33`:151, `t34`:199 until T41-52; op-declarations `t34`:226 until T41-58 (K2445);
    13. (N823, K2438) from T41-37's merge until T41-36's, publish-schedule's test that it declares `scheduled_editions` (refused `TABLE_DECLARED` while publication still declares it); from T41-36's merge until each user's merge, the callers of the moved services: `op=publishat` and ratification's scheduled arms (T41-39), case-authoring R58, R59 (T41-43), scheduler's `scheduled-publish` (T41-49), queue-producers' scheduled items (T41-53), actions `t34` (T41-47), the plane's three ops (T41-63);
    14. the plane bundle and `program.mjs`, staled by any merge, regenerated at each layer's close.
 
@@ -131,6 +131,7 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 - **T41-47 · actions** · (N822) R52–R60: the hold reads and notices answered at `EXISTENCE` of a hidden project with what each already names, never contents; `t34` re-stated · req: §3.5, BOB's wording. (N823, K2438) `t34.test.mjs`'s stub of `publication.scheduleEdition` re-pointed to publish-schedule.
 - **T41-48 · filings** (tests only) · (was T40-9a; N819) `outward.test.mjs`:136's fixture · K2387.
 - **T41-48a · filing-templates** (tests only) · (N822, K2442) re-state for D54 the tests rule 4 (11) lists.
+- **T41-48b · action-plans** · (Bob's Actions D17, K2443) R34: the tray lists every proposal of a planning run, no cut-off, no paging (the `after` cursor and `PROPOSALS_CURSOR_REFUSED` retired; `op=planproposals` and `planRead` answer whole) · req: R34 as amended · L11 shares: op-declarations (the op's `after` parameter), affordances if its help names five.
 
 ### L10
 - **T41-49 · scheduler** · (N820) R26 registers `question-explorer`'s consumer and `investigation`'s quiet check; (N823) publish-schedule's wake (R71) re-pointed · req: §3.6.

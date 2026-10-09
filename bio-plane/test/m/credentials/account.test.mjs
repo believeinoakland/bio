@@ -65,7 +65,7 @@ test("R22 accountReferenceSet: refusals in order, each writing nothing; the memb
   assert.equal(w.row(`SELECT COUNT(*) AS n FROM account_references WHERE member_id='ann'`).n, 1);
   assert.equal((await w.c.accountReferenceFor({ member: "ann", act: { kind: "ask", member: "ann" } })).secret, "sk-ann-2");
   /* T38: a subscription token is refused UNKNOWN_ACCOUNT_KIND, writing nothing; ann's key stands, switches kept */
-  w.c.accountSwitchSet({ member: "ann", switch: "standing", on: true, by: "ann" });
+  w.c.accountUsesSet({ owner: "member:ann", switch: "standing", on: true, by: "ann" });
   const held = w.snapshot();
   const sub = await w.c.accountReferenceSet({ member: "ann", kind: "subscription", secret: SUB, by: "member:ann" });
   assert.deepEqual(shape(sub), refusal("UNKNOWN_ACCOUNT_KIND"));
@@ -84,8 +84,8 @@ test("R22 accountReferenceSet: refusals in order, each writing nothing; the memb
 test("R22 R25 accountReferenceRemove: the same refusals, by the member's own act only; removing turns both switches off; a member with no reference has no assistant", async () => {
   const w = await accountWorld();
   await set(w, "ann", "ann");
-  w.c.accountSwitchSet({ member: "ann", switch: "suggestions", on: true, by: "ann" });
-  w.c.accountSwitchSet({ member: "ann", switch: "standing", on: true, by: "ann" });
+  w.c.accountUsesSet({ owner: "member:ann", switch: "suggestions", on: true, by: "ann" });
+  w.c.accountUsesSet({ owner: "member:ann", switch: "standing", on: true, by: "ann" });
   const before = w.snapshot();
   for (const [by, code] of [[null, "MACHINE_CANNOT_HOLD_ACCOUNT"], ["class:ai", "MACHINE_CANNOT_HOLD_ACCOUNT"],
                             ["bob", "NOT_YOUR_ACCOUNT"], ["second", "NOT_YOUR_ACCOUNT"], ["admin", "NOT_YOUR_ACCOUNT"]])
@@ -118,7 +118,7 @@ test("R23 the reference, an API key, is sealed under its member: stored only enc
     await keep(w.c.accountReferenceSet({ member: "bob", kind: "apikey", secret: SUB, by: "bob" }));
     await keep(w.c.accountReferenceSet({ member: "bob", kind: "apikey", secret: SUB, by: "ann" }));   // a refusal
     await keep(w.c.accountReferenceSet({ member: "bob", kind: "subscription", secret: SUB, by: "bob" }));   // retired (T38)
-    await keep(w.c.accountSwitchSet({ member: "ann", switch: "suggestions", on: true, by: "ann" }));
+    await keep(w.c.accountUsesSet({ owner: "member:ann", switch: "suggestions", on: true, by: "ann" }));
     for (const viewer of ["ann", "member:ann", "bob", "second", "admin", "class:admin", null])
       await keep(w.c.accountReferenceState({ member: "ann", viewer }));
     await keep(w.c.accountReferenceFor({ member: "ann", act: { kind: "ask", member: "bob" } }));
@@ -143,7 +143,7 @@ test("R23 the reference, an API key, is sealed under its member: stored only enc
     for (const id of ["ann", "bob"]) {
       const row = w.row(`SELECT * FROM account_references WHERE member_id=?`, id);
       assert.deepEqual(Object.keys(row).sort(), ["explore", "iv", "kind", "member_id", "sealed", "set_at", "standing", "suggestions",
-        "use_ask", "use_draft", "use_run"]);
+        "use_account", "use_ask", "use_draft", "use_enquire", "use_read", "use_run", "use_transcribe"]);
     }
     assert.equal(w.row(`SELECT kind FROM account_references WHERE member_id='bob'`).kind, "apikey");
     assert.equal(w.c.accountReferenceState({ member: "bob", viewer: "member:bob" }).kind, "apikey");
@@ -154,7 +154,7 @@ test("R23 the reference, an API key, is sealed under its member: stored only enc
     /* state: the member alone, by either spelling; any other viewer NOT_YOUR_ACCOUNT, writing nothing */
     const mine = w.c.accountReferenceState({ member: "ann", viewer: "member:ann" });
     assert.deepEqual({ ...mine, set_at: null }, { ok: true, held: true, kind: "apikey", set_at: null, suggestions: true, standing: false,
-      uses: { ask: true, draft: true, run: true, standing: false, explore: "no", suggestions: true },
+      uses: { ask: true, draft: true, run: true, standing: false, explore: "no", enquire: true, read: true, transcribe: true, account: true, suggestions: true },
       subscription: { connected: false, since: null, uses: null } });
     assert.deepEqual(w.c.accountReferenceState({ member: "ann", viewer: "ann" }), mine);
     const before = w.snapshot();
@@ -215,7 +215,7 @@ test("R24 accountReferenceFor unseals a key only for the member's own ask, run o
   assert.equal(w.snapshot(), held, "it writes nothing");
 });
 
-test("R25 accountSwitchSet: two switches, off by default, set only by the member's own act; UNKNOWN_SWITCH; a member with no reference NO_ACCOUNT; nothing for another member", async () => {
+test("R25 R55 (T41: accountSwitchSet retired into accountUsesSet) a reference's two switches, off by default, set only by the member's own act; UNKNOWN_SWITCH; a member with no reference NO_ACCOUNT; nothing for another member", async () => {
   const w = await accountWorld();
   assert.deepEqual(ACCOUNT_SWITCHES, ["suggestions", "standing"]);
   await set(w, "ann", "ann");
@@ -225,23 +225,23 @@ test("R25 accountSwitchSet: two switches, off by default, set only by the member
   const before = w.snapshot();
   for (const [by, code] of [[null, "MACHINE_CANNOT_HOLD_ACCOUNT"], ["class:admin", "MACHINE_CANNOT_HOLD_ACCOUNT"],
                             ["bob", "NOT_YOUR_ACCOUNT"], ["second", "NOT_YOUR_ACCOUNT"], ["admin", "NOT_YOUR_ACCOUNT"]])
-    assert.deepEqual(shape(w.c.accountSwitchSet({ member: "ann", switch: "suggestions", on: true, by })), refusal(code), String(by));
+    assert.deepEqual(shape(w.c.accountUsesSet({ owner: "member:ann", switch: "suggestions", on: true, by })), refusal(code), String(by));
   for (const name of [null, "", "Suggestions", "standing; DROP TABLE x", "budget"]) {
-    const r = w.c.accountSwitchSet({ member: "ann", switch: name, on: true, by: "ann" });
+    const r = w.c.accountUsesSet({ owner: "member:ann", switch: name, on: true, by: "ann" });
     assert.deepEqual(shape(r), refusal("UNKNOWN_SWITCH"), String(name));
   }
-  assert.deepEqual(shape(w.c.accountSwitchSet({ member: "dee", switch: "standing", on: true, by: "dee" })), refusal("ACCOUNT_MEMBER_NOT_ACTIVE"));
+  assert.deepEqual(shape(w.c.accountUsesSet({ owner: "member:dee", switch: "standing", on: true, by: "dee" })), refusal("ACCOUNT_MEMBER_NOT_ACTIVE"));
   assert.equal(w.snapshot(), before, "no refusal writes");
-  assert.deepEqual(w.c.accountSwitchSet({ member: "ann", switch: "suggestions", on: true, by: "ann" }), { ok: true, switch: "suggestions", on: true });
+  assert.deepEqual(w.c.accountUsesSet({ owner: "member:ann", switch: "suggestions", on: true, by: "ann" }), { ok: true, owner: "member:ann", switch: "suggestions", on: true });
   assert.deepEqual([st("ann"), st("bob")], [[true, false], [false, false]], "the member's own, nobody else's");
-  w.c.accountSwitchSet({ member: "ann", switch: "standing", on: true, by: "member:ann" });
+  w.c.accountUsesSet({ owner: "member:ann", switch: "standing", on: true, by: "member:ann" });
   assert.deepEqual(st("ann"), [true, true]);
   /* (T40; R55) a value that is not a boolean is SWITCH_VALUE_INVALID, writing nothing */
   const held = w.snapshot();
   for (const on of ["yes", 1, null, undefined, "ask"])
-    assert.deepEqual(shape(w.c.accountSwitchSet({ member: "ann", switch: "standing", on, by: "ann" })), refusal("SWITCH_VALUE_INVALID"), String(on));
+    assert.deepEqual(shape(w.c.accountUsesSet({ owner: "member:ann", switch: "standing", on, by: "ann" })), refusal("SWITCH_VALUE_INVALID"), String(on));
   assert.equal(w.snapshot(), held);
-  w.c.accountSwitchSet({ member: "ann", switch: "standing", on: false, by: "ann" });
+  w.c.accountUsesSet({ owner: "member:ann", switch: "standing", on: false, by: "ann" });
   assert.deepEqual(st("ann"), [true, false]);
   /* a replacement keeps them; removal turns both off */
   await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-2", by: "ann" });
@@ -250,7 +250,7 @@ test("R25 accountSwitchSet: two switches, off by default, set only by the member
   assert.deepEqual(st("ann"), [false, false]);
   /* belongs to the reference: with none, NO_ACCOUNT, nothing written */
   const n = w.snapshot();
-  assert.deepEqual(shape(w.c.accountSwitchSet({ member: "ann", switch: "standing", on: true, by: "ann" })), refusal("NO_ACCOUNT"));
+  assert.deepEqual(shape(w.c.accountUsesSet({ owner: "member:ann", switch: "standing", on: true, by: "ann" })), refusal("NO_ACCOUNT"));
   assert.equal(w.snapshot(), n);
 });
 

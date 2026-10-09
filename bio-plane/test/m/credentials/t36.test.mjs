@@ -136,7 +136,7 @@ test("R51 aiKeepAwaySet: an active administrator only (NOT_AN_ADMIN through memb
 
 test("R51 R52 each set is appended with its on, reason, who and when, never replacing an earlier one, and answers the state; aiKeepAwayState answers the latest set, the reason in the administrator's words, null when none; off with nulls before any set; it writes nothing and never throws", async () => {
   const w = await world().group("ann");
-  const none = { on: false, reason: null, set_by: null, set_at: null, uses: ["ask", "draft", "run", "standing", "explore"] };
+  const none = { on: false, reason: null, set_by: null, set_at: null, uses: ["ask", "draft", "run", "standing", "explore", "enquire", "read", "transcribe", "account"] };
   assert.deepEqual(w.c.aiKeepAwayState(), none, "off by default");
   const words = "  We are under a confidentiality order until the hearing; \"no AI\" until 1 March.  ";
   const on = w.c.aiKeepAwaySet({ on: true, reason: words, by: "member:second" });
@@ -178,10 +178,10 @@ test("R51 R52 the routes: aikeepaway takes `by` from the query over the body; ai
 async function servedWorld() {
   const w = await world().group("ann", "bob");
   await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ant-api03-ANN", by: "ann" });
-  w.c.accountSwitchSet({ member: "ann", switch: "standing", on: true, by: "ann" });
+  w.c.accountUsesSet({ owner: "member:ann", switch: "standing", on: true, by: "ann" });
   await w.c.groupKeySet({ key: "sk-ant-api03-GROUP", by: "admin" });
   w.c.groupKeySwitch({ on: true, by: "admin" });
-  w.c.groupSwitchSet({ switch: "standing", on: true, by: "admin" });
+  w.c.accountUsesSet({ owner: "group", switch: "standing", on: true, by: "admin" });
   w.c.groupKeyNoticeSeen({ member: "bob", by: "bob" });
   w.session = {};
   for (const id of ["ann", "bob"]) w.session[id] = (await w.c.login({ role: `member:${id}`, password: PASSWORD(id) })).token;
