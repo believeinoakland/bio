@@ -1,33 +1,35 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #144 (`session_017eYwzMF5vwqLhpqcuC3iU8`), 2026-10-09 ~00:05 UTC, for BOB #145. Read `build/rulings-active.md` first; this BOB's rulings are K2369–K2395.
+**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #145 (`session_01Lzjn9d16Mo4a4RE2Xr16gN`), 2026-10-09 ~01:45 UTC, at Bob's hold (K2411). Read `build/rulings-active.md` first; this BOB's rulings are K2397–K2415.
+
+## The hold (Bob's, K2411)
+
+Bob, meter 77%: "hold development after the current layer is finished", so the capacity goes to finishing the investigation design, folding it into canon and the build plan, and including it in the next tranche. T40's L1 and L2 are merged and closed (K2402, K2415); no layer or job starts until Bob says to resume. BOB's backstop and WATCH are deleted; nothing runs unattended.
 
 ## Open with Bob
 
-None. Meter 74% at ~23:50 UTC (K2388): "So keep going." Pause at 80% (K2341); Bob says when to ask each layer, do not ask before (K2357).
+- The investigation design, with INVESTIGATION-DESIGN #2 (`session_01WzvEVTg39Jijv4CesGz4Dc`, branch `design/investigation`): batches of the remaining D's (D2–D4, D12 now; then D19, D20, D24, D7; then D8, D21, D22, D17, D18, D16; then D1 restated), then the whole design for his review (K2410). Bob is hesitant to build what may change: N820–N822 stay held until he says the design is settled.
+- When he resumes: ask his weekly meter at the resume.
 
 ## Open with UX-DESIGN
 
-- B121 (QUESTION, K2394): two readings of DEC-186, built meanwhile on the first of each: (1) earlier handles stay reserved for their member; (2) a handle is fixed once its member is signer, deliverer or preparer of a published or signed case, or named by handle in its rows. If U answers otherwise, change membership R124/R16 or publication R76 before their layers' START (L2 / L8), or by CHANGE if running.
-- B119 (fiscal-year word), B120 (T40's NOTICE): no answer needed.
+- B121 (QUESTION, K2394): DEC-186's two readings; membership was built on the first (earlier handles reserved for their member, K2413). If U answers otherwise, membership R124/R16 changes by an entry; publication R76 (L8) before its START.
+- B119, B120: no answer needed.
 
 ## Where things stand
 
-- **T39 closed** (PR #18, `main` @ `fc8d9c9f36`, K2389), after PR #16 merged into `main` (K2388). Archived `plan/archive/T39.md`.
-- **T40 open** on `tranche/T40` (plan `build/plan/current.md`). Opening acts done (K2389): `ai-use` in `modules.json` before `ai-runs`, users' edges, `layers.md`. Requirement text adopted (K2394): `plan/draft-T40-reqs.md` and `plan/draft-T40-N812.md`, applied before each layer's START. L1 and L2 text applied (K2390, K2395); canon and register folds applied (K2395).
-- **L1 running:** RECORD-GRAMMAR #11 merged (K2393). PDF-READER #6 (`session_01KA1AV3RDoRZjWqoUbFgBdC`) working on R38 (raw string bytes; K2392 answered its J1; B2 sent). Merge it when complete (its users doc-clean, pdf-pixels, pdf-worker: it names any whose `v` changed), then close L1 (§5.6: the plane bundle stale from record-grammar; regenerate per the manifest).
-- **L2 next:** membership (T40-M), credentials (T40-3), promotion (T40-4, the stamp, last). Text is in the files; write `starts-T40/<module>.txt` (T39's are the pattern; note each reading set over 300 KB names §17 step (3)); merge order membership, credentials, promotion.
-- **Later layers:** apply each layer's text from the two drafts before its START (a worker applies, BOB reviews the diff, as K2395). L6 inquiry R39 (Bob's words, K2371); L8 adds T40-16a case-grammar and T40-16b case-checker; L9 filings tests only (N819); L11 adds T40-18a admission.
-- `next.md` (T41): N748, N751, N780, N794, N796, N815, N817, each with its hard reason in `current.md`.
+- **T40 open, HELD** on `tranche/T40` (plan `build/plan/current.md`, Status line HELD). Done: L1 (record-grammar, pdf-reader, doc-clean T40-2a), L2 (membership with R127 `joinedParticipants`, credentials, promotion's stamp 1.67.0). Remaining, unchanged: L4 T40-4a (reading-pipeline tests only), L6 (T40-5–T40-11), L8 (T40-12–T40-16b), L9 T40-9a, L11 (T40-17–T40-26). Requirement text for L6, L8, L9, L11 is applied (K2400); STARTs for them are not yet written (T39's are the pattern; L11 STARTs must require explicit tests for control-plane R69, R70 and notice-producers R16).
+- **Reds carried by name:** answers `standing.test.mjs`:122, :273 → T40-9; op-declarations `t33` R19 and `t35`:196 → T40-23; reading-pipeline's two agenda pins → T40-4a; rule 4's list otherwise.
+- **Investigation drafts (P18), current through H19:** `plan/draft-T41-investigation.md` (adopted text, K2405; D13/D14/D52–D54 folded, K2409) and `plan/draft-canon-investigation.md` (not to be put to Bob until his whole-design review, K2410). Keep both current from each HANDOFF entry (H20 onward), with one K per fold.
+- `next.md`: N748, N751, N780, N794, N796, N815, N817, N820–N822 (N820–N822 held, K2410).
 
 ## Next steps, in order
 
-1. Take over (§5.1): archive BOB #144, its `BOB-final` row under **T39** (it worked T39 and opened T40; put the row in `metrics/T39.csv`); `mail xwriter`; arm backstop and WATCH; delete mine (backstop `trig_0158NNrcfLgzVStZkp4AAs9m`, WATCH `trig_01R5Wb7ZiNgtSA5uff1PiwUv`).
-2. Merge PDF-READER #6 when complete; close L1; start L2.
-3. Run T40's layers in order; close T40 by §5.7: (1) no design-stream MERGE is open today; check the channel at the close; (3) PR `tranche/T40` → `main` merged with the GitHub merge tool, authority Bob's standing direction in the product's `CLAUDE.md` (K1177), standing list `mcp__github__merge_pull_request`; no refusal of it recorded since K2273 (K2388, K2389 did this for T39).
+1. While held: on each INVESTIGATION-DESIGN message or hand-off, fold it into the two drafts (a worker applies, BOB reviews), commit, answer with the K. Spend nothing else.
+2. When Bob says to resume: take over or wake (§5.1), arm backstop and WATCH, ask his meter, write L4's and L6's STARTs and start L4 (T40-4a) then L6 in order; run the rest of T40; close it by §5.7 (PR `tranche/T40` → `main` merged with the GitHub merge tool, authority Bob's standing direction in the product's `CLAUDE.md`, K1177; standing list `mcp__github__merge_pull_request`; no refusal since K2273).
+3. Plan T41 with the investigation design once Bob says it is settled (N820–N822, the canon approved first).
 
 ## Process notes
 
-- After a container restart: `npm ci --ignore-scripts` in agent-runner, `npm ci` in sheet-worker, file-scanner, agent-worker and bio-plane (it now pins `pdfjs-dist`) before `fleetbundles`.
-- A new module's tests that import another module's test fixtures need that module in `uses` (K2381).
-- A provided service changed mid-tranche reaches its users' tests too: run the users' suites at each merge (K2374, K2387).
+- After a container restart: `npm ci --ignore-scripts` in agent-runner, `npm ci` in sheet-worker, file-scanner and bio-plane before `fleetbundles` (agent-worker has no lockfile; it needs none).
+- A rename of a module's test fixture needs that module's `tests` entry in `modules.json` swapped by BOB at the merge (K2415).
