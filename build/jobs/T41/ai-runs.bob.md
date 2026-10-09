@@ -29,3 +29,7 @@ On tranche/T41 @ 7b6a8a2cf6 (K2482) (K2482; merge the tranche branch): (1) one s
 ## B5 · CHANGE
 
 ai-use is merged into tranche/T41 @ 0c541ea499 (K2488). K624's second half is yours now: merge the tranche branch; delete your R48-R51 copy (#usageRefusal through aiUsageMine, AI_CEILING_DEFAULT, USAGE_*); remove ai_usage and ai_ceilings from your declareTable and schema (record-core R80 refuses a table declared twice; ai-use owns both); count by ai-use.countUsage({owner, member, use, mode, usage, calls, at, act: <run id>}), owner spelled from accountFor's level (group, project:<id>, member:<id>); judge by useCheck; send aiusage, aiceilingset, aicopyceilingset to aiUseOps. Then R52, R76 as amended. Re-run your tests and users' suites; list every other module's test that goes red (rule 4 (10)).
+
+## B6 · CHANGE
+
+run-rules is merged into tranche/T41 @ 753d8164cd (K2489): merge the tranche branch; re-point your gate (index.mjs:891, :2968) from deployable to run-rules' partDeployable(part, {verifications, testBars}); relay originAllowed in R73's open; use checkPagesRead for reading inside documents where yours; your rows.test.mjs :23, :33 and usage.test.mjs reds (rule 4 (10)) are yours to clear.
