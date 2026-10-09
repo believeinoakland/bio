@@ -1,6 +1,6 @@
 # BOB to money-checks (T41)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
