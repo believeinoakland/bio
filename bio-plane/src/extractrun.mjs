@@ -125,6 +125,84 @@ const rank = (letter) => {
 const isNonEmptyString = (s) => typeof s === "string" && s.trim().length > 0;
 
 /* ------------------------------------------------------------------ *
+ * The verified quote (R42 as amended at T41, D4)
+ * ------------------------------------------------------------------ */
+
+/** IS THIS PROPOSAL'S QUOTE THE RECORD'S OWN TEXT? The one exception to the B cap.
+ *
+ *  D4: a proposal whose quote is a BYTE-EXACT substring of the capture's extracted text at its extent
+ *  is not a machine's reading of what a string looks like; it is the capture's own words, and it keeps
+ *  the capture's own ceiling. Byte-exact means nothing is folded: case, whitespace and Unicode form all
+ *  count, so a quote that a machine "tidied" is not verified. A well-formed string is a substring of
+ *  another exactly when its UTF-8 bytes are a substring of the other's (UTF-8 synchronises on every
+ *  code point), so the JS comparison is the byte comparison; a quote holding a lone surrogate has no
+ *  UTF-8 form and is never verified.
+ *
+ *  `capture` is `{text, ceiling}` and comes from the RECORD, read by the caller over the stored capture
+ *  (the text at the entry's extent, the capture's own grade), never from the proposal: a proposal that
+ *  could hand in the text it is checked against would verify itself. The extent is the entry's
+ *  `source`: a quote with no readable position names no extent and is not verified. A `ceiling` that is
+ *  neither a grade nor null (undetermined) cannot be kept, so the quote is not verified either. */
+function verifiedQuote(e, capture) {
+  const c = capture && typeof capture === "object" && !Array.isArray(capture) ? capture : null;
+  if (!c || typeof c.text !== "string") return null;
+  if (!(c.ceiling === null || c.ceiling === undefined || rank(c.ceiling) != null)) return null;
+  if (typeof e.quote !== "string" || e.quote.length === 0 || !e.quote.isWellFormed()) return null;
+  if (e.source == null || readingSource(e.source) == null) return null;
+  if (!c.text.includes(e.quote)) return null;
+  return { ceiling: c.ceiling ?? null };
+}
+
+const MONTH = "(?:jan(?:uary|\\.)?|feb(?:ruary|\\.)?|mar(?:ch|\\.)?|apr(?:il|\\.)?|may|june?|july?|aug(?:ust|\\.)?"
+            + "|sep(?:t(?:ember)?)?\\.?|oct(?:ober|\\.)?|nov(?:ember|\\.)?|dec(?:ember|\\.)?)";
+const ORD = "(?:st|nd|rd|th)?";
+const EDGE_L = "(?<![\\p{L}\\p{N}])", EDGE_R = "(?![\\p{L}\\p{N}])";
+const DATE_FORMS = [
+  `\\d{4}-\\d{1,2}-\\d{1,2}(?:[T ]\\d{1,2}:\\d{2}(?::\\d{2})?)?`,
+  `\\d{1,2}[/.\\-]\\d{1,2}[/.\\-]\\d{2,4}`,
+  `${MONTH}\\s+\\d{1,2}${ORD}(?:,?\\s+\\d{4})?`,
+  `\\d{1,2}${ORD}\\s+(?:of\\s+)?${MONTH}(?:,?\\s+\\d{4})?`,
+  `${MONTH},?\\s+\\d{4}`,
+].map((f) => new RegExp(`${EDGE_L}${f}${EDGE_R}`, "giu"));
+const NUMBER_DIGITS = new RegExp(`(?:[$€£¥]\\s?)?[-−]?(?<![\\p{L}\\p{N}][.,:/\\-]?)\\d+(?:[.,:/\\-]\\d+)*(?:%|${ORD}|bn|[kKmMbB])${EDGE_R}`, "gu");
+/* the last pass: any digit run still unnamed (glued to letters, "v5", "item7"), so no digit escapes */
+const DIGIT_RUN = /\d+(?:[.,]\d+)*/gu;
+const WORD = "(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen"
+           + "|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety"
+           + "|hundred|thousand|million|billion|trillion|dozen)";
+const NUMBER_WORDS = new RegExp(`${EDGE_L}${WORD}(?:(?:[\\s-]+(?:and[\\s-]+)?)${WORD})*${EDGE_R}`, "giu");
+
+/** EVERY NUMBER AND DATE IN A QUOTE, READ BY CODE, for the member to check at acceptance (R42, D4).
+ *
+ *  A verified quote keeps the capture's ceiling because its WORDS are the capture's; a figure is where
+ *  an exact quote can still mislead (a superseded amount, a date read in the wrong order), so the member
+ *  accepting it is shown each one rather than trusting the machine to have picked the right sentence.
+ *  Over-naming is the safe direction: a date is any ISO, slashed or month-name date; a number is every
+ *  remaining run of digits (with its currency sign, separators, percent, ordinal or magnitude), every
+ *  run of spelled-out cardinals, and last any digit run still unnamed (one glued to letters, "v5"), so
+ *  no digit in the quote is left unnamed. Each is `{kind, text, at}`, `at` the
+ *  offset in the quote, in quote order; the dates are taken first and a number inside one is not named
+ *  twice. Pure; never throws. */
+export function quoteFigures(quote) {
+  if (typeof quote !== "string" || quote.length === 0) return [];
+  const taken = [];
+  const free = (a, b) => taken.every(([x, y]) => b <= x || a >= y);
+  const take = (re, kind) => {
+    const found = [];
+    for (const m of quote.matchAll(re)) found.push({ kind, text: m[0], at: m.index });
+    /* the longest first, so "May 5, 2024" is one date and not "May 5" and a year */
+    found.sort((p, q) => q.text.length - p.text.length || p.at - q.at);
+    const kept = [];
+    for (const f of found)
+      if (free(f.at, f.at + f.text.length)) { taken.push([f.at, f.at + f.text.length]); kept.push(f); }
+    return kept;
+  };
+  const dates = DATE_FORMS.flatMap((re) => take(re, "date"));
+  const numbers = [...take(NUMBER_DIGITS, "number"), ...take(NUMBER_WORDS, "number"), ...take(DIGIT_RUN, "number")];
+  return [...dates, ...numbers].sort((p, q) => p.at - q.at);
+}
+
+/* ------------------------------------------------------------------ *
  * The predicates
  * ------------------------------------------------------------------ */
 
@@ -182,10 +260,41 @@ export function checkExtractVersion(version) {
  *  readers already write (`reading_refs`, FW-5) — `meeting:2101`, a key the
  *  document itself carries. A machine that read that string out of the text has
  *  named an identifier and earns B. A machine that has only a NAME has named the
- *  weakest thing framework §8.1 grades and earns C. There is no third answer and
- *  no route to A: see `PROPOSED_READING_CEILING`. */
-export function proposedReadingGrade(entry) {
+ *  weakest thing framework §8.1 grades and earns C. Without a verified quote there
+ *  is no third answer and no route to A: see `PROPOSED_READING_CEILING`.
+ *
+ *  THE ONE EXCEPTION (R42 as amended at T41, D4): with `capture` (`{text, ceiling}`,
+ *  read by the caller from the record) and a quote that is that text byte for byte at
+ *  the entry's place (`verifiedQuote`), the proposal keeps the capture's own ceiling,
+ *  whatever letter that is, and every number and date in the quote is named in `check`
+ *  (`quoteFigures`) for the member to check at acceptance. The answer always carries
+ *  `verified_quote` and `check` (empty when not verified), so the two cases are told
+ *  apart by a field and never by guessing from the letter. */
+export function proposedReadingGrade(entry, capture = null) {
   const e = entry && typeof entry === "object" ? entry : {};
+  const base = namedGrade(e);
+  /* THE VERIFIED QUOTE (R42 as amended, D4). It replaces the letter, never the requirement that the
+     proposal name something: a proposal naming nothing earns nothing whatever it quotes. Its letter is
+     the CAPTURE's ceiling, which may be weaker than the B the reference alone would earn, and that is
+     the point: the quote stands on the capture's words, so it is worth what the capture is worth. */
+  const v = base.grade == null ? null : verifiedQuote(e, capture);
+  if (!v) return { ...base, verified_quote: false, check: [] };
+  const check = quoteFigures(e.quote);
+  const named = check.length === 0 ? `It holds no number or date`
+    : `Its ${check.length} number(s) and date(s) are named for the member to check at acceptance`;
+  if (v.ceiling == null)
+    return { grade: null, verified_quote: true, check,
+             why: `earned undetermined: this proposal's quote is the capture's own text at its place, byte for `
+                + `byte, so it keeps the capture's own ceiling, and that ceiling is undetermined. A letter would `
+                + `be a claim the capture does not support. ${named}` };
+  return { grade: v.ceiling, verified_quote: true, check,
+           why: `earned ${v.ceiling}: this proposal's quote is the capture's own text at its place, byte for `
+              + `byte, so it keeps the capture's own ceiling (${v.ceiling}) rather than the ${PROPOSED_READING_CEILING} `
+              + `a machine's reading of a string is worth. ${named}` };
+}
+
+/* What the reference alone NAMES: B for a kind and a key, C for a label, nothing for neither. */
+function namedGrade(e) {
   /* THE LETTER IS DECIDED ONCE AND THE SENTENCE IS COMPOSED FROM IT, and that
      shape was earned by a control arm rather than chosen (found by `nc-sk8.mjs`'s
      `overstrict` arm, since deleted). The first cut wrote each branch's letter
@@ -223,7 +332,7 @@ export function proposedReadingGrade(entry) {
  *  own work, which DEC-24 rule 3 rules out and which SK-2 states as the track's
  *  first constraint. It is refused rather than ignored: silently dropping it
  *  would let a caller believe it had been honoured. */
-export function checkProposedRef(entry) {
+export function checkProposedRef(entry, capture = null) {
   const e = entry && typeof entry === "object" && !Array.isArray(entry) ? entry : null;
   if (!e) return no("PROPOSAL_SHAPE", `a proposed reference is an object`);
   if (e.grade !== undefined || e.earned !== undefined)
@@ -236,22 +345,26 @@ export function checkProposedRef(entry) {
     return no("PROPOSAL_NO_REF",
       `a proposed reference carries the reference AS IT APPEARS — the raw string the reading names — `
     + `which is what makes it joinable to everything the registered readers wrote`);
-  const { grade } = proposedReadingGrade(e);
-  if (grade == null)
+  if (namedGrade(e).grade == null)
     return no("PROPOSAL_NAMES_NOTHING",
       `this proposal carries a reference string but names neither an identifier (a kind and a key) `
     + `nor a name (a label). There is nothing for the record to grade, and a row that cannot be `
     + `graded cannot become part of a finding`);
-  if (rank(grade) != null && rank(grade) < rank(PROPOSED_READING_CEILING))
-    /* UNREACHABLE TODAY AND KEPT ON PURPOSE. `proposedReadingGrade` returns only
-       B or C, so nothing reaches this branch from the function above it. It is
-       the ceiling stated as a REFUSAL rather than as a comment, so that the day
-       somebody widens the grade rule the ceiling is a thing that fires instead
-       of a sentence somebody has to re-read. The suite drives it directly. */
+  /* THE CEILING, STATED AS A REFUSAL. A verified quote's ceiling is the capture's
+     own (R42 as amended, D4); every other proposal's is the B a machine reading text
+     may reach. UNREACHABLE TODAY AND KEPT ON PURPOSE: `proposedReadingGrade` returns
+     B, C or null unverified and exactly the capture's ceiling verified, so nothing
+     reaches this branch from the function above it. It is the ceiling stated as a
+     refusal rather than as a comment, so that the day somebody widens the grade rule
+     the ceiling is a thing that fires instead of a sentence somebody has to re-read. */
+  const graded = proposedReadingGrade(e, capture);
+  const ceiling = graded.verified_quote ? (capture.ceiling ?? null) : PROPOSED_READING_CEILING;
+  if (rank(graded.grade) != null && (ceiling == null || rank(graded.grade) < rank(ceiling)))
     return no("PROPOSAL_ABOVE_CEILING",
-      `a proposed reading earned ${grade}, which is stronger than the ${PROPOSED_READING_CEILING} `
-    + `a machine reading text may reach. A is what a reference the SOURCE assigned is worth and a `
-    + `machine that read a string out of prose did not get one`);
+      `a proposed reading earned ${graded.grade}, which is stronger than the `
+    + `${ceiling == null ? "undetermined ceiling of the capture its quote is read from" : ceiling} `
+    + `it may reach. A machine reading text reaches B at most; only a quote that is the capture's own `
+    + `text keeps the capture's own ceiling, and never more`);
   /* The position is OPTIONAL and its absence is honest: a reading that cannot
      say WHERE is most readings today (FW-17 / IC-86), and `readingSource`'s own
      contract is that every malformed or incomplete input answers null rather
