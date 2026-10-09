@@ -1,6 +1,6 @@
 # leg-earning — requirements
 
-**Status** · In force: a new module, reviewed (K1505; T33-44), split from `inquiry` by copy (K617), meaning unchanged: R1–R7 name their `inquiry` sources; R8, R9 new (K1447); it holds the basis table (R12, K1601). Every requirement met (LEG-EARNING #1, K1612).
+**Status** · In force: a new module, reviewed (K1505; T33-44), split from `inquiry` by copy (K617), meaning unchanged: R1–R7 name their `inquiry` sources; R8, R9 new (K1447); it holds the basis table (R12, K1601). Last changed T41 (T41-14: R13 `projectsDrawingOnPaged`, R14 `projectsShownOn`, R15 the AI transcription's ceiling, new, as `draft-T41-investigation.md` §3.6; K2405, K2418), not yet met; every other requirement met (LEG-EARNING #1, K1612).
 
 **Size (P6).** About 600–800 lines move (the earned registry, `store.mjs` 26364–26744 at extraction, the reads 31123–31191 and 35552–35759, now in `inquiry/index.mjs`), taking `inquiry` (3,903) well under 4,000.
 
@@ -33,6 +33,11 @@ Terms. A **leg**, **registry**, **grade**, **axis** and **source** are as `inqui
 
 **The basis table** (K1505 (2); K1601)
 - **R12** `leg-earning` holds `inquiry_basis` with its columns, indexes, names, types and meanings unchanged from `inquiry` (R12, R29, R40 there), as a read contract later modules may join. Its one write, `writeBasis(bundleId, legs)`, replaces an inquiry's legs whole (`target_type` derived from the target's prefix), and R3's backfill sets a leg's `content_id`; nothing else writes it. It is declared explicitly to `record-core` (`declareTable`) with the classes it has today (purge clear, keyed by `bundle_id`; expunge none; export admin-only; sight bundle; stored).
+
+**Projects drawing on a question, and the AI transcription's ceiling** (T41-14)
+- **R13** *(not yet met: T41)* (D36, D29) `projectsDrawingOnPaged({id, after, limit})`: every project drawing on `id` (R7's test, over every project), paged, `limit` at most 500, with `cursor`; in-process only. R7's 32-bound stays for its callers.
+- **R14** *(not yet met: T41)* (H38, D64) `projectsShownOn({id, viewer})` answers a viewer who may see the question the projects drawing on it that are not hidden (`membership` R85), each `{id, name}` as `membership` R44 lets her see it, at most 200, with `truncated`; a hidden project is never answered, named or counted, and the answer is the same whether or not one draws.
+- **R15** *(not yet met: T41)* (D21; D4) `earned`'s capture ceiling for a passage of an AI transcription (`text-chain` R104) is undetermined, except at an extent a member attested against the page (`content.attestText`), where it is the capture's own grade.
 
 ## Private
 

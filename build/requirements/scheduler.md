@@ -1,6 +1,6 @@
 # scheduler — requirements
 
-**Status** · In force: approved by Bob 2026-09-26 (K102), with later folds reviewed. Last changed T35 (T35-83: R12, K2029), T36 (T36-29: R24, option B; K2129, K2153) T37 (T37-24: R2, R7, R24 amended; N762; K2153, K2175) and T39 (T39-15: R25 new, R2, R5, R9 amended; N806; K2333); those marked not yet met (T37, T39), every other requirement met.
+**Status** · In force: approved by Bob 2026-09-26 (K102), with later folds reviewed. Last changed T35 (T35-83: R12, K2029), T36 (T36-29: R24, option B; K2129, K2153) T37 (T37-24: R2, R7, R24 amended; N762; K2153, K2175) and T39 (T39-15: R25 new, R2, R5, R9 amended; N806; K2333); those marked not yet met (T37, T39), every other requirement met. Last changed T41 (T41-49's text: R26 new; N820; K2405, K2417, K2418); marked not yet met (T41).
 
 **Size (P6).** About 590 lines move (about 180 without comment-only and blank lines). A job reads it with the public parts of the modules whose consumers it runs. Well under 4,000.
 
@@ -57,6 +57,9 @@ Terms. A **consumer** is `{name, key, due(now), wake(now), tick(now)}`: `wake` i
   - At start it registers once with `case-carriage.onCopyWork` (its R17), as R9's notice. Each call runs `arm` (R4) at once, so a member document queued on an idle instance is copied at once. A refused registration is a start-up fault, reported as R23's is. The call writes nothing and runs no tick (R17).
   - No call names a member or a file.
 
+*The investigation's consumers* (T41; N820; `draft-T41-investigation.md` §3.6; K2405, K2417, K2418)
+- **R26** *(not yet met: T41)* registers `question-explorer`'s consumer (R1) and `investigation`'s quiet check (R18).
+
 **Ordering by intent** (`layers.md`, layer 7)
 - **R10** Where a consumer's due work exceeds its batch, the scheduler ranks it by what `intent`'s `servesOf` (its R28) answers each item serves: work serving an objective's open gap (intent R6), then work serving an aspiration in force, then longest-waiting (no aspiration ranks above another, intent R12; K228); but any work that has waited longer than one whole cadence of its own goes first, so priority orders the work and never starves it. Each batch-bounded tick (`monitor-cadence`, `archive-monitor`, `gathering-sweep` (`link-sweep`'s `sweepTick(now, rank)`, its R4; monitoring R56 before N506's split; K1122), `capture-request-drain`, `bias-debt`) receives the rank with its `now`, as `tick(now, rank)` (N224); a sweep item (`<bundle>#<id>`) serves what its bundle serves, so the rank asks `servesOf` about that bundle (K1160): `monitoring`'s `cadenceTick(now, rank)` and `archiveTick(now, rank)` (its R19, R20), `capture-requests`' tick (its R11, R12) and `bias`'s `biasDebtSweep` (its R33) as each takes it.
 
@@ -84,6 +87,7 @@ Terms. A **consumer** is `{name, key, due(now), wake(now), tick(now)}`: `wake` i
 - `file-safety` (T36-29, T37-24): `scanBatch`, `renderBatch`, `deeperBatch`, `forwardSecurityCounts`, `refreshReputationLists` (its R4, R12, R36, R35, R41); their due and wake `scanWake`, `renderWake`, `deeperWake`, `forwardWake`, `reputationWake` (its R39); `onFileWork` (its R40), R24's notice.
 - `case-carriage` (T39; N806, K2333; a `modules.json` edge): `copyBatch`, `copyWake`, `onCopyWork` (its R15, R17), the `document-copy` consumer (R25).
 - `doc-clean` (T39; K2381; a `modules.json` edge, tests only): its test fixtures, so `copies.test.mjs` makes a real cleaned copy through the real case-carriage.
+- (T41; N820; K2418; new `modules.json` edges, §3.6's list) `question-explorer`: its consumer (its R1; R26). `investigation`: its quiet check (its R18; R26).
 - `reevaluation`: `noticeSweep`, `noticeSweepDue`, `noticeSweepWake` (its R25, over R14's `raiseNotices`, K199 (1)), a consumer (R5; N164, N178).
 - The Durable Object's alarm (`ctx.storage.setAlarm`, `getAlarm`, `deleteAlarm`).
 

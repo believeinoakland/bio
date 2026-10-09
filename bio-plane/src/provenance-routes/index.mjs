@@ -820,16 +820,15 @@ class ProvenanceRoutes {
    * existed. Nothing here publishes how many rows were withheld, because that
    * count is itself the disclosure.
    *
-   * MEASURED RATHER THAN ASSUMED, because it changes what this fence is DOING:
-   * `viewerPredicate` filters PROJECT bundles and nothing else (`query.mjs`,
-   * and its own comment says the evidence corpus stays shared), and a route mark
-   * can only ever name an `information` bundle — the write refuses every other
-   * type with ROUTE_MARK_NOT_A_DOCUMENT. So for any RECOGNISED viewer this gate
-   * withholds nothing, and the case it is load-bearing for is the UNRECOGNISED
-   * one, where `viewerPredicate` returns `0=1` and the read fails closed. It is
-   * applied anyway rather than reasoned away: the gate is the only place that
-   * rule lives, and an op that skipped it would be correct today and wrong the
-   * day the predicate widens. */
+   * WHAT THIS FENCE WITHHOLDS. A route mark can only ever name an `information`
+   * bundle (the write refuses every other type with ROUTE_MARK_NOT_A_DOCUMENT),
+   * and `viewerPredicate` (membership R43) withholds such a bundle when it
+   * belongs to a project the viewer may not see whole (record-core R34's
+   * `project`; N426): from a member outside it, and since D54 (K2408) from the
+   * founder and every administrator neither invited nor joined to a HIDDEN
+   * project. An unrecognised viewer gets `0=1` and the read fails closed. The
+   * gate is the only place that rule lives, so this read asks it and never
+   * restates it. */
 
   provenanceRoutesMarked({ after = "", limit = null, viewer = null } = {}) {
     const gate = viewerPredicate(viewer);

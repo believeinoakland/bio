@@ -1,6 +1,6 @@
 # answers — requirements
 
-**Status** · In force: reviewed (K1505; banner cleared K1599); a new module (K1439; T33-53). Built switched off (Rule 7): the AI half of standing questions until the 150-question bar is met (M-Q9, T33-D10). Last changed T35 (T35-47: R1 amended; R28, R29 new); every requirement met (K1991). Last changed T37 (T37-15: R1, R19 amended; N765, N669; K231, K2130, K2175, K2200); those marked not yet met (T37). Last changed T40 (T40-9: R30 new, an ask's project, `accountFor` by kind, `useCheck`, R2's kept-away rows; N812; K2373, K2394); those marked not yet met (T40).
+**Status** · In force: reviewed (K1505; banner cleared K1599); a new module (K1439; T33-53). Built switched off (Rule 7): the AI half of standing questions until the 150-question bar is met (M-Q9, T33-D10). Last changed T35 (T35-47: R1 amended; R28, R29 new); every requirement met (K1991). Last changed T37 (T37-15: R1, R19 amended; N765, N669; K231, K2130, K2175, K2200); those marked not yet met (T37). Last changed T40 (T40-9: R30 new, an ask's project, `accountFor` by kind, `useCheck`, R2's kept-away rows; N812; K2373, K2394); those marked not yet met (T40), now T41. Last changed T41 (T41-29: R31 `baseline`, R32 verdict and cause words, R33 `checkSentences`, new, as `draft-T41-investigation.md` §3.6; N820, K2405, K2418), not yet met.
 
 **Size (P6).** About 1,500–2,500 lines (entries C P6 table; ladders §9.4 L1). Under 4,000.
 
@@ -69,6 +69,12 @@ Terms. An **ask** is one member's question, answered under a **grant**: `credent
   - Each is judged by `ai-use.useCheck` in place of the ceiling.
   - R2 widens: every read under a grant also removes the rows of projects `credentials.projectsKeptAway({use})` names, before the read log records them. A count counts none of them.
   - R19's conditions read `AI_LIMIT_REACHED` where they read the ceiling.
+
+#### Baselines, verdict words and the sentence checks (T41-29; N820; K2405, K2418)
+
+- **R31** *(not yet met: T41)* (D20) A sentence kind `baseline`: `{baselines: [{value, rests_on, basis_kind, looked}], difference}`, `basis_kind` one of `document`, `firsthand`, `as_recalled`, `looked` one of `not_yet_looked_for`, `looked_for_and_not_found` (naming where); `checkAnswer` refuses a baseline without its basis as `ANSWER_MALFORMED`.
+- **R32** *(not yet met: T41)* (D20, H30 (4)) In Civicsmith's voice an answer gives no verdict, likelihood or rating word (a closed list, BOB's at the START) and states a cause only quoting a concluded finding that establishes it, else "cause not established"; a sentence that does is withheld `ANSWER_VERDICT_WORD` or `ANSWER_CAUSE_UNESTABLISHED`. A cause a body gave is shown quoted as theirs.
+- **R33** *(not yet met: T41)* (D56) `checkSentences(sentences, {cited, readLog})` exports R4's checks over sentences that each name what they cite, for `case-disclosures` R30; pure, never throws.
 
 ## Private
 

@@ -1,6 +1,6 @@
 # notice-producers — requirements
 
-**Status** · In force: a new module, a seam after `queue-producers` with no copy (K617; T33-82), reviewed with T33's new modules (K1505). Last changed T35 (T35-67: R12, R13 new, R1 amended; K1874, K1875, K1943); every requirement met (NOTICE-PRODUCERS #3, K2041). Last changed T37 (T37-28: R14 reads by `since`; N762, N771; K2175); marked not yet met (T37). Last changed T40 (T40-20: R16 new, the AI accounts' three items; N812; K2353, K2373, K2376); marked not yet met (T40).
+**Status** · In force: a new module, a seam after `queue-producers` with no copy (K617; T33-82), reviewed with T33's new modules (K1505). Last changed T35 (T35-67: R12, R13 new, R1 amended; K1874, K1875, K1943); every requirement met (NOTICE-PRODUCERS #3, K2041). Last changed T37 (T37-28: R14 reads by `since`; N762, N771; K2175); marked not yet met (T37). Last changed T40 (T40-20: R16 new, the AI accounts' three items; N812; K2353, K2373, K2376); marked not yet met (T40). Last changed T41 (T41-54's text: R17 new, Uses gain `steps`, `question-explorer`, `investigation`, `review`; N820; K2405, K2417, K2418); marked not yet met (T41).
 
 **Size (P6).** About 600–1,000 lines (T33-82, est 10 requirements).
 
@@ -35,6 +35,9 @@ Terms. An **item**, a **home set**, the item's `class` (FINDING, OBLIGATION, CON
 **The AI accounts' items** (T40; N812; K2373)
 - **R16** (B7; K2353, K2376) *(not yet met: T41)* One "Ask" item per entry of `ai-use.exploreAsksPending`, and one "Noticed" item per entry of `ai-use.limitsReached` and of `credentials.projectAccountsSuspended` for the viewer, keyed by its stable key so `queue` mints it once per account, limit and period. Its words are the design stream's (NOTICE). It names whose limit, which use and the period's end, and never a member.
 
+**The investigation's items** (T41; N820; `draft-T41-investigation.md` §3.6; K2405, K2417, K2418)
+- **R17** *(not yet met: T41)* Items, each told once, keyed as their source says: `question-find` (FINDING, "Hint · machine work"; `question-explorer` R5); `step-later-found` (FINDING; `steps` R23); `step-date-due` and `step-reminder` (OBLIGATION, to the setter; `steps` R12); `milestone-overdue` and `milestone-reminder` (`investigation` R3); `project-quiet` (`investigation` R18); `step-cost-shared` and `step-cost-message` (FINDING, to owners; `steps` R14, R15); `review-comment-left-out` (`review` R33). **Uses** add `steps`, `question-explorer`, `investigation`, `review`.
+
 ## Private
 
 ### Uses
@@ -44,6 +47,7 @@ Rule 3's list: `queue-producers` (the item shape and homes, as its R8), `people`
 (T35) `credentials`: `securityLevel` and `securityMap` (its R45; R12). `following`: `policyChanges` (its R21; R13). Both edges are in `modules.json` (plan T35 rule 8). `standards`: the author of a policy's declaration (its R1; R13's recipient), a `modules.json` edge BOB adds at L11's START (P17).
 - (T36; K2130, K2152) `file-safety`: `scanFindings` (its R15), `findingKind` (its R38), `securityToolEvents`, `securityTools` (its R27, R31); R14, R15. `provenance`: `homeOf` (R14's home). `following`: `policyChanges`' `since` (R13).
 - (T40; N812; K2373) `ai-use`: `exploreAsksPending` (its R9), `limitsReached` (its R5); `credentials`: `projectAccountsSuspended` (its R59); R16.
+- (T41; N820; K2418; new `modules.json` edges, §3.6's list) `steps` (its R12, R14, R15, R23), `question-explorer` (its R5), `investigation` (its R3, R18), `review` (its R33); R17.
 
 ### Invariants
 

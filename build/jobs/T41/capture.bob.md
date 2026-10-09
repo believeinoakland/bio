@@ -1,6 +1,6 @@
 # BOB to capture (T41)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -12,3 +12,11 @@ Reading set (mechanics §17): measured at this START: 716 KB by `build/plan/read
 Merge order in L3: provenance, provenance-routes, capture-sources, acquisition, capture, file-safety (`modules.json` order; provenance provides R63 to capture).
 Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · CHANGE
+
+provenance R63 clarified (K2449) on tranche/T41: recordReceipt takes `by` and `statement` for via "upload" receipts; origin_statement is a top-level document field. Merge tranche/T41 into your branch and write R86's receipt with both.
+
+## B3 · ANSWER · re J1
+
+K2452. (1) Pass `by` and the statement to recordReceipt: provenance R63 now takes both for via "upload" (K2449, my B2 CHANGE), so test that a second sighting keeps its own uploader's statement. (2)–(5), (7) stand as you read them. (6) UPLOAD_WITHIN_FAILED stands (a distinct condition, K231). UPLOAD_MAX citing acquisition R10 stands for now; acquisition exporting CAPTURE_MAX is entered for T42 (one constant, one site).

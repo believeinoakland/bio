@@ -43,6 +43,13 @@ It is the only module marked `legacy` in `modules.json`.
    13. (N823, K2438) from T41-37's merge until T41-36's, publish-schedule's test that it declares `scheduled_editions` (refused `TABLE_DECLARED` while publication still declares it); from T41-36's merge until each user's merge, the callers of the moved services: `op=publishat` and ratification's scheduled arms (T41-39), case-authoring R58, R59 (T41-43), scheduler's `scheduled-publish` (T41-49), queue-producers' scheduled items (T41-53), actions `t34` (T41-47), the plane's three ops (T41-63);
    14. the plane bundle and `program.mjs`, staled by any merge, regenerated at each layer's close.
 
+**Text owed before each layer's START (K2451; BOB's wording, P5):**
+- L7: none beyond §3.6 (applied).
+- L8: publication R21's waiting clause, R66–R69, R71, R74 retired "moved to publish-schedule R<n>", R70 re-worded (K2438); case-authoring R58, R59 re-pointed; ratification R42 (names publication R67) and R43 re-pointed; the placement of `case-disclosures` R30's account arms that `case-checker` R24 re-runs (case-checker precedes case-disclosures: move the arms earlier or re-word R24); case-import's `bias` edge (R23).
+- L9: actions R52–R60 (hold reads at `EXISTENCE`, §3.5).
+- L10: scheduler R22's `scheduled-publish` consumer re-pointed.
+- L11: queue-producers R37; notice-producers R1 (R17's items) and R2/R3 recipients re-read; queue R1's classes and sentences for `milestone-overdue`, `milestone-reminder`, `project-quiet`, `review-comment-left-out`; setup-words R1, R2; admission R19; control-plane R56; op-declarations' DEC-188 (8) retirements; affordances R50's grades (op-grades' since K1974); plane's T40-26 share and publish-schedule composition.
+
 ## Entries
 
 ### L1 (runs; then the hold)
@@ -64,7 +71,7 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 - **T41-7a · provenance** · (T41-8a's provider; K2434) R63 new: route `upload` (`UPLOAD_VIA`) graded as the doorbell's received material, not fetched, R42's `origin.kind` `upload` with `origin_statement` · req: R63 · merges before T41-8.
 - **T41-7 · capture-sources** · (N822) R58 amended (BOB's wording, K2434): an administrator sees a `project` credential only at `FULL` sight of its project; tests assuming an administrator's `FULL` sight re-stated · req: R58.
 - **T41-7b · provenance-routes** (tests only) · (N822, K2442) `marked`:126, `table`:40 re-stated for D54 (rule 4 (11)).
-- **T41-8b · acquisition** (tests only) · (N822, K2442) `archivelist`:156, :259 re-stated for D54.
+- **T41-8b · acquisition** (tests only) · (N822, K2442) `archivelist`:156, :259 re-stated for D54. (N825, K2453) exports `CAPTURE_MAX` (R10); capture reads it.
 - **T41-8 · capture** · (N822) `held` tests re-stated (an administrator not added sees a hidden project at `EXISTENCE`) · tests only unless R-text names administrators' sight. (K2442) also `knocker`:685.
 - **T41-8a · capture** · (N821 upload; Bob D42 "upload: A", K2425) a member uploads a file she holds: graded received from the member (as the doorbell's material, never fetched, K509 (3)), attributed to her, with her statement of where it came from; stored and profiled as any capture; a later public fetch of the same bytes strengthens it · req: capture R86 (K2434; names `uploadCapture`, `via: "upload"`, address `upload:<sha256>`, method `uploaded`, `UPLOAD_NO_STATEMENT`) · uses provenance R63 (T41-7a) · L11 shares: op-declarations (the op), control-plane (route), affordances (help), store-door if the size path needs it.
 - **T41-8c · file-safety** (tests only) · (N822, K2442) `intake`:105 re-stated for D54.
