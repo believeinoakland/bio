@@ -39,7 +39,8 @@ It is the only module marked `legacy` in `modules.json`.
    9. filings `outward.test.mjs`:136 (R25; K2387) until T41-48;
    10. the L11 users of the retired ceiling codes (`AI_USE_CEILING_REACHED`, `AI_USE_COPY_CEILING_REACHED`: wizard-scripts, instance-setup, store-door, op-declarations' `aiceilingset`, control-plane, plane) from T41-21/T41-23's merges until their L11 jobs, named exactly at L6's close;
    11. (N822) the users' tests that assume an administrator's `FULL` sight of a hidden project, from T41-3's merge until each user's job (named exactly at L2's close from the suites membership runs, P11; the likely files are `draft-T41-investigation.md` §3.5's list);
-   12. the plane bundle and `program.mjs`, staled by any merge, regenerated at each layer's close.
+   12. (K2437) the callers of credentials' removed `accountSwitchSet`/`groupSwitchSet`: answers `standing.test.mjs` :154, :183, :210 until T41-29; plane `ask.test.mjs` :71, :196, :236, :266, :293, :316 until T41-63 (and any further one CREDENTIALS #11 names at COMPLETE);
+   13. the plane bundle and `program.mjs`, staled by any merge, regenerated at each layer's close.
 
 ## Entries
 
