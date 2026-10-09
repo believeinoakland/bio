@@ -82,3 +82,18 @@ Also, for my record: the final `uses` drops `ai-runs`. answers no longer reaches
 1. The plane's composition, `bio-plane/src/plane/store.mjs`:219, still hands `ceilingRefusal` (ai-runs' retired `aiUseCheck`). answers no longer reads it, and takes ai-use's `useCheck` on its own host, so it is dead wiring for T41-63 to drop. The plane's ask path (`plane/ask.mjs`:68, :119) and store-door (`dispatch.mjs`:278) may now call `answers.askAccount` (R30) in place of their own `accountFor` and ceiling (T41-63; store-door at L11). They should pass `use: "draft"` to `logRead` for a draft's reads.
 2. Generated artifacts: the plane bundle (`bio-plane/dist/`) bundles answers, so it is stale (rule 4 (14)). `case-checker/program.mjs` is unaffected until case-checker imports `checkSentences` (T41 L8).
 3. `reading-pipeline/index.mjs`:698 spells the paying owner `member:${member}` from the `member` it was handed. A stamp (`member:bob`) would make `member:member:bob`, so the owner should be built from the bare id. This is against ai-use R1's owner spelling; reading-pipeline's to judge.
+
+## J4 · COMPLETE
+
+T41-29 complete, B4 applied. The record's Completion section has the details.
+- R30: `askAccount`; `useCheck` is ai-use's own on the host by default, replacing `ceilingRefusal`; R2 widened by the grant's use.
+- R19: kind `standing`; `AI_USE_SWITCHED_OFF` maps to `switch_off`, and the limit to `limit`; the sign-in arm is tested both ways.
+- R31–R33: `baseline`, the closed verdict list, causes allowed only quoted, and `checkSentences` in the pure `sentences.mjs`.
+
+Results:
+- Rule 4 (6) and (12) are cleared.
+- answers: 57/57.
+- The users' suites are identical to the tranche alone by test name (54 and 2 failing on both; none added).
+- Format, architecture and ownership: 0 failures. Coverage: 33/33.
+- Final `uses`: the current list without `ai-runs`.
+- Generated artifact: the plane bundle is stale (J3).
