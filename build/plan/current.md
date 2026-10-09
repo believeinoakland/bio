@@ -37,7 +37,7 @@ It is the only module marked `legacy` in `modules.json`.
    5. membership R83's `MODULE_ORDER` tests from the opening's insertion of the five modules until T41-3's merge;
    6. answers `standing.test.mjs`:122 and :273 (K2412) until T41-29;
    7. op-declarations `t33.test.mjs` R19 (K2413) and `t35.test.mjs`:196 (K2412) until T41-58;
-   8. reading-pipeline `convert-chain.test.mjs`:297 and `pieces.test.mjs`:218 (K2399) until T41-9;
+   8. (cleared at T41-9's merge, K2464) reading-pipeline `convert-chain.test.mjs`:297 and `pieces.test.mjs`:218;
    9. filings `outward.test.mjs`:136 (R25; K2387) until T41-48;
    10. the L11 users of the retired ceiling codes (`AI_USE_CEILING_REACHED`, `AI_USE_COPY_CEILING_REACHED`: wizard-scripts, instance-setup, store-door, op-declarations' `aiceilingset`, control-plane, plane) from T41-21/T41-23's merges until their L11 jobs, named exactly at L6's close;
    11. (N822, K2442) the users' tests that assumed an administrator's or the founder's `FULL` sight of a hidden project, from T41-3's merge until each user's job: exactly the 147 listed by file and line in `build/jobs/T41/membership.md` (Completion, "Users' suites"); each user's job re-states its own;
@@ -50,7 +50,7 @@ It is the only module marked `legacy` in `modules.json`.
 - L8: publication R21's waiting clause, R66–R69, R71, R74 retired "moved to publish-schedule R<n>", R70 re-worded (K2438); case-authoring R58, R59 re-pointed; ratification R42 (names publication R67) and R43 re-pointed; the placement of `case-disclosures` R30's account arms that `case-checker` R24 re-runs (case-checker precedes case-disclosures: move the arms earlier or re-word R24); case-import's `bias` edge (R23).
 - L9: actions R52–R60 (hold reads at `EXISTENCE`, §3.5).
 - L10: scheduler R22's `scheduled-publish` consumer re-pointed.
-- L11: queue-producers R37; notice-producers R1 (R17's items) and R2/R3 recipients re-read; queue R1's classes and sentences for `milestone-overdue`, `milestone-reminder`, `project-quiet`, `review-comment-left-out`; setup-words R1, R2; admission R19; control-plane R56; op-declarations' DEC-188 (8) retirements; affordances R50's grades (op-grades' since K1974); plane's T40-26 share and publish-schedule composition.
+- L11: the member's act that calls reading-pipeline R29 (an `op=transcribe` on a held capture: op-declarations declares it, control-plane routes it, the plane composes `read`'s `transcription` from credentials `accountFor`, ai-use `useCheck` and the AI path; K2464); queue-producers R37; notice-producers R1 (R17's items) and R2/R3 recipients re-read; queue R1's classes and sentences for `milestone-overdue`, `milestone-reminder`, `project-quiet`, `review-comment-left-out`; setup-words R1, R2; admission R19; control-plane R56; op-declarations' DEC-188 (8) retirements; affordances R50's grades (op-grades' since K1974); plane's T40-26 share and publish-schedule composition.
 
 ## Entries
 
