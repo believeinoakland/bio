@@ -34,6 +34,51 @@ CREATE INDEX IF NOT EXISTS hypothesis_revisions_bundle ON hypothesis_revisions (
 
 export const HYPOTHESES_TABLES = Object.freeze(["hypotheses", "hypothesis_revisions"]);
 
+/* The system's proposals (R16–R18; D33, D46 A, K1473): stored apart from what members hold, keyed by the inquiry's
+   `bundle_id` like the hypotheses (purged with it, sight the inquiry's). A proposal is `open` until one member takes it
+   up (R17: `taken_as` the hypothesis her act held, `acceptance` record-grammar R52's record) or sets it aside (R18: with
+   her reason, kept readable). */
+export const PROPOSALS_SCHEMA = `
+CREATE TABLE IF NOT EXISTS hypothesis_proposals (
+  proposal_id      TEXT PRIMARY KEY,  -- a HYP- id, so every leg check refuses it as it refuses a hypothesis (R5)
+  bundle_id        TEXT NOT NULL,     -- the inquiry it is proposed in; its sight is the inquiry's
+  kind             TEXT NOT NULL,
+  statement        TEXT NOT NULL,
+  about_json       TEXT NOT NULL,
+  how              TEXT NOT NULL,     -- how the system worked it out
+  false_alarm_rate REAL NOT NULL,     -- its measured false-alarm rate, 0…1
+  run              TEXT NOT NULL,     -- the run that proposed it
+  proposed_at      TEXT NOT NULL,
+  state            TEXT NOT NULL DEFAULT 'open',  -- open | taken_up | set_aside
+  acted_by         TEXT,
+  acted_at         TEXT,
+  reason           TEXT,              -- a setting aside's reason
+  acceptance_json  TEXT,              -- a taking up's acceptance record (record-grammar R52)
+  taken_as         TEXT               -- the hypothesis the taking up held
+);
+CREATE INDEX IF NOT EXISTS hypothesis_proposals_bundle ON hypothesis_proposals (bundle_id, proposed_at);
+CREATE INDEX IF NOT EXISTS hypothesis_proposals_taken ON hypothesis_proposals (taken_as);
+`;
+export const PROPOSALS_TABLE = "hypothesis_proposals";
+
+/* A note shared with a project (R19–R21; D18): a copy of the note's words as they were at the act, keyed by the
+   project's id (purged with it, sight the project's), never exported. It holds no note number, so a later deletion of
+   the private note leaves no sign of the note here (R14). Withdrawn (R20), its words and warning are emptied and the
+   row stays as the project's record that she shared a note on that date and withdrew it on that date. */
+export const SHARES_SCHEMA = `
+CREATE TABLE IF NOT EXISTS narrative_shares (
+  share_id      TEXT PRIMARY KEY,     -- opaque, never a record id
+  project_id    TEXT NOT NULL,
+  member        TEXT NOT NULL,        -- the author who shared it
+  text          TEXT,                 -- the words as shared; null once withdrawn
+  warning_json  TEXT,                 -- inquiry R59's warning at the act, or null
+  shared_at     TEXT NOT NULL,
+  withdrawn_at  TEXT
+);
+CREATE INDEX IF NOT EXISTS narrative_shares_project ON narrative_shares (project_id, shared_at);
+`;
+export const SHARES_TABLE = "narrative_shares";
+
 /* A member's own notes (R11–R15; DEC-136 (2), (3)). A note is keyed by a number of its own (`note_id`), never a record
    id, so no leg, reference, citation, connection, search or count names one (R14). The number is the member's own
    (T36; N727): `member_notes` is keyed by `(member, note_id)`, and each member's next number is drawn from that member's
