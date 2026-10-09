@@ -1,3 +1,11 @@
 # hypotheses (T41)
 
 **Status** · session_01SNmT525iDHSzNtvbkS4m7u · depth 2 · WORKING · handled B1
+
+## J1 · QUESTION
+
+Two points; I carry on with R16–R18, R20, R21 and R19's share on my best reading, and leave R19's warning as the one open item.
+
+(1) R19's warning ("carries `inquiry` R59's warning at the act"). The person test (an entity of kind person holding no public role, `entities`) is named nowhere as a service: `entities` holds no public-role notion in its code or requirements, and inquiry R59 (T41-15, running beside me) has no exported test yet. Your START says none of L6's changes is used by mine, but this one is. My best reading: hypotheses gains the edge `inquiry` (earlier in L6, merges first) and calls one pure function inquiry R59 exports, say `personWarning({text, viewer})` → `null` or `{code, translation, persons}`, answering it in `noteShare`'s answer as `warning` and recording it with the share; never a refusal. Until it exists I reach it optionally (absent → no warning) and the test of that clause stays red, named. Please name the function, its signature and its owner (inquiry or entities), or rule otherwise.
+
+(2) Details I am taking as BOB's unless you say otherwise (recorded in my record): a proposal gets a `HYP-` id from `allocId` (so every leg check already refuses it, R5) in its own table `hypothesis_proposals` (sight the inquiry's, export yes, purged with it); R18's act is `hypothesisSetAside({proposal, reason, by})`; reads `proposalsOf({inquiry, viewer})` under the heading "the system's"; a proposal is open until one member takes it up or sets it aside (then `PROPOSAL_NOT_OPEN`); a share has an opaque random id, holds no note number (so R14's no-trace rule survives the note's deletion), table `note_shares` keyed by `project_id`, sight bundle, export never; `sharesOf` to a non-participant answers exactly as a project with no shares, and also lists the withdrawn markers (no words) so R20's record is readable; R19 asks `membership.projectAuthority(project, by, "joined", "noteshare")` and relays its refusal. New ops in R7's map: `hypothesispropose`, `hypothesistakeup`, `hypothesissetaside`, `hypothesisproposals`, `noteshare`, `noteunshare`, `noteshares` (op-declarations declares them later). New catalogue rows C-134.20 on, awaiting stamp (rule 4 (2)).
