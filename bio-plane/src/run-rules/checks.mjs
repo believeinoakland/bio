@@ -264,15 +264,47 @@ export const AI_RUN_OWN_CHECKS = {
     translation: 'Nothing was read, because this document is kept away from the assistant by a limit your group put on '
       + 'its material. The investigation goes on without it; a person can still read it.',
   },
-  /* R23 (T41-21; N820): A RUN'S ORIGIN, `member` or `explore`. An exploring run opens only while `investigate` is
-     deployable (R19: its verification chain and its test bar both held); an origin outside RUN_ORIGINS, or none, is
-     the same fact — this run may not open from where it says it came — and the detail says which. */
-  AI_RUN_ORIGIN_NOT_ADMITTED: {
+  /* B3 (K2482; AI-RUNS #14 J1): A GROUP'S OWN TEST MATTER THAT IS MALFORMED, refused by `ai-runs` R75's `groupTestSet`
+     and read here by key. Its own code and not C-22.22's: that one is a graded result on a set; this is a matter a member
+     offers a group's own set, and its remedy (say the part, the matter and its answers) differs. A group's set never
+     opens or closes a deploy gate. */
+  AI_GROUP_TEST_INVALID: {
     check: 'C-22.24',
+    where: 'src/ai-runs/index.mjs groupTestSet, reached from the group\'s test investigations',
+    translation: 'This test investigation was not added, because it does not say all it must: which part of the '
+      + 'assistant it tests, the matter itself, and the answers people wrote for it. Your group\'s own tests show how '
+      + 'the assistant does on your matters; they never switch a part on or off.',
+  },
+  /* R23 (T41-21; N820; B4, K2485): A RUN'S ORIGIN outside RUN_ORIGINS, or none. Minted by `originAllowed`, the one site,
+     which `ai-runs` R73's open relays. An origin is said, never assumed. */
+  AI_RUN_ORIGIN_UNKNOWN: {
+    check: 'C-22.25',
     where: 'src/run-rules/rules.mjs originAllowed, called from src/ai-runs/index.mjs open',
-    translation: 'Nothing was started, because this investigation came from somewhere that may not start one now. '
-      + 'Exploring a question unasked is switched on only after investigating has been checked in real use and has '
-      + 'passed its test investigations.',
+    translation: 'Nothing was started, because this investigation did not say where it came from in a way the record '
+      + 'knows: an investigation is started by a member or by exploring a question, and nothing else.',
+  },
+  /* B4 (K2485): `ai-runs` R73 — an exploring run names the step it serves; minted by `ai-runs`, read here by key. */
+  AI_RUN_EXPLORE_NEEDS_STEP: {
+    check: 'C-22.26',
+    where: 'src/ai-runs/index.mjs open, reached from an exploring run',
+    translation: 'Nothing was started, because exploring a question unasked is always done as one step of the work, '
+      + 'and this did not say which step. The step is what records why it ran and what it found.',
+  },
+  /* R23 (B4, K2485): an `explore`-origin run while `investigate` is not deployable (R19: its chain and its test bar).
+     Minted by `originAllowed`, which `ai-runs` R73's open relays. */
+  AI_RUN_EXPLORE_NOT_DEPLOYABLE: {
+    check: 'C-22.27',
+    where: 'src/run-rules/rules.mjs originAllowed, called from src/ai-runs/index.mjs open',
+    translation: 'Nothing was started, because exploring a question unasked is switched on only after investigating has '
+      + 'been checked in real use and has passed its test investigations.',
+  },
+  /* B4 (K2485): `ai-runs` R73 — the step an exploring run names is not one the record holds for it; minted by `ai-runs`,
+     read here by key. Something unseen answers as something absent. */
+  AI_RUN_STEP_UNKNOWN: {
+    check: 'C-22.28',
+    where: 'src/ai-runs/index.mjs open, reached from an exploring run',
+    translation: 'Nothing was started, because the step this investigation names is not one the record holds here. '
+      + 'Something you cannot see is answered exactly as something that does not exist.',
   },
 };
 

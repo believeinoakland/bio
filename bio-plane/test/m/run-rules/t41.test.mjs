@@ -6,7 +6,7 @@ import { TEST_BAR_PARTS, TEST_BAR_RECORD, checkTestBarRecord, testBarHeld, testB
          CIVICSMITH_TEST_SET, TEST_MATTER_SHAPE, DEPLOYMENT_SEQUENCE, RUN_MODES, DEPLOYED_MODES, deployedModesFor,
          deployable, ASK_MODE, DRAFT_MODE, ENQUIRE_MODE, DRAFT_KINDS, DRAFT_REACH, draftMayRead, startAllowed,
          checkAskBounds, ASK_BOUNDS, RUN_ORIGINS, originAllowed, RUN_BOUNDS, PLANE_COUNTED_BOUNDS, checkConsume,
-         checkBound, runStatusFor, finishedBound, checkPagesRead, AI_RUN_CHECKS } from "../../../src/run-rules/index.mjs";
+         checkBound, runStatusFor, finishedBound, checkPagesRead, AI_RUN_CHECKS, translationOf } from "../../../src/run-rules/index.mjs";
 import { refusal } from "./helpers.mjs";
 
 const SET = Object.freeze({ id: "civicsmith-fixture", version: 3, matters: [{ id: "M1" }] });
@@ -100,25 +100,48 @@ test("R19 (T41): the deploy gate reads the test bar besides the chain — partDe
   assert.equal(deployable("investigate", [ver("check")]), true);
 });
 
-test("R23: RUN_ORIGINS is [member, explore], frozen; a member-origin run is admitted, an explore-origin run only while investigate is deployable (R19), any other or absent origin AI_RUN_ORIGIN_NOT_ADMITTED (C-22.24); never throws", () => {
+test("R23: RUN_ORIGINS is [member, explore], frozen; a member-origin run is admitted, an explore-origin run only while investigate is deployable (R19), else AI_RUN_EXPLORE_NOT_DEPLOYABLE (C-22.27); any other or absent origin AI_RUN_ORIGIN_UNKNOWN (C-22.25); never throws", () => {
   assert.ok(Object.isFrozen(RUN_ORIGINS));
   assert.deepEqual([...RUN_ORIGINS], ["member", "explore"]);
   assert.deepEqual(originAllowed({ origin: "member" }), { ok: true });
   assert.deepEqual(originAllowed({ origin: "member", investigateDeployable: false }), { ok: true });
   assert.deepEqual(originAllowed({ origin: "explore", investigateDeployable: true }), { ok: true });
   for (const d of [false, undefined, null, "true", 1, {}]) {
-    const r = refusal(originAllowed({ origin: "explore", investigateDeployable: d }), "AI_RUN_ORIGIN_NOT_ADMITTED");
-    assert.deepEqual([r.check, r.origin], ["C-22.24", "explore"]);
+    const r = refusal(originAllowed({ origin: "explore", investigateDeployable: d }), "AI_RUN_EXPLORE_NOT_DEPLOYABLE");
+    assert.deepEqual([r.check, r.origin], ["C-22.27", "explore"]);
     assert.match(r.detail, /^an exploring run opens only while investigating is switched on/);
   }
   for (const o of [undefined, null, "", "Member", "explorer", "system", "scheduler", 3, ["member"]]) {
-    const r = refusal(originAllowed({ origin: o, investigateDeployable: true }), "AI_RUN_ORIGIN_NOT_ADMITTED");
+    const r = refusal(originAllowed({ origin: o, investigateDeployable: true }), "AI_RUN_ORIGIN_UNKNOWN");
+    assert.equal(r.check, "C-22.25");
     assert.match(r.detail, /is not where a run comes from/);
   }
-  for (const x of [null, undefined, 3, "member"]) refusal(originAllowed(x), "AI_RUN_ORIGIN_NOT_ADMITTED");
+  for (const x of [null, undefined, 3, "member"]) refusal(originAllowed(x), "AI_RUN_ORIGIN_UNKNOWN");
   /* control: the flag the gate reads is R19's own answer, so it is false on Civicsmith's set while it is empty */
   if (CIVICSMITH_TEST_SET.matters.length === 0)
-    refusal(originAllowed({ origin: "explore", investigateDeployable: partDeployable("investigate", {}) }), "AI_RUN_ORIGIN_NOT_ADMITTED");
+    refusal(originAllowed({ origin: "explore", investigateDeployable: partDeployable("investigate", {}) }), "AI_RUN_EXPLORE_NOT_DEPLOYABLE");
+});
+
+test("B3, B4 (K2482, K2485; ai-runs R73, R75): the rows of ai-runs' T41 acts are held here and read by key — AI_GROUP_TEST_INVALID C-22.24 (groupTestSet), AI_RUN_EXPLORE_NEEDS_STEP C-22.26 and AI_RUN_STEP_UNKNOWN C-22.28 (an exploring run's step), each minted by ai-runs, with a plain-words translation", () => {
+  const rows = { AI_GROUP_TEST_INVALID: ["C-22.24", /groupTestSet/], AI_RUN_EXPLORE_NEEDS_STEP: ["C-22.26", /open/],
+                 AI_RUN_STEP_UNKNOWN: ["C-22.28", /open/] };
+  for (const [code, [n, site]] of Object.entries(rows)) {
+    const row = AI_RUN_CHECKS[code];
+    assert.ok(row, code);
+    assert.equal(row.check, n, code);
+    assert.match(row.where, /^src\/ai-runs\/index\.mjs /, `${code} is minted by ai-runs`);
+    assert.match(row.where, site, code);
+    assert.equal(translationOf(code), row.translation, code);
+    assert.ok(row.translation.length >= 40, code);
+    assert.doesNotMatch(row.translation, /\b[A-Z][A-Z_]{3,}\b/, `${code}: plain words`);
+  }
+  assert.match(AI_RUN_CHECKS.AI_GROUP_TEST_INVALID.translation, /never switch a part on or off/, "a group's set opens no gate");
+  assert.match(AI_RUN_CHECKS.AI_RUN_STEP_UNKNOWN.translation, /cannot see is answered exactly as something that does not exist/);
+  /* beside the test bar's own row, which ai-runs also answers through checkTestBarRecord */
+  assert.equal(AI_RUN_CHECKS.AI_TEST_BAR_UNFIT.check, "C-22.22");
+  /* control: no code of a later module sneaks in under C-22 */
+  const c22 = Object.values(AI_RUN_CHECKS).map((r) => r.check).filter((c) => /^C-22\.2\d$/.test(c)).sort();
+  assert.deepEqual(c22, ["C-22.20", "C-22.21", "C-22.22", "C-22.23", "C-22.24", "C-22.25", "C-22.26", "C-22.27", "C-22.28"]);
 });
 
 test("R24: ENQUIRE_MODE describes the mode enquire, frozen — interactive, no run, read-only within ASK_SCOPE, bounded by ASK_BOUNDS, writing nothing itself; deployed apart by its own flag (false today), set once R19's test bar is held for it; startAllowed admits it only at a member's act", () => {

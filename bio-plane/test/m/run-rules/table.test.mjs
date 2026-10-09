@@ -25,8 +25,11 @@ const MINTED_HERE = {
   AI_ASK_BOUND_ABOVE_CEILING: ["C-22.21", "src/run-rules/rules.mjs checkAskBounds"],
   AI_TEST_BAR_UNFIT: ["C-22.22", "src/run-rules/test-bar.mjs checkTestBarRecord"],
   AI_RUN_READ_NO_AI: ["C-22.23", "src/run-rules/rules.mjs checkPagesRead"],
-  AI_RUN_ORIGIN_NOT_ADMITTED: ["C-22.24", "src/run-rules/rules.mjs originAllowed"],
+  AI_RUN_ORIGIN_UNKNOWN: ["C-22.25", "src/run-rules/rules.mjs originAllowed"],
+  AI_RUN_EXPLORE_NOT_DEPLOYABLE: ["C-22.27", "src/run-rules/rules.mjs originAllowed"],
 };
+/** The C-22 rows of ai-runs' T41 acts (B3, B4; K2482, K2485), minted by ai-runs (its R73, R75) and read here by key. */
+const AI_RUNS_C22 = { AI_GROUP_TEST_INVALID: "C-22.24", AI_RUN_EXPLORE_NEEDS_STEP: "C-22.26", AI_RUN_STEP_UNKNOWN: "C-22.28" };
 /** R20's rows, minted by ai-runs (its R52) and answers, read here by key. */
 const USE = { AI_NO_ACCOUNT: "C-109.10", NOT_YOUR_CEILING: "C-109.11" };
 /** R20's retired codes (T40; N812; K2373, K2400), each with its number, never reused, and its replacement in ai-use. */
@@ -58,16 +61,16 @@ function wellFormed(code, row) {
 }
 
 test("R11: the table holds exactly the rows the pure rules mint (each where naming this module's site, C-22.7's skill-version.mjs checkSkillVersion) and the rows of ai-runs' acts, each code once with its number; every refusal carries its row", () => {
-  const want = { ...Object.fromEntries(Object.entries(MINTED_HERE).map(([c, [n]]) => [c, n])), ...AI_RUNS_ACTS, ...PLANNING, ...USE };
+  const want = { ...Object.fromEntries(Object.entries(MINTED_HERE).map(([c, [n]]) => [c, n])), ...AI_RUNS_C22, ...AI_RUNS_ACTS, ...PLANNING, ...USE };
   assert.deepEqual(Object.fromEntries(Object.entries(AI_RUNS_CHECKS).map(([c, r]) => [c, r.check])), want);
   const numbers = Object.values(AI_RUNS_CHECKS).map((r) => r.check);
   assert.equal(new Set(numbers).size, numbers.length, "one condition per C-number");
   for (const [code, row] of Object.entries(AI_RUNS_CHECKS)) wellFormed(code, row);
   for (const [code, [, site]] of Object.entries(MINTED_HERE)) assert.ok(AI_RUNS_CHECKS[code].where.startsWith(site), code);
-  for (const code of [...Object.keys(AI_RUNS_ACTS), ...Object.keys(PLANNING), ...Object.keys(USE)])
+  for (const code of [...Object.keys(AI_RUNS_C22), ...Object.keys(AI_RUNS_ACTS), ...Object.keys(PLANNING), ...Object.keys(USE)])
     assert.match(AI_RUNS_CHECKS[code].where, /^src\/ai-runs\/index\.mjs /, `${code} is minted by ai-runs`);
   /* the families as published, one object across them */
-  assert.deepEqual(Object.keys(AI_RUN_OWN_CHECKS), Object.keys(MINTED_HERE));
+  assert.deepEqual(Object.keys(AI_RUN_OWN_CHECKS).sort(), [...Object.keys(MINTED_HERE), ...Object.keys(AI_RUNS_C22)].sort());
   assert.equal(Object.keys(AI_RUN_ACT_SHAPE_CHECKS).length, 6);
   assert.deepEqual(Object.keys(AI_RUNS_CONTEXT_CHECKS), ["AI_RUNS_NO_CONTEXT_TYPE", "AI_RUNS_UNKNOWN_CONTEXT_TYPE", "AI_RUNS_NO_CONTEXT_ID"]);
   assert.deepEqual(Object.keys(SURFACE_RUN_CHECKS), ["SURFACE_NO_RUN", "SURFACE_RUN_NOT_RUNNING", "SURFACE_NO_BOUND", "SURFACE_BOUND_REACHED"]);
@@ -80,7 +83,8 @@ test("R11: the table holds exactly the rows the pure rules mint (each where nami
     RR.checkConsume({ lease: 0 }, { map: true }), RR.checkConsume({ x: 1 }, { map: true }),
     RR.checkConsume([{ bound: "fetches" }], { list: true }), RR.checkRunState("x".repeat(262144)),
     RR.startAllowed({}), RR.checkVerification(null), RR.checkAskBounds({ turns: 13, bytes: 1, wall_ms: 1, reads: 1 }),
-    RR.checkTestBarRecord(null), RR.checkPagesRead({ limits: [{ on: true }] }), RR.originAllowed({})];
+    RR.checkTestBarRecord(null), RR.checkPagesRead({ limits: [{ on: true }] }), RR.originAllowed({}),
+    RR.originAllowed({ origin: "explore" })];
   assert.deepEqual(minted.map((r) => r.code), Object.keys(MINTED_HERE));
   for (const r of minted) assert.deepEqual([r.ok, r.check, r.translation], [false, AI_RUNS_CHECKS[r.code].check, AI_RUNS_CHECKS[r.code].translation]);
 });

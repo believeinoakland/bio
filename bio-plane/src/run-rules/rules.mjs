@@ -742,18 +742,20 @@ export const RUN_ORIGINS = Object.freeze(["member", "explore"]);
 /** R23 — MAY A RUN OF THIS ORIGIN OPEN? `{ok: true}` for `member`; for `explore` only while `investigate` is deployable
  *  under R19 as amended — its verification chain and its test bar both held — which the caller reads from the record
  *  and hands here as `investigateDeployable` (`partDeployable("investigate", …)`); exactly `true` admits, anything else
- *  does not. Any other origin, and an absent one, is refused too: an origin is said, never assumed. Refused
- *  `AI_RUN_ORIGIN_NOT_ADMITTED` (C-22.24), the detail naming the origin. Pure; never throws. */
+ *  is `AI_RUN_EXPLORE_NOT_DEPLOYABLE` (C-22.27). Any other origin, and an absent one, is `AI_RUN_ORIGIN_UNKNOWN`
+ *  (C-22.25): an origin is said, never assumed. The one site that mints both; `ai-runs` R73's open relays them (B4,
+ *  K2485). Pure; never throws. */
 export function originAllowed(asked) {
   const { origin = null, investigateDeployable = false } = asked && typeof asked === "object" ? asked : {};
   const o = typeof origin === "string" ? origin : "";
   if (o === "member") return { ok: true };
-  if (o === "explore" && investigateDeployable === true) return { ok: true };
-  return refusal("AI_RUN_ORIGIN_NOT_ADMITTED", o === "explore"
-    ? "an exploring run opens only while investigating is switched on, after it has been checked in real use and has "
-      + "passed its test investigations (R19). Nothing was started"
-    : `${JSON.stringify(String(origin ?? "").slice(0, 40))} is not where a run comes from: a run is opened by a member `
-      + `or by the explorer (${RUN_ORIGINS.join(", ")}). Nothing was started`, { origin: o || null });
+  if (o === "explore")
+    return investigateDeployable === true ? { ok: true } : refusal("AI_RUN_EXPLORE_NOT_DEPLOYABLE",
+      "an exploring run opens only while investigating is switched on, after it has been checked in real use and has "
+        + "passed its test investigations (R19). Nothing was started", { origin: o });
+  return refusal("AI_RUN_ORIGIN_UNKNOWN",
+    `${JSON.stringify(String(origin ?? "").slice(0, 40))} is not where a run comes from: a run is opened by a member or `
+      + `by the explorer (${RUN_ORIGINS.join(", ")}). Nothing was started`, { origin: o || null });
 }
 
 /** R26 (T41-21; D2) — MAY THE RUN READ INSIDE THIS DOCUMENT? `limits` is the material limits held for the document
