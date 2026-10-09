@@ -51,3 +51,7 @@ Size (session_01243u4joqb8ZpywX663LU1U): test runs 16, module lines 1022
 ## J2 · REPORT
 
 A seam between steps (STEPS #1) and ai-runs (AI-RUNS #14), measured against their requirements: steps R1 lets a machine credential create a step 'only for a run it holds', and ai-runs R73 opens a run 'with step', so the step must exist before the run it is for. question-explorer mints the run id, calls steps.stepCreate({place, work, by, run, enabled_by}) naming that not-yet-opened run, then ai-runs.open({run, step, origin: 'explore', ...}), and deletes the untouched step (steps R6) when the open is refused. steps R1 should accept a run id its caller is about to open (or check the run at ai-runs' open instead); ai-runs R74's openMany has the same order. Nothing to change in question-explorer.
+
+## J3 · COMPLETE
+
+T41-28 done: R1–R14 built and tested (26/26, each R named with a negative control); checks format, architecture, coverage 0 in a copy with my paths filled; ownership only K1043's modules.json line. B2 (C-145, entities) and B3 (real leg-earning R13) applied. Paths, tests and final uses (adds entities and content, drops contradiction) in my record's Completion. Awaiting CHANGEs for steps, ai-use, ai-runs T41, run-rules R19 and capture-requests R55. J2 reports the steps R1 / ai-runs R73 seam.
