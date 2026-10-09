@@ -195,6 +195,28 @@ CREATE TABLE IF NOT EXISTS group_description (
   at          TEXT NOT NULL
 );
 
+-- R124 (DEC-186 (1)-(3)): EVERY CHANGE A MEMBER MAKES TO THEIR OWN HANDLE, append-only: never deleted or rewritten
+-- (R57). A handle a member held before (from_handle) stays taken for every other member (R16, R124), so "formerly"
+-- never names another member; R17's rows read it as "formerly". Exempt from purge with the members (R115).
+CREATE TABLE IF NOT EXISTS handle_history (
+  seq         INTEGER PRIMARY KEY AUTOINCREMENT,
+  member_id   TEXT NOT NULL,
+  from_handle TEXT NOT NULL,
+  to_handle   TEXT NOT NULL,
+  at          TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS handle_history_member ON handle_history(member_id, seq);
+CREATE INDEX IF NOT EXISTS handle_history_from ON handle_history(from_handle);
+
+-- R123 (K1881): THE HANDLE CHECK'S WINDOW, a two-bucket count of checks per 10-minute window, keyed by the
+-- invitation's hash or the member's id (never a usable invitation). Only the current and previous windows are kept.
+CREATE TABLE IF NOT EXISTS handle_check_window (
+  key   TEXT NOT NULL,
+  win   INTEGER NOT NULL,
+  count INTEGER NOT NULL,
+  PRIMARY KEY (key, win)
+);
+
 -- R107 (DEC-136 (1)): WHETHER MEMBERS ARE TOLD WHAT A COURT CAN REACH, an administrator's choice, append-only; the
 -- latest row is the setting and no row means nobody has chosen (nothing preselected). Exempt from purge (R111).
 CREATE TABLE IF NOT EXISTS court_notice (
@@ -226,7 +248,9 @@ export const MEMBERSHIP_ADDITIVE_COLUMNS = [
    R18. */
 export const MEMBERSHIP_EXEMPT_TABLES = ["members", "member_expertise", "admin_votes", "hosting_access",
   /* R111 (T34): the doors, the group's description and the court-notice setting. */
-  "join_doors", "group_description", "court_notice"];
+  "join_doors", "group_description", "court_notice",
+  /* R124, R123 (T40): the handle history and the handle check's window. */
+  "handle_history", "handle_check_window"];
 /* R115 (T38): participation, visibility and the sight index, with R36's removals; the owner votes, decisions and requests
    to join are `project-roster`'s, declared by it (its R18). */
 export const MEMBERSHIP_PROJECT_TABLES = ["project_participants", "project_removals", "project_visibility", "project_sight"];
