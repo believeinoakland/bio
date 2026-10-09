@@ -179,3 +179,7 @@ Numbered entries; BOB answers each in rulings (K) on `tranche/T<n>`. Decision st
 ## H36 · 2026-10-09 · Bob revises System Design §1
 
 **Carries:** a canon amendment for BOB's next canon fold. In `BIO_System_Design.md` §1, replace "the objective is BETTER GOVERNMENT through greater understanding, less narrative, and accountability; … and *less narrative* binds us before it binds anyone else." with Bob's words: "the objective is BETTER GOVERNMENT through greater understanding, increased accountability, and the separation of narrative from evidence; … bad actors are identified by EVIDENCE, never assumed by role; less narrative allows the full realm of possibilities to be seen and considered." The middle clause, "bad actors are identified by EVIDENCE, never assumed by role", is unchanged. The design of record §1.0 quotes the revised text.
+
+## H37 · 2026-10-09 · Bob's review comments on the design of record
+
+**Carries:** 1.1 now reads "a rule was followed or broken"; the change is wording only. 1.1 also now reads "Finds that cut against what members expect are shown as prominently as those that support it". Bob changed "at least as" to "as". That differs from Content Framework invariant 7 ("surfaced at least as prominently"), so the canon fold should bring invariant 7 into line, or ask Bob to confirm whether he means it there too.
