@@ -8,7 +8,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, block, version, merge, V } from "./fixture.mjs";
-import { basisVersionsOps, CONCLUSION_BIAS_MAX } from "../../../src/basis-versions/index.mjs";
+import { basisVersionsOps, CONCLUSION_BIAS_EFFECTS } from "../../../src/basis-versions/index.mjs";
+import { CONCLUDE_ACT_CHECKS } from "../../../src/basis-versions/checks.mjs";
+import { readBiasApplied } from "../../../src/inquiry-grammar/index.mjs";
 import { biasOf } from "../../../src/bias/index.mjs";
 
 const DOC = "INFO-2026-0001-ledger", Q = "INQ-2026-0001-transfers", T = "2026-09-27T00:00:00Z";
@@ -54,6 +56,13 @@ test("R48: a project's conclusion records bias_applied (both conclusion effects)
   assert.deepEqual([r.bias_applied, r.bias_lens_sha], [BOTH, SHA]);
   assert.deepEqual(bias.calls, BOTH.map((e) => ({ statement: e.statement, scope: { type: "project", id: P }, viewer: V("ruth") })),
     "each statement asked once, at the project's scope, the acting member as viewer");
+  /* written in inquiry-grammar R18's one encoding (K2479): its reader reads the row back as the list */
+  const row = w.text(P).split("\n").slice(w.text(P).split("\n").indexOf("conclusions:") + 1);
+  const keys = Object.fromEntries(row.filter((l) => /^    bias_/.test(l))
+    .map((l) => { const m = /^    (\w+): "(.*)"$/.exec(l); return [m[1], m[2]]; }));
+  assert.deepEqual(keys, { bias_1_statement: "p1", bias_1_effect: "inference_refused", bias_2_statement: "s3",
+                           bias_2_effect: "scrutiny_raised", bias_statements_sha: SHA });
+  assert.deepEqual(readBiasApplied(keys), BOTH);
   const rec = w.bv.conclusionRecordOf(P, Q, V("ruth"));
   assert.deepEqual([rec.history.length, rec.stance.act, rec.stance.bias_applied, rec.stance.bias_lens_sha],
     [1, "concluded", BOTH, SHA], "recorded with the conclusion and read back, in order");
@@ -96,7 +105,7 @@ test("R48: a statement not in force (false) or undetermined (null) is refused BI
 test("R48: a malformed bias_applied is refused BAD_BIAS_APPLIED before bias is asked and writes nothing — not a list, not JSON, an unknown field or a leg's from/to, an empty, unholdable or overlong statement, a leg's effect, a repeat, too many, or any at all without a project; a well-formed list is recorded (control)", () => {
   const { w, bias, P } = setup();
   bias.lens = { p1: true, s3: true };
-  const many = Array.from({ length: CONCLUSION_BIAS_MAX + 1 }, (_, i) => ({ statement: `s${i}`, effect: "scrutiny_raised" }));
+  const many = Array.from({ length: 33 }, (_, i) => ({ statement: `s${i}`, effect: "scrutiny_raised" }));
   const cases = [
     ["not a list", { statement: "p1", effect: "inference_refused" }],
     ["not JSON", "[{statement: p1}"],
@@ -107,6 +116,7 @@ test("R48: a malformed bias_applied is refused BAD_BIAS_APPLIED before bias is a
     ["an empty statement", [{ statement: "  ", effect: "inference_refused" }]],
     ["a statement with a quote", [{ statement: 'p"1', effect: "inference_refused" }]],
     ["a statement with a comment mark", [{ statement: "p#1", effect: "inference_refused" }]],
+    ["a statement with an apostrophe", [{ statement: "p'1", effect: "inference_refused" }]],
     ["an overlong statement", [{ statement: "p".repeat(201), effect: "inference_refused" }]],
     ["a leg's effect grade_lowered", [{ statement: "p1", effect: "grade_lowered" }]],
     ["a leg's effect leg_excluded", [{ statement: "p1", effect: "leg_excluded" }]],
@@ -117,8 +127,14 @@ test("R48: a malformed bias_applied is refused BAD_BIAS_APPLIED before bias is a
   const before = [w.sha(P), w.sha(Q)];
   for (const [label, biasApplied] of cases) {
     const r = conclude(w, { project: P, biasApplied });
-    assert.deepEqual([r.ok, r.reason, typeof r.detail], [false, "BAD_BIAS_APPLIED", "string"], label);
+    assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation, typeof r.detail],
+      [false, "BAD_BIAS_APPLIED", "BAD_BIAS_APPLIED", "C-25.35", CONCLUDE_ACT_CHECKS.BAD_BIAS_APPLIED.translation, "string"], label);
+    /* past the list's own form, the departures are inquiry-grammar R18's shape check's, under this module's C-25.35 */
+    if (Array.isArray(biasApplied))
+      assert.ok(r.findings.length > 0 && r.findings.every((f) => f.check === "C-25.35" && f.code === "BIAS_APPLICATION_MALFORMED"),
+        `${label}: ${JSON.stringify(r.findings).slice(0, 200)}`);
   }
+  assert.deepEqual([...CONCLUSION_BIAS_EFFECTS], ["inference_refused", "scrutiny_raised"]);
   /* without a project: refused, even where every statement would be in force */
   const np = w.bv.conclude({ target: Q, conclusion: "It was bypassed.", falsifier: "a vote", version: "first",
                              biasApplied: BOTH, author: RUTH, viewer: V("ruth") });

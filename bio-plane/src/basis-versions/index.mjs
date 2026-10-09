@@ -29,7 +29,7 @@
 
 import { parseFrontmatter, isMachineIdentity, normalizeType, LEGACY_TYPE_ALIASES, OBJECT_TYPES, STATES, vocabFor,
          createSha256 } from "../record-grammar/index.mjs";
-import { checkLegExtentGrammar, INQUIRY_GRAMMAR_CHECKS } from "../inquiry-grammar/index.mjs";
+import { checkLegExtentGrammar, INQUIRY_GRAMMAR_CHECKS, biasAppliedFindings, readBiasApplied } from "../inquiry-grammar/index.mjs";
 import { readingSourceFromColumns } from "../textchain.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal } from "../membership/index.mjs";
@@ -75,11 +75,9 @@ export const TESTIMONY_REACH_DEPTH = 64;
 export const VERSION_REASON_MAX = 500;
 /** R12 (C-25.32): the shortest reason the version grammar stores on a state that needs one (C-25.19's floor). */
 export const VERSION_REASON_MIN = 8;
-/** R48: a conclusion's bias applications — the effects a conclusion may record, the entries one carries at most, and
- *  the longest statement id the frontmatter holds verbatim. */
+/** R48: the effects a conclusion's bias application may name (inquiry-grammar R18's shape, a conclusion's own effects;
+ *  its caps and encoding are inquiry-grammar's, K2479). */
 export const CONCLUSION_BIAS_EFFECTS = Object.freeze(["inference_refused", "scrutiny_raised"]);
-export const CONCLUSION_BIAS_MAX = 32;
-export const BIAS_STATEMENT_MAX = 200;
 /** R14: the six acts and the state each moves a version to; `current` and `hide` move none. */
 export const VERSION_ACT_TO = Object.freeze({
   accept: "accepted", reject: "rejected", consider: "considering", revert: "suggested", current: null, hide: null,
@@ -123,52 +121,26 @@ const biasNotInForceOf = () => (typeof inquiryFace.biasNotInForce === "function"
                                  detail: `bias statement '${String(statement ?? "").slice(0, 80)}' is not in the lens in `
                                        + `force for ${where}, so it cannot be recorded as applied there` }));
 
-/* R48: a conclusion's `bias_applied`, as a caller sends it (an array, or its JSON from a query string), judged against
-   inquiry-grammar R18's shape with a conclusion's own effects: `{entries}` (empty when none was sent) or `{refused}`. A
-   statement is held verbatim by the restricted frontmatter (no escapes), so one it cannot hold is refused, never
-   rewritten. */
+/* R48: a conclusion's `bias_applied`, as a caller sends it (a list, or its JSON from a query string), judged by
+   inquiry-grammar R18's one shape check (`biasAppliedFindings`) with a conclusion's own effects and this module's
+   C-25.35: `{entries}` (empty when none was sent), each statement trimmed as a member's id is, or `{refused}`. */
 function conclusionBiasApplied(raw) {
-  const bad = (detail) => ({ refused: { ok: false, reason: "BAD_BIAS_APPLIED", detail } });
+  const row = CONCLUDE_ACT_CHECKS.BAD_BIAS_APPLIED;
+  const bad = (detail, findings = []) => ({ refused: { ok: false, reason: "BAD_BIAS_APPLIED", code: "BAD_BIAS_APPLIED",
+                                                       check: row.check, translation: row.translation, detail, findings } });
   if (raw === undefined || raw === null || raw === "") return { entries: [] };
   let list = raw;
   if (typeof raw === "string") {
     try { list = JSON.parse(raw); } catch { return bad("bias_applied is a JSON list of {statement, effect}, and this is not JSON"); }
   }
+  /* a row-shaped object is the grammar's other input form; a caller sends a list */
   if (!Array.isArray(list)) return bad("bias_applied is a list of {statement, effect}");
-  if (list.length > CONCLUSION_BIAS_MAX) return bad(`a conclusion records at most ${CONCLUSION_BIAS_MAX} bias applications`);
-  const entries = [], seen = new Set();
-  for (let i = 0; i < list.length; i++) {
-    const e = list[i];
-    if (!e || typeof e !== "object" || Array.isArray(e)) return bad(`bias_applied[${i}] is not a {statement, effect}`);
-    const extra = Object.keys(e).filter((k) => k !== "statement" && k !== "effect").sort();
-    if (extra.length)
-      return bad(`bias_applied[${i}] names ${extra.map((k) => `'${k}'`).join(", ")}: a conclusion's bias application `
-               + "carries a statement and an effect only (from and to belong to grade_lowered, a leg's effect)");
-    const statement = typeof e.statement === "string" ? e.statement.trim() : "";
-    if (!statement || statement.length > BIAS_STATEMENT_MAX || /["\\\r\n#]/.test(statement))
-      return bad(`bias_applied[${i}]'s statement is the id of a bias statement in force: a non-empty string of at most `
-               + `${BIAS_STATEMENT_MAX} characters with no quote, backslash, line break or comment mark`);
-    if (!CONCLUSION_BIAS_EFFECTS.includes(e.effect))
-      return bad(`bias_applied[${i}]'s effect is one of ${CONCLUSION_BIAS_EFFECTS.join(", ")}: what a declared bias did `
-               + "to this conclusion");
-    const key = `${statement}\u0000${e.effect}`;
-    if (seen.has(key)) return bad(`bias_applied[${i}] repeats statement '${statement.slice(0, 80)}' with effect ${e.effect}`);
-    seen.add(key);
-    entries.push({ statement, effect: e.effect });
-  }
-  return { entries };
-}
-
-/* R48, R22: a conclusion row's bias applications as `appendConclusionEntry` writes them (`bias_<n>_statement`,
-   `bias_<n>_effect`, numbered from 1), in order; a malformed pair is carried as written, never dropped. */
-function biasAppliedIn(r) {
-  const out = [];
-  for (let n = 1; n <= CONCLUSION_BIAS_MAX; n++) {
-    const st = r[`bias_${n}_statement`], ef = r[`bias_${n}_effect`];
-    if (st === undefined && ef === undefined) break;
-    out.push({ statement: typeof st === "string" ? st : null, effect: typeof ef === "string" ? ef : null });
-  }
-  return out;
+  const trimmed = list.map((e) => (e && typeof e === "object" && !Array.isArray(e) && typeof e.statement === "string"
+    ? { ...e, statement: e.statement.trim() } : e));
+  const findings = [];
+  biasAppliedFindings("the conclusion", trimmed, findings, { effects: CONCLUSION_BIAS_EFFECTS, checkId: row.check });
+  if (findings.length) return bad(findings[0].message ?? findings[0].detail ?? "bias_applied is malformed", findings);
+  return { entries: trimmed.map((e) => ({ statement: e.statement, effect: e.effect })) };
 }
 
 export class BasisVersions {
@@ -562,7 +534,7 @@ export class BasisVersions {
                          ? { by: s(r.falsifier_override_by), at: s(r.falsifier_override_at) } : null,
                        commentary: commentary ? { text: commentary, by, at, evidence: false } : null,
                        /* R48: what a declared bias did to this conclusion, and the lens it was checked against */
-                       bias_applied: biasAppliedIn(r), bias_lens_sha: s(r.bias_statements_sha) });
+                       bias_applied: readBiasApplied(r), bias_lens_sha: s(r.bias_statements_sha) });
       } else if (act === "withdrawn") {
         history.push({ ...base, act: "withdrawn", state: "withdrawn", version: s(r.withdraws_version),
                        withdraws_at: s(r.withdraws_at), reason: s(r.reason) ?? "" });
@@ -1089,7 +1061,7 @@ export class BasisVersions {
     const bias = conclusionBiasApplied(biasApplied);
     if (bias.refused) return bias.refused;
     if (bias.entries.length && !pid)
-      return { ok: false, reason: "BAD_BIAS_APPLIED",
+      return { ok: false, reason: "BAD_BIAS_APPLIED", ...concludeRow("BAD_BIAS_APPLIED"),
                detail: "bias applications are recorded with a PROJECT's conclusion and checked against that project's "
                      + "lens in force; a conclusion drawn with no project carries none. Conclude for a project "
                      + "(project=), or send no bias_applied." };
