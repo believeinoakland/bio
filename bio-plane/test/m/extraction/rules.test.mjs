@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { fresh, bundle, calibration } from "./fixture.mjs";
 import { driftObligations } from "../../../src/extraction/drift.mjs";
 import { EXTRACT_RUN_MODE, EXTRACT_FUNCTIONS, checkExtractFunction, checkExtractVersion, proposedReadingGrade, checkProposedRef,
-         proposalChain, mintRatio } from "../../../src/extractrun.mjs";
+         proposalChain, mintRatio, quoteFigures } from "../../../src/extractrun.mjs";
 import { layerChain } from "../../../src/textchain.mjs";
 
 const cal = (id, cap, at = "2026-09-01") => ({ calibration_id: id, engine: "tess", version: "5", at, cap, probe_id: "p", probe_inputs: ["x"], scores: [1], measured_by: "m" });
@@ -106,6 +106,75 @@ test("R42 R44: a proposed reading's grade is computed, never taken: kind and key
   /* PROPOSAL_ABOVE_CEILING: no proposal earns stronger than B, whatever it carries */
   for (const e of [{ refKind: "a", refKey: "b", label: "c", kind: "x", key: "y", ref: "a:b" }, { refKind: "a", refKey: "b", source_assigned: true }])
     assert.ok(["B", "C", null].includes(proposedReadingGrade(e).grade));
+});
+
+test("R42 R44 (T41, D4): a verified quote, byte for byte the capture's text at its place, earns the capture's own ceiling whatever it is, with every number and date named; negative controls: a quote altered by one byte, in case, whitespace or Unicode form, without a place, without the record's text, or naming nothing keeps the old rule", () => {
+  const text = "Item 7. The Council approved $1,250,000.50 on March 3, 2025 by a vote of 5-2. R\u00e9sum\u00e9 filed.";
+  const place = { kind: "pdf-page", ref: "agenda", page: 0 };
+  const quote = "approved $1,250,000.50 on March 3, 2025 by a vote of 5-2";
+  const byKey = { ref: "item:7", refKind: "item", refKey: "7", quote, source: place };
+  const byName = { ref: "Council", label: "Council", quote, source: place };
+  const figures = [{ kind: "number", text: "$1,250,000.50", at: 9 }, { kind: "date", text: "March 3, 2025", at: 26 },
+                   { kind: "number", text: "5-2", at: 53 }];
+  /* the capture's own ceiling, every letter, from a key and from a name alone: never the B cap, never the name's C */
+  for (const ceiling of ["A", "B", "C", "D"])
+    for (const e of [byKey, byName]) {
+      const g = proposedReadingGrade(e, { text, ceiling });
+      assert.deepEqual([g.grade, g.verified_quote, g.check], [ceiling, true, figures], `${e.ref} at ${ceiling}`);
+      assert.match(g.why, new RegExp(`^earned ${ceiling}: .*capture's own ceiling .*3 number\\(s\\) and date\\(s\\) are named`));
+      assert.equal(checkProposedRef(e, { text, ceiling }), null, "a verified quote is not refused PROPOSAL_ABOVE_CEILING");
+    }
+  /* an undetermined ceiling stays undetermined, stated, and is not refused as naming nothing */
+  const und = proposedReadingGrade(byKey, { text, ceiling: null });
+  assert.deepEqual([und.grade, und.verified_quote, und.check], [null, true, figures]);
+  assert.match(und.why, /^earned undetermined: /);
+  assert.equal(checkProposedRef(byKey, { text, ceiling: null }), null);
+  /* a figure-free verified quote names nothing to check */
+  const plain = proposedReadingGrade({ ...byKey, quote: "Item" }, { text, ceiling: "A" });
+  assert.deepEqual([plain.grade, plain.check], ["A", []]);
+  assert.match(plain.why, /holds no number or date$/);
+  /* NEGATIVE CONTROLS: each keeps exactly the old rule (B for a key, C for a name), unverified, nothing named */
+  const old = (e, capture) => { const g = proposedReadingGrade(e, capture); return [g.grade, g.verified_quote, g.check]; };
+  const nfd = "Re\u0301sume\u0301 filed";
+  for (const [why, e, capture] of [
+    ["one byte changed", { ...byKey, quote: quote.replace("5-2", "5-3") }, { text, ceiling: "A" }],
+    ["case folded", { ...byKey, quote: quote.replace("March", "march") }, { text, ceiling: "A" }],
+    ["whitespace changed", { ...byKey, quote: quote.replace(" by ", "  by ") }, { text, ceiling: "A" }],
+    ["Unicode form changed (NFD of NFC text)", { ...byKey, quote: nfd }, { text, ceiling: "A" }],
+    ["a lone surrogate", { ...byKey, quote: "\ud800" }, { text: text + "\ud800", ceiling: "A" }],
+    ["no place", { ...byKey, source: undefined }, { text, ceiling: "A" }],
+    ["an empty quote", { ...byKey, quote: "" }, { text, ceiling: "A" }],
+    ["no record text", byKey, null],
+    ["the text not a string", byKey, { text: null, ceiling: "A" }],
+    ["a ceiling that is no grade", byKey, { text, ceiling: "Z" }],
+    ["the proposal hands in its own text and ceiling", { ...byKey, text, ceiling: "A", capture: { text, ceiling: "A" } }, undefined],
+  ]) assert.deepEqual(old(e, capture), ["B", false, []], why);
+  assert.deepEqual(old({ ...byName, quote: quote.toUpperCase() }, { text, ceiling: "A" }), ["C", false, []], "a name, quote not exact");
+  assert.equal(proposedReadingGrade({ ...byKey, quote: nfd.normalize("NFC") }, { text, ceiling: "A" }).grade, "A", "the control's NFC twin verifies");
+  /* a verified quote does not rescue a proposal that names nothing, an offered grade or an unreadable place */
+  const nothing = { ref: "x:", quote, source: place };
+  assert.equal(proposedReadingGrade(nothing, { text, ceiling: "A" }).grade, null);
+  assert.equal(checkProposedRef(nothing, { text, ceiling: "A" }).reason, "PROPOSAL_NAMES_NOTHING");
+  assert.equal(checkProposedRef({ ...byKey, grade: "A" }, { text, ceiling: "A" }).reason, "GRADE_OFFERED");
+  assert.equal(checkProposedRef({ ...byKey, source: { kind: "pdf-page" } }, { text, ceiling: "A" }).reason, "PROPOSAL_POSITION");
+});
+
+test("R42 (T41, D4): quoteFigures names every date and every number in a quote, in order, a number inside a date not named twice, and leaves no digit unnamed", () => {
+  assert.deepEqual(quoteFigures("On 2025-04-01, 4/1/2025, 1 April 2025, Apr. 1st and June 2025: 12% of 3,400.75, the 21st, \u20ac9 and seventy-five."), [
+    { kind: "date", text: "2025-04-01", at: 3 }, { kind: "date", text: "4/1/2025", at: 15 }, { kind: "date", text: "1 April 2025", at: 25 },
+    { kind: "date", text: "Apr. 1st", at: 39 }, { kind: "date", text: "June 2025", at: 52 }, { kind: "number", text: "12%", at: 63 },
+    { kind: "number", text: "3,400.75", at: 70 }, { kind: "number", text: "21st", at: 84 }, { kind: "number", text: "\u20ac9", at: 90 },
+    { kind: "number", text: "seventy-five", at: 97 }]);
+  assert.deepEqual(quoteFigures("The Council met."), []);
+  assert.deepEqual(quoteFigures("$0.5m, 3bn and v5.2"), [{ kind: "number", text: "$0.5m", at: 0 }, { kind: "number", text: "3bn", at: 7 },
+                                                         { kind: "number", text: "5.2", at: 16 }]);
+  for (const x of [undefined, null, 7, ""]) assert.deepEqual(quoteFigures(x), []);
+  for (const q of ["Case No. 24-cv-0012 filed 03.04.25 at 9:30 for $0.5m", "x1y2 3rd 1,2,3 v5.2.1 2025-13-45", "page 12 of 40; 1/2"]) {
+    const spans = quoteFigures(q).map((f) => [f.at, f.at + f.text.length]);
+    for (const f of quoteFigures(q)) assert.equal(q.slice(f.at, f.at + f.text.length), f.text);
+    for (let i = 0; i < q.length; i++)
+      if (/\d/.test(q[i])) assert.ok(spans.some(([a, b]) => i >= a && i < b), `digit at ${i} of ${q} named`);
+  }
 });
 
 test("R43 R44: proposalChain appends ai(fn, version) through appendStep, refusing no capture chain and a cap that is not a grade, an absent cap undetermined; mintRatio null when nothing minted, else cited over minted", () => {
