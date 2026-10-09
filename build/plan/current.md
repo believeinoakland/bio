@@ -40,7 +40,8 @@ It is the only module marked `legacy` in `modules.json`.
    10. the L11 users of the retired ceiling codes (`AI_USE_CEILING_REACHED`, `AI_USE_COPY_CEILING_REACHED`: wizard-scripts, instance-setup, store-door, op-declarations' `aiceilingset`, control-plane, plane) from T41-21/T41-23's merges until their L11 jobs, named exactly at L6's close;
    11. (N822) the users' tests that assume an administrator's `FULL` sight of a hidden project, from T41-3's merge until each user's job (named exactly at L2's close from the suites membership runs, P11; the likely files are `draft-T41-investigation.md` §3.5's list);
    12. (K2437) the callers of credentials' removed `accountSwitchSet`/`groupSwitchSet`: answers `standing.test.mjs` :154, :183, :210 until T41-29; plane `ask.test.mjs` :71, :196, :236, :266, :293, :316 until T41-63 (and any further one CREDENTIALS #11 names at COMPLETE);
-   13. the plane bundle and `program.mjs`, staled by any merge, regenerated at each layer's close.
+   13. (N823, K2438) from T41-37's merge until T41-36's, publish-schedule's test that it declares `scheduled_editions` (refused `TABLE_DECLARED` while publication still declares it); from T41-36's merge until each user's merge, the callers of the moved services: `op=publishat` and ratification's scheduled arms (T41-39), case-authoring R58, R59 (T41-43), scheduler's `scheduled-publish` (T41-49), queue-producers' scheduled items (T41-53), actions `t34` (T41-47), the plane's three ops (T41-63);
+   14. the plane bundle and `program.mjs`, staled by any merge, regenerated at each layer's close.
 
 ## Entries
 
@@ -107,14 +108,14 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 ### L8
 - **T41-34 · case-grammar** · (was T40-16a; DEC-185) R12's `obscured_marked`, R14; (D56, D59, D60, D61) R23–R26, R13 and R14 amended · req: T40's applied text, §3.6 · 2,353 → ~2,550.
 - **T41-35 · case-carriage** · (was T40-12; N818, N816, N798, N811) as T40-12; (N822) `marks` re-stated · req: applied (K2400).
-- **T41-36 · publication** · (was T40-13; N811, N799) as T40-13 (R76 `publishedWorkOf` among them); (N823) deletes its copy of the scheduled-publishing seam after T41-37 merges and reaches it through a registration T41-37 fills (K31's pattern; R21's waiting clause); (N822) `convert-casesign`, `t34` re-stated; (DEC-188 (7)) `document.refused.changed` (C-122.7) by key · req: applied; the split's text BOB's from the extraction map · **P6:** 3,835 (K1821) + ~60 − ~500 → ~3,400.
-- **T41-37 · publish-schedule (new; N823)** · built by copy (K624) of publication's publishing at a set time: R66–R71, R74 (`schedule.mjs`, 312; `scheduled_editions` and its schema share; `registerScheduledPublisher`, `onPublishScheduled`, the waiting-edition read), each retired in publication as "moved to publish-schedule R<n>"; it calls publication R22's commit · K624, K617, K2418 · req: BOB's split plan, with the extraction map `build/extraction/publication-split-3.md` written before L8's START (P18) · ~500. **Merges before T41-36** (it uses only what publication already provides).
+- **T41-36 · publication** · (was T40-13; N811, N799) as T40-13 (R76 `publishedWorkOf` among them); (N823) deletes its copy of the scheduled-publishing seam after T41-37 merges and reaches it through a registration T41-37 fills (K31's pattern; R21's waiting clause); (N822) `convert-casesign`, `t34` re-stated; (DEC-188 (7)) `document.refused.changed` (C-122.7) by key · req: applied; the split's text BOB's from the extraction map · **P6:** 3,835 (K1821) + ~60 − ~500 → ~3,400. (K2438) R66–R69, R71, R74 retired "moved to publish-schedule R<n>"; R70 stays, re-worded, its set-time share read through the seam `registerWaitingEditions` (publish-schedule R8); `civil-time`, `jurisdictions` leave its `uses`.
+- **T41-37 · publish-schedule (new; N823)** · built by copy (K624) of publication's publishing at a set time: R66–R71, R74 (`schedule.mjs`, 312; `scheduled_editions` and its schema share; `registerScheduledPublisher`, `onPublishScheduled`, the waiting-edition read), each retired in publication as "moved to publish-schedule R<n>"; it reads `case_documents` to see a commit (ratification's publisher commits; K2438) · K624, K617, K2418 · req: `publish-schedule.md` R1–R11 and the map `build/extraction/publication-split-3.md` (K2438) · ~500. **Merges before T41-36** (it uses only what publication already provides).
 - **T41-38 · public-read** · (was T40-14; N798, N811) labels by key.
 - **T41-39 · ratification** · (was T40-15; N811) R42's stop after signing; (N823) re-points `op=publishat` and R42's publisher to publish-schedule; (D60) R49 `APPROVAL_MISSING`, R50 `registerApprovalReader` · req: applied, §3.6 · after T41-36, T41-37 · 3,552 → ~3,640.
 - **T41-40 · case-checker** · (was T40-16b; N798) `/3` specification; (D56, D59) R23 lens, R24 the account's code arms; the edge to `strength` · req: §3.6 · 1,468 → ~1,650.
 - **T41-41 · case-import** · (D59, D62) R22 whole-case acceptance, R23 the importer's lens · after T41-40.
 - **T41-42 · case-disclosures** · (was T40-16; N798, N811) as T40-16; (D56–D59, D63) R30 `accountJudged`, R31, R22 amended; (DEC-188 (7)) `document.cleaned.label`, `document.refused.clean`, `.pending` (C-120.20–.22) by key; edges to `answers`, `bias` · req: applied, §3.6 · after T41-35, T41-41 · 2,098 → ~2,400.
-- **T41-43 · case-authoring** · (D56, D57, D60, D61) R63–R68; (N823) R58 re-pointed to publish-schedule's waiting read; (N822) `fences`, `statement` re-stated · req: §3.6 · after T41-42 · **P6:** 3,473 → ~3,700: the job measures at its START and reports before building if it would pass ~4,000 (the account's R63–R68 then move to a module after it, BOB's).
+- **T41-43 · case-authoring** · (D56, D57, D60, D61) R63–R68; (N823) R58 and R59's `#waits` re-pointed to publish-schedule's waiting read; (N822) `fences`, `statement` re-stated · req: §3.6 · after T41-42 · **P6:** 3,473 → ~3,700: the job measures at its START and reports before building if it would pass ~4,000 (the account's R63–R68 then move to a module after it, BOB's).
 - **T41-44 · review** · (N822) R9 drops "or an active administrator" for a hidden project's drafts; (D60, D61) R30–R33 · req: §3.5, §3.6 · 1,028 → ~1,250.
 
 **L8 merge order:** case-grammar, case-carriage, publish-schedule, publication, public-read, ratification, case-checker, case-import, case-disclosures, case-authoring, review.
@@ -122,7 +123,7 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 ### L9
 - **T41-45 · conformance** · (D55) Purpose re-worded; (N822) `determine`, `reads` re-stated.
 - **T41-46 · consequences** · (N822) `record` tests re-stated · tests only.
-- **T41-47 · actions** · (N822) R52–R60: the hold reads and notices answered at `EXISTENCE` of a hidden project with what each already names, never contents; `t34` re-stated · req: §3.5, BOB's wording.
+- **T41-47 · actions** · (N822) R52–R60: the hold reads and notices answered at `EXISTENCE` of a hidden project with what each already names, never contents; `t34` re-stated · req: §3.5, BOB's wording. (N823, K2438) `t34.test.mjs`'s stub of `publication.scheduleEdition` re-pointed to publish-schedule.
 - **T41-48 · filings** (tests only) · (was T40-9a; N819) `outward.test.mjs`:136's fixture · K2387.
 
 ### L10
@@ -132,7 +133,7 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 - **T41-50 · wizard-scripts** · (was T40-17) R27; (N821, D52, D53) R23 amended (one front door, six routes; `FRONT_DOORS` filled from the design stream's doors when given), R28; (DEC-188 (8)) the Connect wizard and `screen-registry` use `ailimitset`, `accountusesset` in place of `aiceilingset`, `aicopyceilingset`, `accountswitchset`, `groupswitchset` · req: applied, §3.6; DEC-188's share BOB's wording · 2,379 → ~2,450.
 - **T41-51 · op-grades** · (was T40-18) the new ops' grades (N797, N799, N812, N820's) · fixed at L11's START.
 - **T41-52 · affordances** · (was T40-19) shares of the new codes and ops; (N820) R50 the new acts graded; (DEC-188 (7)) `ACT_HELP` for `owed_accountusesset`, `owed_ailimitset`, `owed_projectkeyset`, `owed_projectsigninset`, `owed_projectaccountswitch`, `owed_projectaccountremove`, `owed_projectkeynoticeseen`, `owed_projectaikeepaway`, `owed_exploreapprove`; (N822) `converts` re-stated · 2,284 → ~2,450.
-- **T41-53 · queue-producers** · (N822) `action`, `shared` re-stated; recipients re-read against D54 · tests only unless R-text changes.
+- **T41-53 · queue-producers** · (N822) `action`, `shared` re-stated; recipients re-read against D54 · tests only unless R-text changes. (N823, K2438) R37 reads `scheduledEditions` from publish-schedule (its type guard would silently drop the scheduled items).
 - **T41-54 · notice-producers** · (was T40-20) R16; (N820) R17's items; (N822) R2/R3 recipients re-read; (DEC-188 (6), (7)) items read by key (`ai.queue.limitreached`, `.suspended`, `.exploreask`; `ai.label.explored`) · 862 → ~1,250.
 - **T41-55 · queue** · (was T40-21; N814, N812) `op=proposedispose` project arm; R1 kinds; (N820) R1, R52 · req: applied, §3.6.
 - **T41-56 · setup-words** · (DEC-188; U142) R1/R2: `WORD_ROWS` re-frozen at the commit DEC-188 merged (PR #19; 1,006 words, 388 protected), R1's counts stated anew · req: BOB's wording naming the commit. (DEC-188 (8), K2435) the `act.accountswitchset.*`, `act.groupswitchset.*` rows re-pointed to `accountusesset`.
@@ -142,7 +143,7 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 - **T41-60 · answer-envelope** · (K2428) its C-120 case-disclosures test (`R2, R7 … .20–.22`) red on `tranche/T41` since T40's stamp: re-pin; and re-pin C-35.13's translation re-worded by TEXT-CHAIN #7 (K2428) · (N820) families gain the new modules' and amended modules' check rows · fixed at L11's START from the merged codes.
 - **T41-61 · store-door** · (was T40-24) R10.
 - **T41-62 · control-plane** · (was T40-25) R69, R70, the handle routes; (N820) R71 routes R43's ops, a capture's `step`; (DEC-188 (8)) R56 drops `groupswitchset` · **P6:** 3,270 → ~3,460.
-- **T41-63 · plane** · (was T40-26) composes `ai-use`, registers publication's handle guard; (N820) R30 composes the four new modules, their migrations and counts; (N823) composes `publish-schedule`, registers its publisher; (N822) `t33` re-stated; whatever L1–L8's codes owe · fixed at L11's START.
+- **T41-63 · plane** · (was T40-26) composes `ai-use`, registers publication's handle guard; (N820) R30 composes the four new modules, their migrations and counts; (N823) composes and migrates `publish-schedule` and spreads its ops (`store.mjs` 564; ratification's factory registers the publisher, its R43); (N822) `t33` re-stated; whatever L1–L8's codes owe · fixed at L11's START.
 
 **L11 STARTs (K874, K2400):** control-plane R69, R70 and notice-producers R16 each need an explicit test. **L11 merge order:** `modules.json` order; plane last.
 
