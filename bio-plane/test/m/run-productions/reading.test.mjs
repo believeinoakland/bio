@@ -93,6 +93,28 @@ test("R21 (D4): a verified quote keeps the capture's own ceiling, which may be w
   assert.equal(u.w.row(`SELECT earned FROM proposed_readings WHERE ref='ordinance:12'`).earned, null);
 });
 
+test("R21 (K2502): an investigate-mode run carrying a step (an exploring run, question-explorer R13) proposes while reading as an extract run does, the step tied; one naming no step is refused NOT_AN_EXTRACT_RUN with nothing written, and a run of another mode is refused even with a step", () => {
+  const { w, cap } = base();
+  const step = w.step(Q);
+  w.run("RUN-X", { mode: "investigate", principal_plane: AK, mints: 5, pages: 3 });
+  w.run("RUN-C", { mode: "check", principal_plane: AK, mints: 5 });
+  const x = (over) => w.p.extractPropose({ run: "RUN-X", bundleId: DOC, fn: "propose-reading", version: "0.1.0", proposedBy: AK,
+    viewer: ALICE, caller: AK, refs: [{ ref: "the board", label: "The Board", quote: "The Board approved", source: P1 }],
+    connections: [{ to_kind: "question", to: Q2, quote: "ordinance 12", source: P1, how: "shared_identifier", key: "12" }], ...over });
+  const before = w.snapshot();
+  const none = x({});
+  refusedAs(none, "NOT_AN_EXTRACT_RUN");
+  assert.match(none.detail, /named no step/);
+  refusedAs(x({ step: "" }), "NOT_AN_EXTRACT_RUN");
+  refusedAs(x({ run: "RUN-C", step }), "NOT_AN_EXTRACT_RUN");
+  assert.deepEqual(w.snapshot(), before, "nothing written on any");
+  const ok = x({ step });
+  assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 300));
+  assert.deepEqual([ok.step, ok.proposed[0].verified_quote, ok.connections[0].earned], [step, true, "B"]);
+  assert.deepEqual(w.steps.productsOf({ step, viewer: ALICE }).products.map((p) => [p.kind, p.id]),
+                   [["capture", cap], ["content", ok.proposed[0].content_id]]);
+});
+
 test("R21 (D4; K2496): the ceiling a verified quote keeps is the record's own for that capture, route included — leg-earning's earned capture ceiling, asked for the document — so a capture whose route earns C keeps C; an unbound route (a direct fetch) earns B", () => {
   const name = { ref: "the board", label: "The Board", quote: "The Board approved", source: P1 };
   const direct = base();
