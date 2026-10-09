@@ -107,12 +107,16 @@ details.canon code{font:.85em var(--mono);overflow-wrap:anywhere}
 
 <h2 id="now">1 · Open with you now</h2>
 <div class="now">
-<p><b>Open with you: the rest of batch 2</b> of the remaining decisions (<a href="#questions">section 6</a>):</p>
+<p><b>Open with you: batch 3</b>, the last of the remaining decisions (<a href="#questions">section 6</a>):</p>
 <ul>
-<li><b>D24</b> · the rules the AI follows</li>
-<li><b>D7</b> · one act starting several AI steps</li>
+<li><b>D8</b> · reading guides</li>
+<li><b>D21</b> · pages that are only pictures</li>
+<li><b>D22</b> · a note beside a source</li>
+<li><b>D17</b> · waits on a question</li>
+<li><b>D18</b> · sharing a private note</li>
+<li><b>D16</b> · when nothing is left to do: watch or close</li>
 </ul>
-<p>A short answer is enough, for example "D24: B, D7: A".</p>
+<p>A short answer is enough, for example "D8: A, D21: A, D22: A, D17: A, D18: A, D16: A".</p>
 <p class="note">As you asked, nothing of the investigation design is built until every open question is answered and you have reviewed the design as a whole. BOB keeps a canon text of it current; that comes to you only after your review.</p>
 </div>
 
@@ -239,6 +243,8 @@ details.canon code{font:.85em var(--mono);overflow-wrap:anywhere}
 <li><b>The intake interview</b> asks the same questions on both paths (what happened; which public body, and where; since when; what was promised or expected, and by whom; what you already have; what you want to come of it). By hand, it is one page to fill in quickly. With the assistant, it is a conversation that skips what she has already said and follows up. The member checks the answers before they are kept. The answers are narrative (2.9).</li>
 <li><b>How answers are worded:</b> in Civicsmith's own voice, an answer shows each baseline side by side with what it rests on and the measured difference ("900 days since the notice to proceed; contract time 540 days"). It gives no verdict, likelihood or rating words, and says "cause not established" unless a member wrote a cause. Members' own conclusions may say "late", in their words, at their bar.</li>
 <li><b>Test investigations:</b> before members get an AI part, it must pass Civicsmith's own set of test investigations: real public matters, frozen with their documents, with answers written by people. A group may add its own; the AI part is then also measured against them, and the results shown to that group. Test transcripts are kept for grading only and never published.</li>
+<li><b>Several steps at once:</b> one act may start several AI steps. The estimate before covers them all; each runs within the limits, and one that reaches a limit stops and says so while the others go on.</li>
+<li><b>The rules the AI follows</b> are approved by you in plain language, as part of this design (for example, "the assistant never writes a member's reason"). The AI's working instructions may only quote those rules, and code checks that they do.</li>
 <li><b>Cost before and after:</b> before an AI act or an exploring run, an estimate as a range ("about $0.50 to $2"), or "not known yet" until enough runs are measured; after it, the actual cost. Both are shown to the paying account's owners only; on a subscription, runs and tokens instead of money. Nobody sees another member's spending.</li>
 <li><b>Reading inside a document:</b> the AI may read a document the group holds a few pages at a time, within a reading limit, and never one under a "no AI" limit. As it reads, it builds the record: it proposes the passages worth citing that bear on the investigation (figures, policies, decisions, statements and the like), and the connections they make (to bodies, people in their public roles, other documents and the questions). Each proposal is tied to its exact quote, labelled as the system's work, and taken up by a member's act (D3), keeping the document's grade (D4).</li>
 <li><b>Tracking:</b> use is tracked per account, per type of use, over time. A member sees her own; a project's owners see the project account's; administrators see the group key's totals by type of use, naming no member.</li>
@@ -409,30 +415,65 @@ details.canon code{font:.85em var(--mono);overflow-wrap:anywhere}
 
 
 
-<p><b>Batch 2: the assistant at the front door.</b> These four shape how a member is met and spoken to, by hand and with the assistant.</p>
+<p><b>Batch 3: reading, and the working material around it.</b> The last six of the remaining decisions.</p>
 
-
-
-
-
-<div class="slip"><span class="id">D24 · The rules the AI follows</span>
-<p><b>Background.</b> The AI works from written instructions for each job: reading documents, planning steps, interviewing. A built rule already says those instructions may only quote canon, so nothing in them can be invented outside the rules you approve.</p>
+<div class="slip"><span class="id">D8 · Reading guides</span>
+<p><b>Background.</b> The same kinds of document come up again and again: budgets, contracts, change orders, agendas, audit reports. A reading guide says what to look for in one kind, and where: for a construction contract, the contract time, liquidated damages, the change-order clause. By hand, a guide is a checklist the member works through. With the AI, it is what the AI reads for, and what it proposes (D2).</p>
 <ol>
-<li><b>A · You approve each set of instructions in full,</b> as written for the AI.</li>
-<li><b>B · You approve the rules in plain language</b> as part of the design (for example "the assistant never writes a member's reason"; "a find names its source passage"). BOB writes the instructions, which may only quote those rules; code checks that they do.</li>
+<li><b>A · Two libraries.</b> Civicsmith's own, shipped to every group and approved by you or someone you name, each guide only after measured use shows it works. And each group's own. A member's guide is usable by her at once, and becomes the group's after another member reviews it. The AI may draft a guide but never approves one.</li>
+<li><b>B · Civicsmith's library only.</b></li>
+<li><b>C · Each group's only.</b></li>
 </ol>
-<p><b>Trade-offs.</b> A gives you every word, but the instructions are long, technical and change often, so each change would wait on you. B puts your approval where it matters, on what the AI may and may not do, with code holding the instructions to it.</p>
-<p class="rec">Recommended: B.</p></div>
-
-<div class="slip"><span class="id">D7 · One act starting several AI steps</span>
-<p><b>Background.</b> A member may want the AI to work on several things at once: "look into all five of these questions". Your AI-use rulings already give limits and exploring settings, and D12 now shows a cost before work starts. What remains is whether one act may start several AI steps.</p>
-<ol>
-<li><b>A · Yes.</b> One act may start several steps. The estimate before (D12) covers them all; each step runs on its own within the limits; any step that reaches a limit stops and says so, while the others go on.</li>
-<li><b>B · No:</b> one act, one step.</li>
-</ol>
-<p><b>Trade-offs.</b> B makes a member click five times for five questions, and gains nothing the limits do not already give. A is efficient, and the combined estimate keeps it honest.</p>
+<p><b>Trade-offs.</b> B misses local documents, such as a city's own budget layout. C makes every group start from nothing. A gives every group a good start and room for its own.</p>
 <p class="rec">Recommended: A.</p></div>
-<p class="note"><b>Next, batch 3:</b> reading guides (D8), reading scanned pages (D21), the note beside a source (D22), shared waits (D17), sharing a private note (D18), watch or close (D16). Then the list of the engine's parts restated (D1), and the whole design for your review.</p>
+
+<div class="slip"><span class="id">D21 · Pages that are only pictures</span>
+<p><b>Background.</b> Some documents are scans with no text in them. Civicsmith's own text recognition reads most of them, but fails on poor scans, handwriting and tables. An AI can often read what it cannot. Unlike a quote found in a document's text (D4), here the words themselves may be misread.</p>
+<ol>
+<li><b>A · Yes, as proposals.</b> The AI may transcribe such pages on the paying account, within the limits. The text is labelled as the AI's reading and graded "undetermined" until its accuracy is measured. A member who checks a passage against the page may confirm it, and it then carries the document's grade.</li>
+<li><b>B · No.</b> Only Civicsmith's own text recognition.</li>
+</ol>
+<p><b>Trade-offs.</b> B leaves many public records, often the older and more revealing ones, unreadable. A reads them, honestly labelled, with a member's check as the way to full strength.</p>
+<p class="rec">Recommended: A.</p></div>
+
+<div class="slip"><span class="id">D22 · A note beside a source</span>
+<p><b>Background.</b> A member who opens a 200-page document wants to know what it says about her question (M4). The AI can write a short note beside the document: what it says about the question, and what it does not.</p>
+<ol>
+<li><b>A · Yes, bound to quotes.</b> Every sentence of the note is tied to a quote in the document, and any sentence it cannot tie is left out. The note is never shown in place of the source, never stored as the document's content, and never cited as evidence. It is a reading aid, labelled as the system's.</li>
+<li><b>B · No note.</b> The member reads the document and the proposed passages (D2) herself.</li>
+</ol>
+<p><b>Trade-offs.</b> B is safer against a misleading summary but slow, which is the reason a member turns to the assistant at all. A gives the speed, and binding every sentence to a quote keeps it honest.</p>
+<p class="rec">Recommended: A.</p></div>
+
+<div class="slip"><span class="id">D17 · Waits on a question</span>
+<p><b>Background.</b> A question can wait: "waiting for the district's response, due 1 November". Today a dated wait on a question is seen only by the member who set it. A step's waits are already seen wherever the step is (2.2).</p>
+<ol>
+<li><b>A · A wait on a question is seen wherever the question is,</b> by handle and naming no project, as steps are. A reminder a member asked for stays hers alone.</li>
+<li><b>B · Waits stay personal.</b></li>
+</ol>
+<p><b>Trade-offs.</b> Under B, three members may each chase the same overdue reply without knowing it. A shows the shared state of the work, and reminders stay personal, so nobody is nagged.</p>
+<p class="rec">Recommended: A.</p></div>
+
+<div class="slip"><span class="id">D18 · Sharing a private note</span>
+<p><b>Background.</b> A member's private notes are seen by her alone; today she can turn one into a hunch, a question or an observation. Sometimes she simply wants the project to read it ("my notes from the parents' meeting").</p>
+<ol>
+<li><b>A · Yes.</b> She may share a note with a project she is in. Its participants see it, in her words and labelled as hers. It is narrative (2.9), never evidence and never published. She may withdraw it, and the record says it was shared and withdrawn. If it names a person in no public role, she is warned at the act (2.10).</li>
+<li><b>B · No.</b> She turns it into a lead or a question instead.</li>
+</ol>
+<p><b>Trade-offs.</b> B forces a working note into a shape it does not have. A is the plain thing members expect.</p>
+<p class="rec">Recommended: A.</p></div>
+
+<div class="slip"><span class="id">D16 · When nothing is left to do: watch or close</span>
+<p><b>Background.</b> Investigations go quiet: every step has ended, nothing is awaited, and nothing new is arriving. The project then sits open with no sign of whether anyone means to come back.</p>
+<ol>
+<li><b>A · The system proposes once:</b> "watch" (keep watching its sources, and reopen the work when something arrives) or "close". A member of the project decides; nothing more is asked after that. A quiet project shows as quiet on its page; that is a display, not a new stage.</li>
+<li><b>B · Nothing is proposed.</b> Projects stay open until an owner closes them.</li>
+</ol>
+<p><b>Trade-offs.</b> B leaves the group's list full of projects nobody is working on, and misses the moment to set a watch. A asks once, at the right time, without nagging.</p>
+<p class="rec">Recommended: A.</p></div>
+
+<p class="note"><b>After this batch:</b> the list of the engine's parts restated (D1), and then the whole design for your review.</p>
+
 
 
 
@@ -454,20 +495,20 @@ details.canon code{font:.85em var(--mono);overflow-wrap:anywhere}
 <tr><td class="id">D2</td><td>Letting the AI read a held document's text in bounded slices, returning only proposals tied to quotes; the canon says a sub-session never hands back documents.</td><td>ruled A, see 2.6</td></tr>
 <tr><td class="id">D3</td><td>One way to accept anything the system proposes, recording whether it was accepted as proposed, edited, or written by the member herself.</td><td>ruled A, see 2.4</td></tr>
 <tr><td class="id">D4</td><td>How strong a fact is when the AI found it: the quote keeps the document's grade; what it means is the member's judgment.</td><td>ruled A, see 2.4</td></tr>
-<tr><td class="id">D7</td><td>What permits targeted AI work. Your AI-use rules now answer most of this; what remains is whether holding a document for a purpose is itself enough to read it.</td><td>open now, batch 2</td></tr>
-<tr><td class="id">D8</td><td>Reading guides for recurring documents: Civicsmith's and each group's, approved only after measured use.</td><td>batch 3</td></tr>
+<tr><td class="id">D7</td><td>What permits targeted AI work. Your AI-use rules now answer most of this; what remains is whether holding a document for a purpose is itself enough to read it.</td><td>ruled A, see 2.6</td></tr>
+<tr><td class="id">D8</td><td>Reading guides for recurring documents: Civicsmith's and each group's, approved only after measured use.</td><td>open now, batch 3</td></tr>
 <tr><td class="id">D12</td><td>Showing a rough cost before AI work. Tracking after the fact is answered by your AI-use rules.</td><td>ruled A, see 2.6</td></tr>
 <tr><td class="id">D13</td><td>The fence against investigating private individuals: see 2.10.</td><td>ruled B</td></tr>
 <tr><td class="id">D14</td><td>Test investigations with answers written by people: see 2.6.</td><td>ruled C</td></tr>
-<tr><td class="id">D16</td><td>When nothing left could change the picture: watch or close. It now relates to the exploring setting.</td><td>batch 3</td></tr>
-<tr><td class="id">D17</td><td>Waits seen by every member working on a question, not only the one who set them.</td><td>batch 3</td></tr>
-<tr><td class="id">D18</td><td>Sharing a private note with a project, never as evidence.</td><td>batch 3</td></tr>
+<tr><td class="id">D16</td><td>When nothing left could change the picture: watch or close. It now relates to the exploring setting.</td><td>open now, batch 3</td></tr>
+<tr><td class="id">D17</td><td>Waits seen by every member working on a question, not only the one who set them.</td><td>open now, batch 3</td></tr>
+<tr><td class="id">D18</td><td>Sharing a private note with a project, never as evidence.</td><td>open now, batch 3</td></tr>
 <tr><td class="id">D19</td><td>The intake interview, a project step: about six questions on one page, each with why it is asked, all skippable.</td><td>ruled B, see 2.6</td></tr>
 <tr><td class="id">D20</td><td>How answers are worded: baselines side by side, no single "late" verdict, "cause not established" unless a member authored a cause.</td><td>ruled A, see 2.6 and 2.9</td></tr>
-<tr><td class="id">D21</td><td>AI transcription of scanned pages without text, labelled undetermined until measured.</td><td>batch 3</td></tr>
-<tr><td class="id">D22</td><td>A short note beside a source, every sentence tied to a quote.</td><td>batch 3</td></tr>
+<tr><td class="id">D21</td><td>AI transcription of scanned pages without text, labelled undetermined until measured.</td><td>open now, batch 3</td></tr>
+<tr><td class="id">D22</td><td>A short note beside a source, every sentence tied to a quote.</td><td>open now, batch 3</td></tr>
 <tr><td class="id">D23</td><td>The words members see, including a name for steps not confused with the action plan.</td><td>with the design stream</td></tr>
-<tr><td class="id">D24</td><td>The instruction text the AI follows when reading, planning and interviewing, which you rule on first.</td><td>open now, batch 2</td></tr>
+<tr><td class="id">D24</td><td>The instruction text the AI follows when reading, planning and interviewing, which you rule on first.</td><td>ruled B, see 2.6</td></tr>
 <tr><td class="id">D43</td><td>Actions: supporting members throughout the action plan, "to the greatest and most appropriate extents possible". Its requirements, capabilities, use cases and screens are to be researched and designed in their own effort, as investigations are now.</td><td>a future design effort</td></tr>
 </table></div>
 
@@ -587,6 +628,7 @@ details.canon code{font:.85em var(--mono);overflow-wrap:anywhere}
 <p>Members should meet one meaning each for "finding" (a concluded question) and "basis" (what a question rests on). The design stream will draw the other words.</p>
 
 <h2 id="words">9 · Your rulings, in your words</h2>
+<blockquote><p>"D24: B. D7: A."</p><cite>D24, D7 · 9 Oct</cite></blockquote>
 <blockquote><p>"D19: B." "D20: A (This seems like a good place to again make a distinction between evidence and narrative. Community members aren't always rigorous in their memories. In the Grandview story, the parent says that the school district said the campus would be closed for 1 school year for construction. Is that what the school district actually said, or simply what the parent remembers?)"</p><cite>D19, D20 · 9 Oct</cite></blockquote>
 <blockquote><p>"D12: A." "D2: A, but it should be creating useful content and connections as it does so. Citations to figure, policies, decisions, statements, and other related to the investigation that are found during the reading could be proposed."</p><cite>D12, D2 · 9 Oct</cite></blockquote>
 <blockquote><p>"D3: A." On D4: "If it says it in the documents (both the publisher's own words, and checked by code to be in the document) and a number or date that's also really there and checked by the member, then why would there be any reason for the evidence grade to fall?"</p><cite>D3, D4 · 9 Oct</cite></blockquote>
@@ -620,19 +662,19 @@ details.canon code{font:.85em var(--mono);overflow-wrap:anywhere}
 <tr><td class="id">D4</td><td>a fact the AI found keeps the document's grade</td><td><span class="tag t-ruled">ruled</span> A</td></tr>
 <tr><td class="id">D5</td><td>why a document is held, stated when captured, is part of its provenance</td><td><span class="tag t-set">settled</span> K2064</td></tr>
 <tr><td class="id">D6</td><td>the system's own explanations and hypotheses</td><td><span class="tag t-ruled">ruled</span> by D33</td></tr>
-<tr><td class="id">D7</td><td>one act starting several AI steps</td><td><span class="tag t-open">open</span></td></tr>
-<tr><td class="id">D8</td><td>reading guides</td><td><span class="tag t-later">batch 3</span></td></tr>
+<tr><td class="id">D7</td><td>one act may start several AI steps</td><td><span class="tag t-ruled">ruled</span> A</td></tr>
+<tr><td class="id">D8</td><td>reading guides</td><td><span class="tag t-open">open</span></td></tr>
 <tr><td class="id">D9–D11</td><td>a contract is a standard; school districts covered; every AI part tested first</td><td><span class="tag t-set">settled</span> K2064</td></tr>
 <tr><td class="id">D12</td><td>cost shown before and after AI work</td><td><span class="tag t-ruled">ruled</span> A</td></tr>
 <tr><td class="id">D13</td><td>the fence against investigating private people</td><td><span class="tag t-ruled</span> B</td></tr>
 <tr><td class="id">D14</td><td>test investigations an AI part must pass</td><td><span class="tag t-ruled</span> C</td></tr>
 <tr><td class="id">D15</td><td>working material never published</td><td><span class="tag t-set">settled</span> K2064</td></tr>
-<tr><td class="id">D16–D18</td><td>watch or close; shared waits; sharing a note</td><td><span class="tag t-later">batch 3</span></td></tr>
+<tr><td class="id">D16–D18</td><td>watch or close; shared waits; sharing a note</td><td><span class="tag t-open">open</span></td></tr>
 <tr><td class="id">D19</td><td>the intake interview: same questions, a form by hand, a conversation with the assistant</td><td><span class="tag t-ruled">ruled</span> B</td></tr>
 <tr><td class="id">D20</td><td>answers show baselines and what each rests on; narrative is not evidence</td><td><span class="tag t-ruled">ruled</span> A</td></tr>
-<tr><td class="id">D21–D22</td><td>scanned pages; the note beside a source</td><td><span class="tag t-later">batch 3</span></td></tr>
+<tr><td class="id">D21–D22</td><td>scanned pages; the note beside a source</td><td><span class="tag t-open">open</span></td></tr>
 <tr><td class="id">D23</td><td>the words members see</td><td><span class="tag t-later">design stream</span></td></tr>
-<tr><td class="id">D24</td><td>the rules the AI follows</td><td><span class="tag t-open">open</span></td></tr>
+<tr><td class="id">D24</td><td>Bob approves the AI's rules in plain language; instructions only quote them</td><td><span class="tag t-ruled">ruled</span> B</td></tr>
 <tr><td class="id">D25–D26</td><td>teams, subgoals, leaders; assignments</td><td><span class="tag t-off">withdrawn</span></td></tr>
 <tr><td class="id">D27</td><td>milestones belong to a project</td><td><span class="tag t-ruled">ruled</span> A</td></tr>
 <tr><td class="id">D28</td><td>an untouched step can be deleted</td><td><span class="tag t-ruled">ruled</span> A</td></tr>
