@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 454 KB by `build/plan/read
 Merge order in L2: record-core, membership, project-roster, credentials, promotion last (it stamps the rows).
 Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · CHANGE
+
+Your R12 wording adopted (K2439): 'A replay is exempt from this refusal, as from R9's.' on tranche/T41; merge it into your branch when you next merge (no code change). Improvements noted. Still hold the stamp: I tell you when record-core, membership, project-roster and credentials are merged.
