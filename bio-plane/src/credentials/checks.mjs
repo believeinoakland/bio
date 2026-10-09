@@ -11,6 +11,25 @@
 
 const at = (fn, region) => `src/credentials/index.mjs ${fn} > ${region}`;
 
+/* R54, R56–R58 (T41; DEC-188 (7)): the words of `words.json` (`docs/development/ux-substrate/screens/words.json`) this
+   module's refusals and notice read, each `en` verbatim, read by key; placeholders (`{Use}`, `{whose}`, `{who}`,
+   `{project}`, `{for_uses}`, `{member}`, `{date}`, `{reason}`) are left for the screen, except that a project key's
+   disclosure is answered with `{project}` filled (R58). A row's `translation` is the word itself, never a copy. */
+export const AI_WORDS = Object.freeze({
+  'ai.refused.off': '{Use} is switched off on {whose} account, so the assistant can\'t do this here. {who} can switch it on.',
+  'ai.refused.projectkeptaway': 'This project keeps its material away from AI{for_uses}. {member} set this on {date}: '
+    + '\u201c{reason}\u201d. Everything else in the project works as usual.',
+  'ai.refused.notsole': 'Your own sign-in can be a project\'s account only while you are its only member, and {project} has '
+    + 'other members. Add an Anthropic API key for the project instead.',
+  'ai.disclosure.projectkey': 'Your questions in {project}, and the material read to answer them, go to Anthropic under the '
+    + 'project\'s API account. Its owners see how much is used in total, never what you ask or who asked.',
+  'ai.refused.noticedue': 'Before the assistant works on {project}\'s account, read what that means.',
+  'ai.refused.switchvalue': 'That isn\'t a setting this switch takes: a use is on or off, and exploring is No, Ask every day '
+    + 'or Yes.',
+  'ai.refused.signinnotconnected': 'Connect your own Claude sign-in first, in Settings \u203a The assistant; then it can '
+    + 'serve this project.',
+});
+
 /* D-158 / C-63: a signing key is registered to a member who can attest (Membership Architecture v2 §6). Two codes for
    two facts: a member with no handle has never enrolled; one who has a handle and is not `active` is not standing. Both
    are minted in one region, `#signerMemberBar`, which R6, R7's activation and R9 consume. */
@@ -165,8 +184,11 @@ export const ACCOUNT_CHECKS = Object.freeze({
     check: 'C-29.21', where: at("#switchName", "is-account-switch"),
     /* T40 (T40-3; R55): re-worded, an account now holds a switch for each kind of use. Awaiting promotion's stamp
        (T40-4). */
+    /* (T41; T41-5, R55) re-worded: four kinds of use added. Awaiting promotion's stamp (T41-6). */
     translation: 'That is not one of the assistant\'s switches for this account. There is one for each kind of use '
-      + '(asking, drafting, runs, standing questions and exploring), and one for suggestions. Nothing was changed.',
+      + '(asking, drafting, runs, standing questions, exploring, the interview and planning, reading inside documents, '
+      + 'transcribing picture pages, and drafting and checking a case\'s account), and one for suggestions. Nothing was '
+      + 'changed.',
   }),
   ACCOUNT_SEAL_UNAVAILABLE: Object.freeze({
     check: 'C-29.22', where: at("#sealRefusal", "is-seal-bound"),
@@ -220,38 +242,31 @@ export const ACCOUNT_CHECKS = Object.freeze({
   }),
   /* T40 (T40-3; N812, D34, D38, K2352, K2353, K2404): a project's account (R54), the switches' values (R55), the
      account used (R56), a project's material limit (R57) and its key's notice (R58), the next free numbers of C-29 at
-     the job's START (C-29.34–.39). New rows, awaiting promotion's stamp (T40-4). */
+     the job's START (C-29.34–.39). New rows, awaiting promotion's stamp (T40-4). (T41; DEC-188 (7)) Each reads its
+     translation by key from `AI_WORDS` (`words.json`), never a copy: a row change for promotion's T41-6 stamp. */
   PROJECT_NOT_SOLE_MEMBER: Object.freeze({
     check: 'C-29.34', where: at("projectSigninSet", "is-project-sole-member"),
-    translation: 'Your own Claude sign-in can pay for a project only while you are its only member. This project has '
-      + 'other members, so it can use an Anthropic API key instead. Nothing was changed.',
+    translation: AI_WORDS['ai.refused.notsole'],
   }),
   SIGNIN_NOT_CONNECTED: Object.freeze({
     check: 'C-29.35', where: at("projectSigninSet", "is-signin-connected"),
-    translation: 'You have not connected your Claude subscription, so there is no sign-in of yours to use for this '
-      + 'project. Sign in with your Claude subscription through Claude Code first. Nothing was changed.',
+    translation: AI_WORDS['ai.refused.signinnotconnected'],
   }),
   SWITCH_VALUE_INVALID: Object.freeze({
     check: 'C-29.36', where: at("#valueInvalid", "is-switch-value"),
-    translation: 'That is not a value this setting takes. Exploring takes no, ask every day or yes; every other '
-      + 'switch is on or off; a limit on material names the kinds of use it covers. Nothing was changed.',
+    translation: AI_WORDS['ai.refused.switchvalue'],
   }),
   AI_USE_SWITCHED_OFF: Object.freeze({
     check: 'C-29.37', where: at("#switchedOff", "is-use-switched-on"),
-    translation: 'The Claude account that pays for this is switched off for this kind of use, so the assistant was not '
-      + 'used. Whoever holds that account can switch it on. Nothing was sent.',
+    translation: AI_WORDS['ai.refused.off'],
   }),
   PROJECT_AI_KEPT_AWAY: Object.freeze({
     check: 'C-29.38', where: at("aiKeptAway", "is-project-kept-away"),
-    translation: 'This project keeps its material away from the assistant for this kind of use, so no assistant was '
-      + 'used. One of its owners turned this on and gave the reason shown. If you think this should change, ask an '
-      + 'owner of the project. Nothing was sent.',
+    translation: AI_WORDS['ai.refused.projectkeptaway'],
   }),
   PROJECT_KEY_NOTICE_DUE: Object.freeze({
     check: 'C-29.39', where: at("#projectNoticeDue", "is-project-key-notice-seen"),
-    translation: 'Before the assistant answers you under this project\'s account, read one short notice: your '
-      + 'questions, and the material read to answer them, go to Anthropic under the project\'s API account. Confirm '
-      + 'you have read it, then ask again. Nothing was sent.',
+    translation: AI_WORDS['ai.refused.noticedue'],
   }),
   /* T40 (T40-3): its `where` moves to `#keepAwayReason`, the one site R51 and R57 share (a row change for T40-4). */
   AI_KEEP_AWAY_NO_REASON: Object.freeze({

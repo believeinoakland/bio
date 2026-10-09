@@ -12,9 +12,13 @@
  * stored subscription token retired; and, from T40 (T40-3; N812, D34, D38, K2352, K2353, K2404), a project's own AI
  * account (an API key, or its only member's sign-in), every account's switch for each kind of use, the cascade that
  * chooses the one account used (the project's, the member's own, the group's), material limits by use for the group
- * and each project, a project key's notice, and the suspended sign-in accounts owners are told of.
+ * and each project, a project key's notice, and the suspended sign-in accounts owners are told of; and, from T41 (T41-5;
+ * N820, N796, DEC-188 (1), (7), (8)), four more kinds of use, `accountUsesSet` the one act that sets an account's
+ * switches, a sign-in's own standing switch, the refusals' words read by key from `words.json`, and each account's
+ * panel reads: its uses and keep-aways, and its change history. A project's name (R58) is its bundle's title, read
+ * through record-core's `bundleInfo` (its R34).
  *
- * Requirements: build/requirements/credentials.md (R1–R59; R26 retired). Split from `membership` (K617, K636 BOB-1, K637; T19 layer
+ * Requirements: build/requirements/credentials.md (R1–R61; R26 retired). Split from `membership` (K617, K636 BOB-1, K637; T19 layer
  * 2, CREDENTIALS #1): the code is copied from `membership/index.mjs` and `schema.mjs`, without change of meaning, and
  * reads `members` only through membership's services (`memberFacts`, `sessionRights`, `isAdministrator`,
  * `activeAdmins`, `notAnAdmin`), never by SQL. Who the members are, and what each may do, is membership's; this module
@@ -31,12 +35,13 @@
 import { MACHINE_CLASS_PREFIX, isMachineIdentity, sha256HexSync } from "../record-grammar/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { Membership, membershipOf, notAnAdmin, noSuchMember, noSuchProject, notTheOwner } from "../membership/index.mjs";
-import { CREDENTIALS_SCHEMA, CREDENTIALS_ADDITIVE_COLUMNS, CREDENTIALS_TABLES, CREDENTIALS_PROJECT_TABLES } from "./schema.mjs";
-export { CREDENTIALS_EXEMPT_TABLES, CREDENTIALS_TABLES, CREDENTIALS_PROJECT_TABLES } from "./schema.mjs";
+import { CREDENTIALS_SCHEMA, CREDENTIALS_ADDITIVE_COLUMNS, CREDENTIALS_TABLES, CREDENTIALS_PROJECT_TABLES,
+         CREDENTIALS_HISTORY_TABLE } from "./schema.mjs";
+export { CREDENTIALS_EXEMPT_TABLES, CREDENTIALS_TABLES, CREDENTIALS_PROJECT_TABLES, CREDENTIALS_HISTORY_TABLE } from "./schema.mjs";
 import { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, ACCOUNT_CHECKS,
-         KEYED_SERVICE_CHECKS, SIGN_IN_CHECKS } from "./checks.mjs";
+         KEYED_SERVICE_CHECKS, SIGN_IN_CHECKS, AI_WORDS } from "./checks.mjs";
 export { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, ACCOUNT_CHECKS,
-         KEYED_SERVICE_CHECKS, SIGN_IN_CHECKS } from "./checks.mjs";
+         KEYED_SERVICE_CHECKS, SIGN_IN_CHECKS, AI_WORDS } from "./checks.mjs";
 
 /* R22 (K1502, K1547): the kind of a member's own Claude account reference: `apikey` (the member's own API key), held,
    sealed and used for that member alone. (T38; N708's remainder, K2200) `subscription`, a stored `claude setup-token`
@@ -44,15 +49,21 @@ export { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, ACCO
    a stored token, and a reference of that kind stored before T38 is removed at `migrate`. The group's own key is an API
    key only (R33). */
 export const ACCOUNT_KINDS = Object.freeze(["apikey"]);
-/* R25, R37 (K1479, K1500): the two switches, a member's reference's and the group key's alike. (T40) Two of R55's. */
+/* R25, R37 (K1479, K1500): the two switches, a member's reference's and the group key's alike. (T40) Two of R55's;
+   (T41; DEC-188 (8)) set only by `accountUsesSet`, R25's and R37's own acts retired. */
 export const ACCOUNT_SWITCHES = Object.freeze(["suggestions", "standing"]);
 /* R55 (T40; N812, D34, B2): the kinds of use. Every account holds a switch for each, `explore` holding one of
    `EXPLORE_VALUES` (B6, K2350), plus `suggestions` (K1479); `USE_SWITCHES` names them all. An act served by an account
-   is of any kind but `explore` (R24, R56). Defaults: ask, draft and run on; standing and suggestions off; explore no. */
-export const USE_KINDS = Object.freeze(["ask", "draft", "run", "standing", "explore"]);
+   is of any kind but `explore` (R24, R56). Defaults: ask, draft and run on; standing and suggestions off; explore no.
+   (T41; D2, D19, D21, D56) Four kinds added, each a member's own act or a run she starts, on by default as ask, draft
+   and run: `enquire` (the interview and planning), `read` (reading inside documents), `transcribe` (transcribing
+   picture pages) and `account` (drafting and checking a case's account). */
+export const USE_KINDS = Object.freeze(["ask", "draft", "run", "standing", "explore", "enquire", "read", "transcribe",
+  "account"]);
 export const EXPLORE_VALUES = Object.freeze(["no", "ask", "yes"]);
 export const USE_SWITCHES = Object.freeze([...USE_KINDS, "suggestions"]);
-const USE_DEFAULTS = Object.freeze({ ask: true, draft: true, run: true, standing: false, explore: "no", suggestions: false });
+const USE_DEFAULTS = Object.freeze({ ask: true, draft: true, run: true, standing: false, explore: "no", enquire: true,
+  read: true, transcribe: true, account: true, suggestions: false });
 const ACT_KINDS = Object.freeze(USE_KINDS.filter((k) => k !== "explore"));
 /* R27: an ask grant's life, in seconds (it also ends with the member's session). */
 export const AI_GRANT_TTL_SECONDS = 900;
@@ -147,9 +158,7 @@ export class Credentials {
        same act. */
     this.sql.exec(`UPDATE recovery_codes SET spent_at=? WHERE role=? AND spent_at IS NULL`, Credentials.#instant(at),
       `member:${memberId}`);
-    this.sql.exec(`DELETE FROM subscription_connections WHERE member_id=?`, memberId);
-    /* R54 (T40): a project's sign-in account is cleared with its member's sign-in */
-    this.sql.exec(`DELETE FROM project_accounts WHERE kind='signin' AND member_id=?`, memberId);
+    this.#signinCleared(memberId, by, "revoked");
     /* REC-159: the cascade is the revoking act's, so the keys it revokes name its actor. R21: a key it revokes takes
        the act's own time (the notice's `at`) as `status_at`; a key already revoked keeps its own. */
     this.sql.exec(
@@ -181,6 +190,7 @@ export class Credentials {
     this.sql.exec(`UPDATE ai_credentials SET expires_at=? WHERE expires_at IS NULL`,
       stampSecond(Date.now() + AI_CREDENTIAL_EXPIRY_DAYS.default * DAY_MS));
     this.#tx(() => this.#retiredReferences());
+    this.#tx(() => this.#carryHistory());
     this.declareTables();
   }
 
@@ -224,7 +234,8 @@ export class Credentials {
   declareTables() {
     if (this.#declared) return false;
     const answer = this.core.declareTable("credentials",
-      [...CREDENTIALS_TABLES, ...CREDENTIALS_PROJECT_TABLES].map((t) => ({ ...t, ...(t.keys ? { keys: [...t.keys] } : {}) })));
+      [...CREDENTIALS_TABLES, ...CREDENTIALS_PROJECT_TABLES, CREDENTIALS_HISTORY_TABLE]
+        .map((t) => ({ ...t, ...(t.keys ? { keys: [...t.keys] } : {}) })));
     if (answer && answer.ok === false)
       throw new Error(`credentials: record-core refused its table declaration: ${answer.reason} (${answer.table})`);
     this.#declared = true;
@@ -1121,9 +1132,8 @@ export class Credentials {
     /* END DEC-49 REGION is-secret-given */
   }
 
-  /* R25, R37: the two switches' names, one list for a member's reference and the group key; (T40) R55's `names`, every
-     switch an account holds, for `accountUsesSet`. */
-  static #switchName(name, names = ACCOUNT_SWITCHES) {
+  /* R55: every switch an account holds, for `accountUsesSet` (T41: R25's and R37's own acts retired into it). */
+  static #switchName(name, names = USE_SWITCHES) {
     /* DEC-49 REGION is-account-switch */
     if (typeof name !== "string" || !names.includes(name))
       return Credentials.#row(ACCOUNT_CHECKS, "UNKNOWN_SWITCH", `the switches are ${names.join(", ")}. `
@@ -1139,13 +1149,14 @@ export class Credentials {
    * are two of them, stored where they were. A value outside what a switch takes is refused SWITCH_VALUE_INVALID,
    * naming the values; only R33's and R54's on/off of the key itself keep "only `true` is on". */
   static #USE_COLUMN = Object.freeze({ ask: "use_ask", draft: "use_draft", run: "use_run", standing: "standing",
-                                       explore: "explore", suggestions: "suggestions" });
-  static #USES_COLUMNS = "use_ask, use_draft, use_run, standing, explore, suggestions";
+                                       explore: "explore", enquire: "use_enquire", read: "use_read",
+                                       transcribe: "use_transcribe", account: "use_account", suggestions: "suggestions" });
+  static #USES_COLUMNS = USE_SWITCHES.map((k) => Credentials.#USE_COLUMN[k]).join(", ");
 
-  /* An account's switches from its row, as R55 names them. */
+  /* An account's switches from its row, as R55 names them, in USE_SWITCHES' order. */
   static #usesOf(r) {
-    return { ask: !!r?.use_ask, draft: !!r?.use_draft, run: !!r?.use_run, standing: !!r?.standing,
-             explore: EXPLORE_VALUES.includes(r?.explore) ? r.explore : "no", suggestions: !!r?.suggestions };
+    return Object.fromEntries(USE_SWITCHES.map((k) => [k, k === "explore"
+      ? (EXPLORE_VALUES.includes(r?.explore) ? r.explore : "no") : !!r?.[Credentials.#USE_COLUMN[k]]]));
   }
 
   /* R55, R57: SWITCH_VALUE_INVALID, minted here alone: `what` and the values it takes. */
@@ -1219,8 +1230,11 @@ export class Credentials {
       const bar = this.#accountBar(owner, by);
       if (bar) return { refusal: bar };
       const id = Credentials.#memberOf(owner);
-      if (this.#reference(id, "member_id")) return { table: "account_references", where: "member_id=?", args: [id] };
-      if (this.#connected(id)) return { table: "subscription_connections", where: "member_id=?", args: [id] };
+      const act = (account) => (n, v) => this.#change(`member:${id}`, "use_set", { account, switch: n, value: v }, by);   /* R61 */
+      if (this.#reference(id, "member_id"))
+        return { table: "account_references", where: "member_id=?", args: [id], act: act("reference") };
+      if (this.#connected(id))
+        return { table: "subscription_connections", where: "member_id=?", args: [id], act: act("signin") };
       return { none: this.#noAccount(id, "member") };
     }
     /* no owner this module knows: refused as R22 refuses any principal but the actor */
@@ -1290,10 +1304,13 @@ export class Credentials {
     const id = Credentials.#memberOf(member);
     const { sealed, iv } = await this.#encrypt(`member:${id}`, kind, secret);
     const setAt = stampSecond();
-    this.sql.exec(
-      `INSERT INTO account_references (member_id, kind, sealed, iv, set_at) VALUES (?,?,?,?,?)
-       ON CONFLICT(member_id) DO UPDATE SET kind=excluded.kind, sealed=excluded.sealed, iv=excluded.iv,
-         set_at=excluded.set_at`, id, kind, sealed, iv, setAt);
+    this.#tx(() => {
+      this.sql.exec(
+        `INSERT INTO account_references (member_id, kind, sealed, iv, set_at) VALUES (?,?,?,?,?)
+         ON CONFLICT(member_id) DO UPDATE SET kind=excluded.kind, sealed=excluded.sealed, iv=excluded.iv,
+           set_at=excluded.set_at`, id, kind, sealed, iv, setAt);
+      this.#change(`member:${id}`, "key_set", { account: "reference", kind }, by, null, setAt);   /* R61 */
+    });
     return { ok: true, kind, set_at: setAt };
   }
 
@@ -1304,8 +1321,13 @@ export class Credentials {
     if (bar) return bar;
     const id = Credentials.#memberOf(member);
     const held = !!this.#one(`SELECT member_id FROM account_references WHERE member_id=?`, id);
-    if (held) this.sql.exec(`DELETE FROM account_references WHERE member_id=?`, id);
-    this.sql.exec(`DELETE FROM ai_grants WHERE member_id=? AND kind='standing'`, id);
+    this.#tx(() => {
+      if (held) {
+        this.sql.exec(`DELETE FROM account_references WHERE member_id=?`, id);
+        this.#change(`member:${id}`, "removed", { account: "reference" }, by);   /* R61 */
+      }
+      this.sql.exec(`DELETE FROM ai_grants WHERE member_id=? AND kind='standing'`, id);
+    });
     return { ok: true, removed: held };
   }
 
@@ -1324,6 +1346,163 @@ export class Credentials {
              /* R43: whether the member is connected through their own subscription, and since when; never a login;
                 (T40, R55) the sign-in's own switches, null when not connected */
              subscription: { connected: !!sub, since: sub ? sub.since : null, uses: sub ? Credentials.#usesOf(sub) : null } };
+  }
+
+  /* ===== EACH ACCOUNT'S CHANGES (R61; T41, DEC-188 (1)) =====
+   *
+   * Every change to an account's settings is recorded in `account_changes`, in the order made, with who made it and
+   * when, never the key or a digest of it: a key or sign-in set or replaced, the account switched, removed, one use's
+   * switch set, and a material limit set. Only an accepted change writes one; a refusal or a read never does. The
+   * records R33, R51, R54 and R57 kept before T41 (`group_key_acts`, `ai_keep_away`, `project_account_acts`,
+   * `project_keep_away`) are carried into it once, in the order they were made, each naming its origin, so nothing is
+   * back-filled and nothing carried twice; those tables are still written, each row with its change beside it. */
+
+  static #ownerOfProject(project) { return `project:${project}`; }
+
+  /* One change, in the caller's act. `origin` names the earlier record written beside it, or null. */
+  #change(owner, change, detail, by, origin = null, at = stampSecond()) {
+    const project = owner.startsWith("project:") ? owner.slice(8) : null;
+    this.sql.exec(`INSERT OR IGNORE INTO account_changes (owner, project_id, at, by, change, detail, origin)
+                   VALUES (?,?,?,?,?,?,?)`, owner, project, at, Credentials.#memberOf(by), change,
+      detail ? JSON.stringify(detail) : null, origin);
+  }
+
+  #lastSeq() { return Number(this.#one(`SELECT last_insert_rowid() AS id`)?.id ?? 0); }
+
+  /* R33's acts on the group key and R54's on a project's account, as R61 names them. */
+  static #legacyChange(act, detail) {
+    if (act === "set") return ["key_set", { kind: "apikey" }];
+    if (act === "setkey") return ["key_set", { kind: "apikey" }];
+    if (act === "setsignin") return ["signin_set", {}];
+    if (act === "remove") return ["removed", {}];
+    if (act === "switch") return ["switched", { on: detail === "on" }];
+    const m = /^(?:switch|uses):(.+)$/.exec(act);
+    if (m) return ["use_set", { switch: m[1],
+      value: detail === "on" ? true : detail === "off" ? false : detail }];
+    return [act, detail === null || detail === undefined ? {} : { detail }];
+  }
+
+  static #limitDetail(r) { return { on: !!r.is_on, uses: Credentials.#usesList(r.uses), reason: r.reason ?? null }; }
+
+  /* migrate: the records kept before T41 not yet carried, in the order made (instant, then the order each table kept
+     them). A later boot finds none. */
+  #carryHistory() {
+    const have = (t) => this.#rows(`PRAGMA table_info(${t})`).length > 0;
+    const out = [];
+    if (have("group_key_acts"))
+      for (const r of this.#rows(`SELECT seq, act, detail, actor, at FROM group_key_acts ORDER BY seq`))
+        out.push({ owner: "group", at: r.at, by: r.actor, rank: 0, seq: r.seq, origin: `group_key_acts:${r.seq}`,
+                   cd: Credentials.#legacyChange(r.act, r.detail) });
+    if (have("ai_keep_away"))
+      for (const r of this.#rows(`SELECT seq, is_on, uses, reason, set_by, set_at FROM ai_keep_away ORDER BY seq`))
+        out.push({ owner: "group", at: r.set_at, by: r.set_by, rank: 1, seq: r.seq, origin: `ai_keep_away:${r.seq}`,
+                   cd: ["limit_set", Credentials.#limitDetail(r)] });
+    if (have("project_account_acts"))
+      for (const r of this.#rows(`SELECT seq, project_id, act, detail, actor, at FROM project_account_acts ORDER BY seq`))
+        out.push({ owner: Credentials.#ownerOfProject(r.project_id), at: r.at, by: r.actor, rank: 2, seq: r.seq,
+                   origin: `project_account_acts:${r.seq}`, cd: Credentials.#legacyChange(r.act, r.detail) });
+    if (have("project_keep_away"))
+      for (const r of this.#rows(`SELECT seq, project_id, is_on, uses, reason, set_by, set_at FROM project_keep_away ORDER BY seq`))
+        out.push({ owner: Credentials.#ownerOfProject(r.project_id), at: r.set_at, by: r.set_by, rank: 3, seq: r.seq,
+                   origin: `project_keep_away:${r.seq}`, cd: ["limit_set", Credentials.#limitDetail(r)] });
+    const carried = new Set(this.#rows(`SELECT origin FROM account_changes WHERE origin IS NOT NULL`).map((r) => r.origin));
+    out.filter((x) => !carried.has(x.origin))
+      .sort((a, b) => (a.at < b.at ? -1 : a.at > b.at ? 1 : a.rank - b.rank || a.seq - b.seq))
+      .forEach((x) => this.#change(x.owner, x.cd[0], x.cd[1], x.by, x.origin, x.at));
+  }
+
+  /* R43, R16, R54: a member's sign-in cleared (their own disconnection, or their revocation), with every project's
+     sign-in account that was theirs; each a change of its account (R61). */
+  #signinCleared(id, by, why) {
+    const held = !!this.#one(`SELECT member_id FROM subscription_connections WHERE member_id=?`, id);
+    if (held) {
+      this.sql.exec(`DELETE FROM subscription_connections WHERE member_id=?`, id);
+      /* R32 (T41): a standing question's grant her sign-in served ends with it (none when a reference of hers served it) */
+      if (!this.#reference(id, "member_id")) this.sql.exec(`DELETE FROM ai_grants WHERE member_id=? AND kind='standing'`, id);
+      this.#change(`member:${id}`, "removed", { account: "signin", why }, by);
+    }
+    for (const p of this.#rows(`SELECT project_id FROM project_accounts WHERE kind='signin' AND member_id=?`, id)) {
+      this.sql.exec(`DELETE FROM project_accounts WHERE project_id=?`, p.project_id);
+      this.#change(Credentials.#ownerOfProject(p.project_id), "removed", { kind: "signin", member: id, why: "signin_cleared" }, by);
+    }
+    return held;
+  }
+
+  /* R60, R61: the owners of the account `owner` names are those R55 lets set its switches; anyone else is refused as
+     R55 refuses them. Null when `viewer` is one of them. */
+  #ownerBar(owner, viewer) {
+    if (owner === "group") return this.#adminBar(viewer, "reading the group key's assistant settings");
+    if (typeof owner === "string" && owner.startsWith("project:"))
+      return this.#projectOwnerBar(owner.slice(8), viewer, "reading a project's assistant settings");
+    if (typeof owner === "string" && owner.startsWith("member:")) return this.#accountBar(owner, viewer);
+    return this.#accountBar(null, viewer);
+  }
+
+  /* R57, R60: every material limit that can bind the account, on or off: the group's, and a project's own for its
+     account. */
+  #limitsFor(owner) {
+    const g = this.aiKeepAwayState();
+    const out = [{ scope: "group", on: g.on, uses: g.uses, reason: g.reason, set_by: g.set_by, set_at: g.set_at }];
+    if (owner.startsWith("project:")) {
+      let lim;
+      try { lim = this.#projectLimit(owner.slice(8)); }
+      catch { lim = { on: null, uses: null, reason: null, set_by: null, set_at: null }; }
+      out.push({ scope: "project", project: owner.slice(8), on: lim.on, uses: lim.uses, reason: lim.reason,
+                 set_by: lim.set_by, set_at: lim.set_at });
+    }
+    return out;
+  }
+
+  /* R60 `accountUses` (`op=accountuses`): one account's uses and keep-aways, to its owners alone: `{owner, held,
+     uses, keptAway}`, `uses` every R55 switch with its value (its default where none was set; null when no account is
+     held, the group key's defaults before any act on it). For `member:<id>`, `uses` is the account `accountUsesSet`
+     sets (their reference when held, else their sign-in) and `accounts` answers each of the two. Never a key; writes
+     nothing; never throws (a store that cannot be read answers `unreadable: true`). */
+  accountUses({ owner = null, viewer = null } = {}) {
+    try {
+      const bar = this.#ownerBar(owner, viewer);
+      if (bar) return bar;
+      const keptAway = this.#limitsFor(owner);
+      if (owner === "group") {
+        const f = this.#groupKeyFacts();
+        return { ok: true, owner, held: f.held, uses: f.uses, keptAway };
+      }
+      if (owner.startsWith("project:")) {
+        const p = this.#projectAccountRow(owner.slice(8));
+        return { ok: true, owner, held: !!p, kind: p ? p.kind : null, uses: p ? Credentials.#usesOf(p) : null, keptAway };
+      }
+      const id = Credentials.#memberOf(owner);
+      const ref = this.#reference(id, Credentials.#USES_COLUMNS);
+      const sub = this.#one(`SELECT ${Credentials.#USES_COLUMNS} FROM subscription_connections WHERE member_id=?`, id);
+      const one = (r) => ({ held: !!r, uses: r ? Credentials.#usesOf(r) : null });
+      return { ok: true, owner, held: !!(ref || sub), uses: ref ? Credentials.#usesOf(ref) : sub ? Credentials.#usesOf(sub) : null,
+               accounts: { reference: one(ref), signin: one(sub) }, keptAway };
+    } catch {
+      return { ok: true, owner: typeof owner === "string" ? owner : null, held: null, uses: null, keptAway: null, unreadable: true };
+    }
+  }
+
+  /* R61 `accountHistory` (`op=accounthistory`): the account's changes, to its owners alone (R60's), in the order made,
+     each `{at, by, change, …}` with what it set; capped as R15's (default 200, at most 500) with a measured
+     `truncated`. Writes nothing; never throws. */
+  accountHistory({ owner = null, viewer = null, limit = null } = {}) {
+    try {
+      const bar = this.#ownerBar(owner, viewer);
+      if (bar) return bar;
+      const asked = Number(limit);
+      const cap = Number.isFinite(asked) && asked > 0 ? Math.min(500, Math.floor(asked)) : 200;
+      const found = this.#rows(`SELECT at, by, change, detail FROM account_changes WHERE owner=? ORDER BY seq LIMIT ?`,
+        owner, cap + 1);
+      const changes = found.slice(0, cap).map((r) => {
+        let d = {};
+        try { d = r.detail ? JSON.parse(r.detail) : {}; } catch { d = {}; }
+        return { ...d, at: r.at, by: r.by, change: r.change };
+      });
+      return { ok: true, owner, count: changes.length, limit: cap, truncated: found.length > cap, changes };
+    } catch {
+      return { ok: true, owner: typeof owner === "string" ? owner : null, count: 0, limit: null, truncated: false,
+               changes: [], unreadable: true };
+    }
   }
 
   /* ===== A CONNECTED SUBSCRIPTION (R43; N678's share, DEC-156; K1819, K1922) =====
@@ -1348,7 +1527,12 @@ export class Credentials {
     if (id === null || isMachineIdentity(member) || this.#memberFacts(id)?.status !== "active")
       return Credentials.#row(ACCOUNT_CHECKS, "ACCOUNT_MEMBER_NOT_ACTIVE", "only an active member is connected through "
         + "their subscription. Nothing was recorded.");
-    this.sql.exec(`INSERT OR IGNORE INTO subscription_connections (member_id, since) VALUES (?,?)`, id, stampSecond());
+    if (!this.#connected(id))
+      this.#tx(() => {
+        const since = stampSecond();
+        this.sql.exec(`INSERT OR IGNORE INTO subscription_connections (member_id, since) VALUES (?,?)`, id, since);
+        this.#change(`member:${id}`, "signin_set", { account: "signin" }, id, null, since);   /* R61: by the member's own sign-in */
+      });
     return { ok: true, member: id, since: this.#one(`SELECT since FROM subscription_connections WHERE member_id=?`, id).since };
   }
 
@@ -1360,12 +1544,8 @@ export class Credentials {
     const bar = this.#accountBar(member, by);
     if (bar) return bar;
     const id = Credentials.#memberOf(member);
-    const held = !!this.#one(`SELECT member_id FROM subscription_connections WHERE member_id=?`, id);
-    this.#tx(() => {
-      if (held) this.sql.exec(`DELETE FROM subscription_connections WHERE member_id=?`, id);
-      /* R54 (T40): a project's sign-in account is cleared with its member's sign-in */
-      this.sql.exec(`DELETE FROM project_accounts WHERE kind='signin' AND member_id=?`, id);
-    });
+    /* R54 (T40): a project's sign-in account is cleared with its member's sign-in; (T41; R61) each a change */
+    const held = this.#tx(() => this.#signinCleared(id, by, "disconnected"));
     return { ok: true, disconnected: held };
   }
 
@@ -1412,21 +1592,8 @@ export class Credentials {
     return (await this.#ownReference(id)) ?? this.#noAccount(id, true);
   }
 
-  /* R25: the member's own switches, each off by default; they belong to the reference, so a member with none is
-     answered NO_ACCOUNT. They govern only acts their own reference serves; the group key has its own (R37). (T40;
-     R55) Two of R55's, set as `accountUsesSet` sets them: a value that is not a boolean is SWITCH_VALUE_INVALID. */
-  accountSwitchSet({ member = null, switch: name = null, on, by = null } = {}) {
-    const bar = this.#accountBar(member, by);
-    if (bar) return bar;
-    const unknown = Credentials.#switchName(name);
-    if (unknown) return unknown;
-    const bad = Credentials.#switchValueFault(name, on);
-    if (bad) return bad;
-    const id = Credentials.#memberOf(member);
-    if (!this.#reference(id, "member_id")) return this.#noAccount(id, true);
-    this.sql.exec(`UPDATE account_references SET ${Credentials.#USE_COLUMN[name]}=? WHERE member_id=?`, on ? 1 : 0, id);
-    return { ok: true, switch: name, on };
-  }
+  /* R25 (T41; DEC-188 (8)): the member's own `suggestions` and `standing` switches stand, two of R55's, and are set
+     only by `accountUsesSet`; R25's own act, `accountSwitchSet` (`op=accountswitchset`), is retired into it. */
 
   /* ===== THE GROUP'S API KEY (R33–R37; K1755; DEC-172, K1957) =====
    *
@@ -1453,9 +1620,13 @@ export class Credentials {
              uses: r ? Credentials.#usesOf(r) : { ...USE_DEFAULTS } };
   }
 
+  /* R33's record, and (T41; R61) its change beside it, naming it as its origin. */
   #groupKeyAct(act, detail, by) {
+    const at = stampSecond();
     this.sql.exec(`INSERT INTO group_key_acts (act, detail, actor, at) VALUES (?,?,?,?)`, act, detail ?? null,
-      Credentials.#memberOf(by), stampSecond());
+      Credentials.#memberOf(by), at);
+    const [change, d] = Credentials.#legacyChange(act, detail ?? null);
+    this.#change("group", change, d, by, `group_key_acts:${this.#lastSeq()}`, at);
   }
 
   /* R33: one key for the group's copy, replacing any earlier one; off when first set (a replacement keeps the switch
@@ -1485,8 +1656,8 @@ export class Credentials {
     const bar = this.#adminBar(by, "removing the group's Anthropic API key");
     if (bar) return bar;
     const held = this.#groupKeyFacts().held;
-    this.sql.exec(`UPDATE group_key SET sealed=NULL, iv=NULL, is_on=0, set_by=NULL, set_at=NULL, suggestions=0,
-                   standing=0, use_ask=0, use_draft=0, use_run=0, explore='no' WHERE id=1`);
+    const off = USE_SWITCHES.map((k) => `${Credentials.#USE_COLUMN[k]}=${k === "explore" ? "'no'" : "0"}`).join(", ");
+    this.sql.exec(`UPDATE group_key SET sealed=NULL, iv=NULL, is_on=0, set_by=NULL, set_at=NULL, ${off} WHERE id=1`);
     this.#groupKeyAct("remove", null, by);
     return { ok: true, removed: held };
   }
@@ -1501,20 +1672,8 @@ export class Credentials {
     return { ok: true, on: this.#groupKeyFacts().on };
   }
 
-  /* R37: the group key's own `suggestions` and `standing`, off by default, set by an active administrator. (T40; R55)
-     Two of R55's, set as `accountUsesSet` sets them: a value that is not a boolean is SWITCH_VALUE_INVALID. */
-  groupSwitchSet({ switch: name = null, on, by = null } = {}) {
-    const bar = this.#adminBar(by, "switching the group key's assistant settings");
-    if (bar) return bar;
-    const unknown = Credentials.#switchName(name);
-    if (unknown) return unknown;
-    const bad = Credentials.#switchValueFault(name, on);
-    if (bad) return bad;
-    const v = on ? 1 : 0;
-    this.sql.exec(`INSERT INTO group_key (id, ${name}) VALUES (1,?) ON CONFLICT(id) DO UPDATE SET ${name}=excluded.${name}`, v);
-    this.#groupKeyAct(`switch:${name}`, v ? "on" : "off", by);
-    return { ok: true, switch: name, on: v === 1 };
-  }
+  /* R37 (T41; DEC-188 (8)): the group key's own `suggestions` and `standing` stand, two of R55's, set only by
+     `accountUsesSet` with `owner` `group`; R37's own act, `groupSwitchSet` (`op=groupswitchset`), is retired into it. */
 
   /* R34, R37: an active administrator reads `{held, on, set_at, by, suggestions, standing}` (T40: and `uses`, every R55
      switch); any other active member
@@ -1569,12 +1728,14 @@ export class Credentials {
   }
 
   /* R35's choice without unsealing: which account serves an active member's act now, 'member', 'group' or null, and
-     the switches that govern it (R25, R37). (T38; K2275) A member's own sign-in (R43) serves at level 'member' with no
-     switch of its own: R25's belong to a reference and R37's to the group key, so both read off for it. */
+     the switches that govern it (R25, R37, R55). (T41; N796, Bob K2425) A member's own sign-in (R43) serves at level
+     'member' and is governed by its own switches (R55), as a reference is: T38's refusal of a sign-in (K2275) is
+     lifted. */
   #servingAccount(id) {
     const own = this.#reference(id, "suggestions, standing");
     if (own) return { level: "member", suggestions: !!own.suggestions, standing: !!own.standing };
-    if (this.#connected(id)) return { level: "member", signin: true, suggestions: false, standing: false };
+    const sub = this.#one(`SELECT suggestions, standing FROM subscription_connections WHERE member_id=?`, id);
+    if (sub) return { level: "member", signin: true, suggestions: !!sub.suggestions, standing: !!sub.standing };
     const g = this.#groupKeyFacts();
     return g.on ? { level: "group", suggestions: g.suggestions, standing: g.standing } : null;
   }
@@ -1741,8 +1902,14 @@ export class Credentials {
     const u = Credentials.#usesToStore(uses);
     if (u.fault) return u.fault;
     const given = typeof reason === "string" && reason.trim() !== "";
-    this.sql.exec(`INSERT INTO ai_keep_away (is_on, reason, set_by, set_at, uses) VALUES (?,?,?,?,?)`, turnOn ? 1 : 0,
-      given ? reason : null, Credentials.#memberOf(by), stampSecond(), u.json);
+    this.#tx(() => {
+      const at = stampSecond();
+      this.sql.exec(`INSERT INTO ai_keep_away (is_on, reason, set_by, set_at, uses) VALUES (?,?,?,?,?)`, turnOn ? 1 : 0,
+        given ? reason : null, Credentials.#memberOf(by), at, u.json);
+      /* R61: the change beside it */
+      this.#change("group", "limit_set", Credentials.#limitDetail({ is_on: turnOn, uses: u.json, reason: given ? reason : null }),
+        by, `ai_keep_away:${this.#lastSeq()}`, at);
+    });
     return { ok: true, ...this.aiKeepAwayState() };
   }
 
@@ -1805,9 +1972,24 @@ export class Credentials {
    * C-70.1, and only then is ownership asked; PROJECT_ACT_NOT_THE_OWNER is membership's own answer (its R122). Each
    * act is recorded with its owner and instant, never the key. */
 
-  static PROJECT_KEY_NOTICE_TEXT = "This project has its own Claude account, an Anthropic API key one of its owners set. "
-    + "When you ask the assistant in this project, your questions, and the material read to answer them, go to "
-    + "Anthropic under the project's API account.";
+  /* R58 (T41; DEC-188 (7)): the notice's words, `words.json`'s `ai.disclosure.projectkey`, read by key; `{project}`
+     is the project's name when answered (`#disclosure`). */
+  static PROJECT_KEY_NOTICE_TEXT = AI_WORDS["ai.disclosure.projectkey"];
+
+  /* R58: the project's name, its bundle's title (record-core R34's `bundleInfo`), else its id. Never throws. */
+  #projectName(project) {
+    try {
+      const t = this.core?.bundleInfo?.(project)?.title;
+      if (typeof t === "string" && t.trim() !== "") return t;
+    } catch { /* the id */ }
+    return String(project);
+  }
+
+  /* R58: the disclosure for `project`, `{project}` filled with its name. */
+  #disclosure(project) {
+    return { key: "ai.disclosure.projectkey",
+             text: Credentials.PROJECT_KEY_NOTICE_TEXT.replaceAll("{project}", this.#projectName(project)) };
+  }
 
   /* membership R122: PROJECT_ACT_NOT_THE_OWNER, minted there alone. */
   #notTheOwner(by, project) { return notTheOwner(by ?? null, project); }
@@ -1871,9 +2053,14 @@ export class Credentials {
     return !!parts && parts.some((x) => x.member === p.member_id) && parts.every((x) => x.member === p.member_id);
   }
 
+  /* R54's record, and (T41; R61) its change beside it, naming it as its origin. */
   #projectAct(project, act, detail, by) {
+    const at = stampSecond();
     this.sql.exec(`INSERT INTO project_account_acts (project_id, act, detail, actor, at) VALUES (?,?,?,?,?)`, project, act,
-      detail ?? null, Credentials.#memberOf(by), stampSecond());
+      detail ?? null, Credentials.#memberOf(by), at);
+    const [change, d] = Credentials.#legacyChange(act, detail ?? null);
+    const extra = act === "setsignin" ? { kind: "signin", member: Credentials.#memberOf(by) } : {};
+    this.#change(Credentials.#ownerOfProject(project), change, { ...d, ...extra }, by, `project_account_acts:${this.#lastSeq()}`, at);
   }
 
   /* R54 `projectKeySet`: an owner holds an Anthropic API key for the project, replacing any earlier account; off when
@@ -1987,7 +2174,7 @@ export class Credentials {
     const id = Credentials.#memberOf(member);
     const seen = id !== null && typeof project === "string"
       && !!this.#one(`SELECT member_id FROM project_key_notices WHERE member_id=? AND project_id=?`, id, project);
-    return { ok: true, due: !seen, text: Credentials.PROJECT_KEY_NOTICE_TEXT };
+    return { ok: true, due: !seen, text: this.#disclosure(project).text };
   }
 
   /* R58 `projectKeyNoticeSeen`: the member's own act (R22's refusals), for a project they have joined, recorded once
@@ -2009,7 +2196,8 @@ export class Credentials {
     /* DEC-49 REGION is-project-key-notice-seen */
     if (this.#one(`SELECT member_id FROM project_key_notices WHERE member_id=? AND project_id=?`, id, project)) return null;
     return Credentials.#row(ACCOUNT_CHECKS, "PROJECT_KEY_NOTICE_DUE", "this member has not yet read the notice that their "
-      + "questions go to Anthropic under this project's API account. Nothing was sent.", { member: id, project });
+      + "questions go to Anthropic under this project's API account. Nothing was sent.",
+      { member: id, project, project_name: this.#projectName(project), disclosure: this.#disclosure(project) });
     /* END DEC-49 REGION is-project-key-notice-seen */
   }
 
@@ -2053,8 +2241,15 @@ export class Credentials {
     const u = Credentials.#usesToStore(uses);
     if (u.fault) return u.fault;
     const given = typeof reason === "string" && reason.trim() !== "";
-    this.sql.exec(`INSERT INTO project_keep_away (project_id, is_on, uses, reason, set_by, set_at) VALUES (?,?,?,?,?,?)`,
-      project, turnOn ? 1 : 0, u.json, given ? reason : null, Credentials.#memberOf(by), stampSecond());
+    this.#tx(() => {
+      const at = stampSecond();
+      this.sql.exec(`INSERT INTO project_keep_away (project_id, is_on, uses, reason, set_by, set_at) VALUES (?,?,?,?,?,?)`,
+        project, turnOn ? 1 : 0, u.json, given ? reason : null, Credentials.#memberOf(by), at);
+      /* R61: the change beside it */
+      this.#change(Credentials.#ownerOfProject(project), "limit_set",
+        Credentials.#limitDetail({ is_on: turnOn, uses: u.json, reason: given ? reason : null }), by,
+        `project_keep_away:${this.#lastSeq()}`, at);
+    });
     return { ok: true, project, ...this.#projectLimit(project) };
   }
 
@@ -2126,8 +2321,9 @@ export class Credentials {
     return this.#mintGrant(id, sessionSha, Math.min(Date.now() + AI_GRANT_TTL_SECONDS * 1000, s.expires), "ask");
   }
 
-  /* R32: a standing question's grant, for `answers` R19 only (not routed): shaped as R27's, minted with no session. A
-     member served by their own sign-in is refused STANDING_SWITCH_OFF: no switch governs it (T38; K2275, N796). */
+  /* R32: a standing question's grant, for `answers` R19 only (not routed): shaped as R27's, minted with no session.
+     (T41; N796, Bob K2425) A member served by their own sign-in is asked their sign-in's `standing` switch (R55), off by
+     default and set only by their own act, as a reference's is; a sign-in is never refused for being one. */
   async aiGrantMintStanding({ member = null, question = null } = {}) {
     const id = Credentials.#memberOf(member);
     const refuse = (code, detail) => Credentials.#row(ACCOUNT_CHECKS, code, detail, { member: id });
@@ -2141,7 +2337,7 @@ export class Credentials {
     /* DEC-49 REGION is-standing-grant */
     if (!serving.standing)
       return refuse("STANDING_SWITCH_OFF", `standing questions are off for the ${serving.level === "group"
-        ? "group's key" : serving.signin ? "member's own sign-in, which has no standing switch" : "member's own account"}, `
+        ? "group's key" : serving.signin ? "member's own sign-in" : "member's own account"}, `
         + "which would serve this one. Nothing was minted.");
     if (typeof question !== "string" || question.trim() === "")
       return refuse("NO_QUESTION", "no standing question was named. Nothing was minted.");
@@ -2736,7 +2932,6 @@ export function credentialsOps(c, url, body, env) {
     accountreferenceremove: () => c.accountReferenceRemove({ ...(body || {}), by: url.searchParams.get("by") }),
     accountreference: () => c.accountReferenceState({ member: url.searchParams.get("member"),
                                                       viewer: url.searchParams.get("viewer") }),
-    accountswitchset: () => c.accountSwitchSet({ ...(body || {}), by: url.searchParams.get("by") }),
     /* (T40; R27) the project an ask is made in, the body's or the query's; never a stamp */
     aigrantmint: () => c.aiGrantMint({ member: url.searchParams.get("member"), by: url.searchParams.get("by"),
                                        session: url.searchParams.get("session"),
@@ -2744,7 +2939,6 @@ export function credentialsOps(c, url, body, env) {
     groupkeyset: () => c.groupKeySet({ ...(body || {}), by: url.searchParams.get("by") }),
     groupkeyremove: () => c.groupKeyRemove({ by: url.searchParams.get("by") }),
     groupkeyswitch: () => c.groupKeySwitch({ ...(body || {}), by: url.searchParams.get("by") }),
-    groupswitchset: () => c.groupSwitchSet({ ...(body || {}), by: url.searchParams.get("by") }),
     groupkeystate: () => c.groupKeyState({ viewer: url.searchParams.get("viewer") }),
     groupkeynotice: () => c.groupKeyNotice({ member: url.searchParams.get("viewer") }),
     groupkeynoticeseen: () => c.groupKeyNoticeSeen({ member: url.searchParams.get("by"), by: url.searchParams.get("by") }),
@@ -2761,6 +2955,10 @@ export function credentialsOps(c, url, body, env) {
        and `viewer` the stamps after the body. The in-plane reads (`projectAccountsSuspended`, `projectsKeptAway`,
        `aiKeptAway`) are not routed. */
     accountusesset: () => c.accountUsesSet({ ...(body || {}), by: by() }),
+    /* (T41; R60, R61) an account's panel: its uses and keep-aways, and its changes, to its owners; `viewer` the stamp */
+    accountuses: () => c.accountUses({ owner: url.searchParams.get("owner"), viewer: url.searchParams.get("viewer") }),
+    accounthistory: () => c.accountHistory({ owner: url.searchParams.get("owner"), viewer: url.searchParams.get("viewer"),
+                                             limit: url.searchParams.get("limit") }),
     projectkeyset: () => c.projectKeySet({ ...(body || {}), by: by() }),
     projectsigninset: () => c.projectSigninSet({ ...(body || {}), by: by() }),
     projectaccountremove: () => c.projectAccountRemove({ ...(body || {}), by: by() }),

@@ -189,7 +189,7 @@ test("R39 signOut ends the session its token names, with the ask grants minted u
 test("R39 signOutEverywhere ends every session of the token's role, that one included, and their ask grants; never another role's, nor a standing question's grant", async () => {
   const w = await world().group("ann", "bob");
   for (const id of ["ann", "bob"]) await w.c.accountReferenceSet({ member: id, kind: "apikey", secret: `sk-${id}`, by: id });
-  w.c.accountSwitchSet({ member: "ann", switch: "standing", on: true, by: "ann" });
+  w.c.accountUsesSet({ owner: "member:ann", switch: "standing", on: true, by: "ann" });
   const ann = [];
   for (let i = 0; i < 3; i++) ann.push((await w.c.login({ role: "member:ann", password: PASSWORD("ann") })).token);
   const bob = (await w.c.login({ role: "member:bob", password: PASSWORD("bob") })).token;
