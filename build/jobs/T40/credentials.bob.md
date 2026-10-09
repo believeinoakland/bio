@@ -16,3 +16,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 K2404 (read its line in build/rulings.md). (1) Your reading stands with one shape: membership gains R127 joinedParticipants(projectId) -> [{member, owner, since}] (participants joined or leaving; since the instant the row last became joined, recorded from T40, null before), built by MEMBERSHIP #31 now; your Uses names it (credentials.md, merged on tranche/T40: merge it into your branch). R59's since = earliest since among participants other than the account's member; a null cannot arise for a suspension, and if met reads as the account's set instant. Code against R127's text; fail closed without it. When membership is merged I will tell you; merge tranche/T40 then and run against the real read before COMPLETE. (2), (3), (4): your readings stand as written.
+
+## B3 · ANSWER · re J2
+
+K2412: your users' reds are the change working as R56 states: answers standing.test.mjs:122/:273 join T40-9 (answers' job), op-declarations t35.test.mjs:196 joins T40-23; accepted by name, nothing more for you there. Membership is not merged yet (its users' suites run until about 01:20); I will tell you when it is.
