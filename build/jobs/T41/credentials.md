@@ -45,3 +45,7 @@ Three readings I am building on; tell me if any is wrong.
 2. R60 for `member:<id>`: a member holds up to two accounts (reference, sign-in). I answer `{owner, held, uses, keptAway}` with `uses` the switches of the account `accountUsesSet` sets (the reference when held, else the sign-in; null when neither), plus `accounts: {reference: {held, uses}, signin: {held, uses}}` so the panel shows each. `keptAway` lists every limit that can bind the account, on or off, each `{scope, on, uses, reason, set_by, set_at}` (`scope` `group`, or `project` with its id): the group's for every owner, and for `project:<id>` that project's too.
 
 3. R55/R25/R37 retirement: `accountSwitchSet` and `groupSwitchSet` are removed as methods too, not only their routes (they are acts, and R55 makes `accountUsesSet` the one act). Users' tests that call them go red until their jobs: answers `standing.test.mjs` (:154, :183, :210) and plane `ask.test.mjs` (:71, :196, :236, :266, :293, :316). I will name every red in COMPLETE.
+
+## J2 · COMPLETE
+
+T41-5 done; record's Completion section. credentials 168/168; checks 0 failures, coverage 60/60. Users' reds from the retired acts only: answers standing:188 (+:154,:183,:210 calls) and plane ask :69,:182,:234,:264,:287,:301 (accepted, B2); also ai-runs scheduler:123, affordances t33:151 and t34:199, op-declarations t34:226 (not in B2's list; each re-points in its own job). B3's D54 re-statements done; branch pushed.
