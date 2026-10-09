@@ -21,13 +21,13 @@ export const LOOK_FOR_OPENERS = Object.freeze(["Look for", "Note whether", "Note
   "Watch for", "Compare"]);
 
 /** R4: what names conduct, each list matched as whole words, case-insensitive, in every text of an item. `op_form`
- *  is the op spelling `op=`. */
+ *  is the op spelling `op=`. `may` is not listed: a month's name would trip it (K2482). */
 export const CONDUCT_LISTS = Object.freeze({
   op_form: Object.freeze(["op="]),
   tool_or_act: Object.freeze(["run", "call", "fetch", "search", "capture", "post", "send", "sign", "publish", "approve",
     "delete", "tool", "grant"]),
   party: Object.freeze(["assistant", "Civicsmith", "model", "AI"]),
-  rule_or_permission: Object.freeze(["permission", "permitted", "allowed", "may", "must", "rule", "instruction"]),
+  rule_or_permission: Object.freeze(["permission", "permitted", "allowed", "must", "rule", "instruction"]),
 });
 
 /** R4: the item's shape. */

@@ -12,12 +12,18 @@ test("R4 the closed lists are exactly BOB's (K2472), frozen", () => {
     op_form: ["op="],
     tool_or_act: ["run", "call", "fetch", "search", "capture", "post", "send", "sign", "publish", "approve", "delete", "tool", "grant"],
     party: ["assistant", "Civicsmith", "model", "AI"],
-    rule_or_permission: ["permission", "permitted", "allowed", "may", "must", "rule", "instruction"],
+    rule_or_permission: ["permission", "permitted", "allowed", "must", "rule", "instruction"],
   });
   assert.ok(Object.isFrozen(LOOK_FOR_OPENERS) && Object.isFrozen(CONDUCT_LISTS));
   for (const l of Object.values(CONDUCT_LISTS)) assert.ok(Object.isFrozen(l));
   assert.deepEqual([...ITEM_FIELDS], ["label", "look_for", "where"]);
   assert.equal(conductCheckHolder(), null, "nothing registered in this file");
+});
+
+test("R4 `may` is not on the list (K2482): a month's name passes, and a stated permission is still refused by `allowed`", () => {
+  assert.equal(checkGuide([item("Budget", "Look for the May budget amendment")]).ok, true);
+  assert.equal(checkGuide([item("L", "Look for what the clerk may file", "the May packet")]).ok, true);
+  assert.equal(checkGuide([item("L", "Look for what is allowed")]).found.word, "allowed");
 });
 
 test("R4 every opener makes a look-for statement, any case; anything else is refused (negative control)", () => {
