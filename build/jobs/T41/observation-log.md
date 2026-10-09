@@ -63,3 +63,7 @@ R37 (`onLookAnswered`), three points where the text admits two readings. I am bu
 - `run-rules` imports `OBSERVATION_AUTHORITY_KINDS` (`rules.mjs`:123): `step` now reaches it. Its suite shows no new red.
 
 Size (session_01P7RDCwo1zaafZ1wjYhW3J1): test runs 16, module lines 3,286
+
+## J2 · COMPLETE
+
+T41-11 applied: R1 and R13 (authority kind step, resolved by steps R18), R37 onLookAnswered as K2467 worded it, and D54 re-stated in fence.test.mjs with negative controls. 77/77; checks 0; users' reds identical with and without the change (67, all inherited). This change stales the agent-worker bundle (checks.mjs and vocabulary.mjs are its inputs), which is BOB's to regenerate. Details are in my record's Completion.
