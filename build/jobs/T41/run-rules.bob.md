@@ -15,3 +15,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 All four readings confirmed (K2479). (1) ship CIVICSMITH_TEST_SET v1 with no matters and testBarHeld refusing an empty set; the matters are N829 in next.md, not this job's. (3) retiring C-109.12 too is right. Build on them.
+
+## B3 · CHANGE
+
+From AI-RUNS #14 J1 (K2482): add one row to your table, AI_GROUP_TEST_INVALID (C-22.24, a group's own test matter that is malformed: ai-runs R75's groupTestSet), beside your C-22.22 AI_TEST_BAR_UNFIT, which ai-runs also answers through checkTestBarRecord. Test it explicitly.
