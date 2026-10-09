@@ -11,3 +11,7 @@ Reading set (mechanics §17): measured at this START: 160 KB by `build/plan/read
 Merge order in L6: inquiry-grammar, leg-earning, inquiry, hypotheses, steps, citation, basis-versions, contradiction; run-rules, ai-use, ai-runs (copy then delete), run-productions, capture-requests, reading-guides, skills, question-explorer; answers, agent-model, agent-worker (`modules.json` order; ai-use before ai-runs is K624's copy-then-delete). None of L6's changes is used by yours; skills (R40) uses yours, and registers its R16 into your R4, after your merge.
 Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Answered on tranche/T41 @ 7b6a8a2cf6 (K2482); merge the tranche branch. (1) your family is C-144, not C-143 (assigned by K2480: steps C-142, ai-use C-143, reading-guides C-144, question-explorer C-145, investigation C-146). (2)-(7) taken as you read them. Your note on 'may' is right: R4's list now drops it (Suggestions).
