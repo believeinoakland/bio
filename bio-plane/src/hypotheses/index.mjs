@@ -20,7 +20,8 @@
  * `promotion`, `explore` (whose `rederive` R6 asks), `calculations` (whose synchronous `gradeFactsOf` R6's calculation
  * arm asks; absent, the host's instance, reached when first asked), `registry` (a connection registry other than the
  * default, for a test), `now` (a clock answering an ISO instant), `personWarning` (inquiry R59's person test, R19's
- * warning; `({text, viewer})` → null or the warning) and `shareId` (a share's id maker, for a test). */
+ * warning, `({text, entities, viewer})` → null or the warning; absent, `inquiry.personWarning`, K2479) and `shareId`
+ * (a share's id maker, for a test). */
 import { isHypothesisId, isMachineIdentity, idPattern, ACCEPTANCE_FORMS, acceptanceRecord } from "../record-grammar/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, Membership } from "../membership/index.mjs";
@@ -28,6 +29,9 @@ import { promotionOf } from "../promotion/index.mjs";
 import { BOUNDS, HUNCH_LABEL, defaultRegistry, isRecordId } from "../connection-grammar/index.mjs";
 import { exploreOf } from "../explore/index.mjs";
 import { calculationsOf } from "../calculations/index.mjs";
+/* R19 (K2479): inquiry R59's person test, `personWarning`, read off the namespace so this module loads before inquiry's
+   T41 merge exports it (reached optionally until then). */
+import * as inquiryModule from "../inquiry/index.mjs";
 import { HYPOTHESES_SCHEMA, HYPOTHESES_TABLES, NOTES_SCHEMA, NOTES_TABLES, NOTES_ADDED_COLUMNS, NOTE_NUMBERS_TABLE,
          PROPOSALS_SCHEMA, PROPOSALS_TABLE, SHARES_SCHEMA, SHARES_TABLE } from "./schema.mjs";
 import { HYPOTHESES_CHECKS } from "./checks.mjs";
@@ -144,7 +148,8 @@ export class Hypotheses {
     this.#calculations = calculations;
     this.#registry = registry;
     this.#now = typeof now === "function" ? now : () => new Date().toISOString();
-    this.#personWarning = typeof personWarning === "function" ? personWarning : null;
+    this.#personWarning = typeof personWarning === "function" ? personWarning
+      : typeof inquiryModule.personWarning === "function" ? inquiryModule.personWarning : null;
     this.#shareId = typeof shareId === "function" ? shareId : () => `share:${crypto.randomUUID()}`;
   }
 
@@ -666,7 +671,7 @@ export class Hypotheses {
     const denied = this.#membership.projectAuthority(proj, by, "joined", "noteshare");
     if (denied) return denied;
     let warning = null;
-    if (this.#personWarning) { try { warning = this.#personWarning({ text: n.text, viewer: by }) ?? null; } catch { warning = null; } }
+    if (this.#personWarning) { try { warning = this.#personWarning({ text: n.text, entities: [], viewer: by }) ?? null; } catch { warning = null; } }
     const at = this.#now();
     const share = this.#shareId();
     return this.#record.transact(() => {

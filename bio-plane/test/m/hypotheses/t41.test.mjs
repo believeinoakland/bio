@@ -8,6 +8,7 @@ import { hypothesesOps, HYPOTHESES_CHECKS, SYSTEM_LABEL, PROPOSALS_HEADING, PROP
   from "../../../src/hypotheses/index.mjs";
 import { ACCEPTANCE_FORMS, isHypothesisId } from "../../../src/record-grammar/index.mjs";
 import { isRecordId } from "../../../src/connection-grammar/index.mjs";
+import * as inquiryModule from "../../../src/inquiry/index.mjs";
 
 const PROJ = "PROJ-2026-0001";
 const HIDDEN = "INQ-2026-0009-hidden";
@@ -241,6 +242,17 @@ test("R19 a note naming a person in no public role carries inquiry R59's warning
   const t = setup({ personWarning: () => { throw new Error("boom"); } });
   const n = t.h.noteWrite({ text: "x", by: ANN }).note;
   assert.deepEqual([t.h.noteShare({ note: n, project: PROJ, by: ANN }).ok], [true]);
+});
+
+test("R19 with no test injected, noteShare asks inquiry R59's own personWarning (K2479) and answers and records exactly what it answers (red until inquiry's T41 merge exports it)", () => {
+  assert.equal(typeof inquiryModule.personWarning, "function", "inquiry exports personWarning (its R59)");
+  const w = setup();
+  for (const text of [`I think ${E3} is behind it.`, "The minutes were late."]) {
+    const n = w.h.noteWrite({ text, by: ANN }).note;
+    const r = w.h.noteShare({ note: n, project: PROJ, by: ANN });
+    const expected = inquiryModule.personWarning({ text, entities: [], viewer: ANN }) ?? null;
+    assert.deepEqual([r.ok, r.warning ?? null], [true, expected], text);
+  }
 });
 
 /* ---- R20 ---------------------------------------------------------------------------------------------------------- */
