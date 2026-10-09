@@ -51,3 +51,7 @@ My best reading, which I am building: R71 governs a project's account (R6 says "
 ## J2 · COMPLETE
 
 T41-31 complete (record's Completion, commits 9b4203a311 and ea0aa083df): R71 through R6, R10, R29, R32, R33, R57, and R57's standing sign-in tested on and off. New t41.test.mjs 41/0 and t41.control.mjs 7/0; npm test 13/13 files green; bundle regenerated, fleetbundles 1/0; format, architecture, coverage (63/63) and ownership 0 failures. Built on J1's reading, still open: a project's sign-in accepted (R6's sentence wants BOB's wording). Deferred: the stale cascade.control.mjs, to the split.
+
+## J3 · COMPLETE
+
+B2 applied: tranche/T41 merged (R6 as K2479; no code change needed). The merge's agent-model R13 (estimated_cost_usd) staled my bundle (regenerated) and ask.test.mjs' R54 usage check (now expects USAGE_FIGURES plus ESTIMATE, agent-model's answer exactly). npm test 13 files 0 fail; t41 41/0; checks 0 failures; fleetbundles: only the plane bundle stale (inherited red 14). Record's Completion has the addendum.
