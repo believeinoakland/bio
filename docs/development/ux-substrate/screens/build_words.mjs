@@ -126,6 +126,48 @@ must(scr, 'mock-screens.js', 'formerly dev-o');
 add('handle.characters', 'A handle uses only lower-case letters, digits and hyphens.', false, 'mock-screens.js join');
 must(scr, 'mock-screens.js', 'A handle uses only lower-case letters, digits and hyphens');
 
+add('handle.refused.unchecked', 'Civicsmith couldn\'t check whether your work is in a published case, so your handle wasn\'t changed. Try again in a moment.', false, 'DEC-188', 'HANDLE_CHANGE_UNCHECKED');
+add('handle.refused.paused', 'Too many handles checked in a short time. Try again in {minutes} minutes.', false, 'DEC-188', 'HANDLE_CHECK_PAUSED');
+add('handle.refused.notmember', 'Only a member can change their own handle.', false, 'DEC-188', 'HANDLE_CHANGE_NOT_A_MEMBER');
+
+// 4c. AI accounts and limits (DEC-188; N812): who pays, what for, up to what; protected where they say who sees what
+add('ai.whopays', must(scr, 'mock-screens.js', 'For a member\\\'s act in a project that has its own AI account, that project\\\'s account pays. Otherwise the member\\\'s own account, if they connected one; otherwise the group\\\'s key. The account chosen is the one used: if it has reached a limit, or that use is switched off on it, the assistant stops for that act and says whose setting stopped it.').replace(/\\'/g, "'"), true, 'mock-screens.js AI_WHO_PAYS');
+for (const [k, name] of [['ask', 'Asking'], ['draft', 'Drafting'], ['run', 'Runs'], ['standing', 'Standing questions'], ['explore', 'Exploring'], ['suggestions', 'Suggestions']]) add(`ai.use.${k}.name`, name, false, 'mock-screens.js AI_USES');
+for (const [k, t] of [['no', 'No'], ['ask', 'Ask every day'], ['yes', 'Yes']]) add(`ai.explore.${k}`, t, false, 'mock-screens.js aiExplore');
+add('ai.whose.group', 'your group\'s', false, 'DEC-188', 'whose, in the refusals');
+add('ai.whose.project', 'this project\'s', false, 'DEC-188', 'whose, in the refusals');
+add('ai.whose.own', 'your own', false, 'DEC-188', 'whose, in the refusals');
+add('ai.refused.limit', 'The assistant stopped here: {whose} {period} limit for {use} is reached. It works again {when}. Everything else works as usual.', true, 'DEC-188', 'AI_LIMIT_REACHED, scope a use; {period} daily or monthly; never a cost');
+add('ai.refused.limit.overall', 'The assistant stopped here: {whose} {period} limit is reached. It works again {when}. Everything else works as usual.', true, 'DEC-188', 'AI_LIMIT_REACHED, scope overall');
+add('ai.refused.limit.member', 'The assistant stopped here: you have used the {period} amount each member may use of {whose} account. It works again {when}. Everything else works as usual.', true, 'DEC-188', 'AI_LIMIT_REACHED, scope per_member');
+add('ai.refused.off', '{Use} is switched off on {whose} account, so the assistant can\'t do this here. {who} can switch it on.', true, 'DEC-188', 'AI_USE_SWITCHED_OFF; {who}: An administrator, An owner of this project, You');
+add('ai.refused.projectkeptaway', 'This project keeps its material away from AI{for_uses}. {member} set this on {date}: “{reason}”. Everything else in the project works as usual.', true, 'DEC-188', 'PROJECT_AI_KEPT_AWAY; {for_uses} empty, or " for exploring"');
+add('ai.refused.notsole', 'Your own sign-in can be a project\'s account only while you are its only member, and {project} has other members. Add an Anthropic API key for the project instead.', true, 'DEC-188', 'PROJECT_NOT_SOLE_MEMBER');
+add('ai.disclosure.projectkey', must(scr, 'mock-screens.js', 'Your questions in Pothole repairs, and the material read to answer them, go to Anthropic under the project\'s API account. Its owners see how much is used in total, never what you ask or who asked.').replace(/\\'/g, "'").replace('Pothole repairs', '{project}'), true, 'mock-screens.js projectai', 'PROJECT_KEY_NOTICE_DUE shows it before the first act the key pays for');
+add('ai.refused.noticedue', 'Before the assistant works on {project}\'s account, read what that means.', true, 'DEC-188', 'PROJECT_KEY_NOTICE_DUE');
+add('ai.refused.switchvalue', 'That isn\'t a setting this switch takes: a use is on or off, and exploring is No, Ask every day or Yes.', false, 'DEC-188', 'SWITCH_VALUE_INVALID');
+add('ai.refused.signinnotconnected', 'Connect your own Claude sign-in first, in Settings › The assistant; then it can serve this project.', false, 'DEC-188', 'SIGNIN_NOT_CONNECTED');
+add('ai.refused.limitinvalid', 'That limit can\'t be set: {field}. A limit is a positive amount in dollars, tokens or calls, for a day or a month.', false, 'DEC-188', 'AI_LIMIT_INVALID');
+add('ai.refused.unitunavailable', 'A limit in dollars needs an API key: a subscription doesn\'t report what a use costs. Set it in tokens or calls instead.', false, 'DEC-188', 'LIMIT_UNIT_UNAVAILABLE');
+add('ai.refused.explorenotenabled', 'Exploring is off on {whose} account, or has no limit of its own yet: it runs only within an exploring limit its owners set.', false, 'DEC-188', 'EXPLORE_NOT_ENABLED');
+add('ai.queue.limitreached', '{account} reached its {period} limit{for_use} on {date}. {Uses} on it pause until {when}; its other uses go on.', true, 'DEC-188', 'the told-once Noticed item; names no member');
+must(scr, 'mock-screens.js', 'reached its monthly limit for runs on 14 October. Runs on it pause until 1 November; its other uses go on.');
+add('ai.queue.suspended', must(scr, 'mock-screens.js', 'a second member joined, and a sign-in serves a project only while it has one member. Members\\\' acts there now use their own accounts, or the group\\\'s key.').replace(/\\'/g, "'").replace(/^/, 'Your sign-in no longer serves {project}: '), true, 'mock-screens.js queue', 'the project account suspended; names no member');
+add('ai.queue.exploreask', 'The assistant found something worth exploring in {scope} today: {what}. Explore it today on {account}? If nobody says yes today, it doesn\'t.', false, 'DEC-188', 'the daily Ask, shown as Noticed with Explore today');
+must(scr, 'mock-screens.js', 'If nobody says yes today, it doesn\\\'t.');
+add('ai.label.explored', 'Machine work · found while exploring · enabled by {owner}', true, 'mock-screens.js explored', 'enabled_by: the group, the project\'s name, or the member\'s handle');
+must(scr, 'mock-screens.js', 'Machine work · found while exploring · enabled by');
+add('ai.owner.group', 'the group', false, 'DEC-188', 'enabled_by for the group');
+
+// 4d. Supplied documents in a published case (BOB's drafts from T39, adopted as written; DEC-188)
+add('document.cleaned.label', 'Details of who made this file, and of its pictures, removed for publication; the group holds the original', true, 'DEC-188', 'COPY_CLEANED_LABEL');
+add('document.refused.changed', 'A document a member supplied now needs a different publication copy from the one this case was prepared with. Prepare the case again. Nothing was published.', true, 'DEC-188', 'DOCUMENT_COPY_CHANGED_SINCE');
+add('document.refused.clean', 'A document a member supplied can\'t be cleaned of the details that could show who made it: {document}. Capture it from where it was published, supply a plainer copy, or stop relying on it.', true, 'DEC-188', 'DOCUMENT_NOT_CLEANABLE');
+add('document.refused.pending', 'The publication copy of a document a member supplied is still being made: {document}. Try again in a few minutes.', false, 'DEC-188', 'DOCUMENT_COPY_PENDING');
+
+// 4e. A question a project draws on (DEC-188; Bob's ruling that setting aside is each project's own)
+add('question.refused.drawnon', 'This question can\'t be set aside for the whole group, because a project draws on it. Set it aside in your project instead; that leaves it as it is everywhere else.', false, 'DEC-188', 'DRAWN_ON_BY_A_PROJECT; names no project');
+
 // 5. The frame: rail, phone tabs, explanation levels
 for (const [k, name] of W.RAIL) { add(`rail.${k}.name`, name, false, 'mock-shell.js RAIL'); if (W.RAIL_HELP[k]) add(`rail.${k}.holds`, W.RAIL_HELP[k], false, 'mock-refs.js RAIL_HELP'); }
 for (const [k, name] of W.TABS) if (!W.RAIL.some(r => r[0] === k)) add(`tab.${k}.name`, name, false, 'mock-shell.js TABS');

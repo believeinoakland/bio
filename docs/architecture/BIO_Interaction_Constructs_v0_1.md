@@ -965,6 +965,12 @@ case, after which it is fixed; members see the earlier handle beside the new one
 
 **Acts that can never be undone, on a phone (the design session, 2026-10-08, DEC-181).** Every act the Irreversible weight marks is
 read on a phone and done on a larger screen, replacing DEC-170's single act.
+
+**Who pays for the assistant (the design session, 2026-10-09, DEC-188, beneath Bob's K2350, K2352, K2353).** One panel serves the
+group's key, a project's account and a member's own: what it pays for, its limits (overall, by use, by member; dollars on an API key
+only; part of the overall limit or on top of it), its use summed naming no member, and every change with who and when. The account
+the cascade chooses (the project's, else the member's own, else the group's) is the one used; a project's account is its own API key,
+or its sole member's sign-in. A member stopped by a limit is told whose limit, never a cost; owners are told once a period.
 ## What this changes about how M8 is built
 
 **Build the constructs, then the capabilities arrive cheaply.** The order that follows:

@@ -8,17 +8,20 @@
   "state": 4,
   "draft": 4,
   "photo": 13,
-  "handle": 6,
+  "handle": 9,
+  "ai": 31,
+  "document": 4,
+  "question": 1,
   "rail": 14,
   "tab": 2,
   "level": 2,
   "guide": 6,
-  "screen": 94,
-  "act": 463,
+  "screen": 95,
+  "act": 483,
   "column": 33,
   "wizard": 239,
-  "total": 946,
-  "protected": 361
+  "total": 1006,
+  "protected": 388
  },
  "words": [
   {
@@ -592,6 +595,269 @@
    "source": "mock-screens.js join"
   },
   {
+   "key": "handle.refused.unchecked",
+   "en": "Civicsmith couldn't check whether your work is in a published case, so your handle wasn't changed. Try again in a moment.",
+   "protected": false,
+   "source": "DEC-188",
+   "note": "HANDLE_CHANGE_UNCHECKED"
+  },
+  {
+   "key": "handle.refused.paused",
+   "en": "Too many handles checked in a short time. Try again in {minutes} minutes.",
+   "protected": false,
+   "source": "DEC-188",
+   "note": "HANDLE_CHECK_PAUSED"
+  },
+  {
+   "key": "handle.refused.notmember",
+   "en": "Only a member can change their own handle.",
+   "protected": false,
+   "source": "DEC-188",
+   "note": "HANDLE_CHANGE_NOT_A_MEMBER"
+  },
+  {
+   "key": "ai.whopays",
+   "en": "For a member's act in a project that has its own AI account, that project's account pays. Otherwise the member's own account, if they connected one; otherwise the group's key. The account chosen is the one used: if it has reached a limit, or that use is switched off on it, the assistant stops for that act and says whose setting stopped it.",
+   "protected": true,
+   "source": "mock-screens.js AI_WHO_PAYS"
+  },
+  {
+   "key": "ai.use.ask.name",
+   "en": "Asking",
+   "protected": false,
+   "source": "mock-screens.js AI_USES"
+  },
+  {
+   "key": "ai.use.draft.name",
+   "en": "Drafting",
+   "protected": false,
+   "source": "mock-screens.js AI_USES"
+  },
+  {
+   "key": "ai.use.run.name",
+   "en": "Runs",
+   "protected": false,
+   "source": "mock-screens.js AI_USES"
+  },
+  {
+   "key": "ai.use.standing.name",
+   "en": "Standing questions",
+   "protected": false,
+   "source": "mock-screens.js AI_USES"
+  },
+  {
+   "key": "ai.use.explore.name",
+   "en": "Exploring",
+   "protected": false,
+   "source": "mock-screens.js AI_USES"
+  },
+  {
+   "key": "ai.use.suggestions.name",
+   "en": "Suggestions",
+   "protected": false,
+   "source": "mock-screens.js AI_USES"
+  },
+  {
+   "key": "ai.explore.no",
+   "en": "No",
+   "protected": false,
+   "source": "mock-screens.js aiExplore"
+  },
+  {
+   "key": "ai.explore.ask",
+   "en": "Ask every day",
+   "protected": false,
+   "source": "mock-screens.js aiExplore"
+  },
+  {
+   "key": "ai.explore.yes",
+   "en": "Yes",
+   "protected": false,
+   "source": "mock-screens.js aiExplore"
+  },
+  {
+   "key": "ai.whose.group",
+   "en": "your group's",
+   "protected": false,
+   "source": "DEC-188",
+   "note": "whose, in the refusals"
+  },
+  {
+   "key": "ai.whose.project",
+   "en": "this project's",
+   "protected": false,
+   "source": "DEC-188",
+   "note": "whose, in the refusals"
+  },
+  {
+   "key": "ai.whose.own",
+   "en": "your own",
+   "protected": false,
+   "source": "DEC-188",
+   "note": "whose, in the refusals"
+  },
+  {
+   "key": "ai.refused.limit",
+   "en": "The assistant stopped here: {whose} {period} limit for {use} is reached. It works again {when}. Everything else works as usual.",
+   "protected": true,
+   "source": "DEC-188",
+   "note": "AI_LIMIT_REACHED, scope a use; {period} daily or monthly; never a cost"
+  },
+  {
+   "key": "ai.refused.limit.overall",
+   "en": "The assistant stopped here: {whose} {period} limit is reached. It works again {when}. Everything else works as usual.",
+   "protected": true,
+   "source": "DEC-188",
+   "note": "AI_LIMIT_REACHED, scope overall"
+  },
+  {
+   "key": "ai.refused.limit.member",
+   "en": "The assistant stopped here: you have used the {period} amount each member may use of {whose} account. It works again {when}. Everything else works as usual.",
+   "protected": true,
+   "source": "DEC-188",
+   "note": "AI_LIMIT_REACHED, scope per_member"
+  },
+  {
+   "key": "ai.refused.off",
+   "en": "{Use} is switched off on {whose} account, so the assistant can't do this here. {who} can switch it on.",
+   "protected": true,
+   "source": "DEC-188",
+   "note": "AI_USE_SWITCHED_OFF; {who}: An administrator, An owner of this project, You"
+  },
+  {
+   "key": "ai.refused.projectkeptaway",
+   "en": "This project keeps its material away from AI{for_uses}. {member} set this on {date}: “{reason}”. Everything else in the project works as usual.",
+   "protected": true,
+   "source": "DEC-188",
+   "note": "PROJECT_AI_KEPT_AWAY; {for_uses} empty, or \" for exploring\""
+  },
+  {
+   "key": "ai.refused.notsole",
+   "en": "Your own sign-in can be a project's account only while you are its only member, and {project} has other members. Add an Anthropic API key for the project instead.",
+   "protected": true,
+   "source": "DEC-188",
+   "note": "PROJECT_NOT_SOLE_MEMBER"
+  },
+  {
+   "key": "ai.disclosure.projectkey",
+   "en": "Your questions in {project}, and the material read to answer them, go to Anthropic under the project's API account. Its owners see how much is used in total, never what you ask or who asked.",
+   "protected": true,
+   "source": "mock-screens.js projectai",
+   "note": "PROJECT_KEY_NOTICE_DUE shows it before the first act the key pays for"
+  },
+  {
+   "key": "ai.refused.noticedue",
+   "en": "Before the assistant works on {project}'s account, read what that means.",
+   "protected": true,
+   "source": "DEC-188",
+   "note": "PROJECT_KEY_NOTICE_DUE"
+  },
+  {
+   "key": "ai.refused.switchvalue",
+   "en": "That isn't a setting this switch takes: a use is on or off, and exploring is No, Ask every day or Yes.",
+   "protected": false,
+   "source": "DEC-188",
+   "note": "SWITCH_VALUE_INVALID"
+  },
+  {
+   "key": "ai.refused.signinnotconnected",
+   "en": "Connect your own Claude sign-in first, in Settings › The assistant; then it can serve this project.",
+   "protected": false,
+   "source": "DEC-188",
+   "note": "SIGNIN_NOT_CONNECTED"
+  },
+  {
+   "key": "ai.refused.limitinvalid",
+   "en": "That limit can't be set: {field}. A limit is a positive amount in dollars, tokens or calls, for a day or a month.",
+   "protected": false,
+   "source": "DEC-188",
+   "note": "AI_LIMIT_INVALID"
+  },
+  {
+   "key": "ai.refused.unitunavailable",
+   "en": "A limit in dollars needs an API key: a subscription doesn't report what a use costs. Set it in tokens or calls instead.",
+   "protected": false,
+   "source": "DEC-188",
+   "note": "LIMIT_UNIT_UNAVAILABLE"
+  },
+  {
+   "key": "ai.refused.explorenotenabled",
+   "en": "Exploring is off on {whose} account, or has no limit of its own yet: it runs only within an exploring limit its owners set.",
+   "protected": false,
+   "source": "DEC-188",
+   "note": "EXPLORE_NOT_ENABLED"
+  },
+  {
+   "key": "ai.queue.limitreached",
+   "en": "{account} reached its {period} limit{for_use} on {date}. {Uses} on it pause until {when}; its other uses go on.",
+   "protected": true,
+   "source": "DEC-188",
+   "note": "the told-once Noticed item; names no member"
+  },
+  {
+   "key": "ai.queue.suspended",
+   "en": "Your sign-in no longer serves {project}: a second member joined, and a sign-in serves a project only while it has one member. Members' acts there now use their own accounts, or the group's key.",
+   "protected": true,
+   "source": "mock-screens.js queue",
+   "note": "the project account suspended; names no member"
+  },
+  {
+   "key": "ai.queue.exploreask",
+   "en": "The assistant found something worth exploring in {scope} today: {what}. Explore it today on {account}? If nobody says yes today, it doesn't.",
+   "protected": false,
+   "source": "DEC-188",
+   "note": "the daily Ask, shown as Noticed with Explore today"
+  },
+  {
+   "key": "ai.label.explored",
+   "en": "Machine work · found while exploring · enabled by {owner}",
+   "protected": true,
+   "source": "mock-screens.js explored",
+   "note": "enabled_by: the group, the project's name, or the member's handle"
+  },
+  {
+   "key": "ai.owner.group",
+   "en": "the group",
+   "protected": false,
+   "source": "DEC-188",
+   "note": "enabled_by for the group"
+  },
+  {
+   "key": "document.cleaned.label",
+   "en": "Details of who made this file, and of its pictures, removed for publication; the group holds the original",
+   "protected": true,
+   "source": "DEC-188",
+   "note": "COPY_CLEANED_LABEL"
+  },
+  {
+   "key": "document.refused.changed",
+   "en": "A document a member supplied now needs a different publication copy from the one this case was prepared with. Prepare the case again. Nothing was published.",
+   "protected": true,
+   "source": "DEC-188",
+   "note": "DOCUMENT_COPY_CHANGED_SINCE"
+  },
+  {
+   "key": "document.refused.clean",
+   "en": "A document a member supplied can't be cleaned of the details that could show who made it: {document}. Capture it from where it was published, supply a plainer copy, or stop relying on it.",
+   "protected": true,
+   "source": "DEC-188",
+   "note": "DOCUMENT_NOT_CLEANABLE"
+  },
+  {
+   "key": "document.refused.pending",
+   "en": "The publication copy of a document a member supplied is still being made: {document}. Try again in a few minutes.",
+   "protected": false,
+   "source": "DEC-188",
+   "note": "DOCUMENT_COPY_PENDING"
+  },
+  {
+   "key": "question.refused.drawnon",
+   "en": "This question can't be set aside for the whole group, because a project draws on it. Set it aside in your project instead; that leaves it as it is everywhere else.",
+   "protected": false,
+   "source": "DEC-188",
+   "note": "DRAWN_ON_BY_A_PROJECT; names no project"
+  },
+  {
    "key": "rail.home.name",
    "en": "Home",
    "protected": false,
@@ -1001,6 +1267,12 @@
    "source": "mock-refs.js SCREEN_HELP"
   },
   {
+   "key": "screen.projectai.name",
+   "en": "AI for this project",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
    "key": "screen.question.name",
    "en": "Question",
    "protected": false,
@@ -1373,8 +1645,8 @@
    "source": "registry.json"
   },
   {
-   "key": "act.aicopyceilingset.label.setup",
-   "en": "Set the group's daily limit",
+   "key": "act.owed_ailimitset.label.setup",
+   "en": "Set each member's daily use of the group's key",
    "protected": true,
    "source": "registry.json"
   },
@@ -1517,8 +1789,14 @@
    "source": "registry.json"
   },
   {
-   "key": "act.groupswitchset.label.members",
-   "en": "Set the group key's suggestions and standing questions",
+   "key": "act.owed_accountusesset.label.members",
+   "en": "Set what the group's key pays for",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_ailimitset.label.members",
+   "en": "Set a limit on the group's key",
    "protected": true,
    "source": "registry.json"
   },
@@ -1625,14 +1903,14 @@
    "source": "registry.json"
   },
   {
-   "key": "act.aiceilingset.label.connect",
-   "en": "Set your daily limit",
+   "key": "act.owed_accountusesset.label.connect",
+   "en": "Set what your account pays for",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.accountswitchset.label.connect",
-   "en": "Let the assistant suggest unprompted",
+   "key": "act.owed_ailimitset.label.connect",
+   "en": "Set a limit on your account",
    "protected": true,
    "source": "registry.json"
   },
@@ -1801,6 +2079,18 @@
   {
    "key": "act.promote.label.queue",
    "en": "Open a question from a hint",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_projectkeyset.label.queue",
+   "en": "Add an API key for a project",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_exploreapprove.label.queue",
+   "en": "Let the assistant explore today",
    "protected": true,
    "source": "registry.json"
   },
@@ -2089,6 +2379,54 @@
   {
    "key": "act.planopen.label.project",
    "en": "Plan what to do",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_projectkeyset.label.projectai",
+   "en": "Hold the project's API key",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_projectsigninset.label.projectai",
+   "en": "Use your own sign-in for the project",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_projectaccountswitch.label.projectai",
+   "en": "Switch the project's account on or off",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_projectaccountremove.label.projectai",
+   "en": "Remove the project's account",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_projectkeynoticeseen.label.projectai",
+   "en": "Read what the project's key means",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_accountusesset.label.projectai",
+   "en": "Set what the project's account pays for",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_ailimitset.label.projectai",
+   "en": "Set a limit on the project's account",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_projectaikeepaway.label.projectai",
+   "en": "Keep the project's material away from AI, with a reason",
    "protected": true,
    "source": "registry.json"
   },
@@ -2898,13 +3236,13 @@
   },
   {
    "key": "act.owed_aikeepaway.does",
-   "en": "Stops every assistant in the group, the group's and members' own. Members see your reason on Settings › The assistant.",
+   "en": "Keeps the group's material away from AI, for every use or the ones you choose. It binds every account, the group's, any project's and members' own. Members see your reason on Settings › The assistant.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
    "key": "act.groupkeyset.does",
-   "en": "Holds one Anthropic API key for the group, sealed and never shown again. It serves members with no account of their own, at the group's cost.",
+   "en": "Holds one Anthropic API key for the group, sealed and never shown again. It pays for a member's act when neither a project's account nor the member's own serves it.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -3463,6 +3801,60 @@
   {
    "key": "act.clockpropose.does",
    "en": "Works out a due date from the law and the dates, showing each day counted and each holiday skipped. It proposes the date; a member confirms it.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_accountusesset.does",
+   "en": "Switches one use on or off for this account: asking, drafting, runs, standing questions, suggestions, or exploring (No, Ask every day, Yes). An act this account would pay for, with its use off, stops; it never moves to another account.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_ailimitset.does",
+   "en": "Sets or removes one limit on this account: overall, for one use, or for each member's use, in dollars (estimated, API keys only), tokens or calls, a day or a month. It binds this account only.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_projectkeyset.does",
+   "en": "Holds an Anthropic API key for this project, sealed and never shown again. Switched on, it pays for members' acts in the project, before their own accounts or the group's key.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_projectsigninset.does",
+   "en": "Makes your own Claude sign-in the project's account, allowed only while you are its only member. If another member joins, it stops serving the project at once and you are told.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_projectaccountswitch.does",
+   "en": "Turns the project's account on or off without removing it. While it is off, members' own accounts, then the group's key, serve in the project.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_projectaccountremove.does",
+   "en": "Removes the project's account. Members' own accounts, then the group's key, serve in the project from then on.",
+   "protected": true,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_projectkeynoticeseen.does",
+   "en": "Records that you have read what the project's key means, before the first act it pays for.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_projectaikeepaway.does",
+   "en": "Keeps this project's material away from AI, for every use or the ones you choose, with a reason every member sees. It binds every account, whoever pays.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_exploreapprove.does",
+   "en": "Lets the assistant explore today, on this account, what it said is worth exploring. Without a yes today, it doesn't.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -4146,7 +4538,7 @@
   },
   {
    "key": "column.money.period.shows",
-   "en": "The accounting period the source counts the amount in, here the city's fiscal year (FY2022 ran 1 July 2021 to 30 June 2022). It is not the date the money moved: that is in When it moved.",
+   "en": "The accounting period the source counts the amount in, such as a fiscal year, which need not match the calendar year. It is not the date the money moved: that is in When it moved.",
    "protected": false,
    "source": "mock-refs.js COL_HELP"
   },
@@ -5172,19 +5564,19 @@
   },
   {
    "key": "wizard.WIZ-74328804ddae3503.step5.what",
-   "en": "Set your daily limit.",
+   "en": "Set a limit on your account, if you want one: for everything or for one use, a day or a month.",
    "protected": false,
    "source": "library.json"
   },
   {
    "key": "wizard.WIZ-74328804ddae3503.step5.why",
-   "en": "It caps what the assistant can spend on your account each day. An administrator may set a lower one for the group.",
+   "en": "It binds only your own account. The group's and a project's limits never bind it.",
    "protected": false,
    "source": "library.json"
   },
   {
    "key": "wizard.WIZ-74328804ddae3503.step6.what",
-   "en": "Choose whether the assistant may suggest things without being asked. It is off unless you turn it on.",
+   "en": "Choose what your account pays for, and whether the assistant may suggest things without being asked. Suggestions are off unless you turn them on.",
    "protected": false,
    "source": "library.json"
   },
