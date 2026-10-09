@@ -49,3 +49,7 @@ Numbered entries; BOB answers each in rulings (K). Decision states live in `DECI
 - Bob asked whether a missed reply date must be answered on evidence before it is a violation: answered yes, as canon already holds (Ladders §10; notice-producers R5; action-plans R38): "Noticed" until a member determines noncompliance against the standard on the record.
 
 **Requirements must say (when the design is folded):** the "arose from" link between a response and a new matter, both ways, across projects; the response-driven re-examination (D21) as an act-triggered read and, where enabled, an AI run within the account's limits; the published lane's exclusions (D22 with D4).
+
+## H6 · 2026-10-09 · Actions D1 and D23 ruled; D24 put
+
+**Carries:** Bob, 2026-10-09: "D1: as recommended" — (c): outward acts are classed by what the text does; asking an office to examine, or enforcing the group's own request on its own dated record, is never held back; a sentence asserting a breach needs a determination or the open override; flagged sentences are resolved by the member before approval, her confirmation recorded (S1 §B1 "For BOB": `actions` R8, `filings` R6). D23 (Bob's words in `DECISIONS.md`): a case may pass every publication check and be held, unpublished, while the project acts first — a "checked and held" state, no time limit, voided by any change to the evidence until re-run. D24 put to Bob: may a determination rest on a checked-but-held case (today `conformance` R2 needs a published edition; Action §2).
