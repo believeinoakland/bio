@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 179 KB, under 300 KB: read
 Merge order in L1: none (independent). L1 holds exactly two jobs; after L1 the tranche holds on Bob's direction (K2422), so finish, merge and stay available.
 Inherited reds: the plan's "Rules at the opening" list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · ANSWER · re J1
+
+K2427: all three readings stand (machine: true, tier 4, letter calibrated, no calibration edge). R3 and R91 re-worded on tranche/T41 to include ai_transcription (meaning unchanged; R91 marked not yet met T41): merge it. query-language grammar.test.mjs:210 red is accepted by name until T41-10a (its tests-only entry in L5): keep machine on, and report the red in your COMPLETE.
