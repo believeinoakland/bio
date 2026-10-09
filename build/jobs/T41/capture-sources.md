@@ -26,3 +26,7 @@
 These are left for a later job of this module, not this entry.
 
 Size (session_01AQ3yjggSC6tiKpht4z578o): test runs 6, module lines 2687
+
+## J1 · COMPLETE
+
+T41-7 applied (R58 under D54): an administrator, the founder included, sees every member and group entry and a project entry only at FULL sight of its project; withdrawal (R57) shares the rule. Tests re-stated with negative controls; old code fails 3, new passes 96/96. Users' suites: 13 reds, identical with my change stashed (inherited). Checks: format 0, architecture 0, coverage 65/65, ownership 0. R58's not-yet-met mark is yours to strike. Details in my record's Completion.
