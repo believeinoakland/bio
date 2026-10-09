@@ -220,7 +220,7 @@ const NO_CITATION_T = "A citation is the address of something somebody who was n
 
 test("R29 the shared act rows: NO_BASIS C-33.40 and NO_CITATION C-33.41, {check, where, translation}, numbers and words unchanged", () => {
   assert.ok(Object.isFrozen(SHARED_ACT_CHECKS));
-  assert.deepEqual(Object.keys(SHARED_ACT_CHECKS), ["NO_BASIS", "NO_CITATION"]);
+  assert.deepEqual(Object.keys(SHARED_ACT_CHECKS), ["NO_BASIS", "NO_CITATION", "ACCEPT_MUST_REAUTHOR"]);
   for (const row of Object.values(SHARED_ACT_CHECKS)) assert.deepEqual(Object.keys(row), ["check", "where", "translation"]);
   assert.equal(SHARED_ACT_CHECKS.NO_BASIS.check, "C-33.40");
   assert.equal(SHARED_ACT_CHECKS.NO_CITATION.check, "C-33.41");
