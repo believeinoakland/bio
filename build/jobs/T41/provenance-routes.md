@@ -1,6 +1,6 @@
 # provenance-routes (T41)
 
-**Status** · session_01Mu9HJJYkkMVmYJQmr99iuS · depth 2 · COMPLETE · handled B1
+**Status** · session_01Mu9HJJYkkMVmYJQmr99iuS · depth 2 · COMPLETE · handled B3
 
 ## Work (kept current; not a mailbox entry)
 
@@ -31,3 +31,30 @@ Size (session_01Mu9HJJYkkMVmYJQmr99iuS): test runs 5, module lines 1215
 ## J1 · COMPLETE
 
 T41-7b applied (tests only): marked.test.mjs:126 (R5) and table.test.mjs:40 (R10) re-stated for D54, each with a discoverable-project negative control; new R4 D54 case; fixture gains project(); a stale comment in index.mjs corrected. No requirement text assumes the old sight. 38/38; format, architecture, coverage 13/13, ownership: 0 failures. Record: build/jobs/T41/provenance-routes.md.
+
+## Completion (B2 · CHANGE, K2457)
+
+Merged `tranche/T41` (provenance R63 merged). Read whole: B2, K2457, provenance R63 and R58, capture R86 and R65, provenance's `register-checks.mjs` upload shape.
+
+Applied: `chainFromEvidence` (R1) gains an upload arm, beside the doorbell's: a document whose `origin.kind` is `upload` (provenance's exported `UPLOAD_ORIGIN`) is never a fetched route, whatever its `locator` (`upload:<sha256>`); its one hop is read from the upload's receipt it states (`source.receipt.sha256`, `received`): "these bytes were received for upload:<sha256> at <received>", `via: "upload"`, `bound: false`, `who` the instance and the member who brought it in (`capture.actor`), `reconstructed.from` naming those fields. Her `origin_statement` is never read into a hop. Without the receipt it is undetermined, `missing` naming the receipt. R2's rebuild and R4's assessment take it through the same function.
+
+Tests: `chain.test.mjs` R1 (K2457) (the hop, the statement absent from it, no actor, four receipt-less shapes undetermined; negative controls: the same fields under a fetched origin are `direct`, under a doorbell origin the doorbell arm's own missing); `rebuild.test.mjs` R1, R2, R4 (K2457) (rebuild reconstructs and applies, the mark reads `derivable`/`PRESENT`, the statement carried untouched; without the receipt `EVIDENCE_INSUFFICIENT` and `LOOKED_INDETERMINATE`). Both fail with the arm removed (2 fail, 38 pass), pass with it.
+
+For BOB (REPORT J3): R1's text names the doorbell arm only; it should gain the upload arm as built (and the Uses line for `provenance` gain `UPLOAD_ORIGIN`, its R58/R63). Proposed R1 sentence: "a document brought in by an upload (`origin.kind` `upload`, provenance R63) is never a fetched route either; its one hop, when its chain is missing, is read from the upload's receipt it states (`source.receipt`: "these bytes were received for upload:<sha256> at <received>", `via: "upload"`), else it is `undetermined` with `source.receipt` missing; the member's `origin_statement` is never read into a hop."
+
+Deferred: none. Found in other modules: none.
+
+Tests and checks:
+- `node --test bio-plane/test/m/provenance-routes/`: tests 40, pass 40, fail 0.
+- users' suites (retrieval, affordances, answer-envelope, store-door, control-plane, plane, `test/system/migrate-released`): tests 808, pass 764, fail 44, the identical 44 with this change stashed: none this job's.
+- `checks/format.mjs`: 0 failures; `checks/architecture.mjs provenance-routes`: 0 failures; `checks/coverage.mjs provenance-routes`: 13 of 13; 0 failures; `checks/ownership.mjs provenance-routes tranche/T41`: 0 failures (run after commit).
+
+Size (session_01Mu9HJJYkkMVmYJQmr99iuS): test runs 10, module lines 1240
+
+## J2 · REPORT
+
+R1's text names only the doorbell arm; B2's upload arm is built (index.mjs, ARM U). Please amend R1 and the Uses line (provenance: UPLOAD_ORIGIN, its R58/R63). Proposed sentence in my record, B2 Completion.
+
+## J3 · COMPLETE
+
+B2 applied (K2457): chainFromEvidence gains an upload arm, one hop read from the upload's receipt (via upload, never fetched; origin_statement never a hop; no receipt: undetermined). Tests in chain.test.mjs and rebuild.test.mjs with negative controls, failing without the arm. 40/40; users' suites 764/808, the same 44 reds without this change; format, architecture, coverage 13/13, ownership: 0 failures.
