@@ -4,7 +4,9 @@
    `runProductionsOf`'s deps take them (K61, K120): ai-runs (R28 `runFor`, R29 `boundOf`/`consumeBound`), strength
    (R26 `candidatePair`, R27 `candidateIndependence`), citation (R5 `retiredNotCitable`), basis-versions (R5
    `basisVersionsOf`, R9 `basisVersions`, R28 `appendVersion`, R40 `onCandidates`), connections (R22 `citesInto`),
-   and content's own two providers (extraction's readings, provenance's `capturesOf`). Every stand-in records the calls
+   and content's own two providers (extraction's readings, provenance's `capturesOf`), extraction's units (its R36),
+   steps' `recordProduct` (its R9) and, when a test gives one, credentials' `aiKeptAway` (its R57). Every stand-in
+   records the calls
    made to it. Bundles and their files are written as record-core's read contract holds them (its R37), and the tables
    later modules own that this module reads under their read contracts (inquiry R40, basis-versions R38) are created
    here in their stated columns (inquiry_basis is leg-earning's since K1505 (2), its R12), and extraction's own tables from its schema (so a test can show a production writes
@@ -121,7 +123,8 @@ export const basisVersionsOf = (fm) => versionsIn(fm);
  *  plane reaches them), strength over an inquiry stand-in (its R13 registry, R14 `legCapped`, R16 `basisFor`) whose
  *  capture ceilings the test sets in `w.ceilings`. `aiRuns: null` leaves ai-runs to this module's factory (the real
  *  module, over its own tables). */
-export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven } = {}) {
+export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven, steps: stepsGiven = undefined,
+                        credentials = null } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -137,11 +140,12 @@ export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven }
   /* provenance's `capturesOf` (its R48), as content reads it: the captures registered to a bundle, first-held first. */
   const registered = {};
   const prov = { capturesOf: (b) => (registered[b] || []).map((capture_sha) => ({ capture_sha })) };
-  const ex = { readings: {}, readFor: {} };
+  const ex = { readings: {}, readFor: {}, units: {}, unitsAsked: [] };
   const extraction = {
     readingOf: (s) => (ex.readings[s] ? { reading: { page_boxes: null }, chain: null, pageCount: null,
                                           textContainer: null, captureFormat: null, ...ex.readings[s] } : null),
-    unitsOf: () => ({ units: [], state: null }),
+    /* extraction R36's shape: the capture's units in seq order and the index's state; null state when never indexed. */
+    unitsOf: (s) => { ex.unitsAsked.push(s); return ex.units[s] ? { capture_sha: s, units: ex.units[s], state: "whole" } : { capture_sha: s, units: [], state: null }; },
     capturesReadFor: (b) => (ex.readFor[b] || []).map((capture_sha) => ({ capture_sha, at: null })),
     onReading: () => ({ ok: true }),
   };
@@ -249,9 +253,20 @@ export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven }
     strengthOf(host, { record, membership, inquiry, producingGroup: () => "g", now: () => clock.now });
     citationOf(host, { record, membership, content });
   }
-  const p = runProductionsOf(host, { record, membership, content, connections,
+  /* steps R9's `recordProduct` (the in-process door), as its requirements word it: a step the stand-in holds takes the
+     record; any other step is refused as absent. Every tie is recorded. `steps: null` gives no provider. */
+  const stepsHeld = new Set(), ties = [];
+  const steps = stepsGiven === null ? null : stepsGiven || {
+    recordProduct({ step, record, by }) {
+      note("recordProduct", { step, record, by });
+      if (!stepsHeld.has(step)) return { ok: false, code: "NO_SUCH_STEP", reason: "NO_SUCH_STEP", detail: "no such step" };
+      ties.push({ step, record, by });
+      return { ok: true };
+    },
+  };
+  const p = runProductionsOf(host, { record, membership, content, connections, extraction,
                                      ...(aiRunsGiven === null ? {} : { aiRuns }),
-                                     basisVersions,
+                                     basisVersions, ...(steps ? { steps } : {}), ...(credentials ? { credentials } : {}),
                                      ...(real ? {} : { strength, citation }), now: () => Date.parse(clock.now) });
   p.migrate();
 
@@ -274,7 +289,7 @@ export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven }
 
   const w = {
     st, host, record, membership, prov, registered, content, p, clock, ex, calls, runs, bounds, aiRuns, strength,
-    citation, retired, connections, cites, basisVersions, candidateSources, ceilings,
+    citation, retired, connections, cites, basisVersions, candidateSources, ceilings, steps, stepsHeld, ties,
     versions: {}, authors: {}, ats: {}, legsOf: {}, groundsOf: {},
     row: (qq, ...a) => [...st.sql.exec(qq, ...a)][0] ?? null,
     rows: (qq, ...a) => [...st.sql.exec(qq, ...a)],
@@ -307,13 +322,22 @@ export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven }
       st.sql.exec(`INSERT OR IGNORE INTO register (capture_sha, bundle_id, path, encoding, bytes, registered)
                    VALUES (?, ?, ?, 'utf8', ?, ?)`, s, id, `snapshots/${id}.txt`, Buffer.byteLength(text), clock.now);
       if (read) ex.readings[s] = { chain: LAYER, pageCount };
+      /* extraction R58's `readings` read contract: the capture's row names its bundle. */
+      st.sql.exec(`INSERT OR IGNORE INTO readings (capture_sha, bundle_id, reading, at) VALUES (?, ?, '{}', ?)`, s, id, clock.now);
       return s;
+    },
+    /** The capture's text units as extraction R36 holds them: `pages` a list of page texts (pdf), or `units` given whole. */
+    units(capture, pagesOrUnits) {
+      ex.units[capture] = pagesOrUnits.map((u, i) => (typeof u === "string"
+        ? { extent: { kind: "pdf-page", page: i, rect: null }, ref: `page ${i + 1}`, text: u, truncated: false, seq: i, chain_kind: null }
+        : { truncated: false, chain_kind: null, seq: i, ...u }));
     },
     /** A run as ai-runs holds it (its Terms), and its declared bounds. */
     run(id, { status = "running", mode = "check", context_type = "inquiry", context_id = Q, principal_plane = ALICE_TOKEN,
-              mints = null } = {}) {
+              mints = null, pages = null } = {}) {
       runs.set(id, { run: id, status, mode, context_type, context_id, principal_plane });
       if (mints !== null) bounds.set(`${id}|mints`, { allowed: mints, consumed: 0 });
+      if (pages !== null) bounds.set(`${id}|pages`, { allowed: pages, consumed: 0 });
       return id;
     },
     suggest(over = {}) {

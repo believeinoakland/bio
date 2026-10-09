@@ -1,7 +1,10 @@
-/* run-productions' tables (requirements: `build/requirements/run-productions.md`, R2, R11, R17; K4, K23). Moved out of
- * the legacy `schema.mjs` at this module's extraction, with the comments that record why each is shaped as it is:
- * `suggest_refusals` (R2's memo of a refused submission, keyed by its target) and `proposed_readings` (R11's
- * productions, keyed by their bundle). Both are declared to record-core's purge (R17). */
+/* run-productions' tables (requirements: `build/requirements/run-productions.md`, R2, R11, R17, R21–R24; K4, K23).
+ * Moved out of the legacy `schema.mjs` at this module's extraction, with the comments that record why each is shaped
+ * as it is: `suggest_refusals` (R2's memo of a refused submission, keyed by its target) and `proposed_readings` (R11's
+ * productions, keyed by their bundle). T41-24 adds four (R21–R24): `proposed_connections`, `proposal_acceptances`,
+ * `bearing_notes` and `run_pages_read`. Every one is declared to record-core's purge (R17). */
+
+import { sha256HexSync, canonicalJson } from "../record-grammar/index.mjs";
 
 export const RUN_PRODUCTIONS_SCHEMA = `
 -- PL-3 / IS-4 / F10 -- THE REFUSED SUBMISSION, KEPT SO A VERBATIM RESUBMIT IS A
@@ -99,19 +102,102 @@ CREATE TABLE IF NOT EXISTS proposed_readings (
   fn_version   TEXT NOT NULL,     -- and its version. A proposal nobody can re-run is one nobody can check
   chain        TEXT NOT NULL,     -- the capture's chain with the ai step appended, canonical JSON
   cap          TEXT,              -- the chain's derivation cap. NULL = undetermined, STATED
-  earned       TEXT NOT NULL,     -- B or C, COMPUTED from what the reference names. Never A
+  earned       TEXT,              -- COMPUTED: B or C from what the reference names, or (T41, D4) the capture's own
+                                  -- ceiling for a verified quote, which may be weaker or NULL (undetermined, STATED
+                                  -- in why). Never A
   pos_kind     TEXT,              -- IC-1's discriminator: pdf-page | sheet-cell | slide-shape | doc-para
   pos          TEXT,              -- the per-arm fields as canonical JSON, key-ordered
   pos_ref      TEXT,              -- IC-1's REQUIRED human form, produced by the container that knows it
   content_id   TEXT,              -- the passage this made citable, when one was minted. NULL is ordinary
   proposed_by  TEXT NOT NULL,     -- the machine credential, stamped server-side. Never a caller's word
   at           TEXT NOT NULL,
+  id           TEXT,              -- T41-24 (R22): the proposal's own name, 'prp:' + sha256 of (run, capture, ref)
+  quote        TEXT,              -- R21: the exact words the proposal rests on, as the proposer sent them
+  verified     INTEGER NOT NULL DEFAULT 0,  -- 1 when the quote passed extraction R42's byte-exact check
+  figures      TEXT,              -- R42's quoteFigures over a verified quote (JSON), for the member to check
+  why          TEXT,              -- the grade's sentence, composed with its letter
+  step         TEXT,              -- R21: the step the run's work served (steps R9), or NULL
   PRIMARY KEY (run, capture_sha, ref)
 );
 -- By BUNDLE: purge's per-bundle arm and the read a member asks of a document.
 -- By RUN: the run's own productions, which is what the bound is a bound ON.
 CREATE INDEX IF NOT EXISTS proposed_readings_bundle ON proposed_readings(bundle_id);
 CREATE INDEX IF NOT EXISTS proposed_readings_run ON proposed_readings(run);
+
+-- T41-24 (R21; Investigation section 5, AI Roles section 3 rule 3; D2, D4) -- A PROPOSED CONNECTION: what a run
+-- reading inside a held document says the passage connects to (a public body, a person in a public role, another
+-- document, a question), tied to its exact quote at its place. APART FROM proposed_readings for the same reason that
+-- table is apart from reading_refs: it is not a connection of the record (connections' tables are what the record
+-- holds as connected) until a member takes it up (R22), so it cannot be counted as one by construction.
+-- earned is COMPUTED from how the link is established (A the source's own link, B a shared identifier, C a name or
+-- a date) and NULL, stated in why, when the quote is not the capture's own text; never D, never offered.
+CREATE TABLE IF NOT EXISTS proposed_connections (
+  id           TEXT PRIMARY KEY,  -- 'prc:' + sha256 of (run, capture, kind, target, quote, place)
+  run          TEXT NOT NULL,
+  capture_sha  TEXT NOT NULL,
+  bundle_id    TEXT NOT NULL,     -- the document read: purge, and the viewer join
+  to_kind      TEXT NOT NULL,     -- body | person | document | question
+  to_id        TEXT NOT NULL,     -- an ENT- id (body, person) or a bundle id (document, question)
+  role         TEXT,              -- a person's public role, as the quote shows it
+  how          TEXT NOT NULL,     -- source_link | shared_identifier | name | date
+  grounds      TEXT,              -- the reference, identifier, name or date the link rests on
+  quote        TEXT NOT NULL,
+  pos_kind     TEXT NOT NULL,
+  pos          TEXT NOT NULL,
+  pos_ref      TEXT,
+  verified     INTEGER NOT NULL,
+  figures      TEXT NOT NULL,
+  earned       TEXT,
+  why          TEXT NOT NULL,
+  step         TEXT,
+  proposed_by  TEXT NOT NULL,
+  at           TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS proposed_connections_bundle ON proposed_connections(bundle_id);
+CREATE INDEX IF NOT EXISTS proposed_connections_run ON proposed_connections(run);
+
+-- T41-24 (R22; record-grammar R52; D3) -- THE MEMBER'S ONE ACCEPTING ACT on a proposed passage or connection, one
+-- per member per proposal: the form, and the meaning recorded (the proposal's own, or her words).
+CREATE TABLE IF NOT EXISTS proposal_acceptances (
+  proposal     TEXT NOT NULL,
+  kind         TEXT NOT NULL,     -- passage | connection
+  bundle_id    TEXT NOT NULL,     -- the document the proposal was read from: purge, and the viewer join
+  form         TEXT NOT NULL,     -- as_proposed | edited | own_instead
+  accepted_by  TEXT NOT NULL,
+  at           TEXT NOT NULL,
+  meaning      TEXT NOT NULL,
+  meaning_of   TEXT NOT NULL,     -- 'proposal' (as proposed) or 'member' (her words)
+  PRIMARY KEY (proposal, accepted_by)
+);
+
+-- T41-24 (R23; D22) -- A BEARING NOTE: what a document says about a question and what it does not, each sentence
+-- kept only when tied to the capture's own words. NEVER CONTENT: it is held here, never in content's tables, has no
+-- id a leg accepts, and is read only beside its source.
+CREATE TABLE IF NOT EXISTS bearing_notes (
+  id           TEXT PRIMARY KEY,  -- 'brn:' + sha256 of (run, capture, question, sentences)
+  capture_sha  TEXT NOT NULL,
+  bundle_id    TEXT NOT NULL,
+  question     TEXT NOT NULL,
+  run          TEXT NOT NULL,
+  sentences    TEXT NOT NULL,     -- JSON: [{text, quote, position, figures}], the tied ones in the order given
+  left_out     INTEGER NOT NULL,  -- how many sentences could not be tied
+  written_by   TEXT NOT NULL,     -- the run's caller, stamped
+  at           TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS bearing_notes_bundle ON bearing_notes(bundle_id);
+CREATE INDEX IF NOT EXISTS bearing_notes_question ON bearing_notes(question);
+
+-- T41-24 (R24; run-rules R26; D2) -- WHAT A RUN HAS READ: one row per page of a capture a run read, so a page is
+-- charged to the 'pages' bound once and a run stopping at the bound says how far it read.
+CREATE TABLE IF NOT EXISTS run_pages_read (
+  run          TEXT NOT NULL,
+  capture_sha  TEXT NOT NULL,
+  bundle_id    TEXT NOT NULL,
+  page         INTEGER NOT NULL,
+  at           TEXT NOT NULL,
+  PRIMARY KEY (run, capture_sha, page)
+);
+CREATE INDEX IF NOT EXISTS run_pages_read_bundle ON run_pages_read(bundle_id);
 `;
 
 /** The declaration to record-core's purge (its R21, R46; R17): the proposals by their bundle, the refusals by their
@@ -119,16 +205,45 @@ CREATE INDEX IF NOT EXISTS proposed_readings_run ON proposed_readings(run);
 export const RUN_PRODUCTIONS_TABLES = Object.freeze([
   "proposed_readings",
   { name: "suggest_refusals", keys: ["target"] },
+  /* T41-24: each by the document it was read from; a bearing note also by its question. */
+  "proposed_connections",
+  "proposal_acceptances",
+  { name: "bearing_notes", keys: ["bundle_id", "question"] },
+  "run_pages_read",
 ]);
+
+const OWNED = new Set(["proposed_readings", "suggest_refusals", "proposed_connections", "proposal_acceptances",
+                       "bearing_notes", "run_pages_read"]);
 
 /** Which of the legacy declarations this module now owns (the legacy store filters them out of its own list). */
 export function runProductionsOwns(t) {
   const name = typeof t === "string" ? t : t && t.name;
-  return name === "proposed_readings" || name === "suggest_refusals";
+  return OWNED.has(name);
 }
 
-/** The module's tables, created where absent. The statements are the schema text above, run one by one. */
+/** A passage proposal's name (R22): 'prp:' and the SHA-256 of its key, the run, the capture and the reference. */
+export const passageProposalId = (run, captureSha, ref) =>
+  `prp:${sha256HexSync(canonicalJson(["passage", String(run), String(captureSha), String(ref)]))}`;
+
+/** The module's tables, created where absent. The statements are the schema text above, run one by one. A store whose
+ *  `proposed_readings` predates T41-24 (no `id`; `earned` NOT NULL) is rebuilt once in the new shape, every row kept
+ *  and named, since a NOT NULL cannot be dropped in place. */
 export function migrateRunProductions(sql) {
+  const cols = [...sql.exec(`PRAGMA table_info(proposed_readings)`)];
+  if (cols.length && !cols.some((c) => c.name === "id")) {
+    sql.exec(`ALTER TABLE proposed_readings RENAME TO proposed_readings__t40`);
+    sql.exec(`DROP INDEX IF EXISTS proposed_readings_bundle`);
+    sql.exec(`DROP INDEX IF EXISTS proposed_readings_run`);
+  }
   const bare = RUN_PRODUCTIONS_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const stmt of bare.split(";")) if (stmt.trim()) sql.exec(stmt);
+  if (cols.length && !cols.some((c) => c.name === "id")) {
+    const old = "run, capture_sha, bundle_id, ref, ref_kind, ref_key, label, fn, fn_version, chain, cap, earned, pos_kind, "
+      + "pos, pos_ref, content_id, proposed_by, at";
+    sql.exec(`INSERT INTO proposed_readings (${old}) SELECT ${old} FROM proposed_readings__t40`);
+    sql.exec(`DROP TABLE proposed_readings__t40`);
+  }
+  for (const r of [...sql.exec(`SELECT run, capture_sha, ref FROM proposed_readings WHERE id IS NULL`)])
+    sql.exec(`UPDATE proposed_readings SET id=? WHERE run=? AND capture_sha=? AND ref=?`,
+             passageProposalId(r.run, r.capture_sha, r.ref), r.run, r.capture_sha, r.ref);
 }
