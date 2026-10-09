@@ -46,3 +46,7 @@ T41-20 applied on my reading J2 (no answer yet; if your answer differs, send a C
 - `format`: 0 failures. `architecture contradiction`: 0 failures. `coverage contradiction`: 59 of 59 live requirement ids named; 0 failures. `ownership contradiction tranche/T41`: 4 files; 0 failures.
 
 Size (session_01QHVLXdtMjHsZ4vfCKxRp7x): test runs 9, module lines 3698
+
+## J4 · REPORT
+
+B2 applied: tranche/T41 merged into job/T41/contradiction (1ded3cc7f0). The built notice already matches R50's folded reading (K2479); no code change. Re-run after the merge: contradiction tests 128, pass 120, fail 0, todo 8; format, architecture, coverage (59 of 59) and ownership: 0 failures each. J3 COMPLETE stands.
