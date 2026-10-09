@@ -1,6 +1,6 @@
 /* membership — who the members are and what each may do; projects as working groups, sight, and the fence.
  *
- * Requirements: build/requirements/membership.md (R4–R126; T40's R122 `notTheOwner`, R123–R125 the handle check, the
+ * Requirements: build/requirements/membership.md (R4–R127; T40's R127 `joinedParticipants` (K2404), R122 `notTheOwner`, R123–R125 the handle check, the
  * handle change and its guard, R126's rows, R16, R17, R55 and R57 as amended, and R83's order with `ai-use` (T40-M; N797,
  * N799, N812; DEC-184, DEC-186; K2373, K2376, K2394); T38's R116–R121, project-roster's seams and N793's
  * `noSuchMember` (T38-4; N783, N793, K2270, K2271, K2275), and R83's order with `project-roster`; T39's R83 order
@@ -778,11 +778,14 @@ export class Membership {
       if (kind === "rescue") {
         const c = comment === null || comment === undefined ? null : String(comment);
         this.sql.exec(
-          `INSERT INTO project_participants (project_id,member_id,state,owner,owner_order,invited_by,comment,created,updated)
-           VALUES (?,?,'joined',1,${nextOrder},?,?,?,?)
-           ON CONFLICT(project_id,member_id) DO UPDATE SET owner=1, owner_order=excluded.owner_order, state='joined',
-             updated=excluded.updated`,
-          projectId, memberId, projectId, by, c, when, when);
+          `INSERT INTO project_participants (project_id,member_id,state,owner,owner_order,invited_by,comment,created,updated,
+                                            joined_at)
+           VALUES (?,?,'joined',1,${nextOrder},?,?,?,?,?)
+           ON CONFLICT(project_id,member_id) DO UPDATE SET owner=1, owner_order=excluded.owner_order,
+             joined_at=CASE WHEN project_participants.state='joined' THEN project_participants.joined_at
+                            ELSE excluded.joined_at END,
+             state='joined', updated=excluded.updated`,
+          projectId, memberId, projectId, by, c, when, when, when);   /* R127: a rescue joins */
         return true;
       }
       return false;
@@ -1241,6 +1244,18 @@ export class Membership {
     return !!(p && p.state === "joined");
   }
 
+  /* R127 (K2404; for `credentials` R54, R59): every participant `joined` or `leaving` (R54's set), whatever the member's
+     status, in member-id order: `{member, owner, since}`, `since` the instant the row last became `joined` (null for a row
+     joined before T40 recorded it). An unknown project answers []. Writes nothing and never throws. */
+  joinedParticipants(projectId) {
+    try {
+      if (typeof projectId !== "string" || !projectId) return [];
+      return this.#rows(`SELECT member_id, owner, joined_at FROM project_participants
+                          WHERE project_id=? AND state IN ('joined','leaving') ORDER BY member_id`, projectId)
+        .map((r) => ({ member: r.member_id, owner: r.owner === 1, since: r.joined_at ?? null }));
+    } catch { return []; }
+  }
+
   /* R74: one member's participation in one project, `{state, owner}`, or null (promotion's forkProject reads it). */
   participation(projectId, memberId) {
     const p = this.#one(`SELECT state, owner FROM project_participants WHERE project_id=? AND member_id=?`,
@@ -1259,8 +1274,9 @@ export class Membership {
       return { ok: false, reason: "OWNED" };
     const now = new Date().toISOString();
     this.sql.exec(
-      `INSERT OR REPLACE INTO project_participants (project_id,member_id,state,owner,owner_order,invited_by,created,updated)
-       VALUES (?,?,'joined',1,1,NULL,?,?)`, projectId, memberId, now, now);
+      `INSERT OR REPLACE INTO project_participants (project_id,member_id,state,owner,owner_order,invited_by,created,updated,
+                                                    joined_at)
+       VALUES (?,?,'joined',1,1,NULL,?,?,?)`, projectId, memberId, now, now, now);   /* R127: joined at creation */
     return { ok: true, projectId, owner: memberId };
   }
 
@@ -1301,8 +1317,10 @@ export class Membership {
     const p = this.participation(projectId, by);
     if (!p) return { ok: false, reason: "NOT_INVITED",
       detail: "a member joins a project they were invited to. Being uninvited is not a refusal you can see." };
-    this.sql.exec(`UPDATE project_participants SET state='joined', comment=NULL, updated=? WHERE project_id=? AND member_id=?`,
-      new Date().toISOString(), projectId, by);
+    /* R127 (K2404): the instant the row becomes `joined`; a row already joined keeps the instant it joined. */
+    const now = new Date().toISOString();
+    this.sql.exec(`UPDATE project_participants SET joined_at=CASE WHEN state='joined' THEN joined_at ELSE ? END,
+                     state='joined', comment=NULL, updated=? WHERE project_id=? AND member_id=?`, now, now, projectId, by);
     return { ok: true, projectId, state: "joined" };
   }
 

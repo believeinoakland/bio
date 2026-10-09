@@ -112,6 +112,9 @@ CREATE TABLE IF NOT EXISTS project_participants (
   comment    TEXT,
   created    TEXT NOT NULL,
   updated    TEXT NOT NULL,
+  -- R127 (K2404; T40): the instant the row last became 'joined', written by the act that joins (a project's creation
+  -- for its founding owner); NULL for a row joined before T40, never back-filled.
+  joined_at  TEXT,
   PRIMARY KEY (project_id, member_id)
 );
 CREATE INDEX IF NOT EXISTS pp_member ON project_participants(member_id);
@@ -241,6 +244,7 @@ export const MEMBERSHIP_ADDITIVE_COLUMNS = [
   ["members", "door", "TEXT"],
   ["members", "approved_by", "TEXT"],
   ["project_participants", "owner_order", "INTEGER"],
+  ["project_participants", "joined_at", "TEXT"],
 ];
 
 /* R115, R111: the tables purge never clears (identity, governance and the group's own settings) and those keyed by project, cleared with it. The

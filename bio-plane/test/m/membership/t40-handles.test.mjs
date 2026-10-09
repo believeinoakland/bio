@@ -368,3 +368,41 @@ test("R126 R124 the handle words name no plane, server, copy or instance (R112)"
     assert.doesNotMatch(MEMBERSHIP_CHECKS[code].translation, /\b(cop(y|ies)|instances?|planes?|servers?)\b/i, code);
   assert.equal(typeof Membership.HANDLE_CHECK_STATED, "string");
 });
+
+/* ---------------------------------------------------------------- R127 (K2404) ------------------------------------- */
+
+test("R127 joinedParticipants lists every participant joined or leaving, whatever their status, with the owner flag and the instant they joined", async (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now: Date.UTC(2026, 9, 9, 12, 0, 0) });
+  const w = await world().group("ann", "bob", "cal", "dee");
+  w.project("PROJ-1");
+  w.m.projectClaimOwner({ projectId: "PROJ-1", memberId: "ann" });
+  const t0 = new Date().toISOString();
+  for (const h of ["bob", "cal", "dee"]) w.m.projectInvite({ projectId: "PROJ-1", handle: h, by: "ann" });
+  t.mock.timers.setTime(Date.UTC(2026, 9, 9, 13, 0, 0));
+  const t1 = new Date().toISOString();
+  w.m.projectJoin({ projectId: "PROJ-1", by: "bob" });
+  w.m.projectJoin({ projectId: "PROJ-1", by: "cal" });
+  w.m.projectLeave({ projectId: "PROJ-1", by: "cal" });
+  w.m.memberSet({ memberId: "bob", status: "revoked", by: "admin" });
+  const before = snapshot(w);
+  assert.deepEqual(w.m.joinedParticipants("PROJ-1"), [
+    { member: "ann", owner: true, since: t0 },
+    { member: "bob", owner: false, since: t1 },     // revoked, still listed: whatever the member's status
+    { member: "cal", owner: false, since: t1 },     // leaving is listed (R54's set)
+  ]);
+  assert.deepEqual(snapshot(w), before, "writes nothing");
+  /* a second join of a joined row keeps the instant it joined */
+  t.mock.timers.setTime(Date.UTC(2026, 9, 9, 14, 0, 0));
+  w.m.projectJoin({ projectId: "PROJ-1", by: "ann" });
+  assert.equal(w.m.joinedParticipants("PROJ-1")[0].since, t0);
+  /* a row joined before T40 recorded the instant reads null */
+  w.sql.exec(`UPDATE project_participants SET joined_at=NULL WHERE member_id='ann'`);
+  assert.equal(w.m.joinedParticipants("PROJ-1")[0].since, null);
+  /* negative controls: an invited participant is not listed; an unknown project, and anything that is not an id, is [] */
+  assert.ok(!w.m.joinedParticipants("PROJ-1").some((p) => p.member === "dee"), "invited, not joined");
+  for (const id of ["PROJ-NONE", "", null, undefined, 7, {}]) assert.deepEqual(w.m.joinedParticipants(id), [], String(id));
+  /* R118's rescue joins: the invited dee becomes a joined owner, joined at the act's instant */
+  w.m.participationWrite("rescue", { projectId: "PROJ-1", memberId: "dee", by: "admin", at: "2026-10-09T15:00:00.000Z" });
+  assert.deepEqual(w.m.joinedParticipants("PROJ-1").find((p) => p.member === "dee"),
+    { member: "dee", owner: true, since: "2026-10-09T15:00:00.000Z" });
+});
