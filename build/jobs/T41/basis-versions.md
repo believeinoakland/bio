@@ -57,3 +57,30 @@ Completion after CHANGE B3 (inquiry-grammar merged, K2491), on tranche/T41 merge
 - Process checks: format 0, architecture 0, coverage 45/45, ownership 0 failures.
 
 Size (session_01JYn5FgkG5v9aRRBB74jGmo): test runs 18, module lines 3711
+
+## J4 · COMPLETE
+
+Completion after CHANGE B4 (inquiry merged, K2498), on tranche/T41 merged at dc41a13858.
+
+**Applied.** The `biasNotInForce` bridge is removed. R48 imports inquiry R61's `biasNotInForce` and calls it with `{statement, where: "the conclusion of <project> on <inquiry>", inForce, scope: {type: "project", id}}`. It answers a finding row, so the conclusion's refusal has these parts:
+- `reason` and `code`: `BIAS_APPLICATION_NOT_IN_FORCE`.
+- Its `check`, `translation` and `detail`, lifted from the row.
+- `findings`: the row itself.
+- `target`, `project`, `statement` and `in_force` (false, or null for undetermined).
+
+Nothing is written, as before. The test now holds the finding equal to inquiry's own spelling.
+
+**Deferred:** nothing. Every entry is applied.
+
+**For BOB's text (from J3, still open):** R35's list should gain C-25.35.
+
+**Final uses:** unchanged, as `modules.json` stands.
+
+**Tests and checks.**
+- basis-versions: 136/136.
+- inquiry 193/193, inquiry-grammar 76/76.
+- Readers of conclusions: retrieval 168/168, queue 128/128, ratification 220/220, contradiction 120/120, project-stage 23/23.
+- queue-producers 77/80: its 3 reds are the inherited ones.
+- Process checks: format 0, architecture 0, coverage 45/45, ownership 0 failures.
+
+Size (session_01JYn5FgkG5v9aRRBB74jGmo): test runs 21, module lines 3683 (J3's 3711 was a miscount; it was 3693)
