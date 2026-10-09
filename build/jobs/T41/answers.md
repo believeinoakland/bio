@@ -15,3 +15,12 @@ My readings of R30, R19, R31–R33, on which I am building now (stop me only if 
 7. **R33.** `checkSentences(sentences, {cited, readLog})` lives in a new pure file, `answers/sentences.mjs`, with no plane imports beyond record-grammar, calc-grammar and observation-log constants, so case-checker's program can bundle it (K2471). `cited` is `{holdings, rules, looks}` as in an answer. It answers `{ok: true, withheld}` (R4's entries) or `ANSWER_MALFORMED`, and never throws. `checkAnswer` runs through it.
 
 Final `uses` (for BOB at merge): the current list unchanged (`ai-use` is already in it).
+
+## J2 · QUESTION
+
+Replaces J1's items 5 and 6 only; the rest of J1 stands as taken (K2482). While building, I narrowed these two. Unless you answer otherwise, I keep them:
+
+5'. **R31 `looked`.** It is required, one of the two, for a baseline of basis `firsthand` or `as_recalled`. For basis `document` it is null: the document was found, so neither state applies. A document's baseline must rest on a holding (`rests_on` names an `h<i>` in its sentence's support). A baseline's own value is labelled by its basis, so R4's figure check exempts it: `firsthand`/`as_recalled` always, and `document` only when its value is within the quote of a holding it rests on. Every other figure in the sentence is checked as R4 states.
+6'. **R32's cause.** No `concluded` marker is read. A cause word (`because`, `caused`, `due to`, `led to`, `as a result of`, `resulted in`, `owing to`, ...) is allowed only inside a quotation that is part of the quote of a holding the sentence cites and the read log answered. That covers both a concluded finding quoted and a body's own cause shown as theirs. A cause word in Civicsmith's own words, or inside a quotation not read, is withheld `ANSWER_CAUSE_UNESTABLISHED`, and its translation says "the cause is not established". Reason: "concluded" has no one field across the reads, and R32 says "only quoting", which this checks exactly.
+
+Also, for my record: the final `uses` drops `ai-runs`. answers no longer reaches it, since the ceiling (`aiUseCheck`) is replaced by `ai-use.useCheck`. The rest of the list is unchanged.
