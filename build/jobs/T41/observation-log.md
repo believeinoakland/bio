@@ -1,6 +1,6 @@
 # observation-log (T41)
 
-**Status** · session_01P7RDCwo1zaafZ1wjYhW3J1 · depth 2 · COMPLETE · handled B2
+**Status** · session_01P7RDCwo1zaafZ1wjYhW3J1 · depth 2 · COMPLETE · handled B3
 
 ## J1 · QUESTION
 
