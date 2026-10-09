@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, realWorld, PASSWORD } from "./fixture.mjs";
-import { credentialsOf, CREDENTIALS_EXEMPT_TABLES, CREDENTIALS_TABLES, CREDENTIALS_PROJECT_TABLES } from "../../../src/credentials/index.mjs";
+import { credentialsOf, CREDENTIALS_EXEMPT_TABLES, CREDENTIALS_TABLES, CREDENTIALS_PROJECT_TABLES, CREDENTIALS_HISTORY_TABLE } from "../../../src/credentials/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 
 const sessionsOf = (w, id) => w.rows(`SELECT token_sha FROM sessions WHERE role=?`, `member:${id}`).length;
@@ -133,7 +133,8 @@ test("R18 R30 every credentials table is declared exempt from purge, and a whole
 test("R18 R30 R34 the declaration: every table declared once by credentials through declareTable, with its classes; any refusal is thrown", () => {
   const w = world();
   const mine = [...w.core.declared.entries()].filter(([, d]) => d.module === "credentials");
-  assert.deepEqual(mine.map(([n]) => n).sort(), [...CREDENTIALS_EXEMPT_TABLES, ...CREDENTIALS_PROJECT_TABLES.map((t) => t.name)].sort(),
+  assert.deepEqual(mine.map(([n]) => n).sort(), [...CREDENTIALS_EXEMPT_TABLES, ...CREDENTIALS_PROJECT_TABLES.map((t) => t.name),
+    CREDENTIALS_HISTORY_TABLE.name].sort(),
     "every table this module owns, and only those");
   const cls = Object.fromEntries(mine.map(([n, d]) => [n, d.classes]));
   for (const t of CREDENTIALS_EXEMPT_TABLES)

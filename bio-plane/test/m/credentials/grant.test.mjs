@@ -136,8 +136,8 @@ test("R31 aiGrantHeld answers {ok, member, viewer, expires} exactly when R28 wou
   const mint = async (id) => (await w.c.aiGrantMint({ member: id, by: id, session: w.session[id] })).token;
   const [a, b, d] = [await mint("ann"), await mint("bob"), await mint("dee")];
   await w.c.groupKeySet({ key: "sk-g", by: "admin" });
-  w.c.groupSwitchSet({ switch: "standing", on: true, by: "admin" });
-  w.c.accountSwitchSet({ member: "ann", switch: "standing", on: true, by: "ann" });
+  w.c.accountUsesSet({ owner: "group", switch: "standing", on: true, by: "admin" });
+  w.c.accountUsesSet({ owner: "member:ann", switch: "standing", on: true, by: "ann" });
   const st = (await w.c.aiGrantMintStanding({ member: "ann", question: "what changed?" })).token;
   const agree = async (token, label) => {
     const held = await w.c.aiGrantHeld({ token });
@@ -180,7 +180,7 @@ test("R32 aiGrantMintStanding: refusals in order (not active, NO_ACCOUNT, STANDI
   assert.deepEqual(shape(await standing("bob")), refusal("NO_ACCOUNT"), "no reference, no group key");
   assert.deepEqual(shape(await standing("ann")), refusal("STANDING_SWITCH_OFF"), "her own account's switch is off");
   assert.equal(w.snapshot(), before, "no refusal mints");
-  w.c.accountSwitchSet({ member: "ann", switch: "standing", on: true, by: "ann" });
+  w.c.accountUsesSet({ owner: "member:ann", switch: "standing", on: true, by: "ann" });
   const on = w.snapshot();
   for (const question of [null, undefined, "", "   ", 7])
     assert.deepEqual(shape(await w.c.aiGrantMintStanding({ member: "ann", question })), refusal("NO_QUESTION"), String(question));
@@ -189,11 +189,11 @@ test("R32 aiGrantMintStanding: refusals in order (not active, NO_ACCOUNT, STANDI
   await w.c.groupKeySet({ key: "sk-g", by: "admin" });
   w.c.groupKeySwitch({ on: true, by: "admin" });
   assert.deepEqual(shape(await standing("bob")), refusal("STANDING_SWITCH_OFF"), "the group key's standing switch is off");
-  w.c.groupSwitchSet({ switch: "standing", on: true, by: "second" });
+  w.c.accountUsesSet({ owner: "group", switch: "standing", on: true, by: "second" });
   const gb = await standing("bob");
   assert.equal(gb.ok, true, "R32 names no notice refusal: the model call itself goes through accountFor (R35, R36)");
   /* ann's own switch governs her, whatever the group key's says */
-  w.c.groupSwitchSet({ switch: "standing", on: false, by: "admin" });
+  w.c.accountUsesSet({ owner: "group", switch: "standing", on: false, by: "admin" });
   const snap = w.snapshot();
   const t0 = Date.now();
   const g = await standing("ann");
@@ -222,7 +222,7 @@ test("R32 aiGrantMintStanding: refusals in order (not active, NO_ACCOUNT, STANDI
   assert.deepEqual(shape(await w.c.aiGrantAdmit({ token: gb.token, op: "search" })), refusal("GRANT_NOT_HELD"));
   /* an expired one ends at its time */
   await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann-2", by: "ann" });
-  w.c.accountSwitchSet({ member: "ann", switch: "standing", on: true, by: "ann" });
+  w.c.accountUsesSet({ owner: "member:ann", switch: "standing", on: true, by: "ann" });
   const late = (await standing("ann")).token;
   w.sql.exec(`UPDATE ai_grants SET expires=? WHERE kind='standing'`, Date.now() - 1);
   assert.deepEqual(shape(await w.c.aiGrantAdmit({ token: late, op: "search" })), refusal("GRANT_NOT_HELD"));

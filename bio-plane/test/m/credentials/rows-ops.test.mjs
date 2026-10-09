@@ -85,10 +85,10 @@ test("R12 R15 R53 the AI credential routes: `who` from the query over the body, 
   assert.deepEqual(w.ops("limit=1").aicredentials().limit, 1);
   assert.equal(w.ops("tokenId=t1&who=class:ai", { who: "ann" }).aicredentialrevoke().reason, "AI_CREDENTIAL_REVOKE_NOT_A_MEMBER");
   assert.equal(w.ops("tokenId=t1&who=ann").aicredentialrevoke().already, false);
-  assert.deepEqual(Object.keys(w.ops()).sort(), ["accountreference", "accountreferenceremove", "accountreferenceset",
-    "accountswitchset", "accountusesset", "aicredentiallook", "aicredentialmint", "aicredentialrevoke", "aicredentials", "aigrantmint",
+  assert.deepEqual(Object.keys(w.ops()).sort(), ["accounthistory", "accountreference", "accountreferenceremove", "accountreferenceset",
+    "accountuses", "accountusesset", "aicredentiallook", "aicredentialmint", "aicredentialrevoke", "aicredentials", "aigrantmint",
     "aikeepaway", "aikeepawaystate", "bootstrap", "claim", "groupkeynotice", "groupkeynoticeseen", "groupkeyremove", "groupkeyset", "groupkeystate",
-    "groupkeyswitch", "groupswitchset", "keyedservices", "keyedserviceset", "keyedserviceswitch", "login",
+    "groupkeyswitch", "keyedservices", "keyedserviceset", "keyedserviceswitch", "login",
     "projectaccountremove", "projectaccountstate", "projectaccountswitch", "projectaikeepaway", "projectaikeepawaystate",
     "projectkeynotice", "projectkeynoticeseen", "projectkeyset", "projectsigninset", "recover",
     "recoverycodesissue", "recoverycodesstate", "securitycount", "securitymap", "session", "setpassword", "signeradd", "signerlist", "signerset",
@@ -149,7 +149,9 @@ test("R33 R34 R36 R37 the group key's routes: `by` and `viewer` from the query o
   const set = await w.ops("by=second&key=sk-from-query", { key: "sk-route-group" }).groupkeyset();
   assert.deepEqual(Object.keys(set).sort(), ["ok", "set_at"]);
   assert.deepEqual(w.ops("by=admin", { on: true, by: "ann" }).groupkeyswitch(), { ok: true, on: true });
-  assert.deepEqual(w.ops("by=admin", { switch: "standing", on: true }).groupswitchset(), { ok: true, switch: "standing", on: true });
+  /* (T41; DEC-188 (8)) the group key's switches are set through `accountusesset`, `owner` `group`; `groupswitchset` retired */
+  assert.deepEqual(w.ops("by=admin", { owner: "group", switch: "standing", on: true }).accountusesset(),
+    { ok: true, owner: "group", switch: "standing", on: true });
   const full = w.ops("viewer=second").groupkeystate();
   assert.deepEqual([full.held, full.on, full.by, full.standing], [true, true, "second", true]);
   assert.deepEqual(w.ops("viewer=ann").groupkeystate(), { ok: true, on: true });
@@ -174,7 +176,7 @@ test("R22 R23 R25 R27 R29 the T33-20 routes: `by`, `viewer`, `member` and `sessi
     "NOT_YOUR_ACCOUNT", "the stamp wins over the body's `by`");
   assert.equal(w.ops("member=ann&viewer=member:ann").accountreference().held, true);
   assert.equal(w.ops("member=ann&viewer=member:second").accountreference().reason, "NOT_YOUR_ACCOUNT");
-  assert.equal(w.ops("by=ann", { member: "ann", switch: "standing", on: true }).accountswitchset().on, true);
+  assert.equal(w.ops("by=ann", { owner: "member:ann", switch: "standing", on: true }).accountusesset().on, true, "T41: accountswitchset retired");
   const tok = (await w.c.login({ role: "member:ann", password: PASSWORD("ann") })).token;
   const g = await w.ops(`member=ann&by=ann&session=${tok}`).aigrantmint();
   assert.equal((await w.c.aiGrantAdmit({ token: g.token, op: "search" })).member, "ann");

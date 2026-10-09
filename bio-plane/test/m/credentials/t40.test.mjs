@@ -14,8 +14,8 @@ import { notAnAdmin, noSuchProject, notTheOwner } from "../../../src/membership/
 const shape = (r) => ({ ok: r.ok, reason: r.reason, code: r.code, check: r.check, translation: r.translation });
 const refusal = (code) => ({ ok: false, reason: code, code, check: ACCOUNT_CHECKS[code].check, translation: ACCOUNT_CHECKS[code].translation });
 const KEY = "sk-ant-api03-PROJECT-SENTINEL-40a1";
-const DEFAULTS = { ask: true, draft: true, run: true, standing: false, explore: "no", suggestions: false };
-const OFF = { ask: false, draft: false, run: false, standing: false, explore: "no", suggestions: false };
+const DEFAULTS = { ask: true, draft: true, run: true, standing: false, explore: "no", enquire: true, read: true, transcribe: true, account: true, suggestions: false };
+const OFF = { ask: false, draft: false, run: false, standing: false, explore: "no", enquire: false, read: false, transcribe: false, account: false, suggestions: false };
 const act = (kind, member, project) => ({ kind, member, ...(project !== undefined ? { project } : {}) });
 
 /* ann owns P (hidden) with bob joined; cy owns S alone (hidden), connected through her subscription; dee owns D
@@ -32,8 +32,8 @@ async function projectWorld(opts) {
 
 /* ===== R55: USE_KINDS and every account's switches ===== */
 
-test("R55 USE_KINDS is exported and frozen, ask, draft, run, standing, explore; every account holds a switch for each kind but explore (no, ask or yes) and suggestions; the defaults: ask, draft and run on, standing and suggestions off, explore no", async () => {
-  assert.deepEqual([...USE_KINDS], ["ask", "draft", "run", "standing", "explore"]);
+test("R55 USE_KINDS is exported and frozen, ask, draft, run, standing, explore (T41: and enquire, read, transcribe, account); every account holds a switch for each kind but explore (no, ask or yes) and suggestions; the defaults: ask, draft and run on, standing and suggestions off, explore no", async () => {
+  assert.deepEqual([...USE_KINDS], ["ask", "draft", "run", "standing", "explore", "enquire", "read", "transcribe", "account"]);
   assert.ok(Object.isFrozen(USE_KINDS) && Object.isFrozen(USE_SWITCHES) && Object.isFrozen(EXPLORE_VALUES));
   assert.deepEqual([...USE_SWITCHES], [...USE_KINDS, "suggestions"]);
   assert.deepEqual([...EXPLORE_VALUES], ["no", "ask", "yes"]);
@@ -103,18 +103,19 @@ test("R55 accountUsesSet sets one switch of one account by its owner: the group'
   assert.deepEqual(w.c.accountReferenceState({ member: "cy", viewer: "cy" }).uses, null);
 });
 
-test("R25 R37 R55 the reference's and the group key's two switches are two of R55's, their stored values kept; accountSwitchSet and groupSwitchSet set them as accountUsesSet does (SWITCH_VALUE_INVALID for a value not boolean) and name only those two (UNKNOWN_SWITCH for a kind of use); removing the reference or the group key turns off every R55 switch of it", async () => {
+test("R25 R37 R55 the reference's and the group key's two switches are two of R55's, their stored values kept; (T41) set only through accountUsesSet, accountSwitchSet and groupSwitchSet retired (no method, no route); removing the reference or the group key turns off every R55 switch of it", async () => {
   const w = await projectWorld();
   await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann", by: "ann" });
-  w.c.accountSwitchSet({ member: "ann", switch: "standing", on: true, by: "ann" });
+  w.c.accountUsesSet({ owner: "member:ann", switch: "standing", on: true, by: "ann" });
   assert.equal(w.c.accountReferenceState({ member: "ann", viewer: "ann" }).uses.standing, true, "one switch, two doors");
   w.c.accountUsesSet({ owner: "member:ann", switch: "suggestions", on: true, by: "ann" });
   assert.equal(w.c.accountReferenceState({ member: "ann", viewer: "ann" }).suggestions, true);
-  /* the two acts name only their two switches */
-  assert.equal(w.c.accountSwitchSet({ member: "ann", switch: "ask", on: false, by: "ann" }).reason, "UNKNOWN_SWITCH");
-  assert.equal(w.c.groupSwitchSet({ switch: "draft", on: false, by: "admin" }).reason, "UNKNOWN_SWITCH");
-  assert.equal(w.c.accountSwitchSet({ member: "ann", switch: "standing", on: "on", by: "ann" }).reason, "SWITCH_VALUE_INVALID");
-  assert.equal(w.c.groupSwitchSet({ switch: "standing", on: 1, by: "admin" }).reason, "SWITCH_VALUE_INVALID");
+  /* (T41; DEC-188 (8)) the two retired acts are gone, method and route */
+  assert.equal(typeof w.c.accountSwitchSet, "undefined");
+  assert.equal(typeof w.c.groupSwitchSet, "undefined");
+  assert.ok(!("accountswitchset" in w.ops()) && !("groupswitchset" in w.ops()));
+  assert.equal(w.c.accountUsesSet({ owner: "member:ann", switch: "standing", on: "on", by: "ann" }).reason, "SWITCH_VALUE_INVALID");
+  assert.equal(w.c.accountUsesSet({ owner: "group", switch: "standing", on: 1, by: "admin" }).reason, "SWITCH_VALUE_INVALID");
   /* removal: the reference's row goes (a new reference starts at the defaults); the group key's are turned off */
   w.c.accountUsesSet({ owner: "member:ann", switch: "explore", on: "yes", by: "ann" });
   w.c.accountReferenceRemove({ member: "ann", by: "ann" });
@@ -123,7 +124,7 @@ test("R25 R37 R55 the reference's and the group key's two switches are two of R5
   assert.deepEqual(w.c.accountReferenceState({ member: "ann", viewer: "ann" }).uses, DEFAULTS);
   await w.c.groupKeySet({ key: "sk-group", by: "admin" });
   w.c.accountUsesSet({ owner: "group", switch: "explore", on: "ask", by: "admin" });
-  w.c.groupSwitchSet({ switch: "standing", on: true, by: "admin" });
+  w.c.accountUsesSet({ owner: "group", switch: "standing", on: true, by: "admin" });
   assert.deepEqual(w.c.groupKeyState({ viewer: "admin" }).uses, { ...DEFAULTS, standing: true, explore: "ask" }, "negative control: held");
   w.c.groupKeyRemove({ by: "admin" });
   assert.deepEqual(w.c.groupKeyState({ viewer: "admin" }).uses, OFF);
@@ -384,8 +385,9 @@ test("R56 R58 a project's key is due its notice as the group key's is: PROJECT_K
   await w.c.projectKeySet({ project: "P", key: KEY, by: "ann" });
   w.c.projectAccountSwitch({ project: "P", on: true, by: "ann" });
   const n = w.c.projectKeyNotice({ member: "bob", project: "P" });
-  assert.deepEqual(n, { ok: true, due: true, text: Credentials.PROJECT_KEY_NOTICE_TEXT });
-  assert.match(n.text, /questions, and the material read to answer them, go to Anthropic under the project's API account/);
+  /* (T41; DEC-188 (7)) words.json's `ai.disclosure.projectkey`, `{project}` the project's name */
+  assert.deepEqual(n, { ok: true, due: true, text: Credentials.PROJECT_KEY_NOTICE_TEXT.replace("{project}", "Project P") });
+  assert.match(n.text, /questions in Project P, and the material read to answer them, go to Anthropic under the project's API account/);
   const due = await w.c.accountFor({ member: "bob", act: act("ask", "bob", "P") });
   assert.deepEqual([shape(due), due.member, due.project], [refusal("PROJECT_KEY_NOTICE_DUE"), "bob", "P"]);
   const before = w.snapshot();
@@ -558,20 +560,8 @@ test("R59 projectAccountsSuspended answers, for each project the viewer owns who
   assert.ok(!Object.keys(w.ops()).some((op) => /suspended|keptaway|projectskept/i.test(op)), "in-plane, reached by no route");
 });
 
-/* ===== R32 with R55 (K2376 (3)) ===== */
-
-test("R32 a sign-in's standing switch is held (R55), but while N796 is held with Bob a member served by their sign-in is still refused STANDING_SWITCH_OFF, its switch on or off", async () => {
-  const w = await projectWorld();
-  assert.equal(w.c.accountUsesSet({ owner: "member:cy", switch: "standing", on: true, by: "cy" }).ok, true);
-  const before = w.snapshot();
-  const r = await w.c.aiGrantMintStanding({ member: "cy", question: "what is new?" });
-  assert.deepEqual(shape(r), refusal("STANDING_SWITCH_OFF"));
-  assert.equal(w.snapshot(), before);
-  /* negative control: a reference's standing switch on mints */
-  await w.c.accountReferenceSet({ member: "bob", kind: "apikey", secret: "sk-bob", by: "bob" });
-  w.c.accountUsesSet({ owner: "member:bob", switch: "standing", on: true, by: "bob" });
-  assert.equal((await w.c.aiGrantMintStanding({ member: "bob", question: "q" })).ok, true);
-});
+/* ===== R32 with R55 (K2376 (3)): T40's hold on a sign-in's standing questions is lifted at T41 (N796, K2425);
+   `t41.test.mjs` tests R32 as it now stands. ===== */
 
 /* ===== R30: the project tables ===== */
 

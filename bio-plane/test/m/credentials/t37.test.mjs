@@ -27,7 +27,7 @@ const NEW = "a-new-passphrase-9";
 async function signedIn() {
   const w = await world().group("ann", "bob");
   await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann", by: "ann" });
-  w.c.accountSwitchSet({ member: "ann", switch: "standing", on: true, by: "ann" });
+  w.c.accountUsesSet({ owner: "member:ann", switch: "standing", on: true, by: "ann" });
   w.s = {};
   for (const k of ["ann1", "ann2", "ann3"]) w.s[k] = (await w.c.login({ role: "member:ann", password: PASSWORD("ann") })).token;
   w.s.bob = (await w.c.login({ role: "member:bob", password: PASSWORD("bob") })).token;
