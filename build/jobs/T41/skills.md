@@ -70,3 +70,7 @@ T41-27 complete, B4 applied. reading-guides is wired: R16 is registered at load,
 ## B5 (CHANGE: run-rules merged @ 753d8164cd)
 
 My branch already held 753d8164cd: the tranche merge for B4 brought run-rules in, and my second commit wired it. There was never a stand-in. `RUN_ORIGINS`, `DRAFT_KINDS`/`DRAFT_REACH`, `ENQUIRE_MODE` and `RUN_BOUNDS.pages` are read by key. `checkPagesRead` and the test bar (run-rules R19, R26) are not services skills' requirements name: the pack carries the reading bound's description, and judging pages read or the bar is the plane's, not this pack's (R24). So neither is imported. Re-run on the merged branch: skills 105/0, run-rules and reading-guides 83/0.
+
+## J4 · COMPLETE
+
+B5 applied: my branch already held run-rules @ 753d8164cd from B4's merge, and every run-rules name I use is read by key, with no stand-in. checkPagesRead and the test bar are not mine to call (R24), and my record says why. skills 105/0, run-rules and reading-guides 83/0. The uses edge skills → reading-guides is still yours at merge.
