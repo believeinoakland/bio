@@ -12,7 +12,25 @@ Verified against a local stand-in for membership's D54 (scratch only, never comm
 
 R10 as met (K2437, for BOB to fold at the merge): "At an administrator's `EXISTENCE` of a hidden project (one it is neither invited nor joined to, `membership` R44), `projectRequest` answers `membership`'s `PROJECT_SEEN_NOT_A_PARTICIPANT` (C-70.1, with the owners R77 adds) and writes nothing: a request to join is asked only at a discoverable project's `EXISTENCE`; its owners add an administrator by inviting them."
 
-Next: when BOB says membership is merged, merge `tranche/T41`, run the tests, then record completion.
+## Completion
+
+Entries applied: T41-4 (N822, D54; K2408, K2409, K2435), with R10's reading ruled K2437 (B2). Merged `tranche/T41` after membership (B3, K2442) at 1250436679.
+
+Deferred: none.
+
+Found in other modules: none of this job's making. The users' suites (answer-envelope, plane, `test/system/migrate-released`) show 4 reds (answer-envelope's two R7/R2 catalogue tests, plane's two R12 bias-debt tests), identical on `tranche/T41` without this branch (180 pass, 4 fail there too): not this job's.
+
+B3's D54 reds, each re-stated and green: `figures-purge` :63 and :107 (the VIEWERS table: the founder in both spellings and an administrator not in either hidden project now count 0, with a discoverable and an invited negative control); `ownership` :24 (an administrator at hidden P's EXISTENCE answered C-70.1), :113 and :145 (the rescue reachable at an administrator's EXISTENCE, unchanged tests now green through the module change), :178 (R6's administrator readers at FULL only, after P is discoverable), :230 (the administrator test split into hidden P at EXISTENCE and discoverable P at FULL); `requests` :24 (R10 at an administrator's EXISTENCE of hidden H: C-70.1 with its owners, K2437).
+
+Tests and checks:
+- `node --test bio-plane/test/m/project-roster/`: tests 31, pass 31, fail 0 (on `tranche/T41` merged).
+- users' suites: tests 184, pass 180, fail 4 (the same 4 on `tranche/T41` alone).
+- `checks/format.mjs`: 145 modules, 144 requirements files; 0 failures.
+- `checks/architecture.mjs project-roster`: 11 product files, 32 relative imports; 0 failures.
+- `checks/coverage.mjs project-roster`: 20 of 20 live requirement ids named by a test; 0 failures.
+- `checks/ownership.mjs project-roster tranche/T41`: 7 files changed; 0 failures.
+
+Size (session_01EMvdfBAQoP23gwygdrcexb): test runs 8, module lines 895
 
 ## J1 · QUESTION
 
