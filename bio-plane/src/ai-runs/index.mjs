@@ -402,10 +402,11 @@ export class AiRuns {
    *  rollup ruling gave the run's two rollup writers a referent, and a bare
    *  `run` PRESENT is now refused here like any other — see its catalogue row. */
   #aiRunAppend(run, entry, at, terminal = 0, actor = null, step = null) {
-    /* R73: a step-run's LOOK names its step (observation-log R1, steps R9), and is tied to the run here so the run's log
-       and rollup still read it; its terminal and wake entries stay the run's own. */
-    if (step && !terminal) {
-      return this.#appendAs(run, entry, at, 0, actor, step);
+    /* R73: a step-run's entries name its step (observation-log R1, steps R9): its looks, and its wake and terminal
+       rollups too, since a rollup's `observation` referent must be a row of its own authority (C-22.10). Each is tied to
+       the run here, so the run's log and rollup read them and no other run's. */
+    if (step) {
+      return this.#appendAs(run, entry, at, terminal, actor, step);
     }
     return this.#appendAs(run, entry, at, terminal, actor);
   }
@@ -584,7 +585,7 @@ export class AiRuns {
         detail: stoppedByBound
           ? `the run stopped because the '${bound}' bound was reached (${RUN_BOUNDS[bound]})`
           : `the run ended: ${RUN_ENDINGS[bound]}`,
-      }, at, 1);
+      }, at, 1, null, row.step || null);
       if (bad) return { run, found: true, terminated: false, ...bad };
       /* FL-8 / IC-67 — WHAT BECAME OF THIS RUN, ASKED ONCE AND OF `run-rules`.
          This was `stoppedByBound ? "stopped" : "finished"`, written out TWICE
@@ -1631,7 +1632,7 @@ export class AiRuns {
     if (!w) return [];
     const ids = w.woken(AiRuns.AI_RUN_WAKE_TICK_BATCH);
     return (Array.isArray(ids) ? ids : []).slice(0, AiRuns.AI_RUN_WAKE_TICK_BATCH)
-      .map((run) => this.#one(`SELECT run, context_type, context_id, principal_plane, principal_claude, principal_claude_ref FROM ai_runs
+      .map((run) => this.#one(`SELECT run, context_type, context_id, principal_plane, principal_claude, principal_claude_ref, step FROM ai_runs
                                 WHERE run = ? AND status = 'running'`, String(run)))
       .filter(Boolean);
   }
@@ -1723,7 +1724,7 @@ export class AiRuns {
                 + `(${captured} captured, ${refused} refused, ${expired} expired). The run is resumable: its own log `
                 + `carries what each request established, and §14b.7's resumed run reads it and `
                 + `continues rather than restarting. ${decision.says}`,
-        }, iso, 0);
+        }, iso, 0, null, r.step || null);
         if (refusal) return refusal;
         this.sql.exec(`UPDATE ai_runs SET expires = ? WHERE run = ?`, until, r.run);
         this.#wait().markWoken(done.map((q) => q.request), iso);
@@ -1732,7 +1733,7 @@ export class AiRuns {
       wakes.push({ run: r.run, completions: done.length, captured, refused, expired,
                    woken: !bad, ...(bad ? { unwritable: bad } : { expires: until }),
                    resume: decision.dispatch ? "DISPATCH" : decision.withheld });
-      if (!bad && decision.dispatch) dispatches.push({ run: r.run, context_id: r.context_id, payer: AiRuns.#memberOfRun(r), project: r.context_type === "project" ? r.context_id : null,
+      if (!bad && decision.dispatch) dispatches.push({ run: r.run, context_id: r.context_id, payer: AiRuns.#memberOfRun(r), step: r.step || null, project: r.context_type === "project" ? r.context_id : null,
                                        owner: r.principal_claude });
     }
 
@@ -1932,7 +1933,7 @@ export class AiRuns {
             + `resumable by its own principal; nothing it established is lost`
           : `Resumption: the dispatch to agent-worker did not complete (${outcome.state}: ${outcome.reason}). `
             + `The run was woken and is still resumable by its own principal; nothing it established is lost`,
-      }, iso, 0));
+      }, iso, 0, null, d.step || null));
       if (refusal) outcome.unwritable = refusal;
     }
     return outcome;
@@ -3199,7 +3200,8 @@ export class AiRuns {
                   at = null } = {}) {
     const now = AiRuns.#aiIso(at ? Date.parse(at) : Date.now());
     const record = { part, set, set_version, false_alarm_rate, passed, graded_by, at: now };
-    const judge = RUN_RULES.checkTestBarRecord;
+    /* `deps.checkTestBarRecord` stands in for run-rules' judge in a module test alone, until run-rules (T41-21) merges */
+    const judge = this.#deps.checkTestBarRecord || RUN_RULES.checkTestBarRecord;
     const bad = typeof judge === "function" ? judge(record)
       : this.#refuse("AI_TEST_BAR_UNFIT", "the test bar's judge (run-rules' checkTestBarRecord) is not reachable. Nothing was recorded");
     if (bad) return bad;
