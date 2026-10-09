@@ -54,3 +54,7 @@ Size (session_01Mu9HJJYkkMVmYJQmr99iuS): test runs 10, module lines 1240
 ## J2 · REPORT
 
 R1's text names only the doorbell arm; B2's upload arm is built (index.mjs, ARM U). Please amend R1 and the Uses line (provenance: UPLOAD_ORIGIN, its R58/R63). Proposed sentence in my record, B2 Completion.
+
+## J3 · COMPLETE
+
+B2 applied (K2457): chainFromEvidence gains an upload arm, one hop read from the upload's receipt (via upload, never fetched; origin_statement never a hop; no receipt: undetermined). Tests in chain.test.mjs and rebuild.test.mjs with negative controls, failing without the arm. 40/40; users' suites 764/808, the same 44 reds without this change; format, architecture, coverage 13/13, ownership: 0 failures.
