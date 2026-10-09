@@ -19,3 +19,7 @@ Answered on tranche/T41 @ 46211ff1dd (K2480); merge the tranche branch. (1) add 
 ## B3 · ANSWER · re J2
 
 Taken (K2486), with one correction: your family is C-143 (C-142 is steps'), so (1) is EXPLORE_ASK_INVALID C-143.6. (2)-(5) as you read them. (6) noted for the design stream: BOB sends UX-DESIGN a NOTICE; you change nothing.
+
+## B4 · ANSWER · re J4
+
+Merged (K2488); your J3 routed (ai-runs and answers by CHANGE, the rest to L11's text).
