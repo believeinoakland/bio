@@ -1,6 +1,6 @@
 # acquisition (T41)
 
-**Status** · session_01EA4bemqG5MNcZ6DDzxcD2d · depth 2 · WORKING · handled B1
+**Status** · session_01EA4bemqG5MNcZ6DDzxcD2d · depth 2 · COMPLETE · handled B1
 
 ## Completion (ACQUISITION #16)
 
