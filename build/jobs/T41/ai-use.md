@@ -28,7 +28,7 @@
 **Ran.**
 - `node --test bio-plane/test/m/ai-use/`: tests 48, pass 48, fail 0.
 - No layer tests are named in the manifest. No service of an existing module changed, and no module's code imports ai-use yet, so there are no users' suites to run.
-- Checks, run with `modules.json` holding my paths, tests and `retrieval` as a local, uncommitted edit (BOB's to apply): `format` 0 failures; `architecture` ai-use 0 failures (8 files, 26 imports); `coverage` 13 of 13; `ownership` 0 failures (run after the commit; line below).
+- Checks, run with `modules.json` holding my paths, tests and `retrieval` as a local, uncommitted edit (BOB's to apply): `format` 0 failures; `architecture` ai-use 0 failures (8 files, 26 imports); `coverage` 13 of 13; `ownership` 9 files, 0 failures (after the commit).
 
 **Deferred.** None.
 
@@ -45,6 +45,8 @@
 - `credentials`: N831, the in-plane read of an account's uses.
 - The design stream: `ai.refused.explorenotenabled` (J2 (6); BOB's NOTICE, K2486).
 - No generated artifact is staled: nothing bundled imports ai-use yet.
+
+Size (session_01DYz6SJ2uB7j5P98MvAwUne): test runs 10, module lines 1093
 
 ## J1 · QUESTION
 
