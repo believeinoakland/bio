@@ -61,3 +61,7 @@ Three things for you:
 ## J3 · REPORT
 
 B4 applied and pushed: tranche/T41 merged; R76 answers null for a capture whose every receipt is doorbell or upload (negative controls: a fetched receipt beside them, and a capture held with no receipt, keep the note), read through provenance R60 receiptsOfCapture, a use capture's Uses list does not yet name (please add); UPLOAD_MAX removed, R86 imports acquisition's CAPTURE_MAX. Suite 172/172; format, architecture, coverage 59/59, ownership 0 failures. Still waiting only on provenance's merge for COMPLETE.
+
+## J4 · COMPLETE
+
+T41-8 and T41-8a complete, with B2, B4 and B5 applied. tranche/T41 (provenance merged) merged into job/T41/capture; UPLOAD_VIA from provenance; R86 and R76 also tested over provenance's own instance. Suite 173/173; format, architecture, coverage 59/59, ownership 9 files: all 0 failures. Record's Completion has the reading set, entries, tests, findings and size (4,059 lines; split N826, T42).
