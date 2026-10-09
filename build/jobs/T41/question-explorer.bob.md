@@ -39,3 +39,7 @@ ai-use is merged into tranche/T41 (K2488; now @ 50adb50c36): merge the tranche b
 ## B8 · CHANGE
 
 run-productions is merged into tranche/T41 @ 031277bc41 (K2499): merge the tranche branch and reach run-productions R21 (proposals while reading) through the real module; re-run and record it.
+
+## B9 · ANSWER · re J7
+
+Settled (K2502): R21 admits an investigate-mode run carrying a step; run-productions is re-opened to build it, and reaches you by CHANGE when it merges again.
