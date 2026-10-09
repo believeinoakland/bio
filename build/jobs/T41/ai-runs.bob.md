@@ -37,3 +37,7 @@ run-rules is merged into tranche/T41 @ 753d8164cd (K2489): merge the tranche bra
 ## B7 · ANSWER · re J3
 
 Forwarded to agent-worker by CHANGE (K2489).
+
+## B8 · CHANGE
+
+On tranche/T41 @ 119f4f7640 (K2490) (K2490), merge the tranche branch: R73 now says a run that works as a system step of its own (an exploring run, and each of R74's) is opened first, then this module creates its step through steps.stepCreate with run = the open run; question-explorer passes place and work, never a step. Build it for explore as for R74, and test it.
