@@ -1,6 +1,6 @@
 # text-chain — requirements
 
-**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). Carried rows D-635 and D-665 are outside this module. Every requirement met.
+**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). Carried rows D-635 and D-665 are outside this module. Every requirement met. Last changed T41's opening (T41-2: R104 new; N820; K2405, K2418, K2420); marked not yet met (T41).
 
 ## Public
 
@@ -359,6 +359,9 @@ new refusal condition in this module mints the next one in the family and is add
 - **R101** `CONFIDENCE_BASES` is a plain object whose keys are exactly `engine` and `none`: the bases R42 admits.
 - **R102** `perPageTierWinner(p1, p2)` → `"tier1"` when `p2` is absent, `"tier2"` when `p1` is absent, else `"tier2"` exactly on R76's two conditions and `"tier1"` otherwise; `TIER_RULE` is a non-empty sentence stating that rule (fewer undetermined characters and more glyphs, else tier 1).
 - **R103** `READING_POSITION_KINDS` is a plain object whose keys are exactly R61's four arms; `READING_POSITION_UNPRODUCED` is `"dom"`, the IC-1 arm `readingSource` answers `null` for.
+
+**T41's addition** (N820; D21; K2418; `plan/draft-T41-investigation.md` §3.6)
+- **R104** *(not yet met: T41)* (D21) Step kind `ai_transcription` with a derivation cap undetermined until its accuracy is measured (`calibration`), so `captureBound` answers undetermined for text it produced.
 
 ## Private
 

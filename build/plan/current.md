@@ -1,6 +1,10 @@
 # Plan T41
 
-**Status** · DRAFT · to be written at the opening as `<state> · BOB #<n> · <session> · depth <d>` (§5.1 (1)). Runs L1, then HOLDS until Bob resumes (K2422; K2411's hold continues from L2 onward).
+**Status** · OPEN · BOB #145 · session_01Lzjn9d16Mo4a4RE2Xr16gN · depth 1
+
+**Jobs** · 
+
+**At T41's opening (K2422, K2423):** opened from `main` @ 8af83ac942 after T40's early close; Bob's meter 79%. Runs layer 1, then holds until Bob resumes.
 
 **At T41's opening (K2422):** T40 closed early on Bob's direction (L1–L2 merged; L4–L11 moved here, not started). PR #19 (DEC-188, MERGE U144) is on `main`. `tranche/T41` from `main` @ `8af83ac942`. Drafted by a worker for BOB at the opening, to be reviewed by BOB before it becomes `current.md`.
 

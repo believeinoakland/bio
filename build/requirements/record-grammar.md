@@ -1,6 +1,6 @@
 # record-grammar — requirements
 
-**Status** · In force: worded by BOB (K585, K589), a layer-1 module, with later folds reviewed (DEC folds K1019). Last changed T34 (T34-1: R46 amended; R49 new; K1571, K1576), cross-references re-pointed T35 (K2035); every requirement met.
+**Status** · In force: worded by BOB (K585, K589), a layer-1 module, with later folds reviewed (DEC folds K1019). Last changed T34 (T34-1: R46 amended; R49 new; K1571, K1576), cross-references re-pointed T35 (K2035); every requirement met. Last changed T41's opening (T41-1: R51–R53 new; N820; K2405, K2418, K2420); those marked not yet met (T41).
 
 ## Public
 
@@ -93,6 +93,11 @@ The record's shared grammar, below every module that reads or writes a document:
 
 **T37's addition** (N669; DEC-127 (2), (5), DEC-157 (2)–(4); K1793, K1804)
 - **R50** (amends R38, R49) `PROPOSAL_STATES` gains, after `law_relation`, `translation`: a frozen table of the three keys, each sentence saying, in its state, that the wording is a draft translation of an interface word, shown to members as "Draft" and not the group's wording until a member granted that language adopts it; for `machine_proposed`, that it is machine work, labelled as machine work, which can draft a translation and can never adopt or confirm one. `proposalLabel(proposedBy, "translation")` answers as R38 says; the `RangeError` for an unknown subject names the thirteen subjects. The other tables and their sentences are unchanged.
+
+**T41's additions** (N820; D3, D8, D32; K2405, K2418; `plan/draft-T41-investigation.md` §3.6)
+- **R51** *(not yet met: T41)* `ID_TABLE` gains `STP` (owner `steps`, form `opaque`); `isStepId(v)`.
+- **R52** *(not yet met: T41)* (D3) `ACCEPTANCE_FORMS` is `["as_proposed", "edited", "own_instead"]`, frozen; `acceptanceRecord({proposal, form, by, at, kind})` is the one shape every accepting act records (`steps` R24, `hypotheses` R17, `run-productions` R22, `question-explorer` R6, `investigation` R12, R20, `case-authoring` R64). Where accepting would make a member vouch for a legal or authored statement (an action's reason, a case statement, a testimony), `as_proposed` is refused `ACCEPT_MUST_REAUTHOR` by the act's owner and only `edited` or `own_instead` lands.
+- **R53** *(not yet met: T41)* `ID_TABLE` gains `GUD` (owner `reading-guides`, form `opaque`); `isGuideId(v)`.
 
 ## Private
 
