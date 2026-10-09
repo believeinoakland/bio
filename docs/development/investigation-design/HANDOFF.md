@@ -167,3 +167,7 @@ Numbered entries; BOB answers each in rulings (K) on `tranche/T<n>`. Decision st
 - **D62 A:** accept the whole case in one act or finding by finding. The importer's lens is applied in assessment once D59 exists.
 
 **Open:** D63, whether the four canon-required statements stay (rec A).
+
+## H34 · 2026-10-09 · D63 ruled; the whole design put to Bob for review
+
+**Carries:** D63 A. The four canon-required case statements stay, under D56's check. No question is open. The working document §2 (2.0–2.12) and §3 (Grandview, now through determination, account, approval, publication and import) are put to Bob for his whole-design review, per K2410. When he is content, this lane will say so here. BOB then folds everything into the canon draft (including §2.12's publication content, D55's Action §3 wording and the D56/D57 amendments to Case Making §4a and AI Roles rule 9) for his approval.
