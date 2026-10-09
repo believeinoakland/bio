@@ -2965,14 +2965,18 @@ var USAGE_FIGURES = Object.freeze([
 ]);
 var DETAIL_MAX2 = 200;
 var MESSAGE_MAX = 300;
+var ESTIMATE = "estimated_cost_usd";
+var SUMMED = Object.freeze([...USAGE_FIGURES, ESTIMATE]);
+var finite = (v) => typeof v === "number" && Number.isFinite(v) ? v : null;
 function usageOf(stated) {
   const u = stated && typeof stated === "object" ? stated : {};
-  return Object.fromEntries(USAGE_FIGURES.map((k) => [k, typeof u[k] === "number" && Number.isFinite(u[k]) ? u[k] : null]));
+  return { ...Object.fromEntries(USAGE_FIGURES.map((k) => [k, finite(u[k])])), [ESTIMATE]: null };
 }
+var kept = (u) => Object.fromEntries(SUMMED.map((k) => [k, finite(u[k])]));
 function sumUsage(a, b) {
-  if (!a) return b ? usageOf(b) : null;
-  if (!b) return usageOf(a);
-  return Object.fromEntries(USAGE_FIGURES.map((k) => [k, a[k] == null || b[k] == null ? null : a[k] + b[k]]));
+  if (!a) return b ? kept(b) : null;
+  if (!b) return kept(a);
+  return Object.fromEntries(SUMMED.map((k) => [k, a[k] == null || b[k] == null ? null : a[k] + b[k]]));
 }
 function callsOf(stated) {
   return Number.isInteger(stated) && stated >= 0 ? stated : null;
@@ -3314,17 +3318,47 @@ var MODEL_FOR_MODE = Object.freeze({
   draft: "claude-opus-5"
 });
 var MODEL_MAX_TOKENS = 16e3;
+var rates = (input, output, cache_read, cache_write) => Object.freeze({ input, output, cache_read, cache_write });
+var MODEL_PRICES = Object.freeze({
+  "claude-opus-5": rates(5, 25, 0.5, 6.25)
+});
+var RATE_OF = Object.freeze({
+  input_tokens: "input",
+  output_tokens: "output",
+  cache_read_input_tokens: "cache_read",
+  cache_creation_input_tokens: "cache_write"
+});
+var INPUT_SIDE = Object.freeze(["input_tokens", "cache_read_input_tokens", "cache_creation_input_tokens"]);
+var highest = (r) => Math.max(r.input, r.output, r.cache_read, r.cache_write);
+var TABLE_HIGHEST = Math.max(...Object.values(MODEL_PRICES).map(highest));
+var utf8 = new TextEncoder();
+function estimateCost(usage, { model, serialized, maxTokens }) {
+  const own2 = Object.prototype.hasOwnProperty.call(MODEL_PRICES, model) ? MODEL_PRICES[model] : null;
+  const top = own2 ? highest(own2) : TABLE_HIGHEST;
+  const rate = (figure) => own2 ? own2[RATE_OF[figure]] : top;
+  let usd = 0;
+  for (const k of Object.keys(RATE_OF)) if (usage[k] != null) usd += usage[k] * rate(k);
+  if (INPUT_SIDE.some((k) => usage[k] == null)) {
+    const stated = INPUT_SIDE.reduce((n, k) => n + (usage[k] ?? 0), 0);
+    usd += Math.max(0, utf8.encode(String(serialized ?? "")).length - stated) * top;
+  }
+  if (usage.output_tokens == null)
+    usd += (Number.isInteger(maxTokens) && maxTokens > 0 ? maxTokens : MODEL_MAX_TOKENS) * top;
+  return usd / 1e6;
+}
+var priced = (got, turn) => got && got.usage ? { ...got, usage: { ...got.usage, [ESTIMATE]: estimateCost(got.usage, turn) } } : got;
 var DEFAULT_MAX_SEGMENT_BYTES = 1e9;
 var SEGMENT_BYTES_SOURCE = "D-611 on M-168: CPU binds at ~7-10 ms per MB re-serialised, ~3 GB under the 30 s default; a segment sends at most a third of that";
 var CONVERSATION_MAX_TURNS = 12;
 function segmentMeter({ turnsBound, bytesBound }) {
   return { turns: 0, turnsBound, bytes: 0, bytesBound, stopped: null };
 }
-var LEVELS2 = Object.freeze(["member", "group"]);
+var LEVELS2 = Object.freeze(["member", "project", "group"]);
+var KEY_ONLY = Object.freeze(["project", "group"]);
 function usable(reference) {
   if (!reference || typeof reference !== "object") return null;
   if (reference.level !== void 0 && !LEVELS2.includes(reference.level)) return null;
-  if (reference.level === "group" && reference.kind !== "apikey") return null;
+  if (KEY_ONLY.includes(reference.level) && reference.kind !== "apikey") return null;
   if (reference.kind === "apikey" && typeof reference.key === "string" && reference.key) return { kind: "apikey", secret: reference.key };
   if (reference.kind === "signin" && typeof reference.member === "string" && reference.member)
     return { kind: "signin", member: reference.member };
@@ -3336,7 +3370,7 @@ function precheck(reference, runner) {
   if (!ref) return { refusal: refused(
     null,
     "ACCOUNT_REFERENCE_UNUSABLE",
-    `a model turn runs only under the account reference that serves a member's act: {kind: "apikey", key} or {kind: "signin", member}, the member's own, or the group's API key {kind: "apikey", level: "group", key}`
+    `a model turn runs only under the account reference that serves a member's act: {kind: "apikey", key} or {kind: "signin", member}, the member's own, or a project's or the group's API key {kind: "apikey", level: "project" or "group", key}`
   ) };
   if (ref.kind === "signin" && !runnerBinding(runner)) return { refusal: refused(
     null,
@@ -3400,7 +3434,7 @@ async function converse({
     }));
     const stop = charge(serialized);
     if (stop) return { ...stop, usage, calls };
-    const got = await apikeyTurn(ref.secret, serialized);
+    const got = priced(await apikeyTurn(ref.secret, serialized), { model, serialized, maxTokens: MODEL_MAX_TOKENS });
     if (got.usage) {
       usage = sumUsage(usage, got.usage);
       calls += 1;

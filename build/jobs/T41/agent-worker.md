@@ -32,7 +32,15 @@
 
 **Found in other modules.** None.
 
-Size (session_01CuxSKppmd8ZmgSfSPhpxXR): test runs 8, module lines 2,760 (source; 13,923 all files outside `dist/`)
+
+**After B2 (ANSWER to J1, K2479).** I merged `tranche/T41` @ 15ec91ff1f; R6 now reads as J1 proposed, so no code change was needed. The merge brought agent-model's T41 change (its R13: `estimated_cost_usd` beside the five figures on the API-key path), which staled two things of mine:
+- The committed bundle: regenerated.
+- `ask.test.mjs`' R54 usage check: it now expects agent-model's answer exactly, `USAGE_FIGURES` plus its `ESTIMATE`. This tracks agent-model R13; nothing is weakened.
+Re-run results:
+- `npm test`: 13 files, 0 fail (ask 62/0, requirements 305/0, t41 41/0).
+- fleetbundles: agent-worker passes. The only fails are the plane bundle's staleness, which is inherited red 14 (regenerated at the layer's close), not mine.
+- format, architecture, coverage (63/63) and ownership: 0 failures.
+Size (session_01CuxSKppmd8ZmgSfSPhpxXR): test runs 11, module lines 2,760 (source; 13,923 all files outside `dist/`)
 
 ## J1 · QUESTION
 

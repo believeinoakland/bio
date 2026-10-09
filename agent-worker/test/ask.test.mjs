@@ -12,6 +12,7 @@ import { AI_GRANT_OPS } from "../../bio-plane/src/credentials/index.mjs";
 import { ASK_SCOPE } from "../../bio-plane/src/answers/scope.mjs";
 import { ASK_BOUNDS } from "../../bio-plane/src/run-rules/index.mjs";
 import { MODEL_ENDPOINT, MODEL_FOR_MODE, USAGE_FIGURES } from "../../agent-model/src/model.mjs";
+import { ESTIMATE } from "../../agent-model/src/outcome.mjs";
 import { MEMBER } from "./account.mjs";
 
 let pass = 0, fail = 0;
@@ -188,11 +189,14 @@ section("R54 · interpret, read through the grant, compose, check, and return on
   /* agent-model R6: on the API-key path each request answered counts one call, so each conversation's `calls` is the
      number of requests the model API received for it (reading's offer `done_reading`, composing's `answer`). */
   const requests = (tool) => r.model.filter((c) => (c.body.tools || []).some((x) => x.name === tool)).length;
-  t("R54 (N588): each conversation's usage is reported for mode ask, with its model, its five figures and its calls "
-    + "exactly as agent-model R6 answers them (one per model call that reached the provider)",
+  /* agent-model R13 (T40; K2376): on the API-key path its usage adds the copy's estimate beside the five figures. */
+  const FIGURES = [...USAGE_FIGURES, ESTIMATE];
+  t("R54 (N588): each conversation's usage is reported for mode ask, with its model, its figures (agent-model R13's "
+    + "estimate on the API-key path included) and its calls exactly as agent-model R6 answers them (one per model call "
+    + "that reached the provider)",
     usage.map((u) => [u.mode, u.model, Object.keys(u.usage), u.calls]),
-    [["ask", MODEL_FOR_MODE.ask, USAGE_FIGURES, requests("done_reading")],
-     ["ask", MODEL_FOR_MODE.ask, USAGE_FIGURES, requests("answer")]]);
+    [["ask", MODEL_FOR_MODE.ask, FIGURES, requests("done_reading")],
+     ["ask", MODEL_FOR_MODE.ask, FIGURES, requests("answer")]]);
   t("R54: the turns ran through agent-model under the member's own reference, mode ask's model",
     [[...new Set(r.model.map((c) => c.url))], [...new Set(r.model.map((c) => c.key))], [...new Set(r.model.map((c) => c.body.model))]],
     [[MODEL_ENDPOINT], [SECRET], [MODEL_FOR_MODE.ask]]);
