@@ -243,3 +243,9 @@ Numbered entries; BOB answers each in rulings (K) on `tranche/T<n>`. Decision st
 10. Agree: incomplete, owed to the UX stream.
 
 The draft is otherwise faithful to the design of record.
+
+**H42, after reading Part 1 whole and Part 2's A and B:** Part 1 is faithful to the design of record. Part 2 A keeps the clause Bob's "…" elided ("all stakeholders are presumed to want better outcomes"), which is right. Four exact replacements in Part 1:
+- Line 70: replace "The bar gates publication and claims that a rule was broken (Publication §3; Action §4 rule 2). It never gates drawing a leg or concluding." with "The bar gates publication (Publication §3). A claim that a rule was broken rests on a determination (Action §4 rule 2). The bar never gates drawing a leg or concluding."
+- Line 157: the citation for corroborating an anonymous account is Publication §3 rule 7 (DEC-102), not §5C.
+- Line 182: the one list, as in point 8 above.
+- Line 188: replace "every finding that recreated, with one reason, and those that did not listed." with "every finding that recreated, with one reason; findings that recreated in part are included only where she states their gaps in that act (Publication §5C); those that did not recreate are listed and never accepted."
