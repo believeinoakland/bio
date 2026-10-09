@@ -62,3 +62,7 @@ Everything else is built and pushed: R40–R44 (R40 short of reading-guides' wir
 - `checks/format.mjs`: 0 failures. `checks/architecture.mjs skills`: 2 failures, the `uses` edge above. `checks/coverage.mjs skills`: 44 of 44, 0 failures. `checks/ownership.mjs skills tranche/T41`: 0 failures.
 
 Size (session_01KFVUg5QN5wuokvbEDMZgah): test runs 20, module lines 2,816
+
+## J3 · COMPLETE
+
+T41-27 complete, B4 applied. reading-guides is wired: R16 is registered at load, checkGuide runs at every render, and R16 runs again after it. run-rules R23–R26 are read by key in the investigation layers (it came in with the tranche merge). Tests: skills 105/0, reading-guides and run-rules 83/0. Checks: format, coverage (44/44) and ownership 0. Architecture fails only on the uses edge skills → reading-guides, for you to apply at merge (0 with it). Inherited reds noted for you: answer-envelope's 4 catalogue-totality tests, the same on the tranche base. Details are in my record's Completion section.
