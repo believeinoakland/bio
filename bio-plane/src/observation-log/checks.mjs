@@ -117,8 +117,9 @@ export const AI_RUN_CHECKS = {
     where: 'src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe',
     translation: 'That observation does not say why the look was made. '
       + 'The record keeps what it looked for only when something can be named as the reason — '
-      + 'an investigation, a monitoring sweep, a link in a document, a ratification, or a '
-      + 'lead somebody wrote down. A look with no reason behind it is not recorded.',
+      + 'an investigation, a monitoring sweep, a link in a document, a ratification, an acquisition, '
+      + 'an extraction, a derivation, a lead somebody wrote down, a standing objective, or a step '
+      + 'taken for a question. A look with no reason behind it is not recorded.',
   },
   /* REC-93, 2026-09-14 — THE WARC LESSON, AND THE FALSE-COVERAGE HAZARD FROM
      THE OTHER DIRECTION. `OBSERVATION-LOG-DESIGN.md` §3: *"`PRESENT` with no
