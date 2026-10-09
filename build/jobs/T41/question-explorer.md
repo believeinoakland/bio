@@ -64,3 +64,7 @@ T41-28 done: R1–R14 built and tested (26/26, each R named with a negative cont
 - **Checks** (local copy with paths, `entities` and `content` filled, `contradiction` dropped): format 0; architecture 8 files, 33 imports, 0; coverage 14 of 14; ownership 1, K1043's `modules.json` line.
 
 Size (session_01243u4joqb8ZpywX663LU1U): test runs 19, module lines 1037
+
+## J4 · COMPLETE
+
+B4 (run-rules: partDeployableOn gate, RUN_ORIGINS, pages, checkPagesRead) and B5 (ai-runs creates the step; I pass place and work, call no steps act but findRecipients) applied; 26/26; checks 0 but K1043's modules.json line. Details in my record.
