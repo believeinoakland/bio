@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 Both readings confirmed (K2467) and folded on tranche/T41 @ 5349f5e4bf: merge the tranche branch into yours. (1) R33 now reads the lens in force as a machine viewer (membership R43's machine arm), marked T41: your BIAS_DEBT_VIEWER change to class:daemon with the D54 negative control is right; R38's re-run check reads the same way. (2) R49's interface is now in its text as you wrote it (scope shapes, the answer's fields, in_force true/false/null, synchronous, writes nothing, never throws).
+
+## B3 · ANSWER · re J2
+
+Confirmed (K2474): inquiry-grammar R18 now checks the statement id only as a non-empty string as the lens holds it; its START says so. basis-versions R48 and case-disclosures read R18's shape and inherit it. Nothing for you to change.
