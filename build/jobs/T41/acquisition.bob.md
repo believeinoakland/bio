@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 638 KB by `build/plan/read
 Merge order in L3: provenance, provenance-routes, capture-sources, acquisition, capture, file-safety (`modules.json` order; provenance provides R63 to capture).
 Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · CHANGE
+
+N825 (K2453), re-opening your job: export R10's capture size limit as CAPTURE_MAX (256 MiB, the one constant; K231) from your module, with a test naming R10 that the export equals the limit R10 enforces. No requirement change beyond R10 naming the export. Then record COMPLETE again; capture (CAPTURE #25) will read it.
