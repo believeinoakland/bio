@@ -18,8 +18,8 @@
  * captures nothing itself (R3); it names no place in behaviour or outward text (R8); and it never decides the gate
  * from a group's own test investigations (R11).
  *
- * Providers built in T41 alongside it (the T41 services of `ai-runs`,
- * `capture-requests`, `run-productions`) are taken through `deps` and read by their requirements' names; where one is
+ * Providers built in T41 alongside it (the T41 services of `ai-runs` and
+ * `capture-requests`) are taken through `deps` and read by their requirements' names; where one is
  * absent the module fails closed: the gate stays shut and nothing is explored. */
 
 import { recordOf, stampInstant } from "../record-core/index.mjs";
@@ -34,6 +34,7 @@ import { aiRunsOf } from "../ai-runs/index.mjs";
 import { captureRequestsOf } from "../capture-requests/index.mjs";
 import { stepsOf } from "../steps/index.mjs";
 import { aiUseOf } from "../ai-use/index.mjs";
+import { runProductionsOf } from "../run-productions/index.mjs";
 import * as runRules from "../run-rules/index.mjs";
 import { localDay } from "../civil-time/index.mjs";
 import { parseFrontmatter, isMachineIdentity, ACCEPTANCE_FORMS, acceptanceRecord, canonicalJson, sha256HexSync }
@@ -62,8 +63,6 @@ export const EXPLORE_USE = "explore";
 export const EXPLORE_MODE = "investigate";
 /** R7, R11: the AI part the test bar is recorded for (`ai-runs` R75). */
 export const EXPLORE_TEST_PART = "explore";
-/** R13: "a few pages at a time". */
-export const EXPLORE_PAGES_AT_ONCE = 5;
 /** The bounds an exploring run declares at its open (`ai-runs` R9, `run-rules` R3's list form; `pages` is R26's). */
 export const EXPLORE_BOUNDS = Object.freeze([
   Object.freeze({ bound: "fetches", allowed: 20 }),
@@ -90,7 +89,7 @@ const bareMember = (v) => { const m = /^member:([A-Za-z0-9._:-]{1,128})$/.exec(S
 
 export class QuestionExplorer {
   constructor({ storage, record, membership, credentials, connections, retrieval, inquiry, legEarning, basisVersions,
-                steps = null, aiUse = null, aiRuns, captureRequests = null,
+                steps = null, aiUse = null, aiRuns, captureRequests = null, runProductions = null,
                 held = null, testSet = runRules.CIVICSMITH_TEST_SET, principal = EXPLORE_PRINCIPAL, now = null }) {
     this.storage = storage;
     this.sql = storage.sql;
@@ -106,6 +105,7 @@ export class QuestionExplorer {
     this.aiUse = aiUse;
     this.aiRuns = aiRuns;
     this.captureRequests = captureRequests;
+    this.runProductions = runProductions;
     this.principal = principal;
     this.now = typeof now === "function" ? now : () => Date.now();
     /* R7: what the record holds for the deploy gate, `{verifications, testBars}` (the shape `run-rules`' `partDeployable`
@@ -628,57 +628,31 @@ export class QuestionExplorer {
 
   /* ---------------------------------------------------------------- R13: reading inside documents */
 
-  /** R13: the run reads inside a held document, a few pages at a time within its `pages` bound (`run-rules` R26),
-   *  never a document under a "no AI" material limit (`credentials` R57, for `read` or `explore`). Answers how far it
-   *  has read; what it proposes while reading is `run-productions` R21's, under the step this answer names. */
-  read({ run, bundleId, pages = 1, caller = null, at = null } = {}) {
+  /** R13: the run reads inside a held document through `run-productions` (its R24 `readPages`): a few pages at a time
+   *  within the run's `pages` bound (`run-rules` R26), never a document under a "no AI" material limit on `read`
+   *  (`credentials` R57; run-productions asks `run-rules`' `checkPagesRead`, the one site), and says how far it read.
+   *  Asked here first: the document is within the paying account's sight (R3), and no limit keeps it from `explore`.
+   *  What it proposes while reading is `run-productions` R21's, under the step this answer names. */
+  read({ run, bundleId, from = null, caller = null, at = null } = {}) {
     const live = this.#liveRun(run, caller);
     if (live.refusal) return live.refusal;
     const r = live.run;
     const id = str(bundleId);
     const b = id ? this.#one(`SELECT object_type, project FROM bundles WHERE bundle_id=?`, id) : null;
     if (!b || b.object_type !== "information" || !this.#ownerSees(r.owner, id))
-      return { ok: false, reason: "NO_SUCH_BUNDLE", code: "NO_SUCH_BUNDLE", target: id, detail: "no held document by that id is in the paying account's sight" };
-    const project = str(b.project);
-    /* `run-rules` R26's one refusal for a read under a "no AI" limit (`checkPagesRead`, AI_RUN_READ_NO_AI), over the
-       limits that bind this document: the group's, and its project's when it keeps from `read` (`credentials` R57); a
-       limit that cannot be read keeps (fail closed). */
-    const limits = [];
-    try { limits.push(this.credentials.aiKeepAwayState()); } catch { limits.push({ on: null }); }
-    if (project) {
-      let kept = null;
-      try { kept = this.credentials.projectsKeptAway({ use: "read" }); } catch { kept = null; }
-      if (!Array.isArray(kept) || kept.includes(project)) limits.push({ on: true, uses: ["read"] });
-    }
-    const noAi = runRules.checkPagesRead({ limits });
-    if (noAi) return { ...noAi, run: r.run, target: id };
-    /* And exploring's own use: a document kept from `explore` by the group or its project. */
+      return { ok: false, reason: "NO_SUCH_BUNDLE", code: "NO_SUCH_BUNDLE", target: id,
+               detail: "no held document by that id is in the paying account's sight" };
     let k = null;
-    try { k = this.credentials.aiKeptAway({ project, use: EXPLORE_USE }); }
+    try { k = this.credentials.aiKeptAway({ project: str(b.project), use: EXPLORE_USE }); }
     catch { k = { code: "AI_KEPT_AWAY" }; }
     if (k) return this.#refuse("EXPLORE_READ_KEPT_AWAY", "a material limit keeps this document from exploring",
                                { run: r.run, target: id, kept_away: { code: k.code ?? null, use: EXPLORE_USE } });
-    const n = Number(pages);
-    const prior = this.#one(`SELECT through FROM explore_reads WHERE run=? AND bundle_id=?`, r.run, id);
-    const from = prior ? Number(prior.through) : 0;
-    if (!Number.isSafeInteger(n) || n < 1 || n > EXPLORE_PAGES_AT_ONCE)
-      return this.#refuse("EXPLORE_PAGES_BOUND", `a read asks 1 to ${EXPLORE_PAGES_AT_ONCE} pages at a time`, { run: r.run, target: id, read_through: from });
-    const bound = this.aiRuns.boundOf(r.run, "pages");
-    if (!bound || Number(bound.consumed) + n > Number(bound.allowed))
-      return this.#refuse("EXPLORE_PAGES_BOUND", "the run's pages bound would be passed", { run: r.run, target: id, read_through: from,
-        allowed: bound ? Number(bound.allowed) : 0, consumed: bound ? Number(bound.consumed) : 0 });
-    const iso = this.#iso(at);
-    const done = this.record.transact(() => {
-      const spent = this.aiRuns.consumeBound(r.run, "pages", n);
-      if (spent && spent.ok === false) return spent;
-      this.sql.exec(`INSERT INTO explore_reads (run, question, bundle_id, through, at) VALUES (?,?,?,?,?)
-                     ON CONFLICT(run, bundle_id) DO UPDATE SET through=excluded.through, at=excluded.at`,
-                    r.run, r.question, id, from + n, iso);
-      return { ok: true };
-    });
-    if (done && done.ok === false) return done;
-    return { ok: true, run: r.run, step: r.step, target: id, from, through: from + n,
-             proposals: "run-productions R21, under this step" };
+    if (!this.runProductions || typeof this.runProductions.readPages !== "function")
+      return this.#refuse("EXPLORE_NO_RUN", "the reading door is not in place", { run: r.run });
+    const read = this.runProductions.readPages({ run: r.run, bundleId: id, ...(from === null ? {} : { from }),
+                                                 viewer: this.principal, caller: caller ?? this.principal,
+                                                 ...(at ? { at } : {}) });
+    return read && read.ok !== false ? { ...read, step: r.step } : read;
   }
 
   /* ---------------------------------------------------------------- R8, R12: the end */
@@ -877,6 +851,7 @@ export function questionExplorerOf(host, deps) {
       basisVersions: d.basisVersions || basisVersionsOf(host),
       aiRuns: d.aiRuns || aiRunsOf(host),
       captureRequests: d.captureRequests || captureRequestsOf(host),
+      runProductions: d.runProductions || runProductionsOf(host),
       steps: d.steps || stepsOf(host, { record, membership }), aiUse: d.aiUse || aiUseOf(host, { record, membership }),
       held: d.held || null, ...(d.testSet ? { testSet: d.testSet } : {}),
       principal: d.principal || EXPLORE_PRINCIPAL, now: d.now || null,

@@ -17,6 +17,7 @@ import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { legEarningOf } from "../../../src/leg-earning/index.mjs";
 import { stepsOf } from "../../../src/steps/index.mjs";
 import { aiUseOf } from "../../../src/ai-use/index.mjs";
+import { runProductionsOf } from "../../../src/run-productions/index.mjs";
 import { questionExplorerOf } from "../../../src/question-explorer/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
@@ -100,7 +101,7 @@ export function world({ gateOpen = true, testSet = TEST_SET } = {}) {
   const note = (name, a) => calls.push({ name, a });
   const w = {
     st, host, record, membership, credentials, clock, calls,
-    subjects: {}, asserted: {}, conns: [], captures: {}, held: new Set(),
+    subjects: {}, units: {}, asserted: {}, conns: [], captures: {}, held: new Set(),
     steps: [], runs: new Map(), bounds: new Map(),
     /* What the record holds for the deploy gate (run-rules R19, R75's records) over a test set with one matter. */
     testBars: [bar("investigate"), bar("explore")], verifications: [VERIFIED_CHECK],
@@ -153,6 +154,13 @@ export function world({ gateOpen = true, testSet = TEST_SET } = {}) {
         steps.stepEnd({ step: r.step, end: a.stepEnd, ...(a.stepEnd === "set_aside" ? { reason: a.reason } : {}), by: r.principalPlane });
       }
       return { ok: true, run: a.run, actual: { usd: 0.42 } };
+    },
+    /* R28: the run as run-productions reads it (sight through membership, as ai-runs answers it). */
+    runFor(run, viewer) {
+      const r = typeof run === "string" ? w.runs.get(run.trim()) : null;
+      if (!r || !membership.inSight(r.contextId, viewer)) return null;
+      return { run: r.run, status: r.status === "running" ? "running" : "stopped", mode: r.mode, context_type: r.contextType,
+               context_id: r.contextId, principal_plane: r.principalPlane, principal_claude: r.principalClaude };
     },
     boundOf(run, bound) { const b = w.bounds.get(`${run}|${bound}`); return b ? { ...b } : null; },
     consumeBound(run, bound, n) {
@@ -209,8 +217,18 @@ export function world({ gateOpen = true, testSet = TEST_SET } = {}) {
   const realAiUse = aiUseOf(host, { record, membership, credentials, connections, zone: "UTC" });
   const aiUse = Object.fromEntries(["exploreAllowed", "exploreAsk", "estimate", "exploreApprove", "exploreAsksPending"]
     .map((k) => [k, (a) => { note(k, a); return realAiUse[k](a); }]));
+  /* run-productions is the real module (merged, K2499): R24 `readPages` over the real credentials' limits and
+     ai-runs' bounds (the stand-in's `runFor`, `boundOf`, `consumeBound`), a document's capture and its text units
+     answered by content's and extraction's stand-ins (`w.units`). */
+  const runProductions = runProductionsOf(host, {
+    record, membership, connections, aiRuns, credentials, steps: realSteps, legEarning,
+    content: { captureFor: (b) => Object.keys(w.captures).find((c) => w.captures[c] === b) ?? null },
+    extraction: { unitsOf: (sha) => ({ units: w.units[sha] || [], state: "indexed" }) },
+    strength: {}, citation: {}, basisVersions: { onCandidates: () => ({ ok: true }) }, now: () => Date.parse(clock.now) });
+  runProductions.migrate();
   const p = questionExplorerOf(host, {
     record, membership, credentials, connections, retrieval, inquiry, legEarning, basisVersions, aiRuns, captureRequests,
+    runProductions,
     steps: realSteps, aiUse,
     held: () => { note("held", {}); return { verifications: w.verifications, testBars: w.testBars }; },
     testSet,
@@ -260,7 +278,12 @@ export function world({ gateOpen = true, testSet = TEST_SET } = {}) {
   };
   /* A project draws on a question: its document cites it (connections' `refs`, R58). */
   w.draw = (question, project) => st.sql.exec(`INSERT OR IGNORE INTO refs (bundle_id, target_id, kind) VALUES (?, ?, 'cites')`, project, question);
-  w.doc = (id, cap, { project = null } = {}) => { w.bundle(id, "information", null, { project }); w.captures[cap] = id; return cap; };
+  w.doc = (id, cap, { project = null, pages = 3 } = {}) => {
+    w.bundle(id, "information", null, { project });
+    w.captures[cap] = id;
+    w.units[cap] = Array.from({ length: pages }, (_, i) => ({ extent: { kind: "pdf-page", page: i }, ref: `page ${i + 1}`, text: `text of page ${i + 1}` }));
+    return cap;
+  };
   w.entity = (id, kind) => { st.sql.exec(`INSERT OR REPLACE INTO entities (entity_id, kind, at) VALUES (?, ?, 't')`, id, kind); return id; };
   w.resolve = (cap, bundleId, entity) =>
     st.sql.exec(`INSERT INTO resolutions (capture_sha, bundle_id, ref, entity_id, grade, established) VALUES (?, ?, 'r', ?, 'B', 1)`,

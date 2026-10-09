@@ -26,7 +26,8 @@ export const EXPLORE_CHECKS = Object.freeze({
     + "with a short account of how. Nothing was offered."),
   /* R13: a document under a "no AI" material limit. */
   EXPLORE_READ_KEPT_AWAY: row("read", "This document is kept away from the assistant, so the system did not read it."),
-  /* R13: a read past the run's `pages` bound, or a run that declared none. */
+  /* R13: a read past the run's `pages` bound. Retired at B8 (K2499): `run-productions` R24 mints the pages refusals;
+     the row stays so no number is reused, and nothing here mints it. */
   EXPLORE_PAGES_BOUND: row("read", "This exploring run has read as many pages as it may. It stopped where it was."),
   /* R6: a door asked of a find the member cannot see or that was not offered to her (answered as absent). */
   EXPLORE_NO_SUCH_FIND: row("doors", "No find by that name was offered to you. Nothing was recorded."),

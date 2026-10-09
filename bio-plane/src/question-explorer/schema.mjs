@@ -77,16 +77,6 @@ CREATE TABLE IF NOT EXISTS explore_considered (
   PRIMARY KEY (question, owner, day)
 );
 
--- R13: how far a run has read inside each held document, a few pages at a time.
-CREATE TABLE IF NOT EXISTS explore_reads (
-  run       TEXT NOT NULL,
-  question  TEXT NOT NULL,
-  bundle_id TEXT NOT NULL,
-  through   INTEGER NOT NULL,
-  at        TEXT NOT NULL,
-  PRIMARY KEY (run, bundle_id)
-);
-
 -- R6: a member's own doors on a find: muted (a follower outside every drawing project) or accepted (record-grammar
 -- R52's record). One row per find, question and member.
 CREATE TABLE IF NOT EXISTS explore_doors (
@@ -109,7 +99,6 @@ export const QUESTION_EXPLORER_TABLES = Object.freeze([
   { name: "explore_finds", keys: ["question", "bundle_id", "bundle_b"] },
   { name: "explore_doors", keys: ["question"] },
   { name: "explore_considered", keys: ["question"] },
-  { name: "explore_reads", keys: ["question", "bundle_id"] },
 ]);
 
 /** The module's tables, created where absent. */
