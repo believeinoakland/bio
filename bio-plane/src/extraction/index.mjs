@@ -1449,15 +1449,21 @@ export class Extraction {
             w = { ok: true, staled, observed, compared: out.kept ? out.kept.compared : null, afterRead,
                   indexed: { written: out.indexed.written, offered: out.indexed.offered, over_bound: out.indexed.over_bound } };
           }
-        } catch { w = { ok: false }; }
+        } catch { w = { ok: false, rolledBack: true }; }
         structure.text = t3.i2text;
         structure.tier = t3.wiredTier;
         if (t3.ocrNote) structure.notes = [...structure.notes, t3.ocrNote];
         structure.reextraction = {
           performed: true, written: w.ok === true, cost,
-          ...(w.ok === true ? {} : { why: "the record's reading of this capture could not be written (it was no "
-                                        + "longer held for this caller when the write arrived), so the text above "
-                                        + "was read and NOT recorded" }),
+          /* Two different facts, never answered alike: the capture left the caller's sight before the write, or
+             the write ran and was rolled back whole (a listener refused it, R24), so nothing of it was kept. */
+          ...(w.ok === true ? {} : w.rolledBack === true
+            ? { why: "the record's reading of this capture could not be written: the write was refused while it ran "
+                   + "and rolled back whole, so the text above was read and NOT recorded, and nothing the re-read "
+                   + "would have changed was changed" }
+            : { why: "the record's reading of this capture could not be written (it was no "
+                   + "longer held for this caller when the write arrived), so the text above "
+                   + "was read and NOT recorded" }),
           pages: t3.filled, engine: t3.engine,
           text_source: chain, chain: describeChain(chain),
           reading: { content_type: reading.content_type, read_from_text: reading.read_from_text,
