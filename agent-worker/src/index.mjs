@@ -387,15 +387,18 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
       + "member opens no run: a run's identity and its conditions are the plane's, and a member that "
       + "could open one would be a machine deciding what it was formed under.", 404, { run_id: runId }) };
 
-  /* R10, R57 (K1502, K1503, K1755) — THE RECORD'S ACCOUNT HOLDER AND THE MEMBER WHOSE ACT THE ARRIVED ACCOUNT SERVES
-     MUST BE THE SAME MEMBER. The run records the member whose act started it (a standing question's author) as its
-     account holder (`session.principal.claude`); this segment was handed the account that serves one member's act:
+  /* R10, R57 (K1502, K1503, K1755) — THE MEMBER WHOSE ACT THE RUN RECORDS AND THE MEMBER WHOSE ACT THE ARRIVED ACCOUNT
+     SERVES MUST BE THE SAME MEMBER. (T41; ai-runs R52, K2489) The run records the member whose act started it (a
+     standing question's author) as `session.principal.ref` (`principal_claude_ref`, `member:<id>`) and the owner who
+     pays as `session.principal.claude` (`member:<id>`, `project:<id>` or `group`), which is read here never: a run the
+     group's or a project's key pays is still that member's act. This segment was handed the account that serves one
+     member's act:
      that member's own reference, or the group's or a project's API key (`level: "group"`, `"project"`, R71), which
      serves that member's act and never the group's or the project's own, so the run stays that member's act. When the two members differ, driving on would spend one
      member's act on another's run, which K1502 forbids and nobody could audit. Refused before any step, naming both
      members (ids, never a secret); this member re-words neither. Every segment carries an account (R6), the stubbed
      `judgements` path included, so the check is made on every segment. */
-  const recordedPayer = session.principal?.claude ?? null;
+  const recordedPayer = session.principal?.ref ?? null;
   if (account && recordedPayer !== account.member)
     return { refusal: refusal("RUN_NAMES_A_DIFFERENT_PAYER",
       `the run's own record says it is the act of ${JSON.stringify(recordedPayer)}, but the Claude account handed to `

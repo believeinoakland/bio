@@ -167,7 +167,7 @@ export default {
       return Response.json({ ok: true, result: { run: url.searchParams.get("run"), found: true, session: {
         id: url.searchParams.get("run"), mode: CFG.mode === undefined ? "check" : CFG.mode, status: S.status, context: runCtx(CFG),
         ...(CFG.maxPasses != null ? { max_passes: CFG.maxPasses } : {}),
-        principal: { plane: "member:ruth", claude: CFG.payer ?? "member:ruth", ref: null, skill: CFG.skill ?? null },
+        principal: { plane: "member:ruth", claude: CFG.owner ?? CFG.payer ?? "member:ruth", ref: CFG.payer ?? "member:ruth", skill: CFG.skill ?? null },
         state: S.state,
         budget: Object.entries(S.budget).map(([bound, b]) => ({ bound, allowed: b.allowed, consumed: b.consumed, unit: null })),
       } } });

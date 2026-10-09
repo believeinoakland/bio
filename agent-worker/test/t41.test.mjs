@@ -58,7 +58,7 @@ function plane(cfg = {}) {
       case "askusage": return ok({ ok: true });
       case "whoami": return ok({ tokenClass: "ai", session: false, member: null });
       case "airun": return ok({ found: true, session: { id: "RUN-41", mode: "check", status: S.status, max_passes: 1,
-        principal: { plane: cfg.payer ?? MEMBER, claude: cfg.payer ?? MEMBER, skill: PACK.version },
+        principal: { plane: cfg.payer ?? MEMBER, claude: cfg.owner ?? cfg.payer ?? MEMBER, ref: cfg.payer ?? MEMBER, skill: PACK.version },
         context: { type: "inquiry", id: "INQ-1" },
         budget: [{ bound: "fetches", allowed: 9 }, { bound: "subsessions", allowed: 9 }, { bound: "wallclock", allowed: 9e5 },
                  { bound: "runtime", allowed: 900 }].map((b) => ({ ...b, consumed: 0 })) } });
@@ -221,6 +221,39 @@ section("R10, R57, R71 · a run is continued only under the account serving the 
   const right = await drive("run", stubbed(PKEY(SAM)), { planeCfg: { payer: SAM } });
   t("R10, R57, R71 (control): the project's key serving Sam's own act on Sam's run drives, still Sam's act",
     [right.status, right.out?.claude_account?.member, right.out?.claude_account?.level], [200, SAM, "project"]);
+}
+
+section("R10, R57 (ai-runs R52, K2489) · the run's member is principal.ref; principal.claude names who pays and is never compared");
+{
+  const GROUP = (member = MEMBER) => ({ kind: "apikey", level: "group", secret: MEMBER_KEY, member });
+  const pk = await drive("run", stubbed(PKEY()), { planeCfg: { owner: `project:${PROJECT}` } });
+  t("R10, R57, R71: a run the project's key pays (principal.claude project:<id>, principal.ref Ruth) drives on that key "
+    + "serving Ruth's act", [pk.status, pk.out?.claude_account?.level, pk.out?.claude_account?.member], [200, "project", MEMBER]);
+  const ps = await drive("run", stubbed(PSIGNIN()), { planeCfg: { owner: `project:${PROJECT}` } });
+  t("R10, R57, R71: a run the project's sign-in pays drives on it, Ruth's own", [ps.status, ps.out?.claude_account?.kind], [200, "signin"]);
+  const g = await drive("run", stubbed(GROUP()), { planeCfg: { owner: "group" } });
+  t("R10, R57: a run the group's key pays (principal.claude group) drives on that key serving Ruth's act",
+    [g.status, g.out?.claude_account?.level, g.out?.claude_account?.member], [200, "group", MEMBER]);
+  const gSam = await drive("run", stubbed(GROUP(MEMBER)), { planeCfg: { owner: "group", payer: SAM } });
+  t("R10, R57 (control): the group's key serving Ruth's act on a group-paid run of Sam's is refused, recorded naming "
+    + "principal.ref, never the owner who pays",
+    [gSam.status, gSam.out?.code, gSam.out?.recorded, gSam.out?.supplied], [409, "RUN_NAMES_A_DIFFERENT_PAYER", SAM, MEMBER]);
+  const pSam = await drive("run", stubbed(PKEY(MEMBER)), { planeCfg: { owner: `project:${PROJECT}`, payer: SAM } });
+  t("R10, R57, R71 (control): the project's key serving Ruth's act on a project-paid run of Sam's is refused the same way",
+    [pSam.status, pSam.out?.code, pSam.out?.recorded], [409, "RUN_NAMES_A_DIFFERENT_PAYER", SAM]);
+}
+
+section("R26 (ai-runs R72, agent-model R13) · a tick's usage carries agent-model's figures as it answers them, the estimate included");
+{
+  const usageOf = (r) => r.plane.filter((c) => c.op === "airuntick").flatMap((c) => c.body?.usage || []);
+  const k = await drive("run", runBody(PKEY()));
+  const ku = usageOf(k);
+  t("R26: on a project's key every usage entry carries estimated_cost_usd, a number, beside the five figures",
+    [ku.length > 0, ku.every((e) => typeof e.usage?.estimated_cost_usd === "number")], [true, true]);
+  const s = await drive("run", runBody(PSIGNIN()));
+  const su = usageOf(s);
+  t("R26 (control): on a project's sign-in every entry carries estimated_cost_usd as null, passed as agent-model answers it",
+    [su.length > 0, su.every((e) => e.usage && "estimated_cost_usd" in e.usage && e.usage.estimated_cost_usd === null)], [true, true]);
 }
 
 section("R71, R57 · model turns on a project's account: its key to the Messages API, its sign-in as the member's own in that member's runner");

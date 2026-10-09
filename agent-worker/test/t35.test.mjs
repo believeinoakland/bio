@@ -79,7 +79,7 @@ function plane(cfg = {}) {
       case "airun": return ok({ found: true, session: { id: u.searchParams.get("run"), mode: cfg.mode ?? "check",
         label: `a run labelled ${SENT}`, status: S.status, plan: cfg.mode === "plan" ? PLAN_ID : null,
         context: cfg.mode === "plan" ? { type: "project", id: PROJECT, questions: [] } : { type: "inquiry", id: "INQ-T35" },
-        max_passes: cfg.maxPasses ?? 1, principal: { plane: MEMBER, claude: MEMBER, skill: PACK.version },
+        max_passes: cfg.maxPasses ?? 1, principal: { plane: MEMBER, claude: MEMBER, ref: MEMBER, skill: PACK.version },
         state: S.state, budget: WIDE.map((b) => ({ ...b, consumed: 0 })) } });
       case "airunlog": return ok({ found: true, entries: [{ seq: 1, detail: doc }], truncated: false });
       case "airunspawn": return ok({ found: true, half: "search", payload: { run: u.searchParams.get("run"),

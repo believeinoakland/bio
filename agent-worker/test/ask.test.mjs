@@ -57,7 +57,7 @@ function plane(cfg = {}) {
       case "askusage": return ok({ ok: true });
       case "whoami": return ok({ tokenClass: "ai", session: false, member: null });
       case "airun": return ok({ found: true, session: { id: "RUN-A", mode: "check", status: S.status, max_passes: 1,
-        principal: { plane: MEMBER, claude: MEMBER, skill: PACK.version }, context: { type: "inquiry", id: "INQ-1" },
+        principal: { plane: MEMBER, claude: MEMBER, ref: MEMBER, skill: PACK.version }, context: { type: "inquiry", id: "INQ-1" },
         budget: [{ bound: "fetches", allowed: 9 }, { bound: "subsessions", allowed: 9 }, { bound: "wallclock", allowed: 9e5 },
                  { bound: "runtime", allowed: 900 }].map((b) => ({ ...b, consumed: 0 })) } });
       case "airunlog": return ok({ found: true, entries: [], truncated: false });

@@ -496,7 +496,7 @@ export default {
     if (op === "airun")
       return Response.json({ ok: true, result: { session: {
         id: url.searchParams.get("run"), mode: "check", status: "running",
-        principal: { plane: "member:ruth", claude: "member:ruth" },
+        principal: { plane: "member:ruth", claude: "member:ruth", ref: "member:ruth" },
         context: { type: "inquiry", id: "INQ-1" }, max_passes: 1,
         budget: [{ bound: "fetches", allowed: 50, consumed: 0 },
                  { bound: "subsessions", allowed: 50, consumed: 0 },

@@ -39,6 +39,9 @@ const ARMS = [
     to: `async function accountOf(body) {\n  if (body.question && body.account?.kind === "signin") return { refusal: refusal("BAD_ACCOUNT", "x", 400) };` },
   { name: "a project carried at another level taken", file: INDEX, ids: ["R6", "R71"],
     from: ": a.project !== undefined)", to: ": false)" },
+  { name: "the payer compared against principal.claude (who pays) instead of principal.ref (whose act)", file: INDEX,
+    ids: ["R10", "R57"], from: "const recordedPayer = session.principal?.ref ?? null;",
+    to: "const recordedPayer = session.principal?.claude ?? null;" },
 ];
 
 const pick = process.argv[2] ? [Number(process.argv[2])] : ARMS.map((_, i) => i + 1);

@@ -45,7 +45,18 @@ Re-run results:
 - (1) Was already done after B2: `ask.test.mjs`' R54 check expects R13's sixth figure.
 - (2) I had regenerated my own bundle (`agent-worker/dist`; the manifest lists agent-worker as its owner) after B2, before B3 arrived. It is byte-identical to a fresh build at this head, so R45 reads green and there is no accepted red to name. BOB's regeneration at L6's close will produce the same bytes, or replace them.
 - `npm test`: 13 files, 0 fail.
-Size (session_01CuxSKppmd8ZmgSfSPhpxXR): test runs 12, module lines 2,760 (source; 13,923 all files outside `dist/`)
+
+**After B4 (CHANGE, from AI-RUNS #14 J3, K2489) and B5.** I merged `tranche/T41` (8ebe11131c).
+- **R10 now compares against `principal.ref`.** It compares `account.member` against the run's `session.principal.ref` (`principal_claude_ref`, the member whose act it is), never `principal.claude`. Once ai-runs merges, `claude` names the paying owner (`member:<id>`, `project:<id>` or `group`). `recorded` now carries `principal.ref`.
+- **Test mocks:** every plane mock in this module's tests (11 files) now publishes `ref` as the member whose act it is; `requirements.test.mjs` and `t41.test.mjs` can set the paying owner apart (`owner`).
+- **`account.level` `project` and `suggestions` false:** these were already taken (R71, above). A project's account with `suggestions` false is accepted at both kinds, and nothing refuses a project's key for its switch.
+- **`estimated_cost_usd` in usage (R26):** passed through exactly as agent-model answers it. It is tested on the tick: a number on a project's key, null on a project's sign-in.
+- **New in `t41.test.mjs`** (48/0, was 41): runs paid by the group's or a project's key drive on that key serving the member's act, and the controls refuse a mismatch, naming `principal.ref`; plus R26's estimate on the key and on the sign-in.
+- **New control arm 8** (R10 reading `principal.claude` again) fails the suite: `t41.control.mjs` 8/0.
+- **`npm test`:** 13 files; every suite 0 fail except `requirements.test.mjs` 303/2. The 2 are R45 (the committed bundle is stale: run-rules' merge and this change's `src/index.mjs`). That red is accepted by name, as B4 says: BOB regenerates at L6's close, and I did not regenerate.
+- No other suite drives this member's `/run` with a real plane: `d260-resume` and `fence-e2e` no longer exist; `git grep` finds only `fleetbundles` and `newgroup`'s wizard reading its files.
+- **For BOB (wording):** R10's text still names `session.principal.claude`. It wants `session.principal.ref` (ai-runs R52, K2489).
+Size (session_01CuxSKppmd8ZmgSfSPhpxXR): test runs 16, module lines 2,760 (source; 13,923 all files outside `dist/`)
 
 ## J1 · QUESTION
 

@@ -143,7 +143,7 @@ export default {
         id: run, mode: "check", status: "running", max_passes: 1,
         context: { type: "inquiry", id: "INQ-1" },
         principal: { plane: "member:ruth", claude: run === "run-sam" ? "member:sam" : "member:ruth",
-                     ref: null, skill: "investigative-session@1" },
+                     ref: run === "run-sam" ? "member:sam" : "member:ruth", skill: "investigative-session@1" },
         budget: [{ bound: "fetches", allowed: 50, consumed: 0 },
                  { bound: "subsessions", allowed: 50, consumed: 0 },
                  { bound: "wallclock", allowed: 500000, consumed: 0 },
