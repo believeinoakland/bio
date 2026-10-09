@@ -45,3 +45,13 @@ Built and pushed everything but R19's production warning wiring (J1 (1), still o
 ## J3 · COMPLETE
 
 T41-16 applied (R14 amended, R16–R21; B2 taken: R19 calls inquiry.personWarning, reached optionally). hypotheses tests 46: 45 pass, 1 named red until inquiry's merge (t41 'R19 with no test injected…'). Checks: format, architecture, coverage 21/21, ownership 0. Other modules: control-plane r53-routes:67 red until T41-58 (J2 (b)); no set-aside op in op-declarations R43 (J2 (a)). Record: Completion.
+
+## Completion again (B5 CHANGE; HYPOTHESES #5)
+
+Merged `tranche/T41` @ dc41a13858 (inquiry merged, K2498). R19's warning is now inquiry's own: `personWarning({text, entities, viewer})` over `inquiry.personFacts({text, viewer})` (the record's facts for the persons the note names, read as its author), the host's inquiry instance reached when first asked (`deps.inquiry` for a test); a read that throws warns nothing and refuses nothing. The test fixture gives a stand-in `personFacts` (its world builds none of the modules beneath inquiry; the real inquiry built there fails its promotions on missing tables), so the suite drives inquiry's real `personWarning` over facts shaped as `personFacts` answers them.
+
+**Named red cleared**: `t41.test.mjs` "R19 with no test injected…" is replaced by "R19 with no stand-in test, noteShare asks inquiry R59's own personWarning…" (a person in no public role warns, one in a public role and none named do not; asked of the note's words as its author; recorded with the share), green.
+
+**Ran.** `node --test bio-plane/test/m/hypotheses/`: tests 46, pass 46, fail 0. control-plane `r53-routes.test.mjs`:67 still red, accepted by name until T41-58 (B3). Checks: format 0; architecture 0 (12 files, 40 imports); coverage 21 of 21; ownership 0 (7 files).
+
+Size (session_01SNmT525iDHSzNtvbkS4m7u): test runs 18, module lines 1,104
