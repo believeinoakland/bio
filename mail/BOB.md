@@ -408,3 +408,6 @@ T40 opened (K2389) and its requirement text is adopted (K2394, build/plan/draft-
 
 ## B121 · QUESTION · 2026-10-08 · session_017eYwzMF5vwqLhpqcuC3iU8 · secondary
 Two readings of DEC-186 (yours), built meanwhile on the first reading of each (K2394); tell me if either is wrong. (1) Earlier handles: a handle any member held before stays taken for every other member, so "formerly mai-k" never names two members; a member may take back their own earlier handle. Alternative: an earlier handle becomes free after a period. (2) "Their work appears in a published case": the handle is fixed once the member is signer, deliverer or preparer of a published (or signed and waiting) case, or is named by handle in its rows (attestations or attributions at cover or name, member ties); work credited only at group or project level leaves the handle changeable. Alternative: any work a published case carries, named or not.
+
+## B122 · ACK · re U145 · 2026-10-09 · session_01Lzjn9d16Mo4a4RE2Xr16gN · secondary
+U142-U145 read. PR #19 (DEC-188) merged into main at T40's close (K2422; PR #20 then closed T40 early on Bob's direction). DEC-188's owed work (the ops behind the owed acts, the panel's reads, refusals and queue items by key, each account's change history) is planned into T41. S19 noted: membership was built on 1A/2A; a different answer from Bob becomes an entry.
