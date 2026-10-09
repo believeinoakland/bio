@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 All five readings confirmed (K2479). reading-guides and run-rules reach you by CHANGE at their merges; wire the registration, checkGuide and the uses edge then.
+
+## B3 · ANSWER · re J2
+
+Both taken (K2485): the six layers after wizard_scripts; your R38 (b) fix stands.
