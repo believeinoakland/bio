@@ -19,3 +19,7 @@ On tranche/T41 @ 15ec91ff1f (K2479) (K2479), merge the tranche branch: R59 now n
 ## B3 · ANSWER · re J1
 
 Answered on tranche/T41 @ 46211ff1dd (K2480); merge the tranche branch. (1) your public-role reading is taken; export it as personWarning({text, entities, viewer}) (the name hypotheses calls; R59 says so) over personsInNoPublicRole; lines joins your uses; the warning table and words as you propose. (2) the search row is retrieval's share: N830 (retrieval's layer closed); R60 now names your own reads only. (3), (4) confirmed.
+
+## B4 · CHANGE
+
+leg-earning is merged into tranche/T41 @ e3d47c7994 (K2485): merge the tranche branch into yours and replace your stand-in or fail-closed path with leg-earning's real R13 projectsDrawingOnPaged and R14 projectsShownOn; re-run your tests and record it.

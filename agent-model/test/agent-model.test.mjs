@@ -9,7 +9,7 @@ import assert from "node:assert/strict";
 
 import {
   modelCall, converse, segmentMeter, MODEL_FOR_MODE, MODEL_FOR_MODE_SOURCE, MODEL_ENDPOINT, RUNNER_URL,
-  CONVERSATION_MAX_TURNS, USAGE_FIGURES, SEGMENT_BYTES_SOURCE, parentSystem, subsessionSystem, judgeTools,
+  CONVERSATION_MAX_TURNS, USAGE_FIGURES, ESTIMATE, MODEL_PRICES, MODEL_PRICES_SOURCE, MODEL_MAX_TOKENS, SEGMENT_BYTES_SOURCE, parentSystem, subsessionSystem, judgeTools,
   planJudgeTools, subsessionTools, rowPrompt, LOAD_LAYER, rowFacts, openRow, subsessionOpening, READ_FACTS, READ_RESULT,
 } from "../src/model.mjs";
 
@@ -98,6 +98,8 @@ function conv(over = {}) {
            onTool: async () => ({ content: "ok" }), ...over };
 }
 const MODES = ["check", "investigate", "extract", "plan", "ask", "draft"];
+/** R5's five figures of a usage, without R13's estimate beside them. */
+const figures = (u) => Object.fromEntries(Object.entries(u).filter(([k]) => k !== ESTIMATE));
 
 /* ------------------------------------------------------------------ R1 */
 
@@ -334,22 +336,23 @@ test("R4 on the apikey path every request marks the system prompt (with the pack
 /* ------------------------------------------------------------------ R5 */
 
 test("R5 every outcome that reached the provider carries usage with the five figures on both paths; an unstated figure is null, never 0; total_cost_usd only where stated", async () => {
-  const five = (u) => assert.deepEqual(Object.keys(u).sort(), [...USAGE_FIGURES].sort());
+  /* The five figures, and beside them R13's estimate (tested there). */
+  const five = (u) => assert.deepEqual(Object.keys(u).sort(), [...USAGE_FIGURES, ESTIMATE].sort());
   assert.deepEqual([...USAGE_FIGURES].sort(), ["cache_creation_input_tokens", "cache_read_input_tokens", "input_tokens",
     "output_tokens", "total_cost_usd"]);
   replies.push(json(200, message([{ type: "text", text: "a" }])));
   const a = await modelCall(APIKEY, BODY);
   five(a.usage);
-  assert.deepEqual(a.usage, { input_tokens: 10, output_tokens: 5, cache_read_input_tokens: 3, cache_creation_input_tokens: 2,
+  assert.deepEqual(figures(a.usage), { input_tokens: 10, output_tokens: 5, cache_read_input_tokens: 3, cache_creation_input_tokens: 2,
                               total_cost_usd: null });
   replies.push(json(200, message([{ type: "text", text: "a" }], { usage: { input_tokens: 0, output_tokens: 9 } })));
   const b = await modelCall(APIKEY, BODY);
-  assert.deepEqual(b.usage, { input_tokens: 0, output_tokens: 9, cache_read_input_tokens: null, cache_creation_input_tokens: null,
+  assert.deepEqual(figures(b.usage), { input_tokens: 0, output_tokens: 9, cache_read_input_tokens: null, cache_creation_input_tokens: null,
                               total_cost_usd: null });
   replies.push(json(400, { type: "error", error: { type: "invalid_request_error", message: "no" } }));
   const c = await modelCall(APIKEY, BODY);
   five(c.usage);
-  assert.ok(Object.values(c.usage).every((v) => v === null));
+  assert.ok(Object.values(figures(c.usage)).every((v) => v === null));
   replies.push(json(200, message([], { stop_reason: "refusal", usage: { input_tokens: 4, output_tokens: 1 } })));
   assert.equal((await modelCall(APIKEY, BODY)).usage.input_tokens, 4);
   replies.push({ raw: "nope", status: 500 });
@@ -357,10 +360,10 @@ test("R5 every outcome that reached the provider carries usage with the five fig
 
   /* sign-in: the runner's figures as it states them, cost included; unstated ones null. */
   const s = await modelCall(SUB, BODY, { runner: fakeRunner([() => [end()]]).ns });
-  assert.deepEqual(s.usage, { input_tokens: 7, output_tokens: 4, cache_read_input_tokens: 0, cache_creation_input_tokens: 1,
+  assert.deepEqual(figures(s.usage), { input_tokens: 7, output_tokens: 4, cache_read_input_tokens: 0, cache_creation_input_tokens: 1,
                               total_cost_usd: 0.01 });
   const s2 = await modelCall(SUB, BODY, { runner: fakeRunner([() => [end({ usage: { input_tokens: 2, total_cost_usd: "1" } })]]).ns });
-  assert.deepEqual(s2.usage, { input_tokens: 2, output_tokens: null, cache_read_input_tokens: null,
+  assert.deepEqual(figures(s2.usage), { input_tokens: 2, output_tokens: null, cache_read_input_tokens: null,
                                cache_creation_input_tokens: null, total_cost_usd: null });
   const s3 = await modelCall(SUB, BODY, { runner: fakeRunner([() => [{ ok: false, code: "SDK_ERROR", detail: "x" }]]).ns });
   five(s3.usage);
@@ -382,7 +385,7 @@ test("R6 a conversation ends on the final tool, on stopped turns or bytes before
   const got = await converse(conv({ messages, meter: m, onTool: async (name, input) => { performed.push([name, input]); return { content: { n: input.q } }; } }));
   assert.deepEqual(got.answer, { v: "done" });
   assert.deepEqual(performed, [["lookup", { q: "1" }], ["lookup", { q: "2" }]]);
-  assert.deepEqual(got.usage, { input_tokens: 20, output_tokens: 10, cache_read_input_tokens: 6, cache_creation_input_tokens: 4,
+  assert.deepEqual(figures(got.usage), { input_tokens: 20, output_tokens: 10, cache_read_input_tokens: 6, cache_creation_input_tokens: 4,
                                 total_cost_usd: null });
   assert.equal(m.turns, 2);
   assert.equal(m.bytes, calls[0].init.body.length + calls[1].init.body.length);
@@ -563,7 +566,7 @@ test("R7 on the signin path only the named tools are offered, each relayed call 
   assert.equal(r.log.sent[2].tool_result.is_error, true);
   assert.deepEqual(r.log.sent[3], { tool_result: { id: "u3", content: "received" } });
   assert.equal(r.log.closed, 1);
-  assert.deepEqual(got.usage, end().usage);
+  assert.deepEqual(figures(got.usage), end().usage);
   assert.equal(m.turns, 4);
   assert.equal(m.bytes, r.log.sent.reduce((s, x) => s + JSON.stringify(x).length, 0));
   /* The transcript is kept in the Messages API's shape, every call with its result. */
@@ -710,14 +713,46 @@ test("R10 it reaches no address but MODEL_ENDPOINT and the runner binding, and n
   assert.doesNotMatch(text, /oakland|alameda|california|san francisco|berkeley/i);
 });
 
+/* ------------------------------------------------------------------ Purpose */
+
+test("Purpose a turn reaches the provider the account reference names (today Anthropic's Claude only): a member's own, a project's or the group's API key to the Messages API, a member's sign-in to that member's own runner; the reference arrives per call and is never kept", async () => {
+  const PKEY = "sk-ant-api03-SENTINELPROJECT-0000";
+  const GKEY = "sk-ant-api03-SENTINELGROUP-0000";
+  const r = fakeRunner([() => [end()]]);
+  const returned = [];
+  /* Each level's API key goes to the Messages API under its own key; the runner is never reached. */
+  for (const reference of [APIKEY, { kind: "apikey", level: "member", key: KEY }, { kind: "apikey", level: "project", key: PKEY },
+                           { kind: "apikey", level: "group", key: GKEY }]) {
+    calls.length = 0;
+    replies.push(json(200, message([{ type: "text", text: "a" }])));
+    returned.push(await modelCall(reference, BODY, { runner: r.ns }));
+    assert.deepEqual(calls.map((c) => [c.url, c.init.headers["x-api-key"]]), [[MODEL_ENDPOINT, reference.key]]);
+  }
+  assert.equal(r.log.opened, 0);
+  /* A member's sign-in goes to that member's own runner instance and makes no fetch. */
+  calls.length = 0;
+  returned.push(await modelCall({ kind: "signin", level: "member", member: MEMBER }, BODY, { runner: r.ns }));
+  assert.deepEqual([calls.length, r.log.opened, r.log.names], [0, 1, [MEMBER]]);
+  /* Never kept: the next call without a reference makes no call, and no answer carries a key. */
+  returned.push(await modelCall(undefined, BODY, { runner: r.ns }), await converse(conv({ reference: undefined, runner: r.ns })));
+  assert.deepEqual([calls.length, r.log.opened], [0, 1]);
+  for (const k of [KEY, PKEY, GKEY]) assert.ok(!JSON.stringify(returned).includes(k));
+  /* Negative control: a reference that names no account this module can use reaches no provider. */
+  for (const reference of [{ kind: "apikey", level: "project" }, { kind: "openai", level: "project", key: PKEY }]) {
+    assert.equal((await modelCall(reference, BODY, { runner: r.ns })).refused.type, "ACCOUNT_REFERENCE_UNUSABLE");
+  }
+  assert.deepEqual([calls.length, r.log.opened], [0, 1]);
+});
+
 /* ------------------------------------------------------------------ R11 */
 
-test("R11 a group-level reference is the group's API key, sent exactly as a member's: only with kind apikey; a group reference of another kind, or a level other than member or group, is refused with no call", async () => {
+test("R11 a group-level reference is the group's API key and a project-level one a project's, each sent exactly as a member's: only with kind apikey; a group or project reference of another kind, or a level other than member, project or group, is refused with no call", async () => {
   const GKEY = "sk-ant-api03-SENTINELGROUP-0000";
   /* Sent exactly as a member's key: the same address, headers and body, cache marks included, the same usage. */
   const sent = [];
   const answers = [];
-  for (const reference of [{ kind: "apikey", key: GKEY }, { kind: "apikey", level: "member", key: GKEY }, { kind: "apikey", level: "group", key: GKEY }]) {
+  for (const level of [undefined, "member", "project", "group"]) {
+    const reference = { kind: "apikey", key: GKEY, ...(level ? { level } : {}) };
     calls.length = 0;
     replies.push(json(200, message([{ type: "text", text: "a" }])));
     answers.push(await modelCall(reference, BODY));
@@ -727,30 +762,161 @@ test("R11 a group-level reference is the group's API key, sent exactly as a memb
     sent.push(calls.map((c) => ({ url: c.url, headers: c.init.headers, body: c.init.body })));
   }
   assert.equal(sent[0].length, 3);
-  assert.deepEqual(sent[2], sent[0]);
-  assert.deepEqual(sent[1], sent[0]);
-  assert.equal(sent[2][0].headers["x-api-key"], GKEY);
-  assert.ok(sent[2].every((c) => !c.body.includes(GKEY) && c.url === MODEL_ENDPOINT));
-  assert.deepEqual(JSON.parse(sent[2][0].body).system.at(-1).cache_control, { type: "ephemeral" });
-  assert.deepEqual(answers[4], answers[0]);
-  assert.deepEqual(answers[5], answers[1]);
+  for (const i of [1, 2, 3]) {
+    assert.deepEqual(sent[i], sent[0]);
+    assert.deepEqual(answers[2 * i], answers[0]);
+    assert.deepEqual(answers[2 * i + 1], answers[1]);
+  }
+  for (const i of [2, 3]) {
+    assert.equal(sent[i][0].headers["x-api-key"], GKEY);
+    assert.ok(sent[i].every((c) => !c.body.includes(GKEY) && c.url === MODEL_ENDPOINT));
+    assert.deepEqual(JSON.parse(sent[i][0].body).system.at(-1).cache_control, { type: "ephemeral" });
+  }
   assert.deepEqual(answers[5].usage, answers[1].usage);
   assert.ok(!JSON.stringify(answers).includes(GKEY), "kept as any secret is (R8)");
 
-  /* Refused, no call: a group reference of another kind; a level that is neither member nor group. */
+  /* Refused, no call: a group or project reference of another kind; a level that is neither member, project nor group. */
   calls.length = 0;
   const r = fakeRunner([() => [end()]]);
-  const bad = [{ kind: "signin", level: "group", member: MEMBER }, { kind: "subscription", level: "group", token: "sk-ant-oat01-x" },
-    { kind: "subscription", level: "group", key: GKEY }, { kind: "signin", level: "operator", member: MEMBER },
-    { kind: "other", level: "group", key: GKEY }, { level: "group", key: GKEY },
-    { kind: "apikey", level: "admin", key: GKEY }, { kind: "apikey", level: "", key: GKEY }, { kind: "apikey", level: null, key: GKEY },
-    { kind: "apikey", level: "GROUP", key: GKEY }, { kind: "subscription", level: "operator", token: "sk-ant-oat01-x" }];
+  const bad = [];
+  for (const level of ["group", "project"])
+    bad.push({ kind: "signin", level, member: MEMBER }, { kind: "subscription", level, token: "sk-ant-oat01-x" },
+             { kind: "subscription", level, key: GKEY }, { kind: "other", level, key: GKEY }, { level, key: GKEY },
+             { kind: "apikey", level }, { kind: "apikey", level, key: "" });
+  bad.push({ kind: "signin", level: "operator", member: MEMBER }, { kind: "apikey", level: "admin", key: GKEY },
+           { kind: "apikey", level: "", key: GKEY }, { kind: "apikey", level: null, key: GKEY },
+           { kind: "apikey", level: "GROUP", key: GKEY }, { kind: "apikey", level: "Project", key: GKEY },
+           { kind: "apikey", level: "projects", key: GKEY }, { kind: "signin", level: "workspace", member: MEMBER },
+           { kind: "subscription", level: "operator", token: "sk-ant-oat01-x" });
   for (const reference of bad) {
     assert.equal((await modelCall(reference, BODY, { runner: r.ns })).refused.type, "ACCOUNT_REFERENCE_UNUSABLE", JSON.stringify(reference));
     assert.equal((await converse(conv({ reference, runner: r.ns }))).refused.type, "ACCOUNT_REFERENCE_UNUSABLE");
   }
   assert.equal(calls.length, 0);
   assert.equal(r.log.opened, 0);
+  /* Negative control: the same runner and a member-level sign-in does reach it, so the refusals above are the level's. */
+  assert.ok((await modelCall({ kind: "signin", level: "member", member: MEMBER }, BODY, { runner: r.ns })).result);
+  assert.equal(r.log.opened, 1);
+});
+
+/* ------------------------------------------------------------------ R13 */
+
+const bytes = (text) => Buffer.byteLength(text, "utf8");
+const near = (actual, expected, what) =>
+  assert.ok(typeof actual === "number" && Math.abs(actual - expected) < 1e-12, `${what}: ${actual} is not ${expected}`);
+const OPUS = "claude-opus-5";
+
+test("R13 MODEL_PRICES holds USD per million input, output, cache-read and cache-write tokens for every MODEL_FOR_MODE model, a reviewed edit beside it", () => {
+  assert.ok(Object.isFrozen(MODEL_PRICES));
+  const unpriced = (prices) => [...new Set(Object.values(MODEL_FOR_MODE))].filter((m) => !Object.prototype.hasOwnProperty.call(prices, m));
+  assert.deepEqual(unpriced(MODEL_PRICES), [], "every model MODEL_FOR_MODE names is priced");
+  /* Negative control: the check finds a model missing from a table. */
+  assert.deepEqual(unpriced({ "claude-other": {} }), [OPUS]);
+  for (const [model, r] of Object.entries(MODEL_PRICES)) {
+    assert.ok(Object.isFrozen(r), model);
+    assert.deepEqual(Object.keys(r).sort(), ["cache_read", "cache_write", "input", "output"]);
+    for (const v of Object.values(r)) assert.ok(Number.isFinite(v) && v > 0, model);
+    assert.throws(() => { "use strict"; r.input = 0; });
+  }
+  assert.deepEqual({ ...MODEL_PRICES[OPUS] }, { input: 5, output: 25, cache_read: 0.5, cache_write: 6.25 });
+  assert.match(MODEL_PRICES_SOURCE, /2026-10-06/);
+  assert.match(MODEL_PRICES_SOURCE, /five-minute/);
+});
+
+test("R13 on the apikey path every outcome's usage adds estimated_cost_usd from its figures at the model's prices; total_cost_usd stays as the provider states it; a provider's own estimated_cost_usd is not taken", async () => {
+  const opus = { ...BODY, model: OPUS };
+  replies.push(json(200, message([{ type: "text", text: "a" }])));
+  const a = await modelCall(APIKEY, opus);
+  near(a.usage[ESTIMATE], (10 * 5 + 5 * 25 + 3 * 0.5 + 2 * 6.25) / 1e6, "each figure at its own rate");
+  assert.equal(a.usage.total_cost_usd, null, "total_cost_usd stays the provider's (it stated none)");
+  /* The provider's figures, its total and an estimate it names itself: the total kept as stated, its estimate not taken. */
+  replies.push(json(200, message([{ type: "text", text: "a" }], { usage: { input_tokens: 1000, output_tokens: 0,
+    cache_read_input_tokens: 0, cache_creation_input_tokens: 0, total_cost_usd: 0.7, estimated_cost_usd: 999 } })));
+  const b = await modelCall(APIKEY, opus);
+  near(b.usage[ESTIMATE], 1000 * 5 / 1e6, "input only");
+  assert.equal(b.usage.total_cost_usd, 0.7);
+  /* Negative control: one more output token moves the estimate by exactly the output rate. */
+  replies.push(json(200, message([{ type: "text", text: "a" }], { usage: { input_tokens: 1000, output_tokens: 1,
+    cache_read_input_tokens: 0, cache_creation_input_tokens: 0 } })));
+  near((await modelCall(APIKEY, opus)).usage[ESTIMATE] - b.usage[ESTIMATE], 25 / 1e6, "one output token");
+  /* A model refusal still reached the provider: priced. */
+  replies.push(json(200, message([], { stop_reason: "refusal", usage: { input_tokens: 4, output_tokens: 1,
+    cache_read_input_tokens: 0, cache_creation_input_tokens: 0 } })));
+  near((await modelCall(APIKEY, opus)).usage[ESTIMATE], (4 * 5 + 25) / 1e6, "a refusal");
+
+  /* A conversation: the sum of its turns' estimates, each at the table's model. */
+  replies.push(json(200, message([toolUse("a", "lookup")])));
+  replies.push(json(200, message([toolUse("b", "answer", { v: 1 })])));
+  const c = await converse(conv());
+  assert.equal(calls.at(-1).body.model, OPUS);
+  near(c.usage[ESTIMATE], 2 * (10 * 5 + 5 * 25 + 3 * 0.5 + 2 * 6.25) / 1e6, "summed over two turns");
+  /* Every apikey ending that carries usage carries a number, never null and never 0 for a turn that was answered. */
+  for (const got of [a, b, c]) assert.ok(got.usage[ESTIMATE] > 0);
+  /* A conversation stopped before any request spent nothing and states no usage at all. */
+  assert.equal((await converse(conv({ meter: meter(0) }))).usage, null);
+  /* No estimate where nothing reached the provider. */
+  assert.equal((await modelCall(undefined, opus)).usage, undefined);
+});
+
+test("R13 a null figure on the apikey path is priced at the model's highest rate, never as zero: its count bounded by the request sent (input side by its UTF-8 bytes, output by max_tokens); a model the table does not price is priced at the table's highest rate", async () => {
+  const top = Math.max(...Object.values(MODEL_PRICES[OPUS]));
+  assert.equal(top, 25);
+  const opus = { ...BODY, model: OPUS, messages: [{ role: "user", content: "naïve café — ☃ ✓" }] };
+  /* Cache figures unstated: the input side's unstated remainder, the request's bytes less what was stated. */
+  replies.push(json(200, message([{ type: "text", text: "a" }], { usage: { input_tokens: 7, output_tokens: 9 } })));
+  const a = await modelCall(APIKEY, opus);
+  const sentA = calls.at(-1).init.body;
+  assert.ok(bytes(sentA) > sentA.length, "the request holds multi-byte text, so bytes and characters differ");
+  near(a.usage[ESTIMATE], (7 * 5 + 9 * 25 + (bytes(sentA) - 7) * top) / 1e6, "unstated cache figures");
+  /* Negative control: priced as zero, the same figures would give less. */
+  assert.ok(a.usage[ESTIMATE] > (7 * 5 + 9 * 25) / 1e6);
+  /* Output unstated: max_tokens at the highest rate. */
+  replies.push(json(200, message([{ type: "text", text: "a" }], { usage: { input_tokens: 7, cache_read_input_tokens: 0,
+    cache_creation_input_tokens: 0 } })));
+  near((await modelCall(APIKEY, opus)).usage[ESTIMATE], (7 * 5 + opus.max_tokens * top) / 1e6, "unstated output");
+  /* Nothing stated (a non-200 refusal, a body that is not JSON): the whole bound at the highest rate. */
+  replies.push(json(400, { type: "error", error: { type: "invalid_request_error", message: "no" } }));
+  const r = await modelCall(APIKEY, opus);
+  near(r.usage[ESTIMATE], (bytes(calls.at(-1).init.body) + opus.max_tokens) * top / 1e6, "a refusal stating nothing");
+  replies.push({ raw: "<html>", status: 502 });
+  const nj = await modelCall(APIKEY, opus);
+  near(nj.usage[ESTIMATE], (bytes(calls.at(-1).init.body) + opus.max_tokens) * top / 1e6, "a body that is not JSON");
+  /* Stated input-side figures beyond the request's bytes leave no remainder, never a negative one. */
+  replies.push(json(200, message([{ type: "text", text: "a" }], { usage: { input_tokens: 1e6, output_tokens: 0 } })));
+  near((await modelCall(APIKEY, opus)).usage[ESTIMATE], 5, "no negative remainder");
+  /* A body with no usable max_tokens is bounded by the module's own. */
+  replies.push(json(200, message([{ type: "text", text: "a" }], { usage: { input_tokens: 0, cache_read_input_tokens: 0,
+    cache_creation_input_tokens: 0 } })));
+  near((await modelCall(APIKEY, { ...opus, max_tokens: "lots" })).usage[ESTIMATE], MODEL_MAX_TOKENS * top / 1e6, "MODEL_MAX_TOKENS");
+  /* In a conversation, the bound of an unstated output is MODEL_MAX_TOKENS, the max_tokens it sends. */
+  replies.push(json(200, message([toolUse("b", "answer", { v: 1 })], { usage: { input_tokens: 3, cache_read_input_tokens: 0,
+    cache_creation_input_tokens: 0 } })));
+  const c = await converse(conv());
+  assert.equal(calls.at(-1).body.max_tokens, MODEL_MAX_TOKENS);
+  near(c.usage[ESTIMATE], (3 * 5 + MODEL_MAX_TOKENS * top) / 1e6, "a conversation's unstated output");
+  /* A model the table does not price: every figure at the table's highest rate. */
+  const tableTop = Math.max(...Object.values(MODEL_PRICES).flatMap((p) => Object.values(p)));
+  replies.push(json(200, message([{ type: "text", text: "a" }])));
+  near((await modelCall(APIKEY, { ...BODY, model: "claude-unpriced-9" })).usage[ESTIMATE], (10 + 5 + 3 + 2) * tableTop / 1e6, "unpriced model");
+  replies.push(json(200, message([{ type: "text", text: "a" }])));
+  near((await modelCall(APIKEY, { ...BODY, model: "toString" })).usage[ESTIMATE], (10 + 5 + 3 + 2) * tableTop / 1e6, "a prototype key is no model");
+});
+
+test("R13 on the signin path estimated_cost_usd is always null, whatever the runner states; total_cost_usd stays as stated", async () => {
+  const s = await modelCall(SUB, BODY, { runner: fakeRunner([() => [end({ usage: { ...end().usage, estimated_cost_usd: 3 } })]]).ns });
+  assert.equal(s.usage[ESTIMATE], null);
+  assert.equal(s.usage.total_cost_usd, 0.01);
+  const r = fakeRunner([() => [{ tool_use: { id: "u1", name: "lookup", input: {} } }],
+    () => [{ tool_use: { id: "u2", name: "answer", input: { v: 1 } } }], () => [end({ usage: { ...end().usage, estimated_cost_usd: 3 } })]]);
+  const c = await converse(conv({ reference: SUB, runner: r.ns }));
+  assert.deepEqual([c.answer, c.usage[ESTIMATE], c.usage.total_cost_usd], [{ v: 1 }, null, 0.01]);
+  for (const script of [[() => [{ ok: false, code: "SDK_ERROR", detail: "x" }]], [() => ["close"]], [() => [end({ result: "hm" })]]]) {
+    const got = await converse(conv({ reference: SUB, runner: fakeRunner(script).ns, maxTurns: 2 }));
+    assert.equal(got.usage[ESTIMATE], null);
+  }
+  /* Negative control: the same figures on the apikey path are priced. */
+  replies.push(json(200, message([{ type: "text", text: "a" }], { usage: end().usage })));
+  assert.ok((await modelCall(APIKEY, { ...BODY, model: OPUS })).usage[ESTIMATE] > 0);
 });
 
 /* ------------------------------------------------------------------ R12 */
