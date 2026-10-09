@@ -75,3 +75,10 @@ Replaces J1's items 5 and 6 only; the rest of J1 stands as taken (K2482). While 
 6'. **R32's cause.** No `concluded` marker is read. A cause word (`because`, `caused`, `due to`, `led to`, `as a result of`, `resulted in`, `owing to`, ...) is allowed only inside a quotation that is part of the quote of a holding the sentence cites and the read log answered. That covers both a concluded finding quoted and a body's own cause shown as theirs. A cause word in Civicsmith's own words, or inside a quotation not read, is withheld `ANSWER_CAUSE_UNESTABLISHED`, and its translation says "the cause is not established". Reason: "concluded" has no one field across the reads, and R32 says "only quoting", which this checks exactly.
 
 Also, for my record: the final `uses` drops `ai-runs`. answers no longer reaches it, since the ceiling (`aiUseCheck`) is replaced by `ai-use.useCheck`. The rest of the list is unchanged.
+
+## J3 · REPORT
+
+**Found in other modules:**
+1. The plane's composition, `bio-plane/src/plane/store.mjs`:219, still hands `ceilingRefusal` (ai-runs' retired `aiUseCheck`). answers no longer reads it, and takes ai-use's `useCheck` on its own host, so it is dead wiring for T41-63 to drop. The plane's ask path (`plane/ask.mjs`:68, :119) and store-door (`dispatch.mjs`:278) may now call `answers.askAccount` (R30) in place of their own `accountFor` and ceiling (T41-63; store-door at L11). They should pass `use: "draft"` to `logRead` for a draft's reads.
+2. Generated artifacts: the plane bundle (`bio-plane/dist/`) bundles answers, so it is stale (rule 4 (14)). `case-checker/program.mjs` is unaffected until case-checker imports `checkSentences` (T41 L8).
+3. `reading-pipeline/index.mjs`:698 spells the paying owner `member:${member}` from the `member` it was handed. A stamp (`member:bob`) would make `member:member:bob`, so the owner should be built from the bare id. This is against ai-use R1's owner spelling; reading-pipeline's to judge.
