@@ -1,6 +1,6 @@
 # capture-requests (T41)
 
-**Status** · session_01Y176r2DgXuBjQoTamPdKfb · depth 2 · RUNNING until 2026-10-09T23:59:57Z (users' suites with real steps, vs tranche/T41) · handled B2
+**Status** · session_01Y176r2DgXuBjQoTamPdKfb · depth 2 · COMPLETE · handled B2
 
 ## Completion (CAPTURE-REQUESTS #15)
 
