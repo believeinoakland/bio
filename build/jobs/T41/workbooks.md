@@ -25,3 +25,7 @@ Tests and checks:
 - `checks/ownership.mjs workbooks tranche/T41`: 0 failures (run after commit).
 
 Size (session_015Xxi8gSWqxgZKESRaSag2Y): test runs 3, module lines 2814
+
+## J1 · COMPLETE
+
+T41-12a applied (tests only): add.test.mjs:129 (R13) and notes.test.mjs:46 (R11) re-stated for D54 — an uninvited administrator is answered as an absent workbook, an invited one sees it; new R13 D54 case (administrator and founder, both spellings, withheld on every read and act, nothing written; negative control: P set discoverable, all three see it whole, a member outside still not). No requirement text assumes the old sight. 26/26; format, architecture, coverage 18/18, ownership: 0 failures. Record: build/jobs/T41/workbooks.md.
