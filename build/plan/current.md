@@ -10,6 +10,8 @@
 
 **Sources** · `archive/T40.md` (entries, rules, "Left out", doubts, Outcome); `archive/T39.md` and `archive/T38.md` "Left out" rows, each re-tested (Bob's direction relayed by BOB, 2026-10-09: "Make certain that all development tasks that can be done safely are included in T41"); `next.md` N748, N751, N780, N794, N796, N815, N817, N820–N823; `plan/draft-T41-investigation.md` (adopted K2405, refolded K2417/K2418; the requirement text for N820–N822); UX-DESIGN U145 (DEC-188's owed line); rulings K2404–K2422, K657, K1043, K624, K617, K1821; `layers.md`; `modules.json`; `rulings-active.md`. Sizes over `modules.json` paths, the most specific path owning each file (K1821), on `tranche/T41` today.
 
+**Pause after this tranche (K2456):** T41 closes through §5.7 step 5; T42 is not opened until Bob resumes.
+
 ## Legacy census (§5.2 (2))
 
 | legacy module | in T41 | hard reason |
