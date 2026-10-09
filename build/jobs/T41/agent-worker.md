@@ -40,7 +40,12 @@ Re-run results:
 - `npm test`: 13 files, 0 fail (ask 62/0, requirements 305/0, t41 41/0).
 - fleetbundles: agent-worker passes. The only fails are the plane bundle's staleness, which is inherited red 14 (regenerated at the layer's close), not mine.
 - format, architecture, coverage (63/63) and ownership: 0 failures.
-Size (session_01CuxSKppmd8ZmgSfSPhpxXR): test runs 11, module lines 2,760 (source; 13,923 all files outside `dist/`)
+
+**After B3 (CHANGE, K2485).** I merged `tranche/T41` (now at 8e954b4bfa).
+- (1) Was already done after B2: `ask.test.mjs`' R54 check expects R13's sixth figure.
+- (2) I had regenerated my own bundle (`agent-worker/dist`; the manifest lists agent-worker as its owner) after B2, before B3 arrived. It is byte-identical to a fresh build at this head, so R45 reads green and there is no accepted red to name. BOB's regeneration at L6's close will produce the same bytes, or replace them.
+- `npm test`: 13 files, 0 fail.
+Size (session_01CuxSKppmd8ZmgSfSPhpxXR): test runs 12, module lines 2,760 (source; 13,923 all files outside `dist/`)
 
 ## J1 · QUESTION
 
