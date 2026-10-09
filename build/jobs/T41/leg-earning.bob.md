@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 All four readings confirmed (K2479). Build on them.
+
+## B3 · ANSWER · re J2
+
+Merged (K2485); provenance added to your Uses.
