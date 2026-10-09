@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 633 KB by `build/plan/read
 Merge order in L4: reading-pipeline, extraction (independent).
 Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+K2461: your reading stands as written: both functions stay pure, {text, ceiling} read by the caller (run-productions, T41-24), byte-exact substring, a verified quote earns the capture's own ceiling (weaker included, null stated), dates and numbers named for the member to check, PROPOSAL_ABOVE_CEILING and PROPOSAL_NAMES_NOTHING as you state; no store-side helper here. Record the signature in your Completion so T41-24 codes against it.
