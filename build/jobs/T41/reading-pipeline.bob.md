@@ -1,6 +1,6 @@
 # BOB to reading-pipeline (T41)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 371 KB by `build/plan/read
 Merge order in L4: reading-pipeline, extraction (independent).
 Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+K2462: 1–5 stand as you read them. R18 now names tier 4 (a covering ai_transcription step, naming its engine; member null), marked T41. modules.json gives reading-pipeline uses record-core and credentials: test against the real credentials. Merge tranche/T41 into your branch.

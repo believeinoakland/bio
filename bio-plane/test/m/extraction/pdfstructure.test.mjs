@@ -192,6 +192,24 @@ test("R34 R24 (reading-pipeline R5, R11): with pages filled, the reading by read
   assert.equal(x.compared.state, "undetermined");
 });
 
+test("R34 R24: a re-read whose write a listener refuses is rolled back whole and says so, never as the capture having left the caller's sight; the same re-read with the listener quiet is written (control)", async () => {
+  const text = i2([{ page: 0, text: "Text" }, { page: 1, text: "", undetermined: [noText(1)] }]);
+  const { w, d } = await held(text);
+  let refuse = true;
+  w.x.onReading("content", () => { if (refuse) throw new Error("refused"); return { staled: 0 }; });
+  const before = writes(w);
+  const run = () => withEntry(pdf(text, 2),
+    () => w.x.pdfStructure({ ocr: "1", sha: d, viewer: "class:admin", author: "member:m1", env: { OCR_WORKER: member(() => ocrAnswer([1])) } }));
+  const x = (await run()).body.reextraction;
+  assert.deepEqual([x.performed, x.written], [true, false]);
+  assert.match(x.why, /rolled back whole/);
+  assert.doesNotMatch(x.why, /no longer held/);
+  assert.equal(writes(w), before, "nothing of the refused write is kept");
+  refuse = false;
+  const ok = (await run()).body.reextraction;
+  assert.deepEqual([ok.performed, ok.written, ok.why], [true, true, undefined]);
+});
+
 test("R35 (reading-pipeline R7): a re-read asks only for the pages the stored reading still leaves unread, so repeated re-reads reach a long scan's tail, and a folio page is never appended twice", async () => {
   const pages = Array.from({ length: 30 }, (_, i) => ({ page: i, text: i === 0 ? "7" : "", undetermined: [i === 0 ? folio(0) : noText(i)] }));
   const { w, d } = await held(i2(pages));
