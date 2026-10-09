@@ -70,6 +70,13 @@ test("R37 negative controls: a PRESENT with no earlier absence, a partial, an ab
   assert.equal(c2.length, 0, "a refused PRESENT is no observation");
   w2.obs.observe(found());
   assert.equal(c2.length, 1, "the matching PRESENT does");
+  // a row with no subject has no subject: it calls nothing, and an absence with no subject is answered by nothing
+  const w3 = world();
+  const c3 = heard(w3);
+  w3.obs.observe(look({ state: "LOOKED_ABSENT", subject: null }));
+  assert.equal(w3.obs.observe(found({ subject: null })), null);
+  assert.equal(c3.length, 0, "no subject: nothing told");
+  assert.equal(w3.count("observation_log"), 2);
 });
 
 test("R37 an absence a PRESENT already answered is not told again; a new absence after it is told to the next PRESENT, alone", () => {
