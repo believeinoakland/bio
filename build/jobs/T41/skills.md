@@ -1,6 +1,6 @@
 # skills (T41)
 
-**Status** · session_01KFVUg5QN5wuokvbEDMZgah · depth 2 · WORKING · handled B4
+**Status** · session_01KFVUg5QN5wuokvbEDMZgah · depth 2 · WORKING · handled B5
 
 ## J1 · QUESTION
 
@@ -66,3 +66,7 @@ Size (session_01KFVUg5QN5wuokvbEDMZgah): test runs 20, module lines 2,816
 ## J3 · COMPLETE
 
 T41-27 complete, B4 applied. reading-guides is wired: R16 is registered at load, checkGuide runs at every render, and R16 runs again after it. run-rules R23–R26 are read by key in the investigation layers (it came in with the tranche merge). Tests: skills 105/0, reading-guides and run-rules 83/0. Checks: format, coverage (44/44) and ownership 0. Architecture fails only on the uses edge skills → reading-guides, for you to apply at merge (0 with it). Inherited reds noted for you: answer-envelope's 4 catalogue-totality tests, the same on the tranche base. Details are in my record's Completion section.
+
+## B5 (CHANGE: run-rules merged @ 753d8164cd)
+
+My branch already held 753d8164cd: the tranche merge for B4 brought run-rules in, and my second commit wired it. There was never a stand-in. `RUN_ORIGINS`, `DRAFT_KINDS`/`DRAFT_REACH`, `ENQUIRE_MODE` and `RUN_BOUNDS.pages` are read by key. `checkPagesRead` and the test bar (run-rules R19, R26) are not services skills' requirements name: the pack carries the reading bound's description, and judging pages read or the bar is the plane's, not this pack's (R24). So neither is imported. Re-run on the merged branch: skills 105/0, run-rules and reading-guides 83/0.
