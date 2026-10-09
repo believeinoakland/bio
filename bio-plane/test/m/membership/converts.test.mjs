@@ -153,8 +153,14 @@ test("R55 (project-authority) each refusal carries its row's check and translati
      "adopting a bias set", "owner"]);
   assert.equal(w.m.projectAuthority("P", V("kit"), "joined", "x"), null, "a joined participant works");
   assert.equal(w.m.projectAuthority("P", V("iris"), "owner", "x"), null, "the owner directs");
+  /* D54 (T41-3): an administrator holds no position in P, whether it sees P at EXISTENCE (hidden) or whole */
   for (const who of [V("second"), V("admin")])
+    assert.equal(w.m.projectAuthority("P", who, "joined", "x").check, "C-56.1", `${who}: no position, hidden`);
+  w.m.projectVisibilitySet({ projectId: "P", setting: "discoverable", by: "iris", viewer: V("iris") });
+  for (const who of [V("second"), V("admin")]) {
+    assert.equal(w.m.inSight("P", who), true, `${who} sees discoverable P`);
     assert.equal(w.m.projectAuthority("P", who, "joined", "x").check, "C-56.1", `${who}: sight confers nothing`);
+  }
   for (const who of [null, undefined, BEARER]) assert.equal(w.m.projectAuthority("P", who, "owner", "x"), null, String(who));
 });
 
