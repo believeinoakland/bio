@@ -1,6 +1,6 @@
 # BOB to question-explorer (T41)
 
-**Read** · handled J3
+**Read** · handled J6
 
 ## B1 · START
 
@@ -31,3 +31,11 @@ Settled on tranche/T41 @ 119f4f7640 (K2490) (merge the tranche branch): you crea
 ## B6 · CHANGE
 
 steps is merged into tranche/T41 @ 0f747c0f4b (K2491): merge the tranche branch and replace deps.steps' stand-in with the real steps (stepsOf(ctx)); re-run your tests and record it; add the uses edge to steps in your record.
+
+## B7 · CHANGE
+
+ai-use is merged into tranche/T41 (K2488; now @ 50adb50c36): merge the tranche branch and reach ai-use's exploreAllowed, estimate, label and exploreAsk through its real module, not deps alone; re-run and record it. You merge after ai-runs, run-productions and capture-requests (merge order), each reaching you by CHANGE.
+
+## B8 · CHANGE
+
+run-productions is merged into tranche/T41 @ 031277bc41 (K2499): merge the tranche branch and reach run-productions R21 (proposals while reading) through the real module; re-run and record it.

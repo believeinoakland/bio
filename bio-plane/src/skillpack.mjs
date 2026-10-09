@@ -152,6 +152,7 @@ import { RUN_BOUNDS, RUN_ENDINGS, AI_RUN_CHECKS } from "./run-rules/index.mjs";
    two suites, and the pack composes them. */
 import { judgementLayers, actionPlanningLayer, filingDraftingLayer, editionStatementLayer, wizardAuthoringLayer,
          legalLookupLayer, askLayer, suggestionsLayer, writingHelpLayer, interfaceTranslationLayer,
+         readingGuideLayer, enquireLayer, exploreLayer, readingLayer, caseAccountLayer, accountCheckLayer,
          RESEARCH_BOUNDARY_CLAUSES, RESEARCH_BOUNDARY_NOTE, SKILL_CHECKS, SKILL_CHECK_KEYS } from "./skilldoctrine.mjs";
 export { SKILL_CHECKS, SKILL_CHECK_KEYS };
 /* N345. The recommender's prompt is contradiction's (its R41): measured on the blind fixture of dissolved pairs
@@ -259,6 +260,14 @@ export const SOURCING = {
   interface_translation: "authored", /* skilldoctrine.mjs, Interaction Constructs §L, DEC-127, DEC-157, DEC-179 (R39) */
   interface_translation_unpublished: "absent", /* while op=affordances publishes no translation draft act (R39) */
   research_boundary: "authored", /* skilldoctrine.mjs, ladders §9.4 and Roles §3 rules 11, 12, resident (R2, R37, R38) */
+  /* T41 (T41-27; N820): the investigation's layers, every clause quoted from BIO_Investigation_v0_1.md (R43). */
+  reading_guide:  "guide",      /* reading-guides guideFor's items, passed by the run's caller, checked for conduct (R40) */
+  reading_guide_none: "absent", /* while the caller passes no guide (R40) */
+  enquire:        "authored",   /* skilldoctrine.mjs, the interview and planning (R41) */
+  explore:        "authored",   /* skilldoctrine.mjs, exploring, reusing investigate's layers (R42) */
+  reading:        "authored",   /* skilldoctrine.mjs, reading inside documents (R42) */
+  case_account:   "authored",   /* skilldoctrine.mjs, the case's account (R44) */
+  account_check:  "authored",   /* skilldoctrine.mjs, the account's check (R44) */
   wizard_scripts: "absent",     /* absent until the plane publishes wizard scripts — see the header (R9) */
   wizard_scripts_published: "driven", /* op=affordances .wizard_scripts, validated against .screens (R10) */
   /* SK-2's five layers. `authored` throughout, and the label is the honest one:
@@ -350,7 +359,7 @@ const MACHINE_MODE = "machine";
  *  precedent: it throws rather than compose a sentence it cannot compose
  *  truthfully. A control that passes while asserting nothing is the failure
  *  D-216's arm 3 measured, and an empty render is how it would arrive here. */
-export function renderPack(published) {
+export function renderPack(published, { reading_guides: readingGuides = null } = {}) {
   const p = published && typeof published === "object" ? published : {};
   const vocabularies = p.vocabularies && typeof p.vocabularies === "object" ? p.vocabularies : null;
   const catalog = Array.isArray(p.catalog) ? p.catalog : null;
@@ -386,7 +395,7 @@ export function renderPack(published) {
 
   /* R37, R38: the research boundary is resident in every run and ask, so a pack without one of its clauses is not
      rendered: a run would hold the rest of its instructions and not this. */
-  for (const c of [0, 1, 2, 3].map((i) => RESEARCH_BOUNDARY_CLAUSES?.[i]))
+  for (const c of [0, 1, 2, 3, 4].map((i) => RESEARCH_BOUNDARY_CLAUSES?.[i]))
     if (!c || typeof c.text !== "string" || c.text.trim() === "")
       throw new Error("the resident research boundary carries record content as data (R37), discovery that is not "
         + "capture, files read only as extracted text and capture requested only for a held address (R38), each quoted "
@@ -439,7 +448,8 @@ export function renderPack(published) {
   const wizardScripts = Array.isArray(p.wizard_scripts) ? p.wizard_scripts : null;
   if (wizardScripts) validateWizardScripts(wizardScripts, p.screens);
 
-  const disclosed = disclosedLayers({ vocabularies, catalog, captureActs: p.capture_acts, wizardScripts, published: p });
+  const disclosed = disclosedLayers({ vocabularies, catalog, captureActs: p.capture_acts, wizardScripts, published: p,
+                                     readingGuides });
   resident.disclosable = Object.keys(disclosed).map((k) => ({ layer: k, load_when: disclosed[k].load_when }));
 
   const pack = { id: SKILL_PACK_ID, edition: DOCTRINE_EDITION, resident, disclosed,
@@ -450,7 +460,8 @@ export function renderPack(published) {
 /** THE PROGRESSIVELY-DISCLOSED LAYERS (§14b.1). Each names the work that loads
  *  it, so "loads when the run reaches work that needs them" is a field a
  *  scheduler can read rather than a sentence a model must interpret. */
-export function disclosedLayers({ vocabularies, catalog, captureActs, wizardScripts = null, published = {} } = {}) {
+export function disclosedLayers({ vocabularies, catalog, captureActs, wizardScripts = null, published = {},
+                                  readingGuides = null } = {}) {
   return {
     /* SK-2's judgement layers first, so `disclosable` lists what the run is
        INSTRUCTED BY before what it is given to work with. Spread from one
@@ -544,6 +555,16 @@ export function disclosedLayers({ vocabularies, catalog, captureActs, wizardScri
         + "plane has not published its screen registry and its wizard scripts to this render, so no script "
         + "could be validated here, and none is carried: the layer waits on the plane publishing both.",
     },
+    /* T41 (T41-27; N820). R40: the guide in force for each kind of document the run reads, passed by the run's caller
+       (`reading-guides.guideFor`, its R5), its items only and checked for conduct, or a stated absence with none. R41,
+       R42, R44: the interview and planning, exploring, reading inside documents, and the case's account and its check,
+       each a quotation of the investigation's canon (R43). */
+    reading_guide: readingGuideLayer(readingGuides),
+    enquire: enquireLayer(),
+    explore: exploreLayer(),
+    reading: readingLayer(),
+    case_account: caseAccountLayer(),
+    account_check: accountCheckLayer(),
   };
 }
 

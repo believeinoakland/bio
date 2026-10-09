@@ -35,16 +35,17 @@ import { parseFrontmatter, normalizeType, OBJECT_TYPES, STATES, vocabFor, derive
          SHARED_ACT_CHECKS } from "../record-grammar/index.mjs";
 import { checkInquiryBasis, checkInquiryExtension, supersedesEdgeFindings, divisionDisclosureFindings, INQUIRY_ROWS }
   from "./grammar.mjs";
-import { INQUIRY_GRAMMARS, parseImportedFindingRef, parseOccurrenceRef, CALCULATION_REF_RE } from "../inquiry-grammar/index.mjs";
+import { INQUIRY_GRAMMARS, parseImportedFindingRef, parseOccurrenceRef, CALCULATION_REF_RE, readBiasApplied }
+  from "../inquiry-grammar/index.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate, listenerRefusal } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, listenerRefusal, Membership } from "../membership/index.mjs";
 import { promotionOf, stepContext, PROMOTION_ROW_CHECKS } from "../promotion/index.mjs";
 import { contentOf, CONTENT_EXTENT_CHECKS, CONTENT_MINTED_BY_PLANE, canonicalExtent, legContentId }
   from "../content/index.mjs";
 import { connectionsOf, refsReplacedOf } from "../connections/index.mjs";
 import { entitiesOf } from "../entities/index.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
-import { legEarningOf, legCapped, PROJECTS_DRAWING_MAX } from "../leg-earning/index.mjs";
+import { legEarningOf, legCapped } from "../leg-earning/index.mjs";
 import { standardsOf } from "../standards/index.mjs";
 import { calculationsOf } from "../calculations/index.mjs";
 import { captureOf } from "../capture/index.mjs";
@@ -52,8 +53,9 @@ import { notADisposition, DISPOSITIONS } from "../progressions/index.mjs";
 import { INQUIRY_TABLES, INQUIRY_DECLARATIONS, migrateInquiry, BUNDLE_FACTS, LEGS_RELATION } from "./schema.mjs";
 import { localDay, dayRange, isCalendarDate } from "../civil-time/index.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
-import { INQUIRY_CONTRADICTION_CHECKS, INQUIRY_SURFACE_CHECKS } from "./checks.mjs";
-import { checkInquiryEntry } from "./grammar.mjs";
+import { INQUIRY_CONTRADICTION_CHECKS, INQUIRY_SURFACE_CHECKS, INQUIRY_BIAS_CHECKS, QUESTION_WORDS, INQUIRY_WARNINGS }
+  from "./checks.mjs";
+import { checkInquiryEntry, inquiryQuestionOf } from "./grammar.mjs";
 import { contradictionFindings, candidateOf, readResolution, exploresOf, CANDIDATE_RE } from "./contradiction.mjs";
 import { setScalar, setOrAddScalar, appendStateHistory, removeBlock, setOrAddBlock, setSection, appendSessionLog,
          spliceBasisGround, blockEntries, fmSafe, rand } from "./text.mjs";
@@ -61,7 +63,8 @@ import { setScalar, setOrAddScalar, appendStateHistory, removeBlock, setOrAddBlo
 export { INQUIRY_SCHEMA, INQUIRY_TABLES, INQUIRY_DECLARATIONS, BUNDLE_FACTS, LEGS_RELATION, SUBJECT_COLUMN, moveBundleFacts, moveSubjectEntity }
   from "./schema.mjs";
 export * from "./grammar.mjs";
-export { INQUIRY_CONTRADICTION_CHECKS, INQUIRY_SURFACE_CHECKS } from "./checks.mjs";
+export { INQUIRY_CONTRADICTION_CHECKS, INQUIRY_SURFACE_CHECKS, INQUIRY_BIAS_CHECKS, QUESTION_WORDS, INQUIRY_WARNINGS }
+  from "./checks.mjs";
 export { CONTRADICTION_COORDINATES, PLURALITY_DIFFERENCES, DISSOLVED_BY, NORM_CANONS, RESOLUTION_KINDS, resolutionFamily,
          resolutionLines, CANDIDATE_RE, QUALIFIER_MAX, HYPOTHESIS_MAX } from "./contradiction.mjs";
 
@@ -104,15 +107,17 @@ const setterOf = (author) => { const t = typeof author === "string" ? author.tri
  *  module holds no copy of its own. */
 export { DISPOSITIONS };
 
-/** R39 (K102, K107 (3)): the refusal of a disposition a second team's stance would feel, its row held here (K174's
- *  pattern, the catalogue untouched). */
+/** R39 (K2371, K2436; H10, H38; DEC-188 (7)): the refusal of a shared disposition of a question a project shown to the
+ *  caller draws on, its row held here (K174's pattern, the catalogue untouched). `DRAWN_ON_BY_SEVERAL_PROJECTS` (C-106.1)
+ *  is retired, its number never reused (a different condition, T40-5). The translation is `words.json`'s
+ *  `question.refused.drawnon`, read by key (`QUESTION_WORDS`); it names no project, which travel in the refusal as data.
+ *  It awaits T41's stamp. */
 export const INQUIRY_DISPOSE_CHECKS = {
-  DRAWN_ON_BY_SEVERAL_PROJECTS: {
-    check: 'C-106.1',
-    where: 'src/inquiry/index.mjs #dispose > is-dispose-shared',
-    translation: 'More than one project draws on this question, and setting it down here would set it down for '
-      + 'every one of them. One team\'s disposition never moves another team\'s stance: set it aside for your own '
-      + 'project instead, which leaves the question where the other projects have it.',
+  DRAWN_ON_BY_A_PROJECT: {
+    check: 'C-106.2',
+    where: 'src/inquiry/index.mjs #dispose > is-dispose-drawn-on',
+    translation: QUESTION_WORDS['question.refused.drawnon'],
+    key: 'question.refused.drawnon',
   },
 };
 
@@ -130,11 +135,11 @@ const unreferenced = (t) => isImportedRef(t) || (typeof t === "string"
 
 /** The catalogue row a refusal code has, if any: its check id and canned translation travel with it (DEC-49). */
 const ROW_FAMILIES = [INQUIRY_ROWS, SHARED_ACT_CHECKS, INQUIRY_DISPOSE_CHECKS, INQUIRY_CONTRADICTION_CHECKS,
-                      INQUIRY_SURFACE_CHECKS];
+                      INQUIRY_SURFACE_CHECKS, INQUIRY_BIAS_CHECKS];
 function withRow(answer) {
   if (!answer || answer.ok !== false || typeof answer.reason !== "string" || answer.check) return answer;
   const row = ROW_FAMILIES.map((f) => f && f[answer.reason]).find((r) => r && r.check);
-  return row ? { ...answer, check: row.check, translation: row.translation } : answer;
+  return row ? { ...answer, check: row.check, translation: row.translation, ...(row.key ? { key: row.key } : {}) } : answer;
 }
 
 /** R16: the superseded-by column read back as a list; ONE parser, so no caller splits the string itself. */
@@ -151,6 +156,79 @@ export function actNoBasis(detail, extra = {}) {
   return { ...(extra && typeof extra === "object" ? extra : {}),
            ok: false, reason: "NO_BASIS", code: "NO_BASIS", check: row.check, translation: row.translation, detail };
   /* END DEC-49 REGION is-act-no-basis */
+}
+
+/** R61 (D59; K231, K2472): the one spelling of `BIAS_APPLICATION_NOT_IN_FORCE` (C-2.19), a finding inside
+ *  `BASIS_REFUSED`: `statement` the bias statement id the application names, `where` the place that names it (a leg's
+ *  `basis[i]`, or a caller's own label: `basis-versions` R48 and `case-disclosures` R31 answer through it). `inForce` is
+ *  what `bias.statementInForce` answered (`false`, or `null` for undetermined); `scope` the lens asked. Pure; never
+ *  throws. */
+export function biasNotInForce(args = {}) {
+  const { statement = null, where = null, inForce = false, scope = null } = args && typeof args === "object" ? args : {};
+  /* DEC-49 REGION is-bias-application-in-force */
+  const row = INQUIRY_BIAS_CHECKS.BIAS_APPLICATION_NOT_IN_FORCE;
+  const id = typeof statement === "string" ? statement : null;
+  const at = typeof where === "string" && where ? where : null;
+  const lens = scope && typeof scope === "object" && scope.type === "project" && typeof scope.id === "string" && scope.id
+    ? `the lens in force for ${scope.id}` : "the group's lens in force";
+  return { check: row.check, code: "BIAS_APPLICATION_NOT_IN_FORCE", translation: row.translation,
+           statement: id, where: at, in_force: inForce === null ? null : false,
+           detail: `${at ?? "a bias application"} names the bias statement ${id === null ? "(none)" : `'${fmSafe(id)}'`}, `
+                 + (inForce === null
+                   ? `and whether it is in ${lens} could not be read, so the application is refused rather than trusted`
+                   : `which is not in ${lens}`) };
+  /* END DEC-49 REGION is-bias-application-in-force */
+}
+
+/* ------------------------------------------------------------------ R59: a person in no public role (D13) */
+
+/** R59 (K2479, K2480): the line kinds and the far end's kind that make a person's role public: an office the entity
+ *  holds, is responsible for or acts (speaks) for; a government body it belongs to. Read from `lines` (its R17 read
+ *  contract) and the far end's kind and sector from `entities`. */
+export const PUBLIC_ROLE_LINES = Object.freeze({ office: Object.freeze(["holds", "responsible_for", "acts_for"]),
+                                                 government_body: Object.freeze(["belongs_to", "seat_on"]) });
+/** R59: the most words of a question read as a name's run, the longest run, and the cap on persons named. */
+export const PERSON_TEXT_WORDS_MAX = 120;
+export const PERSON_NAME_WORDS_MAX = 8;
+const ENTITY_ID_IN_TEXT = /\bENT-\d{4}-\d{4,}\b/g;
+/* A name's fold for matching inside a question: lower-cased, every run of characters that is no letter or digit one
+   space, trimmed (so a name matches as whole words). */
+const wordsFold = (t) => (typeof t === "string" ? t.toLowerCase().normalize("NFC").replace(/[^\p{L}\p{N}]+/gu, " ").trim() : "");
+
+/** R59 (D13): the persons in no public role that `text` names, over `entities`, the facts a caller read from the record
+ *  (`{entity_id, kind, label, aliases?, public_role, named?}`): an entity of kind `person` whose `public_role` is not
+ *  `true`, and that is `named` (the caller found it named: a question's subject, or matched by alias), or whose id or
+ *  label or an alias occurs in `text` as whole words. Answers `[{entity_id, label}]`, by id, each once. Pure; never
+ *  throws. */
+export function personsInNoPublicRole(args = {}) {
+  try {
+    const { text = "", entities = [] } = args && typeof args === "object" ? args : {};
+    const hay = ` ${wordsFold(text)} `;
+    const raw = typeof text === "string" ? text : "";
+    const out = new Map();
+    for (const e of Array.isArray(entities) ? entities : []) {
+      if (!e || typeof e !== "object" || e.kind !== "person" || e.public_role === true) continue;
+      const id = typeof e.entity_id === "string" ? e.entity_id : "";
+      if (!id) continue;
+      const names = [e.label, ...(Array.isArray(e.aliases) ? e.aliases : [])].map(wordsFold).filter(Boolean);
+      const named = e.named === true || raw.includes(id) || names.some((n) => hay.includes(` ${n} `));
+      if (named && !out.has(id)) out.set(id, { entity_id: id, label: typeof e.label === "string" ? e.label : null });
+    }
+    return [...out.values()].sort((a, b) => (a.entity_id < b.entity_id ? -1 : 1));
+  } catch { return []; }
+}
+
+/** R59 (D13; K2479): the test the promotion of a question asks, and `intent` R32 and `hypotheses` R19 ask by the same
+ *  export: null when `text` (over `entities`, as `personsInNoPublicRole`) names no person in no public role; else the
+ *  warning `{code: "PERSON_IN_NO_PUBLIC_ROLE", key, translation, persons}`, never an error. `viewer` is the member the
+ *  warning is for, carried as the caller's (the facts are the caller's read). Pure; never throws. */
+export function personWarning(args = {}) {
+  const { text = "", entities = [], viewer = null } = args && typeof args === "object" ? args : {};
+  const persons = personsInNoPublicRole({ text, entities });
+  if (!persons.length) return null;
+  const row = INQUIRY_WARNINGS.PERSON_IN_NO_PUBLIC_ROLE;
+  return { code: "PERSON_IN_NO_PUBLIC_ROLE", key: row.key, translation: row.translation, persons,
+           ...(typeof viewer === "string" && viewer ? { viewer } : {}) };
 }
 
 /* The files of a bundle other than bundle.md, carried unchanged into its next promotion. */
@@ -207,6 +285,9 @@ const MEMBER_AUTHOR = /^member:([A-Za-z0-9._:-]{1,128}?)(?:\/.*)?$/;
 /** R53: the key a finding is offered to bias under, its question's id behind a prefix no run id shares (bias keys every
  *  debt by its work product's key alone). */
 const FINDING_KEY = "finding:";
+/** R53 (K2442, D54): the viewer an internal read takes, a machine credential's (membership R43: it sees every bundle),
+ *  never the founder's `admin`, which is blind to a hidden project the founder neither was invited to nor joined. */
+export const INTERNAL_VIEWER = "class:daemon";
 
 /* ------------------------------------------------------------------ the module */
 
@@ -358,6 +439,12 @@ export class Inquiry {
    *  inside the promotion's transaction, before the write. */
   check(c) {
     const { pkg, bundleId, files, promotedType } = stepContext(c);
+    /* R59: the held document as it stands before this write, for the projection to tell a revised question from one
+       left alone (by projection time the record holds the new bytes) */
+    if (c && c.state && c.state.inquiry && c.head && promotedType === "inquiry") {
+      try { c.state.inquiry.priorText = this.record.readFile(bundleId, "bundle.md")?.text ?? null; }
+      catch { c.state.inquiry.priorText = null; }
+    }
     const basisMd = Array.isArray(files) ? files.find((f) => f && f.path === "bundle.md") : null;
     const docFm = basisMd && typeof basisMd.text === "string" ? parseFrontmatter(basisMd.text).data : null;
     const isInquiry = promotedType === "inquiry";
@@ -392,6 +479,10 @@ export class Inquiry {
         /* R11 (T33-45; K1447 (ii), (iii)): what the record holds behind a held standard's or a calculation's leg. */
         const hf = this.#heldLegFindings(basisLegs, c.author);
         if (hf.length) return { ok: false, reason: "BASIS_REFUSED", findings: hf };
+        /* R61 (D59; inquiry-grammar R18's store-side share): each `bias_applied` statement in force for the inquiry's
+           project (or the instance), the acting member as viewer; one not in force, or undetermined, refused */
+        const bf2 = this.biasAppliedFindings({ legs: basisLegs, project: basisFm.project, viewer: c.author });
+        if (bf2.length) return { ok: false, reason: "BASIS_REFUSED", findings: bf2 };
       }
     }
     /* REC-18: a subject entity the registry does not hold. */
@@ -544,6 +635,38 @@ export class Inquiry {
                      detail: `basis[${i}] rests on the calculation ${t}, whose acceptance is not recorded: a `
                            + `calculation is a leg once a member has accepted it` });
       }
+    });
+    return out;
+  }
+
+  /* R61 (D59; K2448, K2472, K2491): every bias application of every leg, read through inquiry-grammar's one encoding
+     (`readBiasApplied`, its R18: the numbered scalar keys `bias_<n>_*`), its `statement` asked of
+     `bias.statementInForce` (its R49) at the inquiry's project scope (its document's `project`; else the instance),
+     `viewer` the promotion's author. An answer of `in_force` false or null, a read that throws or answers another shape,
+     and no bias module to ask are each refused through `biasNotInForce`, naming the leg and the statement (fail closed).
+     A leg with no application asks nothing; a malformed one is inquiry-grammar R18's to refuse, so only a statement that
+     is a non-empty string is asked here. Public, so an act that records a leg asks the same check before it writes; the
+     promotion asks it over the document's legs. Answers the findings (empty: every statement in force); never throws. */
+  biasAppliedFindings({ legs = [], project = null, viewer = null } = {}) {
+    const out = [];
+    if (!Array.isArray(legs)) return out;
+    project = typeof project === "string" ? project.trim() : "";
+    const scope = project ? { type: "project", id: project } : "instance";
+    legs.forEach((leg, i) => {
+      const applied = readBiasApplied(leg);
+      applied.forEach((a, j) => {
+        const statement = a && typeof a === "object" && typeof a.statement === "string" ? a.statement.trim() : "";
+        if (!statement) return;
+        let r = null;
+        try {
+          r = this.#bias && typeof this.#bias.statementInForce === "function"
+            ? this.#bias.statementInForce({ statement, scope, viewer }) : null;
+        } catch { r = null; }
+        const inForce = r && typeof r === "object" && (r.in_force === true || r.in_force === false) ? r.in_force : null;
+        if (inForce !== true)
+          out.push(biasNotInForce({ statement, where: `basis[${i}].bias_applied[${j}]`, inForce,
+                                    scope: project ? scope : { type: "instance" } }));
+      });
     });
     return out;
   }
@@ -724,8 +847,11 @@ export class Inquiry {
         bundleId, pkg.migrationReplay.capture, promotionKey, ts);
       migrated = { capture: pkg.migrationReplay.capture, promotion: promotionKey, at: ts };
     }
+    /* R59 (D13): the warning on a creation or a revision of the question naming a person in no public role, recorded
+       with her choice; nothing is refused. */
+    const warned = isInquiry && docFm && !pkg.replay ? this.#personWarningAt(bundleId, cur, docFm, c, pkg) : null;
     /* R54: the dated waits, re-derived from the document's recheck triggers. */
-    if (isInquiry && docFm) this.#projectWaits(bundleId, docFm, c.author);
+    if (isInquiry && docFm) this.#projectWaits(bundleId, docFm, c.author, this.#setIn(pkg && pkg.setIn, c.author));
     /* R53 (A9, bias R40): a finding, when the document enters `concluded` stating its project. */
     if (isInquiry && docFm && docFm.current_state === "concluded" && !(cur && cur.currentState === "concluded"))
       this.#recordFinding(bundleId, docFm, c.author, !!pkg.replay);
@@ -735,11 +861,117 @@ export class Inquiry {
       this.sql.exec(`INSERT OR IGNORE INTO inquiry_member_agents (bundle_id, user_agent, at) VALUES (?,?,?)`,
         bundleId, agent, this.#when());
     return { ...(migrated ? { migration_replay: migrated } : {}),
-             ...(contentProjected.length ? { content: contentProjected } : {}) };
+             ...(contentProjected.length ? { content: contentProjected } : {}),
+             ...(warned ? { warning: warned } : {}) };
   }
 
-  /* R53: the question's finding and the project lens in force as it was made, read as bias reads every lens (the
-     administrator viewer, bias R33). A lens that cannot be read (no bias bound, or its read fails) and a replayed
+  /* R59 (D13; K2480): asked at a promotion of an inquiry that creates it, or revises its question (its `## Question`, or
+     its title when it has none) or its subject entity. The warning is answered and recorded (`inquiry_person_warnings`)
+     with her choice: `went_on` when the package says she saw it before the act (`personWarningSeen: true`), else
+     `warned_at_act`; a machine's promotion records `pending`, and the next promotion of the question by a member (her
+     taking it up) carries that warning to her and records her choice, even when it does not revise the question. Never
+     throws into the promotion: a test that cannot be read warns of nothing. */
+  #personWarningAt(bundleId, cur, fm, c, pkg) {
+    try {
+      const author = typeof c.author === "string" ? c.author.trim() : "";
+      const machine = !author || isMachineIdentity(author);
+      const questionOf = (text) => {
+        if (typeof text !== "string") return "";
+        const q = inquiryQuestionOf(text);
+        if (typeof q === "string" && q.trim()) return q.trim();
+        const f = parseFrontmatter(text).data;
+        return f && typeof f.title === "string" ? f.title : "";
+      };
+      const next = Array.isArray(c.files) ? c.files.find((f) => f && f.path === "bundle.md") : null;
+      const nextQ = questionOf(next && next.text);
+      const subject = typeof fm.subject_entity === "string" && fm.subject_entity.trim() ? fm.subject_entity.trim() : null;
+      let asked = !cur;
+      if (cur) {
+        const held = c.state && c.state.inquiry ? c.state.inquiry.priorText : undefined;
+        const was = typeof held === "string" ? held : null;
+        const wasFm = was ? parseFrontmatter(was).data || {} : {};
+        const wasSubject = typeof wasFm.subject_entity === "string" && wasFm.subject_entity.trim() ? wasFm.subject_entity.trim() : null;
+        asked = questionOf(was) !== nextQ || wasSubject !== subject;
+      }
+      let warning = asked ? personWarning({ text: nextQ, entities: this.personFacts({ text: nextQ, subject, viewer: author }),
+                                            viewer: machine ? null : author }) : null;
+      if (!warning && !machine) {
+        /* a machine's proposal not yet taken up: the latest row of the question is a pending one */
+        const last = this.#one(`SELECT persons, choice FROM inquiry_person_warnings WHERE bundle_id=? ORDER BY warning_id DESC LIMIT 1`, bundleId);
+        if (last && last.choice === "pending") {
+          const persons = safeJson(last.persons);
+          const row = INQUIRY_WARNINGS.PERSON_IN_NO_PUBLIC_ROLE;
+          if (Array.isArray(persons) && persons.length)
+            warning = { code: "PERSON_IN_NO_PUBLIC_ROLE", key: row.key, translation: row.translation, persons, viewer: author,
+                        proposed_by_machine: true };
+        }
+      }
+      if (!warning) return null;
+      const choice = machine ? "pending" : pkg && pkg.personWarningSeen === true ? "went_on" : "warned_at_act";
+      this.sql.exec(`INSERT INTO inquiry_person_warnings (bundle_id, at, by, persons, choice) VALUES (?,?,?,?,?)`,
+        bundleId, this.#when(), author || null, JSON.stringify(warning.persons), choice);
+      return { ...warning, choice };
+    } catch { return null; }
+  }
+
+  /** R59 (D13; K2479, K2480): the record's facts for the persons `text` and `subject` may name, for `personWarning`:
+   *  the subject entity, every `ENT-` id written in the text, and every entity whose live alias is a run of the text's
+   *  words (at most `PERSON_NAME_WORDS_MAX` words a run, over its first `PERSON_TEXT_WORDS_MAX` words), through
+   *  `entities.entitiesByAlias` (its R6); each person among them `{entity_id, kind, label, public_role, named: true}`,
+   *  `public_role` true when `lines` holds, not withdrawn, a line of `PUBLIC_ROLE_LINES` from it (an office it holds,
+   *  is responsible for or acts for; a government body it belongs to or sits on). Never throws. */
+  personFacts(args = {}) {
+    const { text = "", subject = null, viewer = null } = args && typeof args === "object" ? args : {};
+    const ids = new Set();
+    try {
+      if (typeof subject === "string" && subject.trim()) ids.add(subject.trim());
+      for (const m of (typeof text === "string" ? text : "").matchAll(ENTITY_ID_IN_TEXT)) ids.add(m[0]);
+      const words = wordsFold(text).split(" ").filter(Boolean).slice(0, PERSON_TEXT_WORDS_MAX);
+      const ents = this.entities;
+      const tried = new Set();
+      if (ents && typeof ents.entitiesByAlias === "function")
+        for (let i = 0; i < words.length; i++)
+          for (let n = 1; n <= PERSON_NAME_WORDS_MAX && i + n <= words.length; n++) {
+            const run = words.slice(i, i + n).join(" ");
+            if (tried.has(run)) continue;
+            tried.add(run);
+            let r = null;
+            try { r = ents.entitiesByAlias({ alias: run, viewer }); } catch { r = null; }
+            for (const e of (r && Array.isArray(r.entities) ? r.entities : []))
+              if (e && e.kind === "person" && typeof e.entity_id === "string") ids.add(e.entity_id);
+          }
+    } catch { /* what was found stands */ }
+    const out = [];
+    for (const id of [...ids].sort()) {
+      const e = this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, id);
+      if (!e || e.kind !== "person") continue;
+      out.push({ entity_id: e.entity_id, kind: e.kind, label: e.label, public_role: this.#publicRole(id), named: true });
+    }
+    return out;
+  }
+
+  /* R59: whether `lines` holds, not withdrawn, a public-role line from the person (PUBLIC_ROLE_LINES); false when the
+     record holds no such line (a store with no lines table holds none). */
+  #publicRole(id) {
+    try {
+      const rows = this.#rows(`SELECT l.kind, e.kind AS to_kind, e.entity_id AS to_id FROM lines l
+                                 JOIN entities e ON e.entity_id = l.to_entity
+                                WHERE l.from_entity=? AND l.withdrawn=0`, id);
+      for (const r of rows) {
+        if (r.to_kind === "office" && PUBLIC_ROLE_LINES.office.includes(r.kind)) return true;
+        if (r.to_kind === "body" && PUBLIC_ROLE_LINES.government_body.includes(r.kind)) {
+          let sector = null;
+          try { sector = this.entities.readEntity({ entityId: r.to_id })?.entity?.sector ?? null; } catch { sector = null; }
+          if (sector === "government") return true;
+        }
+      }
+      return false;
+    } catch { return false; }
+  }
+
+  /* R53: the question's finding and the project lens in force as it was made, read as an internal read (a machine
+     viewer, `INTERNAL_VIEWER`), never as the founder's: the founder is blind to a hidden project it is neither invited
+     nor joined to (membership R43, D54; K2442), and the lens of a finding is the project's whatever any member sees. A lens that cannot be read (no bias bound, or its read fails) and a replayed
      conclusion (not made now) record no lens; none in force records that none was. Never throws into the promotion. */
   #recordFinding(bundleId, fm, author, replay) {
     const project = typeof fm.project === "string" ? fm.project.trim() : "";
@@ -747,7 +979,7 @@ export class Inquiry {
     let state = "unreadable", sha = null;
     if (!replay && this.#bias)
       try {
-        const m = this.#bias.biasManifest({ scope: "project", scopeId: project, viewer: "admin", limit: 1 });
+        const m = this.#bias.biasManifest({ scope: "project", scopeId: project, viewer: INTERNAL_VIEWER, limit: 1 });
         if (m && m.in_force === true && typeof m.statements_sha === "string") { state = "recorded"; sha = m.statements_sha; }
         else if (m && m.in_force === false) state = "none";
       } catch { /* unreadable: no lens recorded */ }
@@ -842,7 +1074,9 @@ export class Inquiry {
     const rows = Array.isArray(fm.state_history) ? fm.state_history.filter((r) => r && typeof r === "object") : [];
     return { ok: true, id, transitions: rows.map((r) => ({
       at: r.timestamp ?? null, from: r.from_state ?? null, to: r.to_state ?? null,
-      by: r.author ?? null, reason: r.blurb ?? null })) };
+      by: r.author ?? null, reason: r.blurb ?? null })),
+      /* R60 (H38): a read of a question to a viewer answers the projects R14 shows her; the in-process call names none */
+      ...(viewer !== undefined ? this.#projectsField(id, viewer) : {}) };
   }
 
   /** R48 (N345): the inquiry's recorded `{candidate, resolution, explores}` as its latest promotion projected them, with
@@ -912,7 +1146,7 @@ export class Inquiry {
      text and date the document still states keeps who set it and when (its position and description follow the
      document); one whose text is still stated under another date ends `redated`, and the new date is a new wait set by
      this promotion's author; one no longer stated ends `removed`. Ended waits are kept, with who and when. */
-  #projectWaits(bundleId, fm, author) {
+  #projectWaits(bundleId, fm, author, setIn = null) {
     const triggers = Array.isArray(fm.recheck_triggers) ? fm.recheck_triggers : [];
     const stated = [];
     triggers.forEach((t, i) => {
@@ -939,8 +1173,8 @@ export class Inquiry {
         this.sql.exec(`UPDATE inquiry_dated_waits SET ended='redated', ended_by=?, ended_at=?, idx=NULL WHERE wait_id=?`,
           who, when, moved.wait_id);
       }
-      this.sql.exec(`INSERT INTO inquiry_dated_waits (bundle_id, idx, text, description, date, set_by, set_at)
-                     VALUES (?,?,?,?,?,?,?)`, bundleId, w.idx, w.text, w.description, w.date, who, when);
+      this.sql.exec(`INSERT INTO inquiry_dated_waits (bundle_id, idx, text, description, date, set_by, set_at, set_in)
+                     VALUES (?,?,?,?,?,?,?,?)`, bundleId, w.idx, w.text, w.description, w.date, who, when, setIn);
       set.push({ inquiry: bundleId, date: w.date, set_by: who });
     }
     for (const h of held)
@@ -948,6 +1182,17 @@ export class Inquiry {
         this.sql.exec(`UPDATE inquiry_dated_waits SET ended='removed', ended_by=?, ended_at=?, idx=NULL WHERE wait_id=?`,
           who, when, h.wait_id);
     if (this.#onWaitSet) for (const n of set) { try { this.#onWaitSet.fn(n); } catch { /* never undoes the promotion */ } }
+  }
+
+  /* R54 (T41; K2480): the project the promoting act named (the package's `setIn`, which the control plane stamps from
+     the request's project context), kept only when it names a project the author may see; else none. Never throws. */
+  #setIn(named, author) {
+    try {
+      const p = typeof named === "string" ? named.trim() : "";
+      if (!p) return null;
+      const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, p);
+      return b && b.object_type === "project" && this.membership.inSight(p, author) === true ? p : null;
+    } catch { return null; }
   }
 
   /* R55, R57: the profile's time zone (the active jurisdiction view's `time_zone`), or null when none is held: a wait's
@@ -999,7 +1244,7 @@ export class Inquiry {
           : today === null ? "undetermined"
           : today >= w.date ? "due" : "waiting";
         waits.push({ inquiry: w.bundle_id, index: w.idx, text: w.text, description: w.description, date: w.date,
-                     set_by: w.set_by, set_at: w.set_at, state,
+                     set_by: w.set_by, set_at: w.set_at, set_in: w.set_in ?? null, state,
                      ...(state === "looked" ? { looked_at: w.looked_at, ...(w.look_note ? { note: w.look_note } : {}) } : {}),
                      ...(state === "ended" ? { inquiry_state: w.current_state } : {}),
                      ...(state === "undetermined"
@@ -1008,6 +1253,64 @@ export class Inquiry {
       }
       return { ok: true, member: m, as_of: at, zone, waits };
     } catch { return { ok: true, member: memberStamp(member), waits: [] }; }
+  }
+
+  /** R55 (T41; D17; K2480): every open dated wait on `question` to any `viewer` who may see it (R33: else answered
+   *  exactly as an absent question, no waits), each with its text, description and date, its state as of `asOf`
+   *  (`waiting`, `due`, `ended` or `undetermined` as R55 states them; a look is the setter's own and is not answered
+   *  here), the setter's handle (`members.handle`, membership R120; null for a setter with none, a machine), and the
+   *  project it was set in, `{id, name}`, only while that project is discoverable (membership R85) and the viewer's
+   *  sight of it is not NONE (R44): otherwise no `set_in`, exactly as for a wait set in no project. The answer carries
+   *  `projects` (R60, leg-earning R14). R55's due notice and R56's look stay the setter's alone. Writes nothing; never
+   *  throws. */
+  questionWaits(args = {}) {
+    const { question = null, viewer = null, asOf = null } = args && typeof args === "object" ? args : {};
+    const absent = { ok: true, question: typeof question === "string" ? question : null, waits: [] };
+    try {
+      if (typeof question !== "string" || !question || typeof viewer !== "string" || !viewer.trim()) return absent;
+      const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, question);
+      if (!b || normalizeType(b.object_type) !== "inquiry" || this.membership.inSight(question, viewer) !== true) return absent;
+      const zone = this.#zone();
+      const today = this.#day(typeof asOf === "string" && asOf ? asOf : this.#when(), zone);
+      const ended = WAIT_ENDING_STATES.includes(b.current_state);
+      const waits = this.#rows(`SELECT w.idx, w.text, w.description, w.date, w.set_by, w.set_at, w.set_in, m.handle
+                                  FROM inquiry_dated_waits w LEFT JOIN members m
+                                    ON 'member:' || m.member_id = w.set_by
+                                 WHERE w.bundle_id=? AND w.ended IS NULL ORDER BY w.idx, w.wait_id`, question)
+        .map((w) => {
+          const state = ended ? "ended" : today === null ? "undetermined" : today >= w.date ? "due" : "waiting";
+          const shown = this.#projectShownByName(w.set_in, viewer);
+          return { index: w.idx, text: w.text, description: w.description, date: w.date, state,
+                   set_by_handle: typeof w.handle === "string" && w.handle ? w.handle : null, set_at: w.set_at,
+                   ...(shown ? { set_in: shown } : {}), ...(ended ? { inquiry_state: b.current_state } : {}) };
+        });
+      return { ok: true, question, zone, waits, ...this.#projectsField(question, viewer) };
+    } catch { return absent; }
+  }
+
+  /* R55 (D17): a project as `{id, name}` while it is discoverable and the viewer's sight of it is not NONE, else null. */
+  #projectShownByName(projectId, viewer) {
+    if (typeof projectId !== "string" || !projectId) return null;
+    try {
+      if (this.membership.visibilityOf(projectId) !== "discoverable") return null;
+      if (this.membership.sight(projectId, viewer) === Membership.SIGHT_NONE) return null;
+      const r = this.#one(`SELECT title FROM bundles WHERE bundle_id=?`, projectId);
+      return r ? { id: projectId, name: r.title ?? null } : null;
+    } catch { return null; }
+  }
+
+  /** R60 (H38): `{projects}` for question `id` read by `viewer` (leg-earning R14's answer for her), as every read of a
+   *  question here answers it; `{projects: null, projects_undetermined}` when it cannot be read. Never throws. */
+  projectsOf(id, viewer) { return this.#projectsField(id, viewer); }
+
+  /* R60 (H38): the `projects` field of a read answering a question to `viewer`: leg-earning R14's answer for that viewer,
+     `{projects, projects_truncated?}`, or `{projects: null, projects_undetermined}` when it cannot be read (never an
+     empty list in its place). */
+  #projectsField(question, viewer) {
+    const r = this.#projectsShown(question, viewer);
+    if (r === null)
+      return { projects: null, projects_undetermined: "which projects draw on this question could not be read" };
+    return { projects: r.projects, ...(r.truncated ? { projects_truncated: true } : {}) };
   }
 
   /** R56: the wait's setter records that they looked, with the instant; it reads `looked` until a later revision sets a
@@ -1099,7 +1402,7 @@ export class Inquiry {
       for (const id of ids) {
         const b = this.#one(`SELECT bundle_id, object_type, current_state FROM bundles WHERE bundle_id=?`, id);
         if (!b || normalizeType(b.object_type) !== "inquiry" || this.membership.inSight(id, viewer) !== true) continue;
-        out.push(this.#documentWait(id, b.current_state, viewer));
+        out.push({ ...this.#documentWait(id, b.current_state, viewer), ...this.#projectsField(id, viewer) });
       }
       return { ok: true, questions: out };
     } catch { return { ok: true, questions: [] }; }
@@ -1397,28 +1700,33 @@ export class Inquiry {
                        + "dependent rather than stranding it." };
     }
 
-    /* R39 (K102): ONE TEAM'S DISPOSITION NEVER MOVES ANOTHER TEAM'S STANCE. A member more than one project draws on
-       (a project document citing it, the citation not severed, counted over every project whatever the viewer
-       sees) is not moved here: the set is refused naming each such member, and no project the viewer may not see;
-       a disposition is then taken per project through the project-scoped set-aside (`queue`'s `op=proposedispose`).
-       `divide` and `ground` stay shared acts, because they change what the question is. */
-    /* DEC-49 REGION is-dispose-shared */
-    const shared = [];
+    /* R39 (K2371, K2436; H10, H38): DEFERRAL AND DISMISSAL ARE EACH PROJECT'S OWN ACT on its own relationship to a
+       question, taken through `queue`'s `op=proposedispose` project arm (its R27); this shared act moves the question's
+       own state only. A member a project SHOWN to the caller draws on (`leg-earning.projectsShownOn`, its R14: a
+       drawing project that is not hidden) is not moved: the set is refused naming each such member and, as data, the
+       projects R14 shows her, never a hidden one. A member drawn on only by hidden projects, or by none, is moved on its
+       own state, the answer the same either way (each hidden project's own relationship stands, H10). Nothing here
+       counts the drawing projects, and no outcome depends on how many there are. A read of R14 that fails refuses the
+       set as undetermined, naming no project and saying nothing about whether any draws (fail closed). `divide` and
+       `ground` stay shared acts, because they change what the question is. */
+    /* DEC-49 REGION is-dispose-drawn-on */
+    const drawn = [], unread = [];
     for (const id of sel.members) {
-      const drawing = this.legEarning.projectsDrawingOn(id);
-      if (drawing.length > 1) {
-        const seen = drawing.filter((p) => this.membership.inSight(p, viewer));
-        shared.push({ id, projects: seen, ...(seen.length < drawing.length ? { others_out_of_view: true } : {}),
-                      ...(drawing.truncated ? { truncated: true, bound: PROJECTS_DRAWING_MAX } : {}) });
-      }
+      const shown = this.#projectsShown(id, viewer);
+      if (shown === null) { unread.push(id); continue; }
+      if (shown.projects.length)
+        drawn.push({ id, projects: shown.projects, ...(shown.truncated ? { truncated: true } : {}) });
     }
-    if (shared.length)
-      return withRow({ ok: false, reason: "DRAWN_ON_BY_SEVERAL_PROJECTS", to,
-                       offenders: shared.sort((x, y) => (x.id < y.id ? -1 : 1)),
-                       detail: "more than one project draws on these questions, and a disposition here would move "
-                             + "every project's stance at once. Set each aside for your own project instead "
-                             + "(op=proposedispose), which leaves the others where they are. Nothing was moved." });
-    /* END DEC-49 REGION is-dispose-shared */
+    if (unread.length)
+      return { ok: false, reason: "PROJECTS_UNDETERMINED", to, offenders: unread.sort(),
+               detail: "which projects draw on these questions could not be read, so whether this shared act would "
+                     + "move a question a project works on is not known, and nothing was moved. Try again." };
+    if (drawn.length)
+      return withRow({ ok: false, reason: "DRAWN_ON_BY_A_PROJECT", code: "DRAWN_ON_BY_A_PROJECT", to,
+                       offenders: drawn.sort((x, y) => (x.id < y.id ? -1 : 1)),
+                       detail: "a project draws on these questions, and each project sets a question aside for itself "
+                             + "(op=proposedispose), which leaves it as it is everywhere else. Nothing was moved." });
+    /* END DEC-49 REGION is-dispose-drawn-on */
 
     const when = this.#when();
     const disposed = [];
@@ -1479,6 +1787,24 @@ export class Inquiry {
     }
     return { ok: true, to, reason: why, handle, disposed: disposed.sort(), weight: "refuse", drift: sel.drift,
              ...reevaluation };
+  }
+
+  /* R39, R60 (H38; leg-earning R14): the projects drawing on question `id` that `viewer` is shown, `{projects: [{id,
+     name}], truncated}`, never a hidden one, or null when the read cannot be had (no such read, a throw, or no list).
+     R14's answer is taken as a list, or as an object carrying `projects`; each entry as `{id, name}` (an entry that is a
+     bare id is taken as its id with no name). */
+  #projectsShown(id, viewer) {
+    try {
+      const le = this.legEarning;
+      if (!le || typeof le.projectsShownOn !== "function") return null;
+      const r = le.projectsShownOn({ id, viewer });
+      const list = Array.isArray(r) ? r : r && typeof r === "object" && Array.isArray(r.projects) ? r.projects : null;
+      if (!list) return null;
+      const projects = list.map((p) => (typeof p === "string" ? { id: p, name: null }
+        : p && typeof p === "object" && typeof p.id === "string" ? { id: p.id, name: typeof p.name === "string" ? p.name : null }
+        : null)).filter(Boolean);
+      return { projects, truncated: !!(r && r.truncated) };
+    } catch { return null; }
   }
 
   /** R39, R11, R23 (T33-45; K617, K1505): the earned registry and the resting-on reads moved by copy to `leg-earning`
@@ -2494,9 +2820,11 @@ export function inquiryOf(host, deps) {
     if (retrieval && typeof retrieval.registerField === "function")
       retrieval.registerField("inquiry", "legs", LEGS_RELATION);
     if (retrieval && typeof retrieval.registerProjectionDecoration === "function")
-      retrieval.registerProjectionDecoration("inquiry", (row) => {
-        const m = row && normalizeType(row.object_type) === "inquiry" ? k.migratedSurfacing(row.bundle_id) : null;
-        return m ? { surfaced_in: m } : {};
+      retrieval.registerProjectionDecoration("inquiry", (row, ctx) => {
+        if (!row || normalizeType(row.object_type) !== "inquiry") return {};
+        const m = k.migratedSurfacing(row.bundle_id);
+        /* R60 (H38): the question's document, read by a viewer, answers the projects R14 shows her */
+        return { ...(m ? { surfaced_in: m } : {}), ...k.projectsOf(row.bundle_id, ctx && ctx.viewer) };
       });
   }
   return k;
@@ -2541,6 +2869,9 @@ export function inquiryOps(k, url, body) {
                                owner: q("owner"), author: q("author") }),
     inquirydivide: () => k.divide({ ...b, target: q("target") || b.target, viewer: q("viewer"), author: q("author") }),
     inquiryground: () => k.ground({ ...b, target: q("target") || b.target, viewer: q("viewer"), author: q("author") }),
+    /* R55 (T41; D17): every wait on a question, to a viewer who may see it */
+    questionwaits: () => k.questionWaits({ question: q("question") || b.question, viewer: q("viewer"),
+                                           asOf: q("asOf") || null }),
     /* R56: the look is the stamped member's own (`by` from the stamp, never the body). */
     waitlook: () => k.waitLook({ inquiry: q("inquiry") || b.inquiry, index: q("index") ?? b.index, note: b.note ?? null,
                                  by: q("author") }),

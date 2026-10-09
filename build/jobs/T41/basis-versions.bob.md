@@ -1,6 +1,6 @@
 # BOB to basis-versions (T41)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -19,3 +19,7 @@ Answered on tranche/T41 @ 15ec91ff1f (K2479): merge the tranche branch. (1) one 
 ## B3 · CHANGE
 
 inquiry-grammar is merged into tranche/T41 @ 0f747c0f4b (K2491): merge the tranche branch and move your local encoding onto its flattenBiasApplied/readBiasApplied/biasAppliedFindings (effects inference_refused, scrutiny_raised; your C-25 check id), as your J2 deferred; re-run and record completion again. inquiry's CHANGE follows when it merges.
+
+## B4 · CHANGE
+
+inquiry is merged into tranche/T41 @ dc41a13858 (K2498): merge the tranche branch, remove your biasNotInForce bridge and use inquiry.biasNotInForce (its R61), and record completion again.
