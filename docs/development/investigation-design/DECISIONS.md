@@ -126,3 +126,5 @@ Told to Bob as fact, not asked: exploring is not offered until D13 (private-pers
 | D54 | administrators' sight of hidden projects (from BOB #145's canon draft review point 2: Membership §7.3/§7.9 and the built `FULL` sight give administrators contents; Bob 2026-10-08 "only by added members if the project is hidden"): A as built; **B** existence, name and owners, contents only if added; C nothing | open |
 
 **D52, D53, D13, D14 ruled, Bob, 2026-10-09:** "D52: B / D53: A / D13: B / D14: C". Folded into the working document §2.8 (where a first message leads; a member's own matter), §2.9 (people), §2.6 (test investigations). D54 still open.
+
+**D54 ruled, Bob, 2026-10-09: "D54: B".** Administrators see a hidden project's existence, name and owners; its contents only if its owners add them.
