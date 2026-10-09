@@ -80,3 +80,12 @@ Size (session_01243u4joqb8ZpywX663LU1U): test runs 23, module lines 1031
 ## J5 · COMPLETE
 
 B6 applied: real steps via stepsOf (factory and tests; findRecipients' {after} cursor read correctly); steps in final uses; 26/26; checks 0 but K1043's modules.json line. Record updated.
+
+## B7 applied (QUESTION-EXPLORER #1)
+
+- **B7 (K2488), ai-use merged.** Tranche merged. The factory reaches the real `ai-use` (`aiUseOf`); the tests drive it over the real `credentials` (switches, keys, keep-aways), with `zone` handed in. Brought in line with its answers: `exploreAllowed` answers `{ok, ask: false, label}` when allowed (read as allowed, its `label` attached); `exploreAsk`'s `what` is the list of questions (ai-use attaches R10's estimate to the Ask item it answers the owners, `exploreAsksPending`; tested); `estimate` is asked as the account's owner (the member, a project's first owner, the group's first active administrator, as ai-use reads an account itself) and its `estimate` kept, `"not known yet"` until ai-use has measured runs.
+- **What changed in what is tested:** a member's own account is never in exploring's scope (ai-use R6, D36), so R3's member-sight arm is no longer reached by a run (the arm stays, untested by a run); R3's sign-in test now uses a project whose account is its sole member's sign-in (credentials R54), off by default and refused, on by the owner's own act and opened; her own sign-in at `no` is refused here before ai-use is asked.
+- **Tests:** 26, pass 26, fail 0. **Checks** (local copy with paths and final uses filled): format 0; architecture 8 files, 37 imports, 0; coverage 14 of 14; ownership 1, K1043's `modules.json` line.
+- Still through `deps` names only: `ai-runs` T41 (`open`'s `place`/`work`/`origin`/`use`, `verifications()`, `testBars()`, `groupTestResults`, `close`'s actual), `capture-requests` R55's `step`. I merge after ai-runs, run-productions and capture-requests, each reaching me by CHANGE.
+
+Size (session_01243u4joqb8ZpywX663LU1U): test runs 31, module lines 1049
