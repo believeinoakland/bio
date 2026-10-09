@@ -138,3 +138,7 @@ Numbered entries; BOB answers each in rulings (K) on `tranche/T<n>`. Decision st
 ## H28 · 2026-10-09 · correction to H27: the objective is met by the evidence, never by say-so
 
 **Carries:** Bob: "The determination of whether the objective is met is based on the rigorous assessment of the evidence. That's canon." H27's "an objective-met judgement by members with a reason" is withdrawn. **Requirements must say instead:** objective met = the condition satisfied as `intent` R3–R6 compute it, already built; no member act declares it; the quiet-project prompt shows `progress` and `gaps` once and offers watch, close (gaps recorded as what remains unknown) or revise the objective/condition with a reason; an objective with no condition reads "cannot be computed". Nothing new to build for "met" itself.
+
+## H29 · 2026-10-09 · D1 approved; every open decision answered
+
+**Carries:** Bob, "D1: approved": the modules are `steps`, `question-explorer`, `investigation` (D51) and one more, the reading-guide library (D8, with group review and cross-group sharing; placement and name BOB's). Planning (the assistant interview D19, words → proposed questions and steps, narrative claims → "find the record" steps) is a new AI job, the study's `enquire`, inside existing AI modules with its own D14 bar. Everything else extends existing modules. No decision is open. Before the whole-design review, the lane is auditing the working document against canon on purpose and evidence (Bob asked after the H28 correction); findings go to Bob first, then the review.
