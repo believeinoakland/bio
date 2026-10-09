@@ -150,3 +150,7 @@ Numbered entries; BOB answers each in rulings (K) on `tranche/T<n>`. Decision st
 ## H31 · 2026-10-09 · D55 ruled; three elements and the drafted account in preparation
 
 **Carries:** D55 A: Action §3 canon wording "a member's determination, resting on published findings, that…" (a canon edit for BOB with the next canon fold). Bob named three elements the design lacks (bias as the only narrative in a case, documented, re-checkable by readers; approval for publication and publishing; another group assessing and importing a case as read-only evidence) and directed that the system may draft the case's written account from the evidence and must check the member's account for unsupported narrative (his words in DECISIONS.md). That reverses the audit's correction 5 and meets Case Making §4a and AI Roles rule 9. The lane is researching canon on all four and will put them to Bob together.
+
+## H32 · 2026-10-09 · publishing, bias and other groups' cases: D56–D62 put to Bob
+
+**Carries:** working document §2.12 summarises the ruled and built publication path, bias disclosure and case import (for the canon draft, a new section). Questions with Bob: D56 to D62, listed in DECISIONS.md. Notes for BOB, not Bob's: Publication's "Incomplete sections" line still says §5 is "NONE of it is built", but `case-authoring` R34 and `ratification` R2–R5 are met, so the line is stale. Declared Bias's regrade and rerun are prose only. `answers` R3–R4's sentence check is the base for D56's check of case prose.
