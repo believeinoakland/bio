@@ -52,7 +52,7 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 ### L2
 - **T41-3 · membership** · (N822; D54 B) R13 terms (two forms of `EXISTENCE`), R43, R44, R60, R77 (C-70.1's owners for that case), R88, R18, R120 with its index migration, as §3.5; acts that must reach a hidden project without its contents (project-roster R5; DEC-113's hold reads) stay reachable at `EXISTENCE`; (K657) R83's `MODULE_ORDER` names `steps`, `reading-guides`, `question-explorer`, `investigation`, `publish-schedule`; (DEC-188 (7)) the handle refusals read by key: `handle.refused.unchecked` (HANDLE_CHANGE_UNCHECKED, re-worded), `handle.refused.paused`, `handle.refused.notmember` · K2408, K2409, U145 · req: §3.5; R83 and the keys BOB's wording · runs every user's suite (P11) and reports the reds that name rule 4 (11) · **P6:** 3,621 + ~40.
 - **T41-4 · project-roster** · (N822) R5's rescue reachable at `EXISTENCE` of a hidden project; tests `visibility-directory`, `requests`, `figures-purge` re-stated for an administrator neither invited nor joined · K2408 · req: §3.5 (R5 re-read; BOB's wording if it changes) · after T41-3.
-- **T41-5 · credentials** · (N820; D2, D19, D21, D56) R55 `USE_KINDS` gains `enquire`, `read`, `transcribe`, `account`, each switched and bound by material limits; (DEC-188 (8)) `accountSwitchSet` (R25) and `groupswitchset` (R37) retire to `accountusesset` (R55's switches), with pointers; (DEC-188 owed: the panel's reads, change history) a read answering each account's uses and keep-aways to its owners, and each account's change history (key set, switched, removed, uses, keep-aways) with who and when, to its owners only; (DEC-188 (7)) its refusals read by key: `ai.refused.off`, `.projectkeptaway`, `.notsole`, `.noticedue` (with `ai.disclosure.projectkey`), `.switchvalue`, `.signinnotconnected` · K2418, U145 · req: §3.6 (R55); DEC-188's share BOB's wording before L2's START · 2,834 + T40's ~420 → ~3,350.
+- **T41-5 · credentials** · (N820; D2, D19, D21, D56) R55 `USE_KINDS` gains `enquire`, `read`, `transcribe`, `account`, each switched and bound by material limits; (DEC-188 (8)) `accountSwitchSet` (R25) and `groupswitchset` (R37) retire to `accountusesset` (R55's switches), with pointers; (DEC-188 owed: the panel's reads, change history) a read answering each account's uses and keep-aways to its owners, and each account's change history (key set, switched, removed, uses, keep-aways) with who and when, to its owners only; (DEC-188 (7)) its refusals read by key: `ai.refused.off`, `.projectkeptaway`, `.notsole`, `.noticedue` (with `ai.disclosure.projectkey`), `.switchvalue`, `.signinnotconnected` · K2418, U145 · req: §3.6 (R55); DEC-188's share BOB's wording before L2's START · 2,834 + T40's ~420 → ~3,350. (N796, Bob K2425) a sign-in's `standing` switch works (R55, off by default, the member's own act), R32's sign-in refusal lifted; answers' and agent-worker's standing path and `question-explorer` R3 admit a sign-in principal whose `standing`/`explore` switch is on.
 - **T41-6 · promotion** · stamps T41's L1–L2 rows (membership's, credentials', their re-worded rows) · K1680 · req: the rows' behaviour, BOB's wording.
 
 **L2 merge order:** membership, project-roster, credentials, promotion last.
@@ -60,6 +60,7 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 ### L3
 - **T41-7 · capture-sources** · (N822) R58 re-read against D54; tests assuming an administrator's `FULL` sight re-stated · req: R58, BOB's wording if it changes.
 - **T41-8 · capture** · (N822) `held` tests re-stated (an administrator not added sees a hidden project at `EXISTENCE`) · tests only unless R-text names administrators' sight.
+- **T41-8a · capture** · (N821 upload; Bob D42 "upload: A", K2425) a member uploads a file she holds: graded received from the member (as the doorbell's material, never fetched, K509 (3)), attributed to her, with her statement of where it came from; stored and profiled as any capture; a later public fetch of the same bytes strengthens it · req: BOB's wording before L3's START (capture R, new) · L11 shares: op-declarations (the op), control-plane (route), affordances (help), store-door if the size path needs it.
 
 ### L4
 - **T41-9 · reading-pipeline** · (was T40-4a; K2399) re-measure `convert-chain.test.mjs`:297 and `pieces.test.mjs`:218; (N820; D21) R29: a transcription tier above tier 3 at a member's act on the paying account (`use: "transcribe"`), appended as `ai_transcription` (text-chain R104), never under a "no AI" limit · req: §3.6 · 1,452 → ~1,550.
@@ -148,15 +149,14 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 | N815 | not left out: `question-explorer` (T41-28) |
 | N751 | a measurement: no fresh policies beyond the 74 read (K2079) |
 | N780 | a deployment: the next release cut (K1501) |
-| N794 | Bob's (K633, K1849): `legacy-ui` touched only where he names it |
-| N796 | Bob's (P17), still open: held "with the investigation design lane's related question" (K2334); the design was approved without answering it, so K2334's condition for bringing it again is met (doubt 1) |
+| N794 | Bob's: "N794: A" (K2425), legacy-ui stays frozen until the new screens replace it (K633, K1849) |
 | N817 | not a module job: the actions design lane, started by BOB alongside the tranche; its condition (the investigation lane handed off, K2417) is met (doubt 2) |
 | N821: the wizard runner; N551 (part), N572 | a dependency not yet built: the runner is a screen-side construct of the new screens (N672) |
-| N821: member upload of a file she holds; email capture | Bob's (P17): a new intake route (hand-carried material's grade and attestation, `sources` "upload redesign", K509 (5)); email capture also a deployment (an inbound route per group) |
+| N821: email capture | Bob's: "D42 - email: A" (K2425), later, after upload is in use; also a deployment (an inbound address per group) |
 | N821: screens for built ops; shortcuts, command bar | the UX stream's: handed to UX-DESIGN by NOTICE |
 | `agent-worker`'s split (7,510 lines) | size before its split is not this tranche's: no split map exists; T41-31 is a small change only (doubt 7) |
 | T38's screen rows (N788, N757, N776, N708, N669 parts; N670; N559, N654, N672, N673, N683, N688, N698, N703, N710, N714, N719, N721, N726, N728, N732, N734, N735) | a dependency not yet built: the new member screens (N672); Bob (K2147): no interim control |
-| N757 (later) | Bob's (DEC-180): his reasons (cost, keep-away) are now met by the account cascade and material limits (K2350–K2353), but resuming it is his (doubt 6) |
+| N757 (later) | Bob's: "N757: A" (K2425), members mark photo areas by hand; no AI proposals |
 | N563, N579, N632, N641, N643, N645, N652, N698 (parts) | a measurement (each as T37's table names it) |
 | N703 (part) | a deployment or measurement: a zone and read token per group |
 | N647 | a measurement: `investigate` is deployable only once its test bar is held (run-rules R19 as amended, T41-21) |
