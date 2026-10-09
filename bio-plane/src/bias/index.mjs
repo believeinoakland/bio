@@ -5,6 +5,7 @@
  *   biasAdopt     the AUTHORED, ATTRIBUTED, REASONED act that puts a set in force, and the PIN taken at that instant
  *                 (R11, R12; DEC-88).
  *   biasManifest  the EFFECTIVE SET in force for a scope, its hash, and what it does NOT enforce (R13–R18, R24, R25).
+ *   statementInForce  whether one statement id is in that set, with its kind and text (R49; D59).
  *   biasInhale    reading an outside policy: it SPLITS bars from bias, PUBLISHES the residue, and PROPOSES, never
  *                 installs (R19–R21). It holds no write path at all: no SQL, no transaction, no promotion.
  *   descriptionDraft  the group's own self-description (membership R110), offered to an active member as the opening
@@ -81,8 +82,11 @@ export const BIAS_DEBT_UNCLEARED_MAX = 1000;
 /* R44's bound, R43's: 200 by default, at most 1,000. */
 export const BIAS_DEBT_SETTLED_DEFAULT = 200;
 export const BIAS_DEBT_SETTLED_MAX = 1000;
-/* The operator-internal viewer the sweep reads a lens as (R33): the lens in force is a fact about the SCOPE. */
-export const BIAS_DEBT_VIEWER = "admin";
+/* The operator-internal viewer the sweep and the re-run check read a lens as (R33, R38): the lens in force is a fact
+   about the SCOPE, whoever may see it, so it is read through membership R43's machine arm, which sees every bundle.
+   Not the founder's viewer: since D54 (K2408, T41-3) that is withheld a hidden project it is not in, and its lens
+   would read as none in force (K2442). */
+export const BIAS_DEBT_VIEWER = "class:daemon";
 /* R46: the figures R42's `counts(hid)` answers, registered with record-core under these names, in this order. */
 export const BIAS_COUNT_KEYS = Object.freeze(["biasStatements", "biasAdoptions"]);
 
@@ -159,8 +163,9 @@ class Bias {
   }
 
   /* The viewer gate over a bundle-id column (membership's one sight rule, R43, over record-core's `bundles`): a
-     machine credential or the founder's viewer passes everything, an unrecognised viewer nothing, a member what the
-     predicate admits. The column must be qualified, or it binds to `bundles` inside the subquery and passes all. */
+     machine credential passes everything, an unrecognised viewer nothing, a member, the founder included, what the
+     predicate admits (since D54 the founder and an administrator are withheld a hidden project they are not in).
+     The column must be qualified, or it binds to `bundles` inside the subquery and passes all. */
   static #gate(col, viewer) { return Bias.#gateOver(col, viewerPredicate(viewer)); }
 
   /* The same gate from a predicate already compiled (`viewerPredicate`'s answer, R43's `gate`). A predicate that is
@@ -376,19 +381,15 @@ class Bias {
 
   /* ---------------------------------------------------------------- R13–R18, R24, R25: the manifest */
 
-  /** op=biasmanifest — THE EFFECTIVE SET IN FORCE, its hash, and its residue. Effective bias = the adopted instance
-   *  statements at pinned revisions, minus project nullifications of unlocked statements, plus project replacements
-   *  and additions. The hash is over the WHOLE set, never the page (R17). A nullification of a LOCKED statement is
-   *  refused its effect and reported. Absence is stated: "no manifest was in force", never an empty lens.
-   *  SYNCHRONOUS, so a transaction may call it (the case document's stamp, REC-126's review copy). */
-  biasManifest({ scope = "instance", scopeId = "", viewer = null, limit = null, offset = 0 } = {}) {
-    const st = String(scope) === "project" ? "project" : "instance";
-    const sid = st === "project" ? String(scopeId || "").trim() : "";
+  /* R13–R17: THE EFFECTIVE SET for a scope, as the viewer may see it — the one computation R18's manifest pages and
+     R49's question asks of. `{answer}` where R13–R15 answer without a lens (not seen, undetermined, none in force);
+     else the whole ordered set, its hash, and what the manifest prints beside it. */
+  #lens(st, sid, viewer) {
     if (st === "project" && (!sid || !this.#membership.inSight(sid, viewer)))
-      return { ok: true, scope: st, scope_id: sid, in_force: false,
+      return { answer: { ok: true, scope: st, scope_id: sid, in_force: false,
                bundles: [], statements: [], residue: [], lock_violations: [],
                statements_sha: null, count: 0, total: 0, limit: 0, offset: 0, truncated: false,
-               stated: "no manifest was in force" };
+               stated: "no manifest was in force" } };
 
     const seen = Bias.#gate("a.bundle_id", viewer);
     const pinned = new Map();          // bundle id -> the pinned revision's front matter
@@ -434,24 +435,23 @@ class Bias {
     };
 
     if (unresolved.length > 0)
-      return { ok: true, scope: st, scope_id: sid, in_force: null,
+      return { answer: { ok: true, scope: st, scope_id: sid, in_force: null,
                bundles: [], statements: [], residue: [], lock_violations: [],
                statements_sha: null, unresolved_pins: unresolved, ...marker,
                count: 0, total: 0, limit: 0, offset: 0, truncated: false,
                stated: "undetermined: an adoption pins a revision whose bytes this record cannot produce, "
-                     + "so which statements are in force cannot be computed" };
+                     + "so which statements are in force cannot be computed" } };
 
     if (adoptions.length === 0)
-      return { ok: true, scope: st, scope_id: sid, in_force: false,
+      return { answer: { ok: true, scope: st, scope_id: sid, in_force: false,
                bundles: [], statements: [], residue: [], lock_violations: [],
                statements_sha: null, ...marker,
                count: 0, total: 0, limit: 0, offset: 0, truncated: false,
-               stated: "no manifest was in force" };
+               stated: "no manifest was in force" } };
 
     /* The instance layer first, keyed by statement id so a project override can find what it names. */
     const effective = new Map();
     const level = new Map();
-    const instanceBySubject = new Map();
     for (const a of instanceAdoptions)
       for (const s of statementRows(a.bundle_id, pinned.get(a.bundle_id))) {
         effective.set(s.statement_id, s);
@@ -497,6 +497,20 @@ class Bias {
     /* R17: over the WHOLE set and the fields that change meaning, before any paging. */
     const statementsSha = sha256Hex(JSON.stringify(
       all.map((s) => [s.bundle_id, s.statement_id, s.kind, s.subject, s.text, s.justification, s.locked])));
+    return { adoptions, all, statementsSha, pinnedText, lockViolations, marker };
+  }
+
+  /** op=biasmanifest — THE EFFECTIVE SET IN FORCE, its hash, and its residue. Effective bias = the adopted instance
+   *  statements at pinned revisions, minus project nullifications of unlocked statements, plus project replacements
+   *  and additions. The hash is over the WHOLE set, never the page (R17). A nullification of a LOCKED statement is
+   *  refused its effect and reported. Absence is stated: "no manifest was in force", never an empty lens.
+   *  SYNCHRONOUS, so a transaction may call it (the case document's stamp, REC-126's review copy). */
+  biasManifest({ scope = "instance", scopeId = "", viewer = null, limit = null, offset = 0 } = {}) {
+    const st = String(scope) === "project" ? "project" : "instance";
+    const sid = st === "project" ? String(scopeId || "").trim() : "";
+    const lens = this.#lens(st, sid, viewer);
+    if (lens.answer) return lens.answer;
+    const { adoptions, all, statementsSha, pinnedText, lockViolations, marker } = lens;
 
     /* R18, DEC-54 (b): the residue travels with the manifest, read from each PINNED revision's own section. */
     const residue = adoptions.map((a) => {
@@ -507,6 +521,7 @@ class Bias {
     /* R24 (safeguard 3): a project statement in force on a subject a group statement in force also addresses,
        naming no statement it overrides, is an INTERACTION, listed with both justifications so a reviewer reads the
        one against the other. Nothing is refused (R28). */
+    const instanceBySubject = new Map();
     for (const s of all) if (s.scope === "instance") {
       if (!instanceBySubject.has(s.subject)) instanceBySubject.set(s.subject, []);
       instanceBySubject.get(s.subject).push(s);
@@ -564,6 +579,45 @@ class Bias {
       limit: cap, offset: from,
       truncated: from + page.length < all.length,
     };
+  }
+
+  /* ---------------------------------------------------------------- R49: one statement, in force or not */
+
+  /** R49 (D59; T41-12) — IS THIS STATEMENT IN THE LENS IN FORCE FOR THIS SCOPE? The question a recorded bias
+   *  application asks before it is honoured (`inquiry-grammar` R18 at a leg, `basis-versions` R48 at a conclusion,
+   *  `case-disclosures` R30–R31 at a case's account). It asks R16's effective set — the WHOLE set, never a page — at
+   *  R13's and R14's sight, by the statement id that set is keyed by (unique within a lens: a project statement of the
+   *  same id replaces the group's). `scope` is `"instance"` (or `{type: "instance"}`) or `{type: "project", id}`, the
+   *  context shape R33 reads. In force: the statement's kind and text, its bundle, its level (`group` or `project`,
+   *  DEC-149), whether it is locked, and R17's hash of the lens it was found in, so a caller can record which lens it
+   *  checked against. Not in force — no such id, no lens in force, or a project the viewer may not see, answered
+   *  identically (R13) — `in_force: false`; an adoption whose pinned bytes cannot be read (R14), `in_force: null`.
+   *  SYNCHRONOUS, so a transaction may call it; writes nothing; never throws. */
+  statementInForce({ statement = null, scope = "instance", viewer = null } = {}) {
+    const isProject = isObj(scope) ? scope.type === "project" : scope === "project";
+    const sid = isProject && isObj(scope) && typeof scope.id === "string" ? scope.id.trim() : "";
+    const where = { type: isProject ? "project" : "instance", id: sid };
+    const id = typeof statement === "string" ? statement.trim() : "";
+    const absent = (inForce, stated, sha = null) => ({
+      ok: true, statement: id || null, scope: where, in_force: inForce, kind: null, text: null, bundle_id: null,
+      level: null, locked: null, statements_sha: sha, stated });
+    try {
+      if (!id) return absent(false, "no statement id was named, so none is in force");
+      const lens = this.#lens(where.type, sid, viewer);
+      if (lens.answer) return lens.answer.in_force === null
+        ? absent(null, "undetermined: an adoption pins a revision whose bytes this record cannot produce, so whether "
+                     + "this statement is in force cannot be computed")
+        : absent(false, "no lens is in force for this scope, so this statement is not in force");
+      const s = lens.all.find((x) => x.statement_id === id);
+      if (!s) return absent(false, "this statement is not in the lens in force for this scope", lens.statementsSha);
+      return { ok: true, statement: id, scope: where, in_force: true, kind: s.kind, text: s.text, bundle_id: s.bundle_id,
+               level: s.scope === "project" ? "project" : "group", locked: s.locked,
+               statements_sha: lens.statementsSha,
+               stated: "this statement is in the lens in force for this scope" };
+    } catch {
+      return absent(null, "undetermined: the lens in force could not be read, so whether this statement is in force "
+                        + "is not known");
+    }
   }
 
   /* ---------------------------------------------------------------- R19–R21: the inhale */
@@ -755,7 +809,7 @@ class Bias {
     try { return this.#pending() ? Number(now) + this.#delayMs() : null; } catch { return null; }
   }
 
-  /* R33: the lens now in force for a work product's context, read as the administrator viewer: a project's scope for
+  /* R33: the lens now in force for a work product's context, read as the machine viewer (`BIAS_DEBT_VIEWER`): a project's scope for
      work over a project, the instance's otherwise. `{sha}` (null when none is in force), or `{undetermined: true}`. */
   #lensNow(context) {
     const project = context && context.type === "project" && context.id;
@@ -1028,8 +1082,8 @@ class Bias {
   }
 
   /** R43: the debts not yet cleared whose context `gate` admits (`gate` membership's predicate, `viewerPredicate`'s
-   *  answer over the alias `b`; a machine or founder scope admits every debt; a malformed gate admits none), newest
-   *  raised first, ties by run, at most `limit` (1–1,000, default 200), `truncated` measured by reading one more.
+   *  answer over the alias `b`; a machine scope admits every debt, the founder's what R43 admits it to (D54); a
+   *  malformed gate admits none), newest raised first, ties by run, at most `limit` (1–1,000, default 200), `truncated` measured by reading one more.
    *  Writes nothing; never throws (a read that fails answers none, and says so). */
   uncleared({ gate = null, limit = null } = {}) {
     const n = Math.floor(Number(limit));
