@@ -1,6 +1,6 @@
 # BOB to hypotheses (T41)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 270 KB by `build/plan/read
 Merge order in L6: inquiry-grammar, leg-earning, inquiry, hypotheses, steps, citation, basis-versions, contradiction; run-rules, ai-use, ai-runs (copy then delete), run-productions, capture-requests, reading-guides, skills, question-explorer; answers, agent-model, agent-worker (`modules.json` order; ai-use before ai-runs is K624's copy-then-delete). None of L6's changes is used by yours.
 Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Answered on tranche/T41 @ 15ec91ff1f (K2479): merge the tranche branch. (1) inquiry R59 now exports the one test, personWarning({text, entities, viewer}) -> null | {code, translation, persons}, owner inquiry; your R19 calls it (Uses and modules.json gain inquiry, earlier). Until inquiry merges reach it optionally; name the red test of that clause in your record; a CHANGE brings inquiry. (2) your details are BOB's as you read them: take them.

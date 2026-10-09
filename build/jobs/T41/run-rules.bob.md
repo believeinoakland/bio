@@ -1,6 +1,6 @@
 # BOB to run-rules (T41)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -11,3 +11,11 @@ Reading set (mechanics §17): measured at this START: 208 KB by `build/plan/read
 Merge order in L6: inquiry-grammar, leg-earning, inquiry, hypotheses, steps, citation, basis-versions, contradiction; run-rules, ai-use, ai-runs (copy then delete), run-productions, capture-requests, reading-guides, skills, question-explorer; answers, agent-model, agent-worker (`modules.json` order; ai-use before ai-runs is K624's copy-then-delete). None of L6's changes is used by yours; ai-use, ai-runs, run-productions, skills and question-explorer use yours later in this layer.
 Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+All four readings confirmed (K2479). (1) ship CIVICSMITH_TEST_SET v1 with no matters and testBarHeld refusing an empty set; the matters are N829 in next.md, not this job's. (3) retiring C-109.12 too is right. Build on them.
+
+## B3 · CHANGE
+
+From AI-RUNS #14 J1 (K2482): add one row to your table, AI_GROUP_TEST_INVALID (C-22.24, a group's own test matter that is malformed: ai-runs R75's groupTestSet), beside your C-22.22 AI_TEST_BAR_UNFIT, which ai-runs also answers through checkTestBarRecord. Test it explicitly.
