@@ -5,12 +5,12 @@ Bob's decisions in this lane are D-numbers ("Actions D<n>" where confusable with
 | D | subject | recommended | state |
 |---|---|---|---|
 | D1 | asking or asserting: which outward acts the breach rule (Action rule 2) holds back | (c) by what the text does; flagged assertions resolved by the member, confirmation recorded | **ruled** 2026-10-09, Bob: "D1: as recommended" (c). |
-| D2 | checking what the group sends against the record | (c) case-account check; contradicted sentence held by default, open override | open |
-| D3 | law's window shorter than the time to publish (Brown Act §54960.1) | (b) window shown + quick one-finding case; with (d) overridden action may join escalation once determined (revises K600 (a), Bob's) | open |
-| D4 | what stays inside: confidential act, counsel matter (a project), member as source, promises to people | (a) | open |
-| D5 | when a breach is over: curing act; harm addressed; publishing again | curing act (b); reasoned statement + optional words (a); outcome entry then determination (b) | open |
-| D6 | endings: stopped pursuing; closing summary; success record; stopping watches | as page §7 | open |
-| D7 | when an official's spoken promise binds | (a) only once confirmed in writing or public; silence a dated fact | open |
+| D2 | checking what the group sends against the record | (c) case-account check; contradicted sentence held by default, open override | **ruled** 2026-10-09, Bob: "D2: C". |
+| D3 | law's window shorter than the time to publish (Brown Act §54960.1) | (b) window shown + quick one-finding case; with (d) overridden action may join escalation once determined (revises K600 (a), Bob's) | **ruled** 2026-10-09, Bob: "D3: as recommended" — (b) with (d); (d) revises K600 (a) ("an overridden action never joins an escalation"), Bob's own. |
+| D4 | what stays inside: confidential act, counsel matter (a project), member as source, promises to people | (a) | **ruled** 2026-10-09, Bob: "D4: A". |
+| D5 | when a breach is over: curing act; harm addressed; publishing again | curing act (b); reasoned statement + optional words (a); outcome entry then determination (b) | **ruled** 2026-10-09, Bob: "D5: as recommended" — curing act (b); reasoned statement with optional words (a); outcome entry, then determination with the next edition (b). |
+| D6 | endings: stopped pursuing; closing summary; success record; stopping watches | as page §7 | open — Bob, 2026-10-09: "Need a better, more detailed explanation"; re-explained on the page (6a–6d, worked example) |
+| D7 | when an official's spoken promise binds | (a) only once confirmed in writing or public; silence a dated fact | **ruled** 2026-10-09, Bob: "D7: A", with the office's silence recorded as a dated fact. |
 | D8 | templates, procedure guides, legal facts in context, other states, who writes rules | as page §7 | open |
 | D9 | counsel briefing before determination; defence purpose | (b) | open |
 | D10 | litigation hold: who places it; hold notice to members | (a), (a) | open |
