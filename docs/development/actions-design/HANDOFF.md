@@ -16,7 +16,7 @@ Numbered entries; BOB answers each in rulings (K). Decision states live in `DECI
 - The records-request rules (Case Making D-147, D-148, D-149: one round trip, outcome vocabulary, a due date citing a governing law, a fee quote as evidence, every governing law named) are built but have lost their canonical home since Action §6 made Case Making's action paragraphs history. The lane will place them in its canon draft; until then BOB may want to note it.
 - Stale texts (R2 §contradictions, R3 §M): FA Function 3 and Roadmap §10 still say escalation "activates"; State Rules I-11 "marked overdue", §1.2 ID grammar, §4.4 kinds; Publication §3 rule 15(d) matches quotes by the old free-text counterparty; NOTIFICATIONS lists email as open; `filing-templates.md` status says R27 unmet (met, K2233); `following.md` keeps a DRAFT banner; K899 (7) superseded by DEC-113 unmarked; K92 (5), K11, K13 not marked amended; K102's "for now" never lifted for layer-9 modules.
 - No K ruling records this lane's start or Bob's 2026-10-09 words; N817 in `next.md` still reads "Not today".
-- Defect for a tranche: overdue is marked on the UTC day, 7–8 hours early in Pacific time (Ladders TIME L1).
+- Ladders TIME L1 records overdue marked on the UTC day (7–8 h early in Pacific); K1657 moved actions R12/R25/R33 to the office's local day, so the ladder note is likely stale: re-check both code sites (U6–U10 worker), correct the ladder.
 
 **Readings this lane settles as detail (BOB to confirm or overrule in a K):**
 1. K1466's "activate": the phase waiting on a duty occurrence opens and its options are offered as ready; a member starts each (as action-plans R14/R38 already build); member choice (K590 (1), (7), DEC-69) holds.
