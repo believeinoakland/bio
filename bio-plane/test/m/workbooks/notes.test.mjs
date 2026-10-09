@@ -43,7 +43,11 @@ test("R11 recordCheck is refused SELF_CHECK for the workbook's author and UNKNOW
   w.clock.now = "2026-10-06T10:00:00.000Z";
   for (const outcome of ["agrees", "disagrees", "could_not_check"])
     assert.equal((await w.wb.recordCheck({ ...w.at, outcome, note: outcome === "disagrees" ? "B4 should be 99.95" : undefined, by: V("carol") })).ok, true);
-  assert.equal((await w.wb.recordCheck({ ...w.at, outcome: "agrees", by: V("alice") })).ok, true, "an administrator who is not the author");
+  /* D54: alice, an administrator neither invited nor joined to the hidden project P, is answered as for an absent
+     workbook and records nothing; invited by its owner, she is a second member like any other */
+  assert.equal(codeOf(await w.wb.recordCheck({ ...w.at, outcome: "agrees", by: V("alice") })), "NO_SUCH_WORKBOOK", "D54: an uninvited administrator");
+  assert.equal(w.membership.projectInvite({ projectId: w.P, handle: "h_alice", by: "bob" }).ok, true);
+  assert.equal((await w.wb.recordCheck({ ...w.at, outcome: "agrees", by: V("alice") })).ok, true, "an invited administrator who is not the author");
   for (const viewer of [V("bob"), V("carol"), MACHINE]) {
     const checks = (await w.wb.readWorkbook({ ...w.at, viewer })).checks;
     assert.deepEqual(checks.map((c) => [c.outcome, c.by, c.at]), [["agrees", V("carol"), "2026-10-06T10:00:00.000Z"],

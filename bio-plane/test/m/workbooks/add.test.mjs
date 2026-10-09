@@ -122,11 +122,16 @@ test("R13 a workbook whose project, capture or any bound source the viewer may n
   /* an unbound binding's source is still shown, so it still withholds */
   assert.equal((await w.wb.unbind({ bindingId: b2.binding.binding_id, reason: "wrong table", by: V("bob") })).ok, true);
   await absentAll(V("carol"), "an unbound binding's source out of sight");
-  /* an extent out of sight */
+  /* an extent out of sight. D54: alice, an administrator neither invited nor joined to the hidden project P, sees it at
+     EXISTENCE only, so the workbook is absent to her until bob invites her; invited, she sees P and binds */
   const w2 = await seeded();
   const hiddenP = w2.project("Private", "alice");
   const fig = w2.figure("$1,200.50", { project: hiddenP });
-  assert.equal((await w2.wb.bind({ ...w2.at, range: "Model!B2", input: { extent: fig.contentId }, by: V("alice") })).ok, true, "alice sees the extent");
+  const bindFig = () => w2.wb.bind({ ...w2.at, range: "Model!B2", input: { extent: fig.contentId }, by: V("alice") });
+  assert.deepEqual(absentOf(await bindFig()), absent, "D54: an administrator not invited to the hidden project");
+  assert.equal(w2.count("workbook_bindings"), 0, "and nothing is bound");
+  assert.equal(w2.membership.projectInvite({ projectId: w2.P, handle: "h_alice", by: "bob" }).ok, true);
+  assert.equal((await bindFig()).ok, true, "an invited administrator sees P and the extent");
   for (const r of [await w2.wb.readWorkbook({ ...w2.at, viewer: V("bob") }), await w2.wb.inputsOf({ ...w2.at, viewer: V("bob") })])
     assert.deepEqual(absentOf(r), absent, "bob may not see the bound extent");
   /* the capture: its home moved into a project bob may not see */
@@ -136,6 +141,22 @@ test("R13 a workbook whose project, capture or any bound source the viewer may n
   assert.deepEqual(absentOf(await w3.wb.readWorkbook({ ...w3.at, viewer: V("carol") })), absent, "a capture out of sight");
   /* a machine viewer sees it */
   assert.equal((await w.wb.readWorkbook({ ...w.at, viewer: MACHINE })).ok, true);
+  /* D54: an administrator, the founder included, neither invited nor joined to a hidden project never sees its
+     contents: P's workbook is withheld from each exactly as an absent one, and every act on it writes nothing */
+  const w4 = await seeded();
+  const before = w4.snapshot();
+  for (const viewer of [V("alice"), "admin", V("admin")]) {
+    for (const r of [await w4.wb.readWorkbook({ ...w4.at, viewer }), await w4.wb.inputsOf({ ...w4.at, viewer }), await w4.wb.lint({ ...w4.at, viewer }),
+                     await w4.wb.recordCheck({ ...w4.at, outcome: "agrees", by: viewer }), await w4.wb.recompute({ ...w4.at, by: viewer })])
+      assert.deepEqual(absentOf(r), absent, `D54, ${viewer}: ${JSON.stringify(r).slice(0, 100)}`);
+  }
+  assert.deepEqual(w4.snapshot(), before, "D54: no act of an uninvited administrator wrote");
+  /* the negative control: P set discoverable by its owner, administrators and the founder see it whole again; a member
+     outside it still does not (a discoverable project's EXISTENCE never shows its contents) */
+  assert.equal(w4.membership.projectVisibilitySet({ projectId: w4.P, setting: "discoverable", by: "bob" }).ok, true);
+  for (const viewer of [V("alice"), "admin", V("admin")])
+    assert.equal((await w4.wb.readWorkbook({ ...w4.at, viewer })).ok, true, `${viewer} sees a discoverable project's workbook`);
+  assert.deepEqual(absentOf(await w4.wb.readWorkbook({ ...w4.at, viewer: V("dave") })), absent, "dave, a member outside it, still does not");
 });
 
 test("R18 the tables are declared through record-core.declareTable, export yes, keyed to their project for purge; a purge of the project clears them", async () => {

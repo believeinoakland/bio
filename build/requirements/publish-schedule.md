@@ -124,7 +124,7 @@ Terms are `publication`'s: a **case**, an **edition**, the **case document**. A 
 
 - **R8** *(not yet met: T41)* (the seam with `publication`, K31's pattern; new in this split as `publication` R61 was in the fourth, carrying `publication` R21's waiting clause and R70's set-time share as built)
 
-  At its creation this module registers once with `publication.registerWaitingEditions` the source `publication` reads a waiting edition through:
+  At its creation this module registers once, with `publication.registerWaitingEditions({isWaiting, signedAtOf})` (`publication` R77; K2438), the source `publication` reads a waiting edition through:
   - `isWaiting(caseId, edition)`: true while that case edition's edition waits (R1), else false. `publication` R21 then counts its document as signed, neither replacing nor re-authoring it.
   - `signedAtOf(caseId, edition)`: R5's instant while it waits, else null.
 

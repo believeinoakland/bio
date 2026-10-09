@@ -30,7 +30,7 @@ A project's own working material over its steps and objective: milestones (D27),
 
 #### The intake interview (D19)
 
-- **R11** *(not yet met: T41)* `INTAKE_QUESTIONS` is the one frozen list of six: what happened; which public body, and where; since when; what was promised or expected, and by whom; what you already have; what you want to come of it. Both paths ask exactly these: by hand, one page (`interviewForm`); with the assistant, a conversation in mode `enquire` (`run-rules` R24) that skips what she has already said and follows up, whose output is the same six answers as a labelled draft.
+- **R11** *(not yet met: T41)* `INTAKE_QUESTIONS`, held by `skills` (its R41, K2472; read from there, never re-listed), is the one frozen list of six: what happened; which public body, and where; since when; what was promised or expected, and by whom; what you already have; what you want to come of it. Both paths ask exactly these: by hand, one page (`interviewForm`); with the assistant, a conversation in mode `enquire` (`run-rules` R24) that skips what she has already said and follows up, whose output is the same six answers as a labelled draft.
 - **R12** *(not yet met: T41)* `interviewKeep({project, answers, from_draft?, by})`, by a joined participant: the member checks the answers before they are kept; each answer is kept in her words as **narrative** (`kind: "narrative"`), with whether it began as the assistant's draft and was kept unchanged or edited (`record-grammar` R52). The interview is a project-placed step of the project (`steps` R1), its record the step's product. An interview is never evidence, never a body's statement, never a leg target (a check registered with `promotion` refuses it, `NARRATIVE_NOT_A_LEG`).
 - **R13** *(not yet met: T41)* `interviewOf({project, viewer})` answers the project's participants the kept interviews, each labelled as the member's own account.
 
@@ -54,6 +54,7 @@ A project's own working material over its steps and objective: milestones (D27),
 
 ### Uses
 
+- `skills`: `INTAKE_QUESTIONS` (its R41; R11; K2472). A new `modules.json` edge; `skills` is earlier (layer 6).
 - `record-grammar`: `acceptanceRecord` (its R52; R12, R20).
 - `civil-time`: local days (R2, R3).
 - `record-core`: `declareTable`, keyed by project and purged with it (R10).

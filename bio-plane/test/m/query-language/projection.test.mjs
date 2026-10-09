@@ -22,6 +22,11 @@ function both() {
       monitor_enabled: 1, action_clock_overdue: 1 });
     w.bundle("PR", { type: "project", title: "hidden", body: "water water water", schema_id: "s1" });
     w.bundle("D", { title: "streets", body: "nothing of note" });
+    /* D54 (membership R43): PR is hidden (the index holds no setting for it), PD discoverable; erin is an
+       administrator. */
+    w.member("erin", "admin");
+    w.bundle("PD", { type: "project", title: "open", body: "water", schema_id: "s1" });
+    w.sight("PD", "discoverable");
     w.insert("inquiry_basis", { bundle_id: "B", ord: 0, target_id: "A", grade_source: "hunch", grade: "B" });
     w.insert("inquiry_basis", { bundle_id: "B", ord: 1, target_id: "PR", grade_source: "documented" });
     w.insert("resolutions", { bundle_id: "A", capture_sha: "s", ref: "r", entity_id: "ENT-1", grade: "C" });
@@ -48,7 +53,7 @@ const OPTS = [{}, { ids: ["A", "B", "PR"] }, { sort: "schema", dir: "asc" }, { s
 test("R25 the projection is read through the relation the caller names, keyed by its key and its fts_id; with none, from bundles", () => {
   const [flat, split] = both();
   let compared = 0;
-  for (const viewer of [V, "member:ann", null])
+  for (const viewer of [V, "member:ann", "admin", "member:erin", null])
     for (const q of QUERIES)
       for (const rows of ROWS)
         for (const o of OPTS) {
@@ -68,6 +73,13 @@ test("R25 the projection is read through the relation the caller names, keyed by
           });
         }
   assert.ok(compared > 3000, `${compared} statements compared`);
+  /* D54 through the relation: the hidden PR is withheld from the founder and an administrator as from ann, on the
+     page, the count and a relevance order; the discoverable PD is theirs, and not ann's. */
+  for (const [viewer, want] of [[V, ["PD", "PR"]], ["member:ann", []], ["admin", ["PD"]], ["member:erin", ["PD"]]]) {
+    const named = compile({ q: "water type:project", viewer }, { projection: REL });
+    assert.deepEqual(split.all(named.statements.page()).map((r) => r.bundle_id).sort(), want, viewer);
+    assert.deepEqual(split.all(named.statements.count()), [{ n: want.length }], viewer);
+  }
   /* This module names no later module's table: the relation's name is only ever the caller's. */
   for (const [, s] of everyStatement(compile({ q: "water schema:s1", viewer: V, rows: "leg" }, { projection: { table: "t9", key: "k9" } })))
     assert.ok(!/bundle_projection/.test(s.sql) && /\bt9\b/.test(s.sql));

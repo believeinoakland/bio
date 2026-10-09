@@ -207,8 +207,15 @@ test("R6 the content: arm's sub-fields over the content table, and passage: over
   assert.deepEqual(ids("content:chain=*"), ["D1", "D2", "D5"], "presence");
   assert.deepEqual(ids("content:layer"), [], "a kind no row holds");
   /* content R14, DEC-4: a machine reading also finds the units read in more than one way. */
-  assert.deepEqual(MACHINE_READ_KINDS, ["ocr", "ai"]);
   assert.equal(MACHINE_READ_KINDS, TEXT_CHAIN_MACHINE_READ_KINDS, "text-chain's list, re-exported (N104)");
+  assert.deepEqual(MACHINE_READ_KINDS, Object.keys(STEP_KINDS).filter((k) => STEP_KINDS[k].machine),
+    "the step kinds text-chain marks machine readings (its R91), never a list of this module's");
+  assert.ok(MACHINE_READ_KINDS.length >= 2);
+  /* Every machine reading, whatever text-chain lists, also selects the mixed units; a kind that is not one does not. */
+  for (const k of MACHINE_READ_KINDS) {
+    const own = { ocr: ["D1"], ai: ["D5"] }[k] || [];
+    assert.deepEqual(ids(`content:chain=${k}`), sorted([...own, "D2"]), `content:chain=${k}`);
+  }
   assert.deepEqual(ids("content:ocr"), ["D1", "D2"]);
   assert.deepEqual(ids("content:chain=ai"), ["D2", "D5"]);
   assert.deepEqual(ids("content:mixed"), ["D2"]);
