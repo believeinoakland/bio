@@ -105,8 +105,27 @@ test("R13: a result is answered only to a viewer who may see every input; one in
   assert.deepEqual(alice.items, []);
   assert.equal(alice.truncated, false);
   assert.equal(JSON.stringify(alice).includes(w.id("MNY-2026-f2")), false);
-  /* an administrator sees every bundle (membership R43) and so every input */
+  /* D54 (membership R43, R44): an administrator neither invited nor joined to a hidden project sees none of its
+     contents. Dave administers and is invited to P, but not to the hidden project: its input stays fenced and uncounted */
+  w.member("dave", "admin");
+  w.participate(P, "dave", "invited");
+  const dave = w.c.noticed({ project: P, viewer: "member:dave" });
+  assert.deepEqual(dave.items, []);
+  assert.equal(dave.truncated, false);
+  assert.equal(JSON.stringify(dave).includes(w.id("MNY-2026-f2")), false);
+  /* nor P itself, hidden, to an administrator outside it: refused, carrying no result and no input */
+  for (const viewer of [ADMIN_BOB, "admin"]) {
+    const outside = w.c.noticed({ project: P, viewer });
+    assert.equal(outside.ok, false, viewer);
+    assert.equal("items" in outside, false, viewer);
+    assert.equal(JSON.stringify(outside).includes(w.id("MNY-2026-f1")), false, viewer);
+  }
+  /* controls, still at FULL: an administrator invited to P and joined to the hidden project sees every input */
+  w.participate(P, "bob", "invited");
   assert.equal(w.c.noticed({ project: P, viewer: ADMIN_BOB }).items.length, 1);
+  /* and once the hidden project is set discoverable, an administrator outside it sees it whole (K2409) */
+  w.discoverable("PROJ-2026-0002-hidden", "bob");
+  assert.equal(w.c.noticed({ project: P, viewer: "member:dave" }).items.length, 1);
 });
 
 test("R10 R14: a shown result is never a fact, never on a person or entity, and says no verdict", () => {
