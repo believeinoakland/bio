@@ -1,6 +1,6 @@
 # extraction (T41)
 
-**Status** · session_01JGmpMryVXRkDRTjTm7xrXJ · depth 2 · WORKING · handled B2
+**Status** · session_01JGmpMryVXRkDRTjTm7xrXJ · depth 2 · COMPLETE · handled B2
 
 ## Completion (EXTRACTION #18)
 
