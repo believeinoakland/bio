@@ -129,8 +129,16 @@ test("R6 (N607): a detector switched on in no project is skipped, run over nothi
   assert.equal(ran.detectors, 1);
   assert.deepEqual([...new Set(results(w).map((r) => r.detector_id))], [d.detector_id]);
   assert.deepEqual(w.record.rebuildAndCompare("money-checks", "money_detector_results"), { same: true });
-  /* switched off again everywhere: run over nothing, its held results go, and the rebuild agrees */
-  w.c.switchDetector({ detectorId: d.detector_id, project: "PROJ-2026-0001-alpha", on: false, by: ADMIN_BOB });
+  /* D54 (membership R43): an administrator neither invited nor joined to the hidden project cannot switch it there;
+     nothing is written and the detector still runs */
+  const switches = w.count("money_detector_switches");
+  assert.equal(w.c.switchDetector({ detectorId: d.detector_id, project: "PROJ-2026-0001-alpha", on: false, by: ADMIN_BOB }).ok, false);
+  assert.equal(w.count("money_detector_switches"), switches);
+  assert.equal(w.c.runDetectors({ budgetMs: 10_000 }).detectors, 1);
+  /* switched off again everywhere, by an administrator joined to it (still at FULL): run over nothing, its held
+     results go, and the rebuild agrees */
+  w.participate("PROJ-2026-0001-alpha", "bob");
+  assert.equal(w.c.switchDetector({ detectorId: d.detector_id, project: "PROJ-2026-0001-alpha", on: false, by: ADMIN_BOB }).ok, true);
   const after = w.c.runDetectors({ budgetMs: 10_000 });
   assert.equal(after.detectors, 0);
   assert.equal(results(w).length, 0);
