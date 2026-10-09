@@ -41,6 +41,7 @@ import { inquiryOf } from "../inquiry/index.mjs";
 import { runPrincipalGate, runPrincipalOf } from "../run-rules/index.mjs";
 import { normalizeAddress } from "../subresources.mjs";
 import { standardsOf } from "../standards/index.mjs";
+import { stepsOf } from "../steps/index.mjs";
 import { migrateCaptureRequests } from "./schema.mjs";
 import { CAPTURE_REQUEST_CHECKS, CAPTURE_SOURCE_CHECKS, CAPTURE_PURPOSES, CAPTURE_UA_MODES, CAPTURE_UA_MODE_ALIASES,
          uaModeOf, userAgentIsLegible } from "./checks.mjs";
@@ -460,14 +461,14 @@ export class CaptureRequests {
   }
 
   /** R55: the capture a request for a step filed, tied to that step through `steps`' in-process door (its R9,
-   *  `recordProduct`). Its answer is relayed and changes nothing of the row; never throws. */
-  async #tieToStep(q, sha, at) {
+   *  `recordProduct({step, record: {kind: "capture", id}, by})`, `by` the row's plane principal). Its answer is relayed
+   *  and changes nothing of the row; never throws. */
+  async #tieToStep(q, sha) {
     try {
       const steps = this.#steps();
       if (!steps || typeof steps.recordProduct !== "function")
         return { ok: false, step: q.step, detail: "no steps are reachable here, so the capture was filed and not tied to its step" };
-      const a = await steps.recordProduct({ step: q.step, record: sha, kind: "capture", by: q.principal_plane,
-                                            run: q.run, request: q.request, at });
+      const a = await steps.recordProduct({ step: q.step, record: { kind: "capture", id: sha }, by: q.principal_plane });
       if (a && a.ok !== false) return { ok: true, step: q.step };
       return { ok: false, step: q.step, reason: (a && (a.reason || a.code)) || null,
                detail: String((a && a.detail) || "the step did not take the capture").slice(0, 300) };
@@ -478,21 +479,14 @@ export class CaptureRequests {
   }
 
   /** R55, steps R11: the arrival a step's wait on a capture request reads (`registerArrivalSource("capture_request",
-   *  read)`). `read(id)` or `read({id, viewer})`: null for a blank or unknown id, or one the viewer given cannot see by
-   *  target (steps answers it `undetermined`); else the request's state, `met` exactly when captured, `ended` when
-   *  terminal. Synchronous; writes nothing; never throws. */
-  arrival(a) {
+   *  read, "capture-requests")`): `true` when the request is captured, `false` while it is not (waiting, refused or
+   *  expired: nothing arrived), and null for a blank or unknown id, which steps reads as undetermined. Synchronous;
+   *  writes nothing; never throws. */
+  arrived(id) {
     try {
-      const o = a && typeof a === "object" ? a : { id: a };
-      const id = text(o.id ?? o.request).trim();
-      if (!id) return null;
-      const r = this.#one(`SELECT request, target, state, captured_at, updated, capture_sha FROM capture_requests
-                            WHERE request = ?`, id);
-      if (!r) return null;
-      if (o.viewer !== undefined && o.viewer !== null && !this.#inquiryInSight(r.target, o.viewer)) return null;
-      return { kind: CAPTURE_REQUEST_ARRIVAL_KIND, id: r.request, state: r.state, met: r.state === "captured",
-               ended: CAPTURE_REQUEST_TERMINAL.includes(r.state), at: r.captured_at ?? r.updated,
-               capture_sha: r.capture_sha ?? null };
+      const key = text(id).trim();
+      const r = key ? this.#one(`SELECT state FROM capture_requests WHERE request = ?`, key) : null;
+      return r ? r.state === "captured" : null;
     } catch { return null; }
   }
 
@@ -760,7 +754,7 @@ export class CaptureRequests {
              home and makes none (R39). The promotion's refusal changes nothing of the row: the capture is filed. */
           const promoted = r.existed === true || !r.document ? null : this.#promoteCapture(q, r.document, verdict.attribution, at);
           /* R55: a request made for a step ties its capture (new or already held, R39) to that step. */
-          const tied = q.step && r.sha ? await this.#tieToStep(q, r.sha, at) : null;
+          const tied = q.step && r.sha ? await this.#tieToStep(q, r.sha) : null;
           captured.push({ request: q.request, address: q.address, sha: r.sha || null, grade: r.grade ?? null,
                           attribution: verdict.attribution, already_held: r.existed === true,
                           ...(promoted ? { promoted } : {}), ...(tied ? { step_product: tied } : {}) });
@@ -1792,9 +1786,10 @@ export function captureRequestsOf(host, deps = {}) {
       /* R51–R53 (T35): standards' read of a standard (its R5), reached when first asked, so the one standards instance
          on this host is the one the plane built with its own deps. */
       standards: deps.standards || (() => standardsOf(host)),
-      /* R55 (T41-25): `steps`' instance (its R2, R9, R11), when given. */
-      steps: deps.steps || null,
     };
+    /* R55 (T41-25): `steps`' instance (its R2, R9, R11), the one on this host, built on the record this module uses. */
+    d.steps = deps.steps === undefined
+      ? stepsOf(host, { record, observationLog: d.observations, promotion: d.promotion }) : deps.steps;
     c = new CaptureRequests(storage, d);
     instances.set(storage, c);
     /* R47, R35 (plan T33, Rules (6)): both tables declared explicitly through record-core's `declareTable` (its R21).
@@ -1824,7 +1819,7 @@ export function captureRequestsOf(host, deps = {}) {
       d.capture.registerReader("captured-for", CAPTURE_REQUESTS_MODULE, (a) => c.capturedFor(a));
     /* R55, steps R11: a step's wait on a capture request is answered by this module's rows. */
     if (d.steps && typeof d.steps.registerArrivalSource === "function")
-      d.steps.registerArrivalSource(CAPTURE_REQUEST_ARRIVAL_KIND, (a) => c.arrival(a));
+      d.steps.registerArrivalSource(CAPTURE_REQUEST_ARRIVAL_KIND, (id) => c.arrived(id), CAPTURE_REQUESTS_MODULE);
     /* R29, ai-runs R41 (K182): the wake reads this module's rows through the wait source, when ai-runs is given. */
     if (d.aiRuns && typeof d.aiRuns.registerWaitSource === "function")
       d.aiRuns.registerWaitSource(CAPTURE_REQUESTS_MODULE, c.waitSource());
