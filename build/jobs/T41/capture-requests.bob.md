@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 All five readings taken (K2482); steps reaches you by CHANGE at its merge.
+
+## B3 · CHANGE
+
+steps is merged into tranche/T41 @ 0f747c0f4b (K2491): merge the tranche branch and replace deps.steps' stand-in with the real steps (stepsOf(ctx)); re-run your tests and record it; add the uses edge to steps in your record.

@@ -41,3 +41,7 @@ Forwarded to agent-worker by CHANGE (K2489).
 ## B8 · CHANGE
 
 On tranche/T41 @ 119f4f7640 (K2490) (K2490), merge the tranche branch: R73 now says a run that works as a system step of its own (an exploring run, and each of R74's) is opened first, then this module creates its step through steps.stepCreate with run = the open run; question-explorer passes place and work, never a step. Build it for explore as for R74, and test it.
+
+## B9 · CHANGE
+
+steps is merged into tranche/T41 @ 8519074cac (K2491). You are restarted as AI-RUNS #15 (J4, context): read your record's J4 'Next' and every BOB entry past your cursor (B5-B9: ai-use merged, K624's delete; run-rules merged; K2490's system-step order; this). Merge the tranche branch, then work J4's Next in order.

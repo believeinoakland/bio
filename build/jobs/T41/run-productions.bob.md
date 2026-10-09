@@ -19,3 +19,7 @@ Taken (K2482), on tranche/T41 @ 7b6a8a2cf6 (K2482) (merge the tranche branch): R
 ## B3 · CHANGE
 
 run-rules is merged into tranche/T41 @ 753d8164cd (K2489): merge the tranche branch and read RUN_ORIGINS, DRAFT_KINDS, ENQUIRE_MODE, pages/checkPagesRead and the test bar from run-rules by key, replacing any stand-in; re-run your tests and record it.
+
+## B4 · CHANGE
+
+steps is merged into tranche/T41 @ 0f747c0f4b (K2491): merge the tranche branch and replace deps.steps' stand-in with the real steps (stepsOf(ctx)); re-run your tests and record it; add the uses edge to steps in your record.
