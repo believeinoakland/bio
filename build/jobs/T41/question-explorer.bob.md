@@ -1,6 +1,6 @@
 # BOB to question-explorer (T41)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -11,3 +11,11 @@ Reading set (mechanics §17): measured at this START: 473 KB by `build/plan/read
 Merge order in L6: inquiry-grammar, leg-earning, inquiry, hypotheses, steps, citation, basis-versions, contradiction; run-rules, ai-use, ai-runs (copy then delete), run-productions, capture-requests, reading-guides, skills, question-explorer; answers, agent-model, agent-worker (`modules.json` order; ai-use before ai-runs is K624's copy-then-delete). You come after steps (T41-17), ai-use (T41-22) and ai-runs (T41-23). Same-layer providers you use: steps, ai-use, ai-runs, leg-earning (R13, R14), run-rules (R19, R23, R26), run-productions (R21), capture-requests (R55). Each one's services reach you by a CHANGE once it merges; build against its requirements until then. Record your final `uses` in your record, for BOB to apply at your merge.
 Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+All seven readings taken (K2482). Your family is C-145. entities joins your uses (record it).
+
+## B3 · CHANGE
+
+leg-earning is merged into tranche/T41 @ e3d47c7994 (K2485): merge the tranche branch into yours and replace your stand-in or fail-closed path with leg-earning's real R13 projectsDrawingOnPaged and R14 projectsShownOn; re-run your tests and record it.

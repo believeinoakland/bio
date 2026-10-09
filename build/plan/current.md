@@ -44,12 +44,14 @@ It is the only module marked `legacy` in `modules.json`.
    12. (K2437) the callers of credentials' removed `accountSwitchSet`/`groupSwitchSet`: answers `standing.test.mjs` :154, :183, :210 until T41-29; plane `ask.test.mjs` :69, :182, :234, :264, :287, :301 until T41-63; ai-runs `scheduler`:123 until T41-23; affordances `t33`:151, `t34`:199 until T41-52; op-declarations `t34`:226 until T41-58 (K2445);
    13. (N823, K2438) from T41-37's merge until T41-36's, publish-schedule's test that it declares `scheduled_editions` (refused `TABLE_DECLARED` while publication still declares it); from T41-36's merge until each user's merge, the callers of the moved services: `op=publishat` and ratification's scheduled arms (T41-39), case-authoring R58, R59 (T41-43), scheduler's `scheduled-publish` (T41-49), queue-producers' scheduled items (T41-53), actions `t34` (T41-47), the plane's three ops (T41-63);
    14. the plane bundle and `program.mjs`, staled by any merge, regenerated at each layer's close.
+   15. (K2486) control-plane `r53-routes.test.mjs`:67 (R53) from T41-16's merge until T41-58 declares hypotheses' ops.
 
 **Text owed before each layer's START (K2451; BOB's wording, P5):**
 - L7: none beyond §3.6 (applied).
 - L8: publication R21's waiting clause, R66–R69, R71, R74 retired "moved to publish-schedule R<n>", R70 re-worded (K2438); case-authoring R58, R59 re-pointed; ratification R42 (names publication R67) and R43 re-pointed; the placement of `case-disclosures` R30's account arms that `case-checker` R24 re-runs (case-checker precedes case-disclosures: move the arms earlier or re-word R24); case-import's `bias` edge (R23).
-- L9: actions R52–R60 (hold reads at `EXISTENCE`, §3.5).
+- L9: actions R52–R60 (hold reads at `EXISTENCE`, §3.5); actions registers its records-request outcome with `intent` R33's `registerSource` (K2483).
 - L10: scheduler R22's `scheduled-publish` consumer re-pointed.
+- L11 (K2486): op-declarations declares a route for hypotheses R18's set-aside (`hypothesissetaside`, beside R43's `hypothesistakeup`, `noteshare`, `noteunshare`, `shares`); UX-DESIGN NOTICE: `ai.refused.explorenotenabled` names a condition ai-use R3 never refuses on.
 - L11: the member's act that calls reading-pipeline R29 (an `op=transcribe` on a held capture: op-declarations declares it, control-plane routes it, the plane composes `read`'s `transcription` from credentials `accountFor`, ai-use `useCheck` and the AI path; K2464); queue-producers R37; notice-producers R1 (R17's items) and R2/R3 recipients re-read; queue R1's classes and sentences for `milestone-overdue`, `milestone-reminder`, `project-quiet`, `review-comment-left-out`; setup-words R1, R2; admission R19; control-plane R56; op-declarations' DEC-188 (8) retirements; affordances R50's grades (op-grades' since K1974); plane's T40-26 share and publish-schedule composition.
 
 ## Entries
@@ -121,7 +123,7 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 ### L8
 - **T41-34 · case-grammar** · (was T40-16a; DEC-185) R12's `obscured_marked`, R14; (D56, D59, D60, D61) R23–R26, R13 and R14 amended · req: T40's applied text, §3.6 · 2,353 → ~2,550.
 - **T41-35 · case-carriage** · (was T40-12; N818, N816, N798, N811) as T40-12; (N822) `marks` re-stated · req: applied (K2400).
-- **T41-36 · publication** · (was T40-13; N811, N799) as T40-13 (R76 `publishedWorkOf` among them); (N823) deletes its copy of the scheduled-publishing seam after T41-37 merges and reaches it through a registration T41-37 fills (K31's pattern; R21's waiting clause); (N822) `convert-casesign`, `t34` re-stated; (DEC-188 (7)) `document.refused.changed` (C-122.7) by key · req: applied; the split's text BOB's from the extraction map · **P6:** 3,835 (K1821) + ~60 − ~500 → ~3,400. (K2438) R66–R69, R71, R74 retired "moved to publish-schedule R<n>"; R70 stays, re-worded, its set-time share read through the seam `registerWaitingEditions` (publish-schedule R8); `civil-time`, `jurisdictions` leave its `uses`.
+- **T41-36 · publication** · (was T40-13; N811, N799) as T40-13 (R76 `publishedWorkOf` among them); (N823) deletes its copy of the scheduled-publishing seam after T41-37 merges and reaches it through a registration T41-37 fills (K31's pattern; R21's waiting clause); (N822) `convert-casesign`, `t34` re-stated; (DEC-188 (7)) `document.refused.changed` (C-122.7) by key; (K2483) `publication/index.mjs`:1090 (`#criteriaOf`) reads as the founder (`"admin"`): an internal read takes no viewer or a machine one · req: applied; the split's text BOB's from the extraction map · **P6:** 3,835 (K1821) + ~60 − ~500 → ~3,400. (K2438) R66–R69, R71, R74 retired "moved to publish-schedule R<n>"; R70 stays, re-worded, its set-time share read through the seam `registerWaitingEditions` (publish-schedule R8); `civil-time`, `jurisdictions` leave its `uses`.
 - **T41-37 · publish-schedule (new; N823)** · built by copy (K624) of publication's publishing at a set time: R66–R71, R74 (`schedule.mjs`, 312; `scheduled_editions` and its schema share; `registerScheduledPublisher`, `onPublishScheduled`, the waiting-edition read), each retired in publication as "moved to publish-schedule R<n>"; it reads `case_documents` to see a commit (ratification's publisher commits; K2438) · K624, K617, K2418 · req: `publish-schedule.md` R1–R11 and the map `build/extraction/publication-split-3.md` (K2438) · ~500. **Merges before T41-36** (it uses only what publication already provides).
 - **T41-38 · public-read** · (was T40-14; N798, N811) labels by key.
 - **T41-39 · ratification** · (was T40-15; N811) R42's stop after signing; (N823) re-points `op=publishat` and R42's publisher to publish-schedule; (D60) R49 `APPROVAL_MISSING`, R50 `registerApprovalReader` · req: applied, §3.6 · after T41-36, T41-37 · 3,552 → ~3,640.
@@ -132,7 +134,7 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 - **T41-44 · review** · (N822) R9 drops "or an active administrator" for a hidden project's drafts; (D60, D61) R30–R33 · req: §3.5, §3.6 · 1,028 → ~1,250.
 - **T41-44a · network-notices** · (N822, K2442) `index.mjs`:187 (`#closed`, `projectStage` read as the founder) takes no viewer or a machine one; its tests rule 4 (11) lists re-stated.
 
-**L8 merge order:** case-grammar, case-carriage, publish-schedule, publication, public-read, ratification, case-checker, case-import, case-disclosures, case-authoring, review.
+**L8 merge order:** case-grammar, case-carriage, publish-schedule, publication, public-read, network-notices, ratification, case-checker, case-import, case-disclosures, case-authoring, review.
 
 ### L9
 - **T41-45 · conformance** · (D55) Purpose re-worded; (N822) `determine`, `reads` re-stated.

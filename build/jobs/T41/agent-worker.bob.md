@@ -1,6 +1,6 @@
 # BOB to agent-worker (T41)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -12,3 +12,11 @@ Reading set (mechanics §17): measured at this START: 1321 KB by `build/plan/rea
 Merge order in L6: inquiry-grammar, leg-earning, inquiry, hypotheses, steps, citation, basis-versions, contradiction; run-rules, ai-use, ai-runs (copy then delete), run-productions, capture-requests, reading-guides, skills, question-explorer; answers, agent-model, agent-worker (`modules.json` order; ai-use before ai-runs is K624's copy-then-delete). None of L6's changes is used by yours.
 Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Agreed (K2479): R6 now reads 'level group with a kind other than apikey' on tranche/T41 @ 15ec91ff1f (K2479) (merge the tranche branch); a project's account, apikey or signin, is R71's, as you set out.
+
+## B3 · CHANGE
+
+agent-model is merged into tranche/T41 @ e3d47c7994 (K2485) (its R13 adds estimated_cost_usd beside the five usage figures; null on signin). Merge the tranche branch: (1) agent-worker/test/ask.test.mjs 'R54 (N588)' expects exactly five usage figures: re-state it for R13's sixth (P8, your own test). (2) your bundle (agent-worker/dist) is staled by agent-model: requirements.test.mjs R45 reads red until BOB regenerates it at L6's close (§14): name it in your record as accepted, do not regenerate it.
