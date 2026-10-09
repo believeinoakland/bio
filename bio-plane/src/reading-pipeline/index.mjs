@@ -1,4 +1,4 @@
-/* reading-pipeline (R1–R28): a capture's reading from its stored bytes, for `extraction`, which stores it. The tier
+/* reading-pipeline (R1–R29): a capture's reading from its stored bytes, for `extraction`, which stores it. The tier
    ladder, the chain composed as it goes, the content type's reader over the text, and the reading with its
    provenance, its container, its dialect and its text units; and the pieces of it `extraction`'s re-read (its
    R31–R35) composes (R23). Split from `extraction` by N513 with no change of meaning (its `pipeline.mjs`, which it
@@ -601,6 +601,156 @@ export async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier
 }
 
 /* ===================================================================== *
+ * Tier 4: the AI's reading of a page (R29).
+ * ===================================================================== */
+
+/* R29 (T41-9; N820, D21; text-chain R104): a transcription tier above tier 3. For the pages Civicsmith's own text
+   recognition could not read, and only at a member's act, on the account that pays for that act and within its
+   limits (`use: "transcribe"`), the AI's reading is merged as tier 3's is (R6's rule: an asked-for page with no
+   glyph is filled, a folio page gains it appended) under the part `pixels -> ai_transcription(<model>)`, both
+   uncapped: the AI's reading, undetermined until its accuracy is measured (BIO_Investigation §6).
+
+   The module stays pure and reaches none of it by import. The caller acting at the member's request hands in
+   `transcription = {member, project?, credentials, useCheck, transcribe, at?}`:
+   - `credentials`: the plane's credentials (`credentials.accountFor`, its R56), asked for the act
+     `{kind: "transcribe", member, project}`. It refuses a "no AI" material limit first (the group's, or the
+     project's, R57), then no account, the use switched off, a project the member has not joined; any refusal
+     sends nothing;
+   - `useCheck`: `ai-use.useCheck` (its R3), asked `{owner, member, use: "transcribe", at}` for the account chosen;
+     a refusal, or none handed in, sends nothing (a limit nobody checked is not one the act is within);
+   - `transcribe`: the caller's AI path, handed `{account, capture_sha, store, pages, use}`, answering
+     `{ok: true, engine, version?, pages: [{page, text}]}`.
+   The account's key goes to `transcribe` only, never into the reading or a note. */
+export const TRANSCRIBE_USE = "transcribe";
+export const AI_TRANSCRIPTION_SOURCE = "unmeasured: the AI's reading of a page that is only a picture is "
+  + "undetermined until its accuracy is measured (text-chain R104; BIO_Investigation_v0_1.md §6)";
+export const AI_READING_LABEL = "the AI's reading";
+
+/* R29: the pages Civicsmith's own text recognition could not read, ascending: a page still carrying a marker that
+   selects it for OCR (tier 3 did not fill it), or one OCR filled with no glyph (every region below its floor). None
+   for a document with no per-page text, or one carrying `encrypted`. */
+export function tier4Pages(text) {
+  const pages = (text && Array.isArray(text.pages)) ? text.pages : [];
+  const marks = (text && Array.isArray(text.undetermined)) ? text.undetermined : [];
+  if (marks.some((m) => m && m.reason === "encrypted")) return [];
+  const out = [];
+  for (const p of pages) {
+    if (!p || !Number.isInteger(p.page) || p.page < 0 || out.includes(p.page)) continue;
+    const own = Array.isArray(p.undetermined) ? p.undetermined : [];
+    const routed = own.some((u) => u && TIER3_REASONS.includes(u.reason));
+    const floored = own.some((u) => u && u.reason === "ocr_below_floor")
+      && !(typeof p.text === "string" && glyphCount(p.text) > 0);
+    if (routed || floored) out.push(p.page);
+  }
+  return out.sort((a, b) => a - b);
+}
+
+/* The parts a settled chain is made of, so the AI's part can be added beside them (`mergedChain`'s input). An
+   unscoped chain is one part, over `unscopedPages`; a scoped one is its parts as `mergedChain` stamped them, each
+   with its pages and its steps without the stamp. Null when a part cannot be read back. */
+function partsOfChain(chain, unscopedPages) {
+  if (!Array.isArray(chain) || checkChain(chain)) return null;
+  const derivations = chain.filter((x) => x && x.extent != null);
+  if (!derivations.length) return unscopedPages.length ? [{ pages: unscopedPages, chain }] : [];
+  const parts = new Map();
+  for (const step of chain) {
+    const e = step.extent;
+    if (!(e && e.kind === "pages" && Array.isArray(e.pages))) return null;
+    const key = Number.isInteger(e.part) ? `#${e.part}` : e.pages.join(",");
+    const { extent, ...bare } = step;
+    if (!parts.has(key)) parts.set(key, { pages: e.pages.slice(), chain: [] });
+    parts.get(key).chain.push(bare);
+  }
+  return [...parts.values()];
+}
+
+const AI_REFUSAL_SAYS = {
+  no_such_page: "the document has no such page",
+  not_asked: "the AI was not asked for it",
+  carries_glyphs: "it already carries text of its own, which the AI's reading may not replace",
+};
+const refusalSays = (r) => [r && r.code, r && (r.detail || r.translation)].filter((x) => typeof x === "string" && x)
+  .join(": ") || "refused";
+
+/* R29: the tier-4 seam. `chain` is the chain settled through tier 3 (before a Drive export's conversion), `wiredTier`
+   its tier. Answers `{i2text, chain, wiredTier, aiNote, filled, engine}`: unchanged, with the reason in `aiNote`,
+   whenever nothing was filled. Never throws. */
+export async function tier4Extend(transcription, { sha, storeName, i2text, chain, wiredTier }) {
+  const out = { i2text, chain, wiredTier, aiNote: null, filled: [], engine: null };
+  if (!transcription || typeof transcription !== "object") return out;
+  const pages = tier4Pages(i2text);
+  const not = (why) => { out.aiNote = `the AI was not asked to transcribe ${describePages(pages)}: ${why}`; return out; };
+  if (!pages.length) {
+    out.aiNote = "no page was left that Civicsmith's own text recognition could not read, so the AI was not asked "
+               + "to transcribe";
+    return out;
+  }
+  const { member = null, project = null, credentials = null, useCheck = null, transcribe = null } = transcription;
+  if (!(typeof member === "string" && member))
+    return not("the AI transcribes only at a member's own act, and none was named");
+  if (!(credentials && typeof credentials.accountFor === "function"))
+    return not("the account that would pay for it could not be checked");
+  let account;
+  try {
+    account = await credentials.accountFor({ member, act: { kind: TRANSCRIBE_USE, member,
+                                                            ...(project != null ? { project } : {}) } });
+  } catch { return not("the account that would pay for it could not be checked"); }
+  if (!(account && account.ok === true)) return not(refusalSays(account));
+  const owner = account.level === "project" ? `project:${account.project}`
+    : account.level === "group" ? "group" : `member:${member}`;
+  if (typeof useCheck !== "function") return not("the limits of the account that would pay for it could not be checked");
+  const at = typeof transcription.at === "string" && transcription.at ? transcription.at : new Date().toISOString();
+  try {
+    const limit = await useCheck({ owner, member, use: TRANSCRIBE_USE, at });
+    if (limit) return not(refusalSays(limit));
+  } catch { return not("the limits of the account that would pay for it could not be checked"); }
+  if (typeof transcribe !== "function") return not("no AI is set up to transcribe");
+  let res;
+  try {
+    res = await transcribe({ account, capture_sha: sha, store: storeName, pages: [...pages], use: TRANSCRIBE_USE });
+  } catch { return not("the AI could not be reached"); }
+  const r = res && typeof res === "object" ? res : {};
+  if (r.ok !== true) return not(`the AI declined${typeof r.reason === "string" ? ` (${r.reason})` : ""}`);
+  const engine = typeof r.engine === "string" ? r.engine.trim() : "";
+  if (!engine) return not("the AI's answer did not name the model that read the pages, so nothing it produced could be "
+                          + "re-run or measured later");
+  const version = typeof r.version === "string" && r.version.trim() ? r.version.trim() : null;
+  const answered = (Array.isArray(r.pages) ? r.pages : [])
+    .filter((p) => p && Number.isInteger(p.page) && typeof p.text === "string" && glyphCount(p.text) > 0)
+    .map((p) => ({ page: p.page, text: p.text, undetermined: [] }));
+  const m = mergeTier3Text(i2text, { pages: answered }, pages);
+  if (!m.ok) return not(m.why);
+  if (!m.filled.length) return not("the AI returned no text for any page it was asked for");
+  const part = appendStep([{ step: "pixels", cap: null, measured_by: AI_TRANSCRIPTION_SOURCE, calibration: null }],
+                          { step: "ai_transcription", engine, version, cap: null, measured_by: AI_TRANSCRIPTION_SOURCE,
+                            calibration: null });
+  if (!Array.isArray(part)) return not(`the AI's provenance was refused: ${part.detail}`);
+  const replaced = m.filled.filter((p) => !m.appended.includes(p));
+  const held = (m.text.pages || []).filter((p) => p && Number.isInteger(p.page) && !replaced.includes(p.page)
+                                                  && typeof p.text === "string" && glyphCount(p.text) > 0).map((p) => p.page);
+  const parts = partsOfChain(chain, held);
+  if (!parts) return not("the chain of the text already read could not be stated beside the AI's");
+  const merged = mergedChain([...parts, { pages: m.filled, chain: part }]);
+  if (!Array.isArray(merged)) return not(`the AI's provenance was refused: ${merged.detail}`);
+  out.i2text = m.text; out.chain = merged; out.wiredTier = 4;
+  out.filled = m.filled; out.engine = { engine, version };
+  const say = [`${describePages(m.filled)} that Civicsmith's own text recognition could not read ${m.filled.length === 1
+    ? "was" : "were"} transcribed by the AI (${engine}${version ? ` ${version}` : ""}) at a member's request, on the `
+    + `account that pays for it: this text is ${AI_READING_LABEL}, not yet determined until its accuracy is measured `
+    + `or a member checks a passage against the page`];
+  if (m.appended.length)
+    say.push(`${describePages(m.appended)} already held a little text of its own (a folio), which was kept, and the `
+           + `AI's reading was appended after it`);
+  if (m.unanswered.length) say.push(`${describePages(m.unanswered)} the AI did not transcribe, and ${m.unanswered.length
+    === 1 ? "it stays" : "they stay"} unread`);
+  if (m.refusedWhy.length)
+    say.push(`${m.refusedWhy.length} page(s) the AI returned were not merged: `
+           + m.refusedWhy.map((x) => `${describePages([x.page])} (${AI_REFUSAL_SAYS[x.reason] || x.reason})`).join(", "));
+  out.aiNote = say.join("; ");
+  return out;
+}
+
+/* ===================================================================== *
  * Text units (R15).
  * ===================================================================== */
 
@@ -901,10 +1051,11 @@ const failed = (doc, docType, basis, extra = {}) => ({
  *  caller (`extraction`, its R1 and R18) hands in: `evidence` (record-core's `evidenceStore()`, or null), `env` (the
  *  fleet bindings PDF_WORKER and OCR_WORKER), `storeName` (the namespace the members read the capture under), `view` (`jurisdictions.combine`'s
  *  view of the instance's profiles, or undefined when the instance holds none, extraction R18), `planeVersion`, and
- *  `liveCalibration` (R5). Never throws; every failure is a failed reading. */
+ *  `liveCalibration` (R5); and, only at a member's act, `transcription` (R29, `tier4Extend`): without it the answer is
+ *  exactly what it was before R29. Never throws; every failure is a failed reading. */
 export async function read(document, { evidence = null, env = {}, storeName = "bio", view, planeVersion = null,
-                                        liveCalibration = null } = {}) {
-  try { return await readInner(document, { evidence, env, storeName, view, planeVersion, liveCalibration }); }
+                                        liveCalibration = null, transcription = null } = {}) {
+  try { return await readInner(document, { evidence, env, storeName, view, planeVersion, liveCalibration, transcription }); }
   catch (e) {
     const reading = failed(document, null, `the reading could not be composed (${String(e && e.message || e).slice(0, 200)}), `
       + `so nothing is claimed about this document's text; it is a failed reading, never an emptied document`);
@@ -934,7 +1085,7 @@ export async function bytesOf(evidence, doc) {
   return { bytes: at === total ? out : null, why: at === total ? null : "the parts held do not add up to the capture's size" };
 }
 
-async function readInner(doc, { evidence, env, storeName, view, planeVersion, liveCalibration }) {
+async function readInner(doc, { evidence, env, storeName, view, planeVersion, liveCalibration, transcription }) {
   const retrieved = doc && typeof doc.retrieved === "string" ? doc.retrieved : null;
   const sha = doc && doc.capture && typeof doc.capture.sha256 === "string" ? doc.capture.sha256 : null;
   const ct = doc && doc.capture && typeof doc.capture.content_type === "string" ? doc.capture.content_type : "";
@@ -1023,7 +1174,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     /* R2 (D-593, D-684): through the entry over the stored bytes, tier 1, including delimited text read as text at
        intake and a multi-part capture within the bound: a CSV's text is the entry's own decode. */
     let i2text = null, wiredTier = null, pageCount = null, pageBoxes = null, pdfPaints = null, wired = null;
-    let chain = null, ocrNote = null, tier2note = null, tier2PerPage = null, t3Wanting = false;
+    let chain = null, ocrNote = null, tier2note = null, tier2PerPage = null, t3Wanting = false, aiRead = null;
     try {
       if (typeof entry.text === "function") {
         const parts = typeof entry.parts === "function" ? await entry.parts(bytes) : bytes;
@@ -1061,6 +1212,16 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       if (t3.chainSet) chain = t3.chain;
       if (t3.ocrNote != null) ocrNote = t3.ocrNote;
       t3Wanting = t3.stillWanting;
+      /* R29: tier 4, at a member's act only, over what tiers 1-3 settled and before a Drive export's conversion. */
+      if (transcription && i2text) {
+        const t4 = await tier4Extend(transcription, { sha, storeName, i2text, wiredTier,
+          chain: chain || layerChainFor(i2text, { tier: wiredTier, container: fmt }) });
+        if (t4.filled.length) {
+          i2text = t4.i2text; chain = t4.chain; wiredTier = t4.wiredTier;
+          aiRead = { pages: t4.filled, engine: t4.engine.engine, version: t4.engine.version, label: AI_READING_LABEL };
+        }
+        if (t4.aiNote) ocrNote = ocrNote ? `${ocrNote}; ${t4.aiNote}` : t4.aiNote;
+      }
       if (i2text && Object.prototype.hasOwnProperty.call(i2text, "dialect")) {
         try { readDialect = readingDialect(i2text.dialect); } catch { readDialect = undefined; }
       }
@@ -1091,6 +1252,8 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
         ? readingFromWire({ wired, docType, chain, wiredTier, fmt, retrieved, tier2note, ocrNote, tier3Candidate: t3Wanting })
         : { ...failed(doc, docType, [tier2note, ocrNote, `the ${fmt} entry produced no text from these bytes`]
               .filter(Boolean).join(" — ")) };
+      /* R29: the pages the AI read, labelled as its reading. */
+      if (aiRead) reading.ai_transcription = aiRead;
       /* R12: never zero. */
       reading.page_count = Number.isInteger(pageCount) && pageCount > 0 ? pageCount : null;
       /* N100 (R12): the boxes under the count's rule: present where it is, null where no box was read. */
