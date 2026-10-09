@@ -1,6 +1,6 @@
 # promotion (T40)
 
-**Status** · session_01XChv8V6DE72utCnY78u8bo · depth 2 · WAITING ON BOB (J1) · handled B1
+**Status** · session_01XChv8V6DE72utCnY78u8bo · depth 2 · WAITING ON BOB (J1) · handled B2
 
 ## J1 · REPORT
 
