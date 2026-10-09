@@ -124,3 +124,5 @@ Told to Bob as fact, not asked: exploring is not offered until D13 (private-pers
 | D13 (restated) | private-person fence after Bob's B8 (tracking people essential): A no non-official at all; **B** people through their part in a public matter, no subject a private person's private life, warned at the act, the system never explores a person on its own and gathers about a person only when a member tied them to the question, up to a per-run cap; C publication rules only | open |
 | D14 (restated) | test investigations: A Civicsmith's set gates release; B each group's own; **C** both | open |
 | D54 | administrators' sight of hidden projects (from BOB #145's canon draft review point 2: Membership §7.3/§7.9 and the built `FULL` sight give administrators contents; Bob 2026-10-08 "only by added members if the project is hidden"): A as built; **B** existence, name and owners, contents only if added; C nothing | open |
+
+**D52, D53, D13, D14 ruled, Bob, 2026-10-09:** "D52: B / D53: A / D13: B / D14: C". Folded into the working document §2.8 (where a first message leads; a member's own matter), §2.9 (people), §2.6 (test investigations). D54 still open.
