@@ -46,3 +46,7 @@ Four readings I am building on now; each is my best reading, and I carry on with
 ## J2 · COMPLETE
 
 T41-15 applied whole (R39, R54, R55, R59, R60, R61, K2442's internal lens read, D54's tests re-stated), with B2-B4. Inquiry 193/193 (1 todo, pre-existing); users' suites: no new red (92 vs 93 on the tranche; plane R12 bias test now green). Checks: format 0, coverage 52/52, ownership 0; architecture 1: lines joins my uses (K2480), yours to apply in modules.json. Deferred: R61 reads through inquiry-grammar's readBiasApplied at its CHANGE. Plane bundle stale. New: C-2.19 BIAS_APPLICATION_NOT_IN_FORCE, C-106.2's row, table inquiry_person_warnings, op questionwaits, package fields setIn and personWarningSeen (the control plane's to stamp). Record: build/jobs/T41/inquiry.md, Completion.
+
+## J3 · COMPLETE
+
+B5 applied: tranche merged; R61 reads each leg through inquiry-grammar's readBiasApplied (my reader removed); grammar.test.mjs pins BIAS_APPLICATION_MALFORMED (C-2.8). Inquiry 193/193 (1 todo). Checks unchanged: format 0, coverage 52/52, ownership 0, architecture 1 (lines in uses, yours to apply). Record updated.
