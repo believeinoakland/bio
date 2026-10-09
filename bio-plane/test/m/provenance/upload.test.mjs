@@ -9,6 +9,8 @@ import * as provenance from "../../../src/provenance/index.mjs";
 import { registerChecks, ARCHIVE_VIA, ARCHIVE_CAPTURE_GRADE, DOORBELL_VIA, UPLOAD_VIA, UNPACKED_VIA, FETCHED_VIAS,
          RECEIVED_NOT_FETCHED, UPLOAD_ORIGIN, UPLOADED_METHOD } from "../../../src/provenance/index.mjs";
 import { EARNED_CAPTURE_CEILING, parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+import { migrateProvenance } from "../../../src/provenance/schema.mjs";
+import { DatabaseSync } from "node:sqlite";
 
 const T = "2026-10-09T01:00:00Z";
 const up = (s) => `upload:${s}`;
@@ -74,6 +76,68 @@ test("R63: a later fetch of the same bytes writes its own receipt beside the upl
   /* The upload's receipt stays; nothing is regraded or removed. */
   assert.deepEqual(w.rows(`SELECT via FROM captured_locators WHERE capture_sha = ? ORDER BY via`, s).map((r) => r.via),
                    ["archive.org", "direct", "upload"]);
+});
+
+test("R63 (K2449): an upload's receipt holds each sighting's member and statement, answered wherever receipts are read", () => {
+  const w = world({ now: "2026-10-09T09:00:00.000Z" });
+  const heard = [];
+  w.prov.onReceipt("observation-log", (e) => { heard.push(e); return null; });
+  const s = sha("the same file, two members");
+  const a = w.prov.recordReceipt({ address: up(s), addressNorm: up(s), captureSha: s, retrieved: "2026-10-09T01:00:00Z",
+                                   via: UPLOAD_VIA, by: "member:ruth", statement: "the clerk handed me this" });
+  assert.deepEqual([a.recorded, a.observation], [true, "new"]);
+  /* A second sighting by another member: the same receipt, its interval widened, her own statement kept beside the first. */
+  const b = w.prov.recordReceipt({ address: up(s), addressNorm: up(s), captureSha: s, retrieved: "2026-10-10T02:00:00.500Z",
+                                   via: UPLOAD_VIA, by: "member:sam", statement: "found it in a box of council papers" });
+  assert.deepEqual([b.recorded, b.observation], [true, "unchanged"]);
+  const sightings = [{ by: "member:ruth", statement: "the clerk handed me this", at: "2026-10-09T01:00:00Z" },
+                     { by: "member:sam", statement: "found it in a box of council papers", at: "2026-10-10T02:00:00Z" }];
+  /* R16 and R60 answer it. */
+  const row = w.prov.receipts({ addressNorm: up(s) }).rows;
+  assert.equal(row.length, 1);
+  assert.deepEqual([row[0].via, row[0].observations, row[0].first_retrieved, row[0].last_retrieved, row[0].uploads],
+                   ["upload", 2, "2026-10-09T01:00:00Z", "2026-10-10T02:00:00Z", sightings]);
+  assert.deepEqual(w.prov.receiptsOfCapture({ captureSha: s }).rows.map((r) => r.uploads), [sightings]);
+  assert.deepEqual(w.prov.receipts({}).rows.find((r) => r.capture_sha === s).uploads, sightings);
+  /* R47's payload carries this sighting's member and statement. */
+  assert.deepEqual(heard.map((e) => [e.via, e.by, e.statement]),
+                   [["upload", "member:ruth", "the clerk handed me this"], ["upload", "member:sam", "found it in a box of council papers"]]);
+  /* The same member again, the same words: a third sighting, kept as such (one entry per upload, as observations count). */
+  w.prov.recordReceipt({ addressNorm: up(s), captureSha: s, via: UPLOAD_VIA, by: "member:ruth", statement: "the clerk handed me this" });
+  const third = w.prov.receiptsOfCapture({ captureSha: s }).rows[0];
+  assert.deepEqual([third.observations, third.uploads.length, third.uploads[2]],
+                   [3, 3, { by: "member:ruth", statement: "the clerk handed me this", at: "2026-10-09T09:00:00Z" }]);
+  /* Given as strings or not at all: anything else is held as null, never coerced. */
+  const t = sha("an upload with no words");
+  w.prov.recordReceipt({ addressNorm: up(t), captureSha: t, retrieved: T, via: UPLOAD_VIA, by: 7, statement: { text: "x" } });
+  assert.deepEqual(w.prov.receiptsOfCapture({ captureSha: t }).rows[0].uploads, [{ by: null, statement: null, at: T }]);
+  /* Negative control: any other route takes neither, holds none, and hands the listeners null. */
+  for (const via of ["direct", DOORBELL_VIA, ARCHIVE_VIA, UNPACKED_VIA, "some-mirror"]) {
+    const o = sha(`other ${via}`);
+    heard.length = 0;
+    w.prov.recordReceipt({ addressNorm: `e.org/${via}`, captureSha: o, retrieved: T, via, by: "member:ruth", statement: "mine" });
+    assert.equal(w.prov.receiptsOfCapture({ captureSha: o }).rows[0].uploads, null, via);
+    assert.equal(w.row(`SELECT uploads FROM captured_locators WHERE capture_sha = ?`, o).uploads, null, via);
+    assert.deepEqual([heard[0].by, heard[0].statement], [null, null], via);
+  }
+  /* The grade is R63's whatever the sightings say: words are never evidence (no field of the answer moves). */
+  assert.deepEqual([w.prov.captureGrade(s).route, w.prov.captureGrade(s).basis], ["upload", RECEIVED_NOT_FETCHED]);
+});
+
+test("R63 (K2449): a store written before the column existed gains `uploads` at boot, every earlier receipt null", () => {
+  const db = new DatabaseSync(":memory:");
+  const sql = { exec(q, ...a) { const st = db.prepare(q); return st.columns().length ? st.all(...a) : (st.run(...a), []); } };
+  db.exec(`CREATE TABLE captured_locators (address_norm TEXT NOT NULL, address TEXT NOT NULL, capture_sha TEXT NOT NULL,
+             via TEXT NOT NULL DEFAULT 'direct', retrieval_locator TEXT, first_retrieved TEXT NOT NULL,
+             last_retrieved TEXT NOT NULL, observations INTEGER NOT NULL DEFAULT 1, reputation TEXT,
+             PRIMARY KEY (address_norm, capture_sha, via))`);
+  db.prepare(`INSERT INTO captured_locators VALUES (?,?,?,?,?,?,?,?,?)`).run("knock:K", "knock:K", sha("k"), "doorbell",
+    null, T, T, 1, null);
+  migrateProvenance(sql);
+  migrateProvenance(sql);
+  assert.deepEqual({ ...db.prepare(`SELECT * FROM captured_locators`).get() },
+    { address_norm: "knock:K", address: "knock:K", capture_sha: sha("k"), via: "doorbell", retrieval_locator: null,
+      first_retrieved: T, last_retrieved: T, observations: 1, reputation: null, uploads: null });
 });
 
 test("R63, R62: upload is not in FETCHED_VIAS; an uploaded capture is not fetched until a fetch of its bytes is recorded", () => {

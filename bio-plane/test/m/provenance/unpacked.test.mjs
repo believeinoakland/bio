@@ -32,7 +32,7 @@ test("R15, R48: an unpacked receipt sits at the archive's address plus #zip:<ind
   assert.deepEqual({ ...w.row(`SELECT * FROM captured_locators WHERE via = 'unpacked'`) }, {
     address_norm: `${NORM}#zip:3`, address: `${ADDR}#zip:3`, capture_sha: file.sha, via: "unpacked",
     retrieval_locator: `zip:${archive.sha}!3`, first_retrieved: T(2), last_retrieved: T(2), observations: 1,
-    reputation: null });
+    reputation: null, uploads: null });
   /* A reader seeking the archive's address finds the archive alone; the file answers at its own address. */
   assert.deepEqual(w.prov.receipts({ addressNorm: NORM }).rows.map((x) => x.capture_sha), [archive.sha]);
   assert.deepEqual(w.prov.versionChain({ addressNorm: NORM, viewer: V("x") }).versions.map((v) => v.capture_sha), [archive.sha]);

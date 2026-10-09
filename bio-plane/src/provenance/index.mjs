@@ -52,10 +52,13 @@ const secondOf = (iso) => String(iso).replace(/\.\d+Z$/, "Z");
 function safeJson(text) {
   try { return JSON.parse(text); } catch { return null; }
 }
-/* A receipt as R16 and R60 answer it: every column, `reputation` (R61) read back to the object stored, null when none. */
+/* A receipt as R16 and R60 answer it: every column, `reputation` (R61) read back to the object stored, null when none,
+   and `uploads` (R63) read back to its sightings, null on a receipt of any other route. */
 const RECEIPT_COLUMNS = "address_norm, address, capture_sha, via, retrieval_locator, first_retrieved, last_retrieved, "
-                      + "observations, reputation";
-const receiptRow = (r) => ({ ...r, reputation: typeof r.reputation === "string" ? safeJson(r.reputation) : null });
+                      + "observations, reputation, uploads";
+const uploadsOf = (text) => { const a = typeof text === "string" ? safeJson(text) : null; return Array.isArray(a) ? a : null; };
+const receiptRow = (r) => ({ ...r, reputation: typeof r.reputation === "string" ? safeJson(r.reputation) : null,
+                             uploads: uploadsOf(r.uploads) });
 /* A digest as the register keys it: a `sha256:` prefix and case ignored (R5). */
 const bareSha = (v) => (typeof v === "string" ? v.trim().replace(/^sha256:/, "").toLowerCase() : null);
 
@@ -888,11 +891,19 @@ class Provenance {
    *  handed to the listeners as this write gave it, null when it gave none. A repeat that gives one replaces the
    *  stored answer (the newest lookup speaks for the address); one that gives none keeps it, as `retrieval_locator`
    *  is kept. It changes no other field, grade or chain. */
+  /*  R63 (K2449): a receipt of route `upload` holds, for each sighting, the uploading member `by` and her `statement` of
+   *  where the file came from, appended to its `uploads` as `{by, statement, at}` (`at` the sighting's instant), so a
+   *  second sighting by another member keeps her own statement beside the first: two members bringing the same bytes
+   *  are two attributed sightings. Each is kept as given (a string, else null). A receipt of any other route takes
+   *  neither and holds none. The listeners are handed this sighting's `by` and `statement`, null on any other route. */
   recordReceipt({ address, addressNorm, captureSha, retrieved, via = "direct", retrievalLocator = null, reputation = null,
-                  context = null } = {}) {
+                  by = null, statement = null, context = null } = {}) {
     if (!addressNorm || !captureSha) return { recorded: false };
     const v = String(via || "direct");
     const rep = isObj(reputation) ? reputation : null;
+    const upload = v === UPLOAD_VIA;
+    const sighting = upload ? { by: typeof by === "string" ? by : null, statement: typeof statement === "string" ? statement : null }
+                            : { by: null, statement: null };
     const asked = typeof retrieved === "string" && retrieved ? Date.parse(retrieved) : NaN;
     const clock = Date.parse(this.#now());
     const when = stampInstant("second", Number.isFinite(asked) ? asked : Number.isFinite(clock) ? clock : Date.now());
@@ -902,18 +913,24 @@ class Provenance {
            FROM captured_locators WHERE address_norm = ? AND via = ?`,
         captureSha, addressNorm, v) || { n: 0, same: 0 };
       const observation = Number(seen.n) === 0 ? "new" : Number(seen.same) > 0 ? "unchanged" : "changed";
+      const held = upload ? this.#one(`SELECT uploads FROM captured_locators WHERE address_norm = ? AND capture_sha = ?
+                                         AND via = ?`, addressNorm, captureSha, v) : null;
+      const uploads = upload ? JSON.stringify([...(uploadsOf(held && held.uploads) || []), { ...sighting, at: when }]) : null;
       this.#sql.exec(
-        `INSERT INTO captured_locators (address_norm, address, capture_sha, via, retrieval_locator, first_retrieved, last_retrieved, observations, reputation)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)
+        `INSERT INTO captured_locators (address_norm, address, capture_sha, via, retrieval_locator, first_retrieved, last_retrieved, observations, reputation, uploads)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
          ON CONFLICT(address_norm, capture_sha, via) DO UPDATE SET
            first_retrieved   = MIN(first_retrieved, excluded.first_retrieved),
            last_retrieved    = MAX(last_retrieved,  excluded.last_retrieved),
            retrieval_locator = COALESCE(excluded.retrieval_locator, retrieval_locator),
            observations      = observations + 1,
-           reputation        = COALESCE(excluded.reputation, reputation)`,
-        addressNorm, address || addressNorm, captureSha, v, retrievalLocator, when, when, rep ? JSON.stringify(rep) : null);
+           reputation        = COALESCE(excluded.reputation, reputation),
+           uploads           = COALESCE(excluded.uploads, uploads)`,
+        addressNorm, address || addressNorm, captureSha, v, retrievalLocator, when, when, rep ? JSON.stringify(rep) : null,
+        uploads);
       const event = { address: address || addressNorm, address_norm: addressNorm, capture_sha: captureSha, via: v,
-                      retrieval_locator: retrievalLocator, retrieved: when, observation, reputation: rep, context };
+                      retrieval_locator: retrievalLocator, retrieved: when, observation, reputation: rep, ...sighting,
+                      context };
       const listeners = this.#listeners.map(({ module, fn }) => {
         try {
           const out = fn(event);

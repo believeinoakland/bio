@@ -116,7 +116,8 @@ test("R61: R47's onReceipt payload carries the reputation this write gave, null 
   w.prov.recordReceipt({ addressNorm: "e.org/l", captureSha: sha("l"), retrieved: T(3), reputation: "listed" });
   assert.deepEqual(seen.map((e) => e.reputation), [LISTED, null, null]);
   assert.deepEqual(Object.keys(seen[0]).sort(),
-    ["address", "address_norm", "capture_sha", "context", "observation", "reputation", "retrieval_locator", "retrieved", "via"]);
+    ["address", "address_norm", "by", "capture_sha", "context", "observation", "reputation", "retrieval_locator", "retrieved",
+     "statement", "via"]);
 });
 
 test("R61: op=recordcapturedlocator (R53) carries the body's reputation to the receipt", () => {
@@ -141,7 +142,7 @@ test("R61: a store written before the column existed gains it at boot, every ear
   migrateProvenance(sql);
   assert.deepEqual({ ...db.prepare(`SELECT * FROM captured_locators`).get() },
     { address_norm: "e.org/m", address: "https://e.org/m", capture_sha: sha("m"), via: "direct", retrieval_locator: null,
-      first_retrieved: T(1), last_retrieved: T(2), observations: 2, reputation: null });
+      first_retrieved: T(1), last_retrieved: T(2), observations: 2, reputation: null, uploads: null });
 });
 
 test("N730 (T36-9's Suggestion): a read of the receipts by retrieval locator is an index seek, not a scan", () => {
