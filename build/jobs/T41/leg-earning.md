@@ -39,3 +39,7 @@ Mutation check: each of six mutations (hidden filter, attestation test, page cov
 - No generated artifact edited. The plane bundle is staled as by any merge (rule 4 (14)).
 
 Size (session_018Dq5y3nwTnhZrikpr65p7D): test runs 16, module lines 1470
+
+## J2 · REPORT
+
+leg-earning requirements, Uses: names no `provenance`, though the code has used `provenance.captureGrade` since the split (R1, R8) and now also `DOORBELL_VIA` and `UPLOAD_VIA` (R16). `modules.json` already carries the edge. Wording only, BOB's to add.
