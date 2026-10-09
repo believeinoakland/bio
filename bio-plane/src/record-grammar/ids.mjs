@@ -64,6 +64,10 @@ export const ID_TABLE = Object.freeze([
      calculations minted sequentially, and every reader keeps reading them through `idPattern`. Minting follows `form`
      alone (record-core). */
   row('CALC', 'calculations', 'opaque', 'sequential'), row('STQ', 'answers'),
+  /* T41-1 (N820; D32, D8; K2405, K2418): a step (`steps`) and a reading guide (`reading-guides`), opaque, as T33's new
+     objects are: a counter would tell a reader how many steps a group took, hidden projects' included. Their owners are
+     named here before they hold code (P8). */
+  row('STP', 'steps', 'opaque'), row('GUD', 'reading-guides', 'opaque'),
 ]);
 
 const YEAR = '\\d{4}';
@@ -88,6 +92,14 @@ export function idPattern(prefix) {
 const HYP_RE = idPattern('HYP');
 /** R48: is `v` a hypothesis id? The one test every store-side refusal of a hypothesis reads (K1467, K1487). */
 export const isHypothesisId = (v) => typeof v === 'string' && HYP_RE.test(v);
+
+const STP_RE = idPattern('STP');
+/** R51: is `v` a step id? (`steps`, D32.) */
+export const isStepId = (v) => typeof v === 'string' && STP_RE.test(v);
+
+const GUD_RE = idPattern('GUD');
+/** R53: is `v` a reading guide id? (`reading-guides`, D8.) */
+export const isGuideId = (v) => typeof v === 'string' && GUD_RE.test(v);
 
 /** Every bundle id prefix, in the order the patterns spell them (R1): the sequential prefixes `ID_TABLE` gives the
  *  bundle records. */
