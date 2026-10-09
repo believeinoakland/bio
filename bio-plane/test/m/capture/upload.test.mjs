@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { fresh, bucket, provenance, network, register, sha } from "./fixture.mjs";
 import { UPLOAD_STATEMENT_MAX, UPLOAD_NAME_MAX, UPLOAD_WITHIN_FAILED_DETAIL } from "../../../src/capture/index.mjs";
 import { CAPTURE_CHECKS } from "../../../src/capture/checks.mjs";
+import { provenanceOf, UPLOAD_VIA } from "../../../src/provenance/index.mjs";
 import { INSTALLATION_CHECKS, firstHopWho, CAPTURE_MAX } from "../../../src/acquisition/index.mjs";
 
 const te = new TextEncoder();
@@ -242,4 +243,34 @@ test("R86 R77: an upload, once promoted at collected, is held for review as any 
   assert.deepEqual(held.held.map((x) => [x.bundle_id, x.source]),
                    [["INFO-2026-0001", { address: `upload:${r.capture.sha256}`, via: "upload", retrieved: AT }]]);
   assert.deepEqual((await c.heldCaptures({ viewer: "member:m1", member: "m2" })).held, [], "negative control: not under another member");
+});
+
+/* Over provenance's own instance (its R5, R13, R60, R62, R63; K2449, K2457), not the fixture's stand-in. */
+test("R86 R76 (provenance R63): over provenance itself, an upload grades received with route upload, keeps each uploader's statement on its receipt, answers no grade note and reads not fetched; a later public fetch of the same bytes then governs", async () => {
+  const f = setup();
+  f.s.db.exec("DROP TABLE captured_locators; DROP TABLE register;");
+  const p = provenanceOf({ storage: f.s }, { record: f.core });
+  p.migrate();
+  f.c.provenance = p;
+  assert.equal(UPLOAD_VIA, "upload");
+  const bytes = te.encode("the council's draft budget");
+  const r = await f.c.uploadCapture({ ...ok, bytes });
+  const d = r.capture.sha256;
+  const g = p.captureGrade(d);
+  assert.deepEqual([g.grade, g.route, g.determined, g.basis], [null, "upload", false, "CAPTURE_RECEIVED_NOT_FETCHED"]);
+  assert.equal(r.document.capture.grade_basis, g.basis, "the document states the grade basis provenance answers");
+  assert.equal(p.fetchedByThisCopy(d).fetched, false);
+  const again = await f.c.uploadCapture({ ...ok, bytes, statement: "from a colleague", by: "m2", at: "2026-10-10T08:00:00Z" });
+  assert.equal(again.existed, true, "provenance's receipt names the digest");
+  assert.deepEqual(p.receiptsOfCapture({ captureSha: d }).rows[0].uploads.map((u) => [u.by, u.statement]),
+                   [["m1", STATEMENT], ["m2", "from a colleague"]], "each uploader's own statement kept");
+  assert.equal((await f.c.gradeNoteOf({ captureSha: d })).note, null, "R76: received only, no acquire note");
+  const net = network({ "https://city.example/budget": () => new Response("the council's draft budget", { headers: { "content-type": "text/plain" } }) });
+  try { assert.equal((await f.c.acquire({ locator: "https://city.example/budget" }, { cls: "member", member: true, sessMember: "m3" })).body.ok, true); }
+  finally { net.restore(); }
+  const later = p.captureGrade(d);
+  assert.deepEqual([later.route, later.determined], ["direct", true], "the fetched receipt's answer governs (provenance R59)");
+  assert.equal(p.fetchedByThisCopy(d).fetched, true);
+  assert.deepEqual(p.receiptsOfCapture({ captureSha: d }).rows.find((x) => x.via === "upload").uploads.length, 2, "the upload's receipt and statements stay");
+  assert.equal((await f.c.gradeNoteOf({ captureSha: d })).note !== null, true, "R76: a fetched receipt beside, the note again");
 });

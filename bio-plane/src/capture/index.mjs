@@ -32,7 +32,8 @@ import { ACQUIRE_GRADE_NOTE } from "../acquisition/index.mjs";
 import { unpack, archiveList, memberOf, acquisitionOf } from "../acquisition/index.mjs";
 import { recordOf, PER_ITEM_MAX } from "../record-core/index.mjs";
 import { governorOf } from "../host-governor/index.mjs";
-import { provenanceOf, DOORBELL_VIA } from "../provenance/index.mjs";
+/* R86 (T41-8a): `UPLOAD_VIA`, the route an upload's receipt names, provenance's one spelling (its R63). */
+import { provenanceOf, DOORBELL_VIA, UPLOAD_VIA } from "../provenance/index.mjs";
 import { attest, attestationOf } from "../attestation/index.mjs";
 import { viewerPredicate, GATE_MARK, listenerRefusal } from "../membership/index.mjs";
 import { credentialsOf } from "../credentials/index.mjs";
@@ -81,8 +82,6 @@ const WITHIN_FAULT = Symbol("within's fault");
 export const PULL_WITHIN_FAILED_DETAIL =
   "the act run with the pull did not complete, so the pull was rolled back and nothing was written";
 
-/* R86 (T41-8a): the route an upload's receipt names, provenance's one spelling (its R63). */
-const UPLOAD_VIA = "upload";
 /* R76 (K2455): the routes by which a capture is received, never fetched (provenance R51, R63). */
 const RECEIVED_VIAS = Object.freeze([DOORBELL_VIA, UPLOAD_VIA]);
 /* R86: the parts an upload is held in, `acquisition` R10's form. */
