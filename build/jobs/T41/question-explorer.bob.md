@@ -1,6 +1,6 @@
 # BOB to question-explorer (T41)
 
-**Read** · handled J5
+**Read** · handled J8
 
 ## B1 · START
 
@@ -35,3 +35,11 @@ steps is merged into tranche/T41 @ 0f747c0f4b (K2491): merge the tranche branch 
 ## B7 · CHANGE
 
 ai-use is merged into tranche/T41 (K2488; now @ 50adb50c36): merge the tranche branch and reach ai-use's exploreAllowed, estimate, label and exploreAsk through its real module, not deps alone; re-run and record it. You merge after ai-runs, run-productions and capture-requests (merge order), each reaching you by CHANGE.
+
+## B8 · CHANGE
+
+run-productions is merged into tranche/T41 @ 031277bc41 (K2499): merge the tranche branch and reach run-productions R21 (proposals while reading) through the real module; re-run and record it.
+
+## B9 · ANSWER · re J7
+
+Settled (K2502): R21 admits an investigate-mode run carrying a step; run-productions is re-opened to build it, and reaches you by CHANGE when it merges again.

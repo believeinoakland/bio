@@ -35,7 +35,7 @@ It is the only module marked `legacy` in `modules.json`.
    3. the UI's DEC-88 tests (Bob's), carried;
    4. legacy-ui `statement-ack.test.mjs` (N794, K633);
    5. membership R83's `MODULE_ORDER` tests from the opening's insertion of the five modules until T41-3's merge;
-   6. answers `standing.test.mjs`:122 and :273 (K2412) until T41-29;
+   6. (cleared at T41-29's merge, K2500) answers `standing.test.mjs`:122 and :273;
    7. op-declarations `t33.test.mjs` R19 (K2413) and `t35.test.mjs`:196 (K2412) until T41-58;
    8. (cleared at T41-9's merge, K2464) reading-pipeline `convert-chain.test.mjs`:297 and `pieces.test.mjs`:218;
    9. filings `outward.test.mjs`:136 (R25; K2387) until T41-48;
@@ -52,6 +52,8 @@ It is the only module marked `legacy` in `modules.json`.
 - L8: publication R21's waiting clause, R66–R69, R71, R74 retired "moved to publish-schedule R<n>", R70 re-worded (K2438); case-authoring R58, R59 re-pointed; ratification R42 (names publication R67) and R43 re-pointed; the placement of `case-disclosures` R30's account arms that `case-checker` R24 re-runs (case-checker precedes case-disclosures: move the arms earlier or re-word R24); case-import's `bias` edge (R23).
 - L9: actions R52–R60 (hold reads at `EXISTENCE`, §3.5); actions registers its records-request outcome with `intent` R33's `registerSource` (K2483).
 - L10: scheduler R22's `scheduled-publish` consumer re-pointed.
+- L11 (K2500, ANSWERS #7 J3): the plane drops `store.mjs`:219's `ceilingRefusal` wiring; the plane's ask path (`ask.mjs`:68, :119) and store-door (`dispatch.mjs`:278) call `answers.askAccount` (R30) for the account and limit, passing `use: "draft"` to `logRead` for a draft's reads.
+- L11 (K2498, INQUIRY #16 J2): control-plane stamps a promotion package's `setIn` (the request's project context) and `personWarningSeen`, and routes `questionwaits`.
 - L11 (K2496, RUN-PRODUCTIONS #8 J2): op-declarations R43 and control-plane R71 also declare and route `readpages`, `acceptancecounts`, `bearingnotes`.
 - L11 (K2488, AI-USE #1 J3): plane and control-plane route `aiUseOps` (`ailimitset`, `ailimits`, `aiusage`, `exploreapprove`; `aiUseOf(ctx)` reads the zone from retrieval); notice-producers R16 reads `limitsReached` and `exploreAsksPending` by their stable `key`; answer-envelope's families gain C-143 (`AI_USE_CHECKS`).
 - L11 (K2486): op-declarations declares a route for hypotheses R18's set-aside (`hypothesissetaside`, beside R43's `hypothesistakeup`, `noteshare`, `noteunshare`, `shares`); UX-DESIGN NOTICE: `ai.refused.explorenotenabled` names a condition ai-use R3 never refuses on.
