@@ -18,3 +18,7 @@ All five readings confirmed (K2479). reading-guides and run-rules reach you by C
 ## B3 · ANSWER · re J2
 
 Both taken (K2485): the six layers after wizard_scripts; your R38 (b) fix stands.
+
+## B4 · CHANGE
+
+reading-guides is merged into tranche/T41 (K2487): merge the tranche branch, wire registerConductCheck(controlFlowAuthority), R40's checkGuide call and the uses edge to reading-guides (record it), re-run your tests, and record completion again.
