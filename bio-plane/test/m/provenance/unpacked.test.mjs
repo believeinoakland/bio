@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, V, provDoc, infoMd } from "./fixture.mjs";
-import { ARCHIVE_VIA, DOORBELL_VIA, UNPACKED_VIA, UNPACKED_METHOD, UNPACKED_FROM_ARCHIVE, UNPACKED_UNRESOLVED,
+import { ARCHIVE_VIA, DOORBELL_VIA, UPLOAD_VIA, UNPACKED_VIA, UNPACKED_METHOD, UNPACKED_FROM_ARCHIVE, UNPACKED_UNRESOLVED,
          ARCHIVE_CAPTURE_GRADE, registerChecks, withRegisterChecks } from "../../../src/provenance/index.mjs";
 import { ARCHIVE_DEPTH_MAX } from "../../../src/ooxml.mjs";
 import { EARNED_CAPTURE_CEILING, TESTIMONY_GRADE, parseFrontmatter } from "../../../src/record-grammar/index.mjs";
@@ -267,6 +267,28 @@ test("R42: at the write, the archive is held, the letter is the archive's (R59) 
   refused(fileMember(w3, fileDoc({ grade: null, basis: "measured", origin: knockOrigin })),
           /grade_basis is 'measured', not its archive's, 'CAPTURE_RECEIVED_NOT_FETCHED'/);
   assert.equal(fileMember(w3, fileDoc({ grade: null, basis: "CAPTURE_RECEIVED_NOT_FETCHED", origin: knockOrigin })).ok, true);
+});
+
+test("R63, R42: a file cut out of an uploaded archive carries the archive's origin and basis, and owes no statement of its own", () => {
+  const w = world();
+  w.prov.recordReceipt({ addressNorm: `upload:${sha(ARCHIVE_BYTES)}`, captureSha: sha(ARCHIVE_BYTES), retrieved: T(1), via: UPLOAD_VIA });
+  const upOrigin = { kind: "upload" };
+  const held = archiveDoc({ origin: upOrigin });
+  held.capture = { ...held.capture, method: "uploaded", grade: null, grade_basis: "CAPTURE_RECEIVED_NOT_FETCHED", actor_class: "member" };
+  held.origin_statement = { text: "the clerk handed me this archive", words_of: "member:ruth", evidence_of_truth: false };
+  assert.equal(fileArchive(w, held).ok, true);
+  const before = w.snapshot();
+  /* Negative controls: a letter, or another basis, on the file of an archive that earns none. */
+  for (const [doc, re] of [[fileDoc({ grade: "B", origin: upOrigin }), /but its archive earns no letter \(CAPTURE_RECEIVED_NOT_FETCHED\)/],
+                           [fileDoc({ grade: null, basis: "measured", origin: upOrigin }), /not its archive's, 'CAPTURE_RECEIVED_NOT_FETCHED'/]]) {
+    const r = fileMember(w, doc);
+    assert.deepEqual([r.ok, r.reason], [false, "PROVENANCE_REGISTER_REFUSED"], JSON.stringify(r));
+    assert.ok(r.findings.some((x) => x.check === "C-18.1" && re.test(x.detail)), JSON.stringify(r.findings));
+  }
+  assert.deepEqual(w.snapshot(), before, "no refusal wrote anything");
+  /* As unpack writes it: method unpacked, the archive's origin, no statement: filed, earning the upload's answer. */
+  const r = fileMember(w, fileDoc({ grade: null, basis: "CAPTURE_RECEIVED_NOT_FETCHED", origin: upOrigin }));
+  assert.equal(r.ok, true, JSON.stringify(r));
 });
 
 test("R42: an archive held with no document of it to read is a finding: its origin cannot be shown", () => {

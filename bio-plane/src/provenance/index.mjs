@@ -40,7 +40,8 @@ export { PROVENANCE_SCHEMA } from "./schema.mjs";
 
 /** The tables this module owns (R41): no other module declares, writes or reshapes them. */
 export const PROVENANCE_TABLES = ["register", "captured_locators", "origin_declarations"];
-export { registerChecks, RECEIVED_NOT_FETCHED, DOORBELL_ORIGIN, UNPACKED_METHOD } from "./register-checks.mjs";
+export { registerChecks, RECEIVED_NOT_FETCHED, DOORBELL_ORIGIN, UNPACKED_METHOD, UPLOAD_ORIGIN,
+         UPLOADED_METHOD } from "./register-checks.mjs";
 export { REGISTER_ENTRY_CHECKS, VERSION_CHAIN_CHECKS, PROVENANCE_ACT_CHECKS, TESTIMONY_CHECKS } from "./checks.mjs";
 
 const hexBytes = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
@@ -96,6 +97,11 @@ export const ARCHIVE_CAPTURE_GRADE = BASIS_GRADES[BASIS_GRADES.indexOf(EARNED_CA
  *  for the writer. */
 export const DOORBELL_VIA = "doorbell";
 
+/** R63 · K2425 (4) (K509 (3)): the receipt `via` of a file a member holds and brought in herself (`capture`'s upload,
+ *  its R86), at the address `upload:<sha256>`. Like the doorbell's material it was RECEIVED, never fetched, and is
+ *  graded exactly as R51 grades it. The one spelling, exported for the writer. */
+export const UPLOAD_VIA = "upload";
+
 /** R59 · N688 (K1844, K1852): the receipt `via` of a file `acquisition.unpack` cut out of an archive the record holds
  *  (its R38; R15 here), at the archive's document address followed by `#zip:<index>`, its retrieval locator
  *  `zip:<archiveSha>!<index>`. Such a file earns exactly what its archive earns. The one spelling, exported for the
@@ -109,11 +115,13 @@ export const UNPACKED_UNRESOLVED = "CAPTURE_UNPACKED_UNRESOLVED";
    place in its central directory (`ooxml` R27). Read from the receipt, which no caller writes, never from a document. */
 const UNPACKED_LOCATOR = /^zip:([0-9a-fA-F]{64})!(\d+)$/;
 /** R62 · N806 (K2333): the routes by which this copy fetched a capture itself: a direct fetch (Drive and render fetches
- *  record `direct` too), an archive replay, a capture request's fetch. A doorbell's file was handed in, not fetched.
+ *  record `direct` too), an archive replay, a capture request's fetch. A doorbell's file was handed in, and an
+ *  upload's brought in by the member who holds it (R63): neither was fetched, so neither route is here.
  *  The one list, exported for every reader of the source condition (`file-safety` R6, `case-carriage` R15). */
 export const FETCHED_VIAS = Object.freeze(["direct", ARCHIVE_VIA, "capture-request"]);
-/* R59: between equal answers, the order of the routes; a route no ruling grades never outranks a ruled one. */
-const ROUTE_RANK = { direct: 0, archive: 1, unpacked: 2, doorbell: 3 };
+/* R59: between equal answers, the order of the routes; a route no ruling grades never outranks a ruled one.
+   R63: an upload stands where the doorbell stands. */
+const ROUTE_RANK = { direct: 0, archive: 1, unpacked: 2, doorbell: 3, upload: 3 };
 
 /* PL-10 / D-220. The chain's bound, in the pair every capped read in this
    file publishes: the default a caller gets by saying nothing, and the
@@ -944,7 +952,7 @@ class Provenance {
   }
 
   /* ===================================================================== *
-   * R24–R27, R51, R59: THE CAPTURE AXIS FOR ONE CAPTURE, FROM ITS ROUTE.
+   * R24–R27, R51, R59, R63: THE CAPTURE AXIS FOR ONE CAPTURE, FROM ITS ROUTE.
    * ===================================================================== */
 
   /** `captureGrade(captureSha) → {grade, route, determined, basis, why}`. The route is the record's own fact about
@@ -973,8 +981,8 @@ class Provenance {
     if (!vias.length)
       return { grade: null, route: "unrecorded", determined: false, basis: "CAPTURE_ROUTE_UNRECORDED",
                ceiling: EARNED_CAPTURE_CEILING,
-               why: "no fetch route is recorded for these bytes (bytes a provenance document carried, or a member's "
-                  + "upload), so no capture grade is measured from how they were fetched. A leg on them keeps the "
+               why: "no fetch route is recorded for these bytes (bytes a provenance document carried), so no "
+                  + "capture grade is measured from how they were fetched. A leg on them keeps the "
                   + `letter its author gave, under the ceiling (${EARNED_CAPTURE_CEILING}), stated as authored` };
     const answers = [];
     /* R24 · D-177: a capture fetched `direct` earns the ceiling, measured. */
@@ -1000,19 +1008,12 @@ class Provenance {
        author's letter under the ceiling, stated as authored. What the receipt DOES prove is existence: the record
        held these bytes at the pull's instant, by its own receipt at the knock's address (the chain of custody from
        the knock's receipt), so the earliest such receipt is named. */
-    if (vias.includes(DOORBELL_VIA)) {
-      const r = this.#one(`SELECT address, address_norm, first_retrieved FROM captured_locators
-                            WHERE capture_sha = ? AND via = ? ORDER BY first_retrieved, address_norm LIMIT 1`,
-                          s, DOORBELL_VIA);
-      answers.push({ grade: null, route: "doorbell", determined: false, basis: RECEIVED_NOT_FETCHED,
-                     ceiling: EARNED_CAPTURE_CEILING,
-                     received: { address: r.address, address_norm: r.address_norm, at: r.first_retrieved },
-                     why: "these bytes were handed to the group through the doorbell and brought in by a member, never "
-                        + "fetched from an address, so no capture grade is measured from how they were fetched. A leg "
-                        + `on them keeps the letter its author gave, under the ceiling (${EARNED_CAPTURE_CEILING}), `
-                        + `stated as authored. That the record held them at ${r.first_retrieved} is proven by the `
-                        + `receipt your group's Civicsmith itself made at ${r.address}` });
-    }
+    if (vias.includes(DOORBELL_VIA))
+      answers.push(this.#received(s, DOORBELL_VIA, "handed to the group through the doorbell and brought in by a member"));
+    /* R63 · K2425 (4): a file a member holds, brought in by her upload: received, not fetched, graded exactly as the
+       doorbell's material (R51), its existence at the upload's instant proven by the receipt the upload wrote. */
+    if (vias.includes(UPLOAD_VIA))
+      answers.push(this.#received(s, UPLOAD_VIA, "brought in by a member who holds the file"));
     if (answers.length) return this.#strongest(answers);
     /* R26: a route no ruling grades is NAMED, and the grade is undetermined. It answers only when no ruled route
        does (R59: it never outranks a ruled one). */
@@ -1022,8 +1023,22 @@ class Provenance {
                 + "capture axis is UNDETERMINED" };
   }
 
+  /* R51, R63: the answer of material RECEIVED by route `via` (`doorbell` or `upload`), never fetched: no letter, the
+     member's authored letter under the ceiling, and the earliest such receipt named as the proof of existence. */
+  #received(s, via, how) {
+    const r = this.#one(`SELECT address, address_norm, first_retrieved FROM captured_locators
+                          WHERE capture_sha = ? AND via = ? ORDER BY first_retrieved, address_norm LIMIT 1`, s, via);
+    return { grade: null, route: via, determined: false, basis: RECEIVED_NOT_FETCHED, ceiling: EARNED_CAPTURE_CEILING,
+             received: { address: r.address, address_norm: r.address_norm, at: r.first_retrieved },
+             why: `these bytes were ${how}, never fetched from an address, so no capture grade is measured from how `
+                + "they were fetched. A leg on them keeps the letter its author gave, under the ceiling "
+                + `(${EARNED_CAPTURE_CEILING}), stated as authored. That the record held them at ${r.first_retrieved} `
+                + `is proven by the receipt your group's Civicsmith itself made at ${r.address}` };
+  }
+
   /* R59: the strongest of several routes' answers: a determined grade before an undetermined one, a higher letter
-     before a lower one, and between equal answers the order direct, archive.org, unpacked, doorbell. The sort is
+     before a lower one, and between equal answers the order direct, archive.org, unpacked, then doorbell and upload
+     (R63) in one place. The sort is
      stable, so between two equal `unpacked` answers the first receipt's stands. With one answer this is that answer,
      so R24, R25, R26 and R51 answer as before for a capture with no `unpacked` receipt. */
   #strongest(answers) {
