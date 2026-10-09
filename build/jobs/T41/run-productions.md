@@ -68,6 +68,19 @@ The factory reaches `legEarningOf(host)`. The tests use a stand-in of leg-earnin
 
 Size (session_012FXyapfXzBKoA3m8DhRQoh): test runs 38, module lines 2222
 
+## CHANGE B6 (RUN-PRODUCTIONS #8)
+
+**K2502 applied.** R21 now also admits an investigate-mode run that carries a step, as an exploring run (question-explorer R13) does: `extractPropose` takes it as it takes an extract run, and ties the step. An investigate run that names no step is still refused `NOT_AN_EXTRACT_RUN`, and the detail says it named no step. A run of any other mode is refused even when it names a step. C-104.5's translation now says an exploring investigation proposes only for the step it serves.
+
+A new test covers both sides: the negative controls (no step, an empty step, a check-mode run with a step, each writing nothing) and the success arm (passage verified, connection graded B, capture and content tied to the real step).
+
+**Re-run:**
+- `node --test test/m/run-productions/` gives 54 tests, 54 pass, 0 fail.
+- Users' suites: skills 105/0, store-door 41/0, plane 148/7, answer-envelope 24/4, control-plane 194/1. The control-plane red is `r53-routes`:67, hypotheses' ops (K2502's rule 4 (15)). None is mine.
+- `format` 0, `architecture` 0 (the edges are now in `modules.json`), `coverage` 24/24, `ownership` 0.
+
+Size (session_012FXyapfXzBKoA3m8DhRQoh): test runs 40, module lines 2231
+
 ## J1 · QUESTION
 
 R21–R24, my best readings; I am building on them now and will bring the work in line with your answer.
