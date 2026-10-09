@@ -5,7 +5,7 @@
    control (K874). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { answersWorld, answer, V, LIMIT } from "./fixture.mjs";
+import { answersWorld, answer, V } from "./fixture.mjs";
 import { GRANT_USES, ownerOf } from "../../../src/answers/index.mjs";
 
 const BOB = V("bob"), CAROL = V("carol"), ALICE = V("alice");
@@ -29,9 +29,10 @@ test("R30 an ask calls accountFor with kind ask and its project, and is judged b
   assert.deepEqual(w.limit.asked.at(-1), { owner: "member:bob", member: "bob", use: "ask", at: "2026-10-05T16:00:00Z" });
   assert.deepEqual(w.snapshot(), before, "writes nothing");
   /* the limit reached: ai-use's refusal, unchanged */
-  w.limit.refusal = LIMIT;
-  assert.deepEqual(await w.a.askAccount({ member: BOB }), LIMIT);
-  w.limit.refusal = null;
+  const reached = w.reach("member:bob", "ask");
+  assert.deepEqual(await w.a.askAccount({ member: BOB }), reached);
+  w.unreach("member:bob", "ask");
+  assert.equal((await w.a.askAccount({ member: BOB })).ok, true, "under its limit again");
   /* the account chosen is the one used: its ask use off is credentials R56's refusal, never the next account */
   assert.equal(real.accountUsesSet({ owner: "member:bob", switch: "ask", on: false, by: BOB }).ok, true);
   assert.equal((await w.a.askAccount({ member: BOB })).code, "AI_USE_SWITCHED_OFF");
@@ -42,7 +43,7 @@ test("R30 an ask calls accountFor with kind ask and its project, and is judged b
     const x = await w.a.askAccount({ member: BOB });
     assert.equal(x.ok, false); assert.equal(x.reason, "LIMITS_UNREADABLE");
   }
-  w.a.deps.useCheck = (a) => { w.limit.asked.push(a); return w.limit.refusal; };
+  w.a.deps.useCheck = (a) => w.useCheck(a);
   /* a project the member has joined: its account pays, judged by the project's limits */
   const P = w.project("Carol's work", "carol");
   assert.equal((await real.projectKeySet({ project: P, key: "sk-p", by: CAROL })).ok, true);
@@ -129,4 +130,15 @@ test("R30 R19 a standing run's grant reads under its own use: a project kept awa
   /* the same read under an ask grant keeps the project: the limit covers standing questions only */
   const ask = w.a.logRead({ grant: "g-ask", viewer: CAROL, op: "search", args: {}, answer: { ok: true, hits: [{ bundle_id: P }] } });
   assert.deepEqual(ask.hits, [{ bundle_id: P }]);
+});
+
+test("R30 with no useCheck handed in, answers judges by ai-use's useCheck on its own host (the negative control: an account under its limits is served)", async () => {
+  const w = answersWorld({ deps: { useCheck: undefined } });
+  await w.credentials.accountReferenceSet({ member: "bob", kind: "apikey", secret: "sk-bob", by: BOB });
+  assert.equal((await w.a.askAccount({ member: BOB })).ok, true);
+  const reached = w.reach("member:bob", "ask");
+  const r = await w.a.askAccount({ member: BOB });
+  assert.deepEqual(r, reached);
+  assert.equal(r.code, "AI_LIMIT_REACHED");
+  assert.equal(w.limit.asked.length, 0, "the fixture's watched provider was not the one asked");
 });

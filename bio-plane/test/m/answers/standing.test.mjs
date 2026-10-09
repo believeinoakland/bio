@@ -4,7 +4,7 @@
    is in the test profile's zone, so "today" is a local day. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { answersWorld, answer, V, LIMIT } from "./fixture.mjs";
+import { answersWorld, answer, V } from "./fixture.mjs";
 import { ANSWERS_CHECKS, STANDING_LABEL, STANDING_TICK_MAX, nextDueDay } from "../../../src/answers/index.mjs";
 
 const BOB = V("bob"), CAROL = V("carol"), ALICE = V("alice");
@@ -154,15 +154,15 @@ test("R19 R30 the AI half answers new finds only when the copy's switch, keep-aw
   assert.deepEqual(await step(), { condition: "switch_off", switch: "member" });
   assert.equal(w.credentials.accountUsesSet({ owner: "member:bob", switch: "standing", on: true, by: BOB }).ok, true);
   /* R30: the paying account's limits, ai-use.useCheck, in place of the ceiling */
-  w.limit.refusal = LIMIT;
-  assert.deepEqual(await step(), { condition: "limit", code: "AI_LIMIT_REACHED", translation: LIMIT.translation });
+  const reached = w.reach("member:bob", "standing");
+  assert.deepEqual(await step(), { condition: "limit", code: "AI_LIMIT_REACHED", translation: reached.translation });
   const asked = w.limit.asked.at(-1);
   assert.deepEqual([asked.owner, asked.member, asked.use, asked.at], ["member:bob", "bob", "standing", w.clock.now]);
   /* a limit that cannot be judged holds it back (fail closed): the negative control of the check itself */
-  w.limit.refusal = null;
+  w.unreach("member:bob", "standing");
   w.a.deps.useCheck = () => { throw new Error("the counter is down"); };
   assert.deepEqual(await step(), { condition: "limit", code: null, translation: null });
-  w.a.deps.useCheck = (a) => { w.limit.asked.push(a); return w.limit.refusal; };
+  w.a.deps.useCheck = (a) => w.useCheck(a);
   assert.equal(calls.length, 0, "no model call while any condition holds it back");
   assert.equal(grants(), 0, "no grant is minted while any condition holds it back");
   assert.equal(await step(), null);
@@ -357,10 +357,10 @@ test("R19 the sign-in arm (N796, Bob K2425; credentials R32, R55): an author ser
   assert.doesNotMatch(JSON.stringify(w.rows(`SELECT * FROM standing_runs`)), /signin|no_account|kept_away/);
   /* on, by her own act: the grant is minted for her sign-in and the model stub is called once */
   assert.equal(real.accountUsesSet({ owner: "member:carol", switch: "standing", on: true, by: CAROL }).ok, true);
-  w.limit.refusal = LIMIT;
-  assert.deepEqual(await step(), { condition: "limit", code: "AI_LIMIT_REACHED", translation: LIMIT.translation }, "its limits read as for any account");
+  const reached = w.reach("member:carol", "standing");
+  assert.deepEqual(await step(), { condition: "limit", code: "AI_LIMIT_REACHED", translation: reached.translation }, "its limits read as for any account");
   assert.equal(w.limit.asked.at(-1).owner, "member:carol");
-  w.limit.refusal = null;
+  w.unreach("member:carol", "standing");
   assert.equal(await step(), null);
   assert.deepEqual(touched.filter((k) => k !== "aiGrantHeld"), ["aiKeptAway", "accountFor", "aiGrantMintStanding", "projectsKeptAway"]);
   assert.equal(calls.length, 1); assert.equal(grants(), 1);

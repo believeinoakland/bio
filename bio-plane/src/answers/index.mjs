@@ -18,9 +18,9 @@
  *                        `AI_KEPT_AWAY`, K231), the account that serves an act (its R56, `accountFor`), the standing
  *                        question's grant (its R32, `aiGrantMintStanding`), for R19, and the projects kept away from a
  *                        use (its R57, `projectsKeptAway`), for R30's widening of R2.
- *   useCheck             `({owner, member, use, at})` → null or `AI_LIMIT_REACHED` (`ai-use.useCheck`, its R3), handed
- *                        in by the composition root: the paying account's limits, in place of the ceiling (R30), read
- *                        for every account, a sign-in's included.
+ *   useCheck             `({owner, member, use, at})` → null or `AI_LIMIT_REACHED`: the paying account's limits, in
+ *                        place of the ceiling (R30), read for every account, a sign-in's included; `ai-use.useCheck`
+ *                        (its R3) on the same host unless a test or the composition root passes its own.
  *   combine              `jurisdictions.combine` (default), over the active profiles (`record-core` R26).
  *   now                  the module's clock, an ISO instant (default: the wall clock).
  *
@@ -33,6 +33,7 @@ import { membershipOf, listenerRefusal, notAnAdmin } from "../membership/index.m
 import { AI_GRANT_TTL_SECONDS } from "../credentials/index.mjs";
 import { savedForm } from "../query.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
+import { aiUseOf } from "../ai-use/index.mjs";
 import { ANSWERS_TABLES, migrateAnswers } from "./schema.mjs";
 import { refusal } from "./checks.mjs";
 import { askAdmits, scrubRead } from "./scope.mjs";
@@ -367,7 +368,8 @@ export function answersOf(host, deps) {
     const d = deps || {};
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
-    a = new Answers({ ...d, storage: d.storage || storage, record, membership });
+    const useCheck = d.useCheck || ((x) => aiUseOf(host, { record, membership }).useCheck(x));
+    a = new Answers({ ...d, storage: d.storage || storage, record, membership, useCheck });
     instances.set(storage, a);
     const declared = record.declareTable("answers", ANSWERS_TABLES);
     if (!declared || declared.ok === false) throw new Error(`answers' tables could not be declared: ${JSON.stringify(declared)}`);
