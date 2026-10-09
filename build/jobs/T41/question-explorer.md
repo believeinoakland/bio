@@ -47,3 +47,7 @@ Readings I am building on now (carrying on; none stops the job). Answer any you 
 - In a local copy with my `paths`, `tests` and `entities` filled into `modules.json` (not committed): `format` 0 failures; `architecture … question-explorer` 8 product files, 31 relative imports, 0 failures; `coverage … question-explorer` 14 of 14, 0 failures; `ownership … origin/tranche/T41` 10 files, 1 failure, `build/modules.json` (that local edit, K1043's form). On this branch as committed, ownership lists my 8 files outside empty `paths`/`tests` until BOB fills them.
 
 Size (session_01243u4joqb8ZpywX663LU1U): test runs 16, module lines 1022
+
+## J2 · REPORT
+
+A seam between steps (STEPS #1) and ai-runs (AI-RUNS #14), measured against their requirements: steps R1 lets a machine credential create a step 'only for a run it holds', and ai-runs R73 opens a run 'with step', so the step must exist before the run it is for. question-explorer mints the run id, calls steps.stepCreate({place, work, by, run, enabled_by}) naming that not-yet-opened run, then ai-runs.open({run, step, origin: 'explore', ...}), and deletes the untouched step (steps R6) when the open is refused. steps R1 should accept a run id its caller is about to open (or check the run at ai-runs' open instead); ai-runs R74's openMany has the same order. Nothing to change in question-explorer.
