@@ -171,3 +171,7 @@ Numbered entries; BOB answers each in rulings (K) on `tranche/T<n>`. Decision st
 ## H34 · 2026-10-09 · D63 ruled; the whole design put to Bob for review
 
 **Carries:** D63 A. The four canon-required case statements stay, under D56's check. No question is open. The working document §2 (2.0–2.12) and §3 (Grandview, now through determination, account, approval, publication and import) are put to Bob for his whole-design review, per K2410. When he is content, this lane will say so here. BOB then folds everything into the canon draft (including §2.12's publication content, D55's Action §3 wording and the D56/D57 amendments to Case Making §4a and AI Roles rule 9) for his approval.
+
+## H35 · 2026-10-09 · the working document reduced to the design of record
+
+**Carries:** at Bob's request ("Let's consider reviewing what doesn't need to be in the document. That's the version I'll review."), `investigation-design.html` now holds only §1, the design (1.0–1.12, previously §2), and §2, the Grandview walk. Taken out: the open-questions panel; the craft table; the D42 study; questions as put; the "coming later" table; the study's research and the fourteen scenarios; Bob's rulings in his words; and the register. Also gone are D-number references and notes about earlier versions. Detail markers stay. The working history remains in DECISIONS.md, HANDOFF.md and git history (the last full version is commit 85930a765b). Section numbers cited in H1–H34 (§2.x) are now §1.x.
