@@ -1,0 +1,240 @@
+<title>Actions Design</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400&display=swap">
+<style>
+/* One working file for the actions design, carried forward like the investigation lane's: where we are, then what exists, what is built, the gaps, and what comes next */
+:root{
+  --bg:#f4f5f1; --fg:#1d2321; --muted:#59645f; --rule:#d2d8d2; --panel:#e8ece6; --card:#fbfcf9;
+  --accent:#2b5e58; --ok:#2e6b46; --okbg:#d9ecdf; --part:#8a5a12; --partbg:#f3e6cf; --no:#9a3b2f; --nobg:#f4dcd6; --sys:#5a4f8a; --sysbg:#e3e0f1;
+  --display:"Source Serif 4", Georgia, serif; --body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif; --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#131917;--fg:#e1e8e3;--muted:#9daaa3;--rule:#2c3631;--panel:#1b2320;--card:#17201c;--accent:#8cc7bd;--ok:#9bd8b2;--okbg:#1d3a29;--part:#e8c07e;--partbg:#3a2d16;--no:#f0a493;--nobg:#3d211b;--sys:#c3bbf0;--sysbg:#2c2843;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#131917;--fg:#e1e8e3;--muted:#9daaa3;--rule:#2c3631;--panel:#1b2320;--card:#17201c;--accent:#8cc7bd;--ok:#9bd8b2;--okbg:#1d3a29;--part:#e8c07e;--partbg:#3a2d16;--no:#f0a493;--nobg:#3d211b;--sys:#c3bbf0;--sysbg:#2c2843;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:16px/1.6 var(--body)}
+main{max-width:52rem;margin:0 auto;padding-inline:16px;padding-block:36px 72px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.2;font-weight:600}
+h1{font-size:2.2rem;margin:0 0 .3rem}
+h2{font-size:1.45rem;margin:2.8rem 0 .6rem;padding-top:1.2rem;border-top:1px solid var(--rule)}
+h3{font-size:1.12rem;margin:1.8rem 0 .4rem}
+p,li{max-width:70ch}
+a{color:var(--accent)}
+.meta{font:400 .85rem var(--mono);color:var(--muted);margin:0 0 1rem}
+.lede{font-size:1.08rem;color:var(--muted);margin:0 0 1.2rem}
+.note{font-size:.92rem;color:var(--muted)}
+nav.toc{background:var(--panel);border-radius:6px;padding:.8rem 1.2rem}
+nav.toc ol{margin:.2rem 0;padding-left:1.3rem;columns:2;column-gap:2rem}
+@media (max-width:560px){nav.toc ol{columns:1}}
+.now{border:2px solid var(--accent);border-radius:8px;padding:1rem 1.2rem;display:grid;gap:.5rem;margin:1rem 0}
+.now p{margin:0}
+.now ul{margin:0;padding-left:1.2rem;display:grid;gap:.3rem}
+ul.plain{padding-left:1.2rem;display:grid;gap:.4rem}
+blockquote{margin:1rem 0;padding:.2rem 0 .2rem 1rem;border-left:3px solid var(--accent);font-family:var(--display);font-size:1.05rem}
+blockquote p{margin:.2rem 0}
+cite{display:block;font:400 .8rem var(--body);color:var(--muted);font-style:normal}
+.chain{display:grid;gap:0;margin:1rem 0}
+.node{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.6rem;align-items:center;background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:.5rem .8rem}
+.node b{font-family:var(--display);font-size:1.02rem}
+.node span.d{display:block;font-size:.86rem;color:var(--muted)}
+.arrow{font:600 .74rem var(--mono);color:var(--accent);padding:.2rem 0 .2rem 1.4rem;position:relative}
+.arrow::before{content:"";position:absolute;left:.6rem;top:0;bottom:0;border-left:2px solid var(--accent)}
+.tag{display:inline-block;font:600 .7rem var(--body);letter-spacing:.04em;padding:.1rem .45rem;border-radius:3px;white-space:nowrap}
+.t-ok{color:var(--ok);background:var(--okbg)}
+.t-part{color:var(--part);background:var(--partbg)}
+.t-no{color:var(--no);background:var(--nobg)}
+.t-sys{color:var(--sys);background:var(--sysbg)}
+.legend{display:flex;flex-wrap:wrap;gap:.6rem 1rem;font-size:.86rem;color:var(--muted);margin:.4rem 0 0}
+.wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.92rem;min-width:36rem}
+th,td{text-align:left;vertical-align:top;padding:.45rem .6rem;border-bottom:1px solid var(--rule)}
+th{font:600 .72rem var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td.n{font-variant-numeric:tabular-nums;white-space:nowrap}
+td.id{font:600 .8rem var(--mono);color:var(--accent);white-space:nowrap}
+.gap{display:grid;gap:.5rem;margin:.6rem 0}
+.gap > div{background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:.6rem .9rem}
+.gap b{font-family:var(--display)}
+.gap p{margin:.2rem 0 0;font-size:.93rem}
+.who{font:600 .7rem var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.uc{counter-reset:u;list-style:none;padding:0;display:grid;gap:.45rem}
+.uc li{counter-increment:u;display:grid;grid-template-columns:2.2rem minmax(0,1fr);gap:.3rem}
+.uc li::before{content:"U" counter(u);font:600 .82rem var(--mono);color:var(--accent);padding-top:.15rem}
+code{font:400 .86em var(--mono)}
+</style>
+<main>
+<h1>Actions Design</h1>
+<p class="meta">The design of actions in Civicsmith · working file for Bob · 9 October 2026 · page 1: what exists and what is missing</p>
+<p class="lede">How Civicsmith supports a group from the moment it suspects something is wrong (or working), through planning, preparing, deciding and sending, to tracking the response and recording how it ended. This lane works through actions as deeply as the investigation lane worked through investigations, and ends with a canon draft and requirements.</p>
+
+<div class="now">
+<p><b>Where we are.</b> Step 1 (research) and step 2 (the map of what is built against what canon and your rulings require) are done. This page reports them.</p>
+<ul>
+<li><b>Nothing to decide on this page.</b> The questions that need you come with the use cases and the design (steps 3 and 4), each with options and a recommendation.</li>
+<li><b>The main finding:</b> the machinery behind actions is built and passes its tests, but a member can reach almost none of it. What exists was designed around one kind of group doing one kind of thing: a group acting against a government office over a breach. Your direction asks for more than that.</li>
+<li><b>Next:</b> about twenty concrete situations real groups face (section 6), each traced through what Civicsmith does today and what it should do.</li>
+</ul>
+</div>
+
+<nav class="toc"><ol>
+<li><a href="#dir">Your direction</a></li>
+<li><a href="#canon">What canon says an action is</a></li>
+<li><a href="#built">What is built</a></li>
+<li><a href="#gaps">The gaps</a></li>
+<li><a href="#settled">Readings settled here</a></li>
+<li><a href="#next">The use cases to come</a></li>
+<li><a href="#record">The research record</a></li>
+</ol></nav>
+
+<h2 id="dir">1 · Your direction</h2>
+<blockquote><p>"Civicsmith should support members throughout the action plan to the greatest and most appropriate extents possible. … like we're doing as we design Civicsmith's investigation support, we need to research explore, and design the requirements, capabilities, use cases, and UX of actions."</p><cite>Bob, 8 October 2026 (investigation lane D43)</cite></blockquote>
+<blockquote><p>"we need to dive every bit as deeply into the requirements, current capabilities, additional capabilities needed, design, and use cases of Actions"</p><cite>Bob, 9 October 2026, starting this lane</cite></blockquote>
+<p>Your earlier rulings on actions still stand, and the design builds on them. Those from 29–30 September (the action plan) and later include:</p>
+<ul class="plain">
+<li><b>The plan is the member's.</b> The system suggests options. You said it should show "the best first 5" and let the member ask for the next five. There is no catalogue of response options and no budgets. A plan holds up to three scenarios. An option left unticked is undecided, and declining one is an explicit act with a reason.</li>
+<li><b>An action may start from success as well as a breach,</b> and a plan may open as soon as an inquiry begins.</li>
+<li><b>Never addressed to a private individual.</b> The assistant drafts only proposals that a member adopts. Lobbying is allowed only to enforce or restore an existing requirement.</li>
+<li><b>A breach claim needs a determination,</b> unless a member openly overrides it with a reason. Evidence-seeking actions (records requests, requests for comment) are never held back.</li>
+<li><b>The venue sets the standard of evidence.</b> No action is refused for its evidence grade.</li>
+<li><b>Reminders come only at the member's request,</b> with no nagging and no outside channel. A missed date notifies once.</li>
+<li><b>Due dates drive the plan.</b> You said: "If the response isn't received by the due date, then [it may] cause other actions in an action plan to activate."</li>
+<li><b>The litigation hold.</b> You said: "we HAVE to [block] purging of all material named in the hold."</li>
+<li><b>Filing templates</b> go through a formal authoring, approval and attribution process. You asked for wording that is "optimally accurate, appropriate and compelling".</li>
+<li><b>The investigation lane's rulings carry over.</b> Both audiences must be served, members who work with the assistant and members who don't (D42). AI use is set per group, per project and per member account (D34–D39).</li>
+</ul>
+
+<h2 id="canon">2 · What canon says an action is</h2>
+<p>The Action layer's canon is <i>BIO Action v0.1</i>, which you approved on 30 September. It holds seven parts, connected as below. Each part is marked with how far a member can use it today.</p>
+<div class="legend"><span><span class="tag t-ok">usable</span> a member can do it today</span><span><span class="tag t-part">thin</span> partly reachable</span><span><span class="tag t-sys">built, no screen</span> works, tested, but only through the programming interface</span><span><span class="tag t-no">not built</span></span></div>
+<div class="chain">
+<div class="node"><div><b>Action plan</b><span class="d">opens on a suspicion or a finding; the matters it addresses, options (suggested and the member's own), up to three scenarios laid out in phases with checkpoints</span></div><span class="tag t-sys">built, no screen</span></div>
+<div class="arrow">publication, then a member's determination</div>
+<div class="node"><div><b>Standard and determination</b><span class="d">a government act measured against a law, policy or commitment the record holds: compliant, noncompliant or unclear</span></div><span class="tag t-sys">built, no screen</span></div>
+<div class="node"><div><b>Consequence</b><span class="d">what a breach did and to whom, computed from the record or assessed by a member; whether it has been addressed</span></div><span class="tag t-sys">built, no screen</span></div>
+<div class="arrow">a member chooses an option and starts it</div>
+<div class="node"><div><b>Action</b><span class="d">one outward engagement: kind, addressee (an office by role), risk tier, clock with each deadline's basis, what it rests on, correspondence, resolution</span></div><span class="tag t-part">thin</span></div>
+<div class="node"><div><b>Filing and communication</b><span class="d">prepared from the record: Tier 1–2 filings from templates, the Tier 3 counsel packet, drafts; approved and sent by the member's own hand</span></div><span class="tag t-sys">built, no screen</span></div>
+<div class="arrow">replies come back as correspondence</div>
+<div class="node"><div><b>Escalation</b><span class="d">seven stages pursuing one noncompliant determination; a met trigger is proposed, and a member advances or declines with a reason</span></div><span class="tag t-sys">built, no screen</span></div>
+<div class="node"><div><b>Monitoring and the queue</b><span class="d">watches clocks and triggers; to-dos for overdue dates, checkpoints, proposed stages, reminders, holds</span></div><span class="tag t-part">thin</span></div>
+</div>
+<p><b>The contract, in canon's words:</b> "An action rests on the record, and one asserting a breach rests on a published finding and a standard held in the record. The group plans and decides every act; the AI proposes and prepares, and never files or sends. Compliance is recorded as carefully as noncompliance. Every deadline names its basis."</p>
+<p><b>How the investigation design hands over.</b> The new investigation canon passes work to actions at four points:</p>
+<ul class="plain">
+<li>a determination makes acting possible;</li>
+<li>a records request that a step needs is started as an action;</li>
+<li>when the work goes quiet, the members "turn to writing up and acting";</li>
+<li>"an action" is one of the places a first message can lead.</li>
+</ul>
+<p>Still owed from that lane is a member-facing name that keeps investigation steps apart from the action plan (its D23).</p>
+
+<h2 id="built">3 · What is built</h2>
+<p>Eleven modules carry actions. Every one is built, and every one's requirements are recorded as met. Their tests ran today: <b>724 of 725 pass</b>. The one failure is a known, accepted fixture problem in filings, already scheduled for the next tranche. Thirteen neighbouring modules also pass, including the queue, reminders, the docket, wizards and duties. None of their three failures concerns actions.</p>
+<div class="wrap"><table>
+<thead><tr><th>part</th><th>what it does for a group</th><th>tests</th><th>member can reach it?</th></tr></thead>
+<tbody>
+<tr><td>actions</td><td>create an action, move it through its states, record correspondence, name its governing laws, set its risk tier, fee quotes, pressure marks, litigation hold</td><td class="n">96/96</td><td><span class="tag t-part">thin</span> old interface: list, create, view, and four acts (move, correspondence, laws, risk tier)</td></tr>
+<tr><td>action clocks</td><td>deadlines with their basis, reminders the member asks for, calendar file of the member's own dates</td><td class="n">55/55</td><td><span class="tag t-part">thin</span> overdue items shown in the queue but can't be answered there</td></tr>
+<tr><td>action plans</td><td>matters, options, declines with reasons, scenarios, phases, checkpoints, phases that start when a body's deadline is met or missed, the planning run</td><td class="n">63/63</td><td><span class="tag t-sys">no screen</span></td></tr>
+<tr><td>conformance</td><td>standards and determinations, per standard, after publication</td><td class="n">81/81</td><td><span class="tag t-sys">no screen</span></td></tr>
+<tr><td>consequences</td><td>what a breach did, with arithmetic over cited figures</td><td class="n">41/41</td><td><span class="tag t-sys">no screen</span></td></tr>
+<tr><td>filing templates</td><td>authored, approved and attributed templates</td><td class="n">56/56</td><td><span class="tag t-sys">no screen</span></td></tr>
+<tr><td>filings</td><td>Tier 1–2 drafts, counsel packet with chronology and exhibit grades, record of what was sent</td><td class="n">69/70</td><td><span class="tag t-sys">no screen</span></td></tr>
+<tr><td>escalation</td><td>seven stages, proposed advances, declining with a reason, pre-assembled opening reason</td><td class="n">63/63</td><td><span class="tag t-sys">no screen</span></td></tr>
+<tr><td>monitoring, following</td><td>watching clocks, triggers and pages; following portals</td><td class="n">171/171</td><td><span class="tag t-part">thin</span> the old "monitor" act only</td></tr>
+<tr><td>action grammar</td><td>the shared vocabulary underneath</td><td class="n">29/29</td><td>(no member surface)</td></tr>
+</tbody></table></div>
+<p class="note">Two guided wizards, "Get a record" and "Start and send", are scripted. No wizard runner exists yet, and their screens exist only in the UX stream's designs. The old interface is not being worked on (your ruling of 26 September). The new interface waits on the UX design stream.</p>
+
+<h2 id="gaps">4 · The gaps</h2>
+<p>There are five kinds of gap. Each item says whose it is: <b>yours</b> (policy, doctrine, requirements, UX), <b>BOB's</b> (build order and record-keeping), <b>UX</b> (the design stream's screens), or <b>this lane</b> (to design and bring to you).</p>
+
+<h3>4.1 · Reach: built, but a member can't use it</h3>
+<div class="gap">
+<div><b>No screens for most of the Action layer.</b><p>There are no screens for plans, determinations, consequences, filings, templates, escalation, reminders, holds or following. On an action itself, the old interface offers only four acts.</p><p class="who">UX, then BOB's build order (next.md N821)</p></div>
+<div><b>To-dos you can see but not answer.</b><p>The queue shows action to-dos (an overdue clock, a plan checkpoint, a proposed escalation stage) but offers only "Forward" and "Mark resolved". The system then refuses "Mark resolved" on these items. The reply each to-do needs is built but is never drawn on screen.</p><p class="who">UX; BOB</p></div>
+<div><b>Nothing proposes the next act on an action.</b><p>When a member looks at an action, nothing offers filing, escalation, the plan or a reminder, so the member has to know these exist.</p><p class="who">this lane (behaviour), then UX</p></div>
+</div>
+
+<h3>4.2 · Capabilities canon names that are not built</h3>
+<div class="gap">
+<div><b>A records request that isn't tied to one state's law.</b><p>You adopted a records request that works under any jurisdiction's law as the direction (Case Making D-149), but only the California-specific kind exists.</p></div>
+<div><b>Deadlines computed from the law.</b><p>Counting days, rolling past weekends and holidays, and citing the rule are only partly built and can't be reached. There is also a defect: "overdue" is marked on the UTC day, which is 7–8 hours early in California.</p></div>
+<div><b>Addressing a real office.</b><p>An action's addressee is free text, not linked to the registry of bodies and offices. Escalation can't follow real oversight lines ("who can make the City Administrator act?"). The old interface's "add" flow names a person, which conflicts with your rule that actions are never addressed to a private individual.</p></div>
+<div><b>Following what happens after filing.</b><p>A group can't follow a petition's hearing date, a referral to the grand jury, or a court order as a proceeding linked to its action.</p></div>
+<div><b>"Tell me if the Clerk misses this date."</b><p>Standing questions about a body's deadlines aren't built.</p></div>
+<div><b>The "what we did" timeline.</b><p>The group's own acts, shown beside what happened in the world, aren't built.</p></div>
+<div><b>The litigation hold on the member's device.</b><p>The device half is unbuilt and waits for a device-storage module.</p></div>
+<div><b>Help drafting messages.</b><p>The assistant's help drafting messages and translations isn't built.</p></div>
+<p class="who">BOB's to schedule; this lane folds each into the design where a use case needs it</p>
+</div>
+
+<h3>4.3 · Things never designed</h3>
+<p>These are for this lane, and the use cases will test each one.</p>
+<div class="gap">
+<div><b>Only one shape of group action.</b><p>What exists serves a group acting against a government office. Canon and your rulings also name:</p><ul class="plain"><li>awareness work, journalism and grassroots campaigns;</li><li>public comment and testimony at meetings;</li><li>recognising success;</li><li>negotiation and settlement;</li><li>coalitions with other groups (joint action, which you deferred);</li><li>"working on" notices;</li><li>help for a group that becomes a target (a SLAPP threat, a subpoena).</li></ul><p>Most of these stop at "prepare" today. Nothing designs what happens after the message is sent.</p></div>
+<div><b>Did it work?</b><p>An action records how it ended (complied, denied, escalated, withdrawn, completed), but nothing records what came of the plan as a whole. It is not defined what "consequences addressed" means, or whether the government actually fixed what was found. Consequences exist only for breaches, so the effect of a success is never recorded.</p></div>
+<div><b>Support at every stage, for both kinds of member.</b><p>The assistant today suggests options and drafts communications. Your D43 asks for support "throughout", so this lane must find where help belongs: choosing whom to address, preparing a filing, getting ready for a meeting, reading a reply, deciding whether to escalate. It must also find where help must stop: legal information is allowed, legal advice is not, and the machine never says "what to file".</p></div>
+<div><b>The question you deferred.</b><p>"If this finding holds, what could we do, and what else would have to be true?" covers standing, filing windows and exhausting remedies (D-165). Canon lays out how it would be shown but holds it back.</p></div>
+<div><b>No capability ladder for actions.</b><p>The capability ladders cover every other construct. Actions, filings, escalation and plans have none, so there is no agreed path from what exists today to the fullest version.</p></div>
+<div><b>A records request started from an investigation.</b><p>A records request started from an investigation step, and the step's wait set beside the action's clock, need one design so a member doesn't see two reminders for one date.</p></div>
+</div>
+
+<h3>4.4 · Defects in the record</h3>
+<p>These are BOB's to correct. The list goes to BOB in the hand-off, not to you.</p>
+<ul class="plain">
+<li><b>Records-request rules without a home.</b> The rules for records requests are built: one round trip, the outcomes of a reply, and a due date that must cite its law. You ruled them in Case Making, whose action sections the Action canon then made "history". They now have no clear home in canon.</li>
+<li><b>Stale texts on escalation and outcomes.</b> Some older canon still says escalation "activates" on its own. Some still lists six stages, or the old seven state-specific action kinds. Some still says overdue is "marked" rather than worked out when read. Publication's quote matching still uses the old free-text counterparty.</li>
+<li><b>Stale status lines and an unrecorded start.</b> Two requirements files have stale status lines. No ruling records this lane's start or your 9 October words. N817 still reads "Not today".</li>
+<li><b>Older rulings never marked as replaced.</b> One example is the first litigation-hold release.</li>
+</ul>
+
+<h3>4.5 · Contradictions the design must resolve</h3>
+<p>The research found 18 across the core canon and 15 more across the rest. Most are wording, and this lane or BOB settles them as detail (section 5). Those that touch doctrine will come to you with the use cases. Three examples:</p>
+<ul class="plain">
+<li><b>The shape of a plan.</b> Case Making's plan is a decision tree of steps. The Action canon's plan is options laid out in up to three scenarios.</li>
+<li><b>Resources.</b> Case Making gives each step a "resources" list (money, hours, expertise). You ruled "no budgets", and canon forbids measuring members.</li>
+<li><b>Three meanings of "action".</b> Canon uses the word for any step toward an objective, for one outward engagement, and for a pursued course with a clock.</li>
+</ul>
+
+<h2 id="settled">5 · Readings settled here</h2>
+<p>These follow from canon and your rulings, so they need no question to you. They are recorded for BOB to confirm, and they are named here so you can see them.</p>
+<div class="gap">
+<div><b>What "activate" means.</b><p>Your 5 October words say a missed due date may cause later steps of a plan to "activate". This is read as: the phase that waits on that date opens, and its options are offered to the member as ready to start. A member still starts each one. This is how the built plan already works, and it keeps your rule that the member chooses.</p></div>
+<div><b>The pre-assembled escalation reason is not writing help.</b><p>You agreed that writing help is never offered in a field where a member states the reason for an act. Escalation's pre-assembled reason is a list of record facts with their sources (the standard breached, dates passed without reply, consequences recorded), labelled as machine work. Read that way, it is a summary of the record, not words written for the member, so both rulings hold.</p></div>
+<div><b>Addressee and the person who owes the duty are two things.</b><p>A law may bind a named person, such as a lobbyist's registration or an official's financial statement. An action about that person's missed duty is addressed to the office that enforces it, never to the person.</p></div>
+<div><b>Case Making's plan sections are history.</b><p>Where Case Making and the Action canon differ (the decision tree, resources, the gate on unestablished steps), the Action canon governs, as you approved. Case Making stays as the reasoning behind it.</p></div>
+</div>
+
+<h2 id="next">6 · The use cases to come</h2>
+<p>Step 3 traces each situation through what a member can do in Civicsmith today and what Civicsmith should do. Each draws on things real groups do: law firms, auditors' offices, newsrooms and community activists, per your 5 October rule. Some use the Grandview example from the investigation design.</p>
+<ol class="uc">
+<li>A records request: from an investigation's gap to the reply, a fee quote, a partial denial, and an appeal.</li>
+<li>A request for comment to an official before the group publishes.</li>
+<li>A complaint to an oversight office, such as the City Auditor's whistleblower line, and following what it did.</li>
+<li>Public comment at a council meeting: preparing, a time limit, getting on the record, and what the minutes show.</li>
+<li>Testimony before a state body, with written comments filed by a deadline.</li>
+<li>A grand jury complaint, and the mandated reply months later.</li>
+<li>A demand letter that cites the law (cure and correct under the Brown Act) and its response window.</li>
+<li>Handing a case to a lawyer: the counsel packet, exhibit grades, and the lawyer's own timetable.</li>
+<li>Escalation through the seven stages when the city doesn't answer.</li>
+<li>Working with a reporter: a tip, an embargo, the story, and the city's response.</li>
+<li>An awareness campaign on a bond measure, with flyers, a community meeting and a "working on" notice.</li>
+<li>A success story: thanking a department that fixed what it was asked to fix.</li>
+<li>Meeting the official: requesting a meeting, preparing for it, and recording what was said and agreed.</li>
+<li>A coalition with another group acting on the same finding.</li>
+<li>The group under pressure: a threatening letter, a litigation hold, and the record as evidence.</li>
+<li>Follow-up on outcomes: did the city do what it said, and when does the group stop watching?</li>
+<li>A new member picking up a half-run plan.</li>
+<li>The member who never uses the assistant, doing every use case above unaided (your D42).</li>
+<li>The same records request in another state: what jurisdiction data must supply.</li>
+<li>A plan started at the first suspicion, before anything is published.</li>
+</ol>
+
+<h2 id="record">7 · The research record</h2>
+<p class="note">For BOB and a successor. These are the six reports on branch <code>design/actions</code> under <code>docs/development/actions-design/research/</code>. Each was read in full, with its sources cited.</p>
+<ul class="plain note">
+<li><b>R1:</b> the core canon (Action, Case Making, Investigation, Capability Ladders). It covers 18 tensions and about 20 words with several meanings.</li>
+<li><b>R2:</b> every other canon document touching actions. It lists 24 rules absent from the Action canon and 15 contradictions.</li>
+<li><b>R3:</b> every ruling on actions, by theme. It gives your standing directions in your words and 14 rulings that conflict or were superseded without being marked.</li>
+<li><b>R4:</b> the 29–30 September action-design lane: your rulings word for word, its design, and what reached requirements.</li>
+<li><b>R5:</b> the eleven action modules, each requirement against the code and tests, with the tests run.</li>
+<li><b>R6:</b> the neighbouring modules, the layering, and what a member can actually do today.</li>
+</ul>
+</main>

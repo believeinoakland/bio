@@ -34,3 +34,4 @@ The investigation lane, branch `design/investigation`, `docs/development/investi
 
 - 2026-10-09: started; RESUME and HANDOFF H1 written.
 - 2026-10-09: step 1 under way. Six readers write `research/R1`–`R6`: R1 core canon (Action, Case Making, Investigation, Ladders), R2 other canon, R3 rulings (incl. UX DECs), R4 the old action-design lane, R5 the action modules (requirements, code, tests run), R6 adjacent modules and what a member can do today. Next: read them, write the step-1/2 synthesis into the working page `actions-design.html`, render for Bob.
+- 2026-10-09: steps 1–2 done. R1–R6 in `research/`. Working page `actions-design.html` = https://claude.ai/artifact/3LPhoZ6geoYBnt7XvDqUM8 (publish the same file path to update; from a new session pass that URL). HANDOFF H2. Next: step 3, the twenty use cases in page §6, each traced today vs should; then step 4 questions to Bob (D1 on).
