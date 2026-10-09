@@ -44,6 +44,13 @@ test("R8 projectVisibility gives the setting and its history to a caller at FULL
     assert.deepEqual(w.r.projectVisibility({ projectId: p, viewer }), noSuchProject(p), `${p} ${viewer}`);
   assert.deepEqual(w.r.projectVisibility({ projectId: "INFO-I", viewer: V("ann") }),
     { ok: false, reason: "NOT_A_PROJECT", project: "INFO-I" });
+  /* D54: an administrator (the founder in either spelling) neither invited nor joined to hidden H is below FULL:
+     the absent answer; invited, it reads H's setting (the negative control) */
+  for (const viewer of [V("second"), "admin", V("admin")])
+    assert.deepEqual(w.r.projectVisibility({ projectId: "PROJ-H", viewer }), noSuchProject("PROJ-H"), `${viewer} at H`);
+  w.m.projectInvite({ projectId: "PROJ-H", handle: "second", by: "ann", viewer: V("ann") });
+  assert.deepEqual([w.r.projectVisibility({ projectId: "PROJ-H", viewer: V("second") }).ok,
+    w.r.projectVisibility({ projectId: "PROJ-H", viewer: V("second") }).setting], [true, "hidden"], "invited: FULL");
   const before = snapshot(w);
   w.r.projectVisibility({ projectId: "PROJ-D", viewer: V("ann") });
   assert.equal(snapshot(w), before, "a read writes nothing");
@@ -83,10 +90,13 @@ test("R9 projectDirectory: needs a member; the discoverable projects the caller 
   const x1d = w.r.projectDirectory({ viewer: V("cal") }).projects.find((p) => p.id === "PROJ-X1").request;
   assert.equal(x1d.state, "declined");
   assert.match(x1d.closed, /^\d{4}-/);
-  /* a project at FULL is not listed: its owner, a participant (invited too), an administrator, the founder */
+  /* a project at FULL is not listed: its owner, a participant (invited too), an administrator, the founder (every
+     discoverable project is FULL to them); and an administrator neither invited nor joined to hidden H is not shown H,
+     though below FULL of it (D54): a hidden project is never in the directory */
   assert.deepEqual(w.r.projectDirectory({ viewer: V("ann") }).projects, []);
   assert.deepEqual(w.r.projectDirectory({ viewer: V("second") }).projects, []);
-  assert.deepEqual(w.r.projectDirectory({ viewer: V("admin") }).projects, [], "the founder's member:admin sees all at FULL");
+  assert.deepEqual(w.r.projectDirectory({ viewer: V("admin") }).projects, [], "the founder's member:admin");
+  for (const viewer of [V("second"), V("admin")]) assert.equal(w.m.inSight("PROJ-H", viewer), false, `${viewer}: H below FULL`);
   assert.deepEqual(w.r.projectDirectory({ viewer: V("bob") }).projects.map((p) => p.id),
     ["PROJ-D", "PROJ-X0", "PROJ-X1", "PROJ-X2", "PROJ-X3"], "invited to H only, which is hidden anyway");
   w.m.projectInvite({ projectId: "PROJ-X0", handle: "bob", by: "ann", viewer: V("ann") });

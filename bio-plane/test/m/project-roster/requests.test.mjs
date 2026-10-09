@@ -32,10 +32,15 @@ test("R10 projectRequest: a member asks first; NONE answers as absent; FULL is n
   w.m.memberSet({ memberId: "dee", status: "revoked", by: "admin" });
   assert.equal(ask(w, "dee").reason, "PROJECT_REQUEST_NEEDS_A_MEMBER", "an inactive member");
   assert.equal(ask(w, "admin", "NOPE", null, V("cal")).reason, "PROJECT_REQUEST_NEEDS_A_MEMBER", "asked first, before sight");
-  /* the founder's viewer in either spelling is the founder, at FULL sight of every project */
-  for (const v of ["admin", V("admin")]) {
-    carries(ask(w, "admin", "PROJ-H", null, v), "PROJECT_REQUEST_NOT_OUTSIDE");
-    assert.deepEqual(ask(w, "admin", "NOPE", null, v), noSuchProject("NOPE"), v);
+  /* the founder's viewer in either spelling is the founder: at FULL of discoverable D (not outside), and, neither
+     invited nor joined to hidden H, at its EXISTENCE (D54), where the ask is not open: membership's C-70.1 with H's
+     owners, as every caller at EXISTENCE (J1's reading); an active administrator the same */
+  for (const [by, v] of [["admin", "admin"], ["admin", V("admin")], ["second", V("second")]]) {
+    carries(ask(w, by, "PROJ-D", null, v), "PROJECT_REQUEST_NOT_OUTSIDE");
+    const h = ask(w, by, "PROJ-H", null, v);
+    assert.deepEqual(h, w.m.existenceAct("PROJ-H", v), `${v} at H`);
+    assert.deepEqual([h.reason, h.project, h.owners], ["PROJECT_SEEN_NOT_A_PARTICIPANT", "PROJ-H", ["ann"]], `${v} at H`);
+    assert.deepEqual(ask(w, by, "NOPE", null, v), noSuchProject("NOPE"), v);
   }
   assert.deepEqual(ask(w, "cal", "PROJ-H"), noSuchProject("PROJ-H"));
   const absent = (p) => JSON.stringify(ask(w, "cal", p)).replaceAll(p, "<id>");
@@ -156,6 +161,19 @@ test("R14 projectRequests: the caller's own (never the answering owner), or a pr
   const mine = w.r.projectRequests({ by: "dee", viewer: V("dee") });
   assert.deepEqual(mine.requests.map((r) => [r.project, r.name, r.state]), [["PROJ-D", "Discoverable D", "lapsed"]]);
   w.m.projectVisibilitySet({ projectId: "PROJ-D", setting: "discoverable", by: "ann", viewer: V("ann") });
+  /* D54: while D is hidden, an administrator (the founder included) neither invited nor joined is at its EXISTENCE and
+     reads none of its requests: C-70.1 first, with its owners; its owner reads them all the while */
+  w.m.projectVisibilitySet({ projectId: "PROJ-D", setting: "hidden", by: "ann", viewer: V("ann") });
+  for (const [by, viewer] of [["second", V("second")], ["admin", "admin"], ["admin", V("admin")]]) {
+    const h = w.r.projectRequests({ projectId: "PROJ-D", by, viewer });
+    assert.deepEqual([h.reason, h.owners, "requests" in h], ["PROJECT_SEEN_NOT_A_PARTICIPANT", ["ann"], false], viewer);
+    assert.doesNotMatch(JSON.stringify(h), /"(cal|dee|bob)"|me too/, `${viewer}: no requester, no participant`);
+    /* with an owner's viewer stamped beside the administrator's `by`, the administrator is still below FULL */
+    carries(w.r.projectRequests({ projectId: "PROJ-D", by, viewer: V("ann") }), "PROJECT_REQUESTS_NOT_VISIBLE");
+  }
+  assert.equal(w.r.projectRequests({ projectId: "PROJ-D", by: "ann", viewer: V("ann") }).requests.length, 2, "the owner");
+  w.m.projectVisibilitySet({ projectId: "PROJ-D", setting: "discoverable", by: "ann", viewer: V("ann") });
+  /* the negative control: discoverable again, the same administrators read them at FULL */
   for (const [by, viewer] of [["ann", V("ann")], ["second", V("second")], ["admin", "admin"]]) {
     const all = w.r.projectRequests({ projectId: "PROJ-D", by, viewer });
     assert.deepEqual([all.own, all.projectId], [false, "PROJ-D"]);
