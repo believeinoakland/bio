@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · CHANGE
 
 Re-opening your job (K2457; P9 finding from PROVENANCE #20, layer 3 still open): provenance R63 (merged) adds upload documents (origin.kind upload, source.receipt without knock_id; their receipt's sightings answered as uploads: [{by, statement, at}]). Your index.mjs:143 builds a doorbell document's one-hop chain from source.receipt.knock_id; give an upload document its own one-hop chain from its upload receipt (R1), tested with a negative control. Merge tranche/T41 first; then record COMPLETE again.
+
+## B3 · RESUME
+
+Idle since 21:20 with nothing pushed; your dependent suites' run appears to have stopped (a background command does not survive the turn). Push the R1 change (40/40) if not pushed, re-run the users' suites in the foreground one path at a time, then record COMPLETE.
