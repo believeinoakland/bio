@@ -70,3 +70,18 @@ Adds to J1 (which stands whole). These are readings I took while building; none 
 4. **R6's answer.** R6 says "`null`, and with `null` also `label`". Built as `{ok: true, ask: false, label: {kind: "machine", enabled_by: owner}}`, with `{ok: true, ask: true}` and the refusals beside it.
 5. **R10, R11's viewer.** "Only to the account's owners" needs a viewer, so both take `viewer`. R9's Ask item reads R10 internally, from its owner's own read.
 6. **For the design stream, through BOB (not mine to change).** `ai.refused.explorenotenabled` reads "Exploring is off on {whose} account, **or has no limit of its own yet**: it runs only within an exploring limit its owners set." R3, as BOB corrected it to Bob's A5 (K2400), never refuses `yes` with no explore limit: the overall limit judges it. So the sentence states a condition the code never refuses on. I read the key as R13 asks and change nothing.
+
+## J3 · REPORT
+
+Found in other modules, at ai-use's completion (also in my record's Completion):
+1. **ai-runs (T41-23)**:
+   - Delete the R48–R51 copy (`#usageRefusal` through `aiUsageMine`, `AI_CEILING_DEFAULT`, `USAGE_*`).
+   - Remove `ai_usage` and `ai_ceilings` from its `declareTable` and its schema. record-core refuses a table declared by two modules (R80). ai-use's first `migrate` rebuilds `ai_usage` keyed by owner, so ai-runs' old `ON CONFLICT(member, day, mode)` write fails once both are made on one store. ai-use carries `ai_ceilings` once and leaves the table; ai-runs drops it.
+   - Re-point: count by `countUsage({owner, member, use, mode, usage, calls, at, act: <run id>})`, the owner spelled from `accountFor`'s level (`group`, `project:<id>`, `member:<id>`); judge by `useCheck`; send `aiusage`, `aiceilingset` and `aicopyceilingset` to `aiUseOps` (`ailimitset`, `ailimits`, `aiusage`, `exploreapprove`).
+2. **answers**: `countAskUsage({…, owner, act})` and `useCheck` in place of ai-runs' `countAskUsage` and `aiUseCheck`.
+3. **membership R83**: `MODULE_ORDER` gains ai-use (B10's accepted red).
+4. **answer-envelope `families.mjs`**: C-143 (`AI_USE_CHECKS`) joins in its place in the order.
+5. **plane and control-plane**: route `aiUseOps`. `aiUseOf(ctx)` reads the zone from retrieval by default.
+6. **notice-producers R16**: reads `limitsReached` and `exploreAsksPending` (each with a stable `key`).
+7. **credentials**: N831, an in-plane read of an account's uses, replaces ai-use's `#exploreOf` helper.
+8. **The design stream**: `ai.refused.explorenotenabled` (J2 (6); your NOTICE, K2486).
