@@ -21,7 +21,7 @@ import { CAPTURE_CHECKS, KNOCK_CHECKS } from "./checks.mjs";
 import { INFORMATION_GRAMMAR } from "./grammar.mjs";
 import { evidenceAbsent } from "./ops.mjs";
 import { acquire, archiveLookup, profileOf, profileView, governedFetch, governedCall, INSTALLATION_CHECKS,
-         firstHopWho } from "../acquisition/index.mjs";
+         firstHopWho, CAPTURE_MAX } from "../acquisition/index.mjs";
 import { verifySshsig, NS_RATIFY, captureAccountStatement } from "../sshsig.mjs";
 /* R69 (N530, K1336): the account statement is spelled once, by `signatures` (its R41); re-exported so the names this
    module's users import (`affordances`' tests among them) still resolve, with no spelling of capture's own. */
@@ -83,8 +83,8 @@ export const PULL_WITHIN_FAILED_DETAIL =
 
 /* R86 (T41-8a): the route an upload's receipt names, provenance's one spelling (its R63). */
 const UPLOAD_VIA = "upload";
-/** R86: the capture size limit, `acquisition` R10's 256 MiB (acquisition exports no such figure; stated once here). */
-export const UPLOAD_MAX = 256 * 1024 * 1024;
+/* R76 (K2455): the routes by which a capture is received, never fetched (provenance R51, R63). */
+const RECEIVED_VIAS = Object.freeze([DOORBELL_VIA, UPLOAD_VIA]);
 /* R86: the parts an upload is held in, `acquisition` R10's form. */
 const UPLOAD_PART = 8 * 1024 * 1024;
 /** R86: the longest statement of origin, and the longest stated file name, in characters. */
@@ -1095,9 +1095,9 @@ export class Capture {
         if (done) break;
         if (!value) throw new Error("not bytes");
         total += value.length;
-        if (total > UPLOAD_MAX) {
+        if (total > CAPTURE_MAX) {
           await reader.cancel();
-          return { ok: false, reason: "TOO_LARGE", status: 413, bytes: total, maxBytes: UPLOAD_MAX,
+          return { ok: false, reason: "TOO_LARGE", status: 413, bytes: total, maxBytes: CAPTURE_MAX,
                    detail: "the file exceeds what this surface will capture even in parts; nothing was written" };
         }
         whole.update(value);
@@ -1405,7 +1405,14 @@ export class Capture {
         try { const h = await this.provenance.registerHolds({ sha }); held = h?.registered === true || h?.acquired === true; }
         catch { held = false; }
       }
-      return held ? { captureSha: sha, note: ACQUIRE_GRADE_NOTE } : none;
+      if (!held) return none;
+      /* K2455: a capture whose every receipt is a received route was not fetched, which the acquire note says it was;
+         it answers null. Its receipts are read through provenance R60; a capture with none, or a read that fails,
+         answers the note as before. */
+      let rows = [];
+      try { rows = this.provenance?.receiptsOfCapture?.({ captureSha: sha })?.rows ?? []; } catch { rows = []; }
+      if (Array.isArray(rows) && rows.length && rows.every((r) => RECEIVED_VIAS.includes(r && r.via))) return none;
+      return { captureSha: sha, note: ACQUIRE_GRADE_NOTE };
     } catch { return none; }
   }
 

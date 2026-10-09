@@ -4,9 +4,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bucket, provenance, network, register, sha } from "./fixture.mjs";
-import { UPLOAD_MAX, UPLOAD_STATEMENT_MAX, UPLOAD_NAME_MAX, UPLOAD_WITHIN_FAILED_DETAIL } from "../../../src/capture/index.mjs";
+import { UPLOAD_STATEMENT_MAX, UPLOAD_NAME_MAX, UPLOAD_WITHIN_FAILED_DETAIL } from "../../../src/capture/index.mjs";
 import { CAPTURE_CHECKS } from "../../../src/capture/checks.mjs";
-import { INSTALLATION_CHECKS, firstHopWho } from "../../../src/acquisition/index.mjs";
+import { INSTALLATION_CHECKS, firstHopWho, CAPTURE_MAX } from "../../../src/acquisition/index.mjs";
 
 const te = new TextEncoder();
 const MiB = 1024 * 1024;
@@ -94,19 +94,19 @@ test("R86 (acquisition R10): zero bytes is EMPTY and no bytes at all NO_BODY, ea
 });
 
 test("R86 (acquisition R10): more than 256 MiB is TOO_LARGE (413) with the stream cancelled, and no receipt, actor or document; exactly 256 MiB is admitted, held in parts of 8 MiB", async () => {
-  assert.equal(UPLOAD_MAX, 256 * MiB);
+  assert.equal(CAPTURE_MAX, 256 * MiB);
   const chunk = new Uint8Array(8 * MiB).fill(0x61);
   const big = setup();
   const s = streamOf(chunk, 40);
   const r = await big.c.uploadCapture({ ...ok, bytes: s.stream });
-  assert.deepEqual([r.ok, r.reason, r.status, r.maxBytes, r.bytes], [false, "TOO_LARGE", 413, UPLOAD_MAX, 33 * 8 * MiB], "refused at the first chunk past the limit");
+  assert.deepEqual([r.ok, r.reason, r.status, r.maxBytes, r.bytes], [false, "TOO_LARGE", 413, CAPTURE_MAX, 33 * 8 * MiB], "refused at the first chunk past the limit");
   assert.equal(s.cancelled, true, "the stream cancelled");
   assert.deepEqual(big.prov.receipts, [], "no receipt");
   assert.equal(big.rows(`SELECT count(*) n FROM capture_actors`)[0].n, 0, "no actor");
   /* negative control: exactly the limit is filed, in 32 parts of 8 MiB, each under its own digest */
   const fit = setup();
   const r2 = await fit.c.uploadCapture({ ...ok, bytes: streamOf(chunk, 32).stream });
-  assert.deepEqual([r2.ok, r2.existed, r2.capture.bytes], [true, false, UPLOAD_MAX]);
+  assert.deepEqual([r2.ok, r2.existed, r2.capture.bytes], [true, false, CAPTURE_MAX]);
   assert.equal(r2.document.parts.length, 32);
   assert.ok(r2.document.parts.every((p, i) => p.bytes === 8 * MiB && p.sha256 === sha(chunk)
     && p.file === `snapshots/upload-${r2.capture.sha256}.part${String(i).padStart(3, "0")}`));
