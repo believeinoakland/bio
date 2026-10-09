@@ -72,3 +72,7 @@ Found applying T41-24 (record, 'Found in other modules'). (1) R22's 'only then m
 ## J3 · COMPLETE
 
 T41-24 applied (R21–R24; K2482's bearing-note run optional and credentials for the 'no AI' read). run-productions 52/52 (39 at START), negative controls per requirement; users' suites' reds all identical on tranche/T41; format 0, coverage 24/24, ownership 0; architecture 2, both the credentials import awaiting K2482's edge in modules.json; edges to apply at my merge: credentials, steps (steps through deps.steps until its CHANGE). Branch job/T41/run-productions pushed.
+
+## J4 · COMPLETE
+
+B3 and B4 applied: R24's no-AI judgement is run-rules' checkPagesRead over credentials R57's limits (fails closed), pages read by key; the real steps through stepsOf, ties now {kind: capture|content} as steps' recordProduct takes them (found by driving it). run-productions 52/52; users' suites unchanged but answer-envelope's totality list missing steps', ai-use's and reading-guides' new families (not mine); format 0, coverage 24/24, ownership 0; architecture 4, exactly the steps and credentials imports awaiting their edges at my merge. Record updated; branch pushed.
