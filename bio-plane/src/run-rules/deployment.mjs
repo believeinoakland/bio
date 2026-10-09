@@ -164,7 +164,22 @@ export const ASK_MODE = Object.freeze({
 /** R22 (T37-49; N669; K2200, K2201): THE KINDS OF DRAFT, named by `DRAFT_MODE.kinds`. `own_words` is R21's draft of a
  *  member's own words; `translation` the assistant's draft of the interface words a group's language lacks, or its
  *  reading of one kept word back into English for an administrator's check (DEC-127 (5), DEC-157 (2), (4)). Frozen. */
-export const DRAFT_KINDS = Object.freeze(["own_words", "translation"]);
+export const DRAFT_KINDS = Object.freeze(["own_words", "translation", "case_account", "account_check", "bearing_note"]);
+
+/** R22, R25 (T41-21; D56, D22) — WHAT EACH KIND OF DRAFT MAY READ. `own_words` reads within `answers`' ASK_SCOPE (R21), and
+ *  through a grant only as `draftMayRead` says; `translation` reads nothing of the record (R22). R25's three, the system's
+ *  drafts, read within ASK_SCOPE narrowed to one record: `case_account` (the system's draft of a case's account from its
+ *  evidence, in one or several framings: time order, by question, by rule) and `account_check` (the system's flags on a
+ *  member's account, `skills` R44) to the case's own record; `bearing_note` (`run-productions` R23) to the source's own.
+ *  Each is R21's mode in every other respect: interactive, no run, no run row, read-only, ASK_BOUNDS, `draft`'s flag.
+ *  Their reading is their reach, not a member's grant, so `draftMayRead` stays false for them. Frozen, every level. */
+export const DRAFT_REACH = Object.freeze({
+  own_words: Object.freeze({ scope: "ask_scope", means: "within answers' ASK_SCOPE (its R1); a firsthand field reads nothing" }),
+  translation: Object.freeze({ scope: "none", means: "nothing of the record: only the interface words it is asked about" }),
+  case_account: Object.freeze({ scope: "case_record", means: "within answers' ASK_SCOPE, narrowed to the case's own record: its evidence, in one or several framings (time order, by question, by rule)" }),
+  account_check: Object.freeze({ scope: "case_record", means: "within answers' ASK_SCOPE, narrowed to the case's own record: the member's account and what it cites (skills R44)" }),
+  bearing_note: Object.freeze({ scope: "source_record", means: "within answers' ASK_SCOPE, narrowed to the source's own record (run-productions R23)" }),
+});
 
 /** R22 — THE MOST INTERFACE WORDS ONE TRANSLATION DRAFT IS GIVEN (K2201): the words it is asked about, and no more. */
 export const TRANSLATION_DRAFT_MAX_WORDS = 100;
@@ -188,6 +203,7 @@ export const DRAFT_MODE = Object.freeze({
   reach: "within answers' ASK_SCOPE (its R1); no write op of any module",
   firsthand_reach: "nothing: a draft for a field that records what the member saw reads nothing at all",
   kinds: DRAFT_KINDS,
+  kind_reach: DRAFT_REACH,
   translation_reach: "nothing of the record: no read op of any module, answers' ASK_SCOPE included, whatever the "
     + "member's suggestions switch; a translation draft is given only the interface words it is asked about, at most "
     + `${TRANSLATION_DRAFT_MAX_WORDS} a draft, each with its key, note and marks as its caller hands them`,
@@ -206,6 +222,29 @@ export const DRAFT_MODE = Object.freeze({
   bounds: "ASK_BOUNDS (R17), declared when the draft starts",
 });
 
+/** R24 (T41-21; D1, D19): THE MODE `enquire` — the intake interview and planning: a member's words into proposed questions
+ *  and steps, and remembered claims into "find the record" steps. The third interactive mode, on `ask`'s rule: it is NO
+ *  RUN (it answers inside one member's act and writes no run row); read-only within `answers`' ASK_SCOPE (its R1); bounded
+ *  by R17's ASK_BOUNDS; deployed apart by its own flag, set only by a reviewed change once R19's test bar is held for it
+ *  (`partDeployable("enquire", …)`), whatever the run modes' state and whatever `ask`'s or `draft`'s flag. It writes
+ *  nothing itself: its proposals are stored by `investigation` R12, R20 and `steps` R24. `startAllowed` admits it only at
+ *  a member's act (R18). Not in DEPLOYMENT_SEQUENCE.order and not in RUN_MODES. Frozen. */
+export const ENQUIRE_MODE = Object.freeze({
+  mode: "enquire",
+  read_only: true,
+  reach: "within answers' ASK_SCOPE (its R1); no write op of any module",
+  interactive: true,
+  writes_run_row: false,
+  writes: "nothing: its proposals are stored by investigation R12, R20 and steps R24, each by its own act",
+  why: "it interviews one member about their matter and proposes questions and steps inside that member's act, and is "
+    + "no run: it writes no run row and keeps nothing itself",
+  deploys_apart: true,
+  deployed: false,
+  when: "only by a reviewed change of its own that sets this flag, once R19's test bar is held for it, whatever the run "
+    + "modes' state and whatever ask's or draft's flag",
+  bounds: "ASK_BOUNDS (R17), declared when the interview starts",
+});
+
 /** R22 (R21; K1841 (2); K2200, K2201) — MAY THIS DRAFT READ THE RECORD THROUGH A GRANT? `true` only for an `own_words`
  *  draft whose field does not record what the member saw (`firsthand` absent, null or false) and whose account's
  *  suggestions switch is on (`suggestions` exactly true). A `translation` draft reads nothing of the record, whatever
@@ -217,7 +256,7 @@ export function draftMayRead(asked) {
   return at("kind") === "own_words" && (firsthand == null || firsthand === false) && at("suggestions") === true;
 }
 
-/** The modes a RUN may be in: the order's, and nothing else. `ask` and `draft` are deployed through DEPLOYED_MODES (R16,
+/** The modes a RUN may be in: the order's, and nothing else. `ask`, `draft` and `enquire` are deployed through DEPLOYED_MODES (R16,
  *  R21) but are no runs, so an open that must refuse a run in a mode that is not a run's reads this list beside
  *  DEPLOYED_MODES. */
 export const RUN_MODES = Object.freeze([...DEPLOYMENT_SEQUENCE.order]);
@@ -225,9 +264,9 @@ export const RUN_MODES = Object.freeze([...DEPLOYMENT_SEQUENCE.order]);
 const CHAIN = DEPLOYMENT_SEQUENCE.order.filter((m) => !Object.prototype.hasOwnProperty.call(DEPLOYMENT_SEQUENCE.deploys_apart, m));
 const own = (o, k) => o != null && typeof o === "object" && Object.prototype.hasOwnProperty.call(o, k);
 
-/** R9, R14, R16, R21 — WHICH MODES ARE DEPLOYED UNDER THESE FLAGS? The one computation DEPLOYED_MODES is, exported so
- *  each flag can be judged on its own. `flags` may name `verification_recorded` (the chain's), `plan` (R14), `ask`
- *  (R16) and `draft` (R21); a name left out takes the value this module holds today. The chain's first member deploys
+/** R9, R14, R16, R21, R24 — WHICH MODES ARE DEPLOYED UNDER THESE FLAGS? The one computation DEPLOYED_MODES is, exported
+ *  so each flag can be judged on its own. `flags` may name `verification_recorded` (the chain's), `plan` (R14), `ask`
+ *  (R16), `draft` (R21) and `enquire` (R24); a name left out takes the value this module holds today. The chain's first member deploys
  *  first; its second only once a verification is recorded. A mode that deploys apart is deployed exactly when its own
  *  flag is `true`: no other flag, and no state of the run modes, moves it. Frozen; pure; never throws. */
 export function deployedModesFor(flags) {
@@ -239,6 +278,7 @@ export function deployedModesFor(flags) {
     ...DEPLOYMENT_SEQUENCE.order.filter((m) => apart(m, DEPLOYMENT_SEQUENCE.deploys_apart[m]?.deployed)),
     ...(apart(ASK_MODE.mode, ASK_MODE.deployed) ? [ASK_MODE.mode] : []),
     ...(apart(DRAFT_MODE.mode, DRAFT_MODE.deployed) ? [DRAFT_MODE.mode] : []),
+    ...(apart(ENQUIRE_MODE.mode, ENQUIRE_MODE.deployed) ? [ENQUIRE_MODE.mode] : []),
   ]);
 }
 
@@ -301,11 +341,13 @@ export function checkVerification(v) {
 /** R19 — MAY `mode` BE DEPLOYED, ON THE VERIFICATIONS THE RECORD HOLDS? The order's chain (its modes less those that
  *  deploy apart): its first member always; each later one only when a well-formed `verification_recorded`
  *  (`checkVerification`) is held for EVERY chain mode before it — `investigate` only after `check`'s, `extract` only
- *  after both. A mode that deploys apart (`plan`, R14; `ask`, R16; `draft`, R21) is never decided by the chain: its own
- *  reviewed flag alone deploys it, so this answers true for it. Any other word is false. Pure; never throws. */
+ *  after both. A mode that deploys apart (`plan`, R14; `ask`, R16; `draft`, R21; `enquire`, R24) is never decided by the
+ *  chain: its own reviewed flag alone deploys it, so this answers true for it. Any other word is false. This is the chain
+ *  alone: R19 as amended (T41-21) adds the test bar, and `partDeployable` (`./test-bar.mjs`) is the gate that reads both.
+ *  Pure; never throws. */
 export function deployable(mode, verifications) {
   const m = typeof mode === "string" ? mode : "";
-  if (m === ASK_MODE.mode || m === DRAFT_MODE.mode
+  if (m === ASK_MODE.mode || m === DRAFT_MODE.mode || m === ENQUIRE_MODE.mode
       || Object.prototype.hasOwnProperty.call(DEPLOYMENT_SEQUENCE.deploys_apart, m)) return true;
   const at = CHAIN.indexOf(m);
   if (at < 0) return false;
