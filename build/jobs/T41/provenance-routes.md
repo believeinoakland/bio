@@ -27,3 +27,7 @@ Tests and checks:
 - `checks/ownership.mjs provenance-routes tranche/T41`: 6 files changed; 0 failures.
 
 Size (session_01Mu9HJJYkkMVmYJQmr99iuS): test runs 5, module lines 1215
+
+## J1 · COMPLETE
+
+T41-7b applied (tests only): marked.test.mjs:126 (R5) and table.test.mjs:40 (R10) re-stated for D54, each with a discoverable-project negative control; new R4 D54 case; fixture gains project(); a stale comment in index.mjs corrected. No requirement text assumes the old sight. 38/38; format, architecture, coverage 13/13, ownership: 0 failures. Record: build/jobs/T41/provenance-routes.md.
