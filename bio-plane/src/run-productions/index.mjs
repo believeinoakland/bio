@@ -24,7 +24,8 @@ import { strengthOf, ORIGIN_LIMIT, STRENGTH_AXES } from "../strength/index.mjs";
 import { citationOf } from "../citation/index.mjs";
 import { basisVersionsOf, versionsIn, versionAsWritten, isBoilerplate } from "../basis-versions/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
-import { runPrincipalGate } from "../run-rules/index.mjs";
+import { runPrincipalGate, checkPagesRead, RUN_BOUNDS } from "../run-rules/index.mjs";
+import { stepsOf } from "../steps/index.mjs";
 import { extractionOf } from "../extraction/index.mjs";
 import { credentialsOf } from "../credentials/index.mjs";
 import { EXTRACT_RUN_MODE, proposalChain, checkProposedRef, proposedReadingGrade, mintRatio } from "../extractrun.mjs";
@@ -88,6 +89,8 @@ export const READ_PAGES_SAYS = "the text the record holds for these pages, read 
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 const HEX64 = /^[0-9a-f]{64}$/;
 const ENTITY_ID = idPattern("ENT");
+/** R24: the run's reading bound, run-rules' (its R26), read by key. */
+const PAGES_BOUND = Object.prototype.hasOwnProperty.call(RUN_BOUNDS, "pages") ? "pages" : null;
 const nonBlank = (v) => (typeof v === "string" && v.trim() !== "" ? v.trim() : null);
 /** R21: a proposed connection's name, 'prc:' and the SHA-256 of what makes it one connection under a run. */
 const connectionProposalId = (run, captureSha, kind, to, quote, pos) =>
@@ -147,7 +150,7 @@ export class RunProductions {
     this.citation = citation;
     this.basisVersions = basisVersions;
     /* T41-24: extraction's store half for a capture's text units (its R36) and the references its readers found (its
-       R58); credentials' `aiKeptAway` (its R57); steps' `recordProduct` (its R9), null until given. */
+       R58); credentials' material limits (its R57); steps' `recordProduct` (its R9). */
     this.extraction = extraction;
     this.steps = steps;
     this.credentials = credentials;
@@ -745,10 +748,10 @@ export class RunProductions {
     /* R21: THE STEP IS TIED OR THE CALL IS REFUSED: a production said to serve a step and tied to none would be a
        claim the record does not hold. Its existence and sight are steps' to answer, inside the write. */
     const stepId = step == null || step === "" ? null : step;
-    if (stepId !== null && (!isStepId(stepId) || !this.steps || typeof this.steps.recordProduct !== "function"))
+    if (stepId !== null && !isStepId(stepId))
       return this.#refuse("STEP_UNREADABLE",
         `this production names ${typeof stepId === "string" ? `'${stepId.slice(0, 60)}'` : "a step"} as the step it `
-        + `serves, and ${isStepId(stepId) ? "no step can be tied from here" : "that is not a step's name"}, so nothing `
+        + `serves, and that is not a step's name, so nothing `
         + `was tied to it`, { step: typeof stepId === "string" ? stepId.slice(0, 80) : null });
     /* END DEC-49 REGION is-extract-step */
     const textAt = this.#quoteTextFor(sha, ctx.chain);
@@ -859,7 +862,7 @@ export class RunProductions {
       /* R21: THE STEP THE WORK SERVED (steps R9): the capture read, and each passage this batch made citable. A refusal
          rolls the whole batch back and is relayed as steps answered it. */
       if (stepId !== null)
-        for (const record of [sha, ...newlyMinted]) {
+        for (const record of [{ kind: "capture", id: sha }, ...newlyMinted.map((id) => ({ kind: "content", id }))]) {
           const tied = this.steps.recordProduct({ step: stepId, record, by });
           if (tied && tied.ok === false)
             return { ...tied, ok: false, reason: tied.reason ?? tied.code, code: tied.code ?? tied.reason, step: stepId };
@@ -1035,9 +1038,19 @@ export class RunProductions {
     const { bundle, sha } = doc;
     /* "NO AI" IS ASKED BEFORE THE BOUND, so a document kept from the AI is refused however much the run may read. The
        refusal is credentials', relayed whole. */
-    const kept = this.credentials.aiKeptAway({ ...(bundle.project ? { project: bundle.project } : {}), use: "read" });
-    if (kept) return { ...kept, ok: false, reason: kept.reason ?? kept.code, code: kept.code ?? kept.reason,
-                       run: runId, bundle_id: bundleId };
+    /* THE JUDGEMENT IS run-rules' (`checkPagesRead`, R26; B3): the material limits held for this document, the group's
+       and its project's (credentials R57), each read here; one that cannot be read is held as on, so the read fails
+       closed. */
+    const limits = [];
+    try { const g = this.credentials.aiKeepAwayState(); limits.push({ on: g.on, uses: g.uses }); }
+    catch { limits.push({ on: null, uses: null }); }
+    if (bundle.project) {
+      const kept = this.credentials.projectsKeptAway({ use: "read" });
+      if (kept === null) limits.push({ on: null, uses: null });
+      else if (kept.includes(bundle.project)) limits.push({ on: true, uses: ["read"] });
+    }
+    const noAi = checkPagesRead({ limits });
+    if (noAi) return { ...noAi, run: runId, bundle_id: bundleId };
     let units = [], state = null;
     try {
       const u = this.extraction ? this.extraction.unitsOf(sha) : null;
@@ -1049,7 +1062,7 @@ export class RunProductions {
       .map((x) => Number(x.page)));
     const howFar = () => (already.size ? Math.max(...already) + 1 : 0);
     /* DEC-49 REGION is-read-door */
-    const bound = this.aiRuns.boundOf(runId, "pages");
+    const bound = this.aiRuns.boundOf(runId, PAGES_BOUND);
     if (!bound || !(Number(bound.allowed) > 0))
       return this.#refuse("NO_PAGES_BOUND",
         `this run declares no 'pages' bound, so its reading would be unbounded. The bound is declared at op=airunopen, `
@@ -1076,13 +1089,13 @@ export class RunProductions {
       for (const page of fresh)
         this.sql.exec(`INSERT OR IGNORE INTO run_pages_read (run, capture_sha, bundle_id, page, at) VALUES (?,?,?,?,?)`,
                       runId, sha, bundleId, page, when);
-      const spent = this.aiRuns.consumeBound(runId, "pages", fresh.length);
+      const spent = this.aiRuns.consumeBound(runId, PAGES_BOUND, fresh.length);
       if (spent && spent.ok === false) return { ...spent, ok: false, run: runId };
       return { ok: true };
     });
     if (done && done.ok === false) return done;
     for (const page of fresh) already.add(page);
-    const after = this.aiRuns.boundOf(runId, "pages");
+    const after = this.aiRuns.boundOf(runId, PAGES_BOUND);
     const readTo = start + slice.length;
     return { ok: true, run: runId, bundle_id: bundleId, capture_sha: sha, from: start,
              pages: slice, read_to: Math.min(readTo, pages.length), page_count: pages.length, index_state: state,
@@ -1327,10 +1340,9 @@ export function runProductionsOf(host, deps) {
                              citation: d.citation || citationOf(host, { record, membership, content }),
                              basisVersions: d.basisVersions || basisVersionsOf(host, { record, membership, content }),
                              extraction: d.extraction || extractionOf(host, { record, membership }),
-                             /* T41-24: R24's "no AI" read is this module's (K2482); steps (R21) is given until its edge
-                                lands. */
+                             /* T41-24: R24's "no AI" read is this module's (K2482); R21's step is steps' (B4). */
                              credentials: d.credentials || credentialsOf(host, { record, membership }),
-                             steps: d.steps || null,
+                             steps: d.steps || stepsOf(host, { record, membership }),
                              now: d.now || null });
     instances.set(host, p);
     record.declarePurge(RUN_PRODUCTIONS_MODULE, RUN_PRODUCTIONS_TABLES);

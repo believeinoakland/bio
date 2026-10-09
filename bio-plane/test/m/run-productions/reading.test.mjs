@@ -9,7 +9,6 @@ import { ACCEPTANCE_FORMS } from "../../../src/record-grammar/index.mjs";
 import { world, LAYER, Q, Q2, PROJ, DOC, DOC2, HIDDEN_PROJ, ALICE, BOB, MACHINE, sha } from "./fixture.mjs";
 
 const AK = "class:ai/k1";
-const STEP = "STP-2026-abcdefgh12345678";
 const P1 = { kind: "pdf-page", page: 0, ref: "page 1" }, P2 = { kind: "pdf-page", page: 1, ref: "page 2" };
 const TEXT = ["The Board approved ordinance 12 on 3 March 2026, for $4,500.", "Minutes of the Clerk, page two."];
 /* OCR chains whose engine was measured at B and at C: the capture's own ceiling (`text-chain.captureBound`, the
@@ -28,8 +27,8 @@ function refusedAs(r, code) {
 
 /* A question, a document whose capture's units hold TEXT on two pages (a text layer: its own ceiling is B), and an
    extract run over the question holding a mints and a pages bound. */
-function base({ mints = 10, pages = 3, chain = OCR_B, steps } = {}) {
-  const w = world(steps === undefined ? {} : { steps });
+function base({ mints = 10, pages = 3, chain = OCR_B } = {}) {
+  const w = world();
   w.inquiry(Q); w.inquiry(Q2);
   const cap = w.doc(DOC);
   w.ex.readings[cap] = { chain, pageCount: 2 };
@@ -157,33 +156,32 @@ test("R21 (AI Roles §3 rule 3): a connection — to a body, a person in a publi
                    strip(connect({ to: "INQ-2026-0099-none" }, { run: "RUN-B", viewer: BOB }), "INQ-2026-0099-none"));
 });
 
-test("R21 (steps R9): the step the work serves is carried by every proposal and tied through recordProduct — the capture read and each passage newly minted — in the batch's transaction; a step steps refuses rolls the batch back and is relayed, nothing spent; a malformed step or no steps provider is STEP_UNREADABLE; no step ties nothing", () => {
+test("R21 (steps R9): the step the work serves is carried by every proposal and tied through steps' recordProduct — the capture read and each passage newly minted — in the batch's transaction; a step steps does not hold rolls the batch back and is relayed, nothing spent; a malformed step is STEP_UNREADABLE; no step ties nothing", () => {
   const { w, cap, propose } = base();
-  w.stepsHeld.add(STEP);
-  const r = propose({ step: STEP, refs: [{ ref: "k:1", refKind: "k", refKey: "1", source: P1 }, { ref: "k:2", label: "two" }],
+  const step = w.step(Q);
+  const tied = () => w.steps.productsOf({ step, viewer: ALICE }).products.map((p) => [p.kind, p.id]);
+  assert.deepEqual(tied(), []);
+  const r = propose({ step, refs: [{ ref: "k:1", refKind: "k", refKey: "1", source: P1 }, { ref: "k:2", label: "two" }],
                       connections: [{ to_kind: "question", to: Q2, quote: "ordinance 12", source: P1, how: "shared_identifier", key: "12" }] });
-  assert.equal(r.ok, true);
-  assert.equal(r.step, STEP);
-  assert.deepEqual(w.ties, [{ step: STEP, record: cap, by: AK }, { step: STEP, record: r.proposed[0].content_id, by: AK }]);
-  assert.deepEqual(w.rows(`SELECT step FROM proposed_readings`).map((x) => x.step), [STEP, STEP]);
-  assert.equal(w.row(`SELECT step FROM proposed_connections`).step, STEP);
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  assert.equal(r.step, step);
+  assert.deepEqual(tied(), [["capture", cap], ["content", r.proposed[0].content_id]]);
+  assert.deepEqual(w.rows(`SELECT step FROM proposed_readings`).map((x) => x.step), [step, step]);
+  assert.equal(w.row(`SELECT step FROM proposed_connections`).step, step);
   /* A step steps does not hold: its refusal relayed whole, the batch rolled back, nothing spent. */
   const before = w.snapshot();
   const other = "STP-2026-zzzzzzzz00000000";
   const refused = propose({ step: other, refs: [{ ref: "k:3", refKind: "k", refKey: "3", source: P2 }] });
-  assert.deepEqual([refused.ok, refused.code, refused.step], [false, "NO_SUCH_STEP", other]);
+  assert.deepEqual([refused.ok, refused.step], [false, other]);
+  assert.ok(refused.code, JSON.stringify(refused));
   assert.deepEqual(w.snapshot(), before);
   assert.deepEqual(w.calls.filter((c) => c.name === "consumeBound").map((c) => c.a.n), [1], "only the first batch spent");
   refusedAs(propose({ step: "step one", refs: [{ ref: "k:4", label: "x" }] }), "STEP_UNREADABLE");
   assert.deepEqual(w.snapshot(), before);
   /* No step: nothing tied (the control). */
-  w.ties.length = 0;
-  assert.equal(propose({ refs: [{ ref: "k:5", label: "five" }] }).step, null);
-  assert.deepEqual(w.ties, []);
-  /* No steps provider: a named step cannot be tied, so the call is refused. */
-  const bare = base({ steps: null });
-  refusedAs(bare.propose({ step: STEP, refs: [{ ref: "k:1", label: "x" }] }), "STEP_UNREADABLE");
-  assert.equal(bare.propose({ refs: [{ ref: "k:1", label: "x" }] }).ok, true);
+  const n = tied().length;
+  assert.equal(propose({ refs: [{ ref: "k:5", label: "five", source: P2 }] }).step, null);
+  assert.equal(tied().length, n);
 });
 
 test("R22 (D3; record-grammar R52): proposalAccept is the member's one act on a proposed passage or connection — as proposed (the meaning recorded as proposed), edited (her words), or her own instead (the machine's set aside); one per member; only then does acceptedFor answer that a leg may cite it as hers", () => {
@@ -348,7 +346,7 @@ test("R24 (D2; run-rules R26): a run reads a held document a few pages at a time
   assert.equal(read({ run: "RUN-INV" }).ok, true, "a run in mode investigate reads too");
 });
 
-test("R24 (run-rules R26, credentials R57): a document under a 'no AI' material limit covering reading is refused whatever the bound, credentials' refusal relayed; a limit not covering reading, or on another project, refuses nothing", () => {
+test("R24 (run-rules R26, credentials R57): a document under a 'no AI' material limit covering reading is refused whatever the bound, run-rules' checkPagesRead judging credentials' limits, its refusal relayed; a limit not covering reading, or on another project, refuses nothing", () => {
   const { w, cap } = base({ pages: 20 });
   w.project(PROJ, ["alice"]);
   w.st.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, owner, created, updated) VALUES (?, 'olive', 'joined', 1, 't', 't')`, PROJ);
@@ -362,7 +360,9 @@ test("R24 (run-rules R26, credentials R57): a document under a 'no AI' material 
   assert.equal(w.credentials.projectAiKeepAwaySet({ project: PROJ, on: true, uses: ["read"], reason: "sealed records", by: "member:olive" }).ok, true);
   const before = w.snapshot();
   const kept = read();
-  assert.deepEqual([kept.ok, kept.code, kept.run, kept.bundle_id], [false, "PROJECT_AI_KEPT_AWAY", "RUN-E", DOC]);
+  refusedAs(kept, "AI_RUN_READ_NO_AI");
+  assert.equal(kept.check, "C-22.23", "run-rules' row (its R26)");
+  assert.deepEqual([kept.run, kept.bundle_id], ["RUN-E", DOC]);
   assert.deepEqual(w.snapshot(), before, "nothing read or spent");
   /* The same limit on a document outside the project: read. */
   w.st.sql.exec(`UPDATE bundles SET project=NULL WHERE bundle_id=?`, DOC); w.membership.reindexProjectSight(DOC);

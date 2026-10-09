@@ -5,8 +5,8 @@
    (R26 `candidatePair`, R27 `candidateIndependence`), citation (R5 `retiredNotCitable`), basis-versions (R5
    `basisVersionsOf`, R9 `basisVersions`, R28 `appendVersion`, R40 `onCandidates`), connections (R22 `citesInto`),
    and content's own two providers (extraction's readings, provenance's `capturesOf`), extraction's units (its R36),
-   steps' `recordProduct` (its R9); credentials is the real module (its R57 `aiKeptAway`, reached through its
-   factory). Every stand-in records the calls
+   steps (its R9 `recordProduct`, over the observation log it registers with) and credentials (its R57 material limits) are the real modules, reached through
+   their factories. Every stand-in records the calls
    made to it. Bundles and their files are written as record-core's read contract holds them (its R37), and the tables
    later modules own that this module reads under their read contracts (inquiry R40, basis-versions R38) are created
    here in their stated columns (inquiry_basis is leg-earning's since K1505 (2), its R12), and extraction's own tables from its schema (so a test can show a production writes
@@ -18,6 +18,8 @@ import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
+import { stepsOf } from "../../../src/steps/index.mjs";
+import { observationLogOf } from "../../../src/observation-log/index.mjs";
 import { strengthOf } from "../../../src/strength/index.mjs";
 import { citationOf } from "../../../src/citation/index.mjs";
 import { versionsIn } from "../../../src/basis-versions/index.mjs";
@@ -124,7 +126,7 @@ export const basisVersionsOf = (fm) => versionsIn(fm);
  *  plane reaches them), strength over an inquiry stand-in (its R13 registry, R14 `legCapped`, R16 `basisFor`) whose
  *  capture ceilings the test sets in `w.ceilings`. `aiRuns: null` leaves ai-runs to this module's factory (the real
  *  module, over its own tables). */
-export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven, steps: stepsGiven = undefined } = {}) {
+export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -256,20 +258,14 @@ export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven, 
     strengthOf(host, { record, membership, inquiry, producingGroup: () => "g", now: () => clock.now });
     citationOf(host, { record, membership, content });
   }
-  /* steps R9's `recordProduct` (the in-process door), as its requirements word it: a step the stand-in holds takes the
-     record; any other step is refused as absent. Every tie is recorded. `steps: null` gives no provider. */
-  const stepsHeld = new Set(), ties = [];
-  const steps = stepsGiven === null ? null : stepsGiven || {
-    recordProduct({ step, record, by }) {
-      note("recordProduct", { step, record, by });
-      if (!stepsHeld.has(step)) return { ok: false, code: "NO_SUCH_STEP", reason: "NO_SUCH_STEP", detail: "no such step" };
-      ties.push({ step, record, by });
-      return { ok: true };
-    },
-  };
+  /* steps, the real module over its own tables (its R9 `recordProduct`, reached through its factory, B4). */
+  const observationLog = observationLogOf(host, { record, membership, provenance: null, extraction: null,
+                                                  now: () => Date.parse(clock.now) });
+  observationLog.migrate();
+  const steps = stepsOf(host, { record, membership, observationLog });
   const p = runProductionsOf(host, { record, membership, content, connections, extraction,
                                      ...(aiRunsGiven === null ? {} : { aiRuns }),
-                                     basisVersions, ...(steps ? { steps } : {}),
+                                     basisVersions, steps,
                                      ...(real ? {} : { strength, citation }), now: () => Date.parse(clock.now) });
   p.migrate();
 
@@ -292,7 +288,7 @@ export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven, 
 
   const w = {
     st, host, record, membership, prov, registered, content, p, clock, ex, calls, runs, bounds, aiRuns, strength,
-    citation, retired, connections, cites, basisVersions, candidateSources, ceilings, steps, stepsHeld, ties, credentials,
+    citation, retired, connections, cites, basisVersions, candidateSources, ceilings, steps, credentials,
     versions: {}, authors: {}, ats: {}, legsOf: {}, groundsOf: {},
     row: (qq, ...a) => [...st.sql.exec(qq, ...a)][0] ?? null,
     rows: (qq, ...a) => [...st.sql.exec(qq, ...a)],
@@ -342,6 +338,12 @@ export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven, 
       if (mints !== null) bounds.set(`${id}|mints`, { allowed: mints, consumed: 0 });
       if (pages !== null) bounds.set(`${id}|pages`, { allowed: pages, consumed: 0 });
       return id;
+    },
+    /** A step on a question, made by a member through steps' own act (its R1). */
+    step(question = Q, by = ALICE) {
+      const r = steps.stepCreate({ place: { questions: [question] }, work: `read what ${question} rests on`, by });
+      if (!r.ok) throw new Error(`step: ${JSON.stringify(r)}`);
+      return r.step;
     },
     suggest(over = {}) {
       return p.suggest({ target: Q, kind: "basis-version", run: RUN, name: "a reading",
