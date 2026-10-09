@@ -76,3 +76,7 @@ B4 (run-rules: partDeployableOn gate, RUN_ORIGINS, pages, checkPagesRead) and B5
 - **Tests:** 26, pass 26, fail 0. **Checks** (local copy with paths and those uses): format 0; architecture 8 files, 35 imports, 0; coverage 14 of 14; ownership 1, K1043's `modules.json` line.
 
 Size (session_01243u4joqb8ZpywX663LU1U): test runs 23, module lines 1031
+
+## J5 · COMPLETE
+
+B6 applied: real steps via stepsOf (factory and tests; findRecipients' {after} cursor read correctly); steps in final uses; 26/26; checks 0 but K1043's modules.json line. Record updated.
