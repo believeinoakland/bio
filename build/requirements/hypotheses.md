@@ -44,7 +44,7 @@ Terms. A **note** is a member's own words kept in the group's copy, seen only by
 - **R18** *(not yet met: T41)* A proposal set aside by a member stays readable with her reason. R1's `MACHINE_CANNOT_HYPOTHESISE` stands for `hold` (K1467).
 
 **A note shared with a project** (T41-16; D18)
-- **R19** *(not yet met: T41)* (D18) `noteShare({note, project, by})` by the note's author, a joined participant of `project`: copies the note's current words into a share of that project, seen by its participants, labelled as hers and as narrative; never evidence, a leg target, content, published or carried by a case. A note naming a person in no public role carries `inquiry` R59's warning at the act.
+- **R19** *(not yet met: T41)* (D18) `noteShare({note, project, by})` by the note's author, a joined participant of `project`: copies the note's current words into a share of that project, seen by its participants, labelled as hers and as narrative; never evidence, a leg target, content, published or carried by a case. A note naming a person in no public role carries `inquiry` R59's warning at the act, through `inquiry.personWarning` (answered as `warning` and recorded with the share; never a refusal; K2479).
 - **R20** *(not yet met: T41)* (D18) `noteUnshare({share, by})` by its author withdraws it: its words leave every answer, and the project's record keeps that a note was shared by her on that date and withdrawn on that date, without its words.
 - **R21** *(not yet met: T41)* `sharesOf({project, viewer})` answers the project's participants its standing shares, newest first, at most 200.
 
@@ -52,6 +52,7 @@ Terms. A **note** is a member's own words kept in the group's copy, seen only by
 
 ### Uses
 
+- `inquiry`: `personWarning` (its R59; R19; K2479). A new `modules.json` edge; `inquiry` is earlier (layer 6).
 - `record-grammar`: `ID_TABLE` (`HYP-`), `idPattern`, `isHypothesisId`.
 - `record-core`: `allocId`, `transact`, `declareTable`.
 - `membership`: `viewerPredicate`, `inSight`; `courtNotice` (its R107) and R108's sentence (R11; T34-30); `positionalMember` (its R76), naming a note's member (since T34; K2136).
