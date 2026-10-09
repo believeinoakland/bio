@@ -98,10 +98,10 @@ Terms. An **item** is `queue`'s item (its Provides) without `disposition` (`queu
 
 
 **Publishing at a set time** (DEC-147 (2), (3), (5); N662)
-- **R37** (`publication` R66–R69) For each case edition `publication.scheduledEditions` answers (its R69, read as the plane), items to the member who set its time and to the case's project's owners (`membership` R65), and to nobody else; each item's subject is the case edition, homed under the case's project (`queue` R7):
-  - CONDITION `edition-scheduled`, while the edition is `waiting`, keyed `CONDITION::edition-scheduled::<case>@<edition>`: its summary says "Signed · publishes <date, time>", the date and time as set, in the group's zone as R69 carries it, never converted to UTC (R36); it offers moving and cancelling the time (`op=publishatmove`, `op=publishatcancel`). It leaves when the edition leaves `waiting`. A moved time changes the item's words, never mints another item.
+- **R37** *(not yet met: T41)* (`publish-schedule` R1–R4; was `publication` R66–R69; N823, K2438) For each case edition `publishSchedule.scheduledEditions` answers (its R4, read as the plane), items to the member who set its time and to the case's project's owners (`membership` R65), and to nobody else; each item's subject is the case edition, homed under the case's project (`queue` R7):
+  - CONDITION `edition-scheduled`, while the edition is `waiting`, keyed `CONDITION::edition-scheduled::<case>@<edition>`: its summary says "Signed · publishes <date, time>", the date and time as set, in the group's zone as `publish-schedule` R4 carries it, never converted to UTC (R36); it offers moving and cancelling the time (`op=publishatmove`, `op=publishatcancel`). It leaves when the edition leaves `waiting`. A moved time changes the item's words, never mints another item.
   - FINDING `edition-published-as-scheduled`, once the edition is `published`, keyed `FINDING::edition-published-as-scheduled::<case>@<edition>`, naming the set time and the instant published. It is raised once and never repeated, and leaves when its recipient disposes of it (DEC-69, DEC-70).
-  - FINDING `scheduled-edition-stopped`, once the edition is `stopped`, keyed `FINDING::scheduled-edition-stopped::<case>@<edition>`, naming each reason R67 gives, in its own translation, and saying that nothing was published and that publishing needs a new signing. It is raised once and never repeated, and leaves when its recipient disposes of it (DEC-69, DEC-70).
+  - FINDING `scheduled-edition-stopped`, once the edition is `stopped`, keyed `FINDING::scheduled-edition-stopped::<case>@<edition>`, naming each reason `publish-schedule` R2 gives, in its own translation, and saying that nothing was published and that publishing needs a new signing. It is raised once and never repeated, and leaves when its recipient disposes of it (DEC-69, DEC-70).
 
   A cancelled edition earns no item.
 
@@ -148,7 +148,7 @@ Terms. An **item** is `queue`'s item (its Provides) without `disposition` (`queu
 - `docket` (N520): `coreDue` (its R9; R30). `reevaluation`'s `docketDependents` (its R30; R31) joins its use above.
 - `wizard-scripts` (N528): `brokenScripts` (its R13; R32), `submittedFor` (its R17; R33), `baseUpdates` (its R26; R39; T34-92).
 - `case-import` (N534): `watchItems` (its R20; R35). `reevaluation`'s `citedCaseDependents` (its R33; R34) joins its use above.
-- `publication` (T34-82): `scheduledEditions` (its R69; R37), beside `caseDocumentFacts` above.
+- `publish-schedule` (T41; K2438; was `publication`'s, T34-82): `scheduledEditions` (its R4; R37). `publication` keeps `caseDocumentFacts` above.
 - Registered at start, not used (K31's pattern; T34-82): `instance-setup`'s `placeArrivals` (its R62; R38), a later module in layer 11.
 
 ### Invariants

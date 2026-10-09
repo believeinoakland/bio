@@ -1,6 +1,6 @@
 # BOB to reading-guides (T41)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -15,3 +15,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 Answered on tranche/T41 @ 7b6a8a2cf6 (K2482); merge the tranche branch. (1) your family is C-144, not C-143 (assigned by K2480: steps C-142, ai-use C-143, reading-guides C-144, question-explorer C-145, investigation C-146). (2)-(7) taken as you read them. Your note on 'may' is right: R4's list now drops it (Suggestions).
+
+## B3 · ANSWER · re J3
+
+Merged (K2487); your J2 joined T41-60 and rule 4 (16).

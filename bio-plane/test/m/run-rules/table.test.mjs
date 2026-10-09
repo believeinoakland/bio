@@ -6,7 +6,7 @@ import * as RR from "../../../src/run-rules/index.mjs";
 import { AI_RUN_CHECKS as OBSERVATION_LOG_ROWS } from "../../../src/observation-log/index.mjs";
 
 const { AI_RUNS_CHECKS, AI_RUN_OWN_CHECKS, AI_RUN_ACT_SHAPE_CHECKS, AI_RUNS_CONTEXT_CHECKS, SURFACE_RUN_CHECKS,
-        AI_RUN_OPEN_CHECKS, AI_RUN_PLAN_CHECKS, AI_USE_CHECKS, AI_RUN_CHECKS, translationOf } = RR;
+        AI_RUN_OPEN_CHECKS, AI_RUN_PLAN_CHECKS, AI_USE_CHECKS, AI_RUN_CHECKS, RETIRED_CHECKS, translationOf } = RR;
 
 /** R11's rows minted here, by code, with the site that mints each. */
 const MINTED_HERE = {
@@ -23,12 +23,20 @@ const MINTED_HERE = {
   AI_RUN_NOT_A_MEMBER_ACT: ["C-22.19", "src/run-rules/rules.mjs startAllowed"],
   AI_RUN_VERIFICATION_UNFIT: ["C-22.20", "src/run-rules/deployment.mjs checkVerification"],
   AI_ASK_BOUND_ABOVE_CEILING: ["C-22.21", "src/run-rules/rules.mjs checkAskBounds"],
+  AI_TEST_BAR_UNFIT: ["C-22.22", "src/run-rules/test-bar.mjs checkTestBarRecord"],
+  AI_RUN_READ_NO_AI: ["C-22.23", "src/run-rules/rules.mjs checkPagesRead"],
+  AI_RUN_ORIGIN_UNKNOWN: ["C-22.25", "src/run-rules/rules.mjs originAllowed"],
+  AI_RUN_EXPLORE_NOT_DEPLOYABLE: ["C-22.27", "src/run-rules/rules.mjs originAllowed"],
 };
-/** R20's rows, minted by ai-runs (its R50, R52) and answers, read here by key. */
-const USE = { AI_USE_CEILING_REACHED: "C-109.8", AI_USE_COPY_CEILING_REACHED: "C-109.9", AI_NO_ACCOUNT: "C-109.10",
-              NOT_YOUR_CEILING: "C-109.11", AI_CEILING_INVALID: "C-109.12" };
+/** The C-22 rows of ai-runs' T41 acts (B3, B4; K2482, K2485), minted by ai-runs (its R73, R75) and read here by key. */
+const AI_RUNS_C22 = { AI_GROUP_TEST_INVALID: "C-22.24", AI_RUN_EXPLORE_NEEDS_STEP: "C-22.26", AI_RUN_STEP_UNKNOWN: "C-22.28" };
+/** R20's rows, minted by ai-runs (its R52) and answers, read here by key. */
+const USE = { AI_NO_ACCOUNT: "C-109.10", NOT_YOUR_CEILING: "C-109.11" };
+/** R20's retired codes (T40; N812; K2373, K2400), each with its number, never reused, and its replacement in ai-use. */
+const RETIRED = { AI_USE_CEILING_REACHED: ["C-109.8", "AI_LIMIT_REACHED"], AI_USE_COPY_CEILING_REACHED: ["C-109.9", "AI_LIMIT_REACHED"],
+                  AI_CEILING_INVALID: ["C-109.12", "AI_LIMIT_INVALID"] };
 /** Of R20's rows, those that set a ceiling rather than hold a run or ask back. */
-const SETTING = ["NOT_YOUR_CEILING", "AI_CEILING_INVALID"];
+const SETTING = ["NOT_YOUR_CEILING"];
 /** R11's rows minted by ai-runs and read here by key. */
 const AI_RUNS_ACTS = {
   AI_RUN_CAPABILITY_UNAVAILABLE: "C-33.29", AI_RUN_NO_CONTEXT: "C-33.30", AI_RUN_ALREADY_OPEN: "C-33.31",
@@ -53,28 +61,30 @@ function wellFormed(code, row) {
 }
 
 test("R11: the table holds exactly the rows the pure rules mint (each where naming this module's site, C-22.7's skill-version.mjs checkSkillVersion) and the rows of ai-runs' acts, each code once with its number; every refusal carries its row", () => {
-  const want = { ...Object.fromEntries(Object.entries(MINTED_HERE).map(([c, [n]]) => [c, n])), ...AI_RUNS_ACTS, ...PLANNING, ...USE };
+  const want = { ...Object.fromEntries(Object.entries(MINTED_HERE).map(([c, [n]]) => [c, n])), ...AI_RUNS_C22, ...AI_RUNS_ACTS, ...PLANNING, ...USE };
   assert.deepEqual(Object.fromEntries(Object.entries(AI_RUNS_CHECKS).map(([c, r]) => [c, r.check])), want);
   const numbers = Object.values(AI_RUNS_CHECKS).map((r) => r.check);
   assert.equal(new Set(numbers).size, numbers.length, "one condition per C-number");
   for (const [code, row] of Object.entries(AI_RUNS_CHECKS)) wellFormed(code, row);
   for (const [code, [, site]] of Object.entries(MINTED_HERE)) assert.ok(AI_RUNS_CHECKS[code].where.startsWith(site), code);
-  for (const code of [...Object.keys(AI_RUNS_ACTS), ...Object.keys(PLANNING), ...Object.keys(USE)])
+  for (const code of [...Object.keys(AI_RUNS_C22), ...Object.keys(AI_RUNS_ACTS), ...Object.keys(PLANNING), ...Object.keys(USE)])
     assert.match(AI_RUNS_CHECKS[code].where, /^src\/ai-runs\/index\.mjs /, `${code} is minted by ai-runs`);
   /* the families as published, one object across them */
-  assert.deepEqual(Object.keys(AI_RUN_OWN_CHECKS), Object.keys(MINTED_HERE));
+  assert.deepEqual(Object.keys(AI_RUN_OWN_CHECKS).sort(), [...Object.keys(MINTED_HERE), ...Object.keys(AI_RUNS_C22)].sort());
   assert.equal(Object.keys(AI_RUN_ACT_SHAPE_CHECKS).length, 6);
   assert.deepEqual(Object.keys(AI_RUNS_CONTEXT_CHECKS), ["AI_RUNS_NO_CONTEXT_TYPE", "AI_RUNS_UNKNOWN_CONTEXT_TYPE", "AI_RUNS_NO_CONTEXT_ID"]);
   assert.deepEqual(Object.keys(SURFACE_RUN_CHECKS), ["SURFACE_NO_RUN", "SURFACE_RUN_NOT_RUNNING", "SURFACE_NO_BOUND", "SURFACE_BOUND_REACHED"]);
   assert.deepEqual(Object.keys(AI_RUN_OPEN_CHECKS), ["AI_RUN_MODE_NOT_DEPLOYED"]);
   for (const fam of [AI_RUN_OWN_CHECKS, AI_RUN_ACT_SHAPE_CHECKS, AI_RUNS_CONTEXT_CHECKS, SURFACE_RUN_CHECKS, AI_RUN_OPEN_CHECKS, AI_RUN_PLAN_CHECKS, AI_USE_CHECKS])
     for (const [code, row] of Object.entries(fam)) assert.equal(AI_RUNS_CHECKS[code], row, code);
-  /* each refusal R2–R8, R10 and R17–R19 mint is built from its row here */
+  /* each refusal R2–R8, R10, R17–R19, R23 and R26 mint is built from its row here */
   const minted = [RR.checkBound("x"), RR.checkSkillVersion(""), RR.projectGate({ actor: "a", contextType: "project" }),
     RR.checkRunContextKind({ contextType: "x" }), RR.runPrincipalGate({}), RR.checkConsume({ fetches: -1 }, { map: true }),
     RR.checkConsume({ lease: 0 }, { map: true }), RR.checkConsume({ x: 1 }, { map: true }),
     RR.checkConsume([{ bound: "fetches" }], { list: true }), RR.checkRunState("x".repeat(262144)),
-    RR.startAllowed({}), RR.checkVerification(null), RR.checkAskBounds({ turns: 13, bytes: 1, wall_ms: 1, reads: 1 })];
+    RR.startAllowed({}), RR.checkVerification(null), RR.checkAskBounds({ turns: 13, bytes: 1, wall_ms: 1, reads: 1 }),
+    RR.checkTestBarRecord(null), RR.checkPagesRead({ limits: [{ on: true }] }), RR.originAllowed({}),
+    RR.originAllowed({ origin: "explore" })];
   assert.deepEqual(minted.map((r) => r.code), Object.keys(MINTED_HERE));
   for (const r of minted) assert.deepEqual([r.ok, r.check, r.translation], [false, AI_RUNS_CHECKS[r.code].check, AI_RUNS_CHECKS[r.code].translation]);
 });
@@ -130,13 +140,17 @@ test("R12: no place is named in the module's behaviour or outward text — its r
     RR.checkVerification({}).detail,
     RR.checkAskBounds([]).detail, RR.checkAskBounds({ x: 1 }).detail, RR.checkAskBounds({ turns: 0 }).detail,
     RR.checkAskBounds({ turns: 1.5 }).detail, RR.checkAskBounds({ turns: 99 }).detail, RR.checkAskBounds({}).detail,
+    JSON.stringify(RR.ENQUIRE_MODE), JSON.stringify(RR.DRAFT_REACH), JSON.stringify(RR.TEST_BAR_RECORD),
+    JSON.stringify(RR.TEST_MATTER_SHAPE), JSON.stringify(RR.CIVICSMITH_TEST_SET), ...RR.RUN_ORIGINS,
+    RR.checkTestBarRecord({}).detail, RR.checkPagesRead({ limits: [{}] }).detail, RR.originAllowed({ origin: "explore" }).detail,
+    RR.originAllowed({ origin: "x" }).detail, RR.startAllowed({ mode: "enquire" }).detail,
   ];
   for (const t of texts) assert.equal(PLACE.test(String(t)), false, String(t).slice(0, 80));
   /* control: the pattern does catch a place */
   assert.equal(PLACE.test("the City of Anywhere"), true);
 });
 
-test("R20: the ceiling refusals AI_USE_CEILING_REACHED, AI_USE_COPY_CEILING_REACHED, AI_NO_ACCOUNT, R18's AI_RUN_NOT_A_MEMBER_ACT, NOT_YOUR_CEILING and AI_CEILING_INVALID are rows of the table, each with its number and a plain-words translation naming no cost per answer; minted by ai-runs and answers and read here by key", () => {
+test("R20: AI_NO_ACCOUNT, R18's AI_RUN_NOT_A_MEMBER_ACT and NOT_YOUR_CEILING are rows of the table, each with its number and a plain-words translation naming no cost (D12: a cost is answered only to the paying account's owners, by ai-use R10, R11, and these rows are read by any member); minted by ai-runs and answers and read here by key", () => {
   assert.deepEqual(Object.fromEntries(Object.entries(AI_USE_CHECKS).map(([c, r]) => [c, r.check])), USE);
   const all = { ...AI_USE_CHECKS, AI_RUN_NOT_A_MEMBER_ACT: AI_RUN_OWN_CHECKS.AI_RUN_NOT_A_MEMBER_ACT };
   for (const [code, row] of Object.entries(all)) {
@@ -145,31 +159,48 @@ test("R20: the ceiling refusals AI_USE_CEILING_REACHED, AI_USE_COPY_CEILING_REAC
     assert.equal(translationOf(code), row.translation, code);
     assert.match(row.translation, SETTING.includes(code) ? /^Nothing was changed, because / : /^Nothing was (run|started), because /,
                  `${code}: says nothing ran or changed`);
-    /* K1450: members see no cost per answer, so no translation names a price, a charge or a figure of money */
+    /* D12 (K1450 as amended): no translation names a price, a charge or a figure of money to whoever reads it */
     assert.doesNotMatch(row.translation, /\$|\bcost|\bprice|\bcharge|\bdollar|\bspend|\bbill|\btokens?\b|\bcredit/i, code);
     assert.doesNotMatch(row.translation, /\b[A-Z][A-Z_]{3,}\b/, `${code}: plain words, no machine word`);
   }
   for (const code of Object.keys(USE)) assert.match(AI_USE_CHECKS[code].where, /^src\/ai-runs\/index\.mjs /);
   assert.match(AI_RUN_OWN_CHECKS.AI_RUN_NOT_A_MEMBER_ACT.where, /^src\/run-rules\/rules\.mjs startAllowed, called from src\/ai-runs\/index\.mjs .* answers$/);
-  /* each condition named in its own words: the member's own ceiling, the administrator's for the copy, no account */
-  assert.match(AI_USE_CHECKS.AI_USE_CEILING_REACHED.translation, /your own daily limit/);
-  assert.match(AI_USE_CHECKS.AI_USE_COPY_CEILING_REACHED.translation, /administrator/);
   assert.match(AI_USE_CHECKS.AI_NO_ACCOUNT.translation, /Claude account or an API key of your own/);
   /* K1755: the group's API key, held by an administrator and switched on, also serves a member; the row says both */
   assert.match(AI_USE_CHECKS.AI_NO_ACCOUNT.translation, /your group has no API key of its own switched on/);
+  /* T40 (N812): or the account that would serve has this use switched off */
+  assert.match(AI_USE_CHECKS.AI_NO_ACCOUNT.translation, /or the account that would serve has this use switched off/);
   assert.doesNotMatch(AI_USE_CHECKS.AI_NO_ACCOUNT.translation, /works only on the account of the member who asks/);
   assert.match(AI_USE_CHECKS.NOT_YOUR_CEILING.translation, /theirs alone to set or look at/);
   /* K1610: the copy's ceiling is refused NOT_AN_ADMIN, so this row names neither it nor its setter */
   assert.equal(AI_USE_CHECKS.NOT_YOUR_CEILING.where, "src/ai-runs/index.mjs aiCeilingSet and aiUsageMine");
   assert.doesNotMatch(AI_USE_CHECKS.NOT_YOUR_CEILING.where + AI_USE_CHECKS.NOT_YOUR_CEILING.translation, /aiCopyCeilingSet|administrator|copy/);
-  assert.match(AI_USE_CHECKS.AI_CEILING_INVALID.translation, /a whole number of one or more, or no limit/);
   const texts = Object.values(all).map((r) => r.translation);
   assert.equal(new Set(texts).size, texts.length);
   /* control: the cost pattern does catch a cost */
   assert.match("this answer cost $0.02", /\$|\bcost/i);
 });
 
-test("R11, R20 (DEC-149, T34-86): a string a member reads names the group's Civicsmith as \"your group's Civicsmith\" — C-33.29, C-109.1 and C-109.9 say it, and STANDARD_BASIS' none-recorded needs no name; no translation or vocabulary sentence of this module says instance, copy, plane or server", () => {
+test("R20 (T40; N812; K2373, K2400): AI_USE_CEILING_REACHED, AI_USE_COPY_CEILING_REACHED and AI_CEILING_INVALID are retired — no row of the table, no translation, each held in RETIRED_CHECKS with its number, never reused, and its ai-use replacement; NOT_YOUR_CEILING stays", () => {
+  assert.deepEqual(Object.fromEntries(Object.entries(RETIRED_CHECKS).map(([c, r]) => [c, [r.check, r.retired_for]])), RETIRED);
+  assert.ok(Object.isFrozen(RETIRED_CHECKS));
+  for (const r of Object.values(RETIRED_CHECKS)) assert.ok(Object.isFrozen(r));
+  for (const code of Object.keys(RETIRED)) {
+    assert.equal(Object.prototype.hasOwnProperty.call(AI_RUN_CHECKS, code), false, `${code} has no row`);
+    assert.equal(Object.prototype.hasOwnProperty.call(AI_USE_CHECKS, code), false, code);
+    assert.equal(translationOf(code), null, `${code} has no translation here`);
+  }
+  /* never reused: no row of the one map holds a retired number */
+  const live = new Set(Object.values(AI_RUN_CHECKS).map((r) => r.check));
+  for (const [code, [n]] of Object.entries(RETIRED)) assert.equal(live.has(n), false, `${n} (${code}) is not reused`);
+  /* ai-use's rows are its own: none of its codes is a row here */
+  for (const c of ["AI_LIMIT_REACHED", "AI_LIMIT_INVALID", "AI_USE_SWITCHED_OFF"]) assert.equal(translationOf(c), null, c);
+  /* control: NOT_YOUR_CEILING and AI_NO_ACCOUNT stay, with their numbers */
+  assert.equal(AI_RUN_CHECKS.NOT_YOUR_CEILING.check, "C-109.11");
+  assert.equal(AI_RUN_CHECKS.AI_NO_ACCOUNT.check, "C-109.10");
+});
+
+test("R11, R20 (DEC-149, T34-86): a string a member reads names the group's Civicsmith as \"your group's Civicsmith\" — C-33.29 and C-109.1 say it (C-109.9 retired, R20), and STANDARD_BASIS' none-recorded needs no name; no translation or vocabulary sentence of this module says instance, copy, plane or server", () => {
   const named = {
     AI_RUN_CAPABILITY_UNAVAILABLE: "Nothing was run, because your group's Civicsmith could not find an account to run it under. "
       + "That is a fact about our setup and not an answer about your question: no searching happened, so nothing here "
@@ -177,9 +208,6 @@ test("R11, R20 (DEC-149, T34-86): a string a member reads names the group's Civi
     AI_RUN_MODE_NOT_DEPLOYED: "Nothing was run, because the kind of work this run asked for is not switched on for your "
       + "group's Civicsmith yet. Kinds of work are switched on one at a time, each only after the one before it has been "
       + "checked in real use. Ask for a kind that is switched on, or leave the kind out to run the one that is.",
-    AI_USE_COPY_CEILING_REACHED: "Nothing was run, because you have reached today's limit that this group's administrator "
-      + "set to keep your group's Civicsmith from being overloaded. It resets at the start of tomorrow, or an administrator "
-      + "can raise it.",
   };
   for (const [code, text] of Object.entries(named)) {
     assert.equal(AI_RUNS_CHECKS[code].translation, text, code);

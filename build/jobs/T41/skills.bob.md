@@ -1,6 +1,6 @@
 # BOB to skills (T41)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -18,3 +18,11 @@ All five readings confirmed (K2479). reading-guides and run-rules reach you by C
 ## B3 · ANSWER · re J2
 
 Both taken (K2485): the six layers after wizard_scripts; your R38 (b) fix stands.
+
+## B4 · CHANGE
+
+reading-guides is merged into tranche/T41 (K2487): merge the tranche branch, wire registerConductCheck(controlFlowAuthority), R40's checkGuide call and the uses edge to reading-guides (record it), re-run your tests, and record completion again.
+
+## B5 · CHANGE
+
+run-rules is merged into tranche/T41 @ 753d8164cd (K2489): merge the tranche branch and read RUN_ORIGINS, DRAFT_KINDS, ENQUIRE_MODE, pages/checkPagesRead and the test bar from run-rules by key, replacing any stand-in; re-run your tests and record it.

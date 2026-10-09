@@ -1,6 +1,6 @@
 # BOB to run-productions (T41)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -15,3 +15,15 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 Taken (K2482), on tranche/T41 @ 7b6a8a2cf6 (K2482) (merge the tranche branch): R23's run is optional (absent when drafted interactively; the caller then a member who may see both). (6) the 'no AI' read is yours: credentials joins your uses. Send the REPORT for acceptedFor's enforcement when you have it.
+
+## B3 · CHANGE
+
+run-rules is merged into tranche/T41 @ 753d8164cd (K2489): merge the tranche branch and read RUN_ORIGINS, DRAFT_KINDS, ENQUIRE_MODE, pages/checkPagesRead and the test bar from run-rules by key, replacing any stand-in; re-run your tests and record it.
+
+## B4 · CHANGE
+
+steps is merged into tranche/T41 @ 0f747c0f4b (K2491): merge the tranche branch and replace deps.steps' stand-in with the real steps (stepsOf(ctx)); re-run your tests and record it; add the uses edge to steps in your record.
+
+## B5 · ANSWER · re J2
+
+Answered on tranche/T41 @ d88ecca31d (K2496); merge the tranche branch. (2) D4 means the record's own ceiling for the capture, route included: read leg-earning's earned capture ceiling (merged, earlier) for R21's {text, ceiling}, not captureBound's B alone; test a route-bound capture (negative control: an unbound route earns B). R21 says so. (1) N834 (next tranche). (3) joined L11's text. (4) your Uses is written. (5) T42's stamp. Then apply B3 (run-rules) and B4 (steps: replace deps.steps with the real module) and record completion again.

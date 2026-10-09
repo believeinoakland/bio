@@ -42,8 +42,8 @@ export const LEAD_CHECKS = {
 };
 
 
-/** R7, R16: the rows `inquiry`'s acts mint for the inquiry's own refusals, the lead row (R5), the imported leg's (R11)
- *  and the four new leg kinds' (R13–R15, R17), by code. Named with the
+/** R7, R16, R18: the rows `inquiry`'s acts mint for the inquiry's own refusals, the lead row (R5), the imported leg's
+ *  (R11), the four new leg kinds' (R13–R15, R17) and a bias application's (R18), by code. Named with the
  *  reserved `_CHECKS` suffix, so DEC-49 composition (control-plane's `families.mjs`) finds it as a family (K850). */
 export const INQUIRY_GRAMMAR_CHECKS = Object.freeze({
   LEAD_NOT_EVIDENCE: LEAD_CHECKS.LEAD_NOT_EVIDENCE,
@@ -122,5 +122,17 @@ export const INQUIRY_GRAMMAR_CHECKS = Object.freeze({
       + 'out from: what kind it is, its two ends, the date it holds as of, and the method. Its name must be the one '
       + 'those five give, and it states no grade or part of its own: how strong it is comes from the links it was '
       + 'worked out over. Correct the leg. Nothing was written.',
+  },
+  /* R18 (T41-13; D59): a bias application at a leg whose form departs from R18's shape, C-2.8, refused by
+     `biasApplicationRefusal` in `./grammar.mjs` (carried inside `BASIS_REFUSED` by `inquiry`'s write, its R11).
+     Stamped by promotion's next stamping. */
+  BIAS_APPLICATION_MALFORMED: {
+    check: 'C-2.8',
+    where: 'src/inquiry-grammar/grammar.mjs biasApplicationRefusal > is-bias-application-form',
+    translation: 'A leg can record each statement of your project\'s declared bias that was applied to it: the '
+      + 'statement, and what it did, which is one of three things: it lowered the leg\'s grade (from one letter to a '
+      + 'weaker one), it set the leg aside, or it refused an inference. This record of it is not in that form. '
+      + 'Recording it moves no grade: the grade on the leg is still the one you state. Correct the record. '
+      + 'Nothing was written.',
   },
 });

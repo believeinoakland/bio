@@ -1,6 +1,6 @@
 # BOB to basis-versions (T41)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -15,3 +15,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 Answered on tranche/T41 @ 15ec91ff1f (K2479): merge the tranche branch. (1) one encoding for both, inquiry-grammar's (R18): bias_<n>_statement/_effect keys on the conclusions[] row, through its flattenBiasApplied/readBiasApplied, plus bias_statements_sha; it reaches you by CHANGE when inquiry-grammar merges; meanwhile build to that shape (same key names). (2)-(5) confirmed; BAD_BIAS_APPLIED as BAD_COMMENTARY. The bridge for inquiry.biasNotInForce is fine until inquiry's CHANGE.
+
+## B3 · CHANGE
+
+inquiry-grammar is merged into tranche/T41 @ 0f747c0f4b (K2491): merge the tranche branch and move your local encoding onto its flattenBiasApplied/readBiasApplied/biasAppliedFindings (effects inference_refused, scrutiny_raised; your C-25 check id), as your J2 deferred; re-run and record completion again. inquiry's CHANGE follows when it merges.
