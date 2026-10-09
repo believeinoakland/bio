@@ -33,6 +33,7 @@ The instance's composition root. It builds every module on one Durable Object's 
 ### Uses
 
 - `store-door`: `dispatch`, `controlPlaneRoutes` and the promotion step it exports (its R1, R5; K2043); `control-plane`: `makeFetch` and the door's hooks (R1, R5, R6).
+- (T41; N812, N823; K2438) `ai-use` (R31); `publish-schedule`: its instance and ops map (R32); `ratification`'s factory, which creates it (its R43).
 - `instance-setup`: `instanceSetupOf` and its `start`, `instanceSetupOps` (R1, R5).
 - `scheduler`: `alarm`, `onAlarm`, `start` (R3, R4).
 - `record-core`: `recordOf` with the evidence bucket and prefix, `RECORD_SCHEMA` first (R2, R3).
@@ -94,6 +95,8 @@ The instance's composition root. It builds every module on one Durable Object's 
 
 **T41's composition** (T41; N820; `draft-T41-investigation.md` §3.6; K2405, K2417, K2418)
 - **R30** *(not yet met: T41)* registers the four new factories, their migrations and counts.
+- **R31** *(not yet met: T41)* (T40; N812, N799; T40-26's share) The composition root builds `ai-use` on the object's storage at its place in R2's order, runs its migration as R3 says, declares its tables through `record-core` (`ai-use` R7; K23), starts it, hands that one instance to every module that reads it, and spreads its ops map into R5's route map, so each of its ops reaches its handler through `control-plane`'s door. It starts `publication` so that its registration with `membership.registerHandleGuard` (`publication` R76, `membership` R125) is held before the first request.
+- **R32** *(not yet met: T41)* (N823; K2438) The composition root composes `publish-schedule` at its place in R2's order (directly after `publication`): the one instance `ratification`'s factory creates (`ratification` R43), migrated as R3 says (`scheduled_editions`, `publish-schedule` R10), handed to `scheduler` (its R22), to `queue` for `queue-producers` R37 and to `case-authoring` (its R58); its ops map (`publishatmove`, `publishatcancel`, `publishschedule`) is spread into R5's route map.
 
 ### Satisfies
 

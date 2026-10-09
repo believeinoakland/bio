@@ -54,7 +54,7 @@ It is the only module marked `legacy` in `modules.json`.
 - L10: scheduler R22's `scheduled-publish` consumer re-pointed.
 - L11 (K2488, AI-USE #1 J3): plane and control-plane route `aiUseOps` (`ailimitset`, `ailimits`, `aiusage`, `exploreapprove`; `aiUseOf(ctx)` reads the zone from retrieval); notice-producers R16 reads `limitsReached` and `exploreAsksPending` by their stable `key`; answer-envelope's families gain C-143 (`AI_USE_CHECKS`).
 - L11 (K2486): op-declarations declares a route for hypotheses R18's set-aside (`hypothesissetaside`, beside R43's `hypothesistakeup`, `noteshare`, `noteunshare`, `shares`); UX-DESIGN NOTICE: `ai.refused.explorenotenabled` names a condition ai-use R3 never refuses on.
-- L11: the member's act that calls reading-pipeline R29 (an `op=transcribe` on a held capture: op-declarations declares it, control-plane routes it, the plane composes `read`'s `transcription` from credentials `accountFor`, ai-use `useCheck` and the AI path; K2464); queue-producers R37; notice-producers R1 (R17's items) and R2/R3 recipients re-read; queue R1's classes and sentences for `milestone-overdue`, `milestone-reminder`, `project-quiet`, `review-comment-left-out`; setup-words R1, R2; admission R19; control-plane R56; op-declarations' DEC-188 (8) retirements; affordances R50's grades (op-grades' since K1974); plane's T40-26 share and publish-schedule composition.
+- L11 (applied, K2484): queue-producers R37; notice-producers R1 (R17's items) and R2/R3 recipients re-read; queue R1's classes and sentences for `milestone-overdue`, `milestone-reminder`, `project-quiet`, `review-comment-left-out`; setup-words R1, R2; admission R19; control-plane R56; op-declarations' DEC-188 (8) retirements; affordances R50's grades (op-grades' since K1974); plane's T40-26 share and publish-schedule composition.
 
 ## Entries
 
@@ -192,6 +192,7 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 | N650 | a dependency not yet built: LAW L5's pack path |
 | N666 | Bob's (DEC-151): after the first public release |
 | N747 | Bob's (UX; `legacy-ui` frozen) |
+| `op=transcribe` (reading-pipeline R29's caller; was L11's owed text) | a dependency not yet built: the AI path and extraction's write (N832, K2484) |
 | stamp of T41's L3+ rows | the order: promotion (L2) runs before they exist; T42's stamp |
 
 **Newly brought in (were out or new):** N820 (all of §3), N815 (explorer), N748 (as N820), N822 (D54 and its users), N823 (publication split), N821 (front doors, D52/D53 routes, similarity at the door via `stepsLike`), D59's regrade (§4.2 (7), planned in T41, not T42), DEC-188's owed work (U145), and T40's 29 unstarted entries.
