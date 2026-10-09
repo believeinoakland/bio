@@ -1,6 +1,6 @@
 # project-roster (T41)
 
-**Status** · session_01EMvdfBAQoP23gwygdrcexb · depth 2 · WAITING ON BOB (J1) · handled B0
+**Status** · session_01EMvdfBAQoP23gwygdrcexb · depth 2 · WAITING ON BOB (J1) · handled B2
 
 ## Work (kept current; not a mailbox entry)
 
