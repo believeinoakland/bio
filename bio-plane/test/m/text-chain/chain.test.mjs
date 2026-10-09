@@ -15,6 +15,7 @@ const ok = {
   layer: { step: "layer" }, pixels: { step: "pixels" }, ocr: { step: "ocr", engine: "eng", version: "1" },
   ai: { step: "ai", engine: "model" }, attested: { step: "attested", member: "m1", at: "2026-01-01" },
   convert: { step: "convert", engine: "host-export", format: "odt" }, typed: { step: "typed", member: "m2" },
+  ai_transcription: { step: "ai_transcription", engine: "vision-model", version: "3" },
 };
 const isRefusal = (r, code) => {
   assert.equal(r && r.ok, false, `expected a refusal ${code}, got ${JSON.stringify(r)}`);
@@ -29,7 +30,7 @@ const O = (cap, extra = {}) => ({ step: "ocr", engine: "eng", cap, ...extra });
 const pages = (ps, part) => (part === undefined ? { kind: "pages", pages: ps } : { kind: "pages", pages: ps, part });
 
 test("R1: every step kind has role derivation|verification and a label; only attested verifies", () => {
-  assert.deepEqual(KINDS.sort(), ["ai", "attested", "convert", "layer", "ocr", "pixels", "typed"]);
+  assert.deepEqual(KINDS.sort(), ["ai", "ai_transcription", "attested", "convert", "layer", "ocr", "pixels", "typed"]);
   for (const k of KINDS) {
     assert.ok(["derivation", "verification"].includes(STEP_KINDS[k].role), k);
     assert.equal(typeof STEP_KINDS[k].label, "string");
@@ -53,17 +54,21 @@ test("R2: every kind declares tier: an integer, \"step\" or null", () => {
   assert.equal(STEP_KINDS.layer.tier, "step");
   assert.equal(STEP_KINDS.pixels.tier, 3);
   assert.equal(STEP_KINDS.ocr.tier, 3);
+  assert.equal(STEP_KINDS.ai_transcription.tier, 4);
   for (const k of ["ai", "attested", "typed", "convert"]) assert.equal(STEP_KINDS[k].tier, null);
 });
 
-test("R3: convert and typed declare names, unmeasured and letter; no other kind declares them", () => {
+test("R3: convert, typed and ai_transcription (R104) declare names, unmeasured and letter; no other kind declares them", () => {
   assert.deepEqual(STEP_KINDS.convert.names, ["engine", "format"]);
   assert.equal(STEP_KINDS.convert.unmeasured, "undetermined");
   assert.equal(STEP_KINDS.convert.letter, "calibrated");
   assert.deepEqual(STEP_KINDS.typed.names, ["member"]);
   assert.equal(STEP_KINDS.typed.unmeasured, "undetermined");
   assert.equal(STEP_KINDS.typed.letter, "never");
-  for (const k of KINDS.filter((x) => x !== "convert" && x !== "typed"))
+  assert.deepEqual(STEP_KINDS.ai_transcription.names, ["engine"]);
+  assert.equal(STEP_KINDS.ai_transcription.unmeasured, "undetermined");
+  assert.equal(STEP_KINDS.ai_transcription.letter, "calibrated");
+  for (const k of KINDS.filter((x) => !["convert", "typed", "ai_transcription"].includes(x)))
     for (const f of ["names", "unmeasured", "letter"]) assert.equal(STEP_KINDS[k][f], undefined, `${k}.${f}`);
   /* Plain object, never mutated by use. */
   const before = JSON.stringify(STEP_KINDS);
@@ -95,7 +100,7 @@ test("R7: a non-object step refuses STEP_SHAPE; an unknown .step refuses STEP_UN
 test("R8: ocr/ai without a non-empty engine, or a names-declaring kind missing a named field, refuses STEP_UNNAMED", () => {
   for (const k of ["ocr", "ai"])
     for (const engine of [undefined, null, "", 5, {}]) isRefusal(checkChain([{ step: k, engine }]), "TEXT_CHAIN_STEP_UNNAMED");
-  for (const k of ["convert", "typed"])
+  for (const k of ["convert", "typed", "ai_transcription"])
     for (const f of STEP_KINDS[k].names)
       for (const v of [undefined, "", "  ", 3]) isRefusal(checkChain([{ ...ok[k], [f]: v }]), "TEXT_CHAIN_STEP_UNNAMED");
   /* Kinds that name nothing need nothing. */
@@ -110,12 +115,14 @@ test("R9: a present calibration that is not a non-empty string refuses CAL_REF; 
   }
 });
 
-test("R10: a calibrated-letter kind (convert) with a cap and no calibration refuses LETTER_UNCALIBRATED", () => {
-  for (const cap of [...BASIS_GRADES, "Z"]) {
-    isRefusal(checkChain([{ ...ok.convert, cap }]), "TEXT_CHAIN_LETTER_UNCALIBRATED");
-    assert.equal(checkChain([{ ...ok.convert, cap, calibration: "cal-1" }]), null);
+test("R10: a calibrated-letter kind (convert, ai_transcription) with a cap and no calibration refuses LETTER_UNCALIBRATED", () => {
+  for (const k of ["convert", "ai_transcription"]) {
+    for (const cap of [...BASIS_GRADES, "Z"]) {
+      isRefusal(checkChain([{ ...ok[k], cap }]), "TEXT_CHAIN_LETTER_UNCALIBRATED");
+      assert.equal(checkChain([{ ...ok[k], cap, calibration: "cal-1" }]), null);
+    }
+    assert.equal(checkChain([{ ...ok[k], cap: null }]), null);
   }
-  assert.equal(checkChain([{ ...ok.convert, cap: null }]), null);
   /* Other kinds may carry a cap without a calibration. */
   for (const k of ["layer", "pixels", "ocr", "ai"]) assert.equal(checkChain([{ ...ok[k], cap: "C" }]), null);
 });
@@ -436,11 +443,11 @@ test("R81: chainKindFor answers the one kind covering a page, mixed when parts o
   assert.equal(terminalStep(mergedChain([{ chain: [L(null)], pages: [0] }, { chain: [ok.pixels, O("C")], pages: [0] }])), "ocr");
 });
 
-test("R91: the machine readings are the kinds declaring machine: true, ocr and ai only, and MACHINE_READ_KINDS lists them in STEP_KINDS order", () => {
+test("R91: the machine readings are the kinds declaring machine: true, ocr, ai and ai_transcription only, and MACHINE_READ_KINDS lists them in STEP_KINDS order", () => {
   const kinds = Object.keys(STEP_KINDS);
   for (const k of kinds) assert.ok([true, undefined].includes(STEP_KINDS[k].machine), k);
-  assert.deepEqual(kinds.filter((k) => STEP_KINDS[k].machine === true), ["ocr", "ai"]);
-  assert.deepEqual(MACHINE_READ_KINDS, ["ocr", "ai"]);
+  assert.deepEqual(kinds.filter((k) => STEP_KINDS[k].machine === true), ["ocr", "ai", "ai_transcription"]);
+  assert.deepEqual(MACHINE_READ_KINDS, ["ocr", "ai", "ai_transcription"]);
   assert.ok(Object.isFrozen(MACHINE_READ_KINDS));
   assert.throws(() => { "use strict"; MACHINE_READ_KINDS.push("layer"); });
   /* Every one is a derivation: an engine read or rewrote the text. */
