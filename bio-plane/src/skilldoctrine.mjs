@@ -89,6 +89,9 @@ import { SUGGEST_LEVELS, SUGGEST_CHECKS } from "./run-productions/index.mjs";
 import { BASIS_ROLES, EARNED_GRADE_SOURCES, PROPOSAL_STATES } from "./record-grammar/index.mjs";
 import { BASIS_VERSION_CHECKS, CONCLUDE_ACT_CHECKS } from "./basis-versions/index.mjs";
 import { INQUIRY_GRAMMAR_CHECKS } from "./inquiry-grammar/index.mjs";
+/* The guide check and its one registration are reading-guides' (its R4; K2472, K31's pattern): this module fills the
+   registration with its R16 at load, and runs the check again at every render of a guide (R40). */
+import { checkGuide, registerConductCheck } from "./reading-guides/index.mjs";
 /* The run's rows and the one deployment order are run-rules' (its R8, R9, R11;
    N156, K617): read from it, never copied. */
 import { AI_RUN_CHECKS, DEPLOYMENT_SEQUENCE, DEPLOYED_MODES, DRAFT_MODE, GATE_ADDRESS, SEQUENCING_SOURCE,
@@ -222,6 +225,11 @@ export function controlFlowAuthority(text) {
   const s = typeof text === "string" ? text : "";
   return CONTROL_FLOW_AUTHORITY.filter((p) => p.re.test(s)).map((p) => p.name);
 }
+
+/** R40 (K2472): R16 registered, once at load, as reading-guides' conduct check (its R4), so every draft, review,
+ *  adoption and offer of a guide is scanned by the same function as this module's doctrine. Its answer is kept: a
+ *  second registration in one process is refused there (`PROVIDER_DECLARED`), and R40's render runs R16 itself anyway. */
+export const CONDUCT_CHECK_REGISTRATION = Object.freeze(registerConductCheck(controlFlowAuthority, "skills"));
 
 /* =========================================================================
  * THE CLAUSES
@@ -1861,7 +1869,7 @@ export function accountCheckLayer() {
    here, and an item either finds throws, naming the guide and the item, so nothing renders. The guides arrive from the
    run's caller, which reads them for the viewer; this pack reads no viewer. */
 
-/** The text fields of a guide's item the conduct checks read (`reading-guides`' item `{label, look_for, where?}`). */
+/** The text fields of a guide's item R16 reads here: the guide check's own (`reading-guides` R4, `ITEM_FIELDS`). */
 const GUIDE_ITEM_FIELDS = Object.freeze(["label", "look_for", "where"]);
 
 /** THE `reading_guide` LAYER over the guides the caller passed (R40): a stated absence in R9's form with none; with
@@ -1881,9 +1889,17 @@ export function readingGuideLayer(answers) {
     load_when: "the run reads a document of a kind a guide below is for",
     sourcing: "guide",
     body: {
-      guides: guides.map(({ guide, origin }) => {
+      guides: guides.map(({ guide, origin, kind }) => {
         const name = typeof guide.id === "string" ? guide.id : "an unnamed guide";
-        const items = Array.isArray(guide.items) ? guide.items : [];
+        /* R4 first, the guide check as reading-guides holds it (its closed lists, the look-for openers, the registered
+           R16); its refusal names the item, and nothing renders. */
+        const checked = checkGuide(guide.items);
+        if (!checked || checked.ok !== true)
+          throw new Error(`the reading guide ${name} item ${Number.isInteger(checked?.item) ? checked.item + 1 : "?"} `
+            + `(${JSON.stringify(checked?.label ?? null)}) carries a clause of conduct or is not what to look for: `
+            + `${checked?.reason ?? "the guide check refused it"}: ${checked?.detail ?? ""}`);
+        const items = checked.items;
+        /* R16 again, here, whatever is registered (R40). */
         items.forEach((item, i) => {
           const texts = GUIDE_ITEM_FIELDS.map((f) => item?.[f]).filter((t) => typeof t === "string");
           const found = [...new Set(texts.flatMap(controlFlowAuthority))];
@@ -1891,7 +1907,7 @@ export function readingGuideLayer(answers) {
             throw new Error(`the reading guide ${name} item ${i + 1} (${JSON.stringify(item?.label ?? null)}) carries a `
               + `clause of conduct (${found.join("; ")}): a guide says what to look for, never how the AI may behave`);
         });
-        return { kind: guide.kind ?? null, guide: name, origin: origin ?? guide.origin ?? null, items };
+        return { kind: guide.kind ?? kind ?? null, guide: name, origin: origin ?? guide.origin ?? null, items };
       }),
       note: "a guide is WHAT TO LOOK FOR in one kind of document, never how the AI may behave: the AI's rules of conduct "
         + "come only from the rules Bob approves, no guide can loosen them, and code checks that none does.",

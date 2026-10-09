@@ -3,11 +3,15 @@
  * account and its check. Each with a negative control (K874). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+import { join } from "node:path";
 import { renderPack, packVersion, SOURCING } from "../../../src/skillpack.mjs";
 import { INVESTIGATION_SOURCE, INTAKE_QUESTIONS, INTAKE_SENTENCE, ENQUIRE_CLAUSES, EXPLORE_CLAUSES, READING_CLAUSES,
          CASE_ACCOUNT_CLAUSES, ACCOUNT_CHECK_CLAUSES, enquireLayer, exploreLayer, readingLayer, caseAccountLayer,
-         accountCheckLayer, readingGuideLayer, judgementLayers, controlFlowAuthority } from "../../../src/skilldoctrine.mjs";
-import { read, foundIn, section, canonDocuments, published } from "./fixture.mjs";
+         accountCheckLayer, readingGuideLayer, judgementLayers, controlFlowAuthority, CONDUCT_CHECK_REGISTRATION }
+  from "../../../src/skilldoctrine.mjs";
+import { checkGuide, registerConductCheck, conductCheckHolder } from "../../../src/reading-guides/index.mjs";
+import { ROOT, read, foundIn, section, canonDocuments, published } from "./fixture.mjs";
 
 const CANON = () => read(INVESTIGATION_SOURCE);
 /* "§6" is the section headed "6. AI use in an investigation": the number and its dot open the heading. */
@@ -19,7 +23,7 @@ const LAYERS = ["reading_guide", "enquire", "explore", "reading", "case_account"
 const guide = (items, over = {}) => ({ guide: { id: "GUD-1", kind: "construction_contract", origin: "group",
   items, state: "group", author: "m1" , ...over }, origin: "group" });
 const ITEMS = [
-  { label: "Contract time", look_for: "Look for the number of days allowed to complete the work", where: "the agreement" },
+  { label: "Contract time", look_for: "Look for the number of days given to complete the work", where: "the agreement" },
   { label: "Damages", look_for: "Note whether liquidated damages are stated per day" },
   { label: "Change orders", look_for: "Check whether the change-order clause names who approves" },
 ];
@@ -144,7 +148,9 @@ test("R40 the reading_guide layer: with no guide passed, a stated absence in R9'
   assert.equal(layer.sourcing, "guide");
   assert.equal(SOURCING.reading_guide, "guide");
   assert.deepEqual(layer.body.guides, [{ kind: "construction_contract", guide: "GUD-1", origin: "group", items: ITEMS }]);
-  assert.equal(layer.body.guides[0].items, ITEMS, "the items, unchanged");
+  assert.deepEqual(layer.body.guides[0].items, checkGuide(ITEMS).items, "the items as the guide check passed them");
+  assert.deepEqual(readingGuideLayer([guide(ITEMS.map((it) => ({ ...it, label: `  ${it.label} ` })))]).body.guides[0].items,
+    ITEMS, "trimmed by the check, nothing else");
   for (const leaked of ["state", "author"]) assert.ok(!(leaked in layer.body.guides[0]), `the items only: no ${leaked}`);
   assert.ok(pack.resident.disclosable.some((d) => d.layer === "reading_guide" && d.load_when === layer.load_when));
   /* R11: a run under a guide ran under other instructions. */
@@ -165,6 +171,35 @@ test("R40 R16 a guide carries no clause of conduct: an item R16 finds throws, na
   assert.doesNotThrow(() => renderPack(published(), { reading_guides: [guide(ITEMS)] }));
 });
 
+test("R40 reading-guides' R4 runs at every render: an item its closed lists refuse, or one that is not a look-for statement, throws naming the guide and the item, though R16 finds nothing in it", () => {
+  for (const bad of [{ label: "Bond", look_for: "Look for the bond the assistant attached" },
+                     { label: "Bond", look_for: "Look for whatever the rule permits" },
+                     { label: "Bond", look_for: "Look for op=fetch in the schedule" },
+                     { label: "Bond", look_for: "The performance bond amount" }]) {
+    assert.deepEqual(controlFlowAuthority(bad.look_for), [], "R16 alone would pass it");
+    const items = [ITEMS[0], bad];
+    assert.equal(checkGuide(items).ok, false, "R4 refuses it");
+    assert.throws(() => readingGuideLayer([guide(items)]), /reading guide GUD-1 item 2 \("Bond"\)/);
+    assert.throws(() => renderPack(published(), { reading_guides: [guide(items)] }), /GUD-1 item 2/);
+  }
+  assert.throws(() => readingGuideLayer([guide([])]), /reading guide GUD-1/, "a guide with no items is no guide");
+});
+
+test("R40 K2472 skills registers R16 as reading-guides' conduct check once, at load: the check then refuses a control-flow item no closed list names, and a second registration is refused", () => {
+  assert.deepEqual({ ...CONDUCT_CHECK_REGISTRATION }, { ok: true, module: "skills" });
+  assert.equal(conductCheckHolder(), "skills");
+  const loop = [{ label: "Bond", look_for: "Look for the bond, and keep going until you are satisfied" }];
+  assert.ok(controlFlowAuthority(loop[0].look_for).length > 0);
+  const r = checkGuide(loop);
+  assert.equal(r.ok, false);
+  assert.equal(r.reason, "GUIDE_CARRIES_CONDUCT");
+  assert.equal(r.found.list, "registered", "refused by the registered R16, not a closed list");
+  assert.deepEqual(r.found.patterns, controlFlowAuthority(loop[0].look_for));
+  assert.equal(registerConductCheck(() => [], "other").reason, "PROVIDER_DECLARED", "one registration per process");
+  /* The control: a clean item passes the registered check. */
+  assert.equal(checkGuide([ITEMS[1]]).ok, true);
+});
+
 test("R16 R24 R26 R22 no string of the investigation's layers carries control-flow authority or names a place; none reads a viewer", () => {
   const pack = renderPack(published(), { reading_guides: [guide(ITEMS)] });
   for (const k of LAYERS) {
@@ -178,4 +213,21 @@ test("R16 R24 R26 R22 no string of the investigation's layers carries control-fl
   for (const extra of [{ viewer: "m1" }, { project: "PRJ-1" }, { exploring: "yes" }])
     assert.equal(renderPack(published(extra)).version, v);
   assert.equal(packVersion(renderPack(published())), v);
+});
+
+test("R40 R16 runs again at render whatever reading-guides' check answers: with checkGuide made to pass everything, a control-flow item still throws, naming the guide and the item", () => {
+  const rg = join(ROOT, "bio-plane/src/reading-guides/index.mjs");
+  const run = (look) => execFileSync(process.execPath, ["--experimental-test-module-mocks", "--no-warnings",
+    "--input-type=module", "-e", `
+    import { mock } from "node:test";
+    const real = { ...(await import(${JSON.stringify(rg + "?real")})) };
+    mock.module(${JSON.stringify("file://" + rg)}, { namedExports: { ...real,
+      checkGuide: (items) => ({ ok: true, items }), registerConductCheck: () => ({ ok: true, module: "skills" }) } });
+    const { renderPack } = await import(${JSON.stringify("file://" + join(ROOT, "bio-plane/src/skillpack.mjs"))});
+    const { published } = await import(${JSON.stringify("file://" + join(ROOT, "bio-plane/test/m/skills/fixture.mjs"))});
+    const guides = [{ guide: { id: "GUD-9", kind: "k", items: [{ label: "Bond", look_for: ${JSON.stringify(look)} }] }, origin: "group" }];
+    try { renderPack(published(), { reading_guides: guides }); console.log("RENDERED"); } catch (e) { console.log("THREW " + e.message); }`],
+    { encoding: "utf8" });
+  assert.match(run("Look for the bond, and repeat until it is found"), /^THREW the reading guide GUD-9 item 1 \("Bond"\) carries a clause of conduct \(a loop written as an instruction/m);
+  assert.match(run("Look for the bond amount"), /^RENDERED/m, "the control: a clean item renders");
 });
