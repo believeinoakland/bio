@@ -11,3 +11,7 @@ Reading set (mechanics §17): measured at this START: 368 KB by `build/plan/read
 Merge order in L2: membership, credentials, promotion last (it stamps the rows).
 Inherited reds: the plan's rule 4 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · CHANGE
+
+K2404: membership gains R127 joinedParticipants(projectId) (build/requirements/membership.md on tranche/T40; merge tranche/T40 into your branch). CREDENTIALS #10 codes against it in this layer (R54 sole-member rule, R59 since), so build it with its stated shape early, record the join instant in the joining act from now on (null for rows joined before), and test it explicitly with a negative control (a leaving participant listed; an invited one not; an unknown project []). It joins your T40-M entry.
