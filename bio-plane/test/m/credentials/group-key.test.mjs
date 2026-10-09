@@ -47,15 +47,17 @@ test("R33 groupKeySet, groupKeyRemove, groupKeySwitch: active administrators onl
 
 test("R33 R34 the key held: off when first set and off by default; a replacement keeps the switch; removal switches it off; each act recorded with its administrator and instant, never the key", async () => {
   const w = await groupWorld();
+  const DEFAULTS = { ask: true, draft: true, run: true, standing: false, explore: "no", suggestions: false };
+  const OFF = { ask: false, draft: false, run: false, standing: false, explore: "no", suggestions: false };
   assert.deepEqual(w.c.groupKeyState({ viewer: "admin" }),
-    { ok: true, held: false, on: false, set_at: null, by: null, suggestions: false, standing: false }, "nothing held by default");
+    { ok: true, held: false, on: false, set_at: null, by: null, suggestions: false, standing: false, uses: DEFAULTS }, "nothing held by default");
   /* switched on before any key: still off */
   assert.deepEqual(w.c.groupKeySwitch({ on: true, by: "admin" }), { ok: true, on: false });
   const s = await w.c.groupKeySet({ key: KEY, by: "second" });
   assert.deepEqual(Object.keys(s).sort(), ["ok", "set_at"]);
   assert.match(s.set_at, /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/);
   assert.deepEqual(w.c.groupKeyState({ viewer: "second" }),
-    { ok: true, held: true, on: false, set_at: s.set_at, by: "second", suggestions: false, standing: false }, "off when first set");
+    { ok: true, held: true, on: false, set_at: s.set_at, by: "second", suggestions: false, standing: false, uses: DEFAULTS }, "off when first set");
   assert.deepEqual(w.c.groupKeySwitch({ on: true, by: "member:second" }), { ok: true, on: true });
   assert.deepEqual(w.c.groupKeySwitch({ on: "yes", by: "admin" }), { ok: true, on: false }, "only `true` is on");
   w.c.groupKeySwitch({ on: true, by: "admin" });
@@ -68,7 +70,8 @@ test("R33 R34 the key held: off when first set and off by default; a replacement
   assert.equal(w.row(`SELECT COUNT(*) AS n FROM group_key`).n, 1);
   assert.deepEqual(w.c.groupKeyRemove({ by: "second" }), { ok: true, removed: true });
   assert.deepEqual(w.c.groupKeyState({ viewer: "admin" }),
-    { ok: true, held: false, on: false, set_at: null, by: null, suggestions: false, standing: false });
+    { ok: true, held: false, on: false, set_at: null, by: null, suggestions: false, standing: false, uses: OFF },
+    "R37 (T40): removal turns off every R55 switch of the group key");
   assert.deepEqual(w.c.groupKeyRemove({ by: "admin" }), { ok: true, removed: false });
   /* set again after removal: off again */
   await w.c.groupKeySet({ key: KEY, by: "admin" });
@@ -111,12 +114,13 @@ test("R34 sealed at rest under the copy: in no table, answer, route, log or erro
     assert.ok(!dump.includes(KEY) && !dump.includes(digest) && !dump.includes(Buffer.from(KEY).toString("base64")), "in no table");
     assert.ok(!said.includes(KEY) && !said.includes(digest), "in no answer, route, log or error");
     assert.deepEqual(Object.keys(w.row(`SELECT * FROM group_key`)).sort(),
-      ["id", "is_on", "iv", "sealed", "set_at", "set_by", "standing", "suggestions"]);
+      ["explore", "id", "is_on", "iv", "sealed", "set_at", "set_by", "standing", "suggestions", "use_ask", "use_draft", "use_run"]);
     for (const t of ["group_key", "group_key_acts", "group_key_notices"])
       assert.equal(w.core.declared.get(t).classes.export, "never", t);
     /* the key opens for a served member's act only (the routes above removed it, so it is set and switched on again) */
     await w.c.groupKeySet({ key: KEY, by: "admin" });
     w.c.groupKeySwitch({ on: true, by: "admin" });
+    w.c.accountUsesSet({ owner: "group", switch: "ask", on: true, by: "admin" });   /* R37 (T40): the removal turned it off */
     w.c.groupKeyNoticeSeen({ member: "ann", by: "ann" });
     assert.deepEqual(await w.c.accountFor({ member: "ann", act: ask("ann") }), { ok: true, kind: "apikey", level: "group", key: KEY });
     /* under the copy's own seal secret: another opens nothing */
@@ -138,7 +142,8 @@ test("R34 R37 groupKeyState: an active administrator (the founder included) read
   const before = w.snapshot();
   for (const viewer of ["admin", "second", "member:second"]) {
     const s = w.c.groupKeyState({ viewer });
-    assert.deepEqual({ ...s, set_at: null }, { ok: true, held: true, on: true, set_at: null, by: "admin", suggestions: true, standing: false }, viewer);
+    assert.deepEqual({ ...s, set_at: null }, { ok: true, held: true, on: true, set_at: null, by: "admin", suggestions: true, standing: false,
+      uses: { ask: true, draft: true, run: true, standing: false, explore: "no", suggestions: true } }, viewer);
   }
   for (const viewer of ["ann", "member:bob"]) assert.deepEqual(w.c.groupKeyState({ viewer }), { ok: true, on: true }, viewer);
   for (const viewer of ["dee", "cal", "ghost", "class:admin", "class:member", "token:ai", null, undefined, ""])
@@ -151,6 +156,8 @@ test("R34 R37 groupKeyState: an active administrator (the founder included) read
 test("R35 accountFor: the member's own reference when held ({kind, level: member, key}); else the group key when held and on ({kind: apikey, level: group, key}) for an active member who has read its notice; else NO_ACCOUNT; any act but the member's own NOT_YOUR_ACCOUNT; it writes nothing", async () => {
   const w = await groupWorld();
   await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ant-api03-ann", by: "ann" });
+  w.c.accountSwitchSet({ member: "ann", switch: "standing", on: true, by: "ann" });   /* R55: standing is off by default */
+  w.c.groupSwitchSet({ switch: "standing", on: true, by: "admin" });
   const before = w.snapshot();
   /* any act but the member's own ask, run or standing question */
   for (const act of [null, undefined, {}, "ask", { kind: "ask" }, { kind: "ask", member: "bob" }, { kind: "export", member: "ann" },
@@ -233,7 +240,8 @@ test("R37 groupSwitchSet: the group key's own suggestions and standing, off by d
   assert.equal(w.snapshot(), before, "no refusal writes");
   assert.deepEqual(w.c.groupSwitchSet({ switch: "suggestions", on: true, by: "second" }), { ok: true, switch: "suggestions", on: true });
   assert.deepEqual(g(), [true, false]);
-  assert.deepEqual(w.c.groupSwitchSet({ switch: "standing", on: "yes", by: "admin" }), { ok: true, switch: "standing", on: false });
+  assert.equal(w.c.groupSwitchSet({ switch: "standing", on: "yes", by: "admin" }).reason, "SWITCH_VALUE_INVALID", "T40: R55's values");
+  assert.deepEqual(w.c.groupSwitchSet({ switch: "standing", on: false, by: "admin" }), { ok: true, switch: "standing", on: false });
   w.c.groupSwitchSet({ switch: "standing", on: true, by: "admin" });
   assert.deepEqual(g(), [true, true]);
   assert.deepEqual(acts(w).slice(-3), [{ act: "switch:suggestions", detail: "on", actor: "second" },

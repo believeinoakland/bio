@@ -128,7 +128,12 @@ CREATE TABLE IF NOT EXISTS account_references (
   iv          TEXT NOT NULL,
   set_at      TEXT NOT NULL,
   suggestions INTEGER NOT NULL DEFAULT 0,
-  standing    INTEGER NOT NULL DEFAULT 0
+  standing    INTEGER NOT NULL DEFAULT 0,
+  -- R55 (T40): the reference's switch for each other kind of use (on by default; explore 'no', 'ask' or 'yes')
+  use_ask     INTEGER NOT NULL DEFAULT 1,
+  use_draft   INTEGER NOT NULL DEFAULT 1,
+  use_run     INTEGER NOT NULL DEFAULT 1,
+  explore     TEXT NOT NULL DEFAULT 'no'
 );
 
 -- R29 (K1449): the group's own key for one keyed outside service, set by an administrator, sealed as above (salt
@@ -177,7 +182,13 @@ CREATE TABLE IF NOT EXISTS group_key (
   set_by      TEXT,
   set_at      TEXT,
   suggestions INTEGER NOT NULL DEFAULT 0,
-  standing    INTEGER NOT NULL DEFAULT 0
+  standing    INTEGER NOT NULL DEFAULT 0,
+  -- R55 (T40): the group key's switch for each other kind of use (on by default; explore 'no', 'ask' or 'yes'); all
+  -- off once the key is removed (R37)
+  use_ask     INTEGER NOT NULL DEFAULT 1,
+  use_draft   INTEGER NOT NULL DEFAULT 1,
+  use_run     INTEGER NOT NULL DEFAULT 1,
+  explore     TEXT NOT NULL DEFAULT 'no'
 );
 
 -- R33: each act on the group key, recorded with its administrator and instant, never the key: 'act' is 'set',
@@ -270,7 +281,9 @@ CREATE TABLE IF NOT EXISTS ai_keep_away (
   is_on  INTEGER NOT NULL,
   reason TEXT,
   set_by TEXT NOT NULL,
-  set_at TEXT NOT NULL
+  set_at TEXT NOT NULL,
+  -- R57 (T40): the JSON list of USE_KINDS the limit covers; NULL for every use
+  uses   TEXT
 );
 
 -- R43 (DEC-156; K1819): that a member is connected through their own Claude subscription, and since when. A FACT
@@ -278,8 +291,74 @@ CREATE TABLE IF NOT EXISTS ai_keep_away (
 -- member's own agent-runner container, where the Claude Code binary wrote it. Seen by its member alone.
 CREATE TABLE IF NOT EXISTS subscription_connections (
   member_id TEXT PRIMARY KEY,
-  since     TEXT NOT NULL
+  since     TEXT NOT NULL,
+  -- R55 (T40; N812): the sign-in's own switch for each kind of use, as an account's (use_ask, use_draft, use_run on and
+  -- standing, suggestions off by default; explore 'no', 'ask' or 'yes'). Cleared with the row.
+  use_ask     INTEGER NOT NULL DEFAULT 1,
+  use_draft   INTEGER NOT NULL DEFAULT 1,
+  use_run     INTEGER NOT NULL DEFAULT 1,
+  standing    INTEGER NOT NULL DEFAULT 0,
+  suggestions INTEGER NOT NULL DEFAULT 0,
+  explore     TEXT NOT NULL DEFAULT 'no'
 );
+
+-- R54 (T40; N812, D34, K2353): a project's one AI account, set by one of its owners: an Anthropic API key ('apikey',
+-- sealed as the group key is, under 'project:<id>'; no digest) or the acting owner's own sign-in ('signin', holding
+-- only 'member_id', no secret), serving only while that member is the project's only participant. Off when first
+-- set ('is_on'); R55's switches as an account's. 'set_by' and 'set_at' name the act that set it. Never exported, and
+-- deleted with its project (R30: cleared by a purge of the project, keyed by 'project_id'); a sign-in account is
+-- cleared when its member's sign-in is (R43, R16).
+CREATE TABLE IF NOT EXISTS project_accounts (
+  project_id  TEXT PRIMARY KEY,
+  kind        TEXT NOT NULL,
+  sealed      TEXT,
+  iv          TEXT,
+  member_id   TEXT,
+  is_on       INTEGER NOT NULL DEFAULT 0,
+  set_by      TEXT NOT NULL,
+  set_at      TEXT NOT NULL,
+  use_ask     INTEGER NOT NULL DEFAULT 1,
+  use_draft   INTEGER NOT NULL DEFAULT 1,
+  use_run     INTEGER NOT NULL DEFAULT 1,
+  standing    INTEGER NOT NULL DEFAULT 0,
+  suggestions INTEGER NOT NULL DEFAULT 0,
+  explore     TEXT NOT NULL DEFAULT 'no'
+);
+CREATE INDEX IF NOT EXISTS project_accounts_member ON project_accounts(member_id);
+
+-- R54: each act on a project's account, with its owner and instant, never the key: 'act' is 'setkey', 'setsignin',
+-- 'remove', 'switch' (detail 'on' or 'off') or 'uses:<switch>' (R55; detail its value). Deleted with its project.
+CREATE TABLE IF NOT EXISTS project_account_acts (
+  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
+  project_id TEXT NOT NULL,
+  act        TEXT NOT NULL,
+  detail     TEXT,
+  actor      TEXT NOT NULL,
+  at         TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS project_account_acts_project ON project_account_acts(project_id, seq);
+
+-- R58 (D311, K1478 (i)): the members who have read a project key's notice, each by their own act, per project.
+-- Deleted with its project.
+CREATE TABLE IF NOT EXISTS project_key_notices (
+  member_id  TEXT NOT NULL,
+  project_id TEXT NOT NULL,
+  seen_at    TEXT NOT NULL,
+  PRIMARY KEY (member_id, project_id)
+);
+
+-- R57 (D38 C; B3): a project's material limits, appended as R51's are, the latest the setting: 'uses' the JSON list
+-- of USE_KINDS it covers, NULL for all. Deleted with its project.
+CREATE TABLE IF NOT EXISTS project_keep_away (
+  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
+  project_id TEXT NOT NULL,
+  is_on      INTEGER NOT NULL,
+  uses       TEXT,
+  reason     TEXT,
+  set_by     TEXT NOT NULL,
+  set_at     TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS project_keep_away_project ON project_keep_away(project_id, seq);
 `;
 
 /* Columns a store written before they existed gains at boot: additive and nullable, never back-filled (D-85). */
@@ -292,6 +371,24 @@ export const CREDENTIALS_ADDITIVE_COLUMNS = [
   ["ai_grants", "kind", "TEXT"],
   ["ai_credentials", "expires_at", "TEXT"],
   ["keyed_services", "form", "TEXT"],
+  /* R55 (T40; N812): every account's switch for each kind of use. The defaults keep today's behaviour (ask, draft and
+     run on; explore 'no'); `standing` and `suggestions` keep their stored values (R25, R37). */
+  ["account_references", "use_ask", "INTEGER NOT NULL DEFAULT 1"],
+  ["account_references", "use_draft", "INTEGER NOT NULL DEFAULT 1"],
+  ["account_references", "use_run", "INTEGER NOT NULL DEFAULT 1"],
+  ["account_references", "explore", "TEXT NOT NULL DEFAULT 'no'"],
+  ["group_key", "use_ask", "INTEGER NOT NULL DEFAULT 1"],
+  ["group_key", "use_draft", "INTEGER NOT NULL DEFAULT 1"],
+  ["group_key", "use_run", "INTEGER NOT NULL DEFAULT 1"],
+  ["group_key", "explore", "TEXT NOT NULL DEFAULT 'no'"],
+  ["subscription_connections", "use_ask", "INTEGER NOT NULL DEFAULT 1"],
+  ["subscription_connections", "use_draft", "INTEGER NOT NULL DEFAULT 1"],
+  ["subscription_connections", "use_run", "INTEGER NOT NULL DEFAULT 1"],
+  ["subscription_connections", "standing", "INTEGER NOT NULL DEFAULT 0"],
+  ["subscription_connections", "suggestions", "INTEGER NOT NULL DEFAULT 0"],
+  ["subscription_connections", "explore", "TEXT NOT NULL DEFAULT 'no'"],
+  /* R57: the uses a group's material limit covers (JSON), NULL for every use, as a limit set before T40 */
+  ["ai_keep_away", "uses", "TEXT"],
 ];
 
 /* R18: every table this module owns, declared exempt from purge (identity and credentials outlive a reset corpus). */
@@ -321,3 +418,14 @@ export const CREDENTIALS_TABLES = Object.freeze([
   ["security_key", "never", "group"], ["recovery_codes", "never", "group"], ["recoveries", "never", "group"],
   ["subscription_connections", "never", "owner"], ["ai_keep_away", "admin-only", "group"],
 ].map(([name, exp, sight]) => Object.freeze({ name, ...CLASSES, export: exp, sight })));
+
+/* R30 (T40; N812): the tables of a project's account, its notices and its material limits, declared the same way
+   except that each is deleted with its project: `purge: "clear"` keyed to the project's bundle by `project_id` (record-
+   core R46), so a purge of the project, or the whole-store purge that removes every project, deletes them and nothing
+   else does (K2404's reading (3)). Never exported, read only through R54's and R57's services; the material limits
+   exported to administrators only, as R51's. */
+export const CREDENTIALS_PROJECT_TABLES = Object.freeze([
+  ["project_accounts", "never"], ["project_account_acts", "never"], ["project_key_notices", "never"],
+  ["project_keep_away", "admin-only"],
+].map(([name, exp]) => Object.freeze({ name, keys: Object.freeze(["project_id"]), ...CLASSES, purge: "clear", export: exp,
+  sight: "group" })));
