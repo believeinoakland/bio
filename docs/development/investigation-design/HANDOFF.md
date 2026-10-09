@@ -209,3 +209,7 @@ Numbered entries; BOB answers each in rulings (K) on `tranche/T<n>`. Decision st
     - Declared Bias: regrade is to be built (D59).
 - **Next, Bob's direction.** Once the canon is finalised, Bob will ask BOB for a thoroughly researched review of the entire canon for changes the investigation design needs. The same review is to set up a process that keeps one source of truth across canon, each fact held in the right canon document. The placement plan above is its first instance.
 - **Requirements deltas since the T41 draft.** H23–H39 list each one. Key items: D2's reading proposals; D3's one accepting act; D4's grade; D12; D16's objective as the measure (built `intent`); D19; D20; D21; D22; D52's front door; D53; D13; D14; D56–D63 publication; H39's later-found data updates dead-end steps.
+
+## H41 · 2026-10-09 · Bob confirms the placement rule
+
+**Carries:** Bob: "Also agreed that the single source of truth review will result in the investigation design only saying what's new in that document with references to other canon documents." So the H40 placement plan is Bob's direction, not only this lane's proposal. `BIO_Investigation_v0_1.md` states only what is new and cites the other canon documents for the rest. The canon-wide single-source-of-truth review applies the same rule everywhere.
