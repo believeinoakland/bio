@@ -31,3 +31,29 @@ Completion, T41-19 (basis-versions), on tranche/T41 merged at 15ec91ff1f (K2479)
 **Tests and checks.** `node --test test/m/basis-versions/`: 136/136 (131 before, plus 5 new in `conclude-bias.test.mjs`, R48 with negative controls). Layer tests: none named in the manifest. format: 145 modules, 0 failures. architecture: 26 product files, 0 failures. coverage: 45 of 45 live ids, 0 failures. ownership: 7 files, 0 failures.
 
 Size (session_01JYn5FgkG5v9aRRBB74jGmo): test runs 14, module lines 3710
+
+## J3 · COMPLETE
+
+Completion after CHANGE B3 (inquiry-grammar merged, K2491), on tranche/T41 merged at 0f747c0f4b.
+
+**Applied.** R48 now runs on inquiry-grammar R18's one encoding (K2479).
+- **Write:** `appendConclusionEntry` writes the row's keys through `flattenBiasApplied`, plus `bias_statements_sha`.
+- **Read:** `conclusionRecordOf` reads the row through `readBiasApplied`.
+- **Shape check:** `biasAppliedFindings` judges the list, with `effects` `inference_refused` and `scrutiny_raised` and `checkId` C-25.35. Each departure is carried in the refusal's `findings` (code `BIAS_APPLICATION_MALFORMED`).
+- **Local copies removed:** my own shape checker, reader and caps are gone. The stored form is unchanged. One change: a statement holding an apostrophe is now refused too, as R18's check refuses it.
+
+`BAD_BIAS_APPLIED` is a `CONCLUDE_ACT_CHECKS` row, C-25.35, with its translation, carried with its code wherever it is answered, including the no-project arm. R16 still places it as `BAD_COMMENTARY`.
+
+**For BOB's text:** R35's list should gain C-25.35 (it reads C-25.1–C-25.34). The R35 test pins C-25.1–34 over the version catalogues only, so it holds; R48's test names C-25.35.
+
+**Still deferred:** the `biasNotInForce` bridge, until inquiry's CHANGE.
+
+**Final uses:** unchanged, as `modules.json` stands.
+
+**Tests and checks.**
+- basis-versions: 136/136.
+- inquiry-grammar 76/76; users of `conclusionRecordOf`: retrieval 168/168, queue 128/128, ratification 220/220, contradiction 120/120, project-stage 23/23.
+- queue-producers 77/80: its 3 reds are the inherited ones, unchanged by this job.
+- Process checks: format 0, architecture 0, coverage 45/45, ownership 0 failures.
+
+Size (session_01JYn5FgkG5v9aRRBB74jGmo): test runs 18, module lines 3711
