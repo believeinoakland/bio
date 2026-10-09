@@ -1,6 +1,6 @@
 # project-roster (T41)
 
-**Status** · session_01EMvdfBAQoP23gwygdrcexb · depth 2 · WORKING · handled B3
+**Status** · session_01EMvdfBAQoP23gwygdrcexb · depth 2 · COMPLETE · handled B3
 
 ## Work (kept current; not a mailbox entry)
 
