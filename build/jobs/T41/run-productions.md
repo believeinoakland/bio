@@ -107,3 +107,7 @@ B3 and B4 applied: R24's no-AI judgement is run-rules' checkPagesRead over crede
 ## J5 · COMPLETE
 
 B5 applied (K2496 (2)): R21's ceiling is leg-earning's earned capture ceiling for the document, route included (unreadable: null, never B); R23 checks against the same; tested route-bound C, control direct B, unreadable null. B3, B4 applied earlier (J4). run-productions 53/53; users' suites unchanged (none mine); format 0, coverage 24/24, ownership 0; architecture 5, exactly the steps, credentials and leg-earning imports awaiting their edges. Record updated; branch pushed.
+
+## J6 · COMPLETE
+
+B6 applied (K2502): extractPropose admits an investigate-mode run carrying a step, the step tied; an investigate run with no step (or an empty one) and a run of another mode with a step stay NOT_AN_EXTRACT_RUN, nothing written (tested both sides, real steps). run-productions 54/54; users' suites: control-plane r53-routes:67 (hypotheses' ops, K2502's rule 4 (15)) and the earlier answer-envelope/plane reds, none mine; format, architecture, coverage 24/24, ownership: 0. Record updated; branch pushed.
