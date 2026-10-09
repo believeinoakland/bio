@@ -136,6 +136,7 @@ CREATE TABLE IF NOT EXISTS inquiry_dated_waits (
   date         TEXT NOT NULL,
   set_by       TEXT,
   set_at       TEXT NOT NULL,
+  set_in       TEXT,
   ended        TEXT,
   ended_by     TEXT,
   ended_at     TEXT,
@@ -147,12 +148,27 @@ CREATE TABLE IF NOT EXISTS inquiry_dated_waits (
 );
 CREATE INDEX IF NOT EXISTS inquiry_dated_waits_bundle ON inquiry_dated_waits(bundle_id);
 CREATE INDEX IF NOT EXISTS inquiry_dated_waits_setter ON inquiry_dated_waits(set_by, date);
+
+-- R59 (T41; D13; K2480): the warning a promotion of a question carried for naming a person in no public role, one row
+-- per promotion that carried it, with the persons named (JSON [{entity_id, label}]) and her choice: 'went_on' (she saw it
+-- before the act and went on), 'warned_at_act' (told by the act's answer), 'pending' (a machine's proposal, told to the
+-- member who takes it up), and that member's row once she has. Nothing is refused. Keyed by bundle_id and cleared with
+-- its inquiry.
+CREATE TABLE IF NOT EXISTS inquiry_person_warnings (
+  warning_id   INTEGER PRIMARY KEY,
+  bundle_id    TEXT NOT NULL,
+  at           TEXT NOT NULL,
+  by           TEXT,
+  persons      TEXT NOT NULL,
+  choice       TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS inquiry_person_warnings_bundle ON inquiry_person_warnings(bundle_id, choice);
 `;
 
 /** R36: the tables this module declares to purge, each keyed to a bundle by its `bundle_id`. */
 export const INQUIRY_TABLES = ["inquiry_exclusions", "inquiry_migration_replays", "inquiry_member_agents",
                               "inquiry_contradiction_links", "inquiry_bundle_facts", "inquiry_findings",
-                              "inquiry_dated_waits"];
+                              "inquiry_dated_waits", "inquiry_person_warnings"];
 /** R36 (plan T33, Rules (6)): every table declared explicitly through `record-core.declareTable` (its R21), with the
  *  classes `declarePurge`'s default form gives (purge `clear`, expunge `none`, export `admin-only`, derive `stored`, no
  *  version chain), each with the sight of the bundle it names; `inquiry_findings` also keyed by the project its lens
@@ -173,7 +189,8 @@ const MOVED = ["inquiry_basis_count", "inquiry_superseded_by"];
 /** R36, R40 (N136's rest): the subject entity, held on `bundles` until T19, moved once by `moveSubjectEntity`. */
 export const SUBJECT_COLUMN = "inquiry_subject_entity";
 
-const ADDITIVE = [[BUNDLE_FACTS, SUBJECT_COLUMN, "TEXT"]];
+/* R54 (T41): `set_in`, the project the promoting act named, added to a dated-waits table created before T41. */
+const ADDITIVE = [[BUNDLE_FACTS, SUBJECT_COLUMN, "TEXT"], ["inquiry_dated_waits", "set_in", "TEXT"]];
 
 /** Create the tables, then add a column an earlier shape lacks (an absent table has no columns and was just created
  *  whole). Idempotent: every boot. The subject entity is moved off `bundles` on the boot that gives this module's table
