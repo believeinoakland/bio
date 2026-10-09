@@ -22,3 +22,9 @@
 - `format`: 145 modules, 0 failures · `architecture money-checks`: 0 failures · `coverage money-checks`: 17 of 17 live ids, 0 failures · `ownership money-checks tranche/T41`: 0 failures.
 
 Size (session_01QVjSp42ywbNdzv9ts1aHcs): test runs 2, module lines 1013
+
+## J1 · REPORT
+
+Two flaws in money-checks' own code, found while re-stating for D54; not fixed, since neither is in my requirements' text (yours to word, or to rule not needed):
+1. `switchDetector` (index.mjs:508) and `noticed` (:775) answer a caller at `EXISTENCE` with `NO_SUCH_PROJECT`; membership's Terms, R44 and R77 call for `PROJECT_SEEN_NOT_A_PARTICIPANT` (C-70.1, with `owners` for an administrator at a hidden project's `EXISTENCE`). Pre-dates D54. My tests assert `ok: false` and no contents, so they hold either way.
+2. `switchDetector` admits any viewer R43 admits, so an active administrator outside a discoverable project may switch a detector there, against membership R60 (an administrator's sight is never a position). money-checks R5 says only "a member's act per project".
