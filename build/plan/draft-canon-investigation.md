@@ -6,7 +6,7 @@
 
 **Incomplete sections** ·
 - §4 — the question explorer is designed and not offered to any member until D13 and D14 are ruled (K2401, K2405).
-- §7 — the study of both audiences (D42) is under way in the lane; its findings, and the intake interview (D19), are not yet here.
+- §7 — the study of both audiences (D42) is done (the lane's working document §5); its questions D52 and D53 are with Bob, and the intake interview (D19) is not yet here.
 - §8 — the open decisions, and the points where this draft meets existing canon without resolving it.
 
 **Contents**
@@ -58,7 +58,7 @@ Bob's model of the record, which places steps (2026-10-08): "Documents, content,
 
 **What a step is.** Bob, D32: "a step is the work done in pursuit of an answer to a question. Some steps might contribute to answering the question, others may be dead-ends - though we should recognize that even some dead-ends may still contribute to our overall understanding of the world. This understanding is recorded in the form of documents, content, connections, and constructs created while pursuing that step." And D35: "A step is work done in pursuit of an answer to a question - and to provide context for members, in the development of a question, to understand how to respond to findings, and so on." A step is done by a member or by the system: "A step may be defined to indicate that a member or AI are doing specific work (a step)" (D32).
 
-A step is the investigation's own work. It is not an action (an outward engagement, Action §3) and not a step of an action plan (Case Making §THE ACTION PLAN); a records request a step needs is started as an action. A step is never evidence and never a leg: what it produces may become evidence by a member's act (§4).
+A step is the investigation's own work. It is not an action (an outward engagement, Action §3) and not a step of an action plan (Case Making §THE ACTION PLAN); a records request a step needs is started as an action, and what comes back to it (a production, a refusal, silence) is the step's product. A step is never evidence and never a leg: what it produces may become evidence by a member's act (§4).
 
 **Where a step is taken, and who sees it.** Bob, D35: "No, a member recording a step doesn't choose which of these it serves. A step taken anywhere is seen wherever it is." Its place is fixed by where it is taken:
 - **On one or more questions:** seen wherever any of those questions is seen, its doer named by handle, naming no project.
@@ -140,8 +140,9 @@ Bob's model of the craft (2026-10-08, offered by him for confirmation and mapped
 ## 8. What stays open
 
 **Open with Bob, each to come with its background and options:**
-- **D13** — no investigation of a private person; a per-person breadth cap. The explorer's fence; exploring waits on it.
-- **D14** — test investigations with member-authored gold answers. The explorer's gate (§4); exploring waits on it.
+- **D13** — the private-person fence, restated after Bob's B8 (tracking people essential): put to Bob 2026-10-09, the lane recommending people through their part in a public matter, never a private life as subject, warned at the act, the system never exploring a person on its own. The explorer's fence; exploring waits on it.
+- **D14** — test investigations with member-authored gold answers. The explorer's gate (§4); exploring waits on it. Put to Bob 2026-10-09: Civicsmith's set gates release, a group may add its own (recommended).
+- **D52** — where a first message leads (six places, recommended). **D53** — a member's own matter with a public body (helped in her hidden project, recommended). **D54** — administrators' sight of hidden projects.
 - **D1** — what remains of the module list after D50 and D51: a library of reading guides, an AI planner (mode `enquire`), an AI reading flow (`READ_FLOW`).
 - **D2** — whether a run may read bounded text spans of one held document, returning only proposals (loosens IS §14b.1).
 - **D3** — one accepting act for every proposal, recording as proposed, edited or unaided.
@@ -162,8 +163,8 @@ Bob's model of the craft (2026-10-08, offered by him for confirmation and mapped
 
 **Existing canon this draft meets but does not resolve (for BOB):**
 - Capability Ladders §QUESTIONS L4 "Ruled" still says "there is no project account"; K2352/K2353 (and Ladders §2's cross-cutting rulings) allow one. §4 here follows K2353.
-- Membership §7.3 and §7.9: administrators see every project, hidden ones included (sight without authority). The lane's document says a hidden project is "invisible to everyone outside it"; §2 here defers to Membership and states no exception.
-- Capability Ladders §10 forbids "drift into ... case management"; the lane read that as excluding timesheets, Gantt charts and member scores, not a plan serving the investigation, and offered the reading to Bob, who has not confirmed it in words (D27 and D30 were ruled without it).
+- Administrators' sight of hidden projects: Membership §7.3/§7.9 and the built FULL sight give administrators contents; Bob's words of 2026-10-08 read otherwise; put to him as D54. §2 follows the answer.
+- Capability Ladders §10 forbids "drift into ... case management"; the lane read that as excluding timesheets, Gantt charts and member scores, not a plan serving the investigation, and offered the reading to Bob, and whose rulings D27 and D30, made on the page that offered it, settle it for this construct.
 - Action §4 rule 8 ("the plan holds no costs, assignees or hours") and Case Making §6b (a free resources list on an action-plan step) govern the action plan; D29 gives investigation steps a money cost. Not a contradiction of the text, but the "no budgets" line of 2026-09-29 is reversed for this plan only, per the lane's D29 framing.
 - K1463 makes the group's payments ordinary money facts with no "ours" mark; a step's stated cost is the group's working figure, not a money fact. Whether an actual payment is then recorded per K1463 and tied to the step is not ruled.
 - Case Making's and the queue's uses of "step" and "finding" (an action-plan step; a machine "finding" as a queue item) collide with this document's; D23 owes one member-facing meaning each.
