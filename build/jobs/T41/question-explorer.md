@@ -93,3 +93,12 @@ Size (session_01243u4joqb8ZpywX663LU1U): test runs 31, module lines 1049
 ## J6 · COMPLETE
 
 B7 applied: real ai-use (exploreAllowed's {ok, ask, label}, exploreAsk's what as the question list, estimate read as the account's owner); a member's own account is out of exploring's scope in ai-use, so R3's sign-in test runs through a project's sole-member sign-in account. 26/26; checks 0 but K1043's modules.json line. Record updated.
+
+## B8 applied (QUESTION-EXPLORER #1)
+
+- **B8 (K2499), run-productions merged.** Tranche merged. R13's read now goes through the real `run-productions` R24 `readPages` (factory `runProductionsOf`; the tests drive the real module over the real `credentials` and `steps`, with ai-runs', content's and extraction's stand-ins): a few pages at a time, its `pages` bound, its `checkPagesRead` "no AI" refusal (`AI_RUN_READ_NO_AI`), and how far it read (`read_to`, `next_from`, `PAGES_BOUND_REACHED`). Asked here first: the document is in the paying account's sight (R3) and no limit keeps it from `explore` (C-145.7). My own page counting and its table `explore_reads` are removed (one store of what a run read, run-productions' `run_pages_read`); C-145.8 `EXPLORE_PAGES_BOUND` is retired, its number kept, nothing mints it.
+- **Found (J7, REPORT):** run-productions R21's proposals (`extractPropose`, connections while reading) are refused `NOT_AN_EXTRACT_RUN` for any run not in mode `extract`, while an exploring run is `investigate` (my R3); `readPages` admits both. So an exploring run reads but proposes nothing while reading, and my R13's "what it proposes while reading is run-productions R21's" has nothing to name. Nothing to change here.
+- **Tests:** 26, pass 26, fail 0 (R13 re-stated over the real module). **Checks** (local copy with paths and final uses): format 0; architecture 8 files, 39 imports, 0; coverage 14 of 14; ownership 1, K1043's `modules.json` line.
+- Still through `deps` names only: `ai-runs` T41 and `capture-requests` R55's `step`.
+
+Size (session_01243u4joqb8ZpywX663LU1U): test runs 34, module lines 1014
