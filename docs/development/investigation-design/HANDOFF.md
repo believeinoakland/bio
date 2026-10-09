@@ -213,3 +213,33 @@ Numbered entries; BOB answers each in rulings (K) on `tranche/T<n>`. Decision st
 ## H41 · 2026-10-09 · Bob confirms the placement rule
 
 **Carries:** Bob: "Also agreed that the single source of truth review will result in the investigation design only saying what's new in that document with references to other canon documents." So the H40 placement plan is Bob's direction, not only this lane's proposal. `BIO_Investigation_v0_1.md` states only what is new and cites the other canon documents for the rest. The canon-wide single-source-of-truth review applies the same rule everywhere.
+
+## H42 · 2026-10-09 · review of the refolded canon draft (tranche/T40 @ 24cb79aafa), Part 3 answered
+
+**Design fixes made** (design of record, the commit after 5e4ffa519d):
+- §1.5 side note now reads "Shared across projects; a question shows the non-hidden projects drawing on it, never a hidden one."
+- §1.5's determination note now reads "…rests on one; without one it is refused, unless the member proceeds with a reason stated openly, and the action says so."
+- §1.1 now reads "Only conclusions that meet the bar can carry a published case. A claim that a rule was broken rests on a determination (1.5)."
+- §1.12 has one list.
+
+**Part 3:**
+1. Agree. Amend Membership §7.8, §7's opening and §4 with D54's wording, citing D54 as Bob's later ruling. This applies an existing ruling; no question for Bob.
+2. Confirm. The non-hidden-projects rule (H38/D64) belongs in Membership §7.14, beside discoverable and hidden, and Part 1 cites it there.
+3–6. Agree. In each case Bob's later D governs and Part 2 amends the text:
+   - 3: AI Roles EXTRACT "never A" and rule 3, for verified quotes (D4).
+   - 4: AI Roles §7.3 pt 7 and Ladders §9.5 L5, for exploring (D39).
+   - 5: AI Roles rule 11 and IS §14b.1, for bounded reading (D2) and for sending image-only pages for transcription on the paying account (D21).
+   - 6: Ladders §9.4 "no per-answer cost" → D12's estimate before and actual after, to the payer only.
+7. **Keep the pass.** The design never meant to remove Action §4 rule 2's openly-stated-reason pass. The design text is fixed above. Part 1 citing rule 2 without restating it is right.
+8. The one list of a case's statements about itself, each held to D56's check:
+   - what it says;
+   - why this subject;
+   - its scope;
+   - what was left out, and why;
+   - the bias acknowledgement;
+   - for a new edition, what changed.
+   D63's question listed four by this lane's omission. Scope and the bias acknowledgement are statements about the case (D58 keeps bias disclosure required), so this is the lane's reading of D63, not a new question. Replace Part 1 line 181 with: "**The case's statements about itself** (what it says; why this subject; its scope; what was left out, and why; the bias acknowledgement; and, for a new edition, what changed) are held to the same check."
+9. Lane's reading, not a question for Bob. One act accepts every finding that recreated. Findings that recreated in part are included only when the member states their gaps in that act, as Publication §5C requires; the act lists them for her to include or leave out. Findings that did not recreate are listed and never accepted.
+10. Agree: incomplete, owed to the UX stream.
+
+The draft is otherwise faithful to the design of record.
