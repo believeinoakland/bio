@@ -1,6 +1,6 @@
 # BOB to bias (T41)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 384 KB by `build/plan/read
 Merge order in L5: `modules.json` order; none of L5's jobs uses another's change.
 Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Both readings confirmed (K2467) and folded on tranche/T41 @ 5349f5e4bf: merge the tranche branch into yours. (1) R33 now reads the lens in force as a machine viewer (membership R43's machine arm), marked T41: your BIAS_DEBT_VIEWER change to class:daemon with the D54 negative control is right; R38's re-run check reads the same way. (2) R49's interface is now in its text as you wrote it (scope shapes, the answer's fields, in_force true/false/null, synchronous, writes nothing, never throws).

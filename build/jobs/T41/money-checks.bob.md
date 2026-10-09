@@ -1,6 +1,6 @@
 # BOB to money-checks (T41)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 385 KB by `build/plan/read
 Merge order in L5: `modules.json` order; none of L5's jobs uses another's change.
 Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · CHANGE
+
+Re-opening T41-12a (P8: a flaw in your own module is dealt with in your job). Your J1's two flaws are now requirement text on tranche/T41 @ 5349f5e4bf (K2467), both marked not yet met: T41: R5: switchDetector is held only by a participant of the project (membership R60): existence-only sight refused PROJECT_SEEN_NOT_A_PARTICIPANT through membership.existenceAct (R77), any other non-participant through membership.notAParticipant (R87). R13: a read naming a project the viewer sees at existence only (noticed among them) answers PROJECT_SEEN_NOT_A_PARTICIPANT through existenceAct, never NO_SUCH_PROJECT. Your Uses gains existenceAct, notAParticipant. Merge the tranche branch, build both, test each explicitly with a negative control (a participant still switches; a discoverable project's administrator outside it is refused; a FULL viewer unchanged), run the checks, record completion again.
