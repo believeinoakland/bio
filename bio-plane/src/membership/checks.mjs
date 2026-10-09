@@ -36,13 +36,18 @@
 const at = (fn, region) => `src/membership/index.mjs ${fn} > ${region}`;
 
 /* R123, R124 (DEC-184, DEC-186): the handle words of `words.json` (`docs/development/ux-substrate/screens/words.json`),
-   each `en` verbatim, read by key; placeholders (`{handle}`, `{group}`, `{suggestion}`, `{case}`) are left for the
-   screen. `handle.changeable` and `handle.formerly` are the screens' own words and are not held here (R123). */
+   each `en` verbatim, read by key; placeholders (`{handle}`, `{group}`, `{suggestion}`, `{case}`, `{minutes}`) are left
+   for the screen. `handle.changeable` and `handle.formerly` are the screens' own words and are not held here (R123).
+   T41-3 (DEC-188 (7)): the three refusals' words, `handle.refused.*`, the UX stream's; their rows read them by key. */
 export const HANDLE_WORDS = Object.freeze({
   'handle.free': '{handle} is free in {group}',
   'handle.taken': '{handle} is already taken in {group}. Try another, such as {suggestion}.',
   'handle.characters': 'A handle uses only lower-case letters, digits and hyphens.',
   'handle.fixed': 'Your handle is fixed: your work is in a published case ({case}).',
+  'handle.refused.unchecked': 'Civicsmith couldn\'t check whether your work is in a published case, so your handle '
+    + 'wasn\'t changed. Try again in a moment.',
+  'handle.refused.paused': 'Too many handles checked in a short time. Try again in {minutes} minutes.',
+  'handle.refused.notmember': 'Only a member can change their own handle.',
 });
 
 export const MEMBERSHIP_CHECKS = Object.freeze({
@@ -218,17 +223,17 @@ export const MEMBERSHIP_CHECKS = Object.freeze({
      changed by its member (R124). The next free numbers of C-96, this module's family for the acts on a member's own
      row (K107 (3), K174; C-96.47 the last held at the job's START). Each code is minted at one site, the region its
      `where` names. ===== */
-  /* R123 (K1881): the check's protective window, 60 checks in any 10 minutes per invitation or member. */
+  /* R123 (K1881): the check's protective window, 60 checks in any 10 minutes per invitation or member. The translation
+     is `words.json`'s `handle.refused.paused`, read by key, `{minutes}` the answer's `minutes` (DEC-188 (7)). */
   HANDLE_CHECK_PAUSED: Object.freeze({
     check: 'C-96.48', where: at("handleCheck", "is-handle-check-window"),
-    translation: 'Too many handles were checked in a short time, so this one was not checked. Wait a few minutes and '
-      + 'try again. Nothing was changed.',
+    translation: HANDLE_WORDS['handle.refused.paused'],
   }),
-  /* R124: only an active member changes a handle, and only their own. */
+  /* R124: only an active member changes a handle, and only their own. The translation is `words.json`'s
+     `handle.refused.notmember`, read by key (DEC-188 (7)). */
   HANDLE_CHANGE_NOT_A_MEMBER: Object.freeze({
     check: 'C-96.49', where: at("handleChange", "is-handle-change-member"),
-    translation: 'A handle is changed by the member it belongs to, signed in as themselves, and the account asking is '
-      + 'not an active member of this group. Nothing was changed.',
+    translation: HANDLE_WORDS['handle.refused.notmember'],
   }),
   /* R124, R125 (DEC-186 (1)): fixed once the member's work is in a published case. The translation is `words.json`'s
      `handle.fixed`, read by key, `{case}` the case named. */
@@ -237,11 +242,11 @@ export const MEMBERSHIP_CHECKS = Object.freeze({
     translation: HANDLE_WORDS['handle.fixed'],
   }),
   /* R124: the guard could not answer (none registered, a throw, or an answer it does not give), so the change fails
-     closed. BOB's draft, re-wordable by the UX stream. */
+     closed. The translation is `words.json`'s `handle.refused.unchecked`, read by key: the UX stream re-worded BOB's
+     draft (DEC-188 (7)). */
   HANDLE_CHANGE_UNCHECKED: Object.freeze({
     check: 'C-96.51', where: at("handleChange", "is-handle-fixed"),
-    translation: 'Whether your work is in a published case could not be checked, so your handle was not changed. Try '
-      + 'again.',
+    translation: HANDLE_WORDS['handle.refused.unchecked'],
   }),
 });
 
@@ -367,7 +372,7 @@ export const CUSTODIAL_CHECKS = {
  * name, BOB #15, 2026-09-18; §4.9: *"the custodial role can audit everything and direct
  * nothing"*). An act that changes a project, its productions or their grants asks the ACTOR'S
  * OWN POSITION IN THAT PROJECT — never what the actor may SEE. An administrator (enrolled, or
- * the founder) sees every project and so passed every act whose only barrier was the
+ * the founder) saw every project (every discoverable one since D54) and so passed every act whose only barrier was the
  * visibility gate; these two rows are what such an act now answers when the position is
  * missing. The positions are §7's: a JOINED participant holds the working rights (§7.5 —
  * invited-not-joined is view only), and an OWNER holds the acts §7 and DEC-72 reserve to the
@@ -398,14 +403,16 @@ export const PROJECT_AUTHORITY_CHECKS = {
  * such a member aims at it — other than the request to join — is refused POSITIONALLY with this code,
  * carrying the project's id and name and NOTHING else. A "does not exist" answer there would be false
  * about a project the directory has just shown the caller; a HIDDEN project still answers exactly as
- * one that does not exist (§7.9, REC-138), and this code is never said about one. Minted in ONE region,
- * `Membership#existenceOnly`, which every act's sight check relays. */
+ * one that does not exist (§7.9, REC-138) to every member who is not an administrator. D54 (K2408, K2409;
+ * T41-3): an administrator neither invited nor joined to a HIDDEN project is at its EXISTENCE too, and this
+ * code then also carries its owners' handles (membership R77). C-70.1's translation is true of both forms.
+ * Minted in ONE region, `Membership#existenceOnly`, which every act's sight check relays. */
 export const PROJECT_VISIBILITY_CHECKS = {
   PROJECT_SEEN_NOT_A_PARTICIPANT: {
     check: 'C-70.1',
     where: 'src/membership/index.mjs #existenceOnly > is-project-existence-only',
-    translation: 'This project can be found, but you are not one of its participants, so you cannot do '
-      + 'that in it or see what is inside it. Nothing was changed. You can ask its owners to add you.',
+    translation: 'You can see that this project exists, but you are not one of its participants, so you cannot '
+      + 'do that in it or see what is inside it. Nothing was changed. You can ask its owners to add you.',
   },
   PROJECT_VISIBILITY_NOT_THE_OWNER: {
     check: 'C-70.2',

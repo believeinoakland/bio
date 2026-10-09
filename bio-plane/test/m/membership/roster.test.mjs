@@ -120,20 +120,44 @@ test("R17 memberList: every stamp, expertise as R24; cover only under the admini
   assert.ok(!("cover" in w.ops("").memberlist().members[0]));
 });
 
-test("R18 each row of an administrator's roster lists that member's projects", async () => {
+test("R18 each row of an administrator's roster lists that member's projects the administrator sees at FULL, and of a hidden project it is not in only the owners (D54)", async () => {
   const w = await world().group("ann", "bob");
   w.project("PROJ-1");
   w.project("PROJ-2");
+  w.project("PROJ-3");
   w.m.projectClaimOwner({ projectId: "PROJ-1", memberId: "ann" });
   w.m.projectInvite({ projectId: "PROJ-1", handle: "bob", by: "ann" });
   w.m.projectClaimOwner({ projectId: "PROJ-2", memberId: "bob" });
-  const rows = w.m.memberList({ administer: true }).members;
-  const of = (id) => rows.find((r) => r.member_id === id).projects;
-  assert.deepEqual(of("ann"), [{ project: "PROJ-1", state: "joined", owner: true }]);
-  assert.deepEqual(of("bob"), [{ project: "PROJ-1", state: "invited", owner: false },
-                               { project: "PROJ-2", state: "joined", owner: true }]);
-  assert.deepEqual(of("second"), []);
-  for (const r of w.m.memberList({}).members) assert.ok(!("projects" in r), "an ordinary roster lists none");
+  w.m.projectClaimOwner({ projectId: "PROJ-3", memberId: "ann" });
+  w.m.projectInvite({ projectId: "PROJ-3", handle: "bob", by: "ann" });
+  w.m.projectVisibilitySet({ projectId: "PROJ-3", setting: "discoverable", by: "ann" });
+  const list = (viewer) => {
+    const rows = w.m.memberList({ administer: true, viewer }).members;
+    return (id) => rows.find((r) => r.member_id === id).projects;
+  };
+  const ownerOnly = (project) => ({ project, state: null, owner: true, existence: true });
+  /* an administrator in none of them, and the founder: the discoverable project whole, the hidden ones by owner only */
+  for (const v of [V("second"), "admin", V("admin"), null]) {
+    const of = list(v);
+    assert.deepEqual(of("ann"), [ownerOnly("PROJ-1"), { project: "PROJ-3", state: "joined", owner: true }], String(v));
+    assert.deepEqual(of("bob"), [ownerOnly("PROJ-2"), { project: "PROJ-3", state: "invited", owner: false }],
+      `${v}: bob's invitation to hidden PROJ-1 is not listed`);
+    assert.deepEqual(of("second"), [], String(v));
+  }
+  /* an administrator invited to PROJ-1 sees it at FULL, so its participants are listed whole */
+  w.m.projectInvite({ projectId: "PROJ-1", handle: "second", by: "ann" });
+  const of = list(V("second"));
+  assert.deepEqual(of("bob"), [{ project: "PROJ-1", state: "invited", owner: false }, ownerOnly("PROJ-2"),
+                               { project: "PROJ-3", state: "invited", owner: false }]);
+  assert.deepEqual(of("second"), [{ project: "PROJ-1", state: "invited", owner: false }]);
+  /* a machine credential (the operator's) sees every project whole */
+  assert.deepEqual(list(`${MACHINE_CLASS_PREFIX}admin`)("bob").map((p) => p.state), ["invited", "joined", "invited"]);
+  /* op=memberlist passes the control plane's viewer stamp through; a body's never wins */
+  const op = w.ops(`administer=1&viewer=${encodeURIComponent(V("second"))}`, { viewer: V("ann") }).memberlist();
+  assert.deepEqual(op.members.find((r) => r.member_id === "bob").projects, of("bob"));
+  /* negative control: the member who owns or joined sees nothing more here than an administrator's roster gives, and
+     an ordinary roster lists no projects at all */
+  for (const r of w.m.memberList({ viewer: V("ann") }).members) assert.ok(!("projects" in r), "an ordinary roster lists none");
 });
 
 test("R19 publishing a pairing is the member's or an administrator's per-member setting", async () => {

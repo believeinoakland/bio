@@ -29,6 +29,11 @@ test("R32 projectInvite: NOT_THE_OWNER, NO_SUCH_HANDLE, NOT_ACTIVE, ALREADY_A_PA
   await w.enrol("eve");
   w.m.memberSet({ memberId: "eve", status: "revoked", by: "admin" });
   assert.equal(w.m.projectInvite({ projectId: "PROJ-P", handle: "dee", by: "bob", viewer: V("bob") }).reason, "NOT_THE_OWNER");
+  /* D54 (T41-3): an administrator neither invited nor joined is at hidden PROJ-P's EXISTENCE, so its act is refused
+     there, with the owners; at a discoverable project it sees whole, inviting is still an owner's act (R60). */
+  const ex = w.m.projectInvite({ projectId: "PROJ-P", handle: "dee", by: "second", viewer: V("second") });
+  assert.deepEqual([ex.reason, ex.owners], ["PROJECT_SEEN_NOT_A_PARTICIPANT", ["ann"]]);
+  w.m.projectVisibilitySet({ projectId: "PROJ-P", setting: "discoverable", by: "ann", viewer: V("ann") });
   assert.equal(w.m.projectInvite({ projectId: "PROJ-P", handle: "dee", by: "second", viewer: V("second") }).reason, "NOT_THE_OWNER");
   assert.equal(w.m.projectInvite({ projectId: "PROJ-P", handle: "zed", by: "ann", viewer: V("ann") }).reason, "NO_SUCH_HANDLE");
   assert.equal(w.m.projectInvite({ projectId: "PROJ-P", handle: "eve", by: "ann", viewer: V("ann") }).reason, "NOT_ACTIVE");
@@ -115,6 +120,10 @@ test("R36 projectRemove: refusals; removes whether or not they asked; every remo
   w.m.projectInvite({ projectId: "PROJ-P", handle: "dee", by: "ann", viewer: V("ann") });   // a participant who stays
   w.m.projectJoin({ projectId: "PROJ-P", by: "dee", viewer: V("dee") });
   await w.enrol("eve");                                                                     // outside the project
+  /* D54: hidden PROJ-P is at its EXISTENCE for an administrator not in it; discoverable, removal is an owner's act */
+  assert.equal(w.m.projectRemove({ projectId: "PROJ-P", handle: "bob", by: "second", viewer: V("second") }).reason,
+    "PROJECT_SEEN_NOT_A_PARTICIPANT");
+  w.m.projectVisibilitySet({ projectId: "PROJ-P", setting: "discoverable", by: "ann", viewer: V("ann") });
   assert.equal(w.m.projectRemove({ projectId: "PROJ-P", handle: "bob", by: "second", viewer: V("second") }).reason, "NOT_THE_OWNER");
   assert.equal(w.m.projectRemove({ projectId: "PROJ-P", handle: "bob", by: "cal", viewer: V("cal") }).reason, "NOT_THE_OWNER");
   assert.equal(w.m.projectRemove({ projectId: "PROJ-P", handle: "zed", by: "ann", viewer: V("ann") }).reason, "NO_SUCH_HANDLE");

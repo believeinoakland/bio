@@ -180,12 +180,20 @@ test("R56 R54 (ratify-authority) delivery needs a joined position, the signature
 
 test("R45 (project-discoverable) the machine credentials and an administrator are refused the setting", async () => {
   const w = await projectWorld();
-  for (const by of [BEARER, `${MACHINE_CLASS_PREFIX}member`, "second", "admin"]) {
-    const r = w.m.projectVisibilitySet({ projectId: "P", setting: "discoverable", by, viewer: by.startsWith("class:") ? by : V(by) });
+  const refusedAsNotOwner = (by) => {
+    const r = w.m.projectVisibilitySet({ projectId: "P", setting: "hidden", by, viewer: by.startsWith("class:") ? by : V(by) });
     assert.deepEqual([r.code, r.check, r.translation],
       ["PROJECT_VISIBILITY_NOT_THE_OWNER", "C-70.2", PROJECT_VISIBILITY_CHECKS.PROJECT_VISIBILITY_NOT_THE_OWNER.translation], by);
-  }
+  };
+  /* hidden P: the machine credentials see it whole and are refused as not its owner; an administrator not in it is at
+     its EXISTENCE (D54, T41-3) and is refused there, C-70.1 */
+  for (const by of [BEARER, `${MACHINE_CLASS_PREFIX}member`]) refusedAsNotOwner(by);
+  for (const by of ["second", "admin"])
+    assert.equal(w.m.projectVisibilitySet({ projectId: "P", setting: "discoverable", by, viewer: V(by) }).code,
+      "PROJECT_SEEN_NOT_A_PARTICIPANT", by);
   assert.equal(w.m.projectVisibilitySet({ projectId: "P", setting: "discoverable", by: "iris", viewer: V("iris") }).ok, true);
+  /* discoverable P: every one of them sees it whole, and the setting is still the owners' alone */
+  for (const by of [BEARER, `${MACHINE_CLASS_PREFIX}member`, "second", "admin"]) refusedAsNotOwner(by);
 });
 
 /* ---- project-sight ---- */

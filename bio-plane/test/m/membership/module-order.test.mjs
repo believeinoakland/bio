@@ -60,14 +60,20 @@ const SINCE_T33 = [["sheet-worker", "file-scanner", "record-core"], ["capture", 
                       `setup-words` directly before `instance-setup` in layer 11. */
                    ["image-cover", "doc-clean", "pdf-worker"], ["setup-page", "setup-words", "instance-setup"],
                    /* T40-M (N812 B10; K657, K2373, K2389): `ai-use` directly after `run-rules` in layer 6. */
-                   ["run-rules", "ai-use", "ai-runs"]];
+                   ["run-rules", "ai-use", "ai-runs"],
+                   /* T41-3 (N820, N823; K657, K2431): the five modules T41's opening adds, each between the two
+                      neighbours `build/modules.json` places it between. */
+                   ["hypotheses", "steps", "citation"], ["capture-requests", "reading-guides", "skills"],
+                   ["skills", "question-explorer", "answers"], ["intent", "investigation", "reevaluation"],
+                   ["publication", "publish-schedule", "docket"]];
 /* Listed in the file before its job builds it (K1043's form: empty `paths`), tolerated by name until that merge
    (T33-19a's rule). The T33, T36 and T38 modules so tolerated have all merged (T38's `file-safety` and
    `project-roster` among them), so none is tolerated any longer; T39-M (K2343): `setup-words`, until its L11 job;
-   T40-M (K2373): `ai-use`, until its L6 job (T40-7). */
-const NOT_YET_BUILT = ["setup-words", "ai-use"];
+   T40-M (K2373): `ai-use`, until its L6 job (T40-7). T41-3 (K657, K2431): `setup-words` has merged and is held to
+   its paths; the five T41's opening adds are tolerated until each one's job merges. */
+const NOT_YET_BUILT = ["ai-use", "steps", "reading-guides", "question-explorer", "investigation", "publish-schedule"];
 
-test("R83 T36-6 T37-44 T38-4 T39-M T40-M MODULE_ORDER holds the modules added since T33 in the file's places: file-scanner, file-safety, law-relations, op-grades, answer-envelope, store-door, image-cover, project-roster, doc-clean, setup-words, ai-use", async () => {
+test("R83 T36-6 T37-44 T38-4 T39-M T40-M T41-3 MODULE_ORDER holds the modules added since T33 in the file's places: file-scanner, file-safety, law-relations, op-grades, answer-envelope, store-door, image-cover, project-roster, doc-clean, setup-words, ai-use, steps, reading-guides, question-explorer, investigation, publish-schedule", async () => {
   const modules = await modulesJson();
   const layerOf = new Map(modules.map((m) => [m.id, m.layer]));
   for (const [before, id, after] of SINCE_T33) {
@@ -75,7 +81,8 @@ test("R83 T36-6 T37-44 T38-4 T39-M T40-M MODULE_ORDER holds the modules added si
     assert.ok(at > 0, `${id} is held`);
     assert.deepEqual(MODULE_ORDER.slice(at - 1, at + 2), [before, id, after], `${before} → ${id} → ${after}`);
   }
-  assert.deepEqual(SINCE_T33.map(([, id]) => layerOf.get(id)), [1, 3, 5, 11, 11, 11, 1, 2, 1, 11, 6], "each in its layer");
+  assert.deepEqual(SINCE_T33.map(([, id]) => layerOf.get(id)), [1, 3, 5, 11, 11, 11, 1, 2, 1, 11, 6, 6, 6, 6, 7, 8],
+    "each in its layer");
 });
 
 test("R83 T33-19a MODULE_ORDER holds plan T33's order: the new modules in their places, local-facts and standards in layer 5, observation-log after connections", async () => {
@@ -85,17 +92,19 @@ test("R83 T33-19a MODULE_ORDER holds plan T33's order: the new modules in their 
   const since = new Set(SINCE_T33.map(([, id]) => id));
   for (const [layer, ids] of Object.entries(T33_LAYERS))
     assert.deepEqual(MODULE_ORDER.filter((id) => layerOf.get(id) === Number(layer) && !since.has(id)), ids, `layer ${layer}`);
+  /* T41-3: a run as T33 left it, read past the modules added since (`publish-schedule` now sits inside the first). */
+  const t33Order = MODULE_ORDER.filter((id) => !since.has(id));
   for (const run of T33_RUNS) {
-    const at = MODULE_ORDER.indexOf(run[0]);
+    const at = t33Order.indexOf(run[0]);
     assert.ok(at >= 0, run[0]);
-    assert.deepEqual(MODULE_ORDER.slice(at, at + run.length), run, run.join(" → "));
+    assert.deepEqual(t33Order.slice(at, at + run.length), run, run.join(" → "));
   }
   for (const id of ["local-facts", "standards"]) assert.equal(layerOf.get(id), 5, `${id} is in layer 5`);
   assert.equal(MODULE_ORDER.indexOf("observation-log"), MODULE_ORDER.indexOf("connections") + 1);
   for (const id of T33_NEW) assert.ok(MODULE_ORDER.includes(id), `${id} is held in its place`);
 });
 
-test("R83 T33-19a T39-M T40-M every module MODULE_ORDER holds is built, its paths on disk; a module listed before its job merges (setup-words, ai-use) is named as not yet built, by name, and fails nothing", async (t) => {
+test("R83 T33-19a T39-M T40-M T41-3 every module MODULE_ORDER holds is built, its paths on disk; a module listed before its job merges (ai-use, steps, reading-guides, question-explorer, investigation, publish-schedule) is named as not yet built, by name, and fails nothing", async (t) => {
   const modules = await modulesJson();
   const notYet = [];
   for (const m of modules) {
@@ -110,6 +119,23 @@ test("R83 T33-19a T39-M T40-M every module MODULE_ORDER holds is built, its path
   }
   /* Its merge gives a module its paths, and from then on it is held to them like any other. */
   if (notYet.length) t.diagnostic(`not yet built (tolerated until its job merges): ${notYet.join(", ")}`);
+});
+
+/* K874's negative control for T41-3's re-pin: the checks above fail a list that leaves out one of the five, and a list
+   that holds it in another place, so they test the place and not merely the presence. */
+test("R83 T41-3 negative control: a list missing steps, or holding investigation out of its place, is refused by the file and by the neighbour pins", async () => {
+  const ids = (await modulesJson()).map((m) => m.id);
+  const missing = MODULE_ORDER.filter((id) => id !== "steps");
+  assert.notDeepEqual(missing, ids, "a list without steps is not the file's");
+  const moved = MODULE_ORDER.filter((id) => id !== "investigation");
+  moved.splice(moved.indexOf("reevaluation") + 1, 0, "investigation");
+  assert.notDeepEqual(moved, ids, "investigation after reevaluation is not the file's order");
+  const at = moved.indexOf("investigation");
+  assert.notDeepEqual(moved.slice(at - 1, at + 2), ["intent", "investigation", "reevaluation"], "the pin refuses it");
+  for (const [before, id, after] of SINCE_T33.slice(-5)) {
+    const i = MODULE_ORDER.indexOf(id);
+    assert.deepEqual(MODULE_ORDER.slice(i - 1, i + 2), [before, id, after], `${id} in its place in the real list`);
+  }
 });
 
 test("R83 MODULE_ORDER is frozen: no write changes it", () => {
