@@ -1,6 +1,6 @@
 # bias (T41)
 
-**Status** · session_01Vt7EyjJ17PS4rE1A2oh9ME · depth 2 · WORKING · handled B1
+**Status** · session_01Vt7EyjJ17PS4rE1A2oh9ME · depth 2 · RUNNING until 2026-10-09T22:35:08Z (users' suites (bias users, twice)) · handled B1
 
 ## J1 · QUESTION
 
