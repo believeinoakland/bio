@@ -125,7 +125,10 @@ test("R20: the lens block — manifest in force or stated absent or unreadable, 
 
 test("R21: the bar — recorded, none-recorded, context-has-no-project, names-no-axis or unreadable, with its sentence; the pair only when recorded, an unnamed axis null, never filled in", async () => {
   const w = await readWorld();
-  const std = async (o) => { const run = `S${Math.random()}`; await w.runs.open(OPEN({ run, ...o })); return (await w.runs.read({ run, viewer: "admin" })).session.standard; };
+  /* bob, joined to PROJ, reads every case (D54, K2442: the founder outside PROJ reads its runs as absent, asserted below) */
+  const std = async (o) => { const run = `S${Math.random()}`; await w.runs.open(OPEN({ run, ...o }));
+    if (o.contextId === PROJ) assert.equal((await w.runs.read({ run, viewer: "admin" })).found, false, "D54");
+    return (await w.runs.read({ run, viewer: "member:bob" })).session.standard; };
   const proj = { contextType: "project", contextId: PROJ, actor: "bob", viewer: "member:bob", principalPlane: "member:bob" };
   const cases = [
     [{ ...proj, standardPair: '{"capture":"B","connection":" C "}' }, "recorded", { capture: "B", connection: "C" }],
@@ -167,7 +170,10 @@ test("R22: the runs in a context — no type C-36.1, an unknown one C-36.2, no i
   const empty = await w.runs.listInContext({ contextType: "project", contextId: "PROJ-2026-0404", viewer: "member:dan", limit: 1 });
   assert.deepEqual({ ...hidden, context: null }, { ...empty, context: null });
   assert.deepEqual([hidden.count, hidden.truncated], [0, false]);
-  assert.equal((await w.runs.listInContext({ contextType: "project", contextId: HIDDEN, viewer: "admin" })).count, 1);
+  assert.equal((await w.runs.listInContext({ contextType: "project", contextId: HIDDEN, viewer: "member:ann" })).count, 1, "control: its owner");
+  /* D54 (K2442): the founder, neither invited nor joined, lists none of a hidden project's runs, as dan does */
+  const founder = await w.runs.listInContext({ contextType: "project", contextId: HIDDEN, viewer: "admin", limit: 1 });
+  assert.deepEqual({ ...founder, context: null }, { ...hidden, context: null }, "D54: byte for byte as an outsider");
 });
 
 test("R23, R34: the spawn payload — absent or invisible found false; the search half carries context, mode, skill, bar and budget and no lens field at all; the compose half adds R20's block; the budget capped at the bound count", async () => {

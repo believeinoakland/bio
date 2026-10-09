@@ -24,7 +24,7 @@ import { retrievalOf } from "../retrieval/index.mjs";
 import { contradictionOf } from "../contradiction/index.mjs";
 import { CONDITION_KINDS } from "../observation-log/vocabulary.mjs";
 import { promotionOf } from "../promotion/index.mjs";
-import { normalizeType, OBJECT_TYPES, isMachineIdentity } from "../record-grammar/index.mjs";
+import { normalizeType, OBJECT_TYPES, isMachineIdentity, MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
 import { credentialsOf } from "../credentials/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { sha256hex, instanceAiCredential } from "../tokens.mjs";
@@ -198,7 +198,9 @@ export class AiRuns {
       read: async (run) => {
         const row = this.#one(`SELECT rerun_of, created FROM ai_runs WHERE run = ?`, String(run ?? ""));
         if (!row) return null;
-        const a = await this.read({ run, viewer: "admin" });
+        /* An internal read, as bias reads every work product: a machine viewer, which sees every run (K2442: the
+           founder's `admin` viewer no longer sees a hidden project it is not in, D54). */
+        const a = await this.read({ run, viewer: AiRuns.#INTERNAL_VIEWER });
         const s = a && a.found === true ? a.session : null;
         if (!s) return null;
         const bias = s.bias || {};
@@ -218,6 +220,9 @@ export class AiRuns {
       visible: async (run, viewer) => !!this.runFor(run, viewer),
     };
   }
+
+  /** The viewer of this module's own internal reads (K2442): a machine identity, never a person's sight. */
+  static #INTERNAL_VIEWER = `${MACHINE_CLASS_PREFIX}daemon`;
 
   /** R35: the row of one of this module's acts' codes, read by key from `run-rules`' table (its R11, R15, R20). */
   #checkRow(code) { return AI_RUNS_CHECKS[code]; }
@@ -1719,15 +1724,20 @@ export class AiRuns {
     if (!ref || ref.refusal)
       outcome = { state: "REFUSED", status: null,
                   reason: String((ref && ref.refusal && (ref.refusal.code || ref.refusal.reason)) || "NO_ACCOUNT").slice(0, 80) };
-    /* K1615 (agent-worker R56): and the switch that governs the serving account: the member's own (credentials R25), read
-       from their reference's state; anything but an explicit on is off. The group key's own switch (credentials R37) has
-       no in-plane read for a member's act (ai-runs #11 J1 (2)), so a run the group key serves offers none: off, as by
-       default. */
+    /* K1615 (agent-worker R56): and the switch that governs the serving account. */
+    /* (T41; credentials R55, R37) every account now holds its `suggestions` switch, set by `accountUsesSet`: a member's
+       reference or sign-in (whichever serves, read through `accountUses` as that member, R60), and the group key
+       (`groupKeySwitches()`, an in-plane read). Anything but an explicit on is off. */
     let suggestions = false;
-    if (!outcome && ref.level === "member") {
+    if (!outcome) {
       try {
-        const st = credentialsOf(this.ctx).accountReferenceState({ member: `member:${d.payer}`, viewer: `member:${d.payer}` });
-        suggestions = !!(st && st.ok === true && st.suggestions === true);
+        const c = credentialsOf(this.ctx);
+        if (ref.level === "group") suggestions = c.groupKeySwitches().suggestions === true;
+        else if (ref.level === "member") {
+          const u = c.accountUses({ owner: `member:${d.payer}`, viewer: `member:${d.payer}` });
+          const acct = u && u.ok === true && u.accounts ? (ref.kind === "signin" ? u.accounts.signin : u.accounts.reference) : null;
+          suggestions = !!(acct && acct.uses && acct.uses.suggestions === true);
+        }
       } catch { suggestions = false; }
     }
     const body = outcome ? null : { run_id: d.run, store: resumer.store, credential: resumer.token,
