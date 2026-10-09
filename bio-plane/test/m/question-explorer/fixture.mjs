@@ -15,6 +15,7 @@ import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { legEarningOf } from "../../../src/leg-earning/index.mjs";
+import { stepsOf } from "../../../src/steps/index.mjs";
 import { questionExplorerOf } from "../../../src/question-explorer/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
@@ -80,7 +81,7 @@ export function questionMd(id, { subject = null, surfacedBy = "human", state = "
           "state_history: []", "---", "", "## Question", "", "What happened?", ""].join("\n");
 }
 
-export function world({ gateOpen = true, steps: withSteps = true, aiUse: withAiUse = true, testSet = TEST_SET } = {}) {
+export function world({ gateOpen = true, aiUse: withAiUse = true, testSet = TEST_SET } = {}) {
   const st = storage();
   const host = { storage: st };
   for (const t of RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").split(";"))
@@ -98,7 +99,7 @@ export function world({ gateOpen = true, steps: withSteps = true, aiUse: withAiU
   const note = (name, a) => calls.push({ name, a });
   const w = {
     st, host, record, membership, credentials, clock, calls,
-    recipients: {}, subjects: {}, asserted: {}, conns: [], captures: {}, held: new Set(),
+    subjects: {}, asserted: {}, conns: [], captures: {}, held: new Set(),
     explore: {}, approved: new Set(), steps: [], runs: new Map(), bounds: new Map(),
     /* What the record holds for the deploy gate (run-rules R19, R75's records) over a test set with one matter. */
     testBars: [bar("investigate"), bar("explore")], verifications: [VERIFIED_CHECK],
@@ -116,6 +117,8 @@ export function world({ gateOpen = true, steps: withSteps = true, aiUse: withAiU
   };
   if (!gateOpen) w.testBars = [];
 
+  /* What ai-runs does with a run's system step (its R73: created once the run is open, ended at its close), recorded
+     here as the stand-in ai-runs' own calls; the real `steps` (merged, K2491) answers `findRecipients`. */
   const steps = {
     stepCreate(a) {
       note("stepCreate", a);
@@ -124,10 +127,7 @@ export function world({ gateOpen = true, steps: withSteps = true, aiUse: withAiU
       w.steps.push({ step, ...a, state: "planned" });
       return { ok: true, step, place: a.place, at: clock.now };
     },
-    stepDelete(a) { note("stepDelete", a); w.steps = w.steps.filter((s) => s.step !== a.step); return { ok: true }; },
     stepEnd(a) { note("stepEnd", a); const s = w.steps.find((x) => x.step === a.step); if (s) s.state = a.end; return { ok: true }; },
-    recordProduct(a) { note("recordProduct", a); return { ok: true }; },
-    findRecipients(a) { note("findRecipients", a); return { recipients: w.recipients[a.question] || [], next: null }; },
   };
   const aiUse = {
     exploreAllowed(a) {
@@ -205,16 +205,21 @@ export function world({ gateOpen = true, steps: withSteps = true, aiUse: withAiU
   const legEarning = legEarningOf(host, { record, membership, connections,
                                           promotion: { fact: () => ({ ok: false }) }, content: {} });
   const basisVersions = { currentOf: (p) => ({ current: `reading of ${p}` }) };
+  /* steps is the real module (merged, K2491): R17 `findRecipients` over leg-earning's drawing projects and its own
+     follows. Its registrations with promotion and observation-log are answered by stand-ins (neither is read here). */
+  const realSteps = stepsOf(host, { record, membership, legEarning,
+    promotion: { registerStep: () => ({ ok: true }) },
+    observationLog: { registerAuthority: () => ({ ok: true }), onLookAnswered: () => ({ ok: true }) } });
 
   const p = questionExplorerOf(host, {
     record, membership, credentials, connections, retrieval, inquiry, legEarning, basisVersions, aiRuns, captureRequests,
-    steps: withSteps ? steps : null, aiUse: withAiUse ? aiUse : null,
+    steps: realSteps, aiUse: withAiUse ? aiUse : null,
     held: () => { note("held", {}); return { verifications: w.verifications, testBars: w.testBars }; },
     testSet,
     now: () => Date.parse(clock.now),
   });
   p.migrate();
-  Object.assign(w, { p, legEarning, stepsApi: steps, aiUse, aiRuns, captureRequests, connections, retrieval });
+  Object.assign(w, { p, legEarning, steps: w.steps, realSteps, stepsApi: steps, aiUse, aiRuns, captureRequests, connections, retrieval });
 
   let rev = 0;
   w.bundle = (id, type, text, { project = null, state = null } = {}) => {
@@ -236,7 +241,7 @@ export function world({ gateOpen = true, steps: withSteps = true, aiUse: withAiU
   w.question = (id, { subject = null, surfacedBy = "human", state = "open", recipients = ["alice"] } = {}) => {
     w.bundle(id, "inquiry", questionMd(id, { subject, surfacedBy, state }), { state });
     w.subjects[id] = subject;
-    w.recipients[id] = recipients;
+    w.follow(id, ...recipients);
     return id;
   };
   w.project = (id, participants = [], { owners = [], setting = "hidden" } = {}) => {
@@ -247,6 +252,13 @@ export function world({ gateOpen = true, steps: withSteps = true, aiUse: withAiU
     st.sql.exec(`INSERT INTO project_sight (project_id, setting) VALUES (?, ?)
                  ON CONFLICT(project_id) DO UPDATE SET setting=excluded.setting`, id, setting);
     return id;
+  };
+  /* Members follow a question by their own act (steps R16), so steps R17 answers them as its recipients. */
+  w.follow = (question, ...members) => {
+    for (const m of members) {
+      const r = realSteps.questionFollow({ question, on: true, by: `member:${m}` });
+      if (!r || r.ok === false) throw new Error(`follow ${m}: ${JSON.stringify(r)}`);
+    }
   };
   /* A project draws on a question: its document cites it (connections' `refs`, R58). */
   w.draw = (question, project) => st.sql.exec(`INSERT OR IGNORE INTO refs (bundle_id, target_id, kind) VALUES (?, ?, 'cites')`, project, question);

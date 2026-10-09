@@ -18,7 +18,7 @@
  * captures nothing itself (R3); it names no place in behaviour or outward text (R8); and it never decides the gate
  * from a group's own test investigations (R11).
  *
- * Providers built in T41 alongside it (`steps`, `ai-use`, and the T41 services of `ai-runs`,
+ * Providers built in T41 alongside it (`ai-use`, and the T41 services of `ai-runs`,
  * `capture-requests`, `run-productions`) are taken through `deps` and read by their requirements' names; where one is
  * absent the module fails closed: the gate stays shut and nothing is explored. */
 
@@ -32,6 +32,7 @@ import { legEarningOf } from "../leg-earning/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
 import { captureRequestsOf } from "../capture-requests/index.mjs";
+import { stepsOf } from "../steps/index.mjs";
 import * as runRules from "../run-rules/index.mjs";
 import { localDay } from "../civil-time/index.mjs";
 import { parseFrontmatter, isMachineIdentity, ACCEPTANCE_FORMS, acceptanceRecord, canonicalJson, sha256HexSync }
@@ -203,7 +204,8 @@ export class QuestionExplorer {
         const id = bareMember(raw.startsWith("member:") ? raw : `member:${raw}`);
         if (id) out.add(id);
       }
-      after = r && !Array.isArray(r) ? (r.next ?? null) : null;
+      const next = r && !Array.isArray(r) ? r.next : null;
+      after = next && typeof next === "object" ? (next.after ?? null) : (typeof next === "string" ? next : null);
       if (!after) break;
     }
     return [...out].sort();
@@ -839,8 +841,8 @@ export class QuestionExplorer {
 const instances = new WeakMap();
 
 /** The one question-explorer instance for `host` (the Durable Object's `ctx`, with its `storage`); `deps` are read on
- *  the first call only; a provider not given is reached through its factory, except those built in T41 beside it
- *  (`steps`, `ai-use`), which come only through `deps` until they merge. At creation it declares its tables to purge. */
+ *  the first call only; a provider not given is reached through its factory (`steps` since its merge, K2491), except
+ *  `ai-use`, built in T41 beside it, which comes only through `deps` until it merges. At creation it declares its tables to purge. */
 export function questionExplorerOf(host, deps) {
   let p = instances.get(host);
   if (!p) {
@@ -857,7 +859,7 @@ export function questionExplorerOf(host, deps) {
       basisVersions: d.basisVersions || basisVersionsOf(host),
       aiRuns: d.aiRuns || aiRunsOf(host),
       captureRequests: d.captureRequests || captureRequestsOf(host),
-      steps: d.steps || null, aiUse: d.aiUse || null,
+      steps: d.steps || stepsOf(host, { record, membership }), aiUse: d.aiUse || null,
       held: d.held || null, ...(d.testSet ? { testSet: d.testSet } : {}),
       principal: d.principal || EXPLORE_PRINCIPAL, now: d.now || null,
     });

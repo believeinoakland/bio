@@ -54,7 +54,7 @@ test("R5: findsFor answers each find, once (keyed per find and question), to eac
   const w = world().standard();
   w.project(HPROJ, ["bob"]);
   w.doc(HDOC, HCAP, { project: HPROJ });
-  w.recipients[Q] = ["alice", "bob", "dana"];
+  w.follow(Q, "alice", "bob", "dana");
   w.project(PROJ, ["alice"], { owners: ["alice"] });
   w.draw(Q, PROJ);
   w.explore.group = "no";
@@ -78,7 +78,7 @@ test("R5: a recipient who may not see the question, or the document a find rests
   const w = world().standard();
   w.project(HPROJ, ["bob"]);
   w.doc(HDOC, HCAP, { project: HPROJ });
-  w.recipients[Q] = ["alice", "bob"];
+  w.follow(Q, "alice", "bob");
   w.draw(Q, HPROJ);
   w.explore.group = "no";
   const o = w.openRun(`project:${HPROJ}`);
@@ -89,7 +89,7 @@ test("R5: a recipient who may not see the question, or the document a find rests
 
 test("R6: a find's only doors are a member's: dismiss (the queue's in a drawing project; a follower outside every one mutes it), accept by one act in record-grammar R52's forms, hold a hypothesis, or start a step; nothing here writes a leg, a grade, a conclusion or a hypothesis", () => {
   const w = world().standard();
-  w.recipients[Q] = ["alice", "bob"];
+  w.follow(Q, "alice", "bob");
   w.project(PROJ, ["alice"], { owners: ["alice"], setting: "discoverable" });
   w.draw(Q, PROJ);
   const o = w.openRun("group");
@@ -129,7 +129,7 @@ test("R6: a find's only doors are a member's: dismiss (the queue's in a drawing 
 
 test("R6: a follower outside every drawing project mutes a find; a participant of a drawing project dismisses it through the queue, not here", () => {
   const w = world().standard();
-  w.recipients[Q] = ["alice", "bob"];
+  w.follow(Q, "alice", "bob");
   w.project(PROJ, ["alice"], { owners: ["alice"], setting: "discoverable" });
   w.draw(Q, PROJ);
   const o = w.openRun("group");
@@ -170,7 +170,6 @@ test("R7: finds are offered only while the gate is open: the explorer passed its
   /* Civicsmith's own set holds no matter yet (run-rules R19): over it nothing opens. */
   assert.equal(world({ testSet: CIVICSMITH_TEST_SET }).standard().p.gate().open, false);
   /* Without the providers it needs, it is shut (fail closed). */
-  assert.equal(world({ steps: false }).p.gate().open, false);
   assert.equal(world({ aiUse: false }).p.gate().open, false);
 });
 

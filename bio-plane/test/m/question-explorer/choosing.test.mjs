@@ -55,7 +55,7 @@ test("R2: worth exploring: open or surfaced, at least one member receives its fi
   const ids = () => w.p.questionsWorthExploring({ at: w.clock.now }).map((x) => x.question);
   assert.deepEqual(ids().sort(), [Q, Q2].sort(), "Q3 has no recipient; a concluded question is not open or surfaced");
   w.bundle(Q3, "inquiry", null, { state: "surfaced" });
-  w.recipients[Q3] = ["carol"];
+  w.follow(Q3, "carol");
   assert.ok(ids().includes(Q3), "surfaced counts");
   w.explore.group = "yes";
   w.p.exploreTick(w.clock.now);
@@ -107,7 +107,7 @@ test("R3: the run opens through ai-runs in the investigate run path, origin expl
 
 test("R3: a principal served by a sign-in explores only while that sign-in account's explore use is on; off (its default) it is refused as any account whose explore use is off (credentials R55, the real module)", () => {
   const w = world().standard();
-  w.recipients[Q] = ["alice"];
+  w.follow(Q, "alice");
   w.explore["member:alice"] = "yes";
   assert.equal(w.credentials.subscriptionConnected({ member: "alice" }).ok, true);
   /* Off: the sign-in's switch at its default, no. */
