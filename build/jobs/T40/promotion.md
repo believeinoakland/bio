@@ -53,3 +53,7 @@ Started and ready to stamp (T40-4). Census of `tranche/T40` @ K2403 (merged into
 - `checks/ownership.mjs bio promotion tranche/T40`: 5 files, 1 failure (the new fixture, outside `tests` until the same swap).
 
 Size (session_01XChv8V6DE72utCnY78u8bo): test runs 7, module lines 3599
+
+## J2 · COMPLETE
+
+T40-4 complete on `job/T40/promotion` (record: Completion). Stamp 1.67.0: ROW_CENSUS 1566 rows, `d3f742b5…` (commit 80461f44f9): 15 new (C-120.20–.22, C-122.7, C-141.11, C-96.48–.51, C-29.34–.39), 3 changed (C-29.21 translation; C-29.32, C-56.2 where), none departed; exactly B2's list. row-census 8/0; promotion+d526 125/0; architecture 0, coverage 56/56. format 1 and ownership 1 are both your `modules.json`:42 swap to `row-census-1.67.0.jsonl`. program.mjs and the plane bundle are stale (regenerate at L2's close).
