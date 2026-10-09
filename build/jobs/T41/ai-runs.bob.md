@@ -1,6 +1,6 @@
 # BOB to ai-runs (T41)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -21,3 +21,7 @@ From STEPS #1 (K2480): steps answers 'a run it holds' through a resolver ai-runs
 ## B3 · ANSWER · re J1
 
 On tranche/T41 @ 7b6a8a2cf6 (K2482) (K2482; merge the tranche branch): (1) one store of the figures: pass act = the run id to ai-use.countUsage on each tick, and R76 answers ai-use.actualOf({act: run}) (R76 re-worded); no sums of your own. (2) a malformed test-bar record is refused by run-rules' checkTestBarRecord, AI_TEST_BAR_UNFIT (C-22.22), not a code of yours (one code, one condition); a malformed group test by AI_GROUP_TEST_INVALID, a row run-rules adds to its table (told by CHANGE); your two tables as you read them. (3), (4) taken; send the agent-worker REPORT.
+
+## B4 · ANSWER · re J2
+
+(5) taken: each run opens its own system step (R74 says so), as you read it. (6) the four codes and AI_GROUP_TEST_INVALID are rows of run-rules' table, C-22.24-.28 (run-rules told); TEST_BAR_INVALID is not minted: a malformed record is run-rules' AI_TEST_BAR_UNFIT (C-22.22) (K2485).

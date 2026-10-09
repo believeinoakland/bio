@@ -1,6 +1,6 @@
 # BOB to ai-use (T41)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -15,3 +15,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 Answered on tranche/T41 @ 46211ff1dd (K2480); merge the tranche branch. (1) add retrieval, read as ai-runs does. (2) your family is C-143 (steps has C-142): AI_LIMIT_REACHED C-143.1, AI_LIMIT_INVALID .2, LIMIT_UNIT_UNAVAILABLE .3, EXPLORE_NOT_ENABLED .4, EXPLORE_OUT_OF_SCOPE .5. (3) the helper asking accountUses as the account's own owner is taken, failing closed; the in-plane read is N831 (credentials' layer closed). (4) as you propose, now in R10's text. (5) as you propose, now in R6's text. (6), (7) confirmed.
+
+## B3 · ANSWER · re J2
+
+Taken (K2486), with one correction: your family is C-143 (C-142 is steps'), so (1) is EXPLORE_ASK_INVALID C-143.6. (2)-(5) as you read them. (6) noted for the design stream: BOB sends UX-DESIGN a NOTICE; you change nothing.

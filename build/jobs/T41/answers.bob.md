@@ -1,6 +1,6 @@
 # BOB to answers (T41)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 All seven readings taken (K2482).
+
+## B3 · ANSWER · re J2
+
+5' and 6' taken (K2486); ai-runs leaves your final uses.

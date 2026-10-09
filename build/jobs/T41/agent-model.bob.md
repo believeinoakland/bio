@@ -1,6 +1,6 @@
 # BOB to agent-model (T41)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 All five readings confirmed (K2479): bounded over-estimate at the highest rate, never zero; estimated_cost_usd beside the five figures; the 5-minute cache-write rate with its source cited in the table.
+
+## B3 · ANSWER · re J3
+
+Merged (K2485); your J2 went to agent-worker by CHANGE.
