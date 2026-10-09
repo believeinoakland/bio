@@ -153,7 +153,7 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 | N751 | a measurement: no fresh policies beyond the 74 read (K2079) |
 | N780 | a deployment: the next release cut (K1501) |
 | N794 | Bob's: "N794: A" (K2425), legacy-ui stays frozen until the new screens replace it (K633, K1849) |
-| N817 | not a module job: the actions design lane, started by BOB alongside the tranche; its condition (the investigation lane handed off, K2417) is met (doubt 2) |
+| N817 | not left out: the actions design lane, ACTIONS-DESIGN #1, started at Bob's direction (K2433) |
 | N821: the wizard runner; N551 (part), N572 | a dependency not yet built: the runner is a screen-side construct of the new screens (N672) |
 | N821: email capture | Bob's: "D42 - email: A" (K2425), later, after upload is in use; also a deployment (an inbound address per group) |
 | N821: screens for built ops; shortcuts, command bar | the UX stream's: handed to UX-DESIGN by NOTICE |
