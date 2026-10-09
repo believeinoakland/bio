@@ -1,6 +1,6 @@
 # BOB to inquiry-grammar (T41)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 402 KB by `build/plan/read
 Merge order in L6: inquiry-grammar, leg-earning, inquiry, hypotheses, steps, citation, basis-versions, contradiction; run-rules, ai-use, ai-runs (copy then delete), run-productions, capture-requests, reading-guides, skills, question-explorer; answers, agent-model, agent-worker (`modules.json` order; ai-use before ai-runs is K624's copy-then-delete). None of L6's changes is used by yours.
 Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Answered in requirements on tranche/T41 @ 15ec91ff1f (K2479): merge the tranche branch. (1) bias_applied must be storable, so it has one encoding, yours: numbered scalar keys on the item, bias_<n>_statement/_effect/_from/_to, n from 1 contiguous (as R17 flattens a derivation); export flattenBiasApplied and readBiasApplied besides BIAS_EFFECTS and biasAppliedFindings(label, value, findings, {effects, checkId}); basis-versions R48 uses them for a conclusion row. Caps: at most 32 entries, no statement-effect pair twice, statement at most 200 characters with no quote, backslash, newline or #. (2) your shape is right. (3) as you propose.
