@@ -189,3 +189,23 @@ Numbered entries; BOB answers each in rulings (K) on `tranche/T<n>`. Decision st
 **Carries:** Bob's comment on §1.1: "A question shows which non-hidden projects draw on it". Hidden projects are still never shown, named or counted. This reverses H10/D41's "a question never shows which projects draw on it" for non-hidden projects. It affects `inquiry`, `leg-earning` R13 (in-process only today) and `steps` R3 (handle only, no project). It also affects canon text in the draft (§2's principle, quoted from Bob's D41 reasoning), which needs Bob's new words. Knock-ons put to Bob as D64. Also from Bob's comments: §1.1 "where the evidence stands: for it, against it, and the gaps", wording only.
 
 **H39 · 2026-10-09 · Bob comment on §1.3:** "A step that looked but found nothing is later updated if the data is later found." Folded in. When data is found later, change tracking brings it to the step and the questions it serves. The earlier look stays, dated: the observation log is append-only. A member may revise the step's per-question outcome. **Requirements:** `steps` needs a link from later-arriving data to the dead-end steps whose looks it answers, and a notice to those working on the question.
+
+## H40 · 2026-10-09 · the design is approved; into canon
+
+**Carries:**
+- **Approval.** Bob: "I've reviewed the investigation design document and approve it." D64, D65 and D66 were then agreed.
+- **The design of record.** `investigation-design.html` on `design/investigation`, published at https://claude.ai/artifact/QjSSFHE78G9PtwKhpW5ZEo. Every question is answered.
+- **Into canon.** Bob: "I think it should be added to the canon." This lane agreed, with a placement plan, which Bob saw in the lane's reply and did not object to:
+  - `BIO_Investigation_v0_1.md` states in full only what is new to investigations: the project as an investigation and its objective (§1.1), steps (§1.2–1.3), the system's part (§1.4), AI use specific to investigations (§1.6), where a first message leads (§1.8), narrative and evidence (§1.9), people (§1.10), the parts (§1.11), and the account check and drafting, readers' re-check, approval rules, reviewers and whole-case acceptance (§1.12). Anything already ruled elsewhere is cited, never restated: evidence rules, publication, bias and import mechanics, and System Design's purpose.
+  - Amendments go into their own documents:
+    - Membership §4, §7.3, §7.9, §7.14 (D54);
+    - System Design §1 (H36, Bob's wording);
+    - Case Making §4a and AI Roles rule 9 (D56, the system drafts the account; every sentence checked; lying is not bias);
+    - Action §3 (D55);
+    - Content Framework invariant 7, "as prominently" (D66);
+    - Capability Ladders §9.4, §9.5 L4 (project accounts);
+    - K1481 amended by D39 (exploring);
+    - D41's principle replaced: a question shows its non-hidden projects (H38, D64);
+    - Declared Bias: regrade is to be built (D59).
+- **Next, Bob's direction.** Once the canon is finalised, Bob will ask BOB for a thoroughly researched review of the entire canon for changes the investigation design needs. The same review is to set up a process that keeps one source of truth across canon, each fact held in the right canon document. The placement plan above is its first instance.
+- **Requirements deltas since the T41 draft.** H23–H39 list each one. Key items: D2's reading proposals; D3's one accepting act; D4's grade; D12; D16's objective as the measure (built `intent`); D19; D20; D21; D22; D52's front door; D53; D13; D14; D56–D63 publication; H39's later-found data updates dead-end steps.
