@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #146 · session_017Mqb4UstLxePtEby56C1kS · depth 1
 
-**Jobs** · record-grammar: RECORD-GRAMMAR #12 session_0196Hjq7pbtNLCRCp3UtdPBW; text-chain: TEXT-CHAIN #7 session_01JDz9kGpTxawc3vKv6rH4vU
+**Jobs** · record-grammar: RECORD-GRAMMAR #12 session_0196Hjq7pbtNLCRCp3UtdPBW; text-chain: TEXT-CHAIN #7 session_01JDz9kGpTxawc3vKv6rH4vU; record-core: RECORD-CORE #19 session_013ReqojuRgnmvwKseFV6CE9; membership: MEMBERSHIP #32 session_011HAMj6VLhgKZ4DeMarJYTz; project-roster: PROJECT-ROSTER #2 session_01EMvdfBAQoP23gwygdrcexb; credentials: CREDENTIALS #11 session_01NyoLivN8Gk5Yd1QkwvULcW; promotion: PROMOTION #39 session_0126JXzoUNxJ6PKnFaGmmabB
 
 **At T41's opening (K2422, K2423):** opened from `main` @ 8af83ac942 after T40's early close; Bob's meter 79%. Runs layer 1, then holds until Bob resumes.
 
@@ -79,7 +79,7 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 ### L6
 - **T41-13 · inquiry-grammar** · (D59) R18 `bias_applied` on a leg · req: §3.6.
 - **T41-14 · leg-earning** · (D36, D29, H38, D64, D21) R13 `projectsDrawingOnPaged`, R14 `projectsShownOn`, R15 the AI transcription's ceiling · req: §3.6.
-- **T41-15 · inquiry** · (was T40-5; N814) R39 re-written (each project's own deferral and dismissal; K2371) and (N820; H38) R39 amended (names only non-hidden drawing projects; a question drawn on only by hidden projects moved on its own state); R55 amended (D17), R59 (D13 warning), R60 (`projects` on every read); (DEC-188 (7)) `question.refused.drawnon` by key · K2371, K2418 · req: R39 as applied (K2400) with §3.6's amendment folded by BOB before L6's START (see doubt 3) · 3,294 → ~3,420.
+- **T41-15 · inquiry** · (was T40-5; N814) R39 re-written (each project's own deferral and dismissal; K2371) and (N820; H38) R39 amended (names only non-hidden drawing projects; a question drawn on only by hidden projects moved on its own state); R55 amended (D17), R59 (D13 warning), R60 (`projects` on every read); (DEC-188 (7)) `question.refused.drawnon` by key · K2371, K2418 · req: R39 folded (K2436), R54 `set_in`, R55, R59, R60 as §3.6 · 3,294 → ~3,420.
 - **T41-16 · hypotheses** · (D33, D46 A, D18) R16–R21, R14 amended · req: §3.6 · 810 → ~1,080.
 - **T41-17 · steps (new)** · (N820; D27–D50, H38, H39, D64) R1–R27 · req: §3.1 · ~2,150; if it grows past ~2,500, the cost relay, follows and later-found move to a module directly after it (BOB's, at the job's report).
 - **T41-18 · citation** · (N822) `cite-refusals` tests re-stated · tests only.
