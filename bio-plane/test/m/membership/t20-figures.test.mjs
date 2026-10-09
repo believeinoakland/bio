@@ -48,9 +48,10 @@ const WHOLE = { projectParticipants: 5 };
 /* Each viewer, what it is told: whole, less a project it is outside, or nothing (a viewer R43 refuses hides all). */
 const VIEWERS = [
   [undefined, WHOLE, "a viewer never sent: the direct internal call, counted whole"],
-  ["admin", WHOLE, "the founder sees every bundle"],
+  /* D54 (T41-3): A and B are hidden, and neither the founder nor `second` is in either, so both are less both. */
+  ["admin", { projectParticipants: 0 }, "the founder, in neither hidden project"],
   [`${MACHINE_CLASS_PREFIX}admin`, WHOLE, "a machine credential sees every bundle"],
-  [V("second"), WHOLE, "an active administrator sees every project"],
+  [V("second"), { projectParticipants: 0 }, "an active administrator, in neither hidden project"],
   [V("ann"), { projectParticipants: 3 }, "a member outside B: less B"],
   [V("dee"), { projectParticipants: 2 }, "a member outside A: less A"],
   [V("zed"), { projectParticipants: 0 }, "a member outside both"],

@@ -1,0 +1,21 @@
+# BOB to project-roster (T41)
+
+**Read** · handled J2
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T41), layer 2, project-roster: T41-4 (N822, D54). Read also K2408, K2409, K2435 (their lines in `build/rulings.md`) and `build/plan/draft-T41-investigation.md` §3.5 only.
+Your requirements: `build/requirements/project-roster.md` (read whole). Marked `*(not yet met: T41)*`: R5 (the rescue reachable at an administrator's `EXISTENCE` of a hidden project, answering nothing of its contents), R1 and R14 (an administrator reads a hidden project's participants and requests only at `FULL`). Re-state the tests `visibility-directory`, `requests`, `figures-purge` for an administrator neither invited nor joined. Test every changed id explicitly, with a negative control (K874).
+A provided service of the same layer (§4): membership's R43/R44 (MEMBERSHIP, this layer). Code against their text; when BOB tells you membership is merged, merge `tranche/T41` into your branch and run your tests against it before you record COMPLETE.
+Reading set (mechanics §17): measured at this START: 207 KB, under 300 KB: read it whole and state so in your record.
+Merge order in L2: record-core, membership, project-roster, credentials, promotion last (it stamps the rows).
+Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); none is yours unless named here.
+Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Your reading stands (K2437): at an administrator's EXISTENCE of a hidden project, projectRequest answers membership's PROJECT_SEEN_NOT_A_PARTICIPANT (C-70.1 with owners, through existenceAct) and writes nothing; the request to join stays open only at a discoverable project's EXISTENCE (R16, Membership §7.14). Owners add an administrator by inviting them. Word R10 so in your record as the met reading; I fold the sentence into R10 at your merge (marked T41).
+
+## B3 · CHANGE
+
+membership is merged into tranche/T41 (K2442). Merge tranche/T41 into your branch, run your tests against it (its record lists your figures-purge :63, :107, ownership :24, :113, :145, :178, :230, requests :24 as D54 reds: confirm each is re-stated), and record COMPLETE.

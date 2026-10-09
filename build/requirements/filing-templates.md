@@ -1,6 +1,6 @@
 # filing-templates — requirements
 
-**Status** · In force: approved by Bob 2026-10-01 (K921: the design, its ten answers and the module), Bob's second answers governing where they differ (K924); K922 (1) moved `FILING_BLANKS` and `FILING_TEXT_MAX` here from `filings`. Last changed T35 (T35-63: R26, C-115.45, C-115.46; K1869); every other requirement met (FILING-TEMPLATES #5, K2021). Last changed T37 (T37-23: Terms amended, R27 new; N761; K2129, K2175); R27 not yet met (T37).
+**Status** · In force: approved by Bob 2026-10-01 (K921: the design, its ten answers and the module), Bob's second answers governing where they differ (K924); K922 (1) moved `FILING_BLANKS` and `FILING_TEXT_MAX` here from `filings`. Last changed T35 (T35-63: R26, C-115.45, C-115.46; K1869); every other requirement met (FILING-TEMPLATES #5, K2021). Last changed T37 (T37-23: Terms amended, R27 new; N761; K2129, K2175); R27 met (K2233).
 
 **Size (P6).** New. Estimated 1,100–1,500 lines with its tables (templates, versions with revisions, proposals, reviews, grants, comments, approvals and endings), plus about 150 moved from `filings`. Well under the mark.
 

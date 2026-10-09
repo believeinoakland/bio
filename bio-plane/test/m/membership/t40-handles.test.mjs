@@ -307,8 +307,10 @@ test("R126 the handle codes are rows of C-96, the next free numbers (C-96.48 to 
   }
   assert.equal(MEMBERSHIP_CHECKS.HANDLE_FIXED.translation, words.find((x) => x.key === "handle.fixed").en);
   assert.equal(MEMBERSHIP_CHECKS.HANDLE_FIXED.translation, "Your handle is fixed: your work is in a published case ({case}).");
+  /* T41-3 (DEC-188 (7)): the UX stream re-worded BOB's draft; the row reads `handle.refused.unchecked` by key
+     (t41-sight-words.test.mjs holds all three keys). */
   assert.equal(MEMBERSHIP_CHECKS.HANDLE_CHANGE_UNCHECKED.translation,
-    "Whether your work is in a published case could not be checked, so your handle was not changed. Try again.");
+    words.find((x) => x.key === "handle.refused.unchecked").en);
   /* negative control: no other row of this module holds those numbers, and C-96.47 is still NO_SUCH_MEMBER's */
   const all = Object.entries(MEMBERSHIP_CHECKS);
   for (const check of Object.values(want)) assert.equal(all.filter(([, r]) => r.check === check).length, 1, check);
