@@ -37,7 +37,7 @@ import { checkInquiryBasis, checkInquiryExtension, supersedesEdgeFindings, divis
   from "./grammar.mjs";
 import { INQUIRY_GRAMMARS, parseImportedFindingRef, parseOccurrenceRef, CALCULATION_REF_RE } from "../inquiry-grammar/index.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate, listenerRefusal } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, listenerRefusal, Membership } from "../membership/index.mjs";
 import { promotionOf, stepContext, PROMOTION_ROW_CHECKS } from "../promotion/index.mjs";
 import { contentOf, CONTENT_EXTENT_CHECKS, CONTENT_MINTED_BY_PLANE, canonicalExtent, legContentId }
   from "../content/index.mjs";
@@ -175,6 +175,18 @@ export function biasNotInForce(args = {}) {
                    ? `and whether it is in ${lens} could not be read, so the application is refused rather than trusted`
                    : `which is not in ${lens}`) };
   /* END DEC-49 REGION is-bias-application-in-force */
+}
+
+/* R61 (inquiry-grammar R18; K2479): a leg's bias applications, as a parsed list (`bias_applied`, an act's own input) or
+   in front matter's one encoding, the numbered scalar keys `bias_<n>_statement` (`n` from 1 and contiguous). The shape is
+   inquiry-grammar's to judge; this reads only what each entry names as its statement. To be read through
+   inquiry-grammar's `readBiasApplied` once its T41 job merges (BOB's CHANGE). */
+function appliedOf(leg) {
+  if (!leg || typeof leg !== "object") return [];
+  if (Array.isArray(leg.bias_applied)) return leg.bias_applied;
+  const out = [];
+  for (let n = 1; Object.hasOwn(leg, `bias_${n}_statement`); n++) out.push({ statement: leg[`bias_${n}_statement`] });
+  return out;
 }
 
 /* The files of a bundle other than bundle.md, carried unchanged into its next promotion. */
@@ -594,7 +606,7 @@ export class Inquiry {
     project = typeof project === "string" ? project.trim() : "";
     const scope = project ? { type: "project", id: project } : "instance";
     legs.forEach((leg, i) => {
-      const applied = leg && typeof leg === "object" && Array.isArray(leg.bias_applied) ? leg.bias_applied : [];
+      const applied = appliedOf(leg);
       applied.forEach((a, j) => {
         const statement = a && typeof a === "object" && typeof a.statement === "string" ? a.statement.trim() : "";
         if (!statement) return;
@@ -789,7 +801,7 @@ export class Inquiry {
       migrated = { capture: pkg.migrationReplay.capture, promotion: promotionKey, at: ts };
     }
     /* R54: the dated waits, re-derived from the document's recheck triggers. */
-    if (isInquiry && docFm) this.#projectWaits(bundleId, docFm, c.author);
+    if (isInquiry && docFm) this.#projectWaits(bundleId, docFm, c.author, this.#setIn(pkg && pkg.setIn, c.author));
     /* R53 (A9, bias R40): a finding, when the document enters `concluded` stating its project. */
     if (isInquiry && docFm && docFm.current_state === "concluded" && !(cur && cur.currentState === "concluded"))
       this.#recordFinding(bundleId, docFm, c.author, !!pkg.replay);
@@ -907,7 +919,9 @@ export class Inquiry {
     const rows = Array.isArray(fm.state_history) ? fm.state_history.filter((r) => r && typeof r === "object") : [];
     return { ok: true, id, transitions: rows.map((r) => ({
       at: r.timestamp ?? null, from: r.from_state ?? null, to: r.to_state ?? null,
-      by: r.author ?? null, reason: r.blurb ?? null })) };
+      by: r.author ?? null, reason: r.blurb ?? null })),
+      /* R60 (H38): a read of a question to a viewer answers the projects R14 shows her; the in-process call names none */
+      ...(viewer !== undefined ? this.#projectsField(id, viewer) : {}) };
   }
 
   /** R48 (N345): the inquiry's recorded `{candidate, resolution, explores}` as its latest promotion projected them, with
@@ -977,7 +991,7 @@ export class Inquiry {
      text and date the document still states keeps who set it and when (its position and description follow the
      document); one whose text is still stated under another date ends `redated`, and the new date is a new wait set by
      this promotion's author; one no longer stated ends `removed`. Ended waits are kept, with who and when. */
-  #projectWaits(bundleId, fm, author) {
+  #projectWaits(bundleId, fm, author, setIn = null) {
     const triggers = Array.isArray(fm.recheck_triggers) ? fm.recheck_triggers : [];
     const stated = [];
     triggers.forEach((t, i) => {
@@ -1004,8 +1018,8 @@ export class Inquiry {
         this.sql.exec(`UPDATE inquiry_dated_waits SET ended='redated', ended_by=?, ended_at=?, idx=NULL WHERE wait_id=?`,
           who, when, moved.wait_id);
       }
-      this.sql.exec(`INSERT INTO inquiry_dated_waits (bundle_id, idx, text, description, date, set_by, set_at)
-                     VALUES (?,?,?,?,?,?,?)`, bundleId, w.idx, w.text, w.description, w.date, who, when);
+      this.sql.exec(`INSERT INTO inquiry_dated_waits (bundle_id, idx, text, description, date, set_by, set_at, set_in)
+                     VALUES (?,?,?,?,?,?,?,?)`, bundleId, w.idx, w.text, w.description, w.date, who, when, setIn);
       set.push({ inquiry: bundleId, date: w.date, set_by: who });
     }
     for (const h of held)
@@ -1013,6 +1027,17 @@ export class Inquiry {
         this.sql.exec(`UPDATE inquiry_dated_waits SET ended='removed', ended_by=?, ended_at=?, idx=NULL WHERE wait_id=?`,
           who, when, h.wait_id);
     if (this.#onWaitSet) for (const n of set) { try { this.#onWaitSet.fn(n); } catch { /* never undoes the promotion */ } }
+  }
+
+  /* R54 (T41; K2480): the project the promoting act named (the package's `setIn`, which the control plane stamps from
+     the request's project context), kept only when it names a project the author may see; else none. Never throws. */
+  #setIn(named, author) {
+    try {
+      const p = typeof named === "string" ? named.trim() : "";
+      if (!p) return null;
+      const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, p);
+      return b && b.object_type === "project" && this.membership.inSight(p, author) === true ? p : null;
+    } catch { return null; }
   }
 
   /* R55, R57: the profile's time zone (the active jurisdiction view's `time_zone`), or null when none is held: a wait's
@@ -1064,7 +1089,7 @@ export class Inquiry {
           : today === null ? "undetermined"
           : today >= w.date ? "due" : "waiting";
         waits.push({ inquiry: w.bundle_id, index: w.idx, text: w.text, description: w.description, date: w.date,
-                     set_by: w.set_by, set_at: w.set_at, state,
+                     set_by: w.set_by, set_at: w.set_at, set_in: w.set_in ?? null, state,
                      ...(state === "looked" ? { looked_at: w.looked_at, ...(w.look_note ? { note: w.look_note } : {}) } : {}),
                      ...(state === "ended" ? { inquiry_state: w.current_state } : {}),
                      ...(state === "undetermined"
@@ -1073,6 +1098,64 @@ export class Inquiry {
       }
       return { ok: true, member: m, as_of: at, zone, waits };
     } catch { return { ok: true, member: memberStamp(member), waits: [] }; }
+  }
+
+  /** R55 (T41; D17; K2480): every open dated wait on `question` to any `viewer` who may see it (R33: else answered
+   *  exactly as an absent question, no waits), each with its text, description and date, its state as of `asOf`
+   *  (`waiting`, `due`, `ended` or `undetermined` as R55 states them; a look is the setter's own and is not answered
+   *  here), the setter's handle (`members.handle`, membership R120; null for a setter with none, a machine), and the
+   *  project it was set in, `{id, name}`, only while that project is discoverable (membership R85) and the viewer's
+   *  sight of it is not NONE (R44): otherwise no `set_in`, exactly as for a wait set in no project. The answer carries
+   *  `projects` (R60, leg-earning R14). R55's due notice and R56's look stay the setter's alone. Writes nothing; never
+   *  throws. */
+  questionWaits(args = {}) {
+    const { question = null, viewer = null, asOf = null } = args && typeof args === "object" ? args : {};
+    const absent = { ok: true, question: typeof question === "string" ? question : null, waits: [] };
+    try {
+      if (typeof question !== "string" || !question || typeof viewer !== "string" || !viewer.trim()) return absent;
+      const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, question);
+      if (!b || normalizeType(b.object_type) !== "inquiry" || this.membership.inSight(question, viewer) !== true) return absent;
+      const zone = this.#zone();
+      const today = this.#day(typeof asOf === "string" && asOf ? asOf : this.#when(), zone);
+      const ended = WAIT_ENDING_STATES.includes(b.current_state);
+      const waits = this.#rows(`SELECT w.idx, w.text, w.description, w.date, w.set_by, w.set_at, w.set_in, m.handle
+                                  FROM inquiry_dated_waits w LEFT JOIN members m
+                                    ON 'member:' || m.member_id = w.set_by
+                                 WHERE w.bundle_id=? AND w.ended IS NULL ORDER BY w.idx, w.wait_id`, question)
+        .map((w) => {
+          const state = ended ? "ended" : today === null ? "undetermined" : today >= w.date ? "due" : "waiting";
+          const shown = this.#projectShownByName(w.set_in, viewer);
+          return { index: w.idx, text: w.text, description: w.description, date: w.date, state,
+                   set_by_handle: typeof w.handle === "string" && w.handle ? w.handle : null, set_at: w.set_at,
+                   ...(shown ? { set_in: shown } : {}), ...(ended ? { inquiry_state: b.current_state } : {}) };
+        });
+      return { ok: true, question, zone, waits, ...this.#projectsField(question, viewer) };
+    } catch { return absent; }
+  }
+
+  /* R55 (D17): a project as `{id, name}` while it is discoverable and the viewer's sight of it is not NONE, else null. */
+  #projectShownByName(projectId, viewer) {
+    if (typeof projectId !== "string" || !projectId) return null;
+    try {
+      if (this.membership.visibilityOf(projectId) !== "discoverable") return null;
+      if (this.membership.sight(projectId, viewer) === Membership.SIGHT_NONE) return null;
+      const r = this.#one(`SELECT title FROM bundles WHERE bundle_id=?`, projectId);
+      return r ? { id: projectId, name: r.title ?? null } : null;
+    } catch { return null; }
+  }
+
+  /** R60 (H38): `{projects}` for question `id` read by `viewer` (leg-earning R14's answer for her), as every read of a
+   *  question here answers it; `{projects: null, projects_undetermined}` when it cannot be read. Never throws. */
+  projectsOf(id, viewer) { return this.#projectsField(id, viewer); }
+
+  /* R60 (H38): the `projects` field of a read answering a question to `viewer`: leg-earning R14's answer for that viewer,
+     `{projects, projects_truncated?}`, or `{projects: null, projects_undetermined}` when it cannot be read (never an
+     empty list in its place). */
+  #projectsField(question, viewer) {
+    const r = this.#projectsShown(question, viewer);
+    if (r === null)
+      return { projects: null, projects_undetermined: "which projects draw on this question could not be read" };
+    return { projects: r.projects, ...(r.truncated ? { projects_truncated: true } : {}) };
   }
 
   /** R56: the wait's setter records that they looked, with the instant; it reads `looked` until a later revision sets a
@@ -1164,7 +1247,7 @@ export class Inquiry {
       for (const id of ids) {
         const b = this.#one(`SELECT bundle_id, object_type, current_state FROM bundles WHERE bundle_id=?`, id);
         if (!b || normalizeType(b.object_type) !== "inquiry" || this.membership.inSight(id, viewer) !== true) continue;
-        out.push(this.#documentWait(id, b.current_state, viewer));
+        out.push({ ...this.#documentWait(id, b.current_state, viewer), ...this.#projectsField(id, viewer) });
       }
       return { ok: true, questions: out };
     } catch { return { ok: true, questions: [] }; }
@@ -2582,9 +2665,11 @@ export function inquiryOf(host, deps) {
     if (retrieval && typeof retrieval.registerField === "function")
       retrieval.registerField("inquiry", "legs", LEGS_RELATION);
     if (retrieval && typeof retrieval.registerProjectionDecoration === "function")
-      retrieval.registerProjectionDecoration("inquiry", (row) => {
-        const m = row && normalizeType(row.object_type) === "inquiry" ? k.migratedSurfacing(row.bundle_id) : null;
-        return m ? { surfaced_in: m } : {};
+      retrieval.registerProjectionDecoration("inquiry", (row, ctx) => {
+        if (!row || normalizeType(row.object_type) !== "inquiry") return {};
+        const m = k.migratedSurfacing(row.bundle_id);
+        /* R60 (H38): the question's document, read by a viewer, answers the projects R14 shows her */
+        return { ...(m ? { surfaced_in: m } : {}), ...k.projectsOf(row.bundle_id, ctx && ctx.viewer) };
       });
   }
   return k;
@@ -2629,6 +2714,9 @@ export function inquiryOps(k, url, body) {
                                owner: q("owner"), author: q("author") }),
     inquirydivide: () => k.divide({ ...b, target: q("target") || b.target, viewer: q("viewer"), author: q("author") }),
     inquiryground: () => k.ground({ ...b, target: q("target") || b.target, viewer: q("viewer"), author: q("author") }),
+    /* R55 (T41; D17): every wait on a question, to a viewer who may see it */
+    questionwaits: () => k.questionWaits({ question: q("question") || b.question, viewer: q("viewer"),
+                                           asOf: q("asOf") || null }),
     /* R56: the look is the stamped member's own (`by` from the stamp, never the body). */
     waitlook: () => k.waitLook({ inquiry: q("inquiry") || b.inquiry, index: q("index") ?? b.index, note: b.note ?? null,
                                  by: q("author") }),

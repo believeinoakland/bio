@@ -6,7 +6,7 @@
    and the exported pure `biasNotInForce`. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world } from "./fixture.mjs";
+import { world, inquiryMd } from "./fixture.mjs";
 import { biasNotInForce, INQUIRY_BIAS_CHECKS, inquiryOf } from "../../../src/inquiry/index.mjs";
 
 const LENS = "BIAS-2026-6101-lens";
@@ -103,4 +103,27 @@ test("R61 K231: biasNotInForce is the refusal's one spelling, pure, its row this
   assert.doesNotThrow(() => biasNotInForce());
   assert.doesNotThrow(() => biasNotInForce(null));
   assert.equal(biasNotInForce({ statement: 7 }).statement, null);
+});
+
+test("R61 at the promotion: a leg's statement written in front matter's encoding (bias_<n>_statement, inquiry-grammar R18) is asked as the author sees it; one not in force refuses BASIS_REFUSED and nothing is written", () => {
+  const w = lensWorld();
+  const DOC = "INFO-2026-6102-doc";
+  w.doc(DOC);
+  const md = (id, statements) => inquiryMd(id, { legs: [{ target: DOC }], extra: [`project: ${w.P}`] })
+    .replace("    role: supports", ["    role: supports", ...statements.flatMap((st, i) =>
+      [`    bias_${i + 1}_statement: ${st}`, `    bias_${i + 1}_effect: leg_excluded`])].join("\n"));
+  /* in force: lands (the negative control) */
+  const ok = w.promote("INQ-2026-6101-in", md("INQ-2026-6101-in", ["s1"]), undefined, { author: "member:ruth" });
+  assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 400));
+  /* not in force: refused, the leg and the statement named, nothing written */
+  const r = w.promote("INQ-2026-6102-out", md("INQ-2026-6102-out", ["s1", "s9"]), undefined, { author: "member:ruth" });
+  assert.deepEqual([r.ok, r.reason], [false, "BASIS_REFUSED"]);
+  assert.deepEqual(r.findings.map((f) => [f.code, f.check, f.statement, f.where]),
+                   [["BIAS_APPLICATION_NOT_IN_FORCE", "C-2.19", "s9", "basis[0].bias_applied[1]"]]);
+  assert.equal(w.record.head("INQ-2026-6102-out"), null, "nothing was written");
+  /* the author is the viewer: sam, outside the project, is refused the statement ruth may apply */
+  const sam = w.promote("INQ-2026-6103-sam", md("INQ-2026-6103-sam", ["s1"]), undefined, { author: "member:sam" });
+  assert.deepEqual(sam.findings?.map((f) => f.code), ["BIAS_APPLICATION_NOT_IN_FORCE"], JSON.stringify(sam).slice(0, 300));
+  /* a leg with no application asks nothing and lands */
+  assert.equal(w.promote("INQ-2026-6104-none", inquiryMd("INQ-2026-6104-none", { legs: [{ target: DOC }] })).ok, true);
 });
