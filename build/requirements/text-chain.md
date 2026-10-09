@@ -28,7 +28,7 @@ non-empty array of step objects; `STEP_KINDS` below is the only source of which 
   (the step itself names its tier, on a `tier` field), or `null` (the kind is not a rung on the
   extraction ladder).
 - **R3** `convert`, `typed` and (T41; R104, K2427) `ai_transcription` additionally declare `names` (the fields `checkChain` requires
-  non-empty on that step), `unmeasured: "undetermined"` and `letter` (`"calibrated"` for `convert`,
+  non-empty on that step), `unmeasured: "undetermined"` and `letter` (`"calibrated"` for `convert` and `ai_transcription`,
   `"never"` for `typed`) — read by `checkChain`'s and `derivationCap`'s rules, never hand-matched by
   spelling.
 - Errors: not applicable; a plain object, never mutated.
