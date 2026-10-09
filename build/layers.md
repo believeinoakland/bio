@@ -292,6 +292,6 @@ Uses: `steps` uses record-grammar, civil-time, record-core, membership, promotio
 
 | module | what it does | source |
 | --- | --- | --- |
-| publish-schedule | Publishing a signed case edition at a set time: the waiting edition and its table (`scheduled_editions`), the publisher registered at start, moving and cancelling, the schedule's read, the wake for `scheduler`, the waiting-edition read for `case-authoring`. It commits through `publication` R22. | `publication/schedule.mjs` (312 lines), `scheduled_editions` and its schema share; `publication` R66–R71, R74 |
+| publish-schedule | Publishing a signed case edition at a set time: the waiting edition and its table (`scheduled_editions`), the publisher registered at start, moving and cancelling, the schedule's read, the wake for `scheduler`, the waiting-edition read for `case-authoring`. It reads `case_documents` to see a commit; ratification's publisher commits (K2438). | `publication/schedule.mjs` (312 lines), `scheduled_editions` and its schema share; `publication` R66–R71, R74 |
 
 Uses: `publish-schedule` uses civil-time, jurisdictions, record-core, membership and publication (K2438). `ratification` (`op=publishat`, R42's publisher), `case-authoring` (R58, R59), `scheduler` (R71's wake), `queue-producers` (R37), `actions` (a test) and `plane` re-point to it in their T41 jobs; publication reaches its waiting editions through the registration `registerWaitingEditions` (K31's pattern).
