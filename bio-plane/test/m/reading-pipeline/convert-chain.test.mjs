@@ -6,8 +6,8 @@
      and the over-strictness arms (a city ODT, an archive replay and a city PDF gain no conversion), pinned by the
      digests the old suite measured (PRISTINE below);
    - `test/producer-provenance.test.mjs`: R10/R11's `layer -> ocr(<product>)` over the real pdf entry;
-   - `test/reading-wire.test.mjs`: the real Legistar packet through the real pdf entry with R11's partial-decode
-     statement, and R11's failed readings naming tier 1's marker.
+   - `test/reading-wire.test.mjs`: the real Legistar packet through the real pdf entry (a full decode since K2399),
+     R11's partial-decode statement, and R11's failed readings naming tier 1's marker.
    The capture documents are built as capture's acquire answer carries them (the Drive and archive hops by their own
    builders). R24: the agenda readers run over the view the caller hands in, here the instance's profiles combined. */
 import { test } from "node:test";
@@ -294,15 +294,41 @@ const CID = xrefPdf([
   "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
 ]);
 
-test("R2 R10 R11 (reading-wire): the real Legistar packet read through the real pdf entry at tier 1 is a determined reading over [layer], and its 45-code-point residue is stated on the basis as a PARTIAL decode; a full decode is not called partial", async () => {
+/* A one-page agenda with a second font that has no Unicode map (no /ToUnicode, no /Encoding): tier 1 decodes the
+   agenda and marks the three codes it cannot, so the text is read over a partial decode (R11's statement). */
+function partialPage(lines) {
+  const cbuf = Buffer.from("BT /F1 10 Tf " + lines.map((l, j) => (j ? "0 -12 Td " : "") + `(${l}) Tj `).join("")
+                           + "/F2 10 Tf 0 -12 Td (xyz) Tj ET", "latin1");
+  return pdf([
+    { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+    { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+    { num: 3, body: "<< /Type /Page /Parent 2 0 R /Resources << /Font << /F1 5 0 R /F2 7 0 R >> >> /Contents 4 0 R >>" },
+    { num: 4, head: `<< /Length ${cbuf.length} >>`, stream: cbuf },
+    { num: 5, body: "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /ToUnicode 6 0 R >>" },
+    { num: 6, head: `<< /Length ${CMAP.length} >>`, stream: CMAP },
+    { num: 7, body: "<< /Type /Font /Subtype /TrueType /BaseFont /Arial >>" },
+  ]);
+}
+const PARTIAL = partialPage(agendaLines("Grand Performance Mural", "26-9911", "26-9912", "26-9913"));
+
+/* Re-measured at T41-9 (K2399): pdf-reader R38 reads strings as bytes, so the packet's 45 codes 0x80–0x9F, the residue
+   this test pinned as a partial decode before, now decode (60,797 -> 60,842 characters). The partial-decode statement is
+   checked on a document that still has a residue. */
+test("R2 R10 R11 (reading-wire): the real Legistar packet read through the real pdf entry at tier 1 is a determined reading over [layer], decoded whole (60,842 characters since K2399) and stated as a full decode; a text with an undecoded residue is stated on the basis as a PARTIAL decode, naming its marker", async () => {
   assert.equal(sha(REAL), "16cb1adf6d35116dbc475ae39ac1757f28cd549e7ff5b7f6d5bb7c660503570c", "the packet's bytes are the measured ones");
   const w = instance();
   const { r } = await readPdf(w, REAL, "https://oakland.legistar.com/View.ashx?M=A&ID=1425405");
   assert.deepEqual(r.text_source, [layerStep("pdf")]);
   assert.deepEqual([r.read_from_text, r.found, r.text_tier, r.text_container, r.content_type], [true, true, 1, "pdf", "meeting_agenda"]);
   assert.match(r.basis, /^read by the meeting_agenda reader v1 over pdf the document's own text layer \(tier 1\)/, "the reader, the chain and the tier");
-  assert.match(r.basis, /PARTIAL decode, stated: 45 undetermined/);
+  assert.match(r.basis, /read over a full decode \(60842 characters\)/);
+  assert.doesNotMatch(r.basis, /PARTIAL/);
+  assert.deepEqual([r.text_chars, r.text_undetermined], [60842, 0], "R17: the counts agree with the statement");
   assert.match(r.basis, /every reference carries where it was read \(41 of 41\)/, "where references were read");
+  const partial = (await readPdf(w, PARTIAL, LEGISTAR("partial.pdf"))).r;
+  assert.deepEqual([partial.read_from_text, partial.found, partial.text_tier], [true, true, 1]);
+  assert.match(partial.basis, /read over a PARTIAL decode, stated: 1 undetermined region\(s\)\/code point\(s\): no_tounicode beside \d+ decoded characters/);
+  assert.equal(partial.text_undetermined, 1);
   const three = await readPdf(w, THREE, LEGISTAR("three.pdf"));
   assert.deepEqual([three.r.found, three.r.text_tier], [true, 1]);
   assert.doesNotMatch(three.r.basis, /PARTIAL/);
