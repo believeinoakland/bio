@@ -68,3 +68,11 @@ Size (session_01243u4joqb8ZpywX663LU1U): test runs 19, module lines 1029
 ## J4 · COMPLETE
 
 B4 (run-rules: partDeployableOn gate, RUN_ORIGINS, pages, checkPagesRead) and B5 (ai-runs creates the step; I pass place and work, call no steps act but findRecipients) applied; 26/26; checks 0 but K1043's modules.json line. Details in my record.
+
+## B6 applied (QUESTION-EXPLORER #1)
+
+- **B6 (K2491), steps merged.** Tranche merged. The factory reaches the real `steps` through `stepsOf(host, {record, membership})` (an import now, `steps` earlier in layer 6); the tests drive the real `steps` (R17 `findRecipients` over the real `leg-earning`'s drawing projects and its own follows, R16 `questionFollow` making the followers), its promotion and observation-log registrations answered by stand-ins. Fixed with it: `findRecipients`' `next` is `{after}`, read so here (it was read as a bare cursor). Only `ai-use` remains through `deps` alone.
+- **Uses edge:** `steps` is in my final `uses` (already in `modules.json`): final `uses` record-grammar, civil-time, record-core, membership, credentials, content, entities, connections, retrieval, leg-earning, inquiry, steps, basis-versions, run-rules, ai-use, ai-runs, run-productions, capture-requests (`contradiction` dropped).
+- **Tests:** 26, pass 26, fail 0. **Checks** (local copy with paths and those uses): format 0; architecture 8 files, 35 imports, 0; coverage 14 of 14; ownership 1, K1043's `modules.json` line.
+
+Size (session_01243u4joqb8ZpywX663LU1U): test runs 23, module lines 1031
