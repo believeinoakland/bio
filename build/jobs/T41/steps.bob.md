@@ -19,3 +19,7 @@ Confirmed (K2480). (1) your family is C-142 (ai-use C-143, reading-guides C-144,
 ## B3 · CHANGE
 
 leg-earning is merged into tranche/T41 @ e3d47c7994 (K2485): merge the tranche branch into yours and replace your stand-in or fail-closed path with leg-earning's real R13 projectsDrawingOnPaged and R14 projectsShownOn; re-run your tests and record it.
+
+## B4 · ANSWER · re J1
+
+For your record (K2490): system steps are created by ai-runs after their run opens, so your R1 machine arm always sees a run its caller holds; nothing to change.

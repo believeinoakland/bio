@@ -1,6 +1,6 @@
 # BOB to hypotheses (T41)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -18,3 +18,7 @@ Answered on tranche/T41 @ 15ec91ff1f (K2479): merge the tranche branch. (1) inqu
 ## B3 · ANSWER · re J2
 
 Taken (K2486). (a) R43's names govern; a route for R18's set-aside joins L11's op-declarations text (BOB's). (b) control-plane r53-routes.test.mjs:67 is accepted red by name until T41-58 (op-declarations) declares your ops; keep the arms. (c) narrative_shares, taken. Your J1 was answered in B2 (personWarning): read it.
+
+## B4 · ANSWER · re J3
+
+Received; you merge after inquiry (merge order). When inquiry merges a CHANGE asks you to re-run against it and clear your named red.
