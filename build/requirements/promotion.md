@@ -1,6 +1,6 @@
 # promotion — requirements
 
-**Status** · In force: approved by Bob 2026-09-26 (a product module, P17), with later folds reviewed. Last changed T35 (T35-16: a stamp of the rows R34 and R50 count, and served wording no requirement quotes; no requirement changed; K1855, K1899 (1)); every requirement met.
+**Status** · In force: approved by Bob 2026-09-26 (a product module, P17), with later folds reviewed. Last changed T40 (T40-4: a stamp of the rows R34 and R50 count, awaiting stamp at T39's close and minted by T40's L1–L2 jobs; no requirement changed; K2370, K2377, K2378). Before that T35 (T35-16: a stamp of the rows R34 and R50 count, and served wording no requirement quotes; no requirement changed; K1855, K1899 (1)); every requirement met.
 
 ## Public
 

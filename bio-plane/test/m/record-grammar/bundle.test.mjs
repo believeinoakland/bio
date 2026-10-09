@@ -174,3 +174,44 @@ test("R39 with no bundle.md, one C-13.1 error and no document arm; format hygien
   assert.equal(r.findings[0].message, "bundle.md is missing");
   assert.equal(r.pass, false);
 });
+
+/* T40 (N809, K2390): an `object_type` that names no type of R3 by its own key is an unknown type, an inherited name of
+   `Object.prototype` included, and `checkBundle` answers it as it answers `memo`: never a throw. */
+test("R39 an object_type naming no type by its own key (toString, constructor, __proto__, every Object.prototype name) is an unknown type, answered as memo is; checkBundle never throws for it", async () => {
+  const base = fixtures()["clean information"];
+  const withType = (type, prefix = "INFO") => {
+    const text = base.files.get("bundle.md").replace("object_type: information", `object_type: ${type}`)
+      .replace("id: INFO-", `id: ${prefix}-`);
+    return run({ ...base, folderName: `${prefix}-2026-0001-a`, files: new Map([["bundle.md", text]]) });
+  };
+  /* The answer to an unknown type with the bytes held otherwise equal: `memo` is the model, its message the only change. */
+  const memo = await withType("memo");
+  assert.deepEqual(memo.findings.filter((f) => f.check === "C-2.5").map((f) => f.message), ["object_type 'memo' is not a known type"]);
+  assert.equal(memo.pass, false);
+  const like = (r, t) => ({ ...r, findings: r.findings.map((f) => (f.check === "C-2.5" ? { ...f, message: f.message.replace(`'${t}'`, "'memo'") } : f)) });
+  const NAMES = ["toString", "constructor", "__proto__", ...Object.getOwnPropertyNames(Object.prototype)];
+  for (const t of NAMES) {
+    const r = await withType(t);
+    assert.deepEqual(like(r, t), memo, t);
+    assert.deepEqual(r.findings.filter((f) => f.check === "C-2.5").map((f) => f.message), [`object_type '${t}' is not a known type`], t);
+    /* No heading arm and no state arm runs for it, as for any unknown type. */
+    assert.ok(!r.findings.some((f) => ["C-3.1", "C-4.1", "C-4.2"].includes(f.check)), t);
+  }
+  /* Under every bundle prefix, too: the id's implied type is never an inherited value. */
+  for (const p of ["PROB", "INQ", "PROJ", "BIAS", "PLN"]) for (const t of ["toString", "constructor", "__proto__"]) {
+    const r = await withType(t, p);
+    assert.deepEqual(r.findings.filter((f) => f.check === "C-2.5").map((f) => f.message), [`object_type '${t}' is not a known type`], `${p} ${t}`);
+  }
+  /* Negative control: a known type still checks, its heading and state arms running (and a legacy spelling read through
+     its own table). */
+  const known = await withType("information");
+  assert.deepEqual(known, EXPECTED["clean information"]);
+  const project = fixtures()["C-4.1 project state outside its machine"];
+  assert.ok((await run(project)).findings.some((f) => f.check === "C-4.1"));
+  const missing = await run(fixtures()["C-3.1 missing and extra headings"]);
+  assert.ok(missing.findings.some((f) => f.check === "C-3.1"));
+  const legacy = await run(fixtures()["legacy problem spelling"]);
+  assert.deepEqual(legacy, EXPECTED["legacy problem spelling"]);
+  assert.ok(legacy.findings.some((f) => f.message === "required heading '## Statement' is missing"), "judged by focus's headings");
+  assert.ok(!legacy.findings.some((f) => ["C-2.5", "C-4.1"].includes(f.check)));
+});
