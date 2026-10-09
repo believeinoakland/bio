@@ -102,7 +102,17 @@ blockquote cite{display:block;font:400 .8rem var(--mono);color:var(--muted);font
 
 <h2 id="now">1 · Open with you now</h2>
 <div class="now">
-<p>No design question is open. The next step is in my reply of 9 October: what to take up next.</p>
+<p><b>Six questions from BOB</b>, who has drafted the requirements for building steps, the system's exploring, milestones and reports. Five are about meaning, one about architecture. Each is set out in full in <a href="#questions">section 5</a>, with my recommendation:</p>
+<ul>
+<li><b>D46</b> · where the system's own hunches live</li>
+<li><b>D47</b> · a shared step's outcome, when it helped one question and not another</li>
+<li><b>D48</b> · when a milestone counts as met</li>
+<li><b>D49</b> · who a message about sharing a cost names</li>
+<li><b>D50</b> · why a document is held</li>
+<li><b>D51</b> · three new parts of the product (architecture)</li>
+</ul>
+<p>A short answer is enough, for example "D46: A, D47: B, …".</p>
+<p class="note">Also under way: the study of both kinds of member that you approved (D42), the by-hand path and the assistant's, traced through messy first messages. It will appear as a new section here.</p>
 </div>
 
 <h2 id="design">2 · The design</h2>
@@ -265,7 +275,75 @@ blockquote cite{display:block;font:400 .8rem var(--mono);color:var(--muted);font
 
 <h2 id="questions">5 · Open questions</h2>
 
-<p>None. Every question on the design so far is answered.</p>
+<p>BOB has turned the ruled design into requirements for the next build: steps, the system's exploring, and a project's milestones and reports. Writing them exposed five points of meaning your rulings do not yet settle, and one point of architecture you rule on. Each is set out below with its background, an example and the options. BOB's recommendation and mine agree on all six.</p>
+
+<div class="slip"><span class="id">D46 · Where the system's own hunches live</span>
+<p><b>Background.</b> You ruled: "Members can have hunches, hypotheses, and follow leads - as can the system" (D33). Today only a member can hold a hypothesis on a question, and a hypothesis is never evidence. The system will now form its own while exploring, so the build needs to know where they go.</p>
+<p><b>Example.</b> On Grandview's question "When did the district first know the rebuild would run late?", the system reads the board agendas and suggests: "The district knew by March 2025, when the construction manager first reported a 90-day slip."</p>
+<ol>
+<li><b>A · Kept apart, as the system's suggestions.</b> Shown on the question, to everyone who sees it, under a heading of their own ("the system's hunches"), and offered alongside its finds. A member who thinks one worth pursuing takes it up; it becomes her hypothesis, with a note that it came from the system. The members' own list holds only what members hold.</li>
+<li><b>B · On the same list as members' hypotheses,</b> each labelled as the system's.</li>
+</ol>
+<p><b>Trade-offs.</b> B is one list, so slightly simpler to read. But the system can produce many hunches, and a mixed list fills with guesses nobody chose, blurring what members actually believe. Under A, members can ignore the system's suggestions without having to dismiss each one, and "members decide" stays visible on the screen.</p>
+<p class="rec">Recommended: A.</p></div>
+
+<div class="slip"><span class="id">D47 · A shared step's outcome</span>
+<p><b>Background.</b> A step ends with an outcome: it helped, it was a dead end, or it was set aside (D32). You also ruled that one step can serve several questions (D45). The two meet when a shared step helps one question and not another.</p>
+<p><b>Example.</b> The step "Get the construction manager's monthly reports, 2023–2025" serves two questions: Grandview's "When did the district first know?", and another project's "Did change orders exceed the legal limit?". The reports date the delay precisely but say nothing about change orders.</p>
+<ol>
+<li><b>A · One outcome for the step.</b> It must be called "helped" or "dead end", which is true for one question and false for the other.</li>
+<li><b>B · The step ends once, and each question records its own outcome.</b> The step is ended or set aside; then, for each question, someone working on it records whether it helped that question. The system never records "helped" or "dead end" itself; it leaves "not yet judged".</li>
+</ol>
+<p><b>Trade-offs.</b> A is simpler but often wrong, and the wrong answer then misleads the next member who searches for the step before repeating it. B costs one extra choice per question, made only by people working on that question.</p>
+<p class="rec">Recommended: B.</p></div>
+
+<div class="slip"><span class="id">D48 · When a milestone is met</span>
+<p><b>Background.</b> You ruled that a milestone is met when the questions or steps it waits on are done (D27). "Done" needs a meaning.</p>
+<p><b>Example.</b> "Contract and change orders in hand before the 14 November board meeting" waits on the question "What did the change orders add?" and on the records-request step for them.</p>
+<ol>
+<li><b>Recommended.</b> A question is done when <i>this</i> project has concluded on it. Another project's conclusion does not count, since each project concludes for itself. A step is done when it has ended, whatever its outcome, and the milestone shows which outcome. A question this project deferred or dismissed, or a step set aside, is <i>not</i> done: the milestone shows that item as stuck, and a member may take it off the milestone, which is recorded.</li>
+<li><b>Alternative.</b> A question deferred or dismissed, or a step set aside, also counts as done.</li>
+</ol>
+<p><b>Trade-offs.</b> Under the alternative, a milestone can read "met" when the work was in fact dropped, the day before the meeting it was set for. Under the recommendation, nothing reads "met" unless it was, and dropping an item is a visible act.</p>
+<p class="rec">Recommended: as above.</p></div>
+
+<div class="slip"><span class="id">D49 · Who a message about sharing a cost names</span>
+<p><b>Background.</b> When several non-hidden projects share a costed step, each project's owners are told the total and how many projects share the interest, and may send messages to the others to settle who pays (D29). Your principle is that a shared question never shows which projects draw on it (D41). But settling money needs someone the others can reach.</p>
+<p><b>Example.</b> A $240 copying fee for the video of a closed hearing; three projects draw on the question. Each project's owners are told: "$240; 3 projects share this interest."</p>
+<ol>
+<li><b>A · The message carries its writer's handle</b> (for example @maria) and names no project unless she writes it in.</li>
+<li><b>B · Anonymous:</b> replies only through the relay, with no name on any message.</li>
+<li><b>C · The message names the writer's project</b> automatically.</li>
+</ol>
+<p><b>Trade-offs.</b> B makes paying awkward: in the end money passes between people, and nobody knows whom to pay. C reveals which project wants the answer, whether or not the writer means to. A lets the writer decide how much to reveal.</p>
+<p class="rec">Recommended: A.</p></div>
+
+<div class="slip"><span class="id">D50 · Why a document is held</span>
+<p><b>Background.</b> The study proposed a part of the product called "holdings", which would keep for each document a stated reason why the group holds it. It was settled earlier (D5) that the reason stated at capture is part of the document's provenance. Since then you ruled: "A step doesn't remember it's purpose"; a step's purposes are the questions that refer to it.</p>
+<p><b>Example.</b> The bond measure was captured by the step "Read the bond measure for background". Later it turns out to settle a question about how the money may be spent.</p>
+<ol>
+<li><b>Recommended · Provenance only.</b> Why a document is held is answered by the step that produced it and the questions that step serves, read from the record and never written separately. A document that came without a step (a chance find, something forwarded, a doorbell drop) shows who brought it and from where; once a member ties it to a step, it shows that step's questions too. There is no separate "holdings" part.</li>
+<li><b>Alternative · A stated reason per document</b>, written at capture and kept beside the provenance.</li>
+</ol>
+<p><b>Trade-offs.</b> A stated reason goes stale as soon as the document proves useful for another question, as the bond measure did, and it repeats what the questions already say. A member who wants to note why she grabbed something still can, in the step's "what was learned" or in a lead.</p>
+<p class="rec">Recommended: provenance only.</p></div>
+
+<div class="slip"><span class="id">D51 · Three new parts of the product (architecture)</span>
+<p><b>Background.</b> Civicsmith is built from parts called modules. Each holds one capability, and they are stacked in layers so that each uses only what sits below it. You rule on adding a part that carries new product capability. The design needs three.</p>
+<ol>
+<li><b>Steps</b> (layer 6, after hypotheses). Steps, where each is seen, outcomes, what a step produced, waits and dates, costs and the cost notice, the search that prevents duplicate steps, and following a question.</li>
+<li><b>Question explorer</b> (layer 6, after the AI's instructions). The system exploring a question unasked: choosing what is worth exploring, running it as a step of its own, judging how each find bears on the question, and offering the finds.</li>
+<li><b>Investigation</b> (layer 7, after objectives). A project's own milestones and its members' reports.</li>
+</ol>
+<p><b>Why three and not one.</b> Each part has a size limit, and the step part alone is large. Keeping the explorer separate also lets steps, milestones and reports ship and work fully without AI (your D42), while the AI part is held back until its checks are passed. It is called "question explorer" so it is not confused with the existing "explore", which walks the connections in the record.</p>
+<ol>
+<li><b>A · Approve as placed.</b></li>
+<li><b>B · Ask BOB for a different arrangement,</b> saying what you would change.</li>
+</ol>
+<p class="rec">Recommended: A.</p></div>
+
+<p class="note"><b>Not a question, for your information.</b> The question explorer can be built in the next tranche, but no exploring will be offered to members until two later decisions are ruled. One is the fence against investigating private individuals (D13). The other is the test investigations every AI part must pass first (D14). I will bring both to you with the study of both kinds of member, where a message about a dispute between neighbours shows exactly what that fence has to do.</p>
+
 
 <h2 id="later">6 · Coming later</h2>
 <p>These are the study's decisions for the AI stages, adjusted to your rulings. They are listed so you can see what is ahead. None is being asked now; each will come with full background when its stage is near.</p>
@@ -455,6 +533,12 @@ blockquote cite{display:block;font:400 .8rem var(--mono);color:var(--muted);font
 <tr><td class="id">D39</td><td>exploring: No, Ask every day, Yes; overall and per-use limits, inclusive or exclusive</td><td><span class="tag t-ruled">ruled</span></td></tr>
 <tr><td class="id">D40</td><td>what members outside a project see</td><td><span class="tag t-off">withdrawn</span>, as already ruled</td></tr>
 <tr><td class="id">D41</td><td>a step on a shared question taken inside a hidden project is on the question</td><td><span class="tag t-ruled">ruled</span> A</td></tr>
+<tr><td class="id">D46</td><td>where the system's own hunches live</td><td><span class="tag t-open">open</span></td></tr>
+<tr><td class="id">D47</td><td>a shared step's outcome, per question</td><td><span class="tag t-open">open</span></td></tr>
+<tr><td class="id">D48</td><td>when a milestone is met</td><td><span class="tag t-open">open</span></td></tr>
+<tr><td class="id">D49</td><td>who a shared-cost message names</td><td><span class="tag t-open">open</span></td></tr>
+<tr><td class="id">D50</td><td>why a document is held: provenance only</td><td><span class="tag t-open">open</span></td></tr>
+<tr><td class="id">D51</td><td>three new parts: steps, question explorer, investigation</td><td><span class="tag t-open">open</span></td></tr>
 </table></div>
 <p class="note">Source: <code>docs/development/investigation-design/</code> on branch <code>design/investigation</code>, which also holds the handoff to BOB, who turns rulings into requirements.</p>
 </main>

@@ -66,3 +66,9 @@ Numbered entries; BOB answers each in rulings (K) on `tranche/T<n>`. Decision st
 ## H13 · 2026-10-09 · the step model complete: D27–D30, D44, D45
 
 **Carries (Bob's words in `DECISIONS.md`):** D27 A (milestones belong to a project); D28 A (an untouched step can be deleted; a worked step keeps its record); D29 (a step may carry a money cost; a costed step shared by projects none of which is hidden: owners told the total and the count, messages relayed, they settle payment themselves, Civicsmith splits nothing); D30 B (member-written reports, system-drafted, kept with the project, never published); D44 no (no nested steps); D45 (steps searchable so work is shared, not duplicated; a step is a record associated with the questions that refer to it, keeping no purpose or method of its own). With D32–D41 the model of steps, questions and AI use is complete for requirements; the working document §2 states it whole.
+
+## H14 · 2026-10-09 · INVESTIGATION-DESIGN #2 takes over; BOB's six questions put to Bob
+
+**Carries:** #2 took over from #1 (RESUME.md). Bob approved the D42 study (both audiences; messy first messages traced through by-hand and assistant paths): "A". BOB #145's K2401 questions are in the working document §5 as **D46** (Q1 system hunches), **D47** (Q2 shared step outcome), **D48** (Q3 milestone met), **D49** (Q4 cost message names), **D50** (Q5 why a document is held), **D51** (§2.1 the three modules), each with background, example, options and BOB's recommendation, which this lane concurs with. The explorer's gating on D13/D14 is stated to Bob as fact; this lane will put D13 and D14 to him with the study, whose neighbour-dispute message is their natural context. Answers come back here as they arrive.
+
+**On canon:** this lane would rather BOB draft the step construct as canon (from `investigation-design.html` §2 and the answers), with this lane reviewing it against Bob's words before it goes to him.
