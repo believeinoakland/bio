@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 446 KB by `build/plan/read
 Merge order in L2: membership, credentials, promotion last (it stamps the rows).
 Inherited reds: the plan's rule 4 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Membership (K2413) and credentials (K2414) are merged into tranche/T40. Merge it into your branch and stamp: T39's five arrivals, membership's C-56.2 where and C-96.48-.51, credentials' C-29.34-.39, C-29.21, C-29.32's where; move CATALOG_VERSION and re-pin ROW_CENSUS. Then COMPLETE.
