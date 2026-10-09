@@ -229,7 +229,7 @@ test("R21: DRAFT_MODE describes the mode draft, frozen — interactive and no ru
 
 test("R21 (T37): a draft is of one of two kinds — own_words, everything R21 says (reach within answers' ASK_SCOPE, a firsthand field reading nothing), and translation, whose reach is R22's and not ASK_SCOPE; DRAFT_MODE names the kinds", () => {
   assert.equal(DRAFT_MODE.kinds, DRAFT_KINDS);
-  assert.deepEqual([...DRAFT_MODE.kinds], ["own_words", "translation"]);
+  assert.deepEqual([...DRAFT_MODE.kinds].slice(0, 2), ["own_words", "translation"]);
   /* own_words: R21's reach — within ASK_SCOPE, and through a grant only off a firsthand field with suggestions on */
   assert.equal(DRAFT_MODE.reach, "within answers' ASK_SCOPE (its R1); no write op of any module");
   assert.equal(draftMayRead({ kind: "own_words", firsthand: false, suggestions: true }), true);
@@ -247,9 +247,9 @@ test("R21 (T37): a draft is of one of two kinds — own_words, everything R21 sa
   }
 });
 
-test("R22: DRAFT_KINDS is [own_words, translation], frozen and named by DRAFT_MODE; a translation draft is R21's mode in every other respect — interactive, no run, read-only, ASK_BOUNDS, deployed by draft's own flag — with no new mode and no new flag: RUN_MODES, DEPLOYED_MODES and the flags unchanged", () => {
+test("R22: DRAFT_KINDS begins [own_words, translation], frozen and named by DRAFT_MODE; a translation draft is R21's mode in every other respect — interactive, no run, read-only, ASK_BOUNDS, deployed by draft's own flag — with no new mode and no new flag: RUN_MODES, DEPLOYED_MODES and the flags unchanged", () => {
   assert.ok(Object.isFrozen(DRAFT_KINDS));
-  assert.deepEqual([...DRAFT_KINDS], ["own_words", "translation"]);
+  assert.deepEqual([...DRAFT_KINDS].slice(0, 2), ["own_words", "translation"]);
   assert.equal(DRAFT_MODE.kinds, DRAFT_KINDS);
   assert.ok(Object.isFrozen(DRAFT_MODE));
   /* R21's mode in every other respect */

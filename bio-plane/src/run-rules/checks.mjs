@@ -7,9 +7,10 @@
  * those rows and this table's, one map. C-33's and C-66's other rows stay with their own families' owners (C-66.5
  * `inquiry`'s, C-66.6 `control-plane`'s). Tested in `test/m/run-rules/`.
  * DEC-149 (T34-86; K1784): a translation a member reads names the group's Civicsmith as "your group's Civicsmith", never
- * "this instance", "the copy" or "the plane" (C-33.29, C-109.1, C-109.9). */
+ * "this instance", "the copy" or "the plane" (C-33.29, C-109.1; C-109.9 until its retirement, R20). */
 
-/* C-22's run rows: C-22.5, .7, .8, .11–.16, .18, and T33's .19 (R18), .20 (R19) and .21 (R17). The family's history and its reason for being one row per code are in
+/* C-22's run rows: C-22.5, .7, .8, .11–.16, .18, T33's .19 (R18), .20 (R19) and .21 (R17), and T41's .22 (R19's test
+ * bar), .23 (R26) and .24 (R23). The family's history and its reason for being one row per code are in
  * observation-log's `AI_RUN_CHECKS` header (`../observation-log/checks.mjs`), which holds the log's rows. C-22.7 (`checkSkillVersion`'s, R8) is
  * held here beside its one minting site, `./skill-version.mjs` (R8, R11; K333, N289); `skills` names it by key through
  * this module (its R25). */
@@ -168,8 +169,9 @@ export const AI_RUN_OWN_CHECKS = {
   AI_RUN_BOUND_PLANE_COUNTED: {
     check: 'C-22.14',
     where: 'src/run-rules/rules.mjs checkConsume, called from src/ai-runs/index.mjs tick and open',
-    translation: 'This part of the investigation\'s budget is kept by the record itself — passages marked citable '
-      + 'and questions opened are counted as the work lands, and whether the investigation is still alive is read '
+    /* R26 (T41-21): `pages` joins the plane-counted bounds, so the sentence names pages read beside the rest. */
+    translation: 'This part of the investigation\'s budget is kept by the record itself — passages marked citable, '
+      + 'questions opened and pages read are counted as the work lands, and whether the investigation is still alive is read '
       + 'off the clock — so the investigation cannot report it, up or down. Nothing was recorded for this step.',
   },
   /* REC-172, 2026-09-23 (INVESTIGATIVE-SESSION.md §14b.6). A tick's `consume` key naming no bound, and a `consume`
@@ -240,6 +242,37 @@ export const AI_RUN_OWN_CHECKS = {
     where: 'src/run-rules/rules.mjs checkAskBounds, called from agent-worker and answers when an ask starts',
     translation: 'Nothing was asked, because the question was given more room than one question may have — more '
       + 'turns, more reading or more time than the most allowed. Ask again within those limits.',
+  },
+  /* R19 as amended (T41-21; D11, D14): AN AI PART'S RESULT ON THE TEST INVESTIGATIONS, `ai-runs` R75's record, judged
+     here as `verification_recorded` is: one code for every way the record is unfit (a part this module does not name, no
+     set, a version that is not a whole number of one or more, a false-alarm rate outside 0 to 1, a `passed` that is not
+     true or false, nobody grading, no time), the detail naming the field. Its own code and not C-22.20's: that one is a
+     member's verification of a live run; this is a graded result on frozen test matters, and its remedy differs. */
+  AI_TEST_BAR_UNFIT: {
+    check: 'C-22.22',
+    where: 'src/run-rules/test-bar.mjs checkTestBarRecord, called from src/ai-runs/index.mjs testBarRecord',
+    translation: 'This result on the test investigations was not kept, because it does not say all it must: which part '
+      + 'of the assistant was tested, on which set and which version of it, how often it raised a false alarm, whether '
+      + 'it passed, who graded it and when. Until such a result is kept, that part stays switched off.',
+  },
+  /* R26 (T41-21; D2): A READ INSIDE A DOCUMENT KEPT FROM THE ASSISTANT. A material limit that covers reading (`credentials`
+     R57) refuses the read whatever the run's `pages` bound allows: the bound counts pages a run may read, it never
+     licenses one. Minted here by `checkPagesRead`; the run's read relays it. The sentence names no limit's reason. */
+  AI_RUN_READ_NO_AI: {
+    check: 'C-22.23',
+    where: 'src/run-rules/rules.mjs checkPagesRead, called from the run\'s read inside a held document',
+    translation: 'Nothing was read, because this document is kept away from the assistant by a limit your group put on '
+      + 'its material. The investigation goes on without it; a person can still read it.',
+  },
+  /* R23 (T41-21; N820): A RUN'S ORIGIN, `member` or `explore`. An exploring run opens only while `investigate` is
+     deployable (R19: its verification chain and its test bar both held); an origin outside RUN_ORIGINS, or none, is
+     the same fact — this run may not open from where it says it came — and the detail says which. */
+  AI_RUN_ORIGIN_NOT_ADMITTED: {
+    check: 'C-22.24',
+    where: 'src/run-rules/rules.mjs originAllowed, called from src/ai-runs/index.mjs open',
+    translation: 'Nothing was started, because this investigation came from somewhere that may not start one now. '
+      + 'Exploring a question unasked is switched on only after investigating has been checked in real use and has '
+      + 'passed its test investigations.',
   },
 };
 
@@ -590,51 +623,43 @@ export const AI_RUN_PLAN_CHECKS = {
   },
 };
 
-/* R20 (Q0-5; K1450, K1502, K1601; D79) / C-109.8–.12 — WHAT HOLDS AN AI RUN OR ASK BACK BEFORE IT STARTS: the member's
- * use ceiling, the copy's lower one, and no account of the member's own; and the two refusals of setting a ceiling. `ai-runs` mints each at its open and tick (its R50,
- * R52) and `answers` before any model call of an ask; both read the rows here by key, as R11's `ai-runs` rows are. They
- * join C-109, the open's family, after the planning run's rows. Each is said in plain words and names no cost: members
- * see no cost per answer (K1450). */
+/* R20 (Q0-5; K1450, K1502, K1601; D79) / C-109.10–.11 — WHAT HOLDS AN AI RUN OR ASK BACK BEFORE IT STARTS that is not a
+ * use limit: no account serves the member's act; and a member's limit set or read by another. `ai-runs` and `answers`
+ * mint them and read the rows here by key, as R11's `ai-runs` rows are. They join C-109, the open's family, after the
+ * planning run's rows. Each is said in plain words and names no cost: a translation names a cost to nobody but the
+ * paying account's owners, to whom `ai-use` R10, R11 answer it (D12), and these rows are read by any member.
+ * T40 (N812; K2373, K2400): the ceiling codes retired for `ai-use`'s limits (RETIRED_CHECKS below); `ai-use`'s rows are
+ * its own, in its own table (its R8), not this module's. */
 export const AI_USE_CHECKS = {
-  /* R50: the member's own daily ceiling, set by the member. */
-  AI_USE_CEILING_REACHED: {
-    check: 'C-109.8',
-    where: 'src/ai-runs/index.mjs open, tick and the ask\'s ceiling, reached from op=airunopen, op=airuntick and an ask',
-    translation: 'Nothing was run, because you have used the assistant as much today as your own daily limit allows. '
-      + 'You set that limit yourself and can raise it; otherwise it resets at the start of tomorrow.',
-  },
-  /* R50: the lower ceiling an administrator set for the copy's own load. */
-  AI_USE_COPY_CEILING_REACHED: {
-    check: 'C-109.9',
-    where: 'src/ai-runs/index.mjs open, tick and the ask\'s ceiling, reached from op=airunopen, op=airuntick and an ask',
-    translation: 'Nothing was run, because you have reached today\'s limit that this group\'s administrator set to keep '
-      + 'your group\'s Civicsmith from being overloaded. It resets at the start of tomorrow, or an administrator can raise it.',
-  },
   /* R52 (K1502, K1503; K1755): no account serves the member's act — none of their own connected (a subscription token
-     or an API key), and the group's API key, which an administrator may hold, not held or switched off. */
+     or an API key), and the group's API key, which an administrator may hold, not held or switched off. T40 (N812):
+     or the account that would serve has this use switched off, where `AI_USE_SWITCHED_OFF` (`credentials` R56) is not
+     answered in its place. */
   AI_NO_ACCOUNT: {
     check: 'C-109.10',
     where: 'src/ai-runs/index.mjs open and the ask\'s account, reached from op=airunopen and an ask',
     translation: 'Nothing was run, because no account serves your request: you have not connected a Claude account or '
-      + 'an API key of your own, and your group has no API key of its own switched on. Connect yours, or ask an '
-      + 'administrator about the group\'s.',
+      + 'an API key of your own, and your group has no API key of its own switched on, or the account that would serve '
+      + 'has this use switched off. Connect yours, or ask an administrator about the group\'s.',
   },
   /* R50 (K1601, K1610): a member's ceiling is that member's own to set and read. The copy's ceiling is an
-     administrator's, refused to anyone else by membership's NOT_AN_ADMIN, never by this row. */
+     administrator's, refused to anyone else by membership's NOT_AN_ADMIN, never by this row. Stays at T40 (`ai-use` R2). */
   NOT_YOUR_CEILING: {
     check: 'C-109.11',
     where: 'src/ai-runs/index.mjs aiCeilingSet and aiUsageMine',
     translation: 'Nothing was changed, because a member\'s daily limit on the assistant is theirs alone to set or look '
       + 'at.',
   },
-  /* R50 (K1601): a ceiling's figure is a whole number of one or more, or none at all (null: no ceiling of one's own). */
-  AI_CEILING_INVALID: {
-    check: 'C-109.12',
-    where: 'src/ai-runs/index.mjs aiCeilingSet and aiCopyCeilingSet',
-    translation: 'Nothing was changed, because a daily limit on the assistant is a whole number of one or more, or no '
-      + 'limit of your own at all. Give a whole number, or clear the limit.',
-  },
 };
+
+/* R20 (T40; N812; K2373, K2400) — THE CODES RETIRED FROM THIS TABLE, each with the number it held, never reused, and the
+ * code that replaced it (`ai-use`'s, in its own table). Kept as data so a later row cannot take a retired number:
+ * `test/m/run-rules/table.test.mjs` R20 holds every number here apart from every row's. Frozen, every level. */
+export const RETIRED_CHECKS = Object.freeze({
+  AI_USE_CEILING_REACHED: Object.freeze({ check: 'C-109.8', retired_for: 'AI_LIMIT_REACHED' }),
+  AI_USE_COPY_CEILING_REACHED: Object.freeze({ check: 'C-109.9', retired_for: 'AI_LIMIT_REACHED' }),
+  AI_CEILING_INVALID: Object.freeze({ check: 'C-109.12', retired_for: 'AI_LIMIT_INVALID' }),
+});
 
 /** Every row this module holds, by code. */
 export const AI_RUNS_CHECKS = Object.freeze({ ...AI_RUN_OWN_CHECKS, ...AI_RUN_ACT_SHAPE_CHECKS, ...AI_RUNS_CONTEXT_CHECKS,

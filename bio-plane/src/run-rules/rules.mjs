@@ -204,6 +204,12 @@ export const RUN_BOUNDS = {
      declares at the open, and nothing here caps it: five is the size of a page of the member's tray (`action-plans`
      R34), not a bound. AFTER `surfaces` for `mints`' tie-break reason: appending it renames no existing ending. */
   proposals:   "options a planning run proposed for an action plan — the planning run's bound on what it may propose",
+  /* R26 (T41-21; D2): THE READING BOUND, on `mints`' rule. The number of pages of held documents a run may read; a run in
+     mode `extract` or `investigate` reading inside a document declares it at the open, and the plane counts it as each
+     page is read (PLANE_COUNTED_BOUNDS below), never the caller. A page of a document under a "no AI" material limit
+     (`credentials` R57) is refused inside the run whatever this bound allows (`checkPagesRead`). AFTER `proposals` for
+     `mints`' tie-break reason: appending it renames no existing ending. */
+  pages:       "pages of documents the group holds that the run may read inside — the run's reading bound",
   lease:      "the run stopped heartbeating and its lease lapsed: it died rather than finished",
 };
 
@@ -491,7 +497,8 @@ export function checkBound(bound) {
    T20, held it equal to a census of `store.mjs`' writers read off the source.) A caller's figure for one of these can only disagree with the plane's: a positive one makes the bound say passages
    were minted or questions opened that were not, and a negative one is a refund of what the plane counted. So the
    caller spends neither, at the tick or as a seed at the open — a zero claims nothing and is let through. */
-export const PLANE_COUNTED_BOUNDS = Object.freeze(["mints", "surfaces", "proposals"]);
+/* R26 (T41-21): `pages` joins them, counted by the run's read as each page is read inside a held document. */
+export const PLANE_COUNTED_BOUNDS = Object.freeze(["mints", "surfaces", "proposals", "pages"]);
 
 /* REC-172 (§14b.6) — THE BOUND THE PLANE DECIDES, and it is NOT a count. `lease` is the heartbeat whose LAPSE is how a
    killed run is noticed (`finishedBound`'s `expired`, the `ai-run-reap` consumer): the plane reads it off the clock,
@@ -700,7 +707,8 @@ export function askBoundReached(bounds, used) {
  *  with no member's act, it starts only when `standing` names its author, a member, and the mode is `ask` (R16's
  *  read-only reach; R17's bounds and the author's own account and ceiling are held by its callers). A draft (R21; T35,
  *  N686, DEC-153) starts only at the act of the member who asked for the help: the exception is `ask`'s alone, so with
- *  no member's act a draft is refused whatever `standing` holds. Anything else — a token class, the scheduler, a blank
+ *  no member's act a draft is refused whatever `standing` holds; so is the mode `enquire` (R24; T41-21), the interview
+ *  and planning, which starts only at the act of the member whose matter it is. Anything else — a token class, the scheduler, a blank
  *  or unrecognised stamp — is `AI_RUN_NOT_A_MEMBER_ACT` (C-22.19): fail closed. Never throws. */
 export function startAllowed(asked) {
   const { startedBy = null, mode = null, standing = null } = asked && typeof asked === "object" ? asked : {};
@@ -713,7 +721,10 @@ export function startAllowed(asked) {
   const m = mode == null ? "" : String(mode).trim();
   if (author && m === "ask") return { ok: true, exception: "standing_question", author };
   return refusal("AI_RUN_NOT_A_MEMBER_ACT",
-    m === "draft"
+    m === "enquire"
+      ? "the interview and planning start only at the act of the member whose matter it is, and the standing "
+        + "question's exception is an ask's alone (K1481). Nothing was started"
+      : m === "draft"
       ? "a draft of a member's own words starts only at the act of the member who asked for the help, and the "
         + "standing question's exception is an ask's alone (DEC-153, K1481). Nothing was started"
       : author
@@ -721,6 +732,44 @@ export function startAllowed(asked) {
         + `${JSON.stringify(m.slice(0, 40))} (K1481). Nothing was started`
       : "no member's act started this, and it is not the AI half of a standing question a member wrote (K1481). "
         + "Nothing was started");
+}
+
+/* R23 (T41-21; N820) — WHERE A RUN CAME FROM. `member`: a member's own act opened it (every run before T41, and every
+   run since that is not the explorer's); `explore`: the system exploring a question unasked, where an account owner
+   turned exploring on (`question-explorer`). Frozen, in that order. */
+export const RUN_ORIGINS = Object.freeze(["member", "explore"]);
+
+/** R23 — MAY A RUN OF THIS ORIGIN OPEN? `{ok: true}` for `member`; for `explore` only while `investigate` is deployable
+ *  under R19 as amended — its verification chain and its test bar both held — which the caller reads from the record
+ *  and hands here as `investigateDeployable` (`partDeployable("investigate", …)`); exactly `true` admits, anything else
+ *  does not. Any other origin, and an absent one, is refused too: an origin is said, never assumed. Refused
+ *  `AI_RUN_ORIGIN_NOT_ADMITTED` (C-22.24), the detail naming the origin. Pure; never throws. */
+export function originAllowed(asked) {
+  const { origin = null, investigateDeployable = false } = asked && typeof asked === "object" ? asked : {};
+  const o = typeof origin === "string" ? origin : "";
+  if (o === "member") return { ok: true };
+  if (o === "explore" && investigateDeployable === true) return { ok: true };
+  return refusal("AI_RUN_ORIGIN_NOT_ADMITTED", o === "explore"
+    ? "an exploring run opens only while investigating is switched on, after it has been checked in real use and has "
+      + "passed its test investigations (R19). Nothing was started"
+    : `${JSON.stringify(String(origin ?? "").slice(0, 40))} is not where a run comes from: a run is opened by a member `
+      + `or by the explorer (${RUN_ORIGINS.join(", ")}). Nothing was started`, { origin: o || null });
+}
+
+/** R26 (T41-21; D2) — MAY THE RUN READ INSIDE THIS DOCUMENT? `limits` is the material limits held for the document
+ *  (`credentials` R57, each `{on, uses, reason}`, `uses` naming USE_KINDS entries and meaning all of them when absent).
+ *  A limit that is on (`on` anything but exactly `false`) and covers the use `read` keeps the document from the AI: the
+ *  read is refused `AI_RUN_READ_NO_AI` (C-22.23), whatever the run's `pages` bound allows — the bound is not consulted.
+ *  Null otherwise: the bound is then judged by `finishedBound` as every bound is. A limit that is not an object is no
+ *  limit; `limits` that is not a list is none. The detail never quotes a limit's reason. Pure; never throws. */
+export function checkPagesRead(asked) {
+  const { limits = null } = asked && typeof asked === "object" ? asked : {};
+  const keeps = (l) => l != null && typeof l === "object" && !Array.isArray(l) && l.on !== false
+    && (l.uses == null || (Array.isArray(l.uses) && l.uses.includes("read")));
+  if (!(Array.isArray(limits) && limits.some(keeps))) return null;
+  return refusal("AI_RUN_READ_NO_AI",
+    "this document is kept away from the assistant by a limit on its material, so the run may not read inside it, "
+      + "whatever its reading bound allows (R26). Nothing was read");
 }
 
 /* ------------------------------------------------- DEC-63's gate (PL-18)
