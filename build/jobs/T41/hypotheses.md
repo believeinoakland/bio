@@ -55,3 +55,7 @@ Merged `tranche/T41` @ dc41a13858 (inquiry merged, K2498). R19's warning is now 
 **Ran.** `node --test bio-plane/test/m/hypotheses/`: tests 46, pass 46, fail 0. control-plane `r53-routes.test.mjs`:67 still red, accepted by name until T41-58 (B3). Checks: format 0; architecture 0 (12 files, 40 imports); coverage 21 of 21; ownership 0 (7 files).
 
 Size (session_01SNmT525iDHSzNtvbkS4m7u): test runs 18, module lines 1,104
+
+## J4 · COMPLETE
+
+B5 applied: merged tranche/T41 @ dc41a13858; R19 asks inquiry's real personWarning over inquiry.personFacts (as the note's author). Named red cleared; hypotheses 46/46. control-plane r53-routes:67 still the accepted red (B3). Checks 0, coverage 21/21. Record: 'Completion again'.
