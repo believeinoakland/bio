@@ -23,3 +23,7 @@
 - `node checks/ownership.mjs ../bio citation tranche/T41`: 0 failures.
 
 Size (session_016Z52Lhounrfoi2UisaQuXe): test runs 4, module lines 1406
+
+## J1 · COMPLETE
+
+T41-18 complete, tests only: cite-refusals (R1 position, R1 order) and sever (R4 order) re-stated for D54 with negative controls (discoverable project; invited administrator); no code change (existence is already asked before position). 78/78; format, architecture, coverage, ownership 0. Reading set 252 KB, read whole. Record: build/jobs/T41/citation.md, Completion.
