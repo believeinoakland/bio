@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #146 · session_017Mqb4UstLxePtEby56C1kS · depth 1
 
-**Jobs** · record-grammar: RECORD-GRAMMAR #12 session_0196Hjq7pbtNLCRCp3UtdPBW; text-chain: TEXT-CHAIN #7 session_01JDz9kGpTxawc3vKv6rH4vU; record-core: RECORD-CORE #19 session_013ReqojuRgnmvwKseFV6CE9
+**Jobs** · record-grammar: RECORD-GRAMMAR #12 session_0196Hjq7pbtNLCRCp3UtdPBW; text-chain: TEXT-CHAIN #7 session_01JDz9kGpTxawc3vKv6rH4vU; record-core: RECORD-CORE #19 session_013ReqojuRgnmvwKseFV6CE9; membership: MEMBERSHIP #32 session_011HAMj6VLhgKZ4DeMarJYTz
 
 **At T41's opening (K2422, K2423):** opened from `main` @ 8af83ac942 after T40's early close; Bob's meter 79%. Runs layer 1, then holds until Bob resumes.
 
