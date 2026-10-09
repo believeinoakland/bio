@@ -10,17 +10,25 @@ export const USAGE_FIGURES = Object.freeze([
 export const DETAIL_MAX = 200;
 export const MESSAGE_MAX = 300;
 
-/** R5 — the provider's usage as stated: a finite number stays, anything else is `null`. */
+/* R13 — the copy's own estimate of what a turn cost, beside the provider's figures and not one of them: priced on
+ * the `apikey` path (`model.mjs`), always `null` on the `signin` path. */
+export const ESTIMATE = "estimated_cost_usd";
+const SUMMED = Object.freeze([...USAGE_FIGURES, ESTIMATE]);
+const finite = (v) => (typeof v === "number" && Number.isFinite(v) ? v : null);
+
+/** R5 — the provider's usage as stated: a finite number stays, anything else is `null`. The estimate is never taken
+ *  from what a provider or runner states: it is `null` here, and only the `apikey` path prices it (R13). */
 export function usageOf(stated) {
   const u = stated && typeof stated === "object" ? stated : {};
-  return Object.fromEntries(USAGE_FIGURES.map((k) => [k, typeof u[k] === "number" && Number.isFinite(u[k]) ? u[k] : null]));
+  return { ...Object.fromEntries(USAGE_FIGURES.map((k) => [k, finite(u[k])])), [ESTIMATE]: null };
 }
 
-/** R6 — the sum over turns; a figure any turn left `null` stays `null` in the sum. */
+/** R6 — the sum over turns; a figure any turn left `null` stays `null` in the sum, the estimate included. */
+const kept = (u) => Object.fromEntries(SUMMED.map((k) => [k, finite(u[k])]));
 export function sumUsage(a, b) {
-  if (!a) return b ? usageOf(b) : null;
-  if (!b) return usageOf(a);
-  return Object.fromEntries(USAGE_FIGURES.map((k) => [k, a[k] == null || b[k] == null ? null : a[k] + b[k]]));
+  if (!a) return b ? kept(b) : null;
+  if (!b) return kept(a);
+  return Object.fromEntries(SUMMED.map((k) => [k, a[k] == null || b[k] == null ? null : a[k] + b[k]]));
 }
 
 /** R6 — the number of model calls a runner states for one conversation: a whole number, else `null` (never 0). */

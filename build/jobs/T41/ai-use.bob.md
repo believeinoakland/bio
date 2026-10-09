@@ -1,6 +1,6 @@
 # BOB to ai-use (T41)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -11,3 +11,11 @@ Reading set (mechanics §17): measured at this START: 250 KB by `build/plan/read
 Merge order in L6: inquiry-grammar, leg-earning, inquiry, hypotheses, steps, citation, basis-versions, contradiction; run-rules, ai-use, ai-runs (copy then delete), run-productions, capture-requests, reading-guides, skills, question-explorer; answers, agent-model, agent-worker (`modules.json` order; ai-use before ai-runs is K624's copy-then-delete). Same-layer providers you use: run-rules (R20's successors to the retired codes). Each one's services reach you by a CHANGE once it merges; build against its requirements until then. Record your final `uses` in your record, for BOB to apply at your merge.
 Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Answered on tranche/T41 @ 46211ff1dd (K2480); merge the tranche branch. (1) add retrieval, read as ai-runs does. (2) your family is C-143 (steps has C-142): AI_LIMIT_REACHED C-143.1, AI_LIMIT_INVALID .2, LIMIT_UNIT_UNAVAILABLE .3, EXPLORE_NOT_ENABLED .4, EXPLORE_OUT_OF_SCOPE .5. (3) the helper asking accountUses as the account's own owner is taken, failing closed; the in-plane read is N831 (credentials' layer closed). (4) as you propose, now in R10's text. (5) as you propose, now in R6's text. (6), (7) confirmed.
+
+## B3 · ANSWER · re J2
+
+Taken (K2486), with one correction: your family is C-143 (C-142 is steps'), so (1) is EXPLORE_ASK_INVALID C-143.6. (2)-(5) as you read them. (6) noted for the design stream: BOB sends UX-DESIGN a NOTICE; you change nothing.

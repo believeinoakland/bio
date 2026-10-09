@@ -13,7 +13,7 @@
 
 ### Purpose
 
-How a model turn reaches the AI provider an account names (today Anthropic's Claude only). Given the account reference that serves one member's act (the member's own, a project's or the group's API key, K1755; T40, N812, D34), it sends a conversation's turns either to the Messages API (an API key) or to Claude Code running unmodified in the `agent-runner` container (a Claude subscription), returns each turn's outcome and its `usage`, and keeps the segment within its turn and byte bounds. It holds no credential: the reference arrives per call and is never kept. *(not yet met: T41)*
+How a model turn reaches the AI provider an account names (today Anthropic's Claude only). Given the account reference that serves one member's act (the member's own, a project's or the group's API key, K1755; T40, N812, D34), it sends a conversation's turns either to the Messages API (an API key) or to Claude Code running unmodified in the `agent-runner` container (a Claude subscription), returns each turn's outcome and its `usage`, and keeps the segment within its turn and byte bounds. It holds no credential: the reference arrives per call and is never kept.
 
 ### Provides
 
@@ -32,7 +32,7 @@ Terms. An **account reference** is `{kind: "apikey", key}` or (T38; K2200) `{kin
 - **R7** (K1502; M-Q4 relay) On the `signin` path the tools the model may call are only those `tools` names, and each call the runner relays is performed by `onTool` and its result sent back over the same connection, so `agent-worker`'s table keeps every decision (R16, R39 there); R6's endings hold unchanged.
 
 **Prices** (T40; N812; K2373, K2376)
-- **R13** (B4; fact 3) *(not yet met: T41)*
+- **R13** (B4; fact 3)
   - `MODEL_PRICES`, a reviewed edit beside `MODEL_FOR_MODE`, holds USD per million input, output, cache-read and cache-write tokens for each model. Every `MODEL_FOR_MODE` model must be priced, which a test checks.
   - On the `apikey` path, every outcome's `usage` adds `estimated_cost_usd` from its figures at that model's prices. Where a figure is `null` on the `apikey` path, that figure is priced at the model's highest rate, never as zero (K2376); it is always `null` on the `signin` path.
   - `total_cost_usd` stays as the provider states it.
@@ -51,7 +51,7 @@ Terms. An **account reference** is `{kind: "apikey", key}` or (T38; K2200) `{kin
 - **R8** (`agent-worker` R36; K1429, K1502) A reference's secret is used for the one call it came with and kept nowhere: no module state, log, answer, outcome, `usage` or error carries it. A test passes a sentinel secret and finds it in no returned value and no console output, and a second call without a reference makes no call.
 - **R9** (K1502, K1755: the group's copy binds no Claude credential in its environment; the group's API key lives in `credentials`' sealed table and arrives per call as a reference, R11) It reads no environment variable or binding for a credential: with a key present in `env` (`INSTANCE_CLAUDE_TOKEN` included) and no reference, every call is refused by R2 and nothing is sent.
 - **R10** No place is named in its behaviour or outward text, and it reaches no address but `MODEL_ENDPOINT` and the `runner` binding.
-- **R11** (K1755; T40: N812, D34, K2373, K2400) A reference of `level` `group` is the group's API key, and one of `level` `project` a project's: each is taken only with `kind` `apikey` and sent exactly as a member's `apikey` reference is (R2, R4, R5), kept as R8 keeps any; a `group` or `project` reference of any other `kind`, or a `level` present and other than `member`, `project` or `group`, answers `refused` with type `ACCOUNT_REFERENCE_UNUSABLE` and makes no call. *(not yet met: T41)*
+- **R11** (K1755; T40: N812, D34, K2373, K2400) A reference of `level` `group` is the group's API key, and one of `level` `project` a project's: each is taken only with `kind` `apikey` and sent exactly as a member's `apikey` reference is (R2, R4, R5), kept as R8 keeps any; a `group` or `project` reference of any other `kind`, or a `level` present and other than `member`, `project` or `group`, answers `refused` with type `ACCOUNT_REFERENCE_UNUSABLE` and makes no call.
 
 ### Satisfies
 
