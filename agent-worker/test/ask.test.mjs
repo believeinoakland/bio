@@ -353,7 +353,7 @@ section("R58, R36 · a run's model half: turns through agent-model, usage report
     ticks.filter((x) => !x.body.usage).length > 0 && ticks.filter((x) => x.body.usage).every((x) => x.body.usage.length > 0), true);
   const v = await (await worker.fetch(new Request("http://agent-worker/version"), { VERSION: "ask", PLANE: plane().binding })).json();
   t("R58: GET /version answers the one statement of when model turns run",
-    /exactly when the Claude account that serves the member's act \(the member's own reference, or the group's API key\) arrives/
+    /exactly when the Claude account that serves the member's act \(the member's own reference or sign-in, a project's account, or the group's API key\) arrives/
       .test(v.model_turns ?? ""), true);
   const all = TRANSCRIPTS;
   t("R36: no answer or event carried the grant, the ai credential, the member's secret or the group's key",

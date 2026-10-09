@@ -2902,9 +2902,9 @@ var sha256hex = async (v) => {
 };
 
 // src/cascade.mjs
-var CASCADE_ORDER = Object.freeze(["member", "group"]);
+var CASCADE_ORDER = Object.freeze(["project", "member", "group"]);
 var ACCOUNT_KINDS = Object.freeze(["apikey", "signin"]);
-var LEVEL_KINDS = Object.freeze({ member: ACCOUNT_KINDS, group: Object.freeze(["apikey"]) });
+var LEVEL_KINDS = Object.freeze({ project: ACCOUNT_KINDS, member: ACCOUNT_KINDS, group: Object.freeze(["apikey"]) });
 var CASCADE_NO_ACCOUNT = "NO_ACCOUNT";
 var LEVEL_UNSET = "unset";
 var LEVEL_REVOKED = "revoked_by_publication";
@@ -2912,10 +2912,12 @@ var LEVEL_AVAILABLE = "available";
 var isObject3 = (a) => a !== null && typeof a === "object" && !Array.isArray(a);
 var secretOf = (account) => isObject3(account) && typeof account.secret === "string" ? account.secret : "";
 var memberOf = (account) => isObject3(account) && typeof account.member === "string" ? account.member : "";
+var projectOf = (account) => isObject3(account) && typeof account.project === "string" ? account.project : "";
 var levelOf = (account) => isObject3(account) && CASCADE_ORDER.includes(account.level) ? account.level : "member";
 async function levelState(account) {
   if (!isObject3(account) || !CASCADE_ORDER.includes(account.level)) return LEVEL_UNSET;
   if (!LEVEL_KINDS[account.level].includes(account.kind)) return LEVEL_UNSET;
+  if (account.level === "project" && !projectOf(account)) return LEVEL_UNSET;
   if (account.kind === "signin") return memberOf(account) ? LEVEL_AVAILABLE : LEVEL_UNSET;
   const v = secretOf(account);
   if (v.length === 0) return LEVEL_UNSET;
@@ -2932,15 +2934,16 @@ async function resolveClaudeCascade(account) {
       level,
       kind: account.kind,
       member: typeof account.member === "string" ? account.member : null,
+      ...level === "project" ? { project: projectOf(account) } : {},
       levels
     };
-  const whose = level === "group" ? "the group's API key" : "the member's own Claude account reference";
+  const whose = level === "group" ? "the group's API key" : level === "project" ? "the project's Claude account" : "the member's own Claude account reference";
   return {
     available: false,
     reason: CASCADE_NO_ACCOUNT,
     level,
     levels,
-    detail: state === LEVEL_REVOKED ? `${whose} has been published in this repository, which revokes it, so no model turn can run under it. ` + (level === "group" ? "An administrator sets a new key for the group, or members connect their own." : "The member connects a new one; until then the group's API key serves them only while your group's Civicsmith holds it and it is on.") : `no usable Claude account arrived for this act (${whose} was absent, empty, named no member, or of a kind its level does not hold). Which account serves a member's act is your group's Civicsmith's to answer (the member's own, else the group's API key while it is held and on); a member whom neither serves has no assistant.`
+    detail: state === LEVEL_REVOKED ? `${whose} has been published in this repository, which revokes it, so no model turn can run under it. ` + (level === "group" ? "An administrator sets a new key for the group, or members connect their own." : level === "project" ? "An owner of the project sets a new one; until then the member's own account, else the group's API key, serves them only while your group's Civicsmith holds it and it is on." : "The member connects a new one; until then the group's API key serves them only while your group's Civicsmith holds it and it is on.") : `no usable Claude account arrived for this act (${whose} was absent, empty, named no member${level === "project" ? " or no project" : ""}, or of a kind its level does not hold). Which account serves a member's act is your group's Civicsmith's to answer (the project's, else the member's own, else the group's API key while it is held and on); a member whom none serves has no assistant.`
   };
 }
 async function cascadeToken(account) {
@@ -3723,7 +3726,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
   if (account && recordedPayer !== account.member)
     return { refusal: refusal2(
       "RUN_NAMES_A_DIFFERENT_PAYER",
-      `the run's own record says it is the act of ${JSON.stringify(recordedPayer)}, but the Claude account handed to this segment serves ${JSON.stringify(account.member)}'s act (${account.level === "group" ? "the group's API key, serving that member" : "that member's own reference"}). A run is continued only under the account that serves the member whose act started it, never another member's (K1502, K1755, D-260), so no step was taken and the run stays as it was. The caller handed the account for the wrong member, or the run recorded the wrong member.`,
+      `the run's own record says it is the act of ${JSON.stringify(recordedPayer)}, but the Claude account handed to this segment serves ${JSON.stringify(account.member)}'s act (${account.level === "group" ? "the group's API key, serving that member" : account.level === "project" ? "the project's account, serving that member" : "that member's own reference"}). A run is continued only under the account that serves the member whose act started it, never another member's (K1502, K1755, D-260), so no step was taken and the run stays as it was. The caller handed the account for the wrong member, or the run recorded the wrong member.`,
       409,
       { run_id: runId, recorded: recordedPayer, supplied: account.member }
     ) };
@@ -4485,11 +4488,12 @@ var planeRefused = (runId, store, asked) => json({
   plane_status: asked.status,
   plane: asked.body
 }, 403);
+var PROJECT_ID_MAX = 200;
 async function accountOf(body) {
   if (body.claude_accounts !== void 0)
     return { refusal: refusal2(
       "BAD_ACCOUNT",
-      "claude_accounts is the retired three-level cascade's field: there is no project or instance Claude account. A call carries the one account that serves the member's act, as account.",
+      "claude_accounts is the retired three-level cascade's field: there is no instance Claude account. A call carries the one account that serves the member's act, as account.",
       400,
       { field: "claude_accounts" }
     ) };
@@ -4501,10 +4505,10 @@ async function accountOf(body) {
       409,
       { capability: "unavailable" }
     ) };
-  if (typeof a !== "object" || Array.isArray(a) || !ACCOUNT_KINDS.includes(a.kind) || !CASCADE_ORDER.includes(a.level) || !LEVEL_KINDS[a.level].includes(a.kind) || typeof a.member !== "string" || !a.member || a.kind === "signin" && (a.secret !== void 0 || a.suggestions !== void 0 && a.suggestions !== false))
+  if (typeof a !== "object" || Array.isArray(a) || !ACCOUNT_KINDS.includes(a.kind) || !CASCADE_ORDER.includes(a.level) || !LEVEL_KINDS[a.level].includes(a.kind) || typeof a.member !== "string" || !a.member || (a.level === "project" ? !(typeof a.project === "string" && a.project && a.project.length <= PROJECT_ID_MAX) : a.project !== void 0) || a.kind === "signin" && (a.secret !== void 0 || a.suggestions !== void 0 && a.suggestions !== false))
     return { refusal: refusal2(
       "BAD_ACCOUNT",
-      `account is the account that serves the member's act: {kind, level, secret, member}, kind one of ${ACCOUNT_KINDS.join(", ")}, level one of ${CASCADE_ORDER.join(", ")} (the group's account an API key only), and member the member whose act it serves; a signin account is the member's own and carries no secret and no suggestions but false. What arrived is not one, and this member judges only what it is handed.`,
+      `account is the account that serves the member's act: {kind, level, secret, member}, kind one of ${ACCOUNT_KINDS.join(", ")}, level one of ${CASCADE_ORDER.join(", ")} (the group's account an API key only), and member the member whose act it serves; a project's account names its project, and no other does; a signin account is the member's own and carries no secret and no suggestions but false. What arrived is not one, and this member judges only what it is handed.`,
       400,
       { field: "account" }
     ) };
@@ -4625,11 +4629,17 @@ async function handleRun(req, env) {
     stage: "harness",
     turns_run: meter.turns,
     judgement_source: modelMode ? "model" : "body",
-    judgement_note: modelMode ? `the control-flow table ran and the judgements inside its steps were made by model turns run through agent-model (${meter.turns}), under the Claude account that serves the member's act (${cascade.level === "group" ? "the group's API key" : "the member's own"}) and the skill pack the run names; the sub-sessions ran one per level and returned REPORTS` : "the control-flow table ran and its judgements arrived from the caller (the body), so no model turn was taken (turns_run: 0). Stated rather than presented as a model run.",
-    /* R29 — WHICH ACCOUNT, secret-free by construction: its kind, its level (the member's own, or the group's API key,
-       K1755) and the member whose act it serves. A call with none never reaches here (R6 refused it by name before
-       any step). */
-    claude_account: { available: true, kind: cascade.kind, level: cascade.level, member: cascade.member },
+    judgement_note: modelMode ? `the control-flow table ran and the judgements inside its steps were made by model turns run through agent-model (${meter.turns}), under the Claude account that serves the member's act (${cascade.level === "group" ? "the group's API key" : cascade.level === "project" ? "the project's" : "the member's own"}) and the skill pack the run names; the sub-sessions ran one per level and returned REPORTS` : "the control-flow table ran and its judgements arrived from the caller (the body), so no model turn was taken (turns_run: 0). Stated rather than presented as a model run.",
+    /* R29 — WHICH ACCOUNT, secret-free by construction: its kind, its level (the member's own, a project's, R71, or the
+       group's API key, K1755), the member whose act it serves and, for a project's, the project (an id). A call with
+       none never reaches here (R6 refused it by name before any step). */
+    claude_account: {
+      available: true,
+      kind: cascade.kind,
+      level: cascade.level,
+      member: cascade.member,
+      ...cascade.level === "project" ? { project: cascade.project } : {}
+    },
     mode: drive.mode,
     trace: drive.trace,
     passes: drive.passes,
@@ -4721,7 +4731,7 @@ var ASK_DEPS = {
   NAMESPACES,
   DEFAULT_MAX_SEGMENT_BYTES
 };
-var MODEL_TURNS = "run through agent-model exactly when the Claude account that serves the member's act (the member's own reference, or the group's API key) arrives with the call and the run's, ask's or draft's mode has turns to run; a segment whose caller supplies the judgements runs none";
+var MODEL_TURNS = "run through agent-model exactly when the Claude account that serves the member's act (the member's own reference or sign-in, a project's account, or the group's API key) arrives with the call and the run's, ask's or draft's mode has turns to run; a segment whose caller supplies the judgements runs none";
 var index_default = {
   async fetch(req, env) {
     const url = new URL(req.url);

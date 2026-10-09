@@ -378,7 +378,7 @@ section("R2–R7 · each malformed request refused by its code, in order, with n
     ["R6", "account of a kind agent-model does not take", { ...base, account: { ...ACCOUNTS, kind: "password" } }, 400, "BAD_ACCOUNT"],
     ["R6", "account naming no member", { ...base, account: { kind: "apikey", level: "member", secret: CLAUDE_TOKEN } }, 400, "BAD_ACCOUNT"],
     ["R6", "account naming no level", { ...base, account: { kind: "apikey", secret: CLAUDE_TOKEN, member: MEMBER } }, 400, "BAD_ACCOUNT"],
-    ["R6", "account at the project level (there is none)", { ...base, account: { ...ACCOUNTS, level: "project" } }, 400, "BAD_ACCOUNT"],
+    ["R6, R71", "account at the project level naming no project", { ...base, account: { ...ACCOUNTS, level: "project" } }, 400, "BAD_ACCOUNT"],
     ["R6", "account at the instance level (there is none)", { ...base, account: { ...ACCOUNTS, level: "instance" } }, 400, "BAD_ACCOUNT"],
     ["R6", "the group's account as a subscription (the group's is an API key only)", { ...base, account: { ...GROUP_ACCOUNT, kind: "subscription" } }, 400, "BAD_ACCOUNT"],
     ["R6", "the group's account with an empty secret", { ...base, account: { ...GROUP_ACCOUNT, secret: "" } }, 409, "NO_ACCOUNT"],
@@ -1103,7 +1103,7 @@ section("R30, R31 · GET /version; anything else 404 UNKNOWN");
 {
   const v = await call(mf, "version", { method: "GET" });
   t("R30, R58: GET /version -> 200 {ok, name, version: env.VERSION} and the one statement of when model turns run",
-    [v.status, v.out.ok, v.out.name, v.out.version, /through agent-model exactly when the Claude account that serves the member's act \(the member's own reference, or the group's API key\) arrives/.test(v.out.model_turns)],
+    [v.status, v.out.ok, v.out.name, v.out.version, /through agent-model exactly when the Claude account that serves the member's act \(the member's own reference or sign-in, a project's account, or the group's API key\) arrives/.test(v.out.model_turns)],
     [200, true, "agent-worker", "req-test", true]);
   const bare = newMf({ VERSION: "" });
   t("R30: and \"0.0.0\" when env.VERSION is empty", (await call(bare, "version", { method: "GET" })).out.version, "0.0.0");
@@ -1121,12 +1121,12 @@ section("R30, R31 · GET /version; anything else 404 UNKNOWN");
 }
 
 /* ============================================================ the cascade, pure */
-section("R32, R33 · the cascade: the one account that arrived, at its own level (member or group)");
+section("R32, R33 · the cascade: the one account that arrived, at its own level (project, member or group)");
 {
   const PUBLISHED_VALUE = readFileSync(fileURLToPath(new URL("../../bio-plane/dist/SECRETS.txt", import.meta.url)), "utf8")
     .split("\n").find((l) => l.startsWith("ADMIN_TOKEN=")).split("=")[1].trim();
   const st = async (a) => (await resolveClaudeCascade(a)).levels.map((l) => `${l.level}:${l.state}`);
-  t("R32: two levels, member and group; no project or instance level is judged, held or answered", [...CASCADE_ORDER], ["member", "group"]);
+  t("R32, R71: three levels, a project's, the member's own and the group's, in credentials' order; no instance level is judged, held or answered", [...CASCADE_ORDER], ["project", "member", "group"]);
   t("R32: unset (no non-empty secret), revoked_by_publication, or available, at the account's own level — no shape check "
     + "beyond agent-model's kinds (the group's an API key only); (T38) a sign-in available by its member, subscription retired",
     [await st({ ...ACCOUNTS, secret: "" }), await st({ ...ACCOUNTS, secret: PUBLISHED_VALUE }),
@@ -1136,7 +1136,7 @@ section("R32, R33 · the cascade: the one account that arrived, at its own level
      await st({ ...ACCOUNTS, kind: "subscription", secret: "x" }), await st({ ...SIGNIN, member: "" }),
      await st({ kind: "signin", level: "member" }), await st({ ...SIGNIN, level: "group" })],
     [["member:unset"], ["member:revoked_by_publication"], ["member:available"], ["member:unset"],
-     ["group:available"], ["group:unset"], ["group:revoked_by_publication"], ["group:unset"], ["member:unset"],
+     ["group:available"], ["group:unset"], ["group:revoked_by_publication"], ["group:unset"], ["project:unset"],
      ["member:unset"], ["member:unset"], ["member:unset"], ["group:unset"]]);
   const si = await resolveClaudeCascade(SIGNIN);
   t("R32 (T38): a sign-in resolves with its kind, its level and the wire's member", [si.available, si.level, si.kind, si.member],

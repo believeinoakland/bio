@@ -61,8 +61,8 @@ const states = (st) => st.levels.map((l) => `${l.level}:${l.state}`);
 
 console.log("\n--- 1 · R32: the cascade judges the one account that arrived, at its own level, pure ---");
 {
-  t("R32: the levels are the member's own and the group's API key, and nothing else (K1502, K1755: no project or "
-    + "instance level)", [...CASCADE_ORDER], ["member", "group"]);
+  t("R32, R71: the levels are a project's account, the member's own and the group's API key, and nothing else (K1502, "
+    + "K1755, K2373: no instance level)", [...CASCADE_ORDER], ["project", "member", "group"]);
   t("R32 (T38): the kinds are agent-model's: apikey and signin; subscription is retired", [...ACCOUNT_KINDS], ["apikey", "signin"]);
   const a = await resolveClaudeCascade(apikey());
   t("R32: an API key of the member's own is available, with its kind and its member",
@@ -84,7 +84,7 @@ console.log("\n--- 1 · R32: the cascade judges the one account that arrived, at
   for (const [why, acct] of [["absent", undefined], ["empty secret", apikey(RUTH, "")], ["another kind", { kind: "oauth", secret: KEY, member: RUTH }],
                              ["the old cascade's shape", { member: { token: KEY } }],
                              ["an account naming no level", { kind: "apikey", secret: KEY, member: RUTH }],
-                             ["an account at the project level", { ...apikey(), level: "project" }]]) {
+                             ["an account at the instance level", { ...apikey(), level: "instance" }]]) {
     const n = await resolveClaudeCascade(acct);
     t(`R32: ${why} is unset: NO_ACCOUNT at the member level`, [n.available, n.reason, n.level, states(n)],
       [false, CASCADE_NO_ACCOUNT, "member", [`member:${LEVEL_UNSET}`]]);
@@ -106,7 +106,7 @@ console.log("\n--- 1 · R32: the cascade judges the one account that arrived, at
   t("R32: and the detail is a sentence a surface can render", typeof r.detail === "string" && r.detail.length > 80, true);
   t("R32: no status carries the secret", [a, s, g, r].some((x) => JSON.stringify(x).includes(KEY)
     || JSON.stringify(x).includes(TOKEN) || JSON.stringify(x).includes(GROUP_KEY) || JSON.stringify(x).includes(PUBLISHED_VALUE)), false);
-  t("R32: no status names a project or instance level", [a, s, g, r].some((x) => /project|instance/.test(JSON.stringify(x.levels))), false);
+  t("R32: no member's or group's status names a project or instance level", [a, s, g, r].some((x) => /project|instance/.test(JSON.stringify(x.levels))), false);
 }
 
 console.log("\n--- 2 · R33: the reference, derived from the status, in agent-model's terms ---");
@@ -213,7 +213,7 @@ console.log("\n--- 4 · R6, R57: no account, a bad one, or the retired cascade's
     ["R6: an account of a kind agent-model does not take", { ...base, account: { kind: "oauth", secret: KEY, member: RUTH } }, 400, "BAD_ACCOUNT"],
     ["R6: an account naming no member", { ...base, account: { kind: "apikey", level: "member", secret: KEY } }, 400, "BAD_ACCOUNT"],
     ["R6: an account naming no level", { ...base, account: { kind: "apikey", secret: KEY, member: RUTH } }, 400, "BAD_ACCOUNT"],
-    ["R6: an account at the project level (there is none)", { ...base, account: { ...apikey(), level: "project" } }, 400, "BAD_ACCOUNT"],
+    ["R6, R71: an account at the project level naming no project", { ...base, account: { ...apikey(), level: "project" } }, 400, "BAD_ACCOUNT"],
     ["R6: the group's account as a subscription (the group's is an API key only)", { ...base, account: { ...group(), kind: "subscription" } }, 400, "BAD_ACCOUNT"],
     ["R6 (T38): a member's own subscription, retired (credentials R22)", { ...base, account: sub() }, 400, "BAD_ACCOUNT"],
     ["R6 (T38): a sign-in carrying a secret", { ...base, account: { ...signin(), secret: TOKEN } }, 400, "BAD_ACCOUNT"],
