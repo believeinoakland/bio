@@ -27,8 +27,8 @@ non-empty array of step objects; `STEP_KINDS` below is the only source of which 
 - **R2** Each entry has `tier`: an integer (the kind IS that extraction tier), the string `"step"`
   (the step itself names its tier, on a `tier` field), or `null` (the kind is not a rung on the
   extraction ladder).
-- **R3** `convert` and `typed` additionally declare `names` (the fields `checkChain` requires
-  non-empty on that step), `unmeasured: "undetermined"` and `letter` (`"calibrated"` for `convert`,
+- **R3** `convert`, `typed` and (T41; R104, K2427) `ai_transcription` additionally declare `names` (the fields `checkChain` requires
+  non-empty on that step), `unmeasured: "undetermined"` and `letter` (`"calibrated"` for `convert` and `ai_transcription`,
   `"never"` for `typed`) — read by `checkChain`'s and `derivationCap`'s rules, never hand-matched by
   spelling.
 - Errors: not applicable; a plain object, never mutated.
@@ -342,7 +342,7 @@ new refusal condition in this module mints the next one in the family and is add
 - **R88** (N98) `extentCovers`: a `region` extent covers a target only when `rectSpace(extent.source)` equals `rectSpace(target)`, neither `null` (added to R54's conditions; the default stays no).
 - **R89** (N98) `readingPositionInExtent`, `pdf-page` with a rect on both sides: `false` unless both rects are in the same readable space (added to R71's `pdf-page` rule).
 - **R90** (N102, D-665, D-697) `mergeTier2Text`: when tier 2 wins a page, each of the base page's `image_unread` markers is carried onto the merged page after tier 2's own, unless tier 2 states one with the same `reason` and `rect`; it counts 0 undetermined characters, so no award moves (R77's family).
-- **R91** (N104, K143) Each `STEP_KINDS` entry that is a machine reading declares `machine: true` (`ocr`, `ai`), and no other does; `MACHINE_READ_KINDS` is the frozen array of those keys in `STEP_KINDS` order (`["ocr", "ai"]`), which `query-language` re-exports.
+- **R91** (N104, K143) Each `STEP_KINDS` entry that is a machine reading declares `machine: true` (`ocr`, `ai`, and (T41; R104, K2427) `ai_transcription`), and no other does; `MACHINE_READ_KINDS` is the frozen array of those keys in `STEP_KINDS` order (`["ocr", "ai", "ai_transcription"]` from T41) *(not yet met: T41)*, which `query-language` re-exports.
 
 **The content-extent algebra** (copied from the catalogue in T19, K747; the catalogue's copy was deleted at T19's close, K855, so this module's is the only one).
 - **R92** `CONTENT_EXTENT_KINDS` is a plain object whose keys are exactly `document`, `pdf-page`, `sheet-cell`, `slide-shape`, `doc-para`, `sheet-range`, `doc-table`, `image`, in that order, each `{landed: true, human: <its phrase>}`, the phrases unchanged from the catalogue's as this module copied them (K747); `dom` is not a key.
