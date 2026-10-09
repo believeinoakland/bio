@@ -44228,8 +44228,10 @@ function chainTiersOf(chain3, page2) {
     const pages = stepPages(s);
     if (!covers(pages, page2)) continue;
     const key2 = partOf(s);
-    const had = byPart.get(key2) || { layer: null, pixels: null };
-    if (s.step === "pixels") {
+    const had = byPart.get(key2) || { layer: null, pixels: null, ai: null };
+    if (s.step === "ai_transcription") {
+      had.ai = { tier: 4, engine: typeof s.engine === "string" && s.engine ? `${s.engine}${s.version ? ` ${s.version}` : ""}` : null };
+    } else if (s.step === "pixels") {
       const next = chain3[i + 1];
       had.pixels = { tier: 3, engine: next && next.step === "ocr" && typeof next.engine === "string" ? `${next.engine}${next.version ? ` ${next.version}` : ""}` : null };
     } else if (s.step === "layer") {
@@ -44237,7 +44239,7 @@ function chainTiersOf(chain3, page2) {
     }
     byPart.set(key2, had);
   }
-  return [...byPart.values()].map((h) => h.pixels || h.layer).filter(Boolean);
+  return [...byPart.values()].map((h) => h.ai || h.pixels || h.layer).filter(Boolean);
 }
 function chainTierOf(chain3, page2) {
   const all = chainTiersOf(chain3, page2);
@@ -44967,6 +44969,129 @@ async function tier3Extend(env, {
   const stillWanting = wanted && (!(filled15.length + seeded.length) || unanswered3.length > 0);
   return { i2text, wiredTier, chain: chain3, chainSet, ocrNote, filled: filled15, seeded, engine, stillWanting };
 }
+var TRANSCRIBE_USE = "transcribe";
+var AI_TRANSCRIPTION_SOURCE = "unmeasured: the AI's reading of a page that is only a picture is undetermined until its accuracy is measured (text-chain R104; BIO_Investigation_v0_1.md \xA76)";
+var AI_READING_LABEL = "the AI's reading";
+function tier4Pages(text7) {
+  const pages = text7 && Array.isArray(text7.pages) ? text7.pages : [];
+  const marks2 = text7 && Array.isArray(text7.undetermined) ? text7.undetermined : [];
+  if (marks2.some((m) => m && m.reason === "encrypted")) return [];
+  const out = [];
+  for (const p3 of pages) {
+    if (!p3 || !Number.isInteger(p3.page) || p3.page < 0 || out.includes(p3.page)) continue;
+    const own8 = Array.isArray(p3.undetermined) ? p3.undetermined : [];
+    const routed = own8.some((u) => u && TIER3_REASONS.includes(u.reason));
+    const floored = own8.some((u) => u && u.reason === "ocr_below_floor") && !(typeof p3.text === "string" && glyphCount(p3.text) > 0);
+    if (routed || floored) out.push(p3.page);
+  }
+  return out.sort((a, b) => a - b);
+}
+function partsOfChain(chain3, unscopedPages) {
+  if (!Array.isArray(chain3) || checkChain(chain3)) return null;
+  const derivations = chain3.filter((x) => x && x.extent != null);
+  if (!derivations.length) return unscopedPages.length ? [{ pages: unscopedPages, chain: chain3 }] : [];
+  const parts = /* @__PURE__ */ new Map();
+  for (const step of chain3) {
+    const e2 = step.extent;
+    if (!(e2 && e2.kind === "pages" && Array.isArray(e2.pages))) return null;
+    const key2 = Number.isInteger(e2.part) ? `#${e2.part}` : e2.pages.join(",");
+    const { extent, ...bare4 } = step;
+    if (!parts.has(key2)) parts.set(key2, { pages: e2.pages.slice(), chain: [] });
+    parts.get(key2).chain.push(bare4);
+  }
+  return [...parts.values()];
+}
+var AI_REFUSAL_SAYS = {
+  no_such_page: "the document has no such page",
+  not_asked: "the AI was not asked for it",
+  carries_glyphs: "it already carries text of its own, which the AI's reading may not replace"
+};
+var refusalSays = (r) => [r && r.code, r && (r.detail || r.translation)].filter((x) => typeof x === "string" && x).join(": ") || "refused";
+async function tier4Extend(transcription, { sha: sha2, storeName, i2text, chain: chain3, wiredTier }) {
+  const out = { i2text, chain: chain3, wiredTier, aiNote: null, filled: [], engine: null };
+  if (!transcription || typeof transcription !== "object") return out;
+  const pages = tier4Pages(i2text);
+  const not = (why2) => {
+    out.aiNote = `the AI was not asked to transcribe ${describePages(pages)}: ${why2}`;
+    return out;
+  };
+  if (!pages.length) {
+    out.aiNote = "no page was left that Civicsmith's own text recognition could not read, so the AI was not asked to transcribe";
+    return out;
+  }
+  const { member: member2 = null, project = null, credentials = null, useCheck = null, transcribe = null } = transcription;
+  if (!(typeof member2 === "string" && member2))
+    return not("the AI transcribes only at a member's own act, and none was named");
+  if (!(credentials && typeof credentials.accountFor === "function"))
+    return not("the account that would pay for it could not be checked");
+  let account;
+  try {
+    account = await credentials.accountFor({ member: member2, act: {
+      kind: TRANSCRIBE_USE,
+      member: member2,
+      ...project != null ? { project } : {}
+    } });
+  } catch {
+    return not("the account that would pay for it could not be checked");
+  }
+  if (!(account && account.ok === true)) return not(refusalSays(account));
+  const owner = account.level === "project" ? `project:${account.project}` : account.level === "group" ? "group" : `member:${member2}`;
+  if (typeof useCheck !== "function") return not("the limits of the account that would pay for it could not be checked");
+  const at39 = typeof transcription.at === "string" && transcription.at ? transcription.at : (/* @__PURE__ */ new Date()).toISOString();
+  try {
+    const limit = await useCheck({ owner, member: member2, use: TRANSCRIBE_USE, at: at39 });
+    if (limit) return not(refusalSays(limit));
+  } catch {
+    return not("the limits of the account that would pay for it could not be checked");
+  }
+  if (typeof transcribe !== "function") return not("no AI is set up to transcribe");
+  let res;
+  try {
+    res = await transcribe({ account, capture_sha: sha2, store: storeName, pages: [...pages], use: TRANSCRIBE_USE });
+  } catch {
+    return not("the AI could not be reached");
+  }
+  const r = res && typeof res === "object" ? res : {};
+  if (r.ok !== true) return not(`the AI declined${typeof r.reason === "string" ? ` (${r.reason})` : ""}`);
+  const engine = typeof r.engine === "string" ? r.engine.trim() : "";
+  if (!engine) return not("the AI's answer did not name the model that read the pages, so nothing it produced could be re-run or measured later");
+  const version = typeof r.version === "string" && r.version.trim() ? r.version.trim() : null;
+  const answered = (Array.isArray(r.pages) ? r.pages : []).filter((p3) => p3 && Number.isInteger(p3.page) && typeof p3.text === "string" && glyphCount(p3.text) > 0).map((p3) => ({ page: p3.page, text: p3.text, undetermined: [] }));
+  const m = mergeTier3Text(i2text, { pages: answered }, pages);
+  if (!m.ok) return not(m.why);
+  if (!m.filled.length) return not("the AI returned no text for any page it was asked for");
+  const part = appendStep(
+    [{ step: "pixels", cap: null, measured_by: AI_TRANSCRIPTION_SOURCE, calibration: null }],
+    {
+      step: "ai_transcription",
+      engine,
+      version,
+      cap: null,
+      measured_by: AI_TRANSCRIPTION_SOURCE,
+      calibration: null
+    }
+  );
+  if (!Array.isArray(part)) return not(`the AI's provenance was refused: ${part.detail}`);
+  const replaced = m.filled.filter((p3) => !m.appended.includes(p3));
+  const held2 = (m.text.pages || []).filter((p3) => p3 && Number.isInteger(p3.page) && !replaced.includes(p3.page) && typeof p3.text === "string" && glyphCount(p3.text) > 0).map((p3) => p3.page);
+  const parts = partsOfChain(chain3, held2);
+  if (!parts) return not("the chain of the text already read could not be stated beside the AI's");
+  const merged = mergedChain([...parts, { pages: m.filled, chain: part }]);
+  if (!Array.isArray(merged)) return not(`the AI's provenance was refused: ${merged.detail}`);
+  out.i2text = m.text;
+  out.chain = merged;
+  out.wiredTier = 4;
+  out.filled = m.filled;
+  out.engine = { engine, version };
+  const say = [`${describePages(m.filled)} that Civicsmith's own text recognition could not read ${m.filled.length === 1 ? "was" : "were"} transcribed by the AI (${engine}${version ? ` ${version}` : ""}) at a member's request, on the account that pays for it: this text is ${AI_READING_LABEL}, not yet determined until its accuracy is measured or a member checks a passage against the page`];
+  if (m.appended.length)
+    say.push(`${describePages(m.appended)} already held a little text of its own (a folio), which was kept, and the AI's reading was appended after it`);
+  if (m.unanswered.length) say.push(`${describePages(m.unanswered)} the AI did not transcribe, and ${m.unanswered.length === 1 ? "it stays" : "they stay"} unread`);
+  if (m.refusedWhy.length)
+    say.push(`${m.refusedWhy.length} page(s) the AI returned were not merged: ` + m.refusedWhy.map((x) => `${describePages([x.page])} (${AI_REFUSAL_SAYS[x.reason] || x.reason})`).join(", "));
+  out.aiNote = say.join("; ");
+  return out;
+}
 var sheetRangeOf = (u) => {
   const r = u.range;
   return r && r.kind === "sheet-range" && typeof r.sheet === "string" && r.sheet && typeof r.range === "string" && r.range ? { sheet: r.sheet, range: r.range } : { sheet: null, range: null };
@@ -45216,10 +45341,11 @@ async function read(document, {
   storeName = "bio",
   view,
   planeVersion = null,
-  liveCalibration = null
+  liveCalibration = null,
+  transcription = null
 } = {}) {
   try {
-    return await readInner(document, { evidence, env, storeName, view, planeVersion, liveCalibration });
+    return await readInner(document, { evidence, env, storeName, view, planeVersion, liveCalibration, transcription });
   } catch (e2) {
     const reading2 = failed(document, null, `the reading could not be composed (${String(e2 && e2.message || e2).slice(0, 200)}), so nothing is claimed about this document's text; it is a failed reading, never an emptied document`);
     reading2.metadata = null;
@@ -45246,7 +45372,7 @@ async function bytesOf(evidence, doc) {
   }
   return { bytes: at39 === total2 ? out : null, why: at39 === total2 ? null : "the parts held do not add up to the capture's size" };
 }
-async function readInner(doc, { evidence, env, storeName, view, planeVersion, liveCalibration }) {
+async function readInner(doc, { evidence, env, storeName, view, planeVersion, liveCalibration, transcription }) {
   const retrieved = doc && typeof doc.retrieved === "string" ? doc.retrieved : null;
   const sha2 = doc && doc.capture && typeof doc.capture.sha256 === "string" ? doc.capture.sha256 : null;
   const ct = doc && doc.capture && typeof doc.capture.content_type === "string" ? doc.capture.content_type : "";
@@ -45330,7 +45456,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     }
   } else if (wireable) {
     let i2text = null, wiredTier = null, pageCount = null, pageBoxes = null, pdfPaints = null, wired = null;
-    let chain3 = null, ocrNote = null, tier2note = null, tier2PerPage = null, t3Wanting = false;
+    let chain3 = null, ocrNote = null, tier2note = null, tier2PerPage = null, t3Wanting = false, aiRead = null;
     try {
       if (typeof entry3.text === "function") {
         const parts = typeof entry3.parts === "function" ? await entry3.parts(bytes2) : bytes2;
@@ -45374,6 +45500,22 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       if (t3.chainSet) chain3 = t3.chain;
       if (t3.ocrNote != null) ocrNote = t3.ocrNote;
       t3Wanting = t3.stillWanting;
+      if (transcription && i2text) {
+        const t4 = await tier4Extend(transcription, {
+          sha: sha2,
+          storeName,
+          i2text,
+          wiredTier,
+          chain: chain3 || layerChainFor(i2text, { tier: wiredTier, container: fmt })
+        });
+        if (t4.filled.length) {
+          i2text = t4.i2text;
+          chain3 = t4.chain;
+          wiredTier = t4.wiredTier;
+          aiRead = { pages: t4.filled, engine: t4.engine.engine, version: t4.engine.version, label: AI_READING_LABEL };
+        }
+        if (t4.aiNote) ocrNote = ocrNote ? `${ocrNote}; ${t4.aiNote}` : t4.aiNote;
+      }
       if (i2text && Object.prototype.hasOwnProperty.call(i2text, "dialect")) {
         try {
           readDialect = readingDialect(i2text.dialect);
@@ -45409,6 +45551,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
         }
       }
       reading2 = wired ? readingFromWire({ wired, docType, chain: chain3, wiredTier, fmt, retrieved, tier2note, ocrNote, tier3Candidate: t3Wanting }) : { ...failed(doc, docType, [tier2note, ocrNote, `the ${fmt} entry produced no text from these bytes`].filter(Boolean).join(" \u2014 ")) };
+      if (aiRead) reading2.ai_transcription = aiRead;
       reading2.page_count = Number.isInteger(pageCount) && pageCount > 0 ? pageCount : null;
       reading2.page_boxes = pageBoxes;
       reading2.container_extent = extent;
@@ -47195,7 +47338,7 @@ var Extraction = class _Extraction {
             };
           }
         } catch {
-          w = { ok: false };
+          w = { ok: false, rolledBack: true };
         }
         structure2.text = t3.i2text;
         structure2.tier = t3.wiredTier;
@@ -47204,7 +47347,9 @@ var Extraction = class _Extraction {
           performed: true,
           written: w.ok === true,
           cost,
-          ...w.ok === true ? {} : { why: "the record's reading of this capture could not be written (it was no longer held for this caller when the write arrived), so the text above was read and NOT recorded" },
+          /* Two different facts, never answered alike: the capture left the caller's sight before the write, or
+             the write ran and was rolled back whole (a listener refused it, R24), so nothing of it was kept. */
+          ...w.ok === true ? {} : w.rolledBack === true ? { why: "the record's reading of this capture could not be written: the write was refused while it ran and rolled back whole, so the text above was read and NOT recorded, and nothing the re-read would have changed was changed" } : { why: "the record's reading of this capture could not be written (it was no longer held for this caller when the write arrived), so the text above was read and NOT recorded" },
           pages: t3.filled,
           engine: t3.engine,
           text_source: chain3,
@@ -176902,6 +177047,50 @@ var rank6 = (letter2) => {
   return i < 0 ? null : i;
 };
 var isNonEmptyString2 = (s) => typeof s === "string" && s.trim().length > 0;
+function verifiedQuote(e2, capture2) {
+  const c = capture2 && typeof capture2 === "object" && !Array.isArray(capture2) ? capture2 : null;
+  if (!c || typeof c.text !== "string") return null;
+  if (!(c.ceiling === null || c.ceiling === void 0 || rank6(c.ceiling) != null)) return null;
+  if (typeof e2.quote !== "string" || e2.quote.length === 0 || !e2.quote.isWellFormed()) return null;
+  if (e2.source == null || readingSource(e2.source) == null) return null;
+  if (!c.text.includes(e2.quote)) return null;
+  return { ceiling: c.ceiling ?? null };
+}
+var MONTH = "(?:jan(?:uary|\\.)?|feb(?:ruary|\\.)?|mar(?:ch|\\.)?|apr(?:il|\\.)?|may|june?|july?|aug(?:ust|\\.)?|sep(?:t(?:ember)?)?\\.?|oct(?:ober|\\.)?|nov(?:ember|\\.)?|dec(?:ember|\\.)?)";
+var ORD = "(?:st|nd|rd|th)?";
+var EDGE_L = "(?<![\\p{L}\\p{N}])";
+var EDGE_R = "(?![\\p{L}\\p{N}])";
+var DATE_FORMS = [
+  `\\d{4}-\\d{1,2}-\\d{1,2}(?:[T ]\\d{1,2}:\\d{2}(?::\\d{2})?)?`,
+  `\\d{1,2}[/.\\-]\\d{1,2}[/.\\-]\\d{2,4}`,
+  `${MONTH}\\s+\\d{1,2}${ORD}(?:,?\\s+\\d{4})?`,
+  `\\d{1,2}${ORD}\\s+(?:of\\s+)?${MONTH}(?:,?\\s+\\d{4})?`,
+  `${MONTH},?\\s+\\d{4}`
+].map((f17) => new RegExp(`${EDGE_L}${f17}${EDGE_R}`, "giu"));
+var NUMBER_DIGITS = new RegExp(`(?:[$\u20AC\xA3\xA5]\\s?)?[-\u2212]?(?<![\\p{L}\\p{N}][.,:/\\-]?)\\d+(?:[.,:/\\-]\\d+)*(?:%|${ORD}|bn|[kKmMbB])${EDGE_R}`, "gu");
+var DIGIT_RUN = /\d+(?:[.,]\d+)*/gu;
+var WORD3 = "(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion|trillion|dozen)";
+var NUMBER_WORDS2 = new RegExp(`${EDGE_L}${WORD3}(?:(?:[\\s-]+(?:and[\\s-]+)?)${WORD3})*${EDGE_R}`, "giu");
+function quoteFigures(quote2) {
+  if (typeof quote2 !== "string" || quote2.length === 0) return [];
+  const taken = [];
+  const free = (a, b) => taken.every(([x, y]) => b <= x || a >= y);
+  const take = (re, kind2) => {
+    const found3 = [];
+    for (const m of quote2.matchAll(re)) found3.push({ kind: kind2, text: m[0], at: m.index });
+    found3.sort((p3, q10) => q10.text.length - p3.text.length || p3.at - q10.at);
+    const kept = [];
+    for (const f17 of found3)
+      if (free(f17.at, f17.at + f17.text.length)) {
+        taken.push([f17.at, f17.at + f17.text.length]);
+        kept.push(f17);
+      }
+    return kept;
+  };
+  const dates = DATE_FORMS.flatMap((re) => take(re, "date"));
+  const numbers = [...take(NUMBER_DIGITS, "number"), ...take(NUMBER_WORDS2, "number"), ...take(DIGIT_RUN, "number")];
+  return [...dates, ...numbers].sort((p3, q10) => p3.at - q10.at);
+}
 var no5 = (reason2, detail, extra = {}) => ({ ok: false, reason: reason2, detail, ...extra });
 function checkExtractFunction(fn) {
   if (!isNonEmptyString2(fn))
@@ -176925,8 +177114,28 @@ function checkExtractVersion(version) {
     );
   return null;
 }
-function proposedReadingGrade(entry3) {
+function proposedReadingGrade(entry3, capture2 = null) {
   const e2 = entry3 && typeof entry3 === "object" ? entry3 : {};
+  const base2 = namedGrade(e2);
+  const v = base2.grade == null ? null : verifiedQuote(e2, capture2);
+  if (!v) return { ...base2, verified_quote: false, check: [] };
+  const check2 = quoteFigures(e2.quote);
+  const named2 = check2.length === 0 ? `It holds no number or date` : `Its ${check2.length} number(s) and date(s) are named for the member to check at acceptance`;
+  if (v.ceiling == null)
+    return {
+      grade: null,
+      verified_quote: true,
+      check: check2,
+      why: `earned undetermined: this proposal's quote is the capture's own text at its place, byte for byte, so it keeps the capture's own ceiling, and that ceiling is undetermined. A letter would be a claim the capture does not support. ${named2}`
+    };
+  return {
+    grade: v.ceiling,
+    verified_quote: true,
+    check: check2,
+    why: `earned ${v.ceiling}: this proposal's quote is the capture's own text at its place, byte for byte, so it keeps the capture's own ceiling (${v.ceiling}) rather than the ${PROPOSED_READING_CEILING} a machine's reading of a string is worth. ${named2}`
+  };
+}
+function namedGrade(e2) {
   if (isNonEmptyString2(e2.refKind) && isNonEmptyString2(e2.refKey)) {
     const grade2 = "B";
     return {
@@ -176946,7 +177155,7 @@ function proposedReadingGrade(entry3) {
     why: `earned nothing: this proposal names neither an identifier nor a name, so there is nothing to grade. Undetermined is stated rather than defaulted to the weakest letter, because a letter is a claim and there is no claim here`
   };
 }
-function checkProposedRef(entry3) {
+function checkProposedRef(entry3, capture2 = null) {
   const e2 = entry3 && typeof entry3 === "object" && !Array.isArray(entry3) ? entry3 : null;
   if (!e2) return no5("PROPOSAL_SHAPE", `a proposed reference is an object`);
   if (e2.grade !== void 0 || e2.earned !== void 0)
@@ -176959,16 +177168,17 @@ function checkProposedRef(entry3) {
       "PROPOSAL_NO_REF",
       `a proposed reference carries the reference AS IT APPEARS \u2014 the raw string the reading names \u2014 which is what makes it joinable to everything the registered readers wrote`
     );
-  const { grade: grade2 } = proposedReadingGrade(e2);
-  if (grade2 == null)
+  if (namedGrade(e2).grade == null)
     return no5(
       "PROPOSAL_NAMES_NOTHING",
       `this proposal carries a reference string but names neither an identifier (a kind and a key) nor a name (a label). There is nothing for the record to grade, and a row that cannot be graded cannot become part of a finding`
     );
-  if (rank6(grade2) != null && rank6(grade2) < rank6(PROPOSED_READING_CEILING))
+  const graded = proposedReadingGrade(e2, capture2);
+  const ceiling = graded.verified_quote ? capture2.ceiling ?? null : PROPOSED_READING_CEILING;
+  if (rank6(graded.grade) != null && (ceiling == null || rank6(graded.grade) < rank6(ceiling)))
     return no5(
       "PROPOSAL_ABOVE_CEILING",
-      `a proposed reading earned ${grade2}, which is stronger than the ${PROPOSED_READING_CEILING} a machine reading text may reach. A is what a reference the SOURCE assigned is worth and a machine that read a string out of prose did not get one`
+      `a proposed reading earned ${graded.grade}, which is stronger than the ${ceiling == null ? "undetermined ceiling of the capture its quote is read from" : ceiling} it may reach. A machine reading text reaches B at most; only a quote that is the capture's own text keeps the capture's own ceiling, and never more`
     );
   if (e2.source !== void 0 && e2.source !== null && readingSource(e2.source) == null)
     return no5(
@@ -236942,11 +237152,11 @@ var UNIT_WORDS = new Set(`office division section unit bureau department dept ag
   operations group area district task force`.split(/\s+/).filter(Boolean));
 var L2 = "\\p{Lu}";
 var l = "\\p{Ll}";
-var WORD3 = `(?:${L2}${l}+(?:${L2}${l}+)*(?:[-'\u2019]${L2}?${l}+)*|${L2}\\.)`;
+var WORD4 = `(?:${L2}${l}+(?:${L2}${l}+)*(?:[-'\u2019]${L2}?${l}+)*|${L2}\\.)`;
 var PARTICLE = "(?:de|del|della|di|da|dos|du|la|le|van|von|der|den|ter|bin|ibn|al)";
 var NICK = `(?:["\u201C][${"\\p{L}"}]+["\u201D])`;
 var SUFFIX = "(?:,?\\s+(?:Jr\\.?|Sr\\.?|II|III|IV))";
-var NAME_SRC = `${WORD3}(?:\\s+(?:${PARTICLE}\\s+)?(?:${NICK}\\s+)?${WORD3}){1,3}${SUFFIX}?`;
+var NAME_SRC = `${WORD4}(?:\\s+(?:${PARTICLE}\\s+)?(?:${NICK}\\s+)?${WORD4}){1,3}${SUFFIX}?`;
 var NAME_AT = new RegExp(`^(?:${NAME_SRC})`, "u");
 var NAME_WHOLE = new RegExp(`^(?:${NAME_SRC})$`, "u");
 var NAME_ALL = new RegExp(`(?<![\\p{L}\\p{N}])${NAME_SRC}(?![\\p{L}\\p{N}])`, "gu");
@@ -237066,10 +237276,10 @@ function namedAs(selfLines, kind2) {
   const as = selfLines.filter((x) => x.kinds.includes(kind2));
   return { as, only_other: selfLines.length > 0 && !as.length };
 }
-var MONTH = "(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|June?|July?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)";
+var MONTH2 = "(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|June?|July?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)";
 var MONTHS5 = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
-var DATE_IN_ROWS = new RegExp(`\\b${MONTH}\\.?\\s+\\d{1,2}\\b|\\b\\d{1,2}\\/\\d{1,2}\\/\\d{2,4}\\b`, "gi");
-var FULL_DATE = new RegExp(`\\b(${MONTH})\\.?\\s+(\\d{1,2}),?\\s+(\\d{4})\\b|\\b(\\d{1,2})[/.-](\\d{1,2})[/.-](\\d{2,4})\\b|\\b(${MONTH})\\.?,?\\s+(\\d{4})\\b`, "i");
+var DATE_IN_ROWS = new RegExp(`\\b${MONTH2}\\.?\\s+\\d{1,2}\\b|\\b\\d{1,2}\\/\\d{1,2}\\/\\d{2,4}\\b`, "gi");
+var FULL_DATE = new RegExp(`\\b(${MONTH2})\\.?\\s+(\\d{1,2}),?\\s+(\\d{4})\\b|\\b(\\d{1,2})[/.-](\\d{1,2})[/.-](\\d{2,4})\\b|\\b(${MONTH2})\\.?,?\\s+(\\d{4})\\b`, "i");
 function datesIn(text7) {
   return (flatten(text7).match(DATE_IN_ROWS) || []).length;
 }
