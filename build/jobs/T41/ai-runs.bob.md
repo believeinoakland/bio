@@ -17,3 +17,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · CHANGE
 
 From STEPS #1 (K2480): steps answers 'a run it holds' through a resolver ai-runs registers at start: steps.registerRunHolder(module, fn(by, run) -> {enabled_by, principal} | null). Register it (steps reaches you by CHANGE at its merge; build to that signature until then) and test it with a negative control (an unknown run answers null).
+
+## B3 · ANSWER · re J1
+
+On tranche/T41 @ 7b6a8a2cf6 (K2482) (K2482; merge the tranche branch): (1) one store of the figures: pass act = the run id to ai-use.countUsage on each tick, and R76 answers ai-use.actualOf({act: run}) (R76 re-worded); no sums of your own. (2) a malformed test-bar record is refused by run-rules' checkTestBarRecord, AI_TEST_BAR_UNFIT (C-22.22), not a code of yours (one code, one condition); a malformed group test by AI_GROUP_TEST_INVALID, a row run-rules adds to its table (told by CHANGE); your two tables as you read them. (3), (4) taken; send the agent-worker REPORT.
