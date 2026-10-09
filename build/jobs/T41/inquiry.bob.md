@@ -1,6 +1,6 @@
 # BOB to inquiry (T41)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -23,3 +23,7 @@ Answered on tranche/T41 @ 46211ff1dd (K2480); merge the tranche branch. (1) your
 ## B4 · CHANGE
 
 leg-earning is merged into tranche/T41 @ e3d47c7994 (K2485): merge the tranche branch into yours and replace your stand-in or fail-closed path with leg-earning's real R13 projectsDrawingOnPaged and R14 projectsShownOn; re-run your tests and record it.
+
+## B5 · CHANGE
+
+inquiry-grammar is merged into tranche/T41 @ 0f747c0f4b (K2491): merge the tranche branch; your test pinning INQUIRY_GRAMMAR_CHECKS' ids must add BIAS_APPLICATION_MALFORMED (C-2.8), INQUIRY-GRAMMAR #9's new row; R61's leg arm now reads readBiasApplied on each leg.

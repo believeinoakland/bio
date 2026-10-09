@@ -5,7 +5,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, inquiryMd, NOW } from "./fixture.mjs";
-import { inquiryFindings } from "../../../src/inquiry/index.mjs";
+import { inquiryFindings, INTERNAL_VIEWER } from "../../../src/inquiry/index.mjs";
 
 const DOC = "INFO-2026-5301-doc", LENS = "BIAS-2026-5301-lens";
 const WHY = "We adopt this lens because the office is a party to matters this group examines.";
@@ -37,7 +37,9 @@ function lensWorld({ bias = true } = {}) {
                                  identity: "member:ruth", viewer: "member:ruth" });
     assert.equal(a.ok, true, JSON.stringify(a).slice(0, 400));
   };
-  w.lensNow = () => w.bias.biasManifest({ scope: "project", scopeId: P, viewer: "admin", limit: 1 }).statements_sha;
+  /* the lens as an internal read sees it (a machine viewer): the project is hidden (no visibility recorded, membership
+     R85) and ruth's alone, so the founder's `admin` is blind to it (D54, K2442) */
+  w.lensNow = () => w.bias.biasManifest({ scope: "project", scopeId: P, viewer: INTERNAL_VIEWER, limit: 1 }).statements_sha;
   /** A question stating `project` (none when null), created open and then concluded by `author`. */
   w.conclude = (id, project, author = "member:ruth") => {
     const extra = project ? [`project: ${project}`] : [];
@@ -135,4 +137,25 @@ test("R53 the lens recorded: a re-revision of a concluded question keeps its fin
                    { lens_state: "unreadable", lens_sha: null });
   assert.equal((await inquiryFindings(bare.host).read(`finding:${Q}`)).lens, null);
   assert.equal(bare.k.bindBias({}), null, "bindBias takes only a bias instance");
+});
+
+test("R53 D54 K2442: the lens of a finding in a HIDDEN project is read as an internal read (a machine viewer), never as the founder, who is blind to it; a member's own read stays fenced", () => {
+  const w = lensWorld();
+  assert.equal(w.membership.visibilityOf(w.P), "hidden", "the fixture's project is hidden");
+  w.adopt();
+  const Q = "INQ-2026-5321-hidden";
+  w.conclude(Q, w.P);
+  const row = w.row(`SELECT lens_state, lens_sha FROM inquiry_findings WHERE bundle_id=?`, Q);
+  assert.deepEqual(row, { lens_state: "recorded", lens_sha: w.lensNow() });
+  assert.match(row.lens_sha, /^[0-9a-f]{64}$/);
+  assert.match(INTERNAL_VIEWER, /^class:/, "a machine credential's viewer");
+  /* negative controls: the founder and a member outside the project are fenced from that manifest (bias R13, membership
+     R43), so a finding read as either would have recorded no lens */
+  for (const v of ["admin", "member:admin", "member:sam"]) {
+    const m = w.bias.biasManifest({ scope: "project", scopeId: w.P, viewer: v, limit: 1 });
+    assert.notEqual(m.in_force, true, v);
+    assert.notEqual(m.statements_sha, row.lens_sha, v);
+  }
+  /* and the project's own participant still reads it */
+  assert.equal(w.bias.biasManifest({ scope: "project", scopeId: w.P, viewer: "member:ruth", limit: 1 }).statements_sha, row.lens_sha);
 });

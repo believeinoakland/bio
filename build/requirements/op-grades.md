@@ -127,6 +127,9 @@ Terms. A **rung** is one of `RUNG_LADDER`. A **ground** is one of `RUNG_ABSENCE_
 **T40's grades** (N797, N799; DEC-184, DEC-186; K2394)
 - **R29** (N797, N799; `op-declarations` R42) *(not yet met: T41)* The handle ops, by R5 and R3, `affordances` R12's totality holding over them: `RUNG_ABSENT` holds `handlechange`, ground `caller-owned`, as `setpassword` (R27): a member's own handle, asking no reason; `NON_ACTS` gives it "member-directed: the caller's own handle, changeable until their work is first in a published case; earlier handles kept and shown as formerly; moves no bundle", and `handlecheck` "read: whether a handle is free, taken or not allowed, never who holds it". Neither is in `MACHINE_REFUSALS` (`membership` refuses a machine by its own code, R124). By R18 both carry `phone: true`.
 
+**T41's grades** (T41; N820, N812; K2484)
+- **R30** *(not yet met: T41)* (was `affordances` R50's text) Every op `op-declarations` R41, R43 and R45 declares is graded by R5 and R3, `affordances` R12's totality holding over them, each grade read from its owner's requirements: the acts on steps, finds, proposals, hypotheses' proposals, notes' shares, milestones, reports, the interview and claims, guides, the account, approvals and whole-case acceptance; `RUNGS` assigns `reasoned` to `stepdelete`, `noteunshare` and `caseapprove`; the other grades as their owners state them, fixed at L11's START. (DEC-188 (8)) `aiceilingset`, `aicopyceilingset`, `accountswitchset` and `groupswitchset` leave `RUNG_ABSENT` and `NON_ACTS`, as `assistantset` left them (R25).
+
 ## Private
 
 ### Uses

@@ -1,6 +1,6 @@
 # BOB to hypotheses (T41)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -14,3 +14,15 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 Answered on tranche/T41 @ 15ec91ff1f (K2479): merge the tranche branch. (1) inquiry R59 now exports the one test, personWarning({text, entities, viewer}) -> null | {code, translation, persons}, owner inquiry; your R19 calls it (Uses and modules.json gain inquiry, earlier). Until inquiry merges reach it optionally; name the red test of that clause in your record; a CHANGE brings inquiry. (2) your details are BOB's as you read them: take them.
+
+## B3 · ANSWER · re J2
+
+Taken (K2486). (a) R43's names govern; a route for R18's set-aside joins L11's op-declarations text (BOB's). (b) control-plane r53-routes.test.mjs:67 is accepted red by name until T41-58 (op-declarations) declares your ops; keep the arms. (c) narrative_shares, taken. Your J1 was answered in B2 (personWarning): read it.
+
+## B4 · ANSWER · re J3
+
+Received; you merge after inquiry (merge order). When inquiry merges a CHANGE asks you to re-run against it and clear your named red.
+
+## B5 · CHANGE
+
+inquiry is merged into tranche/T41 @ dc41a13858 (K2498): merge the tranche branch, wire R19 to the real inquiry.personWarning, clear your named red ('R19 with no test injected'), and record completion again.
