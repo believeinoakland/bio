@@ -38,47 +38,59 @@ import { recordOf } from "../record-core/index.mjs";
 export const GATE_MARK = "/*viewer-gate*/";
 
 /* R43. THE ONE RULE OF WHAT A VIEWER MAY SEE (Membership Architecture v2 §7.9), moved here from query.mjs (K57).
-   A machine credential (the four token classes and an organisation-scoped `ai` credential) or the founder's viewer
-   sees every bundle; a `member:<id>` viewer sees every bundle that is not a project, and a project only as a
-   participant (any state) or as an active administrator; any other viewer sees nothing (fail closed).
+   A machine credential (the four token classes and an organisation-scoped `ai` credential) sees every bundle; a
+   `member:<id>` viewer sees every bundle that is not a project, and a project only as a participant (any state) or as
+   an active administrator; any other viewer sees nothing (fail closed).
    The predicate is written over the alias `b`, bound to record-core's `bundles` (its R37 read contract). `member`
    is the viewer's member id, null for every arm that is not an identified session (D-310).
    N357 (K494, W1): the founder's viewer is spelled bare `admin` or `member:admin` (the founder's positional
-   spelling, `resolveSession`'s identity); both see every bundle, and only the second names a member, `admin`. The
-   founder has no roster row, so the participant arm below would have shown `member:admin` no project it had not
-   joined while the bare spelling saw them all.
+   spelling, `resolveSession`'s identity); both see what the founder's arm admits, and only the second names a member,
+   `admin`. The founder has no roster row; its participation rows, when it owns or joined a project, are `admin`'s.
    N426 (K704, K710): THE PROJECT FENCE. A bundle that belongs to a project (record-core R34's `project`, which promotion
    writes from the document) is seen exactly when its project is: so an escalation's, a plan's or any project record's
-   bundle read record-wide is fenced by the same two arms that fence the project itself. The project a row is judged
-   by is its own id for a project, and its `project` column for anything else (an empty one names none). A bundle
-   naming a project nobody participates in is seen by the administrators alone, the fail-closed reading of "exactly
-   when it would see that project". */
+   bundle read record-wide is fenced by the same arms that fence the project itself. The project a row is judged
+   by is its own id for a project, and its `project` column for anything else (an empty one names none).
+   D54 (Bob's "D54: B", K2408; hidden projects only, K2409; T41-3): an administrator, the founder included, sees a HIDDEN
+   project, and every bundle belonging to it, only as a participant (invited or joined); a DISCOVERABLE project stays
+   seen whole by administrators. The setting is read from `project_sight` (R85's index, the owners' latest act), so a
+   project the index does not hold, and a bundle naming a project that is not one, reads hidden: seen by its
+   participants and machine credentials alone (fail closed). At a hidden project's EXISTENCE an administrator learns
+   its id, name and owners and nothing else (R44, R77). */
+const OWN_PROJECT = `(CASE WHEN b.object_type = 'project' THEN b.bundle_id ELSE b.project END)`;
 export function viewerPredicate(viewer) {
   const v = typeof viewer === "string" ? viewer : "";
   const CLS = MACHINE_CLASS_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const m = new RegExp(`^(${CLS}(admin|member|probe|daemon|ai)|member:([A-Za-z0-9._:-]{1,128})|admin)$`).exec(v);
   if (!m) return { sql: `${GATE_MARK} 0=1`, args: [], viewer: null, scope: "DENY", member: null };
   const memberId = m[3] || null;
-  if (!memberId || memberId === Membership.ROOT_ADMIN)
-    return { sql: `${GATE_MARK} 1=1`, args: [], viewer: v, scope: "member", member: memberId };
+  const founder = v === Membership.ROOT_ADMIN || memberId === Membership.ROOT_ADMIN;
+  if (!memberId && !founder)
+    return { sql: `${GATE_MARK} 1=1`, args: [], viewer: v, scope: "member", member: null };
+  /* The two arms every session shares: a bundle outside every project, and a project the viewer participates in. */
+  const outside = `(b.object_type <> 'project' AND COALESCE(b.project, '') = '')`;
+  const participant = `EXISTS (SELECT 1 FROM project_participants pp WHERE pp.project_id = ${OWN_PROJECT} AND pp.member_id = ?)`;
+  const discoverable = `EXISTS (SELECT 1 FROM project_sight ps WHERE ps.project_id = ${OWN_PROJECT}
+                                  AND ps.setting = 'discoverable')`;
+  /* The administrator's arm (D54): a discoverable project only; the founder's viewer holds it always, an enrolled
+     member while they are an active administrator. */
+  const administers = founder ? discoverable
+    : `(EXISTS (SELECT 1 FROM members am WHERE am.member_id = ? AND am.role = 'admin' AND am.status = 'active')
+            AND ${discoverable})`;
+  const who = founder ? Membership.ROOT_ADMIN : memberId;
   return {
     member: memberId,
-    sql: `${GATE_MARK} ((b.object_type <> 'project' AND COALESCE(b.project, '') = '') OR EXISTS (
-             SELECT 1 FROM project_participants pp
-             WHERE pp.project_id = (CASE WHEN b.object_type = 'project' THEN b.bundle_id ELSE b.project END)
-               AND pp.member_id = ?)
-           OR EXISTS (
-             SELECT 1 FROM members am
-             WHERE am.member_id = ? AND am.role = 'admin' AND am.status = 'active'))`,
-    args: [memberId, memberId],
+    sql: `${GATE_MARK} (${outside} OR ${participant} OR ${administers})`,
+    args: founder ? [who] : [who, who],
     viewer: v, scope: "participant",
   };
 }
 
 /* R88 (N352, K477). THE COMPLEMENT OF R43's RULE, spelled once: the bundles a viewer may NOT see, as a set to subtract
-   (D-464, D-486). `null` when R43 lets the viewer see every bundle (its machine and founder arms, scope `member`), so
-   there is nothing to subtract; otherwise `{sql, args}`, a parenthesised subquery over record-core's `bundles` (its R37
-   read contract) naming every bundle R43's compiled gate does not pass: every bundle, for a viewer R43 refuses. It is
+   (D-464, D-486). `null` when R43 lets the viewer see every bundle (its machine arm, scope `member`; since D54 no longer
+   the founder's viewer, which is withheld the hidden projects it is not in), so there is nothing to subtract;
+   otherwise `{sql, args}`, a parenthesised subquery over record-core's `bundles` (its R37 read contract) naming every
+   bundle R43's compiled gate does not pass: every bundle, for a viewer R43 refuses; for the founder's viewer and an
+   active administrator's, the hidden projects R43 withholds from them and the bundles belonging to them. It is
    the gate negated as a set, never a second rule, so a count taken through it and a read taken through
    `viewerPredicate` cannot disagree about who is hidden. A caller subtracts with `<key> NOT IN ${sql}` and binds `args`.
    What an absent viewer means stays the caller's: asked, it is R43's refusal and hides everything; an internal
@@ -201,8 +213,8 @@ export function noSuchMember(memberId, extra = null) {
    space, then the remedy (DEC-83). Who is an owner stays each act's own rule (R54); this only answers the refusal.
    Writes nothing and never throws. */
 const NOT_THE_OWNER_DETAIL = "this is an act an owner of the project performs, and the caller is not one of its owners. "
-  + "Seeing a project is not directing it: an administrator sees every project and directs none (Membership Architecture "
-  + "v2 §4.9, §7). Nothing was changed.";
+  + "Seeing a project is not directing it: an administrator directs no project, whatever it sees (Membership "
+  + "Architecture v2 §4.9, §7). Nothing was changed.";
 const NOT_THE_OWNER_FIXED = new Set(["ok", "reason", "code", "check", "translation", "by", "project", "detail", "message"]);
 export function notTheOwner(by, projectId, extra = null) {
   let own = [];
@@ -234,7 +246,9 @@ export function notTheOwner(by, projectId, extra = null) {
    T37-44 (K1185, K2171): `image-cover` after `pdf-pixels` in layer 1, as T37's opening placed it. T38-4 (N783; K657,
    K1185, K2270): `project-roster` in layer 2, directly after `membership` and before `credentials`. T39-M (N806, N807;
    K657, K2333, K2343): `doc-clean` after `image-cover` in layer 1, `setup-words` before `instance-setup` in layer 11.
-   T40-M (N812 B10; K657, K2373, K2389): `ai-use` after `run-rules` in layer 6, before `ai-runs`. */
+   T40-M (N812 B10; K657, K2373, K2389): `ai-use` after `run-rules` in layer 6, before `ai-runs`. T41-3 (N820, N823;
+   K657, K2431): `steps` after `hypotheses`, `reading-guides` after `capture-requests` and `question-explorer` after
+   `skills` in layer 6, `investigation` after `intent` in layer 7, `publish-schedule` after `publication` in layer 8. */
 export const MODULE_ORDER = Object.freeze([
   /* 1 */ "record-grammar", "jurisdictions", "civil-time", "calc-grammar", "connection-grammar", "test-support",
           "runtime-limits", "signatures", "bundler", "court-citations", "id-spaces", "subresources", "ooxml",
@@ -248,12 +262,13 @@ export const MODULE_ORDER = Object.freeze([
   /* 5 */ "entities", "events", "lines", "local-facts", "connections", "observation-log", "law-relations", "standards",
           "progressions", "money", "money-checks", "duties", "people", "explore", "bias", "query-language", "retrieval",
           "calculations", "workbooks",
-  /* 6 */ "inquiry-grammar", "accepted-work", "leg-earning", "inquiry", "hypotheses", "citation", "basis-versions",
-          "strength", "contradiction", "run-rules", "ai-use", "ai-runs", "run-productions", "capture-requests",
-          "skills", "answers", "agent-harness", "agent-model", "agent-runner", "agent-worker",
-  /* 7 */ "intent", "reevaluation",
-  /* 8 */ "case-grammar", "corpus-export", "case-carriage", "case-tensions", "publication", "docket", "public-read",
-          "project-stage", "network-notices", "case-catalogue", "ratification", "case-checker", "case-import",
+  /* 6 */ "inquiry-grammar", "accepted-work", "leg-earning", "inquiry", "hypotheses", "steps", "citation",
+          "basis-versions", "strength", "contradiction", "run-rules", "ai-use", "ai-runs", "run-productions",
+          "capture-requests", "reading-guides", "skills", "question-explorer", "answers", "agent-harness", "agent-model",
+          "agent-runner", "agent-worker",
+  /* 7 */ "intent", "investigation", "reevaluation",
+  /* 8 */ "case-grammar", "corpus-export", "case-carriage", "case-tensions", "publication", "publish-schedule",
+          "docket", "public-read", "project-stage", "network-notices", "case-catalogue", "ratification", "case-checker", "case-import",
           "case-disclosures", "case-authoring", "review",
   /* 9 */ "conformance", "consequences", "action-grammar", "actions", "action-clocks", "filing-templates", "filings",
           "escalation", "action-plans",
@@ -639,10 +654,23 @@ export class Membership {
 
   static MEMBER_PAIRINGS_LIMIT = 200;
 
-  /* R18 (section 7.8): the projects a member participates in, for an administrator's roster. */
-  #projectsOf(memberId) {
-    return this.#rows(`SELECT project_id, state, owner FROM project_participants WHERE member_id=? ORDER BY project_id`,
-      memberId).map((p) => ({ project: p.project_id, state: p.state, owner: !!p.owner }));
+  /* R18 (section 7.8; D54, T41-3): the projects a member participates in, for an administrator's roster, as the
+     administrator reading it (`viewer`) sees them: each project that administrator sees at FULL (R44), and, of a
+     hidden project it does not, only the member's ownership, which that administrator's EXISTENCE already shows
+     (`{project, state: null, owner: true, existence: true}`); a hidden project's other participants are never listed
+     to an administrator neither invited nor joined to it. With no viewer stamped, the roster is read as an
+     administrator in no project would read it (fail closed): discoverable projects whole, hidden ones by owner only. */
+  #projectsOf(memberId, viewer) {
+    const full = (p) => (viewer === null || viewer === undefined
+      ? this.visibilityOf(p) === "discoverable" : this.inSight(p, viewer));
+    const out = [];
+    for (const p of this.#rows(`SELECT project_id, state, owner FROM project_participants WHERE member_id=?
+                                 ORDER BY project_id`, memberId)) {
+      if (full(p.project_id)) out.push({ project: p.project_id, state: p.state, owner: !!p.owner });
+      else if (p.owner && this.visibilityOf(p.project_id) === "hidden")
+        out.push({ project: p.project_id, state: null, owner: true, existence: true });
+    }
+    return out;
   }
 
   static async #sha256(v) {
@@ -824,7 +852,8 @@ export class Membership {
     } catch { return 0; }
   }
 /* Membership Architecture v2 section 7: authority over a project belongs to its
-   OWNERS, and to nobody else. An administrator sees every project (7.3, 7.8) and
+   OWNERS, and to nobody else. An administrator sees every discoverable project, and
+   a hidden one only as a participant (7.3, 7.8, 7.9 as D54 amended them), and
    directs none of them (v2 4.9), the single exception being 7.13, the rescue of a
    project whose owners are all inactive (`project-roster`'s `projectOwnerRescue`, its R5).
 
@@ -904,7 +933,7 @@ export class Membership {
       return refusal("PROJECT_ACT_NOT_A_PARTICIPANT",
         `${act} on ${String(projectId).slice(0, 80)} is work inside that project, and ${who} has not joined it `
         + `(§7.5: an invited member has view rights only; an uninvited one, none). Seeing a project is not `
-        + `directing it: an administrator sees every project and directs none (§4.9, §7). Nothing was written.`);
+        + `directing it: an administrator directs no project, whatever it sees (§4.9, §7). Nothing was written.`);
     /* END DEC-49 REGION is-project-authority */
     return null;
   }
@@ -995,12 +1024,12 @@ export class Membership {
    *   SIGHT_NONE      — nothing: an absent id, or a project the caller cannot see at all. §7.9 exactly.
    *   SIGHT_EXISTENCE — the project's id and name and the request to join, and nothing else: a DISCOVERABLE
    *                     project, asked by a member SESSION (a viewer naming a member) outside its participants.
-   *   SIGHT_FULL      — what `viewerPredicate` admits today (invited, joined, an administrator, the founder,
-   *                     every machine credential). Unchanged: its SQL is asked first and alone decides FULL.
+   *   SIGHT_FULL      — what `viewerPredicate` admits (invited, joined, an administrator or the founder at a
+   *                     discoverable project, every machine credential): its SQL is asked first and alone decides FULL.
    * EXISTENCE is asked only where FULL was refused, only of a PROJECT, and only of a viewer the gate reads as
-   * a member — so a machine credential (already FULL) and an administrator (already FULL) are unchanged, an
-   * absent or unrecognised viewer stays NONE (fail closed), and a HIDDEN project stays NONE for everybody who
-   * could not already see it. `viewerPredicate` IS NOT CHANGED: every record read, search, citation list,
+   * a member — so a machine credential (already FULL) is unchanged, an absent or unrecognised viewer stays NONE
+   * (fail closed), and a HIDDEN project stays NONE for everybody who could not already see it but an administrator
+   * (D54, T41-3: its second form, below). `viewerPredicate` IS NOT CHANGED: every record read, search, citation list,
    * reverse edge and run report still compiles only FULL sight, because those reads return CONTENTS.
    * `inSight` IS the FULL level, asked first and unchanged, so every existing caller keeps its meaning; the
    * acts ask `existenceAct` just BEFORE their REC-138 line, so NONE still reaches that line and its answer. */
@@ -1010,12 +1039,28 @@ export class Membership {
 
   static SIGHT_FULL = "full";
 
+  /* D54 (K2408, K2409; T41-3): EXISTENCE has a second form. An administrator (the founder's viewer, either spelling, or
+     an active administrator's) whom R43 does not admit to a HIDDEN project, being neither invited nor joined, sees that
+     it exists: its id, its name and its owners' handles (R77), so a legal hold or a complaint can name it; never its
+     contents. A discoverable project's EXISTENCE is unchanged, and administrators are FULL there already. */
   sight(bundleId, viewer) {
     if (this.inSight(bundleId, viewer)) return Membership.SIGHT_FULL;
-    if (!viewerPredicate(viewer).member || typeof bundleId !== "string") return Membership.SIGHT_NONE;
+    if (typeof bundleId !== "string" || (!this.#administratorView(viewer) && !viewerPredicate(viewer).member))
+      return Membership.SIGHT_NONE;
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, bundleId);
     if (!b || b.object_type !== "project") return Membership.SIGHT_NONE;
-    return this.visibilityOf(bundleId) === "discoverable" ? Membership.SIGHT_EXISTENCE : Membership.SIGHT_NONE;
+    if (this.visibilityOf(bundleId) === "discoverable") return Membership.SIGHT_EXISTENCE;
+    return this.#administratorView(viewer) ? Membership.SIGHT_EXISTENCE : Membership.SIGHT_NONE;
+  }
+
+  /* R43's administrator arms, as a viewer names them: the founder's viewer (bare `admin` or `member:admin`), or a
+     `member:<id>` viewer naming an active administrator. A machine credential is neither: it sees every bundle. */
+  #administratorView(viewer) {
+    const g = viewerPredicate(viewer);
+    if (g.scope === "DENY" || g.scope === "member") return false;
+    if (viewer === Membership.ROOT_ADMIN || g.member === Membership.ROOT_ADMIN) return true;
+    const m = this.#one(`SELECT role, status FROM members WHERE member_id=?`, g.member);
+    return !!m && m.role === "admin" && m.status === "active";
   }
 
   /* R85 (N332, K412): a named service (control-plane R27's existence read calls it), asking no viewer: it states only
@@ -1104,22 +1149,31 @@ export class Membership {
      (`rosterInSight`'s precedent): it is an internal caller, and NONE's line decides for it as before. */
   existenceAct(projectId, viewer) {
     if (viewer === null || viewer === undefined) return null;
-    return this.sight(projectId, viewer) === Membership.SIGHT_EXISTENCE ? this.#existenceOnly(projectId) : null;
+    try {
+      return this.sight(projectId, viewer) === Membership.SIGHT_EXISTENCE ? this.#existenceOnly(projectId) : null;
+    } catch { return null; }
   }
 
-  /* C-70.1, minted here and only here; every act RELAYS it through `existenceAct`. The id and the name, which the
-     directory already showed this caller, and nothing else — no act, no state, no owner, no participant. */
+  /* C-70.1, minted here and only here; every act RELAYS it through `existenceAct`. Its two forms (R77, D54): at a
+     discoverable project's EXISTENCE, the id and the name, which the directory already showed this caller, and nothing
+     else; at a hidden project's, which only an administrator neither invited nor joined reaches (R44), the id, the name
+     and `owners`, the owners' current handles in R65's order (null for an owner with none, the founder), so a hold or a
+     complaint can name who to ask. No act, no state, no other participant, ever. */
   #existenceOnly(projectId) {
     const title = this.#titleOf(projectId);
+    const hidden = this.visibilityOf(projectId) === "hidden";
     const refusal = (code, detail) => {
       const row = PROJECT_VISIBILITY_CHECKS[code];
       return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail,
-               project: projectId, name: title };
+               project: projectId, name: title,
+               ...(hidden ? { owners: this.projectOwners(projectId).map((o) => this.memberFacts(o)?.handle ?? null) } : {}) };
     };
     /* DEC-49 REGION is-project-existence-only */
-    return refusal("PROJECT_SEEN_NOT_A_PARTICIPANT",
-      "this project is discoverable and you are not one of its participants. Its existence and name are all "
-      + "it shows you; asking to join is the one act open to you (Membership Architecture v2 §7.14).");
+    return refusal("PROJECT_SEEN_NOT_A_PARTICIPANT", hidden
+      ? "this project is hidden and you are neither invited to it nor joined to it. As an administrator you see its "
+        + "id, its name and its owners, and nothing inside it; its owners can add you (Membership Architecture v2 §7.9)."
+      : "this project is discoverable and you are not one of its participants. Its existence and name are all "
+        + "it shows you; asking to join is the one act open to you (Membership Architecture v2 §7.14).");
     /* END DEC-49 REGION is-project-existence-only */
   }
 
@@ -1292,8 +1346,8 @@ export class Membership {
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     if (!this.isProjectOwner(projectId, by))
       return { ok: false, reason: "NOT_THE_OWNER",
-               detail: "only an owner of this project invites participants to it. An administrator sees "
-                     + "every project and directs none of them." };
+               detail: "only an owner of this project invites participants to it. An administrator directs "
+                     + "no project, whatever it sees." };
     const target = this.memberByHandle(handle);
     if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
     if (target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };
@@ -2045,7 +2099,7 @@ export class Membership {
     /* END DEC-49 REGION is-enrol-password-set */
   }
 
-  memberList({ administer } = {}) {
+  memberList({ administer, viewer = null } = {}) {
     /* THE COVER↔HANDLE PROJECTION (Membership Architecture v1 §3 and v2 §3,
        identical and unambiguous: "Pairing. Only administrators see cover and
        handle together"), and it is a PROJECTION rather than a refusal, because
@@ -2096,7 +2150,7 @@ export class Membership {
          /* R17, R124 (T40; DEC-186 (2)): the member's earlier handles, latest first, to every caller R17 answers. */
          formerly: this.#formerly(r.member_id, r.handle),
          pairing_published: r.pairing_published === 1,              /* R19 */
-         ...(pairs ? { projects: this.#projectsOf(r.member_id),                /* R18: an administrator's roster */
+         ...(pairs ? { projects: this.#projectsOf(r.member_id, viewer),        /* R18: an administrator's roster */
                        /* R105: how each came in and their invitation, for an administrator's roster only. */
                        door: door ?? "administrator", approvedBy: approved_by ?? null,
                        expires: r.status === "proposed" ? null : invite_expires ?? null,
@@ -2182,6 +2236,12 @@ export class Membership {
     return Math.max(1, Math.ceil(ms / 1000) + 1);
   }
 
+  /* R123 (DEC-188 (7)): the paused answer's fields: `stated`, `retryAfter` in whole seconds, and `minutes`, the whole
+     minutes until then, rounded up, which the translation's `{minutes}` names. */
+  static #pausedFor(retryAfter) {
+    return { stated: Membership.HANDLE_CHECK_STATED, retryAfter, minutes: Math.ceil(retryAfter / 60) };
+  }
+
   /** R123 (DEC-184 (2), (3), DEC-186 (3); K1881; `op=handlecheck`): whether `handle` could be taken in this group now,
    *  as a person types it, asked with a live invitation or by an active member (`viewer`). Free, taken (with a
    *  suggestion) or not allowed (naming what does not fit), never who holds it. Writes only its count; never throws. */
@@ -2205,7 +2265,7 @@ export class Membership {
         return Membership.#rowRefusal("HANDLE_CHECK_PAUSED",
           "too many handles were checked for this invitation or member in the last few minutes, so this one was not "
           + "read. Nothing was changed.",
-          { stated: Membership.HANDLE_CHECK_STATED, retryAfter: Membership.#handleCheckRetry(est) });
+          Membership.#pausedFor(Membership.#handleCheckRetry(est)));
       /* END DEC-49 REGION is-handle-check-window */
       this.sql.exec(`INSERT INTO handle_check_window (key, win, count) VALUES (?,?,1)
                      ON CONFLICT(key, win) DO UPDATE SET count=count+1`, key, est.win);
@@ -2821,7 +2881,9 @@ export function membershipOps(m, url, body, env) {
                                            viewer: url.searchParams.get("viewer") }),
         handlechange: () => m.handleChange({ handle: body?.handle ?? null, by: url.searchParams.get("by") }),
         invitelook: () => m.inviteLook(body || {}),
-        memberlist: () => m.memberList({ administer: url.searchParams.get("administer") }),
+        /* R18 (D54, T41-3): `viewer`, the control plane's stamp, says which administrator reads the roster's projects. */
+        memberlist: () => m.memberList({ administer: url.searchParams.get("administer"),
+                                         viewer: url.searchParams.get("viewer") }),
         /* REC-159: `memberadd`'s relay shape, for its reason — spread the body, THEN the stamp. */
         memberset: () => m.memberSet({ ...(body || {}), by: url.searchParams.get("by") }),
         /* The membership model's member half. `memberadd`, `memberset`,

@@ -127,11 +127,18 @@ test("R87 R35: projectLeave by a caller holding no participation answers notAPar
   const w = await world().group("ann", "bob", "cal");
   w.project("PROJ-P");
   w.m.projectClaimOwner({ projectId: "PROJ-P", memberId: "ann" });
-  for (const [by, viewer] of [["bob", V("bob")], ["cal", null], ["second", V("second")], ["ghost", V("ghost")]]) {
+  for (const [by, viewer] of [["bob", V("bob")], ["cal", null], ["ghost", V("ghost")]]) {
     const before = snapshot(w);
     assert.deepEqual(w.m.projectLeave({ projectId: "PROJ-P", by, viewer }), notAParticipant("PROJ-P", by), by);
     assert.equal(snapshot(w), before, `${by}: nothing written`);
   }
+  /* D54 (T41-3): an administrator not in hidden P is at its EXISTENCE and answered there (C-70.1); once P is
+     discoverable it sees P whole, holds no participation, and is answered through notAParticipant */
+  assert.equal(w.m.projectLeave({ projectId: "PROJ-P", by: "second", viewer: V("second") }).code, "PROJECT_SEEN_NOT_A_PARTICIPANT");
+  w.m.projectVisibilitySet({ projectId: "PROJ-P", setting: "discoverable", by: "ann", viewer: V("ann") });
+  const before = snapshot(w);
+  assert.deepEqual(w.m.projectLeave({ projectId: "PROJ-P", by: "second", viewer: V("second") }), notAParticipant("PROJ-P", "second"));
+  assert.equal(snapshot(w), before, "second: nothing written");
   /* An absent project and a hidden one answer alike (R61). */
   const absent = w.m.projectLeave({ projectId: "PROJ-NEVER", by: "bob", viewer: V("bob") });
   assert.deepEqual(absent, notAParticipant("PROJ-NEVER", "bob"));
