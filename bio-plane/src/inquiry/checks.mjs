@@ -110,3 +110,15 @@ export const QUESTION_WORDS = Object.freeze({
   'question.refused.drawnon': 'This question can\'t be set aside for the whole group, because a project draws on it. '
     + 'Set it aside in your project instead; that leaves it as it is everywhere else.',
 });
+
+/* R59 (T41; D13; K2479, K2480): the warning a promotion of a question carries when its question or named entities name a
+ * person in no public role. A warning, never a refusal, so it takes no check number. Its words are BOB's draft
+ * (INQUIRY #16 J1, K2480) until `words.json` holds the key, then read from there by key; `{persons}` is left for the
+ * screen to fill with the persons the warning names. */
+export const INQUIRY_WARNINGS = Object.freeze({
+  PERSON_IN_NO_PUBLIC_ROLE: Object.freeze({
+    key: 'question.warning.person',
+    translation: 'Investigations look at people through their part in a public matter, never at a private life. This '
+      + 'question names {persons}, whom the record holds in no public role. You decide whether to go on.',
+  }),
+});

@@ -52,8 +52,9 @@ import { notADisposition, DISPOSITIONS } from "../progressions/index.mjs";
 import { INQUIRY_TABLES, INQUIRY_DECLARATIONS, migrateInquiry, BUNDLE_FACTS, LEGS_RELATION } from "./schema.mjs";
 import { localDay, dayRange, isCalendarDate } from "../civil-time/index.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
-import { INQUIRY_CONTRADICTION_CHECKS, INQUIRY_SURFACE_CHECKS, INQUIRY_BIAS_CHECKS, QUESTION_WORDS } from "./checks.mjs";
-import { checkInquiryEntry } from "./grammar.mjs";
+import { INQUIRY_CONTRADICTION_CHECKS, INQUIRY_SURFACE_CHECKS, INQUIRY_BIAS_CHECKS, QUESTION_WORDS, INQUIRY_WARNINGS }
+  from "./checks.mjs";
+import { checkInquiryEntry, inquiryQuestionOf } from "./grammar.mjs";
 import { contradictionFindings, candidateOf, readResolution, exploresOf, CANDIDATE_RE } from "./contradiction.mjs";
 import { setScalar, setOrAddScalar, appendStateHistory, removeBlock, setOrAddBlock, setSection, appendSessionLog,
          spliceBasisGround, blockEntries, fmSafe, rand } from "./text.mjs";
@@ -61,7 +62,8 @@ import { setScalar, setOrAddScalar, appendStateHistory, removeBlock, setOrAddBlo
 export { INQUIRY_SCHEMA, INQUIRY_TABLES, INQUIRY_DECLARATIONS, BUNDLE_FACTS, LEGS_RELATION, SUBJECT_COLUMN, moveBundleFacts, moveSubjectEntity }
   from "./schema.mjs";
 export * from "./grammar.mjs";
-export { INQUIRY_CONTRADICTION_CHECKS, INQUIRY_SURFACE_CHECKS, INQUIRY_BIAS_CHECKS, QUESTION_WORDS } from "./checks.mjs";
+export { INQUIRY_CONTRADICTION_CHECKS, INQUIRY_SURFACE_CHECKS, INQUIRY_BIAS_CHECKS, QUESTION_WORDS, INQUIRY_WARNINGS }
+  from "./checks.mjs";
 export { CONTRADICTION_COORDINATES, PLURALITY_DIFFERENCES, DISSOLVED_BY, NORM_CANONS, RESOLUTION_KINDS, resolutionFamily,
          resolutionLines, CANDIDATE_RE, QUALIFIER_MAX, HYPOTHESIS_MAX } from "./contradiction.mjs";
 
@@ -187,6 +189,57 @@ function appliedOf(leg) {
   const out = [];
   for (let n = 1; Object.hasOwn(leg, `bias_${n}_statement`); n++) out.push({ statement: leg[`bias_${n}_statement`] });
   return out;
+}
+
+/* ------------------------------------------------------------------ R59: a person in no public role (D13) */
+
+/** R59 (K2479, K2480): the line kinds and the far end's kind that make a person's role public: an office the entity
+ *  holds, is responsible for or acts (speaks) for; a government body it belongs to. Read from `lines` (its R17 read
+ *  contract) and the far end's kind and sector from `entities`. */
+export const PUBLIC_ROLE_LINES = Object.freeze({ office: Object.freeze(["holds", "responsible_for", "acts_for"]),
+                                                 government_body: Object.freeze(["belongs_to", "seat_on"]) });
+/** R59: the most words of a question read as a name's run, the longest run, and the cap on persons named. */
+export const PERSON_TEXT_WORDS_MAX = 120;
+export const PERSON_NAME_WORDS_MAX = 8;
+const ENTITY_ID_IN_TEXT = /\bENT-\d{4}-\d{4,}\b/g;
+/* A name's fold for matching inside a question: lower-cased, every run of characters that is no letter or digit one
+   space, trimmed (so a name matches as whole words). */
+const wordsFold = (t) => (typeof t === "string" ? t.toLowerCase().normalize("NFC").replace(/[^\p{L}\p{N}]+/gu, " ").trim() : "");
+
+/** R59 (D13): the persons in no public role that `text` names, over `entities`, the facts a caller read from the record
+ *  (`{entity_id, kind, label, aliases?, public_role, named?}`): an entity of kind `person` whose `public_role` is not
+ *  `true`, and that is `named` (the caller found it named: a question's subject, or matched by alias), or whose id or
+ *  label or an alias occurs in `text` as whole words. Answers `[{entity_id, label}]`, by id, each once. Pure; never
+ *  throws. */
+export function personsInNoPublicRole(args = {}) {
+  try {
+    const { text = "", entities = [] } = args && typeof args === "object" ? args : {};
+    const hay = ` ${wordsFold(text)} `;
+    const raw = typeof text === "string" ? text : "";
+    const out = new Map();
+    for (const e of Array.isArray(entities) ? entities : []) {
+      if (!e || typeof e !== "object" || e.kind !== "person" || e.public_role === true) continue;
+      const id = typeof e.entity_id === "string" ? e.entity_id : "";
+      if (!id) continue;
+      const names = [e.label, ...(Array.isArray(e.aliases) ? e.aliases : [])].map(wordsFold).filter(Boolean);
+      const named = e.named === true || raw.includes(id) || names.some((n) => hay.includes(` ${n} `));
+      if (named && !out.has(id)) out.set(id, { entity_id: id, label: typeof e.label === "string" ? e.label : null });
+    }
+    return [...out.values()].sort((a, b) => (a.entity_id < b.entity_id ? -1 : 1));
+  } catch { return []; }
+}
+
+/** R59 (D13; K2479): the test the promotion of a question asks, and `intent` R32 and `hypotheses` R19 ask by the same
+ *  export: null when `text` (over `entities`, as `personsInNoPublicRole`) names no person in no public role; else the
+ *  warning `{code: "PERSON_IN_NO_PUBLIC_ROLE", key, translation, persons}`, never an error. `viewer` is the member the
+ *  warning is for, carried as the caller's (the facts are the caller's read). Pure; never throws. */
+export function personWarning(args = {}) {
+  const { text = "", entities = [], viewer = null } = args && typeof args === "object" ? args : {};
+  const persons = personsInNoPublicRole({ text, entities });
+  if (!persons.length) return null;
+  const row = INQUIRY_WARNINGS.PERSON_IN_NO_PUBLIC_ROLE;
+  return { code: "PERSON_IN_NO_PUBLIC_ROLE", key: row.key, translation: row.translation, persons,
+           ...(typeof viewer === "string" && viewer ? { viewer } : {}) };
 }
 
 /* The files of a bundle other than bundle.md, carried unchanged into its next promotion. */
@@ -397,6 +450,12 @@ export class Inquiry {
    *  inside the promotion's transaction, before the write. */
   check(c) {
     const { pkg, bundleId, files, promotedType } = stepContext(c);
+    /* R59: the held document as it stands before this write, for the projection to tell a revised question from one
+       left alone (by projection time the record holds the new bytes) */
+    if (c && c.state && c.state.inquiry && c.head && promotedType === "inquiry") {
+      try { c.state.inquiry.priorText = this.record.readFile(bundleId, "bundle.md")?.text ?? null; }
+      catch { c.state.inquiry.priorText = null; }
+    }
     const basisMd = Array.isArray(files) ? files.find((f) => f && f.path === "bundle.md") : null;
     const docFm = basisMd && typeof basisMd.text === "string" ? parseFrontmatter(basisMd.text).data : null;
     const isInquiry = promotedType === "inquiry";
@@ -800,6 +859,9 @@ export class Inquiry {
         bundleId, pkg.migrationReplay.capture, promotionKey, ts);
       migrated = { capture: pkg.migrationReplay.capture, promotion: promotionKey, at: ts };
     }
+    /* R59 (D13): the warning on a creation or a revision of the question naming a person in no public role, recorded
+       with her choice; nothing is refused. */
+    const warned = isInquiry && docFm && !pkg.replay ? this.#personWarningAt(bundleId, cur, docFm, c, pkg) : null;
     /* R54: the dated waits, re-derived from the document's recheck triggers. */
     if (isInquiry && docFm) this.#projectWaits(bundleId, docFm, c.author, this.#setIn(pkg && pkg.setIn, c.author));
     /* R53 (A9, bias R40): a finding, when the document enters `concluded` stating its project. */
@@ -811,7 +873,112 @@ export class Inquiry {
       this.sql.exec(`INSERT OR IGNORE INTO inquiry_member_agents (bundle_id, user_agent, at) VALUES (?,?,?)`,
         bundleId, agent, this.#when());
     return { ...(migrated ? { migration_replay: migrated } : {}),
-             ...(contentProjected.length ? { content: contentProjected } : {}) };
+             ...(contentProjected.length ? { content: contentProjected } : {}),
+             ...(warned ? { warning: warned } : {}) };
+  }
+
+  /* R59 (D13; K2480): asked at a promotion of an inquiry that creates it, or revises its question (its `## Question`, or
+     its title when it has none) or its subject entity. The warning is answered and recorded (`inquiry_person_warnings`)
+     with her choice: `went_on` when the package says she saw it before the act (`personWarningSeen: true`), else
+     `warned_at_act`; a machine's promotion records `pending`, and the next promotion of the question by a member (her
+     taking it up) carries that warning to her and records her choice, even when it does not revise the question. Never
+     throws into the promotion: a test that cannot be read warns of nothing. */
+  #personWarningAt(bundleId, cur, fm, c, pkg) {
+    try {
+      const author = typeof c.author === "string" ? c.author.trim() : "";
+      const machine = !author || isMachineIdentity(author);
+      const questionOf = (text) => {
+        if (typeof text !== "string") return "";
+        const q = inquiryQuestionOf(text);
+        if (typeof q === "string" && q.trim()) return q.trim();
+        const f = parseFrontmatter(text).data;
+        return f && typeof f.title === "string" ? f.title : "";
+      };
+      const next = Array.isArray(c.files) ? c.files.find((f) => f && f.path === "bundle.md") : null;
+      const nextQ = questionOf(next && next.text);
+      const subject = typeof fm.subject_entity === "string" && fm.subject_entity.trim() ? fm.subject_entity.trim() : null;
+      let asked = !cur;
+      if (cur) {
+        const held = c.state && c.state.inquiry ? c.state.inquiry.priorText : undefined;
+        const was = typeof held === "string" ? held : null;
+        const wasFm = was ? parseFrontmatter(was).data || {} : {};
+        const wasSubject = typeof wasFm.subject_entity === "string" && wasFm.subject_entity.trim() ? wasFm.subject_entity.trim() : null;
+        asked = questionOf(was) !== nextQ || wasSubject !== subject;
+      }
+      let warning = asked ? personWarning({ text: nextQ, entities: this.personFacts({ text: nextQ, subject, viewer: author }),
+                                            viewer: machine ? null : author }) : null;
+      if (!warning && !machine) {
+        /* a machine's proposal not yet taken up: the latest row of the question is a pending one */
+        const last = this.#one(`SELECT persons, choice FROM inquiry_person_warnings WHERE bundle_id=? ORDER BY warning_id DESC LIMIT 1`, bundleId);
+        if (last && last.choice === "pending") {
+          const persons = safeJson(last.persons);
+          const row = INQUIRY_WARNINGS.PERSON_IN_NO_PUBLIC_ROLE;
+          if (Array.isArray(persons) && persons.length)
+            warning = { code: "PERSON_IN_NO_PUBLIC_ROLE", key: row.key, translation: row.translation, persons, viewer: author,
+                        proposed_by_machine: true };
+        }
+      }
+      if (!warning) return null;
+      const choice = machine ? "pending" : pkg && pkg.personWarningSeen === true ? "went_on" : "warned_at_act";
+      this.sql.exec(`INSERT INTO inquiry_person_warnings (bundle_id, at, by, persons, choice) VALUES (?,?,?,?,?)`,
+        bundleId, this.#when(), author || null, JSON.stringify(warning.persons), choice);
+      return { ...warning, choice };
+    } catch { return null; }
+  }
+
+  /** R59 (D13; K2479, K2480): the record's facts for the persons `text` and `subject` may name, for `personWarning`:
+   *  the subject entity, every `ENT-` id written in the text, and every entity whose live alias is a run of the text's
+   *  words (at most `PERSON_NAME_WORDS_MAX` words a run, over its first `PERSON_TEXT_WORDS_MAX` words), through
+   *  `entities.entitiesByAlias` (its R6); each person among them `{entity_id, kind, label, public_role, named: true}`,
+   *  `public_role` true when `lines` holds, not withdrawn, a line of `PUBLIC_ROLE_LINES` from it (an office it holds,
+   *  is responsible for or acts for; a government body it belongs to or sits on). Never throws. */
+  personFacts(args = {}) {
+    const { text = "", subject = null, viewer = null } = args && typeof args === "object" ? args : {};
+    const ids = new Set();
+    try {
+      if (typeof subject === "string" && subject.trim()) ids.add(subject.trim());
+      for (const m of (typeof text === "string" ? text : "").matchAll(ENTITY_ID_IN_TEXT)) ids.add(m[0]);
+      const words = wordsFold(text).split(" ").filter(Boolean).slice(0, PERSON_TEXT_WORDS_MAX);
+      const ents = this.entities;
+      const tried = new Set();
+      if (ents && typeof ents.entitiesByAlias === "function")
+        for (let i = 0; i < words.length; i++)
+          for (let n = 1; n <= PERSON_NAME_WORDS_MAX && i + n <= words.length; n++) {
+            const run = words.slice(i, i + n).join(" ");
+            if (tried.has(run)) continue;
+            tried.add(run);
+            let r = null;
+            try { r = ents.entitiesByAlias({ alias: run, viewer }); } catch { r = null; }
+            for (const e of (r && Array.isArray(r.entities) ? r.entities : []))
+              if (e && e.kind === "person" && typeof e.entity_id === "string") ids.add(e.entity_id);
+          }
+    } catch { /* what was found stands */ }
+    const out = [];
+    for (const id of [...ids].sort()) {
+      const e = this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, id);
+      if (!e || e.kind !== "person") continue;
+      out.push({ entity_id: e.entity_id, kind: e.kind, label: e.label, public_role: this.#publicRole(id), named: true });
+    }
+    return out;
+  }
+
+  /* R59: whether `lines` holds, not withdrawn, a public-role line from the person (PUBLIC_ROLE_LINES); false when the
+     record holds no such line (a store with no lines table holds none). */
+  #publicRole(id) {
+    try {
+      const rows = this.#rows(`SELECT l.kind, e.kind AS to_kind, e.entity_id AS to_id FROM lines l
+                                 JOIN entities e ON e.entity_id = l.to_entity
+                                WHERE l.from_entity=? AND l.withdrawn=0`, id);
+      for (const r of rows) {
+        if (r.to_kind === "office" && PUBLIC_ROLE_LINES.office.includes(r.kind)) return true;
+        if (r.to_kind === "body" && PUBLIC_ROLE_LINES.government_body.includes(r.kind)) {
+          let sector = null;
+          try { sector = this.entities.readEntity({ entityId: r.to_id })?.entity?.sector ?? null; } catch { sector = null; }
+          if (sector === "government") return true;
+        }
+      }
+      return false;
+    } catch { return false; }
   }
 
   /* R53: the question's finding and the project lens in force as it was made, read as an internal read (a machine
