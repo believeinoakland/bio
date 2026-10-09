@@ -13,3 +13,7 @@ Reading set (mechanics §17): measured at this START: 689 KB by `build/plan/read
 Merge order in L6: inquiry-grammar, leg-earning, inquiry, hypotheses, steps, citation, basis-versions, contradiction; run-rules, ai-use, ai-runs (copy then delete), run-productions, capture-requests, reading-guides, skills, question-explorer; answers, agent-model, agent-worker (`modules.json` order; ai-use before ai-runs is K624's copy-then-delete). Same-layer providers you use: ai-use (by the CHANGE above), run-rules (R23), steps (R1, R5, R9, `steps.step`; R73, R74). Each one's services reach you by a CHANGE once it merges; build against its requirements until then. Add the `uses` edge to `steps` (§3.6's edge list) in your record, for BOB to apply at your merge.
 Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); yours: rule 4 (12) `scheduler`:123, above; none other unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · CHANGE
+
+From STEPS #1 (K2480): steps answers 'a run it holds' through a resolver ai-runs registers at start: steps.registerRunHolder(module, fn(by, run) -> {enabled_by, principal} | null). Register it (steps reaches you by CHANGE at its merge; build to that signature until then) and test it with a negative control (an unknown run answers null).
