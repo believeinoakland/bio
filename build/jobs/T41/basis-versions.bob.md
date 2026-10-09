@@ -1,6 +1,6 @@
 # BOB to basis-versions (T41)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
