@@ -1,6 +1,6 @@
 # Plan T41
 
-**Status** · OPEN · BOB #145 · session_01Lzjn9d16Mo4a4RE2Xr16gN · depth 1
+**Status** · OPEN · BOB #146 · session_017Mqb4UstLxePtEby56C1kS · depth 1
 
 **Jobs** · record-grammar: RECORD-GRAMMAR #12 session_0196Hjq7pbtNLCRCp3UtdPBW; text-chain: TEXT-CHAIN #7 session_01JDz9kGpTxawc3vKv6rH4vU
 
