@@ -35,15 +35,16 @@ Terms. A **leg**, **registry**, **grade**, **axis** and **source** are as `inqui
 - **R12** `leg-earning` holds `inquiry_basis` with its columns, indexes, names, types and meanings unchanged from `inquiry` (R12, R29, R40 there), as a read contract later modules may join. Its one write, `writeBasis(bundleId, legs)`, replaces an inquiry's legs whole (`target_type` derived from the target's prefix), and R3's backfill sets a leg's `content_id`; nothing else writes it. It is declared explicitly to `record-core` (`declareTable`) with the classes it has today (purge clear, keyed by `bundle_id`; expunge none; export admin-only; sight bundle; stored).
 
 **Projects drawing on a question, and the AI transcription's ceiling** (T41-14)
-- **R13** *(not yet met: T41)* (D36, D29) `projectsDrawingOnPaged({id, after, limit})`: every project drawing on `id` (R7's test, over every project), paged, `limit` at most 500, with `cursor`; in-process only. R7's 32-bound stays for its callers.
-- **R14** *(not yet met: T41)* (H38, D64) `projectsShownOn({id, viewer})` answers a viewer who may see the question the projects drawing on it that are not hidden (`membership` R85), each `{id, name}` as `membership` R44 lets her see it, at most 200, with `truncated`; a hidden project is never answered, named or counted, and the answer is the same whether or not one draws.
-- **R15** *(not yet met: T41)* (D21; D4) `earned`'s capture ceiling for a passage of an AI transcription (`text-chain` R104) is undetermined, except at an extent a member attested against the page (`content.attestText`), where it is the capture's own grade.
-- **R16** *(not yet met: T41)* (K538; K2457, K2472) When no capture of a document came by a route that measures a capture grade, `earned` states its legs as authored (`stated_as: "authored"`, `route_basis` the routes, sorted) with a `why` naming each route in words: a doorbell's receipt (`CAPTURE_RECEIVED_NOT_FETCHED`, its receipt's `via` the doorbell) "received through the doorbell"; a member's upload (`via: "upload"`, `provenance` R63) "uploaded by a member"; no route recorded "no fetch route recorded"; the letter its author gave stays, under the ceiling, never stated as measured.
+- **R13** (D36, D29) `projectsDrawingOnPaged({id, after, limit})`: every project drawing on `id` (R7's test, over every project), paged, `limit` at most 500, with `cursor`; in-process only. R7's 32-bound stays for its callers.
+- **R14** (H38, D64) `projectsShownOn({id, viewer})` answers a viewer who may see the question the projects drawing on it that are not hidden (`membership` R85), each `{id, name}` as `membership` R44 lets her see it, at most 200, with `truncated`; a hidden project is never answered, named or counted, and the answer is the same whether or not one draws.
+- **R15** (D21; D4) `earned`'s capture ceiling for a passage of an AI transcription (`text-chain` R104) is undetermined, except at an extent a member attested against the page (`content.attestText`), where it is the capture's own grade.
+- **R16** (K538; K2457, K2472) When no capture of a document came by a route that measures a capture grade, `earned` states its legs as authored (`stated_as: "authored"`, `route_basis` the routes, sorted) with a `why` naming each route in words: a doorbell's receipt (`CAPTURE_RECEIVED_NOT_FETCHED`, its receipt's `via` the doorbell) "received through the doorbell"; a member's upload (`via: "upload"`, `provenance` R63) "uploaded by a member"; no route recorded "no fetch route recorded"; the letter its author gave stays, under the ceiling, never stated as measured.
 
 ## Private
 
 ### Uses
 
+- `provenance`: `captureGrade` (R1, R8), `DOORBELL_VIA`, `UPLOAD_VIA` (R16) (LEG-EARNING #4 J2, K2485).
 - `inquiry-grammar`: the leg vocabulary and the imported-finding reference (R3).
 - `accepted-work`: whether an imported finding's edition is accepted (R3).
 - `record-core`: the `bundles` read contract (R3, R7).
