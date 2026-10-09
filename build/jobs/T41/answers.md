@@ -2,6 +2,57 @@
 
 **Status** · session_01AYLXqGDu2yvQaZ7USf6Dv7 · depth 2 · RUNNING until 2026-10-09T23:56:28Z (users' suites, mine vs tranche/T41) · handled B4
 
+## Completion (ANSWERS #7)
+
+**Entry applied: T41-29** (R30; R19's sign-in arm; R31–R33; the reds of rule 4 (6) and (12)). The readings are J1 and J2, taken in B2 (K2482) and B3 (K2486). B4's CHANGE is applied: ai-use was merged, and the tranche merged in.
+- **R30.**
+  - `askAccount({member, project?, at?})` (`index.mjs`) calls `accountFor` with kind `ask` and the ask's project. It judges the account chosen by `useCheck` for its owner (`ownerOf`: `member:<id>`, `project:<id>` or `group`). It answers `{ok, account, owner}`, or the refusal unchanged. A limit it cannot judge is fail-closed `LIMITS_UNREADABLE`, and an unreadable account `ACCOUNT_UNREADABLE`, both with no row. It is in-plane and not in the ops map, because its answer carries the account's key.
+  - `useCheck` is ai-use's own on the same host (`aiUseOf(host).useCheck`), unless the composition root or a test hands one in. It replaces `ceilingRefusal`.
+  - R2 widened: `logRead` takes the grant's `use` (`ask` by default, `draft`, `standing`; `GRANT_USES`), fixed when its log opens. Each read and each rule answer under the grant drops the rows of projects that `credentials.projectsKeptAway({use})` names: the project's own bundle and every bundle it holds. Counts beside lists count none of them. Unreadable limits drop every project's rows (fail closed).
+  - The B4 change named `countAskUsage`: answers never called it. An ask's usage is store-door's route (requirements, Uses), so there was nothing here to replace.
+- **R19.**
+  - Keep-away is read as `aiKeptAway({use: "standing"})`. `accountFor` is asked with kind `standing` and no project.
+  - Credentials R56's `AI_USE_SWITCHED_OFF` maps to `{switch_off, switch}`, naming the account (`own` gives `member`, else `group` or `project`). R32's `STANDING_SWITCH_OFF` maps the same way.
+  - `useCheck`'s refusal is `{condition: "limit", code: "AI_LIMIT_REACHED", translation}`. A check that cannot be read is `{limit, code: null}`.
+  - The sign-in arm runs when its `standing` use is on: a grant and one model call. When the use is off: `{switch_off, member}`, no grant, no model call. Both ways are tested.
+  - The standing run's read log reads under use `standing`.
+- **R31.** Sentence kind `baseline`: `{baselines: [{value, rests_on, basis_kind, looked}], difference}`, as J2 5'. `BASIS_KINDS`, `LOOKED_STATES`.
+- **R32.**
+  - `VERDICT_WORDS`: the closed list (K2472), frozen and tested whole. It is matched as whole words in Civicsmith's own text (outside quotations and the cited quotes), the summary included. A percentage counts as a likelihood when "sure", "certain" or "confident" stands beside it.
+  - Cause words are allowed only inside a quotation that is part of a read quote the sentence cites (J2 6'; rule items' quotes count too).
+  - New rows C-135.14 `ANSWER_VERDICT_WORD` and C-135.15 `ANSWER_CAUSE_UNESTABLISHED`. They await promotion's stamp (rule 4 (2)).
+- **R33.** `checkSentences(sentences, {cited, readLog, viewer?})` is in `sentences.mjs`, which imports only pure files: record-grammar `json.mjs`, calc-grammar `figures.mjs`, observation-log `vocabulary.mjs`, and this module's `checks.mjs` and `readlog.mjs`. That keeps it bundleable for case-checker (K2471). `readLog` is a ReadLog, or, offline, the list of objects read. `checkAnswer` judges through the same `judge`.
+- **Reds cleared:** rule 4 (6) `standing.test.mjs`:122, :273 and rule 4 (12) :154, :183, :210. The tests now set switches through `accountUsesSet`.
+
+**Deferred:** none.
+
+**Found in other modules (REPORT J3):**
+1. The plane's composition, `bio-plane/src/plane/store.mjs`:219, still hands `ceilingRefusal` (ai-runs' retired `aiUseCheck`). answers no longer reads it, and takes ai-use's `useCheck` on its own host, so it is dead wiring for T41-63 to drop. The plane's ask path (`plane/ask.mjs`:68, :119) and store-door (`dispatch.mjs`:278) may now call `answers.askAccount` (R30) in place of their own `accountFor` and ceiling (T41-63; store-door at L11). They should pass `use: "draft"` to `logRead` for a draft's reads.
+2. Generated artifacts: the plane bundle (`bio-plane/dist/`) bundles answers, so it is stale (rule 4 (14)). `case-checker/program.mjs` is unaffected until case-checker imports `checkSentences` (T41 L8).
+3. `reading-pipeline/index.mjs`:698 spells the paying owner `member:${member}` from the `member` it was handed. A stamp (`member:bob`) would make `member:member:bob`, so the owner should be built from the bare id. This is against ai-use R1's owner spelling; reading-pipeline's to judge.
+
+**Tests and checks** (on `job/T41/answers` with `tranche/T41` @ cbdca49cd0 merged):
+- answers: `node --test bio-plane/test/m/answers/*.test.mjs`: **57 pass, 0 fail**. New files: `accounts.test.mjs` (R30) and `sentences.test.mjs` (R31–R33). Each check has a negative control (K874).
+- The users of answers were run on my branch and on `tranche/T41` alone, by test name:
+  - case-checker, scheduler, affordances, notice-producers, op-declarations, answer-envelope, store-door, control-plane, plane, and `migrate-released`: 1014 tests, 960 pass, 54 fail on both. The same 54 by name: no red added, none cleared.
+  - agent-worker: 12 tests, 10 pass, 2 fail on both, the same 2.
+- From the process repository:
+  - `node checks/format.mjs`: 0 failures.
+  - `node checks/architecture.mjs answers`: 20 files, 65 imports, 0 failures.
+  - `node checks/coverage.mjs answers`: 33 of 33 live ids named, 0 failures.
+  - `node checks/ownership.mjs answers tranche/T41`: 12 files, 0 failures.
+
+**Reading set:** measured at about 290 KB, under 300 KB, so I read all of it myself:
+- the requirements, whole;
+- every code and test file of the module, whole;
+- the Purpose of each used module, and the services named: credentials R28, R32, R35, R55–R57, R60, and its `accountFor`, `aiKeptAway`, `projectsKeptAway` and `aiGrantMintStanding` code; ai-use R1 and R3, and its `useCheck`, `countAskUsage` and `aiLimitSet` code after B4; record-core R34; membership `inSight`;
+- layer 6's row;
+- case-checker R24 and case-disclosures R30.
+
+**Final `uses`:** the current list without `ai-runs` (B3): record-grammar, jurisdictions, civil-time, calc-grammar, record-core, membership, credentials, content, entities, events, lines, observation-log, standards, duties, people, query-language, retrieval, calculations, ai-use.
+
+Size (session_01AYLXqGDu2yvQaZ7USf6Dv7): test runs 21, module lines 1833
+
 ## J1 · QUESTION
 
 My readings of R30, R19, R31–R33, on which I am building now (stop me only if one is wrong):
