@@ -85,3 +85,7 @@ Found in other modules, at ai-use's completion (also in my record's Completion):
 6. **notice-producers R16**: reads `limitsReached` and `exploreAsksPending` (each with a stable `key`).
 7. **credentials**: N831, an in-plane read of an account's uses, replaces ai-use's `#exploreOf` helper.
 8. **The design stream**: `ai.refused.explorenotenabled` (J2 (6); your NOTICE, K2486).
+
+## J4 · COMPLETE
+
+AI-USE #1 complete on job/T41/ai-use: R1–R13 met. Tests 48/48. format 0, architecture 0, coverage 13/13, ownership 0, with my paths, tests and `retrieval` in `modules.json` as a local edit; those three are yours to apply (record: Completion). Report J3.
