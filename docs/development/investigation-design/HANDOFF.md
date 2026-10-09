@@ -110,3 +110,7 @@ Numbered entries; BOB answers each in rulings (K) on `tranche/T<n>`. Decision st
 ## H21 · 2026-10-09 · the remaining study decisions taken up now (Bob's direction)
 
 **Carries:** Bob: "Why are we waiting on these issues rather than taking them on now???" This lane is taking up D2–D24's remainder now, in three batches. Batch 1 is with Bob: D3, D4, D12, D2, chosen because `question-explorer` (T41) needs them: finds accepted, a find's grade when drawn as a leg, the Ask item's rough cost, reading inside held documents. The canon approval is with him too. Batch 2: D19, D20, D24, D7(c). Batch 3: D8, D21, D22, D17, D18, D16.
+
+## H22 · 2026-10-09 · canon approval withdrawn from Bob's document (K2410)
+
+**Carries:** per K2410 (Bob: "I'm also hesitant to start building what might change significantly"), the canon approval is removed from the working document; the lane works through the remaining open decisions (batch 1 D3, D4, D12, D2 with Bob now; batches 2 and 3 to follow; D1 restated last), then presents the whole design for Bob's review. Rulings keep arriving here for BOB's drafts.
