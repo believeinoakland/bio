@@ -21,7 +21,7 @@
  *
  * REACHED as `moneyChecksOf(host, deps)` (K61): one instance per host, created on the first call with `deps`:
  *   record       `recordOf(host)`: `transact`, `declareTable`.
- *   membership   `membershipOf(host)`: `isAdministrator` (R8, R11).
+ *   membership   `membershipOf(host)`: `isAdministrator` (R8, R11); `existenceAct`, `participation` (R5, R13; K2467).
  *   entities     `entitiesOf(host)`: `readEntity` (an entity's kind: a person is never a subject, R4).
  *   progressions `progressionsOf(host)`: `readInstance` (R1), and its read contract `progression_instances` (its R34).
  *   money        `moneyOf(host)`: `readFact`, `moneyOf`, `summable`, `committedAgainstPaid` (R1, R2, R13).
@@ -31,7 +31,7 @@
 import { isHypothesisId, isMachineIdentity, idPattern, sha256HexSync, canonicalJson } from "../record-grammar/index.mjs";
 import { checkRecipe, evaluate, parseFigure, add, subtract, multiply, divide } from "../calc-grammar/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
-import { viewerPredicate, noSuchProject, notAnAdmin, membershipOf, listenerRefusal } from "../membership/index.mjs";
+import { viewerPredicate, noSuchProject, notAnAdmin, notAParticipant, membershipOf, listenerRefusal } from "../membership/index.mjs";
 import { entitiesOf, noSuchEntity } from "../entities/index.mjs";
 import { progressionsOf } from "../progressions/index.mjs";
 import { moneyOf } from "../money/index.mjs";
@@ -505,7 +505,14 @@ export class MoneyChecks {
     const did = str(detectorId), pid = str(project);
     if (!did || !this.#one(`SELECT 1 AS x FROM money_detectors WHERE detector_id=?`, did)) return refusal("NO_SUCH_DETECTOR", { detector_id: did || null });
     if (!pid) return refusal("NO_PROJECT");
-    if (!this.#projectSeen(pid, MoneyChecks.#viewerOf(member))) return noSuchProject(pid);
+    /* R5 (K2467): sight before position (membership R61). Existence-only sight answers C-70.1 through membership's one
+       site (its R77); an act on a project held only by its participants, so an administrator's sight, which is never a
+       position (its R60), is refused NOT_A_PARTICIPANT (its R87). */
+    const viewer = MoneyChecks.#viewerOf(member);
+    const existence = this.membership.existenceAct(pid, viewer);
+    if (existence) return existence;
+    if (!this.#projectSeen(pid, viewer)) return noSuchProject(pid);
+    if (!this.membership.participation(pid, member)) return notAParticipant(pid, str(by));
     if (on !== true && on !== false) return refusal("NO_SWITCH");
     const at = this.now();
     const was = this.#switchedOn(did, pid);
@@ -772,6 +779,9 @@ export class MoneyChecks {
     if (!pid) return refusal("NO_PROJECT");
     const lim = limit === null || limit === undefined || limit === "" ? NOTICED_DEFAULT : Number(limit);
     if (!Number.isSafeInteger(lim) || lim < 1 || lim > NOTICED_MAX) return refusal("BAD_LIMIT", { limit });
+    /* R13 (K2467): a project seen at existence only answers C-70.1 through membership (its R77), never as absent. */
+    const existence = this.membership.existenceAct(pid, viewer);
+    if (existence) return existence;
     if (!this.#projectSeen(pid, viewer)) return noSuchProject(pid);
     const sees = this.#factSeer(viewer);
     const items = [];
