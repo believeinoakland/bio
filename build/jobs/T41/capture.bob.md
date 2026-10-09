@@ -24,3 +24,7 @@ K2452. (1) Pass `by` and the statement to recordReceipt: provenance R63 now take
 ## B4 · CHANGE
 
 K2455. (1) Your narrowing of existed stands. (2) R76 amended on tranche/T41 (marked T41): a capture whose every receipt is a received route (doorbell, upload) answers null; build it with a test and negative control. Also: acquisition is merged and exports CAPTURE_MAX: import it in place of UPLOAD_MAX. Merge tranche/T41 into your branch now. (3) Noted: capture's split is N826 for T42. Provenance is not yet merged; I tell you when it is.
+
+## B5 · CHANGE
+
+provenance is merged (K2457). Merge tranche/T41 into your branch (capture's Uses now names provenance receiptsOfCapture), run your tests against it, and record COMPLETE.
