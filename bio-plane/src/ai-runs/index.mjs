@@ -36,6 +36,7 @@ import { RUN_BOUNDS, RUN_ENDINGS, RUN_CONTEXTS, STANDARD_BASIS, OBSERVATION_STAT
          checkConsume, checkRunState, finishedBound, runStatusFor, projectGate, runConsultsProjects, checkRunContextKind,
          runPrincipalGate, checkSkillVersion, DEPLOYED_MODES, DEFAULT_MODE, AI_RUNS_CHECKS, RUN_MODES, startAllowed,
          checkVerification, deployable, ASK_MODE, DRAFT_MODE } from "../run-rules/index.mjs";
+import * as RUN_RULES from "../run-rules/index.mjs";
 import { AI_RUNS_SCHEMA, AI_RUNS_TABLES, AI_RUNS_ADDED_COLUMNS } from "./schema.mjs";
 
 export { AI_RUNS_SCHEMA, AI_RUNS_TABLES } from "./schema.mjs";
@@ -265,8 +266,8 @@ export class AiRuns {
     AI_RUN_EXPLORE_NOT_DEPLOYABLE: { check: null, translation: "Exploring is not available yet: it opens only after the assistant "
       + "has passed its tests. Nothing was started." },
     AI_RUN_STEP_UNKNOWN: { check: null, translation: "No such step is open to you. Nothing was started." },
-    TEST_BAR_INVALID: { check: null, translation: "That test result is not complete, so it was not recorded." },
-    GROUP_TEST_INVALID: { check: null, translation: "A test investigation needs its matter and the answers your members wrote. "
+    AI_TEST_BAR_UNFIT: { check: null, translation: "That test result is not complete, so it was not recorded." },
+    AI_GROUP_TEST_INVALID: { check: null, translation: "A test investigation needs its matter and the answers your members wrote. "
       + "Nothing was added." },
   });
 
@@ -565,6 +566,7 @@ export class AiRuns {
         WHERE ${AiRuns.#ownRows()} AND terminal = 0
         ORDER BY seq DESC LIMIT 1`, run, run);
 
+    const actual = this.#actualFromUse(run);
     const done = this.#transact(() => {
       /* THE TERMINAL ENTRY FIRST, then the status. The order is deliberate: if
          anything could fail it is the append, and a run left `running` with its
@@ -598,13 +600,12 @@ export class AiRuns {
          chooses the terminal entry's SENTENCE two lines up, which is a different
          question from what the run's status is. */
       const status = runStatusFor(bound);
-      /* R76 (D12): the run's actual cost, its own sums fixed at its ending (every path: a close, a tick's bound, the
-         reaper), answered only to the paying account's owners (`#costFor`). */
-      const actual = AiRuns.#actualOf(safeJson(row.cost));
+      /* R76 (D12, K2482): the run's actual cost, ai-use's figures for it, recorded at its ending (every path: a close, a
+         tick's bound, the reaper), answered only to the paying account's owners (`#costFor`). */
       this.sql.exec(
         `UPDATE ai_runs SET status = ?, updated = ?, stopped_bound = ?, stopped_condition = ?, stopped_at = ?, actual = ?
          WHERE run = ?`,
-        status, at, bound, condition, at, JSON.stringify(actual), run);
+        status, at, bound, condition, at, actual ? JSON.stringify(actual) : null, run);
       return { run, found: true, terminated: true,
                status,
                bound, condition, state, at };
@@ -642,16 +643,6 @@ export class AiRuns {
     } catch { return { told: false, reason: "steps did not answer" }; }
   }
 
-  /** R76: a run's sums (`cost`, added to at each tick's usage) as its actual cost: money where every entry stated it,
-   *  else tokens and calls. A run that counted nothing answers zeros in tokens and calls. */
-  static #actualOf(c) {
-    const z = c && typeof c === "object" ? c : {};
-    const n = (k) => (Number.isFinite(Number(z[k])) ? Number(z[k]) : 0);
-    const tokens = n("input_tokens") + n("output_tokens") + n("cache_read_input_tokens") + n("cache_creation_input_tokens");
-    const money = n("entries") > 0 && n("cost_unstated") === 0;
-    return { unit: money ? "usd" : "tokens", ...(money ? { usd: Math.round(n("cost_micro_usd")) / 1e6 } : {}), tokens,
-             calls: n("calls") };
-  }
 
   /* ---- DEC-63 / PL-18: THE RUN VERBS' GATE IS PROJECT MEMBERSHIP ----------
    *
@@ -1392,8 +1383,6 @@ export class AiRuns {
     this.#transact(() => {
       /* R48: the calls, against the run's member, in the tick's own transaction; nothing of them reaches the log. */
       if (calls.length) this.#count(payer, calls, nowMs);
-      /* R76: and to the run's own sums, which its ending fixes as its actual cost */
-      if (calls.length) this.#addCost(run, calls);
       for (const e of Array.isArray(log) ? log : []) {
         /* `row.principal_claude` is the run's machine identity and this method
            already holds the row — see #aiRunAppend's note on why it is passed
@@ -1496,7 +1485,7 @@ export class AiRuns {
     let ended = this.#aiRunTerminate({ run, offered: bound, condition, at: now, derive: false });
     /* R76: at close the run answers its actual cost, to its paying account's owners only */
     if (ended && ended.terminated === true) {
-      const held = this.#one(`SELECT principal_claude, actual, cost FROM ai_runs WHERE run = ?`, run);
+      const held = this.#one(`SELECT run, principal_claude, actual FROM ai_runs WHERE run = ?`, run);
       const cost = held ? this.#costFor(held, viewer) : null;
       if (cost) ended = { ...ended, cost };
     }
@@ -2883,24 +2872,6 @@ export class AiRuns {
     return entries.length;
   }
 
-  /** R76: add well-formed usage entries to the run's own sums (inside the tick's transaction): the token figures, the
-   *  calls (a `null` as one), and the cost each entry states (`total_cost_usd`, else `estimated_cost_usd`, R72), an entry
-   *  stating neither counted as unstated. */
-  #addCost(run, entries) {
-    const held = safeJson((this.#one(`SELECT cost FROM ai_runs WHERE run = ?`, run) || {}).cost) || {};
-    const c = { entries: 0, calls: 0, input_tokens: 0, output_tokens: 0, cache_read_input_tokens: 0,
-                cache_creation_input_tokens: 0, cost_micro_usd: 0, cost_unstated: 0, ...held };
-    for (const e of entries) {
-      const u = e.usage;
-      c.entries += 1;
-      c.calls += AiRuns.#callsOf(e);
-      for (const f of USAGE_TOKEN_FIGURES) c[f] += u[f] === null ? 0 : u[f];
-      const usd = u.total_cost_usd != null ? u.total_cost_usd : u.estimated_cost_usd != null ? u.estimated_cost_usd : null;
-      if (usd === null) c.cost_unstated += 1; else c.cost_micro_usd += Math.round(usd * 1e6);
-    }
-    this.sql.exec(`UPDATE ai_runs SET cost = ? WHERE run = ?`, JSON.stringify(c), run);
-  }
-
   /** R76: whether `viewer` is an owner of the account a run's `principal_claude` names: the member for `member:<id>`, an
    *  owner of the project for `project:<id>`, an active administrator for `group`. False for anything else. */
   #ownsAccount(principalClaude, viewer) {
@@ -2920,7 +2891,24 @@ export class AiRuns {
   #costFor(row, viewer) {
     if (!this.#ownsAccount(row.principal_claude, viewer)) return null;
     const actual = safeJson(row.actual);
-    return actual ? { final: true, ...actual } : { final: false, ...AiRuns.#actualOf(safeJson(row.cost)) };
+    if (actual) return { final: true, ...actual };
+    const now = this.#actualFromUse(row.run);
+    return now ? { final: false, ...now } : null;
+  }
+
+  /** The `ai-use` module (T41; R52, R76), reached in-process until its merge re-points it to its factory. */
+  #aiUse() { return this.#deps.aiUse || null; }
+
+  /** R76 (K2482): the run's actual cost from the one store of the figures, `ai-use.actualOf({act: <run>})` (its R11), read
+   *  internally; null when ai-use is not reachable or answers none. Never throws. */
+  #actualFromUse(run) {
+    try {
+      const u = this.#aiUse();
+      const a = u && typeof u.actualOf === "function" ? u.actualOf({ act: String(run), viewer: AiRuns.#INTERNAL_VIEWER }) : null;
+      if (!a || a.ok === false || typeof a.code === "string") return null;
+      const { ok: _ok, ...rest } = a;
+      return rest;
+    } catch { return null; }
   }
 
   /** R50: a member's use on one local day, over every mode: `tokens` every token processed, `calls` the calls. */
@@ -3199,6 +3187,79 @@ export class AiRuns {
     const next = order[order.indexOf(mode) + 1] ?? null;
     return { ok: true, mode, run, verified_by: v.verified_by, at: existed ? prior.at : now, existed,
              next: next ? { mode: next, deployable: deployable(next, this.verifications()) } : null };
+  }
+
+  /* ---- R75 (T41; D14, D11): THE TEST BAR, written here, where runs are, and read by run-rules R19's deploy gate ---- */
+
+  /** R75: record an AI part's result on a test set, written by the harness (an in-plane call, reached by no route): Civicsmith's
+   *  frozen set, or a group's own (`set: "group"`). Its shape is judged by `run-rules`' `checkTestBarRecord` (AI_TEST_BAR_UNFIT,
+   *  C-22.22; B3, K2485), a RELAY; refused whole where that judge is not reachable (fail closed). Figures only: no transcript is
+   *  taken or kept (D15). Append-only. */
+  testBarRecord({ part = null, set = null, set_version = null, false_alarm_rate = null, passed = null, graded_by = null,
+                  at = null } = {}) {
+    const now = AiRuns.#aiIso(at ? Date.parse(at) : Date.now());
+    const record = { part, set, set_version, false_alarm_rate, passed, graded_by, at: now };
+    const judge = RUN_RULES.checkTestBarRecord;
+    const bad = typeof judge === "function" ? judge(record)
+      : this.#refuse("AI_TEST_BAR_UNFIT", "the test bar's judge (run-rules' checkTestBarRecord) is not reachable. Nothing was recorded");
+    if (bad) return bad;
+    this.#transact(() => this.sql.exec(
+      `INSERT INTO ai_test_bar (part, set_name, set_version, false_alarm_rate, passed, graded_by, at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      String(part), String(set), String(set_version), Number(false_alarm_rate), passed === true ? 1 : 0, String(graded_by), now));
+    return { ok: true, part: String(part), set: String(set), set_version: String(set_version),
+             false_alarm_rate: Number(false_alarm_rate), passed: passed === true, at: now };
+  }
+
+  /** R75: every result recorded on Civicsmith's own test investigations (never a group's set, which opens or closes no
+   *  gate), oldest first, in run-rules R19's shape, for its `deployable`. Writes nothing; never throws. */
+  testBarRecords() {
+    try {
+      return this.#rows(`SELECT part, set_name, set_version, false_alarm_rate, passed, graded_by, at FROM ai_test_bar
+                          WHERE set_name <> 'group' ORDER BY seq`)
+        .map((r) => ({ part: r.part, set: r.set_name, set_version: r.set_version, false_alarm_rate: Number(r.false_alarm_rate),
+                       passed: r.passed === 1, graded_by: r.graded_by, at: r.at }));
+    } catch { return []; }
+  }
+
+  /** R75: a member adds one of the group's own test investigations for a part: a matter and the answers the group's people
+   *  wrote. `by` is the control plane's stamp, an active member. A blank part, matter or answers, or a caller who is not an
+   *  active member, is AI_GROUP_TEST_INVALID (a row of run-rules' table, B4), nothing written. A matter already held for the
+   *  part is replaced by its newer answers. */
+  groupTestSet({ part = null, matter = null, answers = null, by = null, at = null } = {}) {
+    const who = memberIdOf(by);
+    const text = (v, max) => (typeof v === "string" && v.trim() !== "" && v.length <= max ? v.trim() : null);
+    const p = text(part, 60), m = text(matter, 200);
+    const a = typeof answers === "string" ? text(answers, 20000)
+      : answers && typeof answers === "object" ? (JSON.stringify(answers).length <= 20000 ? JSON.stringify(answers) : null) : null;
+    let active = false;
+    try { const f = who ? this.#membership().memberFacts(who) : null; active = !!f && f.status === "active"; } catch { active = false; }
+    /* DEC-49 REGION is-ai-group-test */
+    if (!p || !m || !a || !active)
+      return this.#refuse("AI_GROUP_TEST_INVALID", !active ? "a group's test investigation is added by one of its active members. "
+        + "Nothing was added." : `a group's test investigation names its part, its matter and the answers your members wrote `
+        + `(missing: ${[!p && "part", !m && "matter", !a && "answers"].filter(Boolean).join(", ")}). Nothing was added.`);
+    /* END DEC-49 REGION is-ai-group-test */
+    const now = AiRuns.#aiIso(at ? Date.parse(at) : Date.now());
+    this.#transact(() => this.sql.exec(
+      `INSERT INTO ai_group_tests (part, matter, answers, by, at) VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT(part, matter) DO UPDATE SET answers = excluded.answers, by = excluded.by, at = excluded.at`,
+      p, m, a, `member:${who}`, now));
+    return { ok: true, part: p, matter: m, at: now };
+  }
+
+  /** R75: a part's results on the group's own test investigations, with each false-alarm rate, to the group's active
+   *  members; anyone else is answered none (withheld, never counted). Never a deploy gate's input. Writes nothing. */
+  groupTestResults({ part = null, viewer = null } = {}) {
+    const who = memberIdOf(viewer);
+    const p = typeof part === "string" ? part.trim() : "";
+    let active = false;
+    try { const f = who ? this.#membership().memberFacts(who) : null; active = !!f && f.status === "active"; } catch { active = false; }
+    if (!active || !p) return { ok: true, part: p || null, matters: 0, results: [] };
+    const matters = this.#one(`SELECT count(*) c FROM ai_group_tests WHERE part = ?`, p).c;
+    const results = this.#rows(`SELECT set_version, false_alarm_rate, passed, at FROM ai_test_bar
+                                 WHERE set_name = 'group' AND part = ? ORDER BY seq`, p)
+      .map((r) => ({ set_version: r.set_version, false_alarm_rate: Number(r.false_alarm_rate), passed: r.passed === 1, at: r.at }));
+    return { ok: true, part: p, matters: Number(matters), results };
   }
 
   /* ---- R25, R26: THE SURFACING STEP, registered with promotion (K31) --------------------------------------------- */

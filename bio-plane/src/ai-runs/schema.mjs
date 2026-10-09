@@ -3,9 +3,9 @@
  * table here, and `migrate` adds them to a table created before them. */
 export const AI_RUNS_TABLES = Object.freeze(["ai_runs", "ai_run_bounds", "inquiry_run_surfacings", "ai_usage", "ai_ceilings",
   "ai_mode_verifications", "ai_run_looks", "ai_test_bar", "ai_group_tests"]);
-/* T41 (T41-23): `step`, `origin` (R73), `cost` (R76, the run's own sums of its ticks' usage) and `actual` (R76, fixed at
-   its close) are additive columns, added by `migrate` to a table created before them. */
-export const AI_RUNS_ADDED_COLUMNS = Object.freeze(["lens_at_open", "rerun_of", "plan", "step", "origin", "cost", "actual"]);
+/* T41 (T41-23): `step`, `origin` (R73) and `actual` (R76, ai-use's figures for the run, recorded at
+   its close; K2482) are additive columns, added by `migrate` to a table created before them. */
+export const AI_RUNS_ADDED_COLUMNS = Object.freeze(["lens_at_open", "rerun_of", "plan", "step", "origin", "actual"]);
 
 export const AI_RUNS_SCHEMA = `
 
@@ -66,7 +66,6 @@ CREATE TABLE IF NOT EXISTS ai_runs (
   plan                  TEXT,
   step                  TEXT,
   origin                TEXT,
-  cost                  TEXT,
   actual                TEXT
 );
 CREATE INDEX IF NOT EXISTS ai_runs_expires ON ai_runs(status, expires);
