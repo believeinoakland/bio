@@ -136,21 +136,21 @@ test("R51 aiKeepAwaySet: an active administrator only (NOT_AN_ADMIN through memb
 
 test("R51 R52 each set is appended with its on, reason, who and when, never replacing an earlier one, and answers the state; aiKeepAwayState answers the latest set, the reason in the administrator's words, null when none; off with nulls before any set; it writes nothing and never throws", async () => {
   const w = await world().group("ann");
-  const none = { on: false, reason: null, set_by: null, set_at: null };
+  const none = { on: false, reason: null, set_by: null, set_at: null, uses: ["ask", "draft", "run", "standing", "explore"] };
   assert.deepEqual(w.c.aiKeepAwayState(), none, "off by default");
   const words = "  We are under a confidentiality order until the hearing; \"no AI\" until 1 March.  ";
   const on = w.c.aiKeepAwaySet({ on: true, reason: words, by: "member:second" });
-  assert.deepEqual(Object.keys(on).sort(), ["ok", "on", "reason", "set_at", "set_by"]);
-  assert.deepEqual({ ...on, set_at: null }, { ok: true, on: true, reason: words, set_by: "second", set_at: null }, "in the administrator's words as set");
+  assert.deepEqual(Object.keys(on).sort(), ["ok", "on", "reason", "set_at", "set_by", "uses"]);
+  assert.deepEqual({ ...on, set_at: null, uses: null }, { ok: true, on: true, reason: words, set_by: "second", set_at: null, uses: null }, "in the administrator's words as set");
   assert.match(on.set_at, /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/);
   const before = w.snapshot();
-  assert.deepEqual(w.c.aiKeepAwayState(), { on: true, reason: words, set_by: "second", set_at: on.set_at });
+  assert.deepEqual(w.c.aiKeepAwayState(), { on: true, reason: words, set_by: "second", set_at: on.set_at, uses: none.uses });
   assert.equal(w.snapshot(), before, "the state writes nothing");
   const off = w.c.aiKeepAwaySet({ on: false, by: "admin" });
-  assert.deepEqual({ ...off, set_at: null }, { ok: true, on: false, reason: null, set_by: "admin", set_at: null }, "null when none was given");
+  assert.deepEqual({ ...off, set_at: null }, { ok: true, on: false, reason: null, set_by: "admin", set_at: null, uses: none.uses }, "null when none was given");
   assert.equal(w.c.aiKeepAwaySet({ on: "yes", reason: "only `true` is on", by: "admin" }).on, false);
   const again = w.c.aiKeepAwaySet({ on: true, reason: "second reason", by: "admin" });
-  assert.deepEqual(w.c.aiKeepAwayState(), { on: true, reason: "second reason", set_by: "admin", set_at: again.set_at });
+  assert.deepEqual(w.c.aiKeepAwayState(), { on: true, reason: "second reason", set_by: "admin", set_at: again.set_at, uses: none.uses });
   /* appended: every set kept, in order */
   assert.deepEqual(w.rows(`SELECT is_on, reason, set_by FROM ai_keep_away ORDER BY seq`).map((r) => [r.is_on, r.reason, r.set_by]),
     [[1, words, "second"], [0, null, "admin"], [0, "only `true` is on", "admin"], [1, "second reason", "admin"]]);
@@ -159,9 +159,9 @@ test("R51 R52 each set is appended with its on, reason, who and when, never repl
   assert.deepEqual([d.purge, d.sight], ["exempt", "group"]);
   /* never throws: a setting it cannot read is not known (on: null), never off */
   w.sql.exec(`DROP TABLE ai_keep_away`);
-  assert.deepEqual(w.c.aiKeepAwayState(), { on: null, reason: null, set_by: null, set_at: null });
+  assert.deepEqual(w.c.aiKeepAwayState(), { on: null, reason: null, set_by: null, set_at: null, uses: null });
   const broken = Object.create(Object.getPrototypeOf(w.c));
-  assert.deepEqual(w.c.aiKeepAwayState.call(broken), { on: null, reason: null, set_by: null, set_at: null });
+  assert.deepEqual(w.c.aiKeepAwayState.call(broken), { on: null, reason: null, set_by: null, set_at: null, uses: null });
 });
 
 test("R51 R52 the routes: aikeepaway takes `by` from the query over the body; aikeepawaystate answers the state, whoever the plane admits (every active member, by its spec)", async () => {
@@ -201,7 +201,7 @@ test("R35 while the group keeps its material away every account is refused AI_KE
   /* the refusal carries the setting's reason, who and when, as R52 answers them */
   const kept = await w.c.accountFor({ member: "ann", act: ask("ann") });
   assert.deepEqual(Object.keys(kept).sort(), ["check", "code", "detail", "keep_away", "ok", "reason", "translation"]);
-  const { on, ...state } = w.c.aiKeepAwayState();
+  const { on, uses, ...state } = w.c.aiKeepAwayState();
   assert.deepEqual([on, kept.keep_away], [true, state]);
   const before = w.snapshot();
   for (const [member, act] of [["ann", ask("ann")], ["ann", { kind: "run", member: "ann" }], ["ann", { kind: "standing", member: "ann" }],

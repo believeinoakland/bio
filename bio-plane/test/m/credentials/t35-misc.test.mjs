@@ -102,7 +102,9 @@ test("R43 subscriptionConnected records that an active member is connected, with
   const r = w.c.subscriptionConnected({ member: "member:ann" });
   assert.deepEqual(Object.keys(r).sort(), ["member", "ok", "since"]);
   assert.deepEqual([r.ok, r.member], [true, "ann"]);
-  assert.deepEqual(w.rows(`SELECT * FROM subscription_connections`), [{ member_id: "ann", since: r.since }], "the fact and its instant only");
+  assert.deepEqual(w.rows(`SELECT member_id, since FROM subscription_connections`), [{ member_id: "ann", since: r.since }], "the fact and its instant");
+  assert.deepEqual(Object.keys(w.row(`SELECT * FROM subscription_connections`)).sort(), ["explore", "member_id", "since", "standing",
+    "suggestions", "use_ask", "use_draft", "use_run"], "and the sign-in's own switches (R55), nothing else: no login, code or token");
   assert.deepEqual(w.c.subscriptionConnected({ member: "ann" }).since, r.since, "connected since the first");
   assert.ok(!Object.keys(w.ops()).some((op) => op === "subscriptionconnected"), "reached by no route");
 });
@@ -110,8 +112,9 @@ test("R43 subscriptionConnected records that an active member is connected, with
 test("R43 R23 accountReferenceState answers it to the member alone as subscription {connected, since}; subscriptionDisconnect is the member's own act (R22's refusals); since T38 accountFor and the ask grant read it (R35, R27)", async () => {
   const w = await world().group("ann", "bob");
   const since = w.c.subscriptionConnected({ member: "ann" }).since;
-  assert.deepEqual(w.c.accountReferenceState({ member: "ann", viewer: "ann" }).subscription, { connected: true, since });
-  assert.deepEqual(w.c.accountReferenceState({ member: "bob", viewer: "bob" }).subscription, { connected: false, since: null });
+  assert.deepEqual(w.c.accountReferenceState({ member: "ann", viewer: "ann" }).subscription, { connected: true, since,
+    uses: { ask: true, draft: true, run: true, standing: false, explore: "no", suggestions: false } });
+  assert.deepEqual(w.c.accountReferenceState({ member: "bob", viewer: "bob" }).subscription, { connected: false, since: null, uses: null });
   for (const viewer of ["bob", "second", "admin"]) assert.equal(w.c.accountReferenceState({ member: "ann", viewer }).reason, "NOT_YOUR_ACCOUNT");
   /* T38: served by her own sign-in (R35); bob, not connected, by nothing */
   assert.deepEqual(await w.c.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } }),
@@ -125,7 +128,7 @@ test("R43 R23 accountReferenceState answers it to the member alone as subscripti
     assert.equal(w.c.subscriptionDisconnect({ member: "ann", by }).reason, code, String(by));
   assert.equal(w.snapshot(), before);
   assert.deepEqual(w.c.subscriptionDisconnect({ member: "ann", by: "member:ann" }), { ok: true, disconnected: true });
-  assert.deepEqual(w.c.accountReferenceState({ member: "ann", viewer: "ann" }).subscription, { connected: false, since: null });
+  assert.deepEqual(w.c.accountReferenceState({ member: "ann", viewer: "ann" }).subscription, { connected: false, since: null, uses: null });
   assert.equal((await w.c.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } })).reason, "NO_ACCOUNT", "disconnected: served by nothing");
   assert.deepEqual(w.c.subscriptionDisconnect({ member: "ann", by: "ann" }), { ok: true, disconnected: false });
   assert.deepEqual(w.ops("by=bob", { member: "ann" }).subscriptiondisconnect(), { ok: true, disconnected: false }, "the route acts for the stamped member only");

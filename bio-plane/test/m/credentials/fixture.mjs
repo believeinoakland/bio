@@ -35,8 +35,8 @@ function stubCore(db) {
   return {
     declared,
     bundleInfo(id) {
-      const r = db.prepare(`SELECT bundle_id, object_type, title FROM bundles WHERE bundle_id=?`).get(bind(id));
-      return r ? { id: r.bundle_id, type: r.object_type, title: r.title, project: null } : null;
+      const r = db.prepare(`SELECT bundle_id, object_type, title, project FROM bundles WHERE bundle_id=?`).get(bind(id));
+      return r ? { id: r.bundle_id, type: r.object_type, title: r.title, project: r.project ?? null } : null;
     },
     declarePurge(module, tables = [], { exempt = [] } = {}) {
       const names = [...tables.map((t) => (typeof t === "string" ? t : t.name)), ...exempt];
@@ -65,7 +65,7 @@ export const SEAL = "test-seal-secret-0123456789";
 
 export function world({ sealSecret = SEAL } = {}) {
   const db = new DatabaseSync(":memory:");
-  db.exec(`CREATE TABLE bundles (bundle_id TEXT PRIMARY KEY, object_type TEXT NOT NULL, title TEXT)`);
+  db.exec(`CREATE TABLE bundles (bundle_id TEXT PRIMARY KEY, object_type TEXT NOT NULL, title TEXT, project TEXT)`);
   const core = stubCore(db);
   const sql = sqlOver(db);
   const ctx = { storage: { sql } };
@@ -94,6 +94,18 @@ export function world({ sealSecret = SEAL } = {}) {
       await w.enrol("second", "admin");
       for (const id of members) await w.enrol(id);
       return w;
+    },
+    /* (T40) A project bundle created by `owner` through membership's own act (its R71), with its visibility. */
+    project(id, owner, visibility = "hidden") {
+      db.prepare(`INSERT INTO bundles (bundle_id, object_type, title) VALUES (?, 'project', ?)`).run(id, `Project ${id}`);
+      m.projectCreated({ projectId: id, ownerId: owner, visibility, by: owner });
+      return id;
+    },
+    /* (T40) `owner` invites `handle` into the project and the member joins (membership R32, R33). */
+    join(id, owner, member) {
+      const i = m.projectInvite({ projectId: id, handle: member, by: owner, viewer: `member:${owner}` });
+      if (!i.ok) return i;
+      return m.projectJoin({ projectId: id, by: member, viewer: `member:${member}` });
     },
     /* Every table's rows, to show an act wrote nothing. */
     snapshot() {

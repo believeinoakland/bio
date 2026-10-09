@@ -9,9 +9,12 @@
  * its material away from every assistant; and, from T37 (T37-6; DEC-182 (4), K231, N761), a member's own password
  * change, the one keep-away read every gate asks, and a mint that carries no digest refused; and, from T38 (T38-5;
  * N785, N708's remainder, K2200), a member connected through their subscription served by their own sign-in, and the
- * stored subscription token retired.
+ * stored subscription token retired; and, from T40 (T40-3; N812, D34, D38, K2352, K2353, K2404), a project's own AI
+ * account (an API key, or its only member's sign-in), every account's switch for each kind of use, the cascade that
+ * chooses the one account used (the project's, the member's own, the group's), material limits by use for the group
+ * and each project, a project key's notice, and the suspended sign-in accounts owners are told of.
  *
- * Requirements: build/requirements/credentials.md (R1–R53; R26 retired). Split from `membership` (K617, K636 BOB-1, K637; T19 layer
+ * Requirements: build/requirements/credentials.md (R1–R59; R26 retired). Split from `membership` (K617, K636 BOB-1, K637; T19 layer
  * 2, CREDENTIALS #1): the code is copied from `membership/index.mjs` and `schema.mjs`, without change of meaning, and
  * reads `members` only through membership's services (`memberFacts`, `sessionRights`, `isAdministrator`,
  * `activeAdmins`, `notAnAdmin`), never by SQL. Who the members are, and what each may do, is membership's; this module
@@ -27,9 +30,10 @@
  */
 import { MACHINE_CLASS_PREFIX, isMachineIdentity, sha256HexSync } from "../record-grammar/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
-import { Membership, membershipOf, notAnAdmin, noSuchMember } from "../membership/index.mjs";
-import { CREDENTIALS_SCHEMA, CREDENTIALS_ADDITIVE_COLUMNS, CREDENTIALS_TABLES } from "./schema.mjs";
-export { CREDENTIALS_EXEMPT_TABLES, CREDENTIALS_TABLES } from "./schema.mjs";
+import { Membership, membershipOf, notAnAdmin, noSuchMember, noSuchProject } from "../membership/index.mjs";
+import * as MEMBERSHIP from "../membership/index.mjs";
+import { CREDENTIALS_SCHEMA, CREDENTIALS_ADDITIVE_COLUMNS, CREDENTIALS_TABLES, CREDENTIALS_PROJECT_TABLES } from "./schema.mjs";
+export { CREDENTIALS_EXEMPT_TABLES, CREDENTIALS_TABLES, CREDENTIALS_PROJECT_TABLES } from "./schema.mjs";
 import { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, ACCOUNT_CHECKS,
          KEYED_SERVICE_CHECKS, SIGN_IN_CHECKS } from "./checks.mjs";
 export { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, ACCOUNT_CHECKS,
@@ -41,8 +45,16 @@ export { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, ACCO
    a stored token, and a reference of that kind stored before T38 is removed at `migrate`. The group's own key is an API
    key only (R33). */
 export const ACCOUNT_KINDS = Object.freeze(["apikey"]);
-/* R25, R37 (K1479, K1500): the two switches, a member's reference's and the group key's alike. */
+/* R25, R37 (K1479, K1500): the two switches, a member's reference's and the group key's alike. (T40) Two of R55's. */
 export const ACCOUNT_SWITCHES = Object.freeze(["suggestions", "standing"]);
+/* R55 (T40; N812, D34, B2): the kinds of use. Every account holds a switch for each, `explore` holding one of
+   `EXPLORE_VALUES` (B6, K2350), plus `suggestions` (K1479); `USE_SWITCHES` names them all. An act served by an account
+   is of any kind but `explore` (R24, R56). Defaults: ask, draft and run on; standing and suggestions off; explore no. */
+export const USE_KINDS = Object.freeze(["ask", "draft", "run", "standing", "explore"]);
+export const EXPLORE_VALUES = Object.freeze(["no", "ask", "yes"]);
+export const USE_SWITCHES = Object.freeze([...USE_KINDS, "suggestions"]);
+const USE_DEFAULTS = Object.freeze({ ask: true, draft: true, run: true, standing: false, explore: "no", suggestions: false });
+const ACT_KINDS = Object.freeze(USE_KINDS.filter((k) => k !== "explore"));
 /* R27: an ask grant's life, in seconds (it also ends with the member's session). */
 export const AI_GRANT_TTL_SECONDS = 900;
 /* R28 (K1505 (14); N580, K1603, K1609): the ask's op allow-list, held by the grant's class, each entry the op's name as
@@ -137,6 +149,8 @@ export class Credentials {
     this.sql.exec(`UPDATE recovery_codes SET spent_at=? WHERE role=? AND spent_at IS NULL`, Credentials.#instant(at),
       `member:${memberId}`);
     this.sql.exec(`DELETE FROM subscription_connections WHERE member_id=?`, memberId);
+    /* R54 (T40): a project's sign-in account is cleared with its member's sign-in */
+    this.sql.exec(`DELETE FROM project_accounts WHERE kind='signin' AND member_id=?`, memberId);
     /* REC-159: the cascade is the revoking act's, so the keys it revokes name its actor. R21: a key it revokes takes
        the act's own time (the notice's `at`) as `status_at`; a key already revoked keeps its own. */
     this.sql.exec(
@@ -210,7 +224,8 @@ export class Credentials {
      effect of resetting the corpus, and an export that carried a secret would publish it. */
   declareTables() {
     if (this.#declared) return false;
-    const answer = this.core.declareTable("credentials", CREDENTIALS_TABLES.map((t) => ({ ...t })));
+    const answer = this.core.declareTable("credentials",
+      [...CREDENTIALS_TABLES, ...CREDENTIALS_PROJECT_TABLES].map((t) => ({ ...t, ...(t.keys ? { keys: [...t.keys] } : {}) })));
     if (answer && answer.ok === false)
       throw new Error(`credentials: record-core refused its table declaration: ${answer.reason} (${answer.table})`);
     this.#declared = true;
@@ -1082,12 +1097,16 @@ export class Credentials {
     /* END DEC-49 REGION is-account-theirs */
   }
 
-  /* R24, R25, R27, R32, R35: no account serves this member (R35's last branch), or, for R24 and R25, the member holds
-     no reference of their own. */
-  #noAccount(member, ownOnly = false) {
+  /* R24, R25, R27, R32, R35: no account serves this member (R35's last branch), or, for R24 and R25 (`own`), the
+     member holds no reference of their own; (T40; R55) for `accountUsesSet`, the owner named holds no account
+     (`member`: neither a reference nor a sign-in; `project`: the project holds none). */
+  #noAccount(member, scope = "served") {
     /* DEC-49 REGION is-account-held */
-    return Credentials.#row(ACCOUNT_CHECKS, "NO_ACCOUNT", ownOnly
+    return Credentials.#row(ACCOUNT_CHECKS, "NO_ACCOUNT", scope === true || scope === "own"
       ? "this member holds no Claude account reference of their own. Nothing was used or written."
+      : scope === "member" ? "this member holds no Claude account of their own: no key and no connected sign-in. Nothing "
+        + "was written."
+      : scope === "project" ? "this project holds no Claude account. Nothing was written."
       : "no Claude account serves this member: they hold no reference of their own, they are not connected through "
         + "their subscription, and the group's key is not held or not on, so there is no assistant for them. Nothing was "
         + "used.", { member });
@@ -1103,14 +1122,110 @@ export class Credentials {
     /* END DEC-49 REGION is-secret-given */
   }
 
-  /* R25, R37: the two switches' names, one list for a member's reference and the group key. */
-  static #switchName(name) {
+  /* R25, R37: the two switches' names, one list for a member's reference and the group key; (T40) R55's `names`, every
+     switch an account holds, for `accountUsesSet`. */
+  static #switchName(name, names = ACCOUNT_SWITCHES) {
     /* DEC-49 REGION is-account-switch */
-    if (!ACCOUNT_SWITCHES.includes(name))
-      return Credentials.#row(ACCOUNT_CHECKS, "UNKNOWN_SWITCH", `the switches are ${ACCOUNT_SWITCHES.join(" and ")}. `
+    if (typeof name !== "string" || !names.includes(name))
+      return Credentials.#row(ACCOUNT_CHECKS, "UNKNOWN_SWITCH", `the switches are ${names.join(", ")}. `
         + "Nothing was written.", { switch: typeof name === "string" ? name.slice(0, 40) : null });
     return null;
     /* END DEC-49 REGION is-account-switch */
+  }
+
+  /* ===== EVERY ACCOUNT'S SWITCHES (R55; T40, N812, D34, B2, B6, K2350) =====
+   *
+   * Each account (a member's reference, a member's sign-in, a project's account and the group key) holds a switch for
+   * each kind of use but `explore`, which holds `no`, `ask` or `yes`, and `suggestions`. R25's and R37's two switches
+   * are two of them, stored where they were. A value outside what a switch takes is refused SWITCH_VALUE_INVALID,
+   * naming the values; only R33's and R54's on/off of the key itself keep "only `true` is on". */
+  static #USE_COLUMN = Object.freeze({ ask: "use_ask", draft: "use_draft", run: "use_run", standing: "standing",
+                                       explore: "explore", suggestions: "suggestions" });
+  static #USES_COLUMNS = "use_ask, use_draft, use_run, standing, explore, suggestions";
+
+  /* An account's switches from its row, as R55 names them. */
+  static #usesOf(r) {
+    return { ask: !!r?.use_ask, draft: !!r?.use_draft, run: !!r?.use_run, standing: !!r?.standing,
+             explore: EXPLORE_VALUES.includes(r?.explore) ? r.explore : "no", suggestions: !!r?.suggestions };
+  }
+
+  /* R55, R57: SWITCH_VALUE_INVALID, minted here alone: `what` and the values it takes. */
+  static #valueInvalid(what, values, extra) {
+    /* DEC-49 REGION is-switch-value */
+    return Credentials.#row(ACCOUNT_CHECKS, "SWITCH_VALUE_INVALID", `${what} takes ${values.map(String).join(", ")}. `
+      + "Nothing was changed.", { values: [...values], ...(extra || {}) });
+    /* END DEC-49 REGION is-switch-value */
+  }
+
+  /* R55: `explore` one of EXPLORE_VALUES; any other switch a boolean. */
+  static #switchValueFault(name, on) {
+    if (name === "explore") return EXPLORE_VALUES.includes(on) ? null
+      : Credentials.#valueInvalid("the explore switch", EXPLORE_VALUES, { switch: name });
+    return typeof on === "boolean" ? null : Credentials.#valueInvalid(`the ${name} switch`, [true, false], { switch: name });
+  }
+
+  static #stored(name, on) { return name === "explore" ? on : on ? 1 : 0; }
+
+  /* R56: AI_USE_SWITCHED_OFF, minted here alone: the account the cascade chose holds the act's kind off, and the act
+     never moves to the next account (Bob, K2352). `whose` is `project`, `own` or `group`. */
+  static #switchedOff(whose, use, project = null) {
+    /* DEC-49 REGION is-use-switched-on */
+    const name = whose === "project" ? "this project's" : whose === "group" ? "your group's" : "your own";
+    return Credentials.#row(ACCOUNT_CHECKS, "AI_USE_SWITCHED_OFF", `the account used for this act is ${name} Claude `
+      + `account, and its switch for ${use} is off; the act does not move to another account. Nothing was used.`,
+      { whose, use, ...(project !== null ? { project } : {}) });
+    /* END DEC-49 REGION is-use-switched-on */
+  }
+
+  /* R55 `accountUsesSet`: one switch of one account, by its owner, `owner` spelled as ai-use R1's (`group`,
+     `project:<id>`, `member:<id>`). The group key's by an active administrator (R33's refusals; it may be set before a key
+     is held, as R37's); a project's by one of its owners (R54's refusals), while it holds an account; a member's own by
+     that member (R22's refusals), on the account of theirs that would serve them: their reference when held, else their
+     sign-in. Refusals in order: the owner's, UNKNOWN_SWITCH, SWITCH_VALUE_INVALID, NO_ACCOUNT, each writing nothing. */
+  accountUsesSet({ owner = null, switch: name = null, on, by = null } = {}) {
+    const t = this.#usesOwner(owner, by);
+    if (t.refusal) return t.refusal;
+    const unknown = Credentials.#switchName(name, USE_SWITCHES);
+    if (unknown) return unknown;
+    const bad = Credentials.#switchValueFault(name, on);
+    if (bad) return bad;
+    if (t.none) return t.none;
+    this.#tx(() => {
+      if (t.ensure) t.ensure();
+      this.sql.exec(`UPDATE ${t.table} SET ${Credentials.#USE_COLUMN[name]}=? WHERE ${t.where}`, Credentials.#stored(name, on),
+        ...t.args);
+      if (t.act) t.act(name, on);
+    });
+    return { ok: true, owner, switch: name, on };
+  }
+
+  /* The account `owner` names, as `{table, where, args, ensure?, act?}`, `{refusal}` or `{none}`. */
+  #usesOwner(owner, by) {
+    const said = (v) => (typeof v === "boolean" ? (v ? "on" : "off") : String(v));
+    if (owner === "group") {
+      const bar = this.#adminBar(by, "switching the group key's assistant settings");
+      return bar ? { refusal: bar } : { table: "group_key", where: "id=1", args: [],
+        ensure: () => this.sql.exec(`INSERT INTO group_key (id) VALUES (1) ON CONFLICT(id) DO NOTHING`),
+        act: (n, v) => this.#groupKeyAct(`switch:${n}`, said(v), by) };
+    }
+    if (typeof owner === "string" && owner.startsWith("project:")) {
+      const project = owner.slice(8);
+      const bar = this.#projectOwnerBar(project, by, "setting a project's assistant settings");
+      if (bar) return { refusal: bar };
+      if (!this.#projectAccountRow(project)) return { none: this.#noAccount(null, "project") };
+      return { table: "project_accounts", where: "project_id=?", args: [project],
+        act: (n, v) => this.#projectAct(project, `uses:${n}`, said(v), by) };
+    }
+    if (typeof owner === "string" && owner.startsWith("member:")) {
+      const bar = this.#accountBar(owner, by);
+      if (bar) return { refusal: bar };
+      const id = Credentials.#memberOf(owner);
+      if (this.#reference(id, "member_id")) return { table: "account_references", where: "member_id=?", args: [id] };
+      if (this.#connected(id)) return { table: "subscription_connections", where: "member_id=?", args: [id] };
+      return { none: this.#noAccount(id, "member") };
+    }
+    /* no owner this module knows: refused as R22 refuses any principal but the actor */
+    return { refusal: this.#accountBar(null, by) };
   }
 
   /* R23, R29, R34: THE SEAL. AES-256-GCM under a key derived (HKDF-SHA-256) from the Worker's seal secret, the owner as
@@ -1201,12 +1316,15 @@ export class Credentials {
     if (id === null || typeof member !== "string" || Credentials.#memberOf(viewer) !== id || isMachineIdentity(viewer))
       return Credentials.#notYours("a member's Claude account is seen only by that "
         + "member. Nothing was read.");
-    const r = this.#reference(id, "kind, set_at, suggestions, standing");
-    const sub = this.#one(`SELECT since FROM subscription_connections WHERE member_id=?`, id);
+    const r = this.#reference(id, `kind, set_at, ${Credentials.#USES_COLUMNS}`);
+    const sub = this.#one(`SELECT since, ${Credentials.#USES_COLUMNS} FROM subscription_connections WHERE member_id=?`, id);
     return { ok: true, held: !!r, kind: r ? r.kind : null, set_at: r ? r.set_at : null,
              suggestions: !!(r && r.suggestions), standing: !!(r && r.standing),
-             /* R43: whether the member is connected through their own subscription, and since when; never a login */
-             subscription: { connected: !!sub, since: sub ? sub.since : null } };
+             /* R55 (T40): every switch of the reference, null when none is held */
+             uses: r ? Credentials.#usesOf(r) : null,
+             /* R43: whether the member is connected through their own subscription, and since when; never a login;
+                (T40, R55) the sign-in's own switches, null when not connected */
+             subscription: { connected: !!sub, since: sub ? sub.since : null, uses: sub ? Credentials.#usesOf(sub) : null } };
   }
 
   /* ===== A CONNECTED SUBSCRIPTION (R43; N678's share, DEC-156; K1819, K1922) =====
@@ -1244,16 +1362,20 @@ export class Credentials {
     if (bar) return bar;
     const id = Credentials.#memberOf(member);
     const held = !!this.#one(`SELECT member_id FROM subscription_connections WHERE member_id=?`, id);
-    if (held) this.sql.exec(`DELETE FROM subscription_connections WHERE member_id=?`, id);
+    this.#tx(() => {
+      if (held) this.sql.exec(`DELETE FROM subscription_connections WHERE member_id=?`, id);
+      /* R54 (T40): a project's sign-in account is cleared with its member's sign-in */
+      this.sql.exec(`DELETE FROM project_accounts WHERE kind='signin' AND member_id=?`, id);
+    });
     return { ok: true, disconnected: held };
   }
 
-  /* R24, R35: the act a member's account may serve: their own ask, run or standing question. Answers the member's id,
-     or null. */
+  /* R24, R35: the act a member's account may serve: their own ask, run or standing question; (T40; R56) any kind of use
+     but `explore`, so a `draft` too. Answers the member's id, or null. */
   static #ownAct(member, act) {
     const id = Credentials.#memberOf(member);
     const actKind = act && typeof act === "object" ? act.kind : null;
-    if (id === null || !["ask", "run", "standing"].includes(actKind) || Credentials.#memberOf(act.member) !== id
+    if (id === null || !ACT_KINDS.includes(actKind) || Credentials.#memberOf(act.member) !== id
         || isMachineIdentity(act.member)) return null;
     return id;
   }
@@ -1281,7 +1403,8 @@ export class Credentials {
   /* R24: unseals the member's reference only for that member's own ask, run or standing question, for the one call it
      serves; the caller keeps nothing (agent-model R8). Kept for its callers until they move to `accountFor` (R35). */
   async accountReferenceFor({ member = null, act = null } = {}) {
-    const away = this.aiKeptAway();   /* R35 (DEC-172): no assistant while the group keeps its material away */
+    /* R35 (DEC-172): no assistant while the group keeps its material away; (T40; R57) for the act's use */
+    const away = this.aiKeptAway({ use: act && typeof act === "object" ? act.kind : null });
     if (away) return away;
     const id = Credentials.#ownAct(member, act);
     if (id === null)
@@ -1291,16 +1414,19 @@ export class Credentials {
   }
 
   /* R25: the member's own switches, each off by default; they belong to the reference, so a member with none is
-     answered NO_ACCOUNT. They govern only acts their own reference serves; the group key has its own (R37). */
-  accountSwitchSet({ member = null, switch: name = null, on = false, by = null } = {}) {
+     answered NO_ACCOUNT. They govern only acts their own reference serves; the group key has its own (R37). (T40;
+     R55) Two of R55's, set as `accountUsesSet` sets them: a value that is not a boolean is SWITCH_VALUE_INVALID. */
+  accountSwitchSet({ member = null, switch: name = null, on, by = null } = {}) {
     const bar = this.#accountBar(member, by);
     if (bar) return bar;
     const unknown = Credentials.#switchName(name);
     if (unknown) return unknown;
+    const bad = Credentials.#switchValueFault(name, on);
+    if (bad) return bad;
     const id = Credentials.#memberOf(member);
     if (!this.#reference(id, "member_id")) return this.#noAccount(id, true);
-    this.sql.exec(`UPDATE account_references SET ${name}=? WHERE member_id=?`, on === true ? 1 : 0, id);
-    return { ok: true, switch: name, on: on === true };
+    this.sql.exec(`UPDATE account_references SET ${Credentials.#USE_COLUMN[name]}=? WHERE member_id=?`, on ? 1 : 0, id);
+    return { ok: true, switch: name, on };
   }
 
   /* ===== THE GROUP'S API KEY (R33–R37; K1755; DEC-172, K1957) =====
@@ -1315,7 +1441,7 @@ export class Credentials {
   static #GROUP_KEY_OWNER = "group-key:anthropic";
 
   #groupKeyRow() {
-    return this.#one(`SELECT sealed, iv, is_on, set_by, set_at, suggestions, standing FROM group_key WHERE id=1`);
+    return this.#one(`SELECT sealed, iv, is_on, set_by, set_at, ${Credentials.#USES_COLUMNS} FROM group_key WHERE id=1`);
   }
 
   /* Held, and on only while held and switched on. */
@@ -1323,7 +1449,9 @@ export class Credentials {
     const r = this.#groupKeyRow();
     const held = !!(r && r.sealed);
     return { held, on: held && !!r.is_on, set_at: held ? r.set_at : null, by: held ? r.set_by : null,
-             suggestions: !!(r && r.suggestions), standing: !!(r && r.standing) };
+             suggestions: !!(r && r.suggestions), standing: !!(r && r.standing),
+             /* R55 (T40): every switch of the group key; before any act on it, the defaults it starts with */
+             uses: r ? Credentials.#usesOf(r) : { ...USE_DEFAULTS } };
   }
 
   #groupKeyAct(act, detail, by) {
@@ -1352,13 +1480,14 @@ export class Credentials {
     return { ok: true, set_at: setAt };
   }
 
-  /* R33, R37: removes the key, which switches it off and turns both its switches off; with none, `removed: false`. */
+  /* R33, R37: removes the key, which switches it off and turns both its switches off; (T40; R37) every R55 switch of
+     it; with none, `removed: false`. */
   groupKeyRemove({ by = null } = {}) {
     const bar = this.#adminBar(by, "removing the group's Anthropic API key");
     if (bar) return bar;
     const held = this.#groupKeyFacts().held;
     this.sql.exec(`UPDATE group_key SET sealed=NULL, iv=NULL, is_on=0, set_by=NULL, set_at=NULL, suggestions=0,
-                   standing=0 WHERE id=1`);
+                   standing=0, use_ask=0, use_draft=0, use_run=0, explore='no' WHERE id=1`);
     this.#groupKeyAct("remove", null, by);
     return { ok: true, removed: held };
   }
@@ -1373,19 +1502,23 @@ export class Credentials {
     return { ok: true, on: this.#groupKeyFacts().on };
   }
 
-  /* R37: the group key's own `suggestions` and `standing`, off by default, set by an active administrator. */
-  groupSwitchSet({ switch: name = null, on = false, by = null } = {}) {
+  /* R37: the group key's own `suggestions` and `standing`, off by default, set by an active administrator. (T40; R55)
+     Two of R55's, set as `accountUsesSet` sets them: a value that is not a boolean is SWITCH_VALUE_INVALID. */
+  groupSwitchSet({ switch: name = null, on, by = null } = {}) {
     const bar = this.#adminBar(by, "switching the group key's assistant settings");
     if (bar) return bar;
     const unknown = Credentials.#switchName(name);
     if (unknown) return unknown;
-    const v = on === true ? 1 : 0;
+    const bad = Credentials.#switchValueFault(name, on);
+    if (bad) return bad;
+    const v = on ? 1 : 0;
     this.sql.exec(`INSERT INTO group_key (id, ${name}) VALUES (1,?) ON CONFLICT(id) DO UPDATE SET ${name}=excluded.${name}`, v);
     this.#groupKeyAct(`switch:${name}`, v ? "on" : "off", by);
     return { ok: true, switch: name, on: v === 1 };
   }
 
-  /* R34, R37: an active administrator reads `{held, on, set_at, by, suggestions, standing}`; any other active member
+  /* R34, R37: an active administrator reads `{held, on, set_at, by, suggestions, standing}` (T40: and `uses`, every R55
+     switch); any other active member
      `{on}`; anyone else is refused as a non-administrator. Never the key; writes nothing. */
   groupKeyState({ viewer = null } = {}) {
     const id = Credentials.#memberOf(viewer);
@@ -1453,31 +1586,89 @@ export class Credentials {
      R2 opens that member's sign-in); else the group key when held and on, `{kind: "apikey", level: "group", key}`, for
      an active member who has read its notice (R36); else NO_ACCOUNT. While the group keeps its
      material away (R51), every account is refused AI_KEPT_AWAY first, before any is read. `act` as R24's. Writes
-     nothing; called only by the modules that run the assistant. */
+     nothing; called only by the modules that run the assistant. (T40; R56) `act` takes `project`, and the cascade
+     begins with that project's account, `{kind: "apikey", level: "project", project, key}` or `{kind: "signin", level:
+     "project", project, member}`; the account the cascade chooses is the one used (#resolve). */
   async accountFor({ member = null, act = null } = {}) {
-    const away = this.aiKeptAway();
+    const away = this.aiKeptAway({ use: act && typeof act === "object" ? act.kind : null });
     if (away) return away;
     const id = Credentials.#ownAct(member, act);
     if (id === null)
       return Credentials.#notYours("a Claude account serves only a member's own asks, runs and standing questions. "
         + "Nothing was used.");
-    const own = await this.#ownReference(id);
-    if (own) return own.ok ? { ok: true, kind: own.kind, level: "member", key: own.secret } : own;
-    if (this.#connected(id)) return { ok: true, kind: "signin", level: "member", member: id };
-    if (!this.#groupKeyFacts().on) return this.#noAccount(id);
-    if (this.#memberFacts(id)?.status !== "active")
-      return Credentials.#row(ACCOUNT_CHECKS, "ACCOUNT_MEMBER_NOT_ACTIVE", "the group's key serves only acts of active "
-        + "members. Nothing was used.");
-    const due = this.#noticeDue(id);
-    if (due) return due;
+    const r = this.#resolve(id, act.kind, Credentials.#projectOf(act));
+    if (r.refusal) return r.refusal;
+    if (r.kind === "signin")
+      return r.level === "project" ? { ok: true, kind: "signin", level: "project", project: r.project, member: r.member }
+                                   : { ok: true, kind: "signin", level: "member", member: id };
+    if (r.level === "member") {
+      const own = await this.#ownReference(id);
+      if (!own) return this.#noAccount(id);
+      return own.ok ? { ok: true, kind: own.kind, level: "member", key: own.secret } : own;
+    }
     const unsealable = this.#seal();
     if (unsealable) return unsealable;
-    const r = this.#groupKeyRow();
-    const key = await this.#decrypt(Credentials.#GROUP_KEY_OWNER, "apikey", r.sealed, r.iv);
+    if (r.level === "project") {
+      const key = await this.#decrypt(`project:${r.project}`, "apikey", r.row.sealed, r.row.iv);
+      if (key === null)
+        return Credentials.#sealRefusal("the project's key does not open under the seal secret of your group's "
+          + "Civicsmith, which has changed; one of the project's owners sets it again. Nothing was used.");
+      return { ok: true, kind: "apikey", level: "project", project: r.project, key };
+    }
+    const key = await this.#decrypt(Credentials.#GROUP_KEY_OWNER, "apikey", r.row.sealed, r.row.iv);
     if (key === null)
       return Credentials.#sealRefusal("the group's key does not open under the seal secret of your group's Civicsmith, "
         + "which has changed; an administrator sets it again. Nothing was used.");
     return { ok: true, kind: "apikey", level: "group", key };
+  }
+
+  /* R56: the project an act names, or null when it names none. */
+  static #projectOf(act) {
+    const p = act && typeof act === "object" ? act.project : undefined;
+    return p === undefined || p === null ? null : p;
+  }
+
+  /* R56 (T40; N812, D38; A3, A4 of K2352, K2353), without unsealing: the account that serves member `id`'s act of kind
+     `use`, the first that is held and on of (1) `project`'s account (a sign-in only while it serves, R54), when the act
+     names a project the member has joined; (2) the member's own, their reference, else their sign-in; (3) the group
+     key. The account chosen is the one used: its switch for `use` off is AI_USE_SWITCHED_OFF, naming whose, and the act
+     never moves to the next account. A project the member cannot see is answered as absent, one they see and have not
+     joined PROJECT_ACT_NOT_A_PARTICIPANT; the project's material limit (R57) is asked before its account. A key that
+     pays for others' acts serves only an active member who has read its notice (R36, R58), asked when `notice`.
+     Answers `{refusal}`, or `{level, kind, project?, member?, row?}`. Writes nothing. */
+  #resolve(id, use, project, { notice = true } = {}) {
+    if (project !== null) {
+      const bar = this.#participantBar(project, id, "asking the assistant in a project");
+      if (bar) return { refusal: bar };
+      const away = this.aiKeptAway({ project, use });
+      if (away) return { refusal: away };
+      const p = this.#projectAccountRow(project);
+      if (p && p.is_on && this.#serves(p)) {
+        if (!Credentials.#usesOf(p)[use]) return { refusal: Credentials.#switchedOff("project", use, project) };
+        if (p.kind === "signin") return { level: "project", kind: "signin", project, member: p.member_id };
+        if (this.#memberFacts(id)?.status !== "active")
+          return { refusal: Credentials.#row(ACCOUNT_CHECKS, "ACCOUNT_MEMBER_NOT_ACTIVE", "a project's key serves only "
+            + "acts of active members. Nothing was used.") };
+        const due = notice ? this.#projectNoticeDue(id, project) : null;
+        if (due) return { refusal: due };
+        return { level: "project", kind: "apikey", project, row: p };
+      }
+    }
+    const own = this.#reference(id, `kind, ${Credentials.#USES_COLUMNS}`);
+    if (own) return Credentials.#usesOf(own)[use] ? { level: "member", kind: own.kind }
+                                                    : { refusal: Credentials.#switchedOff("own", use) };
+    const sub = this.#one(`SELECT ${Credentials.#USES_COLUMNS} FROM subscription_connections WHERE member_id=?`, id);
+    if (sub) return Credentials.#usesOf(sub)[use] ? { level: "member", kind: "signin", member: id }
+                                                    : { refusal: Credentials.#switchedOff("own", use) };
+    const g = this.#groupKeyRow();
+    if (!(g && g.sealed && g.is_on)) return { refusal: this.#noAccount(id) };
+    if (!Credentials.#usesOf(g)[use]) return { refusal: Credentials.#switchedOff("group", use) };
+    if (this.#memberFacts(id)?.status !== "active")
+      return { refusal: Credentials.#row(ACCOUNT_CHECKS, "ACCOUNT_MEMBER_NOT_ACTIVE", "the group's key serves only acts "
+        + "of active members. Nothing was used.") };
+    const due = notice ? this.#noticeDue(id) : null;
+    if (due) return { refusal: due };
+    return { level: "group", kind: "apikey", row: g };
   }
 
   /* ===== KEEPING THE GROUP'S MATERIAL AWAY FROM AI (R51, R52; DEC-172, K1957) =====
@@ -1493,29 +1684,66 @@ export class Credentials {
      known, which R35 reads as kept away (a failure never sends material out). */
   aiKeepAwayState() {
     try {
-      const r = this.#one(`SELECT is_on, reason, set_by, set_at FROM ai_keep_away ORDER BY seq DESC LIMIT 1`);
-      return r ? { on: !!r.is_on, reason: r.reason ?? null, set_by: r.set_by, set_at: r.set_at }
-               : { on: false, reason: null, set_by: null, set_at: null };
-    } catch { return { on: null, reason: null, set_by: null, set_at: null }; }
+      const r = this.#one(`SELECT is_on, reason, set_by, set_at, uses FROM ai_keep_away ORDER BY seq DESC LIMIT 1`);
+      return r ? { on: !!r.is_on, reason: r.reason ?? null, set_by: r.set_by, set_at: r.set_at, uses: Credentials.#usesList(r.uses) }
+               : { on: false, reason: null, set_by: null, set_at: null, uses: [...USE_KINDS] };
+    } catch { return { on: null, reason: null, set_by: null, set_at: null, uses: null }; }
   }
 
-  /* R51 (`op=aikeepaway`): an active administrator's act. `on: true` needs a reason of 1 to 2,000 characters, not
-     blank; a reason given with `on: false` is kept under the same bounds. Each refusal writes nothing. */
-  aiKeepAwaySet({ on = false, reason = null, by = null } = {}) {
-    const bar = this.#adminBar(by, "keeping the group's material away from every assistant");
-    if (bar) return bar;
-    const turnOn = on === true;
+  /* R57 (T40): the uses a material limit covers, from its stored JSON: every kind when none was named (a limit set
+     before T40 covers every use), and, for a value that does not read, every kind (fail closed). */
+  static #usesList(json) {
+    if (json === null || json === undefined) return [...USE_KINDS];
+    try {
+      const a = JSON.parse(json);
+      return Array.isArray(a) && a.length ? USE_KINDS.filter((k) => a.includes(k)) : [...USE_KINDS];
+    } catch { return [...USE_KINDS]; }
+  }
+
+  /* R57: a limit covers `use` when it is on and names it; with no `use` asked, whenever it is on ("as now", K2404 (4)). */
+  static #covers(limit, use) {
+    return limit.on === true && (use === null || use === undefined || (Array.isArray(limit.uses) && limit.uses.includes(use)));
+  }
+
+  /* R57: `uses` as set: absent (every use) or a non-empty list of USE_KINDS entries, each once; answers `{json}` to
+     store, or `{fault}`, SWITCH_VALUE_INVALID naming the values (K2404 (4)). */
+  static #usesToStore(uses) {
+    if (uses === null || uses === undefined) return { json: null };
+    if (Array.isArray(uses) && uses.length && uses.every((u) => USE_KINDS.includes(u)) && new Set(uses).size === uses.length)
+      return { json: JSON.stringify(USE_KINDS.filter((k) => uses.includes(k))) };
+    return { fault: Credentials.#valueInvalid("a material limit's uses, a list of the kinds of use it covers,", USE_KINDS) };
+  }
+
+  /* R51 (DEC-172), R57: the reason rule a material limit is set under, the group's or a project's: `on: true` needs a
+     reason of 1 to 2,000 characters, not blank; a reason given with `on: false` is held to the same bounds.
+     AI_KEEP_AWAY_NO_REASON, minted here alone. */
+  static #keepAwayReason(turnOn, reason) {
     const given = typeof reason === "string" && reason.trim() !== "";
     const length = typeof reason === "string" ? [...reason].length : 0;
     /* DEC-49 REGION is-keep-away-reason */
     if ((turnOn && !given) || (given && length > KEEP_AWAY_REASON.max) || (reason !== null && reason !== undefined
         && typeof reason !== "string"))
-      return Credentials.#row(ACCOUNT_CHECKS, "AI_KEEP_AWAY_NO_REASON", `keeping the group's material away from every assistant is `
+      return Credentials.#row(ACCOUNT_CHECKS, "AI_KEEP_AWAY_NO_REASON", `keeping material away from the assistant is `
         + `turned on only with a reason of ${KEEP_AWAY_REASON.min} to ${KEEP_AWAY_REASON.max} characters, which every `
         + `member reads${given ? `; this one has ${length}` : ""}. Nothing was changed.`);
     /* END DEC-49 REGION is-keep-away-reason */
-    this.sql.exec(`INSERT INTO ai_keep_away (is_on, reason, set_by, set_at) VALUES (?,?,?,?)`, turnOn ? 1 : 0,
-      given ? reason : null, Credentials.#memberOf(by), stampSecond());
+    return null;
+  }
+
+  /* R51 (`op=aikeepaway`): an active administrator's act. `on: true` needs a reason of 1 to 2,000 characters, not
+     blank; a reason given with `on: false` is kept under the same bounds. Each refusal writes nothing. (T40; R57) It
+     takes `uses`, the kinds of use the limit covers (all when absent). */
+  aiKeepAwaySet({ on = false, uses = null, reason = null, by = null } = {}) {
+    const bar = this.#adminBar(by, "keeping the group's material away from every assistant");
+    if (bar) return bar;
+    const turnOn = on === true;
+    const noReason = Credentials.#keepAwayReason(turnOn, reason);
+    if (noReason) return noReason;
+    const u = Credentials.#usesToStore(uses);
+    if (u.fault) return u.fault;
+    const given = typeof reason === "string" && reason.trim() !== "";
+    this.sql.exec(`INSERT INTO ai_keep_away (is_on, reason, set_by, set_at, uses) VALUES (?,?,?,?,?)`, turnOn ? 1 : 0,
+      given ? reason : null, Credentials.#memberOf(by), stampSecond(), u.json);
     return { ok: true, ...this.aiKeepAwayState() };
   }
 
@@ -1525,16 +1753,341 @@ export class Credentials {
      (instance-setup R55, answers, wizard-scripts, store-door) reads it, never a copy of the condition. A setting that
      cannot be read is that refusal, saying so, with the three null (fail closed, K2093). Writes nothing; never
      throws. */
-  aiKeptAway() {
+  aiKeptAway({ project = null, use = null } = {}) {
     let st;
     try { st = this.aiKeepAwayState(); } catch { st = { on: null, reason: null, set_by: null, set_at: null }; }
-    if (st.on === false) return null;
+    /* (T40; R57) the group's limit refuses when it covers `use`; then `project`'s, PROJECT_AI_KEPT_AWAY */
+    if (st.on === false || (st.on === true && !Credentials.#covers(st, use))) return this.#projectKeptAway(project, use);
     /* DEC-49 REGION is-kept-away */
     return Credentials.#row(ACCOUNT_CHECKS, "AI_KEPT_AWAY", st.on === true
       ? "the group keeps its material away from every assistant, so no account was read or used. Nothing was sent."
       : "whether the group keeps its material away from every assistant could not be read, so no account was read or "
         + "used. Nothing was sent.", { keep_away: { reason: st.reason, set_by: st.set_by, set_at: st.set_at } });
     /* END DEC-49 REGION is-kept-away */
+  }
+
+  /* R57: a project's material limit, the latest set, or off before any. Throws when it cannot be read: its caller
+     fails closed. */
+  #projectLimit(project) {
+    const r = this.#one(`SELECT is_on, uses, reason, set_by, set_at FROM project_keep_away WHERE project_id=?
+                         ORDER BY seq DESC LIMIT 1`, project);
+    return r ? { on: !!r.is_on, uses: Credentials.#usesList(r.uses), reason: r.reason ?? null, set_by: r.set_by, set_at: r.set_at }
+             : { on: false, uses: [...USE_KINDS], reason: null, set_by: null, set_at: null };
+  }
+
+  /* R57: PROJECT_AI_KEPT_AWAY, minted here alone, with the limit's reason, who and when; null when `project` names
+     none or its limit does not cover `use`. A limit that cannot be read is that refusal, saying so (fail closed,
+     K2093). */
+  #projectKeptAway(project, use) {
+    if (project === null || project === undefined) return null;
+    let lim;
+    try { lim = this.#projectLimit(String(project)); } catch { lim = { on: null, reason: null, set_by: null, set_at: null }; }
+    if (lim.on === false || (lim.on === true && !Credentials.#covers(lim, use))) return null;
+    /* DEC-49 REGION is-project-kept-away */
+    return Credentials.#row(ACCOUNT_CHECKS, "PROJECT_AI_KEPT_AWAY", lim.on === true
+      ? "this project keeps its material away from the assistant for this use, so no account was read or used. Nothing "
+        + "was sent."
+      : "whether this project keeps its material away from the assistant could not be read, so no account was read or "
+        + "used. Nothing was sent.",
+      { project: String(project), use: use ?? null, keep_away: { reason: lim.reason, set_by: lim.set_by, set_at: lim.set_at } });
+    /* END DEC-49 REGION is-project-kept-away */
+  }
+
+  /* ===== A PROJECT'S AI ACCOUNT (R54, R58, R59; T40, N812, D34, D37, K2352, K2353, K2404) =====
+   *
+   * A project holds at most one account, set, switched and removed by any one of its owners (K2352 (2)): an Anthropic
+   * API key, sealed as the group key is under `project:<id>`, or the acting owner's own sign-in (R43), which holds no
+   * secret and serves only while that member is the project's only participant (K2353: a subscription is that one
+   * member's own use, AT-3). When a second member joins, the join is not refused: the sign-in stops serving at once
+   * (R56 goes on to each member's own account, then the group's) and the owners are told once (R59, read by
+   * notice-producers R16); it serves again when the project returns to that one member. Who participates, and since
+   * when, is membership's `joinedParticipants` (its R127); without it a sign-in serves nothing (fail closed). Sight
+   * before position (Membership v2 §7): a project the caller cannot see is answered as absent, one seen at existence by
+   * C-70.1, and only then is ownership asked; PROJECT_ACT_NOT_THE_OWNER is membership's own answer (its R122). Each
+   * act is recorded with its owner and instant, never the key. */
+
+  static PROJECT_KEY_NOTICE_TEXT = "This project has its own Claude account, an Anthropic API key one of its owners set. "
+    + "When you ask the assistant in this project, your questions, and the material read to answer them, go to "
+    + "Anthropic under the project's API account.";
+
+  /* membership R122: PROJECT_ACT_NOT_THE_OWNER, minted there alone. */
+  #notTheOwner(by, project) {
+    if (typeof MEMBERSHIP.notTheOwner === "function") return MEMBERSHIP.notTheOwner(by ?? null, project);
+    /* until membership's T40-M merges: its one site today, `projectAuthority`'s owner arm */
+    return this.membership.projectAuthority(project, `member:${Credentials.#memberOf(by) || "not-a-member"}`, "owner",
+      "acting on a project's AI account");
+  }
+
+  /* membership R44: the caller's sight of `project`, NONE for anything that names no project; never throws. */
+  #sightOf(project, viewer) {
+    if (typeof project !== "string" || project === "") return Membership.SIGHT_NONE;
+    try { return this.membership.sight(project, viewer); } catch { return Membership.SIGHT_NONE; }
+  }
+
+  /* Sight first (R44, R77): NONE answers as absent, EXISTENCE C-70.1; null when the caller sees the project. */
+  #unseen(project, viewer) {
+    const s = this.#sightOf(project, viewer);
+    if (s === Membership.SIGHT_FULL) return null;
+    const absent = noSuchProject(typeof project === "string" ? project : null);
+    return s === Membership.SIGHT_EXISTENCE ? (this.membership.existenceAct(project, viewer) ?? absent) : absent;
+  }
+
+  /* R54: an act on a project's AI settings is an owner's (membership R54, R122); a machine credential, the operator's
+     token or an unstamped call is refused the same way. */
+  #projectOwnerBar(project, by, act) {
+    const id = Credentials.#memberOf(by);
+    if (by === null || by === undefined || by === "" || isMachineIdentity(by) || id === null)
+      return this.#notTheOwner(by, project);
+    const unseen = this.#unseen(project, `member:${id}`);
+    if (unseen) return unseen;
+    return this.#isOwner(project, id) ? null : this.#notTheOwner(by, project);
+  }
+
+  /* R56, R58: a project a member acts in is one they have joined (membership R54's set; R55's
+     PROJECT_ACT_NOT_A_PARTICIPANT for one they see and have not joined). */
+  #participantBar(project, id, act) {
+    const viewer = `member:${id}`;
+    const unseen = this.#unseen(project, viewer);
+    if (unseen) return unseen;
+    return this.membership.projectAuthority(project, viewer, "joined", act);
+  }
+
+  #isOwner(project, id) { try { return this.membership.isProjectOwner(project, id) === true; } catch { return false; } }
+  #isJoined(project, id) { try { return this.membership.isJoinedParticipant(project, id) === true; } catch { return false; } }
+
+  /* membership R127: the project's participants joined or leaving, `[{member, owner, since}]`, or null when it cannot
+     be read. */
+  #participants(project) {
+    try {
+      if (typeof this.membership.joinedParticipants !== "function") return null;
+      const a = this.membership.joinedParticipants(project);
+      return Array.isArray(a) ? a : null;
+    } catch { return null; }
+  }
+
+  #projectAccountRow(project) {
+    if (typeof project !== "string" || project === "") return null;
+    return this.#one(`SELECT * FROM project_accounts WHERE project_id=?`, project);
+  }
+
+  /* R54: a key serves while held; a sign-in only while its member is the project's only participant. */
+  #serves(p) {
+    if (p.kind !== "signin") return true;
+    const parts = this.#participants(p.project_id);
+    return !!parts && parts.some((x) => x.member === p.member_id) && parts.every((x) => x.member === p.member_id);
+  }
+
+  #projectAct(project, act, detail, by) {
+    this.sql.exec(`INSERT INTO project_account_acts (project_id, act, detail, actor, at) VALUES (?,?,?,?,?)`, project, act,
+      detail ?? null, Credentials.#memberOf(by), stampSecond());
+  }
+
+  /* R54 `projectKeySet`: an owner holds an Anthropic API key for the project, replacing any earlier account; off when
+     first set (a key replacing a key keeps its switches; replacing a sign-in, it is a new account). Answers
+     `{ok, project, kind, set_at}`, never the key. */
+  async projectKeySet({ project = null, key = null, by = null } = {}) {
+    const bar = this.#projectOwnerBar(project, by, "setting a project's Anthropic API key");
+    if (bar) return bar;
+    const empty = Credentials.#noSecret(key);
+    if (empty) return empty;
+    const unsealable = this.#seal();
+    if (unsealable) return unsealable;
+    const { sealed, iv } = await this.#encrypt(`project:${project}`, "apikey", key);
+    const setAt = stampSecond();
+    const actor = Credentials.#memberOf(by);
+    this.#tx(() => {
+      const held = this.#projectAccountRow(project);
+      if (held && held.kind === "apikey")
+        this.sql.exec(`UPDATE project_accounts SET sealed=?, iv=?, set_by=?, set_at=? WHERE project_id=?`, sealed, iv, actor,
+          setAt, project);
+      else {
+        this.sql.exec(`DELETE FROM project_accounts WHERE project_id=?`, project);
+        this.sql.exec(`INSERT INTO project_accounts (project_id, kind, sealed, iv, set_by, set_at) VALUES (?,'apikey',?,?,?,?)`,
+          project, sealed, iv, actor, setAt);
+      }
+      this.#projectAct(project, "setkey", null, by);
+    });
+    return { ok: true, project, kind: "apikey", set_at: setAt };
+  }
+
+  /* R54 `projectSigninSet`: the acting owner's own sign-in becomes the project's account, replacing any earlier one;
+     refused PROJECT_NOT_SOLE_MEMBER while the project has any other participant (owners included; and when who
+     participates cannot be read), and SIGNIN_NOT_CONNECTED when the owner is not connected through their subscription. */
+  projectSigninSet({ project = null, by = null } = {}) {
+    const bar = this.#projectOwnerBar(project, by, "making your sign-in a project's Claude account");
+    if (bar) return bar;
+    const id = Credentials.#memberOf(by);
+    const parts = this.#participants(project);
+    /* DEC-49 REGION is-project-sole-member */
+    if (!parts || parts.some((x) => x.member !== id))
+      return Credentials.#row(ACCOUNT_CHECKS, "PROJECT_NOT_SOLE_MEMBER", "a member's own sign-in serves a project only "
+        + "while that member is its only participant, and this project has others (owners included); it can hold an "
+        + "Anthropic API key instead. Nothing was written.", { project });
+    /* END DEC-49 REGION is-project-sole-member */
+    /* DEC-49 REGION is-signin-connected */
+    if (!this.#connected(id))
+      return Credentials.#row(ACCOUNT_CHECKS, "SIGNIN_NOT_CONNECTED", "you are not connected through your Claude "
+        + "subscription, so there is no sign-in of yours to serve the project. Nothing was written.", { project });
+    /* END DEC-49 REGION is-signin-connected */
+    const setAt = stampSecond();
+    this.#tx(() => {
+      const held = this.#projectAccountRow(project);
+      if (held && held.kind === "signin" && held.member_id === id)
+        this.sql.exec(`UPDATE project_accounts SET set_by=?, set_at=? WHERE project_id=?`, id, setAt, project);
+      else {
+        this.sql.exec(`DELETE FROM project_accounts WHERE project_id=?`, project);
+        this.sql.exec(`INSERT INTO project_accounts (project_id, kind, member_id, set_by, set_at) VALUES (?,'signin',?,?,?)`,
+          project, id, id, setAt);
+      }
+      this.#projectAct(project, "setsignin", null, by);
+    });
+    return { ok: true, project, kind: "signin", set_at: setAt };
+  }
+
+  /* R54 `projectAccountRemove`: removes whichever account is held; with none, `removed: false`. */
+  projectAccountRemove({ project = null, by = null } = {}) {
+    const bar = this.#projectOwnerBar(project, by, "removing a project's Claude account");
+    if (bar) return bar;
+    const held = !!this.#projectAccountRow(project);
+    this.#tx(() => {
+      this.sql.exec(`DELETE FROM project_accounts WHERE project_id=?`, project);
+      this.#projectAct(project, "remove", null, by);
+    });
+    return { ok: true, removed: held };
+  }
+
+  /* R54 `projectAccountSwitch`: switches whichever account is held on or off; only `true` is on, and it is on only
+     while an account is held. */
+  projectAccountSwitch({ project = null, on = false, by = null } = {}) {
+    const bar = this.#projectOwnerBar(project, by, "switching a project's Claude account");
+    if (bar) return bar;
+    const v = on === true ? 1 : 0;
+    this.#tx(() => {
+      this.sql.exec(`UPDATE project_accounts SET is_on=? WHERE project_id=?`, v, project);
+      this.#projectAct(project, "switch", v ? "on" : "off", by);
+    });
+    return { ok: true, on: !!this.#projectAccountRow(project)?.is_on };
+  }
+
+  /* R54 `projectAccountState`: its owners `{held, kind, on, set_at, by, uses, serving}`, its joined participants
+     `{on, serving}`, anyone else as absent (after sight: C-70.1 at existence). Never the key; writes nothing. */
+  projectAccountState({ project = null, viewer = null } = {}) {
+    const id = Credentials.#memberOf(viewer);
+    const absent = noSuchProject(typeof project === "string" ? project : null);
+    if (id === null || isMachineIdentity(viewer)) return absent;
+    const unseen = this.#unseen(project, `member:${id}`);
+    if (unseen) return unseen;
+    const p = this.#projectAccountRow(project);
+    const on = !!p?.is_on;
+    const serving = !!p && this.#serves(p);
+    if (this.#isOwner(project, id))
+      return { ok: true, held: !!p, kind: p ? p.kind : null, on, set_at: p ? p.set_at : null, by: p ? p.set_by : null,
+               uses: p ? Credentials.#usesOf(p) : null, serving };
+    if (this.#isJoined(project, id)) return { ok: true, on, serving };
+    return absent;
+  }
+
+  /* R58 `projectKeyNotice`: `{due, text}` for a member and a project until their own act records that they have read
+     it; writes nothing. */
+  projectKeyNotice({ member = null, project = null } = {}) {
+    const id = Credentials.#memberOf(member);
+    const seen = id !== null && typeof project === "string"
+      && !!this.#one(`SELECT member_id FROM project_key_notices WHERE member_id=? AND project_id=?`, id, project);
+    return { ok: true, due: !seen, text: Credentials.PROJECT_KEY_NOTICE_TEXT };
+  }
+
+  /* R58 `projectKeyNoticeSeen`: the member's own act (R22's refusals), for a project they have joined, recorded once
+     with its instant; again answers `already: true`. */
+  projectKeyNoticeSeen({ member = null, project = null, by = null } = {}) {
+    const bar = this.#accountBar(member, by);
+    if (bar) return bar;
+    const id = Credentials.#memberOf(member);
+    const out = this.#participantBar(project, id, "reading a project key's notice");
+    if (out) return out;
+    const already = !!this.#one(`SELECT member_id FROM project_key_notices WHERE member_id=? AND project_id=?`, id, project);
+    if (!already) this.sql.exec(`INSERT INTO project_key_notices (member_id, project_id, seen_at) VALUES (?,?,?)`, id, project,
+      stampSecond());
+    return { ok: true, seen: true, already };
+  }
+
+  /* R58: PROJECT_KEY_NOTICE_DUE, minted here alone. */
+  #projectNoticeDue(id, project) {
+    /* DEC-49 REGION is-project-key-notice-seen */
+    if (this.#one(`SELECT member_id FROM project_key_notices WHERE member_id=? AND project_id=?`, id, project)) return null;
+    return Credentials.#row(ACCOUNT_CHECKS, "PROJECT_KEY_NOTICE_DUE", "this member has not yet read the notice that their "
+      + "questions go to Anthropic under this project's API account. Nothing was sent.", { member: id, project });
+    /* END DEC-49 REGION is-project-key-notice-seen */
+  }
+
+  /* R59 `projectAccountsSuspended`: for each project `viewer` owns whose sign-in account stopped serving because
+     another member joined, `{project, member, since, key}`: `since` the earliest join among the participants other
+     than the account's member (membership R127), the account's set instant when none is recorded (K2404 (1)); `key`
+     stable per project and suspension. `at` is the caller's instant; the answer is the suspensions in force at the
+     call. In-plane, for notice-producers R16; writes nothing and never throws (a read that fails answers none). */
+  projectAccountsSuspended({ viewer = null, at = null } = {}) {
+    try {
+      const id = Credentials.#memberOf(viewer);
+      if (id === null || isMachineIdentity(viewer)) return [];
+      const out = [];
+      for (const p of this.#rows(`SELECT project_id, member_id, set_at FROM project_accounts WHERE kind='signin'
+                                  ORDER BY project_id`)) {
+        if (!this.#isOwner(p.project_id, id)) continue;
+        const parts = this.#participants(p.project_id);
+        const others = parts ? parts.filter((x) => x.member !== p.member_id) : [];
+        if (!others.length) continue;
+        const sinces = others.map((x) => x.since).filter((x) => typeof x === "string" && x !== "").sort();
+        const since = sinces.length ? sinces[0] : p.set_at;
+        out.push({ project: p.project_id, member: p.member_id, since, key: `${p.project_id}|${p.member_id}|${since}` });
+      }
+      return out;
+    } catch { return []; }
+  }
+
+  /* ===== A PROJECT'S MATERIAL LIMITS (R57; D38 C, B3) =====
+   *
+   * A project may keep its material away from the assistant, for every kind of use or the ones it names, set by any
+   * one of its owners under R51's reason rule and appended as R51's are. A material limit binds every account,
+   * whoever pays; `aiKeptAway` (R35) is the one site for both refusals. */
+
+  /* R57 `projectAiKeepAwaySet`: an owner's act (R54's refusals), R51's reason rule, `uses` as R51's; answers the state. */
+  projectAiKeepAwaySet({ project = null, on = false, uses = null, reason = null, by = null } = {}) {
+    const bar = this.#projectOwnerBar(project, by, "keeping a project's material away from the assistant");
+    if (bar) return bar;
+    const turnOn = on === true;
+    const noReason = Credentials.#keepAwayReason(turnOn, reason);
+    if (noReason) return noReason;
+    const u = Credentials.#usesToStore(uses);
+    if (u.fault) return u.fault;
+    const given = typeof reason === "string" && reason.trim() !== "";
+    this.sql.exec(`INSERT INTO project_keep_away (project_id, is_on, uses, reason, set_by, set_at) VALUES (?,?,?,?,?,?)`,
+      project, turnOn ? 1 : 0, u.json, given ? reason : null, Credentials.#memberOf(by), stampSecond());
+    return { ok: true, project, ...this.#projectLimit(project) };
+  }
+
+  /* R57 `projectAiKeepAwayState`: the project's limit, to its participants (joined or leaving); anyone else as absent.
+     Writes nothing. */
+  projectAiKeepAwayState({ project = null, viewer = null } = {}) {
+    const id = Credentials.#memberOf(viewer);
+    const absent = noSuchProject(typeof project === "string" ? project : null);
+    if (id === null || isMachineIdentity(viewer)) return absent;
+    const unseen = this.#unseen(project, `member:${id}`);
+    if (unseen) return unseen;
+    if (!this.#isJoined(project, id)) return absent;
+    try { return { ok: true, project, ...this.#projectLimit(project) }; }
+    catch { return { ok: true, project, on: null, uses: null, reason: null, set_by: null, set_at: null }; }
+  }
+
+  /* R57 `projectsKeptAway`: the ids of the projects whose limit covers `use`, for reads under a grant (answers R30)
+     and exploring's scope (ai-use R9). In-plane; writes nothing; null when the limits cannot be read, which its caller
+     reads as unknown. */
+  projectsKeptAway({ use = null } = {}) {
+    try {
+      return this.#rows(`SELECT k.project_id, k.is_on, k.uses FROM project_keep_away k
+                         WHERE k.seq = (SELECT MAX(seq) FROM project_keep_away q WHERE q.project_id = k.project_id)
+                         ORDER BY k.project_id`)
+        .filter((r) => Credentials.#covers({ on: !!r.is_on, uses: Credentials.#usesList(r.uses) }, use))
+        .map((r) => r.project_id);
+    } catch { return null; }
   }
 
   /* ===== THE ASK GRANT (R27, R28, R31, R32; Q1-3, K1450, K1505 (14), K1609, K1685) =====
@@ -1560,11 +2113,13 @@ export class Credentials {
   /* R27: at the member's own act under their own live session; refused NO_ACCOUNT when no account serves them (R35:
      no reference of their own, not connected through their subscription, and the group key not held or off; T38,
      K2275), and GROUP_KEY_NOTICE_DUE when the group key would serve them and they have not read its notice (R36). A
-     member served by their own sign-in is granted, no notice asked. */
-  async aiGrantMint({ member = null, by = null, session = null } = {}) {
+     member served by their own sign-in is granted, no notice asked. (T40; R56) It takes `project?`, a project the
+     member has joined, and asks R56's cascade for `{kind: "ask", member, project}`: its refusals are this mint's
+     (PROJECT_KEY_NOTICE_DUE for a project's key whose notice is due, AI_USE_SWITCHED_OFF, ...). */
+  async aiGrantMint({ member = null, by = null, session = null, project = null } = {}) {
     const bar = this.#accountBar(member, by);
     if (bar) return bar;
-    const away = this.aiKeptAway();   /* R27 mints only for a member R35 serves: none while kept away (DEC-172) */
+    const away = this.aiKeptAway({ use: "ask" });   /* R27 mints only for a member R35 serves: none while kept away (DEC-172) */
     if (away) return away;
     const id = Credentials.#memberOf(member);
     const sessionSha = typeof session === "string" && session !== "" ? Credentials.#tokenSha(session) : null;
@@ -1572,12 +2127,8 @@ export class Credentials {
     if (!s || s.role !== `member:${id}` || s.expires < Date.now())
       return Credentials.#notYours("an ask's grant is minted only under the member's own "
         + "live session. Nothing was minted.");
-    const serving = this.#servingAccount(id);
-    if (!serving) return this.#noAccount(id);
-    if (serving.level === "group") {
-      const due = this.#noticeDue(id);
-      if (due) return due;
-    }
+    const served = this.#resolve(id, "ask", project === undefined ? null : project);
+    if (served.refusal) return served.refusal;
     return this.#mintGrant(id, sessionSha, Math.min(Date.now() + AI_GRANT_TTL_SECONDS * 1000, s.expires), "ask");
   }
 
@@ -1589,7 +2140,7 @@ export class Credentials {
     if (id === null || isMachineIdentity(member) || this.#memberFacts(id)?.status !== "active")
       return refuse("ACCOUNT_MEMBER_NOT_ACTIVE", "a standing question runs only for an active member. Nothing was "
         + "minted.");
-    const away = this.aiKeptAway();   /* R32 mints only for a member R35 serves: none while kept away (DEC-172) */
+    const away = this.aiKeptAway({ use: "standing" });   /* R32 mints only for a member R35 serves: none while kept away (DEC-172) */
     if (away) return away;
     const serving = this.#servingAccount(id);
     if (!serving) return this.#noAccount(id);
@@ -2129,6 +2680,8 @@ export function credentialsOf(ctx, { record = null, membership = null, sealSecre
    `body` is the parsed body; `env` the store's environment. */
 export function credentialsOps(c, url, body, env) {
   const doorStamps = (u) => ({ source: u.searchParams.get("source"), country: u.searchParams.get("country") });
+  const bodyField = (k) => (body && typeof body === "object" && !Array.isArray(body) && typeof body[k] === "string" ? body[k] : null);
+  const by = () => url.searchParams.get("by");
   return {
     /* D-199: `who` is the SERVER'S stamp, and `secretSha` never comes from a caller: the control plane generates the
        value, hashes it, and this module never sees the value. R53 (N761; K2129): the digest is read from the body
@@ -2190,8 +2743,10 @@ export function credentialsOps(c, url, body, env) {
     accountreference: () => c.accountReferenceState({ member: url.searchParams.get("member"),
                                                       viewer: url.searchParams.get("viewer") }),
     accountswitchset: () => c.accountSwitchSet({ ...(body || {}), by: url.searchParams.get("by") }),
+    /* (T40; R27) the project an ask is made in, the body's or the query's; never a stamp */
     aigrantmint: () => c.aiGrantMint({ member: url.searchParams.get("member"), by: url.searchParams.get("by"),
-                                       session: url.searchParams.get("session") }),
+                                       session: url.searchParams.get("session"),
+                                       project: bodyField("project") ?? (url.searchParams.get("project") || null) }),
     groupkeyset: () => c.groupKeySet({ ...(body || {}), by: url.searchParams.get("by") }),
     groupkeyremove: () => c.groupKeyRemove({ by: url.searchParams.get("by") }),
     groupkeyswitch: () => c.groupKeySwitch({ ...(body || {}), by: url.searchParams.get("by") }),
@@ -2208,6 +2763,22 @@ export function credentialsOps(c, url, body, env) {
     aikeepawaystate: () => c.aiKeepAwayState(),
     /* R50 (N744; K2038): STORE-INTERNAL, no spec (op-declarations R6): R44's write for admission R22, reached from the
        Worker through the store as `doorbellrefused` is. It takes `{kind, country}` from the body and nothing else. */
+    /* T40 (R54–R58): every account's switches, a project's account, its key's notice and its material limits; `by`
+       and `viewer` the stamps after the body. The in-plane reads (`projectAccountsSuspended`, `projectsKeptAway`,
+       `aiKeptAway`) are not routed. */
+    accountusesset: () => c.accountUsesSet({ ...(body || {}), by: by() }),
+    projectkeyset: () => c.projectKeySet({ ...(body || {}), by: by() }),
+    projectsigninset: () => c.projectSigninSet({ ...(body || {}), by: by() }),
+    projectaccountremove: () => c.projectAccountRemove({ ...(body || {}), by: by() }),
+    projectaccountswitch: () => c.projectAccountSwitch({ ...(body || {}), by: by() }),
+    projectaccountstate: () => c.projectAccountState({ project: url.searchParams.get("project"),
+                                                       viewer: url.searchParams.get("viewer") }),
+    projectkeynotice: () => c.projectKeyNotice({ member: url.searchParams.get("viewer"), project: url.searchParams.get("project") }),
+    projectkeynoticeseen: () => c.projectKeyNoticeSeen({ project: bodyField("project") ?? url.searchParams.get("project"),
+                                                         member: by(), by: by() }),
+    projectaikeepaway: () => c.projectAiKeepAwaySet({ ...(body || {}), by: by() }),
+    projectaikeepawaystate: () => c.projectAiKeepAwayState({ project: url.searchParams.get("project"),
+                                                             viewer: url.searchParams.get("viewer") }),
     securitycount: () => {
       const b = body && typeof body === "object" && !Array.isArray(body) ? body : {};
       return c.securityCount({ kind: b.kind ?? null, country: b.country ?? null });
